@@ -2,8 +2,17 @@ set ROOT=%~dp0
 call run.bat
 cd %ROOT%
 
-call lib/build.bat
-cd dev
+cd %ROOT%\app\ext
+call ..\..\dev\php\php composer/composer.phar self-update
+del composer.lock
+call ..\..\dev\php\php composer/composer.phar install
+
+cd %ROOT%\lib
+call ..\dev\php\php composer/composer.phar self-update
+del composer.lock
+call ..\dev\php\php composer/composer.phar install
+
+cd %ROOT%\dev
 chcp 1251
 call mysql\bin\mysql --user=devprom --password=devprom_pass -e "source ../db/devprom.sql"
 call mysql\bin\mysql --user=devprom --password=devprom_pass --database=devprom -e "source ../db/update.sql"

@@ -325,7 +325,8 @@
                 {
                     "name": "Jonathan Wage",
                     "email": "jonwage@gmail.com",
-                    "homepage": "http://www.jwage.com/"
+                    "homepage": "http://www.jwage.com/",
+                    "role": "Creator"
                 },
                 {
                     "name": "Guilherme Blanco",
@@ -397,7 +398,7 @@
                 {
                     "name": "Johannes Schmitt",
                     "email": "schmittjoh@gmail.com",
-                    "homepage": "http://jmsyst.com",
+                    "homepage": "https://github.com/schmittjoh",
                     "role": "Developer of wrapped JMSSerializerBundle"
                 }
             ],
@@ -449,16 +450,16 @@
         },
         {
             "name": "symfony/symfony",
-            "version": "v2.2.9",
+            "version": "v2.2.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/symfony.git",
-                "reference": "6a5c6c0d76014cd54cf8bd82a96b75d7589d8029"
+                "reference": "6a9c223b066a2553b8f59fd26f84ea630eff403c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/symfony/zipball/6a5c6c0d76014cd54cf8bd82a96b75d7589d8029",
-                "reference": "6a5c6c0d76014cd54cf8bd82a96b75d7589d8029",
+                "url": "https://api.github.com/repos/symfony/symfony/zipball/6a9c223b066a2553b8f59fd26f84ea630eff403c",
+                "reference": "6a9c223b066a2553b8f59fd26f84ea630eff403c",
                 "shasum": ""
             },
             "require": {
@@ -532,7 +533,9 @@
             "authors": [
                 {
                     "name": "Fabien Potencier",
-                    "email": "fabien@symfony.com"
+                    "email": "fabien@symfony.com",
+                    "homepage": "http://fabien.potencier.org",
+                    "role": "Lead Developer"
                 },
                 {
                     "name": "Symfony Community",
@@ -544,7 +547,7 @@
             "keywords": [
                 "framework"
             ],
-            "time": "2013-10-10 12:15:43"
+            "time": "2013-12-02 07:14:10"
         },
         {
             "name": "twig/twig",
