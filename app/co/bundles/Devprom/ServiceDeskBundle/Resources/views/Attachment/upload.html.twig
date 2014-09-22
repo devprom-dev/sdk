@@ -1,0 +1,29 @@
+{% extends '::content.html.twig' %}
+
+{% block title %}
+    {% trans %} attachment.new.title {% endtrans %}
+{% endblock %}
+
+{% block content -%}
+    <div class="col-md-6 col-md-offset-3">
+        <h2 class="page-title">{{ 'attachment.new.title'|trans }}</h2>
+        <section class="widget">
+            <header>
+                <h4>
+                    <a class="uid" href="{{ path('issue_show', { 'id': issue.id }) }}" title="{{ issue.caption }}">[I-{{ issue.id }}] {{ issue.caption|unescapeHtml }}</a>
+                </h4>
+            </header>
+            <div class="body">
+                <form role="form" class="form-horizontal" id="attachment" action="{{ path('attachment_upload', { 'issueId' : issue.id }) }}" method="post" {{ form_enctype(form) }}>
+
+                    {{ form_widget(form) }}
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">{{ 'attachment.upload'|trans }}</button>
+                        <a class="btn btn-default" href="{{ path('issue_show', { 'id': issue.id }) }}">{{ 'attachment.cancel'|trans }}</a>
+                    </div>
+                </form>
+        </section>
+    </div>
+{% endblock %}
+

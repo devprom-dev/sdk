@@ -1,0 +1,109 @@
+_entry:
+    pattern:  /
+    defaults: { _controller: ApplicationBundle:Security:login }
+
+logoff:
+    pattern:  /logoff
+    defaults: { _controller: ApplicationBundle:Security:logoff }
+
+news:
+    pattern:  /news/{key}
+    defaults: { _controller: ApplicationBundle:Atom:news}
+
+login:
+    pattern:  /login
+    defaults: { _controller: ApplicationBundle:Security:login }
+    requirements:
+        _method:  GET
+
+login_process:
+    pattern:  /login
+    defaults: { _controller: ApplicationBundle:Security:loginProcess }
+    requirements:
+        _method:  POST
+
+recovery:
+    pattern:  /recovery
+    defaults: { _controller: ApplicationBundle:Security:restore }
+    requirements:
+        _method:  GET
+
+recovery_process:
+    pattern:  /recovery
+    defaults: { _controller: ApplicationBundle:Security:restoreProcess }
+    requirements:
+        _method:  POST
+    
+reset:
+    pattern:  /reset
+    defaults: { _controller: ApplicationBundle:Security:reset }
+    requirements:
+        _method:  GET
+
+reset_process:
+    pattern:  /reset
+    defaults: { _controller: ApplicationBundle:Security:resetProcess }
+    requirements:
+        _method:  POST
+
+profile:
+    pattern:  /profile
+    defaults: { _controller: ApplicationBundle:Profile:form }
+    requirements:
+        _method:  GET
+
+project_new:
+    pattern:  /projects/new
+    defaults: { _controller: ApplicationBundle:Project:new }
+    requirements:
+        _method:  GET
+
+project_create:
+    pattern:  /projects/new
+    defaults: { _controller: ApplicationBundle:Project:create }
+    requirements:
+        _method:  POST
+
+menu_config:
+    pattern:  /menu/config
+    defaults: { _controller: ApplicationBundle:Menu:config }
+    requirements:
+        _method:  GET
+
+error_404:
+    pattern:  /404
+    defaults: { _controller: ApplicationBundle:Page:error }
+
+error_500:
+    pattern:  /500
+    defaults: { _controller: ApplicationBundle:Page:error }
+
+error_500_zip:
+    pattern:  /500.zip
+    defaults: { _controller: ApplicationBundle:Page:errorZip }
+
+error_310:
+    pattern:  /310
+    defaults: { _controller: ApplicationBundle:Page:error } 
+
+error_503:
+    pattern:  /503
+    defaults: { _controller: ApplicationBundle:Page:error }
+
+_app_tooltip:
+    pattern:  /tooltip/{classname}/{objects}
+    defaults: { _controller: ApplicationBundle:Tooltip:show }
+
+_namespace:
+    pattern:  /{module}/{namespace}
+    defaults: { _controller: ApplicationBundle:Page:module }
+
+_page:
+    pattern:  /{module}/{namespace}/{page}
+    defaults: { _controller: ApplicationBundle:Page:module }
+
+_file:
+    pattern:  /{module}/{namespace}/{page}/{file}
+    defaults: { _controller: ApplicationBundle:Page:module }
+
+   

@@ -1,0 +1,190 @@
+/*
+Copyright (c) 2003-2013, CKSource - Frederico Knabben. All rights reserved.
+For licensing, see LICENSE.html or http://ckeditor.com/license
+*/
+
+.wysiwyg
+{
+	line-height: 1.6em;
+	padding: 0 0 10px 0;
+	width: 100%;
+}
+
+.wysiwyg-text[contenteditable=true]
+{
+    position: relative;
+    left: -5px;
+    padding: 5px;
+}
+
+.wysiwyg-input[contenteditable=true]
+{
+    left: -5px;
+    padding: 2px 5px 2px 5px;
+}
+
+.wysiwyg-field[contenteditable=true]
+{
+    padding: 5px;
+}
+
+.wysiwyg-field
+{
+	min-height: 98px;
+}
+
+.wysiwyg-welcome
+{
+	padding: 5px;
+/*	position:absolute; */
+	color:silver;
+	font-style: italic;
+	margin-bottom: -30px;
+}
+
+.wysiwyg-hover
+{
+    position: relative;
+	margin:-2px -2px -2px -2px;
+	border: 2px solid #f0f0f5;
+}
+
+.wysiwyg p
+{
+	line-height: 1.6em !important;
+	margin: 0;
+	
+	font-family: inherit;
+	font-weight: normal;
+	font-size: inherit;
+}
+
+.wysiwyg blockquote, 
+.wysiwyg q {
+	quotes: none;
+}
+.wysiwyg blockquote:before, 
+.wysiwyg blockquote:after,
+.wysiwyg q:before, 
+.wysiwyg q:after {
+	content: '';
+	content: none;
+}
+
+.wysiwyg table {
+	/* bootstrap theme */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	
+	border-collapse: collapse;
+	border-spacing: 0;
+
+    font-weight: normal;
+    float: none;
+}
+
+.wysiwyg blockquote
+{
+	font-style: italic;
+	font-family: Georgia, Times, "Times New Roman", serif;
+	padding: 2px 0;
+	border-style: solid;
+	border-color: #ccc;
+	border-width: 0;
+}
+
+.wysiwyg  blockquote
+{
+	padding-left: 20px;
+	padding-right: 8px;
+	border-left-width: 5px;
+}
+
+.cke_contents_rtl blockquote
+{
+	padding-left: 8px;
+	padding-right: 20px;
+	border-right-width: 5px;
+}
+
+.wysiwyg a
+{
+	color: #0782C1;
+}
+
+.wysiwyg ol,
+.wysiwyg ul,
+.wysiwyg dl
+{
+	/* IE7: reset rtl list margin. (#7334) */
+	*margin-right: 0px;
+	margin: 1.12em;
+	margin-left: 40px;
+}
+
+.wysiwyg h1,
+.wysiwyg h2,
+.wysiwyg h3,
+.wysiwyg h4,
+.wysiwyg h5,
+.wysiwyg h6
+{
+    line-height: 1.2em;
+}
+
+.wysiwyg hr
+{
+	border: 0px;
+	border-top: 1px solid #ccc;
+}
+
+.wysiwyg img.right {
+    border: 1px solid #ccc;
+    float: right;
+    margin-left: 15px;
+    padding: 5px;
+}
+
+.wysiwyg img.left {
+    border: 1px solid #ccc;
+    float: left;
+    margin-right: 15px;
+    padding: 5px;
+}
+
+.wysiwyg img:hover {
+	opacity: .9;
+	filter: alpha(opacity = 90);
+}
+
+.wysiwyg pre
+{
+	white-space: pre-wrap; /* CSS 2.1 */
+	word-wrap: break-word; /* IE7 */
+}
+
+.wysiwyg a[href]
+{
+	cursor: pointer;
+}
+
+.wysiwyg code
+{
+	font-size: inherit;
+	font-family: monospace;
+	font-weight: inherit;
+	padding: inherit;
+	color: inherit;
+	border: inherit;
+	background: inherit;
+}
+
+.wysiwyg pre
+{
+    font-size: inherit;
+    font-family: monospace;
+    font-weight: inherit;
+    padding: inherit;
+    color: inherit;
+    border: inherit;
+    background: inherit;
+}

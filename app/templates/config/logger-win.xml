@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log4php:configuration xmlns:log4php="http://logging.apache.org/log4php/">
+    <appender name="LDAPFileAppender" class="LoggerAppenderRollingFile">
+        <layout class="LoggerLayoutTTCC" />
+        <param name="file" value="C:\DEVPROM\apache\logs\ldap.log" />
+        <param name="maxFileSize" value="1M"></param>
+        <param name="maxBackupIndex" value="5"></param>
+    </appender>
+    <appender name="SystemFileAppender" class="LoggerAppenderRollingFile">
+        <layout class="LoggerLayoutTTCC" />
+        <param name="file" value="C:\DEVPROM\apache\logs\system.log" />
+        <param name="maxFileSize" value="1M"></param>
+        <param name="maxBackupIndex" value="5"></param>
+    </appender>
+    <appender name="CommandsFileAppender" class="LoggerAppenderRollingFile">
+        <layout class="LoggerLayoutTTCC" />
+        <param name="file" value="C:\DEVPROM\apache\logs\commands.log" />
+        <param name="maxFileSize" value="1M"></param>
+        <param name="maxBackupIndex" value="5"></param>
+    </appender>
+    <appender name="InstallFileAppender" class="LoggerAppenderRollingFile">
+        <layout class="LoggerLayoutTTCC" />
+        <param name="file" value="C:\DEVPROM\apache\logs\install.log" />
+        <param name="maxFileSize" value="1M"></param>
+        <param name="maxBackupIndex" value="5"></param>
+    </appender>
+    <appender name="SOAPFileAppender" class="LoggerAppenderRollingFile">
+        <layout class="LoggerLayoutTTCC" />
+        <param name="file" value="C:\DEVPROM\apache\logs\soap.log" />
+        <param name="maxFileSize" value="1M"></param>
+        <param name="maxBackupIndex" value="5"></param>
+    </appender>
+    <appender name="SCMFileAppender" class="LoggerAppenderRollingFile">
+        <layout class="LoggerLayoutTTCC" />
+        <param name="file" value="C:\DEVPROM\apache\logs\scm.log" />
+        <param name="maxFileSize" value="1M"></param>
+        <param name="maxBackupIndex" value="5"></param>
+    </appender>
+    <logger name="Commands">
+        <appender_ref ref="CommandsFileAppender" />
+        <level value="info" />
+    </logger>
+    <logger name="Install">
+        <appender_ref ref="InstallFileAppender" />
+        <level value="info" />
+    </logger>
+    <logger name="LDAP">
+        <appender_ref ref="LDAPFileAppender" />
+        <level value="info" />
+    </logger>
+    <logger name="System">
+        <appender_ref ref="SystemFileAppender" />
+        <level value="error" />
+    </logger>
+    <logger name="SOAP">
+        <appender_ref ref="SOAPFileAppender" />
+        <level value="error" />
+    </logger>
+    <logger name="SCM">
+        <appender_ref ref="SCMFileAppender" />
+        <level value="info" />
+    </logger>
+    <root/>
+</log4php:configuration>

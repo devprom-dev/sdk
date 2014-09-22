@@ -1,0 +1,228 @@
+/* Block with welcome text on login and registration pages */
+/* ---------------------------------------------------------------------- */
+
+.welcome-description {
+    float: none;
+}
+
+.welcome-description h3 {
+    font-size: 19.5px;
+    line-height: 40px;
+}
+
+@media (min-width: 1125px) {
+    .layout-description {
+        max-width: 1125px;
+        margin-right: 10%;
+        padding-left: 15%;
+    }
+}
+
+@media (min-width: 768px) {
+    .welcome-description h3 {
+        font-size: 22.75px;
+        line-height: 40px;
+    }
+
+}
+
+@media (min-width: 992px) {
+    .welcome-description {
+        float: right;
+    }
+}
+
+/* Language flags */
+/* ---------------------------------------------------------------------- */
+
+.icon-en-flag, .icon-ru-flag {
+    width: 16px;
+    height: 11px;
+
+}
+.icon-en-flag {
+    background-image: url('../images/flag_en.gif');
+}
+
+.icon-ru-flag {
+    background-image: url('../images/flag_ru.gif');
+}
+
+.no-wrap {
+    white-space: nowrap;
+}
+
+.centered {
+    text-align: center;
+}
+
+.issue-id-cell {
+    white-space: nowrap;
+}
+
+textarea.form-control {
+    height: 150px !important;
+}
+
+input[type='file'].form-control {
+    background-color: transparent;
+    transform: scale(2);
+}
+
+.fileinput-name {
+    margin: 10px 10px;
+    display: inline-block;
+}
+
+/* theme patches */
+/* ---------------------------------------------------------------------- */
+
+body, .badge, .label, .form-control {
+    font-size: 16px;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+    font-family: sans-serif;
+}
+
+.btn {
+    padding:8px 18px;
+    font-size:16.25px;
+    line-height:1.33;
+    border-radius:1px;
+}
+
+.badge {
+    padding: 5px 9px 5px 9px;
+}
+
+@media(max-width: 767px) {
+    .table, .badge {
+        font-size: 13px;
+    }
+}
+
+
+.side-nav li p {
+    padding: 8px 20px;
+}
+
+.chat-messages {
+    padding-right: 0;
+}
+
+.chat-message-body {
+    margin-left: 130px;
+}
+
+textarea.textarea-sm {
+    height: 50px !important;
+}
+
+.notifications {
+    margin: 0;
+}
+
+.navbar-text {
+    color: rgba(51,51,51,0.5);
+    font-size: 19.5px;
+    line-height: 36px;
+
+    margin: 0;
+    padding: 0;
+    float: none;
+}
+
+.navbar-btn {
+    margin-top: 2px;
+}
+
+.nav-divider {
+    width: 40px;
+}
+
+span.hidden-xs {
+    display: inline !important;
+}
+
+@media(max-width: 767px) {
+    span.hidden-xs {
+        display: none!important
+    }
+}
+
+.hidden-xxs {
+    display: block !important;
+}
+
+span.hidden-xxs {
+    display: inline !important;
+}
+
+@media(max-width: 610px) {
+    .hidden-xxs, span.hidden-xxs {
+        display: none!important
+     }
+}
+
+.hidden-xxxs {
+    display: block !important;
+}
+
+@media(max-width: 420px) {
+    .hidden-xxxs {
+        display: none!important
+    }
+}
+
+
+.wrap {
+    margin-left: 0;
+}
+
+.logo {
+    width: auto;
+}
+
+.table .issue-caption-cell a {
+    color: white;
+}
+
+.table th {
+    text-align: center;
+}
+
+.table th .sort-caret {
+    margin-right: -15px;
+}
+
+@media (max-width: 767px) {
+    .logo {
+        top: 13px !important;
+    }
+}
+
+.login-widget, .registration-widget {
+    width: 330px;
+}
+
+
+/* font-awesome patch for language flags in navbar */
+/* ---------------------------------------------------------------------- */
+
+a [class^="icon-"],
+a [class*=" icon-"] {
+    display: inline-block;
+}

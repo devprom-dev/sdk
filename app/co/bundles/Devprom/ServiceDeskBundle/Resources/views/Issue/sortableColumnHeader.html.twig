@@ -1,0 +1,15 @@
+{% if sortDirection == 'asc' %}
+    {% set sortDirectionClass = 'ascending' %}
+    {% set reverseSortDirection = 'desc' %}
+{% else %}
+    {% set sortDirectionClass = 'descending' %}
+    {% set reverseSortDirection = 'asc' %}
+{% endif %}
+<th{% if sortColumn == columnName %} class="no-wrap {{ sortDirectionClass }}"{% endif %}>
+    <a href="{{ path('issue_list', {'sortColumn':columnName,'sortDirection':reverseSortDirection}) }}">
+        {{ columnLabel|trans }}
+        {% if sortColumn == columnName %}
+            <b class="sort-caret"></b>
+        {% endif %}
+    </a>
+</th>

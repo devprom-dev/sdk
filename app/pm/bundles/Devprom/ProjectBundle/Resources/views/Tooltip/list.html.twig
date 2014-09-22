@@ -1,0 +1,8 @@
+{% for object in objects|slice(0,10) %}
+{{ object.ref | raw }}
+<br/>
+{% endfor %}
+
+{% if objects|length > 10 %}
+...
+{% endif %}

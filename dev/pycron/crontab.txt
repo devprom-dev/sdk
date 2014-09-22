@@ -1,0 +1,59 @@
+# This is an example crontab file
+#
+# Each line of crontab.txt has the following structure:
+# <Minute> <Hour> <Day> <Month> <Day of Week> <Command line>
+#
+# Position:    Values:
+# Minute       0-59
+# Hour         0-23
+# Day          1-31
+# Month        1-12 or use names
+# Day of week  0-6 (0=Sunday, 1=Monday, ..., 6=Saturday) or use names
+#
+# Instead of minute, hour, day, month or day of week it's also possible to
+# specify a *. A * represents all possible values for that position (e.g. a
+# * on 2nd position is the same as specifying all the possible values for hour)
+#
+# Several values can be separated by commas: e.g. if a command is to #be
+# executed every 10th minute so you can specify 0,10,20,30,40,50 for minute.
+# A range of values can be specified with a -: e.g. value 0-12 for
+# hour -> every hour a.m.
+#
+# A divider is specified by "/": */2 specified for minute means every second
+# minute. 5-10/2 for hour matches every second hour from 5 to 10.
+#
+# line continuation character: " \"
+# please note: there has to be a space before "\". There's no character
+# allowed after "\"
+#
+# a line starting with a "#" is a comment
+#
+# character '?':
+# ... means "time of pycron startup".
+# Internally all the ? get replaced by the current time. So if you specify e.g.
+# ? ? * * * command
+# The command gets executed on startup of the pycron service and then every day
+# at the same time (if the computer is not turned off in between).
+# If the cron service was started e.g. at 10:29 the command gets executed
+# at 10:29 and at 10:29 the following days.
+#
+# missed tasks ('!' or '*')
+#
+# On startup of the service pycron checks if there are any missed tasks
+# (tasks that should have been executed if the service would have run continuously).
+# Only specially marked commands are checked for missed tasks:
+#
+#    A '!' in front of a command tells pycron to run the command once if the task was missed.
+#    A '*' in front of a command tells pycron to run the command as many times as the command was missed.
+#
+# E.g. if you specify
+#
+# 0 */2 * * * *"c:\a command.exe"           #run every two hours
+# 0 */2 * * * !"c:\a second command.exe"    #run every two hours
+#
+# and the computer was down between 1:30 a.m. and 6:30 a.m. the task "c:\a command.exe"
+# will get called three times and "c:\a second command.exe" will get called once.
+#
+#------------------------------------------------------------------------------
+
+* * * * * C:\DEVPROM.Corporate\pycron\run.bat

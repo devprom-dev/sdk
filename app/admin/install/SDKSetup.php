@@ -1,0 +1,56 @@
+<?php
+
+class SDKSetup extends Installable 
+{
+    function check()
+    {
+        return true;
+    }
+
+    function install()
+    {
+ 		$user_id = $this->createUser( 'Administrator', 'admin', 'Administrator' );
+
+ 		$this->updateSystemSettings();
+ 		
+		getCheckpointFactory()->getCheckpoint('CheckpointSystem')->executeDynamicOnly();
+		
+		getSession()->close();
+		
+		getSession()->open(getFactory()->getObject('User')->getExact($user_id));
+
+		$installation_factory = InstallationFactory::getFactory();
+		    
+		$clear_cache_action = new ClearCache();
+		    
+		$clear_cache_action->install();
+		
+		return true;
+	}
+ 	
+ 	protected function createUser( $name, $login, $email )
+ 	{
+ 		return getFactory()->getObject('User')->add_parms(
+ 				array (
+ 						'Caption' => $name,
+ 						'Login' => $login,
+ 						'Email' => $email,
+ 						'Password' => $login,
+ 						'IsAdmin' => 'Y'
+ 				)
+ 		);
+ 	}
+ 	
+ 	protected function updateSystemSettings()
+ 	{
+ 		getFactory()->getObject('cms_SystemSettings')->getAll()->modify(
+ 				array (
+ 						'Caption' => 'Devprom SDK',
+ 						'EmailSender' => 'admin',
+ 						'AdminEmail' => 'Administrator',
+ 						'ServerName' => EnvironmentSettings::getServerName(),
+ 						'ServerPort' => 80
+ 				)
+ 		);
+ 	}
+}

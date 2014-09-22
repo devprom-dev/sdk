@@ -1,0 +1,59 @@
+#!/usr/bin/env php
+<?php
+
+// if you don't want to setup permissions the proper way, just uncomment the following PHP line
+// read http://symfony.com/doc/current/book/installation.html#configuration-and-setup for more information
+//umask(0000);
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use Doctrine\Common\Annotations\AnnotationRegistry;
+
+$loader = require __DIR__ . '/../ext/vendor/autoload.php';
+
+AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
+
+$input = new ArgvInput();
+
+$dbname = $input->getParameterOption('--dbname', 'devprom');
+
+putenv('DB_NAME='.$dbname);
+
+// defining environment and including required files
+
+define('SERVER_ROOT_PATH', dirname(__FILE__).'/../');
+
+$document_root = rtrim($input->getParameterOption('--document-root', $_SERVER['DOCUMENT_ROOT'] != '' ? $_SERVER['DOCUMENT_ROOT'] : SERVER_ROOT_PATH),'/\\').'/';
+
+define('DOCUMENT_ROOT', $document_root); 
+
+define('CACHE_PATH', DOCUMENT_ROOT.'cache');
+
+include(DOCUMENT_ROOT . 'settings.php');
+
+include(SERVER_ROOT_PATH . 'classes.php');
+
+// let's remove custom keys from ArgInput
+foreach ($_SERVER['argv'] as $k => $v) 
+{
+    if (preg_match('/\-\-dbname/', strtolower($v))) {
+        unset($_SERVER['argv'][$k]);
+    }
+
+    if (preg_match('/\-\-document\-root/', strtolower($v))) {
+        unset($_SERVER['argv'][$k]);
+    }
+}
+
+// loading kernel
+$input = new ArgvInput();
+
+require_once __DIR__.'/../app/Devprom/Component/HttpKernel/ServiceDeskAppKernel.php';
+
+$env = $input->getParameterOption(array('--env', '-e'), getenv('SYMFONY_ENV') ?: 'dev');
+
+$debug = getenv('SYMFONY_DEBUG') !== '0' && !$input->hasParameterOption(array('--no-debug', '')) && $env !== 'prod'; 
+
+$kernel = new ServiceDeskAppKernel($env, $debug);
+$application = new Application($kernel);
+$application->run($input);

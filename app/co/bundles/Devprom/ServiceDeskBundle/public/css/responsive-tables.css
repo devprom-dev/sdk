@@ -1,0 +1,70 @@
+/*
+ Original solution: http://elvery.net/demo/responsive-tables/#no-more-tables
+*/
+
+@media only screen and (max-width: 630px) {
+
+    /* Force table to not be like tables anymore */
+    .responsive-table table,
+    .responsive-table thead,
+    .responsive-table tbody,
+    .responsive-table th,
+    .responsive-table td,
+    .responsive-table tr
+    {
+        display: block;
+    }
+
+    .responsive-table td.hidden-xs,
+    .responsive-table td.hidden-sm,
+    .responsive-table th.hidden-xs,
+    .responsive-table th.hidden-sm
+    {
+        display: block !important;
+    }
+
+    .responsive-table .table-striped tbody>tr:nth-child(odd)>td {
+        background-color: transparent;
+    }
+
+    /* Hide table headers (but not display: none;, for accessibility) */
+    .responsive-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .responsive-table tr {
+        padding: 19px 20px 20px;
+        margin-top: 20px;
+        background-color: rgba(51, 51, 51, 0.25)
+    }
+
+    .responsive-table td {
+        /* Behave  like a "row" */
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 35% !important;
+        white-space: normal;
+        text-align:left;
+    }
+
+    .responsive-table td:before {
+        /* Now like a table header */
+        position: absolute;
+        /* Top/left values mimic padding */
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align:left;
+        font-weight: bold;
+    }
+
+    /*
+    Label the data
+    */
+    .responsive-table td:before { content: attr(data-title); }
+}

@@ -1,0 +1,89 @@
+{% extends '::base.html.twig' %}
+
+{% block title %}
+    {% trans %} security.title {% endtrans %}
+{% endblock %}
+
+{% block body -%}
+
+        <nav id="sidebar" class="sidebar nav-collapse collapse visible-xs">
+            <ul id="side-nav" class="side-nav">
+                <li {% if app.request.get('_route') == 'issue_list' %}class='active'{% endif %}>
+                    <a href="{{ path('issue_list') }}"><i class="icon-home"></i> <span class="name">{{ 'index.title'|trans }}</span></a>
+                </li>
+                <li class="{% if app.request.get('_route') == 'issue_new' %} active{% endif %}">
+                    <a href="{{ url('issue_new') }}"><i class="icon-plus-sign-alt"></i> <span class="name">{{ 'issue.add'|trans }}</span></a>
+                </li>
+                <li>
+                    <a href="{{ path('fos_user_security_logout') }}">
+                        <i class="icon-signout"></i> <span class="name">{{ 'layout.logout'|trans({}, 'FOSUserBundle') }}</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    <div class="wrap">
+        <header class="page-header">
+            <div class="navbar">
+                <ul class="nav navbar-nav navbar-right pull-right">
+                    {% include 'Common/language_selector.html.twig' %}
+
+                    {% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+                        <li>
+                            <p class="navbar-text">
+                                <span class="icon-user"></span> {{ app.user.username }}
+                            </p>
+                        </li>
+                        <li class="hidden-xs">
+                            <a class="navbar-link" href="{{ path('fos_user_security_logout') }}" title="{{ 'layout.logout'|trans({}, 'FOSUserBundle') }}" id="logout-link">
+                                <span class="icon-signout"></span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{{ path('fos_user_security_login') }}" class="active">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a>
+                        </li>
+                        <li>
+                            <a href="{{ path('fos_user_registration_register') }}" id="register-link">{{ 'layout.register'|trans({}, 'FOSUserBundle') }}</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="visible-xs">
+                        <a href="#"
+                           class="btn-navbar"
+                           data-toggle="collapse"
+                           data-target=".sidebar"
+                           title="">
+                            <i class="icon-reorder"></i>
+                        </a>
+                    </li>
+                </ul>
+                <div class="nav-divider pull-right hidden-xs">&nbsp;</div>
+
+                <div class="pull-left hidden-xxxs">
+                    <a class="btn btn-lg btn-default navbar-btn" id="home-link" title="{{ 'index.title'|trans }}" href="{{ url('issue_list') }}">
+                        <i class="icon-home"></i> <span class="hidden-xs">{{ 'index.title'|trans }}</span>
+                    </a>
+                    <button class="btn btn-lg btn-success navbar-btn" title="{{ 'issue.add'|trans }}" onclick="window.location='{{ url('issue_new') }}';">
+                        <i class="icon-plus"></i> <span class="hidden-xxs">{{ 'issue.add'|trans }}</span>
+                    </button>
+                </div>
+            </div>
+            <div class="centered">
+                {% for key, messages in app.session.flashbag.all() %}
+                    {% for key, message in messages %}
+                        <div class="alert alert-info flash">
+                            <a href="#" class="close" data-dismiss="alert">&times;</a>
+                            {{ message|trans }}
+                        </div>
+                    {%  endfor %}
+                {% endfor %}
+            </div>
+
+        </header>
+
+        <div class="content container">
+            {% block content %}{% endblock %}
+        </div> <!-- /container -->
+    </div> <!-- /wrap -->
+{% endblock %}

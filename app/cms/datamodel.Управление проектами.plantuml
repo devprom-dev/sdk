@@ -1,0 +1,336 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_Bug" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+  Priority: INTEGER
+  Environment: INTEGER
+  Release: INTEGER
+  Build: INTEGER
+  ChangeRequest: INTEGER
+  Requirement: INTEGER
+  Attachment: FILE
+  State: TEXT
+  Submitter: INTEGER
+  Project: INTEGER
+  IsPlanned: CHAR
+  Test: INTEGER
+  TestCaseExecution: INTEGER
+}
+
+class "pm_Enhancement" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+  Priority: INTEGER
+  ChangeRequest: INTEGER
+  Requirement: INTEGER
+  Submitter: INTEGER
+  Attachment: FILE
+  Project: INTEGER
+  IsPlanned: CHAR
+  TestCaseExecution: INTEGER
+}
+
+class "Задача" << TABLE >> {
+}
+
+class "pm_Meeting" << TABLE >> {
+  Subject: LARGETEXT
+  Agenda: RICHTEXT
+  Location: TEXT
+  MeetingDate: DATE
+  MeetingTime: TEXT
+  RememberInterval: INTEGER
+}
+
+class "MeetingParticipation" << TABLE >> {
+  Meeting: INTEGER
+  Participant: INTEGER
+  Comments: LARGETEXT
+  Подтверждено: CHAR
+  Rejected: CHAR
+  RejectReason: LARGETEXT
+  RememberInterval: INTEGER
+}
+
+class "pm_TaskState" << TABLE >> {
+  Caption: VARCHAR
+}
+
+class "pm_ProjectCreation" << TABLE >> {
+  IPAddress: TEXT
+  Project: INTEGER
+  CodeName: TEXT
+  Language: TEXT
+  Caption: VARCHAR
+  Login: TEXT
+  Email: TEXT
+  Password: TEXT
+  Methodology: TEXT
+  CreationHash: TEXT
+  Language: TEXT
+  Access: TEXT
+  SystemUser: INTEGER
+}
+
+class "pm_ProjectUse" << TABLE >> {
+  Project: INTEGER
+  Participant: INTEGER
+  SessionHash: TEXT
+  PrevLoginDate: DATE
+  Timezone: VARCHAR
+}
+
+class "pm_Help" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  Version: VARCHAR
+  Content: INTEGER
+  Project: INTEGER
+}
+
+class "HelpLink" << TABLE >> {
+}
+
+class "pm_HelpDeactReason" << TABLE >> {
+  HelpLink: INTEGER
+  Task: INTEGER
+  IsActive: CHAR
+}
+
+class "pm_PublicInfo" << TABLE >> {
+  Project: INTEGER
+  IsProjectInfo: CHAR
+  IsChangeRequests: CHAR
+  IsParticipants: CHAR
+  IsBlog: CHAR
+  IsKnowledgeBase: CHAR
+  IsReleases: CHAR
+  IsPublicDocumentation: CHAR
+  IsPublicArtefacts: CHAR
+}
+
+class "TemplateHTML" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+  CSSBlock: LARGETEXT
+  Header: LARGETEXT
+  Footer: LARGETEXT
+  HeaderContents: CHAR
+  SectionNumbers: CHAR
+}
+
+class "pm_BuildTask" << TABLE >> {
+  Build: INTEGER
+  Task: INTEGER
+}
+
+class "pm_RequestTag" << TABLE >> {
+  Request: INTEGER
+  Tag: INTEGER
+}
+
+class "pm_Configuration" << TABLE >> {
+  Caption: VARCHAR
+  Details: RICHTEXT
+}
+
+class "pm_NewsChannel" << TABLE >> {
+  Caption: VARCHAR
+  Description: TEXT
+  RssLink: TEXT
+  Language: INTEGER
+  IsPublic: CHAR
+}
+
+class "pm_NewsChannelItem" << TABLE >> {
+  Caption: VARCHAR
+  Description: TEXT
+  HtmlLink: TEXT
+  NewsChannel: INTEGER
+}
+
+class "pm_NewsChannelSubscription" << TABLE >> {
+  NewsChannel: INTEGER
+  Project: INTEGER
+}
+
+class "pm_Scrum" << TABLE >> {
+  WasYesterday: RICHTEXT
+  WhatToday: RICHTEXT
+  CurrentProblems: RICHTEXT
+  Participant: INTEGER
+}
+
+class "pm_MeetingParticipant" << TABLE >> {
+  Meeting: INTEGER
+  Participant: INTEGER
+  Accepted: CHAR
+  Rejected: FLOAT
+  RejectReason: FLOAT
+  RememberInterval: INTEGER
+}
+
+class "pm_ReleaseNote" << TABLE >> {
+  Release: INTEGER
+  ChangeRequest: INTEGER
+  Content: LARGETEXT
+}
+
+class "pm_TestScenarioReqLink" << TABLE >> {
+}
+
+class "pm_Poll" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  IsPublic: CHAR
+}
+
+class "pm_PollItem" << TABLE >> {
+  Caption: VARCHAR
+  Answers: LARGETEXT
+  IsSection: CHAR
+  Poll: INTEGER
+}
+
+class "pm_PollResult" << TABLE >> {
+  Poll: INTEGER
+  User: INTEGER
+  IsCurrent: CHAR
+  CommitDate: DATE
+  AnonymousHash: TEXT
+}
+
+class "pm_PollItemResult" << TABLE >> {
+  PollItem: INTEGER
+  PollResult: INTEGER
+  Answer: LARGETEXT
+}
+
+class "pm_RequirementState" << TABLE >> {
+  Caption: VARCHAR
+}
+
+class "pm_ProjectTag" << TABLE >> {
+  Caption: VARCHAR
+  Project: INTEGER
+}
+
+class "pm_Vacancy" << TABLE >> {
+  Caption: VARCHAR
+  Project: INTEGER
+  IsActive: CHAR
+  RequiredWorkload: INTEGER
+  PriceOfHour: TEXT
+  Description: RICHTEXT
+  Requirements: RICHTEXT
+}
+
+class "pm_Invitation" << TABLE >> {
+  Project: INTEGER
+  Author: INTEGER
+  Addressee: TEXT
+}
+
+class "pm_DownloadAction" << TABLE >> {
+  Caption: VARCHAR
+  ObjectId: INTEGER
+  EntityRefName: TEXT
+}
+
+class "pm_DownloadActor" << TABLE >> {
+  SystemUser: INTEGER
+  DownloadAction: INTEGER
+}
+
+class "pm_Currency" << TABLE >> {
+  Caption: VARCHAR
+  CodeName: TEXT
+}
+
+class "pm_BugetSettings" << TABLE >> {
+  Project: INTEGER
+  IsBugetUsed: CHAR
+  Currency: INTEGER
+  PaymentModel: INTEGER
+  HideParticipantsCost: CHAR
+}
+
+class "pm_PaymentModel" << TABLE >> {
+  Caption: VARCHAR
+}
+
+class "BlogPostChange" << TABLE >> {
+  BlogPost: INTEGER
+  Content: LARGETEXT
+  SystemUser: INTEGER
+}
+
+class "pm_CalendarInterval" << TABLE >> {
+  Kind: TEXT
+  StartDate: DATE
+  FinishDate: DATE
+  IntervalYear: INTEGER
+  IntervalMonth: INTEGER
+  IntervalDay: INTEGER
+  Caption: VARCHAR
+  IntervalQuarter: INTEGER
+  IntervalWeek: INTEGER
+}
+
+"pm_Bug" << TABLE >> "*" -- "1" "Priority" << TABLE >> : Priority
+"pm_Bug" << TABLE >> "*" -- "0..1" "pm_Environment" << TABLE >> : Environment
+"pm_Bug" << TABLE >> "*" -- "1" "pm_Release" << TABLE >> : Release
+"pm_Bug" << TABLE >> "*" -- "0..1" "pm_Build" << TABLE >> : Build
+"pm_Bug" << TABLE >> "*" -- "0..1" "pm_ChangeRequest" << TABLE >> : ChangeRequest
+"pm_Bug" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : Requirement
+"pm_Bug" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Submitter
+"pm_Bug" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Bug" << TABLE >> "*" -- "0..1" "pm_Test" << TABLE >> : Test
+"pm_Bug" << TABLE >> "*" -- "0..1" "pm_TestCaseExecution" << TABLE >> : TestCaseExecution
+"pm_Enhancement" << TABLE >> "*" -- "1" "Priority" << TABLE >> : Priority
+"pm_Enhancement" << TABLE >> "*" -- "0..1" "pm_ChangeRequest" << TABLE >> : ChangeRequest
+"pm_Enhancement" << TABLE >> "*" -- "0..1" "WikiPage" << TABLE >> : Requirement
+"pm_Enhancement" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Submitter
+"pm_Enhancement" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Enhancement" << TABLE >> "*" -- "0..1" "pm_TestCaseExecution" << TABLE >> : TestCaseExecution
+"MeetingParticipation" << TABLE >> "*" -- "1" "pm_Meeting" << TABLE >> : Meeting
+"MeetingParticipation" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Participant
+"pm_ProjectCreation" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_ProjectCreation" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"pm_ProjectUse" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_ProjectUse" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Participant
+"pm_Help" << TABLE >> "*" -- "0..1" "WikiPage" << TABLE >> : Content
+"pm_Help" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_HelpDeactReason" << TABLE >> "*" -- "0..1" "HelpLink" << TABLE >> : HelpLink
+"pm_HelpDeactReason" << TABLE >> "*" -- "0..1" "pm_Task" << TABLE >> : Task
+"pm_PublicInfo" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_BuildTask" << TABLE >> "*" -- "1" "pm_Build" << TABLE >> : Build
+"pm_BuildTask" << TABLE >> "*" -- "1" "pm_Task" << TABLE >> : Task
+"pm_RequestTag" << TABLE >> "*" -- "1" "pm_ChangeRequest" << TABLE >> : Request
+"pm_RequestTag" << TABLE >> "*" -- "1" "Tag" << TABLE >> : Tag
+"pm_NewsChannel" << TABLE >> "*" -- "1" "cms_Language" << TABLE >> : Language
+"pm_NewsChannelItem" << TABLE >> "*" -- "1" "pm_NewsChannel" << TABLE >> : NewsChannel
+"pm_NewsChannelSubscription" << TABLE >> "*" -- "1" "pm_NewsChannel" << TABLE >> : NewsChannel
+"pm_NewsChannelSubscription" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Scrum" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Participant
+"pm_MeetingParticipant" << TABLE >> "*" -- "1" "pm_Meeting" << TABLE >> : Meeting
+"pm_MeetingParticipant" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Participant
+"pm_ReleaseNote" << TABLE >> "*" -- "1" "pm_Release" << TABLE >> : Release
+"pm_ReleaseNote" << TABLE >> "*" -- "1" "pm_ChangeRequest" << TABLE >> : ChangeRequest
+"pm_PollItem" << TABLE >> "*" -- "1" "pm_Poll" << TABLE >> : Poll
+"pm_PollResult" << TABLE >> "*" -- "1" "pm_Poll" << TABLE >> : Poll
+"pm_PollResult" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : User
+"pm_PollItemResult" << TABLE >> "*" -- "1" "pm_PollItem" << TABLE >> : PollItem
+"pm_PollItemResult" << TABLE >> "*" -- "1" "pm_PollResult" << TABLE >> : PollResult
+"pm_ProjectTag" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Vacancy" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Invitation" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Invitation" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Author
+"pm_DownloadActor" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"pm_DownloadActor" << TABLE >> "*" -- "1" "pm_DownloadAction" << TABLE >> : DownloadAction
+"pm_BugetSettings" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_BugetSettings" << TABLE >> "*" -- "1" "pm_Currency" << TABLE >> : Currency
+"pm_BugetSettings" << TABLE >> "*" -- "1" "pm_PaymentModel" << TABLE >> : PaymentModel
+"BlogPostChange" << TABLE >> "*" -- "1" "BlogPost" << TABLE >> : BlogPost
+"BlogPostChange" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser

@@ -1,0 +1,7 @@
+{% extends "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
+
+{% block body %}
+    {% autoescape false %}
+    {{ 'registration.email.message'|trans({'%login%': login, '%password%': password, '%clientName%': client_name, '%link%' : site_url}, 'emails')|convert_encoding('UTF-8', 'windows-1251') }}
+    {% endautoescape %}
+{% endblock body %}

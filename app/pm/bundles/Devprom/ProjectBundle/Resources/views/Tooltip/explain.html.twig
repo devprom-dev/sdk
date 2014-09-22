@@ -1,0 +1,15 @@
+{% for page in pages %}
+{{ page.title }}
+<br/>
+<br/>
+{{ page.ref | raw }}
+<br/>
+{{ page.date }}, {{ page.author }}
+<br/>
+<br/>
+{% endfor %}
+
+<div class="alert">
+{{ description }}
+<img src="/images/exclamation.png" style="margin-bottom:3px;">
+</div>

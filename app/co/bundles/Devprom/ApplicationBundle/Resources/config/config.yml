@@ -1,0 +1,10 @@
+framework:
+    #esi:            ~
+    secret:          123
+    router:
+        resource: "config/routing.yml"
+        strict_requirements: false
+    csrf_protection: false
+    validation:      { enable_annotations: true }
+    templating:
+        engines: ['twig','php']

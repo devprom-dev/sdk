@@ -1,0 +1,78 @@
+imports:
+    - { resource: parameters.yml }
+    - { resource: services.yml }
+    - { resource: security.yml }
+
+framework:
+    #esi:             ~
+    translator:
+      fallback: "ru"
+      enabled: true
+    secret:          %secret%
+    router:
+        resource: "%kernel.root_dir%/Resources/config/routing.yml"
+        strict_requirements: %kernel.debug%
+    form:            ~
+    csrf_protection: ~
+    validation:      { enable_annotations: true }
+    templating:
+        engines: ['twig']
+        #assets_version: SomeVersionScheme
+    default_locale:  %systemLanguage%
+    trusted_proxies: ~
+    session:
+            save_path: ~
+
+assetic:
+    bundles:        [ DevpromServiceDeskBundle, FOSUserBundle ]
+    use_controller: true
+
+# Doctrine Configuration
+doctrine:
+    dbal:
+        driver:   %database_driver%
+        host:     %DB_HOST%
+        port:     %database_port%
+        dbname:   %DB_NAME%
+        user:     %DB_USER%
+        password: %DB_PASS%
+        charset:  cp1251
+        driver_class: Devprom\CommonBundle\Doctrine\DBAL\Driver\PDOMySql\Driver
+        wrapper_class: Devprom\CommonBundle\Doctrine\DBAL\Connection
+        types:
+            datetime: Devprom\CommonBundle\Doctrine\DBAL\Type\UTCDateTimeType
+        options:
+            x_reconnect_attempts: 10
+    orm:
+        auto_generate_proxy_classes: %kernel.debug%
+        auto_mapping: true
+
+twig:
+    form:
+        resources:
+            - DevpromServiceDeskBundle:Form:fields.html.twig
+
+# Swiftmailer Configuration
+swiftmailer:
+    transport:  smtp
+    host:       %mailer_host%
+    username:   %mailer_user%
+    password:   %mailer_password%
+    port:       %mailer_port%
+    encryption: %mailer_encryption%
+    spool:      { type: memory }
+
+monolog:
+    handlers:
+        applog:
+            type: rotating_file
+            path: "%kernel.logs_dir%/servicedesk_system.log"
+            level: debug
+            max_files: 5 # Set up to keep log files for 5 recent days only
+            channels: [!mail]
+        mail:
+            type: rotating_file
+            path: "%kernel.logs_dir%/servicedesk_mail.log"
+            level: debug
+            max_files: 5
+            channels: [mail]

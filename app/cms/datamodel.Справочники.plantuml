@@ -1,0 +1,32 @@
+!define TABLE (T,#FFAAAA)
+
+class "Priority" << TABLE >> {
+  Caption: VARCHAR
+  RelatedColor: COLOR
+}
+
+class "ObjectChangeLog" << TABLE >> {
+  Caption: VARCHAR
+  ClassName: VARCHAR
+  ObjectId: INTEGER
+  EntityRefName: TEXT
+  ObjectUrl: TEXT
+  EntityName: TEXT
+  ChangeKind: TEXT
+  Content: LARGETEXT
+  Author: TEXT
+  VisibilityLevel: INTEGER
+  SystemUser: INTEGER
+}
+
+class "pm_ProjectTemplate" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  FileName: TEXT
+  Language: INTEGER
+  IsDefault: CHAR
+  ProductEdition: TEXT
+}
+
+"ObjectChangeLog" << TABLE >> "*" -- "0..1" "cms_User" << TABLE >> : SystemUser
+"pm_ProjectTemplate" << TABLE >> "*" -- "1" "cms_Language" << TABLE >> : Language

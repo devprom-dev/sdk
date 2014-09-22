@@ -1,0 +1,25 @@
+{% extends '::content.html.twig' %}
+
+{% block title %}
+    {% trans %} new.title {% endtrans %}
+{% endblock %}
+
+{% block content -%}
+    <h2 class="page-title">{{ 'new.title'|trans }}</h2>
+    <section class="widget">
+
+        <div class="body">
+            <form role="form" class="form-horizontal" action="{{ path('issue_create') }}" method="POST" {{ form_enctype(form) }}>
+                {{ form_widget(form) }}
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{{ 'issue.create'|trans }}</button>
+                    <a class="btn btn-default" href="{{ path('issue_list') }}">{{ 'issue.cancel'|trans }}</a>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+{% endblock %}

@@ -1,0 +1,65 @@
+!define TABLE (T,#FFAAAA)
+
+class "Comment" << TABLE >> {
+  Caption: LARGETEXT
+  AuthorId: INTEGER
+  ObjectId: INTEGER
+  ObjectClass: TEXT
+  PrevComment: INTEGER
+  ExternalAuthor: TEXT
+  ExternalEmail: TEXT
+}
+
+class "Tag" << TABLE >> {
+  Caption: VARCHAR
+  Owner: INTEGER
+}
+
+class "pm_Attachment" << TABLE >> {
+  File: FILE
+  Description: LARGETEXT
+  ObjectId: INTEGER
+  ObjectClass: TEXT
+}
+
+class "cms_Snapshot" << TABLE >> {
+  ObjectId: TEXT
+  ObjectClass: TEXT
+  Caption: VARCHAR
+  SystemUser: INTEGER
+  ListName: TEXT
+  Type: TEXT
+  Description: LARGETEXT
+}
+
+class "cms_SnapshotItem" << TABLE >> {
+  Snapshot: INTEGER
+  ObjectId: INTEGER
+  ObjectClass: TEXT
+}
+
+class "cms_SnapshotItemValue" << TABLE >> {
+  SnapshotItem: INTEGER
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+  Value: TEXT
+}
+
+class "cms_IdsHash" << TABLE >> {
+  HashKey: TEXT
+  Ids: RICHTEXT
+}
+
+class "pm_CustomTag" << TABLE >> {
+  Tag: INTEGER
+  ObjectId: INTEGER
+  ObjectClass: VARCHAR
+}
+
+"Comment" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : AuthorId
+"Comment" << TABLE >> "*" -- "0..1" "Comment" << TABLE >> : PrevComment
+"Tag" << TABLE >> "*" -- "0..1" "pm_Participant" << TABLE >> : Owner
+"cms_Snapshot" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"cms_SnapshotItem" << TABLE >> "*" -- "1" "cms_Snapshot" << TABLE >> : Snapshot
+"cms_SnapshotItemValue" << TABLE >> "*" -- "1" "cms_SnapshotItem" << TABLE >> : SnapshotItem
+"pm_CustomTag" << TABLE >> "*" -- "1" "Tag" << TABLE >> : Tag

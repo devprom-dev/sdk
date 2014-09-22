@@ -1,0 +1,19 @@
+{% block subject %}
+    {{ 'issue.updated.subject'|trans({ '%id%' : issue.id }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+{% endblock subject %}
+
+{% block body_html %}
+    {% set issueLink %}{{ url("issue_show", { "id": issue.id }) }}{% endset %}
+
+    {% embed "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
+        {% block body %}
+            {% autoescape false %}
+            {{ 'issue.updated.body'|trans({
+                '%title%' : issue.caption,
+                '%link%' : issueLink,
+                '%changes%' : changes,
+            }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+            {% endautoescape %}
+        {% endblock body %}
+    {% endembed %}
+{% endblock body_html %}

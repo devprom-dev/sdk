@@ -1,0 +1,97 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_Participant" << TABLE >> {
+  SystemUser: INTEGER
+  Caption: VARCHAR
+  Capacity: INTEGER
+  OverrideUser: CHAR
+  Email: TEXT
+  ICQNumber: TEXT
+  Skype: TEXT
+  HomePhone: TEXT
+  MobilePhone: TEXT
+  Login: TEXT
+  Project: INTEGER
+  IsActive: CHAR
+  Salary: FLOAT
+}
+
+class "pm_ParticipantRole" << TABLE >> {
+  Participant: INTEGER
+  Capacity: FLOAT
+  Project: INTEGER
+  ProjectRole: INTEGER
+}
+
+class "pm_Project" << TABLE >> {
+  Caption: VARCHAR
+  CodeName: TEXT
+  Description: RICHTEXT
+  Language: INTEGER
+  Platform: LARGETEXT
+  IsConfigurations: CHAR
+  MainWikiPage: INTEGER
+  RequirementsWikiPage: INTEGER
+  StartDate: DATE
+  FinishDate: DATE
+  IsClosed: CHAR
+  Blog: INTEGER
+  Tools: LARGETEXT
+  Rating: FLOAT
+  IsTender: CHAR
+  IsSubversionUsed: CHAR
+  IsFileServer: CHAR
+  HasMeetings: CHAR
+  IsPollUsed: CHAR
+  IsKnowledgeUsed: CHAR
+  IsBlogUsed: CHAR
+  WikiEditorClass: TEXT
+  DaysInWeek: INTEGER
+}
+
+class "pm_ProjectRole" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  ReferenceName: VARCHAR
+  ProjectRoleBase: INTEGER
+}
+
+class "pm_UserMail" << TABLE >> {
+  ToParticipant: INTEGER
+  Subject: LARGETEXT
+  Content: LARGETEXT
+  FromParticipant: INTEGER
+}
+
+class "pm_Question" << TABLE >> {
+  Content: RICHTEXT
+  Author: INTEGER
+  State: TEXT
+}
+
+class "cms_Report" << TABLE >> {
+  Caption: VARCHAR
+  Description: TEXT
+  Url: TEXT
+  Category: INTEGER
+}
+
+class "cms_ReportCategory" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+}
+
+"pm_Participant" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"pm_Participant" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_ParticipantRole" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Participant
+"pm_ParticipantRole" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_ParticipantRole" << TABLE >> "*" -- "1" "pm_ProjectRole" << TABLE >> : ProjectRole
+"pm_Project" << TABLE >> "*" -- "0..1" "cms_Language" << TABLE >> : Language
+"pm_Project" << TABLE >> "*" -- "0..1" "WikiPage" << TABLE >> : MainWikiPage
+"pm_Project" << TABLE >> "*" -- "0..1" "WikiPage" << TABLE >> : RequirementsWikiPage
+"pm_Project" << TABLE >> "*" -- "1" "Blog" << TABLE >> : Blog
+"pm_ProjectRole" << TABLE >> "*" -- "1" "pm_ProjectRole" << TABLE >> : ProjectRoleBase
+"pm_UserMail" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : ToParticipant
+"pm_UserMail" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : FromParticipant
+"pm_Question" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Author
+"cms_Report" << TABLE >> "*" -- "1" "cms_ReportCategory" << TABLE >> : Category

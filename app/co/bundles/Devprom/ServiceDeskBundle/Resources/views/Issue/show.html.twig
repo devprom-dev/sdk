@@ -1,0 +1,155 @@
+{% extends '::content.html.twig' %}
+
+{% import "DevpromServiceDeskBundle:Common:macros.html.twig" as macro %}
+
+{% block title %}
+    [I-{{ issue.id }}] {{ issue.caption }}
+{% endblock %}
+
+{% block content -%}
+    <section class="widget">
+        <h2 class="page-title"><strong><a href="{{ url('issue_show', { 'id': issue.id }) }}">[I-{{ issue.id }}]</a></strong>
+            <span id="issue-title">{{ issue.caption|unescapeHtml }}</span></h2>
+        <div class="body">
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="edit-issue-button"
+                        onclick="window.location='{{ url('issue_edit', { 'id': issue.id }) }}';">
+                    <i class="glyphicon glyphicon-edit"></i>
+                    {{ 'issue.edit'|trans }}
+                </button>
+                <button type="button" class="btn btn-primary" id="add-attachment-button"
+                        onclick="window.location='{{ url('attachment', { 'issueId' : issue.id }) }}';">
+                    <i class="glyphicon glyphicon-paperclip"></i>
+                    {{ 'issue.add.attachment'|trans }}
+                </button>
+                <button type="button" class="btn btn-primary" id="add-attachment-button"
+                        onclick="window.location='{{ url('issue_show', { 'id' : issue.id }) }}#comment-form';">
+                    <i class="glyphicon glyphicon-comment"></i>
+                    {{ 'issue.add.comment'|trans }}
+                </button>
+            </div>
+
+            <div class="clearfix"><br></div>
+
+            <div class="well">
+                <div class="body row">
+                    <div class="col-sm-8">
+                    	{% if issue.stateComment.comment != "" %}
+                    	<p id="issue-state-comment">
+                    		{{ 'issue.state.comment'|trans }}<br/><br/>
+                    	    {% autoescape false %}{{ issue.stateComment.comment|unescapeHtml }}{% endautoescape %}
+                    	    <br/><br/>{{ 'issue.original.title'|trans }}
+                    	</p> 
+                    	{% endif %}
+                        <p id="issue-description">{% autoescape false %}{{ issue.description|unescapeHtml }}{% endautoescape %}</p>
+                    </div> <!-- /col-sm-8 -->
+
+                    <div class="col-sm-4">
+                        <div class="well">
+                        <table class="table">
+                            <tr>
+                                <td>{{ 'issue_issueType'|trans }}</td>
+                                <td class="issue_issueType">{{ issue.issueType.name|trans }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ 'issue_product'|trans }}</td>
+                                <td class="issue_product">{{ issue.product|unescapeHtml }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ 'issue_state'|trans }}</td>
+                                <td class="issue_state">{{ issue.state.name|trans }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ 'issue_priority'|trans }}</td>
+                                <td class="issue_priority">
+                                    {{ macro.priority_badge(issue.priority.name|trans, issue.priority.id) }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>{{ 'issue_assignedTo'|trans }}</td>
+                                <td class="issue_assignedTo">{{ issue.assignedTo }}</td>
+                            </tr>
+                            <tr>
+                                <td>{{ 'issue_createdAt'|trans }}</td>
+                                <td class="issue_createdAt">{{ issue.createdAt|date('Y-m-d H:i:s') }}</td>
+                            </tr>
+                        </table>
+                        </div>
+                    </div>  <!-- /col-sm-4 -->
+                </div> <!-- /row -->
+            </div> <!-- /widget -->
+
+            <section class="well" id="issue-attachments">
+                <header>
+                    <h4>
+                        <i class="eicon-attach"></i>
+                        {{ 'issue_attachments'|trans }}
+                    </h4>
+                </header>
+                <div class="body">
+                    <ul>
+                        {% for attachment in issue.attachments %}
+                            <li>
+                                <a href="{{ path('attachment_download', { 'attachmentId' : attachment.id }) }}">{{ attachment.originalFilename }}</a>
+                                <a href="{{ path('attachment_delete', { 'attachmentId' : attachment.id }) }}" title="{{ 'issue.delete.attachment'|trans }}">
+                                    <span class="glyphicon glyphicon-remove"></span></a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <br>
+                    <button type="button" class="btn btn-sm btn-primary" id="add-attachment-button"
+                            onclick="window.location='{{ url('attachment', { 'issueId' : issue.id }) }}';">
+                        <i class="glyphicon glyphicon-paperclip"></i>
+                        {{ 'issue.add.attachment'|trans }}
+                    </button>
+                </div>
+            </section>
+
+
+            <section class="well" id="comments">
+                <header>
+                    <h4>
+                        <i class="eicon-chat"></i>
+                        {{ 'issue_comments'|trans }}
+                    </h4>
+                </header>
+                <div class="body">
+                    <div id="chat" class="chat">
+                        <div id="chat-messages" class="chat-messages">
+                            {% for comment in issue.comments %}
+                                <div class="chat-message">
+                                    <div class="sender pull-left">
+                                        {% autoescape false %}{{ comment.author }}{% endautoescape %}
+                                        <div class="time">
+                                            {{ comment.createdAt|date('d.m.Y H:i') }}
+                                        </div>
+                                    </div>
+
+                                    <div class="chat-message-body">
+                                        <span class="arrow"></span>
+                                        <div class="text">
+                                            {% autoescape false %}{{ comment.text|unescapeHtml }}{% endautoescape %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <footer class="chat-footer row" id="comment-form">
+                            <form role="form" class="form-horizontal" action="{{ path('issue_add_comment', { 'issueId' : issue.id }) }}" method="post" {{ form_enctype(comment_form) }}>
+                                <div class="col-xs-9">
+                                    <textarea id="form_text" name="form[text]" required="required" placeholder="{{ 'issue.comment.prompt'|trans }}" class="form-control input-transparent textarea-sm"></textarea>
+                                    {{ form_widget(comment_form._token) }}
+                                </div>
+                                <div class="col-xs-3">
+                                    <button type="submit" id="new-message-btn" class="btn btn-primary btn-block">{{ 'issue.comment.add'|trans }}</button>
+                                </div>
+                            </form>
+                        </footer>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+{% endblock %}

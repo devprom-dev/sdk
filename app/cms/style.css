@@ -1,0 +1,20 @@
+body {background:white;margin-top:0pt;margin-bottom:0pt;margin-left:0pt;margin-right:0pt;font-family:verdana;}
+td {font-family:verdana;font-size:9pt;line-height:145%;}
+table {border:0;font-family:verdana;font-size:8pt;cell-padding:0;cell-spacing:0;border-collapse:collapse;}
+select { font-family:verdana;font-size:8pt;border-style:groove; border:1px solid #d5d5df;
+		background:#f5f5f5;margin-top:2pt;width:75pt;height:16pt;}
+input { font-family:verdana;font-size:8pt;border-style:groove; border:1px solid #d5d5df;
+		background:#f5f5f5;margin-top:2pt;width:75pt;height:16pt;}
+textarea { font-family:verdana;font-size:9pt;line-height:145%;border-style:groove; border:1px solid #d5d5df;
+		background:#f5f5f5;margin-top:2pt;}
+form {margin-top:0pt;margin-bottom:0pt;}
+
+.formtable {background:#eaeaea;border:1px solid #d5d5df;margin-bottom:10pt;border-collapse:collapse;}
+.formtablerow {background:#f5f5f5;border:1px solid #d5d5df;padding:2pt;}
+.formtablebtn {background:#f8f8f8}
+.pageheader {height:20pt;border-bottom:1px dashed #d5d5df;margin-bottom:15pt;}
+
+.list_header {background:#D9CCF4;border:1px solid silver;padding:3pt;vertical-align:top;}
+.list_links {background:#ECD2FC;border:1px solid silver;padding:3pt;vertical-align:top;}
+.list_operations {background:#D6D8F8;border:1px solid silver;padding:3pt;vertical-align:top;}
+.list_cell {border:1px solid silver;padding:3pt;vertical-align:top;}

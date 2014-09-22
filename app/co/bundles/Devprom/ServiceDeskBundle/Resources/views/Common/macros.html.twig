@@ -1,0 +1,14 @@
+{% macro priority_badge(priorityName, priorityId) %}
+    {% if priorityId == 1 %}
+        {% set styleClass = 'badge-important' %}
+    {% elseif priorityId == 2 %}
+        {% set styleClass = 'badge-warning' %}
+    {% elseif priorityId == 3 %}
+        {% set styleClass = 'badge-info' %}
+    {% elseif priorityId == 4 %}
+        {% set styleClass = 'badge-success' %}
+    {% else %}
+        {% set styleClass = 'badge-default' %}
+    {% endif %}
+    <span class="badge {{ styleClass }}">{{ priorityName }}</span>
+{% endmacro %}

@@ -1,0 +1,182 @@
+!define TABLE (T,#FFAAAA)
+
+class "cms_MainMenu" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+}
+
+class "cms_Page" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+  PHPFile: TEXT
+  Menu: INTEGER
+  HelpId: INTEGER
+}
+
+class "News" << TABLE >> {
+  Content: LARGETEXT
+}
+
+class "Email" << TABLE >> {
+  Caption: VARCHAR
+  ToAddress: TEXT
+  FromAddress: TEXT
+  Body: LARGETEXT
+}
+
+class "ObjectEmailNotification" << TABLE >> {
+  Caption: VARCHAR
+  Header: LARGETEXT
+  RecordDescription: LARGETEXT
+  Footer: LARGETEXT
+  IsAdd: CHAR
+  IsModify: CHAR
+  IsDelete: CHAR
+  HeaderEn: LARGETEXT
+  FooterEn: LARGETEXT
+}
+
+class "ObjectEmailNotificationLink" << TABLE >> {
+  EmailNotification: INTEGER
+  EntityReferenceName: TEXT
+}
+
+class "AdvertiseBooks" << TABLE >> {
+  BookStore: TEXT
+  BookUIN: TEXT
+  Caption: VARCHAR
+  BookUrl: TEXT
+  ImageUrl: TEXT
+}
+
+class "Donation" << TABLE >> {
+  Caption: VARCHAR
+  WMZVolume: TEXT
+}
+
+class "BlogLink" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  BlogUrl: TEXT
+  Blog: INTEGER
+}
+
+class "BlogSubscriber" << TABLE >> {
+  Email: TEXT
+  Blog: INTEGER
+}
+
+class "cms_LinkCategory" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+}
+
+class "cms_Link" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+  Category: INTEGER
+  IsPublished: CHAR
+}
+
+class "cms_UserSettings" << TABLE >> {
+  User: INTEGER
+  Settings: TEXT
+  Value: TEXT
+}
+
+class "cms_BrowserTransitionLog" << TABLE >> {
+  UserId: TEXT
+  URL: LARGETEXT
+}
+
+class "cms_ClientInfo" << TABLE >> {
+  Caption: VARCHAR
+  Country: TEXT
+  City: TEXT
+}
+
+class "cms_SerializedObject" << TABLE >> {
+  SourceName: TEXT
+  ClassName: TEXT
+  EntityName: TEXT
+  OldObjectId: INTEGER
+  NewObjectId: INTEGER
+}
+
+class "cms_RemapObject" << TABLE >> {
+  EntityName: TEXT
+  ObjectId: INTEGER
+}
+
+class "cms_SynchronizationSource" << TABLE >> {
+  ReferenceUrl: TEXT
+  ServerName: TEXT
+  Author: INTEGER
+}
+
+class "cms_DeletedObject" << TABLE >> {
+  EntityName: TEXT
+  ObjectId: FLOAT
+}
+
+class "cms_UserLock" << TABLE >> {
+  EntityName: TEXT
+  ObjectId: INTEGER
+  IsActive: CHAR
+  SystemUser: INTEGER
+}
+
+class "cms_EmailNotification" << TABLE >> {
+  Caption: VARCHAR
+  CodeName: TEXT
+  Content: LARGETEXT
+}
+
+class "cms_NotificationSubscription" << TABLE >> {
+  Caption: VARCHAR
+  Notification: INTEGER
+  IsActive: CHAR
+}
+
+class "cms_LoginRetry" << TABLE >> {
+  SystemUser: INTEGER
+  RetryAmount: INTEGER
+}
+
+class "cms_CheckQuestion" << TABLE >> {
+  QuestionRussian: TEXT
+  QuestionEnglish: TEXT
+  Answer: TEXT
+  AnswerEnglish: TEXT
+}
+
+class "entity" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+  packageId: INTEGER
+  IsOrdered: CHAR
+  IsDictionary: CHAR
+}
+
+class "cms_PluginModule" << TABLE >> {
+  Caption: VARCHAR
+}
+
+class "cms_EntityCluster" << TABLE >> {
+  ObjectClass: TEXT
+  ObjectAttribute: TEXT
+  AttributeValue: TEXT
+  ObjectIds: LARGETEXT
+  TotalCount: INTEGER
+}
+
+"cms_Page" << TABLE >> "*" -- "1" "cms_MainMenu" << TABLE >> : Menu
+"ObjectEmailNotificationLink" << TABLE >> "*" -- "1" "ObjectEmailNotification" << TABLE >> : EmailNotification
+"BlogLink" << TABLE >> "*" -- "1" "Blog" << TABLE >> : Blog
+"BlogSubscriber" << TABLE >> "*" -- "1" "Blog" << TABLE >> : Blog
+"cms_Link" << TABLE >> "*" -- "1" "cms_LinkCategory" << TABLE >> : Category
+"cms_SynchronizationSource" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Author
+"cms_UserLock" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"cms_NotificationSubscription" << TABLE >> "*" -- "1" "cms_EmailNotification" << TABLE >> : Notification
+"cms_LoginRetry" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"entity" << TABLE >> "*" -- "1" "" << TABLE >> : packageId

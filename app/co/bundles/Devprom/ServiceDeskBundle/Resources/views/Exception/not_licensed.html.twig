@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="windows-1251" />
+    <title>{{ 'app.title'|trans({'%clientName%' : client_name }) }} - {{ 'not.licensed.title'|trans }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/lightBlue/css/application.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/css/servicedesk.css') }}" />
+    <!--[if lt IE 9]>
+    <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/html5shiv.js') }}"></script>
+    <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/respond.js') }}"></script>
+    <![endif]-->
+</head>
+<body class="background-dark">
+    <div class="content container">
+        <header>
+            <h3>{{ 'not.licensed.title'|trans }}</h3>
+        </header>
+        <div class="body">
+            <section class="widget col-md-6">
+                <div class="body">
+                    {% autoescape false %}
+                    <p>{{ 'not.licensed.content'|trans }}</p>
+                    {% endautoescape %}                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

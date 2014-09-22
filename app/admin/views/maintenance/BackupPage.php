@@ -1,0 +1,84 @@
+<?php
+
+include SERVER_ROOT_PATH."admin/classes/maintenance/BackupAndRecoveryOnWindows.php";
+
+include "BackupTable.php";
+include "BackupFormDatabase.php";
+include "BackupFormApplication.php";
+include "BackupFormComplete.php";
+include "RecoveryWizardFormBase.php";
+include "RecoveryFormUnpack.php";
+include "RecoveryFormDatabase.php";
+include "RecoveryFormFiles.php";
+include "RecoveryFormApplication.php";
+
+class BackupPage extends AdminPage
+{
+	function getObject()
+	{
+		global $model_factory;
+		return $model_factory->getObject('Backup');
+	}
+	
+	function getTable()
+	{
+		return new BackupTable($this->getObject());
+	}
+
+	function needDisplayForm()
+	{
+	    global $_REQUEST;
+	    return $_REQUEST['action'] != '';    
+	}
+	
+	function getForm()
+	{
+	    global $_REQUEST, $model_factory;
+	    
+	    $object = $model_factory->getObject('cms_Update');
+	    
+	    switch ( $_REQUEST['action'] )
+	    {
+	        case 'backupdatabase':
+	            return new BackupFormDatabase( $object );
+
+            case 'backupapplication':
+                return new BackupFormApplication( $object );
+
+            case 'backupcomplete':
+                return new BackupFormComplete( $object );
+
+            case 'recoveryunpack':
+                return new RecoveryFormUnpack( $object );
+                
+            case 'recoveryfiles':
+                return new RecoveryFormFiles( $object );
+            
+            case 'recoveryapplication':
+                return new RecoveryFormApplication( $object );
+                
+	        default:
+	            return null;
+	    }
+	}
+	
+	function export()
+	{
+	    switch ( $_REQUEST['export'] )
+	    {
+	        case 'download':
+	            
+	            $backup_file_name = $_REQUEST['backup_file_name'];
+	            
+	            $downloader = new Downloader;
+	            
+	            $downloader->echoFile( SERVER_BACKUP_PATH.$backup_file_name,
+	                $backup_file_name, 'application/zip' );
+	             
+	            break;
+
+	        default:
+	            parent::export();
+	    }
+	}
+}

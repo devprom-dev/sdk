@@ -1,0 +1,60 @@
+.multiSelect {
+	background: white url(/images/dropdown.png) right center no-repeat;
+	padding: 0px 4px;
+	padding-right: 20px;
+	display: inline;
+	font-family: Arial;
+	height: 20px;
+}
+
+.filter_item input.ac_welcome {
+	font-family: Arial;
+}
+	
+.filter_item input.datepicker {
+	font-family: Arial;
+}
+
+.multiSelect.hover  {
+	background: url(/images/dropdowo.png) right center no-repeat;
+}
+
+.multiSelect.active, 
+.multiSelect.focus {
+}
+
+.multiSelect.active {
+	background: url(/images/dropdowp.png) right center no-repeat;
+}
+
+.multiSelectOptions {
+	width: 266px;
+	max-height: 350px;
+	margin-top: -1px;
+	overflow: auto;
+	border: solid 1px #B2B2B2;
+	background: #FFF;
+}
+
+.multiSelectOptions LABEL {
+	padding: 5px;
+	display: block;
+}
+
+.multiSelectOptions LABEL.checked {
+	background: #E6E6E6;
+}
+
+.multiSelectOptions LABEL.selectAll {
+	border-bottom: dotted 1px #CCC;
+}
+
+.multiSelectOptions LABEL.hover {
+	background: #CFCFCF;
+}
+
+.multiSelectOptions input {
+	border:none;
+	height:14px;
+	vertical-align:middle;
+}

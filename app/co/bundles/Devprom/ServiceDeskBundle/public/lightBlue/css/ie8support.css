@@ -1,0 +1,31 @@
+html
+{
+	background-color:DarkSlateGray;
+}
+
+body.background-dark
+{
+    background-color:DarkSlateGray;
+}
+
+.well
+{
+	background-color:Gray;
+}
+
+.widget
+{
+    background-color:DimGray;
+}
+
+.input-group-addon
+{
+    background-color:DarkSlateGray;
+}
+
+input.input-transparent,
+textarea.input-transparent
+{
+	background-color: white;
+	color: black !important;
+}

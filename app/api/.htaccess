@@ -1,0 +1,14 @@
+Options +FollowSymLinks -Indexes
+
+RewriteEngine On
+RewriteBase /
+
+RewriteRule ^dataservice$ /api/dataservice.php [QSA]
+RewriteRule ^securityservice$ /api/securityservice.php [QSA]
+RewriteRule ^testservice$ /api/testservice.php [QSA]
+RewriteRule ^supportservice$ /api/supportservice.php [QSA]
+RewriteRule ^systemservice$ /api/systemservice.php [QSA]
+RewriteRule ^taskservice$ /api/taskservice.php [QSA]
+RewriteRule ^wikiservice$ /api/wikiservice.php [QSA]
+
+RewriteRule ^service/([^/]+)/([^/]+)$ servie.php?namespace=$1&module=$2 [L,QSA]

@@ -1,0 +1,15 @@
+<?php
+// app/console
+
+include dirname(__FILE__)."/../vendor/autoload.php";
+
+use Devprom\SDK\Command\MakeBlankPlugin;
+use Devprom\SDK\Command\BuildPlugin;
+use Symfony\Component\Console\Application;
+
+$application = new Application();
+
+$application->add( new MakeBlankPlugin );
+$application->add( new BuildPlugin );
+
+$application->run();

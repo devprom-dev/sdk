@@ -1,0 +1,111 @@
+!define TABLE (T,#FFAAAA)
+
+class "WikiPage" << TABLE >> {
+  ParentPath: TEXT
+  SectionNumber: VARCHAR
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+  Content: LARGETEXT
+  ParentPage: INTEGER
+  Project: INTEGER
+  Author: INTEGER
+  UserField1: TEXT
+  IsTemplate: INTEGER
+  UserField2: TEXT
+  IsArchived: CHAR
+  UserField3: TEXT
+  IsDraft: CHAR
+  UserField3: TEXT
+  ContentEditor: TEXT
+  State: TEXT
+  PageType: INTEGER
+}
+
+class "WikiPageFile" << TABLE >> {
+  Caption: VARCHAR
+  Content: FILE
+  Description: VARCHAR
+  WikiPage: INTEGER
+}
+
+class "WikiPageChange" << TABLE >> {
+  WikiPage: INTEGER
+  Content: LARGETEXT
+  Author: INTEGER
+}
+
+class "Blog" << TABLE >> {
+  Caption: VARCHAR
+}
+
+class "BlogPost" << TABLE >> {
+  Caption: VARCHAR
+  Content: TEXT
+  AuthorId: INTEGER
+  Blog: INTEGER
+  IsPublished: CHAR
+  ContentEditor: TEXT
+}
+
+class "BlogPostFile" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  Content: FILE
+  BlogPost: INTEGER
+}
+
+class "WikiTag" << TABLE >> {
+  Wiki: INTEGER
+  Tag: INTEGER
+  WikiReferenceName: TEXT
+}
+
+class "BlogPostTag" << TABLE >> {
+  BlogPost: INTEGER
+  Tag: INTEGER
+}
+
+class "pm_Watcher" << TABLE >> {
+  ObjectId: INTEGER
+  ObjectClass: TEXT
+  SystemUser: INTEGER
+  Email: TEXT
+}
+
+class "WikiPageType" << TABLE >> {
+  Caption: VARCHAR
+  ShortCaption: VARCHAR
+  Description: LARGETEXT
+  ReferenceName: VARCHAR
+  DefaultPageTemplate: INTEGER
+  WikiEditor: TEXT
+  PageReferenceName: VARCHAR
+}
+
+class "WikiPageTrace" << TABLE >> {
+  SourcePage: INTEGER
+  TargetPage: INTEGER
+  IsActual: CHAR
+  Baseline: INTEGER
+  Type: TEXT
+  UnsyncReasonType: VARCHAR
+}
+
+"WikiPage" << TABLE >> "*" -- "0..1" "WikiPage" << TABLE >> : ParentPage
+"WikiPage" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"WikiPage" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Author
+"WikiPage" << TABLE >> "*" -- "0..1" "WikiPageType" << TABLE >> : PageType
+"WikiPageFile" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : WikiPage
+"WikiPageChange" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : WikiPage
+"WikiPageChange" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Author
+"BlogPost" << TABLE >> "*" -- "1" "Blog" << TABLE >> : Blog
+"BlogPostFile" << TABLE >> "*" -- "1" "BlogPost" << TABLE >> : BlogPost
+"WikiTag" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : Wiki
+"WikiTag" << TABLE >> "*" -- "1" "Tag" << TABLE >> : Tag
+"BlogPostTag" << TABLE >> "*" -- "1" "BlogPost" << TABLE >> : BlogPost
+"BlogPostTag" << TABLE >> "*" -- "1" "Tag" << TABLE >> : Tag
+"pm_Watcher" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"WikiPageType" << TABLE >> "*" -- "0..1" "WikiPage" << TABLE >> : DefaultPageTemplate
+"WikiPageTrace" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : SourcePage
+"WikiPageTrace" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : TargetPage
+"WikiPageTrace" << TABLE >> "*" -- "0..1" "cms_Snapshot" << TABLE >> : Baseline

@@ -1,0 +1,10 @@
+{% block subject %}
+    {% autoescape false %}
+    {{ 'registration.email.subject'|trans({}, 'emails')|convert_encoding('UTF-8', 'windows-1251') }}
+    {% endautoescape %}
+{% endblock %}
+{% block body_text %}
+{% endblock %}
+{% block body_html %}
+    {% include "DevpromServiceDeskBundle:Email:registration_email.html.twig" %}
+{% endblock %}

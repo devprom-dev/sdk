@@ -1,0 +1,66 @@
+<?php
+
+namespace Devprom\AdministrativeBundle\Controller;
+
+use Devprom\AdministrativeBundle\Controller\BaseController;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+class MailerController extends BaseController
+{
+    public function indexAction()
+    {
+    	if ( is_object($response = $this->checkAccess()) ) return $response;
+    	
+    	include SERVER_ROOT_PATH.'admin/views/mailer/MailerPage.php';
+    	
+    	return $this->responsePage(new \MailerPage);
+    }
+    
+    public function storeAction()
+    {
+    	if ( is_object($response = $this->checkAccess()) ) return $response;
+    	
+    	$object_it = getFactory()->getObject('MailerSettings')->getAll();
+    	
+    	$parms = array();
+    	
+    	foreach( $object_it->object->getAttributes() as $attribute => $data )
+    	{
+    		$parms[$attribute] = $this->getRequest()->request->get($attribute); 
+    	}
+    	
+    	$object_it->modify($parms);
+    	
+    	$test_email = $this->getRequest()->request->get("MailTestEmail");
+    	
+    	if ( $test_email != '' )
+    	{
+    		$from_address = $parms['AdminEmail'];
+    		
+    		if ( $from_address == '' )
+    		{
+    			return $this->replyError(text(1267));
+    		}
+    		
+			$mail_result = mail(
+					$test_email, 
+					'=?UTF-8?B?'.base64_encode(\IteratorBase::wintoutf8(text(1523))).'?=', 
+					'<html>'.PHP_EOL.
+		    			'<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>'.PHP_EOL.
+		    			'<body>'.\IteratorBase::wintoutf8(text(1524)).'</body>'.PHP_EOL.
+		    		'</html>',
+					"Sender: ".$from_address."\r\nFrom: ".$from_address."\r\n".
+					"MIME-Version: 1.0\r\nContent-type: text/html; charset=utf-8\r\n", 
+					"-f ".$from_address
+    		);
+			
+			return $this->replySuccess(text(1706).'<br/><br/>'.text(1526));
+    	}
+    	else
+    	{
+    		return $this->replyRedirect('/admin/mailer/', text(1706));
+    	}
+    }
+}

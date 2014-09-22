@@ -1,0 +1,146 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_Methodology" << TABLE >> {
+  IsPlanningUsed: CHAR
+  IsTasks: CHAR
+  IsReleasesUsed: VARCHAR
+  IsFixedRelease: CHAR
+  ReleaseDuration: INTEGER
+  HasMilestones: CHAR
+  IsVersionsUsed: CHAR
+  UseScrums: CHAR
+  IsDesign: CHAR
+  IsRequirements: CHAR
+  IsTests: CHAR
+  Project: INTEGER
+  IsHelps: CHAR
+  IsRequestOrderUsed: CHAR
+  RequestApproveRequired: CHAR
+  IsResponsibleForIssue: CHAR
+  UseFunctionalDecomposition: CHAR
+  IsResponsibleForFunctions: CHAR
+  UseEnvironments: CHAR
+  IsHighTolerance: CHAR
+  TaskEstimationUsed: CHAR
+  RequestEstimationRequired: VARCHAR
+  IsReportsOnActivities: CHAR
+  IsParticipantsTakeTasks: CHAR
+  IsDeadlineUsed: CHAR
+  IsTasksDepend: CHAR
+  IsCrossChecking: CHAR
+  VerificationTime: INTEGER
+  IsUserInProject: CHAR
+  CustomerAcceptsIssues: CHAR
+  IsKanbanUsed: CHAR
+  IsStoryMappingUsed: CHAR
+}
+
+class "TemplateHTML2" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+  CSSBlock: LARGETEXT
+  Header: LARGETEXT
+  Footer: LARGETEXT
+  HeaderContents: CHAR
+  SectionNumbers: CHAR
+}
+
+class "pm_AccessRight" << TABLE >> {
+  ProjectRole: INTEGER
+  ReferenceName: VARCHAR
+  ReferenceType: TEXT
+  AccessType: TEXT
+}
+
+class "pm_VersionSettings" << TABLE >> {
+  Project: INTEGER
+  UseRelease: CHAR
+  UseIteration: CHAR
+  UseBuild: CHAR
+}
+
+class "pm_ProjectLink" << TABLE >> {
+  Target: INTEGER
+  Source: INTEGER
+  Requests: INTEGER
+  Releases: INTEGER
+  Tasks: INTEGER
+  KnowledgeBase: INTEGER
+  Blog: INTEGER
+  Requirements: INTEGER
+  Testing: INTEGER
+  HelpFiles: INTEGER
+  Files: INTEGER
+  SourceCode: INTEGER
+}
+
+class "pm_ObjectAccess" << TABLE >> {
+  ObjectClass: TEXT
+  ObjectId: INTEGER
+  ProjectRole: INTEGER
+  AccessType: TEXT
+}
+
+class "pm_ProjectStage" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+}
+
+class "pm_TaskTypeStage" << TABLE >> {
+  TaskType: INTEGER
+  ProjectStage: INTEGER
+}
+
+class "pm_CustomReport" << TABLE >> {
+  Caption: VARCHAR
+  Category: TEXT
+  Module: VARCHAR
+  ReportBase: TEXT
+  Url: TEXT
+  IsHandAccess: CHAR
+  Description: LARGETEXT
+  Author: INTEGER
+}
+
+class "pm_UserSetting" << TABLE >> {
+  Setting: TEXT
+  Value: TEXT
+  Participant: INTEGER
+}
+
+class "pm_CustomAttribute" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+  EntityReferenceName: VARCHAR
+  AttributeType: INTEGER
+  ValueRange: LARGETEXT
+  DefaultValue: VARCHAR
+  Description: LARGETEXT
+  IsVisible: CHAR
+  IsRequired: CHAR
+  IsUnique: CHAR
+  ObjectKind: TEXT
+  AttributeTypeClassName: VARCHAR
+  Capacity: INTEGER
+}
+
+class "pm_AttributeValue" << TABLE >> {
+  CustomAttribute: INTEGER
+  ObjectId: INTEGER
+  IntegerValue: INTEGER
+  StringValue: TEXT
+  TextValue: LARGETEXT
+  PasswordValue: PASSWORD
+}
+
+"pm_Methodology" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_AccessRight" << TABLE >> "*" -- "1" "pm_ProjectRole" << TABLE >> : ProjectRole
+"pm_VersionSettings" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_ProjectLink" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Target
+"pm_ProjectLink" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Source
+"pm_ObjectAccess" << TABLE >> "*" -- "1" "pm_ProjectRole" << TABLE >> : ProjectRole
+"pm_TaskTypeStage" << TABLE >> "*" -- "1" "pm_TaskType" << TABLE >> : TaskType
+"pm_TaskTypeStage" << TABLE >> "*" -- "1" "pm_ProjectStage" << TABLE >> : ProjectStage
+"pm_CustomReport" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Author
+"pm_UserSetting" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Participant
+"pm_AttributeValue" << TABLE >> "*" -- "1" "pm_CustomAttribute" << TABLE >> : CustomAttribute

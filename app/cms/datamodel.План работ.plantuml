@@ -1,0 +1,99 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_Release" << TABLE >> {
+  ReleaseNumber: VARCHAR
+  IsCurrent: CHAR
+  IsDraft: CHAR
+  Description: RICHTEXT
+  Project: INTEGER
+  StartDate: DATE
+  FinishDate: DATE
+  InitialVelocity: INTEGER
+  Version: INTEGER
+  IsActual: CHAR
+  ProjectStage: INTEGER
+}
+
+class "pm_Task" << TABLE >> {
+  Caption: RICHTEXT
+  Planned: FLOAT
+  Assignee: INTEGER
+  Release: INTEGER
+  TaskType: INTEGER
+  Priority: INTEGER
+  ChangeRequest: INTEGER
+  Controller: INTEGER
+  LeftWork: FLOAT
+  Result: LARGETEXT
+  Comments: RICHTEXT
+  State: TEXT
+  StartDate: DATE
+  FinishDate: DATE
+}
+
+class "pm_TaskType" << TABLE >> {
+  Caption: VARCHAR
+  ShortCaption: VARCHAR
+  Description: LARGETEXT
+  RelatedColor: COLOR
+  ReferenceName: VARCHAR
+  ProjectRole: INTEGER
+  ParentTaskType: INTEGER
+  UsedInPlanning: CHAR
+}
+
+class "pm_Version" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  StartDate: DATE
+  FinishDate: DATE
+  Project: INTEGER
+  InitialEstimationError: INTEGER
+  InitialBugsInWorkload: INTEGER
+  IsActual: CHAR
+  InitialVelocity: INTEGER
+}
+
+class "pm_Milestone" << TABLE >> {
+  MilestoneDate: DATE
+  Caption: VARCHAR
+  Description: RICHTEXT
+  Passed: CHAR
+  ReasonToChangeDate: RICHTEXT
+  CompleteResult: RICHTEXT
+}
+
+class "pm_Activity" << TABLE >> {
+  Caption: VARCHAR
+  ReportDate: DATE
+  Task: INTEGER
+  Capacity: FLOAT
+  Participant: INTEGER
+  Description: TEXT
+  Completed: CHAR
+  Iteration: INTEGER
+}
+
+class "pm_TaskTrace" << TABLE >> {
+  Task: INTEGER
+  ObjectId: INTEGER
+  ObjectClass: TEXT
+  IsActual: CHAR
+}
+
+"pm_Release" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Release" << TABLE >> "*" -- "1" "pm_Version" << TABLE >> : Version
+"pm_Release" << TABLE >> "*" -- "0..1" "pm_ProjectStage" << TABLE >> : ProjectStage
+"pm_Task" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Assignee
+"pm_Task" << TABLE >> "*" -- "0..1" "pm_Release" << TABLE >> : Release
+"pm_Task" << TABLE >> "*" -- "1" "pm_TaskType" << TABLE >> : TaskType
+"pm_Task" << TABLE >> "*" -- "1" "Priority" << TABLE >> : Priority
+"pm_Task" << TABLE >> "*" -- "0..1" "pm_ChangeRequest" << TABLE >> : ChangeRequest
+"pm_Task" << TABLE >> "*" -- "0..1" "pm_Participant" << TABLE >> : Controller
+"pm_TaskType" << TABLE >> "*" -- "1" "pm_ProjectRole" << TABLE >> : ProjectRole
+"pm_TaskType" << TABLE >> "*" -- "1" "pm_TaskType" << TABLE >> : ParentTaskType
+"pm_Version" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"pm_Activity" << TABLE >> "*" -- "0..1" "pm_Task" << TABLE >> : Task
+"pm_Activity" << TABLE >> "*" -- "0..1" "pm_Participant" << TABLE >> : Participant
+"pm_Activity" << TABLE >> "*" -- "0..1" "pm_Release" << TABLE >> : Iteration
+"pm_TaskTrace" << TABLE >> "*" -- "1" "pm_Task" << TABLE >> : Task

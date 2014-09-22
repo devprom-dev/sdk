@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+    <head>
+        <meta charset="windows-1251" />
+        <title>{{ 'app.title'|trans({'%clientName%' : client_name }) }} - {% block title %}{% endblock %}</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/lightBlue/css/application.min.css') }}" />
+        <link rel="stylesheet" href="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/css/servicedesk.css') }}" />
+
+        {% block stylesheets %}{% endblock %}
+
+        <!--[if lt IE 9]>
+        <link rel="stylesheet" href="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/lightBlue/css/ie8support.css') }}" />
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/html5shiv.js') }}"></script>
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/respond.min.js') }}"></script>
+        <![endif]-->
+    </head>
+    <body class="background-dark">
+
+       {% block body %}{% endblock %}
+
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.min.js') }}"></script>
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/jstz-1.0.4.min.js') }}"></script>
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.cookies.2.2.0.min.js') }}"></script>
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/bootstrap.min.js') }}"></script>
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/select2.js') }}"></script>
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.icheck.js') }}"></script>
+        {% block javascripts %}{% endblock %}
+        <script src="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/js/app.js') }}"></script>
+       
+		<script type="text/javascript">
+        	$(document).ready( function() {
+        		$.cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
+        		$.cookies.set('devprom-client-tz', jstz.determine().name());
+        	});
+		</script>
+       
+    </body>
+</html>

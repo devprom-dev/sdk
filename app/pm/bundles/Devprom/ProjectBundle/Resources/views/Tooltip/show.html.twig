@@ -1,0 +1,38 @@
+{% if type.uid != "" %}
+	<b>{{ type.name }}</b>: [{{ type.uid }}] 
+	{% for attribute_name, attribute in attributes if attribute_name == "Caption" %}
+	    {{ attribute.text | raw }}
+	{% endfor %}
+	<br/>
+	<br/>
+{% endif %}
+
+{% for attribute_name, attribute in attributes if type.uid != "" and attribute_name != "Caption" or type.uid == "" %}
+	<b>{{ attribute.title }}</b>: {{ attribute.text | raw }}
+
+	{% if attribute.type == 'text' or attribute.name == 'Caption' %}
+		<br/>
+	{% endif %} 
+	<br/>
+{% endfor %}
+
+{% if comments.data.text != "" %}
+	<br/>
+	<b>{{ comments.name }}</b>: [{{ comments.data.author }}]
+	<br/>
+	{{ comments.data.text | raw }}
+	<br/>
+{% endif %}
+
+{% if lifecycle.data.state != "" %}
+<br/>
+<b>{{ lifecycle.name }}</b>:
+<br/>
+{{ lifecycle.data.state }}
+<br/>
+{% if lifecycle.data.name != "" %}
+	<img src="/images/bullet_go.png" style="margin:0 0 -3px -2px;">{{ lifecycle.data.name }}
+	{{ lifecycle.data.text }}
+	<br/>
+{% endif %}
+{% endif %}

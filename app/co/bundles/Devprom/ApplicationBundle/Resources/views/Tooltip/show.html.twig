@@ -1,0 +1,11 @@
+{% for section_name, section_data in sections %}
+    {% if section_name == "attributes" %}
+        {% for attribute_name, attribute in section_data %}
+    		<b>{{ attribute.title }}</b>: {{ attribute.text | raw }}
+    		{% if attribute.type == 'text' or attribute.name == 'Caption' %}
+    			<br/>
+    		{% endif %} 
+    		<br/>
+    	{% endfor %}
+    {% endif %}
+{% endfor %}

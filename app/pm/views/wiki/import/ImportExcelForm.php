@@ -1,0 +1,11 @@
+<?php
+
+include SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
+
+class ImportExcelForm extends ImportXmlForm
+{
+ 	function getAddCaption()
+ 	{
+ 		return str_replace('%1', $this->getObject()->getDisplayName(), text(1722));
+ 	}
+}

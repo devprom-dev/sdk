@@ -1,0 +1,97 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_StateAttribute" << TABLE >> {
+  State: INTEGER
+  ReferenceName: VARCHAR
+  Entity: VARCHAR
+  IsVisible: CHAR
+  IsRequired: CHAR
+}
+
+class "pm_SubversionUser" << TABLE >> {
+  SystemUser: INTEGER
+  Connector: INTEGER
+  UserName: VARCHAR
+  UserPassword: PASSWORD
+}
+
+class "co_AffectedObjects" << TABLE >> {
+  ObjectId: INTEGER
+  ObjectClass: VARCHAR
+}
+
+class "pm_State" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  ReferenceName: VARCHAR
+  ObjectClass: TEXT
+  RelatedColor: COLOR
+  IsTerminal: CHAR
+  QueueLength: INTEGER
+}
+
+class "pm_Transition" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  SourceState: INTEGER
+  TargetState: INTEGER
+  IsReasonRequired: CHAR
+}
+
+class "pm_StateObject" << TABLE >> {
+  ObjectId: INTEGER
+  ObjectClass: TEXT
+  State: INTEGER
+  Comment: LARGETEXT
+  Transition: INTEGER
+  Author: INTEGER
+  Duration: FLOAT
+}
+
+class "pm_TransitionRole" << TABLE >> {
+  Transition: INTEGER
+  ProjectRole: INTEGER
+}
+
+class "pm_TransitionAttribute" << TABLE >> {
+  Transition: INTEGER
+  ReferenceName: VARCHAR
+  Entity: LARGETEXT
+}
+
+class "pm_Predicate" << TABLE >> {
+  Caption: VARCHAR
+}
+
+class "pm_TransitionPredicate" << TABLE >> {
+  Transition: INTEGER
+  Predicate: INTEGER
+}
+
+class "pm_TransitionResetField" << TABLE >> {
+  Transition: INTEGER
+  ReferenceName: VARCHAR
+  Entity: TEXT
+}
+
+class "pm_StateAction" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+  State: INTEGER
+}
+
+"pm_StateAttribute" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : State
+"pm_SubversionUser" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"pm_SubversionUser" << TABLE >> "*" -- "1" "pm_Subversion" << TABLE >> : Connector
+"pm_Transition" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : SourceState
+"pm_Transition" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : TargetState
+"pm_StateObject" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : State
+"pm_StateObject" << TABLE >> "*" -- "0..1" "pm_Transition" << TABLE >> : Transition
+"pm_StateObject" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Author
+"pm_TransitionRole" << TABLE >> "*" -- "1" "pm_Transition" << TABLE >> : Transition
+"pm_TransitionRole" << TABLE >> "*" -- "1" "pm_ProjectRole" << TABLE >> : ProjectRole
+"pm_TransitionAttribute" << TABLE >> "*" -- "1" "pm_Transition" << TABLE >> : Transition
+"pm_TransitionPredicate" << TABLE >> "*" -- "1" "pm_Transition" << TABLE >> : Transition
+"pm_TransitionPredicate" << TABLE >> "*" -- "1" "pm_Predicate" << TABLE >> : Predicate
+"pm_TransitionResetField" << TABLE >> "*" -- "1" "pm_Transition" << TABLE >> : Transition
+"pm_StateAction" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : State

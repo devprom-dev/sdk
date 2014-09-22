@@ -1,0 +1,12 @@
+{
+    "autoload": {
+        "psr-0": {
+		"Devprom\\SDK": "app"
+        }
+    },
+    "require": {
+        "php": ">=5.3.3",
+        "symfony/symfony": "2.2.*",
+        "symfony/console": "2.2.*"
+    }
+}

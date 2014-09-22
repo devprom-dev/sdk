@@ -1,0 +1,255 @@
+/*
+ * Common
+ */
+div.info-circle-icon{
+    width: 26px;
+    height: 26px;
+    background-image: url("../img/glyphicons_195_circle_info.png");
+    float: left;
+    margin: 5px;
+    opacity: 0.3;
+}
+
+/*
+ * Sections 
+ */
+
+#functional-group-selector div a{
+    margin-right: 20px;
+}
+
+/*
+ * MenuConfigurator related styles
+ */
+#menu-configurator .menu-content ul, #menu-configurator .menu-content li,
+.pages-content ul, #menu-configurator .pages-content li
+{
+    list-style-type: none;
+    margin-left: 0px;
+}
+
+#menu-configurator li{
+    padding: 2px;
+}
+
+#menu-configurator .menu-content > ul > li > div.menu-group-node{
+    cursor: pointer;
+} 
+
+div.menu-group-node > span{
+/*    display: block;
+    float: left;
+    width: 80%;*/
+}
+
+div.menu-group-node > div.controls{
+    text-align: right;
+    float: right;
+}
+
+#menu-configurator .menu-content li li{
+    margin-left: 20px;
+    border: 1px solid #FFF;
+    padding-left: 5px;
+}
+
+#menu-configurator .menu-content li li.inserting-before{
+    border-top: 2px solid orange;
+}
+
+#menu-configurator .menu-content li li.inserting-after{
+    border-bottom: 2px solid orange;
+}
+
+#menu-configurator i.controls{
+    display: none;
+    padding-left: 5px;
+}
+
+i.controls i{
+    cursor: pointer;
+}
+
+/*
+ * Pages
+ */
+.pages-content li li
+{
+    margin-left: 10px;
+    padding-left: 3px;
+}
+
+.pages-content ul > li
+{
+    text-transform: uppercase;
+    color: #777;
+}
+
+.pages-content li > ul > li
+{
+    text-transform: none;
+    color: #333333;
+    border: 1px solid #FFF;
+}
+
+.pages-content li > ul > li.unavailable
+{
+    color: #999;
+    cursor: default;
+    border: 1px solid #FFF;
+}
+
+#menu-configurator .menu-colum .info{
+    margin-top: 20px;
+}
+
+#menu-configurator .ui-draggable-dragging, #menu-configurator .ui-sortable-helper{
+    border: 1px dotted #999 !important;
+
+    cursor: move !important;
+    cursor: -moz-grabbing !important;
+    cursor: -webkit-grabbing !important;
+    
+    box-shadow: 2px 2px 5px 0 #777;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    background-color: white;
+    width: inherit;
+    
+    padding-left: 5px;
+}
+
+#pages {
+    padding: 5px;
+}
+
+div.pages-column{
+    border: 1px solid #FFF;
+}
+
+div.pages-column > div.muted{
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+#menu
+{
+    padding: 5px;	
+}
+
+#menu .container-fluid
+{
+	padding: 0;
+}
+
+#menu > div.muted{
+    margin-top: 5px;
+}
+
+div.pages-content {
+    position: relative;
+}
+
+.pages-content li ul li div.hdr
+{
+    border: 1px solid white;
+	padding:2px;
+	font-weight: bold;
+	float:left;
+}
+.pages-content li ul li div.hdr-ref
+{
+	padding-top: 3px;
+    float:left;
+}
+.pages-content li ul li div.hdr-ref a
+{
+	display: none;
+	margin-left: 22px;
+}
+.pages-content li ul li:hover div.hdr-ref a
+{
+    display: block;
+}
+.pages-content li div.desc
+{
+	padding:3px;
+	clear:both;
+}
+.pages-content ul > li > div.hdr
+{
+    float:left;
+}
+.pages-content ul > li > div.hdr-ref
+{
+    float:left;
+}
+.pages-content ul > li > div.hdr-ref a
+{
+    display: block;
+    text-transform: none;
+    margin-left: 22px;
+}
+
+#menu-configurator .menu-content li li:hover,
+#menu-configurator .pages-content li li div.hdr:hover{
+    cursor: url("../img/palm.gif"), move;
+    border: 1px dotted #999;
+}
+
+li.dragging{
+    border: 1px dotted #999 !important;
+    color: #999 !important;
+    
+    cursor: move !important;
+    cursor: -moz-grabbing !important;
+    cursor: -webkit-grabbing !important;
+}
+/*
+ * Views customization
+ */
+
+.filter-not-match{
+    display: none;
+}
+
+span.filter-match{
+    background-color: #FCF6AB;
+    border-radius: 2px;
+}
+
+div.pages-column.droppable-active
+{
+    background-color: #F5FEF5;
+    border-radius: 3px;
+    border: 1px solid #E5EEE5;
+}
+
+div.pages-column.droppable-active li > ul > li span
+{
+    border: 1px solid #F5FEF5 !important;
+}
+
+i.key-enter-icon{
+    background-image: url("../img/key_enter.png");
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    line-height: 16px;
+    margin-top: 2px;
+}
+
+li.no-drag{
+    cursor: default !important;
+    border: 1px solid #FFF !important;
+}
+
+#save-control
+{
+	padding-bottom: 12px;
+}
+
+.menu-button .btn
+{
+	min-width: 120px;
+}

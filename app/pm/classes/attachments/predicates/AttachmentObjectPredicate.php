@@ -1,0 +1,20 @@
+<?php
+
+class AttachmentObjectPredicate extends FilterPredicate
+{
+     function _predicate( $filter )
+     {
+         if ( !is_a($filter, 'IteratorBase') )
+         {
+             return " AND t.ObjectId = -1 ";
+         }
+
+         if ( $filter->count() < 1 )
+         {
+             return " AND t.ObjectId = -1 ";
+         }
+         
+         return " AND t.ObjectId IN (".join(',',$filter->idsToArray()).") ".
+                " AND LCASE(t.ObjectClass) IN ('".strtolower($filter->object->getClassName())."', '".strtolower(get_class($filter->object))."')";
+     }
+}

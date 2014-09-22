@@ -1,0 +1,7 @@
+Options +FollowSymLinks
+
+RewriteEngine On
+
+RewriteBase /servicedesk
+
+RewriteRule .? servicedesk.php [L,QSA]

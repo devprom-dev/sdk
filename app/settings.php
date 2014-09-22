@@ -1,0 +1,2 @@
+
+	define('CUSTOMER_UID', 'CUSTOMER_UID');

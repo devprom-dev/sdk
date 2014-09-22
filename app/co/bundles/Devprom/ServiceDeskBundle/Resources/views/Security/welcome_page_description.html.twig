@@ -1,0 +1,6 @@
+{% block description_content %}
+    <div class="jumbotron">
+        <h2>{{ 'landing.page.title'|trans({'%client_name%' : client_name}, 'client') }}</h2>
+        <p class="lead">{% autoescape false %}{{ 'landing.page.description'|trans({}, 'client') }}{% endautoescape %}</p>
+    </div>
+{% endblock description_content %}

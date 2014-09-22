@@ -1,0 +1,67 @@
+{
+    "autoload": {
+        "psr-0": {
+		"Devprom\\ApplicationBundle": "../co/bundles",
+		"Devprom\\AdministrativeBundle": "../admin/bundles",
+		"Devprom\\Component": "../app",
+        	"Devprom\\CommonBundle": "../co/bundles/",
+        	"Devprom\\ServiceDeskBundle": "../co/bundles/",
+		"Devprom\\ProjectBundle": "../pm/bundles"
+        },
+        "classmap": ["imap/"]
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url":  "https://github.com/saveug/InlineStyle"
+        },
+        {
+            "type": "git",
+            "url":  "https://github.com/klaussilveira/gitter.git"
+        },
+        {
+            "type": "git",
+            "url":  "https://github.com/klaussilveira/SimpleSHM.git"
+        },
+	{
+            "type":"package",
+            "package":{
+                "name":"saveug/inlinestyle",
+                "version":"1.2",
+                "source":{
+                    "type":"git",
+                    "url":"https://github.com/saveug/InlineStyle",
+                    "reference":"master"
+                },
+                "autoload":{
+		    "psr-0": { "InlineStyle": "" }
+                }
+            }
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "doctrine/orm": "2.3.*",
+        "doctrine/doctrine-bundle": "1.2.*",
+        "doctrine/migrations": "dev-master",
+        "doctrine/doctrine-migrations-bundle": "dev-master",
+        "friendsofsymfony/user-bundle": "*",
+        "symfony/symfony": "2.2.*",
+        "symfony/assetic-bundle": "2.3.*",
+        "symfony/twig-bundle": "2.2.*",
+        "symfony/framework-bundle": "2.2.*",
+        "symfony/security-bundle": "2.2.*",
+        "symfony/swiftmailer-bundle": "2.2.*",
+        "symfony/monolog-bundle": "2.2.*",
+        "sensio/framework-extra-bundle": "2.2.*",
+        "saveug/inlinestyle": "1.2",
+        "friendsofsymfony/rest-bundle": "0.12.0",
+        "jms/serializer-bundle": "0.12.*@dev",
+	"klaussilveira/gitter": "*",
+	"klaussilveira/simple-shm": "*",
+	"mindscape/raygun4php": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    }
+}

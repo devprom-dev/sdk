@@ -1,0 +1,27 @@
+framework:
+    secret: 123
+    router:
+        resource: "@ProjectBundle/Resources/config/routing.yml"
+        strict_requirements: false
+    csrf_protection: false
+    validation:      { enable_annotations: true }
+    templating: 
+      engines: ['twig','php'] 
+fos_rest:
+    body_listener: true
+    routing_loader:
+        default_format: json
+assetic:
+    read_from:            "%kernel.root_dir%/../../../../public"
+    debug:	%kernel.debug%
+    use_controller: true
+    filters:
+        cssrewrite: ~
+monolog:
+    handlers:
+        applog:
+            type: rotating_file
+            path: "%kernel.logs_dir%/pm_app_system.log"
+            level: debug
+            max_files: 5 # Set up to keep log files for 5 recent days only
+        

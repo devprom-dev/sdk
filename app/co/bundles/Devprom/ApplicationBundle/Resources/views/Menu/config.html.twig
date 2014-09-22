@@ -1,0 +1,143 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="/cache/?v=3.0&type=css" />
+    <link title="" type="application/rss+xml" rel="alternate" href="/rss" />
+    <script src="/cache/?v=3.0&l=ru" type="text/javascript" charset="UTF-8"></script>
+    <script src="/scripts/jquery-ui/jquery-ui-1.8.23.custom.min.js?v=3.0&l=ru" type="text/javascript" charset="UTF-8"></script>
+<style>
+    .sortable1{
+        display:none;
+    }
+    .sortable2 b{
+        color:orangered;
+    }
+</style>
+<script>
+    $(function() {
+        $(".sortable1, .sortable2").sortable({
+            connectWith: ".connectedSortable"
+        }).disableSelection();
+
+        var menu_top = $('#menu-top');
+        menu_top.find('a').live('dblclick', function () {
+            var a = $(this);
+            a.parents('li').append('<input type="text" class="input-medium" value="' + a.html() + '" />').find('input').focus().focusout(function () {
+                if ($(this).val() != '') {
+                    a.html($(this).val()).show();
+                    $(this).remove();
+                } else {
+                    $(this).parents('li').remove();
+                }
+            });
+            a.hide();
+        });
+        menu_top.find('a').live('click', function () {
+            $('.sortable1').hide();
+            $('#' + this.id.replace('top', 'left')).show();
+        });
+
+        menu_top.find('li:last button').live('click', function () {
+            function focusout(th) {
+                if ($(th).val() != '') {
+                    $(th).parents('li').append('<a href="#">' + $(th).val() + '</a>');
+                    $(th).remove();
+                } else {
+                    $(th).parents('li').remove();
+                }
+            }
+            menu_top.find('li:last')
+                    .before('<li><input type="text" class="input-medium" value="" /></li>')
+                    .parents('ul')
+                    .find('input')
+                    .focus()
+                    .focusout(function () {
+                        focusout(this);
+                    })
+                    .keypress(function (event) {
+                        if (event.which == 13) {
+                            focusout(this);
+                        }
+                    });
+        });
+    });
+    function search(q)
+    {
+        $('.sortable2 li').each(function() {
+            if (!$(this).hasClass('nav-header')) {
+                $(this).html($(this).html().replace('<b>', '').replace('</b>', '').replace(new RegExp(q, "i"), "<b>$&</b>"));
+            }
+        });
+    }
+</script>
+</head>
+<body>
+<div class="container-fluid">
+    <h1>Настройка меню</h1>
+    <div>
+        <ul class="nav nav-pills" id="menu-top">
+            <li><a href="#" id="menu_top_1">Управление проектом</a></li>
+            <li><a href="#" id="menu_top_2">Анализ и проектирование</a></li>
+            <li><a href="#" id="menu_top_3">Разработка</a></li>
+            <li><a href="#" id="menu_top_4">Контроль качества</a></li>
+            <li><a href="#" id="menu_top_5">Документирование</a></li>
+            <li><button class="btn" type="button">Добавить пункт меню</button></li>
+        </ul>
+    </div>
+    <div class="row-fluid">
+        <div class="span3">
+            <p class="muted">Вертикальное меню</p>
+            <ul class="nav nav-list connectedSortable sortable1" style="display:block;" id="menu_left_1">
+                <li class="nav-header">Главная</li>
+                <li data-id="6">Активность</li>
+                <li data-id="7">База знаний</li>
+                <li class="nav-header">Задачи</li>
+                <li data-id="8">Мои задачи</li>
+                <li data-id="9">Доска</li>
+                <li data-id="10">Список</li>
+            </ul>
+            <ul class="nav nav-list connectedSortable sortable1" id="menu_left_2">
+                <li class="nav-header">2Главная</li>
+                <li data-id="6">Активность</li>
+                <li data-id="7">База знаний</li>
+                <li class="nav-header">2Задачи</li>
+                <li data-id="8">Мои задачи</li>
+                <li data-id="9">Доска</li>
+                <li data-id="10">Список</li>
+            </ul>
+            <ul class="nav nav-list connectedSortable sortable1" id="menu_left_3"></ul>
+            <ul class="nav nav-list connectedSortable sortable1" id="menu_left_4"></ul>
+            <ul class="nav nav-list connectedSortable sortable1" id="menu_left_5"></ul>
+            <form id="input_vertical_add" style="display:none;">
+                <div class="input-append">
+                    <input class="span10" type="text">
+                </div>
+            </form>
+            <button class="btn" type="button" onclick="if($('#input_vertical_add').is(':visible')){$('.sortable1:visible').append('<li class=\'nav-header\'>' + $('#input_vertical_add input').val() + '</li>');$('#input_vertical_add').hide();}else{$('#input_vertical_add').show();}">Добавить раздел меню</button>
+            <p class="muted">Для наполнения меню перетащите страницы из правой части в левую.</p>
+        </div>
+        <div class="span9">
+            <p class="muted">Доступные для добавления страницы</p>
+            <form class="form-search">
+                <div class="input-append">
+                    <input class="span10 search-query" type="text">
+                    <button class="btn" type="submit" onclick="search($(this).parent().find('input').val());">Найти</button>
+                </div>
+            </form>
+            <ul class="nav nav-list connectedSortable sortable2">
+                <li class="nav-header">Атрибуты</li>
+                <li data-id="1">Атрибуты документов</li>
+                <li data-id="2">Атрибуты задач</li>
+                <li class="nav-header">Задачи</li>
+                <li data-id="3">Документы задач</li>
+                <li data-id="4">Документы пользователей</li>
+                <li data-id="5">Документы по проектам</li>
+            </ul>
+        </div>
+    </div>
+    <p class="muted">Сохраняется автоматически.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<?php
+
+include_once SERVER_ROOT_PATH."pm/classes/common/SharedObjectsBuilder.php";
+
+class SharedObjectsPlanBuilder extends SharedObjectsBuilder
+{
+    public function getGroup()
+    {
+        return 'Releases';
+    }
+    
+    public function checkSharedInProject( $project_it )
+    {
+        return $project_it->getMethodologyIt()->HasVersions() || $project_it->getMethodologyIt()->HasReleases();
+    }
+    
+    public function build( SharedObjectRegistry & $set )
+    {
+		$entities = array (
+    			'Milestone',
+		        'Version',
+     	        'Release',
+     	        'Iteration',
+				'Stage'
+		);
+		
+ 		foreach( $entities as $key )
+		{
+			$set->add( $key, $this->getGroup() );
+		} 	            
+    }
+}

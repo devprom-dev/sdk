@@ -1,0 +1,6 @@
+This folder is destined for containing of public assets such as .css , images , .js. But we can't publish 
+assets from here in right way using Assetic. So all of the assets were moved to the app/pm/public/CustomMenuBundle/ 
+folder. 
+
+When I get know how to integrate Assetic all of the assets will be moved here again. And publishing of them will be delegated
+to Assetic.

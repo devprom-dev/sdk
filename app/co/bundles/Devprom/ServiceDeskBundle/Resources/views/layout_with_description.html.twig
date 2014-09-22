@@ -1,0 +1,31 @@
+{% extends '::base.html.twig' %}
+
+{% block body -%}
+    <header class="page-header">
+        <div class="navbar">
+            <ul class="nav navbar-nav navbar-right pull-right">
+                {% include 'Common/language_selector.html.twig' %}
+            </ul>
+        </div>
+    </header>
+
+    <div class="content container layout-description col-md-10 col-md-offset-1">
+        <div class="well">
+          <div class="body row">
+            <div class="col-md-6 welcome-description">
+            	<div class="body">
+                    <h3>{{ 'landing.page.title'|trans({'%client_name%' : client_name}, 'client') }}</h3>
+                    <div class="hidden-xs">
+                        <p>{% autoescape false %}{{ 'landing.page.description'|trans({}, 'client') }}{% endautoescape %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                {% block fos_user_content %}
+                {% endblock fos_user_content %}
+            </div>
+            <div class="clear-fix"></div>
+          </div>
+       </div>
+    </div>
+{% endblock %}

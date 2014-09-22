@@ -1,0 +1,44 @@
+_admin_entry:
+    pattern:  /
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+_admin_module:
+    pattern:  /{module}
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+_admin_namespace:
+    pattern:  /{module}/{namespace}
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+_admin_page:
+    pattern:  /{module}/{namespace}/{page}
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+_admin_install:
+    pattern:  /install/
+    defaults: { _controller: AdministrativeBundle:Install:index }
+
+_admin_license:
+    pattern:  /admin/license/
+    defaults: { _controller: AdministrativeBundle:License:index }
+
+_admin_info:
+    pattern:  /admin/info/
+    defaults: { _controller: AdministrativeBundle:Info:index }
+
+_admin_mailer:
+    pattern:  /admin/mailer/
+    defaults: { _controller: AdministrativeBundle:Mailer:index }
+    requirements:
+        _method:  GET
+
+_mailer_store:
+    pattern:  /admin/mailer/
+    defaults: { _controller: AdministrativeBundle:Mailer:store }
+    requirements:
+        _method:  POST
+    
+_admin_logs:
+    pattern:  /admin/log/
+    defaults: { _controller: AdministrativeBundle:Logs:index }
+    

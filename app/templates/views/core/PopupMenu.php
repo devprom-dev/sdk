@@ -1,0 +1,1 @@
+<?php echo $view->render('core/PopupMenuBody.php', array( 'items' => $items)); ?>

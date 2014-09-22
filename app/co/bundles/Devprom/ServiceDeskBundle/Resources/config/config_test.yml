@@ -1,0 +1,18 @@
+imports:
+    - { resource: config.yml }
+
+parameters:
+    db_host: localhost
+    db_user: devprom
+    db_pass: devprompass
+    db_name: devprom
+
+    systemLanguage: ru
+    adminEmail: admin@domain
+    supportEmail: support@domain
+    supportName: Test Support
+
+framework:
+    test: ~
+    session:
+        storage_id: session.storage.mock_file

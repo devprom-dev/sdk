@@ -1,0 +1,176 @@
+!define TABLE (T,#FFAAAA)
+
+class "EmailQueue" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  FromAddress: TEXT
+  MailboxClass: TEXT
+}
+
+class "EmailQueueAddress" << TABLE >> {
+  ToAddress: TEXT
+  EmailQueue: INTEGER
+  cms_UserId: INTEGER
+}
+
+class "cms_Language" << TABLE >> {
+  Caption: VARCHAR
+  CodeName: TEXT
+}
+
+class "cms_Backup" << TABLE >> {
+  Caption: VARCHAR
+  BackupFileName: TEXT
+}
+
+class "cms_Update" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  FileName: TEXT
+  LogFileName: TEXT
+}
+
+class "cms_SystemSettings" << TABLE >> {
+  Caption: VARCHAR
+  Language: INTEGER
+  AdminEmail: TEXT
+  AllowToChangeLogin: CHAR
+  AdminProject: INTEGER
+}
+
+class "cms_User" << TABLE >> {
+  Caption: VARCHAR
+  Email: VARCHAR
+  Login: VARCHAR
+  Language: INTEGER
+  ICQ: TEXT
+  Skype: TEXT
+  Phone: TEXT
+  Password: TEXT
+  IsShared: CHAR
+  IsAdmin: CHAR
+  SessionHash: TEXT
+  Photo: IMAGE
+  IsActivated: CHAR
+  Rating: FLOAT
+  Description: LARGETEXT
+  LDAPUID: TEXT
+}
+
+class "cms_License" << TABLE >> {
+  LicenseType: TEXT
+  LicenseValue: TEXT
+  LicenseKey: TEXT
+}
+
+class "cms_BlackList" << TABLE >> {
+  SystemUser: INTEGER
+  IPAddress: TEXT
+  BlockReason: TEXT
+}
+
+class "cms_BatchJob" << TABLE >> {
+  Caption: VARCHAR
+  Parameters: LARGETEXT
+}
+
+class "cms_TempFile" << TABLE >> {
+  Caption: VARCHAR
+  FileName: TEXT
+  MimeType: TEXT
+  File: FILE
+}
+
+class "co_ScheduledJob" << TABLE >> {
+  Caption: VARCHAR
+  ClassName: TEXT
+  Parameters: LARGETEXT
+  Minutes: VARCHAR
+  Hours: VARCHAR
+  Days: VARCHAR
+  WeekDays: VARCHAR
+  IsActive: CHAR
+}
+
+class "co_JobRun" << TABLE >> {
+  ScheduledJob: INTEGER
+  Result: LARGETEXT
+  IsCompleted: CHAR
+}
+
+class "co_ProjectGroup" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  ParentGroup: INTEGER
+  LDAPUID: TEXT
+}
+
+class "co_ProjectGroupLink" << TABLE >> {
+  ProjectGroup: INTEGER
+  Project: INTEGER
+}
+
+class "co_UserGroup" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  ParentGroup: INTEGER
+  LDAPUID: TEXT
+}
+
+class "co_UserGroupLink" << TABLE >> {
+  UserGroup: INTEGER
+  SystemUser: INTEGER
+}
+
+class "co_AccessRight" << TABLE >> {
+  UserGroup: INTEGER
+  ReferenceType: TEXT
+  ReferenceName: VARCHAR
+  AccessType: TEXT
+}
+
+class "cms_Resource" << TABLE >> {
+  ResourceKey: TEXT
+  ResourceValue: TEXT
+}
+
+class "co_CustomReport" << TABLE >> {
+  Caption: VARCHAR
+  ReportBase: TEXT
+  Url: TEXT
+  Description: LARGETEXT
+  Author: INTEGER
+}
+
+class "cms_Checkpoint" << TABLE >> {
+  Caption: VARCHAR
+  Description: LARGETEXT
+  CheckResult: CHAR
+  IsEnabled: CHAR
+  Value: TEXT
+}
+
+class "co_MailboxProvider" << TABLE >> {
+  Caption: VARCHAR
+  ProtocolName: TEXT
+}
+
+class "co_MailTransport" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+}
+
+"EmailQueueAddress" << TABLE >> "*" -- "1" "EmailQueue" << TABLE >> : EmailQueue
+"cms_SystemSettings" << TABLE >> "*" -- "1" "cms_Language" << TABLE >> : Language
+"cms_SystemSettings" << TABLE >> "*" -- "0..1" "pm_Project" << TABLE >> : AdminProject
+"cms_User" << TABLE >> "*" -- "1" "cms_Language" << TABLE >> : Language
+"cms_BlackList" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"co_JobRun" << TABLE >> "*" -- "1" "co_ScheduledJob" << TABLE >> : ScheduledJob
+"co_ProjectGroup" << TABLE >> "*" -- "0..1" "co_ProjectGroup" << TABLE >> : ParentGroup
+"co_ProjectGroupLink" << TABLE >> "*" -- "1" "co_ProjectGroup" << TABLE >> : ProjectGroup
+"co_ProjectGroupLink" << TABLE >> "*" -- "1" "pm_Project" << TABLE >> : Project
+"co_UserGroup" << TABLE >> "*" -- "0..1" "co_UserGroup" << TABLE >> : ParentGroup
+"co_UserGroupLink" << TABLE >> "*" -- "1" "co_UserGroup" << TABLE >> : UserGroup
+"co_UserGroupLink" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
+"co_AccessRight" << TABLE >> "*" -- "1" "co_UserGroup" << TABLE >> : UserGroup
+"co_CustomReport" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : Author

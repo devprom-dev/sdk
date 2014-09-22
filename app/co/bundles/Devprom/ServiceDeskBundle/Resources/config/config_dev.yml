@@ -1,0 +1,6 @@
+imports:
+    - { resource: config.yml }
+    - { resource: ../../Config/DevpromParameters.php }
+
+framework:
+    router:   { resource: "%kernel.root_dir%/Resources/config/routing_dev.yml" }

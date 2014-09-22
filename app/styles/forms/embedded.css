@@ -1,0 +1,51 @@
+.embeddedRowTitle
+{
+	max-width:90%;
+}
+
+.embeddedRow
+{
+	padding-bottom:4px;
+}
+
+.embeddedRow .embeddedRowTitle
+{
+	margin-bottom:6px;
+	float:left;
+	max-width:90%;
+}
+
+.embeddedRow .embeddedRowTitle .title
+{
+    overflow:hidden;
+}
+
+.embedded_footer 
+{
+	padding: 8px 0;
+	margin-bottom: 6px;
+}
+
+.embedded_footer input
+{
+	width: 75pt;
+	height: 16pt;
+}
+
+.embedded_footer input[type=button],
+.embedded_footer input[type=submit]
+{
+	width: auto;
+	height: auto;
+}
+
+.embedded_form a.comment_link
+{
+	color: silver;
+}
+
+.embedded_form a.comment_link:hover
+{
+	color: black;
+}
+

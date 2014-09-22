@@ -1,0 +1,9 @@
+framework:
+    #esi:            ~
+    secret:          123
+    router:
+        resource: "%kernel.root_dir%/conf/routing.yml"
+        strict_requirements: false
+    csrf_protection: false
+    validation:      { enable_annotations: true }
+    templating:      { engines: ['php'] }

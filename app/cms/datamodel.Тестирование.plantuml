@@ -1,0 +1,50 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_Test" << TABLE >> {
+  TestScenario: INTEGER
+  Environment: INTEGER
+  Version: VARCHAR
+  Result: INTEGER
+}
+
+class "pm_TestCaseExecution" << TABLE >> {
+  Test: INTEGER
+  TestCase: INTEGER
+  Success: CHAR
+  Tester: INTEGER
+  Result: INTEGER
+  Description: TEXT
+}
+
+class "pm_Environment" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+}
+
+class "pm_TestPlan" << TABLE >> {
+  Caption: VARCHAR
+  Description: RICHTEXT
+}
+
+class "pm_TestPlanItem" << TABLE >> {
+  TestSuite: INTEGER
+  Assignee: INTEGER
+  Planned: FLOAT
+  TestPlan: INTEGER
+}
+
+class "pm_TestExecutionResult" << TABLE >> {
+  Caption: VARCHAR
+  ReferenceName: VARCHAR
+}
+
+"pm_Test" << TABLE >> "*" -- "1" "" << TABLE >> : TestScenario
+"pm_Test" << TABLE >> "*" -- "0..1" "pm_Environment" << TABLE >> : Environment
+"pm_Test" << TABLE >> "*" -- "1" "pm_TestExecutionResult" << TABLE >> : Result
+"pm_TestCaseExecution" << TABLE >> "*" -- "1" "pm_Test" << TABLE >> : Test
+"pm_TestCaseExecution" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : TestCase
+"pm_TestCaseExecution" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Tester
+"pm_TestCaseExecution" << TABLE >> "*" -- "1" "pm_TestExecutionResult" << TABLE >> : Result
+"pm_TestPlanItem" << TABLE >> "*" -- "1" "WikiPage" << TABLE >> : TestSuite
+"pm_TestPlanItem" << TABLE >> "*" -- "0..1" "pm_Participant" << TABLE >> : Assignee
+"pm_TestPlanItem" << TABLE >> "*" -- "1" "pm_TestPlan" << TABLE >> : TestPlan

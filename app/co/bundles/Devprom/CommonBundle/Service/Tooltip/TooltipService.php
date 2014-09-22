@@ -1,0 +1,125 @@
+<?php
+
+namespace Devprom\CommonBundle\Service\Tooltip;
+
+include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
+
+class TooltipService
+{
+	private $object_it;
+	
+	public function __construct( $class_name, $object_id )
+	{
+    	$this->setObjectIt(getFactory()->getObject($class_name)->getExact($object_id));
+	}
+	
+	public function setObjectIt( $object_it )
+	{ 
+		$this->object_it = $object_it;
+	}
+	
+	public function getObjectIt()
+	{
+		return $this->object_it;
+	}
+			
+    public function getData()
+    {
+    	return array (
+    			'attributes' => 
+    				$this->buildAttributes( $this->object_it )
+    	);
+    }
+    
+    protected function buildAttributes( $object_it )
+    {
+    	$data = array();
+    	
+    	$object = $object_it->object;
+    	
+    	$tooltip_attributes = $object->getAttributesByGroup('tooltip');
+ 		
+	    $system_attributes = $object->getAttributesByGroup('system');
+ 		
+ 		foreach ( $object->getAttributes() as $attribute => $parms )
+ 	 	{
+ 	 		if ( $attribute == 'State' ) continue;
+ 	 		
+ 	 		$type = $object->getAttributeType($attribute);
+
+ 	 		if ( $type == '' ) continue;
+
+ 	 		if ( $object_it->get($attribute) == '' ) continue;
+ 	 		
+ 	 		if ( in_array($attribute, $system_attributes) ) continue;
+
+ 	 		if ( count($tooltip_attributes) > 0 && !in_array($attribute, $tooltip_attributes) || count($tooltip_attributes) < 1 && !$object->IsAttributeVisible($attribute) )
+ 	 		{
+ 	 		    if ( $attribute != 'State' || !is_a($object, 'MetaobjectStatable') ) continue;
+ 	 		}
+
+ 	 		$data[] = array (
+ 	 				'name' => $attribute,
+ 	 				'title' => translate($object->getAttributeUserName($attribute)), 
+ 	 				'type' => $type,
+ 	 				'text' => $this->getAttributeValue( $object_it, $attribute, $type ) 
+ 	 		); 
+ 	 	}
+
+ 	 	return $data;
+    }
+
+ 	protected function getAttributeValue( $object_it, $attribute, $type )
+ 	{
+ 	    switch ( $attribute )
+ 	    {
+ 	        case 'State':
+ 	            if ( is_a($object_it->object, 'MetaobjectStatable') && $object_it->object->getStateClassName() != '' )
+         	    {
+     	            $state = getFactory()->getObject($object_it->object->getStateClassName());
+     	            
+     	            $state_it = $state->getByRef('ReferenceName', $object_it->get('State'));
+     	            
+     	            return $state_it->getDisplayName();
+         	    }
+         	    break;
+ 	    }
+ 	    
+ 		switch ( $type )
+ 		{
+			case 'char':
+			    return $object_it->get($attribue) == 'Y' ? translate('Да') : translate('Нет');
+			    
+ 		    case 'text':
+ 			    
+			    $totext = new \html2text( $object_it->getHtmlDecoded($attribute) );
+			    
+			    return $object_it->getWordsOnlyValue($totext->get_text(), 25);
+
+ 			case 'wysiwyg':
+ 			    
+			    return $object_it->getHtmlDecoded($attribute);
+			    
+ 			default:
+	 	 		if ( $object_it->object->IsReference($attribute) )
+		 		{	
+		 			$uid = new \ObjectUID;
+		 			
+					$ref_it = $object_it->getRef($attribute);
+					$titles = array();
+					
+					while( !$ref_it->end() )
+					{
+						$titles[] = $uid->getUidTitle($ref_it); 
+						$ref_it->moveNext();
+					}
+					
+		 			return (count($titles) > 1 ? '<br/>' : '').join('<br/>', $titles);
+		 		}
+		 		else
+		 		{
+ 					return $object_it->getHtml($attribute);
+		 		}
+ 	 	}
+ 	}	
+}

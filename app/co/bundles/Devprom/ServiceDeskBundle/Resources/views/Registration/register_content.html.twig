@@ -1,0 +1,12 @@
+<section class="widget">
+    <div class="body">
+        <form role="form" action="{{ path('fos_user_registration_register') }}" {{ form_enctype(form) }} method="POST" class="form-horizontal">
+            <legend>{{ 'registration.title'|trans }}</legend>
+            {{ form_widget(form) }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{ 'registration.submit'|trans({}, 'FOSUserBundle') }}</button>
+                <a class="btn btn-default" href="{{ path('fos_user_security_login') }}">{{ 'registration.cancel'|trans({}, 'FOSUserBundle') }}</a>
+            </div>
+        </form>
+    </div>
+</section>

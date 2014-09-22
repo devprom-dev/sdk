@@ -1,0 +1,48 @@
+!define TABLE (T,#FFAAAA)
+
+class "pm_ReleaseMetrics" << TABLE >> {
+  Release: INTEGER
+  SnapshotDate: DATE
+  Workload: INTEGER
+  LeftWorkload: INTEGER
+  SnapshotDays: INTEGER
+  PlannedWorkload: INTEGER
+  TaskType: INTEGER
+}
+
+class "pm_ParticipantMetrics" << TABLE >> {
+  Participant: INTEGER
+  Iteration: INTEGER
+  Metric: TEXT
+  MetricValue: FLOAT
+}
+
+class "pm_IterationMetric" << TABLE >> {
+  Iteration: INTEGER
+  MetricValueDate: DATETIME
+  Metric: TEXT
+  MetricValue: FLOAT
+}
+
+class "pm_VersionMetric" << TABLE >> {
+  Version: INTEGER
+  MetricValueDate: DATETIME
+  Metric: TEXT
+  MetricValue: FLOAT
+}
+
+class "pm_VersionBurndown" << TABLE >> {
+  Version: INTEGER
+  SnapshotDate: DATE
+  Workload: FLOAT
+  SnapshotDays: INTEGER
+  PlannedWorkload: FLOAT
+}
+
+"pm_ReleaseMetrics" << TABLE >> "*" -- "1" "pm_Release" << TABLE >> : Release
+"pm_ReleaseMetrics" << TABLE >> "*" -- "0..1" "pm_TaskType" << TABLE >> : TaskType
+"pm_ParticipantMetrics" << TABLE >> "*" -- "1" "pm_Participant" << TABLE >> : Participant
+"pm_ParticipantMetrics" << TABLE >> "*" -- "1" "pm_Release" << TABLE >> : Iteration
+"pm_IterationMetric" << TABLE >> "*" -- "1" "pm_Release" << TABLE >> : Iteration
+"pm_VersionMetric" << TABLE >> "*" -- "1" "pm_Version" << TABLE >> : Version
+"pm_VersionBurndown" << TABLE >> "*" -- "1" "pm_Version" << TABLE >> : Version

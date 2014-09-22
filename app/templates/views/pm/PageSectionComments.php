@@ -1,0 +1,5 @@
+<?php
+
+$section->render( $view );
+
+?>

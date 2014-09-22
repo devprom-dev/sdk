@@ -1,0 +1,87 @@
+.taskcard
+{
+	border:2px solid black;
+	background: white;
+	float:left;
+	width:460px;
+	height:230px;
+	margin:5px;
+	border-collapse:collapse;
+	page-break-inside: avoid;
+}
+
+.taskcard .left
+{
+	float:left;
+	width:250px;
+	vertical-align:top;
+}
+
+.taskcard .left .caption
+{
+	height:8em;
+	overflow:hidden;
+}
+
+.taskcard .right
+{
+	float:right;
+	width:25%;
+	border-left:1px solid;
+	height:100%;
+}
+
+.taskcard .caption
+{
+	padding:12px;
+	color: black;
+	font-size:+1.4em;
+	padding-bottom:12px;
+}
+
+.taskcard .description
+{
+	padding:12px;
+	color: black;
+	font-size:+1.1em;
+}
+
+.taskcard .uid
+{
+	padding:4px 12px 4px 12px;
+	color: black;
+	height: 1.8em;
+	font-size:+1.2em;
+	border-bottom:1px solid black;
+}
+
+.taskcard .field
+{
+	padding:4px 12px 4px 12px;
+	color: black;
+	height: 1.8em;
+	font-size:+1.2em;
+	border-bottom:1px solid black;
+}
+
+.pagebreak
+{
+	display: block;
+	clear: both;
+	page-break-after: always;
+}
+	
+/* portrait */
+@media print and (orientation:portrait)
+{
+	.taskcard {
+	}
+}
+
+/* landscape */
+@media print and (orientation:landscape)
+{
+	.taskcard {
+		width: 470px;
+	}
+}

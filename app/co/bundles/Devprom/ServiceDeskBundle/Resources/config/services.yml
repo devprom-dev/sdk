@@ -1,0 +1,126 @@
+services:
+    doctrine_dbal_connection_listener:
+        class: Devprom\CommonBundle\Doctrine\DBAL\Listener\PostConnectListener
+        tags:
+            - { name: doctrine.event_listener, event: postConnect }
+            
+    object_change_logger:
+        class: Devprom\ServiceDeskBundle\Service\ObjectChangeLogger
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+            translator: "@translator"
+    servicedesk_twig_unescapehtml:
+        class: Devprom\ServiceDeskBundle\Twig\UnescapeHtmlTwigExtention
+        tags:
+            - { name: twig.extension }
+    servicedesk_twig_issuetype:
+        class: Devprom\ServiceDeskBundle\Twig\IssueTypeTwigExtention
+        tags:
+            - { name: twig.extension }
+    servicedesk_twig_settings:
+        class: Devprom\ServiceDeskBundle\Twig\SettingsTwigExtension
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+            router: "@router"
+        tags:
+            - { name: twig.extension }
+    kernel.listener.your_listener_name:
+            class: Devprom\ServiceDeskBundle\EventListener\ServiceDeskExceptionListener
+            tags:
+                - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
+    request_listener:
+            class: Devprom\ServiceDeskBundle\EventListener\RequestListener
+            arguments:
+                securityContext: "@security.context"
+                twig: "@twig"
+            tags:
+                - { name: kernel.event_listener, event: kernel.request, method: onKernelController }
+    settings_request_listener:
+            class: Devprom\ServiceDeskBundle\EventListener\SettingsRequestListener
+            arguments:
+                container: @service_container
+                router: "@router"
+            tags:
+                - { name: kernel.event_listener, event: kernel.view, method: onKernelController }
+
+
+    model_factory:
+        class: ModelFactory
+
+    user_service:
+        class: Devprom\ServiceDeskBundle\Service\UserService
+        arguments:
+            userManager: "@fos_user.user_manager"
+            mailer: "@servicedesk_mailer"
+    issue_service:
+        class: Devprom\ServiceDeskBundle\Service\IssueService
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+            objectChangeLogger: "@object_change_logger"
+            mailer: "@servicedesk_mailer"
+    attachment_service:
+        class: Devprom\ServiceDeskBundle\Service\AttachmentService
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+
+    settings_service:
+        class: Devprom\ServiceDeskBundle\Service\SettingsService
+        arguments:
+            kernel: "@kernel"
+            settings_storage: "@settings_storage"
+            settings_filter: "@settings_filter"
+            settingsFilePath: "@@DevpromServiceDeskBundle/Resources/config/settings.yml"
+            acceptedSettings: %accepted_settings%
+    settings_storage:
+        class: Devprom\ServiceDeskBundle\Service\YamlSettingsStorage
+    settings_filter:
+        class: Devprom\ServiceDeskBundle\Service\SettingsFilter
+        arguments:
+            acceptedSettings: %accepted_settings%
+
+    servicedesk_mailer:
+        class: Devprom\ServiceDeskBundle\Mailer\Mailer
+        arguments:
+            mailer: "@mailer"
+            router: "@router"
+            twig: "@twig"
+            parameters:
+                template:
+                    confirmation: %fos_user.registration.confirmation.template%
+                    resetting: %fos_user.resetting.email.template%
+                    registration: DevpromServiceDeskBundle:Registration:email.html.twig
+                from_email:
+                    confirmation: %fos_user.registration.confirmation.from_email%
+                    resetting: %fos_user.resetting.email.from_email%
+                    default:
+                        address: "%supportEmail%"
+                        sender_name: "%supportName%"
+
+    mail_transport_logger:
+        class: Devprom\ServiceDeskBundle\Mailer\MailTransportLogger
+        arguments:
+            logger: "@logger"
+        tags:
+            - { name: monolog.logger, channel: mail }
+    message_logger:
+        class: Devprom\ServiceDeskBundle\Mailer\MessageLogger
+        arguments:
+            logger: "@logger"
+        tags:
+            - { name: monolog.logger, channel: mail }
+
+    servicedesk_registration_form_type:
+        class: Devprom\ServiceDeskBundle\Form\Type\RegistrationFormType
+        arguments: [%fos_user.model.user.class%]
+        tags:
+            - { name: form.type, alias: servicedesk_registration_form }
+    servicedesk_logging_registration_form_handler:
+        class: Devprom\ServiceDeskBundle\Form\Handler\LoggingRegistrationFormHandler
+        scope: request
+        arguments: ["@fos_user.registration.form", "@request", "@fos_user.user_manager", "@fos_user.mailer", "@fos_user.util.token_generator", "@object_change_logger", "@model_factory", "@service_container"]
+
+    clear_cache_service:
+        class: Devprom\CommonBundle\Service\ClearCacheService
+        arguments:
+            cacheDir: %kernel.cache_dir%

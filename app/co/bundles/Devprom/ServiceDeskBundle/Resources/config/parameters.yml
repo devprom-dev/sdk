@@ -1,0 +1,14 @@
+parameters:
+    database_driver: pdo_mysql
+    database_port: null
+
+    locale: en
+    secret: a5f77b39610bc536efa946c97e32b2dc227518a0
+
+    accepted_settings: [ 'supportProjectId', 'appUrl' ]
+
+    mailer_encryption: null
+    mailer_host: 127.0.0.1
+    mailer_port: 25
+    mailer_user: ''
+    mailer_password: ''
