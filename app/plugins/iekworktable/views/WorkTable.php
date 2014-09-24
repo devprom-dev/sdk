@@ -19,6 +19,16 @@ class WorkTable extends PageTable
 	{
 		return array();	
 	}
+
+	function getNewActions()
+	{
+		return array();	
+	}
+
+	function getDeleteActions()
+	{
+		return array();	
+	}
 	
  	function getSortDefault( $sort_parm = 'sort' )
 	{
