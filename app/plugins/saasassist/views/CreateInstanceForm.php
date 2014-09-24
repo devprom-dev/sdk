@@ -4,7 +4,7 @@ class CreateInstanceForm extends AjaxForm
 {
  	function getAddCaption()
  	{ 
- 		return text('saasassist6');
+ 		return $_REQUEST['template'] != '' ? text('saasassist37') : text('saasassist6');
  	}
 
  	function getCommandClass()
@@ -14,12 +14,12 @@ class CreateInstanceForm extends AjaxForm
 
 	function getAttributes()
 	{
-		return array('instance', 'email', 'info');
+		return array('instance', 'email');
 	}
 
 	function getAttributeType( $attribute )
 	{
-		return $attribute == 'info' ? 'custom' : 'text';
+		return 'text';
 	}
 	
 	function getName( $attribute )
@@ -68,26 +68,6 @@ class CreateInstanceForm extends AjaxForm
 	
 	function getTemplate()
 	{
-		return "co/FormAsyncNoHeader.php";
-	}
-	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
-	{
-		switch ( $attribute )
-		{
-			case 'info':
-				$this->drawInfo();
-				break;
-				
-			default:
-				parent::drawCustomAttribute( $attribute, $value, $tab_index );
-		}
-	}
-	
-	function drawInfo()
-	{
-		echo text('saasassist21');
-		
-		echo '<input type="hidden" name="template" value="'.htmlentities($_REQUEST['template']).'">';
+		return '../../plugins/saasassist/views/templates/CreateInstance.tpl.php';
 	}
 }
