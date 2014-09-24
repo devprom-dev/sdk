@@ -1,0 +1,3891 @@
+<?php 
+namespace Symfony\Bundle\FrameworkBundle\Templating
+{
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Security\Core\SecurityContext;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\HttpFoundation\Request;
+class GlobalVariables
+{
+protected $container;
+public function __construct(ContainerInterface $container)
+{
+$this->container = $container;
+}
+public function getSecurity()
+{
+if ($this->container->has('security.context')) {
+return $this->container->get('security.context');
+}
+}
+public function getUser()
+{
+if (!$security = $this->getSecurity()) {
+return;
+}
+if (!$token = $security->getToken()) {
+return;
+}
+$user = $token->getUser();
+if (!is_object($user)) {
+return;
+}
+return $user;
+}
+public function getRequest()
+{
+if ($this->container->has('request') && $request = $this->container->get('request')) {
+return $request;
+}
+}
+public function getSession()
+{
+if ($request = $this->getRequest()) {
+return $request->getSession();
+}
+}
+public function getEnvironment()
+{
+return $this->container->getParameter('kernel.environment');
+}
+public function getDebug()
+{
+return (Boolean) $this->container->getParameter('kernel.debug');
+}
+}
+}
+namespace Symfony\Component\Templating
+{
+interface TemplateReferenceInterface
+{
+public function all();
+public function set($name, $value);
+public function get($name);
+public function getPath();
+public function getLogicalName();
+}
+}
+namespace Symfony\Component\Templating
+{
+class TemplateReference implements TemplateReferenceInterface
+{
+protected $parameters;
+public function __construct($name = null, $engine = null)
+{
+$this->parameters = array('name'=> $name,'engine'=> $engine,
+);
+}
+public function __toString()
+{
+return $this->getLogicalName();
+}
+public function set($name, $value)
+{
+if (array_key_exists($name, $this->parameters)) {
+$this->parameters[$name] = $value;
+} else {
+throw new \InvalidArgumentException(sprintf('The template does not support the "%s" parameter.', $name));
+}
+return $this;
+}
+public function get($name)
+{
+if (array_key_exists($name, $this->parameters)) {
+return $this->parameters[$name];
+}
+throw new \InvalidArgumentException(sprintf('The template does not support the "%s" parameter.', $name));
+}
+public function all()
+{
+return $this->parameters;
+}
+public function getPath()
+{
+return $this->parameters['name'];
+}
+public function getLogicalName()
+{
+return $this->parameters['name'];
+}
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Templating
+{
+use Symfony\Component\Templating\TemplateReference as BaseTemplateReference;
+class TemplateReference extends BaseTemplateReference
+{
+public function __construct($bundle = null, $controller = null, $name = null, $format = null, $engine = null)
+{
+$this->parameters = array('bundle'=> $bundle,'controller'=> $controller,'name'=> $name,'format'=> $format,'engine'=> $engine,
+);
+}
+public function getPath()
+{
+$controller = str_replace('\\','/', $this->get('controller'));
+$path = (empty($controller) ?'': $controller.'/').$this->get('name').'.'.$this->get('format').'.'.$this->get('engine');
+return empty($this->parameters['bundle']) ?'views/'.$path :'@'.$this->get('bundle').'/Resources/views/'.$path;
+}
+public function getLogicalName()
+{
+return sprintf('%s:%s:%s.%s.%s', $this->parameters['bundle'], $this->parameters['controller'], $this->parameters['name'], $this->parameters['format'], $this->parameters['engine']);
+}
+}
+}
+namespace Symfony\Component\Templating
+{
+interface TemplateNameParserInterface
+{
+public function parse($name);
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Templating
+{
+use Symfony\Component\Templating\TemplateNameParserInterface;
+use Symfony\Component\Templating\TemplateReferenceInterface;
+use Symfony\Component\HttpKernel\KernelInterface;
+class TemplateNameParser implements TemplateNameParserInterface
+{
+protected $kernel;
+protected $cache;
+public function __construct(KernelInterface $kernel)
+{
+$this->kernel = $kernel;
+$this->cache = array();
+}
+public function parse($name)
+{
+if ($name instanceof TemplateReferenceInterface) {
+return $name;
+} elseif (isset($this->cache[$name])) {
+return $this->cache[$name];
+}
+$name = str_replace(':/',':', preg_replace('#/{2,}#','/', strtr($name,'\\','/')));
+if (false !== strpos($name,'..')) {
+throw new \RuntimeException(sprintf('Template name "%s" contains invalid characters.', $name));
+}
+$parts = explode(':', $name);
+if (3 !== count($parts)) {
+throw new \InvalidArgumentException(sprintf('Template name "%s" is not valid (format is "bundle:section:template.format.engine").', $name));
+}
+$elements = explode('.', $parts[2]);
+if (3 > count($elements)) {
+throw new \InvalidArgumentException(sprintf('Template name "%s" is not valid (format is "bundle:section:template.format.engine").', $name));
+}
+$engine = array_pop($elements);
+$format = array_pop($elements);
+$template = new TemplateReference($parts[0], $parts[1], implode('.', $elements), $format, $engine);
+if ($template->get('bundle')) {
+try {
+$this->kernel->getBundle($template->get('bundle'));
+} catch (\Exception $e) {
+throw new \InvalidArgumentException(sprintf('Template name "%s" is not valid.', $name), 0, $e);
+}
+}
+return $this->cache[$name] = $template;
+}
+}
+}
+namespace Symfony\Component\Config
+{
+interface FileLocatorInterface
+{
+public function locate($name, $currentPath = null, $first = true);
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Templating\Loader
+{
+use Symfony\Component\Config\FileLocatorInterface;
+use Symfony\Component\Templating\TemplateReferenceInterface;
+class TemplateLocator implements FileLocatorInterface
+{
+protected $locator;
+protected $cache;
+public function __construct(FileLocatorInterface $locator, $cacheDir = null)
+{
+if (null !== $cacheDir && is_file($cache = $cacheDir.'/templates.php')) {
+$this->cache = require $cache;
+}
+$this->locator = $locator;
+}
+protected function getCacheKey($template)
+{
+return $template->getLogicalName();
+}
+public function locate($template, $currentPath = null, $first = true)
+{
+if (!$template instanceof TemplateReferenceInterface) {
+throw new \InvalidArgumentException("The template must be an instance of TemplateReferenceInterface.");
+}
+$key = $this->getCacheKey($template);
+if (isset($this->cache[$key])) {
+return $this->cache[$key];
+}
+try {
+return $this->cache[$key] = $this->locator->locate($template->getPath(), $currentPath);
+} catch (\InvalidArgumentException $e) {
+throw new \InvalidArgumentException(sprintf('Unable to find template "%s" : "%s".', $template, $e->getMessage()), 0, $e);
+}
+}
+}
+}
+namespace Symfony\Component\Templating\Storage
+{
+abstract class Storage
+{
+protected $template;
+public function __construct($template)
+{
+$this->template = $template;
+}
+public function __toString()
+{
+return (string) $this->template;
+}
+abstract public function getContent();
+}
+}
+namespace Symfony\Component\Templating\Storage
+{
+class FileStorage extends Storage
+{
+public function getContent()
+{
+return file_get_contents($this->template);
+}
+}
+}
+namespace Symfony\Component\Templating
+{
+interface EngineInterface
+{
+public function render($name, array $parameters = array());
+public function exists($name);
+public function supports($name);
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Templating
+{
+use Symfony\Component\Templating\EngineInterface as BaseEngineInterface;
+use Symfony\Component\HttpFoundation\Response;
+interface EngineInterface extends BaseEngineInterface
+{
+public function renderResponse($view, array $parameters = array(), Response $response = null);
+}
+}
+namespace Symfony\Component\Templating
+{
+use Symfony\Component\Templating\Storage\Storage;
+use Symfony\Component\Templating\Storage\FileStorage;
+use Symfony\Component\Templating\Storage\StringStorage;
+use Symfony\Component\Templating\Helper\HelperInterface;
+use Symfony\Component\Templating\Loader\LoaderInterface;
+if (!defined('ENT_SUBSTITUTE')) {
+define('ENT_SUBSTITUTE', 8);
+}
+class PhpEngine implements EngineInterface, \ArrayAccess
+{
+protected $loader;
+protected $current;
+protected $helpers;
+protected $parents;
+protected $stack;
+protected $charset;
+protected $cache;
+protected $escapers;
+protected static $escaperCache;
+protected $globals;
+protected $parser;
+public function __construct(TemplateNameParserInterface $parser, LoaderInterface $loader, array $helpers = array())
+{
+$this->parser = $parser;
+$this->loader = $loader;
+$this->parents = array();
+$this->stack = array();
+$this->charset ='UTF-8';
+$this->cache = array();
+$this->globals = array();
+$this->setHelpers($helpers);
+$this->initializeEscapers();
+foreach ($this->escapers as $context => $escaper) {
+$this->setEscaper($context, $escaper);
+}
+}
+public function render($name, array $parameters = array())
+{
+$storage = $this->load($name);
+$key = md5(serialize($storage));
+$this->current = $key;
+$this->parents[$key] = null;
+$parameters = array_replace($this->getGlobals(), $parameters);
+if (false === $content = $this->evaluate($storage, $parameters)) {
+throw new \RuntimeException(sprintf('The template "%s" cannot be rendered.', $this->parser->parse($name)));
+}
+if ($this->parents[$key]) {
+$slots = $this->get('slots');
+$this->stack[] = $slots->get('_content');
+$slots->set('_content', $content);
+$content = $this->render($this->parents[$key], $parameters);
+$slots->set('_content', array_pop($this->stack));
+}
+return $content;
+}
+public function exists($name)
+{
+try {
+$this->load($name);
+} catch (\InvalidArgumentException $e) {
+return false;
+}
+return true;
+}
+public function supports($name)
+{
+$template = $this->parser->parse($name);
+return'php'=== $template->get('engine');
+}
+protected function evaluate(Storage $template, array $parameters = array())
+{
+$__template__ = $template;
+if (isset($parameters['__template__'])) {
+throw new \InvalidArgumentException('Invalid parameter (__template__)');
+}
+if ($__template__ instanceof FileStorage) {
+extract($parameters, EXTR_SKIP);
+$view = $this;
+ob_start();
+require $__template__;
+return ob_get_clean();
+} elseif ($__template__ instanceof StringStorage) {
+extract($parameters, EXTR_SKIP);
+$view = $this;
+ob_start();
+eval('; ?>'.$__template__.'<?php ;');
+return ob_get_clean();
+}
+return false;
+}
+public function offsetGet($name)
+{
+return $this->get($name);
+}
+public function offsetExists($name)
+{
+return isset($this->helpers[$name]);
+}
+public function offsetSet($name, $value)
+{
+$this->set($name, $value);
+}
+public function offsetUnset($name)
+{
+throw new \LogicException(sprintf('You can\'t unset a helper (%s).', $name));
+}
+public function addHelpers(array $helpers)
+{
+foreach ($helpers as $alias => $helper) {
+$this->set($helper, is_int($alias) ? null : $alias);
+}
+}
+public function setHelpers(array $helpers)
+{
+$this->helpers = array();
+$this->addHelpers($helpers);
+}
+public function set(HelperInterface $helper, $alias = null)
+{
+$this->helpers[$helper->getName()] = $helper;
+if (null !== $alias) {
+$this->helpers[$alias] = $helper;
+}
+$helper->setCharset($this->charset);
+}
+public function has($name)
+{
+return isset($this->helpers[$name]);
+}
+public function get($name)
+{
+if (!isset($this->helpers[$name])) {
+throw new \InvalidArgumentException(sprintf('The helper "%s" is not defined.', $name));
+}
+return $this->helpers[$name];
+}
+public function extend($template)
+{
+$this->parents[$this->current] = $template;
+}
+public function escape($value, $context ='html')
+{
+if (is_numeric($value)) {
+return $value;
+}
+if (is_scalar($value)) {
+if (!isset(self::$escaperCache[$context][$value])) {
+self::$escaperCache[$context][$value] = call_user_func($this->getEscaper($context), $value);
+}
+return self::$escaperCache[$context][$value];
+}
+return call_user_func($this->getEscaper($context), $value);
+}
+public function setCharset($charset)
+{
+$this->charset = $charset;
+}
+public function getCharset()
+{
+return $this->charset;
+}
+public function setEscaper($context, $escaper)
+{
+$this->escapers[$context] = $escaper;
+self::$escaperCache[$context] = array();
+}
+public function getEscaper($context)
+{
+if (!isset($this->escapers[$context])) {
+throw new \InvalidArgumentException(sprintf('No registered escaper for context "%s".', $context));
+}
+return $this->escapers[$context];
+}
+public function addGlobal($name, $value)
+{
+$this->globals[$name] = $value;
+}
+public function getGlobals()
+{
+return $this->globals;
+}
+protected function initializeEscapers()
+{
+$that = $this;
+$this->escapers = array('html'=>
+function ($value) use ($that) {
+return is_string($value) ? htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, $that->getCharset(), false) : $value;
+},'js'=>
+function ($value) use ($that) {
+if ('UTF-8'!= $that->getCharset()) {
+$value = $that->convertEncoding($value,'UTF-8', $that->getCharset());
+}
+$callback = function ($matches) use ($that) {
+$char = $matches[0];
+if (!isset($char[1])) {
+return'\\x'.substr('00'.bin2hex($char), -2);
+}
+$char = $that->convertEncoding($char,'UTF-16BE','UTF-8');
+return'\\u'.substr('0000'.bin2hex($char), -4);
+};
+if (null === $value = preg_replace_callback('#[^\p{L}\p{N} ]#u', $callback, $value)) {
+throw new \InvalidArgumentException('The string to escape is not a valid UTF-8 string.');
+}
+if ('UTF-8'!= $that->getCharset()) {
+$value = $that->convertEncoding($value, $that->getCharset(),'UTF-8');
+}
+return $value;
+},
+);
+self::$escaperCache = array();
+}
+public function convertEncoding($string, $to, $from)
+{
+if (function_exists('mb_convert_encoding')) {
+return mb_convert_encoding($string, $to, $from);
+} elseif (function_exists('iconv')) {
+return iconv($from, $to, $string);
+}
+throw new \RuntimeException('No suitable convert encoding function (use UTF-8 as your encoding or install the iconv or mbstring extension).');
+}
+public function getLoader()
+{
+return $this->loader;
+}
+protected function load($name)
+{
+$template = $this->parser->parse($name);
+$key = $template->getLogicalName();
+if (isset($this->cache[$key])) {
+return $this->cache[$key];
+}
+$storage = $this->loader->load($template);
+if (false === $storage) {
+throw new \InvalidArgumentException(sprintf('The template "%s" does not exist.', $template));
+}
+return $this->cache[$key] = $storage;
+}
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Templating
+{
+use Symfony\Component\Templating\PhpEngine as BasePhpEngine;
+use Symfony\Component\Templating\Loader\LoaderInterface;
+use Symfony\Component\Templating\TemplateNameParserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
+class PhpEngine extends BasePhpEngine implements EngineInterface
+{
+protected $container;
+public function __construct(TemplateNameParserInterface $parser, ContainerInterface $container, LoaderInterface $loader, GlobalVariables $globals = null)
+{
+$this->container = $container;
+parent::__construct($parser, $loader);
+if (null !== $globals) {
+$this->addGlobal('app', $globals);
+}
+}
+public function get($name)
+{
+if (!isset($this->helpers[$name])) {
+throw new \InvalidArgumentException(sprintf('The helper "%s" is not defined.', $name));
+}
+if (is_string($this->helpers[$name])) {
+$this->helpers[$name] = $this->container->get($this->helpers[$name]);
+$this->helpers[$name]->setCharset($this->charset);
+}
+return $this->helpers[$name];
+}
+public function setHelpers(array $helpers)
+{
+$this->helpers = $helpers;
+}
+public function renderResponse($view, array $parameters = array(), Response $response = null)
+{
+if (null === $response) {
+$response = new Response();
+}
+$response->setContent($this->render($view, $parameters));
+return $response;
+}
+}
+}
+namespace Symfony\Component\Templating\Loader
+{
+use Symfony\Component\Templating\TemplateReferenceInterface;
+use Symfony\Component\Templating\Storage\Storage;
+interface LoaderInterface
+{
+public function load(TemplateReferenceInterface $template);
+public function isFresh(TemplateReferenceInterface $template, $time);
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Templating\Loader
+{
+use Symfony\Component\Templating\Storage\FileStorage;
+use Symfony\Component\Templating\Loader\LoaderInterface;
+use Symfony\Component\Config\FileLocatorInterface;
+use Symfony\Component\Templating\TemplateReferenceInterface;
+class FilesystemLoader implements LoaderInterface
+{
+protected $locator;
+public function __construct(FileLocatorInterface $locator)
+{
+$this->locator = $locator;
+}
+public function load(TemplateReferenceInterface $template)
+{
+try {
+$file = $this->locator->locate($template);
+} catch (\InvalidArgumentException $e) {
+return false;
+}
+return new FileStorage($file);
+}
+public function isFresh(TemplateReferenceInterface $template, $time)
+{
+if (false === $storage = $this->load($template)) {
+return false;
+}
+if (!is_readable((string) $storage)) {
+return false;
+}
+return filemtime((string) $storage) < $time;
+}
+}
+}
+namespace Symfony\Component\Routing
+{
+interface RequestContextAwareInterface
+{
+public function setContext(RequestContext $context);
+public function getContext();
+}
+}
+namespace Symfony\Component\Routing\Generator
+{
+use Symfony\Component\Routing\Exception\InvalidParameterException;
+use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Routing\RequestContextAwareInterface;
+interface UrlGeneratorInterface extends RequestContextAwareInterface
+{
+const ABSOLUTE_URL = true;
+const ABSOLUTE_PATH = false;
+const RELATIVE_PATH ='relative';
+const NETWORK_PATH ='network';
+public function generate($name, $parameters = array(), $referenceType = self::ABSOLUTE_PATH);
+}
+}
+namespace Symfony\Component\Routing\Generator
+{
+interface ConfigurableRequirementsInterface
+{
+public function setStrictRequirements($enabled);
+public function isStrictRequirements();
+}
+}
+namespace Symfony\Component\Routing\Generator
+{
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\Exception\InvalidParameterException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
+use Psr\Log\LoggerInterface;
+class UrlGenerator implements UrlGeneratorInterface, ConfigurableRequirementsInterface
+{
+protected $routes;
+protected $context;
+protected $strictRequirements = true;
+protected $logger;
+protected $decodedChars = array('%2F'=>'/','%40'=>'@','%3A'=>':','%3B'=>';','%2C'=>',','%3D'=>'=','%2B'=>'+','%21'=>'!','%2A'=>'*','%7C'=>'|',
+);
+public function __construct(RouteCollection $routes, RequestContext $context, LoggerInterface $logger = null)
+{
+$this->routes = $routes;
+$this->context = $context;
+$this->logger = $logger;
+}
+public function setContext(RequestContext $context)
+{
+$this->context = $context;
+}
+public function getContext()
+{
+return $this->context;
+}
+public function setStrictRequirements($enabled)
+{
+$this->strictRequirements = null === $enabled ? null : (Boolean) $enabled;
+}
+public function isStrictRequirements()
+{
+return $this->strictRequirements;
+}
+public function generate($name, $parameters = array(), $referenceType = self::ABSOLUTE_PATH)
+{
+if (null === $route = $this->routes->get($name)) {
+throw new RouteNotFoundException(sprintf('Unable to generate a URL for the named route "%s" as such route does not exist.', $name));
+}
+$compiledRoute = $route->compile();
+return $this->doGenerate($compiledRoute->getVariables(), $route->getDefaults(), $route->getRequirements(), $compiledRoute->getTokens(), $parameters, $name, $referenceType, $compiledRoute->getHostTokens());
+}
+protected function doGenerate($variables, $defaults, $requirements, $tokens, $parameters, $name, $referenceType, $hostTokens)
+{
+$variables = array_flip($variables);
+$mergedParams = array_replace($defaults, $this->context->getParameters(), $parameters);
+if ($diff = array_diff_key($variables, $mergedParams)) {
+throw new MissingMandatoryParametersException(sprintf('Some mandatory parameters are missing ("%s") to generate a URL for route "%s".', implode('", "', array_keys($diff)), $name));
+}
+$url ='';
+$optional = true;
+foreach ($tokens as $token) {
+if ('variable'=== $token[0]) {
+if (!$optional || !array_key_exists($token[3], $defaults) || null !== $mergedParams[$token[3]] && (string) $mergedParams[$token[3]] !== (string) $defaults[$token[3]]) {
+if (null !== $this->strictRequirements && !preg_match('#^'.$token[2].'$#', $mergedParams[$token[3]])) {
+$message = sprintf('Parameter "%s" for route "%s" must match "%s" ("%s" given) to generate a corresponding URL.', $token[3], $name, $token[2], $mergedParams[$token[3]]);
+if ($this->strictRequirements) {
+throw new InvalidParameterException($message);
+}
+if ($this->logger) {
+$this->logger->error($message);
+}
+return null;
+}
+$url = $token[1].$mergedParams[$token[3]].$url;
+$optional = false;
+}
+} else {
+$url = $token[1].$url;
+$optional = false;
+}
+}
+if (''=== $url) {
+$url ='/';
+}
+$url = strtr(rawurlencode($url), $this->decodedChars);
+$url = strtr($url, array('/../'=>'/%2E%2E/','/./'=>'/%2E/'));
+if ('/..'=== substr($url, -3)) {
+$url = substr($url, 0, -2) .'%2E%2E';
+} elseif ('/.'=== substr($url, -2)) {
+$url = substr($url, 0, -1) .'%2E';
+}
+$schemeAuthority ='';
+if ($host = $this->context->getHost()) {
+$scheme = $this->context->getScheme();
+if (isset($requirements['_scheme']) && ($req = strtolower($requirements['_scheme'])) && $scheme !== $req) {
+$referenceType = self::ABSOLUTE_URL;
+$scheme = $req;
+}
+if ($hostTokens) {
+$routeHost ='';
+foreach ($hostTokens as $token) {
+if ('variable'=== $token[0]) {
+if (null !== $this->strictRequirements && !preg_match('#^'.$token[2].'$#', $mergedParams[$token[3]])) {
+$message = sprintf('Parameter "%s" for route "%s" must match "%s" ("%s" given) to generate a corresponding URL.', $token[3], $name, $token[2], $mergedParams[$token[3]]);
+if ($this->strictRequirements) {
+throw new InvalidParameterException($message);
+}
+if ($this->logger) {
+$this->logger->error($message);
+}
+return null;
+}
+$routeHost = $token[1].$mergedParams[$token[3]].$routeHost;
+} else {
+$routeHost = $token[1].$routeHost;
+}
+}
+if ($routeHost !== $host) {
+$host = $routeHost;
+if (self::ABSOLUTE_URL !== $referenceType) {
+$referenceType = self::NETWORK_PATH;
+}
+}
+}
+if (self::ABSOLUTE_URL === $referenceType || self::NETWORK_PATH === $referenceType) {
+$port ='';
+if ('http'=== $scheme && 80 != $this->context->getHttpPort()) {
+$port =':'.$this->context->getHttpPort();
+} elseif ('https'=== $scheme && 443 != $this->context->getHttpsPort()) {
+$port =':'.$this->context->getHttpsPort();
+}
+$schemeAuthority = self::NETWORK_PATH === $referenceType ?'//': "$scheme://";
+$schemeAuthority .= $host.$port;
+}
+}
+if (self::RELATIVE_PATH === $referenceType) {
+$url = self::getRelativePath($this->context->getPathInfo(), $url);
+} else {
+$url = $schemeAuthority.$this->context->getBaseUrl().$url;
+}
+$extra = array_diff_key($parameters, $variables, $defaults);
+if ($extra && $query = http_build_query($extra,'','&')) {
+$url .='?'.$query;
+}
+return $url;
+}
+public static function getRelativePath($basePath, $targetPath)
+{
+if ($basePath === $targetPath) {
+return'';
+}
+$sourceDirs = explode('/', isset($basePath[0]) &&'/'=== $basePath[0] ? substr($basePath, 1) : $basePath);
+$targetDirs = explode('/', isset($targetPath[0]) &&'/'=== $targetPath[0] ? substr($targetPath, 1) : $targetPath);
+array_pop($sourceDirs);
+$targetFile = array_pop($targetDirs);
+foreach ($sourceDirs as $i => $dir) {
+if (isset($targetDirs[$i]) && $dir === $targetDirs[$i]) {
+unset($sourceDirs[$i], $targetDirs[$i]);
+} else {
+break;
+}
+}
+$targetDirs[] = $targetFile;
+$path = str_repeat('../', count($sourceDirs)) . implode('/', $targetDirs);
+return''=== $path ||'/'=== $path[0]
+|| false !== ($colonPos = strpos($path,':')) && ($colonPos < ($slashPos = strpos($path,'/')) || false === $slashPos)
+? "./$path" : $path;
+}
+}
+}
+namespace Symfony\Component\Routing
+{
+use Symfony\Component\HttpFoundation\Request;
+class RequestContext
+{
+private $baseUrl;
+private $pathInfo;
+private $method;
+private $host;
+private $scheme;
+private $httpPort;
+private $httpsPort;
+private $parameters = array();
+public function __construct($baseUrl ='', $method ='GET', $host ='localhost', $scheme ='http', $httpPort = 80, $httpsPort = 443, $path ='/')
+{
+$this->baseUrl = $baseUrl;
+$this->method = strtoupper($method);
+$this->host = $host;
+$this->scheme = strtolower($scheme);
+$this->httpPort = $httpPort;
+$this->httpsPort = $httpsPort;
+$this->pathInfo = $path;
+}
+public function fromRequest(Request $request)
+{
+$this->setBaseUrl($request->getBaseUrl());
+$this->setPathInfo($request->getPathInfo());
+$this->setMethod($request->getMethod());
+$this->setHost($request->getHost());
+$this->setScheme($request->getScheme());
+$this->setHttpPort($request->isSecure() ? $this->httpPort : $request->getPort());
+$this->setHttpsPort($request->isSecure() ? $request->getPort() : $this->httpsPort);
+}
+public function getBaseUrl()
+{
+return $this->baseUrl;
+}
+public function setBaseUrl($baseUrl)
+{
+$this->baseUrl = $baseUrl;
+}
+public function getPathInfo()
+{
+return $this->pathInfo;
+}
+public function setPathInfo($pathInfo)
+{
+$this->pathInfo = $pathInfo;
+}
+public function getMethod()
+{
+return $this->method;
+}
+public function setMethod($method)
+{
+$this->method = strtoupper($method);
+}
+public function getHost()
+{
+return $this->host;
+}
+public function setHost($host)
+{
+$this->host = $host;
+}
+public function getScheme()
+{
+return $this->scheme;
+}
+public function setScheme($scheme)
+{
+$this->scheme = strtolower($scheme);
+}
+public function getHttpPort()
+{
+return $this->httpPort;
+}
+public function setHttpPort($httpPort)
+{
+$this->httpPort = $httpPort;
+}
+public function getHttpsPort()
+{
+return $this->httpsPort;
+}
+public function setHttpsPort($httpsPort)
+{
+$this->httpsPort = $httpsPort;
+}
+public function getParameters()
+{
+return $this->parameters;
+}
+public function setParameters(array $parameters)
+{
+$this->parameters = $parameters;
+return $this;
+}
+public function getParameter($name)
+{
+return isset($this->parameters[$name]) ? $this->parameters[$name] : null;
+}
+public function hasParameter($name)
+{
+return array_key_exists($name, $this->parameters);
+}
+public function setParameter($name, $parameter)
+{
+$this->parameters[$name] = $parameter;
+}
+}
+}
+namespace Symfony\Component\Routing\Matcher
+{
+use Symfony\Component\Routing\RequestContextAwareInterface;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+interface UrlMatcherInterface extends RequestContextAwareInterface
+{
+public function match($pathinfo);
+}
+}
+namespace Symfony\Component\Routing
+{
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
+interface RouterInterface extends UrlMatcherInterface, UrlGeneratorInterface
+{
+public function getRouteCollection();
+}
+}
+namespace Symfony\Component\Routing
+{
+use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\Config\ConfigCache;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Routing\Generator\ConfigurableRequirementsInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
+class Router implements RouterInterface
+{
+protected $matcher;
+protected $generator;
+protected $context;
+protected $loader;
+protected $collection;
+protected $resource;
+protected $options = array();
+protected $logger;
+public function __construct(LoaderInterface $loader, $resource, array $options = array(), RequestContext $context = null, LoggerInterface $logger = null)
+{
+$this->loader = $loader;
+$this->resource = $resource;
+$this->logger = $logger;
+$this->context = null === $context ? new RequestContext() : $context;
+$this->setOptions($options);
+}
+public function setOptions(array $options)
+{
+$this->options = array('cache_dir'=> null,'debug'=> false,'generator_class'=>'Symfony\\Component\\Routing\\Generator\\UrlGenerator','generator_base_class'=>'Symfony\\Component\\Routing\\Generator\\UrlGenerator','generator_dumper_class'=>'Symfony\\Component\\Routing\\Generator\\Dumper\\PhpGeneratorDumper','generator_cache_class'=>'ProjectUrlGenerator','matcher_class'=>'Symfony\\Component\\Routing\\Matcher\\UrlMatcher','matcher_base_class'=>'Symfony\\Component\\Routing\\Matcher\\UrlMatcher','matcher_dumper_class'=>'Symfony\\Component\\Routing\\Matcher\\Dumper\\PhpMatcherDumper','matcher_cache_class'=>'ProjectUrlMatcher','resource_type'=> null,'strict_requirements'=> true,
+);
+$invalid = array();
+foreach ($options as $key => $value) {
+if (array_key_exists($key, $this->options)) {
+$this->options[$key] = $value;
+} else {
+$invalid[] = $key;
+}
+}
+if ($invalid) {
+throw new \InvalidArgumentException(sprintf('The Router does not support the following options: "%s".', implode('\', \'', $invalid)));
+}
+}
+public function setOption($key, $value)
+{
+if (!array_key_exists($key, $this->options)) {
+throw new \InvalidArgumentException(sprintf('The Router does not support the "%s" option.', $key));
+}
+$this->options[$key] = $value;
+}
+public function getOption($key)
+{
+if (!array_key_exists($key, $this->options)) {
+throw new \InvalidArgumentException(sprintf('The Router does not support the "%s" option.', $key));
+}
+return $this->options[$key];
+}
+public function getRouteCollection()
+{
+if (null === $this->collection) {
+$this->collection = $this->loader->load($this->resource, $this->options['resource_type']);
+}
+return $this->collection;
+}
+public function setContext(RequestContext $context)
+{
+$this->context = $context;
+if (null !== $this->matcher) {
+$this->getMatcher()->setContext($context);
+}
+if (null !== $this->generator) {
+$this->getGenerator()->setContext($context);
+}
+}
+public function getContext()
+{
+return $this->context;
+}
+public function generate($name, $parameters = array(), $referenceType = self::ABSOLUTE_PATH)
+{
+return $this->getGenerator()->generate($name, $parameters, $referenceType);
+}
+public function match($pathinfo)
+{
+return $this->getMatcher()->match($pathinfo);
+}
+public function getMatcher()
+{
+if (null !== $this->matcher) {
+return $this->matcher;
+}
+if (null === $this->options['cache_dir'] || null === $this->options['matcher_cache_class']) {
+return $this->matcher = new $this->options['matcher_class']($this->getRouteCollection(), $this->context);
+}
+$class = $this->options['matcher_cache_class'];
+$cache = new ConfigCache($this->options['cache_dir'].'/'.$class.'.php', $this->options['debug']);
+if (!$cache->isFresh()) {
+$dumper = new $this->options['matcher_dumper_class']($this->getRouteCollection());
+$options = array('class'=> $class,'base_class'=> $this->options['matcher_base_class'],
+);
+$cache->write($dumper->dump($options), $this->getRouteCollection()->getResources());
+}
+require_once $cache;
+return $this->matcher = new $class($this->context);
+}
+public function getGenerator()
+{
+if (null !== $this->generator) {
+return $this->generator;
+}
+if (null === $this->options['cache_dir'] || null === $this->options['generator_cache_class']) {
+$this->generator = new $this->options['generator_class']($this->getRouteCollection(), $this->context, $this->logger);
+} else {
+$class = $this->options['generator_cache_class'];
+$cache = new ConfigCache($this->options['cache_dir'].'/'.$class.'.php', $this->options['debug']);
+if (!$cache->isFresh()) {
+$dumper = new $this->options['generator_dumper_class']($this->getRouteCollection());
+$options = array('class'=> $class,'base_class'=> $this->options['generator_base_class'],
+);
+$cache->write($dumper->dump($options), $this->getRouteCollection()->getResources());
+}
+require_once $cache;
+$this->generator = new $class($this->context, $this->logger);
+}
+if ($this->generator instanceof ConfigurableRequirementsInterface) {
+$this->generator->setStrictRequirements($this->options['strict_requirements']);
+}
+return $this->generator;
+}
+}
+}
+namespace Symfony\Component\Routing\Matcher
+{
+interface RedirectableUrlMatcherInterface
+{
+public function redirect($path, $route, $scheme = null);
+}
+}
+namespace Symfony\Component\Routing\Matcher
+{
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\Route;
+class UrlMatcher implements UrlMatcherInterface
+{
+const REQUIREMENT_MATCH = 0;
+const REQUIREMENT_MISMATCH = 1;
+const ROUTE_MATCH = 2;
+protected $context;
+protected $allow = array();
+protected $routes;
+public function __construct(RouteCollection $routes, RequestContext $context)
+{
+$this->routes = $routes;
+$this->context = $context;
+}
+public function setContext(RequestContext $context)
+{
+$this->context = $context;
+}
+public function getContext()
+{
+return $this->context;
+}
+public function match($pathinfo)
+{
+$this->allow = array();
+if ($ret = $this->matchCollection(rawurldecode($pathinfo), $this->routes)) {
+return $ret;
+}
+throw 0 < count($this->allow)
+? new MethodNotAllowedException(array_unique(array_map('strtoupper', $this->allow)))
+: new ResourceNotFoundException();
+}
+protected function matchCollection($pathinfo, RouteCollection $routes)
+{
+foreach ($routes as $name => $route) {
+$compiledRoute = $route->compile();
+if (''!== $compiledRoute->getStaticPrefix() && 0 !== strpos($pathinfo, $compiledRoute->getStaticPrefix())) {
+continue;
+}
+if (!preg_match($compiledRoute->getRegex(), $pathinfo, $matches)) {
+continue;
+}
+$hostMatches = array();
+if ($compiledRoute->getHostRegex() && !preg_match($compiledRoute->getHostRegex(), $this->context->getHost(), $hostMatches)) {
+continue;
+}
+if ($req = $route->getRequirement('_method')) {
+if ('HEAD'=== $method = $this->context->getMethod()) {
+$method ='GET';
+}
+if (!in_array($method, $req = explode('|', strtoupper($req)))) {
+$this->allow = array_merge($this->allow, $req);
+continue;
+}
+}
+$status = $this->handleRouteRequirements($pathinfo, $name, $route);
+if (self::ROUTE_MATCH === $status[0]) {
+return $status[1];
+}
+if (self::REQUIREMENT_MISMATCH === $status[0]) {
+continue;
+}
+return $this->getAttributes($route, $name, array_replace($matches, $hostMatches));
+}
+}
+protected function getAttributes(Route $route, $name, array $attributes)
+{
+$attributes['_route'] = $name;
+return $this->mergeDefaults($attributes, $route->getDefaults());
+}
+protected function handleRouteRequirements($pathinfo, $name, Route $route)
+{
+$scheme = $route->getRequirement('_scheme');
+$status = $scheme && $scheme !== $this->context->getScheme() ? self::REQUIREMENT_MISMATCH : self::REQUIREMENT_MATCH;
+return array($status, null);
+}
+protected function mergeDefaults($params, $defaults)
+{
+foreach ($params as $key => $value) {
+if (!is_int($key)) {
+$defaults[$key] = $value;
+}
+}
+return $defaults;
+}
+}
+}
+namespace Symfony\Component\Routing\Matcher
+{
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\Route;
+abstract class RedirectableUrlMatcher extends UrlMatcher implements RedirectableUrlMatcherInterface
+{
+public function match($pathinfo)
+{
+try {
+$parameters = parent::match($pathinfo);
+} catch (ResourceNotFoundException $e) {
+if ('/'=== substr($pathinfo, -1) || !in_array($this->context->getMethod(), array('HEAD','GET'))) {
+throw $e;
+}
+try {
+parent::match($pathinfo.'/');
+return $this->redirect($pathinfo.'/', null);
+} catch (ResourceNotFoundException $e2) {
+throw $e;
+}
+}
+return $parameters;
+}
+protected function handleRouteRequirements($pathinfo, $name, Route $route)
+{
+$scheme = $route->getRequirement('_scheme');
+if ($scheme && $this->context->getScheme() !== $scheme) {
+return array(self::ROUTE_MATCH, $this->redirect($pathinfo, $name, $scheme));
+}
+return array(self::REQUIREMENT_MATCH, null);
+}
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Routing
+{
+use Symfony\Component\Routing\Matcher\RedirectableUrlMatcher as BaseMatcher;
+class RedirectableUrlMatcher extends BaseMatcher
+{
+public function redirect($path, $route, $scheme = null)
+{
+return array('_controller'=>'Symfony\\Bundle\\FrameworkBundle\\Controller\\RedirectController::urlRedirectAction','path'=> $path,'permanent'=> true,'scheme'=> $scheme,'httpPort'=> $this->context->getHttpPort(),'httpsPort'=> $this->context->getHttpsPort(),'_route'=> $route,
+);
+}
+}
+}
+namespace Symfony\Component\HttpKernel\CacheWarmer
+{
+interface WarmableInterface
+{
+public function warmUp($cacheDir);
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Routing
+{
+use Symfony\Component\Routing\Router as BaseRouter;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\HttpKernel\CacheWarmer\WarmableInterface;
+use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
+class Router extends BaseRouter implements WarmableInterface
+{
+private $container;
+public function __construct(ContainerInterface $container, $resource, array $options = array(), RequestContext $context = null)
+{
+$this->container = $container;
+$this->resource = $resource;
+$this->context = null === $context ? new RequestContext() : $context;
+$this->setOptions($options);
+}
+public function getRouteCollection()
+{
+if (null === $this->collection) {
+$this->collection = $this->container->get('routing.loader')->load($this->resource, $this->options['resource_type']);
+$this->resolveParameters($this->collection);
+}
+return $this->collection;
+}
+public function warmUp($cacheDir)
+{
+$currentDir = $this->getOption('cache_dir');
+$this->setOption('cache_dir', $cacheDir);
+$this->getMatcher();
+$this->getGenerator();
+$this->setOption('cache_dir', $currentDir);
+}
+private function resolveParameters(RouteCollection $collection)
+{
+foreach ($collection as $route) {
+foreach ($route->getDefaults() as $name => $value) {
+$route->setDefault($name, $this->resolve($value));
+}
+foreach ($route->getRequirements() as $name => $value) {
+$route->setRequirement($name, $this->resolve($value));
+}
+$route->setPath($this->resolve($route->getPath()));
+$route->setHost($this->resolve($route->getHost()));
+}
+}
+private function resolve($value)
+{
+if (is_array($value)) {
+foreach ($value as $key => $val) {
+$value[$key] = $this->resolve($val);
+}
+return $value;
+}
+if (!is_string($value)) {
+return $value;
+}
+$container = $this->container;
+$escapedValue = preg_replace_callback('/%%|%([^%\s]++)%/', function ($match) use ($container, $value) {
+if (!isset($match[1])) {
+return'%%';
+}
+$resolved = $container->getParameter($match[1]);
+if (is_string($resolved) || is_numeric($resolved)) {
+return (string) $resolved;
+}
+throw new RuntimeException(sprintf('The container parameter "%s", used in the route configuration value "%s", '.'must be a string or numeric, but it is of type %s.',
+$match[1],
+$value,
+gettype($resolved)
+)
+);
+}, $value);
+return str_replace('%%','%', $escapedValue);
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+class ParameterBag implements \IteratorAggregate, \Countable
+{
+protected $parameters;
+public function __construct(array $parameters = array())
+{
+$this->parameters = $parameters;
+}
+public function all()
+{
+return $this->parameters;
+}
+public function keys()
+{
+return array_keys($this->parameters);
+}
+public function replace(array $parameters = array())
+{
+$this->parameters = $parameters;
+}
+public function add(array $parameters = array())
+{
+$this->parameters = array_replace($this->parameters, $parameters);
+}
+public function get($path, $default = null, $deep = false)
+{
+if (!$deep || false === $pos = strpos($path,'[')) {
+return array_key_exists($path, $this->parameters) ? $this->parameters[$path] : $default;
+}
+$root = substr($path, 0, $pos);
+if (!array_key_exists($root, $this->parameters)) {
+return $default;
+}
+$value = $this->parameters[$root];
+$currentKey = null;
+for ($i = $pos, $c = strlen($path); $i < $c; $i++) {
+$char = $path[$i];
+if ('['=== $char) {
+if (null !== $currentKey) {
+throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "[" at position %d.', $i));
+}
+$currentKey ='';
+} elseif (']'=== $char) {
+if (null === $currentKey) {
+throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "]" at position %d.', $i));
+}
+if (!is_array($value) || !array_key_exists($currentKey, $value)) {
+return $default;
+}
+$value = $value[$currentKey];
+$currentKey = null;
+} else {
+if (null === $currentKey) {
+throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "%s" at position %d.', $char, $i));
+}
+$currentKey .= $char;
+}
+}
+if (null !== $currentKey) {
+throw new \InvalidArgumentException(sprintf('Malformed path. Path must end with "]".'));
+}
+return $value;
+}
+public function set($key, $value)
+{
+$this->parameters[$key] = $value;
+}
+public function has($key)
+{
+return array_key_exists($key, $this->parameters);
+}
+public function remove($key)
+{
+unset($this->parameters[$key]);
+}
+public function getAlpha($key, $default ='', $deep = false)
+{
+return preg_replace('/[^[:alpha:]]/','', $this->get($key, $default, $deep));
+}
+public function getAlnum($key, $default ='', $deep = false)
+{
+return preg_replace('/[^[:alnum:]]/','', $this->get($key, $default, $deep));
+}
+public function getDigits($key, $default ='', $deep = false)
+{
+return str_replace(array('-','+'),'', $this->filter($key, $default, $deep, FILTER_SANITIZE_NUMBER_INT));
+}
+public function getInt($key, $default = 0, $deep = false)
+{
+return (int) $this->get($key, $default, $deep);
+}
+public function filter($key, $default = null, $deep = false, $filter=FILTER_DEFAULT, $options=array())
+{
+$value = $this->get($key, $default, $deep);
+if (!is_array($options) && $options) {
+$options = array('flags'=> $options);
+}
+if (is_array($value) && !isset($options['flags'])) {
+$options['flags'] = FILTER_REQUIRE_ARRAY;
+}
+return filter_var($value, $filter, $options);
+}
+public function getIterator()
+{
+return new \ArrayIterator($this->parameters);
+}
+public function count()
+{
+return count($this->parameters);
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+class HeaderBag implements \IteratorAggregate, \Countable
+{
+protected $headers;
+protected $cacheControl;
+public function __construct(array $headers = array())
+{
+$this->cacheControl = array();
+$this->headers = array();
+foreach ($headers as $key => $values) {
+$this->set($key, $values);
+}
+}
+public function __toString()
+{
+if (!$this->headers) {
+return'';
+}
+$max = max(array_map('strlen', array_keys($this->headers))) + 1;
+$content ='';
+ksort($this->headers);
+foreach ($this->headers as $name => $values) {
+$name = implode('-', array_map('ucfirst', explode('-', $name)));
+foreach ($values as $value) {
+$content .= sprintf("%-{$max}s %s\r\n", $name.':', $value);
+}
+}
+return $content;
+}
+public function all()
+{
+return $this->headers;
+}
+public function keys()
+{
+return array_keys($this->headers);
+}
+public function replace(array $headers = array())
+{
+$this->headers = array();
+$this->add($headers);
+}
+public function add(array $headers)
+{
+foreach ($headers as $key => $values) {
+$this->set($key, $values);
+}
+}
+public function get($key, $default = null, $first = true)
+{
+$key = strtr(strtolower($key),'_','-');
+if (!array_key_exists($key, $this->headers)) {
+if (null === $default) {
+return $first ? null : array();
+}
+return $first ? $default : array($default);
+}
+if ($first) {
+return count($this->headers[$key]) ? $this->headers[$key][0] : $default;
+}
+return $this->headers[$key];
+}
+public function set($key, $values, $replace = true)
+{
+$key = strtr(strtolower($key),'_','-');
+$values = array_values((array) $values);
+if (true === $replace || !isset($this->headers[$key])) {
+$this->headers[$key] = $values;
+} else {
+$this->headers[$key] = array_merge($this->headers[$key], $values);
+}
+if ('cache-control'=== $key) {
+$this->cacheControl = $this->parseCacheControl($values[0]);
+}
+}
+public function has($key)
+{
+return array_key_exists(strtr(strtolower($key),'_','-'), $this->headers);
+}
+public function contains($key, $value)
+{
+return in_array($value, $this->get($key, null, false));
+}
+public function remove($key)
+{
+$key = strtr(strtolower($key),'_','-');
+unset($this->headers[$key]);
+if ('cache-control'=== $key) {
+$this->cacheControl = array();
+}
+}
+public function getDate($key, \DateTime $default = null)
+{
+if (null === $value = $this->get($key)) {
+return $default;
+}
+if (false === $date = \DateTime::createFromFormat(DATE_RFC2822, $value)) {
+throw new \RuntimeException(sprintf('The %s HTTP header is not parseable (%s).', $key, $value));
+}
+return $date;
+}
+public function addCacheControlDirective($key, $value = true)
+{
+$this->cacheControl[$key] = $value;
+$this->set('Cache-Control', $this->getCacheControlHeader());
+}
+public function hasCacheControlDirective($key)
+{
+return array_key_exists($key, $this->cacheControl);
+}
+public function getCacheControlDirective($key)
+{
+return array_key_exists($key, $this->cacheControl) ? $this->cacheControl[$key] : null;
+}
+public function removeCacheControlDirective($key)
+{
+unset($this->cacheControl[$key]);
+$this->set('Cache-Control', $this->getCacheControlHeader());
+}
+public function getIterator()
+{
+return new \ArrayIterator($this->headers);
+}
+public function count()
+{
+return count($this->headers);
+}
+protected function getCacheControlHeader()
+{
+$parts = array();
+ksort($this->cacheControl);
+foreach ($this->cacheControl as $key => $value) {
+if (true === $value) {
+$parts[] = $key;
+} else {
+if (preg_match('#[^a-zA-Z0-9._-]#', $value)) {
+$value ='"'.$value.'"';
+}
+$parts[] = "$key=$value";
+}
+}
+return implode(', ', $parts);
+}
+protected function parseCacheControl($header)
+{
+$cacheControl = array();
+preg_match_all('#([a-zA-Z][a-zA-Z_-]*)\s*(?:=(?:"([^"]*)"|([^ \t",;]*)))?#', $header, $matches, PREG_SET_ORDER);
+foreach ($matches as $match) {
+$cacheControl[strtolower($match[1])] = isset($match[3]) ? $match[3] : (isset($match[2]) ? $match[2] : true);
+}
+return $cacheControl;
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+class FileBag extends ParameterBag
+{
+private static $fileKeys = array('error','name','size','tmp_name','type');
+public function __construct(array $parameters = array())
+{
+$this->replace($parameters);
+}
+public function replace(array $files = array())
+{
+$this->parameters = array();
+$this->add($files);
+}
+public function set($key, $value)
+{
+if (!is_array($value) && !$value instanceof UploadedFile) {
+throw new \InvalidArgumentException('An uploaded file must be an array or an instance of UploadedFile.');
+}
+parent::set($key, $this->convertFileInformation($value));
+}
+public function add(array $files = array())
+{
+foreach ($files as $key => $file) {
+$this->set($key, $file);
+}
+}
+protected function convertFileInformation($file)
+{
+if ($file instanceof UploadedFile) {
+return $file;
+}
+$file = $this->fixPhpFilesArray($file);
+if (is_array($file)) {
+$keys = array_keys($file);
+sort($keys);
+if ($keys == self::$fileKeys) {
+if (UPLOAD_ERR_NO_FILE == $file['error']) {
+$file = null;
+} else {
+$file = new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['size'], $file['error']);
+}
+} else {
+$file = array_map(array($this,'convertFileInformation'), $file);
+}
+}
+return $file;
+}
+protected function fixPhpFilesArray($data)
+{
+if (!is_array($data)) {
+return $data;
+}
+$keys = array_keys($data);
+sort($keys);
+if (self::$fileKeys != $keys || !isset($data['name']) || !is_array($data['name'])) {
+return $data;
+}
+$files = $data;
+foreach (self::$fileKeys as $k) {
+unset($files[$k]);
+}
+foreach (array_keys($data['name']) as $key) {
+$files[$key] = $this->fixPhpFilesArray(array('error'=> $data['error'][$key],'name'=> $data['name'][$key],'type'=> $data['type'][$key],'tmp_name'=> $data['tmp_name'][$key],'size'=> $data['size'][$key]
+));
+}
+return $files;
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+class ServerBag extends ParameterBag
+{
+public function getHeaders()
+{
+$headers = array();
+foreach ($this->parameters as $key => $value) {
+if (0 === strpos($key,'HTTP_')) {
+$headers[substr($key, 5)] = $value;
+}
+elseif (in_array($key, array('CONTENT_LENGTH','CONTENT_MD5','CONTENT_TYPE'))) {
+$headers[$key] = $value;
+}
+}
+if (isset($this->parameters['PHP_AUTH_USER'])) {
+$headers['PHP_AUTH_USER'] = $this->parameters['PHP_AUTH_USER'];
+$headers['PHP_AUTH_PW'] = isset($this->parameters['PHP_AUTH_PW']) ? $this->parameters['PHP_AUTH_PW'] :'';
+} else {
+$authorizationHeader = null;
+if (isset($this->parameters['HTTP_AUTHORIZATION'])) {
+$authorizationHeader = $this->parameters['HTTP_AUTHORIZATION'];
+} elseif (isset($this->parameters['REDIRECT_HTTP_AUTHORIZATION'])) {
+$authorizationHeader = $this->parameters['REDIRECT_HTTP_AUTHORIZATION'];
+}
+if (null !== $authorizationHeader) {
+if (0 === stripos($authorizationHeader,'basic')) {
+$exploded = explode(':', base64_decode(substr($authorizationHeader, 6)));
+if (count($exploded) == 2) {
+list($headers['PHP_AUTH_USER'], $headers['PHP_AUTH_PW']) = $exploded;
+}
+} elseif (empty($this->parameters['PHP_AUTH_DIGEST']) && (0 === stripos($authorizationHeader,'digest'))) {
+$headers['PHP_AUTH_DIGEST'] = $authorizationHeader;
+$this->parameters['PHP_AUTH_DIGEST'] = $authorizationHeader;
+}
+}
+}
+if (isset($headers['PHP_AUTH_USER'])) {
+$headers['AUTHORIZATION'] ='Basic '.base64_encode($headers['PHP_AUTH_USER'].':'.$headers['PHP_AUTH_PW']);
+} elseif (isset($headers['PHP_AUTH_DIGEST'])) {
+$headers['AUTHORIZATION'] = $headers['PHP_AUTH_DIGEST'];
+}
+return $headers;
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+class Request
+{
+const HEADER_CLIENT_IP ='client_ip';
+const HEADER_CLIENT_HOST ='client_host';
+const HEADER_CLIENT_PROTO ='client_proto';
+const HEADER_CLIENT_PORT ='client_port';
+protected static $trustProxy = false;
+protected static $trustedProxies = array();
+protected static $trustedHostPatterns = array();
+protected static $trustedHosts = array();
+protected static $trustedHeaders = array(
+self::HEADER_CLIENT_IP =>'X_FORWARDED_FOR',
+self::HEADER_CLIENT_HOST =>'X_FORWARDED_HOST',
+self::HEADER_CLIENT_PROTO =>'X_FORWARDED_PROTO',
+self::HEADER_CLIENT_PORT =>'X_FORWARDED_PORT',
+);
+protected static $httpMethodParameterOverride = false;
+public $attributes;
+public $request;
+public $query;
+public $server;
+public $files;
+public $cookies;
+public $headers;
+protected $content;
+protected $languages;
+protected $charsets;
+protected $acceptableContentTypes;
+protected $pathInfo;
+protected $requestUri;
+protected $baseUrl;
+protected $basePath;
+protected $method;
+protected $format;
+protected $session;
+protected $locale;
+protected $defaultLocale ='en';
+protected static $formats;
+public function __construct(array $query = array(), array $request = array(), array $attributes = array(), array $cookies = array(), array $files = array(), array $server = array(), $content = null)
+{
+$this->initialize($query, $request, $attributes, $cookies, $files, $server, $content);
+}
+public function initialize(array $query = array(), array $request = array(), array $attributes = array(), array $cookies = array(), array $files = array(), array $server = array(), $content = null)
+{
+$this->request = new ParameterBag($request);
+$this->query = new ParameterBag($query);
+$this->attributes = new ParameterBag($attributes);
+$this->cookies = new ParameterBag($cookies);
+$this->files = new FileBag($files);
+$this->server = new ServerBag($server);
+$this->headers = new HeaderBag($this->server->getHeaders());
+$this->content = $content;
+$this->languages = null;
+$this->charsets = null;
+$this->acceptableContentTypes = null;
+$this->pathInfo = null;
+$this->requestUri = null;
+$this->baseUrl = null;
+$this->basePath = null;
+$this->method = null;
+$this->format = null;
+}
+public static function createFromGlobals()
+{
+$request = new static($_GET, $_POST, array(), $_COOKIE, $_FILES, $_SERVER);
+if (0 === strpos($request->headers->get('CONTENT_TYPE'),'application/x-www-form-urlencoded')
+&& in_array(strtoupper($request->server->get('REQUEST_METHOD','GET')), array('PUT','DELETE','PATCH'))
+) {
+parse_str($request->getContent(), $data);
+$request->request = new ParameterBag($data);
+}
+return $request;
+}
+public static function create($uri, $method ='GET', $parameters = array(), $cookies = array(), $files = array(), $server = array(), $content = null)
+{
+$server = array_replace(array('SERVER_NAME'=>'localhost','SERVER_PORT'=> 80,'HTTP_HOST'=>'localhost','HTTP_USER_AGENT'=>'Symfony/2.X','HTTP_ACCEPT'=>'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8','HTTP_ACCEPT_LANGUAGE'=>'en-us,en;q=0.5','HTTP_ACCEPT_CHARSET'=>'ISO-8859-1,utf-8;q=0.7,*;q=0.7','REMOTE_ADDR'=>'127.0.0.1','SCRIPT_NAME'=>'','SCRIPT_FILENAME'=>'','SERVER_PROTOCOL'=>'HTTP/1.1','REQUEST_TIME'=> time(),
+), $server);
+$server['PATH_INFO'] ='';
+$server['REQUEST_METHOD'] = strtoupper($method);
+$components = parse_url($uri);
+if (isset($components['host'])) {
+$server['SERVER_NAME'] = $components['host'];
+$server['HTTP_HOST'] = $components['host'];
+}
+if (isset($components['scheme'])) {
+if ('https'=== $components['scheme']) {
+$server['HTTPS'] ='on';
+$server['SERVER_PORT'] = 443;
+} else {
+unset($server['HTTPS']);
+$server['SERVER_PORT'] = 80;
+}
+}
+if (isset($components['port'])) {
+$server['SERVER_PORT'] = $components['port'];
+$server['HTTP_HOST'] = $server['HTTP_HOST'].':'.$components['port'];
+}
+if (isset($components['user'])) {
+$server['PHP_AUTH_USER'] = $components['user'];
+}
+if (isset($components['pass'])) {
+$server['PHP_AUTH_PW'] = $components['pass'];
+}
+if (!isset($components['path'])) {
+$components['path'] ='/';
+}
+switch (strtoupper($method)) {
+case'POST':
+case'PUT':
+case'DELETE':
+if (!isset($server['CONTENT_TYPE'])) {
+$server['CONTENT_TYPE'] ='application/x-www-form-urlencoded';
+}
+case'PATCH':
+$request = $parameters;
+$query = array();
+break;
+default:
+$request = array();
+$query = $parameters;
+break;
+}
+$queryString ='';
+if (isset($components['query'])) {
+parse_str(html_entity_decode($components['query']), $qs);
+if ($query) {
+$query = array_replace($qs, $query);
+$queryString = http_build_query($query,'','&');
+} else {
+$query = $qs;
+$queryString = $components['query'];
+}
+} elseif ($query) {
+$queryString = http_build_query($query,'','&');
+}
+$server['REQUEST_URI'] = $components['path'].(''!== $queryString ?'?'.$queryString :'');
+$server['QUERY_STRING'] = $queryString;
+return new static($query, $request, array(), $cookies, $files, $server, $content);
+}
+public function duplicate(array $query = null, array $request = null, array $attributes = null, array $cookies = null, array $files = null, array $server = null)
+{
+$dup = clone $this;
+if ($query !== null) {
+$dup->query = new ParameterBag($query);
+}
+if ($request !== null) {
+$dup->request = new ParameterBag($request);
+}
+if ($attributes !== null) {
+$dup->attributes = new ParameterBag($attributes);
+}
+if ($cookies !== null) {
+$dup->cookies = new ParameterBag($cookies);
+}
+if ($files !== null) {
+$dup->files = new FileBag($files);
+}
+if ($server !== null) {
+$dup->server = new ServerBag($server);
+$dup->headers = new HeaderBag($dup->server->getHeaders());
+}
+$dup->languages = null;
+$dup->charsets = null;
+$dup->acceptableContentTypes = null;
+$dup->pathInfo = null;
+$dup->requestUri = null;
+$dup->baseUrl = null;
+$dup->basePath = null;
+$dup->method = null;
+$dup->format = null;
+if (!$dup->get('_format') && $this->get('_format')) {
+$dup->attributes->set('_format', $this->get('_format'));
+}
+if (!$dup->getRequestFormat(null)) {
+$dup->setRequestFormat($format = $this->getRequestFormat(null));
+}
+return $dup;
+}
+public function __clone()
+{
+$this->query = clone $this->query;
+$this->request = clone $this->request;
+$this->attributes = clone $this->attributes;
+$this->cookies = clone $this->cookies;
+$this->files = clone $this->files;
+$this->server = clone $this->server;
+$this->headers = clone $this->headers;
+}
+public function __toString()
+{
+return
+sprintf('%s %s %s', $this->getMethod(), $this->getRequestUri(), $this->server->get('SERVER_PROTOCOL'))."\r\n".
+$this->headers."\r\n".
+$this->getContent();
+}
+public function overrideGlobals()
+{
+$_GET = $this->query->all();
+$_POST = $this->request->all();
+$_SERVER = $this->server->all();
+$_COOKIE = $this->cookies->all();
+foreach ($this->headers->all() as $key => $value) {
+$key = strtoupper(str_replace('-','_', $key));
+if (in_array($key, array('CONTENT_TYPE','CONTENT_LENGTH'))) {
+$_SERVER[$key] = implode(', ', $value);
+} else {
+$_SERVER['HTTP_'.$key] = implode(', ', $value);
+}
+}
+$request = array('g'=> $_GET,'p'=> $_POST,'c'=> $_COOKIE);
+$requestOrder = ini_get('request_order') ?: ini_get('variables_order');
+$requestOrder = preg_replace('#[^cgp]#','', strtolower($requestOrder)) ?:'gp';
+$_REQUEST = array();
+foreach (str_split($requestOrder) as $order) {
+$_REQUEST = array_merge($_REQUEST, $request[$order]);
+}
+}
+public static function trustProxyData()
+{
+trigger_error('trustProxyData() is deprecated since version 2.0 and will be removed in 2.3. Use setTrustedProxies() instead.', E_USER_DEPRECATED);
+self::$trustProxy = true;
+}
+public static function setTrustedProxies(array $proxies)
+{
+self::$trustedProxies = $proxies;
+self::$trustProxy = $proxies ? true : false;
+}
+public static function getTrustedProxies()
+{
+return self::$trustedProxies;
+}
+public static function setTrustedHosts(array $hostPatterns)
+{
+self::$trustedHostPatterns = array_map(function ($hostPattern) {
+return sprintf('{%s}i', str_replace('}','\\}', $hostPattern));
+}, $hostPatterns);
+self::$trustedHosts = array();
+}
+public static function getTrustedHosts()
+{
+return self::$trustedHostPatterns;
+}
+public static function setTrustedHeaderName($key, $value)
+{
+if (!array_key_exists($key, self::$trustedHeaders)) {
+throw new \InvalidArgumentException(sprintf('Unable to set the trusted header name for key "%s".', $key));
+}
+self::$trustedHeaders[$key] = $value;
+}
+public static function isProxyTrusted()
+{
+return self::$trustProxy;
+}
+public static function normalizeQueryString($qs)
+{
+if (''== $qs) {
+return'';
+}
+$parts = array();
+$order = array();
+foreach (explode('&', $qs) as $param) {
+if (''=== $param ||'='=== $param[0]) {
+continue;
+}
+$keyValuePair = explode('=', $param, 2);
+$parts[] = isset($keyValuePair[1]) ?
+rawurlencode(urldecode($keyValuePair[0])).'='.rawurlencode(urldecode($keyValuePair[1])) :
+rawurlencode(urldecode($keyValuePair[0]));
+$order[] = urldecode($keyValuePair[0]);
+}
+array_multisort($order, SORT_ASC, $parts);
+return implode('&', $parts);
+}
+public static function enableHttpMethodParameterOverride()
+{
+self::$httpMethodParameterOverride = true;
+}
+public static function getHttpMethodParameterOverride()
+{
+return self::$httpMethodParameterOverride;
+}
+public function get($key, $default = null, $deep = false)
+{
+return $this->query->get($key, $this->attributes->get($key, $this->request->get($key, $default, $deep), $deep), $deep);
+}
+public function getSession()
+{
+return $this->session;
+}
+public function hasPreviousSession()
+{
+return $this->hasSession() && $this->cookies->has($this->session->getName());
+}
+public function hasSession()
+{
+return null !== $this->session;
+}
+public function setSession(SessionInterface $session)
+{
+$this->session = $session;
+}
+public function getClientIp()
+{
+$ip = $this->server->get('REMOTE_ADDR');
+if (!self::$trustProxy) {
+return $ip;
+}
+if (!self::$trustedHeaders[self::HEADER_CLIENT_IP] || !$this->headers->has(self::$trustedHeaders[self::HEADER_CLIENT_IP])) {
+return $ip;
+}
+$clientIps = array_map('trim', explode(',', $this->headers->get(self::$trustedHeaders[self::HEADER_CLIENT_IP])));
+$clientIps[] = $ip;
+$trustedProxies = self::$trustProxy && !self::$trustedProxies ? array($ip) : self::$trustedProxies;
+$ip = $clientIps[0];
+$clientIps = array_diff($clientIps, $trustedProxies);
+return $clientIps ? array_pop($clientIps) : $ip;
+}
+public function getScriptName()
+{
+return $this->server->get('SCRIPT_NAME', $this->server->get('ORIG_SCRIPT_NAME',''));
+}
+public function getPathInfo()
+{
+if (null === $this->pathInfo) {
+$this->pathInfo = $this->preparePathInfo();
+}
+return $this->pathInfo;
+}
+public function getBasePath()
+{
+if (null === $this->basePath) {
+$this->basePath = $this->prepareBasePath();
+}
+return $this->basePath;
+}
+public function getBaseUrl()
+{
+if (null === $this->baseUrl) {
+$this->baseUrl = $this->prepareBaseUrl();
+}
+return $this->baseUrl;
+}
+public function getScheme()
+{
+return $this->isSecure() ?'https':'http';
+}
+public function getPort()
+{
+if (self::$trustProxy) {
+if (self::$trustedHeaders[self::HEADER_CLIENT_PORT] && $port = $this->headers->get(self::$trustedHeaders[self::HEADER_CLIENT_PORT])) {
+return $port;
+}
+if (self::$trustedHeaders[self::HEADER_CLIENT_PROTO] &&'https'=== $this->headers->get(self::$trustedHeaders[self::HEADER_CLIENT_PROTO],'http')) {
+return 443;
+}
+}
+if ($host = $this->headers->get('HOST')) {
+if (false !== $pos = strrpos($host,':')) {
+return intval(substr($host, $pos + 1));
+}
+return'https'=== $this->getScheme() ? 443 : 80;
+}
+return $this->server->get('SERVER_PORT');
+}
+public function getUser()
+{
+return $this->server->get('PHP_AUTH_USER');
+}
+public function getPassword()
+{
+return $this->server->get('PHP_AUTH_PW');
+}
+public function getUserInfo()
+{
+$userinfo = $this->getUser();
+$pass = $this->getPassword();
+if (''!= $pass) {
+$userinfo .= ":$pass";
+}
+return $userinfo;
+}
+public function getHttpHost()
+{
+$scheme = $this->getScheme();
+$port = $this->getPort();
+if (('http'== $scheme && $port == 80) || ('https'== $scheme && $port == 443)) {
+return $this->getHost();
+}
+return $this->getHost().':'.$port;
+}
+public function getRequestUri()
+{
+if (null === $this->requestUri) {
+$this->requestUri = $this->prepareRequestUri();
+}
+return $this->requestUri;
+}
+public function getSchemeAndHttpHost()
+{
+return $this->getScheme().'://'.$this->getHttpHost();
+}
+public function getUri()
+{
+if (null !== $qs = $this->getQueryString()) {
+$qs ='?'.$qs;
+}
+return $this->getSchemeAndHttpHost().$this->getBaseUrl().$this->getPathInfo().$qs;
+}
+public function getUriForPath($path)
+{
+return $this->getSchemeAndHttpHost().$this->getBaseUrl().$path;
+}
+public function getQueryString()
+{
+$qs = static::normalizeQueryString($this->server->get('QUERY_STRING'));
+return''=== $qs ? null : $qs;
+}
+public function isSecure()
+{
+if (self::$trustProxy && self::$trustedHeaders[self::HEADER_CLIENT_PROTO] && $proto = $this->headers->get(self::$trustedHeaders[self::HEADER_CLIENT_PROTO])) {
+return in_array(strtolower(current(explode(',', $proto))), array('https','on','ssl','1'));
+}
+return'on'== strtolower($this->server->get('HTTPS')) || 1 == $this->server->get('HTTPS');
+}
+public function getHost()
+{
+if (self::$trustProxy && self::$trustedHeaders[self::HEADER_CLIENT_HOST] && $host = $this->headers->get(self::$trustedHeaders[self::HEADER_CLIENT_HOST])) {
+$elements = explode(',', $host);
+$host = $elements[count($elements) - 1];
+} elseif (!$host = $this->headers->get('HOST')) {
+if (!$host = $this->server->get('SERVER_NAME')) {
+$host = $this->server->get('SERVER_ADDR','');
+}
+}
+$host = strtolower(preg_replace('/:\d+$/','', trim($host)));
+if ($host && !preg_match('/^\[?(?:[a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {
+throw new \UnexpectedValueException('Invalid Host');
+}
+if (count(self::$trustedHostPatterns) > 0) {
+if (in_array($host, self::$trustedHosts)) {
+return $host;
+}
+foreach (self::$trustedHostPatterns as $pattern) {
+if (preg_match($pattern, $host)) {
+self::$trustedHosts[] = $host;
+return $host;
+}
+}
+throw new \UnexpectedValueException('Untrusted Host');
+}
+return $host;
+}
+public function setMethod($method)
+{
+$this->method = null;
+$this->server->set('REQUEST_METHOD', $method);
+}
+public function getMethod()
+{
+if (null === $this->method) {
+$this->method = strtoupper($this->server->get('REQUEST_METHOD','GET'));
+if ('POST'=== $this->method) {
+if ($method = $this->headers->get('X-HTTP-METHOD-OVERRIDE')) {
+$this->method = strtoupper($method);
+} elseif (self::$httpMethodParameterOverride) {
+$this->method = strtoupper($this->request->get('_method', $this->query->get('_method','POST')));
+}
+}
+}
+return $this->method;
+}
+public function getRealMethod()
+{
+return strtoupper($this->server->get('REQUEST_METHOD','GET'));
+}
+public function getMimeType($format)
+{
+if (null === static::$formats) {
+static::initializeFormats();
+}
+return isset(static::$formats[$format]) ? static::$formats[$format][0] : null;
+}
+public function getFormat($mimeType)
+{
+if (false !== $pos = strpos($mimeType,';')) {
+$mimeType = substr($mimeType, 0, $pos);
+}
+if (null === static::$formats) {
+static::initializeFormats();
+}
+foreach (static::$formats as $format => $mimeTypes) {
+if (in_array($mimeType, (array) $mimeTypes)) {
+return $format;
+}
+}
+return null;
+}
+public function setFormat($format, $mimeTypes)
+{
+if (null === static::$formats) {
+static::initializeFormats();
+}
+static::$formats[$format] = is_array($mimeTypes) ? $mimeTypes : array($mimeTypes);
+}
+public function getRequestFormat($default ='html')
+{
+if (null === $this->format) {
+$this->format = $this->get('_format', $default);
+}
+return $this->format;
+}
+public function setRequestFormat($format)
+{
+$this->format = $format;
+}
+public function getContentType()
+{
+return $this->getFormat($this->headers->get('CONTENT_TYPE'));
+}
+public function setDefaultLocale($locale)
+{
+$this->defaultLocale = $locale;
+if (null === $this->locale) {
+$this->setPhpDefaultLocale($locale);
+}
+}
+public function setLocale($locale)
+{
+$this->setPhpDefaultLocale($this->locale = $locale);
+}
+public function getLocale()
+{
+return null === $this->locale ? $this->defaultLocale : $this->locale;
+}
+public function isMethod($method)
+{
+return $this->getMethod() === strtoupper($method);
+}
+public function isMethodSafe()
+{
+return in_array($this->getMethod(), array('GET','HEAD'));
+}
+public function getContent($asResource = false)
+{
+if (false === $this->content || (true === $asResource && null !== $this->content)) {
+throw new \LogicException('getContent() can only be called once when using the resource return type.');
+}
+if (true === $asResource) {
+$this->content = false;
+return fopen('php://input','rb');
+}
+if (null === $this->content) {
+$this->content = file_get_contents('php://input');
+}
+return $this->content;
+}
+public function getETags()
+{
+return preg_split('/\s*,\s*/', $this->headers->get('if_none_match'), null, PREG_SPLIT_NO_EMPTY);
+}
+public function isNoCache()
+{
+return $this->headers->hasCacheControlDirective('no-cache') ||'no-cache'== $this->headers->get('Pragma');
+}
+public function getPreferredLanguage(array $locales = null)
+{
+$preferredLanguages = $this->getLanguages();
+if (empty($locales)) {
+return isset($preferredLanguages[0]) ? $preferredLanguages[0] : null;
+}
+if (!$preferredLanguages) {
+return $locales[0];
+}
+$extendedPreferredLanguages = array();
+foreach ($preferredLanguages as $language) {
+$extendedPreferredLanguages[] = $language;
+if (false !== $position = strpos($language,'_')) {
+$superLanguage = substr($language, 0, $position);
+if (!in_array($superLanguage, $preferredLanguages)) {
+$extendedPreferredLanguages[] = $superLanguage;
+}
+}
+}
+$preferredLanguages = array_values(array_intersect($extendedPreferredLanguages, $locales));
+return isset($preferredLanguages[0]) ? $preferredLanguages[0] : $locales[0];
+}
+public function getLanguages()
+{
+if (null !== $this->languages) {
+return $this->languages;
+}
+$languages = AcceptHeader::fromString($this->headers->get('Accept-Language'))->all();
+$this->languages = array();
+foreach (array_keys($languages) as $lang) {
+if (strstr($lang,'-')) {
+$codes = explode('-', $lang);
+if ($codes[0] =='i') {
+if (count($codes) > 1) {
+$lang = $codes[1];
+}
+} else {
+for ($i = 0, $max = count($codes); $i < $max; $i++) {
+if ($i == 0) {
+$lang = strtolower($codes[0]);
+} else {
+$lang .='_'.strtoupper($codes[$i]);
+}
+}
+}
+}
+$this->languages[] = $lang;
+}
+return $this->languages;
+}
+public function getCharsets()
+{
+if (null !== $this->charsets) {
+return $this->charsets;
+}
+return $this->charsets = array_keys(AcceptHeader::fromString($this->headers->get('Accept-Charset'))->all());
+}
+public function getAcceptableContentTypes()
+{
+if (null !== $this->acceptableContentTypes) {
+return $this->acceptableContentTypes;
+}
+return $this->acceptableContentTypes = array_keys(AcceptHeader::fromString($this->headers->get('Accept'))->all());
+}
+public function isXmlHttpRequest()
+{
+return'XMLHttpRequest'== $this->headers->get('X-Requested-With');
+}
+public function splitHttpAcceptHeader($header)
+{
+trigger_error('splitHttpAcceptHeader() is deprecated since version 2.2 and will be removed in 2.3.', E_USER_DEPRECATED);
+$headers = array();
+foreach (AcceptHeader::fromString($header)->all() as $item) {
+$key = $item->getValue();
+foreach ($item->getAttributes() as $name => $value) {
+$key .= sprintf(';%s=%s', $name, $value);
+}
+$headers[$key] = $item->getQuality();
+}
+return $headers;
+}
+protected function prepareRequestUri()
+{
+$requestUri ='';
+if ($this->headers->has('X_ORIGINAL_URL')) {
+$requestUri = $this->headers->get('X_ORIGINAL_URL');
+$this->headers->remove('X_ORIGINAL_URL');
+$this->server->remove('HTTP_X_ORIGINAL_URL');
+$this->server->remove('UNENCODED_URL');
+$this->server->remove('IIS_WasUrlRewritten');
+} elseif ($this->headers->has('X_REWRITE_URL')) {
+$requestUri = $this->headers->get('X_REWRITE_URL');
+$this->headers->remove('X_REWRITE_URL');
+} elseif ($this->server->get('IIS_WasUrlRewritten') =='1'&& $this->server->get('UNENCODED_URL') !='') {
+$requestUri = $this->server->get('UNENCODED_URL');
+$this->server->remove('UNENCODED_URL');
+$this->server->remove('IIS_WasUrlRewritten');
+} elseif ($this->server->has('REQUEST_URI')) {
+$requestUri = $this->server->get('REQUEST_URI');
+$schemeAndHttpHost = $this->getSchemeAndHttpHost();
+if (strpos($requestUri, $schemeAndHttpHost) === 0) {
+$requestUri = substr($requestUri, strlen($schemeAndHttpHost));
+}
+} elseif ($this->server->has('ORIG_PATH_INFO')) {
+$requestUri = $this->server->get('ORIG_PATH_INFO');
+if (''!= $this->server->get('QUERY_STRING')) {
+$requestUri .='?'.$this->server->get('QUERY_STRING');
+}
+$this->server->remove('ORIG_PATH_INFO');
+}
+$this->server->set('REQUEST_URI', $requestUri);
+return $requestUri;
+}
+protected function prepareBaseUrl()
+{
+$filename = basename($this->server->get('SCRIPT_FILENAME'));
+if (basename($this->server->get('SCRIPT_NAME')) === $filename) {
+$baseUrl = $this->server->get('SCRIPT_NAME');
+} elseif (basename($this->server->get('PHP_SELF')) === $filename) {
+$baseUrl = $this->server->get('PHP_SELF');
+} elseif (basename($this->server->get('ORIG_SCRIPT_NAME')) === $filename) {
+$baseUrl = $this->server->get('ORIG_SCRIPT_NAME'); } else {
+$path = $this->server->get('PHP_SELF','');
+$file = $this->server->get('SCRIPT_FILENAME','');
+$segs = explode('/', trim($file,'/'));
+$segs = array_reverse($segs);
+$index = 0;
+$last = count($segs);
+$baseUrl ='';
+do {
+$seg = $segs[$index];
+$baseUrl ='/'.$seg.$baseUrl;
+++$index;
+} while ($last > $index && (false !== $pos = strpos($path, $baseUrl)) && 0 != $pos);
+}
+$requestUri = $this->getRequestUri();
+if ($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, $baseUrl)) {
+return $prefix;
+}
+if ($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, dirname($baseUrl))) {
+return rtrim($prefix,'/');
+}
+$truncatedRequestUri = $requestUri;
+if (false !== $pos = strpos($requestUri,'?')) {
+$truncatedRequestUri = substr($requestUri, 0, $pos);
+}
+$basename = basename($baseUrl);
+if (empty($basename) || !strpos(rawurldecode($truncatedRequestUri), $basename)) {
+return'';
+}
+if (strlen($requestUri) >= strlen($baseUrl) && (false !== $pos = strpos($requestUri, $baseUrl)) && $pos !== 0) {
+$baseUrl = substr($requestUri, 0, $pos + strlen($baseUrl));
+}
+return rtrim($baseUrl,'/');
+}
+protected function prepareBasePath()
+{
+$filename = basename($this->server->get('SCRIPT_FILENAME'));
+$baseUrl = $this->getBaseUrl();
+if (empty($baseUrl)) {
+return'';
+}
+if (basename($baseUrl) === $filename) {
+$basePath = dirname($baseUrl);
+} else {
+$basePath = $baseUrl;
+}
+if ('\\'=== DIRECTORY_SEPARATOR) {
+$basePath = str_replace('\\','/', $basePath);
+}
+return rtrim($basePath,'/');
+}
+protected function preparePathInfo()
+{
+$baseUrl = $this->getBaseUrl();
+if (null === ($requestUri = $this->getRequestUri())) {
+return'/';
+}
+$pathInfo ='/';
+if ($pos = strpos($requestUri,'?')) {
+$requestUri = substr($requestUri, 0, $pos);
+}
+if (null !== $baseUrl && false === $pathInfo = substr($requestUri, strlen($baseUrl))) {
+return'/';
+} elseif (null === $baseUrl) {
+return $requestUri;
+}
+return (string) $pathInfo;
+}
+protected static function initializeFormats()
+{
+static::$formats = array('html'=> array('text/html','application/xhtml+xml'),'txt'=> array('text/plain'),'js'=> array('application/javascript','application/x-javascript','text/javascript'),'css'=> array('text/css'),'json'=> array('application/json','application/x-json'),'xml'=> array('text/xml','application/xml','application/x-xml'),'rdf'=> array('application/rdf+xml'),'atom'=> array('application/atom+xml'),'rss'=> array('application/rss+xml'),
+);
+}
+private function setPhpDefaultLocale($locale)
+{
+try {
+if (class_exists('Locale', false)) {
+\Locale::setDefault($locale);
+}
+} catch (\Exception $e) {
+}
+}
+private function getUrlencodedPrefix($string, $prefix)
+{
+if (0 !== strpos(rawurldecode($string), $prefix)) {
+return false;
+}
+$len = strlen($prefix);
+if (preg_match("#^(%[[:xdigit:]]{2}|.){{$len}}#", $string, $match)) {
+return $match[0];
+}
+return false;
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+class Response
+{
+public $headers;
+protected $content;
+protected $version;
+protected $statusCode;
+protected $statusText;
+protected $charset;
+public static $statusTexts = array(
+100 =>'Continue',
+101 =>'Switching Protocols',
+102 =>'Processing', 200 =>'OK',
+201 =>'Created',
+202 =>'Accepted',
+203 =>'Non-Authoritative Information',
+204 =>'No Content',
+205 =>'Reset Content',
+206 =>'Partial Content',
+207 =>'Multi-Status', 208 =>'Already Reported', 226 =>'IM Used', 300 =>'Multiple Choices',
+301 =>'Moved Permanently',
+302 =>'Found',
+303 =>'See Other',
+304 =>'Not Modified',
+305 =>'Use Proxy',
+306 =>'Reserved',
+307 =>'Temporary Redirect',
+308 =>'Permanent Redirect', 400 =>'Bad Request',
+401 =>'Unauthorized',
+402 =>'Payment Required',
+403 =>'Forbidden',
+404 =>'Not Found',
+405 =>'Method Not Allowed',
+406 =>'Not Acceptable',
+407 =>'Proxy Authentication Required',
+408 =>'Request Timeout',
+409 =>'Conflict',
+410 =>'Gone',
+411 =>'Length Required',
+412 =>'Precondition Failed',
+413 =>'Request Entity Too Large',
+414 =>'Request-URI Too Long',
+415 =>'Unsupported Media Type',
+416 =>'Requested Range Not Satisfiable',
+417 =>'Expectation Failed',
+418 =>'I\'m a teapot', 422 =>'Unprocessable Entity', 423 =>'Locked', 424 =>'Failed Dependency', 425 =>'Reserved for WebDAV advanced collections expired proposal', 426 =>'Upgrade Required', 428 =>'Precondition Required', 429 =>'Too Many Requests', 431 =>'Request Header Fields Too Large', 500 =>'Internal Server Error',
+501 =>'Not Implemented',
+502 =>'Bad Gateway',
+503 =>'Service Unavailable',
+504 =>'Gateway Timeout',
+505 =>'HTTP Version Not Supported',
+506 =>'Variant Also Negotiates (Experimental)', 507 =>'Insufficient Storage', 508 =>'Loop Detected', 510 =>'Not Extended', 511 =>'Network Authentication Required', );
+public function __construct($content ='', $status = 200, $headers = array())
+{
+$this->headers = new ResponseHeaderBag($headers);
+$this->setContent($content);
+$this->setStatusCode($status);
+$this->setProtocolVersion('1.0');
+if (!$this->headers->has('Date')) {
+$this->setDate(new \DateTime(null, new \DateTimeZone('UTC')));
+}
+}
+public static function create($content ='', $status = 200, $headers = array())
+{
+return new static($content, $status, $headers);
+}
+public function __toString()
+{
+return
+sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText)."\r\n".
+$this->headers."\r\n".
+$this->getContent();
+}
+public function __clone()
+{
+$this->headers = clone $this->headers;
+}
+public function prepare(Request $request)
+{
+$headers = $this->headers;
+if ($this->isInformational() || in_array($this->statusCode, array(204, 304))) {
+$this->setContent(null);
+}
+if (!$headers->has('Content-Type')) {
+$format = $request->getRequestFormat();
+if (null !== $format && $mimeType = $request->getMimeType($format)) {
+$headers->set('Content-Type', $mimeType);
+}
+}
+$charset = $this->charset ?:'UTF-8';
+if (!$headers->has('Content-Type')) {
+$headers->set('Content-Type','text/html; charset='.$charset);
+} elseif (0 === stripos($headers->get('Content-Type'),'text/') && false === stripos($headers->get('Content-Type'),'charset')) {
+$headers->set('Content-Type', $headers->get('Content-Type').'; charset='.$charset);
+}
+if ($headers->has('Transfer-Encoding')) {
+$headers->remove('Content-Length');
+}
+if ($request->isMethod('HEAD')) {
+$length = $headers->get('Content-Length');
+$this->setContent(null);
+if ($length) {
+$headers->set('Content-Length', $length);
+}
+}
+if ('HTTP/1.0'!= $request->server->get('SERVER_PROTOCOL')) {
+$this->setProtocolVersion('1.1');
+}
+if ('1.0'== $this->getProtocolVersion() &&'no-cache'== $this->headers->get('Cache-Control')) {
+$this->headers->set('pragma','no-cache');
+$this->headers->set('expires', -1);
+}
+$this->ensureIEOverSSLCompatibility($request);
+return $this;
+}
+public function sendHeaders()
+{
+if (headers_sent()) {
+return $this;
+}
+header(sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText));
+foreach ($this->headers->allPreserveCase() as $name => $values) {
+foreach ($values as $value) {
+header($name.': '.$value, false);
+}
+}
+foreach ($this->headers->getCookies() as $cookie) {
+setcookie($cookie->getName(), $cookie->getValue(), $cookie->getExpiresTime(), $cookie->getPath(), $cookie->getDomain(), $cookie->isSecure(), $cookie->isHttpOnly());
+}
+return $this;
+}
+public function sendContent()
+{
+echo $this->content;
+return $this;
+}
+public function send()
+{
+$this->sendHeaders();
+$this->sendContent();
+if (function_exists('fastcgi_finish_request')) {
+fastcgi_finish_request();
+} elseif ('cli'!== PHP_SAPI) {
+$previous = null;
+$obStatus = ob_get_status(1);
+while (($level = ob_get_level()) > 0 && $level !== $previous) {
+$previous = $level;
+if ($obStatus[$level - 1]) {
+if (version_compare(PHP_VERSION,'5.4','>=')) {
+if (isset($obStatus[$level - 1]['flags']) && ($obStatus[$level - 1]['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE)) {
+ob_end_flush();
+}
+} else {
+if (isset($obStatus[$level - 1]['del']) && $obStatus[$level - 1]['del']) {
+ob_end_flush();
+}
+}
+}
+}
+flush();
+}
+return $this;
+}
+public function setContent($content)
+{
+if (null !== $content && !is_string($content) && !is_numeric($content) && !is_callable(array($content,'__toString'))) {
+throw new \UnexpectedValueException('The Response content must be a string or object implementing __toString(), "'.gettype($content).'" given.');
+}
+$this->content = (string) $content;
+return $this;
+}
+public function getContent()
+{
+return $this->content;
+}
+public function setProtocolVersion($version)
+{
+$this->version = $version;
+return $this;
+}
+public function getProtocolVersion()
+{
+return $this->version;
+}
+public function setStatusCode($code, $text = null)
+{
+$this->statusCode = $code = (int) $code;
+if ($this->isInvalid()) {
+throw new \InvalidArgumentException(sprintf('The HTTP status code "%s" is not valid.', $code));
+}
+if (null === $text) {
+$this->statusText = isset(self::$statusTexts[$code]) ? self::$statusTexts[$code] :'';
+return $this;
+}
+if (false === $text) {
+$this->statusText ='';
+return $this;
+}
+$this->statusText = $text;
+return $this;
+}
+public function getStatusCode()
+{
+return $this->statusCode;
+}
+public function setCharset($charset)
+{
+$this->charset = $charset;
+return $this;
+}
+public function getCharset()
+{
+return $this->charset;
+}
+public function isCacheable()
+{
+if (!in_array($this->statusCode, array(200, 203, 300, 301, 302, 404, 410))) {
+return false;
+}
+if ($this->headers->hasCacheControlDirective('no-store') || $this->headers->getCacheControlDirective('private')) {
+return false;
+}
+return $this->isValidateable() || $this->isFresh();
+}
+public function isFresh()
+{
+return $this->getTtl() > 0;
+}
+public function isValidateable()
+{
+return $this->headers->has('Last-Modified') || $this->headers->has('ETag');
+}
+public function setPrivate()
+{
+$this->headers->removeCacheControlDirective('public');
+$this->headers->addCacheControlDirective('private');
+return $this;
+}
+public function setPublic()
+{
+$this->headers->addCacheControlDirective('public');
+$this->headers->removeCacheControlDirective('private');
+return $this;
+}
+public function mustRevalidate()
+{
+return $this->headers->hasCacheControlDirective('must-revalidate') || $this->headers->has('proxy-revalidate');
+}
+public function getDate()
+{
+return $this->headers->getDate('Date', new \DateTime());
+}
+public function setDate(\DateTime $date)
+{
+$date->setTimezone(new \DateTimeZone('UTC'));
+$this->headers->set('Date', $date->format('D, d M Y H:i:s').' GMT');
+return $this;
+}
+public function getAge()
+{
+if (null !== $age = $this->headers->get('Age')) {
+return (int) $age;
+}
+return max(time() - $this->getDate()->format('U'), 0);
+}
+public function expire()
+{
+if ($this->isFresh()) {
+$this->headers->set('Age', $this->getMaxAge());
+}
+return $this;
+}
+public function getExpires()
+{
+try {
+return $this->headers->getDate('Expires');
+} catch (\RuntimeException $e) {
+return \DateTime::createFromFormat(DATE_RFC2822,'Sat, 01 Jan 00 00:00:00 +0000');
+}
+}
+public function setExpires(\DateTime $date = null)
+{
+if (null === $date) {
+$this->headers->remove('Expires');
+} else {
+$date = clone $date;
+$date->setTimezone(new \DateTimeZone('UTC'));
+$this->headers->set('Expires', $date->format('D, d M Y H:i:s').' GMT');
+}
+return $this;
+}
+public function getMaxAge()
+{
+if ($this->headers->hasCacheControlDirective('s-maxage')) {
+return (int) $this->headers->getCacheControlDirective('s-maxage');
+}
+if ($this->headers->hasCacheControlDirective('max-age')) {
+return (int) $this->headers->getCacheControlDirective('max-age');
+}
+if (null !== $this->getExpires()) {
+return $this->getExpires()->format('U') - $this->getDate()->format('U');
+}
+return null;
+}
+public function setMaxAge($value)
+{
+$this->headers->addCacheControlDirective('max-age', $value);
+return $this;
+}
+public function setSharedMaxAge($value)
+{
+$this->setPublic();
+$this->headers->addCacheControlDirective('s-maxage', $value);
+return $this;
+}
+public function getTtl()
+{
+if (null !== $maxAge = $this->getMaxAge()) {
+return $maxAge - $this->getAge();
+}
+return null;
+}
+public function setTtl($seconds)
+{
+$this->setSharedMaxAge($this->getAge() + $seconds);
+return $this;
+}
+public function setClientTtl($seconds)
+{
+$this->setMaxAge($this->getAge() + $seconds);
+return $this;
+}
+public function getLastModified()
+{
+return $this->headers->getDate('Last-Modified');
+}
+public function setLastModified(\DateTime $date = null)
+{
+if (null === $date) {
+$this->headers->remove('Last-Modified');
+} else {
+$date = clone $date;
+$date->setTimezone(new \DateTimeZone('UTC'));
+$this->headers->set('Last-Modified', $date->format('D, d M Y H:i:s').' GMT');
+}
+return $this;
+}
+public function getEtag()
+{
+return $this->headers->get('ETag');
+}
+public function setEtag($etag = null, $weak = false)
+{
+if (null === $etag) {
+$this->headers->remove('Etag');
+} else {
+if (0 !== strpos($etag,'"')) {
+$etag ='"'.$etag.'"';
+}
+$this->headers->set('ETag', (true === $weak ?'W/':'').$etag);
+}
+return $this;
+}
+public function setCache(array $options)
+{
+if ($diff = array_diff(array_keys($options), array('etag','last_modified','max_age','s_maxage','private','public'))) {
+throw new \InvalidArgumentException(sprintf('Response does not support the following options: "%s".', implode('", "', array_values($diff))));
+}
+if (isset($options['etag'])) {
+$this->setEtag($options['etag']);
+}
+if (isset($options['last_modified'])) {
+$this->setLastModified($options['last_modified']);
+}
+if (isset($options['max_age'])) {
+$this->setMaxAge($options['max_age']);
+}
+if (isset($options['s_maxage'])) {
+$this->setSharedMaxAge($options['s_maxage']);
+}
+if (isset($options['public'])) {
+if ($options['public']) {
+$this->setPublic();
+} else {
+$this->setPrivate();
+}
+}
+if (isset($options['private'])) {
+if ($options['private']) {
+$this->setPrivate();
+} else {
+$this->setPublic();
+}
+}
+return $this;
+}
+public function setNotModified()
+{
+$this->setStatusCode(304);
+$this->setContent(null);
+foreach (array('Allow','Content-Encoding','Content-Language','Content-Length','Content-MD5','Content-Type','Last-Modified') as $header) {
+$this->headers->remove($header);
+}
+return $this;
+}
+public function hasVary()
+{
+return null !== $this->headers->get('Vary');
+}
+public function getVary()
+{
+if (!$vary = $this->headers->get('Vary')) {
+return array();
+}
+return is_array($vary) ? $vary : preg_split('/[\s,]+/', $vary);
+}
+public function setVary($headers, $replace = true)
+{
+$this->headers->set('Vary', $headers, $replace);
+return $this;
+}
+public function isNotModified(Request $request)
+{
+if (!$request->isMethodSafe()) {
+return false;
+}
+$lastModified = $request->headers->get('If-Modified-Since');
+$notModified = false;
+if ($etags = $request->getEtags()) {
+$notModified = (in_array($this->getEtag(), $etags) || in_array('*', $etags)) && (!$lastModified || $this->headers->get('Last-Modified') == $lastModified);
+} elseif ($lastModified) {
+$notModified = $lastModified == $this->headers->get('Last-Modified');
+}
+if ($notModified) {
+$this->setNotModified();
+}
+return $notModified;
+}
+public function isInvalid()
+{
+return $this->statusCode < 100 || $this->statusCode >= 600;
+}
+public function isInformational()
+{
+return $this->statusCode >= 100 && $this->statusCode < 200;
+}
+public function isSuccessful()
+{
+return $this->statusCode >= 200 && $this->statusCode < 300;
+}
+public function isRedirection()
+{
+return $this->statusCode >= 300 && $this->statusCode < 400;
+}
+public function isClientError()
+{
+return $this->statusCode >= 400 && $this->statusCode < 500;
+}
+public function isServerError()
+{
+return $this->statusCode >= 500 && $this->statusCode < 600;
+}
+public function isOk()
+{
+return 200 === $this->statusCode;
+}
+public function isForbidden()
+{
+return 403 === $this->statusCode;
+}
+public function isNotFound()
+{
+return 404 === $this->statusCode;
+}
+public function isRedirect($location = null)
+{
+return in_array($this->statusCode, array(201, 301, 302, 303, 307, 308)) && (null === $location ?: $location == $this->headers->get('Location'));
+}
+public function isEmpty()
+{
+return in_array($this->statusCode, array(201, 204, 304));
+}
+protected function ensureIEOverSSLCompatibility(Request $request)
+{
+if (false !== stripos($this->headers->get('Content-Disposition'),'attachment') && preg_match('/MSIE (.*?);/i', $request->server->get('HTTP_USER_AGENT'), $match) == 1 && true === $request->isSecure()) {
+if (intval(preg_replace("/(MSIE )(.*?);/","$2", $match[0])) < 9) {
+$this->headers->remove('Cache-Control');
+}
+}
+}
+}
+}
+namespace Symfony\Component\HttpFoundation
+{
+class ResponseHeaderBag extends HeaderBag
+{
+const COOKIES_FLAT ='flat';
+const COOKIES_ARRAY ='array';
+const DISPOSITION_ATTACHMENT ='attachment';
+const DISPOSITION_INLINE ='inline';
+protected $computedCacheControl = array();
+protected $cookies = array();
+protected $headerNames = array();
+public function __construct(array $headers = array())
+{
+parent::__construct($headers);
+if (!isset($this->headers['cache-control'])) {
+$this->set('Cache-Control','');
+}
+}
+public function __toString()
+{
+$cookies ='';
+foreach ($this->getCookies() as $cookie) {
+$cookies .='Set-Cookie: '.$cookie."\r\n";
+}
+ksort($this->headerNames);
+return parent::__toString().$cookies;
+}
+public function allPreserveCase()
+{
+return array_combine($this->headerNames, $this->headers);
+}
+public function replace(array $headers = array())
+{
+$this->headerNames = array();
+parent::replace($headers);
+if (!isset($this->headers['cache-control'])) {
+$this->set('Cache-Control','');
+}
+}
+public function set($key, $values, $replace = true)
+{
+parent::set($key, $values, $replace);
+$uniqueKey = strtr(strtolower($key),'_','-');
+$this->headerNames[$uniqueKey] = $key;
+if (in_array($uniqueKey, array('cache-control','etag','last-modified','expires'))) {
+$computed = $this->computeCacheControlValue();
+$this->headers['cache-control'] = array($computed);
+$this->headerNames['cache-control'] ='Cache-Control';
+$this->computedCacheControl = $this->parseCacheControl($computed);
+}
+}
+public function remove($key)
+{
+parent::remove($key);
+$uniqueKey = strtr(strtolower($key),'_','-');
+unset($this->headerNames[$uniqueKey]);
+if ('cache-control'=== $uniqueKey) {
+$this->computedCacheControl = array();
+}
+}
+public function hasCacheControlDirective($key)
+{
+return array_key_exists($key, $this->computedCacheControl);
+}
+public function getCacheControlDirective($key)
+{
+return array_key_exists($key, $this->computedCacheControl) ? $this->computedCacheControl[$key] : null;
+}
+public function setCookie(Cookie $cookie)
+{
+$this->cookies[$cookie->getDomain()][$cookie->getPath()][$cookie->getName()] = $cookie;
+}
+public function removeCookie($name, $path ='/', $domain = null)
+{
+if (null === $path) {
+$path ='/';
+}
+unset($this->cookies[$domain][$path][$name]);
+if (empty($this->cookies[$domain][$path])) {
+unset($this->cookies[$domain][$path]);
+if (empty($this->cookies[$domain])) {
+unset($this->cookies[$domain]);
+}
+}
+}
+public function getCookies($format = self::COOKIES_FLAT)
+{
+if (!in_array($format, array(self::COOKIES_FLAT, self::COOKIES_ARRAY))) {
+throw new \InvalidArgumentException(sprintf('Format "%s" invalid (%s).', $format, implode(', ', array(self::COOKIES_FLAT, self::COOKIES_ARRAY))));
+}
+if (self::COOKIES_ARRAY === $format) {
+return $this->cookies;
+}
+$flattenedCookies = array();
+foreach ($this->cookies as $path) {
+foreach ($path as $cookies) {
+foreach ($cookies as $cookie) {
+$flattenedCookies[] = $cookie;
+}
+}
+}
+return $flattenedCookies;
+}
+public function clearCookie($name, $path ='/', $domain = null)
+{
+$this->setCookie(new Cookie($name, null, 1, $path, $domain));
+}
+public function makeDisposition($disposition, $filename, $filenameFallback ='')
+{
+if (!in_array($disposition, array(self::DISPOSITION_ATTACHMENT, self::DISPOSITION_INLINE))) {
+throw new \InvalidArgumentException(sprintf('The disposition must be either "%s" or "%s".', self::DISPOSITION_ATTACHMENT, self::DISPOSITION_INLINE));
+}
+if (''== $filenameFallback) {
+$filenameFallback = $filename;
+}
+if (!preg_match('/^[\x20-\x7e]*$/', $filenameFallback)) {
+throw new \InvalidArgumentException('The filename fallback must only contain ASCII characters.');
+}
+if (false !== strpos($filenameFallback,'%')) {
+throw new \InvalidArgumentException('The filename fallback cannot contain the "%" character.');
+}
+if (false !== strpos($filename,'/') || false !== strpos($filename,'\\') || false !== strpos($filenameFallback,'/') || false !== strpos($filenameFallback,'\\')) {
+throw new \InvalidArgumentException('The filename and the fallback cannot contain the "/" and "\\" characters.');
+}
+$output = sprintf('%s; filename="%s"', $disposition, str_replace('"','\\"', $filenameFallback));
+if ($filename !== $filenameFallback) {
+$output .= sprintf("; filename*=utf-8''%s", rawurlencode($filename));
+}
+return $output;
+}
+protected function computeCacheControlValue()
+{
+if (!$this->cacheControl && !$this->has('ETag') && !$this->has('Last-Modified') && !$this->has('Expires')) {
+return'no-cache';
+}
+if (!$this->cacheControl) {
+return'private, must-revalidate';
+}
+$header = $this->getCacheControlHeader();
+if (isset($this->cacheControl['public']) || isset($this->cacheControl['private'])) {
+return $header;
+}
+if (!isset($this->cacheControl['s-maxage'])) {
+return $header.', private';
+}
+return $header;
+}
+}
+}
+namespace Symfony\Component\Config
+{
+class FileLocator implements FileLocatorInterface
+{
+protected $paths;
+public function __construct($paths = array())
+{
+$this->paths = (array) $paths;
+}
+public function locate($name, $currentPath = null, $first = true)
+{
+if ($this->isAbsolutePath($name)) {
+if (!file_exists($name)) {
+throw new \InvalidArgumentException(sprintf('The file "%s" does not exist.', $name));
+}
+return $name;
+}
+$filepaths = array();
+if (null !== $currentPath && file_exists($file = $currentPath.DIRECTORY_SEPARATOR.$name)) {
+if (true === $first) {
+return $file;
+}
+$filepaths[] = $file;
+}
+foreach ($this->paths as $path) {
+if (file_exists($file = $path.DIRECTORY_SEPARATOR.$name)) {
+if (true === $first) {
+return $file;
+}
+$filepaths[] = $file;
+}
+}
+if (!$filepaths) {
+throw new \InvalidArgumentException(sprintf('The file "%s" does not exist (in: %s%s).', $name, null !== $currentPath ? $currentPath.', ':'', implode(', ', $this->paths)));
+}
+return array_values(array_unique($filepaths));
+}
+private function isAbsolutePath($file)
+{
+if ($file[0] =='/'|| $file[0] =='\\'|| (strlen($file) > 3 && ctype_alpha($file[0])
+&& $file[1] ==':'&& ($file[2] =='\\'|| $file[2] =='/')
+)
+|| null !== parse_url($file, PHP_URL_SCHEME)
+) {
+return true;
+}
+return false;
+}
+}
+}
+namespace Symfony\Component\EventDispatcher
+{
+class Event
+{
+private $propagationStopped = false;
+private $dispatcher;
+private $name;
+public function isPropagationStopped()
+{
+return $this->propagationStopped;
+}
+public function stopPropagation()
+{
+$this->propagationStopped = true;
+}
+public function setDispatcher(EventDispatcherInterface $dispatcher)
+{
+$this->dispatcher = $dispatcher;
+}
+public function getDispatcher()
+{
+return $this->dispatcher;
+}
+public function getName()
+{
+return $this->name;
+}
+public function setName($name)
+{
+$this->name = $name;
+}
+}
+}
+namespace Symfony\Component\EventDispatcher
+{
+interface EventDispatcherInterface
+{
+public function dispatch($eventName, Event $event = null);
+public function addListener($eventName, $listener, $priority = 0);
+public function addSubscriber(EventSubscriberInterface $subscriber);
+public function removeListener($eventName, $listener);
+public function removeSubscriber(EventSubscriberInterface $subscriber);
+public function getListeners($eventName = null);
+public function hasListeners($eventName = null);
+}
+}
+namespace Symfony\Component\EventDispatcher
+{
+class EventDispatcher implements EventDispatcherInterface
+{
+private $listeners = array();
+private $sorted = array();
+public function dispatch($eventName, Event $event = null)
+{
+if (null === $event) {
+$event = new Event();
+}
+$event->setDispatcher($this);
+$event->setName($eventName);
+if (!isset($this->listeners[$eventName])) {
+return $event;
+}
+$this->doDispatch($this->getListeners($eventName), $eventName, $event);
+return $event;
+}
+public function getListeners($eventName = null)
+{
+if (null !== $eventName) {
+if (!isset($this->sorted[$eventName])) {
+$this->sortListeners($eventName);
+}
+return $this->sorted[$eventName];
+}
+foreach (array_keys($this->listeners) as $eventName) {
+if (!isset($this->sorted[$eventName])) {
+$this->sortListeners($eventName);
+}
+}
+return $this->sorted;
+}
+public function hasListeners($eventName = null)
+{
+return (Boolean) count($this->getListeners($eventName));
+}
+public function addListener($eventName, $listener, $priority = 0)
+{
+$this->listeners[$eventName][$priority][] = $listener;
+unset($this->sorted[$eventName]);
+}
+public function removeListener($eventName, $listener)
+{
+if (!isset($this->listeners[$eventName])) {
+return;
+}
+foreach ($this->listeners[$eventName] as $priority => $listeners) {
+if (false !== ($key = array_search($listener, $listeners, true))) {
+unset($this->listeners[$eventName][$priority][$key], $this->sorted[$eventName]);
+}
+}
+}
+public function addSubscriber(EventSubscriberInterface $subscriber)
+{
+foreach ($subscriber->getSubscribedEvents() as $eventName => $params) {
+if (is_string($params)) {
+$this->addListener($eventName, array($subscriber, $params));
+} elseif (is_string($params[0])) {
+$this->addListener($eventName, array($subscriber, $params[0]), isset($params[1]) ? $params[1] : 0);
+} else {
+foreach ($params as $listener) {
+$this->addListener($eventName, array($subscriber, $listener[0]), isset($listener[1]) ? $listener[1] : 0);
+}
+}
+}
+}
+public function removeSubscriber(EventSubscriberInterface $subscriber)
+{
+foreach ($subscriber->getSubscribedEvents() as $eventName => $params) {
+if (is_array($params) && is_array($params[0])) {
+foreach ($params as $listener) {
+$this->removeListener($eventName, array($subscriber, $listener[0]));
+}
+} else {
+$this->removeListener($eventName, array($subscriber, is_string($params) ? $params : $params[0]));
+}
+}
+}
+protected function doDispatch($listeners, $eventName, Event $event)
+{
+foreach ($listeners as $listener) {
+call_user_func($listener, $event);
+if ($event->isPropagationStopped()) {
+break;
+}
+}
+}
+private function sortListeners($eventName)
+{
+$this->sorted[$eventName] = array();
+if (isset($this->listeners[$eventName])) {
+krsort($this->listeners[$eventName]);
+$this->sorted[$eventName] = call_user_func_array('array_merge', $this->listeners[$eventName]);
+}
+}
+}
+}
+namespace Symfony\Component\EventDispatcher
+{
+use Symfony\Component\DependencyInjection\ContainerInterface;
+class ContainerAwareEventDispatcher extends EventDispatcher
+{
+private $container;
+private $listenerIds = array();
+private $listeners = array();
+public function __construct(ContainerInterface $container)
+{
+$this->container = $container;
+}
+public function addListenerService($eventName, $callback, $priority = 0)
+{
+if (!is_array($callback) || 2 !== count($callback)) {
+throw new \InvalidArgumentException('Expected an array("service", "method") argument');
+}
+$this->listenerIds[$eventName][] = array($callback[0], $callback[1], $priority);
+}
+public function removeListener($eventName, $listener)
+{
+$this->lazyLoad($eventName);
+if (isset($this->listeners[$eventName])) {
+foreach ($this->listeners[$eventName] as $key => $l) {
+foreach ($this->listenerIds[$eventName] as $i => $args) {
+list($serviceId, $method, $priority) = $args;
+if ($key === $serviceId.'.'.$method) {
+if ($listener === array($l, $method)) {
+unset($this->listeners[$eventName][$key]);
+if (empty($this->listeners[$eventName])) {
+unset($this->listeners[$eventName]);
+}
+unset($this->listenerIds[$eventName][$i]);
+if (empty($this->listenerIds[$eventName])) {
+unset($this->listenerIds[$eventName]);
+}
+}
+}
+}
+}
+}
+parent::removeListener($eventName, $listener);
+}
+public function hasListeners($eventName = null)
+{
+if (null === $eventName) {
+return (Boolean) count($this->listenerIds) || (Boolean) count($this->listeners);
+}
+if (isset($this->listenerIds[$eventName])) {
+return true;
+}
+return parent::hasListeners($eventName);
+}
+public function getListeners($eventName = null)
+{
+if (null === $eventName) {
+foreach (array_keys($this->listenerIds) as $serviceEventName) {
+$this->lazyLoad($serviceEventName);
+}
+} else {
+$this->lazyLoad($eventName);
+}
+return parent::getListeners($eventName);
+}
+public function addSubscriberService($serviceId, $class)
+{
+foreach ($class::getSubscribedEvents() as $eventName => $params) {
+if (is_string($params)) {
+$this->listenerIds[$eventName][] = array($serviceId, $params, 0);
+} elseif (is_string($params[0])) {
+$this->listenerIds[$eventName][] = array($serviceId, $params[0], isset($params[1]) ? $params[1] : 0);
+} else {
+foreach ($params as $listener) {
+$this->listenerIds[$eventName][] = array($serviceId, $listener[0], isset($listener[1]) ? $listener[1] : 0);
+}
+}
+}
+}
+public function dispatch($eventName, Event $event = null)
+{
+$this->lazyLoad($eventName);
+return parent::dispatch($eventName, $event);
+}
+public function getContainer()
+{
+return $this->container;
+}
+protected function lazyLoad($eventName)
+{
+if (isset($this->listenerIds[$eventName])) {
+foreach ($this->listenerIds[$eventName] as $args) {
+list($serviceId, $method, $priority) = $args;
+$listener = $this->container->get($serviceId);
+$key = $serviceId.'.'.$method;
+if (!isset($this->listeners[$eventName][$key])) {
+$this->addListener($eventName, array($listener, $method), $priority);
+} elseif ($listener !== $this->listeners[$eventName][$key]) {
+parent::removeListener($eventName, array($this->listeners[$eventName][$key], $method));
+$this->addListener($eventName, array($listener, $method), $priority);
+}
+$this->listeners[$eventName][$key] = $listener;
+}
+}
+}
+}
+}
+namespace Symfony\Component\EventDispatcher
+{
+interface EventSubscriberInterface
+{
+public static function getSubscribedEvents();
+}
+}
+namespace Symfony\Component\HttpKernel\EventListener
+{
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+class ResponseListener implements EventSubscriberInterface
+{
+private $charset;
+public function __construct($charset)
+{
+$this->charset = $charset;
+}
+public function onKernelResponse(FilterResponseEvent $event)
+{
+if (HttpKernelInterface::MASTER_REQUEST !== $event->getRequestType()) {
+return;
+}
+$response = $event->getResponse();
+if (null === $response->getCharset()) {
+$response->setCharset($this->charset);
+}
+$response->prepare($event->getRequest());
+}
+public static function getSubscribedEvents()
+{
+return array(
+KernelEvents::RESPONSE =>'onKernelResponse',
+);
+}
+}
+}
+namespace Symfony\Component\HttpKernel\EventListener
+{
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
+use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RequestContextAwareInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+class RouterListener implements EventSubscriberInterface
+{
+private $matcher;
+private $context;
+private $logger;
+public function __construct($matcher, RequestContext $context = null, LoggerInterface $logger = null)
+{
+if (!$matcher instanceof UrlMatcherInterface && !$matcher instanceof RequestMatcherInterface) {
+throw new \InvalidArgumentException('Matcher must either implement UrlMatcherInterface or RequestMatcherInterface.');
+}
+if (null === $context && !$matcher instanceof RequestContextAwareInterface) {
+throw new \InvalidArgumentException('You must either pass a RequestContext or the matcher must implement RequestContextAwareInterface.');
+}
+$this->matcher = $matcher;
+$this->context = $context ?: $matcher->getContext();
+$this->logger = $logger;
+}
+public function onKernelRequest(GetResponseEvent $event)
+{
+$request = $event->getRequest();
+$this->context->fromRequest($request);
+if ($request->attributes->has('_controller')) {
+return;
+}
+try {
+if ($this->matcher instanceof RequestMatcherInterface) {
+$parameters = $this->matcher->matchRequest($request);
+} else {
+$parameters = $this->matcher->match($request->getPathInfo());
+}
+if (null !== $this->logger) {
+$this->logger->info(sprintf('Matched route "%s" (parameters: %s)', $parameters['_route'], $this->parametersToString($parameters)));
+}
+$request->attributes->add($parameters);
+unset($parameters['_route']);
+unset($parameters['_controller']);
+$request->attributes->set('_route_params', $parameters);
+} catch (ResourceNotFoundException $e) {
+$message = sprintf('No route found for "%s %s"', $request->getMethod(), $request->getPathInfo());
+throw new NotFoundHttpException($message, $e);
+} catch (MethodNotAllowedException $e) {
+$message = sprintf('No route found for "%s %s": Method Not Allowed (Allow: %s)', $request->getMethod(), $request->getPathInfo(), implode(', ', $e->getAllowedMethods()));
+throw new MethodNotAllowedHttpException($e->getAllowedMethods(), $message, $e);
+}
+}
+private function parametersToString(array $parameters)
+{
+$pieces = array();
+foreach ($parameters as $key => $val) {
+$pieces[] = sprintf('"%s": "%s"', $key, (is_string($val) ? $val : json_encode($val)));
+}
+return implode(', ', $pieces);
+}
+public static function getSubscribedEvents()
+{
+return array(
+KernelEvents::REQUEST => array(array('onKernelRequest', 32)),
+);
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Controller
+{
+use Symfony\Component\HttpFoundation\Request;
+interface ControllerResolverInterface
+{
+public function getController(Request $request);
+public function getArguments(Request $request, $controller);
+}
+}
+namespace Symfony\Component\HttpKernel\Controller
+{
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
+class ControllerResolver implements ControllerResolverInterface
+{
+private $logger;
+public function __construct(LoggerInterface $logger = null)
+{
+$this->logger = $logger;
+}
+public function getController(Request $request)
+{
+if (!$controller = $request->attributes->get('_controller')) {
+if (null !== $this->logger) {
+$this->logger->warning('Unable to look for the controller as the "_controller" parameter is missing');
+}
+return false;
+}
+if (is_array($controller) || (is_object($controller) && method_exists($controller,'__invoke'))) {
+return $controller;
+}
+if (false === strpos($controller,':')) {
+if (method_exists($controller,'__invoke')) {
+return new $controller;
+} elseif (function_exists($controller)) {
+return $controller;
+}
+}
+list($controller, $method) = $this->createController($controller);
+if (!method_exists($controller, $method)) {
+throw new \InvalidArgumentException(sprintf('Method "%s::%s" does not exist.', get_class($controller), $method));
+}
+return array($controller, $method);
+}
+public function getArguments(Request $request, $controller)
+{
+if (is_array($controller)) {
+$r = new \ReflectionMethod($controller[0], $controller[1]);
+} elseif (is_object($controller) && !$controller instanceof \Closure) {
+$r = new \ReflectionObject($controller);
+$r = $r->getMethod('__invoke');
+} else {
+$r = new \ReflectionFunction($controller);
+}
+return $this->doGetArguments($request, $controller, $r->getParameters());
+}
+protected function doGetArguments(Request $request, $controller, array $parameters)
+{
+$attributes = $request->attributes->all();
+$arguments = array();
+foreach ($parameters as $param) {
+if (array_key_exists($param->name, $attributes)) {
+$arguments[] = $attributes[$param->name];
+} elseif ($param->getClass() && $param->getClass()->isInstance($request)) {
+$arguments[] = $request;
+} elseif ($param->isDefaultValueAvailable()) {
+$arguments[] = $param->getDefaultValue();
+} else {
+if (is_array($controller)) {
+$repr = sprintf('%s::%s()', get_class($controller[0]), $controller[1]);
+} elseif (is_object($controller)) {
+$repr = get_class($controller);
+} else {
+$repr = $controller;
+}
+throw new \RuntimeException(sprintf('Controller "%s" requires that you provide a value for the "$%s" argument (because there is no default value or because there is a non optional argument after this one).', $repr, $param->name));
+}
+}
+return $arguments;
+}
+protected function createController($controller)
+{
+if (false === strpos($controller,'::')) {
+throw new \InvalidArgumentException(sprintf('Unable to find controller "%s".', $controller));
+}
+list($class, $method) = explode('::', $controller, 2);
+if (!class_exists($class)) {
+throw new \InvalidArgumentException(sprintf('Class "%s" does not exist.', $class));
+}
+return array(new $class(), $method);
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Event
+{
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\EventDispatcher\Event;
+class KernelEvent extends Event
+{
+private $kernel;
+private $request;
+private $requestType;
+public function __construct(HttpKernelInterface $kernel, Request $request, $requestType)
+{
+$this->kernel = $kernel;
+$this->request = $request;
+$this->requestType = $requestType;
+}
+public function getKernel()
+{
+return $this->kernel;
+}
+public function getRequest()
+{
+return $this->request;
+}
+public function getRequestType()
+{
+return $this->requestType;
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Event
+{
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+class FilterControllerEvent extends KernelEvent
+{
+private $controller;
+public function __construct(HttpKernelInterface $kernel, $controller, Request $request, $requestType)
+{
+parent::__construct($kernel, $request, $requestType);
+$this->setController($controller);
+}
+public function getController()
+{
+return $this->controller;
+}
+public function setController($controller)
+{
+if (!is_callable($controller)) {
+throw new \LogicException(sprintf('The controller must be a callable (%s given).', $this->varToString($controller)));
+}
+$this->controller = $controller;
+}
+private function varToString($var)
+{
+if (is_object($var)) {
+return sprintf('Object(%s)', get_class($var));
+}
+if (is_array($var)) {
+$a = array();
+foreach ($var as $k => $v) {
+$a[] = sprintf('%s => %s', $k, $this->varToString($v));
+}
+return sprintf("Array(%s)", implode(', ', $a));
+}
+if (is_resource($var)) {
+return sprintf('Resource(%s)', get_resource_type($var));
+}
+if (null === $var) {
+return'null';
+}
+if (false === $var) {
+return'false';
+}
+if (true === $var) {
+return'true';
+}
+return (string) $var;
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Event
+{
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+class FilterResponseEvent extends KernelEvent
+{
+private $response;
+public function __construct(HttpKernelInterface $kernel, Request $request, $requestType, Response $response)
+{
+parent::__construct($kernel, $request, $requestType);
+$this->setResponse($response);
+}
+public function getResponse()
+{
+return $this->response;
+}
+public function setResponse(Response $response)
+{
+$this->response = $response;
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Event
+{
+use Symfony\Component\HttpFoundation\Response;
+class GetResponseEvent extends KernelEvent
+{
+private $response;
+public function getResponse()
+{
+return $this->response;
+}
+public function setResponse(Response $response)
+{
+$this->response = $response;
+$this->stopPropagation();
+}
+public function hasResponse()
+{
+return null !== $this->response;
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Event
+{
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+class GetResponseForControllerResultEvent extends GetResponseEvent
+{
+private $controllerResult;
+public function __construct(HttpKernelInterface $kernel, Request $request, $requestType, $controllerResult)
+{
+parent::__construct($kernel, $request, $requestType);
+$this->controllerResult = $controllerResult;
+}
+public function getControllerResult()
+{
+return $this->controllerResult;
+}
+public function setControllerResult($controllerResult)
+{
+$this->controllerResult = $controllerResult;
+}
+}
+}
+namespace Symfony\Component\HttpKernel\Event
+{
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+class GetResponseForExceptionEvent extends GetResponseEvent
+{
+private $exception;
+public function __construct(HttpKernelInterface $kernel, Request $request, $requestType, \Exception $e)
+{
+parent::__construct($kernel, $request, $requestType);
+$this->setException($e);
+}
+public function getException()
+{
+return $this->exception;
+}
+public function setException(\Exception $exception)
+{
+$this->exception = $exception;
+}
+}
+}
+namespace Symfony\Component\HttpKernel
+{
+final class KernelEvents
+{
+const REQUEST ='kernel.request';
+const EXCEPTION ='kernel.exception';
+const VIEW ='kernel.view';
+const CONTROLLER ='kernel.controller';
+const RESPONSE ='kernel.response';
+const TERMINATE ='kernel.terminate';
+}
+}
+namespace Symfony\Component\HttpKernel\Config
+{
+use Symfony\Component\Config\FileLocator as BaseFileLocator;
+use Symfony\Component\HttpKernel\KernelInterface;
+class FileLocator extends BaseFileLocator
+{
+private $kernel;
+private $path;
+public function __construct(KernelInterface $kernel, $path = null, array $paths = array())
+{
+$this->kernel = $kernel;
+if (null !== $path) {
+$this->path = $path;
+$paths[] = $path;
+}
+parent::__construct($paths);
+}
+public function locate($file, $currentPath = null, $first = true)
+{
+if ('@'=== $file[0]) {
+return $this->kernel->locateResource($file, $this->path, $first);
+}
+return parent::locate($file, $currentPath, $first);
+}
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Controller
+{
+use Symfony\Component\HttpKernel\KernelInterface;
+class ControllerNameParser
+{
+protected $kernel;
+public function __construct(KernelInterface $kernel)
+{
+$this->kernel = $kernel;
+}
+public function parse($controller)
+{
+if (3 != count($parts = explode(':', $controller))) {
+throw new \InvalidArgumentException(sprintf('The "%s" controller is not a valid a:b:c controller string.', $controller));
+}
+list($bundle, $controller, $action) = $parts;
+$controller = str_replace('/','\\', $controller);
+$bundles = array();
+foreach ($this->kernel->getBundle($bundle, false) as $b) {
+$try = $b->getNamespace().'\\Controller\\'.$controller.'Controller';
+if (class_exists($try)) {
+return $try.'::'.$action.'Action';
+}
+$bundles[] = $b->getName();
+$msg = sprintf('Unable to find controller "%s:%s" - class "%s" does not exist.', $bundle, $controller, $try);
+}
+if (count($bundles) > 1) {
+$msg = sprintf('Unable to find controller "%s:%s" in bundles %s.', $bundle, $controller, implode(', ', $bundles));
+}
+throw new \InvalidArgumentException($msg);
+}
+}
+}
+namespace Symfony\Bundle\FrameworkBundle\Controller
+{
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpKernel\Controller\ControllerResolver as BaseControllerResolver;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\ControllerNameParser;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+class ControllerResolver extends BaseControllerResolver
+{
+protected $container;
+protected $parser;
+public function __construct(ContainerInterface $container, ControllerNameParser $parser, LoggerInterface $logger = null)
+{
+$this->container = $container;
+$this->parser = $parser;
+parent::__construct($logger);
+}
+protected function createController($controller)
+{
+if (false === strpos($controller,'::')) {
+$count = substr_count($controller,':');
+if (2 == $count) {
+$controller = $this->parser->parse($controller);
+} elseif (1 == $count) {
+list($service, $method) = explode(':', $controller, 2);
+return array($this->container->get($service), $method);
+} else {
+throw new \LogicException(sprintf('Unable to parse the controller name "%s".', $controller));
+}
+}
+list($class, $method) = explode('::', $controller, 2);
+if (!class_exists($class)) {
+throw new \InvalidArgumentException(sprintf('Class "%s" does not exist.', $class));
+}
+$controller = new $class();
+if ($controller instanceof ContainerAwareInterface) {
+$controller->setContainer($this->container);
+}
+return array($controller, $method);
+}
+}
+}

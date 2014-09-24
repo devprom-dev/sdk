@@ -1,0 +1,1 @@
+O:14:"ModuleIterator":2:{s:2:"rs";a:1:{i:0;a:5:{s:18:"cms_PluginModuleId";s:13:"update-upload";s:7:"Caption";s:25:"Загрузка файла обновления";s:25:"AccessEntityReferenceName";s:10:"cms_Update";s:3:"Url";s:18:"/admin/updates.php";s:3:"VPD";N;}}s:8:"id_field";s:18:"cms_PluginModuleId";}
