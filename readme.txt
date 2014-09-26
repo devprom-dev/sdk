@@ -17,3 +17,9 @@ dev\php\php lib/app/console new-plugin mypluginname
 dev\php\php lib/app/console build-plugin mypluginname
 
 Расположение дистрибутива плагина: build/plugin.mypluginname.zip
+
+-- Примеры плагинов
+
+example1
+Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
+Пример триггера, изменяющего состояние пожелания при создании по нему задачи.
