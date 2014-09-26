@@ -1,8 +1,9 @@
 <?php
 
 include_once SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilder.php";
-include_once "LicenseSAASAgileTeam.php";
 include_once "LicenseSAASALM.php";
+include_once "LicenseSAASALMMiddle.php";
+include_once "LicenseSAASALMLarge.php";
 
 class LicenseRegistryBuilderSaaS extends LicenseRegistryBuilder
 {
@@ -10,7 +11,10 @@ class LicenseRegistryBuilderSaaS extends LicenseRegistryBuilder
 	{
 		$registry->resetLicenses();
 		
-		$registry->addLicense( getFactory()->getObject('LicenseSAASAgileTeam') );
+		$registry->addLicense( getFactory()->getObject('LicenseSAASALMLarge') );
+		
+		$registry->addLicense( getFactory()->getObject('LicenseSAASALMMiddle') );
+		
 		$registry->addLicense( getFactory()->getObject('LicenseSAASALM') );
 	}
 }
