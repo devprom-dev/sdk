@@ -1,6 +1,7 @@
 <?php
 
 include "model/events/TaskChangedEventHandler.php";
+include "model/events/TaskAddedEventHandler.php";
 
 class example1PM extends PluginPMBase
 {
@@ -8,7 +9,8 @@ class example1PM extends PluginPMBase
 	public function getBuilders()
 	{
 		return array(
-				new TaskChangedEventHandler()
+				new TaskChangedEventHandler(),
+				new TaskAddedEventHandler()
 		);
 	}
 }
