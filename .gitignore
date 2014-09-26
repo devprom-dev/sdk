@@ -1,0 +1,12 @@
+/app/ext/vendor
+/lib/vendor
+/dev/mysql/data
+/dev/apache/htdocs/cache
+/dev/apache/logs/*.log
+/dev/apache/logs/*.pid
+/app/.project
+/app/.buildpath
+/app/.settings
+/dev/apache/htdocs/conf/logger.xml
+/dev/apache/htdocs/conf/*.ini
+/dev/apache/htdocs/conf/*.json
