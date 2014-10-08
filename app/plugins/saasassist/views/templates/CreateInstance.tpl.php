@@ -11,8 +11,6 @@
                     
                     <br/>
                     <?php echo text('saasassist21'); ?>
-
-					<?php echo '<input type="hidden" name="template" value="'.htmlentities($_REQUEST['template']).'">'; ?>
 					<div class="clearfix"></div>
 					<br/>
                 </div>

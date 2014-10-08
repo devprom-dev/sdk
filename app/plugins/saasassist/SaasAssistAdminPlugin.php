@@ -1,13 +1,15 @@
 <?php
 
 include_once "classes/licenses/events/RenewSAASLicenseEventHandler.php";
+include_once "classes/ScriptIntercomBuilder.php";
 
 class SaasAssistAdminPlugin extends PluginAdminBase
 {
  	function getBuilders()
  	{
  	    return array (
- 	            new RenewSAASLicenseEventHandler()
+ 	            new RenewSAASLicenseEventHandler(),
+ 	    		new ScriptIntercomBuilder(getSession())
  	    );
  	}
 

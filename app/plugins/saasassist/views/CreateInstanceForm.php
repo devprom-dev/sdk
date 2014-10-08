@@ -14,7 +14,7 @@ class CreateInstanceForm extends AjaxForm
 
 	function getAttributes()
 	{
-		return array('instance', 'email');
+		return array('instance', 'email', 'template');
 	}
 
 	function getAttributeType( $attribute )
@@ -45,10 +45,20 @@ class CreateInstanceForm extends AjaxForm
 				return preg_replace('/\%1/', SAAS_DOMAIN, text('saasassist9'));
 		}
 	}
+	
+	function getAttributeValue( $attribute )
+	{
+		if ( $attribute == 'template' )
+		{		
+			return htmlentities($_REQUEST['template']);
+		}
+		
+		return parent::getAttributeValue( $attribute );
+	}
 
 	function IsAttributeVisible( $attribute )
 	{
-		return true;
+		return $attribute != 'template';
 	}
  	
 	function IsAttributeModifable( $attribute )

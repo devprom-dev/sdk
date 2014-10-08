@@ -1,10 +1,13 @@
 <?php
 
+include_once "classes/ScriptIntercomBuilder.php";
+
 class SaasAssistCoPlugin extends PluginCoBase
 {
  	function getBuilders()
  	{
  	    return array (
+ 	    		new ScriptIntercomBuilder(getSession())
  	    );
  	}
  	
