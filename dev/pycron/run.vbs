@@ -1,4 +1,4 @@
-url="http://feature.devprom/core/processjobs.php"
+url="http://devprom.local/core/processjobs.php"
 
 Set objHTTP = CreateObject( "WinHttp.WinHttpRequest.5.1" )
 objHTTP.SetTimeouts 120000, 120000, 120000, 120000
