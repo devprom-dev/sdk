@@ -33,7 +33,8 @@ example1
 
 -- Синхронизация с основным репозиторием SDK
 
-git remote add upstream https://github.com/devprom-dev/sdk.git
+(первоначальная настройка) git remote add upstream https://github.com/devprom-dev/sdk.git
+
 git fetch upstream
 git checkout master
 git merge upstream/master
