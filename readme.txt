@@ -31,3 +31,9 @@ example1
 Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
 Пример триггера, изменяющего состояние пожелания при создании по нему задачи.
 
+-- Синхронизация с основным репозиторием SDK
+
+git remote add upstream https://github.com/devprom-dev/sdk.git
+git fetch upstream
+git checkout master
+git merge upstream/master
