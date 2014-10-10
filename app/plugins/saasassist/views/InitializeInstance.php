@@ -162,11 +162,15 @@ class InitializeInstance extends Page
 		
 		if ( $job_it->getId() < 1 ) return;
 		
-		$instance_number = trim(file_get_contents('/home/saas/instances.dat'), ' '.chr(10).chr(13));
+		$instance_number = intval(trim(file_get_contents('/home/saas/instances.dat'), ' '.chr(10).chr(13)));
+		
+		$hours = round($instance_number / 60, 0);
+		$minutes = $instance_number % 60;
 		
 		$job_it->modify(
 				array (
-						'Minutes' => $instance_number >= 0 ? intval($instance_number) : 0
+						'Minutes' => min(max($minutes, 0), 59),
+						'Hours' => $hours < 1 ? 23 : min($hours, 23)
 				)
 		); 
 		

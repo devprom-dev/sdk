@@ -37,7 +37,7 @@ class LicenseSAASBase extends LicenseInstalled
 
  		if ( $iterator->getId() == '') return 0;
 
- 		$license_data = file_get_contents(SERVER_ROOT_PATH.'conf/license.dat');
+ 		$license_data = @file_get_contents(SERVER_ROOT_PATH.'conf/license.dat');
  		
  		if ( $license_data == '' ) return $iterator->get('LicenseValue');
  		
