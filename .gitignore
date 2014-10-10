@@ -5,5 +5,9 @@
 /dev/apache/logs/*.log
 /dev/apache/logs/*.pid
 /app/.project
+/app/.buildpath
 /app/.settings
+/app/plugins/plugins.php
 /dev/apache/htdocs/conf/logger.xml
+/dev/apache/htdocs/conf/*.ini
+/dev/apache/htdocs/conf/*.json
