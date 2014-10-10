@@ -23,7 +23,7 @@ _admin_license:
     defaults: { _controller: AdministrativeBundle:License:index }
 
 _admin_info:
-    pattern:  /admin/info/
+    pattern:  /admin/info
     defaults: { _controller: AdministrativeBundle:Info:index }
 
 _admin_mailer:
@@ -42,3 +42,10 @@ _admin_logs:
     pattern:  /admin/log/
     defaults: { _controller: AdministrativeBundle:Logs:index }
     
+_admin_scripts:
+    pattern:  /admin/scripts/javascript/
+    defaults: { _controller: CommonBundle:Scripts:js }
+
+_admin_css:
+    pattern:  /admin/scripts/css/
+    defaults: { _controller: CommonBundle:Scripts:css }

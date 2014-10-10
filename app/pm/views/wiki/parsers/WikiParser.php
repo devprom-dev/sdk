@@ -3,7 +3,7 @@
 include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
  
-define( 'REGEX_UID', '/(^|<[^as][^>]*>|[^>\[\/])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
+define( 'REGEX_UID', '/(^|<[^as][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
 define( 'REGEX_INCLUDE_PAGE', '/\{\{([^\}]+)\}\}/si' );
  
 class WikiParser
@@ -911,13 +911,26 @@ class WikiParser
  	    
  		$url .= strpos($url, '?') === false ? '?&.png' : '&.png';
  		
- 	    return 'src="'.$url.'"';
+ 	    return ' src="'.$url.'"';
  	}
 
+ 	if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
+ 	{
+ 		$url_components = parse_url($match[1]);
+ 		$server_components = defined('PLANTUML_SERVER_URL') ? parse_url(PLANTUML_SERVER_URL) : parse_url('http://plantuml.com');
+ 		
+ 		$url_components['scheme'] = $server_components['scheme']; 
+ 		$url_components['host'] = $server_components['host'];
+ 		$url_components['port'] = $server_components['port'] != '' ? ':'.$server_components['port'] : '';
+ 		
+ 		return ' src="'.$url_components['scheme'].'://'.
+ 				$url_components['host'].$url_components['port'].$url_components['path'].'?t='.time().'"';
+ 	}
+ 		
   	// empty url
  	if ( $match[1] == '' )
  	{
- 	    return 'src="'._getServerUrl().'/images/warning.png"';
+ 	    return ' src="'._getServerUrl().'/images/warning.png"';
  	}
  	
  	return $match[0];

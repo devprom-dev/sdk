@@ -2,19 +2,25 @@
 
 class PMCustomDictionaryRegistry extends ObjectRegistrySQL
 {
+	function __construct( $object )
+	{
+		parent::__construct( $object );
+	}
+
+	function getFilters()
+	{
+		return array_merge (
+				parent::getFilters(),
+				array (
+						new FilterPredicate(get_class($this->getObject()->getAttributeObject()).",".$this->getObject()->getAttribute())
+				)
+		);
+	}
+	
  	function createSQLIterator( $sql )
  	{
- 	    global $model_factory;
- 	    
- 	    $filters = $this->getObject()->getFilters();
- 	    
- 	    if ( count($filters) < 1 ) return $this->createIterator(array());
- 	    
- 	    $parts = preg_split('/,/', $filters[0]->getValue());
- 	    
- 		$custom = $model_factory->getObject('pm_CustomAttribute');
-
- 		$custom_it = $custom->getByAttribute( $model_factory->getObject($parts[0]), $parts[1] );
+ 		$custom_it = getFactory()->getObject('pm_CustomAttribute')->
+ 				getByAttribute( $this->getObject()->getAttributeObject(), $this->getObject()->getAttribute() );
 
  		$data = array();
 

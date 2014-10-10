@@ -2,6 +2,7 @@
 
 include "ChangeLogIterator.php";
 include "ChangeLogRegistry.php";
+include "ChangeLogGranularityRegistry.php";
 include "persisters/ChangeLogDetailsPersister.php";
 include "predicates/ChangeLogActionFilter.php";
 include "predicates/ChangeLogExceptParticipantFilter.php";
@@ -31,19 +32,6 @@ class ChangeLog extends Metaobject
  		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата изменения'), false, false );
 
  		$this->addPersister( new ChangeLogDetailsPersister() );
- 		
-		$system_attributes = array (
-		        'ObjectId',
-		        'ObjectUrl',
-		        'VisibilityLevel',
-		        'EntityRefName',
-		        'ClassName'
-		);
-		
-		foreach( $system_attributes as $attribute )
-		{
- 			$this->addAttributeGroup($attribute, 'system');
-		}
  	}
  	
  	function createIterator() 

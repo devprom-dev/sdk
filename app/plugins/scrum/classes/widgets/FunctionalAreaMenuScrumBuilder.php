@@ -20,7 +20,7 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
         
         if ( class_exists('ModuleCategoryBuilderRequirements') )
         {
-	        $this->buildAnalysis( $set );
+        	$this->buildAnalysis( $set );
         }
     }
     

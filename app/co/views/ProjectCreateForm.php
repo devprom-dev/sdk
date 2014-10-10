@@ -36,7 +36,7 @@
  	
 	function getAttributes()
 	{
-		return array ( 'Caption', 'Codename', 'Template' );
+		return array ( 'Caption', 'Codename', 'Template', 'Participants' );
 	}
 	
 	function getAttributeType( $attribute )
@@ -45,6 +45,7 @@
 		{
 			case 'Codename':
 			case 'Caption':
+			case 'Participants':
 				return 'text'; 	
 
 			case 'Template':
@@ -81,7 +82,7 @@
 
 	function IsAttributeRequired( $attribute )
 	{
-		return true;
+		return $attribute != 'Participants';
 	}
 	
 	function getName( $attribute )
@@ -99,6 +100,9 @@
 			case 'Template':
 				return translate('Шаблон начальных настроек проекта');
 
+			case 'Participants':
+				return translate('Пригласить участников');
+				
 			default:
 				return parent::getName( $attribute );
 				
@@ -117,6 +121,9 @@
 
 			case 'Template':
 				return text(741);
+
+			case 'Participants':
+				return text(1865);
  		}
  	}
  }

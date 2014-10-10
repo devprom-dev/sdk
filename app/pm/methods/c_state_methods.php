@@ -283,9 +283,11 @@ class TransitionStateMethod extends WebMethod
 		{
 			$result = array (
 				"message" => "denied",
-				"description" => IteratorBase::wintoutf8(text(708))				
+				"description" =>
+						str_replace('%1', getSession()->getApplicationUrl().'project/workflow/'.$object->getStateClassName(), 
+								IteratorBase::wintoutf8(text(1860)))				
 			);
-		
+			
 			echo JsonWrapper::encode($result);
 			
 			return;

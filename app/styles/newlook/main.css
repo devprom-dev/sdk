@@ -648,7 +648,7 @@ option[disabled]
 .board_item_body input[type="checkbox"]
 {
 	padding: 0;
-    margin: 2px 3px 0 0;
+    margin: 1px 3px 0 0;
 }
 
 .board_item_body input[type="text"]
@@ -739,7 +739,7 @@ table.table-document > tbody > tr > td
 
 table.table-document > tbody > tr.row-empty > td
 {
-    padding: 0;
+    padding: 0 !important;
 }
 
 table.table-document td input[type="checkbox"]
@@ -860,4 +860,31 @@ a.file_attach img
 {
     display: table;
     width: 100%;
+}
+
+.title-on-card
+{
+    display: table;
+    width: 100%;	
+}
+
+.left-on-card
+{
+	display: table-cell;
+	text-align: left;
+}
+
+.right-on-card 
+{
+	display: table-cell;
+    text-align: right;
+}
+
+.right-on-card .order
+{
+    background: #6666CC;
+    color: white;
+    font-size: 7pt;
+    padding: 3px 7px 3px 7px;
+    line-height: 8px;
 }

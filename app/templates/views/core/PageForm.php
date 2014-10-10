@@ -126,7 +126,7 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 <script type="text/javascript">
 	var originalState = '';
     var formid = 'object_form';
-    	
+
 	$(document).ready(function() 
 	{
 		makeForm('<?=$action?>');
@@ -134,3 +134,11 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 </script>
 
 <?php } ?>
+
+<script type="text/javascript">
+
+    devpromOpts.saveButtonName = '<?=$button_save_title?>';
+    devpromOpts.closeButtonName = '<?=translate('Отменить')?>';
+    devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
+
+</script>

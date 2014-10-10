@@ -29,10 +29,10 @@ abstract class BusinessTransactionAfterEventHandler
 			
 			$object_it->moveNext();
 		}
-
-	        $lock = new LockFileSystem( get_class($object_it->object) );
+		
+	    $lock = new LockFileSystem( get_class($object_it->object) );
 	        
-	        $lock->Release();
+	    $lock->Release();
 	}
 	
 	private $object_it;

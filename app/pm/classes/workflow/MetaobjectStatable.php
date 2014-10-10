@@ -259,15 +259,11 @@ class MetaobjectStatable extends Metaobject
 
 		if ( $parms['Transition'] != '' )
 		{
-			$transition = getFactory()->getObject('pm_Transition');
-			
-			$transition->setVpdContext( $object_it );
-			
-			$transition_it = $transition->getExact($parms['Transition']);
-
-			$state_it = $transition_it->getRef('TargetState');
-			
-			$parms['State'] = $state_it->get('ReferenceName'); 
+			$parms['State'] = getFactory()->getObject($this->getStateClassName())->getRegistry()->Query(
+					array (
+							new StateTransitionTargetPredicate($parms['Transition'])
+					)
+			)->get('ReferenceName');
 		}
 		
 		if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )

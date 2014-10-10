@@ -4,13 +4,17 @@ class RequestReleasePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		$release_it = getFactory()->getObject('Release')->getExact($filter);
+ 		$ids = preg_split('/,/',$filter);
  		
- 		if ( $release_it->getId() < 1 ) return " AND 1 = 2 ";
+ 		array_walk($ids, function(&$value) {
+ 				$value = is_numeric($value) && $value > 0 ? $value : '0';  
+ 		});
+
+ 		if ( count($ids) < 1 ) return "AND 1 = 2";
  		
- 		return " AND ( t.PlannedRelease IN (".join(',',$release_it->idsToArray()).") ".
+ 		return " AND ( IFNULL(t.PlannedRelease,0) IN (".join(',',$ids).") ".
  			   "       OR EXISTS (SELECT 1 FROM pm_Release r, pm_Task s ".
- 			   "				   WHERE r.Version IN (".join(',',$release_it->idsToArray()).") ".
+ 			   "				   WHERE IFNULL(r.Version, 0) IN (".join(',',$ids).") ".
  			   "					 AND r.pm_ReleaseId = s.Release AND s.ChangeRequest = t.pm_ChangeRequestId) )";
  	}
 } 

@@ -19,7 +19,12 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 		if ( file_exists($archiver_path) )
 		{
 			chdir(SERVER_BACKUP_PATH);
-			shell_exec($archiver_path.' a -r -tzip '.$this->getBackupFileName().' devprom/* htdocs/*');
+
+			$command = $archiver_path.' a -r -tzip '.$this->getBackupFileName().' devprom/* htdocs/*';
+			
+			$this->writeLog("Zip: ".$command);
+			
+			$this->writeLog("Zip: ".shell_exec($command));
 		}
 		else
 		{
@@ -126,12 +131,18 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
  		chdir(SERVER_ROOT.'/mysql/bin');
 		$host_parts = preg_split('/:/', DB_HOST);
 		
-		shell_exec('mysqldump.exe --host='.$host_parts[0].' --port='.$host_parts[1].
+		$command = 'mysqldump.exe --host='.$host_parts[0].' --port='.$host_parts[1].
 			' --user='.DB_USER.' --password='.DB_PASS.' --add-drop-table --set-charset --force' .
 			' --result-file="'.$sql_path.'devprom.sql'.
 		    '" --default-character-set=cp1251 --character-sets-dir="'.
-		    SERVER_ROOT.'/mysql/share/charsets" '.DB_NAME);
+		    SERVER_ROOT.'/mysql/share/charsets" '.DB_NAME;
 		
+		$this->writeLog("Backup: ".$command);
+		
+		$result = shell_exec($command);
+		
+		$this->writeLog("Backup: ".$result);
+				
 		$this->configure_database_file( $sql_path.'devprom.sql' );
 		
 		return true;

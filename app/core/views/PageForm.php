@@ -560,7 +560,8 @@ class PageForm extends MetaObjectForm
 		    'scripts' => $scripts,
 		    'draw_sections' => true,
 		    'form_body_template' => $this->getBodyTemplate(),
-		    'title' => $this->getPageTitle()
+		    'title' => $this->getPageTitle(),
+			'button_save_title' => translate('Сохранить')
 		);
 	}
 	

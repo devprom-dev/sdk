@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once "BusinessAction.php";
 
 class RequestBusinessActionGetInWorkDuplicates extends BusinessAction
@@ -37,7 +39,9 @@ class RequestBusinessActionGetInWorkDuplicates extends BusinessAction
  	        
  	        if ( $state_it->getId() > 0 )
  	        {
- 	            $duplicate_it->modify( array('State' => $state_it->get('ReferenceName')) );
+				$service = new WorkflowService($request);
+				
+				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'), $this->getDisplayName());
  	        }
  	        else
  	        {

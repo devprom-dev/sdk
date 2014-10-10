@@ -4,6 +4,7 @@
  use Symfony\Component\Templating\TemplateNameParser;
  use Symfony\Component\Templating\Loader\FilesystemLoader;
  use Symfony\Component\Templating\Helper\SlotsHelper;
+ use Devprom\CommonBundle\Service\Widget\ScriptService;
  
  $path = dirname(__FILE__);
  
@@ -658,7 +659,9 @@
 
         $first_menu = count($areas) > 0 ? array_pop(array_values($areas)) : array();
 
- 		return array(
+        $script_service = new ScriptService();
+        
+        return array(
  			'inside' => count($first_menu['menus']) > 0,
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
  		    'navigation_title' => $tab_title,
@@ -676,7 +679,8 @@
  		    'tab_uid' => $tab_uid,
  		    'active_area_uid' => $active_area_uid,
  		    'bottom_sections' => $bottom_sections,
- 			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid)
+ 			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid),
+        	'javascript_paths' => $script_service->getJSPaths()
  		);
  	}
  	

@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
 
 class RequestTriggersCommon extends SystemTriggersBase
@@ -12,42 +14,32 @@ class RequestTriggersCommon extends SystemTriggersBase
 	    
 		if ( !array_key_exists('State', $content) ) return;
 
-		$this->stateAttributeModified( $object_it );
+		if ( $object_it->get('State') != 'submitted' ) return;
+		
+	    if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) return;
+		
+	    $this->stateAttributeModified( $object_it );
 	}
     
 	function stateAttributeModified( $object_it )
 	{
-	    global $model_factory;
-	    
-	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-	    
-	    $part_it = getSession()->getParticipantIt();
-	    
-	    switch ( $object_it->get('State') )
-	    {
-	        case 'submitted':
+		$task = getFactory()->getObject('pm_Task');
+		
+ 		$task->removeNotificator( 'EmailNotificator' );
+ 		
+ 		$task_it = $task->getByRefArray( array( 
+ 		        'Assignee' => getSession()->getParticipantIt()->getId(),
+ 				'ChangeRequest' => $object_it->getId() 
+ 		));
 
-	    		if ( is_object($methodology_it) && !$methodology_it->HasTasks() )
-				{
-					$task = $model_factory->getObject('pm_Task');
-					
-			 		$task->removeNotificator( 'EmailNotificator' );
-			 		
-			 		$task_it = $task->getByRefArray( array( 
-			 		        'Assignee' => $part_it->getId(),
-			 				'ChangeRequest' => $object_it->getId() 
-			 		));
-			 			
-			 		while ( !$task_it->end() )
-			 		{
-			 			$task_it->modify( array('State' => 'planned') );
-			 			
-			 			$task_it->moveNext();
-			 		}
-				}
-	            
-	            break;
-	    }
+		$service = new WorkflowService($task);
+ 		
+ 		while ( !$task_it->end() )
+ 		{
+			$service->moveToState($task_it, 'planned');
+ 			
+ 			$task_it->moveNext();
+ 		}
 	}
 }
  

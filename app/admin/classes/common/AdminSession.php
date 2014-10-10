@@ -16,6 +16,13 @@ class AdminSession extends SessionBase
 		
 		getLanguage();
 	}
+
+	function configure()
+	{
+		parent::configure();
+		
+		$this->getCacheEngine()->setDefaultPath('admin');
+	}
 	
  	function getSite()
  	{

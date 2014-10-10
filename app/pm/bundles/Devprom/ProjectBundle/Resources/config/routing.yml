@@ -23,12 +23,24 @@ _export:
     defaults: { _controller: ProjectBundle:Project:export }
 
 _scripts:
-    pattern:  /pm/{project}/scripts/javascript
-    defaults: { _controller: ProjectBundle:Scripts:js }
+    pattern:  /pm/{project}/scripts/javascript/
+    defaults: { _controller: CommonBundle:Scripts:js }
 
 _css:
-    pattern:  /pm/{project}/scripts/css
-    defaults: { _controller: ProjectBundle:Scripts:css }
+    pattern:  /pm/{project}/scripts/css/
+    defaults: { _controller: CommonBundle:Scripts:css }
+
+invite:
+    pattern:  /pm/{project}/invite
+    defaults: { _controller: ProjectBundle:Invitation:form }
+    requirements:
+        _method:  GET
+
+invite_process:
+    pattern:  /pm/{project}/invite
+    defaults: { _controller: ProjectBundle:Invitation:formProcess }
+    requirements:
+        _method:  POST
 
 pages:
     type:     rest
@@ -63,5 +75,15 @@ rest_build:
 rest_issue:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\IssueController
+    prefix:   /pm/{project}/api/v1
+
+rest_change:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\ChangeController
+    prefix:   /pm/{project}/api/v1
+
+rest_task:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\TaskController
     prefix:   /pm/{project}/api/v1
     

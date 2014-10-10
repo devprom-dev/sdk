@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once "BusinessAction.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 
@@ -12,11 +14,9 @@ class TaskBusinessActionResolveIssue extends BusinessAction
 	
 	function apply( $object_it )
  	{
- 		global $model_factory;
+		if ( $object_it->get('ChangeRequest') == '' ) return true;
  		
 		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) return true;
-		
-		if ( $object_it->get('ChangeRequest') == '' ) return true;
 		
 		getSession()->addBuilder( new RequestModelExtendedBuilder() );
 		
@@ -31,16 +31,9 @@ class TaskBusinessActionResolveIssue extends BusinessAction
 
 			$terminals = $request_it->object->getTerminalStates();
 			
-			$transition_it = $request_it->getTransitionTo( $terminals[0] );
-
-			if ( $transition_it->getId() > 0 )
-			{
-				$request_it->modify (
-					array( 	'State' => $terminals[0],
-					 	'Transition' => $transition_it->getId(),
-						'TransitionComment' => $resolution ) 
-				);
-			}
+			$service = new WorkflowService($request_it->object);
+			
+			$service->moveToState($request_it, $terminals[0], $resolution);
 		}
  		
  		return true;
@@ -48,8 +41,7 @@ class TaskBusinessActionResolveIssue extends BusinessAction
 
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_Task');
+ 		return getFactory()->getObject('pm_Task');
  	}
  	
  	function getDisplayName()

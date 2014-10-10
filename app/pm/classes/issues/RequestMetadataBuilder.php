@@ -90,7 +90,21 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 			}
 		}
 		
-    	foreach ( array('Author', 'ClosedInVersion', 'Fact', 'Caption', 'Description', 'Owner', 'Priority', 'Function', 'OrderNum') as $attribute )
+		$permission_attributes = array(
+				'Author', 
+				'ClosedInVersion', 
+				'Fact', 
+				'Caption', 
+				'Description', 
+				'Owner', 
+				'Priority', 
+				'Function', 
+				'OrderNum',
+				'Type',
+				'PlannedRelease',
+				'Estimation');
+		
+    	foreach ( $permission_attributes as $attribute )
 		{
 		    $metadata->addAttributeGroup($attribute, 'permissions');
 		}

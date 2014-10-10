@@ -1,7 +1,6 @@
 <?php
 
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
-use Devprom\ProjectBundle\Service\Widget\ScriptService;
 use Devprom\ProjectBundle\Service\Model\ModelService;
 
 include SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
@@ -147,16 +146,13 @@ class PMPage extends Page
             $parms['navigation_title'] = $report->getExact( $this->getReport() )->getDisplayName();
         }
 	    
-        $script_service = new ScriptService();
-
 		return array_merge( $parms, 
 				array (
 					'caption_template' => 'pm/PageTitle.php',
 				    'project_code' => getSession()->getProjectIt()->get('CodeName'),
 					'project_template' => getSession()->getProjectIt()->get('Tools'),
 					'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
-					'menus' => $this->getTopMenus(),
-					'javascript_paths' => $script_service->getJSPaths()
+					'menus' => $this->getTopMenus()
 				)
 		);
 	}

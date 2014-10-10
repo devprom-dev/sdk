@@ -7,7 +7,13 @@ class ModifyAttributeWebMethod extends WebMethod
 {
  	var $object_it, $attribute, $value, $callback;
  	
+ 	private $uid_service = null;
+ 	
+ 	private $method_url = '';
+ 	
  	private $method_script = '';
+ 	
+ 	private $project = '';
  	
  	function __construct( $object_it = null, $attribute = '', $value = '')
  	{
@@ -17,6 +23,9 @@ class ModifyAttributeWebMethod extends WebMethod
  		$this->attribute = $attribute;
  		$this->value = $value;
  		$this->callback = "''";
+ 		$this->uid_service = new ObjectUID;
+ 		$this->method_url = '/'.getSession()->getSite().'/';
+ 		$this->project = getSession()->getProjectIt()->get('CodeName');
  		
  		$this->buildMethodScript();
  	}
@@ -42,8 +51,11 @@ class ModifyAttributeWebMethod extends WebMethod
  	
  	private function buildMethodScript()
  	{ 
- 		$this->method_script = "javascript: runMethod('".$this->getModule().'?method='.get_class($this).
-			"', {%data%}, ".$this->callback.", '".$this->getWarning()."');";
+ 		$project_code = is_object($this->object_it) ? $this->uid_service->getProject($this->object_it) : $this->project;
+ 		 
+ 		$method_url = $this->method_url.$project_code.'/methods.php?method='.get_class($this);
+ 		
+ 		$this->method_script = "javascript: runMethod('".$method_url."', {%data%}, ".$this->callback.", '".$this->getWarning()."');";
  	}
  	
  	function getRedirectUrl()
@@ -62,12 +74,17 @@ class ModifyAttributeWebMethod extends WebMethod
 
  	function getJSCall( $parms = array(), $object_it = null )
  	{
- 		if ( is_null($object_it) ) $object_it = $this->object_it;
+ 		if ( !is_null($object_it) )
+ 		{
+ 			$this->object_it = $object_it;
+ 			
+ 			$this->buildMethodScript();
+ 		}
  		
 		$parms = array( 
-			'class' => strtolower(get_class($object_it->object)),
+			'class' => strtolower(get_class($this->object_it->object)),
  			'attribute' => $this->attribute,
- 			'object' => $object_it->getId(),
+ 			'object' => $this->object_it->getId(),
  			'value' => $this->value
  			);
  			

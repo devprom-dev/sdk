@@ -18,6 +18,8 @@ class PageList extends ListTable
  	
  	private $uid_service = null;
  	
+ 	private $iterator_data = null;
+ 	
  	function PageList( $object )
  	{
  		$this->uid_service = new ObjectUID('', $object);
@@ -169,7 +171,7 @@ class PageList extends ListTable
 		);
 	}
 	
-	function getReferenceIt( $attribute )
+	function getReferenceIt( $attribute  )
 	{
 		if ( is_object($this->references_it[$attribute]) ) return $this->references_it[$attribute];
 		 
@@ -180,20 +182,43 @@ class PageList extends ListTable
 				return $this->references_it[$attribute] = $this->getObject()->getEmptyIterator();
 		}
 
-		$ids = array_filter($this->getIteratorRef()->fieldToArray($attribute), function($value) 
+		if ( is_null($this->iterator_data) ) $this->iterator_data = $this->getIteratorRef()->getRowset();  
+				
+		$data = array_filter($this->iterator_data, function($value) use ($attribute) 
 		{
-				return $value != '';
+				return $value[$attribute] != '';
 		});
 		
-		if ( count($ids) < 1 )
-		{
-				return $this->references_it[$attribute] = $this->getObject()->getEmptyIterator();
-		}
+		if ( count($data) < 1 ) return $this->references_it[$attribute] = $this->getObject()->getEmptyIterator();
+
+		$ids = array();
 		
-		return $this->references_it[$attribute] = $object->getRegistry()->Query(
-				array(
-						new FilterInPredicate(join(',',$ids))
-				)
+		foreach( $data as $key => $row ) $ids[] = $row[$attribute]; 
+		
+		return $this->references_it[$attribute] = $object->createCachedIterator(
+				$object->getRegistry()->Query(
+						array(
+								new FilterInPredicate(join(',',$ids))
+						)
+				)->getRowset()
+		);
+	}
+	
+	function getFilteredReferenceIt( $attr, $value )
+	{
+		$ref_it = $this->getReferenceIt($attr);
+
+		if ( $ref_it->count() < 1 ) return $ref_it;
+		 
+		$ref_key = $ref_it->getIdAttribute();
+
+		$ref_ids = preg_split('/,/', $value);
+
+		return $ref_it->object->createCachedIterator(
+				array_values(array_filter($ref_it->getRowset(), function($value) use ($ref_key, $ref_ids)
+				{
+						return in_array($value[$ref_key], $ref_ids);
+				}))
 		);
 	}
 	

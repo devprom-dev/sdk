@@ -1,0 +1,33 @@
+<?php
+
+namespace Devprom\CommonBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Devprom\CommonBundle\Service\Widget\ScriptService;
+
+class ScriptsController extends Controller
+{
+    public function jsAction()
+    {
+    	$service = new ScriptService();
+
+    	$response = new Response($service->getJSBody());
+    	
+		$response->headers->set('Content-Type', 'text/javascript; charset=utf-8');
+    	
+    	return $response;
+    }
+
+    public function cssAction()
+    {
+    	$service = new ScriptService();
+
+    	$response = new Response($service->getCSSBody());
+    	
+		$response->headers->set('Content-Type', 'text/css');
+    	
+    	return $response;
+    }
+}

@@ -29,8 +29,8 @@ class UserParticipanceTypePredicate extends FilterPredicate
  	    
  	    if ( count($vpds) < 1 ) return " AND 1 = 2 ";
  	    
-		return " AND EXISTS (SELECT 1 FROM pm_Participant r " .
+		return " AND ( t.cms_UserId = 0 OR EXISTS (SELECT 1 FROM pm_Participant r " .
 			   "			  WHERE r.SystemUser = t.cms_UserId" .
-			   "			    AND r.VPD IN ('".join("','", $vpds)."') ) ";
+			   "			    AND r.VPD IN ('".join("','", $vpds)."') ) ) ";
  	}
 }

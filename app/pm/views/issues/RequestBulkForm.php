@@ -128,7 +128,6 @@ class RequestBulkForm extends BulkForm
  			case 'Owner':
     			$worker = $model_factory->getObject('Participant');
     			
-    			$worker->addFilter( new ParticipantActivePredicate() );
     			$worker->addFilter( new ParticipantWorkerPredicate() );
 				
 				$field = new FieldDictionary( $worker );

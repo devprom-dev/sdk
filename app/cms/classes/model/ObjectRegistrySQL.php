@@ -84,7 +84,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->default_sort = $sort_clause;
 	}
 	
-	public function Query( $parms = array() )
+	protected function setParameters( $parms )
 	{
 		$filters = array();
 		
@@ -106,6 +106,11 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->setSorts($sorts);
 
 		if ( count($persisters) > 0 ) $this->setPersisters($persisters);
+	}
+	
+	public function Query( $parms = array() )
+	{
+		$this->setParameters( $parms );
 		
 		return $this->getAll();
 	}
@@ -125,6 +130,15 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$sql .= $this->getLimitClause();
 
 		return $this->createSQLIterator($sql);
+	}
+	
+	public function Count( $parms = array() )
+	{
+		$this->setParameters( $parms );
+		
+		return $this->createSQLIterator(
+				'SELECT COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
+			)->get('cnt');
 	}
 	
 	public function createSQLIterator( $sql_query ) 

@@ -16,7 +16,7 @@ class WrtfCKEditorPageParser extends WikiParser
 
 		$content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $content);
 		
-        $content = preg_replace_callback('/src="([^"]*)"/i', preg_image_src_callback, $content);
+        $content = preg_replace_callback('/\s+src="([^"]*)"/i', preg_image_src_callback, $content);
         
         $was_state = libxml_use_internal_errors(true);
         

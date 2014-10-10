@@ -25,6 +25,13 @@ class ParticipantList extends PMPageList
 		switch( $attr )
 		{
 			case 'ParticipantRole':
+				
+				if ( $object_it->getId() < 1 )
+				{
+					echo text(1864);
+					
+					return;
+				}
 			    
 			    $project_it = getSession()->getProjectIt();
 			    
@@ -178,6 +185,32 @@ class ParticipantList extends PMPageList
 	
 	function getItemActions( $column_name, $object_it ) 
 	{
+		return $object_it->getId() < 1 
+				? $this->getInvitedActions($object_it) 
+				: $this->getUserActions($object_it);
+	}
+
+	function getInvitedActions( $object_it )
+	{
+		$actions = array();
+		
+		$invitation_it = getFactory()->getObject('Invitation')->getExact($object_it->get('Invitation'));
+		
+		$method = new DeleteObjectWebMethod($invitation_it);
+		
+		if ( $method->hasAccess() )
+		{
+			$actions[] = array (
+					'name' => $method->getCaption(),
+					'url' => $method->getJSCall() 
+			);
+		}
+		
+		return $actions;
+	}
+	
+	function getUserActions( $object_it )
+	{
         $participant = getFactory()->getObject('Participant');
 		
 		if ( $object_it->get('Participant') > 0 )
@@ -246,9 +279,9 @@ class ParticipantList extends PMPageList
 		    );
 		}
 				
-		return $actions;
+		return $actions;		
 	}
-
+	
 	function getGroupFields() 
 	{
 		$fields = parent::getGroupFields();

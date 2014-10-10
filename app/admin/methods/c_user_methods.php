@@ -76,7 +76,8 @@ class UnBlockUserWebMethod extends UserWebMethod
 
 	function hasAccess()
 	{
-		return getSession()->getUserIt()->IsAdministrator();
+		return getSession()->getUserIt()->IsAdministrator()
+			&& getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('User')); 
 	}
 }
 

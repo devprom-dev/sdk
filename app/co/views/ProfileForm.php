@@ -22,6 +22,8 @@ class ProfileForm extends AjaxForm
  	
  	function getRedirectUrl()
 	{
+		if ( $_REQUEST['redirect'] != '' ) return htmlentities($_REQUEST['redirect']);
+		
 		switch ( $this->getAction() )
 		{
 			case CO_ACTION_MODIFY:
