@@ -26,7 +26,13 @@ class CoAccessPolicy extends AccessPolicy
  		
  		if ( $user_it->get('GroupId') == '' )
  		{
- 		    return getFactory()->getObject('co_UserGroup')->getEmptyIterator();
+ 		    return $this->group_it = getFactory()->getObject('co_UserGroup')->createCachedIterator(
+ 		    		array (
+		 		    		array (
+		 		    				'co_UserGroupId' => 0
+		 		    		)
+ 					)
+			);
  		} 		
 	
  		return $this->group_it = $user_it->getRef('GroupId');

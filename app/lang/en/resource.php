@@ -2,6 +2,7 @@
 
 	
  $text_array = array (
+ 	'Приглашение в проект' => 'Invitation into the project',
  	'Незавершенные задачи' => 'Open tasks',
  	'Руководители' => 'Management',
  	'Сумма' => 'Summary', 
@@ -3154,7 +3155,7 @@
 	1831 => 'Select this option to display the report on "Favorites" panel',
 	1832 => 'Modules and reports settings, navigation settings, favorites',
 	1833 => 'Common settings',
-	1834 => 'Project artefacts', 		
+	1834 => 'Project artefacts (issues, tasks, comments, files, releases, iterations, etc.)', 		
  	1835 => 'Selected color is used to paint the cards on the boards, in case of the color scheme "By states" is selected.',
 	1836 => '<b>Move</b> the cards between the states (columns) using <b>drag\'n\'drop</b>, to modify attributes just <b>double-click</b> on the card, more operations are available from the context menu on the card. To adjust the list of columns and their titles use the module "%1".',
 	1837 => 'The earliest start date among the issues related to this feature',
@@ -3179,7 +3180,13 @@
  	1856 => 'Selected color is used to paint the cards on the task board, in case of the color scheme "By type" is selected.',
 	1857 => '(spent: %3 hrs, remained: %2 hrs)',
 	1858 => 'Backups',
- 	1859 => 'Fresh <a href="/admin/backups.php">backup has been created</a> in case of data recovery will be required'
+ 	1859 => 'Fresh <a href="/admin/backups.php">backup has been created</a> in case of data recovery will be required',
+	1860 => 'Unable to change state because of absent transition, please check out the <a href="%1">workflow settings</a> and append the transition.',
+	1861 => 'Invite by email',
+ 	1862 => 'Enter the email address of the new participant. You can invite multiple participants by separating the addresses with a comma.',
+ 	1863 => 'Invitation to the project',
+ 	1864 => 'Invitation sent',
+ 	1865 => 'You can send your colleagues invitations to participate in the project, to do this, enter e-mail addresses separated by a comma. You can do this later using menu Settings - Participants.'
  );
 
 return $text_array;

@@ -39,7 +39,13 @@ class BackupAndRecoveryStrategy
  		if ( !is_dir(SERVER_BACKUP_PATH) ) mkdir(SERVER_BACKUP_PATH);
  		
  		$sql_path = SERVER_BACKUP_PATH.'devprom/';
- 		if ( !is_dir($sql_path) ) mkdir($sql_path);
+ 		
+ 		if ( !is_dir($sql_path) )
+ 		{
+			$this->writeLog("Backup: make directory ".$sql_path);
+ 			
+			mkdir($sql_path);
+ 		}
 		
 		if ( defined('MYSQL_BACKUP_COMMAND') )
 		{
@@ -49,16 +55,21 @@ class BackupAndRecoveryStrategy
 						str_replace('%4', DB_NAME, 
 							str_replace('%5', $sql_path.'devprom.sql', MYSQL_BACKUP_COMMAND ) ) ) ) );
 			
-			$result = shell_exec( $command );
 		}
 		else
 		{
-			$result = shell_exec('mysqldump --set-charset --default-character-set=cp1251 ' .
+			$command = 'mysqldump --set-charset --default-character-set=cp1251 ' .
 				' --host='.DB_HOST.' --user='.DB_USER.' --password='.DB_PASS.
 				' --add-drop-table --force '.DB_NAME.' > '.
-				$sql_path.'devprom.sql');
+				$sql_path.'devprom.sql';
 		}
 
+		$this->writeLog("Backup: ".$command);
+		
+		$result = shell_exec( $command );
+
+		$this->writeLog("Backup: database dumping result ".$result);
+		
 		$this->configure_database_file( $sql_path.'devprom.sql' );
 		
 		return true;
@@ -70,6 +81,8 @@ class BackupAndRecoveryStrategy
  		
  		if ( $dbf === false )
  		{
+			$this->writeLog("Backup: unable find database dump file ".$path);
+			
  			return;
  		}
  		
@@ -137,11 +150,24 @@ class BackupAndRecoveryStrategy
 
  	function backup_htdocs() 
  	{
- 		if ( is_dir(SERVER_BACKUP_PATH) === false ) mkdir(SERVER_BACKUP_PATH);
+ 		if ( is_dir(SERVER_BACKUP_PATH) === false )
+ 		{
+ 			$this->writeLog("Backup: make directory ".SERVER_BACKUP_PATH);
+ 			 		
+ 			mkdir(SERVER_BACKUP_PATH);
+ 		}
 
 		// soruce files backup
 		$htdocs_backup_path = SERVER_BACKUP_PATH.'htdocs/';
-		if ( !is_dir($htdocs_backup_path) ) mkdir($htdocs_backup_path);
+		
+		if ( !is_dir($htdocs_backup_path) )
+		{
+			$this->writeLog("Backup: make directory ".$htdocs_backup_path);
+			 			
+			mkdir($htdocs_backup_path);
+		}
+
+		$this->writeLog("Backup: start copying application");
 		
 		$this->full_copy( SERVER_ROOT_PATH, $htdocs_backup_path );
 		
@@ -149,6 +175,8 @@ class BackupAndRecoveryStrategy
 		{
 		    unlink( $htdocs_backup_path.'settings_server.php' );
 		}
+
+ 		$this->writeLog("Backup: application copying passed");
  	}
  	
  	function backup_files() 
@@ -159,8 +187,18 @@ class BackupAndRecoveryStrategy
 		$files_backup_path = SERVER_BACKUP_PATH.
 			$this->getBackupName().'/';
 		
-		if ( !is_dir($files_backup_path) ) mkdir($files_backup_path);
+		if ( !is_dir($files_backup_path) )
+		{
+			$this->writeLog("Backup: make directory ".$files_backup_path);
+			
+			mkdir($files_backup_path);
+		}
+		
+		$this->writeLog("Backup: start copying files");
+		
 		$this->full_copy( SERVER_FILES_PATH, $files_backup_path, false );
+
+ 		$this->writeLog("Backup: files copying passed");
  	}
 
  	function recovery_unzip( $backup_file_name ) 
@@ -346,7 +384,11 @@ class BackupAndRecoveryStrategy
  			str_replace('%2', 'devprom', str_replace('%3', 'htdocs', $command ) ) 
  			);
  				
+		$this->writeLog("Zip: ".$command);
+ 		
  		$result = shell_exec( $command );
+
+		$this->writeLog("Zip: ".$result);
  		
 		// remove source backup files
 		$this->full_delete( SERVER_BACKUP_PATH.'devprom/' );
@@ -435,8 +477,6 @@ class BackupAndRecoveryStrategy
                        }
                        else
                        {
-                       		$this->writeLog('Copying: '.$source_path.$file.' to '.$destination_path.$file);
-                       	
                             $result = copy($source_path.$file, $destination_path.$file);
 
                             if ( !$result )

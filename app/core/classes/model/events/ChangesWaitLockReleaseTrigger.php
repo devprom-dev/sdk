@@ -25,6 +25,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 				'co_JobRun', 
 				'pm_ProjectUse', 
 				'ObjectChangeLog', 
+				'ObjectChangeLogAttribute', 
 				'EmailQueue', 
 				'EmailQueueAddress',
 				'cms_EntityCluster'

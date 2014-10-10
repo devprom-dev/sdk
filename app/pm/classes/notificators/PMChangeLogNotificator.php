@@ -390,11 +390,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		}
 	}
 	
-	function getContent( $prev_it, $object_it )
-	{
-		return parent::getContent( $prev_it, $object_it );
-	}
-
 	function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
 		global $project_it, $_REQUEST;

@@ -4,6 +4,8 @@ namespace Devprom\ApplicationBundle\Controller;
 
 use Devprom\ApplicationBundle\Controller\PageController;
 use Devprom\ApplicationBundle\Service\CreateProjectService;
+use Devprom\CommonBundle\Service\Project\InviteService;
+
 
 include_once SERVER_ROOT_PATH."co/views/Common.php";
 include SERVER_ROOT_PATH."co/views/ProjectCreatePage.php";
@@ -58,10 +60,22 @@ class ProjectController extends PageController
 		$result = $strategy->execute();
 		
 		if ( $result < 1 ) 
+		{
 		    return $this->replyError( self::getResultDescription($strategy, $result) );
+		}
 
-		return $this->replySuccess( 
-		    $strategy->getSuccessMessage(), $request->request->get('Codename').'/'); 
+		$emails = preg_split('/,/', $request->request->get('Participants'));
+		
+		if ( count($emails) > 0 )
+		{
+			$invite_service = new InviteService($this, getSession());
+			$invite_service->inviteByEmails($emails);
+		}
+		
+		return $this->replySuccess(
+				$strategy->getSuccessMessage(), 
+				$request->request->get('Codename').'/'
+		); 
     }
     
 	static function getResultDescription( $strategy, $result )

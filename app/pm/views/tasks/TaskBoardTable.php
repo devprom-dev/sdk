@@ -297,5 +297,17 @@ class TaskBoardTable extends PMPageTable
 		}
 
 		return $append_actions;
-	}	
+	}
+	
+ 	function getSortFields()
+	{
+		$cols = parent::getSortFields();
+
+		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
+		{
+			array_push( $cols, 'OrderNum');
+		}
+	
+		return $cols;
+	}
 }

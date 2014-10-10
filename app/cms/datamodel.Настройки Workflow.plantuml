@@ -20,6 +20,11 @@ class "co_AffectedObjects" << TABLE >> {
   ObjectClass: VARCHAR
 }
 
+class "ObjectChangeLogAttribute" << TABLE >> {
+  ObjectChangeLogId: INTEGER
+  Attributes: TEXT
+}
+
 class "pm_State" << TABLE >> {
   Caption: VARCHAR
   Description: LARGETEXT
@@ -83,6 +88,7 @@ class "pm_StateAction" << TABLE >> {
 "pm_StateAttribute" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : State
 "pm_SubversionUser" << TABLE >> "*" -- "1" "cms_User" << TABLE >> : SystemUser
 "pm_SubversionUser" << TABLE >> "*" -- "1" "pm_Subversion" << TABLE >> : Connector
+"ObjectChangeLogAttribute" << TABLE >> "*" -- "1" "ObjectChangeLog" << TABLE >> : ObjectChangeLogId
 "pm_Transition" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : SourceState
 "pm_Transition" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : TargetState
 "pm_StateObject" << TABLE >> "*" -- "1" "pm_State" << TABLE >> : State

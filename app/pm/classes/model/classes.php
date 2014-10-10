@@ -108,3 +108,4 @@ include_once SERVER_ROOT_PATH.'pm/classes/resources/CustomResource.php';
 include_once SERVER_ROOT_PATH.'pm/classes/widgets/FunctionalArea.php';
 include_once SERVER_ROOT_PATH.'pm/classes/settings/CustomAttributeType.php';
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiType.php';
+include_once SERVER_ROOT_PATH.'pm/classes/participants/Invitation.php';

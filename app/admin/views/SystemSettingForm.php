@@ -95,11 +95,11 @@ class SystemSettingsForm extends PageForm
 				break;
 				
 			case 'ServerPort':
-				$field->setDefault(text(466).EnvironmentSettings::getServerPort());
+				$field->setDefault(text(466).EnvironmentSettings::getServerPortDefault());
 				break;
 
 			case 'ServerName':
-				$field->setDefault(text(466).EnvironmentSettings::getServerName());
+				$field->setDefault(text(466).EnvironmentSettings::getServerNameDefault());
 				break;
 		}
 

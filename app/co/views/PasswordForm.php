@@ -13,6 +13,8 @@ class PasswordForm extends AjaxForm
     
  	function getRedirectUrl()
 	{
+		if ( $_REQUEST['redirect'] != '' ) return htmlentities($_REQUEST['redirect']);
+		
 		switch ( $this->getAction() )
 		{
 			case CO_ACTION_MODIFY:
@@ -33,26 +35,12 @@ class PasswordForm extends AjaxForm
 		array_push($attrs, 'NewPassword');
 		array_push($attrs, 'RepeatPassword');
 		
-		array_push($attrs, 'page');
-		
 		return $attrs;
 	}
 
 	function getAttributeType( $attribute )
 	{
 		return 'password';
-	}
-	
-	function getAttributeValue( $attribute )
-	{
-	    switch ( $attribute )
-	    {
-	        case 'page':
-	            return $_REQUEST['page'];
-	            
-	        default:
-	            return parent::getAttributeValue( $attribute );
-	    }
 	}
 	
 	function getName( $attribute )
@@ -72,7 +60,7 @@ class PasswordForm extends AjaxForm
 
 	function IsAttributeVisible( $attribute )
 	{
-		return $attribute != 'page';
+		return true;
 	}
  	
 	function IsAttributeModifable( $attribute )
@@ -82,7 +70,7 @@ class PasswordForm extends AjaxForm
 
 	function IsAttributeRequired( $attribute )
 	{
-		return $attribute != 'page';
+		return true;
 	}
 	
 	function getWidth()
@@ -110,7 +98,7 @@ class PasswordForm extends AjaxForm
          		}
          		else
          		{
-         			$key = $_REQUEST['key'];
+         			$key = htmlentities($_REQUEST['key']);
          		}
  			
 	            echo '<input type="hidden" name="key" value="'.$key.'">';

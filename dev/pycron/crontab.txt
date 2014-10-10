@@ -56,4 +56,4 @@
 #
 #------------------------------------------------------------------------------
 
-* * * * * %SystemRoot%\system32\cmd.exe /C "start /D "<specify-working-dir-here>" run.bat"
+* * * * * %SystemRoot%\system32\cmd.exe /C "start /D ""<specify-working-dir-here>"" run.bat"

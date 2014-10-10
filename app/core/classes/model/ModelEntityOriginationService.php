@@ -119,6 +119,7 @@ class ModelEntityOriginationService
 			case 'co_CustomReport':
 			case 'co_MailboxProvider':
 			case 'co_MailTransport':
+			case 'ObjectChangeLogAttribute':
 				return '';
 				
 			default:

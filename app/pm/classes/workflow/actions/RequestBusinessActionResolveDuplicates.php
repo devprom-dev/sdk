@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once "BusinessAction.php";
 
 class RequestBusinessActionResolveDuplicates extends BusinessAction
@@ -11,20 +13,16 @@ class RequestBusinessActionResolveDuplicates extends BusinessAction
 	
 	function apply( $object_it )
  	{
- 	    $request_it = $object_it->object->getRegistry()->Query(
+ 	    $request = $this->getObject();
+ 		
+ 		$duplicate_it = $request->getRegistry()->Query(
 				array (
  	    				new RequestDuplicatesOfFilter($object_it->getId())
 				)
 		);
  		 	    
- 	    while( !$request_it->end() )
+ 	    while( !$duplicate_it->end() )
  	    {
- 	        $request = new Request();
- 	        
- 	        $duplicate_it = $request->getRegistry()->Query( 
- 	        		array(new FilterInPredicate($request_it->getId())) 
- 	        );
- 	        
  	        $state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
  	        		array( 
  	        				new FilterAttributePredicate('IsTerminal', 'Y'),
@@ -34,14 +32,16 @@ class RequestBusinessActionResolveDuplicates extends BusinessAction
  	        
  	        if ( $state_it->getId() > 0 )
  	        {
- 	            $duplicate_it->modify( array ( 'State' => $state_it->get('ReferenceName') ) );
+				$service = new WorkflowService($request);
+				
+				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'), $this->getDisplayName());
  	        }
  	        else
  	        {
  	        	throw new Exception('There is no terminal state for the issue "'.$duplicate_it->getId().'"');
  	        }
  	    
- 	        $request_it->moveNext();
+ 	        $duplicate_it->moveNext();
  	    }
  	    
  		return true;

@@ -77,10 +77,23 @@ class ParticipantTable extends PMPageTable
 		{
 			$actions[] =  array ( 
 			        'name' => translate('Добавить участника'),
-					'url' => $method->getJSCall()
+					'url' => $method->getJSCall(),
+					'uid' => 'add-user'
 		    );
 		}
 
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
+		
+		if ( $method->hasAccess() )
+		{
+			$actions[] = array();
+			$actions[] = array ( 
+			        'name' => text(1861),
+					'url' => $method->getJSCall(),
+					'uid' => 'invite-email'
+		    );
+		}
+		
 		return $actions;
 	}
 	

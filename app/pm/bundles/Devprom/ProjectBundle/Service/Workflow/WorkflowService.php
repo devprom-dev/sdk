@@ -15,9 +15,11 @@ class WorkflowService
 		$this->state_object = getFactory()->getObject($this->object->getStateClassName());
 	}
 	
-	public function moveToState( $object_it, $target_state_ref_name, $comment = '' )
+	public function moveToState( $object_it, $target_state_ref_name, $comment = '', $parms = array() )
 	{
 		if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
+
+		if ( $object_it->get('State') == $target_state_ref_name ) return;
 		
 	    $source_it = $this->state_object->getRegistry()->Query(
     			array (
@@ -51,10 +53,14 @@ class WorkflowService
 	    	throw new \Exception('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
 	    }
 	    
-		$object_it->modify( array( 
-		        'Transition' => $transition_it->getId(),
-				'TransitionComment' => $comment 
-		));
+		$object_it->modify( 
+				array_merge( $parms, 
+						array( 
+					        'Transition' => $transition_it->getId(),
+							'TransitionComment' => $comment 
+						)
+				)
+		);
 				
 	    getFactory()->getEventsManager()->
 	    		executeEventsAfterBusinessTransaction(

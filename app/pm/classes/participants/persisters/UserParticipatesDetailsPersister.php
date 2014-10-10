@@ -32,7 +32,7 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 			"     AND t.SystemUser = ".$this->getPK($alias).") Participant ";
  		
  		$columns[] = 
-     		"( SELECT GROUP_CONCAT(t.IsActive)" .
+     		"( SELECT IFNULL(GROUP_CONCAT(t.IsActive),'N') " .
      		"  	 FROM pm_Participant t " .
 			" 	WHERE t.Project = ".$project_it->getId().
 			"     AND t.SystemUser = ".$this->getPK($alias).") IsActive ";

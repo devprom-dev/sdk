@@ -4,13 +4,18 @@ namespace Devprom\ProjectBundle\Service\Model\FilterResolver;
 
 class IterationFilterResolver
 {
-	public function resolve( $filter )
+	public function __construct( $filter = '' )
+	{
+		$this->filter = $filter;
+	}
+	
+	public function resolve()
 	{
 		$object = getFactory()->getObject('Iteration');
 		
 		$filters = array();
 		
-		$names = preg_split('/,/', $filter);
+		$names = preg_split('/,/', $this->filter);
 		
 		foreach( $names as $filter )
 		{
@@ -21,13 +26,11 @@ class IterationFilterResolver
 			    	$filters[] = new \IterationTimelinePredicate(\IterationTimelinePredicate::CURRENT); 
 			    	
 			    	break;
-			    	
-			    default:
-			    	
-			    	$filters[] = new \IterationTimelinePredicate('dummy'); 
 			}
 		}
 		
 		return $filters;
 	}
+	
+	private $filter = '';
 }

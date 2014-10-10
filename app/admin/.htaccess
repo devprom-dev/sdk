@@ -3,7 +3,7 @@ RewriteEngine On
 
 RewriteBase /admin
 
-RewriteRule ^license|mailer|log|info/?$ /app/pageadmin.php [L,QSA]
+RewriteRule ^(scripts|license|mailer|log|info)/?.*$ /app/pageadmin.php [L,QSA]
 RewriteRule ^module/([^/]+)/([^/\.]+)$ /admin/page.php?namespace=$1&module=$2 [L,QSA]
 RewriteRule ^module/([^/]+)/([^/]+)$ /admin/$2?namespace=$1 [L,QSA]
 RewriteRule ^(\/?|index.+)$ /admin/activity.php [L,QSA,R=301]

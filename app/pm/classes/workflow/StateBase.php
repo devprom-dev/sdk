@@ -10,6 +10,7 @@ include "predicates/StateTerminalPredicate.php";
 include "predicates/ObjectStatePredicate.php";
 include "predicates/StateHasNoTransitionsPredicate.php";
 include "predicates/StateHasNoObjectsPredicate.php";
+include "predicates/StateTransitionTargetPredicate.php";
 include "StateBaseModelBuilder.php";
 
 class StateBase extends MetaobjectCacheable

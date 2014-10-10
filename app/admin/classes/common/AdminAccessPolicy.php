@@ -28,7 +28,7 @@ class AdminAccessPolicy extends COAccessPolicy
 			if ( is_bool($result) ) return $result;
 		}
 
-		if ( $action_kind == ACCESS_CREATE && is_object($this->license_it) )
+		if ( $action_kind == ACCESS_CREATE  )
 		{
 			if ( !is_object($this->license_it) )
 			{

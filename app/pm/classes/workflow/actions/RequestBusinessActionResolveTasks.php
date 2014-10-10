@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once "BusinessAction.php";
 
 class RequestBusinessActionResolveTasks extends BusinessAction
@@ -14,7 +16,9 @@ class RequestBusinessActionResolveTasks extends BusinessAction
 		$task_it = $object_it->getRef('OpenTasks');
 		
 		$task_it->object->removeNotificator( 'EmailNotificator' );
-				
+
+		$service = new WorkflowService($task_it->object);
+		
 		while ( !$task_it->end() )
 		{
 			$task_states = $task_it->object->getTerminalStates();
@@ -24,18 +28,13 @@ class RequestBusinessActionResolveTasks extends BusinessAction
 				$task_states[] = 'resolved';
 			}
 
-			$task_parms = array( 
-				'State' => $task_states[0],
-				'LeftWork' => 0,
-				'Assignee' => getSession()->getParticipantIt()->getId() 
+			$service->moveToState($task_it, $task_states[0], $this->getDisplayName(),
+					array (
+							'LeftWork' => 0,
+							'Assignee' => getSession()->getParticipantIt()->getId(),
+							'Result' => getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ? text(1013) : ''
+					)
 			);
- 				 
-			if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
-			{
-				$task_parms['Result'] = text(1013);
-			}
- 				
- 			$task_it->modify( $task_parms );
  			
  			$task_it->moveNext();
  		}

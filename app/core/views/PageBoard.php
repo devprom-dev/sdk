@@ -263,7 +263,7 @@ class PageBoard extends PageList
 		}
 	}
 	
-	function drawRefCell( $object_it, $attr )
+	function drawRefCell( $ref_it, $object_it, $attr )
 	{
 		if ( $object_it->get($attr) == '' ) return;
 
@@ -271,20 +271,19 @@ class PageBoard extends PageList
 		{
 		    case 'pm_Attachment':
 				
-		    	parent::drawRefCell( $object_it->getRef($attr), $object_it, $attr );
+		    	parent::drawRefCell( $ref_it, $object_it, $attr );
 		    	
 		    	break;
 		    	
 		    default:
-		    	$ref_it = $object_it->getRef($attr);
-		    	
-				echo '<div style="padding:0 0 0 0;">';
+
+		    	echo '<div style="padding:0 0 0 0;">';
 		
 				if ( !$this->getUidService()->hasUID($ref_it) )
 				{
 					echo translate($object_it->object->getAttributeUserName( $attr )).': ';
 				}
-					
+	
 				parent::drawRefCell($ref_it , $object_it, $attr);
 				
 				echo '</div>';
@@ -612,6 +611,8 @@ class PageBoard extends PageList
 					
 					foreach( $columns as $column_it )
 					{
+						$uid = htmlentities($this->getUidService()->getUidOnly($column_it), ENT_COMPAT | ENT_HTML401, 'windows-1251');
+						
 						$style = $this->getItemStyle( $column_it );
 						
 						$spinner = $this->getCardColor( $column_it );
@@ -620,7 +621,7 @@ class PageBoard extends PageList
 		
 						$order_num = $column_it->get('OrderNum') < 1 ? ($i + 1) : $column_it->get('OrderNum'); 
 							
-						echo '<div class="board_item" data-toggle="context" data-target="#context-menu-'.$column_it->getId().'" style="margin: 0 8px 0 0" project="'.ObjectUID::getProject($column_it).'" object="'.$column_it->getId().'" group="'.$group_key.'" more="'.$board_values[$prev_board_index].'" order="'.$order_num.'" modifiable="'.$modifiable.'" entity="'.$entity_ref_name.'" modified="'.$column_it->get('AffectedDate').'">';
+						echo '<div class="board_item" data-toggle="context" data-target="#context-menu-'.$column_it->getId().'" style="margin: 0 8px 0 0" project="'.ObjectUID::getProject($column_it).'" object="'.$column_it->getId().'" group="'.$group_key.'" more="'.$board_values[$prev_board_index].'" order="'.$order_num.'" modifiable="'.$modifiable.'" entity="'.$entity_ref_name.'" modified="'.$column_it->get('AffectedDate').'" uid="'.$uid.'">';
 							echo '<div class="board_item_separator" group="'.$group_key.'" more="'.$board_values[$prev_board_index].'" order="'.$order_num.'">&nbsp;</div>';
 							echo '<div class="board_item_body" style="'.$style.'">';
 							if ( $spinner != '' ) echo '<div class="board_item_spinner" style="'.$spinner.'">&nbsp;</div>';
@@ -633,7 +634,7 @@ class PageBoard extends PageList
 								
 								if( $references[$attr] ) 
 								{
-									$this->drawRefCell($column_it, $attr);
+									$this->drawRefCell($this->getFilteredReferenceIt($attr, $column_it->get($attr)), $column_it, $attr);
 								} 
 								else 
 								{
@@ -714,7 +715,6 @@ class PageBoard extends PageList
 			boardItemOptions.saveButtonName = '<? echo translate('Сохранить') ?>';
 			boardItemOptions.closeButtonName = '<? echo translate('Отменить') ?>';
 			boardItemOptions.transitionTitle = '<? echo text(1011) ?>';
-			boardItemOptions.deniedTitle = '<? echo str_replace('%1', getSession()->getApplicationUrl().'project/workflow?dict='.$object->getStateClassName(), text(1012)) ?>';
 			boardItemOptions.locked = false;
 			boardItemOptions.groupAttribute = '<? echo $group_field; ?>';
 			boardItemOptions.boardCreated = '<?=SystemDateTime::date()?>';

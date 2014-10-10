@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/classes/participants/UserParticipatesModelBuilder.php"; 
+include_once SERVER_ROOT_PATH."pm/classes/participants/UsersAndInvitationsRegistry.php"; 
 
 include "ParticipantForm.php";
 include "ParticipantRoleForm.php";
@@ -19,11 +20,11 @@ class ParticipantPage extends PMPage
  	
  	function getObject()
  	{
- 		$object = new User();
+ 		$registry = new UsersAndInvitationsRegistry();
  		
- 		$object->addFilter( new UserStatePredicate('active') );
+ 		$registry->setProject( getSession()->getProjectIt()->getId() );
  		
- 		return $object;
+ 		return new User($registry);
  	} 
  	
  	function getTable() 

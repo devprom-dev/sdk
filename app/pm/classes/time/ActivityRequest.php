@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once SERVER_ROOT_PATH."pm/classes/time/Activity.php";
 
 class ActivityRequest extends Activity
@@ -67,7 +69,7 @@ class ActivityRequest extends Activity
 	 						)->getId()
 	 			) );
 	 			
-	 		if ( $task_id <= 0 ) throw new Exception('Unable create task object will be used to store spent time');
+	 		if ( $task_id <= 0 ) throw new Exception('Unable create task object to be used to store spent time');
 	 		
 	 		$task_it = $task->getExact( $task_id );
 	 		
@@ -76,12 +78,15 @@ class ActivityRequest extends Activity
 	 		if ( $state_it->get('IsTerminal') == 'Y' )
 	 		{
 	 			$states = $task_it->object->getTerminalStates();
-	 			
-	 			$task_it->modify( array (
-	 				'State' => $states[0] != '' ? $states[0] : 'resolved',
-	 				'Result' => text(1013),
-	 				'LeftWork' => 0
-	 			));
+
+				$service = new WorkflowService($task);
+				
+				$service->moveToState($task_it, $states[0] != '' ? $states[0] : 'resolved', '',
+						array ( 
+ 								'Result' => text(1013),
+ 								'LeftWork' => 0
+ 						)
+	 			);
 	 		}
 		}
 		else
