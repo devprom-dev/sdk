@@ -1,0 +1,2 @@
+
+CALL upgrade_db('
