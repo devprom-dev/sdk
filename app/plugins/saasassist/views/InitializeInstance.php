@@ -158,21 +158,39 @@ class InitializeInstance extends Page
 	
 	protected function setupBackgroundTasks()
 	{
-		$job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'processbackup');
-		
-		if ( $job_it->getId() < 1 ) return;
-		
 		$instance_number = intval(trim(file_get_contents('/home/saas/instances.dat'), ' '.chr(10).chr(13)));
 		
 		$hours = round($instance_number / 60, 0);
 		$minutes = $instance_number % 60;
 		
-		$job_it->modify(
+		$job_it = getFactory()->getObject('co_ScheduledJob')->getRegistry()->Query(
 				array (
-						'Minutes' => min(max($minutes, 0), 59),
-						'Hours' => $hours < 1 ? 23 : min($hours, 23)
+						new FilterAttributePredicate('ClassName', array('processbackup', 'processcheckpoints'))
 				)
-		); 
+		);
+		
+		while( !$job_it->end() )
+		{
+			switch($job_it->get('ClassName'))
+			{
+			    case 'processbackup':
+			    	$modify_hours = $hours < 1 ? 23 : min($hours, 23);
+			    	break;
+			    	
+			    case 'processcheckpoints':
+			    	$modify_hours = '*';
+			    	break;
+			}
+			
+			$job_it->modify(
+					array (
+							'Minutes' => min(max($minutes, 0), 59),
+							'Hours' => $modify_hours
+					)
+			);
+			
+			$job_it->moveNext();
+		} 
 		
 		$info_path = DOCUMENT_ROOT.'conf/runtime.info';
 
