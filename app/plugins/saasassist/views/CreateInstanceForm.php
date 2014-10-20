@@ -14,7 +14,7 @@ class CreateInstanceForm extends AjaxForm
 
 	function getAttributes()
 	{
-		return array('instance', 'email', 'template');
+		return array('instance', 'username', 'email', 'template');
 	}
 
 	function getAttributeType( $attribute )
@@ -31,6 +31,9 @@ class CreateInstanceForm extends AjaxForm
 
 			case 'instance':
 				return text('saasassist7');
+				
+			case 'username':
+				return text('saasassist40');
 		}
 	}
 	

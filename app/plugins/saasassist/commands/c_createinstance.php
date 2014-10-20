@@ -16,7 +16,7 @@ class CreateInstance extends CommandForm
 	
  	function validate()
  	{
- 		$this->checkRequired( array('instance', 'email') );
+ 		$this->checkRequired( array('instance', 'email', 'username') );
  		
  	 	if ( filter_var($_REQUEST['email'], FILTER_VALIDATE_EMAIL) === false )
  		{
@@ -51,9 +51,9 @@ class CreateInstance extends CommandForm
  		
  		$this->email = $_REQUEST['email'];
  	
- 		list($this->username, $server) = preg_split('/\@/', $this->email);
+ 		list($this->userlogin, $server) = preg_split('/\@/', $this->email);
 
- 		$this->userlogin = $this->username;
+ 		$this->username = htmlentities(IteratorBase::utf8towin($_REQUEST['username']), ENT_COMPAT | ENT_HTML401, 'windows-1251');
  		
 		return true;
  	}

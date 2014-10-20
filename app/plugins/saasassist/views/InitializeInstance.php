@@ -27,6 +27,8 @@ class InitializeInstance extends Page
  				$_REQUEST['username'], $_REQUEST['userlogin'], $_REQUEST['useremail']
 		);
  		
+ 		$user_it = getFactory()->getObject('User')->getExact($user_id);
+ 		
  		$log .= 'User created: '.$user_id;
  		
  		$this->updateSystemSettings();
@@ -39,7 +41,7 @@ class InitializeInstance extends Page
 
 		$checkpoint->executeDynamicOnly();
 		
-		$this->sendMail($_REQUEST['useremail'], $_REQUEST['userlogin'], $_REQUEST['userlogin']);
+		$this->sendMail($user_it);
 		
 		$this->setupLoggers();
 		
@@ -49,7 +51,7 @@ class InitializeInstance extends Page
 		
 		getSession()->close();
 		
-		getSession()->open(getFactory()->getObject('User')->getExact($user_id));
+		getSession()->open($user_it);
 
 		file_put_contents(dirname(SERVER_ROOT_PATH).'/initialize.log', $log);
 		
@@ -136,17 +138,23 @@ class InitializeInstance extends Page
 		file_put_contents($settings_file, str_replace($default_path, $local_dir, file_get_contents($settings_file))); 
  	}
  	
-	protected function sendMail( $to_address, $user_name, $user_pass )
+	protected function sendMail( $user_it )
 	{
+		$to_address = $user_it->get('Email');
+		$user_name = $user_it->get('Login');
+		$user_pass = $user_it->get('Login');
+		$host_url = 'https://'.EnvironmentSettings::getServerName();
+		
 	    $mail = new HtmlMailbox;
 	    $mail->appendAddress($to_address);
 	    
 	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/saasassist/resources/greetings.html');
 	    
-	    $body = preg_replace('/\%host\%/', preg_replace('/\%1/', 'https://'.EnvironmentSettings::getServerName(), text('saasassist22')), $body);
+	    $body = preg_replace('/\%host\%/', preg_replace('/\%user_name\%/', $user_it->get('Caption'), preg_replace('/\%1/', $host_url, text('saasassist22'))), $body);
 	    $body = preg_replace('/\%account\%/', preg_replace('/\%2/', $user_pass, preg_replace('/\%1/', $user_name, text('saasassist23'))), $body);
 	    $body = preg_replace('/\%links\%/', text('saasassist24'), $body);
 	    $body = preg_replace('/\%trial\%/', text('saasassist25'), $body);
+	    $body = preg_replace('/\%pass_url\%/', $host_url.'/reset?key='.$user_it->getResetPasswordKey(), $body);
 		
 	    $mail->setBody($body);
 	    
@@ -165,7 +173,13 @@ class InitializeInstance extends Page
 		
 		$job_it = getFactory()->getObject('co_ScheduledJob')->getRegistry()->Query(
 				array (
-						new FilterAttributePredicate('ClassName', array('processbackup', 'processcheckpoints'))
+						new FilterAttributePredicate('ClassName', 
+								array(
+										'processbackup',
+										'processcheckpoints',
+										'trackhistory'
+								)
+					    )
 				)
 		);
 		
@@ -178,6 +192,7 @@ class InitializeInstance extends Page
 			    	break;
 			    	
 			    case 'processcheckpoints':
+			    case 'trackhistory':
 			    	$modify_hours = '*';
 			    	break;
 			}
