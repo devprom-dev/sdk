@@ -122,6 +122,14 @@ abstract class RestController extends FOSRestController implements ClassResource
     
     protected function getModelService()
     {
-    	return new ModelService(new \ModelValidator(), new \ModelDataTypeMapper(), $this->getFilterResolver());
+    	return new ModelService(
+    			new \ModelValidator(
+						array (
+								new \ModelValidatorTypes()
+    					)
+				), 
+    			new \ModelDataTypeMapper(), 
+    			$this->getFilterResolver()
+		);
     }
 }

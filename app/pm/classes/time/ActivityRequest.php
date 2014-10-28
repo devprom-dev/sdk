@@ -77,16 +77,24 @@ class ActivityRequest extends Activity
 	 		
 	 		if ( $state_it->get('IsTerminal') == 'Y' )
 	 		{
-	 			$states = $task_it->object->getTerminalStates();
-
-				$service = new WorkflowService($task);
-				
-				$service->moveToState($task_it, $states[0] != '' ? $states[0] : 'resolved', '',
-						array ( 
- 								'Result' => text(1013),
- 								'LeftWork' => 0
- 						)
-	 			);
+	 			$target_state = array_shift($task_it->object->getTerminalStates());
+	 			
+	 			if ( $target_state == '' )
+	 			{
+	 				$target_state = array_pop($task_it->object->getNonTerminalStates());
+	 			}
+	 			
+	 			if ( $target_state != '' )
+	 			{
+					$service = new WorkflowService($task);
+					
+					$service->moveToState($task_it, $target_state, '',
+							array ( 
+	 								'Result' => text(1013),
+	 								'LeftWork' => 0
+	 						)
+		 			);
+	 			}
 	 		}
 		}
 		else

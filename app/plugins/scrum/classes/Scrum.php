@@ -1,12 +1,13 @@
 <?php
 
 include "ScrumIterator.php";
+include "ScrumGrouppedRegistry.php";
 
 class Scrum extends Metaobject
 {
- 	function __construct() 
+ 	function __construct( $registry = null ) 
  	{
- 		parent::Metaobject('pm_Scrum');
+ 		parent::Metaobject('pm_Scrum', $registry);
  		
 		$this->setSortDefault( new SortAttributeClause('RecordCreated.D') );
  	}
@@ -14,18 +15,6 @@ class Scrum extends Metaobject
  	function createIterator() 
  	{
  		return new ScrumIterator( $this );
- 	}
- 	
- 	function getGroupedByDay() 
- 	{
- 		$sort = $this->getSortClause();
- 		
- 		$sql = "SELECT t.*, DATE_FORMAT(t.RecordCreated, '".getSession()->getLanguage()->getDateFormat()."') GroupDate" .
- 			   "  FROM pm_Scrum t " .
- 			   " WHERE t.VPD IN ('".join("','",$this->getVpds())."') ".
- 			   " ORDER BY ".($sort != '' ? $sort."," : "")." t.RecordCreated DESC ";
- 		
- 		return $this->createSQLIterator($sql);
  	}
  	
  	function getAttributeUserName( $attr )

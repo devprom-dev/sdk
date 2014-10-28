@@ -80,7 +80,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         // board
         $setting = new PageListSetting('RequestBoard');
         
-        $columns = array('UID', 'Caption', 'Footer', 'Tasks', 'RecentComment', 'Fact', 'Estimation', 'Attachment');
+        $columns = array('UID', 'Caption', 'Tasks', 'RecentComment', 'Fact', 'Estimation', 'Attachment');
         
         if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
         {

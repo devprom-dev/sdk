@@ -1,5 +1,7 @@
 <?php
 
+include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorTypeNull.php";
+
 class Field
 {
  	var $name;
@@ -133,5 +135,10 @@ class Field
 	function getTabIndex()
 	{
 		return $this->tabindex;
+	}
+	
+	function getValidator()
+	{
+		return new ModelValidatorTypeNull();
 	}
 }

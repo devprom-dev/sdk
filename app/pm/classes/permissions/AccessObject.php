@@ -1,13 +1,14 @@
 <?php
 
 include "AccessObjectIterator.php";
+include "AccessObjectRegistry.php";
 include "persisters/ObjectAccessReferenceNamePersister.php";
 
 class AccessObject extends Metaobject
 {
- 	function AccessObject() 
+ 	function AccessObject( $registry = null ) 
  	{
- 		parent::Metaobject('pm_ObjectAccess');
+ 		parent::Metaobject('pm_ObjectAccess', $registry);
  		
  		$this->setSortDefault( array(
  		    new SortAttributeClause('ObjectId'),
@@ -24,8 +25,6 @@ class AccessObject extends Metaobject
 
 	function getObjectAccessIt( $object_it )
 	{
-		global $model_factory;
-		
 		if ( $object_it->getId() < 1 ) throw new Exception('Real object required, empty object is given');
 		
 		$sql = "  SELECT t.pm_ProjectRoleId ProjectRole, t.ProjectRoleBase, " .

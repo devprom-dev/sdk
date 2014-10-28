@@ -11,11 +11,11 @@ class RequestBusinessActionAssignParticipant extends BusinessAction
 	
 	function apply( $object_it )
  	{
- 	    global $model_factory;
- 	    
+ 		if ( $object_it->object->getAttributeType('Owner') == '' ) return;
+ 		
  	    if ( $object_it->get('Owner') != '' ) return true;
  	    
- 	    $participant = $model_factory->getObject('pm_Participant');
+ 	    $participant = getFactory()->getObject('pm_Participant');
  	    
  	    $participant->setVpdContext($object_it);
  	    
@@ -30,8 +30,7 @@ class RequestBusinessActionAssignParticipant extends BusinessAction
 
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_ChangeRequest');
+ 		return getFactory()->getObject('pm_ChangeRequest');
  	}
  	
  	function getDisplayName()

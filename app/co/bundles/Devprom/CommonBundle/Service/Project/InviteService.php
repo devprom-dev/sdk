@@ -87,6 +87,8 @@ class InviteService
 		
 		if ( $user_it->getId() > 0 ) $login = $email;
 		
+		$user->setNotificationEnabled(false);
+		
 		$user_it = $user->getExact(
 				$user->add_parms(
 						array (

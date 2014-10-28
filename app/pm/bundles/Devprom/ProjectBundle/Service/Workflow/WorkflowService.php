@@ -4,8 +4,12 @@ namespace Devprom\ProjectBundle\Service\Workflow;
 
 class WorkflowService
 {
-	public function __construct( $object )
+	const RESOLVE = 'resolve';
+	
+	public function __construct( $object, $logger = null )
 	{
+		$this->logger = is_object($logger) ? $logger : \Logger::getLogger('System');  
+		
 		if ( !$object instanceof \MetaobjectStatable ) throw new \Exception('Statable object is required');
 		 
 		$this->object = $object;
@@ -24,22 +28,25 @@ class WorkflowService
 	    $source_it = $this->state_object->getRegistry()->Query(
     			array (
     					new \FilterAttributePredicate('ReferenceName', $object_it->get('State')),
-    					new \FilterVpdPredicate($object_it->get('VPD'))
+    					new \FilterVpdPredicate($object_it->get('VPD')),
+    					new \SortOrderedClause()
     			)
     	);
 
-    	\Logger::getLogger('System')->info( "[WorkflowService] Source state is ".$source_it->getId() );
+    	$this->logger->info( "[WorkflowService] Source state is ".$source_it->getId() );
 	    	
 	    $target_it = $this->state_object->getRegistry()->Query(
     			array (
-    					new \FilterAttributePredicate('ReferenceName', $target_state_ref_name),
+    					$target_state_ref_name == self::RESOLVE
+    							? new \FilterAttributePredicate('IsTerminal', 'Y')
+    							: new \FilterAttributePredicate('ReferenceName', $target_state_ref_name),
     					new \FilterVpdPredicate($object_it->get('VPD'))
     			)
     	);
 	    
 	    if ( $target_it->getId() == '' ) throw new \Exception('Target state "'.$target_state_ref_name.'" is undefined');
 	    
-	    \Logger::getLogger('System')->info( "[WorkflowService] Target state is ".$target_it->getId() );
+	    $this->logger->info( "[WorkflowService] Target state is ".$target_it->getId() );
 	    
 	    $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
 	    		array (
@@ -69,6 +76,6 @@ class WorkflowService
 	}
 	
 	private $object = null;
-	
 	private $state_object = null;
+	private $logger = null;
 }

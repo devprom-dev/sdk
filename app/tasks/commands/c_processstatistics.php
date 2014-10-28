@@ -10,10 +10,14 @@ class ProcessStatistics extends TaskCommand
 		
 		getFactory()->getObject('Calendar')->getAll();
 		
-		$step = 30;
+		$job_data_it = $this->getData();
+		
+		$parameters = $job_data_it->getParameters();
+		
+		$step = $parameters['limit'] > 0 ? $parameters['limit'] : 30;
 		
 		$job_it = $this->getJob();
-
+		
 		if ( $job_it->count() > 0 )
 		{
 			while ( !$job_it->end() )

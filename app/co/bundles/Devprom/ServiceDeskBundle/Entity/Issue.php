@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\ArrayCollection;
 use DateTime;
+use Doctrine\Common\Collections\Criteria;
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -64,7 +65,6 @@ class Issue extends BaseEntity {
     /**
      * @ORM\OneToOne(targetEntity="Product")
      * @ORM\JoinColumn(name="Function", referencedColumnName="pm_FunctionId")
-     * @Assert\NotBlank
      * @var Product
      */
     private $product;
@@ -77,11 +77,7 @@ class Issue extends BaseEntity {
     private $project;
 
     /**
-     * @ORM\ManyToMany(targetEntity="IssueAttachment")
-     * @ORM\JoinTable(name="pm_attachment",
-     *      joinColumns={@ORM\JoinColumn(name="ObjectId", referencedColumnName="pm_ChangeRequestId")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="pm_AttachmentId", referencedColumnName="pm_AttachmentId", unique=true)}
-     *      )
+     * @ORM\OneToMany(targetEntity="IssueAttachment", mappedBy="issue", fetch="EAGER", cascade={"all"})
      * @var ArrayCollection
      */
     private $attachments;
@@ -145,7 +141,9 @@ class Issue extends BaseEntity {
      */
     public function getAttachments()
     {
-        return $this->attachments->toArray();
+        return $this->attachments->matching(
+        			Criteria::create()->where(Criteria::expr()->eq("ObjectClass", "request"))
+			)->toArray();
     }
 
     /**

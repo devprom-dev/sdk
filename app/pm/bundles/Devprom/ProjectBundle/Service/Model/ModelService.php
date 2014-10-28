@@ -58,6 +58,8 @@ class ModelService
 			{
 				if ( $object->getAttributeDbType($attribute) == '' ) continue;
 				if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
+				if ( !$object->IsAttributeStored($attribute) ) continue;
+				
 				if ( $attribute == "Description" ) continue;
 				
 				$predicate = new \FilterAttributePredicate($attribute, $value);

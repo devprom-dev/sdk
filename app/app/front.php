@@ -1,15 +1,14 @@
 <?php
 
 include (dirname(__FILE__).'/../common.php'); 
-include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
+include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 use Devprom\Component\HttpFoundation\DevpromRequest;
 use Devprom\Component\HttpKernel\MainApplicationKernel;
 use Symfony\Component\Routing\Exception;
 
-$plugins = new PluginsFactory();
-
-$model_factory = new ModelFactoryExtended($plugins);
+$lock = new CacheLock();
+$lock->Wait(5);
 
 $kernel = new MainApplicationKernel('prod', false);
 
@@ -21,11 +20,14 @@ try
 
 	$response = $kernel->handle($request);
 	
-	$response->send();
-	
-	$kernel->terminate($request, $response);
+	if ( is_object($response) )
+	{
+		$response->send();
+		
+		$kernel->terminate($request, $response);
+	}
 }
-catch( LogicException $e )
+catch( \LogicException $e )
 {
 }
 catch( Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e )

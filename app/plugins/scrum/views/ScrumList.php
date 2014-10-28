@@ -6,13 +6,11 @@ class ScrumList extends PMPageList
  	
 	function __construct( $object ) 
 	{
+		$object->setRegistry( new ScrumGrouppedRegistry() );
+		
 		parent::__construct($object);
 		
 		$this->participant = getFactory()->getObject('pm_Participant');
-	}
-	
- 	function getIterator() {
-		return $this->object->getGroupedByDay();
 	}
 	
 	function IsNeedToDisplay( $attr ) 

@@ -19,6 +19,12 @@ catch( Exception $e)
 
 try 
 {
+	$classes_filter = $_REQUEST['classes'] != '' ? $_REQUEST['classes'] : $_SERVER['argv'][1];
+
+	$classes = array_filter( preg_split('/,/', $classes_filter), function(&$value) {
+			return preg_match('/^[0-9a-zA-Z\\\\\\/]+$/i', $value);
+	});
+
 	foreach( $urls as $url )
 	{
 		if ( is_object($log) ) $log->info( 'Running background tasks on url: '.$url);
@@ -29,8 +35,8 @@ try
                 ) 
             ) 
         ); 	
-	    
-        $result = file_get_contents( $url.'/tasks/command.php?class=runjobs', false, $ctx );
+        
+        $result = file_get_contents( $url.'/tasks/command.php?class=runjobs&filter='.join(',',$classes), false, $ctx );
         
         if ( $result === false )
         {

@@ -1,10 +1,10 @@
 <?php
  
- include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
- include_once SERVER_ROOT_PATH.'core/methods/GetWholeTextWebMethod.php';
+include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
+include_once SERVER_ROOT_PATH.'core/methods/GetWholeTextWebMethod.php';
 
- function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
- {
+function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
+{
  	if ( strtolower(get_class($object_it->object)) == 'metaobject' )
  	{
  		$object_class = $object_it->object->getClassName();
@@ -78,4 +78,4 @@
 	{
 		echo $object_it->getHtmlValue($attr_value);
 	}
- }
+}

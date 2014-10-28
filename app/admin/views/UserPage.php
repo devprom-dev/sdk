@@ -1,5 +1,7 @@
 <?php
 
+include_once SERVER_ROOT_PATH."admin/classes/UserModelExtendedBuilder.php";
+
 include ('UserForm.php');
 include ('UserTable.php');
 include ('UserPageSectionProjects.php');
@@ -26,11 +28,9 @@ class UserPage extends AdminPage
 	
 	function getObject()
 	{
-	    $object = getFactory()->getObject('User');
-	    
-	    $object->addPersister( new UserDetailsPersister() );
-	    
-	    return $object;
+		getSession()->addBuilder( new UserModelExtendedBuilder() );
+		
+	    return getFactory()->getObject('User');
 	}
 
 	function getTable()

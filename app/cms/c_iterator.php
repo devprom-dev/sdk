@@ -617,7 +617,11 @@ class IteratorBase
 	
 	function modify( $parms ) 
 	{
-		return $this->object->modify_parms( $this->getId(), $parms );
+		$result = $this->object->modify_parms( $this->getId(), $parms );
+		
+		$this->setRowset($this->object->getExact($this->getId())->getRowset());
+				
+		return $result;
 	}
 	
 	function delete()

@@ -15,7 +15,7 @@ class WikiHistoryList extends ProjectLogList
 		global $model_factory;
 		
 		parent::retrieve();
-		
+	
 		$it = $this->getIteratorRef();
 		
 		$filter_values = $this->getFilterValues();
@@ -28,15 +28,13 @@ class WikiHistoryList extends ProjectLogList
 		
 		$this->editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
 		
-		$change = $model_factory->getObject('WikiPageChange');
-		
-		$change->addSort( new SortAttributeClause('WikiPage') );
-		
-		$change->addSort( new SortAttributeClause('RecordCreated') );
-		
-		$this->change_it = $change->getByRefArray( array (
-				'WikiPage' => $object_it->idsToArray()
-		));
+		$this->change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
+				array (
+						new FilterAttributePredicate('WikiPage', $object_it->idsToArray()),
+						new SortAttributeClause('WikiPage'),
+						new SortAttributeClause('RecordCreated')
+				)
+		);
 		
 		$object_it->moveFirst();
 		

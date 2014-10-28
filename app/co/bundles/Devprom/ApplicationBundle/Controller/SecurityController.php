@@ -146,8 +146,6 @@ class SecurityController extends PageController
     
     function resetProcessAction()
     {
-    	global $model_factory;
-
 		$response = $this->checkRequired( array( 'NewPassword', 'RepeatPassword' ) );
 		
 		if ( is_object($response) ) return $response;
@@ -160,7 +158,9 @@ class SecurityController extends PageController
 		
     	$session = getSession();
     	
-    	$user = $model_factory->getObject('cms_User');
+    	$user = getFactory()->getObject('cms_User');
+
+		$user->setNotificationEnabled(false);
     	
     	$user_it = $user->getAll();
 

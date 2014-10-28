@@ -1,6 +1,6 @@
 <?php
 
-include('common.php');
+include dirname(__FILE__).'/../app/bootstrap.php';
 
 include_once SERVER_ROOT_PATH.'core/methods/ProcessEmbeddedWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/DeleteEmbeddedWebMethod.php';

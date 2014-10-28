@@ -155,26 +155,6 @@ class CloneLogic
 					
 					break;
 					
-				case 'pm_CustomReport':
-					
-					$id = CloneLogic::applyToReport( $context, $attrs, $iterator, $project_it );
-					
-					if ( $id > 0 )
-					{
-						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
-					}
-					else
-					{
-						$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
-					
-    					if ( count($parms) > 0 )
-    					{
-    						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
-    					}
-					}
-					
-					break;
-					
 				default:
 				    
 				    if ( count($object->getVpds()) < 1 )
@@ -466,6 +446,18 @@ class CloneLogic
 							->getByRef('ReferenceName', $parms['ReferenceName'])->getId();
 				}
 				
+				$project_it = getSession()->getProjectIt();
+				
+				$parms['Content'] = preg_replace_callback('/file\/([^\/]+)\/([^\/]+)\/([\d]+)/i', 
+						function($matches) use ($ids_map, $project_it)
+						{
+								$file_id = $ids_map[$matches[1]][$matches[3]];
+								return $file_id != ''
+										? 'file/'.$matches[1].'/'.$project_it->get('CodeName').'/'.$file_id
+										: $matches[0];
+						}, $it->getHtmlDecoded('Content')
+					);
+
 				break;
 			
 			case 'pm_Workspace':
@@ -485,22 +477,67 @@ class CloneLogic
 				
 			case 'pm_UserSetting':
 				
-				$parms['Participant'] = '-1';
-				
-				$parms['Value'] = self::replaceUser($it->get('Value'));
+				$setting_it = $it->object->getRegistry()->Query(
+						array (
+								new FilterAttributePredicate('Setting', $it->get('Setting')),
+								new SettingGlobalPredicate('dummy'),
+								new FilterBaseVpdPredicate()
+						)
+				);
+
+				if ( $setting_it->getId() == '' )
+				{
+					$parms['Participant'] = '-1';
+					$parms['Value'] = self::replaceUser($it->get('Value'));
+				}
+				else
+				{
+					$setting_it->modify(
+							array (
+									'Value' => self::replaceUser($it->get('Value'))
+							)
+					);
+									
+					$parms = array();
+				}
 				
 				break;
 				
 			case 'pm_CustomReport':
 				
 				// each participant should have his own mytasks/mysissues report
-				if ( !in_array($it->get('ReportBase'), array('mytasks', 'myissues')) )
+				if ( in_array($it->get('ReportBase'), array('mytasks', 'myissues')) )
+				{
+					$parms = array();
+				}
+				else
 				{
 					$parms['Author'] = -1;
+					$parms['Url'] = self::replaceUser($it->get('Url'));
+				}
+
+				break;
+				
+			case 'ObjectChangeLog':
+
+				$parms['ObjectId'] = $ids_map[$it->get('EntityRefName')][$it->get('ObjectId')];
+				
+				//$parms['RecordCreated'] = $it->get('RecordCreated');
+				//$parms['RecordModified'] = $it->get('RecordModified');
+				
+				if ( $parms['ObjectId'] < 1 )
+				{
+					$parms = array();
+				}
+				else
+				{
+					$parms['Content'] = preg_replace_callback('/\&version=([\d]+)/i', 
+							function($matches) use ($ids_map) {
+									return '&version='.$ids_map['WikiPageChange'][$matches[1]];
+							}, $it->getHtmlDecoded('Content')
+						);
 				}
 				
-				$parms['Url'] = self::replaceUser($it->get('Url'));
-
 				break;
 		}
 		
@@ -558,7 +595,7 @@ class CloneLogic
 		
 		$project_it->invalidateCache();
 		
-		getSession()->getProjectIt()->invalidateCache();
+		getSession()->setProjectIt($project_it);
  	}
 
  	static function applyToState( & $context, & $attrs, & $it, & $project_it )
@@ -612,28 +649,6 @@ class CloneLogic
  		}
  		
  		return $object_it->count() < 1 ? 0 : $object_it->getId();
- 	}
- 	
- 	static function applyToReport( & $context, & $attrs, & $it, & $project_it )
- 	{
- 		$object_it = $it->object->getByRefArray(
- 				array ( 
- 						'Caption' => addslashes(html_entity_decode($it->get('Caption'), ENT_COMPAT | ENT_HTML401, 'cp1251'))
- 				)
- 		);
- 		
- 		if ( $object_it->getId() > 0 )
- 		{
-	 		$object_it->modify( 
-	 				array (
-	 						'Url' => self::replaceUser(
-	 										html_entity_decode($it->get('Url'), ENT_COMPAT | ENT_HTML401, 'cp1251')
-	 								 )
-	 				)
-	 		);
- 		}
- 		
- 		return $object_it->getId();
  	}
  	
  	static function applyToMethodology( & $context, & $attrs, & $it, & $project_it )

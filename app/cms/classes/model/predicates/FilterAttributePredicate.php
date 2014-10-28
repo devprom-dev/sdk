@@ -109,14 +109,11 @@ class FilterAttributePredicate extends FilterPredicate
  			    
  			    if ( count($values) > 0 )
  			    {
- 			    	$ref_it = $ref->getRegistry()->Query( array (
- 			    			new FilterInPredicate($values)
- 			    	));
-     				
-     				if ( $ref_it instanceof ParticipantIterator )
-     				{
-     					$ref_it = $ref_it->getOtherIt();
-     				}
+ 			    	$ref_it = $ref->getRegistry()->Query( 
+ 			    			array (
+ 			    					new FilterInPredicate($values)
+ 			    			)
+ 			    	);
  			    }
  			    else
  			    {

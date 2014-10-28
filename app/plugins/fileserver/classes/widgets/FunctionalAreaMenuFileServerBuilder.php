@@ -18,11 +18,7 @@ class FunctionalAreaMenuFileServerBuilder extends FunctionalAreaMenuCommonBuilde
 		
 		$items[] = $module->getExact('fileserver/folders')->buildMenuItem();
 		
- 		$menu[] = array ( 
-			'name' => translate('װאיכû.'), 
- 		    'uid' => 'files',
-			'items' => $items 
- 		);
+		$menu['quick']['items'] = array_merge($items, $menu['quick']['items']);
         
  		$set->setAreaMenus( ModuleCategoryBuilderFileServer::AREA_UID, $menu );
     }

@@ -1,6 +1,6 @@
 _entry:
     pattern:  /
-    defaults: { _controller: ApplicationBundle:Security:login }
+    defaults: { _controller: ApplicationBundle:Main:index }
 
 logoff:
     pattern:  /logoff

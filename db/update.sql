@@ -5,9 +5,8 @@ SET collation_database=cp1251_general_ci;
 SET NAMES 'cp1251' COLLATE 'cp1251_general_ci';
 SET CHARACTER SET cp1251;
 
-SET global wait_timeout=600;
-SET global interactive_timeout=600;
-SET global connect_timeout=600;
+SET wait_timeout=600;
+SET interactive_timeout=600;
 
 DROP PROCEDURE IF EXISTS upgrade_db;
 DROP FUNCTION IF EXISTS check_index_exists;
@@ -1040,6 +1039,8 @@ END IF;
 
 IF NOT check_constraint_exists('UK_pm_AttributeValue', 'pm_AttributeValue') THEN
 
+DELETE FROM pm_AttributeValue WHERE IntegerValue IS NULL AND StringValue IS NULL AND TextValue IS NULL AND PasswordValue IS NULL;
+
 DELETE FROM pm_AttributeValue using pm_AttributeValue, pm_AttributeValue ar2 
  WHERE pm_AttributeValue.pm_AttributeValueId < ar2.pm_AttributeValueId
    AND IFNULL(pm_AttributeValue.CustomAttribute,0) = IFNULL(ar2.CustomAttribute,0)
@@ -1117,6 +1118,63 @@ ALTER TABLE pm_CustomReport ADD Module VARCHAR(128);
 END IF;
 
 
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+SELECT 'Изменившиеся атрибуты', 'ObjectChangeLogAttribute', 7, 'N', 10, 'N' 
+  FROM (SELECT 1) t
+  WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'ObjectChangeLogAttribute');
+
+IF NOT check_table_exists('ObjectChangeLogAttribute') THEN
+CREATE TABLE `ObjectChangeLogAttribute` (
+  `ObjectChangeLogAttributeId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`ObjectChangeLogAttributeId`)
+) ENGINE=MyISAM DEFAULT CHARSET=cp1251;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+SELECT NOW(), NOW(), NULL,'Изменение','ObjectChangeLogId','REF_ObjectChangeLogId',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'ObjectChangeLogAttribute' 
+   AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ObjectChangeLogId')
+ LIMIT 1;
+
+IF NOT check_column_exists('ObjectChangeLogId', 'ObjectChangeLogAttribute') THEN
+ALTER TABLE ObjectChangeLogAttribute ADD ObjectChangeLogId INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+SELECT NOW(), NOW(), NULL,'Атрибуты','Attributes','TEXT',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'ObjectChangeLogAttribute' 
+   AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Attributes')
+ LIMIT 1;
+
+IF NOT check_column_exists('Attributes', 'ObjectChangeLogAttribute') THEN
+ALTER TABLE ObjectChangeLogAttribute ADD Attributes VARCHAR(2048);
+END IF;
+
+IF check_index_exists('I$ObjectChangeLogAttribute$LogId') THEN
+CREATE INDEX I$ObjectChangeLogAttribute$LogId ON ObjectChangeLogAttribute (ObjectChangeLogId);
+END IF;
+
+UPDATE pm_Participant SET IsActive = 'N' WHERE EXISTS (SELECT 1 FROM cms_BlackList bl WHERE bl.SystemUser = pm_Participant.SystemUser);
+
+UPDATE WikiPage SET State = (SELECT s.ReferenceName FROM pm_State s WHERE s.ObjectClass = 'requirement' AND s.VPD = WikiPage.VPD ORDER BY s.OrderNum LIMIT 1)
+ WHERE ReferenceName = 2 AND IsTemplate = 0 AND NOT EXISTS (SELECT 1 FROM pm_State s WHERE s.ReferenceName = WikiPage.State AND s.ObjectClass = 'requirement' AND s.VPD = WikiPage.VPD);
+
+IF NOT check_constraint_exists('UK_pm_UserSetting', 'pm_UserSetting') THEN
+DELETE FROM pm_UserSetting using pm_UserSetting, pm_UserSetting ar2 
+ WHERE pm_UserSetting.pm_UserSettingId < ar2.pm_UserSettingId
+   AND IFNULL(pm_UserSetting.VPD,0) = IFNULL(ar2.VPD,0)
+   AND IFNULL(pm_UserSetting.Setting,0) = IFNULL(ar2.Setting,0)
+   AND IFNULL(pm_UserSetting.Participant,0) = IFNULL(ar2.Participant,0);
+
+ALTER IGNORE TABLE pm_UserSetting ADD CONSTRAINT UK_pm_UserSetting UNIQUE (VPD, Setting, Participant);
+END IF;
+
+UPDATE pm_ProjectTemplate SET Caption = 'Поддержка' WHERE FileName = 'ticket_ru.xml';
 
 --
 --

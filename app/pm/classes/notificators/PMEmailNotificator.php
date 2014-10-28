@@ -251,17 +251,7 @@ class PMEmailNotificator extends EmailNotificator
 			}
 			
 			// exlude those who have no access to view object
-			$policy = $this->getParticipantAccessPolicy($participant_it);
-			
-			$roles = $participant_it->getRoles();
-
-			if ( !$policy->getObjectAccess(ACCESS_READ, $object_it) )
-			{
-				$participant_it->moveNext();
-				continue;
-			}
-
-			if ( !$policy->getEntityAccess(ACCESS_READ, $object_it->object) )
+			if ( !$handler->participantHasAccess($participant_it, $object_it) )
 			{
 				$participant_it->moveNext();
 				continue;
@@ -460,28 +450,5 @@ class PMEmailNotificator extends EmailNotificator
 			default:	
 				return parent::isAttributeRequired( $attribute_name, $object_it, $action );
 		}
-	}
-	
-	function getParticipantAccessPolicy( $participant_it )
-	{
-		$policy = getFactory()->getAccessPolicy();
-		
-		if ( $policy instanceof AccessPolicyBase )
-		{
-			$roles = $participant_it->getRoles();
-			 
-		    foreach( $roles as $key => $role )
-	        {
-	            if ( $role < 1 ) $roles[$key] = $policy->getRoleByBase( $role );
-	        }
-			
-	        $class_name = get_class($policy);
-	        
-	        $policy = new $class_name(getFactory()->getCacheService());
-	        
-	        $policy->setRoles($roles);
-		}
-		
-        return $policy;
 	}
 }

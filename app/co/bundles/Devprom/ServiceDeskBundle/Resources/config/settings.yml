@@ -1,8 +1,3 @@
 parameters:
-    mailer_host: smtp.mail.ru
-    mailer_port: '495'
-    mailer_encryption: null
-    mailer_user: noreplysup@mail.ru
-    mailer_password: fdnjvfn
-    supportProjectId: 204
+    supportProjectId: 19
     appUrl: 'http://devprom.local/servicedesk'

@@ -40,12 +40,13 @@ class IssueFormType extends AbstractType
                 'query_builder' => function(EntityRepository $er) use ($projectVPD) {
                     $qb = $er->createQueryBuilder('p');
                     return $qb->where($qb->expr()->eq('p.vpd', '\''.$projectVPD.'\''));
-                }
+                },
+                'required' => false
             ))
             ->add('priority');
         if ($this->allowAttachment) {
             $builder->add("newAttachment", new AttachmentFormType(), array(
-                'required' => false,
+                'required' => false
             ));
         }
     }

@@ -31,7 +31,7 @@ class AttachmentController extends Controller
     {
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
 
-        $issue = $this->getIssueService()->getIssueById($attachment->getIssueId());
+        $issue = $attachment->getIssue();
         $this->checkUserIsAuthorized($issue);
 
         $response = new BinaryFileResponse($attachment->getFilePath());
@@ -98,12 +98,12 @@ class AttachmentController extends Controller
 
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
 
-        $issue = $this->getIssueService()->getIssueById($attachment->getIssueId());
+        $issue = $attachment->getIssue();
         $this->checkUserIsAuthorized($issue);
 
         $this->getAttachmentService()->delete($attachment);
 
-        return $this->redirect($this->generateUrl('issue_show', array('id' => $attachment->getIssueId())));
+        return $this->redirect($this->generateUrl('issue_show', array('id' => $issue->getId())));
     }
 
 
@@ -113,6 +113,8 @@ class AttachmentController extends Controller
      */
     protected function checkUserIsAuthorized(Issue $issue)
     {
+    	$issue = $this->getIssueService()->getIssueById($issue->getId());
+    	
         if ($issue->getAuthorEmail() != $this->getUser()->getEmail()) {
             throw new HttpException(403);
         }

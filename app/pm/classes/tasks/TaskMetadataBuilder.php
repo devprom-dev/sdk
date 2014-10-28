@@ -28,35 +28,30 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 		$metadata->setAttributeOrderNum('LeftWork', 9);
 
-		if ( is_object($methodology_it) && $methodology_it->IsTimeTracking() )
+		if ( $methodology_it->IsTimeTracking() )
 		{
 			$metadata->addPersister( new TaskFactPersister );
 		}
 			
 		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true);
-
 		$metadata->addPersister( new TaskTracePersister() );
 		
-		if ( is_object($methodology_it) )
-		{
-			$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
-			
-			$metadata->setAttributeVisible('Priority', $methodology_it->get('IsRequestOrderUsed') != 'Y');
-		}
+		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
+		$metadata->setAttributeVisible('Priority', $methodology_it->get('IsRequestOrderUsed') != 'Y');
+		$metadata->setAttributeRequired('Assignee', !$methodology_it->IsParticipantsTakesTasks());
 
-		foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask') as $attribute )
-		{
-			$metadata->addAttributeGroup($attribute, 'permissions');
-		}
-		
 		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true, false, '', 110);
-
 		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
 		
 		$metadata->setAttributeDescription( 'StartDate', text(1841) );
 		$metadata->setAttributeDescription( 'FinishDate', text(1842) );
 
 		$metadata->addPersister( new TaskAssigneePersister() );
+
+    	foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask') as $attribute )
+		{
+			$metadata->addAttributeGroup($attribute, 'permissions');
+		}
 		
 	    $this->removeAttributes( $metadata, $methodology_it );
     }

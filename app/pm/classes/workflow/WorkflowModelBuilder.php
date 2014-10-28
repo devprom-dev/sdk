@@ -15,7 +15,7 @@ class WorkflowModelBuilder extends ObjectModelBuilder
 
 		$object->addAttribute('TransitionComment', 'LARGETEXT', text(1197), false);
 
-		$object->addAttribute('Transition', 'REF_pm_TransitionId', translate('Переход'), false);
+		$object->addAttribute('LastTransition', 'REF_pm_TransitionId', text(1867), false);
 		
 		$object->addPersister( new TransitionAttributesPersister() );
 
@@ -25,14 +25,14 @@ class WorkflowModelBuilder extends ObjectModelBuilder
 
 		$object->addAttribute('StateObject', 'INTEGER', '', false, true);
 		
-   	    $attributes = array( 'Transition', 'StateObject', 'StateDuration' );
+   	    $attributes = array( 'StateObject', 'StateDuration' );
     	
     	foreach ( $attributes as $attribute )
     	{
     		$object->addAttributeGroup($attribute, 'system');
     	}
 		
-    	$attributes = array( 'TransitionComment', 'Transition', 'StateDuration' );
+    	$attributes = array( 'TransitionComment', 'LastTransition', 'StateDuration' );
     	
     	foreach ( $attributes as $attribute )
     	{

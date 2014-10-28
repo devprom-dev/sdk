@@ -1160,7 +1160,7 @@ class StoredObjectDB extends Object
 		$id = DAL::Instance()->Escape( $id );
 		
 		$sql = "DELETE FROM ".$this->getEntityRefName().
-			   " WHERE ".$this->getEntityRefName()."Id = ".$id.
+			   " WHERE ".$this->getEntityRefName()."Id IN (".join(',',preg_split('/,/', $id)).")".
 			   "   AND RecordVersion = ".$parms['RecordVersion'];
 
 		$this->checkDeleteOnly($sql);

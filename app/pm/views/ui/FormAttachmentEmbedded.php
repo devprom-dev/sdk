@@ -7,10 +7,16 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  {
  	var $image_mode = false;
  	var $anchor_it;
+ 	private $image_class = 'image_attach';
  	
  	function setAnchorIt( $object_it )
  	{
  	    $this->anchor_it = $object_it;
+ 	}
+ 	
+ 	function setImageClass( $class_name )
+ 	{
+ 		$this->image_class = $class_name;
  	}
  	
  	function IsAttributeVisible( $attribute )
@@ -58,10 +64,10 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 		{
 			return parent::getItemDisplayName( $object_it );
 		}
-		
-		return '<a class=modify_image id="File'.$object_it->getId().'" href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('File').'">'.
-			'<img src="/images/attach.png" style="margin-bottom:-4px;">&nbsp;'.$object_it->getFileName('File').
-				' ('.$object_it->getFileSizeKb('File').' Kb)</a>'; 		
+
+		return '<a class="'.$this->image_class.'" href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('File').'">'.
+			'<img src="/images/attach.png" style="margin-bottom:-4px;"> '.$object_it->getFileName('File').'</a>'.
+				' ('.$object_it->getFileSizeKb('File').' Kb)'; 		
 	}
 	
 	function getActions( $object_it, $item )
@@ -99,7 +105,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
      		{
      			<?=$editor->getAttachmentsCallback()?>();
     
-    			$('a.modify_image[name="'+data.name+'"]').each( function() {
+    			$('a.<?=$this->image_class?>[name="'+data.name+'"]').each( function() {
      				if ( !$(this).parent().is('strike') ) $(this).click();
     			});
      		}

@@ -1,7 +1,6 @@
 <?php
 
 include "TaskTypeIterator.php";
-include "persisters/TaskTypeStagePersister.php";
 include "predicates/TaskTypeBaseIterationRelatedPredicate.php";
 include "predicates/TaskTypeFixBugPredicate.php";
 include "predicates/TaskTypeNonBugFixPredicate.php";
@@ -16,18 +15,6 @@ class TaskType extends MetaobjectCacheable
 		parent::__construct('pm_TaskType');
 		
 		$this->defaultsort = "(SELECT tt.OrderNum FROM pm_TaskType tt WHERE tt.pm_TaskTypeId = t.ParentTaskType), OrderNum";
-		
-		$this->addAttribute('Stages', 'REF_pm_ProjectStageId', translate('Стадии процесса'), false);
-			
-		$this->addPersister( new TaskTypeStagePersister() );
-		
-		$this->setAttributeType('ParentTaskType', 'REF_TaskTypeBaseId');
-
-		$this->setAttributeRequired('ParentTaskType', true);
-		
-		$this->setAttributeDescription('ProjectRole', text(1849));
-		
- 		$this->setAttributeDescription( 'RelatedColor', text(1856) );
  	}
 	
 	function createIterator() 

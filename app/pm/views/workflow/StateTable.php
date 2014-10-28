@@ -4,20 +4,6 @@ include 'StateList.php';
 
 class StateTable extends PMPageTable
 {
-    var $object;
-
-    function StateTable ( $object )
-    {
-        $this->object = $object;
-        
-        parent::PMPageTable( $this->object );
-    }
-
-    function getObject()
-    {
-        return $this->object;
-    }
-
     function getList()
     {
         return new StateList( $this->getObject() );
@@ -25,7 +11,7 @@ class StateTable extends PMPageTable
 
     function getCaption()
     {
-        return $this->object->getDisplayName();
+        return $this->getObject()->getDisplayName();
     }
 
 	function getSortDefault( $sort_parm = 'sort' )

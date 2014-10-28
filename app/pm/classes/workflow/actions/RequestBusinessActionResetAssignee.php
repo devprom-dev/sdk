@@ -11,6 +11,8 @@ class RequestBusinessActionResetAssignee extends BusinessAction
 	
 	function apply( $object_it )
  	{
+ 		if ( $object_it->object->getAttributeType('Owner') == '' ) return;
+ 		
  	    if ( $object_it->get('Owner') == '' ) return true;
  	    
  	    $object_it->modify( array( 'Owner' => '' ) );
@@ -20,8 +22,7 @@ class RequestBusinessActionResetAssignee extends BusinessAction
 
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_ChangeRequest');
+ 		return getFactory()->getObject('pm_ChangeRequest');
  	}
  	
  	function getDisplayName()

@@ -140,7 +140,11 @@ class PageList extends ListTable
 
 		$object->setLimit( $this->getLimit() );
 			
-		return $object->getAll();
+		$iterator = $object->getAll();
+		
+		$this->iterator_data = $iterator->getRowset();
+		
+		return $iterator;
 	}
 	
 	function getGroupIt()
@@ -177,13 +181,11 @@ class PageList extends ListTable
 		 
 		$object = $this->getObject()->getAttributeObject($attribute);
 
-		if ( !is_object($object) )
+		if ( !is_object($object) || count($this->iterator_data) < 1 )
 		{
 				return $this->references_it[$attribute] = $this->getObject()->getEmptyIterator();
 		}
-
-		if ( is_null($this->iterator_data) ) $this->iterator_data = $this->getIteratorRef()->getRowset();  
-				
+		
 		$data = array_filter($this->iterator_data, function($value) use ($attribute) 
 		{
 				return $value[$attribute] != '';

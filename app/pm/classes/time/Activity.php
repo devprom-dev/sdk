@@ -83,8 +83,7 @@ class Activity extends Metaobject
 			   "  	      WHERE a.Task = t.pm_TaskId ".
 			   "        ) t," .
 			   "		pm_Participant p ".
-			   "  WHERE t.Participant = p.pm_ParticipantId ".
-			   $this->getFilterPredicate('t').$this->getVpdPredicate('p').
+			   "  WHERE t.Participant = p.pm_ParticipantId ".$this->getFilterPredicate('t').
 			   "  GROUP BY ".$measure.", p.SystemUser, ".$group;
 
 		return $this->createSQLIterator($sql);

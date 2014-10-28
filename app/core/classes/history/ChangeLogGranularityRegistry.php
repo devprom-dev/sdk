@@ -11,9 +11,8 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 	public function getGroups()
 	{
 		return array (
-				new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / '.$this->granularity.'))'),
-				new GroupAttributeClause('ObjectChangeLogId'),
-				new GroupAttributeClause('Caption'),
+				new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / '.$this->granularity.') * '.$this->granularity.')'),
+				new GroupAttributeClause('ChangeKind'),
 				new GroupAttributeClause('ObjectId'),
 				new GroupAttributeClause('ClassName'),
 				new GroupAttributeClause('EntityRefName'),
@@ -28,10 +27,21 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 				parent::getPersisters()
 		);
 	}
-	
-	public function getQueryClause2()
+
+	public function getSorts()
 	{
-		return "(SELECT t. *, (SELECT GROUP_CONCAT(a.Attributes ORDER BY a.Attributes) FROM ObjectChangeLogAttribute a WHERE a.ObjectChangeLogId = t.ObjectChangeLogId) Attributes FROM ObjectChangeLog t)";
+		return array_merge(
+				array ( new SortAttributeClause('RecordCreated') ),
+				parent::getSorts()
+		);
+	}
+	
+	public function getQueryClause()
+	{
+		return " (SELECT t.*, ".
+			   "		 (SELECT GROUP_CONCAT(DISTINCT a.Attributes ORDER BY a.Attributes) ".
+			   "		    FROM ObjectChangeLogAttribute a WHERE a.ObjectChangeLogId = t.ObjectChangeLogId) Attributes ".
+			   "	FROM ObjectChangeLog t WHERE 1 = 1 ".$this->getFilterPredicate().") ";
 	}
 	
 	public function setGranularity( $granularity )

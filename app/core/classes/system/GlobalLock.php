@@ -5,13 +5,11 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 class GlobalLock
 {
 	private $background_lock = null;
-	
 	private $maintenance_lock = null;
 	
 	function __construct()
 	{
     	$this->background_lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME);
-   	    
     	$this->maintenance_lock = new LockFileSystem(MAINTENANCE_LOCK_NAME);
 	}
 	
@@ -35,7 +33,6 @@ class GlobalLock
 	public function release()
 	{
    	    $this->background_lock->Release();
-   	    
         $this->maintenance_lock->Release();
 	}
 }

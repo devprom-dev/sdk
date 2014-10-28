@@ -259,11 +259,13 @@ class MetaobjectStatable extends Metaobject
 
 		if ( $parms['Transition'] != '' )
 		{
-			$parms['State'] = getFactory()->getObject($this->getStateClassName())->getRegistry()->Query(
+			$state_it = getFactory()->getObject($this->getStateClassName())->getRegistry()->Query(
 					array (
 							new StateTransitionTargetPredicate($parms['Transition'])
 					)
-			)->get('ReferenceName');
+			);
+			
+			if ( $state_it->getId() > 0 ) $parms['State'] = $state_it->get('ReferenceName');
 		}
 		
 		if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )
@@ -321,18 +323,17 @@ class MetaobjectStatable extends Metaobject
 		
 		$parms['StateDuration'] = $parms['StateDuration'] == '' ? $object_it->get('StateDuration') : $parms['StateDuration']; 
 		
-		$objectstate = getFactory()->getObject('pm_StateObject');
-		
-		$objectstate->setVpdContext( $state_it );
-		
-		$parms['StateObject'] = $objectstate->add_parms( array ( 
-					'ObjectId' => $object_it->getId(),
-					'ObjectClass' => $this->getStatableClassName(),
-					'State' => $state_it->getId(),
-					'Transition' => $parms['Transition'],
-					'Comment' => $parms['TransitionComment'],
-					'Author' => getSession()->getUserIt()->getId()
-		));
+		$parms['StateObject'] = getFactory()->getObject('pm_StateObject')->add_parms( 
+				array ( 
+						'ObjectId' => $object_it->getId(),
+						'ObjectClass' => $this->getStatableClassName(),
+						'State' => $state_it->getId(),
+						'Transition' => $parms['Transition'],
+						'Comment' => $parms['TransitionComment'],
+						'Author' => getSession()->getUserIt()->getId(),
+						'VPD' => $object_it->get('VPD')
+				)
+		);
 		
 		// calculates duration of the lifecycle time of the object
 		//			

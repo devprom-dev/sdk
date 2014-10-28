@@ -48,7 +48,7 @@ class PMPageForm extends PageForm
     	if ( !parent::persist() ) return false;
     	
     	$object_it = $this->getObjectIt();
-		    
+
     	$invoke_workflow = is_object($object_it) 
     		&& ($this->getAction() == 'add' || $this->getAction() == 'modify' && $this->getTransitionIt()->getId() > 0);
     	

@@ -13,6 +13,8 @@ class RequestBusinessActionResolveTasks extends BusinessAction
 	
 	function apply( $object_it )
  	{
+ 		if ( $object_it->object->getAttributeType('OpenTasks') == '' ) return;
+ 				
 		$task_it = $object_it->getRef('OpenTasks');
 		
 		$task_it->object->removeNotificator( 'EmailNotificator' );

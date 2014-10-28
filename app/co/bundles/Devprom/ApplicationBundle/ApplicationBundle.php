@@ -10,7 +10,18 @@ class ApplicationBundle extends DevpromBundle
 {
 	protected function buildSession()
 	{
-		return new \COSession(null, null, null, $this->getCacheService());		
+		$session = new \COSession(null, null, null, $this->getCacheService());
+
+ 		getFactory()->setAccessPolicy(null);
+ 		
+ 		$cache_service = getCacheService();
+ 		 
+ 		$cache_service->setDefaultPath('usr-'.$session->getUserIt()->getId());
+ 		
+ 		// define access policy
+ 		getFactory()->setAccessPolicy( new \CoAccessPolicy($cache_service) );
+		
+		return $session;
 	}
 	
 	public function boot()

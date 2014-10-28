@@ -142,6 +142,7 @@ var draggableOptions = {
 			}
 		},
 		className: '',
+		classUserName: '',
 		groupAttribute: '',
 		boardCreated: '',
 		itemFormUrl: '',
@@ -361,11 +362,11 @@ function modifyBoardItem( item, options, callback )
 	if ( typeof objectid == 'undefined' || objectid == '' ) return;
 	
 	workflowModify({
-		form_url: '/pm/'+item.attr("project")+options.itemFormUrl,
+		form_url: item.attr("project") ? '/pm/'+item.attr("project") + options.itemFormUrl : options.itemFormUrl,
 		class_name: options.className,
 		entity_ref: options.className,
 		object_id: objectid,
-		form_title: item.attr("uid")
+		form_title: item.attr("uid") ? item.attr("uid") : options.classUserName
 	}, "donothing");
 }
 

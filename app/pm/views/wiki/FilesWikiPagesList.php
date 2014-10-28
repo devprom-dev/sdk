@@ -30,16 +30,7 @@ class FilesWikiPagesList extends PMStaticPageList
 		{
 			case 'Caption':
 				
-		 		if ( $object_it->IsImage('Content')) 
-		 		{
-					echo '<a class=image_attach href="'.$object_it->getFileUrl().
-						'&.png"><img src="/images/image.png"> '.$object_it->getFileName('Content').'</a>'; 		
-		 		}
-		 		else
-		 		{
-					echo '<a class=modify_image href="'.$object_it->getFileUrl().
-						'"><img src="/images/attach.png"> '.$object_it->getFileName('Content').'</a>'; 		
-		 		}
+		 		echo $object_it->getFileLink(); 
 		 		
 		 		break;
 

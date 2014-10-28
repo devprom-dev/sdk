@@ -9,10 +9,12 @@ class Artefact extends Metaobject
  	{
 		parent::Metaobject('pm_Artefact');
 
+		$this->setAttributeRequired('Release', false);
+		$this->setAttributeRequired('Build', false);
+
 		$this->addAttributeGroup('IsAuthorizedDownload', 'system');
-		
 		$this->addAttributeGroup('IsArchived', 'system');
-	}
+ 	}
 	
 	function createIterator()
 	{
@@ -29,15 +31,6 @@ class Artefact extends Metaobject
 		return false;
 	}
 
-	function isAttributeRequired( $name ) 
-	{
-		if($name == 'Release' || $name == 'Build') 
-		{
-			return false;
-		}
-		
-		return parent::isAttributeRequired( $name );
-	}
 	function getDefaultAttributeValue( $name ) 
 	{
 		switch( $name )

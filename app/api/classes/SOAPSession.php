@@ -32,6 +32,7 @@ class SOAPSession extends SessionBase
  	                    new IterationMetadataBuilder(),
  	                    new ReleaseMetadataBuilder(),
  	            		new TaskMetadataBuilder(),
+ 	            		new TaskTypeMetadataBuilder(),
  	                    new MilestoneMetadataBuilder(),
  	            		new ModelVersionAttributesBuilder(),
  	            		new DataModelRegistryBuilderCommon()

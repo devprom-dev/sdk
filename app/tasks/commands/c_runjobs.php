@@ -48,7 +48,12 @@ class RunJobs extends Command
 		}
 		else
 		{
-			$job_it = $job->getAll();
+			$job_it = $job->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('ClassName', preg_split('/,/',$_REQUEST['filter'])),
+							new SortOrderedClause()
+					)
+			);
 		}
 
 		// store the time the command was executed last time

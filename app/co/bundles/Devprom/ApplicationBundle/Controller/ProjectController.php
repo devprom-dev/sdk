@@ -23,28 +23,29 @@ class ProjectController extends PageController
     
     public function createAction()
     {
-        global $model_factory;
-         
         $response = $this->checkUserAuthorized();
         
         if ( is_object($response) ) return $response;
+
+        $request = $this->getRequest();
+		$prj_cls = getFactory()->getObject('pm_Project');
         
         // validate values
-        
-        $request = $this->getRequest();
+        $codename = $request->request->get('CodeName');
+        if ( $codename == '' ) $codename = $prj_cls->getDefaultAttributeValue('CodeName');
 
-        $empty_values = $request->request->get('Codename') == ''
-            || $request->request->get('Caption') == ''
+        $caption = \IteratorBase::utf8towin($request->request->get('Caption'));
+        if ( $caption == '' ) $caption = $prj_cls->getDefaultAttributeValue('Caption');
+        
+        $empty_values = $codename == '' || $caption == ''
             || $request->request->get('Template') == '';
             
         if ( $empty_values ) return $this->replyError(text(200));
         
-		$prj_cls = $model_factory->getObject('pm_Project');
-
-		if ( !$prj_cls->validCodeName($request->request->get('Codename')) ) return $this->replyError(text(208));
+		if ( !$prj_cls->validCodeName($codename) ) return $this->replyError(text(208));
 
 		$project_it = $prj_cls->getByRef(
-		    'LCASE(CodeName)', strtolower($request->request->get('Codename'))
+		    'LCASE(CodeName)', strtolower($codename)
 		);
 			
 		if ( $project_it->count() > 0 ) return $this->replyError(text(202));
@@ -53,7 +54,8 @@ class ProjectController extends PageController
         
 		// create new project
 
-		$_REQUEST['Caption'] = \IteratorBase::utf8towin($request->request->get('Caption'));
+		$_REQUEST['Caption'] = $caption;
+		$_REQUEST['Codename'] = $codename;
 
 		$strategy = new CreateProjectService();
 		
@@ -73,8 +75,7 @@ class ProjectController extends PageController
 		}
 		
 		return $this->replySuccess(
-				$strategy->getSuccessMessage(), 
-				$request->request->get('Codename').'/'
+				$strategy->getSuccessMessage(), $codename.'/'
 		); 
     }
     

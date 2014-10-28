@@ -4,21 +4,16 @@ include "FieldTaskTypeStages.php";
 
 class TaskTypeForm extends PMPageForm
 {
-	function TaskTypeForm() 
-	{
-		global $model_factory;
-		parent::PMPageForm( $model_factory->getObject('pm_TaskType') );
-	}
-
- 	function IsNeedButtonNew() {
-		return false;
-	}
+ 	function buildModelValidator()
+ 	{
+ 		$validator = parent::buildModelValidator();
+ 		
+ 		$validator->addValidator( new ModelValidatorUnique(array('ReferenceName')) );
+ 		
+ 		return $validator;
+ 	}
 	
- 	function IsNeedButtonCopy() {
-		return false;
-	}
-
- 	function IsAttributeVisible( $attr_name ) 
+	function IsAttributeVisible( $attr_name ) 
  	{
  		switch ( $attr_name )
  		{

@@ -32,6 +32,8 @@ class FieldWYSIWYGFile extends Field
  		
  		$this->form->setFormId( 1000 + $this->form->getFormId() );
  		
+ 		$this->form->setImageClass('modify_image');
+ 		
  		return $this->form;
  	}
  	
