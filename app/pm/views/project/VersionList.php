@@ -56,6 +56,8 @@ class VersionList extends PMPageList
 		
 		$object_it = $this->getIt( $source_it );
 		
+		if ( $object_it->getId() == '' ) return;
+		
 		$report = $model_factory->getObject('PMReport');
 
 		switch ( $attr )

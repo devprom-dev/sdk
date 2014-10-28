@@ -14,81 +14,89 @@ class ModelValidatorTest extends DevpromTestCase
 
     function testModelValidOnDates()
     {   
-    	$validator = new ModelValidator();
+    	$validator = new ModelValidator(array (
+								new \ModelValidatorTypes()
+    					));
     	
     	$data = array( 'RecordModified' => 'asd' );
     	
-    	$this->assertEquals("RecordModified", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
 
     	$data = array( 'RecordModified' => '2013-32-43' );
     	
-    	$this->assertEquals("RecordModified", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
     	
     	$data = array( 'RecordModified' => '2013-02-03' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
 
     	$data = array( 'RecordModified' => '' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
     }
 
     function testModelValidOnNumbers()
     {   
-    	$validator = new ModelValidator();
+    	$validator = new ModelValidator(array (
+								new \ModelValidatorTypes()
+    					));
     	
     	$data = array( 'OrderNum' => 'asd' );
     	
-    	$this->assertEquals("OrderNum", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
 
     	$data = array( 'OrderNum' => '1' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
 
     	$data = array( 'OrderNum' => '14645646456' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
 
         $data = array( 'OrderNum' => '14645.646456' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
 
         $data = array( 'OrderNum' => '14645,646456' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
     }
 
     function testModelValidOnReferences()
     {   
-    	$validator = new ModelValidator();
+    	$validator = new ModelValidator(array (
+								new \ModelValidatorTypes()
+    					));
     	
     	$data = array( 'SystemUser' => 'asd' );
 
-    	$this->assertEquals("SystemUser", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
 
         $data = array( 'SystemUser' => '14645.646456' );
     	
-    	$this->assertEquals("SystemUser", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
     	
     	$data = array( 'SystemUser' => '14645646456' ); // more than integer
     	
-    	$this->assertEquals("SystemUser", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
     	
     	$data = array( 'SystemUser' => '1' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
-
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
+	
         $data = array( 'SystemUser' => '14645,646456' );
     	
-    	$this->assertEquals("", $validator->validateType(new Snapshot(), $data)); 
+    	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
     }
     
     function testModelValidOnPasswords()
     {   
-    	$validator = new ModelValidator();
+    	$validator = new ModelValidator(array (
+								new \ModelValidatorTypes()
+    					));
     	
     	$data = array( 'Password' => 'asd' );
     	
-    	$this->assertEquals("", $validator->validateType(new User(), $data)); 
+    	$this->assertEquals("", $validator->validate	(new User(), $data)); 
     }
 }

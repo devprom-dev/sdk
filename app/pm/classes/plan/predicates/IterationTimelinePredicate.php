@@ -8,8 +8,6 @@ class IterationTimelinePredicate extends FilterPredicate
 	
  	function _predicate( $filter )
  	{
- 		$now = SystemDateTime::convertToServerTime(SystemDateTime::date('Y-m-d'));
- 		
  		switch ( $filter )
  		{
  			case self::PAST:
@@ -20,7 +18,7 @@ class IterationTimelinePredicate extends FilterPredicate
 					   "			   FROM pm_IterationMetric me " .
 					   "			  WHERE me.Iteration = t.pm_ReleaseId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".$now."' > GREATEST(me.MetricValueDate, t.FinishDate) )" .
+					   "			    AND '".SystemDateTime::date()."' > GREATEST(me.MetricValueDate, t.FinishDate) )" .
 			   		   " AND NOT EXISTS ( SELECT 1 FROM pm_Task s " .
 			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
 			   		   "				     AND s.State IN ('".join("','",$states)."'))";
@@ -35,7 +33,7 @@ class IterationTimelinePredicate extends FilterPredicate
 					   "                AND ms.Metric = 'EstimatedStart' ".
 					   "			    AND me.Iteration = t.pm_ReleaseId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".$now."' BETWEEN GREATEST(ms.MetricValueDate, t.StartDate) ".
+					   "			    AND '".SystemDateTime::date()."' BETWEEN GREATEST(ms.MetricValueDate, t.StartDate) ".
 					   "							  AND GREATEST(me.MetricValueDate, t.FinishDate) )" .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_Task s " .
 			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
@@ -51,7 +49,7 @@ class IterationTimelinePredicate extends FilterPredicate
 					   "                AND ms.Metric = 'EstimatedStart' ".
 					   "			    AND me.Iteration = t.pm_ReleaseId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".$now."' <= GREATEST(me.MetricValueDate, t.FinishDate) )" .
+					   "			    AND '".SystemDateTime::date()."' <= GREATEST(me.MetricValueDate, t.FinishDate) )" .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_Task s " .
 			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
 			   		   "				     AND s.State NOT IN ('".join("','",$states)."')))";

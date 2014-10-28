@@ -45,6 +45,7 @@ include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataPermissionsBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/triggers/TaskOrderNumTrigger.php";
+include SERVER_ROOT_PATH."pm/classes/tasks/TaskTypeMetadataBuilder.php";
 
 include SERVER_ROOT_PATH."pm/classes/plan/IterationMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/ReleaseMetadataBuilder.php";
@@ -53,6 +54,7 @@ include SERVER_ROOT_PATH."pm/classes/plan/MilestoneMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/product/FeatureMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderCommon.php";
+include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderLatest.php";
 
 include SERVER_ROOT_PATH."pm/classes/common/triggers/CacheSessionProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/communications/triggers/DeleteCommentsTrigger.php";
@@ -62,11 +64,9 @@ include_once SERVER_ROOT_PATH."pm/classes/notificators/PMChangeLogNotificator.ph
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetWorkItemDatesTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetPlanItemDatesTrigger.php";
 
-
-include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiSectionNumberingTrigger.php";
-include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiParentPathTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageMetadataBuilder.php";
 
 ///////////////////////////////////////////////////////////////////////
 class PMSession extends SessionBase
@@ -140,6 +140,7 @@ class PMSession extends SessionBase
  	    return array_merge( 
  	            array (
  	                    new CacheResetTrigger(),
+ 	            		new WikiPageMetadataBuilder(),
  	                    new SharedObjectsCommonBuilder(),
  	                    new SharedObjectsTasksBuilder(),
  	                    new SharedObjectsPlanBuilder(),
@@ -149,6 +150,7 @@ class PMSession extends SessionBase
  	                    new SearchableObjectsCommonBuilder(),
  	                    new AccessRightEntitySetCommonBuilder(),
  	                    new RequestMetadataBuilder(),
+ 	            		new TaskTypeMetadataBuilder(),
  	                    new TaskMetadataBuilder(),
  	                    new TaskMetadataPermissionsBuilder(),
  	                    new IterationMetadataBuilder(),
@@ -179,8 +181,6 @@ class PMSession extends SessionBase
  	            		new ModuleCategoryBuilderCommon(),
  	            		
  	            		// triggers
- 	                    new WikiParentPathTrigger(),
- 	                    new WikiSectionNumberingTrigger(),
  	            		new WikiPageNewVersionTrigger(),
  	            		new WikiBreakTraceTrigger(),
  	            		new CustomReportModelEventsHandler()
@@ -193,6 +193,7 @@ class PMSession extends SessionBase
  	                    new EstimationStrategyCommonBuilder(),
  	                    new CacheSessionProjectTrigger(),
  	            		new CustomizableObjectBuilderCommon($this),
+ 	            		new ProjectTemplateSectionsRegistryBuilderLatest($this),
  	            		
  	            		// model
  	            		new ApplyBusinessActionsEventHandler(),
@@ -383,6 +384,11 @@ class PMSession extends SessionBase
  	function getProjectIt()
  	{
  		return $this->project_it;
+ 	}
+ 	
+ 	function setProjectIt( $project_it )
+ 	{
+ 		$this->project_it = $project_it;
  	}
  	
  	public function getLinkedIt()

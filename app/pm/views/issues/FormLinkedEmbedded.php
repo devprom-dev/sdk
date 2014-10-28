@@ -51,7 +51,7 @@ class FormLinkedEmbedded extends PMFormEmbedded
 		
 	    $uid = new ObjectUID;
 	    
- 		return $type_title.': '.$uid->getUidWithCaption( $target_it ).' ('.$target_it->getStateName().')';
+ 		return translate($type_title).': '.$uid->getUidWithCaption( $target_it ).' ('.$target_it->getStateName().')';
  	}
  	
 	function createField( $attr )
@@ -63,6 +63,11 @@ class FormLinkedEmbedded extends PMFormEmbedded
 			case 'TargetRequest':
 				return new FieldAutoCompleteObject( $object );
 
+			case 'LinkType':
+				$field = new FieldDictionary( $object );
+				$field->translateOptions();
+				return $field;
+				
 			default:
 				return parent::createField( $attr );			
 		}

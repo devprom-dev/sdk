@@ -7,6 +7,7 @@ include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
 
@@ -21,23 +22,18 @@ class TaskForm extends PMPageForm
     	parent::extendModel();
     	
 		$builder = new TaskModelExtendedBuilder();
-		
 		$builder->build( $this->getObject() );
 
 		$this->getObject()->addPersister( new WatchersPersister() );
-    }
-	
-	function getModelValidator()
-	{
-		$validator = parent::getModelValidator();
 
-		if ( $this->IsAttributeRequired('Fact') )
-		{
-			$validator->addValidator( new ModelValidatorEmbeddedForm('Fact', 'Capacity') );
-		}
+		$transition_it = $this->getTransitionIt();
 		
-		return $validator;
-	}
+		if ( $transition_it->getId() > 0 )
+		{
+			$builder = new WorkflowTransitionTaskModelBuilder($transition_it);
+			$builder->build( $this->getObject() );
+		}
+    }
 	
  	function IsAttributeVisible( $attr_name ) 
 	{
@@ -65,18 +61,6 @@ class TaskForm extends PMPageForm
 		}
 
 		return parent::IsAttributeVisible( $attr_name );
-	}
-	
- 	function IsAttributeRequired( $attr_name ) 
-	{
-		switch ( $attr_name )
-		{
-			case 'Assignee':
-				return !getSession()->getProjectIt()->getMethodologyIt()->IsParticipantsTakesTasks();
-				
-			default:
-				return parent::IsAttributeRequired( $attr_name );
-		}
 	}
 	
 	function getTransitionAttributes()

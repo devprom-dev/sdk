@@ -1,7 +1,8 @@
 <?php
 
+include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueTasks.php";
 include_once "FormTaskEmbedded.php";
-        
+
 class FieldTask extends Field
 {
  	var $request_it, $iteration_it;
@@ -12,6 +13,11 @@ class FieldTask extends Field
  		$this->iteration_it = $iteration_it;
  		
  		parent::Field();
+ 	}
+ 	
+ 	function getValidator()
+ 	{
+ 		return new ModelValidatorIssueTasks();
  	}
  	
  	function draw()

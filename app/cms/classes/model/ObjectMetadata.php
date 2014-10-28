@@ -87,7 +87,7 @@ class ObjectMetadata
     
     public function setAttributeType($attribute, $type)
     {
-    	$this->attributes[$attribute]['type'] = $type;
+    	$this->attributes[$attribute]['type'] = $this->attributes[$attribute]['dbtype'] = $type;
     }
     
     public function setAttributeCaption($attribute, $caption)
@@ -163,7 +163,14 @@ class ObjectMetadata
 		
 		$this->attributes[$name]['groups'][] = $group;
 	}
-    
+	
+	function getAttributeClass( $attribute )
+	{
+		return strpos($this->attributes[$attribute]['type'], 'REF_') !== false
+				? substr($this->attributes[$attribute]['type'], 4, strlen($this->attributes[$attribute]['type']) - 6)
+				: '';
+	}
+	
     private $object = array();
     
     private $attributes = array();

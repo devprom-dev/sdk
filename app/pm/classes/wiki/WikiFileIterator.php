@@ -6,12 +6,12 @@ class WikiFileIterator extends OrderedIterator
  	{
  		if ( $this->IsImage('Content')) 
  		{
-			return '<a class="modify_image image_attach" href="'.$this->getFileUrl().'&.png" ' .
+			return '<a class="image_attach" href="'.$this->getFileUrl().'&.png" ' .
 				'><img src="/images/image.png" style="margin-bottom:-4px;"> '.$this->getFileName('Content').'</a>'; 		
  		}
  		else
  		{
-			return '<a class="modify_image image_attach" href="'.$this->getFileUrl().'" ' .
+			return '<a class="" href="'.$this->getFileUrl().'" ' .
 				'><img src="/images/attach.png" style="margin-bottom:-4px;"> '.$this->getFileName('Content').'</a>'; 		
  		}
  	}

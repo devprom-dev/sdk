@@ -4,8 +4,6 @@ class ReleaseTimelinePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		$now = SystemDateTime::convertToServerTime(SystemDateTime::date('Y-m-d'));
- 		
  		switch ( $filter )
  		{
  			case 'past':
@@ -18,7 +16,7 @@ class ReleaseTimelinePredicate extends FilterPredicate
 					   "                AND ms.Metric = 'EstimatedStart' ".
 					   "			    AND me.Version = t.pm_VersionId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".$now."' > GREATEST(me.MetricValueDate, t.FinishDate) )" .
+					   "			    AND '".SystemDateTime::date()."' > GREATEST(me.MetricValueDate, t.FinishDate) )" .
 			   		   " AND NOT EXISTS ( SELECT 1 FROM pm_ChangeRequest r " .
 			   		   "			       WHERE r.PlannedRelease = t.pm_VersionId" .
 			   		   "				     AND r.State IN ('".join("','",$states)."'))";
@@ -33,7 +31,7 @@ class ReleaseTimelinePredicate extends FilterPredicate
 					   "                AND ms.Metric = 'EstimatedStart' ".
 					   "			    AND me.Version = t.pm_VersionId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".$now."' BETWEEN GREATEST(ms.MetricValueDate, t.StartDate) ".
+					   "			    AND '".SystemDateTime::date()."' BETWEEN GREATEST(ms.MetricValueDate, t.StartDate) ".
 					   "							  AND GREATEST(IFNULL(me.MetricValueDate, NOW()), IFNULL(t.FinishDate, NOW())) )" .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_ChangeRequest r " .
 			   		   "			       WHERE r.PlannedRelease = t.pm_VersionId" .
@@ -47,7 +45,7 @@ class ReleaseTimelinePredicate extends FilterPredicate
 					   "			   FROM pm_VersionMetric me " .
 					   "			  WHERE me.Version = t.pm_VersionId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".$now."' <= GREATEST(IFNULL(me.MetricValueDate, NOW()), IFNULL(t.FinishDate, NOW())) )" .
+					   "			    AND '".SystemDateTime::date()."' <= GREATEST(IFNULL(me.MetricValueDate, NOW()), IFNULL(t.FinishDate, NOW())) )" .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_ChangeRequest r " .
 			   		   "			       WHERE r.PlannedRelease = t.pm_VersionId" .
 			   		   "				     AND r.State NOT IN ('".join("','",$states)."')))";

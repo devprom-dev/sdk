@@ -31,6 +31,8 @@ class FieldWikiAttachments extends FieldAttachments
 		 
  		$this->form = new FormWikiAttachmentEmbedded( $files, 'WikiPage' );
  		
+ 		$this->form->setImageClass('modify_image');
+ 		
  		$this->form->setAnchorIt( $object_it );
  		
  		$this->form->setReadonly( $this->readOnly() );

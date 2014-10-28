@@ -8,8 +8,19 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class MainController extends Controller
 {
-    public function indexAction( $module = '', $namespace = '', $page = '', $file = '' )
+    public function indexAction()
     {
+        if ( preg_match('/command/i', $this->getRequest()->getBaseUrl()) )
+    	{
+    		return new Response();
+    	}
+    	
+    	if ( getSession()->getUserIt()->getId() < 1 )
+    	{
+    		return new RedirectResponse($this->generateUrl('login')); 
+    	}
+    	
+    	return $this->redirect('/pm/my');
     }
 
     protected function checkDeploymentState()

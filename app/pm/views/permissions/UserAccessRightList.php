@@ -56,7 +56,7 @@ class UserAccessRightList extends AccessRightList
                         $object = getFactory()->getObject($object_it->get('ReferenceName'));
                         	
                         $read_access = $this->access_policy->getEntityAccess(ACCESS_READ, $object);
-
+                        
                         if ( $read_access )
                         {
                             $write_access = $this->access_policy->getEntityAccess(ACCESS_MODIFY, $object);

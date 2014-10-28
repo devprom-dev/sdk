@@ -37,16 +37,16 @@ class UpdateTable extends StaticPageTable
 	{
 		return array (
 			array (
-				'name' => translate('Скачать обновление'),
-				'url' => 'http://devprom.ru/download',
-				'uid' => 'download'
-			),
-			array(),
-			array (
 				'name' => translate('Установить'),
 				'url' => '?action=upload',
 				'uid' => 'upload'
-			)
+			),
+			array(),
+			array (
+				'name' => translate('Скачать обновление'),
+				'url' => 'http://devprom.ru/download?updates',
+				'uid' => 'download'
+			),
 		);
 	}
 }

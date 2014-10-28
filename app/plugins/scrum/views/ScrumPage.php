@@ -12,8 +12,7 @@ class ScrumPage extends PMPage
 
 	function getObject()
 	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_Scrum');
+ 		return getFactory()->getObject('pm_Scrum');
 	}
 	
  	function getTable() 

@@ -15,13 +15,19 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 	
  	function createSQLIterator( $sql ) 
  	{
- 		global $model_factory;
- 		
-		$participant = $model_factory->getObject('pm_Participant');
- 		
- 		foreach( $this->getObject()->getParticipantFilters() as $filter ) $participant->addFilter( $filter );
- 		
-		$participants = $participant->getAll()->idsToArray();
+		$participants = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
+					array_merge (
+							array (
+									new FilterAttributePredicate('Project',
+											array_merge(
+													array( getSession()->getProjectIt()->getId() ),
+													preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject'))
+											)
+									)
+							),
+							$this->getObject()->getParticipantFilters()
+					)
+			)->idsToArray();
 		 		
 		$this->report_year = $this->getObject()->getReportYear();
 		

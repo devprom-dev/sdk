@@ -303,16 +303,15 @@ class BackupAndRecoveryStrategy
 
  		$this->writeLog("UPDATE database\n");
 
-		// setup specific statements in the update script 		
-		$f = fopen($sql_path, 'r', 1);
+		$file_content = file_get_contents($sql_path); 
 		
-		$this->writeLog(text(1031).': '.$sql_path."\n");
-		
-		$file_content = fread($f, filesize($sql_path));
-		
-		fclose($f);
+		if ( $file_content == '' )
+		{
+			$this->writeLog(text(1031).': '.$sql_path."\n");
+			return;
+		}
 
-		// execute sql script to update the database
+		// setup specific statements in the update script 		
 		if ( defined('MYSQL_UPDATE_COMMAND') )
 		{
 			$command = str_replace('%1', DB_HOST, 
@@ -329,6 +328,7 @@ class BackupAndRecoveryStrategy
 
 		$this->writeLog($command."\n");
 
+		// execute sql script to update the database
 		$result = shell_exec( $command );
 		
 		$this->writeLog($result);

@@ -213,4 +213,11 @@ class CommentHandler extends EmailNotificatorHandler
  		
  		return $text;
  	}
+
+	function participantHasAccess( $participant_it, $object_it )
+	{
+		if ( !parent::participantHasAccess( $participant_it, $object_it ) ) return false;
+		
+		return parent::participantHasAccess( $participant_it, $object_it->getAnchorIt() );
+	}
 }

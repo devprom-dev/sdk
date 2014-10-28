@@ -231,6 +231,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['Caption'] = text(1833);
         $item['Description'] = text(1812);
         $item['AccessEntityReferenceName'] = 'pm_Project';
+        $item['AccessType'] = ACCESS_MODIFY;
         $item['Url'] = 'project/settings';
         
         $modules[] = $item;
@@ -335,7 +336,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['cms_PluginModuleId'] = 'kbtemplates';
         $item['Caption'] = text(1343);
         $item['Description'] = text(1820);
-        $item['AccessEntityReferenceName'] = 'ProjectPage';
+        $item['AccessEntityReferenceName'] = 'KnowledgeBaseTemplate';
         $item['Url'] = 'knowledgebase/templates';
         
         $modules[] = $item;

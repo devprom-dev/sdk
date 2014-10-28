@@ -17,11 +17,8 @@ class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
     public function build( StateBusinessActionRegistry & $set )
     {
  		$set->registerRule( new TaskBusinessActionResolveIssue() );
- 		
  		$set->registerRule( new TaskBusinessActionDeclineIssue() );
- 		
  		$set->registerRule( new TaskBusinessActionAssignParticipant() );
- 		
  		$set->registerRule( new TaskBusinessActionResetAssignee() );
     }
 }

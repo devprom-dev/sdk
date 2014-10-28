@@ -14,7 +14,7 @@ class TaskResultDictionary extends FieldDictionary
  	function getOptions()
  	{
 		$items = array();
- 	    
+
 		switch ( $this->type_it->getRef('ParentTaskType')->get('ReferenceName') )
 		{
 			case 'testing':

@@ -1,5 +1,6 @@
 <?php
 
+include "DictionaryItemForm.php";
 include "ProjectRoleForm.php";
 include "TaskTypeForm.php";
 include "CustomAttributeEntityForm.php";
@@ -94,53 +95,49 @@ class DictionaryPage extends PMPage
  		global $model_factory, $_REQUEST;
 
 		$object = $this->getDictionary();
-		if ( is_object($object) )
+		
+		if ( !is_object($object) ) return null;
+		
+		switch ( $object->getClassName() )
 		{
-			switch ( $object->getClassName() )
-			{
-				case 'pm_ProjectRole':
-					return new ProjectRoleForm ( $object );
-					
-				case 'pm_TaskType':
-					return new TaskTypeForm ( $object );
+			case 'pm_ProjectRole':
+				return new ProjectRoleForm ( $object );
+				
+			case 'pm_TaskType':
+				return new TaskTypeForm ( $object );
 
-				case 'pm_Transition':
+			case 'pm_Transition':
+				return new TransitionForm( getFactory()->getObject('Transition') );
 
-					return new TransitionForm( getFactory()->getObject('Transition') );
+			case 'pm_State':
+				return new StateForm ( $object );
+				
+			case 'WikiPageType':
+				return new RequirementTypeForm ( $object );
 
-				case 'pm_State':
-					
-					return new StateForm ( $object );
-					
-				case 'WikiPageType':
-					return new RequirementTypeForm ( $object );
-
-				case 'pm_TestExecutionResult':
-					return new TestExecutionResultForm ( $object );
-					
-			    case 'pm_CustomAttribute':
-			    	
-					if ( $_REQUEST['class'] == 'metaobject' )
+			case 'pm_TestExecutionResult':
+				return new TestExecutionResultForm ( $object );
+				
+		    case 'pm_CustomAttribute':
+		    	
+				if ( $_REQUEST['class'] == 'metaobject' )
+				{
+					if ( $_REQUEST['pm_CustomAttributeId'] == '' && $_REQUEST['EntityReferenceName'] == '' )
 					{
-						if ( $_REQUEST['pm_CustomAttributeId'] == '' && $_REQUEST['EntityReferenceName'] == '' )
-						{
-							return new CustomAttributeEntityForm( $object );
-						}
-						else
-						{
-							return new CustomAttributeFinalForm( $object );
-						}
+						return new CustomAttributeEntityForm( $object );
 					}
 					else
 					{
-						return new CustomAttributeFinalForm( $object );	
+						return new CustomAttributeFinalForm( $object );
 					}
+				}
+				else
+				{
+					return new CustomAttributeFinalForm( $object );	
+				}
 
-				default:
-					return new PMPageForm( $object );
-			}
+			default:
+				return new DictionaryItemForm( $object );
 		}
-		
-		return null;
  	}
 }

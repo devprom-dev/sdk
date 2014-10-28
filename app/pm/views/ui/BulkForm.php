@@ -137,9 +137,10 @@ class BulkForm extends PMForm
  		switch ( $attr )
  		{
  			case 'operation': return ' ';
-
+ 			case 'ids': return '';
+ 			
  			default:
- 				return parent::getDescription( $attr );
+ 				return parent::getDescription( $attr ).' ';
  		}
  	}
 	

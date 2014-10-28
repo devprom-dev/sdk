@@ -76,6 +76,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     		<input id="<?=$class_name?>redirect" type="hidden" name="redirect" value="<?=$redirect_url?>">
     		<input type="hidden" id="unsavedMessage" value="<?=text(632)?>">
     		<input type="hidden" id="deleteMessage" value="<?=$form->getDeleteMessage()?>">
+    		<input type="hidden" name="Transition" value="<?=$transition?>">
     		
     		<?php 
     		

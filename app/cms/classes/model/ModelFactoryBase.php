@@ -68,11 +68,6 @@ class ModelFactoryBase
 	public function setAccessPolicy( $policy )
 	{
 		$this->access_policy = $policy;
-		
-		if ( is_object($this->access_policy) )
-		{
-			$this->access_policy->setCacheService( $this->getCacheService() );
-		}
 	}
 	
 	public function getEventsManager()

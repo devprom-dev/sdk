@@ -47,7 +47,7 @@ class TooltipController extends Controller
     	}
     	
     	$service = new BrokenTraceExplainService($this->getRequest()->get('object'));
- 	
+
     	return $this->render('ProjectBundle:Tooltip:explain.html.twig', $service->getData());
     }
     

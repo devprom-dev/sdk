@@ -25,7 +25,6 @@ class Form
 	var $has_buttons = true;
 	var $has_title = true;
 	var $warning_message = '';
-	var $undefined_attributes;
 	var $action;
 	var $readonly;
 	var $dynamic_mode;
@@ -108,26 +107,15 @@ class Form
 
 			if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return; 
 			
-			$undefined_attributes = $this->getUndefinedRequiredAttributes();
-			
-			if ( count($undefined_attributes) == 0 ) 
-			{
-			    $this->persist();
+		    $this->persist();
 
-				if ( $_REQUEST['formonly'] == 'true' )
-				{
-					$this->edit($this->object_it->getId());
-				}
-				else
-				{
-					$this->redirectOnAdded($this->object_it, $this->redirect_url);
-				}
+			if ( $_REQUEST['formonly'] == 'true' )
+			{
+				$this->edit($this->object_it->getId());
 			}
 			else
 			{
-			    $this->action = 'show';
-			    
-				$this->setRequiredAttributesWarning($undefined_attributes);
+				$this->redirectOnAdded($this->object_it, $this->redirect_url);
 			}
 			
 			return;
@@ -181,31 +169,18 @@ class Form
 		
 				if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return;
 
-				$undefined_attributes = $this->getUndefinedRequiredAttributes($object_it->getId());
-
 				$this->redirect_url = $this->getRedirectUrl();
 				
-				if ( count($undefined_attributes) == 0 ) 
+				if ( !$this->persist() )
 				{
-					if ( !$this->persist() )
-					{
-						$this->required_attributes_warning = true;
-						$this->warning_message = text(1106);
-						
-						$this->edit($object_it->getId()); 
-					}
-					else
-					{
-						$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
-					}
-				}
-				else 
-				{
-					$this->setRequiredAttributesWarning($undefined_attributes);
+					$this->required_attributes_warning = true;
+					$this->warning_message = text(1106);
 					
-					$this->edit($object_it->getId());
-
-				    $this->action = 'show';
+					$this->edit($object_it->getId()); 
+				}
+				else
+				{
+					$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
 				}
 
 				break;
@@ -343,29 +318,6 @@ class Form
 		
 		return true;
  	}
- 	
-	function getUndefinedRequiredAttributes( $object_id = 0 )
-	{
-		$attributes = array();
-		
-		if($object_id > 0) {
-			$object_it = $this->object->getExact($object_id);
-		} else {
-			$object_it = null;
-		}
-		
-		$keys = array_keys($this->object->getAttributesSorted());
-		for($i = 0; $i < count($keys); $i++) 
-		{
-			if( $this->IsAttributeRequired( $keys[$i] ) && !$this->IsAttributeValueDefined( $keys[$i], $object_it )
-			   && !in_array(translate($this->object->getAttributeUserName($keys[$i])), $attributes) ) 
-			{
-				array_push($attributes, translate($this->object->getAttributeUserName($keys[$i])));
-			}
-		}
-		
-		return $attributes;
-	}
  	
 	function hasAlert()
 	{
@@ -551,10 +503,9 @@ class Form
 		return $this->object->getEntityRefName().'Id='.$object_id.'&'.$this->object->getEntityRefName().'action=show';
 	}
 	
-	function setRequiredAttributesWarning($undefined_attributes = array())
+	function setRequiredAttributesWarning()
 	{
 		$this->required_attributes_warning = true;
-		$this->undefined_attributes = $undefined_attributes;
 	}
 	
 	function hasButtons( $state ) {
@@ -635,11 +586,7 @@ class Form
 	
 	function getWarningMessage() 
 	{
-		if ( $this->warning_message != '' ) return $this->warning_message;
-		
-		if ( !$this->required_attributes_warning ) return '';
-		
-		return text(2).': '.join($this->undefined_attributes, ', ').'.';
+		return $this->warning_message;
 	}
 	
 	function getButtonName( $button ) 

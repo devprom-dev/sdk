@@ -727,7 +727,8 @@ function createinstance()
 		url: '/co/command.php?class=createinstance&namespace=saasassist&action=1',
 		data: {
 			instance: $('#try-form #try-form-instance').val(),
-			email: $('#try-form #try-form-email').val()
+			email: $('#try-form #try-form-email').val(),
+			username: $('#try-form #try-form-username').val()
 		},
 		dataType: "html",
 		success: 

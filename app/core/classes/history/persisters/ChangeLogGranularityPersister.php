@@ -6,7 +6,7 @@ class ChangeLogGranularityPersister extends ObjectSQLPersister
  	{
  		$columns = array();
  		
- 		array_push( $columns, " t.Caption " );
+ 		array_push( $columns, " t.ChangeKind " );
  		
  		array_push( $columns, " t.ClassName " );
  		
@@ -24,17 +24,17 @@ class ChangeLogGranularityPersister extends ObjectSQLPersister
  			" MAX(t.RecordCreated) RecordCreated " );
 
         array_push( $columns, 
- 			" GROUP_CONCAT(DISTINCT t.ChangeKind) ChangeKind " );
-
-        array_push( $columns, 
  			" MIN(t.VisibilityLevel) VisibilityLevel " );
 
+        array_push( $columns, 
+ 			" MAX(t.Caption) Caption " );
+        
         array_push( $columns, 
  			" GROUP_CONCAT(DISTINCT t.Content ORDER BY t.RecordCreated DESC SEPARATOR '<br/>') Content " );
         
         array_push( $columns, 
- 			" (SELECT GROUP_CONCAT(DISTINCT a.Attributes ORDER BY a.Attributes) FROM ObjectChangeLogAttribute a WHERE a.ObjectChangeLogId = t.ObjectChangeLogId) Attributes " );
-
+ 			" GROUP_CONCAT(DISTINCT t.Attributes) Attributes " );
+        
         array_push( $columns, 
  			" GROUP_CONCAT(t.ObjectChangeLogId) ObjectChangeLogId " );
         

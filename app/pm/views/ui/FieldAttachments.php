@@ -5,6 +5,7 @@ include_once "FormAttachmentEmbedded.php";
 class FieldAttachments extends FieldForm
 {
  	var $object_it, $attachments, $caution, $anchor_field;
+ 	private $image_class = 'image_attach';
  	
  	function FieldAttachments( $object_it = null, $writable = true, $caution = true )
  	{
@@ -54,6 +55,11 @@ class FieldAttachments extends FieldForm
  	{
  		$this->attachments = $attachments;
  	}
+
+ 	function setImageClass( $class_name )
+ 	{
+ 		$this->image_class = $class_name;
+ 	}
  	
  	function getObjectIt()
  	{
@@ -71,6 +77,7 @@ class FieldAttachments extends FieldForm
 	{
  		$form = new FormAttachmentEmbedded( $this->getAttachments(), $this->anchor_field );
  		
+ 		$form->setImageClass( $this->image_class );
  		$form->setAnchorIt( $this->getObjectIt() );
 
  		return $form;

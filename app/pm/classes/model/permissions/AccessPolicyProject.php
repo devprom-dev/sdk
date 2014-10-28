@@ -174,7 +174,7 @@ class AccessPolicyProject extends AccessPolicyBase
  		if ( count($access_map) == count($overriden_access) ) return false;
  	}
  	
- 	function getAttributeAccess( $action_kind, &$object, $attribute_refname ) 
+ 	function getAttributeAccess( $action_kind, &$object, $attribute_refname, $reference_class = '' ) 
  	{
  		if ( $this->access_it->count() > 0 )
  		{
@@ -186,7 +186,27 @@ class AccessPolicyProject extends AccessPolicyBase
 	
 				$access_map[$role_id] = $access > -1 
 						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
-						: null; 
+						: null;
+
+ 			 	// entity level access for references
+	 			if ( is_null($access_map[$role_id]) && $reference_class != '' )
+	 			{
+						$access = $this->access_it->getClassAccess( $role_id, getFactory()->getClass($reference_class) );
+			
+						$access_map[$role_id] = $access > -1 
+								? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+								: null; 
+		
+						if ( is_null($access_map[$role_id]) )
+						{
+			 				// only for backward compatibility
+							$access = $this->access_it->getEntityAccess( $role_id, $reference_class );
+				
+							$access_map[$role_id] = $access > -1 
+									? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+									: null;
+						} 
+	 			}
  			}
  			
  			$access = $this->calculateAccess($access_map);
@@ -205,7 +225,24 @@ class AccessPolicyProject extends AccessPolicyBase
  			
  			foreach( $this->getRoles() as $role_id )
  			{
-				$access = $this->access_it->getEntityAccess( $role_id, $object );
+				$access = $this->access_it->getClassAccess( $role_id, get_class($object) );
+	
+				$access_map[$role_id] = $access > -1 
+						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
+						: null; 
+ 			}
+
+ 			$access = $this->calculateAccess($access_map);
+ 			
+ 			if ( is_bool($access) ) return $access;
+
+ 			// only for backward compatibility
+ 			$access_map = array();
+ 			
+ 			foreach( $this->getRoles() as $role_id )
+ 			{
+ 				// obolete method
+				$access = $this->access_it->getEntityAccess( $role_id, $object->getEntityRefName() );
 	
 				$access_map[$role_id] = $access > -1 
 						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
@@ -277,6 +314,7 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_State':
 					case 'pm_Transition':
 					case 'pm_TransitionAttribute':
+					case 'WikiPageTemplate':
 						return $action_kind == ACCESS_READ;
 						
 					case 'pm_ChangeRequest':
@@ -290,9 +328,8 @@ class AccessPolicyProject extends AccessPolicyBase
 						return true;
 
 					case 'pm_ProjectUse':
-						return $action_kind == ACCESS_READ || 
-							$action_kind == ACCESS_MODIFY;
-						
+						return $action_kind == ACCESS_READ || $action_kind == ACCESS_MODIFY;
+							
 					case 'pm_Participant':
 					case 'pm_ProjectRole':
 					case 'pm_ParticipantRole':

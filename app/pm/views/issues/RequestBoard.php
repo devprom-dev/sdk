@@ -47,7 +47,7 @@ class RequestBoard extends PMPageBoard
  		
  		$this->task_uid_service = new ObjectUid('', getFactory()->getObject('Task'));
  		
-		$this->getObject()->addAttribute( 'Footer', '', '', false, false, '', 99999 );
+		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
  	}
  	
  	function buildRelatedDataCache()
@@ -249,6 +249,13 @@ class RequestBoard extends PMPageBoard
  		return 'IssueState';
  	}
  	
+ 	function getColumnVisibility( $attribute )
+ 	{
+ 		if ( $attribute == 'Basement' ) return array_sum($this->visible_column) > 0;
+ 		
+ 		return parent::getColumnVisibility( $attribute );
+ 	}
+ 	
 	function getColumnFields()
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
@@ -377,7 +384,7 @@ class RequestBoard extends PMPageBoard
 				
 				break;
 				
-			case 'Footer':
+			case 'Basement':
    				
 				echo '<div style="display:table;width:100%;margin-bottom:3px;height:23px;">';
 					echo '<div style="display:table-cell;text-align:left;">';

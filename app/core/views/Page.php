@@ -635,10 +635,21 @@
 			
 			$first_menu = count($values) > 0 ? array_shift($values) : array();
 
-			if ( count($first_menu['items']) < 1 )
+			if ( in_array($area['uid'], array('main','favs')) ) continue;
+
+			// remove area if there are no items in the first vertical subsection
+			if ( is_array($first_menu['items']) )
 			{
-				unset($areas[$key]);
+				$items = array_filter( $first_menu['items'], function($value) {
+						return $value['uid'] != '' && $value['uid'] != 'navigation-settings' ;
+				});
 			}
+			else
+			{
+				$items = array();	
+			}
+			
+			if ( count($items) < 1 ) unset($areas[$key]);
 		}
    
         $context = $this->getNavigationContext( $areas, $active_url );
@@ -661,6 +672,8 @@
 
         $script_service = new ScriptService();
         
+        $page_uid = get_class($this);
+        
         return array(
  			'inside' => count($first_menu['menus']) > 0,
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
@@ -680,7 +693,9 @@
  		    'active_area_uid' => $active_area_uid,
  		    'bottom_sections' => $bottom_sections,
  			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid),
-        	'javascript_paths' => $script_service->getJSPaths()
+        	'javascript_paths' => $script_service->getJSPaths(),
+        	'hint' => getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
+        	'page_uid' => $page_uid
  		);
  	}
  	
@@ -901,4 +916,9 @@
 		 
 		 return $ids;
  	}
+ 	
+ 	function getHint()
+	{
+		return '';
+	}
 }

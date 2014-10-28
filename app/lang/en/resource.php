@@ -2,6 +2,7 @@
 
 	
  $text_array = array (
+ 	'Итерации и задачи' => 'Iterations and tasks',
  	'Приглашение в проект' => 'Invitation into the project',
  	'Незавершенные задачи' => 'Open tasks',
  	'Руководители' => 'Management',
@@ -3186,7 +3187,10 @@
  	1862 => 'Enter the email address of the new participant. You can invite multiple participants by separating the addresses with a comma.',
  	1863 => 'Invitation to the project',
  	1864 => 'Invitation sent',
- 	1865 => 'You can send your colleagues invitations to participate in the project, to do this, enter e-mail addresses separated by a comma. You can do this later using menu Settings - Participants.'
+ 	1865 => 'You can send your colleagues invitations to participate in the project, to do this, enter e-mail addresses separated by a comma. You can do this later using menu Settings - Participants.',
+	1866 => 'Recent visit',
+ 	1867 => 'Recent action',
+	1868 => 'System name'
  );
 
 return $text_array;

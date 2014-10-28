@@ -47,7 +47,6 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
 		if ( $this->transition_it->get('IsReasonRequired') == 'Y' )
 		{
 			$object->setAttributeVisible( 'TransitionComment', true );
-			
 			$object->setAttributeRequired( 'TransitionComment', true );
 		}
 		

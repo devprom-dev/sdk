@@ -2,12 +2,16 @@
 
 namespace Devprom\ProjectBundle\Service\Tooltip;
 
+include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
+
 class BrokenTraceExplainService
 {
 	private $object_it;
 	
 	public function __construct( $object_id )
 	{
+		getSession()->addBuilder( new \WikiPageModelExtendedBuilder() );
+		
     	$this->object_it = getFactory()->getObject('WikiPage')->getExact($object_id);
 	}
 	

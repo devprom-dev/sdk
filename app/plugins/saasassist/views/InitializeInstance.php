@@ -223,7 +223,8 @@ class InitializeInstance extends Page
 				'kanban-demo' => text('saasassist28'),
 				'requirements-demo' => text('saasassist30'),
 				'scrum-demo' => text('saasassist31'),
-				'storymapping-demo' => text('saasassist33')
+				'storymapping-demo' => text('saasassist33'),
+				'demo-documenting' => text('saasassist42')
 		);
 		
 		$project_tpl = getFactory()->getObject('pm_ProjectTemplate');

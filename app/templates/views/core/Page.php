@@ -40,7 +40,7 @@
 		<ul>
 			<li><a target="_blank" href="http://devprom.ru/docs"><?=translate('документация')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 			<li><a target="_blank" href="http://devprom.ru/news"><?=translate('новости')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-			<li><a target="_blank" href="http://devprom.ru/download"><?=translate('обновления')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+			<li><a target="_blank" href="http://devprom.ru/download?updates"><?=translate('обновления')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 			<li><a target="_blank" href="http://support.devprom.ru"><?=translate('поддержка')?></a></li>
 		</ul>
 	  </footer>

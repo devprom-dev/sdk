@@ -22,7 +22,6 @@ include_once "predicates/RequestReleasePredicate.php";
 include_once "predicates/RequestDuplicatesOfFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";
-include_once "validators/ModelValidatorIssueTasks.php";
 
 class Request extends MetaobjectStatable 
 {

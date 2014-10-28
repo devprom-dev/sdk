@@ -36,14 +36,14 @@
  	
 	function getAttributes()
 	{
-		return array ( 'Caption', 'Codename', 'Template', 'Participants' );
+		return array ( 'Caption', 'CodeName', 'Template', 'Participants' );
 	}
 	
 	function getAttributeType( $attribute )
 	{
 		switch ( $attribute )
 		{
-			case 'Codename':
+			case 'CodeName':
 			case 'Caption':
 			case 'Participants':
 				return 'text'; 	
@@ -55,21 +55,21 @@
 
 	function getAttributeClass( $attribute )
 	{
-		global $model_factory;
-		
 		switch ( $attribute )
 		{
 			case 'Template':
-				return $model_factory->getObject('pm_ProjectTemplate');
+				return getFactory()->getObject('pm_ProjectTemplate');
 		}
 	}
 
 	function getAttributeValue( $attribute )
 	{
-		global $model_factory;
-		
 		switch ( $attribute )
 		{
+		    case 'Caption':
+		    case 'CodeName':
+		    	return "";
+		    	
 			default:
 				return parent::getAttributeValue( $attribute );
 		}
@@ -91,7 +91,7 @@
 		
 		switch ( $attribute )
 		{
-			case 'Codename':
+			case 'CodeName':
 				return translate('Кодовое название проекта');
 
 			case 'Caption':
@@ -113,7 +113,7 @@
  	{
  		switch( $attribute )
  		{
-			case 'Codename':
+			case 'CodeName':
 				return str_replace('%1', _getServerUrl(), text(479));
 
 			case 'Caption':

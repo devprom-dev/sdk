@@ -21,42 +21,8 @@ class Project extends Metaobject
  	function __construct( ObjectRegistrySQL $registry = null ) 
  	{
 		parent::__construct('pm_Project', $registry);
-		
+
 		$this->setSortDefault( new SortAttributeClause('Caption') );
-		
- 		$this->addPersister( new ProjectVPDPersister() );
-
-        $this->addAttribute( 'LinkedProject', 'REF_pm_ProjectId', translate('Связанные проекты'), false );
-
-        $this->addPersister( new ProjectLinkedPersister() );
- 		
- 		$this->setAttributeVisible( 'IsPollUsed', false );
- 		
- 		$this->setAttributeType( 'CodeName', 'VARCHAR' );
- 		
- 		$this->setAttributeType( 'Description', 'TEXT' );
- 		
- 		$this->setAttributeVisible( 'StartDate', false );
- 		
- 		$this->setAttributeVisible( 'FinishDate', false );
- 		
-		foreach ( array('Caption', 'CodeName') as $attribute )
-		{
-		    $this->addAttributeGroup($attribute, 'tooltip');
-		}
-		
-		$system_attributes = array(
-		        'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsKnowledgeUsed', 'IsBlogUsed', 'IsFileServer', 
-		        'MainWikiPage', 'StartDate', 'FinishDate', 'IsSubversionUsed', 'HasMeetings', 'IsConfigurations', 
-		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'RequirementsWikiPage', 'Tools', 'Language'
-		);
-		
- 		foreach ( $system_attributes as $attribute )
-		{
-			$this->addAttributeGroup($attribute, 'system');
-		}
-		
-		$this->removeAttribute('HasMeetings');
  	}
 	
 	function getMetadataCacheName()
@@ -127,20 +93,6 @@ class Project extends Metaobject
 		return $this->getByRef("Codename", $codename);
 	}
 
-	function IsAttributeRequired( $attr_name )
-	{
-		if ( $attr_name == 'Budget' )
-			return false;
-
-		if ( $attr_name == 'Blog' )
-			return false;
-			
-		if ( $attr_name == 'Version' )
-			return false;
-
-		return parent::IsAttributeRequired( $attr_name ); 
-	}
-	
 	function getAttributeUserName( $attr )
 	{
 		switch ( $attr )
@@ -355,6 +307,21 @@ class Project extends Metaobject
 	    }
 		
 		return preg_match ("/^[a-zA-Z0-9][a-zA-Z0-9\-\_]+[a-zA-Z0-9]?$/i", $code_name);
+	}
+	
+	function getDefaultAttributeValue( $attr )
+	{
+		switch( $attr )
+		{
+		    case 'Caption':
+		    	return translate('Проект').' '.($this->getRegistry()->Count() + 1);
+		    	
+		    case 'CodeName':
+		    	return 'project'.($this->getRegistry()->Count() + 1);
+		    	
+		    default:
+		    	return parent::getDefaultAttributeValue( $attr );
+		}
 	}
 	
 	function add_parms( $parms )

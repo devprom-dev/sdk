@@ -6,6 +6,8 @@ class FieldDictionary extends Field
 {
  	var $object, $style, $displayhelp, $options, $null_option;
 	
+ 	private $translate_options = false;
+ 	
 	function FieldDictionary( & $object ) 
 	{
 		$this->object = $object;
@@ -13,8 +15,6 @@ class FieldDictionary extends Field
 		$this->style = '';
 		$this->null_option = true;
 		
-		$this->options = $this->getOptions();
-
 		$this->displayhelp = is_object($this->object) && 
 			(is_a($this->object, 'Metaobject') || is_subclass_of($this->object, 'Metaobject')) && 
 			$this->object->getAttributeType('Description') != '' &&
@@ -31,6 +31,11 @@ class FieldDictionary extends Field
 	function setNullOption( $enabled )
 	{
 	    $this->null_option = $enabled;
+	}
+	
+	function translateOptions( $translate = true )
+	{
+		$this->translate_options = $translate;
 	}
 	
 	function hideHelp()
@@ -87,10 +92,12 @@ class FieldDictionary extends Field
 
 		while( !$entity_it->end() )
 		{
+			$title = $uid->getUidTitle($entity_it);
+			
 		    $options[] = array (
                 'value' => $entity_it->getId(),
                 'referenceName' => $entity_it->get('ReferenceName'),
-                'caption' => $uid->getUidTitle($entity_it),
+                'caption' => $this->translate_options ? translate($title) : $title,
                 'disabled' => false
             );
 
@@ -119,6 +126,8 @@ class FieldDictionary extends Field
 			<?php } ?>
 			<?
 			$valueinlist = false;
+			
+			$this->options = $this->getOptions();
 			
 			foreach( $this->options as $key => $option )
 			{
