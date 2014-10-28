@@ -4,7 +4,7 @@ class SDKSetup extends Installable
 {
     function check()
     {
-        return true;
+        return INSTALLATION_UID == '{75E2A7D9-4BD8-4bdc-8392-D1AA2308A383}';
     }
 
     function install()

@@ -16,6 +16,7 @@ include_once 'UpgradeMySQL.php';
 include_once 'UpgradeUserPictures.php';
 include_once 'SetupPhpOpCache.php';
 include_once 'SetupUserGroups.php';
+include_once 'SDKSetup.php';
 
 class InstallationFactory
 {
@@ -56,6 +57,7 @@ class InstallationFactory
 	        new UpgradeMySQL(),
         	new UpgradeUserPictures(),
         	new SetupUserGroups(),
+        	new SDKSetup(),
 	        new ClearCache()
 	    );
     }

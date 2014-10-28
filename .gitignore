@@ -1,6 +1,7 @@
 /app/ext/vendor
 /lib/vendor
-/dev/mysql/data
+/dev/mysql/data/*
+/dev/mysql/data/mysql/*
 /dev/apache/htdocs/cache
 /dev/apache/logs/*.log
 /dev/apache/logs/*.pid
