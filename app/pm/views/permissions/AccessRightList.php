@@ -4,16 +4,9 @@ class AccessRightList extends PMStaticPageList
 {
     var $object_access_it, $access_it;
 
-    function AccessRightList( $object )
-    {
-        parent::PageList( $object );
-    }
-
     function retrieve()
     {
-        global $model_factory;
-        	
-        $object_access = $model_factory->getObject('AccessObject');
+        $object_access = getFactory()->getObject('AccessObject');
 
         $this->object_access_it = $object_access->getAll();
         	
@@ -194,6 +187,37 @@ class AccessRightList extends PMStaticPageList
         }
     }
 
+    function drawRefCell2( $entity_it, $object_it, $attr )
+    {
+        switch ( $attr )
+        {
+            case 'ReferenceName':
+                switch ( $object_it->get('ReferenceType') )
+                {
+                    case 'O':
+                        
+                        $this->object_access_it->setStop( 'ReferenceName', $object_it->get('ReferenceName') );
+
+                        $uid = new ObjectUID;
+
+                        $it = $this->object_access_it->getObjectIt();
+                        	
+                        $uid->drawUidInCaption( $it );
+                        
+                        break;
+
+                    default:
+                        
+                        break;
+                }
+
+                break;
+
+            default:
+                return parent::drawRefCell( $entity_it, $object_it, $attr );
+        }
+    }
+    
     function getGroupFields()
     {
         $values = $this->getFilterValues();

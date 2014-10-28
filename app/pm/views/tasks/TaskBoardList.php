@@ -11,6 +11,8 @@ class TaskBoardList extends PMPageBoard
  	
  	private $priorities_array = array();
 
+ 	private $visible_column = array();
+ 	
  	function TaskBoardList( $object ) 
 	{
 		global $model_factory;
@@ -160,7 +162,7 @@ class TaskBoardList extends PMPageBoard
 		}
 	}
  	
- 	function drawRefCell( $object_it, $attr )
+ 	function drawRefCell( $ref_it, $object_it, $attr )
  	{
  		switch ( $attr )
  		{
@@ -175,7 +177,7 @@ class TaskBoardList extends PMPageBoard
  		    	if ( $object_it->get($attr) != '' )
  		    	{
 	 		        echo '<div style="padding:3px 0 3px 0;">';
-	 		            echo $object_it->getRef($attr)->getDisplayName();
+	 		            echo $ref_it->getDisplayName();
 	 		        echo '</div>';
  		    	}
  		        
@@ -183,7 +185,7 @@ class TaskBoardList extends PMPageBoard
  		        
  		    default:
 				echo '<div style="padding:3px 0 3px 0;">';
- 					parent::drawRefCell( $object_it, $attr );
+ 					parent::drawRefCell( $ref_it, $object_it, $attr );
  				echo '</div>';
  		}
  	}
@@ -210,24 +212,26 @@ class TaskBoardList extends PMPageBoard
 			
 			case 'UID':
 				
-				echo '<div>';
-					$this->drawCheckbox($object_it);
-
-					parent::drawCell( $object_it, $attr );
+				echo '<div class="title-on-card">';
+					echo '<div class="left-on-card">';
+						$this->drawCheckbox($object_it);
+						parent::drawCell( $object_it, $attr );
+					echo '</div>';
+	
+					if ( $this->visible_column['OrderNum'] )
+					{
+						echo '<div class="right-on-card">';
+							echo '<span class="order" title="'.translate('Номер').'">';
+								echo $object_it->get('OrderNum');
+							echo '</span>';
+						echo '</div>';
+					}
 				echo '</div>';
-
+				
 				break;
 
 			case 'OrderNum':
-				if ( !$object_it->IsFinished() && getFactory()->getAccessPolicy()->can_modify($object_it) )
-				{
-					echo '<div style="float:left;padding:6px 0 3px 0;width:40%;">';
-						$method = new AutoSaveFieldWebMethod( $object_it, 'OrderNum' );
-						$method->setInput();
-						$method->draw();
-					echo '</div>';
-					break;
-				}				
+				break;
 			
 			default:
 				parent::drawCell( $object_it, $attr );
@@ -401,7 +405,7 @@ class TaskBoardList extends PMPageBoard
 		<script type="text/javascript">
 			$(document).ready( function()
 			{
-				boardItemOptions.itemFormUrl = '<?=$this->getObject()->getPage()?>';
+				boardItemOptions.itemFormUrl = '/tasks/board';
 				boardItemOptions.resetParms = boardItemOptions.resetParms + "&taskstate=all"; 
 				
 				if ( typeof draggableOptions != 'undefined' )
@@ -422,8 +426,17 @@ class TaskBoardList extends PMPageBoard
 	
 	function getRenderParms()
 	{
-		$this->buildRelatedDataCache();
+ 		$this->buildRelatedDataCache();
 		
-		return parent::getRenderParms();
+		$parms = parent::getRenderParms();
+		
+		foreach( array('OrderNum') as $column )
+		{
+			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
+			
+			$this->visible_column[$column] = $this->getColumnVisibility($column);
+		}
+		
+		return $parms; 
 	}
 }

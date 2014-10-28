@@ -156,23 +156,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 						{
 							echo '<td id="'.$cell_id.'" '.($width != '' ? 'width="'.$width.'"' : '').' title="'.$comment.'" style="text-align:'.$align.';color:'.$color.'">';
 							
-								$ref_it = $list->getReferenceIt($attr);
-				
-								if ( $ref_it->count() > 0 )
-								{
-									$ref_key = $ref_it->getIdAttribute();
-					
-									$ref_ids = preg_split('/,/', $it->get($attr));
-					
-									$ref_it = $ref_it->object->createCachedIterator(
-											array_values(array_filter($ref_it->getRowset(), function($value) use ($ref_key, $ref_ids)
-											{
-												return in_array($value[$ref_key], $ref_ids);
-											}))
-										);
-								}
-
-								$list->drawRefCell( $ref_it, $it, $attr);
+								$list->drawRefCell( $list->getFilteredReferenceIt($attr, $it->get($attr)), $it, $attr);
 								
        						echo '</td>';
 						} 

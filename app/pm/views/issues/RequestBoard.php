@@ -27,7 +27,7 @@ class RequestBoard extends PMPageBoard
  	
  	private $method_spend_time = null;
  	
- 	private $visible_columns = array();
+ 	private $visible_column = array();
  	
  	private $spent_time_title = '';
  	
@@ -46,6 +46,8 @@ class RequestBoard extends PMPageBoard
  		parent::__construct( $object );
  		
  		$this->task_uid_service = new ObjectUid('', getFactory()->getObject('Task'));
+ 		
+		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
  	}
  	
  	function buildRelatedDataCache()
@@ -203,13 +205,6 @@ class RequestBoard extends PMPageBoard
 		}
  	}
 
-	function getColumns()
-	{
-		$this->object->addAttribute( 'Footer', '', '', false, false, '', 99999 );
-		
-		return parent::getColumns();
-	}
-
 	function getGroupDefault()
 	{
 		if ( $this->getTable()->hasCrossProjectFilter() ) return 'Project';
@@ -252,6 +247,13 @@ class RequestBoard extends PMPageBoard
  	function getBoardAttributeClassName()
  	{
  		return 'IssueState';
+ 	}
+ 	
+ 	function getColumnVisibility( $attribute )
+ 	{
+ 		if ( $attribute == 'Basement' ) return array_sum($this->visible_column) > 0;
+ 		
+ 		return parent::getColumnVisibility( $attribute );
  	}
  	
 	function getColumnFields()
@@ -318,26 +320,7 @@ class RequestBoard extends PMPageBoard
 		}
 	}
 
-	function IsNeedToDisplay( $attr ) 
-	{
-		switch( $attr ) 
-		{
-			case 'UID':
-			case 'Caption':
-			case 'Footer':
-			case 'Attachment':
-			case 'RecentComment':
-				return true;
-
-			case 'Fact':
-				return getSession()->getProjectIt()->getMethodologyIt()->IsTimeTracking();
-				
-			default:
-				return false;
-		}
-	}
-
-	function drawRefCell( $object_it, $attr )
+	function drawRefCell( $ref_it, $object_it, $attr )
 	{
 		switch ( $attr )
 		{
@@ -345,7 +328,7 @@ class RequestBoard extends PMPageBoard
 				if ( $object_it->get($attr) < 1 || $object_it->get('OwnerPhotoId') > 0 ) return;
 				
 				echo '<div style="padding:0 0 0 0;overflow-y:hidden;height:16px;">';
-					echo $object_it->getRef($attr)->getDisplayName();
+					echo $ref_it->getDisplayName();
 				echo '</div>';
 				
 				break;
@@ -361,7 +344,7 @@ class RequestBoard extends PMPageBoard
 				}
 				else
 				{
-					$value = $object_it->getRef('Author')->getDisplayName();
+					$value = $ref_it->getDisplayName();
 				}
 					
 				echo '<div style="overflow:hidden;height:1.7em;word-break:break-all" title="'.$value.'">';
@@ -371,7 +354,7 @@ class RequestBoard extends PMPageBoard
 				break;
 				
 			default:
-				parent::drawRefCell( $object_it, $attr );
+				parent::drawRefCell( $ref_it, $object_it, $attr );
 		}
 	}
 
@@ -380,19 +363,28 @@ class RequestBoard extends PMPageBoard
 		switch( $attr )
 		{
 			case 'UID':
-				echo '<div>';
-					$this->drawCheckbox($object_it);
-
-					$type_image = $this->types_array[$object_it->get('Type')];
-					
-					if ( $type_image != '' ) echo '<img src="/images/'.$type_image.'" style="float:left;padding:3px 3px 0 0px;"> ';
-
-					parent::drawCell( $object_it, $attr );
+				
+				echo '<div class="title-on-card">';
+					echo '<div class="left-on-card">';
+						$this->drawCheckbox($object_it);
+						$type_image = $this->types_array[$object_it->get('Type')];
+						if ( $type_image != '' ) echo '<img src="/images/'.$type_image.'" style="float:left;padding:3px 3px 0 0px;"> ';
+						parent::drawCell( $object_it, $attr );
+					echo '</div>';
+	
+					if ( $this->visible_column['OrderNum'] )
+					{
+						echo '<div class="right-on-card">';
+							echo '<span class="order" title="'.translate('Номер').'">';
+								echo $object_it->get('OrderNum');
+							echo '</span>';
+						echo '</div>';
+					}
 				echo '</div>';
-			
+				
 				break;
 				
-			case 'Footer':
+			case 'Basement':
    				
 				echo '<div style="display:table;width:100%;margin-bottom:3px;height:23px;">';
 					echo '<div style="display:table-cell;text-align:left;">';
@@ -432,7 +424,7 @@ class RequestBoard extends PMPageBoard
 						if ( $this->visible_column['Attachment'] )
 						{
 							echo '<div style="display: inline-block;vertical-align:bottom;">';
-								parent::drawRefCell( $object_it, 'Attachment' );
+								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
 							echo '</div>';
 						}
 					echo '</div>';
@@ -478,23 +470,6 @@ class RequestBoard extends PMPageBoard
 						}
 					echo '</div>';
 				echo '</div>';
-
-				if ( $this->visible_column['OrderNum'] )
-				{
-    				echo '<div style="padding:3px 0 3px 0;vertical-align:bottom;">';
-    				
-					if ( $this->visible_column['OrderNum'] )
-					{
-						echo '<div style="float:left;padding:4px 0 4px 0;width:40%;">';
-							$method = new AutoSaveFieldWebMethod( $object_it, 'OrderNum' );
-							$method->setInput();
-							$method->draw();
-						echo '</div>';
-					}
-					
-					echo '<div style="clear:both;"></div>';
-					echo '</div>';
-				}
 
 				break;						 
 
@@ -713,7 +688,7 @@ class RequestBoard extends PMPageBoard
 		
 		$(document).ready( function()
 		{
-			boardItemOptions.itemFormUrl = '<?=$this->object->getPage()?>';
+			boardItemOptions.itemFormUrl = '/issues/board';
 			
 			board( boardItemOptions );
 

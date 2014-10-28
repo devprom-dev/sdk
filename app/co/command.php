@@ -1,15 +1,7 @@
 <?php
 
-include('../common.php');
-include SERVER_ROOT_PATH.'co/classes/COSession.php';
+include dirname(__FILE__).'/../app/front.php';
 include SERVER_ROOT_PATH.'/core/c_command.php';
-include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
-
-$plugins = new PluginsFactory();
- 
-$model_factory = new ModelFactoryExtended($plugins);
-  
-$session = new COSession();
 
 $class = $_REQUEST['class'];
 $page = $_REQUEST['page'];

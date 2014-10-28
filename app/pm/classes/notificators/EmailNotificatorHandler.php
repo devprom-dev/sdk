@@ -109,4 +109,29 @@ class EmailNotificatorHandler
 							
 		return $notification_type == 'all' || $notification_type == 'system';
 	}
+	
+	function participantHasAccess( $participant_it, $object_it )
+	{
+		if ( $object_it->getId() == '' ) return false;
+		
+		$policy = getFactory()->getAccessPolicy();
+		
+		if ( $policy instanceof AccessPolicyBase )
+		{
+			$roles = $participant_it->getRoles();
+			 
+		    foreach( $roles as $key => $role )
+	        {
+	            if ( $role < 1 ) $roles[$key] = $policy->getRoleByBase( $role );
+	        }
+			
+	        $class_name = get_class($policy);
+	        
+	        $policy = new $class_name(getFactory()->getCacheService());
+	        
+	        $policy->setRoles($roles);
+		}
+		
+		return $policy->getObjectAccess(ACCESS_READ, $object_it) && $policy->getEntityAccess(ACCESS_READ, $object_it->object);
+	}
 }

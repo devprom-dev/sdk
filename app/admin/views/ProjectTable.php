@@ -36,6 +36,8 @@ class ProjectTable extends PageTable
 	
 	function getNewActions()
 	{
+		if ( !getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) ) return array();
+			
 		return array(
 				array (
 						'name' => translate('Создать'),

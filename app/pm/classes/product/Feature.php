@@ -24,16 +24,6 @@ class Feature extends Metaobject
 		return getSession()->getApplicationUrl($this).'features/list?';
 	}
 	
-	function IsAttributeRequired( $att_name ) 
-	{
-		if ( $att_name == 'Description' )
-		{
-			return false;
-		}
-		
-		return parent::IsAttributeRequired( $att_name );
-	}
-
 	function getByRequests( $request_it )
 	{
 		$requests = array();

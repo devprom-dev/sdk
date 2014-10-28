@@ -2,6 +2,15 @@
 
 class TaskCommand extends Command
 {
+	protected function getData()
+	{
+		return getFactory()->getObject('co_ScheduledJob')->getRegistry()->Query(
+				array (
+						new FilterAttributePredicate('ClassName', strtolower(get_class($this)))
+				)
+		);
+	}
+	
 	protected function getJob( $ref_name = '' )
 	{
 		if ( $ref_name == '' ) $ref_name = get_class($this);

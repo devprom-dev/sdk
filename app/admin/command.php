@@ -1,6 +1,6 @@
 <?php
 
-include('common.php');
+include dirname(__FILE__).'/../app/bootstrap.php';
 include(dirname(__FILE__).'/../core/c_command.php');
 
 $class = $_REQUEST['class'];

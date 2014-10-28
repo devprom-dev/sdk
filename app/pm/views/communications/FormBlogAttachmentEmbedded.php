@@ -63,9 +63,7 @@ class FormBlogAttachmentEmbedded extends PMFormEmbedded
             return parent::getItemDisplayName( $object_it );
         }
 
-        return '<a class=modify_image href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('Content').'">'.
-                '<img src="/images/attach.png" style="margin-bottom:-4px;"> '.$object_it->getFileName('Content').'</a>'.
-                ' ('.$object_it->getFileSizeKb('Content').' Kb)';
+        return $object_it->getFileLink();
     }
 
     function getShowMenu()

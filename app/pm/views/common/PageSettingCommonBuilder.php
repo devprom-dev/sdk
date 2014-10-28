@@ -104,8 +104,20 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         // tasks table
         
         $setting = new PageListSetting('TaskBoardList');
+
+        $columns = array('UID', 'Caption', 'Assignee', 'AssigneeUser', 'Progress');
+
+        if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
+		{
+		    $columns[] = 'OrderNum';
+		}
+        
+        $setting->setVisibleColumns($columns);
         
         $settings->add( $setting );
+
+        
+        
         
         $setting = new PageTableSetting('TaskBoardTable');
         

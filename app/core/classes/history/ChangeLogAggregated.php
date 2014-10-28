@@ -11,5 +11,18 @@ class ChangeLogAggregated extends ChangeLog
         parent::__construct( new ChangeLogAggregatedRegistry($this) );
         
  		$this->addPersister( new ChangeLogAggregatePersister() );
+ 		
+   		$system_attributes = array (
+		        'ObjectId',
+		        'ObjectUrl',
+		        'VisibilityLevel',
+		        'EntityRefName',
+		        'ClassName'
+		);
+		
+		foreach( $system_attributes as $attribute )
+		{
+ 			$this->addAttributeGroup($attribute, 'system');
+		}
     }
 }

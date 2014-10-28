@@ -145,6 +145,26 @@ class PMWikiList extends PMPageList
 				
 				break;
 				
+		    case 'WikiPageFile':
+		        
+		        $files = array();
+		        
+		        while( !$entity_it->end() )
+		        {
+		            $files[] = array (
+		                    'type' => $entity_it->IsImage('Content') ? 'image' : 'file',
+		                    'url' => $entity_it->getFileUrl(),
+		                    'name' => $entity_it->getFileName('Content'),
+		                    'size' => $entity_it->getFileSizeKb('Content')
+		            );  
+		            
+		            $entity_it->moveNext();
+		        }
+
+		        echo $this->getTable()->getView()->render('core/Attachments.php', array( 'files' => $files ));
+		        
+		        break;
+				
 			default:
 				parent::drawRefCell( $entity_it, $object_it, $attr );
 		}

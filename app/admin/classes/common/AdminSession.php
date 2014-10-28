@@ -16,7 +16,7 @@ class AdminSession extends SessionBase
 		
 		getLanguage();
 	}
-	
+
  	function getSite()
  	{
  	    return 'admin';

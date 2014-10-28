@@ -1,6 +1,6 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
+include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 class ClearCache extends Installable
 {
@@ -24,9 +24,11 @@ class ClearCache extends Installable
 	// makes install actions
 	function install()
 	{
-		$lock = new GlobalLock();
+		$lock = new CacheLock();
 		
-		$lock->lock();
+		$lock->Wait(120);
+		
+		$lock->Lock();
 		
 		$cache_dir = defined('CACHE_PATH') ? CACHE_PATH : SERVER_ROOT_PATH.'cache/';
 		
@@ -35,8 +37,6 @@ class ClearCache extends Installable
 		$result = $this->full_delete( rtrim($cache_dir,'/').'/' );
 		
 		if ( !$result && method_exists($this, 'info') ) $this->info( 'Unable to clear cache directory: '.$cache_dir );
-		
-		$lock->release();
 		
 		return true;
 	}

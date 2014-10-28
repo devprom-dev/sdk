@@ -27,7 +27,6 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
     			'Comment' => '3',
     			'ChangeLog' => '3',
     			'ChangeLogAggregated' => '3',
-    			'Participant' => '3',
     			'SpentTime' => '3',
      	        'Project' => '3',
     			'ProjectPage' => 'KnowledgeBase'

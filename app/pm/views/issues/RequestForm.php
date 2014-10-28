@@ -15,6 +15,7 @@ include "FieldTasksRequest.php";
 include "FieldLinkedRequest.php";
 include "FieldRequestState.php";
 include "FieldRequestTagTrace.php";
+include "FieldIssueDeadlines.php";
 
 class RequestForm extends PMPageForm
 {
@@ -67,18 +68,6 @@ class RequestForm extends PMPageForm
 		if ( $template_it->getId() < 1 ) return;
 		
 		$this->template_it = $template_it;
-	}
-	
-	function getModelValidator()
-	{
-		$validator = parent::getModelValidator();
-
-		if ( $this->IsAttributeRequired('Fact') )
-		{
-			$validator->addValidator( new ModelValidatorEmbeddedForm('Fact', 'Capacity') );
-		}
-		
-		return $validator;
 	}
 	
 	public function buildMethods()
@@ -194,8 +183,7 @@ class RequestForm extends PMPageForm
 				return new FieldTasksRequest( $this->object_it );
 
 			case 'Deadlines':
-				return new FieldIssueTrace( $this->object_it, 
-					$model_factory->getObject('RequestTraceMilestone') );
+				return new FieldIssueDeadlines( $this->object_it );
 					
 			case 'State':
 				return new FieldRequestState( $this->object_it );
@@ -584,7 +572,7 @@ class RequestForm extends PMPageForm
 		
 		$url = getFactory()->getObject('PMReport')->getExact('allissues')->get('Url');
     											
-		$references = array ('Function', 'Author', 'Priority', 'Owner');
+		$references = array ('Function', 'Author', 'Priority');
 		
 	    $attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->getObject() );
         
@@ -606,7 +594,15 @@ class RequestForm extends PMPageForm
 	   		);
 		}
 
-   		$refs_actions['Type'] = array(
+		if ( $object_it->object->getAttributeType('Owner') != '' )
+		{
+	   		$refs_actions['Owner'] = array(
+	   				'name' => text(1828),
+					'url' => $url.'&owner='.$object_it->getRef('Owner')->get('SystemUser')
+	   		);
+		}
+		
+		$refs_actions['Type'] = array(
    				'name' => text(1828),
 				'url' => $url.'&type='.$object_it->getRef('Type')->get('ReferenceName')
    		);

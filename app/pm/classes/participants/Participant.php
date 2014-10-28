@@ -1,5 +1,7 @@
 <?php
 
+include_once SERVER_ROOT_PATH."pm/classes/communications/Notification.php";
+
 include "ParticipantIterator.php";
 include "predicates/ParticipantActivePredicate.php";
 include "predicates/ParticipantBaseRoleNamePredicate.php";

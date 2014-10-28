@@ -15,7 +15,7 @@ class AccessPolicy
  	
  	function __construct( $cache_service )
  	{
- 		$this->setCacheService( is_object($cache_service) ? $cache_service : getCacheService() );
+ 		$this->setCacheService( is_object($cache_service) ? $cache_service : getFactory()->getCacheService() );
 	
  		$this->data = $this->getCacheService()->get('access-policy-'.get_class($this));
  	}
@@ -62,14 +62,14 @@ class AccessPolicy
 		return $this->check_access( ACCESS_CREATE, $object, null );
 	}
 
-	function can_read_attribute( &$object, $attribute_refname ) 
+	function can_read_attribute( &$object, $attribute_refname, $reference_class = '' ) 
 	{
-		return $this->check_access_attribute( ACCESS_READ, $object, $attribute_refname );
+		return $this->check_access_attribute( ACCESS_READ, $object, $attribute_refname, $reference_class );
 	}
 	
-	function can_modify_attribute( &$object, $attribute_refname ) 
+	function can_modify_attribute( &$object, $attribute_refname, $reference_class = '' ) 
 	{
-		return $this->check_access_attribute( ACCESS_MODIFY, $object, $attribute_refname );
+		return $this->check_access_attribute( ACCESS_MODIFY, $object, $attribute_refname, $reference_class );
 	}
 	
 	function can_read( &$target ) 
@@ -125,12 +125,12 @@ class AccessPolicy
 		return $this->check_roles_access( $action, $object, $object_it );
 	}
 	
-	function check_access_attribute( $action, &$object, $attribute_refname ) 
+	function check_access_attribute( $action, &$object, $attribute_refname, $reference_class ) 
 	{
-		return $this->check_roles_access_attribute($action, $object, $attribute_refname);
+		return $this->check_roles_access_attribute($action, $object, $attribute_refname, $reference_class);
 	}
 	
-	function check_roles_access_attribute( $action, &$object, $attribute_refname ) 
+	function check_roles_access_attribute( $action, &$object, $attribute_refname, $reference_class ) 
 	{
 		if ( !is_object($object) ) throw new Exception('Object is required');
 		
@@ -145,7 +145,7 @@ class AccessPolicy
 			if ( isset($this->data[$key]) ) return $this->data[$key];
 		}
 		 
-		return $this->data[$key] = $this->getAttributeAccess($action, $object, $attribute_refname);
+		return $this->data[$key] = $this->getAttributeAccess($action, $object, $attribute_refname, $reference_class);
 	}
 	
 	function check_roles_access( $action, &$object, $object_it ) 
@@ -191,7 +191,7 @@ class AccessPolicy
  		return true; 
  	}
  	
- 	public function getAttributeAccess( $action_kind, &$object, $attribute_refname ) 
+ 	public function getAttributeAccess( $action_kind, &$object, $attribute_refname, $reference_class = '' ) 
  	{
  		return true; 
  	}

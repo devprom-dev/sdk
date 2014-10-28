@@ -35,10 +35,11 @@ class IssueAttachment extends BaseEntity {
     private $originalFilename;
 
     /**
-     * @ORM\Column(type="integer", name="ObjectId")
-     * @var integer
+     * @ORM\ManyToOne(targetEntity="Issue", inversedBy="attachments")
+     * @ORM\JoinColumn(name="ObjectId", referencedColumnName="pm_ChangeRequestId")
+     * @var Issue
      */
-    private $issueId;
+    private $issue;
 
     /**
      * @ORM\Column(type="string", name="FileMime")
@@ -59,19 +60,19 @@ class IssueAttachment extends BaseEntity {
     private $file;
 
     /**
-     * @param int $issueId
+     * @param Issue $issue
      */
-    public function setIssueId($issueId)
+    public function setIssue($issue)
     {
-        $this->issueId = $issueId;
+        $this->issue = $issue;
     }
 
     /**
-     * @return int
+     * @return Issue
      */
-    public function getIssueId()
+    public function getIssue()
     {
-        return $this->issueId;
+        return $this->issue;
     }
 
     /**

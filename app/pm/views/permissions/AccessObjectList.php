@@ -6,16 +6,15 @@ class AccessObjectList extends PMPageList
 
     function __construct( $object, $object_it )
     {
-        parent::__construct( $object );
-        
         $this->object_it = $object_it;
-    }
 
-    function getIterator()
-    {
-        return $this->object_it->getId() > 0 
-            ? $this->object->getObjectAccessIt( $this->object_it )
-            : $this->object->getEmptyIterator();
+    	$registry = new AccessObjectRegistry($object);
+    	
+    	$registry->setObjectIt($this->object_it);
+        
+    	$object->setRegistry($registry);
+    	
+        parent::__construct( $object );
     }
 
     function IsNeedToDisplay( $attr )

@@ -11,7 +11,7 @@ include SERVER_ROOT_PATH."core/classes/model/events/ChangesWaitLockReleaseTrigge
 include SERVER_ROOT_PATH."core/classes/versioning/triggers/SnapshotDeleteCascadeTrigger.php";
 include SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."core/classes/project/PortfolioCommonBuilder.php";
-
+include SERVER_ROOT_PATH."core/classes/project/ProjectMetadataBuilder.php";
 
 class SessionBase
 {
@@ -34,7 +34,8 @@ class SessionBase
  				array (
 		 	            new ObjectMetadataModelBuilder(),
 		 	            new ResourceBuilderLanguageFiles(),
-		 	            new ResourceBuilderPluginsLanguageFiles()
+		 	            new ResourceBuilderPluginsLanguageFiles(),
+ 						new ProjectMetadataBuilder()
  				)
  		);
  		

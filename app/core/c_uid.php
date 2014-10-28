@@ -288,7 +288,20 @@
  		return $text;
  	}
  	
-	function getUidIconGlobal( $object_it, $need_project = true)
+  	function getUidOnly( $object_it )
+ 	{
+ 		if ( !$this->hasUid( $object_it ) ) return '';
+ 		
+ 		$info = $this->getUIDInfo( $object_it );
+ 		
+        $text = '['.$info['uid'].'] ';
+		
+ 		if ( $info['alien'] ) $text .= ' {'.$info['project'].'} ';
+
+ 		return $text;
+ 	}
+ 	
+ 	function getUidIconGlobal( $object_it, $need_project = true)
 	{
  		if ( !$this->hasUid( $object_it ) ) return '';
  		

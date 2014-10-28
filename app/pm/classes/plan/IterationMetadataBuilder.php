@@ -10,5 +10,8 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Release' ) return;
 
     	$metadata->addPersister( new CapacityPersister() );
+    	
+    	$metadata->setAttributeRequired('FinishDate', !getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease()); 
+    	$metadata->setAttributeRequired('InitialVelocity', false);
     }
 }

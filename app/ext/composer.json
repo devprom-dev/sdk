@@ -47,7 +47,7 @@
         "doctrine/doctrine-migrations-bundle": "dev-master",
         "friendsofsymfony/user-bundle": "*",
         "symfony/symfony": "2.2.*",
-        "symfony/assetic-bundle": "2.3.*",
+        "symfony/assetic-bundle": "2.*",
         "symfony/twig-bundle": "2.2.*",
         "symfony/framework-bundle": "2.2.*",
         "symfony/security-bundle": "2.2.*",

@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
 
 define('TASKS_UID', 1);
@@ -226,58 +228,20 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	        
 	        $this->session->setParticipantIt( $committer_it );
 	    }
-	    
+
 	    foreach( $objects as $object_it )
 	    {
 	    	$this->info( "Process object: ".$object_it->getId() );
-	    	
-	    	$state_object = getFactory()->getObject($object_it->object->getStateClassName());
-	    	
-	    	$source_it = $state_object->getRegistry()->Query(
-	    			array (
-	    					new FilterAttributePredicate('ReferenceName', $object_it->get('State')),
-	    					new FilterVpdPredicate($object_it->get('VPD'))
-	    			)
-	    	);
 
-	    	$this->info( "Source state: ".$source_it->getId() );
-	    	
-		    $target_it = $state_object->getRegistry()->Query(
-	    			array (
-	    					$target_state == 'resolve'
-	    							? new FilterAttributePredicate('IsTerminal', 'Y')
-	    							: new FilterAttributePredicate('ReferenceName', $target_state),
-	    					new FilterVpdPredicate($object_it->get('VPD')),
-	    					new SortAttributeClause('OrderNum')
-	    			)
-	    	);
-	    	
-	    	$this->info( "Target state: ".$target_it->getId() );
-		    
-		    $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
-		    		array (
-		    				new FilterAttributePredicate('SourceState', $source_it->getId()),
-		    				new FilterAttributePredicate('TargetState', $target_it->getId())
-		    		)
-		    );
-
-	    	if ( $transition_it->getId() > 0 )
+	    	try
 	    	{
-				$object_it->modify( array( 
-				        'Transition' => $transition_it->getId(),
-						'TransitionComment' => $comments 
-				));
+				$service = new WorkflowService($object_it->object, Logger::getLogger('SCM'));
 				
-			    getFactory()->getEventsManager()->
-			    		executeEventsAfterBusinessTransaction(
-			    				$object_it->object->getExact($object_it->getId()), 'WorklfowMovementEventHandler'
-	   					);
-			    		
-			    $this->info( "Object has been moved" );
+		    	$service->moveToState($object_it, $target_state, $comments);
 	    	}
-	    	else
+	    	catch( \Exception $e )
 	    	{
-	    		$this->info( "Transition not found" );
+	    		Logger::getLogger('SCM')->error($e->getMessage());
 	    	}
 	    }
 	}

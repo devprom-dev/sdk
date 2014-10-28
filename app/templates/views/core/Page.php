@@ -11,7 +11,7 @@
     	<link href="/styles/jquery-ui/jquery.ui.1.8.16.ie.css" rel="stylesheet">
 	<![endif]-->
 	<link title="" type="application/rss+xml" rel="alternate" href="/rss"/>
-	<link rel="stylesheet" href="<?=getSession()->getApplicationUrl()?>scripts/css?v=<?=$current_version?>" type="text/css" media="screen">
+	<link rel="stylesheet" href="<?=getSession()->getApplicationUrl()?>scripts/css/?v=<?=$current_version?>" type="text/css" media="screen">
 	<?php $view['slots']->output('_header'); ?>
    	<script src="/cache?v=<?=$current_version?>&l=<?=$language_code?>" type="text/javascript" charset="UTF-8"></script>
   </head>
@@ -40,7 +40,7 @@
 		<ul>
 			<li><a target="_blank" href="http://devprom.ru/docs"><?=translate('документация')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 			<li><a target="_blank" href="http://devprom.ru/news"><?=translate('новости')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-			<li><a target="_blank" href="http://devprom.ru/download"><?=translate('обновления')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+			<li><a target="_blank" href="http://devprom.ru/download?updates"><?=translate('обновления')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 			<li><a target="_blank" href="http://support.devprom.ru"><?=translate('поддержка')?></a></li>
 		</ul>
 	  </footer>
@@ -59,12 +59,13 @@
         devpromOpts.language = '<?=$language_code?>';
         devpromOpts.datepickerLanguage = '<?=$datelanguage?>';
         devpromOpts.dateformat = '<?=$dateformat?>';
-        devpromOpts.template = '<?=$project_template?>';
         devpromOpts.saveButtonName = '<?=translate('Сохранить')?>';
         devpromOpts.closeButtonName = '<?=translate('Отменить')?>';
         devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
+        devpromOpts.template = '<?=$project_template?>';
         devpromOpts.mathJaxLib = '<?=(defined('MATH_JAX_LIB_SRC') ? MATH_JAX_LIB_SRC : "")?>';
-		<?php if ( !defined('METRICS_CLIENT') || METRICS_CLIENT ) { $global_url = parse_url(_getServerUrl()); ?>
+        devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
+        <?php if ( !defined('METRICS_CLIENT') || METRICS_CLIENT ) { $global_url = parse_url(_getServerUrl()); ?>
 		devpromOpts.url = "<?=$global_url['scheme']?>://devprom.ru/rx";
 		devpromOpts.iid = "<?=INSTALLATION_UID?>";
 		devpromOpts.version = "<?=$current_version?>";

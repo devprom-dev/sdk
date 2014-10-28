@@ -26,7 +26,7 @@ foreach ( $items as $item_key => $item )
             
             unset($items[$item_key]['items'][$child_key]);
         }
-        
+
         $items[$item_key]['count']++;
     }
 }

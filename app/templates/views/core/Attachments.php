@@ -16,7 +16,7 @@ foreach( $files as $file )
 {
 	$actions[] = array(
 		'name' => $file['name'].' ('.$file['size'].'KB)',
-		'url' => $file['type'] == 'image' ? $file['url'].'.png' : $file['url'],
+		'url' => $file['type'] == 'image' ? $file['url'].'&.png' : $file['url'],
 		'class' => $file['type'] == 'image' ? "image_attach" : ""
 	);
 }

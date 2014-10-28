@@ -53,6 +53,8 @@ class ReportSpentTimeList extends PMStaticPageList
 		});
 		
 		$request = getFactory()->getObject('pm_ChangeRequest');
+		
+		$request->resetPersisters();
 
 		$this->request_it = count($items) > 0 
 			? $request->getRegistry()->Query( array(new FilterInPredicate($items)) )

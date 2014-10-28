@@ -29,8 +29,6 @@ class PageForm extends MetaObjectForm
      
   	function PageForm( $object )
  	{
- 		$this->model_validator = new ModelValidator();
-
  		parent::__construct( $object );
 
  		$this->setRedirectUrl( $this->buildRedirectUrl() );
@@ -38,6 +36,55 @@ class PageForm extends MetaObjectForm
  		$this->system_attributes = $this->buildSystemAttributes();
  		
  		$this->buildRelatedDataCache();
+ 	}
+ 	
+ 	function buildModelValidator()
+ 	{
+ 		$validator = new ModelValidator();
+ 		
+		$type_validation_attrs = array();
+		
+		// build specific field validators
+		foreach( $this->getObject()->getAttributes() as $attribute => $data )
+		{
+			if ( $this->getObject()->IsAttributeVisible($attribute) )
+			{
+				$field = $this->createFieldObject($attribute);
+				
+				if ( is_null($field) )
+				{
+					$type_validation_attrs[] = $attribute;
+					continue;
+				}
+				
+				$field_validator = $field->getValidator();
+				
+				if ( $field_validator instanceof ModelValidatorType )
+				{ 
+					if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
+					
+					$type_validation_attrs[] = $attribute;
+				}
+				else
+				{
+					$validator->addValidator($field_validator);
+				}
+			}
+			else
+			{
+				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
+				
+				$type_validation_attrs[] = $attribute;
+			}
+		}
+		
+		// basic (type based) validation used for hidden fields and simple types (int, string, etc.) 
+		if ( count($type_validation_attrs) > 0 )
+		{
+			$validator->addValidator(new ModelValidatorTypes($type_validation_attrs));
+		}
+
+ 		return $validator;
  	}
  	
  	function buildSystemAttributes()
@@ -193,6 +240,11 @@ class PageForm extends MetaObjectForm
 	
 	function getModelValidator()
 	{
+		if ( !is_object($this->model_validator) )
+		{
+			$this->model_validator = $this->buildModelValidator();
+		}
+		
 		return $this->model_validator;
 	}
  	
@@ -231,7 +283,7 @@ class PageForm extends MetaObjectForm
 	
   	function getCaption() 
  	{
-		return $this->object->getDisplayName();
+		return translate($this->object->getDisplayName());
 	}
 
 	function createFieldObject( $name ) 
@@ -560,7 +612,9 @@ class PageForm extends MetaObjectForm
 		    'scripts' => $scripts,
 		    'draw_sections' => true,
 		    'form_body_template' => $this->getBodyTemplate(),
-		    'title' => $this->getPageTitle()
+		    'title' => $this->getPageTitle(),
+			'button_save_title' => translate('Сохранить'),
+			'transition' => $this->getTransitionIt()->getId()
 		);
 	}
 	

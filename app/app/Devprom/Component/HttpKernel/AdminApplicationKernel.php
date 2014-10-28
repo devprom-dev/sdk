@@ -13,7 +13,8 @@ class AdminApplicationKernel extends Kernel
     {
         $bundles = array(
             new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
-            new \Devprom\AdministrativeBundle\AdministrativeBundle()
+        	new \Devprom\AdministrativeBundle\AdministrativeBundle(),
+	    	new \Devprom\CommonBundle\CommonBundle()
         );
 
         return $bundles;

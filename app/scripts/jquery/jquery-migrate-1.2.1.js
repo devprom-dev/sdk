@@ -301,7 +301,8 @@ jQuery.sub = function() {
 jQuery.ajaxSetup({
 	converters: {
 		"text json": jQuery.parseJSON
-	}
+	},
+	cache: false
 });
 
 

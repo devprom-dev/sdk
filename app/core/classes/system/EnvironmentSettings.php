@@ -19,12 +19,8 @@ class EnvironmentSettings
         return strtolower(getenv('HTTPS')) == 'on'; 
     }
     
-    static private function _getServerName()
+    static public function getServerNameDefault()
     {
-        $host = static::getCustomServerName();
-        
-        if ( $host != '' ) return $host;
-        
         $host = getenv('SERVER_NAME');
 
         if ( $host != '' ) return $host;
@@ -45,7 +41,11 @@ class EnvironmentSettings
     
     static public function getServerName()
     {
-        $server_name = static::_getServerName();
+        $server_name = static::getCustomServerName();
+        
+        if ( $server_name != '' ) return $server_name;
+        
+        $server_name = self::getServerNameDefault();
         
 		if ( class_exists('idna_convert', false) )
 		{
@@ -74,7 +74,16 @@ class EnvironmentSettings
     
     static public function getServerPort()
     {
-        $port = getenv('SERVER_PORT');
+        $port = static::getCustomServerPort();
+        
+        if ( $port != '' ) return $port;
+        
+        return self::getServerPortDefault();
+    }
+    
+    static public function getServerPortDefault()
+    {
+    	$port = getenv('SERVER_PORT');
 
         if ( $port != '' ) return $port;
         
@@ -85,10 +94,6 @@ class EnvironmentSettings
             if ( $port != '' ) return $port;
         }
 
-        $port = static::getCustomServerPort();
-        
-        if ( $port != '' ) return $port;
-        
         return '80'; 
     }
     

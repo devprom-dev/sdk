@@ -7,9 +7,16 @@ class FormWikiAttachmentEmbedded extends PMFormEmbedded
  	var $image_mode = false;
  	var $anchor_it;
  	
+ 	private $image_class = "image_attach";
+ 	
  	function setAnchorIt( $object_it )
  	{
  	    $this->anchor_it = $object_it;
+ 	}
+ 	
+ 	function setImageClass( $class_name )
+ 	{
+ 		$this->image_class = $class_name;
  	}
 
  	function getFieldValue( $attr )
@@ -55,9 +62,7 @@ class FormWikiAttachmentEmbedded extends PMFormEmbedded
 			return parent::getItemDisplayName( $object_it );
 		}
 
-		return $object_it->getDisplayName();
-		
-		return '<a class=modify_image href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('Content').'">'.
+		return '<a class="'.$this->image_class.'" href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('Content').'">'.
 			'<img src="/images/attach.png" style="margin-bottom:-4px;"> '.$object_it->getFileName('Content').'</a>'.
 				' ('.$object_it->getFileSizeKb('Content').' Kb)'; 		
 	}
@@ -84,7 +89,7 @@ class FormWikiAttachmentEmbedded extends PMFormEmbedded
      		{
      			<?=$editor->getAttachmentsCallback()?>();
     
-    			$('a.modify_image[name="'+data.name+'"]').each( function() {
+    			$('a.<?=$this->image_class?>[name="'+data.name+'"]').each( function() {
      				if ( !$(this).parent().is('strike') ) $(this).click();
     			});
      		}

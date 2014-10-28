@@ -10,7 +10,7 @@ class TransitionAttributesPersister extends ObjectSQLPersister
  		
  		array_push( $columns, 
  			"( SELECT GROUP_CONCAT(CAST(so.Transition AS CHAR)) FROM pm_StateObject so ".
- 			"   WHERE so.ObjectId = ".$this->getPK($alias)." AND so.ObjectClass = '".$this->getObject()->getStatableClassName()."' ) Transition " );
+ 			"   WHERE so.ObjectId = ".$this->getPK($alias)." AND so.ObjectClass = '".$this->getObject()->getStatableClassName()."' ) LastTransition " );
 
  		array_push( $columns, 
  			"( SELECT so.Comment FROM pm_StateObject so ".

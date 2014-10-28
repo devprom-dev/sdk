@@ -14,7 +14,11 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 		
 		$items = array();
 		
-		$custom_it = getFactory()->getObject('pm_CustomReport')->getMyRegistry()->getAll();
+		$custom_it = getFactory()->getObject('pm_CustomReport')->getMyRegistry()->Query(
+				array (
+						new SortOrderedClause()
+				)				
+		);
 		
 		while ( !$custom_it->end() )
 		{

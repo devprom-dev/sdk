@@ -127,7 +127,7 @@ class RequestList extends PMPageList
 				
                 while ( !$entity_it->end() )
                 {
-					$items[] = $types_ids[$id].': '.$this->getUidService()->getUidIconGlobal($entity_it, true);
+					$items[] = translate($types_ids[$id]).': '.$this->getUidService()->getUidIconGlobal($entity_it, true);
 				
 					$entity_it->moveNext();
 				}

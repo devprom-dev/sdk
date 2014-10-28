@@ -16,8 +16,6 @@ class RequestPlanningForm extends PMPageForm
 		getSession()->addBuilder( new RequestModelExtendedBuilder() );
 		
 		parent::__construct( getFactory()->getObject('pm_ChangeRequest') );
-		
-		$this->getModelValidator()->addValidator( new ModelValidatorIssueTasks() );
 	}
 	
 	function getEmbeddedForm()

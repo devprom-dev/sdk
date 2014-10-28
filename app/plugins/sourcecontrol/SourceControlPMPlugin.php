@@ -10,7 +10,6 @@ include "classes/AccessRightEntitySetCodeBuilder.php";
 include "classes/ProjectMetadataCodeBuilder.php";
 include "classes/BuildCodeMetadataBuilder.php";
 include "classes/SubversionModelBuilder.php";
-include_once "classes/notificators/BuildCodeClosedInVersionUpdateTrigger.php";
 include_once "classes/notificators/RevisionCommentActionsTrigger.php";
 include "classes/HistoricalObjectsRegistryBuilderCode.php";
 include "classes/ProjectLinkCodeMetadataBuilder.php";
@@ -71,7 +70,6 @@ class SourceControlPMPlugin extends PluginPMBase
             new AccessRightEntitySetCodeBuilder(),
             new ProjectMetadataCodeBuilder(),
             new BuildCodeMetadataBuilder(),
-            new BuildCodeClosedInVersionUpdateTrigger(),
             new RevisionCommentActionsTrigger( getSession() ),
         	new ProjectTemplateSectionsCodeRegistryBuilder(getSession()),
         		

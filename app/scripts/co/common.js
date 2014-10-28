@@ -704,7 +704,63 @@ function startopenid( id, moveCaret )
 
 function startdemo( template )
 {
-	_gat._getTracker("UA-10541243-1")._trackEvent('demo-start', template);
+	_gat._getTracker("UA-10541243-1")._trackEvent('demo-start', template, 'hard-form');
 	
 	setTimeout(function() { window.location = 'http://devprom.ru/module/saasassist/create?template=' + template; }, 300);
+}
+
+function createinstance()
+{
+	_gat._getTracker("UA-10541243-1")._trackEvent('demo-start', 'blank', 'quick-form');
+
+	$('#try-form-result').hide();
+	$('#try-form input, #try-form button').attr('disabled', '');
+    $('#try-form button').addClass('loading');
+    $('.disable-block').fadeIn();
+    var interval = setInterval( function() {
+    	$('#try-form .form-group').hide();
+    	$('#try-form .form-message').css('display','inline-block');
+    }, 4000);
+    
+	$.ajax({
+		type: "GET",
+		url: '/co/command.php?class=createinstance&namespace=saasassist&action=1',
+		data: {
+			instance: $('#try-form #try-form-instance').val(),
+			email: $('#try-form #try-form-email').val(),
+			username: $('#try-form #try-form-username').val()
+		},
+		dataType: "html",
+		success: 
+			function(result) {
+				try {
+					data = jQuery.parseJSON(result);
+					if ( data.state == 'error' ) {
+						$('#try-form-result').html(data.message).show();
+						$('#try-form input, #try-form button').removeAttr('disabled');
+					    $('#try-form button').removeClass('loading');
+					    $('.disable-block').fadeOut();
+					    clearInterval(interval);
+						return;
+					}
+					window.location = data.object;
+				}
+				catch( e ) {
+		 			$('#try-form-result').html(result).show();
+		 			$('#try-form input, #try-form button').removeAttr('disabled');
+		 		    $('#try-form button').removeClass('loading');
+		 		    $('.disable-block').fadeOut();
+		 		   clearInterval(interval);
+				}
+			},
+		error: 
+			function(xhr, status, error)
+			{
+				$('#try-form-result').html(error).show();
+				$('#try-form input, #try-form button').removeAttr('disabled');
+				$('#try-form button').removeClass('loading');
+	 		    $('.disable-block').fadeOut();
+	 		   clearInterval(interval);
+			}
+	});
 }

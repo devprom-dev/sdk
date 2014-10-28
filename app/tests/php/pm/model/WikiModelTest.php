@@ -4,8 +4,6 @@ include_once SERVER_ROOT_PATH."tests/php/pm/DevpromDummyTestCase.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPage.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/PMWikiPage.php";
-include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiSectionNumberingTrigger.php"; 
-include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiSectionNumberingTrigger.php"; 
 
 class WikiModelTest extends DevpromDummyTestCase
 {
@@ -63,16 +61,8 @@ class WikiModelTest extends DevpromDummyTestCase
                 $this->stringContains("t.ParentPath = ',1,2,'")
         );
 
-        $trigger = new WikiParentPathTrigger();
-
-        $trigger->modify( 
-                $this->entity->createCachedIterator(array(
-                            array( 
-                                    'WikiPageId' => '2', 
-                                    'ParentPage' => '' 
-                                 )
-                        )),
-                $this->entity->createCachedIterator(array(
+        $this->entity->updateParentPath(
+        		$this->entity->createCachedIterator(array(
                             array( 
                                     'WikiPageId' => '2', 
                                     'ParentPage' => '1' 
@@ -107,16 +97,8 @@ class WikiModelTest extends DevpromDummyTestCase
                 $this->stringContains("t.ParentPath = ',1,2,3,'")
         );
 
-        $trigger = new WikiParentPathTrigger();
-
-        $trigger->modify( 
-                $this->entity->createCachedIterator(array(
-                            array( 
-                                    'WikiPageId' => '3', 
-                                    'ParentPage' => '' 
-                                 )
-                        )),
-                $this->entity->createCachedIterator(array(
+        $this->entity->updateParentPath(
+        		$this->entity->createCachedIterator(array(
                             array( 
                                     'WikiPageId' => '3', 
                                     'ParentPage' => '2' 
@@ -148,10 +130,8 @@ class WikiModelTest extends DevpromDummyTestCase
                 $this->stringContains("t.ParentPath = ',1,2,'")
         );
 
-        $trigger = new WikiParentPathTrigger();
-
-        $trigger->add( 
-                $this->entity->createCachedIterator(array(
+        $this->entity->updateParentPath(
+        		$this->entity->createCachedIterator(array(
                             array( 
                                     'WikiPageId' => '2', 
                                     'ParentPage' => '1' 

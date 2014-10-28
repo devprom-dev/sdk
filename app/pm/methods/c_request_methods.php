@@ -773,17 +773,19 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
  	function execute_request()
  	{
- 		global $_REQUEST, $project_it;
- 		
  		if ( is_object($this->request_it) )
  		{
  			$_REQUEST['ChangeRequest'] = join(',', $this->request_it->idsToArray()); 
  		}
- 		
+
 	 	if ( $_REQUEST['ChangeRequest'] != '' ) 
 	 	{
-	 		$this->execute($_REQUEST['ChangeRequest'], $_REQUEST['attr'], 
-	 			$project_it->utf8towin($_REQUEST['value']), $_REQUEST['notify']);
+	 		$this->execute(
+	 				$_REQUEST['ChangeRequest'], 
+	 				$_REQUEST['attr'], 
+	 				IteratorBase::utf8towin($_REQUEST['value']), 
+	 				$_REQUEST['notify']
+ 			);
 	 	}
  	}
  	
@@ -799,7 +801,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		
  		if ( $request_it->count() < 1 ) return;
  		 
-		if ( $attribute == 'Tag' )
+		if ( array_key_exists('Tag', $_REQUEST) )
 		{
 			$request_tag = $model_factory->getObject('pm_RequestTag');
 			
@@ -819,7 +821,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
     			$request_it->moveNext();
  			}
 		}
-		else if ( $attribute == 'RemoveTag' )
+		else if ( array_key_exists('RemoveTag', $_REQUEST) )
 		{
 			$request_tag = $model_factory->getObject('pm_RequestTag');
 			
@@ -830,77 +832,5 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 			    $request_it->moveNext();
 			}
 		}
-		else if ( $attribute == 'Version' )
-		{
-			$version = $model_factory->getObject('Version');
-			
-			$version_it = $version->getExact($value);
-			
-			$parms['PlannedRelease'] = $version_it->get('Version');
-			$parms['ClosedInVersion'] = $value;
-			
-			while ( !$request_it->end() )
-			{
-			    $request_it->modify( $parms );
-			    
-			    $request_it->moveNext();
-			}
-		}
-		else if ( $attribute == 'Iteration' )
-		{
-			$iteration = $model_factory->getObject('Iteration');
-			$iteration_it = $iteration->getExact($value);
-			
-			$parms['PlannedRelease'] = $iteration_it->get('Version');
-			
-			while ( !$request_it->end() )
-			{
-    			$request_it->modify( $parms );
-    			
-    			$task_it = $request_it->getRef('OpenTasks');
-    			
-    			while ( !$task_it->end() )
-    			{
-    				$task_it->object->removeNotificator( 'EmailNotificator' );
-    				$task_it->modify( array('Release' => $iteration_it->getId()) );
-    				$task_it->moveNext();
-    			}
-    			
-    			$request_it->moveNext();
-			}
-		}
-		else if ( $attribute == 'Remove' )
-		{
-		    while ( !$request_it->end() )
-		    {
-		        $request_it->delete();
-		        
-		        $request_it->moveNext();
-		    }		        
-		}
-		else if ( $attribute == 'State' )
-		{
-			$parms['Transition'] = $_REQUEST['Transition'];
-			$parms['State'] = $_REQUEST['targetstate'];
-			$parms['TransitionComment'] = $request_it->utf8towin($_REQUEST['value']);
-
-		    while ( !$request_it->end() )
-		    {
-			    $request_it->modify( $parms );
-			    
-			    $request_it->moveNext();
-		    }
-		}
-		else
-		{
-		    while ( !$request_it->end() )
-		    {
-		        $request_it->modify( array( $attribute => $value ) );
-		        
-		        $request_it->moveNext();
-		    }
-		}
  	}
- }
-
-?>
+}

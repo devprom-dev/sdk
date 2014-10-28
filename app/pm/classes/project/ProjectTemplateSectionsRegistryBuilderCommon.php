@@ -33,13 +33,13 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	private function buildSettings( & $registry )
     {
    	  	$project = getFactory()->getObject('pm_Project');
+   	  	
 	 	$project->addFilter( new ProjectCurrentPredicate() );
 
-	 	$usersettings = getFactory()->getObject('PMUserSettings');
-	 	$usersettings->addFilter( new PMUserSettingProjectPredicate('tmp') );
-
+	 	// methodology settings
 		$methodology = getFactory()->getObject('pm_Methodology');
- 		$methodology->addFilter( new FilterAttributePredicate('Project', $this->session->getProjectIt()->getId() ) );
+ 		
+		$methodology->addFilter( new FilterAttributePredicate('Project', $this->session->getProjectIt()->getId() ) );
 	 	
 	 	$items = array( 
 	 		$project,
@@ -47,7 +47,6 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 		getFactory()->getObject('pm_ProjectStage'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
-	 		$usersettings,
 	 		$methodology
 	 	);
 	 	
@@ -58,11 +57,14 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
     {
    		$items = array();
    		
-   		$items[] = getFactory()->getObject('pm_CustomReport');
-   	
+   		$report = getFactory()->getObject('pm_CustomReport');
+   		$report->addFilter( new CustomReportMyPredicate() );
+   		
+   		$items[] = $report;
+   		
 	 	// navigation settings
 	 	$workspace = getFactory()->getObject('Workspace');
-	 	
+
 	 	$workspace_it = $workspace->getRegistry()->getDefault();
 	 	
 	 	$workspace->addFilter( new FilterInPredicate($workspace_it->idsToArray()) );
@@ -71,16 +73,34 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 
 	 	$workspace_menu = getFactory()->getObject('pm_WorkspaceMenu');
 	 	
-	 	$workspace_menu->addFilter( new FilterAttributePredicate('Workspace', $workspace_it->getId()) );
+	 	$workspace_menu->addFilter( new FilterAttributePredicate('Workspace', $workspace_it->idsToArray()) );
+	 	$workspace_menu->addSort( new SortOrderedClause() );
 	 	
 	 	$items[] = $workspace_menu;
 	 	
 	 	$workspace_item = getFactory()->getObject('pm_WorkspaceMenuItem');
+	 	$workspace_item->addSort( new SortOrderedClause() );
 	 	
 	 	$workspace_item->addFilter( new FilterAttributePredicate('WorkspaceMenu', $workspace_menu->getAll()->idsToArray()) );
 	 	
 	 	$items[] = $workspace_item;
 
+	 	// settings for reports and modules
+	 	$usersettings = getFactory()->getObject('PMUserSettings');
+	 	
+	 	$usersettings->addFilter(
+				new FilterAttributePredicate('Participant', 
+						array(
+ 	    						getSession()->getParticipantIt()->getId(), // search for user's settings 
+ 	    						'-1' // search for common settings
+ 	    				)
+ 	    		)
+	 	);
+	 	
+	 	$usersettings->addSort(new SortAttributeClause('Participant.D')); // user settings overrides common settings 
+
+	 	$items[] = $usersettings;
+	 	
  		$registry->addSection($registry, 'Widgets', $items, true, text(1832));
     }
    

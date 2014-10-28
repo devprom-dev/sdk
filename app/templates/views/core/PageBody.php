@@ -74,8 +74,15 @@
                 <div class="row-fluid">
                 
                		<?php $view['slots']->output('_content') ?>
+
+               		<?php 
+					if ( $hint != '' )
+					{
+						echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid));
+					}
+               		?>
                		
-                </div> <!-- end row-fluid -->
+               	</div> <!-- end row-fluid -->
             </section>
         </div>
 		

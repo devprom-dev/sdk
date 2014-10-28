@@ -4,6 +4,7 @@
  use Symfony\Component\Templating\TemplateNameParser;
  use Symfony\Component\Templating\Loader\FilesystemLoader;
  use Symfony\Component\Templating\Helper\SlotsHelper;
+ use Devprom\CommonBundle\Service\Widget\ScriptService;
  
  $path = dirname(__FILE__);
  
@@ -634,10 +635,21 @@
 			
 			$first_menu = count($values) > 0 ? array_shift($values) : array();
 
-			if ( count($first_menu['items']) < 1 )
+			if ( in_array($area['uid'], array('main','favs')) ) continue;
+
+			// remove area if there are no items in the first vertical subsection
+			if ( is_array($first_menu['items']) )
 			{
-				unset($areas[$key]);
+				$items = array_filter( $first_menu['items'], function($value) {
+						return $value['uid'] != '' && $value['uid'] != 'navigation-settings' ;
+				});
 			}
+			else
+			{
+				$items = array();	
+			}
+			
+			if ( count($items) < 1 ) unset($areas[$key]);
 		}
    
         $context = $this->getNavigationContext( $areas, $active_url );
@@ -658,7 +670,11 @@
 
         $first_menu = count($areas) > 0 ? array_pop(array_values($areas)) : array();
 
- 		return array(
+        $script_service = new ScriptService();
+        
+        $page_uid = get_class($this);
+        
+        return array(
  			'inside' => count($first_menu['menus']) > 0,
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
  		    'navigation_title' => $tab_title,
@@ -676,7 +692,10 @@
  		    'tab_uid' => $tab_uid,
  		    'active_area_uid' => $active_area_uid,
  		    'bottom_sections' => $bottom_sections,
- 			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid)
+ 			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid),
+        	'javascript_paths' => $script_service->getJSPaths(),
+        	'hint' => getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
+        	'page_uid' => $page_uid
  		);
  	}
  	
@@ -897,4 +916,9 @@
 		 
 		 return $ids;
  	}
+ 	
+ 	function getHint()
+	{
+		return '';
+	}
 }

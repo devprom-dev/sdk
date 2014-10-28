@@ -122,49 +122,6 @@ class Task extends MetaobjectStatable
 		return parent::getDefaultAttributeValue( $name );
 	}
 	
-	function IsAttributeRequired( $att_name ) 
-	{
-		global $_REQUEST, $model_factory;
-
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
-		if( $att_name == 'Assignee' && $methodology_it->IsParticipantsTakesTasks() ) 
-		{
-			if ( $_REQUEST['Transition'] > 0 && $_REQUEST['pm_TaskId'] > 0 )
-			{
-				$transition = $model_factory->getObject('Transition');
-				$transition_it = $transition->getExact($_REQUEST['Transition']);
-				
-				if ( $transition_it->count() > 0 )
-				{
-					$target_it = $transition_it->getRef('TargetState');
-					if ($target_it->get('IsTerminal') == 'Y' ) return true;
-				}
-			}
-			else
-			{
-				return false;
-			}
-		}
-
-		if ( $att_name == 'Result' && $_REQUEST['Transition'] > 0 )
-		{
-			$transition = $model_factory->getObject('Transition');
-			$transition_it = $transition->getExact($_REQUEST['Transition']);
-			
-			if ( $transition_it->count() > 0 )
-			{
-				$target_it = $transition_it->getRef('TargetState');
-				if ( in_array($target_it->get('ReferenceName'), $this->getTerminalStates()) )
-				{
-					return true;
-				}
-			}
-		}
-		
-		return parent::IsAttributeRequired( $att_name );
-	}
-	
 	function IsDeletedCascade( $object )
 	{
 	    if ( is_a($object, 'Request') ) return true;

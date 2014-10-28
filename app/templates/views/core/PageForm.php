@@ -76,6 +76,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     		<input id="<?=$class_name?>redirect" type="hidden" name="redirect" value="<?=$redirect_url?>">
     		<input type="hidden" id="unsavedMessage" value="<?=text(632)?>">
     		<input type="hidden" id="deleteMessage" value="<?=$form->getDeleteMessage()?>">
+    		<input type="hidden" name="Transition" value="<?=$transition?>">
     		
     		<?php 
     		
@@ -126,7 +127,7 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 <script type="text/javascript">
 	var originalState = '';
     var formid = 'object_form';
-    	
+
 	$(document).ready(function() 
 	{
 		makeForm('<?=$action?>');
@@ -134,3 +135,11 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 </script>
 
 <?php } ?>
+
+<script type="text/javascript">
+
+    devpromOpts.saveButtonName = '<?=$button_save_title?>';
+    devpromOpts.closeButtonName = '<?=translate('Отменить')?>';
+    devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
+
+</script>

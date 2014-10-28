@@ -88,9 +88,9 @@ class AccessRightIterator extends OrderedIterator
 		}
  	}
  	
- 	function getEntityAccess( $role_id, &$object )
+ 	function getEntityAccess( $role_id, $entity_ref_name )
  	{
- 		$access = $this->getHashedAccess( $role_id, $object->getEntityRefName(), 'Y' );
+ 		$access = $this->getHashedAccess( $role_id, $entity_ref_name, 'Y' );
 
 		switch ( $access )
 		{
@@ -104,26 +104,30 @@ class AccessRightIterator extends OrderedIterator
 				return 0;
 
 			default:
-		 		$access = $this->getHashedAccess( $role_id,
-		 			get_class($object), 'Y' );
-
-				switch ( $access )
-				{
-					case 'modify':
-						return 2;
-						
-					case 'view':
-						return 1;
-						
-					case 'none':
-						return 0;
-		
-					default:
-						return -1;
-				}
+				return -1;
 		}
  	}
 
+ 	function getClassAccess( $role_id, &$class_name )
+ 	{
+ 		$access = $this->getHashedAccess( $role_id, $class_name, 'Y' );
+
+		switch ( $access )
+		{
+			case 'modify':
+				return 2;
+				
+			case 'view':
+				return 1;
+				
+			case 'none':
+				return 0;
+
+			default:
+				return -1;
+		}
+ 	}
+ 	
  	function getHashedAccess( $role_id, $object, $type )
  	{ 
  		return $this->hash[md5($role_id.strtolower($object).$type)];

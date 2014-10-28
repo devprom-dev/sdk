@@ -10,9 +10,9 @@ class RequestMetadataPermissionsBuilder extends ObjectMetadataEntityBuilder
 
     	$policy = getFactory()->getAccessPolicy();
 
-        foreach($metadata->getAttributesByGroup('permissions') as $attribute )
+        foreach(array_keys($metadata->getAttributes()) as $attribute )
 		{
-			if ( !$policy->can_read_attribute($metadata->getObject(), $attribute) )
+			if ( !$policy->can_read_attribute($metadata->getObject(), $attribute, $metadata->getAttributeClass($attribute)) )
 			{
 				$metadata->removeAttribute($attribute);
 			}

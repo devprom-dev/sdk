@@ -15,11 +15,8 @@ class ApplyTemplateService
 	
  	function apply( $template_it, $project_it, $sections = null )
  	{
-		getFactory()->getEventsManager()->removeNotificator( new \ChangesWaitLockReleaseTrigger() );
-		getFactory()->getEventsManager()->removeNotificator( new \CacheSessionProjectTrigger() );
-		getFactory()->getEventsManager()->removeNotificator( new \CacheResetTrigger() );
-		getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
-		getFactory()->getEventsManager()->removeNotificator( new \PMEmailNotificator() );
+ 		// disable any model events handler
+		getFactory()->setEventsManager( new \ModelEventsManager() );
 		
  		// store initial values for iteration dates
  		$context = new \CloneContext();
@@ -37,7 +34,11 @@ class ApplyTemplateService
  				
 		foreach ( $objects as $object )
 		{
+			$object->resetFilters();
+			
 			$object->addFilter( new \FilterBaseVpdPredicate() );
+			
+			$iterator = $object->createXMLIterator($xml);
 			
 			switch ( $object->getEntityRefName() )
 			{
@@ -51,13 +52,51 @@ class ApplyTemplateService
 				case 'pm_Predicate':
 				case 'pm_StateAction':
 				case 'pm_StateAttribute':
-				case 'pm_Workspace':
-				case 'pm_WorkspaceMenu':
-				case 'pm_WorkspaceMenuItem':
 				case 'pm_AccessRight':
+				case 'pm_Workspace':
 					
 					$object->deleteAll();
 						
+					break;
+					
+				case 'pm_CustomReport':
+
+					if ( $iterator->count() > 0 )
+					{
+						// remove common (glogal) reports
+						$report_it = $object->getByRefArray(
+								array (
+										'Author' => -1
+								)
+						);
+						
+						while( !$report_it->end() )
+						{
+							$report_it->delete();
+							$report_it->moveNext();
+						}
+					}
+					
+					break;
+
+				case 'pm_UserSetting':
+
+					if ( $iterator->count() > 0 )
+					{
+						// remove common (glogal) settings for reports/modules
+						$it = $object->getByRefArray(
+								array (
+										'Participant' => -1
+								)
+						);
+						
+						while( !$it->end() )
+						{
+							$it->delete();
+							$it->moveNext();
+						}
+					}
+					
 					break;
 					
 				case 'pm_State':
@@ -67,7 +106,7 @@ class ApplyTemplateService
 					break;
 			}
 
-			\CloneLogic::Run( $context, $object, $object->createXMLIterator($xml), $project_it ); 
+			\CloneLogic::Run( $context, $object, $iterator, $project_it ); 
 		}
 		
 		// remove unnecessary data

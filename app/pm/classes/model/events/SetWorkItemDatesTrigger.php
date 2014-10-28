@@ -31,14 +31,15 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 	function processStartDate( $object_it, $content )
 	{
 	    $table_name = $object_it->object->getEntityRefName();
-		
+
 		switch( $table_name )
 		{
 		    case 'pm_Task':
 		    	
 		    	if ( $content['Release'] > 0 )
 		    	{
-		    		$value = "(SELECT r.StartDate FROM pm_Release r WHERE r.pm_ReleaseId = pm_Task.Release)";
+		    		$value = " (SELECT GREATEST(r.StartDate, '".$object_it->get('RecordCreated')."') ".
+		    				 "	  FROM pm_Release r WHERE r.pm_ReleaseId = pm_Task.Release) ";
 		    	}
 		    	
 		    	break;
@@ -47,7 +48,8 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 
 				if ( $content['PlannedRelease'] > 0 )
 		    	{
-		    		$value = "(SELECT r.StartDate FROM pm_Version r WHERE r.pm_VersionId = pm_ChangeRequest.PlannedRelease)";
+		    		$value = " (SELECT GREATEST(r.StartDate, '".$object_it->get('RecordCreated')."') ".
+		    				 "	  FROM pm_Version r WHERE r.pm_VersionId = pm_ChangeRequest.PlannedRelease) ";
 		    	}
 		    	
 		    	break;

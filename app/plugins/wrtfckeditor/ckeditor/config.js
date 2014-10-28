@@ -13,10 +13,11 @@ CKEDITOR.editorConfig = function( config ) {
 	config.extraPlugins = 'plantuml,lineutils';
 	
 	config.allowedContent = true;
-	
+	config.disableNativeSpellChecker = false;
 	config.entities = false;
 
 	if ( devpromOpts.mathJaxLib != '' ) config.mathJaxLib = devpromOpts.mathJaxLib;
+	config.plantUMLServer = devpromOpts.plantUMLServer != '' ? devpromOpts.plantUMLServer : 'http://www.plantuml.com';
 
 	config.toolbar_FullToolbar =
 	[

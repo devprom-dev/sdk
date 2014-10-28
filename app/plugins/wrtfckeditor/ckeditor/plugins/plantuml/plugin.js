@@ -39,16 +39,39 @@ CKEDITOR.plugins.add( 'plantuml',
 			{
 				// Get to the closest <img> element that contains the selection.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dom.node.html#getAscendant
-				if ( element )
-					element = element.getAscendant( 'img', true );
+				if ( element && element.getName() != 'img' )
+				{
+					if ( element.hasAscendant('img', true) ) {
+						element = element.getAscendant( 'img', true );
+					}
+					else if ( element.getElementsByTag('img').count() > 0 ) {
+						element = element.getElementsByTag('img').getItem(0);
+					}
+				}
+				
 				// Return a context menu object in an enabled, but not active state.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.html#.TRISTATE_OFF
-				if ( element && !element.isReadOnly() && !element.data( 'cke-realelement' ) )
+				if ( element && !element.data( 'cke-realelement' ) )
 		 			return { umlItem : CKEDITOR.TRISTATE_OFF };
 				// Return nothing if the conditions are not met.
 		 		return null;
 			});
 		}
+		
+		editor.on( 'doubleclick', function( evt )
+        {
+            var element = evt.data.element;
+
+            if ( element.is('img') && element.getAttribute('alt') != "" && !element.data('cke-realelement') ) {
+            	try {
+            		$.base64.decode(element.getAttribute('alt'));
+			    	editor.openDialog('umlDialog');
+			    	evt.cancel();
+            	}
+            	catch(e) {
+            	}
+            }
+        }, null, null, 0);
 		
 		// Add a dialog window definition containing all UI elements and listeners.
 		// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dialog.html#.add
@@ -92,10 +115,11 @@ CKEDITOR.plugins.add( 'plantuml',
 								commit : function( element )
 								{
 									var u = compress(this.getValue());
-									u = "http://www.plantuml.com/plantuml/img/"+u;
+									u = editor.config.plantUMLServer + "/plantuml/img/"+u;
 									var altText = $.base64.encode(escape(this.getValue()));
 									element.setAttribute( "alt", altText );
 									element.setAttribute( "src", u );
+									element.setAttribute( "data-cke-saved-src", u );
 								}
 							},
 						]
@@ -109,12 +133,19 @@ CKEDITOR.plugins.add( 'plantuml',
 					var sel = editor.getSelection(),
 					// Assigning the element in which the selection starts to a variable.
 					// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dom.selection.html#getStartElement
-						element = sel.getStartElement();
+					element = sel.getStartElement();
 					
 					// Get the <img> element closest to the selection.
-					if ( element )
-						element = element.getAscendant( 'img', true );
-					
+					if ( element && element.getName() != 'img' )
+					{
+						if ( element.hasAscendant('img', true) ) {
+							element = element.getAscendant( 'img', true );
+						}
+						else if ( element.getElementsByTag('img').count() > 0 ) {
+							element = element.getElementsByTag('img').getItem(0);
+						}
+					}
+				
 					// Create a new <img> element if it does not exist.
 					// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dom.document.html#createElement
 					// For a new <img> element set the insertMode flag to true.

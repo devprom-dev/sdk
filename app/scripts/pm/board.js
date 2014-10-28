@@ -142,6 +142,7 @@ var draggableOptions = {
 			}
 		},
 		className: '',
+		classUserName: '',
 		groupAttribute: '',
 		boardCreated: '',
 		itemFormUrl: '',
@@ -195,6 +196,9 @@ function boardMake( options )
 						switch ( resultObject.message )
 						{
 							case '':
+								redrawBoardItem( item, options );
+								break;
+
 							case 'ok':
 								if ( typeof resultObject.object != 'undefined' )
 								{
@@ -207,14 +211,12 @@ function boardMake( options )
 									item.attr('object', "");
 								}
 								
-								//redrawBoardChanges(options);
-								
 								break;
 								
 							case 'denied':
 								$('#modal-form').remove();
 								$('body').append( '<div id="modal-form" title="'+options.classUserName+'">'+
-									options.deniedTitle+'</div>' );
+										resultObject.description+'</div>' );
 	
 								$('#modal-form').dialog({
 									width: 450,
@@ -356,139 +358,16 @@ function initializeBoardItem( items, options )
 function modifyBoardItem( item, options, callback ) 
 {
 	var objectid = item.attr('object');
+	
 	if ( typeof objectid == 'undefined' || objectid == '' ) return;
 	
-	var url = options.itemFormUrl != '' ? options.itemFormUrl : filterLocation.location;
-	
-	var url_items = url.split('#');
-	url = url_items[0]; 
-	
-	if ( url.indexOf('?') < 0 ) {
-		url += '?formonly=true';
-	}
-	else {
-		url += '&formonly=true';
-	}
-	url += '&form-mode=quick&'+options.redrawItemUrl+'='+objectid;
-
-	if ( item.attr('modifiable') == "1" )
-	{
-		action = options.className+'action=show';
-		dialogButtons = [
-			{
-				text: options.saveButtonName,
-			 	click: function() {
-					var dialogVar = $(this);
-					
-					if ( !validateForm($('#modal-form #object_form')) ) return false;
-					
-					$('#modal-form #object_form').attr('action', url);
-
-					$('#'+options.className+'action').val('modify');
-					$('#'+options.className+'redirect').val(url + '&temp=');
-					
-					$('#modal-form').parent()
-						.find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
-					
-					$('#modal-form #object_form').ajaxSubmit({
-						dataType: 'html',
-						success: function( data ) 
-						{
-							var warning = $(data).find('.form_warning');
-							
-							if ( warning.length > 0 )
-							{
-								$('#modal-form').parent()
-									.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-								
-								$('.form_warning').remove();
-								$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#object_form'));
-							}
-							else 
-							{
-								item.attr("lifecycle", "modified");
-								dialogVar.dialog('close');
-								
-								if ( typeof callback == 'function' ) {
-									callback( item, options );
-								}
-							}
-						},
-						error: function( xhr )
-						{
-							$('#modal-form').parent()
-								.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-						}
-					});
-				}
-			},
-			{
-				text: options.closeButtonName,
-				click: function() {
-					$(this).dialog('close');
-				}
-			} ];
-	}
-	else
-	{
-		action = options.className+'action=view';
-		dialogButtons = [
- 			{
- 				text: options.closeButtonName,
- 				click: function() {
- 					$(this).dialog('close');
- 				}
- 			} ];
-	}
-	
-	url += '&'+action+'&entity='+options.className+
-		'&'+options.className+'Id='+item.attr('object');
-	 
-	filterLocation.showActivity();
-	
-	$.ajax({
-		type: "GET",
-		url: url,
-		dataType: "html",
-		async: true,
-		cache: false,
-		success: 
-			function(result) {
-				$('#modal-form').remove();
-				
-				$('body').append( '<div id="modal-form" style="display:none;" title="'+options.classUserName+'">'+
-					result+'</div>' );
-				
-				window.onbeforeunload = null;
-				
-				var scale = $('#modal-form').find('.control-column').length < 2 ? 3/5 : 4/5;
-				
-				$('#modal-form').dialog({
-					width: Math.max(950, $(window).width()*scale),
-					modal: true,
-					height: 'auto',
-					resizable: false,
-					open: function()
-					{
-						$('#object_form input:visible:first').blur();
-
-						completeUIExt($('#modal-form').parent());
-
-						focusField('object_form');
-					},
-					create: function() 
-					{
-				        $(this).css("maxHeight", $(window).height() - 200);        
-				    },
-					beforeClose: function(event, ui) 
-					{
-						formDestroy();
-						filterLocation.hideActivity();
-					},
-					buttons: dialogButtons
-				});
-			}
-	});
+	workflowModify({
+		form_url: item.attr("project") ? '/pm/'+item.attr("project") + options.itemFormUrl : options.itemFormUrl,
+		class_name: options.className,
+		entity_ref: options.className,
+		object_id: objectid,
+		form_title: item.attr("uid") ? item.attr("uid") : options.classUserName
+	}, "donothing");
 }
 
 function createBoardItem( query_string, options, data, callback ) 

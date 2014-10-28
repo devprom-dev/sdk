@@ -21,22 +21,12 @@ class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
     {
         $request = getFactory()->getObject('Request');
     	
-    	if ( $request->getAttributeType('Tasks') != '' )
-    	{
- 			$set->registerRule( new RequestBusinessActionResolveTasks() );
- 			$set->registerRule( new RequestBusinessActionResetTasks() );
-    	}
- 		
-    	if ( $request->getAttributeType('Owner') != '' )
-    	{
-    		$set->registerRule( new RequestBusinessActionAssignParticipant() );
- 			$set->registerRule( new RequestBusinessActionResetAssignee() );
-    	}
-    	
+		$set->registerRule( new RequestBusinessActionResolveTasks() );
+		$set->registerRule( new RequestBusinessActionResetTasks() );
+   		$set->registerRule( new RequestBusinessActionAssignParticipant() );
+		$set->registerRule( new RequestBusinessActionResetAssignee() );
  		$set->registerRule( new RequestBusinessActionSetPriorityHigh() );
- 		
  		$set->registerRule( new RequestBusinessActionResolveDuplicates() );
- 		
  		$set->registerRule( new RequestBusinessActionGetInWorkDuplicates() );
     }
 }

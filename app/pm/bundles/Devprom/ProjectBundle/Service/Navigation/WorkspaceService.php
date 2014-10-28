@@ -25,6 +25,8 @@ class WorkspaceService
 		foreach( $areas as $area )
 		{
 			$nodes = array();
+
+			if ( !is_array($area['menus']) ) continue;
 			
 			foreach( $area['menus'] as $group )
 			{
@@ -220,11 +222,25 @@ class WorkspaceService
 			{
 				if ( $node['id'] != 'quick' ) continue;
 				
-				$workspace['menuNodes'][$node_key]['nodes'][] = array (
-						'report' => $report
-				);
+				$item_found = false;
 				
-				$this->storeWorkspace($workspace);
+				foreach( $workspace['menuNodes'][$node_key]['nodes'] as $item )
+				{
+					if ( $item['report']['id'] == $report['id'] )
+					{
+						$item_found = true;
+						break;
+					}
+				}
+				
+				if ( !$item_found )
+				{
+					$workspace['menuNodes'][$node_key]['nodes'][] = array (
+							'report' => $report
+					);
+					
+					$this->storeWorkspace($workspace);
+				}
 			}
 		}
 	}

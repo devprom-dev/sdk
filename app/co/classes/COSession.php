@@ -9,9 +9,6 @@ class COSession extends SessionBase
 {
  	public function configure()
  	{
- 		// define access policy
- 		getFactory()->setAccessPolicy( new CoAccessPolicy(getFactory()->getCacheService()) );
-
  		// register business and aspects triggers 
  		getFactory()->getEventsManager()->registerNotificator( new COSystemTriggers );
  		

@@ -15,8 +15,7 @@ class StateBaseIterator extends OrderedIterator
 	
 	function getObject()
 	{
-		global $model_factory;
-		return $model_factory->getObject( $this->get('ObjectClass') );
+		return getFactory()->getObject( $this->get('ObjectClass') );
 	}
 
 	function getObjectsCount()

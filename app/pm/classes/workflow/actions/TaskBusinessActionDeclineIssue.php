@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+
 include_once "BusinessAction.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 
@@ -29,10 +31,9 @@ class TaskBusinessActionDeclineIssue extends BusinessAction
 		{
 			$resolution = text(906).': '.$object_it->get('Result');
 
-			$request_it->modify ( 
-					array( 'State' => array_shift($request_it->object->getNonTerminalStates()),
-						   'TransitionComment' => $resolution ) 
-			);
+			$service = new WorkflowService($request_it->object);
+			
+			$service->moveToState($request_it, array_shift($request_it->object->getNonTerminalStates()), $resolution);
 		}
  		
  		return true;

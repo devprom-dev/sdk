@@ -27,4 +27,13 @@ class AdministrativeBundle extends DevpromBundle
 	{
 		return new \AdminSession(null, null, null, $this->getCacheService());		
 	}
+	
+	protected function buildCacheService()
+	{
+		$service = parent::buildCacheService();
+		
+		$service->setDefaultPath('admin');
+		
+		return $service;
+	}
 }

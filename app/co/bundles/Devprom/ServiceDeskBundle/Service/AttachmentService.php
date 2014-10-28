@@ -25,7 +25,7 @@ class AttachmentService {
     public function save(IssueAttachment $attachment, Issue $issue) {
         $storedFilename = "File" . md5(uniqid());
 
-        $attachment->setIssueId($issue->getId());
+        $attachment->setIssue($issue);
         $attachment->setContentType($attachment->getFile()->getMimeType());
         $attachment->setOriginalFilename($attachment->getFile()->getClientOriginalName());
         $attachment->setObjectClass('request');

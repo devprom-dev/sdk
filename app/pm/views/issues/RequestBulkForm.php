@@ -36,13 +36,25 @@ class RequestBulkForm extends BulkForm
  			case 'Project':
  				return translate('Проект');
 
- 			case 'Iteration':
+ 			case 'Iterations':
  				return translate('Итерация');
  				
  			default:
  				return parent::getName( $attr );
  		}
  	}
+ 	
+	function IsAttributeVisible( $attribute )
+	{
+		switch( $attribute )
+		{
+		    case 'RemoveTag':
+		    	return false;
+		    
+		    default:
+		    	return parent::IsAttributeVisible( $attribute );
+		}
+	}
  	
  	function IsAttributeModifiable( $attr )
 	{
@@ -128,7 +140,6 @@ class RequestBulkForm extends BulkForm
  			case 'Owner':
     			$worker = $model_factory->getObject('Participant');
     			
-    			$worker->addFilter( new ParticipantActivePredicate() );
     			$worker->addFilter( new ParticipantWorkerPredicate() );
 				
 				$field = new FieldDictionary( $worker );
@@ -171,21 +182,20 @@ class RequestBulkForm extends BulkForm
 	    
 		$actions = parent::getBulkActions($object_it);
 		
-		if ( getFactory()->getAccessPolicy()->can_modify($object_it) )
-		{
-			if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
-			
-			$key = 'Method:ModifyRequestWebMethod:attr=Tag';
-			$actions[$key] = text(861);
+		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return $actions;
+		
+		if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
+		
+		$key = 'Method:ModifyRequestWebMethod:Tag';
+		$actions[$key] = text(861);
 
-			$key = 'Method:ModifyRequestWebMethod:attr=RemoveTag';
-			$actions[$key] = text(862);
+		$key = 'Method:ModifyRequestWebMethod:RemoveTag';
+		$actions[$key] = text(862);
 
-			if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
+		if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
 
-			$key = 'Method:DuplicateIssuesWebMethod:Project';
-			$actions[$key] = text(867);
-		}
+		$key = 'Method:DuplicateIssuesWebMethod:Project';
+		$actions[$key] = text(867);
 		
 		return $actions;
 	}

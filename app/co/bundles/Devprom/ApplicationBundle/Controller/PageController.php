@@ -23,7 +23,10 @@ class PageController extends MainController
     public function errorAction()
     {
         $response = $this->responsePage( new \ErrorPage() );
-        $response->headers->set('Status', '500');
+        
+        $parts = preg_split('/\?/', $_SERVER['REQUEST_URI']);
+        
+        $response->headers->set('Status', trim($parts[0],'/'));
         
         return $response;
     }

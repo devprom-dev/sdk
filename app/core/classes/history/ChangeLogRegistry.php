@@ -16,6 +16,15 @@ class ChangeLogRegistry extends ObjectRegistrySQL
 		);
 	}
 	
+	function getSorts() 
+	{
+		return array_merge(
+				array ( 
+						new SortAttributeClause('ObjectChangeLogId.D')
+				)
+		);
+	}
+	
  	function getQueryClause()
  	{
  	    $query = $this->_getQuery();

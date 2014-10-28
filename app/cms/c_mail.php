@@ -6,7 +6,8 @@ class MailBox
 {
  	var $to_address, $body, $from_address, $subject;
 	
-	function MailBox() {
+	function __construct()
+	{
 		$this->to_address = array();
 	}
 	
@@ -92,9 +93,19 @@ class MailBox
  
  class HtmlMailBox extends MailBox
  {
+ 	private $boundary = '';
+ 	
+ 	function __construct()
+ 	{
+ 		parent::__construct();
+ 		
+ 		$this->boundary = "devprom-5446b4677d9475446b481adbb3";
+ 	}
+ 	
 	function getContentType() 
 	{
-		return "MIME-Version: 1.0".Chr(13).Chr(10)."Content-type: text/html; charset=utf-8";
+		return "MIME-Version: 1.0\r\n".
+			   "Content-Type: multipart/alternative; boundary=\"".$this->boundary."\"";
 	}
 	
 	function encode( $text ) {
@@ -103,12 +114,27 @@ class MailBox
 
 	function setBody( $body ) 
 	{
-		$this->body = $this->applyStyles(
+		$this->body = "\r\n\r\n--" . $this->boundary . "\r\n";
+		$this->body .= "Content-Type: text/plain; charset=\"utf-8\"\r\n\r\n";
+				
+		$texted = strip_tags(html_entity_decode($body, ENT_COMPAT | ENT_HTML401, 'cp1251'));
+		
+		$texted = preg_replace('/\s{2,}/', PHP_EOL, $texted);
+		$texted = preg_replace('/[\r\n]{2,}/', PHP_EOL.PHP_EOL, $texted);
+		
+		$this->body .= IteratorBase::wintoutf8($texted);
+		
+		$this->body .= "\r\n\r\n--" . $this->boundary . "\r\n";
+		$this->body .= "Content-Type: text/html; charset=\"utf-8\"\r\n\r\n";
+		
+		$this->body .= $this->applyStyles(
 		    '<html>'.PHP_EOL.
 		    '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>'.PHP_EOL.
 		    '<body>'.IteratorBase::wintoutf8($body).'</body>'.PHP_EOL.
 		    '</html>'
 		);
+
+		$this->body .= "\r\n\r\n--" . $this->boundary . "--";
 	}
 	
 	function applyStyles( $html )

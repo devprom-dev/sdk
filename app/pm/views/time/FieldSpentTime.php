@@ -1,5 +1,6 @@
 <?php
 
+include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorEmbeddedForm.php";
 include "SpentTimeFormEmbedded.php";
 
 class FieldSpentTime extends FieldForm
@@ -11,10 +12,14 @@ class FieldSpentTime extends FieldForm
  		$this->object_it = $object_it;
  	}
 
+ 	function getValidator()
+ 	{
+ 		return new ModelValidatorEmbeddedForm('Fact', 'Capacity');
+ 	}
+ 	
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_Activity');
+ 		return getFactory()->getObject('pm_Activity');
  	}
  	
  	function getObjectIt()
@@ -44,8 +49,6 @@ class FieldSpentTime extends FieldForm
 	
 	function drawBody( & $view = null )
 	{
-		global $model_factory;
-
 		$activity = $this->getObject();
 		
 		$activity->addSort( new SortAttributeClause('ReportDate') );

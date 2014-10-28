@@ -17,7 +17,7 @@ $model_factory = new ModelFactoryExtended($plugins);
 
 $state = $model_factory->getObject('DeploymentState');
 
-if ( !$state->IsReadyToBeUsed() )
+if ( !$state->IsActivated() )
 {
 	die();
 }

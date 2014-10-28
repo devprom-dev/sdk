@@ -4,8 +4,10 @@ namespace Devprom\ApplicationBundle\Controller;
 
 use Devprom\ApplicationBundle\Controller\PageController;
 use Devprom\ApplicationBundle\Service\LoginUserService;
+use Devprom\CommonBundle\Service\Project\InviteService;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 if ( !class_exists('CoPage', false) ) include SERVER_ROOT_PATH."co/views/Common.php";
 
@@ -144,8 +146,6 @@ class SecurityController extends PageController
     
     function resetProcessAction()
     {
-    	global $model_factory;
-
 		$response = $this->checkRequired( array( 'NewPassword', 'RepeatPassword' ) );
 		
 		if ( is_object($response) ) return $response;
@@ -158,7 +158,9 @@ class SecurityController extends PageController
 		
     	$session = getSession();
     	
-    	$user = $model_factory->getObject('cms_User');
+    	$user = getFactory()->getObject('cms_User');
+
+		$user->setNotificationEnabled(false);
     	
     	$user_it = $user->getAll();
 
@@ -195,5 +197,24 @@ class SecurityController extends PageController
         getSession()->close();
         
         return new RedirectResponse('/');
+    }
+    
+    public function joinAction()
+    {
+    	$email = $this->getRequest()->get('email');
+    	
+    	if ( $email == '' ) throw new NotFoundHttpException('Email is required');
+
+    	$service = new InviteService($this, getSession());
+    	
+    	$user_it = $service->applyInvitation($email);
+    	
+    	if ( $user_it->getId() < 1 ) throw new NotFoundHttpException('Unable process the invitation');
+    	
+    	return new RedirectResponse(
+    			\EnvironmentSettings::getServerUrl().
+    					'/reset?key='.$user_it->getResetPasswordKey().
+    						'&redirect='.urlencode('/profile?redirect=/pm/my')
+		);
     }
 }

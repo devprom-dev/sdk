@@ -8,6 +8,7 @@ include SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include SERVER_ROOT_PATH."pm/methods/WikiRemoveStyleWebMethod.php";
 include SERVER_ROOT_PATH."pm/classes/wiki/DocumentMetadataBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 
 include "PMWikiTable.php";
 include "PMWikiDocument.php";
@@ -31,6 +32,8 @@ class PMWikiUserPage extends PMPage
 {
  	function PMWikiUserPage()
  	{
+ 		getSession()->addBuilder( new WikiPageModelExtendedBuilder() );
+ 		
  		parent::PMPage();
  		
  		getSession()->addBuilder( new WikiDocumentSettingBuilder() );
@@ -252,14 +255,13 @@ class PMWikiUserPage extends PMPage
  	{
        $branch = array();
 
-       foreach ($elements as $element) {
+       foreach ($elements as $key => $element) {
            if ($element['parent'] == $parentId) {
                $children = $this->buildTree($elements, $element['id']);
-               if ($children) {
+               if (count($children)>0) {
                    $element['children'] = $children;
                }
                $branch[] = $element;
-               unset($elements[$element['id']]);
            }
        }
        

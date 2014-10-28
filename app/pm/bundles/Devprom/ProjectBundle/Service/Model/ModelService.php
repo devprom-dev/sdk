@@ -12,9 +12,9 @@ class ModelService
 		$this->filter_resolver = $filter_resolver;
 	}
 	
-	public function set( $entity_name, $data, $id = '' )
+	public function set( $entity, $data, $id = '' )
 	{
-		$object = $this->getObject($entity_name);
+		$object = is_object($entity) ? $entity : $this->getObject($entity);
 
 		// convert to internal charset
 		foreach( $data as $key => $value )
@@ -58,6 +58,8 @@ class ModelService
 			{
 				if ( $object->getAttributeDbType($attribute) == '' ) continue;
 				if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
+				if ( !$object->IsAttributeStored($attribute) ) continue;
+				
 				if ( $attribute == "Description" ) continue;
 				
 				$predicate = new \FilterAttributePredicate($attribute, $value);
@@ -81,7 +83,7 @@ class ModelService
 			
 			if ( $result < 1 ) throw new \Exception('Unable create new record of '.get_class($object));
 			
-			return $this->get($entity_name, $result);
+			return $this->get($entity, $result);
 		}
 		else
 		{
@@ -95,15 +97,15 @@ class ModelService
 				throw new \Exception('Unable update the record ('.$object_it->getId().') of '.get_class($object));
 			}
 			
-			return $this->get($entity_name, $object_it->getId());
+			return $this->get($entity, $object_it->getId());
 		}
 	}
 	
-	public function get( $entity_name, $id = '' )
+	public function get( $entity, $id = '' )
 	{
 		if ( $id == '' ) $id = 0;
 		
-		$object = $this->getObject($entity_name);
+		$object = is_object($entity) ? $entity : $this->getObject($entity);
 		
 		$object_it = $object->getRegistry()->Query(
 				array (
@@ -114,15 +116,17 @@ class ModelService
 		
 		if ( $object_it->getId() < 1 )
 		{
-			throw new \Exception('There is no record ('.$id.') of '.$entity_name);
+			throw new \Exception('There is no record ('.$id.') of '.get_class($object));
 		}
 
 		return $this->sanitizeData($object_it->object, $object_it->getData());
 	}
 	
-	public function delete( $entity_name, $id )
+	public function delete( $entity, $id )
 	{
-		$object_it = $this->getObject($entity_name)->getExact($id);
+		$object = is_object($entity) ? $entity : $this->getObject($entity);
+		 
+		$object_it = $object->getExact($id);
 		
 		if ( !getFactory()->getAccessPolicy()->can_delete($object_it) )
 		{
@@ -137,22 +141,22 @@ class ModelService
 		);
 	}
 	
-	public function find( $entity_name, $filter = '', $limit = '', $offset = '')
+	public function find( $entity, $limit = '', $offset = '')
 	{
-		$object = $this->getObject($entity_name);
+		$object = is_object($entity) ? $entity : $this->getObject($entity);
 		
 		$registry = $object->getRegistry();
 		
-		$registry->setLimit($limit > 0 ? $limit : 50);
+		if ( $limit > 0 ) $registry->setLimit($limit);
 		
 		$query = array(
 				new \FilterVpdPredicate($object->getVpds())
 		);
 
 		// apply filters if any
-		if ( $filter != '' && is_object($this->filter_resolver) )
+		if ( is_object($this->filter_resolver) )
 		{
-			$query = array_merge( $query, $this->filter_resolver->resolve($filter) );
+			$query = array_merge( $query, $this->filter_resolver->resolve() );
 		}
 		
 		$result = array();

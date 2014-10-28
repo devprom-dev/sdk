@@ -538,6 +538,11 @@ function runMethod( method, data, url, warning )
 				}
 			
 				filterLocation.hideActivity();
+
+				if ( xhr.getResponseHeader('status') == '404' )
+				{
+					result = '{"message":""}';
+				}
 				
 				if ( typeof url == 'function' )
 				{
@@ -717,7 +722,7 @@ function appendEmbeddedItem( form_id )
 	if ( $('#embeddedFormBody'+form_id).html() == null )
 	{
 		body = $('#embeddedForm'+form_id).html();
-		if ( jQuery.browser.msie )
+		if ( $.browser.msie && $.browser.version < 9 )
 		{
 			$('#embeddedForm'+form_id).html('<form id="embeddedFormBody'+form_id+'" method="post" enctype="multipart/form-data">' + 
 				body + '</form>');
@@ -888,6 +893,7 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 		url: method_url+'?method=processembeddedwebmethod',
 		dataType: 'html',
 		async: false,
+		cache: false,
 		error: function( xhr, status, e ) 
 		{
 			$("#embeddedForm"+form_id)
@@ -1526,8 +1532,18 @@ function completeUIExt( jqe )
 					if ( xhr.status === 0 ) return;
 					tooltip.attr('data-content', ajaxErrorExplain( xhr, error ));				
 				},
-				success: function( data ) 
+				success: function( data, status, xhr ) 
 				{
+					if ( xhr.getResponseHeader('status') == '500' )
+					{
+						window.location = '/500';
+					}
+				
+					if ( xhr.getResponseHeader('status') == '404' )
+					{
+						return;
+					}
+
 					tooltip.attr('data-content', data);
 					tooltip.attr('loaded', 'true');
 					tooltip.data('popover').tip().find('.popover-content').css('width', $(window).width() / 3);
@@ -2229,9 +2245,20 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 		async: true,
 		cache: false,
 		success: 
-			function(result) 
+			function(result, status, xhr) 
 			{
+				if ( xhr.getResponseHeader('status') == '500' )
+				{
+					window.location = '/500';
+				}
+			
 				$('#modal-form').remove();
+
+				if ( xhr.getResponseHeader('status') == '404' )
+				{
+					filterLocation.hideActivity();
+					return;
+				}
 				
 				$('body').append('<div id="modal-form" style="display:none;" title="'+form_title+'"></div>');
 
@@ -2368,10 +2395,21 @@ function workflowModify( options, callback )
 		async: true,
 		cache: false,
 		success: 
-			function(result) 
+			function(result, status, xhr) 
 			{
+				if ( xhr.getResponseHeader('status') == '500' )
+				{
+					window.location = '/500';
+				}
+			
 				$('#modal-form').remove();
-				
+	
+				if ( xhr.getResponseHeader('status') == '404' )
+				{
+					filterLocation.hideActivity();
+					return;
+				}
+			
 				$('body').append('<div id="modal-form" style="display:none;" title="'+options.form_title+'"></div>');
 
 				var form = $(result);

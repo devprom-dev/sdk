@@ -23,11 +23,18 @@ class ReleaseForm extends PMPageForm
 			
 			$object->setAttributeDescription('FinishDate', $text);
 		}
-		
-		if ( !$methodology_it->HasFixedRelease() )
+	}
+	
+	function buildModelValidator()
+	{
+		$validator = parent::buildModelValidator();
+
+		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease() )
 		{
-			$this->getModelValidator()->addValidator( new ModelValidatorDatesCausality() );
+			$validator->addValidator( new ModelValidatorDatesCausality() );
 		}
+		
+		return $validator;
 	}
 
  	function IsAttributeVisible( $attr_name ) 

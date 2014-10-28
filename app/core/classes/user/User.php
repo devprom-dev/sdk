@@ -12,9 +12,9 @@ include "persisters/UserDetailsPersister.php";
 
 class User extends Metaobject
 {
- 	function User() 
+ 	function User( $registry = null ) 
  	{
-		parent::Metaobject('cms_User');
+		parent::Metaobject('cms_User', $registry);
 		
 		$this->setSortDefault( new SortAttributeClause('Caption') );
 		

@@ -18,10 +18,6 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 		
 		$items = array();
 
-		$module_it = $module->getExact('project-settings');
-		
-		if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return;
-
 		$module_part_it = $module->getExact('participants');
 		
 		if ( getFactory()->getAccessPolicy()->can_read($module_part_it) )
@@ -29,7 +25,12 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_part_it->buildMenuItem();
 		}
 		
-	    $items['common'] = $module_it->buildMenuItem();
+		$module_it = $module->getExact('project-settings');
+		
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+		{
+			$items['common'] = $module_it->buildMenuItem();
+		}
 
     	$module_it = $module->getExact('methodology');
 		

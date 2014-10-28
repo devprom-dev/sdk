@@ -8,10 +8,14 @@ class ProcessRevisionLog extends TaskCommand
 	{
 		$this->logStart();
 		
-		$step = 5;
+		$job_data_it = $this->getData();
 		
-		$job_it = $this->getJob();
+		$parameters = $job_data_it->getParameters();
+		
+		$step = $parameters['limit'] > 0 ? $parameters['limit'] : 30;
 
+		$job_it = $this->getJob();
+		
 		if ( $job_it->count() > 0 )
 		{
 			while ( !$job_it->end() )

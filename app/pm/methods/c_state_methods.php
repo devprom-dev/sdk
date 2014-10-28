@@ -17,8 +17,6 @@ class TransitionStateMethod extends WebMethod
  	
  	function TransitionStateMethod ( $transition_it = null, $object_it = null )
  	{
- 		global $model_factory;
- 		
  		parent::WebMethod();
 	
 		if ( is_object($transition_it) )
@@ -67,10 +65,8 @@ class TransitionStateMethod extends WebMethod
  	
  	function getWarning() 
  	{
- 		global $model_factory;
- 		
  		$state_it = $this->transition_it->getRef( 'TargetState', 
- 			$model_factory->getObject($this->object_it->object->getStateClassName()) );
+ 			getFactory()->getObject($this->object_it->object->getStateClassName()) );
  			
  		return $state_it->getWarningMessage( $this->object_it );
  	}
@@ -126,15 +122,13 @@ class TransitionStateMethod extends WebMethod
 	
  	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
-
-		$object = $model_factory->getObject($_REQUEST['class']);
+		$object = getFactory()->getObject($_REQUEST['class']);
 		
 		$object_it = $object->getExact($_REQUEST['object']);
 
 		$this->setObjectIt( $object_it );
  		
-		$transition = $model_factory->getObject('pm_Transition');
+		$transition = getFactory()->getObject('pm_Transition');
 		
 		$transition->setVpdContext( $object_it );
 
@@ -154,17 +148,15 @@ class TransitionStateMethod extends WebMethod
 
  	function execute( $transition_id, $object_id, $class, $required = array() )
  	{
- 		global $model_factory;
-
  		getSession()->addBuilder( new WorkflowModelBuilder() );
  		
- 		$object = $model_factory->getObject($class);
+ 		$object = getFactory()->getObject($class);
 		
 		$object_it = $object->getExact( $object_id ); 		
 
 		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return;
 
-		$transition = $model_factory->getObject('Transition');
+		$transition = getFactory()->getObject('Transition');
 		
 		$transition->setVpdContext( $object_it );
 		
@@ -212,22 +204,18 @@ class TransitionStateMethod extends WebMethod
  	
 	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
- 		
 		$this->execute( $_REQUEST );
  	}
 
  	function execute( $parms )
  	{
- 		global $model_factory;
-
  		getSession()->addBuilder( new WorkflowModelBuilder() );
  		
- 		$class_name = $model_factory->getClass($parms['class']);
+ 		$class_name = getFactory()->getClass($parms['class']);
  		
  		if ( !class_exists($class_name) ) throw new Exception('Unknown class name: '.$parms['class']);
  		
-		$object = $model_factory->getObject($class_name);
+		$object = getFactory()->getObject($class_name);
 		
 		if ( $parms['object'] > 0 )
 		{
@@ -258,24 +246,31 @@ class TransitionStateMethod extends WebMethod
 			return;
 		}
 
-		$source_it = $object_it->getStateIt();
+		$state_object = getFactory()->getObject($object->getStateClassName());
 		
-		if ( $source_it->count() < 1 ) 
+	    $source_it = $state_object->getRegistry()->Query(
+    			array (
+    					new \FilterAttributePredicate('ReferenceName', $object_it->get('State')),
+    					new \FilterVpdPredicate($object_it->get('VPD')),
+    					new \SortOrderedClause()
+    			)
+    	);
+		
+		if ( $source_it->getId() < 1 ) 
 		{
-			$result = array (
-				"message" => "denied",
-				"description" => IteratorBase::wintoutf8(text(708))				
-			);
-		
-			echo JsonWrapper::encode($result);
-
-			return;
+		    $source_it = $state_object->getRegistry()->Query(
+	    			array (
+	    					new \FilterVpdPredicate($object_it->get('VPD')),
+	    					new \SortOrderedClause()
+	    			)
+	    	);
 		}
 
-		$target_it = getFactory()->getObject($object->getStateClassName())->getRegistry()->Query(
+		$target_it = $state_object->getRegistry()->Query(
 				array (
 						new FilterAttributePredicate('ReferenceName', preg_split('/,/', trim($parms['target']))),
-						new FilterBaseVpdPredicate()
+						new FilterBaseVpdPredicate(),
+						new SortOrderedClause()
 				)
 		);
 		
@@ -283,9 +278,11 @@ class TransitionStateMethod extends WebMethod
 		{
 			$result = array (
 				"message" => "denied",
-				"description" => IteratorBase::wintoutf8(text(708))				
+				"description" =>
+						str_replace('%1', getSession()->getApplicationUrl().'project/workflow/'.$object->getStateClassName(), 
+								IteratorBase::wintoutf8(text(1860)))				
 			);
-		
+			
 			echo JsonWrapper::encode($result);
 			
 			return;
@@ -301,7 +298,7 @@ class TransitionStateMethod extends WebMethod
 						new FilterAttributePredicate('TargetState', $target_it->getId()),
 						new TransitionStateClassPredicate($object->getStatableClassName()),
 						new FilterBaseVpdPredicate(),
-						new SortAttributeClause('OrderNum')
+						new SortOrderedClause()
 				  )
 		);
 
@@ -504,13 +501,11 @@ class TransitionStateMethod extends WebMethod
  	
  	function getValues()
  	{
- 		global $model_factory;
- 		
   		$values = array (
  			'all' => translate('Все'),
  			);
  		
- 		$transition = $model_factory->getObject('Transition');
+ 		$transition = getFactory()->getObject('Transition');
  		$transition_it = $transition->getByRefArray(
  			array( 'SourceState' => $this->state_it->idsToArray() )
  			);

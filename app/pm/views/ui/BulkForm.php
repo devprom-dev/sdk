@@ -106,6 +106,11 @@ class BulkForm extends PMForm
 				return 'largetext'; 	
 				
 			default:
+				if ( $this->getObject()->IsReference($attribute) && $this->getObject()->getAttributeObject($attribute) instanceof PMCustomDictionary )
+				{
+					return 'custom';
+				}
+				
 				return parent::getAttributeType( $attribute );
 		}
 	}
@@ -132,9 +137,10 @@ class BulkForm extends PMForm
  		switch ( $attr )
  		{
  			case 'operation': return ' ';
-
+ 			case 'ids': return '';
+ 			
  			default:
- 				return parent::getDescription( $attr );
+ 				return parent::getDescription( $attr ).' ';
  		}
  	}
 	
@@ -374,6 +380,27 @@ class BulkForm extends PMForm
 				break;
 				
 			default:
+				if ( $this->getObject()->IsReference($attribute) )
+				{
+					$ref_object = $this->getObject()->getAttributeObject($attribute);
+					
+					if ( $ref_object instanceof PMCustomDictionary )
+					{
+						$field = new FieldCustomDictionary($this->getObject(), $attribute);
+	
+						$field->SetId($attribute);
+						$field->SetName($attribute);
+						$field->SetValue($value);
+						$field->SetTabIndex($tab_index);
+						
+						echo $this->getName($attribute);
+						
+						$field->draw();
+						
+						return;
+					}
+				}
+
 				parent::drawCustomAttribute( $attribute, $value, $tab_index );
 		}
 	}

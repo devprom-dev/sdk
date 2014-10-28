@@ -352,9 +352,18 @@ class ProcessDigest extends TaskCommand
 			
 			ob_end_clean();
 							
+			$content = $log_it->getHtmlDecoded('Content');
+			
+			$content_normalized = substr($content, 0, 128);
+			
+			if ( strlen($content_normalized) < strlen($content) )
+			{
+				$content_normalized .= "...";
+			}
+			
 			$html .= '<td class="list_cell">'.getSession()->getLanguage()->getTimeFormatted($log_it->get('RecordCreated')).'&nbsp;&nbsp;&nbsp;</td>';
 			$html .= '<td class="list_cell"><i class="'.$change_kind.'"></i> '.$title.'</td>';
-			$html .= '<td class="list_cell">'.$log_it->getHtmlDecoded('Content').'</td>';
+			$html .= '<td class="list_cell">'.$content_normalized.'</td>';
 			$html .= '<td class="list_cell">'.$author_name.'</td>';
 
 			$html .= '</tr>';

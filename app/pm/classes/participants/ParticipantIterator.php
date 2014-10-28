@@ -329,11 +329,4 @@ class ParticipantIterator extends OrderedIterator
 		 		
 		 return getFactory()->getObject('pm_ParticipantMetrics')->createSQLIterator($sql);
 	}
-	
-	function getOtherIt()
-	{
-		return $this->object->getByRefArray( array(
-			'SystemUser' => $this->fieldToArray('SystemUser')
-		));		
-	}
 }

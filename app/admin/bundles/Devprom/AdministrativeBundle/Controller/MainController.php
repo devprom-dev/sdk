@@ -14,7 +14,7 @@ class MainController extends BaseController
     	$request = $this->getRequest();
 
     	// check if an update is installing then skip controlling of deployment state
-    	if ( preg_match('/update/i', $request->getQueryString()) ) return;
+    	if ( preg_match('/update|command/i', $request->getBaseUrl()) ) return;
 
     	$state = getFactory()->getObject('DeploymentState');
     	
@@ -25,6 +25,6 @@ class MainController extends BaseController
     		return new RedirectResponse($this->generateUrl('_admin_install'));
     	}
     	
-		if ( is_object($response = $this->checkAccess()) ) return $response;    	
+		if ( is_object($response = $this->checkAccess()) ) return $response;
     }
 }

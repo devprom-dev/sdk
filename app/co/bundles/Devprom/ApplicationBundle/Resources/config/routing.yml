@@ -1,6 +1,6 @@
 _entry:
     pattern:  /
-    defaults: { _controller: ApplicationBundle:Security:login }
+    defaults: { _controller: ApplicationBundle:Main:index }
 
 logoff:
     pattern:  /logoff
@@ -34,6 +34,10 @@ recovery_process:
     requirements:
         _method:  POST
     
+join:
+    pattern:  /join-project
+    defaults: { _controller: ApplicationBundle:Security:join }
+
 reset:
     pattern:  /reset
     defaults: { _controller: ApplicationBundle:Security:reset }
@@ -106,4 +110,11 @@ _file:
     pattern:  /{module}/{namespace}/{page}/{file}
     defaults: { _controller: ApplicationBundle:Page:module }
 
+_admin_scripts:
+    pattern:  /co/scripts/javascript/
+    defaults: { _controller: CommonBundle:Scripts:js }
+
+_admin_css:
+    pattern:  /co/scripts/css/
+    defaults: { _controller: CommonBundle:Scripts:css }
    

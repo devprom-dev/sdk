@@ -11,6 +11,8 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
  	private $system_attributes = array();
  	
+ 	private $modified_attributes = array();
+ 	
  	function __construct()
  	{
  		parent::__construct();
@@ -23,12 +25,14 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
  	
  	function add( $object_it ) 
 	{
+		$this->modified_attributes = array();
+		
 		$this->process( $object_it, 'added' );
 	}
 
  	function modify( $prev_object_it, $object_it ) 
 	{
-		$content = $this->getContent( $prev_object_it, $object_it );
+		list($content, $this->modified_attributes) = $this->getContent( $prev_object_it, $object_it );
 
 		$content != '' 
 			? $this->process( $object_it, 'modified', $content, $this->default_visibility )
@@ -37,12 +41,16 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
  	function delete( $object_it ) 
 	{
+		$this->modified_attributes = array();
+		
 		$this->process( $object_it, 'deleted' );
 	}
 	
 	function getContent( $prev_object_it, $object_it )
 	{
 		$content = '';
+		$modified_attributes = array();
+		
 		$attributes = $object_it->object->getAttributes();
 
 		foreach( $attributes as $att_name => $attribute ) 
@@ -63,6 +71,8 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 			
 			if( $was_value != $now_value )
 			{
+				$modified_attributes[] = $att_name;
+				
 				if ( $object_it->object->IsReference($att_name) ) 
 				{
 					$now_ref = $object_it->getRef($att_name);
@@ -88,7 +98,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 			}
         }
 
-        return $content;
+        return array($content, $modified_attributes);
 	}
 	
 	function process( $object_it, $kind, $content = '', $visibility = 1) 
@@ -116,7 +126,19 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$parms['VisibilityLevel'] = $visibility;
 		$parms['SystemUser'] = getSession()->getUserIt()->getId();
 
-		$change_log->add_parms($parms);
+		$id = $change_log->add_parms($parms);
+		
+		$log_attribute = getFactory()->getObject('ObjectChangeLogAttribute');
+		
+		foreach( $this->modified_attributes as $attribute )
+		{
+			$log_attribute->add_parms(
+					array (
+							'ObjectChangeLogId' => $id,
+							'Attributes' => $attribute
+					)
+			);
+		}
 	}
 	
 	function is_active( $object_it ) 

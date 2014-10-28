@@ -1,6 +1,6 @@
 <?php
 
-include "predicates/PMUserSettingProjectPredicate.php";
+include "predicates/SettingGlobalPredicate.php";
 
 class PMUserSettings extends MetaobjectCacheable
 {

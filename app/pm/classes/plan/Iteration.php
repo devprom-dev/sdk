@@ -134,18 +134,6 @@ class Iteration extends Metaobject
 		return parent::getDefaultAttributeValue($name);
 	}
 	
-	function IsAttributeRequired( $attr )
-	{
-		switch ( $attr )
-		{
-			case 'FinishDate':
-				return !getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease();		
-				
-			default:
-				return parent::IsAttributeRequired( $attr );
-		}
-	}
-
 	function add_parms( $parms ) 
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();

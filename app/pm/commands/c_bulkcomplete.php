@@ -188,8 +188,8 @@ include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
     			}
     			
     			$_REQUEST = array_merge( $_REQUEST, $attrs );
-    			
-   				$method = new $class_name( $object_it );
+
+    			$method = new $class_name( $object_it );
     				
    				// as standalone the method may to echo some text 
    				ob_start();
