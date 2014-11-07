@@ -426,26 +426,8 @@ class CloneLogic
 				break;
 				
 			case 'WikiPage':
-				
-				$parms['DocumentVersion'] = '';
-				
-				if ( $parms['ParentPage'] == '' )
-				{
-					$parms['ParentPath'] = '';
-					$parms['SectionNumber'] = '';
-				}
-				
-				if ( !is_numeric($parms['IsTemplate']) )
-				{
-					$parms['IsTemplate'] = $parms['IsTemplate'] == 'Y' ? 1 : 0;
-				}
-				
-				if ( !is_numeric($parms['ReferenceName']) )
-				{
-					$parms['ReferenceName'] = getFactory()->getObject('WikiPage')
-							->getByRef('ReferenceName', $parms['ReferenceName'])->getId();
-				}
-				
+
+				// rebuild hard links to images
 				$project_it = getSession()->getProjectIt();
 				
 				$parms['Content'] = preg_replace_callback('/file\/([^\/]+)\/([^\/]+)\/([\d]+)/i', 
@@ -457,6 +439,42 @@ class CloneLogic
 										: $matches[0];
 						}, $it->getHtmlDecoded('Content')
 					);
+				
+				if ( $it->get('ParentPage') == '' && $it->get('ReferenceName') == WikiTypeRegistry::KnowledgeBase )
+				{
+					$root_it = getFactory()->getObject('ProjectPage')->getRootIt();
+
+					if ( $root_it->getId() > 0 )
+					{
+						$root_it->modify(
+								array (
+										'Content' => $parms['Content']
+								) 
+						);
+						
+						return array();
+					}
+				}
+				
+				$parms['DocumentVersion'] = '';
+				
+				if ( $parms['ParentPage'] == '' )
+				{
+					$parms['ParentPath'] = '';
+					$parms['SectionNumber'] = '';
+				}
+
+				// backward compatibility
+				if ( !is_numeric($parms['IsTemplate']) )
+				{
+					$parms['IsTemplate'] = $parms['IsTemplate'] == 'Y' ? 1 : 0;
+				}
+				
+				if ( !is_numeric($parms['ReferenceName']) )
+				{
+					$parms['ReferenceName'] = getFactory()->getObject('WikiPage')
+							->getByRef('ReferenceName', $parms['ReferenceName'])->getId();
+				}
 
 				break;
 			
@@ -770,9 +788,9 @@ class CloneLogic
  	{
  		$user_it = getSession()->getUserIt();
  		
- 		$value = preg_replace('/taskassignee=[^;&]+/i', 'taskassignee='.$user_it->getId(), $value);
+ 		$value = preg_replace('/taskassignee=[\d]+/i', 'taskassignee='.$user_it->getId(), $value);
 				
-		$value = preg_replace('/owner=[^;&]+/i', 'owner='.$user_it->getId(), $value);
+		$value = preg_replace('/owner=[\d]+/i', 'owner='.$user_it->getId(), $value);
 		
 		return $value;
  	}

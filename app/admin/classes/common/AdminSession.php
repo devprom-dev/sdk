@@ -7,6 +7,8 @@ include SERVER_ROOT_PATH."admin/classes/notificators/ProcessFirstUserEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/UpdateBlockedParticipantsEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/RecentBackupCreatedEvent.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceModuleBuilder.php";
+include SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
+
 
 class AdminSession extends SessionBase
 {
@@ -34,14 +36,20 @@ class AdminSession extends SessionBase
  	
  	function createBuilders()
  	{
- 	    return array_merge( parent::createBuilders(), array (
- 	            new AdminEmailNotificator(),
- 	            new AdminChangeLogNotificator(),
- 	            new AdminSystemTriggers(),
- 	    		new ProcessFirstUserEvent(),
- 	    		new UpdateBlockedParticipantsEvent(),
- 	    		new MaintenanceModuleBuilder(),
- 	    		new RecentBackupCreatedEvent()
- 	    ));
+ 	    return array_merge(
+ 	    		array (
+ 	    				new ResourceBuilderCoLanguageFile()
+ 	    		),
+ 	    		parent::createBuilders(),
+ 	    		array (
+		 	            new AdminEmailNotificator(),
+		 	            new AdminChangeLogNotificator(),
+		 	            new AdminSystemTriggers(),
+		 	    		new ProcessFirstUserEvent(),
+		 	    		new UpdateBlockedParticipantsEvent(),
+		 	    		new MaintenanceModuleBuilder(),
+		 	    		new RecentBackupCreatedEvent()
+ 	    		)
+ 	    );
  	}
 }

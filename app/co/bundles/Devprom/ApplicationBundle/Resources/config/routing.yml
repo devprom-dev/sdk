@@ -68,6 +68,12 @@ project_create:
     requirements:
         _method:  POST
 
+project_welcome:
+    pattern:  /projects/welcome
+    defaults: { _controller: ApplicationBundle:Project:welcome }
+    requirements:
+        _method:  GET
+
 menu_config:
     pattern:  /menu/config
     defaults: { _controller: ApplicationBundle:Menu:config }

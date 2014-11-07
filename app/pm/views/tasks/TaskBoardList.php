@@ -4,6 +4,8 @@ include_once "TaskProgressFrame.php";
 include_once "TaskBalanceFrame.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
 include_once SERVER_ROOT_PATH.'core/views/c_priority_view.php';
+include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 
 class TaskBoardList extends PMPageBoard
 {
@@ -12,14 +14,18 @@ class TaskBoardList extends PMPageBoard
  	private $priorities_array = array();
 
  	private $visible_column = array();
+
+ 	private $method_comment = null;
  	
- 	function TaskBoardList( $object ) 
+ 	private $method_spend_time = null;
+ 	
+ 	function __construct( $object ) 
 	{
-		global $model_factory;
-		
 		$this->priority_frame = new PriorityFrame();
 		
 		parent::__construct( $object );
+		
+		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
 	}
 
 	function buildRelatedDataCache()
@@ -32,6 +38,24 @@ class TaskBoardList extends PMPageBoard
 			 
 			$priority_it->moveNext();
 		}
+		
+	 	$method = new CommentWebMethod( $this->getObject()->getEmptyIterator() );
+ 		
+ 		if ( $method->hasAccess() )
+ 		{
+ 			$method->setRedirectUrl('donothing');
+ 			
+ 			$this->method_comment = $method;
+ 		}
+
+ 		$method = new SpendTimeWebMethod( $this->getObject()->getEmptyIterator() );
+ 		
+ 		if ( $method->hasAccess() )
+ 		{
+ 			$method->setRedirectUrl('donothing');
+ 			
+ 			$this->method_spend_time = $method;
+ 		}
 		
 		$this->getTable()->buildRelatedDataCache();
 	}
@@ -118,6 +142,13 @@ class TaskBoardList extends PMPageBoard
 		return $cols;
 	}
 
+ 	function getColumnVisibility( $attribute )
+ 	{
+ 		if ( $attribute == 'Basement' ) return array_sum($this->visible_column) > 0;
+ 		
+ 		return parent::getColumnVisibility( $attribute );
+ 	}
+	
 	function getGroupDefault()
 	{
 		if ( $this->getTable()->hasCrossProjectFilter() ) return 'Project';
@@ -166,21 +197,8 @@ class TaskBoardList extends PMPageBoard
  	{
  		switch ( $attr )
  		{
- 		    case 'Fact':
- 		        echo '<div style="padding:3px 0 3px 0;">';
- 		            echo ($object_it->get('Fact') > 0 ? $object_it->get('Fact').' '.translate('÷.') : '');
- 		        echo '</div>';
- 		        
- 		        break;
- 		         
  		    case 'AssigneeUser':
- 		    	if ( $object_it->get($attr) != '' )
- 		    	{
-	 		        echo '<div style="padding:3px 0 3px 0;">';
-	 		            echo $ref_it->getDisplayName();
-	 		        echo '</div>';
- 		    	}
- 		        
+ 		    case 'Attachment':
  		        break;
  		        
  		    default:
@@ -194,6 +212,11 @@ class TaskBoardList extends PMPageBoard
 	{
 		switch($attr)	
 		{
+ 		    case 'Fact':
+			case 'OrderNum':
+			case 'RecentComment':
+				break;
+			
 			case 'Progress':
 				if ( $object_it->IsFinished() )
 				{
@@ -230,9 +253,51 @@ class TaskBoardList extends PMPageBoard
 				
 				break;
 
-			case 'OrderNum':
-				break;
-			
+			case 'Basement':
+   				
+				echo '<div style="display:table;width:100%;margin-bottom:3px;height:23px;">';
+					echo '<div style="display:table-cell;text-align:left;">';
+						if ( $object_it->get('OwnerPhotoId') != '' )
+						{
+							echo $this->getTable()->getView()->render('core/UserPicture.php', array ( 
+									'id' => $object_it->get('OwnerPhotoId'), 
+									'class' => 'user-mini', 
+									'image' => 'userpics-mini',
+									'title' => $object_it->get('OwnerPhotoTitle')
+							));
+						}
+						if ( $this->visible_column['Attachment'] )
+						{
+							echo '<div style="display: inline-block;vertical-align:bottom;">';
+								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
+							echo '</div>';
+						}
+					echo '</div>';
+						
+					echo '<div style="display:table-cell;text-align:right;">';
+						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 && is_object($this->method_spend_time) )
+						{
+							$this->method_spend_time->setAnchorIt($object_it);
+							
+							echo '<div class="board-item-fact" title="'.$this->spent_time_title.'">';
+								echo '<a href="'.$this->method_spend_time->getJSCall().'">'.$object_it->get('Fact').'</a>';
+		    				echo '</div>';
+						}
+	
+						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
+						{
+							echo '<div style="margin-left:4px;display: inline-block;">';
+								echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+										'object_it' => $object_it,
+										'redirect' => 'donothing'
+								));
+							echo '</div>';
+						}
+					echo '</div>';
+				echo '</div>';
+
+				break;					
+								
 			default:
 				parent::drawCell( $object_it, $attr );
 		}
@@ -312,54 +377,28 @@ class TaskBoardList extends PMPageBoard
 
 	function getActions( $object_it ) 
 	{
-		global $model_factory;
-		
 		$actions = parent::getActions( $object_it );
 		
-		if ( $object_it->IsFinished() )
+		if ( is_object($this->method_comment) )
 		{
-			return $actions;	
-		}	
-		
-		$project_roles = getSession()->getRoles();
-		
-		if( $project_roles['lead'] && !$this->getTable()->hasCrossProjectFilter() ) 
-		{
-			if ( !isset($this->futher_it) )
-			{
-				$release = $model_factory->getObject('Iteration');
-				
-				$release->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-				
-				$this->futher_it = $release->getAll();
-			}
-			else
-			{
-				$this->futher_it->moveFirst();
-			}
+			$this->method_comment->setAnchorIt($object_it);
 			
-			$need_separator = true;
-			while( !$this->futher_it->end() )
-			{
-				if ( $this->futher_it->getId() != $object_it->get('Release') )
-				{
-					if ( $need_separator )
-					{
-						array_push($actions, array());
-						$need_separator = false;
-					}
-					
-					$it = $this->futher_it->_clone();
-					$method = new MoveTaskWebMethod($it);
+			$actions[] = array();
+			$actions[] = array ( 
+				'name' => $this->method_comment->getCaption(), 
+				'url' => $this->method_comment->getJSCall() 
+			);
+		}
 		
-					array_push($actions,
-							   array( 'name' => $method->getCaption(), 
-							   		  'url' => $method->getJSCall( array( 'Task' => $object_it->getId(),
-							   			'Release' => $this->futher_it->getId())) ) );
-				}
-						   			
-				$this->futher_it->moveNext();
-			}
+		if ( is_object($this->method_spend_time) )
+		{
+			$this->method_spend_time->setAnchorIt($object_it);
+			
+			$actions[] = array();
+			$actions[] = array ( 
+				'name' => $this->method_spend_time->getCaption(), 
+				'url' => $this->method_spend_time->getJSCall() 
+			);
 		}
 		
 		$priority_actions = array();
@@ -430,7 +469,7 @@ class TaskBoardList extends PMPageBoard
 		
 		$parms = parent::getRenderParms();
 		
-		foreach( array('OrderNum') as $column )
+		foreach( array( 'Attachment', 'RecentComment', 'Fact', 'OrderNum') as $column )
 		{
 			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
 			

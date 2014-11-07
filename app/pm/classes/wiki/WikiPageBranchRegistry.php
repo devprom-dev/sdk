@@ -6,7 +6,7 @@ class WikiPageBranchRegistry extends ObjectRegistrySQL
 	{
 		return array_merge( parent::getFilters(), 
 				array (
-					new FilterVpdPredicate($this->getObject()->getVpds()),
+					new FilterVpdPredicate(),
 					new FilterAttributePredicate('ObjectClass', $this->getObject()->getObjectClass()),
 					new FilterAttributePredicate('Type', 'branch')
 				)

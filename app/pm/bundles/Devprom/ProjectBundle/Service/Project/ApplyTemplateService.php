@@ -13,7 +13,7 @@ class ApplyTemplateService
 		$this->reset_state = $flag;
 	}
 	
- 	function apply( $template_it, $project_it, $sections = null )
+ 	function apply( $template_it, $project_it, $sections = array(), $except_sections = array() )
  	{
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
@@ -30,7 +30,9 @@ class ApplyTemplateService
 
  		$state_objects = array();
  		
- 		$objects = is_array($sections) ? $this->getSectionObjects($sections) : $this->getAllObjects();
+ 		$objects = count($sections) > 0 
+ 				? $this->getSectionObjects($sections, $except_sections) 
+ 				: $this->getAllObjects($except_sections);
  				
 		foreach ( $objects as $object )
 		{
@@ -130,7 +132,7 @@ class ApplyTemplateService
  		getSession()->truncate();
  	}
  	
- 	private function getSectionObjects( $sections )
+ 	static protected function getSectionObjects( $sections, $except_sections = array() )
  	{
  		$objects = array();
  		
@@ -138,6 +140,12 @@ class ApplyTemplateService
 		
  		while ( !$section_it->end() )
  		{
+ 			if ( in_array($section_it->get('ReferenceName'), $except_sections) )
+ 			{
+ 				$section_it->moveNext();
+ 				continue;
+ 			}
+ 			
  			if ( !in_array($section_it->get('ReferenceName'), $sections) )
  			{
  				$section_it->moveNext();
@@ -152,23 +160,39 @@ class ApplyTemplateService
  		return $objects;
  	}
  	
- 	static public function getAllObjects()
+ 	static public function getAllObjects( $except_sections = array() )
  	{
  		$objects = array (
  				getFactory()->getObject('Participant'),
  				getFactory()->getObject('ParticipantRole'),
- 				getFactory()->getObject('Tag')
+	 			getFactory()->getObject('Release'),
+	 			getFactory()->getObject('Iteration')
  		);
  		 		
 		$section_it = getFactory()->getObject('ProjectTemplateSections')->getAll();
 
  	 	while ( !$section_it->end() )
  		{
+ 		 	if ( in_array($section_it->get('ReferenceName'), $except_sections) )
+ 			{
+ 				$section_it->moveNext();
+ 				continue;
+ 			}
+ 			
  			$objects = array_merge($objects, $section_it->get('items'));
  			
  			$section_it->moveNext();
  		}
 
- 		return $objects;
+ 		$result = array();
+ 		
+ 		foreach( $objects as $object )
+ 		{
+ 			$hash = get_class($object).$object->getEntityRefName();
+ 			
+ 			if ( !array_key_exists($hash, $result) ) $result[$hash] = $object;
+ 		}
+ 		
+ 		return $result;
  	}
 }

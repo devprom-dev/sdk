@@ -6,9 +6,9 @@ use Devprom\ApplicationBundle\Controller\PageController;
 use Devprom\ApplicationBundle\Service\CreateProjectService;
 use Devprom\CommonBundle\Service\Project\InviteService;
 
-
 include_once SERVER_ROOT_PATH."co/views/Common.php";
 include SERVER_ROOT_PATH."co/views/ProjectCreatePage.php";
+include SERVER_ROOT_PATH."co/views/ProjectWelcomePage.php";
  
 class ProjectController extends PageController
 {
@@ -24,49 +24,61 @@ class ProjectController extends PageController
     public function createAction()
     {
         $response = $this->checkUserAuthorized();
-        
         if ( is_object($response) ) return $response;
 
         $request = $this->getRequest();
 		$prj_cls = getFactory()->getObject('pm_Project');
         
+		$parms = array();
+
+		// get defaults
+        $parms['CodeName'] = $request->request->get('CodeName');
+        $parms['Caption'] = \IteratorBase::utf8towin($request->request->get('Caption'));
+        $parms['Template'] = $request->request->get('Template');
+
+        if ( $parms['CodeName'] == '' ) $parms['CodeName'] = $prj_cls->getDefaultAttributeValue('CodeName');
+        if ( $parms['Caption'] == '' ) $parms['Caption'] = $prj_cls->getDefaultAttributeValue('Caption');
+		
         // validate values
-        $codename = $request->request->get('CodeName');
-        if ( $codename == '' ) $codename = $prj_cls->getDefaultAttributeValue('CodeName');
-
-        $caption = \IteratorBase::utf8towin($request->request->get('Caption'));
-        if ( $caption == '' ) $caption = $prj_cls->getDefaultAttributeValue('Caption');
+        foreach( $parms as $key => $value )
+        {
+        	if ( $value == '' ) return $this->replyError(text(200));
+        }
         
-        $empty_values = $codename == '' || $caption == ''
-            || $request->request->get('Template') == '';
-            
-        if ( $empty_values ) return $this->replyError(text(200));
-        
-		if ( !$prj_cls->validCodeName($codename) ) return $this->replyError(text(208));
-
-		$project_it = $prj_cls->getByRef(
-		    'LCASE(CodeName)', strtolower($codename)
+        $validator = new \ModelValidator(
+        		array (
+        				new \ModelValidatorProjectCodeName(),
+        				new \ModelValidatorUnique(array('CodeName'))
+        		)
 		);
-			
-		if ( $project_it->count() > 0 ) return $this->replyError(text(202));
-
-		if ( !getFactory()->getAccessPolicy()->can_create($prj_cls) ) return $this->replyError(text(706));
         
-		// create new project
+        $message = $validator->validate($prj_cls, $parms);
+        
+		if ( $message != "" ) return $this->replyError($message);
 
-		$_REQUEST['Caption'] = $caption;
-		$_REQUEST['Codename'] = $codename;
+		// check access policy
+		if ( !getFactory()->getAccessPolicy()->can_create($prj_cls) )
+		{
+			return $this->replyError(text(706));
+		}
 
+        $parms['DemoData'] = in_array(strtolower($request->request->get('DemoData')), array('Y','on'));
+		
 		$strategy = new CreateProjectService();
 		
-		$result = $strategy->execute();
+		$result = $strategy->execute($parms);
 		
 		if ( $result < 1 ) 
 		{
-		    return $this->replyError( self::getResultDescription($strategy, $result) );
+		    return $this->replyError( $strategy->getResultDescription($result) );
 		}
 
-		$emails = preg_split('/,/', $request->request->get('Participants'));
+		$emails = array_filter(
+				preg_split('/,/', $request->request->get('Participants')), 
+				function($value) {
+						return $value != '' && filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+				}
+        );
 		
 		if ( count($emails) > 0 )
 		{
@@ -75,49 +87,14 @@ class ProjectController extends PageController
 		}
 		
 		return $this->replySuccess(
-				$strategy->getSuccessMessage(), $codename.'/'
+				$strategy->getResultDescription(0), $parms['CodeName'].'/'
 		); 
     }
     
-	static function getResultDescription( $strategy, $result )
-	{
-		switch($result)
-		{
-			case -1:
-				return text(200);
-				
-			case -2:
-				return text(201);
-				
-			case -3:
-				return text(202);
-				
-			case -4:
-				return text(203);
-
-			case -5:
-				return text(204);
-				
-			case -6:
-				return text(205);
-				
-			case -7:
-				return text(206);
-				
-			case -8:
-				return text(207);
-				
-			case -9:
-				return text(208);
-				
-			case -10:
-				return text(209);
-				
-			case -11:
-				return text(1424);
-				
-			default:
-				return $strategy->getSuccessMessage();
-		}
-	}    
+    public function welcomeAction()
+    {
+        if ( is_object($response = $this->checkUserAuthorized()) ) return $response;
+        
+    	return $this->responsePage( new \ProjectWelcomePage() );
+    }
 }

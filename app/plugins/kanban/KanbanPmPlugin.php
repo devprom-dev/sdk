@@ -31,15 +31,6 @@ class KanbanPmPlugin extends PluginPMBase
  		if ( getSession()->getProjectIt()->IsPortfolio() ) return array();
  		
 		$modules = array (
- 			'requests' => 
- 				array(
- 					'includes' => array( 'kanban/views/KanbanRequestPage.php' ),
- 					'classname' => 'KanbanRequestPage',
- 				    'title' => text('kanban17'),
- 					'description' => text('kanban29'),
- 				    'AccessEntityReferenceName' => 'pm_ChangeRequest',
- 					'area' => FUNC_AREA_MANAGEMENT
- 					),
 		    'avgleadtime' => 
  				array(
  					'includes' => array( 'kanban/views/LeadAndCycleTimePage.php' ),
@@ -50,7 +41,19 @@ class KanbanPmPlugin extends PluginPMBase
  					'area' => FUNC_AREA_MANAGEMENT
  					)
  			);
- 			
+
+		if ( !$this->checkEnabled() ) return $modules;
+		
+		$modules['requests'] = 
+ 				array(
+ 					'includes' => array( 'kanban/views/KanbanRequestPage.php' ),
+ 					'classname' => 'KanbanRequestPage',
+ 				    'title' => text('kanban17'),
+ 					'description' => text('kanban29'),
+ 				    'AccessEntityReferenceName' => 'pm_ChangeRequest',
+ 					'area' => FUNC_AREA_MANAGEMENT
+ 					);
+		
  		return $modules;
  	}
 

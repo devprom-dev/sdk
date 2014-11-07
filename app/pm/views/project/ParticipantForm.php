@@ -9,6 +9,15 @@ class ParticipantForm extends PMPageForm
 		parent::__construct( getFactory()->getObject('pm_Participant') );
 	}
 		
+	function editable()
+	{
+		$object_it = $this->getObjectIt();
+		
+		if ( is_object($object_it) && $object_it->getId() == getSession()->getParticipantIt()->getId() ) return true;
+		
+		return parent::editable();
+	}
+	
 	function process()
 	{
 		if ( $this->getAction() == 'add' )
@@ -82,6 +91,15 @@ class ParticipantForm extends PMPageForm
 		return false;
 	}
 
+	function IsAttributeEditable( $attr_name )
+	{
+		$object_it = $this->getObjectIt();
+		
+		if ( is_object($object_it) && $object_it->getId() == getSession()->getParticipantIt()->getId() ) return true;
+		
+		return parent::IsAttributeEditable( $attr_name );
+	}
+	
  	function IsAttributeVisible( $attr_name ) 
  	{
  		global $_REQUEST;

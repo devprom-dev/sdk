@@ -99,9 +99,7 @@ class Iteration extends Metaobject
     			$iteration->addFilter( new IterationReleasePredicate($_REQUEST['Version']) );
 			}
 			
-			$iteration_it = $iteration->getFirst();
-			
-			return $iteration_it->get('ReleaseNumber') + 1;
+			return max(intval($iteration->getFirst()->get('ReleaseNumber')), 0) + 1;
 		}
 		elseif ($name == 'Project') 
 		{

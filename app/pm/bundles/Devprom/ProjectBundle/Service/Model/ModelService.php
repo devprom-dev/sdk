@@ -110,7 +110,7 @@ class ModelService
 		$object_it = $object->getRegistry()->Query(
 				array (
 						new \FilterInPredicate($id),
-						new \FilterVpdPredicate($object->getVpds())
+						new \FilterVpdPredicate()
 				)
 		);
 		
@@ -150,7 +150,7 @@ class ModelService
 		if ( $limit > 0 ) $registry->setLimit($limit);
 		
 		$query = array(
-				new \FilterVpdPredicate($object->getVpds())
+				new \FilterVpdPredicate()
 		);
 
 		// apply filters if any

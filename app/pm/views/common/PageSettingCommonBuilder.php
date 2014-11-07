@@ -105,7 +105,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         
         $setting = new PageListSetting('TaskBoardList');
 
-        $columns = array('UID', 'Caption', 'Assignee', 'AssigneeUser', 'Progress');
+        $columns = array('UID', 'Caption', 'RecentComment', 'Fact', 'Attachment', 'AssigneeUser', 'Progress');
 
         if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
 		{

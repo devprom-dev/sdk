@@ -17,15 +17,15 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
     	
     	$this->buildWidgets($registry);
     	
-    	$this->buildKnowledgeBase($registry);
-    	
     	$this->buildProjectRoles($registry);
     	
     	$this->buildWorkflow($registry);
-    	
+
  		$registry->addSection(new Metaobject('cms_Resource'), 'Terminology', array(), true, text(940));
 
- 		$registry->addSection(getFactory()->getObject('pm_CustomAttribute'), '', array(), true, text(1080));
+ 		$registry->addSection(getFactory()->getObject('pm_CustomAttribute'), 'Attributes', array(), true, text(1080));
+
+    	$this->buildTemplates($registry);
  		
  		$this->buildArtefacts($registry);
 	}
@@ -47,8 +47,14 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 		getFactory()->getObject('pm_ProjectStage'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
+			getFactory()->getObject('TaskTypeStage'), 				
 	 		$methodology
 	 	);
+	 	
+	 	$projectpage = getFactory()->getObject('ProjectPage');
+	 	$projectpage->addFilter( new WikiSectionFilter() );
+		$projectpage->addSort( new SortDocumentClause() );
+		$items[] = $projectpage;
 	 	
  		$registry->addSection($registry, 'pm_Project', $items, true, text(734));
     }
@@ -104,20 +110,13 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  		$registry->addSection($registry, 'Widgets', $items, true, text(1832));
     }
    
-    private function buildKnowledgeBase( & $registry )
+    private function buildTemplates( & $registry )
     {
  		$registry->addSection(
- 				getFactory()->getObject('KnowledgeBaseTemplate'), 'KnowledgeBaseTemplate', array(), true, text(733)
+ 				getFactory()->getObject('KnowledgeBaseTemplate'), 'Templates', array(), true, text(733)
    		);
-
-	 	$projectpage = getFactory()->getObject('ProjectPage');
-
-	 	$projectpage->addFilter( new WikiSectionFilter() );
-		$projectpage->addSort( new SortDocumentClause() );
-	 	
- 		$registry->addSection($projectpage, 'ProjectPage', array(), true, text(736));
     }
-   
+    
     private function buildProjectRoles( & $registry )
     {
 	 	$projectrole = getFactory()->getObject('ProjectRole');
@@ -152,7 +151,6 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  		$items = array (
  			getFactory()->getObject('Release'),
  			getFactory()->getObject('Iteration'),
-			getFactory()->getObject('TaskTypeStage'), 				
  			getFactory()->getObject('Tag'),
  			getFactory()->getObject('Feature'),
  			getFactory()->getObject('Request'),
@@ -161,15 +159,21 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 			getFactory()->getObject('Task'),
  			getFactory()->getObject('TaskTraceTask'),
  			getFactory()->getObject('Milestone'),
+ 			getFactory()->getObject('RequestTraceMilestone'),
+ 			getFactory()->getObject('PMBlogPost'),
  			getFactory()->getObject('Attachment'),
  			getFactory()->getObject('Activity'),
- 			getFactory()->getObject('Comment'),
  			getFactory()->getObject('PMEntityCluster'),
  			getFactory()->getObject('Snapshot'),
  			getFactory()->getObject('SnapshotItem'),
- 			getFactory()->getObject('SnapshotItemValue')
+ 			getFactory()->getObject('SnapshotItemValue'),
+ 			getFactory()->getObject('Comment')
  		);
  		
- 		$registry->addSection($registry, 'ProjectArtefacts', $items, true, text(1834));
+ 		$log = getFactory()->getObject('ChangeLog');
+ 		$log->addFilter( new ChangeLogObjectFilter('request,task,pmblogpost,milestone') );
+ 		$items[] = $log; 
+ 		
+		$registry->addSection($registry, 'ProjectArtefacts', $items, true, text(1834));
     }
 }

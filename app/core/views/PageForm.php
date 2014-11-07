@@ -77,10 +77,11 @@ class PageForm extends MetaObjectForm
 				$type_validation_attrs[] = $attribute;
 			}
 		}
-		
+
 		// basic (type based) validation used for hidden fields and simple types (int, string, etc.) 
 		if ( count($type_validation_attrs) > 0 )
 		{
+			$validator->addValidator(new ModelValidatorObligatory($type_validation_attrs));
 			$validator->addValidator(new ModelValidatorTypes($type_validation_attrs));
 		}
 

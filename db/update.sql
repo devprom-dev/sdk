@@ -1176,6 +1176,54 @@ END IF;
 
 UPDATE pm_ProjectTemplate SET Caption = 'Поддержка' WHERE FileName = 'ticket_ru.xml';
 
+DROP TABLE IF EXISTS tmpProjectVPD;
+
+CREATE TABLE tmpProjectVPD (VPD VARCHAR(255)) AS 
+SELECT p.VPD FROM pm_Project p 
+ WHERE EXISTS (SELECT 1 FROM pm_State s WHERE s.VPD = p.VPD AND s.ObjectClass = 'task' AND NOT EXISTS (SELECT 1 FROM pm_Transition t WHERE t.SourceState = s.pm_StateId) AND s.IsTerminal = 'N')
+   AND EXISTS (SELECT 1 FROM pm_State s WHERE s.VPD = p.VPD AND s.ObjectClass = 'task' AND NOT EXISTS (SELECT 1 FROM pm_Transition t WHERE t.SourceState = s.pm_StateId) AND s.IsTerminal = 'Y');
+
+INSERT INTO pm_Transition (VPD, Caption, SourceState, TargetState)
+SELECT p.VPD, 'Выполнить', 
+	   (SELECT s.pm_StateId FROM pm_State s WHERE s.ObjectClass = 'task' AND s.VPD = p.VPD AND s.IsTerminal = 'N' ORDER BY s.OrderNum LIMIT 1),
+       (SELECT s.pm_StateId FROM pm_State s WHERE s.ObjectClass = 'task' AND s.VPD = p.VPD AND s.IsTerminal = 'Y' ORDER BY s.OrderNum LIMIT 1)
+  FROM tmpProjectVPD p;
+
+INSERT INTO pm_Transition (VPD, Caption, SourceState, TargetState)
+SELECT p.VPD, 'Отклонить', 
+	   (SELECT s.pm_StateId FROM pm_State s WHERE s.ObjectClass = 'task' AND s.VPD = p.VPD AND s.IsTerminal = 'Y' ORDER BY s.OrderNum LIMIT 1),
+       (SELECT s.pm_StateId FROM pm_State s WHERE s.ObjectClass = 'task' AND s.VPD = p.VPD AND s.IsTerminal = 'N' ORDER BY s.OrderNum LIMIT 1)
+  FROM tmpProjectVPD p;
+
+DROP TABLE tmpProjectVPD;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+SELECT NOW(), NOW(), NULL,'Тип шаблона','Kind','VARCHAR','case','Y','N',e.entityId,100
+  FROM entity e WHERE e.ReferenceName = 'pm_ProjectTemplate' 
+   AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Kind')
+ LIMIT 1;
+
+IF NOT check_column_exists('Kind', 'pm_ProjectTemplate') THEN
+ALTER TABLE pm_ProjectTemplate ADD Kind VARCHAR(128);
+
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (5, 'text(co1)', 'text(co2)', 'tasks_ru.xml', 1, 'team', 'process');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (200, 'text(co3)', 'text(co4)', 'openup_ru.xml', 1, 'ee', 'methodology');
+UPDATE pm_ProjectTemplate SET Kind = 'methodology' WHERE FileName IN ('scrum_ru.xml','kanban_ru.xml','scrum_en.xml','sdlc_en.xml','sdlc_ru.xml','openup_en.xml','msfagile_en.xml');
+UPDATE pm_ProjectTemplate SET Kind = 'case' WHERE FileName IN ('ticket_en.xml','ticket_ru.xml');
+UPDATE pm_ProjectTemplate SET Caption = 'text(co3)', Description = 'text(co4)' WHERE FileName IN ('openup_en.xml');
+UPDATE pm_ProjectTemplate SET Caption = 'text(co5)', Description = 'text(co6)' WHERE FileName IN ('sdlc_ru.xml','sdlc_en.xml');
+UPDATE pm_ProjectTemplate SET Caption = 'text(co7)', Description = 'text(co8)', ProductEdition = 'team' WHERE FileName IN ('scrum_ru.xml','scrum_en.xml');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (10, '', '', 'kanban_en.xml', 2, 'team', 'methodology');
+UPDATE pm_ProjectTemplate SET Caption = 'text(co9)', Description = 'text(co10)', OrderNum = 10 WHERE FileName IN ('kanban_ru.xml','kanban_en.xml');
+UPDATE pm_ProjectTemplate SET Caption = 'text(co11)', Description = 'text(co12)', ProductEdition = 'ee', OrderNum = 60 WHERE FileName IN ('ticket_ru.xml','ticket_en.xml');
+DELETE FROM pm_ProjectTemplate WHERE FileName IN ('scrum_simple_ru.xml', 'msfagile_en.xml');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (20, 'text(co13)', 'text(co14)', 'ba_ru.xml', 1, 'ee', 'case');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (30, 'text(co15)', 'text(co16)', 'reqs_ru.xml', 1, 'ee', 'case');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (40, 'text(co17)', 'text(co18)', 'testing_ru.xml', 1, 'ee', 'case');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (50, 'text(co19)', 'text(co20)', 'docs_ru.xml', 1, 'ee', 'case');
+INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (45, 'text(co21)', 'text(co22)', 'tracker_ru.xml', 1, 'team', 'process');
+END IF;
+
 --
 --
 --

@@ -40,6 +40,8 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']); 
 
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
+		
+		return $menus;
     }
     
     protected function createCustomReports()
@@ -59,7 +61,8 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     	            'Caption' => $report_it->get('Caption'),
     	            'ReportBase' => $report_it->getId(),
     	            'Category' => FUNC_AREA_FAVORITES,
-    	            'Url' => $report_it->get('QueryString')
+    	            'Url' => $report_it->get('QueryString'),
+    	    		'OrderNum' => 10
     	    ));
 	    }
 		    
@@ -71,7 +74,8 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
    		            'Caption' => $report_it->get('Caption'),
    		            'ReportBase' => $report_it->getId(),
    		            'Category' => FUNC_AREA_FAVORITES,
-   		            'Url' => $report_it->get('QueryString')
+   		            'Url' => $report_it->get('QueryString'),
+   		    		'OrderNum' => 11
    		    ));
 	    }
     }

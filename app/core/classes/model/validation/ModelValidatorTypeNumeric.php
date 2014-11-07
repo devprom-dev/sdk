@@ -11,6 +11,8 @@ class ModelValidatorTypeNumeric extends ModelValidatorType
 	
 	public function validate( & $value )
 	{
+		if ( $value == '' ) return true;
+		
 		$values = preg_split('/,/', $value);
 		
 		foreach( $values as $value )

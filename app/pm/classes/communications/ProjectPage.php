@@ -41,7 +41,7 @@ class ProjectPage extends PMWikiPage
 	{
 		return $this->getRegistry()->Query( array (
 				new WikiRootFilter(),
-				new FilterVpdPredicate( $this->getVpds() ),
+				new FilterVpdPredicate(),
 				new NativeProjectSortClause($this->getVpdValue())
 		));
 	}

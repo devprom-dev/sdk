@@ -17,4 +17,24 @@ class LeadAndCycleTimeChart extends PMPageChart
 		
 		return $widget;
 	}
+	
+	function getColumnFields()
+	{
+		return array();
+	}
+	
+	function getGroupFields()
+	{
+		return array();
+	}
+	
+	function getAggByFields()
+	{
+		return array();
+	}
+	
+	function getAggregators()
+	{
+		return array();
+	}
 }

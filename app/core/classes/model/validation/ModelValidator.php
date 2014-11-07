@@ -1,6 +1,7 @@
 <?php
 
 include_once "ModelValidatorTypes.php";
+include_once "ModelValidatorObligatory.php";
 include_once "ModelValidatorUnique.php";
 
 class ModelValidator

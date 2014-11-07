@@ -125,7 +125,7 @@ include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
     			{
     		        $this->processEmbeddedForms( $object_it, $key );
     		        
-    			    $object_it->modify( $data['attributes'] ); 
+    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']); 
     
     				$object_it->moveNext();
     			}

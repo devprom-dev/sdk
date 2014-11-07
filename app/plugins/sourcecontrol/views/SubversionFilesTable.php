@@ -59,23 +59,18 @@ class SubversionFilesTable extends PMPageTable
 
     function getFilters()
     {
-        global $model_factory;
+    	$repository = getFactory()->getObject('pm_Subversion');
+    	
+        $filter = new FilterObjectMethod($repository, '', '', false );
 
-        $filter = new FilterObjectMethod(
-                $model_factory->getObject('pm_Subversion'), '', false );
-
-        $filter->setType( 'singlevalue' );
+        $filter->setType('singlevalue');
+        $filter->setHasNone(false);
+        $filter->setDefaultValue($repository->getRegistry()->Query(array(new FilterVpdPredicate()))->getId());
 
         $path = new FilterTextWebMethod( translate('Текущий каталог'), 'path' );
-        
         $path->setStyle( 'width:600px;' );
         
         return array ( $filter,	$path );
-    }
-
-    function getFilterOrientation()
-    {
-        return 'left';
     }
 
     function getRenderParms( $parms )

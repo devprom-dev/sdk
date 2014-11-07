@@ -6,4 +6,9 @@ class FieldFile extends Field
 	{
 		echo '<input id="'.$this->getId().'" tabindex="'.$this->getTabIndex().'" name="'.$this->getName().'" value="'.$this->getValue().'" type="file" '.($this->readOnly() ? 'readonly' : '').' >';
 	}
+	
+	function getValidator()
+	{
+		return new ModelValidatorTypeFile();
+	}
 } 

@@ -704,9 +704,13 @@ function startopenid( id, moveCaret )
 
 function startdemo( template )
 {
-	_gat._getTracker("UA-10541243-1")._trackEvent('demo-start', template, 'hard-form');
+	var url = 'http://devprom.ru/module/saasassist/create';
 	
-	setTimeout(function() { window.location = 'http://devprom.ru/module/saasassist/create?template=' + template; }, 300);
+	if ( template != '' ) {
+		url += '?template='+ template;
+	}
+		
+	setTimeout(function() { window.location = url; }, 300);
 }
 
 function createinstance()

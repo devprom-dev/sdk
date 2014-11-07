@@ -4,6 +4,7 @@ include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/comments/persisters/CommentRecentPersister.php";
 include "persisters/TaskSpentTimePersister.php";
+include "persisters/TaskPhotoPersister.php";
 
 class TaskModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -17,7 +18,7 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		
 		$object->addPersister( new WatchersPersister() );
 		
-		$object->addAttribute('RecentComment', 'RICHTEXT', text(1198), false);
+		$object->addAttribute('RecentComment', 'RICHTEXT', translate('Комментарии'), false);
 		
 		$comment = getFactory()->getObject('Comment');
 		
@@ -31,5 +32,7 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
         }
 
 		$object->addAttribute('AssigneeUser', 'REF_UserId', translate('Исполнитель'), false);
+		
+		$object->addPersister( new TaskPhotoPersister() );
 	}
 }

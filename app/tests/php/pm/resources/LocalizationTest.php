@@ -8,7 +8,7 @@ class LocalizationTest extends DevpromTestCase
 	
 	private $files = array();
 	
-	private $skip = array('procloud', 'ext', 'cache', 'images', 'scripts', 'styles', 'ckeditor', 'crm', 'js', 'css');
+	private $skip = array('procloud', 'ext', 'cache', 'images', 'scripts', 'styles', 'ckeditor', 'js', 'css');
 	
     function setUp()
     {   
@@ -67,7 +67,16 @@ class LocalizationTest extends DevpromTestCase
 					
 					if ( is_array($text_array) )
 					{
-						$this->resources[$language] = array_merge($this->resources[$language], array_keys($text_array));	
+						$keys = array_keys($text_array);
+						
+						if ( strpos($path, 'ApplicationBundle') > 0 )
+						{
+							array_walk( $keys, function(&$value, $key) use($plugin) {
+								if ( is_numeric($value) ) $value = 'co'.$value;
+							});
+						}
+
+						$this->resources[$language] = array_merge($this->resources[$language], $keys);	
 					}
 					
 					if ( is_array($plugin_text_array) )

@@ -23,9 +23,7 @@ class WorkflowModelBuilder extends ObjectModelBuilder
 		
 		$object->addPersister( new StateDurationPersister() );
 
-		$object->addAttribute('StateObject', 'INTEGER', '', false, true);
-		
-   	    $attributes = array( 'StateObject', 'StateDuration' );
+   	    $attributes = array( 'StateDuration' );
     	
     	foreach ( $attributes as $attribute )
     	{

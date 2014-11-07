@@ -603,12 +603,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/migrations.git",
-                "reference": "1a9dffa64e33fdc10f4b4c3f5d7230b74d4a1021"
+                "reference": "f4fe9d9cc21a711d89d91d29c4a4e7945289cdd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/migrations/zipball/1a9dffa64e33fdc10f4b4c3f5d7230b74d4a1021",
-                "reference": "1a9dffa64e33fdc10f4b4c3f5d7230b74d4a1021",
+                "url": "https://api.github.com/repos/doctrine/migrations/zipball/f4fe9d9cc21a711d89d91d29c4a4e7945289cdd0",
+                "reference": "f4fe9d9cc21a711d89d91d29c4a4e7945289cdd0",
                 "shasum": ""
             },
             "require": {
@@ -653,7 +653,7 @@
                 "database",
                 "migrations"
             ],
-            "time": "2014-08-18 18:03:07"
+            "time": "2014-10-30 14:49:25"
         },
         {
             "name": "doctrine/orm",
@@ -1336,12 +1336,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/MindscapeHQ/raygun4php.git",
-                "reference": "ae37a7bae6eaf0cd80e2365f9c0e43a21e3493bd"
+                "reference": "bd3d46c6526a46c17a0ace8ed2920147edf85aed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MindscapeHQ/raygun4php/zipball/ae37a7bae6eaf0cd80e2365f9c0e43a21e3493bd",
-                "reference": "ae37a7bae6eaf0cd80e2365f9c0e43a21e3493bd",
+                "url": "https://api.github.com/repos/MindscapeHQ/raygun4php/zipball/bd3d46c6526a46c17a0ace8ed2920147edf85aed",
+                "reference": "bd3d46c6526a46c17a0ace8ed2920147edf85aed",
                 "shasum": ""
             },
             "require": {
@@ -1378,7 +1378,7 @@
                 "logging",
                 "raygun"
             ],
-            "time": "2014-08-07 02:19:59"
+            "time": "2014-10-30 22:34:50"
         },
         {
             "name": "monolog/monolog",

@@ -21,6 +21,7 @@ include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/GetAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/GetWholeTextWebMethod.php";
+include_once SERVER_ROOT_PATH."core/methods/SettingsWebMethod.php";
 
 include_once SERVER_ROOT_PATH.'core/c_more.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
@@ -48,7 +49,6 @@ include_once('methods/c_wiki_methods_base.php');
 include_once('methods/c_report_methods.php');
 include_once('methods/c_common_methods.php');
 include_once('methods/c_comment_methods.php');
-include_once "methods/SettingsWebMethod.php";
 include_once "methods/WikiRemoveStyleWebMethod.php";
 include_once "methods/MakeSnapshotWebMethod.php";
 include_once "methods/ViewSpentTimeUserWebMethod.php";

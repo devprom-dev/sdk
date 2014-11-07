@@ -9,8 +9,6 @@ class PageBoard extends PageList
     
     private $board_attribute_iterator = null;
 
- 	private $state_names = array();
-    
  	function PageBoard( $object ) 
 	{
 		parent::__construct( $object );
@@ -232,7 +230,7 @@ class PageBoard extends PageList
 			    
 			case 'State':
 				
-				echo $this->state_names[$object_it->get('State')];
+				echo $object_it->get('StateName');
 				
 				break;
 				

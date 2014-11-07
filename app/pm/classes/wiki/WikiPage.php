@@ -1,6 +1,8 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/classes/workflow/MetaobjectStatable.php";
+include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiType.php';
+
 include "WikiPageIterator.php";
 include "WikiPageRegistry.php";
 include "WikiPageRegistryContent.php";
@@ -200,6 +202,8 @@ class WikiPage extends MetaobjectStatable
 		if ( $result < 1 ) return $result;
 		
 		$this->updateSortIndexAndSections($object_it);
+		
+		return $result;
 	}
 	
 	function createLike( $object_id, $use_notification = true )

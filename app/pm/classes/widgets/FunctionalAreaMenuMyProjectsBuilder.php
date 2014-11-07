@@ -2,7 +2,29 @@
 
 class FunctionalAreaMenuMyProjectsBuilder extends FunctionalAreaMenuFavoritesBuilder
 {
-    protected function createCustomReports()
+    public function build( FunctionalAreaMenuRegistry & $set )
+    {
+    	$menus = parent::build($set);
+
+    	if ( getFactory()->getObject('Project')->getRegistry()->Count() < 1 && !defined('SKIP_WELCOME_PAGE') )
+    	{
+			$menus['quick']['items'] = array_merge(
+					array (
+							array (
+									'uid' => 'welcome',
+									'url' => '/projects/welcome'
+							)
+					),
+					$menus['quick']['items']
+			);
+    	} 
+
+		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
+		
+		return $menus;
+    }
+	
+	protected function createCustomReports()
     {
     	parent::createCustomReports();
     	
@@ -18,7 +40,8 @@ class FunctionalAreaMenuMyProjectsBuilder extends FunctionalAreaMenuFavoritesBui
    		            'Caption' => $report_it->getDisplayName(),
    		            'ReportBase' => $report_it->getId(),
    		            'Category' => FUNC_AREA_FAVORITES,
-   		            'Url' => $report_it->get('QueryString')
+   		            'Url' => $report_it->get('QueryString'),
+   		    		'OrderNum' => 20
    		    ));
 	    }
     }

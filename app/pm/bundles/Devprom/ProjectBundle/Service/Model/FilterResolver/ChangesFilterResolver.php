@@ -4,7 +4,7 @@ namespace Devprom\ProjectBundle\Service\Model\FilterResolver;
 
 class ChangesFilterResolver
 {
-	public function __construct( $classes = '', $date = '' )
+	public function __construct( $classes = '', $date = '', $from = '' )
 	{
 		$this->classes = preg_split('/,/', $classes);
 		
@@ -14,6 +14,7 @@ class ChangesFilterResolver
 		});
 		
 		$this->date = $date;
+		$this->from = $from;
 	}
 	
 
@@ -28,13 +29,18 @@ class ChangesFilterResolver
 
 		if ( $this->date != '' )
 		{
-			$filters[] = new \FilterModifiedAfterPredicate($this->date);
+			$filters[] = new \FilterSubmittedDatePredicate($this->date);
 		}
 			
+		if ( $this->from != '' )
+		{
+			$filters[] = new \FilterModifiedAfterPredicate($this->from);
+		}
+		
 		return $filters;
 	}
 	
 	private $classes = '';
-	
 	private $date = '';
+	private $from = '';
 }

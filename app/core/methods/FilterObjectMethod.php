@@ -162,7 +162,7 @@ class FilterObjectMethod extends FilterWebMethod
 						$this->it->getIdAttribute() == $this->idfieldname
 							? new FilterInPredicate($selected_values)
 							: new FilterAttributePredicate($this->idfieldname, $selected_values),
-						new FilterVpdPredicate($this->it->object->getVpds())
+						new FilterVpdPredicate()
 				)
 		);
 

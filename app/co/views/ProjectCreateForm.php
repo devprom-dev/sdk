@@ -36,7 +36,7 @@
  	
 	function getAttributes()
 	{
-		return array ( 'Caption', 'CodeName', 'Template', 'Participants' );
+		return array ( 'Caption', 'CodeName', 'Template', 'Participants', 'DemoData' );
 	}
 	
 	function getAttributeType( $attribute )
@@ -47,6 +47,9 @@
 			case 'Caption':
 			case 'Participants':
 				return 'text'; 	
+				
+			case 'DemoData':
+				return 'char';
 
 			case 'Template':
 				return 'object';
@@ -58,7 +61,18 @@
 		switch ( $attribute )
 		{
 			case 'Template':
-				return getFactory()->getObject('pm_ProjectTemplate');
+				$template = getFactory()->getObject('pm_ProjectTemplate');
+				
+				$template->addFilter( new FilterAttributePredicate('Language', getSession()->getLanguage()->getLanguageId()) );
+				
+				$template->setSortDefault(
+		 				array (
+		 						new SortAttributeClause('Kind.D'),
+		 						new SortAttributeClause('OrderNum')	
+		 				)
+	 			);
+						
+				return $template;
 		}
 	}
 
@@ -69,6 +83,12 @@
 		    case 'Caption':
 		    case 'CodeName':
 		    	return "";
+
+		    case 'Template':
+		    	return $_REQUEST['Template'];
+		    	
+		    case 'DemoData':
+		    	return $this->getAttributeValue('Template') == '' ? 'N' : 'Y';
 		    	
 			default:
 				return parent::getAttributeValue( $attribute );
@@ -77,7 +97,14 @@
 
 	function IsAttributeVisible( $attribute )
 	{
-		return true;
+		switch( $attribute )
+		{
+		    case 'Template':
+		    	return $this->getAttributeValue($attribute) == '';
+		    	
+		    default:
+		    	return true;
+		}
 	}
 
 	function IsAttributeRequired( $attribute )
@@ -102,6 +129,9 @@
 
 			case 'Participants':
 				return translate('Пригласить участников');
+
+			case 'DemoData':
+				return text(1869);
 				
 			default:
 				return parent::getName( $attribute );

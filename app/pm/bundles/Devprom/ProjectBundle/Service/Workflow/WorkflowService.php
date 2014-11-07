@@ -70,9 +70,7 @@ class WorkflowService
 		);
 				
 	    getFactory()->getEventsManager()->
-	    		executeEventsAfterBusinessTransaction(
-	    				$object_it->object->getExact($object_it->getId()), 'WorklfowMovementEventHandler'
-		);
+	    		executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
 	}
 	
 	private $object = null;

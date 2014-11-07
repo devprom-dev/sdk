@@ -12,3 +12,4 @@
 /dev/apache/htdocs/conf/logger.xml
 /dev/apache/htdocs/conf/*.ini
 /dev/apache/htdocs/conf/*.json
+sync-release.bat

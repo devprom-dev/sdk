@@ -176,8 +176,9 @@ include "DateFormatRussian.php";
  ////////////////////////////////////////////////////////////////////////////////// 
  class LanguageEnglish extends Language
  {
- 	function getLanguageId() {
- 		return 0;
+ 	function getLanguageId()
+ 	{
+ 		return 2;
  	}
 
  	function getLanguage() 

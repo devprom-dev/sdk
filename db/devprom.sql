@@ -9,9 +9,8 @@ create database devprom;
 
 use devprom;
 
-SET global wait_timeout=600;
-SET global interactive_timeout=600;
-SET global connect_timeout=600;
+SET wait_timeout=600;
+SET interactive_timeout=600;
 
 DROP TABLE IF EXISTS `AdvertiseBooks`;
 SET @saved_cs_client     = @@character_set_client;

@@ -15,7 +15,7 @@ class ModelValidatorTypeReference extends ModelValidatorType
 		{
 			return strval(intval($value)) == $value;
 		});
-		
-		return count($ids) > 0;
+
+		return $value == '' || count($ids) > 0;
 	}
 }

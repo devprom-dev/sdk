@@ -1261,7 +1261,6 @@
  	'добавить' => 'append',
  	'Email участника' => 'Participant email',
  	'Имя участника' => 'Participant name',
- 	'В кодовом названии проекта можно использовать только латинские буквы, цифры и символы "-" и "_", например, myproject_0. Кодовое название должно состоять более чем из 2-х символов.' => 'In a code name of your project it is possible to use only alphabetical symbols, digits and symbols "-" and "_", for example myproject_0. The codename should have more then 3 symbols length.',
  	'Мои проекты' => 'My projects',
  	'Каталог проектов' => 'Projects catalogue',
  	'Проект с таким кодовым названием уже зарегистрирован, укажите другое кодовое название вашего проекта' => 'A project with the same code name was registered already, please choose another code name of your project',
@@ -2098,7 +2097,6 @@
  	205 => 'It is unable to create wiki page, please contact <a href="mailto: marketing@devprom.ru">administrator</a>',
  	206 => 'You have reached a maximum number of projects created today',
  	207 => 'It is unable to use symbol "@" in the login name',
- 	208 => 'There are restrictions on symbols you can use in the code name of the project. You can use only latin letters, digits and symbols "-" and "_", for example myproject_0. Code name of the project should be more than 2 letters length.',
  	209 => 'There is no user as the first participant',
  	210 => 'You have to fill all required fields',
  	211 => 'The password is wrong',
@@ -2377,8 +2375,6 @@
  	715 => 'Finish: ',
  	716 => 'Participants usage',
  	717 => 'Project templates',
- 	718 => 'Import from template',
- 	719 => 'Export to template',
  	720 => 'Export project settings into template',
  	721 => 'Enter template\'s name according to project settings',
  	722 => 'Describe template\'s purpose in details. This will help users to use proper template to create new project',
@@ -2390,7 +2386,7 @@
  	729 => 'Select a template which corresponds to desired project settings, then choose template options you want to import',
  	730 => 'Import',
  	731 => 'Project settings stored in the template have been successfully imported',
- 	733 => 'Knowledge base templates',
+ 	733 => 'Artefacts templates',
  	734 => 'Common settings of the project and it\'s methodology',
  	736 => 'Knowledge base sections',
  	739 => 'Project roles and permissions',
@@ -2618,7 +2614,7 @@
 	977 => 'Apply to all',
 	978 => 'Apply current settings of the report to all project participants',
 	979 => 'Reset to all',
-	980 => 'Project discussions',
+	980 => 'Discussions',
 	981 => 'Discussions without my answers',
 	982 => 'Discussions with my participance',
 	983 => 'You have no access to complete the operation',
@@ -3135,8 +3131,6 @@
  	1810 => 'Search for reports and modules',
  	1811 => 'My reports',
  	1812 => 'Common settings of the project, it\'s name, dates, language of the project, the status of the project and used features, plugins and extensions.',
- 	1813 => 'Using a project template import you can apply a previously saved settings to your current project',
- 	1814 => 'By exporting a project template you can save the settings of your project, in order to use them to create new projects or to distribute settings on a previously created project',
     1815 => 'The list of participants of the project allows to define which users can enter into a project, in which the roles and what access rights, and display contact information and to configure mail notification',
  	1816 => 'The settings of the project methodology determine system behavior, functionality and allow you to customize the system to your development process',
  	1817 => 'Setting of permissions allows you to restrict access between project-level roles objects, attributes, and entities, reports, and modules',
@@ -3190,7 +3184,9 @@
  	1865 => 'You can send your colleagues invitations to participate in the project, to do this, enter e-mail addresses separated by a comma. You can do this later using menu Settings - Participants.',
 	1866 => 'Recent visit',
  	1867 => 'Recent action',
-	1868 => 'System name'
+	1868 => 'System name',
+ 	1869 => 'Populate project with the <b>demo data</b> to allow better learning of Devprom',
+ 	1870 => 'In a code name of your project it is possible to use only alphabetical symbols, digits and symbols "-" and "_", for example myproject_0. The codename should have more then 3 symbols length.'
  );
 
 return $text_array;

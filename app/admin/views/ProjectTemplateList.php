@@ -6,4 +6,9 @@ class ProjectTemplateList extends PageList
 	{
 		return array();
 	}
+	
+	function getColumnFields()
+	{
+		return array();
+	}
 }
