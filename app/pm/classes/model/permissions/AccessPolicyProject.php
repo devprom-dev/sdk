@@ -280,6 +280,17 @@ class AccessPolicyProject extends AccessPolicyBase
  	{
  		global $model_factory, $session, $project_it;
  		
+ 		$array = is_object(getSession()->getPluginsManager()) ? getSession()->getPluginsManager()->getPluginsForSection('pm') : array();
+			
+		foreach ( $array as $plugin )
+		{
+			$ref_name = $this->getRoleReferenceName($role_id);
+			
+			$access = $plugin->getEntityAccess( $action_kind, $ref_name, $object );
+
+			if ( is_bool($access) ) return $access;
+		}
+ 		
 		if( is_object($object) )
 		{
 			$ref_name = $object->getClassName();
@@ -398,7 +409,7 @@ class AccessPolicyProject extends AccessPolicyBase
 						return $action_kind == ACCESS_READ;
 						
 					case 'pm_Participant':
-						return in_array($action_kind, array(ACCESS_READ, ACCESS_MODIFY));
+						return in_array($action_kind, array(ACCESS_READ));
 						
 					case 'pm_Project': 
 						return $action_kind == ACCESS_CREATE || $action_kind == ACCESS_READ;
@@ -755,9 +766,13 @@ class AccessPolicyProject extends AccessPolicyBase
 						
 					case 'pm_Participant':
 
-					    $this->setReason(text(1247));
+						if ( $object_it->getId() == $part_it->getId() )
+						{
+					    	$this->setReason(text(1247));
+					    	return true;
+						}
 
-						return $object_it->getId() == $part_it->getId() || $action_kind == ACCESS_READ;
+						break;
 						
 					case 'cms_Snapshot':
 						

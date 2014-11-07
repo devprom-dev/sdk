@@ -109,6 +109,7 @@ class ActivityRequest extends Activity
 	{
 		$request_it = getFactory()->getObject('pm_ChangeRequest')->getRegistry()->Query(
 				array (
+						new RequestTasksPersister(),
 						new FilterInPredicate($parms['Task'] > 0 ? $parms['Task'] : '-1')
 				)
 		);

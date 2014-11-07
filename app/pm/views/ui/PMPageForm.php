@@ -92,7 +92,9 @@ class PMPageForm extends PageForm
                         'ReferenceName' => $it->get('ReferenceName'),
                         'AttributeType' => $it->get('AttributeType'),
                         'Id' => $it->getId(),
-                        'DisplayName' => $it->getDisplayName());
+                        'DisplayName' => $it->getDisplayName(),
+                		'AttributeValue' => strtolower($value)
+                );
             }
             
             $it->moveNext();
@@ -102,13 +104,11 @@ class PMPageForm extends PageForm
         
         foreach ($unique_attrs as $key => $attr) 
         {
-            $value = $parms[$attr['ReferenceName']];
-            
             $field = $attribute->getAttributeObject('AttributeType')->getExact($attr['AttributeType'])->getValueColumn();
 
             $attr_it = $value_object->getByRefArray( array(
                 		'CustomAttribute' => $attr['Id'],
-                        'LCASE(' . $field . ')' => strtolower($value)
+                        'LCASE(' . $field . ')' => $attr['AttributeValue']
             ));
 
             if ($attr_it->count() > 0 && $attr_it->get('ObjectId') != $id) 

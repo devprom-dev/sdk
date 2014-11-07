@@ -553,9 +553,13 @@
 		
 		if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) )
 		{
+			$skip_welcome = getFactory()->getObject('UserSettings')->getSettingsValue('projects-welcome-page');
+			
 			$company_actions[] = array (
 					'icon' => 'icon-plus',
-					'url' => '/projects/new',
+					'url' =>  $skip_welcome != 'off' && !defined('SKIP_WELCOME_PAGE')
+									? '/projects/welcome'
+									: '/projects/new',
 					'name' => translate('Ñîçäàòü ïğîåêò')
 			);
 		}
@@ -677,7 +681,7 @@
         return array(
  			'inside' => count($first_menu['menus']) > 0,
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
- 		    'navigation_title' => $tab_title,
+ 		    'navigation_title' => $tab_title != '' ? $tab_title : $this->getTitle(),
  		    'navigation_url' => $tab_url,
  			'b_checkpoint_alert' => $this->getCheckpointAlert(),
  			'b_display_sections' => $percent > 0 && !$this->notfound,
@@ -694,7 +698,7 @@
  		    'bottom_sections' => $bottom_sections,
  			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid),
         	'javascript_paths' => $script_service->getJSPaths(),
-        	'hint' => getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
+        	'hint' => !$this->needDisplayForm() && getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
         	'page_uid' => $page_uid
  		);
  	}

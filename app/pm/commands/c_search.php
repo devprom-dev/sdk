@@ -57,7 +57,7 @@ class Search extends CommandForm
 				$exact_object_it = $object->getRegistry()->Query(
 						array(
 								new FilterInPredicate($search),
-								new FilterVpdPredicate($object->getVpds()) 
+								new FilterVpdPredicate() 
 						)
 				);
 			}

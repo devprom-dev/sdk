@@ -2,6 +2,8 @@
 
 namespace Devprom\ProjectBundle\Service\Wiki;
 
+include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
+
 class SelectService
 {
 	private $object = null;
@@ -10,16 +12,18 @@ class SelectService
 	
 	public function __construct( $class_name, $root )
 	{
+		getSession()->addBuilder( new \WikiPageModelExtendedBuilder() );
+		
     	$this->object = getFactory()->getObject($class_name);
 
     	$predicates = $root > 0 
     		? array (
     				new \FilterAttributePredicate('ParentPage', $root),
-    				new \FilterVpdPredicate($this->object->getVpds())
+    				new \FilterVpdPredicate()
     			)
     		: array (
     				new \WikiRootFilter(),
-    				new \FilterVpdPredicate($this->object->getVpds())
+    				new \FilterVpdPredicate()
     			);
     		
     	$this->setObjectIt( $this->object->getRegistry()->Query($predicates) );

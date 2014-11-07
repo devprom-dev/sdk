@@ -167,7 +167,7 @@ class Form
 			//	
 			case 'modify':
 		
-				if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return;
+				if ( !$this->editable() ) return;
 
 				$this->redirect_url = $this->getRedirectUrl();
 				
@@ -363,6 +363,18 @@ class Form
 		return $this->readonly;
 	}
 	
+	function editable()
+	{
+		if( isset($this->object_it) ) 
+		{
+			return getFactory()->getAccessPolicy()->can_modify($this->object_it);
+		} 
+		else 
+		{
+			return getFactory()->getAccessPolicy()->can_create($this->getObject());
+		}
+	}
+	
 	function setCheckAccessMessage( $message )
 	{
 		$this->check_access_message = $message;
@@ -382,12 +394,12 @@ class Form
 			}
 			else
 			{
-				$has_access = getFactory()->getAccessPolicy()->can_modify($this->object_it);
+				$has_access = $this->editable();
 			}
 		} 
 		else 
 		{
-			$has_access = getFactory()->getAccessPolicy()->can_create($this->getObject());
+			$has_access = $this->editable();
 		}
 		
 		if ( !$has_access )
@@ -819,7 +831,7 @@ class Form
 		}
 		else
 		{
-			if ( $this->has_buttons && getFactory()->getAccessPolicy()->can_modify($this->object_it) )
+			if ( $this->has_buttons && $this->editable() )
 			{
 				array_push($buttons, 'modify');
 			}

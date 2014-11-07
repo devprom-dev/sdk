@@ -5,6 +5,8 @@ namespace Devprom\ApplicationBundle;
 use Devprom\Component\HttpKernel\Bundle\DevpromBundle;
 
 include SERVER_ROOT_PATH."co/classes/COSession.php";
+include_once SERVER_ROOT_PATH.'core/methods/WebMethod.php';
+include_once SERVER_ROOT_PATH.'core/methods/SettingsWebMethod.php';
 
 class ApplicationBundle extends DevpromBundle
 {
@@ -27,7 +29,7 @@ class ApplicationBundle extends DevpromBundle
 	public function boot()
     {
     	parent::boot();
-         
+
         if ( $_REQUEST['method'] != '' && class_exists($_REQUEST['method']) )
 	    {
 			$method = new $_REQUEST['method'];

@@ -70,7 +70,7 @@
 		<?php } ?>
 		
         <div id="page-content" class="container-fluid" style="padding:0">
-            <section class="content content-internal" style="<?=$style?>">
+            <section class="content content-internal <?=$section_class?>" style="<?=$style?>">
                 <div class="row-fluid">
                 
                		<?php $view['slots']->output('_content') ?>

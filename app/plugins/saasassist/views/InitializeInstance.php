@@ -217,14 +217,6 @@ class InitializeInstance extends Page
 	protected function setupProjectTemplates()
 	{
 		$demo_templates = array (
-				'demo-alm' => text('saasassist27'),
-				'demo-servicedesk' => text('saasassist32'),
-				'demo-testing' => text('saasassist29'),
-				'kanban-demo' => text('saasassist28'),
-				'requirements-demo' => text('saasassist30'),
-				'scrum-demo' => text('saasassist31'),
-				'storymapping-demo' => text('saasassist33'),
-				'demo-documenting' => text('saasassist42')
 		);
 		
 		$project_tpl = getFactory()->getObject('pm_ProjectTemplate');

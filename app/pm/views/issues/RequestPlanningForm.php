@@ -86,21 +86,28 @@ class RequestPlanningForm extends PMPageForm
  		}	
 	}
 
+	function getFieldValue( $attr )
+	{
+		$value = parent::getFieldValue( $attr );
+		
+		switch( $attr )
+		{
+		    case 'Release':
+    		case 'PlannedRelease':
+		    	return $value == '' 
+		    			? $this->createFieldObject($attr)->getObject()->getFirst()->getId()
+		    			: $value;
+		}
+		
+		return $value;
+	}
+	
     function createField( $name )
     {
-        global $_REQUEST, $model_factory;
-
         $field = parent::createField( $name );
         
     	switch ( $name )
     	{
-    		case 'Release':
-    		case 'PlannedRelease':
-    			
- 		        $field->setDefault( $field->getObject()->getFirst()->getId() );
-    			
-    			return $field;
-
 			case 'Caption':
 			
 			    if ( $_REQUEST['Transition'] > 0 )

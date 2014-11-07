@@ -11,7 +11,7 @@ class HistoricalObjectsRegistryBuilderCommon extends HistoricalObjectsRegistryBu
 			'State',
 			'Owner',
 			'Author',
-			'Transition',
+			'LastTransition',
 			'Type',
 			'Function'
  		));
@@ -21,7 +21,7 @@ class HistoricalObjectsRegistryBuilderCommon extends HistoricalObjectsRegistryBu
 			'State',
 			'Assignee',
 			'TaskType',
-			'Transition'
+			'LastTransition'
 		));
     }
 }

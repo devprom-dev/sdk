@@ -13,8 +13,7 @@ class ProjectTemplateFileServerSectionsRegistryBuilder extends ProjectTemplateSe
 	
     public function build ( ProjectTemplateSectionsRegistry & $registry )
     {
-    	if( $this->session->getProjectIt()->get('IsFileServer') != 'Y' ) return;
-    	
-    	$registry->addSection(getFactory()->getObject('pm_ArtefactType'), 'Folders', array(), true, text(935));
+    	$registry->addSectionItem('ProjectArtefacts', getFactory()->getObject('ArtefactType'));
+    	$registry->addSectionItem('ProjectArtefacts', getFactory()->getObject('Artefact'));
     }
 }

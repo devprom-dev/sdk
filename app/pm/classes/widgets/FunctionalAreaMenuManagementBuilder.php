@@ -24,24 +24,30 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		
 		$menus['quick']['items'][] = $module->getExact('project-knowledgebase')->buildMenuItem();
 		
-		// main tab
-		
-		$tab = array();
-		
-		$items[] = $report->getExact('project-log')->buildMenuItem();
+		$menus['quick']['items'][] = $report->getExact('project-log')->buildMenuItem();
 
-		$items[] = $module->getExact('project-blog')->buildMenuItem();
+		$menus['quick']['items'][] = $module->getExact('project-blog')->buildMenuItem();
 		
-	 	$items[] = $module->getExact('project-question')->buildMenuItem();
+	 	$menus['quick']['items'][] = $module->getExact('project-question')->buildMenuItem();
         
- 		$tab = array ( 
-			'name' => $project_it->IsProgram() ? translate('Программа') : translate('Проект'), 
-			'items' => $items,
- 		    'uid' => 'project'
- 		);
- 		
- 		$menus = array_merge(array_slice($menus, 0, 1), array('project' => $tab), array_slice($menus, 1));
+ 		// plan items
+
+		$items = array();
 		
+		$items[] = $report->getExact('projectplan')->buildMenuItem();
+		
+		$items[] = $module->getExact('project-plan-milestone')->buildMenuItem();
+		
+		$items[] = $report->getExact('currenttasks')->buildMenuItem();
+		
+		$items[] = $module->getExact('tasks-board')->buildMenuItem();
+		
+ 		$menus = array_merge( array_slice($menus, 0, 1), array( 'plan' => array ( 
+			'name' => translate('План'), 
+			'items' => $items,
+ 		    'uid' => 'plan')), array_slice($menus, 1) 
+ 		);
+				
 		// releases (or issues) tab
 		$items = array();
  		
@@ -77,24 +83,6 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
      		);
 		}
 		
- 		// plan items
-
-		$items = array();
-		
-		$items[] = $report->getExact('projectplan')->buildMenuItem();
-		
-		$items[] = $module->getExact('project-plan-milestone')->buildMenuItem();
-		
-		$items[] = $report->getExact('currenttasks')->buildMenuItem();
-		
-		$items[] = $module->getExact('tasks-board')->buildMenuItem();
-		
- 		$menus = array_merge( array_slice($menus, 0, 2), array( 'plan' => array ( 
-			'name' => translate('План'), 
-			'items' => $items,
- 		    'uid' => 'plan')), array_slice($menus, 2) 
- 		);
-				
  		// reports items
  		
 		$items = array();

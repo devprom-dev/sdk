@@ -60,11 +60,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 		
-	    $items['import'] = $module->getExact('import-settings')->buildMenuItem();
-	    
-	    $items['export'] = $module->getExact('export-settings')->buildMenuItem();
-		
- 	    $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
+	    $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
  	    
  	    $items = array();
  	    

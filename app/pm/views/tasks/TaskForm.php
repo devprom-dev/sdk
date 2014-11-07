@@ -15,6 +15,15 @@ class TaskForm extends PMPageForm
 {
  	var $request_it;
  	
+ 	private $move_iteration_methods = array();
+ 	
+ 	public function __construct( $object )
+ 	{
+ 		parent::__construct($object);
+ 		
+ 		$this->buildMethods();
+ 	}
+ 	
     protected function extendModel()
     {
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
@@ -35,6 +44,32 @@ class TaskForm extends PMPageForm
 		}
     }
 	
+	public function buildMethods()
+	{
+		$project_roles = getSession()->getRoles();
+		$project_it = getSession()->getProjectIt();
+		
+		if( $project_roles['lead'] && !$project_it->IsPortfolio() && $project_it->getMethodologyIt()->HasPlanning() ) 
+		{
+			$release_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+						array (
+								new IterationTimelinePredicate('not-passed'),
+								new FilterBaseVpdPredicate()
+						)
+				);
+			
+			while( !$release_it->end() )
+			{
+				$method = new MoveTaskWebMethod($release_it->copy());
+				$method->setRedirectUrl('donothing');
+				
+				$this->move_iteration_methods[$release_it->getId()] = $method; 
+						   			
+				$release_it->moveNext();
+			}
+		}
+	}
+    
  	function IsAttributeVisible( $attr_name ) 
 	{
 		$this->object_it = $this->getObjectIt();
@@ -233,50 +268,6 @@ class TaskForm extends PMPageForm
 		
 		if ( !is_object($object_it) ) return $actions;
 		
-		$project_roles = getSession()->getRoles();
-		
-		if( !$object_it->IsFinished() && $project_roles['lead'] && !getSession()->getProjectIt()->IsPortfolio() ) 
-		{
-			if ( !isset($this->futher_it) )
-			{
-				$release = $model_factory->getObject('Iteration');
-				
-				$release->addFilter( new IterationTimelinePredicate('not-passed') );
-				
-				$this->futher_it = $release->getAll();
-			}
-			else
-			{
-				$this->futher_it->moveFirst();
-			}
-			
-			$need_separator = true;
-			while( !$this->futher_it->end() )
-			{
-				if ( $this->futher_it->getId() != $object_it->get('Release') )
-				{
-					if ( $need_separator )
-					{
-						array_push($actions, array());
-						$need_separator = false;
-					}
-					
-					$it = $this->futher_it->_clone();
-					
-					$method = new MoveTaskWebMethod($it);
-					
-					$method->setRedirectUrl('donothing');
-		
-					array_push($actions,
-							   array( 'name' => $method->getCaption(), 
-							   		  'url' => $method->getJSCall( array( 'Task' => $object_it->getId(),
-							   			'Release' => $this->futher_it->getId())) ) );
-				}
-						   			
-				$this->futher_it->moveNext();
-			}
-		}
-				
 		$method = new WatchWebMethod( $object_it );
 		
 		$method->setRedirectUrl('donothing');
@@ -294,7 +285,39 @@ class TaskForm extends PMPageForm
 		return $actions;
 	}
 	
-  	function getDiscriminatorField()
+	function getTransitionActions($object_it)
+	{
+		$actions = parent::getTransitionActions($object_it);
+		
+		if( !$object_it->IsFinished() ) 
+		{
+			$move_actions = array();
+			
+			foreach( $this->move_iteration_methods as $iteration_id => $method )
+			{
+				if ( $iteration_id == $object_it->get('Release') ) continue;
+				
+				$move_actions[] = array(
+						'name' => $method->getCaption(), 
+						'url' => $method->getJSCall( 
+										array( 
+												'Task' => $object_it->getId(),
+									   			'Release' => $iteration_id
+										)
+								 )
+				);
+			}
+			
+			if ( count($move_actions) > 0 )
+			{
+				$actions = array_merge( $actions, array(array()), $move_actions);
+			}
+		}
+				
+		return $actions;
+	}
+	
+	function getDiscriminatorField()
  	{
  		return $this->getEditMode() ? 'TaskType' : '';
  	}

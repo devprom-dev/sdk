@@ -107,5 +107,7 @@ class ModelEventsManager
 			
 			if ( $handler->readyToHandle() ) $handler->process(); 
 		}
+		
+		$object_it->moveFirst();
 	}
 }

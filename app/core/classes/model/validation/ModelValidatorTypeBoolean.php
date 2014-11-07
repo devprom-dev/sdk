@@ -11,6 +11,6 @@ class ModelValidatorTypeBoolean extends ModelValidatorType
 	
 	public function validate( & $value )
 	{
-		return in_array($value, array('on', 'N', 'Y'));
+		return in_array($value, array('on', 'N', 'Y', ''));
 	}
 }

@@ -9,19 +9,20 @@ include "ActivateUserSettings.php";
 
 class CreateProjectService
 {
- 	function execute()
+	private $skip_demo_data = false;
+	
+ 	function execute( $parms )
  	{
- 		global $_REQUEST, $model_factory;
- 		
  		$this->user_id = getSession()->getUserIt()->getId();
- 		$this->code_name = $_REQUEST['Codename'];
- 		$this->caption = $_REQUEST['Caption'];
+ 		$this->code_name = $parms['CodeName'];
+ 		$this->caption = $parms['Caption'];
+ 		$this->skip_demo_data = !$parms['DemoData'];
  		
- 		$template = $model_factory->getObject('pm_ProjectTemplate');
+ 		$template = getFactory()->getObject('pm_ProjectTemplate');
  		
  		$template->setRegistry( new \ObjectRegistrySQL() );
  		
- 		$template_it = $template->getExact( $_REQUEST['Template'] );
+ 		$template_it = $template->getExact( $parms['Template'] );
 
  		if ( $template_it->count() > 0 )
  		{
@@ -31,7 +32,7 @@ class CreateProjectService
  		else
  		{
 	 		$this->language = 'RU';
-	 		$this->methodology = $_REQUEST['Methodology'] == '' ? '1' : $_REQUEST['Methodology'];
+	 		$this->methodology = '1';
  		}
  		
  		$this->access = '';
@@ -272,11 +273,53 @@ class CreateProjectService
 		$service->setResetState(false);
 		
 		// apply default template
-		$service->apply($template_it, $project_it );
+		$service->apply(
+				$template_it, 
+				$project_it, 
+				array(), // import all data available in the template
+				$this->skip_demo_data ? array('ProjectArtefacts', 'Attributes') : array()
+		);
  	}
  	
- 	function getSuccessMessage()
- 	{
- 		return text(229);
- 	}
+	static function getResultDescription( $result )
+	{
+		switch($result)
+		{
+			case -1:
+				return text(200);
+				
+			case -2:
+				return text(201);
+				
+			case -3:
+				return text(202);
+				
+			case -4:
+				return text(203);
+
+			case -5:
+				return text(204);
+				
+			case -6:
+				return text(205);
+				
+			case -7:
+				return text(206);
+				
+			case -8:
+				return text(207);
+				
+			case -9:
+				return text(1870);
+				
+			case -10:
+				return text(209);
+				
+			case -11:
+				return text(1424);
+				
+			default:
+				return text(229);
+		}
+	}     	
 }

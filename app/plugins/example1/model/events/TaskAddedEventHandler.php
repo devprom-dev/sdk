@@ -16,9 +16,11 @@ class TaskAddedEventHandler extends ObjectFactoryNotificator
 	    
 	    $request_it = $object_it->getRef('ChangeRequest');
 	    
+	    $states = $request_it->object->getStates();
+	    
 	    $service = new WorkflowService($request_it->object);
 	    
-	    $service->moveToState( $request_it, 'planned', "Moved after task was created" );
+	    $service->moveToState( $request_it, $states[1], "Moved after task was created" );
 	}
 	
 	function modify( $prev_object_it, $object_it ) {} 

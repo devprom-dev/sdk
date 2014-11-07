@@ -743,19 +743,55 @@ class PageTable extends ViewTable
 	        {
     	        $filter_options = $filter->getValues();
     	        
+    	        $group_of_values_selected = false;
+	        	foreach( $filter_options as $key => $value )
+    	        {
+    	            if ( count(preg_split('/,/', $key)) > 1 )
+    	            {
+    	            	$diff_items = 
+    	            		count(
+									array_diff(
+											preg_split('/,/', trim($key)),
+											preg_split('/,/', trim($filter_value)) 
+   	                				)
+	                		) + count(
+									array_diff(
+											preg_split('/,/', trim($filter_value)),
+											preg_split('/,/', trim($key))
+   	                				)
+	                		);
+
+    	            	$group_of_values_selected = $diff_items < 1;
+    	            	
+    	            	break; 
+    	            }
+    	        }
+    	        
 	            foreach( $filter_options as $key => $value )
     	        {
     	            $script = "javscript: $(this).hasClass('checked') ? filterLocation.turnOn('".$filter->getName()."', '".trim($key)."', 0) : filterLocation.turnOff('".$filter->getName()."', '".trim($key)."', 0);";
     	            
-    	            $group_of_values = count(preg_split('/,/', $key)) > 1;
+    	            $group_of_values = count(preg_split('/,/', $key)) > 1; 
     	             
     	            if ( $group_of_values )
     	            {
-    	                // group of values
-    	                $actions[] = array();
+    	            	// if group of values then append a separator
+   	                	$actions[] = array();
     	            }
-    	            
-    	            $checked_item = trim($key) == trim($filter_value) || in_array(trim($key), preg_split('/,/', $filter_value));
+
+    	            $checked_item = 
+    	            		count(
+									array_diff(
+											preg_split('/,/', trim($key)),
+											preg_split('/,/', trim($filter_value))
+   	                				)
+   	                		) + count(
+									array_diff(
+											preg_split('/,/', trim($filter_value)),
+											preg_split('/,/', trim($key))
+   	                				)
+   	                		) < 1
+							|| !$group_of_values_selected && in_array(trim($key), preg_split('/,/', $filter_value));
     	             
                     $checked_all = in_array(trim($key), array('', 'all')) && in_array($filter_value, array('', 'all'));
     	            

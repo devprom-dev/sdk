@@ -14,6 +14,8 @@ class MetaobjectStatable extends Metaobject
  	{
  	    parent::__construct($class, $registry);
  	    
+		$this->addAttribute('StateObject', 'INTEGER', '', false, true);
+ 	    
  		if ( $this->getAttributeType('Project') == '' )
 	    {
 			$this->addAttribute('Project', 'REF_pm_ProjectId', translate('Проект'), false);

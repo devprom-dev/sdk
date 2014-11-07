@@ -11,50 +11,19 @@ class ProjectForm extends PMPageForm
         parent::__construct( $project_it->object );
     }
 
-    function validateInputValues( $id, $action )
+ 	function buildModelValidator()
+ 	{
+ 		$validator = parent::buildModelValidator();
+ 		
+ 		$validator->addValidator( new ModelValidatorProjectCodeName() );
+ 		$validator->addValidator( new ModelValidatorUnique(array('CodeName')) );
+ 		
+ 		return $validator;
+ 	}
+ 	
+    function IsNeedButtonDelete()
     {
-        global $_REQUEST;
-
-        $message = parent::validateInputValues( $id, $action );
-
-        if ( $message != '' )
-        {
-            return $message;
-        }
-
-        // check for uniqueness of project code name
-        $it = $this->object->getByRefArray(
-                array('CodeName' => $_REQUEST['CodeName'] )
-        );
-        	
-        if ( $it->count() > 0 && $it->getId() != $id )
-        {
-            return translate('ѕроект с таким кодовым названием уже зарегистрирован, укажите другое кодовое название вашего проекта');
-        }
-
-        // check for correctness of project code name
-        if ( !$this->object->validCodeName($_REQUEST['CodeName']) )
-        {
-            return translate('¬ кодовом названии проекта можно использовать только латинские буквы, цифры и символы "-" и "_", например, myproject_0');
-        }
-
-        return '';
-    }
-
-    function IsNeedButtonNew() {
         return false;
-    }
-
-    function IsNeedButtonCopy() {
-        return false;
-    }
-
-    function IsNeedButtonDelete() {
-        return false;
-    }
-
-    function IsNeedButtonSave() {
-        return true;
     }
 
     function IsAttributeVisible( $attr_name )
@@ -105,23 +74,7 @@ class ProjectForm extends PMPageForm
 
     function getActions()
     {
-        global $model_factory;
-
-        $actions = array();
-
-        $project = $model_factory->getObject('pm_Project');
-
-        if ( !getFactory()->getAccessPolicy()->can_modify($project) ) return $actions;
-
-        array_push( $actions,
-        array( 'name' => text(718), 'url' => '?action=applytemplate' )
-        );
-        	
-        array_push( $actions,
-        array( 'name' => text(719), 'url' => '?action=newtemplate' )
-        );
-
-        return $actions;
+        return array();
     }
 
     function getPageTitle()

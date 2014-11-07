@@ -11,6 +11,7 @@ class Artefact extends Metaobject
 
 		$this->setAttributeRequired('Release', false);
 		$this->setAttributeRequired('Build', false);
+		$this->setAttributeRequired('Kind', false);
 
 		$this->addAttributeGroup('IsAuthorizedDownload', 'system');
 		$this->addAttributeGroup('IsArchived', 'system');

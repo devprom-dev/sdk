@@ -14,6 +14,7 @@ include "predicates/FilterNextSiblingsPredicate.php";
 include "predicates/FilterNoVpdPredicate.php";
 include "predicates/FilterSubmittedAfterPredicate.php";
 include "predicates/FilterSubmittedBeforePredicate.php";
+include "predicates/FilterSubmittedDatePredicate.php";
 include "predicates/FilterVpdPredicate.php";
 include "predicates/FilterHasNoAttributePredicate.php";
 

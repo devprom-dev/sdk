@@ -7,7 +7,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectSQLPasswordPe
 
 include "ObjectMetadataBuilder.php";
 include "ObjectMetadataModelBuilder.php";
-include "SortAttributeClause.php";
+include "model/sorts/SortAttributeClause.php";
 include "ObjectReferenceParser.php";
 include "GroupAttributeClause.php";
 

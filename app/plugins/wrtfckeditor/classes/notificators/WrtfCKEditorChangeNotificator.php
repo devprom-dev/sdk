@@ -199,7 +199,10 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
      			if ( preg_match( '/class="([^"]+)"/i', $attributes, $attrs ) )
      				$additional .= 'class="'.$attrs[1].'" ';
 
-     			$predicates[] = new FilterAttributePredicate($key_field, $name);
+     			$filter = new FilterAttributePredicate($key_field, $name);
+     			$filter->setHasMultipleValues(false);
+     			
+     			$predicates[] = $filter;
      			
      			$file_it = $file->getRegistry()->Query( $predicates );
 

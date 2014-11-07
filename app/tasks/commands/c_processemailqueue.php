@@ -83,12 +83,13 @@
 							$mail->addressUpdateEmail($from_address, $admin_address))."\r\n";
 					
 					$headers .=
-						"From: ".$mail->addressUpdateEmail($from_address, $admin_address)."\r\n";
+						"From: ".$mail->encodeAddress(
+							$mail->addressUpdateEmail($from_address, $admin_address))."\r\n";
 				}
 				else
 				{
 					$headers = 
-						"From: ".$from_address."\r\n";
+						"From: ".$mail->encodeAddress($from_address)."\r\n";
 				}
 				
 				$headers .= 

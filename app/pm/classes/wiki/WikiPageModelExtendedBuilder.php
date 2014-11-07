@@ -25,7 +25,7 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 
 		$object->addPersister( new WikiPageAttachmentsPersister() );
 		
-		$object->addAttribute( 'Tags', 'REF_WikiTagId', translate('в§уш'), false );
+		$object->addAttribute('Tags', 'REF_WikiTagId', translate('в§уш'), false );
 		
 		$object->addPersister( new WikiTagsPersister() );
 		

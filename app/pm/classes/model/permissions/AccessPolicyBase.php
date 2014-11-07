@@ -44,21 +44,6 @@ abstract class AccessPolicyBase extends COAccessPolicy
     
     function getEntityAccess( $action_kind, &$object ) 
  	{
-		$array = is_object(getSession()->getPluginsManager()) 
-			? getSession()->getPluginsManager()->getPluginsForSection('pm') : array();
-			
-		foreach ( $array as $plugin )
-		{
-			foreach( $this->getRoles() as $role_id )
-			{
-				$ref_name = $this->getRoleReferenceName($role_id);
-				
-				$access = $plugin->getEntityAccess( $action_kind, $ref_name, $object );
-	
-				if ( is_bool($access) ) return $access;
-			}
-		}
-
         if ( !is_object($this->project_it)) $this->project_it = $this->session->getProjectIt();
         
         if ( !is_object($this->methodology_it)) $this->methodology_it = $this->project_it->getMethodologyIt();

@@ -28,7 +28,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 				'ObjectChangeLogAttribute', 
 				'EmailQueue', 
 				'EmailQueueAddress',
-				'cms_EntityCluster'
+				'cms_EntityCluster',
+				'pm_StateObject'
 		);
 		
 		if ( in_array($object_it->object->getEntityRefName(), $skipped_entities) ) return;
@@ -159,7 +160,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    case 'pm_Activity':
 		    	$ref_it = $object_it->getRef('Task');
 		    	
-		    	if ( $ref_it instanceof TaskIterator )
+		    	if ( $ref_it instanceof TaskIterator && $ref_it->object->getAttributeType('ChangeRequest') != '' )
 		    	{
 			    	return array( 
 			    		'Request' => $ref_it->getRef('ChangeRequest')

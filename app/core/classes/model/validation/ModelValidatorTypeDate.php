@@ -11,6 +11,6 @@ class ModelValidatorTypeDate extends ModelValidatorType
 	
 	public function validate( & $value )
 	{
-		return getLanguage()->getDbDate($value) != "";
+		return $value == '' || getLanguage()->getDbDate($value) != "";
 	}
 }

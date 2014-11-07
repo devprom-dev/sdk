@@ -219,7 +219,7 @@ class ParticipantList extends PMPageList
 		    
 			$method = new ObjectModifyWebMethod($participant_it);
 
-			if ( $method->hasAccess() )
+			if ( $method->hasAccess() || $participant_it->getId() == getSession()->getParticipantIt()->getId() )
 			{
 				$method->setRedirectUrl('donothing');
 				

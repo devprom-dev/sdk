@@ -187,6 +187,8 @@ class IteratorBase
 	function moveToId( $value )
 	{
 		$this->moveTo( $this->id_field, $value );
+		
+		return $this;
 	}
 
 	function count() 
@@ -310,24 +312,23 @@ class IteratorBase
 	{
 		$this->rs = $rs;
 		
-		$this->pos = 0;
-		
 		if ( is_resource($this->rs) )
 		{
 		    $this->count = mysql_num_rows($this->rs);
 		}
 		else
 		{
+			$this->hashes = array();
 			$id_attr = $this->getIdAttribute();
+		    $this->count = count($this->rs);
 			
 			foreach( $this->rs as $key => $row )
 			{
 				$this->hashes[$id_attr][$row[$id_attr]] = $key; 
 			}
-			
-		    $this->count = count($this->rs);
 		}
 		
+		$this->pos = 0;
 		$this->fetch();
 	}
 	
@@ -870,7 +871,8 @@ class IteratorBase
 				    case 'text':
 				    case 'wysiwyg':
 				    case 'varchar':
-				        
+				    case 'password':
+				    	
 				        if ( $value != '' ) 
     					{
     						$value = '<![CDATA['.base64_encode($value).']]>';

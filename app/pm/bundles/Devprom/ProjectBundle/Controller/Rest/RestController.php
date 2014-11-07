@@ -125,6 +125,7 @@ abstract class RestController extends FOSRestController implements ClassResource
     	return new ModelService(
     			new \ModelValidator(
 						array (
+								new \ModelValidatorObligatory(),
 								new \ModelValidatorTypes()
     					)
 				), 

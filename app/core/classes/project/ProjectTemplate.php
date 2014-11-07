@@ -9,40 +9,15 @@ class ProjectTemplate extends Metaobject
 {
  	function __construct() 
  	{
- 		global $model_factory;
- 		
- 		$user_it = getSession()->getUserIt();
- 		
  		parent::__construct('pm_ProjectTemplate', new ProjectTemplateRegistryTeam($this) );
 
  		$this->setAttributeDefault( 'ProductEdition', 'custom' );
  		
- 		$sorts = array();
- 		
- 		if ( is_object($user_it) )
- 		{
- 			if ( $user_it->get('Language') < 1 )
- 			{
-				$settings = $model_factory->getObject('cms_SystemSettings');
-				$settings_it = $settings->getAll();
-				
-				$lang = $settings_it->get('Language');
- 			}
- 			else
- 			{
-				$lang = $user_it->get('Language');
- 			}
- 			
- 			$sorts[] = new SortProjectTemplateLanguageClause($lang);
- 		}
- 		else
- 		{
- 			$sorts[] = new SortAttributeClause('Language');
- 		}
-
-		$sorts[] = new SortAttributeClause('OrderNum');
-		
-		$this->setSortDefault($sorts);
+		$this->setSortDefault(
+ 				array (
+ 						new SortAttributeClause('OrderNum')	
+ 				)
+ 		);
  	}
  	
  	function createIterator() 

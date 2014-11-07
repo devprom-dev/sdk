@@ -42,11 +42,16 @@ class RequestForm extends PMPageForm
 
     protected function extendModel()
     {
-		$this->getObject()->setAttributeOrderNum( 'State', 15 );
+		$this->getObject()->setAttributeOrderNum('State', 15);
 		
-		$this->getObject()->setAttributeVisible( 'State', !$this->getEditMode() );
-
+		$this->getObject()->setAttributeVisible('State', !$this->getEditMode());
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
+    	
+    	$author_external = is_object($this->getObjectIt()) && $this->getObjectIt()->get('ExternalAuthor') != '';
+    	
+    	$this->getObject()->setAttributeVisible('ExternalAuthor', $author_external); 
+    	$this->getObject()->setAttributeVisible('Author', !$author_external);
+    	$this->getObject()->setAttributeRequired('Author', !$author_external);
     	
     	parent::extendModel();
 
@@ -392,33 +397,6 @@ class RequestForm extends PMPageForm
     			return parent::getFieldValue( $attr );
     	}
     }
-    
-	function IsAttributeVisible( $attr_name )
-	{
-	    switch( $attr_name )
-	    {
-			case 'ExternalAuthor':
-				return parent::IsAttributeVisible( $attr_name ) && is_object($this->getObjectIt()) && $this->getObjectIt()->get('ExternalAuthor') != '';
-                    
-			case 'Author':
-				if ( is_object($this->getObjectIt()) && $this->getObjectIt()->get('ExternalAuthor') != '' ) return false;
-				break;
-	    }
-	    
-	    return parent::IsAttributeVisible( $attr_name );
-	}
-
-	function IsAttributeRequired( $attr_name )
-	{
-	    switch( $attr_name )
-	    {
-				case 'Author':
-					if ( is_object($this->getObjectIt()) && $this->getObjectIt()->get('ExternalAuthor') != '' ) return false;
-				break;
-	    }
-	    
-	    return parent::IsAttributeRequired( $attr_name );
-	}
 	
 	function IsAttributeEditable( $attribute )
 	{

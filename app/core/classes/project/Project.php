@@ -13,6 +13,7 @@ include "predicates/ProjectVpdPredicate.php";
 include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";
 include "persisters/ProjectLinkedPersister.php";
+include "validators/ModelValidatorProjectCodeName.php";
 
 class Project extends Metaobject 
 {

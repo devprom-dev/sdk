@@ -165,7 +165,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'defectsreopenedchart',
 						'title' => text(1004),
 				        'description' => text(1401),
-				        'query' => 'group=history&aggby=Transition&type=bug&infosections=none&state=all&modifiedafter=last-month',
+				        'query' => 'group=history&aggby=LastTransition&type=bug&infosections=none&state=all&modifiedafter=last-month',
 				        'category' => FUNC_AREA_MANAGEMENT,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )

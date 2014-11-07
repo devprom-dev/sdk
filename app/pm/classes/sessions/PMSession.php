@@ -1,6 +1,7 @@
 <?php
  
 include_once SERVER_ROOT_PATH.'core/c_session.php';
+include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
 
 include SERVER_ROOT_PATH.'pm/classes/model/ModelFactoryProject.php';
 include SERVER_ROOT_PATH.'pm/classes/model/permissions/AccessPolicyProject.php';
@@ -139,6 +140,7 @@ class PMSession extends SessionBase
  	{
  	    return array_merge( 
  	            array (
+ 	            		new ResourceBuilderCoLanguageFile(),
  	                    new CacheResetTrigger(),
  	            		new WikiPageMetadataBuilder(),
  	                    new SharedObjectsCommonBuilder(),

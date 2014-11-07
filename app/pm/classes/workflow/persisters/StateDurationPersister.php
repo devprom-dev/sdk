@@ -16,10 +16,12 @@ class StateDurationPersister extends ObjectSQLPersister
  			"               FROM pm_StateObject so WHERE so.pm_StateObjectId = ".$alias."StateObject), ".
  			"            UNIX_TIMESTAMP(".$alias."RecordCreated)) / 3600 ) StateDuration " );
 
+ 		$state_it = $this->getObject()->cacheStates();
+		
  		array_push( $columns, 
- 			"( SELECT s.Caption FROM pm_State s, pm_StateObject so ".
+ 			"IFNULL(( SELECT s.Caption FROM pm_State s, pm_StateObject so ".
  			"   WHERE s.pm_StateId = so.State ".
- 			"     AND so.pm_StateObjectId = ".$alias."StateObject) StateName " );
+ 			"     AND so.pm_StateObjectId = ".$alias."StateObject), '".$state_it->getDisplayName()."') StateName " );
 		
  		return $columns;
  	}

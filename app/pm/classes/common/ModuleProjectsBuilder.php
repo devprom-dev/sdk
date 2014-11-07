@@ -236,28 +236,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         
         $modules[] = $item;
 
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'import-settings';
-        $item['Caption'] = text(718);
-        $item['Description'] = text(1813);
-        $item['AccessEntityReferenceName'] = 'pm_Project';
-        $item['AccessType'] = 'modify';
-        $item['Url'] = 'project/import-settings';
-        
-        $modules[] = $item;
-        
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'export-settings';
-        $item['Caption'] = text(719);
-        $item['Description'] = text(1814);
-        $item['AccessEntityReferenceName'] = 'pm_Project';
-        $item['AccessType'] = 'modify';
-        $item['Url'] = 'project/export-settings';
-        
-        $modules[] = $item;
-        
         $item['cms_PluginModuleId'] = 'navigation-settings';
         $item['Caption'] = text(1807);
         $item['Description'] = text(1806);
