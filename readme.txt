@@ -28,8 +28,7 @@ dev\php\php lib/app/console build-plugin mypluginname
 
 git fetch upstream
 git checkout master
-git merge -s recursive -X mine upstream/master
-
+git merge -s recursive -X theirs upstream/master
 run.bat
 (обновление базы данных) upgrade.bat
 
