@@ -1,3 +1,4 @@
+--
 -- Первоначальная установка SDK
 0. Установить Git-клиент, прописать путь к нему в переменной PATH (нужно для работы composer)
 1. Установить SDK командой setup.bat
@@ -9,10 +10,7 @@
 2. Установить сервис dev/pycron/pycron -install (нужны права администратора)
 3. Запустить сервис net start pycron
 
--- Обновление базы данных (при выходе обновления SDK)
-1. Запустить файл run.bat
-1. Запустить файл upgrade.bat
-
+--
 -- Разработка плагинов
 Команда для создания нового плагина:
 dev\php\php lib/app/console new-plugin mypluginname
@@ -24,14 +22,20 @@ dev\php\php lib/app/console build-plugin mypluginname
 
 Расположение дистрибутива плагина: build/plugin.mypluginname.zip
 
--- Примеры плагинов
-example1
-Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
-Пример триггера, изменяющего состояние пожелания при создании по нему задачи.
-
+--
 -- Синхронизация с основным репозиторием SDK
 (первоначальная настройка) git remote add upstream https://github.com/devprom-dev/sdk.git
 
 git fetch upstream
 git checkout master
-git merge upstream/master
+git merge -s recursive -X mine upstream/master
+
+run.bat
+(обновление базы данных) upgrade.bat
+
+--
+-- Примеры плагинов
+example1
+Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
+Пример триггера, изменяющего состояние пожелания при создании по нему задачи.
+
