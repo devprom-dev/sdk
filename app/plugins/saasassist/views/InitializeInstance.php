@@ -79,7 +79,7 @@ class InitializeInstance extends Page
  	
  	protected function createUser( $name, $login, $email )
  	{
- 		return getFactory()->getObject('User')->add_parms(
+ 		$user_id = getFactory()->getObject('User')->add_parms(
  				array (
  						'Caption' => $name,
  						'Login' => $login,
@@ -88,6 +88,20 @@ class InitializeInstance extends Page
  						'IsAdmin' => 'Y'
  				)
  		);
+ 		
+		$group_it = getFactory()->getObject('co_UserGroup')->getRegistry()->getAll();
+		
+		if ( $group_it->getId() > 0 )
+		{
+			getFactory()->getObject('co_UserGroupLink')->add_parms( 
+					array (
+							'SystemUser' => $user_id,
+							'UserGroup' => $group_it->getId()
+					)
+			); 
+		}
+ 		
+ 		return $user_id;
  	}
  	
  	protected function createLicense()

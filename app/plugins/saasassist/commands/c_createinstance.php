@@ -60,7 +60,7 @@ class CreateInstance extends CommandForm
  	
  	function create()
 	{
-		$this->sendMail( shell_exec('/home/saas/clone.sh '.$this->instance.' 2>&1') );
+		$this->sendMail( shell_exec('/home/saas/pop-instance.sh '.$this->instance.' 2>&1') );
 		
 		$this->replyRedirect(
 				'https://'.$this->instance.'.'.SAAS_DOMAIN.'/module/saasassist/initialize?'.

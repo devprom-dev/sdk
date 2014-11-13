@@ -125,7 +125,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    
 	    $body = preg_replace('/_url_/', EnvironmentSettings::getServerUrl().'/admin/license/', $body);
 
-	    $days_due_terminate = max(15 + $left_days, 0);
+	    $days_due_terminate = max(7 + $left_days, 0);
 	    
 	    switch( $days_due_terminate )
 	    {
