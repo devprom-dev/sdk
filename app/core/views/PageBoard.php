@@ -45,6 +45,36 @@ class PageBoard extends PageList
  		);
  	}
  	
+ 	function hasCommonBoardAttributesAcrossProjects()
+ 	{
+ 		$classname = $this->getBoardAttributeClassName();
+
+ 		if ( $classname == '' ) return false;
+ 		
+ 		$value_it = getFactory()->getObject($classname)->getRegistry()->Query(
+ 				array (
+ 						new FilterVpdPredicate()
+ 				)
+ 		);
+ 		
+ 		$values = array();
+ 		
+ 		while( !$value_it->end() )
+ 		{
+ 			$values[$value_it->get('VPD')][] = $value_it->get('Caption');
+ 			$value_it->moveNext();
+ 		}
+ 		
+ 		$example = array_shift($values);
+ 		
+ 		foreach( $values as $attributes )
+ 		{
+ 			if ( count(array_diff($example, $attributes)) > 0 || count(array_diff($attributes, $example)) > 0 ) return false;
+ 		}
+ 		
+ 		return true;
+ 	}
+ 	
  	function getBoardAttributeIterator()
  	{
  		if ( is_object($this->board_attribute_iterator) )
@@ -471,7 +501,7 @@ class PageBoard extends PageList
 			// отрисовываем значения опорного атрибута в заголовке списка				
 			foreach( $board_names as $ref_name => $title )
 			{
-				echo '<th align=center class=list_header width="'.round(80 / (count($board_names)), 100).'%">';
+				echo '<th align=center class=list_header width="'.round(100 / (count($board_names)), 100).'%">';
 					echo $title; 
 				echo '</th>'; 
 			}
@@ -619,7 +649,7 @@ class PageBoard extends PageList
 		
 						$order_num = $column_it->get('OrderNum') < 1 ? ($i + 1) : $column_it->get('OrderNum'); 
 							
-						echo '<div class="board_item" data-toggle="context" data-target="#context-menu-'.$column_it->getId().'" style="margin: 0 8px 0 0" project="'.ObjectUID::getProject($column_it).'" object="'.$column_it->getId().'" group="'.$group_key.'" more="'.$board_values[$prev_board_index].'" order="'.$order_num.'" modifiable="'.$modifiable.'" entity="'.$entity_ref_name.'" modified="'.$column_it->get('AffectedDate').'" uid="'.$uid.'">';
+						echo '<div class="board_item" data-toggle="context" data-target="#context-menu-'.$column_it->getId().'" style="margin: 0 8px 0 0; width:135px;" project="'.ObjectUID::getProject($column_it).'" object="'.$column_it->getId().'" group="'.$group_key.'" more="'.$board_values[$prev_board_index].'" order="'.$order_num.'" modifiable="'.$modifiable.'" entity="'.$entity_ref_name.'" modified="'.$column_it->get('AffectedDate').'" uid="'.$uid.'">';
 							echo '<div class="board_item_separator" group="'.$group_key.'" more="'.$board_values[$prev_board_index].'" order="'.$order_num.'">&nbsp;</div>';
 							echo '<div class="board_item_body" style="'.$style.'">';
 							if ( $spinner != '' ) echo '<div class="board_item_spinner" style="'.$spinner.'">&nbsp;</div>';
@@ -694,18 +724,24 @@ class PageBoard extends PageList
 		$(document).ready( function () {
 		    boardItemOptions.getItemWidth = function ()
 			{
-				var columnWidth = Math.round(($('.board-table').width() - <? echo $xoffset ?>) / <? echo $columns ?>);
+				var columnWidth = 
+					Math.min.apply(Math, $('td.board-column').map(function() {
+					        return $(this).width();
+					    }).get()) - 20;
+			    
+				var cardSpace = 3;
+				var minCardWidth = <?=$columns?> <= 4 ? 135 : 110;
 
-				for( var i = 1; i < 100; i++ ) {
-					if ( (Math.floor(columnWidth / i) < 130) ) {
+				for( var i = 1; i < 10; i++ ) {
+					if ( (Math.floor(columnWidth / i - (i - 1) * cardSpace) < minCardWidth) ) {
 						itemsInColumn = i - 1;
 						break;
 					}
 				}
-				
-				return itemsInColumn <= 1 
-					? Math.max(columnWidth + 25, 115) 
-					: Math.max((columnWidth / itemsInColumn), 130);
+
+				var itemWidth = columnWidth / itemsInColumn - (itemsInColumn - 1) * cardSpace;
+
+				return itemsInColumn <= 1 ? Math.max(columnWidth, minCardWidth) : Math.max(itemWidth, minCardWidth);
 			};
 			boardItemOptions.cellCSSPath = ".board-column,.board_item_separator";
 			boardItemOptions.className =  '<? echo $this->object->getClassName() ?>';

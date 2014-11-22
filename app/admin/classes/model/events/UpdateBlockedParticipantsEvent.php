@@ -8,7 +8,9 @@ class UpdateBlockedParticipantsEvent extends SystemTriggersBase
 	{
 	    if ( !in_array($object_it->object->getEntityRefName(), array('cms_BlackList')) ) return;
 
-	    $participant_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
+	    $part = getFactory()->getObject('pm_Participant');
+	    
+	    $participant_it = $part->getRegistry()->Query(
 	    		array (
 	    				new FilterAttributePredicate('SystemUser', $object_it->get('SystemUser'))
 	    		)
@@ -16,7 +18,7 @@ class UpdateBlockedParticipantsEvent extends SystemTriggersBase
 	    
 	    while( !$participant_it->end() )
 	    {
-	    	$participant_it->modify(
+	    	$part->modify_parms($participant_it->getId(), 
 	    			array (
 	    					'IsActive' => ($kind == TRIGGER_ACTION_DELETE ? 'Y' : 'N')
 	    			)

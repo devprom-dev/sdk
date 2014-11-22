@@ -6,18 +6,20 @@ include_once "FieldTask.php";
 
 class RequestPlanningForm extends PMPageForm
 {
-	function __construct() 
-	{
+    protected function extendModel()
+    {
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
 		{
-			getSession()->addBuilder( new RequestModelPlanningBuilder() );
+			$builder = new RequestModelPlanningBuilder();
+			$builder->build( $this->getObject() );
 		}
 
-		getSession()->addBuilder( new RequestModelExtendedBuilder() );
-		
-		parent::__construct( getFactory()->getObject('pm_ChangeRequest') );
-	}
-	
+		$builder = new RequestModelExtendedBuilder();
+		$builder->build( $this->getObject() );
+
+    	parent::extendModel();
+    }
+    
 	function getEmbeddedForm()
 	{
 		return new FormTaskEmbedded();	

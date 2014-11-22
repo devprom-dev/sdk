@@ -14,7 +14,10 @@ class ProjectTemplateSectionsRegistryBuilderLatest extends ProjectTemplateSectio
     public function build ( ProjectTemplateSectionsRegistry & $registry )
     {
  		$items = array (
- 			getFactory()->getObject('WikiPageChange')
+ 			getFactory()->getObject('WikiPageChange'),
+ 			getFactory()->getObject('Snapshot'),
+ 			getFactory()->getObject('SnapshotItem'),
+ 			getFactory()->getObject('SnapshotItemValue')
  		);
 
     	foreach( $items as $object )

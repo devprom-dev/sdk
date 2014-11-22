@@ -175,7 +175,7 @@ class TransitionStateMethod extends WebMethod
 			if ( $required[$key] == '' ) unset($required[$key]);
 		}
 
-		$object_it->modify( $required );
+		$object_it->object->modify_parms($object_it->getId(), $required);
 
 	    getFactory()->getEventsManager()->
 	    		executeEventsAfterBusinessTransaction(

@@ -12,7 +12,7 @@ class PMFormEmbedded extends FormEmbedded
         $this->customtypes = array();
         $this->customkinds = array();
         	
-        if ( is_object($object) )
+        if ( is_object($object) && getFactory()->getObject('CustomizableObjectSet')->checkObject($object) )
         {
             $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($object);
             

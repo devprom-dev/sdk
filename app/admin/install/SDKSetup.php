@@ -48,7 +48,9 @@ class SDKSetup extends Installable
  	
  	protected function updateSystemSettings()
  	{
- 		getFactory()->getObject('cms_SystemSettings')->getAll()->modify(
+ 		$settings = getFactory()->getObject('cms_SystemSettings');
+ 		
+ 		$settings->modify_parms($settings->getAll()->getId(),
  				array (
  						'Caption' => 'Devprom SDK',
  						'EmailSender' => 'admin',

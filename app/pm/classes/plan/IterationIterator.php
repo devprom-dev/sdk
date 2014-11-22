@@ -223,9 +223,7 @@ class IterationIterator extends OrderedIterator
 	{
 		$project_it = $this->getRef('Project');
 		
-		$sql =  "SELECT (TO_DAYS(r.FinishDate) - GREATEST(m.SnapshotDays,TO_DAYS(r.StartDate))) / 7 * ".$project_it->getDaysInWeek().
-				"			+ LEAST(SIGN(TO_DAYS(NOW()) - TO_DAYS(r.StartDate)) + 1, 1) Duration, " .
-		 		"       m.PlannedWorkload " .
+		$sql =  "SELECT m.PlannedWorkload " .
 		 		"  FROM pm_Release r " .
 		 		"		LEFT OUTER JOIN pm_ReleaseMetrics m " .
 		 		"			ON r.pm_ReleaseId = m.Release " .
@@ -235,25 +233,29 @@ class IterationIterator extends OrderedIterator
 
 		$it = $this->object->createSQLIterator( $sql );
 		
-		$duration = $it->get('Duration') > 0 
-		 	? round($it->get('Duration'), 0) : $this->getCapacity();
-		 
-		$capacity = $it->get('PlannedWorkload') > 0 
-		 	? $it->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
+		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getCapacity();
+		$capacity = $it->get('PlannedWorkload') > 0 ? $it->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
 		
-		$velocity = $duration > 0 ? $capacity / $duration : 0;  	
-		 	
+		if ( $project_it->getMethodologyIt()->HasFixedRelease() )
+		{
+			$velocity = $this->getVelocity() / $duration;
+		}
+		else
+		{
+			$velocity = $this->getVelocity();
+		}
+
 		return array( $duration, $capacity, $velocity ); 
 	}
 	
 	function getEstimatedBurndownMetrics()
 	{
 		list( $in_duration, $in_capacity, $in_velocity ) = $this->getInitialBurndownMetrics();
-			
-		$capacity = $this->getTotalWorkload();
+
+		$duration = $this->getLeftCapacity();
 		
-		$duration = min($in_velocity > 0 ? ceil($capacity / $in_velocity) : 0, 365);
-		
+		$capacity = $in_velocity > 0 ? ceil($duration * $in_velocity) : $this->getEstimation();
+				
 		return array( $duration, $capacity, $in_velocity );
 	}
 	
@@ -556,7 +558,7 @@ class IterationIterator extends OrderedIterator
 			$predicates = $it->get('TaskType') < 1 ? array() 
 				: array ( new TaskTypeBasePredicate($it->get('TaskType')) );
 
-			$it->modify( array ( 
+			$metrics->modify_parms( $it->getId(), array ( 
 				'PlannedWorkload' => $this->getPlannedTotalWorkload($predicates) 
 			));
 			
@@ -802,14 +804,12 @@ class IterationIterator extends OrderedIterator
 
 		list( $left_days, $est_capacity, $est_velocity ) = $this->getEstimatedBurndownMetrics();
 		
-		$left_days = floor($left_days * 7 / $project_it->getDaysInWeek());
-
 		if ( $left_days > 0 )
 		{
-			$sql = " SELECT FROM_DAYS(TO_DAYS(GREATEST(NOW(), r.StartDate)) + ".$left_days.") dt".
+			$sql = " SELECT FROM_DAYS(TO_DAYS(GREATEST(NOW(), r.StartDate)) + ".$left_days." - 1) dt".
 				   "   FROM pm_Release r " .
 				   "  WHERE r.pm_ReleaseId = ".$this->getId();
-	
+
 			$it = $this->object->createSQLIterator($sql);
 			
 			if ( $formatted )
@@ -880,8 +880,6 @@ class IterationIterator extends OrderedIterator
 		$project_it = $this->getRef('Project');
 		
 		list( $left_days, $est_capacity, $est_velocity ) = $this->getEstimatedBurndownMetrics();
-		
-		$left_days = floor($left_days * 7 / $project_it->getDaysInWeek());
 		
 		if ( $left_days > 0 )
 		{

@@ -4,18 +4,19 @@ class ChangeLogActionFilter extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		switch ( $filter )
+ 		$types = array_intersect(
+ 				getFactory()->getObject('ChangeLogAction')->getAll()->fieldToArray('ReferenceName'),
+ 				preg_split('/,/', $filter)
+		); 
+ 		
+ 		if ( in_array('commented', $types) )
  		{
- 			case 'added':
- 			case 'modified':
- 			case 'deleted':
- 			    return " AND t.ChangeKind = '".$filter."' ";
-
- 			case 'commented':
- 			    return " AND t.ChangeKind IN ('".$filter."', 'comment_modified', 'comment_deleted') ";
- 			    
- 			default:
- 				return " AND 1 = 2 ";
+ 			$types[] = 'comment_modified';
+ 			$types[] = 'comment_deleted';
  		}
+ 		
+ 		if ( count($types) < 1 ) return " AND 1 = 2 ";
+ 		
+ 		return " AND t.ChangeKind IN ('".join("','", $types)."') ";
  	}
 }

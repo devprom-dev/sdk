@@ -92,6 +92,8 @@
 					switch ( $field_names[$j] )
 					{
 						default:
+							$id = '';
+							
 							if ( !array_key_exists($field_names[$j], $refs) )
 							{
 								$ref = $object->getAttributeObject($field_names[$j]);
@@ -145,6 +147,7 @@
 	function getId( $object_it, $value, $default )
 	{
 		$object_it->moveFirst();
+		
 		while ( !$object_it->end() )
 		{
 			if ( strtolower($object_it->getDisplayName()) == strtolower(trim($value)) )
@@ -167,7 +170,6 @@
 		global $model_factory;
 		
 		if ( !is_a($object, 'MetaobjectStatable') ) return $model_factory->getObject('StateBase')->getEmptyIterator();
-
 		if ( $object->getStateClassName() == '' ) return $model_factory->getObject('StateBase')->getEmptyIterator();
 		
 		$state = $model_factory->getObject($object->getStateClassName());
@@ -291,7 +293,7 @@
 					
 					$value = $ref_it->getId() > 0 
 							? $ref_it->getDisplayName() 
-							: preg_replace('/Undefined:/', '', $value);
+							: '';
 				}
 				else
 				{

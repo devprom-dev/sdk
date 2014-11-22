@@ -59,9 +59,8 @@ class LoginUserService
 								
 							$this->sendRetryNotification( $this->user_it, $_SERVER['REMOTE_ADDR'] );
 						}
-
-						$retry_it->modify( 
-							array('RetryAmount' => $retry_it->get('RetryAmount') + 1 ) );
+						
+						$retry->modify_parms($retry_it->getId(), array('RetryAmount' => $retry_it->get('RetryAmount') + 1 ) );
 					}
 					else
 					{

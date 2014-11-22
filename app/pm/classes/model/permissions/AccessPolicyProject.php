@@ -449,23 +449,6 @@ class AccessPolicyProject extends AccessPolicyBase
 
  	 	switch ( $ref_name )
 		{
-			case 'pm_Release':
-				if ( $action_kind == ACCESS_DELETE )
-				{
-					$this->setReason( text(920) );
-
-					$task = getFactory()->getObject('pm_Task');
-					
-					$count = $task->getByRefArrayCount(
-						array('Release' => $object_it->getId()) );
-							
-					if ( $count > 0 )
-					{
-						return false;
-					}
-				}
-				break;
-					
 			case 'pm_Version':
 				if ( $action_kind == ACCESS_DELETE )
 				{

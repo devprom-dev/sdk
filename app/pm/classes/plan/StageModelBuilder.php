@@ -33,7 +33,7 @@ class StageModelBuilder extends ObjectModelBuilder
 		
 		$object->addAttribute('Burndown', '', translate('Burndown'), true);
 		
-		if ( $methodology_it->HasPlanning() )
+		if ( $methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
 		{
 			$object->addAttribute('Burnup', '', translate('Burnup'), true);
 		}

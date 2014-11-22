@@ -60,7 +60,7 @@ class WorkflowService
 	    	throw new \Exception('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
 	    }
 	    
-		$object_it->modify( 
+		$object_it->object->modify_parms($object_it->getId(), 
 				array_merge( $parms, 
 						array( 
 					        'Transition' => $transition_it->getId(),
@@ -68,6 +68,8 @@ class WorkflowService
 						)
 				)
 		);
+		
+		$object_it = $object_it->object->getExact($object_it->getId());
 				
 	    getFactory()->getEventsManager()->
 	    		executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');

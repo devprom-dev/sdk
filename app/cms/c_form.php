@@ -245,7 +245,7 @@ class Form
 				
 				$mapper->map($this->getObject(), $_REQUEST);
 				
-				if ( $this->object_it->modify($_REQUEST) < 1 )
+				if ( $this->getObject()->modify_parms($this->object_it->getId(), $_REQUEST) < 1 )
 				{
 					return false;
 				}

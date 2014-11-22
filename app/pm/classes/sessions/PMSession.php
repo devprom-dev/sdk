@@ -24,6 +24,7 @@ include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderRequest.
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderIssue.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderTask.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ApplyBusinessActionsEventHandler.php";
+include SERVER_ROOT_PATH."pm/classes/workflow/events/ResetFieldsEventHandler.php";
 
 include SERVER_ROOT_PATH."pm/classes/settings/DictionaryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/settings/WorkflowBuilderCommon.php";
@@ -121,6 +122,8 @@ class PMSession extends SessionBase
 
         parent::configure();
  		
+        $this->addBuilder(new ProjectTemplateSectionsRegistryBuilderLatest($this));
+        
         $this->user_it = null;
         
  		getLanguage();
@@ -195,9 +198,9 @@ class PMSession extends SessionBase
  	                    new EstimationStrategyCommonBuilder(),
  	                    new CacheSessionProjectTrigger(),
  	            		new CustomizableObjectBuilderCommon($this),
- 	            		new ProjectTemplateSectionsRegistryBuilderLatest($this),
  	            		
  	            		// model
+ 	            		new ResetFieldsEventHandler(),
  	            		new ApplyBusinessActionsEventHandler(),
  	            		new ResetTasksEventHandler()
  	            )

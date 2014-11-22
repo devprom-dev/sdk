@@ -47,6 +47,7 @@ class GitConnector extends SCMConnector
 
 					$this->repository->setConfig("user.name", $credentials->getLogin());
 					$this->repository->setConfig("user.email", $credentials->getLogin());
+					$this->repository->setConfig("i18n.logoutputencoding", "UTF-8");
 					
 					$client->run($this->repository, "fetch");
 					
@@ -204,8 +205,8 @@ class GitConnector extends SCMConnector
  				$registry->addCommit( 
  						$commit->getShortHash(), 
  						$commit->getDate()->format('Y-m-d H:i:s'), 
- 						$commit->getMessage(), 
- 						$commit->getCommiter()->getName()
+ 						self::detectCharset($commit->getMessage()), 
+ 						self::detectCharset($commit->getCommiter()->getName())
  				);
  			} 			
  		}
@@ -236,8 +237,8 @@ class GitConnector extends SCMConnector
  				$registry->addCommit( 
  						$commit->getShortHash(), 
  						$commit->getDate()->format('Y-m-d H:i:s'), 
- 						$commit->getMessage(), 
- 						$commit->getCommiter()->getName()
+ 						self::detectCharset($commit->getMessage()), 
+ 						self::detectCharset($commit->getCommiter()->getName())
  				);
  			} 			
  		}
@@ -309,7 +310,7 @@ class GitConnector extends SCMConnector
  			
  			$blog = $this->repository->getBlob($path);
  			
- 			return $blog->output();
+ 			return self::detectCharset($blog->output());
  		}
  		catch( Exception $e )
  		{
@@ -343,7 +344,7 @@ class GitConnector extends SCMConnector
 				return text('sourcecontrol12');
 		}
  	}
- 	
+
  	private static function getToolPath()
  	{
  		if ( static::checkWindows() )

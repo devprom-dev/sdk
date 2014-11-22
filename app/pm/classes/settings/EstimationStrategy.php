@@ -68,7 +68,7 @@ abstract class EstimationStrategy
 		return '';
 	}
 
-	function getVelocityText()
+	function getVelocityText( $object )
 	{
 		return '';
 	}

@@ -30,9 +30,9 @@
 	
  	function modify( $object_id )
 	{
-		$it = getFactory()->getObject('LicenseInstalled')->getAll();
+		$installed = getFactory()->getObject('LicenseInstalled');
 		
-		$it->modify( $_REQUEST );
+		$installed->modify_parms( $installed->getAll()->getId(), $_REQUEST );
 		
 		$this->complete();
 	}

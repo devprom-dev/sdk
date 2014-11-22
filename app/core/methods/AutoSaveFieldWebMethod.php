@@ -41,13 +41,15 @@ class AutoSaveFieldWebMethod extends AutoSaveTextWebMethod
  		
  		if ( !class_exists($class_name) ) throw new Exception('Unknown class: '.$class_name);
  		
- 		$object_it = getFactory()->getObject($class_name)->getExact(IteratorBase::utf8towin($parms['object']));
+ 		$object = getFactory()->getObject($class_name);
+ 		
+ 		$object_it = $object->getExact(IteratorBase::utf8towin($parms['object']));
 
  		if ( $object_it->getId() == '' ) throw new Exception('Object was not found: '.$parms['object']);
  		
  		if ( getFactory()->getAccessPolicy()->can_modify($object_it) )
  		{
-			$object_it->modify( array( $parms['field'] => $value ) );
+ 			$object->modify_parms($object_it->getId(), array( $parms['field'] => $value ));
  		}
  	}
 }

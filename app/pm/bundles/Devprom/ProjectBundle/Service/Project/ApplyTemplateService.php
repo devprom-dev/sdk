@@ -45,6 +45,7 @@ class ApplyTemplateService
 			switch ( $object->getEntityRefName() )
 			{
 				case 'cms_Resource':
+				case 'cms_Snapshot':
 				case 'pm_Transition':
 				case 'pm_TransitionAttribute':
 				case 'pm_TransitionResetField':
@@ -128,6 +129,8 @@ class ApplyTemplateService
 				$state_it->moveNext();
 			}
 		}
+		
+		$project_it->storeMetrics();
  		
  		getSession()->truncate();
  	}
@@ -162,13 +165,8 @@ class ApplyTemplateService
  	
  	static public function getAllObjects( $except_sections = array() )
  	{
- 		$objects = array (
- 				getFactory()->getObject('Participant'),
- 				getFactory()->getObject('ParticipantRole'),
-	 			getFactory()->getObject('Release'),
-	 			getFactory()->getObject('Iteration')
- 		);
- 		 		
+ 		$objects = array();
+ 		
 		$section_it = getFactory()->getObject('ProjectTemplateSections')->getAll();
 
  	 	while ( !$section_it->end() )
@@ -180,6 +178,16 @@ class ApplyTemplateService
  			}
  			
  			$objects = array_merge($objects, $section_it->get('items'));
+
+ 			if ( $section_it->get('ReferenceName') == 'pm_Project')
+ 			{
+ 				$objects = array_merge($objects, array (
+ 						getFactory()->getObject('Participant'),
+		 				getFactory()->getObject('ParticipantRole'),
+			 			getFactory()->getObject('Release'),
+			 			getFactory()->getObject('Iteration')
+				));
+ 			}
  			
  			$section_it->moveNext();
  		}

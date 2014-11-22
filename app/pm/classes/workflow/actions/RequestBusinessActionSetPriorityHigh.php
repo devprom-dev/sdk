@@ -23,7 +23,7 @@ class RequestBusinessActionSetPriorityHigh extends BusinessAction
  	    
  	    $priority_it->moveNext();
  	    
- 	    $object_it->modify( array(
+ 	    $object_it->object->modify_parms($object_it->getId(), array(
  	            'Priority' => $priority_it->getId() 
  	    ));
  	    

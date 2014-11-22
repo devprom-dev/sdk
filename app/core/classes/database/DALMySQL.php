@@ -19,28 +19,38 @@ class DALMySQL extends DAL
         mysql_select_db($info->getDbName(), $this->connection) or trigger_error(mysql_error(), E_USER_ERROR);
  
         mysql_query("SET time_zone = '".EnvironmentSettings::getUTCOffset().":00'", $this->connection) or trigger_error(mysql_error(), E_USER_ERROR);
-        
         mysql_query("SET NAMES 'cp1251' COLLATE 'cp1251_general_ci'", $this->connection) or trigger_error(mysql_error(), E_USER_ERROR);
+    }
+    
+    public function Reconnect()
+    {
+    	if ( !@mysql_ping($this->connection) )
+    	{
+	    	$this->Connect( $this->connectionInfo );
+    	}
     }
     
     public function Query( $sql )
     {
-        if ( ! @mysql_ping($this->connection) ) $this->Connect( $this->connectionInfo );
-
         $this->info( $sql );
         
-        $resultSet = mysql_query($sql, $this->connection);
+        $resultSet = @mysql_query($sql, $this->connection);
 
-        if ( $resultSet === false ) throw new Exception(mysql_error().': '.$sql);
+        if ( $resultSet === false )
+        {
+        	$this->Reconnect();
+        	
+        	$resultSet = @mysql_query($sql, $this->connection);
+        	
+        	if ( $resultSet === false ) throw new Exception(mysql_error().': '.$sql);
+        }
         
         return $resultSet;
     }
      
     public function Escape( $sql_string )
     {
-        if ( ! @mysql_ping($this->connection) ) return $sql_string;
-
-        return mysql_real_escape_string($sql_string);
+        return @mysql_real_escape_string($sql_string);
     }
     
     public function GetAffectedRows()

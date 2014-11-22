@@ -49,21 +49,11 @@ class SubversionRevisionDetailsList extends SubversionList
 	                
 	                $content = preg_split('/\//', $object_it->get('ContentType'));
 	
-	                if ( $content[0] == 'text' )
-	                {
-	                    echo '<a href="/pm/'.$project_it->get('CodeName').
-		                    '/module/sourcecontrol/files?path='.urlencode($path).
-		                    '&version='.SanitizeUrl::parseUrl($_REQUEST['version']).'&subversion='.$repo_it->getId().
-		                    '&name='.urlencode($object_it->get('Name')).'">'.
-		                    $object_it->utf8towin($object_it->get('Name')).'</a>';
-	                }
-	                else
-	                {
-	                    echo '<a href="?export=download&path='.urlencode($path).
-		                    '&version='.SanitizeUrl::parseUrl($_REQUEST['version']).'&subversion='.$repo_it->getId().
-		                    '&name='.urlencode($object_it->get('Name')).'">'.
-		                    $object_it->utf8towin($object_it->get('Name')).'</a>';
-	                }
+                    echo '<a href="/pm/'.$project_it->get('CodeName').
+	                    '/module/sourcecontrol/files?path='.urlencode($path).
+	                    '&version='.SanitizeUrl::parseUrl($_REQUEST['version']).'&subversion='.$repo_it->getId().
+	                    '&name='.urlencode($object_it->get('Name')).'">'.
+	                    $object_it->utf8towin($object_it->get('Name')).'</a>';
 	            }
 	            else
 	            {

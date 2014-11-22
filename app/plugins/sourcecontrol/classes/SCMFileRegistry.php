@@ -6,8 +6,6 @@ class SCMFileRegistry extends SCMDataRegistry
 {
 	public function addFile( $type, $modified, $path, $status, $name, $length, $creator, $content_type )
 	{
-		$content_type = $content_type != '' ? IteratorBase::utf8towin($content_type) : $this->getContentTypeByFileName($name);
- 		
 		$this->addData( array (
 				'Type' => $type,
 				'RecordModified' => $modified,
@@ -15,8 +13,7 @@ class SCMFileRegistry extends SCMDataRegistry
 				'Status' => $status,
 				'Name' => $name,
 				'Length' => $length,
-				'Creator' => IteratorBase::utf8towin($creator),
-				'ContentType' => $content_type
+				'Creator' => IteratorBase::utf8towin($creator)
 		));
 	}
 	

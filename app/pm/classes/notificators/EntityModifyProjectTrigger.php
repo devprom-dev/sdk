@@ -104,14 +104,13 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 
 		// move related changes into target project
 		$change->addFilter( new ChangeLogItemFilter($object_it) );
-		
 		$change->addFilter( new FilterAttributePredicate('ChangeKind', 'added,modified,commented' ) );
 		
 		$change_it = $change->getAll();
 		
 		while ( !$change_it->end() )
 		{
-			$change_it->modify( array(
+			$change->modify_parms( $change_it->getId(), array(
 			    'VPD' => $target_it->get('VPD'),
 			    'RecordModified' => $change_it->get('RecordModified') 
 			));

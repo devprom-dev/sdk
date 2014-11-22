@@ -9,41 +9,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  }
   
  ///////////////////////////////////////////////////////////////////////////////////////
- class ViewLogActionWebMethod extends ViewProjectLogWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Активность');
- 	}
- 	
- 	function getValues()
- 	{
-  		return array (
- 			'all' => translate('Все'),
- 			'added' => translate('Создание'),
- 			'modified' => translate('Изменение'),
- 			'deleted' => translate('Удаление'),
- 			'commented' => translate('Обсуждение')
-  		);
-	}
-	
-	function getStyle()
-	{
-		return 'width:145px;';
-	}
-	
-	function getValueParm()
-	{
-		return 'action';
-	}
-
-	function getType()
-	{
-		return 'singlevalue';
-	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
  class ViewLogSubjectWebMethod extends ViewProjectLogWebMethod
  {
  	function getCaption()

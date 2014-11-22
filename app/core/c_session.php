@@ -177,7 +177,7 @@ class SessionBase
 		{
 			$parms['PrevLoginDate'] = $prev_logon_it->get('RecordModified');
 			 
-		 	$prev_logon_it->modify($parms);
+			$stored_session->getRegistry()->Store($prev_logon_it, $parms);
 		}
 		else 
 		{

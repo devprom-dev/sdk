@@ -1,5 +1,7 @@
 <?php
 
+include_once SERVER_ROOT_PATH."pm/classes/common/ObjectSearchRegistry.php";
+
 class Search extends CommandForm
 {
     function validate()
@@ -36,9 +38,8 @@ class Search extends CommandForm
 		
 		while( !$searchable_it->end() )
 		{
-			$object = $model_factory->getObject($searchable_it->get('ReferenceName'));
-			
-			$object->addSort( new SortRecentClause() );
+			$object = getFactory()->getObject($searchable_it->get('ReferenceName'));
+			$object->setRegistry( new ObjectSearchRegistry() );
 			
 			if( !getFactory()->getAccessPolicy()->can_read($object) ) 
 			{
@@ -57,14 +58,21 @@ class Search extends CommandForm
 				$exact_object_it = $object->getRegistry()->Query(
 						array(
 								new FilterInPredicate($search),
-								new FilterVpdPredicate() 
+								new FilterVpdPredicate(),
+								new SortRecentClause() 
 						)
 				);
 			}
 
 			if ( strlen($search) > $length_constraint )
 			{
-				$object_it = $object->search( $search, $searchable_it->get('attributes') );
+				$object_it = $object->getRegistry()->Query(
+						array(
+								new FilterSearchAttributesPredicate($search, $searchable_it->get('attributes')),
+								new FilterVpdPredicate(),
+								new SortRecentClause()
+						)
+				);
 				
 				if ( is_a($object, 'WikiPage') )
 				{

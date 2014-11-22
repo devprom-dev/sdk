@@ -18,6 +18,16 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
  		parent::__construct();
  	}
  	
+ 	function setModifiedAttributes( $attributes )
+ 	{
+ 		$this->modified_attributes = $attributes;
+ 	}
+ 	
+ 	function getModifiedAttributes()
+ 	{
+ 		return $this->modified_attributes;
+ 	}
+ 	
  	function setVisibility( $visibility )
  	{
  		$this->default_visibility = $visibility;
@@ -55,46 +65,35 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
 		foreach( $attributes as $att_name => $attribute ) 
 		{
-			if( !$this->isAttributeVisible($att_name, $object_it, 'modify') ) continue; 
-
 			$was_value = $prev_object_it->getHtmlDecoded($att_name);
-			
 			$now_value = $object_it->getHtmlDecoded($att_name);
 
-			$att_type = $object_it->object->getAttributeType($att_name);
-			
-			if ( $att_type == 'wysiwyg' )
+			if ( $object_it->object->getAttributeType($att_name) == 'wysiwyg' )
 			{
 				$was_value = preg_replace('/\r|\n/', '', $was_value); 
 				$now_value = preg_replace('/\r|\n/', '', $now_value); 
 			}
 			
-			if( $was_value != $now_value )
-			{
-				$modified_attributes[] = $att_name;
+			if( $was_value == $now_value ) continue;
+			
+			$modified_attributes[] = $att_name;
+
+			if( !$this->isAttributeVisible($att_name, $object_it, 'modify') ) continue; 
 				
-				if ( $object_it->object->IsReference($att_name) ) 
-				{
-					$now_ref = $object_it->getRef($att_name);
+			if ( $object_it->object->IsReference($att_name) ) 
+			{
+				$now_ref = $object_it->getRef($att_name);
 
-					$content .= translate($object_it->object->getAttributeUserName($att_name))
-									.': '.$now_ref->getDisplayName().Chr(10).Chr(13);
-				} 
-				else 
-				{
-					if ( $now_value == 'Y' ) 
-					{
-						$now_value = translate('Да');
-					}
-					
-					if ( $now_value == 'N' ) 
-					{
-						$now_value = translate('Нет');
-					}
+				$content .= translate($object_it->object->getAttributeUserName($att_name))
+								.': '.$now_ref->getDisplayName().Chr(10).Chr(13);
+			} 
+			else 
+			{
+				if ( $now_value == 'Y' ) $now_value = translate('Да'); 
+				if ( $now_value == 'N' ) $now_value = translate('Нет'); 
 
-					$content .= translate($object_it->object->getAttributeUserName($att_name))
-									.': '.$now_value.Chr(10).Chr(13);
-				}
+				$content .= translate($object_it->object->getAttributeUserName($att_name))
+								.': '.$now_value.Chr(10).Chr(13);
 			}
         }
 
@@ -103,11 +102,9 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 	
 	function process( $object_it, $kind, $content = '', $visibility = 1) 
 	{
-		global $model_factory;
-
 		if( !$this->is_active($object_it) ) return;
 
-		$change_log = $model_factory->getObject('ObjectChangeLog');
+		$change_log = getFactory()->getObject('ObjectChangeLog');
 		
 		$change_log->setVpdContext( $object_it );
 		

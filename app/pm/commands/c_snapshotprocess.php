@@ -23,7 +23,7 @@ class SnapshotProcess extends CommandForm
 
 		if ( !getFactory()->getAccessPolicy()->can_modify($snapshot_it) ) $this->replyDenied();
 		
-		$result = $snapshot_it->modify( array( 
+		$result = $snapshot->modify_parms($snapshot_it->getId(), array( 
 				'Caption' => IteratorBase::utf8towin($_REQUEST['Caption']),
 				'Description' => IteratorBase::utf8towin($_REQUEST['Description'])
 		));

@@ -78,11 +78,14 @@
  			$state_it->moveNext();
  		}
 
- 		$registry = getFactory()->getObject('ObjectChangeLog')->getRegistry();
  		
+ 		$registry = new ObjectRegistrySQL();
  		$registry->setLimit(1);
  		
- 		$change_it = $registry->Query(
+ 		$object = getFactory()->getObject('ObjectChangeLog');
+ 		$object->setRegistry($registry);
+ 		
+ 		$change_it = $object->getRegistry()->Query(
 				array (
 						new ChangeLogItemFilter($this->object_it),
 						new SortAttributeClause('RecordCreated')

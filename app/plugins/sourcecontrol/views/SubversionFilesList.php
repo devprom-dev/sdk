@@ -23,7 +23,6 @@ class SubversionFilesList extends SubversionList
         $this->object->addAttribute('File', '', translate('Имя каталога или файла'), true);
         $this->object->addAttribute('Author', '', translate('Автор'), true);
         $this->object->addAttribute('Size', '', translate('Размер'), true);
-        $this->object->addAttribute('Type', '', translate('Тип'), true);
         $this->object->addAttribute('LastModification', '', translate('Последнее изменение'), true);
 
         return parent::getColumns();
@@ -49,20 +48,10 @@ class SubversionFilesList extends SubversionList
                             break;
 
                 default:
-                    $content = preg_split('/\//', $object_it->get('ContentType'));
-                    if ( $content[0] == 'text' )
-                    {
-                        echo '<a href="/pm/'.$project_it->get('CodeName').
+                    echo '<a href="/pm/'.$project_it->get('CodeName').
                         '/module/sourcecontrol/files?path='.urlencode($path).'&subversion='.$repo_it->getId().
                         '&name='.urlencode($object_it->get('Name')).'">'.
                         $object_it->utf8towin($object_it->get('Name')).'</a>';
-                    }
-                    else
-                    {
-                        echo '<a href="?export=download&path='.urlencode($path).'&subversion='.$repo_it->getId().
-                        '&name='.urlencode($object_it->get('Name')).'">'.
-                        $object_it->utf8towin($object_it->get('Name')).'</a>';
-                    }
                     break;
             }
         }
@@ -92,5 +81,20 @@ class SubversionFilesList extends SubversionList
         {
             echo $object_it->get('Creator');
         }
+    }
+    
+    function getColumnWidth( $attribute )
+    {
+    	switch( $attribute )
+    	{
+    	    case 'Author':
+    	    case 'Size':
+    	    	return '10%';
+    	    	
+    	    case 'LastModification':
+    	    	return '20%';
+    	}
+    	
+    	return parent::getColumnWidth($attribute);
     }
 }

@@ -6,85 +6,34 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
 {
     public function build( FunctionalAreaMenuRegistry & $set )
     {
- 	    global $model_factory;
- 	    
  	    $menus = parent::build($set);
  	    
-        $custom = $model_factory->getObject('pm_CustomReport');
-		
-        $custom_it = $custom->getMyRegistry()->getAll();
-		
-		if ( $custom_it->count() < 1 )
-		{
-		    // append default reports
-		    $report = $model_factory->getObject('PMReport');
-		    
-		    $report_it = $report->getExact('project-blog');
-		    
-		    if ( $report_it->getId() != '' )
-		    {
-    		    $custom->add_parms( array (
-    		            'Caption' => translate('Блоги'),
-    		            'ReportBase' => $report_it->getId(),
-    		            'Category' => FUNC_AREA_FAVORITES,
-    		            'Url' => $report_it->get('QueryString')
-    		    ));
-		    }
-
-			$report_it = $report->getExact('productbacklog');
-		    
-		    if ( getFactory()->getAccessPolicy()->can_read($report_it) != '' )
-		    {
-    		    $custom->add_parms( array (
-    		    		'Caption' => $report_it->getDisplayName(),
-    		            'ReportBase' => $report_it->getId(),
-    		            'Category' => FUNC_AREA_FAVORITES,
-    		            'Url' => $report_it->get('QueryString')
-    		    ));
-		    }
-		}
+ 	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  	    
-		$module = $model_factory->getObject('Module');
+		$module = getFactory()->getObject('Module');
+		$report = getFactory()->getObject('PMReport');
 		
-		$report = $model_factory->getObject('PMReport');
-						
-		$custom = $model_factory->getObject('pm_CustomReport');
-		
-		$custom_it = $custom->getAll();
-
-		while ( !$custom_it->end() )
-		{
-			if ( getFactory()->getAccessPolicy()->can_read($custom_it) && $custom_it->get('Category') == FUNC_AREA_FAVORITES )
-			{
-			    $it = $report->getExact($custom_it->getId());
-			    
-			    $uid = $it->getId();
-			    
-				$items[$uid] = $it->buildMenuItem();
-				
-				$items[$uid]['uid'] = $uid;
-			}
-			
-			$custom_it->moveNext();
-		}
-		
-		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']);  
-		
- 		// reports items
- 		
 		$items = array();
 		
-		$items[] = $report->getExact('project-log')->buildMenuItem();
-		
 		$items[] = $report->getExact('features-chart')->buildMenuItem();
+        
+		$module_it = $module->getExact('issues-board');
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+		{
+			$items[] = $report->getExact('issuesboardcrossproject')->buildMenuItem();
+		}
 
-		$items[] = $report->getExact('activitiesreport')->buildMenuItem();
+        $task_chart_it = $module->getExact('tasks-board');
+        if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
+        {
+			$items[] = $report->getExact('tasksboardcrossproject')->buildMenuItem();
+        }
 		
-		$menus['reports'] = array (
-            'name' => translate('Отчеты'),
-            'uid' => 'reports',
-            'items' => $items
- 	    );
+		$items[] = $report->getExact('activitiesreport')->buildMenuItem();
+		$items[] = $report->getExact('discussions')->buildMenuItem();
+		$items[] = $report->getExact('project-blog')->buildMenuItem();
+		
+		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
 		
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
     }

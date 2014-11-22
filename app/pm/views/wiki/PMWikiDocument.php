@@ -70,7 +70,7 @@ class PMWikiDocument extends PMWikiTable
 	    $baseline = $model_factory->getObject('Snapshot');
 	    
 	    $values = $this->getFilterValues();
- 		
+
  		if ( in_array($values['baseline'], array('', 'none', 'all')) )
  		{
  			$this->revision_it = $baseline->getEmptyIterator();

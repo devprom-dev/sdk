@@ -300,9 +300,12 @@
 		$test_it = $test->getExact( $test_id );
 	}
 
-	$test_it->modify ( 
-		array( 'Result' => $dict_result[0]['Id'],
-			   'Description' => $test_it->utf8towin($description) ) );
+	$test->modify_parms($test_it->getId(), 
+			array( 
+					'Result' => $dict_result[0]['Id'],
+			   		'Description' => $test_it->utf8towin($description)
+			)
+	);
 	
 	$test_it = $test_it->getRef('Test');
 	$test_it->updateResult();

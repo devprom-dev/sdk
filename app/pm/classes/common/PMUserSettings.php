@@ -42,7 +42,7 @@ class PMUserSettings extends MetaobjectCacheable
 		{
 			$parms['Value'] = $value;
 			
-			$value_it->modify($parms);
+			$this->modify_parms($value_it->getId(), $parms);
 		}
 		else 
 		{

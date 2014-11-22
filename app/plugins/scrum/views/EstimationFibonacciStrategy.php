@@ -16,15 +16,17 @@ class EstimationFibonacciStrategy extends EstimationStrategy
 		return text('scrum11');
 	}
 	
-	function getVelocityText()
+	function getVelocityText($object)
 	{
-		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease() )
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		
+		if ( (!$methodology_it->HasPlanning() || $object instanceof Iteration) && $methodology_it->HasFixedRelease() )
 		{
-			return text('scrum12');
+			return text('scrum13');
 		}
 		else
 		{
-			return text('scrum13');
+			return text('scrum12');
 		}
 	}
 	

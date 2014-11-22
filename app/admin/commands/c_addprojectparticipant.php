@@ -58,7 +58,7 @@ class AddProjectParticipant extends CommandForm
 		}
 		else
 		{
-		    $part_it->modify( array ( 'IsActive' => 'Y' ));
+			$participant->modify_parms( $part_it->getId(), array ( 'IsActive' => 'Y' ));
 		}
 
 		if ( $part_it->count() < 1 ) $this->replyError( text(706) );

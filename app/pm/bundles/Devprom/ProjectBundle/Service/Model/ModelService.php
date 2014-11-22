@@ -92,7 +92,7 @@ class ModelService
 				throw new \Exception('Lack of permissions to modify object of '.get_class($object));
 			}
 			
-			if ( $object_it->modify($data) < 1 )
+			if ( $object->modify_parms($object_it->getId(), $data) < 1 )
 			{
 				throw new \Exception('Unable update the record ('.$object_it->getId().') of '.get_class($object));
 			}

@@ -16,15 +16,21 @@ class IssueAuthorRegistry extends ObjectRegistrySQL
 
 		$data = array();
 		
-		while( !$it->end() )
+		$user_it = getFactory()->getObject('User')->getRegistry()->Query(
+				array(
+						new FilterInPredicate($it->fieldToArray('Author'))
+				)
+		);
+		
+		while( !$user_it->end() )
 		{
 			$data[] = array ( 
-					'cms_UserId' => $it->get('Author'), 
-					'Caption' => $it->getRef('Author')->getDisplayName(),
-					'Login' => $it->get('Author')
+					'cms_UserId' => $user_it->getId(), 
+					'Caption' => $user_it->getDisplayName(),
+					'Login' => $user_it->getId()
 			);
 			
-			$it->moveNext();
+			$user_it->moveNext();
 		}
 
 		$object = getFactory()->getObject('pm_Watcher');

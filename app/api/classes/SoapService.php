@@ -282,7 +282,7 @@ class SoapService
 			$this->storeFiles( $object, $object_parms );
 			$this->setDefaultValues( $object, $attrs, $object_parms );
 				
-			$id = $it->modify($object_parms);
+			$id = $object->modify_parms($it->getId(), $object_parms);
 
 			if ( $id < 1 ) $server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
 		}

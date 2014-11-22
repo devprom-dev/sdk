@@ -443,7 +443,7 @@ class Metaobject extends StoredObjectDB
 	{
 		while( $reference_it->getId() != '' )
 		{
-			$reference_it->modify( array( $attribute => '' ) );
+			$reference_it->object->modify_parms($reference_it->getId(), array( $attribute => '' ));
 			
 			$reference_it->moveNext();
 		}

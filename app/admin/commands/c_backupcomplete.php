@@ -21,6 +21,8 @@ class BackupComplete extends MaintenanceCommand
 	    $backup->setBackupName($backup->getBackupName());
 	    
 	    $result = $backup->zip();
+	    
+	    DAL::Instance()->Reconnect();
 	    	
 	    $parts = preg_split('/,/', $_REQUEST['parms']);
 	    

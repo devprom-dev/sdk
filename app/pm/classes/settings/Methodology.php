@@ -47,7 +47,7 @@ class Methodology extends Metaobject
 			
 			while( !$seq_it->end() )
 			{
-				$seq_it->modify( array('OrderNum' => $next_seq) );
+				$object->modify_parms($seq_it->getId(), array('OrderNum' => $next_seq));
 
 				$next_seq++;
 				$seq_it->moveNext();
@@ -63,7 +63,7 @@ class Methodology extends Metaobject
 			
 			while( !$seq_it->end() )
 			{
-				$seq_it->modify( array('OrderNum' => $next_seq) );
+				$object->modify_parms($seq_it->getId(), array('OrderNum' => $next_seq));
 
 				$next_seq++;
 				$seq_it->moveNext();

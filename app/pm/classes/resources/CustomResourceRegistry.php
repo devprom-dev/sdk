@@ -6,14 +6,16 @@ class CustomResourceRegistry extends ResourceRegistry
 {
  	function createSQLIterator( $sql )
  	{
- 	    if ( !$this->getObject()->getCacheEnabled() ) return ObjectRegistrySQL::createSQLIterator( $sql );
+ 	    if ( !$this->getObject()->getCacheEnabled() )
+ 	    {
+ 	    	return ObjectRegistrySQL::createSQLIterator( $sql );
+ 	    }
  	    
  	    $it = parent::createSQLIterator( $sql );
  	    
  	    $records = $this->getRecords();
 
  	    // import globally define resources into the current project
- 	    
  	    $vpd_value = array_shift($this->getObject()->getVpds());
 
  	    foreach( $records as $key => $record ) $records[$key]['VPD'] = $vpd_value;
@@ -32,21 +34,12 @@ class CustomResourceRegistry extends ResourceRegistry
  	        }
  	        
  	        $records[$it->get('ResourceKey')]['ResourceValue'] = $it->getHtmlDecoded('ResourceValue');
- 	        
  	        $records[$it->get('ResourceKey')]['Caption'] = $it->getHtmlDecoded('ResourceValue');
- 	        
  	        $records[$it->get('ResourceKey')]['OriginalId'] = $it->getId();
  	        
  	        $it->moveNext();
  	    }
  	    
- 	    // sort items on ResourceValue
- 		
- 		uasort( $records, function($left, $right) 
- 		{ 
- 		    return $left['ResourceValue'] > $right['ResourceValue'] ? 1 : -1; 
- 	    });
-
  	    return $this->createIterator( array_values($records) );
  	}	
-}
+} 

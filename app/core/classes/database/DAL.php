@@ -6,6 +6,8 @@ abstract class DAL
     
     public abstract function Connect( $info );
     
+    public abstract function Reconnect();
+    
     public abstract function Query( $sql );
     
     public abstract function GetAffectedRows();

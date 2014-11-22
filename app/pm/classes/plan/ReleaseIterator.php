@@ -48,11 +48,9 @@ class ReleaseIterator extends OrderedIterator
 
 	function getInitialBurndownMetrics()
 	{
-		global $project_it;
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
-		$sql =  "SELECT (TO_DAYS(r.FinishDate) - GREATEST(m.SnapshotDays,TO_DAYS(r.StartDate))) / 7 * ".$project_it->getDaysInWeek().
-				"		 	+ LEAST(SIGN(TO_DAYS(NOW()) - TO_DAYS(r.StartDate)) + 1, 1) Duration, " .
-		 		"       m.PlannedWorkload " .
+		$sql =  "SELECT m.PlannedWorkload " .
 		 		"  FROM pm_Version r " .
  				"		LEFT OUTER JOIN pm_VersionBurndown m " .
  				"			ON r.pm_VersionId = m.Version " .
@@ -61,13 +59,17 @@ class ReleaseIterator extends OrderedIterator
 
 		$it = $this->object->createSQLIterator( $sql );
 	
-		$duration = $it->get('Duration') > 0 
-		 	? round($it->get('Duration'), 0) : $this->getCapacity();
-		 
-		$capacity = $it->get('PlannedWorkload') > 0 
-		 	? $it->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
-		
-		$velocity = $duration > 0 ? $capacity / $duration : 0;  	
+		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getCapacity();
+		$capacity = $it->get('PlannedWorkload') > 0 ? $it->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
+
+		if ( !$methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
+		{
+			$velocity = $duration > 0 ? $this->get('InitialVelocity') / $duration : $this->get('InitialVelocity');
+		}
+		else
+		{
+			$velocity = $this->getVelocity();
+		}
 		 	
 		return array( $duration, $capacity, $velocity ); 
 	}
@@ -76,10 +78,12 @@ class ReleaseIterator extends OrderedIterator
 	{
 		list( $in_duration, $in_capacity, $in_velocity ) = $this->getInitialBurndownMetrics();
 			
-		// get remain capacity of the release
-		$capacity = $this->getTotalWorkload();
+		// gets remain capacity of the release
+		$duration = $this->getLeftCapacity();
 		
-		$duration = min($in_velocity > 0 ? ceil($capacity / $in_velocity) : 0, 365);
+		$capacity = $in_velocity > 0 && $duration > 0 ? ceil($duration * $in_velocity) : $this->getTotalWorkload();
+		
+		if ( $capacity < 1 ) $capacity = $in_velocity;
 		
 		return array( $duration, $capacity, $in_velocity );
 	}
@@ -128,7 +132,6 @@ class ReleaseIterator extends OrderedIterator
 		}
 
 		list( $duration, $est_capacity, $est_velocity ) = $this->getEstimatedBurndownMetrics();
-		$duration = floor($duration * 7 / $project_it->getDaysInWeek());
 		
 		if ( $duration == '' )
 		{
@@ -137,7 +140,7 @@ class ReleaseIterator extends OrderedIterator
 
 		if ( $duration > 0 || !$this->IsCompleted() )
 		{
-			$finish_date = "GREATEST(FROM_DAYS(TO_DAYS(NOW()) + ".$duration."), '".$this->get_native('FinishDate')."')";
+			$finish_date = "GREATEST(FROM_DAYS(TO_DAYS(NOW()) + ".$duration." - 1), '".$this->get_native('FinishDate')."')";
 		}
 		else
 		{
@@ -203,7 +206,8 @@ class ReleaseIterator extends OrderedIterator
 	{
 		global $model_factory;
 		
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		$project_it = getSession()->getProjectIt();
+		$methodology_it = $project_it->getMethodologyIt();
 		
 		// calculate metrics for each iteration
 		if ( $methodology_it->HasPlanning() )
@@ -218,7 +222,6 @@ class ReleaseIterator extends OrderedIterator
 			while ( !$iteration_it->end() )
 			{
 				$iteration_it->storeMetrics();
-				
 				$iteration_it->moveNext();
 			}
 		}		
@@ -233,12 +236,12 @@ class ReleaseIterator extends OrderedIterator
 		
 		if ( $methodology_it->HasPlanning() )
 		{
-			$iteration = $model_factory->getObject('Iteration');
-			
-			$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::PAST) );
-			$iteration->addFilter( new IterationReleasePredicate($this->getId()) );
-			
-			$iteration_it = $iteration->getAll();
+			$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+					array (
+							new IterationTimelinePredicate(IterationTimelinePredicate::PAST),
+							new IterationReleasePredicate($this->getId())
+					)
+			);
 				
 			$sql = " SELECT IFNULL(AVG(m.MetricValue), 0) Velocity " .
 				   "   FROM pm_IterationMetric m, pm_Release r " .
@@ -251,6 +254,12 @@ class ReleaseIterator extends OrderedIterator
 			$velit = $this->object->createSQLIterator($sql);
 			
 			$velocity = round($velit->get('Velocity'), 0);
+			if ( $velocity <= 0 ) $velocity = $this->get('InitialVelocity');
+			
+			if ( $methodology_it->HasFixedRelease() )
+			{
+				$velocity /= $methodology_it->getReleaseDuration() * $project_it->getDaysInWeek();
+			}
 		}
 		else
 		{ 
@@ -267,15 +276,13 @@ class ReleaseIterator extends OrderedIterator
 					$velocity = round($completed / $capacity, 1);
 				}
 			}
+			if ( $velocity <= 0 ) $velocity = $this->get('InitialVelocity');
 		}
 		
-		if ( $velocity <= 0 )
-		{
-			$velocity = $this->get('InitialVelocity');
-		}
-
 		// calculate estimated start and finish dates
 		//
+		$estimation = max($estimation, $this->getCapacity() * $velocity); 
+		
 		$metrics = array (
 			'Workload' => $total_workload,
 			'Estimation' => $estimation,
@@ -328,6 +335,8 @@ class ReleaseIterator extends OrderedIterator
 
 	function storeBurndownSnapshot()
 	{
+		$project_it = getSession()->getProjectIt();
+		
 		$sql = " SELECT GREATEST(LEAST(TO_DAYS(NOW()), TO_DAYS(r.FinishDate)), TO_DAYS(r.StartDate)) BeginDays, ".
 			   "	    r.FinishDate " .
 			   "   FROM pm_Version r " .
@@ -342,9 +351,11 @@ class ReleaseIterator extends OrderedIterator
 				   'SnapshotDays' => $it->get("BeginDays")) 
 			);
 
+		list( $duration, $workload, $velocity ) = $this->getEstimatedBurndownMetrics();
+		
 		$workload = $this->getTotalWorkload();
-		$plannedworkload = $this->getPlannedTotalWorkload();
-
+		$plannedworkload = max($this->getPlannedTotalWorkload(), $duration * $velocity);
+		
 		if ( $this->IsFinished() )
 		{
 			$metric_date = $it->get('FinishDate');
@@ -403,7 +414,7 @@ class ReleaseIterator extends OrderedIterator
 		
 		while ( !$it->end() )
 		{
-			$it->modify( array ( 
+			$metrics->modify_parms( $it->getId(), array ( 
 				'PlannedWorkload' => $this->getPlannedTotalWorkload() 
 			));
 			$it->moveNext();
@@ -583,35 +594,24 @@ class ReleaseIterator extends OrderedIterator
 
 	function getPlannedTotalWorkload() 
 	{
-		global $model_factory;
-		
-		$request = $model_factory->getObject('pm_ChangeRequest');
+		$request = getFactory()->getObject('pm_ChangeRequest');
 
 		$request->addFilter( new FilterAttributePredicate('PlannedRelease', $this->getId()) );
 		
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
-		$data = $strategy->getEstimation( $request );
-		
-		return array_shift($data); 
+		return array_shift(getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )); 
 	}
 
 	function getTotalWorkload() 
 	{
-		global $model_factory;
-		
-		$request = $model_factory->getObject('pm_ChangeRequest');
+		$request = getFactory()->getObject('pm_ChangeRequest');
 		
 		$request->addFilter( new FilterAttributePredicate('PlannedRelease', $this->getId()) );
-		$request->addFilter( new StatePredicate('notresolved') );
+		$request->addFilter( new StatePredicate('notterminal') );
 		
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
-		$data = $strategy->getEstimation( $request, 
-				$request->getAttributeType('EstimationLeft') != '' ? 'EstimationLeft' : 'Estimation'
-		);
-		
-		return array_shift($data); 
+		return array_shift(
+				getSession()->getProjectIt()->getMethodologyIt()
+					->getEstimationStrategy()->getEstimation( $request, 'Estimation')
+		); 
 	}
 
 	function getCompletedWorkload() 

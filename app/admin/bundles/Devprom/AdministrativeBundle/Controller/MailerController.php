@@ -22,16 +22,16 @@ class MailerController extends BaseController
     {
     	if ( is_object($response = $this->checkAccess()) ) return $response;
     	
-    	$object_it = getFactory()->getObject('MailerSettings')->getAll();
+    	$settings = getFactory()->getObject('MailerSettings');
     	
     	$parms = array();
     	
-    	foreach( $object_it->object->getAttributes() as $attribute => $data )
+    	foreach( $settings->getAttributes() as $attribute => $data )
     	{
     		$parms[$attribute] = $this->getRequest()->request->get($attribute); 
     	}
     	
-    	$object_it->modify($parms);
+    	$settings->modify_parms($settings->getAll()->getId(), $parms);
     	
     	$test_email = $this->getRequest()->request->get("MailTestEmail");
     	

@@ -9,11 +9,11 @@ class ObjectAffectedDatePersister extends ObjectSQLPersister
  		$columns = array();
  		
 		$columns[] = 
-			" IFNULL((SELECT CONCAT(RecordModified,'.',co_AffectedObjectsId) ".
+			" IFNULL((SELECT UNIX_TIMESTAMP(RecordModified) * 100000 + co_AffectedObjectsId ".
 			"	 FROM co_AffectedObjects o ".
 			"   WHERE o.ObjectId = ".$this->getPK($alias).
 			"	  AND o.ObjectClass = '".get_class($this->getObject())."' ".
-			"   ORDER BY RecordModified DESC LIMIT 1), t.RecordModified) AffectedDate "; 
+			"   ORDER BY RecordModified DESC LIMIT 1), UNIX_TIMESTAMP(t.RecordModified) * 100000) AffectedDate "; 
  		
  		return $columns;
  	}

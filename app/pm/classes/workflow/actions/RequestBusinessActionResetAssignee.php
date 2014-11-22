@@ -15,7 +15,7 @@ class RequestBusinessActionResetAssignee extends BusinessAction
  		
  	    if ( $object_it->get('Owner') == '' ) return true;
  	    
- 	    $object_it->modify( array( 'Owner' => '' ) );
+ 	    $object_it->object->modify_parms($object_it->getId(), array( 'Owner' => '' ));
  	    
  		return true;
  	}

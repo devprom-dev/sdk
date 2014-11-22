@@ -19,11 +19,6 @@ class PMWikiDocumentList extends PMWikiList
     {
     	global $model_factory;
     	
-    	if ( $_REQUEST['revision'] > 0 )
-    	{
-    		$this->revision_it = $model_factory->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
-    	}
-
     	$snapshot_it = $this->getTable()->getCompareToSnapshot();
 
    		if ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch', 'document')) )
@@ -60,6 +55,16 @@ class PMWikiDocumentList extends PMWikiList
     		$registry->setSnapshotIt($version_it);
     			
 	    	$this->getObject()->setRegistry($registry);
+    	}
+    	
+        if ( $_REQUEST['revision'] > 0 )
+    	{
+    		$this->revision_it = $model_factory->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
+    		
+    		if ( $this->revision_it->getId() > 0 )
+    		{
+    			$this->getObject()->addPersister( new WikiPageRevisionPersister($this->revision_it) );
+    		}    			
     	}
     	
         parent::retrieve();

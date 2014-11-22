@@ -1,5 +1,7 @@
 <?php
 
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
+
 include "TaskForm.php";
 include "TaskBulkForm.php";
 include "IterationBurndownSection.php";
@@ -31,7 +33,6 @@ class TaskPlanningPage extends PMPage
 				}
 				
  				$this->addInfoSection( new StatableLifecycleSection( $object_it ) );
-	 			
  				$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
  			}
  		}
@@ -55,9 +56,15 @@ class TaskPlanningPage extends PMPage
  		}
  	}
  	
+ 	function getObject()
+ 	{
+ 		getSession()->addBuilder( new TaskModelExtendedBuilder() );
+ 		return getFactory()->getObject('Task');
+ 	}
+ 	
  	function getTableDefault()
  	{
- 	    return new TaskBoardTable();
+ 	    return new TaskBoardTable($this->getObject());
  	}
  	
  	function getTable() 
@@ -96,10 +103,10 @@ class TaskPlanningPage extends PMPage
  		switch ( $_REQUEST['mode'] )
  		{
  		    case 'bulk':
- 		        return new TaskBulkForm( getFactory()->getObject('pm_Task') );
+ 		        return new TaskBulkForm( $this->getObject() );
  		    
  		    default:
-				return new TaskForm( getFactory()->getObject('pm_Task') );
+				return new TaskForm( $this->getObject() );
  		}
  	}
 }

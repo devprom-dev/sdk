@@ -168,9 +168,11 @@ class SecurityController extends PageController
 		{
 			if( $request->query->get('key') == $user_it->getResetPasswordKey() ) 
 			{
-				$user_it->modify( array(
-				    'Password' => \IteratorBase::utf8towin($request->request->get('NewPassword'))
-				));
+				$user->modify_parms($user_it->getId(),
+						array(
+						    'Password' => \IteratorBase::utf8towin($request->request->get('NewPassword'))
+						)
+				);
 					
 				$session = getSession();
 				

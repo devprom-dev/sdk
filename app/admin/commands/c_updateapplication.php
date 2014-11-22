@@ -35,7 +35,9 @@ class UpdateApplication extends MaintenanceCommand
 	    
 	    // go to the next step
 	    $strategy->release();
-	     
+
+	    DAL::Instance()->Reconnect();
+	    
 	    $_SERVER['APP_VERSION'] = getFactory()->getObject('cms_Update')->getLatest()->getDisplayName();
 	    
 		$this->replyRedirect( '?action=updatesystem&parms='.SanitizeUrl::parseUrl($_REQUEST['parms']) );
@@ -81,7 +83,7 @@ class UpdateApplication extends MaintenanceCommand
     	    $parms['FileName'] = $update_file_name;
     	    $parms['LogFileName'] = $update_file_name.'.log';
     	    
-	        $update_it->modify($parms); 
+    	    $update_cls->modify_parms($update_it->getId(),$parms); 
 	    }
 	    
 	    $update->writeLog( "INSTALLED UPDATES:" );

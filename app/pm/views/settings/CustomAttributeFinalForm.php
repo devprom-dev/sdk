@@ -98,8 +98,8 @@ class CustomAttributeFinalForm extends PMPageForm
 			$mapper = new ModelDataTypeMapper();
 			
 			$default_value = $mapper->getMapper(
-					$this->getObject()->getAttributeObject('AttributeType')->getExact($attr_type)->getDbType()
-			)->map($default_value);
+						$this->getObject()->getAttributeObject('AttributeType')->getExact($attr_type)->getDbType()
+				)->map($default_value);
 			
 			if ( $default_value == '' )
 			{

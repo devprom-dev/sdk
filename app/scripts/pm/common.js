@@ -883,8 +883,11 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 	var itemsCount = $('#embeddedItemsCount'+form_id).val();
 	if ( itemsCount < 1 ) itemsCount = 1;
 
+	var project = $('#embeddedProject'+form_id).val();
+	if ( project == '' ) project = devpromOpts.project; 
+	
 	var method_url = 'methods.php';
-	if ( devpromOpts.project != '' ) method_url = '/pm/'+devpromOpts.project+'/'+method_url;
+	if ( devpromOpts.project != '' ) method_url = '/pm/'+project+'/'+method_url;
 
 	$("#embeddedForm"+form_id+" .embedded_footer")
 		.children("input[type='button']").attr('disabled', true);

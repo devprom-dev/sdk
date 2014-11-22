@@ -161,14 +161,16 @@ class UserExcludeWebMethod extends UserWebMethod
 		
 		getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
 		
-		$part_it = getFactory()->getObject('Participant')->getByRefArray( 
+		$part = getFactory()->getObject('Participant');
+		
+		$part_it = $part->getByRefArray( 
 				array (
 					'SystemUser' => $this->user_it->getId(),
 					'Project' => $this->project_it->getId() 	
 				)
 			);
 
-		$part_it->modify( 
+		$part->modify_parms($part_it->getId(), 
 				array ( 
 						'IsActive' => 'N' 
 				)

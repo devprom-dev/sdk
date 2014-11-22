@@ -34,10 +34,13 @@ class MailerSettingsPersister extends ObjectSQLPersister
  			}
  		}
 
- 		getFactory()->getObject('cms_SystemSettings')->getAll()->modify(
- 			array (
- 				'AdminEmail' => $parms['AdminEmail']
- 			) 
+ 		$settings = getFactory()->getObject('cms_SystemSettings');
+ 		
+ 		$settings->modify_parms(
+ 				$settings->getAll()->getId(), 
+	 			array (
+	 				'AdminEmail' => $parms['AdminEmail']
+	 			) 
  		);
  		
 		$command = new ClearCache();

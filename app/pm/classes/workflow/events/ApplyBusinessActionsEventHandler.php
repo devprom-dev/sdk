@@ -6,13 +6,13 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
 {
 	function handle( $object_it )
 	{
-		$state_id = $object_it->getStateIt()->getId();
+		$state_it = $object_it->getStateIt();
 		
-		if ( $state_id < 1 ) return;
+		if ( $state_it->getId() < 1 ) return;
 		
  		$action_it = getFactory()->getObject('StateAction')->getRegistry()->Query(
  				array (
- 						new FilterAttributePredicate('State', $state_id),
+ 						new FilterAttributePredicate('State', $state_it->getId()),
  				)
  		);
 

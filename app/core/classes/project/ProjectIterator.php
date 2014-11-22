@@ -471,7 +471,8 @@ class ProjectIterator extends OrderedIterator
 			$version_it->moveNext();
 		}
 		
-		$this->modify(
+		$this->object->setNotificationEnabled(false);
+		$this->object->modify_parms($this->getId(), 
 				array (
 						'Rating' => $this->getVelocityDevider()
 				)

@@ -12,12 +12,9 @@ class SubversionFilesPage extends SubversionPage
     
     function __construct()
     {
-        global $model_factory, $_REQUEST;
-    
-        $subversion = $model_factory->getObject('pm_Subversion');
-        	
         $this->subversion_it = $_REQUEST['subversion'] != '' 
-                ? $subversion->getExact($_REQUEST['subversion']) : $subversion->getEmptyIterator();
+                ? $this->getObject()->getExact($_REQUEST['subversion']) 
+        		: $this->getObject()->getEmptyIterator();
         	
         parent::__construct();
         	
@@ -25,6 +22,11 @@ class SubversionFilesPage extends SubversionPage
         {
             $this->addInfoSection( new SubversionFileRevisionsSection($this->subversion_it)	);
         }
+    }
+    
+    function getObject()
+    {
+    	return getFactory()->getObject('pm_Subversion');
     }
     
  	function getTable() 
@@ -37,12 +39,51 @@ class SubversionFilesPage extends SubversionPage
      			    return new SubversionFileDiffTable( $this->subversion_it );
     
      			default:
-     			    return new SubversionFileTable( $this->subversion_it );
+     			    return new SubversionFileTable( $this->getObject() );
  	        }
  	    }
  	    
 		return new SubversionFilesTable();
  	}
+ 	
+    function getRenderParms()
+    {
+    	$parms = parent::getRenderParms();
+    	
+    	if ( $_REQUEST['name'] == '' || $_REQUEST['mode'] == 'diff' ) return $parms;
+    	
+    	$file_body = $this->subversion_it->getConnector()->getTextFile(
+			        		IteratorBase::wintoutf8($_REQUEST['path']),
+    						$_REQUEST['version']
+			         );
+    	
+        $file_name = tempnam(sys_get_temp_dir(), md5($_REQUEST['name']));
+    	file_put_contents($file_name, $file_body);
+    	
+    	$finfo = new finfo(FILEINFO_MIME);
+    	$content_type = $finfo->file($file_name);
+    	
+    	if ( strpos($content_type, 'text') === false )
+    	{
+    		// binary file 	
+			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
+			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
+			header('Content-Type: '.$content_type);
+		 	header('Content-Disposition: attachment; filename="'.$_REQUEST['name'].'"');
+    		
+		 	echo $file_body;
+		 	die();
+    	}
+    	
+    	return array_merge( $parms,
+        		array (
+		            'file_body' => IteratorBase::utf8towin($file_body),
+		            'path' => $_REQUEST['path'],
+		            'name' => IteratorBase::utf8towin($_REQUEST['name']),
+		            'version' => $_REQUEST['version'],
+        		)
+        );
+    }
  	
  	function getForm() 
  	{
@@ -52,24 +93,5 @@ class SubversionFilesPage extends SubversionPage
  	function getTitle()
  	{
 		return text('sourcecontrol3'); 		
- 	}
- 	
- 	function export()
- 	{
- 		global $model_factory;
-	 	
-		header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
-		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
-	 	header('Content-Disposition: attachment; filename="'.$_REQUEST['name'].'"');
-	 	 
-	 	$object = $model_factory->getObject('pm_Subversion');
-	 	$object_it = $object->getExact($_REQUEST['subversion']);
-	 	
-	 	if ( $object_it->getId() > 0 )
-	 	{
-	 		$connector = $object_it->getConnector();	 	
-	 		
-	 		echo $connector->getBinaryFile(IteratorBase::wintoutf8($_REQUEST['path']));
-	 	}
  	}
 }

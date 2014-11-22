@@ -47,7 +47,8 @@ class PortfolioIterator extends ProjectIterator
         {
             foreach ( $attributes as $key => $value )
             {
-                if ( $methodology_it->get($key) == 'Y' ) $data[0][$key] = 'Y';
+            	if ( $key == 'IsRequestOrderUsed' ) continue;
+                if ( $methodology_it->get($key) != 'N' ) $data[0][$key] = $methodology_it->get($key);
             }
             
             $methodology_it->moveNext();

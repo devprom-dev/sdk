@@ -17,19 +17,15 @@ class VersionPage extends PMPage
  	function __construct()
  	{
  		getSession()->addBuilder( new IterationModelMetricsBuilder() );
- 		
         getSession()->addBuilder( new ReleaseModelMetricsBuilder() );
- 		
+        getSession()->addBuilder( new StageModelBuilder() );
+        
         parent::__construct();
  	}
  	
  	function getObject()
  	{
- 		global $model_factory;
- 		
-        getSession()->addBuilder( new StageModelBuilder() );
- 		
- 		return $model_factory->getObject('Stage');
+ 		return getFactory()->getObject('Stage');
  	}
  	
  	function getTable() 

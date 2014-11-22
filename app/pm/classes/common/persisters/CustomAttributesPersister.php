@@ -69,7 +69,9 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		
  		foreach( $attributes as $attribute ) $ids[] = $attribute['id']; 
  		
- 		$value_it = getFactory()->getObject('pm_AttributeValue')->getRegistry()->Query(
+ 		$value = getFactory()->getObject('pm_AttributeValue');
+ 		
+ 		$value_it = $value->getRegistry()->Query(
  				array (
  						new FilterAttributePredicate('CustomAttribute', $ids),
  						new FilterAttributePredicate('ObjectId', $object_id),
@@ -106,7 +108,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
 	 			$this->setValueParms( $attr, $parms, $value_parms );
  				
-	 			$value_it->modify( $value_parms );
+	 			$value->modify_parms($value_it->getId(), $value_parms);
  			}
  		}
  	}
@@ -155,8 +157,12 @@ class CustomAttributesPersister extends ObjectSQLPersister
  			&& $parms[$attribute['name']] == '' && $value_parms[$value_column] == '' 
  			&& $attribute['default'] != '';
  		 
- 		$value_parms[$value_column] = $use_default 
- 			? $attribute['default'] : $parms[$attribute['name']];
+ 		$value_parms[$value_column] = $use_default ? $attribute['default'] : $parms[$attribute['name']];
+ 		
+ 	 	if ( $value_column == 'IntegerValue' && !is_numeric($parms[$attribute['name']]) )
+ 		{
+ 			$value_parms[$value_column] = '';
+ 		}
  	}
  	
  	function getSelectColumns( $alias )

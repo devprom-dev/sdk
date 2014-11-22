@@ -618,11 +618,14 @@ class IteratorBase
 	
 	function modify( $parms ) 
 	{
-		$result = $this->object->modify_parms( $this->getId(), $parms );
-		
-		$this->setRowset($this->object->getExact($this->getId())->getRowset());
-				
-		return $result;
+		try
+		{
+			Logger::getLogger('System')->error('OBSOLETE. IteratorBase::modify - do not use the method, it will be removed in future updates');
+		}
+		catch(Exception $e)
+		{
+		}
+		return $this->object->modify_parms( $this->getId(), $parms );
 	}
 	
 	function delete()

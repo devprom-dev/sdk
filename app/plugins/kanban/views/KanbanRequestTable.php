@@ -18,4 +18,13 @@ class KanbanRequestTable extends RequestTable
  	{
  	    return array();
  	}
+ 	
+	protected function buildFilterState()
+	{
+		$filter = parent::buildFilterState();
+		
+		$filter->setDefaultValue('all');
+		
+		return $filter;
+	}
 }

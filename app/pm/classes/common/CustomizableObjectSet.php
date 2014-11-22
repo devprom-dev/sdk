@@ -9,4 +9,9 @@ class CustomizableObjectSet extends CacheableSet
  	{
  		parent::__construct(new CustomizableObjectRegistry($this));
  	}
+ 	
+ 	function checkObject( $object )
+ 	{
+ 		return in_array(strtolower(get_class($object)), $this->getAll()->fieldToArray('ReferenceName'));
+ 	}
 }

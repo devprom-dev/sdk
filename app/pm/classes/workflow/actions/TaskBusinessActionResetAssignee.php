@@ -13,7 +13,7 @@ class TaskBusinessActionResetAssignee extends BusinessAction
  	{
  	    if ( $object_it->get('Assignee') == '' ) return true;
  	    
- 	    $object_it->modify( array( 'Assignee' => '' ) );
+ 	    $object_it->object->modify_parms($object_it->getId(), array( 'Assignee' => '' ));
  	     		
  		return true;
  	}

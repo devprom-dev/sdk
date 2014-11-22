@@ -19,7 +19,7 @@
  $it = $iteration->getByRef( 'Version', $release_it->getId() );
 
  // initial data
- $total = array( $release_it->get('Estimation') );
+ $total = array( $release_it->get('Workload') );
  
  $recent_velocity = array( $release_it->get('Velocity') );
 
@@ -27,7 +27,7 @@
  
  while ( !$it->end() )
  {
-	$total[] = $release_it->get('Estimation');
+	$total[] = $release_it->get('Workload');
 		
 	$resolved[] = $resolved[count($resolved)-1] + $it->get('IterationEstimation');
 	
@@ -49,14 +49,7 @@
 
  $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  
- if ( $methodology_it->HasFixedRelease() )
- {
- 	$left_iterations = $velocity > 0 ? ceil($nonplanned / $velocity) : 0;
- }
- else
- {
- 	$iteration_duration = $methodology_it->getReleaseDuration() 
- 		* $project_it->getDaysInWeek();
+ 	$iteration_duration = $methodology_it->getReleaseDuration() * $project_it->getDaysInWeek();
  	
  	if ( $velocity > 0 )
  	{
@@ -66,7 +59,6 @@
  	{
  		$left_iterations = 1000;
  	}
- }
 
  $prognosis = array();
  $index = count($total) - 1;
@@ -77,7 +69,7 @@
  	
  	$devider = $i > 0 ? $nonplanned / $left_iterations * $i : 0;
  	
- 	$prognosis[$index] = $resolved[count($resolved)-1] + ($devider > 0 ? ($resolved[count($resolved)-1] > 0 ? $nonplanned / $left_iterations * $i : 0) : 0); 
+ 	$prognosis[$index] = $resolved[count($resolved)-1] + $devider; 
  }
  
  header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past

@@ -18,17 +18,6 @@ class ParticipantForm extends PMPageForm
 		return parent::editable();
 	}
 	
-	function process()
-	{
-		if ( $this->getAction() == 'add' )
-		{
-			// skip list updating after participant has been created
-			$this->getObject()->removeNotificator('ChangesWaitLockReleaseTrigger');
-		}
-		
-		parent::process();
-	}
-		
 	function processEmbeddedForms( $object_it )
 	{
 		parent::processEmbeddedForms( $object_it );

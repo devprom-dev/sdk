@@ -6,7 +6,6 @@ include_once SERVER_ROOT_PATH.'pm/views/time/FieldSpentTimeTask.php';
 include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
@@ -17,31 +16,22 @@ class TaskForm extends PMPageForm
  	
  	private $move_iteration_methods = array();
  	
- 	public function __construct( $object )
- 	{
- 		parent::__construct($object);
- 		
- 		$this->buildMethods();
- 	}
- 	
     protected function extendModel()
     {
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
     	
-    	parent::extendModel();
-    	
-		$builder = new TaskModelExtendedBuilder();
-		$builder->build( $this->getObject() );
-
 		$this->getObject()->addPersister( new WatchersPersister() );
+		
+		parent::extendModel();
 
 		$transition_it = $this->getTransitionIt();
-		
 		if ( $transition_it->getId() > 0 )
 		{
 			$builder = new WorkflowTransitionTaskModelBuilder($transition_it);
 			$builder->build( $this->getObject() );
 		}
+		
+		$this->buildMethods();
     }
 	
 	public function buildMethods()

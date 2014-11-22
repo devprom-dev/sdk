@@ -89,6 +89,6 @@ class ActuateWikiLinkWebMethod extends WebMethod
 
  		if ( is_object($baseline_it) ) $parms['Baseline'] = $baseline_it->getId();
  		
-		$link_it->modify( $parms );
+ 		$link_it->object->modify_parms($link_it->getId(), $parms);
  	}
 }

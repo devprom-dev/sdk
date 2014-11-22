@@ -21,7 +21,7 @@ class RequestBusinessActionResetTasks extends BusinessAction
 		{
 			while ( !$task_it->end() )
 			{
-				$task_it->modify( array('Release' => '') );
+				$task_it->object->modify_parms($task_it->getId(), array('Release' => ''));
 				$task_it->moveNext();
 			}
 		}

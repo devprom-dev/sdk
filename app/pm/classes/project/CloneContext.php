@@ -4,8 +4,6 @@ class CloneContext
 {
     var $ids_map = array();
 
-    var $iteration_start = 'NOW()';
-    
     var $default_parms = array();
     
     var $use_existing_refs = false;
@@ -32,16 +30,6 @@ class CloneContext
     function getBrokenReferences()
     {
         return $this->broken_references;
-    }
-    
-    function getIterationStart()
-    {
-        return $this->iteration_start;
-    }
-    
-    function setIterationStart( $iteration_start )
-    {
-        $this->iteration_start = $iteration_start;
     }
     
     function getDefaultParms()

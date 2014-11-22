@@ -63,6 +63,8 @@ class LockFileSystem extends Lock
         	
         	$skip++;
         }
+        
+        DAL::Instance()->Reconnect();
     }
     
     /* private members */

@@ -54,17 +54,21 @@ class AuthenticationSOAPFactory extends AuthenticationFactory
     		
 		if ( $project_it->getId() > 0 )
 		{
-			$this->use_it->modify( array( 
-			        'Project' => $project_it->getId(),
-			        'Participant' => $user_it->getId() 
-			));
+			$systemuse->getRegistry()->Store( $this->use_it,
+					array( 
+					        'Project' => $project_it->getId(),
+					        'Participant' => $user_it->getId() 
+					)
+			);
 		}
 		else
 		{
-			$this->use_it->modify( array( 
-			        'Project' => '',
-			        'Participant' => $user_it->getId()
-			));
+			$systemuse->getRegistry()->Store( $this->use_it,
+					array( 
+					        'Project' => '',
+					        'Participant' => $user_it->getId()
+					)
+			);
 		}
 		
    	    $this->use_it = $systemuse->getExact($this->use_it->getId());
