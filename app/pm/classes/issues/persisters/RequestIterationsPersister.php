@@ -27,9 +27,11 @@ class RequestIterationsPersister extends ObjectSQLPersister
 
  	    $object_it->object->removeNotificator( 'EmailNotificator' );
  	    
-	    $object_it->modify( array(
-	            'PlannedRelease' => $iteration_it->get('Version')
-	    ));
+ 	    $this->getObject()->modify_parms( $object_it->getId(),
+ 	    		array(
+			            'PlannedRelease' => $iteration_it->get('Version')
+			    )
+ 	    );
 
 		$task_it = $this->getObject()->getAttributeType('OpenTasks') != '' 
 				? $object_it->getRef('OpenTasks') : getFactory()->getObject('Task')->getEmptyIterator();
@@ -38,7 +40,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
 		{
 			$task_it->object->removeNotificator( 'EmailNotificator' );
 			
-			$task_it->modify( array('Release' => $iteration_it->getId()) );
+			$task_it->object->modify_parms($task_it->getId(), array('Release' => $iteration_it->getId()));
 			
 			$task_it->moveNext();
 		}

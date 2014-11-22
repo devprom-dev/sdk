@@ -103,9 +103,11 @@ class ModelEventsManager
 	{
 		foreach( getSession()->getBuilders($interface_name) as $handler )
 		{
-			$handler->setObjectIt($object_it);
+			$handler->setObjectIt($object_it->object->getExact($object_it->getId()));
 			
-			if ( $handler->readyToHandle() ) $handler->process(); 
+			if ( !$handler->readyToHandle() ) continue;
+			
+			$handler->process();
 		}
 		
 		$object_it->moveFirst();

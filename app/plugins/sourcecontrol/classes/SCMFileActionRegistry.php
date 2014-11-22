@@ -12,8 +12,7 @@ class SCMFileActionRegistry extends SCMDataRegistry
 				'Type' => $type,
 				'Path' => $path,
 				'Name' => $parts['basename'],
-				'Action' => $action,
-				'ContentType' => $this->getContentTypeByFileName($name)
+				'Action' => $action
 		));
 	}
 }

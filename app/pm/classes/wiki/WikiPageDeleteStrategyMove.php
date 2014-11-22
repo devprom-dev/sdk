@@ -16,7 +16,7 @@ class WikiPageDeleteStrategyMove extends WikiPageDeleteStrategy
 		{
 			while( !$reference_it->end() )
 			{
-				$reference_it->modify( array (
+				$reference_it->object->modify_parms($reference_it->getId(), array (
 						'ParentPage' => $self_it->get('ParentPage')
 				));
 				

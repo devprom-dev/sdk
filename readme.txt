@@ -28,4 +28,13 @@ dev\php\php lib/app/console build-plugin mypluginname
 
 git fetch upstream
 git checkout master
-git merge upstream/master
+git merge -s recursive -X theirs upstream/master
+run.bat
+(обновление базы данных) upgrade.bat
+
+--
+-- Примеры плагинов
+example1
+Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
+Пример триггера, изменяющего состояние пожелания при создании по нему задачи.
+

@@ -8,14 +8,17 @@ class PMForm extends AjaxForm
 	{
 		parent::__construct($object);
 		
-        $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
-        
-        while (!$it->end()) 
-        {
-            $this->customtypes[$it->get('ReferenceName')] = $it->get('AttributeType');
-
-            $it->moveNext();
-        }
+		if ( getFactory()->getObject('CustomizableObjectSet')->checkObject($this->getObject()) )
+		{
+	        $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
+	        
+	        while (!$it->end()) 
+	        {
+	            $this->customtypes[$it->get('ReferenceName')] = $it->get('AttributeType');
+	
+	            $it->moveNext();
+	        }
+		}
 	}
 	
 	function getSite()

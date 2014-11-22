@@ -56,6 +56,8 @@ class UpdateUpload extends MaintenanceCommand
 			
 		if ( $result != '' ) $this->replyError($result);
 
+		DAL::Instance()->Reconnect();
+		
 		$this->checkUpdateIsValid();
 		
 		$this->checkPlugins();

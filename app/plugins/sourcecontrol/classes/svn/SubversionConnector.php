@@ -145,7 +145,12 @@ class SubversionConnector extends SCMConnector
 	 		
 	 		foreach( $logs as $info )
 	 		{
-	 			$registry->addCommit($info['version'], $info['date'], $info['comment'], $info['author']);
+	 			$registry->addCommit(
+	 					$info['version'], 
+	 					$info['date'], 
+	 					self::detectCharset($info['comment']),
+	 					$info['author']
+				);
 	 		}
 		}
 
@@ -168,7 +173,7 @@ class SubversionConnector extends SCMConnector
 		
 		$this->log( $this->getLastError() );		
 		
-		return $content;
+		return self::detectCharset($content);
 	}
 	
  	function getBinaryFile( $path, $version = '' )
@@ -214,7 +219,12 @@ class SubversionConnector extends SCMConnector
 	 		
 	 		foreach ( $logs as $info )
 	 		{
-	 			$registry->addCommit($info['version'], $info['date'], $info['comment'], $info['author']);
+	 			$registry->addCommit(
+	 					$info['version'], 
+	 					$info['date'], 
+	 					self::detectCharset($info['comment']),
+	 					$info['author']
+				);
 	 		}
  		}
 		

@@ -6,10 +6,9 @@ class RequestIterator extends StatableIterator
  	
 	function getDisplayName()
 	{
-	 	if ( $this->get('Type') > 0 ) 
+	 	if ( $this->get('Type') > 0 && $this->object->getAttributeType('Type') != '' ) 
 	 	{
-	 		$type_it = $this->getRef('Type');
-	 		return $type_it->getDisplayName().': '.parent::getDisplayName();
+	 		return $this->getRef('Type')->getDisplayName().': '.parent::getDisplayName();
 	 	}
 	 	elseif( $this->getId() > 0 )
 	 	{
@@ -34,8 +33,7 @@ class RequestIterator extends StatableIterator
 
  	function IsFinished() 
  	{
- 		return in_array( $this->get_native('State'), 
- 			$this->object->getTerminalStates() );
+ 		return in_array( $this->get_native('State'), $this->object->getTerminalStates() );
  	}
 
  	function IsImplemented()

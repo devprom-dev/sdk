@@ -82,7 +82,7 @@ class BlogPostTag extends Tag
                 "  AND t.TagId = wt.Tag " .
                 "  AND p.Blog = j.Blog ".
                 "  AND j.pm_ProjectId = ".$project_it->getId().
-                " GROUP BY t.TagId ORDER BY t.Caption ";
+                " GROUP BY t.TagId ORDER BY t.OrderNum ";
 
         return $this->tag->createSQLIterator($sql);
     }

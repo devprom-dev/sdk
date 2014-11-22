@@ -351,19 +351,6 @@ class MetaobjectStatable extends Metaobject
 		
 		$parms['LifecycleDuration'] = round($it->get('CycleTime'), 0);
 		
-		// reset fields
-		//
-		$reset_fields = getFactory()->getObject('TransitionResetField');
-		
-		$reset_fields_it = $reset_fields->getByRef('Transition', $parms['Transition']);
-		
-		while ( !$reset_fields_it->end() )
-		{
-			$parms[$reset_fields_it->get('ReferenceName')] = '';
-			
-			$reset_fields_it->moveNext();
-		}
-
 		return $state_it;
 	}
 }

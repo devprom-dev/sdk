@@ -114,12 +114,15 @@ class RequestBoard extends PMPageBoard
 		{
 			$method = new ModifyAttributeWebMethod($object_it, 'Priority', $priority_it->getId());
 				
-			$method->setCallback( "donothing" );
-				
-			$this->priority_actions[$priority_it->getId()] = array( 
-			    'name' => $priority_it->getDisplayName(),
-				'method' => $method 
-			);
+			if ( $method->hasAccess() )
+			{
+				$method->setCallback( "donothing" );
+					
+				$this->priority_actions[$priority_it->getId()] = array( 
+				    'name' => $priority_it->getDisplayName(),
+					'method' => $method 
+				);
+			}
 			
 			$this->priorities_array[$priority_it->getId()] = $priority_it->copy();
 			 
@@ -134,12 +137,15 @@ class RequestBoard extends PMPageBoard
 		{
 			$method = new ModifyAttributeWebMethod($object_it, 'Estimation', $item);
 				
-			$method->setCallback( "donothing" );
-				
-			$this->estimation_actions[] = array( 
-				    'name' => ' '.$item,
-					'method' => $method 
-			);
+			if ( $method->hasAccess() )
+			{
+				$method->setCallback( "donothing" );
+					
+				$this->estimation_actions[] = array( 
+					    'name' => ' '.$item,
+						'method' => $method 
+				);
+			}
 		}
 		
 		$this->estimation_title = $this->getObject()->getAttributeUserName('Estimation');
@@ -193,11 +199,25 @@ class RequestBoard extends PMPageBoard
  	{
 		if ( $this->getTable()->getReportBase() == 'issuesboardcrossproject' )
 		{
- 			$metastate = getFactory()->getObject('StateMeta');
- 			
- 			$metastate->setAggregatedStateObject(getFactory()->getObject($this->getBoardAttributeClassName()));
- 			
- 			return $metastate->getRegistry()->getAll();
+			$class_name = $this->getBoardAttributeClassName();
+			
+			if ( $this->hasCommonBoardAttributesAcrossProjects() )
+			{
+		 		return getFactory()->getObject($class_name)->getRegistry()->Query(
+		 				array (
+		 						new FilterVpdPredicate(array_shift($this->getObject()->getVpds())),
+		 						new SortAttributeClause('OrderNum')
+		 				)
+		 		);
+			}
+			else
+			{
+	 			$metastate = getFactory()->getObject('StateMeta');
+	 			
+	 			$metastate->setAggregatedStateObject(getFactory()->getObject($class_name));
+	 			
+	 			return $metastate->getRegistry()->getAll();
+			}
 		}
 		else
 		{

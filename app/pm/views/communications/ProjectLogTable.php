@@ -70,19 +70,12 @@ class ProjectLogTable extends PMPageTable
 		$filters = array(
 			new ViewStartDateWebMethod(),
 			new ViewFinishDateWebMethod(),
-			new ViewLogActionWebMethod(),
 			new ViewLogSubjectWebMethod()
 		);	
 		
-		$entity = $model_factory->getObject('ChangeLogEntitySet');
 		
-		$entity_filter = new FilterObjectMethod( $entity, '', 'object' );
-		
-		$entity_filter->setHasNone( false );
-		
-		$entity_filter->setIdFieldName( 'ClassName' );
-		
- 		$filters[] = $entity_filter;
+ 		$filters[] = $this->buildEntityFilter();
+ 		$filters[] = $this->buildActionsFilter();
 		
 		if ( !in_array($_REQUEST['object'], array('','all','none')) )
 		{
@@ -97,6 +90,24 @@ class ProjectLogTable extends PMPageTable
 		}
 		
 		return $filters;
+	}
+	
+	function buildEntityFilter()
+	{
+		$entity_filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogEntitySet'), '', 'object' );
+		$entity_filter->setHasNone( false );
+		$entity_filter->setIdFieldName( 'ClassName' );
+		
+		return $entity_filter;
+	}
+	
+	function buildActionsFilter()
+	{
+		$filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogAction'), '', 'action' );
+		$filter->setHasNone( false );
+		$filter->setIdFieldName( 'ReferenceName' );
+		
+		return $filter;
 	}
 	
 	function getFilterValues()

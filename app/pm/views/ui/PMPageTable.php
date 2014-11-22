@@ -221,9 +221,11 @@ class PMPageTable extends PageTable
         
         if ( $save_action_key == '' ) return;
     	
+        $save_actions = $this->getSaveActions();
+        
 		$base_actions[$save_action_key]['items'] = array_merge(
         		is_array($base_actions[$save_action_key]['items']) ? $base_actions[$save_action_key]['items'] : array(), 
-				$this->getSaveActions()
+				is_array($save_actions) ? $save_actions : array()
 		);
 
 		// additional actions for custom report
@@ -350,6 +352,8 @@ class PMPageTable extends PageTable
 	function buildCustomPredicates( $values )
 	{
 		$predicates = array();
+
+		if ( !getFactory()->getObject('CustomizableObjectSet')->checkObject($this->getObject()) ) return $predicates;
 		
         $attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->getObject() );
         

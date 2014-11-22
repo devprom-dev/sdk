@@ -10,7 +10,6 @@ include_once 'SetupCalendar.php';
 include_once 'SetupMySQLIni.php';
 include_once 'SetupObjectStateAttribute.php';
 include_once 'SetupPhpIni.php';
-include_once 'UpdateTerminology.php';
 include_once 'UpgradeCustomerUIDLocation.php';
 include_once 'UpgradeMySQL.php';
 include_once 'UpgradeUserPictures.php';
@@ -52,7 +51,6 @@ class InstallationFactory
 	        new SetupObjectStateAttribute(),
 	        new SetupPhpIni(),
         	new SetupPhpOpCache(),
-	        new UpdateTerminology(),
 	        new UpgradeCustomerUIDLocation(),
 	        new UpgradeMySQL(),
         	new UpgradeUserPictures(),

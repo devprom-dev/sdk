@@ -21,7 +21,7 @@ class TaskBusinessActionAssignParticipant extends BusinessAction
  	    
  	    $participant_it = $participant->getByRef('SystemUser', getSession()->getUserIt()->getId());
  	    
- 	    $object_it->modify( array(
+ 	    $object_it->object->modify_parms($object_it->getId(), array(
  	            'Assignee' => $participant_it->getId() 
  	    ));
  	     		

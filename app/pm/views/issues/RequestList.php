@@ -28,14 +28,17 @@ class RequestList extends PMPageList
 		
 		foreach( $strategy->getScale() as $item )
 		{
-			$method = new ModifyAttributeWebMethod($object_it, 'Estimation', $item);
+			$method = new ModifyAttributeWebMethod($this->getObject()->getEmptyIterator(), 'Estimation', $item);
 				
-			$method->setCallback( "donothing" );
-				
-			$this->estimation_actions[$item] = array( 
-				    'name' => $item,
-					'method' => $method 
-			);
+			if ( $method->hasAccess() )
+			{
+				$method->setCallback( "donothing" );
+					
+				$this->estimation_actions[$item] = array( 
+					    'name' => $item,
+						'method' => $method 
+				);
+			}
 		}
 	}
 	
@@ -192,7 +195,6 @@ class RequestList extends PMPageList
 				foreach( $actions as $key => $action )
 				{
 					$method = $action['method'];
-					
 					$actions[$key]['url'] = $method->getJSCall(array(), $object_it);
 				}
 				

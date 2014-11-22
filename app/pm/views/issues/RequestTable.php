@@ -365,7 +365,7 @@ class RequestTable extends PMPageTable
 		$owner_filter = new FilterObjectMethod( $user, translate($this->object->getAttributeUserName('Owner')), 'owner' );
 		
 		$filters = array (
-			new ViewRequestStateWebMethod(),
+			$this->buildFilterState(),
 			new FilterStateTransitionMethod( $model_factory->getObject('IssueState') ),
 			$type_method, 
 			new FilterObjectMethod( $model_factory->getObject('Priority'), '', 'priority'),
@@ -465,6 +465,11 @@ class RequestTable extends PMPageTable
 		
 		return array_merge($predicates, parent::getFilterPredicates());
 	}	
+	
+	protected function buildFilterState()
+	{
+		return new ViewRequestStateWebMethod();
+	}
 	
 	protected function buildFilterAuthor()
 	{

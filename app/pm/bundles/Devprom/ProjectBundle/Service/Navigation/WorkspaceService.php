@@ -88,7 +88,7 @@ class WorkspaceService
 		
 		if ( $workspace_it->getId() > 0 )
 		{
-			$workspace_it->modify( $parms ); 
+			$workspace->modify_parms($workspace_it->getId(), $parms); 
 		}
 		else
 		{
@@ -119,7 +119,7 @@ class WorkspaceService
 			
 			if ( $menu_it->getId() > 0 )
 			{
-				$menu_it->modify( $parms ); 
+				$menu->modify_parms($menu_it->getId(), $parms); 
 			}
 			else
 			{
@@ -154,7 +154,7 @@ class WorkspaceService
 					
 					if ( $item_it->getId() > 0 )
 					{
-						$item_it->modify( $parms ); 
+						$item->modify_parms($item_it->getId(), $parms); 
 					}
 					else
 					{

@@ -2,7 +2,7 @@
 
 class ResourceRegistry extends ObjectRegistrySQL
 {
- 	var $records;
+ 	private $records = array();
 
  	function addText( $key, $value, $original = '' )
  	{

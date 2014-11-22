@@ -58,23 +58,20 @@ class InitializeInstance extends Page
 		if ( $_REQUEST['template'] != '' )
 		{
 			$project_it = $this->setupDemoProject($_REQUEST['template']);
-
-		    $installation_factory = InstallationFactory::getFactory();
-		    
-		    $clear_cache_action = new ClearCache();
-		    
-		    $clear_cache_action->install();
-			
-			if ( $project_it->getId() > 0 ) exit(header('Location: /pm/'.$project_it->get('CodeName')));
 		}
 
 		$installation_factory = InstallationFactory::getFactory();
-		    
 		$clear_cache_action = new ClearCache();
-		    
 		$clear_cache_action->install();
-		
-		exit(header('Location: /'));
+
+		if ( is_object($project_it) && $project_it->getId() > 0 )
+		{
+			exit(header('Location: /pm/'.$project_it->get('CodeName')));
+		}
+		else
+		{
+			exit(header('Location: /'));
+		}
 	}
  	
  	protected function createUser( $name, $login, $email )
@@ -248,25 +245,33 @@ class InitializeInstance extends Page
 		}
 	}
 	
-	protected function setupDemoProject( $template )
+	protected function setupDemoProject( $template_file_name )
 	{
-		$template_it = 
- 			getFactory()->getObject('pm_ProjectTemplate')->getRegistry()->Query(
+		$template = getFactory()->getObject('pm_ProjectTemplate');
+		$template->setRegistry( new ObjectRegistrySQL() );
+		
+		$template_it = $template->getRegistry()->Query(
  					array (
- 							new FilterAttributePredicate('FileName', $template)
+ 							new FilterAttributePredicate('FileName', $template_file_name)
  					)
  			);
 		
-		if ( $template_it->getId() < 1 ) return;
+		if ( $template_it->getId() < 1 )
+		{
+			return getFactory()->getObject('Project')->getEmptyIterator();
+		}
 		
-		$_REQUEST['Codename'] = $template_it->get('FileName');
-		$_REQUEST['Caption'] = $template_it->getHtmlDecoded('Caption');
-		$_REQUEST['Template'] = $template_it->getId();  
-		$_REQUEST['User'] = getSession()->getUserIt()->getId();
+		$parms = array();
+		
+		$parms['CodeName'] = 'project1';
+		$parms['Caption'] = $template_it->getHtmlDecoded('Caption');
+		$parms['Template'] = $template_it->getId();  
+		$parms['User'] = getSession()->getUserIt()->getId();
+		$parms['DemoData'] = true;
 
 		$service = new CreateProjectService();
 		
-		$project_it = getFactory()->getObject('Project')->getExact($service->execute());
+		$project_it = getFactory()->getObject('Project')->getExact($service->execute($parms));
 		
 		$project_it->modify(
 				array(

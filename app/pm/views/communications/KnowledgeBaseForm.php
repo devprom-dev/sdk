@@ -11,17 +11,6 @@ class KnowledgeBaseForm extends PMWikiForm
 		$this->object->addAttribute('Template', '', translate('Шаблон'), false, false, '', 15);
  	}
  	
-	function drawField( $name, $index )
-	{
-		$object_it = $this->getObjectIt();
-		
-		switch ( $name )
-		{
-			default:
-				parent::drawField( $name, $index );
-		}
-	}
-				
  	function getTraceActions( $page_it )
 	{
 		return array();

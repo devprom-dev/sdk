@@ -33,7 +33,7 @@
 			return;
 		}
 		
-		$version_it->modify( 	
+		$this->version->modify_parms($version_it->getId(), 	
 			array( 'InitialEstimationError' => $_REQUEST['InitialEstimationError'],
 				   'InitialBugsInWorkload' => $_REQUEST['InitialBugsInWorkload']
 				 )

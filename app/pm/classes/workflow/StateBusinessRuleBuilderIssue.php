@@ -16,7 +16,6 @@ class StateBusinessRuleBuilderIssue extends StateBusinessRuleBuilder
     public function build( StateBusinessRuleRegistry & $set )
     {
      	$set->registerRule( new IssueStateNonBlockedRule() );
- 		
      	$set->registerRule( new IssueIsOwnerRule() );
  		
  		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
@@ -28,7 +27,6 @@ class StateBusinessRuleBuilderIssue extends StateBusinessRuleBuilder
  		while( !$type_it->end() )
  		{
  			$set->registerRule( new IssueExactTypeRule($type_it) );
- 			
  			$type_it->moveNext();
  		}
     }

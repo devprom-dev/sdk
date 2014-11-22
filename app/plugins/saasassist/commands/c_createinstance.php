@@ -28,7 +28,7 @@ class CreateInstance extends CommandForm
  			$this->replyError(text('saasassist3'));
  		}
  		
- 	 	if ( $_REQUEST['template'] != '' && !preg_match('/^[A-Za-z0-9\-]+$/', $_REQUEST['template'], $matches) )
+ 	 	if ( $_REQUEST['template'] != '' && !preg_match('/^[A-Za-z0-9\-\_\.]+$/', $_REQUEST['template'], $matches) )
  		{
  			$this->replyError(text('saasassist26'));
  		}

@@ -12,7 +12,7 @@ class RequestBusinessActionAssignParticipant extends BusinessAction
 	function apply( $object_it )
  	{
  		if ( $object_it->object->getAttributeType('Owner') == '' ) return;
- 		
+
  	    if ( $object_it->get('Owner') != '' ) return true;
  	    
  	    $participant = getFactory()->getObject('pm_Participant');
@@ -21,7 +21,7 @@ class RequestBusinessActionAssignParticipant extends BusinessAction
  	    
  	    $participant_it = $participant->getByRef('SystemUser', getSession()->getUserIt()->getId());
  	    
- 	    $object_it->modify( array(
+ 	    $object_it->object->modify_parms($object_it->getId(), array(
  	            'Owner' => $participant_it->getId() 
  	    ));
  	    

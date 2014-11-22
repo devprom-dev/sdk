@@ -12,6 +12,7 @@ class IterationMetadataVelocityBuilder extends ObjectMetadataEntityBuilder
         
         $strategy = $methodology_it->getEstimationStrategy();
         
- 		$metadata->addAttribute( 'Velocity', 'FLOAT', preg_replace('/:|\%1/', '', $strategy->getVelocityText()), false );
+ 		$metadata->addAttribute( 'Velocity', 'FLOAT', 
+ 				preg_replace('/:|\%1/', '', $strategy->getVelocityText($metadata->getObject())), false );
     }
 }

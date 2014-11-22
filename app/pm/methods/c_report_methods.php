@@ -83,9 +83,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  	
  	function execute( $report_id, $items, $values )
  	{
- 		global $model_factory;
- 		
- 		$report = $model_factory->getObject('pm_CustomReport');
+ 		$report = getFactory()->getObject('pm_CustomReport');
  		$report_it = $report->getExact( $report_id );
 
  		if ( !getFactory()->getAccessPolicy()->can_modify($report_it) ) return;
@@ -102,7 +100,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 			}
 		}
 
-		$report_it->modify( array ( 'Url' => trim($parms,'&') ) );
+		$report->modify_parms($report_it->getId(), array ( 'Url' => trim($parms,'&') ));
 	}
  	
  	function hasAccess()

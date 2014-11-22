@@ -6,12 +6,20 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 {
 	private $affected = null;
-	
 	private $classes_list = array();
 	
 	public function __construct()
 	{
 		$this->affected = getFactory()->getObject('AffectedObjects');
+	}
+	
+	public function __destruct()
+	{
+		foreach( array_unique($this->classes_list) as $class_name )
+		{
+	        $lock = new LockFileSystem( $class_name );
+	        $lock->Release();
+		}	
 	}
 	
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
@@ -29,12 +37,11 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 				'EmailQueue', 
 				'EmailQueueAddress',
 				'cms_EntityCluster',
-				'pm_StateObject'
+				'pm_StateObject',
+				'pm_Project'
 		);
 		
 		if ( in_array($object_it->object->getEntityRefName(), $skipped_entities) ) return;
-		
-		$this->classes_list = array();
 		
 		// put itself in the queue
 		$class_name = get_class($object_it->object);
@@ -52,13 +59,14 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	    // put references in the queue
     	foreach( $object_it->object->getAttributes() as $attribute => $data )
     	{
-    		if ( !$object_it->object->IsReference($attribute) ) continue;
-
-    		if ( in_array($attribute, array("DocumentId","ParentPage")) ) continue;
-    		
     		if ( $object_it->get($attribute) == '' ) continue;
+    		if ( !$object_it->object->IsReference($attribute) ) continue;
+    		if ( in_array($attribute, array("Project","DocumentId","ParentPage")) ) continue;
     		
-    		$class_name = get_class($object_it->object->getAttributeObject($attribute));
+    		$ref = $object_it->object->getAttributeObject($attribute);
+    		if ( in_array($ref->getEntityRefName(), array('cms_User', 'pm_Participant')) ) continue;
+    		
+    		$class_name = get_class($ref);
     		
     		$ref_it = $object_it->getRef($attribute);
     		
@@ -82,19 +90,12 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		DAL::Instance()->Query( 
 		 		"DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
 		 				$mapper->map(
-		 						strftime('%Y-%m-%d %H:%M:%S', strtotime('-10 minutes', strtotime(SystemDateTime::date())))
+		 						strftime('%Y-%m-%d %H:%M:%S', strtotime('-40 seconds', strtotime(SystemDateTime::date())))
          				)."' "
         );
 	    
 		// notify listeners data has been refreshed
 	    $this->classes_list[] = 'ChangeLogAggregated';
-	    
-		foreach( array_unique($this->classes_list) as $class_name )
-		{
-	        $lock = new LockFileSystem( $class_name );
-	        
-	        $lock->Release();
-		}	
 	}
 	
 	function storeAffectedRows( $class_name, $object_it )
@@ -182,6 +183,11 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    case 'pm_ParticipantRole':
 		    	return array( 
 		    		'User' => $object_it->getRef('Participant')->getRef('SystemUser') 
+		    	);
+
+		    case 'pm_Participant':
+		    	return array( 
+		    		'User' => $object_it->getRef('SystemUser') 
 		    	);
 		    	
 		    case 'WikiPageTrace':

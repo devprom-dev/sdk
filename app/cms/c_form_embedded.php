@@ -396,10 +396,15 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 			echo '</script>';
 		}
 
+		$project = getFactory()->getObject('ProjectCache')
+						->getByRef('VPD', is_object($this->getObjectIt()) ? $this->getObjectIt()->get('VPD') : $this->getObject()->getVpdValue() )
+								->get('CodeName');
+			
 		$anchor_credentials = '<input type="hidden" name="embedded'.$this->form_id.'" value="'.strtolower(get_class($this->object)).'">'.
 			 '<input type="hidden" name="embeddedFields'.$this->form_id.'" value="'.join(',', $names).'">'.
-			 '<input type="hidden" name="embeddedPrefix'.$this->form_id.'" value="'.$prefix.'">';
-			 
+			 '<input type="hidden" name="embeddedPrefix'.$this->form_id.'" value="'.$prefix.'">'.
+			 '<input type="hidden" id="embeddedProject'.$this->form_id.'" value="'.$project.'">';
+			 			 
 		if ( is_object($this->object_it) && $this->object_it->count() > 0 )
 		{
 			 $anchor_credentials .= '<input type="hidden" name="anchorObject'.$this->form_id.'" value="'.$this->object_it->getId().'">'.
@@ -734,9 +739,10 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 								}
 							}
 	
-							$item_it = $embedded->getExact($_REQUEST[$field_id]);
 				
-							$item_it->modify( $parms );
+							$embedded->modify_parms($_REQUEST[$field_id], $parms);  
+
+							$item_it = $embedded->getExact($_REQUEST[$field_id]);
 							
 							$this->processAdded( $item_it );
 						}

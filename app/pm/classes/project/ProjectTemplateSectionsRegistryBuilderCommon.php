@@ -33,12 +33,10 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	private function buildSettings( & $registry )
     {
    	  	$project = getFactory()->getObject('pm_Project');
-   	  	
 	 	$project->addFilter( new ProjectCurrentPredicate() );
 
 	 	// methodology settings
 		$methodology = getFactory()->getObject('pm_Methodology');
- 		
 		$methodology->addFilter( new FilterAttributePredicate('Project', $this->session->getProjectIt()->getId() ) );
 	 	
 	 	$items = array( 
@@ -164,9 +162,6 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  			getFactory()->getObject('Attachment'),
  			getFactory()->getObject('Activity'),
  			getFactory()->getObject('PMEntityCluster'),
- 			getFactory()->getObject('Snapshot'),
- 			getFactory()->getObject('SnapshotItem'),
- 			getFactory()->getObject('SnapshotItemValue'),
  			getFactory()->getObject('Comment')
  		);
  		

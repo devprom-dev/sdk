@@ -13,7 +13,7 @@ class CheckpointBackups extends CheckpointEntryDynamic
 		if ( $it->count() < 1 )
 		{
 			// check when the system has been installed
-			$days_it = $object->createSQLIterator(" SELECT TO_DAYS(NOW()) - TO_DAYS(t.RecordCreated) Days FROM cms_License t");
+			$days_it = $object->createSQLIterator(" SELECT TO_DAYS(NOW()) - TO_DAYS(t.RecordCreated) Days FROM cms_User t ORDER BY t.RecordCreated");
 
 			$this->setValue( $days_it->get('Days') > 1 ? "0" : "1");
 		}

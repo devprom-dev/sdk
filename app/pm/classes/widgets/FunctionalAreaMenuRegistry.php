@@ -34,6 +34,8 @@ class FunctionalAreaMenuRegistry extends ObjectRegistrySQL
  			);
  		}
  		
+ 		DAL::Instance()->Reconnect();
+ 		
         return $this->createIterator( $data );
  	}
 }

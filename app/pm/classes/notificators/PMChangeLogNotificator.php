@@ -66,6 +66,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 
 		if( !$this->is_active($object_it) ) return;
 		
+		$modified_attributes = $this->getModifiedAttributes();
+		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
 		$uid = new ObjectUID;
@@ -93,6 +95,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				{
 					$request_it = $object_it->getRef('ChangeRequest');
 					
+					$this->setModifiedAttributes(array('Tasks'));
+					
 					if($kind == 'added' || $kind == 'deleted')
 					{
 						if ( $object_it->getDisplayName() != $request_it->getDisplayName() )
@@ -109,6 +113,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 					}
 				}
 				
+				$this->setModifiedAttributes($modified_attributes);
+				
 				parent::process( $object_it, $kind, $content, $visibility );
 				
 				break;
@@ -122,6 +128,9 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						return false;
 						
 					default:
+						
+						$this->setModifiedAttributes(array('Attachments'));
+						
 						parent::process( $anchor_it, 'modified', 
 							$object_it->object->getDisplayName().': '.$object_it->getFileName('File').
 								' ('.$caption.')', $visibility );
@@ -132,6 +141,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			case 'WikiPageFile':
 				$anchor_it = $object_it->getRef('WikiPage');
 				
+				$this->setModifiedAttributes(array('Attachments'));
+				
 				parent::process( $anchor_it, 'modified', 
 					$object_it->object->getDisplayName().': '.$object_it->getFileName('Content').
 						' ('.$caption.')', $visibility );
@@ -140,6 +151,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			case 'BlogPostFile':
 				$anchor_it = $object_it->getRef('BlogPost');
 				
+				$this->setModifiedAttributes(array('Attachments'));
+				
 				parent::process( $anchor_it, 'modified', 
 					$object_it->object->getDisplayName().': '.$object_it->getFileName('Content').
 						' ('.$caption.')', $visibility );
@@ -147,6 +160,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			
 			case 'pm_ChangeRequestLink':
 				$request_it = $object_it->getRef('SourceRequest');
+				
+				$this->setModifiedAttributes(array('Links'));
 				
 				parent::process( $request_it, 'modified', 
 					html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility );
@@ -230,6 +245,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				$request_it = $object_it->getRef('Request');
 				$tag_it = $object_it->getRef('Tag');
 
+				$this->setModifiedAttributes(array('Tags'));
+				
 				if ( $kind == 'added' )
 				{
 					parent::process( $request_it, 'modified', 
@@ -278,6 +295,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						$text .= chr(10).preg_replace('/%1/', $transition_it->getDisplayName(), text(904)).chr(10);
 					}
 					
+					$this->setModifiedAttributes(array('State'));
+					
 					if ( $ref_it->object->getClassName() == 'pm_ChangeRequest' )
 					{
 						parent::process( $ref_it, 'modified', $text, $visibility + 1 );
@@ -297,6 +316,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 
 			case 'Comment':
+				
 				switch ( $kind )
 				{
 					case 'added':
@@ -349,6 +369,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			    {
 			        $anchor_it = $anchor_it->getRef('ChangeRequest');
 			    }
+
+				$this->setModifiedAttributes(array('Fact'));
 			    
 			    parent::process( $anchor_it, 'modified',
 			        $object_it->getDisplayNameShort().' ('.$caption.')', $visibility );

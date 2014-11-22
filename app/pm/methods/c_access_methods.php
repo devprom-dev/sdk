@@ -137,9 +137,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  	
  	function execute ( $role_id, $object, $kind, $value )
  	{
- 		global $model_factory;
- 		
- 		$access = $model_factory->getObject('pm_AccessRight');
+ 		$access = getFactory()->getObject('pm_AccessRight');
  		$access_it = $access->getByRefArray(
  			array (
  				'ProjectRole' => $role_id,
@@ -168,7 +166,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  			}
  			else
  			{
- 				$access_it->modify( array('AccessType' => $value) );
+ 				$access->modify_parms($access_it->getId(), array('AccessType' => $value));
  			}
  		}
  	}
@@ -237,9 +235,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  	
  	function execute ( $role_id, $classname, $object, $value )
  	{
- 		global $model_factory;
- 		
- 		$access = $model_factory->getObject('pm_ObjectAccess');
+ 		$access = getFactory()->getObject('pm_ObjectAccess');
  		$access_it = $access->getByRefArray(
  			array (
  				'ProjectRole' => $role_id,
@@ -268,7 +264,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  			}
  			else
  			{
- 				$access_it->modify( array('AccessType' => $value) );
+ 				$access->modify_parms($access_it->getId(), array('AccessType' => $value));
  			}
  		}
  	}

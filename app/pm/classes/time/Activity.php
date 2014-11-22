@@ -93,7 +93,8 @@ class Activity extends Metaobject
 	{
 		if ( $parms['Task'] < 1 ) return;
 		
-		$task_it = getFactory()->getObject('pm_Task')->getRegistry()->Query(
+		$task = getFactory()->getObject('pm_Task');
+		$task_it = $task->getRegistry()->Query(
 				array(
 						new FilterInPredicate( $parms['Task'] )
 				)
@@ -103,7 +104,7 @@ class Activity extends Metaobject
 		
 		$parms['Iteration'] = $task_it->get('Release');
 		
-		$task_it->modify( array (
+		$task->modify_parms($task_it->getId(), array (
 			'LeftWork' => $parms['LeftWork'] != '' 
 		        ? $parms['LeftWork'] : max(0, $task_it->get('LeftWork') - $parms['Capacity'])
 		));
@@ -148,7 +149,7 @@ class Activity extends Metaobject
 		
 		    $left_work = max(0, $task_it->get('Planned') - $it->get($sum_aggregate->getAggregateAlias()) );
 
-		    $task_it->modify( array( 'LeftWork' => $left_work ) );
+		    $task_it->object->modify_parms($task_it->getId(), array( 'LeftWork' => $left_work ));
 		}
 	    
 	    return $result;

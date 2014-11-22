@@ -41,7 +41,7 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    		continue;
 	    	}
 	    	
-	    	$trace_it->modify( array(
+	    	$trace_it->object->modify_parms( $trace_it->getId(), array(
 	    			'IsActual' => 'N',
 	    			'UnsyncReasonType' => 'text-changed'
 	    	));
@@ -63,7 +63,7 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    
 	    while ( !$trace_it->end() )
 	    {
-	    	$trace_it->modify( array(
+	    	$trace_it->object->modify_parms( $trace_it->getId(), array(
 	    			'IsActual' => 'N',
 	    			'UnsyncReasonType' => 'structure-append'
 	    	));
@@ -80,7 +80,7 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    
 	    while ( !$trace_it->end() )
 	    {
-	    	$trace_it->modify( array(
+	    	$trace_it->object->modify_parms( $trace_it->getId(), array(
 	    			'IsActual' => 'Y',
 	    			'UnsyncReasonType' => ''
 	    	));

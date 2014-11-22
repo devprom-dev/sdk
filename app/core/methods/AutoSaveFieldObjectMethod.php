@@ -52,14 +52,12 @@ class AutoSaveFieldObjectMethod extends SelectWebMethod
  	 	
  	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
- 		
- 		$object = $model_factory->getObject($_REQUEST['class']);
+ 		$object = getFactory()->getObject($_REQUEST['class']);
  		$object_it = $object->getExact($_REQUEST['object']);
  		
  		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return;
  		
- 		$object_it->modify( 
+ 		$object->modify_parms($object_it->getId(), 
  			array( $_REQUEST['attribute'] => trim($_REQUEST['value']) ) 
  		);
 	}

@@ -16,7 +16,6 @@ class StateBusinessRuleBuilderTask extends StateBusinessRuleBuilder
     public function build( StateBusinessRuleRegistry & $set )
     {
      	$set->registerRule( new TaskStateNonBlockedRule() );
- 		
      	$set->registerRule( new TaskIsAssigneeRule() );
  		
  		$type_it = getFactory()->getObject('pm_TaskType')->getRegistry()->Query(
@@ -28,7 +27,6 @@ class StateBusinessRuleBuilderTask extends StateBusinessRuleBuilder
  		while( !$type_it->end() )
  		{
  			$set->registerRule( new TaskExactTypeRule($type_it) );
- 			
  			$type_it->moveNext();
  		}
     }

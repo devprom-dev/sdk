@@ -38,35 +38,4 @@ class SCMDataRegistry extends ObjectRegistry
 	public function Store( OrderedIterator $object_it, array $data )
 	{
 	}
-	
-	protected function getContentTypeByFileName( $file_name )
-	{
-		$parts = pathinfo($file_name);
- 				
- 		switch ( $parts['extension'] )
- 		{
-			case 'php':
-			case 'php3':
-			case 'php4':
-			case 'php5':
-			case 'phtml':
-			case 'html':
-			case 'htm':
-			case 'css':
-			case 'cpp':
- 			case 'c':
- 			case 'h':
- 			case 'cs':
- 			case 'config':
- 			case 'java':
- 			case 'txt':
- 			case 'xml':
- 			case 'js':
- 			case 'json':
- 			case 'coffee':
- 				return 'text/html; charset="utf-8"';
- 		}
-
- 		return '';
-	}
 }

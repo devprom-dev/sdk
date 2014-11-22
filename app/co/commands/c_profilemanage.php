@@ -35,7 +35,7 @@
 
 		$_REQUEST['Caption'] = $this->user_it->utf8towin($_REQUEST['Caption']);
 		
-		$this->user_it->modify(
+		$this->user->modify_parms($this->user_it->getId(),
 			array( 'Caption' => $_REQUEST['Caption'],
 				   'Email' => $this->Utf8ToWin($_REQUEST['Email']),
 				   'Login' => $this->Utf8ToWin($_REQUEST['Login']),

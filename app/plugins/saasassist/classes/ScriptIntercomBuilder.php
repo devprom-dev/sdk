@@ -32,6 +32,15 @@ class ScriptIntercomBuilder extends ScriptBuilder
     	$content = preg_replace('/%projects%/', $project_it->count(), $content);
     	$content = preg_replace('/%templates%/', join(',',$project_it->fieldToArray('Tools')), $content);
     	
+    	if ( $user_it->get('IsAdmin') == 'Y' )
+    	{
+    		$content = preg_replace('/%user_role%/', 'admin', $content);
+    	}
+    	else
+    	{
+    		$content = preg_replace('/%user_role%/', 'regular', $content);
+    	}
+    	
     	$file_name = tempnam(sys_get_temp_dir(), 'intercom');
     	
     	file_put_contents($file_name, $content);

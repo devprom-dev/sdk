@@ -191,7 +191,7 @@ class Release extends Metaobject
 
 			while( !$request_it->end() )
 			{
-				$request_it->modify( array (
+				$request->modify_parms($request_it->getId(), array (
 					"ClosedInVersion" => $object_it->getDisplayName()
 				));
 				$request_it->moveNext();

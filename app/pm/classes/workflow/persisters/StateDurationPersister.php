@@ -44,7 +44,7 @@ class StateDurationPersister extends ObjectSQLPersister
 		if ( $it->count() > 1 )
 		{
 			$it->moveNext();
-			$it->modify( array( 'Duration' => $parms['StateDuration'] ) ); 
+			$objectstate->modify_parms($it->getId(), array( 'Duration' => $parms['StateDuration'] )); 
 		}
  	}
 }

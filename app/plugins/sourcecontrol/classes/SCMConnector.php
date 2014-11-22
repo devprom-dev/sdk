@@ -144,6 +144,17 @@ abstract class SCMConnector
          return false;
      }
      
+ 	protected static function detectCharset( $string )
+ 	{
+ 		if ( !function_exists('mb_detect_encoding') ) return $string;
+ 		
+ 		$encoding = mb_detect_encoding($string, array_merge(array("cp1251"), mb_detect_order()));
+ 		
+ 		if ( $encoding === false ) return $string;
+ 				
+ 		return mb_convert_encoding($string, "utf-8", $encoding);		
+ 	}
+
     protected static function checkWindows()
     {
         global $_SERVER;

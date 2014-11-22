@@ -12,12 +12,10 @@ class TaskBoardList extends PMPageBoard
  	var $is_finished;
  	
  	private $priorities_array = array();
-
  	private $visible_column = array();
-
  	private $method_comment = null;
- 	
  	private $method_spend_time = null;
+ 	private $priority_actions = array();
  	
  	function __construct( $object ) 
 	{
@@ -30,16 +28,30 @@ class TaskBoardList extends PMPageBoard
 
 	function buildRelatedDataCache()
 	{
+		$object_it = $this->getObject()->getEmptyIterator();
+		
 		$priority_it = getFactory()->getObject('Priority')->getAll();
 		
 		while( !$priority_it->end() )
 		{
+			$method = new ModifyAttributeWebMethod($object_it, 'Priority', $priority_it->getId());
+				
+			if ( $method->hasAccess() )
+			{
+				$method->setCallback( "donothing" );
+					
+				$this->priority_actions[$priority_it->getId()] = array( 
+				    'name' => $priority_it->getDisplayName(),
+					'method' => $method 
+				);
+			}
+			
 			$this->priorities_array[] = $priority_it->copy();
 			 
 			$priority_it->moveNext();
 		}
 		
-	 	$method = new CommentWebMethod( $this->getObject()->getEmptyIterator() );
+	 	$method = new CommentWebMethod( $object_it );
  		
  		if ( $method->hasAccess() )
  		{
@@ -48,7 +60,7 @@ class TaskBoardList extends PMPageBoard
  			$this->method_comment = $method;
  		}
 
- 		$method = new SpendTimeWebMethod( $this->getObject()->getEmptyIterator() );
+ 		$method = new SpendTimeWebMethod( $object_it );
  		
  		if ( $method->hasAccess() )
  		{
@@ -86,11 +98,23 @@ class TaskBoardList extends PMPageBoard
  	{
 		if ( $this->getTable()->getReportBase() == 'tasksboardcrossproject' )
 		{
- 			$metastate = getFactory()->getObject('StateMeta');
- 			
- 			$metastate->setAggregatedStateObject(getFactory()->getObject($this->getBoardAttributeClassName()));
- 			
- 			return $metastate->getRegistry()->getAll();
+			if ( $this->hasCommonBoardAttributesAcrossProjects() )
+			{
+		 		return getFactory()->getObject($this->getBoardAttributeClassName())->getRegistry()->Query(
+		 				array (
+		 						new FilterVpdPredicate(array_shift($this->getObject()->getVpds())),
+		 						new SortAttributeClause('OrderNum')
+		 				)
+		 		);
+			}
+			else
+			{
+				$metastate = getFactory()->getObject('StateMeta');
+	 			
+	 			$metastate->setAggregatedStateObject(getFactory()->getObject($this->getBoardAttributeClassName()));
+	 			
+	 			return $metastate->getRegistry()->getAll();
+			}
 		}
 		else
 		{
@@ -401,22 +425,18 @@ class TaskBoardList extends PMPageBoard
 			);
 		}
 		
-		$priority_actions = array();
+		$priority_actions = $this->priority_actions;
 		
-		foreach( $this->priorities_array as $priority_it )
+		foreach( $priority_actions as $key => $action )
 		{
-			if ( $object_it->get('Priority') == $priority_it->getId() ) continue;
+			if ( $object_it->get('Priority') == $key )
+			{
+				unset($priority_actions[$key]);
+				continue;
+			}
 			
-			$method = new ModifyAttributeWebMethod($object_it, 'Priority', $priority_it->getId());
-				
-			$refreshScript = "donothing";
-			
-			$method->setCallback( $refreshScript );
-				
-			$priority_actions[] = array( 
-			    'name' => $priority_it->getDisplayName(), 
-			    'url' => $method->getJSCall()
-			);
+			$method = $priority_actions[$key]['method'];
+			$priority_actions[$key]['url'] = $method->getJSCall(array(), $object_it);  
 		}
 		
 		if ( count($priority_actions) > 0 )
@@ -427,7 +447,7 @@ class TaskBoardList extends PMPageBoard
 					'items' => $priority_actions
 			);
 		}
-
+		
 		return $actions;
 	}			
 	

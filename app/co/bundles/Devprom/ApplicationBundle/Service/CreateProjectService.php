@@ -157,7 +157,7 @@ class CreateProjectService
 				'Tools' => $this->methodology
 		);
 		
-		$project_it->modify( $parms );
+		$prj_cls->modify_parms($project_it->getId(),$parms); 
 
 		$project_roles = $model_factory->getObject('ProjectRole');
 

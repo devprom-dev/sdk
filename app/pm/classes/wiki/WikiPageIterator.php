@@ -240,41 +240,6 @@ class WikiPageIterator extends StatableIterator
 	{
 	}
 
-	function Archive()
-	{
-		$this->_archive( $this );
-	}
-	
-	function Extract()
-	{
-		$this->_archive( $this, false );
-	}
-
- 	function _getChildren() 
- 	{
-		$parms = array( 'ParentPage' => $this->getId() );
-		
-		return $this->object->getByRefArray($parms);	
-	}
-	
-	function _archive( $page_it, $put = true )
-	{
- 		$children_it = $page_it->_getChildren();
- 		
- 		for( $i = 0; $i < $children_it->count(); $i++ )
- 		{
- 			$this->_archive( $children_it, $put );
- 			
- 			$children_it->modify( 
- 				array('IsArchived' => ($put ? 'Y' : 'N') ) );
- 				 
- 			$children_it->moveNext();
- 		}
-
-		$page_it->modify( 
-			array('IsArchived' => ($put ? 'Y' : 'N') ) ); 
-	}
-	
 	function Version( $was_content )
 	{
 		global $model_factory;
@@ -304,7 +269,7 @@ class WikiPageIterator extends StatableIterator
 		
 		if ( $change_it->count() > 0 )
 		{
-			$this->modify( array(
+			$this->object->modify_parms($this->getId(), array(
 				'Content' => $change_it->getHtmlDecoded('Content'),
 				'Revert' => 'true'
 			));

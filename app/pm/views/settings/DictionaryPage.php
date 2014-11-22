@@ -140,4 +140,14 @@ class DictionaryPage extends PMPage
 				return new DictionaryItemForm( $object );
 		}
  	}
+ 	
+ 	function render( $view = null )
+ 	{
+ 		if ( $_REQUEST['wait'] != '' && $this->getDictionary() instanceof CustomResource )
+ 		{
+ 			die();
+ 		}
+ 		
+ 		return parent::render($view);
+ 	}
 }

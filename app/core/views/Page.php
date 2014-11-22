@@ -398,6 +398,8 @@
         	$module_it = getFactory()->getObject('Module')->getByRef('Url', $tab_url);
          	
         	$active_area_uid = 'favs';
+        	
+        	$tab_item['title'] = $module_it->getDisplayName();
         	$tab_item['module'] = $module_it->getId();
         	$tab_item['url'] = $tab_url; 
         }
@@ -898,7 +900,7 @@
  	
  	function getRecentChangedObjectIds( $table )
  	{
- 		 $from_date = strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 minutes', strtotime(SystemDateTime::date())));
+ 		 $from_date = strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 seconds', strtotime(SystemDateTime::date())));
  		
          $ids = getFactory()->getObject('AffectedObjects')->getRegistry()->Query(
          		array (
@@ -914,7 +916,7 @@
 		 DAL::Instance()->Query( 
 		 		" DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
 		 				$mapper->map(
-		 						strftime('%Y-%m-%d %H:%M:%S', strtotime('-10 minutes', strtotime(SystemDateTime::date())))
+		 						strftime('%Y-%m-%d %H:%M:%S', strtotime('-25 seconds', strtotime(SystemDateTime::date())))
          				)."' "
          );
 		 

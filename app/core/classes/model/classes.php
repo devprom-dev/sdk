@@ -15,6 +15,7 @@ include SERVER_ROOT_PATH.'core/classes/versioning/SnapshotItem.php';
 include SERVER_ROOT_PATH.'core/classes/versioning/SnapshotItemValue.php'; 
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLog.php'; 
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLogAggregated.php'; 
+include SERVER_ROOT_PATH.'core/classes/history/ChangeLogAction.php';
 include SERVER_ROOT_PATH.'cms/c_hashids.php'; 
 include SERVER_ROOT_PATH.'core/classes/system/SystemSettings.php'; 
 include SERVER_ROOT_PATH.'core/classes/UserSettings.php'; 

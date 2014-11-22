@@ -4,8 +4,8 @@
 		"Devprom\\ApplicationBundle": "../co/bundles",
 		"Devprom\\AdministrativeBundle": "../admin/bundles",
 		"Devprom\\Component": "../app",
-        	"Devprom\\CommonBundle": "../co/bundles/",
-        	"Devprom\\ServiceDeskBundle": "../co/bundles/",
+        "Devprom\\CommonBundle": "../co/bundles/",
+        "Devprom\\ServiceDeskBundle": "../co/bundles/",
 		"Devprom\\ProjectBundle": "../pm/bundles"
         },
         "classmap": ["imap/"]
@@ -23,7 +23,11 @@
             "type": "git",
             "url":  "https://github.com/klaussilveira/SimpleSHM.git"
         },
-	{
+        {
+            "type": "git",
+            "url":  "https://github.com/intercom/intercom-php.git"
+        },
+		{
             "type":"package",
             "package":{
                 "name":"saveug/inlinestyle",
@@ -37,6 +41,39 @@
 		    "psr-0": { "InlineStyle": "" }
                 }
             }
+        },
+		{
+            "type":"package",
+            "package":
+			{
+				"name": "intercom/intercom-php",
+				"version":"1.0.0",
+				"description": "Intercom API client built on top of Guzzle 3",
+				"keywords": ["intercom", "intercom.io", "api", "guzzle"],
+				"license": "Apache Version 2",
+				"authors": [
+					{
+					"name": "Intercom Platform Team",
+					"homepage": "http://intercom.io"
+					}
+				],
+                "source":{
+                    "type":"git",
+                    "url":"https://github.com/intercom/intercom-php.git",
+                    "reference":"master"
+                },
+				"require": {
+					"guzzle/guzzle": "~3.9"
+				},
+				"require-dev": {
+					"phpunit/phpunit": "~3.7"
+				},
+				"autoload": {
+					"psr-0": {
+						"Intercom": "src/"
+					}
+				}
+			}
         }
     ],
     "require": {
@@ -59,7 +96,8 @@
         "jms/serializer-bundle": "0.12.*@dev",
 	"klaussilveira/gitter": "*",
 	"klaussilveira/simple-shm": "*",
-	"mindscape/raygun4php": "dev-master"
+	"mindscape/raygun4php": "dev-master",
+	"intercom/intercom-php": "1.0.*"
     },
     "require-dev": {
         "phpunit/phpunit": "3.7.*"

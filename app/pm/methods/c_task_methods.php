@@ -41,14 +41,12 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	
  	function execute( $task_id, $release_id )
  	{
- 		global $model_factory;
- 		
- 		$task = $model_factory->getObject('pm_Task');
+ 		$task = getFactory()->getObject('pm_Task');
  		$task_it = $task->getExact($task_id);
  		
  		if ( getFactory()->getAccessPolicy()->can_modify($task_it) )
  		{
- 			$task_it->modify( array( 'Release' => $release_id ) );
+ 			$task->modify_parms($task_it->getId(), array( 'Release' => $release_id ));
  		}
  	}
  }

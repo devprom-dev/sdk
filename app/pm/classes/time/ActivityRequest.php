@@ -51,7 +51,6 @@ class ActivityRequest extends Activity
 	 		$task->setVpdContext( $request_it );
 	 		
 	 		$task->removeNotificator( 'EmailNotificator' );
-	 		$task->removeNotificator( 'ChangesWaitLockReleaseTrigger' );
 
 	 		$task_id = $task->add_parms(
 	 			array (
@@ -139,10 +138,9 @@ class ActivityRequest extends Activity
 		
 		$parms['Task'] = $task_it->getId(); 
 
-		$request_it->object->removeNotificator( 'ChangesWaitLockReleaseTrigger' );
 		$request_it->object->removeNotificator( 'EmailNotificator' );
 		
-		$request_it->modify( array(
+		$request_it->object->modify_parms($request_it->getId(), array(
 		        'EstimationLeft' => $parms['LeftWork'] 
 		));
 		

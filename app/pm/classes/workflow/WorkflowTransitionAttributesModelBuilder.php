@@ -17,13 +17,33 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
     public function build( Metaobject $object )
     {
     	if ( ! $object instanceof MetaobjectStatable ) return;
-    	
  	    if ( $object->getStateClassName() == '' ) return;
  	    
  	    foreach( $object->getAttributes() as $attribute => $data )
  	    {
  	    	$object->setAttributeVisible($attribute, false);
  	    }
+ 	    
+        $attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
+				array (
+						new FilterAttributePredicate('State', $this->transition_it->getRef('TargetState')->getId()),
+				)
+		);
+		
+		while( !$attribute_it->end() )
+		{
+			$object->setAttributeRequired( 
+					$attribute_it->get('ReferenceName'), 
+					$attribute_it->get('IsRequired') == 'Y'
+				);
+			
+			$object->setAttributeVisible( 
+					$attribute_it->get('ReferenceName'), 
+					$attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y'
+				);
+			
+			$attribute_it->moveNext();
+		}
  	    
  	    $attribute_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
  	    		array(
@@ -50,27 +70,6 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
 			$object->setAttributeRequired( 'TransitionComment', true );
 		}
 		
-    	$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('State', $this->transition_it->getRef('TargetState')->getId()),
-				)
-		);
-		
-		while( !$attribute_it->end() )
-		{
-			$object->setAttributeRequired( 
-					$attribute_it->get('ReferenceName'), 
-					$attribute_it->get('IsRequired') == 'Y'
-				);
-			
-			$object->setAttributeVisible( 
-					$attribute_it->get('ReferenceName'), 
-					$attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y'
-				);
-			
-			$attribute_it->moveNext();
-		}
-
 		foreach( $this->attributes as $attribute )
 		{
 			$object->setAttributeVisible($attribute, true);

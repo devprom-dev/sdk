@@ -65,10 +65,11 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 		$map = array();
 	 		
  			$object_it = $this->getObjectIt();
+ 			$branch = getFactory()->getObject('Snapshot');
  			
  			while( !$object_it->end() )
  			{
-	 			$branch_it = getFactory()->getObject('Snapshot')->getRegistry()->Query(
+	 			$branch_it = $branch->getRegistry()->Query(
 	 					array (
 	 							new FilterAttributePredicate('ObjectId', $object_it->getId()),
 	 							new FilterAttributePredicate('ObjectClass', get_class($this->getObject())),
@@ -78,7 +79,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 			
 	 			if ( $branch_it->getId() > 0 )
 	 			{
-	 				$branch_it->modify(
+	 				$branch->modify_parms($branch_it->getId(),
 	 						array(
 								'Caption' => IteratorBase::utf8towin($_REQUEST['Version']),
 								'Description' => IteratorBase::utf8towin($_REQUEST['Description'])

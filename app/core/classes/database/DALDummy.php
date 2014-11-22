@@ -7,6 +7,10 @@ class DALDummy extends DAL
     public function Connect( $parms )
     {
     }
+
+    public function Reconnect()
+    {
+    }
     
     public function Query( $sql )
     {

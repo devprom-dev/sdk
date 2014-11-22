@@ -36,7 +36,9 @@ class SyncWikiLinkWebMethod extends ActuateWikiLinkWebMethod
 			
 		if ( $page_it->getId() < 1 ) throw new Exception('Unable get source page of the trace');
 		
-		$link_it->getRef('TargetPage')->modify( 
+		$ref_page_it = $link_it->getRef('TargetPage');
+		
+		$ref_page_it->object->modify_parms($ref_page_it->getId(), 
 				array (
 						'Caption' => $page_it->getHtmlDecoded('Caption'),
 						'Content' => $page_it->getHtmlDecoded('Content')

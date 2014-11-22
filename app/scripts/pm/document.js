@@ -542,6 +542,7 @@ function refreshListItems()
 	    complete: function(xhr, textStatus)
 	    {
 	    	if ( textStatus == "abort" ) return;
+	    	if ( xhr.responseText == "" ) return;
 	    	
     		setTimeout( function() {
     			restoreCache(function() {

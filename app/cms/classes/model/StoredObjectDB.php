@@ -17,6 +17,7 @@ include "predicates/FilterSubmittedBeforePredicate.php";
 include "predicates/FilterSubmittedDatePredicate.php";
 include "predicates/FilterVpdPredicate.php";
 include "predicates/FilterHasNoAttributePredicate.php";
+include "predicates/FilterSearchAttributesPredicate.php";
 
 include "sorts/SortClauseBase.php";
 include "sorts/SortCaptionClause.php";
@@ -823,32 +824,6 @@ class StoredObjectDB extends Object
 		$iterator = new HashIterator( $this, $attributes, $all_it);
 		
 		return $iterator;
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
-	function search( $text, $fields, $userfilter = '' )
-	{
-		$query = DAL::Instance()->Escape($text);
-		$words = preg_split('/\s+/', $query);
-		
-		foreach ( $words as $key => $word )
-		{
-			if ( $word[0] != '+' && $word[0] != '-' ) $words[$key] = '+'.$word;
-			$words[$key] .= '*';
-		}
-		
-		$sql = "SELECT ".$this->getRegistry()->getSelectClause('t')." FROM ".$this->getEntityRefName()." t WHERE MATCH (".join($fields, ',').") AGAINST ('".join(' ',$words)."' IN BOOLEAN MODE) ";
-		
-		$sql .= $this->getVpdPredicate().$this->getFilterPredicate();
-
-		$predicate = $this->getDataPredicate('search');
-		if($predicate != '') $sql .= ' AND '.$predicate.' ';
-
-		if ( $userfilter != '' ) $sql .= ' AND '.$userfilter.' ';
-
-		$sql = $sql." ORDER BY RecordModified DESC";
-
-		return $this->createSQLIterator($sql);
 	}
 	
 	//----------------------------------------------------------------------------------------------------------

@@ -94,18 +94,35 @@ class CustomResource extends Resource
  	{
  	    $this->cache_enabled = false;
  	    
- 		$object_it = $this->getByRef( 'ResourceKey', $object_id );
+ 		$object_it = $this->getRegistry()->Query(
+ 				array( 
+ 						new FilterAttributePredicate('ResourceKey', $object_id ),
+ 						new FilterBaseVpdPredicate()
+ 				)
+ 		);
 
- 		if ( $object_it->get('OriginalId') == '' )
+ 		if ( $object_it->getId() == '' )
  		{    
- 			$result = $this->add_parms( array( 
-		        'ResourceKey' => $object_id,
-				'ResourceValue' => $parms['ResourceValue']
- 			));
+ 			if ( $parms['ResourceValue'] != '' )
+ 			{
+	 			$result = $this->add_parms( 
+	 					array( 
+					        'ResourceKey' => $object_id,
+							'ResourceValue' => $parms['ResourceValue']
+	 					)
+	 			);
+ 			}
  		}
  		else
  		{
- 			$result = parent::modify_parms( $object_it->get('OriginalId'), $parms );
+ 			if ( $parms['ResourceValue'] == '' )
+ 			{
+ 				$result = $this->delete( $object_it->getId() );
+ 			}
+ 			else
+ 			{
+ 				$result = parent::modify_parms( $object_it->getId(), $parms );
+ 			}
  		}
  		
  		$this->cache_enabled = true;

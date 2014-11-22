@@ -22,6 +22,11 @@ $project_it = $session->getProjectIt();
 	  <? } ?>
 	</div>
 
+	<div class="btn-group">
+		<a class="btn btn-link btn-navbar">
+    	</a>
+	</div>    	
+	
 	<?php if( is_array($project_navigation_parms) ) { ?>
 	
 	<?php if ( $project_navigation_parms['current_project'] == $project_navigation_parms['current_portfolio'] ) { ?>
@@ -38,28 +43,37 @@ $project_it = $session->getProjectIt();
 	<?php } else { ?>
 
 	<div class="btn-group">
-	  <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
+	  <a class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_portfolio']?>">
 		<?=$project_navigation_parms['current_portfolio_title']?> 
-		<span class="caret"></span>
 	  </a>
-	  
-	  <?php echo $view->render('core/PageTitlePortfolios.php', $project_navigation_parms); ?>
 	</div>		
 
 	<div class="btn-group">
-	  <a class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
-	    <?=$project_navigation_parms['current_project_title']?>
-	    <?php if( count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]) > 1 ) { ?> <span class="caret"></span> <?php } ?>
-	  </a>
-
+		<a class="btn btn-link btn-navbar">
+    	</a>
+	</div>    	
+	
+	<div class="btn-group">
+	
+    <?php if( count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]) > 1 ) { ?>
+  		<a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
+    		<?=$project_navigation_parms['current_project_title']?> 
+    		<span class="caret"></span>
+  		</a>
+  		
   	  <?php 
-  	  
   	  if( count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]) > 1 )
 	  {
 	  	echo $view->render('core/PageTitleProjects.php', $project_navigation_parms);
 	  }
-	  
 	  ?>
+  		
+    <?php } else { ?>
+  		<a id="navbar-project" class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_project']?>">
+    		<?=$project_navigation_parms['current_project_title']?> 
+    	</a>
+    <?php } ?>
+
 	</div>
 	
 	<?php } ?>

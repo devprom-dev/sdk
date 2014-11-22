@@ -53,7 +53,6 @@ class RequestPage extends PMPage
  		        }
 	 			
  		        $this->addInfoSection( new StatableLifecycleSection( $object_it ) );
-	 			
 	 			$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
  		    }
  		}
@@ -80,7 +79,6 @@ class RequestPage extends PMPage
 	 		if ( !$this->needDisplayForm() && is_object($table) )
 	 		{
 	 		    $this->addInfoSection( new IssueBurndownSection() );
-	 		    
 	 			$this->addInfoSection( new IssueEstimationSection() );
 	 		}
  		}
@@ -145,10 +143,8 @@ class RequestPage extends PMPage
  		switch ( $_REQUEST['mode'] )
  		{
  		    case 'group':
-	 			$form = new RequestPlanningForm();
-	 			
+	 			$form = new RequestPlanningForm($this->getObject());
 	 			$form->edit( $_REQUEST['ChangeRequest'] );
-	 			
 	 			return $form;
 	 			
  			case 'bulk':

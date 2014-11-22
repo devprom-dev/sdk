@@ -11,12 +11,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
     {
         $object = $metadata->getObject();
         
-        if ( is_a($object, 'SharedObjectSet') ) return;
-        if ( is_a($object, 'Project') ) return;
-        if ( is_a($object, 'User') ) return;
-        if ( is_a($object, 'ProjectRole') ) return;
-        if ( is_a($object, 'Methodology') ) return;
-        if ( is_a($object, 'PMCustomAttribute') ) return;
+        if ( !in_array($object->getEntityRefName(), array('pm_TestCaseExecution', 'pm_Environment', 'pm_Question', 'pm_Task', 'pm_Function', 'pm_Version', 'pm_Release', 'pm_ChangeRequest', 'WikiPage')) ) return;
         
         $attr = getFactory()->getObject('pm_CustomAttribute');
         

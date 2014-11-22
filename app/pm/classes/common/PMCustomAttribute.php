@@ -35,7 +35,13 @@ class PMCustomAttribute extends MetaobjectCacheable
  	
  	function getEntityDisplayName( $ref_name, $kind )
  	{
-		$ref = getFactory()->getObject($ref_name);
+ 		$class_name = getFactory()->getClass($ref_name);
+ 		
+ 		if ( $class_name == '' ) return '';
+ 		
+		$ref = getFactory()->getObject($class_name);
+		
+		if ( !is_object($ref) ) return '';
 		
  		if ( $kind == '' )
  		{
@@ -46,21 +52,15 @@ class PMCustomAttribute extends MetaobjectCacheable
  			switch ( $ref->getEntityRefName() )
  			{
  				case 'pm_ChangeRequest':
- 					
  					$type_it = getFactory()->getObject('pm_IssueType')->getByRef('ReferenceName', $kind);
- 					
  					break;
  					
  				case 'pm_Task':
- 					
  					$type_it = getFactory()->getObject('pm_TaskType')->getByRef('ReferenceName', $kind);
- 					
  					return $ref->getDisplayName().': '.$type_it->getDisplayName();
 
  				case 'WikiPage':
- 					
  					$type_it = getFactory()->getObject('WikiPageType')->getByRef('ReferenceName', $kind);
- 					
  					break;
  					
  				default:
@@ -192,9 +192,11 @@ class PMCustomAttribute extends MetaobjectCacheable
                     {
                         $data = $value_it->getHtmlDecoded($object_it->getRef('AttributeType')->getValueColumn());
                     
-                        $reference_it->modify( array (
-                                $object_it->get('ReferenceName') => $data
-                        ));
+                        $reference->modify_parms( $reference_it->getId(),
+                        		array (
+		                                $object_it->get('ReferenceName') => $data
+		                        )
+                        );
                     
                         $value_it->moveNext();
                     }

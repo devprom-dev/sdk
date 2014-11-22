@@ -9,18 +9,10 @@ include SERVER_ROOT_PATH.'pm/methods/c_task_methods.php';
 include SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 
 class TaskBoardTable extends PMPageTable
 {
 	var $workload = array();
-	
- 	function __construct() 
-	{
- 		getSession()->addBuilder( new TaskModelExtendedBuilder() );
- 		
-		parent::__construct(getFactory()->getObject('pm_Task'));
-	}
 	
 	function getViewFilter()
 	{

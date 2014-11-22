@@ -15,8 +15,6 @@ class PMPageForm extends PageForm
     function PMPageForm($object)
     {
         parent::__construct($object);
-
-        $this->extendModel();
     }
     
     protected function extendModel()
@@ -39,10 +37,31 @@ class PMPageForm extends PageForm
         			!is_object($this->getObjectIt()) ? $this->getNewObjectAttributes() : array()
     		);
         }
-        
+
         $model_builder->build( $this->getObject() );
     }
     
+	protected function buildCustomAttributes()
+	{
+		if ( !getFactory()->getObject('CustomizableObjectSet')->checkObject($this->getObject()) ) return;
+		
+        $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
+        
+        while (!$it->end()) 
+        {
+            $this->customtypes[$it->get('ReferenceName')] = $it->getRef('AttributeType')->get('ReferenceName');
+
+            $this->customdefault[$it->get('ReferenceName')] = true;
+            
+            if ($it->get('ObjectKind') != '')
+            {
+            	$this->customkinds[$it->get('ReferenceName')] = $it->get('ObjectKind');
+            }
+
+            $it->moveNext();
+        }
+	}
+	
     function persist()
     {
     	if ( !parent::persist() ) return false;
@@ -291,6 +310,8 @@ class PMPageForm extends PageForm
     	
     function getRenderParms()
     {
+        $this->extendModel();
+    	
  		$object_it = $this->getObjectIt();
         
         return array_merge(parent::getRenderParms(), array(
@@ -332,24 +353,5 @@ class PMPageForm extends PageForm
 	    }
 	}
 
-	protected function buildCustomAttributes()
-	{
-        $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
-        
-        while (!$it->end()) 
-        {
-            $this->customtypes[$it->get('ReferenceName')] = $it->getRef('AttributeType')->get('ReferenceName');
-
-            $this->customdefault[$it->get('ReferenceName')] = true;
-            
-            if ($it->get('ObjectKind') != '')
-            {
-            	$this->customkinds[$it->get('ReferenceName')] = $it->get('ObjectKind');
-            }
-
-            $it->moveNext();
-        }
-	}
-	
     private $state_it = null;
 }

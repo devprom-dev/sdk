@@ -309,30 +309,14 @@ class VersionList extends PMPageList
 				if ( !$methodology_it->HasVelocity() ) break;
 				
 				$velocity = round($object_it->getVelocity(), 1);
+				$estimation = $object_it->getTotalWorkload();
 				$strategy = $methodology_it->getEstimationStrategy();
 				
-				if ( $methodology_it->HasPlanning() )
-				{
-					$velocity_text = $velocity; 
-				}
-				else
-				{
-					$velocity_text = $velocity;
-				}
-				
 				echo '<div class="line">';
-					echo str_replace('%1', $velocity_text, $strategy->getVelocityText());
+					echo str_replace('%1', $velocity, $strategy->getVelocityText($object_it->object));
 				echo '</div>';
 
-				list( $capacity, $estimation, $actual_velocity ) = 
-					$object_it->getEstimatedBurndownMetrics();
-
-				$maximum = $velocity;
-			
-				if ( !$methodology_it->HasFixedRelease() ) 
-				{
-					$maximum *= $capacity;
-				}
+				list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
 
 				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedItems') > 0;
 				
@@ -351,7 +335,7 @@ class VersionList extends PMPageList
 				echo '<div class="line">';
 					echo str_replace('%1', $request->getRecordCount(), text(1431));
 				echo '</div>';
-				
+
 				break;
 				
 			case 'pm_Release':
@@ -359,17 +343,10 @@ class VersionList extends PMPageList
 				$velocity = round($object_it->getVelocity(), 0);
 				
 				echo '<div class="line">';
-					echo str_replace('%1', $velocity, $strategy->getVelocityText());
+					echo str_replace('%1', $velocity, $strategy->getVelocityText($object_it->object));
 				echo '</div>';
 				
-				$release_it = $object_it->getRef('Version');
-
-				$maximum = $release_it->getVelocity();
-				
-				if ( !$methodology_it->HasFixedRelease() ) 
-				{
-					$maximum *= $object_it->getLeftCapacity();
-				}
+				list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
 				
 				$estimation = $object_it->getEstimation();
 				

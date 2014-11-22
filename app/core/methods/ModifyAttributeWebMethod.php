@@ -100,8 +100,6 @@ class ModifyAttributeWebMethod extends WebMethod
  	
  	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
-
 		if ( $_REQUEST['class'] == '' || $_REQUEST['attribute'] == '' )
 		{
 			echo '{"message":"denied"}';
@@ -115,71 +113,89 @@ class ModifyAttributeWebMethod extends WebMethod
 		}
 
 		
-		$object = $model_factory->getObject($_REQUEST['class']);
+		$object = getFactory()->getObject($_REQUEST['class']);
 		$object_it = $object->getExact($_REQUEST['object']);
 
-		if ( $object_it->count() > 0 )
+		if ( $object_it->getId() == '' )
 		{
-			if ( $_REQUEST['value'] != '' && $object->IsReference($_REQUEST['attribute']) )
-			{
-		 		$attr_object = $object->getAttributeObject($_REQUEST['attribute']);
-
-		 		$attr_object_it = $attr_object->getExact(preg_split('/,/', $_REQUEST['value']));
-
-				if ( $attr_object_it->count() < 1 )
-				{
-					echo '{"message":"denied"}';
-					return;
-				}
-			}
-			
-			$user_parms = $_REQUEST['parms'];
-			
-			if ( is_array($user_parms) )
-			{
-				foreach( $user_parms as $key => $value )
-				{
-					$user_parms[$key] = IteratorBase::utf8towin($value);
-				}
-			}
-			
-			$parms = array (
-				$_REQUEST['attribute'] => IteratorBase::utf8towin($_REQUEST['value'])
-			);
-			
-			if ( !array_key_exists('OrderNum', $parms) )
-			{
-				$parms['OrderNum'] = $object_it->get('OrderNum');
-			}
-			
-			$parms = is_array($user_parms) ? array_merge($user_parms, $parms) : $parms;
-			
-			// check if there are changes
-			$has_changes = false;
-			
-			foreach( $parms as $key => $value )
-			{
-				if ( $object_it->get_native($key) == $value ) continue;
-				
-				$has_changes = true;
-					
-				break;
-			}
-			
-			$skip_events = preg_split('/,/', $user_parms['SkipEvents']);
-			
-			foreach( $skip_events as $event )
-			{
-				getFactory()->getEventsManager()->removeNotificator($event);
-			}
-			
-			if ( $has_changes ) $object_it->modify( $parms );
-
-			$object->addPersister( new ObjectAffectedDatePersister() );
-			
-			$object_it = $object->getExact($object_it->getId());
-			
-			echo '{"message":"ok", "modified":"'.$object_it->get_native('AffectedDate').'"}';
+			echo '{"message":"object is undefined"}';
+			return;
 		}
+			
+ 	 	if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, $_REQUEST['attribute']) )
+		{
+			echo '{"message":"lack of permissions"}';
+			return;
+		}
+		
+		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) )
+		{
+			echo '{"message":"lack of permissions"}';
+			return;
+		}
+		
+		if ( $_REQUEST['value'] != '' && $object->IsReference($_REQUEST['attribute']) )
+		{
+	 		$attr_object = $object->getAttributeObject($_REQUEST['attribute']);
+
+	 		$attr_object_it = $attr_object->getExact(preg_split('/,/', $_REQUEST['value']));
+
+			if ( $attr_object_it->count() < 1 )
+			{
+				echo '{"message":"denied"}';
+				return;
+			}
+		}
+		
+		$user_parms = $_REQUEST['parms'];
+		
+		if ( is_array($user_parms) )
+		{
+			foreach( $user_parms as $key => $value )
+			{
+				$user_parms[$key] = IteratorBase::utf8towin($value);
+			}
+		}
+		
+		$parms = array (
+			$_REQUEST['attribute'] => IteratorBase::utf8towin($_REQUEST['value'])
+		);
+		
+		if ( !array_key_exists('OrderNum', $parms) )
+		{
+			$parms['OrderNum'] = $object_it->get('OrderNum');
+		}
+		
+		$parms = is_array($user_parms) ? array_merge($user_parms, $parms) : $parms;
+		
+		// check if there are changes
+		$has_changes = false;
+		
+		foreach( $parms as $key => $value )
+		{
+			if ( $object_it->get_native($key) == $value ) continue;
+			
+			$has_changes = true;
+				
+			break;
+		}
+		
+		$skip_events = preg_split('/,/', $user_parms['SkipEvents']);
+		
+		foreach( $skip_events as $event )
+		{
+			getFactory()->getEventsManager()->removeNotificator($event);
+		}
+		
+		if ( $has_changes )
+		{
+			$object->modify_parms($object_it->getId(), $parms);
+		}
+
+		$object->addPersister( new ObjectAffectedDatePersister() );
+		
+		$object_it = $object->getExact($object_it->getId());
+		
+		echo '{"message":"ok", "modified":"'.$object_it->get_native('AffectedDate').'"}';
  	}
 }

@@ -203,7 +203,7 @@ class CloneLogic
         			{
         			    $object_it = $duplicated->getExact($object_id); 
         			    
-        			    $object_it->modify( array($ref_name => $reference_id) );    
+        			    $duplicated->modify_parms($object_it->getId(), array($ref_name => $reference_id));    
         			}
     		    }
 		    }
@@ -315,32 +315,31 @@ class CloneLogic
 		switch ( strtolower(get_class($it->object)) )
 		{
 			case 'release':
-				
-				$release = getFactory()->getObject('Release');
-				
-				$release_it = $release->getByRef('Project', $project_it->getId());
+				$release_it = getFactory()->getObject('Release')->getRegistry()->Query(
+						array(
+								new SortAttributeClause('StartDate.D'),
+								new FilterBaseVpdPredicate()
+						)
+				);
 				
 				if ( $release_it->count() < 1 )
 				{
 					$parms['StartDate'] = SystemDateTime::date();
-					
-					$parms['FinishDate'] = $release->getDefaultFinishDate(
-							SystemDateTime::date(), 
-							date('Y-m-d H:i:s', strtotime('-1 day', strtotime('1 month', strtotime(SystemDateTime::date()))))
-	   			    );
 				}
 				else
 				{
-					$parms['StartDate'] = $release->getDefaultAttributeValue('StartDate');
-					
-					$parms['FinishDate'] = $release->getDefaultFinishDate($parms['StartDate']);
+					$parms['StartDate'] = $release_it->get('FinishDate');
 				}
 
 				break;
 
 			case 'iteration':
-				$iteration = $model_factory->getObject('Iteration');
-				$iteration_it = $iteration->getAll();
+				$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+						array(
+								new SortAttributeClause('StartDate.D'),
+								new FilterBaseVpdPredicate()
+						)
+				);
 				
 				if ( $iteration_it->count() > 0 )
 				{
@@ -348,28 +347,16 @@ class CloneLogic
 					return;
 				}
 
-				if ( $context->getIterationStart() == 'NOW()' )
+				if ( $iteration_it->count() < 1 )
 				{
-					$parms['StartDate'] = $context->getIterationStart(); 
-					$start = $parms['StartDate'];
+					$parms['StartDate'] = 'NOW()';
 				}
 				else
 				{
-					$parms['StartDate'] = $context->getIterationStart(); 
-					$start = "'".$context->getIterationStart()."'";
+					$parms['StartDate'] = $iteration_it->get('FinishDate');
 				}
-
-				$methodology_it = $project_it->getMethodologyIt();
-
-				$duration_days = $methodology_it->get('ReleaseDuration') * 7;
-				if ( $duration_days < 1 ) $duration_days = 28;
 				
-				$sql = " SELECT FROM_DAYS(TO_DAYS(".$start.") + ".$duration_days.") FinishDate ";
-				$date_it = $project_it->object->createSQLIterator( $sql );
-				
-				$context->setIterationStart($date_it->get('FinishDate'));
-				 
-				$parms['FinishDate'] = $date_it->get_native('FinishDate');
+
 				$parms['InitialVelocity'] = '0';
 
 				break;
@@ -400,19 +387,6 @@ class CloneLogic
 				
 				break;
 
-			case 'attachment':
-			case 'comment':
-				
-				$class_name = getFactory()->getClass($it->get('ObjectClass'));
-				
-				if ( !class_exists($class_name) ) return array();
-
-				$anchor_id = $ids_map[getFactory()->getObject($class_name)->getEntityRefName()][$it->get('ObjectId')];
-				
-				if ( $anchor_id == '' ) return array();
-				
-				$parms['ObjectId'] = $anchor_id; 
-				
 			default:
 		}
 		
@@ -442,11 +416,12 @@ class CloneLogic
 				
 				if ( $it->get('ParentPage') == '' && $it->get('ReferenceName') == WikiTypeRegistry::KnowledgeBase )
 				{
-					$root_it = getFactory()->getObject('ProjectPage')->getRootIt();
+					$root = getFactory()->getObject('ProjectPage');
+					$root_it = $root->getRootIt();
 
 					if ( $root_it->getId() > 0 )
 					{
-						$root_it->modify(
+						$root->modify_parms( $root_it->getId(),
 								array (
 										'Content' => $parms['Content']
 								) 
@@ -510,7 +485,7 @@ class CloneLogic
 				}
 				else
 				{
-					$setting_it->modify(
+					$it->object->modify_parms( $setting_it->getId(),
 							array (
 									'Value' => self::replaceUser($it->get('Value'))
 							)
@@ -556,6 +531,22 @@ class CloneLogic
 						);
 				}
 				
+				break;
+				
+			case 'pm_Attachment':
+			case 'Comment':
+			case 'cms_Snapshot':
+				
+				$class_name = getFactory()->getClass($it->get('ObjectClass'));
+				
+				if ( !class_exists($class_name) ) return array();
+
+				$anchor_id = $ids_map[getFactory()->getObject($class_name)->getEntityRefName()][$it->get('ObjectId')];
+				
+				if ( $anchor_id == '' ) return array();
+				
+				$parms['ObjectId'] = $anchor_id;
+
 				break;
 		}
 		
@@ -609,7 +600,7 @@ class CloneLogic
 			}
 		}
 
-		$project_it->modify( $parms );
+		$project_it->object->modify_parms($project_it->getId(), $parms);
 		
 		$project_it->invalidateCache();
 		
@@ -642,7 +633,7 @@ class CloneLogic
 			}
 		}
 
-		$object_it->modify( $parms );
+		$it->object->modify_parms($object_it->getId(), $parms);
 		
 		return $object_it->getId();
  	}
@@ -663,7 +654,7 @@ class CloneLogic
 				if ( $parms[$attr] == '' ) $parms[$attr] = $it->get_native($attr);
 			}
 	
-			$object_it->modify( $parms );
+			$it->object->modify_parms($object_it->getId(), $parms);
  		}
  		
  		return $object_it->count() < 1 ? 0 : $object_it->getId();
@@ -698,7 +689,7 @@ class CloneLogic
 		
 		$methodology_it = $project_it->getMethodologyIt(); 		
 						
-		$methodology_it->modify( $parms );
+		$methodology_it->object->modify_parms($methodology_it->getId(), $parms);
 		
 		getSession()->getProjectIt()->invalidateCache();
  	}
@@ -720,7 +711,7 @@ class CloneLogic
 
 		$settings_it = $settings->getByRef('Project', $project_it->getId());
 		
-		$settings_it->modify( $parms );
+		$settings->modify_parms($settings_it->getId(), $parms);
  	}
 
 	static function duplicate( $iterator, $parms ) 
@@ -779,7 +770,7 @@ class CloneLogic
 			}
 		}
 			
-		$object_it->modify( $parms );
+		$it->object->modify_parms($object_it->getId(), $parms);
 		
 		return $object_it->getId();
  	}

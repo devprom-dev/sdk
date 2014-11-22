@@ -2,18 +2,6 @@ _admin_entry:
     pattern:  /
     defaults: { _controller: AdministrativeBundle:Main:index }
 
-_admin_module:
-    pattern:  /{module}
-    defaults: { _controller: AdministrativeBundle:Main:index }
-
-_admin_namespace:
-    pattern:  /{module}/{namespace}
-    defaults: { _controller: AdministrativeBundle:Main:index }
-
-_admin_page:
-    pattern:  /{module}/{namespace}/{page}
-    defaults: { _controller: AdministrativeBundle:Main:index }
-
 _admin_install:
     pattern:  /install/
     defaults: { _controller: AdministrativeBundle:Install:index }
@@ -49,3 +37,17 @@ _admin_scripts:
 _admin_css:
     pattern:  /admin/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
+
+_admin_module:
+    pattern:  /{module}
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+_admin_namespace:
+    pattern:  /{module}/{namespace}
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+_admin_page:
+    pattern:  /{module}/{namespace}/{page}
+    defaults: { _controller: AdministrativeBundle:Main:index }
+
+    

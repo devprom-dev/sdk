@@ -25,7 +25,9 @@ class BuildCodeRevisionPersister extends ObjectSQLPersister
  	
  	private function resolveIssues( $commit, $build )
  	{
- 		$request_it = getFactory()->getObject('Request')->getRegistry()->Query(
+ 		$request = getFactory()->getObject('Request');
+ 		
+ 		$request_it = $request->getRegistry()->Query(
 	    		array (
 	    				new RequestCodeCommitPredicate($commit),
 	    				new FilterVpdPredicate()
@@ -34,7 +36,7 @@ class BuildCodeRevisionPersister extends ObjectSQLPersister
 
 	    while ( !$request_it->end() )
 	    {
-	        $request_it->modify( 
+	    	$request->modify_parms( $request_it->getId(),
 	        		array( 
 	                		'ClosedInVersion' => $build
 	        		)
