@@ -31,6 +31,10 @@ class AccessPolicyPortfolio extends AccessPolicyBase
  	            return $action_kind != ACCESS_CREATE;
 
  	        case 'pm_Project':
+ 	        	$access = parent::getEntityAccess( $action_kind, $object );
+ 	        	
+ 	        	if ( $access == false ) return $access;
+ 	        	
  	            return $action_kind == ACCESS_READ || $action_kind == ACCESS_CREATE;
  	            
  	        default:

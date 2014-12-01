@@ -12,6 +12,7 @@ include SERVER_ROOT_PATH."core/classes/versioning/triggers/SnapshotDeleteCascade
 include SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."core/classes/project/PortfolioCommonBuilder.php";
 include SERVER_ROOT_PATH."core/classes/project/ProjectMetadataBuilder.php";
+include SERVER_ROOT_PATH."core/classes/resources/ContextResourceFileBuilder.php";
 
 class SessionBase
 {
@@ -322,7 +323,9 @@ class SessionBase
  	    		new AccessPolicyModelEventsHandler(),
  	    		new CacheResetTrigger(),
  	    		new SnapshotDeleteCascadeTrigger(),
- 	    		new ChangesWaitLockReleaseTrigger()
+ 	    		new ChangesWaitLockReleaseTrigger(),
+ 	    		
+ 	    		new ContextResourceFileBuilder($this)
         );
  	}
  	

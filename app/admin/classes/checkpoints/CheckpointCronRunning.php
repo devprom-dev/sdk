@@ -26,11 +26,11 @@ class CheckpointCronRunning extends CheckpointEntryStatic
 
     function getTitle()
     {
-        return 'CRON';
+        return text(1156);
     }
 
     function getDescription()
     {
-        return text(1156);
+        return text(1872);
     }
 }

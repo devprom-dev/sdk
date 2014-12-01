@@ -65,7 +65,14 @@ class InviteService
 				)
 		);
 		
-		if ( $user_it->getId() > 0 ) return $user_it;
+		if ( $user_it->getId() > 0 )
+		{
+			return getFactory()->getObject('Participant')->getRegistry()->Query(
+					array (
+							new \FilterAttributePredicate('SystemUser', $user_it->getId())
+					)
+			);
+		}
 		
 		$invite_it = getFactory()->getObject('Invitation')->getRegistry()->Query(
 				array (
@@ -73,7 +80,14 @@ class InviteService
 				)
 		);
 		
-		if ( $invite_it->getId() < 1 ) return $user_it;
+		if ( $invite_it->getId() < 1 )
+		{
+			return getFactory()->getObject('Participant')->getRegistry()->Query(
+					array (
+							new \FilterAttributePredicate('SystemUser', $user_it->getId())
+					)
+			);
+		}
 		
 		$parts = preg_split('/@/', $email);
 		
@@ -101,11 +115,11 @@ class InviteService
 				)
 		);
 		
-		$this->addParticipant($invite_it->getRef('Project'), $user_it);
+		$participant_it = $this->addParticipant($invite_it->getRef('Project'), $user_it);
 		
 		$invite_it->delete();
 		
-		return $user_it;
+		return $participant_it;
 	}
 	
 	protected function addParticipant( $project_it, $user_it )
@@ -119,16 +133,21 @@ class InviteService
 		
 		if ( $it->getId() > 0 ) return;
 		
+		$participant = getFactory()->getObject('Participant');
+		$participant_it = $participant->getExact(
+				$participant->add_parms(
+					array (
+							'SystemUser' => $user_it->getId(),
+							'Project' => $project_it->getId(),
+							'VPD' => $project_it->get('VPD'),
+							'Notification' => 'every1hour'
+					)
+			 	)
+		);
+		
 		getFactory()->getObject('ParticipantRole')->add_parms(
 				array (
-						'Participant' => getFactory()->getObject('Participant')->add_parms(
-												array (
-														'SystemUser' => $user_it->getId(),
-														'Project' => $project_it->getId(),
-														'VPD' => $project_it->get('VPD'),
-														'Notification' => 'every1hour'
-												)
-										 	),
+						'Participant' => $participant_it->getId(),
 						'ProjectRole' => getFactory()->getObject('ProjectRole')->getRegistry()->Query(
 												array(
 														new \FilterVpdPredicate($project_it->get('VPD')),
@@ -140,6 +159,8 @@ class InviteService
 						'VPD' => $project_it->get('VPD')
 				)
 		);
+		
+		return $participant_it;
 	}
 	
 	protected function sendEmail( $email )

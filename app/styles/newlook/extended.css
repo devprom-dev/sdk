@@ -281,7 +281,14 @@ section.content-internal
 {
     min-height: 550px;
     box-shadow: none;
-    margin-left: 170px;
+}
+
+@media screen 
+{
+	section.content-internal
+	{
+        margin-left: 170px;
+    }
 }
 
 footer.internal,

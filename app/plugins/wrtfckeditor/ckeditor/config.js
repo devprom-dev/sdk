@@ -15,10 +15,10 @@ CKEDITOR.editorConfig = function( config ) {
 	config.allowedContent = true;
 	config.disableNativeSpellChecker = false;
 	config.entities = false;
-
-	if ( devpromOpts.mathJaxLib != '' ) config.mathJaxLib = devpromOpts.mathJaxLib;
+	config.mathJaxLib = devpromOpts.mathJaxLib != '' 
+		? devpromOpts.mathJaxLib : window.location.protocol + "//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML";
+	
 	config.plantUMLServer = devpromOpts.plantUMLServer != '' ? devpromOpts.plantUMLServer : 'http://www.plantuml.com';
-
 	config.toolbar_FullToolbar =
 	[
 		{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo', '-', 'TextColor','BGColor' ] },

@@ -201,7 +201,7 @@ class RequestBoard extends PMPageBoard
 		{
 			$class_name = $this->getBoardAttributeClassName();
 			
-			if ( $this->hasCommonBoardAttributesAcrossProjects() )
+			if ( $this->hasCommonStates() )
 			{
 		 		return getFactory()->getObject($class_name)->getRegistry()->Query(
 		 				array (
@@ -504,11 +504,6 @@ class RequestBoard extends PMPageBoard
 		}
 	}
 
-	function getWorkflowSettingsModule()
-	{
-		return getFactory()->getObject('Module')->getExact('workflow-issuestate');
-	}
-	
 	function getRenderParms()
 	{
  		$this->buildRelatedDataCache();
@@ -683,7 +678,7 @@ class RequestBoard extends PMPageBoard
 		switch ( $values['color'] )
 		{
 		    case 'state':
-		    	return $object_it->getStateIt()->get('RelatedColor');
+		    	return $object_it->get('StateColor');
 		    	
 		    case 'priority':
 		    	return is_object($this->priorities_array[$object_it->get('Priority')]) 

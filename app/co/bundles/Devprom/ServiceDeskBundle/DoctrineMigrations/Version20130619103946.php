@@ -13,12 +13,12 @@ class Version20130619103946 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        $this->addSql('ALTER TABLE cms_externaluser ADD language VARCHAR(3)');
+        $this->addSql('ALTER TABLE cms_ExternalUser ADD language VARCHAR(3)');
 
     }
 
     public function down(Schema $schema)
     {
-        $this->addSql('ALTER TABLE cms_externaluser DROP language');
+        $this->addSql('ALTER TABLE cms_ExternalUser DROP language');
     }
 }

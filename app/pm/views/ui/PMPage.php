@@ -152,7 +152,8 @@ class PMPage extends Page
 				    'project_code' => getSession()->getProjectIt()->get('CodeName'),
 					'project_template' => getSession()->getProjectIt()->get('Tools'),
 					'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
-					'menus' => $this->getTopMenus()
+					'menus' => $this->getTopMenus(),
+					'report' => $this->getReportBase()
 				)
 		);
 	}
@@ -712,4 +713,14 @@ class PMPage extends Page
 
 		return $parms;
  	}
+ 	
+ 	function getHint()
+	{
+		$resource = getFactory()->getObject('ContextResource');
+		
+		$resource_it = $resource->getExact($this->getReportBase());
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+
+		return parent::getHint();
+	}
 }

@@ -67,7 +67,7 @@ class Release extends Metaobject
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
-		if ( $methodology_it->HasFixedRelease() && !$methodology_it->HasPlanning() )
+		if ( ($methodology_it->HasFixedRelease() || $finish_date == '') && !$methodology_it->HasPlanning() )
 		{
 			$weeks = $methodology_it->get('ReleaseDuration');
 			

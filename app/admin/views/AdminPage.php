@@ -86,11 +86,11 @@ class AdminPage extends Page
  		return parent::getMetrics();
  	}
  	
- 	function getCheckpointAlert()
+ 	function getCheckpointAlerts()
  	{
- 		if ( !DeploymentState::IsInstalled() ) return false;
+ 		if ( !DeploymentState::IsInstalled() ) return array();
  		
- 		return parent::getCheckpointAlert();
+ 		return parent::getCheckpointAlerts();
  	}
  	
  	function getTitle()

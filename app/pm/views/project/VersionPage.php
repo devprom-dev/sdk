@@ -47,12 +47,4 @@ class VersionPage extends PMPage
  		 		return new ReleaseForm();
  		}
  	}
- 	
- 	function getHint()
- 	{
- 		if ( getFactory()->getObject('Module')->getExact('ee/msproject')->getId() != '' )
- 		{
- 			return text('ee221').'<br/><br/><img src="/plugins/ee/resources/msproject.png"><br/><br/>'.text('ee222'); 
- 		}
- 	}
 }

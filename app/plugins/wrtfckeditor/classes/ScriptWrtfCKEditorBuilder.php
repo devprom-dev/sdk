@@ -13,10 +13,12 @@ class ScriptWrtfCKEditorBuilder extends ScriptBuilder
 	
     public function build( ScriptRegistry & $object )
     {
-    	$object->addScriptPath("/plugins/wrtfckeditor/ckeditor/ckeditor.js");
+    	$language = strtolower(getSession()->getLanguage()->getLanguage());
     	
+    	$object->addScriptPath("/plugins/wrtfckeditor/ckeditor/ckeditor.js");
 		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/global.js");
-
+		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/resources/js/underi18n.js");
+		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/resources/js/locals/".$language."/resource.js");
 		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/wysiwyg.js");
     }
 }

@@ -13,8 +13,6 @@ include_once SERVER_ROOT_PATH."core/classes/versioning/VersionedObject.php";
 
 class PMPageTable extends PageTable
 {
-	private $cross_project_filter = null;
-	
     function PMPageTable( $object )
     {
         parent::PageTable( $object );
@@ -84,40 +82,18 @@ class PMPageTable extends PageTable
     
     function hasCrossProjectFilter()
     {
-    	if ( !is_null($this->cross_project_filter) ) return $this->cross_project_filter;
-    	
     	$board = $this->getListRef();
 		
 		if ( $board instanceof PageBoard )
 		{
-			$object = getFactory()->getObject($board->getBoardAttributeClassName());
-	
-	 		$state_it = $object->getRegistry()->Query(
-	 				array (
-	 						new FilterVpdPredicate(getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('VPD'))
-	 				)
-	 		);
-	
-	 		$states = array_values(array_unique($state_it->fieldToArray('ReferenceName')));
-	 		
-	 		$own_state_it = $object->getRegistry()->Query(
-	 				array (
-	 						new FilterBaseVpdPredicate()
-	 				)
-	 		);
-	 		
-	 		$diff_states = array_diff($states, $own_state_it->fieldToArray('ReferenceName'));
-	 				
-	 		if ( count($diff_states) > 0 ) return $this->cross_project_filter = false;
-
-	 		$diff_states = array_diff($own_state_it->fieldToArray('ReferenceName'), $states);
-	 				
-	 		if ( count($diff_states) > 0 ) return $this->cross_project_filter = false;
+			return false;
 		}
-    	
-    	return $this->cross_project_filter = 
-    			getSession()->getProjectIt()->get('LinkedProject') != ''  
-    			&& getFactory()->getObject('SharedObjectSet')->sharedInProject($this->getObject(), getSession()->getProjectIt());
+		else
+		{
+	    	return getSession()->getProjectIt()->get('LinkedProject') != ''  
+	    				&& getFactory()->getObject('SharedObjectSet')
+	    						->sharedInProject($this->getObject(), getSession()->getProjectIt());
+		}
     }
     
     function getActions()
@@ -311,6 +287,7 @@ class PMPageTable extends PageTable
         		array (
         			array(),
         			array(
+        					'uid' => 'add-favorites',
         					'name' => text(1327),
         					'url' => "javascript:addToFavorites('".$widget_it->getId()."','".urlencode($info['url'])."', '".($report_id != '' ? 'report' : 'module')."');"
         			)
@@ -327,11 +304,6 @@ class PMPageTable extends PageTable
 	{
 		$predicates = array();
 
-		if ( !$this->hasCrossProjectFilter() )
-		{
-			$predicates[] = new FilterBaseVpdPredicate();
-		}
-		
         $values = $this->getFilterValues();
         
         $predicates = array_merge($predicates, $this->buildCustomPredicates($values));

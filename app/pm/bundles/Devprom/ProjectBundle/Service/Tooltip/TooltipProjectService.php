@@ -60,8 +60,46 @@ class TooltipProjectService extends TooltipService
  	 		);
  	 	}
  	 	
+ 	 	if ( $object_it->object instanceof \Request )
+ 	 	{
+ 	 		$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
+ 	 				array (
+ 	 						new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
+ 	 				)
+ 	 		);
+ 	 		
+ 	 		$states = $task_it->getStatesArray();
+ 	 		
+	 	 	foreach ( $states as $key => $state )
+			{
+				if ( !is_array($state) ) continue;
+				
+				switch ( $state['progress'] )
+				{
+					case '100%':
+						$states[$key]['class'] = 'label-success';
+						break;
+			
+					case '0%':
+						$states[$key]['class'] = 'label-important';
+						break;
+				}
+			}
+ 	 		
+			if ( count($states) > 0 )
+			{
+	 	 		$data[] = array (
+	 	 				'name' => 'Tasks',
+	 	 				'title' => translate('Задачи'),
+	 	 				'type' => 'tasks',
+	 	 				'text' => $states 
+	 	 		);
+			}
+ 	 	}
+ 	 	
  	 	return $data;
-    }    
+    }   
+    
     private function buildLifecycle( $object_it )
     {
     	$object = $object_it->object;

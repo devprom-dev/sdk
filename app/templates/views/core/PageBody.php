@@ -1,12 +1,6 @@
 <?php $view->extend('core/Page.php'); ?>
 
-<? if ( $b_checkpoint_alert ) { ?>
-
-<div class="alert alert-error" style="text-align:center;"><?=text(1128)?></div>
-
-<?php } ?>
-  
-<div class="row-fluid">
+<div class="row-fluid hidden-print">
 	<div class="pull-left">
 		<?php 
 		
@@ -22,12 +16,17 @@
 		?>
 	</div>
 	<div class="pull-right">
-		<?php echo $view->render($menu_template, array( 'menus' => $menus )); ?>
+		<?php 
+				echo $view->render($menu_template, array( 
+						'menus' => $menus, 
+						'checkpoint_alerts' => $checkpoint_alerts 
+				)); 
+		?>
 	</div> 
 </div> <!-- end row -->
 
 <?php if ( $has_horizontal_menu ) { // functional areas, horizontal menu ?>
-<header class="navbar">
+<header class="navbar hidden-print">
     <div class="row-fluid">
     	<div class="span12">
     		<?php 
@@ -47,7 +46,7 @@
 	<div class="contained">
 		<?php if ( count($areas) > 0 ) { ?>
 		<!-- aside -->	
-		<aside class="span2" style="margin:0;">	
+		<aside class="hidden-print span2" style="margin:0;">	
 			<!-- aside item: Menu -->
 			<div id="sidebar">
 			<?php
@@ -70,7 +69,7 @@
 		<?php } ?>
 		
         <div id="page-content" class="container-fluid" style="padding:0">
-            <section class="content content-internal <?=$section_class?>" style="<?=$style?>">
+            <section class="content content-internal <?=$section_class?>" style="<?=$style?>" module="<?=$module?>" report="<?=$report?>">
                 <div class="row-fluid">
                 
                		<?php $view['slots']->output('_content') ?>

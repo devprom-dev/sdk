@@ -45,36 +45,6 @@ class PageBoard extends PageList
  		);
  	}
  	
- 	function hasCommonBoardAttributesAcrossProjects()
- 	{
- 		$classname = $this->getBoardAttributeClassName();
-
- 		if ( $classname == '' ) return false;
- 		
- 		$value_it = getFactory()->getObject($classname)->getRegistry()->Query(
- 				array (
- 						new FilterVpdPredicate()
- 				)
- 		);
- 		
- 		$values = array();
- 		
- 		while( !$value_it->end() )
- 		{
- 			$values[$value_it->get('VPD')][] = $value_it->get('Caption');
- 			$value_it->moveNext();
- 		}
- 		
- 		$example = array_shift($values);
- 		
- 		foreach( $values as $attributes )
- 		{
- 			if ( count(array_diff($example, $attributes)) > 0 || count(array_diff($attributes, $example)) > 0 ) return false;
- 		}
- 		
- 		return true;
- 	}
- 	
  	function getBoardAttributeIterator()
  	{
  		if ( is_object($this->board_attribute_iterator) )
@@ -260,7 +230,7 @@ class PageBoard extends PageList
 			    
 			case 'State':
 				
-				echo $object_it->get('StateName');
+				echo '<span class="label" style="background-color:'.$object_it->get('StateColor').'">'.$object_it->get('StateName').'</span>';
 				
 				break;
 				
@@ -731,6 +701,7 @@ class PageBoard extends PageList
 			    
 				var cardSpace = 3;
 				var minCardWidth = <?=$columns?> <= 4 ? 135 : 110;
+				var itemsInColumn = 1;
 
 				for( var i = 1; i < 10; i++ ) {
 					if ( (Math.floor(columnWidth / i - (i - 1) * cardSpace) < minCardWidth) ) {
@@ -794,34 +765,6 @@ class PageBoard extends PageList
 	        	
 	        if ( is_bool($result) ) return;
 	    }
-	}
-	
-	function getWorkflowSettingsModule()
-	{
-		return null;
-	}
-	
-	function getBoardHint()
-	{
-		$module_it = $this->getWorkflowSettingsModule();
-		
-		if ( !is_object($module_it) ) return '';
-		
-		if ( !getFactory()->getObject('UserSettings')->getSettingsValue('board-hint') != 'off' ) return '';
-		
-		$workflow_ref = '<a href="'.$module_it->get('Url').'">'.$module_it->getDisplayName().'</a>';
-			
-		return preg_replace('/%1/', $workflow_ref, text(1836));
-	}
-	
-	function getRenderParms()
-	{
-		return array_merge(
-				parent::getRenderParms(),
-				array (
-						'hint' => $this->getBoardHint() 
-				)
-		);
 	}
 	
 	function render( &$view, $parms )

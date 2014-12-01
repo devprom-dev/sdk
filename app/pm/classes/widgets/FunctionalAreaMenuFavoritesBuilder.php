@@ -39,6 +39,8 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 
 		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']); 
 
+		$this->buildDocumentsFolder( $menus );
+		
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
 		
 		return $menus;
@@ -78,5 +80,16 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
    		    		'OrderNum' => 11
    		    ));
 	    }
+    }
+    
+    protected function buildDocumentsFolder( &$menus )
+    {
+    	if ( !getSession()->getProjectIt()->object instanceof Portfolio ) return;
+    	
+    	$menus['documents'] = array (
+ 	        'name' => translate('Документы'),
+            'uid' => 'documents',
+            'items' => array()
+ 	    );
     }
 }

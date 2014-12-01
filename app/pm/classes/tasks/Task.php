@@ -18,6 +18,7 @@ include "predicates/TaskVersionPredicate.php";
 include "predicates/TaskFromDatePredicate.php";
 include "predicates/TaskUntilDatePredicate.php";
 include "predicates/TaskBindedToObjectPredicate.php";
+include "predicates/TaskReleasePredicate.php";
 include "sorts/TaskAssigneeSortClause.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";

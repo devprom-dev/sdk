@@ -1,17 +1,25 @@
 <?php
 
 include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorEmbeddedForm.php";
+
 include "SpentTimeFormEmbedded.php";
+include "SpentTimeFormEmbeddedShort.php";
 
 class FieldSpentTime extends FieldForm
 {
  	var $object_it;
+ 	var $short_form = false;
  	
  	function FieldSpentTime( $object_it )
  	{
  		$this->object_it = $object_it;
  	}
 
+ 	function setShortMode( $short = true )
+ 	{
+ 		$this->short_form = $short;
+ 	}
+ 	
  	function getValidator()
  	{
  		return new ModelValidatorEmbeddedForm('Fact', 'Capacity');
@@ -39,7 +47,14 @@ class FieldSpentTime extends FieldForm
  	
 	function & getForm( & $activity )
 	{
- 		return new SpentTimeFormEmbedded( $activity, $this->getAnchorField(), $this->getName() );
+		if ( $this->short_form )
+		{
+			return new SpentTimeFormEmbeddedShort( $activity, $this->getAnchorField(), $this->getName() );
+		}
+		else
+		{
+			return new SpentTimeFormEmbedded( $activity, $this->getAnchorField(), $this->getName() );
+		}
 	}
 	
 	function render( & $view )

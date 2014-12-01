@@ -1,0 +1,39 @@
+<?php
+
+class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
+{
+	function getItemDisplayName( $object_it )
+	{
+		return ''; 		
+	}
+	
+	function drawAddButton( $tabindex )
+	{ 
+		$object_it =& $this->getIteratorRef();
+		
+		$items = array();
+		$object_it->moveFirst();
+		while( !$object_it->end() )
+		{
+			$items[$object_it->getRef('Participant')->getDisplayName()] += $object_it->get('Capacity');
+			$object_it->moveNext();
+		}
+		
+		$lines = array();
+		foreach( $items as $key => $item )
+		{
+			$lines[] = $key.'&nbsp;('.$item.'&nbsp;'.translate('÷.').')';
+		}
+		
+		if ( count($lines) > 0 )
+		{
+			echo '<div class="btn-group" style="vertical-align:top;" title="'.text(1874).'">';
+				echo '<div class="btn dropdown-toggle transparent-btn" data-toggle="dropdown" href="#" style="display:table;width:auto;" onclick="javascript:uiShowSpentTime();">';
+					echo '<span class="title" style="display:table-cell;">'.join('<br/>', $lines).'</span>';
+				echo '</div>';
+			echo '</div><br/>';
+		}		
+	
+		parent::drawAddButton( $tabindex );
+	}
+}

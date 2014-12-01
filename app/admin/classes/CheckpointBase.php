@@ -108,6 +108,21 @@ class CheckpointBase
         return true;
     }
 
+    function checkDetails()
+    {
+    	$details = array();
+    	
+        foreach( $this->getEntries() as $entry )
+        {
+            if ( $entry->enabled() && !$entry->check() )
+            {
+            	$details[] = $entry->getTitle();
+            }
+        }
+
+        return $details;
+    }
+    
     function checkRequired( & $failed_entries )
     {
         $failed_entries = array();

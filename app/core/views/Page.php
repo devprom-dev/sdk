@@ -685,7 +685,7 @@
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
  		    'navigation_title' => $tab_title != '' ? $tab_title : $this->getTitle(),
  		    'navigation_url' => $tab_url,
- 			'b_checkpoint_alert' => $this->getCheckpointAlert(),
+ 			'checkpoint_alerts' => $this->getCheckpointAlerts(),
  			'b_display_sections' => $percent > 0 && !$this->notfound,
  			'percent' => $percent,
  			'menu_template' => $this->getMenuTemplate(),
@@ -701,7 +701,9 @@
  			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid),
         	'javascript_paths' => $script_service->getJSPaths(),
         	'hint' => !$this->needDisplayForm() && getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
-        	'page_uid' => $page_uid
+        	'page_uid' => $page_uid,
+        	'skip_product_tour' => getFactory()->getObject('UserSettings')->getSettingsValue('skip-product-tour'),
+        	'module' => $this->getModule()
  		);
  	}
  	
@@ -889,13 +891,13 @@
 	    return array();
 	}
  	
- 	function getCheckpointAlert()
+ 	function getCheckpointAlerts()
  	{
         $user_it = getSession()->getUserIt();
  		
- 		if ( $user_it->getId() < 1 ) return false;
+ 		if ( $user_it->getId() < 1 || !$user_it->IsAdministrator() ) return array();
  		
-		return $user_it->IsAdministrator() && !getCheckpointFactory()->getCheckpoint( 'CheckpointSystem' )->check();
+		return  getCheckpointFactory()->getCheckpoint( 'CheckpointSystem' )->checkDetails();
  	}
  	
  	function getRecentChangedObjectIds( $table )
@@ -925,6 +927,11 @@
  	
  	function getHint()
 	{
+		$resource = getFactory()->getObject('ContextResource');
+		
+		$resource_it = $resource->getExact($this->getModule());
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+
 		return '';
 	}
 }

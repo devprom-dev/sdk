@@ -5,18 +5,12 @@ class CheckpointSystemAdminEmail extends CheckpointEntryDynamic
 {
 	function execute()
 	{
-		global $model_factory;
-		
-		$system = $model_factory->getObject('cms_SystemSettings');
-
-		$system_it = $system->getAll();
-
-		$this->setValue( $system_it->get('AdminEmail') != '' ? '1' : '0' );
+		$this->setValue( getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail') != '' ? '1' : '0' );
 	}
 
 	function getTitle()
 	{
-		return 'Email notifications';
+		return text(1873);
 	}
 
 	function getDescription()

@@ -6,7 +6,7 @@
 
 <?php } ?>
 
-<div class="filter">
+<div class="filter hidden-print">
 
 <?php if ( $title != '' ) { ?>
 
@@ -78,7 +78,7 @@ foreach( $filter_items as $filter )
 
 </div> <!-- end filter -->
 
-<div class="filter-actions">
+<div class="hidden-print filter-actions">
 
 <?php if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
 
@@ -138,7 +138,7 @@ $alert_text = str_replace('%2', $project_script, str_replace('%1', $personal_scr
 
 ?>
 
-<div class="alert alert-filter alert-warning"><?=$alert_text?></div>
+<div class="hidden-print alert alert-filter alert-warning"><?=$alert_text?></div>
 
 <?php } ?>
 

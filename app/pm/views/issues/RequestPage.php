@@ -16,6 +16,7 @@ include "IssueCompoundSection.php";
 include "RequestIteratorExportBlog.php";
 include "IteratorExportIssueBoard.php"; 
 include "PageSettingIssuesBuilder.php";
+include "PageSectionSpentTime.php";
 include "import/ImportIssueFromExcelSection.php";
 
 class RequestPage extends PMPage
@@ -53,6 +54,10 @@ class RequestPage extends PMPage
  		        }
 	 			
  		        $this->addInfoSection( new StatableLifecycleSection( $object_it ) );
+ 		        if ( $object_it->object->getAttributeType('Spent') != '' )
+ 		        {
+ 		        	$this->addInfoSection( new PageSectionSpentTime( $object_it ) );
+ 		        }
 	 			$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
  		    }
  		}
