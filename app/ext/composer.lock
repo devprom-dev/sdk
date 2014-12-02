@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cda4c8c1ecc2bc54ebffa0abe4e2e4b8",
+    "hash": "db0942a1cad54a54b1d4164e77b1842b",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -775,6 +775,7 @@
             "keywords": [
                 "rest"
             ],
+            "abandoned": true,
             "time": "2013-03-02 20:35:05"
         },
         {
@@ -913,6 +914,135 @@
                 "User management"
             ],
             "time": "2014-09-04 12:28:43"
+        },
+        {
+            "name": "guzzle/guzzle",
+            "version": "v3.9.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/guzzle3.git",
+                "reference": "54991459675c1a2924122afbb0e5609ade581155"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/guzzle3/zipball/54991459675c1a2924122afbb0e5609ade581155",
+                "reference": "54991459675c1a2924122afbb0e5609ade581155",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=5.3.3",
+                "symfony/event-dispatcher": "~2.1"
+            },
+            "replace": {
+                "guzzle/batch": "self.version",
+                "guzzle/cache": "self.version",
+                "guzzle/common": "self.version",
+                "guzzle/http": "self.version",
+                "guzzle/inflection": "self.version",
+                "guzzle/iterator": "self.version",
+                "guzzle/log": "self.version",
+                "guzzle/parser": "self.version",
+                "guzzle/plugin": "self.version",
+                "guzzle/plugin-async": "self.version",
+                "guzzle/plugin-backoff": "self.version",
+                "guzzle/plugin-cache": "self.version",
+                "guzzle/plugin-cookie": "self.version",
+                "guzzle/plugin-curlauth": "self.version",
+                "guzzle/plugin-error-response": "self.version",
+                "guzzle/plugin-history": "self.version",
+                "guzzle/plugin-log": "self.version",
+                "guzzle/plugin-md5": "self.version",
+                "guzzle/plugin-mock": "self.version",
+                "guzzle/plugin-oauth": "self.version",
+                "guzzle/service": "self.version",
+                "guzzle/stream": "self.version"
+            },
+            "require-dev": {
+                "doctrine/cache": "~1.3",
+                "monolog/monolog": "~1.0",
+                "phpunit/phpunit": "3.7.*",
+                "psr/log": "~1.0",
+                "symfony/class-loader": "~2.1",
+                "zendframework/zend-cache": "2.*,<2.3",
+                "zendframework/zend-log": "2.*,<2.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.9-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Guzzle": "src/",
+                    "Guzzle\\Tests": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Dowling",
+                    "email": "mtdowling@gmail.com",
+                    "homepage": "https://github.com/mtdowling"
+                },
+                {
+                    "name": "Guzzle Community",
+                    "homepage": "https://github.com/guzzle/guzzle/contributors"
+                }
+            ],
+            "description": "Guzzle is a PHP HTTP client library and framework for building RESTful web service clients",
+            "homepage": "http://guzzlephp.org/",
+            "keywords": [
+                "client",
+                "curl",
+                "framework",
+                "http",
+                "http client",
+                "rest",
+                "web service"
+            ],
+            "time": "2014-08-11 04:32:36"
+        },
+        {
+            "name": "intercom/intercom-php",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/intercom/intercom-php.git",
+                "reference": "master"
+            },
+            "require": {
+                "guzzle/guzzle": "~3.9"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~3.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Intercom": "src/"
+                }
+            },
+            "license": [
+                "Apache Version 2"
+            ],
+            "authors": [
+                {
+                    "name": "Intercom Platform Team",
+                    "homepage": "http://intercom.io"
+                }
+            ],
+            "description": "Intercom API client built on top of Guzzle 3",
+            "keywords": [
+                "api",
+                "guzzle",
+                "intercom",
+                "intercom.io"
+            ]
         },
         {
             "name": "jdorn/sql-formatter",
@@ -1336,12 +1466,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/MindscapeHQ/raygun4php.git",
-                "reference": "bd3d46c6526a46c17a0ace8ed2920147edf85aed"
+                "reference": "75151ab9e1d88755af76b716fbae32839f522c60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MindscapeHQ/raygun4php/zipball/bd3d46c6526a46c17a0ace8ed2920147edf85aed",
-                "reference": "bd3d46c6526a46c17a0ace8ed2920147edf85aed",
+                "url": "https://api.github.com/repos/MindscapeHQ/raygun4php/zipball/75151ab9e1d88755af76b716fbae32839f522c60",
+                "reference": "75151ab9e1d88755af76b716fbae32839f522c60",
                 "shasum": ""
             },
             "require": {
@@ -1378,7 +1508,7 @@
                 "logging",
                 "raygun"
             ],
-            "time": "2014-10-30 22:34:50"
+            "time": "2014-12-01 03:44:06"
         },
         {
             "name": "monolog/monolog",
@@ -1887,16 +2017,16 @@
         },
         {
             "name": "symfony/symfony",
-            "version": "v2.2.11",
+            "version": "v2.2.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/symfony.git",
-                "reference": "6a9c223b066a2553b8f59fd26f84ea630eff403c"
+                "reference": "14979a3bf96f42cd6d6710f44216c4c2a6aebcb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/symfony/zipball/6a9c223b066a2553b8f59fd26f84ea630eff403c",
-                "reference": "6a9c223b066a2553b8f59fd26f84ea630eff403c",
+                "url": "https://api.github.com/repos/symfony/symfony/zipball/14979a3bf96f42cd6d6710f44216c4c2a6aebcb2",
+                "reference": "14979a3bf96f42cd6d6710f44216c4c2a6aebcb2",
                 "shasum": ""
             },
             "require": {
@@ -1984,19 +2114,19 @@
             "keywords": [
                 "framework"
             ],
-            "time": "2013-12-02 07:14:10"
+            "time": "2013-11-13 14:29:12"
         },
         {
             "name": "twig/twig",
             "version": "v1.16.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/fabpot/Twig.git",
+                "url": "https://github.com/twigphp/Twig.git",
                 "reference": "42f758d9fe2146d1f0470604fc05ee43580873fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fabpot/Twig/zipball/42f758d9fe2146d1f0470604fc05ee43580873fc",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/42f758d9fe2146d1f0470604fc05ee43580873fc",
                 "reference": "42f758d9fe2146d1f0470604fc05ee43580873fc",
                 "shasum": ""
             },
@@ -2410,6 +2540,75 @@
                 "xunit"
             ],
             "time": "2013-01-13 10:24:48"
+        },
+        {
+            "name": "symfony/framework-bundle",
+            "version": "v2.2.11",
+            "target-dir": "Symfony/Bundle/FrameworkBundle",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/FrameworkBundle.git",
+                "reference": "5c06f77cbe7092dc768d523019605a7fd14cef46"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/FrameworkBundle/zipball/5c06f77cbe7092dc768d523019605a7fd14cef46",
+                "reference": "5c06f77cbe7092dc768d523019605a7fd14cef46",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/common": "~2.2",
+                "php": ">=5.3.3",
+                "symfony/config": ">=2.2,<2.3-dev",
+                "symfony/dependency-injection": "~2.0",
+                "symfony/event-dispatcher": "~2.1",
+                "symfony/filesystem": ">=2.1,<2.3-dev",
+                "symfony/http-kernel": ">=2.2,<2.3-dev",
+                "symfony/routing": ">=2.2,<2.3-dev",
+                "symfony/stopwatch": ">=2.2,<2.3-dev",
+                "symfony/templating": "~2.1",
+                "symfony/translation": ">=2.2,<2.3-dev"
+            },
+            "require-dev": {
+                "symfony/finder": "~2.0",
+                "symfony/security": ">=2.2,<2.3-dev"
+            },
+            "suggest": {
+                "symfony/console": "2.2.*",
+                "symfony/finder": "2.2.*",
+                "symfony/form": "2.2.*",
+                "symfony/validator": "2.2.*"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Bundle\\FrameworkBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com",
+                    "homepage": "http://fabien.potencier.org",
+                    "role": "Lead Developer"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony FrameworkBundle",
+            "homepage": "http://symfony.com",
+            "time": "2013-11-28 07:03:21"
         }
     ],
     "aliases": [],
