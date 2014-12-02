@@ -36,6 +36,12 @@ class BrokenTraceExplainService
     	{
     		$class_name = $type->getExact($page_it->get('SourcePageReferenceName'))->get('ClassName');
     		
+    		if ( $class_name == '' )
+    		{
+    			$page_it->moveNext();
+    			continue;
+    		}
+
     		$object_it = getFactory()->getObject($class_name)->getExact($page_it->get('SourcePage'));
     		
     		$change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(

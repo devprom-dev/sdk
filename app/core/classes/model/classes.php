@@ -37,5 +37,6 @@ include SERVER_ROOT_PATH.'core/classes/project/ProjectUse.php';
 include SERVER_ROOT_PATH.'core/classes/project/ProjectTemplate.php'; 
 include SERVER_ROOT_PATH.'cms/classes/AttributeGroup.php';
 include SERVER_ROOT_PATH.'core/classes/history/AffectedObjects.php';
+include SERVER_ROOT_PATH.'core/classes/resources/ContextResource.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php'; 
 

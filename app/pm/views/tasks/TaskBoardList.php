@@ -98,7 +98,7 @@ class TaskBoardList extends PMPageBoard
  	{
 		if ( $this->getTable()->getReportBase() == 'tasksboardcrossproject' )
 		{
-			if ( $this->hasCommonBoardAttributesAcrossProjects() )
+			if ( $this->hasCommonStates() )
 			{
 		 		return getFactory()->getObject($this->getBoardAttributeClassName())->getRegistry()->Query(
 		 				array (
@@ -389,7 +389,7 @@ class TaskBoardList extends PMPageBoard
 		switch ( $values['color'] )
 		{
 		    case 'state':
-		    	return $object_it->getStateIt()->get('RelatedColor');
+		    	return $object_it->get('StateColor');
 		    	
 		    case 'priority':
 		    	return $object_it->getRef('Priority')->get('RelatedColor');
@@ -450,11 +450,6 @@ class TaskBoardList extends PMPageBoard
 		
 		return $actions;
 	}			
-	
-	function getWorkflowSettingsModule()
-	{
-		return getFactory()->getObject('Module')->getExact('workflow-taskstate');
-	}
 	
 	function drawScripts()
 	{

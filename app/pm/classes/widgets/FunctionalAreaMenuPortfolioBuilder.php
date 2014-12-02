@@ -1,14 +1,12 @@
 <?php
 
-include_once "FunctionalAreaMenuProjectBuilder.php";
+include_once "FunctionalAreaMenuMyProjectsBuilder.php";
 
-class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilder
+class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuMyProjectsBuilder
 {
     public function build( FunctionalAreaMenuRegistry & $set )
     {
  	    $menus = parent::build($set);
- 	    
- 	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  	    
 		$module = getFactory()->getObject('Module');
 		$report = getFactory()->getObject('PMReport');
@@ -24,17 +22,34 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
 		}
 
         $task_chart_it = $module->getExact('tasks-board');
-        if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
+        if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
         {
 			$items[] = $report->getExact('tasksboardcrossproject')->buildMenuItem();
         }
 		
-		$items[] = $report->getExact('activitiesreport')->buildMenuItem();
 		$items[] = $report->getExact('discussions')->buildMenuItem();
 		$items[] = $report->getExact('project-blog')->buildMenuItem();
 		
 		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
 		
+		$this->buildResourcesFolder($menus);
+		
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
+    }
+
+	protected function createCustomReports()
+    {
+    	// skip creating custom reports like My Tasks, etc.
+    }
+
+    protected function buildResourcesFolder( &$menus )
+    {
+    	$menus['resources'] = array (
+ 	        'name' => translate('Ресурсы'),
+            'uid' => 'resources',
+            'items' => array(
+            				getFactory()->getObject('PMReport')->getExact('activitiesreport')->buildMenuItem('group=SystemUser')
+    				   )
+ 	    );
     }
 }

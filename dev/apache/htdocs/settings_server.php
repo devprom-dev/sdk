@@ -66,5 +66,7 @@ define('EMAIL_SENDER_TYPE', 'admin');
 //define('CACHE_ENGINE', 'CacheEngineMemcached');
 
 define('METRICS_CLIENT', false);
+define('SKIP_WELCOME_PAGE',true);
+define('SKIP_PRODUCT_TOUR',true);
 
 //define('MATH_JAX_LIB_SRC', '/scripts/mathjax/MathJax.js?config=TeX-AMS_HTML');

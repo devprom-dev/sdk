@@ -136,31 +136,24 @@ class Iteration extends Metaobject
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
-		$object_id = parent::add_parms( $parms );
-		
-		if ( $object_id > 0 )
+		if ( $methodology_it->HasFixedRelease() || $parms['FinishDate'] == '' )
 		{
-			$object_it = $this->getExact( $object_id );
-		}
+			$weeks = $methodology_it->get('ReleaseDuration');
+			
+			if ( $weeks < 1 ) $weeks = 4;
 
-		if ( is_object($object_it) )
-		{
-			if ( $methodology_it->HasFixedRelease() )
-			{
-				$weeks = $methodology_it->get('ReleaseDuration');
-				if ( $weeks < 1 ) $weeks = 4;
-	
-				$parms['FinishDate'] = date( 'Y-m-j', strtotime('-1 day',
-					   			strtotime($weeks.' week', strtotime( $object_it->get_native('StartDate') ) ) ) 
-					   );
-	
-				parent::modify_parms ( $object_id, array('FinishDate' => $parms['FinishDate']) );
-			}
-	
-			$object_it->storeMetrics();
+			$parms['FinishDate'] = date( 'Y-m-j', strtotime('-1 day',
+				   			strtotime($weeks.' week', strtotime( $parms['StartDate'] ) ) ) 
+				   );
 		}
+	
+		$result = parent::add_parms( $parms );
 		
-		return $object_id;
+		if ( $result < 1 ) return $result;
+		
+		$this->getExact($result)->storeMetrics();
+		
+		return $result;
 	}
 	
 	function modify_parms( $object_id, $parms ) 

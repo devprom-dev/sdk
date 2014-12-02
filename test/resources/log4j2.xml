@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appenders>
+     <RollingFile name="RollingFile" fileName=".\logs\app.log"
+                 filePattern=".\logs\app-%d{yyyy-MM-dd HH-mm-ss}.log">
+     <PatternLayout pattern='%d{HH:mm:ss,SSS} %5p %t %C{1}:%M:%L - %m%n'/>
+      <Policies>
+       <OnStartupTriggeringPolicy />	   
+         </Policies>
+		   <DefaultRolloverStrategy fileIndex="min" max="10"/>
+    </RollingFile>
+    <File name="A1" fileName=".\logs\app.log" append="false">
+      <PatternLayout pattern='%d{HH:mm:ss,SSS} %5p %t %C{1}:%M:%L - %m%n'/>
+    </File>
+	  <RollingFile name="SYSTEM_OUT" fileName=".\logs\app.log"
+                 filePattern=".\logs\app-%d{yyyy-MM-dd HH-mm-ss}.log">
+      <PatternLayout pattern='%d{HH:mm:ss,SSS} %5p %t - %m%n'/>
+      <Policies>
+       <OnStartupTriggeringPolicy />	   
+         </Policies>
+		   <DefaultRolloverStrategy fileIndex="min" max="10"/>
+    </RollingFile>
+	<RollingFile name="Listener" fileName=".\logs\app.log"
+                 filePattern=".\logs\app-%d{yyyy-MM-dd HH-mm-ss}.log">
+     <PatternLayout pattern='%d{HH:mm:ss,SSS} %5p %t %m%n'/>
+      <Policies>
+       <OnStartupTriggeringPolicy />	   
+         </Policies>
+		   <DefaultRolloverStrategy fileIndex="min" max="10"/>
+    </RollingFile>	 
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d %-5p [%t] %C{2} (%F:%L) - %m%n"/>
+    </Console>
+  </appenders>
+  <loggers>
+    <logger name="MAIN" level="debug">
+      <appender-ref ref="RollingFile"/>
+    </logger>
+	<logger name="#SYSTEM_OUT" level="debug">
+      <appender-ref ref="SYSTEM_OUT"/>
+    </logger>
+   <logger name="LISTENERLOG" level="debug">
+      <appender-ref ref="Listener"/>
+    </logger>
+    <root level="error">
+      <appender-ref ref="STDOUT"/>
+ 
+    </root>
+  </loggers>
+</configuration>

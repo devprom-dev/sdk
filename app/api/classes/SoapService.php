@@ -51,6 +51,7 @@ class SoapService
 		if ( $user_it->getId() < 1 )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(224))));
+			return;
 		}
 		
 		$project_id = $session->getProject();
@@ -111,6 +112,7 @@ class SoapService
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
+			return;
 		}
 
 		$it = $object->getExact($id);
@@ -118,6 +120,7 @@ class SoapService
 		if ( $it->getId() == '' )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+			return;
 		}
 		 
 		$result = $this->serializeToSoap( $it );
@@ -136,6 +139,7 @@ class SoapService
 		if ( !getFactory()->getAccessPolicy()->can_create($object) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(706))));
+			return;
 		}
 
 		$attrs = $this->getAttributes( $object );
@@ -172,6 +176,7 @@ class SoapService
 		if ( !getFactory()->getAccessPolicy()->can_create($object) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(706))));
+			return;
 		}
 
 		$result = array();
@@ -211,11 +216,13 @@ class SoapService
 		if ( $it->count() < 1 )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+			return;
 		}
 
 		if ( !getFactory()->getAccessPolicy()->can_modify($it) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+			return;
 		}
 
 		$attrs = $this->getAttributes( $object );
@@ -260,11 +267,13 @@ class SoapService
 			if ( $it->count() < 1 )
 			{
 				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+				return;
 			}
 
 			if ( !getFactory()->getAccessPolicy()->can_modify($it) )
 			{
 				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+				return;
 			}
 
 			foreach( $object_parms as $key => $param )
@@ -301,11 +310,13 @@ class SoapService
 		if ( $it->count() < 1 )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+			return;
 		}
 
 		if ( !getFactory()->getAccessPolicy()->can_delete($it) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+			return;
 		}
 
 		$object->delete($id);
@@ -327,11 +338,13 @@ class SoapService
 			if ( $it->count() < 1 )
 			{
 				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(708))));
+				return;
 			}
 
 			if ( !getFactory()->getAccessPolicy()->can_delete($it) )
 			{
 				$server->fault('', $this->logError(IteratorBase::wintoutf8(text(707))));
+				return;
 			}
 
 			$object->delete($values['Id']);
@@ -360,6 +373,7 @@ class SoapService
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
+			return;
 		}
 
 		$object->setLimit(100);
@@ -392,6 +406,7 @@ class SoapService
 		if ( !getFactory()->getAccessPolicy()->can_read($object) )
 		{
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
+			return;
 		}
 
 		$attrs = $this->getAttributes( $object );

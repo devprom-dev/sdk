@@ -25,7 +25,7 @@ class ProjectLogList extends PMStaticPageList
 				
 			    $change_kind = $object_it->getImage();
 				
-				echo '<i class="'.$change_kind.'"></i> &nbsp; ';
+				echo '<i class="'.$change_kind.' hidden-print" style="margin-right: 10px;"></i>';
 
 				$anchor_it = $object_it->getObjectIt();
 				

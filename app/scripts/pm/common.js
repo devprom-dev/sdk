@@ -1508,6 +1508,7 @@ function completeUIExt( jqe )
 
 	jqe.find('.with-tooltip').popover({
 		placement: function() {
+			if ( $(this.$element).is('[placement]') ) return $(this.$element).attr('placement');
 			return this.$element.offset().left < $(window).width() / 2 ? 'right' : 'left';
 		},
 		html:true,
@@ -1518,13 +1519,12 @@ function completeUIExt( jqe )
 		.hover( function(e) 
 		{
 			var tooltip = $(this);
+			if ( !tooltip.data('popover').enabled ) return;
 			
 			if ( typeof tooltip.attr('loaded') != 'undefined' )
 			{
 				$('.popover').toggleClass('in').remove();
-				
 				if ( tooltip.parents('.open').length < 1 ) tooltip.data('popover').show();
-				
 				return;
 			}
 				
@@ -2812,4 +2812,10 @@ function addToFavorites( widget_uid, widget_url, widget_type )
 				window.location = widget_url;
 			}
 	});	
+}
+
+function uiShowSpentTime()
+{
+	$('a[href*=pagesectionspenttime]').click();
+	window.scrollTo($('a[href*=pagesectionspenttime]').offset().left, $('a[href*=pagesectionspenttime]').offset().top);
 }

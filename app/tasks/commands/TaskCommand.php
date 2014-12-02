@@ -21,7 +21,8 @@ class TaskCommand extends Command
 		
 		return $registry->Query(
 				array (
-						new FilterAttributePredicate('Caption', $ref_name)
+						new FilterAttributePredicate('Caption', $ref_name),
+						new SortOrderedClause()
 				)
 		);
 	}

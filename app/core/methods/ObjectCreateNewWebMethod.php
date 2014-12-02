@@ -31,7 +31,7 @@ class ObjectCreateNewWebMethod extends WebMethod
 				$this->getNewObjectUrl(),
 				get_class($this->object),
 				$this->object->getEntityRefName(),
-				$title != '' ? $title : translate($this->object->getDisplayName())
+				$title != '' ? $title : $this->object->getDisplayName()
 		);
 		
 		if ( count($parms) < 1 )

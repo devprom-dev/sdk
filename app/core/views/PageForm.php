@@ -615,7 +615,9 @@ class PageForm extends MetaObjectForm
 		    'form_body_template' => $this->getBodyTemplate(),
 		    'title' => $this->getPageTitle(),
 			'button_save_title' => translate('Сохранить'),
-			'transition' => $this->getTransitionIt()->getId()
+			'transition' => $this->getTransitionIt()->getId(),
+			'form_class_name' => strtolower(get_class($this)),
+			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue(strtolower(get_class($this))) != 'off' ? $this->getHint() : ''
 		);
 	}
 	
@@ -664,6 +666,19 @@ class PageForm extends MetaObjectForm
  	function getSite()
 	{
 		return 'co';
+	}
+	
+ 	function getHint()
+	{
+		$resource = getFactory()->getObject('ContextResource');
+		
+		$resource_it = $resource->getExact(strtolower(get_class($this)));
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		
+		$resource_it = $resource->getExact(strtolower(get_class($this)).'-'.$this->getMode());
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		
+		return '';
 	}
 	
 	function drawScripts()

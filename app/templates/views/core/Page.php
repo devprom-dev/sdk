@@ -15,13 +15,12 @@
 	<?php $view['slots']->output('_header'); ?>
    	<script src="/cache?v=<?=$current_version?>&l=<?=$language_code?>" type="text/javascript" charset="UTF-8"></script>
   </head>
-
   <body>
 	<div class="container-fluid wrapper-all <?=($inside ? 'container-fluid-internal' : '')?>">
 	  
 	  <?php $view['slots']->output('_content'); ?>
 	  
-	  <footer class="<?=($inside ? 'internal' : '')?>">
+	  <footer class="<?=($inside ? 'internal' : '')?> hidden-print">
 		<ul>
 			<?php 
 	 		
@@ -66,7 +65,7 @@
         devpromOpts.mathJaxLib = '<?=(defined('MATH_JAX_LIB_SRC') ? MATH_JAX_LIB_SRC : "")?>';
         devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
         <?php if ( !defined('METRICS_CLIENT') || METRICS_CLIENT ) { $global_url = parse_url(_getServerUrl()); ?>
-		devpromOpts.url = "<?=$global_url['scheme']?>://devprom.ru/rx";
+		devpromOpts.url = window.location.protocol+"//devprom.ru/rx";
 		devpromOpts.iid = "<?=INSTALLATION_UID?>";
 		devpromOpts.version = "<?=$current_version?>";
         <?php } ?>

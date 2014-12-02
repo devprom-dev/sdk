@@ -63,6 +63,18 @@ class TaskBoardTable extends PMPageTable
 		}
 	}
 	
+	function getPredicates($filters)
+	{
+		$predicates = parent::getPredicates($filters);
+
+		if ( $this->getTable()->getReportBase() != 'issuesboardcrossproject' )
+		{
+			$predicates[] = new FilterBaseVpdPredicate();
+		}
+		
+		return $predicates;
+	}
+	
 	function getAssigneeUserWorkloadData()
 	{
 		return $this->workload;
@@ -151,31 +163,21 @@ class TaskBoardTable extends PMPageTable
 	
  	function getFiltersBase()
 	{
-		global $model_factory;
+		$user = getFactory()->getObject('cms_User');
 
-		$iteration = $model_factory->getObject('Iteration');
-		
- 		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		
-		$iterations = new FilterObjectMethod($iteration, translate('Итерация'), 'release');
-		
-		$worker = $model_factory->getObject('pm_Participant');
-
-		$user = $model_factory->getObject('cms_User');
-
-		$user->addFilter( new FilterInPredicate($worker->getAll()->fieldToArray('SystemUser')));
+		$user->addFilter( new FilterInPredicate(getFactory()->getObject('pm_Participant')->getAll()->fieldToArray('SystemUser')));
 		
 		$assignee_filter = new FilterObjectMethod( $user, text(753), 'taskassignee' );
 		
-		$type_method = new FilterObjectMethod( $model_factory->getObject('pm_TaskType'), translate('Тип'), 'tasktype');
+		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_TaskType'), translate('Тип'), 'tasktype');
 		
 		$type_method->setIdFieldName( 'ReferenceName' );
 		
 		$filters = array(
 			new ViewTaskStateWebMethod(),
-            $iterations,
+            $this->buildIterationFilter(),
 			$type_method,
-			new FilterObjectMethod( $model_factory->getObject('Priority'), '', 'taskpriority' ),
+			new FilterObjectMethod( getFactory()->getObject('Priority'), '', 'taskpriority' ),
 			$assignee_filter,
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
@@ -186,6 +188,22 @@ class TaskBoardTable extends PMPageTable
 		return array_merge( $filters, PMPageTable::getFilters() ); 		
 	}
 
+	protected function buildIterationFilter()
+	{
+		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
+		{
+			$release = getFactory()->getObject('Release');
+	 		$release->addFilter( new ReleaseTimelinePredicate('not-passed') );
+			return new FilterObjectMethod($release, translate('Релиз'), 'release');
+		}
+		else
+		{ 
+			$iteration = getFactory()->getObject('Iteration');
+	 		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
+			return new FilterObjectMethod($iteration, translate('Итерация'), 'iteration');
+		}
+	}
+	
  	function getFilterPredicates()
 	{
 		global $_REQUEST;
@@ -197,7 +215,8 @@ class TaskBoardTable extends PMPageTable
 			new FilterAttributePredicate( 'Priority', $values['taskpriority'] ),
 			new FilterAttributePredicate( 'TaskType', $values['tasktype'] ),
 			new TaskAssigneeUserPredicate( $values['taskassignee'] ),
-			new FilterAttributePredicate( 'Release', $values['release'] ),
+			new FilterAttributePredicate( 'Release', $values['iteration'] ),
+			new TaskReleasePredicate($values['release']),
  			new TaskVersionPredicate( $values['stage'] ),
 			new FilterSubmittedAfterPredicate( $values['submittedon'] ),
 			new FilterSubmittedBeforePredicate( $values['submittedbefore'] ),

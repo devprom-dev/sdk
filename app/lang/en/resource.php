@@ -2,6 +2,7 @@
 
 	
  $text_array = array (
+ 	'Ресурсы' => 'Resources',
  	'Итерации и задачи' => 'Iterations and tasks',
  	'Приглашение в проект' => 'Invitation into the project',
  	'Незавершенные задачи' => 'Open tasks',
@@ -2746,7 +2747,7 @@
  	1125 => 'Average execution duration, sec.',
  	1126 => 'Attribute reference name may consits of letters, digits, underscore symbol and should start with letter only',
  	1127 => 'PHP settings',
- 	1128 => 'Some system parameters are not compliant to required values, <a href="/admin/checks.php">see details...</a>',
+ 	1128 => 'Complete setup:',
  	1129 => 'The value of option "%1" defined in php.ini file should be defined to be greater than "%2"',
  	1130 => 'Controlling the system level checks',
  	1131 => 'The directory is writable',
@@ -2990,8 +2991,8 @@
     1378 => 'Reset field "Owner"',
     1379 => 'Reset field "Assignee"',
     1380 => 'Run check',
-    1381 => 'Updates',
-    1382 => 'All recent updates of Devprom were installed. Show <a href="/admin/updates.php">the list of available updates</a>',
+    1381 => 'All recent updates were installed',
+    1382 => 'Show <a href="/admin/updates.php">the list of available updates</a>',
     1383 => 'Tune the system after update has been installed', 
     1384 => 'Downloading update from the Devprom server',
     1385 => 'Check update file',
@@ -3186,7 +3187,12 @@
  	1867 => 'Recent action',
 	1868 => 'System name',
  	1869 => 'Populate project with the <b>demo data</b> to allow better learning of Devprom',
- 	1870 => 'In a code name of your project it is possible to use only alphabetical symbols, digits and symbols "-" and "_", for example myproject_0. The codename should have more then 3 symbols length.'
+ 	1870 => 'In a code name of your project it is possible to use only alphabetical symbols, digits and symbols "-" and "_", for example myproject_0. The codename should have more then 3 symbols length.',
+ 	1871 => 'Product tour',
+ 	1872 => 'Service is running which executes application background tasksЗапущена: PyCron in case of Windows or cron in case of Linux/Unix',
+	1873 => 'Email notification is configured',
+ 	1874 => 'Click to view details and modify spent time',
+ 	1875 => 'You can hide or show fields on the form using <a href="%2">workflow settings</a>. Please note availability of several fields depends on <a href="%1">methodology settings</a>.'
  );
 
 return $text_array;

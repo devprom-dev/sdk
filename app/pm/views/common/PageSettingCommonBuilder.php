@@ -121,7 +121,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         
         $setting = new PageTableSetting('TaskBoardTable');
         
-        $setting->setFilters( array('release', 'taskstate', 'tasktype', 'taskassignee') );
+        $setting->setFilters( array('release', 'iteration', 'taskstate', 'tasktype', 'taskassignee') );
 
        	if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
 		{

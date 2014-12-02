@@ -7,6 +7,7 @@ include SERVER_ROOT_PATH.'pm/classes/model/ModelFactoryProject.php';
 include SERVER_ROOT_PATH.'pm/classes/model/permissions/AccessPolicyProject.php';
 
 include SERVER_ROOT_PATH.'pm/classes/widgets/ModuleCategoryBuilderCommon.php';
+include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceBuilder.php';
 
 include SERVER_ROOT_PATH.'pm/classes/common/PMUserSettings.php'; 
 include SERVER_ROOT_PATH."pm/classes/common/ModuleProjectsBuilder.php";
@@ -198,6 +199,7 @@ class PMSession extends SessionBase
  	                    new EstimationStrategyCommonBuilder(),
  	                    new CacheSessionProjectTrigger(),
  	            		new CustomizableObjectBuilderCommon($this),
+ 	            		new PMContextResourceBuilder(),
  	            		
  	            		// model
  	            		new ResetFieldsEventHandler(),

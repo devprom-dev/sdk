@@ -209,14 +209,14 @@ class SecurityController extends PageController
 
     	$service = new InviteService($this, getSession());
     	
-    	$user_it = $service->applyInvitation($email);
+    	$participant_it = $service->applyInvitation($email);
     	
-    	if ( $user_it->getId() < 1 ) throw new NotFoundHttpException('Unable process the invitation');
+    	if ( $participant_it->getId() < 1 ) throw new NotFoundHttpException('Unable process the invitation');
     	
     	return new RedirectResponse(
     			\EnvironmentSettings::getServerUrl().
-    					'/reset?key='.$user_it->getResetPasswordKey().
-    						'&redirect='.urlencode('/profile?redirect=/pm/my')
+    					'/reset?key='.$participant_it->getRef('SystemUser')->getResetPasswordKey().
+    						'&redirect='.urlencode('/profile?redirect=/pm/'.$participant_it->getRef('Project')->get('CodeName'))
 		);
     }
 }

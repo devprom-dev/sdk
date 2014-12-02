@@ -78,7 +78,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 			{
 			$width = $list->getColumnWidth( 'Actions' );
 			?>
-			<th class="for-operation" width="1%">
+			<th class="for-operation hidden-print" width="1%">
 			</th>
 			<?php } ?>
 			
@@ -173,7 +173,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 					if ( $display_operations ) 
                     {
 						?>
-						<td id="operations">
+						<td id="operations" class="hidden-print">
 						<?php 
 					if ( count($actions) > 0 ) 
 					{

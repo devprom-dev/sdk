@@ -255,7 +255,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'currenttasks',
 						'title' => text(530),
 				        'description' => text(1417),
-				        'query' => 'release=all&taskstate=all',
+				        'query' => 'iteration=all&taskstate=all',
 				        'category' => FUNC_AREA_MANAGEMENT,
 				        'module' => $task_list_it->getId() )
 			);
@@ -273,7 +273,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'resolvedtasks',
 						'title' => text(531),
 				        'description' => text(1416),
-						'query' => 'release=all&taskstate=resolved',
+						'query' => 'iteration=all&taskstate=resolved',
 				        'category' => FUNC_AREA_MANAGEMENT,
 				        'module' => $task_list_it->getId() )
 			);
@@ -309,7 +309,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 					array ( 'name' => 'iterationplanningboard',
 					        'title' => text(1348),
 					        'description' => text(1410),
-							'query' => 'group=Release&release=all&sort=_group&sort2=Priority',
+							'query' => 'group=Release&iteration=all&sort=_group&sort2=Priority',
 					        'category' => FUNC_AREA_MANAGEMENT,
 					        'module' => $task_chart_it->getId() )
 				);

@@ -167,7 +167,14 @@ class RequestForm extends PMPageForm
 					$model_factory->getObject('RequestTraceQuestion') );
 
 			case 'Fact':
-				return new FieldSpentTimeRequest( $this->object_it );
+				$field = new FieldSpentTimeRequest( $this->object_it );
+				 
+				if ( !$this->getEditMode() )
+				{
+					$field->setShortMode();
+				}
+				
+				return $field;
 				
 			case 'Estimation':
 				$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();

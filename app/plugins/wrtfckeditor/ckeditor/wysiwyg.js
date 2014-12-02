@@ -1,3 +1,5 @@
+var cket = underi18n.MessageFactory(ckeditor_resources);
+
 CKEDITOR.disableAutoInline = true;
 CKEDITOR.disableNativeSpellChecker = true;
 
@@ -138,7 +140,7 @@ function setupEditorGlobal( filesTitle )
 function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHtml, appVersion ) 
 {
 	CKEDITOR.timestamp = appVersion;
-	
+		
 	var element = document.getElementById(editor_id);
 
 	if ( $(element).hasClass('cke_editable') ) return true;
@@ -155,6 +157,12 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			contentsCss: ['/pm/'+devpromOpts.project+'/scripts/css?v='+appVersion],
 			startupFocus: $(element).is(':focus')
 		});
+		
+		if ( editor == null ) 
+		{
+			reportBrowserError(element);
+			return;
+		}
 
 		editor.on('instanceReady', function(e) 
 		{
@@ -190,6 +198,12 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			language: devpromOpts.language == '' ? 'en' : devpromOpts.language
 		});
 
+		if ( editor == null ) 
+		{
+			reportBrowserError(element);
+			return;
+		}
+		
 		editor.persist = function() 
 		{
 			var element = $('#' + this.name ); 
@@ -277,6 +291,11 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	};
 	
 	setupEditor( editor );
+}
+
+function reportBrowserError(element)
+{
+	$(element).replaceWith('<div class="alert alert-danger" role="alert">'+cket('wrong-browser')+'<br/>'+$(element).html()+'</div>');
 }
 
 $(document).ready( function()

@@ -482,6 +482,12 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 					{
 						$display_name = $this->getItemDisplayName($object_it);
 						
+						if ( $display_name == '' )
+						{
+							$object_it->moveNext();
+							continue;
+						}
+						
 						if ( $_REQUEST[$prefix.'Delete'.$item] == 1 )
 						{
 							$delete_value = 1;

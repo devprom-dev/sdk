@@ -146,18 +146,6 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 
 		    	if ( $kind == TRIGGER_ACTION_DELETE || $data['DoNotAffectObjects'] ) break;
 			
-			case 'pm_Watcher':
-		    	$ref_it = $object_it->getAnchorIt();
-		    	
-		    	if ( is_object($ref_it) )
-		    	{
-			    	return array( 
-			    		get_class($object_it->getAnchorIt()->object) => $object_it->getAnchorIt() 
-			    	);
-		    	}
-		    	
-		    	break;
-		    	
 		    case 'pm_Activity':
 		    	$ref_it = $object_it->getRef('Task');
 		    	
@@ -209,6 +197,18 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    	return array (
 		    			get_class($ref_object) => $ref_object->getExact($object_it->get('ObjectId'))
 		    	);
+		}
+		
+		if ( $object_it->object instanceof Watcher )
+		{
+	    	$ref_it = $object_it->getAnchorIt();
+	    	
+	    	if ( is_object($ref_it) )
+	    	{
+		    	return array( 
+		    		get_class($ref_it->object) => $ref_it
+		    	);
+	    	}
 		}
 		
 		return array();		

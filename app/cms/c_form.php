@@ -64,6 +64,12 @@ class Form
 		return $this->action;
 	}
 	
+	function getMode()
+	{
+		if ( $this->getAction() == 'show' ) return is_object($this->getObjectIt()) ? 'edit' : 'new';
+		return $this->getAction();
+	}
+	
 	function getEditMode()
 	{
 		return in_array($this->getAction(), array('show', 'add', 'modify')); 

@@ -1224,6 +1224,10 @@ INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Langua
 INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (45, 'text(co21)', 'text(co22)', 'tracker_ru.xml', 1, 'team', 'process');
 END IF;
 
+
+INSERT INTO cms_UserSettings (User, Settings, Value) SELECT cms_UserId, 'skip-product-tour', 'true' FROM cms_User WHERE NOT EXISTS (SELECT 1 FROM cms_UserSettings WHERE Settings = 'skip-product-tour');
+
+
 --
 --
 --

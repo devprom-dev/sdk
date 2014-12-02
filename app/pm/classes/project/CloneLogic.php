@@ -330,6 +330,7 @@ class CloneLogic
 				{
 					$parms['StartDate'] = $release_it->get('FinishDate');
 				}
+				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('1 month', strtotime( $parms['StartDate'])))); 
 
 				break;
 
@@ -349,14 +350,14 @@ class CloneLogic
 
 				if ( $iteration_it->count() < 1 )
 				{
-					$parms['StartDate'] = 'NOW()';
+					$parms['StartDate'] = SystemDateTime::date();
 				}
 				else
 				{
 					$parms['StartDate'] = $iteration_it->get('FinishDate');
 				}
-				
 
+				$parms['FinishDate'] = '';
 				$parms['InitialVelocity'] = '0';
 
 				break;

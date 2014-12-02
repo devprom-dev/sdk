@@ -326,6 +326,7 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_Transition':
 					case 'pm_TransitionAttribute':
 					case 'WikiPageTemplate':
+					case 'WikiPage':
 						return $action_kind == ACCESS_READ;
 						
 					case 'pm_ChangeRequest':

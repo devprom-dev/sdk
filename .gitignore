@@ -13,3 +13,5 @@
 /dev/apache/htdocs/conf/*.ini
 /dev/apache/htdocs/conf/*.json
 sync-release.bat
+/test/logs
+/test/test-output

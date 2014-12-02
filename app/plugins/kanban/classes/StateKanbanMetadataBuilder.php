@@ -13,7 +13,7 @@ class StateKanbanMetadataBuilder extends ObjectMetadataEntityBuilder
 		
     public function build( ObjectMetadata $metadata )
     {
-    	if ( $metadata->getObject()->getEntityRefName() != 'pm_State' ) return;
+    	if ( !$metadata->getObject() instanceof IssueState ) return;
 
     	if ( $this->session->getProjectIt()->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) return;
     	    	

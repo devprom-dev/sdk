@@ -179,6 +179,8 @@ class PMWikiList extends PMPageList
 			if ( $value == 'Content' ) unset($fields[$key]);
 		}
 		
+		$fields[] = 'SectionNumber';
+		
 		return $fields;
 	}
 	
@@ -200,11 +202,6 @@ class PMWikiList extends PMPageList
 		
 		array_push( $fields, 'Project', 'ChangeRequest', 'Tags', 'DocumentId' );
 		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasFeatures() )
-		{
-			array_push( $fields, 'Feature' );
-		}
-		
 		return $fields;
 	}
 	
@@ -218,7 +215,8 @@ class PMWikiList extends PMPageList
  	    switch ( $column )
  	    {
  	        case 'State':
- 	            return '1%';
+ 	        case 'SectionNumber':
+ 	        	return '1%';
  	            
  	        case 'Progress':
  	        case 'DocumentVersion':
