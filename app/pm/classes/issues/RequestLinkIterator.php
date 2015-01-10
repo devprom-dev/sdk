@@ -18,7 +18,7 @@ class RequestLinkIterator extends OrderedIterator
 		);
 
 		return $link_type_it->getDisplayName().': '.
-			$uid->getUidIconGlobal($target_it).' '.$target_it->getDisplayName().' ('.$target_it->getStateName().')';
+			$uid->getUidIconGlobal($target_it).' '.$target_it->getDisplayName().' ('.$target_it->get('StateName').')';
  	}
  	
  	function getTraceDisplayName() 

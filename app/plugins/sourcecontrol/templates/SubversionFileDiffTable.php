@@ -8,7 +8,7 @@ $view->extend('core/PageBody.php');
 $view['slots']->output('_content');
 
 ?>
-<link href="/scripts/prettify/prettify.css" type="text/css" rel="stylesheet" />
+<link href="/plugins/wrtfckeditor/ckeditor/plugins/codesnippet/lib/highlight/styles/github.css" type="text/css" rel="stylesheet" />
 <style>
 	.str { color:#181; font-style:italic }
 	.kwd { color:#369 }
@@ -28,13 +28,10 @@ $view['slots']->output('_content');
 	.added {background:#D4FFC5;}
 </style>
 
-<script type="text/javascript" src="/scripts/prettify/prettify.js"></script>
-
 <script language="javascript">
 	$(document).ready(function() 
 	{ 
-		markupDiff($('.prettyprint'));
-		prettyPrint();
+		markupDiff($('code'));
 	});
 </script>
 
@@ -44,10 +41,8 @@ $view['slots']->output('_content');
 echo '<h4 class="bs">'.$name.' '.($version != '' ? ' &nbsp; ['.translate('версии').': '.$version.' - '.$preversion.']' : '').'</h4>';
 
 echo '<pre style="display:block;overflow:auto;">';
-echo '<code class="prettyprint">';
-
+echo '<code>';
 echo $file_body;
-
 echo '</code>';
 echo '</pre>';
 

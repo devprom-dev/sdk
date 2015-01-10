@@ -13,10 +13,7 @@ class MetaobjectCacheable extends Metaobject
 	
     function getCacheCategory()
 	{
-		// project-wide cache
-		$value = $this->IsVpdEnabled() ? $this->getVpdValue() : '';
-		
-		return $value != '' ? 'pm-'.$value : 'global';
+		return getFactory()->getEntityOriginationService()->getCacheCategory($this);
 	}
 	
 	function getCacheKey( $getter, $class_name = '' )
@@ -37,7 +34,6 @@ class MetaobjectCacheable extends Metaobject
 		    foreach( $getters as $getter )
 		    {
     		    getFactory()->getCacheService()->set($this->getCacheKey($getter, $class_name), '', $this->getCacheCategory());
-    		    getFactory()->getCacheService()->set($this->getCacheKey($getter, $class_name), '', 'global');
 		    }
 		    
 		    $class_name = get_parent_class($class_name);

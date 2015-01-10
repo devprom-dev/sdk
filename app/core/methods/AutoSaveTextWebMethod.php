@@ -58,7 +58,7 @@ class AutoSaveTextWebMethod extends WebMethod
  			switch ( $this->type )
  			{
  				case 'input':
- 					echo '<input type="text" class="input-block-level" title="'.$title.'" id="autosave'.$script_number.'" value="'.$default_value.'">';
+ 					echo '<input type="text" class="input-block-level" style="text-align:right;" title="'.$title.'" id="autosave'.$script_number.'" value="'.$default_value.'">';
  					break;
  					
  				case 'textarea':

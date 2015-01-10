@@ -9,19 +9,14 @@ class ReportWorkflowAnalysisPage extends PMPage
 	public function __construct()
 	{
 		getSession()->addBuilder( new PageSettingWorkflowAnalysisBuilder() );
+		getSession()->addBuilder( new RequestModelWorkflowBuilder() );
 		
 		parent::__construct();
 	}
 	
 	public function getObject()
 	{
-    	global $model_factory;
-
-		getSession()->addBuilder( new RequestModelWorkflowBuilder() );
-		
-    	$object = $model_factory->getObject('Request');
-    	
-    	return $object;
+    	return getFactory()->getObject('Request');
 	}
 	
     function getTable()

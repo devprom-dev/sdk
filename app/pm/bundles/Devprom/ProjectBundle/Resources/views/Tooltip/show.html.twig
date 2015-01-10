@@ -43,7 +43,7 @@
 <br/>
 {% if lifecycle.data.name != "" %}
 	<img src="/images/bullet_go.png" style="margin:0 0 -3px -2px;">{{ lifecycle.data.name }}
-	{{ lifecycle.data.text }}
+	{{ lifecycle.data.text | raw }}
 	<br/>
 {% endif %}
 {% endif %}

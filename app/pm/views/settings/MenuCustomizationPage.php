@@ -26,7 +26,7 @@ class MenuCustomizationPage extends PMPage {
  		
  		$parms['close_url'] = strpos($_SERVER['HTTP_REFERER'], '/menu/') === false ? $_SERVER['HTTP_REFERER'] : getSession()->getApplicationUrl();  
 
- 		$parms['hint'] = getFactory()->getObject('UserSettings')->getSettingsValue('navigations-hint') != 'off' ? text(1806) : '';
+ 		$parms['hint_top'] = getFactory()->getObject('UserSettings')->getSettingsValue('navigations-hint') != 'off' ? text(1806) : '';
  		
  		return $parms;
  	}

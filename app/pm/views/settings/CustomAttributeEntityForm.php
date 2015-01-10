@@ -36,13 +36,6 @@ class CustomAttributeEntityForm extends PMForm
 		}
 	}
 	
-	function getAttributeValue( $attribute )
-	{
-		switch ( $attribute )
-		{
-		}
-	}
-
 	function IsAttributeRequired( $attribute )
 	{
 		switch( $attribute )
@@ -149,6 +142,7 @@ class CustomAttributeEntityForm extends PMForm
 		
 		$field->setId('EntityReferenceName');
 		$field->setName('EntityReferenceName');
+		$field->setValue($this->getAttributeDefault('EntityReferenceName'));
 		$field->setNullOption(false);
 		
 		$field->draw();

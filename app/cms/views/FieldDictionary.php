@@ -107,6 +107,11 @@ class FieldDictionary extends Field
 		return $options;
 	}
 	
+	function getGroups()
+	{
+		return array( '' => '' );
+	}
+	
  	function draw()
 	{
 		global $tabindex, $model_factory;
@@ -115,10 +120,21 @@ class FieldDictionary extends Field
 		{
 			echo '<input type="hidden" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'">';
 			echo '<input class="input-block-level" type="text" disabled value="'.$this->getText().'">';
+			
+			return;
 		}
-		else
+
+		$tab_index = $this->getTabIndex() > 0 ? $this->getTabIndex() : $tabindex;
+
+		$groups = $this->getGroups();
+		$this->options = $this->getOptions();
+		
+		foreach( $this->options as $option )
 		{
-			$tab_index = $this->getTabIndex() > 0 ? $this->getTabIndex() : $tabindex;
+			if ( !array_key_exists($option['group'],$groups) ) $option['group'] = ''; 
+			$groups[$option['group']]['items'][] = $option;
+		}
+			
 		?>
 		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> >
 		<?php if ( $this->null_option ) { ?>
@@ -127,20 +143,24 @@ class FieldDictionary extends Field
 			<?
 			$valueinlist = false;
 			
-			$this->options = $this->getOptions();
-			
-			foreach( $this->options as $key => $option )
+			foreach( $groups as $group )
 			{
-				$selected = ($option['value'] == $this->getValue() && $this->getValue() != '' || count($this->options) == 1 && $this->getRequired()) ? 'selected ' : '';
-				
-				?>
-					<option value="<? echo $option['value']; ?>" <? echo $selected; ?> referenceName="<?=$option['referenceName']?>" <?=($option['disabled'] ? 'disabled' : '')?> ><?=$option['caption']?></option>
-				<?
-				
-				if ( $selected )
+				if ( !is_array($group['items']) ) continue;
+				if ( $group['label'] != '' ) echo '<optgroup label="'.$group['label'].'">';
+				foreach( $group['items'] as $option )
 				{
-					$valueinlist = true;
+					$selected = ($option['value'] == $this->getValue() && $this->getValue() != '' || count($this->options) == 1 && $this->getRequired()) ? 'selected ' : '';
+					
+					?>
+						<option value="<? echo $option['value']; ?>" <? echo $selected; ?> referenceName="<?=$option['referenceName']?>" <?=($option['disabled'] ? 'disabled' : '')?> ><?=$option['caption']?></option>
+					<?
+					
+					if ( $selected )
+					{
+						$valueinlist = true;
+					}
 				}
+				if ( $group['label'] != '' ) echo '</optgroup>';
 			}
 			
 			if ( !$valueinlist && $this->getValue() != '' )
@@ -150,7 +170,6 @@ class FieldDictionary extends Field
 			?>
 		</select>
 		<?
-		}
 	}
 	
 	function drawHelpButton()

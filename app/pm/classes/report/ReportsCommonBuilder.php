@@ -165,12 +165,22 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'defectsreopenedchart',
 						'title' => text(1004),
 				        'description' => text(1401),
-				        'query' => 'group=history&aggby=LastTransition&type=bug&infosections=none&state=all&modifiedafter=last-month',
+				        'query' => 'group=history&aggby=LastTransition&type=bug&infosections=none&state=all&modifiedafter=last-month&transition='.join(',',$this->getReopenTransitions($request)),
 				        'category' => FUNC_AREA_MANAGEMENT,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
 			);
 
+			$object->addReport(
+				array ( 'name' => 'issuesreopenedbyownerchart',
+						'title' => text(1885),
+				        'description' => text(1886),
+				        'query' => 'group=Owner&aggby=Priority&aggregator=none&infosections=none&state=all&was-transition='.join(',',$this->getReopenTransitions($request)),
+				        'category' => FUNC_AREA_MANAGEMENT,
+						'type' => 'chart',
+				        'module' => $issues_chart_it->getId() )
+			);
+			
 			$object->addReport(
 				array ( 'name' => 'issuesbyprioritieschart',
 						'title' => text(997),
@@ -364,6 +374,16 @@ class ReportsCommonBuilder extends ReportsBuilder
 			);			
 		
 			$object->addReport(
+				array ( 'name' => 'tasksreopenedbyassigneechart',
+						'title' => text(1888),
+				        'description' => text(1889),
+				        'query' => 'group=Assignee&aggby=Priority&aggregator=none&infosections=none&state=all&was-transition='.join(',',$this->getReopenTransitions($task)),
+				        'category' => FUNC_AREA_MANAGEMENT,
+						'type' => 'chart',
+				        'module' => $task_chart_it->getId() )
+			);
+			
+			$object->addReport(
 				array ( 'name' => 'tasksplanbytypes',
 						'title' => text(1109),
 				        'description' => text(1412),
@@ -535,5 +555,24 @@ class ReportsCommonBuilder extends ReportsBuilder
 				        'module' => $module_it->getId() )
 			);
 		}
+    }
+    
+    protected function getReopenTransitions( $object )
+    {
+    	$ids = array();
+    	$state_it = $object->cacheStates();
+    	while( !$state_it->end() )
+    	{
+    		if ( $state_it->get('IsTerminal') == 'Y' ) $ids[] = $state_it->getId();
+    		$state_it->moveNext();
+    	}
+    	
+    	if ( count($ids) < 1 ) return array();
+    	
+    	return getFactory()->getObject('Transition')->getRegistry()->Query(
+	    			array (
+	    					new FilterAttributePredicate('SourceState', $ids)
+	    			)
+    		)->idsToArray();
     }
 }

@@ -3,6 +3,7 @@
 include "TransitionIterator.php";
 include "predicates/TransitionObjectPredicate.php";
 include "predicates/TransitionStateClassPredicate.php";
+include "predicates/TransitionWasPredicate.php";
 include "TransitionModelBuilder.php";
 
 class Transition extends MetaobjectCacheable

@@ -82,6 +82,27 @@ foreach( $filter_items as $filter )
 
 <?php if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
 
+<?php foreach( $additional_actions as $action ) { ?>
+	<?php if ( count(array_filter($action['items'], function($item){return $item['name'] != '';})) < 4 ) { ?>
+		<?php foreach( $action['items'] as $key => $item ) { ?>
+			<?php if ( $item['name'] == '' ) continue; ?>
+			<div class="btn-group pull-left">
+				<a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn append-btn btn-small <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
+			   		<i class="icon-plus icon-white"></i> <?=$item['name']?>
+			   	</a>
+			</div>
+		<?php } ?>
+	<?php } else { ?>
+		<div class="btn-group pull-left">
+			<a class="btn dropdown-toggle btn-small <?=($action['class'] == '' ? 'btn-success' : $action['class'])?>" href="#" data-toggle="dropdown">
+		   		<?=$action['name']?>
+		   		<span class="caret"></span>
+		   	</a>
+		   	<? echo $view->render('core/PopupMenu.php', array ('items' => $action['items'])); ?>
+		</div>
+   	<?php } ?>
+<?php } ?>
+
 <?php
 
     echo $view->render('core/PageSectionButtons.php', array (
@@ -92,20 +113,6 @@ foreach( $filter_items as $filter )
     )); 
 
 ?>
-
-<?php foreach( $additional_actions as $action ) { ?>
-
-<?php if ( count($action['items']) < 1 ) continue; ?>
-
-<div class="btn-group pull-left">
-   	<a class="btn dropdown-toggle btn-small <?=($action['class'] == '' ? 'btn-inverse' : $action['class'])?>" href="#" data-toggle="dropdown">
-   		<?=$action['name']?>
-   		<span class="caret"></span>
-   	</a>
-   	<? echo $view->render('core/PopupMenu.php', array ('items' => $action['items'])); ?>
-</div>
-
-<?php } ?>
 
 <?php if ( count($actions) > 0 ) { ?>
 

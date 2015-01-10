@@ -148,16 +148,11 @@ class RequestTable extends PMPageTable
 	
 	function getNewActions()
 	{
-	    global $model_factory;
-	    
 	    $append_actions = array();
 	    
-		$filter = $this->getViewFilter();
-		
-		$filter->setFilter( $this->getFiltersName() );
-		
+	    $filter_values = $this->getFilterValues();
+	    
 		$method = new ObjectCreateNewWebMethod($this->getObject());
-		
 		$method->setRedirectUrl('donothing');
 		
 		if ( $method->hasAccess() )
@@ -175,7 +170,8 @@ class RequestTable extends PMPageTable
 				
 			$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
 					array (
-							new FilterBaseVpdPredicate()
+							new FilterBaseVpdPredicate(),
+							new FilterAttributePredicate('ReferenceName', $filter_values['type'])
 					)
 			);
 			
@@ -198,16 +194,18 @@ class RequestTable extends PMPageTable
 			
 			unset($parms['Type']);
 			
-			$uid = 'append-issue';
-			
-			$append_actions[$uid] = array ( 
-				'name' => $this->object->getDisplayName(),
-				'uid' => $uid,
-				'url' => $url != '' ? preg_replace('/\%query\%/', '', $url) : $method->getJSCall($parms)
-			);
+			if ( in_array($filter_values['type'], array('','all')) || strpos($filter_values['type'],'none') !== false )
+			{
+				$uid = 'append-issue';
+				
+				$append_actions[$uid] = array ( 
+					'name' => $this->object->getDisplayName(),
+					'uid' => $uid,
+					'url' => $url != '' ? preg_replace('/\%query\%/', '', $url) : $method->getJSCall($parms)
+				);
+			}
 			
 			$template_it = getFactory()->getObject('RequestTemplate')->getAll();
-			
 			if ( $template_it->count() > 0 ) $append_actions[] = array();
 			
 			while( !$template_it->end() )
@@ -224,7 +222,6 @@ class RequestTable extends PMPageTable
 		}
 
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
-		
 		$method->setRedirectUrl('donothing');
 		
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasFeatures() && $method->hasAccess() )
@@ -349,31 +346,20 @@ class RequestTable extends PMPageTable
 		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
-		$type_method = new FilterObjectMethod( $model_factory->getObject('pm_IssueType'), translate('Òèï'), 'type');
-		
-		$type_method->setIdFieldName( 'ReferenceName' );
-		
-		$type_method->setNoneTitle( $model_factory->getObject('Request')->getDisplayName() );
 		
 		// build Responsible filter
-		$worker = $model_factory->getObject('pm_Participant');
-
-		$user = $model_factory->getObject('cms_User');
-		
-		$user->addFilter( new FilterInPredicate($worker->getAll()->fieldToArray('SystemUser')) );
-		
-		$owner_filter = new FilterObjectMethod( $user, translate($this->object->getAttributeUserName('Owner')), 'owner' );
 		
 		$filters = array (
 			$this->buildFilterState(),
-			new FilterStateTransitionMethod( $model_factory->getObject('IssueState') ),
-			$type_method, 
+			$this->buildFilterWasTransition(),
+			new FilterStateTransitionMethod( getFactory()->getObject('IssueState') ),
+			$this->buildFilterType(), 
 			new FilterObjectMethod( $model_factory->getObject('Priority'), '', 'priority'),
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
 			new ViewModifiedBeforeDateWebMethod(),
 			new ViewModifiedAfterDateWebMethod(),
-			$owner_filter,
+			$this->buildFilterOwner(),
 			new ViewRequestTagWebMethod(),
 			$this->buildFilterAuthor(),
 			new ViewRequestTaskTypeWebMethod(),
@@ -445,6 +431,7 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestTestResultPredicate($_REQUEST['test']);
 		$predicates[] = new RequestAuthorFilter( $values['author'] );
 		$predicates[] = new TransitionObjectPredicate( $this->getObject(), $values['transition'] );
+		$predicates[] = new TransitionWasPredicate( $values['was-transition'] );
 		$predicates[] = new RequestTaskTypePredicate( $values['tasktype'] );
 		$predicates[] = new RequestTaskStatePredicate( $values['taskstate'] );
 		$predicates[] = new RequestVersionFilter($values['version']);
@@ -469,6 +456,31 @@ class RequestTable extends PMPageTable
 	protected function buildFilterState()
 	{
 		return new ViewRequestStateWebMethod();
+	}
+	
+	protected function buildFilterType()
+	{
+		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_IssueType'), translate('Òèï'), 'type');
+		$type_method->setIdFieldName( 'ReferenceName' );
+		$type_method->setNoneTitle( getFactory()->getObject('Request')->getDisplayName() );
+		return $type_method;
+	}
+	
+	protected function buildFilterWasTransition()
+	{
+		$filter = new FilterStateTransitionMethod( getFactory()->getObject('IssueState') );
+		$filter->setValueParm('was-transition');
+		$filter->setCaption(text(1887));
+		return $filter;
+	}
+	
+	protected function buildFilterOwner()
+	{
+		$user = getFactory()->getObject('cms_User');
+		$user->addFilter( 
+				new FilterInPredicate(getFactory()->getObject('pm_Participant')->getAll()->fieldToArray('SystemUser')) 
+ 		);
+		return new FilterObjectMethod( $user, translate($this->getObject()->getAttributeUserName('Owner')), 'owner' );
 	}
 	
 	protected function buildFilterAuthor()

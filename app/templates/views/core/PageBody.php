@@ -77,6 +77,7 @@
                		<?php 
 					if ( $hint != '' )
 					{
+						echo '<span class="clearfix"></span>';
 						echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid));
 					}
                		?>

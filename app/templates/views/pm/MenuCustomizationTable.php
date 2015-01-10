@@ -16,8 +16,8 @@
 				</div>
 			</div>
 			<div class="row-fluid">
-				<?php if ( $hint != '' ) { ?>
-					<?php echo $view->render('core/Hint.php', array('title' => $hint, 'name' => 'navigations-hint')); ?> 
+				<?php if ( $hint_top != '' ) { ?>
+					<?php echo $view->render('core/HintLight.php', array('title' => $hint_top, 'name' => 'navigations-hint')); ?> 
 				<? } ?>
 			</div>
 			<div class="row-fluid">

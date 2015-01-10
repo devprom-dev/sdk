@@ -53,13 +53,6 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 
-        $module_it = $module->getExact('dicts-customresource');
-
-    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-    		$items[] = $module_it->buildMenuItem();
-		}
-		
 	    $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
  	    
  	    $items = array();
@@ -89,7 +82,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 	    {
 	    	$module_uid = 'dicts-'.strtolower($object_it->getId());
 	    	
-	    	if ( in_array($module_uid, array('dicts-pmcustomattribute', 'dicts-customresource')) )
+	    	if ( in_array($module_uid, array('dicts-pmcustomattribute')) )
 	    	{
 	    		$object_it->moveNext();
 	    		continue;

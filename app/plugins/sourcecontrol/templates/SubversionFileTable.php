@@ -8,8 +8,7 @@ $view->extend('core/PageBody.php');
 $view['slots']->output('_content');
 
 ?>
-<link href="/scripts/prettify/prettify.css" type="text/css" rel="stylesheet" />
-
+<link href="/plugins/wrtfckeditor/ckeditor/plugins/codesnippet/lib/highlight/styles/github.css" type="text/css" rel="stylesheet" />
 <style>
 	.str { color:#181; font-style:italic }
 	.kwd { color:#369 }
@@ -24,15 +23,6 @@ $view['slots']->output('_content');
 	.dec { color:#606 }
 </style>
 
-<script type="text/javascript" src="/scripts/prettify/prettify.js"></script>
-
-<script language="javascript">
-	$(document).ready(function() 
-	{ 
-		prettyPrint();
-	});
-</script>
-
 <div class="pull-left" style="width:73%;">
 <?
 
@@ -45,7 +35,7 @@ $directory = join('/', $parts);
 echo '<h4 class="bs">'.$name.' '. ($version != '' ? ' &nbsp; ['.translate('версия').': '.$version.']' : '').'</h4>';
 
 echo '<pre style="display:block;overflow:auto;">';
-    echo '<code class="prettyprint">'.Chr(10);
+    echo '<code>'.Chr(10);
         echo htmlspecialchars($file_body, ENT_COMPAT | ENT_HTML401, 'windows-1251').Chr(10);
     echo '</code>';
 echo '</pre>';

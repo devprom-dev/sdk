@@ -45,13 +45,15 @@ if ( count($sections) > 0 )
 
 <?php if ( $persisted && $baseline == '' && is_a($form->getObjectIt(), 'StatableIterator') && $attributes['State']['value'] != '' ) { ?> 
 
-<?php $state_it = $form->getObjectIt()->getStateIt(); ?> 
-
 <div class="title-cell" style="width:1%;"></div>
-<div class="title-cell" style="width:1%;">
-    <span class="label label-<?=($state_it->get('IsTerminal') == 'Y' ? 'success' : 'warning')?>">
-        <?=$state_it->getDisplayName()?>
-    </span>
+<div class="title-cell hidden-print" style="width:1%;">
+<?php
+	echo $view->render('pm/StateColumn.php', array (
+				'color' => $form->getObjectIt()->get('StateColor'),
+				'name' => $form->getObjectIt()->get('StateName'),
+				'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
+		)); 
+?>
 </div>
 
 <?php } ?>
@@ -69,7 +71,7 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 
 <? if ( $broken_traces ) { ?>
 
-<div class="title-cell filter-btn" style="width:32px;">
+<div class="title-cell filter-btn hidden-print" style="width:32px;">
 	<? 
 		echo $view->render('pm/WikiPageBrokenIcon.php', 
 			array ( 
@@ -84,7 +86,7 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 
 <? if ( count($compare_actions) > 0 ) { ?>
 
-<div class="title-cell" style="width:1%;">
+<div class="title-cell hidden-print" style="width:1%;">
     <div class="btn-group operation last">
       <a tabindex="-1" class="btn btn-small dropdown-toggle actions-button" data-toggle="dropdown" href="#">
     	<i class="icon-random icon-gray"></i>
@@ -107,7 +109,7 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 
 <div class="title-cell" style="width:1%;"></div>
 
-<div class="title-cell filter-btn" style="width:1%;">
+<div class="title-cell filter-btn hidden-print" style="width:1%;">
    	<a class="btn dropdown-toggle btn-small dropdown-properties" style="white-space: nowrap;" onclick="javascript: workflowProperties('<?=$props_url?>', <?=$form->getObjectIt()->getId()?>, '<?=$props_object?>', '<?=text(1500)?>', 'donothing');" title="<?=text(1500)?>">
    		<i class="icon-align-justify"></i>
    	</a>
@@ -117,7 +119,7 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 
 <div class="title-cell" style="width:1%;"></div>
 
-<div class="title-cell" style="width:1%;">
+<div class="title-cell hidden-print" style="width:1%;">
     <div class="btn-group operation last">
       <a tabindex="-1" class="btn btn-small dropdown-toggle actions-button" data-toggle="dropdown" href="#">
     	<i class="icon-asterisk icon-gray"></i>
@@ -140,7 +142,7 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 <? $attributes['Content']['field']->draw(); ?>
 
 <?php if ( is_object($comments_section) ) { ?>
-<div class="<?=($comments_count < 1 ? 'document-item-bottom' : '')?>" style="display:table;width:100%;height:23px;">
+<div class="<?=($comments_count < 1 ? 'document-item-bottom' : '')?> hidden-print" style="display:table;width:100%;height:23px;">
 	<div style="display:table-cell;">
 		<?php if ( $comments_count > 0 ) { ?> 
 		

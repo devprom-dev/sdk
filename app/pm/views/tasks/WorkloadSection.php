@@ -16,45 +16,52 @@ class WorkloadSection extends InfoSection
  	
  	function drawBody()
  	{
- 		global $model_factory;
- 		
  		$project_it = getSession()->getProjectIt();
  		
- 		$iteration = $model_factory->getObject('Iteration');
- 		
- 		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		
-		$iteration->addPersister( new EntityProjectPersister() );
-		
-		$iteration_it = $iteration->getAll();
+		$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+				array (
+						new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+						new FilterVpdPredicate(),
+						new EntityProjectPersister(),
+						new SortAttributeClause('Project')
+				)
+		);
 
 		$uid = new ObjectUID;
 		
 		echo '<table>';
-		
+
 		while ( !$iteration_it->end() )
 		{
 		    echo '<tr>';
-		    
-		    $columns = $iteration_it->count() > 3 ? 4 : 3; 
+			$columns = $iteration_it->count() > 3 ? 2 : 2; 
 		    
             while( !$iteration_it->end() && $columns-- > 0 )
             {
-                $self_it = $iteration_it->getRef('Project');
+				$part_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
+						array (
+								new ParticipantIterationInvolvedPredicate($iteration_it),
+								new FilterAttributePredicate('Project', $iteration_it->get('Project'))
+						)
+				);
+				
+				if ( $part_it->count() < 1 )
+				{
+					$iteration_it->moveNext();
+					continue;
+				}
+				
+            	$self_it = $iteration_it->getRef('Project');
                 
                 echo '<td>';
-                
-                $info = $uid->getUIDInfo( $iteration_it );
-                
-			    echo '<table class="table"><thead><tr><th>';
-        	        echo ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
-        	            translate('Итерация').': '.$iteration_it->getDisplayName();
-    		    echo '</th></tr></thead>';
-    		    
-    		    echo '<tbody><tr><td>';
-        		    $this->drawIteration($iteration_it);
-    		    echo '</td></tr></tbody></table>';
-    		    
+				    echo '<table class="table"><thead><tr><th>';
+	        	        echo ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
+	        	            translate('Итерация').': '.$iteration_it->getDisplayName();
+	    		    echo '</th></tr></thead>';
+	    		    
+	    		    echo '<tbody><tr><td>';
+	        		    $this->drawIteration($iteration_it, $part_it);
+	    		    echo '</td></tr></tbody></table>';
     		    echo '</td>';
     		    
     		    $iteration_it->moveNext();
@@ -66,18 +73,10 @@ class WorkloadSection extends InfoSection
 		echo '</table>';
 	}
 	
-	function drawIteration( $iteration_it )
+	function drawIteration( $iteration_it, $part_it )
 	{
-	    global $model_factory;
-	    
 		$release_left_capacity = $iteration_it->getLeftCapacity();
 		
-		$part = $model_factory->getObject('pm_Participant');
-		
-		$part->addFilter( new ParticipantIterationInvolvedPredicate($iteration_it) );
-		
-		$part_it = $part->getAll();
-
 		for ( $i = 0; $i < $part_it->count(); $i++ )
 		{
 			$left_work = $iteration_it->getLeftWorkParticipant( $part_it );

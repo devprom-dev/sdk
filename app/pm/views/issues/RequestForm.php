@@ -20,17 +20,13 @@ include "FieldIssueDeadlines.php";
 class RequestForm extends PMPageForm
 {
 	private $template_it;
-	
 	private $method_create_task = null;
-
 	private $method_duplicate = null;
-	
 	private $method_move = null;
-	
 	private $method_watch = null;
-	
 	private $new_template_url = '';
-	
+	private $target_projects = array();
+		
 	function __construct( $object ) 
 	{
 		parent::__construct($object);
@@ -114,6 +110,22 @@ class RequestForm extends PMPageForm
 		}
 		
 		$this->new_template_url = getFactory()->getObject('RequestTemplate')->getPageNameObject().'&ObjectId=%object-id%&items=%object-id%';
+		
+		if ( getSession()->getProjectIt()->get('LinkedProject') != '' )
+		{
+			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
+					array (
+							new FilterInPredicate(preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject'))),
+							new SortAttributeClause('Caption')
+					)
+			);
+	
+			while( !$linked_it->end() )
+			{
+				$this->target_projects[$linked_it->getId()] = $linked_it->getDisplayName();
+				$linked_it->moveNext();
+			}
+		}
 	}
 	
 	function getTransitionAttributes()
@@ -203,6 +215,23 @@ class RequestForm extends PMPageForm
 			case 'Tags':
 				return new FieldRequestTagTrace( is_object($this->object_it)
 					? $this->object_it : null ); 
+				
+			case 'Caption':
+				if ( !$this->getEditMode() )
+			    {
+    				$field = new FieldWYSIWYG();
+     					
+     				is_object($this->object_it) ? 
+    					$field->setObjectIt( $this->object_it ) : 
+    						$field->setObject( $this->getObject() );
+    						
+    			    $field->getEditor()->setMode( WIKI_MODE_INPLACE_INPUT );
+			    }
+			    else
+			    {
+			        $field = parent::createFieldObject($name);
+			    }
+			    return $field;
 		}
 		
 		if( $name == 'Attachment' )
@@ -304,8 +333,8 @@ class RequestForm extends PMPageForm
    			    {
    			        $field->setRows( 1 );
    			    }
-   			    
-   			    if ( $_REQUEST['Transition'] > 0 )
+
+   			    if ( $this->getTransitionIt()->getId() > 0 )
    			    {
    			        $field->setReadonly( true );
    			    }
@@ -417,8 +446,6 @@ class RequestForm extends PMPageForm
 	
 	function getActions()
 	{
-		global $model_factory;
-		
 		$actions = parent::getActions();
 		
 		$object_it = $this->getObjectIt();
@@ -452,38 +479,13 @@ class RequestForm extends PMPageForm
 		
 		if ( is_object($this->method_duplicate) )
 		{
-			if ( $actions[count($actions) - 1]['name'] != '' )
-			{
-				array_push($actions, array( '' ) );
-			}
-
-			$this->method_duplicate->setObjectIt($object_it);
-			
-			$actions[] = array( 
-					'name' => $this->method_duplicate->getCaption(),
-					'url' => $this->method_duplicate->getLink()
-			);
-		}
-
-		if ( is_object($this->method_move) )
-		{
-			$this->method_move->setRequestIt($object_it);
-			
-			$actions[] = array( 
-					'name' => $this->method_move->getCaption(),
-					'url' => $this->method_move->getLink()
-			);
-		}
-
-		if ( is_object($this->method_duplicate) )
-		{
 			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array( '' );
 	
 			$actions[] = array( 
 					'name' => text(1519),
 					'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url)
 			);
-		}
+		}		
 		
 		if ( is_object($this->method_watch) )
 		{
@@ -495,6 +497,90 @@ class RequestForm extends PMPageForm
 					'url' => $this->method_watch->getJSCall()
 			);
 		}
+
+		return $actions;
+	}
+	
+ 	function getTransitionActions( $object_it )
+	{
+		$actions = parent::getTransitionActions( $object_it );
+		
+		if ( is_object($this->method_duplicate) )
+		{
+			if ( $actions[count($actions) - 1]['name'] != '' )
+			{
+				array_push($actions, array( '' ) );
+			}
+
+			$this->method_duplicate->setObjectIt($object_it);
+			
+			if ( count($this->target_projects) > 0 )
+			{
+				$items = array();
+				
+				foreach( $this->target_projects as $id => $title )
+				{
+					$items[] = array (
+							'name' => $title,
+							'url' => $this->method_duplicate->getLink($id)							
+					);
+				}
+				
+				$items[] = array();
+				$items[] = array (
+						'name' => translate('Выбрать'),
+						'url' => $this->method_duplicate->getLink()							
+				);
+				
+				$actions[] = array( 
+					'name' => $this->method_duplicate->getCaption(),
+					'items' => $items
+				);
+			}
+			else
+			{
+				$actions[] = array( 
+						'name' => $this->method_duplicate->getCaption(),
+						'url' => $this->method_duplicate->getLink()
+				);
+			}
+		}
+
+		if ( is_object($this->method_move) )
+		{
+			$this->method_move->setRequestIt($object_it);
+			
+			if ( count($this->target_projects) > 0 )
+			{
+				$items = array();
+				
+				foreach( $this->target_projects as $id => $title )
+				{
+					$items[] = array (
+							'name' => $title,
+							'url' => $this->method_move->getLink($id)							
+					);
+				}
+				
+				$items[] = array();
+				$items[] = array (
+						'name' => translate('Выбрать'),
+						'url' => $this->method_move->getLink()							
+				);
+				
+				$actions[] = array( 
+					'name' => $this->method_move->getCaption(),
+					'items' => $items
+				);
+			}
+			else
+			{
+				$actions[] = array( 
+						'name' => $this->method_move->getCaption(),
+						'url' => $this->method_move->getLink()
+				);
+			}
+		}	
 
 		return $actions;
 	}

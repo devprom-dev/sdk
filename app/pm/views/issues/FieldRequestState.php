@@ -13,7 +13,12 @@ class FieldRequestState extends Field
 	{
 		$states = $this->object_it->getStateExact();
 		
-		echo '<span class="label label-warning" id="'.$this->getId().'">'.$states[0].'</span> ';
+		echo $view->render('pm/StateColumn.php', array (
+				'color' => $this->object_it->get('StateColor'),
+				'name' => $states[0],
+				'terminal' => $this->object_it->get('StateTerminal') == 'Y',
+				'id' => $this->getId()
+		)); 		
 		
 		if ( $this->object_it->object->getAttributeType('Tasks') != '' )
 		{
@@ -24,6 +29,7 @@ class FieldRequestState extends Field
 		
         if ( $this->object_it->get('TransitionComment') != '' )
         {
+        	echo ' &nbsp; ';
             drawMore($this->object_it, 'TransitionComment');		
         }
 	}

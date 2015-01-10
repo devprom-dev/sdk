@@ -90,17 +90,4 @@ class SubversionFilesTable extends PMPageTable
         
     	return parent::getRenderParms( $parms );
     }
-    
-    function drawFooter()
-    {
-        $it = $this->getSubversionIt();
-        
-        if ( $it->count() > 0 )
-        {
-            echo '<div class="line">';
-            echo translate('Путь к файлам').': '.
-                    $it->get('SVNPath').'/'.$it->get('RootPath');
-            echo '</div>';
-        }
-    }
 }

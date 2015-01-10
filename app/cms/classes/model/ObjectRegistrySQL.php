@@ -105,7 +105,10 @@ class ObjectRegistrySQL extends ObjectRegistry
 		
 		$this->setSorts($sorts);
 
-		if ( count($persisters) > 0 ) $this->setPersisters($persisters);
+		if ( count($persisters) > 0 )
+		{
+			$this->setPersisters(array_merge($this->getPersisters(), $persisters));
+		}
 	}
 	
 	public function Query( $parms = array() )

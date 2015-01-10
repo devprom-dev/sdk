@@ -35,7 +35,7 @@ class FunctionalAreaRegistry extends ObjectRegistrySQL
  				'ReferenceName' => $key,
  				'Caption' => $category_it->getDisplayName(),
  			    'icon' => $area['icon'],
- 			    'order' => $area['order']
+ 			    'order' => $area['order'],
  			);
  		}
  		

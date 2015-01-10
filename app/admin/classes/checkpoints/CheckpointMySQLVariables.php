@@ -2,59 +2,81 @@
 
 class CheckpointMySQLVariables extends CheckpointEntryDynamic
 {
-    function execute()
+	function execute()
     {
-        $system = getFactory()->getObject('cms_SystemSettings');
+    	$check_result = "1";
+    	
+        foreach( $this->buildSettings() as $data )
+    	{
+    			$callback = $data['check'];
+		    	array_walk( $data['items'], 
+		    			function( $value, $setting ) use (&$check_result, $callback) {
+		    					if ( !$callback($setting, $value) ) $check_result = "0";
+		    			}
+				);
+    	}
 
-        $system_it = $system->createSQLIterator( "show variables like '%lower_case_table_names%'" );
-
-        if ( $system_it->get('Value') < 1 )
-        {
-        	$this->setValue('0');
-        	
-        	return;
-        }
-        
-        $system_it = $system->createSQLIterator( "show variables like '%ft_min_word_len%'" );
-
-        if ( $system_it->get('Value') < 3 )
-        {
-        	$this->setValue('0');
-        	
-        	return;
-        }
-        
-        $system_it = $system->createSQLIterator( "show variables like '%group_concat_max_len%'" );
-
-        if ( $system_it->get('Value') < 4294967295 )
-        {
-        	$this->setValue('0');
-        	
-        	return;
-        }
-        
-        $system_it = $system->createSQLIterator( "show variables like '%open_files_limit%'" );
-
-        $limit = $this->checkWindows() ? 2048 : 8192;
-        
-        if ( $system_it->get('Value') < $limit )
-        {
-        	$this->setValue('0');
-        	
-        	return;
-        }
-        
-        $this->setValue( '1' );
+    	$this->setValue($check_result);
     }
 
+    function buildSettings()
+    {
+    	$me = $this;
+    	
+    	return array (
+    			array (
+    					'items' => $this->buildNoLessSettings(),
+    					'check' => function( $setting, $value ) use ($me) {
+    									return $me->getSettingValue($setting) >= $value;
+    			                   },
+    					'display' => function( $setting, $value ) {
+    									return $setting." = ".$value;
+    							     }
+    			)
+    	);
+    }
+    
+   	function buildNoLessSettings()
+   	{
+   		$items = array (
+   				"lower_case_table_names" => 1,
+   				"ft_min_word_len" => 3,
+   				"group_concat_max_len" => 4294967295,
+   				"open_files_limit" => $this->checkWindows() ? 2048 : 8192
+   		);
+   		
+   		return $items;
+   	}
+    
+   	function getSettingValue( $name )
+   	{
+        return getFactory()->getObject('cms_SystemSettings')->createSQLIterator( "show variables like '%".$name."%'" )->get('Value');
+   	}
+   	
     function getTitle()
     {
-        return 'DB: MySQL settings';
+        return text(1430);
     }
 
     function getDescription()
     {
-        return text(1430);
+    	$text = '';
+    	
+    	foreach( $this->buildSettings() as $data )
+    	{
+    			$check_callback = $data['check'];
+    			$show_callback = $data['display'];
+    			
+		    	array_walk( $data['items'], 
+		    			function( $value, $setting ) use (&$text, $check_callback, $show_callback) {
+		    					$line = $show_callback($setting, $value);
+		    					if ( !$check_callback($setting, $value) ) $line = "<b>".$line."</b>";
+		    					$text .= $line."<br/>";
+		    			}
+				);
+    	}
+    	
+        return $text;
     }
 
     function checkWindows()

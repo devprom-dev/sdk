@@ -6,6 +6,7 @@ include_once "persisters/RequestTagsPersister.php";
 include_once "persisters/RequestFactPersister.php";
 include_once "persisters/RequestTasksPersister.php";
 include_once "persisters/RequestOwnerPersister.php";
+include_once "persisters/RequestDetailsPersister.php";
 
 class RequestMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
@@ -14,6 +15,8 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_ChangeRequest' ) return;
         
     	$object = $metadata->getObject();
+    	
+    	$metadata->addPersister( new RequestDetailsPersister() );
     	
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		

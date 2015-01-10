@@ -4,10 +4,8 @@ class TransitionResetFieldIterator extends OrderedIterator
 {
  	function getDisplayName() 
  	{
- 		global $model_factory;
+ 		$name = translate(getFactory()->getObject($this->get('Entity'))->getAttributeUserName($this->get('ReferenceName')));
  		
- 		$object = $model_factory->getObject($this->get('Entity'));
- 		
- 		return translate($object->getAttributeUserName( $this->get('ReferenceName') ));
+ 		return $name == '' ? preg_replace('/%1/', $this->get('ReferenceName'), text(1882)) : $name; 
  	}
 }

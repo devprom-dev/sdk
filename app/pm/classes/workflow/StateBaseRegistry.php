@@ -2,10 +2,13 @@
 
 class StateBaseRegistry extends ObjectRegistrySQL
 {
- 	function getQueryClause()
- 	{
- 	    if ( $this->getObject()->getObjectClass() == '' ) return parent::getQueryClause();
-
- 	    return "(SELECT t.* FROM pm_State t WHERE t.ObjectClass = '".strtolower($this->getObject()->getObjectClass())."')";
- 	}
+	function getFilters()
+	{
+		return array_merge(
+				parent::getFilters(),
+				array (
+						new FilterAttributePredicate('ObjectClass', strtolower($this->getObject()->getObjectClass()))
+				)
+		);
+	}
 }

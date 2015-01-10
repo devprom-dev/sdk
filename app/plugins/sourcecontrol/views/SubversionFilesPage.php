@@ -94,4 +94,11 @@ class SubversionFilesPage extends SubversionPage
  	{
 		return text('sourcecontrol3'); 		
  	}
+
+ 	function getHint()
+ 	{
+ 		if ( $_REQUEST['name'] != '' ) return '';
+ 		
+ 		return parent::getHint();
+ 	}
 }

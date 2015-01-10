@@ -1,20 +1,20 @@
 <?php
 
 include "WatcherIterator.php";
+include "WatcherRegistry.php";
 include_once "persisters/WatchersPersister.php";
 
 class Watcher extends Metaobject
 {
  	var $object_it, $size;
  	
- 	function Watcher( $object_it = null, $size = 1 ) 
+ 	function Watcher( $object_it = null ) 
  	{
- 		parent::Metaobject('pm_Watcher');
+ 		parent::Metaobject('pm_Watcher', new WatcherRegistry($this));
  		
  		$this->setAttributeType('SystemUser', 'REF_ProjectUserId');
  		
 		$this->object_it = $object_it;
-		$this->size = $size;
  	}
  	
  	function createIterator() 
@@ -22,41 +22,25 @@ class Watcher extends Metaobject
  		return new WatcherIterator( $this );
  	}
  	
- 	function getAll() 
+ 	function getObjectIt()
  	{
- 		if ( !isset($this->object_it) )
+ 		return $this->object_it;
+ 	}
+ 	
+ 	function getAll()
+ 	{
+ 		if ( !is_object($this->object_it) )
  		{
-	 		return $this->getByRefArray(
-				array( 'ObjectId' => '-1' ) );
+ 			return $this->getByRef('ObjectId', "-1");
  		}
- 		else
- 		{
- 			return $this->getRegistry()->Query(
- 					array_merge( $this->getFilters(),
-							array (
-	 							new FilterAttributePredicate('ObjectId', $this->object_it->idsToArray()),
-	 							new FilterAttributePredicate('ObjectClass', 
-	 									array (
-	 											strtolower($this->object_it->object->getClassName()),
-	 											strtolower(get_class($this->object_it->object))
-	 									)
-	 							),
- 								new SortAttributeClause('ObjectId'),
- 								new SortAttributeClause('RecordCreated')
-							)						
- 					)
- 			);
- 		}
+ 		
+ 		return parent::getAll();
  	}
  	
  	function getWatched( $user_it )
  	{
  		return $this->getByRefArray(
  			array ( 
-				'LCASE(ObjectClass)' => 
- 					array ( strtolower($this->object_it->object->getClassName()),
- 							strtolower(get_class($this->object_it->object))),
- 				'ObjectId' => $this->object_it->getId(),
  				'SystemUser' => $user_it->getId()
  				)
  			);
@@ -66,10 +50,6 @@ class Watcher extends Metaobject
  	{
  		return $this->getByRefArray(
  			array ( 
-				'LCASE(ObjectClass)' => 
- 					array ( strtolower($this->object_it->object->getClassName()),
- 							strtolower(get_class($this->object_it->object))),
- 				'ObjectId' => $this->object_it->getId(),
  				'LCASE(Email)' => strtolower($email)
  				)
  			);

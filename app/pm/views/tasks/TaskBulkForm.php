@@ -9,11 +9,29 @@ class TaskBulkForm extends BulkForm
  		return new TaskForm();
  	}
  	
+ 	function IsAttributeModifiable( $attr )
+	{
+	    switch ( $attr ) 
+	    {
+	        case 'Project':
+	            return true;
+	            
+	        default:
+	            return parent::IsAttributeModifiable( $attr );
+	    }
+	}
+ 	
+ 	function getBulkActions( $object_it )
+ 	{
+ 		return parent::getBulkActions($object_it);
+ 	}
+ 	
  	function getAttributeType( $attr )
  	{
  		switch ( $attr )
  		{
  			case 'Release':
+ 			case 'Project':
  				return 'custom';
  				
  			default:
@@ -45,6 +63,18 @@ class TaskBulkForm extends BulkForm
 				$field->SetId('Release');
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
+				$field->draw();
+				break;
+				
+ 			case 'Project':
+ 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
+				$field->SetId($attribute);
+				$field->SetName($attribute);
+				$field->SetValue($value);
+				$field->SetTabIndex($tab_index);
+				$field->SetRequired(true);
+				
+				echo $field->getName();
 				$field->draw();
 				break;
 				

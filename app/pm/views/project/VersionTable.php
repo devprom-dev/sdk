@@ -15,28 +15,24 @@ class VersionTable extends PMPageTable
 	{
 		$actions = array();
 		
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Release'));
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
+		$method->setRedirectUrl('donothing');
 		
+		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
+		{
+			$actions[] = array(
+					'name' => translate('Итерация'),
+					'url' => $method->getJSCall() 
+			);
+		}
+		
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Release'));
 		$method->setRedirectUrl('donothing');
 		
 		if ( $method->hasAccess() )
 		{
 			$actions[] = array( 
-					'name' => translate('Добавить релиз'),
-					'url' => $method->getJSCall() 
-			);
-		}
-		
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
-		
-		$method->setRedirectUrl('donothing');
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
-		{
-			$actions[] = array();
-			
-			$actions[] = array(
-					'name' => translate('Добавить итерацию'),
+					'name' => translate('Релиз'),
 					'url' => $method->getJSCall() 
 			);
 		}

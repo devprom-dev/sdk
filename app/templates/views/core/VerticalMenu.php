@@ -64,7 +64,7 @@ if ( is_a($session, 'PMSession') )
             ?>
             
     	    <li id="<?=$item_key.'-'.$child_key?>" class="<?='root '.$child['state']?>">
-			    <a href="<?=$child['url']?>"><?=$child['name']?></a>
+			    <a uid="<?=$child['uid']?>" module="<?=$child['module']?>" href="<?=$child['url']?>"><?=$child['name']?></a>
     		</li>
     
     	<?php } ?>
@@ -86,7 +86,7 @@ if ( is_a($session, 'PMSession') )
             ?>
             
 		    <li id="<?=$item_key.'-'.$child_key?>" class="closed <?=$child['state']?>">
-				<a href="<?=$child['url']?>"><?=$child['name']?></a>
+				<a uid="<?=$child['uid']?>" module="<?=$child['module']?>" href="<?=$child['url']?>"><?=$child['name']?></a>
 			</li>
 
 		<?php } ?>

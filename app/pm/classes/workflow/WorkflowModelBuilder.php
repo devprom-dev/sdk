@@ -30,7 +30,7 @@ class WorkflowModelBuilder extends ObjectModelBuilder
     		$object->addAttributeGroup($attribute, 'system');
     	}
 		
-    	$attributes = array( 'TransitionComment', 'LastTransition', 'StateDuration' );
+    	$attributes = array( 'State', 'TransitionComment', 'LastTransition', 'StateDuration' );
     	
     	foreach ( $attributes as $attribute )
     	{

@@ -36,34 +36,17 @@ class CustomAttributesPersister extends ObjectSQLPersister
  	
  	function add( $object_id, $parms )
  	{
- 		global $model_factory;
- 		
- 		$value = $model_factory->getObject('pm_AttributeValue');
- 		
- 		$value->addPersister( new ObjectSQLPasswordPersister() );
- 		
- 		$attributes = $this->getAttributes();
- 		
- 		$mapper = new ModelDataTypeMapper();
- 		
- 		$mapper->map( $this->getObject(), $parms );
-
- 		foreach( $attributes as $attr_id => $attr )
- 		{
- 			$value_parms = array(
- 				'CustomAttribute' => $attr['id'],
- 				'ObjectId' => $object_id
- 			);
- 			
- 			$this->setValueParms( $attr, $parms, $value_parms );
- 			
- 			$value->add_parms( $value_parms );
- 		}
+		$this->set($object_id, $parms);
  	}
 
  	function modify( $object_id, $parms )
  	{
- 		$attributes = $this->getAttributes();
+		$this->set($object_id, $parms);
+ 	}
+ 	
+ 	protected function set( $object_id, $parms )
+ 	{
+ 	 	$attributes = $this->getAttributes();
  		
  		$ids = array();
  		

@@ -21,16 +21,20 @@ class IssueLinkedIssuesPersister extends ObjectSQLPersister
  		
  		$columns[] =  
  			" CONCAT_WS(',',".
- 			"     (SELECT GROUP_CONCAT(CONCAT_WS(':',lkt.BackwardCaption,CAST(l.SourceRequest AS CHAR))) " .
+ 			"     (SELECT GROUP_CONCAT(CONCAT_WS(':',lkt.BackwardCaption,CAST(l.SourceRequest AS CHAR),CASE lkt.ReferenceName WHEN 'blocks' THEN 'blocked' ELSE '' END, sr.State)) " .
 			"        FROM pm_ChangeRequestLink l," .
-            "             pm_ChangeRequestLinkType lkt" .
+            "             pm_ChangeRequestLinkType lkt," .
+            "			  pm_ChangeRequest sr ".
 			"		WHERE l.LinkType = lkt.pm_ChangeRequestLinkTypeId " .
-			"    	  AND l.TargetRequest = ".$this->getPK($alias)."), ".
- 			"     (SELECT GROUP_CONCAT(CONCAT_WS(':',lkt.Caption,CAST(l.TargetRequest AS CHAR))) " .
+			"    	  AND l.TargetRequest = ".$this->getPK($alias).
+			"		  AND l.SourceRequest = sr.pm_ChangeRequestId),  ".
+ 			"     (SELECT GROUP_CONCAT(CONCAT_WS(':',lkt.Caption,CAST(l.TargetRequest AS CHAR),lkt.ReferenceName,tr.State)) " .
 			"        FROM pm_ChangeRequestLink l," .
-            "             pm_ChangeRequestLinkType lkt" .
+            "             pm_ChangeRequestLinkType lkt," .
+            "			  pm_ChangeRequest tr ".
 			"		WHERE l.LinkType = lkt.pm_ChangeRequestLinkTypeId " .
-			"    	  AND l.SourceRequest = ".$this->getPK($alias).") ) LinksWithTypes ";
+			"    	  AND l.SourceRequest = ".$this->getPK($alias).
+ 			"		  AND l.TargetRequest = tr.pm_ChangeRequestId) ) LinksWithTypes ";
  		
  		return $columns;
  	}

@@ -6,9 +6,9 @@ class RequestIterator extends StatableIterator
  	
 	function getDisplayName()
 	{
-	 	if ( $this->get('Type') > 0 && $this->object->getAttributeType('Type') != '' ) 
+	 	if ( $this->get('TypeName') != '' ) 
 	 	{
-	 		return $this->getRef('Type')->getDisplayName().': '.parent::getDisplayName();
+	 		return $this->get('TypeName').': '.parent::getDisplayName();
 	 	}
 	 	elseif( $this->getId() > 0 )
 	 	{
@@ -350,17 +350,6 @@ class RequestIterator extends StatableIterator
  		return $duration;
  	} 	
 
-	 function getTypeName()
-	 {
-	 	if ( $this->get('Type') > 0 ) {
-	 		$type_it = $this->getRef('Type');
-	 		return $type_it->getDisplayName();
-	 	}
-	 	else {
-		 	return $this->object->getDisplayName();
-	 	}
-	 }
-	 
  	 function IsBug() 
  	 {
  	 	$type_it = $this->getRef('Type');

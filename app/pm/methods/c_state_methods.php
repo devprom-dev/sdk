@@ -479,26 +479,24 @@ class TransitionStateMethod extends WebMethod
  {
  	var $state, $state_it;
  	
- 	function FilterStateTransitionMethod( $state = null )
+ 	function __construct( $state = null )
  	{
  		if ( is_object($state) )
  		{
 	 		$this->state = $state;
  			$this->state_it = $this->state->getAll();
  			
- 			parent::FilterWebMethod( $state->getClassName() );
+ 			parent::__construct( $state->getClassName() );
  		}
  		else
  		{
- 			parent::FilterWebMethod( '' );
+ 			parent::__construct( '' );
  		}
+ 		
+ 		$this->setValueParm('transition');
+ 		$this->setCaption(text(1867));
  	}
 
- 	function getCaption()
- 	{
- 		return translate('Переход');
- 	}
- 	
  	function getValues()
  	{
   		$values = array (
@@ -529,15 +527,8 @@ class TransitionStateMethod extends WebMethod
 		return 'width:120px;';
 	}
 
- 	function getValueParm()
- 	{
- 		return 'transition';
- 	}
- 	
  	function hasAccess()
  	{
 		return $this->state_it->count() > 0;
  	}
- }
-
-?>
+}

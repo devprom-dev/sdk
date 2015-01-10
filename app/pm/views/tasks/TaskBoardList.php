@@ -16,6 +16,7 @@ class TaskBoardList extends PMPageBoard
  	private $method_comment = null;
  	private $method_spend_time = null;
  	private $priority_actions = array();
+ 	private $terminal_states = array();
  	
  	function __construct( $object ) 
 	{
@@ -28,6 +29,8 @@ class TaskBoardList extends PMPageBoard
 
 	function buildRelatedDataCache()
 	{
+		$this->terminal_states = $this->getObject()->getTerminalStates();
+		
 		$object_it = $this->getObject()->getEmptyIterator();
 		
 		$priority_it = getFactory()->getObject('Priority')->getAll();
@@ -92,6 +95,28 @@ class TaskBoardList extends PMPageBoard
 		$request = $model_factory->getObject('pm_ChangeRequest');
 		
 		$this->request_it = count($ids) > 0 ? $request->getExact($ids) : $request->getEmptyIterator();
+	}
+	
+	function getSorts()
+	{
+		$sorts = parent::getSorts();
+		
+		foreach( $sorts as $key => $sort )
+		{
+			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ChangeRequest' )
+			{
+				if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
+				{
+					array_unshift($sorts, new TaskRequestOrderSortClause());
+				}
+				else
+				{
+					array_unshift($sorts, new TaskRequestPrioritySortClause());
+				}
+			}
+		}
+		
+		return $sorts;
 	}
 	
  	function buildBoardAttributeIterator()
@@ -189,6 +214,8 @@ class TaskBoardList extends PMPageBoard
 			if ( in_array($field, $fields) ) unset($fields[array_search($field, $fields)]);
 		}
 		
+		$fields[] = 'DueDays';
+		
 		return $fields;
 	}
 	
@@ -265,14 +292,24 @@ class TaskBoardList extends PMPageBoard
 						parent::drawCell( $object_it, $attr );
 					echo '</div>';
 	
-					if ( $this->visible_column['OrderNum'] )
-					{
-						echo '<div class="right-on-card">';
+					echo '<div class="right-on-card">';
+						foreach(preg_split('/,/', $object_it->get('TraceTaskInfo')) as $link)
+						{
+							if ( $link == '' ) continue;
+							list($task_id, $task_state) = preg_split('/:/',$link);
+							if ( in_array($task_state, $this->terminal_states) ) continue;
+							 
+							$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($task_id));
+							echo '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'"><img title="'.text(390).'" src="/images/delete.png"></a> ';
+							break;
+						}
+					
+						if ( $this->visible_column['OrderNum'] ) {
 							echo '<span class="order" title="'.translate('Номер').'">';
 								echo $object_it->get('OrderNum');
 							echo '</span>';
-						echo '</div>';
-					}
+						}
+					echo '</div>';
 				echo '</div>';
 				
 				break;
@@ -333,15 +370,13 @@ class TaskBoardList extends PMPageBoard
 		{
 			case 'AssigneeUser':
 				
-				parent::drawGroup($group_field, $object_it);
-				
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				
 				if ( count($workload) > 0 )
 				{
-					echo ' '.str_replace('%1', $workload[$object_it->get($group_field)]['Planned'],
-								str_replace('%2', $workload[$object_it->get($group_field)]['LeftWork'],
-										str_replace('%3', $workload[$object_it->get($group_field)]['Fact'],text(1857))
+						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
+									'user' => $object_it->getRef('AssigneeUser')->getDisplayName(),
+									'data' => $workload[$object_it->get($group_field)]
 							));
 				}				
 					

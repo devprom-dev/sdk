@@ -20,21 +20,9 @@ class ChangePriorityWebMethod extends WebMethod
  	
  	function drawMethod( $object_it, $attribute ) 
  	{
- 		global $method_priority;
- 		
- 		$writable = getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, $attribute);
- 		
- 		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) || !$writable )
- 		{
- 			$ref_it = $object_it->getRef($attribute);
- 			echo $ref_it->getDisplayName();
- 		}
- 		else
- 		{
-	 		echo '<div id="methodBody'.$object_it->getId().'" style="width:100%;" title="'.translate('Приоритет').'">';
-	 		    $this->drawBody( $object_it, $attribute );
-	 		echo '</div>';
- 		}
+ 		echo '<div id="methodBody'.$object_it->getId().'" style="width:100%;" title="'.translate('Приоритет').'">';
+ 		    $this->drawBody( $object_it, $attribute );
+ 		echo '</div>';
  	}
  	
  	function execute ($parms) 
@@ -92,7 +80,7 @@ class ChangePriorityWebMethod extends WebMethod
 		
 		if ( $current_pos > 0 )
 		{
-			echo '<a href="'.$this->getJSCall($parms).'"><i class="icon-arrow-up"></i></a>';
+			echo '<a href="'.$this->getJSCall($parms).'" tabindex="-1"><i class="icon-arrow-up"></i></a>';
 		}
 		
 		echo '&nbsp;'.$this->priority_it->getDisplayName().'&nbsp;';
@@ -101,7 +89,7 @@ class ChangePriorityWebMethod extends WebMethod
 		
 		if ( $current_pos < $this->priority_it->count() - 1 )
 		{
-			echo '<a href="'.$this->getJSCall($parms).'"><i class="icon-arrow-down"></i></a>';
+			echo '<a href="'.$this->getJSCall($parms).'" tabindex="-1"><i class="icon-arrow-down"></i></a>';
 		}
 
 		echo '</div>';

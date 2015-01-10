@@ -50,8 +50,8 @@ class ManageComment extends CommandForm
  				  'ObjectId' => $object_it->getId(),
  				  'ObjectClass' => get_class($object),
  				  'PrevComment' => $last_comment_id,
- 				  'Caption' => $comment_text,
- 				  'DoNotAffectObjects' => true) );
+ 				  'Caption' => $comment_text)
+ 			);
 
  		$comment_it = $comment->getExact($comment_id);
  		
@@ -77,8 +77,7 @@ class ManageComment extends CommandForm
 		        $comment->modify_parms( 
 		        		$comment_it->getId(), 
 		        		array(
-		        				'Caption' => $comment_text,
-		        				'DoNotAffectObjects' => true
+		        				'Caption' => $comment_text
 						)
 				)
 		);

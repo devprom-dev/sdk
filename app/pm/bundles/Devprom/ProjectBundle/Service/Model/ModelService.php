@@ -16,15 +16,21 @@ class ModelService
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
 
-		// convert to internal charset
 		foreach( $data as $key => $value )
 		{
-			if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' )
+			if ( is_array($value) && $object->IsReference($key) )
 			{
-				unset($data[$key]); continue;
+				// resolve subobjects into references
+				$ref = $object->getAttributeObject($key);
+				$data[$key] = $ref->getRegistry()->Query($this->buildSearchQuery($ref, $value))->getId(); 
 			}
-			
-			$data[$key] = \IteratorBase::utf8towin($value);
+			else
+			{
+				if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' )
+				{
+					unset($data[$key]); continue;
+				}
+			}
 		}
 
 		if ( $id != '' )
@@ -47,36 +53,22 @@ class ModelService
 		// convert data into database format
 		$this->mapping_service->map($object, $data);
 
-		// check an object exists already
-		if ( $id != '' )
-		{
-			$query[] = new \FilterInPredicate($id);
-		}
-		else
-		{
-			foreach( $data as $attribute => $value )
-			{
-				if ( $object->getAttributeDbType($attribute) == '' ) continue;
-				if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
-				if ( !$object->IsAttributeStored($attribute) ) continue;
-				
-				if ( $attribute == "Description" ) continue;
-				
-				$predicate = new \FilterAttributePredicate($attribute, $value);
-				
-				$predicate->setHasMultipleValues(false);
-				
-				$query[] = $predicate;
-			}
-		}
-		
-		$object_it = $object->getRegistry()->Query($query);
+		// check an object exists already (search by Id or alternative key)
+		$object_it = $object->getRegistry()->Query(
+				$id != '' ? array(new \FilterInPredicate($id)) : $this->buildSearchQuery($object, $data)
+		);
 		
 		if ( $object_it->getId() < 1 )
 		{
 			if ( !getFactory()->getAccessPolicy()->can_create($object) )
 			{
 				throw new \Exception('Lack of permissions to create object of '.get_class($object));
+			}
+
+			// convert to internal charset
+			foreach( $data as $key => $value )
+			{
+				$data[$key] = \IteratorBase::utf8towin($value);
 			}
 			
 			$result = $object->add_parms($data);
@@ -90,6 +82,12 @@ class ModelService
 			if ( !getFactory()->getAccessPolicy()->can_modify($object_it) )
 			{
 				throw new \Exception('Lack of permissions to modify object of '.get_class($object));
+			}
+			
+			// convert to internal charset
+			foreach( $data as $key => $value )
+			{
+				$data[$key] = \IteratorBase::utf8towin($value);
 			}
 			
 			if ( $object->modify_parms($object_it->getId(), $data) < 1 )
@@ -183,9 +181,22 @@ class ModelService
 			
 			if ( $id_attribute == $attribute ) $attribute = "Id";
 			
-			$result[$attribute] = \IteratorBase::wintoutf8(
-					html_entity_decode($value, ENT_COMPAT | ENT_HTML401, 'cp1251')
-			);
+			if ( in_array($object->getAttributeType($attribute), array('datetime')) )
+			{
+				$result[$attribute] = \SystemDateTime::convertToClientTime($value);
+			}
+			else
+			{
+				$result[$attribute] = \IteratorBase::wintoutf8(
+						html_entity_decode($value, ENT_COMPAT | ENT_HTML401, 'cp1251')
+				);
+			}
+			
+			if ( $attribute == 'Attributes' )
+			{
+				// hard hack. make unique modified attributes for REST API /changes service
+				$result[$attribute] = join(',',array_unique(preg_split('/,/', $result[$attribute])));
+			}
 		}
 		
 		unset($result['RecordVersion']);
@@ -202,6 +213,27 @@ class ModelService
 		if ( $class_name == '' ) throw new \Exception('Unknown class name: '.$entity_name);
 		
 		return getFactory()->getObject($class_name);
+	}
+	
+	protected function buildSearchQuery( $object, $data )
+	{
+		foreach( $data as $attribute => $value )
+		{
+			if ( $object->getAttributeDbType($attribute) == '' ) continue;
+			if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
+			if ( !$object->IsAttributeStored($attribute) ) continue;
+			
+			if ( $attribute == "Description" ) continue;
+			
+			$predicate = new \FilterAttributePredicate($attribute, \IteratorBase::utf8towin($value));
+			$predicate->setHasMultipleValues(false);
+			
+			$query[] = $predicate;
+		}
+		
+		$query[] = new \FilterBaseVpdPredicate();
+		
+		return $query;
 	}
 
 	private $validator_service = null;

@@ -72,33 +72,6 @@ class PageList extends ListTable
 
 		$filters = $this->getFilterValues();
 		
-		$state_filter = $this->getStateFilterName();
-		
-		if ( $filters['hiddencolumns'] != '' )
-		{
-			if ( in_array($filters[$state_filter], array('all', ''), true) )
-			{
-			    $state = $model_factory->getObject($object->getStateClassName());
-			   
-			    $state_it = $state->getAll();
-			    
-			    $display_states = $state_it->fieldToArray('ReferenceName');
-			}
-			else
-			{
-			    $display_states = preg_split('/,/', $filters[$state_filter]);
-			}
-			
-			$hidden_states = preg_split('/,/', $filters['hiddencolumns']);
-			
-			foreach( $display_states as $key => $state )
-			{
-				if ( in_array($state, $hidden_states, true) ) unset($display_states[$key]);
-			}
-			
-			$filters[$state_filter] = join(',', $display_states);
-		}
-
 		$predicates = $this->getPredicates( $filters );
 
 		$table = $this->getTable();
@@ -429,7 +402,7 @@ class PageList extends ListTable
 
             return array (
                 'class' => $classname,
-                'script' => "javascript: filterLocation.setup('sort=".$sort_parm."', 1)",
+                'script' => "javascript: filterLocation.setup('group=none',1);filterLocation.setup('sort=".$sort_parm."',1);",
                 'name' => $this->getColumnName($attr)
             );
 		}

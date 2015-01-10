@@ -1222,11 +1222,21 @@ INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Langua
 INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (40, 'text(co17)', 'text(co18)', 'testing_ru.xml', 1, 'ee', 'case');
 INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (50, 'text(co19)', 'text(co20)', 'docs_ru.xml', 1, 'ee', 'case');
 INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (45, 'text(co21)', 'text(co22)', 'tracker_ru.xml', 1, 'team', 'process');
+INSERT INTO cms_UserSettings (User, Settings, Value) SELECT cms_UserId, 'skip-product-tour', 'true' FROM cms_User WHERE NOT EXISTS (SELECT 1 FROM cms_UserSettings WHERE Settings = 'skip-product-tour');
 END IF;
 
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+SELECT NOW(), NOW(), NULL,'text(1876)','IsDefault','CHAR','N','N','Y',e.entityId,70
+  FROM entity e WHERE e.ReferenceName = 'pm_TaskType' 
+   AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'IsDefault')
+ LIMIT 1;
 
-INSERT INTO cms_UserSettings (User, Settings, Value) SELECT cms_UserId, 'skip-product-tour', 'true' FROM cms_User WHERE NOT EXISTS (SELECT 1 FROM cms_UserSettings WHERE Settings = 'skip-product-tour');
+IF NOT check_column_exists('IsDefault', 'pm_TaskType') THEN
+ALTER TABLE pm_TaskType ADD IsDefault CHAR(1);
+INSERT INTO pm_ChangeRequestLinkType (OrderNum,ReferenceName,Caption,BackwardCaption) VALUES (50,'implemented','Реализация','Реализует');
+END IF;
 
+delete from pm_CalendarInterval where IntervalYear > 2014;
 
 --
 --

@@ -10,7 +10,7 @@ class EmailNotificatorHandler
 		
 		if ( is_object($part_it) && $part_it->get('Email') != '' )
 		{
-			return '"'.trim($part_it->get('Caption'), '"').'" <'.$part_it->get('Email').'>';
+			return $this->quoteEmail($part_it->get('Caption')).' <'.$part_it->get('Email').'>';
 		}
 		else
 		{
@@ -20,9 +20,17 @@ class EmailNotificatorHandler
 			}
 			else
 			{
-				return '"'.trim($user_it->get('Caption'), '"').'" <'.$user_it->get('Email').'>';
+				return $this->quoteEmail($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
 			}
 		}
+ 	}
+ 	
+ 	private function quoteEmail( $email )
+ 	{
+ 		if ( strpos($email,",") !== false ) {
+ 			$email = '"'.trim($email, '"').'"'; 
+ 		}
+ 		return $email;
  	}
  	
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient )

@@ -3,13 +3,14 @@
 class ModelEntityOriginationService
 {
 	private $cache_service = null;
-	
+	private $language = '';
 	private $data = array();
 	
-	public function __construct( $cache_service = null )
+	public function __construct( $cache_service = null, $language = 'RU' )
 	{
 		$this->setCacheService($cache_service);
 		
+		$this->language = $language;
 		$this->data = $this->getCacheService()->get($this->getCacheName());
 	}
 
@@ -31,6 +32,21 @@ class ModelEntityOriginationService
 	public function getCacheService()
 	{
 		return $this->cache_service;
+	}
+	
+	public function setLanguage( $language )
+	{
+		$this->language = $language;
+	}
+	
+	public function getLanguage()
+	{
+		return $this->language;
+	}
+	
+	public function getCacheCategory( $object )
+	{
+		return 'global-'.$this->language;
 	}
 	
 	public function getSelfOrigin( $object )
@@ -71,8 +87,13 @@ class ModelEntityOriginationService
 		{
 		    case 'AttributeGroup':
 		    case 'ModuleCategory':
-		    	
+		    case 'ChangeLogEntitySet':
 		    	return DUMMY_PROJECT_VPD;
+
+		    case 'DateMonth':
+		    case 'DateWeekday':
+		    case 'DateYear':
+		    	return '';
 		}
 		
 		switch( $object->getEntityRefName() )
@@ -114,7 +135,6 @@ class ModelEntityOriginationService
 			case 'co_RemoteMailbox':
 			case 'co_ScheduledJob':
 			case 'co_JobRun':
-			case 'entity':
 			case 'pm_Importance':
 			case 'co_CustomReport':
 			case 'co_MailboxProvider':

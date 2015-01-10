@@ -68,10 +68,21 @@ foreach( $filter_items as $filter )
 
 <?php if ( count($actions) > 0 ) { ?>
 
-<div class="filter-btn">
-	<div class="btn-group">
-    	<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
-    		<?=translate('Добавить')?>
+<div class="filter-actions last">
+
+	<?php foreach( $additional_actions as $action ) { ?>
+		<?php foreach( $action['items'] as $item ) { ?>
+			<div class="btn-group pull-left">
+				<a class="btn btn-small btn-success" href="<?=$item['url']?>">
+			   		<i class="icon-plus icon-white"></i> <?=$item['name']?>
+			   	</a>
+			</div>
+	    <?php } ?>
+	<?php } ?>
+			
+	<div class="btn-group pull-left last">
+		<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
+    		<?=translate('Действия')?>
     		<span class="caret"></span>
     	</a>
     	<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>

@@ -14,18 +14,14 @@ class PageForm extends MetaObjectForm
     var $page;
 
     private $model_validator = null;
-     
 	private $redirect_url = '';
-	
 	private $system_attributes = array();
-	
 	private $transitions_array = array();
-	
 	private $target_states_array = array();
-	
 	private $transition_it = null;
-	
 	private $transition_rules_it = null;
+	private $transition_appliable = array();
+	private $transition_messages = array();
      
   	function PageForm( $object )
  	{
@@ -101,7 +97,7 @@ class PageForm extends MetaObjectForm
  	{
  		if ( !$this->getObject() instanceof MetaobjectStatable ) return;
  		
- 		$state_it = $this->getObject()->cacheStates();
+ 		$state_it = $this->getObject()->cacheStates()->copyAll();
  		
  		while( !$state_it->end() )
  		{
@@ -112,7 +108,8 @@ class PageForm extends MetaObjectForm
  			while( !$transition_it->end() )
  			{
  				$this->target_states_array[$transition_it->getId()] = $transition_it->getRef('TargetState')->copy();
- 				
+ 				$this->transition_appliable[$transition_it->getId()] = $transition_it->appliable();
+ 				 
  				$transition_it->moveNext();
  			}
  			
@@ -129,8 +126,8 @@ class PageForm extends MetaObjectForm
  		
  		while ( !$predicate_it->end() )
  		{
- 			$this->transition_rules_it[$predicate_it->get('Transition')][] = 
- 					$predicate_it->getRef('Predicate', $rule)->copy();
+ 			$rule_it = $predicate_it->getRef('Predicate', $rule)->copy();
+ 			$this->transition_rules_it[$predicate_it->get('Transition')][] = $rule_it;
 	 		
  			$predicate_it->moveNext();
  		}
@@ -335,7 +332,6 @@ class PageForm extends MetaObjectForm
 		if( getFactory()->getAccessPolicy()->can_modify($object_it) )
 		{
 			$method = new ObjectModifyWebMethod($object_it);
-
 			$method->setRedirectUrl('donothing');
 			
 			$actions[] = array(
@@ -343,18 +339,17 @@ class PageForm extends MetaObjectForm
 					'url' => $this->IsFormDisplayed() ? $object_it->getEditUrl() : '#', 
 					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall() 
 			);
+
+			$transition_actions = $this->getTransitionActions($object_it);
+
+			if ( count($transition_actions) > 0 )
+			{
+				$actions[] = array();
+				$actions = array_merge($actions, $transition_actions);
+			}
 		}
 		
-		$transition_actions = $this->getTransitionActions($object_it);
-
-		if ( count($transition_actions) > 0 )
-		{
-			$actions[] = array();
-			$actions = array_merge($actions, $transition_actions);
-		}
-
 		$plugins = getSession()->getPluginsManager();
-		
 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
 		
 		foreach( $plugins_interceptors as $plugin )
@@ -377,8 +372,13 @@ class PageForm extends MetaObjectForm
 		
 		while ( !$transition_it->end() )
 		{
-			$rules = $this->transition_rules_it[$transition_it->getId()];
+			if ( !$this->transition_appliable[$transition_it->getId()] )
+			{
+				$transition_it->moveNext();
+				continue;
+			}
 			
+			$rules = $this->transition_rules_it[$transition_it->getId()];
 			if ( is_array($rules) )
 			{
 				$skip_transition = false;
@@ -387,6 +387,7 @@ class PageForm extends MetaObjectForm
 				{
 					if ( !$rule_it->check($object_it) )
 					{
+						$this->transition_messages[] = $rule_it->getNegativeReason();
 						$skip_transition = true;
 						break;
 					}
@@ -395,29 +396,18 @@ class PageForm extends MetaObjectForm
 				if ( $skip_transition )
 				{
 					$transition_it->moveNext();
-					
 					continue;
 				}
 			}
 			
 			$method = new TransitionStateMethod( $transition_it, $object_it );
-			
 			$method->setTargetStateRefName($this->target_states_array[$transition_it->getId()]->get('ReferenceName'));
 			
 			if ( !$this->IsFormDisplayed() )
 			{
 				$method->setRedirectUrl('donothing');
 			}
-			else
-			{
-				if ( !$method->hasAccess() )
-				{
-					$transition_it->moveNext();
-					
-					continue;
-				}
-			}
-			
+
 			$actions[] = array ( 
 					'name' => $method->getCaption(), 
 					'url' => $method->getJSCall(),
@@ -617,7 +607,8 @@ class PageForm extends MetaObjectForm
 			'button_save_title' => translate('Сохранить'),
 			'transition' => $this->getTransitionIt()->getId(),
 			'form_class_name' => strtolower(get_class($this)),
-			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue(strtolower(get_class($this))) != 'off' ? $this->getHint() : ''
+			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue(strtolower(get_class($this))) != 'off' ? $this->getHint() : '',
+			'alert' => join('<br/>',$this->transition_messages)
 		);
 	}
 	

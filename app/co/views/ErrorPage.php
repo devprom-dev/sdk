@@ -17,7 +17,7 @@ class ErrorPage extends CoPage
  	{
  		return false;
  	}
-
+ 	
  	function getTable() 
  	{
  	    $parts = preg_split('/\?/', $_SERVER['REQUEST_URI']);

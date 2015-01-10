@@ -4,7 +4,9 @@
 	<ul class="nav nav-tabs" id="rightTab">
 		<?php foreach ( $sections as $key => $section ) { ?>
 		
-		<li class="<?=($key == array_shift(array_keys($sections)) ? 'active' : '')?>"><a href="#<?=$section->getId().$object_id?>"><?=$section->getCaption()?></a></li>
+		<li class="<?=($key == array_shift(array_keys($sections)) ? 'active' : '')?>">
+			<a href="#<?=$section->getId().$object_id?>" tabindex="-1"><?=$section->getCaption()?></a>
+		</li>
 		
 		<?php } ?>
 	</ul>

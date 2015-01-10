@@ -55,12 +55,6 @@
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
-                            <th class="no-wrap hidden-xs hidden-sm{% if sortColumn == 'assignee.name' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'assignee.name','sortDirection':reverseSortDirection}) }}">
-                                    {{ 'issue_assignedTo'|trans }}
-                                    <b class="sort-caret"></b>
-                                </a>
-                            </th>
                             <th class="no-wrap hidden-xs{% if sortColumn == 'issue.createdAt' %} {{ sortDirectionClass }}{% endif %}">
                                 <a href="{{ path('issue_list', {'sortColumn':'issue.createdAt','sortDirection':reverseSortDirection}) }}">
                                     {{ 'issue_createdAt'|trans }}
@@ -82,12 +76,6 @@
                             <td class="centered" data-title="{{ 'issue_state'|trans }}">{{ issue.state.name|trans }}</td>
                             <td class="centered" data-title="{{ 'issue_priority'|trans|slice(0,7) }}.">
                                 {{ macro.priority_badge(issue.priority.name|trans, issue.priority.id) }}
-                            </td>
-                            <td data-title="{{ 'issue_assignedTo'|trans|slice(0,7) }}." class="hidden-xs hidden-sm centered">
-                                {% if issue.assignedTo == '' %}
-                                    &nbsp;
-                                {% endif %}
-                                {{ issue.assignedTo }}
                             </td>
                             <td data-title="{{ 'issue_createdAt'|trans|slice(0,7) }}." class="hidden-xs centered">{% if issue.createdAt %}{{ issue.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
                         </tr>

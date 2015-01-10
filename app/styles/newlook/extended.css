@@ -889,3 +889,8 @@ body.fullpage
 {
 	cursor: pointer;
 }
+
+.ui-corner-all
+{
+	color: black;
+}

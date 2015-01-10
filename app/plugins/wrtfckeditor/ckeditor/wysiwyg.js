@@ -1,4 +1,5 @@
 var cket = underi18n.MessageFactory(ckeditor_resources);
+hljs.initHighlightingOnLoad();
 
 CKEDITOR.disableAutoInline = true;
 CKEDITOR.disableNativeSpellChecker = true;
@@ -105,11 +106,10 @@ function setupEditor( editor )
 			}
 		}
 	});
-
+	
 	editor.on( 'focus', function( e ) 
 	{
 		$('.wysiwyg-welcome[for-id='+e.editor.custom.id+']').hide();
-		
 		$('.wysiwyg-hover').removeClass('wysiwyg-hover');
 	});
 }
@@ -186,6 +186,12 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	      	registerFormDestructorHandler(function () {
 	      		e.editor.destroy();
 	      	});
+	      	
+			e.editor.dataProcessor.writer.setRules('p', {
+                breakAfterClose: false
+            });
+			
+			$(e.editor.editable().$).on( 'paste', pasteImage);	
 		});
 	}
 	else
@@ -272,6 +278,12 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 				e.stopImmediatePropagation();
 				window.location = $(this).attr('href');
 			});
+			
+			e.editor.dataProcessor.writer.setRules('p', {
+                breakAfterClose: false
+            });
+			
+			$(e.editor.editable().$).on( 'paste', pasteImage);
 		});
 	}
 
@@ -296,6 +308,27 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 function reportBrowserError(element)
 {
 	$(element).replaceWith('<div class="alert alert-danger" role="alert">'+cket('wrong-browser')+'<br/>'+$(element).html()+'</div>');
+}
+
+function pasteImage(e) {
+	try {
+	    var data = e.originalEvent.clipboardData.items[0].getAsFile();
+	    var elem = this;
+	    var fr = new FileReader;
+	    
+	    fr.onloadend = function() {
+	        var img = new Image;
+	        img.onload = function() {
+	        	$(img)
+	        		.attr("height",img.height)
+	        		.attr("width",img.width);
+	            $(elem).append(img);
+	        };
+	        img.src = fr.result;
+	    };
+	    fr.readAsDataURL(data);
+	}
+	catch(ex) {}
 }
 
 $(document).ready( function()

@@ -13,11 +13,14 @@ class ReportWorkflowAnalysisTable extends PMPageTable
  	{
  		$values = $this->getFilterValues();
  		
- 		return array (
- 			new StatePredicate( $values['state'] ),
-			new FilterSubmittedAfterPredicate($values['submittedon']),
-			new FilterSubmittedBeforePredicate($values['submittedbefore'])
- 		);
+ 		return array_merge(
+ 				parent::getFilterPredicates(),
+ 				array (
+		 			new StatePredicate( $values['state'] ),
+					new FilterSubmittedAfterPredicate($values['submittedon']),
+					new FilterSubmittedBeforePredicate($values['submittedbefore'])
+		 		)
+ 			);
  	}
 
 	function getList()
@@ -27,8 +30,6 @@ class ReportWorkflowAnalysisTable extends PMPageTable
 
 	function getFilters()
 	{
-		global $model_factory;
-	
 		$filters = array(
 			new ViewRequestStateWebMethod(),
 			new ViewSubmmitedAfterDateWebMethod(),
@@ -44,13 +45,9 @@ class ReportWorkflowAnalysisTable extends PMPageTable
 		$fitler = new FilterObjectMethod( new WorkflowTimeScale(), '', 'timescale' );
 		
 		$fitler->setDefaultValue(1);
-		
 		$fitler->setIdFieldName('ReferenceName');
-		
 		$fitler->setType('singlevalue');
-		
 		$fitler->setHasNone( false );
-		
 		$fitler->setHasAll( false );
 		
 		return $fitler;

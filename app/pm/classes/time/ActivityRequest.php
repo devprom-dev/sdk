@@ -58,14 +58,7 @@ class ActivityRequest extends Activity
 	 				'Planned' => $request_it->get('Estimation') > 0 ? $request_it->get('Estimation') : $fact,
 	 				'LeftWork' => $request_it->get('EstimationLeft'),
 	 				'Fact' => $fact,
-	 				'ChangeRequest' => $request_it->getId(),
-	 				'TaskType' => 
-	 					getFactory()->getObject('TaskType')->getRegistry()->Query( 
-	 							array ( 
-	 									new FilterAttributePredicate('ReferenceName', 'development'),
-	 									new FilterBaseVpdPredicate()
-	 							)
-	 						)->getId()
+	 				'ChangeRequest' => $request_it->getId()
 	 			) );
 	 			
 	 		if ( $task_id <= 0 ) throw new Exception('Unable create task object to be used to store spent time');

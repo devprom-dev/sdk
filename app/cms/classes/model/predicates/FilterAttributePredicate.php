@@ -147,13 +147,22 @@ class FilterAttributePredicate extends FilterPredicate
  	
  	function getQueryPredicate()
  	{
- 	 	 if ( $this->hasNullValue() )
+ 		if ( in_array($this->getObject()->getAttributeType($this->getAttribute()), array('char','varchar','text','wysiwyg')) )
  		{
- 			return " AND (t.".$this->getAttribute()." IN (".join($this->getIds(),',').") OR t.".$this->getAttribute()." IS NULL )";
+ 			$field = "IFNULL(t.".$this->getAttribute().",'".$this->getObject()->getDefaultAttributeValue($this->getAttribute())."')"; 
  		}
  		else
  		{
- 			return " AND t.".$this->getAttribute()." IN (".join($this->getIds(),',').") ";
+ 			$field = "t.".$this->getAttribute();
+ 		}
+ 		
+ 	 	if ( $this->hasNullValue() )
+ 		{
+ 			return " AND (".$field." IN (".join($this->getIds(),',').") OR t.".$this->getAttribute()." IS NULL )";
+ 		}
+ 		else
+ 		{
+ 			return " AND ".$field." IN (".join($this->getIds(),',').") ";
  		}
  	}
 }

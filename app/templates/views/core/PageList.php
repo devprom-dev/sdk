@@ -43,7 +43,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 
 			<th class="for-chk <?=($need_to_select ? 'visible' : 'hidden')?>" width="1%" uid="checkbox">
 				<?php if ( $need_to_select ) { ?>
-					<input id="to_delete_all<?=$table_id?>" type="checkbox" onclick="checkRows('<?=$table_id?>')">
+					<input id="to_delete_all<?=$table_id?>" tabindex="-1" type="checkbox" onclick="checkRows('<?=$table_id?>')">
 				<?php } ?>
 			</th>
 			<?php $columns_number++; ?>
@@ -137,7 +137,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 
 					<td class="<?=($need_to_select ? 'visible' : 'hidden')?>" uid="checkbox">
 						<? if ( $need_to_select && $list->IsNeedToSelectRow( $it ) ) { ?>
-							<input class=checkbox type="checkbox" name="to_delete_<? echo $it->getId(); ?>">
+							<input class=checkbox tabindex="-1" type="checkbox" name="to_delete_<? echo $it->getId(); ?>">
 						<? } ?>
 					</td>
 

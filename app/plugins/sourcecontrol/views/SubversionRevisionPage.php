@@ -41,6 +41,21 @@ class SubversionRevisionPage extends SubversionPage
  	
  	function getTitle()
  	{
+ 		$title = parent::getTitle();
+ 		
+ 		if ( $title != '' ) return $title;
+ 		
 		return text('sourcecontrol4'); 		
+ 	}
+ 	
+ 	function getHint()
+ 	{
+ 		if ( $_REQUEST['mode'] != '' ) return '';
+ 		if ( $this->getReport() != '' )
+ 		{
+ 			if ( getFactory()->getObject('PMReport')->getExact($this->getReport())->get('Type') == 'chart' ) return '';
+ 		}
+ 		
+ 		return parent::getHint();
  	}
 }

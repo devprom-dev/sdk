@@ -21,6 +21,15 @@ class ParticipantRole extends Metaobject
 			case 'Project':
 				return getSession()->getProjectIt()->getId();
 				
+			case 'ProjectRole':
+				$role = getFactory()->getObject('ProjectRole');
+				return $role->getRegistry()->Query(
+							array (
+									new FilterVpdPredicate(),
+									new FilterNotInPredicate($role->getByRef('ReferenceName', 'lead')->getId())
+							)
+					)->getId();
+				
 			default:
 				return parent::getDefaultAttributeValue( $attr );
 		}

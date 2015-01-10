@@ -248,6 +248,37 @@ class TaskForm extends PMPageForm
 		}
 	}
 	
+	function getFieldValue( $attr )
+	{
+		switch( $attr )
+		{
+		    case 'TaskType':
+		    	
+		    	if ( $this->getMode() == 'new' )
+		    	{
+			    	return getFactory()->getObject('TaskType')->getRegistry()->Query(
+					    		array (
+					    				new FilterBaseVpdPredicate(),
+					    				new FilterAttributePredicate('IsDefault', 'Y')
+					    		)
+					    )->getId();
+		    	}
+		    	break;
+		    	
+		    case 'Caption':
+		    case 'Priority':
+		    	
+		    	if ( $this->getMode() == 'new' && parent::getFieldValue('ChangeRequest') != '' )
+		    	{
+		    		$request_it = getFactory()->getObject('Request')->getExact(parent::getFieldValue('ChangeRequest'));
+		    		return $request_it->getHtmlDecoded($attr);
+		    	}
+		    	
+		    	break;
+		}
+		return parent::getFieldValue( $attr );
+	}
+	
 	function getActions()
 	{
 		global $model_factory;

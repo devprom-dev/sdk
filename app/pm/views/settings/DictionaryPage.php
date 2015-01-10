@@ -5,7 +5,6 @@ include "ProjectRoleForm.php";
 include "TaskTypeForm.php";
 include "CustomAttributeEntityForm.php";
 include "CustomAttributeFinalForm.php";
-include "TerminologyTable.php";
 include "DictionaryItemsTable.php";
 include "DictionaryTable.php";
 include "TestExecutionResultForm.php";
@@ -71,9 +70,6 @@ class DictionaryPage extends PMPage
 		{
 			switch ( $object->getClassName() )
 			{
-				case 'cms_Resource':
-					return new TerminologyTable( $object );
-
 				case 'pm_State':
 				    return new StateTable( $object );
 					    	
@@ -122,7 +118,7 @@ class DictionaryPage extends PMPage
 		    	
 				if ( $_REQUEST['class'] == 'metaobject' )
 				{
-					if ( $_REQUEST['pm_CustomAttributeId'] == '' && $_REQUEST['EntityReferenceName'] == '' )
+					if ( $_REQUEST['pm_CustomAttributeId'] == '' && ($_REQUEST['EntityReferenceName'] == '' || $_REQUEST['AttributeType'] == '') )
 					{
 						return new CustomAttributeEntityForm( $object );
 					}

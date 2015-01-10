@@ -112,4 +112,16 @@ class StateList extends PMPageList
 	{
 		return 'none';
 	}
+	
+	function getColumnWidth( $attribute )
+	{
+		switch( $attribute )
+		{
+		    case 'Actions':
+		    	return '20%';
+		    	
+		    default:
+		    	return parent::getColumnWidth( $attribute );
+		}
+	}
 }

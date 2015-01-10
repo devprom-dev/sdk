@@ -1124,7 +1124,10 @@ function setupAutocomplete( $e )
 	{
 		if ($(this).autocomplete("widget").is(":visible")) return;
 
-		$(this).autocomplete( "search", $(this).val() == '' ? " " : $(this).val() );
+		if ( $(this).next('input').val() == '' ) {
+			// if there is no default value then open the list
+			$(this).autocomplete( "search", $(this).val() == '' ? " " : $(this).val() );
+		}
 	})
 	.click(function(event)
 	{

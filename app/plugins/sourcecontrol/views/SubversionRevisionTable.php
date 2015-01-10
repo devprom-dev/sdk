@@ -59,11 +59,8 @@ class SubversionRevisionTable extends PMPageTable
     function buildAuthorFilter()
     {
     	$filter = new FilterObjectMethod(getFactory()->getObject('SubversionAuthor'), translate('Автор'));
-    	
     	$filter->setIdFieldName('ReferenceName');
-    	
     	$filter->setHasNone(false);
-    	
     	return $filter;
     }
 
@@ -95,50 +92,23 @@ class SubversionRevisionTable extends PMPageTable
         return parent::getSortDefault( $sort_parm );
     }
 
-    function drawFooter()
-    {
-        $list = $this->getListRef();
-        
-        if ( is_a($list, 'PageChart' ) ) return;
-        
-        $it = $this->getSubversionIt();
-        	
-        if ( $it->count() == 1 )
-        {
-            echo '<div class="line">';
-            echo translate('Путь к файлам').': '.
-                    $it->get('SVNPath').'/'.$it->get('RootPath');
-            echo '</div>';
-        }
-
-        echo join('<br/>', $this->errors);
-    }
-
     function getViewFilter()
     {
         return new ViewRevisionViewWebMethod();
     }
-    
-    function IsNeedToAdd()
-    {
-        return false;
-    }
-    
-    function getActions()
-    {
-	    global $model_factory;
-        
-	    $actions = parent::getActions();
 
-	    $job_it = $model_factory->getObject('co_ScheduledJob')->getByRef('ClassName', 'processrevisionlog');
+    function getNewActions()
+    {
+    	$actions = array();
+    	
+	    $job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'processrevisionlog');
 
-	    $self_actions[] = array ( 
-	            'name' => translate('Обновить'), 
+	    $actions[] = array ( 
+	            'name' => translate('Обновить'),
+	    		'uid' => 'refresh-commits', 
 	            'url' => '/tasks/command.php?class=runjobs&job='.$job_it->getId().'&redirect='.urlencode($_SERVER['REQUEST_URI']) 
 	    );
 	    
-	    $self_actions[] = array();
-        
-        return array_merge( $self_actions, $actions );
+	    return $actions;
     }
 }

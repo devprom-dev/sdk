@@ -775,11 +775,16 @@ class PMWikiForm extends PMPageForm
 		parent::drawButtons();
 	}
 	
+	function getTransitionAttributes()
+	{
+		return array('Caption');
+	}
+	
   	function IsAttributeVisible( $attr_name ) 
  	{
-		$this->object_it = $this->getObjectIt();
+ 		$object_it = $this->getObjectIt();
  		
-		if ( $this->IsTemplate($this->object_it) )
+		if ( $this->IsTemplate($object_it) )
  		{
  			if ( $this->getEditMode() )
  			{
@@ -809,6 +814,11 @@ class PMWikiForm extends PMPageForm
 				$field->setTabIndex( 1 );
 
 				$field->setId( $field->getId().$this->form_index );
+				
+		   		if ( $this->getTransitionIt()->getId() > 0 )
+   			    {
+   			        $field->setReadonly( true );
+   			    }
 				
 				break;
 

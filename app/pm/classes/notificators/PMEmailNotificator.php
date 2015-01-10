@@ -126,7 +126,12 @@ class PMEmailNotificator extends EmailNotificator
 
 	function addRecipient( $object_it, &$emails )
 	{
-		return $emails[] = '"'.$object_it->get('Caption').'" <'.$object_it->get('Email').'>';
+		$title = $object_it->get('Caption');
+		if ( strpos($title, ",") !== false )
+		{
+			$title = '"'.trim($object_it->get('Caption'),'"').'"';
+		}
+		return $emails[] = $title.' <'.$object_it->get('Email').'>';
 	}
 	
 	function getRecipientArray( $object_it, $prev_object_it, $action ) 

@@ -110,8 +110,8 @@ class ApplyTemplateService
 			}
 
 			\CloneLogic::Run( $context, $object, $iterator, $project_it ); 
-		}
-		
+		} 
+
 		// remove unnecessary data
 		foreach( $state_objects as $state )
 		{
@@ -137,7 +137,9 @@ class ApplyTemplateService
  	
  	static protected function getSectionObjects( $sections, $except_sections = array() )
  	{
- 		$objects = array();
+ 		$objects = array(
+ 				getFactory()->getObject('ProjectRole')
+ 		);
  		
 		$section_it = getFactory()->getObject('ProjectTemplateSections')->getAll();
 		

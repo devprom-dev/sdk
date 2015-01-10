@@ -129,7 +129,7 @@ class CloneLogic
 					
     					if ( count($parms) > 0 )
     					{
-    						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $iterator->duplicate( $parms );
+    						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate($iterator, $parms);
     					}
 					}
 					
@@ -149,7 +149,7 @@ class CloneLogic
 					
     					if ( count($parms) > 0 )
     					{
-    						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $iterator->duplicate( $parms );
+    						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate($iterator, $parms);
     					}
 					}
 					
@@ -330,7 +330,7 @@ class CloneLogic
 				{
 					$parms['StartDate'] = $release_it->get('FinishDate');
 				}
-				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('1 month', strtotime( $parms['StartDate'])))); 
+				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('2 month', strtotime( $parms['StartDate'])))); 
 
 				break;
 
@@ -342,19 +342,13 @@ class CloneLogic
 						)
 				);
 				
-				if ( $iteration_it->count() > 0 )
-				{
-					$parms = array();
-					return;
-				}
-
 				if ( $iteration_it->count() < 1 )
 				{
 					$parms['StartDate'] = SystemDateTime::date();
 				}
 				else
 				{
-					$parms['StartDate'] = $iteration_it->get('FinishDate');
+					$parms['StartDate'] = date('Y-m-j', strtotime('1 day', strtotime($iteration_it->get('FinishDate')))); 
 				}
 
 				$parms['FinishDate'] = '';
@@ -653,6 +647,8 @@ class CloneLogic
 			foreach ( $attrs as $attr )
 			{
 				if ( $parms[$attr] == '' ) $parms[$attr] = $it->get_native($attr);
+				if ( $attr == 'Project' ) unset($parms[$attr]);
+				if ( $attr == 'VPD' ) unset($parms[$attr]);
 			}
 	
 			$it->object->modify_parms($object_it->getId(), $parms);

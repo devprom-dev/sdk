@@ -77,17 +77,17 @@ if ( count($items) < 1 ) return;
 
 		    <?php if ( $action['click'] != '' ) { ?>
 		    
-    			<a onclick="<?=$action['click']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" onclick="<?=$action['click']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
 		    
 		    <?php } else { ?>
 		    
     		    <?php if ( $class == '' ) { ?>
     			
-    			<a class="<?=$action['class']?>" href="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" href="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
     		    
     		    <?php } else { ?>
     			
-    			<a class="<?=$class?>" radio-group="<?=$action['radio-group']?>" onkeydown="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" class="<?=$class?>" radio-group="<?=$action['radio-group']?>" onkeydown="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
     			
     			<?php } ?>
     			

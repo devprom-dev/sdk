@@ -141,11 +141,6 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	{
 		switch ( $object_it->object->getEntityRefName() )
 		{
-		    case 'Comment':
-		    	$data = $this->getRecordData();
-
-		    	if ( $kind == TRIGGER_ACTION_DELETE || $data['DoNotAffectObjects'] ) break;
-			
 		    case 'pm_Activity':
 		    	$ref_it = $object_it->getRef('Task');
 		    	
@@ -199,7 +194,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    	);
 		}
 		
-		if ( $object_it->object instanceof Watcher )
+		if ( $object_it->object instanceof Watcher || $object_it->object instanceof Comment )
 		{
 	    	$ref_it = $object_it->getAnchorIt();
 	    	

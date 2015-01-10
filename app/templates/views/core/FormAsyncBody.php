@@ -23,7 +23,7 @@
 		    <?=$form_title?>
 		</legend>
 		
-		<?php if ( count($actions) > 0 ) { ?>
+		<?php if ( count($actions) > 1 ) { ?>
 			<div class="actions">
 				<div class="btn-group">
 					<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
@@ -35,6 +35,17 @@
 			</div> <!-- end actions -->
 		<?php } ?>
 
+		<?php if ( count($actions) == 1 ) { ?>
+			<?php $item = array_shift($actions); ?>
+			<div class="actions">
+				<div class="btn-group">
+					<a class="btn btn-small btn-inverse" href="<?=$item['url']?>">
+						<?=$item['name']?>
+					</a>
+				</div>
+			</div> <!-- end actions -->
+		<?php } ?>
+		
 		<?php } ?>
 		
 		<div class="clearfix"></div>
@@ -70,7 +81,7 @@
 		    <?php if ( $attribute['type'] == 'char' ) { ?>
 
 			<label class="checkbox">
-      			<input type="checkbox" id="<?=$attribute['id']?>" name="<?=$attribute['id']?>" <?=($attribute['value'] == 'Y' ? 'checked' : '')?> > <?=$attribute['caption']?>
+      			<input type="checkbox" tabindex="<?=$attribute['index']?>" id="<?=$attribute['id']?>" name="<?=$attribute['id']?>" <?=($attribute['value'] == 'Y' ? 'checked' : '')?> > <?=$attribute['caption']?>
     		</label>
 
 			<?php } else if ( $attribute['type'] == 'custom' ) { ?>

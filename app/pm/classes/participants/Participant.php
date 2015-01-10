@@ -8,7 +8,6 @@ include "predicates/ParticipantBaseRoleNamePredicate.php";
 include "predicates/ParticipantBaseRolePredicate.php";
 include "predicates/ParticipantIterationInvolvedPredicate.php";
 include "predicates/ParticipantRolePredicate.php";
-include "predicates/ParticipantTaskTypeBasePredicate.php";
 include "predicates/ParticipantTeamAtWorkPredicate.php";
 include "predicates/ParticipantUserGroupPredicate.php";
 include "predicates/ParticipantUserPredicate.php";
@@ -243,14 +242,9 @@ class Participant extends Metaobject
 		return $this->createSQLIterator($sql);
 	}
 
-	function getLeadTeam( $project = null )
+	function getLeadTeam( $project = 0 )
 	{
-		global $project_it;
-		
-		if ( is_null($project) )
-		{
-			$project = $project_it->getId();
-		}
+		if ( $project < 1 ) $project = getSession()->getProjectIt()->getId();
 		
 		$sql = "SELECT p.* ".
 			   "  FROM pm_Participant p " .

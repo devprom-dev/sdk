@@ -9,7 +9,11 @@ class RequestModelWorkflowBuilder extends ObjectModelBuilder
     {
     	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
     	
-    	$state_it = $object->cacheStates();
+    	$state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
+ 				array (
+ 						new FilterBaseVpdPredicate()
+ 				)
+ 		);
     	
     	while( !$state_it->end() )
     	{

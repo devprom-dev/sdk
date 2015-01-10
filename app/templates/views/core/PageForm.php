@@ -59,8 +59,15 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     			</div> <!-- end actions -->
         			
         	    <?php if ( $state_name != '' ) { ?>
-        		<div class="pull-right actions">
-       				<span class="label label-warning" style="margin-top:6px;"><?=$state_name?></span> &nbsp;
+        		<div class="pull-right actions" style="margin-top:6px;">
+					<?php 
+						echo $view->render('pm/StateColumn.php', array (
+									'color' => $form->getObjectIt()->get('StateColor'),
+									'name' => $form->getObjectIt()->get('StateName'),
+									'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
+							)); 
+					?>        		
+       				&nbsp;
         		</div>
         		<?php } ?>
         		

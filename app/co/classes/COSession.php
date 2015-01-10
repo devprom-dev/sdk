@@ -29,7 +29,7 @@ class COSession extends SessionBase
  	{
  	    return '/co/';
  	}
-
+ 	
  	function createBuilders()
  	{
  	    return array_merge(

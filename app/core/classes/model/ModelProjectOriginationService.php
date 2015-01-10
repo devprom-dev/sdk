@@ -27,6 +27,14 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 		return $this->session;
 	}
 	
+	public function getCacheCategory( $object )
+	{
+		$origin = $this->getSelfOrigin($object);
+		
+		return in_array($origin,array('',DUMMY_PROJECT_VPD)) 
+					? parent::getCacheCategory($object) : 'pm-'.$origin;
+	}
+	
 	protected function getSharedSet()
 	{
 		if ( !is_object($this->shared) )
@@ -74,7 +82,10 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 		$vpds = array();
 		
 		if ( $object instanceof SharedObjectSet ) return $vpds;
-		if ( $object->getEntityRefName() == 'pm_ProjectLink' ) return $vpds;
+		if ( $object instanceof CustomResource ) return $vpds;
+		if ( $object instanceof PMObjectCacheable ) return $vpds;
+		
+		if ( in_array($object->getEntityRefName(), array('pm_ProjectLink','pm_ProjectRole','pm_AccessRight','pm_ObjectAccess')) ) return $vpds;
 		
 		$settings_it = $this->getSettingsIt();
 		

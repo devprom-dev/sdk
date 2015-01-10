@@ -25,41 +25,7 @@ class TaskBoardTable extends PMPageTable
 		
 		if ( $list->getGroup() == 'AssigneeUser' )
 		{
-			$object = getFactory()->getObject('Task');
-			
-			$object->addFilter( new FilterInPredicate($list->getIteratorRef()->idsToArray()) );
-			
-			// cache aggregates on workload and spent time
-			$planned_aggregate = new AggregateBase( 'AssigneeUser', 'Planned', 'SUM' );
-			
-			$object->addAggregate( $planned_aggregate );
-
-			$left_aggregate = new AggregateBase( 'AssigneeUser', 'LeftWork', 'SUM' );
-			
-			$object->addAggregate( $left_aggregate );
-
-			$fact_aggregate = new AggregateBase( 'AssigneeUser', 'Fact', 'SUM' );
-			
-			$object->addAggregate( $fact_aggregate );
-			
-			$task_it = $object->getAggregated();
-			
-			while( !$task_it->end() )
-			{
-				$this->workload[$task_it->get('AssigneeUser')]['Planned'] = $task_it->get($planned_aggregate->getAggregateAlias());
-				
-				if ( $this->workload[$task_it->get('AssigneeUser')]['Planned'] == '' ) $this->workload[$task_it->get('AssigneeUser')]['Planned'] = 0;
-
-				$this->workload[$task_it->get('AssigneeUser')]['LeftWork'] = $task_it->get($left_aggregate->getAggregateAlias());
-
-				if ( $this->workload[$task_it->get('AssigneeUser')]['LeftWork'] == '' ) $this->workload[$task_it->get('AssigneeUser')]['LeftWork'] = 0;
-				
-				$this->workload[$task_it->get('AssigneeUser')]['Fact'] = $task_it->get($fact_aggregate->getAggregateAlias());
-
-				if ( $this->workload[$task_it->get('AssigneeUser')]['Fact'] == '' ) $this->workload[$task_it->get('AssigneeUser')]['Fact'] = 0;
-				
-				$task_it->moveNext();
-			}
+			$this->buildAssigneeWorkload();
 		}
 	}
 	
@@ -179,6 +145,7 @@ class TaskBoardTable extends PMPageTable
 			$type_method,
 			new FilterObjectMethod( getFactory()->getObject('Priority'), '', 'taskpriority' ),
 			$assignee_filter,
+			$this->buildFilterWasTransition(),
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
 			new ViewModifiedBeforeDateWebMethod(),
@@ -194,7 +161,7 @@ class TaskBoardTable extends PMPageTable
 		{
 			$release = getFactory()->getObject('Release');
 	 		$release->addFilter( new ReleaseTimelinePredicate('not-passed') );
-			return new FilterObjectMethod($release, translate('Релиз'), 'release');
+			return new FilterObjectMethod($release, translate('Релиз'), 'issue-release');
 		}
 		else
 		{ 
@@ -202,6 +169,14 @@ class TaskBoardTable extends PMPageTable
 	 		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
 			return new FilterObjectMethod($iteration, translate('Итерация'), 'iteration');
 		}
+	}
+	
+	protected function buildFilterWasTransition()
+	{
+		$filter = new FilterStateTransitionMethod( getFactory()->getObject('TaskState') );
+		$filter->setValueParm('was-transition');
+		$filter->setCaption(text(1887));
+		return $filter;
 	}
 	
  	function getFilterPredicates()
@@ -216,7 +191,7 @@ class TaskBoardTable extends PMPageTable
 			new FilterAttributePredicate( 'TaskType', $values['tasktype'] ),
 			new TaskAssigneeUserPredicate( $values['taskassignee'] ),
 			new FilterAttributePredicate( 'Release', $values['iteration'] ),
-			new TaskReleasePredicate($values['release']),
+			new TaskReleasePredicate($values['issue-release']),
  			new TaskVersionPredicate( $values['stage'] ),
 			new FilterSubmittedAfterPredicate( $values['submittedon'] ),
 			new FilterSubmittedBeforePredicate( $values['submittedbefore'] ),
@@ -226,7 +201,8 @@ class TaskBoardTable extends PMPageTable
 		$predicates[] = new FilterModifiedAfterPredicate($values['modifiedafter']);
 		$predicates[] = new FilterModifiedBeforePredicate($values['modifiedbefore']);
  		$predicates[] = new TaskBindedToObjectPredicate($_REQUEST['trace']);
-		
+		$predicates[] = new TransitionWasPredicate( $values['was-transition'] );
+ 		
 		return array_merge(parent::getFilterPredicates(), $predicates);
 	}
 	
@@ -320,5 +296,102 @@ class TaskBoardTable extends PMPageTable
 		}
 	
 		return $cols;
+	}
+
+	protected function buildAssigneeWorkload()
+	{
+		$list = $this->getListRef();
+		$task_ids = $list->getIteratorRef()->idsToArray();
+		
+		$object = getFactory()->getObject('Task');
+		$object->addFilter( new FilterInPredicate($task_ids) );
+		
+		// cache aggregates on workload and spent time
+		$planned_aggregate = new AggregateBase( 'AssigneeUser', 'Planned', 'SUM' );
+		$object->addAggregate( $planned_aggregate );
+
+		$left_aggregate = new AggregateBase( 'AssigneeUser', 'LeftWork', 'SUM' );
+		$object->addAggregate( $left_aggregate );
+
+		$fact_aggregate = new AggregateBase( 'AssigneeUser', 'Fact', 'SUM' );
+		$object->addAggregate( $fact_aggregate );
+		
+		$task_it = $object->getAggregated();
+		
+		while( !$task_it->end() )
+		{
+			$value = $task_it->get($planned_aggregate->getAggregateAlias());
+			if ( $value == '' ) $value = 0;
+			
+			$this->workload[$task_it->get('AssigneeUser')]['Planned'] = $value;
+			
+			$value = $task_it->get($left_aggregate->getAggregateAlias());
+			if ( $value == '' ) $value = 0;
+			
+			$this->workload[$task_it->get('AssigneeUser')]['LeftWork'] = $value;
+
+			$value = $task_it->get($fact_aggregate->getAggregateAlias());
+			if ( $value == '' ) $value = 0;
+							
+			$this->workload[$task_it->get('AssigneeUser')]['Fact'] = $value;
+			
+			$task_it->moveNext();
+		}
+		
+		$project_it = getSession()->getProjectIt();
+		$iteration_registry = getFactory()->getObject('Iteration')->getRegistry();
+		$part_registry = getFactory()->getObject('Participant')->getRegistry();
+		
+		foreach( $this->workload as $user_id => $data )
+		{
+			$iteration_it = $iteration_registry->Query(
+					array (
+							new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+							new IterationUserHasTasksPredicate($user_id),
+							new FilterVpdPredicate(),
+							new EntityProjectPersister(),
+							new SortAttributeClause('Project')
+					)
+			);
+
+			$data = array();
+			$this->workload[$user_id]['Iterations'] = array(); 
+			
+			if ( $user_id == '' ) continue;
+			
+			while( !$iteration_it->end() )
+			{
+				$self_it = $iteration_it->getRef('Project');
+				$part_it = $part_registry->Query(
+						array (
+								new FilterAttributePredicate('SystemUser', $user_id),
+								new FilterAttributePredicate('Project', $self_it->getId()),
+						)
+				);
+				
+				$data['leftwork'] = $iteration_it->getLeftWorkParticipant( $part_it );
+				if ( $data['leftwork'] < 1 )
+				{
+					$iteration_it->moveNext();
+					continue;
+				}
+
+				$data['title'] = ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
+	        	            translate('Итерация').': '.$iteration_it->getDisplayName();
+
+				$data['number'] = $iteration_it->getDisplayName();
+				$data['capacity'] = $iteration_it->getLeftCapacity() * $part_it->get('Capacity');
+				
+				$method = new ObjectModifyWebMethod($iteration_it);
+				if ( $method->hasAccess() )
+				{
+					$method->setRedirectUrl('donothing');
+					$data['url'] = $method->getJSCall(); 
+				}
+
+				$this->workload[$user_id]['Iterations'][] = $data;
+				$iteration_it->moveNext();
+			}
+		}
 	}
 }

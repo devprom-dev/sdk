@@ -90,20 +90,8 @@ class VersionList extends PMPageList
 
 					$offset = '0px';
 					
-					if ( $object_it->get('ProjectStage') > 0 )
-					{
-						$stage_it = $object_it->getRef('ProjectStage');
-					}
-
 					echo '<div style="padding-left:'.$offset.';">';
-						$caption = translate('Итерация').' '.$object_it->getDisplayName();
-
-						if ( is_object($stage_it) )
-						{
-							$caption .= ' ['.$stage_it->getDisplayName().']'; 
-						}
-
-						echo $caption;
+						echo translate('Итерация').' '.$object_it->getDisplayName();
 					echo '</div>';		
 
 					break;

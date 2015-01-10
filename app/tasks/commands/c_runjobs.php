@@ -127,48 +127,36 @@ class RunJobs extends Command
 				 
 				if ( is_object($command) )
 				{
-					$jobrun = $model_factory->getObject('co_JobRun');
-					
-					$run_id = $jobrun->add_parms( array ( 
-						'ScheduledJob' => $job_it->getId(),
-						'IsCompleted' => 'N' 
-					));
-					
-					ob_start();
+					$started_date = SystemDateTime::date();
 
 					try
 					{
-						$result = $command->execute();
+						ob_start();
+						$command->execute();
 
 						if ( $_REQUEST['redirect'] == '' )
 						{
 							echo $job_it->getDisplayName().': '.translate('Выполнено').': '.SystemDateTime::date();
 						}
+						$result = ob_get_contents();
 
-						$logger = $this->getLogger();
+						if ( is_object($this->getLogger()) ) $this->getLogger()->info($result);
 						
-						if ( is_object($logger) )
-						{
-							$logger->info( ob_get_contents() );
-						}
+						getFactory()->getObject('co_JobRun')->add_parms( array ( 
+							'ScheduledJob' => $job_it->getId(),
+							'Result' => $result,
+							'IsCompleted' => 'Y',
+							'RecordCreated' => $started_date 
+						));
 					}
 					catch( Exception $e )
 					{
-						$logger = $this->getLogger();
-						
-						if ( is_object($logger) )
+						if ( is_object($this->getLogger()) )
 						{
-							$logger->error( get_class($command).': '.$e->getMessage() );
+							$this->getLogger()->error( get_class($command).': '.$e->getMessage() );
 						}
 					}
 					
-					$jobrun = $model_factory->getObject('co_JobRun');
-					
-					$jobrun->modify_parms( $run_id, array ( 
-						'Result' => ob_get_contents(),
-						'IsCompleted' => 'Y' 
-					));
-
 					// remove old results
 					while ( true )
 					{

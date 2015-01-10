@@ -44,10 +44,13 @@ class ProjectList extends PageList
 		
 		if ( $method->HasAccess() )
 		{
+			$method->setRedirectUrl('donothing');
+			
 		    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
 		    
 		    $actions[] = array(
-    		    'url' => $method->getJSCall(), 'name' => $object_it->get('IsClosed') == 'Y' ? text(1320) : text(1319)
+    		    'url' => $method->getJSCall(),
+		    	'name' => $object_it->get('IsClosed') == 'Y' ? text(1320) : text(1319)
 		    );
 		}
 		

@@ -23,5 +23,6 @@ class TaskTypeMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 		$metadata->setAttributeDescription('ProjectRole', text(1849));
  		$metadata->setAttributeDescription( 'RelatedColor', text(1856) );
+ 		$metadata->setAttributeDescription( 'IsDefault', text(1877) );
     }
 }

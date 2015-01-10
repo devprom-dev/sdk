@@ -9,7 +9,7 @@ class Feature extends Metaobject
 {
  	function __construct() 
  	{
- 		parent::__construct('pm_Function');
+ 		parent::__construct('pm_Function', null, getSession()->getCacheKey());
  		
  		$this->setSortDefault( new SortAttributeClause('Caption') );
  	}

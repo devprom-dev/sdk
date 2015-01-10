@@ -41,11 +41,6 @@ class User extends Metaobject
 		$this->setAttributeOrderNum('Photo', 1);
  	}
 
-	function getMetadataCacheName()
-	{
-	    return 'global';
-	}
- 	
  	function createIterator() 
 	{
 		return new UserIterator( $this );

@@ -167,17 +167,6 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	cursor: pointer;
 }
 
-.wysiwyg code
-{
-	font-size: inherit;
-	font-family: monospace;
-	font-weight: inherit;
-	padding: inherit;
-	color: inherit;
-	border: inherit;
-	background: inherit;
-}
-
 .wysiwyg pre
 {
     font-size: inherit;

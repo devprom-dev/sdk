@@ -37,8 +37,8 @@ class WorkspaceService
 					$items[] = array (
 							'title' => \IteratorBase::wintoutf8($item['name']),
 							'report' => array (
-									'id' => $item['module'] != '' ? $item['module'] : $item['uid'],
-									'type' => $item['module'] != '' ? 'module' : 'report',
+									'id' => $item['report'] == '' ? $item['module'] : $item['uid'],
+									'type' => $item['report'] == '' ? 'module' : 'report',
 									'title' => \IteratorBase::wintoutf8($item['name'])
 							)
 					);
@@ -396,20 +396,25 @@ class WorkspaceService
 				if ( $item_it->get('ReportUID') != '' )
 				{
 					$report_it = $report->getExact($item_it->get('ReportUID'));
+					$item = $report_it->buildMenuItem();
+					$item['name'] = $report_it->get('Caption');
+					$item['report'] = $report_it->getId();
+					$item['module'] = $report_it->get('Module');
 				}
 				else if ( $item_it->get('ModuleUID') != '' )
 				{
-					$report_it = $module->getExact($item_it->get('ModuleUID'));
+					$module_it = $module->getExact($item_it->get('ModuleUID'));
+					$item = $module_it->buildMenuItem();
+					$item['name'] = $module_it->get('Caption');
+					$item['report'] = '';
+					$item['module'] = $module_it->getId();
 				}
 				else
 				{
 					$item_it->moveNext();
-					
 					continue;
 				}
 				
-				$item = $report_it->buildMenuItem();
-				$item['name'] = $report_it->get('Caption');
 				$items[] = $item;
 				
 				$item_it->moveNext();
