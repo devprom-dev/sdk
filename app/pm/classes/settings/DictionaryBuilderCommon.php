@@ -13,8 +13,6 @@ class DictionaryBuilderCommon extends DictionaryBuilder
 	{
  		$registry->addEntity( getFactory()->getObject('PMCustomAttribute') );
 		
- 		$registry->addEntity( getFactory()->getObject('CustomResource') );
- 		
  		$registry->addEntity( getFactory()->getObject('pm_ProjectRole') );
 
  		$registry->addEntity( getFactory()->getObject('pm_IssueType') );

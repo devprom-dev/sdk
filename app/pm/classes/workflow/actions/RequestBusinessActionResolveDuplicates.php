@@ -8,7 +8,7 @@ class RequestBusinessActionResolveDuplicates extends BusinessAction
 {
  	function getId()
  	{
- 		return '706204028';
+ 		return '19adedb1-7426-44ea-8139-4a2d680dfeac';
  	}
 	
 	function apply( $object_it )
@@ -54,6 +54,6 @@ class RequestBusinessActionResolveDuplicates extends BusinessAction
  	
  	function getDisplayName()
  	{
- 		return text(1387);
+ 		return text(1878);
  	}
 }

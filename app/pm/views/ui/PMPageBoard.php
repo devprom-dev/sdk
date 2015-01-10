@@ -24,6 +24,11 @@ class PMPageBoard extends PageBoard
 	    return array_diff(parent::getGroupFields(), $this->getObject()->getAttributesByGroup('trace')); 
 	}
 	
+	function getColumnFields()
+	{
+		return array_merge(parent::getColumnFields(), $this->getObject()->getAttributesByGroup('workflow'));
+	}
+	
 	function hasCommonStates()
 	{
  		$classname = $this->getBoardAttributeClassName();
@@ -52,5 +57,22 @@ class PMPageBoard extends PageBoard
  		}
  		
  		return true;
+	}
+	
+	function drawCell( $object_it, $attr )
+	{
+		switch( $attr )
+		{
+			case 'State':
+            	echo $this->getTable()->getView()->render('pm/StateColumn.php', array (
+									'color' => $object_it->get('StateColor'),
+									'name' => $object_it->get('StateName'),
+									'terminal' => $object_it->get('StateTerminal') == 'Y'
+							));
+				break;
+				
+			default:
+				parent::drawCell( $object_it, $attr );
+		}
 	}
 }

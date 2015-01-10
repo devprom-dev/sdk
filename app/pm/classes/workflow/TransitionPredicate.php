@@ -1,14 +1,12 @@
 <?php
 
 include "TransitionPredicateIterator.php";
-include "predicates/TransitionPredicateTransition.php";
 
 class TransitionPredicate extends MetaobjectCacheable
 {
  	function __construct() 
  	{
  		parent::__construct('pm_TransitionPredicate');
- 		
  		$this->setAttributeType('Predicate', 'REF_StateBusinessRuleId');
  	}
  	

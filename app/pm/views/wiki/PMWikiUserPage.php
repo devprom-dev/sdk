@@ -337,4 +337,15 @@ class PMWikiUserPage extends PMPage
  		    'page_id' => $object_it->getId()
         ));
  	}
+ 	
+	function getHint()
+ 	{
+	    switch ( $_REQUEST['view'] )
+	    {
+	        case 'docs':
+	        	if ( $_REQUEST['document'] > 0 ) return '';
+	        	break;
+	    }
+	   	return parent::getHint();
+ 	} 	
 }

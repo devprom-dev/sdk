@@ -119,7 +119,7 @@ foreach( $attributes as $name => $attribute )
 ?>
 
 <div class="actions">
-	<div class="btn-group">
+	<div class="btn-group last">
 		<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
 			<?=translate('Действия')?>
 			<span class="caret"></span>
@@ -141,7 +141,18 @@ foreach( $attributes as $name => $attribute )
 	<?php } ?>
 </ul> <!-- end breadcrumb -->
 
-<h4 class="bs"><?=$attributes['Caption']['text']?></h4>
+<h4 class="bs" style="width:90%;">
+	<? 
+	if ( $attributes['Caption']['field'] instanceof FieldWYSIWYG )
+	{
+	    $attributes['Caption']['field']->draw();
+	}
+	else
+	{ 
+	    echo $attributes['Caption']['text'];
+	}
+	?>
+</h4>
 
 <?php if ( $warning != '' ) { ?>
 
@@ -157,12 +168,12 @@ foreach( $attributes as $name => $attribute )
 
 <div class="accordion-wrap">
 	<div class="accordion-heading">
-	  <a class="to-drop-btn" href="#collapseOne">
+	  <a class="to-drop-btn" href="#collapseOne" tabindex="-1">
 		<span class="caret"></span>
 		<?=translate('Свойства')?>
 	  </a>
 	</div>
-	<div id="collapseOne" class="accordion-body">
+	<div id="collapseOne" class="accordion-body" tabindex="-1">
 		<div class="row" style="display:table;width:100%;">
 			<?php foreach( $columns as $column_index => $column ) { ?>
 		    <div class="properties-column-<?=count($columns).$column_index?>">
@@ -200,7 +211,7 @@ foreach( $attributes as $name => $attribute )
 	
 	<!--  -->
 	<div class="accordion-heading">
-	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseTwo">
+	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
 		<span class="caret"></span>
 		<?=$attributes['Description']['name']?>
 	  </a>
@@ -222,7 +233,7 @@ foreach( $attributes as $name => $attribute )
 	<?php if ( $attributes['Tasks']['visible'] ) { ?>
 
 	<div class="accordion-heading <?=$section_class['Tasks']?>">
-	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseThree">
+	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseThree" tabindex="-1">
 		<span class="caret"></span>
 		<?=$attributes['Tasks']['name']?>
 	  </a>
@@ -238,7 +249,7 @@ foreach( $attributes as $name => $attribute )
 	<?php if ( $attributes['Attachment']['visible'] ) { ?>
 	
 	<div class="accordion-heading <?=$section_class['Trace']?>">
-	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseFour">				
+	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseFour" tabindex="-1">				
 		<span class="caret"></span>
 		<?=$attributes['Attachment']['name']?> 
 	  </a>
@@ -252,7 +263,7 @@ foreach( $attributes as $name => $attribute )
 	
 	<?php if ( count($trace_attributes) > 0 ) { ?>
 	<div class="accordion-heading <?=$section_class['Trace']?>">
-	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseFive">
+	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseFive" tabindex="-1">
 		<span class="caret"></span>
 		<?=text(1243)?>
 	  </a>
@@ -276,7 +287,7 @@ foreach( $attributes as $name => $attribute )
 <?php if (!$formonly && $draw_sections) { ?>
 
 	<div class="accordion-heading">
-	  <a id="comments-section" class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseComments">
+	  <a id="comments-section" class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseComments" tabindex="-1">
 		<span class="caret"></span>
 		<?=text(1346)?>
 		<?=($comments_count > 0 ? ' ('.$comments_count.')' : '')?>

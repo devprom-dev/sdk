@@ -18,7 +18,7 @@ class Module extends MetaobjectCacheable
 	function getCacheCategory()
 	{
 		// participant-wide cache
-	    return $this->getMetadataCacheName();
+	    return getSession()->getCacheKey();
 	}
 }
 

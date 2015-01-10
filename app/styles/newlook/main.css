@@ -115,6 +115,11 @@ footer p {
 	font-size: 12px;
 }
 
+footer ul
+{
+	margin: 0;
+}
+
 footer li {
 	display:inline;
 	font-size: 12px;
@@ -321,8 +326,16 @@ a.dashed:hover {
 	right:0;
 }
 
-.alert p {
-	margin-top:1em;
+.alert p, .alert div {
+	margin-bottom:0.8em;
+	margin-left:40px;
+	color: #404040;
+}
+
+.alert ul {
+    margin-bottom:0.8em;
+    margin-left:80px;
+    color: #404040;
 }
 
 .wrap-sidebar {
@@ -468,7 +481,12 @@ th .header-caret
 }
 
 .pagination {
-	margin-top:20px;
+	margin-top:0px;
+}
+
+.pagination-total {
+	margin-top: 5px;
+	margin-left: 20px;
 }
 
 .pagination p {
@@ -887,4 +905,47 @@ a.file_attach img
     font-size: 7pt;
     padding: 3px 7px 3px 7px;
     line-height: 8px;
+}
+
+section.login
+{
+	max-width: 550px;
+	margin: 80px auto 0px auto;
+	padding-bottom:0;
+}
+
+div.user-workload
+{
+	display:table;
+}
+
+div.user-workload div.cell
+{
+	display:table-cell;
+	vertical-align:top;
+	padding-left:10px;
+}
+
+div.user-workload div.cell:first-child
+{
+	padding-left:0;
+	padding-right:12px;
+}
+
+div.user-workload div.progress-cell
+{
+	padding-left:3px;
+	width:90px;
+}
+
+div.reorder-control
+{
+    display:table;	
+}
+
+div.reorder-control div
+{
+	width:10px;
+    display:table-cell;
+    vertical-align:top;
 }

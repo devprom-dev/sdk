@@ -19,7 +19,8 @@ class RequestBulkForm extends BulkForm
  			case 'Project':
  			case 'Iterations':
  			case 'Owner':
- 			    return 'custom';
+ 			case 'LinkType':
+ 				return 'custom';
  				
  			default:
  				return parent::getAttributeType( $attr );
@@ -38,6 +39,9 @@ class RequestBulkForm extends BulkForm
 
  			case 'Iterations':
  				return translate('Итерация');
+
+ 			case 'LinkType':
+ 				return translate('Тип связи');
  				
  			default:
  				return parent::getName( $attr );
@@ -55,7 +59,7 @@ class RequestBulkForm extends BulkForm
 		    	return parent::IsAttributeVisible( $attribute );
 		}
 	}
- 	
+	
  	function IsAttributeModifiable( $attr )
 	{
 	    switch ( $attr ) 
@@ -98,6 +102,7 @@ class RequestBulkForm extends BulkForm
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
+				$field->SetRequired(true);
 				
 				echo $this->getName($attribute);
 				
@@ -137,7 +142,22 @@ class RequestBulkForm extends BulkForm
 				
 				break;
 				
- 			case 'Owner':
+ 			case 'LinkType':
+ 				$type = getFactory()->getObject('RequestLinkType');
+ 				
+				$field = new FieldAutoCompleteObject($type);
+				$field->SetId($attribute);
+				$field->SetName($attribute);
+				$field->SetValue($type->getByRef('ReferenceName', 'implemented')->getId());
+				$field->SetTabIndex($tab_index);
+				
+				echo $this->getName($attribute);
+				
+				$field->draw();
+				
+				break;
+				
+			case 'Owner':
     			$worker = $model_factory->getObject('Participant');
     			
     			$worker->addFilter( new ParticipantWorkerPredicate() );
@@ -194,7 +214,8 @@ class RequestBulkForm extends BulkForm
 
 		if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
 
-		$key = 'Method:DuplicateIssuesWebMethod:Project';
+		$method = new DuplicateIssuesWebMethod();
+		$key = $method->getMethodName();
 		$actions[$key] = text(867);
 		
 		return $actions;

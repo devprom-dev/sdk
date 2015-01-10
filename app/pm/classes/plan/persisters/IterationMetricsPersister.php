@@ -26,9 +26,6 @@ class IterationMetricsPersister extends ObjectSQLPersister
 			"  WHERE m.Iteration = " .$objectPK.
 			"	 AND m.Metric = 'Velocity' LIMIT 1) Velocity ";
 
- 		$columns[] = 
- 			"(SELECT CONCAT(v.Caption, '.', t.ReleaseNumber) FROM pm_Version v WHERE v.pm_VersionId = t.Version) Caption ";
- 		
  		return $columns;
  	}
 }

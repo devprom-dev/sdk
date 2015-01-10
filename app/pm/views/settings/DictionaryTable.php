@@ -24,8 +24,4 @@ class DictionaryTable extends PMPageTable
 	{
 	    return array();
 	}
-	
-	function drawFooter()
-	{
-	}
 } 

@@ -21,6 +21,7 @@ RewriteRule ^([^/]+)/versioning/revisions/?([^/]+)?$ snapshots.php?project=$1&ob
 RewriteRule ^([^/]+)/tasks/(list|trace|chart|board)$ planning.php?project=$1&view=$2 [L,QSA]
 RewriteRule ^([^/]+)/tasks/(list|trace|chart|board)/([^/]+)$ planning.php?project=$1&view=$2&report=$3 [L,QSA]
 RewriteRule ^([^/]+)/project/reports/(.+)$ index.php?project=$1&mode=reports&pmreportcategory=$2 [L,QSA]
+RewriteRule ^([^/]+)/project/dicts/PMCustomAttribute/([^/]+)$ index.php?project=$1&mode=dicts&dict=PMCustomAttribute&customattributeentity=$2 [L,QSA]
 RewriteRule ^([^/]+)/project/dicts/(.+)$ index.php?project=$1&mode=dicts&dict=$2 [L,QSA]
 RewriteRule ^([^/]+)/project/workflow/(.+)$ index.php?project=$1&mode=workflow&dict=$2 [L,QSA]
 RewriteRule ^([^/]+)/project/(meeting|dicts|question|reports|log|blog|scrum|tags|versionsettings|settings|import-settings|export-settings|methodology|workflow)$ index.php?project=$1&mode=$2 [L,QSA]

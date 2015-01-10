@@ -20,6 +20,7 @@ include_once "predicates/RequestTaskStatePredicate.php";
 include_once "predicates/RequestNonPlannedPredicate.php";
 include_once "predicates/RequestReleasePredicate.php";
 include_once "predicates/RequestDuplicatesOfFilter.php";
+include_once "predicates/RequestImplementationFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";
 
@@ -29,7 +30,7 @@ class Request extends MetaobjectStatable
  	
  	function __construct() 
  	{
-		parent::__construct('pm_ChangeRequest');
+		parent::__construct('pm_ChangeRequest', null, getSession()->getCacheKey());
  	}
  	
 	function createIterator() 

@@ -72,7 +72,8 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
     			array (
     					'items' => array ( 'disable_functions' ),
     					'check' => function( $setting, $value ) {
-    									return strpos(ini_get( 'disable_functions' ), 'shell_exec') === false;
+    									return strpos(ini_get( 'disable_functions' ), 'shell_exec') === false
+    										   && strpos(ini_get( 'disable_functions' ), 'disk_free_space') === false;
     							   },
         				'display' => function( $setting, $value ) {
     									return "disable_functions = ";

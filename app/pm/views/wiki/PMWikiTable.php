@@ -147,7 +147,7 @@ class PMWikiTable extends PMPageTable
 			new FilterAttributePredicate( 'PageType', $values['type'] ),
 			new PMWikiLinkedStateFilter( $values['linkstate'] ),
 			new FilterAttributePredicate( 'Author', $values['participant'] ),
-			new FilterAttributePredicate( 'ParentPage', $values['parentpage'] ),
+			new WikiRootTransitiveFilter( $values['parentpage'] ),
 			new WikiTagFilter( $values['tag'] ),
 			new WikiContentFilter( $values['content'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),

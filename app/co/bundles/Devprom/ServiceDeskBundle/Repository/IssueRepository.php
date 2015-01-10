@@ -73,10 +73,7 @@ class IssueRepository extends EntityRepository {
         /** @var QueryBuilder $qb */
         $qb = $this->getBaseQuery();
 
-        $qb->andWhere('issue.project = ?1')
-            ->andWhere('w.email = ?2')
-            ->setParameter(1, $projectId)
-            ->setParameter(2, $authorEmail);
+        $qb->andWhere('w.email = ?1')->setParameter(1, $authorEmail);
 
         foreach ($orderBy as $column => $direction)
         {

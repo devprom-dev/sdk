@@ -26,11 +26,6 @@ class Project extends Metaobject
 		$this->setSortDefault( new SortAttributeClause('Caption') );
  	}
 	
-	function getMetadataCacheName()
-	{
-	    return 'global';
-	}
- 	
  	function createIterator() 
 	{
 		return new ProjectIterator( $this );
@@ -81,17 +76,6 @@ class Project extends Metaobject
 			   " order by (SELECT COUNT(1) FROM pm_ChangeRequest r WHERE r.Project = p.pm_ProjectId) DESC ";
 			   
 		return $this->createSqlIterator($sql);
-	}
-
-	function getCurrentIt()
-	{
-		global $project_it;
-		return $project_it;
-	}
-	
-	function getByName( $codename )
-	{
-		return $this->getByRef("Codename", $codename);
 	}
 
 	function getAttributeUserName( $attr )

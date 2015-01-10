@@ -39,14 +39,13 @@ class StateBaseIterator extends OrderedIterator
 
 	function getTransitionIt()
 	{
-		$transition = getFactory()->getObject('Transition');
-
-		$transition->setVpdContext( $this );
+		if ( $this->getId() == '' ) return getFactory()->getObject('Transition')->getEmptyIterator();
 		
-		$it = $transition->getByRefArray(
-			array( 'SourceState' => $this->getId() )
-		);	
-
+		$it = getFactory()->getObject('Transition')->getRegistry()->Query(
+				array (
+						new FilterAttributePredicate('SourceState', $this->getId())
+				)
+		);
 		$it->object->setStateAttributeType( $this->object );
 		
 		return $it;

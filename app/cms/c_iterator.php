@@ -330,6 +330,8 @@ class IteratorBase
 		
 		$this->pos = 0;
 		$this->fetch();
+		
+		return $this;
 	}
 	
 	function copy()

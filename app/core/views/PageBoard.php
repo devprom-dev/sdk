@@ -109,6 +109,39 @@ class PageBoard extends PageList
 
  	}
  	
+	function getFilterValues()
+	{
+		$filters = parent::getFilterValues();
+		
+		$state_filter = $this->getStateFilterName();
+		
+		if ( $filters['hiddencolumns'] != '' )
+		{
+			if ( in_array($filters[$state_filter], array('all', ''), true) )
+			{
+			    $display_states = $this->getBoardStates();
+			}
+			else
+			{
+			    $display_states = preg_split('/,/', $filters[$state_filter]);
+			}
+			
+			$hidden_states = preg_split('/,/', $filters['hiddencolumns']);
+			
+			foreach( $display_states as $key => $state )
+			{
+				if ( in_array($state, $hidden_states) || $state == $filters['hiddencolumns'] )
+				{
+					unset($display_states[$key]);
+				}
+			}
+
+			$filters[$state_filter] = join(',', $display_states);
+		}
+
+		return $filters;
+	}
+	
  	function getGroupFieldObject( $field_name )
  	{
  		global $model_factory;
@@ -228,12 +261,6 @@ class PageBoard extends PageList
 			    
 			    break;
 			    
-			case 'State':
-				
-				echo '<span class="label" style="background-color:'.$object_it->get('StateColor').'">'.$object_it->get('StateName').'</span>';
-				
-				break;
-				
 			default:
 				
 			    if ( $object_it->get($attr) == '' ) return;
@@ -322,7 +349,7 @@ class PageBoard extends PageList
 		
 		foreach ( $this->boardrefnames as $key => $column )
 		{
-			$checked = !in_array($column, $active);
+			$checked = !in_array($column, $active) && $column != $values['hiddencolumns'];
 			
 			$script = "javascript: $(this).hasClass('checked') ? filterLocation.turnOff('hiddencolumns', '".$column."', 0) : filterLocation.turnOn('hiddencolumns', '".$column."', 0); ";
 			
@@ -426,10 +453,16 @@ class PageBoard extends PageList
 			// получим все значения опорного атрибута
 			$board_values = $this->getBoardValues();
 			
-			foreach( preg_split('/,/',$filter_values['hiddencolumns']) as $ref_name )
+			if ( $filter_values['hiddencolumns'] != '' )
 			{
-			    unset($board_names[$ref_name]);
-			    unset($board_values[$ref_name]);
+			    unset($board_names[$filter_values['hiddencolumns']]);
+			    unset($board_values[$filter_values['hiddencolumns']]);
+			
+				foreach( preg_split('/,/',$filter_values['hiddencolumns']) as $ref_name )
+				{
+				    unset($board_names[$ref_name]);
+				    unset($board_values[$ref_name]);
+				}
 			}
 			
 			$board_values = array_values($board_values);

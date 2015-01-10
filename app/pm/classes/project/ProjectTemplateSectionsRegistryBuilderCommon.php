@@ -17,11 +17,9 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
     	
     	$this->buildWidgets($registry);
     	
-    	$this->buildProjectRoles($registry);
+    	$this->buildPermissions($registry);
     	
     	$this->buildWorkflow($registry);
-
- 		$registry->addSection(new Metaobject('cms_Resource'), 'Terminology', array(), true, text(940));
 
  		$registry->addSection(getFactory()->getObject('pm_CustomAttribute'), 'Attributes', array(), true, text(1080));
 
@@ -35,14 +33,18 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
    	  	$project = getFactory()->getObject('pm_Project');
 	 	$project->addFilter( new ProjectCurrentPredicate() );
 
+	 	$projectrole = getFactory()->getObject('ProjectRole');
+	 	$projectrole->addFilter( new ProjectRoleInheritedFilter() );
+	 	
 	 	// methodology settings
 		$methodology = getFactory()->getObject('pm_Methodology');
 		$methodology->addFilter( new FilterAttributePredicate('Project', $this->session->getProjectIt()->getId() ) );
 	 	
 	 	$items = array( 
 	 		$project,
+	 		$projectrole,
 	 		getFactory()->getObject('pm_VersionSettings'),
-	 		getFactory()->getObject('pm_ProjectStage'),
+ 			getFactory()->getObject('pm_ProjectStage'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
 			getFactory()->getObject('TaskTypeStage'), 				
@@ -115,17 +117,13 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
    		);
     }
     
-    private function buildProjectRoles( & $registry )
+    private function buildPermissions( & $registry )
     {
-	 	$projectrole = getFactory()->getObject('ProjectRole');
-	 	$projectrole->addFilter( new ProjectRoleInheritedFilter() );
-	 	
 	 	$items = array (
-	 			$projectrole,
 	 			getFactory()->getObject('pm_AccessRight')
 	 	);
 
- 		$registry->addSection($registry, 'ProjectRole', $items, true, text(739));
+ 		$registry->addSection($registry, 'Permissions', $items, true, text(739));
    }
 
    private function buildWorkflow( & $registry )

@@ -17,6 +17,22 @@ class ContextResourceFileBuilder extends ContextResourceBuilder
 
     	$strings = include(SERVER_ROOT_PATH."co/bundles/Devprom/CommonBundle/Resources/text/".$language."/context-resource.php");
     	
-    	foreach( $strings as $module => $text ) $object->addText($module, IteratorBase::utf8towin($text));
+    	$module_object = getFactory()->getObject('Module');
+    	
+    	foreach( $strings as $module => $text )
+    	{
+    		$text = preg_replace_callback(
+						'/\%module:([^\%]+)\%/i',
+						function( $matches ) use ($module_object) {
+								$module_it = $module_object->getExact($matches[1]);
+								return '<a href="'.$module_it->get('Url').'">'.$module_it->getDisplayName().'</a>';
+						},
+						IteratorBase::utf8towin($text)
+				);	
+
+    		$text = preg_replace('/\%host\%/i', EnvironmentSettings::getServerUrl(),$text);	
+    		
+    		$object->addText($module, $text);
+    	}
     }
 }

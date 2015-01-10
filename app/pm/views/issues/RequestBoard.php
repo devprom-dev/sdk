@@ -7,36 +7,22 @@ include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 
 class RequestBoard extends PMPageBoard
 {
+	private $terminal_states = array();
  	private $task_terminal_states = array();
- 	
  	private $non_terminal_states = array();
- 	
  	private $tasks_array = array();
- 	
  	private $priorities_array = array();
- 	
  	private $priority_actions = array();
- 	
  	private $task_transitions_array = array();
- 	
  	private $task_target_states_array = array();
- 	
  	private $method_create_task = null;
- 	
  	private $method_comment = null;
- 	
  	private $method_spend_time = null;
- 	
  	private $visible_column = array();
- 	
  	private $spent_time_title = '';
- 	
  	private $types_array = array();
- 	
  	private $task_uid_service = null;
- 	
  	private $estimation_actions = array();
- 	
  	private $estimation_title = '';
  	
  	function __construct( $object )
@@ -53,7 +39,9 @@ class RequestBoard extends PMPageBoard
  	function buildRelatedDataCache()
  	{
  		$object = $this->getObject();
- 		
+
+ 		$this->terminal_states = $object->getTerminalStates();
+ 		 
  	 	$task = getFactory()->getObject('Task');
  		
  		$this->task_terminal_states = $task->getTerminalStates();
@@ -299,8 +287,6 @@ class RequestBoard extends PMPageBoard
 		{
 			array_push( $cols, 'OrderNum');
 		}
-
-		unset( $cols['Deadlines'] );
 		
 		return $cols;
 	}
@@ -391,15 +377,23 @@ class RequestBoard extends PMPageBoard
 						if ( $type_image != '' ) echo '<img src="/images/'.$type_image.'" style="float:left;padding:3px 3px 0 0px;"> ';
 						parent::drawCell( $object_it, $attr );
 					echo '</div>';
-	
-					if ( $this->visible_column['OrderNum'] )
-					{
-						echo '<div class="right-on-card">';
+					echo '<div class="right-on-card">';
+						foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
+						{
+							list($type_name, $link_id, $type_ref, $link_state) = preg_split('/:/',$link_info);
+							if ( $type_ref == 'blocked' && !in_array($link_state,$this->terminal_states)) {
+								$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
+								echo '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'"><img title="'.text(961).'" src="/images/delete.png"></a>';
+								break;
+							}
+						}
+					
+						if ( $this->visible_column['OrderNum'] ) {
 							echo '<span class="order" title="'.translate('Номер').'">';
 								echo $object_it->get('OrderNum');
 							echo '</span>';
-						echo '</div>';
-					}
+						}
+					echo '</div>';
 				echo '</div>';
 				
 				break;

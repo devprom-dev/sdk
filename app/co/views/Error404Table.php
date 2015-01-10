@@ -2,7 +2,12 @@
  
 class Error404Table extends CoPageTable
 {
-    function getRenderParms( $parms )
+ 	function getCaption()
+ 	{
+		return getFactory()->getObject('SystemSettings')->getAll()->getDisplayName();
+ 	}
+	
+	function getRenderParms( $parms )
     {
          global $plugins;
          

@@ -2,7 +2,12 @@
 
 class AuthenticationFactory
 {
- 	var $user;
+ 	private $user = null;
+ 	
+ 	function __construct( UserIterator $user_it = null )
+ 	{
+ 		$this->setUser($user_it);
+ 	}
  	
  	function ready()
  	{

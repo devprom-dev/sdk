@@ -4,16 +4,18 @@ include "DictionaryItemsList.php";
 
 class DictionaryItemsTable extends PMPageTable
 {
+	function __construct( $object )
+	{
+		$object->setAttributeVisible('OrderNum', $object instanceof StateBase);
+		
+		parent::__construct($object);
+	}
+	
 	function getList()
 	{
 		return new DictionaryItemsList( $this->getObject() );
 	}
 
-    function getCaption()
-    {
-        return $this->getObject()->getDisplayName();
-    }
-	
 	function getSortDefault( $sort_parm = 'sort' )
 	{
 	    if ( $sort_parm == 'sort' ) return 'OrderNum';
@@ -49,9 +51,14 @@ class DictionaryItemsTable extends PMPageTable
 		{
 			case 'pm_CustomAttribute':
 				
+				$values = $this->getFilterValues();
+				$items = preg_split('/,/',$values['customattributeentity']);
+				$entity_ref_name = array_shift($items); 				
+
 				$actions[] = array ( 
 						'name' => translate('Добавить'),
-						'url' => $this->getObject()->getPageName().'&area='.$this->getPage()->getArea().'&redirect='.$_SERVER['REQUEST_URI']
+						'url' => $this->getObject()->getPageName().'&EntityReferenceName='.$entity_ref_name.
+										'&area='.$this->getPage()->getArea().'&redirect='.$_SERVER['REQUEST_URI']
 				);
 				
 				return $actions;

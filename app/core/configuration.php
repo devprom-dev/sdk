@@ -49,7 +49,6 @@ new core\classes\ExceptionHandler( $handlers );
 
 // profiling
 MetricsServer::Instance()->Start();
- 
 MetricsClient::Instance()->Start();
 
 // database connection

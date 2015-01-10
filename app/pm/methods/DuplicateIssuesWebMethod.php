@@ -9,67 +9,64 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 		return text(867);
 	}
 
+	function getMethodName()
+	{
+		return parent::getMethodName().':LinkType';
+	}
+	
 	function getReferences()
 	{
-		global $model_factory;
-		
 		$references = array();
 		
- 	    $references[] = $model_factory->getObject('pm_IssueType');
-
- 	    $references[] = $model_factory->getObject('Priority');
+ 	    $references[] = getFactory()->getObject('pm_IssueType');
+ 	    $references[] = getFactory()->getObject('Priority');
  	    
- 	    $request = $model_factory->getObject('pm_ChangeRequest');
- 	    
+ 	    $request = getFactory()->getObject('pm_ChangeRequest');
  	    $request->addFilter( new FilterInPredicate($this->getObjectIt()->idsToArray()) );
  	    
- 	    $references[] = $request;
- 	    
- 	    $trace = $model_factory->getObject('pm_ChangeRequestTrace');
-		
+ 	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
 		$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $this->getObjectIt()->idsToArray()) ); 
- 	    
-		$references[] = $trace;
 		
-		$attachment = $model_factory->getObject('pm_Attachment');
-				
+		$attachment = getFactory()->getObject('pm_Attachment');
 		$attachment->addFilter( new AttachmentObjectPredicate($this->getObjectIt()) );
-		
-		$references[] = $attachment;
 
- 	    $task = $model_factory->getObject('Task');
- 	    
+ 	    $task = getFactory()->getObject('Task');
  	    $task->addFilter( new FilterAttributePredicate('ChangeRequest', $this->getObjectIt()->idsToArray()) );
  	    
- 	    $references[] = $task;
- 	    
- 	    $activity = $model_factory->getObject('Activity');
- 	    
+ 	    $activity = getFactory()->getObject('Activity');
  	    $activity->addFilter( new ActivityRequestPredicate($this->getObjectIt()->idsToArray()) );
- 	    
+
+ 	    $references[] = $request;
+		$references[] = $trace;
+		$references[] = $attachment;
+ 	    $references[] = $task;
  	    $references[] = $activity;		
-		
+ 	    
  	    return $references;
 	}
 	
  	function duplicate( $project_it )
  	{
- 	    global $model_factory;
- 	    
 		$context = parent::duplicate( $project_it );
 		
  	 	$map = $context->getIdsMap();
 
- 	    $request = $model_factory->getObject('pm_ChangeRequest');
- 	    
-		$link = $model_factory->getObject('pm_ChangeRequestLink');
+ 	    $request = getFactory()->getObject('pm_ChangeRequest');
+		$link = getFactory()->getObject('pm_ChangeRequestLink');
+		$link_type = getFactory()->getObject('RequestLinkType');
+		
+		$type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
+		if ( $type_it->getId() < 1 )
+		{
+			$type_it =  $link_type->getByRef('ReferenceName', 'duplicates');
+		}
 		
  	    foreach( $this->getObjectIt()->idsToArray() as $source_id )
  	    {
     		$link->add_parms( array( 
     		    'SourceRequest' => $source_id,
     			'TargetRequest' => $map[$request->getClassName()][$source_id],
-    			'LinkType' => 1 
+    			'LinkType' => $type_it->getId() 
     		));
  	    }
  	    

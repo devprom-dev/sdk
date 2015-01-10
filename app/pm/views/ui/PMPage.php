@@ -340,7 +340,9 @@ class PMPage extends Page
 										'area' => $this->getArea()
 									),
 									translate($type_it->getDisplayName())
-								 )
+								 ),
+						'uid' => $type_it->get('ReferenceName')
+						
 				);
 				
 				$type_it->moveNext();
@@ -352,7 +354,8 @@ class PMPage extends Page
 								array (
 									'area' => $this->getArea()
 								)
-							 )
+							 ),
+					'uid' => 'issue'
 			);
 			
 			$template_it = getFactory()->getObject('RequestTemplate')->getAll();
@@ -368,7 +371,8 @@ class PMPage extends Page
 										'template' => $template_it->getId(),
 										'area' => $this->getArea()
 									)
-								 )
+								 ),
+						'uid' => 'template'.$template_it->getId()
 				);
 				
 				$template_it->moveNext();
@@ -401,7 +405,9 @@ class PMPage extends Page
 									'Assignee' => getSession()->getParticipantIt()->getId(),
 									'area' => $this->getArea()
 								)
-							 )
+							 ),
+					'uid' => 'task'
+					
 			);
 		}
 
@@ -430,7 +436,8 @@ class PMPage extends Page
 								array (
 									'area' => $this->getArea()
 								)
-							 )
+							 ),
+					'uid' => 'question'
 			);
 		}
 		
@@ -718,9 +725,15 @@ class PMPage extends Page
 	{
 		$resource = getFactory()->getObject('ContextResource');
 		
+		$resource_it = $resource->getExact($this->getReport());
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		
 		$resource_it = $resource->getExact($this->getReportBase());
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
 
+		$resource_it = $resource->getExact($this->getModule().':'.array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools'))));
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		
 		return parent::getHint();
 	}
 }

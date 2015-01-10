@@ -10,7 +10,7 @@ class ResourceBuilderPluginsLanguageFiles extends ResourceBuilder
 
         if ( !is_object($plugins) ) return;
         
-        $text_array = $plugins->initializeResources(getSession()->getLanguageUid());
+        $text_array = $plugins->initializeResources(getSession()->getLanguage()->getLanguage());
 
        	foreach ( $text_array as $key => $value )
 		{

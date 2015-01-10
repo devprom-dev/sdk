@@ -6,9 +6,4 @@ class ProjectUse extends Metaobject
  	{
  	    parent::__construct('pm_ProjectUse');
  	}
-
- 	function getMetadataCacheName()
- 	{
- 	    return 'global';
- 	}
 }

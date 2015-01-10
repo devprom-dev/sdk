@@ -11,6 +11,7 @@ include "predicates/FilterNotInPredicate.php";
 include "predicates/FilterModifiedAfterPredicate.php";
 include "predicates/FilterModifiedBeforePredicate.php";
 include "predicates/FilterNextSiblingsPredicate.php";
+include "predicates/FilterPrevSiblingsPredicate.php";
 include "predicates/FilterNoVpdPredicate.php";
 include "predicates/FilterSubmittedAfterPredicate.php";
 include "predicates/FilterSubmittedBeforePredicate.php";
@@ -1196,8 +1197,6 @@ class StoredObjectDB extends Object
 	//----------------------------------------------------------------------------------------------------------
 	function modify_parms( $id, $parms )
 	{
-		global $model_factory;
-
 		if ( count($parms) < 1 ) throw new Exception('There are no attributes to be updated');
 
 		$prev_object_it = $this->getExact($id);
@@ -1223,8 +1222,6 @@ class StoredObjectDB extends Object
 		}
 
 		$affected_rows = $this->getRegistryDefault()->Store( $prev_object_it, $parms );
-
-		if ( $affected_rows < 1 ) return $affected_rows;
 		
 		if ( count($imageattributes) > 0 || count($fileattributes) > 0 )
 		{

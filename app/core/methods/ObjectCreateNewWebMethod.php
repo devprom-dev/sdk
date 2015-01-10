@@ -42,7 +42,7 @@ class ObjectCreateNewWebMethod extends WebMethod
 		{
 			$strings = array();
 			
-			foreach( $parms as $key => $value ) $strings[] = $key.":'".$value."'";
+			foreach( $parms as $key => $value ) $strings[] = $key.":'".addslashes($value)."'";
 			
 			$parms_string = '{'.join(',',$strings).'}';
 		}

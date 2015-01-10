@@ -12,16 +12,26 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 	    if ( $kind != TRIGGER_ACTION_MODIFY ) return;
-	    
-	    if ( !array_key_exists('Project', $content) ) return;
-	    
 	    if ( !$this->checkEntity($object_it) ) return;
 	    
 	    $references = $this->getObjectReferences($object_it);
-	    
 	    if ( !is_array($references) ) return;
 	    
-	    $this->moveEntity( $object_it, $object_it->getRef('Project'), $references );
+	    if ( !array_key_exists('Project', $content) )
+	    {
+		    $data = $this->getRecordData();
+		    
+		    if ( !array_key_exists('Project', $data) ) return;
+		    if ( $data['Project'] == $object_it->get('Project') ) return;
+		    
+		    $project_it = getFactory()->getObject('Project')->getExact($data['Project']);
+	    }
+	    else
+	    {
+	    	$project_it = $object_it->getRef('Project');
+	    }
+
+	    $this->moveEntity( $object_it, $project_it, $references );
 	}
 	
 	protected function moveEntity( & $object_it, & $target_it, & $references )

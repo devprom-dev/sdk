@@ -1,15 +1,29 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/methods/c_state_methods.php";
+include_once SERVER_ROOT_PATH."pm/methods/ReorderWebMethod.php";
 
 class PMPageList extends PageList
 {
-	private $state_names = array();
+	private $order_method = null;
 	
     function PMPageList( $object )
     {
         parent::PageList($object);
     }
+    
+	function buildMethods()
+	{
+		// reorder method
+		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
+				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'OrderNum');
+		
+		if ( $has_access )
+		{
+			$this->order_method = new ReorderWebMethod($this->getObject()->getEmptyIterator());
+			$this->order_method->setInput();
+		}
+	}
     
     function retrieve()
     {
@@ -19,19 +33,6 @@ class PMPageList extends PageList
 		{
 		    $this->getObject()->addPersister( new SnapshotItemValuePersister($values['baseline']) );
 		}
-		
-		if ( is_a($this->getObject(), 'MetaobjectStatable') && $this->getObject()->getStateClassName() != '' )
-		{
-			$state_it = $this->getObject()->cacheStates();
-			
-			while( !$state_it->end() )
-			{
-				$this->state_names[$state_it->get('ReferenceName')] = $state_it->getDisplayName();
-				
-				$state_it->moveNext();
-			}
-		}
-			
 		
     	return parent::retrieve();
     }
@@ -43,9 +44,11 @@ class PMPageList extends PageList
         switch ( $attr )
         {
             case 'State':
-    
-            	echo $this->state_names[$object_it->get('State')];
-    
+            	echo $this->getTable()->getView()->render('pm/StateColumn.php', array (
+									'color' => $object_it->get('StateColor'),
+									'name' => $object_it->get('StateName'),
+									'terminal' => $object_it->get('StateTerminal') == 'Y'
+							));
                 break;
     
 			case 'History':
@@ -75,6 +78,19 @@ class PMPageList extends PageList
     				    echo translate('Все изменения');
     				echo '</a>';
         		}
+			    
+			    break;
+			    
+			case 'OrderNum':
+				if ( is_object($this->order_method) )
+				{
+					$this->order_method->setObjectIt($object_it);
+        			$this->order_method->draw();
+				}
+				else
+				{
+					parent::drawCell( $object_it, $attr );
+				}
 			    
 			    break;
 			    
@@ -116,6 +132,11 @@ class PMPageList extends PageList
 	    parent::setupColumns();
 	}
 	
+	function getColumnFields()
+	{
+		return array_merge(parent::getColumnFields(), $this->getObject()->getAttributesByGroup('workflow'));
+	}
+	
  	function getGroupDefault()
  	{
  		$default = parent::getGroupDefault();
@@ -134,4 +155,11 @@ class PMPageList extends PageList
 	    
  	    return $default;
  	}
+ 	
+	function getRenderParms()
+	{
+		$this->buildMethods();
+		
+		return parent::getRenderParms();
+	}
 }

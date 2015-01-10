@@ -77,7 +77,9 @@ function initializeDocument( page_id, options )
 					localOptions.scrollLastPos = -1;
 				}
 			})
-			.keydown(function(e) {
+			.keydown(function(e)
+			{
+				if ( $(e.target).is('.cke_editable') ) return;
 			    switch(e.which) {
 			        case 38: // up
 			        	buildTopWaypoint(options);
@@ -249,7 +251,7 @@ function restoreCache( callback )
 		
 		holder = $('.table-inner:first').find(itemSelector);
 		
-		if ( holder.length < 1 )
+		if ( holder.length < 1 || holder.attr('sort-value') != cachedItem.attr('sort-value') )
 		{
 			// if there is no item then create new one
 			$('.table-inner tr#no-elements-row').remove();
@@ -266,7 +268,7 @@ function restoreCache( callback )
 				else if( cachedItem.attr("sort-type") == "desc" )
 				{
 					var list = $(group_selector).filter( function() {
-						return $(this).attr("sort-value") <= cachedItem.attr("sort-value");
+						return parseInt($(this).attr("sort-value")) <= parseInt(cachedItem.attr("sort-value"));
 					});
 					
 					list.length < 1 ? $(group_selector+":first").before(cachedItem) : list.first().before(cachedItem);
@@ -274,7 +276,7 @@ function restoreCache( callback )
 				else
 				{
 					var list = $(group_selector).filter( function() {
-						return $(this).attr("sort-value") >= cachedItem.attr("sort-value");
+						return parseInt($(this).attr("sort-value")) >= parseInt(cachedItem.attr("sort-value"));
 					});
 					
 					list.length < 1 ? $(group_selector+":last").after(cachedItem) : list.first().before(cachedItem);  
@@ -285,6 +287,7 @@ function restoreCache( callback )
 				// put it in the end of the table
 				$('.table-inner tbody').append(cachedItem);
 			}
+			holder.remove();
 		}
 		else
 		{
@@ -305,7 +308,7 @@ function restoreCache( callback )
 	$('.table-inner:first tr[object-id]').filter(function (i,e) {
 		return $.inArray($(e).attr('object-id'), ids) >= 0;
 	})
-	.fadeTo(500, 1, function() {
+	.fadeTo(300, 1, function() {
 	});
 
 	refreshListItems();
@@ -591,8 +594,8 @@ function gotoRandomPage( page_id, load_pages, use_cache )
 	if ( use_cache && $('tr[object-id='+page_id+']').length > 0 && !$('tr[object-id='+page_id+']').hasClass('row-empty') )
 	{
 		scrollToPage( page_id );
-
 		selectPageInTree( page_id );
+		CKEDITOR.instances[$('[id*=WikiPageContent][objectid='+page_id+']').attr("id")].focus();
 
 		return;
 	}

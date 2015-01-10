@@ -10,9 +10,9 @@ class MetaobjectStatable extends Metaobject
  	
  	private $attrs_cache = array();
  	
- 	function __construct( $class, ObjectRegistrySQL $registry = null ) 
+ 	function __construct( $class, ObjectRegistrySQL $registry = null, $metadata_cache = '' ) 
  	{
- 	    parent::__construct($class, $registry);
+ 	    parent::__construct($class, $registry, $metadata_cache);
  	    
 		$this->addAttribute('StateObject', 'INTEGER', '', false, true);
  	    
@@ -28,13 +28,6 @@ class MetaobjectStatable extends Metaobject
     	foreach ( $attributes as $attribute )
     	{
     		$this->addAttributeGroup($attribute, 'system');
-    	}
-		
-    	$attributes = array( 'State', 'LifecycleDuration' );
-    	
-    	foreach ( $attributes as $attribute )
-    	{
-    		$this->addAttributeGroup($attribute, 'workflow');
     	}
  	}
  

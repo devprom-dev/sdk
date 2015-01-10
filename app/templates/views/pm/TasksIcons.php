@@ -20,7 +20,7 @@ foreach ( $states as $key => $state )
 
 <?php foreach ( $states as $key => $state ) { ?>
 
-<div class="btn-group" style="margin:0;height:<?=($state['photo_id'] != '' ? '21': '18')?>px;">
+<div class="btn-group" style="margin:0;height:<?=($state['photo_id'] != '' ? '21': '20')?>px;">
 
 	<?php if ( $state['url'] != '' ) { ?>
 	<a class="with-tooltip dropdown-toggle" data-toggle="dropdown" href="#" data-placement="right" data-original-title="" data-content="" info="<?=$state['url']?>">

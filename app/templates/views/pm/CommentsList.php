@@ -9,13 +9,13 @@
 			
 			<?php if( $icon_size == 'small' ) { ?>
 			
-			<a class="dashed <?=$new_link_class?>" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
+			<a tabindex="5" class="dashed <?=$new_link_class?>" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
 				<?=translate('добавить комментарий')?>
 			</a>
 			
 			<?php } else { ?>
 
-			<a class="btn btn-small btn-success" type="button" title="" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
+			<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
 			    <i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
 			</a>
 			

@@ -15,6 +15,8 @@ class TaskPlanningPage extends PMPage
  	{
  		global $_REQUEST, $model_factory;
 
+ 		getSession()->addBuilder( new TaskModelExtendedBuilder() );
+ 		
  		parent::PMPage();
  		
  		if ( $_REQUEST['view'] == 'chart' ) return;
@@ -58,7 +60,6 @@ class TaskPlanningPage extends PMPage
  	
  	function getObject()
  	{
- 		getSession()->addBuilder( new TaskModelExtendedBuilder() );
  		return getFactory()->getObject('Task');
  	}
  	

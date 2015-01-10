@@ -8,6 +8,7 @@ include SERVER_ROOT_PATH.'pm/classes/model/permissions/AccessPolicyProject.php';
 
 include SERVER_ROOT_PATH.'pm/classes/widgets/ModuleCategoryBuilderCommon.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceBuilder.php';
+include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceCustomReportsBuilder.php';
 
 include SERVER_ROOT_PATH.'pm/classes/common/PMUserSettings.php'; 
 include SERVER_ROOT_PATH."pm/classes/common/ModuleProjectsBuilder.php";
@@ -49,6 +50,8 @@ include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataPermissionsBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/triggers/TaskOrderNumTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskTypeMetadataBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/tasks/events/UpdateLeftWorkEventHandler.php";
+include SERVER_ROOT_PATH."pm/classes/tasks/events/TaskModifyProjectTrigger.php";
 
 include SERVER_ROOT_PATH."pm/classes/plan/IterationMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/ReleaseMetadataBuilder.php";
@@ -109,7 +112,6 @@ class PMSession extends SessionBase
         
         // reconfigure the cache
  		$this->setCacheEngine(getCacheService());
- 		
  		$this->getCacheEngine()->setDefaultPath($this->getCacheKey());
         
  		// create the new model factory
@@ -172,7 +174,8 @@ class PMSession extends SessionBase
  	            		new SetPlanItemDatesTrigger(),
  	                    new DeleteCommentsTrigger(),
  	                    new IssueModifyProjectTrigger(),
- 	                    new FeatureMetadataBuilder(),
+ 	            		new TaskModifyProjectTrigger(),
+ 	            		new FeatureMetadataBuilder(),
  	            		new StateBusinessActionBuilderTask(),
  	                    new StateBusinessActionBuilderRequest(),
  	                    new StateBusinessRuleBuilderIssue(),
@@ -200,11 +203,13 @@ class PMSession extends SessionBase
  	                    new CacheSessionProjectTrigger(),
  	            		new CustomizableObjectBuilderCommon($this),
  	            		new PMContextResourceBuilder(),
+ 	            		new PMContextResourceCustomReportsBuilder(),
  	            		
  	            		// model
  	            		new ResetFieldsEventHandler(),
  	            		new ApplyBusinessActionsEventHandler(),
- 	            		new ResetTasksEventHandler()
+ 	            		new ResetTasksEventHandler(),
+ 	            		new UpdateLeftWorkEventHandler()
  	            )
  	    );
  	}

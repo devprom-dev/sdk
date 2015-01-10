@@ -37,16 +37,6 @@ class IterationForm extends PMPageForm
 		return $validator;
 	}
 
- 	function IsNeedButtonNew() 
- 	{
-		return false;
-	}
- 	
- 	function IsNeedButtonCopy() 
- 	{
-		return false;
-	}
- 	
  	function IsAttributeVisible( $attr_name ) 
  	{
  		switch ( $attr_name )
@@ -66,6 +56,28 @@ class IterationForm extends PMPageForm
  			default:
 				return parent::IsAttributeVisible( $attr_name );
  		}
+	}
+	
+	function getDefaultValue( $attribute )
+	{
+		$value = parent::getDefaultValue( $attribute );
+		
+		switch($attribute)
+		{
+		    case 'Version':
+		    	if ( $value == '' )
+		    	{
+		    		return getFactory()->getObject('Release')->getRegistry()->Query(
+			    				array (
+			    						new FilterVpdPredicate(),
+			    						new ReleaseTimelinePredicate('current')
+			    				)
+		    			)->getId();
+		    	}
+		    	break;
+		}
+		
+		return $value;
 	}
 	
 	function createField( $attr )

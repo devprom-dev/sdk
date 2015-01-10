@@ -4,8 +4,10 @@ class TransitionPredicateIterator extends OrderedIterator
 {
  	function getDisplayName() 
  	{
- 		$predicate_it = $this->getRef('Predicate');
- 			
- 		return $predicate_it->getDisplayName();
+ 		$ref_it = $this->getRef('Predicate');
+ 		
+ 		return $ref_it->getId() != '' 
+ 				? $ref_it->getDisplayName() 
+ 				: preg_replace('/%1/', $this->get('Predicate'), text(1881));
  	}
 }

@@ -6,19 +6,8 @@ class LicenseInstalledRegistry extends ObjectRegistrySQL
 	{
 		$iterator = parent::createSQLIterator( $sql );
 		
-		if ( $iterator->count() < 1 )
-		{
-			getFactory()->error('License entity wasn\'t found');
-			
-			return $iterator;
-		}
-		
-		if ( !class_exists($iterator->get('LicenseType')) )
-		{
-			getFactory()->error('License class wasn\'t found: '.$iterator->get('LicenseType'));
-			
-			return $iterator;
-		}
+		if ( $iterator->count() < 1 ) return $iterator;
+		if ( !class_exists($iterator->get('LicenseType')) ) return $iterator;
 		
 		$class_name = $iterator->get('LicenseType');
 		

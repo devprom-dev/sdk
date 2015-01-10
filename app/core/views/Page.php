@@ -26,6 +26,7 @@
  include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
  include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportJSON.php';
  include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
+ include_once SERVER_ROOT_PATH.'core/classes/system/Coloring.php';
  include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 
  include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
@@ -492,10 +493,9 @@
 		        
 		        while ( !$linked_it->end() )
 		        {
-		        	if ( $portfolio_it->getId() == $linked_it->getId() ) 
+		        	if ( $portfolio_it->getId() == $linked_it->getId() || array_key_exists($linked_it->get('CodeName'), $programs) ) 
 		        	{
 		        		$linked_it->moveNext();
-		        		
 		        		continue;
 		        	}
 		        	
@@ -779,8 +779,8 @@
 		{
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
-			header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
-			header("Pragma: no-cache"); // HTTP/1.0
+			header("Cache-Control: no-cache, must-revalidate, max-age=0, no-store, post-check=0, pre-check=0"); // HTTP/1.1
+			header("Pragma: no-cache "); // HTTP/1.0
 			header('Content-type: text/html; charset=windows-1251');
 
 			if ( is_a($this->form, 'PMPageForm') )
@@ -832,6 +832,10 @@
         {
 	 		$table = $this->getTableRef();
 
+			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
+			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
+			header("Cache-Control: no-cache, must-revalidate, max-age=0, no-store, must-revalidate, post-check=0, pre-check=0"); // HTTP/1.1
+			header("Pragma: no-cache "); // HTTP/1.0
 	 		header('Content-type: text/html; charset=windows-1251');
 	 		
 	 		$table->render($view, $render_parms);

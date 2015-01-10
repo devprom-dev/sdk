@@ -13,8 +13,4 @@ class DictionaryTable extends StaticPageTable
 	{
 		return array();
 	}
-	
-	function drawFooter()
-	{
-	}
 }

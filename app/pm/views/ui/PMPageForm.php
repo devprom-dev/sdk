@@ -3,8 +3,6 @@
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 
-include_once 'FieldState.php';
-
 ///////////////////////////////////////////////////////////////////////////////
 class PMPageForm extends PageForm
 {
@@ -149,32 +147,6 @@ class PMPageForm extends PageForm
  		return '';
  	}
 
-    function getAlert()
-    {
-        global $model_factory;
-
-        $object_it = $this->getObjectIt();
-
-        if (!is_object($object_it))
-            return "";
-        if (!is_a($object_it->object, 'MetaobjectStatable'))
-            return "";
-
-        $state_it = $object_it->getStateIt();
-        $transition_it = $state_it->getTransitionIt();
-
-        $message = '';
-        while (!$transition_it->end()) {
-            if (!$transition_it->doable($this->object_it)) {
-                $message = $transition_it->getNonDoableReason();
-                break;
-            }
-            $transition_it->moveNext();
-        }
-
-        return $message;
-    }
-    
     function getSite()
     {
         return 'pm';
@@ -246,9 +218,6 @@ class PMPageForm extends PageForm
     {
         switch ($attr) 
         {
-            case 'State':
-                return new FieldState();
-    
             default:
                 foreach ($this->customtypes as $refname => $type) 
                 {
@@ -315,7 +284,6 @@ class PMPageForm extends PageForm
  		$object_it = $this->getObjectIt();
         
         return array_merge(parent::getRenderParms(), array(
-            'alert' => $this->getAlert(),
             'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable() ? $object_it->getStateName() : "" 
         ));
     }

@@ -37,6 +37,8 @@ class ChangesFilterResolver
 			$filters[] = new \FilterModifiedAfterPredicate($this->from);
 		}
 		
+		$filters[] = new \SortAttributeClause('ObjectChangeLogId.D');
+		
 		return $filters;
 	}
 	

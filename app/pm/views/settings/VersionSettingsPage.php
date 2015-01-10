@@ -13,13 +13,7 @@ class VersionSettingsPage extends PMPage
 
     function getObjectIt()
     {
-        global $model_factory;
-        	
-        $settings = $model_factory->getObject('pm_VersionSettings');
-
-        $settings_it = $settings->getAll();
-        
-        return $settings_it;
+        return getFactory()->getObject('pm_VersionSettings')->getAll();
     }
     
     function needDisplayForm()
@@ -28,11 +22,11 @@ class VersionSettingsPage extends PMPage
         
         if ( getFactory()->getAccessPolicy()->can_modify($settings_it) )
         {
-            $this->form->edit( $settings_it->getId() );
+            $this->getFormRef()->edit( $settings_it->getId() );
         }
         else
         {
-            $this->form->show( $settings_it->getId() );
+            $this->getFormRef()->show( $settings_it->getId() );
         }
         	
         return true;

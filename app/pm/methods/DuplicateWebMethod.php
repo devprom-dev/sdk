@@ -49,10 +49,15 @@ class DuplicateWebMethod extends WebMethod
 		return 'Method:'.get_class($this).':Project';
 	}
 	
-	function getLink()
+	function getLink( $project_id = '' )
 	{
-		return '?mode=bulk&ids='.$this->getObjectIt()->getId().
-			'&bulkmode=complete&operation='.$this->getMethodName().'&redirect='.urlencode($_SERVER['REQUEST_URI']);
+		$url = '?mode=bulk&ids='.$this->getObjectIt()->getId().
+					'&bulkmode=complete&operation='.$this->getMethodName().'&redirect='.urlencode($_SERVER['REQUEST_URI']);
+		if ( $project_id != '' )
+		{
+			$url .= '&Project='.$project_id;
+		}
+		return $url;
 	}
 	
 	function getJSCall( $parms = array() )

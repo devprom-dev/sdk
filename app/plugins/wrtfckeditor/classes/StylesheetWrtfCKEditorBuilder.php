@@ -14,15 +14,10 @@ class StylesheetWrtfCKEditorBuilder extends StyleSheetBuilder
     public function build( StyleSheetRegistry & $object )
     {
     	$object->addScriptFile(SERVER_ROOT_PATH.'/plugins/wrtfckeditor/ckeditor/contents.css');
-		
 		$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/inline-content.css");
-
     	$object->addScriptFile(SERVER_ROOT_PATH.'/styles/wysiwyg/msword.css');
-		
     	$object->addScriptFile(SERVER_ROOT_PATH.'/styles/newlook/medium-fonts.css');
-		
     	$object->addScriptFile(DOCUMENT_ROOT.'conf/plugins/wrtfckeditor/custom.css');
-		
-    	$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/plugins/codesnippet/lib/highlight/styles/default.css");
+    	$object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/ckeditor/plugins/codesnippet/lib/highlight/styles/railscasts.css");
     }
 }

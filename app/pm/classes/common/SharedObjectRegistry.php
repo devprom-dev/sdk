@@ -15,11 +15,7 @@ class SharedObjectRegistry extends ObjectRegistrySQL
 
  	function createSQLIterator( $sql )
  	{
- 	    global $model_factory;
-
- 	    $builders = getSession()->getBuilders('SharedObjectsBuilder'); 
- 	    
- 	    foreach( $builders as $builder )
+ 	    foreach( getSession()->getBuilders('SharedObjectsBuilder') as $builder )
  	    {
  	        $builder->build( $this );
  	    }

@@ -8,9 +8,9 @@ class CalendarRegistry extends ObjectRegistrySQL
 			   
 		$it = parent::createSQLIterator( $sql );
 
-   		for( $i = 0; $i < date('Y') + 4 - $it->get('cnt'); $i++ )
+   		for( $i = $it->get('cnt'); $i < date('Y') + 4; $i++ )
 		{
-			$this->_createIntervals( date("Y") + $i );
+			$this->_createIntervals( $i );
 		}
 		
 		return $this->createIterator(array());

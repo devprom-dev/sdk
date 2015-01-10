@@ -1,4 +1,4 @@
-<div style="display:table;width:100%;">
+<div class="hidden-print" style="display:table;width:100%;">
 	<div class="filter" style="display:table-cell;font-weight:normal;width:60%;vertical-align:top;">
 		<?php foreach( $actions as $action ) { ?>
 			<?php if ( count($action['items']) < 1 ) continue; ?>

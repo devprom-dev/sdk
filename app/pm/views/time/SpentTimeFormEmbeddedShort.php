@@ -2,9 +2,9 @@
 
 class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 {
-	function getItemDisplayName( $object_it )
+	function getItemVisibility( $object_it )
 	{
-		return ''; 		
+		return false; 		
 	}
 	
 	function drawAddButton( $tabindex )

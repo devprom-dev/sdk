@@ -8,6 +8,7 @@ include_once "ModelDataTypeMappingInteger.php";
 include_once "ModelDataTypeMappingFloat.php";
 include_once "ModelDataTypeMappingReference.php";
 include_once "ModelDataTypeMappingTag.php";
+include_once "ModelDataTypeMappingString.php";
 
 class ModelDataTypeMapper
 {
@@ -22,7 +23,8 @@ class ModelDataTypeMapper
 				new ModelDataTypeMappingBoolean(),
 				new ModelDataTypeMappingInteger(),
 				new ModelDataTypeMappingFloat(),
-				new ModelDataTypeMappingReference()
+				new ModelDataTypeMappingReference(),
+				new ModelDataTypeMappingString()
 		);
 	}
 	

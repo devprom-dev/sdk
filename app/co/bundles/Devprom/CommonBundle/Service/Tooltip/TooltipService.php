@@ -10,7 +10,9 @@ class TooltipService
 	
 	public function __construct( $class_name, $object_id )
 	{
-    	$this->setObjectIt(getFactory()->getObject($class_name)->getExact($object_id));
+		$object = getFactory()->getObject($class_name);
+		$this->extendModel($object);
+    	$this->setObjectIt($object->getExact($object_id));
 	}
 	
 	public function setObjectIt( $object_it )
@@ -29,6 +31,10 @@ class TooltipService
     			'attributes' => 
     				$this->buildAttributes( $this->object_it )
     	);
+    }
+    
+    protected function extendModel( $object )
+    {
     }
     
     protected function buildAttributes( $object_it )

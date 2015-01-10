@@ -6,7 +6,7 @@ class ModelValidatorProjectCodeName extends ModelValidatorInstance
 {
 	public function validate( Metaobject $object, array & $parms )
 	{
-		$parms['CodeName'] = trim($parms['CodeName'], ' \r\n');
+		$parms['CodeName'] = trim($parms['CodeName'], " \r\n");
 		
 	    if ( strlen($parms['CodeName']) < 3 ) return text(1870);
 	    

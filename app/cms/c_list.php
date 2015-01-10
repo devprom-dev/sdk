@@ -886,12 +886,8 @@
         }
        	echo '</ul></div>';
        	
-        echo '<div class="pull-right pagination">';
-
-        $iterator = $this->getIteratorRef();
-        
-		echo translate('Всего строк').': '.$iterator->count();
-		
+        echo '<div class="pull-left pagination pagination-total">';
+	        echo preg_replace('/%1/', $this->getIteratorRef()->count(), text(1884));
 		echo '</div>';
 	}
 	

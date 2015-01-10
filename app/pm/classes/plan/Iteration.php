@@ -4,7 +4,7 @@ include "IterationIterator.php";
 include "IterationRegistry.php";
 include "predicates/IterationTimelinePredicate.php";
 include "predicates/IterationReleasePredicate.php";
-include "persisters/IterationMetricsPersister.php";
+include "predicates/IterationUserHasTasksPredicate.php";
 include "sorts/SortRecentNumberClause.php";
 include "sorts/SortReleaseIterationClause.php";
 
@@ -18,14 +18,6 @@ class Iteration extends Metaobject
 		        new SortReleaseIterationClause(),
 		        new SortAttributeClause('ReleaseNumber')
 		));
-		
-		$this->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false);
-		
-		$this->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Оценка окончания'), false, false);
-		
- 		$this->addAttribute( 'Caption', 'TEXT', translate('Итерация'), false );
- 		
-		$this->addPersister( new IterationMetricsPersister() );
 	}
 
 	function DeletesCascade( $object )

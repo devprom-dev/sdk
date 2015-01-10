@@ -51,7 +51,7 @@ class MailboxScannerTest extends DevpromTestCase {
         
         $this->projectIt = $this->getMock("ProjectIterator", array(), array(new Project()));
         $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
-        $this->session = new \SessionBase();
+        $this->session = $this->getSessionObject();
 
         $this->watcherMock = $this->getMock("Watcher", array("add_parms", "createSQLIterator"), array($this->requestMock->createSQLIterator('')));
         

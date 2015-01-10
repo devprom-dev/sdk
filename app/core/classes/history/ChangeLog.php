@@ -20,15 +20,16 @@ class ChangeLog extends Metaobject
 {
  	function __construct( ObjectRegistrySQL $registry = null ) 
  	{
- 		global $model_factory;
- 		
  		parent::__construct('ObjectChangeLog', is_object($registry) ? $registry : new ChangeLogRegistry($this));
  		
  		$this->setAttributeType( 'Author', 'REF_pm_ParticipantId' );
  		
  		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата изменения'), false, false );
-
  		$this->addPersister( new ChangeLogDetailsPersister() );
+
+ 		$this->setSortDefault( array( 
+ 		    new SortAttributeClause('ObjectChangeLogId.D')
+ 		));
  	}
  	
  	function createIterator() 

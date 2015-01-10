@@ -17,11 +17,15 @@ class CoAccessPolicy extends AccessPolicy
  			return $this->group_it;
  		}
 
- 		$user_it = getSession()->getUserIt();
-
+ 		$user_it = getFactory()->getObject('User')->getRegistry()->Query(
+ 				array (
+ 						new FilterInPredicate(getSession()->getUserIt()->getId())
+ 				)
+ 		);
+ 		
  	 	if ( $user_it->object->getAttributeType('GroupId') == '' )
  	    {
- 	    	return getFactory()->getObject('co_UserGroup')->getEmptyIterator();
+ 	    	return $this->group_it = getFactory()->getObject('co_UserGroup')->getEmptyIterator();
  	    }
  		
  		if ( $user_it->get('GroupId') == '' )
@@ -120,7 +124,11 @@ class CoAccessPolicy extends AccessPolicy
 		            
 	            $group_it->moveNext();
         	}
-	
+
+            $access = $this->group_access_it->getAccess( $group_it, $object_it );
+
+	        if ( $access != -1 ) return $access;
+        	
             $this->group_access_it->moveNext();
         }
  	    

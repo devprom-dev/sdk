@@ -142,7 +142,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		return translate('Перенести в проект');
 	}
 
-	function getLink()
+	function getLink( $target_id = '' )
 	{
 		$redirect_url = $_SERVER['REQUEST_URI'];
 		
@@ -152,7 +152,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		}
 		
 		return '?mode=bulk&ids='.$this->request_it->getId().
-			'&bulkmode=complete&operation=AttributeProject'.
+			'&bulkmode=complete&operation=AttributeProject&Project='.$target_id.
 		    '&redirect='.urlencode($redirect_url);
 	}
 	
@@ -193,9 +193,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 	function getJSCall()
 	{
 		return parent::getJSCall( array(
-			'Caption' => $this->request_it->getDisplayName(),
-			'ChangeRequest' => $this->request_it->getId(),
-			'Priority' => $this->request_it->get('Priority')
+			'ChangeRequest' => $this->request_it->getId()
 		));
 	}
  }

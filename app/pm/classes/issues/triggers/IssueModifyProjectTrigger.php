@@ -9,7 +9,6 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
 		switch( $object_it->object->getEntityRefName() )
 	    {
 	        case 'pm_ChangeRequest':
-	        	
 	        	return true;
 	    }
 	    
@@ -18,65 +17,76 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
 	
 	protected function & getObjectReferences( & $object_it )
 	{
-		global $model_factory;
-		
  	    // prepare list of objects to be serilalized
  	    $references = array();
+ 	    $ids = $object_it->idsToArray();
         
  	    $type = getFactory()->getObject('pm_IssueType');
- 	    
  	    $type->addFilter( new FilterInPredicate($object_it->fieldToArray('Type')) );
  	    
- 	    $references[] = $type;
- 	    
  	    $priority = getFactory()->getObject('Priority');
- 	    
  	    $priority->addFilter( new FilterInPredicate($object_it->fieldToArray('Priority')) );
  	    
- 	    $references[] = $priority; 
+ 	    $request = getFactory()->getObject('pm_ChangeRequest');
+ 	    $request->addFilter( new FilterInPredicate($ids) );
  	    
- 	    $request = $model_factory->getObject('pm_ChangeRequest');
+ 	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
+		$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $ids) ); 
  	    
- 	    $request->addFilter( new FilterInPredicate($object_it->idsToArray()) );
+ 	    $link = getFactory()->getObject('pm_ChangeRequestLink');
+ 	    $link->addFilter( new RequestLinkedFilter($ids) ); 
  	    
- 	    $references[] = $request;
- 	    
- 	    $trace = $model_factory->getObject('pm_ChangeRequestTrace');
-		
-		$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $object_it->getId()) ); 
- 	    
-		$references[] = $trace;
-		
- 	    $link = $model_factory->getObject('pm_ChangeRequestLink');
-
- 	    $link->addFilter( new RequestLinkedFilter($object_it->getId()) ); 
- 	    
-		$references[] = $link;
- 	    
-		$attachment = $model_factory->getObject('pm_Attachment');
-				
+		$attachment = getFactory()->getObject('pm_Attachment');
 		$attachment->addFilter( new AttachmentObjectPredicate($object_it) );
-		
-		$references[] = $attachment;
 
- 	    $task = $model_factory->getObject('Task');
+		$watcher = getFactory()->getObject2('pm_Watcher', $object_it);
+		
+ 	    $task = getFactory()->getObject('Task');
+ 	    $task->addFilter( new FilterAttributePredicate('ChangeRequest', $ids) );
  	    
- 	    $task->addFilter( new FilterAttributePredicate('ChangeRequest', $object_it->idsToArray()) );
+ 	    $activity = getFactory()->getObject('Activity');
+ 	    $activity->addFilter( new ActivityRequestPredicate($ids) );
  	    
- 	    $references[] = $task;
- 	    
- 	    $activity = $model_factory->getObject('Activity');
- 	    
- 	    $activity->addFilter( new ActivityRequestPredicate($object_it->idsToArray()) );
- 	    
- 	    $references[] = $activity;
- 	    
-		$comment = $model_factory->getObject('Comment');
-				
+		$comment = getFactory()->getObject('Comment');
 		$comment->addFilter( new CommentObjectFilter($object_it) );
 		
-		$references[] = $comment;
+ 	    $part_ids = array_unique(
+		 	    		array_filter(
+		 	    				array_merge(
+					 	    		$request->getAll()->fieldToArray('Owner'),
+					 	    		$task->getAll()->fieldToArray('Assignee'),
+					 	    		$activity->getAll()->fieldToArray('Participant')
+		 	    				),
+								function($value) { return $value > 0; }	
+		 	    		)
+	 	    		);
 
+ 	    if ( count($part_ids) > 0 )
+ 	    {
+	 	    $part = getFactory()->getObject('Participant');
+	 	    $part->addFilter( new FilterInPredicate($part_ids) );
+	 	    $references[] = $part;
+	 	     
+	 	    $part_role = getFactory()->getObject('ParticipantRole');
+	 	    $part_role->addFilter( new FilterAttributePredicate('Participant', $part_ids) );
+	 	    $references[] = $part_role;
+	 	    
+	 	    $project_role = getFactory()->getObject('ProjectRole');
+	 	    $project_role->addFilter( new FilterInPredicate($part_role->getAll()->fieldToArray('ProjectRole')) );
+	 	    $references[] = $project_role;
+ 	    } 
+
+ 	    $references[] = $type;
+ 	    $references[] = $priority; 
+ 	    $references[] = $request;
+		$references[] = $trace;
+ 	    $references[] = $link;
+		$references[] = $attachment;
+ 	    $references[] = $task;
+ 	    $references[] = $activity;
+		$references[] = $comment;
+		$references[] = $watcher;
+ 	    
 		return $references;
 	}
 }

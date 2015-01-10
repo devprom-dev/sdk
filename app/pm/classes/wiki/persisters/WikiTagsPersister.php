@@ -11,7 +11,7 @@ class WikiTagsPersister extends ObjectSQLPersister
   		$objectPK = $alias.$object->getClassName().'Id';
  		
  		array_push( $columns, 
- 			"(SELECT GROUP_CONCAT(wt.WikiTagId) FROM WikiTag wt " .
+ 			"(SELECT GROUP_CONCAT(wt.Tag) FROM WikiTag wt " .
 			"  WHERE wt.Wiki = ".$objectPK." ) Tags " );
 
  		return $columns;

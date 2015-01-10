@@ -6,13 +6,28 @@ class ProjectLogList extends PMStaticPageList
  	
 	function setupColumns()
 	{
-		$this->object->addAttribute('UserAvatar', '', translate('Пользователь'), true, false, '', 1);
-	
+		$this->object->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
+		$this->object->setAttributeCaption( 'SystemUser', translate('Имя автора') );
 		$this->object->setAttributeOrderNum( 'SystemUser', 2 );
 		
-		$this->object->setAttributeCaption( 'SystemUser', translate('Имя') );
-		
 		parent::setupColumns();
+	}
+	
+	function getSorts()
+	{
+		$sorts = parent::getSorts();
+		
+		foreach( $sorts as $key => $sort )
+		{
+			if ( !$sort instanceof SortAttributeClause ) continue;
+			
+			if ( $sort->getAttributeName() == 'ChangeDate' )
+			{
+				$sorts[$key] = new SortAttributeClause('ObjectChangeLogId.D');
+			}
+		}
+		
+		return $sorts;
 	}
 	
 	function drawCell( $object_it, $attr ) 

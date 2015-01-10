@@ -4,14 +4,30 @@ include_once "AutoSaveTextWebMethod.php";
 
 class AutoSaveFieldWebMethod extends AutoSaveTextWebMethod
 {
- 	var $object_it, $field;
+ 	private $object_it = null;
+ 	private $field;
  	
  	function AutoSaveFieldWebMethod( $object_it = null, $field = '' )
  	{
- 		$this->object_it = $object_it;
+ 		$this->setObjectIt($object_it);
  		$this->field = $field;
 
- 		parent::AutoSaveTextWebMethod();
+ 		parent::__construct();
+ 	}
+ 	
+ 	function setObjectIt( $object_it )
+ 	{
+ 		$this->object_it = $object_it;
+ 	}
+ 	
+ 	function getObjectIt()
+ 	{
+ 		return $this->object_it;
+ 	}
+ 	
+ 	function getField()
+ 	{
+ 		return $this->field;
  	}
  	
  	function getTitle()
@@ -21,9 +37,7 @@ class AutoSaveFieldWebMethod extends AutoSaveTextWebMethod
  	
  	function hasAccess()
  	{
- 		return is_object($this->object_it) 
- 			? getFactory()->getAccessPolicy()->can_modify_attribute($this->object_it->object, $this->field)
- 			: true; 
+ 		return true; 
  	}
  	
  	function draw()

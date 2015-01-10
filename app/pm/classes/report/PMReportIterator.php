@@ -127,7 +127,8 @@ class PMReportIterator extends OrderedIterator
             'name' => $this->getDisplayName(),
 	        'title' => $this->getDisplayName(),
             'url' => $url.'/'.$this->getId().'?report='.$this->getId().$base_parm.'&'.$query_string,
-            'uid' => $this->getId()
+            'uid' => $this->getId(),
+	    	'report' => $this->getId()
 	    );
 	}
 	

@@ -1,17 +1,20 @@
 <?php
 
-include_once SERVER_ROOT_PATH."pm/classes/common/PMObjectCacheable.php";
-
-class CacheableSet extends PMObjectCacheable
+class CacheableSet extends MetaobjectCacheable
 {
  	function __construct( $registry = null )
  	{
  		parent::__construct('entity', is_object($registry) ? $registry : new ObjectRegistrySQL($this) );
  	}
  	
+ 	function getVpds()
+ 	{
+ 		return array();
+ 	}
+ 	
 	function getCacheCategory()
 	{
 		// participant-wide cache
-	    return $this->getMetadataCacheName();
+	    return getSession()->getCacheKey();
 	}
 }

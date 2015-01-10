@@ -13,7 +13,7 @@
 	<link title="" type="application/rss+xml" rel="alternate" href="/rss"/>
 	<link rel="stylesheet" href="<?=getSession()->getApplicationUrl()?>scripts/css/?v=<?=$current_version?>" type="text/css" media="screen">
 	<?php $view['slots']->output('_header'); ?>
-   	<script src="/cache?v=<?=$current_version?>&l=<?=$language_code?>" type="text/javascript" charset="UTF-8"></script>
+   	<script src="/cache/?v=<?=$current_version?>&l=<?=$language_code?>" type="text/javascript" charset="UTF-8"></script>
   </head>
   <body>
 	<div class="container-fluid wrapper-all <?=($inside ? 'container-fluid-internal' : '')?>">
@@ -22,25 +22,23 @@
 	  
 	  <footer class="<?=($inside ? 'internal' : '')?> hidden-print">
 		<ul>
-			<?php 
-	 		
-		 	if ( defined('METRICS_VISIBLE') && METRICS_VISIBLE ) 
-		 	{
-		 	 	$metrics_text = str_replace('%1', MetricsServer::Instance()->getDuration(), text(1067));
-	 
-			 	$metrics_text = str_replace('%2', MetricsClient::Instance()->getDuration('clscript'), $metrics_text);
-		 	}
-			
-			?>
-			<li><? echo '<a target="_blank" href="http://devprom.ru">'.$license_name.'</a> '.$current_version.' '.$metrics_text; ?>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-			<li><a target="_blank" href="http://support.devprom.ru/issue/new"><?=translate('Сообщить о проблеме')?></a></li>
+			<li><? echo '<a tabindex="-1" target="_blank" href="http://devprom.ru">'.$license_name.'</a> '.$current_version; ?>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+			<li><a tabindex="-1" target="_blank" href="http://support.devprom.ru/issue/new"><?=translate('Сообщить о проблеме')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+			<li><a tabindex="-1" target="_blank" href="http://devprom.ru/docs"><?=translate('Документация')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+			<li><a tabindex="-1" target="_blank" href="http://club.devprom.ru"><?=text(1880)?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+			<li><a tabindex="-1" target="_blank" href="http://devprom.ru/news"><?=translate('Новости')?></a></li>
 		</ul>
-	    <p><?=text(1286)?></p>
+		<?php 
+ 		
+	 	if ( defined('METRICS_VISIBLE') && METRICS_VISIBLE ) 
+	 	{
+	 	 	$metrics_text = str_replace('%1', MetricsServer::Instance()->getDuration(), text(1067));
+		 	$metrics_text = str_replace('%2', MetricsClient::Instance()->getDuration('clscript'), $metrics_text);
+	 	}
+		
+		?>
 		<ul>
-			<li><a target="_blank" href="http://devprom.ru/docs"><?=translate('документация')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-			<li><a target="_blank" href="http://devprom.ru/news"><?=translate('новости')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-			<li><a target="_blank" href="http://devprom.ru/download?updates"><?=translate('обновления')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-			<li><a target="_blank" href="http://support.devprom.ru"><?=translate('поддержка')?></a></li>
+			<li><?=$metrics_text?></li>
 		</ul>
 	  </footer>
 	</div>	<!-- end container -->

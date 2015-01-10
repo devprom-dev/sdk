@@ -38,7 +38,14 @@ class TaskList extends PMPageList
 
 		$this->has_grouping = $this->getGroup() != '';
 
-		$this->priority_method = new ChangePriorityWebMethod(getFactory()->getObject('Priority')->getAll());
+		// cache priority method
+		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
+				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority');
+		
+		if ( $has_access )
+		{
+			$this->priority_method = new ChangePriorityWebMethod(getFactory()->getObject('Priority')->getAll());
+		}
 		
 		$this->getTable()->buildRelatedDataCache();
 	}
@@ -70,6 +77,37 @@ class TaskList extends PMPageList
 		return $cols;
 	}
 	
+	function getGroupFields() 
+	{
+		$fields = parent::getGroupFields();
+
+		$fields[] = 'DueDays';
+		
+		return $fields;
+	}
+	
+	function getSorts()
+	{
+		$sorts = parent::getSorts();
+		
+		foreach( $sorts as $key => $sort )
+		{
+			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ChangeRequest' )
+			{
+				if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
+				{
+					array_unshift($sorts, new TaskRequestOrderSortClause());
+				}
+				else
+				{
+					array_unshift($sorts, new TaskRequestPrioritySortClause());
+				}
+			}
+		}
+		
+		return $sorts;
+	}
+	
   	function IsNeedToSelect()
 	{
 		return true;
@@ -91,9 +129,14 @@ class TaskList extends PMPageList
 				break;
 	    	
 			case 'Priority':
-			    
-				$this->priority_method->drawMethod( $object_it, 'Priority' );
-				
+				if ( is_object($this->priority_method) )
+				{
+					$this->priority_method->drawMethod( $object_it, 'Priority' );
+				}
+				else
+				{
+					parent::drawRefCell( $entity_it, $object_it, $attr );
+				}
 				break;
 	        
 			case 'ChangeRequest':
@@ -152,19 +195,6 @@ class TaskList extends PMPageList
 					$frame = new TaskProgressFrame( $object_it->getProgress() );
 				}
 				$frame->draw();
-				break;
-			
-			case 'OrderNum':
-				if ( getFactory()->getAccessPolicy()->can_modify($object_it) )
-				{
-					$method = new AutoSaveFieldWebMethod( $object_it, 'OrderNum' );
-					$method->setInput();
-					$method->draw();
-				}
-				else 
-				{
-                    parent::drawCell( $object_it, $attr );				    
-				}
 				break;
 				
 			default:
@@ -234,15 +264,12 @@ class TaskList extends PMPageList
 				
 			case 'AssigneeUser':
 				
-				parent::drawGroup($group_field, $object_it);
-				
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				
 				if ( count($workload) > 0 )
 				{
-					echo ' '.str_replace('%1', $workload[$object_it->get($group_field)]['Planned'],
-								str_replace('%2', $workload[$object_it->get($group_field)]['LeftWork'],
-										str_replace('%3', $workload[$object_it->get($group_field)]['Fact'],text(1857))
+						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
+									'data' => $workload[$object_it->get($group_field)]
 							));
 				}				
 					

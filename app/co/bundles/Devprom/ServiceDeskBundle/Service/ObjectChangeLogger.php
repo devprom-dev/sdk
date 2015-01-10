@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Translation\Translator;
 
 include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
-
+include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -28,6 +28,7 @@ class ObjectChangeLogger
      * @var Translator
      */
     private $translator;
+    private $session = null;
 
     function __construct(EntityManager $em, Translator $translator)
     {
@@ -37,16 +38,10 @@ class ObjectChangeLogger
 
 
     public function logIssueCreated(Issue $issue) {
-        $ocl = $this->createBaseObjectChangeLog($issue);
-        $ocl->setChangeKind('added');
-        $ocl->setClassName('request');
-
-        $this->em->persist($ocl);
-        $this->em->persist($this->createAffectedObject($issue));
-        $this->em->flush();
-        
 		$lock = new \LockFileSystem( 'Request' );
-        $lock->Release();        
+        $lock->Release();
+
+        $this->notifyIssueCreated($issue);
     }
 
     public function logCommentCreated(IssueComment $comment) {
@@ -136,5 +131,40 @@ class ObjectChangeLogger
         return $unitOfWork->getEntityChangeSet($issue);
     }
 
+    protected function buildSession($issue)
+    {
+    	if ( is_object($this->session) ) return;
+		
+    	$system_it = getFactory()->getObject('SystemSettings')->getAll();
+		return $this->session = new \PMSession(
+				getFactory()->getObject('Project')->getExact($issue->getProject()), 
+				new \AuthenticationFactory(
+						getFactory()->getObject('User')->createCachedIterator(
+								array (
+										array (
+												'Caption' => $system_it->getDisplayName(),
+												'Email' => $system_it->get('AdminEmail')
+										)
+								)
+							)						
+        		)
+			);
+    }
+    
+    protected function notifyIssueCreated(Issue $issue)
+    {
+    	$this->buildSession($issue);
+		getFactory()->getEventsManager()->notify_object_add(
+				getFactory()->getObject('Request')->getExact($issue->getId()), array()
+			);
+    }
 
+    protected function notifyIssueModified(Issue $issue)
+    {
+    	$this->buildSession($issue);
+    	$issue_it = getFactory()->getObject('Request')->getExact($issue->getId());
+		getFactory()->getEventsManager()->notify_object_modify(
+				$issue_it, $issue_it, array()
+			);
+    }
 }

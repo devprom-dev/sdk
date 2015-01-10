@@ -23,14 +23,15 @@ class ExceptionHandlerListenerDevprom extends ExceptionHandlerListener
 			$this->post( 
 					array (
 							'Caption' => $data['error']['message'],
-							'Description' => nl2br(var_export($data, true))
+							'Description' => nl2br(var_export($data, true)),
+							'ServerName' => $data['server']['SERVER_NAME'],
+							'ServerAddress' => $data['server']['SERVER_ADDR']
 					)
 			);
 		}
 		catch(Exception $e)
 		{
 			error_log($e->getMessage());
-			
 			error_log('Unhandled exception: '.print_r($data, true));
 		}
 	}

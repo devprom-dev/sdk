@@ -10,9 +10,4 @@ class Resource extends MetaobjectCacheable
  		
  		$this->setAttributeVisible( 'OrderNum', false );
  	}
-
- 	function getDisplayName()
- 	{
- 		return text(940);
- 	}
 }

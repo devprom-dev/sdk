@@ -25,7 +25,7 @@ class Metaobject extends StoredObjectDB
 	
 	private $entity_title = '';
 	
- 	function Metaobject( $entity_refname, ObjectRegistrySQL $registry = null )
+ 	function Metaobject( $entity_refname, ObjectRegistrySQL $registry = null, $metadata_cache_category = '' )
 	{
 	    global $entity_cache;
 	    
@@ -38,21 +38,20 @@ class Metaobject extends StoredObjectDB
 		if ( $this->entity->getId() < 1 ) throw new Exception('Unknown entity: '.$entity_refname);
 		
 		$this->entity_ref_name = $this->entity->get('ReferenceName');
-		
 		$this->entity_title = $this->entity->getDisplayName();
-		
 		$this->reference_parsers = array();
-		
 		$this->resetFilters();
 		
-		$metadata = getFactory()->getMetadataRegistry()->getMetadata($this);
+		if ( $metadata_cache_category == '' ) {
+			$metadata_cache_category = getFactory()->getEntityOriginationService()->getCacheCategory($this);
+		} 
+			
+		$metadata = getFactory()->getMetadataRegistry()->getMetadata($this, $metadata_cache_category);
 		
 		$this->setPersisters( $metadata->getPersisters() ); 
-		
 		$attributes = $metadata->getAttributes();
 		
 		$this->setAttributes($attributes);
-
 		foreach( $attributes as $key => $attribute )
 		{
 			if ( $attribute['dbtype'] == 'PASSWORD' )
@@ -70,11 +69,6 @@ class Metaobject extends StoredObjectDB
 	    {
 	        $builder->build( $this ); 
 	    }
-	}
-	
-	public function getMetadataCacheName()
-	{
-	    return getFactory()->getCacheService()->getDefaultPath();
 	}
 	
 	function getEntity()

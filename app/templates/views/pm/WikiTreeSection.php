@@ -5,7 +5,7 @@
 
 <div id="treeview-hints">
 	<?php if ( $hint_display ) { ?>
-		<? echo $view->render('core/Hint.php', array('title' => text(1322), 'name' => $hint_name)); ?>
+		<? echo $view->render('core/HintLight.php', array('title' => text(1322), 'name' => $hint_name)); ?>
 	<?php } ?>
 </div>
 

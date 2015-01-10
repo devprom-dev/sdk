@@ -625,7 +625,7 @@ class Form
 			$key = substr($button_name, 0, 1);
 		}
 		
-		if( getSession()->getLanguageUid() == 'EN' )
+		if( getSession()->getLanguage()->getLanguage() == 'EN' )
 		{
 			return $key;
 		}

@@ -29,6 +29,8 @@ class WikiHistorySettingBuilder extends PageSettingBuilder
         
 	    $setting->setFilters( array('formatting', 'action', 'participant') );
 	    
+	    $setting->setSorts( array('RecordModified.D') );
+	    
         $settings->add( $setting );
     }
 }

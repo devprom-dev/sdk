@@ -12,7 +12,7 @@ class PMUserSettings extends MetaobjectCacheable
 	function getCacheCategory()
 	{
 		// participant-wide cache
-	    return $this->getMetadataCacheName();
+	    return getSession()->getCacheKey();
 	}
 
  	function getSettingsValue( $settings_name, $user_id = 0 )

@@ -233,9 +233,6 @@ class AjaxForm
 		return $this->object->getAttributeObject( $attribute );
 	}
 
-	/*
-	 * returns visual type of attribute
-	 */
 	function getAttributeValue( $attribute )
 	{
 		if ( isset($this->object_it) )
@@ -252,7 +249,11 @@ class AjaxForm
 	
 	function getAttributeDefault( $attribute )
 	{
-		return $this->object->getDefaultAttributeValue($attribute);
+		$value = $this->object->getDefaultAttributeValue($attribute);
+		 
+		if ( $value == '' ) return $_REQUEST[$attribute];
+	
+		return $value;
 	}
 	
 	/*
@@ -397,8 +398,9 @@ class AjaxForm
 					else
 					{
 						$field = new FieldAutoCompleteObject( $object );
+						$field->setDefault($default);
 					}
-					
+
 					$field->SetTabindex($tab_index); 
 					$field->SetName($attribute);
 					$field->SetValue($value);

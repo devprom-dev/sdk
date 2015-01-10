@@ -2,21 +2,21 @@
 
 class ObjectMetadataRegistry
 {
-	public function getMetadata( Metaobject & $object )
+	public function getMetadata( Metaobject & $object, $cache_category = '' )
 	{
 	    $key = $object->getEntityRefName().get_class($object);
 		
 	    if ( isset($this->metadata_cache[$key]) ) return $this->metadata_cache[$key];
 	    
-	    return $this->metadata_cache[$key] = $this->buildMetadata($object);
+	    return $this->metadata_cache[$key] = $this->buildMetadata($object, $cache_category);
 	}
 	
-	public function buildMetadata( Metaobject & $object )
-	{
+	protected function buildMetadata( Metaobject & $object, $cache_category = '' )
+	{ 
 	    // check the cache
 	    $session_key = 'entity-metadata-'.md5($object->getEntityRefName().get_class($object));
 	    
-		$metadata = getFactory()->getCacheService()->get( $session_key, $object->getMetadataCacheName() );
+		$metadata = getFactory()->getCacheService()->get( $session_key, $cache_category );
 
 		if ( !is_object($metadata) )
 		{
@@ -26,7 +26,7 @@ class ObjectMetadataRegistry
 	    	
 			$metadata->build();
 			
-			getFactory()->getCacheService()->set( $session_key, $metadata, $object->getMetadataCacheName() );
+			getFactory()->getCacheService()->set( $session_key, $metadata, $cache_category );
 		}
 		else
 		{

@@ -55,23 +55,25 @@ class StatableIterator extends OrderedIterator
 	
 	function getTransitionTo( $to_state, $from_state = '' )
 	{
-		global $model_factory;
-
-		$state = $model_factory->getObject($this->object->getStateClassName());
-		
-		$state->setVpdContext( $this );
-		
 		if ( $from_state == '' ) $from_state = $this->get('State');
 		
-		$source_it = $state->getByRef('ReferenceName', trim($from_state) );
+		$state = getFactory()->getObject($this->object->getStateClassName());
 		
-		$target_it = $state->getByRef('ReferenceName', trim($to_state) );
+		$source_it = $state->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('ReferenceName', trim($from_state)),
+							new FilterBaseVpdPredicate()
+					)
+			);	
+				
+		$target_it = $state->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('ReferenceName', trim($to_state)),
+							new FilterBaseVpdPredicate()
+					)
+			);
 
-		$transition = $model_factory->getObject('pm_Transition');
-
-		$transition->setVpdContext( $this );
-
-		return $transition->getByRefArray( array( 
+		return getFactory()->getObject('pm_Transition')->getByRefArray( array( 
 		        'TargetState' => $target_it->getId(),
 				'SourceState' => $source_it->getId() 
 		));

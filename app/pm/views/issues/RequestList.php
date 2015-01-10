@@ -9,23 +9,30 @@ include_once SERVER_ROOT_PATH."core/views/c_priority_view.php";
 class RequestList extends PMPageList
 {
 	private $estimation_actions = array();
-	
 	private $visible_columns = array();
+	private $priority_method = null;
 	
 	function RequestList( $object ) 
 	{
-		$this->priority_frame = new PriorityFrame();
+		$object->setAttributeOrderNum('OrderNum', 35);
 		
 		parent::PMPageList($object);
 	}
 	
 	function buildRelatedDataCache()
 	{
+		$this->priority_frame = new PriorityFrame();
+		
 		// cache priority method
-		$this->priority_method = new ChangePriorityWebMethod( getFactory()->getObject('Priority')->getAll() );
+		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
+				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority');
+		
+		if ( $has_access )
+		{
+			$this->priority_method = new ChangePriorityWebMethod( getFactory()->getObject('Priority')->getAll() );
+		}
 		
 		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
 		foreach( $strategy->getScale() as $item )
 		{
 			$method = new ModifyAttributeWebMethod($this->getObject()->getEmptyIterator(), 'Estimation', $item);
@@ -123,14 +130,16 @@ class RequestList extends PMPageList
 
 				foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $type)
 				{
-					list( $type, $id ) = preg_split('/\:/', $type);
+					list( $type_name, $id ) = preg_split('/\:/', $type);
 					
-					$types_ids[$id] = $type; 
+					$types_ids[$id] = $type_name; 
 				}
 				
+				$items = array();
                 while ( !$entity_it->end() )
                 {
-					$items[] = translate($types_ids[$id]).': '.$this->getUidService()->getUidIconGlobal($entity_it, true);
+					$items[] = translate($types_ids[$entity_it->getId()]).
+									': '.$this->getUidService()->getUidIconGlobal($entity_it, true);
 				
 					$entity_it->moveNext();
 				}
@@ -141,7 +150,14 @@ class RequestList extends PMPageList
 				
 			case 'Priority':
 				
-				$this->priority_method->drawMethod( $object_it, 'Priority' );
+				if ( is_object($this->priority_method) )
+				{
+					$this->priority_method->drawMethod( $object_it, 'Priority' );
+				}
+				else
+				{
+					parent::drawRefCell( $entity_it, $object_it, $attr );
+				}
 				
 				break;
 				
@@ -177,15 +193,18 @@ class RequestList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-    
     			$type_it = $object_it->getRef('Type');
     			
     			echo '<img src="/images/'.IssueTypeFrame::getIcon($type_it).'">&nbsp;';
     		    
-    		    if ( !$this->visible_columns['Type'] ) echo $object_it->getTypeName().': ';
-    			
-    			echo $object_it->get('Caption');
-    			
+    		    if ( !$this->visible_columns['Type'] )
+    		    {
+    		    	echo $object_it->getDisplayName();
+    		    }
+    		    else
+    		    {
+    		    	echo $object_it->get('Caption');
+    		    }
 			break;
 			
 			case 'Estimation':
@@ -205,20 +224,6 @@ class RequestList extends PMPageList
 			    
     			break;
     			
-			case 'OrderNum':
-
-			    if ( getFactory()->getAccessPolicy()->can_modify($object_it) )
-			    {
-        			$method = new AutoSaveFieldWebMethod( $object_it, 'OrderNum' );
-        			
-        			$method->setInput();
-        			
-        			$method->draw();
-			    }
-			    
-			    break;
-			    
-
 			case 'RecentComment':
 				
 				parent::drawCell( $object_it, $attr );
@@ -254,7 +259,7 @@ class RequestList extends PMPageList
 			return 80;
 			
 		if ( $attr == 'OrderNum' )
-			return '50';
+			return 70;
 
 		return parent::getColumnWidth( $attr );
 	}

@@ -2,6 +2,27 @@
 
 class FieldParticipantDictionary extends FieldDictionary
 {
+	function getGroups()
+	{
+		$groups = array();
+		
+		$role_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
+				array (
+						new FilterBaseVpdPredicate()
+				)
+		);
+		
+		while( !$role_it->end() )
+		{
+			$groups[$role_it->getId()] = array (
+					'label' => $role_it->getDisplayName()
+			);
+			$role_it->moveNext();
+		}
+			
+		return $groups;
+	}
+	
  	function getOptions()
 	{
  		$part_it = $this->getObject()->getRegistry()->Query(
@@ -12,25 +33,14 @@ class FieldParticipantDictionary extends FieldDictionary
  				)
 		);
 
- 		$roles = array();
  		$options = array();
 	    
 	 	while ( !$part_it->end() ) 
  		{
- 			if ( !in_array($part_it->get('ProjectRole'), $roles) )
- 			{
-    		    $options[] = array (
-                    'caption' => join(', ', $part_it->getRef('ProjectRole')->fieldToArray('Caption')),
-                    'disabled' => true
-                );
-    		    
-    		    $roles[] = $part_it->get('ProjectRole');
- 			}
-
 		    $options[] = array (
 		        'value' => $part_it->getId(),
                 'caption' => $part_it->getDisplayName(),
-                'disabled' => false
+                'group' => $part_it->get('ProjectRole')
             );
  			
  			$part_it->moveNext();

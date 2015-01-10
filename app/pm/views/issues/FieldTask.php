@@ -66,9 +66,11 @@ class FieldTask extends Field
 
 		echo '<div class="clearfix">&nbsp;</div>';
 		
+		$checked = in_array(getSession()->getProjectIt()->get('Tools'), array('sdlc_ru.xml', 'sdlc_en.xml')) ? 'checked' : '';
+		
 		echo '<label class="checkbox">';
 			echo '<input name="'.$this->getName().'" type="hidden" value="tasks">';
-		    echo '<input name="dependencies" type="checkbox" class="checkbox"> '.text(1047);
+		    echo '<input name="dependencies" type="checkbox" class="checkbox" '.$checked.'> '.text(1047);
 		echo '</label>';
  	}
  	

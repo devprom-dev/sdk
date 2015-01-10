@@ -44,8 +44,7 @@ class JobRunList extends StaticPageList
 		switch ( $attr )
 		{
 			case 'ExecutionTime':
-
-				echo $object_it->get_native('RecordCreated');
+				echo SystemDateTime::convertToClientTime($object_it->get('RecordCreated'));
 				break;
 
 			case 'Result':

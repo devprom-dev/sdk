@@ -112,8 +112,4 @@ class ReportTable extends PMPageTable
 	    
 	    <?php
 	}
-	
-	function drawFooter()
-	{
-	}
 } 

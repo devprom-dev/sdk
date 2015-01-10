@@ -152,6 +152,11 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 		return $object_it->getDisplayName();
 	}
 
+ 	function getItemVisibility( $object_it )
+	{
+		return true;
+	}
+	
 	function getSaveCallback()
 	{
 		return '';
@@ -480,13 +485,13 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 					
 					while ( !$object_it->end() )
 					{
-						$display_name = $this->getItemDisplayName($object_it);
-						
-						if ( $display_name == '' )
+						if ( !$this->getItemVisibility($object_it) )
 						{
 							$object_it->moveNext();
 							continue;
 						}
+						
+						$display_name = $this->getItemDisplayName($object_it);
 						
 						if ( $_REQUEST[$prefix.'Delete'.$item] == 1 )
 						{

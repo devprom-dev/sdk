@@ -4,7 +4,11 @@ class RequestStateDurationPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 		$state_it = $this->getObject()->cacheStates();
+    	$state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
+ 				array (
+ 						new FilterBaseVpdPredicate()
+ 				)
+ 		);
  		
  		$columns = array();
 
@@ -15,7 +19,6 @@ class RequestStateDurationPersister extends ObjectSQLPersister
 			if ( $state_it->get('IsTerminal') == 'Y' )
 			{
 				$state_it->moveNext();
-				
 				continue;
 			}
 			
@@ -41,14 +44,16 @@ class RequestStateDurationPersister extends ObjectSQLPersister
 				   "				WHERE ps.ObjectClass = so.ObjectClass ".
 				   "				  AND ps.ObjectId = so.ObjectId ".
 				   "				  AND ps.pm_StateObjectId > so.pm_StateObjectId)) / 3600), 0) ".
-				   "    		FROM pm_StateObject so ".
-				   "   		   WHERE so.State = ".$state_it->getId().
+				   "    		FROM pm_StateObject so, ".
+				   "				 pm_State st ".
+				   "   		   WHERE st.ReferenceName = '".$state_it->get('ReferenceName')."' ".
+				   "			 AND st.pm_StateId = so.State ".
 				   "     		 AND so.ObjectId = ".$this->getPK($alias)." ) ".
 				   "  		, 1)) State_".$state_it->getDbSafeReferenceName();
 			
 			$state_it->moveNext();
 		}
-		
+
  		return $columns;
  	}
 }

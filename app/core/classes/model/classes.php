@@ -32,11 +32,12 @@ include SERVER_ROOT_PATH.'core/classes/project/Project.php';
 include SERVER_ROOT_PATH.'core/classes/project/Program.php'; 
 include SERVER_ROOT_PATH.'core/classes/project/Portfolio.php'; 
 include SERVER_ROOT_PATH.'core/classes/project/ProjectCache.php'; 
+include SERVER_ROOT_PATH.'core/classes/project/ProjectState.php';
 include SERVER_ROOT_PATH.'core/classes/locale/LanguageEntity.php'; 
 include SERVER_ROOT_PATH.'core/classes/project/ProjectUse.php'; 
 include SERVER_ROOT_PATH.'core/classes/project/ProjectTemplate.php'; 
 include SERVER_ROOT_PATH.'cms/classes/AttributeGroup.php';
 include SERVER_ROOT_PATH.'core/classes/history/AffectedObjects.php';
 include SERVER_ROOT_PATH.'core/classes/resources/ContextResource.php';
-include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php'; 
-
+include SERVER_ROOT_PATH.'core/classes/schedule/DeadlineSwimlane.php';
+include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php';

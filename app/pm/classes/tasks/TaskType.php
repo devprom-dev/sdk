@@ -15,6 +15,8 @@ class TaskType extends MetaobjectCacheable
 		parent::__construct('pm_TaskType');
 		
 		$this->defaultsort = "(SELECT tt.OrderNum FROM pm_TaskType tt WHERE tt.pm_TaskTypeId = t.ParentTaskType), OrderNum";
+		
+		$this->setAttributeDescription('ParentTaskType', text(1883));
  	}
 	
 	function createIterator() 
@@ -32,17 +34,6 @@ class TaskType extends MetaobjectCacheable
 		return $this->getByRefArray(
 			array ( 'ProjectRole' => $project_role_it->getId() )
 			);
-	}
-
-	function getSuperTypesAggIt()
-	{
-		$sql = " SELECT ParentTaskType, COUNT(1) SubItems " .
-			   "   FROM pm_TaskType t " .
-			   "  WHERE t.ParentTaskType IS NOT NULL ".
-			   $this->getVpdPredicate().$this->getFilterPredicate().
-			   "  GROUP BY t.ParentTaskType ";
-			   
-		return $this->createSQLIterator( $sql );
 	}
 
 	function add_parms( $parms )

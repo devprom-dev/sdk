@@ -5,22 +5,17 @@ namespace Devprom\ProjectBundle\Service\Tooltip;
 use Devprom\CommonBundle\Service\Tooltip\TooltipService;
 
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/IssueLinkedIssuesPersister.php";
 
 class TooltipProjectService extends TooltipService
 {
-	private $object_it;
-	
 	private $baseline;
 	
 	public function __construct( $class_name, $object_id, $baseline )
 	{
-    	$object = getFactory()->getObject($class_name);
-    	
-    	$object->addPersister( new \AttachmentsPersister() );
-
-    	$this->setObjectIt( $object->getExact($object_id) );
-    	
     	$this->baseline = $baseline;
+		
+    	parent::__construct($class_name, $object_id);
 	}
 	
     public function getData()
@@ -46,6 +41,21 @@ class TooltipProjectService extends TooltipService
     	));
     }
     
+    protected function extendModel( $object )
+    {
+    	$object->addPersister( new \AttachmentsPersister() );
+    	
+    	if ( $object instanceof \Request )
+    	{
+    		$object->addPersister( new \IssueLinkedIssuesPersister() );
+    	}
+    	
+    	if ( $object instanceof \MetaobjectStatable )
+    	{
+    		$object->addPersister( new \StateDurationPersister() );
+    	}
+    }
+    
     protected function buildAttributes( $object_it )
     {
     	$data = parent::buildAttributes( $object_it );
@@ -62,43 +72,78 @@ class TooltipProjectService extends TooltipService
  	 	
  	 	if ( $object_it->object instanceof \Request )
  	 	{
- 	 		$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
- 	 				array (
- 	 						new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
- 	 				)
- 	 		);
- 	 		
- 	 		$states = $task_it->getStatesArray();
- 	 		
-	 	 	foreach ( $states as $key => $state )
-			{
-				if ( !is_array($state) ) continue;
-				
-				switch ( $state['progress'] )
-				{
-					case '100%':
-						$states[$key]['class'] = 'label-success';
-						break;
-			
-					case '0%':
-						$states[$key]['class'] = 'label-important';
-						break;
-				}
-			}
- 	 		
-			if ( count($states) > 0 )
-			{
-	 	 		$data[] = array (
-	 	 				'name' => 'Tasks',
-	 	 				'title' => translate('Задачи'),
-	 	 				'type' => 'tasks',
-	 	 				'text' => $states 
-	 	 		);
-			}
+ 	 		$this->buildRequestAttributes( $data, $object_it );
  	 	}
  	 	
  	 	return $data;
     }   
+    
+    protected function buildRequestAttributes( &$data, $object_it )
+    {
+    	// Tasks attribute
+    	$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
+				array (
+						new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
+				)
+		);
+		
+		$states = $task_it->getStatesArray();
+		
+		foreach ( $states as $key => $state )
+		{
+			if ( !is_array($state) ) continue;
+			
+			switch ( $state['progress'] )
+			{
+				case '100%':
+					$states[$key]['class'] = 'label-success';
+					break;
+		
+				case '0%':
+					$states[$key]['class'] = 'label-important';
+					break;
+			}
+		}
+		
+		if ( count($states) > 0 )
+		{
+			$data[] = array (
+					'name' => 'Tasks',
+					'title' => translate('Задачи'),
+					'type' => 'tasks',
+					'text' => $states 
+			);
+		}
+		
+		// Linked requests attribute
+		foreach( $data as $key => $attribute )
+		{
+			if ( $attribute['name'] == 'Links' )
+			{
+				unset($data[$key]);
+			}
+		}
+		
+		$uid = new \ObjectUID();
+		$types = array();
+		
+		foreach( preg_split('/,/',$object_it->get('LinksWithTypes')) as $item )
+		{
+			if( $item == '' ) continue;
+			list($type_name, $object_id, $type_ref) = preg_split('/:/',$item);
+			
+			$info = $uid->getUIDInfo($object_it->object->getExact($object_id));
+			$types[$type_name][] = $info['uid'].' {'.$info['project'].'} '.$info['caption'].' ('.$info['state_name'].')'; 
+		}
+		
+		foreach( $types as $type_name => $requests )
+		{
+			$data[] = array (
+					'title' => $type_name,
+					'text' => join(', ', $requests)
+			);
+		}
+    }
     
     private function buildLifecycle( $object_it )
     {

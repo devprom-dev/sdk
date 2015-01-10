@@ -10,7 +10,7 @@
  	
  	private $object = null;
  	
- 	private static $terminal_states = array();
+// 	private static $terminal_states = array();
  	
  	function __construct( $baseline_id = '', $object = null ) 
  	{
@@ -49,10 +49,12 @@
  	{
  		if ( !is_object($object) ) return;
  		
+ 		/*
  	 	if ( method_exists($object, 'getTerminalStates') && !is_array(self::$terminal_states[get_class($object)]) )
 		{
 			self::$terminal_states[get_class($object)] = $object->getTerminalStates();
 		}
+		*/
 		
 		$this->object = $object;
  	}
@@ -242,12 +244,13 @@
 			$url .= '/'.$text; 
 		}
 		
-		$terminal_states = self::$terminal_states[get_class($object_it->object)];
+		//$terminal_states = self::$terminal_states[get_class($object_it->object)];
 		
 		return array(
             'uid' => $text,
             'project' => $self_project_name,
-            'completed' => is_array($terminal_states) && in_array( $object_it->get('State'), $terminal_states),
+            'completed' => $object_it->get('StateTerminal') == 'Y', //is_array($terminal_states) && in_array( $object_it->get('State'), $terminal_states),
+			'state_name' => $object_it->get('StateName'),
             'url' => $url,
             'alien' => $self_project_name != '' && $object_it->get('VPD') != getSession()->getProjectIt()->get('VPD'),
             'caption' => $object_it->getDisplayName(),

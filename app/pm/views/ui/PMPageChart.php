@@ -24,9 +24,9 @@ class PMPageChart extends PageChart
 
 	    $report_it = getFactory()->getObject('PMReport')->getExact($this->getTable()->getReport());
  	    
-	    if ( $report_it->get('Description') != '' )
+	    if ( !is_numeric($this->getTable()->getReport()) && $report_it->get('Description') != '' )
 	    {
-	        echo $view->render('core/Hint.php', array('title' => $report_it->get('Description'), 'name' => 'description'));
+	        echo $view->render('core/Hint.php', array('title' => '<p>'.$report_it->get('Description').'</p>', 'name' => 'description'));
 	    }
  	}
 }

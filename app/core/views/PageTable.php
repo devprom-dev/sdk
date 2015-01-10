@@ -649,7 +649,7 @@ class PageTable extends ViewTable
 	
 	function getRenderParms( $parms )
 	{
-        $view_filter = $this->getViewFilter();
+		$view_filter = $this->getViewFilter();
 	
 		if ( is_object($view_filter) )
 		{
@@ -658,10 +658,19 @@ class PageTable extends ViewTable
 			if ( $view_filter->getValue() != '' )
 			{
 				$list = $this->getList( $view_filter->getValue() );
-				
                 $this->setList( $list );
 			}
+			else
+			{
+				$values = $this->getFilterValues();
+				if ( $values['view'] != '' )
+				{
+					$list = $this->getList( $values['view'] );
+		            $this->setList( $list );
+				}
+			}
 		}
+		
     
 	    $list = $this->getListRef();
     	
@@ -674,7 +683,7 @@ class PageTable extends ViewTable
         
 		$parms = array_merge($parms, array(
 			'table' => $this,
-			'title' => '',
+			'title' => $parms['navigation_title'] == $parms['title'] ? '' : $parms['title'],
             'list' => $list
 		));
 
@@ -852,26 +861,7 @@ class PageTable extends ViewTable
 	    
 	    $actions = $this->getActions();
 	    
-	    if ( count($actions) < 1 && count($additional_actions) > 0 )
-	    {
-	    	$menu = array_pop($additional_actions);
-	    	
-	    	$actions = $menu['items']; 
-
-	    	$additional_actions = array();
-	    } 
-
-	    $delete_actions = $this->getDeleteActions();
-   
-	    if ( count($delete_actions) > 0 )
-	    {
-	    	if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-	    	
-	    	$actions = array_merge($actions, $delete_actions);
-	    }
-	    
-
-	    $plugins = getSession()->getPluginsManager();
+		$plugins = getSession()->getPluginsManager();
 	    
 		$plugins_interceptors = is_object($plugins) 
 				? $plugins->getPluginsForSection(getSession()->getSite()) : array();
@@ -881,6 +871,15 @@ class PageTable extends ViewTable
 			$plugin->interceptMethodTableGetActions( $this, $actions );
 		}
 	    
+	    $delete_actions = $this->getDeleteActions();
+   
+	    if ( count($delete_actions) > 0 )
+	    {
+	    	if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
+	    	
+	    	$actions = array_merge($actions, $delete_actions);
+	    }
+
 	    if ( is_array($parms['sections']) )
 	    {
 	        $values = $this->getFilterValues();
@@ -894,7 +893,7 @@ class PageTable extends ViewTable
     			if ( !in_array($key, $sectionnames) ) unset($parms['sections'][$key]);
     		}
 	    }
-	    
+
 		return array_merge($parms, array(
             'filter_items' => $filter_items,
             'filter_modified' => !$this->IsFilterPersisted(),

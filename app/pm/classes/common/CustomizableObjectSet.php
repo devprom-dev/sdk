@@ -1,13 +1,13 @@
 <?php
 
-include_once SERVER_ROOT_PATH."pm/classes/common/CacheableSet.php";
+include_once SERVER_ROOT_PATH."pm/classes/common/PMObjectCacheable.php";
 include "CustomizableObjectRegistry.php";
 
-class CustomizableObjectSet extends CacheableSet
+class CustomizableObjectSet extends PMObjectCacheable
 {
  	function __construct() 
  	{
- 		parent::__construct(new CustomizableObjectRegistry($this));
+ 		parent::__construct('entity', new CustomizableObjectRegistry($this));
  	}
  	
  	function checkObject( $object )

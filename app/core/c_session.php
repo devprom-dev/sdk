@@ -43,7 +43,6 @@ class SessionBase
 		$this->setAuthenticationFactory( $factory );
  		
 		$this->cache_engine = is_object($cache_service) ? $cache_service : getFactory()->getCacheService();
- 		
  		$this->language = $language;
  		
  		$this->configure();
@@ -51,6 +50,9 @@ class SessionBase
  	
  	public function configure()
  	{
+ 		getFactory()->getEntityOriginationService()->setLanguage($this->getLanguageUid());
+ 		$this->getCacheEngine()->setDefaultPath($this->getCacheKey());
+
  		$this->builders = array_merge($this->builders, $this->createBuilders());
  		
 		$plugins = $this->getPluginsManager();
@@ -198,7 +200,7 @@ class SessionBase
  	    {
  	        $this->user_it = $this->factory->authorize();
  	        
- 	        if ( $this->user_it->getId() > 0 ) return $this->user_it;
+ 	        if ( $this->user_it->count() > 0 ) return $this->user_it;
  	    }
  	    
  		$auth_factories = new AuthenticationFactorySet($this);
@@ -261,9 +263,9 @@ class SessionBase
  	
  	function getCacheKey()
  	{
- 		return 'global';	
+ 		return 'global-'.$this->getLanguageUid();	
  	}
- 	
+ 	 	
  	function get( $key, $category = '' )
  	{
  		$category = $category == '' ? $this->getCacheKey() : $category;

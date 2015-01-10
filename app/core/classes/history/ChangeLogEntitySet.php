@@ -9,9 +9,4 @@ class ChangeLogEntitySet extends MetaobjectCacheable
  	{
  		parent::__construct('entity', new ChangeLogEntityRegistry($this));
  	}
- 	
-	function getCacheCategory()
-	{
-	    return getSession()->getCacheKey();
-	}
 }

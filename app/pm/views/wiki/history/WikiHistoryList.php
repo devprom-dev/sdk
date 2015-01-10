@@ -56,9 +56,31 @@ class WikiHistoryList extends ProjectLogList
         {
         	$this->getObject()->setAttributeVisible('Caption', true);
         }
+        
+        $this->getObject()->setAttributeCaption('Caption', $object_it->object->getDisplayName());
  	}
+ 	
+	function getColumnFields()
+	{
+		$fields = parent::getColumnFields();
+ 		
+		unset($fields[array_search('EntityName', $fields)]);
+		unset($fields[array_search('Project', $fields)]);
+
+		return $fields; 
+	}
 	
- 	function getChangeIt( $object_it )
+	function getGroupFields()
+	{
+		$fields = parent::getGroupFields();
+ 		
+		unset($fields[array_search('EntityName', $fields)]);
+		unset($fields[array_search('Project', $fields)]);
+
+		return $fields; 
+	}
+	
+	function getChangeIt( $object_it )
  	{
 		if ( preg_match('/\&version=([\d]+)/i', $object_it->getHtmlDecoded('Content'), $matches) )
 		{

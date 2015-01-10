@@ -20,6 +20,8 @@ include "predicates/TaskUntilDatePredicate.php";
 include "predicates/TaskBindedToObjectPredicate.php";
 include "predicates/TaskReleasePredicate.php";
 include "sorts/TaskAssigneeSortClause.php";
+include "sorts/TaskRequestOrderSortClause.php";
+include "sorts/TaskRequestPrioritySortClause.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";
 
@@ -29,7 +31,7 @@ class Task extends MetaobjectStatable
  	
  	function __construct( $registry = null ) 
  	{
-		parent::__construct('pm_Task', $registry);
+		parent::__construct('pm_Task', $registry, getSession()->getCacheKey());
  	}
 	
 	function getPage() 
@@ -117,7 +119,32 @@ class Task extends MetaobjectStatable
 		}
 		elseif( $name == 'TaskType' ) 
 		{
-		    return $model_factory->getObject('TaskType')->getByRef('ReferenceName', 'development')->getId();
+			$type = getFactory()->getObject('TaskType');
+			
+			$type_it = $type->getRegistry()->Query(
+			    		array (
+			    				new FilterBaseVpdPredicate(),
+			    				new FilterAttributePredicate('ProjectRole', getSession()->getParticipantIt()->getRoles())
+			    		)
+				);
+			
+			if ( $type_it->getId() > 0 ) return $type_it->getId();
+		    				
+		    $type_it = $type->getRegistry()->Query(
+			    		array (
+			    				new FilterBaseVpdPredicate(),
+			    				new FilterAttributePredicate('IsDefault', 'Y')
+			    		)
+			    );
+
+			if ( $type_it->getId() > 0 ) return $type_it->getId();
+			    		
+    		return $type->getRegistry()->Query( 
+					array ( 
+							new FilterBaseVpdPredicate(),
+							new FilterAttributePredicate('ReferenceName', 'development')
+					)
+				)->getId();
 		}
 
 		return parent::getDefaultAttributeValue( $name );
