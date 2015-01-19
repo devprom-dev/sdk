@@ -1,0 +1,6 @@
+@CHARSET "UTF-8";
+#modal-form iframe
+{
+	border: none;
+	width: 100%;
+}

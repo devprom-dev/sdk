@@ -1,5 +1,7 @@
 <?php
 
+include "classes/AccountSiteJSBuilder.php";
+include "classes/AccountSiteCssBuilder.php";
 include "COPlugin.php";
 
 // define common plugin attributes
@@ -42,5 +44,30 @@ class accountPlugin extends PluginBase
  	function IsUpdatedWithCore()
  	{
  		return false;
+ 	}
+ 	
+  	function getHeaderMenus()
+ 	{
+ 		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+ 		
+ 		$buy_url = '/module/account/form?'.http_build_query(
+ 				array (
+ 						'LicenseType' => $license_it->get('LicenseType'),
+ 						'WasLicenseValue' => $license_it->get('LicenseValue'),
+ 						'WasLicenseKey' => $license_it->get('LicenseKey'),
+ 						'InstallationUID' => INSTALLATION_UID
+ 				)
+ 			);
+ 				
+ 		return array(
+ 				array (
+ 						'caption' => 'Оплатить',
+ 						'class' => 'btn-success',
+ 						'url' => "javascript: showAccountForm('".$buy_url."');"
+ 				),
+ 				array('class' => 'empty'),
+ 				array('class' => 'empty'),
+ 				array('class' => 'empty')
+ 		);
  	}
 }

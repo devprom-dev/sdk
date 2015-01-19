@@ -5,7 +5,10 @@ class accountCo extends PluginCoBase
 	// returns builders which extend application behavior 
 	public function getBuilders()
 	{
-		return array();
+		return array(
+				new AccountSiteJSBuilder(getSession()),
+				new AccountSiteCssBuilder(getSession())
+		);
 	}
 	
 	// returns modules of the plugin
@@ -24,4 +27,9 @@ class accountCo extends PluginCoBase
                 )
         );
     }
+    
+  	function getHeaderMenus()
+ 	{
+ 		return $this->getBasePlugin()->getHeaderMenus();
+ 	}
 }

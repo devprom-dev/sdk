@@ -40,6 +40,21 @@ class CoPage extends Page
  		// quick menu actions
 		$actions = array();
 
+ 		// pluginnable quick menus
+		$plugin_menus = $plugins->getHeaderMenus( 'co' );
+		
+		foreach ( $plugin_menus as $menu )
+		{
+			$menus[] = array (
+				'class' => 'header_popup',
+				'button_class' => $menu['class'],
+				'title' => $menu['caption'],
+				'description' => $menu['title'],
+				'url' => $menu['url'],
+				'items' => $menu['actions']
+			);
+		}
+		
 		$quick_actions = $plugins->getQuickActions('co');
 		
 		if ( count($quick_actions) > 0 )
@@ -101,18 +116,6 @@ class CoPage extends Page
 			'items' => $actions
 		);
 
-		// pluginnable quick menus
-		$plugin_menus = $plugins->getHeaderMenus( 'co' );
-		
-		foreach ( $plugin_menus as $menu )
-		{
-			$menus[] = array (
-				'class' => 'header_popup',
-				'title' => $menu['caption'],
-				'items' => $menu['actions']
-			);
-		}
- 		
 		return $menus;
  	}
  	

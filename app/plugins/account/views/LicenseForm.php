@@ -6,6 +6,11 @@ class LicenseForm extends AjaxForm
     {
         return 'getlicensekey';
     }
+    
+    function getFormUrl()
+    {
+    	return '/module/account/command?name='.$this->getCommandClass();
+    }
 
     function getAttributes()
     {
@@ -48,6 +53,12 @@ class LicenseForm extends AjaxForm
 
     function IsAttributeVisible( $attribute )
     {
+    	switch( $attribute )
+    	{
+    	    case 'InstallationUID':
+    	    	return $this->getAttributeValue($attribute) == '';
+    	}
+    	
         return true;
     }
 
@@ -63,31 +74,28 @@ class LicenseForm extends AjaxForm
     
     function getName( $attribute )
     {
-        global $model_factory;
-
         switch ( $attribute )
         {
             case 'InstallationUID':
-                return 'Ваш идентификатор инсталляции Devprom <span class="required">*</span>';
+                return text('account2');
 
             case 'LicenseType':
-                return 'Выбранный тип лицензии';
+                return text('account3');
 
             case 'LicenseValue':
-            	
             	switch( $_REQUEST['LicenseType'] )
             	{
             	    case 'LicenseSAASALM':
 					case 'LicenseSAASALMMiddle':
 					case 'LicenseSAASALMLarge':
-            	    	return 'Укажите в месяцах продолжительность использования Devprom<span class="required">*</span>';
+            	    	return text('account4');
             	    	
             	    default:
-            	    	return 'Укажите количество пользователей <span class="required">*</span>';
+            	    	return text('account5');
             	}
             	
             case 'Aggreement':
-            	return 'Я принимаю условия <a href="http://devprom.ru/download/%D0%9B%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B4%D0%BE%D0%B3%D0%BE%D0%B2%D0%BE%D1%80-SaaS">договора оказания услуг (лицензионного соглашения)</a>';
+            	return text('account6');
 
             default:
                 return parent::getName( $attribute );
@@ -97,19 +105,12 @@ class LicenseForm extends AjaxForm
 
     function getAttributeValue( $attribute )
     {
-        global $_REQUEST;
-
         switch ( $attribute )
         {
             case 'InstallationUID':
             case 'LicenseType':
             case 'LicenseValue':
-
-                if ( $_REQUEST[$attribute] != '' )
-                {
-                    return $_REQUEST[$attribute];
-                }
-
+                if ( $_REQUEST[$attribute] != '' ) return $_REQUEST[$attribute];
                 return parent::getAttributeValue( $attribute );
 
             case 'Aggreement': return 'N';
@@ -175,69 +176,38 @@ class LicenseForm extends AjaxForm
 	<?php 
 	}
 	
-	function draw()
+	function draw2()
 	{
-		global $_REQUEST;
-		
-		$form_processor_url = '/command/'.$this->getCommandClass();
-	
 		$this->drawScript();
 
-		echo '<div style="width:70%;font-size:10pt;">';
+		echo '<div style="font-size:10pt;">';
 			echo '<br/>';
 			echo 'Пользователь: <b>'.getSession()->getUserIt()->getDisplayName().'</b> ('.getSession()->getUserIt()->get('Email').')';
 		echo '</div>';
 		
-		echo '<style>';
-			echo '#myForm table td { padding-bottom:0; border: none; }';
-			echo '#myForm table td.value { padding-top:6px; }';
-			echo '.required { font-weight: bold; color: red; }';
-			echo '.error { color: red; }';
-		echo '</style>';
-		
-		echo '<div style="width:70%;">';
-			echo '<form id="myForm" action="'.$form_processor_url.'" method="post" style="width:100%;" onsubmit="javascript: return false;">';
-				echo '<input type="hidden" id="action" name="action" value="'.$this->getAction().'">';
-				echo '<input type="hidden" name="MAX_FILE_SIZE" value="1048576">';
-				echo '<input type="hidden" id="lru" name="lru" value="">';
-				echo '<input type="hidden" id="lrs" name="lrs" value="">';
-				echo '<input type="hidden" name="Redirect" value="'.htmlentities($_REQUEST['Redirect']).'">';
-				echo '<input type="hidden" name="WasLicenseKey" value="'.htmlentities($_REQUEST['LicenseKey']).'">';
-				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlentities($_REQUEST['Value']).'">';
-				
-				echo '<table style="width:100%;">';
-				$attributes = $this->getAttributes();
-		
-				for ( $i = 0; $i < count($attributes); $i++ )
-				{
-					$this->drawAttribute( $attributes[$i] );
-				}
-				echo '</table>';
-			echo '</form>';
+		echo '<form id="myForm" action="/module/account/command?name=getlicensekey" method="post" style="width:100%;" onsubmit="javascript: return false;">';
+			echo '<input type="hidden" id="action" name="action" value="'.$this->getAction().'">';
+			echo '<input type="hidden" name="MAX_FILE_SIZE" value="1048576">';
+			echo '<input type="hidden" id="lru" name="lru" value="">';
+			echo '<input type="hidden" id="lrs" name="lrs" value="">';
+			echo '<input type="hidden" name="Redirect" value="'.htmlentities($_REQUEST['Redirect']).'">';
+			echo '<input type="hidden" name="WasLicenseKey" value="'.htmlentities($_REQUEST['LicenseKey']).'">';
+			echo '<input type="hidden" name="WasLicenseValue" value="'.htmlentities($_REQUEST['Value']).'">';
 			
-			echo '<div id="result" style="clear:both;padding-bottom:12px;"></div>';
-
-			echo '<div id="frm-buttons" style="width:100%;">';
-				
-				$script = "javascript: submitForm('".$this->getAction()."', function() {})";
+			echo '<table style="width:100%;">';
+			$attributes = $this->getAttributes();
+	
+			for ( $i = 0; $i < count($attributes); $i++ )
+			{
+				$this->drawAttribute( $attributes[$i] );
+			}
+			echo '</table>';
+		echo '</form>';
 			
-				echo '<a class="write" style="float:left;" href="'.$script.'">';
-					echo 'Получить ключ';
-				echo '</a>';
-
-				$script = "javascript: submitForm('3', function() {})";
-				
-				echo '<a style="font-size:13px;float:left;margin-left:18px;margin-top:6px;" href="'.$script.'">';
-					echo 'Вернуться';
-				echo '</a>';
-				
-				echo '<div id="rt"></div>';
-			echo '</div>';
-				
-			echo '<div style="clear:both;"></div>';
+		echo '<div style="clear:both;"></div>';
 			
-           	switch( $_REQUEST['LicenseType'] )
-           	{
+       	switch( $_REQUEST['LicenseType'] )
+       	{
             	    case 'LicenseSAASALM':
 					case 'LicenseSAASALMMiddle':
 					case 'LicenseSAASALMLarge':
@@ -246,7 +216,7 @@ class LicenseForm extends AjaxForm
 				           	echo '<span style="font-size:13px;">* Оплата услуг производится <a target="_blank" href="http://devprom.ru/price/Payonline">процессинговым центром PayOnline</a></span>';
 
 				           	break;
-           	}
+       	}
 			
 		echo '</div>';
 	}
@@ -263,5 +233,14 @@ class LicenseForm extends AjaxForm
 	function getTemplate()
 	{
 		return '../../plugins/account/views/templates/account.tpl.php';
+	}
+	
+	function getRenderParms()
+	{
+		$parms = parent::getRenderParms();
+		
+		$parms['buttons_template'] = '../../plugins/account/views/templates/buttons.tpl.php';
+		
+		return $parms;
 	}
 }

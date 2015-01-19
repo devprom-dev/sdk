@@ -2022,16 +2022,16 @@
         },
         {
             "name": "symfony/symfony",
-            "version": "v2.2.10",
+            "version": "v2.2.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/symfony.git",
-                "reference": "14979a3bf96f42cd6d6710f44216c4c2a6aebcb2"
+                "reference": "6a9c223b066a2553b8f59fd26f84ea630eff403c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/symfony/zipball/14979a3bf96f42cd6d6710f44216c4c2a6aebcb2",
-                "reference": "14979a3bf96f42cd6d6710f44216c4c2a6aebcb2",
+                "url": "https://api.github.com/repos/symfony/symfony/zipball/6a9c223b066a2553b8f59fd26f84ea630eff403c",
+                "reference": "6a9c223b066a2553b8f59fd26f84ea630eff403c",
                 "shasum": ""
             },
             "require": {
@@ -2119,7 +2119,7 @@
             "keywords": [
                 "framework"
             ],
-            "time": "2013-11-13 14:29:12"
+            "time": "2013-12-02 07:14:10"
         },
         {
             "name": "twig/twig",
@@ -2545,75 +2545,6 @@
                 "xunit"
             ],
             "time": "2013-01-13 10:24:48"
-        },
-        {
-            "name": "symfony/framework-bundle",
-            "version": "v2.2.11",
-            "target-dir": "Symfony/Bundle/FrameworkBundle",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/FrameworkBundle.git",
-                "reference": "5c06f77cbe7092dc768d523019605a7fd14cef46"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/FrameworkBundle/zipball/5c06f77cbe7092dc768d523019605a7fd14cef46",
-                "reference": "5c06f77cbe7092dc768d523019605a7fd14cef46",
-                "shasum": ""
-            },
-            "require": {
-                "doctrine/common": "~2.2",
-                "php": ">=5.3.3",
-                "symfony/config": ">=2.2,<2.3-dev",
-                "symfony/dependency-injection": "~2.0",
-                "symfony/event-dispatcher": "~2.1",
-                "symfony/filesystem": ">=2.1,<2.3-dev",
-                "symfony/http-kernel": ">=2.2,<2.3-dev",
-                "symfony/routing": ">=2.2,<2.3-dev",
-                "symfony/stopwatch": ">=2.2,<2.3-dev",
-                "symfony/templating": "~2.1",
-                "symfony/translation": ">=2.2,<2.3-dev"
-            },
-            "require-dev": {
-                "symfony/finder": "~2.0",
-                "symfony/security": ">=2.2,<2.3-dev"
-            },
-            "suggest": {
-                "symfony/console": "2.2.*",
-                "symfony/finder": "2.2.*",
-                "symfony/form": "2.2.*",
-                "symfony/validator": "2.2.*"
-            },
-            "type": "symfony-bundle",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.2-dev"
-                }
-            },
-            "autoload": {
-                "psr-0": {
-                    "Symfony\\Bundle\\FrameworkBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Fabien Potencier",
-                    "email": "fabien@symfony.com",
-                    "homepage": "http://fabien.potencier.org",
-                    "role": "Lead Developer"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "http://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony FrameworkBundle",
-            "homepage": "http://symfony.com",
-            "time": "2013-11-28 07:03:21"
         }
     ],
     "aliases": [],
