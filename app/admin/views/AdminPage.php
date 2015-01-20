@@ -27,6 +27,21 @@ class AdminPage extends Page
 		
 		if ( !is_object($user_it) ) return $actions;
 		if ( $user_it->getId() < 1 ) return $actions;
+
+ 	 	// pluginnable quick menus
+		$plugin_menus = $plugins->getHeaderMenus( 'admin' );
+		
+		foreach ( $plugin_menus as $menu )
+		{
+			$menus[] = array (
+				'class' => 'header_popup',
+				'button_class' => $menu['class'],
+				'title' => $menu['caption'],
+				'description' => $menu['title'],
+				'url' => $menu['url'],
+				'items' => $menu['actions']
+			);
+		}
 		
 		$actions = array( array ( 
 			'name' => translate('Настроить профиль'),

@@ -8,7 +8,13 @@ class RenewSAASLicenseEventHandler extends SystemTriggersBase
 	{
 		if ( $object_it->object->getEntityRefName() != 'cms_License' ) return;
 		
-		unlink(SERVER_ROOT_PATH.'conf/license.dat');		
+		unlink(SERVER_ROOT_PATH.'conf/license.dat');
+
+	    getCheckpointFactory()->getCheckpoint('CheckpointSystem')->checkOnly( 
+	    		array (
+				    'LicenseSAASExpirationCheckpoint'
+	    		)
+	    );
 	}
 }
  

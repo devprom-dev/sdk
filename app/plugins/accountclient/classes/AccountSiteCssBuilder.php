@@ -6,6 +6,6 @@ class AccountSiteCssBuilder extends StyleSheetBuilder
 {
     public function build( StyleSheetRegistry & $object )
     {
-    	$object->addScriptFile(SERVER_ROOT_PATH.'/plugins/account/resources/css/account-form.css');
+    	$object->addScriptFile(SERVER_ROOT_PATH.'/plugins/accountclient/resources/css/account-form.css');
     }
 }

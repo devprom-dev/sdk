@@ -2,16 +2,11 @@
 
 include SERVER_ROOT_PATH."core/c_command.php";
 include SERVER_ROOT_PATH."plugins/account/commands/GetLicenseKey.php";
+include_once "AccountController.php";
 
-class AccountCommandController extends Page
+class AccountCommandController extends AccountController
 {
  	function needDisplayForm() 
- 	{
- 		return false;
- 	}
- 	
- 	// the page will be available without any authentization required 
- 	function authorizationRequired()
  	{
  		return false;
  	}
@@ -22,6 +17,10 @@ class AccountCommandController extends Page
  		
  		$user_it = getSession()->getUserIt();
  		
+ 		header('Access-Control-Allow-Origin: *');
+ 		header('Access-Control-Allow-Methods: *');
+ 		header('Access-Control-Allow-Headers: *');
+		
  		switch( $_REQUEST['name'] )
  		{
  		    case 'getlicensekey':

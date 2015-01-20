@@ -44,17 +44,29 @@ class SaasAssistAdminPlugin extends PluginAdminBase
  	    {
  	    	$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
  	    	
- 	    	array_unshift($actions, 
- 	    			array (
-			 	    		'url' => 
-			 	    			"javascript: window.location = 'https://devprom.ru/license?LicenseType=".$license_it->get('LicenseType').
+ 	    	if ( class_exists('AccountSiteJSBuilder') )
+ 	    	{
+ 	    		$script = AccountSiteJSBuilder::getScriptToBuy(); 
+ 	    	}
+ 	    	else
+ 	    	{
+ 	    		$script = "window.location = 'https://devprom.ru/license?LicenseType=".$license_it->get('LicenseType').
 			 	    			"&LicenseKey=".$license_it->get('LicenseKey').
 			 	    			"&Value=".$license_it->get('LicenseValue').
 			 	    			"&InstallationUID=".INSTALLATION_UID.
-			 	    			"&Redirect=".urlencode(EnvironmentSettings::getServerUrl().$_SERVER['REQUEST_URI'])."';",
-			 	    			
+			 	    			"&Redirect=".urlencode(EnvironmentSettings::getServerUrl().$_SERVER['REQUEST_URI'])."'";
+ 	    	} 	    	
+ 	    	
+ 	    	$actions = array ( 
+ 	    			array (
+			 	    		'url' => "javascript: ".$script.";",
 			 	    		'name' => text('saasassist36'),
 			 	    		'class' => 'btn-success'
+ 	    			),
+ 	    			array (
+ 	    					'url' => "javascript: $('#action".$form->getId()."').val(3);",
+ 	    					'name' => translate('Ââåñòè êëş÷'),
+ 	    					'type' => 'submit'
  	    			)
  	    	);
  	    }

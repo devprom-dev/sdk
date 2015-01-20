@@ -67,7 +67,7 @@ class InstallLicenseForm extends AdminForm
 			    return $_REQUEST[$attribute];
 
 			case 'LicenseKey';
-				return $_REQUEST[$attribute] == '' 
+				return !array_key_exists($attribute, $_REQUEST) 
 						? getFactory()->getObject('LicenseInstalled')->getAll()->get($attribute)
 						: $_REQUEST[$attribute];
 			    

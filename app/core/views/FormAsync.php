@@ -13,12 +13,14 @@ class AjaxForm
  	var $view;
  	
  	private $redirect_url = '';
+ 	private $form_id = '';
  	
  	/*
  	 * initializes form members
  	 */
  	function AjaxForm ( $object )
  	{
+ 		$this->form_id = uniqid();
  		if ( is_subclass_of($object, 'StoredObjectDB') )
  		{
  			$this->object = $object;
@@ -36,6 +38,11 @@ class AjaxForm
  		} 			
  		
  		$this->setRedirectUrl( SanitizeUrl::parseSystemUrl($_REQUEST['redirect']) );
+ 	}
+ 	
+ 	function getId()
+ 	{
+ 		return $this->form_id;
  	}
  	
  	/*
@@ -537,7 +544,7 @@ class AjaxForm
 			'attributes' => $attributes,
             'buttons_template' => 'core/FormAsyncButtons.php',
             'buttons_parms' => array( 'actions' => $actions ),
-            'form_id' => uniqid(),
+            'form_id' => $this->form_id,
             'redirect_url' => $this->getRedirectUrl(),
 			'form_url' => htmlentities($_SERVER['REQUEST_URI']), 
             'actions' => $actions,

@@ -6,18 +6,17 @@ function showAccountForm(url)
 
 	$('body').append(
 			'<div id="modal-form" style="display:none;" title="'+actxt('form-title')+'">'+
-			'<iframe id="modal-frame" src="'+url+'"></iframe>'+
+			'<iframe id="modal-frame" src="'+url+'" initial="'+url+'"></iframe>'+
 			'</div>'
 		);
 
 	$('#modal-form').dialog({
 		width: 750,
-		height: $(window).height()*5/6,
+		height: $(window).height()*2/3,
 		modal: true,
 		resizable: true,
 		open: function() {
-			$("#modal-frame").css("minHeight", $(this).height() - 10);
-			$("#modal-frame").css("minWidth", $(this).width() - 80);
+			$("#modal-frame").css("minHeight", "97%");
 		},
 		buttons: [
 			{
@@ -49,13 +48,7 @@ function showAccountForm(url)
 							var message = data.message;
 							
 							if ( state == 'redirect' ) {
-								if ( message != '' ) {
-									$('#modal-frame').contents().find('#result')
-									 	.removeClass('alert-success alert-error')
-										.addClass('alert alert-success')
-										.html(message);
-								}
-								$('#modal-frame').attr('src', data.object);
+								$('#modal-frame').load(function() {buildProcessingForm();}).attr('src', data.object);
 							}
 
 							if ( message != '' ) {
@@ -63,10 +56,10 @@ function showAccountForm(url)
 									.removeClass('alert-success alert-error')
 									.addClass('alert alert-'+state)
 									.html(message);
+								$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 							}
 						},
 						complete: function(xhr) {
-							$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 						},
 						error: function( xhr )
 						{
@@ -86,11 +79,36 @@ function showAccountForm(url)
 				tabindex: 11,
 				text: actxt('form-cancel-btn'),
 				id: 'CancelBtn',
-				click: function()
-				{
+				click: function() {
 					$(this).dialog('close');
 				}
 			}
 		]
 	});
+}
+
+function buildProcessingForm()
+{
+	$('#modal-form').dialog('option', 'height', $(window).height() * 5/6);
+	$('#modal-form').dialog('option', 'position', { my: "center", at: "center", of: window });
+	$('#modal-form').dialog('option', 'buttons', [
+  			{
+				tabindex: 10,
+				text: actxt('form-return-btn'),
+				id: 'ReturnBtn',
+				click: function() {
+					showAccountForm($("#modal-frame").attr('initial'));
+				}
+			},
+			{
+				tabindex: 11,
+				text: actxt('form-close-btn'),
+				id: 'CloseBtn',
+				click: function() {
+					$(this).dialog('close');
+				}
+			}
+	]);
+
+	$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 }

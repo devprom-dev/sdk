@@ -1,0 +1,81 @@
+<?php
+
+include "classes/AccountSiteJSBuilder.php";
+include "classes/AccountSiteCssBuilder.php";
+include "AdminPlugin.php";
+include "COPlugin.php";
+include "PMPlugin.php";
+
+// define common plugin attributes
+class accountClientPlugin extends PluginBase
+{
+	const SERVER_URL = 'http://localhost';
+	
+	// this is plugin's unique internal name
+ 	function getNamespace()
+ 	{
+ 		return 'accountclient';
+ 	}
+ 
+ 	// 
+  	function getFileName()
+ 	{
+ 		return 'accountClient.php';
+ 	}
+ 	
+ 	// plugin's title
+ 	function getCaption()
+ 	{
+ 		return text('accountclient1');
+ 	}
+ 	
+ 	// plugin's order number in the list of plugins, is using to define dependencies between plugins
+ 	function getIndex()
+ 	{
+ 	    return parent::getIndex() + 5000;
+ 	}
+ 	
+ 	// returns plugins extentions for the corresponding application:
+ 	// PM - project management
+ 	// Admin - administration
+ 	// CO - common section
+ 	//
+ 	function getSectionPlugins()
+ 	{
+ 		return array( new accountClientCo, new accountClientAdmin, new accountClientPM );
+ 	}
+ 	
+ 	function IsUpdatedWithCore()
+ 	{
+ 		return false;
+ 	}
+
+  	function getHeaderMenus()
+ 	{
+ 		$user_it = getSession()->getUserIt();
+ 		if ( !$user_it->IsAdministrator() ) return array();
+
+ 		$display_buy_button = false;
+ 	    foreach( getCheckpointFactory()->getCheckpoint('CheckpointSystem')->getEntries() as $entry )
+        {
+            if ( !$entry->enabled() || $entry->check() ) continue;
+        	if ( $entry instanceof LicenseSAASExpirationCheckpoint )
+        	{
+        		$display_buy_button = true;
+        		break;
+        	}
+        }
+        if ( !$display_buy_button ) return array();
+ 		
+ 		return array(
+ 				array (
+ 						'caption' => 'Оплатить',
+ 						'class' => 'btn-success',
+ 						'url' => "javascript: ".AccountSiteJSBuilder::getScriptToBuy().";"
+ 				),
+ 				array('class' => 'empty'),
+ 				array('class' => 'empty'),
+ 				array('class' => 'empty')
+ 		);
+ 	}
+}

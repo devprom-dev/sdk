@@ -4,13 +4,6 @@ class GetLicenseKey extends CommandForm
 {
  	function validate()
  	{
- 		global $user_it, $_REQUEST;
- 		
- 		if ( !$user_it->IsReal() )
- 		{
- 			$this->replyError( 'Получить лицензию могут только зарегистрированные пользователи.' );
- 		}
- 		
 		$this->checkRequired( array('InstallationUID', 'LicenseType') );
 		
 		if ( $_REQUEST['LicenseType'] != 'LicenseTeam' )
@@ -24,11 +17,11 @@ class GetLicenseKey extends CommandForm
             	    case 'LicenseSAASALM':
             	    case 'LicenseSAASALMMiddle':
             	    case 'LicenseSAASALMLarge':
-						$this->replyError( 'Укажите количество месяцев использования Devprom.' );
+						$this->replyError( text('account19') );
 						break;
 						
             	    default:
-            	    	$this->replyError( 'Укажите количество пользователей.' );
+            	    	$this->replyError( text('account20') );
             	}
 			}
 		}
@@ -37,20 +30,36 @@ class GetLicenseKey extends CommandForm
 		{
 			if ( !in_array(strtolower($_REQUEST['Aggreement']), array('on', 'y')) )
 			{
-				$this->replyError( 'Для продолжения необходимо изучить и принять условия публичной оферты.' ); 
+				$this->replyError( text('account21') ); 
 			}
 		}
+		
+		if ( $_REQUEST['UserName'] != '' && $_REQUEST['Email'] != '' && $_REQUEST['UserPassword'] != '' )
+		{
+			$this->joinCustomer( 
+					$_REQUEST['UserName'], 
+					$_REQUEST['Email'], 
+					$_REQUEST['UserPassword'], 
+					$_REQUEST['Language'],
+					$_REQUEST['InstallationUID'], 
+					$_REQUEST['LicenseType']
+			);
+		}
+
+ 	 	if ( !getSession()->getUserIt()->IsReal() ) $this->replyError( text('account18') );
 		
 		return true;
  	}
  	
  	function create()
 	{
-		global $model_factory, $_REQUEST, $user_it;
+		global $model_factory;
 
+		$user_it = getSession()->getUserIt();
+		
 		if ( in_array($_REQUEST['LicenseType'], array('LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge')) && $_REQUEST['LicenseKey'] == '' )
 		{
-			$this->redirectToStore();
+			$this->redirectToStore( $user_it->get('Email') );
 		}
 		
 		$license_data = array();
@@ -279,28 +288,21 @@ class GetLicenseKey extends CommandForm
  		return md5($uid.$users._SALT.date('#221Y#332m-@j'));
 	}
 	
-	function redirectToStore()
+	function redirectToStore( $email )
 	{
+		$store_parms = $this->getStoreParameters();
+		
 		$merchantId = 62021;
-		$currency = "RUB";
+		$currency = $store_parms['Currency'];
 		$securityKey = "30cfcab4-ce10-413f-bbfd-4a367823bc1c";
 
-		switch( $_REQUEST['LicenseType'] )
+		if ( $store_parms[$_REQUEST['LicenseType']] != '' )
 		{
-		    case 'LicenseSAASALM':
-		    	
-		    	$amount = round($_REQUEST['LicenseValue'] * 3000, 0); 
-		    	
-		    	break;
-		    	
-            case 'LicenseSAASALMMiddle':
-
-            	$amount = round($_REQUEST['LicenseValue'] * 15000, 0); 
-		    	
-		    	break;
-		    	
-            default:
-            	$amount = round($_REQUEST['LicenseValue'] * 60000, 0); 
+	    	$amount = round($_REQUEST['LicenseValue'] * $store_parms[$_REQUEST['LicenseType']], 0); 
+		}
+		else
+		{
+			$amount = round($_REQUEST['LicenseValue'] * 60000, 0);
 		}
 		
 		$amount .= ".00"; 
@@ -317,8 +319,9 @@ class GetLicenseKey extends CommandForm
 		$hash = md5($queryWithSecurityKey);
 
 		$clientQuery = $baseQuery."&SecurityKey=".$hash;
-
-		$paymentFormAddress = "https://secure.payonlinesystem.com/ru/payment/?".$clientQuery;
+		$clientQuery = $clientQuery."&Email=".$email;
+		
+		$paymentFormAddress = $store_parms['Url'].$clientQuery;
 
 		$order_info = array (
 				'LicenseType' => $_REQUEST['LicenseType'],
@@ -334,5 +337,51 @@ class GetLicenseKey extends CommandForm
 		setcookie('devprom-order-info', JsonWrapper::encode($order_info), 0, '/' );
 		
 		$this->replyRedirect($paymentFormAddress);
+	}
+	
+	function getStoreParameters()
+	{
+		if ( getSession()->getUserIt()->get('Language') == 1 )
+		{
+			return array (
+					'Currency' => 'RUB',
+					'Url' => "https://secure.payonlinesystem.com/ru/payment/?",
+					'LicenseSAASALM' => 3000,
+					'LicenseSAASALMMiddle' => 15000,
+					'LicenseSAASALMLarge' => 60000
+			);
+		}
+		else
+		{
+			return array (
+					'Currency' => 'USD',
+					'Url' => "https://secure.payonlinesystem.com/en/payment/?",
+					'LicenseSAASALM' => 100,
+					'LicenseSAASALMMiddle' => 500,
+					'LicenseSAASALMLarge' => 2000
+			);
+		}
+	}
+	
+	function joinCustomer( $name, $email, $password, $language, $uid, $type )
+	{
+		$user_id = getFactory()->getObject('User')->add_parms(
+				array (
+						'Caption' => IteratorBase::utf8towin($name),
+						'Email' => $email,
+						'Password' => $password,
+						'Login' => array_shift(preg_split('/@/', $email)),
+						'Language' => $language
+				)
+		);
+		
+		getFactory()->getObject('AccountLicenseData')->modify_parms( $user_id,
+				array (
+						'uid' => $uid,
+						'type' => $type
+				)
+		);
+		
+		getSession()->open( getFactory()->getObject('User')->getExact($user_id) );
 	}
 }

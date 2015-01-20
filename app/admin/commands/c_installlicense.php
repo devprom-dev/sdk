@@ -98,6 +98,15 @@
 		return $user_it;
 	}
 	
+ 	function delete()
+	{
+		$url =  '?LicenseType='.urlencode($_REQUEST['LicenseType']);
+		$url .= '&InstallationUID='.INSTALLATION_UID;
+		$url .= '&LicenseKey=';
+		
+		$this->replyRedirect( $url );
+	}
+	
 	function getResultDescription( $result )
 	{
 		global $model_factory, $_REQUEST;

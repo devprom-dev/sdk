@@ -9,30 +9,38 @@ class LicenseForm extends AjaxForm
     
     function getFormUrl()
     {
-    	return '/module/account/command?name='.$this->getCommandClass();
+    	return 'http://localhost/module/account/command?name='.$this->getCommandClass();
+    	return EnvironmentSettings::getServerUrl().'/module/account/command?name='.$this->getCommandClass();
     }
 
     function getAttributes()
     {
+    	$attributes = array();
+    	
+    	if ( getSession()->getUserIt()->getId() < 1 )
+    	{
+    		$attributes = array_merge($attributes, array('UserName', 'Email', 'UserPassword', 'UserForm'));
+    	}
+    	else
+    	{
+    		$attributes = array_merge($attributes, array('UserTitle', 'UserForm'));
+    	}
+    	
         if ( $_REQUEST['LicenseType'] == 'LicenseTeam' )
         {
-            $attributes = array ( 'LicenseType', 'InstallationUID' );
+            $attributes = array_merge($attributes, array('LicenseType', 'InstallationUID'));
         }
         else
         {
-            $attributes = array ( 'LicenseType', 'InstallationUID', 'LicenseValue' );
+            $attributes = array_merge($attributes, array('LicenseType', 'InstallationUID', 'LicenseValue'));
         }
         
-       	switch( $_REQUEST['LicenseType'] )
-       	{
-			case 'LicenseSAASALM':
-			case 'LicenseSAASALMMiddle':
-			case 'LicenseSAASALMLarge':
-            	
-            	$attributes[] = 'Aggreement';
-            	
-            	break;
-       	}
+        if ( $this->processSaasProduct() )
+        {
+			$attributes[] = 'AggreementForm';
+           	$attributes[] = 'Aggreement';
+           	$attributes[] = 'PaymentServiceInfo';
+        }
         
         return $attributes;
     }
@@ -42,12 +50,23 @@ class LicenseForm extends AjaxForm
         switch ( $attribute )
         {
             case 'InstallationUID':
-            case 'LicenseType':
             case 'LicenseValue':
-                return 'text';
+            case 'UserName':
+            case 'Email':
+            	return 'text';
 
+            case 'UserPassword':
+            	return 'password';
+            	
             case 'Aggreement':
                 return 'char';
+
+            case 'LicenseType':
+            case 'PaymentServiceInfo':
+            case 'UserForm':
+            case 'UserTitle':
+            case 'AggreementForm':
+            	return 'custom';
         }
     }
 
@@ -83,20 +102,21 @@ class LicenseForm extends AjaxForm
                 return text('account3');
 
             case 'LicenseValue':
-            	switch( $_REQUEST['LicenseType'] )
-            	{
-            	    case 'LicenseSAASALM':
-					case 'LicenseSAASALMMiddle':
-					case 'LicenseSAASALMLarge':
-            	    	return text('account4');
-            	    	
-            	    default:
-            	    	return text('account5');
-            	}
+           		return $this->processSaasProduct() ? text('account4') : text('account5');
             	
             case 'Aggreement':
             	return text('account6');
 
+            case 'PaymentServiceInfo':
+            	return '';
+
+            case 'UserName':
+            	return text('account14');
+            case 'Email':
+            	return text('account15');
+            case 'UserPassword':
+            	return text('account16');
+            	
             default:
                 return parent::getName( $attribute );
 
@@ -109,10 +129,15 @@ class LicenseForm extends AjaxForm
         {
             case 'InstallationUID':
             case 'LicenseType':
-            case 'LicenseValue':
-                if ( $_REQUEST[$attribute] != '' ) return $_REQUEST[$attribute];
-                return parent::getAttributeValue( $attribute );
+            case 'Email':
+            case 'UserName':
+            	if ( $_REQUEST[$attribute] != '' ) return $_REQUEST[$attribute];
+        	    return parent::getAttributeValue( $attribute );
 
+           case 'LicenseValue':
+                if ( $_REQUEST[$attribute] != '' ) return $_REQUEST[$attribute];
+                return $this->processSaasProduct() ? 12 : parent::getAttributeValue( $attribute ); 
+            	
             case 'Aggreement': return 'N';
                 
             default:
@@ -124,9 +149,6 @@ class LicenseForm extends AjaxForm
     {
         switch ( $attribute )
         {
-            case 'LicenseValue':
-                return '&nbsp;';
-
             default:
                 return '';
         }
@@ -134,92 +156,46 @@ class LicenseForm extends AjaxForm
 
     function drawCustomAttribute( $attribute, $value, $tab_index )
     {
-        global $tab_index;
-
         switch( $attribute )
         {
-            case 'LicenseType':
-
-                $licenses = array (
-	                'LicenseEnterprise' => 'Полнофункциональная версия Devprom.ALM',
-	                'LicenseTrial' => 'Ознакомительная версия Devprom.ALM',
-	                'LicenseTeam' => 'Базовая версия Devprom.AgileTeam',
-	                'LicenseSAASALM' => 'Devprom.ALM в облаке myalm.ru на 10 пользователей',
-					'LicenseSAASALMMiddle' => 'Devprom.ALM в облаке myalm.ru на 30 пользователей',
-					'LicenseSAASALMLarge' => 'Devprom.ALM в облаке myalm.ru на 100 пользователей'
-                );
-
-                $type = $this->getAttributeValue( $attribute );
-
-                echo '<div class="input-border form-group" style="">';
-	                echo '<input type="hidden" id="LicenseType" name="LicenseType" value="'.$value.'">';
-	                echo '<input class="input_value form-control" value="'.$licenses[$value].'" tabindex="'.$tab_index.'" readonly>';
-                echo '</div>';
-
-                return;
+        	case 'LicenseType':
+				$field = new FieldDictionary(
+					 $this->processSaasProduct() 
+					 		? getFactory()->getObject('AccountProductSaas') 
+					 		: getFactory()->getObject('AccountProduct')
+            	);
+				$field->SetName($attribute);
+				$field->SetValue($value);
+				$field->SetId($attribute);
+				$field->SetTabIndex($tab_index);
+				$field->setNullOption(false);
+				
+				echo $this->getName($attribute);
+				$field->draw();
+				
+				echo '<input type="hidden" name="WasLicenseKey" value="'.htmlspecialchars($_REQUEST['WasLicenseKey']).'">';
+				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlspecialchars($_REQUEST['WasLicenseValue']).'">';
+				break;
+        		
+        	case 'PaymentServiceInfo':
+        		echo text('account13');
+        		break;
+        		
+        	case 'UserTitle':
+        		echo str_replace('%1', getSession()->getUserIt()->getDisplayName(), text('account17'));
+        		break;
+        		
+        	case 'UserForm':
+        		echo '<input type="hidden" name="Language" value="'.htmlspecialchars($_REQUEST['Language']).'">';
+        		
+        	case 'AggreementForm':
+        		echo '<hr/>';
+        		break;
+        		
+        	default:
+        		return parent::drawCustomAttribute( $attribute, $value, $tab_index );
         }
-
-        return parent::drawCustomAttribute( $attribute, $value, $tab_index );
     }
-
-    function drawScript()
-    {
-        ?>
-	<script language="javascript">
-		$(document).ready(function() 
-		{
-			$('#LicenseType').change(function() {
-				window.location = updateLocation('LicenseType='+$('#LicenseType').val(), window.location.toString()); 
-			});
-		});
-	</script>
-	<?php 
-	}
-	
-	function draw2()
-	{
-		$this->drawScript();
-
-		echo '<div style="font-size:10pt;">';
-			echo '<br/>';
-			echo 'Пользователь: <b>'.getSession()->getUserIt()->getDisplayName().'</b> ('.getSession()->getUserIt()->get('Email').')';
-		echo '</div>';
-		
-		echo '<form id="myForm" action="/module/account/command?name=getlicensekey" method="post" style="width:100%;" onsubmit="javascript: return false;">';
-			echo '<input type="hidden" id="action" name="action" value="'.$this->getAction().'">';
-			echo '<input type="hidden" name="MAX_FILE_SIZE" value="1048576">';
-			echo '<input type="hidden" id="lru" name="lru" value="">';
-			echo '<input type="hidden" id="lrs" name="lrs" value="">';
-			echo '<input type="hidden" name="Redirect" value="'.htmlentities($_REQUEST['Redirect']).'">';
-			echo '<input type="hidden" name="WasLicenseKey" value="'.htmlentities($_REQUEST['LicenseKey']).'">';
-			echo '<input type="hidden" name="WasLicenseValue" value="'.htmlentities($_REQUEST['Value']).'">';
-			
-			echo '<table style="width:100%;">';
-			$attributes = $this->getAttributes();
-	
-			for ( $i = 0; $i < count($attributes); $i++ )
-			{
-				$this->drawAttribute( $attributes[$i] );
-			}
-			echo '</table>';
-		echo '</form>';
-			
-		echo '<div style="clear:both;"></div>';
-			
-       	switch( $_REQUEST['LicenseType'] )
-       	{
-            	    case 'LicenseSAASALM':
-					case 'LicenseSAASALMMiddle':
-					case 'LicenseSAASALMLarge':
-            	    	
-							echo '<br/>';
-				           	echo '<span style="font-size:13px;">* Оплата услуг производится <a target="_blank" href="http://devprom.ru/price/Payonline">процессинговым центром PayOnline</a></span>';
-
-				           	break;
-       	}
-			
-		echo '</div>';
-	}
 
 	function drawTitle()
 	{
@@ -242,5 +218,19 @@ class LicenseForm extends AjaxForm
 		$parms['buttons_template'] = '../../plugins/account/views/templates/buttons.tpl.php';
 		
 		return $parms;
+	}
+
+	protected function processSaasProduct()
+	{
+	    switch( $_REQUEST['LicenseType'] )
+       	{
+			case 'LicenseSAASALM':
+			case 'LicenseSAASALMMiddle':
+			case 'LicenseSAASALMLarge':
+            	return true;
+            	
+			default:
+				return false;
+       	}
 	}
 }
