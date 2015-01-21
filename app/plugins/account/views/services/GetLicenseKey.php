@@ -1,5 +1,7 @@
 <?php
- 
+
+include_once SERVER_ROOT_PATH."core/c_command.php";
+
 class GetLicenseKey extends CommandForm
 {
  	function validate()
@@ -293,6 +295,7 @@ class GetLicenseKey extends CommandForm
 		$store_parms = $this->getStoreParameters();
 		
 		$merchantId = 62021;
+		//$merchantId = 7742;
 		$currency = $store_parms['Currency'];
 		$securityKey = "30cfcab4-ce10-413f-bbfd-4a367823bc1c";
 
@@ -317,9 +320,12 @@ class GetLicenseKey extends CommandForm
 		$queryWithSecurityKey = $baseQuery."&PrivateSecurityKey=".$securityKey;
 
 		$hash = md5($queryWithSecurityKey);
-
+		$url_parts = parse_url($_REQUEST['Redirect']);
+		
 		$clientQuery = $baseQuery."&SecurityKey=".$hash;
 		$clientQuery = $clientQuery."&Email=".$email;
+		$clientQuery = $clientQuery."&FailUrl=".urlencode($url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed');
+		
 		
 		$paymentFormAddress = $store_parms['Url'].$clientQuery;
 
@@ -331,7 +337,8 @@ class GetLicenseKey extends CommandForm
 				'InstallationUID' => $_REQUEST['InstallationUID'],
 				'Redirect' => $_REQUEST['Redirect'],
 				'Amount' => $amount,
-				'OrderId' => $orderId
+				'OrderId' => $orderId,
+				'Currency' => $currency
 		);
 		
 		setcookie('devprom-order-info', JsonWrapper::encode($order_info), 0, '/' );

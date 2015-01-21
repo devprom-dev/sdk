@@ -4,6 +4,7 @@ define( 'SAAS_DOMAIN', 'myalm.ru' );
 define( 'SAAS_SENDER', 'noreply@projectscloud.ru' );
 
 include "classes/licenses/LicenseRegistryBuilderSaaS.php";
+include "classes/licenses/events/RenewSAASLicenseEventHandler.php";
 include "classes/CheckpointRegistryBuilderSaaS.php";
 include "SaasAssistCoPlugin.php";
 include "SaasAssistAdminPlugin.php";

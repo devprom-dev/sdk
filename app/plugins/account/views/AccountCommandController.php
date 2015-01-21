@@ -1,8 +1,8 @@
 <?php
 
-include SERVER_ROOT_PATH."core/c_command.php";
-include SERVER_ROOT_PATH."plugins/account/commands/GetLicenseKey.php";
 include_once "AccountController.php";
+include "services/GetLicenseKey.php";
+include "services/ProcessOrder.php";
 
 class AccountCommandController extends AccountController
 {
@@ -25,6 +25,11 @@ class AccountCommandController extends AccountController
  		{
  		    case 'getlicensekey':
  		    	$command = new GetLicenseKey();
+ 		    	$command->execute();
+ 		    	break; 
+
+ 		    case 'processorder':
+ 		    	$command = new ProcessOrder();
  		    	$command->execute();
  		    	break; 
  		}

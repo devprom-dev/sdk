@@ -49,7 +49,9 @@ foreach( $checkpoint_alerts as $key => $alert )
 		<?php } else { ?>
 		<a id="navbar-quick-create" class="btn dropdown-toggle <?=$menu['button_class']?>" data-toggle="dropdown" href="#">
 		<?php } ?>
-
+			<?php if ( $menu['icon'] != '' ) { ?>
+				<i class="<?=$menu['icon']?>"></i>
+			<?php } ?>
 			<?=$menu['title']?>
 			<?php if ( count($menu['items']) > 0 ) { ?>
 				<span class="caret"></span>

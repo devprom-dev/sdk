@@ -7,6 +7,7 @@ class SaasAssistCoPlugin extends PluginCoBase
  	function getBuilders()
  	{
  	    return array (
+ 	    		new RenewSAASLicenseEventHandler(),
  	    		new ScriptIntercomBuilder(getSession())
  	    );
  	}

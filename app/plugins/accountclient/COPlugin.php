@@ -19,6 +19,16 @@ class accountClientCo extends PluginCoBase
                 array(
                         'includes' => array( 'accountclient/views/AccountProxyController.php' ),
                         'classname' => 'AccountProxyController'
+                ),
+            'failed' =>
+                array(
+                        'includes' => array( 'accountclient/views/FailedController.php' ),
+                        'classname' => 'FailedController'
+                ),
+            'process' =>
+                array(
+                        'includes' => array( 'accountclient/views/SetupLicenseController.php' ),
+                        'classname' => 'SetupLicenseController'
                 )
         );
     }

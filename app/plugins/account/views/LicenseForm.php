@@ -9,7 +9,6 @@ class LicenseForm extends AjaxForm
     
     function getFormUrl()
     {
-    	return 'http://localhost/module/account/command?name='.$this->getCommandClass();
     	return EnvironmentSettings::getServerUrl().'/module/account/command?name='.$this->getCommandClass();
     }
 
@@ -175,6 +174,7 @@ class LicenseForm extends AjaxForm
 				
 				echo '<input type="hidden" name="WasLicenseKey" value="'.htmlspecialchars($_REQUEST['WasLicenseKey']).'">';
 				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlspecialchars($_REQUEST['WasLicenseValue']).'">';
+				echo '<input type="hidden" name="Redirect" value="'.htmlspecialchars($_REQUEST['Redirect']).'">';
 				break;
         		
         	case 'PaymentServiceInfo':

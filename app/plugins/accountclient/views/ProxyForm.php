@@ -4,7 +4,7 @@ class ProxyForm extends AjaxForm
 {
 	function getTemplate()
 	{
-		return '../../plugins/accountclient/views/templates/account.tpl.php';
+		return '../../plugins/accountclient/views/templates/proxy.tpl.php';
 	}
 	
 	function proxy()

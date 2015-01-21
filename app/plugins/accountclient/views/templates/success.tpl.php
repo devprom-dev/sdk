@@ -8,7 +8,12 @@
 	<script src="/cache/?v=<?=$current_version?>&l=<?=$language_code?>" type="text/javascript" charset="UTF-8"></script>
   </head>
   <body style="background: white;margin: 10px 10px 0 10px;">
-  		<div id="result" class=""></div>
-		<?php $parms['form']->proxy(); ?>
-  </body>
+  	<div class="alert alert-success">
+	  	<?=text('accountclient9')?>
+		<script type="text/javascript">
+			$(document).ready( function() {
+				window.parent.location.reload(); 
+			});
+		</script>
+  	</body>
 </html>

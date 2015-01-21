@@ -89,7 +89,7 @@ function showAccountForm(url)
 
 function buildProcessingForm()
 {
-	$('#modal-form').dialog('option', 'height', $(window).height() * 5/6);
+	$('#modal-form').dialog('option', 'height', $(window).height() - 60);
 	$('#modal-form').dialog('option', 'position', { my: "center", at: "center", of: window });
 	$('#modal-form').dialog('option', 'buttons', [
   			{

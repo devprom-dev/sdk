@@ -9,7 +9,7 @@ include "PMPlugin.php";
 // define common plugin attributes
 class accountClientPlugin extends PluginBase
 {
-	const SERVER_URL = 'http://localhost';
+	const SERVER_URL = 'http://devprom.ru';
 	
 	// this is plugin's unique internal name
  	function getNamespace()
@@ -68,10 +68,15 @@ class accountClientPlugin extends PluginBase
         if ( !$display_buy_button ) return array();
  		
  		return array(
- 				array (
- 						'caption' => 'Оплатить',
+ 				array('class' => 'empty'),
+ 				array('class' => 'empty'),
+				array('class' => 'empty'),
+ 				array('class' => 'empty'),
+  				array (
+ 						'caption' => text('accountclient2'),
  						'class' => 'btn-success',
- 						'url' => "javascript: ".AccountSiteJSBuilder::getScriptToBuy().";"
+ 						'url' => "javascript: ".AccountSiteJSBuilder::getScriptToBuy().";",
+ 						'icon' => 'icon-white icon-shopping-cart'
  				),
  				array('class' => 'empty'),
  				array('class' => 'empty'),
