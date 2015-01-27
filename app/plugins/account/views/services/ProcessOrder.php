@@ -6,7 +6,7 @@ class ProcessOrder extends CommandForm
 {
  	function validate()
  	{
-		$this->checkRequired( array('OrderId') );
+		$this->checkRequired( array('OrderId','OrderInfo') );
 		
 		return true;
  	}
@@ -20,13 +20,13 @@ class ProcessOrder extends CommandForm
 	{
 		if ( $_COOKIE['devprom-order-info'] == '' ) $this->delete();
 		
-		$order_info = JsonWrapper::decode($_COOKIE['devprom-order-info']);
+		$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
 		
 		$orderId = $_REQUEST['OrderId'];
 		
 		if ( $order_info['OrderId'] != $orderId ) $this->delete();
 
-		$securityKey = "30cfcab4-ce10-413f-bbfd-4a367823bc1c";
+		$securityKey = MERCHANT_KEY;
 		
 		$baseQuery = "DateTime=".$_REQUEST['DateTime'].
 					 "&TransactionID=".$_REQUEST['TransactionID'].
@@ -63,7 +63,9 @@ class ProcessOrder extends CommandForm
 	
 	function replyRedirect( $url )
 	{
-		$url_parts = parse_url($_REQUEST['Redirect']);
+		$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
+		$url_parts = parse_url($order_info['Redirect']);
+		
 		exit(header('Location: '.$url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].$url));
 	}
 	

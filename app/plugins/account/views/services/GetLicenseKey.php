@@ -28,14 +28,6 @@ class GetLicenseKey extends CommandForm
 			}
 		}
 
- 		if ( in_array($_REQUEST['LicenseType'], array('LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge')) )
-		{
-			if ( !in_array(strtolower($_REQUEST['Aggreement']), array('on', 'y')) )
-			{
-				$this->replyError( text('account21') ); 
-			}
-		}
-		
 		if ( $_REQUEST['UserName'] != '' && $_REQUEST['Email'] != '' && $_REQUEST['UserPassword'] != '' )
 		{
 			$this->joinCustomer( 
@@ -47,8 +39,27 @@ class GetLicenseKey extends CommandForm
 					$_REQUEST['LicenseType']
 			);
 		}
-
- 	 	if ( !getSession()->getUserIt()->IsReal() ) $this->replyError( text('account18') );
+ 		else if ( $_REQUEST['Email'] != '' && $_REQUEST['ExistPassword'] != '' )
+		{
+			$user_it = getFactory()->getObject('User')->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('Email', $_REQUEST['Email'])
+					)
+			);
+			
+			while( !$user_it->end() )
+			{
+				if ( $user_it->get('Password') == $user_it->object->getHashedPassword($_REQUEST['ExistPassword']) )
+				{
+					$this->updateCustomer( $user_it,
+							$_REQUEST['InstallationUID'], 
+							$_REQUEST['LicenseType']
+					);
+					break;
+				}
+				$user_it->moveNext();
+			}
+		}
 		
 		return true;
  	}
@@ -57,6 +68,15 @@ class GetLicenseKey extends CommandForm
 	{
 		global $model_factory;
 
+ 	 	if ( !getSession()->getUserIt()->IsReal() ) $this->replyError( text('account18') );
+	 	if ( in_array($_REQUEST['LicenseType'], array('LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge')) )
+		{
+			if ( !in_array(strtolower($_REQUEST['Aggreement']), array('on', 'y')) )
+			{
+				$this->replyError( text('account21') ); 
+			}
+		}
+ 	 	
 		$user_it = getSession()->getUserIt();
 		
 		if ( in_array($_REQUEST['LicenseType'], array('LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge')) && $_REQUEST['LicenseKey'] == '' )
@@ -266,9 +286,20 @@ class GetLicenseKey extends CommandForm
 		mail('12.141209@dropbox.pipedrive.com', 'deal', $body, $headers);
 	}
 	
+	function modify()
+	{
+		if ( $_REQUEST['Email'] != '' )
+		{
+			$this->resetCustomerPassword($_REQUEST['Email']);
+			$this->replySuccess(str_replace('%1', $_REQUEST['Email'], text('account24')));
+		}
+	}
+	
 	function delete()
 	{
 		global $_REQUEST;
+
+		if ( !getSession()->getUserIt()->IsReal() ) $this->replyError( text('account18') );
 		
 		$url = $_REQUEST['Redirect'].'?LicenseType='.$_REQUEST['LicenseType'].
 			'&LicenseValue='.$_REQUEST['LicenseValue'].'&LicenseKey=';
@@ -294,10 +325,10 @@ class GetLicenseKey extends CommandForm
 	{
 		$store_parms = $this->getStoreParameters();
 		
-		$merchantId = 62021;
-		//$merchantId = 7742;
+		$merchantId = MERCHANT_ID;
+		$securityKey = MERCHANT_KEY;
 		$currency = $store_parms['Currency'];
-		$securityKey = "30cfcab4-ce10-413f-bbfd-4a367823bc1c";
+		
 
 		if ( $store_parms[$_REQUEST['LicenseType']] != '' )
 		{
@@ -323,11 +354,8 @@ class GetLicenseKey extends CommandForm
 		$url_parts = parse_url($_REQUEST['Redirect']);
 		
 		$clientQuery = $baseQuery."&SecurityKey=".$hash;
-		$clientQuery = $clientQuery."&Email=".$email;
-		$clientQuery = $clientQuery."&FailUrl=".urlencode($url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed');
-		
-		
-		$paymentFormAddress = $store_parms['Url'].$clientQuery;
+		$clientQuery .= "&Email=".$email;
+		$clientQuery .= "&FailUrl=".urlencode($url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed');
 
 		$order_info = array (
 				'LicenseType' => $_REQUEST['LicenseType'],
@@ -340,8 +368,9 @@ class GetLicenseKey extends CommandForm
 				'OrderId' => $orderId,
 				'Currency' => $currency
 		);
+		$clientQuery .= "&OrderInfo=".urlencode(JsonWrapper::encode($order_info));
 		
-		setcookie('devprom-order-info', JsonWrapper::encode($order_info), 0, '/' );
+		$paymentFormAddress = $store_parms['Url'].$clientQuery;
 		
 		$this->replyRedirect($paymentFormAddress);
 	}
@@ -370,25 +399,84 @@ class GetLicenseKey extends CommandForm
 		}
 	}
 	
-	function joinCustomer( $name, $email, $password, $language, $uid, $type )
+	protected function joinCustomer( $name, $email, $password, $language, $uid, $type )
 	{
-		$user_id = getFactory()->getObject('User')->add_parms(
+		$user = getFactory()->getObject('User');
+		$user->setNotificationEnabled(false);
+		
+		$user_it = $user->getRegistry()->Query(
 				array (
-						'Caption' => IteratorBase::utf8towin($name),
-						'Email' => $email,
-						'Password' => $password,
-						'Login' => array_shift(preg_split('/@/', $email)),
-						'Language' => $language
+						new FilterAttributePredicate('Email', $email),
+						new FilterInstallationUIDPredicate($uid)
 				)
 		);
 		
-		getFactory()->getObject('AccountLicenseData')->modify_parms( $user_id,
+		if ( $user_it->getId() == '' )
+		{
+			$user_id = $user->add_parms(
+					array (
+							'Caption' => IteratorBase::utf8towin($name),
+							'Email' => $email,
+							'Password' => $password,
+							'Login' => array_shift(preg_split('/@/', $email)),
+							'Language' => $language
+					)
+			);
+			$user_it = $user->getExact($user_id);
+
+			getFactory()->getObject('AccountLicenseData')->modify_parms( $user_it->getId(),
+					array (
+							'uid' => $uid,
+							'type' => $type
+					)
+			);
+		}
+		
+		getSession()->open($user_it);
+	}
+
+	protected function updateCustomer( $user_it, $uid, $type )
+	{
+		getFactory()->getObject('AccountLicenseData')->modify_parms( $user_it->getId(),
 				array (
 						'uid' => $uid,
 						'type' => $type
 				)
 		);
 		
-		getSession()->open( getFactory()->getObject('User')->getExact($user_id) );
+		getSession()->open( $user_it );
+	}
+	
+	protected function resetCustomerPassword( $email )
+	{
+		$user = getFactory()->getObject('User');
+		$user->setNotificationEnabled(false);
+		
+		$user_it = $user->getRegistry()->Query(
+				array (
+						new FilterAttributePredicate('Email', $email)
+				)
+		);
+		
+		$new_password = substr(str_shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+{}[]()"),0,16);
+		
+		$user->modify_parms( $user_it->getId(),
+				array (
+						'Password' => $new_password 
+				)
+		);
+		
+	    $language = $user_it->get('Language') == 1 ? 'ru' : 'en';
+
+	    $body = preg_replace('/\%key\%/', $new_password, 
+	    		file_get_contents(SERVER_ROOT_PATH.'plugins/account/resources/'.$language.'/reset-password.html')
+			);
+
+	    $mail = new HtmlMailbox;
+	    $mail->appendAddress($user_it->get('Email'));
+	    $mail->setBody($body);
+	    $mail->setSubject(text('account25'));
+	    $mail->setFrom("Devprom Software <".getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail').">");
+	    $mail->send();
 	}
 }

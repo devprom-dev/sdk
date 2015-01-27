@@ -12,6 +12,7 @@
 	  	<?=text('accountclient9')?>
 		<script type="text/javascript">
 			$(document).ready( function() {
+				window.parent.resizeModalWindow();
 				window.parent.location.reload(); 
 			});
 		</script>

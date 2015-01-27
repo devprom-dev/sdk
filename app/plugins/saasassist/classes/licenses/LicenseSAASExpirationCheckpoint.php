@@ -35,6 +35,11 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 		return $this->getValue() == "0" ? text('saasassist35') : text('saasassist18');
 	}
 	
+    function notificationRequired()
+    {
+    	return false;
+    }
+	
 	protected function timeToSendLicenseNotification()
 	{
 		$timeline = DOCUMENT_ROOT.'conf/licenselastnotification.dat';

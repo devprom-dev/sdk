@@ -9,7 +9,7 @@ class LicenseForm extends AjaxForm
     
     function getFormUrl()
     {
-    	return EnvironmentSettings::getServerUrl().'/module/account/command?name='.$this->getCommandClass();
+    	return ACCOUNT_HOST.'/module/account/command?name='.$this->getCommandClass();
     }
 
     function getAttributes()
@@ -18,7 +18,20 @@ class LicenseForm extends AjaxForm
     	
     	if ( getSession()->getUserIt()->getId() < 1 )
     	{
-    		$attributes = array_merge($attributes, array('UserName', 'Email', 'UserPassword', 'UserForm'));
+    		$user_it = getFactory()->getObject('User')->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('Email', $this->getAttributeValue('Email'))
+					)
+			);
+    		
+    		if ( $user_it->getId() != '' )
+    		{
+    			$attributes = array_merge($attributes, array('ExistPassword'));
+    		}
+    		else
+    		{
+	    		$attributes = array_merge($attributes, array('UserName', 'Email', 'UserPassword', 'UserForm'));
+    		}
     	}
     	else
     	{
@@ -55,6 +68,7 @@ class LicenseForm extends AjaxForm
             	return 'text';
 
             case 'UserPassword':
+            case 'ExistPassword':
             	return 'password';
             	
             case 'Aggreement':
@@ -96,29 +110,25 @@ class LicenseForm extends AjaxForm
         {
             case 'InstallationUID':
                 return text('account2');
-
             case 'LicenseType':
                 return text('account3');
-
             case 'LicenseValue':
            		return $this->processSaasProduct() ? text('account4') : text('account5');
-            	
             case 'Aggreement':
             	return text('account6');
-
             case 'PaymentServiceInfo':
             	return '';
-
             case 'UserName':
             	return text('account14');
             case 'Email':
             	return text('account15');
             case 'UserPassword':
             	return text('account16');
+            case 'ExistPassword':
+            	return text('account22');
             	
             default:
                 return parent::getName( $attribute );
-
         }
     }
 
@@ -148,6 +158,9 @@ class LicenseForm extends AjaxForm
     {
         switch ( $attribute )
         {
+            case 'ExistPassword':
+            	return str_replace('%1', $this->getId(), text('account23'));
+            	
             default:
                 return '';
         }
@@ -175,6 +188,7 @@ class LicenseForm extends AjaxForm
 				echo '<input type="hidden" name="WasLicenseKey" value="'.htmlspecialchars($_REQUEST['WasLicenseKey']).'">';
 				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlspecialchars($_REQUEST['WasLicenseValue']).'">';
 				echo '<input type="hidden" name="Redirect" value="'.htmlspecialchars($_REQUEST['Redirect']).'">';
+				echo '<input type="hidden" name="Email" value="'.htmlspecialchars($_REQUEST['Email']).'">';
 				break;
         		
         	case 'PaymentServiceInfo':

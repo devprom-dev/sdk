@@ -58,6 +58,8 @@ function showAccountForm(url)
 									.html(message);
 								$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 							}
+							
+							$('#modal-frame').contents().find('input[name="action"]').val(1);
 						},
 						complete: function(xhr) {
 						},
@@ -85,6 +87,11 @@ function showAccountForm(url)
 			}
 		]
 	});
+	
+	window.resizeModalWindow = function() {
+		$('#modal-form').dialog('option', 'height', $(window).height() * 1/2);
+		$('#modal-form').dialog('option', 'position', { my: "center", at: "center", of: window });
+	};
 }
 
 function buildProcessingForm()
@@ -111,4 +118,10 @@ function buildProcessingForm()
 	]);
 
 	$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+}
+
+function resetPassword()
+{
+	$('#modal-frame').contents().find('input[name="action"]').val(2);
+	$('#SubmitBtn').click();
 }

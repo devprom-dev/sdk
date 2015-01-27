@@ -10,10 +10,5 @@
   <body style="background: white;margin: 10px 10px 0 10px;">
   		<div id="result" class=""></div>
 		<?php $parms['form']->proxy(); ?>
-		<script type="text/javascript">
-			$(document).ready( function() {
-				//window.location = '/module/accountclient/process?LicenseKey=dcdd28a21c618525c53a83181e68c86d&LicenseValue=200'; 
-			});
-		</script>
   </body>
 </html>

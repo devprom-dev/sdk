@@ -8,29 +8,34 @@
 	<script src="/cache/?v=<?=$current_version?>&l=<?=$language_code?>" type="text/javascript" charset="UTF-8"></script>
   </head>
   <body style="background: white;margin: 10px 10px 0 10px;">
-  	<?=text('accountclient3')?>
-  	<hr/>
-  	<div class="alert alert-error">
-  	<?php
-		  	switch( $parms['code'] ) {
-		  	    case '1':
-		  	    	echo text('accountclient4');
-		  	    	break;
-		  	    	
-		  	    case '2':
-		  	    	echo text('accountclient5');
-		  	    	break;
-		  	    	
-		  	    case '3':
-		  	    	echo text('accountclient6');
-		  	    	break;
-		  	    
-		  	    default:
-		  	    	echo text('accountclient7');
-			}
-  	?>
-  	</div>
-  	<hr/>
-  	<?=text('accountclient8')?>
-  	</body>
+	  	<?=text('accountclient3')?>
+	  	<hr/>
+	  	<div class="alert alert-error">
+	  	<?php
+			  	switch( $parms['code'] ) {
+			  	    case '1':
+			  	    	echo text('accountclient4');
+			  	    	break;
+			  	    	
+			  	    case '2':
+			  	    	echo text('accountclient5');
+			  	    	break;
+			  	    	
+			  	    case '3':
+			  	    	echo text('accountclient6');
+			  	    	break;
+			  	    
+			  	    default:
+			  	    	echo text('accountclient7');
+				}
+	  	?>
+	  	</div>
+	  	<hr/>
+	  	<?=text('accountclient8')?>
+		<script type="text/javascript">
+			$(document).ready( function() {
+				window.parent.resizeModalWindow(); 
+			});
+		</script>
+  </body>
 </html>

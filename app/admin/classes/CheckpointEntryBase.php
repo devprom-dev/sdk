@@ -48,6 +48,11 @@ class CheckpointEntryBase
     {
         return false;
     }
+    
+    function notificationRequired()
+    {
+    	return true;
+    }
 
 	function getLogger()
 	{
