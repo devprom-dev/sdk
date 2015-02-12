@@ -54,10 +54,15 @@ class ProcessOrder extends CommandForm
 						)
 		);
 		
+		$this->updateSupportSubscription(
+				$order_info['InstallationUID'], 
+				$licensed_days, 
+				$order_info['LicenseType'], 
+				$order_info['Redirect']
+		);
 		$this->sendMail($query_parms['LicenseKey'], $query_parms['LicenseValue']);
 		
 		$query_parms['LicenseValue'] = $licensed_days;
-		
 		$this->replyRedirect('/module/accountclient/process?'.http_build_query($query_parms));
 	}
 	
@@ -69,7 +74,7 @@ class ProcessOrder extends CommandForm
 		exit(header('Location: '.$url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].$url));
 	}
 	
-	function getLicenseKey( $uid, & $value, $type, $was_license_value, $was_license_key )
+	protected function getLicenseKey( $uid, & $value, $type, $was_license_value, $was_license_key )
 	{
 		define ('SAASSALT', 'b49ca47b46v46c581u3c34dlc0ac85d2');
 
@@ -100,7 +105,7 @@ class ProcessOrder extends CommandForm
 		return md5($uid.$value.$salt.date('#2fee3ffY#3fe2a32m-@3@j', $today_date));
 	}
 	
-	function sendMail( $key, $value )
+	protected function sendMail( $key, $value )
 	{
 	    $mail = new HtmlMailbox;
 
@@ -133,5 +138,32 @@ class ProcessOrder extends CommandForm
 	    $mail->setFrom("Devprom Software <".getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail').">");
 	    	
 	    $mail->send();
+	}
+	
+	protected function updateSupportSubscription( $iid, $days, $license_type, $redirect_url )
+	{
+		$payed_till = date('Y-m-d', strtotime($days.' day', strtotime(date('Y-m-j'))));
+		
+		$service_it = getFactory()->getObject('ServicePayed')->getByRef('VPD', $iid);
+		if ( $service_it->getId() > 0 )
+		{
+			$service_it->object->modify_parms($service_it->getId(), 
+					array (
+							'PayedTill' => $payed_till 
+					)
+			);
+		}
+		else
+		{
+			$url_parts = parse_url($redirect_url);
+			$service_it->object->add_parms(
+					array (
+							'Caption' => $url_parts['host'],
+							'IID' => $iid,
+							'PayedTill' => $payed_till,
+							'Description' => $license_type
+					)
+			);
+		}
 	}
 }

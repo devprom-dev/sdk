@@ -39,7 +39,7 @@ class SaasAssistAdminPlugin extends PluginAdminBase
  	
  	function interceptMethodFormGetActions( & $form, & $actions )
  	{
- 	    if ( is_a($form, 'LicenseForm') )
+ 	    if ( $form instanceof InstallLicenseTypeForm || $form instanceof LicenseForm )
  	    {
  	    	$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
  	    	
@@ -58,7 +58,7 @@ class SaasAssistAdminPlugin extends PluginAdminBase
  	    	
  	    	$actions = array ( 
  	    			array (
-			 	    		'url' => "javascript: ".$script.";",
+			 	    		'url' => getSession()->getUserIt()->getId() > 0 ? "javascript: ".$script.";" : "javascript: window.location = '/login';",
 			 	    		'name' => text('saasassist36'),
 			 	    		'class' => 'btn-success'
  	    			),

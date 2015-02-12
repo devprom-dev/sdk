@@ -1,6 +1,6 @@
 <?php
 
-define ('ACCOUNT_HOST', 'http://devprom.ru');
+define ('ACCOUNT_HOST', 'https://devprom.ru');
 //define ('MERCHANT_ID', 7742);
 //define ('MERCHANT_KEY', 'efef1ce9-6c7b-401f-8430-1e96540636fc');
 define ('MERCHANT_ID', 62021);
@@ -9,8 +9,10 @@ define ('MERCHANT_KEY', '30cfcab4-ce10-413f-bbfd-4a367823bc1c');
 include "classes/model/AccountProduct.php";
 include "classes/model/AccountProductSaas.php";
 include "classes/model/AccountLicenseData.php";
+include "classes/model/ServicePayed.php";
 include "classes/model/predicates/FilterInstallationUIDPredicate.php";
 include "COPlugin.php";
+include "AdminPlugin.php";
 
 // define common plugin attributes
 class accountPlugin extends PluginBase
@@ -46,7 +48,7 @@ class accountPlugin extends PluginBase
  	//
  	function getSectionPlugins()
  	{
- 		return array( new accountCo );
+ 		return array( new accountCo, new accountAdmin );
  	}
  	
  	function IsUpdatedWithCore()

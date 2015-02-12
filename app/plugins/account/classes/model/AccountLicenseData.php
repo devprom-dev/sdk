@@ -59,6 +59,8 @@ class AccountLicenseData extends Metaobject
     
     function modify_parms( $id, $parms )
     {
+    	$this->setNotificationEnabled(false);
+    	
         $it = $this->getByUser( $id );
         
         while ( !$it->end() )
