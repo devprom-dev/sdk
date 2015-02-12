@@ -328,7 +328,7 @@ class CloneLogic
 				}
 				else
 				{
-					$parms['StartDate'] = $release_it->get('FinishDate');
+					$parms['StartDate'] = date('Y-m-j', strtotime('1 day', strtotime($release_it->get('FinishDate'))));
 				}
 				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('2 month', strtotime( $parms['StartDate'])))); 
 

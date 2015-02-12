@@ -93,17 +93,7 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 
 	 	// settings for reports and modules
 	 	$usersettings = getFactory()->getObject('PMUserSettings');
-	 	
-	 	$usersettings->addFilter(
-				new FilterAttributePredicate('Participant', 
-						array(
- 	    						getSession()->getParticipantIt()->getId(), // search for user's settings 
- 	    						'-1' // search for common settings
- 	    				)
- 	    		)
-	 	);
-	 	
-	 	$usersettings->addSort(new SortAttributeClause('Participant.D')); // user settings overrides common settings 
+	 	$usersettings->setRegistry( new PMUserSettingsExportRegistry() );
 
 	 	$items[] = $usersettings;
 	 	

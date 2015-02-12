@@ -299,7 +299,8 @@ class PMPage extends Page
 				'title' => $menu['caption'],
 				'description' => $menu['title'],
 				'url' => $menu['url'],
-				'items' => $menu['actions']
+				'items' => $menu['actions'],
+				'icon' => $menu['icon']
 			);
 		}
  		
@@ -402,7 +403,7 @@ class PMPage extends Page
 					'name' => $method->getObject()->getDisplayName(),
 					'url' => $method->getJSCall( 
 								array (
-									'Assignee' => getSession()->getParticipantIt()->getId(),
+									'Assignee' => getSession()->getUserIt()->getId(),
 									'area' => $this->getArea()
 								)
 							 ),
@@ -484,7 +485,7 @@ class PMPage extends Page
 
 			$actions[] =  array ( 
 			    'name' => translate('Профиль участника'),
-				'url' => getSession()->getApplicationUrl().'profile.php' 
+				'url' => getSession()->getApplicationUrl().'profile' 
 			);
 		}
 		
@@ -734,6 +735,24 @@ class PMPage extends Page
 		$resource_it = $resource->getExact($this->getModule().':'.array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools'))));
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
 		
-		return parent::getHint();
+		$parent = parent::getHint();
+		if ( $parent != '' ) return $parent;
+		
+		$report = $this->getReport();
+		if ( $report == '' ) $report = $this->getReportBase(); 		
+		
+		if ( $report != '' )
+		{
+		    $text = getFactory()->getObject('PMReport')->getExact($report)->get('Description');
+		    if ( $text != '' ) return '<p>'.$text.'</p>';
+		}
+
+		if ( $this->getModule() != '' )
+		{
+			$text = getFactory()->getObject('Module')->getExact($this->getModule())->get('Description');
+			if ( $text != '' ) return '<p>'.$text.'</p>';
+		}
+		
+		return '';
 	}
 }

@@ -6,7 +6,7 @@ class DictionaryItemsTable extends PMPageTable
 {
 	function __construct( $object )
 	{
-		$object->setAttributeVisible('OrderNum', $object instanceof StateBase);
+		$object->setAttributeVisible('OrderNum', $object instanceof StateBase || $object instanceof FeatureType);
 		
 		parent::__construct($object);
 	}

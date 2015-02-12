@@ -13,9 +13,11 @@ include "predicates/ParticipantUserGroupPredicate.php";
 include "predicates/ParticipantUserPredicate.php";
 include "predicates/ParticipantWorkerPredicate.php";
 include "predicates/ParticipantWorkloadPredicate.php";
+include "predicates/UserWorkerPredicate.php";
 include "persisters/ParticipantDetailsPersister.php";
 include "persisters/ParticipantOthersPersister.php";
 include "persisters/ParticipantRolesPersister.php";
+include "persisters/UserParticipatesDetailsPersister.php";
 
 class Participant extends Metaobject
 {
@@ -69,11 +71,7 @@ class Participant extends Metaobject
 
 	function add_parms( $parms ) 
 	{
-		global $model_factory;
-		
-		$user = $model_factory->getObject('cms_User');
-		$user_it = $user->getExact($parms['SystemUser']);
-		
+		$user_it = getFactory()->getObject('cms_User')->getExact($parms['SystemUser']);
 		if($user_it->count() > 0) 
 		{
 			$parms['Caption'] = $user_it->get('Caption');
@@ -86,15 +84,15 @@ class Participant extends Metaobject
 
 		$part_id = parent::add_parms( $parms );
 	
-		// activate email notifications
-		$part = $model_factory->getObject('pm_Participant');
-		$part_it = $part->getExact( $part_id );
-
-		if ( $parms['Notification'] != '' )
-		{
-			$notification = $model_factory->getObject('Notification');
-			$notification->store( $parms['Notification'], $part_it );
-		}
+		$setting = getFactory()->getObject('pm_UserSetting');
+		$setting->add_parms(
+				array (
+						'Setting' => md5('emailnotification'),
+						'Value' => 'email='.$parms['Notification'],
+						'Participant' => $part_id,
+						'VPD' => $parms['VPD'] 
+				)
+		);
 		
 		return $part_id;
 	}

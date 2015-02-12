@@ -27,7 +27,7 @@ class SettingsController extends Controller {
      * @Template()
      */
     public function dashboardAction() {
-        if ($this->container->getParameter('supportProjectId')) {
+        if (count($this->container->getParameter('supportProjects'))>0) {
             return $this->redirect($this->generateUrl('issue_list', array(), true));
         }
 
@@ -71,20 +71,6 @@ class SettingsController extends Controller {
     }
 
     /**
-     * @return array
-     */
-    protected function getProjectsList()
-    {
-        $projects = $this->getDoctrine()->getManager()->getRepository("DevpromServiceDeskBundle:Project")->findAll();
-        $projectList = array();
-        /** @var Project $project */
-        foreach ($projects as $project) {
-            $projectList[$project->getId()] = mb_convert_encoding($project->getName(), 'windows-1251', 'windows-1251');
-        }
-        return $projectList;
-    }
-
-    /**
      * @return SettingsService
      */
     protected function getSettingsService() {
@@ -98,12 +84,6 @@ class SettingsController extends Controller {
     protected function createSettingsForm($settings)
     {
         return $this->createFormBuilder($settings)
-            ->add("supportProjectId", "choice", array(
-                'choice_list' => new SimpleChoiceList($this->getProjectsList()),
-                'empty_value' => '',
-                'label' => 'settings.supportProjectId.title',
-                'translation_domain' => 'settings'
-            ))
             ->add("appUrl", "url", array(
                 'label' => 'settings.appUrl.title',
                 'required' => false,
@@ -111,6 +91,4 @@ class SettingsController extends Controller {
             ))
             ->getForm();
     }
-
-
 }

@@ -5,6 +5,7 @@ return array(
     'logout.link' => 'Logout',
 
     'index.title' => 'My requests',
+	'index.company_title' => 'Company requests',
     'index.no.issues' => 'You have no requests so far',
     'new.title' => 'New request',
     'edit.title' => 'Edit request',
@@ -17,7 +18,8 @@ return array(
     'issue_state' => 'Status',
     'issue_issueType' => 'Type',
     'issue_product' => 'Product',
-    'issue_newAttachment' => 'Attach file',
+    'issue_project' => 'Product',
+	'issue_newAttachment' => 'Attach file',
     'issue_assignedTo' => 'Assignee',
     'issue_createdAt' => 'Created',
     'issue_priority' => 'Priority',

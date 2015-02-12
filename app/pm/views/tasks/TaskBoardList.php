@@ -5,7 +5,6 @@ include_once "TaskBalanceFrame.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
 include_once SERVER_ROOT_PATH.'core/views/c_priority_view.php';
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
-include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 
 class TaskBoardList extends PMPageBoard
 {
@@ -14,9 +13,9 @@ class TaskBoardList extends PMPageBoard
  	private $priorities_array = array();
  	private $visible_column = array();
  	private $method_comment = null;
- 	private $method_spend_time = null;
  	private $priority_actions = array();
  	private $terminal_states = array();
+ 	private $method_spend_time = null;
  	
  	function __construct( $object ) 
 	{
@@ -29,49 +28,39 @@ class TaskBoardList extends PMPageBoard
 
 	function buildRelatedDataCache()
 	{
+		$object_it = $this->getObject()->getEmptyIterator();
 		$this->terminal_states = $this->getObject()->getTerminalStates();
 		
-		$object_it = $this->getObject()->getEmptyIterator();
-		
 		$priority_it = getFactory()->getObject('Priority')->getAll();
-		
 		while( !$priority_it->end() )
 		{
 			$method = new ModifyAttributeWebMethod($object_it, 'Priority', $priority_it->getId());
-				
 			if ( $method->hasAccess() )
 			{
 				$method->setCallback( "donothing" );
-					
 				$this->priority_actions[$priority_it->getId()] = array( 
 				    'name' => $priority_it->getDisplayName(),
 					'method' => $method 
 				);
 			}
-			
 			$this->priorities_array[] = $priority_it->copy();
-			 
 			$priority_it->moveNext();
 		}
 		
-	 	$method = new CommentWebMethod( $object_it );
- 		
+	 	$method = new CommentWebMethod($object_it);
  		if ( $method->hasAccess() )
  		{
  			$method->setRedirectUrl('donothing');
- 			
  			$this->method_comment = $method;
  		}
 
- 		$method = new SpendTimeWebMethod( $object_it );
- 		
+	 	$method = new SpendTimeWebMethod($object_it);
  		if ( $method->hasAccess() )
  		{
  			$method->setRedirectUrl('donothing');
- 			
  			$this->method_spend_time = $method;
  		}
-		
+ 		
 		$this->getTable()->buildRelatedDataCache();
 	}
 	
@@ -161,13 +150,7 @@ class TaskBoardList extends PMPageBoard
 			$this->object->addAttribute( 'Progress', '', translate('Прогресс'), false );
 		}
 		
-		$columns = parent::getColumns();
-		
-		// use AssigneeUser (User) instead of Assignee (Participant)
-		$key = array_search('Assignee', $columns);
-		if ( $key !== false ) unset($columns[$key]);
-		
-		return $columns;
+		return parent::getColumns();
 	}
 
 	function getColumnFields()
@@ -202,9 +185,9 @@ class TaskBoardList extends PMPageBoard
 	{
 		if ( $this->getTable()->hasCrossProjectFilter() ) return 'Project';
 		
-		return 'AssigneeUser';
+		return 'Assignee';
 	}
-	
+ 		
 	function getGroupFields() 
 	{
 		$fields = parent::getGroupFields();
@@ -217,6 +200,13 @@ class TaskBoardList extends PMPageBoard
 		$fields[] = 'DueDays';
 		
 		return $fields;
+	}
+	
+	function getGroup() 
+	{
+		$group = parent::getGroup();
+		if ( $group == 'AssigneeUser' ) return 'Assignee'; 
+		return $group;
 	}
 	
  	function getBoardAttribute()
@@ -236,7 +226,7 @@ class TaskBoardList extends PMPageBoard
 			case 'UID':
 			case 'Caption':
 			case 'Progress':
-			case 'AssigneeUser':
+			case 'Assignee':
 				return true;
 				
 			default: 
@@ -248,7 +238,7 @@ class TaskBoardList extends PMPageBoard
  	{
  		switch ( $attr )
  		{
- 		    case 'AssigneeUser':
+ 		    case 'Assignee':
  		    case 'Attachment':
  		        break;
  		        
@@ -266,22 +256,7 @@ class TaskBoardList extends PMPageBoard
  		    case 'Fact':
 			case 'OrderNum':
 			case 'RecentComment':
-				break;
-			
 			case 'Progress':
-				if ( $object_it->IsFinished() )
-				{
-					$frame = new TaskBalanceFrame( $object_it->get('Planned'), $object_it->get('Fact') );
-					
-					$frame->draw();
-				}
-				elseif ( $object_it->get('Planned') > 0 )
-				{
-					$frame = new TaskProgressFrame( $object_it->getProgress() );
-					
-					$frame->draw();
-				}
-
 				break;
 			
 			case 'UID':
@@ -304,7 +279,7 @@ class TaskBoardList extends PMPageBoard
 							break;
 						}
 					
-						if ( $this->visible_column['OrderNum'] ) {
+						if ( $this->visible_column['OrderNum'] && $object_it->get('OrderNum') != '' ) {
 							echo '<span class="order" title="'.translate('Номер').'">';
 								echo $object_it->get('OrderNum');
 							echo '</span>';
@@ -334,6 +309,26 @@ class TaskBoardList extends PMPageBoard
 							echo '</div>';
 						}
 					echo '</div>';
+					
+					if ( $this->visible_column['Progress'] )
+					{
+						if ( $object_it->IsFinished() )
+						{
+							$frame = new TaskBalanceFrame( $object_it->get('Planned'), $object_it->get('Fact') );
+							
+							echo '<div style="display:table-cell;text-align:right;">';
+								$frame->draw();
+							echo '</div>';
+						}
+						elseif ( $object_it->get('Planned') > 0 )
+						{
+							$frame = new TaskProgressFrame( $object_it->getProgress() );
+							
+							echo '<div style="display:table-cell;text-align:right;">';
+								$frame->draw();
+							echo '</div>';
+						}
+					}
 						
 					echo '<div style="display:table-cell;text-align:right;">';
 						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 && is_object($this->method_spend_time) )
@@ -348,7 +343,7 @@ class TaskBoardList extends PMPageBoard
 						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
 						{
 							echo '<div style="margin-left:4px;display: inline-block;">';
-								echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+								echo $this->getTable()->getView()->render('core/CommentsIconMini.php', array (
 										'object_it' => $object_it,
 										'redirect' => 'donothing'
 								));
@@ -368,14 +363,14 @@ class TaskBoardList extends PMPageBoard
 	{
 		switch ( $group_field )
 		{
-			case 'AssigneeUser':
+			case 'Assignee':
 				
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				
 				if ( count($workload) > 0 )
 				{
 						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
-									'user' => $object_it->getRef('AssigneeUser')->getDisplayName(),
+									'user' => $object_it->getRef('Assignee')->getDisplayName(),
 									'data' => $workload[$object_it->get($group_field)]
 							));
 				}				
@@ -449,17 +444,6 @@ class TaskBoardList extends PMPageBoard
 			);
 		}
 		
-		if ( is_object($this->method_spend_time) )
-		{
-			$this->method_spend_time->setAnchorIt($object_it);
-			
-			$actions[] = array();
-			$actions[] = array ( 
-				'name' => $this->method_spend_time->getCaption(), 
-				'url' => $this->method_spend_time->getJSCall() 
-			);
-		}
-		
 		$priority_actions = $this->priority_actions;
 		
 		foreach( $priority_actions as $key => $action )
@@ -522,9 +506,9 @@ class TaskBoardList extends PMPageBoard
 		foreach( array( 'Attachment', 'RecentComment', 'Fact', 'OrderNum') as $column )
 		{
 			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
-			
 			$this->visible_column[$column] = $this->getColumnVisibility($column);
 		}
+		$this->visible_column['Progress'] = $this->getColumnVisibility('Progress');
 		
 		return $parms; 
 	}

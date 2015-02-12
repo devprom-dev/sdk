@@ -5,6 +5,7 @@ return array(
     'logout.link' => 'Выйти',
 
     'index.title' => 'Мои заявки',
+	'index.company_title' => 'Заявки компании',
     'index.no.issues' => 'У вас пока нет ни одной заявки',
     'new.title' => 'Новая заявка',
     'edit.title' => 'Изменение заявки',
@@ -17,7 +18,8 @@ return array(
     'issue_state' => 'Статус',
     'issue_issueType' => 'Тип',
     'issue_product' => 'Продукт',
-    'issue_newAttachment' => 'Прикрепить файл',
+    'issue_project' => 'Продукт',
+	'issue_newAttachment' => 'Прикрепить файл',
     'issue_assignedTo' => 'Ответственный',
     'issue_createdAt' => 'Дата создания',
     'issue_priority' => 'Приоритет',

@@ -97,14 +97,14 @@ class TooltipService
 			    return $object_it->get($attribue) == 'Y' ? translate('Да') : translate('Нет');
 			    
  		    case 'text':
- 			    
 			    $totext = new \html2text( $object_it->getHtmlDecoded($attribute) );
-			    
 			    return $object_it->getWordsOnlyValue($totext->get_text(), 25);
 
  			case 'wysiwyg':
- 			    
 			    return $object_it->getHtmlDecoded($attribute);
+
+ 			case 'date':
+			    return $object_it->getDateFormat($attribute);
 			    
  			default:
 	 	 		if ( $object_it->object->IsReference($attribute) )

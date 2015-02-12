@@ -2,8 +2,8 @@
 
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/watchers/FieldWatchers.php';
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 
-include_once "fields/FieldWikiPage.php";
 include_once "fields/FieldWikiAttachments.php";
 include_once "fields/FieldWikiTagTrace.php";
 include_once "fields/FieldWikiTrace.php";
@@ -57,13 +57,14 @@ class PMWikiForm extends PMPageForm
 		$this->buildMethods();
 	}
  	
-	function buildMethods()
+	protected function buildMethods()
 	{
 		$url = $this->getObject()->getPageNameObject().'&ParentPage=%object-id%';
 		
 		$this->append_methods[] = array( 
-				'name' => translate('Добавить раздел'),
-				'url' => $url 
+				'name' => $this->getAppendActionName(),
+				'url' => $url,
+				'uid' => 'append-child-page'
 		);
 		
 		$type_it = $this->getTypeIt();
@@ -191,6 +192,11 @@ class PMWikiForm extends PMPageForm
 	    $this->form_index = $index;
 	}
 	
+	function getAppendActionName()
+	{
+		return translate('Добавить раздел');
+	}
+	
 	function setReviewMode()
 	{
 		$this->review_mode = true;
@@ -285,6 +291,23 @@ class PMWikiForm extends PMPageForm
  	function getCreateActions( $page_it )
 	{
 		return array();
+	}
+	
+ 	function getAppendActions( $page_it )
+	{
+		$actions = array();
+		$not_readonly = !$this->getReadonly() && !$this->getEditMode();
+		
+		if ( $this->appendable && $not_readonly )
+		{
+			foreach( $this->append_methods as $action )
+			{
+				$action['url'] = preg_replace('/%object-id%/', is_object($page_it) ? $page_it->getId() : '', $action['url']);
+				$actions[] = $action;
+			}
+		}
+		
+		return $actions;
 	}
 	
 	function getDeleteActions()
@@ -410,16 +433,11 @@ class PMWikiForm extends PMPageForm
 
 		if ( $this->template_mode ) return $actions;
 		
-		if ( $this->appendable && $not_readonly )
+		$append_actions = $this->getAppendActions($page_it);
+		if ( count($append_actions) > 0 )
 		{
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-		    
-			foreach( $this->append_methods as $action )
-			{
-				$action['url'] = preg_replace('/%object-id%/', is_object($page_it) ? $page_it->getId() : '', $action['url']);
-				
-				$actions[] = $action;
-			}
+			$actions = array_merge($actions, $append_actions);
 		}
 		
 		if ( !is_object($page_it) ) return $actions;
@@ -934,7 +952,7 @@ class PMWikiForm extends PMPageForm
 			    
 		        $object->addFilter( new FilterBaseVpdPredicate() );
 			    
-			    return new FieldWikiPage( $object );
+			    return new FieldHierarchySelector( $object );
 				
 			case 'Template':
 				$template = $this->getTemplateObject();

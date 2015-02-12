@@ -131,14 +131,14 @@ class EmailNotificator extends ObjectFactoryNotificator
 									$modified_body .= ' ('.translate('было').': '.$was_ref->getDisplayName().')';
 	       						}
 	       						
-								$modified_body .= chr(10);
+								$modified_body .= '<br/>';
 							}
 							else
 							{
 								if( $this->isAttributeRequired($att_name, $object_it, $action) )
 			        			{
 		       						$static_body .= $object_it->object->getAttributeUserName($att_name).': '.$now_ref->getDisplayName();
-									$static_body .= chr(10);
+									$static_body .= '<br/>';
 								}
 							}
 							
@@ -152,11 +152,11 @@ class EmailNotificator extends ObjectFactoryNotificator
 									if ( $now_value != '' )
 									{
 			       						$modified_body .= $object_it->object->getAttributeUserName($att_name).' ('.translate('текущее').'): '.
-			       							$now_value.chr(10);
+			       							$now_value.'<br/>';
 			       							
 			       						if ( strlen($now_value) > 80 ) 
 			       						{
-			       							$modified_body .= chr(10);
+			       							$modified_body .= '<br/>';
 			       						}
 									}
 		       						
@@ -164,11 +164,11 @@ class EmailNotificator extends ObjectFactoryNotificator
 		       						{
 										$modified_body .= 
 											$object_it->object->getAttributeUserName($att_name).' ('.translate('было').'): '.
-												$was_value.chr(10).chr(10);
+												$was_value.'<br/>'.'<br/>';
 
 			       						if ( strlen($was_value) > 80 ) 
 			       						{
-			       							$modified_body .= chr(10);
+			       							$modified_body .= '<br/>';
 			       						}
 		       						}
 								}
@@ -184,7 +184,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 										$modified_body .= ' ('.translate('было').': '.$was_value.')';
 		       						}
 		       						
-									$modified_body .= chr(10);
+									$modified_body .= '<br/>';
 								}
 							}
 							else
@@ -192,7 +192,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 								if( $this->isAttributeRequired($att_name, $object_it, $action) )
 			        			{
 		       						$static_body .= $object_it->object->getAttributeUserName($att_name).': '.$now_value;
-									$static_body .= chr(10);
+									$static_body .= '<br/>';
 			        			}
 							}
 	       				}
@@ -201,10 +201,10 @@ class EmailNotificator extends ObjectFactoryNotificator
                 
                 if ( $modified_body != '' )
                 {
-	                $body = translate('Изменившиеся атрибуты').': '.Chr(10).Chr(10).
-	                	$modified_body.Chr(10).Chr(10).
-	                	translate('Остальные атрибуты').': '.Chr(10).Chr(10).
-	                	$static_body.Chr(10).Chr(10);
+	                $body = translate('Изменившиеся атрибуты').': '.'<br/>'.'<br/>'.
+	                	$modified_body.'<br/>'.'<br/>'.
+	                	translate('Остальные атрибуты').': '.'<br/>'.'<br/>'.
+	                	$static_body.'<br/>'.'<br/>';
                 }
                 else
                 {
@@ -276,11 +276,11 @@ class EmailNotificator extends ObjectFactoryNotificator
 				if ( $object_it->object->IsReference($att_name) ) 
 				{
 					$ref = $object_it->getRef($att_name);
-					$body .= $ref->getDisplayName().Chr(10);
+					$body .= $ref->getDisplayName().'<br/>';
 				} 
 				else 
 				{
-					$body .= $object_it->getHtmlDecoded($att_name).Chr(10);
+					$body .= $object_it->getHtmlDecoded($att_name).'<br/>';
 				}
 			}
         }

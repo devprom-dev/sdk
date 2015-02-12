@@ -43,24 +43,6 @@ class Iteration extends Metaobject
 		return new IterationIterator( $this );
 	}
 
-	function getRelatedToParticipant( $participant_id )
-	{
-		global $project_it;
-		
-		$sql = " SELECT r.* " .
-			   "   FROM pm_Release r, pm_Version v " .
-			   "  WHERE r.Project = ".$project_it->getId().
-			   "    AND EXISTS (SELECT 1" .
-			   "				  FROM pm_Task t " .
-			   "				 WHERE t.Release = r.pm_ReleaseId " .
-			   "				   AND t.Assignee = ".$participant_id."" .
-			   "				   AND t.State <> 'resolved' " .
-			   "    AND v.pm_VersionId = r.Version ".
-			   "  ORDER BY r.StartDate ASC ";
-			   
-		return $this->createSQLIterator( $sql );
-	}
-	
 	function getDefaultAttributeValue( $name ) 
 	{
 		global $_REQUEST, $model_factory;

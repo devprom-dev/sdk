@@ -45,6 +45,7 @@ include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueOrderNumTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueModifyProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/VersionedObjectRegistryBuilderIssue.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
+include SERVER_ROOT_PATH."pm/classes/issues/events/RequestFeatureUpdateMetricsEventHandler.php";
 
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataPermissionsBuilder.php";
@@ -58,6 +59,8 @@ include SERVER_ROOT_PATH."pm/classes/plan/ReleaseMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/MilestoneMetadataBuilder.php";
 
 include SERVER_ROOT_PATH."pm/classes/product/FeatureMetadataBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/product/events/FeatureUpdateMetricsEventHandler.php";
+
 include SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderLatest.php";
@@ -65,7 +68,7 @@ include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuil
 include SERVER_ROOT_PATH."pm/classes/common/triggers/CacheSessionProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/communications/triggers/DeleteCommentsTrigger.php";
 
-include_once SERVER_ROOT_PATH."pm/classes/notificators/PMEmailNotificator.php";
+include_once SERVER_ROOT_PATH."pm/classes/notificators/EmailNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/notificators/PMChangeLogNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetWorkItemDatesTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetPlanItemDatesTrigger.php";
@@ -166,7 +169,7 @@ class PMSession extends SessionBase
  	                    new MilestoneMetadataBuilder(),
  	                    new RequestMetadataPermissionsBuilder(),
  	                    new PMChangeLogNotificator(),
- 	                    new PMEmailNotificator(),
+ 	                    new EmailNotificator(),
  	                    new RequestTriggersCommon(),
  	                    new IssueOrderNumTrigger(),
  	                    new TaskOrderNumTrigger(),
@@ -192,7 +195,9 @@ class PMSession extends SessionBase
  	            		// triggers
  	            		new WikiPageNewVersionTrigger(),
  	            		new WikiBreakTraceTrigger(),
- 	            		new CustomReportModelEventsHandler()
+ 	            		new CustomReportModelEventsHandler(),
+ 	            		new FeatureUpdateMetricsEventHandler(),
+ 	            		new RequestFeatureUpdateMetricsEventHandler()
  	            ),
  	            parent::createBuilders(),
  	            array (

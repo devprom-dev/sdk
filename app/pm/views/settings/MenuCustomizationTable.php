@@ -5,6 +5,6 @@
 class MenuCustomizationTable extends PMPageTable{
     
     function getTemplate() {
-	return 'pm/MenuCustomizationTable.php';
+		return 'pm/MenuCustomizationTable.php';
     }
 }

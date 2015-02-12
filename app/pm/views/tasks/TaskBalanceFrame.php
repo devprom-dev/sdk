@@ -51,22 +51,15 @@ class TaskBalanceFrame
  		
  		$diff = $planned - $fact;
  		
-		echo '<div style="display:table;width:100%;padding-bottom:2px;" title="'.text(1855).'">';
-			echo '<div style="display:table-cell;width:55%;">';
-				echo '<table class="progress-table" width="100%" cellpadding=0 cellspacing=1 style="margin-top:2px;border:1px solid #d0d0e0;">';
-					echo '<tr>';
-						echo '<td width="50%" class="progress-left" style="background:#DAF2BA;">';
-							echo '<div style="font-size:1px;height:8px;width:'.$less_percent.'%;background:'.$color1.';"> </div>';
-						echo '</td>';
-						echo '<td width="50%" class="progress-right" style="background:#F2CCBA;">';
-							echo '<div style="font-size:1px;height:8px;width:'.$more_percent.'%;background:'.$color2.';"> </div>';
-						echo '</td>';
-					echo '</tr>';
-				echo '</table>';
-			echo '</div>';
-			echo '<div style="display:table-cell;text-align:right;" title="'.$stage.'">';
-				echo '&nbsp;'.round($planned, 1).'&nbsp;/&nbsp;'.round($fact, 1).'&nbsp;'.translate('÷.');
-			echo '</div>';
-		echo '</div>';
+		echo '<table class="progress-table" width="100%" cellpadding=0 cellspacing=1 style="min-width:40px;margin-top:2px;border:1px solid #d0d0e0;" title="'.text(1855).': '.round($planned, 1).' / '.round($fact, 1).' '.translate('÷.').'">';
+			echo '<tr>';
+				echo '<td width="50%" class="progress-left" style="background:#DAF2BA;">';
+					echo '<div style="font-size:1px;height:8px;width:'.$less_percent.'%;background:'.$color1.';"> </div>';
+				echo '</td>';
+				echo '<td width="50%" class="progress-right" style="background:#F2CCBA;">';
+					echo '<div style="font-size:1px;height:8px;width:'.$more_percent.'%;background:'.$color2.';"> </div>';
+				echo '</td>';
+			echo '</tr>';
+		echo '</table>';
  	}
 }

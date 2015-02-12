@@ -1,14 +1,14 @@
 <?php
 
-include SERVER_ROOT_PATH."admin/classes/notificators/AdminEmailNotificator.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminChangeLogNotificator.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminSystemTriggers.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/ProcessFirstUserEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/UpdateBlockedParticipantsEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/RecentBackupCreatedEvent.php";
+include SERVER_ROOT_PATH."admin/classes/model/events/UserCreatedEvent.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceModuleBuilder.php";
-include SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
-
+include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceJSBuilder.php";
+include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
 
 class AdminSession extends SessionBase
 {
@@ -38,17 +38,18 @@ class AdminSession extends SessionBase
  	{
  	    return array_merge(
  	    		array (
- 	    				new ResourceBuilderCoLanguageFile()
+ 	    				new ResourceBuilderCoLanguageFile(),
+ 	    				new MaintenanceJSBuilder(getSession())
  	    		),
  	    		parent::createBuilders(),
  	    		array (
-		 	            new AdminEmailNotificator(),
 		 	            new AdminChangeLogNotificator(),
 		 	            new AdminSystemTriggers(),
 		 	    		new ProcessFirstUserEvent(),
 		 	    		new UpdateBlockedParticipantsEvent(),
 		 	    		new MaintenanceModuleBuilder(),
-		 	    		new RecentBackupCreatedEvent()
+		 	    		new RecentBackupCreatedEvent(),
+ 	    				new UserCreatedEvent()
  	    		)
  	    );
  	}

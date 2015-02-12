@@ -155,7 +155,29 @@ class ProjectLogTable extends PMPageTable
 	
 	function getNewActions()
 	{
-		return array();
+		$actions = array();
+		$values = $this->getFilterValues();
+		
+		if ( $values['action'] == 'commented' )
+		{
+			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Question'));
+			if ( $method->hasAccess() )
+			{
+				$method->setRedirectUrl('donothing');
+				$uid = strtolower('new-question');
+				$actions[$uid] = array ( 
+						'name' => translate('Задать вопрос'),
+						'uid' => $uid,
+						'url' => $method->getJSCall(
+										array( 
+												'area' => $this->getPage()->getArea()
+										)
+								 ) 
+				);
+			}
+		}
+		
+		return $actions;
 	}
 	
 	function getActions()

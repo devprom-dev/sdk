@@ -894,3 +894,27 @@ body.fullpage
 {
 	color: black;
 }
+
+.accordion-body td#testcase
+{
+	padding: 0;
+}
+
+.accordion-body .pagination
+{
+	margin-bottom: 12px;
+	padding-bottom: 6px;
+	border-bottom: #E5E5E5 1px solid;
+	text-align: center;
+}
+
+.accordion-body .table-header
+{
+	margin: 0;
+}
+
+span.label a.with-tooltip,
+span.label a.with-tooltip:hover
+{
+    color: white;	
+}

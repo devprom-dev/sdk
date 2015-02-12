@@ -87,22 +87,17 @@ class ObjectRegistrySQL extends ObjectRegistry
 	protected function setParameters( $parms )
 	{
 		$filters = array();
-		
 		$sorts = array();
-
 		$persisters = array();
 		
 		foreach ( $parms as $parameter )
 		{
 			if ( is_a($parameter, 'FilterPredicate') ) $filters[] = $parameter; 
-			
 			if ( is_a($parameter, 'SortClauseBase') ) $sorts[] = $parameter;
-
 			if ( is_a($parameter, 'ObjectSQLPersister') ) $persisters[] = $parameter;
 		}
 		
 		$this->setFilters($filters);
-		
 		$this->setSorts($sorts);
 
 		if ( count($persisters) > 0 )
@@ -114,13 +109,12 @@ class ObjectRegistrySQL extends ObjectRegistry
 	public function Query( $parms = array() )
 	{
 		$this->setParameters( $parms );
-		
 		return $this->getAll();
 	}
 	
 	public function getAll()
 	{
-		$sql = 'SELECT '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
+		$sql = 'SELECT /*all*/ '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
 
 		$group = $this->getGroupClause('t');
 
@@ -140,7 +134,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->setParameters( $parms );
 		
 		return $this->createSQLIterator(
-				'SELECT COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
+				'SELECT /*count*/ COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
 			)->get('cnt');
 	}
 	
@@ -363,6 +357,8 @@ class ObjectRegistrySQL extends ObjectRegistry
 		{
 			$persister->modify( $object_it->getId(), $data );
 		}		
+		
+		$model_factory->resetCachedIterator($object);
 		
 		return $affected_rows;
 	}

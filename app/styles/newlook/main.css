@@ -922,7 +922,7 @@ div.user-workload
 div.user-workload div.cell
 {
 	display:table-cell;
-	vertical-align:top;
+	vertical-align:middle;
 	padding-left:10px;
 }
 

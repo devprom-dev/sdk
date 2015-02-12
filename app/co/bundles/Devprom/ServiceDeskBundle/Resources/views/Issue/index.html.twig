@@ -25,38 +25,26 @@
                 <table class="table table-striped table-editable" id="issues-list">
                     <thead>
                         <tr>
-                            <th class="no-wrap {% if sortColumn == 'issue.id' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'issue.id','sortDirection':reverseSortDirection}) }}">
+                            <th class="no-wrap {% if sortColumn == 'issue.id' %} {{ sortDirectionClass }}{% endif %}" width="10%">
+                                <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.id','sortDirection':reverseSortDirection}) }}">
                                     {{ 'issue_id'|trans }}
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
                             <th class="no-wrap {% if sortColumn == 'issue.caption' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'issue.caption','sortDirection':reverseSortDirection}) }}">
+                                <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.caption','sortDirection':reverseSortDirection}) }}">
                                     {{ 'issue_caption'|trans }}
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
-                            <th class="no-wrap {% if sortColumn == 'product.name' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'product.name','sortDirection':reverseSortDirection}) }}">
-                                    {{ 'issue_product'|trans }}
-                                    <b class="sort-caret"></b>
-                                </a>
-                            </th>
-                            <th class="no-wrap {% if sortColumn == 'issue.state' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'issue.state','sortDirection':reverseSortDirection}) }}">
-                                    {{ 'issue_state'|trans }}
-                                    <b class="sort-caret"></b>
-                                </a>
-                            </th>
-                            <th class="no-wrap {% if sortColumn == 'priority.id' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'priority.id','sortDirection':reverseSortDirection}) }}">
+                            <th class="no-wrap {% if sortColumn == 'priority.id' %} {{ sortDirectionClass }}{% endif %}" width="10%">
+                                <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'priority.id','sortDirection':reverseSortDirection}) }}">
                                     {{ 'issue_priority'|trans }}
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
-                            <th class="no-wrap hidden-xs{% if sortColumn == 'issue.createdAt' %} {{ sortDirectionClass }}{% endif %}">
-                                <a href="{{ path('issue_list', {'sortColumn':'issue.createdAt','sortDirection':reverseSortDirection}) }}">
+                            <th class="no-wrap hidden-xs{% if sortColumn == 'issue.createdAt' %} {{ sortDirectionClass }}{% endif %}" width="20%">
+                                <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.createdAt','sortDirection':reverseSortDirection}) }}">
                                     {{ 'issue_createdAt'|trans }}
                                     <b class="sort-caret"></b>
                                 </a>
@@ -64,16 +52,25 @@
                         </tr>
                     </thead>
                     <tbody>
+                    {% set state = '' %}
                     {% for issue in issues %}
+                    	{% if state != issue.state.name %}
+                    	<tr>
+                    		<td class="state-row" colspan="4" style="padding-top: 32px;">
+                    			<b>{{ issue.state.name|trans }}</b>
+                    			{% set state = issue.state.name %}
+                    		</td>
+                    	</tr>
+                    	{% endif %}
                         <tr>
-                            <td class="issue-id-cell"  data-title="{{ 'issue_id'|trans }}"><img src="/images/{{ issueTypeIconFilename(issue.issueType.referenceName) }}">&nbsp;<a href="{{ path('issue_show', { 'id': issue.id }) }}">[I-{{ issue.id }}]</a></td>
+                            <td class="issue-id-cell"  data-title="{{ 'issue_id'|trans }}">
+                            	<img src="/images/{{ issueTypeIconFilename(issue.issueType.referenceName) }}">&nbsp;<a href="{{ path('issue_show', { 'id': issue.id }) }}">[I-{{ issue.id }}]</a>
+                            </td>
                             <td class="issue-caption-cell" data-title="{{ 'issue_caption'|trans }}">
                                 <a href="{{ path('issue_show', { 'id': issue.id }) }}">
                                     {{ issue.caption|unescapeHtml }}
                                 </a>
                             </td>
-                            <td class="centered" data-title="{{ 'issue_product'|trans }}">{{ issue.product|unescapeHtml }}</td>
-                            <td class="centered" data-title="{{ 'issue_state'|trans }}">{{ issue.state.name|trans }}</td>
                             <td class="centered" data-title="{{ 'issue_priority'|trans|slice(0,7) }}.">
                                 {{ macro.priority_badge(issue.priority.name|trans, issue.priority.id) }}
                             </td>

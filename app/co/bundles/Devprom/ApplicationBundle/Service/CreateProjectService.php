@@ -3,6 +3,7 @@
 namespace Devprom\ApplicationBundle\Service;
 
 use Devprom\ProjectBundle\Service\Project\ApplyTemplateService;
+use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 include "ActivateUserSettings.php";
@@ -200,9 +201,29 @@ class CreateProjectService
 			$role_cls->add_parms($parms);
 		}
 
+		$test_result = getFactory()->getObject('pm_TestExecutionResult');
+		if ( $test_result->getRegistry()->Count(array(new \FilterAttributePredicate('ReferenceName', 'succeeded'))) < 1 )
+		{
+			$test_result->add_parms(
+					array (
+							'Caption' => translate('Пройден'),
+							'ReferenceName' => 'succeeded'
+					)
+			);
+		}
+ 		if ( $test_result->getRegistry()->Count(array(new \FilterAttributePredicate('ReferenceName', 'failed'))) < 1 )
+		{
+			$test_result->add_parms(
+					array (
+							'Caption' => translate('Провален'),
+							'ReferenceName' => 'failed'
+					)
+			);
+		}
+		
 		// turn on email notifications
 		$notification = $model_factory->getObject('Notification');
-		$notification->store( 'every1hour', $part_it );
+		$notification->store( $project_it->getDefaultNotificationType(), $part_it );
 
 		// add changed objects into the log
 		$change_log = new \Metaobject('ObjectChangeLog');
@@ -230,17 +251,8 @@ class CreateProjectService
 		$parms['SystemUser'] = $this->user_id;
 	
 		$change_log->add_parms($parms);
-		
-		getFactory()->getObject('ProjectCache')->resetCache();
 
-	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-			    
-	    while( !$portfolio_it->end() )
-	    {
-	        getSession()->truncateForProject( $portfolio_it );
-			        
-	        $portfolio_it->moveNext();
-	    }
+		$this->invalidateCache();
 		
 		return $project_id;
  	}
@@ -251,7 +263,7 @@ class CreateProjectService
 		getFactory()->getEventsManager()->removeNotificator( new \CacheSessionProjectTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \CacheResetTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
-		getFactory()->getEventsManager()->removeNotificator( new \PMEmailNotificator() );
+		getFactory()->getEventsManager()->removeNotificator( new \EmailNotificator() );
 		
 		$meth_cls = getFactory()->getObject('pm_Methodology');
 		
@@ -279,6 +291,24 @@ class CreateProjectService
 				array(), // import all data available in the template
 				$this->skip_demo_data ? array('ProjectArtefacts', 'Attributes') : array()
 		);
+ 	}
+ 	
+ 	protected function invalidateCache()
+ 	{
+ 		getFactory()->getObject('ProjectCache')->resetCache();
+
+	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
+	    while( !$portfolio_it->end() )
+	    {
+	        getSession()->truncateForProject( $portfolio_it );
+	        $portfolio_it->moveNext();
+	    }
+		
+		$command = new \Symfony\Bundle\FrameworkBundle\Command\CacheClearCommand;
+    	$command->setContainer(ServiceDeskAppKernel::loadWithoutRequest()->getContainer()); 
+    	
+    	$output = new \Symfony\Component\Console\Output\NullOutput();
+    	$command->run(new \Symfony\Component\Console\Input\ArgvInput(array('', '--no-warmup')), $output);
  	}
  	
 	static function getResultDescription( $result )

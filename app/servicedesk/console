@@ -26,11 +26,8 @@ define('SERVER_ROOT_PATH', dirname(__FILE__).'/../');
 $document_root = rtrim($input->getParameterOption('--document-root', $_SERVER['DOCUMENT_ROOT'] != '' ? $_SERVER['DOCUMENT_ROOT'] : SERVER_ROOT_PATH),'/\\').'/';
 
 define('DOCUMENT_ROOT', $document_root); 
-
 define('CACHE_PATH', DOCUMENT_ROOT.'cache');
-
 include(DOCUMENT_ROOT . 'settings.php');
-
 include(SERVER_ROOT_PATH . 'classes.php');
 
 // let's remove custom keys from ArgInput
@@ -50,10 +47,6 @@ $input = new ArgvInput();
 
 require_once __DIR__.'/../app/Devprom/Component/HttpKernel/ServiceDeskAppKernel.php';
 
-$env = $input->getParameterOption(array('--env', '-e'), getenv('SYMFONY_ENV') ?: 'dev');
-
-$debug = getenv('SYMFONY_DEBUG') !== '0' && !$input->hasParameterOption(array('--no-debug', '')) && $env !== 'prod'; 
-
-$kernel = new ServiceDeskAppKernel($env, $debug);
+$kernel = new Devprom\Component\HttpKernel\ServiceDeskAppKernel('prod', false);
 $application = new Application($kernel);
 $application->run($input);

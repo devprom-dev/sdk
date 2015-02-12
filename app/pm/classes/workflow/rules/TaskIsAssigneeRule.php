@@ -16,6 +16,6 @@ class TaskIsAssigneeRule extends BusinessRulePredicate
  	
  	function check( $object_it )
  	{
- 		return $object_it->get('AssigneeUser') == getSession()->getUserIt()->getId();
+ 		return $object_it->get('Assignee') == getSession()->getUserIt()->getId();
  	}
 }

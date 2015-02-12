@@ -16,11 +16,9 @@ class FlotChartDataSource
 			{
 				default:
 					$value = $it->get($attribute);
-					
 					if ( $value != '' && $object->IsReference($attribute) )
 					{
-						$ref_it = $it->getRef($attribute);
-						$value = $ref_it->getDisplayName();
+						$value = $it->getRef($attribute)->getDisplayName();
 					}
 			}
 			

@@ -6,6 +6,7 @@ include_once SERVER_ROOT_PATH."pm/classes/comments/persisters/CommentRecentPersi
 include "persisters/TaskSpentTimePersister.php";
 include "persisters/TaskPhotoPersister.php";
 include "persisters/TaskDatesPersister.php";
+include "persisters/TaskIssueArtefactsPersister.php";
 
 class TaskModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -17,6 +18,9 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
         
 		$object->addPersister( new AttachmentsPersister() );
 		$object->addPersister( new WatchersPersister() );
+
+		$object->addAttribute('IssueTraces', 'TEXT', text(1902), false);
+		$object->addPersister( new TaskIssueArtefactsPersister() );
 		
 		$object->addAttribute('RecentComment', 'RICHTEXT', translate('Комментарии'), false);
 		$comment = getFactory()->getObject('Comment');
@@ -27,8 +31,7 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
             $object->addAttribute('Spent', 'REF_ActivityTaskId', translate('Списание времени'), false);
             $object->addPersister( new TaskSpentTimePersister() );
         }
-
-		$object->addAttribute('AssigneeUser', 'REF_UserId', translate('Исполнитель'), false);
+ 
 		$object->addPersister( new TaskPhotoPersister() );
 		
 		$object->addAttribute('DueDays', 'INTEGER', text(1890), false);

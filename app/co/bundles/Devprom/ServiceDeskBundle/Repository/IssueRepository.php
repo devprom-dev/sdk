@@ -29,7 +29,7 @@ class IssueRepository extends EntityRepository {
                 'comments.objectClass = \'request\'')
             ->join('issue.state', 'state',
                 'WITH',
-                'state.objectClass = \'request\'')
+                'state.objectClass = \'request\' AND state.vpd = issue.vpd')
             ->join('Devprom\\ServiceDeskBundle\\Entity\\Watcher', 'w',
                 'WITH',
                 'w.vpd = issue.vpd AND w.objectId = issue.id AND w.objectClass = \'request\'');
@@ -69,10 +69,9 @@ class IssueRepository extends EntityRepository {
          Please use one of specific methods to retrieve Issue");
     }
 
-    public function findByProjectAndAuthor($projectId, $authorEmail, $orderBy = null, $limit = null, $offset = null) {
+    public function findByAuthor($authorEmail, $orderBy = null, $limit = null, $offset = null) {
         /** @var QueryBuilder $qb */
         $qb = $this->getBaseQuery();
-
         $qb->andWhere('w.email = ?1')->setParameter(1, $authorEmail);
 
         foreach ($orderBy as $column => $direction)
@@ -81,12 +80,27 @@ class IssueRepository extends EntityRepository {
         }
 
         $issues = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
-
         $issues = $this->mapMixedDQLResult($issues);
-
         return $issues;
     }
 
+    public function findByCompany($authorEmail, $orderBy = null, $limit = null, $offset = null) {
+        /** @var QueryBuilder $qb */
+        $qb = $this->getBaseQuery();
+        $qb->andWhere(
+        		'w.email IN (SELECT u2.email FROM Devprom\\ServiceDeskBundle\\Entity\\User u1, Devprom\\ServiceDeskBundle\\Entity\\User u2 '.
+        		'			  WHERE u1.email = ?1 AND u1.company = u2.company)')->setParameter(1, $authorEmail);
+
+        foreach ($orderBy as $column => $direction)
+        {
+            $qb->addOrderBy($column, $direction);
+        }
+
+        $issues = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult();
+        $issues = $this->mapMixedDQLResult($issues);
+        return $issues;
+    }
+    
     /**
      * @return Issue
      */

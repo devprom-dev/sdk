@@ -33,7 +33,7 @@ class RequestBusinessActionResolveTasks extends BusinessAction
 			$service->moveToState($task_it, $task_states[0], $this->getDisplayName(),
 					array (
 							'LeftWork' => 0,
-							'Assignee' => getSession()->getParticipantIt()->getId(),
+							'Assignee' => getSession()->getUserIt()->getId(),
 							'Result' => getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ? text(1013) : ''
 					)
 			);

@@ -8,6 +8,8 @@ define( 'TRIGGER_ACTION_DELETE', 'delete' );
 
 abstract class SystemTriggersBase extends ObjectFactoryNotificator
 {
+	private $was_data = array();
+	
  	function add( $object_it ) 
 	{
 		if ( $object_it->getId() < 1 ) throw new Exception('Unable execute trigger on empty object');
@@ -19,7 +21,9 @@ abstract class SystemTriggersBase extends ObjectFactoryNotificator
 	{
 		if ( $object_it->getId() < 1 ) throw new Exception('Unable execute trigger on empty object');
 		
-		$this->process( $object_it->copy(), TRIGGER_ACTION_MODIFY, array_diff_assoc($object_it->getData(), $prev_object_it->getData()) );
+		$this->was_data = $prev_object_it->getData();
+		
+		$this->process( $object_it->copy(), TRIGGER_ACTION_MODIFY, array_diff_assoc($object_it->getData(), $this->was_data) );
 	}
 
  	function delete( $object_it ) 
@@ -30,5 +34,11 @@ abstract class SystemTriggersBase extends ObjectFactoryNotificator
 	}
 
 	abstract function process( $object_it, $kind, $content = array(), $visibility = 1); 
+
+	// returns the data were before modification
+	function getWasData()
+	{
+		return $this->was_data;
+	}
 }
  

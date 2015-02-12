@@ -39,7 +39,7 @@ class SettingsRequestListener {
     }
 
     protected function checkSettings(GetResponseForControllerResultEvent $event) {
-        if (!$this->container->getParameter('supportProjectId')) {
+        if (count($this->container->getParameter('supportProjects'))<1) {
             $event->setResponse(new RedirectResponse($this->router->generate(self::SETTINGS_PAGE_ROUTE, array(), true)));
         }
     }

@@ -53,13 +53,27 @@ class IssueService {
         return $this->em->getRepository('DevpromServiceDeskBundle:Issue')->find($id);
     }
 
-    public function getIssuesByProjectAndAuthor($projectId, $authorEmail, $sortColumn, $sortDirection) {
+    public function getIssuesByAuthor($authorEmail, $sortColumn, $sortDirection) {
         /** @var IssueRepository $issueRepository */
         $issueRepository = $this->em->getRepository('DevpromServiceDeskBundle:Issue');
-        return $issueRepository->findByProjectAndAuthor(
-            $projectId,
+        return $issueRepository->findByAuthor(
             $authorEmail,
-            array($sortColumn => $sortDirection)
+            array(
+            		'state.orderNum' => 'asc',
+            		$sortColumn => $sortDirection
+        	)
+        );
+    }
+    
+    public function getIssuesByCompany($authorEmail, $sortColumn, $sortDirection) {
+        /** @var IssueRepository $issueRepository */
+        $issueRepository = $this->em->getRepository('DevpromServiceDeskBundle:Issue');
+        return $issueRepository->findByCompany(
+            $authorEmail,
+            array(
+            		'state.orderNum' => 'asc',
+            		$sortColumn => $sortDirection
+        	)
         );
     }
 
@@ -88,11 +102,12 @@ class IssueService {
     }
 
     protected function createIssue(Issue $issue, $projectId, User $author) {
-        $vpd = $this->getProjectVPD($projectId);
 
         // persist issue
-        $issue->setProject($this->em->getReference("DevpromServiceDeskBundle:Project", $projectId));
-        $issue->setVpd($vpd);
+        $projectId = $issue->getProject() != '' ? $issue->getProject()->getId() : $projectId;
+       	$vpd = $this->getProjectVPD($projectId);
+       	$issue->setProject($this->em->getReference("DevpromServiceDeskBundle:Project", $projectId));
+	    $issue->setVpd($vpd);
         $issue->setState($this->getFirstIssueStateForProject($projectId));
         $this->em->persist($issue);
         $this->em->flush();
@@ -100,7 +115,6 @@ class IssueService {
         $this->addIssueWatcher($issue, $author->getEmail(), $vpd);
 
         $this->objectChangeLogger->logIssueCreated($issue);
-
         $this->mailer->sendIssueCreatedMessage($issue, $author->getEmail(), $author->getLanguage());
     }
 

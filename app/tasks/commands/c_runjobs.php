@@ -217,11 +217,6 @@ class RunJobs extends Command
 	function repairTables()
 	{
 	    DAL::Instance()->Query("check table co_JobRun");
-	    
-	    $result = DAL::Instance()->Query("show table status where Comment like '%crashed%' and Name IN ('co_JobRun')");
-	    
-	    if ( mysql_num_rows($result) < 1 ) return;
-	    
 	    DAL::Instance()->Query("repair table co_JobRun USE_FRM ");
 	}
 }

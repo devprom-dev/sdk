@@ -6,7 +6,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th><?=(translate('Группа проектов').(count($programs) > 0 ? ' / '.translate('Мои программы') : ''))?></th>
+                            <th><?=(translate('Портфели').(count($programs) > 0 ? ' / '.translate('Программы') : ''))?></th>
                             <th><?=translate('Проекты')?></th>
                         </tr>
                     </thead>

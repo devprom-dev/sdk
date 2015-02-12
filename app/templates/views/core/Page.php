@@ -62,9 +62,10 @@
         devpromOpts.template = '<?=$project_template?>';
         devpromOpts.mathJaxLib = '<?=(defined('MATH_JAX_LIB_SRC') ? MATH_JAX_LIB_SRC : "")?>';
         devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
-        <?php if ( !defined('METRICS_CLIENT') || METRICS_CLIENT ) { $global_url = parse_url(_getServerUrl()); ?>
+        
+		<?php if ( !defined('METRICS_CLIENT') || METRICS_CLIENT ) { ?>
 		devpromOpts.url = window.location.protocol+"//devprom.ru/rx";
-		devpromOpts.iid = "<?=INSTALLATION_UID?>";
+		devpromOpts.iid = "<?=$public_iid?>";
 		devpromOpts.version = "<?=$current_version?>";
         <?php } ?>
         

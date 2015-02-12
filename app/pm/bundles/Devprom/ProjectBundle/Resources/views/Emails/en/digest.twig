@@ -1,0 +1,274 @@
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<title></title> 
+		<style>
+            html,
+            body{
+                margin: 0;
+                padding: 0;
+                background-color: white;
+                min-width: 600px;
+            }
+			div, p, span, strong, b, em, i, a, li, td { -webkit-text-size-adjust: none; }
+            a{
+                color: #0782c1;
+                text-decoration: none;
+            }
+            span{
+            	color: #0782c1;
+            }
+		</style>
+	</head>
+	<body>
+	<table cellpadding="0" cellspacing="0" border="0" width="100%" align="center" style="border-collapse: collapse; background: white;">
+		<tr>
+			<td>
+				<table cellpadding="0" cellspacing="0" border="0" width="600" align="center" style="border-collapse: collapse; background: white;">
+                    <tr>
+                        <td>
+                            <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+                                <tr>
+                                    <td align="left" valign="top" width="235" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                                    <td align="left" valign="top">
+                                    </td>
+                                    <td align="left" valign="top" width="235" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="left" valign="top" height="20" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                    </tr>
+
+                    <tr>
+                    	<td>
+        	            	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #fff; border-radius: 4px 4px 0 0;">
+        
+        	            		<tr>
+        							<td align="left" valign="top" width="600">
+        								<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background: #fff;">
+        						            <tr>
+        										<td align="left" valign="top" height="10" width="600" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        									</tr>
+        									<tr>
+        						            	<td align="left" valign="top" width="600" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
+        						            		Recent changes in the project, <a href="{{ log_url }}">more details</a>:
+        						            	</td>
+        						            </tr>
+        						            <tr>
+        										<td align="left" valign="top" height="22" width="600" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        									</tr>
+        									{% for date, users in dates %}
+        									<tr>
+        										<td align="left" valign="top" width="600">
+        											<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        												<tr>
+        													<td align="left" valign="top" width="187">
+        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        															<tr>
+        																<td align="left" valign="top" width="187">
+        																	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        																		<tr>
+        																			<td align="left" valign="top" height="10" width="187" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top" height="1" width="187" style="font-size: 0px; line-height: 0; background-color: #c2c2c2;">&nbsp;</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top" height="10" width="187" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																	</table>
+        																</td>
+        															</tr>
+        														</table>
+        													</td>
+        													<td align="left" valign="top" width="226" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle; text-align: center;">
+        														{{ date }}
+        													</td>
+        													<td align="left" valign="top" width="187">
+        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        															<tr>
+        																<td align="left" valign="top" width="187">
+        																	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        																		<tr>
+        																			<td align="left" valign="top" height="10" width="187" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top" height="1" width="187" style="font-size: 0px; line-height: 0; background-color: #c2c2c2;">&nbsp;</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top" height="10" width="187" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																	</table>
+        																</td>
+        															</tr>
+        														</table>
+        													</td>
+        												</tr>
+        											</table>										
+        										</td>
+        									</tr>
+        									<tr>
+        										<td align="left" valign="top" height="7" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        									</tr>
+        									{% for user_name, log_items in users %}
+        									<tr>
+        										<td align="left" valign="top" width="600">
+        											<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #c2c2c2; border-radius: 4px; overflow: hidden; width: 100%">
+        												<tr>
+        													<td align="left" valign="top" height="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        												</tr>
+        												<tr>
+        													<td align="left" valign="top" width="600">
+        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        															<tr>
+        																<td align="left" valign="top" width="23" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																<td align="left" valign="top" style="font-size: 16px; color: #fff; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
+        																	{{ user_name | raw }}
+        																</td>
+        																<td align="left" valign="top" width="23" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        															</tr>
+        														</table>
+        													</td>
+        												</tr>
+        												<tr>
+        													<td align="left" valign="top" height="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        												</tr>
+        												{% for log in log_items %}
+        												<tr>
+        													<td align="left" valign="top" width="600">
+        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        															<tr>
+        																<td align="left" valign="top" width="6" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																<td align="left" valign="top">
+        																	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #f5f5f5;">
+        																		<tr>
+        																			<td align="left" valign="top" height="15" width="530" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top">
+        																				<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        																					<tr>
+        																						<td align="left" valign="top" width="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																						<td align="left" valign="top" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
+        																							{% if log.uid != "" %}
+        																								<span><a href="{{ log.url }}">[{{ log.uid }}]</a></span>
+        																							{% endif %}
+        																							{{ log.entity | raw }}: {{ log.title | raw }}
+        																						</td>
+        																						<td align="left" valign="top" width="72" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
+        																							{{ log.time }}
+        																						</td>
+        																					</tr>
+        																				</table>
+        																			</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																	</table>
+        																</td>
+        																<td align="left" valign="top" width="1" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        															</tr>
+        														</table>
+        													</td>
+        												</tr>
+        												<tr>
+        													<td align="left" valign="top" height="1" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        												</tr>
+        												<tr>
+        													<td align="left" valign="top" width="600">
+        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        															<tr>
+        																<td align="left" valign="top" width="6" style="font-size: 0px; line-height: 0; background-color: #90d790;">&nbsp;</td>
+        																<td align="left" valign="top" >
+        																	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #f5f5f5; border-radius: 0 0 3px 0;">
+        																		<tr>
+        																			<td align="left" valign="top" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top">
+        																				<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        																					<tr>
+        																						<td align="left" valign="top" width="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																						<td style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
+        																							{% if log.content == "" %}
+        																								{% if log.action == "added" %}
+        																								Added
+        																								{% elseif log.action == "deleted" %}
+        																								Deleted
+        																								{% elseif log.action == "modified" %}
+        																								Modified
+        																								{% endif %}
+        																							{% else %}
+        																								{{ log.content | raw }}
+        																							{% endif %}
+        																						</td>
+        																					</tr>
+        																				</table>
+        																			</td>
+        																		</tr>
+        																		<tr>
+        																			<td align="left" valign="top" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																		</tr>
+        																	</table>
+        																</td>
+        																<td align="left" valign="top" width="1" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        															</tr>
+        														</table>
+        													</td>
+        												</tr>
+        												<tr>
+        													<td align="left" valign="top" height="1" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        												</tr>
+        												{% endfor %}
+        											</table>
+        										</td>
+        									</tr>
+        									<tr>
+        										<td align="left" valign="top" height="10" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        									</tr>
+        									{% endfor %}
+        									{% endfor %}
+        								</table>
+        							</td>
+        	            		</tr>
+                    			<tr>
+                                    <td align="left" valign="top" height="28" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                                </tr>
+        	            	</table>
+        			        <table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #f5f5f5; border-radius: 4px 4px 4px 4px;">
+                    			<tr>
+                                    <td align="left" valign="top" height="28" width="600" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" width="600">
+        	                            <table cellpadding="0" cellspacing="0" border="0">
+        	                            	<tr>
+        	                            	<td align="left" valign="top" width="33" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        		                            <td align="left" valign="top" width="517" style="font-size: 12px; color: #9c9c9c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none;">
+        		                            	You are subscribed on <b>periodic digest notifications</b> of changes of the project.
+        		                            	You can change frequency of notification or choose another notification method, e.q., receive notification addressed to you by the system only.
+        		                            	<a href="{{ profile_url }}">Open your profile</a> to change notification settings.
+        		                            </td>
+        		                            <td align="left" valign="top" width="50" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        	                            	</tr>
+        	                            </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="left" valign="top" height="28" width="600" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                                </tr>
+                            </table>      
+                    	</td>
+                    </tr>
+                    <tr>
+                        <td align="left" valign="top" height="40" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+                    </tr>
+		        </table>
+			</td>
+		</tr>
+	</table>
+    </body>
+</html>

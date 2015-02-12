@@ -5,15 +5,10 @@ include_once "ExceptionHandlerListener.php";
 class ExceptionHandlerListenerDevprom extends ExceptionHandlerListener
 {
 	private $transport = 'tcp';
-	
 	private $host = 'hq.devprom.ru';
-	
 	private $port = '80';
-	
-	private $path = '/pm/errors/api/v1/issues';
-	
+	private $path = '/pm/errors/api/v1/bugs';
 	private $user = 'errorhandler';
-	
 	private $password = '8S3b7x5h-evCFa:';
 	
 	public function handle( $data, $code )
@@ -25,7 +20,8 @@ class ExceptionHandlerListenerDevprom extends ExceptionHandlerListener
 							'Caption' => $data['error']['message'],
 							'Description' => nl2br(var_export($data, true)),
 							'ServerName' => $data['server']['SERVER_NAME'],
-							'ServerAddress' => $data['server']['SERVER_ADDR']
+							'ServerAddress' => $data['server']['SERVER_ADDR'],
+							'SubmittedVersion' => $_SERVER['APP_VERSION']
 					)
 			);
 		}

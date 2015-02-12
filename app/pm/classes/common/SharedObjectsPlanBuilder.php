@@ -11,7 +11,7 @@ class SharedObjectsPlanBuilder extends SharedObjectsBuilder
     
     public function checkSharedInProject( $project_it )
     {
-        return $project_it->getMethodologyIt()->HasVersions() || $project_it->getMethodologyIt()->HasReleases();
+        return $project_it->getMethodologyIt()->HasReleases();
     }
     
     public function build( SharedObjectRegistry & $set )

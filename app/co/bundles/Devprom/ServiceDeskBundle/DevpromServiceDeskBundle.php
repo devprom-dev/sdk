@@ -23,7 +23,6 @@ class DevpromServiceDeskBundle extends Bundle
         }
 
         $this->setUpDevpromTranslations();
-
         $this->setUpMailLogging();
     }
 
@@ -56,5 +55,4 @@ class DevpromServiceDeskBundle extends Bundle
         $mailer->registerPlugin(new Swift_Plugins_LoggerPlugin($logger));
         $mailer->registerPlugin($messageLogger);
     }
-
 }

@@ -18,11 +18,8 @@ class ArtefactTable extends PMPageTable
 				translate('Каталог') )
 		);
 		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasVersions() )
-		{
-			$filters[] = new FilterAutoCompleteWebMethod( 
-				$model_factory->getObject('Version'), translate('Версия') );
-		}
+		$filters[] = new FilterAutoCompleteWebMethod( 
+			$model_factory->getObject('Version'), translate('Версия') );
 		
 		return $filters;
 	}

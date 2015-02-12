@@ -5,7 +5,7 @@ namespace Devprom\ServiceDeskBundle\Tests\Service;
 use Devprom\ServiceDeskBundle\Service\YamlSettingsStorage;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Yaml\Yaml;
-
+use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -26,7 +26,7 @@ class YamlSettingsStorageTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp()
     {
-        $kernel = new \ServiceDeskAppKernel('test', true);
+        $kernel = new ServiceDeskAppKernel('test', true);
         $kernel->boot();
 
         $settingsDir = $kernel->locateResource(self::SETTINGS_DIR);

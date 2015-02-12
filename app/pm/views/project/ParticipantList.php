@@ -183,6 +183,11 @@ class ParticipantList extends PMPageList
 	    }
 	}
 	
+	function IsNeedToDisplayOperations()
+	{
+		return true;
+	}
+	
 	function getItemActions( $column_name, $object_it ) 
 	{
 		return $object_it->getId() < 1 

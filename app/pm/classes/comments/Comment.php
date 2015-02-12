@@ -2,6 +2,7 @@
 
 include_once "CommentBase.php";
 include "CommentIterator.php";
+include "persisters/CommentAuthorPersister.php";
 
 class Comment extends CommentBase
 {
@@ -10,10 +11,10 @@ class Comment extends CommentBase
  		parent::__construct();
  	    
  		$this->addAttributeGroup('ObjectClass', 'system');
-
  		$this->addAttributeGroup('ObjectId', 'system');
- 		
  		$this->addAttributeGroup('PrevComment', 'system');
+ 		
+ 		$this->addPersister( new CommentAuthorPersister() );
  	}
  	
 	function createIterator() 

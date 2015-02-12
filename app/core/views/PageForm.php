@@ -43,34 +43,26 @@ class PageForm extends MetaObjectForm
 		// build specific field validators
 		foreach( $this->getObject()->getAttributes() as $attribute => $data )
 		{
-			if ( $this->getObject()->IsAttributeVisible($attribute) )
+			$field = $this->createFieldObject($attribute);
+			
+			if ( is_null($field) )
 			{
-				$field = $this->createFieldObject($attribute);
-				
-				if ( is_null($field) )
-				{
-					$type_validation_attrs[] = $attribute;
-					continue;
-				}
-				
-				$field_validator = $field->getValidator();
-				
-				if ( $field_validator instanceof ModelValidatorType )
-				{ 
-					if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
-					
-					$type_validation_attrs[] = $attribute;
-				}
-				else
-				{
-					$validator->addValidator($field_validator);
-				}
+				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
+				$type_validation_attrs[] = $attribute;
+				continue;
 			}
-			else
-			{
+			
+			$field_validator = $field->getValidator();
+			
+			if ( $field_validator instanceof ModelValidatorType )
+			{ 
 				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
 				
 				$type_validation_attrs[] = $attribute;
+			}
+			else
+			{
+				$validator->addValidator($field_validator);
 			}
 		}
 
@@ -356,7 +348,7 @@ class PageForm extends MetaObjectForm
 		{
 			$plugin->interceptMethodFormGetActions( $this, $actions );
 		}
-		
+				
 		return $actions;
 	}
 
@@ -387,7 +379,9 @@ class PageForm extends MetaObjectForm
 				{
 					if ( !$rule_it->check($object_it) )
 					{
-						$this->transition_messages[] = $rule_it->getNegativeReason();
+						$reason = $rule_it->getNegativeReason();
+						if ( $reason != '' ) $this->transition_messages[] = $reason;
+						
 						$skip_transition = true;
 						break;
 					}

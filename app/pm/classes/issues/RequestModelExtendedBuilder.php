@@ -22,7 +22,5 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
 			
 		    $object->addPersister( new RequestSpentTimePersister() );
 		}
-		
-		$object->addPersister( new RequestTasksPersister() );
     }
 }

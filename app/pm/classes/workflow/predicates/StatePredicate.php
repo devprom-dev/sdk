@@ -12,18 +12,18 @@ class StatePredicate extends FilterPredicate
 		{
 			case 'notresolved':
 			case 'notterminal':
-				return " AND t.State NOT IN ('".
+				return " AND IFNULL(t.State,'submitted') NOT IN ('".
 					join($object->getTerminalStates(), "','")."') ";
 
 			case 'terminal':
-				return " AND t.State IN ('".
+				return " AND IFNULL(t.State,'submitted') IN ('".
 					join($object->getTerminalStates(), "','")."') ";
 				
 			default:
 		 		$state = $model_factory->getObject($object->getStateClassName());
 		 		
 		 		$state_it = $state->getByRefArray( array (
-		 			'ReferenceName' => preg_split('/,/', $filter) 
+		 			'ReferenceName' => preg_split('/[,-]/', $filter) 
 		 		));
 		 		
 		 		if ( $state_it->count() > 0 )

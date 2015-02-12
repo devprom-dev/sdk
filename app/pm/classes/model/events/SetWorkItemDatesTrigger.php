@@ -1,5 +1,6 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
 include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
 
 class SetWorkItemDatesTrigger extends SystemTriggersBase
@@ -13,8 +14,19 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 	    $this->processStartDate( $object_it, $content );
 	    
 	    if ( !array_key_exists('State', $content) ) return;
-	    
+
 	    $this->processFinishDate($object_it);
+	    
+	    if ( $object_it->object instanceof Request )
+	    {
+		    $service = new StoreMetricsService();
+	    	$service->storeIssueMetrics($object_it->object->getRegistry()->Query(
+	    			array (
+	    					new FilterInPredicate(array($object_it->getId())),
+	    					new RequestMetricsPersister()
+	    			)
+	    		));
+	    }
 	}
 	
 	function processFinishDate( $object_it )
@@ -67,10 +79,9 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 			if ( $value == '' && $object_it->get('State') == array_shift($states) ) $value = "NOW()";
 		}
 		
-		if ( $value == '' ) return;
-		
-	    $sql = " UPDATE ".$table_name." SET StartDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId();
-	    
-	    DAL::Instance()->Query($sql);
+		if ( $value != '' )
+		{
+		    DAL::Instance()->Query("UPDATE ".$table_name." SET StartDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId());
+		}
 	}
 }

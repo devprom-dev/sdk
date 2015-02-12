@@ -12,22 +12,21 @@ App.module("MenuConfigurator", function(MenuConfigurator, App, Backbone, Marione
     
     //The region for displaing menu structure
     this.menuRegion = new Backbone.Marionette.Region({el: $('div.menu-content')});
-    
     this.saveControlRegion = new Backbone.Marionette.Region({el: '#save-control'});
-    
     this.restoreControlRegion = new Backbone.Marionette.Region({el: '#restore-control'});
-    
     this.currentArea = '';
-    
     this.restUrl = '';
 
     this.getRestUrl = function() {
     	return MenuConfigurator.restUrl;
+    },
+    
+    this.resetCurrentMenu = function() {
+    	menuNodesCollection.set({});
     };
     
     //Private
-    var 
-	MenuView = TreeView.extend({
+    var MenuView = TreeView.extend({
 	    itemView: GroupMenuNodeView
 	}),
 	
@@ -195,4 +194,6 @@ App.on("start", function()
 	    }
         });
     });
+
+	$('#menu-reset').click(function() { App.module("MenuConfigurator").resetCurrentMenu(); });
 });

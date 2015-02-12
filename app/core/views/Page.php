@@ -703,7 +703,8 @@
         	'hint' => !$this->needDisplayForm() && getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
         	'page_uid' => $page_uid,
         	'skip_product_tour' => getFactory()->getObject('UserSettings')->getSettingsValue('skip-product-tour'),
-        	'module' => $this->getModule()
+        	'module' => $this->getModule(),
+        	'public_iid' => md5(INSTALLATION_UID.CUSTOMER_UID)
  		);
  	}
  	
@@ -711,7 +712,12 @@
  	{
  		return new PhpEngine(
  			new TemplateNameParser(), 
- 			new FilesystemLoader(SERVER_ROOT_PATH.'/templates/views/%name%'), 
+ 			new FilesystemLoader(
+ 					array (
+ 							SERVER_ROOT_PATH.'/templates/views/%name%',
+ 							SERVER_ROOT_PATH.'/plugins/%name%'
+ 					)
+ 			), 
  			array (
 				new SlotsHelper()
 			)

@@ -8,9 +8,14 @@
 
         <nav id="sidebar" class="sidebar nav-collapse collapse visible-xs">
             <ul id="side-nav" class="side-nav">
-                <li {% if app.request.get('_route') == 'issue_list' %}class='active'{% endif %}>
+                <li {% if app.request.get('_route') == 'issue_list' and app.request.get('filter') == "my" %}class='active'{% endif %}>
                     <a href="{{ path('issue_list') }}"><i class="icon-home"></i> <span class="name">{{ 'index.title'|trans }}</span></a>
                 </li>
+                {% if app.user.company.seecompanyissues == "Y" %}
+                <li {% if app.request.get('_route') == 'issue_list' and app.request.get('filter') == "company" %}class='active'{% endif %}>
+                    <a href="{{ path('issue_list') }}company"><i class="icon-briefcase"></i> <span class="name">{{ 'index.company_title'|trans }}</span></a>
+                </li>
+                {% endif %}
                 <li class="{% if app.request.get('_route') == 'issue_new' %} active{% endif %}">
                     <a href="{{ url('issue_new') }}"><i class="icon-plus-sign-alt"></i> <span class="name">{{ 'issue.add'|trans }}</span></a>
                 </li>
@@ -64,6 +69,11 @@
                     <a class="btn btn-lg btn-default navbar-btn" id="home-link" title="{{ 'index.title'|trans }}" href="{{ url('issue_list') }}">
                         <i class="icon-home"></i> <span class="hidden-xs">{{ 'index.title'|trans }}</span>
                     </a>
+                    {% if app.user.company.seecompanyissues == "Y" %}
+                    <a class="btn btn-lg btn-default navbar-btn" id="home-link" title="{{ 'index.company_title'|trans }}" href="{{ url('issue_list') }}company">
+                        <i class="icon-briefcase"></i> <span class="hidden-xs">{{ 'index.company_title'|trans }}</span>
+                    </a>
+                    {% endif %}
                     <button class="btn btn-lg btn-success navbar-btn" title="{{ 'issue.add'|trans }}" onclick="window.location='{{ url('issue_new') }}';">
                         <i class="icon-plus"></i> <span class="hidden-xxs">{{ 'issue.add'|trans }}</span>
                     </button>

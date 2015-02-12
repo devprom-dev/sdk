@@ -121,12 +121,10 @@ $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 <?php } ?> 
 
 <?php if ( !$formonly) { ?>
-
-  <div class="control-group">
+<div class="control-group">
     <label class="control-label" for="buttons"></label>
     <div class="controls">
         <?php $form->drawButtons(); ?>
     </div>
-  </div>
-
+</div>
 <?php } ?>

@@ -4,7 +4,7 @@ class CalendarRegistry extends ObjectRegistrySQL
 {
     function createSQLIterator( $sql )
     {
-    	$sql = " SELECT IFNULL(MAX(IntervalYear) + 1,YEAR(NOW())) cnt FROM pm_CalendarInterval ";
+    	$sql = " SELECT IFNULL(MAX(IntervalYear) + 1,YEAR(NOW())-5) cnt FROM pm_CalendarInterval ";
 			   
 		$it = parent::createSQLIterator( $sql );
 

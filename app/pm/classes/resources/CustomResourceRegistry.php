@@ -19,25 +19,27 @@ class CustomResourceRegistry extends ResourceRegistry
  	    $vpd_value = array_shift($this->getObject()->getVpds());
 
  	    foreach( $records as $key => $record ) $records[$key]['VPD'] = $vpd_value;
- 	    
- 	    // override original values with custom ones
- 	     
- 	    $it = ObjectRegistrySQL::createSQLIterator( $sql );
- 	    
- 	    while( !$it->end() )
+
+ 	    if ( !getSession()->getProjectIt()->IsPortfolio() )
  	    {
- 	        if ( !array_key_exists($it->get('ResourceKey'), $records) ) 
- 	        {
- 	            $it->moveNext();
- 	            
- 	            continue;
- 	        }
- 	        
- 	        $records[$it->get('ResourceKey')]['ResourceValue'] = $it->getHtmlDecoded('ResourceValue');
- 	        $records[$it->get('ResourceKey')]['Caption'] = $it->getHtmlDecoded('ResourceValue');
- 	        $records[$it->get('ResourceKey')]['OriginalId'] = $it->getId();
- 	        
- 	        $it->moveNext();
+	 	    // override original values with custom ones
+	 	    $it = ObjectRegistrySQL::createSQLIterator( $sql );
+	 	    
+	 	    while( !$it->end() )
+	 	    {
+	 	        if ( !array_key_exists($it->get('ResourceKey'), $records) ) 
+	 	        {
+	 	            $it->moveNext();
+	 	            
+	 	            continue;
+	 	        }
+	 	        
+	 	        $records[$it->get('ResourceKey')]['ResourceValue'] = $it->getHtmlDecoded('ResourceValue');
+	 	        $records[$it->get('ResourceKey')]['Caption'] = $it->getHtmlDecoded('ResourceValue');
+	 	        $records[$it->get('ResourceKey')]['OriginalId'] = $it->getId();
+	 	        
+	 	        $it->moveNext();
+	 	    }
  	    }
  	    
  	    return $this->createIterator( array_values($records) );

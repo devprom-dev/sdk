@@ -77,7 +77,7 @@ class UpdateList extends PageList
                 array(),
                 array( 
                 		'name' => translate('Скачать обновление'), 
-                		'url' => $object_it->get('DownloadUrl'),
+                		'url' => $object_it->get('DownloadUrl').'&iid='.INSTALLATION_UID,
                 		'uid' => 'download'
 	        	)
 	        );

@@ -158,21 +158,17 @@ class RequestBulkForm extends BulkForm
 				break;
 				
 			case 'Owner':
-    			$worker = $model_factory->getObject('Participant');
-    			
-    			$worker->addFilter( new ParticipantWorkerPredicate() );
+    			$worker = getFactory()->getObject('User');
+    			$worker->addFilter( new UserWorkerPredicate() );
 				
 				$field = new FieldDictionary( $worker );
-				
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				
 				echo $this->getName($attribute);
-				
 				$field->draw();
-				
 				break;
  			    
 			default:

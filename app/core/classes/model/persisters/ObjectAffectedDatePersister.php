@@ -7,7 +7,9 @@ class ObjectAffectedDatePersister extends ObjectSQLPersister
  	function getSelectColumns( $alias )
  	{
  		$columns = array();
- 		
+
+ 		if ( $this->getObject()->getAttributeType('RecordModified') == '' ) return $columns;
+		
 		$columns[] = 
 			" IFNULL((SELECT UNIX_TIMESTAMP(RecordModified) * 100000 + co_AffectedObjectsId ".
 			"	 FROM co_AffectedObjects o ".

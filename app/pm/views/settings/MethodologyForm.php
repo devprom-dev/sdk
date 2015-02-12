@@ -38,6 +38,7 @@ class MethodologyForm extends PMPageForm
             case 'IsResponsibleForFunctions':
             case 'IsTasksDepend':
             case 'IsResponsibleForIssue':
+            case 'IsVersionsUsed':
                 return false;
 
             default:
@@ -74,8 +75,6 @@ class MethodologyForm extends PMPageForm
                 return text(35);
             case 'IsReportsOnActivities':
                 return text(410);
-            case 'IsVersionsUsed':
-                return text(672);
             case 'IsReleasesUsed':
                 return text(671);
             case 'IsRequestOrderUsed':

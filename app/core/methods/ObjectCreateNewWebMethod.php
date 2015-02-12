@@ -22,7 +22,7 @@ class ObjectCreateNewWebMethod extends WebMethod
 	
 	function getNewObjectUrl()
 	{
-		return $this->object->getPageNameObject();
+		return $this->object->getPageName();
 	}
 	
 	function getJSCall( $parms = array(), $title = '' )
@@ -42,7 +42,13 @@ class ObjectCreateNewWebMethod extends WebMethod
 		{
 			$strings = array();
 			
-			foreach( $parms as $key => $value ) $strings[] = $key.":'".addslashes($value)."'";
+			foreach( $parms as $key => $value )
+			{
+				if ( strpos($value, '()') !== false )
+					$strings[] = $key.":".addslashes($value);
+				else
+					$strings[] = $key.":'".addslashes($value)."'";
+			}
 			
 			$parms_string = '{'.join(',',$strings).'}';
 		}

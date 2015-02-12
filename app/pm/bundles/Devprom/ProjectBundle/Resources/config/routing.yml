@@ -2,6 +2,10 @@ config:
     pattern: /pm/{project}/menu/{report}
     defaults: { _controller: ProjectBundle:Navigation:index }
 
+settings:
+    pattern: /pm/{project}/settings/{area}/{action}
+    defaults: { _controller: ProjectBundle:Settings:index }
+
 _broken_trace_explain:
     pattern:  /pm/{project}/tooltip/explain/{object}
     defaults: { _controller: ProjectBundle:Tooltip:explain }
@@ -14,9 +18,9 @@ _tooltip_objects_list:
     pattern:  /pm/{project}/tooltip/objectlist/{classname}/{objects}
     defaults: { _controller: ProjectBundle:Tooltip:list }
 
-_wiki_select:
-    pattern:  /pm/{project}/wiki/select/{classname}
-    defaults: { _controller: ProjectBundle:Wiki:select }
+_treemodel_select:
+    pattern:  /pm/{project}/treemodel/{classname}
+    defaults: { _controller: ProjectBundle:Tree:index }
 
 _export:
     pattern:  /pm/{project}/export
@@ -85,5 +89,10 @@ rest_change:
 rest_task:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\TaskController
+    prefix:   /pm/{project}/api/v1
+
+rest_bug:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\BugController
     prefix:   /pm/{project}/api/v1
     

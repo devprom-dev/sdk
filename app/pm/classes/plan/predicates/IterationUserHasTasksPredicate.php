@@ -13,9 +13,8 @@ class IterationUserHasTasksPredicate extends FilterPredicate
  		
  		if ( !is_numeric($filter) ) return " AND 1 = 2 ";
  		
-	    return " AND EXISTS (SELECT 1 FROM pm_Task s, pm_Participant p ".
-	    	   "			  WHERE s.Assignee = p.pm_ParticipantId ".
-	    	   "				AND p.SystemUser = ".$filter.
+	    return " AND EXISTS (SELECT 1 FROM pm_Task s ".
+	    	   "			  WHERE s.Assignee = ".$filter.
 	    	   "			    AND s.Release = t.pm_ReleaseId) ";
  	}
 }

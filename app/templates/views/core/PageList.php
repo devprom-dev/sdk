@@ -34,6 +34,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
         <div class="<?=($list_mode == 'infinite' ? 'table-inner-div' : 'wishes')?>">
         <table id="<?=$table_id?>" class="table-inner <?=$table_class_name?>" created="<?=$created_datetime?>">
 	
+		<?php if ( $show_header ) { ?>
 		<tr class="header-row">
 			<?php if ( $display_numbers ) { ?>
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
@@ -83,6 +84,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 			<?php } ?>
 			
         </tr>
+        <?php } ?>
 			
 			<?
 			$columns_number++;
@@ -168,30 +170,29 @@ $display_operations = $list->IsNeedToDisplayOperations();
 						}
 					}
 
-					$actions = $list->getActions($it->getCurrentIt());
-					
 					if ( $display_operations ) 
                     {
-						?>
+						$actions = $list->getActions($it->getCurrentIt());
+                    	?>
 						<td id="operations" class="hidden-print">
 						<?php 
-					if ( count($actions) > 0 ) 
-					{
+						if ( count($actions) > 0 ) 
+						{
+							?>
+								<div class="btn-group operation last">
+								  <a class="btn btn-small dropdown-toggle actions-button" data-toggle="dropdown" href="#">
+									<i class="icon-asterisk icon-gray"></i>
+									<span class="caret"></span>
+								  </a>
+								  <?php
+									echo $view->render('core/PopupMenu.php', array (
+										'items' => $actions
+									));
+								  ?>
+								</div>
+							<?
+						}
 						?>
-							<div class="btn-group operation last">
-							  <a class="btn btn-small dropdown-toggle actions-button" data-toggle="dropdown" href="#">
-								<i class="icon-asterisk icon-gray"></i>
-								<span class="caret"></span>
-							  </a>
-							  <?php
-								echo $view->render('core/PopupMenu.php', array (
-									'items' => $actions
-								));
-							  ?>
-							</div>
-						<?
-					}
-					?>
 					</td>
 					<?php } ?>
 				</tr>

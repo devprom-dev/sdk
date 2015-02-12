@@ -23,7 +23,7 @@ class TaskBoardTable extends PMPageTable
 	{
 		$list = $this->getListRef();
 		
-		if ( $list->getGroup() == 'AssigneeUser' )
+		if ( $list->getGroup() == 'Assignee' )
 		{
 			$this->buildAssigneeWorkload();
 		}
@@ -149,7 +149,7 @@ class TaskBoardTable extends PMPageTable
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
 			new ViewModifiedBeforeDateWebMethod(),
-			new ViewModifiedAfterDateWebMethod(),
+			new ViewModifiedAfterDateWebMethod()
 		);
 
 		return array_merge( $filters, PMPageTable::getFilters() ); 		
@@ -189,14 +189,14 @@ class TaskBoardTable extends PMPageTable
 			new StatePredicate( $values['taskstate'] ),
 			new FilterAttributePredicate( 'Priority', $values['taskpriority'] ),
 			new FilterAttributePredicate( 'TaskType', $values['tasktype'] ),
-			new TaskAssigneeUserPredicate( $values['taskassignee'] ),
+			new FilterAttributePredicate( 'Assignee', $values['taskassignee'] ),
 			new FilterAttributePredicate( 'Release', $values['iteration'] ),
 			new TaskReleasePredicate($values['issue-release']),
  			new TaskVersionPredicate( $values['stage'] ),
 			new FilterSubmittedAfterPredicate( $values['submittedon'] ),
 			new FilterSubmittedBeforePredicate( $values['submittedbefore'] ),
 			new FilterAttributePredicate( 'ChangeRequest', $_REQUEST['issue'] )
-			);		
+		);		
 
 		$predicates[] = new FilterModifiedAfterPredicate($values['modifiedafter']);
 		$predicates[] = new FilterModifiedBeforePredicate($values['modifiedbefore']);
@@ -210,14 +210,7 @@ class TaskBoardTable extends PMPageTable
 	{
 		$actions = array();
 
-		$list = $this->getListRef();
-		
-		$values = $this->getFilterValues();
-		
-		$object = $this->getObject();
-		
 		$method = new ExcelExportWebMethod();
-
 		$url = $method->getJSCall( translate('Задачи') );
 
 		array_push($actions, array( 'name' => $method->getCaption(),
@@ -232,18 +225,30 @@ class TaskBoardTable extends PMPageTable
 			'url' => $method->getJSCall() ) );
 
 		///
-		if ( getFactory()->getAccessPolicy()->can_modify($object) )
+		$list = $this->getListRef();
+
+		if ( $list->IsNeedToSelect() )
 		{
-			if ( $actions[count($actions) - 1]['name'] != '' )
-			{
-				array_push($actions, array() );
-			}
-
-			array_push($actions, array( 'name' => translate('Выбрать все'),
-				'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 'title' => text(969) ) );
-
-			array_push($actions, array( 'name' => translate('Массовые операции'),
-				'url' => 'javascript: processBulkMethod();', 'title' => text(651) ) );
+            if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
+			$actions[] = array( 
+			    'name' => translate('Выбрать все'),
+				'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 
+				'title' => text(969),
+				'radio' => true
+			);
+		}
+		
+		$bulk_actions_access = 
+				getFactory()->getAccessPolicy()->can_modify($this->getObject()) 
+				&& !getSession()->getProjectIt()->object instanceof Portfolio;
+	    
+		if ( $bulk_actions_access )
+		{
+			$actions[] = array( 
+					'name' => translate('Массовые операции'),
+					'url' => 'javascript: processBulkMethod();', 
+					'title' => text(651)
+			);
 		}
 		
 		return $actions;
@@ -307,13 +312,13 @@ class TaskBoardTable extends PMPageTable
 		$object->addFilter( new FilterInPredicate($task_ids) );
 		
 		// cache aggregates on workload and spent time
-		$planned_aggregate = new AggregateBase( 'AssigneeUser', 'Planned', 'SUM' );
+		$planned_aggregate = new AggregateBase( 'Assignee', 'Planned', 'SUM' );
 		$object->addAggregate( $planned_aggregate );
 
-		$left_aggregate = new AggregateBase( 'AssigneeUser', 'LeftWork', 'SUM' );
+		$left_aggregate = new AggregateBase( 'Assignee', 'LeftWork', 'SUM' );
 		$object->addAggregate( $left_aggregate );
 
-		$fact_aggregate = new AggregateBase( 'AssigneeUser', 'Fact', 'SUM' );
+		$fact_aggregate = new AggregateBase( 'Assignee', 'Fact', 'SUM' );
 		$object->addAggregate( $fact_aggregate );
 		
 		$task_it = $object->getAggregated();
@@ -323,17 +328,17 @@ class TaskBoardTable extends PMPageTable
 			$value = $task_it->get($planned_aggregate->getAggregateAlias());
 			if ( $value == '' ) $value = 0;
 			
-			$this->workload[$task_it->get('AssigneeUser')]['Planned'] = $value;
+			$this->workload[$task_it->get('Assignee')]['Planned'] = $value;
 			
 			$value = $task_it->get($left_aggregate->getAggregateAlias());
 			if ( $value == '' ) $value = 0;
 			
-			$this->workload[$task_it->get('AssigneeUser')]['LeftWork'] = $value;
+			$this->workload[$task_it->get('Assignee')]['LeftWork'] = $value;
 
 			$value = $task_it->get($fact_aggregate->getAggregateAlias());
 			if ( $value == '' ) $value = 0;
 							
-			$this->workload[$task_it->get('AssigneeUser')]['Fact'] = $value;
+			$this->workload[$task_it->get('Assignee')]['Fact'] = $value;
 			
 			$task_it->moveNext();
 		}
@@ -369,6 +374,12 @@ class TaskBoardTable extends PMPageTable
 						)
 				);
 				
+				if( $part_it->getId() < 1 )
+				{
+					$iteration_it->moveNext();
+					continue;
+				}
+				
 				$data['leftwork'] = $iteration_it->getLeftWorkParticipant( $part_it );
 				if ( $data['leftwork'] < 1 )
 				{
@@ -376,10 +387,10 @@ class TaskBoardTable extends PMPageTable
 					continue;
 				}
 
-				$data['title'] = ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
-	        	            translate('Итерация').': '.$iteration_it->getDisplayName();
-
-				$data['number'] = $iteration_it->getDisplayName();
+				$project_prefix = ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '');
+				
+				$data['title'] = $project_prefix.translate('Итерация').': '.$iteration_it->getDisplayName();
+				$data['number'] = $iteration_it->get('ShortCaption');
 				$data['capacity'] = $iteration_it->getLeftCapacity() * $part_it->get('Capacity');
 				
 				$method = new ObjectModifyWebMethod($iteration_it);

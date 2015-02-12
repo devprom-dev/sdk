@@ -344,11 +344,25 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestStateWebMethod extends ViewRequestWebMethod
  {
- 	function __construct()
+ 	private $iterator = null;
+ 	private $non_terminal_it = null;
+ 	private $terminal_it = null;
+ 	
+ 	function __construct( $iterator = null )
  	{
  		parent::__construct();
  		
- 		$this->setDefaultValue(join(',',getFactory()->getObject('Request')->getNonTerminalStates()));
+ 		$this->iterator = is_object($iterator) ? $iterator : $this->getDefaultIterator();
+
+ 		$data = $this->iterator->getRowset();
+ 		foreach( $data as $key => $row )
+ 		{
+ 			$data[$key]['ReferenceName'] = str_replace(',','-',$data[$key]['ReferenceName']);  
+ 		}
+ 		$this->iterator = $this->iterator->object->createCachedIterator($data);
+ 		
+ 		$this->buildTerminals();
+ 		$this->setDefaultValue(join(',',$this->non_terminal_it->fieldToArray('ReferenceName')));
  	}
  	
  	function getCaption()
@@ -358,28 +372,42 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  	function getValues()
  	{
- 		global $model_factory;
- 		
   		$values = array ();
  		$values['all'] = translate('Все');
   		
-		$state = $model_factory->getObject('IssueState');
- 		$issue = $model_factory->getObject('pm_ChangeRequest');
-		
-		$state_it = $state->getAll();
-		while ( !$state_it->end() )
+		while ( !$this->iterator->end() )
 		{
-			$values[$state_it->get('ReferenceName')] = $state_it->getDisplayName();
-			$state_it->moveNext();
+			$values[$this->iterator->get('ReferenceName')] = $this->iterator->getDisplayName();
+			$this->iterator->moveNext();
 		}
 
-		$state = join(',',$issue->getTerminalStates());
+		$state = join(',',$this->terminal_it->fieldToArray('ReferenceName'));
 		if ( count($values) > 1 && !array_key_exists($state, $values) ) $values[$state] = translate('Завершено'); 
 		
-		$state = join(',',$issue->getNonTerminalStates());
+		$state = join(',',$this->non_terminal_it->fieldToArray('ReferenceName'));
 		if ( count($values) > 1 && !array_key_exists($state, $values) ) $values[$state] = translate('Не завершено');
 		
 		return $values;
+	}
+	
+	protected function getDefaultIterator()
+	{
+		return getFactory()->getObject('IssueState')->getAll();
+	}
+	
+	protected function buildTerminals()
+	{
+		$this->non_terminal_it = $this->iterator->object->createCachedIterator(
+					array_values(array_filter($this->iterator->getRowset(), function($row) {
+							return $row['IsTerminal'] == 'N';
+					}))
+			);
+			
+		$this->terminal_it = $this->iterator->object->createCachedIterator(
+					array_values(array_filter($this->iterator->getRowset(), function($row) {
+							return $row['IsTerminal'] == 'Y';
+					}))
+			);
 	}
 	
 	function getStyle()
@@ -418,11 +446,6 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	{
  		return 'width:170px;';
  	}
- 	
-	function hasAccess()
-	{
-		return getSession()->getProjectIt()->getMethodologyIt()->HasVersions();
-	}
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
@@ -621,28 +644,14 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	{
  		global $model_factory;
  		
- 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasVersions() )
- 		{
- 			$this->object = $model_factory->getObject('Version'); 
- 		}
- 		else
- 		{
- 			$this->object = $model_factory->getObject('Stage'); 
- 		}
+		$this->object = $model_factory->getObject('Version'); 
  		
  		parent::FilterAutoCompleteWebMethod( $this->object, $this->getCaption() );
  	}
  	
  	function getCaption()
  	{
- 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasVersions() )
- 		{
- 			return translate('Выполнено в версии');
- 		}
- 		else
- 		{
- 			return translate('Выполнено на стадии');
- 		}
+		return translate('Выполнено в версии');
  	}
 
  	function getValueParm()
@@ -657,8 +666,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
 	function hasAccess()
 	{
-		return getSession()->getProjectIt()->getMethodologyIt()->HasReleases() 
-		    || getSession()->getProjectIt()->getMethodologyIt()->HasVersions();
+		return getSession()->getProjectIt()->getMethodologyIt()->HasReleases();
 	}
  }
 

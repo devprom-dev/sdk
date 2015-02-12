@@ -37,24 +37,18 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
  	    $items = array();
  	    
  	    $items['board'] = $module->getExact('issues-board')->buildMenuItem();
- 	    
 		$items['backlog'] = $report->getExact('productbacklog')->buildMenuItem();
- 	    
-		$items['knowledgebase'] = $module->getExact('project-knowledgebase')->buildMenuItem();
-		
 		$items['plan'] = $module->getExact('project-plan-hierarchy')->buildMenuItem();
-
  	    $items['tasks'] = $module->getExact('tasks-board')->buildMenuItem();
-		
+		$items['knowledgebase'] = $module->getExact('project-knowledgebase')->buildMenuItem();
+ 	    
 		$menu['quick']['items'] = array_merge($items, $menu['quick']['items']); 
 		
 		$items = array();
 		
 		$items['burndown'] = $report->getExact('releaseburndown')->buildMenuItem();
  	    $items['burndown']['name'] = text('scrum8');
-		
 		$items['velocity'] = $report->getExact('velocitychart')->buildMenuItem();
- 	    
 		$items['activity'] = $report->getExact('project-log')->buildMenuItem();
  	    $items['activity']['name'] = text('scrum5');
  	    

@@ -654,23 +654,13 @@ class PageTable extends ViewTable
 		if ( is_object($view_filter) )
 		{
 			$view_filter->setFilter( $this->getFiltersName() );
-			
-			if ( $view_filter->getValue() != '' )
-			{
-				$list = $this->getList( $view_filter->getValue() );
-                $this->setList( $list );
-			}
-			else
-			{
-				$values = $this->getFilterValues();
-				if ( $values['view'] != '' )
-				{
-					$list = $this->getList( $values['view'] );
-		            $this->setList( $list );
-				}
-			}
 		}
-		
+
+		if ( $_REQUEST['view'] != '' )
+		{
+			$list = $this->getList( $_REQUEST['view'] );
+            $this->setList( $list );
+		}
     
 	    $list = $this->getListRef();
     	
@@ -733,7 +723,7 @@ class PageTable extends ViewTable
 	        {
     	        foreach( $filter->getValues() as $key => $value )
     	        {
-    	            $script = "javascript: filterLocation.setup('".$filter->getName()."=".trim($key)."', 1); ";
+    	            $script = "javascript: filterLocation.setup('".$filter->getName()."=".urlencode(trim($key))."', 1); ";
     	            
     	            $checked_item = in_array(trim($key), preg_split('/,/', $filter_value));
     	            
@@ -778,7 +768,7 @@ class PageTable extends ViewTable
     	        
 	            foreach( $filter_options as $key => $value )
     	        {
-    	            $script = "javscript: $(this).hasClass('checked') ? filterLocation.turnOn('".$filter->getName()."', '".trim($key)."', 0) : filterLocation.turnOff('".$filter->getName()."', '".trim($key)."', 0);";
+    	            $script = "javscript: $(this).hasClass('checked') ? filterLocation.turnOn('".$filter->getName()."', '".urlencode(trim($key))."', 0) : filterLocation.turnOff('".$filter->getName()."', '".urlencode(trim($key))."', 0);";
     	            
     	            $group_of_values = count(preg_split('/,/', $key)) > 1; 
     	             
@@ -898,8 +888,18 @@ class PageTable extends ViewTable
             'filter_items' => $filter_items,
             'filter_modified' => !$this->IsFilterPersisted(),
             'actions' => $actions,
-            'additional_actions' => $additional_actions
+            'additional_actions' => $additional_actions,
+			'save_settings_alert' => $this->buildSaveSettingsAlert()
 		));
+	}
+	
+	function buildSaveSettingsAlert()
+	{
+		$personal_script = "javascript: $('li[uid=personal-persist]>a').addClass('checked'); window.location = $('li[uid=personal-persist]>a[href]').length > 0 ? $('li[uid=personal-persist]>a').attr('href') : $('li[uid=personal-persist]>a').attr('onkeydown')";
+
+		return str_replace('%2', getFactory()->getObject('Module')->getExact('profile')->get('Url'), 
+							str_replace('%1', $personal_script, text(1318))
+				); 
 	}
 	
 	function getTemplate()

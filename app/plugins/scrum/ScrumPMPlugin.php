@@ -3,7 +3,7 @@
 include "classes/widgets/FunctionalAreaMenuScrumBuilder.php";
 include "views/EstimationStrategyScrumBuilder.php";
 include "classes/VelocityReportsBuilder.php";
-include "classes/notificators/EmailScrumNotificator.php";
+include "classes/events/ScrumReportedEvent.php";
 include "classes/notificators/ScrumChangeNotificator.php";
 
 class ScrumPMPlugin extends PluginPMBase
@@ -53,7 +53,7 @@ class ScrumPMPlugin extends PluginPMBase
                 new VelocityReportsBuilder(),
                 new EstimationStrategyScrumBuilder(),
                 new ScrumChangeNotificator(),
-                new EmailScrumNotificator()
+                new ScrumReportedEvent()
         );
     }
 

@@ -43,7 +43,8 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $setting->setVisibleColumns(
         		array_merge(
         				array (
-        						'Spent'
+        						'Spent',
+        						'IssueTraces'
         				),
         				array_filter( $visible_attributes, function($value)
         				{
@@ -105,7 +106,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         
         $setting = new PageListSetting('TaskBoardList');
 
-        $columns = array('UID', 'Caption', 'RecentComment', 'Fact', 'Attachment', 'AssigneeUser', 'Progress');
+        $columns = array('UID', 'Caption', 'RecentComment', 'Fact', 'Attachment', 'Assignee', 'Progress');
 
         if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
 		{

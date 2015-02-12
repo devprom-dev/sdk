@@ -12,9 +12,11 @@ namespace Devprom\ServiceDeskBundle\Config;
 use Symfony\Component\DependencyInjection\Container;
 
 $loader = new DevpromParametersLoader();
-$supportProjectId = $container->hasParameter('supportProjectId') ? $container->getParameter('supportProjectId') : null;
-$container->setParameter('supportProjectId', $supportProjectId);
-$devpromParameters = $loader->load($supportProjectId);
+$devpromParameters = $loader->loadSystemSettings();
+foreach ($devpromParameters as $paramName => $paramValue) {
+    $container->setParameter($paramName, $paramValue);
+}
+$devpromParameters = $loader->loadProjectSettings();
 foreach ($devpromParameters as $paramName => $paramValue) {
     $container->setParameter($paramName, $paramValue);
 }

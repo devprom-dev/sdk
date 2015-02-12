@@ -10,12 +10,15 @@ include_once SERVER_ROOT_PATH."pm/views/ui/FieldAttachments.php";
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueTrace.php";
+include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueFeatureLevel.php";
 
 include "FieldTasksRequest.php";
 include "FieldLinkedRequest.php";
 include "FieldRequestState.php";
 include "FieldRequestTagTrace.php";
 include "FieldIssueDeadlines.php";
+include "FieldAuthor.php";
 
 class RequestForm extends PMPageForm
 {
@@ -26,13 +29,14 @@ class RequestForm extends PMPageForm
 	private $method_watch = null;
 	private $new_template_url = '';
 	private $target_projects = array();
-		
+ 	private $method_spend_time = null;
+ 	private $feature_types = array();
+	
 	function __construct( $object ) 
 	{
 		parent::__construct($object);
 		
 		$this->checkTemplateDefined();
-		
 		$this->buildMethods();
 	}
 
@@ -42,17 +46,19 @@ class RequestForm extends PMPageForm
 		
 		$this->getObject()->setAttributeVisible('State', !$this->getEditMode());
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
-    	
-    	$author_external = is_object($this->getObjectIt()) && $this->getObjectIt()->get('ExternalAuthor') != '';
-    	
-    	$this->getObject()->setAttributeVisible('ExternalAuthor', $author_external); 
-    	$this->getObject()->setAttributeVisible('Author', !$author_external);
-    	$this->getObject()->setAttributeRequired('Author', !$author_external);
+    	$this->getObject()->setAttributeVisible('Author', true);
     	
     	parent::extendModel();
 
 		$this->getObject()->addPersister( new WatchersPersister() );
     }
+    
+ 	function buildModelValidator()
+ 	{
+ 		$validator = parent::buildModelValidator();
+		$validator->addValidator( new ModelValidatorIssueFeatureLevel() );
+ 		return $validator;
+ 	}
     
 	public function checkTemplateDefined()
 	{
@@ -74,40 +80,40 @@ class RequestForm extends PMPageForm
 	public function buildMethods()
 	{
 		$object = $this->getObject();
-		
 		$object_it = $object->getEmptyIterator();
 		
  		$method = new RequestCreateTaskWebMethod($object_it);
- 		
  		if ( $method->hasAccess() )
  		{
  			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
- 			
  			$this->method_create_task = $method;
  		}
  		
 		$method = new DuplicateIssuesWebMethod($object_it);
-		
 		if ( $method->hasAccess() )
 		{
 			$this->method_duplicate = $method;
 		}
 
 		$method = new MoveToProjectWebMethod($object_it);
-		
 		if ( $method->hasAccess() )
 		{
 			$this->method_move = $method;
 		}
 		
 		$method = new WatchWebMethod($object_it);
-		
 		if ( $method->hasAccess() )
 		{
  			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-						
 			$this->method_watch = $method;
 		}
+		
+	 	$method = new SpendTimeWebMethod($object_it);
+ 		if ( $method->hasAccess() )
+ 		{
+ 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+ 			$this->method_spend_time = $method;
+ 		}
 		
 		$this->new_template_url = getFactory()->getObject('RequestTemplate')->getPageNameObject().'&ObjectId=%object-id%&items=%object-id%';
 		
@@ -125,7 +131,13 @@ class RequestForm extends PMPageForm
 				$this->target_projects[$linked_it->getId()] = $linked_it->getDisplayName();
 				$linked_it->moveNext();
 			}
+			if ( !getSession()->getProjectIt()->IsPortfolio() )
+			{
+				$this->target_projects[getSession()->getProjectIt()->getId()] = getSession()->getProjectIt()->getDisplayName();
+			}
 		}
+		
+		$this->feature_types = getFactory()->getObject('pm_FeatureType')->getAll()->fieldToArray('ReferenceName');
 	}
 	
 	function getTransitionAttributes()
@@ -232,6 +244,11 @@ class RequestForm extends PMPageForm
 			        $field = parent::createFieldObject($name);
 			    }
 			    return $field;
+			    
+			case 'Function':
+				return count($this->feature_types) > 0 
+					? new FieldHierarchySelector($this->getObject()->getAttributeObject($name))
+					: new FieldAutocompleteObject($this->getObject()->getAttributeObject($name));
 		}
 		
 		if( $name == 'Attachment' )
@@ -241,14 +258,6 @@ class RequestForm extends PMPageForm
 		elseif( $name == 'Watchers' )
 		{
 			return new FieldWatchers( is_object($this->object_it) ? $this->object_it : $this->object );
-		}
-		else if ( $name == 'Function' )
-		{
-			$field = new FieldAutoCompleteObject( $model_factory->getObject('pm_Function') );
-			
-			//$field->setAppendable();
-			
-			return $field;
 		}
 		else if( $name == 'Links' )
 		{
@@ -272,25 +281,12 @@ class RequestForm extends PMPageForm
 		}
 		elseif($name == 'Author') 
 		{
-			return new FieldAutoCompleteObject( $model_factory->getObject('cms_User') );
+			return new FieldAuthor();
 		}
 		elseif($name == 'Owner') 
 		{
-			$worker = $model_factory->getObject('pm_Participant');
-			
-			if ( $this->getEditMode() )
-			{
-    			$worker->addFilter( new ParticipantWorkerPredicate() );
-    			
-    			if ( is_object($this->object_it) )
-    			{
-    				$worker->setVpdContext( $this->object_it );
-    			}
-    			else
-    			{
-    				$worker->addFilter( new FilterBaseVpdPredicate() );
-    			}
-			}
+			$worker = getFactory()->getObject('User');
+   			$worker->addFilter( new UserWorkerPredicate() );
 			
 			return new FieldParticipantDictionary( $worker );
 		}
@@ -463,7 +459,7 @@ class RequestForm extends PMPageForm
 				'url' => $this->method_create_task->getJSCall() 
 			);
 		}
-		
+
 		if ( $this->IsFormDisplayed() )
 		{
 			$method = new SetRequestIterationWebMethod( $object_it );
@@ -486,16 +482,26 @@ class RequestForm extends PMPageForm
 					'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url)
 			);
 		}		
+
+		return $actions;
+	}
+	
+	function getDeleteActions()
+	{
+		$actions = parent::getDeleteActions();
+		
+		$object_it = $this->getObjectIt();
+		if ( !is_object($object_it) ) return $actions;
 		
 		if ( is_object($this->method_watch) )
 		{
 			$this->method_watch->setObjectIt($object_it);			
-			
-			$actions[] = array('');
-			$actions[] = array( 
+		
+			array_unshift($actions, array());
+			array_unshift($actions, array( 
 					'name' => $this->method_watch->getCaption(),
 					'url' => $this->method_watch->getJSCall()
-			);
+			));
 		}
 
 		return $actions;
@@ -520,6 +526,7 @@ class RequestForm extends PMPageForm
 				
 				foreach( $this->target_projects as $id => $title )
 				{
+					if ( $id == $object_it->get('Project') ) continue;
 					$items[] = array (
 							'name' => $title,
 							'url' => $this->method_duplicate->getLink($id)							
@@ -556,6 +563,7 @@ class RequestForm extends PMPageForm
 				
 				foreach( $this->target_projects as $id => $title )
 				{
+					if ( $id == $object_it->get('Project') ) continue;
 					$items[] = array (
 							'name' => $title,
 							'url' => $this->method_move->getLink($id)							
@@ -582,6 +590,17 @@ class RequestForm extends PMPageForm
 			}
 		}	
 
+		if ( is_object($this->method_spend_time) )
+		{
+			$this->method_spend_time->setAnchorIt($object_it);
+			
+			$actions[] = array();
+			$actions[] = array ( 
+				'name' => $this->method_spend_time->getCaption(), 
+				'url' => $this->method_spend_time->getJSCall() 
+			);
+		}
+		
 		return $actions;
 	}
 	
@@ -661,7 +680,7 @@ class RequestForm extends PMPageForm
 		{
 	   		$refs_actions[$reference] = array(
 	   				'name' => text(1828),
-					'url' => $url.'&'.strtolower($reference).'='.$object_it->get($reference)
+					'url' => $url.'&'.strtolower($reference).'='.urlencode($object_it->get($reference))
 	   		);
 		}
 
@@ -669,7 +688,7 @@ class RequestForm extends PMPageForm
 		{
 	   		$refs_actions['Owner'] = array(
 	   				'name' => text(1828),
-					'url' => $url.'&owner='.$object_it->getRef('Owner')->get('SystemUser')
+					'url' => $url.'&owner='.$object_it->get('Owner')
 	   		);
 		}
 		

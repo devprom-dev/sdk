@@ -5,10 +5,16 @@ include_once SERVER_ROOT_PATH."ext/htmldiff/html_diff.php";
 class PMWikiDocumentList extends PMWikiList
 {
     private $first_object_it;
-    
     private $revision_it;
-    
     private $visible_ids = array();
+    private $trace_source_attribute = '';
+    
+    function __construct( $object )
+    {
+    	parent::__construct($object);
+    	
+    	$this->trace_source_attribute = array_pop($this->getObject()->getAttributesByGroup('source-attribute'));
+    }
     
  	function getSorts()
 	{
@@ -114,7 +120,7 @@ class PMWikiDocumentList extends PMWikiList
  	
 	function getColumns()
 	{
-		return array('Content', 'Attributes');
+		return array($this->trace_source_attribute, 'Content', 'Attributes');
 	}
  	
  	function setupColumns()
@@ -186,7 +192,15 @@ class PMWikiDocumentList extends PMWikiList
 	{
 	    if ( !$this->rowIsVisible($object_it) ) return;
 	
-	    parent::drawRefCell( $entity_it, $object_it, $attr );
+		switch ( $attr )
+		{
+		    case $this->trace_source_attribute:
+		    	$this->drawSourcePage( $entity_it );
+		    	break;
+		    	
+			default:
+				parent::drawRefCell( $entity_it, $object_it, $attr );
+		}
 	}
 	
 	function drawCell( $object_it, $attr ) 
@@ -198,17 +212,13 @@ class PMWikiDocumentList extends PMWikiList
 		switch ( $attr )
 		{
 		    case 'Content':
-
 	    		$this->drawPageContent( $object_it );
-		    	
         		break;
 
 		    case 'Attributes':
-			    
 	    		$this->drawAttributes( $object_it );
-		    	
         		break;
-        		
+		    	
 			default:
 				parent::drawCell( $object_it, $attr ) ;
 		}
@@ -221,10 +231,33 @@ class PMWikiDocumentList extends PMWikiList
  	        case 'Attributes':
  	            return '20%';
 
+ 	        case $this->trace_source_attribute:
+ 	            return '50%';
+ 	            
  	        default:
  	            return parent::getColumnWidth( $column );
  	    }
  	}
+	
+	function drawSourcePage( $object_it )
+	{
+		while( !$object_it->end() )
+		{
+			echo '<div style="margin-top: 2px;padding-right:18px;display:table;">';
+				echo '<div style="display:table-cell;padding-right:8px;vertical-align: top;">';
+					echo $this->getUidService()->getUidIcon($object_it);
+				echo '</div>';
+				echo '<h4 class="title-cell bs" style="display:table-cell;">';
+					echo $object_it->getDisplayName();
+				echo '</h4>';
+			echo '</div>';
+			echo '<div style="margin-top: 11px;padding-right:18px;">';
+				$field = new FieldCompareToContent($object_it,$object_it);
+				$field->draw();
+			echo '</div>';
+			$object_it->moveNext();
+		}
+	}
 	
 	function drawPageContent( $object_it )
 	{
@@ -364,6 +397,7 @@ class PMWikiDocumentList extends PMWikiList
 		foreach( $this->getObject()->getAttributes() as $key => $attribute )
 		{
 			if ( $key == "Content" ) continue;
+			if ( $key == $this->trace_source_attribute ) continue;
 			if ( $this->getColumnVisibility($key) ) return true;
 		}
 		

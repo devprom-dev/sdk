@@ -4,7 +4,7 @@ RewriteEngine On
 RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
-RewriteRule ^([^/]+)/(tooltip|wiki|export|scripts|api|invite)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/(tooltip|wiki|export|scripts|api|invite|treemodel|settings)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&page=$4 [L,QSA]
 RewriteRule ^([^/]+)/([a-z]{1}-[0-9]+)/?(\d+)?$ goto.php?project=$1&uid=$2&baseline=$3 [L,NC,QSA]
@@ -31,6 +31,7 @@ RewriteRule ^([^/]+)/participants/(list|rights|invite|mail|find|spenttime)/([^/]
 RewriteRule ^([^/]+)/plan/(metrics|hierarchy|milestone)$ project.php?project=$1&mode=$2 [L,QSA]
 RewriteRule ^([^/]+)/plan/(metrics|hierarchy|milestone)/([^/]+)$ project.php?project=$1&mode=$2&report=$3 [L,QSA]
 RewriteRule ^([^/]+)/knowledgebase/(tree|files|templates)/?([^/]+)?$ knowledgebase.php?project=$1&view=$2&report=$3 [L,QSA]
+RewriteRule ^([^/]+)/profile/?$ profile.php?project=$1 [L,QSA]
 
 RewriteCond %{REQUEST_URI} functions\.php 
 RewriteCond %{QUERY_STRING} view=(\w+) 

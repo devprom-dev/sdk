@@ -185,10 +185,8 @@ class TooltipProjectService extends TooltipService
  	 	
  	 	if ( $comment_it->count() < 1 ) return array();
 
- 	 	$info = $comment_it->getUserInfo();
-
  	 	return array (
- 	 			'author' => $info['Name'],
+ 	 			'author' => $comment_it->get('AuthorName'),
  	 			'text' => $this->getAttributeValue($comment_it, 'Caption', 'text') 
  	 	);
     }

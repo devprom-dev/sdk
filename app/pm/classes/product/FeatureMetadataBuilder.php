@@ -3,24 +3,30 @@
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tags/persisters/FeatureTagPersister.php";
 
+include "persisters/FeatureTitlePersister.php";
+include "persisters/FeatureHierarchyPersister.php";
+
 class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Function' ) return;
 
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
- 		$tag = getFactory()->getObject('CustomTag');
+		$metadata->setAttributeDescription('StartDate', text(1837));
+	    $metadata->setAttributeDescription('DeliveryDate', text(1838));
+    	
+	    $metadata->addAttributeGroup('Request', 'trace');
+    	
+ 		$metadata->addPersister( new FeatureTitlePersister() );
+ 		$metadata->addPersister( new FeatureHierarchyPersister() );
  		
  		$metadata->addAttribute( 'Tags', 'REF_TagId', translate('в§уш'), false, false, '', 40 );
- 		
+ 		$tag = getFactory()->getObject('CustomTag');
  		$metadata->addPersister( new FeatureTagPersister() );
  		
-		foreach ( array('Caption', 'Importance', 'Description') as $attribute )
+		foreach ( array('Caption', 'Importance', 'Description', 'Tags', 'Type', 'StartDate', 'DeliveryDate') as $attribute )
 		{
 			$metadata->addAttributeGroup($attribute, 'tooltip');
-
 			$metadata->addAttributeGroup($attribute, 'permissions');
 		}
     }

@@ -33,31 +33,6 @@ class TaskModifyProjectTrigger extends EntityModifyProjectTrigger
 		$comment = getFactory()->getObject('Comment');
 		$comment->addFilter( new CommentObjectFilter($object_it) );
 		
- 	    $part_ids = array_unique(
-		 	    		array_filter(
-		 	    				array_merge(
-					 	    		$task->getAll()->fieldToArray('Assignee'),
-					 	    		$activity->getAll()->fieldToArray('Participant')
-		 	    				),
-								function($value) { return $value > 0; }	
-		 	    		)
-	 	    		);
-
- 	    if ( count($part_ids) > 0 )
- 	    {
-	 	    $part = getFactory()->getObject('Participant');
-	 	    $part->addFilter( new FilterInPredicate($part_ids) );
-	 	    $references[] = $part;
-	 	     
-	 	    $part_role = getFactory()->getObject('ParticipantRole');
-	 	    $part_role->addFilter( new FilterAttributePredicate('Participant', $part_ids) );
-	 	    $references[] = $part_role;
-	 	    
-	 	    $project_role = getFactory()->getObject('ProjectRole');
-	 	    $project_role->addFilter( new FilterInPredicate($part_role->getAll()->fieldToArray('ProjectRole')) );
-	 	    $references[] = $project_role;
- 	    } 
-
  	    $references[] = $type;
  	    $references[] = $task;
 		$references[] = $trace;

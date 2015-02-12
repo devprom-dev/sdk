@@ -42,6 +42,7 @@ class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($curl, CURLOPT_HTTPGET, true);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
 		
 		$result = curl_exec($curl);
 		

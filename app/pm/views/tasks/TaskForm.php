@@ -1,6 +1,6 @@
 <?php
 
-include "TaskResultDictionary.php";
+include "FieldTaskResultDictionary.php";
 include_once "FieldTaskTypeDictionary.php";
 include_once SERVER_ROOT_PATH.'pm/views/time/FieldSpentTimeTask.php';
 include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
@@ -9,17 +9,18 @@ include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
+include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 
 class TaskForm extends PMPageForm
 {
  	var $request_it;
  	
  	private $move_iteration_methods = array();
+ 	private $method_spend_time = null;
  	
     protected function extendModel()
     {
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
-    	
 		$this->getObject()->addPersister( new WatchersPersister() );
 		
 		parent::extendModel();
@@ -29,6 +30,19 @@ class TaskForm extends PMPageForm
 		{
 			$builder = new WorkflowTransitionTaskModelBuilder($transition_it);
 			$builder->build( $this->getObject() );
+		}
+		
+		if ( is_object($this->getObjectIt()) )
+		{
+			$result_field_required = 
+					$transition_it->getRef('TargetState')->get('IsTerminal') == 'Y'
+					&& in_array($this->getObjectIt()->getRef('TaskType')->get('ReferenceName'), array('testing'));
+			
+			if ( $result_field_required )
+			{
+				$this->getObject()->setAttributeRequired('Result', true);	
+				$this->getObject()->setAttributeVisible('Result', true);
+			}
 		}
 		
 		$this->buildMethods();
@@ -58,6 +72,13 @@ class TaskForm extends PMPageForm
 				$release_it->moveNext();
 			}
 		}
+		
+	 	$method = new SpendTimeWebMethod( $this->getObjectIt() );
+ 		if ( $method->hasAccess() )
+ 		{
+ 			$method->setRedirectUrl('donothing');
+ 			$this->method_spend_time = $method;
+ 		}
 	}
     
  	function IsAttributeVisible( $attr_name ) 
@@ -95,13 +116,6 @@ class TaskForm extends PMPageForm
 		if ( $this->getFieldValue( 'Caption' ) )
 		{
 		    $fields[] = 'Caption';
-		}
-		
-		$target_it = $this->getTransitionIt()->getRef('TargetState');
-
-		if ( $target_it->get('IsTerminal') == 'Y' )
-		{
-			$fields[] = 'Result';
 		}
 		
 		return $fields;
@@ -160,10 +174,8 @@ class TaskForm extends PMPageForm
 				return new FieldTaskTypeDictionary( $tasktype );
 
 			case 'Assignee':
-				$object = getFactory()->getObject('Participant');
-
-	    		$object->addFilter( new ParticipantWorkerPredicate() );
-	    		$object->addFilter( new FilterBaseVpdPredicate() );
+				$object = getFactory()->getObject('User');
+	    		$object->addFilter( new UserWorkerPredicate() );
 
 				return new FieldParticipantDictionary( $object );
 				
@@ -184,11 +196,7 @@ class TaskForm extends PMPageForm
 				}
 
 			case 'Result':
-				
-   				return new TaskResultDictionary( 
-   						getFactory()->getObject('TaskType'),
-   						is_object($this->getObjectIt()) ? $this->getObjectIt()->get('TaskType') : ''
-   				); 
+   				return new FieldTaskResultDictionary();
 				
 			case 'ResultArtefact':
 				return new FieldDictionary( $model_factory->getObject('pm_Artefact') );
@@ -279,30 +287,25 @@ class TaskForm extends PMPageForm
 		return parent::getFieldValue( $attr );
 	}
 	
-	function getActions()
+	function getDeleteActions()
 	{
-		global $model_factory;
-		
-		$actions = parent::getActions();
+		$actions = parent::getDeleteActions();
 		
 		$object_it = $this->getObjectIt();
-		
 		if ( !is_object($object_it) ) return $actions;
 		
 		$method = new WatchWebMethod( $object_it );
-		
-		$method->setRedirectUrl('donothing');
-		
 		if ( $method->hasAccess() )
 		{
-		    if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-		    
-			$actions[] = array( 
+			$method->setRedirectUrl('donothing');
+			
+			array_unshift($actions, array());
+			array_unshift($actions, array( 
 			        'name' => $method->getCaption(),
 				    'url' => $method->getJSCall() 
-			);
+			));
 		}
-		
+
 		return $actions;
 	}
 	
@@ -335,6 +338,17 @@ class TaskForm extends PMPageForm
 			}
 		}
 				
+		if ( is_object($this->method_spend_time) )
+		{
+			$this->method_spend_time->setAnchorIt($object_it);
+			
+			$actions[] = array();
+			$actions[] = array ( 
+				'name' => $this->method_spend_time->getCaption(), 
+				'url' => $this->method_spend_time->getJSCall() 
+			);
+		}
+		
 		return $actions;
 	}
 	

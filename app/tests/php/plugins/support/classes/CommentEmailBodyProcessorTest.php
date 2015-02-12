@@ -41,6 +41,51 @@ class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
         $this->assertSame($meaningfullPart, $result);
     }
 
+    public function shouldTruncateSignatureDashDashLF() {
+        $meaningfullPart = "Some reply\r\n";
+        $content =  $meaningfullPart . "--\n>Some reply history";
+
+        $result = $this->processor->process($content, false);
+
+        $this->assertSame($meaningfullPart, $result);
+    }
+
+    public function shouldTruncateSignatureDashDashCR	() {
+        $meaningfullPart = "Some reply\r\n";
+        $content =  $meaningfullPart . "--\r>Some reply history";
+
+        $result = $this->processor->process($content, false);
+
+        $this->assertSame($meaningfullPart, $result);
+    }
+    
+    public function shouldTruncateSignatureDashDashDashLF() {
+        $meaningfullPart = "Some reply\r\n";
+        $content =  $meaningfullPart . "---\r\n>Some reply history";
+
+        $result = $this->processor->process($content, false);
+
+        $this->assertSame($meaningfullPart, $result);
+    }
+    
+    public function shouldTruncateSignatureHR1() {
+        $meaningfullPart = "Some reply\r\n";
+        $content =  $meaningfullPart . "<hr>>Some reply history";
+
+        $result = $this->processor->process($content, false);
+
+        $this->assertSame($meaningfullPart, $result);
+    }
+    
+    public function shouldTruncateSignatureHR2() {
+        $meaningfullPart = "Some reply\r\n";
+        $content =  $meaningfullPart . "<hr/>>Some reply history";
+
+        $result = $this->processor->process($content, false);
+
+        $this->assertSame($meaningfullPart, $result);
+    }
+    
     /**
      * @test
      */

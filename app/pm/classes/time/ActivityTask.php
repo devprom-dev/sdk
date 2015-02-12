@@ -23,22 +23,7 @@ class ActivityTask extends Activity
 
 		$this->setVpdContext($task_it);
 		
-		$participant = getFactory()->getObject('Participant');
-		
-		$participant->setVpdContext($task_it);
-		
-		if ( $parms['Participant'] < 1 )
-		{
-    		$participant_it = $participant->getByRef('SystemUser', getSession()->getUserIt()->getId());
-    		
-    		$parms['Participant'] = $participant_it->getId();
-		}
-		else
-		{
-		    $participant_it = $participant->getExact($parms['Participant']);
-		}
-		
-        if ( $participant_it->getId() < 1 ) throw new Exception('Participant identifier should be passed');
+		if ( $parms['Participant'] < 1 ) $parms['Participant'] = getSession()->getUserIt()->getId();
 
 		return parent::add_parms( $parms );
 	}

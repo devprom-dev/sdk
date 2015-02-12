@@ -136,16 +136,7 @@ foreach( $filter_items as $filter )
 
 <?php if ( $filter_actions[0]['name'] != '' && $filter_modified ) { ?>
 
-<?php 
-
-$personal_script = "javascript: $('li[uid=personal-persist]>a').addClass('checked'); window.location = $('li[uid=personal-persist]>a[href]').length > 0 ? $('li[uid=personal-persist]>a').attr('href') : $('li[uid=personal-persist]>a').attr('onkeydown')";
-$project_script = 'javascript: window.location = $(\'li[uid=project-persist]>a\').attr(\'onkeydown\')';
-
-$alert_text = str_replace('%2', $project_script, str_replace('%1', $personal_script, text(1318))); 
-
-?>
-
-<div class="hidden-print alert alert-filter alert-warning"><?=$alert_text?></div>
+<div class="hidden-print alert alert-filter alert-warning"><?=$save_settings_alert?></div>
 
 <?php } ?>
 

@@ -81,7 +81,8 @@ class SortAttributeClause extends SortClauseBase
 	 				
 					if ( $ref instanceof Metaobject && $ref->getEntity()->get('IsDictionary') == 'Y' )
 					{
-						 return " (SELECT s.OrderNum FROM ".$ref->getClassName()." s WHERE s.".$ref->getClassName()."Id = ".$sql_attr.") ".$sort_type." ";
+						$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
+						return " (SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
 					}
 	 			}
 

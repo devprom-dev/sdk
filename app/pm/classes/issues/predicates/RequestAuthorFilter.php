@@ -20,8 +20,17 @@ class RequestAuthorFilter extends FilterPredicate
  		
  	 	if ( count($emails) > 0 )
  		{
- 			$predicate .= ($predicate != '' ? " OR " : "").
- 					" EXISTS (SELECT 1 FROM pm_Watcher w WHERE w.Email IN ('".join("','", $emails)."') AND w.ObjectId = t.pm_ChangeRequestId) ";
+ 			$author_it = getFactory()->getObject('IssueAuthor')->getRegistry()->Query(
+ 					array (
+ 							new FilterAttributePredicate('Caption', $emails)
+ 					)
+ 			);
+ 			$emails = $author_it->fieldToArray('Email');
+ 			if ( count($emails) > 0 )
+ 			{
+	 			$predicate .= ($predicate != '' ? " OR " : "").
+	 					" EXISTS (SELECT 1 FROM pm_Watcher w WHERE w.Email IN ('".join("','", $emails)."') AND w.ObjectId = t.pm_ChangeRequestId) ";
+ 			}
  		}
  		
  		if ( in_array('none', $emails) )

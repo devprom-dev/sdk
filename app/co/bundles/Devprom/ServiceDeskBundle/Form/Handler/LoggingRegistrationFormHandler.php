@@ -49,8 +49,7 @@ class LoggingRegistrationFormHandler extends RegistrationFormHandler
     {
         $this->container->get('session')->set('fos_user_registration/password', $user->getPlainPassword());
         parent::onSuccess($user, $confirmation);
-        $vpd = \ModelProjectOriginationService::getOrigin($this->container->getParameter('supportProjectId'));
-        $this->objectChangeLogger->logExternalUserRegistered($user, $vpd);
+        $this->objectChangeLogger->logExternalUserRegistered($user);
     }
 
 

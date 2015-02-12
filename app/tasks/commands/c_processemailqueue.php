@@ -92,8 +92,10 @@
 						"From: ".$mail->encodeAddress($from_address)."\r\n";
 				}
 				
+				/*
 				$headers .= 
 					"Reply-To: ".$mail->encodeAddress($from_address)."\r\n";
+				*/
 				
 				if ( is_object($mail) )
 				{

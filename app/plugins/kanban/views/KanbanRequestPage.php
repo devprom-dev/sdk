@@ -17,18 +17,12 @@ class KanbanRequestPage extends RequestPage
  		
  		if ( $this->needDisplayForm() ) return;
  		
- 		$table = $this->getTableRef();
- 		
- 		if ( !is_a($table, 'KanbanRequestTable') ) return;
+ 		if ( !is_a($this->getTableRef(), 'KanbanRequestTable') ) return;
 
- 		$filter = $table->getViewFilter();
- 		
- 		$filter->setDefaultValue( 'board' );
+ 		$_REQUEST['view'] = 'board';
 
  		$this->addInfoSection( new FullScreenSection() );
- 		
  		$this->addInfoSection(new KanbanComulativeFlowSection($this->getReleaseIt()));
- 		
  		$this->addInfoSection(new KanbanEstimationSection($this->getReleaseIt()));
  	}
  	

@@ -81,6 +81,8 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		        if ( !$this->methodology_it->HasFeatures() ) return false;
 		        
 		        break;
+		        
+		     case 'cms_User': return $action_kind == ACCESS_READ;
 		}
 		
 		switch ( strtolower(get_class($object)) )
@@ -143,9 +145,7 @@ abstract class AccessPolicyBase extends COAccessPolicy
 			    
 			    if ( $action_kind != ACCESS_DELETE ) return true;
 			    
-			    $participant_it = $object_it->getRef('Participant');
-			    
-			    return $participant_it->get('SystemUser') == getSession()->getUserIt()->getId();
+			    return $object_it->get('Participant') == getSession()->getUserIt()->getId();
 		} 				
 
 		return parent::getObjectAccess( $action_kind, $object_it );

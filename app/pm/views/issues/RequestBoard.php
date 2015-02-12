@@ -3,7 +3,6 @@
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
 include_once SERVER_ROOT_PATH."core/views/c_priority_view.php";
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
-include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 
 class RequestBoard extends PMPageBoard
 {
@@ -17,13 +16,13 @@ class RequestBoard extends PMPageBoard
  	private $task_target_states_array = array();
  	private $method_create_task = null;
  	private $method_comment = null;
- 	private $method_spend_time = null;
  	private $visible_column = array();
  	private $spent_time_title = '';
  	private $types_array = array();
  	private $task_uid_service = null;
  	private $estimation_actions = array();
  	private $estimation_title = '';
+ 	private $method_spend_time = null;
  	
  	function __construct( $object )
  	{
@@ -39,96 +38,65 @@ class RequestBoard extends PMPageBoard
  	function buildRelatedDataCache()
  	{
  		$object = $this->getObject();
-
+		$object_it = $object->getEmptyIterator();
+ 		
  		$this->terminal_states = $object->getTerminalStates();
- 		 
- 	 	$task = getFactory()->getObject('Task');
- 		
- 		$this->task_terminal_states = $task->getTerminalStates();
- 		
  		$this->non_terminal_states = $object->getNonTerminalStates();
  		
- 		$state_it = $task->cacheStates();
+ 	 	$task = getFactory()->getObject('Task');
+ 		$this->task_terminal_states = $task->getTerminalStates();
  		
+ 		$state_it = $task->cacheStates();
  		while( !$state_it->end() )
  		{
  			$transition_it = $state_it->getTransitionIt();
- 			 
  			$this->task_transitions_array[$state_it->get('ReferenceName')] = $transition_it;
- 			
  		 	while( !$transition_it->end() )
  			{
  				$this->task_target_states_array[$transition_it->getId()] = $transition_it->getRef('TargetState');
- 				
  				$transition_it->moveNext();
  			}
- 			
  			$state_it->moveNext();
  		}
  		
  		$method = new RequestCreateTaskWebMethod( $object->getEmptyIterator() );
- 		
  		if ( $method->hasAccess() )
  		{
  			$method->setRedirectUrl('donothing');
- 			
  			$this->method_create_task = $method;
  		}
 
  		$method = new CommentWebMethod( $object->getEmptyIterator() );
- 		
  		if ( $method->hasAccess() )
  		{
  			$method->setRedirectUrl('donothing');
- 			
  			$this->method_comment = $method;
  		}
 
- 		$method = new SpendTimeWebMethod( $object->getEmptyIterator() );
- 		
- 		if ( $method->hasAccess() )
- 		{
- 			$method->setRedirectUrl('donothing');
- 			
- 			$this->method_spend_time = $method;
- 		}
- 		
 		// cache priorities
 		$priority_it = getFactory()->getObject('Priority')->getAll();
-		
-		$object_it = $object->getEmptyIterator();
-		
 		while( !$priority_it->end() )
 		{
 			$method = new ModifyAttributeWebMethod($object_it, 'Priority', $priority_it->getId());
-				
 			if ( $method->hasAccess() )
 			{
 				$method->setCallback( "donothing" );
-					
 				$this->priority_actions[$priority_it->getId()] = array( 
 				    'name' => $priority_it->getDisplayName(),
 					'method' => $method 
 				);
 			}
-			
 			$this->priorities_array[$priority_it->getId()] = $priority_it->copy();
-			 
 			$priority_it->moveNext();
 		}
 		
-		$this->spent_time_title = $this->getObject()->getAttributeUserName('Fact');
-		
 		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
 		foreach( $strategy->getScale() as $item )
 		{
 			$method = new ModifyAttributeWebMethod($object_it, 'Estimation', $item);
-				
 			if ( $method->hasAccess() )
 			{
 				$method->setCallback( "donothing" );
-					
 				$this->estimation_actions[] = array( 
 					    'name' => ' '.$item,
 						'method' => $method 
@@ -136,7 +104,15 @@ class RequestBoard extends PMPageBoard
 			}
 		}
 		
-		$this->estimation_title = $this->getObject()->getAttributeUserName('Estimation');
+ 		$method = new SpendTimeWebMethod($object_it);
+ 		if ( $method->hasAccess() )
+ 		{
+ 			$method->setRedirectUrl('donothing');
+ 			$this->method_spend_time = $method;
+ 		}
+		
+		$this->spent_time_title = $this->getObject()->getAttributeUserName('Fact');
+ 		$this->estimation_title = $this->getObject()->getAttributeUserName('Estimation');
  	}
  	
 	function retrieve()
@@ -188,7 +164,6 @@ class RequestBoard extends PMPageBoard
 		if ( $this->getTable()->getReportBase() == 'issuesboardcrossproject' )
 		{
 			$class_name = $this->getBoardAttributeClassName();
-			
 			if ( $this->hasCommonStates() )
 			{
 		 		return getFactory()->getObject($class_name)->getRegistry()->Query(
@@ -201,9 +176,7 @@ class RequestBoard extends PMPageBoard
 			else
 			{
 	 			$metastate = getFactory()->getObject('StateMeta');
-	 			
 	 			$metastate->setAggregatedStateObject(getFactory()->getObject($class_name));
-	 			
 	 			return $metastate->getRegistry()->getAll();
 			}
 		}
@@ -236,15 +209,14 @@ class RequestBoard extends PMPageBoard
 			$fields[] = 'Estimation';
 		}
 		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasVersions() )
-		{
-			return array_merge( $fields,
-				array( 'ClosedInVersion', 'SubmittedVersion' ) );
-		}
-		else
-		{
-			return $fields;
-		}
+		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion' ) );
+	}
+	
+	function getGroup() 
+	{
+		$group = parent::getGroup();
+		if ( $group == 'OwnerUser' ) return 'Owner'; 
+		return $group;
 	}
 	
  	function getBoardAttribute()
@@ -388,7 +360,7 @@ class RequestBoard extends PMPageBoard
 							}
 						}
 					
-						if ( $this->visible_column['OrderNum'] ) {
+						if ( $this->visible_column['OrderNum'] && $object_it->get('OrderNum') != '' ) {
 							echo '<span class="order" title="'.translate('Номер').'">';
 								echo $object_it->get('OrderNum');
 							echo '</span>';
@@ -476,7 +448,7 @@ class RequestBoard extends PMPageBoard
 						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
 						{
 							echo '<div style="margin-left:4px;display: inline-block;">';
-								echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+								echo $this->getTable()->getView()->render('core/CommentsIconMini.php', array (
 										'object_it' => $object_it,
 										'redirect' => 'donothing'
 								));
@@ -550,17 +522,6 @@ class RequestBoard extends PMPageBoard
 			$actions[] = array ( 
 				'name' => $this->method_comment->getCaption(), 
 				'url' => $this->method_comment->getJSCall() 
-			);
-		}
-		
-		if ( is_object($this->method_spend_time) )
-		{
-			$this->method_spend_time->setAnchorIt($object_it);
-			
-			$actions[] = array();
-			$actions[] = array ( 
-				'name' => $this->method_spend_time->getCaption(), 
-				'url' => $this->method_spend_time->getJSCall() 
 			);
 		}
 		

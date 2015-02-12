@@ -18,36 +18,37 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 		
 		$items = array();
 
-		$module_part_it = $module->getExact('participants');
+        $module_it = $module->getExact('profile');
+		if ( getFactory()->getAccessPolicy()->can_read($module_part_it) )
+		{
+    		$items[] = $module_it->buildMenuItem();
+		}
 		
+		$module_part_it = $module->getExact('participants');
 		if ( getFactory()->getAccessPolicy()->can_read($module_part_it) )
 		{
     		$items[] = $module_part_it->buildMenuItem();
 		}
 		
-		$module_it = $module->getExact('project-settings');
-		
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-			$items['common'] = $module_it->buildMenuItem();
-		}
-
-    	$module_it = $module->getExact('methodology');
-		
+		$module_it = $module->getExact('methodology');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
     		$items[] = $module_it->buildMenuItem();
 		}
 	    
-		$module_it = $module->getExact('dicts-pmcustomattribute');
+    	$module_it = $module->getExact('project-settings');
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+		{
+			$items[] = $module_it->buildMenuItem();
+		}
 
+		$module_it = $module->getExact('dicts-pmcustomattribute');
     	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
     		$items[] = $module_it->buildMenuItem();
 		}
 		
     	$module_it = $module->getExact('rights');
-
     	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
     		$items[] = $module_it->buildMenuItem();
@@ -126,7 +127,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 	 	
         $module_it = $module->getExact('versions');
 
-    	if ( $methodology_it->HasVersions() && getFactory()->getAccessPolicy()->can_read($module_it) )
+    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
     		$items[] = $module_it->buildMenuItem();
 		}

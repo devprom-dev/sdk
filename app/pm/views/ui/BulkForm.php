@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 
 class BulkForm extends PMForm
 {
@@ -87,6 +88,9 @@ class BulkForm extends PMForm
 			case 'TransitionComment':
 				return translate('Комментарий'); 	
 				
+ 			case 'Watchers':
+ 				return translate('Наблюдатели');
+				
 			default:
 				return parent::getName( $attribute );
 		}
@@ -104,6 +108,9 @@ class BulkForm extends PMForm
 
 			case 'TransitionComment':
 				return 'largetext'; 	
+
+			case 'Watchers':
+				return 'custom';
 				
 			default:
 				if ( $this->getObject()->IsReference($attribute) && $this->getObject()->getAttributeObject($attribute) instanceof PMCustomDictionary )
@@ -331,6 +338,9 @@ class BulkForm extends PMForm
 	    {
 	        case 'State':
 	            return false;
+
+	        case 'Watchers':
+	            return true;
 	    }
 	    
 	    $type = $this->getObject()->getAttributeType($attr);
@@ -377,6 +387,19 @@ class BulkForm extends PMForm
 				
 			case 'operation':
 				$this->drawAction( $value, $tab_index );
+				break;
+				
+ 			case 'Watchers':
+				$field = new FieldWatchers( $this->getObject() );
+				$field->SetId($attribute);
+				$field->SetName('value');
+				$field->SetValue($value);
+				$field->SetTabIndex($tab_index);
+				
+				echo $this->getName($attribute);
+				echo '<span id="'.$field->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;">';
+				    $field->draw();
+				echo '</span>';
 				break;
 				
 			default:

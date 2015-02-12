@@ -80,20 +80,6 @@ class UserIterator extends OrderedIterator
  		return md5(RESET_KEY.$this->getId().$this->get_native('Login'));
  	}
  	
- 	function getAverageEfficiency()
- 	{
- 		$sql = 	" SELECT IFNULL(AVG(m.MetricValue), 0) Efficiency " .
-		 		"   FROM pm_ParticipantMetrics m, pm_Participant p " .
-		 		"  WHERE m.Participant = p.pm_ParticipantId" .
-		 		"    AND m.Metric = 'Efficiency' " .
-		 		"    AND p.SystemUser = ".$this->getId().
-		 		"    AND (SELECT COUNT(1) FROM pm_Task t WHERE t.Assignee = m.Participant) > 10 ";
- 		
- 		$it = $this->object->createSQLIterator($sql);
- 		
- 		return round($it->get('Efficiency'));
- 	}
-
 	/*
 	 * returns personal velocity for the participant 
 	 */
@@ -110,20 +96,6 @@ class UserIterator extends OrderedIterator
  		return round($it->get('Velocity'));
 	}
 
- 	function getMaxEfficiency()
- 	{
- 		$sql = 	" SELECT IFNULL(MAX(m.MetricValue), 0) Efficiency " .
-		 		"   FROM pm_ParticipantMetrics m, pm_Participant p " .
-		 		"  WHERE m.Participant = p.pm_ParticipantId" .
-		 		"    AND m.Metric = 'Efficiency' " .
-		 		"    AND p.SystemUser = ".$this->getId().
-		 		"    AND (SELECT COUNT(1) FROM pm_Task t WHERE t.Assignee = m.Participant) > 10 ";
- 		
- 		$it = $this->object->createSQLIterator($sql);
- 		
- 		return round($it->get('Efficiency'));
- 	}
- 	
  	function getRating()
  	{
  		return $this->get('Rating');

@@ -114,7 +114,7 @@ class CheckpointBase
     	
         foreach( $this->getEntries() as $entry )
         {
-            if ( $entry->enabled() && !$entry->check() )
+            if ( $entry->enabled() && $entry->notificationRequired() && !$entry->check() )
             {
             	$details[] = $entry->getTitle();
             }

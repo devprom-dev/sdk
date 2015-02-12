@@ -11,7 +11,10 @@ var documentOptions = {
 		className: '',
 		visiblePages: 20,
 		scrollable: true,
-		reorder: true
+		reorder: true,
+		is_numeric: function (input) {
+		    var RE = /^-{0,1}\d*\.{0,1}\d+$/; return (RE.test(input));
+		}
 };
 	
 var localOptions = {};
@@ -256,7 +259,7 @@ function restoreCache( callback )
 			// if there is no item then create new one
 			$('.table-inner tr#no-elements-row').remove();
 			
-			var group_selector = '.table-inner tbody tr[group-id="'+group_id+'"]';
+			var group_selector = '.table-inner tbody tr[group-id="'+group_id+'"][sort-value]';
 			
 			if ( typeof group_id != 'undefined' && $(group_selector).length > 0 )
 			{
@@ -267,17 +270,33 @@ function restoreCache( callback )
 				}
 				else if( cachedItem.attr("sort-type") == "desc" )
 				{
-					var list = $(group_selector).filter( function() {
-						return parseInt($(this).attr("sort-value")) <= parseInt(cachedItem.attr("sort-value"));
-					});
+					var list = null;
+					if ( localOptions.is_numeric(cachedItem.attr("sort-value")) ) {
+						list = $(group_selector).filter( function() {
+							return parseInt($(this).attr("sort-value")) <= parseInt(cachedItem.attr("sort-value"));
+						});
+					}
+					else {
+						list = $(group_selector).filter( function() {
+							return $(this).attr("sort-value").toString() <= cachedItem.attr("sort-value").toString();
+						});
+					}
 					
 					list.length < 1 ? $(group_selector+":first").before(cachedItem) : list.first().before(cachedItem);
 				}
 				else
 				{
-					var list = $(group_selector).filter( function() {
-						return parseInt($(this).attr("sort-value")) >= parseInt(cachedItem.attr("sort-value"));
-					});
+					var list = null;
+					if ( localOptions.is_numeric(cachedItem.attr("sort-value")) ) {
+						list = $(group_selector).filter( function() {
+							return parseInt($(this).attr("sort-value")) >= parseInt(cachedItem.attr("sort-value"));
+						});
+					}
+					else {
+						list = $(group_selector).filter( function() {
+							return $(this).attr("sort-value").toString() >= cachedItem.attr("sort-value").toString();
+						});
+					}
 					
 					list.length < 1 ? $(group_selector+":last").after(cachedItem) : list.first().before(cachedItem);  
 				}
@@ -546,6 +565,7 @@ function refreshListItems()
 	    {
 	    	if ( textStatus == "abort" ) return;
 	    	if ( xhr.responseText == "" ) return;
+	    	if ( $.inArray(xhr.status, [302,301,500,404]) != -1 ) return;
 	    	
     		setTimeout( function() {
     			restoreCache(function() {

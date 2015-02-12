@@ -21,7 +21,7 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  
  	function getSessionId()
  	{
- 		return md5(SystemDateTime::date("d.m.Y. h:i:s").$this->getUser().INSTALLATION_UID);
+ 		return md5(SystemDateTime::date("d.m.Y. h:i:s").PASS_KEY.$this->getUser().INSTALLATION_UID);
  	}
  	
  	function logon( $remember = false )

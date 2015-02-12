@@ -36,15 +36,15 @@ class IterationBurndownSection extends InfoSection
 		{
 		    echo '<tr>';
 		    
-		    $columns = $iteration_it->count() > 3 ? 3 : 2; 
+		    $columns = $iteration_it->count() > 3 ? 4 : 3; 
 		    
             while( !$iteration_it->end() && $columns-- > 0 )
             {
                 $self_project_it = $iteration_it->getRef('Project');
                 
-                echo '<td>';
-        		    echo '<table class="table"><thead><tr><th>';
-            	        echo ($self_project_it->getId() != $project_it->getId() ? '{'.$self_project_it->get('CodeName').'} ' : '').
+                echo '<td style="min-width:300px;">';
+				    echo '<table class="table"><thead><tr><th style="white-space:normal;">';
+                		echo ($self_project_it->getId() != $project_it->getId() ? '{'.$self_project_it->get('CodeName').'} ' : '').
             	            translate('Итерация').': '.$iteration_it->getDisplayName();
         		    echo '</th></tr></thead>';
         		    

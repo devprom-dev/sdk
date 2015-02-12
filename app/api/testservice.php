@@ -248,10 +248,14 @@
 		}
 	}
 
-	$test = $model_factory->getObject('TestExecution');
-	$test_id = $test->Execute( $scenario_it, $version, $env_it );
-	
-	$test_it = $test->getExact( $test_id );
+	$test = getFactory()->getObject('TestExecution');
+	$test_it = $test->getExact($test->add_parms(
+			array (
+					'TestScenario' => is_object($scenario_it) ? $scenario_it->getId() : '',
+					'Version' => $version,
+					'Environment' => is_object($env_it) ? $env_it->getId() : ''
+			)
+	));
 	return $soap->serializeToSoap( $test_it ); 
  }
 

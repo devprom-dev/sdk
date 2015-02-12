@@ -100,6 +100,23 @@ class InstallLicenseTypeForm extends AjaxForm
 	    return 'admin/InstallLicenseTypeForm.php';
 	}
 	
+    function getActions()
+    {
+		return array (
+				array (
+						'url' => "javascript: $('#action".$this->getId()."').val(1);",
+						'name' => translate('Получить ключ'),
+						'class' => 'btn-primary',
+						'type' => 'submit'
+				),
+				array (
+						'url' => "javascript: $('#action".$this->getId()."').val(3);",
+						'name' => translate('Ввести ключ'),
+						'type' => 'submit'
+				)
+		);    	
+    }
+	
 	function getRenderParms()
 	{
 		$license_it = getFactory()->getObject('LicenseState')->getAll();

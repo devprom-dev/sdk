@@ -4,13 +4,6 @@ include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorsDictionary.php";
 
 class ProjectForm extends PMPageForm
 {
-    function __construct( $project_it )
-    {
-    	$this->setObjectIt( $project_it );
-    	
-        parent::__construct( $project_it->object );
-    }
-
  	function buildModelValidator()
  	{
  		$validator = parent::buildModelValidator();

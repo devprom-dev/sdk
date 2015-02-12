@@ -8,10 +8,15 @@ class PageBoard extends PageList
     var $view;
     
     private $board_attribute_iterator = null;
+    private $plugins = null;
 
  	function PageBoard( $object ) 
 	{
 		parent::__construct( $object );
+		
+		$plugins = getSession()->getPluginsManager();
+		$this->plugins = is_object($plugins) 
+				? $plugins->getPluginsForSection(getSession()->getSite()) : array();
 	}
 
 	function setTable( & $table )
@@ -187,8 +192,18 @@ class PageBoard extends PageList
 	    $form->show($object_it);
 	    
 	    $transition_actions = $form->getTransitionActions( $object_it );
-	    
 	    if ( count($transition_actions) < 1 ) return $actions;
+
+	    $plugin_actions = array();
+    	foreach( $this->plugins as $plugin )
+		{
+			$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
+		}
+		if ( count($plugin_actions) > 0 )
+		{
+			$transition_actions[] = array();
+			$transition_actions = array_merge( $transition_actions, $plugin_actions );
+		}
 	    
 	    return array_merge(
 	    		$actions,
@@ -249,7 +264,7 @@ class PageBoard extends PageList
 		{
 			case 'Caption':
 				
-			    echo '<div  style="clear:both;padding:3px 0 0 0;height:5.0em;line-height: 16px;word-wrap:none;overflow:hidden;">';
+			    echo '<div class="bi-cap" style="clear:both;padding:3px 0 0 0;height:5.0em;line-height: 16px;word-wrap:none;overflow:hidden;">';
 					echo $object_it->getWordsOnly('Caption', 16);
 				echo '</div>';
 				

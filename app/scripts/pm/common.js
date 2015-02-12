@@ -1227,14 +1227,13 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 	registerFormValidator( function()
 	{
 		var choosen = $('#'+jqe_text_id).val();
-		
 		jqe_field = $('#'+jqe_text_id).next('input');
 		
-		if ( jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 && isNaN(choosen) )
-		{
-			jqe_field.val(choosen);
+		if ( jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 ) {
+			if ( isNaN(choosen) && (jqe_field.val() == "" || isNaN(jqe_field.val()))) {
+				jqe_field.val(choosen);
+			}
 		}
-		
 		return true;
 	});
 	
@@ -1515,7 +1514,8 @@ function completeUIExt( jqe )
 			return this.$element.offset().left < $(window).width() / 2 ? 'right' : 'left';
 		},
 		html:true,
-		trigger: 'manual'	
+		trigger: 'manual',
+		container: 'body'
 	});
 	
 	jqe.find('a.with-tooltip[info]')
@@ -1552,7 +1552,8 @@ function completeUIExt( jqe )
 
 					tooltip.attr('data-content', data);
 					tooltip.attr('loaded', 'true');
-					tooltip.data('popover').tip().find('.popover-content').css('width', $(window).width() / 3);
+					tooltip.data('popover').tip().find('.popover-content')
+						.css('width', $(window).width() / 3);
 
 					if ( tooltip.is(':hover') && tooltip.parents('.open').length < 1 )
 					{
@@ -1600,7 +1601,7 @@ function completeUIExt( jqe )
         }
         
         window.setTimeout( function() {
-        	$(boardItemOptions.itemCSSPath).width(boardItemOptions.getItemWidth());
+        	boardItemOptions.resizeCards();
         }, 50);
         
     });
@@ -2821,4 +2822,40 @@ function uiShowSpentTime()
 {
 	$('a[href*=pagesectionspenttime]').click();
 	window.scrollTo($('a[href*=pagesectionspenttime]').offset().left, $('a[href*=pagesectionspenttime]').offset().top);
+}
+
+function reloadPage()
+{
+	window.location.reload();
+}
+
+function getCheckedRows()
+{
+	ids = '';
+	$('.checkbox').each(function() {
+		if ( this.checked )
+		{
+			ids += this.name.toString().replace('to_delete_','')+'-';
+		}
+	});
+	return ids;
+}
+
+function setupLocationParameter( param )
+{
+	var location = window.location.toString();
+	location = updateLocation(param, location);
+	window.location = location; 
+}
+
+function moveNextCase()
+{
+	if ( $('.pagination a.btn-primary').length < 1 ) return;
+	try {
+		if ($('.pagination a.btn-primary').parent('li').is(':last-child')) return;
+		var nextCase = parseInt($('.pagination a.btn-primary').text());
+		setupLocationParameter('offset2='+nextCase);
+	}
+	catch(e) {
+	}
 }

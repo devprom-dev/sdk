@@ -116,11 +116,11 @@ class IterationIterator extends OrderedIterator
 		return $it->get('Workload');
 	}
 
-	function getSpentHoursByParticipant( $participant_id ) 
+	function getSpentHoursByParticipant( $user_id ) 
 	{
 		$sql = 'SELECT IFNULL(SUM(Planned - LeftWork), 0) Workload FROM pm_Task t '.
 			   ' WHERE t.Release = '.$this->getId().
-			   '   AND t.Assignee = '.$participant_id;
+			   '   AND t.Assignee = '.$user_id;
 		
 		$it = $this->object->createSQLIterator( $sql );
 		
@@ -291,10 +291,13 @@ class IterationIterator extends OrderedIterator
 
 	function getLeftWorkParticipant( $part_it ) 
 	{
+		if ( $part_it->getId() < 1 ) return 0;
+		
 		$sql = "SELECT SUM(IFNULL(t.LeftWork, 0)) leftwork ".
-			   "  FROM pm_Task t ".
+			   "  FROM pm_Task t, pm_Participant p ".
 			   " WHERE t.State <> 'resolved' ".
-			   "   AND t.Assignee = ".$part_it->getId().
+			   "   AND p.pm_ParticipantId = ".$part_it->getId().
+			   "   AND p.SystemUser = t.Assignee ".
   		 	   "   AND t.Release = " .$this->getId();
 
 		$it = $this->object->createSQLIterator( $sql );			   
@@ -353,7 +356,7 @@ class IterationIterator extends OrderedIterator
 		return array( $state_data[0], $count_data[0] );
 	}
 
-	function getParticipantInvolvement( $participant_id, $stage )
+	function getParticipantInvolvement( $user_id, $stage )
 	{
 		global $model_factory;
 		
@@ -391,7 +394,7 @@ class IterationIterator extends OrderedIterator
 			" SELECT SUM(t.Planned) ParticipantWorkload" .
 			"   FROM pm_Task t" .
 			"  WHERE t.Release = ".$this->getId().$task->getFilterPredicate('t').
-			"    AND t.Assignee = ".$participant_id;
+			"    AND t.Assignee = ".$user_id;
 
 		$it_part = $this->object->createSQLIterator($sql);
 
@@ -645,20 +648,18 @@ class IterationIterator extends OrderedIterator
 		
 		DAL::Instance()->Query("UNLOCK TABLES");
 
-		$this->part = getFactory()->getObject('pm_Participant');
-
-		$sql = " SELECT p.* " .
-				"  FROM pm_Release r, pm_Participant p " .
-				" WHERE r.pm_ReleaseId = ".$this->getId().
-				"   AND p.Project = r.Project";
-		
-		$part_it = $this->part->createSQLIterator($sql);
+		$part_it = getFactory()->getObject('User')->getRegistry()->Query(
+			array (
+				new UserWorkerPredicate(),
+				new UserParticipatesDetailsPersister()
+			)
+		);
 		$release_capacity = $this->getCurrentCapacity();
 		
 		$metrics = array();
 		while ( !$part_it->end() )
 		{
-			$required_capacity = $part_it->getCapacity() * $release_capacity;
+			$required_capacity = $part_it->get('Capacity') * $release_capacity;
 			$spent_hours = $this->getSpentHoursByParticipant( $part_it->getId() );
 
 			if ( $required_capacity > 0 )

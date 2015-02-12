@@ -27,25 +27,33 @@ class FieldParticipantDictionary extends FieldDictionary
 	{
  		$part_it = $this->getObject()->getRegistry()->Query(
  				array (
- 						new FilterBaseVpdPredicate(),
- 						new SortAttributeClause('ProjectRole'),
- 						new FilterAttributePredicate('IsActive', 'Y')
+ 						new UserWorkerPredicate(),
+ 						new UserParticipatesDetailsPersister()
  				)
 		);
 
- 		$options = array();
+ 		$groups = array();
 	    
 	 	while ( !$part_it->end() ) 
  		{
-		    $options[] = array (
+		    $groups[$part_it->get('ProjectRole')][] = array (
 		        'value' => $part_it->getId(),
-                'caption' => $part_it->getDisplayName(),
-                'group' => $part_it->get('ProjectRole')
+                'caption' => $part_it->getDisplayName()
             );
  			
  			$part_it->moveNext();
  		}
+ 		
+ 		$options = array();
+ 		
+ 		foreach( $groups as $group => $items )
+ 		{
+ 			foreach( $items as $item )
+ 			{
+ 				$options[] = array_merge( $item, array('group' => $group) );
+ 			}
+ 		}
 
-		return $options;
+ 		return $options;
 	}
 }

@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
+
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 
 class ProcessStatistics extends TaskCommand
@@ -59,12 +61,13 @@ class ProcessStatistics extends TaskCommand
 		$project = $model_factory->getObject('pm_Project');
 		
 		$project_it = $project->getInArray('pm_ProjectId', $chunk );
-		
+
 		while ( !$project_it->end() )
 		{
 			$session = new PMSession($project_it->get('CodeName'), $auth_factory);
-			
-			$project_it->storeMetrics();
+
+			$service = new StoreMetricsService();
+			$service->execute($project_it);
 			
 			$project_it->moveNext();
 		}

@@ -32,6 +32,19 @@ class MailBox
 		$this->from_address = $from_address;
 	}
 	
+	function setFromUser( $user_it )
+	{
+		$this->from_address = $this->quoteEmail($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
+	}
+	
+ 	private function quoteEmail( $email )
+ 	{
+ 		if ( strpos($email,",") !== false ) {
+ 			$email = '"'.trim($email, '"').'"'; 
+ 		}
+ 		return $email;
+ 	}
+	
 	function send()
 	{
 		$configuration = getConfiguration();

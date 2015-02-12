@@ -9,6 +9,6 @@ class ParticipantIterationInvolvedPredicate extends FilterPredicate
 	        return " AND 1 = 2 ";
 	    }
 	    
-	    return " AND EXISTS (SELECT 1 FROM pm_Task s WHERE s.Assignee = t.pm_ParticipantId AND s.Release = ".$filter->getId().") ";
+	    return " AND EXISTS (SELECT 1 FROM pm_Task s WHERE s.Assignee = t.SystemUser AND s.Release = ".$filter->getId().") ";
  	}
 }

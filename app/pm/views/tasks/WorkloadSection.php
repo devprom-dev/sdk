@@ -4,6 +4,58 @@ include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersist
 
 class WorkloadSection extends InfoSection
 {
+	private $data = array();
+	
+	public function __construct()
+	{
+		parent::__construct();
+		$this->data = $this->buildData();
+	}
+	
+	protected function buildData()
+	{
+		$data = array();
+		
+		$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+				array (
+						new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+						new FilterVpdPredicate(),
+						new EntityProjectPersister(),
+						new SortAttributeClause('Project')
+				)
+		);
+		
+		while ( !$iteration_it->end() )
+		{
+				$part_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
+						array (
+								new ParticipantIterationInvolvedPredicate($iteration_it),
+								new FilterAttributePredicate('Project', $iteration_it->get('Project'))
+						)
+				);
+				
+				if ( $part_it->count() < 1 )
+				{
+					$iteration_it->moveNext();
+					continue;
+				}
+
+				$data[] = array (
+						'iteration' => $iteration_it->copy(),
+						'participant' => $part_it->copyAll()
+				);
+				
+				$iteration_it->moveNext();
+		}
+		
+		return $data;
+	}
+	
+	function getData()
+	{
+		return $this->data;
+	}
+	
  	function getCaption()
  	{
  		return text(716);
@@ -17,44 +69,22 @@ class WorkloadSection extends InfoSection
  	function drawBody()
  	{
  		$project_it = getSession()->getProjectIt();
- 		
-		$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
-				array (
-						new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
-						new FilterVpdPredicate(),
-						new EntityProjectPersister(),
-						new SortAttributeClause('Project')
-				)
-		);
-
 		$uid = new ObjectUID;
 		
 		echo '<table>';
-
-		while ( !$iteration_it->end() )
+		for( $i = 0; $i < count($this->data); )
 		{
 		    echo '<tr>';
-			$columns = $iteration_it->count() > 3 ? 2 : 2; 
+			$columns = count($this->data) > 3 ? 3 : 2; 
 		    
-            while( !$iteration_it->end() && $columns-- > 0 )
+            while( $i < count($this->data) && $columns-- > 0 )
             {
-				$part_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
-						array (
-								new ParticipantIterationInvolvedPredicate($iteration_it),
-								new FilterAttributePredicate('Project', $iteration_it->get('Project'))
-						)
-				);
-				
-				if ( $part_it->count() < 1 )
-				{
-					$iteration_it->moveNext();
-					continue;
-				}
-				
+            	$iteration_it = $this->data[$i]['iteration'];
+				$part_it = $this->data[$i]['participant'];
             	$self_it = $iteration_it->getRef('Project');
                 
-                echo '<td>';
-				    echo '<table class="table"><thead><tr><th>';
+                echo '<td style="min-width:300px;">';
+				    echo '<table class="table"><thead><tr><th style="white-space:normal;">';
 	        	        echo ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
 	        	            translate('Итерация').': '.$iteration_it->getDisplayName();
 	    		    echo '</th></tr></thead>';
@@ -63,13 +93,10 @@ class WorkloadSection extends InfoSection
 	        		    $this->drawIteration($iteration_it, $part_it);
 	    		    echo '</td></tr></tbody></table>';
     		    echo '</td>';
-    		    
-    		    $iteration_it->moveNext();
+    		    $i++;
     		}
-    		
     		echo '</tr>';
 		}
-		
 		echo '</table>';
 	}
 	

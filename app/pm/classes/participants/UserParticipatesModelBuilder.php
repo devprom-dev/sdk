@@ -3,7 +3,6 @@
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 
 include "UserParticipanceType.php";
-include "persisters/UserParticipatesDetailsPersister.php";
 include "predicates/UserParticipanceTypePredicate.php";
 include "predicates/UserParticipanceRolePredicate.php";
 include "predicates/UserParticipanceWorkloadPredicate.php";

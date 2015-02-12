@@ -5,12 +5,17 @@
 
 include 'MenuCustomizationTable.php';
 
-class MenuCustomizationPage extends PMPage {
-    
+class MenuCustomizationPage extends PMPage
+{
     public function getTable()
     {
 		return new MenuCustomizationTable(getFactory()->getObject('pm_Workspace'));
     }
+
+ 	function getModule()
+ 	{
+ 		return 'navigation-settings';
+ 	}
     
  	function getFullPageRenderParms()
  	{
@@ -19,14 +24,11 @@ class MenuCustomizationPage extends PMPage {
  		unset($parms['areas']);
  		
  		$parms['inside'] = true;
- 		
  		$parms['has_horizontal_menu'] = false;
- 		
  		$parms['reports_edit_url'] = getFactory()->getObject('Module')->getExact('project-reports')->get('Url');
- 		
- 		$parms['close_url'] = strpos($_SERVER['HTTP_REFERER'], '/menu/') === false ? $_SERVER['HTTP_REFERER'] : getSession()->getApplicationUrl();  
-
- 		$parms['hint_top'] = getFactory()->getObject('UserSettings')->getSettingsValue('navigations-hint') != 'off' ? text(1806) : '';
+ 		$parms['close_url'] = strpos($_SERVER['HTTP_REFERER'], '/menu/') === false ? $_SERVER['HTTP_REFERER'] : getSession()->getApplicationUrl();
+ 		$parms['hint_top'] = $parms['hint'];
+ 		$parms['hint'] = '';  
  		
  		return $parms;
  	}

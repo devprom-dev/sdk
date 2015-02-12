@@ -1,5 +1,7 @@
 <?php
 
+namespace Devprom\Component\HttpKernel;
+
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Kernel;
@@ -10,19 +12,18 @@ class ServiceDeskAppKernel extends Kernel
     public function registerBundles()
     {
         $bundles = array(
-            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
-            new Symfony\Bundle\SecurityBundle\SecurityBundle(),
-            new Symfony\Bundle\MonologBundle\MonologBundle(),
-            new Symfony\Bundle\AsseticBundle\AsseticBundle(),
-            new Symfony\Bundle\TwigBundle\TwigBundle(),
-            new Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle(),
-            new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
-            new Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle(),
-            new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
-            new FOS\UserBundle\FOSUserBundle(),
-
-            new Devprom\CommonBundle\CommonBundle(),
-            new Devprom\ServiceDeskBundle\DevpromServiceDeskBundle(),
+            new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new \Symfony\Bundle\SecurityBundle\SecurityBundle(),
+            new \Symfony\Bundle\MonologBundle\MonologBundle(),
+            new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
+            new \Symfony\Bundle\TwigBundle\TwigBundle(),
+            new \Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle(),
+            new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+            new \Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle(),
+            new \Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
+            new \FOS\UserBundle\FOSUserBundle(),
+            new \Devprom\CommonBundle\CommonBundle(),
+            new \Devprom\ServiceDeskBundle\DevpromServiceDeskBundle(),
         );
 
         /*
@@ -94,8 +95,8 @@ class ServiceDeskAppKernel extends Kernel
             $baseUrl = $pathParts['path'];
             return array($requestScheme, $host, $baseUrl);
         } else {
-            $requestScheme = EnvironmentSettings::getServerSchema();
-            $host = EnvironmentSettings::getServerName();
+            $requestScheme = \EnvironmentSettings::getServerSchema();
+            $host = \EnvironmentSettings::getServerName();
             $baseUrl = "/servicedesk";
             return array($requestScheme, $host, $baseUrl);
         }

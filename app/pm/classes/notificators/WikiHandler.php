@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
+include_once SERVER_ROOT_PATH."ext/htmldiff/html_diff.php";
 include_once "EmailNotificatorHandler.php";
 
 class WikiHandler extends EmailNotificatorHandler
@@ -14,7 +15,6 @@ class WikiHandler extends EmailNotificatorHandler
 		switch ( $object_it->object->getReferenceName() )
 		{
 			case WikiTypeRegistry::Requirement:
-				
 		 		// notification will be sent only if content of the requirement was changed
 		 		if ( $action == 'modify' && $object_it->get('Content') != $prev_object_it->get('Content') )
 		 		{
@@ -23,132 +23,105 @@ class WikiHandler extends EmailNotificatorHandler
 		 			
 		 			if ( $state_it->get('ReferenceName') != 'submitted' )
 		 			{ 
-		 				$part_it = $project_it->getParticipantIt();
-		 				
-		 				while ( !$part_it->end() )
-		 				{
-							array_push($result, $part_it->getId());
-		 					$part_it->moveNext();
-		 				}
+		 				return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
 		 			}
 		 		}
-		 		
 		 		break;
 		 		
 			case WikiTypeRegistry::KnowledgeBase:
-				
-				$part_it = $project_it->getParticipantIt();
-				
-				while ( !$part_it->end() )
-				{
-					array_push($result, $part_it->getId());
-					$part_it->moveNext();
-				}
-				break;
+				return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
 		}
 		
 		return $result;
 	}	
  	
-	function getDiff( & $editor, & $change_it, & $object_it )
+	protected function getFields( $action, $object_it, $prev_object_it )
 	{
-	    $prev_content = html_entity_decode( $change_it->getHtmlDecoded('Content'), ENT_QUOTES | ENT_HTML401, 'cp1251' );
-	    
-	    $curr_content = html_entity_decode( $object_it->getHtmlDecoded('Content'), ENT_QUOTES | ENT_HTML401, 'cp1251' );
-	    
-	    $html2text = new Html2Text($prev_content);
-	    
-	    $prev_content = $html2text->get_text(); //preg_replace('/[\r\n]+/', '<br/>', $html2text->get_text());
-	    
-	    $html2text = new Html2Text($curr_content);
-	    
-	    $curr_content = $html2text->get_text(); //preg_replace('/[\r\n]+/', '<br/>', $html2text->get_text());
-	    	  
-	    return $editor->getDiff( $prev_content, $curr_content );
+		$fields = parent::getFields( $action, $object_it, $prev_object_it );
+		
+		if ( $action == 'modify' )
+		{
+			$change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('WikiPage', $object_it->getId()),
+							new SortRecentClause()
+					)
+				);
+
+			$editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
+			$editor->setObjectIt( $object_it );
+			
+			$diff_content = $this->getDiff( $editor, $change_it, $object_it );
+			
+			$diff_content = str_replace("diff-html-removed", '" style="background:#F59191;', $diff_content);
+			$diff_content = str_replace("diff-html-added", '" style="background:#90EC90;', $diff_content);
+			
+			$fields['Content']['value'] = $diff_content;
+			unset($fields['Content']['was_value']);
+		}
+		
+		return $fields;
 	}
 	
-	function getBody( $action, $object_it, $prev_object_it, $recipient )
+	protected function getDiff( & $editor, & $change_it, & $object_it )
 	{
-		global $model_factory;
+		$parser = $editor->getComparerParser();
 
-		$body = '';
-
-		switch ( $action )
+ 		$diff = html_diff(
+						IteratorBase::wintoutf8($parser->parse($change_it->getHtmlDecoded('Content'))),
+	 					IteratorBase::wintoutf8($parser->parse($object_it->getHtmlDecoded('Content')))
+		);
+			
+ 		if ( strpos($diff, "diff-html-") !== false )
+ 		{
+ 			return IteratorBase::utf8towin( $diff );  
+ 		}
+ 		else
+ 		{
+ 			return $editor->getPageParser()->parse($object_it->getHtmlDecoded('Content'));
+ 		}
+	}
+		
+	public static function getValue( $object_it, $attr )
+	{
+		switch ( $attr )
 		{
-			case 'modify':
-				if ( $object_it->get('IsArchived') != $prev_object_it->get('IsArchived') )
-				{
-					if ( $object_it->get('IsArchived') == 'Y' )
-					{
-						return text(836);
-					}
-					else
-					{
-						return text(837);
-					}
-				}
-				
-				// the last change of the page
-				$change = $model_factory->getObject('WikiPageChange');
-		        
-				$change->defaultsort = 'RecordCreated DESC';
-		        
-				$change_it = $change->getByRefArray(array('WikiPage' => $object_it->getId()), 1);
-								
-				// the current page text
-				$body = '<h3>'.$object_it->get('Caption').'</h3>';
-
-				$editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
-				
+			case 'Content':
+				$editor = WikiEditorBuilder::build( $object_it->get('ContentEditor') );
 				$editor->setObjectIt( $object_it );
-				
-				$diff = $this->getDiff( $editor, $change_it, $object_it );
-
-		        $body .= '<br/>';
-
-		        if ( $diff == '' ) 
-		        {
-		         	$body .= translate('Нет изменений');
-		        }
-		        else 
-		        {
-		        	if ( strlen($diff) > 5000 )
-		        	{
-		        		$body .= '<a href="'._getServerUrl().$object_it->getHistoryUrl().'">'.
-		        			translate('История изменений').'</a>';
-		        	}
-		        	else
-		        	{
-		        		$body .= $diff;
-		        	}
-		        }
-		       
-				$body = str_replace(chr(10), '', $body);
-				return $body.'<br/><br/>'; 
-
-			case 'add':
-				$more_text = false;
-				
-				$editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
-
-				$editor->setObjectIt( $object_it );
-				
-				$url = $this->getObjectItUid($object_it);
-				
-				$body = '<h3>'.$object_it->get('Caption').'</h3><br/>';
 				
 				$parser = $editor->getHtmlParser();
+				$parser->setObjectIt( $object_it );
+				return $parser->parse($object_it->getHtmlDecoded('Content'));
 				
-				$body .= $parser->parse_substr( $object_it->getHtmlDecoded('Content'), 620, $more_text );
-		
-				if ( $more_text )
-				{
-					$body .= '<br/><br/><a href="'.
-						$this->getObjectItUid($object_it).'">'.translate('читать дальше').'</a>';
-				}
-					
-				$body = str_replace(chr(10), '', $body);
-				return $body;	
+			default:
+				return parent::getValue( $object_it, $attr );
 		}
-	}	
+	}
+
+	protected function IsAttributeVisible( $attribute_name, $object_it, $action )
+	{
+		switch ( $attribute_name )
+		{
+			case 'Content':
+				return true;
+				
+			default:
+				return parent::IsAttributeVisible( $attribute_name, $object_it, $action );
+		}		
+	}
+	
+	protected function IsAttributeRequired( $attribute_name, $object_it, $action )
+	{
+		switch ( $attribute_name )
+		{
+			case 'Caption':
+			case 'Author':
+			case 'ParentPage':
+				return false;
+				
+			default:
+				return parent::IsAttributeRequired( $attribute_name, $object_it, $action );
+		}
+	}
 }
