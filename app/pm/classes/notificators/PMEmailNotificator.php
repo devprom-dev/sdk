@@ -421,7 +421,11 @@ class PMEmailNotificator extends EmailNotificator
 				}
 				
 			case 'pm_ChangeRequest':
-
+				if ( $action == 'add' && $attribute_name == 'ExternalAuthor' && $object_it->get('ExternalAuthor') != '' )
+				{
+					return true;
+				}
+				
 				return parent::isAttributeVisible( $attribute_name, $object_it, $action );
 
 			default:	

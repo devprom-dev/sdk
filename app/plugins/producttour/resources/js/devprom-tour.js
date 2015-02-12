@@ -71,7 +71,7 @@ var tour = new Tour({
 	  }
 	],
 	name: "devpromTour",
-	duration: 1000 * 60,
+	duration: 1000 * 20,
 	template: 
 		"<div class='popover tour' style='max-width:450px;'>"+
 		  "<div class='arrow'></div>"+

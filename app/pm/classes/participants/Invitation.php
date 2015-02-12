@@ -26,7 +26,7 @@ class Invitation extends Metaobject
 		return new InvitationIterator($this);
 	}
 	
-	function getPageNameObject()
+	function getPageName()
 	{
 		return getSession()->getApplicationUrl($this).'invite';
 	}

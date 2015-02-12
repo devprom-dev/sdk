@@ -37,7 +37,10 @@ class UserServiceTest extends PHPUnit_Framework_TestCase {
                 $user->setPassword(md5($user->getPassword()));
                 return $user;
             }));
-        $this->service = new \Devprom\ServiceDeskBundle\Service\UserService($this->userManager, $this->mailer);
+        $this->entityManager = $this->getMockBuilder("Doctrine\ORM\EntityManager")
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->service = new \Devprom\ServiceDeskBundle\Service\UserService($this->entityManager, $this->userManager, $this->mailer);
     }
 
 

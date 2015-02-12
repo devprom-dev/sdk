@@ -719,11 +719,15 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 					}
 
 					$mapper = new ModelDataTypeMapper();
-
 					$mapper->map( $embedded, $parms );
-
+					
 					if ( $_REQUEST[$field_id] > 0 )
 					{
+						$embedded_it = $embedded->getExact($_REQUEST[$field_id]);
+						
+						if ( $embedded_it->getId() < 1 ) continue;
+						if ( !getFactory()->getAccessPolicy()->can_modify($embedded_it) ) continue; 
+						
 					    if ( is_callable($process_record_callback, true, $how_to_call) )
 					    {
 					        if ( $process_record_callback( $embedded, $field_id, $anchor_field, $prefix, $i ) ) continue;
@@ -749,7 +753,6 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 									if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
 								}
 							}
-	
 				
 							$embedded->modify_parms($_REQUEST[$field_id], $parms);  
 
@@ -758,7 +761,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 							$this->processAdded( $item_it );
 						}
 					}
-					else if ( count($parms) > 0 )
+					else if ( count($parms) > 0 && getFactory()->getAccessPolicy()->can_create($embedded) )
 					{
 						$parms[$anchor_field] = $object_it->getId();
 	

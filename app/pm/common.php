@@ -25,9 +25,9 @@ if ( $state->IsMaintained() )
 	exit(header('Location: /503'));
 }
  
-if ( $_REQUEST['project'] == '' )
+if ( $_REQUEST['project'] == '')
 {
- 	exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+ 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 // resolve project code
@@ -68,20 +68,20 @@ $project_it = getSession()->getProjectIt();
 
 if ( !is_object($project_it) )
 {
- 	exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+ 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 if ( $project_it->getId() < 1 )
 {
- 	exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+ 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 if ( getSession()->getUserIt()->getId() < 1 )
 {
-	exit(header('Location: /login?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /login?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 if ( !getFactory()->getAccessPolicy()->can_read($project_it) )
 {
-	exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }

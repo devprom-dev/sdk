@@ -319,6 +319,11 @@ class PageList extends ListTable
 		return $this->getPages() > 1;
 	}
 	
+	function IsNeedHeader()
+	{
+		return true;
+	}
+	
 	function getColumnVisibility( $attr )
 	{
 		$filter_values = $this->getFilterValues();
@@ -649,9 +654,7 @@ class PageList extends ListTable
 	    	$plugin_actions = array();
 	    	
     		$plugins = getSession()->getPluginsManager();
-		
 			$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection(getSession()->getSite()) : array();
-			
 			foreach( $plugins_interceptors as $plugin )
 			{
 				$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
@@ -660,7 +663,6 @@ class PageList extends ListTable
 			if ( count($plugin_actions) > 0 )
 			{
 				array_push($actions, array( '' ) );
-				
 				$actions = array_merge( $actions, $plugin_actions );
 			}
 			
@@ -1094,7 +1096,8 @@ class PageList extends ListTable
 			'scrollable' => false,
 			'reorder' => false,
 			'sort_field' => $sort_field,
-			'sort_type' => $sort_type
+			'sort_type' => $sort_type,
+			'show_header' => $this->IsNeedHeader()
 		);
 	}
 	

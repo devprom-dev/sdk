@@ -18,6 +18,7 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
     			'IssueState' => 'Requests',
     			'RequestType' => 'Requests',
      	        'Feature' => 'Requests',
+     			'FeatureType' => 'Requests',
     		    'TaskType' => 'Requests',
     			'PMBlogPost' => 'Blog',
     			'BlogPostFile' => 'Blog',

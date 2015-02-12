@@ -27,6 +27,7 @@ include 'parsers/WikiIteratorExportRtf.php';
 include 'parsers/WikiIteratorExportCHM.php';
 include "import/ImportWikiPageFromExcelSection.php";
 include "import/ImportExcelForm.php";
+include "WikiIncludeForm.php";
 
 class PMWikiUserPage extends PMPage
 {
@@ -136,6 +137,8 @@ class PMWikiUserPage extends PMPage
  	function getForm() 
  	{
  		if ( $_REQUEST['view'] == 'import' ) return new ImportExcelForm($this->getObject());
+ 		
+ 		if ( $_REQUEST['Include'] != '' ) return new WikiIncludeForm($this->getObject());
  		
  		return parent::getForm();
  	}

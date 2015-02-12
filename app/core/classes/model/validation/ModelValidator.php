@@ -18,6 +18,11 @@ class ModelValidator
 		$this->instance_validators[] = $validator;
 	}
 	
+	public function insertValidator( $validator )
+	{
+		array_unshift($this->instance_validators, $validator);
+	}
+		
 	public function validate( Metaobject $object, array & $parms )
 	{
 		foreach( $this->instance_validators as $validator )

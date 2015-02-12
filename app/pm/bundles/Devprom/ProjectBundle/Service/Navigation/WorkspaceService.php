@@ -195,9 +195,7 @@ class WorkspaceService
 	
 	public function removeWorkspace( $area_id )
 	{
-		$workspace = getFactory()->getObject('Workspace');
-		
-		$workspace_it = $workspace->getRegistry()->Query( 
+		$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->Query( 
 					array (
 							new \FilterAttributePredicate('UID', $area_id),
 							new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
@@ -208,6 +206,22 @@ class WorkspaceService
 		if ( $workspace_it->getId() < 1 ) return;
 		
 		$workspace_it->delete();
+	}
+	
+	public function removeWorkspaces()
+	{
+		$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->Query( 
+					array (
+							new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
+							new \FilterBaseVpdPredicate()
+					)
+			);
+		
+		while( !$workspace_it->end() )
+		{
+			$workspace_it->delete();
+			$workspace_it->moveNext();
+		}
 	}
 	
 	public function storeReportToWorkspace( $report, $workspace_uid = FUNC_AREA_FAVORITES )

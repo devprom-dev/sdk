@@ -1,10 +1,10 @@
 <?php
 
-include "classes/Subversion.php";
-include "classes/SubversionRevision.php";
-include "classes/SubversionUser.php";
-include "classes/SubversionAuthor.php";
-include 'SourceControlPMPlugin.php';
+include_once "classes/Subversion.php";
+include_once "classes/SubversionRevision.php";
+include_once "classes/SubversionUser.php";
+include_once "classes/SubversionAuthor.php";
+include_once 'SourceControlPMPlugin.php';
 
 class SourceControlPlugin extends PluginBase
 {

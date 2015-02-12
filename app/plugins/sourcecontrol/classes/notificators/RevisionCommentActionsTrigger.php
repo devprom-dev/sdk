@@ -13,9 +13,9 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 {
     private $session;
     
-    function __construct( PMSession & $session )
+    function __construct( PMSession $session )
     {
-        $this->session =& $session;
+        $this->session = $session;
         
         parent::__construct();
     }
@@ -31,7 +31,7 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	
 	function getExpression()
 	{
-		$expression = '/([TI]{1}-[\d]+[^\#]*)((\#(resolve|%STATES)[^\#]*)|(\#time\s+([\d]+d\s?)?([\d]+h)?[^\#]*)|(\#comment\s+([^$]+)))*/i';
+		$expression = '/([TI]{1}-[\d]+[^\]\#]*)((\#(resolve|%STATES)[^\#]*)|(\#time\s+([\d]+d\s?)?([\d]+h)?[^\#]*)|(\#comment\s+([^$]+)))*/i';
 		
 		$states = array_merge(
 				getFactory()->getObject('Request')->getStates(),
@@ -101,7 +101,7 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	 	
 	    if ( $methodology_it->IsTimeTracking() && is_object($committer_it) && $committer_it->getId() > 0 && $spent_hours > 0 )
 	    {
-	        $this->addWorkLog( $objects, $committer_it, $spent_hours );
+	        $this->addWorkLog( $objects, $committer_it->getRef('SystemUser'), $spent_hours );
 	    }
 	    
 	    $target_state = trim($match_result[TASKS_STATE][$index], ' #');

@@ -27,9 +27,10 @@ $project_it = $session->getProjectIt();
     	</a>
 	</div>    	
 	
+	<?php $subprojects_count = count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]); ?>
 	<?php if( is_array($project_navigation_parms) ) { ?>
 	
-	<?php if ( $project_navigation_parms['current_project'] == $project_navigation_parms['current_portfolio'] ) { ?>
+	<?php if ( $project_navigation_parms['current_project'] == $project_navigation_parms['current_portfolio'] && $subprojects_count > 0 ) { ?>
 
 	<div class="btn-group">
 	  <a id="navbar-portfolio" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
@@ -55,7 +56,7 @@ $project_it = $session->getProjectIt();
 	
 	<div class="btn-group">
 	
-    <?php if( count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]) > 1 ) { ?>
+    <?php if( $subprojects_count > 1 ) { ?>
   		<a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
     		<?=$project_navigation_parms['current_project_title']?> 
     		<span class="caret"></span>
@@ -68,7 +69,7 @@ $project_it = $session->getProjectIt();
 	  }
 	  ?>
   		
-    <?php } else { ?>
+    <?php } elseif ( $subprojects_count > 0 ) { ?>
   		<a id="navbar-project" class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_project']?>">
     		<?=$project_navigation_parms['current_project_title']?> 
     	</a>

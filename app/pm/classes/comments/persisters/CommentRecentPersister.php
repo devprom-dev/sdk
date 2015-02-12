@@ -16,7 +16,7 @@ class CommentRecentPersister extends ObjectSQLPersister
  			"( SELECT COUNT(1) FROM Comment so ".
  			"   WHERE so.ObjectId = ".$this->getPK($alias).
  			"     AND LCASE(so.ObjectClass) = '".strtolower(get_class($this->getObject()))."' ) CommentsCount ";
- 		
+
  		return $columns;
  	}
 }

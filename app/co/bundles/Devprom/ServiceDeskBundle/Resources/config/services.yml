@@ -51,6 +51,7 @@ services:
     user_service:
         class: Devprom\ServiceDeskBundle\Service\UserService
         arguments:
+            em: "@doctrine.orm.entity_manager"
             userManager: "@fos_user.user_manager"
             mailer: "@servicedesk_mailer"
     issue_service:

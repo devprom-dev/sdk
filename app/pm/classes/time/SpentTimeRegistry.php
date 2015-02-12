@@ -15,7 +15,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 	
  	function createSQLIterator( $sql ) 
  	{
-		$participants = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
+		$participant_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
 					array_merge (
 							array (
 									new FilterAttributePredicate('Project',
@@ -27,7 +27,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 							),
 							$this->getObject()->getParticipantFilters()
 					)
-			)->idsToArray();
+			);
 		 		
 		$this->report_year = $this->getObject()->getReportYear();
 		
@@ -39,7 +39,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		
 		if ( $this->getObject()->getView() == 'participants' || $this->getObject()->getGroup() == 'SystemUser' )
 		{
-    		$sql = " SELECT p.SystemUser ItemId, 'Participant' Item, p.pm_ParticipantId Participant, 1 SortOrder " .
+    		$sql = " SELECT p.SystemUser ItemId, 'Participant' Item, p.SystemUser Participant, 1 SortOrder, p.VPD  " .
     			   "   FROM pm_Participant p ";
     			
     		array_push($sql_array, $sql);
@@ -48,7 +48,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		if ( $this->getObject()->getView() == 'projects' || $this->getObject()->getGroup() == 'Project' )
 		{
     		$projects_sql = 
-    			   " SELECT p.Project ItemId, 'Project' Item, p.pm_ParticipantId Participant, 2 SortOrder " .
+    			   " SELECT p.Project ItemId, 'Project' Item, p.SystemUser Participant, 2 SortOrder, p.VPD " .
     			   "   FROM pm_Participant p ";
     				    
     		array_push($sql_array, $projects_sql);
@@ -58,10 +58,10 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		
  		if ( $this->view == 'tasks' )
 		{
-			$sql = " SELECT t.pm_TaskId ItemId, 'Task' Item, t.Participant, 3 SortOrder " .
+			$sql = " SELECT t.pm_TaskId ItemId, 'Task' Item, t.Participant, 3 SortOrder, t.VPD " .
 				   "   FROM ( " .
 						   " SELECT a.Task pm_TaskId, MIN(".preg_replace('/%1/', "a.ReportDate", $group_function).") SortColumn, ".
-						   "        a.Participant " .
+						   "        a.Participant, a.VPD " .
 						   "   FROM pm_Activity a " .
 						   "  WHERE 1 = 1 ".
             			  ($this->report_year > 0 ? " AND YEAR(a.ReportDate) = ".$this->report_year : "").
@@ -74,10 +74,10 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		}
 		else if ( $this->view == 'issues' || count($sql_array) < 1 )
 		{
-			$sql = " SELECT t.ChangeRequest ItemId, 'ChangeRequest' Item, t.Participant, 3 SortOrder " .
+			$sql = " SELECT t.ChangeRequest ItemId, 'ChangeRequest' Item, t.Participant, 3 SortOrder, t.VPD " .
 				   "   FROM ( " .
 						   " SELECT t.ChangeRequest, MIN(".preg_replace('/%1/', "a.ReportDate", $group_function).") RecordModified, ".
-						   "        a.Participant " .
+						   "        a.Participant, a.VPD " .
 						   "   FROM pm_Activity a, pm_Task t " .
 						   "  WHERE 1 = 1 ".
             			  ($this->report_year > 0 ? " AND YEAR(a.ReportDate) = ".$this->report_year : "").
@@ -95,8 +95,9 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		       "                ".( $this->getObject()->getGroup() != 'SystemUser' ? 'GROUP_CONCAT(DISTINCT CAST(p.SystemUser AS CHAR))' : 'p.SystemUser')." SystemUser " .
 			   "           FROM (".join(' UNION ', $sql_array).") t," .
 			   "		        pm_Participant p " .
-			   "          WHERE t.Participant IN (".join($participants,',').")" .
-			   "            AND t.Participant = p.pm_ParticipantId ".
+			   "          WHERE p.pm_ParticipantId IN (".join($participant_it->idsToArray(),',').")" .
+			   "            AND t.Participant = p.SystemUser ".
+			   "			AND t.VPD = p.VPD ".
 		       "          ".( $this->getObject()->getGroup() != 'SystemUser' ? 'GROUP BY 1, 2' : '' ).
 		       ( $this->getObject()->getGroup() != 'Project'
 			   ? "          ORDER BY (SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = p.SystemUser), p.Project, t.SortOrder "
@@ -139,12 +140,10 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		}
 		
 		$activity = $this->getObject()->getActivityObject();			
-
 		$activity->addFilter( new ActivityReportYearPredicate($this->report_year) );
-
 		$activity->addFilter( new ActivityReportMonthPredicate($this->report_month) );
-		
-		$activity->addFilter( new FilterAttributePredicate('Participant', $participants) );
+		$activity->addFilter( new FilterAttributePredicate('Participant', $participant_it->fieldToArray('SystemUser')) );
+		$activity->addFilter( new FilterVpdPredicate() );
 		
 		$reported_it = $activity->getReported("p.SystemUser", $group_function);
 		

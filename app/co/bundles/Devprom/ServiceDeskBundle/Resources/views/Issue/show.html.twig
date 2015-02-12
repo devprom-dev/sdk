@@ -46,14 +46,20 @@
 
                     <div class="col-sm-4">
                         <div class="well">
-                        <table class="table">
+                        <table class="table" style="margin-bottom:0;">
                             <tr>
                                 <td>{{ 'issue_issueType'|trans }}</td>
                                 <td class="issue_issueType">{{ issue.issueType.name|trans }}</td>
                             </tr>
                             <tr>
                                 <td>{{ 'issue_product'|trans }}</td>
-                                <td class="issue_product">{{ issue.product|unescapeHtml }}</td>
+                                <td class="issue_product">
+                                {% if issue.product != "" %}
+                                    {{ issue.product|unescapeHtml }}
+                                {% else %}
+                                    {{ issue.project|unescapeHtml }}
+                                {% endif %}
+                                </td>
                             </tr>
                             <tr>
                                 <td>{{ 'issue_state'|trans }}</td>

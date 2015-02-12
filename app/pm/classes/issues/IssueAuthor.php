@@ -8,4 +8,13 @@ class IssueAuthor extends Metaobject
  	{
  		parent::__construct('cms_User', new IssueAuthorRegistry());
  	}
+ 	
+ 	function getExact($id)
+ 	{
+ 		return $this->getRegistry()->Query(
+ 				array (
+ 						new FilterInPredicate($id)
+ 				)
+ 		);
+ 	}
 }

@@ -35,34 +35,6 @@ class Activity extends Metaobject
 			array( 'Task' => $task_it->end() ? -1 : $task_it->getId() ) );
 	}
 
-	function getActive()
-	{
-		global $part_it;
-		
-		return $this->getByRefArray( 
-			array('Participant' => $part_it->getId(),
-			      'Completed' => "N") );
-	}
-
-	function getActual()
-	{
-		global $part_it;
-		
-		$this->defaultsort = 'Completed ASC, RecordCreated DESC';
-		return $this->getByRefArray( 
-			array('Participant' => $part_it->getId(), 'Task' => 0, 'Completed' => "N") );
-	}
-
-	function getCompleted()
-	{
-		global $part_it;
-		
-		return $this->getByRefArray( 
-			array('Participant' => $part_it->getId(),
-			      'Completed' => "Y",
-			      'Task' => 0) );
-	}
-	
 	function getReported( $measure, $group_function = 'DAYOFMONTH(%1)' )
 	{
 		$group = preg_replace(
@@ -83,7 +55,8 @@ class Activity extends Metaobject
 			   "  	      WHERE a.Task = t.pm_TaskId ".
 			   "        ) t," .
 			   "		pm_Participant p ".
-			   "  WHERE t.Participant = p.pm_ParticipantId ".$this->getFilterPredicate('t').
+			   "  WHERE t.Participant = p.SystemUser ".$this->getFilterPredicate('t').
+			   "	AND t.VPD = p.VPD ".
 			   "  GROUP BY ".$measure.", p.SystemUser, ".$group;
 
 		return $this->createSQLIterator($sql);

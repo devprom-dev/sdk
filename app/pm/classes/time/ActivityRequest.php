@@ -18,7 +18,7 @@ class ActivityRequest extends Activity
 		}
  	}
  	
-	function getTaskIt( $fact, $request_it, $part_it )
+	function getTaskIt( $fact, $request_it, $user_id )
 	{
 	 	$task = getFactory()->getObject('pm_Task');
 		
@@ -34,7 +34,7 @@ class ActivityRequest extends Activity
 		
 		while ( !$task_it->end() )
 		{
-			if ( $task_it->get('Assignee') != '' && $task_it->get('Assignee') != $part_it->getId() )
+			if ( $task_it->get('Assignee') != '' && $task_it->get('Assignee') != $user_id )
 			{
 				$task_it->moveNext();
 				continue;
@@ -54,7 +54,7 @@ class ActivityRequest extends Activity
 
 	 		$task_id = $task->add_parms(
 	 			array (
-	 				'Assignee' => $part_it->getId(),
+	 				'Assignee' => $user_id,
 	 				'Planned' => $request_it->get('Estimation') > 0 ? $request_it->get('Estimation') : $fact,
 	 				'LeftWork' => $request_it->get('EstimationLeft'),
 	 				'Fact' => $fact,
@@ -110,24 +110,9 @@ class ActivityRequest extends Activity
 
 		$this->setVpdContext($request_it);
 		
-		$participant = getFactory()->getObject('Participant');
-		
-		$participant->setVpdContext( $request_it );
-		
-		if ( $parms['Participant'] < 1 )
-		{
-    		$participant_it = $participant->getByRef('SystemUser', getSession()->getUserIt()->getId());
-		
-    		$parms['Participant'] = $participant_it->getId();
-		}
-		else
-		{
-		    $participant_it = $participant->getExact($parms['Participant']);
-		}
+		if ( $parms['Participant'] < 1 ) $parms['Participant'] = getSession()->getUserIt()->getId();
 
-    	if ( $participant_it->getId() < 1 ) throw new Exception('Participant identifier should be passed');
-		
-		$task_it = $this->getTaskIt( $parms['Capacity'], $request_it, $participant_it );
+		$task_it = $this->getTaskIt( $parms['Capacity'], $request_it, $parms['Participant'] );
 		
 		$parms['Task'] = $task_it->getId(); 
 

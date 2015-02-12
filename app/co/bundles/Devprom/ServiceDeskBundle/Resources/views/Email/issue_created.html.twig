@@ -11,7 +11,7 @@
             {{ 'issue.created.body'|trans({
             '%title%' : issue.caption,
             '%description%' : issue.description|unescapeHtml,
-            '%product%' : issue.product,
+            '%product%' : issue.product != "" ? issue.product : issue.project,
             '%priority%' : issue.priority,
             '%type%' : issue.issueType,
             '%link%' : issueLink,

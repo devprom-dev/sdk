@@ -18,6 +18,17 @@ class StateMeta extends Metaobject
  	{
  		return $this->aggregated_state;
  	}
+	
+	public function setStatesDelimiter( $delimiter )
+	{
+		$this->states_delimiter = $delimiter;
+	}
+	
+	public function getStatesDelimiter()
+	{
+		return $this->states_delimiter;
+	}
  	
+	private $states_delimiter = ",";
  	private $aggregated_state = null;
 }

@@ -193,6 +193,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         
         $modules[] = $item;
         
+        /*
         $item = array();
         
         $item['cms_PluginModuleId'] = 'features-chart';
@@ -201,6 +202,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['Url'] = 'features/chart';
 
         $modules[] = $item;
+        */
         
         foreach( $modules as $module )
         {
@@ -228,7 +230,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-settings';
-        $item['Caption'] = text(1833);
+        $item['Caption'] = translate('Проект');
         $item['Description'] = text(1812);
         $item['AccessEntityReferenceName'] = 'pm_Project';
         $item['AccessType'] = ACCESS_MODIFY;
@@ -238,7 +240,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
 
         $item['cms_PluginModuleId'] = 'navigation-settings';
         $item['Caption'] = text(1807);
-        $item['Description'] = text(1806);
         $item['AccessEntityReferenceName'] = 'pm_CustomReport';
         $item['Url'] = 'menu';
         
@@ -272,6 +273,16 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessEntityReferenceName'] = 'pm_AccessRight';
         $item['AccessType'] = ACCESS_MODIFY;
         $item['Url'] = 'participants/rights';
+        
+        $modules[] = $item;
+
+        $item = array();
+        
+        $item['cms_PluginModuleId'] = 'profile';
+        $item['Caption'] = text(1904);
+        $item['Description'] = text(1905);
+        $item['AccessEntityReferenceName'] = 'pm_Participant';
+        $item['Url'] = 'profile';
         
         $modules[] = $item;
         

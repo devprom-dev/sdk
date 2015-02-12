@@ -12,12 +12,12 @@
 					</section><!-- end #functional-group-selector -->
 				</div>
 				<div class="span2">
-					<a class="pull-right btn dropdown-toggle btn-inverse" href="<?=$close_url?>"><?=translate('Закрыть')?></a>
+					<a id="close-btn" class="pull-right btn btn-inverse" href="<?=$close_url?>"><?=translate('Закрыть')?></a>
 				</div>
 			</div>
 			<div class="row-fluid">
 				<?php if ( $hint_top != '' ) { ?>
-					<?php echo $view->render('core/HintLight.php', array('title' => $hint_top, 'name' => 'navigations-hint')); ?> 
+					<?php echo $view->render('core/Hint.php', array('title' => $hint_top, 'name' => $page_uid)); ?>
 				<? } ?>
 			</div>
 			<div class="row-fluid">
@@ -45,6 +45,11 @@
 											    <div class="span4">
 											      <div class="menu-button pull-right" id="save-control"></div>
 											      <div class="menu-button pull-right" id="restore-control"></div>
+											      <div class="menu-button pull-right">
+											      	<div class="save-button-view">
+											      		<button id="menu-reset" class="btn"><span class="message"><?=translate('Очистить')?></span> <span class="loader"></span></button>
+											      	</div>
+											      </div>
 											      </div>
 											  </div>
 											</div>
@@ -141,6 +146,7 @@
 	$(function() {
 	    App.module('MenuConfigurator').restUrl = '/pm/<?= getSession()->getProjectIt()->get('CodeName'); ?>/menu/rest';
 	    App.module('MenuConfigurator').currentArea = '<?=htmlentities($_REQUEST['area'])?>';
+	    App.module('MenuConfigurator').returnUrl = '<?=$close_url?>';
 	    
 	    App.start({});
 	    

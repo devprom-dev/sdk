@@ -7,7 +7,7 @@
 
 global $serviceDeskContainer;
 
-require_once SERVER_ROOT_PATH.'/app/Devprom/Component/HttpKernel/ServiceDeskAppKernel.php';
+use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 $serviceDeskKernel = ServiceDeskAppKernel::loadWithoutRequest();
 

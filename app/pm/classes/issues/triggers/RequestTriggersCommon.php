@@ -28,16 +28,14 @@ class RequestTriggersCommon extends SystemTriggersBase
  		$task->removeNotificator( 'EmailNotificator' );
  		
  		$task_it = $task->getByRefArray( array( 
- 		        'Assignee' => getSession()->getParticipantIt()->getId(),
+ 		        'Assignee' => getSession()->getUserIt()->getId(),
  				'ChangeRequest' => $object_it->getId() 
  		));
 
 		$service = new WorkflowService($task);
- 		
  		while ( !$task_it->end() )
  		{
 			$service->moveToState($task_it, 'planned');
- 			
  			$task_it->moveNext();
  		}
 	}

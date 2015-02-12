@@ -16,6 +16,6 @@ class IssueIsOwnerRule extends BusinessRulePredicate
  	
  	function check( $object_it )
  	{
- 		return $object_it->get('OwnerUser') == getSession()->getUserIt()->getId();
+ 		return $object_it->get('Owner') == getSession()->getUserIt()->getId();
  	}
 }

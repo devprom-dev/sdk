@@ -1,8 +1,8 @@
 <?php
 
-include_once "FieldWikiPage.php";
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 
-class FieldWikiPageTrace extends FieldWikiPage
+class FieldWikiPageTrace extends FieldHierarchySelector
 {
 	private $form_id = '';
 	

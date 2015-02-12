@@ -51,7 +51,8 @@ class CoPage extends Page
 				'title' => $menu['caption'],
 				'description' => $menu['title'],
 				'url' => $menu['url'],
-				'items' => $menu['actions']
+				'items' => $menu['actions'],
+				'icon' => $menu['icon']
 			);
 		}
 		

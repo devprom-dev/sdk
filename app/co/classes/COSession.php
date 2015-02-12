@@ -3,8 +3,8 @@
 include_once SERVER_ROOT_PATH.'core/c_session.php';
 include_once 'COAccessPolicy.php';
 include_once 'COSystemTriggers.php';
-include "ResourceBuilderCoLanguageFile.php";
-include "ProjectWelcomeStylesheetBuilder.php";
+include_once "ResourceBuilderCoLanguageFile.php";
+include_once "ProjectWelcomeStylesheetBuilder.php";
 
 
 ///////////////////////////////////////////////////////////////////////

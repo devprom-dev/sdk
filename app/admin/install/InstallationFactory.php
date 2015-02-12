@@ -16,6 +16,8 @@ include_once 'UpgradeUserPictures.php';
 include_once 'SetupPhpOpCache.php';
 include_once 'SetupUserGroups.php';
 include_once 'SDKSetup.php';
+include_once 'AttachCustomersToCompanies.php';
+include_once 'SetupSupportProjectSettings.php';
 
 class InstallationFactory
 {
@@ -56,6 +58,8 @@ class InstallationFactory
         	new UpgradeUserPictures(),
         	new SetupUserGroups(),
         	new SDKSetup(),
+        	new AttachCustomersToCompanies(),
+        	new SetupSupportProjectSettings(),
 	        new ClearCache()
 	    );
     }
@@ -134,19 +138,25 @@ class InstallationFactory
 	
 	function error( $message )
 	{
-		$log = $this->getLogger();
-		
-		if ( !is_object($log) ) return;
-		
-		$log->error( $message );
+		try 
+ 		{
+ 			Logger::getLogger('Install')->error($message);
+ 		}
+ 		catch( Exception $e)
+ 		{
+ 			error_log($message);
+ 		}
 	}
 	
 	function info( $message )
 	{
-		$log = $this->getLogger();
-		
-		if ( !is_object($log) ) return;
-		
-		$log->info( $message );
+		try 
+ 		{
+ 			Logger::getLogger('Install')->info($message);
+ 		}
+ 		catch( Exception $e)
+ 		{
+ 			error_log($message);
+ 		}
 	}
 }

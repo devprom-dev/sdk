@@ -107,9 +107,8 @@
  	
  	function isValidUid( $uid ) 
  	{
- 		list($type, $object_id) = preg_split('/-/', $uid);
- 		$class = array_search($type, $this->map);
- 		return $class !== false; 
+ 		list($type, $object_id) = preg_split('/-/', trim($uid));
+ 		return is_numeric($object_id) && array_search($type, $this->map) !== false; 
  	}
  	
  	function hasUid( $object_it ) 
@@ -334,7 +333,17 @@
         	$info['url'] .= strpos($info['url'], '?') > 0 ? '&baseline='.$this->getBaseline() : '?'.$this->getBaseline(); 
         }
         
-        return '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
+        $html = '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
+        
+        if ( $object_it->object instanceof TestExecution )
+        {
+        	$class = $object_it->get('ResultReferenceName') == 'failed' 
+ 				? 'label-important' 
+ 				: ($object_it->get('ResultReferenceName') == 'succeeded' ? 'label-success' : 'label-warning');
+        	$html = '<span class="label '.$class.'">'.$html.'</span>';
+        }
+        
+        return $html;
 	}
 	
  	function drawUidIcon( $object_it, $need_project = true ) 

@@ -1,6 +1,7 @@
 <?php
 
 namespace Devprom\ProjectBundle\Service\Project;
+use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
 
 include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
@@ -130,7 +131,8 @@ class ApplyTemplateService
 			}
 		}
 		
-		$project_it->storeMetrics();
+		$metrics_service = new StoreMetricsService();
+		$metrics_service->execute($project_it);
  		
  		getSession()->truncate();
  	}

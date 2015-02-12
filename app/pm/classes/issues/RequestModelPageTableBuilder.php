@@ -31,7 +31,7 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     		$object->addAttributeGroup($attribute, 'time');
     	}
 
-    	$dates_attributes = array( 'RecordModified', 'RecordCreated', 'StartDate', 'FinishDate', 'Deadlines', 'DeadlinesDate' );
+    	$dates_attributes = array( 'RecordModified', 'RecordCreated', 'StartDate', 'FinishDate', 'Deadlines', 'DeadlinesDate', 'DeliveryDate' );
     	
     	foreach ( $dates_attributes as $attribute )
     	{
@@ -41,11 +41,8 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     	if ( $methodology_it->HasReleases() )
     	{
     		$object->addAttribute('ReleaseStartDate', 'DATE', translate('Релиз').': '.translate('Начало'), false);
-    
     		$object->addAttribute('ReleaseFinishDate', 'DATE', translate('Релиз').': '.translate('Окончание'), false);
-
     		$object->addAttribute('ReleaseEstimatedStart', 'DATE', translate('Релиз').': '.translate('Оценка начала'), false);
-    		
     		$object->addAttribute('ReleaseEstimatedFinish', 'DATE', translate('Релиз').': '.translate('Оценка окончания'), false);
     		
     		$object->addPersister( new RequestReleaseDatesPersister() );

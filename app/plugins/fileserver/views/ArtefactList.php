@@ -25,9 +25,6 @@ class ArtefactList extends PMPageList
 			case 'Project':
 				return false;
 				
-			case 'Version':
-				return getSession()->getProjectIt()->getMethodologyIt()->HasVersions();
-				
 			case 'RecordModified':
 				return true;
 				

@@ -98,9 +98,9 @@ class Issue extends BaseEntity {
     private $comments;
 
     /**
-     * @ORM\OneToOne(targetEntity="ProjectParticipant")
-     * @ORM\JoinColumn(name="Owner", referencedColumnName="pm_ParticipantId")
-     * @var ProjectParticipant
+     * @ORM\OneToOne(targetEntity="InternalUser")
+     * @ORM\JoinColumn(name="Owner", referencedColumnName="cms_UserId")
+     * @var User
      */
     private $assignedTo;
 
@@ -307,7 +307,7 @@ class Issue extends BaseEntity {
     }
     
     /**
-     * @param \Devprom\ServiceDeskBundle\Entity\ProjectParticipant $assignedTo
+     * @param \Devprom\ServiceDeskBundle\Entity\InternalUser $assignedTo
      */
     public function setAssignedTo($assignedTo)
     {
@@ -315,7 +315,7 @@ class Issue extends BaseEntity {
     }
 
     /**
-     * @return \Devprom\ServiceDeskBundle\Entity\ProjectParticipant
+     * @return \Devprom\ServiceDeskBundle\Entity\InternalUser
      */
     public function getAssignedTo()
     {

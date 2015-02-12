@@ -277,6 +277,13 @@ class PMPageForm extends PageForm
 		return array();
 	}
     	
+    function process()
+    {
+        $this->extendModel();
+        
+        return parent::process();
+    }
+	
     function getRenderParms()
     {
         $this->extendModel();

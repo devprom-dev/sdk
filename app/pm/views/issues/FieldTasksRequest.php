@@ -47,7 +47,7 @@ class FieldTasksRequest extends FieldForm
 		 		{
 		 		    echo '<br/>';
 				 
-		 		    echo '<a href="'.$report_it->getUrl().'&issue='.$this->object_it->getId().'&release=all&clickedonform" tabindex="-1">'.text(1014).'</a>';
+		 		    echo '<a href="'.$report_it->getUrl().'&issue='.$this->object_it->getId().'&iteration=all&clickedonform" tabindex="-1">'.text(1014).'</a>';
 				}
 	 		}
  		echo '</div>';

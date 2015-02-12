@@ -10,6 +10,7 @@ include "PMPageChart.php";
 include "PMPageBoard.php";
 
 include_once SERVER_ROOT_PATH."core/classes/versioning/VersionedObject.php";
+include_once SERVER_ROOT_PATH."pm/classes/watchers/predicates/WatcherUserPredicate.php";
 
 class PMPageTable extends PageTable
 {
@@ -38,23 +39,13 @@ class PMPageTable extends PageTable
     
     function getCaption()
     {
-        global $_REQUEST, $model_factory;
-
         if ( $this->getReport() == '' ) return '';
 
-        $report = $model_factory->getObject('PMReport');
+        $title = getFactory()->getObject('PMReport')->getExact( $this->getReport() )->getDisplayName();
         
-        $report_it = $report->getExact( $this->getReport() );
-        
-        $title = $report_it->getDisplayName();
-        
-     	$values = $this->getFilterValues();
- 		
- 		if ( !in_array($values['baseline'], array('', 'none', 'all')) )
+ 		if ( !in_array($_REQUEST['baseline'], array('', 'none', 'all')) )
  		{
- 			$version_it = $model_factory->getObject('Snapshot')->getExact($values['baseline']);
- 			
- 			$title .= ' [rev: '.$version_it->getDisplayName().']'; 
+ 			$title .= ' [rev: '.getFactory()->getObject('Snapshot')->getExact($_REQUEST['baseline'])->getDisplayName().']'; 
  		}
         
         return $title;
@@ -308,7 +299,8 @@ class PMPageTable extends PageTable
         
         $predicates = array_merge($predicates, $this->buildCustomPredicates($values));
 
-        $predicates[] = new ProjectVpdPredicate( $values['target'] ); 
+        $predicates[] = new ProjectVpdPredicate($values['target']);
+        $predicates[] = new WatcherUserPredicate($values['watcher']);  
 		
 		if ( $values['baseline'] != '' )
 		{
@@ -456,33 +448,42 @@ class PMPageTable extends PageTable
         // filters driven by custom attributes
         $filters = array_merge($filters, $this->buildCustomFilters());
 
-    	if ( $this->hasCrossProjectFilter() )
+    	if ( $this->hasCrossProjectFilter() && getSession()->getProjectIt()->get('LinkedProject') != '' )
 	    {
-    		$project = $model_factory->getObject('pm_Project');
-    		
-    		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
-
-    		if ( count($ids) > 0 )
-    		{
-        		if ( !getSession()->getProjectIt()->IsPortfolio() )
-        		{
-        		    $ids[] = getSession()->getProjectIt()->getId();
-        		}
-    
-        		$project->addFilter( new FilterInPredicate($ids) );
-        
-        		$filter = new FilterObjectMethod( $project, translate('Проект'), 'target' );
-        		
-        		$filter->setUseUid(false);
-        		
-        		$filters[] = $filter;
-    		}
+	    	$filters[] = $this->buildProjectFilter();
 	    }
         
+	    switch ( $this->getObject()->getEntityRefName() )
+	    {
+	        case 'pm_ChangeRequest':
+	        case 'pm_Task':
+	        case 'WikiPage':
+	        	$filters[] = $this->buildFilterWatcher();
+	    }
+	    
         return $filters;
     }
     
-    function buildCustomFilters()
+    protected function buildProjectFilter()
+    {
+   		$project = getFactory()->getObject('pm_Project');
+  		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
+
+		if ( !getSession()->getProjectIt()->IsPortfolio() ) $ids[] = getSession()->getProjectIt()->getId();
+   		$project->addFilter( new FilterInPredicate($ids) );
+        
+   		if ( count($ids) > 20 ) {
+			$filter = new FilterAutocompleteWebMethod( $project, translate('Проект'), 'target' );
+   		}
+   		else {
+			$filter = new FilterObjectMethod( $project, translate('Проект'), 'target' );
+	        $filter->setUseUid(false);
+   		}
+        		
+   		return $filter;
+    }
+    
+    protected function buildCustomFilters()
     {
     	$filters = array();
     	
@@ -519,7 +520,7 @@ class PMPageTable extends PageTable
         return $filters;
     }
     
-    function buildSnapshotFilter()
+    protected function buildSnapshotFilter()
     {
     	$versioned = new VersionedObject();
     	
@@ -541,6 +542,13 @@ class PMPageTable extends PageTable
 
 	    return $filter;
     }
+    
+	protected function buildFilterWatcher()
+	{
+		$filter = new FilterObjectMethod( getFactory()->getObject('WatcherUser'), translate('Наблюдатели'), 'watcher' );
+		$filter->setHasNone(false);
+		return $filter;
+	}
     
 	function getSortFields()
 	{

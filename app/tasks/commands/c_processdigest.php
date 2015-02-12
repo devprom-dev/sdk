@@ -1,6 +1,8 @@
 <?php
 
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
+include_once SERVER_ROOT_PATH.'pm/classes/notificators/EmailNotificator.php';
+include_once SERVER_ROOT_PATH.'pm/classes/notificators/DigestHandler.php';
 
 class ProcessDigest extends TaskCommand
 {
@@ -141,6 +143,8 @@ class ProcessDigest extends TaskCommand
 		$recipient_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
 				array( new FilterInPredicate( $chunk ) )
 		);
+		
+		$notificator = new EmailNotificator();
 
 		while ( !$recipient_it->end() )
 		{
@@ -257,122 +261,18 @@ class ProcessDigest extends TaskCommand
 	   		if ( $log_it->getId() < 1 )
 	   		{
 	   			$recipient_it->moveNext();
-	   			
 	   			continue;
 	   		}
+
+	   		$handler = $notificator->getHandler($log_it);
+	   		$handler->setFromDate($from_date_client);
+	   		$handler->setRecipient($recipient_it);
 	   		
-			// get the link to changes report
-			$url = _getServerUrl().getSession()->getApplicationUrl().'project/log?participant=all&mode=log&start='.urlencode($from_date_client);
-
-			$logger->info($url);
-			
-	   		$subject = str_replace( '%1', $project_it->get('CodeName'), text(965) );
-
-	   		$body = str_replace( '%1', $recipient_it->getDisplayName(), text(966) );
-	   		$body = str_replace( '%2', $this->getChanges( $log_it ), $body );
-	   		$body = str_replace( '%3', $url, $body );
+	   		$queues = $notificator->sendMail('', $log_it, $log_it);
 	   		
-			$signature = str_replace( '%1', _getServerUrl().getSession()->getApplicationUrl().'profile.php', text(263) );
-
-			$body .= '<br/><br/>'.$signature;
-
-			$mail = new HtmlMailBox;
-	   		$mail->appendAddress( $recipient_it->get('Email') );
-	   		$mail->setBody( $body );
-	   		$mail->setSubject( $subject );
-	   		$mail->setFrom( $settings_it->getHtmlDecoded('AdminEmail') );
-			
-	   		$queue_id = $mail->send();
-	   		
-			if ( is_object($logger) )
-			{
-				$logger->info( str_replace('%1', $queue_id, text(1212)) );
-			}
+			if ( is_object($logger) ) $logger->info( str_replace('%1', array_pop($queues), text(1212)) );
 	
 			$recipient_it->moveNext();
 		}
-	}
-	
-	function getChanges( & $log_it )
-	{
-		global $model_factory;
-		
-		$uid = new ObjectUID;
-		
-		$html = '';
-		$prev_date = '';
-		
-		$html .= '<table class="list_table">';
-		$html .= '<tr>';
-			$html .= '<td class="list_header">'.translate('Время').'</td>';
-			$html .= '<td class="list_header">'.translate('Описание изменения').'</td>';
-			$html .= '<td class="list_header">'.translate('Содержание').'</td>';
-			$html .= '<td class="list_header">'.translate('Автор').'</td>';
-		$html .= '</tr>';
-		
-		while ( !$log_it->end() )
-		{
-			if ( $prev_date != $log_it->get('ChangeDate') )
-			{
-				$html .= '<tr><th colspan="4" class="list_group">';
-					$html .= '<b>'.getSession()->getLanguage()->getDateFormatted($log_it->get('ChangeDate')).'</b><br/>';
-				$html .= '</th></tr>';
-								
-				$prev_date = $log_it->get('ChangeDate');
-			}
-	
-			$html .= '<tr>';
-			
-			$change_kind = $log_it->getImage(); 
-			$author_name = $log_it->get('AuthorName');
-			
-			$anchor_it = $log_it->getObjectIt();
-			
-			ob_start();
-			
-			if ( $anchor_it->getId() != '' )
-			{
-				if ( $uid->hasUid( $anchor_it ) )
-				{
-				    $uid->drawUidIcon( $anchor_it );
-				}
-				else
-				{
-				    echo $anchor_it->object->getDisplayName();
-				}
-			}
-			else
-			{
-			    echo $anchor_it->object->getDisplayName().': ';
-			}
-			
-			echo ' '.$log_it->getWordsOnly('Caption', 20);
-			
-			$title = ob_get_contents();
-			
-			ob_end_clean();
-							
-			$content = $log_it->getHtmlDecoded('Content');
-			
-			$content_normalized = substr($content, 0, 128);
-			
-			if ( strlen($content_normalized) < strlen($content) )
-			{
-				$content_normalized .= "...";
-			}
-			
-			$html .= '<td class="list_cell">'.getSession()->getLanguage()->getTimeFormatted($log_it->get('RecordCreated')).'&nbsp;&nbsp;&nbsp;</td>';
-			$html .= '<td class="list_cell"><i class="'.$change_kind.'"></i> '.$title.'</td>';
-			$html .= '<td class="list_cell">'.$content_normalized.'</td>';
-			$html .= '<td class="list_cell">'.$author_name.'</td>';
-
-			$html .= '</tr>';
-			
-			$log_it->moveNext();
-		}
-		
-		$html .= '</table>';
-		
-		return $html;
 	}
 }

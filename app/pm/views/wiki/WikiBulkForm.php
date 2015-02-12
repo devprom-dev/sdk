@@ -1,10 +1,15 @@
 <?php
 
 include SERVER_ROOT_PATH."pm/views/ui/BulkForm.php";
-include_once SERVER_ROOT_PATH."pm/views/wiki/fields/FieldWikiPage.php";
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 
 class WikiBulkForm extends BulkForm
 {
+	function getSnapshotObject()
+	{
+		return null;
+	}
+	
 	function getWidth()
 	{
 		return '70%';
@@ -14,13 +19,18 @@ class WikiBulkForm extends BulkForm
  	{
  		switch ( $attr )
  		{
- 		    case 'ParentPage':
+ 			case 'Version':
+ 			case 'Snapshot':
+ 			case 'ParentPage':
  		    case 'Project':
  		    	return 'custom';
 
  			case 'CopyOption':
  				return 'char';
  		    	
+ 			case 'Description':
+ 				return 'largetext';
+ 				
  			default:
  				return parent::getAttributeType( $attr );
  		}
@@ -36,6 +46,9 @@ class WikiBulkForm extends BulkForm
  			case 'Project':
  				return translate('Проект');
  				
+ 			case 'Description':
+ 				return translate('Описание');
+ 				
  			default:
  				return parent::getName( $attr );
  		}
@@ -47,6 +60,9 @@ class WikiBulkForm extends BulkForm
  		{
  			case 'CopyOption':
  				return text(1727);
+
+ 			case 'Description':
+ 				return ' ';
  				
  			default:
  				return parent::getDescription( $attr );
@@ -71,6 +87,38 @@ class WikiBulkForm extends BulkForm
  		
  		switch ( $attribute )
  		{
+ 			case 'Snapshot':
+				
+ 				$snapshot = $this->getSnapshotObject(); 
+ 				$snapshot->addFilter( new FilterAttributePredicate('ObjectId', $this->getIt()->idsToArray()) );
+ 				
+ 				$field = new FieldDictionary( $snapshot );
+ 				$field->SetId($attribute);
+				$field->SetName($attribute);
+				$field->SetValue($value);
+				$field->SetTabIndex($tab_index);
+				
+				echo translate('Версия документа');
+				
+				$field->draw();
+				
+				break;
+				
+ 			case 'Version':
+				
+				$field = new FieldAutoCompleteObject( getFactory()->getObject('Baseline') );
+				
+				$field->setAppendable(); 
+				$field->setRequired();
+ 				
+ 				$field->SetId($attribute);
+				$field->SetName($attribute);
+				$field->SetValue($value);
+				$field->SetTabIndex($tab_index);
+				$field->draw();
+				
+				break;
+				
  			case 'Project':
 
  				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
@@ -89,18 +137,15 @@ class WikiBulkForm extends BulkForm
  			case 'ParentPage':
 
 			    $object = $model_factory->getObject(get_class($this->getObject()));
-
 		        $object->addFilter( new FilterBaseVpdPredicate() );
 			    
-				$field = new FieldWikiPage( $object );
-				
+				$field = new FieldHierarchySelector( $object );
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				
 				$field->draw();
-				
 				$field->drawScripts();
 				
 				break;
@@ -110,6 +155,23 @@ class WikiBulkForm extends BulkForm
  		}
  	}
 
+	function IsAttributeVisible( $attribute )
+	{
+		switch( $attribute )
+		{
+			case 'Snapshot':
+				
+				if ( $this->getIt()->count() > 1 ) return false;
+				
+ 				return $this->getSnapshotObject()->getRegistry()->Query(
+ 						array ( new FilterAttributePredicate('ObjectId', $this->getIt()->getId()) )
+ 					)->count() > 0;
+								
+			default:
+				return parent::IsAttributeVisible( $attribute );
+		}
+	}
+ 	
  	function IsAttributeModifiable( $attr )
 	{
 		switch ( $attr )
@@ -117,6 +179,8 @@ class WikiBulkForm extends BulkForm
 			case 'PageType':
 			case 'Project':
 			case 'ParentPage':
+			case 'Snapshot':
+			case 'Version':
 				return true;
 				
 			case 'ReferenceName':
@@ -132,6 +196,18 @@ class WikiBulkForm extends BulkForm
 				
 			default:
 				return parent::IsAttributeModifiable( $attr );
+		}
+	}
+
+	function IsAttributeRequired( $attribute )
+	{
+		switch( $attribute )
+		{
+			case 'Version':
+				return true;
+				
+			default:
+				return parent::IsAttributeRequired( $attribute );
 		}
 	}
 }

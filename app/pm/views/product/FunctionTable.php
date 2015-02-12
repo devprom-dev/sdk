@@ -6,8 +6,6 @@ include "FunctionChartList.php";
 
 class FunctionTable extends PMPageTable
 {
-    var $object;
-    
 	function getList( $mode = '' )
 	{
 		switch ( $mode )
@@ -23,48 +21,66 @@ class FunctionTable extends PMPageTable
 		}
 	}
 
-	function getSortDefault( $sort_parm )
-	{
-		if ( $sort_parm == 'sort' )
-		{
-			return 'Importance';
-		}
-		
-		return parent::getSortDefault( $sort_parm );
-	}
-	
 	function getActions()
 	{
-		global $model_factory;
-		
 		$actions = array();
 		
 		$method = new ExcelExportWebMethod();
-
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->getJSCall( $this->getCaption(), 'IteratorExportExcel') ) );
+		$actions[] = array( 
+				'name' => $method->getCaption(),
+				'url' => $method->getJSCall( $this->getCaption(), 'IteratorExportExcel')
+		);
 		
 		$method = new HtmlExportWebMethod();
-
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->getJSCall( 'IteratorExportHtml' ) ) );
+		$actions[] = array( 
+				'name' => $method->getCaption(),
+				'url' => $method->getJSCall( 'IteratorExportHtml' )
+		);
 		
 		return $actions;
+	}
+
+	function getNewActions()
+	{
+		$type_it = getFactory()->getObject('FeatureType')->getAll();
+		
+		if ( $type_it->count() < 1 ) return parent::getNewActions(); 
+
+		$actions = array();
+		
+		$method = new ObjectCreateNewWebMethod($this->getObject());
+		$method->setRedirectUrl('donothing');
+		
+		if ( !$method->hasAccess() ) return $actions;
+		
+		while( !$type_it->end() )
+		{
+			$uid = 'append-feature-'.$type_it->get('ReferenceName');
+			$parms['Type'] = $type_it->getId();
+			
+			$actions[$uid] = array ( 
+				'name' => $type_it->getDisplayName(),
+				'uid' => $uid,
+				'url' => $method->getJSCall($parms, $type_it->getDisplayName())
+			);
+			
+			$type_it->moveNext();
+		}
+		
+		return $actions;  
 	}
 	
 	function getFilters()
 	{
-		global $model_factory;
-		
 		$filters = array(
 			new FunctionFilterStateWebMethod(),
-			new FilterTagWebMethod( $model_factory->getObject('FeatureTag') ),
-			new FilterObjectMethod( $model_factory->getObject('Importance'), '', 'importance'),
+			$this->buildFilterType(),
+			new FilterTagWebMethod( getFactory()->getObject('FeatureTag') ),
+			new FilterObjectMethod( getFactory()->getObject('Importance'), '', 'importance'),
 			new FunctionFilterStageWebMethod()
 			);
 
 		$view = new FunctionFilterViewWebMethod();
-		
 		$view->setFilter( $this->getFiltersName() );
 		
 		if ( $view->getValue() == 'chart' )
@@ -83,7 +99,8 @@ class FunctionTable extends PMPageTable
 			new FeatureStateFilter( $filters['state'] ),
 			new FeatureStageFilter( $filters['stage'] ),
 			new CustomTagFilter( $this->getObject(), $filters['tag'] ),
-			new FilterAttributePredicate( 'Importance', $filters['importance'] )
+			new FilterAttributePredicate( 'Importance', $filters['importance'] ),
+			new FilterAttributePredicate( 'Type', $filters['type'] )
 		);
 		
 		return array_merge(parent::getFilterPredicates(), $predicates);
@@ -92,5 +109,12 @@ class FunctionTable extends PMPageTable
 	function getViewFilter()
 	{
 		return new FunctionFilterViewWebMethod();
+	}
+
+	protected function buildFilterType()
+	{
+		$type_method = new FilterObjectMethod( getFactory()->getObject('FeatureType'), '', 'type');
+		$type_method->setIdFieldName( 'ReferenceName' );
+		return $type_method;
 	}
 }

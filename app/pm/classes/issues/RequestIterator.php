@@ -166,41 +166,38 @@ class RequestIterator extends StatableIterator
 			
  			$pattern = text(811);
 
-	 		if ( $methodology_it->HasVersions() )
-	 		{
-				if ( !is_object($this->version_settings) )
-				{
-					$version_settings = $model_factory->getObject('pm_VersionSettings');
-					
-			 		$this->version_settings = $version_settings->getAll();
-				}
+			if ( !is_object($this->version_settings) )
+			{
+				$version_settings = $model_factory->getObject('pm_VersionSettings');
 				
-	 			switch ( $stage_it->object->getClassName() )
-	 			{
-	 				case 'pm_Build':
-	 				case 'pm_Release':
-	 				    
-			 			if ( $this->version_settings->get('UseIteration') == 'Y' )
-			 			{
-							$stage = $stage_name;
-							
-	 						$pattern = text(810);
-			 			}
-			 			
-			 			break;
-			 			
-	 				case 'pm_Version':
-			 			
-	 				    if ( $this->version_settings->get('UseRelease') == 'Y' )
-			 			{
-							$stage = $stage_name;
-	 						
-							$pattern = text(810);
-			 			}
-			 			
-			 			break;
-	 			}
-	 		}
+		 		$this->version_settings = $version_settings->getAll();
+			}
+			
+ 			switch ( $stage_it->object->getClassName() )
+ 			{
+ 				case 'pm_Build':
+ 				case 'pm_Release':
+ 				    
+		 			if ( $this->version_settings->get('UseIteration') == 'Y' )
+		 			{
+						$stage = $stage_name;
+						
+ 						$pattern = text(810);
+		 			}
+		 			
+		 			break;
+		 			
+ 				case 'pm_Version':
+		 			
+ 				    if ( $this->version_settings->get('UseRelease') == 'Y' )
+		 			{
+						$stage = $stage_name;
+ 						
+						$pattern = text(810);
+		 			}
+		 			
+		 			break;
+ 			}
 		}
 
  		if ( $stage == "" )
@@ -243,17 +240,7 @@ class RequestIterator extends StatableIterator
 			case 'release':
 				if ( $this->get('PlannedRelease') > 0 )
 		 		{
-					if ( $methodology_it->HasVersions() )
-					{
-						$message = translate('В релизе').' '.$stage;
-					}
-					else
-					{
-						$parts = preg_split('/\s+/', $stage);
-						$parts[0] = strtolower($parts[0]);
-						
-						$message = translate('Включено в').' '.join($parts, ' ');
-					}
+					$message = translate('В релизе').' '.$stage;
 					array_push($state, $message );
 		 		}
 				break;
@@ -333,17 +320,7 @@ class RequestIterator extends StatableIterator
  		
  		while ( !$task_it->end() && $task_it->get('ChangeRequest') == $this->getId() )
  		{
- 			if( getSession()->getProjectIt()->getMethodologyIt()->HasMeasureUnitDays() )
- 			{
- 				$partitipant_it = $task_it->getRef('Assignee');
- 				
- 				$duration += round($task_it->get("Planned") / 
- 					$partitipant_it->get('Capacity'), 0);
- 			}
- 			else 
- 			{
- 				$duration += $task_it->get("Planned");
- 			}
+			$duration += $task_it->get("Planned");
  			$task_it->moveNext();
  		}	
  		
@@ -419,7 +396,7 @@ class RequestIterator extends StatableIterator
  	 function getImplementors()
  	 {
  	 	$sql = "SELECT p.* " .
- 	 		   "  FROM pm_Participant p INNER JOIN pm_Task t ON t.Assignee = p.pm_ParticipantId" .
+ 	 		   "  FROM pm_Participant p INNER JOIN pm_Task t ON t.Assignee = p.SystemUser" .
  	 		   "       INNER JOIN pm_ChangeRequest r ON t.ChangeRequest = r.pm_ChangeRequestId " .
  	 		   " WHERE r.pm_ChangeRequestId = ".$this->getId();
  	 		   

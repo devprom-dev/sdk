@@ -11,7 +11,6 @@ define(RESULT_SCENARIOPREPARED, 'Подготовлен тестовый набор');
 
 include "TaskIterator.php";
 
-include "predicates/TaskAssigneeUserPredicate.php";
 include "predicates/TaskCategoryPredicate.php";
 include "predicates/TaskTypeBasePredicate.php";
 include "predicates/TaskVersionPredicate.php";
@@ -23,7 +22,7 @@ include "sorts/TaskAssigneeSortClause.php";
 include "sorts/TaskRequestOrderSortClause.php";
 include "sorts/TaskRequestPrioritySortClause.php";
 
-include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
 class Task extends MetaobjectStatable 
 {
@@ -108,7 +107,7 @@ class Task extends MetaobjectStatable
 				
 				$role_it = $role->getInArray('ProjectRole', $project_role_it->idsToArray());
 				if($role_it->count() == 1) {
-					$Assignee = $role_it->get('Participant'); 
+					$Assignee = $role_it->getRef('Participant')->get('SystemUser'); 
 					return $Assignee;
 				}
 			}

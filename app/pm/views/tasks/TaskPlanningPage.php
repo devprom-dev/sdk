@@ -42,18 +42,14 @@ class TaskPlanningPage extends PMPage
  		{
  		    if ( $_REQUEST['view'] == 'board' ) $this->addInfoSection( new FullScreenSection() );
  			
- 		    $report_it = getFactory()->getObject('PMReport')->getExact('iterationburndown');
- 			
- 			if ( $report_it->getId() > 0 )
+ 		    $workload_section = new WorkloadSection();
+ 			if (getSession()->getProjectIt()->getMethodologyIt()->HasReleases())
  			{
- 				$this->addInfoSection( new IterationBurndownSection () );
- 			}
-
- 			$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 			
- 			if ( $methodology_it->TaskEstimationUsed() )
- 			{
- 				$this->addInfoSection( new WorkloadSection () );
+ 			 	if ( getFactory()->getObject('PMReport')->getExact('iterationburndown')->getId() != '' )
+	 			{
+	 				$this->addInfoSection( new IterationBurndownSection () );
+	 			}
+ 				if ( count($workload_section->getData()) > 0 ) $this->addInfoSection($workload_section);
  			}
  		}
  	}

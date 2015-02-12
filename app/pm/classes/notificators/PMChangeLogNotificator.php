@@ -260,7 +260,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 
 			case 'pm_Question':
-				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, $object_it->get('Content'), $visibility );
+				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, '', $visibility );
 					
 				break;
 

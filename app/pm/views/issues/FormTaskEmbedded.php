@@ -138,19 +138,13 @@ class FormTaskEmbedded extends PMFormEmbedded
 				$tasktype = $this->getAttributeObject( $attr ); 
 				$tasktype->addFilter( new FilterBaseVpdPredicate() );
 				
-				$field = new FieldTaskTypeDictionary( $tasktype );
-				
-				return $field;
+				return new FieldTaskTypeDictionary( $tasktype );
 
 			case 'Assignee':
 				$object = $this->getAttributeObject( $attr );
-				$object->addFilter( new ParticipantWorkerPredicate() );
+				$object->addFilter( new UserWorkerPredicate() );
 
-				$object->setVpdContext( $this->getObjectIt() );
-				
-				$field = new FieldParticipantDictionary( $object );
-				
-				return $field;
+				return new FieldParticipantDictionary( $object );
 
 			default:
 				return parent::createField( $attr );			

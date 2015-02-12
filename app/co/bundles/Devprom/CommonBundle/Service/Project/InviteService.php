@@ -15,12 +15,12 @@ class InviteService
 		$this->session = $session;
 		
 		$lang = strtolower($this->session->getLanguage()->getLanguage());
-		$this->email_template = 'CommonBundle:Email:invite.'.$lang.'.html.twig';
+		$this->email_template = 'CommonBundle:Emails/'.$lang.':invite.html.twig';
 	}
 	
 	public function inviteByEmails( $emails )
 	{
-		if ( !getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('User')) ) return;
+		if ( !getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Participant')) ) return;
 
 		foreach( $emails as $email )
 		{
@@ -140,7 +140,7 @@ class InviteService
 							'SystemUser' => $user_it->getId(),
 							'Project' => $project_it->getId(),
 							'VPD' => $project_it->get('VPD'),
-							'Notification' => 'every1hour'
+							'Notification' => $project_it->getDefaultNotificationType()
 					)
 			 	)
 		);

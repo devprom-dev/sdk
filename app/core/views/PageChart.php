@@ -509,6 +509,11 @@ class PageChart extends StaticPageList
 		return $widget;
 	}
 	
+	function getStyle()
+	{
+		return 'height:420px;';
+	}
+	
 	function draw()
 	{
 	    $widget = $this->getChartWidget();
@@ -528,7 +533,7 @@ class PageChart extends StaticPageList
 	    
 		echo '<div style="float:left;width:67%;">';
 
-    		echo '<div id="'.$chart_id.'" style="height:420px;"></div>';
+    		echo '<div id="'.$chart_id.'" style="'.$this->getStyle().'"></div>';
     		
 		    $widget->setLegend( $this->getLegendVisible() );
 		    

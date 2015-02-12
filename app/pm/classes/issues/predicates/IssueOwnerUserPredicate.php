@@ -4,9 +4,7 @@ class IssueOwnerUserPredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
- 		$user = $model_factory->getObject('cms_User');
+ 		$user = getFactory()->getObject('cms_User');
  		
  		$ids = preg_split('/,/', $filter);
  		
@@ -22,9 +20,7 @@ class IssueOwnerUserPredicate extends FilterPredicate
      		
      		if ( $user_it->getId() < 1 ) return " AND 1 = 2 ";
      		
-     		return " AND (t.Owner IN (SELECT p.pm_ParticipantId ".
-     		       "                    FROM pm_Participant p ".
-     		       "                   WHERE p.SystemUser IN (".join(',',$user_it->idsToArray()).")) ".($empty_value ? " OR t.Owner IS NULL " : "").")";
+     		return " AND (t.Owner IN (".join(',',$user_it->idsToArray()).") ".($empty_value ? " OR t.Owner IS NULL " : "").")";
      		
  		}
  		else if ($empty_value)

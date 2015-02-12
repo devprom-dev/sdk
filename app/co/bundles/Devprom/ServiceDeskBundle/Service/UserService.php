@@ -15,9 +15,13 @@ class UserService {
 
     /** @var  UserManager */
     private $userManager;
+    
+    /** @var EntityManager */
+    private $em;
 
-    function __construct(UserManager $userManager, Mailer $mailer)
+    function __construct($em, UserManager $userManager, Mailer $mailer)
     {
+    	$this->em = $em;
         $this->mailer = $mailer;
         $this->userManager = $userManager;
     }
@@ -38,6 +42,11 @@ class UserService {
         return $this->userManager->refreshUser($user);
     }
 
+    public function isCollegues( $email_left, $email_right )
+    {
+    	return $this->em->getRepository('DevpromServiceDeskBundle:User')->isCollegues($email_left,$email_right);
+    }
+    
     protected function getRandomPassword() {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $password = substr(str_shuffle($chars), 0, 5);

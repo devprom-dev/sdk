@@ -54,6 +54,12 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			{
 				$this->storeAffectedRows($class, $object_it);
 			}
+
+			foreach( class_parents($class_name) as $class )
+			{
+				if ( strpos(strtolower($class), 'metaobject') != false ) break;
+				$this->storeAffectedRows($class, $object_it);
+			}
 		}
 	    
 	    // put references in the queue
@@ -69,11 +75,16 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
     		$class_name = get_class($ref);
     		
     		$ref_it = $object_it->getRef($attribute);
-    		
    			$this->storeAffectedRows($class_name, $ref_it);
    			
 			foreach( $this->getDescendants($class_name) as $class )
 			{
+				$this->storeAffectedRows($class, $ref_it);
+			}
+			
+    		foreach( class_parents($class_name) as $class )
+			{
+				if ( strpos(strtolower($class), 'metaobject') != false ) break;
 				$this->storeAffectedRows($class, $ref_it);
 			}
     	}
@@ -109,7 +120,6 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			}				
 
 			$this->affected->setNotificationEnabled(false);
-		
 			$this->affected->setVpdContext($object_it);
 			
 			$this->affected->add_parms(

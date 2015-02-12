@@ -692,7 +692,8 @@
 	{
 		switch ( $attr )
 		{
-			default: 
+			default:
+				if ( $this->object->getAttributeType($attr) == 'char' ) return false; 
 				return $this->object->IsAttributeVisible( $attr );
 		}
 	}

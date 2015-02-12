@@ -10,6 +10,11 @@ include "UpdateFormCheck.php";
 
 class UpdatePage extends AdminPage
 {
+	function __construct()
+	{
+		parent::__construct();
+	}
+	
 	function getObject()
 	{
 		return getFactory()->getObject('cms_Update');

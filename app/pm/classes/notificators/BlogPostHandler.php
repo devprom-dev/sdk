@@ -11,42 +11,23 @@ class BlogPostHandler extends EmailNotificatorHandler
 		
 		if ( $action != 'add' ) return $result; 
 			
-		$part_it = getSession()->getProjectIt()->getParticipantIt();
-		
-		while ( !$part_it->end() )
-		{
-			array_push($result, $part_it->getId());
-			
-			$part_it->moveNext();
-		}
-
-		return $result;
+		return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
 	}	
-
-	function getBody( $action, $object_it, $prev_object_it, $recipient )
+	
+	public static function getValue( $object_it, $attr )
 	{
-		$more_text = false;
-		
-		$url = $this->getObjectItUid($object_it);
-		
-		$body .= $object_it->get('Caption').'<br/><br/>';
-		
-		$editor = WikiEditorBuilder::build( $object_it->get('ContentEditor') );
-		
-		$editor->setObjectIt( $object_it );
-		
-		$parser = $editor->getHtmlParser();
-
-		$parser->setObjectIt( $object_it );
-			
-		$body .= $parser->parse_substr( $object_it->getHtmlDecoded('Content'), 620, $more_text );
-
-		if ( $more_text )
+		switch ( $attr )
 		{
-			$body .= '<br/><br/><a href="'.
-				$this->getObjectItUid($object_it).'">'.translate('читать дальше').'</a>';
+			case 'Content':
+				$editor = WikiEditorBuilder::build( $object_it->get('ContentEditor') );
+				$editor->setObjectIt( $object_it );
+				
+				$parser = $editor->getHtmlParser();
+				$parser->setObjectIt( $object_it );
+				return $parser->parse($object_it->getHtmlDecoded('Content'));
+				
+			default:
+				return parent::getValue( $object_it, $attr );
 		}
-			
-		return $body;	
 	}
 }  

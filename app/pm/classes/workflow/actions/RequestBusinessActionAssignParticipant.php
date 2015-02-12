@@ -15,15 +15,11 @@ class RequestBusinessActionAssignParticipant extends BusinessAction
 
  	    if ( $object_it->get('Owner') != '' ) return true;
  	    
- 	    $participant = getFactory()->getObject('pm_Participant');
- 	    
- 	    $participant->setVpdContext($object_it);
- 	    
- 	    $participant_it = $participant->getByRef('SystemUser', getSession()->getUserIt()->getId());
- 	    
- 	    $object_it->object->modify_parms($object_it->getId(), array(
- 	            'Owner' => $participant_it->getId() 
- 	    ));
+ 	    $object_it->object->modify_parms($object_it->getId(), 
+ 	    		array(
+ 	            	'Owner' => getSession()->getUserIt()->getId() 
+ 	    		)
+ 	    	);
  	    
  		return true;
  	}

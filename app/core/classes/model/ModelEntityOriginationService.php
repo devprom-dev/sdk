@@ -133,12 +133,14 @@ class ModelEntityOriginationService
 			case 'cms_EmailNotification':
 			case 'cms_NotificationSubscription':
 			case 'co_RemoteMailbox':
+			case 'co_Company':
 			case 'co_ScheduledJob':
 			case 'co_JobRun':
 			case 'pm_Importance':
 			case 'co_CustomReport':
 			case 'co_MailboxProvider':
 			case 'co_MailTransport':
+			case 'cms_ExternalUser':
 			case 'ObjectChangeLogAttribute':
 				return '';
 				

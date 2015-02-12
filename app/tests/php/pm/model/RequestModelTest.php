@@ -21,7 +21,8 @@ class RequestModelTest extends DevpromDummyTestCase
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
                         array ( 'Request', null, $this->entity ),
-                        array ( 'IssueState', null, new IssueState )
+                        array ( 'IssueState', null, new IssueState ),
+                        array ( 'RequestTraceMilestone', null, new RequestTraceMilestone )
                 ) 
         ));
         

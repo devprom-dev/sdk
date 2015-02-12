@@ -456,29 +456,6 @@ class ProjectIterator extends OrderedIterator
 		return $this->get('Rating');
 	}
 	
-	function storeMetrics()
-	{
-		$version_it = getFactory()->getObject('Release')->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('Project', $this->getId()),
-						new ReleaseTimelinePredicate('not-passed')
-				)
-		);
-
-		while ( !$version_it->end() )
-		{
-			$version_it->storeMetrics();
-			$version_it->moveNext();
-		}
-		
-		$this->object->setNotificationEnabled(false);
-		$this->object->modify_parms($this->getId(), 
-				array (
-						'Rating' => $this->getVelocityDevider()
-				)
-		);
-	}
-	
 	function getMetricsDate()
 	{
 		$sql = " SELECT MAX(m.RecordModified) LastDate " .
@@ -583,6 +560,19 @@ class ProjectIterator extends OrderedIterator
 		else
 		{
 			return $this->get('DaysInWeek');
+		}
+	}
+	
+	function getDefaultNotificationType()
+	{
+		switch( $this->get('Tools') )
+		{
+		    case 'ticket_ru.xml':
+		    case 'ticket_en.xml':
+		    	return 'system';
+		    	
+		    default:
+				return 'every1hour';    	
 		}
 	}
 }

@@ -12,8 +12,8 @@ class SecurityController extends BaseController {
 
     public function loginAction()
     {
-        $supportProjectId = $this->container->getParameter('supportProjectId');
-        if (!$supportProjectId) {
+        $supportProjects = $this->container->getParameter('supportProjects');
+        if (count($supportProjects)<1) {
             $settingsUrl = $this->container->get('router')->generate('settings_dashboard', array(), true);
             return new RedirectResponse($settingsUrl);
         }

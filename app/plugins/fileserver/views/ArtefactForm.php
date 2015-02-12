@@ -2,18 +2,6 @@
 
 class ArtefactForm extends PMPageForm
 {
- 	function IsAttributeVisible( $attr_name ) 
- 	{
-		switch ( $attr_name )
-		{
-			case 'Version':
-				return getSession()->getProjectIt()->getMethodologyIt()->HasVersions();
-				
-			default:
-				return parent::IsAttributeVisible( $attr_name );
-		}
-	}
-	
  	function validateInputValues( $id, $action )
 	{
 		if ( $action == 'add' || $action == 'modify' )

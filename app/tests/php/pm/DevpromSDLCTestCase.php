@@ -14,7 +14,6 @@ class DevpromSDLCTestCase extends DevpromPMApplicationTestCase
                      'IsReportsOnActivities' => 'Y', 
                      'IsPlanningUsed' => 'Y', 
                      'IsReleasesUsed' => 'I', 
-             		 'IsVersionsUsed' => 'Y',
              		 'HasMilestones' => 'Y',
              		 'IsTasks' => 'Y'
                   )

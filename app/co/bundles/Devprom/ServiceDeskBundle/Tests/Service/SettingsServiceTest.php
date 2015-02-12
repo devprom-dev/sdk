@@ -1,7 +1,9 @@
 <?php
 
 namespace Devprom\ServiceDeskBundle\Service;
+
 use PHPUnit_Framework_MockObject_MockObject;
+use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 
 /**
@@ -20,7 +22,7 @@ class SettingsServiceTest extends \PHPUnit_Framework_TestCase {
 
     protected function setUp()
     {
-        $this->kernel = new \ServiceDeskAppKernel('test', true);
+        $this->kernel = new ServiceDeskAppKernel('test', true);
         $this->kernel->boot();
         $this->storage = $this->getMock("SettingsStorage", array("saveSettings", "loadSettings"));
         $this->filter = $this->getMock("SettingsFilter", array("filter"));

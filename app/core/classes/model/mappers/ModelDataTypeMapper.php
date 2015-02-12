@@ -9,6 +9,7 @@ include_once "ModelDataTypeMappingFloat.php";
 include_once "ModelDataTypeMappingReference.php";
 include_once "ModelDataTypeMappingTag.php";
 include_once "ModelDataTypeMappingString.php";
+include_once "ModelDataTypeMappingPassword.php";
 
 class ModelDataTypeMapper
 {
@@ -24,7 +25,8 @@ class ModelDataTypeMapper
 				new ModelDataTypeMappingInteger(),
 				new ModelDataTypeMappingFloat(),
 				new ModelDataTypeMappingReference(),
-				new ModelDataTypeMappingString()
+				new ModelDataTypeMappingString(),
+				new ModelDataTypeMappingPassword()
 		);
 	}
 	
@@ -33,10 +35,19 @@ class ModelDataTypeMapper
 		foreach( $object->getAttributes() as $attribute => $attribute_data )
 		{
 			$mapper = $this->getMapper($object->getAttributeType($attribute));
-			
+	
 			if ( !array_key_exists($attribute, $values) ) continue;
 
-			$values[$attribute] = $mapper->map($values[$attribute]); 
+			$mapped_value = $mapper->map($values[$attribute]);
+			
+			if ( is_null($mapped_value) )
+			{
+				unset($values[$attribute]);
+			}
+			else
+			{
+				$values[$attribute] = $mapped_value;
+			}
 		}
 	}
 	

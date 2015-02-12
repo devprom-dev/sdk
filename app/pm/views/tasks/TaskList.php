@@ -59,13 +59,7 @@ class TaskList extends PMPageList
 			$this->object->addAttribute( 'Progress', '', translate('Прогресс'), false );
 		}
 		
-		$columns = parent::getColumns();
-		
-		// use AssigneeUser (User) instead of Assignee (Participant)
-		$key = array_search('Assignee', $columns);
-		if ( $key !== false ) unset($columns[$key]);
-		
-		return $columns;
+		return parent::getColumns();
 	}
 	
 	function getColumnFields()
@@ -84,6 +78,13 @@ class TaskList extends PMPageList
 		$fields[] = 'DueDays';
 		
 		return $fields;
+	}
+
+	function getGroup() 
+	{
+		$group = parent::getGroup();
+		if ( $group == 'AssigneeUser' ) return 'Assignee'; 
+		return $group;
 	}
 	
 	function getSorts()
@@ -197,6 +198,20 @@ class TaskList extends PMPageList
 				$frame->draw();
 				break;
 				
+			case 'IssueTraces':
+				$objects = preg_split('/,/', $object_it->get($attr));
+				$uids = array();
+				
+				foreach( $objects as $object_info )
+				{
+					list($class, $id) = preg_split('/:/',$object_info);
+					if ( $class == '' ) continue;
+					$ref_it = getFactory()->getObject($class)->getExact($id);
+					$uids[] = $this->getUidService()->getUidIcon($ref_it); 
+				}
+				echo join(', ',$uids);
+				break;
+				
 			default:
 				parent::drawCell( $object_it, $attr );
 		}
@@ -262,7 +277,7 @@ class TaskList extends PMPageList
 				
 				break;
 				
-			case 'AssigneeUser':
+			case 'Assignee':
 				
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				

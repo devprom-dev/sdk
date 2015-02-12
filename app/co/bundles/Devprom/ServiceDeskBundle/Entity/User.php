@@ -5,13 +5,15 @@ namespace Devprom\ServiceDeskBundle\Entity;
 use FOS\UserBundle\Entity\User as BaseUser;
 use Doctrine\ORM\Mapping as ORM;
 
-
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  *
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Devprom\ServiceDeskBundle\Repository\UserRepository")
  * @ORM\HasLifecycleCallbacks
  * @ORM\Table(name="cms_ExternalUser")
+ * @ORM\AttributeOverrides({
+ *      @ORM\AttributeOverride(name="usernameCanonical", column=@ORM\Column(type="string", name="username_canonical", length=255, unique=false))
+ * })
  */
 class User extends BaseUser {
 
@@ -29,6 +31,13 @@ class User extends BaseUser {
      */
     protected $language;
 
+    /**
+     * @ORM\OneToOne(targetEntity="Company")
+     * @ORM\JoinColumn(name="Company", referencedColumnName="co_CompanyId")
+     * @var Company
+     */
+    protected $company;
+    
     /**
      * @param int $id
      */
@@ -61,6 +70,22 @@ class User extends BaseUser {
         return $this->language;
     }
 
+    /**
+     * @param Company $company
+     */
+    public function setCompany($company)
+    {
+        $this->company = $company;
+    }
+
+    /**
+     * @return Company
+     */
+    public function getCompany()
+    {
+        return $this->company;
+    }
+    
     public function isCredentialsNonExpired()
     {
     	return true;

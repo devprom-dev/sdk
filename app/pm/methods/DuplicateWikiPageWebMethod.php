@@ -4,6 +4,11 @@ include_once "DuplicateWebMethod.php";
 
 class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 {
+	function getMethodName()
+	{
+		return 'Method:'.get_class($this).':Version:CopyOption:Description:Snapshot:Project';
+	}
+	
 	protected function buildContext()
 	{
 		$context = parent::buildContext();
@@ -24,12 +29,35 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 		
 		return $this->parent_it;
 	}
-	
+
 	public function setParentIt( $parent_it )
 	{
 		$this->parent_it = $parent_it;
 	}
-	
+
+	public function getSourceIt()
+	{
+	 	$object = $this->getObject();
+ 	    
+ 	    if ( $_REQUEST['Snapshot'] != '' )
+ 	    {
+			$version_it = getFactory()->getObject('Snapshot')->getExact($_REQUEST['Snapshot']);
+ 	    	 	    	
+ 	    	$object->addPersister( new SnapshotItemValuePersister($version_it->getId()) );
+			
+    		$registry = new WikiPageRegistryVersion();
+    			
+    		$registry->setDocumentIt($this->getObjectIt());
+    		$registry->setSnapshotIt($version_it);
+	    	$object->setRegistry($registry);
+		}
+ 	    
+ 	    $object->addFilter( new WikiRootTransitiveFilter($this->getObjectIt()->idsToArray()) );
+ 	    $object->addSort( new SortDocumentClause() );
+ 	    
+ 	    return $object->getAll();
+	}
+		
 	function getIdsMap( & $object )
 	{
 		if ( is_a($object, get_class($this->getObject())) )

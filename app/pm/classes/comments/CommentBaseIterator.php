@@ -18,26 +18,6 @@ class CommentBaseIterator extends OrderedIterator
 			'LCASE(ObjectClass)', strtolower($this->get('ObjectClass')) );
  	}
  
- 	function getUserInfo()
- 	{
- 		$user_it = $this->getRef('AuthorId');
-
- 		if ( $user_it->count() > 0 )
- 		{
-	 		return array(
-	 			'Email' => $user_it->get('Email'),
-	 			'Name' => $user_it->getDisplayName()
-	 			);
- 		}
- 		else
- 		{
-	 		return array(
-	 			'Email' => $this->get('ExternalEmail'),
-	 			'Name' => $this->get('ExternalAuthor')
-	 			);
- 		}
- 	}
- 	
  	function getThreadUserIt()
  	{
  		global $model_factory;
@@ -61,13 +41,11 @@ class CommentBaseIterator extends OrderedIterator
 		
 		while ( !$comment_it->end() ) 
 		{
-			$info = $comment_it->getUserInfo();
-
-			if( $info['Email'] != '' ) 
+			if( $comment_it->get('AuthorEmail') != '' ) 
 			{
-				if(in_array($info['Email'], $emails) === false) 
+				if(in_array($comment_it->get('AuthorEmail'), $emails) === false) 
 				{
-					array_push( $emails, $info['Email'] );
+					array_push( $emails, $comment_it->get('AuthorEmail') );
 				}
 			}
 			

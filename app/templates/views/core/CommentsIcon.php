@@ -9,9 +9,10 @@ if ( !$method->hasAccess() ) return;
 $method->setRedirectUrl($redirect != '' ? $redirect : 'function() {window.location.reload();}');
 
 ?>
-
-<a title="<?=$method->getCaption()?>" onclick="<?=$method->getJSCall()?>"><i class="icon-comment"></i></a>
-
-<?=$object_it->get('CommentsCount')?>
-
+<div>
+	<a class="btn btn-mini btn-success" title="<?=$method->getCaption()?>" onclick="<?=$method->getJSCall()?>">
+		<i class="icon-comment icon-white"></i>
+		<?=translate('Ответить')?>
+	</a>
+</div>
 												

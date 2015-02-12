@@ -22,9 +22,6 @@ class WorkflowTransitionTaskModelBuilder extends ObjectModelBuilder
 				$object->setAttributeRequired('Assignee', true);	
 				$object->setAttributeVisible('Assignee', true);
 			}
-			
-			$object->setAttributeRequired('Result', true);	
-			$object->setAttributeVisible('Result', true);
 		}
     }
 }

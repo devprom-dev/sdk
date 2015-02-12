@@ -7,7 +7,6 @@ class ProjectSettingsPage extends PMPage
     function __construct()
     {
         parent::__construct();
-        	
         $this->addInfoSection(new PMLastChangesSection(getSession()->getProjectIt()));
     }
 
@@ -18,6 +17,8 @@ class ProjectSettingsPage extends PMPage
 
     function getForm()
     {
-		return new ProjectForm(getSession()->getProjectIt());
+		$form = new ProjectForm(getFactory()->getObject('Project'));
+		$form->edit(getSession()->getProjectIt()->getId());
+		return $form;
     }
 }

@@ -4,6 +4,7 @@
  */
 
 use Symfony\Component\HttpFoundation\Request;
+use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include('../common.php');
 include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
@@ -11,8 +12,6 @@ include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 $plugins = new PluginsFactory();
 
 $model_factory = new ModelFactoryExtended($plugins);
-
-include_once SERVER_ROOT_PATH . '/app/Devprom/Component/HttpKernel/ServiceDeskAppKernel.php';
 
 // --------------------
 

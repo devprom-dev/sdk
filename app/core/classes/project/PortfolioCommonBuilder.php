@@ -21,6 +21,7 @@ class PortfolioCommonBuilder extends PortfolioBuilder
                 'Caption' => translate('Мои проекты'),
                 'CodeName' => 'my',
             	'IsKnowledgeUsed' => 'Y',
+            	'IsSupportUsed' => 'Y',
                 'LinkedProject' => $project_ids,
             	'RelatedProject' => $project_ids 
             ), 

@@ -37,18 +37,30 @@ class StateMetaRegistry extends ObjectRegistrySQL
 				array (
 						array ( 
 								'pm_StateId' => 1, 
-								'ReferenceName' => join(',',array_unique($ref_names['initial'])), 
-								'Caption' => translate('Добавлено')
+								'ReferenceName' => join(
+										$this->getObject()->getStatesDelimiter(),
+										array_unique($ref_names['initial'])
+								), 
+								'Caption' => translate('Добавлено'),
+								'IsTerminal' => 'N'
 						),
 						array ( 
 								'pm_StateId' => 2, 
-								'ReferenceName' => join(',',array_unique($ref_names['progress'])), 
-								'Caption' => translate('В работе')
+								'ReferenceName' => join(
+										$this->getObject()->getStatesDelimiter(),
+										array_unique($ref_names['progress'])
+								), 
+								'Caption' => translate('В работе'),
+								'IsTerminal' => 'N'
 						),
 						array ( 
 								'pm_StateId' => 3,
-								'ReferenceName' => join(',',array_unique($ref_names['final'])),
-								'Caption' => translate('Выполнено')
+								'ReferenceName' => join(
+										$this->getObject()->getStatesDelimiter(),
+										array_unique($ref_names['final'])
+								),
+								'Caption' => translate('Выполнено'),
+								'IsTerminal' => 'Y'
 						)
 				)
 		);

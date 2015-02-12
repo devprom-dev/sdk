@@ -11,8 +11,6 @@ class ModelDataTypeMappingPassword extends ModelDataTypeMapping
 	
 	public function map( $value )
 	{
-		if ( $value == SHADOW_PASS ) return '';
-	
-		return $value;
+		return $value == SHADOW_PASS ? null : $value;
 	}
 }

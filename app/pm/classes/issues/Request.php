@@ -21,8 +21,9 @@ include_once "predicates/RequestNonPlannedPredicate.php";
 include_once "predicates/RequestReleasePredicate.php";
 include_once "predicates/RequestDuplicatesOfFilter.php";
 include_once "predicates/RequestImplementationFilter.php";
+include_once "predicates/RequestDependencyFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
-include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
 class Request extends MetaobjectStatable 
 {
@@ -215,14 +216,7 @@ class Request extends MetaobjectStatable
 
 		if( $attr_name == 'Owner' )
 		{
-		    $session = getSession();
-		    
-		    if ( is_a($session, 'PMSession') ) 
-		    {
-		        $it = $session->getParticipantIt();
-		        
-		        return $it->getId();
-		    }
+			return getSession()->getUserIt()->getId();
 		}    
 		
 		if ( $attr_name == 'ClosedInVersion' && $_REQUEST['pm_ChangeRequestId'] > 0 )

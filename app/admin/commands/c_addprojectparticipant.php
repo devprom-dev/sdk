@@ -51,7 +51,7 @@ class AddProjectParticipant extends CommandForm
 			$id = $participant->add_parms( array ( 
 				'Project' => $_REQUEST['Project'],
 				'SystemUser' => $_REQUEST['SystemUser'],
-				'Notification' => 'every1hour' 
+				'Notification' => $project_it->getDefaultNotificationType() 
 			));
 
 			$part_it = $participant->getExact($id);

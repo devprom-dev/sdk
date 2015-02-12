@@ -61,7 +61,7 @@ class DictionaryPage extends PMPage
  	{
  	    if ( $_REQUEST['dict'] == '' )
  	    {
-            return new DictionaryTable();
+            return new DictionaryTable(getFactory()->getObject('Dictionary'));
  	    }
  	    
  		$object = $this->getDictionary();

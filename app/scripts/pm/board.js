@@ -147,7 +147,12 @@ var draggableOptions = {
 		boardCreated: '',
 		itemFormUrl: '',
 		resetParms: '&view=board&state=all&rows=all&offset2=0&infosections=none',
-		waitRequest: null
+		waitRequest: null,
+		resizeCards: function () 
+		{
+			$(this.itemCSSPath + ' div.bi-cap').width(this.getItemWidth() - 16);
+			$(this.itemCSSPath).width(this.getItemWidth());
+		}
 	};
 
 function board( options ) 
@@ -161,8 +166,8 @@ function board( options )
 
 function boardMake( options )
 {
-	$(options.itemCSSPath)
-		.width(options.getItemWidth()).draggable(options).css('position', '');
+	options.resizeCards();
+	$(options.itemCSSPath).draggable(options).css('position', '');
 
 	$(options.cellCSSPath).droppable({
 		hoverClass: options.hoverClass,
@@ -611,6 +616,8 @@ function redrawBoardChanges( options )
 	    complete: function(xhr, textStatus)
 	    {
 	    	if ( textStatus == "abort" ) return;
+	    	if ( xhr.responseText == "" ) return;
+	    	if ( $.inArray(xhr.status, [302,301,500,404]) != -1 ) return;
 	    	
     		setTimeout( function() {
     			redrawBoardChanges(options);

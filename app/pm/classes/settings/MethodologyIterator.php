@@ -77,11 +77,6 @@ class MethodologyIterator extends OrderedIterator
 		return true;
 	}
 	
-	function HasVersions()
-	{
-		return $this->get('IsVersionsUsed') == 'Y';
-	}
-	
 	function HasReleases()
 	{
 		return in_array($this->get('IsReleasesUsed'), array('Y', 'I'));

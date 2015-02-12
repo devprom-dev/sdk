@@ -56,7 +56,6 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 		
 	    // append default reports
 	    $report_it = $report->getExact('mytasks');
-
 	    if ( $report_it->getId() != '' && !in_array('mytasks', $custom_it->fieldToArray('ReportBase')) )
 	    {
     	    $custom->add_parms( array (
@@ -69,7 +68,6 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 	    }
 		    
 	    $report_it = $report->getExact('myissues');
-
 	    if ( $report_it->getId() != '' && !in_array('myissues', $custom_it->fieldToArray('ReportBase')) )
 	    {
    		    $custom->add_parms( array (
@@ -78,6 +76,18 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
    		            'Category' => FUNC_AREA_FAVORITES,
    		            'Url' => $report_it->get('QueryString'),
    		    		'OrderNum' => 11
+   		    ));
+	    }
+
+    	$report_it = $report->getExact('discussions');
+	    if ( $report_it->getId() != '' && !in_array('discussions', $custom_it->fieldToArray('ReportBase')) )
+	    {
+   		    $custom->add_parms( array (
+   		            'Caption' => $report_it->get('Caption'),
+   		            'ReportBase' => $report_it->getId(),
+   		            'Category' => FUNC_AREA_FAVORITES,
+   		            'Url' => $report_it->get('QueryString'),
+   		    		'OrderNum' => 12
    		    ));
 	    }
     }

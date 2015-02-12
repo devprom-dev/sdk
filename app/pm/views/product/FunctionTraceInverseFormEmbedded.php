@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/views/ui/ObjectTraceFormEmbedded.php";
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 
 class FunctionTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
 {
@@ -27,7 +28,7 @@ class FunctionTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  			case 'Feature':
 				$object = $this->getAttributeObject( $attr );
 
-				$field = new FieldAutoCompleteObject( $object );
+				$field = new FieldHierarchySelector( $object );
 				$field->setTitle( $object->getDisplayName() ); 
 				
 				return $field;

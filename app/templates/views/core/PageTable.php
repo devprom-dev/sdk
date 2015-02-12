@@ -23,7 +23,8 @@ echo $view->render('core/PageTableBody.php', array (
     'navigation_url' => $navigation_url,
     'navigation_title' => $navigation_title,
 	'title' => $title,
-    'changed_ids' => $changed_ids
+    'changed_ids' => $changed_ids,
+	'save_settings_alert' => $save_settings_alert
 ));
 
 ?>

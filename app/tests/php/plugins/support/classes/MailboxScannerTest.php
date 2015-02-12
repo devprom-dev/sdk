@@ -143,7 +143,7 @@ class MailboxScannerTest extends DevpromTestCase {
         		));
         // set up expectations
         $this->watcherMock->expects($this->once())->method("add_parms")
-            ->with(array('Email' => "test@test"));
+            ->with(array('Email' => "test@test", 'VPD' => ''));
 
         // exercise
         $scanner = $this->buildScanner();
@@ -165,7 +165,7 @@ class MailboxScannerTest extends DevpromTestCase {
         		));
         // set up expectations
         $this->watcherMock->expects($this->once())->method("add_parms")
-            ->with(array('Email' => "test@test"));
+            ->with(array('Email' => "test@test", "VPD" => ""));
 
         // exercise
         $mail_message = $this->buildMessage($subject);

@@ -16,6 +16,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
         
     	$object = $metadata->getObject();
     	
+    	$metadata->setAttributeType('Author', 'REF_IssueAuthorId');
     	$metadata->addPersister( new RequestDetailsPersister() );
     	
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
@@ -23,24 +24,18 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		if ( $methodology_it->getId() > 0 && $methodology_it->IsTimeTracking() )
 		{
 			$metadata->addAttribute('Fact', 'FLOAT', translate('Затрачено, ч.'), false, false, '', 35);
-
 		    $metadata->addPersister( new RequestFactPersister() );
-			
 		    $metadata->addAttributeGroup('Fact', 'transition');
 		}
 		
 		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true);
-
 		$metadata->addAttribute('Tags', 'REF_TagId', translate('Тэги'), true, false, '');
-		
 		$metadata->addPersister( new RequestTagsPersister() );
 		
 		$metadata->addAttribute( 'Links', 'REF_pm_ChangeRequestId', 'Связанные пожелания', true);
-		
 		$metadata->addAttributeGroup('Links', 'trace');
 		
 	    $metadata->addAttribute('Question', '', '', false);
-
 		$metadata->addAttributeGroup('Question', 'trace');
 	    
 	    if ( $methodology_it->HasTasks() )
@@ -51,6 +46,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		    
 			$metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', translate('Незавершенные задачи'), false, false, '', 210);
 		    $metadata->addAttributeGroup('OpenTasks', 'trace');
+			$metadata->addPersister( new RequestTasksPersister() );
 		}
 		else
 		{
@@ -61,14 +57,11 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 		$metadata->removeAttribute( 'Environment' );
 		
-		if ( $methodology_it->HasVersions() )
-		{
-		    $metadata->setAttributeCaption('SubmittedVersion', text(1335));
-		    
-		    $metadata->setAttributeCaption('ClosedInVersion', text(1334));
-		}
+	    $metadata->setAttributeCaption('SubmittedVersion', text(1335));
+	    $metadata->setAttributeCaption('ClosedInVersion', text(1334));
 		
 		$metadata->setAttributeType( 'Description', 'wysiwyg' );
+		$metadata->setAttributeType( 'Function', 'REF_FeatureId' );
 		
 		$strategy = $methodology_it->getEstimationStrategy();
 		
@@ -112,7 +105,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		    $metadata->addAttributeGroup($attribute, 'permissions');
 		}
 
-        if ( $methodology_it->HasMilestones() )
+		if ( $methodology_it->HasMilestones() )
 		{	
 			$metadata->addAttribute('Deadlines', 'REF_pm_MilestoneId', translate('Сроки'), true, false, '');
 
@@ -120,11 +113,8 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 	    }
 		
 		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
-
 		$metadata->setAttributeDescription('StartDate', text(1839));
-		
 		$metadata->setAttributeDescription('FinishDate', text(1840));
-		
 		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
 
 		$metadata->addPersister( new RequestOwnerPersister() );
@@ -144,16 +134,11 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		    $metadata->removeAttribute( 'Function' );
 		}
 		
- 	 	if ( $methodology_it->getId() > 0 && !$methodology_it->HasVersions() )
- 	 	{
-		    $metadata->removeAttribute( 'SubmittedVersion' );
-
-	 	 	$metadata->removeAttribute( 'ClosedInVersion' );
- 	 	}
- 	 	
 	 	if ( $methodology_it->getId() > 0 && !$methodology_it->HasReleases() )
  	 	{
 	 	 	$metadata->removeAttribute( 'PlannedRelease' );
+	 	 	$metadata->removeAttribute( 'SubmittedVersion' );
+	 	 	$metadata->removeAttribute( 'ClosedInVersion' );
  	 	}
  	 	
         $strategy = $methodology_it->getEstimationStrategy();
@@ -161,7 +146,6 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		if ( $methodology_it->getId() > 0 && !$strategy->hasEstimationValue() )
 		{
 		    $metadata->removeAttribute( 'Estimation' );
-		    
 		    $metadata->removeAttribute( 'EstimationLeft' );
 		}
 		

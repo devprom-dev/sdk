@@ -20,8 +20,7 @@ class TaskBusinessActionResetAssignee extends BusinessAction
 
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_Task');
+ 		return getFactory()->getObject('pm_Task');
  	}
  	
  	function getDisplayName()

@@ -45,7 +45,7 @@ class ModelService
 		
 		// check record extists already
 		$query = array();
-		
+if ( strpos($data['Caption'], 'There is no object') !== false ) return;		
 		// remove client data
 		unset($data['RecordCreated']);
 		unset($data['RecordModified']);
@@ -71,7 +71,7 @@ class ModelService
 				$data[$key] = \IteratorBase::utf8towin($value);
 			}
 			
-			$result = $object->add_parms($data);
+			$result = $this->create($object, $data);
 			
 			if ( $result < 1 ) throw new \Exception('Unable create new record of '.get_class($object));
 			
@@ -90,7 +90,7 @@ class ModelService
 				$data[$key] = \IteratorBase::utf8towin($value);
 			}
 			
-			if ( $object->modify_parms($object_it->getId(), $data) < 1 )
+			if ( $this->modify($object_it, $data) < 1 )
 			{
 				throw new \Exception('Unable update the record ('.$object_it->getId().') of '.get_class($object));
 			}
@@ -165,6 +165,16 @@ class ModelService
 		}
 		
 		return $result;
+	}
+	
+	protected function create( $object, $data )
+	{
+		return $object->add_parms($data);
+	}
+	
+	protected function modify( $object_it, $data )
+	{
+		return $object_it->object->modify_parms($object_it->getId(), $data);
 	}
 	
 	protected function sanitizeData( $object, $data )

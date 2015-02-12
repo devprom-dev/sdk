@@ -146,14 +146,12 @@ class ParticipantForm extends PMPageForm
 
  	function getFieldValue( $attr )
  	{
- 	    global $plugins;
- 	    
  	    switch ( $attr )
  	    {
  	        case 'Notification':
- 	            
- 	            if ( !is_object($this->getObjectIt()) ) return 'every1hour';
- 	            
+ 	            if ( !is_object($this->getObjectIt()) ) {
+ 	            	return getSession()->getProjectIt()->getDefaultNotificationType();
+ 	            }
  	            return parent::getFieldValue( $attr );
  	            
 			default:

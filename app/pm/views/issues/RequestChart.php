@@ -2,13 +2,6 @@
 
 class RequestChart extends PMPageChart
 {
- 	function __construct( $object )
- 	{
- 	    $object->setAttributeType( 'Author', 'REF_ProjectUserId' );
- 	    
-		parent::__construct( $object );
- 	}
-
  	function getPredicates( $values )
 	{
 	    $predicates = parent::getPredicates( $values );
@@ -32,15 +25,7 @@ class RequestChart extends PMPageChart
 	
 	function getGroupFields() 
 	{
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasVersions() )
-		{
-			return array_merge( parent::getGroupFields(),
-				array( 'ClosedInVersion', 'SubmittedVersion' ) );
-		}
-		else
-		{
-			return parent::getGroupFields();
-		}
+		return array_merge( parent::getGroupFields(), array( 'ClosedInVersion', 'SubmittedVersion' ) );
 	}
 	 		
 	function getAggByFields()

@@ -16,7 +16,7 @@ class ModelValidatorEmbeddedForm extends ModelValidatorInstance
 	public function validate( Metaobject $object, array & $parms )
 	{
 		$rows = array();
-				
+
 		if ( !$object->IsAttributeRequired($this->validate_field) ) return "";
 		
 		foreach( array_keys($parms) as $field )

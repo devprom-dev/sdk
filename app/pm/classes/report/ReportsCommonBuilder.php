@@ -532,6 +532,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 			);
 		}
 
+		/*
  		$module_it = $module->getExact('features-chart');
 
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) && $methodology_it->HasReleases() )
@@ -543,6 +544,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				        'module' => $module_it->getId() )
 			);
 		}
+		*/
 		
 		$module_it = $module->getExact('features-trace');
 		

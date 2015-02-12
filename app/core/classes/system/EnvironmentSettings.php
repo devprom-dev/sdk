@@ -183,4 +183,10 @@ class EnvironmentSettings
     {
     	return md5(INSTALLATION_UID.$_SERVER['SERVER_ADDR'].$_SERVER['PATH'].$_SERVER['SERVER_SOFTWARE']);
     }
+    
+    static public function ajaxRequest()
+    {
+    	$headers = apache_request_headers();
+    	return strtolower($headers['X-Requested-With']) == 'xmlhttprequest';
+    }
 }

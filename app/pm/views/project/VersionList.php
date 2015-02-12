@@ -72,7 +72,7 @@ class VersionList extends PMPageList
 				break;
 		}
 		
-		if ( $attr == 'Stage' || !$methodology_it->HasVersions() && $attr == 'VersionNumber' )
+		if ( $attr == 'Stage' || $attr == 'VersionNumber' )
 		{
 			switch ( $object_it->object->getClassName() )
 			{
@@ -113,7 +113,7 @@ class VersionList extends PMPageList
 				drawMore( $stage_it, 'Description', 10 );
 			}
 		}
-		elseif ( $methodology_it->HasVersions() && $attr == 'VersionNumber' )
+		elseif ( $attr == 'VersionNumber' )
 		{
 			switch ( $object_it->object->getClassName() )
 			{
@@ -373,8 +373,6 @@ class VersionList extends PMPageList
 	    
 	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 	    
-	    $b_is_version = $methodology_it->HasVersions();
-	    
 	    $iteration = $model_factory->getObject('pm_Release');
 	    $report = $model_factory->getObject('PMReport');
 
@@ -388,7 +386,7 @@ class VersionList extends PMPageList
 
 	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
 	            {
-	                if ( $methodology_it->HasVersions() && $this->version_settings->get('UseRelease') == 'Y' )
+	                if ( $this->version_settings->get('UseRelease') == 'Y' )
 	                {
 	                    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array(); 
 	                    array_push($actions,
@@ -420,7 +418,7 @@ class VersionList extends PMPageList
 	            {
 	                array_push( $actions, array() );
 	                array_push($actions,
-	                array('url' => $report_it->getUrl().'&release='.$object_it->get('Iterations'),
+	                array('url' => $report_it->getUrl().'&iteration='.$object_it->get('Iterations'),
 	                'name' => translate('Задачи')));
 	            }
 	            	
@@ -432,7 +430,7 @@ class VersionList extends PMPageList
 	            
 	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
 	            {
-	                if ( $methodology_it->HasVersions() && $this->version_settings->get('UseIteration') == 'Y' )
+	                if ( $this->version_settings->get('UseIteration') == 'Y' )
 	                {
 	                    array_push($actions, array() );
 	                    
@@ -504,8 +502,6 @@ class VersionList extends PMPageList
 	    global $model_factory;
 	    
 	    $actions = array();
-	    
-	    $b_is_version = getSession()->getProjectIt()->getMethodologyIt()->HasVersions();
 	    
 	    $iteration = $model_factory->getObject('pm_Release');
 	    $report = $model_factory->getObject('PMReport');
@@ -697,9 +693,6 @@ class VersionList extends PMPageList
  	{
  		switch ( $attr )
  		{
- 			case 'VersionNumber':
- 				return getSession()->getProjectIt()->getMethodologyIt()->HasVersions() ? 90 : '';
-
  			case 'Progress':
  				return 160;
  				
@@ -731,11 +724,6 @@ class VersionList extends PMPageList
 			'InitialEstimationError', 'InitialBugsInWorkload'
 		));
 		
-		if ( $methodology_it->HasVersions() )
-		{
-			array_unshift( $fields, 'Stage' );
-		}
-
 		if ( $methodology_it->HasPlanning() )
 		{
 			array_push( $fields, 'Burnup' );

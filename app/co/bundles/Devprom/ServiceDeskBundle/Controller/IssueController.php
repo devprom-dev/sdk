@@ -34,7 +34,7 @@ class IssueController extends Controller
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
         $issue = new Issue();
-        $form = $this->createForm(new IssueFormType($this->getProjectVPD(), true), $issue);
+        $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true), $issue);
         $form->bind($request);
 
         if ($form->isValid()) {
@@ -65,7 +65,7 @@ class IssueController extends Controller
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
         $issue = $this->getIssueService()->getBlankIssue();
-        $form = $this->createForm(new IssueFormType($this->getProjectVPD(), true), $issue);
+        $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true), $issue);
 
         return array(
             'issue' => $issue,
@@ -127,7 +127,7 @@ class IssueController extends Controller
         $descr = TextUtil::unescapeHtml($descr);
         $issue->setDescription($descr);
 
-        $editForm = $this->createForm(new IssueFormType($this->getProjectVPD()), $issue);
+        $editForm = $this->createForm(new IssueFormType($this->getProjectVpds()), $issue);
 
         return array(
             'issue' => $issue,
@@ -154,7 +154,7 @@ class IssueController extends Controller
 
         $this->checkUserIsAuthorized($issue);
 
-        $editForm = $this->createForm(new IssueFormType($this->getProjectVPD()), $issue);
+        $editForm = $this->createForm(new IssueFormType($this->getProjectVpds()), $issue);
         $editForm->bind($request);
 
         if ($editForm->isValid()) {
@@ -204,22 +204,32 @@ class IssueController extends Controller
     /**
      * Lists all Issue entities.
      *
-     * @Route("/{sortColumn}/{sortDirection}", name="issue_list", defaults={"sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
+     * @Route("/{filter}/{sortColumn}/{sortDirection}", name="issue_list", defaults={"filter" = "my", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
      * @Method("GET")
      * @Template()
      */
-    public function indexAction($sortColumn, $sortDirection)
+    public function indexAction($filter, $sortColumn, $sortDirection)
     {
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
-        $issues = $this->getIssueService()->getIssuesByProjectAndAuthor(
-            $this->getProjectId(), $this->getUser()->getEmail(), $sortColumn, $sortDirection
-        );
+    	if ( $filter == 'my' || $this->getUser()->getCompany()->getSeeCompanyIssues() != 'Y' )
+    	{
+	        $issues = $this->getIssueService()->getIssuesByAuthor(
+	            $this->getUser()->getEmail(), $sortColumn, $sortDirection
+	        );
+    	}
+    	else
+    	{
+	        $issues = $this->getIssueService()->getIssuesByCompany(
+	            $this->getUser()->getEmail(), $sortColumn, $sortDirection
+	        );
+    	}
 
         return array(
             'issues' => $issues,
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
+        	'issuesFilter' => $filter
         );
     }
 
@@ -229,17 +239,20 @@ class IssueController extends Controller
      */
     protected function getProjectId()
     {
-        return $this->container->getParameter('supportProjectId');
+        return array_shift($this->container->getParameter('supportProjects'));
     }
 
-    /**
-     * @return string
-     */
-    protected function getProjectVPD()
+    protected function getProjectVpds()
     {
-        return \ModelProjectOriginationService::getOrigin($this->getProjectId());
+    	$customer_vpds = array();
+    	foreach($this->getUser()->getCompany()->getProjects() as $project_ref) {
+    		$customer_vpds[] = $project_ref->getProject()->getVpd();
+    	}
+    	return count($customer_vpds) > 0 
+    		? array_intersect($customer_vpds, $this->container->getParameter('supportProjectVpds'))
+    		: $this->container->getParameter('supportProjectVpds');
     }
-
+    
     /**
      * @param $issueComment
      * @return \Symfony\Component\Form\Form
@@ -273,9 +286,11 @@ class IssueController extends Controller
      */
     protected function checkUserIsAuthorized(Issue $issue)
     {
-        if ($issue->getAuthorEmail() != $this->getUser()->getEmail()) {
-            throw new HttpException(403);
-        }
+        if ($issue->getAuthorEmail() == $this->getUser()->getEmail()) return;
+        
+        $service = $this->container->get('user_service');
+        if ( $service->isCollegues($issue->getAuthorEmail(), $this->getUser()->getEmail()) ) return;
+        
+        throw new HttpException(403);
     }
-
 }

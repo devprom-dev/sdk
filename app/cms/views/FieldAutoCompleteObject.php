@@ -112,9 +112,13 @@ class FieldAutoCompleteObject extends Field
 
  	    if ( $value == '' ) return $this->getObject()->createCachedIterator(array());
  	    
- 	    if ( is_numeric($value) )
+ 	    $ids = array_filter(preg_split('/[,-]/',$value), function($id) {
+ 	    			return is_numeric($id);
+ 	    		});
+ 	    
+ 	    if ( count($ids) > 0 )
  	    {
- 	    	return $this->getObject()->getExact($value);
+ 	    	return $this->getObject()->getExact($ids);
  	    }
  	    else
  	    {

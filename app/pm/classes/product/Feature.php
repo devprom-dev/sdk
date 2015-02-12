@@ -3,14 +3,15 @@
 include "FeatureIterator.php";
 include "predicates/FeatureStateFilter.php";
 include "predicates/FeatureStageFilter.php";
+include "predicates/FeatureRootFilter.php";
 include "sorts/SortFeatureStartClause.php";
+include "sorts/SortFeatureHierarchyClause.php";
 
 class Feature extends Metaobject
 {
- 	function __construct() 
+ 	function __construct( $registry = null ) 
  	{
- 		parent::__construct('pm_Function', null, getSession()->getCacheKey());
- 		
+ 		parent::__construct('pm_Function', $registry, getSession()->getCacheKey());
  		$this->setSortDefault( new SortAttributeClause('Caption') );
  	}
 

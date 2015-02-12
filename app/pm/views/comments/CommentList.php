@@ -136,25 +136,6 @@ class CommentList
 		$comments = array();
 		
  		do {
-	   		if ( $comment_it->get('AuthorId') > 0 )
-	   		{
-				$author_it = $comment_it->getRef('AuthorId');
-				
-				$title = $author_it->getDisplayName();
-	   		}
-	   		else
-	   		{
-	   		    $author_it = null;
-	   		    
-				$externalEmail = $comment_it->get('ExternalEmail');
-                $externalName = $comment_it->get('ExternalAuthor');
-                if ($externalName) {
-                    $title = sprintf("%s &lt;%s&gt;", $externalName, $externalEmail);
-                } else {
-                    $title = $externalEmail;
-                }
-	   		}
-	   		
 	   		ob_start();
 	   		
 	   		$this->drawComment( $comment_it );
@@ -180,8 +161,8 @@ class CommentList
 	        	        
  			$comments[] = array (
  				'id' => $comment_it->getId(),
- 				'author' => $title,
- 			    'author_id' => is_object($author_it) ? $author_it->getId() : '',
+ 				'author' => $comment_it->get('AuthorName'),
+ 			    'author_id' => $comment_it->get('AuthorId'),
  				'created' => $comment_it->getDateTimeFormat('RecordCreated'),
  				'actions' => $this->getActions( $comment_it ),
  				'html' => $text,

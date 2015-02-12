@@ -273,10 +273,7 @@ class ReportSpentTimeList extends PMStaticPageList
 					$project = $model_factory->getObject('pm_Project');
 					
 					$project_it = $project->getExact($object_it->get('ItemId')); 
-
-					echo '<b>';
-						echo '<a href="/pm/'.$project_it->get('CodeName').'/">'.$project_it->getDisplayName().'</a>';
-					echo '</b>';
+					echo $project_it->getDisplayName();
 					
 					break;
 			    
@@ -413,13 +410,6 @@ class ReportSpentTimeList extends PMStaticPageList
 
 	function getRowBackgroundColor( $object_it )
 	{
-		switch ( $object_it->get('Item') )
-		{
-			case 'Participant':
-				return '#F6F3FE';
-			
-			case 'Task':
-				return 'white';
-		}
+		return $object_it->get('Item') == $_REQUEST['group'] ? '#F6F3FE' : 'white'; 
 	}	
 }

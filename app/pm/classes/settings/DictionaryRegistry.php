@@ -4,13 +4,13 @@ class DictionaryRegistry extends ObjectRegistrySQL
 {
 	private $entities = array();
 	
- 	function addEntity( & $object )
+ 	function addEntity( & $object, $caption = '' )
  	{
  	    if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
 
  		$this->entities[] = array (
  			'entityId' => get_class($object),
- 			'Caption' => $object->getDisplayName(),
+ 			'Caption' => $caption != '' ? $caption : $object->getDisplayName(),
  			'ReferenceName' => get_class($object)
  		);
  	}

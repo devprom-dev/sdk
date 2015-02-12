@@ -81,18 +81,16 @@ class RequestList extends PMPageList
 	function getGroupFields() 
 	{
 		$fields = array_merge( parent::getGroupFields(), array( 'Tags', 'DeadlinesDate' ) );
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasVersions() )
-		{
-			return array_merge( $fields,
-				array( 'ClosedInVersion', 'SubmittedVersion' ) );
-		}
-		else
-		{
-			return $fields;
-		}
+		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion' ) );
 	}
 
+	function getGroup() 
+	{
+		$group = parent::getGroup();
+		if ( $group == 'OwnerUser' ) return 'Owner'; 
+		return $group;
+	}
+	
 	function getRowBackgroundColor( $object_it ) 
 	{
 		return 'white';

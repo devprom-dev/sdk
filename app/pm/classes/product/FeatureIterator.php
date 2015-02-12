@@ -2,42 +2,28 @@
 
 class FeatureIterator extends OrderedIterator
 {
- 	var $request;
- 	
- 	function get( $attr_name ) 
- 	{
- 		if( $attr_name == 'Responsible') 
- 		{
-			$responsible = array('ResponsibleAnalyst', 'ResponsibleDesigner', 
-				'ResponsibleDeveloper', 'ResponsibleTester', 'ResponsibleDocumenter');
-			$caption = array('Анализ', 'Проектирование', 'Разработка', 
-				'Тестирование', 'Документирование');
+	function getDisplayName()
+	{
+		return $this->get('CaptionAndType');
+	}
+	
+ 	function getTransitiveRootArray()
+	{
+	    $roots = array();
+	    
+		$parent_page = $this->getId();
+		
+		while( $parent_page != '' ) 
+		{
+		    $roots[] = $parent_page;
+		    
+			$parent_page_it = $this->object->getExact($parent_page);
 			
-			for($i = 0; $i < count($responsible); $i++) {
-				if($this->get($responsible[$i]) != '') {
-					$part_it = $this->getRef($responsible[$i]);
-					$value .= ' <i>'.translate($caption[$i]).'</i>: '.$part_it->getDisplayName().'<br/>';
-				}
-			}
- 			return '<br/>'.$value;
- 		}
- 	 	
- 		return parent::get( $attr_name );
- 	}
-
- 	/*
- 	 * returns issues of the function
- 	 */
- 	function getPlannedIssueIt( $iteration_id )
- 	{
- 		$sql = 
-	 	    ' SELECT r.* FROM pm_ChangeRequest r ' .
-			'  WHERE r.Function = '.$this->getId().
-			'    AND r.Project = '.getSession()->getProjectIt()->getId().
-			'    AND EXISTS (SELECT 1 FROM pm_Task t ' .
-			'				  WHERE t.ChangeRequest = r.pm_ChangeRequestId ' .
-			'                   AND t.Release = ' .$iteration_id.' ) ';
+			if( $parent_page_it->get('ParentFeature') == '' ) break; 
 			
- 		return getFactory()->getObject('pm_ChangeRequest')->createSQLIterator( $sql );
- 	}
+			$parent_page = $parent_page_it->get("ParentFeature");
+		}
+		
+		return $roots;
+	}
 } 

@@ -91,32 +91,7 @@ class RequestTable extends PMPageTable
             );
 	    }
 	    
-		///
-		if ( getFactory()->getAccessPolicy()->can_modify($this->object) )
-		{
-			$list = $this->getListRef();
-			
-			if ( $list->IsNeedToSelect() )
-			{
-				$actions[] = array();
-
-				$actions[] = array( 
-				    'name' => translate('Выбрать все'),
-					'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 
-					'title' => text(969),
-					'radio' => true
-				);
-
-				$actions[] = array( 
-                    'name' => translate('Массовые операции'),
-					'url' => 'javascript: processBulkMethod();', 
-                    'title' => text(651)
-                );
-			}
-		}
-		
-        $trace_attributes = $this->getObject()->getAttributesByGroup('trace');
-        
+	    $trace_attributes = $this->getObject()->getAttributesByGroup('trace');
         if ( count($trace_attributes) > 0 )
         {
             if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
@@ -128,6 +103,33 @@ class RequestTable extends PMPageTable
     		);
         }
         
+	    ///
+		$list = $this->getListRef();
+
+		if ( $list->IsNeedToSelect() )
+		{
+            if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
+			$actions[] = array( 
+			    'name' => translate('Выбрать все'),
+				'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 
+				'title' => text(969),
+				'radio' => true
+			);
+		}
+		
+	    $bulk_actions_access = 
+				getFactory()->getAccessPolicy()->can_modify($this->object) 
+				&& !getSession()->getProjectIt()->object instanceof Portfolio; 
+	    
+		if ( $bulk_actions_access )
+		{
+			$actions[] = array( 
+                    'name' => translate('Массовые операции'),
+					'url' => 'javascript: processBulkMethod();', 
+                    'title' => text(651)
+            );
+		}
+		
 		return array_merge($actions, parent::getActions());
 	}
 
@@ -165,7 +167,7 @@ class RequestTable extends PMPageTable
 			    
 		    if ( $report == 'myissues' )
 		    { 
-		    	$parms['Owner'] = getSession()->getParticipantIt()->getId(); 
+		    	$parms['Owner'] = getSession()->getUserIt()->getId(); 
 			}
 				
 			$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
@@ -455,7 +457,14 @@ class RequestTable extends PMPageTable
 	
 	protected function buildFilterState()
 	{
-		return new ViewRequestStateWebMethod();
+		if ( $this->getListRef() instanceof RequestBoard )
+		{
+			return new ViewRequestStateWebMethod($this->getListRef()->getBoardAttributeIterator());
+		}
+		else
+		{
+			return new ViewRequestStateWebMethod();
+		}
 	}
 	
 	protected function buildFilterType()
@@ -485,21 +494,18 @@ class RequestTable extends PMPageTable
 	
 	protected function buildFilterAuthor()
 	{
-		$count = getFactory()->getObject('IssueAuthor')->getRecordCount();
-		
-		if ( $count < 50 )
+		$author = getFactory()->getObject('IssueActualAuthor');
+		$count = $author->getRecordCount();
+		if ( $count < 21 )
 		{
-			$filter = new FilterObjectMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
-			
+			$filter = new FilterObjectMethod($author, translate('Автор'), 'author');
 			$filter->setHasNone(false);
 		}
 		else
 		{
-			$filter = new FilterAutoCompleteWebMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
+			$filter = new FilterAutoCompleteWebMethod($author, translate('Автор'), 'author');
 		}
-		
 		$filter->setIdFieldName('Login');
-		
 		return $filter;
 	}
 

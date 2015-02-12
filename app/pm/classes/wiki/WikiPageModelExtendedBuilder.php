@@ -2,7 +2,7 @@
 
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/comments/persisters/CommentRecentPersister.php";
-include_once SERVER_ROOT_PATH."pm/classes/common/persisters/WatchersPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
 include "persisters/WikiPageFeaturePersister.php";
 include "persisters/WikiPageDetailsPersister.php";

@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Translation\Translator;
 
 include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
+include_once SERVER_ROOT_PATH.'admin/classes/common/AdminSession.php';
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -28,7 +29,7 @@ class ObjectChangeLogger
      * @var Translator
      */
     private $translator;
-    private $session = null;
+    private $project_session = null;
 
     function __construct(EntityManager $em, Translator $translator)
     {
@@ -40,22 +41,13 @@ class ObjectChangeLogger
     public function logIssueCreated(Issue $issue) {
 		$lock = new \LockFileSystem( 'Request' );
         $lock->Release();
-
         $this->notifyIssueCreated($issue);
     }
 
     public function logCommentCreated(IssueComment $comment) {
-        $ocl = $this->createBaseObjectChangeLog($comment->getIssue());
-        $ocl->setChangeKind('commented');
-        $ocl->setClassName('request');
-        $ocl->setVisibilityLevel(2);
-        $ocl->setContent($this->translator->trans('change.log.commented', array(
-            '%commentId%' => $comment->getId(),
-            '%comment%' => $comment->getText(),
-        )));
-
-        $this->em->persist($ocl);
-        $this->em->flush();
+		$lock = new \LockFileSystem( 'Comment' );
+        $lock->Release();
+        $this->notifyCommentCreated($comment);
     }
 
     /**
@@ -80,7 +72,7 @@ class ObjectChangeLogger
         $this->em->flush();
     }
 
-    public function logExternalUserRegistered(User $user, $projectVPD) {
+    public function logExternalUserRegistered(User $user) {
         $ocl = new ObjectChangeLog();
         $ocl->setCaption($user->getUsername());
         $ocl->setEntityRefName('cms_ExternalUser');
@@ -88,11 +80,12 @@ class ObjectChangeLogger
         $ocl->setChangeKind('added');
         $ocl->setClassName('externaluser');
         $ocl->setObjectId($user->getId());
-        $ocl->setVpd($projectVPD);
         $ocl->setVisibilityLevel(1);
 
         $this->em->persist($ocl);
         $this->em->flush();
+        
+        $this->notifyCustomerCreated($user);
     }
 
 
@@ -131,13 +124,12 @@ class ObjectChangeLogger
         return $unitOfWork->getEntityChangeSet($issue);
     }
 
-    protected function buildSession($issue)
+    protected function buildAdminSession()
     {
-    	if ( is_object($this->session) ) return;
-		
+    	if ( is_object($this->admin_session) ) return;
     	$system_it = getFactory()->getObject('SystemSettings')->getAll();
-		return $this->session = new \PMSession(
-				getFactory()->getObject('Project')->getExact($issue->getProject()), 
+    	
+		return $this->admin_session = new \AdminSession(
 				new \AuthenticationFactory(
 						getFactory()->getObject('User')->createCachedIterator(
 								array (
@@ -151,9 +143,36 @@ class ObjectChangeLogger
 			);
     }
     
+    protected function buildProjectSession($issue)
+    {
+    	$system_it = getFactory()->getObject('SystemSettings')->getAll();
+    	
+		return $this->project_session = new \PMSession(
+				getFactory()->getObject('Project')->getExact($issue->getProject()->getId()), 
+				new \AuthenticationFactory(
+						getFactory()->getObject('User')->createCachedIterator(
+								array (
+										array (
+												'Caption' => $system_it->getDisplayName(),
+												'Email' => $system_it->get('AdminEmail')
+										)
+								)
+							)						
+        		)
+			);
+    }
+    
+    protected function notifyCustomerCreated(User $user)
+    {
+    	$this->buildAdminSession();
+		getFactory()->getEventsManager()->notify_object_add(
+				getFactory()->getObject('Customer')->getExact($user->getId()), array()
+			);
+    }
+    
     protected function notifyIssueCreated(Issue $issue)
     {
-    	$this->buildSession($issue);
+    	$this->buildProjectSession($issue);
 		getFactory()->getEventsManager()->notify_object_add(
 				getFactory()->getObject('Request')->getExact($issue->getId()), array()
 			);
@@ -161,10 +180,18 @@ class ObjectChangeLogger
 
     protected function notifyIssueModified(Issue $issue)
     {
-    	$this->buildSession($issue);
+    	$this->buildProjectSession($issue);
     	$issue_it = getFactory()->getObject('Request')->getExact($issue->getId());
 		getFactory()->getEventsManager()->notify_object_modify(
 				$issue_it, $issue_it, array()
+			);
+    }
+
+    protected function notifyCommentCreated(IssueComment $comment)
+    {
+    	$this->buildProjectSession($comment->getIssue());
+    	getFactory()->getEventsManager()->notify_object_add(
+				getFactory()->getObject('Comment')->getExact($comment->getId()), array()
 			);
     }
 }
