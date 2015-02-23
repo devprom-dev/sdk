@@ -458,7 +458,9 @@ class PMPageTable extends PageTable
 	        case 'pm_ChangeRequest':
 	        case 'pm_Task':
 	        case 'WikiPage':
-	        	$filters[] = $this->buildFilterWatcher();
+	        	$filter = $this->buildFilterWatcher();
+	        	if ( is_object($filter) ) $filters[] = $filter;
+	        	break;
 	    }
 	    
         return $filters;

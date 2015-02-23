@@ -126,7 +126,7 @@ class WikiParser
 		$result = preg_replace_callback('/\[code\]([0-9]+)\[\/code\]/mi', preg_code_callback_restore, $result);
 		$result = preg_replace_callback('/\[uml\]([0-9]+)\[\/uml\]/mi', preg_uml_callback_restore, $result);
 		
-		$result = preg_replace_callback('/\[image=([^\[]+)\]/im', preg_image_callback, $result);
+		$result = preg_replace_callback('/\[image=([^\[]+)\]/im', array($this, 'replaceImageCallback'), $result);
 		
 		// returns line delimiters
 		$result = preg_replace('/(\$\%)/s', '<br/>', $result);
@@ -538,6 +538,70 @@ class WikiParser
 	 	
  		return $object_it->getHtmlDecoded('Content');
     }
+    
+    function replaceImageCallback( $match )
+    {
+     	global $image_num;
+	
+		$image_num += 1;
+		$image_width = '';
+		
+		$width_array = array();
+		if ( preg_match('/width=([0-9]+[\%]?)/i', $match[1], $width_array) > 0 )
+		{
+			$image_width = 'width="'.$width_array[1].'"';
+			$match[1] = str_replace('width='.$width_array[1], '', $match[1]);
+		}
+	
+		$text_array = array();
+		if ( preg_match('/^(.*)\s+text=(.*)$/i', $match[1], $text_array) > 0 )
+		{
+			$image_name = $text_array[1];
+			$image_caption = $text_array[2];
+		}
+		else
+		{
+			$image_name = $match[1];
+		}
+	
+		if ( strpos($image_name, 'http:') !== false || strpos($image_name, 'https:') !== false )
+		{
+	 		$result = '<center><img class="wiki_page_image" alt="'.
+	 			$image_caption.'" src="'.$image_name.'" '.$image_width.'/></center>';
+	 			
+	 		return $result;
+		}
+		
+		$image_it = $this->getFileByName($image_name);
+		
+		if ( $image_it->count() > 0 ) 
+		{
+			$url = $this->_getFileUrl($image_it);
+			
+	 		if ( $this->hasUrlOnImage() && $image_width != '' )
+	 		{
+	 			$result .= '<a class="preview" href="'.$url.'&.png" title="'.$image_caption.'">';
+	 		}
+	
+	 		$result .= '<center><img class="wiki_page_image" alt="'.$image_caption.'" src="'.$url.'" '.$image_width.'></center>';
+	
+	 		if ( $this->hasUrlOnImage() && $image_width != '' )
+	 		{
+	 			$result .= '</a>';
+	 		}
+	 		
+	 		if ( $this->hasImageTitle() && $image_caption != '' )
+	 		{
+			   $result .= '<div align=center class="image"> Ðèñ. '.$image_num.'. '.$image_caption.'</div>';
+	 		}
+	 		
+	 		return $result;
+		}
+		else
+		{
+			return $image_name; 
+		}    	
+    }
  }
  
  function preg_font_callback ( $match )
@@ -552,71 +616,7 @@ class WikiParser
  	}
  }
  
- function preg_image_callback( $match ) 
- {
- 	global $wiki_parser, $image_num;
-	
-	$image_num += 1;
-	$image_width = '';
-	
-	$width_array = array();
-	if ( preg_match('/width=([0-9]+[\%]?)/i', $match[1], $width_array) > 0 )
-	{
-		$image_width = 'width="'.$width_array[1].'"';
-		$match[1] = str_replace('width='.$width_array[1], '', $match[1]);
-	}
-
-	$text_array = array();
-	if ( preg_match('/^(.*)\s+text=(.*)$/i', $match[1], $text_array) > 0 )
-	{
-		$image_name = $text_array[1];
-		$image_caption = $text_array[2];
-	}
-	else
-	{
-		$image_name = $match[1];
-	}
-
-	if ( strpos($image_name, 'http:') !== false || strpos($image_name, 'https:') !== false )
-	{
- 		$result = '<center><img class="wiki_page_image" alt="'.
- 			$image_caption.'" src="'.$image_name.'" '.$image_width.'/></center>';
- 			
- 		return $result;
-	}
-	
-	$image_it = $wiki_parser->getFileByName($image_name);
-	
-	if ( $image_it->count() > 0 ) 
-	{
-		$url = $wiki_parser->_getFileUrl($image_it);
-		
- 		if ( $wiki_parser->hasUrlOnImage() && $image_width != '' )
- 		{
- 			$result .= '<a class="preview" href="'.$url.'&.png" title="'.$image_caption.'">';
- 		}
-
- 		$result .= '<center><img class="wiki_page_image" alt="'.$image_caption.'" src="'.$url.'" '.$image_width.'></center>';
-
- 		if ( $wiki_parser->hasUrlOnImage() && $image_width != '' )
- 		{
- 			$result .= '</a>';
- 		}
- 		
- 		if ( $wiki_parser->hasImageTitle() && $image_caption != '' )
- 		{
-		   $result .= '<div align=center class="image"> Ðèñ. '.$image_num.'. '.$image_caption.'</div>';
- 		}
- 		
- 		return $result;
-	}
-	else
-	{
-		return $image_name; 
-	}
- }
- 
-  function preg_url_callback( $match ) 
+ function preg_url_callback( $match ) 
  {
  	global $wiki_parser;
 	

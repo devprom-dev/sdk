@@ -11,7 +11,7 @@ class ObjectStatePredicate extends FilterPredicate
  		}
  		else
  		{
-			return " AND t.StateObject IN (SELECT so.pm_StateObjectId FROM pm_StateObject so WHERE so.State = ".$state_it->getId().") ";
+			return " AND t.State = '".$state_it->get('ReferenceName')."' ";
  		}
  	}
 } 

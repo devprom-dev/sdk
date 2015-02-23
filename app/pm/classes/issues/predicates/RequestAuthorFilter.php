@@ -22,7 +22,7 @@ class RequestAuthorFilter extends FilterPredicate
  		{
  			$author_it = getFactory()->getObject('IssueAuthor')->getRegistry()->Query(
  					array (
- 							new FilterAttributePredicate('Caption', $emails)
+ 							new FilterInPredicate(join(',',$emails))
  					)
  			);
  			$emails = $author_it->fieldToArray('Email');
@@ -38,6 +38,8 @@ class RequestAuthorFilter extends FilterPredicate
  			$predicate .= ($predicate != '' ? " OR " : "").
  					" t.Author IS NULL AND NOT EXISTS (SELECT 1 FROM pm_Watcher w WHERE w.Email <> '' AND w.ObjectId = t.pm_ChangeRequestId) ";
  		}
+ 		
+ 		if ( $predicate == '' ) return " AND 1 = 2 ";
  		
  		return " AND (".$predicate.") ";
  	}

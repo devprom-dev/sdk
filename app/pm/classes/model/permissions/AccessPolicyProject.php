@@ -392,13 +392,10 @@ class AccessPolicyProject extends AccessPolicyBase
 			default:
 				switch ( $ref_name )
 				{
-					case 'pm_Release':
-					case 'pm_Milestone':
-					case 'pm_Methodology':
 					case 'pm_Version':
-					case 'pm_PublicInfo':
+					case 'pm_Release':
+					case 'pm_Methodology':
 					case 'pm_VersionSettings':
-					case 'pm_TaskType':
 					case 'pm_ProjectStage':
 					case 'pm_ProjectRole':
 					case 'pm_ParticipantRole':

@@ -6,13 +6,14 @@ class ResourceBuilderLanguageFiles extends ResourceBuilder
 {
     public function build( ResourceRegistry $object )
     {
-   		global $text_array;
+    	$lang = strtolower(getSession()->getLanguage()->getLanguage());
+    	
+   		foreach ( include(SERVER_ROOT_PATH.'/lang/'.$lang.'/resource.php') as $key => $value )
+		{
+		    $object->addText($key, $value);
+		}
 
-   		$file_name = strtolower(getSession()->getLanguage()->getLanguage()).'/resource.php';
-   		        
-		include SERVER_ROOT_PATH.'/lang/'.$file_name;
-   		        
-   		foreach ( $text_array as $key => $value )
+   		foreach ( include(SERVER_ROOT_PATH.'/lang/'.$lang.'/terms.php') as $key => $value )
 		{
 		    $object->addText($key, $value);
 		}

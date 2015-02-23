@@ -48,6 +48,7 @@ class WikiTemplateList extends PMPageList
         		
         		$this->getTable()->getForm()->render( $this->getTable()->getView(), array());
 
+        		echo '<hr/>';
         		break;
 
 			default:

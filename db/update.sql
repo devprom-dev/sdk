@@ -1571,6 +1571,15 @@ ALTER TABLE co_Service ADD PayedTill DATE;
 ALTER TABLE co_Service MODIFY VPD VARCHAR(256);
 END IF;
 
+IF NOT check_column_exists('Severity', 'pm_ChangeRequest') THEN
+ALTER TABLE pm_ChangeRequest ADD Severity INTEGER;
+UPDATE pm_ChangeRequest SET Severity = Priority;
+END IF;
+
+UPDATE attribute SET AttributeType = 'VARCHAR' WHERE ReferenceName = 'Author' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'ObjectChangeLog');
+
+ALTER TABLE ObjectChangeLog MODIFY Author VARCHAR(255);
+
 --
 --
 --

@@ -304,6 +304,9 @@ class Project extends Metaobject
 		    case 'CodeName':
 		    	return 'project'.($this->getRegistry()->Count() + 1);
 		    	
+		    case 'OrderNum':
+		    	return '';
+		    	
 		    default:
 		    	return parent::getDefaultAttributeValue( $attr );
 		}

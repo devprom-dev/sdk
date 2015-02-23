@@ -358,7 +358,8 @@ class PageForm extends MetaObjectForm
 		
 		$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
 		
-		if ( !is_object($transition_it) ) return $actions;		
+		if ( !is_object($transition_it) ) $transition_it = array_shift(array_values($this->transitions_array));		
+		if ( !is_object($transition_it) ) return $actions;
 		
 		$transition_it->moveFirst();
 		

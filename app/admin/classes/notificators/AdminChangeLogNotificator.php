@@ -28,11 +28,6 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
 		return parent::is_active( $object_it );
 	}
 
-	function getUser()
-	{
-		return getSession()->getUserIt()->getId();
-	}
-
 	function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
 		switch ( $object_it->object->getClassName() )

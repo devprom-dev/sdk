@@ -71,4 +71,8 @@ class WikiTemplateTable extends PMPageTable
 	{
 	    return 'pm/WikiDocument.php';
 	}
+
+	protected function buildFilterWatcher()
+	{
+	}
 } 

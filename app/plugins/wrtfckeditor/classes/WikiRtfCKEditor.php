@@ -81,7 +81,7 @@ class WikiRtfCKEditor extends WikiEditorBase
  	
  	function getTemplateCallback()
  	{
- 		return "function(result) { var editor_id = $('textarea[id*=".$this->getFieldId()."]').attr('id'); $('body', window.frames[0].document).focus(); var instance = CKEDITOR.instances[editor_id]; instance.insertHtml(result); }"; 
+ 		return "function(result) { pasteTemplate( '".$this->getFieldId()."', result ); }"; 
  	}
   	
   	function getAttachmentsCallback()

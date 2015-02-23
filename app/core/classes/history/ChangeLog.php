@@ -15,6 +15,7 @@ include "predicates/ChangeLogParticipantFilter.php";
 include "predicates/ChangeLogStartFilter.php";
 include "predicates/ChangeLogVisibilityFilter.php";
 include "predicates/ChangeLogAccessFilter.php";
+include "sorts/SortChangeLogRecentClause.php";
 
 class ChangeLog extends Metaobject
 {

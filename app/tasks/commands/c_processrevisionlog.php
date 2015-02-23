@@ -8,41 +8,40 @@ class ProcessRevisionLog extends TaskCommand
 	{
 		$this->logStart();
 		
-		$job_data_it = $this->getData();
-		
-		$parameters = $job_data_it->getParameters();
-		
-		$step = $parameters['limit'] > 0 ? $parameters['limit'] : 30;
+		$ids = $this->getChunk(); 
 
-		$job_it = $this->getJob();
-		
-		if ( $job_it->count() > 0 )
+		// shift the next chunk
+		if ( count($ids) < 1 )
 		{
-			while ( !$job_it->end() )
+			$job_it = $this->getJob();
+			if ( $job_it->getId() > 0 )
 			{
-				$this->processChunk( preg_split('/,/', $job_it->get('Parameters')) );
-				
-				$job_it->delete();
-
-				$job_it->moveNext();
+				$ids = array_filter(preg_split('/,/', $job_it->get('Parameters')), function($value) {
+							return $value > 0;
+				});
+				$job_it->object->delete($job_it->getId());
 			}
 		}
-		else
+
+		// pull new chunks
+		if ( count($ids) < 1 )
 		{
-			$subversion_it = getFactory()->getObject('pm_Subversion')->getRegistry()->getAll();
-			
-			$ids = $subversion_it->idsToArray();
+			$ids = getFactory()->getObject('pm_Subversion')->getRegistry()->getAll()->idsToArray();
+
+			$parameters = $this->getData()->getParameters();
+			$step = $parameters['limit'] > 0 ? $parameters['limit'] : 30;
 			
 			$chunks = array_chunk($ids, $step);
-	
-			$immediate_chunk = array_shift( $chunks );
+			$ids = array_shift( $chunks );
 			
-			$this->processChunk( $immediate_chunk );
-			
-			foreach ( $chunks as $chunk )
-			{
+			foreach ( $chunks as $chunk ) {
 				$this->addJob(join(',', $chunk));
 			}
+		}
+		
+		if ( count($ids) > 0 )
+		{
+			$this->processChunk( $ids );
 		}
 		
 		$this->logFinish();
@@ -62,7 +61,7 @@ class ProcessRevisionLog extends TaskCommand
 		
 		while ( !$scm_it->end() )
 		{
-			$this->logInfo( "Check for revisions on: ".$scm_it->getDisplayName() );
+			$this->logInfo( "Check for revisions on: ".$scm_it->getDisplayName().' (id: '.$scm_it->getId().')' );
 
 			$project_it = $scm_it->getRef('Project');
 

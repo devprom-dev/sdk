@@ -77,7 +77,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     		
     	  	<input id="<?=$action_mode?>" type="hidden" name="action_mode" value="form">
     	  	<input name="entity" value="<?=$entity?>" type="hidden">
-    	  	<input name="RecordVersion" value="<?=$record_version?>" type="hidden">
+    	  	<input name="WasRecordVersion" value="<?=$record_version?>" type="hidden">
     		<input type="hidden" action="true" id="<?=$class_name?>action" name="<?=$class_name?>action" value="">
     		<input type="hidden" id="<?=$class_name?>Id" name="<?=$class_name.'Id'?>" value="<?=$object_id?>">
     		<input id="<?=$class_name?>redirect" type="hidden" name="redirect" value="<?=$redirect_url?>">

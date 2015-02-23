@@ -46,8 +46,6 @@ class PMWikiForm extends PMPageForm
 		
 		parent::__construct( $object );
 
-		$this->object->setAttributeOrderNum( 'TransitionComment', 0 );
-		
 		$this->template_mode = is_a($object, get_class($template_object));
 		
 		$this->editable = getFactory()->getAccessPolicy()->can_modify($object);
@@ -1021,8 +1019,12 @@ class PMWikiForm extends PMPageForm
 			'has_properties' => !$this->IsTemplate($object_it),
 			'trace_attributes' => $this->getObject()->getAttributesByGroup('trace')
 		);
+
+		$parent_parms = parent::getRenderParms();
 		
-		return array_merge( parent::getRenderParms(), $parms ); 
+		if ( is_object($object_it) && $object_it->get('IsTemplate') > 0 ) unset($parent_parms['uid_icon']);
+		
+		return array_merge($parent_parms , $parms ); 
 	}
 	
 	function getTemplate()

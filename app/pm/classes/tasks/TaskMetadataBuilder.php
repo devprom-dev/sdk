@@ -34,6 +34,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		}
 			
 		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true);
+		$metadata->addAttribute('TraceInversedTask', 'REF_TaskId', text(1921), true);
 		$metadata->addPersister( new TaskTracePersister() );
 		
 		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');

@@ -180,6 +180,11 @@ abstract class WikiEditorBase
  		return null;
  	}
 
+ 	function getHtmlSelfSufficientParser()
+ 	{
+ 		return $this->getHtmlParser();
+ 	}
+ 	
  	function getComparerParser()
  	{
  		return null;

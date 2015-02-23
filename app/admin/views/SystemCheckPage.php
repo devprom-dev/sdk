@@ -6,8 +6,7 @@ class SystemCheckPage extends AdminPage
 {
 	function getObject()
 	{
-		global $model_factory;
-		return $model_factory->getObject('SystemCheck');
+		return getFactory()->getObject('SystemCheck');
 	}
 
 	function getTable()

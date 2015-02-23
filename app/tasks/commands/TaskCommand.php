@@ -2,6 +2,16 @@
 
 class TaskCommand extends Command
 {
+	function setChunk( $parms )
+	{
+		$this->parms = $parms;
+	}
+	
+	function getChunk()
+	{
+		return $this->parms;
+	}
+	
 	protected function getData()
 	{
 		return getFactory()->getObject('co_ScheduledJob')->getRegistry()->Query(
@@ -38,4 +48,6 @@ class TaskCommand extends Command
 				) 
 		);
 	}
+	
+	private $parms = array();
 }

@@ -76,6 +76,7 @@ include_once SERVER_ROOT_PATH."pm/classes/model/events/SetPlanItemDatesTrigger.p
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageMetadataBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/events/DocumentStateChangedEventHandler.php";
 
 ///////////////////////////////////////////////////////////////////////
 class PMSession extends SessionBase
@@ -194,6 +195,7 @@ class PMSession extends SessionBase
  	            		
  	            		// triggers
  	            		new WikiPageNewVersionTrigger(),
+ 	            		new DocumentStateChangedEventHandler(),
  	            		new WikiBreakTraceTrigger(),
  	            		new CustomReportModelEventsHandler(),
  	            		new FeatureUpdateMetricsEventHandler(),

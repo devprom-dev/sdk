@@ -31,7 +31,7 @@ class IssueAuthorRegistry extends ObjectRegistrySQL
 			if ( $parm instanceof FilterInPredicate )
 			{
 				$id_key = $this->getObject()->getIdAttribute();
-				$id_value = preg_split('/,/', $parm->getValue());
+				$id_value = !is_array($parm->getValue()) ? preg_split('/,/', $parm->getValue()) : $parm->getValue();
 				
 				$rowset = array_filter( $rowset, function(&$row) use($id_key, $id_value) {
 						return in_array($row[$id_key], $id_value);

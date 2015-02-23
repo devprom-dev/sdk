@@ -20,7 +20,7 @@ class IssueRepository extends EntityRepository {
     protected function getBaseQuery() {
         return $this->_em->createQueryBuilder()->select(array('issue', 'state', 'w.email'))
             ->from('Devprom\\ServiceDeskBundle\\Entity\\Issue', 'issue')
-            ->leftJoin('issue.priority', 'priority')
+            ->leftJoin('issue.severity', 'severity')
             ->leftJoin('issue.product', 'product')
             ->leftJoin('issue.assignedTo', 'assignee')
             ->leftJoin('issue.stateComment', 'IssueStateComment')

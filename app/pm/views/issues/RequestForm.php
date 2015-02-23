@@ -46,11 +46,8 @@ class RequestForm extends PMPageForm
 		
 		$this->getObject()->setAttributeVisible('State', !$this->getEditMode());
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
-    	$this->getObject()->setAttributeVisible('Author', true);
     	
     	parent::extendModel();
-
-		$this->getObject()->addPersister( new WatchersPersister() );
     }
     
  	function buildModelValidator()
@@ -354,7 +351,25 @@ class RequestForm extends PMPageForm
 
     	return $field;
     }
-    
+   
+   	function getDefaultValue( $attr )
+   	{
+   		$value = parent::getDefaultValue( $attr );
+   		
+   		switch( $attr )
+   		{
+   		    case 'Author':
+   		    	if ( $value == '' ) return getSession()->getUserIt()->getId();
+   		    	break;
+
+   		    case 'Project':
+   		    	if ( $value == '' ) return getSession()->getProjectIt()->getId();
+   		    	break;
+   		}
+
+   		return $value;
+   	}
+   	
     function getFieldValue( $attr )
     {
         global $model_factory;

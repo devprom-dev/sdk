@@ -170,20 +170,7 @@ class UserExcludeWebMethod extends UserWebMethod
 				)
 			);
 
-		$part->modify_parms($part_it->getId(), 
-				array ( 
-						'IsActive' => 'N' 
-				)
-		);
-		
-		$role_it = getFactory()->getObject('pm_ParticipantRole')->getByRef( 'Participant', $part_it->getId() );
-
-		while( !$role_it->end() )
-		{
-		    $role_it->delete();
-		    
-		    $role_it->moveNext();
-		}
+		if ( $part_it->getId() > 0 ) $part->delete($part_it->getId());
 	}
 
 	function hasAccess()

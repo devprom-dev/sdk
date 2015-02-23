@@ -33,7 +33,7 @@ class IssueFormType extends AbstractType
                     return $qb->where($qb->expr()->eq('it.vpd', '\''.array_pop($vpds).'\''));
                 }
             ))
-            ->add('priority');
+            ->add('severity');
             
 		if ( count($this->vpds) > 1 )
 		{

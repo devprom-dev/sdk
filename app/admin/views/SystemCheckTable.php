@@ -26,9 +26,7 @@ class SystemCheckTable extends StaticPageTable
 	
 	function getActions()
 	{
-	    global $model_factory;
-	    
-	    $job_it = $model_factory->getObject('co_ScheduledJob')->getByRef('ClassName', 'processcheckpoints');
+	    $job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'processcheckpoints');
 	    
 	    return array(
 	            array ( 'name' => text(1380), 'url' => '/tasks/command.php?class=runjobs&job='.$job_it->getId().'&redirect=/admin/checks.php' )

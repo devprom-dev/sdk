@@ -69,7 +69,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
  	    
  	    // bind data to existing objects if any
  	    $context->setUseExistingReferences( true );
- 	    
+ 	    $context->setResetDates(false);
  	    $context->setIdsMap($ids_map);
  	    
  	 	foreach( $references as $object )
@@ -86,6 +86,15 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	protected function deleteObsolete( & $object_it )
 	{
 		$object_it->delete();
+
+		$watcher = getFactory()->getObject2('pm_Watcher', $object_it);
+		$watcher_it = $watcher->getAll();
+		
+		while( !$watcher_it->end() )
+		{
+			$watcher_it->object->delete($watcher_it->getId());
+			$watcher_it->moveNext();
+		}
 	}
 	
 	protected function updateChangeLog( $object_it, $target_it )

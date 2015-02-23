@@ -107,12 +107,18 @@ class Issue extends BaseEntity {
     /**
      * @ORM\OneToOne(targetEntity="Priority")
      * @ORM\JoinColumn(name="Priority", referencedColumnName="PriorityId")
-     * @Assert\NotBlank
      * @var Priority
      */
     private $priority;
 
-
+    /**
+     * @ORM\OneToOne(targetEntity="Priority")
+     * @ORM\JoinColumn(name="Severity", referencedColumnName="PriorityId")
+     * @Assert\NotBlank
+     * @var Severity
+     */
+    private $severity;
+    
     function __construct()
     {
         $this->comments = new ArrayCollection();
@@ -339,6 +345,22 @@ class Issue extends BaseEntity {
         return $this->priority;
     }
 
+    /**
+     * @param Severity $severity
+     */
+    public function setSeverity($severity)
+    {
+        $this->severity = $severity;
+    }
+
+    /**
+     * @return Severity
+     */
+    public function getSeverity()
+    {
+        return $this->severity;
+    }
+    
     /**
      * @param \Devprom\ServiceDeskBundle\Entity\IssueAttachment $newAttachment
      */

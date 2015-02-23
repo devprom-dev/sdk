@@ -26,27 +26,6 @@ class WikiConverterCHM
  		return $this->wiki_it;
  	}
 
-	function getGlobalUrl( $wiki_it ) 
-	{
- 		return $this->translit($wiki_it->getDisplayName()).'_'.$wiki_it->getId().'.html';
-	}
-
-	function getFileUrl( $file_it ) 
-	{
-		$file_ext = pathinfo($file_it->getFileName('Content'), PATHINFO_EXTENSION);
-		$target_file = md5($file_it->getId()).'.'.$file_ext;
-
-		$source_file = SERVER_FILES_PATH.$file_it->object->getClassName().'/'.
-			basename($file_it->getFilePath( 'Content' ));
-		
-		if ( file_exists($source_file) )
-		{
-			copy( $source_file, $this->getPath().$target_file );
-		}
-			
-		return $target_file;
-	}
-
  	function parse()
  	{
  		$this->content_tree = array();
@@ -105,7 +84,7 @@ class WikiConverterCHM
 
 	function transform( $wiki_it )
 	{
-		$file_name = $this->translit($wiki_it->getDisplayName()).'_'.$wiki_it->getId().'.html';
+		$file_name = self::translit($wiki_it->getDisplayName()).'_'.$wiki_it->getId().'.html';
 		$file = fopen( $this->getPath().$file_name, 'w+' );
 
 		$html = "<HTML><TITLE></TITLE>";
@@ -126,13 +105,17 @@ class WikiConverterCHM
 
 		$editor->setObjectIt($wiki_it);
 		
- 		$parser = $editor->getHtmlParser();
+ 		$parser = $editor->getHtmlSelfSufficientParser();
 
  		$parser->setObjectIt($wiki_it);
  		
  		$parser->setRequiredExternalAccess();
+ 		
+		$parser->setHrefResolver(function($wiki_it) {
+ 			return WikiConverterCHM::translit($wiki_it->getDisplayName()).'_'.$wiki_it->getId().'.html';
+ 		});
 		
-		$parser->setObjectIt( $wiki_it );
+ 		$parser->setObjectIt( $wiki_it );
 		
 		$html .= html_entity_decode($parser->parse( $wiki_it->getHtmlDecoded('Content')), ENT_QUOTES | ENT_HTML401, 'cp1251'); 
 				
@@ -226,7 +209,7 @@ class WikiConverterCHM
    	    FileSystem::rmdirr($this->getPath());
  	}
 	
-	function translit($string)
+	static function translit($string)
 	{
        static $ru = array(
                'À', 'à', 'Á', 'á', 'Â', 'â', 'Ã', 'ã', 'Ä', 'ä', 'Å', 'å', '¨', '¸', 'Æ', 'æ', 'Ç', 'ç',

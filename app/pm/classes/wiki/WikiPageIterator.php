@@ -181,7 +181,7 @@ class WikiPageIterator extends StatableIterator
 	
 	function getDisplayName()
 	{
-		$title = parent::getDisplayName();
+		$title = $this->getHtmlDecoded('Caption');
 
 		if ( $this->get('DocumentVersion') != '' )
 		{

@@ -114,7 +114,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 	
 	public function getAll()
 	{
-		$sql = 'SELECT /*all*/ '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
+		$sql = 'SELECT '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
 
 		$group = $this->getGroupClause('t');
 
@@ -134,7 +134,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->setParameters( $parms );
 		
 		return $this->createSQLIterator(
-				'SELECT /*count*/ COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
+				'SELECT COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
 			)->get('cnt');
 	}
 	
@@ -281,8 +281,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$object = & $this->getObject();
 		
 		$pre_sql = "UPDATE ".$object->getEntityRefName()." SET RecordModified = ".
-		   ($data['RecordModified'] != '' ? "'".DAL::Instance()->Escape($data['RecordModified'])."'" : "NOW()").", ".
-		   "RecordVersion = RecordVersion + 1, ";
+		   ($data['RecordModified'] != '' ? "'".DAL::Instance()->Escape($data['RecordModified'])."'" : "NOW()").", ";
 
 		foreach( $object->getAttributes() as $key => $attribute ) 
 		{
@@ -323,28 +322,26 @@ class ObjectRegistrySQL extends ObjectRegistry
 				
 		if ( $sql != '' )
 		{
+			if ( $data['WasRecordVersion'] != '' )
+			{
+				$pre_sql .= "RecordVersion = RecordVersion + 1, ";
+				$data['RecordVersion'] = DAL::Instance()->Escape(addslashes($data['WasRecordVersion']));
+			}
+			
 			$sql = $pre_sql.$sql;
 			
-			if ( $data['RecordVersion'] == '0' || $data['RecordVersion'] != '' )
-			{
-				$data['RecordVersion'] = DAL::Instance()->Escape(addslashes($data['RecordVersion']));
-			}
-			else
-			{
-				$data['RecordVersion'] = $object_it->get('RecordVersion') != '' ? $object_it->get('RecordVersion') : 0;
-			}
-			
 			$sql = substr($sql, 0, strlen($sql) - 1)." WHERE ".
-				" RecordVersion = ".$data['RecordVersion'].
-				" AND ".$object->getEntityRefName()."Id IN (".join(',', preg_split('/,/', $object_it->getId())).")";
+				$object->getEntityRefName()."Id IN (".join(',', preg_split('/,/', $object_it->getId())).")";
 	
+			if ( $data['RecordVersion'] != '' ) $sql .= " AND RecordVersion = ".$data['RecordVersion'];
+			
 			$this->checkUpdateOnly($sql);
 
 			$r2 = DAL::Instance()->Query($sql);
 
 			$affected_rows = DAL::Instance()->GetAffectedRows();
 
-			if ( $affected_rows < 1 ) return $affected_rows;
+			if ( $data['RecordVersion'] != '' && $affected_rows < 1 ) return $affected_rows;
 
 		    $model_factory->resetCachedIterator($object);
 		}
@@ -360,7 +357,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		
 		$model_factory->resetCachedIterator($object);
 		
-		return $affected_rows;
+		return 1;
 	}
 	
 	protected function checkSelectOnly( $sql )

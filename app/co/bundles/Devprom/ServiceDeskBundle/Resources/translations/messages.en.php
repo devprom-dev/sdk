@@ -23,7 +23,8 @@ return array(
     'issue_assignedTo' => 'Assignee',
     'issue_createdAt' => 'Created',
     'issue_priority' => 'Priority',
-    'issue_attachments' => 'Attachments',
+    'issue_severity' => 'Priority',
+	'issue_attachments' => 'Attachments',
     'issue_comments' => 'Comments',
 
     'issue.edit' => 'Edit request',

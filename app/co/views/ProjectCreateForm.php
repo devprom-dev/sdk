@@ -81,6 +81,10 @@
 		switch ( $attribute )
 		{
 		    case 'Caption':
+		    	$template = $this->getAttributeValue('Template');
+		    	if ( $template == '' ) return "";
+		    	return getFactory()->getObject('pm_ProjectTemplate')->getExact($template)->getDisplayName();
+		    	
 		    case 'CodeName':
 		    	return "";
 

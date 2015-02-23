@@ -55,12 +55,13 @@ class Mailer extends TwigSwiftMailer {
         $this->sendMessage($template, $context, $this->getFromAddress(), $toEmail);
     }
 
-    public function sendIssueResolvedMessage(Issue $issue, $comment, $toEmail, $language = 'ru') {
+    public function sendIssueResolvedMessage(Issue $issue, $comment, $toEmail, $language = 'ru', $version = '') {
         $template = 'DevpromServiceDeskBundle:Email:issue_resolved.html.twig';
         $context = array(
             'issue' => $issue,
             'comment' => $comment,
-            'language' => $language
+            'language' => $language,
+        	'version' => $version
         );
 
         $this->sendMessage($template, $context, $this->getFromAddress(), $toEmail);

@@ -19,7 +19,7 @@ class WorkflowService
 		$this->state_object = getFactory()->getObject($this->object->getStateClassName());
 	}
 	
-	public function moveToState( $object_it, $target_state_ref_name, $comment = '', $parms = array() )
+	public function moveToState( $object_it, $target_state_ref_name, $comment = '', $parms = array(), $fire_event = true )
 	{
 		if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
 
@@ -71,8 +71,11 @@ class WorkflowService
 		
 		$object_it = $object_it->object->getExact($object_it->getId());
 				
-	    getFactory()->getEventsManager()->
+		if ( $fire_event )
+		{
+			getFactory()->getEventsManager()->
 	    		executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
+		}
 	}
 	
 	private $object = null;

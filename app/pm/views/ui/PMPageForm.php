@@ -256,6 +256,8 @@ class PMPageForm extends PageForm
 
                     $editor = $field->getEditor();
 
+					//$field->setHasBorder( false );
+					//$field->getEditor()->setMode( WIKI_MODE_NORMAL );
                     $editor->setMode( WIKI_MODE_MINIMAL | WIKI_MODE_INLINE );
 
                     $field->setCssClassName( 'wysiwyg-field' );

@@ -45,6 +45,19 @@ class WikiHistoryList extends ProjectLogList
 			$object_it->moveNext();
 		}
 	}
+
+	function getSorts()
+	{
+		$sorts = PageList::getSorts();
+		foreach( $sorts as $key => $sort )
+		{
+			if ( !$sort instanceof SortAttributeClause ) continue;
+			if ( $sort->getAttributeName() == 'ChangeDate' ) {
+				$sorts[$key] = new SortRecentClause();
+			}
+		}
+		return $sorts;
+	}
 	
   	function setupColumns()
  	{

@@ -12,8 +12,6 @@ class ProductTourPM extends PluginPMBase
 
  		$language = strtolower(getSession()->getLanguage()->getLanguage());
     	    	
-    	if ( $language != 'ru' ) return array();
-    	
 		return array(
 				new ProductTourJSBuilder(getSession()),
 				new ProductTourCSSBuilder()

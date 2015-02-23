@@ -37,9 +37,9 @@
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
-                            <th class="no-wrap {% if sortColumn == 'priority.id' %} {{ sortDirectionClass }}{% endif %}" width="10%">
-                                <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'priority.id','sortDirection':reverseSortDirection}) }}">
-                                    {{ 'issue_priority'|trans }}
+                            <th class="no-wrap {% if sortColumn == 'severity.id' %} {{ sortDirectionClass }}{% endif %}" width="10%">
+                                <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'severity.id','sortDirection':reverseSortDirection}) }}">
+                                    {{ 'issue_severity'|trans }}
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
@@ -71,8 +71,8 @@
                                     {{ issue.caption|unescapeHtml }}
                                 </a>
                             </td>
-                            <td class="centered" data-title="{{ 'issue_priority'|trans|slice(0,7) }}.">
-                                {{ macro.priority_badge(issue.priority.name|trans, issue.priority.id) }}
+                            <td class="centered" data-title="{{ 'issue_severity'|trans|slice(0,7) }}.">
+                                {{ macro.priority_badge(issue.severity.name|trans, issue.severity.id) }}
                             </td>
                             <td data-title="{{ 'issue_createdAt'|trans|slice(0,7) }}." class="hidden-xs centered">{% if issue.createdAt %}{{ issue.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
                         </tr>

@@ -17,12 +17,12 @@
     		</span>
     	{% endfor %}
     {% else %}
-	    {{ attribute.text | raw }}
+    	{% if attribute.type == 'text' or attribute.type == 'wysiwyg' or attribute.name == 'Caption' %}
+			 <div class="tt-field-data">{{ attribute.text | raw }}</div>
+    	{% else %}
+    		{{ attribute.text | raw }}
+    	{% endif %}
     {% endif %}
-
-	{% if attribute.type == 'text' or attribute.name == 'Caption' %}
-		<br/>
-	{% endif %}
 	
 	<br/>
 {% endfor %}

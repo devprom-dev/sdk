@@ -652,20 +652,18 @@ class Form
 		
 		$object_it = $this->getObjectIt();
 		
-		$required = $this->IsAttributeRequired( $field );
-
 		$value = is_object($object_it) && $object_it->count() > 0 
 			? ( $_REQUEST[$field] != '' 
 				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251') 
-				: ($object_it->get_native( $field ) == '' && $this->getEditMode() && $required  
-		  			? $this->object->getDefaultAttributeValue( $field ) 
+				: ($object_it->get_native( $field ) == '' && $this->getEditMode()  
+		  			? $this->getDefaultValue( $field ) 
 		  			: $object_it->get_native( $field ) 
 		  		   ) 
 		  	  )
 			: ($this->required_attributes_warning 
 				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251') 
-				: ( $_REQUEST[$field] == '' && ($required || $this->object->getAttributeDbType( $field ) == 'CHAR') 
-						? $this->object->getDefaultAttributeValue( $field ) 
+				: ( $_REQUEST[$field] == '' || $this->object->getAttributeDbType($field) == 'CHAR' 
+						? $this->getDefaultValue( $field ) 
 						: $_REQUEST[$field]
 				   ) 
 			   );
@@ -738,7 +736,7 @@ class Form
         <form action="<? echo $formname; ?>" method="post" id="<? echo $this->form_id ?>" name="object_form" enctype="multipart/form-data" style="margin-top:0pt;margin-bottom:0pt;">
 		  <input id="<? echo $this->object->getEntityRefName().'action_mode'; ?>" type="hidden" name="action_mode" value="form">
 		  <input name="entity" value="<? echo ($_REQUEST['entity'] != '' ? $_REQUEST['entity'] : $this->object->getEntityRefName()); ?>" type="hidden">
-		  <input name="RecordVersion" value="<? echo $this->getFieldValue('RecordVersion'); ?>" type="hidden">
+		  <input name="WasRecordVersion" value="<? echo $this->getFieldValue('RecordVersion'); ?>" type="hidden">
           <table class=formtable cellpadding=0 cellspacing=0 width=100%>
     		<?
     			$names = array_keys($this->object->getAttributesSorted());

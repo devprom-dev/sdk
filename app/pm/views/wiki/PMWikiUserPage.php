@@ -7,7 +7,6 @@ include SERVER_ROOT_PATH."pm/methods/c_stage_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include SERVER_ROOT_PATH."pm/methods/WikiRemoveStyleWebMethod.php";
-include SERVER_ROOT_PATH."pm/classes/wiki/DocumentMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 
 include "PMWikiTable.php";

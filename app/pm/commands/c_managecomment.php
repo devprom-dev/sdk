@@ -20,17 +20,10 @@ class ManageComment extends CommandForm
  	
  	function create()
 	{
-		global $_SERVER, $_REQUEST, $model_factory;
-		
- 		$object = $model_factory->getObject($_REQUEST['ObjectClass']);
- 		
- 		$object_it = $object->getExact($_REQUEST['ObjectId']);
- 		
+ 		$object_it = getFactory()->getObject($_REQUEST['ObjectClass'])->getExact($_REQUEST['ObjectId']);
 		if ( $object_it->getId() < 1 ) $this->replyError( text(1062) );
 		
-		$comment = $model_factory->getObject('Comment');
-
-		$comment_text = $object_it->utf8towin($_REQUEST['Caption']);
+		$comment = getFactory()->getObject('Comment');
 
  		if ( $_REQUEST['PrevComment'] > 0 )
  		{
@@ -43,12 +36,13 @@ class ManageComment extends CommandForm
  			$last_comment_id = '';
  		}
 
+		$comment_text = $object_it->utf8towin($_REQUEST['Caption']);
  		$comment->setVpdContext( $object_it );
  		
  		$comment_id = $comment->add_parms( 
  			array('AuthorId' => getSession()->getUserIt()->getId(),
  				  'ObjectId' => $object_it->getId(),
- 				  'ObjectClass' => get_class($object),
+ 				  'ObjectClass' => get_class($object_it->object),
  				  'PrevComment' => $last_comment_id,
  				  'Caption' => $comment_text)
  			);
@@ -64,9 +58,7 @@ class ManageComment extends CommandForm
  	
 	function modify( $object_id )
 	{
-		global $_REQUEST, $model_factory;
-
-		$comment = $model_factory->getObject('Comment');
+		$comment = getFactory()->getObject('Comment');
 		$comment_it = $comment->getExact( $object_id ); 
 		
 		if ( $comment_it->getId() < 1 ) $this->replyError( text(1062) );

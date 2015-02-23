@@ -19,6 +19,15 @@ class SystemCheckList extends StaticPageList
 		return true;
 	}
 
+	function IsNeedToDisplay( $attr )
+	{
+		switch( $attr )
+		{
+		    case 'CheckResult': return true;
+		    default: return parent::IsNeedToDisplay( $attr );
+		}
+	}
+	
 	function getItemActions( $column_name, $object_it )
 	{
 		$actions = parent::getItemActions( $column_name, $object_it );

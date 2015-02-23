@@ -5,7 +5,7 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 	public function getGroups()
 	{
 		return array (
-				new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / 180)*180)'),
+				new GroupAttributeClause('FROM_UNIXTIME(ROUND(UNIX_TIMESTAMP(RecordModified) / 86400)*86400)'),
 				new GroupAttributeClause('Author'),
 				new GroupAttributeClause('SystemUser'),
 				new GroupAttributeClause('Caption'),

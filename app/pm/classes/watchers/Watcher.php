@@ -67,14 +67,10 @@ class Watcher extends Metaobject
 	{
 		$it = parent::getExact( $object_id );
 		
-		if ( $it->count() < 1 )
+		if ( !is_object($this->object_it) && $it->count() > 0 )
 		{
-			return $it;
+			$this->object_it = getFactory()->getObject($it->get('ObjectClass'))->getExact($it->get('ObjectId'));
 		}
-		
-		$this->object_it = getFactory()->getObject($it->get('ObjectClass'))->getExact($it->get('ObjectId'));
-
-		$it->object = $this;
 		
 		return $it; 
 	}

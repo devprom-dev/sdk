@@ -28,6 +28,7 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
  	    $priority->addFilter( new FilterInPredicate($object_it->fieldToArray('Priority')) );
  	    
  	    $request = getFactory()->getObject('pm_ChangeRequest');
+ 	    $request->resetPersisters();
  	    $request->addFilter( new FilterInPredicate($ids) );
  	    
  	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
@@ -49,6 +50,7 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
  	    
 		$comment = getFactory()->getObject('Comment');
 		$comment->addFilter( new CommentObjectFilter($object_it) );
+		$comment->addSort( new SortOrderedClause() );
 		
  	    $references[] = $type;
  	    $references[] = $priority; 

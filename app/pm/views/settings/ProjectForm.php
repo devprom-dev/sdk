@@ -36,9 +36,6 @@ class ProjectForm extends PMPageForm
             case 'IsClosed':
                 return text(663);
 
-            case 'IsPollUsed':
-                return text(36);
-
             case 'IsKnowledgeUsed':
                 return text(678);
 

@@ -24,6 +24,11 @@ class Subversion extends Metaobject
  		return text('sourcecontrol2');
  	}
  	
+	function getPage() 
+	{
+		return getSession()->getApplicationUrl($this).'module/sourcecontrol/connection?';
+	}
+ 	
  	function addConnector( $connector )
  	{
  		if ( array_key_exists( strtolower(get_class($connector)), $this->connectors ) ) return;

@@ -26,8 +26,10 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 	 	    {
 	 	    	// skip custom attributes
 	 	    	if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
+	 	    	if ( in_array($attribute, $this->attributes) ) continue;
 	 	    	
 	 	    	$object->setAttributeVisible($attribute, false);
+	 	    	$object->setAttributeRequired($attribute, false);
 	 	    }
 	 	    
  	       	foreach( $this->attributes as $attribute )
@@ -38,7 +40,7 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
  	    
 		$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
 				array (
-						new FilterAttributePredicate('State', $this->state_it->getId() > 0 ? $this->state_it->getId() : '-1'),
+						new FilterAttributePredicate('State', $this->state_it->getId() > 0 ? $this->state_it->getId() : '-1')
 				)
 		);
 		

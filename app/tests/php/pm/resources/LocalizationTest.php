@@ -59,9 +59,10 @@ class LocalizationTest extends DevpromTestCase
 				{
 					$this->buildResourcesUsage( $path . $file . "/" );
 				}
-				elseif ( $file == 'resource.php' )
+				elseif ( $file == 'resource.php' || $file == 'terms.php' )
 				{
-					include_once $path . $file;
+					$data = include_once($path . $file);
+					if ( is_array($data) ) $text_array = $data;
 
 					$language = basename($path);
 					

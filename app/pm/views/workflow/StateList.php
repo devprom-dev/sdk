@@ -29,20 +29,26 @@ class StateList extends PMPageList
                     $object_it->object->setVpdContext($object_it);
                     
 			        $method = new ObjectModifyWebMethod($transition_it);
-			        
-			        $method->setRedirectUrl('donothing');
-                    
-                    $actions[] = array (
-                        'url' => $method->getJSCall(),
-                        'name' => translate('Изменить')
-                    );
+			        if ( $method->hasAccess() )
+			        {
+				        $method->setRedirectUrl('donothing');
+	                    $actions[] = array (
+	                        'url' => $method->getJSCall(),
+	                        'name' => translate('Изменить')
+	                    );
+			        }
+			        else
+			        {
+	                    $actions[] = array (
+	                        'url' => $method->getJSCall(),
+	                        'name' => translate('Просмотр')
+	                    );
+			        }
 
                 	$method = new DeleteObjectWebMethod($transition_it);
-			
 					if ( $method->hasAccess() )
 					{
 						$method->setRedirectUrl('donothing');
-						
 						$actions[] = array();
 					    $actions[] = array(
 						    'name' => $method->getCaption(), 

@@ -6,7 +6,7 @@ include "TaskForm.php";
 include "TaskBulkForm.php";
 include "IterationBurndownSection.php";
 include "WorkloadSection.php";
-include "TaskBoardTable.php";
+include "TaskTable.php";
 include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
 
 class TaskPlanningPage extends PMPage
@@ -61,7 +61,7 @@ class TaskPlanningPage extends PMPage
  	
  	function getTableDefault()
  	{
- 	    return new TaskBoardTable($this->getObject());
+ 	    return new TaskTable($this->getObject());
  	}
  	
  	function getTable() 

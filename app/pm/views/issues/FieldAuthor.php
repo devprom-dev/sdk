@@ -8,6 +8,7 @@ class FieldAuthor extends FieldAutoCompleteObject
 	{
 		parent::__construct(getFactory()->getObject('IssueAuthor'));
 		$this->setAppendable();
+		$this->setSearchEnabled(false);
 	}
 	
 	function getValidator()

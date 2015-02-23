@@ -10,7 +10,7 @@ class Version extends Metaobject
  		parent::Metaobject('pm_Version', new VersionRegistry($this));
  		
  	    $this->setSortDefault( array (
- 	            new SortAttributeClause('VersionNumber')
+ 	            new SortAttributeClause('VersionNumber.D')
  	    ));
  	}
  	

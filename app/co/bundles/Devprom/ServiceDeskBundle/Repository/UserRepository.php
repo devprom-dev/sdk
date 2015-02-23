@@ -17,12 +17,11 @@ class UserRepository extends EntityRepository {
     public function isCollegues($email_left, $email_right)
     {
         $qb = $this->_em->createQueryBuilder()
-	        	->select('u')
-	        	->from('Devprom\\ServiceDeskBundle\\Entity\\User', 'u')
-	        	->where('u.email = ?1')
-	        	->andWhere('u.company IN (SELECT u1.company FROM Devprom\\ServiceDeskBundle\\Entity\\User u1 WHERE u1.email = ?2)')
-	        	->setParameter(1, $email_left)
-	        	->setParameter(2, $email_right);
+	        	->select('u1.id')
+	        	->from('Devprom\\ServiceDeskBundle\\Entity\\User', 'u1')
+	        	->join('Devprom\\ServiceDeskBundle\\Entity\\User', 'u2', \Doctrine\ORM\Query\Expr\Join::WITH, 'u1.company = u2.company')
+	        	->where('u1.email = ?1 AND u2.email = ?2')
+	        	->setParameters(array(1 => $email_left, 2 => $email_right));
 
         return count($qb->getQuery()->getResult()) > 0;
     }
