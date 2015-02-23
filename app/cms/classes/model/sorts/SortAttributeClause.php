@@ -84,10 +84,18 @@ class SortAttributeClause extends SortClauseBase
 						$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
 						return " (SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
 					}
+					
+					$sorts = $ref->getSortDefault();
+					if ( count($sorts) > 0 && $ref->getEntityRefName() != $object->getEntityRefName() )
+					{
+						$clause = array_shift($sorts);
+						if ( $clause instanceof SortAttributeClause ) {
+							return " (SELECT IFNULL(s.".$clause->getAttributeName().", 0) FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
+						}
+					}
 	 			}
 
-	 			if ( in_array($object->getAttributeType($attr), array('integer','float')) )
-	 			{ 
+	 			if ( in_array($object->getAttributeType($attr), array('integer','float')) ) { 
 	 				$sql_attr = " IFNULL(".$sql_attr.", 0) ";
 	 			}
 	 			

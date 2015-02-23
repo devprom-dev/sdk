@@ -19,25 +19,27 @@ class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMet
 					return $value > 0;
 			});
 			
-			if ( count($ids) < 1 ) continue;
-			
-			// get requirement branch 
-			$trace_it = getFactory()->getObject('WikiPageTrace')->getRegistry()->Query( 
-					array(
-						new FilterAttributePredicate('SourcePage', $ids),
-						new FilterAttributePredicate('Type', 'branch'),
-						new WikiTraceTargetBaselinePredicate(IteratorBase::utf8towin($_REQUEST['Version']))
-					)
-			);
+			if ( count($ids) > 0 )
+			{
+				// get requirement branch 
+				$trace_it = getFactory()->getObject('WikiPageTrace')->getRegistry()->Query( 
+						array(
+							new FilterAttributePredicate('SourcePage', $ids),
+							new FilterAttributePredicate('Type', 'branch'),
+							new WikiTraceTargetBaselinePredicate(IteratorBase::utf8towin($_REQUEST['Version']))
+						)
+				);
 
-	 	 	if ( $trace_it->get('TargetPage') > 0 )
-	 	 	{
-	 	 		$this->makeTracesOnRequirementVersion( $map, $trace_it->get('TargetPage'), $object_it ); 
-	 	 	}
-	 	 	else
-	 	 	{
-	 	 		$this->makeTracesOnSourceRequirements( $map, $object_it );
-	 	 	}
+		 	 	if ( $trace_it->get('TargetPage') > 0 ) {
+	 	 			$this->makeTracesOnRequirementVersion( $map, $trace_it->get('TargetPage'), $object_it ); 
+	 		 	}
+	 		 	else {
+	 		 		$this->makeTracesOnSourceRequirements( $map, $object_it );
+	 		 	}
+			}
+			else {
+				$this->makeTracesOnSourceRequirements( $map, $object_it );
+			}
  		}
  	 	
  	 	parent::storeTraces( $map, $object );

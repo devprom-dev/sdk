@@ -13,19 +13,16 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Участник');
+ 		return translate('Автор');
  	}
 
  	function getValues()
  	{
- 		global $project_it;
- 		
   		$values = array (
  			'all' => translate('Все')
  			);
  			
- 		$it = $project_it->getParticipantIt();
- 		
+ 		$it = getFactory()->getObject('ProjectUser')->getAll();
  		while ( !$it->end() )
  		{
  			$values[$it->getId()] = $it->getDisplayName();

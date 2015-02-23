@@ -9,7 +9,6 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  	function FilterDateWebMethod ( $table_name = '' )
  	{
  		$this->method_name = md5($table_name.$this->getMethodName());
- 		
  		parent::__construct();
  	}
 
@@ -23,7 +22,7 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  		return 'width:120px;';
  	}
 
- 	function drawSelect( $parms_array = array() ) 
+  	function drawSelect( $parms_array = array() ) 
  	{
  		return $this->draw( $parms_array );
  	}
@@ -31,24 +30,16 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  	function draw( $parms_array = array() ) 
  	{
  		parent::draw( 
- 			array('setting' => $this->method_name ), $this->getValue() );
+ 			array_merge($parms_array, array('setting' => $this->method_name )),
+ 			$this->getValue()
+ 		);
  	}
 
  	function execute_request()
  	{
- 		global $_REQUEST;
- 		
- 		if ( $_REQUEST['value'] == '' ) $_REQUEST['value'] = 'all';
- 		
- 		$this->execute($_REQUEST['setting'], $_REQUEST['value']);
-
  		if ( $this->getValueParm() != '' )
  		{
  			echo $this->getValueParm().'='.trim($_REQUEST['value']);
  		}
- 	}
-
- 	function execute ( $method, $value )
- 	{
  	}
 }

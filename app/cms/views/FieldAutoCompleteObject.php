@@ -5,18 +5,13 @@ include_once "Field.php";
 class FieldAutoCompleteObject extends Field
 {
  	var $attributes;
- 	
  	var $title;
- 	
  	var $object;
- 	
  	private $additional_attributes = array();
- 	
  	private $select_event = '';
- 	
  	private $auto_expand = true;
- 	
  	private $custom_text = '';
+ 	private $search_enabled = true;
  	
  	function __construct( $object, $attributes = null )
  	{
@@ -54,6 +49,11 @@ class FieldAutoCompleteObject extends Field
  		$this->setValue( $value );
  		
  		parent::setDefault( $value );
+ 	}
+ 	
+ 	function setSearchEnabled( $flag = true )
+ 	{
+ 		$this->search_enabled = $flag;
  	}
  	
  	function getTitle()
@@ -112,21 +112,32 @@ class FieldAutoCompleteObject extends Field
 
  	    if ( $value == '' ) return $this->getObject()->createCachedIterator(array());
  	    
- 	    $ids = array_filter(preg_split('/[,-]/',$value), function($id) {
- 	    			return is_numeric($id);
- 	    		});
- 	    
- 	    if ( count($ids) > 0 )
+ 	    if ( $this->search_enabled )
  	    {
- 	    	return $this->getObject()->getExact($ids);
+	 	    $ids = array_filter(preg_split('/[,-]/',$value), function($id) {
+	 	    			return is_numeric($id);
+	 	    		});
+	
+	 	    if (  count($ids) > 0 )
+	 	    {
+	 	    	return $this->getObject()->getExact($ids);
+	 	    }
+	 	    else
+	 	    {
+		 	    return $this->getObject()->getRegistry()->Query(
+		 	    		array (
+	    						new FilterAttributePredicate('Caption', $value)
+		 	    		)
+		 	    );
+	 	    }
  	    }
  	    else
  	    {
-	 	    return $this->getObject()->getRegistry()->Query(
-	 	    		array (
-    						new FilterAttributePredicate('Caption', $value)
-	 	    		)
-	 	    );
+ 	    	return $this->getObject()->getRegistry()->Query(
+		 	    		array (
+	    						new FilterInPredicate($value)
+		 	    		)
+		 	    );
  	    }
  	}
  	
@@ -141,7 +152,7 @@ class FieldAutoCompleteObject extends Field
 		
 		$object_it = $this->getObjectIt();
 		
-		if ( $object_it->getId() < 1 ) return $this->getValue();
+		if ( $object_it->getId() == '' ) return $this->getValue();
 		
 	    $uid = new ObjectUID;
 	    
@@ -168,7 +179,7 @@ class FieldAutoCompleteObject extends Field
 				{
 					$object_it = $this->getObjectIt();
 
-					if ( $object_it->getId() > 0 )
+					if ( $object_it->getId() != '' )
 					{
 					    $uid = new ObjectUID;
 					    

@@ -6,41 +6,17 @@ include "FieldQuestionTagTrace.php";
 
 class QuestionForm extends PMPageForm
 {
- 	function IsNeedButtonNew() {
-		return false;
-	}
-	
- 	function IsNeedButtonCopy() {
-		return false;
-	}
-
-	function getTransitionAttributes()
-	{
-		return array(
-			'Content', 'Owner'
-		);
-	}
-
- 	function IsAttributeVisible( $attr_name ) 
- 	{
- 		switch($attr_name) 
- 		{
- 			case 'OrderNum':
- 			case 'Comments':
- 				return false;
-
- 			case 'Author':
-				$object_it = $this->getObjectIt();
- 				return isset($object_it) && $this->getAction() != 'show';
-
- 			case 'Tags':
- 			    return true;
- 				    	
- 			default:
-				return parent::IsAttributeVisible( $attr_name );
- 		}
-	}
-
+    protected function extendModel()
+    {
+    	$this->getObject()->setAttributeVisible('Comments', false);
+    	$this->getObject()->setAttributeVisible('OrderNum', false);
+    	$this->getObject()->setAttributeVisible('Tags', true);
+   		$this->getObject()->setAttributeVisible('Author', 
+   				is_object($this->getObjectIt()) && $this->getAction() != 'show');
+   		
+   		return parent::extendModel();
+    }
+    
 	function draw()
 	{
 		echo '<div class="line">';

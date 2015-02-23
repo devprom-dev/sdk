@@ -24,18 +24,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		return $check ? true : parent::is_active( $object_it );
 	}
 
-	function getUser() 
-	{
-		global $part_it;
-		
-		if ( is_object($part_it) && $part_it->count() > 0 )
-		{
-			return $part_it->getId();
-		}
-		
-		return '';
-	}
-	
  	function modify( $prev_object_it, $object_it, $visibility = 1 ) 
 	{
 		$entity_ref_name = $object_it->object->getEntityRefName();
@@ -60,7 +48,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		}
 	}
 
-	function process( $object_it, $kind, $content = '', $visibility = 1) 
+	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '') 
 	{
 		global $model_factory;
 
@@ -84,6 +72,11 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				$caption = translate('удалено');
 				break;
 		}
+		
+		if ( $object_it->object->getEntityRefName() == 'pm_ChangeRequest' )
+		{
+			$author_email = $object_it->get('Author'); 
+		}
 
 		switch( $object_it->object->getEntityRefName() )
 		{
@@ -105,17 +98,17 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						}
 						
 						parent::process( $request_it, 'modified', 
-							$uid->getObjectUid($object_it).' '.$task_caption.' ('.$caption.')', $visibility );
+							$uid->getObjectUid($object_it).' '.$task_caption.' ('.$caption.')', $visibility, $author_email );
 					}
 					else
 					{
-						parent::process( $request_it, 'modified', '', $visibility + 1 );
+						parent::process( $request_it, 'modified', '', $visibility + 1, $author_email );
 					}
 				}
 				
 				$this->setModifiedAttributes($modified_attributes);
 				
-				parent::process( $object_it, $kind, $content, $visibility );
+				parent::process( $object_it, $kind, $content, $visibility, $author_email );
 				
 				break;
 				
@@ -133,7 +126,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						
 						parent::process( $anchor_it, 'modified', 
 							$object_it->object->getDisplayName().': '.$object_it->getFileName('File').
-								' ('.$caption.')', $visibility );
+								' ('.$caption.')', $visibility, $author_email );
 				}
 					
 				break;
@@ -145,7 +138,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				
 				parent::process( $anchor_it, 'modified', 
 					$object_it->object->getDisplayName().': '.$object_it->getFileName('Content').
-						' ('.$caption.')', $visibility );
+						' ('.$caption.')', $visibility, $author_email );
 				break;
 				
 			case 'BlogPostFile':
@@ -155,7 +148,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				
 				parent::process( $anchor_it, 'modified', 
 					$object_it->object->getDisplayName().': '.$object_it->getFileName('Content').
-						' ('.$caption.')', $visibility );
+						' ('.$caption.')', $visibility, $author_email );
 				break;
 			
 			case 'pm_ChangeRequestLink':
@@ -164,7 +157,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				$this->setModifiedAttributes(array('Links'));
 				
 				parent::process( $request_it, 'modified', 
-					html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility );
+					html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility, $author_email );
 					
 				break;
 
@@ -177,10 +170,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind != 'modified' && $base_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $base_it, 'modified', 
-						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2 );
+						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
 				
 					parent::process( $related_it, 'modified', 
-						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2 );
+						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
 				}
 
 				break;
@@ -195,10 +188,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind != 'modified' && $request_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $request_it, 'modified', 
-						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2 );
+						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
 				
 					parent::process( $related_it, 'modified', 
-						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2 );
+						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
 				}
 
 				break;
@@ -212,7 +205,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $task_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $task_it, 'modified', 
-						htmlspecialchars ($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'windows-1251').' ('.$caption.')', $visibility + 2 );
+						htmlspecialchars ($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'windows-1251').' ('.$caption.')', $visibility + 2, $author_email );
 				}
 				break;
 
@@ -226,17 +219,17 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						parent::process( 
 								$page_it, 'modified', 
 								str_replace('%1', $object_it->getBacktraceDisplayName(), $object_it->get('IsActual') == 'N' ? text(1068) : text(1069)),
-								$visibility
+								$visibility, $author_email
 			    		);
 					}
 				}
 				else
 				{
 					parent::process( $object_it->getRef('SourcePage'), 'modified', 
-						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2 );
+						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
 				
 					parent::process( $page_it, 'modified', 
-						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2 );
+						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
 				}
 				
 				break;
@@ -250,17 +243,17 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind == 'added' )
 				{
 					parent::process( $request_it, 'modified', 
-						translate('Прикреплен тэг').': '.$tag_it->getDisplayName(), $visibility + 1 );
+						translate('Прикреплен тэг').': '.$tag_it->getDisplayName(), $visibility + 1, $author_email );
 				}
 				else
 				{
 					parent::process( $request_it, 'modified', 
-						translate('Удален тэг').': '.$tag_it->getDisplayName(), $visibility + 1 );
+						translate('Удален тэг').': '.$tag_it->getDisplayName(), $visibility + 1, $author_email );
 				}
 				break;
 
 			case 'pm_Question':
-				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, '', $visibility );
+				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, '', $visibility, $author_email );
 					
 				break;
 
@@ -268,7 +261,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				$plan_it = $object_it->getRef('TestPlan');
 				
 				parent::process( $plan_it, 'modified', 
-					$object_it->getDisplayName().' ('.$caption.')', $visibility + 1 );
+					$object_it->getDisplayName().' ('.$caption.')', $visibility + 1, $author_email );
 					
 				break;
 
@@ -299,18 +292,18 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 					
 					if ( $ref_it->object->getClassName() == 'pm_ChangeRequest' )
 					{
-						parent::process( $ref_it, 'modified', $text, $visibility + 1 );
+						parent::process( $ref_it, 'modified', $text, $visibility + 1, $author_email );
 					}
 					elseif ( $ref_it->object->getClassName() == 'pm_Task' )
 					{
 						if ( $methodology_it->HasTasks() )
 						{
-							parent::process( $ref_it, 'modified', $text, $visibility + 1 );
+							parent::process( $ref_it, 'modified', $text, $visibility + 1, $author_email );
 						}
 					}
 					else
 					{
-						parent::process( $ref_it, 'modified', $text, $visibility );
+						parent::process( $ref_it, 'modified', $text, $visibility, $author_email );
 					}
 				}
 				break;
@@ -323,19 +316,19 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						$content = str_replace( '%2', $object_it->getPlainText('Caption'), 
 							str_replace('%1', '['.$uid->getObjectUid( $object_it ).']', text(1057) ) );
 						 
-						parent::process( $object_it->getAnchorIt(), 'commented', $content, $visibility + 1 );
+						parent::process( $object_it->getAnchorIt(), 'commented', $content, $visibility + 1, $object_it->get('ExternalEmail') );
 						break;
 						
 					case 'modified':
 						$content = str_replace( '%2', $object_it->getPlainText('Caption'), 
 							str_replace('%1', '['.$uid->getObjectUid( $object_it ).']', text(1200) ) );
 						 
-						parent::process( $object_it->getAnchorIt(), 'comment_modified', $content, $visibility + 1 );
+						parent::process( $object_it->getAnchorIt(), 'comment_modified', $content, $visibility + 1, $object_it->get('ExternalEmail') );
 						break;
 						
 					case 'deleted':
 						$content = str_replace( '%2', $object_it->getPlainText('Caption'), str_replace('%1', '', text(1199) ) );
-						parent::process( $object_it->getAnchorIt(), 'comment_deleted', $content, $visibility + 1 );
+						parent::process( $object_it->getAnchorIt(), 'comment_deleted', $content, $visibility + 1, $object_it->get('ExternalEmail') );
 						break;
 				}
 				break;
@@ -346,14 +339,14 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 					case 'added':
 						 
 						parent::process( $object_it->getAnchorIt(), 'modified', 
-							str_replace('%1', $object_it->getDisplayName(), text(1503)).'.', $visibility + 1 );
+							str_replace('%1', $object_it->getDisplayName(), text(1503)).'.', $visibility + 1, $author_email );
 
 						break;
 						
 					case 'deleted':
 						
 						parent::process( $object_it->getAnchorIt(), 'modified', 
-							str_replace('%1', $object_it->getDisplayName(), text(1504)).'.', $visibility + 1 );
+							str_replace('%1', $object_it->getDisplayName(), text(1504)).'.', $visibility + 1, $author_email );
 
 						break;
 				}
@@ -373,7 +366,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				$this->setModifiedAttributes(array('Fact'));
 			    
 			    parent::process( $anchor_it, 'modified',
-			        $object_it->getDisplayNameShort().' ('.$caption.')', $visibility );
+			        $object_it->getDisplayNameShort().' ('.$caption.')', $visibility, $author_email );
 			    
 			    break;
 			    
@@ -382,12 +375,12 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			    switch( $kind )
 			    {
 			        case 'added':
-			        	
+
 					    $page_it = $object_it->getRef('WikiPage');
 					    
 					    $content = '[url='.$page_it->getHistoryUrl().'&version='.$object_it->getId().' text='.translate('История изменений').']';
 					    
-					    parent::process( $page_it, 'modified', $content, $visibility );
+					    parent::process( $page_it, 'modified', $content, $visibility, $author_email );
 			        	
 			        	break;
 			        	
@@ -397,7 +390,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 					    
 					    $content = str_replace('%1', $object_it->getDateTimeFormat('RecordCreated'), text(1507));
 
-					    parent::process( $page_it, 'modified', $content, $visibility );
+					    parent::process( $page_it, 'modified', $content, $visibility, $author_email );
 			        	
 			        	break;
 			    }
@@ -405,8 +398,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			    break;
 
 			default:
-				
-				if ( $kind != 'modified' || $content != '' ) parent::process( $object_it, $kind, $content, $visibility );
+				if ( $kind != 'modified' || $content != '' ) parent::process( $object_it, $kind, $content, $visibility, $author_email );
 			    
 				break;
 		}

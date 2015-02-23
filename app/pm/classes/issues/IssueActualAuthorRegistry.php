@@ -13,32 +13,19 @@ class IssueActualAuthorRegistry extends ObjectRegistrySQL
 		$data = array();
 		$authors = $it->fieldToArray('Author');
 		
-		$user_it = getFactory()->getObject('User')->getRegistry()->Query(
+		$user_it = getFactory()->getObject('IssueAuthor')->getRegistry()->Query(
 				array(
-						new FilterInPredicate(array_filter($authors, function($value) {
-								return is_numeric($value);
-						}))
+						new FilterInPredicate($authors)
 				)
 		);
 		while( !$user_it->end() )
 		{
 			$data[] = array ( 
-					'cms_UserId' => $user_it->getId(), 
-					'Caption' => $user_it->getDisplayName(),
+					'cms_UserId' => $user_it->getHtmlDecoded('cms_UserId'), 
+					'Caption' => $user_it->getHtmlDecoded('Caption'),
 					'Login' => $user_it->getId()
 			);
 			$user_it->moveNext();
-		}
-
-		foreach( array_filter($authors, function($value) {
-					return !is_numeric($value);
-				 }) as $author_name )
-		{
-			$data[] = array ( 
-					'cms_UserId' => $author_name, 
-					'Caption' => $author_name,
-					'Login' => $author_name
-			);
 		}
 		return $this->createIterator( $data	);
 	}

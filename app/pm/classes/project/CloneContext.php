@@ -3,14 +3,11 @@
 class CloneContext
 {
     var $ids_map = array();
-
     var $default_parms = array();
-    
     var $use_existing_refs = false;
-    
     var $broken_references = array();
-    
     private $reset_state_value = true;
+    private $reset_dates = true;
     
     function getIdsMap()
     {
@@ -60,5 +57,15 @@ class CloneContext
     function getResetState()
     {
     	return $this->reset_state_value;
+    }
+    
+    function setResetDates( $flag = true )
+    {
+    	$this->reset_dates = $flag;
+    }
+    
+    function getResetDates()
+    {
+    	return $this->reset_dates;
     }
 }

@@ -100,15 +100,13 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
         return array($content, $modified_attributes);
 	}
 	
-	function process( $object_it, $kind, $content = '', $visibility = 1) 
+	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '') 
 	{
 		if( !$this->is_active($object_it) ) return;
 
 		$change_log = getFactory()->getObject('ObjectChangeLog');
 		
 		$change_log->setVpdContext( $object_it );
-		
-		$user_id = $this->getUser();
 		
 		$class_name = strtolower(get_class($object_it->object));
 		
@@ -118,7 +116,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$parms['EntityRefName'] = $object_it->object->getEntityRefName();
 		$parms['EntityName'] = translate($object_it->object->getDisplayName());
 		$parms['ChangeKind'] = $kind;
-		$parms['Author'] = $user_id;
+		$parms['Author'] = $author_email != '' ? $author_email : getSession()->getUserIt()->get('Email');
 		$parms['Content'] = $content;
 		$parms['VisibilityLevel'] = $visibility;
 		$parms['SystemUser'] = getSession()->getUserIt()->getId();
@@ -143,11 +141,6 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		return false;
 	}
 	
-	function getUser() 
-	{
-		return getSession()->getUserIt()->getId();
-	}
-
 	protected function getSystemAttributes( $object_it )
 	{
 		if ( isset($this->system_attributes[get_class($object_it->object)]) )

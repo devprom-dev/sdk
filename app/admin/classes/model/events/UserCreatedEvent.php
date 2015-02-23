@@ -23,7 +23,7 @@ class UserCreatedEvent extends SystemTriggersBase
    		$mail->setSubject(text(237));
    		$mail->setBody($render_service->getContent('user-registration.twig', 
    				array (
-	   				'user_name' => getSession()->getUserIt()->getDisplayName(),
+	   				'user_name' => $object_it->getDisplayName(),
 	   				'system_url' => EnvironmentSettings::getServerUrl(),
    					'login' => $object_it->get('Login'),
    					'password' => $data['RepeatPassword'],

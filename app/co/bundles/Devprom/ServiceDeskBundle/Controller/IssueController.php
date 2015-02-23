@@ -245,8 +245,10 @@ class IssueController extends Controller
     protected function getProjectVpds()
     {
     	$customer_vpds = array();
-    	foreach($this->getUser()->getCompany()->getProjects() as $project_ref) {
-    		$customer_vpds[] = $project_ref->getProject()->getVpd();
+    	if ( $this->getUser()->getCompany() ) {
+	    	foreach($this->getUser()->getCompany()->getProjects() as $project_ref) {
+	    		$customer_vpds[] = $project_ref->getProject()->getVpd();
+	    	}
     	}
     	return count($customer_vpds) > 0 
     		? array_intersect($customer_vpds, $this->container->getParameter('supportProjectVpds'))

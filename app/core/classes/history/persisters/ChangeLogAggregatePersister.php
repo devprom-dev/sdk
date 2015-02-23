@@ -30,7 +30,7 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
  			" MIN(t.VisibilityLevel) VisibilityLevel " );
 
         array_push( $columns, 
- 			" GROUP_CONCAT(t.Content ORDER BY t.RecordCreated DESC SEPARATOR '<br/>') Content " );
+ 			" GROUP_CONCAT(DISTINCT t.Content ORDER BY t.RecordCreated DESC SEPARATOR '<br/>') Content " );
         
         array_push( $columns, 
  			" GROUP_CONCAT(t.ObjectChangeLogId) ObjectChangeLogId " );

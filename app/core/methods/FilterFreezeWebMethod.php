@@ -17,7 +17,13 @@ class FilterFreezeWebMethod extends WebMethod
 	function setFilter( $filter )
 	{
 		$this->filter = $filter;
+		$this->filter_values = null;
  		$this->Initialize();
+	}
+	
+	function setValues( $values )
+	{
+		$this->filter_values = $values;
 	}
 	
 	function getFilter()

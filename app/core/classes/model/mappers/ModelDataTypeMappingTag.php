@@ -13,7 +13,11 @@ class ModelDataTypeMappingTag extends ModelDataTypeMapping
 	{
 		$tag = getFactory()->getObject('Tag');
 		
-		$tag_it = is_numeric($value) && $value > 0 ? $tag->getExact($value) : $tag->getByRef('Caption', $value);
+		$tag_it = $tag->getExact($value);
+		
+		if ( $tag_it->getId() < 1 )	{
+			$tag_it = $tag->getByRef('Caption', $value);
+		}
 	
 		return $tag_it->getId() > 0 ? $tag_it->getId() : $tag->add_parms( array('Caption' => $value) ) ;
 	}

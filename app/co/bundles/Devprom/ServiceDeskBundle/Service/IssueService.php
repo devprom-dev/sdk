@@ -82,7 +82,7 @@ class IssueService {
      */
     public function getBlankIssue() {
         $issue = new Issue();
-        $issue->setPriority($this->getDefaultPriority());
+        $issue->setSeverity($this->getDefaultPriority());
         return $issue;
     }
 
@@ -101,26 +101,26 @@ class IssueService {
         $this->objectChangeLogger->logCommentCreated($issueComment);
     }
 
-    protected function createIssue(Issue $issue, $projectId, User $author) {
-
+    protected function createIssue(Issue $issue, $projectId, User $author)
+    {
         // persist issue
         $projectId = $issue->getProject() != '' ? $issue->getProject()->getId() : $projectId;
        	$vpd = $this->getProjectVPD($projectId);
        	$issue->setProject($this->em->getReference("DevpromServiceDeskBundle:Project", $projectId));
 	    $issue->setVpd($vpd);
         $issue->setState($this->getFirstIssueStateForProject($projectId));
+        $issue->setPriority($issue->getSeverity());
         $this->em->persist($issue);
         $this->em->flush();
 
         $this->addIssueWatcher($issue, $author->getEmail(), $vpd);
-
         $this->objectChangeLogger->logIssueCreated($issue);
         $this->mailer->sendIssueCreatedMessage($issue, $author->getEmail(), $author->getLanguage());
     }
 
-    protected function updateIssue(Issue $issue) {
+    protected function updateIssue(Issue $issue)
+    {
         $this->objectChangeLogger->logIssueModified($issue);
-
         $this->em->persist($issue);
         $this->em->flush();
     }

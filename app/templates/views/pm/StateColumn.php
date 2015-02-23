@@ -22,4 +22,4 @@ else
 $text_color = '#'.str_pad(dechex($text_rgb[0]),2,"0").str_pad(dechex($text_rgb[1]),2,"0").str_pad(dechex($text_rgb[2]),2,"0");
 
 ?>
-<span class="label <?=$color_class?>" id="<?=$id?>" style="background-color:<?=$color?>;color:<?=$text_color?>;<?=$style?>"><?=$name?></span>
+<span class="label-state label <?=$color_class?>" id="<?=$id?>" style="background-color:<?=$color?>;color:<?=$text_color?>;<?=$style?>"><?=$name?></span>

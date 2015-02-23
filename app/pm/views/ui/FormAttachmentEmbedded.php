@@ -70,19 +70,6 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 				' ('.$object_it->getFileSizeKb('File').' Kb)'; 		
 	}
 	
-	function getActions( $object_it, $item )
-	{
-	    $actions = parent::getActions( $object_it, $item );
-
-	    $open = array( array (
-	        'name' => translate('Открыть'),
-	        'url' => "javascript: $('a[id=File".$object_it->getId()."]').click();"
-	    ), array());
-	    
-	    return array_merge($open, $actions);
-	}
-	
- 	
  	function getShowMenu()
  	{
 		return !$this->image_mode;

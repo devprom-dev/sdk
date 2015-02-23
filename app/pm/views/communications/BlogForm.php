@@ -141,9 +141,12 @@ class BlogForm extends PMPageForm
  		
  		for ( $i = 0; $i < $req_it->count(); $i++ )
  		{
+ 			$info = $uid->getUidInfo($req_it);
+ 			
  			$title = str_replace(chr(13), ' ',  
- 				str_replace(chr(10), ' ', 
- 					$uid->getObjectUid( $req_it ).' '.$req_it->getWordsOnly('Caption', 15)));
+ 							str_replace(chr(10), ' ', 
+ 									'[url='.$info['url'].' text='.$info['uid'].'] '.$req_it->getWordsOnly('Caption', 15)
+ 				));
  			
  			if ( $req_it->get('Type') == $issue_type_it->getId() )
  			{
@@ -178,7 +181,6 @@ class BlogForm extends PMPageForm
 		}
 		
 		$editor = $this->getEditor();
-		
 		$editor->setObjectIt( $post_it );
 		
 		$parser = $editor->getEditorParser( 'wikisyntaxeditor' );
@@ -186,7 +188,6 @@ class BlogForm extends PMPageForm
 		if ( is_object($parser) )
 		{
 			$parser->setObjectIt( $post_it );
-			
 			return $parser->parse( $description );
 		}
 		else

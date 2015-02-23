@@ -20,7 +20,7 @@ class WikiParserTest extends DevpromTestCase
         
         $string = '<p><a class="uid" href="url">[K-1] Caption</a></p>';
          
-        $this->assertContains(
+        $this->assertEquals(
                 $string, preg_replace_callback(REGEX_UID, array($parser, 'parseUidCallback'), $string)
         );
 

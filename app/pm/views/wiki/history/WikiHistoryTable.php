@@ -12,7 +12,6 @@ class WikiHistoryTable extends ProjectLogTable
 	public function __construct()
 	{
 		parent::__construct(getFactory()->getObject('ChangeLog'));
-
  		getSession()->addBuilder( new WikiHistorySettingBuilder($this->getWikiPageIt()) );
 	}
 	
@@ -28,19 +27,15 @@ class WikiHistoryTable extends ProjectLogTable
 	
 	function buildObjectIt()
 	{
-		global $model_factory;
-		
 		$object_it = parent::buildObjectIt();
 		
 		$this->page_it = $object_it->copy(); 
 		
 		if ( $object_it->get('ParentPage') == '' )
 		{
-			$object = $model_factory->getObject(get_class($object_it->object));
-			
-			$object->addFilter( new WikiRootTransitiveFilter($object_it->getId()) );
-			
-			$object_it = $object->getAll();
+			$object_it = getFactory()->getObject(get_class($object_it->object))->getRegistry()->Query(
+						array (new WikiRootTransitiveFilter($object_it->getId()))
+				);
 		}
 		
 		return $object_it;

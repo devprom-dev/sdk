@@ -1,14 +1,14 @@
 var pt_titles = {
-		"end-tour": "<p>Больше не показывать</p>",
-		"vertical-menu": "<p>Навигация внутри проекта</p>",
-		"filters": "<p>Использование фильтров</p>",
-		"filter-settings": "<p>Настройки сортировки, группировки и т.п.</p>",
-		"add-favorites": "<p>Настройка панели избранного</p>",
-		"filter-actions": "<p>Действия над элементами списков и досок</p>",
-		"adjust-menu-settings": "<p>Тонкая настройка навигации внутри проекта</p>",
-		"project-settings": "<p>Настройка проекта</p>",
-		"project-creation": "<p>Навигация по проектам</p>",
-		"system-administration": "<p>Переход к административному разделу</p>",
-		"my-tasks": "<p>Мои проекты и задачи</p>",
-		"state-fields": "<p>Настройка видимости полей формы</p>"
-};
+		"end-tour": "<p>Do not show again</p>",
+		"vertical-menu": "<p>Navigation within the project</p>",
+		"filters": "<p>The use of filters</p>",
+		"filter-settings": "<p>Sorting, grouping, etc. settings</p>",
+		"add-favorites": "<p>The Favorites Bar customization</p>",
+		"filter-actions": "<p>Lists and boards elements action</p>",
+		"adjust-menu-settings": "<p>Project navigation tweak</p>",
+		"project-settings": "<p>Project settings</p>",
+		"project-creation": "<p>Projects navigation</p>",
+		"system-administration": "<p>Switch to administrative section</p>",
+		"my-tasks": "<p>My projects and tasks</p>",
+		"state-fields": "<p>Form fields visibility setting</p>"
+		}; 

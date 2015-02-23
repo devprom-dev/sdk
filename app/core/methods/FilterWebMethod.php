@@ -58,8 +58,6 @@ class FilterWebMethod extends SelectRefreshWebMethod
  	
  	function execute_request()
  	{
- 		global $_REQUEST;
- 		
  		if ( $this->getValueParm() != '' )
  		{
  			echo $this->getValueParm().'='.trim($_REQUEST['value']);

@@ -98,7 +98,7 @@ include_once SERVER_ROOT_PATH.'pm/classes/common/CustomizableObjectSet.php';
 include_once SERVER_ROOT_PATH.'pm/classes/project/ProjectTemplateSections.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/common/SharedObjectSet.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/product/FunctionTrace.php'; 
-include_once SERVER_ROOT_PATH.'pm/classes/project/ProjectUser.php'; 
+include_once SERVER_ROOT_PATH.'pm/classes/participants/ProjectUser.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/widgets/Workspace.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/widgets/WorkspaceMenu.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/widgets/WorkspaceMenuItem.php'; 

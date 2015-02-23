@@ -120,7 +120,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         
         
         
-        $setting = new PageTableSetting('TaskBoardTable');
+        $setting = new PageTableSetting('TaskTable');
         
         $setting->setFilters( array('release', 'iteration', 'taskstate', 'tasktype', 'taskassignee') );
 

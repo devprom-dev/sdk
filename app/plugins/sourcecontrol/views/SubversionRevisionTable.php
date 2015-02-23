@@ -101,14 +101,26 @@ class SubversionRevisionTable extends PMPageTable
     {
     	$actions = array();
     	
-	    $job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'processrevisionlog');
-
+    	$connector = getFactory()->getObject('Subversion');
+    	if ( $connector->getRegistry()->Count(array(new FilterVpdPredicate())) > 0 )
+    	{
+		    $job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'processrevisionlog');
+		    $actions[] = array ( 
+		            'name' => translate('Обновить'),
+		    		'uid' => 'refresh-commits', 
+		            'url' => '/tasks/command.php?class=runjobs&job='.$job_it->getId().
+		    						'&chunk='.join(',',$connector->getAll()->idsToArray()).
+		    						'&redirect='.urlencode($_SERVER['REQUEST_URI']) 
+		    );
+    	}
+    	
+		$method = new ObjectCreateNewWebMethod($connector);
+		$method->setRedirectUrl('donothing');
 	    $actions[] = array ( 
-	            'name' => translate('Обновить'),
-	    		'uid' => 'refresh-commits', 
-	            'url' => '/tasks/command.php?class=runjobs&job='.$job_it->getId().'&redirect='.urlencode($_SERVER['REQUEST_URI']) 
+	            'name' => $connector->getDisplayName(),
+	    		'uid' => 'new-repository', 
+	            'url' => $method->getJSCall() 
 	    );
-	    
 	    return $actions;
     }
 }

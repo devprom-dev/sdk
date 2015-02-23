@@ -209,16 +209,6 @@ class Request extends MetaobjectStatable
 			}
 		}
 
-		if( $attr_name == 'Author' )
-		{
-			return getSession()->getUserIt()->getId();
-		}
-
-		if( $attr_name == 'Owner' )
-		{
-			return getSession()->getUserIt()->getId();
-		}    
-		
 		if ( $attr_name == 'ClosedInVersion' && $_REQUEST['pm_ChangeRequestId'] > 0 )
 		{
 			$request = $model_factory->getObject('pm_ChangeRequest');

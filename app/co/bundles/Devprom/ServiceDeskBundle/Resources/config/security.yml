@@ -35,6 +35,8 @@ security:
                 csrf_provider: form.csrf_provider
             logout:       true
             anonymous:    true
+            http_basic:
+                realm: "Devprom ServiceDesk App"
 
     access_control:
         - { path: ^/css, roles: IS_AUTHENTICATED_ANONYMOUSLY }

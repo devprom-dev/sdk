@@ -138,26 +138,26 @@
         												{% for log in log_items %}
         												<tr>
         													<td align="left" valign="top" width="600">
-        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        														<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
         															<tr>
         																<td align="left" valign="top" width="6" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         																<td align="left" valign="top">
-        																	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #f5f5f5;">
+        																	<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse; background-color: #f5f5f5;">
         																		<tr>
-        																			<td align="left" valign="top" height="15" width="530" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        																			<td align="left" valign="top" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         																		</tr>
         																		<tr>
         																			<td align="left" valign="top">
-        																				<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        																				<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
         																					<tr>
         																						<td align="left" valign="top" width="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         																						<td align="left" valign="top" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
         																							{% if log.uid != "" %}
         																								<span><a href="{{ log.url }}">[{{ log.uid }}]</a></span>
         																							{% endif %}
-        																							{{ log.entity | raw }}: {{ log.title | raw }}
+        																							{{ log.title | raw }}
         																						</td>
-        																						<td align="left" valign="top" width="72" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
+        																						<td align="left" valign="top" width="72" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: top;">
         																							{{ log.time }}
         																						</td>
         																					</tr>
@@ -179,17 +179,17 @@
         												</tr>
         												<tr>
         													<td align="left" valign="top" width="600">
-        														<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        														<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
         															<tr>
         																<td align="left" valign="top" width="6" style="font-size: 0px; line-height: 0; background-color: #90d790;">&nbsp;</td>
         																<td align="left" valign="top" >
-        																	<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse; background-color: #f5f5f5; border-radius: 0 0 3px 0;">
+        																	<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse; background-color: #f5f5f5; border-radius: 0 0 3px 0;">
         																		<tr>
         																			<td align="left" valign="top" height="15" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         																		</tr>
         																		<tr>
         																			<td align="left" valign="top">
-        																				<table cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
+        																				<table cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
         																					<tr>
         																						<td align="left" valign="top" width="16" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         																						<td style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
@@ -244,15 +244,15 @@
                                 </tr>
                                 <tr>
                                     <td align="left" valign="top" width="600">
-        	                            <table cellpadding="0" cellspacing="0" border="0">
+        	                            <table cellpadding="0" cellspacing="0" width="100%" border="0">
         	                            	<tr>
         	                            	<td align="left" valign="top" width="33" style="font-size: 0px; line-height: 0;">&nbsp;</td>
-        		                            <td align="left" valign="top" width="517" style="font-size: 12px; color: #9c9c9c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none;">
+        		                            <td align="left" valign="top" style="font-size: 12px; color: #9c9c9c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none;">
         		                            	You are subscribed on <b>periodic digest notifications</b> of changes of the project.
         		                            	You can change frequency of notification or choose another notification method, e.q., receive notification addressed to you by the system only.
         		                            	<a href="{{ profile_url }}">Open your profile</a> to change notification settings.
         		                            </td>
-        		                            <td align="left" valign="top" width="50" style="font-size: 0px; line-height: 0;">&nbsp;</td>
+        		                            <td align="left" valign="top" width="33" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         	                            	</tr>
         	                            </table>
                                     </td>

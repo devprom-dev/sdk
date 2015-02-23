@@ -10,6 +10,8 @@ class Comment extends CommentBase
  	{
  		parent::__construct();
  	    
+ 		$this->setSortDefault( array(new SortRecentClause()) );
+ 		
  		$this->addAttributeGroup('ObjectClass', 'system');
  		$this->addAttributeGroup('ObjectId', 'system');
  		$this->addAttributeGroup('PrevComment', 'system');
@@ -20,22 +22,6 @@ class Comment extends CommentBase
 	function createIterator() 
 	{
 		return new CommentBaseIterator( $this );
-	}
-	
-	function getDefaultAttributeValue( $attr_name )
-	{
-	    switch( $attr_name )
-	    {
-	        case 'AuthorId':
-
-	            $user_it = getSession()->getUserIt();
-	            
-	            return $user_it->getId();
-	            
-	        default:
-	            
-	            return parent::getDefaultAttributeValue( $attr_name );        
-	    }
 	}
 	
 	function DeletesCascade( $object )

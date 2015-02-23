@@ -47,19 +47,6 @@ class AdminAccessPolicy extends COAccessPolicy
 		
 		switch ( $class_name )
 		{
-			case 'cms_User':
-				
-				if ( $action_kind == ACCESS_DELETE )
-				{
-					$this->setReason( text(917) );
-
-					$it = $object_it->getParticipantIt();
-					
-					return $it->count() < 1; 
-				}
-				
-				break;
-
 			case 'pm_ProjectRole':
 				
 				if ( $object_it->get('ReferenceName') == 'lead' )

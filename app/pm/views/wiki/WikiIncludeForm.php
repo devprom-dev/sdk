@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/classes/wiki/validators/ModelValidatorIncludePage.php";
+include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelectorAppendable.php";
 include_once "PMWikiForm.php";
 
 class WikiIncludeForm extends PMPageForm
@@ -39,7 +40,7 @@ class WikiIncludeForm extends PMPageForm
  	function buildModelValidator()
  	{
  		$validator = parent::buildModelValidator();
- 		$validator->insertValidator( new ModelValidatorIncludePage() );
+ 		$validator->addValidator( new ModelValidatorIncludePage() );
  		return $validator;
  	}
     
@@ -48,6 +49,8 @@ class WikiIncludeForm extends PMPageForm
 		switch ( $name )
 		{		
 			case 'ParentPage':
+				return new FieldHierarchySelectorAppendable( $this->getObject()->getAttributeObject($name) );
+				
 			case 'PageToInclude':
 				return new FieldHierarchySelector( $this->getObject()->getAttributeObject($name) );
 				

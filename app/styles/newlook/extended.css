@@ -918,3 +918,9 @@ span.label a.with-tooltip:hover
 {
     color: white;	
 }
+
+.tt-field-data
+{
+	max-height: 350px;
+	overflow: hidden;
+}

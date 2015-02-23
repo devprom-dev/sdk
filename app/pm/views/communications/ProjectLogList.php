@@ -4,6 +4,12 @@ class ProjectLogList extends PMStaticPageList
 {
  	var $participant;
  	
+ 	function __construct( $object )
+ 	{
+ 		parent::__construct($object);
+		$this->getObject()->setAttributeType( 'Author', 'REF_IssueAuthorId' );
+ 	}
+ 	
 	function setupColumns()
 	{
 		$this->object->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
@@ -20,14 +26,33 @@ class ProjectLogList extends PMStaticPageList
 		foreach( $sorts as $key => $sort )
 		{
 			if ( !$sort instanceof SortAttributeClause ) continue;
-			
 			if ( $sort->getAttributeName() == 'ChangeDate' )
 			{
-				$sorts[$key] = new SortAttributeClause('ObjectChangeLogId.D');
+				$sorts[$key] = new SortChangeLogRecentClause();
 			}
 		}
 		
 		return $sorts;
+	}
+
+	function drawRefCell( $entity_it, $object_it, $attr ) 
+	{
+		switch( $attr ) 
+		{
+			case 'SystemUser':
+				if ( $object_it->get($attr) == '' )
+				{
+					parent::drawRefCell( $this->getFilteredReferenceIt('Author', $object_it->get('Author')), $object_it, 'Author' );
+				}
+				else
+				{
+					parent::drawRefCell( $entity_it, $object_it, $attr );
+				}
+				break;
+				
+			default:
+				parent::drawRefCell( $entity_it, $object_it, $attr );
+		}
 	}
 	
 	function drawCell( $object_it, $attr ) 

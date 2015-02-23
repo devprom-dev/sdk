@@ -23,7 +23,8 @@ return array(
     'issue_assignedTo' => 'Ответственный',
     'issue_createdAt' => 'Дата создания',
     'issue_priority' => 'Приоритет',
-    'issue_attachments' => 'Приложения',
+    'issue_severity' => 'Приоритет',
+	'issue_attachments' => 'Приложения',
     'issue_comments' => 'Комментарии',
 
     'issue.edit' => 'Изменить заявку',

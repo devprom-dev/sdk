@@ -14,7 +14,7 @@ class StoreMetricsService
 		$this->storeFeatureMetrics( 
 				getFactory()->getObject('Feature')->getRegistry()->Query(
 		 				array (
-		 						new \FilterVpdPredicate(array($project_it->get('VPD'))),
+		 						new \FilterVpdPredicate($project_it->get('VPD')),
 		 						new \FeatureMetricsPersister()
 		 				)
  				)
@@ -23,7 +23,18 @@ class StoreMetricsService
  		$this->storeIssueMetrics( 
 				getFactory()->getObject('Request')->getRegistry()->Query(
 		 				array (
-		 						new \FilterVpdPredicate(array($project_it->get('VPD'))),
+		 						new \FilterVpdPredicate($project_it->get('VPD')),
+		 						new \StatePredicate('terminal'),
+		 						new \FilterAttributePredicate('DeliveryDate', 'none'),
+		 						new \RequestMetricsPersister()
+		 				)
+ 				)
+		 	);
+		
+		$this->storeIssueMetrics( 
+				getFactory()->getObject('Request')->getRegistry()->Query(
+		 				array (
+		 						new \FilterVpdPredicate($project_it->get('VPD')),
 		 						new \StatePredicate('notresolved'),
 		 						new \RequestMetricsPersister()
 		 				)
@@ -33,7 +44,7 @@ class StoreMetricsService
  		$this->storeIssueMetrics( 
 				getFactory()->getObject('Request')->getRegistry()->Query(
 		 				array (
-		 						new \FilterVpdPredicate(array($project_it->get('VPD'))),
+		 						new \FilterVpdPredicate($project_it->get('VPD')),
 		 						new \StatePredicate('notresolved'),
 		 						new \RequestDependencyFilter('duplicates,implemented,blocked'),
 		 						new \RequestMetricsPersister()
@@ -77,7 +88,7 @@ class StoreMetricsService
  		$project_it->object->modify_parms($project_it->getId(), 
 				array (
 						'Rating' => $velocity,
-						'RecordVersion' => $project_it->get('RecordVersion')
+						'RecordModified' => $project_it->get('RecordModified')
 				)
 		);
  	}
@@ -95,7 +106,7 @@ class StoreMetricsService
 	 						'Workload' => $feature_it->get('MetricWorkload'),
 	 						'StartDate' => $feature_it->get('MetricStartDate'),
 	 						'DeliveryDate' => $feature_it->get('MetricDeliveryDate'),
-	 						'RecordVersion' => $feature_it->get('RecordVersion')
+	 						'RecordModified' => $feature_it->get('RecordModified')
 	 				)
 	 		);
  			$feature_it->moveNext();
@@ -113,7 +124,7 @@ class StoreMetricsService
 		 				$issue_it->getId(),
 		 				array (
 		 						'DeliveryDate' => $issue_it->get('MetricDeliveryDate'),
-		 						'RecordVersion' => $issue_it->get('RecordVersion')
+		 						'RecordModified' => $issue_it->get('RecordModified')
 		 				)
 		 		);
  			}

@@ -9,6 +9,7 @@ class RequestFeatureUpdateMetricsEventHandler extends SystemTriggersBase
 	{
 	    if ( !$object_it->object instanceof Request ) return;
 	    if ( $object_it->get('Function') == '' ) return;
+	    if ( $object_it->object->getAttributeType('Function') == '' ) return;
 
 	    $ids = array_filter(
     				preg_split('/,/',$object_it->getRef('Function')->get('ParentPath')), 

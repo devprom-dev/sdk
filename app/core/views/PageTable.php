@@ -696,6 +696,7 @@ class PageTable extends ViewTable
 	        if ( !$filter->hasAccess() ) continue;
 	    
 	        $filter->setFilter( $this->getFiltersName() );
+	        if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
 	    
 	        if ( !$this->IsFilterVisible($filter->getValueParm()) ) continue;
 	        
@@ -709,13 +710,14 @@ class PageTable extends ViewTable
                 
                 ob_end_clean();
                 
-                $filter_items[] = array ( 'html' => $html );
+                $filter_items[] = array ( 
+					'html' => $html
+				);
                 
                 continue;
 	        }
 	        
 	        $filter_value = $filter_values[$filter->getName()];
-	        
 	        $title_items = array();
 	        $actions = array();
 	        

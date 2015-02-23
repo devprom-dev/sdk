@@ -331,6 +331,21 @@ function pasteImage(e) {
 	catch(ex) {}
 }
 
+function pasteTemplate( field, content )
+{
+	var editor_id = $('textarea[id*='+field+']').attr('id');
+	$('body', window.frames[0].document).focus(); 
+	var instance = CKEDITOR.instances[editor_id];
+	if ( !instance.checkDirty() ) {
+		instance.setData(content, function() {
+			instance.updateElement();
+			instance.resetDirty();
+		});
+	} else {
+		instance.insertHtml(content);
+	}
+}
+
 $(document).ready( function()
 {
 	setupEditorGlobal( 'Files' );

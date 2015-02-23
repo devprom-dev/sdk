@@ -7,7 +7,7 @@ class ModelValidatorIncludePage extends ModelValidatorInstance
 	public function validate( Metaobject $object, array & $parms )
 	{
 		$uid = new ObjectUID;
-		
+
 		$ids = array_filter(preg_split('/[,-]/',$parms['PageToInclude']), function($value) {
 					return $value > 0;
 		});

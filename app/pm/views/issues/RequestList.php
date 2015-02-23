@@ -100,18 +100,6 @@ class RequestList extends PMPageList
 	{
 		switch ( $attr )
 		{
-			case 'Author':
-				
-				if ( $object_it->get('ExternalAuthor') != '' )
-				{
-					echo $object_it->get('ExternalAuthor');
-					return;
-				}
-				
-				parent::drawRefCell( $entity_it, $object_it, $attr );
-				
-				break;
-				
 			case 'Spent':
 			    
 			    $field = new FieldSpentTimeRequest( $object_it );

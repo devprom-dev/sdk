@@ -309,8 +309,12 @@ class CloneLogic
 		}
 		
 		$parms['Project'] = $project_it->getId();
-		$parms['RecordCreated'] = '';
-		$parms['RecordModified'] = '';
+		
+		if ( $context->getResetDates() )
+		{
+			$parms['RecordCreated'] = '';
+			$parms['RecordModified'] = '';
+		}
 		
 		switch ( strtolower(get_class($it->object)) )
 		{
@@ -660,9 +664,12 @@ class CloneLogic
  	static function applyToMethodology( & $context, & $attrs, & $it, & $project_it )
  	{
 		$parms = array();
+		$licensed_attrs = array('IsRequirements','IsTests','IsHelps');
 		
 		foreach ( $attrs as $attr )
 		{
+			if ( in_array($attr,$licensed_attrs) && !$it->object->IsAttributeVisible($attr) ) continue;
+			
 			if ( $attr == 'RequestEstimationRequired' )
 			{
 				if ( $it->get_native($attr) == 'Y' || $it->get_native($attr) == 'N' )

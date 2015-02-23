@@ -247,7 +247,9 @@ class ProcessDigest extends TaskCommand
 							// setup left timeline offset
 							new ChangeLogStartFilter( $from_date_client ),
 							// setup right timeline offset
-							new ChangeLogFinishFilter( $till_date_client )
+							new ChangeLogFinishFilter( $till_date_client ),
+							// sort by recent records
+							new SortChangeLogRecentClause()
 						)
 			);
 

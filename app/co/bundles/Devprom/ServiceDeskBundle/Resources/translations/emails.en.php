@@ -53,7 +53,17 @@ return array(
         <hr>
         <p>If you think your request still not complete, please leave a comment here: <a href="%link%">%link%</a></p>
     ',
-
+    'issue.resolved-version.body' => '
+        <p>Hi!</p>
+        <p>Your request "<a href="%link%">%title%</a>" have been completed</p>
+        <p><b>Comment from support engineer:</b></p>
+        <blockquote>%comment%</blockquote>
+        <p><b>Resolved in version:</b> %version%</p>
+    	<br/>
+        <hr>
+        <p>If you think your request still not complete, please leave a comment here: <a href="%link%">%link%</a></p>
+    ',
+    
     'resetting.email.subject' => 'Reset Password',
     'resetting.email.message' => '
             <p>Hello!</p>

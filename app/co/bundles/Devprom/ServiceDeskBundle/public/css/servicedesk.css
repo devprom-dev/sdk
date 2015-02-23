@@ -66,7 +66,7 @@
 }
 
 textarea.form-control {
-    height: 150px !important;
+    min-height: 150px !important;
 }
 
 input[type='file'].form-control {
@@ -133,7 +133,7 @@ h6,
 }
 
 textarea.textarea-sm {
-    height: 50px !important;
+    min-height: 50px !important;
 }
 
 .notifications {
@@ -231,4 +231,17 @@ span.hidden-xxs {
 a [class^="icon-"],
 a [class*=" icon-"] {
     display: inline-block;
+}
+
+textarea.textarea-comment
+{
+	max-width:696px;
+	width: 696px;
+}
+
+textarea#issue_description
+{
+    max-width:640px;
+    width: 640px;
+    min-height:300px !important; 
 }

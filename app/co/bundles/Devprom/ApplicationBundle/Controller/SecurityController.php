@@ -55,8 +55,8 @@ class SecurityController extends PageController
     	$command = new LoginUserService();
 		
     	$result = $command->validate( 
-    	        $request->request->get('login'),
-    	        $request->request->get('pass') 
+    	        trim($request->request->get('login')),
+    	        trim($request->request->get('pass')) 
     	);
 
 		if( $result > 0 )
@@ -66,7 +66,7 @@ class SecurityController extends PageController
 			if ( is_object($log) )
 			{
 				$log->info( 'Login used: '.$request->request->get('login') );
-				$log->info( 'Password hash: '.getFactory()->getObject('User')->getHashedPassword($request->request->get('pass')) );
+				$log->info( 'Password hash: '.getFactory()->getObject('User')->getHashedPassword(trim($request->request->get('pass'))) );
 			}
 			
 			return $this->replyError( $command->getResultDescription( $result ) );
@@ -102,7 +102,7 @@ class SecurityController extends PageController
 
 		$part_cls = $model_factory->getObject('cms_User');
 		
-		$part_it = $part_cls->getByRef('LCASE(Email)', strtolower($request->request->get('email')));
+		$part_it = $part_cls->getByRef('LCASE(Email)', strtolower(trim($request->request->get('email'))));
 
 		if ( $part_it->getId() < 1) return $this->replyError(text(220));
 
@@ -166,7 +166,7 @@ class SecurityController extends PageController
 
 		while ( !$user_it->end() ) 
 		{
-			if( $request->query->get('key') == $user_it->getResetPasswordKey() ) 
+			if( trim($request->query->get('key')) == $user_it->getResetPasswordKey() ) 
 			{
 				$user->modify_parms($user_it->getId(),
 						array(

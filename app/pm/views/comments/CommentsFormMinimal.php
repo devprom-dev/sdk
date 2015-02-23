@@ -24,6 +24,9 @@ class CommentsFormMinimal extends PMPageForm
 	        case 'ObjectClass':
 	            return get_class($this->anchor_it->object);
 	            
+	        case 'AuthorId':
+	        	return getSession()->getUserIt()->getId();
+	            
 	        default:
 	            return parent::getFieldValue( $attr );
 	    }

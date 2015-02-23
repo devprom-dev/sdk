@@ -1517,7 +1517,11 @@ class StoredObjectDB extends Object
 	    }
 	    
 	    $this->defaultsort = join(',', $sorts);
-
+	}
+	
+	function getSortDefault()
+	{
+		return $this->default_sorts;
 	}
 	
 	function addSort( $clause )

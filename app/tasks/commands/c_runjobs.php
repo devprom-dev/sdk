@@ -131,6 +131,9 @@ class RunJobs extends Command
 
 					try
 					{
+						// pass concrete chunk to be processed
+						if ( $_REQUEST['chunk'] != '' ) $command->setChunk(preg_split('/,/',$_REQUEST['chunk']));
+						
 						ob_start();
 						$command->execute();
 

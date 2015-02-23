@@ -485,11 +485,7 @@ class RequestTable extends PMPageTable
 	
 	protected function buildFilterOwner()
 	{
-		$user = getFactory()->getObject('cms_User');
-		$user->addFilter( 
-				new FilterInPredicate(getFactory()->getObject('pm_Participant')->getAll()->fieldToArray('SystemUser')) 
- 		);
-		return new FilterObjectMethod( $user, translate($this->getObject()->getAttributeUserName('Owner')), 'owner' );
+		return new FilterObjectMethod( getFactory()->getObject('ProjectUser'), translate($this->getObject()->getAttributeUserName('Owner')), 'owner' );
 	}
 	
 	protected function buildFilterAuthor()

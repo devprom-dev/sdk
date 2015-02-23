@@ -172,32 +172,6 @@ class RequestIterator extends StatableIterator
 				
 		 		$this->version_settings = $version_settings->getAll();
 			}
-			
- 			switch ( $stage_it->object->getClassName() )
- 			{
- 				case 'pm_Build':
- 				case 'pm_Release':
- 				    
-		 			if ( $this->version_settings->get('UseIteration') == 'Y' )
-		 			{
-						$stage = $stage_name;
-						
- 						$pattern = text(810);
-		 			}
-		 			
-		 			break;
-		 			
- 				case 'pm_Version':
-		 			
- 				    if ( $this->version_settings->get('UseRelease') == 'Y' )
-		 			{
-						$stage = $stage_name;
- 						
-						$pattern = text(810);
-		 			}
-		 			
-		 			break;
- 			}
 		}
 
  		if ( $stage == "" )

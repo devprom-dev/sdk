@@ -25,6 +25,7 @@ class StateBaseIterator extends OrderedIterator
 		$object->resetPersisters();
 		
 		$object->addFilter( new ObjectStatePredicate($this) );
+		$object->addFilter( new FilterBaseVpdPredicate() );
 		
 		$count_aggregate = new AggregateBase( 'State' );
 		

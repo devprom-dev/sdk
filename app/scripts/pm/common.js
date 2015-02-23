@@ -1224,10 +1224,10 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 	
 	var jqe_text_id = jqe_text.attr('id');
 	
-	registerFormValidator( function()
+	registerFormValidator( function(form)
 	{
-		var choosen = $('#'+jqe_text_id).val();
-		jqe_field = $('#'+jqe_text_id).next('input');
+		var choosen = form.find('#'+jqe_text_id).val();
+		jqe_field = form.find('#'+jqe_text_id).next('input');
 		
 		if ( jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 ) {
 			if ( isNaN(choosen) && (jqe_field.val() == "" || isNaN(jqe_field.val()))) {
@@ -1339,7 +1339,7 @@ function validateForm( form )
 	
 	for ( var i = 0; i < formValidators.length; i++ )
 	{
-		if ( ! formValidators[i]() ) valid = false;
+		if ( ! formValidators[i](form) ) valid = false;
 	}
 
 	if ( !valid ) return valid;
@@ -1961,13 +1961,13 @@ function makeForm( action )
 
 	if ( action == 'view' ) return;
 
-	registerFormValidator( function() 
+	registerFormValidator( function(form) 
 	{
-		$('.embedded_form').children('div[multiple]:visible').filter( function() {
+		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
 		}).find('.btn-primary').click();
 	
-		return $('.embedded_form').children('div[multiple]:visible').filter( function() {
+		return form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
 		}).length < 1;
 	});
@@ -2211,13 +2211,13 @@ function workflowMakeupDialog()
 {
 	completeUIExt($('#modal-form').parent());
 
-	registerFormValidator( function() 
+	registerFormValidator( function(form) 
 	{
-		$('.embedded_form').children('div[multiple]:visible').filter( function() {
+		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
 		}).find('.btn-primary').click();
 	
-		return $('.embedded_form').children('div[multiple]:visible').filter( function() {
+		return form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
 		}).length < 1;
 	});

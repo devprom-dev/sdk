@@ -14,22 +14,13 @@ class WikiConverterPreview
 
 		$editor->setObjectIt( $this->wiki_it );
 		
- 		$this->parser = $editor->getHtmlParser();
- 		
+ 		$this->parser = $editor->getHtmlSelfSufficientParser();
  		$this->parser->setObjectIt( $this->wiki_it );
+
+ 		$this->parser->setHrefResolver(function($wiki_it) {
+ 			return '#'.$wiki_it->getId();
+ 		});
  	}
-	
-	function getGlobalUrl( $wiki_it )
-	{
-		if ( is_null($wiki_it) )
-		{
-			return '';
-		}
-		else
-		{
-			return '#'.$wiki_it->getId();
-		}
-	}
 	
 	function getFileUrl( $file_it )
 	{
@@ -109,6 +100,8 @@ class WikiConverterPreview
 		while ( !$this->wiki_it->end() )
 		{
 			$this->drawSeparator(); 
+			
+			echo '<a name="'.$this->wiki_it->getId().'"></a>';
 			echo '<h3>'.$this->wiki_it->get('Caption').'</h3>';
 			
 			$this->setObjectIt( $this->wiki_it );
