@@ -84,7 +84,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    
 	    foreach( $emails as $email ) $mail->appendAddress($email);
 	    
-	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/saasassist/resources/license.html');
+	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/dobassist/resources/license.html');
 	    
 	    $body = preg_replace('/_url_/', EnvironmentSettings::getServerUrl().'/admin/license/', $body);
 	    
@@ -119,7 +119,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    
 	    foreach( $emails as $email ) $mail->appendAddress($email);
 	    
-	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/saasassist/resources/termination.html');
+	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/dobassist/resources/termination.html');
 	    
 	    $body = preg_replace('/_url_/', EnvironmentSettings::getServerUrl().'/admin/license/', $body);
 

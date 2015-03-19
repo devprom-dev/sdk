@@ -9,10 +9,10 @@ class LicenseSAASBase extends LicenseInstalled
 	{
 		parent::__construct();
 
- 		$this->addAttribute( 'Caption', 'VARCHAR', 'text(saasassist10)', true, false, 'text(saasassist11)', 0 );
- 		$this->addAttribute( 'LicenseValue', 'INTEGER', "text(saasassist12)", true, true );
- 		$this->addAttribute( 'LicenseKey', 'VARCHAR', "text(saasassist13)", true, true );
- 		$this->addAttribute( 'LeftDays', 'VARCHAR', 'text(saasassist14)', true, false, 'text(saasassist15)' );
+ 		$this->addAttribute( 'Caption', 'VARCHAR', 'text(dobassist10)', true, false, 'text(dobassist11)', 0 );
+ 		$this->addAttribute( 'LicenseValue', 'INTEGER', "text(dobassist12)", true, true );
+ 		$this->addAttribute( 'LicenseKey', 'VARCHAR', "text(dobassist13)", true, true );
+ 		$this->addAttribute( 'LeftDays', 'VARCHAR', 'text(dobassist14)', true, false, 'text(dobassist15)' );
 	}
 
 	function createIterator()

@@ -18,7 +18,7 @@ class DOBAssistCoPlugin extends PluginCoBase
         return array(
             'initialize' =>
                 array(
-                        'includes' => array( 'saasassist/views/InitializeInstance.php' ),
+                        'includes' => array( 'dobassist/views/InitializeInstance.php' ),
                         'classname' => 'InitializeInstance'
                 )
         );
@@ -30,7 +30,7 @@ class DOBAssistCoPlugin extends PluginCoBase
         {
             case 'createinstance':
                 return array(
-                	'includes' => array( 'saasassist/commands/c_createinstance.php' )
+                	'includes' => array( 'dobassist/commands/c_createinstance.php' )
                 );
         }
     }

@@ -72,7 +72,7 @@ class InitializeInstance extends Page
  						'Login' => $login,
  						'Email' => $email,
  						'Password' => $login,
- 						'Language' => 1,
+ 						'Language' => 2,
  						'IsAdmin' => 'Y'
  				)
  		);
@@ -102,8 +102,8 @@ class InitializeInstance extends Page
  						'EmailSender' => 'admin',
  						'AdminEmail' => SAAS_SENDER,
  						'ServerName' => EnvironmentSettings::getServerName(),
- 						'ServerPort' => 443,
- 						'Language' => 1
+ 						'ServerPort' => SAAS_SCHEME == 'http' ? 80 : 443,
+ 						'Language' => 2
  				)
  		);
  		
@@ -229,7 +229,7 @@ class InitializeInstance extends Page
 						array(
 								'CodeName' => 'supportA',
 								'Caption' => 'Support',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'support_en.xml')))->getId(),
+								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'kanban_en.xml')))->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
@@ -241,7 +241,7 @@ class InitializeInstance extends Page
 						array(
 								'CodeName' => 'incidentsA',
 								'Caption' => 'Incidents',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'incidents_en.xml')))->getId(),
+								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'kanban_en.xml')))->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
