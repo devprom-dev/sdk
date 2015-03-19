@@ -1,11 +1,14 @@
 <?php
 
 include_once SERVER_ROOT_PATH."core/c_command.php";
+include_once SERVER_ROOT_PATH."cms/c_mail.php";
 
 class ProcessOrder extends CommandForm
 {
  	function validate()
  	{
+ 		Logger::getLogger('Commands')->info('ACCOUNT: '.var_export($_REQUEST, true));
+ 		
 		$this->checkRequired( array('OrderId','OrderInfo') );
 		
 		return true;
@@ -18,7 +21,7 @@ class ProcessOrder extends CommandForm
  	
  	function create()
 	{
-		if ( $_COOKIE['devprom-order-info'] == '' ) $this->delete();
+		if ( $_REQUEST['OrderInfo'] == '' ) $this->delete();
 		
 		$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
 		

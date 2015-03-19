@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."core/c_command.php";
+include_once SERVER_ROOT_PATH."cms/c_mail.php";
 
 class GetLicenseKey extends CommandForm
 {
@@ -383,8 +384,8 @@ class GetLicenseKey extends CommandForm
 					'Currency' => 'RUB',
 					'Url' => "https://secure.payonlinesystem.com/ru/payment/?",
 					'LicenseSAASALM' => 3000,
-					'LicenseSAASALMMiddle' => 15000,
-					'LicenseSAASALMLarge' => 60000
+					'LicenseSAASALMMiddle' => 16000,
+					'LicenseSAASALMLarge' => 65000
 			);
 		}
 		else
@@ -392,7 +393,7 @@ class GetLicenseKey extends CommandForm
 			return array (
 					'Currency' => 'USD',
 					'Url' => "https://secure.payonlinesystem.com/en/payment/?",
-					'LicenseSAASALM' => 100,
+					'LicenseSAASALM' => 50,
 					'LicenseSAASALMMiddle' => 500,
 					'LicenseSAASALMLarge' => 2000
 			);
