@@ -26,5 +26,6 @@ $plugin_text_array = array
 		36 => 'Renew license',
 		43 => 'End of trial period notification',
 		44 => 'DevOps Board <%1>',
-		45 => 'Notification about your instance termination'
+		45 => 'Notification about your instance termination',
+		46 => 'Welcome to your DevOps Board'
 );

@@ -66,7 +66,9 @@ class InitializeInstance extends Page
  	
  	protected function createUser( $name, $login, $email )
  	{
- 		return getFactory()->getObject('User')->add_parms(
+ 		$user = getFactory()->getObject('User');
+ 		$user->setNotificationEnabled(false);
+ 		return $user->add_parms(
  				array (
  						'Caption' => $name,
  						'Login' => $login,
@@ -109,7 +111,7 @@ class InitializeInstance extends Page
  		
  		$allowed_templates = array (
  				'kanban_en.xml',
- 				'support_en.xml',
+ 				'ticket_en.xml',
  				'incidents_en.xml',
  				'scrum_en.xml'
  		);
@@ -156,7 +158,7 @@ class InitializeInstance extends Page
 	    $mail = new HtmlMailbox;
 	    $mail->appendAddress($to_address);
 	    
-	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/dobassist/resources/greetings.html');
+	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/dobassist/resources/en/greetings.html');
 	    $body = preg_replace('/\%user_name\%/', $user_it->get('Caption'), preg_replace('/\%host_url\%/', $host_url, $body));
 	    $body = preg_replace('/\%password\%/', $user_pass, preg_replace('/\%login\%/', $user_name, $body));
 	    $body = preg_replace('/\%pass_url\%/', $host_url.'/reset?key='.$user_it->getResetPasswordKey(), $body);
@@ -229,7 +231,7 @@ class InitializeInstance extends Page
 						array(
 								'CodeName' => 'supportA',
 								'Caption' => 'Support',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'kanban_en.xml')))->getId(),
+								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'ticket_en.xml')))->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
@@ -241,7 +243,7 @@ class InitializeInstance extends Page
 						array(
 								'CodeName' => 'incidentsA',
 								'Caption' => 'Incidents',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'kanban_en.xml')))->getId(),
+								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'incidents_en.xml')))->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
