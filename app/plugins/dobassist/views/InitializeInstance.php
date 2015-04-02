@@ -112,8 +112,7 @@ class InitializeInstance extends Page
  		$allowed_templates = array (
  				'kanban_en.xml',
  				'ticket_en.xml',
- 				'incidents_en.xml',
- 				'scrum_en.xml'
+ 				'incidents_en.xml'
  		);
  		
 		$template = getFactory()->getObject('pm_ProjectTemplate');
@@ -130,6 +129,38 @@ class InitializeInstance extends Page
 			$template_it->delete();
 			$template_it->moveNext();
 		}
+		
+		$this->translateDictionaries();
+ 	}
+ 	
+ 	protected function translateDictionaries()
+ 	{
+ 		$entities = array (
+ 				'pm_Importance',
+ 				'Priority',
+ 				'pm_ProjectRole',
+ 				'pm_TaskType',
+ 				'pm_ChangeRequestLinkType',
+ 				'cms_Language'
+ 		);
+ 		
+ 		foreach( $entities as $entity )
+ 		{
+ 			$object = getFactory()->getObject($entity);
+ 			$object->setNotificationEnabled(false);
+ 			
+ 			$it = $object->getAll();
+ 			while( !$it->end() )
+ 			{
+ 				$object->modify_parms($it->getId(),
+ 						array (
+ 								'Caption' => translate($it->getHtmlDecoded('Caption')),
+ 								'BackwardCaption' => translate($it->getHtmlDecoded('BackwardCaption'))
+ 						)
+ 					);
+ 				$it->moveNext();
+ 			}
+ 		}
  	}
  	
  	protected function getKeyFile()

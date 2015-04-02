@@ -3,7 +3,7 @@
 $plugin_text_array = array 
 (
  		1 => 'Title of my first plugin',
-		2 => 'Buy',
+		2 => 'Renew license',
 		3 => 'Unfortunately, your order has failed, the processing engine has informed us about the following:',
 		4 => 'There was a technical issue, the payer should try to pay after some time.',
 		5 => 'To make the payment by credit card is not possible. The payer should use another method of payment.',
