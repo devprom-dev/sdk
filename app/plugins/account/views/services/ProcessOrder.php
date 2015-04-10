@@ -136,10 +136,8 @@ class ProcessOrder extends CommandForm
 	    $body = preg_replace('/\%key\%/', $key, $body);
 		
 	    $mail->setBody($body);
-	    
-	    $mail->setSubject( 'Продление использования Devprom.ALM' );
+	    $mail->setSubject(text('account27'));
 	    $mail->setFrom("Devprom Software <".getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail').">");
-	    	
 	    $mail->send();
 	}
 	

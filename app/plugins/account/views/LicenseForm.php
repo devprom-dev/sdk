@@ -23,36 +23,22 @@ class LicenseForm extends AjaxForm
 							new FilterAttributePredicate('Email', $this->getAttributeValue('Email'))
 					)
 			);
-    		
-    		if ( $user_it->getId() != '' )
-    		{
-    			$attributes = array_merge($attributes, array('ExistPassword'));
-    		}
-    		else
-    		{
-	    		$attributes = array_merge($attributes, array('UserName', 'Email', 'UserPassword', 'UserForm'));
-    		}
+   			$attributes = array_merge($attributes, array('ExistPassword'));
     	}
     	else
     	{
     		$attributes = array_merge($attributes, array('UserTitle', 'UserForm'));
     	}
     	
-        if ( $_REQUEST['LicenseType'] == 'LicenseTeam' )
-        {
-            $attributes = array_merge($attributes, array('LicenseType', 'InstallationUID'));
-        }
-        else
-        {
-            $attributes = array_merge($attributes, array('LicenseType', 'InstallationUID', 'LicenseValue'));
+        $attributes = array_merge($attributes, array('LicenseType', 'InstallationUID'));
+        
+        $product_it = $this->getProduct();
+        if ( $product_it->get('ValueName') != '' ) {
+        	$attributes[] = 'LicenseValue';
         }
         
-        if ( $this->processSaasProduct() )
-        {
-			$attributes[] = 'AggreementForm';
-           	$attributes[] = 'Aggreement';
-           	$attributes[] = 'PaymentServiceInfo';
-        }
+        $fields = $product_it->get('RequiredFields');
+        if ( is_array($fields) ) $attributes = array_merge($attributes, $fields); 
         
         return $attributes;
     }
@@ -113,7 +99,7 @@ class LicenseForm extends AjaxForm
             case 'LicenseType':
                 return text('account3');
             case 'LicenseValue':
-           		return $this->processSaasProduct() ? text('account4') : text('account5');
+           		return $this->getProduct()->get('ValueName');
             case 'Aggreement':
             	return text('account6');
             case 'PaymentServiceInfo':
@@ -145,7 +131,7 @@ class LicenseForm extends AjaxForm
 
            case 'LicenseValue':
                 if ( $_REQUEST[$attribute] != '' ) return $_REQUEST[$attribute];
-                return $this->processSaasProduct() ? 12 : parent::getAttributeValue( $attribute ); 
+                return $this->getProduct()->get('ValueDefault'); 
             	
             case 'Aggreement': return 'N';
                 
@@ -171,19 +157,20 @@ class LicenseForm extends AjaxForm
         switch( $attribute )
         {
         	case 'LicenseType':
-				$field = new FieldDictionary(
-					 $this->processSaasProduct() 
-					 		? getFactory()->getObject('AccountProductSaas') 
-					 		: getFactory()->getObject('AccountProduct')
-            	);
-				$field->SetName($attribute);
-				$field->SetValue($value);
-				$field->SetId($attribute);
-				$field->SetTabIndex($tab_index);
-				$field->setNullOption(false);
+        		$product_it = $this->getProduct()->object->getAll();
 				
-				echo $this->getName($attribute);
-				$field->draw();
+				echo '<b>'.$this->getName($attribute).'</b>';
+				echo '<div/><br/>';
+				while( !$product_it->end() ) { 
+				?>
+				<label class="radio" style="padding-left:">
+		  			<input type="radio" name="<?=$attribute?>" value="<?=$product_it->getId()?>" <?=($this->getProduct()->getId() == $product_it->getId() ? 'checked' : '')?>>
+		  			<?=$product_it->getDisplayName()?>
+				</label>
+				<br/>
+				<?php
+				$product_it->moveNext();
+				}
 				
 				echo '<input type="hidden" name="WasLicenseKey" value="'.htmlspecialchars($_REQUEST['WasLicenseKey']).'">';
 				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlspecialchars($_REQUEST['WasLicenseValue']).'">';
@@ -234,17 +221,20 @@ class LicenseForm extends AjaxForm
 		return $parms;
 	}
 
-	protected function processSaasProduct()
+	protected function getProduct()
 	{
-	    switch( $_REQUEST['LicenseType'] )
-       	{
-			case 'LicenseSAASALM':
-			case 'LicenseSAASALMMiddle':
-			case 'LicenseSAASALMLarge':
-            	return true;
-            	
-			default:
-				return false;
-       	}
+		$products = array (
+			new AccountProduct(),
+			new AccountProductSaas(),
+			new AccountProductDevOps()
+		);
+
+		foreach( $products as $product )
+		{
+			$iterator = $product->getExact($_REQUEST['LicenseType']);
+			if ( $iterator->getId() != '' ) return $iterator;
+		}
+
+		return $products[0]->getAll();
 	}
 }

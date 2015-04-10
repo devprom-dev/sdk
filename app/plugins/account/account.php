@@ -8,6 +8,7 @@ define ('MERCHANT_KEY', '30cfcab4-ce10-413f-bbfd-4a367823bc1c');
 
 include "classes/model/AccountProduct.php";
 include "classes/model/AccountProductSaas.php";
+include "classes/model/AccountProductDevOps.php";
 include "classes/model/AccountLicenseData.php";
 include "classes/model/ServicePayed.php";
 include "classes/model/predicates/FilterInstallationUIDPredicate.php";

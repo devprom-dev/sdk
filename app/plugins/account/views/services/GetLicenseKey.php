@@ -9,38 +9,15 @@ class GetLicenseKey extends CommandForm
  	{
 		$this->checkRequired( array('InstallationUID', 'LicenseType') );
 		
-		if ( $_REQUEST['LicenseType'] != 'LicenseTeam' )
+		$product_it = $this->getProduct($_REQUEST['LicenseType']);
+		if ( $product_it->getId() == '' ) $this->replyError( text('account28') );
+		if ( $product_it->get('ValueName') != '' )
 		{
-			$this->checkRequired( array('LicenseValue') );
-			
-			if ( intval($_REQUEST['LicenseValue']) < 1 )
-			{
-            	switch( $_REQUEST['LicenseType'] )
-            	{
-            	    case 'LicenseSAASALM':
-            	    case 'LicenseSAASALMMiddle':
-            	    case 'LicenseSAASALMLarge':
-						$this->replyError( text('account19') );
-						break;
-						
-            	    default:
-            	    	$this->replyError( text('account20') );
-            	}
-			}
+			$this->checkRequired(array('LicenseValue'));
+			if ( intval($_REQUEST['LicenseValue']) < 1 ) $this->replyError( text('account19') );
 		}
-
-		if ( $_REQUEST['UserName'] != '' && $_REQUEST['Email'] != '' && $_REQUEST['UserPassword'] != '' )
-		{
-			$this->joinCustomer( 
-					$_REQUEST['UserName'], 
-					$_REQUEST['Email'], 
-					$_REQUEST['UserPassword'], 
-					$_REQUEST['Language'],
-					$_REQUEST['InstallationUID'], 
-					$_REQUEST['LicenseType']
-			);
-		}
- 		else if ( $_REQUEST['Email'] != '' && $_REQUEST['ExistPassword'] != '' )
+		
+ 		if ( $_REQUEST['Email'] != '' && $_REQUEST['ExistPassword'] != '' )
 		{
 			$user_it = getFactory()->getObject('User')->getRegistry()->Query(
 					array (
@@ -70,17 +47,18 @@ class GetLicenseKey extends CommandForm
 		global $model_factory;
 
  	 	if ( !getSession()->getUserIt()->IsReal() ) $this->replyError( text('account18') );
-	 	if ( in_array($_REQUEST['LicenseType'], array('LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge')) )
+ 	 	
+ 	 	$product_it = $this->getProduct($_REQUEST['LicenseType']);
+ 	 	$required = $product_it->get('RequiredFields');
+ 	 	
+	 	if ( is_array($required) && in_array('Aggreement', $required) && !in_array(strtolower($_REQUEST['Aggreement']), array('on', 'y')) )
 		{
-			if ( !in_array(strtolower($_REQUEST['Aggreement']), array('on', 'y')) )
-			{
-				$this->replyError( text('account21') ); 
-			}
+			$this->replyError( text('account21') ); 
 		}
  	 	
 		$user_it = getSession()->getUserIt();
 		
-		if ( in_array($_REQUEST['LicenseType'], array('LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge')) && $_REQUEST['LicenseKey'] == '' )
+		if ( ($product_it->get('PriceRUB') != '' || $product_it->get('PriceUSD') != '') && $_REQUEST['LicenseKey'] == '' )
 		{
 			$this->redirectToStore( $user_it->get('Email') );
 		}
@@ -110,22 +88,11 @@ class GetLicenseKey extends CommandForm
 		{
 			switch ( $_REQUEST['LicenseType'] )
 			{
-            	case 'LicenseSAASALM':
-           	    case 'LicenseSAASALMMiddle':
-           	    case 'LicenseSAASALMLarge':
-				
-            		$license_data['key'] = $_REQUEST['LicenseKey'];
-					
-					break;
-					
 				case 'LicenseTeam':
-					
 					$license_data['key'] = $this->getTeamLicense($_REQUEST['InstallationUID']);
-					
 					break;
 	
 				case 'LicenseEnterprise':
-
 					$settings = $model_factory->getObject('cms_SystemSettings');
 			 		$settings_it = $settings->getAll();
 					
@@ -147,33 +114,14 @@ class GetLicenseKey extends CommandForm
 			   		$mail->send();
 					
 			   		$license_data['key'] = '#';
-			   		
 			   		break;
 	
 				case 'LicenseTrial':
-
 					$license_data['key'] = $this->getTrialLicense($_REQUEST['InstallationUID'], $_REQUEST['LicenseValue']);
-
-			   		$mail = new HtmlMailbox;
-			   		
-			   		$from_address = 'Dmitry Lobasev <dmitry.lobasev@devprom.ru>'; 
-			   		$subject = 'Re: Загрузка дистрибутива Devprom ALM';
-		   			$body = 'Добрый день!<br/><br/>Поздравляю вас с успешной установкой Devprom ALM!<br/><br/>Хочу предложить провести для вас и ваших коллег небольшую демонстрацию возможностей Devprom ALM, чтобы вместе с вами лучше понять, как произвести настройку инструмента под потребности процессов вашей компании. Обычно это позволяет сэкономить достаточно много времени, которое бы вы потратили на самостоятельное изучение.<br/><br/>Мы можем провести демонстрацию в вашем офисе, если он в Москве, или через видео-звонок в skype.<br/><br/>Пожалуйста, напишите или позвоните мне, если это предложение вам интересно, мы выберем удобное время встречи.<br/><br/>Также приглашаем вас <a href="http://devprom.ru/news/tag/Вебинар">принять участие в нашем вебинаре</a>, где мы расскажем о возможностях Devprom, а вы сможете задать нам интересующие вас вопросы.<br/><br/>Дмитрий<br/>______________________________________<br/>Dmitry Lobasev, Managing Partner, Devprom<br/>tel: +7 (499) 638-64-11, skype: dmitry.lobasev<br/>web: <a href="http://devprom.ru/">http://devprom.ru</a><br/><br/>Нажмите <strong>Мне нравится</strong> на странице <a href="http://facebook.com/devprom">Devprom в Facebook</a> - будьте в курсе последних новостей о наших продуктах!';
-			   		
-			   		$mail->setBody(wordwrap($body, 70, "\n"));
-			   		$mail->setSubject($subject);
-			   		
-			   		$headers = "From: ".$mail->encodeAddress($from_address)."\r\n";
-    				$headers .= "Reply-To: ".$mail->encodeAddress($from_address)."\r\n";
-    				$headers .= $mail->getContentType()."\r\n";
-			   		
-			   		//mail( $mail->encodeAddress($user_it->get('Email')), $mail->subject, $mail->getBody(), $headers, "-f dmitry.lobasev@devprom.ru");
-					
 					break;
 					
 				default:
-					
-					return $this->replyError('Данный вид лицензирования не поддерживается');
+            		$license_data['key'] = $_REQUEST['LicenseKey'];
 			}
 			
 			$license_data['uid'] = $_REQUEST['InstallationUID'];
@@ -324,22 +272,13 @@ class GetLicenseKey extends CommandForm
 	
 	function redirectToStore( $email )
 	{
-		$store_parms = $this->getStoreParameters();
+		$store_parms = $this->getStoreParameters($_REQUEST['LicenseType']);
 		
 		$merchantId = MERCHANT_ID;
 		$securityKey = MERCHANT_KEY;
 		$currency = $store_parms['Currency'];
 		
-
-		if ( $store_parms[$_REQUEST['LicenseType']] != '' )
-		{
-	    	$amount = round($_REQUEST['LicenseValue'] * $store_parms[$_REQUEST['LicenseType']], 0); 
-		}
-		else
-		{
-			$amount = round($_REQUEST['LicenseValue'] * 60000, 0);
-		}
-		
+    	$amount = round($_REQUEST['LicenseValue'] * $store_parms['Price'], 0); 
 		$amount .= ".00"; 
 
 		$orderId = abs(crc32($_REQUEST['InstallationUID'].date('Y-m-d H:s:i')));
@@ -376,66 +315,42 @@ class GetLicenseKey extends CommandForm
 		$this->replyRedirect($paymentFormAddress);
 	}
 	
-	function getStoreParameters()
+	function getStoreParameters( $licence_type )
 	{
-		if ( getSession()->getUserIt()->get('Language') == 1 )
-		{
+		$product_it = $this->getProduct($licence_type);
+		if ( getSession()->getUserIt()->get('Language') == 1 ) {
 			return array (
 					'Currency' => 'RUB',
 					'Url' => "https://secure.payonlinesystem.com/ru/payment/?",
-					'LicenseSAASALM' => 3000,
-					'LicenseSAASALMMiddle' => 16000,
-					'LicenseSAASALMLarge' => 65000
+					'Price' => $product_it->get('PriceRUB')
 			);
 		}
-		else
-		{
+		else {
 			return array (
 					'Currency' => 'USD',
 					'Url' => "https://secure.payonlinesystem.com/en/payment/?",
-					'LicenseSAASALM' => 50,
-					'LicenseSAASALMMiddle' => 500,
-					'LicenseSAASALMLarge' => 2000
+					'Price' => $product_it->get('PriceUSD')
 			);
 		}
 	}
 	
-	protected function joinCustomer( $name, $email, $password, $language, $uid, $type )
+	protected function getProduct($licence_type)
 	{
-		$user = getFactory()->getObject('User');
-		$user->setNotificationEnabled(false);
-		
-		$user_it = $user->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('Email', $email),
-						new FilterInstallationUIDPredicate($uid)
-				)
+		$products = array (
+			new AccountProduct(),
+			new AccountProductSaas(),
+			new AccountProductDevOps()
 		);
-		
-		if ( $user_it->getId() == '' )
+
+		foreach( $products as $product )
 		{
-			$user_id = $user->add_parms(
-					array (
-							'Caption' => IteratorBase::utf8towin($name),
-							'Email' => $email,
-							'Password' => $password,
-							'Login' => array_shift(preg_split('/@/', $email)),
-							'Language' => $language
-					)
-			);
-			$user_it = $user->getExact($user_id);
-
-			getFactory()->getObject('AccountLicenseData')->modify_parms( $user_it->getId(),
-					array (
-							'uid' => $uid,
-							'type' => $type
-					)
-			);
+			$iterator = $product->getExact($licence_type);
+			if ( $iterator->getId() != '' ) return $iterator;
 		}
-		
-		getSession()->open($user_it);
-	}
 
+		return $products[0]->getEmptyIterator();
+	}
+	
 	protected function updateCustomer( $user_it, $uid, $type )
 	{
 		getFactory()->getObject('AccountLicenseData')->modify_parms( $user_it->getId(),
