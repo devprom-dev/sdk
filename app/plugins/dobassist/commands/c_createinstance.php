@@ -9,26 +9,25 @@ class CreateInstance extends CommandForm
 	private $username = '';
 	private $userlogin = '';
 	private $template = '';
+	private $names_restricted = array('docs','doc','api','support','www','account','news','blog');
 	
  	function validate()
  	{
+ 		header('Access-Control-Allow-Origin: *');
+ 		header('Access-Control-Allow-Methods: *');
+ 		header('Access-Control-Allow-Headers: *');
+ 		
  		$this->checkRequired( array('instance', 'email', 'username') );
+
+ 		$this->instance = trim(strtolower($_REQUEST['instance']));
+ 		$this->template = trim(strtolower($_REQUEST['template']));
  		
  	 	if ( filter_var($_REQUEST['email'], FILTER_VALIDATE_EMAIL) === false ) $this->replyError(text('dobassist2'));
- 		if ( !preg_match('/^[A-Za-z0-9]+$/', $_REQUEST['instance'], $matches) ) $this->replyError(text('dobassist3'));
- 	 	if ( $_REQUEST['template'] != '' && !preg_match('/^[A-Za-z0-9\-\_\.]+$/', $_REQUEST['template'], $matches) )
- 		{
- 			$this->replyError(text('dobassist26'));
- 		}
- 		
- 		$this->template = $_REQUEST['template'];
- 		
- 		$length = strlen($_REQUEST['instance']);
+ 		if ( !preg_match('/^[A-Za-z0-9]+$/', $this->instance, $matches) ) $this->replyError(text('dobassist3'));
+ 		if ( is_dir($this->getLogsDir()) || in_array($this->instance, $this->names_restricted) ) $this->replyError(text('dobassist5'));
+ 	 	$length = strlen($this->instance);
  		if ( $length < 3 || $length > 25 ) $this->replyError(text('dobassist4'));
- 		
- 		$this->instance = strtolower($_REQUEST['instance']);
-
- 		if ( is_dir($this->getLogsDir()) ) $this->replyError(text('dobassist5'));
+ 		if ( $this->template != '' && !preg_match('/^[A-Za-z0-9\-\_\.]+$/', $this->template, $matches) ) $this->replyError(text('dobassist26'));
  		
  		$this->email = $_REQUEST['email'];
  		list($this->userlogin, $server) = preg_split('/\@/', $this->email);

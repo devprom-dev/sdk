@@ -3,13 +3,13 @@
 $plugin_text_array = array 
 (
  		1 => 'SaaS assistant',
-		2 => 'Please specify a valid e-mail address will be sent an email with information to access your Devprom.ALM instance',
+		2 => 'Please specify a valid e-mail address will be sent an email with information to access your DevOpsBoard instance',
 		3 => 'Your site name can consist of english letters and numbers',
 		4 => 'The number of characters in the name of your website should not be less than 3 and more than 25',
-		5 => 'Chosen name is already used, please select another name for your Devprom.ALM instance',
-		6 => 'New instance of Devprom.ALM',
+		5 => 'Chosen name is already used, please select another name for your DevOpsBoard instance',
+		6 => 'New instance of DevOpsBoard',
 		7 => 'Name of your instance',
-		8 => 'Information to access your Devprom instance will be sent to your email.',
+		8 => 'Information to access your DevOpsBoard instance will be sent to your email.',
 		9 => 'Enter a name for your site: http://&lt;site name&gt;.%1, please use latin letters and numbers.',
 		10 => 'DevOps Board',
 		11 => '',
