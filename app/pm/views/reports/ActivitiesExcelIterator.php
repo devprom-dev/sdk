@@ -56,6 +56,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		
  		$iterator = $this->getIterator();
  		$activities_map = $iterator->getActivitiesMap();
+ 		$uid = new ObjectUID;
 
  		switch ( $field )
  		{
@@ -74,8 +75,8 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  						
  					case 'Task':
  						$this->task_it->moveToId($iterator->get('ItemId'));
-
- 						return '[T-'.$this->task_it->getId().'] '.$this->task_it->getDisplayName();
+ 						$info = $uid->getUidInfo($this->task_it);
+ 						return '['.$info['uid'].'] '.$info['caption'].' ('.$info['state_name'].')';
 
  					case 'ChangeRequest':
 						
@@ -85,28 +86,35 @@ class ActivitiesExcelIterator extends IteratorExportExcel
 						}
 						else
 						{
- 							$this->request_it->moveToId($iterator->get('ItemId'));
- 							
-	 						return '[I-'.$this->request_it->getId().'] '.$this->request_it->getDisplayName();
+							$this->request_it->moveToId($iterator->get('ItemId'));
+							$info = $uid->getUidInfo($this->request_it);
+ 							return '['.$info['uid'].'] '.$info['caption'].' ('.$info['state_name'].')';
 						}
  				}
  			
  			case 'Total':
- 			    
  			    foreach( preg_split('/,/', $iterator->get('SystemUser')) as $user_id )
  			    {
- 			        $data = $activities_map[$iterator->get('Item').$iterator->get('ItemId')][$user_id];
- 			        
+ 			        $data = $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Participant'.$user_id];
+ 			        $total += is_array($data) ? array_sum($data) : 0;
+ 			    }
+
+ 		 		foreach( preg_split('/,/', $iterator->get('Project')) as $project_id )
+ 			    {
+ 			        $data = $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Project'.$project_id];
  			        $total += is_array($data) ? array_sum($data) : 0;
  			    }
  			    
  				return $total == 0 ? '' : str_replace(',', '.', $total);
  				
  			default:
- 			    
  			    foreach( preg_split('/,/', $iterator->get('SystemUser')) as $user_id )
  			    {
- 			        $total += $activities_map[$iterator->get('Item').$iterator->get('ItemId')][$user_id][substr($field, 1) + 1];
+ 			        $total += $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Participant'.$user_id][substr($field, 1) + 1];
+ 			    }
+ 		 		foreach( preg_split('/,/', $iterator->get('Project')) as $project_id )
+ 			    {
+ 			        $total += $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Project'.$project_id][substr($field, 1) + 1];
  			    }
  			    
  				return $total == 0 ? '' : str_replace(',', '.', $total);

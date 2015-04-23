@@ -432,7 +432,8 @@ class PageBoard extends PageList
 		$this->offset = $_REQUEST[$this->getOffsetName()] != '' ? $_REQUEST[$this->getOffsetName()] : 0;
 		
 		$this->it = $this->getIteratorRef()->copyAll();
-
+ 		$project_cache_it = getFactory()->getObject('ProjectCache')->getAll();
+		
 		$it = $this->it;
     	
 		$it->moveFirst();
@@ -650,10 +651,14 @@ class PageBoard extends PageList
 				
 				foreach( $row as $prev_board_index => $columns )
 				{
+					if ( $group_field == 'Project' ) {
+							$project_cache_it->moveToId($group_key);
+							$project_attr = ' project="'.$project_cache_it->get('CodeName').'"'; 
+					}
+					
 				    echo '<td class="board-column">';
-				    
 				    echo '<div class="list-left-cell">&nbsp;</div>';
-					echo '<div class="list_cell board-column" more="'.$board_values[$prev_board_index].'" group="'.$group_key.'" sort="'.$sort_values[0].'">';
+					echo '<div class="list_cell" more="'.$board_values[$prev_board_index].'" group="'.$group_key.'" sort="'.$sort_values[0].'" '.$project_attr.'>';
 					
 					foreach( $columns as $column_it )
 					{
@@ -773,6 +778,7 @@ class PageBoard extends PageList
 			boardItemOptions.boardCreated = '<?=SystemDateTime::date()?>';
 			boardItemOptions.droppableAcceptFunction = function ( draggable ) 
 			{
+				if ( !draggable.is(boardItemOptions.itemCSSPath) ) return false;
 				var dropinfo = $(this).is('.board-column') ? $(this).children('.list_cell') : $(this);
 				
 				if ( draggable.attr('more') == "" )
@@ -781,8 +787,6 @@ class PageBoard extends PageList
 				}
 				else
 				{
-					if ( dropinfo.attr('more') != draggable.attr('more') && dropinfo.attr('group') != draggable.parent().attr('group') ) return false;
-
 					if ( parseInt(dropinfo.attr('order')) >= 0 )
 					{
 						return dropinfo.attr('group') == draggable.parent().attr('group') 

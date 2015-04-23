@@ -71,21 +71,16 @@ class RequestChart extends PMPageChart
 		switch ( $this->getTable()->getReportBase() )
 		{
 			case 'releaseburndown':
-			    
 				$flot = new FlotChartBurndownWidget();
-				
 				$flot->setLegend( false );
 				$flot->showPoints( false );
 
 				$flot->setUrl(getSession()->getApplicationUrl().
 					'chartburndownversion.php?version='.$release_it->getId().'&json=1');
-
 				return $flot;
 				
 			case 'releaseburnup':
-			    
 				$flot = new FlotChartBurnupWidget();
-				
 				$flot->setLegend( false );
 				$flot->showPoints( false );
 
@@ -93,6 +88,14 @@ class RequestChart extends PMPageChart
 					'chartburnup.php?release='.$release_it->getId() );
 				
                 return $flot;
+                
+			case 'projectburnup':
+				$flot = new FlotChartBurnupWidget();
+				$flot->setLegend( false );
+				$flot->showPoints( false );
+
+				$flot->setUrl( getSession()->getApplicationUrl().'chartburnupproject.php' );
+				return $flot;
 				
 			default:
 				return parent::getChartWidget();

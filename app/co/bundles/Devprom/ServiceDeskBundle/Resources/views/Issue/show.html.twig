@@ -57,6 +57,12 @@
                                 <td>{{ 'issue_state'|trans }}</td>
                                 <td class="issue_state">{{ issue.state.name|trans }}</td>
                             </tr>
+                            {% if issue.resolvedVersion != "" %}
+                            <tr>
+                                <td>{{ 'issue_version'|trans }}</td>
+                                <td class="issue_state">{{ issue.resolvedVersion | raw }}</td>
+                            </tr>
+                            {% endif %}
                             <tr>
                                 <td>{{ 'issue_severity'|trans }}</td>
                                 <td class="issue_priority">

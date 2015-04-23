@@ -10,6 +10,9 @@ include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.ph
 
 abstract class RestController extends FOSRestController implements ClassResourceInterface
 {
+    abstract protected function getEntity();
+    abstract protected function getFilterResolver();
+	
 	public function cgetAction()
 	{
 		try    	
@@ -115,10 +118,6 @@ abstract class RestController extends FOSRestController implements ClassResource
 			throw $this->createNotFoundException($e->getMessage());
 		}
     }
-    
-    abstract protected function getEntity();
-    
-    abstract protected function getFilterResolver();
     
     protected function getModelService()
     {

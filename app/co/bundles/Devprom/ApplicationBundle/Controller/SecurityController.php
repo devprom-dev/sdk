@@ -2,7 +2,7 @@
 
 namespace Devprom\ApplicationBundle\Controller;
 
-use Devprom\ApplicationBundle\Controller\PageController;
+use Devprom\CommonBundle\Controller\PageController;
 use Devprom\ApplicationBundle\Service\LoginUserService;
 use Devprom\CommonBundle\Service\Project\InviteService;
 use Symfony\Component\HttpFoundation\Response;

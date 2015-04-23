@@ -1,6 +1,6 @@
 <?php 
 
-$user_title = str_replace('%1', $data['Planned'], str_replace('%2', $data['LeftWork'], str_replace('%3', $data['Fact'], text(1857)) ));
+$user_title = str_replace('%1', round($data['Planned'],1), str_replace('%2', round($data['LeftWork'],1), str_replace('%3', round($data['Fact'],1), text(1857)) ));
 if ( $user == '' ) $user = text(1901);
 
 $iterations = array();
@@ -33,10 +33,11 @@ foreach( $data['Iterations'] as $iteration_data )
 	}
 	
 	$iterations[] = array (
-		'title' => $iteration_data['title'].': '.str_replace('%used', round($used_volume, 1), 
-							str_replace('%full', round($full_volume, 1), 
-									str_replace('%left', abs(round($left_volume,2)), 
-											$left_volume < 1 ? text(1900) : text(1899)))),
+		'title' => $iteration_data['title'].' - '.preg_replace(
+						array('/%1/', '/%2/', '/%3/'),
+						array(round($used_volume, 1), round($full_volume, 1), abs(round($left_volume,2))),
+						$left_volume < 0 ? text(1900) : text(1899)
+				   ),
 		'name' => substr($iteration_data['number'], 0, 20),
 		'progress' => $overload
 							? '<div class="progress"><div class="bar bar-danger" style="width: 100%;"></div></div>'

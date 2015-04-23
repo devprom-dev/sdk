@@ -189,4 +189,9 @@ class EnvironmentSettings
     	$headers = apache_request_headers();
     	return strtolower($headers['X-Requested-With']) == 'xmlhttprequest';
     }
+    
+    static public function getMaxFileSize()
+    {
+ 		return defined('MAX_FILE_SIZE') ? MAX_FILE_SIZE : 104857600;
+    }
 }

@@ -572,6 +572,13 @@ function refreshListItems()
     				if ( localOptions.reorder ) reorderSections();
     			});
     		}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 1 : 180000);
+	    },
+	    error: function (xhr, ajaxOptions, thrownError) {
+    		setTimeout( function() {
+    			restoreCache(function() {
+    				if ( localOptions.reorder ) reorderSections();
+    			});
+    		}, 180000);
 	    }
 	});		
 }	

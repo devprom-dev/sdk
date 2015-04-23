@@ -433,6 +433,13 @@ class PageList extends ListTable
 		return '#f8f8f8';
 	}
 	
+	function drawGroupRow($group_field, $object_it, $columns)
+	{
+		echo '<td colspan="'.$columns.'">';
+			$this->drawGroup($group_field, $object_it);
+		echo '</td>';
+	}
+	
 	function drawGroup($group_field, $object_it)
 	{
 		switch ( $group_field )

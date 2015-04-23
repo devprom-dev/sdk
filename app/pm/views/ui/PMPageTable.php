@@ -73,17 +73,17 @@ class PMPageTable extends PageTable
     
     function hasCrossProjectFilter()
     {
-    	$board = $this->getListRef();
-		
-		if ( $board instanceof PageBoard )
+		if ( $this->getListRef() instanceof PageBoard )
 		{
 			return false;
 		}
+		elseif ( getFactory()->getObject('SharedObjectSet')->sharedInProject($this->getObject(), getSession()->getProjectIt()) )
+		{
+	    	return getSession()->getProjectIt()->get('LinkedProject') != '';
+		}
 		else
 		{
-	    	return getSession()->getProjectIt()->get('LinkedProject') != ''  
-	    				&& getFactory()->getObject('SharedObjectSet')
-	    						->sharedInProject($this->getObject(), getSession()->getProjectIt());
+			return true;
 		}
     }
     
@@ -309,10 +309,12 @@ class PMPageTable extends PageTable
 			
 			$predicates[] = new SnapshotObjectPredicate($values['baseline']);
 		}
+
+    	if ( !$this->hasCrossProjectFilter() ) $predicates[] = new FilterBaseVpdPredicate();
 		
 		return array_merge($predicates, parent::getFilterPredicates());
 	}
-	
+
 	function buildCustomPredicates( $values )
 	{
 		$predicates = array();
@@ -439,8 +441,6 @@ class PMPageTable extends PageTable
 	
     function getFilters()
     {
-        global $model_factory;
-        	
         $filters = parent::getFilters();
         
         if( !is_object($this->getObject()) ) return $filters;
@@ -448,10 +448,7 @@ class PMPageTable extends PageTable
         // filters driven by custom attributes
         $filters = array_merge($filters, $this->buildCustomFilters());
 
-    	if ( $this->hasCrossProjectFilter() && getSession()->getProjectIt()->get('LinkedProject') != '' )
-	    {
-	    	$filters[] = $this->buildProjectFilter();
-	    }
+    	if ( $this->hasCrossProjectFilter() ) $filters[] = $this->buildProjectFilter();
         
 	    switch ( $this->getObject()->getEntityRefName() )
 	    {

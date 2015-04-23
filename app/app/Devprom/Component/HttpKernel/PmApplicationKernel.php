@@ -5,6 +5,7 @@
  * @author Vasiliy Pedak truvazia@gmail.com
  */
 namespace Devprom\Component\HttpKernel;
+include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,7 +42,6 @@ class PmApplicationKernel extends Kernel
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
         $loader->load(SERVER_ROOT_PATH.'pm/bundles/Devprom/ProjectBundle/Resources/config/config.yml');
-	
     }
 
     public function getRootDir()
@@ -62,5 +62,13 @@ class PmApplicationKernel extends Kernel
     public function getLogDir()
     {
         return defined('SERVER_LOGS_PATH') ? SERVER_LOGS_PATH : dirname($this->getCacheDir()) . '/logs';
+    }
+    
+    function boot()
+    {
+		$lock = new \CacheLock();
+		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
+    	
+		parent::boot();
     }
 }

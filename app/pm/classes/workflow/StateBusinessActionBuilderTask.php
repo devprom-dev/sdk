@@ -1,11 +1,11 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilder.php";
-
 include "actions/TaskBusinessActionResolveIssue.php";
 include "actions/TaskBusinessActionDeclineIssue.php";
 include "actions/TaskBusinessActionAssignParticipant.php";
 include "actions/TaskBusinessActionResetAssignee.php";
+include "actions/TaskBusinessActionReopenIssue.php";
 
 class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
 {
@@ -20,5 +20,6 @@ class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
  		$set->registerRule( new TaskBusinessActionDeclineIssue() );
  		$set->registerRule( new TaskBusinessActionAssignParticipant() );
  		$set->registerRule( new TaskBusinessActionResetAssignee() );
+ 		$set->registerRule( new TaskBusinessActionReopenIssue() );
     }
 }

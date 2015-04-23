@@ -105,12 +105,6 @@ $display_operations = $list->IsNeedToDisplayOperations();
 
 			for( $i = 0; $i < $rows_num; $i++)
 			{
-				if ( !$list->IsNeedToDisplayRow($it) )
-				{
-					$it->moveNext();
-					continue;
-				}
-				
 				if ( $group_field != '' )
 				{
 					$group_field_value = $it->get($group_field);
@@ -118,15 +112,20 @@ $display_operations = $list->IsNeedToDisplayOperations();
 					if( $group_field_value != $group_field_prev_value ) 
 					{
 					?>
-					<tr class="info" group-id="<?=$group_field_value?>">
-						<td colspan="<?=$columns_number?>">
-							<? $list->drawGroup($group_field, $it); ?>
-						</td>
+					<tr id="<?=($table_row_id.'g_'.$group_field_value)?>" class="info" group-id="<?=$group_field_value?>">
+						<?php $list->drawGroupRow($group_field, $it, $columns_number); ?>
 					</tr>
 					<? 
 					}
 					$group_field_prev_value = $group_field_value;
 				}
+
+				if ( !$list->IsNeedToDisplayRow($it) )
+				{
+					$it->moveNext();
+					continue;
+				}
+				
 				?>
 				
 				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" group-id="<?=$group_field_value?>" modified="<?=$it->get('AffectedDate')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">

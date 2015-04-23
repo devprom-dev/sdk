@@ -49,7 +49,7 @@
 				url: '?export=section',
 				type: 'POST',
 				dataType: 'html',
-				async: <?=($section->getAsyncLoad() ? 'true' : 'false' )?>,
+				async: true,
 				data: { 
 					<?php foreach ( $parms as $parm_key => $parm_value ) { ?>
 					'<?=$parm_key?>' : '<?=$parm_value?>',

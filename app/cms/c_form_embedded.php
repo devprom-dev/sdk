@@ -33,6 +33,11 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  		}
 
  		$this->button_text = translate('добавить');
+ 		$this->extendModel();
+ 	}
+ 	
+ 	protected function extendModel()
+ 	{
  	}
  	
  	function IsAttributeVisible( $attribute )
@@ -277,7 +282,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 				
 				case 'file':
 					echo '<input class="input-block-level" id="'.$field_name.'" type="file" name="'.$field_name.'" value="'.$value.'" tabindex="'.$tabindex.'">';
-					echo '<input type="hidden" name="MAX_FILE_SIZE" value="30485760">';
+					echo '<input type="hidden" name="MAX_FILE_SIZE" value="'.EnvironmentSettings::getMaxFileSize().'">';
 					break;
 	
 				case 'text':

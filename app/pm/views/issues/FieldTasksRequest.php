@@ -34,22 +34,9 @@ class FieldTasksRequest extends FieldForm
  		    if ( is_object($this->object_it) && !$this->getEditMode() ) $form->setObjectIt($this->object_it);
  		    
  		    $form->setReadonly( $this->readOnly() );
-	 		
  		    $form->setTabIndex( $this->getTabIndex() );
 	 		
  		    $form->draw( $view );
-	 		
-			$report_it = getFactory()->getObject('PMReport')->getExact('currenttasks');
-			
-			if ( is_object($this->object_it) && getFactory()->getAccessPolicy()->can_read($report_it) )
-			{
-		 		if( $this->object_it->get('Tasks') != '' )
-		 		{
-		 		    echo '<br/>';
-				 
-		 		    echo '<a href="'.$report_it->getUrl().'&issue='.$this->object_it->getId().'&iteration=all&clickedonform" tabindex="-1">'.text(1014).'</a>';
-				}
-	 		}
  		echo '</div>';
  	}
 } 

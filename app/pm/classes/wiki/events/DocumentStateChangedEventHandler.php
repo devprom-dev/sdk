@@ -8,7 +8,7 @@ class DocumentStateChangedEventHandler extends WorklfowMovementEventHandler
 {
 	function readyToHandle()
 	{ 
-		return $this->getObjectIt()->object instanceof WikiPage;  
+		return $this->getObjectIt()->object instanceof WikiPage && $this->getObjectIt()->object->getStateClassName() != '';  
 	}
 	
 	function handle( $object_it )

@@ -30,20 +30,38 @@ include "DateFormatRussian.php";
  	
  	function Initialize( $resource = null )
  	{
- 	    global $text_data, $model_factory;
-
- 	    $text_data = array();
+ 	    global $text_data;
+ 	    if ( !is_object($resource) ) $resource = getFactory()->getObject('cms_Resource');
  	    
- 	    if ( !is_object($resource) ) $resource = $model_factory->getObject('cms_Resource');
+ 	    $cache_path = $this->getCacheFilePath($resource);
+ 	    if ( file_exists($cache_path) ) {
+ 	    	$text_data = include($cache_path);
+ 	    	return;
+ 	    }
 
+		$this->buildCache($resource, $cache_path);
+		$text_data = include($cache_path);
+		return;
+ 	}
+ 	
+ 	protected function buildCache($resource, $cache_path)
+ 	{
+ 		$records = array();
  	    $resource_it = $resource->getAll();
- 	    
  	    $data = $resource_it->getRowset();
-
  	    foreach( $data as $key => $value )
  	    {
- 	        $text_data[$value['ResourceKey']] = $value['ResourceValue'];
+ 	    	$records[] = "'".$value['ResourceKey']."' => '".preg_replace("/'/", "\\'", $value['ResourceValue'])."'"; 
  	    }
+ 	    @mkdir(dirname($cache_path), 0777, true);
+ 	    file_put_contents($cache_path, '<?php return array('.join(',',$records).');');
+ 	}
+ 	
+ 	protected function getCacheFilePath($resource)
+ 	{
+ 		return CACHE_PATH.'/appcache/'.
+ 				getFactory()->getEntityOriginationService()->getCacheCategory($resource).
+ 					'/texts.php';
  	}
  	
  	function getLanguageId() 

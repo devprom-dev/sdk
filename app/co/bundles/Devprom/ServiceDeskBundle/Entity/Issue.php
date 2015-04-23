@@ -119,6 +119,12 @@ class Issue extends BaseEntity {
      */
     private $severity;
     
+    /**
+     * @ORM\Column(type="string", name="ClosedInVersion")
+     * @var string
+     */
+    private $resolvedVersion;
+    
     function __construct()
     {
         $this->comments = new ArrayCollection();
@@ -377,6 +383,21 @@ class Issue extends BaseEntity {
         return $this->newAttachment;
     }
 
+    /**
+     * @param string $text
+     */
+    public function setResolvedVersion($text)
+    {
+        $this->resolvedVersion = $text;
+    }
 
+    /**
+     * @return string
+     */
+    public function getResolvedVersion()
+    {
+        return $this->resolvedVersion;
+    }
+    
 
 }

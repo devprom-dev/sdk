@@ -268,7 +268,7 @@ class VersionList extends PMPageList
 					
 					$report_it = $model_factory->getObject('PMReport')->getExact('iterationburndown');
 				
-					$url = $report_it->getUrl().'&iteration='.$object_it->getId();
+					$url = $report_it->getUrl().'&release='.$object_it->getId();
 				
 					$chart_id = 'chart'.md5($url);
 					
@@ -625,7 +625,7 @@ class VersionList extends PMPageList
 	                
 				    $states = $model_factory->getObject('Request')->getNonTerminalStates();
 				    
-				    $info = $module_it->buildMenuItem('?release='.$it->getId().'&state='.join(',',$states));
+				    $info = $module_it->buildMenuItem('?release='.$it->getId().'&group=State&state='.join(',',$states));
 				    
 	                $actions[] = array( 
 	                    'url' => $info['url'],
@@ -657,7 +657,7 @@ class VersionList extends PMPageList
 	                
 				    $states = $model_factory->getObject('Task')->getNonTerminalStates();
 				    
-				    $info = $task_list_it->buildMenuItem('?iteration='.$it->getId().'&state='.join(',',$states));
+				    $info = $task_list_it->buildMenuItem('?iteration='.$it->getId().'&group=State&state='.join(',',$states));
 				    
 	                $actions[] = array(
 	                    'url' => $info['url'],

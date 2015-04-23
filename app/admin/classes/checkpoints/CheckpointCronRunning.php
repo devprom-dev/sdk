@@ -31,6 +31,6 @@ class CheckpointCronRunning extends CheckpointEntryStatic
 
     function getDescription()
     {
-        return text(1872);
+        return $this->check() ? text(1930) : text(1872);
     }
 }

@@ -15,15 +15,18 @@ class RenderService
 	public function __construct( $session, $additional_path = SERVER_ROOT_PATH )
 	{
 		$lang = strtolower($session->getLanguage()->getLanguage());
+
+		$paths = array (
+ 			SERVER_ROOT_PATH.'/co/bundles/Devprom/CommonBundle/Resources/views/Emails/'.$lang,
+ 			rtrim($additional_path,"\\/").'/'.$lang
+ 		);
+		foreach( $paths as $key => $value ) {
+			if ( !is_dir($value) ) unset($paths[$key]);
+		}
 		
         $this->templating = new TwigEngine(
  			new \Twig_Environment(
- 					new \Twig_Loader_Filesystem( 
- 							array (
- 									SERVER_ROOT_PATH.'/co/bundles/Devprom/CommonBundle/Resources/views/Emails/'.$lang,
- 									rtrim($additional_path,"\\/").'/'.$lang
- 							)
- 					), 
+ 					new \Twig_Loader_Filesystem($paths), 
  					array(
 						'cache' => CACHE_PATH.'/symfony2-pm',
 					)

@@ -40,14 +40,20 @@
  }
  else
  {
- 	$release->addFilter( new ReleaseTimelinePredicate('current') );
- 	$release_it = $release->getFirst();
+ 	$release_it = $release->getRegistry()->Query(
+ 			array (
+ 					new ReleaseTimelinePredicate('current'),
+ 					new FilterBaseVpdPredicate()
+ 			)
+ 		);
  }
  
  if ( $release_it->count() < 1 )
  {
- 	return;
+ 	$release_it = $release->getRegistry()->Query(array(new FilterBaseVpdPredicate()));
  }
+
+ if ( $release_it->count() < 1 ) return;
  
  // refesh metrics for the current day
  //if ( !$release_it->IsFinished() )

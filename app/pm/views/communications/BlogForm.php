@@ -145,7 +145,8 @@ class BlogForm extends PMPageForm
  			
  			$title = str_replace(chr(13), ' ',  
  							str_replace(chr(10), ' ', 
- 									'[url='.$info['url'].' text='.$info['uid'].'] '.$req_it->getWordsOnly('Caption', 15)
+ 									'[url='.$info['url'].' text='.$info['uid'].'] '.$req_it->getWordsOnly('Caption', 15).
+ 										' ('.$info['state_name'].')'
  				));
  			
  			if ( $req_it->get('Type') == $issue_type_it->getId() )

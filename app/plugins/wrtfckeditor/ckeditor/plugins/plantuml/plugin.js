@@ -51,7 +51,7 @@ CKEDITOR.plugins.add( 'plantuml',
 				
 				// Return a context menu object in an enabled, but not active state.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.html#.TRISTATE_OFF
-				if ( element && !element.data( 'cke-realelement' ) )
+				if ( element && element.getName() == 'img' && !element.data( 'cke-realelement' ) )
 		 			return { umlItem : CKEDITOR.TRISTATE_OFF };
 				// Return nothing if the conditions are not met.
 		 		return null;

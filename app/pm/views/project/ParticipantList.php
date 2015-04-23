@@ -109,7 +109,7 @@ class ParticipantList extends PMPageList
 		        
 		    case 'Capacity':
 
-				$capacity = $object_it->get('Capacity');
+				$capacity = round($object_it->get('Capacity'), 1);
 			
     			if ( !is_null($capacity) )
     			{

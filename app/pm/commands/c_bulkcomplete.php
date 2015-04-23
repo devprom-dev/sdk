@@ -109,8 +109,9 @@ include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 	{
 		global $_REQUEST, $_SERVER, $model_factory;
 		
+		$except_items = array();
+
 		$object_it = $this->getObjectIt();
-		
 		$object_it->object->removeNotificator( 'EmailNotificator' );
 		
 		$data = $this->getOperationData( $object_it );
@@ -118,41 +119,50 @@ include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 		switch ( $data['operation'] )
 		{
 		    case 'Attribute':
-
 		        $key = array();
-		        
 				while ( !$object_it->end() )
     			{
-    		        $this->processEmbeddedForms( $object_it, $key );
-    		        
-    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']); 
-    
+    				try { 
+	    		        $this->processEmbeddedForms( $object_it, $key );
+	    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']); 
+    				}
+    				catch( Exception $e ) {
+	   					$except_items[] = array (
+	   							'it' => $object_it->copy(),
+	   							'ex' => $e
+	   					); 
+    				}
     				$object_it->moveNext();
     			}
 		        
 		        break;
 		        
 		    case 'Transition':
-		        
 		    	$transition_it = getFactory()->getObject('Transition')->getExact($data['parameter']);
-		    			
 		    	$target_state = $transition_it->getRef('TargetState')->get('ReferenceName');
 
 				while ( !$object_it->end() )
     			{
-    				$method = new TransitionStateMethod($transition_it, $object_it);
-    				
-    				ob_start();
-
-					$method->execute( 
-							$transition_it->getId(), 
-							$object_it->getId(), 
-							get_class($object_it->object), 
-							$data['attributes']
-					);
-    
-    				ob_end_clean();
-    
+    				try {
+	    				$method = new TransitionStateMethod($transition_it, $object_it);
+	    				
+	    				ob_start();
+	
+						$method->execute( 
+								$transition_it->getId(), 
+								$object_it->getId(), 
+								get_class($object_it->object), 
+								$data['attributes']
+						);
+	    
+	    				ob_end_clean();
+    				}
+    				catch( Exception $e ) {
+    					$except_items[] = array (
+    							'it' => $object_it->copy(),
+    							'ex' => $e
+    					); 
+    				}
     				$object_it->moveNext();
     			}
     			
@@ -189,23 +199,54 @@ include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
     			
     			$_REQUEST = array_merge( $_REQUEST, $attrs );
 
-    			$method = new $class_name( $object_it );
-    				
-   				// as standalone the method may to echo some text 
-   				ob_start();
-    				
-   				$method->execute_request();
-    
-   				if ( strpos($method->getRedirectUrl(), '/') !== false )
-   				{
-   					$_REQUEST['redirect'] = $method->getRedirectUrl();
-   				}
-   				
-   				ob_end_clean();
-    
-   				$object_it->moveNext();
-    			
+    			try {
+	    			$method = new $class_name( $object_it );
+	    				
+	   				// as standalone the method may to echo some text 
+	   				ob_start();
+	    				
+	   				$method->execute_request();
+	   				if ( strpos($method->getRedirectUrl(), '/') !== false )
+	   				{
+	   					$_REQUEST['redirect'] = $method->getRedirectUrl();
+	   				}
+	   				ob_end_clean();
+    			}
+				catch( Exception $e ) {
+   					$except_items[] = array (
+   							'it' => $object_it->copy(),
+   							'ex' => $e
+   					); 
+    			}
     			break;
+		}
+		
+		if ( false && count($except_items) == $object_it->count() )
+		{
+			$reasons = array();
+			foreach( $except_items as $item )
+			{
+				$reasons[] = $item['ex']->getMessage();
+			}
+			$this->replyError( 
+					preg_replace('/%1/',join('<br/>', array_unique($reasons)),text(1926))
+			);
+		}
+		else if ( count($except_items) > 0 )
+		{
+			$uid = new ObjectUID;
+			$items = array();
+			$reasons = array();
+			foreach( $except_items as $item )
+			{
+				$items[] = $uid->getUidWithCaption($item['it']);
+				$reasons[] = $item['ex']->getMessage();
+			}
+			$this->replyError( 
+					preg_replace('/%2/', join('<br/>', array_unique($reasons)),
+							preg_replace('/%1/',join('<br/>', $items),text(1925))
+						) 
+			);
 		}
 		
 		if ( $_REQUEST['redirect'] != '' )

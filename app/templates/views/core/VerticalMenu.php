@@ -45,9 +45,9 @@ if ( is_a($session, 'PMSession') )
 <ul class="menu vertical-menu" id="menu_<?=$area_id?>" style="margin:0;width:170px;display:<?=($area_id == $active_area_uid ? 'block': 'none')?>;">
     <?php if ( $search_url != '' ) { ?>
     <li class="submenu open <?=( !is_array($items[0]['items']) ? 'search' : '')?>">
-        <form class="form-search" action="<?=$search_url?>" style="padding-left:10px;padding-top:16px;padding-bottom:10px;" action="<?=$base_url?>search.php">
+        <form class="form-search" action="<?=$search_url?>" action="<?=$base_url?>search.php">
             <div class="input-append">
-              <input name="quick" type="text" class="search-query" style="width:80px;" placeholder="<?=translate('Поиск')?>">
+              <input id="quick-search-<?=$area_id?>" name="quick" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="">
               <button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
             </div>
         </form>

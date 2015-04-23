@@ -51,7 +51,7 @@ class FormLinkedEmbedded extends PMFormEmbedded
 		
 	    $uid = new ObjectUID;
 	    
- 		return translate($type_title).': '.$uid->getUidWithCaption( $target_it ).' ('.$target_it->getStateName().')';
+ 		return translate($type_title).': '.$uid->getUidWithCaption( $target_it );
  	}
  	
 	function createField( $attr )

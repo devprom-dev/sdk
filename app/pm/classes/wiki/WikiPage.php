@@ -272,6 +272,7 @@ class WikiPage extends MetaobjectStatable
 	
 	function updateSortIndex( $object_it )
 	{
+		if ( $object_it->getId() == '' ) return;
 		$parent_id = $object_it->get('ParentPage') != '' ? $object_it->get('ParentPage') : $object_it->getId();
 		
 		$sql = " CREATE TEMPORARY TABLE tmp_WikiPageSort (WikiPageId INTEGER, SortIndex VARCHAR(32767) ) ENGINE=MEMORY DEFAULT CHARSET=cp1251 AS ".
@@ -302,6 +303,7 @@ class WikiPage extends MetaobjectStatable
 	
 	function updateSectionNumber( $object_it )
 	{
+		if ( $object_it->getId() == '' ) return;
 		if ( $object_it->get('ParentPage') != '' )
 	    {
 	    	getFactory()->resetCachedIterator($object_it->object);

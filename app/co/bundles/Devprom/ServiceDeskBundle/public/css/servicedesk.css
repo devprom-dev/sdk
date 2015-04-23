@@ -245,3 +245,16 @@ textarea#issue_description
     width: 640px;
     min-height:300px !important; 
 }
+
+div.dev-footer
+{
+	font-size: 0.8em;
+    text-align: center;
+}
+
+div.dev-footer a
+{
+	background: rgba(51,51,51,0.4);
+	padding-left: 8px;
+	padding-right: 8px;
+}

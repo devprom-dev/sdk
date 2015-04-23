@@ -7,18 +7,6 @@ class PMPageBoard extends PageBoard
         parent::PageBoard( $object );
     }
     
-    function getPredicates( $filters )
-    {
-    	$predicates = parent::getPredicates( $filters );
-    	
-    	if ( !$this->hasCommonStates() && !$this->getTable()->hasCrossProjectFilter() )
-		{
-			$predicates[] = new FilterBaseVpdPredicate();
-		}
-		
-    	return $predicates;
-    }
-    
 	function getGroupFields()
 	{
 	    return array_diff(parent::getGroupFields(), $this->getObject()->getAttributesByGroup('trace')); 
@@ -32,7 +20,6 @@ class PMPageBoard extends PageBoard
 	function hasCommonStates()
 	{
  		$classname = $this->getBoardAttributeClassName();
-
  		if ( $classname == '' ) return false;
  		
  		$value_it = getFactory()->getObject($classname)->getRegistry()->Query(
@@ -42,7 +29,6 @@ class PMPageBoard extends PageBoard
  		);
  		
  		$values = array();
- 		
  		while( !$value_it->end() )
  		{
  			$values[$value_it->get('VPD')][] = $value_it->get('Caption');
@@ -50,7 +36,6 @@ class PMPageBoard extends PageBoard
  		}
  		
  		$example = array_shift($values);
- 		
  		foreach( $values as $attributes )
  		{
  			if ( count(array_diff($example, $attributes)) > 0 || count(array_diff($attributes, $example)) > 0 ) return false;

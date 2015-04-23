@@ -8,6 +8,7 @@ define('TASKS_UID', 1);
 define('TASKS_STATE', 3);
 define('TASKS_TIME', 5);
 define('TASKS_COMMENT', 8);
+define('TASKS_FREE_TEXT', 10);
 
 class RevisionCommentActionsTrigger extends SystemTriggersBase
 {
@@ -31,7 +32,7 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	
 	function getExpression()
 	{
-		$expression = '/([TI]{1}-[\d]+[^\]\#]*)((\#(resolve|%STATES)[^\#]*)|(\#time\s+([\d]+d\s?)?([\d]+h)?[^\#]*)|(\#comment\s+([^$]+)))*/i';
+		$expression = '/([TI]{1}-[\d]+)((\#(resolve|%STATES)[^\#]*)|(\#time\s+([\d]+d\s?)?([\d]+h)?[^\#]*)|(\#comment\s+([^$]+))|([^\#]+))*/i';
 		
 		$states = array_merge(
 				getFactory()->getObject('Request')->getStates(),
@@ -97,21 +98,29 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	    }
 
 	    // make actions
-	    $methodology_it = $this->session->getProjectIt()->getMethodologyIt();
-	 	
-	    if ( $methodology_it->IsTimeTracking() && is_object($committer_it) && $committer_it->getId() > 0 && $spent_hours > 0 )
-	    {
-	        $this->addWorkLog( $objects, $committer_it->getRef('SystemUser'), $spent_hours );
-	    }
-	    
+	    $comment_added = false;
 	    $target_state = trim($match_result[TASKS_STATE][$index], ' #');
-	    
 	    if ( $target_state != '' )
 	 	{
 	 		$this->info( "Need to change state: ".$target_state );
-	 		
 	 	    $this->moveObjects( $objects, $comments, $committer_it, $target_state );
+	 	    $comment_added = true;
 	 	}	    
+
+		$methodology_it = $this->session->getProjectIt()->getMethodologyIt();
+	    if ( $methodology_it->IsTimeTracking() && is_object($committer_it) && $committer_it->getId() > 0 && $spent_hours > 0 )
+	    {
+	        $this->addWorkLog( $objects, $committer_it->getRef('SystemUser'), $spent_hours, !$comment_added ? $comments : '' );
+	        $comment_added = true;
+	    }
+	    
+	    $free_text = trim(array_shift($match_result[TASKS_FREE_TEXT]));
+	    if ( !$comment_added && $comments != '' ) {
+	    	$this->addComment($objects, $committer_it, $comments);
+	    }
+	    else if ( $free_text != '' ) {
+	    	$this->addComment($objects, $committer_it, $free_text);
+	    } 
 	}
 
 	function bindObjects( & $revision_it, $uids )
@@ -182,7 +191,7 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 		return $result;
 	}
 	
-	function addWorkLog( & $objects, & $committer_it, $spent_hours )
+	function addWorkLog( & $objects, & $committer_it, $spent_hours, $comments )
 	{
 	    global $model_factory;
 	    
@@ -191,7 +200,8 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	 		$activity_parms = array( 
 		 		'ReportDate' => 'NOW()',
 		 		'Capacity' => max((float) $spent_hours, 0.0),
-		 		'Completed' => 'Y' 
+		 		'Completed' => 'Y',
+	 			'Description' => $comments 
 	 		);
 	 		 
 	 		switch ( $object_it->object->getEntityRefName() )
@@ -244,6 +254,21 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	    		Logger::getLogger('SCM')->error($e->getMessage());
 	    	}
 	    }
+	}
+	
+	function addComment( $objects, $committer_it, $text )
+	{
+ 		foreach ( $objects as $object_it )
+ 		{
+			getFactory()->getObject('Comment')->add_parms(
+				array (
+					'ObjectId' => $object_it->getId(),
+					'ObjectClass' => get_class($object_it->object),
+					'AuthorId' => $committer_it->get('SystemUser'),
+					'Caption' => $text
+				)
+			);
+ 		}
 	}
 	
  	function info( $message )

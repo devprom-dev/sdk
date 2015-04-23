@@ -5,6 +5,7 @@ include_once "SelectDateRefreshWebMethod.php";
 class FilterDateWebMethod extends SelectDateRefreshWebMethod
 {
  	var $method_name;
+ 	private $default_value = '';
  	
  	function FilterDateWebMethod ( $table_name = '' )
  	{
@@ -12,6 +13,22 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  		parent::__construct();
  	}
 
+ 	function setDefault( $value )
+ 	{
+ 		$this->default_value = $value;
+ 	}
+ 	
+ 	function getDefault()
+ 	{
+ 		return $this->default_value;
+ 	}
+
+ 	function getValue()
+ 	{
+ 		$value = parent::getValue();
+ 		return !in_array($value, array('','all')) ? $value : $this->default_value;
+ 	}
+ 	
  	function hasAccess()
  	{
  		return true;
@@ -37,8 +54,11 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
 
  	function execute_request()
  	{
- 		if ( $this->getValueParm() != '' )
- 		{
+ 		if ( $_REQUEST['valueparm'] != '' ) {
+ 			$this->setValueParm($_REQUEST['valueparm']);
+ 		}
+ 		
+ 		if ( $this->getValueParm() != '' ) {
  			echo $this->getValueParm().'='.trim($_REQUEST['value']);
  		}
  	}

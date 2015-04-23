@@ -22,26 +22,26 @@ class CssSpritesGenerator
 		{
 			if ( !file_exists($file) ) continue;
 			
-			$im2 = imagecreatefrompng($file);
+			$im2 = @imagecreatefrompng($file);
 			
 			if ( $im2 === false )
 			{
-				$im2 = imagecreatefromjpeg($file);
+				$im2 = @imagecreatefromjpeg($file);
 			}
 			
 			if ( $im2 === false )
 			{
-				$im2 = imagecreatefromgif($file);
+				$im2 = @imagecreatefromgif($file);
 			}
 
 			if ( $im2 === false )
 			{
-				$im2 = imagecreatefromwbmp($file);
+				$im2 = @imagecreatefromwbmp($file);
 			}
 			
 			if ( $im2 === false )
 			{
-				$im2 = imagecreatefrompng($default_file);
+				$im2 = @imagecreatefrompng($default_file);
 				
 				list($width, $height, $type, $attr) = getimagesize($default_file);
 			}

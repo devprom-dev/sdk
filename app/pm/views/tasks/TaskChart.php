@@ -25,21 +25,19 @@ class TaskChart extends PMPageChart
 	
 	function getChartWidget()
 	{
-		global $_REQUEST, $project_it, $model_factory;
-		
 		if ( $this->getTable()->getReportBase() != 'iterationburndown' ) return parent::getChartWidget();
 		
-		$iteration = $model_factory->getObject('Iteration');
+		$iteration = getFactory()->getObject('Iteration');
 		
 		$values = $this->getFilterValues();
-		
-		if ( in_array($values['release'], array('', 'all', 'hide')) )
+		if ( in_array(trim($values['release']), array('', 'all', 'hide', 'none')) )
 		{
-			$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::CURRENT) );
-			
-			$iteration_it = $iteration->getAll();
-			
-			$values['release'] = $iteration_it->getId(); 
+			$iteration_it = $iteration->getRegistry()->Query(
+					array (
+							new IterationTimelinePredicate(IterationTimelinePredicate::CURRENT),
+							new FilterVpdPredicate()
+					)
+				);
 		}
 		else
 		{
@@ -47,10 +45,8 @@ class TaskChart extends PMPageChart
 		}
 		
 		$flot = new FlotChartBurndownWidget();
-		
 		$flot->setLegend( false );
 		$flot->showPoints( false );
-
 		$flot->setUrl( getSession()->getApplicationUrl().
 			'chartburndown.php?release_id='.$iteration_it->getId().'&json=1' );
 	

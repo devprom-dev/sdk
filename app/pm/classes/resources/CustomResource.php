@@ -90,6 +90,19 @@ class CustomResource extends Resource
  		return $this->createCachedIterator( array_values($data) );
  	}
  	
+	function getExact( $id ) 
+	{
+		$id_attribute = $this->getIdAttribute();
+		return $this->createCachedIterator(
+				array_values(array_filter( 
+						$this->getAll()->getRowset(),
+						function($row) use($id_attribute, $id) {
+								return $row[$id_attribute] != '' && $row[$id_attribute] == $id;
+						}
+ 				))
+		);
+	}
+ 	
  	function modify_parms( $object_id, $parms )
  	{
  	    $this->cache_enabled = false;
@@ -100,7 +113,6 @@ class CustomResource extends Resource
  						new FilterBaseVpdPredicate()
  				)
  		);
-
  		if ( $object_it->getId() == '' )
  		{    
  			if ( $parms['ResourceValue'] != '' )

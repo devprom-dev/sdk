@@ -49,7 +49,7 @@ class BulkDeleteWebMethod extends WebMethod
 
 		while ( !$object_it->end() )
 		{
-		    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception('You have no permissions to delete object');
+		    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception(text(1927));
 		    
 			$object_it->delete();
 			

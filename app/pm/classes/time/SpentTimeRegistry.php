@@ -15,31 +15,15 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 	
  	function createSQLIterator( $sql ) 
  	{
-		$participant_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
-					array_merge (
-							array (
-									new FilterAttributePredicate('Project',
-											array_merge(
-													array( getSession()->getProjectIt()->getId() ),
-													preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject'))
-											)
-									)
-							),
-							$this->getObject()->getParticipantFilters()
-					)
-			);
-		 		
 		$this->report_year = $this->getObject()->getReportYear();
-		
 		$this->report_month = $this->getObject()->getReportMonth();
-		
 		$this->view = $this->getObject()->getView();
 		
 		$sql_array = array();
 		
 		if ( $this->getObject()->getView() == 'participants' || $this->getObject()->getGroup() == 'SystemUser' )
 		{
-    		$sql = " SELECT p.SystemUser ItemId, 'Participant' Item, p.SystemUser Participant, 1 SortOrder, p.VPD  " .
+    		$sql = " SELECT p.SystemUser ItemId, 'Participant' Item, p.SystemUser Participant, ".($this->getObject()->getGroup() == 'SystemUser' ? 1 : 2)." SortOrder, p.VPD  " .
     			   "   FROM pm_Participant p ";
     			
     		array_push($sql_array, $sql);
@@ -48,7 +32,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		if ( $this->getObject()->getView() == 'projects' || $this->getObject()->getGroup() == 'Project' )
 		{
     		$projects_sql = 
-    			   " SELECT p.Project ItemId, 'Project' Item, p.SystemUser Participant, 2 SortOrder, p.VPD " .
+    			   " SELECT p.Project ItemId, 'Project' Item, p.SystemUser Participant, ".($this->getObject()->getGroup() == 'Project' ? 1 : 2)." SortOrder, p.VPD " .
     			   "   FROM pm_Participant p ";
     				    
     		array_push($sql_array, $projects_sql);
@@ -89,19 +73,37 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 
 			array_push($sql_array, $sql);
 		}
+		
+		$users_ids = getFactory()->getObject('ProjectUser')->getRegistry()
+						->Query(array(new FilterInPredicate($this->getObject()->getParticipantFilter())))
+							->idsToArray();
+		
+		$projects_ids = array_filter(
+				array_merge(
+	 				array(getSession()->getProjectIt()->getId()),
+	 				preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject'))
+	 			),
+				function($value) {
+					return $value > 0;
+				}
+			);
 
-		$sql = " SELECT DISTINCT t.ItemId, t.Item, t.SystemUser ".
+		$sql = " SELECT DISTINCT t.ItemId, t.Item, t.SystemUser, t.Project ".
 		       "   FROM (SELECT t.ItemId, t.Item, ".
-		       "                ".( $this->getObject()->getGroup() != 'SystemUser' ? 'GROUP_CONCAT(DISTINCT CAST(p.SystemUser AS CHAR))' : 'p.SystemUser')." SystemUser " .
-			   "           FROM (".join(' UNION ', $sql_array).") t," .
+		       "                ".( $this->getObject()->getGroup() != 'SystemUser' ? 'GROUP_CONCAT(DISTINCT CAST(p.SystemUser AS CHAR))' : 'p.SystemUser')." SystemUser, " .
+		       "                ".( $this->getObject()->getGroup() != 'Project' ? 'GROUP_CONCAT(DISTINCT CAST(p.Project AS CHAR))' : 'p.Project')." Project " .
+		       "           FROM (".join(' UNION ', $sql_array).") t," .
 			   "		        pm_Participant p " .
-			   "          WHERE p.pm_ParticipantId IN (".join($participant_it->idsToArray(),',').")" .
+			   "          WHERE p.SystemUser IN (".join($users_ids,',').")" .
+			   "			AND p.Project IN (".join($projects_ids,',').") ".
 			   "            AND t.Participant = p.SystemUser ".
 			   "			AND t.VPD = p.VPD ".
-		       "          ".( $this->getObject()->getGroup() != 'SystemUser' ? 'GROUP BY 1, 2' : '' ).
-		       ( $this->getObject()->getGroup() != 'Project'
-			   ? "          ORDER BY (SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = p.SystemUser), p.Project, t.SortOrder "
-               : "          ORDER BY p.Project, t.SortOrder  " 
+		       ( $this->getObject()->getGroup() != '' ? 'GROUP BY p.'.$this->getObject()->getGroup().', 1, 2' : 'GROUP BY 1, 2' ).
+			   ( $this->getObject()->getGroup() == 'SystemUser'
+			   		? "  ORDER BY (SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = p.SystemUser), p.SystemUser, t.SortOrder "
+               		: ( $this->getObject()->getGroup() == 'Project'
+               				? " ORDER BY (SELECT pr.Caption FROM pm_Project pr WHERE pr.pm_ProjectId = p.Project), p.Project, t.SortOrder  "
+               				: "	ORDER BY t.SortOrder " ) 
 		       )."       ) t ";
 
 		$it = parent::createSQLIterator($sql);
@@ -142,34 +144,36 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		$activity = $this->getObject()->getActivityObject();			
 		$activity->addFilter( new ActivityReportYearPredicate($this->report_year) );
 		$activity->addFilter( new ActivityReportMonthPredicate($this->report_month) );
-		$activity->addFilter( new FilterAttributePredicate('Participant', $participant_it->fieldToArray('SystemUser')) );
+		$activity->addFilter( new FilterAttributePredicate('Participant', count($this->getObject()->getParticipantFilter()) > 0 ? $this->getObject()->getParticipantFilter() : $users_ids) );
 		$activity->addFilter( new FilterVpdPredicate() );
 		
-		$reported_it = $activity->getReported("p.SystemUser", $group_function);
+		$reported_it = $activity->getReported("SystemUser", $group_function);
 		
 		while ( !$reported_it->end() )
 		{
-			$this->activities_map['Participant'.$reported_it->get('SystemUser')]
-				[$reported_it->get('SystemUser')]
+			$user_key = 'Participant'.$reported_it->get('SystemUser');
+			$project_key = 'Project'.$reported_it->get('Project');
+			
+			$this->activities_map[$user_key][$project_key]
 				[$reported_it->get('Day')] = (float) round($reported_it->get('Capacity'), 1);
 
-			$this->comments_map['Participant'.$reported_it->get('SystemUser')]
-				[$reported_it->get('SystemUser')]
+			$this->comments_map[$user_key][$project_key]
 				[$reported_it->get('Day')] = $reported_it->get('Comments');
 
 			$reported_it->moveNext();
 		}
 
-		$reported_it = $activity->getReported("p.Project", $group_function);
+		$reported_it = $activity->getReported("Project", $group_function);
 		
 		while ( !$reported_it->end() )
 		{
-			$this->activities_map['Project'.$reported_it->get('Project')]
-				[$reported_it->get('SystemUser')]
+			$user_key = 'Participant'.$reported_it->get('SystemUser');
+			$project_key = 'Project'.$reported_it->get('Project');
+			
+			$this->activities_map[$project_key][$user_key]
 				[$reported_it->get('Day')] = (float) round($reported_it->get('Capacity'), 1);
 
-			$this->comments_map['Project'.$reported_it->get('Project')]
-				[$reported_it->get('SystemUser')]
+			$this->comments_map[$project_key][$user_key]
 				[$reported_it->get('Day')] = $reported_it->get('Comments');
 
 			$reported_it->moveNext();
@@ -177,16 +181,16 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 
 		if ( $this->view == 'issues' )
 		{
-			$reported_it = $activity->getReported("t.ChangeRequest", $group_function);
+			$reported_it = $activity->getReported("ChangeRequest", $group_function);
 			
 			while ( !$reported_it->end() )
 			{
-				$this->activities_map['ChangeRequest'.$reported_it->get('ChangeRequest')]
-					[$reported_it->get('SystemUser')]
+				$user_key = 'Participant'.$reported_it->get('SystemUser');
+				
+				$this->activities_map['ChangeRequest'.$reported_it->get('ChangeRequest')][$user_key]
 					[$reported_it->get('Day')] = (float) round($reported_it->get('Capacity'), 1);
 	
-				$this->comments_map['ChangeRequest'.$reported_it->get('ChangeRequest')]
-					[$reported_it->get('SystemUser')]
+				$this->comments_map['ChangeRequest'.$reported_it->get('ChangeRequest')][$user_key]
 					[$reported_it->get('Day')] = $reported_it->get('Comments');
 
 				$reported_it->moveNext();
@@ -195,16 +199,16 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 
 		if ( $this->view == 'tasks' )
 		{
-			$reported_it = $activity->getReported("t.Task", $group_function);
+			$reported_it = $activity->getReported("Task", $group_function);
 			
 			while ( !$reported_it->end() )
 			{
-				$this->activities_map['Task'.$reported_it->get('Task')]
-					[$reported_it->get('SystemUser')]
+				$user_key = 'Participant'.$reported_it->get('SystemUser');
+				
+				$this->activities_map['Task'.$reported_it->get('Task')][$user_key]
 					[$reported_it->get('Day')] = (float) round($reported_it->get('Capacity'), 1);
 	
-				$this->comments_map['Task'.$reported_it->get('Task')]
-					[$reported_it->get('SystemUser')]
+				$this->comments_map['Task'.$reported_it->get('Task')][$user_key]
 					[$reported_it->get('Day')] = $reported_it->get('Comments');
 
 				$reported_it->moveNext();

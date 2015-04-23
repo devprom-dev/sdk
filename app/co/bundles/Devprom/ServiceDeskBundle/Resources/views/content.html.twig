@@ -94,6 +94,7 @@
 
         <div class="content container">
             {% block content %}{% endblock %}
+            <div class="dev-footer">{{ 'any.page.footer'|trans({}, 'client')|raw }}</div>
         </div> <!-- /container -->
     </div> <!-- /wrap -->
 {% endblock %}

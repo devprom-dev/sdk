@@ -304,7 +304,7 @@ class RequestTable extends PMPageTable
 	{
 	    $actions = parent::getFilterActions();
 	    
-	    if ( in_array($this->getReportBase(), array('releaseburndown', 'releaseburnup')) )
+	    if ( in_array($this->getReportBase(), array('releaseburndown', 'releaseburnup', 'projectburnup')) )
 	    {
             foreach( $actions as $key => $action )
             {
@@ -319,7 +319,7 @@ class RequestTable extends PMPageTable
 	
   	function getFilters()
 	{
-	    if ( in_array($this->getReportBase(), array('releaseburndown', 'releaseburnup')) )
+	    if ( in_array($this->getReportBase(), array('releaseburndown', 'releaseburnup', 'projectburnup')) )
 	    {
 	        return $this->getFiltersReleaseBurndown();
 	    }
@@ -329,15 +329,11 @@ class RequestTable extends PMPageTable
 	
 	function getFiltersReleaseBurndown()
 	{
-	    global $model_factory;
-	    
-		$release = $model_factory->getObject('Release');
-		
+		$release = getFactory()->getObject('Release');
 		$release->addFilter( new ReleaseTimelinePredicate('current') );
-		
 		$releases = new FilterObjectMethod( $release, translate('Релизы'), 'release', false);
-		
 		$releases->setType( 'singlevalue' );
+		$releases->setHasNone(false);
 		
 		return array( $releases );
 	}

@@ -26,7 +26,8 @@ return array(
     'issue_severity' => 'Priority',
 	'issue_attachments' => 'Attachments',
     'issue_comments' => 'Comments',
-
+	'issue_version' => 'Version',
+		
     'issue.edit' => 'Edit request',
     'issue.add' => 'Add new request',
     'issue.add.attachment' => 'Attach file',

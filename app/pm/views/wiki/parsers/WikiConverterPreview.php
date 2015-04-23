@@ -20,6 +20,9 @@ class WikiConverterPreview
  		$this->parser->setHrefResolver(function($wiki_it) {
  			return '#'.$wiki_it->getId();
  		});
+ 		$this->parser->setReferenceTitleResolver(function($info) {
+ 			return $info['caption'];
+ 		});
  	}
 	
 	function getFileUrl( $file_it )

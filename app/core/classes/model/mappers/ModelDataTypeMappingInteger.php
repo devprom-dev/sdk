@@ -11,6 +11,8 @@ class ModelDataTypeMappingInteger extends ModelDataTypeMapping
 	
 	public function map( $value )
 	{
+		$value = str_replace(',', '.', $value);
+		
 		if ( $value != '' && !is_numeric($value) ) return 0;
 	
 		return $value;

@@ -2003,5 +2003,6 @@ return array (
 	'не указан' => 'undefined',
 	'Матрица' => 'Matrix',
 	'Тип страницы' => 'Page type',
-	'Результаты поиска' => 'Search results'
+	'Результаты поиска' => 'Search results',
+	'Номер раздела' => 'Section number'
 );

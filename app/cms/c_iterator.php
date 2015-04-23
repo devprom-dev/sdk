@@ -255,17 +255,7 @@ class IteratorBase
 
 	function getHtmlDecoded( $attribute )
 	{
-		$att_type = $this->object->getAttributeVisualType($attribute);
-
-		switch ( $att_type )
-		{
-			case 'date':
-			case 'datetime':
-				return $this->getDateFormat( $attribute );
-				
-			default:
-				return html_entity_decode( $this->get_native($attribute), ENT_COMPAT | ENT_HTML401, 'cp1251' );		
-		}
+		return html_entity_decode( $this->get_native($attribute), ENT_QUOTES | ENT_HTML401, 'cp1251' );		
 	}
 
 	function setData( $data )

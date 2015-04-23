@@ -2,7 +2,7 @@
 
 namespace Devprom\ApplicationBundle\Controller;
 
-use Devprom\ApplicationBundle\Controller\PageController;
+use Devprom\CommonBundle\Controller\PageController;
 
 if ( !class_exists('CoPage', false) ) include SERVER_ROOT_PATH."co/views/Common.php";
 

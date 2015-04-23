@@ -145,18 +145,12 @@ class WorkloadSection extends InfoSection
         		}
         	}
 			
-			if ( $left_volume < 0 )
-			{
-				$left_name = translate('перегрузка');
-			}
-			else
-			{
-				$left_name = translate('свободно');
-			}
-			
-			echo '<div>'.round($used_volume, 1).'&nbsp;'.translate('из').'&nbsp;'.round($full_volume, 1).
-				',&nbsp;'.$left_name.'&nbsp;'.abs(round($left_volume,2)).
-				'&nbsp;'.$measure.'</div>';
+			$text = preg_replace(
+						array('/%1/', '/%2/', '/%3/'),
+						array(round($used_volume, 1), round($full_volume, 1), abs(round($left_volume,2))),
+						$left_volume < 0 ? text(1900) : text(1899)
+				);
+			echo '<div>'.$text.'</div>';
 			
 			if ( $overload )
 			{

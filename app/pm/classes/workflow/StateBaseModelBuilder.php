@@ -16,5 +16,8 @@ class StateBaseModelBuilder extends ObjectModelBuilder
 			'REF_StateActionId', translate('Системные действия'), true);
 		
 		$object->addPersister( new StateBaseModelPersister() );
+		
+		$object->setAttributeCaption('OrderNum', text(1923));
+		$object->setAttributeDescription('OrderNum', text(1924));
     }
 }

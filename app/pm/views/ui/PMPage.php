@@ -566,6 +566,15 @@ class PMPage extends Page
     	$this->report_base = $uid;
     }
  	
+    function getPageUid()
+    {
+    	if ( $this->getReport() != '' ) return $this->getReport();
+    	if ( $this->getReportBase() != '' ) return $this->getReportBase();
+    	if ( $this->getModule() != '' ) return $this->getModule();
+    	
+    	return parent::getPageUid();
+    }
+    
  	function hasAccess()
  	{
  	    if ( !parent::hasAccess() ) return false;
@@ -725,6 +734,7 @@ class PMPage extends Page
  	function getHint()
 	{
 		$resource = getFactory()->getObject('ContextResource');
+		$template = array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools')));
 		
 		$resource_it = $resource->getExact($this->getReport());
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
@@ -732,7 +742,10 @@ class PMPage extends Page
 		$resource_it = $resource->getExact($this->getReportBase());
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
 
-		$resource_it = $resource->getExact($this->getModule().':'.array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools'))));
+		$resource_it = $resource->getExact($this->getReportBase().':'.$template);
+		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		
+		$resource_it = $resource->getExact($this->getModule().':'.$template);
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
 		
 		$parent = parent::getHint();

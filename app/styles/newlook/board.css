@@ -1,4 +1,5 @@
-.board-column
+.board-column,
+.board-column .list_cell
 {
     padding-bottom: 10px;
 }

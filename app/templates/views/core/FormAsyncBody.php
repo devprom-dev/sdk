@@ -65,7 +65,7 @@
 		<div class="" id="result<?=$form_id?>"></div>
 	
 		<input type="hidden" id="action<?=$form_id?>" name="action" value="<?=$form_action?>">
-		<input type="hidden" name="MAX_FILE_SIZE" value="83886080">
+		<input type="hidden" name="MAX_FILE_SIZE" value="<?=EnvironmentSettings::getMaxFileSize()?>">
 		<input type="hidden" name="object_id" value="<?=$object_id?>">
 		<input type="hidden" name="redirect" value="<?=$redirect_url?>">
 		<input type="hidden" name="form_url" value="<?=$form_url?>">

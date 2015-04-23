@@ -75,24 +75,7 @@ var draggableOptions = {
 		getMethodAttributes: function ( item, cell ) 
 		{
 			var controllerUrl = item.attr("project") != '' ? '/pm/'+item.attr("project")+'/' : '';
-
-			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
-			{
-				return { url: controllerUrl+'methods.php?method=modifystatewebmethod',
-					 data: { 'source': jQuery.trim(item.attr("more")), 
-					 		 'target': jQuery.trim(cell.attr("more")), 
-					 		 'object': item.attr("object"),
-					 		 'class': this.className } };
-			}
-
-			if( jQuery.trim(item.attr("group")) != jQuery.trim(cell.attr("group")) )
-			{
-				return { url: controllerUrl+'methods.php?method=modifyattributewebmethod',
-					 data: { 'attribute': this.groupAttribute, 
-					 		 'value': jQuery.trim(cell.attr("group")), 
-					 		 'object': item.attr("object"),
-					 		 'class': this.className } };
-			}
+			var methods = new Array();
 
 			if( parseInt(cell.attr("order")) >= 0 )
 			{
@@ -101,13 +84,40 @@ var draggableOptions = {
 
 				if ( parseInt(item.attr("order")) != tobe_seq )
 				{
-					return { url: controllerUrl+'methods.php?method=modifyattributewebmethod',
-						 data: { 'attribute': 'OrderNum', 
+					methods.push({
+						url: controllerUrl+'methods.php?method=modifyattributewebmethod',
+						data: { 'attribute': 'OrderNum', 
 						 		 'value': tobe_seq, 
 						 		 'object': item.attr("object"),
-						 		 'class': this.className } };
+						 		 'class': this.className }
+					});
 				}
 			}
+
+			if( jQuery.trim(item.attr("group")) != jQuery.trim(cell.attr("group")) )
+			{
+				methods.push({
+					url: controllerUrl+'methods.php?method=modifyattributewebmethod',
+					data: { 'attribute': this.groupAttribute, 
+					 		 'value': jQuery.trim(cell.attr("group")), 
+					 		 'object': item.attr("object"),
+					 		 'class': this.className }
+				});
+			}
+
+			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
+			{
+				controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
+				methods.push({ 
+					url: controllerUrl+'methods.php?method=modifystatewebmethod',
+					data: { 'source': jQuery.trim(item.attr("more")), 
+					 		 'target': jQuery.trim(cell.attr("more")), 
+					 		 'object': item.attr("object"),
+					 		 'class': this.className }
+				});
+			}
+			
+			return methods;
 		},
 		afterItemModified: function( item, options )
 		{
@@ -178,156 +188,23 @@ function boardMake( options )
 			ui.helper.hide();
 			
 			var cell = $(this).is('.board-column') ? $(this).children('.list_cell') : $(this);
-			var method = options.getMethodAttributes( item, cell );
-	
+			var methods = options.getMethodAttributes( item, cell );
+			
 			if ( item.attr("object") == "" )
 			{
-				createBoardItem( item.attr("createItemURIParms"), options, method.data, function( objectid, options ) {
-					item.attr('object', objectid);
-					item.attr('lifecycle', 'created');
-	
-					redrawBoardItem( objectid, options );
-					item.attr('object', "");
+				$.each(methods, function(index,method) {
+					createBoardItem( item.attr("createItemURIParms"), options, method.data, function( objectid, options ) {
+						item.attr('object', objectid);
+						item.attr('lifecycle', 'created');
+		
+						redrawBoardItem( objectid, options );
+						item.attr('object', "");
+					});
 				});
 			}
-			else if ( typeof method != 'undefined' )
+			else
 			{
-				runMethod( method.url, method.data,
-					function ( result ) 
-					{
-						filterLocation.showActivity();
-						resultObject = jQuery.parseJSON(result);
-	
-						switch ( resultObject.message )
-						{
-							case '':
-								redrawBoardItem( item, options );
-								break;
-
-							case 'ok':
-								if ( typeof resultObject.object != 'undefined' )
-								{
-									item.attr('object', resultObject.object);
-									item.attr('lifecycle', 'created');
-								}
-	
-								if ( typeof resultObject.object != 'undefined' )
-								{
-									item.attr('object', "");
-								}
-								
-								break;
-								
-							case 'denied':
-								$('#modal-form').remove();
-								$('body').append( '<div id="modal-form" title="'+options.classUserName+'">'+
-										resultObject.description+'</div>' );
-	
-								$('#modal-form').dialog({
-									width: 450,
-									modal: true,
-									buttons: { "Ok": function() { $(this).dialog("close"); } }
-								});
-								
-								redrawBoardItem( item, options );
-								break;
-	
-							case 'redirect':
-								$.ajax({
-									type: "GET",
-									url: resultObject.url,
-									dataType: "html",
-									async: true,
-									cache: false,
-									success: 
-										function(result) {
-											$('#modal-form').remove();
-											$('body').append( '<div id="modal-form" style="display:none;">'+
-												result+'</div>' );
-											
-											completeUIExt($('#modal-form'));
-											
-											$('#modal-form').attr('title', options.transitionTitle);
-											window.onbeforeunload = null;
-											
-											$('#modal-form').dialog({
-												width: resultObject.url.match(/issues\/board\?mode\=group/) ? $(window).width() - 300 : 750,
-												modal: true,
-												open: function()
-												{
-													workflowMakeupDialog();
-												},
-												create: function() 
-												{
-											        $(this).css("maxHeight", $(window).height() - 200);        
-											    },
-												beforeClose: function(event, ui) 
-												{
-													redrawBoardItem( item, options );
-													formDestroy();
-												},
-												buttons: [
-													{
-														text: options.saveButtonName,
-													 	click: function() {
-															var dialogVar = $(this);
-															
-															if ( !validateForm($('#modal-form #object_form')) ) return false;
-															
-															// submit the form
-															$('#'+options.className+'action').val('modify');
-															$('#'+options.className+'redirect').val(resultObject.url+'&Transition=');
-
-															$('#modal-form').parent()
-																.find('.ui-button')
-																.attr('disabled', true)
-																.addClass("ui-state-disabled");
-															
-															$('#modal-form #object_form').ajaxSubmit({
-																dataType: 'html',
-																success: function( data ) 
-																{
-																	var warning = $(data).find('.form_warning');
-																	
-																	if ( warning.length > 0 )
-																	{
-																		$('#modal-form').parent()
-																			.find('.ui-button')
-																			.attr('disabled', false)
-																			.removeClass("ui-state-disabled");
-																		
-																		$('.form_warning').remove();
-																		$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form #object_form'));
-																	}
-																	else 
-																	{
-																		dialogVar.dialog('close');
-																	}
-																},
-																error: function( xhr )
-																{
-																	$('#modal-form').parent()
-																		.find('.ui-button')
-																		.attr('disabled', false)
-																		.removeClass("ui-state-disabled");
-																}
-															});
-														}
-													},
-													{
-														text: options.closeButtonName,
-														click: function() 
-														{
-															$(this).dialog('close');
-														}
-													}
-												]
-											});
-										}
-								});
-						}
-					},
-				'' );
+				processBoardActions(methods,item,options);
 			}
 		}
 	});
@@ -349,6 +226,156 @@ function boardMake( options )
 			
 			$(this).addClass("board-item-actions-armed");
 	});
+}
+
+function processBoardActions( methods, item, options )
+{
+	if ( methods.length < 1 ) return;
+	var method = methods.shift();
+	runMethod( 
+			method.url,
+			method.data,
+			function ( result ) {
+				processActionResult(result, item, options);
+				processBoardActions(methods, item, options);
+			},
+			''
+	);
+}
+
+function processActionResult( result, item, options ) 
+{
+	filterLocation.showActivity();
+	resultObject = jQuery.parseJSON(result);
+
+	switch ( resultObject.message )
+	{
+		case '':
+			redrawBoardItem( item, options );
+			break;
+
+		case 'ok':
+			if ( typeof resultObject.object != 'undefined' )
+			{
+				item.attr('object', resultObject.object);
+				item.attr('lifecycle', 'created');
+			}
+
+			if ( typeof resultObject.object != 'undefined' )
+			{
+				item.attr('object', "");
+			}
+			
+			break;
+			
+		case 'denied':
+			$('#modal-form').remove();
+			$('body').append( '<div id="modal-form" title="'+options.classUserName+'">'+
+					resultObject.description+'</div>' );
+
+			$('#modal-form').dialog({
+				width: 450,
+				modal: true,
+				buttons: { "Ok": function() { $(this).dialog("close"); } }
+			});
+			
+			redrawBoardItem( item, options );
+			break;
+
+		case 'redirect':
+			$.ajax({
+				type: "GET",
+				url: resultObject.url,
+				dataType: "html",
+				async: true,
+				cache: false,
+				success: 
+					function(result) {
+						$('#modal-form').remove();
+						$('body').append( '<div id="modal-form" style="display:none;">'+
+							result+'</div>' );
+						
+						completeUIExt($('#modal-form'));
+						
+						$('#modal-form').attr('title', options.transitionTitle);
+						window.onbeforeunload = null;
+						
+						$('#modal-form').dialog({
+							width: resultObject.url.match(/issues\/board\?mode\=group/) ? $(window).width() - 300 : 750,
+							modal: true,
+							open: function()
+							{
+								workflowMakeupDialog();
+							},
+							create: function() 
+							{
+						        $(this).css("maxHeight", $(window).height() - 200);        
+						    },
+							beforeClose: function(event, ui) 
+							{
+								redrawBoardItem( item, options );
+								formDestroy();
+							},
+							buttons: [
+								{
+									text: options.saveButtonName,
+								 	click: function() {
+										var dialogVar = $(this);
+										
+										if ( !validateForm($('#modal-form #object_form')) ) return false;
+										
+										// submit the form
+										$('#'+options.className+'action').val('modify');
+										$('#'+options.className+'redirect').val(resultObject.url+'&Transition=');
+
+										$('#modal-form').parent()
+											.find('.ui-button')
+											.attr('disabled', true)
+											.addClass("ui-state-disabled");
+										
+										$('#modal-form #object_form').ajaxSubmit({
+											dataType: 'html',
+											success: function( data ) 
+											{
+												var warning = $(data).find('.form_warning');
+												
+												if ( warning.length > 0 )
+												{
+													$('#modal-form').parent()
+														.find('.ui-button')
+														.attr('disabled', false)
+														.removeClass("ui-state-disabled");
+													
+													$('.form_warning').remove();
+													$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form #object_form'));
+												}
+												else 
+												{
+													dialogVar.dialog('close');
+												}
+											},
+											error: function( xhr )
+											{
+												$('#modal-form').parent()
+													.find('.ui-button')
+													.attr('disabled', false)
+													.removeClass("ui-state-disabled");
+											}
+										});
+									}
+								},
+								{
+									text: options.closeButtonName,
+									click: function() 
+									{
+										$(this).dialog('close');
+									}
+								}
+							]
+						});
+					}
+			});
+	}
 }
 
 function initializeBoardItem( items, options )
@@ -564,64 +591,74 @@ function redrawBoardChanges( options )
 	
 	url += options.resetParms + '&class='+options.className+'&wait=true';
 	
-	if ( options.waitRequest )
-	{
-		options.waitRequest.abort();
-		options.waitRequest = null;
-	}
-	
-	options.waitRequest = $.ajax({
-		type: "GET",
-		url: url,
-		async: true,
-		cache: false,
-		dataType: "html",
-		success: function(result) 
-		{
-			$(result).find('.board-table th').each( function(index, value) 
+	try {
+		if ( options.waitRequest ) {
+			options.waitRequest.abort();
+			options.waitRequest = null;
+		}
+		options.waitRequest = $.ajax({
+			type: "GET",
+			url: url,
+			async: true,
+			cache: false,
+			dataType: "html",
+			success: function(result) 
 			{
-				$('.board-table th:eq('+index+')').html($(this).html());
-			});
-	
-			var items = new Array();
-			var itemSelectors = new Array();
-			
-			$(result).find(options.itemCSSPath).each( function(index, value) 
-			{
-				itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object')+'"]';
+				$(result).find('.board-table th').each( function(index, value) 
+				{
+					$('.board-table th:eq('+index+')').html($(this).html());
+				});
+		
+				var items = new Array();
+				var itemSelectors = new Array();
 				
-				if ( $(itemSelector).is("[modified]") && $(this).attr('modified') <= $(itemSelector).attr('modified') ) return true;
+				$(result).find(options.itemCSSPath).each( function(index, value) 
+				{
+					itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object')+'"]';
 					
-				itemSelectors.push(itemSelector);
-				
-				items.push($(this));
-			});
+					if ( $(itemSelector).is("[modified]") && $(this).attr('modified') <= $(itemSelector).attr('modified') ) return true;
+						
+					itemSelectors.push(itemSelector);
+					
+					items.push($(this));
+				});
 
-			$(result).find(".object-changed[object-id]").each( function(index, value) 
-			{
-				itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object-id')+'"]';
+				$(result).find(".object-changed[object-id]").each( function(index, value) 
+				{
+					itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object-id')+'"]';
+					
+					if ( $(result).find(itemSelector).length < 1 ) $(itemSelector).remove();
+				});
 				
-				if ( $(result).find(itemSelector).length < 1 ) $(itemSelector).remove();
-			});
-			
-			if ( typeof options.redrawBoardItemCustom != 'undefined' ) 
-			{
-				options.redrawBoardItemCustom( $(items), result );
-			}
-	
-			options.initializeBoardItem( $(itemSelectors.join(',')), options );
-			
-			filterLocation.hideActivity();
-		},
-	    complete: function(xhr, textStatus)
-	    {
-	    	if ( textStatus == "abort" ) return;
-	    	if ( xhr.responseText == "" ) return;
-	    	if ( $.inArray(xhr.status, [302,301,500,404]) != -1 ) return;
-	    	
-    		setTimeout( function() {
-    			redrawBoardChanges(options);
-    		}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 1 : 180000);
-	    }
-	});
+				if ( typeof options.redrawBoardItemCustom != 'undefined' ) 
+				{
+					options.redrawBoardItemCustom( $(items), result );
+				}
+		
+				options.initializeBoardItem( $(itemSelectors.join(',')), options );
+				
+				filterLocation.hideActivity();
+			},
+		    complete: function(xhr, textStatus)
+		    {
+		    	if ( textStatus == "abort" ) return;
+		    	if ( xhr.responseText == "" ) return;
+		    	if ( $.inArray(xhr.status, [302,301,500,404]) != -1 ) return;
+		    	
+	    		setTimeout( function() {
+	    			redrawBoardChanges(options);
+	    		}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 1 : 180000);
+		    },
+		    error: function (xhr, ajaxOptions, thrownError) {
+				setTimeout( function() {
+					redrawBoardChanges(options);
+				}, 180000);
+		    }
+		});		
+	}
+	catch(e) {
+		setTimeout( function() {
+			redrawBoardChanges(options);
+		}, 180000);
+	}
 }

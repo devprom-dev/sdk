@@ -14,7 +14,7 @@ class BugController extends RestController
 
 	protected function getFilterResolver()
 	{
-		return null;
+		return array();
 	}
 	
     protected function getModelService()

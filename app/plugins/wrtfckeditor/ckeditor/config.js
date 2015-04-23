@@ -10,7 +10,7 @@ CKEDITOR.editorConfig = function( config ) {
 	// For the complete reference:
 	// http://docs.ckeditor.com/#!/api/CKEDITOR.config
 
-	config.extraPlugins = 'plantuml,lineutils';
+	config.extraPlugins = 'plantuml,lineutils,linkex';
 	
 	config.allowedContent = true;
 	config.disableNativeSpellChecker = false;

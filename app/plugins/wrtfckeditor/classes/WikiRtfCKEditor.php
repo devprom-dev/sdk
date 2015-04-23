@@ -169,7 +169,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php } else { ?>
 			
-			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=$content?>">
+			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=htmlentities($content, ENT_QUOTES | ENT_HTML401, 'cp1251')?>">
 
 			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="min-height:<?=$height?>px;" contenteditable="true" objectId="<?=$object_id?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
 			    <? 

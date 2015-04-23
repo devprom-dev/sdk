@@ -86,6 +86,10 @@ RewriteCond %{REQUEST_URI} knowledgebase\.php
 RewriteCond %{QUERY_STRING} view=(tree|templates) 
 RewriteRule ^([^/]+)/knowledgebase\.php $1/knowledgebase/%1 [R=301,L,NC,E=nocache:1]
 
+RewriteCond %{REQUEST_URI} helpfiles\.php 
+RewriteCond %{QUERY_STRING} wiki_id=(\w+)
+RewriteRule ^([^/]+)/helpfiles\.php $1/module/helpdocs/docs?page=%1&document=%1 [R=301,L,NC,E=nocache:1]
+
 RewriteRule ^([^/]+)/functions\.php $1/features/list [R=301,L,NC]
 RewriteRule ^([^/]+)/requests\.php $1/issues/list [R=301,L,NC]
 RewriteRule ^([^/]+)/planning\.php $1/tasks/list [R=301,L,NC]
