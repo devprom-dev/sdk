@@ -2,35 +2,25 @@
 
 namespace Devprom\AdministrativeBundle\Controller;
 
+use Devprom\CommonBundle\Controller\PageController;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
-class InstallController extends Controller
+class InstallController extends PageController
 {
     public function indexAction()
     {
-    	global $model_factory;
-
-    	$state = $model_factory->getObject('DeploymentState');
-    	
-    	if ( $state->IsReadyToBeUsed() )
-    	{
+    	if ( getFactory()->getObject('DeploymentState')->IsReadyToBeUsed() ) {
     		return new RedirectResponse('/admin/users.php');
     	}
-    	
-    	ob_start();
 
+    	if ( getFactory()->getObject('User')->getRegistry()->Count() > 0 ) {
+    		$response = $this->checkUserAuthorized();
+    		if ( is_object($response) ) return $response;
+    	}
+    	
     	include SERVER_ROOT_PATH.'admin/views/install/InstallPage.php';
-    	
-		$page = new \InstallPage;
-
-		$page->render();
-		
-		$content = ob_get_contents();
-		
-		ob_end_clean();
-		
-		return new Response($content);
+    	return $this->responsePage(new \InstallPage);
     }
 }

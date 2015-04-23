@@ -1,6 +1,6 @@
 _entry:
     pattern:  /
-    defaults: { _controller: ApplicationBundle:Main:index }
+    defaults: { _controller: ApplicationBundle:Entry:index }
 
 logoff:
     pattern:  /logoff
@@ -82,23 +82,23 @@ menu_config:
 
 error_404:
     pattern:  /404
-    defaults: { _controller: ApplicationBundle:Page:error }
+    defaults: { _controller: ApplicationBundle:Error:error }
 
 error_500:
     pattern:  /500
-    defaults: { _controller: ApplicationBundle:Page:error }
+    defaults: { _controller: ApplicationBundle:Error:error }
 
 error_500_zip:
     pattern:  /500.zip
-    defaults: { _controller: ApplicationBundle:Page:errorZip }
+    defaults: { _controller: ApplicationBundle:Error:errorZip }
 
 error_310:
     pattern:  /310
-    defaults: { _controller: ApplicationBundle:Page:error } 
+    defaults: { _controller: ApplicationBundle:Error:error } 
 
 error_503:
     pattern:  /503
-    defaults: { _controller: ApplicationBundle:Page:error }
+    defaults: { _controller: ApplicationBundle:Error:error }
 
 _app_tooltip:
     pattern:  /tooltip/{classname}/{objects}
@@ -106,15 +106,15 @@ _app_tooltip:
 
 _namespace:
     pattern:  /{module}/{namespace}
-    defaults: { _controller: ApplicationBundle:Page:module }
+    defaults: { _controller: CommonBundle:Page:module }
 
 _page:
     pattern:  /{module}/{namespace}/{page}
-    defaults: { _controller: ApplicationBundle:Page:module }
+    defaults: { _controller: CommonBundle:Page:module }
 
 _file:
     pattern:  /{module}/{namespace}/{page}/{file}
-    defaults: { _controller: ApplicationBundle:Page:module }
+    defaults: { _controller: CommonBundle:Page:module }
 
 _admin_scripts:
     pattern:  /co/scripts/javascript/

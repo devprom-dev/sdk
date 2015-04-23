@@ -11,5 +11,5 @@ return array(
         <p>Please log on to the system or register new account in order to create
          new requests and communicate with support engineers.
     ',
+	'any.page.footer' => 'Solutions to support software development lifecycle from <a href="http://devprom.ru">Devprom Software</a>'
 );
-?>

@@ -68,7 +68,7 @@ class ProjectLogTable extends PMPageTable
 		global $_REQUEST, $model_factory;
 		
 		$filters = array(
-			new ViewStartDateWebMethod(),
+			$this->buildStartFilter(),
 			new ViewFinishDateWebMethod(),
 			new ViewLogSubjectWebMethod()
 		);	
@@ -92,6 +92,15 @@ class ProjectLogTable extends PMPageTable
 		return $filters;
 	}
 	
+	function buildStartFilter()
+	{
+		$filter = new ViewStartDateWebMethod();
+		$filter->setDefault(
+				getSession()->getLanguage()->getPhpDate(strtotime('-4 weeks', strtotime(SystemDateTime::date('Y-m-j'))))
+		);
+		return $filter;
+	}
+	
 	function buildEntityFilter()
 	{
 		$entity_filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogEntitySet'), '', 'object' );
@@ -108,18 +117,6 @@ class ProjectLogTable extends PMPageTable
 		$filter->setIdFieldName( 'ReferenceName' );
 		
 		return $filter;
-	}
-	
-	function getFilterValues()
-	{
-		$values = parent::getFilterValues();
-		
-		if ( $_REQUEST['start'] == '' )
-		{
-			$values['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-1 weeks', strtotime(date('Y-m-j')))); 
-		}
-		
-		return $values;
 	}
 	
 	function getFilterPredicates()

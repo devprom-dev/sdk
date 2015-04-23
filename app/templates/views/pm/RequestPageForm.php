@@ -179,7 +179,7 @@ foreach( $attributes as $name => $attribute )
 		    <div class="properties-column-<?=count($columns).$column_index?>">
 				<table class="properties-table">
 				<?php foreach( $column as $ref_name => $attribute ) { ?>
-					<tr>
+					<tr name="<?=$ref_name?>">
 						<th>										
 							<?=$attribute['name']?>:
 						</th>

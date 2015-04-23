@@ -16,7 +16,7 @@ class LockFileSystem extends Lock
     
     public function Release()
     {
-        if ( file_exists($this->getLockFileName()) ) @unlink( $this->getLockFileName() );
+        @unlink( $this->getLockFileName() );
     }
 
     public function Locked( $timeout = 10 )
@@ -46,15 +46,14 @@ class LockFileSystem extends Lock
     	
         while( $this->Locked($timeout) && !connection_aborted() )
         {
-        	usleep(100000);
+        	sleep(1);
         	
-        	if ( $skip > 30 )
+        	if ( $skip > 3 )
         	{
         		// check client connection is active (using connection_aborted func.)
 	        	echo(" ");
 	
 	        	ob_flush();
-	        	
 	        	flush();
 
 	        	// send data once in 3 seconds

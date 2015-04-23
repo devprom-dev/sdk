@@ -88,9 +88,9 @@ class RequestPlanningForm extends PMPageForm
  		}	
 	}
 
-	function getFieldValue( $attr )
+	function getDefaultValue( $attr )
 	{
-		$value = parent::getFieldValue( $attr );
+		$value = parent::getDefaultValue( $attr );
 		
 		switch( $attr )
 		{

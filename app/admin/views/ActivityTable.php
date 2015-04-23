@@ -6,17 +6,7 @@ class ActivityTable extends PageTable
 {
     function __construct()
     {
-        global $model_factory;
-        
-        parent::__construct( $model_factory->getObject('AdminChangeLog') );
-        
-    	if ( $_REQUEST['modified'] == '' )
-		{
-		    $language = getLanguage();
-		    
-		    $_REQUEST['modified'] = $language->getPhpDate( 
-		            strtotime('-1 month', strtotime(date('Y-m-j'))) );
-		}
+        parent::__construct( getFactory()->getObject('AdminChangeLog') );
     }
 	
 	function getList()
@@ -44,9 +34,11 @@ class ActivityTable extends PageTable
 		$filters = array();
 
 		$date = new FilterDateWebMethod();
-		
 		$date->setValueParm( 'modified' );
 		$date->setCaption( translate('Изменено после') );
+		$date->setDefault(
+				getSession()->getLanguage()->getPhpDate(strtotime('-4 weeks', strtotime(SystemDateTime::date('Y-m-j'))))
+		);
 		
 		$filters[] = $date; 
 		

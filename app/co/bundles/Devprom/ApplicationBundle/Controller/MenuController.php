@@ -2,7 +2,7 @@
 
 namespace Devprom\ApplicationBundle\Controller;
 
-use Devprom\ApplicationBundle\Controller\PageController;
+use Devprom\CommonBundle\Controller\PageController;
 use Symfony\Component\HttpFoundation\Response;
 
 class MenuController extends PageController

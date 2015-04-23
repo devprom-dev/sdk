@@ -27,7 +27,6 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuMyProjectsBui
 			$items[] = $report->getExact('tasksboardcrossproject')->buildMenuItem();
         }
 		
-		$items[] = $report->getExact('discussions')->buildMenuItem();
 		$items[] = $report->getExact('project-blog')->buildMenuItem();
 		
 		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']);

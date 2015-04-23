@@ -7,26 +7,22 @@ class ModelServiceBugReporting extends ModelService
 {
 	function set( $entity, $data, $id = '' )
 	{
-		$object = getFactory()->getObject($entity);
+		$url_parts = parse_url(DEVOPSSRV);
 		
-		// disable change log history and other data driven events
-		$object->setNotificationEnabled(false);
+		$json = array (
+				'caption' => $data['Caption'],
+				'stacktrace' => $data['Description'],
+				'host' => $data['ServerName'],
+				'address' => $data['ServerAddress'],
+				'version' => $data['SubmittedVersion'],
+				'source' => 'Devprom Backend',
+				'project' => 'bfced568ec8da2faef45338ff1839d80'
+		);
 		
-		// normalize issue title before persist it
-		$data['Caption'] = $this->normalizeText($data['Caption']);
-		$data['TimesOccured'] = 1;
-		
-		return parent::set( $object, $data, $id );
-	}
-	
-	protected function modify( $object_it, $data )
-	{
-		$data['TimesOccured'] = $object_it->get('TimesOccured') + 1;
-		return parent::modify( $object_it, $data );
-	}
-	
-	protected function normalizeText( $text )
-	{
-		return preg_replace('/\d+/i', 'X', $text);
+		$cmd = "curl -X POST -H 'Content-Type: application/json' ";
+       	$cmd .= " -d '" . \JsonWrapper::encode($json) . "' "
+       		 . " 'http://".$url_parts['host'].':'.$url_parts['port'].'/1/errors'."' > /dev/null 2>&1 &";
+
+       	exec($cmd, $output, $exit);
 	}
 }

@@ -3,6 +3,7 @@
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/watchers/FieldWatchers.php';
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
+include_once SERVER_ROOT_PATH.'pm/methods/OpenBrokenTraceWebMethod.php';
 
 include_once "fields/FieldWikiAttachments.php";
 include_once "fields/FieldWikiTagTrace.php";
@@ -442,9 +443,14 @@ class PMWikiForm extends PMPageForm
 		
 		if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 
+		$history_url = $page_it->getHistoryUrl();
+		if ( is_object($this->getRevisionIt()) && $this->getRevisionIt()->getId() != '' ) {
+			$history_url .= '&start='.$this->getRevisionIt()->getDateTimeFormat('RecordCreated');
+		}
+		
 		$actions['history'] = array( 
 		        'name' => translate('История изменений'),
-				'url' => $page_it->getHistoryUrl().'&start='.(is_object($this->getRevisionIt()) ? $this->getRevisionIt()->getDateTimeFormat('RecordCreated') : ''),
+				'url' => $history_url,
 		        'uid' => 'history'
 		);
 
@@ -503,9 +509,9 @@ class PMWikiForm extends PMPageForm
 	
 	function getCompareActions( $object_it )
 	{
-		if ( !is_object($this->getCompareTo()) ) return array();
-		
-		if ( !$object_it->IsPersisted() && $object_it->get('ParentPage') != '' ) 
+		if ( !is_object($object_it) ) return array();
+
+		if ( !$object_it->IsPersisted() && $object_it->get('ParentPage') != '' && is_object($this->getCompareTo()) ) 
 		{
 			$trace_it = $this->getTraceObject()->getRegistry()->Query(
 					array (
@@ -538,36 +544,59 @@ class PMWikiForm extends PMPageForm
 			return $actions;
 		}
 		
+		if ( $object_it->get('BrokenTraces') == '' ) return array();
+		
 		$trace_it = $this->getTraceObject()->getRegistry()->Query(
 				array (
-						new FilterAttributePredicate('SourcePage', $this->getCompareTo()->getId()),
+						new FilterAttributePredicate('SourcePage', preg_split('/,/', $object_it->get('BrokenTraces'))),
 						new FilterAttributePredicate('TargetPage', $object_it->getId())
 				)
-		);
-		
-		if ( $trace_it->get('Type') != 'branch' || $trace_it->get('IsActual') == 'Y' || $trace_it->get('UnsyncReasonType') != 'text-changed' ) return array();
+			);
+		if ( $trace_it->count() < 1 ) return array();
 		
 		$actions = array();
-		
-		$method = new SyncWikiLinkWebMethod($trace_it);
-		
-		$method->setRedirectUrl("donothing");
-		
-		$actions[] = array( 
-			'url' => $method->getJSCall(),
-			'name' => $method->getCaption() 
-		);
-		
-		$method = new IgnoreWikiLinkWebMethod($trace_it);
+		while( !$trace_it->end() )
+		{
+			$trace_actions = array();
+			
+			$method = new OpenBrokenTraceWebMethod();
+			$trace_actions[] = array (
+					'name' => text(1933),
+					'url' => $method->getJSCall(array('object'=>$object_it->getId()))
+			);
+			$trace_actions[] = array();
+			 
+			if ( $trace_it->get('Type') == 'branch' ) {
+				$method = new SyncWikiLinkWebMethod($trace_it);
+				$method->setRedirectUrl("donothing");
+				$trace_actions[] = array( 
+					'url' => $method->getJSCall(),
+					'name' => $method->getCaption() 
+				);
 				
-		$method->setRedirectUrl("donothing");
-		
-		$actions[] = array( 
-			'url' => $method->getJSCall(),
-			'name' => $method->getCaption() 
-		);
+				$method = new IgnoreWikiLinkWebMethod($trace_it);
+				$method->setRedirectUrl("donothing");
+				$trace_actions[] = array( 
+					'url' => $method->getJSCall(),
+					'name' => $method->getCaption() 
+				);
+			} else {
+				$method = new ActuateWikiLinkWebMethod($trace_it);
+				$trace_actions[] = array( 
+					'url' => $method->getJSCall(),
+					'name' => $method->getCaption() 
+				);
+			}
+			
+			$actions[] = array (
+					'name' => $trace_it->getRef('SourcePage')->getDisplayName(),
+					'items' => $trace_actions
+			);
+			
+			$trace_it->moveNext();
+		}
 
-		return $actions;
+		return count($actions) > 1 ? $actions : $actions[0]['items'];
 	}
 	
 	function getDuplicateMethod( $object_it )
@@ -1013,7 +1042,6 @@ class PMWikiForm extends PMPageForm
 		    'index' => $this->form_index,
 		    'document_mode' => $this->getReviewMode(),
 			'baseline' => is_object($this->getRevisionIt()) ? $this->getRevisionIt()->getId() : '',
-			'broken_traces' => is_object($object_it) ? $object_it->get('BrokenTraces') != "" : false,
 			'compare_actions' => $this->getCompareActions($object_it),
 			'persisted' => is_object($object_it) ? $object_it->IsPersisted() : false,
 			'has_properties' => !$this->IsTemplate($object_it),

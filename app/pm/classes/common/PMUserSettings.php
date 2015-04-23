@@ -10,12 +10,6 @@ class PMUserSettings extends MetaobjectCacheable
  		parent::__construct('pm_UserSetting');
  	}
  	
-	function getCacheCategory()
-	{
-		// participant-wide cache
-	    return getSession()->getCacheKey();
-	}
-
  	function getSettingsValue( $settings_name, $user_id = 0 )
  	{
  		if ( $user_id == 0 ) $user_id = getSession()->getParticipantIt()->getId();

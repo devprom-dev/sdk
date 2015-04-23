@@ -18,33 +18,24 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
  	$object_uid = md5($object_class.$object_id.$attr_name.rand(1, 1000)); 
 	$max_width = 300;
 	$converter = '';
+	$attribute_type = $object_it->object->getAttributeType($attr_name);
  
 	if( $max_words > 0 )
 	{
-		$attr_value = trim($object_it->getHtmlDecoded($attr_name));
-		
-        if ( $object_it->object->getAttributeType($attr_name) == 'wysiwyg' && !$object_it->object->IsAttributeStored($attr_name) )
-        {
+	    if ( $attribute_type == 'wysiwyg' ) {
             // special case for wysiwyg attribute
-            
-            $attr_value = str_replace(chr(10), '', $attr_value);
-        }		
-
-	    if ( $object_it->object->getAttributeType($attr_name) == 'wysiwyg' )
-        {
-            // special case for wysiwyg attribute
-            
-            $attr_value = str_replace(chr(10), '', $attr_value);
-        }		
+            $attr_value = str_replace(chr(10), '', $object_it->getHtmlDecoded($attr_name));
+        }
+        else {		
+            $attr_value = str_replace(chr(10), '', $object_it->get($attr_name));
+        }
         
         $entity_name = $object_it->object->getClassName();
 		
 		$totext = new html2text( addslashes($attr_value) );
-
 		$attr_value = $totext->get_text();
 		
 		$converter = 'html2text';
-
 		$result_value = str_replace( '...', '', $object_it->getWordsOnlyValue($attr_value, $max_words) );
 	}
 	else
@@ -56,11 +47,14 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
 	if( trim($result_value, '.') != trim($attr_value, '.') ) 
 	{
 		$method = new GetWholeTextWebMethod($object_it, $attr_name);
-		
-		$method->setRedirectUrl("function( value ) { $('#".$object_uid."Text').html(value); }");
+		if ( $attribute_type == 'wysiwyg' ) {
+			$method->setRedirectUrl("function( value ) { $('#".$object_uid."Text').html(value); }");
+		}
+		else {
+			$method->setRedirectUrl("function( value ) { $('#".$object_uid."Text').text(value); }");
+		}
 		
 		$hint_method = $method->getJSCall();
-		
 		echo '<span id="'.$object_uid.'" ondblclick="'.$hint_method.'">';
 			echo '<span id="'.$object_uid.'Anchor" style="display:none;">';
 			echo '</span>';

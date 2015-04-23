@@ -4,7 +4,17 @@ include_once "FormTaskEmbedded.php";
 
 class FormRequestTasksEmbedded extends FormTaskEmbedded
 {
- 	function IsAttributeVisible( $attribute )
+	const MAX_VISIBLE_TASKS = 5;
+	
+	private $terminal_states = array();
+	private $hidden_tasks = 0;
+	
+ 	protected function extendModel()
+ 	{
+ 		$this->terminal_states = $this->getObject()->getTerminalStates();
+ 	}
+	
+	function IsAttributeVisible( $attribute )
  	{
  		switch ( $attribute )
  		{
@@ -19,22 +29,26 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
  	function getItemDisplayName( $object_it )
  	{
  		$uid = new ObjectUID;
- 		
- 		return $uid->getUidWithCaption( $object_it ).' ('.$object_it->getStateName().')';
+ 		return $uid->getUidWithCaption( $object_it );
+ 	}
+ 	
+ 	function getItemVisibility( $object_it )
+ 	{
+ 		if ( $object_it->getPos() >= self::MAX_VISIBLE_TASKS && in_array($object_it->get('State'), $this->terminal_states) )
+ 		{
+ 			$this->hidden_tasks++;
+ 			return false;
+ 		}
+ 		return parent::getItemVisibility( $object_it );
  	}
  	
  	function createField( $attr )
  	{
- 	    global $model_factory;
- 	    
  	    switch ( $attr )
  	    {
  	        case 'Release':
- 	            
- 	            $object = $model_factory->getObject('Iteration');
- 	            
+ 	            $object = getFactory()->getObject('Iteration');
  	            $object->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
- 	            
 				return new FieldDictionary( $object );
  	             	
  	        default:
@@ -97,4 +111,23 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 		
 		return $actions;
 	}
+
+ 	function drawAddButton( $tabindex )
+ 	{
+ 		parent::drawAddButton( $tabindex );
+ 		
+	 	if( is_object($this->getObjectIt()) && $this->getObjectIt()->get('Tasks') != '' )
+	 	{
+	 		$report_it = getFactory()->getObject('PMReport')->getExact('currenttasks');
+			if ( getFactory()->getAccessPolicy()->can_read($report_it) )
+			{
+				if ( $this->hidden_tasks > 0 ) {
+					$text = text(1014).' '.str_replace('%1', $this->hidden_tasks, text(1935));
+				} else {
+					$text = text(1936);
+				}
+	 		    echo '<a class="dashed" style="margin-left:20px;" target="_blank" href="'.$report_it->getUrl().'&issue='.$this->getObjectIt()->getId().'&iteration=all&clickedonform" tabindex="-1">'.$text.'</a>';
+			}
+ 		}
+ 	}
 }

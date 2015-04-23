@@ -70,7 +70,7 @@ class SortAttributeClause extends SortClauseBase
 				{
 					return " (SELECT MIN(s.OrderNum) FROM pm_State s " .
 						   "   WHERE s.ObjectClass = '".$object->getStatableClassName()."' " .
-						   "	 AND s.VPD = '".$object->getVpdValue()."' ".
+						   "	 AND s.VPD IN ('".join("','",$object->getVpds())."') ".
 						   "     AND s.ReferenceName = ".$sql_attr.") ".$sort_type;
 				}
 				

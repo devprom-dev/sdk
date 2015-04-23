@@ -4,27 +4,14 @@ include_once "WikiParser.php";
 
 class WikiHtmlSelfSufficientParser extends WikiParser
 {
-	private $href_resolver_func = null;
-	
  	function __construct ( $wiki_it )
  	{
  		parent::__construct( $wiki_it );
- 		$this->href_resolver_func = function($it) {};
  	}
  	
- 	function setHrefResolver( $func )
- 	{
- 		$this->href_resolver_func = $func; 
- 	}
-
 	function hasUrlOnImage()
 	{
 		return false;
-	}
-	
-	function getPageUrl( $wiki_it = null ) 
-	{
-		return call_user_func($this->href_resolver_func, $wiki_it);
 	}
 	
 	function replaceImageCallback( $match )

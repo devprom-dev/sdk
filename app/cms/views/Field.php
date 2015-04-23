@@ -68,7 +68,7 @@ class Field
 		}
 		else
 		{
-			return IteratorBase::getHtmlValue( $this->value );
+			return IteratorBase::getHtmlValue( html_entity_decode($this->getValue(), ENT_COMPAT | ENT_HTML401, 'cp1251' ) );
 		}
 	}
 	
@@ -94,7 +94,9 @@ class Field
 	
 	function getEncodedValue()
 	{
-	    return htmlentities($this->getValue(), ENT_QUOTES | ENT_HTML401, 'cp1251');
+	    return htmlspecialchars(
+	    			html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, 'cp1251'),
+	    					ENT_COMPAT | ENT_HTML401, 'cp1251');
 	}    
 	
 	function setReadOnly( $flag )

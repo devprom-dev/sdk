@@ -14,23 +14,15 @@ class WikiHistorySettingBuilder extends PageSettingBuilder
     public function build( PageSettingSet & $settings )
     {
         $setting = new PageListSetting('WikiHistoryList');
-        
         $setting->setGroup( 'ChangeDate' );
-        
         $columns = array('UserAvatar', 'Content', 'RecordModified');
-        
         if ( $this->page_it->get('ParentPage') < 1 ) $columns[] = 'Caption';
-         
         $setting->setVisibleColumns( $columns );
-        
         $settings->add( $setting );
         
         $setting = new PageTableSetting('WikiHistoryTable');
-        
-	    $setting->setFilters( array('formatting', 'action', 'participant') );
-	    
+	    $setting->setFilters( array('formatting', 'action', 'participant', 'start') );
 	    $setting->setSorts( array('RecordModified.D') );
-	    
         $settings->add( $setting );
     }
 }

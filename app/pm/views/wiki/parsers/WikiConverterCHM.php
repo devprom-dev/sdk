@@ -114,6 +114,9 @@ class WikiConverterCHM
 		$parser->setHrefResolver(function($wiki_it) {
  			return WikiConverterCHM::translit($wiki_it->getDisplayName()).'_'.$wiki_it->getId().'.html';
  		});
+ 		$parser->setReferenceTitleResolver(function($info) {
+ 			return $info['caption'];
+ 		});
 		
  		$parser->setObjectIt( $wiki_it );
 		

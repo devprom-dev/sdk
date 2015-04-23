@@ -27,6 +27,7 @@ include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderIssue.php"
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderTask.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ApplyBusinessActionsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ResetFieldsEventHandler.php";
+include SERVER_ROOT_PATH."pm/classes/resources/ResourceBuilderTerminology.php";
 
 include SERVER_ROOT_PATH."pm/classes/settings/DictionaryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/settings/WorkflowBuilderCommon.php";
@@ -389,14 +390,11 @@ class PMSession extends SessionBase
  	
  	function getLanguage() 
  	{
- 	    global $model_factory;
-
  	    if ( is_object($this->language) ) return $this->language;
- 	    
-    	$this->language = $this->getLanguageUid() == 'EN' ? new LanguageEnglish() : new Language();
-         
-        $this->language->Initialize( $model_factory->getObject('CustomResource') );
-		
+    	$this->language = $this->getLanguageUid() == 'EN' 
+    			? new LanguageEnglish() : new Language();
+    	$this->addBuilder( new ResourceBuilderTerminology() );
+        $this->language->Initialize();
 		return $this->language; 
  	}
  	

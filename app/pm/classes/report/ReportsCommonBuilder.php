@@ -212,6 +212,15 @@ class ReportsCommonBuilder extends ReportsBuilder
 							'type' => 'chart',
 					        'module' => $issues_chart_it->getId() )
 				);
+
+				$object->addReport(
+					array ( 'name' => 'projectburnup',
+							'title' => text(1928),
+					        'query' => 'infosections=none&chartdata=hide&chartlegend=hide',
+					        'category' => FUNC_AREA_MANAGEMENT,
+							'type' => 'chart',
+					        'module' => $issues_chart_it->getId() )
+				);
 			}
 			
 			if ( $methodology_it->HasPlanning() )
@@ -476,7 +485,6 @@ class ReportsCommonBuilder extends ReportsBuilder
 		{
 			$object->addReport(
 				array ( 'name' => 'activitiesreport',
-						'description' => text(529),
 						'category' => FUNC_AREA_MANAGEMENT,
 				        'module' => $module_it->getId() )
 			);

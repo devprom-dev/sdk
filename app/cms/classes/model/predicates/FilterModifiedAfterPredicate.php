@@ -6,9 +6,7 @@ class FilterModifiedAfterPredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		$dt = new DateTime($filter);
  		$mapper = new ModelDataTypeMappingDateTime();
- 		
- 		return " AND t.RecordModified >= '".$mapper->map(DAL::Instance()->Escape($dt->format("Y-m-d H:i:s")))."' ";
+ 		return " AND t.RecordModified >= '".$mapper->map(DAL::Instance()->Escape($filter))."' ";
  	}
 }

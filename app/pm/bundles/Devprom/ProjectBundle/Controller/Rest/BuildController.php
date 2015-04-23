@@ -12,6 +12,6 @@ class BuildController extends RestController
 	
 	function getFilterResolver()
 	{
-		return null;
+		return array();
 	}
 }

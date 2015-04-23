@@ -58,6 +58,7 @@ include_once "methods/CompareDocumentsWebMethod.php";
 include_once "methods/OpenBrokenTraceWebMethod.php";
 include_once "methods/IgnoreWikiLinkWebMethod.php";
 include_once "methods/ReorderWebMethod.php";
+include_once "methods/GotoReportWebMethod.php";
 
 if ( !class_exists($_REQUEST['method'], false) ) throw new Exception('There is no such method');
 

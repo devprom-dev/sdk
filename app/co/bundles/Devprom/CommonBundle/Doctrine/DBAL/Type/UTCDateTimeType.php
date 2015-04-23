@@ -14,7 +14,7 @@ class UTCDateTimeType extends DateTimeType
     {
         if ($value === null) return null;
         
-        if ($value->format() == "") return \SystemDateTime::date();
+        if ($value->format('Y-m-d H:i:s') == "") return \SystemDateTime::date();
         
         return \SystemDateTime::convertToServerTime( $value->format($platform->getDateTimeFormatString()) );
     }

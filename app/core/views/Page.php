@@ -678,7 +678,7 @@
 
         $script_service = new ScriptService();
         
-        $page_uid = get_class($this);
+        $page_uid = $this->getPageUid();
         
         return array(
  			'inside' => count($first_menu['menus']) > 0,
@@ -702,7 +702,6 @@
         	'javascript_paths' => $script_service->getJSPaths(),
         	'hint' => !$this->needDisplayForm() && getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
         	'page_uid' => $page_uid,
-        	'skip_product_tour' => getFactory()->getObject('UserSettings')->getSettingsValue('skip-product-tour'),
         	'module' => $this->getModule(),
         	'public_iid' => md5(INSTALLATION_UID.CUSTOMER_UID)
  		);
@@ -778,6 +777,9 @@
 			    'changed_ids' => $ids
 			)));
 			
+			ob_flush();
+        	flush();
+        				
 			die();
 		}
 
@@ -884,6 +886,11 @@
  	function setModule( $uid )
  	{
  		$this->module = $uid;
+ 	}
+ 	
+ 	function getPageUid()
+ 	{
+ 		return get_class($this);
  	}
  		
  	function getMenuTemplate()

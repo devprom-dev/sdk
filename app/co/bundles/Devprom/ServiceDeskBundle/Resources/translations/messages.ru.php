@@ -26,6 +26,7 @@ return array(
     'issue_severity' => 'Приоритет',
 	'issue_attachments' => 'Приложения',
     'issue_comments' => 'Комментарии',
+	'issue_version' => 'Версия',
 
     'issue.edit' => 'Изменить заявку',
     'issue.add' => 'Создать заявку',

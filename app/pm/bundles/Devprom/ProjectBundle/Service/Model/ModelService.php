@@ -45,7 +45,7 @@ class ModelService
 		
 		// check record extists already
 		$query = array();
-if ( strpos($data['Caption'], 'There is no object') !== false ) return;		
+
 		// remove client data
 		unset($data['RecordCreated']);
 		unset($data['RecordModified']);
@@ -152,9 +152,9 @@ if ( strpos($data['Caption'], 'There is no object') !== false ) return;
 		);
 
 		// apply filters if any
-		if ( is_object($this->filter_resolver) )
-		{
-			$query = array_merge( $query, $this->filter_resolver->resolve() );
+		foreach($this->filter_resolver as $resolver )
+		{ 
+			$query = array_merge( $query, $resolver->resolve() );
 		}
 		
 		$result = array();
@@ -180,15 +180,14 @@ if ( strpos($data['Caption'], 'There is no object') !== false ) return;
 	protected function sanitizeData( $object, $data )
 	{
 		$id_attribute = $object->getIdAttribute();
-		
 		$system_attributes = $object->getAttributesByGroup('system');
+		if ( is_a($object, 'MetaobjectStatable') ) $terminal_states = $object->getTerminalStates();
 		
 		$result = array();
 		
 		foreach( $data as $attribute => $value )
 		{
 			if ( is_numeric($attribute) || in_array($attribute, $system_attributes) ) continue;
-			
 			if ( $id_attribute == $attribute ) $attribute = "Id";
 			
 			if ( in_array($object->getAttributeType($attribute), array('datetime')) )
@@ -198,8 +197,13 @@ if ( strpos($data['Caption'], 'There is no object') !== false ) return;
 			else
 			{
 				$result[$attribute] = \IteratorBase::wintoutf8(
-						html_entity_decode($value, ENT_COMPAT | ENT_HTML401, 'cp1251')
+						stripslashes(html_entity_decode($value, ENT_QUOTES | ENT_HTML401, 'cp1251'))
 				);
+			}
+			
+			if ( $attribute == 'State' && is_array($terminal_states) )
+			{
+				$result['Completed'] = in_array($value, $terminal_states);
 			}
 			
 			if ( $attribute == 'Attributes' )

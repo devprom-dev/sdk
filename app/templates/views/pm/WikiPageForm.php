@@ -69,27 +69,12 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 
 ?>
 
-<? if ( $broken_traces ) { ?>
-
-<div class="title-cell filter-btn hidden-print" style="width:32px;">
-	<? 
-		echo $view->render('pm/WikiPageBrokenIcon.php', 
-			array ( 
-				'id' => $form->getObjectIt()->getId(),
-				'url' => getSession()->getApplicationUrl($form->getObjectIt()) 
-			)
-		); 
-	?>
-</div>
-
-<? } ?>
-
 <? if ( count($compare_actions) > 0 ) { ?>
 
 <div class="title-cell hidden-print" style="width:1%;">
     <div class="btn-group operation last">
       <a tabindex="-1" class="btn btn-small dropdown-toggle actions-button" data-toggle="dropdown" href="#">
-    	<i class="icon-random icon-gray"></i>
+    	<i class="icon-broken"></i>
     	<?=text(1725)?>
     	<span class="caret"></span>
       </a>

@@ -6,6 +6,7 @@ include_once SERVER_ROOT_PATH."pm/classes/participants/Invitation.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/ParticipantRole.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/ProjectRole.php";
+include_once SERVER_ROOT_PATH."cms/c_mail.php";
 
 class InviteService
 {

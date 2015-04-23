@@ -98,21 +98,13 @@ class SessionBase
  	
  	function getLanguageUid()
  	{
- 	    global $model_factory;
- 	    
  		$user_it = $this->getUserIt();
- 		
- 		if ( is_object($user_it) && $user_it->getId() > 0 )
- 		{
+ 		if ( is_object($user_it) && $user_it->getId() > 0 ) {
             return $user_it->get('Language') == 2 ? 'EN' : 'RU'; 		    
  		}
- 		else
- 		{
+ 		else {
     	 	$system = new Metaobject('cms_SystemSettings');
-    	 	
-    		$system_it = $system->getAll();
-    		
-    		return $system_it->get('Language') == 2 ? 'EN' : 'RU';
+    		return $system->getAll()->get('Language') == 2 ? 'EN' : 'RU';
  		}
  	}
  	
@@ -125,6 +117,11 @@ class SessionBase
         $this->language->Initialize();
 		
 		return $this->language; 
+ 	}
+ 	
+ 	function resetLanguage()
+ 	{
+ 		unset($this->language);
  	}
  	
  	function getAuthenticationFactory()

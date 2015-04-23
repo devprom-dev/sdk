@@ -49,6 +49,7 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
 		$items['burndown'] = $report->getExact('releaseburndown')->buildMenuItem();
  	    $items['burndown']['name'] = text('scrum8');
 		$items['velocity'] = $report->getExact('velocitychart')->buildMenuItem();
+		$items['burnup'] = $report->getExact('projectburnup')->buildMenuItem();
 		$items['activity'] = $report->getExact('project-log')->buildMenuItem();
  	    $items['activity']['name'] = text('scrum5');
  	    

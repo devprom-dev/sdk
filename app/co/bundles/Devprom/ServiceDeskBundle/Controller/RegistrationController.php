@@ -42,11 +42,6 @@ class RegistrationController extends BaseController {
             $response = new RedirectResponse($url);
 
             if ($authUser) {
-                /** @var Mailer $mailer */
-                $mailer = $this->container->get('fos_user.mailer');
-                $plainPassword = $this->container->get('session')->get('fos_user_registration/password');
-                $mailer->sendRegistrationEmailMessage($user, $plainPassword);
-
                 $this->authenticateUser($user, $response);
             }
 

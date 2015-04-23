@@ -166,7 +166,6 @@ class html2text
         '/<\/tr>/i',                 			 // </tr>
         '/<td[^>]*>(.*?)<\/td>/i',               // <td> and </td>
         '/<th[^>]*>(.*?)<\/th>/ie',              // <th> and </th>
-        '/&[a-z]+;/i',                             // &nbsp;
         '/<\/p[^>]*>/i'                         // </P>
     );
 
@@ -201,7 +200,6 @@ class html2text
         "",                                   // </tr>
         "\\1|",                            // <td> and </td>
         "strtoupper(\"\\1|\")",            // <th> and </th>
-        ' ',                             		// &nbsp;
         ''                                    // </P>
     );
 

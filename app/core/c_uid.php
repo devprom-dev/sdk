@@ -1,7 +1,7 @@
 <?php
  
- class ObjectUID
- {
+class ObjectUID
+{
  	var $map;
  	
  	private $baseline_id = ''; 
@@ -353,15 +353,14 @@
  	
  	function drawUidInCaption( $object_it, $words = 15 ) 
  	{
-		$this->drawUidIcon( $object_it );
-		echo ' '.$object_it->getWordsOnlyValue($object_it->getDisplayName(), $words);
+		echo $this->getUidWithCaption($object_it, $words);
  	}
 
  	function getUidWithCaption( $object_it, $words = 15, $baseline = '' ) 
  	{
-		return $this->getUidIcon( $object_it ).' '.
-			$object_it->getWordsOnlyValue($object_it->getDisplayName(), $words);
+ 		$text = $this->getUidIcon( $object_it );
+ 		$text .= ' '.$object_it->getWordsOnlyValue($object_it->getDisplayName(), $words);
+ 		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')'; 
+		return $text;
  	}
- }
- 
-?>
+}

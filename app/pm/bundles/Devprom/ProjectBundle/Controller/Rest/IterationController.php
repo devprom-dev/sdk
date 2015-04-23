@@ -13,6 +13,8 @@ class IterationController extends RestController
 	
 	function getFilterResolver()
 	{
-		return new IterationFilterResolver($this->getRequest()->get('filter'));
+		return array (
+				new IterationFilterResolver($this->getRequest()->get('filter'))
+		);
 	}
 }

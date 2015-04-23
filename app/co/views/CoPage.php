@@ -70,6 +70,7 @@ class CoPage extends Page
 		{
 			$menus[] = array (
 				'class' => 'header_popup',
+				'button_class' => 'btn-warning',
 				'title' => translate('Создать'),
 				'items' => $actions
 			);

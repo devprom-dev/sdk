@@ -114,19 +114,15 @@ class TaskTable extends PMPageTable
 	
 	function getFiltersIterationBurndown()
 	{
-	    global $model_factory;
-	    
-		$iteration = $model_factory->getObject('Iteration');
-		
+	    $iteration = getFactory()->getObject('Iteration');
  		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		
 		$iterations = new FilterObjectMethod($iteration, translate('Итерация'), 'release', false);
-		
 		$iterations->setType('singlevalue');
-	    
+		$iterations->setHasNone(false);
+		
 		return array( $iterations );
 	}
-	
+		
  	function getFiltersBase()
 	{
 		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_TaskType'), translate('Тип'), 'tasktype');
@@ -255,22 +251,12 @@ class TaskTable extends PMPageTable
 
  	function getNewActions()
 	{
-	    global $model_factory;
-	    
 	    $append_actions = array();
 	    
-		$filter = $this->getViewFilter();
-		
-		$filter->setFilter( $this->getFiltersName() );
-		
 		$method = new ObjectCreateNewWebMethod($this->getObject());
-		
-		$method->setRedirectUrl('donothing');
-		
-		$uid = 'append-task';
-		
 		if ( $method->hasAccess() )
 		{
+			$method->setRedirectUrl('donothing');
 			$parms = array (
 					'area' => $this->getPage()->getArea()
 			);
@@ -279,7 +265,8 @@ class TaskTable extends PMPageTable
 		    {
 		    	$parms['Assignee'] = getSession()->getParticipantIt()->getId();
 		    }
-			    
+
+		    $uid = 'append-task';
 			$append_actions[$uid] = array ( 
     			'name' => $method->getObject()->getDisplayName(),
 				'uid' => $uid,
@@ -287,6 +274,16 @@ class TaskTable extends PMPageTable
 			);
 		}
 
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
+		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
+		{
+			$method->setRedirectUrl('donothing');
+			$append_actions[] = array(
+					'name' => translate('Итерация'),
+					'url' => $method->getJSCall() 
+			);
+		}
+		
 		return $append_actions;
 	}
 	

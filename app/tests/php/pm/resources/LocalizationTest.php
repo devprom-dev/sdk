@@ -124,7 +124,7 @@ class LocalizationTest extends DevpromTestCase
 					
 					$content = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $content); 
 					
-					preg_match_all( '/[^\w]text\([\'\"]?([^\)\'\"]+)[\'\"]?\)/', $content, $matches );
+					preg_match_all( '/[^\w\.]text\([\'\"]?([^\)\'\"]+)[\'\"]?\)/', $content, $matches );
 					
 					$data = array_filter( $matches[1], function( $value ) {
 						return strpos($value, '$') === false;

@@ -7,7 +7,7 @@ class SpentTime extends Metaobject
 {
  	var $view, $report_year, $report_month, $group;
  	
- 	private $participant_filters = array();
+ 	private $participant_filter = array();
  	
  	function __construct() 
  	{
@@ -61,14 +61,14 @@ class SpentTime extends Metaobject
  	    return $this->report_month;
  	}
  	
-	function setParticipantFilters( array $filters )
+	function setParticipantFilter( array $filters )
 	{
-		$this->participant_filters = $filters;
+		$this->participant_filter = $filters;
 	}
  	
-	function getParticipantFilters()
+	function getParticipantFilter()
 	{
-		return $this->participant_filters;
+		return $this->participant_filter;
 	}
 	
 	function getActivityObject()

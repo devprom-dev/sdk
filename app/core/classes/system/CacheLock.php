@@ -13,4 +13,9 @@ class CacheLock extends LockFileSystem
 	{
 		$this->Release();
 	}
+
+    public function Wait( $timeout )
+    {
+        while( $this->Locked($timeout) ) usleep(100000);
+    }
 }

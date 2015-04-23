@@ -334,9 +334,14 @@ class ImapMailbox {
             if (empty($params['filename']) && empty($params['name'])) {
                 $fileName = $attachmentId . '.' . strtolower($partStructure->subtype);
             } else {
-                $fileName = !empty($params['filename']) ? $params['filename'] : $params['name'];
+                $fileName = $params['name'];
                 $fileName = $this->decodeMimeStr($fileName, $this->serverEncoding);
                 $fileName = $this->decodeRFC2231($fileName, $this->serverEncoding);
+                if ( $fileName == '' ) {
+                	$fileName = $params['filename'];
+	                $fileName = $this->decodeMimeStr($fileName, $this->serverEncoding);
+	                $fileName = $this->decodeRFC2231($fileName, $this->serverEncoding);
+                }
             }
             $attachment = new IncomingMailAttachment();
             $attachment->id = $attachmentId;

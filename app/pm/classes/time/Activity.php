@@ -43,21 +43,21 @@ class Activity extends Metaobject
 				$group_function
 		);
 		
-		$sql = " SELECT ".$measure.", ".
+		$sql = " SELECT t.".$measure.", ".
 			   "		SUM(t.Capacity) Capacity, ".
 			   "		".$group." Day, " .
 			   "	    GROUP_CONCAT(t.Description SEPARATOR '\n') Comments, ".
-			   "		p.SystemUser, ".
-			   "		p.Project " .
+			   "		t.SystemUser, ".
+			   "		t.Project " .
 			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, " .
-			   "				a.Description, a.Participant, a.VPD " .
-			   "		   FROM pm_Activity a, pm_Task t ".
+			   "				a.Description, a.Participant, a.VPD, p.SystemUser, p.Project " .
+			   "		   FROM pm_Activity a, pm_Task t, pm_Participant p ".
 			   "  	      WHERE a.Task = t.pm_TaskId ".
-			   "        ) t," .
-			   "		pm_Participant p ".
-			   "  WHERE t.Participant = p.SystemUser ".$this->getFilterPredicate('t').
-			   "	AND t.VPD = p.VPD ".
-			   "  GROUP BY ".$measure.", p.SystemUser, ".$group;
+			   "			AND a.Participant = p.SystemUser ".
+			   "			AND t.VPD = p.VPD ".
+			   "        ) t" .
+			   "  WHERE 1 = 1 ".$this->getFilterPredicate().
+			   "  GROUP BY t.".$measure.", t.SystemUser, t.Project, ".$group;
 
 		return $this->createSQLIterator($sql);
 	}

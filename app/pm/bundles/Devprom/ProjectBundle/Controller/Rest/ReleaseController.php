@@ -13,6 +13,6 @@ class ReleaseController extends RestController
 	
 	function getFilterResolver()
 	{
-		return null;
+		return array();
 	}
 }

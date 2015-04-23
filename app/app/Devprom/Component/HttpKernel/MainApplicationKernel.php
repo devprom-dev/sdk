@@ -1,6 +1,7 @@
 <?php
 
 namespace Devprom\Component\HttpKernel;
+include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,5 +41,13 @@ class MainApplicationKernel extends Kernel
     public function getCharset()
     {
         return 'windows-1251';
+    }
+
+    function boot()
+    {
+		$lock = new \CacheLock();
+		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
+    	
+		parent::boot();
     }
 }

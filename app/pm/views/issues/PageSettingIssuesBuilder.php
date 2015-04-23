@@ -20,7 +20,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         
         $setting = new PageTableSetting('RequestTable');
         
-        $setting->setFilters( array('release', 'state', 'type', 'priority') );
+        $setting->setFilters( array('release', 'state', 'type', 'priority', 'target') );
 
 		$setting->setSorts( $methodology_it->get('IsRequestOrderUsed') == 'Y' ? array('OrderNum') : array('Priority') );
         

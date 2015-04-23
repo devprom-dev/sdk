@@ -92,15 +92,6 @@ var tour = new Tour({
 	},
 	onEnd: function(tour) {
 		$('.with-tooltip').popover('enable');
-    	runMethod(
-            	'methods.php?method=SettingsWebMethod', 
-            	{
-                	'setting' : 'skip-product-tour',
-                	'value' : 'true'
-                }, 
-            	function() {}, 
-            	''
-            );
 	},
 	onShown: function(tour) {
 		$('[data-role=stop]').click( function() {
@@ -113,5 +104,5 @@ $(document).ready(function() {
 	// Initialize the tour
 	tour.init();
 	// Start the tour
-	tour.start(true);
+	tour.start();
 });

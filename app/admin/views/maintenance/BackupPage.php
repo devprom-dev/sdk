@@ -8,7 +8,6 @@ include "BackupFormApplication.php";
 include "BackupFormComplete.php";
 include "RecoveryWizardFormBase.php";
 include "RecoveryFormUnpack.php";
-include "RecoveryFormDatabase.php";
 include "RecoveryFormFiles.php";
 include "RecoveryFormApplication.php";
 

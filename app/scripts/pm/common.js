@@ -600,12 +600,15 @@ function runMethod( method, data, url, warning )
 	});
 }
 
-function selectRefreshMethod( method_url, id )
+function selectRefreshMethod( method_url, id, parm_name )
 {
 	$.ajax({
 		url: method_url,
 		dataType: 'html',
-		data: { 'value': $('#select_'+id).val() },
+		data: { 
+			'value': $('#select_'+id).val(),
+			'valueparm': parm_name
+		},
 		error: function( xhr ) 
 		{
 		},
@@ -1274,6 +1277,43 @@ function executeAutoComplete( field, url, caption )
 	setupAutocomplete( $("#filter_"+field) );
 }
 
+function quickSearchAutoComplete( field )
+{
+	var method_url = 'methods.php';
+	if ( devpromOpts.project != '' ) method_url = '/pm/'+devpromOpts.project+'/'+method_url;
+
+	$(field)
+		.autocomplete({
+			source: method_url+"?method=autocompletewebmethod&class="+$(field).attr("object")+"&attributes="+$(field).attr("searchattrs"),
+			select: function(event, ui) { 
+					runMethod( method_url+"?method=gotoreportwebmethod", {'report': ui.item.id}, '', '' );
+				},
+			open: function() {
+				$(this).autocomplete('widget').css({
+						'z-index': 9999,
+						'left': '16px',
+						'border-radius': 0
+					});
+			}
+		});
+	
+	$(field).focus(function() 
+	{
+		if ($(this).autocomplete("widget").is(":visible")) return;
+		if ( $(this).next('input').val() == '' ) {
+			// if there is no default value then open the list
+			$(this).autocomplete( "search", $(this).val() == '' ? " " : $(this).val() );
+		}
+	})
+	.keydown( function(event) 
+	{
+		if ($(this).autocomplete("widget").is(":visible")) return;
+		if ( event.which == 40 /* arrow down */ || event.which == 34 /* page down */) {
+			$(this).autocomplete( "search", $(this).val() == '' ? " " : $(this).val() );
+		}
+	});
+}
+
 function focusField( form )
 {
 	jQuery.each($('#'+form+' input, #'+form+' textarea, #'+form+' select'), function() 
@@ -1657,6 +1697,10 @@ function completeUIExt( jqe )
 			$(this).attr('searchattrs').split(','), 
 			$(this).attr('additional').split(',')
 		);
+	});
+	
+	jqe.find('.search-query').each( function() {
+		quickSearchAutoComplete($(this));
 	});
 
 	jqe.find('.ui-dialog-content')

@@ -108,7 +108,6 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		if ( $methodology_it->HasMilestones() )
 		{	
 			$metadata->addAttribute('Deadlines', 'REF_pm_MilestoneId', translate('Сроки'), true, false, '');
-
 			$metadata->addPersister( new RequestMilestonesPersister() );
 	    }
 		
@@ -117,6 +116,9 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeDescription('FinishDate', text(1840));
 		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
 
+   	 	if ( $methodology_it->getId() > 0 && $methodology_it->HasTasks() ) {
+		    $metadata->setAttributeVisible('Owner', false);
+ 	 	}
 		$metadata->addPersister( new RequestOwnerPersister() );
 		
 		$this->removeAttributes( $metadata, $methodology_it );
@@ -124,43 +126,31 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
     
     private function removeAttributes( & $metadata, & $methodology_it )
     {
-    	if ( $methodology_it->getId() > 0 && !$methodology_it->RequestEstimationUsed() )
-		{
+    	if ( $methodology_it->getId() > 0 && !$methodology_it->RequestEstimationUsed() ) {
 		    $metadata->removeAttribute( 'Estimation' );
 		}
 		
-    	if ( $methodology_it->getId() > 0 && !$methodology_it->HasFeatures() )
-		{
+    	if ( $methodology_it->getId() > 0 && !$methodology_it->HasFeatures() ) {
 		    $metadata->removeAttribute( 'Function' );
 		}
 		
-	 	if ( $methodology_it->getId() > 0 && !$methodology_it->HasReleases() )
- 	 	{
+	 	if ( $methodology_it->getId() > 0 && !$methodology_it->HasReleases() ) {
 	 	 	$metadata->removeAttribute( 'PlannedRelease' );
 	 	 	$metadata->removeAttribute( 'SubmittedVersion' );
-	 	 	$metadata->removeAttribute( 'ClosedInVersion' );
  	 	}
  	 	
         $strategy = $methodology_it->getEstimationStrategy();
 			
-		if ( $methodology_it->getId() > 0 && !$strategy->hasEstimationValue() )
-		{
+		if ( $methodology_it->getId() > 0 && !$strategy->hasEstimationValue() ) {
 		    $metadata->removeAttribute( 'Estimation' );
 		    $metadata->removeAttribute( 'EstimationLeft' );
 		}
 		
-		if ( ! $strategy instanceof EstimationHoursStrategy )
-		{
+		if ( ! $strategy instanceof EstimationHoursStrategy ) {
 			$metadata->removeAttribute( 'EstimationLeft' );
 		}
  		
-   	 	if ( $methodology_it->getId() > 0 && $methodology_it->HasTasks() )
- 	 	{
-		    $metadata->removeAttribute( 'Owner' );
- 	 	}
- 	 	
- 	 	if ( $methodology_it->get('IsRequestOrderUsed') != 'Y' )
- 	 	{
+ 	 	if ( $methodology_it->get('IsRequestOrderUsed') != 'Y' ) {
  	 		$metadata->removeAttribute('OrderNum');
  	 	}
     }

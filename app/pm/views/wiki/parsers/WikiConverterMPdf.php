@@ -97,14 +97,19 @@ class WikiConverterMPdf
  		$parser = $editor->getHtmlParser();
  		
  		$parser->setObjectIt( $parent_it );
-
  		$parser->setRequiredExternalAccess();
-		
+		$parser->setHrefResolver(function($wiki_it) {
+ 			return '#'.$wiki_it->getHtmlDecoded('Caption');
+ 		});
+ 		$parser->setReferenceTitleResolver(function($info) {
+ 			return $info['caption'];
+ 		});
+ 		
 		$content = $parser->parse( $content );
     		
 		if ( $level > 0 || $content != '' )
 		{
-    		$title = html_entity_decode($parent_it->get('Caption'), ENT_QUOTES | ENT_HTML401, 'cp1251');
+    		$title = $parent_it->getHtmlDecoded('Caption');
     		
     		$heading_level = max(min($level, 4), 1);  
     		

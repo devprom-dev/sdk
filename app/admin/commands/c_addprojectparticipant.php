@@ -16,11 +16,9 @@ class AddProjectParticipant extends CommandForm
 
 	function create()
 	{
-		global $_REQUEST, $model_factory, $session;
+		global $session;
 
-		$project = $model_factory->getObject('pm_Project');
-		$project_it = $project->getExact($_REQUEST['Project']);
-
+		$project_it = getFactory()->getObject('pm_Project')->getExact($_REQUEST['Project']);
 		if ( $project_it->count() < 1 )
 		{
 			$this->replyError( text(200) );
@@ -28,10 +26,7 @@ class AddProjectParticipant extends CommandForm
 
 		$session = new PMSession($project_it);
 		
-		$baserole = $model_factory->getObject('ProjectRole');
-
-		$baserole_it = $baserole->getExact( $_REQUEST['ProjectRole'] );
-
+		$baserole_it = getFactory()->getObject('ProjectRole')->getExact( $_REQUEST['ProjectRole'] );
 		if ( $baserole_it->count() < 1 )
 		{
 			$this->replyError( text(200) );
@@ -39,7 +34,7 @@ class AddProjectParticipant extends CommandForm
 
 		// check for participant exists
 		//
-		$participant = $model_factory->getObject('pm_Participant');
+		$participant = getFactory()->getObject('pm_Participant');
 		
 		$part_it = $participant->getByRefArray(array ( 
 			'Project' => $_REQUEST['Project'],
@@ -65,7 +60,7 @@ class AddProjectParticipant extends CommandForm
 		
 		// create participant role
 		//
-		$participant_role = $model_factory->getObject('pm_ParticipantRole');
+		$participant_role = getFactory()->getObject('pm_ParticipantRole');
 
 		$role_it = $participant_role->getByRefArray( array ( 
 			'Project' => $_REQUEST['Project'],
@@ -75,6 +70,9 @@ class AddProjectParticipant extends CommandForm
 
 		if ( $role_it->count() < 1 )
 		{
+			$mapper = new ModelDataTypeMapper();
+			$mapper->map( $participant_role, $_REQUEST );
+			
 			$id = $participant_role->add_parms( array ( 
 				'Project' => $_REQUEST['Project'],
 				'Participant' => $part_it->getId(),

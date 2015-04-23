@@ -16,23 +16,20 @@ class SelectDateRefreshWebMethod extends WebMethod
  		
  		$script_number += 1;
  		
- 		$this->value = $default_value;
- 		if ( $this->value == 'all' )
- 		{
- 			$this->value = '';
- 		}
+ 		$value = $this->getValue();
+ 		if ( in_array($value, array('','all')) ) $value = $default_value; 
  		
  		$this->id = 'dt'.$script_number;
  		
 		$container = 'select_'.$this->id.'Container';
 		$call_var = 'select_'.$this->id.'Var';
 		
-		if ( preg_match('/([0-9]+\-)+/', $this->value) > 0 )
+		if ( preg_match('/([0-9]+\-)+/', $value) > 0 )
 		{
-			$this->value = getSession()->getLanguage()->getDateFormatted($this->value);
+			$value = getSession()->getLanguage()->getDateFormatted($value);
 		}
 
-		echo ' <input type="text" class="btn-small input-small datepicker" title="'.$this->getCaption().'" style="'.$this->getStyle().'" id="select_'.$this->id.'" value="'.$this->value.'" placeholder="'.$this->getCaption().'" onchange="javascript: selectRefreshMethod(\''.$url.'\', \''.$this->id.'\')">';
+		echo ' <input type="text" class="btn-small input-small datepicker" title="'.$this->getCaption().'" style="'.$this->getStyle().'" id="select_'.$this->id.'" value="'.$value.'" placeholder="'.$this->getCaption().'" onchange="javascript: selectRefreshMethod(\''.$url.'\', \''.$this->id.'\', \''.$this->getValueParm().'\')">';
  	}
  	
  	function getStyle()

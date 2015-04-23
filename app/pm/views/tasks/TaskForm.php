@@ -36,7 +36,8 @@ class TaskForm extends PMPageForm
 		{
 			$result_field_required = 
 					$transition_it->getRef('TargetState')->get('IsTerminal') == 'Y'
-					&& in_array($this->getObjectIt()->getRef('TaskType')->get('ReferenceName'), array('testing'));
+					&& in_array($this->getObjectIt()->getRef('TaskType')->get('ReferenceName'), array('testing'))
+					&& getFactory()->getObject('pm_TestExecutionResult')->getAll()->count() > 0;
 			
 			if ( $result_field_required )
 			{

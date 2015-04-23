@@ -25,10 +25,12 @@ class ChangeController extends RestController
 	
 	function getFilterResolver()
 	{
-		return new ChangesFilterResolver(
-				$this->getRequest()->get('classes'),
-				$this->getRequest()->get('date'),
-				$this->getRequest()->get('from')
+		return array (
+				new ChangesFilterResolver(
+					$this->getRequest()->get('classes'),
+					$this->getRequest()->get('date'),
+					$this->getRequest()->get('from')
+				)
 		);
 	}
 }

@@ -4,8 +4,6 @@ class StatePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
  		$object = $this->getObject();
 
 		switch ( $filter )
@@ -20,7 +18,7 @@ class StatePredicate extends FilterPredicate
 					join($object->getTerminalStates(), "','")."') ";
 				
 			default:
-		 		$state = $model_factory->getObject($object->getStateClassName());
+		 		$state = getFactory()->getObject($object->getStateClassName());
 		 		
 		 		$state_it = $state->getByRefArray( array (
 		 			'ReferenceName' => preg_split('/[,-]/', $filter) 

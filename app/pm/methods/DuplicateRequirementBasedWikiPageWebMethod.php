@@ -15,9 +15,13 @@ class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMet
 					)
 			);
 	 		
-			$ids = array_filter(preg_split('/,/', $object_it->get('Requirement')), function( $value ) {
-					return $value > 0;
-			});
+			$ids = array();
+			foreach( $object_it->fieldToArray('Requirement') as $req_id )
+			{
+				$ids = array_merge( $ids, array_filter(preg_split('/,/', $req_id), function( $value ) {
+						return $value > 0;
+				}));
+			}
 			
 			if ( count($ids) > 0 )
 			{
@@ -29,9 +33,10 @@ class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMet
 							new WikiTraceTargetBaselinePredicate(IteratorBase::utf8towin($_REQUEST['Version']))
 						)
 				);
-
-		 	 	if ( $trace_it->get('TargetPage') > 0 ) {
-	 	 			$this->makeTracesOnRequirementVersion( $map, $trace_it->get('TargetPage'), $object_it ); 
+				
+				$document_id = array_shift(array_unique($trace_it->fieldToArray('TargetDocumentId')));
+		 	 	if ( $document_id > 0 ) {
+	 	 			$this->makeTracesOnRequirementVersion( $map, $document_id, $object_it ); 
 	 		 	}
 	 		 	else {
 	 		 		$this->makeTracesOnSourceRequirements( $map, $object_it );

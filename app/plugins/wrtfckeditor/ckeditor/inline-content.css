@@ -165,6 +165,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 .wysiwyg a[href]
 {
 	cursor: pointer;
+	word-break: break-all;
 }
 
 .wysiwyg pre

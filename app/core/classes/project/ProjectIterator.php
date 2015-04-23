@@ -441,6 +441,16 @@ class ProjectIterator extends OrderedIterator
 		return round($it->get('Cost'));
 	}
 
+	function getTotalWorkload() 
+	{
+		$request = getFactory()->getObject('pm_ChangeRequest');
+		$request->addFilter( new FilterAttributePredicate('Project', $this->getId()) );
+		
+		return array_shift(
+				$this->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request, 'Estimation')
+		); 
+	}
+	
 	function getRemoveKey()
 	{
 		return md5(INSTALLATION_UID.$this->get('CodeName').date('%Y-%m-%d-%H').$this->getId().INSTALLATION_UID);

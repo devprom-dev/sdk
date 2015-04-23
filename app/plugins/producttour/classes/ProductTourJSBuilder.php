@@ -21,10 +21,7 @@ class ProductTourJSBuilder extends ScriptBuilder
     	$object->addScriptFile(SERVER_ROOT_PATH."plugins/producttour/resources/js/locals/".$language."/content.js");
     	$object->addScriptFile(SERVER_ROOT_PATH."plugins/producttour/resources/js/locals.js");
     	
-    	if ( getFactory()->getObject('UserSettings')->getSettingsValue('skip-product-tour') != 'true' )
-    	{
-    		$object->addScriptFile(SERVER_ROOT_PATH."plugins/producttour/resources/js/devprom-tour.js");
-    	}
+   		$object->addScriptFile(SERVER_ROOT_PATH."plugins/producttour/resources/js/devprom-tour.js");
     	$object->addScriptFile(SERVER_ROOT_PATH."plugins/producttour/resources/js/setupformfields-tour.js");
     }
 }

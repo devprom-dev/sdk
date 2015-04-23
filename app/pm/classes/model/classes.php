@@ -54,6 +54,7 @@ include_once SERVER_ROOT_PATH.'pm/classes/c_task_type_stage.php';
 include_once SERVER_ROOT_PATH.'pm/classes/report/Report.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/report/PMReport.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/report/PMReportCategory.php'; 
+include_once SERVER_ROOT_PATH.'pm/classes/widgets/Widget.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/time/SpentTime.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/issues/RequestType.php'; 
 include_once SERVER_ROOT_PATH.'pm/classes/issues/RequestTraceBase.php'; 

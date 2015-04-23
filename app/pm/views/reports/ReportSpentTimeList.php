@@ -4,6 +4,7 @@ class ReportSpentTimeList extends PMStaticPageList
 {
  	var $days_map, $activities_map, $comments_map;
  	var $user_it, $request_it, $task_it;
+ 	private $group = '';
  	
  	function getIterator() 
  	{
@@ -27,13 +28,14 @@ class ReportSpentTimeList extends PMStaticPageList
 			$object->addFilter( $predicate );
 		}
 		
-		if ( !in_array($_REQUEST['group'], array('', 'none')) )
+		$this->group = $this->getGroup();
+		if ( !in_array($this->group, array('', 'none')) )
 		{
-		    $object->setGroup($_REQUEST['group']);
+		    $object->setGroup($this->group);
 		}
-		
-		$it = $object->getAll();
 
+		$it = $object->getAll();
+		
 		$this->days_map = $it->getDaysMap();
 		$this->activities_map = $it->getActivitiesMap();
 		$this->comments_map = $it->getCommentsMap();
@@ -126,9 +128,8 @@ class ReportSpentTimeList extends PMStaticPageList
 		return parent::getColumns();
 	}
 
-	function getGroup()
+	function getGroupDefault()
 	{
-	    return '';
 	}
 	
 	function getGroupFields()
@@ -181,14 +182,16 @@ class ReportSpentTimeList extends PMStaticPageList
 		switch ( $kind )
 		{
 			case 'Participant':
-				return 0;
+				if ( $this->group == 'SystemUser' ) return 0;
+				return in_array($this->group, array('', 'none')) ? 0 : 2;
 		    
 		    case 'Project':
-				return 0;
-
+		    	if ( $this->group == 'Project' ) return 0;
+		    	return in_array($this->group, array('', 'none')) ? 0 : 2;
+		    	
 			case 'Task':
 			case 'ChangeRequest':
-				return in_array($_REQUEST['group'], array('', 'none')) ? 0 : 2;
+				return in_array($this->group, array('', 'none')) ? 0 : 2;
 				
 			default:
 				return parent::getOffsetLevel( $kind );
@@ -261,6 +264,17 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 	}
 
+	function drawGroupRow( $group, $object_it, $columns )
+	{
+		foreach( $this->getObject()->getAttributes() as $attribute => $data )
+		{
+			if ( !in_array($attribute, array('Caption','Total')) && strpos($attribute, 'Day') === false ) continue;
+			echo '<td id="'.strtolower($attribute).'" style="background-color:white;font-weight:bold;">';
+				echo $this->drawCell($object_it, $attribute);
+			echo '</td>';
+		}
+	}
+	
 	function drawCell( $object_it, $attr ) 
 	{
 		global $model_factory;
@@ -270,26 +284,19 @@ class ReportSpentTimeList extends PMStaticPageList
 			switch ( $object_it->get('Item') )
 			{
 				case 'Project':
-					$project = $model_factory->getObject('pm_Project');
-					
-					$project_it = $project->getExact($object_it->get('ItemId')); 
-					echo $project_it->getDisplayName();
-					
+					$project = getFactory()->getObject('pm_Project');
+					$project_it = $project->getExact($object_it->get('ItemId'));
+					echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">'; 
+						echo $project_it->getDisplayName();
+    				echo '</div>';
 					break;
 			    
 			    case 'Participant':
 				    $this->user_it->moveToId( $object_it->get('ItemId') );
-					
-					if ( $this->hasDetails() )
-					{
-						echo '<b>'.$this->user_it->getDisplayName().'</b>';
-					}
-					else
-					{
-						echo $this->user_it->getDisplayName();
-					}
-					
-					break;
+    				echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">';
+				    	echo $this->user_it->getDisplayName();
+    				echo '</div>';
+				    break;
 
 				case 'Task':
 				    $this->task_it->moveToId( $object_it->get('ItemId') );
@@ -327,23 +334,19 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 		elseif ( $attr == 'Total' )
 		{
-			foreach( preg_split('/,/', $object_it->get('SystemUser')) as $user_id )
-			{
-    			$items = $this->activities_map[$object_it->get('Item').$object_it->get('ItemId')][$user_id];
-				
+			foreach( preg_split('/,/', $object_it->get('SystemUser')) as $user_id ) {
+    			$items = $this->activities_map[$object_it->get('Item').$object_it->get('ItemId')]['Participant'.$user_id];
+			    $total += is_array($items) ? array_sum($items) : 0;
+			}
+			
+			foreach( preg_split('/,/', $object_it->get('Project')) as $project_id ) {
+    			$items = $this->activities_map[$object_it->get('Item').$object_it->get('ItemId')]['Project'.$project_id];
 			    $total += is_array($items) ? array_sum($items) : 0;
 			}
 			
 			if ( $total > 0 )
 			{
-				if ( in_array($object_it->get('Item'), array('Participant', 'Project')) && ($this->hasDetails()) )
-				{
-					echo '<b>'.$total.'</b>';
-				}
-				else
-				{
-					echo $total;
-				}
+				echo $total;
 			}
 			else
 			{
@@ -354,22 +357,17 @@ class ReportSpentTimeList extends PMStaticPageList
 		{
 			$attr = preg_replace('/Day/', '', $attr);
 			
-			foreach( preg_split('/,/', $object_it->get('SystemUser')) as $user_id )
-			{
-    			$hours += $this->activities_map[$object_it->get('Item').$object_it->get('ItemId')][$user_id][$attr];
+			foreach( preg_split('/,/', $object_it->get('SystemUser')) as $user_id ) {
+    			$hours += $this->activities_map[$object_it->get('Item').$object_it->get('ItemId')]['Participant'.$user_id][$attr];
+			}
+
+			foreach( preg_split('/,/', $object_it->get('Project')) as $project_id ) {
+    			$hours += $this->activities_map[$object_it->get('Item').$object_it->get('ItemId')]['Project'.$project_id][$attr];
 			}
 			
 			if ( $hours > 0 )
 			{
-				if ( in_array($object_it->get('Item'), array('Participant', 'Project')) && ($this->hasDetails()) )
-				{
-					echo '<b>'.$hours.'</b>';
-				}
-				else
-				{
-					echo $hours;
-				}
-				
+				echo $hours;
 			}
 			else
 			{
@@ -406,6 +404,13 @@ class ReportSpentTimeList extends PMStaticPageList
 	function IsNeedToDisplayNumber()
 	{
 		return false;
+	}
+	
+	function IsNeedToDisplayRow($object_it)
+	{
+		return $this->group == 'SystemUser' && $object_it->get('Item') != 'Participant'
+			|| $this->group == 'Project' && $object_it->get('Item') != $this->group
+			|| in_array($this->group, array('','none'));
 	}
 
 	function getRowBackgroundColor( $object_it )

@@ -60,17 +60,13 @@ class QuestionForm extends PMPageForm
 			case 'Attachment':
 				return new FieldAttachments( is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->object );
 			    
-			default:
-				$field = parent::createFieldObject( $name );
-				
-				switch ( $name )
-				{
-					case 'Content':
-						$field->setRows(10);
-						break;
-				}
-				
+			case 'Content':
+				$field = new FieldLargeText();
+				$field->setRows(10);
 				return $field;
+				
+			default:
+				return parent::createFieldObject( $name );
 		}
 	}
 	

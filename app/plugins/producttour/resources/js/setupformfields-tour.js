@@ -1,7 +1,7 @@
 var issueSetupFormFieldsTour = new Tour({
 	steps: [
 	  {
-	    path: new RegExp('pm/'+devpromOpts.project+'/project/workflow/IssueState\?')
+	    path: '/pm/'+devpromOpts.project+'/project/workflow/IssueState?'
 	  },
 	  {
 	  },
@@ -41,7 +41,7 @@ var issueSetupFormFieldsTour = new Tour({
 var taskSetupFormFieldsTour = new Tour({
 	steps: [
 	  {
-	    path: new RegExp('pm/'+devpromOpts.project+'/project/workflow/TaskState\?')
+	    path: '/pm/'+devpromOpts.project+'/project/workflow/TaskState?'
 	  },
 	  {
 	  },

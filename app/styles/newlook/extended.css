@@ -503,6 +503,7 @@ div.embeddedRowTitle .transparent-btn
     .properties-column-32, .properties-column-42 {
         width: 0;
         display: none !important;
+        min-width: 240px;
     }   
     .properties-column-43 {
         width: 0;
@@ -520,6 +521,7 @@ div.embeddedRowTitle .transparent-btn
 	.properties-column-42 {
         width: 0;
         display: none !important;
+        min-width: 240px;
     }
     .properties-column-32, .properties-column-43 {
         width: 37%;
@@ -547,6 +549,7 @@ div.embeddedRowTitle .transparent-btn
     }
     .properties-column-42 {
         width: auto;
+        min-width: 240px;
     }
     .properties-column-43 {
         width: 30%;
@@ -923,4 +926,30 @@ span.label a.with-tooltip:hover
 {
 	max-height: 350px;
 	overflow: hidden;
+}
+
+input.search-query {
+  padding-left: 8px;
+  padding-right: 4px;
+  width: 121px;
+}
+
+form.form-search {
+	padding: 16px 0 10px 5px;
+}
+
+.form-search .btn {
+	width:24px;
+	padding:4px 0 4px 0;
+}
+
+i.icon-broken {
+  display: inline-block;
+  width: 18px;
+  height: 16px;
+  line-height: 14px;
+  vertical-align: text-top;
+  background-image: url("/images/exclamation.png");
+  background-position: 0px 0px;
+  background-repeat: no-repeat;
 }

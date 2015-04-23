@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH."core/classes/system/EnvironmentSettings.php";
-
 class SystemDateTime
 {
 	static public function date( $format = 'Y-m-d H:i:s' )

@@ -5,7 +5,8 @@ include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersist
  
 define( 'REGEX_UID', '/(^|<[^as][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
 define( 'REGEX_INCLUDE_PAGE', '/\{\{([^\}]+)\}\}/si' );
- 
+define( 'REGEX_UPDATE_UID', '/<a\s*class="uid"\s*(href="([^"]+)"\s*|[^=>]+="[^"]*"\s*)+>/i' );
+
 class WikiParser
 {
  	var $object_it;
@@ -15,7 +16,9 @@ class WikiParser
  	var $important_array;
  	var $require_external_access = false;
  	var $external_access_user_authorization = false;
-
+	private $href_resolver_func = null;
+	private $title_resolver_func = null;
+ 	
 	function __construct( $wiki_it ) 
 	{
  		global $wiki_parser, $was_table, $header_row;
@@ -25,7 +28,18 @@ class WikiParser
 		$this->uml_array = array();
 		$this->note_array = array();
 		$this->important_array = array();
-		
+
+		$this->title_resolver_func = function($info)
+		{
+     		if ( $info['completed'] ) {
+     			$text = '[<strike>'.$info['uid'].'</strike>]';
+     		}
+     		else {
+    			$text = '['.$info['uid'].']';
+     		}
+     	 	return $text.' '.$info['caption'];
+		};
+
 		$was_table = false;
 		$header_row = '';
 	}
@@ -416,12 +430,29 @@ class WikiParser
 	
 	function getPageUrl( $wiki_it = null ) 
 	{
-		$uid = new ObjectUid;
+		if ( is_callable($this->href_resolver_func) ) {
+			return call_user_func($this->href_resolver_func, $wiki_it);
+		}
 		
+		$uid = new ObjectUid;
 	    $info = $uid->getUIDInfo( $wiki_it );
-	    
  		return $info['url'];
 	}
+
+ 	function setHrefResolver( $func )
+ 	{
+ 		$this->href_resolver_func = $func; 
+ 	}
+ 	
+ 	function getHrefResolver()
+ 	{
+ 		return $this->href_resolver_func;
+ 	}
+ 	
+ 	function setReferenceTitleResolver( $func )
+ 	{
+ 		$this->title_resolver_func = $func;
+ 	}
 
 	function getObjectIt()
 	{
@@ -497,19 +528,19 @@ class WikiParser
     {
      	$info = $this->getUidInfo( trim($match[2], '[]') );
      	
+     	if ( is_object($info['object_it']) )
+     	{
+     		$object_it = $info['object_it'];
+     		$url = $this->getPageUrl($object_it);
+     		if ( $url != '' ) $info['url'] = $url;
+     	}
+     	
      	if ( $info['url'] != '' )
      	{
-     		if ( $info['completed'] )
-     		{
-     			$text = '[<strike>'.$info['uid'].'</strike>]';
-     		}
-     		else
-     		{
-    			$text = '['.$info['uid'].']';
-     		}
-    
-     	 	$text .= ' '.$info['caption'];
-     	 	
+	     	if ( is_callable($this->title_resolver_func) ) {
+				$text = call_user_func($this->title_resolver_func, $info);
+			}     		
+     		
     		$url = '<a class="uid" href="'.$info['url'].'">'.$text.'</a>';
      		
      		return str_replace($match[2], $url, preg_replace('/\[|\]/', '', $match[0]));
@@ -518,6 +549,22 @@ class WikiParser
      	{
      		return $match[0];
      	}
+    }
+
+    function parseUpdateUidCallback ( $match )
+    {
+    	$url_parts = parse_url($match[2]);
+    	$uid = basename($url_parts['path']);
+    	$uid_info = $this->getUidInfo($uid);
+    	if ( count($uid_info) < 1 ) return $match[0];
+
+    	$url_parts['host'] = EnvironmentSettings::getServerName();
+    	$url_parts['scheme'] = EnvironmentSettings::getServerSchema();
+    	$url_parts['port'] = EnvironmentSettings::getServerPort();
+    	$url_parts['path'] = '/pm/'.$uid_info['project'].'/'.$uid; 
+    	$url_updated = $this->unparse_url($url_parts);
+    	
+    	return '<a class="uid" href="'.$url_updated.'">';
     }
     
 	function parseIncludePageCallback( $match )
@@ -602,6 +649,23 @@ class WikiParser
 			return $image_name; 
 		}    	
     }
+    
+	function unparse_url($parsed_url) { 
+	  $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : ''; 
+	  $host     = isset($parsed_url['host']) ? $parsed_url['host'] : ''; 
+	  $port     = $parsed_url['scheme'] == 'http' && $parsed_url['port'] == 80 
+	  				? ''
+	  				: ($parsed_url['scheme'] == 'https' && $parsed_url['port'] == 443
+	  						? ''
+	  						: isset($parsed_url['port']) ? ':' . $parsed_url['port'] : ''); 
+	  $user     = isset($parsed_url['user']) ? $parsed_url['user'] : ''; 
+	  $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass']  : ''; 
+	  $pass     = ($user || $pass) ? "$pass@" : ''; 
+	  $path     = isset($parsed_url['path']) ? $parsed_url['path'] : ''; 
+	  $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : ''; 
+	  $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : ''; 
+	  return "$scheme$user$pass$host$port$path$query$fragment"; 
+	} 
  }
  
  function preg_font_callback ( $match )

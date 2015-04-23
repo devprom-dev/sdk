@@ -54,7 +54,11 @@ class OpenBrokenTraceWebMethod extends WebMethod
 				)
 			);
 			
-			echo $broken_it->getHistoryUrl().'&start='.$change_it->getDateTimeFormat('RecordCreated');
+			$url = $broken_it->getHistoryUrl();
+			if ( $change_it->getId() != '' ) {
+				$url .= '&start='.$change_it->getDateTimeFormat('RecordCreated');  
+			}
+			echo $url;
 		}
 	}
 }

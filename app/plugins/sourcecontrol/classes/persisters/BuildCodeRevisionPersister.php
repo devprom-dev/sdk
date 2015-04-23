@@ -30,7 +30,6 @@ class BuildCodeRevisionPersister extends ObjectSQLPersister
  		$request_it = $request->getRegistry()->Query(
 	    		array (
 	    				new RequestCodeCommitPredicate($commit),
-	    				new StatePredicate('terminal'),
 	    				new FilterVpdPredicate()
 	    		)
 	    );

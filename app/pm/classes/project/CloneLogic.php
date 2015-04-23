@@ -19,7 +19,6 @@ class CloneLogic
 			foreach( $object->getAttributes() as $ref_name => $attribute )
 			{
 			    if ( !$object->IsAttributeStored($ref_name) ) continue;
-			    
 			    $attrs[] = $ref_name;
 			}
 
@@ -91,8 +90,6 @@ class CloneLogic
 				case 'pm_Environment':
 				case 'pm_TestExecutionResult':
 				case 'pm_CustomAttribute':
-				case 'pm_ProjectRole':
-					
 					$id = CloneLogic::applyToLegacy( $context, 'ReferenceName', $attrs, $iterator, $project_it );
 					
 					if ( $id > 0 )
@@ -468,19 +465,28 @@ class CloneLogic
 				break;
 				
 			case 'pm_UserSetting':
-				
+				$it->object->setRegistry(new ObjectRegistrySQL());
 				$setting_it = $it->object->getRegistry()->Query(
 						array (
 								new FilterAttributePredicate('Setting', $it->get('Setting')),
 								new SettingGlobalPredicate('dummy'),
 								new FilterBaseVpdPredicate()
 						)
-				);
-
+				); 
 				if ( $setting_it->getId() == '' )
 				{
-					$parms['Participant'] = '-1';
-					$parms['Value'] = self::replaceUser($it->get('Value'));
+					$setting_it = $it->object->getRegistry()->Query(
+							array (
+									new FilterAttributePredicate('Setting', $it->get('Setting')),
+									new FilterBaseVpdPredicate()
+							)
+					);
+					if ( $setting_it->getId() == '' ) {
+						$parms['Participant'] = '-1';
+						$parms['Value'] = self::replaceUser($it->get('Value'));
+					} else {
+						return array();
+					}
 				}
 				else
 				{
@@ -489,10 +495,8 @@ class CloneLogic
 									'Value' => self::replaceUser($it->get('Value'))
 							)
 					);
-									
-					$parms = array();
+					return array();
 				}
-				
 				break;
 				
 			case 'pm_CustomReport':
@@ -742,7 +746,7 @@ class CloneLogic
 			}
 			else
 			{
-				$values[$attribute] = $iterator->get_native($attribute);
+				$values[$attribute] = $iterator->getHtmlDecoded($attribute);
 			}
 		}
 		
