@@ -1,5 +1,5 @@
 set ROOT=%~dp0
-call run.bat
+run.bat
 cd %ROOT%
 
 cd %ROOT%\app\ext
