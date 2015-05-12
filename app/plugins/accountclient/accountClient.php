@@ -55,7 +55,7 @@ class accountClientPlugin extends PluginBase
  		$user_it = getSession()->getUserIt();
  		if ( !$user_it->IsAdministrator() ) return array();
 
- 		$display_buy_button = false;
+ 		$display_buy_button = false || getFactory()->getObject('LicenseInstalled')->getAll()->get('LicenseValue') < 30;
  	    foreach( getCheckpointFactory()->getCheckpoint('CheckpointSystem')->getEntries() as $entry )
         {
             if ( !$entry->enabled() || $entry->check() ) continue;

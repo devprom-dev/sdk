@@ -5,21 +5,25 @@ include_once SERVER_ROOT_PATH.'admin/classes/CheckpointEntryDynamic.php';
 class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 {
 	private $days_left_to_warning = 7;
+	private $trial_period_length = 14;
 	
 	function execute()
 	{
-		$left_days = getFactory()->getObject('LicenseInstalled')->getAll()->get('LeftDays');
+		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+		$left_days = $license_it->get('LeftDays');
 		
-		$this->setValue( $left_days >= $this->days_left_to_warning ? "1" : "0" );
-
-		if ( $left_days == '' ) return;
-		
-		if ( $left_days >= 0 && $left_days < $this->days_left_to_warning && $this->timeToSendLicenseNotification() )
+		if ( $license_it->get('LicenseValue') > $this->trial_period_length )
 		{
-			$this->sendLicenseNotification($left_days);
+			$this->setValue( $left_days >= $this->days_left_to_warning ? "1" : "0" );
+			if ( $left_days == '' ) return;
+			
+			if ( $left_days >= 0 && $left_days < $this->days_left_to_warning && $this->timeToSendLicenseNotification() )
+			{
+				$this->sendLicenseNotification($left_days);
+			}
 		}
 
-		if ( $left_days < 0 && $this->timeToSendTerminationNotification() )
+		if ( $left_days <= -7 && $this->timeToSendTerminationNotification() )
 		{
 			$this->sendTerminationNotification($left_days);
 		}
@@ -62,7 +66,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 		
 		$last_time = file_exists($timeline) ? file_get_contents($timeline) : 0;
 		 
-		if ( time() - $last_time > 432000 )
+		if ( time() - $last_time > 7 * 24 * 60 * 60 )
 		{ 
 			file_put_contents($timeline, time());
 			
@@ -123,7 +127,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    
 	    $body = preg_replace('/_url_/', EnvironmentSettings::getServerUrl().'/admin/license/', $body);
 
-	    $days_due_terminate = max(7 + $left_days, 0);
+	    $days_due_terminate = max(14 + $left_days, 0);
 	    
 	    switch( $days_due_terminate )
 	    {
