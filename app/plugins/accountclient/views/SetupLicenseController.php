@@ -15,7 +15,8 @@ class SetupLicenseController extends Page
  		$license->modify_parms($license->getAll()->getId(),
  				array (
  						'LicenseValue' => $_REQUEST['LicenseValue'],
- 						'LicenseKey' => $_REQUEST['LicenseKey']
+ 						'LicenseKey' => $_REQUEST['LicenseKey'],
+ 						'LicenseType' => $_REQUEST['LicenseType']
  				)
  		);
  		

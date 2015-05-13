@@ -6,7 +6,7 @@ $plugin_text_array = array
 		2 => 'Application installation idendifier (IID)',
 		3 => 'Choose the product',
 		4 => 'Specify duration of use, monthes',
-		6 => 'Я принимаю условия <a href="http://devprom.ru/download/%D0%9B%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B4%D0%BE%D0%B3%D0%BE%D0%B2%D0%BE%D1%80-SaaS">договора оказания услуг (лицензионного соглашения)</a>',
+		6 => 'I accept the <a target="_blank" href="http://devopsboard.com/terms.html">service agreement</a>',
 		13 => 'Payment will be processed by <a target="_blank" href="http://www.payonline.ru/en/whoweare/">PayOnline processing service</a>',
 		14 => 'Create your account',
 		15 => 'Email',
@@ -19,7 +19,8 @@ $plugin_text_array = array
 		23 => 'If you forgot your password just <a href="javascript:window.parent.resetPassword();">reset it</a>',
 		24 => 'New password has been generated and sent to your email %1',
 		25 => 'Password recovery',
-		26 => 'DevOps Board Premium',
+		26 => 'DevOps Board <b>Team</b>',
 		27 => 'Renewing of license',
-		28 => 'Specififed kind of licensing is not supported'
+		28 => 'Specififed kind of licensing is not supported',
+		29 => 'DevOps Board <b>Unlimited</b>'
 );

@@ -12,8 +12,17 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,
         				'PriceRUB' => 1200,
-        				'PriceUSD' => 25
+        				'PriceUSD' => 120
         		),
+        		array ( 
+        				'entityId' => 'LicenseDevOpsBoardUnlimited', 
+        				'Caption' => text('account29'),
+        				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
+        				'ValueName' => text('account4'),
+        				'ValueDefault' => 12,
+        				'PriceRUB' => 1200,
+        				'PriceUSD' => 300
+        		)
         ));
     }
 }

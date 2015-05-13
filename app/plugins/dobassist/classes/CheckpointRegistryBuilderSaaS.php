@@ -8,7 +8,6 @@ class CheckpointRegistryBuilderSaaS extends CheckpointRegistryBuilder
 	public function build( & $registry )
 	{
 		$license = getFactory()->getObject('LicenseInstalled')->getAll()->get('LicenseType');
-		if ( !in_array($license, array('LicenseDevOpsBoard')) ) return;
 		$registry->registerEntry( new LicenseSAASExpirationCheckpoint() );
 	}
 }

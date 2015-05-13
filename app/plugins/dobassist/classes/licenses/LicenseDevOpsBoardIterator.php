@@ -4,7 +4,7 @@ class LicenseDevOpsBoardIterator extends LicenseSAASBaseIterator
 {
 	function getName()
 	{
-		return 'DevOps Board';
+		return text('dobassist10');
 	}
 	
 	protected function getActiveUsers()
@@ -18,7 +18,7 @@ class LicenseDevOpsBoardIterator extends LicenseSAASBaseIterator
 	
 	protected function getLimit()
 	{
-		return 100;
+		return 5;
 	}
 	
 	function allowCreate( & $object )

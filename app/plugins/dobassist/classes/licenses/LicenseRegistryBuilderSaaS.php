@@ -2,6 +2,7 @@
 
 include_once SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilder.php";
 include_once "LicenseDevOpsBoard.php";
+include_once "LicenseDevOpsBoardUnlimited.php";
 
 class LicenseRegistryBuilderSaaS extends LicenseRegistryBuilder
 {
@@ -9,5 +10,6 @@ class LicenseRegistryBuilderSaaS extends LicenseRegistryBuilder
 	{
 		$registry->resetLicenses();
 		$registry->addLicense( getFactory()->getObject('LicenseDevOpsBoard') );
+		$registry->addLicense( getFactory()->getObject('LicenseDevOpsBoardUnlimited') );
 	}
 }

@@ -836,7 +836,6 @@ return array (
 	1276 => 'Type of license',
 	1277 => 'A wrong license key',
 	1278 => 'License details',
-	1279 => 'For details about the available functionality and the conditions of licensing read the <a href="http://devprom.ru/price">product site</a>.',
 	1280 => 'Click here to start typing',
 	1281 => 'To insert an image, select the file from the list below or upload the new one, then click "OK" button:',
 	1282 => 'You can configure the image settings (for example, size) on the tab "Info"',
