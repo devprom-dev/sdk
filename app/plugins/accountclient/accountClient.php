@@ -55,7 +55,9 @@ class accountClientPlugin extends PluginBase
  		$user_it = getSession()->getUserIt();
  		if ( !$user_it->IsAdministrator() ) return array();
 
- 		$display_buy_button = false || getFactory()->getObject('LicenseInstalled')->getAll()->get('LicenseValue') < 30;
+ 		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+ 		
+ 		$display_buy_button = false || $license_it->get('LicenseValue') < 30;
  	    foreach( getCheckpointFactory()->getCheckpoint('CheckpointSystem')->getEntries() as $entry )
         {
             if ( !$entry->enabled() || $entry->check() ) continue;
@@ -66,6 +68,7 @@ class accountClientPlugin extends PluginBase
         	}
         }
         if ( !$display_buy_button ) return array();
+ 		$left_days = $license_it->get('LeftDays');
  		
  		return array(
  				array('class' => 'empty'),
@@ -73,7 +76,7 @@ class accountClientPlugin extends PluginBase
 				array('class' => 'empty'),
  				array('class' => 'empty'),
   				array (
- 						'caption' => text('accountclient2'),
+ 						'caption' => str_replace('%1', $left_days.' '.getSession()->getLanguage()->getDaysWording($left_days), text('accountclient2')),
  						'class' => 'btn-success',
  						'url' => "javascript: ".AccountSiteJSBuilder::getScriptToBuy().";",
  						'icon' => 'icon-white icon-shopping-cart'

@@ -96,7 +96,7 @@ toursQueue.unshift(new Tour({
 	  }
 	],
 	name: "devOpsBoardTour",
-	duration: 1000 * 40,
+	duration: 1000 * 120,
 	template: 
 		"<div class='popover tour' style='max-width:450px;'>"+
 		  "<div class='arrow'></div>"+

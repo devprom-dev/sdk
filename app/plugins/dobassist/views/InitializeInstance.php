@@ -298,7 +298,7 @@ class InitializeInstance extends Page
 				array (
 						'Source' => $program_it->getId(),
 						'Target' => $support_it->getId(),
-						'LinkType' => 2,
+						'LinkType' => 1,
 						'Requests' => 1,
 						'Tasks' => 1,
 						'KnowledgeBase' => 3,
@@ -313,7 +313,7 @@ class InitializeInstance extends Page
 				array (
 						'Source' => $program_it->getId(),
 						'Target' => $incidents_it->getId(),
-						'LinkType' => 2,
+						'LinkType' => 1,
 						'Requests' => 1,
 						'Tasks' => 1,
 						'KnowledgeBase' => 3,
