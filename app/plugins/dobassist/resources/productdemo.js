@@ -9,11 +9,35 @@ var tc = underi18n.MessageFactory({
 	"support-mailboxes": "To convert support requests sent by emails into cards on tickets board just append <strong>mailboxes</strong> here.</p><p><br />There are automatic <strong>email notifications</strong> when ticket is submitted or resolved. Comments related to tickets sent by emails also.",
 	"incidents-intro": "To be focused on <strong>applications bugs</strong> and <strong>infrastructure incidents</strong> drilldown to \"Incidents\" project.</p><p><br />Check for <strong>builds</strong> bring more issues. Identify servers (or <strong>environments</strong>) where issues were found. Comment how the server was changed (patches, configration changes, etc) to <strong>share knowledge</strong> across the team.",
 	"incidents-autoactions": "<strong>Auto actions</strong> allows you to set type, priority, assignee and other attributes <strong>automatically</strong> for all current and upcoming issues.</p><p><br />It allows your team to be focused on <strong>most important</strong> issues and <strong>do not waste time</strong> on manual analysing of dozen of incidents raised.",
-	"incidents-settings": "To convert alerts sent by emails into incidents adjust <strong>integration settings</strong>. You can plug in as many <strong>mailboxes</strong> you have.</p><p><br />Check <strong>the docs</strong> to plug in other sources of incidents like APM, ARA, CI or CD tools, bugs reporters and exception handlers you use."
+	"incidents-settings": "To convert alerts sent by emails into incidents adjust <strong>integration settings</strong>. You can plug in as many <strong>mailboxes</strong> you have.</p><p><br />Check <strong>the docs</strong> to plug in other sources of incidents like APM, ARA, CI or CD tools, bugs reporters and exception handlers you use.",
+	"intercom-launcher": "If you have any <strong>question</strong>, please, don\'t hesitate to contact our team. Just <strong>click</strong> on the circle or message, type your question and somebody of our team will answer you as soon as possible.</p><p>&nbsp;</p><p>Also, <strong>have a look</strong> at this area from time to time, here you\'ll find <strong>advices</strong> on how to use the application."
 });
- 
+
+(function ($) {
+	/**
+	* @function
+	* @property {object} jQuery plugin which runs handler function once specified element is inserted into the DOM
+	* @param {function} handler A function to execute at the time when the element is inserted
+	* @param {bool} shouldRunHandlerOnce Optional: if true, handler is unbound after its first invocation
+	* @example $(selector).waitUntilExists(function);
+	*/
+	$.fn.waitUntilExists    = function (handler, shouldRunHandlerOnce, isChild) {
+	    var found       = 'found';
+	    var $this       = $(this.selector);
+	    var $elements   = $this.not(function () { return $(this).data(found); }).each(handler).data(found, true);
+
+	    if (!isChild) {
+	        (window.waitUntilExists_Intervals = window.waitUntilExists_Intervals || {})[this.selector] =
+	            window.setInterval(function () { $this.waitUntilExists(handler, shouldRunHandlerOnce, true); }, 500);
+	    }
+	    else if (shouldRunHandlerOnce && $elements.length) {
+	        window.clearInterval(window.waitUntilExists_Intervals[this.selector]);
+	    }
+	    return $this;
+	};
+}(jQuery));
+
 toursQueue.unshift(new Tour({
-	debug: true,
 	steps: [
 	  {
 	    element: "table.board-table th:eq(0) span.title",
@@ -91,6 +115,19 @@ toursQueue.unshift(new Tour({
 	  },
 	  {
 		path: '/pm/productA/issues/board/issuesboardcrossproject?report=issuesboardcrossproject&basemodule=issues-board&&area=favs',
+		orphan: true,
+		template: "",
+		onShow: function(tour) { 
+			$('div.intercom-launcher-button').waitUntilExists(function(){tour.next();}); 
+		}
+	  },
+	  {
+	    element: ".intercom-launcher-button",
+	    title: 'Ask for help here',
+	    content: tc('intercom-launcher'),
+	    placement: 'top'
+	  },
+	  {
 		orphan: true,
 		duration: 1
 	  }

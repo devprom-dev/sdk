@@ -1,7 +1,7 @@
 <?php
 
 define( 'SAAS_DOMAIN', 'devopsboard.com' );
-define( 'SAAS_SCHEME', 'http' );
+define( 'SAAS_SCHEME', 'https' );
 define( 'SAAS_SENDER', 'noreply@devopsboard.com' );
 define( 'SAAS_ROOT', '/home/devopsboard/' );
 

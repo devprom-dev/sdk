@@ -184,7 +184,7 @@ class InitializeInstance extends Page
 		$to_address = $user_it->get('Email');
 		$user_name = $user_it->get('Login');
 		$user_pass = $user_it->get('Login');
-		$host_url = 'https://'.EnvironmentSettings::getServerName();
+		$host_url = SAAS_SCHEME.'://'.EnvironmentSettings::getServerName();
 		
 	    $mail = new HtmlMailbox;
 	    $mail->appendAddress($to_address);

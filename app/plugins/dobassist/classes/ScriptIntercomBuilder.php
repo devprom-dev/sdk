@@ -13,15 +13,13 @@ class ScriptIntercomBuilder extends ScriptBuilder
 	
     public function build( ScriptRegistry & $object )
     {
-    	return;
-    	
     	$user_it = $this->session->getUserIt();
     	if ( $user_it->getId() < 1 ) return;
     	
     	$dt = new DateTime($user_it->get('RecordCreated'));
     	$content = file_get_contents(SERVER_ROOT_PATH."plugins/dobassist/resources/intercom.js");
     	$content = preg_replace('/%name%/', IteratorBase::wintoutf8($user_it->getDisplayName()), $content);  
-    	$content = preg_replace('/%email%/', $user_it->get('Email'), $content);
+    	$content = preg_replace('/%email%/', hash_hmac("sha256", $user_it->get('Email'), "HyfFAbuV5E2LVTpiwsXnntH2eBL9OgNbqp2WACtz"), $content);
     	$content = preg_replace('/%date%/', $dt->getTimestamp(), $content);
     	$content = preg_replace('/%users%/', getFactory()->getObject('User')->getRegistry()->Count(), $content);
     	$content = preg_replace('/%host%/', EnvironmentSettings::getServerName(), $content);
