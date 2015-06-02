@@ -209,7 +209,7 @@ class RequestBoard extends PMPageBoard
 			$fields[] = 'Estimation';
 		}
 		
-		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion' ) );
+		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion', 'DueDays' ) );
 	}
 	
 	function getGroup() 
@@ -217,6 +217,56 @@ class RequestBoard extends PMPageBoard
 		$group = parent::getGroup();
 		if ( $group == 'OwnerUser' ) return 'Owner'; 
 		return $group;
+	}
+	
+	function getGroupIt()
+	{
+		$values = $this->getFilterValues();
+		switch($this->getGroup())
+		{
+			case 'PlannedRelease':
+				$object = getFactory()->getObject('Release');
+				$ids = array_merge(
+						$object->getRegistry()->Query(
+								array (
+										new ReleaseTimelinePredicate('not-passed'),
+										new SortAttributeClause('StartDate'),
+										new FilterVpdPredicate(),
+										$values['release'] != '' 
+												? new FilterInPredicate(preg_split('/,/', $values['release'])) : null
+								)
+							)->idsToArray(),
+						parent::getGroupIt()->idsToArray()
+				);
+				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
+			case 'Function':
+				return getFactory()->getObject('Feature')->getRegistry()->Query(
+						array (
+								new SortAttributeClause('Importance'),
+								new FilterVpdPredicate(),
+								$values['function'] != '' 
+										? new FilterInPredicate(preg_split('/,/', $values['function'])) : null
+						)
+					);
+			case 'Owner':
+				return getFactory()->getObject('User')->getRegistry()->Query(
+						array (
+								new UserWorkerPredicate(),
+								new SortAttributeClause('Caption'),
+								$values['owner'] != '' 
+										? new FilterInPredicate(preg_split('/,/', $values['owner'])) : null
+						)
+					);
+			case 'Priority':
+				return getFactory()->getObject('Priority')->getRegistry()->Query(
+						array (
+								$values['priority'] != '' 
+										? new FilterInPredicate(preg_split('/,/', $values['priority'])) : null
+						)
+				);
+			default:
+				return parent::getGroupIt();
+		}
 	}
 	
  	function getBoardAttribute()
@@ -606,21 +656,8 @@ class RequestBoard extends PMPageBoard
 	    $style = ';background:'.$this->priority_frame->getColor($object_it->get('Priority')).';';
 	    
 	    // deadlines driven coloring
-	    $dates = preg_split('/,/', $object_it->get('DeadlinesDate'));
-	    
-	    $today = SystemDateTime::date();
-	    
-	    foreach( $dates as $date )
-	    {
-	        if ( $date != '' && $date < $today )
-	        {
-	            if ( in_array($object_it->get('State'), $this->non_terminal_states) )
-	            {
-	                $style .= 'border: 2px solid red;';
-	            }
-
-	            break;
-	        }
+	    if ( $object_it->get('DueDays') < 1 && $object_it->get('DeadlinesDate') != '' ) {
+	    	$style .= 'border: 2px solid red;';
 	    }
 	    					
 		return parent::getItemStyle( $object_it ).$style;

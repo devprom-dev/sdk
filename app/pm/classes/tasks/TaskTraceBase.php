@@ -88,19 +88,16 @@ class TaskTraceBase extends Metaobject
 
 	function add_parms( $parms )
 	{
-		global $model_factory;
-		
 		$id = parent::add_parms( $parms );
 		
-		$task = $model_factory->getObject('pm_Task');
+		$task = getFactory()->getObject('pm_Task');
 		$task_it = $task->getExact( $parms['Task'] );
 		
 		if ( $task_it->get('ChangeRequest') > 0 && $this->getObjectClass() != '' )
 		{
 			if ( $this->getObjectClass() == 'PreceedingTask' ) return $id;
 
-			$req_trace = $model_factory->getObject('RequestTraceBase');
-
+			$req_trace = getFactory()->getObject('RequestTraceBase');
 			$cnt = $req_trace->getByRefArrayCount(
 				array( 'ChangeRequest' => $task_it->get('ChangeRequest'),
 					   'ObjectId' => $parms['ObjectId'],
@@ -109,13 +106,14 @@ class TaskTraceBase extends Metaobject
 
 			if ( $cnt < 1 )
 			{
-				$req_trace->add_parms(
-					array('ChangeRequest' => $task_it->get('ChangeRequest'),
-						  'ObjectId' => $parms['ObjectId'],
-						  'ObjectClass' => $this->getObjectClass() ) );
+				$req_trace->add_parms( array(
+						'ChangeRequest' => $task_it->get('ChangeRequest'),
+					  	'ObjectId' => $parms['ObjectId'],
+					  	'ObjectClass' => $this->getObjectClass(),
+						'Type' => 'autotrace'
+				));
 			}
 		}
-		
 		return $id;
 	}
 }

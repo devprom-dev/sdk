@@ -1,6 +1,9 @@
 <?php
 
 return array (
+	'Уровень функции' => 'Feature level',
+	'Уровень' => 'Level',
+	'Родительская функция' => 'Parent feature',
 	'Программы' => 'Programs',
  	'Краткий' => 'Compact',
  	'Открыты' => 'Open',

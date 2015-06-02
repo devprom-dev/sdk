@@ -116,11 +116,17 @@ services:
         arguments: [%fos_user.model.user.class%]
         tags:
             - { name: form.type, alias: servicedesk_registration_form }
+    servicedesk_type_entity_hidden:
+        class: Devprom\ServiceDeskBundle\Form\Type\EntityHiddenType
+        arguments: ["@doctrine.orm.entity_manager"]
+        tags:
+            - { name: form.type, alias: entity_hidden }
+    
     servicedesk_logging_registration_form_handler:
         class: Devprom\ServiceDeskBundle\Form\Handler\LoggingRegistrationFormHandler
         scope: request
         arguments: ["@fos_user.registration.form", "@request", "@fos_user.user_manager", "@fos_user.mailer", "@fos_user.util.token_generator", "@object_change_logger", "@model_factory", "@service_container"]
-
+   
     clear_cache_service:
         class: Devprom\CommonBundle\Service\ClearCacheService
         arguments:

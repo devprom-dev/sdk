@@ -103,8 +103,10 @@ class RequestModelTest extends DevpromDummyTestCase
     
     function testFinishDateUnchanged()
     {
-        $this->getDALMock()->expects($this->never())->method('Query');
-
+        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+                $this->logicalNot($this->stringContains("FinishDate = "))
+        );
+    	
         $trigger = new SetWorkItemDatesTrigger();
 
         $trigger->modify( 

@@ -40,6 +40,12 @@ class PageList extends ListTable
 		$this->plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection(getSession()->getSite()) : array();
  	}
  	
+  	function __destruct()
+ 	{
+ 		$this->view = null;
+ 		$this->table = null;
+ 	}
+ 	
  	function buildSystemAttributes()
  	{
 	    $system_attributes = $this->getObject()->getAttributesByGroup('system');
@@ -123,21 +129,23 @@ class PageList extends ListTable
 	function getGroupIt()
 	{
 		if ( is_object($this->group_it) ) return $this->group_it;
-		 
-		$group_object = $this->getObject()->getAttributeObject($this->getGroup());
+
+		if ( $this->getGroup() == '' ) {
+			return $this->group_it = $this->getObject()->getEmptyIterator();
+		}
+		if ( !$this->getObject()->IsReference($this->getGroup()) ) {
+			return $this->group_it = $this->getObject()->getEmptyIterator();
+		}
 		
-		if ( !is_object($group_object) )
-		{
+		$group_object = $this->getObject()->getAttributeObject($this->getGroup());
+		if ( !is_object($group_object) ) {
 				return $this->group_it = $this->getObject()->getEmptyIterator();
 		}
 		
-		$ids = array_filter($this->getIteratorRef()->fieldToArray($this->getGroup()), function($value) 
-		{
+		$ids = array_filter($this->getIteratorRef()->fieldToArray($this->getGroup()), function($value) {
 				return $value != '';
 		});
-		
-		if ( count($ids) < 1 )
-		{
+		if ( count($ids) < 1 ) {
 				return $this->group_it = $this->getObject()->getEmptyIterator();
 		}
 		
@@ -738,6 +746,7 @@ class PageList extends ListTable
 			
 			if ( $key == 'OrderNum' ) continue;
 			if ( $key != 'State' && !$this->object->IsReference( $key ) ) continue;
+			if ( $this->object->getAttributeUserName($key) == '' ) continue;
 			
 			array_push( $fields, $key );
 		}
@@ -850,15 +859,11 @@ class PageList extends ListTable
 	    if ( count($fields) > 0 )
 	    {
 	        $groups = array();
-	        foreach ( $fields as $field )
+	        foreach ( $fields as $name => $field )
 	        {
-	            $name = $object->getAttributeUserName($field);
-	            if ( $name != '' )
-	            {
-	                $script = "javascript: filterLocation.setup( 'group=".$field."', 0 ); ";
-	                
-	                $groups[translate($name)] = array ( 'url' => $script, 'checked' => $used_group == $field );
-	            }
+	            $name = is_numeric($name) ? $object->getAttributeUserName($field) : $name;
+                $script = "javascript: filterLocation.setup( 'group=".$field."', 0 ); ";
+                $groups[translate($name)] = array ( 'url' => $script, 'checked' => $used_group == $field );
 	        }
 	
 	        ksort($groups);
@@ -1127,7 +1132,7 @@ class PageList extends ListTable
 		);
 	}
 	
-	function & getRenderView()
+	function getRenderView()
 	{
 	    return $this->view;
 	}

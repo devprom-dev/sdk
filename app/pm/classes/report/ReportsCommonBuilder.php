@@ -132,6 +132,15 @@ class ReportsCommonBuilder extends ReportsBuilder
 					        'module' => $module_it->getId() )
 				);
 			}
+
+			$object->addReport(
+				array ( 'name' => 'issuesboarddeadlines',
+						'title' => text(1939),
+				        'description' => text(1940),
+						'category' => FUNC_AREA_MANAGEMENT,
+						'query' => 'group=DueWeeks&state='.join(',',$nonterminal),
+				        'module' => $module_it->getId() )
+			);
 		}
 		
 		$issues_chart_it = $module->getExact('issues-chart');

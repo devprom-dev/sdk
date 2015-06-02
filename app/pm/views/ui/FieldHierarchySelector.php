@@ -8,6 +8,11 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 
 		$this->setAutoExpand(false);
 		
+		if ( $this->Readonly() ) {
+			parent::draw();
+			return; 
+		}
+		
 		$url = getSession()->getApplicationUrl().'treemodel/';
 		
     	$script = "bindFindInTreeField('.find-in-tree > .btn[field-id=".$this->getId()."]', '".$url."'); return false;";

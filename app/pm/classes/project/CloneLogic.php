@@ -111,6 +111,30 @@ class CloneLogic
 					}
 					
 					break;
+
+				// special case of template importing				
+				case 'pm_ProjectRole':
+					$id = CloneLogic::applyToLegacy( $context, 'Caption', $attrs, $iterator, $project_it );
+					
+					if ( $id > 0 )
+					{
+						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
+					}
+					elseif ( !$context->getUseExistingReferences() )
+					{
+						$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
+						
+    					if ( count($parms) > 0 )
+    					{
+    						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
+    					}
+					}
+					else
+					{
+						unset($ids_map[$object->getEntityRefName()][$iterator->getId()]);
+					}
+					
+					break;
 					
 				case 'pm_Participant':
 					

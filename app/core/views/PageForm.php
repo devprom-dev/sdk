@@ -34,6 +34,11 @@ class PageForm extends MetaObjectForm
  		$this->buildRelatedDataCache();
  	}
  	
+ 	function __destruct()
+ 	{
+ 		$this->page = null;
+ 	}
+ 	
  	function buildModelValidator()
  	{
  		$validator = new ModelValidator();
@@ -94,9 +99,7 @@ class PageForm extends MetaObjectForm
  		while( !$state_it->end() )
  		{
  			$transition_it = $state_it->getTransitionIt();
- 			
  			$this->transitions_array[$state_it->get('VPD').'-'.$state_it->get('ReferenceName')] = $transition_it->copyAll();
- 			
  			while( !$transition_it->end() )
  			{
  				$this->target_states_array[$transition_it->getId()] = $transition_it->getRef('TargetState')->copy();
@@ -108,22 +111,21 @@ class PageForm extends MetaObjectForm
  			$state_it->moveNext();
  		}
 
- 	 	$predicate_it = getFactory()->getObject('pm_TransitionPredicate')->getRegistry()->Query(
- 				array (
- 						new FilterAttributePredicate('Transition', array_keys($this->target_states_array))
- 				)
- 		);
- 		
- 		$rule = getFactory()->getObject('StateBusinessRule');
- 		
- 		while ( !$predicate_it->end() )
+ 		if ( count($this->target_states_array) > 0 )
  		{
- 			$rule_it = $predicate_it->getRef('Predicate', $rule)->copy();
- 			$this->transition_rules_it[$predicate_it->get('Transition')][] = $rule_it;
-	 		
- 			$predicate_it->moveNext();
+	 		$rule = getFactory()->getObject('StateBusinessRule');
+ 			$predicate_it = getFactory()->getObject('pm_TransitionPredicate')->getRegistry()->Query(
+ 					array (
+ 							new FilterAttributePredicate('Transition', array_keys($this->target_states_array))
+ 					)
+	 		);
+	 		while ( !$predicate_it->end() )
+ 			{
+ 				$rule_it = $predicate_it->getRef('Predicate', $rule)->copy();
+ 				$this->transition_rules_it[$predicate_it->get('Transition')][] = $rule_it;
+	 			$predicate_it->moveNext();
+ 			}
  		}
- 		
  	}
  	
  	function getTransitionIt()

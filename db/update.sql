@@ -1584,6 +1584,9 @@ ALTER TABLE Comment MODIFY Caption MEDIUMTEXT;
 DELETE FROM pm_ProjectTemplate WHERE FileName = 'ba_ru.xml';
 UPDATE pm_ProjectTemplate SET OrderNum = 55 WHERE FileName = 'tracker_ru.xml';
 UPDATE attribute SET Caption = 'ќценка' WHERE ReferenceName = 'Estimation' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_ChangeRequest');
+delete from entity where entityId = 1;
+
+UPDATE attribute SET IsVisible = 'N' WHERE ReferenceName NOT IN ('Capacity','ReportDate','Description') AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_Activity');
 
 --
 --

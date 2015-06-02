@@ -216,8 +216,7 @@ class phpsvnclient {
 			return false;
 		}
 		
-		$xml2Array = new xml2Array();
-		return $xml2Array->xmlParse($body);
+		return $this->xmlParse($body);
 	}
 
 	/**
@@ -447,10 +446,7 @@ class phpsvnclient {
 		if ( ! $this->Request($args, $headers, $body) )
 			return false;
 
-		$xml2Array = new xml2Array();
-		$arrOutput = $xml2Array->xmlParse($body);
-		//array_shift($arrOutput['children']);
-
+		$arrOutput = $this->xmlParse($body);
 		if ( !is_array($arrOutput['children']) )
 		{
 			return $fileLogs;
@@ -734,5 +730,17 @@ class phpsvnclient {
 	{
 		$this->_http->preferCurl();
 	}
+	
+	protected function xmlParse( $body )
+	{
+		libxml_use_internal_errors(true);
+		$doc = simplexml_load_string($body);
+		if ( $doc === false ) {
+			$errors = libxml_get_errors();
+    		libxml_clear_errors();
+    		if( count($errors) > 0 ) return array();
+		}		
+		$xml2Array = new xml2Array();
+		return $xml2Array->xmlParse($body);
+	}
 }
-?>

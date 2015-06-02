@@ -23,19 +23,12 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  	{
  		switch ( $attribute )
  		{
- 			case 'ReportDate':
- 			case 'Capacity':
- 			case 'Description':
-				
- 			    return parent::IsAttributeVisible( $attribute ); 					
-
  			case 'LeftWork':
- 			    
  			    return $this->anchor_it->object->getAttributeType($this->getLeftWorkAttribute()) != ''
  			    	&& getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
  			    
  			default:
- 				return false;
+ 				return parent::IsAttributeVisible( $attribute );
  		}
  	}
  	

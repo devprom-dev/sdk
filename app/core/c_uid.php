@@ -243,8 +243,6 @@ class ObjectUID
 			$url .= '/'.$text; 
 		}
 		
-		//$terminal_states = self::$terminal_states[get_class($object_it->object)];
-		
 		return array(
             'uid' => $text,
             'project' => $self_project_name,

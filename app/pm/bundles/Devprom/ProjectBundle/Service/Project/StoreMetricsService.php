@@ -20,8 +20,9 @@ class StoreMetricsService
  				)
 		 	);
 
+		$request = getFactory()->getObject('Request');
  		$this->storeIssueMetrics( 
-				getFactory()->getObject('Request')->getRegistry()->Query(
+				$request->getRegistry()->Query(
 		 				array (
 		 						new \FilterVpdPredicate($project_it->get('VPD')),
 		 						new \StatePredicate('terminal'),
@@ -30,9 +31,8 @@ class StoreMetricsService
 		 				)
  				)
 		 	);
-		
 		$this->storeIssueMetrics( 
-				getFactory()->getObject('Request')->getRegistry()->Query(
+				$request->getRegistry()->Query(
 		 				array (
 		 						new \FilterVpdPredicate($project_it->get('VPD')),
 		 						new \StatePredicate('notresolved'),
@@ -40,9 +40,8 @@ class StoreMetricsService
 		 				)
  				)
 		 	);
-
  		$this->storeIssueMetrics( 
-				getFactory()->getObject('Request')->getRegistry()->Query(
+				$request->getRegistry()->Query(
 		 				array (
 		 						new \FilterVpdPredicate($project_it->get('VPD')),
 		 						new \StatePredicate('notresolved'),
@@ -84,10 +83,15 @@ class StoreMetricsService
 			$velocity = $project_it->getVelocityDevider();
  		}
 		
+ 		$stage = getFactory()->getObject('Stage');
+ 		$stage_aggregate = new \AggregateBase( 'Project', 'EstimatedFinishDate', 'MAX' );
+		$stage->addAggregate($stage_aggregate);
+ 		
 		$project_it->object->setNotificationEnabled(false);
  		$project_it->object->modify_parms($project_it->getId(), 
 				array (
 						'Rating' => $velocity,
+						'FinishDate' => $stage->getAggregated()->get($stage_aggregate->getAggregateAlias()),
 						'RecordModified' => $project_it->get('RecordModified')
 				)
 		);

@@ -4,7 +4,7 @@
 setlocale(LC_CTYPE, 'ru_RU.CP1251');
 
 // default server time zone
-date_default_timezone_set('UTC');
+if ( date_default_timezone_get() != "UTC" ) date_default_timezone_set('UTC');
 
 // environment
 $_SERVER['APP_IID'] = INSTALLATION_UID;

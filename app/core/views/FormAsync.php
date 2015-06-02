@@ -564,6 +564,9 @@ class AjaxForm
 		echo $view->render( $this->getTemplate(), array_merge($parms, array( 
                 'parms' => $this->getRenderParms()
         ))); 
+
+		unset($this->view);
+		$this->view = null;
 	}
 	
 	function getActions()

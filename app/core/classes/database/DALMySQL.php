@@ -12,14 +12,15 @@ class DALMySQL extends DAL
     public function Connect( $info )
     {
         $this->connectionInfo = $info;
-        
-        $this->connection = mysql_connect($info->getHost(), $info->getUser(), $info->getPassword(), true) 
-            or trigger_error(mysql_error(), E_USER_ERROR);
-        
-        mysql_select_db($info->getDbName(), $this->connection) or trigger_error(mysql_error(), E_USER_ERROR);
- 
-        mysql_query("SET time_zone = '".EnvironmentSettings::getUTCOffset().":00'", $this->connection) or trigger_error(mysql_error(), E_USER_ERROR);
-        mysql_query("SET NAMES 'cp1251' COLLATE 'cp1251_general_ci'", $this->connection) or trigger_error(mysql_error(), E_USER_ERROR);
+        $this->connection = @mysql_connect($info->getHost(), $info->getUser(), $info->getPassword(), true);
+        if ( $this->connection === false ) {
+        	throw new Exception(mysql_error()); 
+        }
+        if ( !mysql_select_db($info->getDbName(), $this->connection) ) {
+        	throw new Exception(mysql_error());
+        }
+        @mysql_query("SET time_zone = '".EnvironmentSettings::getUTCOffset().":00'", $this->connection);
+        @mysql_query("SET NAMES 'cp1251' COLLATE 'cp1251_general_ci'", $this->connection);
     }
     
     public function Reconnect()

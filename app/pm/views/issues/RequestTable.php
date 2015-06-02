@@ -223,13 +223,14 @@ class RequestTable extends PMPageTable
 			}
 		}
 
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
-		$method->setRedirectUrl('donothing');
-		
+		$method = new ObjectCreateNewWebMethod(
+				$this->getListRef()->getGroup() == 'Function'
+					? getFactory()->getObject('Feature')
+					: getFactory()->getObject('Release')
+			);
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasFeatures() && $method->hasAccess() )
 		{
 			$append_actions[] = array();
-
 			$append_actions[] = array ( 
 				'name' => $method->getObject()->getDisplayName(), 
                    'url' => $method->getJSCall(

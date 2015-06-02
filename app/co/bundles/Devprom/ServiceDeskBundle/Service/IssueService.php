@@ -36,13 +36,13 @@ class IssueService {
         $this->mailer = $mailer;
     }
 
-    public function saveIssue(Issue $issue, $projectId, User $author) {
+    public function saveIssue(Issue $issue,  User $author) {
         $issue->setCaption(TextUtil::escapeHtml($issue->getCaption()));
         $issue->setDescription(TextUtil::escapeForDevpromWysiwygFields($issue->getDescription()));
         if ($issue->getId()) {
             $this->updateIssue($issue);
         } else {
-            $this->createIssue($issue, $projectId, $author);
+            $this->createIssue($issue, $author);
         }
     }
 
@@ -80,9 +80,13 @@ class IssueService {
     /**
      * @return Issue
      */
-    public function getBlankIssue() {
+    public function getBlankIssue( $vpds ) {
         $issue = new Issue();
         $issue->setSeverity($this->getDefaultPriority());
+    	$issue->setProject(
+    			array_pop($this->em->getRepository('DevpromServiceDeskBundle:Project')->findBy(array(
+            			"vpd" => array_pop($vpds),
+        		))));
         return $issue;
     }
 
@@ -101,12 +105,11 @@ class IssueService {
         $this->objectChangeLogger->logCommentCreated($issueComment);
     }
 
-    protected function createIssue(Issue $issue, $projectId, User $author)
+    protected function createIssue(Issue $issue, User $author)
     {
         // persist issue
-        $projectId = $issue->getProject() != '' ? $issue->getProject()->getId() : $projectId;
+        $projectId = $issue->getProject()->getId();
        	$vpd = $this->getProjectVPD($projectId);
-       	$issue->setProject($this->em->getReference("DevpromServiceDeskBundle:Project", $projectId));
 	    $issue->setVpd($vpd);
         $issue->setState($this->getFirstIssueStateForProject($projectId));
         $issue->setPriority($issue->getSeverity());

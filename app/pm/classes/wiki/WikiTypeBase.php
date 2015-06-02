@@ -41,4 +41,9 @@ class WikiTypeBase extends MetaobjectCacheable
 	{
 		return '?entity='.get_class($this);
 	}
+	
+	function IsDeletedCascade( $object )
+	{
+		return false;
+	}
 }

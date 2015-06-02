@@ -21,7 +21,7 @@ class IssueFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
 		$vpds = $this->vpds;
-		
+
     	$builder
             ->add('caption', 'text')
             ->add('description', 'textarea')
@@ -48,12 +48,22 @@ class IssueFormType extends AbstractType
 		}
 		else
 		{
+			$vpd = array_pop($vpds);
+			
+// 			$project_id = $this->em->createQueryBuilder()
+// 				->select('pm_ProjectId')
+// 				->from('Devprom\ServiceDeskBundle\Entity\Project')
+				
+			
+			$builder->add('project', 'entity_hidden', array(
+                'class' => 'Devprom\ServiceDeskBundle\Entity\Project'
+            ));
 			$builder->add('product', 'entity', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Product',
                 'property' => 'name',
-                'query_builder' => function(EntityRepository $er) use ($vpds) {
+                'query_builder' => function(EntityRepository $er) use ($vpd) {
                     $qb = $er->createQueryBuilder('p');
-                    return $qb->where($qb->expr()->eq('p.vpd', '\''.array_pop($vpds).'\''));
+                    return $qb->where($qb->expr()->eq('p.vpd', '\''.$vpd.'\''));
                 },
                 'required' => false
             ));

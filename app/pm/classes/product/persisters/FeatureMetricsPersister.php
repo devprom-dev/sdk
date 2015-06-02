@@ -38,11 +38,11 @@ class FeatureMetricsPersister extends ObjectSQLPersister
              
          $columns[] = 
              "	(SELECT IFNULL( ".
-             "	  (SELECT MAX(r.FinishDate) " .
+             "	  (SELECT MAX(r.DeliveryDate) " .
              "	     FROM pm_ChangeRequest r, pm_Function f" .
              "	    WHERE r.Function = f.pm_FunctionId ".
          	 "		AND f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')), ".
-             "    (SELECT FROM_DAYS(TO_DAYS(NOW()) + IF(pr.Rating <= 0, 0, ROUND(".$strategy->getEstimationAggregate()."(r.Estimation) / pr.Rating, 1))) ".
+             "    (SELECT FROM_DAYS(TO_DAYS(GREATEST(pr.FinishDate,NOW())) + IF(pr.Rating <= 0, 0, ROUND(".$strategy->getEstimationAggregate()."(r.Estimation) / pr.Rating, 1))) ".
              "	   FROM pm_ChangeRequest r, pm_Project pr, pm_Function f " .
              "	  WHERE r.Function = f.pm_FunctionId ".
          	 "		AND f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')".

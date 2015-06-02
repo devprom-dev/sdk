@@ -209,6 +209,47 @@ class TaskBoardList extends PMPageBoard
 		return $group;
 	}
 	
+	function getGroupIt()
+	{
+		$values = $this->getFilterValues();
+		switch($this->getGroup())
+		{
+			case 'Release':
+				$object = getFactory()->getObject('Iteration');
+				$ids = array_merge(
+						$object->getRegistry()->Query(
+								array (
+										new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+										new SortAttributeClause('StartDate'),
+										new FilterVpdPredicate(),
+										$values['iteration'] != '' 
+												? new FilterInPredicate(preg_split('/,/', $values['iteration'])) : null
+								)
+							)->idsToArray(),
+						parent::getGroupIt()->idsToArray()
+				);
+				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
+			case 'Assignee':
+				return getFactory()->getObject('User')->getRegistry()->Query(
+						array (
+								new UserWorkerPredicate(),
+								new SortAttributeClause('Caption'),
+								$values['taskassignee'] != '' 
+										? new FilterInPredicate(preg_split('/,/', $values['taskassignee'])) : null
+						)
+					);
+			case 'Priority':
+				return getFactory()->getObject('Priority')->getRegistry()->Query(
+						array (
+							$values['taskpriority'] != '' 
+										? new FilterInPredicate(preg_split('/,/', $values['taskpriority'])) : null
+						)
+				);
+			default:
+				return parent::getGroupIt();
+		}
+	}
+	
  	function getBoardAttribute()
  	{
  		return 'State';

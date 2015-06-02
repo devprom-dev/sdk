@@ -485,7 +485,7 @@ class PMWikiForm extends PMPageForm
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 			
 			$actions[] = array( 
-				'name' => translate('Создать'),
+				'name' => translate('Реализация'),
 				'items' => $create_actions,
 				'uid' => 'export' 
 			);
@@ -499,7 +499,7 @@ class PMWikiForm extends PMPageForm
 		    
 		    array_push ( $actions, array( 
 				'id' => 'tracing',
-				'name' => translate('Отчеты'),
+				'name' => translate('Трассировка'),
 				'items' => $trace_actions
 			));
 		}

@@ -47,7 +47,7 @@
 			
 			$.ajax({
 				url: '?export=section',
-				type: 'POST',
+				type: 'GET',
 				dataType: 'html',
 				async: true,
 				data: { 

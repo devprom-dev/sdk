@@ -98,10 +98,15 @@ class ObjectRegistrySQL extends ObjectRegistry
 		}
 		
 		$this->setFilters($filters);
-		$this->setSorts($sorts);
+		
+		if ( count($sorts) > 0 ) {
+			$this->setSorts($sorts);
+		}
+		else {
+			$this->setSorts($this->getObject()->getSortDefault());
+		}
 
-		if ( count($persisters) > 0 )
-		{
+		if ( count($persisters) > 0 ) {
 			$this->setPersisters(array_merge($this->getPersisters(), $persisters));
 		}
 	}
@@ -278,7 +283,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		
 		$sql = "";
 		
-		$object = & $this->getObject();
+		$object = $this->getObject();
 		
 		$pre_sql = "UPDATE ".$object->getEntityRefName()." SET RecordModified = ".
 		   ($data['RecordModified'] != '' ? "'".DAL::Instance()->Escape($data['RecordModified'])."'" : "NOW()").", ";

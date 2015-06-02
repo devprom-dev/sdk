@@ -20,12 +20,14 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 			case 'pm_IssueType':
 			case 'pm_TaskType':
 			case 'WikiPageType':
-			case 'cms_Resource':
-				
 				$this->invalidateCache();
-				
 			    break;
 
+			case 'cms_Resource':
+				$this->invalidateCache();
+				if ( function_exists('opcache_reset') ) opcache_reset();
+ 			    break;
+			    
 			case 'pm_CustomReport':
 				
 				getFactory()->getObject('PMReport')->resetCache();

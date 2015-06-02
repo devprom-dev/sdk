@@ -80,7 +80,7 @@ class RequestList extends PMPageList
 
 	function getGroupFields() 
 	{
-		$fields = array_merge( parent::getGroupFields(), array( 'Tags', 'DeadlinesDate' ) );
+		$fields = array_merge( parent::getGroupFields(), array( 'Tags', 'DeadlinesDate', 'DueDays') );
 		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion' ) );
 	}
 

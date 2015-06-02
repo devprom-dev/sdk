@@ -4,6 +4,6 @@ class WikiPageRegistryContent extends ObjectRegistrySQL
 {
 	function getQueryClause()
 	{
-	    return " (SELECT WikiPageId, Content PageContent, UserField3 PageStyle FROM WikiPage) ";
+	    return " (SELECT WikiPageId, Caption, Content PageContent, UserField3 PageStyle FROM WikiPage) ";
 	}
 }

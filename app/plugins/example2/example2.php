@@ -1,26 +1,28 @@
 <?php
 
+include "AdminPlugin.php";
+include "COPlugin.php";
 include "PMPlugin.php";
 
 // define common plugin attributes
-class ProductTourPlugin extends PluginBase
+class example2Plugin extends PluginBase
 {
 	// this is plugin's unique internal name
  	function getNamespace()
  	{
- 		return 'producttour';
+ 		return 'example2';
  	}
  
  	// 
   	function getFileName()
  	{
- 		return 'producttour.php';
+ 		return 'example2.php';
  	}
  	
  	// plugin's title
  	function getCaption()
  	{
- 		return text('producttour1');
+ 		return text('example21');
  	}
  	
  	// plugin's order number in the list of plugins, is using to define dependencies between plugins
@@ -36,7 +38,7 @@ class ProductTourPlugin extends PluginBase
  	//
  	function getSectionPlugins()
  	{
- 		return array( new ProductTourPM );
+ 		return array( new example2Admin, new example2PM );
  	}
  	
  	function IsUpdatedWithCore()

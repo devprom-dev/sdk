@@ -116,8 +116,18 @@ class IssueRepository extends EntityRepository {
      */
     protected function mapMixedDQLResult($issues)
     {
-        $issues = array_map(function ($val) {
+    	$users = $this->_em->createQueryBuilder()
+    		->select('u.email, u.username')
+	        ->from('Devprom\\ServiceDeskBundle\\Entity\\User', 'u')
+	        ->getQuery()
+	        ->getArrayResult();
+    	$names = array();
+    	foreach( $users as $user ) {
+    		$names[$user['email']] = $user['username']; 
+    	}
+        $issues = array_map(function ($val) use($names) {
             $val[0]->setAuthorEmail($val['email']);
+            $val[0]->setAuthorName($names[$val['email']]);
             return $val[0];
         }, $issues);
         return $issues;

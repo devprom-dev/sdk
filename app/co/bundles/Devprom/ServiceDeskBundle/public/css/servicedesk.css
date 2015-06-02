@@ -207,7 +207,7 @@ span.hidden-xxs {
 }
 
 .table th {
-    text-align: center;
+    text-align: left;
 }
 
 .table th .sort-caret {

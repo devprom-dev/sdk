@@ -388,7 +388,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			        	
 					    $page_it = $object_it->getRef('WikiPage');
 					    
-					    $content = str_replace('%1', $object_it->getDateTimeFormat('RecordCreated'), text(1507));
+					    $content = str_replace('%2', $object_it->getHtmlDecoded('Content'),
+					    				str_replace('%1', $object_it->getDateTimeFormat('RecordCreated'), text(1507)));
 
 					    parent::process( $page_it, 'modified', $content, $visibility, $author_email );
 			        	
