@@ -7,6 +7,7 @@ include "persisters/TaskSpentTimePersister.php";
 include "persisters/TaskPhotoPersister.php";
 include "persisters/TaskDatesPersister.php";
 include "persisters/TaskIssueArtefactsPersister.php";
+include "persisters/TaskReleasePersister.php";
 
 class TaskModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -37,5 +38,8 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		$object->addAttribute('DueDays', 'INTEGER', text(1890), false);
 		$object->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1898), false);
 		$object->addPersister( new TaskDatesPersister() );
+		
+		$object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Релиз'), false);
+		$object->addPersister( new TaskReleasePersister() );
     }
 }

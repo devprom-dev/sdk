@@ -9,6 +9,11 @@
  		$this->closable = false;
  		$this->async_load = true;
  	}
+
+   	function __destruct()
+ 	{
+ 		$this->page = null;
+ 	}
  	
  	function setAsyncLoad( $async )
  	{
@@ -25,7 +30,7 @@
  		$this->closable = $closable;
  	}
  	
- 	function setPage( & $page )
+ 	function setPage( $page )
  	{
  		$this->page = $page;
  	}

@@ -6,6 +6,7 @@ include_once SERVER_ROOT_PATH.'pm/views/time/FieldSpentTimeTask.php';
 include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
+include_once SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";

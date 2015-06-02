@@ -563,9 +563,38 @@ class PageBoard extends PageList
 			
 			$prev_group = "-1";
 			
-			$board_cells = array();
-			$rows_keys = array();
 			$column_keys = array_flip($board_values);
+			
+			if ( $group_field != '' && $this->getObject()->IsAttributeRequired($group_field) )
+			{
+				$board_cells = array();
+				$rows_keys = array();
+			}
+			else
+			{
+				foreach($column_keys as $key => $value ) {
+					$board_cells[''][$value] = array();
+				}
+				$rows_keys = array( '' => $this->getObject()->createCachedIterator(
+								array (
+									array ( $group_field => '' ) 
+								)
+						));
+			}
+			
+			$group_it = $this->getGroupIt();
+			while( !$group_it->end() )
+			{
+				$rows_keys[$group_it->getId()] = $this->getObject()->createCachedIterator(
+							array (
+								array ( $group_field => $group_it->getId() ) 
+							)
+					);
+				foreach($column_keys as $key => $value ) {
+					$board_cells[$group_it->getId()][$value] = array();
+				}
+				$group_it->moveNext();
+			}
 
 			while( !$it->end() )
 			{
@@ -608,32 +637,31 @@ class PageBoard extends PageList
 					$prev_board_index = 0;
 					$prev_group = $group_key;
 					
-					if ( !is_array($board_cells[$group_key]) )
+					if ( count($board_cells[$group_key]) < 1 || count($board_cells[$group_key][$column]) < 1 )
 					{
 						$board_cells[$group_key] = array_pad(array(), count($board_values), array());
-						$rows_keys[$group_key] = $it->getId();
+						$rows_keys[$group_key] = $it->copy();
 					}
 				}
 
 				$board_cells[$group_key][$column][] = $it->copy();
-				
 				$it->moveNext();
-			}			
+			}		
+			$it->moveFirst();	
 
 			$columns_number = count($board_values) 
 				+ ($group_field != '' && $this->getGroupStyle() == GROUP_STYLE_COLUMN ? 1 : 0);
 			
 			foreach( $board_cells as $group_key => $row )
 			{
-				if ( count(max($row)) < 1 || count(max($row)) > 0 && max(max($row)) < 1 ) continue;
+				//if ( count(max($row)) < 1 || count(max($row)) > 0 && max(max($row)) < 1 ) continue;
 				
 				if ( $group_field != '' && $this->getGroupStyle() == GROUP_STYLE_ROW )
 				{
-					$it->moveToId( $rows_keys[$group_key] );
-					
+					$row_it = $rows_keys[$group_key];
 					echo '<tr class="info">';
-						echo '<td class="board-group" colspan="'.$columns_number.'" style="background:'.$this->getGroupBackground($group_field, $it).'">';
-							$this->drawGroup($group_field, $it);
+						echo '<td class="board-group" colspan="'.$columns_number.'" style="background:'.$this->getGroupBackground($group_field, $row_it).'">';
+							$this->drawGroup($group_field, $row_it);
 						echo '</td>';
 					echo '</tr>'; 
 				}
@@ -642,10 +670,9 @@ class PageBoard extends PageList
 				
 				if ( $group_field != '' && $this->getGroupStyle() == GROUP_STYLE_COLUMN )
 				{
-					$it->moveToId( $rows_keys[$group_key] );
-					
-					echo '<td class="list_cell board-column" style="background:'.$this->getGroupBackground($group_field, $it).'">';
-						$this->drawGroup($group_field, $it);
+					$row_it = $rows_keys[$group_key];
+					echo '<td class="list_cell board-column" style="background:'.$this->getGroupBackground($group_field, $row_it).'">';
+						$this->drawGroup($group_field, $row_it);
 					echo '</td>'; 
 				}
 				
@@ -722,6 +749,9 @@ class PageBoard extends PageList
 		{
 			$this->drawScripts();
 		}
+		
+		unset($this->view);
+		$this->view = null;
 	}	
 	
 	function drawScripts()

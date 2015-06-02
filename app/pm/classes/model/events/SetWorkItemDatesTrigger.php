@@ -8,19 +8,20 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 	    if ( !in_array($object_it->object->getEntityRefName(), array('pm_Task', 'pm_ChangeRequest')) ) return;
-
 	    if ( !in_array($kind, array(TRIGGER_ACTION_ADD, TRIGGER_ACTION_MODIFY)) ) return;
 	    
 	    $this->processStartDate( $object_it, $content );
 	    
-	    if ( !array_key_exists('State', $content) ) return;
-
-	    $this->processFinishDate($object_it);
+	    if ( array_key_exists('State', $content) ) {
+	    		$this->processFinishDate($object_it);
+	    }
 	    
 	    if ( $object_it->object instanceof Request )
 	    {
 		    $service = new StoreMetricsService();
-	    	$service->storeIssueMetrics($object_it->object->getRegistry()->Query(
+		    $request = new Request();
+		    
+	    	$service->storeIssueMetrics($request->getRegistry()->Query(
 	    			array (
 	    					new FilterInPredicate(array($object_it->getId())),
 	    					new RequestMetricsPersister()

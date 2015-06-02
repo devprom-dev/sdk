@@ -79,7 +79,8 @@ class EmailNotificatorHandler
 	
 			$was_value = $this->getValue( $prev_object_it, $attribute );
 			$now_value = $this->getValue( $object_it, $attribute );
-	
+			$attribute_title = translate($object_it->object->getAttributeUserName($attribute));
+			
 			if( $was_value != '' || $now_value != '' ) 
 			{
 				if($object_it->object->IsReference($attribute)) 
@@ -87,7 +88,7 @@ class EmailNotificatorHandler
 					if( $was_value != $now_value ) 
 					{
 						$parms[$attribute] = array (
-								'name' => $object_it->object->getAttributeUserName($attribute),
+								'name' => $attribute_title,
 								'value' => $object_it->getRef($attribute)->getDisplayName(),
 								'was_value' => $prev_object_it->getRef($attribute)->getDisplayName(),
 								'type' => 'ref'
@@ -96,7 +97,7 @@ class EmailNotificatorHandler
 					elseif( $this->isAttributeRequired($attribute, $object_it, $action) )
 					{
 						$parms[$attribute] = array (
-								'name' => $object_it->object->getAttributeUserName($attribute),
+								'name' => $attribute_title,
 								'value' => $object_it->getRef($attribute)->getDisplayName(),
 								'type' => 'ref'
 						);
@@ -107,7 +108,7 @@ class EmailNotificatorHandler
 					if ( $was_value != $now_value ) 
 					{
 						$parms[$attribute] = array (
-								'name' => $object_it->object->getAttributeUserName($attribute),
+								'name' => $attribute_title,
 								'value' => $now_value,
 								'was_value' => $was_value,
 								'type' => $object_it->object->getAttributeType($attribute)
@@ -118,7 +119,7 @@ class EmailNotificatorHandler
 						if( $this->isAttributeRequired($attribute, $object_it, $action) )
 						{
 							$parms[$attribute] = array (
-									'name' => $object_it->object->getAttributeUserName($attribute),
+									'name' => $attribute_title,
 									'value' => $now_value,
 									'type' => $object_it->object->getAttributeType($attribute)
 							);

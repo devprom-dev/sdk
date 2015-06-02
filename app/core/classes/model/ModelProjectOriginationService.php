@@ -85,7 +85,7 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 		if ( $object instanceof CustomResource ) return $vpds;
 		if ( $object instanceof PMObjectCacheable ) return $vpds;
 		
-		if ( in_array($object->getEntityRefName(), array('pm_ProjectLink','pm_ProjectRole','pm_AccessRight','pm_ObjectAccess')) ) return $vpds;
+		if ( in_array($object->getEntityRefName(), array('pm_ProjectLink','pm_ProjectRole','pm_AccessRight','pm_ObjectAccess','cms_Resource')) ) return $vpds;
 		
 		$settings_it = $this->getSettingsIt();
 		

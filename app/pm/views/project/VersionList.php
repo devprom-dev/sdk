@@ -78,22 +78,20 @@ class VersionList extends PMPageList
 			{
 				case 'pm_Version':
 					$offset = '0px';
-
 					echo '<div style="padding-left:'.$offset.';">';
-						$caption = translate('Релиз').' '.$object_it->getDisplayName();
+						$caption = $object_it->getDisplayName();
+						if ( is_numeric($caption) ) $caption = translate('Релиз').' '.$caption;
 						echo $caption;
 					echo '</div>';		
-
 					break;
 
 				case 'pm_Release':
-
 					$offset = '0px';
-					
 					echo '<div style="padding-left:'.$offset.';">';
-						echo translate('Итерация').' '.$object_it->getDisplayName();
+						$caption = $object_it->getDisplayName();
+						if ( is_numeric($caption) ) $caption = translate('Итерация').' '.$caption;
+						echo $caption;
 					echo '</div>';		
-
 					break;
 			}
 		}

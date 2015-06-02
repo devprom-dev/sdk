@@ -158,6 +158,11 @@
 		}
 	}
 	
+   	function __destruct()
+ 	{
+ 		$this->list = null;
+ 	}
+	
 	function getObject()
 	{
 		return $this->object;

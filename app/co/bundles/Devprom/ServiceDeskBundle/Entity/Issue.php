@@ -91,6 +91,11 @@ class Issue extends BaseEntity {
     private $authorEmail;
 
     /**
+     * @var string
+     */
+    private $authorName;
+    
+    /**
      * @ORM\OneToMany(targetEntity="IssueComment", mappedBy="issue", fetch="EAGER", cascade={"all"})
      * @ORM\OrderBy({"createdAt" = "ASC"})
      * @var ArrayCollection
@@ -222,6 +227,22 @@ class Issue extends BaseEntity {
         return $this->authorEmail;
     }
 
+    /**
+     * @param string $createdBy
+     */
+    public function setAuthorName($createdBy)
+    {
+        $this->authorName = $createdBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthorName()
+    {
+        return $this->authorName;
+    }
+    
     /**
      * @param string $description
      */

@@ -4,120 +4,86 @@ include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
  
 class ActivitiesExcelIterator extends IteratorExportExcel
 {
- 	var $group_participants, $participant_tasks;
- 	
- 	private $task_it;
- 	
- 	private $request_it;
+ 	private $row_it;
  	
  	function ActivitiesExcelIterator( $iterator )
  	{
- 		$this->group_participants = false;
- 		$this->participant_tasks = array();
+ 		$ids = $iterator->fieldToArray('ItemId');
  		
- 		$ids = array();
- 		
- 		while ( !$iterator->end() )
- 		{
- 			if ( $iterator->get('Item') == 'Task' || $iterator->get('Item') == 'ChangeRequest' )
- 			{
- 				$this->group_participants = true;
-				$this->participant_tasks[$iterator->get('SystemUser')] += 1;
- 			}
-
- 			if ( $iterator->get('ItemId') > 0 )
- 			{
- 				$ids[] = $iterator->get('ItemId');
- 			}
- 			
- 			$iterator->moveNext();
- 		}
+ 		$this->row_it = $this->getRowsObject()->getRegistry()->Query(
+	 				array (
+	 						new FilterInPredicate($ids)
+	 				)
+ 			);
+ 		$this->group_it = $this->getGroupObject()->getAll();
  		
  		$iterator->moveFirst();
- 		
- 		$this->task_it = getFactory()->getObject('Task')->getRegistry()->Query(
-	 				array (
-	 						new FilterInPredicate($ids)
-	 				)
- 			);
- 		
- 		$this->request_it = getFactory()->getObject('Request')->getRegistry()->Query(
-	 				array (
-	 						new FilterInPredicate($ids)
-	 				)
- 			);
- 		
  		parent::IteratorExportExcel( $iterator );
  	}
+
+	function getRowsObject()
+	{
+		if ( is_object($this->rows_object) ) return $this->rows_object;
+		switch( $_REQUEST['view'] )
+		{
+			case 'issues':
+				return getFactory()->getObject('Request');
+			case 'participants':
+				return getFactory()->getObject('User');
+			case 'projects':
+				return getFactory()->getObject('Project');
+			case 'tasks':
+				return getFactory()->getObject('Task');
+			default:
+				return getFactory()->getObject('Request');
+		}
+	}
+	
+	function getGroupObject()
+	{
+		if ( $_REQUEST['group'] == '' ) return getFactory()->getObject('User');
+		if ( !$this->getRowsObject()->IsReference($_REQUEST['group']) ) {
+			switch($_REQUEST['group']) {
+				case 'Project':
+					return getFactory()->getObject('Project');
+				default:
+					return getFactory()->getObject('User');
+			}
+		}
+		return $this->getRowsObject()->getAttributeObject($_REQUEST['group']);
+	}
  	
  	function get( $field )
  	{
- 		global $model_factory;
- 		
  		$iterator = $this->getIterator();
- 		$activities_map = $iterator->getActivitiesMap();
  		$uid = new ObjectUID;
 
  		switch ( $field )
  		{
  			case 'ItemId':
- 				switch ( $iterator->get('Item') )
- 				{
- 					case 'Project':
-						$project = $model_factory->getObject('pm_Project');
-						$project_it = $project->getExact($iterator->get('ItemId')); 
- 						return $project_it->getDisplayName();
- 				    
- 				    case 'Participant':
-						$part = $model_factory->getObject('cms_User');
-						$part_it = $part->getExact($iterator->get('ItemId')); 
- 						return $part_it->getDisplayName();
- 						
- 					case 'Task':
- 						$this->task_it->moveToId($iterator->get('ItemId'));
- 						$info = $uid->getUidInfo($this->task_it);
- 						return '['.$info['uid'].'] '.$info['caption'].' ('.$info['state_name'].')';
-
- 					case 'ChangeRequest':
-						
-						if ( $iterator->get('ItemId') < 1 )
-						{
-	 						return text(756);
-						}
-						else
-						{
-							$this->request_it->moveToId($iterator->get('ItemId'));
-							$info = $uid->getUidInfo($this->request_it);
- 							return '['.$info['uid'].'] '.$info['caption'].' ('.$info['state_name'].')';
-						}
+ 				if ( $iterator->get('Group') > 0 ) {
+ 						$this->group_it->moveToId($iterator->get('ItemId'));
+ 						return $this->group_it->getDisplayName();
+ 				} 
+ 				else {
+ 						$this->row_it->moveToId($iterator->get('ItemId'));
+ 						if ( !$uid->hasUid($this->row_it) ) {
+ 							return $this->row_it->getDisplayName();
+ 						}
+ 						else {
+	 						$info = $uid->getUidInfo($this->row_it);
+	 						$result = '['.$info['uid'].'] '.$info['caption'];
+	 						if ( $info['state_name'] != '' ) $result .= ' ('.$info['state_name'].')';
+	 						return $result;
+ 						}
  				}
+ 				break;
  			
  			case 'Total':
- 			    foreach( preg_split('/,/', $iterator->get('SystemUser')) as $user_id )
- 			    {
- 			        $data = $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Participant'.$user_id];
- 			        $total += is_array($data) ? array_sum($data) : 0;
- 			    }
-
- 		 		foreach( preg_split('/,/', $iterator->get('Project')) as $project_id )
- 			    {
- 			        $data = $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Project'.$project_id];
- 			        $total += is_array($data) ? array_sum($data) : 0;
- 			    }
- 			    
- 				return $total == 0 ? '' : str_replace(',', '.', $total);
+ 				return $iterator->get('Total') == 0 ? '' : str_replace(',', '.', $iterator->get('Total'));
  				
  			default:
- 			    foreach( preg_split('/,/', $iterator->get('SystemUser')) as $user_id )
- 			    {
- 			        $total += $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Participant'.$user_id][substr($field, 1) + 1];
- 			    }
- 		 		foreach( preg_split('/,/', $iterator->get('Project')) as $project_id )
- 			    {
- 			        $total += $activities_map[$iterator->get('Item').$iterator->get('ItemId')]['Project'.$project_id][substr($field, 1) + 1];
- 			    }
- 			    
- 				return $total == 0 ? '' : str_replace(',', '.', $total);
+ 				return $iterator->get($field) == 0 ? '' : str_replace(',', '.', $iterator->get($field));
  		}
  	}
  	
@@ -129,13 +95,12 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		{
  			return "SUM(RC[-".(count($fields) - 2)."]:RC[-1])";
  		}
- 		else if ( $this->group_participants && $cell > 0 )
+ 		else if ( $cell > 0 )
  		{
  			$iterator = $this->getIterator();
- 			
- 			if ( in_array($iterator->get('Item'), array('Participant', 'Project')) )
+ 			if ( $iterator->get('Group') > 0 )
  			{
-	 			return "SUM(R[1]C:R[".($this->participant_tasks[$iterator->get('ItemId')])."]C)";
+	 			return "SUM(R[1]C:R[".($iterator->get('Total'))."]C)";
  			}
  		}
  	}
@@ -154,7 +119,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
      			
      		for ( $i = 0; $i < count($days_map); $i++ )
      		{
-     			$fields['D'.$i] = $days_map[$i];
+     			$fields['Day'.($i+1)] = $days_map[$i];
      		}
  		}
  		elseif ( count($days_map) == 12 )
@@ -167,7 +132,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
      		
      		while( !$date_it->end() )
      		{
-     			$fields['D'.($date_it->getId() - 1)] = $date_it->getDisplayName();
+     			$fields['Day'.($date_it->getId() - 1)] = $date_it->getDisplayName();
      			
      		    $date_it->moveNext();
      		}
@@ -178,7 +143,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
      			
      		for ( $i = 0; $i < count($days_map); $i++ )
      		{
-     			$fields['D'.$i] = $days_map[$i];
+     			$fields['Day'.($i+1)] = $days_map[$i];
      		}
  		}
  		
@@ -193,7 +158,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		switch ( $field )
  		{
  			case 'ItemId':
- 				return $this->group_participants ? 250 : 150;
+ 				return $this->getIterator()->get('Group') < 1 ? 250 : 150;
 
  			case 'Total':
  				return 60;
@@ -205,9 +170,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
 
  	function getRowStyle( $object_it )
  	{
- 		$iterator = $this->getIterator();
- 		
- 		if ( in_array($iterator->get('Item'), array('Participant', 'Project')) && $this->group_participants )
+ 		if ( $this->getIterator()->get('Group') > 0 )
  		{
  			return 's22';
  		}

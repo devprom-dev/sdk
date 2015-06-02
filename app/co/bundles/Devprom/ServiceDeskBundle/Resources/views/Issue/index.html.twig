@@ -43,6 +43,11 @@
                                     <b class="sort-caret"></b>
                                 </a>
                             </th>
+                            {% if app.request.get('filter') == "company" %}
+                            <th class="no-wrap hidden-xs{% if sortColumn == 'issue.authorname' %} {{ sortDirectionClass }}{% endif %}" width="20%">
+                            	{{ 'issue_author'|trans }}
+                            </th>
+                            {% endif %}
                             <th class="no-wrap hidden-xs{% if sortColumn == 'issue.createdAt' %} {{ sortDirectionClass }}{% endif %}" width="20%">
                                 <a href="{{ path('issue_list', {'filter':issuesFilter,'sortColumn':'issue.createdAt','sortDirection':reverseSortDirection}) }}">
                                     {{ 'issue_createdAt'|trans }}
@@ -56,7 +61,7 @@
                     {% for issue in issues %}
                     	{% if state != issue.state.name %}
                     	<tr>
-                    		<td class="state-row" colspan="4" style="padding-top: 32px;">
+                    		<td class="state-row" colspan="{{ app.request.get('filter') == "company" ? 5 : 4 }}" style="padding-top: 32px;">
                     			<b>{{ issue.state.name|trans }}</b>
                     			{% set state = issue.state.name %}
                     		</td>
@@ -74,7 +79,12 @@
                             <td class="centered" data-title="{{ 'issue_severity'|trans|slice(0,7) }}.">
                                 {{ macro.priority_badge(issue.severity.name|trans, issue.severity.id) }}
                             </td>
-                            <td data-title="{{ 'issue_createdAt'|trans|slice(0,7) }}." class="hidden-xs centered">{% if issue.createdAt %}{{ issue.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
+                            {% if app.request.get('filter') == "company" %}
+                            <td class="hidden-xs" data-title="{{ 'issue_author'|trans }}">
+                                {{ issue.authorname }}
+                            </td>
+                            {% endif %}
+                            <td data-title="{{ 'issue_createdAt'|trans|slice(0,7) }}." class="hidden-xs">{% if issue.createdAt %}{{ issue.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -85,7 +95,7 @@
             </div>
         </section>
     {% else %}
-        <section class="widget col-sm-6 col-sm-offset-3 centered">
+        <section class="widget centered">
             <h2>{{ 'index.no.issues'|trans }}</h2>
 
             <div class="body">

@@ -24,6 +24,7 @@ include "sorts/SortClauseBase.php";
 include "sorts/SortCaptionClause.php";
 include "sorts/SortOrderedClause.php";
 include "sorts/SortRecentClause.php";
+include "sorts/SortKeyClause.php";
 include "sorts/SortReverseKeyClause.php";
 include "sorts/SortRevOrderedClause.php";
 include "sorts/SortVPDClause.php";
@@ -327,7 +328,7 @@ class StoredObjectDB extends Object
 		
 		$registry->setGroups(array());
 		
-		$registry->setSorts(array());
+		$registry->setSorts(array()); 
 		
 		$registry->setPersisters( $this->persisters );
 		

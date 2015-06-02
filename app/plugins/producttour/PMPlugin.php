@@ -10,8 +10,6 @@ class ProductTourPM extends PluginPMBase
 	{
 		if ( defined('SKIP_PRODUCT_TOUR') ) return array();
 
- 		$language = strtolower(getSession()->getLanguage()->getLanguage());
-    	    	
 		return array(
 				new ProductTourJSBuilder(getSession()),
 				new ProductTourCSSBuilder()

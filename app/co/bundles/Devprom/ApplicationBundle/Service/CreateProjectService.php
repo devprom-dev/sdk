@@ -6,6 +6,7 @@ use Devprom\ProjectBundle\Service\Project\ApplyTemplateService;
 use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
+include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 include "ActivateUserSettings.php";
 
 class CreateProjectService
@@ -295,6 +296,9 @@ class CreateProjectService
  	
  	protected function invalidateCache()
  	{
+		$lock = new \CacheLock();
+		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
+ 		
  		getFactory()->getObject('ProjectCache')->resetCache();
 
 	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();

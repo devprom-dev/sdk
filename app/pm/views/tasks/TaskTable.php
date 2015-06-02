@@ -5,7 +5,7 @@ include "TaskTraceList.php";
 include "TaskChart.php";
 include "TaskBoardList.php";
 include "IteratorExportTaskBoard.php";
-include SERVER_ROOT_PATH.'pm/methods/c_task_methods.php';
+include_once SERVER_ROOT_PATH.'pm/methods/c_task_methods.php';
 include SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";

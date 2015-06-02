@@ -483,7 +483,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 					// draw exist embedded items
 					echo '<div id="embeddedItems'.$this->form_id.'">';
 					
-					$object_it =& $this->getIteratorRef();
+					$object_it = $this->getIteratorRef();
 					
 					$item = 100;
 					$items_count = 0;

@@ -2,7 +2,7 @@
 
 class WikiPageDisplayRules
 {
-	static public function getTraceDisplayName( & $object_it, & $page_it )
+	static public function getTraceDisplayName( $object_it, $page_it )
 	{
 		if ( $object_it->object->IsReference('Type') && $object_it->get('Type') != '' )
 		{

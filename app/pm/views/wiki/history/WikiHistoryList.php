@@ -183,13 +183,12 @@ class WikiHistoryList extends ProjectLogList
 		);
 		
 		$method = new RevertWikiWebMethod();
-		
 		if ( $change_it->get('RecentChangesCount') < 1 && getFactory()->getAccessPolicy()->can_modify($page_it) )
 		{
 			$actions[] = array();
 			$actions[] = array(
 				'name' => translate('Отменить'),
-				'url' => $method->getJSCall( $page_it ) 
+				'url' => $method->getJSCall( $page_it, $object_it ) 
 			);
 		}
 		

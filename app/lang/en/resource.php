@@ -1191,9 +1191,13 @@ return array (
 	1929 => 'Common issues board',
 	1930 => 'Background tasks are necessary for application to be running, e.g. calculating of project metrics, sending e-mail notification, backuping, etc.',
 	1931 => 'System action was processed: %1 (%2)',
-	1932 => 'Return the issue into initial state (reopen)',
+	1932 => 'Reopen the issue has been resolved',
 	1933 => 'Show changes',
 	1934 => 'Tasks total estimation, hrs.',
 	1935 => '(%1 hidden)',
-	1936 => 'show in list'
+	1936 => 'show in list',
+	1937 => 'Days before deadline',
+	1938 => 'Weeks before deadline',
+	1939 => 'Check for issues deadlines',
+	1940 => 'Use the report to check for deadlines issues should be completed on'
 );

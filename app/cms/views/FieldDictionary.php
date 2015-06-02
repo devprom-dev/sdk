@@ -145,7 +145,9 @@ class FieldDictionary extends Field
 			
 			foreach( $groups as $group )
 			{
+				if ( !is_array($group) ) continue;
 				if ( !is_array($group['items']) ) continue;
+				
 				if ( $group['label'] != '' ) echo '<optgroup label="'.$group['label'].'">';
 				foreach( $group['items'] as $option )
 				{

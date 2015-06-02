@@ -25,18 +25,19 @@ class ClearCache extends Installable
 	function install()
 	{
 		$lock = new CacheLock();
-		
 		$lock->Wait(120);
-		
 		$lock->Lock();
 		
 		$cache_dir = defined('CACHE_PATH') ? CACHE_PATH : SERVER_ROOT_PATH.'cache/';
-		
 		if ( method_exists($this, 'info') ) $this->info( 'Clear directory: '.$cache_dir );
-		
-		$result = $this->full_delete( rtrim($cache_dir,'/').'/' );
-		
-		if ( !$result && method_exists($this, 'info') ) $this->info( 'Unable to clear cache directory: '.$cache_dir );
+
+		for( $i = 0; $i < 5; $i++ ) {
+			$this->info( 'Retry: '.$i );
+			$result = $this->full_delete( rtrim($cache_dir,'/').'/' );
+			if ( !$result && method_exists($this, 'info') ) {
+				$this->info( 'Unable to clear cache directory: '.$cache_dir );
+			}
+		}
 		
 		return true;
 	}

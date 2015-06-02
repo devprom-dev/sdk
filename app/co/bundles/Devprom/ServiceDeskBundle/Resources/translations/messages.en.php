@@ -14,6 +14,7 @@ return array(
 
     'issue_id' => 'ID',
     'issue_caption' => 'Name',
+	'issue_author' => 'Author',
     'issue_description' => 'Description',
     'issue_state' => 'Status',
     'issue_issueType' => 'Type',

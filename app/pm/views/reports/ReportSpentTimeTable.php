@@ -30,11 +30,15 @@ class ReportSpentTimeTable extends PMPageTable
  		$this->getObject()->setReportYear( $values['year'] );
  		$this->getObject()->setReportMonth( $values['month'] ); 
  		
+ 		$predicates = array();
  		if ( !in_array($values['participant'], array('','all','none')) ) {
- 			$this->getObject()->setParticipantFilter( preg_split('/,/', $values['participant']));
+			$predicates[] = new FilterAttributePredicate('SystemUser', preg_split('/,/', $values['participant']));
  		}
  		
- 		return parent::getFilterPredicates();
+		$predicates[] = new ActivityReportYearPredicate($values['year']);
+		$predicates[] = new ActivityReportMonthPredicate($values['month']);
+ 		
+ 		return array_merge($predicates, parent::getFilterPredicates());
 	}
 	
 	function getSortFields()

@@ -26,5 +26,3 @@ echo $view->render('core/PageTableBody.php', array (
     'changed_ids' => $changed_ids,
 	'save_settings_alert' => $save_settings_alert
 ));
-
-?>

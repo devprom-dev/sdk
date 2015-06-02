@@ -257,18 +257,16 @@ class WikiPageIterator extends StatableIterator
 	
 	function Revert()
 	{
-		global $model_factory;
-		
-		$change = $model_factory->getObject('WikiPageChange');
+		$change = getFactory()->getObject('WikiPageChange');
    		$change->defaultsort = 'RecordCreated DESC';
 
 		$change->setAttributeType('WikiPage', 'REF_'.get_class($this->object).'Id');
-   		
 		$change_it = $change->getByRefArray( 
 			array('WikiPage' => $this->getId()), 1);
 		
 		if ( $change_it->count() > 0 )
 		{
+			$this->object->setNotificationEnabled(false);
 			$this->object->modify_parms($this->getId(), array(
 				'Content' => $change_it->getHtmlDecoded('Content'),
 				'Revert' => 'true'

@@ -77,7 +77,6 @@
 		}
 		
 		$this->table = $this->getTable();
-		
 		if ( is_object($this->table) && is_a($this->table, 'PageTable') )
 		{
 		    $this->table->setPage( $this );
@@ -90,6 +89,12 @@
 		{
  			$this->infosections = $plugins->getPageInfoSections( $this );
 		}
+ 	}
+ 	
+  	function __destruct()
+ 	{
+ 		$this->form = null;
+ 		$this->table = null;
  	}
  	
  	function addInfoSection( $infosection_object ) 
@@ -109,7 +114,7 @@
  		return null;
  	}
  	
- 	function & getTableRef()
+ 	function getTableRef()
  	{
  		return $this->table;
  	}
@@ -119,7 +124,7 @@
  		return null;
  	}
  	
- 	function & getFormRef()
+ 	function getFormRef()
  	{
  		return $this->form;
  	}
@@ -225,7 +230,7 @@
  	{
  		global $_REQUEST, $model_factory;
  	
- 		$table =& $this->getTableRef();
+ 		$table = $this->getTableRef();
  		
 		if ( $_REQUEST['class'] == '' )
 		{
@@ -239,7 +244,7 @@
  		
 		if ( $_REQUEST['objects'] == '' )
  		{
-			$it =& $table->getListIterator();
+			$it = $table->getListIterator();
 			
 			$it->moveFirst();
  		}
@@ -250,7 +255,7 @@
 
  			if ( is_object($table) && is_a($table, 'PageTable') )
  			{
- 				$list =& $table->getListRef();
+ 				$list = $table->getListRef();
  				
 	 			if ( is_object($list) )
 	 			{
@@ -283,7 +288,7 @@
 				}
 			}
 				
-			$list =& $table->getListRef();
+			$list = $table->getListRef();
 			
 			if ( is_object($list) )
 			{
@@ -323,23 +328,19 @@
  	
  	function exportSection()
  	{
- 	 	global $model_factory, $_REQUEST;
- 	 	
  		if ( $_REQUEST['class'] == '' ) return false;
  		if ( $_REQUEST['section'] == '' ) return false;
- 		if ( !class_exists($_REQUEST['section'], false) ) return false;
+ 		$class_name = $_REQUEST['section'];
+ 		if ( !class_exists($class_name, false) ) return false;
  		
- 		$object = $model_factory->getObject($_REQUEST['class']);
- 		
- 		$ids = preg_split('/,/', $_REQUEST['id']);
- 		
- 		$ids = array_filter($ids, function( $val ) {
+ 		$object = getFactory()->getObject($_REQUEST['class']);
+ 		$ids = array_filter(preg_split('/,/', $_REQUEST['id']), function( $val ) {
  		    return is_numeric($val);
  		});
  		
  		$object_it = count($ids) > 0 ? $object->getExact($ids) : $object->getEmptyIterator();
 
-		$section = new $_REQUEST['section'](
+		$section = new $class_name(
 		        is_object($object_it) && $object_it->getId() > 0 ? $object_it : $object
 		);
 		
@@ -428,7 +429,8 @@
 		    {
 		    	$query_parms = array (
           				new ProjectStatePredicate('active'),
-          				new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject')))
+          				new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject'))),
+		    			new FilterAttributePredicate('IsTender', 'N'),
            		);
 		    	
 		   		if ( $program_it->get('IsParticipant') < 1 )
@@ -445,7 +447,6 @@
 		        	if ( $program_it->getId() == $linked_it->getId() ) 
 		        	{
 		        		$linked_it->moveNext();
-		        		
 		        		continue;
 		        	}
 		        	
@@ -472,7 +473,6 @@
 		$portfolios = array();
 		
 		$portfolio_it = $model_factory->getObject('Portfolio')->getAll();
-		
 		while ( !$portfolio_it->end() )
 		{
 		    if ( !getFactory()->getAccessPolicy()->can_read($portfolio_it) )
@@ -731,18 +731,17 @@
  	function render( $view = null )
  	{
  	    global $model_factory;
+ 	     	    
+		$render_parms = $this->getRenderParms();
+ 	    if ( !is_object($view) ) $view = $this->getRenderView();
  	    
- 	    $render_parms = $this->getRenderParms();
- 	    
- 		if ( $_REQUEST['export'] != '' )
+ 	    if ( $_REQUEST['export'] != '' )
 		{
 			$this->export();
 			
 			die();
 		}
 
- 	    if ( !is_object($view) ) $view = $this->getRenderView();
-		
 		if ( $_REQUEST['tableonly'] != '' && is_object($this->table) )
 		{
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
@@ -758,9 +757,7 @@
 				getFactory()->getCacheService()->setReadonly();
 		    	
 		        $object = $_REQUEST['class'] != '' ? $model_factory->getObject($_REQUEST['class']) : $this->table->getObject();
-
 		        $lock = new LockFileSystem(get_class($object));
-		        
 		        $lock->LockAndWait(180);
 		        
 		        getFactory()->resetCache();
@@ -772,15 +769,12 @@
 		        $_REQUEST['object'] = $_REQUEST[strtolower(get_class($object))] = join(',', $ids); 
 		    }
 		    
-			$this->table->render( $view, array_merge($render_parms , array (
-			    'tableonly' => true,
-			    'changed_ids' => $ids
-			)));
+		    $render_parms['tableonly'] = true;
+		    $render_parms['changed_ids'] = $ids;
+		    
+ 			$this->table->render($view, $render_parms);
 			
-			ob_flush();
-        	flush();
-        				
-			die();
+			return;
 		}
 
 		if ( $_REQUEST['formonly'] != '' && is_object($this->form) )
@@ -838,15 +832,13 @@
         
      	if( is_object($this->table) ) 
         {
-	 		$table = $this->getTableRef();
-
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 			header("Cache-Control: no-cache, must-revalidate, max-age=0, no-store, must-revalidate, post-check=0, pre-check=0"); // HTTP/1.1
 			header("Pragma: no-cache "); // HTTP/1.0
 	 		header('Content-type: text/html; charset=windows-1251');
 	 		
-	 		$table->render($view, $render_parms);
+	 		$this->table->render($view, $render_parms);
 	 		
 	 		return;
        	}

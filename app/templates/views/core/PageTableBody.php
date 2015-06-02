@@ -1,3 +1,4 @@
+
 <div class="table-header">
 
 <?php if ( is_array($changed_ids) ) foreach ( $changed_ids as $id ) { ?>
@@ -105,7 +106,7 @@ foreach( $filter_items as $filter )
 
 <?php
 
-    echo $view->render('core/PageSectionButtons.php', array (
+      echo $view->render('core/PageSectionButtons.php', array (
         'sections' => $sections,
 	    'object_class' => $object_class,
 	    'object_id' => $object_id,
@@ -142,13 +143,13 @@ foreach( $filter_items as $filter )
 
 <div id="tablePlaceholder">
     <?php 
-    	is_object($list) 
+     	is_object($list) 
     		? $list->render( $view, array(
     					'object_id' => $object_id,
     					'object_class' => $object_class
     				)) 
     		: $table->draw( $view ); 
-    ?>
+     ?>
 </div>
 
 <?php $is_need_navigator = $table->IsNeedNavigator() && is_object($list) && $list->moreThanOnePage(); ?>
@@ -159,4 +160,5 @@ foreach( $filter_items as $filter )
 
 <?php $table->drawScripts(); ?>
 
-<?php } ?>
+<?php
+}

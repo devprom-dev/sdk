@@ -11,9 +11,10 @@ class ModelDataTypeMappingFloat extends ModelDataTypeMapping
 	
 	public function map( $value )
 	{
+		if ( $value == '' ) return '';
+
 		$value = str_replace(',', '.', $value);
-		
-		if ( !is_numeric($value) ) return 0.0;
+		if ( !is_numeric($value) ) return '0';
 	
 		return $value;
 	}

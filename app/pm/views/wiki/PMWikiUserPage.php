@@ -4,7 +4,7 @@ include SERVER_ROOT_PATH."pm/methods/c_wiki_methods_base.php";
 include SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_wiki_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_stage_methods.php";
-include SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
+include_once SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include SERVER_ROOT_PATH."pm/methods/WikiRemoveStyleWebMethod.php";
 include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";

@@ -291,29 +291,29 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 		return translate('Отменить');
 	}
 	
-	function getJSCall( $object_it ) 
+	function getJSCall( $object_it, $change_it ) 
 	{
 		return parent::getJSCall( array( 
 				'wiki' => $object_it->getId(),
-				'class' => get_class($object_it->object) 
+				'class' => get_class($object_it->object),
+				'logid' => $change_it->getId() 
 		));
 	}
 	
  	function execute_request()
  	{
- 		global $model_factory;
- 		
- 		$class = $model_factory->getClass($_REQUEST['class']);
- 		
+ 		$class = getFactory()->getClass($_REQUEST['class']);
  		if ( !class_exists($class) ) return;
  		
- 		$object = $model_factory->getObject($class);
- 		
+ 		$object = getFactory()->getObject($class);
  		$object_it = $object->getExact( $_REQUEST['wiki'] );
  		
  		if ( getFactory()->getAccessPolicy()->can_modify($object_it) )
  		{
  			$object_it->Revert();
+ 			
+ 			$log_it = getFactory()->getObject('ChangeLog')->getExact($_REQUEST['logid']);
+ 			if ( $log_it->getId() != '' ) $log_it->object->delete($log_it->getId()); 
  		}
  	}
  }

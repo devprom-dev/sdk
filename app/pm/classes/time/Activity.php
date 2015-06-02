@@ -35,33 +35,6 @@ class Activity extends Metaobject
 			array( 'Task' => $task_it->end() ? -1 : $task_it->getId() ) );
 	}
 
-	function getReported( $measure, $group_function = 'DAYOFMONTH(%1)' )
-	{
-		$group = preg_replace(
-				'/%1/', 
-				"CONVERT_TZ(t.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')", 
-				$group_function
-		);
-		
-		$sql = " SELECT t.".$measure.", ".
-			   "		SUM(t.Capacity) Capacity, ".
-			   "		".$group." Day, " .
-			   "	    GROUP_CONCAT(t.Description SEPARATOR '\n') Comments, ".
-			   "		t.SystemUser, ".
-			   "		t.Project " .
-			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, " .
-			   "				a.Description, a.Participant, a.VPD, p.SystemUser, p.Project " .
-			   "		   FROM pm_Activity a, pm_Task t, pm_Participant p ".
-			   "  	      WHERE a.Task = t.pm_TaskId ".
-			   "			AND a.Participant = p.SystemUser ".
-			   "			AND t.VPD = p.VPD ".
-			   "        ) t" .
-			   "  WHERE 1 = 1 ".$this->getFilterPredicate().
-			   "  GROUP BY t.".$measure.", t.SystemUser, t.Project, ".$group;
-
-		return $this->createSQLIterator($sql);
-	}
-
 	function updateTask( & $parms, $activity_id = 0 )
 	{
 		if ( $parms['Task'] < 1 ) return;

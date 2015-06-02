@@ -528,21 +528,26 @@ class WikiParser
     {
      	$info = $this->getUidInfo( trim($match[2], '[]') );
      	
-     	if ( is_object($info['object_it']) )
-     	{
+    	if ( is_object($info['object_it']) ) {
      		$object_it = $info['object_it'];
      		$url = $this->getPageUrl($object_it);
      		if ( $url != '' ) $info['url'] = $url;
+     		$class = strtolower(get_class($object_it->object));
+     	}
+     	else {
+     		$class = '';
      	}
      	
      	if ( $info['url'] != '' )
      	{
-	     	if ( is_callable($this->title_resolver_func) ) {
+     		if ( in_array($class,array('comment','question')) ) {
+     			$text = '['.$info['uid'].']';
+     		}
+     		else if ( is_callable($this->title_resolver_func)) {
 				$text = call_user_func($this->title_resolver_func, $info);
 			}     		
      		
     		$url = '<a class="uid" href="'.$info['url'].'">'.$text.'</a>';
-     		
      		return str_replace($match[2], $url, preg_replace('/\[|\]/', '', $match[0]));
      	}
      	else

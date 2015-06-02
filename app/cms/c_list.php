@@ -20,6 +20,11 @@
 		$this->action = $action; 
 	}
 
+   	function __destruct()
+ 	{
+ 		$this->object = null;
+ 	}
+	
 	function getMaxOnPage()
 	{
 		return 20;
@@ -626,6 +631,11 @@
     	$this->delete_checks = array();
 	}
 
+   	function __destruct()
+ 	{
+ 		$this->it = null;
+ 	}
+	
  	function getIterator() 
 	{
 	    return $this->object->getAll();

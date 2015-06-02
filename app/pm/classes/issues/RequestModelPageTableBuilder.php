@@ -8,6 +8,7 @@ include_once "persisters/RequestReleaseDatesPersister.php";
 include_once "persisters/RequestIterationDatesPersister.php";
 include_once "persisters/RequestPhotosPersister.php";
 include_once "persisters/RequestEstimatesPersister.php";
+include_once "persisters/RequestDueDatesPersister.php";
 
 class RequestModelPageTableBuilder extends ObjectModelBuilder 
 {
@@ -70,7 +71,11 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     		$object->addAttributeGroup($attribute, 'time');
     	}
 
-    	$dates_attributes = array( 'RecordModified', 'RecordCreated', 'StartDate', 'FinishDate', 'Deadlines', 'DeadlinesDate', 'DeliveryDate' );
+		$object->addAttribute('DueDays', 'INTEGER', text(1937), false);
+		$object->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1938), false);
+		$object->addPersister( new RequestDueDatesPersister() );
+    	
+    	$dates_attributes = array( 'RecordModified', 'RecordCreated', 'StartDate', 'FinishDate', 'Deadlines', 'DeadlinesDate', 'DeliveryDate', 'DueWeeks', 'DueDays' );
     	foreach ( $dates_attributes as $attribute )
     	{
     		$object->addAttributeGroup($attribute, 'dates');

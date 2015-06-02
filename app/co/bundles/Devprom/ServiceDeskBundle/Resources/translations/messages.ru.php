@@ -14,6 +14,7 @@ return array(
 
     'issue_id' => 'ID',
     'issue_caption' => 'Название',
+	'issue_author' => 'Автор',
     'issue_description' => 'Описание',
     'issue_state' => 'Статус',
     'issue_issueType' => 'Тип',

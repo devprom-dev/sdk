@@ -34,6 +34,11 @@ class PageForm extends MetaObjectForm
  		$this->buildRelatedDataCache();
  	}
  	
+ 	function __destruct()
+ 	{
+ 		$this->page = null;
+ 	}
+ 	
  	function buildModelValidator()
  	{
  		$validator = new ModelValidator();

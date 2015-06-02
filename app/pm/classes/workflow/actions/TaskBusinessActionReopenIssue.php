@@ -13,7 +13,9 @@ class TaskBusinessActionReopenIssue extends BusinessAction
 	function apply( $object_it )
  	{
 		if ( $object_it->get('ChangeRequest') == '' ) return true;
+
 		$request_it = $object_it->getRef('ChangeRequest');
+		if ( !in_array($request_it->get('State'), $request_it->object->getTerminalStates()) ) return true;
 		
 		$service = new WorkflowService($request_it->object);
 		$service->moveToState(

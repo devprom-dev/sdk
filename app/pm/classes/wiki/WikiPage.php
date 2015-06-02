@@ -109,6 +109,11 @@ class WikiPage extends MetaobjectStatable
 	    }
 	}
  	
+	function IsDeletedCascade( $object )
+	{
+		return is_a($object, get_class($this));
+	}
+	
 	function add_parms( $parms )
 	{
 		global $_REQUEST, $model_factory;

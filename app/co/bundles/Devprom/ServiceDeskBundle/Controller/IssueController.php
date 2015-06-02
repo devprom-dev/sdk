@@ -33,12 +33,17 @@ class IssueController extends Controller
     {
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
-        $issue = new Issue();
-        $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true), $issue);
+    	$vpds = $this->getProjectVpds();
+        
+    	$issue = new Issue();
+        $form = $this->createForm(new IssueFormType($vpds, true), $issue);
         $form->bind($request);
 
         if ($form->isValid()) {
-            $this->getIssueService()->saveIssue($issue, $this->getProjectId(), $this->getUser());
+        	if ( !is_object($issue->getProject()) ) {
+        		$issue->setProject(array_shift($this->container->getParameter('supportProjects')));
+        	}
+            $this->getIssueService()->saveIssue($issue, $this->getUser());
             if ($issue->getNewAttachment()) {
                 $this->getAttachmentService()->save($issue->getNewAttachment(), $issue);
             }
@@ -64,7 +69,7 @@ class IssueController extends Controller
     {
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
-        $issue = $this->getIssueService()->getBlankIssue();
+        $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
         $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true), $issue);
 
         return array(
@@ -158,7 +163,7 @@ class IssueController extends Controller
         $editForm->bind($request);
 
         if ($editForm->isValid()) {
-            $this->getIssueService()->saveIssue($issue, $this->getProjectId(), $this->getUser());
+            $this->getIssueService()->saveIssue($issue, $this->getUser());
 
             return $this->redirect($this->generateUrl('issue_show', array('id' => $id)));
         }
@@ -231,15 +236,6 @@ class IssueController extends Controller
             'sortDirection' => $sortDirection,
         	'issuesFilter' => $filter
         );
-    }
-
-
-    /**
-     * @return integer
-     */
-    protected function getProjectId()
-    {
-        return array_shift($this->container->getParameter('supportProjects'));
     }
 
     protected function getProjectVpds()

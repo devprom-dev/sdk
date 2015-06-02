@@ -114,6 +114,7 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 			if ( count($query_filters) < 1 ) $query_filters[] = new FilterInPredicate(0);
 		}
 							
+		$this->page_it->object->setSortDefault(array());
 		return $this->page_it->object->getRegistry()->Query(array_merge($query_filters, $persisters));		
 	}
 	

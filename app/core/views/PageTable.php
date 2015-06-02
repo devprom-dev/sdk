@@ -587,29 +587,6 @@ class PageTable extends ViewTable
 
 	function draw( &$view = null )
 	{
-		$view_filter = $this->getViewFilter();
-		
-		if ( !is_object($view_filter) )
-		{
-		    $this->getListRef()->setupColumns();
-		    
-			parent::draw($view);
-			
-			return;
-		}
-		
-		$view_filter->setFilter( $this->getFiltersName() );
-		
-		if ( $view_filter->getValue() != '' )
-		{
-			$it = $this->getListIterator();
-
-			$this->setList( $this->getList( $view_filter->getValue(), $it ) );
-		}
-		
-		$this->getListRef()->setupColumns();
-		
-		parent::draw($view);
 	}
 	
 	function drawScripts()
@@ -916,5 +893,8 @@ class PageTable extends ViewTable
 		$this->view = $view;
 	    
 		echo $view->render( $this->getTemplate(), $parms ); 
+
+		unset($this->view);
+		$this->view = null;
 	}
 }

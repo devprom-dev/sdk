@@ -144,7 +144,11 @@ class RequestForm extends PMPageForm
 	
 	function getNewObjectAttributes()
 	{
-		return array('Caption', 'Description', 'Priority', 'Function', 'Tasks', 'Attachment', 'OrderNum', 'Owner');
+		$attributes = array('Caption', 'Description', 'Priority', 'Function', 'Tasks', 'Attachment', 'OrderNum');
+		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) {
+			$attributes[] = 'Owner';
+		}
+		return $attributes;
 	}
 
 	function createFieldObject( $name )

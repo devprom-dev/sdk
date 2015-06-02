@@ -26,6 +26,7 @@ class FieldTasksRequest extends FieldForm
  		
  		$task->addSort( new SortAttributeClause('State') );
  		$task->addSort( new SortOrderedClause() );
+ 		$task->addSort( new SortKeyClause() );
  		
  		echo '<div id="'.$this->getId().'" class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 

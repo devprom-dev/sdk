@@ -6,7 +6,7 @@ class LockFileSystem extends Lock
 {
     public function __construct ( $name )
     {
-        $this->file_name = preg_replace("([^\w\s\d\-_~,;:\[\]\(\]]|[\.]{2,})", '', $name).'.lock';
+        $this->file_name = preg_replace("/([^\w\s\d\-_~,;:\[\]\(\]]|[\.]{2,})/", '', $name).'.lock';
     }
     
     public function Lock()
@@ -52,8 +52,6 @@ class LockFileSystem extends Lock
         	{
         		// check client connection is active (using connection_aborted func.)
 	        	echo(" ");
-	
-	        	ob_flush();
 	        	flush();
 
 	        	// send data once in 3 seconds
