@@ -19,7 +19,7 @@ $plugin_text_array = array
 		23 => 'If you forgot your password just <a href="javascript:window.parent.resetPassword();">reset it</a>',
 		24 => 'New password has been generated and sent to your email %1',
 		25 => 'Password recovery',
-		26 => 'DevOps Board <b>Team</b>',
+		26 => 'DevOps Board <b>Team</b> (up to 5 users only)',
 		27 => 'Renewing of license',
 		28 => 'Specififed kind of licensing is not supported',
 		29 => 'DevOps Board <b>Unlimited</b>'

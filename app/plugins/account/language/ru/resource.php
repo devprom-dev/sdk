@@ -26,7 +26,7 @@ $plugin_text_array = array
 		23 => 'Если вы забыли пароль, то можете <a href="javascript:window.parent.resetPassword();">сбросить его</a>',
 		24 => 'Ваш пароль был успешно сброшен и отправлен на ваш электронный адрес %1',
 		25 => 'Восстановление пароля',
-		26 => 'DevOps Board Team',
+		26 => 'DevOps Board Team (up to 5 users only)',
 		27 => 'Продление использования Devprom.ALM',
 		28 => 'Данный вид лицензирования не поддерживается',
 		29 => 'DevOps Board Unlimited',
