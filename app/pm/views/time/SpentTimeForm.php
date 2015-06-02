@@ -18,17 +18,11 @@ class SpentTimeForm extends PMPageForm
 	{
 		switch ( $attr_name ) 
 		{
-		    case 'ReportDate':
-		    case 'Description':
-		    case 'Capacity':
-		    	return true;
-		    	
 		    case 'LeftWork':
 		    	return $this->anchor_it->object->getAttributeType($this->getLeftFieldName()) != ''
 		    		&& getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
-		    	
 		    default:
-		    	return false;
+		    	return parent::IsAttributeVisible($attr_name);
 		}
 	}
 	

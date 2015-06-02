@@ -9,7 +9,7 @@ class ActivityMetadataBuilderExample extends ObjectMetadataEntityBuilder
 
     	/*
     	 * DB model has to be extended:
-    	 * ALTER TABLE pm_Activity ADD COLUMN IsOvertype CHAR(1) DEFAULT 'N';
+    	 * ALTER TABLE pm_Activity ADD COLUMN IsOvertime CHAR(1) DEFAULT 'N';
     	 */
 		$metadata->addAttribute(
 				'IsOvertime', 		// system name of the attribute, mapped onto table column 
