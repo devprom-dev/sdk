@@ -76,7 +76,7 @@ class CreateInstanceForm extends AjaxForm
 	
 	function getButtonText()
 	{
-		return translate('Создать');
+		return translate('РЎРѕР·РґР°С‚СЊ');
 	}
 	
 	function getTemplate()

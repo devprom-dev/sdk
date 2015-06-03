@@ -169,7 +169,7 @@ class InitializeInstance extends Page
 		
 	    $mail->setBody($body);
 	    
-	    $mail->setSubject( 'Íà÷àëî ðàáîòû â Devprom.ALM' );
+	    $mail->setSubject( 'ÐÐ°Ñ‡Ð°Ð»Ð¾ Ñ€Ð°Ð±Ð¾Ñ‚Ñ‹ Ð² Devprom.ALM' );
 	    $mail->setFrom("Devprom Software <".SAAS_SENDER.">");
 	    	
 	    $mail->send();

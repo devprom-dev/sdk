@@ -96,24 +96,24 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    switch( $left_days )
 	    {
 	        case 1:
-	        	$days_text = '1 äåíü';
+	        	$days_text = '1 Ð´ÐµÐ½ÑŒ';
 	        	break;
 	        	
 	        case 2:
 	        case 3:
 	        case 4:
-	        	$days_text = $left_days.' äíÿ';
+	        	$days_text = $left_days.' Ð´Ð½Ñ';
 	        	break;
 
 	        default:
-	        	$days_text = $left_days.' äíåé';
+	        	$days_text = $left_days.' Ð´Ð½ÐµÐ¹';
 	    }
 	    
 	    $body = preg_replace('/_days_/', $days_text, $body);
 		
 	    $mail->setBody($body);
 	    
-	    $mail->setSubject( 'Îêîí÷àíèå ïåðèîäà èñïîëüçîâàíèÿ Devprom.ALM' );
+	    $mail->setSubject( 'ÐžÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ðµ Ð¿ÐµÑ€Ð¸Ð¾Ð´Ð° Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¸Ñ Devprom.ALM' );
 	    $mail->setFrom("Devprom Software <".SAAS_SENDER.">");
 	    	
 	    $mail->send();
@@ -140,24 +140,24 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    switch( $days_due_terminate )
 	    {
 	        case 1:
-	        	$days_text = '1 äåíü';
+	        	$days_text = '1 Ð´ÐµÐ½ÑŒ';
 	        	break;
 	        	
 	        case 2:
 	        case 3:
 	        case 4:
-	        	$days_text = $days_due_terminate.' äíÿ';
+	        	$days_text = $days_due_terminate.' Ð´Ð½Ñ';
 	        	break;
 
 	        default:
-	        	$days_text = $days_due_terminate.' äíåé';
+	        	$days_text = $days_due_terminate.' Ð´Ð½ÐµÐ¹';
 	    }
 	    
 	    $body = preg_replace('/_days_/', $days_text, $body);
 		
 	    $mail->setBody($body);
 	    
-	    $mail->setSubject( 'Óäàëåíèå âàøåãî ýêçåìïëÿðà Devprom.ALM' );
+	    $mail->setSubject( 'Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð²Ð°ÑˆÐµÐ³Ð¾ ÑÐºÐ·ÐµÐ¼Ð¿Ð»ÑÑ€Ð° Devprom.ALM' );
 	    $mail->setFrom("Devprom Software <".SAAS_SENDER.">");
 	    	
 	    $mail->send();

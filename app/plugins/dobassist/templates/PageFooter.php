@@ -1,7 +1,7 @@
 <footer class="<?=($inside ? 'internal' : '')?> hidden-print">
 	<ul>
 		<li><? echo '<a tabindex="-1" target="_blank" href="http://devopsboard.com">DevOps Board</a> '.$current_version; ?>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-		<li><a tabindex="-1" target="_blank" href="http://support.devopsboard.com/issue/new"><?=translate('Ñîîáùèòü î ïðîáëåìå')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-		<li><a tabindex="-1" target="_blank" href="http://devopsboard.com/blog"><?=translate('Íîâîñòè')?></a></li>
+		<li><a tabindex="-1" target="_blank" href="http://support.devopsboard.com/issue/new"><?=translate('Ð¡Ð¾Ð¾Ð±Ñ‰Ð¸Ñ‚ÑŒ Ð¾ Ð¿Ñ€Ð¾Ð±Ð»ÐµÐ¼Ðµ')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
+		<li><a tabindex="-1" target="_blank" href="http://devopsboard.com/blog"><?=translate('ÐÐ¾Ð²Ð¾ÑÑ‚Ð¸')?></a></li>
 	</ul>
 </footer>

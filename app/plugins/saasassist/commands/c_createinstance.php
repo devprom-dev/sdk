@@ -54,7 +54,7 @@ class CreateInstance extends CommandForm
  	
  		list($this->userlogin, $server) = preg_split('/\@/', $this->email);
 
- 		$this->username = htmlentities(IteratorBase::utf8towin($_REQUEST['username']), ENT_COMPAT | ENT_HTML401, 'windows-1251');
+ 		$this->username = htmlentities(IteratorBase::utf8towin($_REQUEST['username']), ENT_COMPAT | ENT_HTML401, 'utf-8');
  		
 		return true;
  	}
@@ -80,7 +80,7 @@ class CreateInstance extends CommandForm
 	    $mail = new HtmlMailbox;
 	    $mail->appendAddress('marketing@devprom.ru');
 	    
-	    $body = '������������ ������ ��������� Devprom.ALM<br/>';
+	    $body = 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Devprom.ALM<br/>';
 	    $body .= $this->instance.'.'.SAAS_DOMAIN.'<br/>';
 	    
 		$body .= $log.'<br/>';
@@ -89,7 +89,7 @@ class CreateInstance extends CommandForm
 		
 	    $mail->setBody($body);
 	    
-	    $mail->setSubject( 'SaaS: ����� ��������� Devprom.ALM' );
+	    $mail->setSubject( 'SaaS: пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Devprom.ALM' );
 	    $mail->setFrom(SAAS_SENDER);
 	    	
 	    $mail->send();
