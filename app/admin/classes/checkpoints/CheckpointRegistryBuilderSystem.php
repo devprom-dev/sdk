@@ -13,7 +13,6 @@ include 'CheckpointDirectoryWritable.php';
 include 'CheckpointDiskSpace.php';
 include 'CheckpointExtentionLoaded.php';
 include 'CheckpointHasAdmininstrator.php';
-include 'CheckpointOSLocale.php';
 include 'CheckpointPhpVersion.php';
 include 'CheckpointWindowsSMTP.php';
 include 'CheckpointNoCrashedTables.php';
@@ -31,7 +30,6 @@ class CheckpointRegistryBuilderSystem extends CheckpointRegistryBuilder
 			new CheckpointSystemAdminEmail(),
 			new CheckpointDiskSpace(SERVER_ROOT_PATH),
 			new CheckpointDiskSpace(sys_get_temp_dir()),
-			new CheckpointOSLocale(),
 			new CheckpointCronRunning(),
 			new CheckpointHasAdmininstrator(),
 			new CheckpointWindowsSMTP(),

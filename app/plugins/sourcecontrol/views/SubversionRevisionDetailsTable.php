@@ -47,7 +47,7 @@ class SubversionRevisionDetailsTable extends PMPageTable
     {
         global $_REQUEST;
 
-        return translate('Файлы, измененные в версии').': '.SanitizeUrl::parseUrl($_REQUEST['version']);
+        return translate('Р¤Р°Р№Р»С‹, РёР·РјРµРЅРµРЅРЅС‹Рµ РІ РІРµСЂСЃРёРё').': '.SanitizeUrl::parseUrl($_REQUEST['version']);
     }
 
     function getActions()

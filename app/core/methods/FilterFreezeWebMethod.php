@@ -94,7 +94,9 @@ class FilterFreezeWebMethod extends WebMethod
 		
 		foreach( $values as $key => $value )
 		{
-		    if ( $stored_values[$key] != $value ) return false;
+		    if ( count(array_diff(preg_split('/[-,;]/',$stored_values[$key]), preg_split('/[-,;]/',$value))) > 0 ) {
+		    	return false;
+		    }
 		}
 		
 		return true;

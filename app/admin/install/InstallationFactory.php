@@ -18,6 +18,7 @@ include_once 'SetupUserGroups.php';
 include_once 'SDKSetup.php';
 include_once 'AttachCustomersToCompanies.php';
 include_once 'SetupSupportProjectSettings.php';
+include_once 'MigrateDatabaseUTF8.php';
 
 class InstallationFactory
 {
@@ -44,6 +45,7 @@ class InstallationFactory
     protected static function buildInstallables()
     {
         return array (
+        	new MigrateDatabaseUTF8(),
 	        new ApplyServicedeskMigrations(),
 	        new ChangeConfigurationPath(),
 	        new CheckLicense(),

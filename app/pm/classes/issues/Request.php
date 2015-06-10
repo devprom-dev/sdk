@@ -44,7 +44,7 @@ class Request extends MetaobjectStatable
 		return getSession()->getApplicationUrl($this).'issues/board?mode=request&';
 	}
 	
- 	function getPlannedWorkload( $request_array )
+	function getPlannedWorkload( $request_array )
  	{	
 		$sql = " SELECT SUM(t.Planned) result " .
 				"  FROM pm_Task t" .

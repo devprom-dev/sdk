@@ -11,6 +11,7 @@ class RequestList extends PMPageList
 	private $estimation_actions = array();
 	private $visible_columns = array();
 	private $priority_method = null;
+	private $type_it = null;
 	
 	function RequestList( $object ) 
 	{
@@ -47,6 +48,8 @@ class RequestList extends PMPageList
 				);
 			}
 		}
+		
+		$this->type_it = getFactory()->getObject('RequestType')->getAll();
 	}
 	
 	function setupColumns()
@@ -147,26 +150,6 @@ class RequestList extends PMPageList
 				
 				break;
 				
-			case 'Function':
-				if( $object_it->get($attr) == '' )
-				{
-					echo text(888);
-				}
-				else
-				{
-					$uid = new ObjectUid;
-					
-					$function_it = $object_it->getRef($attr);
-					$uid->drawUidInCaption($function_it);
-					
-					if ( $function_it->get('Importance') > 0 )
-					{
-						$importance_it = $function_it->getRef('Importance');
-						echo ' ('.$importance_it->getDisplayName().')';
-					}
-				}
-				break;
-			
 			default:
 				parent::drawRefCell( $entity_it, $object_it, $attr );
 		}
@@ -179,12 +162,10 @@ class RequestList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-    			$type_it = $object_it->getRef('Type');
-    			
-    			echo '<img src="/images/'.IssueTypeFrame::getIcon($type_it).'">&nbsp;';
-    		    
-    		    if ( !$this->visible_columns['Type'] )
+    		    if ( !$this->visible_columns['Type'] && $this->type_it->count() > 0 )
     		    {
+    		    	$this->type_it->moveToId($object_it->get('Type'));
+    		    	echo '<img src="/images/'.IssueTypeFrame::getIcon($this->type_it).'">&nbsp;';
     		    	echo $object_it->getDisplayName();
     		    }
     		    else
@@ -210,19 +191,7 @@ class RequestList extends PMPageList
 			    
     			break;
     			
-			case 'RecentComment':
-				
-				parent::drawCell( $object_it, $attr );
-				
-				echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
-						'object_it' => $object_it,
-						'redirect' => 'donothing'
-				));
-
-				break;
-			
 			default:
-			    
 			    parent::drawCell( $object_it, $attr );
 		}
 	}
@@ -369,7 +338,7 @@ class RequestList extends PMPageList
 		$parms = parent::getRenderParms();
 		
 		$this->visible_columns = array (
-				'Type' => $this->getColumnVisibility( 'Type' )
+				'Type' => $this->getColumnVisibility('Type')
 		);
 				
 		return $parms; 

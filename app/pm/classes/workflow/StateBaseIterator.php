@@ -28,11 +28,8 @@ class StateBaseIterator extends OrderedIterator
 		$object->addFilter( new FilterBaseVpdPredicate() );
 		
 		$count_aggregate = new AggregateBase( 'State' );
-		
 		$object->addAggregate( $count_aggregate );
-
 		$it = $object->getAggregated();
-		
 		$cnt = $it->get( $count_aggregate->getAggregateAlias() );
 		
 		return $cnt == '' ? 0 : $cnt;

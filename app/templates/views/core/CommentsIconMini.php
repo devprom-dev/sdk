@@ -12,5 +12,3 @@ $method->setRedirectUrl($redirect != '' ? $redirect : 'function() {window.locati
 <a title="<?=$method->getCaption()?>" onclick="<?=$method->getJSCall()?>">
 	<i class="icon-comment"></i>
 </a>
-												
-<?=$object_it->get('CommentsCount')?>

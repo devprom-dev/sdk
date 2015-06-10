@@ -31,7 +31,7 @@ class DictionaryItemsTable extends PMPageTable
 		{
 			case 'pm_CustomAttribute':
 			    
-			    $filter = new FilterObjectMethod($model_factory->getObject('CustomizableObjectSet'), translate('Ñóùíîñòü'), 'customattributeentity');
+			    $filter = new FilterObjectMethod($model_factory->getObject('CustomizableObjectSet'), translate('Ð¡ÑƒÑ‰Ð½Ð¾ÑÑ‚ÑŒ'), 'customattributeentity');
 			    
 			    $filter->setHasNone(false);
 			    $filter->setIdFieldName('ReferenceName');
@@ -56,7 +56,7 @@ class DictionaryItemsTable extends PMPageTable
 				$entity_ref_name = array_shift($items); 				
 
 				$actions[] = array ( 
-						'name' => translate('Äîáàâèòü'),
+						'name' => translate('Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ'),
 						'url' => $this->getObject()->getPageName().'&EntityReferenceName='.$entity_ref_name.
 										'&area='.$this->getPage()->getArea().'&redirect='.$_SERVER['REQUEST_URI']
 				);
@@ -75,10 +75,12 @@ class DictionaryItemsTable extends PMPageTable
 		switch ( $this->getObject()->getClassName() )
 		{
 			case 'pm_CustomAttribute':
-			    
 				return array_merge( parent::getFilterPredicates(), array (
 						new CustomAttributeEntityPredicate( $values['customattributeentity'] )
 				));
+
+			case 'pm_Environment':
+				return parent::getFilterPredicates();
 		}		
 		
 		return array_merge( 

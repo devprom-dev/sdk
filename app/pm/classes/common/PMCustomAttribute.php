@@ -25,7 +25,7 @@ class PMCustomAttribute extends MetaobjectCacheable
  	
  	function getDisplayName()
  	{
- 		return translate('Атрибуты');
+ 		return translate('РђС‚СЂРёР±СѓС‚С‹');
  	}
  	
  	function createIterator() 

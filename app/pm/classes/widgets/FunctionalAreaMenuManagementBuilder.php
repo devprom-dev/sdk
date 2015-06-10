@@ -43,7 +43,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		$items[] = $module->getExact('tasks-board')->buildMenuItem();
 		
  		$menus = array_merge( array_slice($menus, 0, 1), array( 'plan' => array ( 
-			'name' => translate('Ïëàí'), 
+			'name' => translate('ĞŸĞ»Ğ°Ğ½'), 
 			'items' => $items,
  		    'uid' => 'plan')), array_slice($menus, 1) 
  		);
@@ -58,7 +58,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		    $items[] = $report->getExact('issues-trace')->buildMenuItem();
     		
      		$menus[] = array ( 
-    			'name' => translate('Ğåëèçû'), 
+    			'name' => translate('Ğ ĞµĞ»Ğ¸Ğ·Ñ‹'), 
     			'items' => $items,
      		    'uid' => 'releases'
      		);
@@ -77,7 +77,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		    $items[] = $report->getExact('tasks-trace')->buildMenuItem();
     		
      		$menus[] = array ( 
-    			'name' => translate('Èòåğàöèè'), 
+    			'name' => translate('Ğ˜Ñ‚ĞµÑ€Ğ°Ñ†Ğ¸Ğ¸'), 
     			'items' => $items,
      		    'uid' => 'iterations'
      		);
@@ -94,7 +94,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		$items['all'] = $module->getExact('project-reports')->buildMenuItem(FUNC_AREA_MANAGEMENT);
 		
 		$menus['reports'] = array (
-            'name' => translate('Ãğàôèêè è îò÷åòû'),
+            'name' => translate('Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¸ Ğ¾Ñ‚Ñ‡ĞµÑ‚Ñ‹'),
             'uid' => 'reports',
             'items' => $items
  	    );

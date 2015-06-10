@@ -17,11 +17,9 @@ class ResourceRegistry extends ObjectRegistrySQL
  	
  	function createSQLIterator( $sql )
  	{
- 	    foreach( getSession()->getBuilders('ResourceBuilder') as $builder )
- 	    {
+ 	    foreach( getSession()->getBuilders('ResourceBuilder') as $builder ) {
      	    $builder->build( $this );
  	    }
- 	    
  	 	return $this->createIterator( array_values($this->getRecords()) );
  	}
  	

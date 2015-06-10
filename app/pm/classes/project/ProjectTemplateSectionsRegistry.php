@@ -9,7 +9,6 @@ class ProjectTemplateSectionsRegistry extends ObjectRegistrySQL
  		$ref_name = $ref_name == '' ? $object->getClassName() : $ref_name;
  		
  		$this->objects[$ref_name] = array( 
- 			'object' => $object,
  			'ReferenceName' => $ref_name,
  			'items' => count($items) < 1 ? array( $object ) : $items,
  			'IsVisible' => $visible ? 'Y' : 'N',
@@ -45,7 +44,6 @@ class ProjectTemplateSectionsRegistry extends ObjectRegistrySQL
  			$item = array (
  				'entityId' => get_class($object['object']),
  				'ReferenceName' => $object['ReferenceName'],
- 				'object' => $object['object'],
  				'items' => $object['items'],
  				'IsVisible' => $object['IsVisible'],
  				'Description' => $object['Description']

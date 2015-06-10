@@ -22,7 +22,7 @@ class Scrum extends Metaobject
  		switch ( $attr )
  		{
  			case 'GroupDate':
- 				return translate('Дата');
+ 				return translate('Р”Р°С‚Р°');
  				
  			default:
  				return parent::getAttributeUserName( $attr );

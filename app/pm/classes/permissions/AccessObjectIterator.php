@@ -71,15 +71,15 @@ class AccessObjectIterator extends OrderedIterator
  		switch ( $this->get('AccessType') )
  		{
  			case 'none':
- 				$caption .= ' ['.translate('Íåò').']';
+ 				$caption .= ' ['.translate('ĞĞµÑ‚').']';
  				break;
 
  			case 'view':
- 				$caption .= ' ['.translate('Ïğîñìîòğ').']';
+ 				$caption .= ' ['.translate('ĞŸÑ€Ğ¾ÑĞ¼Ğ¾Ñ‚Ñ€').']';
  				break;
 
  			case 'modify':
- 				$caption .= ' ['.translate('Èçìåíåíèå').']';
+ 				$caption .= ' ['.translate('Ğ˜Ğ·Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ğµ').']';
  				break;
  		}
  		
@@ -89,8 +89,9 @@ class AccessObjectIterator extends OrderedIterator
  	function getViewUrl()
  	{
 		$object_it = $this->getObjectIt();
-		
-		return getSession()->getApplicationUrl().'participants/rights?class='.
- 			$object_it->object->getClassName().'&id='.$object_it->getId();
+ 		$info = getFactory()->getObject('Module')
+ 					->getExact('permissions/settings')->buildMenuItem(
+ 							'class='.$object_it->object->getClassName().'&id='.$object_it->getId());
+ 		return $info['url'];
  	}
 } 

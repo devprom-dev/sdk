@@ -1,6 +1,6 @@
 <?php
 
-include SERVER_ROOT_PATH."pm/views/ui/BulkForm.php";
+include_once SERVER_ROOT_PATH."pm/views/ui/BulkForm.php";
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 
 class WikiBulkForm extends BulkForm
@@ -10,9 +10,16 @@ class WikiBulkForm extends BulkForm
 		return null;
 	}
 	
-	function getWidth()
+	function getIt()
 	{
-		return '70%';
+		$iterator = parent::getIt();
+
+		if ( strpos($_REQUEST['operation'], 'BulkDeleteWebMethod') === false ) return $iterator;  
+		return $this->object->getRegistry()->Query(
+				array (
+						new WikiRootTransitiveFilter($iterator->idsToArray())
+				)
+		);
 	}
 	
  	function getAttributeType( $attr )
@@ -44,10 +51,10 @@ class WikiBulkForm extends BulkForm
  				return text(1726);
  			
  			case 'Project':
- 				return translate('Ïğîåêò');
+ 				return translate('ĞŸÑ€Ğ¾ĞµĞºÑ‚');
  				
  			case 'Description':
- 				return translate('Îïèñàíèå');
+ 				return translate('ĞĞ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ');
  				
  			default:
  				return parent::getName( $attr );
@@ -98,7 +105,7 @@ class WikiBulkForm extends BulkForm
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				
-				echo translate('Âåğñèÿ äîêóìåíòà');
+				echo translate('Ğ’ĞµÑ€ÑĞ¸Ñ Ğ´Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ğ°');
 				
 				$field->draw();
 				

@@ -136,7 +136,7 @@ class ProjectLogTable extends PMPageTable
 		
 		if ( $object_it->getId() > 0 )
 		{
-			$filters[] = new ChangeLogItemFilter( $object_it );
+			$filters[] = new ChangeLogItemDateFilter( $object_it );
 		}
 		else if ( !in_array($_REQUEST['object'], array('','all','none')) )
 		{
@@ -163,7 +163,7 @@ class ProjectLogTable extends PMPageTable
 				$method->setRedirectUrl('donothing');
 				$uid = strtolower('new-question');
 				$actions[$uid] = array ( 
-						'name' => translate('Задать вопрос'),
+						'name' => translate('Р—Р°РґР°С‚СЊ РІРѕРїСЂРѕСЃ'),
 						'uid' => $uid,
 						'url' => $method->getJSCall(
 										array( 

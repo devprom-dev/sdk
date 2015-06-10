@@ -26,11 +26,8 @@ class SettingsController extends Controller {
      * @Method("GET")
      * @Template()
      */
-    public function dashboardAction() {
-        if (count($this->container->getParameter('supportProjects'))>0) {
-            return $this->redirect($this->generateUrl('issue_list', array(), true));
-        }
-
+    public function dashboardAction()
+    {
         $settings = $this->getSettingsService()->load();
         if (!$settings['appUrl']) {
             $settings['appUrl'] = str_replace($this->getRequest()->getPathInfo(), "", $this->getRequest()->getUri());

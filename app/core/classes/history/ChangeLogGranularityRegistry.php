@@ -49,5 +49,5 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 		$this->granularity = $granularity;
 	}
 	
-	private $granularity = SECOND;
+	private $granularity = 1;
 }

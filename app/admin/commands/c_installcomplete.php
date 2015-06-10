@@ -6,13 +6,7 @@ class InstallComplete extends CommandForm
 {
 	function validate()
 	{
-		global $_SERVER, $_REQUEST, $model_factory;
-
-		$state = $model_factory->getObject('DeploymentState');
-		
-		if ( !$state->IsInstalled() ) return false;
-		
-		return true;
+		return getFactory()->getObject('DeploymentState')->IsInstalled();
 	}
 
 	function create()
@@ -24,25 +18,23 @@ class InstallComplete extends CommandForm
 			
 		// setup server constants
 		$this->setupCustomerCredentials();
-		
+		$this->setupDefaultLanguage( $_REQUEST['language'] );
 		$plugins->buildPluginsList();
 		
 		$installation_factory = InstallationFactory::getFactory();
-			
 		if ( !$installation_factory->install( $result ) )
 		{
 		    $this->replyError(str_replace('%1', join(', ', $result), text(1053)));
 		}
 		
 	    $clear_cache_action = new ClearCache();
-	    
 	    $clear_cache_action->install();
 		
 		// report result of the operation
 		$this->replyRedirect( '?', text(443) );
 	}
 	
-	function setupCustomerCredentials()
+	protected function setupCustomerCredentials()
 	{
 		$settings_file_path = DOCUMENT_ROOT.'settings_const.php';
 
@@ -58,11 +50,14 @@ class InstallComplete extends CommandForm
 		file_put_contents($settings_file_path, $file_content);
 	}
 	
+	protected function setupDefaultLanguage( $lang )
+	{
+		DAL::Instance()->Query("UPDATE cms_SystemSettings SET Language = ".($lang == 2 ? 2 : 1));
+	}
+	
 	function gen_uuid()
 	{
 		list($usec, $sec) = explode(" ",microtime());
-		
 		return md5(strftime('%d.%m.%Y.%M.%H.%S').((float)$usec + (float)$sec).rand());
 	}
-	
 }

@@ -8,7 +8,7 @@ class StateAction extends Metaobject
  	{
  		parent::Metaobject('pm_StateAction');
  		
- 		$this->setAttributeCaption( 'ReferenceName', translate('Äåéñòâèå') );
+ 		$this->setAttributeCaption( 'ReferenceName', translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ') );
  		
  		$this->setAttributeType( 'ReferenceName', 'REF_StateBusinessActionId' );
  	}

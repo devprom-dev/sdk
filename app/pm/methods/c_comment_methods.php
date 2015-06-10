@@ -15,7 +15,7 @@
  	
 	function getCaption() 
 	{
-		return translate('Удалить');
+		return translate('РЈРґР°Р»РёС‚СЊ');
 	}
 	
 	function hasAccess()

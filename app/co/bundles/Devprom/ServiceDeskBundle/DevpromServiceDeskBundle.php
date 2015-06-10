@@ -11,16 +11,13 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Translation\Translator;
 
+include_once SERVER_ROOT_PATH."admin/classes/templates/SystemTemplate.php";
+
 class DevpromServiceDeskBundle extends Bundle
 {
     public function boot()
     {
         parent::boot();
-
-        // ожидаем, что строки будут в первую очередь в cp1251. —м. [I-4482] и FOS\UserBundle\Util\Canonicalizer
-        if (array_search("Windows-1251", mb_detect_order()) === false) {
-            mb_detect_order("windows-1251," . join(",", mb_detect_order()));
-        }
 
         $this->setUpDevpromTranslations();
         $this->setUpMailLogging();
@@ -41,6 +38,24 @@ class DevpromServiceDeskBundle extends Bundle
         $translator->addResource('php', SERVER_ROOT_PATH . "lang/en/resource.php", "en", "messages");
         // kkorenkov: not going to add translations for "ru" because Devprom's vocabulary contains empty values for this locale
         //$translator->addResource('php', SERVER_ROOT_PATH . "lang/ru/resource.php", "ru", "messages");
+
+        // to override branding strings 
+        $en_strings = array (
+        		\SystemTemplate::getPath().'en/client.en.php' => 'client',
+        		\SystemTemplate::getPath().'en/emails.en.php' => 'emails',
+        		SERVER_ROOT_PATH . "plugins/dobassist/language/en/array.php" => 'client'
+        );
+        foreach( $en_strings as $string => $namespace) {
+        	if ( file_exists($string) ) $translator->addResource('php', $string, "en", $namespace); 
+        }
+        $ru_strings = array (
+        		\SystemTemplate::getPath().'ru/client.ru.php' => 'client',
+        		\SystemTemplate::getPath().'ru/emails.ru.php' => 'emails',
+        		SERVER_ROOT_PATH . "plugins/dobassist/language/ru/array.php" => 'client'
+        );
+        foreach( $ru_strings as $string => $namespace ) {
+        	if ( file_exists($string) ) $translator->addResource('php', $string, "ru", $namespace); 
+        }
     }
 
     protected function setUpMailLogging()

@@ -5,7 +5,6 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 include SERVER_ROOT_PATH.'co/classes/COSession.php';
 include SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 include SERVER_ROOT_PATH.'pm/classes/sessions/SessionPortfolio.php';
-include SERVER_ROOT_PATH.'pm/classes/sessions/SessionPortfolioMyProjects.php';
 include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
 $plugins = new PluginsFactory();
@@ -86,6 +85,3 @@ if ( !getFactory()->getAccessPolicy()->can_read($project_it) )
 {
 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
-
-//$lock = new \CacheLock();
-//$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();

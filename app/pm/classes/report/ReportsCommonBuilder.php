@@ -39,7 +39,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 			{
 				$object->addReport(
 					array ( 'name' => 'myissues',
-							'title' => translate('Ìîè ïîæåëàíèÿ'),
+							'title' => translate('ÐœÐ¾Ð¸ Ð¿Ð¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ'),
 					        'description' => text(1407),
 							'category' => FUNC_AREA_MANAGEMENT,
 					        'query' => 'state='.join(',',$nonterminal).'&owner=user-id',
@@ -58,7 +58,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 
 			$object->addReport(
 				array ( 'name' => 'bugs',
-				        'title' => translate('Îáíàðóæåííûå îøèáêè'),
+				        'title' => translate('ÐžÐ±Ð½Ð°Ñ€ÑƒÐ¶ÐµÐ½Ð½Ñ‹Ðµ Ð¾ÑˆÐ¸Ð±ÐºÐ¸'),
 						'description' => text(781),
 						'category' => FUNC_AREA_MANAGEMENT,
 				        'query' => 'type=bug&show=RecordCreated&sort=RecordCreated.D&modifiedafter=last-month',
@@ -76,7 +76,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 
 			$object->addReport(
 				array ( 'name' => 'issuesmine',
-						'title' => translate('Äîáàâëåíû ìíîé'),
+						'title' => translate('Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ñ‹ Ð¼Ð½Ð¾Ð¹'),
 				        'description' => text(1404),
 						'category' => FUNC_AREA_MANAGEMENT,
 				        'query' => 'author=user-id',
@@ -290,9 +290,9 @@ class ReportsCommonBuilder extends ReportsBuilder
 			
 			$object->addReport( array ( 
 			        'name' => 'mytasks',
-			        'title' => translate('Ìîè çàäà÷è'),
+			        'title' => translate('ÐœÐ¾Ð¸ Ð·Ð°Ð´Ð°Ñ‡Ð¸'),
 			        'description' => text(1406),
-			        'query' => 'taskstate='.join(',',$states).'&taskassignee=user-id',
+			        'query' => 'taskassignee=user-id',
 			        'category' => FUNC_AREA_MANAGEMENT,
 				    'module' => $task_list_it->getId() )
 			);
@@ -538,7 +538,6 @@ class ReportsCommonBuilder extends ReportsBuilder
 		}
 		
 		$module_it = $module->getExact('features-list');
-		
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
 			$object->addReport(
@@ -549,22 +548,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 			);
 		}
 
-		/*
- 		$module_it = $module->getExact('features-chart');
-
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) && $methodology_it->HasReleases() )
-		{
-			$object->addReport(
-				array ( 'name' => 'features-chart',
-				        'description' => text(1395),
-						'category' => FUNC_AREA_MANAGEMENT,
-				        'module' => $module_it->getId() )
-			);
-		}
-		*/
-		
 		$module_it = $module->getExact('features-trace');
-		
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
 			$object->addReport(

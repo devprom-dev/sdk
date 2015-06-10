@@ -62,7 +62,7 @@ foreach( $filter_items as $filter )
     {
     ?>
     <div class="btn-group pull-left">
-    	<a class="btn btn-small dropdown-toggle <?=(in_array($filter['value'],array('','all'),true) ? '' : 'btn-info')?>" uid="<?=$filter['name']?>" href="#" data-toggle="dropdown">
+    	<a class="btn btn-small dropdown-toggle <?=(in_array($filter['value'],array('','all')) ? '' : 'btn-info')?>" uid="<?=$filter['name']?>" href="#" data-toggle="dropdown">
     		<?=$filter['title']?>
     		<span class="caret"></span>
     	</a>
@@ -82,6 +82,32 @@ foreach( $filter_items as $filter )
 <div class="hidden-print filter-actions">
 
 <?php if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
+
+<div class="bulk-filter-actions pull-left" style="<?=(count($additional_actions) > 0 ? 'padding-right:4px;' : '')?>">&nbsp;
+<?php foreach( $bulk_actions['workflow'] as $item ) { ?>
+	<div class="btn-group pull-left" object-state="<?=$item['state']?>">
+		<a id="<?=$item['uid']?>" class="btn btn-small btn-warning" href="<?=$item['url']?>">
+	   		<?=$item['name']?>
+	   	</a>
+	</div>
+<?php } ?>
+<?php if( count($bulk_actions['modify']) > 0 ) { ?>
+	<div id="bulk-modify-actions" class="btn-group pull-left">
+		<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
+	   		<?=translate('Изменить')?>
+	   		<span class="caret"></span>
+	   	</a>
+	   	<? echo $view->render('core/PopupMenu.php', array ('items' => $bulk_actions['modify'])); ?>
+	</div>
+<?php } ?>
+<?php foreach( $bulk_actions['delete'] as $item ) { ?>
+	<div class="btn-group pull-left">
+		<a id="<?=$item['uid']?>" class="btn btn-small btn-danger" href="<?=$item['url']?>">
+	   		<?=$item['name']?>
+	   	</a>
+	</div>
+<?php } ?>
+</div>
 
 <?php foreach( $additional_actions as $action ) { ?>
 	<?php if ( count(array_filter($action['items'], function($item){return $item['name'] != '';})) < 4 ) { ?>
@@ -119,7 +145,7 @@ foreach( $filter_items as $filter )
 
 <div class="btn-group last pull-left">
   	<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
-   		<?=translate('��������')?>
+   		<?=translate('Действия')?>
    		<span class="caret"></span>
    	</a>
    	<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>

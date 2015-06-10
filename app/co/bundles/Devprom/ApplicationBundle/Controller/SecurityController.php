@@ -30,7 +30,7 @@ class SecurityController extends PageController
         if ( $user_it->getId() > 0 )
         {
             return new RedirectResponse( 
-            		$request->query->get('redirect') == '' ? '/pm/my' : $request->query->get('redirect') 
+            		$request->query->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->query->get('redirect') 
             );
         }
         else 
@@ -77,7 +77,7 @@ class SecurityController extends PageController
 		$session->open( $command->getUserIt() );
 
         return $this->replyRedirect(
-        		$request->request->get('redirect') == '' ? '/pm/my' : $request->request->get('redirect')
+        		$request->request->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->request->get('redirect')
 		);
     }
     

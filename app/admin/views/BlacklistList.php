@@ -48,7 +48,7 @@ class BlackList extends PageList
 
 	function getColumns()
 	{
-		$this->object->addAttribute('Date', '', translate('Äàòà'), true);
+		$this->object->addAttribute('Date', '', translate('Ð”Ð°Ñ‚Ð°'), true);
 
 		return parent::getColumns();
 	}

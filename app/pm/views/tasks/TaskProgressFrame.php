@@ -13,7 +13,7 @@ class TaskProgressFrame
  	
  	function draw()
  	{
-		$this->drawLine( translate('Îñòàâøàÿñÿ òðóäîåìêîñòü'), $this->progress[0],
+		$this->drawLine( translate('ÐžÑÑ‚Ð°Ð²ÑˆÐ°ÑÑÑ Ñ‚Ñ€ÑƒÐ´Ð¾ÐµÐ¼ÐºÐ¾ÑÑ‚ÑŒ'), $this->progress[0],
 			$this->progress[1], '#E6B51E', '#F8EABE' );
  	}
  	

@@ -27,11 +27,11 @@ class StageIterator extends OrderedIterator
  		{
  			if ( $this->get('Release') > 0 )
  			{
- 				$caption = translate('Èòåðàöèÿ');
+ 				$caption = translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ');
  			}
  			elseif( $this->get('Version') > 0 )
  			{
- 				$caption = translate('Ðåëèç');
+ 				$caption = translate('Ð ÐµÐ»Ð¸Ð·');
  			}
  			
  			return $caption.' '.$this->get('Caption');

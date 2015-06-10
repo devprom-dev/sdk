@@ -5,7 +5,6 @@ include SERVER_ROOT_PATH."admin/classes/notificators/AdminSystemTriggers.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/ProcessFirstUserEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/UpdateBlockedParticipantsEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/RecentBackupCreatedEvent.php";
-include SERVER_ROOT_PATH."admin/classes/model/events/UserCreatedEvent.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceModuleBuilder.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceJSBuilder.php";
 include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
@@ -48,8 +47,7 @@ class AdminSession extends SessionBase
 		 	    		new ProcessFirstUserEvent(),
 		 	    		new UpdateBlockedParticipantsEvent(),
 		 	    		new MaintenanceModuleBuilder(),
-		 	    		new RecentBackupCreatedEvent(),
- 	    				new UserCreatedEvent()
+		 	    		new RecentBackupCreatedEvent()
  	    		)
  	    );
  	}

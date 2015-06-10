@@ -8,6 +8,6 @@ echo $view->render('core/FormAsyncButtons.php', array(
     'redirect_url' => $redirect_url
 ));
 
-echo '<input class="btn btn-link btn-small" type="button" onclick="javascript: hideCommentForm()" value="'.translate('Îòìåíà').'">';
+echo '<input class="btn btn-link btn-small" type="button" onclick="javascript: hideCommentForm()" value="'.translate('ÐžÑ‚Ð¼ÐµÐ½Ð°').'">';
 echo '<div class="clear-fix"></div>';
 echo '<br/>';

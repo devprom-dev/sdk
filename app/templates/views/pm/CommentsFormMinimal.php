@@ -10,6 +10,8 @@ foreach( $attributes as $key => $attribute ) { if ( $attribute['visible'] ) cont
 
 }
 
+$form->renderThread( $view );
+echo '<br/>';
 echo $view->render('core/PageFormAttribute.php', $attributes['Caption']);
 
 ?>

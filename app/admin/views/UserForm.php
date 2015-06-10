@@ -32,7 +32,7 @@ class UserForm extends AdminPageForm
 		    }
 		}
 		
-		$object->addAttribute( 'RepeatPassword', 'PASSWORD', translate('Повтор пароля'), false, false, '', 65 );
+		$object->addAttribute( 'RepeatPassword', 'PASSWORD', translate('РџРѕРІС‚РѕСЂ РїР°СЂРѕР»СЏ'), false, false, '', 65 );
 		
 		$object->setAttributeRequired('Password', $has_password);
 

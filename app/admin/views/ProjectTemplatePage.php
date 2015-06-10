@@ -5,17 +5,20 @@ include ('ProjectTemplateTable.php');
 
 class ProjectTemplatePage extends AdminPage
 {
-	function getTable()
+	function getObject()
 	{
 		$object = getFactory()->getObject('pm_ProjectTemplate');
-		
 		$object->setRegistry( new ObjectRegistrySQL() );
-		
-		return new ProjectTemplateTable($object);
+		return $object;
+	}
+	
+	function getTable()
+	{
+		return new ProjectTemplateTable($this->getObject());
 	}
 
 	function getForm()
 	{
-		return new ProjectTemplateForm(getFactory()->getObject('pm_ProjectTemplate'));
+		return new ProjectTemplateForm($this->getObject());
 	}
 }

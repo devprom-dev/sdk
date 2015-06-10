@@ -20,7 +20,7 @@
 	exit();
   }
   
-  beginPage('Протокол выполнения SQL');
+  beginPage('РџСЂРѕС‚РѕРєРѕР» РІС‹РїРѕР»РЅРµРЅРёСЏ SQL');
 ?>
 	<table width=100% height=100%>
 		<?

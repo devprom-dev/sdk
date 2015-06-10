@@ -57,12 +57,12 @@ class FieldSpentTime extends FieldForm
 		}
 	}
 	
-	function render( & $view )
+	function render( $view )
 	{
 	    $this->drawBody( $view );    
 	}
 	
-	function drawBody( & $view = null )
+	function drawBody( $view = null )
 	{
 		$activity = $this->getObject();
 		

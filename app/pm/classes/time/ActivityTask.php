@@ -8,7 +8,7 @@ class ActivityTask extends Activity
  	{
  		parent::__construct();
 
- 		$this->addAttribute('LeftWork', 'INTEGER', translate('ŒÒÚ‡ÎÓÒ¸, ˜.'), true);
+ 		$this->addAttribute('LeftWork', 'INTEGER', translate('–û—Å—Ç–∞–ª–æ—Å—å, —á.'), true);
  	}
  	
 	function add_parms( $parms )

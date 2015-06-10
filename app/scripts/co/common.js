@@ -94,9 +94,9 @@ function getPostComment( comment )
 	
 	$('#comment'+comment).html('<div style="clear:both;padding-bottom:6px;"><textarea id="comtext'+comment+'" rows=5></textarea></div>'+
 		'<div class="blackbutton"><div id="body">'+
-		'<a id="post'+comment+'" href="">Отправить</a></div><div id="rt"></div></div> '+
+		'<a id="post'+comment+'" href="">РћС‚РїСЂР°РІРёС‚СЊ</a></div><div id="rt"></div></div> '+
 		'<div class="blackbutton"><div id="body">'+
-		'<a id="close'+comment+'" href="">Закрыть</a></div><div id="rt"></div></div>');
+		'<a id="close'+comment+'" href="">Р—Р°РєСЂС‹С‚СЊ</a></div><div id="rt"></div></div>');
 	
 	$('#post'+comment).click( function() {
 		var text = $('#comtext'+comment).val();

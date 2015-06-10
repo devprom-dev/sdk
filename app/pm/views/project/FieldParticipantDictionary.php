@@ -31,29 +31,44 @@ class FieldParticipantDictionary extends FieldDictionary
  						new UserParticipatesDetailsPersister()
  				)
 		);
-
+ 		
+ 		return class_exists('PortfolioMyProjectsBuilder', false)
+ 			? $this->getRoleBasedOptions($part_it)
+ 			: $this->getSimpleOptions($part_it);
+	}
+	
+	protected function getSimpleOptions($part_it)
+	{
+		$options = array();
+		while ( !$part_it->end() ) 
+ 		{
+		    $options[] = array (
+		        'value' => $part_it->getId(),
+                'caption' => $part_it->getDisplayName()
+            );
+ 			$part_it->moveNext();
+ 		}
+ 		return $options;
+	}
+	
+	protected function getRoleBasedOptions($part_it)
+	{
  		$groups = array();
-	    
 	 	while ( !$part_it->end() ) 
  		{
 		    $groups[$part_it->get('ProjectRole')][] = array (
 		        'value' => $part_it->getId(),
                 'caption' => $part_it->getDisplayName()
             );
- 			
  			$part_it->moveNext();
  		}
  		
  		$options = array();
- 		
- 		foreach( $groups as $group => $items )
- 		{
- 			foreach( $items as $item )
- 			{
+ 		foreach( $groups as $group => $items ) {
+ 			foreach( $items as $item ) {
  				$options[] = array_merge( $item, array('group' => $group) );
  			}
  		}
-
  		return $options;
 	}
 }

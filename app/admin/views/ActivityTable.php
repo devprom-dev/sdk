@@ -35,7 +35,7 @@ class ActivityTable extends PageTable
 
 		$date = new FilterDateWebMethod();
 		$date->setValueParm( 'modified' );
-		$date->setCaption( translate('Èçìåíåíî ïîñëå') );
+		$date->setCaption( translate('Ð˜Ð·Ð¼ÐµÐ½ÐµÐ½Ð¾ Ð¿Ð¾ÑÐ»Ðµ') );
 		$date->setDefault(
 				getSession()->getLanguage()->getPhpDate(strtotime('-4 weeks', strtotime(SystemDateTime::date('Y-m-j'))))
 		);

@@ -66,7 +66,7 @@ foreach( $filter_items as $filter )
 
 </div> <!-- end filter -->
 
-<?php if ( count($actions) > 0 ) { ?>
+<?php if ( count($actions) > 0 || count($additional_actions) > 0 ) { ?>
 
 <div class="filter-actions last">
 
@@ -80,13 +80,15 @@ foreach( $filter_items as $filter )
 	    <?php } ?>
 	<?php } ?>
 			
+	<?php if (count($actions) > 0) { ?>
 	<div class="btn-group pull-left last">
 		<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
-    		<?=translate('Äåéñòâèÿ')?>
+    		<?=translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ')?>
     		<span class="caret"></span>
     	</a>
     	<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
     </div>
+    <?php } ?>
 </div>
 
 <?php } ?>

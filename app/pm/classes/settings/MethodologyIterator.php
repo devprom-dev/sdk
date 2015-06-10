@@ -38,7 +38,7 @@ class MethodologyIterator extends OrderedIterator
 	}
 	
 	function getMeasureUnitName() {
-		return translate ('÷.');
+		return translate ('Ñ‡.');
 	}
 	
 	function HasMeasureUnitDays() {
@@ -46,7 +46,7 @@ class MethodologyIterator extends OrderedIterator
 	}
 	
 	function HasMilestones() {
-		return $this->get('HasMilestones') == 'Y';
+		return true;
 	}
 	
 	function IsParticipantsTakesTasks() {

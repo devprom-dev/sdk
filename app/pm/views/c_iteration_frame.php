@@ -29,10 +29,10 @@
  		
 		echo '<div style="width:100%;">';
 			echo '<div class="line">';
-				$text = translate('Начало').': ';
+				$text = translate('РќР°С‡Р°Р»Рѕ').': ';
 				$text .= $this->release_it->getDateFormat('StartDate').
 					', ';
-				$text .= translate('окончание').': '; 
+				$text .= translate('РѕРєРѕРЅС‡Р°РЅРёРµ').': '; 
 			    $text .= $this->release_it->getDateFormat('FinishDate');
 			    
 			    echo str_replace(' ', '&nbsp;', $text);
@@ -40,7 +40,7 @@
 				$offset = $this->release_it->getFinishOffsetDays();
 				if ( $offset > 0 )
 				{
-					echo '&nbsp;<span style="color:red;" title="'.translate('Отклонение от графика').'">+ '.$offset.' '.translate('дн.').'</span>';
+					echo '&nbsp;<span style="color:red;" title="'.translate('РћС‚РєР»РѕРЅРµРЅРёРµ РѕС‚ РіСЂР°С„РёРєР°').'">+ '.$offset.' '.translate('РґРЅ.').'</span>';
 				}	
 
 			echo '</div>';

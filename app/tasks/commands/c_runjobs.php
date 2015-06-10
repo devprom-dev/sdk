@@ -74,10 +74,10 @@ class RunJobs extends Command
 			}
 			
 			// check for schedule
-			$runjob = $this->checkForPattern( date('i'), trim($job_it->get('Minutes'), ' '.chr(10).chr(13)) ) &&
-				$this->checkForPattern( date('H'), trim($job_it->get('Hours'), ' '.chr(10).chr(13)) ) &&
-				$this->checkForPattern( date('j'), trim($job_it->get('Days'), ' '.chr(10).chr(13)) ) &&
-				$this->checkForPattern( date('w'), trim($job_it->get('WeekDays'), ' '.chr(10).chr(13)) );
+			$runjob = $this->checkForPattern( SystemDateTime::date('i'), trim($job_it->get('Minutes'), ' '.chr(10).chr(13)) ) &&
+				$this->checkForPattern( SystemDateTime::date('H'), trim($job_it->get('Hours'), ' '.chr(10).chr(13)) ) &&
+				$this->checkForPattern( SystemDateTime::date('j'), trim($job_it->get('Days'), ' '.chr(10).chr(13)) ) &&
+				$this->checkForPattern( SystemDateTime::date('w'), trim($job_it->get('WeekDays'), ' '.chr(10).chr(13)) );
 			
 			if ( $runjob )
 			{
@@ -139,7 +139,7 @@ class RunJobs extends Command
 
 						if ( $_REQUEST['redirect'] == '' )
 						{
-							echo $job_it->getDisplayName().': '.translate('Выполнено').': '.SystemDateTime::date();
+							echo $job_it->getDisplayName().': '.translate('Р’С‹РїРѕР»РЅРµРЅРѕ').': '.SystemDateTime::date();
 						}
 						$result = ob_get_contents();
 

@@ -2,9 +2,9 @@
 
 class FilterPredicate
 {
- 	var $filter, $object;
- 	
- 	private $alias;
+ 	private $filter = '';
+ 	private $object = null;
+ 	private $alias = '';
  	
  	function FilterPredicate ( $filter )
  	{
@@ -124,4 +124,21 @@ class FilterPredicate
  	
  	    return $alias.$object->getClassName().'Id';
  	}
+
+	public function __sleep()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __destruct()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __wakeup()
+	{
+		$this->object = null;
+	}
 }

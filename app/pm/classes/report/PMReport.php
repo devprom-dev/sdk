@@ -10,12 +10,11 @@ class PMReport extends Report
  	
  	function __construct()
  	{
- 	    global $model_factory;
- 	    
  		$this->system = false;
  		$this->users = false;
  		
  		parent::__construct( new PMReportRegistry($this) );
+		$this->addAttributeGroup('Category', 'system'); 		
  	}
  	
  	function setSystemOnly()

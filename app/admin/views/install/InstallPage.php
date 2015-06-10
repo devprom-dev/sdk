@@ -13,9 +13,11 @@ class InstallPage extends AdminPage
 	{
 		parent::AdminPage();
 			
-		$this->addInfoSection(new DocumentationInfo);
-		
-		$this->addInfoSection(new InstallationInfo);
+		$state = getFactory()->getObject('DeploymentState');
+		if ( !$state->IsInstalled() ) {
+			$this->addInfoSection(new DocumentationInfo);
+			$this->addInfoSection(new InstallationInfo);
+		}
 	}
 
 	function getTable()
@@ -66,6 +68,6 @@ class InstallPage extends AdminPage
 	
 	function getTitle()
 	{
-		return translate('Установка');
+		return translate('РЈСЃС‚Р°РЅРѕРІРєР°');
 	}
 }

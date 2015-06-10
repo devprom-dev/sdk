@@ -74,13 +74,13 @@ class IssueEstimationSection extends InfoSection
 				$duration = round($total_open / $velocity, 1);
 			}
 			
-			echo translate('Оценка срока выполнения').': <b>'.$duration.' '.translate('дн.').'</b>';
+			echo translate('РћС†РµРЅРєР° СЃСЂРѕРєР° РІС‹РїРѕР»РЅРµРЅРёСЏ').': <b>'.$duration.' '.translate('РґРЅ.').'</b>';
 		echo '</div>';
 
 		if ( $strategy->hasEstimationValue() )
 		{
 			echo '<div class="line">';
-				echo translate('Оценено пожеланий').': <b>'.$percent.'%</b>';
+				echo translate('РћС†РµРЅРµРЅРѕ РїРѕР¶РµР»Р°РЅРёР№').': <b>'.$percent.'%</b>';
 			echo '</div>';
 		}
 	}

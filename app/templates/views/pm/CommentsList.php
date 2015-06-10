@@ -4,19 +4,21 @@
 
 	<?php if (!$form_ready ) { ?>
 
-	<div id="comments-form<?=$control_uid?>" style="<?=($icon_size != 'small' ? "min-height: 48px;" : '')?>">
+	<?php $list->renderThread( $view ); ?>
+	
+	<div id="comments-form<?=$control_uid?>" style="<?=($icon_size != 'small' ? "min-height: 48px;" : '').($comments_count > 0 ? "margin-top:20px;" : "")?>"">
 		<div class="comment">
 			
 			<?php if( $icon_size == 'small' ) { ?>
 			
 			<a tabindex="5" class="dashed <?=$new_link_class?>" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
-				<?=translate('äîáàâèòü êîììåíòàðèé')?>
+				<?=translate('Ð´Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¹')?>
 			</a>
 			
 			<?php } else { ?>
 
 			<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
-			    <i class="icon-comment icon-white"></i> <?=translate('Äîáàâèòü êîììåíòàðèé')?>
+			    <i class="icon-comment icon-white"></i> <?=translate('Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¹')?>
 			</a>
 			
 			<div class="clear-fix">&nbsp;</div>
@@ -24,14 +26,14 @@
 			<?php } ?>
         </div>
 	</div>
-	
+
 	<?php } else { ?>
 	
 		<?php echo $form->render($view, array_merge($form->getRenderParms())); ?>
-	
+		<?php $list->renderThread( $view ); ?>
+		
 	<?php } ?>
 	
-	<?php $list->renderThread( $view ); ?>
 </div>
 
 <script type="text/javascript">
@@ -57,6 +59,8 @@
 
 	function showCommentForm( url, placeholder, comment_id, parent_id )
 	{
+		cookies.set('comments-state-<?=$form->getAnchorIt()->getId()?>', 'open', {hoursToLive:0});
+	
 		formDestroy();
 
 		lastForm.html(lastFormContent);
@@ -99,7 +103,7 @@
 
 	function refreshCommentsThread( thread_id )
 	{
-		if ( !validateForm($('#object_form')) ) return false; 
+		if ( !validateForm($('form[name=object_form]')) ) return false; 
 
 		$('#commentsreply'+thread_id).html('<img src="/images/ajax-loader.gif">');
 		

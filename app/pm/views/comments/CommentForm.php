@@ -103,11 +103,11 @@ class CommentForm extends PMForm
 	{
 		if ( $this->getAction() == CO_ACTION_MODIFY )
 		{
-			return translate('Сохранить');
+			return translate('РЎРѕС…СЂР°РЅРёС‚СЊ');
 		}
 		else
 		{
-			return translate('Отправить');
+			return translate('РћС‚РїСЂР°РІРёС‚СЊ');
 		}
 	}
 

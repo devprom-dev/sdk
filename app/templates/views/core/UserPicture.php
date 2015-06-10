@@ -11,7 +11,7 @@ switch ( $image )
 		$size = 30;
 		break;
 	case 'userpics-mini':
-		$size = 21;
+		$size = 18;
 		break;
 }
 

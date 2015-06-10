@@ -16,6 +16,10 @@ class RequestTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  		}
  	}
  	
+ 	public function showDeliveryDate( $show ) {
+ 		$this->show_delivery_date = $show;
+ 	}
+ 	
  	function drawFieldTitle( $attr )
  	{
  	}
@@ -41,4 +45,17 @@ class RequestTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  	{
  	    return $object_it->getRef('ChangeRequest');
  	}
+ 	
+ 	function getItemDisplayName( $object_it )
+ 	{
+ 		$title = parent::getItemDisplayName($object_it);
+ 		
+ 		if ( $this->show_delivery_date && $object_it->get('DeliveryDate') != '' ) {
+ 			$title .= str_replace('%1', $object_it->getDateFormat('DeliveryDate'), text(2031));
+ 		}
+ 		
+ 		return $title;
+ 	}
+ 	
+ 	private $show_delivery_date = false;
 }

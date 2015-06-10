@@ -58,7 +58,12 @@ class WikiPageIterator extends StatableIterator
  	
 	function getChildrenIt()
 	{
-		return $this->object->getChildrenIt( $this );
+		return $this->object->getRegistry()->Query(
+				array (
+						new WikiRootTransitiveFilter($this->getId()),
+						new FilterNotInPredicate(array($this->getId()))
+				)
+		);
 	}
 	
  	function hasChildren() 
@@ -126,7 +131,9 @@ class WikiPageIterator extends StatableIterator
 	
 	function getParentsArray()
 	{
-		return preg_split('/,/', trim($this->get('ParentPath'), ','));
+		return array_filter(preg_split('/,/', trim($this->get('ParentPath'), ',')), function($value) {
+				return $value > 0;
+		});
 	}
 	
 	/*
@@ -181,7 +188,7 @@ class WikiPageIterator extends StatableIterator
 	
 	function getDisplayName()
 	{
-		$title = $this->getHtmlDecoded('Caption');
+		$title = $this->get('Caption');
 
 		if ( $this->get('DocumentVersion') != '' )
 		{

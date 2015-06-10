@@ -19,7 +19,7 @@ class PageSectionComments extends InfoSection
  	
  	function getCaption()
  	{
- 		return translate('Êîììåíòàğèè');
+ 		return translate('ĞšĞ¾Ğ¼Ğ¼ĞµĞ½Ñ‚Ğ°Ñ€Ğ¸Ğ¸');
  	}
  	
  	function getObjectIt()
@@ -41,7 +41,7 @@ class PageSectionComments extends InfoSection
 		return 'pm/PageSectionComments.php';
 	}
  	
- 	function render( &$view, $parms = array() )
+ 	function render( $view, $parms = array() )
  	{
 		$comment_list = new CommentList( $this->object_it, $this->baseline );
 

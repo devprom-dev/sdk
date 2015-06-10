@@ -197,7 +197,7 @@ class Search extends CommandForm
 			$object = $model_factory->getObject($entity);
 
 	        $html .= '<table class="table"><thead>';
-	        $html .= '<tr><th>'.$object->getDisplayName().'</th><th width="60%">'.translate('Найдено').'</th></tr>';
+	        $html .= '<tr><th>'.$object->getDisplayName().'</th><th width="60%">'.translate('РќР°Р№РґРµРЅРѕ').'</th></tr>';
 	        $html .= '</thead><tbody>';
 
 	        $object_it = $result['object'];
@@ -218,7 +218,7 @@ class Search extends CommandForm
 	                if ( $position === false ) continue;
 	                
 	                $text = str_replace($search, '<strong>'.$search.'</strong>', 
-	                    substr($text, max(0, $position - $size), strlen($search) + $size));
+	                    mb_substr($text, max(0, $position - $size), mb_substr($search) + $size));
                     
     	            $html .= '<td>'.translate($object_it->object->getAttributeUserName($attribute)).': '.$text.'</td>';
 

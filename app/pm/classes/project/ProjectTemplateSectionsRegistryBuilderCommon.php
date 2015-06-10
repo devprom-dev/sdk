@@ -43,7 +43,6 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 	$items = array( 
 	 		$project,
 	 		$projectrole,
-	 		getFactory()->getObject('pm_VersionSettings'),
  			getFactory()->getObject('pm_ProjectStage'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
@@ -137,25 +136,13 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  		$items = array (
  			getFactory()->getObject('Release'),
  			getFactory()->getObject('Iteration'),
+ 			getFactory()->getObject('Milestone'),
+ 			getFactory()->getObject('PMBlogPost'),
  			getFactory()->getObject('Tag'),
  			getFactory()->getObject('Feature'),
  			getFactory()->getObject('Request'),
- 			getFactory()->getObject('RequestTag'),
- 			getFactory()->getObject('WikiTag'),
-			getFactory()->getObject('Task'),
- 			getFactory()->getObject('TaskTraceTask'),
- 			getFactory()->getObject('Milestone'),
- 			getFactory()->getObject('RequestTraceMilestone'),
- 			getFactory()->getObject('PMBlogPost'),
- 			getFactory()->getObject('Attachment'),
- 			getFactory()->getObject('Activity'),
- 			getFactory()->getObject('PMEntityCluster'),
- 			getFactory()->getObject('Comment')
+			getFactory()->getObject('Task')
  		);
- 		
- 		$log = getFactory()->getObject('ChangeLog');
- 		$log->addFilter( new ChangeLogObjectFilter('request,task,pmblogpost,milestone') );
- 		$items[] = $log; 
  		
 		$registry->addSection($registry, 'ProjectArtefacts', $items, true, text(1834));
     }

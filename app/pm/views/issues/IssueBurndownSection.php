@@ -55,7 +55,7 @@ class IssueBurndownSection extends InfoSection
                 
     		    echo '<table class="table"><thead><tr><th>';
     		        echo ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
-    		            translate('Ðåëèç').': '.$this->release_it->getDisplayName();
+    		            translate('Ð ÐµÐ»Ð¸Ð·').': '.$this->release_it->getDisplayName();
     		    echo '</th></tr></thead>';
     		    
     		    echo '<tbody><tr><td>';
@@ -94,7 +94,7 @@ class IssueBurndownSection extends InfoSection
 		{
 			array_push( $actions, array (
 				'url' => $this->release_it->getEditUrl(),
-				'name' => translate('Èçìåíèòü')
+				'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ')
 			));
 		}
 		

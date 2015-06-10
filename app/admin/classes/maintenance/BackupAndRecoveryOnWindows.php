@@ -134,7 +134,7 @@ class BackupAndRecoveryOnWindows extends BackupAndRecoveryStrategy
 		$command = 'mysqldump.exe --host='.$host_parts[0].' --port='.$host_parts[1].
 			' --user='.DB_USER.' --password='.DB_PASS.' --add-drop-table --set-charset --force' .
 			' --result-file="'.$sql_path.'devprom.sql'.
-		    '" --default-character-set=cp1251 --character-sets-dir="'.
+		    '" --default-character-set='.APP_CHARSET.' --character-sets-dir="'.
 		    SERVER_ROOT.'/mysql/share/charsets" '.DB_NAME;
 		
 		$this->writeLog("Backup: ".$command);

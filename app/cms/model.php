@@ -19,20 +19,20 @@
 	makeCache($entity);
  }
   
-  beginPage('Модель сайта');
+  beginPage('РњРѕРґРµР»СЊ СЃР°Р№С‚Р°');
 ?>
 	<table width=100% height=100%>
 		<tr>
 			<td align=left style="border-bottom:.5pt solid silver;padding-bottom:10pt;" height=30>
 				<table>
 					<Tr>
-						<td><a href="<? echo $package->getPageName(); ?>">Пакеты</a></td>
+						<td><a href="<? echo $package->getPageName(); ?>">РџР°РєРµС‚С‹</a></td>
 						<td width=20></td>
-						<td><a href="<? echo $entity->getPageName(); ?>">Сущности</a></td>
+						<td><a href="<? echo $entity->getPageName(); ?>">РЎСѓС‰РЅРѕСЃС‚Рё</a></td>
 						<td width=20></td>
-						<td><a href="<? echo $function->getPageName(); ?>">Бизнес-функции</a></td>
+						<td><a href="<? echo $function->getPageName(); ?>">Р‘РёР·РЅРµСЃ-С„СѓРЅРєС†РёРё</a></td>
 						<td width=20></td>
-						<td><a href="model.php?mode=cache">Закешировать</a></td>
+						<td><a href="model.php?mode=cache">Р—Р°РєРµС€РёСЂРѕРІР°С‚СЊ</a></td>
 					</Tr>
 				</table>
 			</td>
@@ -45,7 +45,7 @@
 					for($i = 0; $i < $packages_it->count(); $i++) {
 					?>
 						<tr>
-							<td>Пакет: <? echo $packages_it->getCaption(); ?></td>
+							<td>РџР°РєРµС‚: <? echo $packages_it->getCaption(); ?></td>
 						</tr>
 						<tr>
 							<td style="padding-left:15pt;">
@@ -58,7 +58,7 @@
 									<tr>
 										<td>
 											<? echo $entities_it->getCaption(); ?> 
-											(таблица: <? echo $entities_it->get('ReferenceName'); ?>)
+											(С‚Р°Р±Р»РёС†Р°: <? echo $entities_it->get('ReferenceName'); ?>)
 											<? echo $entities_it->getEditLink(); ?>
 										</td>
 									</tr>	
@@ -93,8 +93,8 @@
 								{
 								?>
 									<tr>
-										<td>Бизнес-функция: <? echo $fnc_it->getCaption(); ?> 
-											(класс: <? echo $fnc_it->get('ReferenceName'); ?>)</td>
+										<td>Р‘РёР·РЅРµСЃ-С„СѓРЅРєС†РёСЏ: <? echo $fnc_it->getCaption(); ?> 
+											(РєР»Р°СЃСЃ: <? echo $fnc_it->get('ReferenceName'); ?>)</td>
 									</tr>	
 								<?
 									$fnc_it->moveNext();
@@ -112,8 +112,8 @@
 		</tr>
 		<tr>
 			<td height=60>
-				Пакеты предназначены для группировки сущностей модели сайта. Сущность обязательно должна быть размещена в 
-				каком либо пакете.
+				РџР°РєРµС‚С‹ РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅС‹ РґР»СЏ РіСЂСѓРїРїРёСЂРѕРІРєРё СЃСѓС‰РЅРѕСЃС‚РµР№ РјРѕРґРµР»Рё СЃР°Р№С‚Р°. РЎСѓС‰РЅРѕСЃС‚СЊ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ СЂР°Р·РјРµС‰РµРЅР° РІ 
+				РєР°РєРѕРј Р»РёР±Рѕ РїР°РєРµС‚Рµ.
 			</td>
 		</tr>
 	</table>
@@ -138,7 +138,7 @@ function makeCache( $entity )
 	
 	while ( !$it->end() )
 	{
-	    if ( $it->get_native('ReferenceName') == 'Задача' )
+	    if ( $it->get_native('ReferenceName') == 'Р—Р°РґР°С‡Р°' )
 	    {
 	        $it->moveNext();
 	        

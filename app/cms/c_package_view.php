@@ -26,11 +26,11 @@
 		<table width=100%>
 			<tr><td>
 				<a href="<? echo $entity->getPageName().'&packageId='.$_REQUEST['packageId'];?>">
-					Добавить новую сущность в пакет</a> »
+					Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІСѓСЋ СЃСѓС‰РЅРѕСЃС‚СЊ РІ РїР°РєРµС‚</a> В»
 			</td></tr>
 			<tr><td>
 				<a href="<? echo $function->getPageName().'&packageId='.$_REQUEST['packageId'];?>">
-					Добавить новую бизнес-функцию в пакет</a> »
+					Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІСѓСЋ Р±РёР·РЅРµСЃ-С„СѓРЅРєС†РёСЋ РІ РїР°РєРµС‚</a> В»
 			</td></tr>
 		</table>
 	<?	
@@ -42,7 +42,7 @@
  class PackageForm extends Form
  {
  	function getCaption() {
-		return 'Пакет';
+		return 'РџР°РєРµС‚';
 	}
 
 	function createFieldObject( $name ) {

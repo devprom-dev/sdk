@@ -11,6 +11,6 @@ class ProjectState extends MetaobjectCacheable
  	
  	function getDisplayName()
  	{
- 		return translate('Состояние');
+ 		return translate('РЎРѕСЃС‚РѕСЏРЅРёРµ');
  	}
 }

@@ -14,19 +14,19 @@ class AttributeGroupRegistry extends ObjectRegistrySQL
 	
 	function getAll()
 	{
-		$this->add('system', translate('Ñèñòåìíûå'));
+		$this->add('system', translate('Ğ¡Ğ¸ÑÑ‚ĞµĞ¼Ğ½Ñ‹Ğµ'));
 
-		$this->add('trace', translate('Òğàññèğîâêà'));
+		$this->add('trace', translate('Ğ¢Ñ€Ğ°ÑÑĞ¸Ñ€Ğ¾Ğ²ĞºĞ°'));
 
-		$this->add('workflow', translate('Æèçíåííûé öèêë'));
+		$this->add('workflow', translate('Ğ–Ğ¸Ğ·Ğ½ĞµĞ½Ğ½Ñ‹Ğ¹ Ñ†Ğ¸ĞºĞ»'));
     	
-    	$this->add('states', translate('Ñîñòîÿíèÿ'));
+    	$this->add('states', translate('Ğ¡Ğ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ñ'));
 
-    	$this->add('transition', translate('Äëÿ ïåğåõîäà'));
+    	$this->add('transition', translate('Ğ”Ğ»Ñ Ğ¿ĞµÑ€ĞµÑ…Ğ¾Ğ´Ğ°'));
     	
-		$this->add('time', translate('Òğóäîçàòğàòû'));
+		$this->add('time', translate('Ğ¢Ñ€ÑƒĞ´Ğ¾Ğ·Ğ°Ñ‚Ñ€Ğ°Ñ‚Ñ‹'));
 		
-		$this->add('dates', translate('Äàòû'));
+		$this->add('dates', translate('Ğ”Ğ°Ñ‚Ñ‹'));
 		
 		return $this->createIterator($this->data);
 	}

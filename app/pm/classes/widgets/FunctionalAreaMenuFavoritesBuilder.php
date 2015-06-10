@@ -17,6 +17,11 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 		$this->buildQuickItems($items);
 		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']); 
 		$menus['quick']['items'][] = $report->getExact('discussions')->buildMenuItem();
+		$menus['quick']['items'] = array_merge($menus['quick']['items'],
+				array (
+						'project-log' => $report->getExact('project-log')->buildMenuItem()
+				)
+		);
 		
 		$this->buildDocumentsFolder( $menus );
 		
@@ -29,7 +34,6 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     {
 		$report = getFactory()->getObject('PMReport');
 		$custom = getFactory()->getObject('pm_CustomReport');
-    	
         $custom_it = $custom->getMyRegistry()->getAll();
 		
 	    // append default reports
@@ -66,6 +70,7 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     	{
 			 $item = $report->getExact('issuesboardcrossproject')->buildMenuItem();
 			 $item['name'] = text(1929);
+			 $item['order'] = 1;
 			 $items[] = $item;
     	}
     	
@@ -82,7 +87,9 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 			    $custom_it->moveNext(); continue;
 			}
 		    
-			$items[$custom_it->getId()] = $report->getExact($custom_it->getId())->buildMenuItem();
+			$item = $report->getExact($custom_it->getId())->buildMenuItem();
+			$item['order'] = 5; 
+			$items[$custom_it->getId()] = $item;
 			$items[$custom_it->getId()]['uid'] = $custom_it->get('ReportBase');
 			
 			$custom_it->moveNext();
@@ -94,7 +101,7 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     	if ( !getSession()->getProjectIt()->object instanceof Portfolio ) return;
     	
     	$menus['documents'] = array (
- 	        'name' => translate('Äîêóìåíòû'),
+ 	        'name' => translate('Ğ”Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ñ‹'),
             'uid' => 'documents',
             'items' => array()
  	    );

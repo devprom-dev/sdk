@@ -17,6 +17,7 @@ include "core/classes/DeploymentState.php";
 include "core/classes/exceptions/ExceptionHandler.php";
 include "core/classes/exceptions/ExceptionHandlerListenerLogger.php";
 include "core/classes/exceptions/ExceptionHandlerListenerDevprom.php";
+include "core/classes/exceptions/ExceptionHandlerListenerRaven.php";
 include "lang/classes/c_language.php";
 include "cms/c_download.php";
 include "core/c_configuration.php";

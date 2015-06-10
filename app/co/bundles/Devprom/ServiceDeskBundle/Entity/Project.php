@@ -36,12 +36,6 @@ class Project {
     private $vpd;
 
     /**
-     * @ORM\Column(type="string", name="IsSupportUsed")
-     * @var string
-     */
-    private $hassupport;
-    
-    /**
      * @param string $codeName
      */
     public function setCodeName($codeName)
@@ -105,22 +99,6 @@ class Project {
         return $this->vpd;
     }
 
-    /**
-     * @param string $hassupport
-     */
-    public function setHasSupport($flag)
-    {
-        $this->hassupport = $flat;
-    }
-
-    /**
-     * @return string
-     */
-    public function getHasSupport()
-    {
-        return $this->hassupport;
-    }
-    
     function __toString()
     {
         return $this->getName();

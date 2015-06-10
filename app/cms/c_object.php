@@ -89,21 +89,21 @@ include('c_iterator.php');
 		switch ( $this->getAttributeType( $name ) )
 		{
 			case 'integer':
-				return translate('число');
+				return translate('С‡РёСЃР»Рѕ');
 
 			case 'float':
-				return translate('число с запятой');
+				return translate('С‡РёСЃР»Рѕ СЃ Р·Р°РїСЏС‚РѕР№');
 
 			case 'date':
 			case 'datetime':
-				return translate('дата');
+				return translate('РґР°С‚Р°');
 				
 			case 'char':
-				return translate('булевое значение');
+				return translate('Р±СѓР»РµРІРѕРµ Р·РЅР°С‡РµРЅРёРµ');
 
 			case 'text':
 			case 'varchar':
-				return translate('текст');
+				return translate('С‚РµРєСЃС‚');
 				
 			default:
 				return '';
@@ -392,14 +392,14 @@ include('c_iterator.php');
 	            }
 	            // UKRAINIAN fix
 	            switch ($out_i){
-	                case 262: $out_i=179;break;// і
-	                case 182: $out_i=178;break;// І 
-	                case 260: $out_i=186;break;// є
-	                case 180: $out_i=170;break;// Є
-	                case 263: $out_i=191;break;// ї
-	                case 183: $out_i=175;break;// Ї
-	                case 321: $out_i=180;break;// ґ
-	                case 320: $out_i=165;break;// Ґ
+	                case 262: $out_i=179;break;// С–
+	                case 182: $out_i=178;break;// Р† 
+	                case 260: $out_i=186;break;// С”
+	                case 180: $out_i=170;break;// Р„
+	                case 263: $out_i=191;break;// С—
+	                case 183: $out_i=175;break;// Р‡
+	                case 321: $out_i=180;break;// Т‘
+	                case 320: $out_i=165;break;// Тђ
 	            }
 	            $out .= chr($out_i);
 	            $byte2 = false;
@@ -550,10 +550,10 @@ include('c_iterator.php');
 				$file_name = preg_replace('/\]/', ')', $file_name);
 			}
 			
-			// каждый файл размещается в подкаталоге с именем класса
+			// РєР°Р¶РґС‹Р№ С„Р°Р№Р» СЂР°Р·РјРµС‰Р°РµС‚СЃСЏ РІ РїРѕРґРєР°С‚Р°Р»РѕРіРµ СЃ РёРјРµРЅРµРј РєР»Р°СЃСЃР°
 			$filepath = $this->createFilePath($name, $it);
 
-			// копируем файл в подкаталог
+			// РєРѕРїРёСЂСѓРµРј С„Р°Р№Р» РІ РїРѕРґРєР°С‚Р°Р»РѕРі
 			copy( $_FILES[$name]['tmp_name'], $filepath);
 			
     		$sql = "UPDATE ".$this->object->getClassName()." SET ".$name."Path = '".
@@ -578,9 +578,9 @@ include('c_iterator.php');
 	//----------------------------------------------------------------------------------------------------------
  	function copyFile( $name, $source_it, $dest_it )
 	{
-		// формируем новое имя файла
+		// С„РѕСЂРјРёСЂСѓРµРј РЅРѕРІРѕРµ РёРјСЏ С„Р°Р№Р»Р°
 		$filepath = $this->createFilePath($name, $dest_it);
-		// определим путь к копируемому файлу
+		// РѕРїСЂРµРґРµР»РёРј РїСѓС‚СЊ Рє РєРѕРїРёСЂСѓРµРјРѕРјСѓ С„Р°Р№Р»Сѓ
 		$src_filepath = $this->getFilePath($name, $source_it);
 
 		copy( $src_filepath, $filepath );
@@ -593,19 +593,19 @@ include('c_iterator.php');
 	//----------------------------------------------------------------------------------------------------------
  	function copyFileOnPath( $name, $it, $dest_path )
 	{
-		// определим путь к копируемому файлу
+		// РѕРїСЂРµРґРµР»РёРј РїСѓС‚СЊ Рє РєРѕРїРёСЂСѓРµРјРѕРјСѓ С„Р°Р№Р»Сѓ
 		$src_filepath = $this->getFilePath($name, $it);
-		// копируем файл
+		// РєРѕРїРёСЂСѓРµРј С„Р°Р№Р»
 		copy( $src_filepath, $dest_path );
 	}
 
 	//----------------------------------------------------------------------------------------------------------
  	function copyFileExt( $name, $src_file_path, $dest_objectid )
 	{
-		// формируем новое имя файла
+		// С„РѕСЂРјРёСЂСѓРµРј РЅРѕРІРѕРµ РёРјСЏ С„Р°Р№Р»Р°
 		$filepath = $this->createFilePath($name, $dest_objectid);
 
-		// определим путь к копируемому файлу
+		// РѕРїСЂРµРґРµР»РёРј РїСѓС‚СЊ Рє РєРѕРїРёСЂСѓРµРјРѕРјСѓ С„Р°Р№Р»Сѓ
 		copy( $src_file_path, $filepath );
 
 		$pathinfo = pathinfo($src_file_path);			

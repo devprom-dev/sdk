@@ -7,7 +7,7 @@ class LogForm extends AdminForm
         return str_replace('%1', $this->getObjectIt()->getDisplayName(), text(1712));
     }
 
-    function getAttributes( $attribute )
+    function getAttributes()
     {
     	return array( 'Caption' );
     }
@@ -65,7 +65,7 @@ class LogForm extends AdminForm
 		return $line;
 	}
 	
-	function getRenderParms( $parms )
+	function getRenderParms()
 	{
 		return array_merge( parent::getRenderParms($parms), 
 				array (

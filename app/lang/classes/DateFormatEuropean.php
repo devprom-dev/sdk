@@ -29,7 +29,7 @@ class DateFormatEuropean extends DateFormatBase
  	
  	function getPhpDate( $time )
  	{
- 		return SystemDateTime::convertToClientTime(date('Y-m-d H:i:s', $time), 'm/j/Y'); 
+ 		return SystemDateTime::convertToClientTime(date('Y-m-d H:i:s', $time), 'j/m/Y'); 
  	}
 
  	function getDateJSFormat()
@@ -46,5 +46,14 @@ class DateFormatEuropean extends DateFormatBase
 		if ( !checkdate($month, $day, $year) ) return '';
 		
 		return $year."-".$month."-".$day;
+ 	}
+
+ 	function getDaysWording( $days )
+ 	{
+ 		if ( $days == 1 ) {
+ 			return 'day';
+ 		} else {
+ 			return 'days';
+ 		}
  	}
 }

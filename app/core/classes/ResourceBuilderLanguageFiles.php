@@ -6,7 +6,7 @@ class ResourceBuilderLanguageFiles extends ResourceBuilder
 {
     public function build( ResourceRegistry $object )
     {
-    	$lang = strtolower(getSession()->getLanguage()->getLanguage());
+    	$lang = strtolower(getSession()->getLanguageUid());
     	
    		foreach ( include(SERVER_ROOT_PATH.'/lang/'.$lang.'/resource.php') as $key => $value )
 		{

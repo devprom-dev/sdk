@@ -86,7 +86,7 @@ class WorkloadSection extends InfoSection
                 echo '<td style="min-width:300px;">';
 				    echo '<table class="table"><thead><tr><th style="white-space:normal;">';
 	        	        echo ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '').
-	        	            translate('Èòåðàöèÿ').': '.$iteration_it->getDisplayName();
+	        	            translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ').': '.$iteration_it->getDisplayName();
 	    		    echo '</th></tr></thead>';
 	    		    
 	    		    echo '<tbody><tr><td>';
@@ -119,7 +119,7 @@ class WorkloadSection extends InfoSection
 				echo '<div>'.$part_it->get('Caption').'</div>';
 			}
 			
-			$measure = translate('÷.');
+			$measure = translate('Ñ‡.');
 			$full_volume = $part_capacity;
 			$used_volume = $left_work;
 			

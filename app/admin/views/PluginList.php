@@ -30,8 +30,8 @@ class PluginList extends StaticPageList
 
 	function getColumns()
 	{
-		$this->object->addAttribute('Description', '', translate('Íàçíà÷åíèå'), true);
-		$this->object->addAttribute('File', '', translate('Ôàéë'), true);
+		$this->object->addAttribute('Description', '', translate('ÐÐ°Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ'), true);
+		$this->object->addAttribute('File', '', translate('Ð¤Ð°Ð¹Ð»'), true);
 
 		return parent::getColumns();
 	}

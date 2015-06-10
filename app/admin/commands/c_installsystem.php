@@ -97,8 +97,6 @@ class InstallSystem extends CommandForm
 			$this->replyError( text(1031).': '.$sql_script );
 		}
 
-		$file_content = str_replace("%LANGUAGE", 1, $file_content);
-		
 		$file_content = str_replace("use devprom", "use ".$dbname, $file_content);
 
 		$file_content = preg_replace("/analyze\s+table/mi", "-- analyze table", $file_content);

@@ -71,14 +71,14 @@ class CoPage extends Page
 			$menus[] = array (
 				'class' => 'header_popup',
 				'button_class' => 'btn-warning',
-				'title' => translate('Ñîçäàòü'),
+				'title' => translate('Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ'),
 				'items' => $actions
 			);
 		}
  		
 		// profile actions
 		$actions = array(
-			array ( 'name' => translate('Íàñòðîèòü ïðîôèëü'),
+			array ( 'name' => translate('ÐÐ°ÑÑ‚Ñ€Ð¾Ð¸Ñ‚ÑŒ Ð¿Ñ€Ð¾Ñ„Ð¸Ð»ÑŒ'),
 					'url' => '/profile' )						
 		);
 		
@@ -108,7 +108,7 @@ class CoPage extends Page
 			}
 			
 			array_push( $actions, 
-				array ( 'name' => translate('Âûéòè'),
+				array ( 'name' => translate('Ð’Ñ‹Ð¹Ñ‚Ð¸'),
 						'url' => '/logoff' ) );
 		}
 

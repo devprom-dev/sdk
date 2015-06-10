@@ -12,41 +12,42 @@ class AdminPageMenu extends PageMenu
 		$pages = array();
 
 		array_push($pages, array( 
-			'name' => translate('Ãëàâíàÿ'),
+			'name' => translate('Ð“Ð»Ð°Ð²Ð½Ð°Ñ'),
 			'items' => array (
-				array ( 'name' => translate('Àêòèâíîñòè'), 'url' => '/admin/activity.php' ),  
-			    array ( 'name' => translate('Îáíîâëåíèÿ'), 'url' => '/admin/updates.php' ),  
-				array ( 'name' => translate('Ðåçåðâíûå êîïèè'), 'url' => '/admin/backups.php' ),
-				array ( 'name' => translate('Ëîãè'), 'url' => '/admin/log/' )
+				array ( 'name' => translate('ÐÐºÑ‚Ð¸Ð²Ð½Ð¾ÑÑ‚Ð¸'), 'url' => '/admin/activity.php' ),  
+			    array ( 'name' => translate('ÐžÐ±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ñ'), 'url' => '/admin/updates.php' ),  
+				array( 'url' => '/admin/jobs.php', 'name' => text(2024) ),
+			    array ( 'name' => translate('Ð ÐµÐ·ÐµÑ€Ð²Ð½Ñ‹Ðµ ÐºÐ¾Ð¿Ð¸Ð¸'), 'url' => '/admin/backups.php' ),
+				array ( 'name' => translate('Ð›Ð¾Ð³Ð¸'), 'url' => '/admin/log/' )
 			)  
 		));
 		
-		array_push($pages, array( 'url' => '/admin/users.php', 'name' => translate('Ïîëüçîâàòåëè'),
+		array_push($pages, array( 'url' => '/admin/users.php', 'name' => translate('ÐŸÐ¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ð¸'),
 			'items' => array(
-				array( 'url' => '/admin/users.php', 'name' => translate('Ñïèñîê'), 'title' => translate('Ñïèñîê ïîëüçîâàòåëåé') ),
+				array( 'url' => '/admin/users.php', 'name' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº'), 'title' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹') ),
 				array(),
-				array( 'url' => '/admin/blacklist.php', 'name' => translate('Áëîêèðîâêè') )
+				array( 'url' => '/admin/blacklist.php', 'name' => translate('Ð‘Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²ÐºÐ¸') )
 			)
 		));
-		array_push($pages, array( 'url' => '/admin/projects.php', 'name' => translate('Ïðîåêòû'),
+		array_push($pages, array( 'url' => '/admin/projects.php', 'name' => translate('ÐŸÑ€Ð¾ÐµÐºÑ‚Ñ‹'),
 			'items' => array(
-				array( 'url' => '/admin/projects.php', 'name' => translate('Ñïèñîê'), 'title' => translate('Ñïèñîê ïðîåêòîâ') ),
+				array( 'url' => '/admin/projects.php', 'name' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº'), 'title' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð¾Ð²') ),
 				array(),
-				array( 'url' => '/admin/templates.php', 'name' => translate('Øàáëîíû') )
+				array( 'url' => '/admin/templates.php', 'name' => translate('Ð¨Ð°Ð±Ð»Ð¾Ð½Ñ‹') )
 			)
 		));
 
-		array_push($pages, array( 'url' => '/admin/commonsettings.php', 'name' => translate('Íàñòðîéêè'),
+		array_push($pages, array( 'url' => '/admin/commonsettings.php', 'name' => translate('ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸'),
 			'items' => array(
 				array( 'url' => '/admin/commonsettings.php', 'name' => text(1833) ),
-				array( 'url' => '/admin/mailer/', 'name' => translate('Ïî÷òà') ),
+				array( 'url' => '/admin/mailer/', 'name' => translate('ÐŸÐ¾Ñ‡Ñ‚Ð°') ),
 				array(),
-				array( 'url' => '/admin/jobs.php', 'name' => translate('Çàäàíèÿ') ),
-				array ( 'url' => '/admin/checks.php', 'name' => translate('Ïðîâåðêè') ),
-				array ( 'url' => '/admin/license/', 'name' => translate('Ëèöåíçèðîâàíèå') ),
-				array( 'url' => '/admin/plugins.php', 'name' => translate('Ïëàãèíû') ),
-		        array(),
-				array( 'url' => '/admin/dictionaries.php', 'name' => translate('Ñïðàâî÷íèêè'), 'items' => $this->getDictionaries() ),
+				array ( 'url' => '/admin/checks.php', 'name' => translate('ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ¸') ),
+				array ( 'url' => '/admin/license/', 'name' => translate('Ð›Ð¸Ñ†ÐµÐ½Ð·Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ') ),
+				array( 'url' => '/admin/plugins.php', 'name' => translate('ÐŸÐ»Ð°Ð³Ð¸Ð½Ñ‹') ),
+				array( 'url' => '/admin/systemtemplates/', 'name' => translate('Ð¢ÐµÐºÑÑ‚Ñ‹') ),
+				array(),
+				array( 'url' => '/admin/dictionaries.php', 'name' => translate('Ð¡Ð¿Ñ€Ð°Ð²Ð¾Ñ‡Ð½Ð¸ÐºÐ¸'), 'items' => $this->getDictionaries() ),
 		)
 		));
 		

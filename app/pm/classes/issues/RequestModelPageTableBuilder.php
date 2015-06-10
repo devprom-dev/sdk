@@ -26,10 +26,10 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
 		
     	if ( $methodology_it->HasReleases() )
     	{
-    		$object->addAttribute('ReleaseStartDate', 'DATE', translate('Ðåëèç').': '.translate('Íà÷àëî'), false);
-    		$object->addAttribute('ReleaseFinishDate', 'DATE', translate('Ðåëèç').': '.translate('Îêîí÷àíèå'), false);
-    		$object->addAttribute('ReleaseEstimatedStart', 'DATE', translate('Ðåëèç').': '.translate('Îöåíêà íà÷àëà'), false);
-    		$object->addAttribute('ReleaseEstimatedFinish', 'DATE', translate('Ðåëèç').': '.translate('Îöåíêà îêîí÷àíèÿ'), false);
+    		$object->addAttribute('ReleaseStartDate', 'DATE', translate('Ð ÐµÐ»Ð¸Ð·').': '.translate('ÐÐ°Ñ‡Ð°Ð»Ð¾'), false);
+    		$object->addAttribute('ReleaseFinishDate', 'DATE', translate('Ð ÐµÐ»Ð¸Ð·').': '.translate('ÐžÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ðµ'), false);
+    		$object->addAttribute('ReleaseEstimatedStart', 'DATE', translate('Ð ÐµÐ»Ð¸Ð·').': '.translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð½Ð°Ñ‡Ð°Ð»Ð°'), false);
+    		$object->addAttribute('ReleaseEstimatedFinish', 'DATE', translate('Ð ÐµÐ»Ð¸Ð·').': '.translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð¾ÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ñ'), false);
     		$object->addPersister( new RequestReleaseDatesPersister() );
 
     		$attributes = array('ReleaseStartDate', 'ReleaseFinishDate', 'ReleaseEstimatedStart', 'ReleaseEstimatedFinish');
@@ -41,13 +41,13 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     	
         if ( $methodology_it->HasPlanning() )
     	{
- 	        $object->addAttribute('Iterations', 'REF_IterationId', translate('Èòåðàöèÿ'), false);
+ 	        $object->addAttribute('Iterations', 'REF_IterationId', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ'), false);
  	        $object->addPersister( new RequestIterationsPersister() );
     		
- 	        $object->addAttribute('IterationStartDate', 'DATE', translate('Èòåðàöèÿ').': '.translate('Íà÷àëî'), false);
-    		$object->addAttribute('IterationFinishDate', 'DATE', translate('Èòåðàöèÿ').': '.translate('Îêîí÷àíèå'), false);
-    		$object->addAttribute('IterationEstimatedStart', 'DATE', translate('Èòåðàöèÿ').': '.translate('Îöåíêà íà÷àëà'), false);
-    		$object->addAttribute('IterationEstimatedFinish', 'DATE', translate('Èòåðàöèÿ').': '.translate('Îöåíêà îêîí÷àíèÿ'), false);
+ 	        $object->addAttribute('IterationStartDate', 'DATE', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ').': '.translate('ÐÐ°Ñ‡Ð°Ð»Ð¾'), false);
+    		$object->addAttribute('IterationFinishDate', 'DATE', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ').': '.translate('ÐžÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ðµ'), false);
+    		$object->addAttribute('IterationEstimatedStart', 'DATE', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ').': '.translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð½Ð°Ñ‡Ð°Ð»Ð°'), false);
+    		$object->addAttribute('IterationEstimatedFinish', 'DATE', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ').': '.translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð¾ÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ñ'), false);
     		$object->addPersister( new RequestIterationDatesPersister() );
 
     		$attributes = array('IterationStartDate', 'IterationFinishDate', 'IterationEstimatedStart', 'IterationEstimatedFinish');
@@ -57,7 +57,7 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
         	}
     	}
     	
-		$object->addAttribute('RecentComment', 'RICHTEXT', translate('Êîììåíòàðèè'), false);
+		$object->addAttribute('RecentComment', 'WYSIWYG', translate('ÐšÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¸'), false);
 		
 		$comment = getFactory()->getObject('Comment');
 		$object->addPersister( new CommentRecentPersister() );

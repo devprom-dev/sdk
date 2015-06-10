@@ -39,13 +39,6 @@ class CloneLogic
 				    break;
 					
 				// special case of template importing				
-				case 'pm_VersionSettings':
-					
-				    CloneLogic::applyToVersionSettings( $context, $attrs, $iterator, $project_it );
-					
-				    break;
-					
-				// special case of template importing				
 				case 'pm_State':
 					
 				    $id = CloneLogic::applyToState( $context, $attrs, $iterator, $project_it );
@@ -489,6 +482,8 @@ class CloneLogic
 				break;
 				
 			case 'pm_UserSetting':
+				if ( $it->get('Setting') == md5('emailnotification') ) return array();
+				
 				$it->object->setRegistry(new ObjectRegistrySQL());
 				$setting_it = $it->object->getRegistry()->Query(
 						array (
@@ -539,12 +534,7 @@ class CloneLogic
 				break;
 				
 			case 'ObjectChangeLog':
-
 				$parms['ObjectId'] = $ids_map[$it->get('EntityRefName')][$it->get('ObjectId')];
-				
-				//$parms['RecordCreated'] = $it->get('RecordCreated');
-				//$parms['RecordModified'] = $it->get('RecordModified');
-				
 				if ( $parms['ObjectId'] < 1 )
 				{
 					$parms = array();
@@ -554,6 +544,13 @@ class CloneLogic
 					$parms['Content'] = preg_replace_callback('/\&version=([\d]+)/i', 
 							function($matches) use ($ids_map) {
 									return '&version='.$ids_map['WikiPageChange'][$matches[1]];
+							}, $it->getHtmlDecoded('Content')
+						);
+					
+					$uid = new ObjectUID();
+					$parms['Content'] = preg_replace_callback('/\[(([A-Z]{1})-(\d+))\]/i', 
+							function($matches) use ($ids_map, $uid) {
+									return $matches[2].'-'.$ids_map[$uid->getClassNameByUid($matches[1])][$matches[3]];
 							}, $it->getHtmlDecoded('Content')
 						);
 				}
@@ -618,19 +615,36 @@ class CloneLogic
 					
 					if ( $parms[$attr] == '' && $attr == 'WikiEditorClass' )
 					{
-						$parms[$attr] = 'WikiSyntaxEditor';
+						switch( $attr ) {
+							case 'WikiEditorClass':
+								$parms[$attr] = 'WikiSyntaxEditor';
+								break;
+							case 'DaysInWeek':
+								$parms[$attr] = '5';
+								break;		
+							case 'Importance':
+								$parms[$attr] = '3';
+								break;		
+						}
 					}
-					if ( $parms[$attr] == '' && $attr == 'DaysInWeek' )
-					{
-						$parms[$attr] = '5';
-					}
+			}
+		}
+		
+		// remember obsolete attributes values
+		foreach( array('IsSubversionUsed', 'IsSupportUsed', 'IsFileServer', 'IsBlogUsed', 'IsKnowledgeUsed') as $attribute )
+		{
+			if ( $it->get($attribute) != '' ) {
+				$context->setDefaultParms(
+						array_merge( 
+								$context->getDefaultParms(),
+								array ( $attribute => $it->get($attribute) )
+						)
+				);
 			}
 		}
 
 		$project_it->object->modify_parms($project_it->getId(), $parms);
-		
 		$project_it->invalidateCache();
-		
 		getSession()->setProjectIt($project_it);
  	}
 
@@ -696,8 +710,6 @@ class CloneLogic
 		
 		foreach ( $attrs as $attr )
 		{
-			if ( in_array($attr,$licensed_attrs) && !$it->object->IsAttributeVisible($attr) ) continue;
-			
 			if ( $attr == 'RequestEstimationRequired' )
 			{
 				if ( $it->get_native($attr) == 'Y' || $it->get_native($attr) == 'N' )
@@ -719,31 +731,20 @@ class CloneLogic
 
 		$parms['Project'] = $project_it->getId();
 		
-		$methodology_it = $project_it->getMethodologyIt(); 		
-						
-		$methodology_it->object->modify_parms($methodology_it->getId(), $parms);
-		
-		getSession()->getProjectIt()->invalidateCache();
- 	}
-
- 	static function applyToVersionSettings( & $context, & $attrs, & $it, & $project_it )
- 	{
- 		global $model_factory;
- 		
-		$parms = array();
-		
-		foreach ( $attrs as $attr )
+		// get values for obsolete attributes
+		foreach( array('IsSubversionUsed', 'IsSupportUsed', 'IsFileServer', 'IsBlogUsed', 'IsKnowledgeUsed') as $attribute )
 		{
-			$parms[$attr] = $it->get_native($attr);
+			if ( $it->get($attribute) == '' ) {
+				$defaults = $context->getDefaultParms();
+				if ( $defaults[$attribute] != '' ) {
+					$parms[$attribute] = $defaults[$attribute]; 
+				}
+			}
 		}
-
-		$parms['Project'] = $project_it->getId();
 		
-		$settings = $model_factory->getObject('pm_VersionSettings');
-
-		$settings_it = $settings->getByRef('Project', $project_it->getId());
-		
-		$settings->modify_parms($settings_it->getId(), $parms);
+		$methodology_it = $project_it->getMethodologyIt(); 		
+		$methodology_it->object->modify_parms($methodology_it->getId(), $parms);
+		getSession()->getProjectIt()->invalidateCache();
  	}
 
 	static function duplicate( $iterator, $parms ) 

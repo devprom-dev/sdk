@@ -11,7 +11,7 @@
   $pckgs = new Package;
   $fnc = new BusinessFunction;
 
-  beginPage('Главная');
+  beginPage('Р“Р»Р°РІРЅР°СЏ');
 ?>
 	<table width=70% cellpadding=6 cellspacing=0 style="border-collapse:collapse;">
 		<tr><td height=15></td></tr>
@@ -21,7 +21,7 @@
 	{
 	?>
 		<tr><td height=30 valign=top style="border:.5pt solid #cecefe;background:#A9A3A3;color:white;font-weight:bold;">
-			<? echo $package_it->getCaption(); ?> »
+			<? echo $package_it->getCaption(); ?> В»
 		</td></tr>
 		<tr><td style="padding-left:6pt;border:.5pt solid #cecefe;padding-bottom:8pt;">
 			<table cellpadding=3 width=100%>
@@ -74,7 +74,7 @@
 	?>
 		<tr>
 			<td>
-				Для создания модели предметной области перейдите на страницу <a href="model.php">настройки модели »</a>
+				Р”Р»СЏ СЃРѕР·РґР°РЅРёСЏ РјРѕРґРµР»Рё РїСЂРµРґРјРµС‚РЅРѕР№ РѕР±Р»Р°СЃС‚Рё РїРµСЂРµР№РґРёС‚Рµ РЅР° СЃС‚СЂР°РЅРёС†Сѓ <a href="model.php">РЅР°СЃС‚СЂРѕР№РєРё РјРѕРґРµР»Рё В»</a>
 			</td>
 		</tr>
 	<?

@@ -9,27 +9,6 @@ class RequestTraceList extends RequestList
  	
 	function IsNeedToDisplayOperations() { return false; } 
 
-	function setupColumns()
-	{
-		$visible = array_merge( 
-				array(
-						'UID', 
-						'Caption'
-				), 
-		    	$this->getObject()->getAttributesByGroup('trace')
-		);
-		
-		parent::setupColumns();
-		
-		$attrs = $this->object->getAttributes();
-		
-		foreach( $attrs as $key => $attr )
-		{
-			$this->object->setAttributeVisible( $key, in_array($key, $visible) ); 
-		}
-		
-	}
-	
   	function getItemActions( $caption, $object_it )
  	{
  	    return array();

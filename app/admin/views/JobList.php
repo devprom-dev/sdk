@@ -16,8 +16,8 @@ class JobList extends PageList
 
 	function getColumns()
 	{
-		$this->object->addAttribute('Schedule', '', translate('Расписание'), true);
-		$this->object->addAttribute('LastRun', '', translate('Предыдущий запуск'), true);
+		$this->object->addAttribute('Schedule', '', translate('Р Р°СЃРїРёСЃР°РЅРёРµ'), true);
+		$this->object->addAttribute('LastRun', '', translate('РџСЂРµРґС‹РґСѓС‰РёР№ Р·Р°РїСѓСЃРє'), true);
 
 		$this->object->addAttribute('LastDuration', 'INTEGER', text(1124), true, true);
 		$this->object->addAttribute('AverageDuration', 'INTEGER', text(1125), true, true);
@@ -81,14 +81,14 @@ class JobList extends PageList
 		
 		array_push( $actions, array( 
 		    'url' => '/tasks/command.php?class=runjobs&job='.$object_it->getId().'&redirect=/admin/jobs.php', 
-		    'name' => translate('Запустить') 
+		    'name' => translate('Р—Р°РїСѓСЃС‚РёС‚СЊ') 
 		));
 
 		$actions[] = array();
 		
 		array_push( $actions, array( 
 		    'url' => '?job='.$object_it->getId(),
-		    'name' => translate('Результаты') 
+		    'name' => translate('Р РµР·СѓР»СЊС‚Р°С‚С‹') 
 		));
 
 		return $actions;

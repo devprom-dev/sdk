@@ -4,7 +4,7 @@ class JobDescriptionSection extends InfoSection
 {
 	function getCaption()
 	{
-		return translate('Дополнительно');
+		return translate('Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ');
 	}
 
 	function drawBody()

@@ -6,7 +6,7 @@ class WikiTemplateList extends PMPageList
  	{
  	    $this->getObject()->setAttributeOrderNum( 'Content', 0 );
 
-        $this->getObject()->setAttributeCaption( 'UserField1', translate('Шаблон по умолчанию') );
+        $this->getObject()->setAttributeCaption( 'UserField1', translate('РЁР°Р±Р»РѕРЅ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ') );
  	    
 		parent::setupColumns();
  	}
@@ -32,7 +32,7 @@ class WikiTemplateList extends PMPageList
 		{
 			case 'UserField1':
 			    
-				echo ($object_it->get($attr) == 'Y' ? translate('Да') : translate('Нет'));
+				echo ($object_it->get($attr) == 'Y' ? translate('Р”Р°') : translate('РќРµС‚'));
 				
 				break;
 				

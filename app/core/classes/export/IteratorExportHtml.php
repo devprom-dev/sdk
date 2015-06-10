@@ -12,7 +12,7 @@ class IteratorExportHtml extends IteratorExport
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-control: no-store");
 
-		header('Content-Type: text/html; charset=windows-1251');
+		header('Content-Type: text/html; charset='.APP_ENCODING);
 
  		$fields = $this->getFields();
  		
@@ -51,7 +51,7 @@ class IteratorExportHtml extends IteratorExport
  					    
  					    if ( is_array($value) ) $value = join('<br/>', $value);
  					    
- 						$text = html_entity_decode($value, ENT_COMPAT | ENT_HTML401, 'cp1251'); 
+ 						$text = html_entity_decode($value, ENT_COMPAT | ENT_HTML401, APP_ENCODING); 
  				}
  				
  				$result .= '<td>'.$text.'</td>';

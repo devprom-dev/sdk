@@ -13,7 +13,7 @@ class UserProjectsSection extends InfoSection
 
 	function getCaption() 
 	{
-		return translate('Проекты');
+		return translate('РџСЂРѕРµРєС‚С‹');
 	}
 
 	function getRenderParms()

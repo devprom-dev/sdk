@@ -6,6 +6,7 @@ include_once SERVER_ROOT_PATH."pm/methods/ReorderWebMethod.php";
 class PMPageList extends PageList
 {
 	private $order_method = null;
+	private $reference_widgets = array();
 	
     function PMPageList( $object )
     {
@@ -22,6 +23,14 @@ class PMPageList extends PageList
 		{
 			$this->order_method = new ReorderWebMethod($this->getObject()->getEmptyIterator());
 			$this->order_method->setInput();
+		}
+		
+		$it = getFactory()->getObject('ObjectsListWidget')->getAll();
+		while( !$it->end() )
+		{
+			$menu = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId())->buildMenuItem();
+			$this->reference_widgets[$it->get('Caption')] = $menu['url'];
+			$it->moveNext();
 		}
 	}
     
@@ -75,7 +84,7 @@ class PMPageList extends PageList
         			$class = strtolower(get_class($this->getObject()));
         			
     				echo '<a href="'.$report_it->getUrl().'&object='.$class.'&'.$class.'='.$object_it->getId().'&start='.$object_it->get($attr).'">';
-    				    echo translate('Все изменения');
+    				    echo translate('Р’СЃРµ РёР·РјРµРЅРµРЅРёСЏ');
     				echo '</a>';
         		}
 			    
@@ -93,6 +102,14 @@ class PMPageList extends PageList
 				}
 			    
 			    break;
+			    
+			case 'RecentComment':
+				parent::drawCell( $object_it, $attr );
+				echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+						'object_it' => $object_it,
+						'redirect' => 'donothing'
+				));
+				break;
 			    
             default:
                 parent::drawCell( $object_it, $attr );
@@ -120,13 +137,18 @@ class PMPageList extends PageList
         }
     }
     
+	function getReferencesListWidget( $object )
+	{
+		return $this->reference_widgets[get_class($object)];
+	}
+    
  	function setupColumns()
 	{
 	   	$values = $this->getFilterValues();
 		
 		if ( !in_array($values['baseline'], array('', 'all', 'none')) )
 		{
-		    $this->getObject()->addAttribute( 'History', 'TEXT', translate('История изменений'), true );
+		    $this->getObject()->addAttribute( 'History', 'TEXT', translate('РСЃС‚РѕСЂРёСЏ РёР·РјРµРЅРµРЅРёР№'), true );
 		}
 		
 	    parent::setupColumns();

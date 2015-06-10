@@ -8,7 +8,7 @@ class ResourceBuilderCoLanguageFile extends ResourceBuilder
     {
    		global $text_array;
 
-   		$file_name = strtolower(getSession()->getLanguage()->getLanguage()).'/resource.php';
+   		$file_name = strtolower(getSession()->getLanguageUid()).'/resource.php';
    		        
 		include SERVER_ROOT_PATH.'/co/bundles/Devprom/ApplicationBundle/Resources/text/'.$file_name;
    		        

@@ -47,6 +47,6 @@ class ProfilePage extends PMPage
 			$_REQUEST['pm_Participantaction'] = 'show';
 		}
 
-		return new ProfileForm();
+		return new ProfileForm(getFactory()->getObject('pm_Participant'));
  	}
 }

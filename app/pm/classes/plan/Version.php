@@ -31,6 +31,11 @@ class Version extends Metaobject
 		
  	function getDisplayName()
  	{
- 	    return translate('Версия');
+ 	    return translate('Р’РµСЂСЃРёСЏ');
  	}
+
+	function getVpds()
+	{
+		return array();
+	}
 }

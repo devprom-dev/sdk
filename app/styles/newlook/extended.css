@@ -438,8 +438,9 @@ section.modal-fullscreen {
 
 section.modal-fullscreen .row-fluid
 {
-	margin-left: 10px;
-	width: 98%;
+	padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
 }
 
 .right-side-tab .tab-pane
@@ -635,6 +636,7 @@ div.embeddedRowTitle .btn-group .btn
 {
     background: none;
 	background-color: #666666;
+	padding: 0;
 }
 
 form .actions
@@ -952,4 +954,45 @@ i.icon-broken {
   background-image: url("/images/exclamation.png");
   background-position: 0px 0px;
   background-repeat: no-repeat;
+}
+
+th.list_header .btn-group
+{
+	white-space: inherit;
+}
+
+th.list_header li
+{
+	text-align: left;
+}
+
+#modal-form iframe
+{
+    border: none;
+    width: 100%;
+}
+
+.bulk-filter-actions {
+	display:none;
+}
+
+.tabs ul.ui-dialog-titlebar {
+	margin: 4px 8px 8px 8px;
+}
+
+.tabs span.ui-icon-closethick {
+	cursor: pointer;
+}
+
+.ui-tabs .ui-tabs-nav li a {
+    color:#808080;
+}
+
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected a {
+	color:#404040;
+	font-weight: bold;
+}
+
+.board-tasks + .board-tasks {
+    margin-right: 0;
 }

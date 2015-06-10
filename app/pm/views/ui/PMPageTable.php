@@ -61,16 +61,6 @@ class PMPageTable extends PageTable
         return $this->getPage()->getReportBase();
     }
     
-    function IsFilterPersisted()
-    {
-        if ( is_numeric($this->getReport()) )
-        {
-            return true; // persistence of the report will be checked other way 
-        }
-        
-        return parent::IsFilterPersisted();
-    }
-    
     function hasCrossProjectFilter()
     {
 		if ( $this->getListRef() instanceof PageBoard )
@@ -218,7 +208,7 @@ class PMPageTable extends PageTable
 		$base_actions[] = array();
                         
 		$base_actions[] = array (
-           		'name' => translate('Ğåäàêòèğîâàòü'),
+           		'name' => translate('Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ'),
 				'url' => $custom_it->getEditUrl()
 		);
                         
@@ -234,7 +224,7 @@ class PMPageTable extends PageTable
 
 			$base_actions[] = array();
 			$base_actions[] = array (
-					'name' => translate('Óäàëèòü'),
+					'name' => translate('Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ'),
 					'url' => $method->getJsCall()
 			);
 		}
@@ -346,8 +336,9 @@ class PMPageTable extends PageTable
 
 		// overrride defaults with custom settings
 		$values = array_merge(
-				$values, 
+				$values,
 				$this->buildFilterValuesBySettings(
+						$values,
 						$this->getPage()->getSettingsBuilder()->getByPageTable($this)
         		)
         );
@@ -356,37 +347,33 @@ class PMPageTable extends PageTable
 		if ( $this->getReport() != '' )
 		{
 			$values = array_merge(
-					$values, 
+					$values,
 					$this->buildFilterValuesBySettings(
+							$values,
 							$this->getPage()->getSettingsBuilder()->getByReport($this->getReportBase())
         			)
 			);
-			
 			$query_string = getFactory()->getObject('PMReport')->getExact($this->getReport())->get('QueryString');
 		}
 		
-		if ( $query_string == '' ) return $values;
-		
-		foreach( preg_split('/\&/', $query_string) as $query )
-		{
-			list($query_parm, $query_value) = preg_split('/\=/' ,$query);
-
-			if ( $query_parm == 'hide' )
-			{
-				$values[$query_parm] = join('-', array($values[$query_parm], $query_value));
+		if ( $query_string != '' ) {
+			foreach( preg_split('/\&/', $query_string) as $query ) {
+				list($query_parm, $query_value) = preg_split('/\=/' ,$query);
+	
+				if ( $query_parm == 'hide' ) {
+					$values[$query_parm] = join('-', array($values[$query_parm], $query_value));
+				}
+				else {
+					$values[$query_parm] = $query_value;
+				}
 			}
-			else
-			{
-				$values[$query_parm] = $query_value;
-			}
+			$values['hide'] = join('-',array_diff(preg_split('/-/',$values['hide']), preg_split('/-/',$values['show'])));
 		}
 		
-		$values['hide'] = join('-',array_diff(preg_split('/-/',$values['hide']), preg_split('/-/',$values['show'])));
-
 		return $values;
 	}
 	
-	public function buildFilterValuesBySettings( & $setting )
+	public function buildFilterValuesBySettings( $default_values, & $setting )
 	{
 		$values = array();
 
@@ -408,6 +395,7 @@ class PMPageTable extends PageTable
 	    	{
 		    	foreach( $setting->getFilters() as $filter )
 		    	{
+		    		if ( $default_values[$filter] != '' ) continue;
 		    		$values[$filter] = 'all';
 		    	}
 	    	}
@@ -472,10 +460,10 @@ class PMPageTable extends PageTable
    		$project->addFilter( new FilterInPredicate($ids) );
         
    		if ( count($ids) > 20 ) {
-			$filter = new FilterAutocompleteWebMethod( $project, translate('Ïğîåêò'), 'target' );
+			$filter = new FilterAutocompleteWebMethod( $project, translate('ĞŸÑ€Ğ¾ĞµĞºÑ‚'), 'target' );
    		}
    		else {
-			$filter = new FilterObjectMethod( $project, translate('Ïğîåêò'), 'target' );
+			$filter = new FilterObjectMethod( $project, translate('ĞŸÑ€Ğ¾ĞµĞºÑ‚'), 'target' );
 	        $filter->setUseUid(false);
    		}
         		
@@ -544,7 +532,7 @@ class PMPageTable extends PageTable
     
 	protected function buildFilterWatcher()
 	{
-		$filter = new FilterObjectMethod( getFactory()->getObject('WatcherUser'), translate('Íàáëşäàòåëè'), 'watcher' );
+		$filter = new FilterObjectMethod( getFactory()->getObject('WatcherUser'), translate('ĞĞ°Ğ±Ğ»ÑĞ´Ğ°Ñ‚ĞµĞ»Ğ¸'), 'watcher' );
 		$filter->setHasNone(false);
 		return $filter;
 	}

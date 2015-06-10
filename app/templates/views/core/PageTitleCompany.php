@@ -6,8 +6,8 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th><?=(translate('Ïîðòôåëè').(count($programs) > 0 ? ' / '.translate('Ïðîãðàììû') : ''))?></th>
-                            <th><?=translate('Ïðîåêòû')?></th>
+                            <th><?=(translate('ÐŸÐ¾Ñ€Ñ‚Ñ„ÐµÐ»Ð¸').(count($programs) > 0 ? ' / '.translate('ÐŸÑ€Ð¾Ð³Ñ€Ð°Ð¼Ð¼Ñ‹') : ''))?></th>
+                            <th><?=translate('ÐŸÑ€Ð¾ÐµÐºÑ‚Ñ‹')?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -50,8 +50,8 @@
                         </tr>
                         <tr>
                             <td>
-                            <?php if ( getSession()->getUserIt()->get('IsAdmin') == 'Y' ) { ?>
-                                <i class="icon-wrench"></i> <a href="/admin/"><?=translate('Àäìèíèñòðèðîâàíèå')?></a>
+                            <?php foreach ( $admin_actions as $action ) { ?>
+                                <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                             <?php } ?>
                             </td>
                             <td>

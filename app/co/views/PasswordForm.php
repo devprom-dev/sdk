@@ -4,7 +4,7 @@ class PasswordForm extends AjaxForm
 {
  	function getModifyCaption()
  	{
- 		return translate('Изменение пароля');
+ 		return translate('РР·РјРµРЅРµРЅРёРµ РїР°СЂРѕР»СЏ');
  	}
 
     function getFormUrl()
@@ -48,13 +48,13 @@ class PasswordForm extends AjaxForm
 		switch ( $attribute )
 		{
 			case 'CurrentPassword':
-				return translate('Текущий пароль');
+				return translate('РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ');
 				
 			case 'NewPassword':
-				return translate('Новый пароль');
+				return translate('РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ');
 
 			case 'RepeatPassword':
-				return translate('Повтор нового пароля');
+				return translate('РџРѕРІС‚РѕСЂ РЅРѕРІРѕРіРѕ РїР°СЂРѕР»СЏ');
 		}
 	}
 

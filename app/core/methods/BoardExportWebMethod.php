@@ -6,7 +6,7 @@ class BoardExportWebMethod extends ExportWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Печать карточек');
+ 		return translate('РџРµС‡Р°С‚СЊ РєР°СЂС‚РѕС‡РµРє');
  	}
  	
  	function getJSCall( $class )

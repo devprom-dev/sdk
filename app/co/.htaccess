@@ -6,5 +6,5 @@ RewriteRule ^images/([^/]+)$ /images/$1 [L]
 RewriteRule ^scripts/.+$ /app/front.php [L]
 
 RewriteRule ^login\.php$ /login [R=301,L]
-RewriteRule ^projects\.php$ /pm/my [R=301,L]
-RewriteRule ^projects$ /pm/my [R=301,L]
+RewriteRule ^projects\.php$ / [R=301,L]
+RewriteRule ^projects$ / [R=301,L]

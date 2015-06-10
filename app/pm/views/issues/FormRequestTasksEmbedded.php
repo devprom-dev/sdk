@@ -73,7 +73,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 		$method->setRedirectUrl($todo);
 		
 		$actions[] = array (
-				'name' => translate('Èçìåíèòü'),
+				'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ'),
 				'url' => $method->getJSCall()
 		);
 		

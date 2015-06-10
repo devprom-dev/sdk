@@ -1,6 +1,6 @@
 <?php
 /**
- * Çàãðóç÷èê ïðîïåðòåé äëÿ ñåðâèñäåñêà. Èñïîëüçóåòñÿ ñ PhpFileLoader
+ * Ð—Ð°Ð³Ñ€ÑƒÐ·Ñ‡Ð¸Ðº Ð¿Ñ€Ð¾Ð¿ÐµÑ€Ñ‚ÐµÐ¹ Ð´Ð»Ñ ÑÐµÑ€Ð²Ð¸ÑÐ´ÐµÑÐºÐ°. Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÑ‚ÑÑ Ñ PhpFileLoader
  *
  * @see Symfony\Component\DependencyInjection\Loader\PhpFileLoader
  * @author Kosta Korenkov <7r0ggy@gmail.com>

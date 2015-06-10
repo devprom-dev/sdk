@@ -29,6 +29,10 @@ _mailer_store:
 _admin_logs:
     pattern:  /admin/log/
     defaults: { _controller: AdministrativeBundle:Logs:index }
+
+_admin_systemplates:
+    pattern:  /admin/systemtemplates/
+    defaults: { _controller: AdministrativeBundle:SystemTemplate:index }
     
 _admin_scripts:
     pattern:  /admin/scripts/javascript/
@@ -50,4 +54,5 @@ _admin_page:
     pattern:  /{module}/{namespace}/{page}
     defaults: { _controller: AdministrativeBundle:Main:index }
 
+    
     

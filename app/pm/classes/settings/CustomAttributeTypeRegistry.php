@@ -8,37 +8,37 @@ class CustomAttributeTypeRegistry extends ObjectRegistrySQL
  				array (
  						'entityId' => 1,
  						'ReferenceName' => 'integer',
- 						'Caption' => translate('Число')
+ 						'Caption' => translate('Р§РёСЃР»Рѕ')
  				),
  				array (
  						'entityId' => 2,
  						'ReferenceName' => 'dictionary',
- 						'Caption' => translate('Справочник')
+ 						'Caption' => translate('РЎРїСЂР°РІРѕС‡РЅРёРє')
  				),
  				array (
  						'entityId' => 3,
  						'ReferenceName' => 'date',
- 						'Caption' => translate('Дата')
+ 						'Caption' => translate('Р”Р°С‚Р°')
  				),
  				array (
  						'entityId' => 4,
  						'ReferenceName' => 'string',
- 						'Caption' => translate('Строка текста')
+ 						'Caption' => translate('РЎС‚СЂРѕРєР° С‚РµРєСЃС‚Р°')
  				),
  				array (
  						'entityId' => 5,
  						'ReferenceName' => 'text',
- 						'Caption' => translate('Текстовое поле')
+ 						'Caption' => translate('РўРµРєСЃС‚РѕРІРѕРµ РїРѕР»Рµ')
  				),
  				array (
  						'entityId' => 6,
  						'ReferenceName' => 'wysiwyg',
- 						'Caption' => translate('Редактор WYSIWYG')
+ 						'Caption' => translate('Р РµРґР°РєС‚РѕСЂ WYSIWYG')
  				),
  				array (
  						'entityId' => 7,
  						'ReferenceName' => 'reference',
- 						'Caption' => translate('Ссылка')
+ 						'Caption' => translate('РЎСЃС‹Р»РєР°')
  				)
  		));  
  	}

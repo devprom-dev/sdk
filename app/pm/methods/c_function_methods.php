@@ -26,15 +26,15 @@ include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Вид');
+ 		return translate('Р’РёРґ');
  	}
  	
  	function getValues()
  	{
   		return array (
- 			'list' => translate('Список'), 
- 			'chart' => translate('График поставки'),
- 			'trace' => translate('Трассировка')
+ 			'list' => translate('РЎРїРёСЃРѕРє'), 
+ 			'chart' => translate('Р“СЂР°С„РёРє РїРѕСЃС‚Р°РІРєРё'),
+ 			'trace' => translate('РўСЂР°СЃСЃРёСЂРѕРІРєР°')
  			);
 	}
 
@@ -71,15 +71,15 @@ include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Состояние');
+ 		return translate('РЎРѕСЃС‚РѕСЏРЅРёРµ');
  	}
 
  	function getValues()
  	{
   		return array (
- 			'all' => translate('Все'), 
- 			'open' => translate('Не реализованы'),
- 			'closed'  => translate('Реализованы')
+ 			'all' => translate('Р’СЃРµ'), 
+ 			'open' => translate('РќРµ СЂРµР°Р»РёР·РѕРІР°РЅС‹'),
+ 			'closed'  => translate('Р РµР°Р»РёР·РѕРІР°РЅС‹')
  			);
 	}
 
@@ -116,7 +116,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Стадия проекта');
+ 		return translate('РЎС‚Р°РґРёСЏ РїСЂРѕРµРєС‚Р°');
  	}
 
  	function FunctionFilterStageWebMethod()

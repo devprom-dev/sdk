@@ -12,9 +12,9 @@ class RequestTag extends Tag
  	{
  		parent::Metaobject('pm_RequestTag');
 
-		$this->addAttribute('Caption', 'TEXT', translate('Íàçâàíèå'), false);
+		$this->addAttribute('Caption', 'TEXT', translate('ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ'), false);
 		
-		$this->addAttribute('ItemCount', 'INTEGER', translate('Êîëè÷åñòâî'), false);
+		$this->addAttribute('ItemCount', 'INTEGER', translate('ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾'), false);
 
 		$this->addPersister( new RequestTagCaptionPersister() );
  	}

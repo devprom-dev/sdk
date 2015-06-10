@@ -29,6 +29,7 @@ define('DOCUMENT_ROOT', $document_root);
 define('CACHE_PATH', DOCUMENT_ROOT.'cache');
 include(DOCUMENT_ROOT . 'settings.php');
 include(SERVER_ROOT_PATH . 'classes.php');
+include(SERVER_ROOT_PATH . 'constants.php');
 
 // let's remove custom keys from ArgInput
 foreach ($_SERVER['argv'] as $k => $v) 

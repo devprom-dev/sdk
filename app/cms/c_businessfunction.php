@@ -20,11 +20,11 @@
  {
  	function BusinessFunction()
 	{
-		$this->attributes = array( 'Caption' => array('TEXT', 'Название', true),
-								   'ReferenceName' => array('TEXT', 'Имя класса', true),
-								   'packageId' => array('INTEGER', 'Пакет', true),
-								   'OrderNum' => array('INTEGER', 'Порядковый номер', true),
-								   'Description' => array('TEXT', 'Описание', true)
+		$this->attributes = array( 'Caption' => array('TEXT', 'РќР°Р·РІР°РЅРёРµ', true),
+								   'ReferenceName' => array('TEXT', 'РРјСЏ РєР»Р°СЃСЃР°', true),
+								   'packageId' => array('INTEGER', 'РџР°РєРµС‚', true),
+								   'OrderNum' => array('INTEGER', 'РџРѕСЂСЏРґРєРѕРІС‹Р№ РЅРѕРјРµСЂ', true),
+								   'Description' => array('TEXT', 'РћРїРёСЃР°РЅРёРµ', true)
 								    );
 		$this->defaultsort = 'OrderNum';
 
@@ -64,7 +64,7 @@
  class BusinessFunctionForm extends Form
  {
  	function getCaption() {
-		return 'Бизнес-функция';
+		return 'Р‘РёР·РЅРµСЃ-С„СѓРЅРєС†РёСЏ';
 	}
 
 	function createFieldObject( $name ) {

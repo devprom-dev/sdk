@@ -38,7 +38,7 @@ class ReportSpentTimeTable extends PMPageTable
 		$predicates[] = new ActivityReportYearPredicate($values['year']);
 		$predicates[] = new ActivityReportMonthPredicate($values['month']);
  		
- 		return array_merge($predicates, parent::getFilterPredicates());
+ 		return $predicates;// array_merge($predicates, parent::getFilterPredicates());
 	}
 	
 	function getSortFields()
@@ -53,7 +53,7 @@ class ReportSpentTimeTable extends PMPageTable
 		$method = new ExcelExportWebMethod();
 
 		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->getJSCall( translate('Затраченное время'), 'ActivitiesExcelIterator') ) );
+			'url' => $method->getJSCall( translate('Р—Р°С‚СЂР°С‡РµРЅРЅРѕРµ РІСЂРµРјСЏ'), 'ActivitiesExcelIterator') ) );
 
 		return $actions;
 	}

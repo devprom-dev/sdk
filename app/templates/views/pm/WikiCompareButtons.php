@@ -3,11 +3,11 @@
 </span>
 
 <a id="document-compare-prev" class="btn btn-small" href="javascript:;">
-	<i class="icon-arrow-up"></i> <?=translate('Ïðåä.')?>
+	<i class="icon-arrow-up"></i> <?=translate('ÐŸÑ€ÐµÐ´.')?>
 </a>
 
 <a id="document-compare-next" class="btn btn-small" href="javascript:;">
-	<?=translate('Ñëåä.')?> <i class="icon-arrow-down"></i> 
+	<?=translate('Ð¡Ð»ÐµÐ´.')?> <i class="icon-arrow-down"></i> 
 </a>
 
 <script type="text/javascript">

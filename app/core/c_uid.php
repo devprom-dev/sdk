@@ -186,6 +186,12 @@ class ObjectUID
  		}
  	}
  	
+ 	function getClassNameByUid( $uid ) 
+ 	{
+ 		list($type, $object_id) = preg_split('/-/', $uid);
+ 		return array_search(strtoupper($type), $this->map);
+ 	}
+ 	
  	function getObjectIt( $uid ) 
  	{
  		global $model_factory;
@@ -310,7 +316,7 @@ class ObjectUID
 			case 'Comment':
 				break;
 			default:
-			    $title = str_replace('"', "'", html_entity_decode($object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, 'cp1251'));
+			    $title = str_replace('"', "'", html_entity_decode($object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 				break;
 		}
 		

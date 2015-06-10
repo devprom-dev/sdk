@@ -4,12 +4,15 @@ RewriteEngine On
 RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
-RewriteRule ^([^/]+)/(tooltip|wiki|export|scripts|api|invite|treemodel|settings)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/(bulk|tooltip|wiki|export|scripts|api|invite|treemodel|settings)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&page=$4 [L,QSA]
-RewriteRule ^([^/]+)/([a-z]{1}-[0-9]+)/?(\d+)?$ goto.php?project=$1&uid=$2&baseline=$3 [L,NC,QSA]
 RewriteRule ^_images/([^/]+)$ /images/$1 [L]
 RewriteRule ^images/([^/]+)$ /images/$1 [L]
+
+RewriteRule ^([^/]+)/I-([0-9]+)$ $1/issues/board?mode=request&class=metaobject&entity=pm_ChangeRequest&pm_ChangeRequestId=$2&pm_ChangeRequestaction=view [L,NC,QSA]
+RewriteRule ^([^/]+)/T-([0-9]+)$ $1/tasks/board?class=metaobject&entity=pm_Task&pm_TaskId=$2&pm_Taskaction=view [L,NC,QSA]
+RewriteRule ^([^/]+)/([a-z]{1}-[0-9]+)/?(\d+)?$ goto.php?project=$1&uid=$2&baseline=$3 [L,NC,QSA]
 
 RewriteRule ^([^/]+)/comments/([^/]+)/([^/]+)$ comments.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
 RewriteRule ^([^/]+)/time/([^/]+)/([^/]+)$ spenttime.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]

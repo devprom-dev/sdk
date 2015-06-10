@@ -29,7 +29,7 @@
         	<tr>
         		<td valign=top>
                 <?
-                 // îòðèñîâûâàåì ôîðìó ðåäàêòèðîâàíèÿ îáúåêòà
+                 // Ð¾Ñ‚Ñ€Ð¸ÑÐ¾Ð²Ñ‹Ð²Ð°ÐµÐ¼ Ñ„Ð¾Ñ€Ð¼Ñƒ Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°
                  $this->form->draw();
                 ?>
         		</td>
@@ -67,7 +67,7 @@
         	<tr>
         		<td width=40% valign=top>
                 <?
-                 // îòðèñîâûâàåì ôîðìó ðåäàêòèðîâàíèÿ îáúåêòà
+                 // Ð¾Ñ‚Ñ€Ð¸ÑÐ¾Ð²Ñ‹Ð²Ð°ÐµÐ¼ Ñ„Ð¾Ñ€Ð¼Ñƒ Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ñ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°
                  $this->form->draw();
                 ?>
         		</td>
@@ -79,7 +79,7 @@
         		</td>
         		<td valign=top>
                 <?
-                 // îòðèñîâûâàåì ñïèñîê îáúåêòîâ
+                 // Ð¾Ñ‚Ñ€Ð¸ÑÐ¾Ð²Ñ‹Ð²Ð°ÐµÐ¼ ÑÐ¿Ð¸ÑÐ¾Ðº Ð¾Ð±ÑŠÐµÐºÑ‚Ð¾Ð²
                  $this->list->draw();
                 ?>
         		</td></tr>
@@ -212,7 +212,7 @@
 	}
 	
 	function getAddLinkName() {
-		return translate('Äîáàâèòü');
+		return translate('Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ');
 	}
 
 	function getTablePageUrl() {
@@ -276,7 +276,7 @@
 		return 'right';
 	}
 	
-	function draw( &$view = null )
+	function draw( $view = null )
 	{
 		$it = $this->getListIterator();
 		
@@ -345,7 +345,7 @@
 					if($is_need_todelete) {
 					?>								
 					<div style="float:left;padding-left:8px;">
-						<a href="javascript: var act = document.getElementById('list.form.action<? echo $this->view_num; ?>'); act.value = 'list.delete_group'; var lst = document.getElementById('list.form<? echo $this->view_num; ?>'); lst.submit(); "><? echo_lang('Óäàëèòü') ?></a>
+						<a href="javascript: var act = document.getElementById('list.form.action<? echo $this->view_num; ?>'); act.value = 'list.delete_group'; var lst = document.getElementById('list.form<? echo $this->view_num; ?>'); lst.submit(); "><? echo_lang('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ') ?></a>
 					</div>
 					<?
 					}
@@ -383,7 +383,7 @@
 				
 		<div>
                 <?
-                 // îòðèñîâûâàåì òàáëèöó ñ çàïèñÿìè
+                 // Ð¾Ñ‚Ñ€Ð¸ÑÐ¾Ð²Ñ‹Ð²Ð°ÐµÐ¼ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñƒ Ñ Ð·Ð°Ð¿Ð¸ÑÑÐ¼Ð¸
 				 $this->list->render( $view, array() );
                 ?>
         </div>

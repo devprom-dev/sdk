@@ -17,7 +17,7 @@ class WatchingsTable extends PMPageTable
 
 	function getCaption() 
 	{
-		return translate('Объекты под наблюдением');
+		return translate('РћР±СЉРµРєС‚С‹ РїРѕРґ РЅР°Р±Р»СЋРґРµРЅРёРµРј');
 	}
 	
 	function getFilterActions()

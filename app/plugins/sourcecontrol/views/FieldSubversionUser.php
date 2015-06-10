@@ -11,7 +11,7 @@ class FieldSubversionUser extends FieldForm
 		$this->object_it = $object_it;
 	}
 
-	function draw( & $view = null )
+	function draw( $view = null )
 	{
 		$user = getFactory()->getObject('SubversionUser');
 		
@@ -31,7 +31,7 @@ class FieldSubversionUser extends FieldForm
 	    $form->draw( $view );
 	}
 
- 	function render( & $view )
+ 	function render( $view )
 	{
 	    $this->draw( $view );    
 	}

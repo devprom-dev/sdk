@@ -189,7 +189,7 @@ class RequestBoard extends PMPageBoard
 	function getGroupDefault()
 	{
 		if ( $this->getTable()->hasCrossProjectFilter() ) return 'Project';
-		
+		if ( getSession()->getProjectIt()->getMethodologyIt()->HasReleases() ) return 'PlannedRelease'; 
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasFeatures() ) return 'Function'; 
 		
 		return '';
@@ -199,7 +199,7 @@ class RequestBoard extends PMPageBoard
 	{
 		$fields = array_merge( parent::getGroupFields(), array( 'Tags', 'Deadlines' ) );
 
-		foreach( array('Fact', 'Spent', 'Watchers', 'Attachment', 'Iterations') as $field )
+		foreach( array('Fact', 'Spent', 'Watchers', 'Attachment') as $field )
 		{
 			if ( in_array($field, $fields) ) unset($fields[array_search($field, $fields)]);
 		}
@@ -239,6 +239,16 @@ class RequestBoard extends PMPageBoard
 						parent::getGroupIt()->idsToArray()
 				);
 				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
+			case 'Iterations':
+				return getFactory()->getObject('Iteration')->getRegistry()->Query(
+						array (
+								new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+								new SortAttributeClause('StartDate'),
+								new FilterVpdPredicate(),
+								$values['iterations'] != '' 
+										? new FilterInPredicate(preg_split('/,/', $values['iterations'])) : null
+						)
+					);
 			case 'Function':
 				return getFactory()->getObject('Feature')->getRegistry()->Query(
 						array (
@@ -396,22 +406,25 @@ class RequestBoard extends PMPageBoard
 					echo '<div class="left-on-card">';
 						$this->drawCheckbox($object_it);
 						$type_image = $this->types_array[$object_it->get('Type')];
-						if ( $type_image != '' ) echo '<img src="/images/'.$type_image.'" style="float:left;padding:3px 3px 0 0px;"> ';
+						if ( $type_image != '' ) echo '<img src="/images/'.$type_image.'"> ';
 						parent::drawCell( $object_it, $attr );
 					echo '</div>';
 					echo '<div class="right-on-card">';
 						foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
 						{
-							list($type_name, $link_id, $type_ref, $link_state) = preg_split('/:/',$link_info);
-							if ( $type_ref == 'blocked' && !in_array($link_state,$this->terminal_states)) {
+							list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
+							if ( $type_ref == 'blocked' && $direction == 2 && !in_array($link_state,$this->terminal_states)) {
 								$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
-								echo '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'"><img title="'.text(961).'" src="/images/delete.png"></a>';
-								break;
+								echo '<a class="with-tooltip block-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(961).'"></a>';
+							}
+							if ( $type_ref == 'implemented' && $direction == 2 && !in_array($link_state,$this->terminal_states)) {
+								$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
+								echo '<a class="with-tooltip impl-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(2035).'"></a>';
 							}
 						}
 					
 						if ( $this->visible_column['OrderNum'] && $object_it->get('OrderNum') != '' ) {
-							echo '<span class="order" title="'.translate('Íîìåð').'">';
+							echo '<span class="order" title="'.translate('ÐÐ¾Ð¼ÐµÑ€').'">';
 								echo $object_it->get('OrderNum');
 							echo '</span>';
 						}
@@ -422,7 +435,7 @@ class RequestBoard extends PMPageBoard
 				
 			case 'Basement':
    				
-				echo '<div style="display:table;width:100%;margin-bottom:3px;height:23px;">';
+				echo '<div class="item-footer">';
 					echo '<div style="display:table-cell;text-align:left;">';
 						if ( $this->visible_column['Tasks'] && is_array($this->tasks_array[$object_it->getId()]) )
 						{
@@ -450,16 +463,18 @@ class RequestBoard extends PMPageBoard
 						}
 						else if ( $object_it->get('OwnerPhotoId') != '' )
 						{
-							echo $this->getTable()->getView()->render('core/UserPicture.php', array ( 
-									'id' => $object_it->get('OwnerPhotoId'), 
-									'class' => 'user-mini', 
-									'image' => 'userpics-mini',
-									'title' => $object_it->get('OwnerPhotoTitle')
-							));
+							echo '<div class="btn-group">';
+								echo $this->getTable()->getView()->render('core/UserPicture.php', array ( 
+										'id' => $object_it->get('OwnerPhotoId'), 
+										'class' => 'user-mini', 
+										'image' => 'userpics-mini',
+										'title' => $object_it->get('OwnerPhotoTitle')
+								));
+							echo '</div>';
 						}
 						if ( $this->visible_column['Attachment'] )
 						{
-							echo '<div style="display: inline-block;vertical-align:bottom;">';
+							echo '<div class="btn-group" style="display:inline-block;">';
 								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
 							echo '</div>';
 						}
@@ -552,6 +567,36 @@ class RequestBoard extends PMPageBoard
 	function getActions( $object_it ) 
 	{
 		$actions = parent::getActions( $object_it );
+
+		$priority_actions = $this->priority_actions;
+		foreach( $priority_actions as $key => $action )
+		{
+			if ( $object_it->get('Priority') == $key )
+			{
+				unset($priority_actions[$key]);
+				continue;
+			}
+			
+			$method = $priority_actions[$key]['method'];
+			$priority_actions[$key]['url'] = $method->getJSCall(array(), $object_it);  
+		}
+
+		if ( count($priority_actions) > 0 )
+		{
+			$pos = array_search(array('uid'=>'middle'), $actions);
+			
+			$actions = array_merge(
+					array_slice($actions, 0, $pos),
+					array(
+							array(),
+							array(
+								'name' => translate('ÐŸÑ€Ð¸Ð¾Ñ€Ð¸Ñ‚ÐµÑ‚'),
+								'items' => $priority_actions
+							)
+					),
+					array_slice($actions, $pos)
+			); 
+		}
 		
 		if ( is_object($this->method_create_task) )
 		{
@@ -575,31 +620,6 @@ class RequestBoard extends PMPageBoard
 			);
 		}
 		
-		$priority_actions = $this->priority_actions;
-		
-		foreach( $priority_actions as $key => $action )
-		{
-			if ( $object_it->get('Priority') == $key )
-			{
-				unset($priority_actions[$key]);
-				
-				continue;
-			}
-			
-			$method = $priority_actions[$key]['method'];
-			
-			$priority_actions[$key]['url'] = $method->getJSCall(array(), $object_it);  
-		}
-		
-		if ( count($priority_actions) > 0 )
-		{
-			$actions[] = array();
-			$actions[] = array(
-					'name' => translate('Ïðèîðèòåò'),
-					'items' => $priority_actions
-			);
-		}
-
 		return $actions;
 	}
 	
@@ -612,7 +632,7 @@ class RequestBoard extends PMPageBoard
 		$method->setRedirectUrl('donothing');
 		
 		$actions[] = array (
-				'name' => translate('Èçìåíèòü'),
+				'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ'),
 				'url' => $method->getJSCall()
 		);
 
@@ -656,7 +676,11 @@ class RequestBoard extends PMPageBoard
 	    $style = ';background:'.$this->priority_frame->getColor($object_it->get('Priority')).';';
 	    
 	    // deadlines driven coloring
-	    if ( $object_it->get('DueDays') < 1 && $object_it->get('DeadlinesDate') != '' ) {
+	    $deadline_alert = 
+	    		in_array($object_it->get('State'), $this->non_terminal_states) 
+	    		&& $object_it->get('DueDays') < 1 && $object_it->get('DeadlinesDate') != '';
+	    
+	    if ($deadline_alert) {
 	    	$style .= 'border: 2px solid red;';
 	    }
 	    					

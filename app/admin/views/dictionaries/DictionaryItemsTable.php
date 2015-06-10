@@ -32,4 +32,9 @@ class DictionaryItemsTable extends PageTable
 	{
 		return array();
 	}
+	
+	function getBulkActions()
+	{
+		return array();
+	}
 }

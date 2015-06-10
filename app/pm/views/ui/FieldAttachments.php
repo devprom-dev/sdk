@@ -83,12 +83,12 @@ class FieldAttachments extends FieldForm
  		return $form;
 	}
 	
- 	function render( & $view )
+ 	function render( $view )
 	{
 	    $this->drawBody( $view );    
 	}
 	
-	function drawBody( & $view = null )
+	function drawBody( $view = null )
 	{
 		global $model_factory;
 		

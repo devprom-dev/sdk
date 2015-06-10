@@ -8,18 +8,25 @@ class ModulesSettingsService implements SettingsService
 {
 	public function reset()
 	{
-		$setting_it = getFactory()->getObject('PMUserSettings')->getRegistry()->Query(
-				array (
-					new \FilterAttributePredicate('Participant', getSession()->getParticipantIt()->getId()),
-					new \FilterBaseVpdPredicate()
-				)
-		);
+ 		// disable any model events handler
+		getFactory()->setEventsManager( new \ModelEventsManager() );
+
+		$xml = $this->getTemplateXml();
+		$context = new \CloneContext();
 		
-		while(!$setting_it->end())
+		foreach( $this->getObjects() as $object )
 		{
-			$setting_it->delete();
-			$setting_it->moveNext();
+			$object_it = $object->getAll();
+			while(!$object_it->end())
+			{
+				$object->delete($object_it->getId());
+				$object_it->moveNext();
+			}
+			
+			$iterator = $object->createXMLIterator($xml);
+			\CloneLogic::Run( $context, $object, $iterator, getSession()->getProjectIt() ); 
 		}
+		getSession()->truncate();
 	}
 	
 	public function makeDefault()
@@ -28,37 +35,34 @@ class ModulesSettingsService implements SettingsService
 		getFactory()->setEventsManager( new \ModelEventsManager() );
 		
 		// prepare settings object
- 		$settings = getFactory()->getObject('PMUserSettings');
- 		$settings->setRegistry( new \PMUserSettingsExportRegistry() );
- 		
- 		$objects = array ( $settings );
  		$context = new \CloneContext();
- 		
- 		foreach ( $objects as $object )
+ 		foreach ( $this->getObjects() as $object )
 		{
-			$data_it = $object->getAll();
-			
-			switch ( $object->getEntityRefName() )
+			$object_it = $object->getAll();
+			while(!$object_it->end())
 			{
-				case 'pm_UserSetting':
-					// remove common (glogal) settings for reports/modules
-					$it = getFactory()->getObject('PMUserSettings')->getRegistry()->Query(
-							array (
-									new \SettingGlobalPredicate('-'),
-									new \FilterBaseVpdPredicate()
-							)
-					);
-					while( !$it->end() )
-					{
-						$it->delete();
-						$it->moveNext();
-					}
-					break;
+				$object->delete($object_it->getId());
+				$object_it->moveNext();
 			}
-
-			\CloneLogic::Run( $context, $object, $data_it, getSession()->getProjectIt() ); 
+			$object_it->moveFirst();
+			\CloneLogic::Run( $context, $object, $object_it, getSession()->getProjectIt() ); 
 		}
-		
 		getSession()->truncate();
+	}
+	
+	protected function getObjects()
+	{
+		$settings = new \PMUserSettings();
+ 		$settings->setRegistry( new \PMUserSettingsExportRegistry() );
+		return array ( $settings );
+	}
+
+	protected function getTemplateXml()
+	{
+ 		return file_get_contents(
+ 				getFactory()->getObject('ProjectTemplate')->getTemplatePath(
+ 						getSession()->getProjectIt()->get('Tools')
+				)
+ 			);
 	}
 }

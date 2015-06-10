@@ -88,7 +88,7 @@ class PMWikiTable extends PMPageTable
 		
 		$document->addFilter( new WikiRootFilter() );
 		
-		$document_filter = new FilterObjectMethod( $document, translate('Документ'), 'document' );
+		$document_filter = new FilterObjectMethod( $document, translate('Р”РѕРєСѓРјРµРЅС‚'), 'document' );
 		
 		$document_filter->setType( 'singlevalue' );
 		$document_filter->setUseUid( true );
@@ -203,7 +203,7 @@ class PMWikiTable extends PMPageTable
 		$method = new ExcelExportWebMethod();
 		
 		$actions[] = array( 
-			'name' => $method->getCaption().' ('.translate('Текст').')',
+			'name' => $method->getCaption().' ('.translate('РўРµРєСЃС‚').')',
 			'url' => $method->getJSCall( $this->getCaption(), 'WikiIteratorExportExcelText' ) 
 		);
 		
@@ -229,7 +229,7 @@ class PMWikiTable extends PMPageTable
 		if ( count($export_actions) > 0 )
 		{
 			$actions[] = array( 
-			        'name' => translate('Экспорт'),
+			        'name' => translate('Р­РєСЃРїРѕСЂС‚'),
 					'items' => $export_actions,
 			        'uid' => 'export'
 			);
@@ -243,45 +243,14 @@ class PMWikiTable extends PMPageTable
 	            
 			$actions[] = array (
 				'uid' => 'trace', 
-				'name' => translate('Трассировка'),
+				'name' => translate('РўСЂР°СЃСЃРёСЂРѕРІРєР°'),
 				'items' => $trace_actions 
 			);
 		}
 		
-		if ( !getFactory()->getAccessPolicy()->can_modify($this->getObject()) ) return $actions;
-		
-	    $list = $this->getListRef();
-
-		if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-    				
-   		$actions[] = array( 
-   		    'name' => translate('Выбрать все'),
-   			'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 
-   			'title' => text(969),
-   			'radio' => true
-   		);
-    		
-   		array_push($actions, array( 'name' => translate('Массовые операции'),
-   			'url' => 'javascript: processBulkMethod();', 'title' => text(651) ) );
-		
 		return array_merge($actions, parent::getActions());
 	}
 
-	function getDeleteActions()
-	{
-		if( !$this->IsNeedToDelete() ) return array(); 
-		
-		$method = new BulkDeleteWebMethod();
-		
-		$actions['delete'] =  array ( 
-				'name' => $method->getCaption(),
-				'url' => $method->getBulkJSCall( $this->getObject() ),
-				'title' => $method->getDescription()
-		);
-		
-		return $actions;
-	}
-	
 	function getMethodTitle( $left_part, $right_part )
 	{
 		if ( function_exists('mb_strtolower') )

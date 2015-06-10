@@ -3,7 +3,7 @@
  require_once('common.php');
  require_once('views/wiki/parsers/WikiHtmlParser.php');
  
- header('Content-Type: text/html; charset=windows-1251');
+ header('Content-Type: text/html; charset='.APP_ENCODING);
  
  echo '<html>';
 ?>

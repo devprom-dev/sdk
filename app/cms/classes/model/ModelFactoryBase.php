@@ -130,16 +130,10 @@ class ModelFactoryBase
 		return '';
 	}
 	
-	function _clone( $object )
-	{
-		return clone($object);
-	}
-	
 	function getCachedIterator( $entity_ref_name, $sql )
 	{
 	    $iterator = $this->sql_cache[$entity_ref_name][md5($sql)];
-	    
-		return is_object($iterator) ? $this->_clone($iterator) : $iterator;
+		return is_object($iterator) ? $iterator->copyAll() : $iterator;
 	}
 	
 	function cacheIterator( $entity_ref_name, $sql, $iterator )

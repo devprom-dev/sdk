@@ -50,17 +50,20 @@ class KnowledgeBasePage extends PMWikiUserPage
 	{
 		return getFactory()->getObject('KnowledgeBaseTemplate');
 	}
- 	
+
+	function getBulkForm()
+	{
+		return new WikiBulkForm( $this->getObject() );
+	}
+	
 	function getFormBase()
  	{
 	    switch ( $_REQUEST['view'] )
 	    {
 	        case 'templates':
-	        	
 	        	return new KnowledgeBaseForm( $this->getTemplateObject(), $this->getTemplateObject() );
 	        	
 	        default;
-	        
 	        	return new KnowledgeBaseForm( $this->getObject(), $this->getTemplateObject() );
 	    }
  	}
@@ -72,13 +75,6 @@ class KnowledgeBasePage extends PMWikiUserPage
  	
  	function getTableBase() 
  	{
- 		switch( $_REQUEST['mode'] )
- 		{
- 		    case 'bulk':
- 				return new WikiBulkForm( $this->getObject() );
- 	    
- 		    default:
-		        return new KnowledgeBaseTable( $this->getObject(), $this->getStateObject(), $this->getForm() );
- 		}
+        return new KnowledgeBaseTable( $this->getObject(), $this->getStateObject(), $this->getForm() );
  	}
 }

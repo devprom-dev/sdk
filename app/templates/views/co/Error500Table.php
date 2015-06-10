@@ -18,7 +18,7 @@ if (!session_id()) {
 
 	<br/>
 
-    <p><?=(isset($_SESSION['error']) ? htmlentities($_SESSION['error']['error']['message'], ENT_QUOTES | ENT_HTML401, 'windows-1251') : htmlentities($text, ENT_QUOTES | ENT_HTML401, 'windows-1251'))?></p>
+    <p><?=(isset($_SESSION['error']) ? htmlentities($_SESSION['error']['error']['message'], ENT_QUOTES | ENT_HTML401, APP_ENCODING) : htmlentities($text, ENT_QUOTES | ENT_HTML401, APP_ENCODING))?></p>
     <br/>
     
     <?php if ( defined('DISPLAY_ARCHIVE_ON_ERROR') && DISPLAY_ARCHIVE_ON_ERROR || !defined('DISPLAY_ARCHIVE_ON_ERROR') ) { ?>

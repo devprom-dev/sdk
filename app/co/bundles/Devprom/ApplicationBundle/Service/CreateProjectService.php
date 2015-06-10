@@ -59,7 +59,7 @@ class CreateProjectService
 			return -1;
 		}
 		
-		// ñîçäàåì ïğîåêò
+		// ÑĞ¾Ğ·Ğ´Ğ°ĞµĞ¼ Ğ¿Ñ€Ğ¾ĞµĞºÑ‚
 		$prj_cls = $model_factory->getObject('pm_Project');
 		$prj_it = $prj_cls->getByRef('CodeName', $this->code_name);
 		
@@ -111,7 +111,7 @@ class CreateProjectService
 		
 		$project_it = $prj_cls->getExact($project_id);
 		
-		// ñîçäàåì ó÷àñòíèêà
+		// ÑĞ¾Ğ·Ğ´Ğ°ĞµĞ¼ ÑƒÑ‡Ğ°ÑÑ‚Ğ½Ğ¸ĞºĞ°
 		$part_cls = $model_factory->getObject('pm_Participant');
 
 		$parms = array();
@@ -134,14 +134,14 @@ class CreateProjectService
 		
 		$session = new \PMSession($project_it, $auth_factory);
 
-		// âêëş÷àåì VPD
+		// Ğ²ĞºĞ»ÑÑ‡Ğ°ĞµĞ¼ VPD
 		getFactory()->enableVpd(true);
 		
 		$parms = array();
 		
-		// ñîçäàåì áëîã ïğîåêòà
+		// ÑĞ¾Ğ·Ğ´Ğ°ĞµĞ¼ Ğ±Ğ»Ğ¾Ğ³ Ğ¿Ñ€Ğ¾ĞµĞºÑ‚Ğ°
 		$blog = new \Metaobject('Blog');
-		$parms['Caption'] = translate('Áëîã');
+		$parms['Caption'] = translate('Ğ‘Ğ»Ğ¾Ğ³');
 		$blog_id = $blog->add_parms($parms);
 		
 		// looking for template
@@ -159,7 +159,8 @@ class CreateProjectService
 				'Tools' => $this->methodology
 		);
 		
-		$prj_cls->modify_parms($project_it->getId(),$parms); 
+		$prj_cls->modify_parms($project_it->getId(),$parms);
+		$project_it = $prj_cls->getExact($project_it->getId());  
 
 		$project_roles = $model_factory->getObject('ProjectRole');
 
@@ -170,7 +171,7 @@ class CreateProjectService
 		// append additional (system) project roles
 		$role_id = $project_roles->add_parms(
 			array (
-				'Caption' => translate('Âñå ïîëüçîâàòåëè'),
+				'Caption' => translate('Ğ’ÑĞµ Ğ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ñ‚ĞµĞ»Ğ¸'),
 				'ReferenceName' => 'guest',
 				'ProjectRoleBase' => '0'
 			)
@@ -178,7 +179,7 @@ class CreateProjectService
 
 		$role_id = $project_roles->add_parms(
 			array (
-				'Caption' => translate('Ó÷àñòíèêè ñâÿçàííûõ ïğîåêòîâ'),
+				'Caption' => translate('Ğ£Ñ‡Ğ°ÑÑ‚Ğ½Ğ¸ĞºĞ¸ ÑĞ²ÑĞ·Ğ°Ğ½Ğ½Ñ‹Ñ… Ğ¿Ñ€Ğ¾ĞµĞºÑ‚Ğ¾Ğ²'),
 				'ReferenceName' => 'linkedguest',
 				'ProjectRoleBase' => '0'
 			)
@@ -207,7 +208,7 @@ class CreateProjectService
 		{
 			$test_result->add_parms(
 					array (
-							'Caption' => translate('Ïğîéäåí'),
+							'Caption' => translate('ĞŸÑ€Ğ¾Ğ¹Ğ´ĞµĞ½'),
 							'ReferenceName' => 'succeeded'
 					)
 			);
@@ -216,7 +217,7 @@ class CreateProjectService
 		{
 			$test_result->add_parms(
 					array (
-							'Caption' => translate('Ïğîâàëåí'),
+							'Caption' => translate('ĞŸÑ€Ğ¾Ğ²Ğ°Ğ»ĞµĞ½'),
 							'ReferenceName' => 'failed'
 					)
 			);
@@ -274,15 +275,7 @@ class CreateProjectService
 		$methodology_it = $meth_cls->getExact( 
 			$meth_cls->add_parms($parms) ); 
 
-		// create version numbering settings
-		$settings_cls = getFactory()->getObject('pm_VersionSettings');
-
-		$parms = array();
-		$parms['Project'] = $project_it->getId();
-		$settings_cls->add_parms($parms);
-				
 		$service = new ApplyTemplateService();
-		
 		$service->setResetState(false);
 		
 		// apply default template

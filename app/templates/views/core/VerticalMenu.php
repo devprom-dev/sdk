@@ -47,8 +47,7 @@ if ( is_a($session, 'PMSession') )
     <li class="submenu open <?=( !is_array($items[0]['items']) ? 'search' : '')?>">
         <form class="form-search" action="<?=$search_url?>" action="<?=$base_url?>search.php">
             <div class="input-append">
-              <input id="quick-search-<?=$area_id?>" name="quick" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="">
-              <button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
+              <input id="quick-search-<?=$area_id?>" name="quick" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional=""><button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
             </div>
         </form>
     </li>

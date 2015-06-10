@@ -22,25 +22,25 @@ class Tag extends Metaobject
  	    
  	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  	    
- 		$this->addAttribute('Issues', 'REF_pm_ChangeRequestId', translate('Ïîæåëàíèÿ'), true);
+ 		$this->addAttribute('Issues', 'REF_pm_ChangeRequestId', translate('ÐŸÐ¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ'), true);
 		$this->addPersister( new TagRequestPersister() );
 
 		$feature = $model_factory->getObject('Feature');
 		
 		if ( getFactory()->getAccessPolicy()->can_read($feature) && $methodology_it->HasFeatures() )
 		{
-			$this->addAttribute('Features', 'REF_pm_FunctionId', translate('Ôóíêöèè'), true);
+			$this->addAttribute('Features', 'REF_pm_FunctionId', translate('Ð¤ÑƒÐ½ÐºÑ†Ð¸Ð¸'), true);
 			$this->addPersister( new TagFeaturePersister() );
 		}
 
-		$this->addAttribute('Questions', 'REF_pm_QuestionId', translate('Âîïðîñû'), true);
+		$this->addAttribute('Questions', 'REF_pm_QuestionId', translate('Ð’Ð¾Ð¿Ñ€Ð¾ÑÑ‹'), true);
 		$this->addPersister( new TagQuestionPersister() );
 		
 		$knowledge = $model_factory->getObject('ProjectPage');
 		
 		if ( getFactory()->getAccessPolicy()->can_read($knowledge) )
 		{
-			$this->addAttribute('KnowledgeBase', 'REF_ProjectPageId', translate('Áàçà çíàíèé'), true);
+			$this->addAttribute('KnowledgeBase', 'REF_ProjectPageId', translate('Ð‘Ð°Ð·Ð° Ð·Ð½Ð°Ð½Ð¸Ð¹'), true);
 			$this->addPersister( new TagKnowledgeBasePersister() );
 		}
 		
@@ -48,7 +48,7 @@ class Tag extends Metaobject
 		
 		if ( getFactory()->getAccessPolicy()->can_read($blog) )
 		{
-			$this->addAttribute('BlogPosts', 'REF_BlogPostId', translate('Ñîîáùåíèÿ áëîãà'), true);
+			$this->addAttribute('BlogPosts', 'REF_BlogPostId', translate('Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ Ð±Ð»Ð¾Ð³Ð°'), true);
 			$this->addPersister( new TagBlogPostPersister() );
 		}
  	}

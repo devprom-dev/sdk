@@ -10,7 +10,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
  		global $model_factory;
  		
  		parent::FilterAutoCompleteWebMethod(
- 			$model_factory->getObject('cms_User'), translate('¿‚ÚÓ') 
+ 			$model_factory->getObject('cms_User'), translate('–ê–≤—Ç–æ—Ä') 
  			);
  	}
  	

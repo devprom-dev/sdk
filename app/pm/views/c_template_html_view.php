@@ -5,7 +5,7 @@
  {
  	function getCaption() 
  	{
-		return translate('Шаблон выгрузки в формате HTML');
+		return translate('РЁР°Р±Р»РѕРЅ РІС‹РіСЂСѓР·РєРё РІ С„РѕСЂРјР°С‚Рµ HTML');
 	}
 	
  	function IsAttributeVisible( $attr_name ) 
@@ -55,7 +55,7 @@
 
 	function getCaption() 
 	{
-		return translate('Шаблоны выгрузки в формате HTML');
+		return translate('РЁР°Р±Р»РѕРЅС‹ РІС‹РіСЂСѓР·РєРё РІ С„РѕСЂРјР°С‚Рµ HTML');
 	}
  } 
 

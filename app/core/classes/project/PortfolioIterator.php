@@ -32,7 +32,9 @@ class PortfolioIterator extends ProjectIterator
             'pm_Methodology' => 9999999,
             'Project' => $this->getId(),
             'IsReportsOnActivities' => 'N',
-            'IsPlanningUsed' => 'N'
+            'IsPlanningUsed' => 'N',
+        	'IsSupportUsed' => 'Y',
+        	'IsKnowledgeUsed' => 'Y'
         )));
         
         $attributes = $methodology->getAttributes();

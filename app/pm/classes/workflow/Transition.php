@@ -4,7 +4,6 @@ include "TransitionIterator.php";
 include "predicates/TransitionObjectPredicate.php";
 include "predicates/TransitionStateClassPredicate.php";
 include "predicates/TransitionWasPredicate.php";
-include "TransitionModelBuilder.php";
 
 class Transition extends MetaobjectCacheable
 {
@@ -21,7 +20,6 @@ class Transition extends MetaobjectCacheable
  	function setStateAttributeType( $state )
  	{
  		$this->setAttributeType( 'TargetState', 'REF_'.get_class($state).'Id' );
-
  		$this->setAttributeType( 'SourceState', 'REF_'.get_class($state).'Id' );
  	}
 }

@@ -27,11 +27,11 @@ class FunctionalAreaMenuDevelopmentBuilder extends FunctionalAreaMenuCommonBuild
         $items['project-reports'] = $module->getExact('project-reports')
         		->buildMenuItem('&pmreportcategory=dev&'.ModuleCategoryBuilderCode::AREA_UID);
         
-        $items['project-reports']['name'] = translate('Âñå îò÷åòû');
+        $items['project-reports']['name'] = translate('Ğ’ÑĞµ Ğ¾Ñ‚Ñ‡ĞµÑ‚Ñ‹');
         
  		$menu[] = array ( 
  		    'module' => 'files', 
-			'name' => translate('Ãğàôèêè è îò÷åòû'), 
+			'name' => translate('Ğ“Ñ€Ğ°Ñ„Ğ¸ĞºĞ¸ Ğ¸ Ğ¾Ñ‚Ñ‡ĞµÑ‚Ñ‹'), 
 			'items' => $items 
  		);
 
@@ -43,7 +43,7 @@ class FunctionalAreaMenuDevelopmentBuilder extends FunctionalAreaMenuCommonBuild
         
  		$menu[] = array ( 
  		    'module' => 'code', 
-			'name' => translate('Íàñòğîéêè'), 
+			'name' => translate('ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸'), 
 			'items' => $items 
  		);
  		

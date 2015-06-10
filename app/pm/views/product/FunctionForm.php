@@ -11,12 +11,16 @@ class FunctionForm extends PMPageForm
 	private $create_subfunc_actions = array();
 	private $create_issue_actions = array();
 	private $goto_issues_template = '';
+	private $request_it = null;
 	
 	function __construct( $object )
 	{
 		parent::__construct( $object );
-		
 		$this->buildMethods();
+		
+		$this->request_it = $_REQUEST['Request'] > 0 
+			? getFactory()->getObject('Request')->getExact($_REQUEST['Request'])
+			: getFactory()->getObject('Request')->getEmptyIterator();
 	}
 	
 	function buildModelValidator()
@@ -52,7 +56,9 @@ class FunctionForm extends PMPageForm
  		
  	 	if ( getFactory()->getAccessPolicy()->can_create($request) )
  		{
- 			$type_it = getFactory()->getObject('RequestType')->getAll();
+ 			$type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
+ 					array ( new FilterBaseVpdPredicate() )
+ 			);
 		    while( !$type_it->end() )
 		    {
 		        $method = new ObjectCreateNewWebMethod($request);
@@ -140,7 +146,7 @@ class FunctionForm extends PMPageForm
  		{
  			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
  			$actions[] = array ( 
-				'name' => translate('Создать'),
+				'name' => translate('РЎРѕР·РґР°С‚СЊ'),
 	            'items' => $new_actions
 			);
  		}
@@ -150,7 +156,7 @@ class FunctionForm extends PMPageForm
 	 		if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 			$actions[] = array(
 			    'url' => $this->goto_issues_template.$object_it->getId(), 
-			    'name' => translate('Перейти к пожеланиям')
+			    'name' => translate('РџРµСЂРµР№С‚Рё Рє РїРѕР¶РµР»Р°РЅРёСЏРј')
 			);
  		}
  		
@@ -178,32 +184,25 @@ class FunctionForm extends PMPageForm
  		}
 	}
 
-	function draw()
+	function getFieldValue( $attribute )
 	{
-		global $_REQUEST;
-		
-		parent::draw();
-
-		$this->object_it = $this->getObjectIt();
-		
-		if ( isset($this->object_it) && $_REQUEST['formonly'] != 'true')
+		switch( $attribute )
 		{
-			echo '<div class="line">';
-			echo '</div>';
-			echo '<div class="line">';
-			echo '</div>';
-
-			echo '<div class="line">';
-				echo translate('Комментарии участников');
-			echo '</div>';
-
-			echo '<div class="line">';
-				$comment_form = new CommentList( $this->object_it );
-				$comment_form->draw();
-			echo '</div>';
+			case 'Caption':
+				if ( $this->request_it->getId() > 0 ) {
+					return $this->request_it->getHtmlDecoded($attribute);
+				}
+				return parent::getFieldValue( $attribute );
+			case 'Description':
+				if ( $this->request_it->getId() > 0 ) {
+					return strip_tags($this->request_it->getHtmlDecoded($attribute));
+				}
+				return parent::getFieldValue( $attribute );
+			default:
+				return parent::getFieldValue( $attribute );
 		}
 	}
-
+	
 	function createFieldObject( $name )
 	{
 		global $model_factory;
@@ -216,9 +215,7 @@ class FunctionForm extends PMPageForm
 
 			case 'Description':
 				$field = parent::createFieldObject( $name );
-				
 				$field->setRows( 8 );
-				
 				return $field;
 		
 			case 'Tags':
@@ -232,5 +229,16 @@ class FunctionForm extends PMPageForm
 			default:
 				return parent::createFieldObject( $name );
 		}
+	}
+
+	function process()
+	{
+		if ( $this->getAction() != 'add' ) return parent::process();
+
+		if ( $this->request_it->getId() > 0 ) {
+			$this->request_it->object->delete($this->request_it->getId());
+		}
+		
+		return parent::process();
 	}
 }

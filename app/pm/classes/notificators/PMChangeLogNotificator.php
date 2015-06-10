@@ -63,13 +63,13 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		switch ( $kind )
 		{
 			case 'added':
-				$caption = translate('‰Ó·‡‚ÎÂÌÓ');
+				$caption = translate('–¥–æ–±–∞–≤–ª–µ–Ω–æ');
 				break;
 			case 'modified':
-				$caption = translate('ËÁÏÂÌÂÌÓ');
+				$caption = translate('–∏–∑–º–µ–Ω–µ–Ω–æ');
 				break;
 			case 'deleted':
-				$caption = translate('Û‰‡ÎÂÌÓ');
+				$caption = translate('—É–¥–∞–ª–µ–Ω–æ');
 				break;
 		}
 		
@@ -157,7 +157,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				$this->setModifiedAttributes(array('Links'));
 				
 				parent::process( $request_it, 'modified', 
-					html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility, $author_email );
+					html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility, $author_email );
 					
 				break;
 
@@ -170,10 +170,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind != 'modified' && $base_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $base_it, 'modified', 
-						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
+						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				
 					parent::process( $related_it, 'modified', 
-						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
+						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				}
 
 				break;
@@ -188,10 +188,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind != 'modified' && $request_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $request_it, 'modified', 
-						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
+						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				
 					parent::process( $related_it, 'modified', 
-						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
+						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				}
 
 				break;
@@ -205,7 +205,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $task_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $task_it, 'modified', 
-						htmlspecialchars ($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'windows-1251').' ('.$caption.')', $visibility + 2, $author_email );
+						htmlspecialchars ($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				}
 				break;
 
@@ -226,10 +226,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				else
 				{
 					parent::process( $object_it->getRef('SourcePage'), 'modified', 
-						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
+						html_entity_decode($object_it->getTraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				
 					parent::process( $page_it, 'modified', 
-						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251').' ('.$caption.')', $visibility + 2, $author_email );
+						html_entity_decode($object_it->getBacktraceDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING).' ('.$caption.')', $visibility + 2, $author_email );
 				}
 				
 				break;
@@ -243,12 +243,12 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind == 'added' )
 				{
 					parent::process( $request_it, 'modified', 
-						translate('œËÍÂÔÎÂÌ Ú˝„').': '.$tag_it->getDisplayName(), $visibility + 1, $author_email );
+						translate('–ü—Ä–∏–∫—Ä–µ–ø–ª–µ–Ω —Ç—ç–≥').': '.$tag_it->getDisplayName(), $visibility + 1, $author_email );
 				}
 				else
 				{
 					parent::process( $request_it, 'modified', 
-						translate('”‰‡ÎÂÌ Ú˝„').': '.$tag_it->getDisplayName(), $visibility + 1, $author_email );
+						translate('–£–¥–∞–ª–µ–Ω —Ç—ç–≥').': '.$tag_it->getDisplayName(), $visibility + 1, $author_email );
 				}
 				break;
 
@@ -378,7 +378,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 
 					    $page_it = $object_it->getRef('WikiPage');
 					    
-					    $content = '[url='.$page_it->getHistoryUrl().'&version='.$object_it->getId().' text='.translate('»ÒÚÓËˇ ËÁÏÂÌÂÌËÈ').']';
+					    $content = '[url='.$page_it->getHistoryUrl().'&version='.$object_it->getId().' text='.translate('–ò—Å—Ç–æ—Ä–∏—è –∏–∑–º–µ–Ω–µ–Ω–∏–π').']';
 					    
 					    parent::process( $page_it, 'modified', $content, $visibility, $author_email );
 			        	

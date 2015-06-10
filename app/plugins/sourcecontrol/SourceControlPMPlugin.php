@@ -7,7 +7,7 @@ include "classes/ReportsSourceControlBuilder.php";
 include "classes/SharedObjectsSourceCodeBuilder.php";
 include "classes/SearchableObjectsCodeBuilder.php";
 include "classes/AccessRightEntitySetCodeBuilder.php";
-include "classes/ProjectMetadataCodeBuilder.php";
+include "classes/MethodologyModelCodeBuilder.php";
 include "classes/BuildCodeMetadataBuilder.php";
 include "classes/SubversionModelBuilder.php";
 include_once "classes/notificators/RevisionCommentActionsTrigger.php";
@@ -68,7 +68,7 @@ class SourceControlPMPlugin extends PluginPMBase
             new ReportsSourceControlBuilder(),
             new SearchableObjectsCodeBuilder(),
             new AccessRightEntitySetCodeBuilder(),
-            new ProjectMetadataCodeBuilder(),
+            new MethodologyModelCodeBuilder(),
             new BuildCodeMetadataBuilder(),
             new RevisionCommentActionsTrigger( getSession() ),
         	new ProjectTemplateSectionsCodeRegistryBuilder(getSession()),

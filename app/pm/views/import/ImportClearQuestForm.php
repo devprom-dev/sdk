@@ -25,7 +25,7 @@ class ImportClearQuestForm extends ImportTextForm
 				return text(947); 	
 
 			case 'Release':
-				return translate('Ðåëèç'); 	
+				return translate('Ð ÐµÐ»Ð¸Ð·'); 	
 
 			case 'Delimiter':
 				return text(948); 	
@@ -143,7 +143,7 @@ class ImportClearQuestForm extends ImportTextForm
 				while ( !$release_it->end() )
 				{
 					echo '<option value="'.$release_it->getId().'">'.
-						translate('Ðåëèç').': '.$release_it->getDisplayName().'</option>';
+						translate('Ð ÐµÐ»Ð¸Ð·').': '.$release_it->getDisplayName().'</option>';
 					$release_it->moveNext();
 				}
 			echo '</select>';

@@ -56,10 +56,10 @@
 		
 		$project_it = $project->getAll(); 
 		
-		$xml = '<?xml version="1.0" encoding="windows-1251"?>' .
+		$xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>' .
 				'<feed xmlns="http://www.w3.org/2005/Atom">'.Chr(10);
 		
-		$xml .= '<link rel="alternate" type="text/html" hreflang="en" href="'._getServerUrl().htmlspecialchars($url, ENT_COMPAT | ENT_HTML401, 'cp1251').'"/>'.Chr(10);
+		$xml .= '<link rel="alternate" type="text/html" hreflang="en" href="'._getServerUrl().htmlspecialchars($url, ENT_COMPAT | ENT_HTML401, APP_ENCODING).'"/>'.Chr(10);
 		$xml .= '<link rel="self" type="application/atom+xml" href="'.
 			urlencode(_getServerUrl().'/core/command.php?class=atom&entity='.SanitizeUrl::parseUrl($_REQUEST['entity'])).'"/>'.Chr(10);
 
@@ -103,7 +103,7 @@
 				'title' => '<![CDATA['.$object_it->getDisplayName().']]>',
 				'id' => 'devprom.'.$_REQUEST['entity'].': '.$object_it->getId(),
 				'updated' => $object_it->getDateFormatUser('RecordCreated', '%Y-%m-%dT%H:%I:%SZ'),
-				'content' => htmlspecialchars(str_replace(chr(10), '<br/>', $content), ENT_COMPAT | ENT_HTML401, 'cp1251')
+				'content' => htmlspecialchars(str_replace(chr(10), '<br/>', $content), ENT_COMPAT | ENT_HTML401, APP_ENCODING)
 				);
 			
 			$xml .= $this->convert($entry);
@@ -113,7 +113,7 @@
 			
 			$xml .= '<author><name>DEVPROM</name></author>'.Chr(10);
 			$xml .= '<rights>Copyright (c) '.date('Y', time()).' DEVPROM</rights>'.Chr(10);
-			$xml .= '<link rel="alternate" type="text/html" href="'.htmlspecialchars($object_url, ENT_COMPAT | ENT_HTML401, 'cp1251').'"/>'.Chr(10);
+			$xml .= '<link rel="alternate" type="text/html" href="'.htmlspecialchars($object_url, ENT_COMPAT | ENT_HTML401, APP_ENCODING).'"/>'.Chr(10);
 			$xml .= '</entry>'.Chr(10);
 			
 			$object_it->moveNext();
@@ -125,7 +125,7 @@
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 		header("Pragma: no-cache"); // HTTP/1.0
-		header('Content-type: text/xml; charset=windows-1251');
+		header('Content-type: text/xml; charset='.APP_ENCODING);
 		
 		echo $xml;
 	}

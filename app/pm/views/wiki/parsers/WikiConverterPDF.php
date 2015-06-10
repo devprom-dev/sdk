@@ -97,7 +97,7 @@
 	{
 		$this->pdf->SetFont(FONT_FAMILY, '', FONT_HEADER0);
 
-		$this->pdf->Cell( 40, LEFT_MARGIN, html_entity_decode($parent_it->getDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251') );
+		$this->pdf->Cell( 40, LEFT_MARGIN, html_entity_decode($parent_it->getDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );
         $this->pdf->Ln();
 
 		if ( is_object($this->change_it) )
@@ -458,7 +458,7 @@
  	function display()
  	{
 		$file_name = preg_replace('/[\.\,\+\)\(\)\:\;]/i', '_', 
-			html_entity_decode($this->root_it->getDisplayName(), ENT_QUOTES | ENT_HTML401, 'cp1251')).'.pdf';
+			html_entity_decode($this->root_it->getDisplayName(), ENT_QUOTES | ENT_HTML401, APP_ENCODING)).'.pdf';
 
  		if ( EnvironmentSettings::getBrowserPostUnicode() )
 		{ 

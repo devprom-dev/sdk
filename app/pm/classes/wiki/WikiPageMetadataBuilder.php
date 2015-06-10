@@ -12,7 +12,7 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
     	
 		$metadata->setAttributeType('ParentPage', 'REF_'.get_class($object).'Id');
 		
-		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', translate('Документ'), false);
+		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', translate('Р”РѕРєСѓРјРµРЅС‚'), false);
 		
     	$system_attributes = array( 
 		        'UserField1',

@@ -15,16 +15,13 @@ class RequestCodeMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_ChangeRequest' ) return;
-
-    	if ( $this->session->getProjectIt()->get('IsSubversionUsed') != 'Y' ) return;
+    	if ( $this->session->getProjectIt()->getMethodologyIt()->get('IsSubversionUsed') != 'Y' ) return;
 
 		$orderNum = $metadata->getAttributeOrderNum('Links') > 0 
  			? $metadata->getAttributeOrderNum('Links') : $metadata->getLatestOrderNum();
     	
-        $metadata->addAttribute( 'SourceCode', 'REF_pm_SubversionRevisionId', translate('Èñõîäíûé êîä'), true, false, '', $orderNum + 50 );
-
+        $metadata->addAttribute( 'SourceCode', 'REF_pm_SubversionRevisionId', translate('Ð˜ÑÑ…Ð¾Ð´Ð½Ñ‹Ð¹ ÐºÐ¾Ð´'), true, false, '', $orderNum + 50 );
         $metadata->addPersister( new RequestSourceCodePersister() );
-                	
         $metadata->addAttributeGroup('SourceCode', 'trace');
     }
 }

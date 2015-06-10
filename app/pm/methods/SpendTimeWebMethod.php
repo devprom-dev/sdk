@@ -24,7 +24,7 @@ class SpendTimeWebMethod extends ObjectCreateNewWebMethod
  		
 	function getCaption() 
 	{
-		return translate('Списать время');
+		return translate('РЎРїРёСЃР°С‚СЊ РІСЂРµРјСЏ');
 	}
 	
 	function hasAccess()

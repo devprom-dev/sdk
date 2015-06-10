@@ -56,7 +56,7 @@ class PmApplicationKernel extends Kernel
 
     public function getCharset()
     {
-        return 'windows-1251';
+        return APP_ENCODING;
     }
 
     public function getLogDir()
@@ -64,11 +64,10 @@ class PmApplicationKernel extends Kernel
         return defined('SERVER_LOGS_PATH') ? SERVER_LOGS_PATH : dirname($this->getCacheDir()) . '/logs';
     }
     
-    function boot()
+    function initializeContainer()
     {
-		$lock = new \CacheLock();
+    	$lock = new \CacheLock();
 		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
-    	
-		parent::boot();
+    	parent::initializeContainer();
     }
 }

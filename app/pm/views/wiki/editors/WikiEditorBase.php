@@ -36,7 +36,7 @@ abstract class WikiEditorBase
  	
  	function setObjectIt( $object_it )
  	{
- 		$this->object_it = $object_it;
+ 		$this->object_it = $object_it->copy();
 		$this->object = $this->object_it->object; 
  	}
  	

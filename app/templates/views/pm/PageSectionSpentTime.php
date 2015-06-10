@@ -4,7 +4,7 @@
 		<div class="title">
 		<?php  
 			echo $view->render('core/EmbeddedRowTitleMenu.php', array (
-					'title' => '<b>'.$row['user'].'</b>:&nbsp;'.$row['capacity'].'&nbsp;'.translate('÷.').',&nbsp;'.$row['date'],
+					'title' => '<b>'.$row['user'].'</b>:&nbsp;'.$row['capacity'].'&nbsp;'.translate('Ñ‡.').',&nbsp;'.$row['date'],
 					'items' => $row['actions'],
 					'position' => 'last'
 			));

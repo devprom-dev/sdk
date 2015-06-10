@@ -18,7 +18,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-log';
-        $item['Caption'] = translate('Активности');
+        $item['Caption'] = translate('РђРєС‚РёРІРЅРѕСЃС‚Рё');
         $item['AccessEntityReferenceName'] = 'ObjectChangeLog';
         $item['Url'] = 'project/log';
         
@@ -27,7 +27,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-spenttime';
-        $item['Caption'] = translate('Затраченное время');
+        $item['Caption'] = translate('Р—Р°С‚СЂР°С‡РµРЅРЅРѕРµ РІСЂРµРјСЏ');
         $item['AccessEntityReferenceName'] = 'pm_Activity';
         $item['Url'] = 'participants/spenttime';
         
@@ -36,7 +36,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-question';
-        $item['Caption'] = translate('Вопросы');
+        $item['Caption'] = translate('Р’РѕРїСЂРѕСЃС‹');
         $item['AccessEntityReferenceName'] = 'pm_Question';
         $item['Url'] = 'project/question';
         
@@ -45,7 +45,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-blog';
-        $item['Caption'] = translate('Блог');
+        $item['Caption'] = translate('Р‘Р»РѕРі');
         $item['AccessEntityReferenceName'] = 'BlogPost';
         $item['Url'] = 'project/blog';
         
@@ -54,7 +54,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-knowledgebase';
-        $item['Caption'] = translate('База знаний');
+        $item['Caption'] = translate('Р‘Р°Р·Р° Р·РЅР°РЅРёР№');
         $item['AccessEntityReferenceName'] = 'ProjectPage';
         $item['Url'] = 'knowledgebase/tree';
         
@@ -63,7 +63,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-reports';
-        $item['Caption'] = translate('Все отчеты');
+        $item['Caption'] = translate('Р’СЃРµ РѕС‚С‡РµС‚С‹');
         $item['Description'] = text(1824);
         $item['AccessEntityReferenceName'] = 'cms_Report';
         $item['Url'] = 'project/reports';
@@ -73,7 +73,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-plan-hierarchy';
-        $item['Caption'] = translate('План');
+        $item['Caption'] = translate('РџР»Р°РЅ');
         $item['AccessEntityReferenceName'] = 'pm_Version';
         $item['Url'] = 'plan/hierarchy';
         
@@ -82,7 +82,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-plan-milestone';
-        $item['Caption'] = translate('Вехи');
+        $item['Caption'] = translate('Р’РµС…Рё');
         $item['AccessEntityReferenceName'] = 'pm_Milestone';
         $item['Url'] = 'plan/milestone';
         
@@ -100,7 +100,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-backlog';
-        $item['Caption'] = translate('Баклог');
+        $item['Caption'] = translate('Р‘Р°РєР»РѕРі');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/list';
         
@@ -118,7 +118,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-trace';
-        $item['Caption'] = translate('Трассировка пожеланий');
+        $item['Caption'] = translate('РўСЂР°СЃСЃРёСЂРѕРІРєР° РїРѕР¶РµР»Р°РЅРёР№');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/trace';
         
@@ -136,7 +136,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
         {
 	        // tasks modules
-	        $plugin = translate('Задачи');
+	        $plugin = translate('Р—Р°РґР°С‡Рё');
 	        
 	        $item = array();
 	        
@@ -150,7 +150,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
 	        $item = array();
 	        
 	        $item['cms_PluginModuleId'] = 'tasks-board';
-	        $item['Caption'] = translate('Доска задач');
+	        $item['Caption'] = translate('Р”РѕСЃРєР° Р·Р°РґР°С‡');
 	        $item['AccessEntityReferenceName'] = 'pm_Task';
 	        $item['Url'] = 'tasks/board';
 	        
@@ -159,7 +159,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
 	        $item = array();
 	        
 	        $item['cms_PluginModuleId'] = 'tasks-trace';
-	        $item['Caption'] = translate('Трассировка задач');
+	        $item['Caption'] = translate('РўСЂР°СЃСЃРёСЂРѕРІРєР° Р·Р°РґР°С‡');
 	        $item['AccessEntityReferenceName'] = 'pm_Task';
 	        $item['Url'] = 'tasks/trace';
 	        
@@ -178,7 +178,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'features-list';
-        $item['Caption'] = translate('Функции');
+        $item['Caption'] = translate('Р¤СѓРЅРєС†РёРё');
         $item['AccessEntityReferenceName'] = 'pm_Function';
         $item['Url'] = 'features/list';
         
@@ -187,7 +187,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'features-trace';
-        $item['Caption'] = translate('Трассировка функций');
+        $item['Caption'] = translate('РўСЂР°СЃСЃРёСЂРѕРІРєР° С„СѓРЅРєС†РёР№');
         $item['AccessEntityReferenceName'] = 'pm_Function';
         $item['Url'] = 'features/trace';
         
@@ -214,7 +214,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-import';
-        $item['Caption'] = translate('Импорт');
+        $item['Caption'] = translate('РРјРїРѕСЂС‚');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['AccessType'] = ACCESS_CREATE;
         $item['Url'] = 'issues/board';
@@ -230,7 +230,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-settings';
-        $item['Caption'] = translate('Проект');
+        $item['Caption'] = translate('РџСЂРѕРµРєС‚');
         $item['Description'] = text(1812);
         $item['AccessEntityReferenceName'] = 'pm_Project';
         $item['AccessType'] = ACCESS_MODIFY;
@@ -247,32 +247,11 @@ class ModuleProjectsBuilder extends ModuleBuilder
 
         $item = array();
         
-        $item['cms_PluginModuleId'] = 'participants';
-        $item['Caption'] = translate('Участники');
-        $item['Description'] = text(1815);
-        $item['AccessEntityReferenceName'] = 'pm_Participant';
-        $item['Url'] = 'participants/list';
-        
-        $modules[] = $item;
-        
-        $item = array();
-        
         $item['cms_PluginModuleId'] = 'methodology';
-        $item['Caption'] = translate('Методология');
+        $item['Caption'] = translate('РњРµС‚РѕРґРѕР»РѕРіРёСЏ');
         $item['Description'] = text(1816);
         $item['AccessEntityReferenceName'] = 'pm_Methodology';
         $item['Url'] = 'project/methodology';
-        
-        $modules[] = $item;
-
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'rights';
-        $item['Caption'] = translate('Права доступа');
-        $item['Description'] = text(1817);
-        $item['AccessEntityReferenceName'] = 'pm_AccessRight';
-        $item['AccessType'] = ACCESS_MODIFY;
-        $item['Url'] = 'participants/rights';
         
         $modules[] = $item;
 
@@ -333,7 +312,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'tags';
-        $item['Caption'] = translate('Тэги');
+        $item['Caption'] = translate('РўСЌРіРё');
         $item['Description'] = text(1821);
         $item['AccessEntityReferenceName'] = 'Tag';
         $item['Url'] = 'project/tags';
@@ -343,23 +322,13 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'snapshots';
-        $item['Caption'] = translate('Версионирование');
+        $item['Caption'] = translate('Р’РµСЂСЃРёРѕРЅРёСЂРѕРІР°РЅРёРµ');
         $item['Description'] = text(1822);
         $item['AccessEntityReferenceName'] = 'Snapshot';
         $item['Url'] = 'versioning/revisions';
         
         $modules[] = $item;
 
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'versions';
-        $item['Caption'] = text(1344);
-        $item['Description'] = text(1823);
-        $item['AccessEntityReferenceName'] = 'pm_VersionSettings';
-        $item['Url'] = 'project/versionsettings';
-        
-        $modules[] = $item;
-        
         foreach( $modules as $module )
         {
         	$module['Area'] = FunctionalAreaMenuSettingsBuilder::AREA_UID;

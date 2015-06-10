@@ -223,12 +223,12 @@
 	header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 	header("Pragma: no-cache"); // HTTP/1.0
-	header('Content-type: application/json; charset=windows-1251');
+	header('Content-type: application/json; charset='.APP_ENCODING);
 
 	$y_values = array( 
-		translate('Идеально') => $y1_values, 
-		translate('Запланировано') => $y4_values, 
-		translate('Фактически') => $y2_values );
+		translate('РРґРµР°Р»СЊРЅРѕ') => $y1_values, 
+		translate('Р—Р°РїР»Р°РЅРёСЂРѕРІР°РЅРѕ') => $y4_values, 
+		translate('Р¤Р°РєС‚РёС‡РµСЃРєРё') => $y2_values );
 	 
 	$labels = array();
 	foreach( $y_values as $label => $points )
@@ -250,7 +250,7 @@
 	 		$time = strtotime($x3_values[$key].' day', strtotime($start_date)) * 1000;
 		 	$data[] = "[".$time.",".round($value,1)."]";
 		}
-		$labels[] = '{"label":"'.translate('Прогноз').'","data":['.join(',',$data).']}';
+		$labels[] = '{"label":"'.translate('РџСЂРѕРіРЅРѕР·').'","data":['.join(',',$data).']}';
 	}
 	
 	echo '['.join(',',$labels).']';

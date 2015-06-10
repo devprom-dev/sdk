@@ -2,11 +2,6 @@
 
 class JobForm extends PageForm
 {
-	function __construct()
-	{
-		parent::__construct( getFactory()->getObject('co_ScheduledJob') );
-	}
-
 	function IsNeedButtonNew()
 	{
 		return false;

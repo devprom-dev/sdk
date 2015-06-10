@@ -7,9 +7,9 @@ class ProjectList extends PageList
 {
 	function setupColumns()
 	{
-        $this->object->setAttributeCaption( 'IsClosed', translate('Состояние') ); 
+        $this->object->setAttributeCaption( 'IsClosed', translate('РЎРѕСЃС‚РѕСЏРЅРёРµ') ); 
  		
- 		$this->object->addAttribute('Coordinators', 'REF_cms_UserId', translate('Координаторы'), true);
+ 		$this->object->addAttribute('Coordinators', 'REF_cms_UserId', translate('РљРѕРѕСЂРґРёРЅР°С‚РѕСЂС‹'), true);
 		
 		$this->object->addPersister( new ProjectLeadsPersister() );
 	    
@@ -76,7 +76,7 @@ class ProjectList extends PageList
 		{
 		    case 'IsClosed':
 		        
-		        echo $object_it->get('IsClosed') == 'Y' ? translate('Закрыт') : translate('Открыт'); 
+		        echo $object_it->get('IsClosed') == 'Y' ? translate('Р—Р°РєСЂС‹С‚') : translate('РћС‚РєСЂС‹С‚'); 
 		        
 		        break;
 		        

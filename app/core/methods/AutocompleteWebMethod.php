@@ -116,29 +116,24 @@ class AutocompleteWebMethod extends WebMethod
  		}
  		else
  		{
-     		$object_it = $object->getAll();
-     		
      		$data = array();
-     		
+     		$object_it = $object->getAll();
      		while ( !$object_it->end() )
      		{
      			$caption = $object_uid->getUidTitle($object_it);
-     			     			
      			foreach( $attributes as $attribute )
      			{
      				$value = $attribute == 'Caption' ? $caption : $object_it->get( $attribute );
 
-     				if ( mb_stripos( trim($value), $_REQUEST[$key] ) !== false )
+     				if ( mb_stripos( trim($value), $_REQUEST[$key], 0, APP_ENCODING ) !== false )
      				{
      					$data[] = $object_it->getData();
-     					
      					break;
      				}
      			}
     
      			$object_it->moveNext();
      		}
-     		
      		$result = $this->getResult( $object_it->object->createCachedIterator($data), $_REQUEST['additional'] );
  		}
 

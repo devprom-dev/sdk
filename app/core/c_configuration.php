@@ -175,7 +175,7 @@
  	
  	function getKBCaption()
  	{
- 		return translate('Описание');
+ 		return translate('РћРїРёСЃР°РЅРёРµ');
  	}
  	
  	function IsFeedbackAuthRequired()
@@ -335,7 +335,7 @@
 
  	function getKBCaption()
  	{
- 		return translate('База знаний');
+ 		return translate('Р‘Р°Р·Р° Р·РЅР°РЅРёР№');
  	}
 
  	function IsFeedbackAuthRequired()

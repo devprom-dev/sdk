@@ -15,33 +15,12 @@ class ArtefactTable extends PMPageTable
 		
 		$filters = array (
 			new FilterObjectMethod( $model_factory->getObject('pm_ArtefactType'),
-				translate('Каталог') )
+				translate('РљР°С‚Р°Р»РѕРі') )
 		);
 		
 		$filters[] = new FilterAutoCompleteWebMethod( 
-			$model_factory->getObject('Version'), translate('Версия') );
+			$model_factory->getObject('Version'), translate('Р’РµСЂСЃРёСЏ') );
 		
 		return $filters;
 	}
-	
- 	function getActions()
-	{
-		global $model_factory;
-		
-		$list = $this->getListRef();
-		
-		$actions = array();
-		
-		array_push($actions, array( 'name' => translate('Выбрать все'),
-			'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 'title' => text(969) ) );
-
-		array_push($actions, array( 'name' => translate('Массовые операции'),
-			'url' => 'javascript: processBulkMethod();', 'title' => text(651) ) );
-		$actions[] = array();
-
-		$base_actions = parent::getActions();
-		
-		return array_merge( array_slice($base_actions, 0, 2),
-			$actions, array_slice($base_actions, 2) );
-	}	
 } 

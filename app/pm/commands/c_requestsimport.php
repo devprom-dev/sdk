@@ -248,7 +248,7 @@
 
 		if ( count($result) > $max_issues_todisplay )
 		{
-			$xml .= translate('Показаны первые').': '.$max_issues_todisplay.'<br/><br/>';
+			$xml .= translate('РџРѕРєР°Р·Р°РЅС‹ РїРµСЂРІС‹Рµ').': '.$max_issues_todisplay.'<br/><br/>';
 		}
 		
 		$fields = $this->getFields();
@@ -256,7 +256,7 @@
 		$xml .= '<table class="table" width="100%">';
 		
 		$xml .= '<tr>';
-		$xml .= '<th>'.translate('№').'</th>';
+		$xml .= '<th>'.translate('в„–').'</th>';
 		
 		for ( $i = 0; $i < count($fields); $i++ )
 		{
@@ -350,7 +350,7 @@
 
 		$xml .= '</table>';
 
-		$xml .= translate('Всего строк').': '.$rows.'<br/><br/>';
+		$xml .= translate('Р’СЃРµРіРѕ СЃС‚СЂРѕРє').': '.$rows.'<br/><br/>';
 		
 		$this->replyResultBinary( false, $xml);
 	}

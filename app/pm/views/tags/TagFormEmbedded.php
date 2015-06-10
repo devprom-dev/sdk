@@ -19,7 +19,7 @@ class TagFormEmbedded extends PMFormEmbedded
  	    $actions = array();
  	    
  	    $actions[] = array (
- 	        'name' => translate('Ïîêàçàòü âñå'),
+ 	        'name' => translate('ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÑŒ Ð²ÑÐµ'),
  	        'url' => $object_it->object->getPage()
  	    );
  	    $actions[] = array();

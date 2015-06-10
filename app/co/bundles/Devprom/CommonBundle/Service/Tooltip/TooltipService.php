@@ -80,21 +80,13 @@ class TooltipService
  	    switch ( $attribute )
  	    {
  	        case 'State':
- 	            if ( is_a($object_it->object, 'MetaobjectStatable') && $object_it->object->getStateClassName() != '' )
-         	    {
-     	            $state = getFactory()->getObject($object_it->object->getStateClassName());
-     	            
-     	            $state_it = $state->getByRef('ReferenceName', $object_it->get('State'));
-     	            
-     	            return $state_it->getDisplayName();
-         	    }
-         	    break;
+ 	        	return $object_it->get('StateName');
  	    }
  	    
  		switch ( $type )
  		{
 			case 'char':
-			    return $object_it->get($attribue) == 'Y' ? translate('Äà') : translate('Íåò');
+			    return $object_it->get($attribue) == 'Y' ? translate('Ð”Ð°') : translate('ÐÐµÑ‚');
 			    
  		    case 'text':
 			    $totext = new \html2text( $object_it->getHtmlDecoded($attribute) );

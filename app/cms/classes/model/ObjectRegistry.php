@@ -2,13 +2,30 @@
 
 abstract class ObjectRegistry
 {
-	protected $object;
+	protected $object = null;
 	
 	public function __construct( Object $object = null )
 	{
 		$this->setObject($object);
 	}
 	
+	public function __sleep()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __destruct()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __wakeup()
+	{
+		$this->object = null;
+	}
+		
 	public function & getObject()
 	{
 		return $this->object;

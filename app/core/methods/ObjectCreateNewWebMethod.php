@@ -55,7 +55,7 @@ class ObjectCreateNewWebMethod extends WebMethod
 		
 		foreach( $method_parms as $key => $parm )
 		{
-			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, 'windows-1251'));
+			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 		}
 		
 		return "javascript: workflowNewObject('".join("','", $method_parms)."', ".$parms_string.",".$this->getRedirectUrl().")";

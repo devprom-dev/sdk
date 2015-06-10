@@ -37,13 +37,13 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 
  	function getCaption()
  	{
- 		return translate('Тэги');
+ 		return translate('РўСЌРіРё');
  	}
  	
  	function getValues()
  	{
   		$values = array (
- 			'all' => translate('Все'),
+ 			'all' => translate('Р’СЃРµ'),
  			);
  		
  		while ( !$this->tag_it->end() )
@@ -62,7 +62,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
      		}
  		}
  		
-		$values[' 0'] = translate('Тэги: не заданы');
+		$values[' 0'] = translate('РўСЌРіРё: РЅРµ Р·Р°РґР°РЅС‹');
 
  		return $values;
 	}

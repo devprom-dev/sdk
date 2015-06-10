@@ -22,7 +22,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
 		$metadata->addAttribute('Fact', 'FLOAT', 
-			translate('Ôàêòè÷åñêàÿ òðóäîåìêîñòü, ÷.'), 
+			translate('Ð¤Ð°ÐºÑ‚Ð¸Ñ‡ÐµÑÐºÐ°Ñ Ñ‚Ñ€ÑƒÐ´Ð¾ÐµÐ¼ÐºÐ¾ÑÑ‚ÑŒ, Ñ‡.'), 
 				is_object($methodology_it) && $methodology_it->IsTimeTracking(), 
 					true, '', 8 );
 		
@@ -41,8 +41,8 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeVisible('Priority', $methodology_it->get('IsRequestOrderUsed') != 'Y');
 		$metadata->setAttributeRequired('Assignee', !$methodology_it->IsParticipantsTakesTasks());
 
-		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Ïðèëîæåíèÿ'), true, false, '', 110);
-		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Íàáëþäàòåëè'), true);
+		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('ÐŸÑ€Ð¸Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ'), true, false, '', 110);
+		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('ÐÐ°Ð±Ð»ÑŽÐ´Ð°Ñ‚ÐµÐ»Ð¸'), true);
 		
 		$metadata->setAttributeDescription( 'StartDate', text(1841) );
 		$metadata->setAttributeDescription( 'FinishDate', text(1842) );
@@ -53,8 +53,12 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		{
 			$metadata->addAttributeGroup($attribute, 'permissions');
 		}
+        foreach ( array('Result') as $attribute )
+		{
+			$metadata->addAttributeGroup($attribute, 'system');
+		}
 		
-	    $this->removeAttributes( $metadata, $methodology_it );
+		$this->removeAttributes( $metadata, $methodology_it );
     }
     
     private function removeAttributes( & $metadata, & $methodology_it )

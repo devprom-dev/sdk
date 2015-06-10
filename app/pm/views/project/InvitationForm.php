@@ -6,7 +6,7 @@ class InvitationForm extends PMPageForm
 	{
 		$parms = parent::getRenderParms();
 		
-		$parms['button_save_title'] = translate('Пригласить');
+		$parms['button_save_title'] = translate('РџСЂРёРіР»Р°СЃРёС‚СЊ');
 		
 		return $parms;
 	}

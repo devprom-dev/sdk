@@ -99,7 +99,7 @@ class ModelService
 		}
 	}
 	
-	public function get( $entity, $id = '' )
+	public function get( $entity, $id = '', $output = 'text' )
 	{
 		if ( $id == '' ) $id = 0;
 		
@@ -117,7 +117,7 @@ class ModelService
 			throw new \Exception('There is no record ('.$id.') of '.get_class($object));
 		}
 
-		return $this->sanitizeData($object_it->object, $object_it->getData());
+		return $this->sanitizeData($object_it->object, $object_it->getData(), $output);
 	}
 	
 	public function delete( $entity, $id )
@@ -167,9 +167,55 @@ class ModelService
 		return $result;
 	}
 	
+	static public function queryXPath( $object_it, $xpath )
+	{
+		$attributes = $object_it->object->getAttributes();
+		
+		$xml = '';
+		while( !$object_it->end() )
+		{
+			$xml .= '<Object id="'.$object_it->getId().'">';
+			foreach( $attributes as $attribute => $data )
+			{	
+				if ( $object_it->object->IsReference($attribute) ) {
+					$value = $object_it->getRef($attribute)->getDisplayName();
+				}
+				else {
+					$value = $object_it->getHtmlDecoded($attribute);
+				}
+				$xml .= '<'.$attribute.'><![CDATA['.\IteratorBase::wintoutf8(strtolower($value)).']]></'.$attribute.'>';
+			}
+			$xml .= '</Object>';
+			$object_it->moveNext();
+		}
+
+		$ids = array();
+		$xml_object = new \SimpleXMLElement('<?xml version="1.0" encoding="utf-8"?><Collection>'.$xml.'</Collection>');
+		foreach( $xml_object->xpath('/Collection/Object['.$xpath.']') as $item )
+		{
+			foreach( $item->attributes() as $attribute => $value ) {
+				if ( $attribute == 'id' ) $ids[] = (string) $value; 
+			}
+		}
+		
+		$id_attribute = $object_it->object->getIdAttribute();
+		
+		return $object_it->object->createCachedIterator(
+				array_filter( $object_it->getRowset(), function($row) use($id_attribute, $ids) {
+						return in_array($row[$id_attribute], $ids);
+				})
+			);
+	}
+	
 	protected function create( $object, $data )
 	{
-		return $object->add_parms($data);
+		$object_id = $object->add_parms($data);
+		
+		getFactory()->getEventsManager()
+	    	->executeEventsAfterBusinessTransaction(
+	    		$object->getExact($object_id), 'WorklfowMovementEventHandler');
+		
+	    return $object_id;
 	}
 	
 	protected function modify( $object_it, $data )
@@ -177,7 +223,7 @@ class ModelService
 		return $object_it->object->modify_parms($object_it->getId(), $data);
 	}
 	
-	protected function sanitizeData( $object, $data )
+	protected function sanitizeData( $object, $data, $output = 'text' )
 	{
 		$id_attribute = $object->getIdAttribute();
 		$system_attributes = $object->getAttributesByGroup('system');
@@ -197,8 +243,12 @@ class ModelService
 			else
 			{
 				$result[$attribute] = \IteratorBase::wintoutf8(
-						stripslashes(html_entity_decode($value, ENT_QUOTES | ENT_HTML401, 'cp1251'))
+						html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING)
 				);
+				
+				if ( $output == 'html' ) {
+					$result[$attribute] = \IteratorBase::getHtmlValue($result[$attribute]);
+				}
 			}
 			
 			if ( $attribute == 'State' && is_array($terminal_states) )

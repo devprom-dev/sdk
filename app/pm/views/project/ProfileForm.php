@@ -2,9 +2,8 @@
 
 include "FieldRestMySettings.php";
 include "FieldFormButtons.php";
-include "ParticipantForm.php";
 
-class ProfileForm extends ParticipantForm
+class ProfileForm extends PMPageForm
 {
 	function buildRelatedDataCache()
 	{
@@ -80,25 +79,7 @@ class ProfileForm extends ParticipantForm
 	
 	function getActions()
 	{
-	    $session = getSession();
-	    
-	    $actions = array();
-	    $actions[] = array (
-	        'name' => text(1289), 'url' => '/profile'
-	    );
-	    
-	    $actions[] = array();
-	    $actions[] = array (
-	            'name' => text(1290), 'url' => '?mode=watchings'
-	    );
-
-	    $actions[] = array();
-	    $actions[] = array (
-	            'name' => text(1291), 
-	            'url' => $session->getApplicationUrl().'participants/rights?participant='.getSession()->getParticipantIt()->getId()
-	    );
-	     
-	    return $actions;
+	    return array();
 	}
 
 	function createFieldObject( $name ) 
@@ -113,6 +94,9 @@ class ProfileForm extends ParticipantForm
 
 		    case 'MenuSettings':
 		    	return new FieldRestMySettings(getSession()->getApplicationUrl().'settings/menu');
+
+		    case 'Notification':
+		    	return new FieldDictionary(getFactory()->getObject('Notification'));
 		    	
 		    default:
 		    	return parent::createFieldObject( $name );

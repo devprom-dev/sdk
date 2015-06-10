@@ -33,7 +33,7 @@ class MailboxScannerTest extends DevpromTestCase {
 
     public function setUp() {
         parent::setUp();
-        //$this->markTestSkipped("Íåâîçìîæíî ïîääåðæèâàòü");
+        //$this->markTestSkipped("ÐÐµÐ²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾ Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°Ñ‚ÑŒ");
         $this->commentMock = $this->getMock("Comment", array("add_parms"));
         $this->attachmentMock = $this->getMock("Attachment");
         $this->objectUID = $this->getMock("ObjectUID");
@@ -48,8 +48,9 @@ class MailboxScannerTest extends DevpromTestCase {
         		));
 
         $this->requestItMock = $this->requestMock->createSQLIterator('');
-        
-        $this->projectIt = $this->getMock("ProjectIterator", array(), array(new Project()));
+
+        $this->project = $this->getMock('Project', array('createIterator'), array(), '', false);
+        $this->projectIt = $this->getMock("ProjectIterator", array(), array($this->project));
         $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
         $this->session = $this->getSessionObject();
 

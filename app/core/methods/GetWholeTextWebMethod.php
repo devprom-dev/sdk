@@ -30,7 +30,7 @@ class GetWholeTextWebMethod extends WebMethod
 		
 		foreach( $method_parms as $key => $parm )
 		{
-			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, 'windows-1251'));
+			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 		}
 		
 		foreach( $method_parms as $key => $parm )

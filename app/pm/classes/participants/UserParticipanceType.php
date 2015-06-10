@@ -12,6 +12,6 @@ class UserParticipanceType extends CacheableSet
 	
     function getDisplayName()
     {
-        return translate('Пользователи');
+        return translate('РџРѕР»СЊР·РѕРІР°С‚РµР»Рё');
     }
 }

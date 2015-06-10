@@ -38,7 +38,7 @@ class FunctionChartList extends FunctionList
 	
 	function getColumns()
 	{
-		$this->object->addAttribute('ChartColumn', '', translate('Ãðàôèê ðåàëèçàöèè'), true);
+		$this->object->addAttribute('ChartColumn', '', translate('Ð“Ñ€Ð°Ñ„Ð¸Ðº Ñ€ÐµÐ°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ð¸'), true);
 		
 		return parent::getColumns();
 	}

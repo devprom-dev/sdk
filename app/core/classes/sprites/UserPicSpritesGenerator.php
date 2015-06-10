@@ -4,7 +4,7 @@ include_once "CssSpritesGenerator.php";
 
 class UserPicSpritesGenerator extends CssSpritesGenerator
 {
-	private $sprites_mini_size = 21;
+	private $sprites_mini_size = 18;
 	
 	private $sprites_middle_size = 30;
 	

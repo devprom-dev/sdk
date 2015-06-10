@@ -17,9 +17,9 @@ class SubversionRevisionDetailsList extends SubversionList
 
     function getColumns()
     {
-        $this->object->addAttribute('File', '', translate('Имя каталога или файла'), true);
-        $this->object->addAttribute('Path', '', translate('Путь'), true);
-        $this->object->addAttribute('Change', '', translate('Вид изменения'), true);
+        $this->object->addAttribute('File', '', translate('РРјСЏ РєР°С‚Р°Р»РѕРіР° РёР»Рё С„Р°Р№Р»Р°'), true);
+        $this->object->addAttribute('Path', '', translate('РџСѓС‚СЊ'), true);
+        $this->object->addAttribute('Change', '', translate('Р’РёРґ РёР·РјРµРЅРµРЅРёСЏ'), true);
 
         return parent::getColumns();
     }
@@ -43,7 +43,7 @@ class SubversionRevisionDetailsList extends SubversionList
         {
             case 'File':
             	
-                if ( $object_it->get('Action') != translate('Удалено') )
+                if ( $object_it->get('Action') != translate('РЈРґР°Р»РµРЅРѕ') )
 	            {
 	                $path = $object_it->utf8towin($object_it->get('Path'));
 	                
@@ -64,7 +64,7 @@ class SubversionRevisionDetailsList extends SubversionList
             	
             case 'Path':
             	
-                if ( $object_it->get('Action') != translate('Удалено') )
+                if ( $object_it->get('Action') != translate('РЈРґР°Р»РµРЅРѕ') )
 	            {
 	                echo $object_it->utf8towin($object_it->get('Path'));
 	            }
@@ -75,7 +75,7 @@ class SubversionRevisionDetailsList extends SubversionList
             	
                 echo $object_it->get('Action');
             	
-	            if ( $object_it->get('Action') == translate('Изменено') )
+	            if ( $object_it->get('Action') == translate('РР·РјРµРЅРµРЅРѕ') )
 	            {
 	                $log_it = $this->connector->getFileLogs(
 	                        $object_it->get('Path'), 0, $_REQUEST['version'] );
@@ -88,7 +88,7 @@ class SubversionRevisionDetailsList extends SubversionList
 	                    echo ' (<a href="/pm/'.$project_it->get('CodeName').
 	                    '/module/sourcecontrol/files?mode=diff&path='.$object_it->get('Path').
 	                    '&version='.$log_it->get('Version').'&preversion='.$preversion.'&subversion='.$repo_it->getId().
-	                    '&name='.$object_it->get('Name').'">'.translate('Посмотреть изменения').'</a>)';
+	                    '&name='.$object_it->get('Name').'">'.translate('РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёР·РјРµРЅРµРЅРёСЏ').'</a>)';
 	                }
 	            }
 	            

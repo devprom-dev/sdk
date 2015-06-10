@@ -4,14 +4,12 @@
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
 return array(
-    'settings.dashboard.title' => 'Настройки',
-    'settings.dashboard.save' => 'Сохранить',
-    'settings.dashboard.cancel' => 'Отмена',
-    'settings.supportProjectId.title' => 'Связать с проектом',
-    'settings.appUrl.title' => 'URL службы поддержки',
-    'settings.appUrl.description' => 'Если ваша конфигурация службы поддержки использует адрес, отличный от адреса Девпрома,
-     укажите этот адрес здесь. Например, <b>http://support.devprom.ru/</b>',
-    'settings.supportProjectId.description' => '<p>Для работы портала поддержки необходим хотя бы один проект поддержки.<br/><br/></p>
-            <p>Создайте проект с использованием шаблона "Поддержка" или перейдите к настройкам существующего проекта и включите опцию "Использовать портал поддержки..."</p>',
+    'settings.dashboard.title' => 'РќР°СЃС‚СЂРѕР№РєРё',
+    'settings.dashboard.save' => 'РЎРѕС…СЂР°РЅРёС‚СЊ',
+    'settings.dashboard.cancel' => 'РћС‚РјРµРЅР°',
+    'settings.supportProjectId.title' => 'РЎРІСЏР·Р°С‚СЊ СЃ РїСЂРѕРµРєС‚РѕРј',
+    'settings.appUrl.title' => 'URL СЃР»СѓР¶Р±С‹ РїРѕРґРґРµСЂР¶РєРё',
+    'settings.appUrl.description' => 'Р•СЃР»Рё РІР°С€Р° РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ СЃР»СѓР¶Р±С‹ РїРѕРґРґРµСЂР¶РєРё РёСЃРїРѕР»СЊР·СѓРµС‚ Р°РґСЂРµСЃ, РѕС‚Р»РёС‡РЅС‹Р№ РѕС‚ Р°РґСЂРµСЃР° Р”РµРІРїСЂРѕРјР°,
+     СѓРєР°Р¶РёС‚Рµ СЌС‚РѕС‚ Р°РґСЂРµСЃ Р·РґРµСЃСЊ. РќР°РїСЂРёРјРµСЂ, <b>http://support.devprom.ru/</b>',
+    'settings.supportProjectId.description' => '',
 );
-?>

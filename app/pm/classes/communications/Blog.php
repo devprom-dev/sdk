@@ -16,6 +16,6 @@ class Blog extends Metaobject
     
     function getDisplayName()
     {
-        return translate('Блог проекта');
+        return translate('Р‘Р»РѕРі РїСЂРѕРµРєС‚Р°');
     }
 }

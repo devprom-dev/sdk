@@ -41,7 +41,7 @@ class ModelValidatorTypes extends ModelValidatorInstance
 			
 			if ( !$validator->validate($parms[$attribute]) )
 			{
-				$result = translate('Âû óêàçàëè íåêîððåêòíîå çíà÷åíèå ïîëÿ').' "'.
+				$result = translate('Ð’Ñ‹ ÑƒÐºÐ°Ð·Ð°Ð»Ð¸ Ð½ÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð¿Ð¾Ð»Ñ').' "'.
 						translate($object->getAttributeUserName($attribute)).'" ['.$attribute.']';
 				
 				if ( $object->getAttributeTypeName($attribute) != '' )

@@ -11,6 +11,6 @@ class WorkflowTimeScale extends MetaobjectCacheable
     
     function getDisplayName()
     {
-        return translate('Ã‡Ò¯Ú‡·');
+        return translate('–ú–∞—Å—à—Ç–∞–±');
     }
 }

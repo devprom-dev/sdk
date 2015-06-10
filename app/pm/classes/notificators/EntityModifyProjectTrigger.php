@@ -38,7 +38,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	{
  	    global $model_factory, $session;
  	    
- 	    $xml = '<?xml version="1.0" encoding="windows-1251"?><entities>';
+ 	    $xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?><entities>';
  	    
  	    foreach( $references as $object )
  	    {
@@ -114,7 +114,8 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 			'ClassName' => strtolower(get_class($object_it->object)),
 			'ChangeKind' => 'deleted',
 			'Content' => $message,
-			'VisibilityLevel' => 1
+			'VisibilityLevel' => 1,
+			'SystemUser' => getSession()->getUserIt()->getId()
 		);
 
 		$change = $model_factory->getObject('ObjectChangeLog');

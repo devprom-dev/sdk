@@ -90,7 +90,7 @@
 				</li>
 			<?php } ?>
 			
-			<?php if ( !$custom_template_exists ) { ?>
+			<?php if ( !$custom_template_exists && $custom_template_url != '' ) { ?>
 			<li class="template-list-item">
 				<div class="template grey">
 					<i class="icon-lock"></i>

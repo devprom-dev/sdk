@@ -1,13 +1,13 @@
 <?php
  
-define(RESULT_FAILED, 'Ïðîâàëåí');
-define(RESULT_SUCCEEDED, 'Óñïåøíî ïðîéäåí');
-define(RESULT_FIXED, 'Èñïðàâëåíà');
-define(RESULT_RESOLVED, 'Âûïîëíåíà');
-define(RESULT_FIXEDINDIRECTLY, 'Óæå ñäåëàíà');
-define(RESULT_CANTREPRODUCE, 'Íå âîñïðîèçâîäèòñÿ');
-define(RESULT_FUNCTIONSASDESIGNED, 'Ðàáîòàåò êàê çàäóìàíî');
-define(RESULT_SCENARIOPREPARED, 'Ïîäãîòîâëåí òåñòîâûé íàáîð');
+define(RESULT_FAILED, 'ÐŸÑ€Ð¾Ð²Ð°Ð»ÐµÐ½');
+define(RESULT_SUCCEEDED, 'Ð£ÑÐ¿ÐµÑˆÐ½Ð¾ Ð¿Ñ€Ð¾Ð¹Ð´ÐµÐ½');
+define(RESULT_FIXED, 'Ð˜ÑÐ¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð°');
+define(RESULT_RESOLVED, 'Ð’Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð°');
+define(RESULT_FIXEDINDIRECTLY, 'Ð£Ð¶Ðµ ÑÐ´ÐµÐ»Ð°Ð½Ð°');
+define(RESULT_CANTREPRODUCE, 'ÐÐµ Ð²Ð¾ÑÐ¿Ñ€Ð¾Ð¸Ð·Ð²Ð¾Ð´Ð¸Ñ‚ÑÑ');
+define(RESULT_FUNCTIONSASDESIGNED, 'Ð Ð°Ð±Ð¾Ñ‚Ð°ÐµÑ‚ ÐºÐ°Ðº Ð·Ð°Ð´ÑƒÐ¼Ð°Ð½Ð¾');
+define(RESULT_SCENARIOPREPARED, 'ÐŸÐ¾Ð´Ð³Ð¾Ñ‚Ð¾Ð²Ð»ÐµÐ½ Ñ‚ÐµÑÑ‚Ð¾Ð²Ñ‹Ð¹ Ð½Ð°Ð±Ð¾Ñ€');
 
 include "TaskIterator.php";
 
@@ -69,7 +69,7 @@ class Task extends MetaobjectStatable
 			$tasktype = $model_factory->getObject('pm_TaskType');
 			$tasktype_it = $tasktype->getExact($TaskType);
 
-			// àâòîìàòè÷åñêè ïîäñòàâèì åäèíñòâåííîãî èñïîëíèòåëÿ
+			// Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸ Ð¿Ð¾Ð´ÑÑ‚Ð°Ð²Ð¸Ð¼ ÐµÐ´Ð¸Ð½ÑÑ‚Ð²ÐµÐ½Ð½Ð¾Ð³Ð¾ Ð¸ÑÐ¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»Ñ
 			//
 			switch($tasktype_it->get('ReferenceName')) 
 			{
@@ -239,7 +239,7 @@ class Task extends MetaobjectStatable
 						//
 						$parms['LeftWork'] = 0;
 						
-						$parms['TransitionComment'] = translate('Ðåçóëüòàò').': '.
+						$parms['TransitionComment'] = translate('Ð ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚').': '.
 							( $parms['Result'] == '' ? $object_it->get('Result') : $parms['Result'] ).
 							chr(10).$parms['TransitionComment'];
 					}				

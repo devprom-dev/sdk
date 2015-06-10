@@ -13,7 +13,7 @@ class ReportsFileServerBuilder extends ReportsBuilder
 	
 	public function build( ReportRegistry & $object )
     {
-    	if( $this->session->getProjectIt()->get('IsFileServer') != 'Y' ) return;
+    	if( $this->session->getProjectIt()->getMethodologyIt()->get('IsFileServer') != 'Y' ) return;
     	
  		$module = getFactory()->getObject('Module');
  		

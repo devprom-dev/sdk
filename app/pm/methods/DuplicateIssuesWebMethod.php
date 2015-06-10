@@ -23,50 +23,37 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
  	    
  	    $request = getFactory()->getObject('pm_ChangeRequest');
  	    $request->addFilter( new FilterInPredicate($this->getObjectIt()->idsToArray()) );
+   	    $references[] = $request;
  	    
- 	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
-		$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $this->getObjectIt()->idsToArray()) ); 
-		
-		$attachment = getFactory()->getObject('pm_Attachment');
-		$attachment->addFilter( new AttachmentObjectPredicate($this->getObjectIt()) );
+ 	    if ( $this->type_it->get('ReferenceName') == 'duplicates' ) {
+	 	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
+			$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $this->getObjectIt()->idsToArray()) );
+			$references[] = $trace;
+ 	    } 
 
- 	    $task = getFactory()->getObject('Task');
- 	    $task->addFilter( new FilterAttributePredicate('ChangeRequest', $this->getObjectIt()->idsToArray()) );
- 	    
- 	    $activity = getFactory()->getObject('Activity');
- 	    $activity->addFilter( new ActivityRequestPredicate($this->getObjectIt()->idsToArray()) );
-
- 	    $references[] = $request;
-		$references[] = $trace;
-		$references[] = $attachment;
- 	    $references[] = $task;
- 	    $references[] = $activity;		
- 	    
  	    return $references;
 	}
 	
  	function duplicate( $project_it )
  	{
+		$link_type = getFactory()->getObject('RequestLinkType');
+ 		$this->type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
+		if ( $this->type_it->getId() < 1 ) {
+			$this->type_it = $link_type->getByRef('ReferenceName', 'duplicates');
+		}
+ 		
 		$context = parent::duplicate( $project_it );
 		
  	 	$map = $context->getIdsMap();
-
  	    $request = getFactory()->getObject('pm_ChangeRequest');
 		$link = getFactory()->getObject('pm_ChangeRequestLink');
-		$link_type = getFactory()->getObject('RequestLinkType');
-		
-		$type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
-		if ( $type_it->getId() < 1 )
-		{
-			$type_it =  $link_type->getByRef('ReferenceName', 'duplicates');
-		}
 		
  	    foreach( $this->getObjectIt()->idsToArray() as $source_id )
  	    {
     		$link->add_parms( array( 
     		    'SourceRequest' => $source_id,
     			'TargetRequest' => $map[$request->getClassName()][$source_id],
-    			'LinkType' => $type_it->getId() 
+    			'LinkType' => $this->type_it->getId() 
     		));
  	    }
  	    

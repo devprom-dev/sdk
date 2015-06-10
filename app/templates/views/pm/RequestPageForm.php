@@ -121,7 +121,7 @@ foreach( $attributes as $name => $attribute )
 <div class="actions">
 	<div class="btn-group last">
 		<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-			<?=translate('Äåéñòâèÿ')?>
+			<?=translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ')?>
 			<span class="caret"></span>
 		</a>
 		<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
@@ -136,7 +136,7 @@ foreach( $attributes as $name => $attribute )
 	<?php if ( $uid_icon != '' ) { ?>
 	<li>
 	    <?php if ( $navigation_url != '' ) { ?> <span class="divider">/</span> <?php } ?>
-	    <a href="#"><?=$uid_icon?></a>
+	    <? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
 	</li>
 	<?php } ?>
 </ul> <!-- end breadcrumb -->
@@ -170,7 +170,7 @@ foreach( $attributes as $name => $attribute )
 	<div class="accordion-heading">
 	  <a class="to-drop-btn" href="#collapseOne" tabindex="-1">
 		<span class="caret"></span>
-		<?=translate('Ñâîéñòâà')?>
+		<?=translate('Ð¡Ð²Ð¾Ð¹ÑÑ‚Ð²Ð°')?>
 	  </a>
 	</div>
 	<div id="collapseOne" class="accordion-body" tabindex="-1">
@@ -218,9 +218,9 @@ foreach( $attributes as $name => $attribute )
 	</div>
 	<div id="collapseTwo" class="accordion-body collapse">
 		<? 
-		if ( is_a($attributes['Description']['field'], 'FieldWYSIWYG') )
+		if ( is_a($attributes['Description']['field'], 'Field') )
 		{
-		    $attributes['Description']['field']->draw();
+		    $attributes['Description']['field']->draw($this);
 		}
 		else
 		{ 
@@ -309,18 +309,18 @@ foreach( $attributes as $name => $attribute )
 </div> <!-- end accordion -->
 
 <script language="javascript">
-	$.cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
+	cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
 	
 	$(document).ready(function() {
 		$(".accordion-heading > a")
 			.slice(1).click(function() {
-		      $.cookies.set('devprom.request.form.section' + $(this).attr('href'), 
+		      cookies.set('devprom.request.form.section' + $(this).attr('href'), 
 		  	      	$(this).hasClass('collapsed') ? '1' : '0');
 			});
 		
 		$(".accordion-heading > a")
 			.slice(1).each(function( index ) {
-				if($.cookies.get('devprom.request.form.section' + $(this).attr('href')) == '1') {
+				if(cookies.get('devprom.request.form.section' + $(this).attr('href')) == '1') {
 					if ( $(this).hasClass('collapsed') ) $(this).click();
 				}
 			});

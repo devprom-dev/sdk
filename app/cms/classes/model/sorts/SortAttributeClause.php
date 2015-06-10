@@ -89,14 +89,26 @@ class SortAttributeClause extends SortClauseBase
 					if ( count($sorts) > 0 && $ref->getEntityRefName() != $object->getEntityRefName() )
 					{
 						$clause = array_shift($sorts);
-						if ( $clause instanceof SortAttributeClause ) {
-							return " (SELECT IFNULL(s.".$clause->getAttributeName().", 0) FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
+						if ( $clause instanceof SortAttributeClause )
+						{
+			 				if ( in_array($object->getAttributeType($clause->getAttributeName()), array('varchar','text','largetext')) ) { 
+ 								$default_val = "'!'";
+	 						} else {
+	 							$default_val = "0";
+	 						}
+							$sort_clause = " (SELECT IFNULL(s.".$clause->getAttributeName().", ".$default_val.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type;
+							$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
+							return $sort_clause.", (SELECT s.".$alt_sort_column." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
 						}
 					}
 	 			}
 
 	 			if ( in_array($object->getAttributeType($attr), array('integer','float')) ) { 
 	 				$sql_attr = " IFNULL(".$sql_attr.", 0) ";
+	 			}
+
+			 	if ( in_array($object->getAttributeType($attr), array('varchar','text','largetext')) ) { 
+	 				$sql_attr = " IFNULL(".$sql_attr.", '!') ";
 	 			}
 	 			
 				return $sql_attr." ".$sort_type." ";

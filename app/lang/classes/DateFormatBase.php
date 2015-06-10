@@ -33,4 +33,8 @@ class DateFormatBase
  	function getDateJSFormat()
  	{
  	}
+ 	
+ 	function getDaysWording( $days )
+ 	{
+ 	}
 }

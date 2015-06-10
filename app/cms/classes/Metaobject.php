@@ -47,6 +47,7 @@ class Metaobject extends StoredObjectDB
 		} 
 			
 		$metadata = getFactory()->getMetadataRegistry()->getMetadata($this, $metadata_cache_category);
+		$metadata->setObject($this);
 		
 		$this->setPersisters( $metadata->getPersisters() ); 
 		$attributes = $metadata->getAttributes();
@@ -168,7 +169,7 @@ class Metaobject extends StoredObjectDB
  		switch ( $name )
  		{
  			case $this->getClassName().'Id':
- 				return 'Èäåíòèôèêàòîð';
+ 				return 'Ð˜Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€';
 
  			default:
  				return parent::getAttributeUserName( $name );
@@ -283,7 +284,7 @@ class Metaobject extends StoredObjectDB
 			$class_name = $this->getClassName();
 		}
 		
-		$xml = '<entity class="'.$class_name.'">';
+		$xml = '<entity class="'.$class_name.'" encoding="'.APP_ENCODING.'">';
 		
 		$object_it = $this->getAll();
 		$xml .= $object_it->serialize2Xml(); 
@@ -441,5 +442,25 @@ class Metaobject extends StoredObjectDB
 			
 			$reference_it->moveNext();
 		}
+	}
+	
+	public function __sleep()
+	{
+		parent::__sleep();
+		unset($this->entity);
+		$this->entity = null;
+	}
+	
+	public function __destruct()
+	{
+		parent::__destruct();
+		unset($this->entity);
+		$this->entity = null;
+	}
+	
+	public function __wakeup()
+	{
+		parent::__wakeup();
+		$this->entity = null;
 	}
 }

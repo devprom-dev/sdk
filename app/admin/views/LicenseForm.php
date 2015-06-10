@@ -62,7 +62,7 @@ class LicenseForm extends AdminForm
 		return array (
 				array (
 						'url' => "javascript: window.location = '?LicenseType=';",
-						'name' => translate('Èçìåíèòü'),
+						'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ'),
 						'class' => 'btn-primary'
 				)
 		);    	

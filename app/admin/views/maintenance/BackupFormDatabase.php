@@ -4,7 +4,7 @@ class BackupFormDatabase extends AdminForm
 {
  	function getAddCaption()
  	{
- 		return '1. '.translate('Копирование базы данных');
+ 		return '1. '.translate('РљРѕРїРёСЂРѕРІР°РЅРёРµ Р±Р°Р·С‹ РґР°РЅРЅС‹С…');
  	}
  	
  	function getCommandClass()

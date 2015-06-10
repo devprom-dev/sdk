@@ -12,8 +12,16 @@ class FieldIssueInverseTrace extends FieldIssueTrace
 		);  
  	}
  	
+ 	public function showDeliveryDate( $show = true ) {
+ 		$this->show_delivery_date = $show;
+ 	}
+ 	
  	function getForm( & $trace )
 	{
-		return new RequestTraceInverseFormEmbedded( $trace, 'ObjectId' );
+		$form = new RequestTraceInverseFormEmbedded( $trace, 'ObjectId' );
+		$form->showDeliveryDate( $this->show_delivery_date );
+		return $form;
 	}
+	
+	private $show_delivery_date = false;
 }

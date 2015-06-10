@@ -8,7 +8,7 @@ class RequestModelPlanningBuilder extends ObjectModelBuilder
     {
     	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
     	
-		$object->addAttribute('Release', 'REF_IterationId', translate('Èòåðàöèÿ'), true, false, '', 25);
+		$object->addAttribute('Release', 'REF_IterationId', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ'), true, false, '', 25);
 		
 		$object->setAttributeRequired( 'Release', true );
 		

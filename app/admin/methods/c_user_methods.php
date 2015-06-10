@@ -18,7 +18,7 @@ class UserWebMethod extends WebMethod
 class BlockUserWebMethod extends UserWebMethod
 {
 	function getCaption() {
-		return translate('Çàáëîêèðîâàòü');
+		return translate('Ð—Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ');
 	}
 
 	function execute( $parms )
@@ -35,7 +35,7 @@ class BlockUserWebMethod extends UserWebMethod
 				array (
 	 					'SystemUser' => $parms['user'],
 	 					'IPAddress' => '-',
-	 					'BlockReason' => translate('Ïîëüçîâàòåëü çàáëîêèðîâàí àäìèíèñòðàòîðîì')
+	 					'BlockReason' => translate('ÐŸÐ¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒ Ð·Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ð½ Ð°Ð´Ð¼Ð¸Ð½Ð¸ÑÑ‚Ñ€Ð°Ñ‚Ð¾Ñ€Ð¾Ð¼')
 				)
 				);
 			}
@@ -54,7 +54,7 @@ class BlockUserWebMethod extends UserWebMethod
 class UnBlockUserWebMethod extends UserWebMethod
 {
 	function getCaption() {
-		return translate('Ðàçáëîêèðîâàòü');
+		return translate('Ð Ð°Ð·Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ');
 	}
 
 	function execute( $parms )
@@ -93,7 +93,7 @@ class UserRelateToProjectWebMethod extends UserWebMethod
 
 	function getCaption()
 	{
-		return translate('Âêëþ÷èòü â ïðîåêò');
+		return translate('Ð’ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ Ð² Ð¿Ñ€Ð¾ÐµÐºÑ‚');
 	}
 
 	function getRedirectUrl()
@@ -184,7 +184,7 @@ class UserFilterRoleWebMethod extends FilterWebMethod
 {
 	function getCaption()
 	{
-		return translate('Ðîëü');
+		return translate('Ð Ð¾Ð»ÑŒ');
 	}
 
 	function getValues()
@@ -192,8 +192,8 @@ class UserFilterRoleWebMethod extends FilterWebMethod
 		global $model_factory;
 			
 		$values = array (
- 			'all' => translate('Âñå'),
- 			'admin' => translate('Àäìèíèñòðàòîð')
+ 			'all' => translate('Ð’ÑÐµ'),
+ 			'admin' => translate('ÐÐ´Ð¼Ð¸Ð½Ð¸ÑÑ‚Ñ€Ð°Ñ‚Ð¾Ñ€')
 		);
 
 		return $values;
@@ -220,7 +220,7 @@ class UserFilterStateWebMethod extends FilterWebMethod
 {
 	function getCaption()
 	{
-		return translate('Ñîñòîÿíèå');
+		return translate('Ð¡Ð¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ');
 	}
 
 	function getValues()
@@ -228,8 +228,8 @@ class UserFilterStateWebMethod extends FilterWebMethod
 		global $model_factory;
 			
 		$values = array (
- 			'active' => translate('Àêòèâíû'),
- 			'blocked' => translate('Çàáëîêèðîâàíû')
+ 			'active' => translate('ÐÐºÑ‚Ð¸Ð²Ð½Ñ‹'),
+ 			'blocked' => translate('Ð—Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ð½Ñ‹')
 		);
 
 		return $values;

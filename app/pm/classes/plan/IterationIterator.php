@@ -1,6 +1,6 @@
 <?php
 
-define(RESULT_FAILED, 'Провален');
+define(RESULT_FAILED, 'РџСЂРѕРІР°Р»РµРЅ');
 
 class IterationIterator extends OrderedIterator
 {

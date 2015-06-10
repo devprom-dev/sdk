@@ -49,13 +49,17 @@ abstract class Installable
 	
 	function error( $message )
 	{
-	    if ( !is_object($this->factory) ) return;
+		error_log($message);
+		
+		if ( !is_object($this->factory) ) return;
 	    
 		$this->factory->error( $message );
 	}
 
 	function info( $message )
 	{
+		error_log($message);
+		
 	    if ( !is_object($this->factory) ) return;
 	    
 	    $this->factory->info( $message );

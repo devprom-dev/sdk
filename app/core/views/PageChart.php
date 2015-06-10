@@ -170,11 +170,11 @@ class PageChart extends StaticPageList
 	function getAggregators()
 	{
 		return array (
-			'COUNT' => translate('Êîëè÷åñòâî'),
-			'SUM' => translate('Ñóììà'),
-			'AVG' => translate('Ñðåäíåå'),
-			'MAX' => translate('Ìàêñèìóì'),
-			'MIN' => translate('Ìèíèìóì')
+			'COUNT' => translate('ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾'),
+			'SUM' => translate('Ð¡ÑƒÐ¼Ð¼Ð°'),
+			'AVG' => translate('Ð¡Ñ€ÐµÐ´Ð½ÐµÐµ'),
+			'MAX' => translate('ÐœÐ°ÐºÑÐ¸Ð¼ÑƒÐ¼'),
+			'MIN' => translate('ÐœÐ¸Ð½Ð¸Ð¼ÑƒÐ¼')
 		);
 	}
 
@@ -281,16 +281,23 @@ class PageChart extends StaticPageList
 		$object = $this->getObject();
 		$fields = array();
 		
+		$skip_attributes = array_merge(
+				$this->getSystemAttributes(),
+				$this->getObject()->getAttributesByGroup('trace')
+		);
+		
 		$clause = $object->getRegistry()->getSelectClause('', false);
 		$attrs = $object->getAttributes();
 		
 		foreach ( $attrs as $key => $attr )
 		{
 			if ( $key == 'OrderNum' ) continue;
+			if ( in_array($key, $skip_attributes) ) continue;
 			
 			$skip = !$this->object->IsAttributeStored( $key ) && !preg_match('/\)\s+\`?'.$key.'\`?\s+,/', $clause);
-				
 			if ( $skip ) continue;
+
+			if ( in_array($this->object->getAttributeType($key), array('','text','wysiwyg','largetext','char','varchar')) ) continue;
 			
 			array_push( $fields, $key );
 		}
@@ -305,17 +312,15 @@ class PageChart extends StaticPageList
 	{
 		$fields = parent::getColumnFields();
 		
+		$skip_attributes = array_merge(
+				$this->getSystemAttributes(),
+				$this->getObject()->getAttributesByGroup('trace')
+		);
+		
 		foreach( $fields as $key => $field )
 		{
-			if ( $field == 'Transition' )
-			{
-				continue;
-			}
-			
-			if ( $this->object->getAttributeDbType($field) == '' )
-			{
-				unset ( $fields[$key] );
-			}
+			if ( in_array($field, $skip_attributes) ) unset ( $fields[$key] );
+			if ( in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) unset ( $fields[$key] );
 		}
 		
 		return $fields;
@@ -367,12 +372,12 @@ class PageChart extends StaticPageList
 	
 	            array_push( $group_actions,
 	            array (),
-	            array ( 'url' => $script, 'name' => translate('Ïî äàòå'),
+	            array ( 'url' => $script, 'name' => translate('ÐŸÐ¾ Ð´Ð°Ñ‚Ðµ'),
 	            'checked' => $used_group == 'history', 'radio' => true )
 	            );
 	
 	            array_push($actions, array (
-	            'name' => translate('Ãðóïïèðîâêà'),
+	            'name' => translate('Ð“Ñ€ÑƒÐ¿Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ°'),
 	            'items' => $group_actions )
 	            );
 	        }
@@ -407,7 +412,7 @@ class PageChart extends StaticPageList
 	
 	    if ( count($column_actions) > 0 )
 	    {
-	        array_push($actions, array ( 'name' => translate('Àãðåãàöèÿ ïî'),
+	        array_push($actions, array ( 'name' => translate('ÐÐ³Ñ€ÐµÐ³Ð°Ñ†Ð¸Ñ Ð¿Ð¾'),
 	        'items' => $column_actions , 'title' => '' ) );
 	    }
 	
@@ -442,11 +447,11 @@ class PageChart extends StaticPageList
 	
 	        array_push( $column_actions,
 	        array (),
-	        array ( 'url' => $script, 'name' => translate('Áåç àãðåãàöèè'),
+	        array ( 'url' => $script, 'name' => translate('Ð‘ÐµÐ· Ð°Ð³Ñ€ÐµÐ³Ð°Ñ†Ð¸Ð¸'),
 	        'checked' => $filter_values['aggregator'] == 'none', 'radio' => true )
 	        );
 	
-	        array_push($actions, array ( 'name' => translate('Òèï àãðåãàöèè'),
+	        array_push($actions, array ( 'name' => translate('Ð¢Ð¸Ð¿ Ð°Ð³Ñ€ÐµÐ³Ð°Ñ†Ð¸Ð¸'),
 	        'items' => $column_actions , 'title' => '' ) );
 	    }
 	
@@ -458,17 +463,17 @@ class PageChart extends StaticPageList
 	
 	    $script = "javascript: filterLocation.setup( 'chartlegend=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
 	    array_push( $column_actions,
-	    array ( 'url' => $script, 'name' => translate('Îòîáðàæàòü ëåãåíäó'),
+	    array ( 'url' => $script, 'name' => translate('ÐžÑ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°Ñ‚ÑŒ Ð»ÐµÐ³ÐµÐ½Ð´Ñƒ'),
 	    'checked' => $filter_values['chartlegend'] != 'hide', 'multiselect' => true )
 	    );
 	
 	    $script = "javascript: filterLocation.setup( 'chartdata=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
 	    array_push( $column_actions,
-	    array ( 'url' => $script, 'name' => translate('Îòîáðàæàòü òàáëèöó'),
+	    array ( 'url' => $script, 'name' => translate('ÐžÑ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°Ñ‚ÑŒ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñƒ'),
 	    'checked' => $filter_values['chartdata'] != 'hide', 'multiselect' => true )
 	    );
 	
-	    array_push($actions, array ( 'name' => translate('Îïöèè'),
+	    array_push($actions, array ( 'name' => translate('ÐžÐ¿Ñ†Ð¸Ð¸'),
 	    'items' => $column_actions , 'title' => '' ) );
 	
 	    $base_actions = array_merge(
@@ -717,7 +722,7 @@ class PageChart extends StaticPageList
 	    <?php 
 	}
 	
-	function render( &$view, $parms )
+	function render( $view, $parms )
 	{
 		echo $view->render("core/PageChart.php", 
 			array_merge($parms, $this->getRenderParms()) ); 

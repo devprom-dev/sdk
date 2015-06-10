@@ -266,7 +266,7 @@ class PageForm extends MetaObjectForm
 		{
 			case 'TransitionComment':
 			case 'Transition':
-				return htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251');
+				return htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 			
 			default:
 				return parent::getFieldValue( $field );
@@ -281,23 +281,16 @@ class PageForm extends MetaObjectForm
 	function createFieldObject( $name ) 
 	{
 		$plugins = getSession()->getPluginsManager();
-
 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
-
    	    foreach( $plugins_interceptors as $plugin )
         {
         	$field = $plugin->interceptMethodFormCreateFieldObject( $this, $name );
-        	        	
         	if ( is_object($field) ) return $field;
 		}
     		    
 		if( $this->object->IsReference( $name ) ) 
 		{
-			// object reference
-    		$object = clone($this->object->getAttributeObject( $name ));
-    				
-    		if( !is_object($object) ) return null;
-    				
+    		$object = $this->object->getAttributeObject($name);
     		if ( is_object($this->getObjectIt()) && $object->getVpdValue() != '' )
     		{
     			$object->setVpdContext($this->getObjectIt());
@@ -329,7 +322,7 @@ class PageForm extends MetaObjectForm
 			$method->setRedirectUrl('donothing');
 			
 			$actions[] = array(
-					'name' => translate('Èçìåíèòü'),
+					'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ'),
 					'url' => $this->IsFormDisplayed() ? $object_it->getEditUrl() : '#', 
 					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall() 
 			);
@@ -426,7 +419,6 @@ class PageForm extends MetaObjectForm
 		if ( is_object($object_it) && !$this->getEditMode() )
 		{
 			$method = new DeleteObjectWebMethod($object_it);
-			
 			if ( $method->hasAccess() )
 			{
 				if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
@@ -546,32 +538,21 @@ class PageForm extends MetaObjectForm
 		if ( is_object($object_it) )
 		{
 			$uid = new ObjectUid;
-
-			ob_start();
-	
 			if ( $uid->hasUid( $object_it ) )
 			{
-			    $uid->drawUidIcon( $object_it ); 
+				$info = $uid->getUidInfo($object_it);
+			    $object_uid_icon = $uid->getUidIconGlobal($object_it);
+			    $uid_number = $info['uid'];
+			    $uid_url = $info['url'];
 			}
 			else
 			{
-			    echo '<a href="'.$object_it->getViewUrl().'">'.
-			        $object_it->object->getDisplayName().': '.$object_it->getDisplayName().'</a>'; 
+			    $object_uid_icon = $object_it->object->getDisplayName().': '.$object_it->getDisplayName();
+			    $uid_url = $object_it->getViewUrl();
 			}
-			
-			$object_uid_icon = ob_get_contents();
-
-			ob_end_clean();
-			
-			if ( $_REQUEST['Transition'] > 0 )
+			if ( $this->getTransitionIt()->getId() != '' )
     		{
-    			$transition = $model_factory->getObject('pm_Transition');
-    			
-    			$transition->setVpdContext( $object_it );
-    			
-    			$transition_it = $transition->getExact($_REQUEST['Transition']);
-    			
-    			$object_uid_icon = $transition_it->getDisplayName().': '.$object_uid_icon;
+    			$object_uid_icon = $this->getTransitionIt()->getDisplayName().': '.$object_uid_icon;
     		}
 		}
 		
@@ -584,7 +565,7 @@ class PageForm extends MetaObjectForm
 		return array(
 			'form' => $this,
 			'caption' => $this->getCaption(),
-			'warning' => $this->hasAlert() ? translate('Âíèìàíèå!').' '.$this->getWarningMessage() : '',
+			'warning' => $this->hasAlert() ? translate('Ð’Ð½Ð¸Ð¼Ð°Ð½Ð¸Ðµ!').' '.$this->getWarningMessage() : '',
 			'form_processor_url' => $this->getFormPage(),
 			'form_id' => $this->getId(),
 			'action_mode' => $this->object->getEntityRefName().'action_mode',
@@ -601,17 +582,19 @@ class PageForm extends MetaObjectForm
 		    'draw_sections' => true,
 		    'form_body_template' => $this->getBodyTemplate(),
 		    'title' => $this->getPageTitle(),
-			'button_save_title' => translate('Ñîõðàíèòü'),
+			'button_save_title' => translate('Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ'),
 			'transition' => $this->getTransitionIt()->getId(),
 			'form_class_name' => strtolower(get_class($this)),
-			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue(strtolower(get_class($this))) != 'off' ? $this->getHint() : '',
-			'alert' => join('<br/>',$this->transition_messages)
+			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getId()) != 'off' ? $this->getHint() : '',
+			'alert' => join('<br/>',$this->transition_messages),
+			'uid' => $uid_number,
+			'uid_url' => $uid_url
 		);
 	}
 	
 	function getTemplate()
 	{
-		return "core/PageForm.php";
+		return $_REQUEST['formonly'] ? "core/PageFormDialog.php" : "core/PageForm.php";
 	}
 	
 	function getBodyTemplate()
@@ -637,9 +620,11 @@ class PageForm extends MetaObjectForm
 	        : $object_it->object->getDisplayName().': '.$object_it->getDisplayName();
 	}
 	
-	function render( &$view, $parms )
+	function render( $view, $parms )
 	{
-		echo $view->render( $this->getTemplate(), array_merge($parms, $this->getRenderParms()) ); 
+		$render_parms = $this->getRenderParms();
+
+		echo $view->render( $this->getTemplate(), array_merge($parms, $render_parms) ); 
 	}
 	
 	function validateInputValues( $id, $action )

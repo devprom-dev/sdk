@@ -150,7 +150,7 @@ class PMWikiDocument extends PMWikiTable
 	    $mode_filter->setIdFieldName( 'ReferenceName' );
 	    $mode_filter->setHasAll( false );
 	    $mode_filter->setType( 'singlevalue' );
-	    $mode_filter->setNoneTitle( translate('Âûêë.') );
+	    $mode_filter->setNoneTitle( translate('Ð’Ñ‹ÐºÐ».') );
 	    
 	    $mode_filter->setFilter( $this->getFiltersName() );
 	    
@@ -213,7 +213,7 @@ class PMWikiDocument extends PMWikiTable
 			{
 				$title .= ": ".$snapshot_it->getDisplayName();
 				
-				if ( strlen($title) > 30 ) $title = substr($title, 0, 30).'...';
+				if ( mb_strlen($title) > 30 ) $title = mb_substr($title, 0, 30).'...';
 			}
 			
 			if ( $snapshot_it->get('Type') == 'branch' || strpos($snapshot_it->getId(), 'document') !== false )
@@ -225,12 +225,12 @@ class PMWikiDocument extends PMWikiTable
 					);
 				
 				$baseline_url = "javascript: window.location = '".$doc_it->getViewUrl()."';";
-				$baseline_title = translate('Áåéçëàéí').': '.$snapshot_it->getDisplayName();
+				$baseline_title = translate('Ð‘ÐµÐ¹Ð·Ð»Ð°Ð¹Ð½').': '.$snapshot_it->getDisplayName();
 			}
 			else
 			{
 				$baseline_url = "javascript: window.location = updateLocation('baseline=".$snapshot_it->getId()."', window.location.toString());";
-				$baseline_title = translate('Âåðñèÿ').': '.$snapshot_it->getDisplayName();
+				$baseline_title = translate('Ð’ÐµÑ€ÑÐ¸Ñ').': '.$snapshot_it->getDisplayName();
 
 				if ( $this->getRevisionIt()->getId() == $snapshot_it->getId() )
 				{
@@ -248,7 +248,7 @@ class PMWikiDocument extends PMWikiTable
 		
 		if ( $this->getRevisionIt()->getId() != '' )
 		{
-			$document_title = translate('Áåéçëàéí').': '.$this->getDocumentIt()->getDisplayName();
+			$document_title = translate('Ð‘ÐµÐ¹Ð·Ð»Ð°Ð¹Ð½').': '.$this->getDocumentIt()->getDisplayName();
 			
 			if ( $this->getDocumentIt()->getId() == $selected )
 			{
@@ -273,7 +273,7 @@ class PMWikiDocument extends PMWikiTable
 		
 		if ( $this->getDocumentIt()->get('DocumentVersion') != '' )
 		{
-			$baseline_title = translate('Áåéçëàéí').': '.$this->getDocumentIt()->get('DocumentVersion');
+			$baseline_title = translate('Ð‘ÐµÐ¹Ð·Ð»Ð°Ð¹Ð½').': '.$this->getDocumentIt()->get('DocumentVersion');
 			
 			$baselines[] = array (
 				'name' => $baseline_title,
@@ -282,7 +282,7 @@ class PMWikiDocument extends PMWikiTable
 		}
 		elseif ( count($baselines) > 0 )
 		{
-			$baseline_title = translate('Áåéçëàéí').': '.$this->getDocumentIt()->getDisplayName();
+			$baseline_title = translate('Ð‘ÐµÐ¹Ð·Ð»Ð°Ð¹Ð½').': '.$this->getDocumentIt()->getDisplayName();
 			
 			$baselines[] = array (
 				'name' => $baseline_title,
@@ -292,7 +292,7 @@ class PMWikiDocument extends PMWikiTable
 
 		if ( $baseline_selected == "" ) $baseline_selected = $baseline_title;
 		
-		if ( strlen($baseline_selected) > 30 ) $baseline_selected = substr($baseline_selected, 0, 30).'...';
+		if ( mb_strlen($baseline_selected) > 30 ) $baseline_selected = mb_substr($baseline_selected, 0, 30).'...';
 		
 		if ( count($baselines) < 1 && count($actions) < 1 )
 		{
@@ -303,7 +303,7 @@ class PMWikiDocument extends PMWikiTable
 			return array ( 
 					array (
 						'name' => $baseline_selected,
-						'class' => $baseline_selected != translate('Âåðñèÿ') ? 'btn-info' : "btn",
+						'class' => $baseline_selected != translate('Ð’ÐµÑ€ÑÐ¸Ñ') ? 'btn-info' : "btn",
 						'items' => $baselines,
 						'uid' => 'baseline'
 					),
@@ -371,7 +371,7 @@ class PMWikiDocument extends PMWikiTable
  		if ( count($temp_actions) > 0 )
  		{
  			$actions[] = array (
-					'name' => translate('Ýêñïîðò'),
+					'name' => translate('Ð­ÐºÑÐ¿Ð¾Ñ€Ñ‚'),
  					'items' => $temp_actions,
  					'uid' => 'export'
 			);
@@ -384,7 +384,7 @@ class PMWikiDocument extends PMWikiTable
  			if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
  			
  			$actions[] = array (
-					'name' => translate('Òðàññèðîâêà'),
+					'name' => translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°'),
  					'items' => $temp_actions,
  					'uid' => 'trace'
 			);
@@ -408,7 +408,7 @@ class PMWikiDocument extends PMWikiTable
 		}
 		
 		$actions[] = array( 
-		        'name' => translate('Èñòîðèÿ èçìåíåíèé'),
+		        'name' => translate('Ð˜ÑÑ‚Ð¾Ñ€Ð¸Ñ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ð¹'),
 				'url' => $history_url,
 		        'uid' => 'history'
 		);
@@ -421,7 +421,7 @@ class PMWikiDocument extends PMWikiTable
 		if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
 		
 		$actions[] = array (
-                'name' => translate('Ïðîñìîòð'),
+                'name' => translate('ÐŸÑ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€'),
                 'url' => $this->getDocumentIt()->getViewUrl().'&viewmode=view'
         );
 		

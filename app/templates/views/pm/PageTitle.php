@@ -84,7 +84,7 @@ $project_it = $session->getProjectIt();
     <?php if ( $project_it->IsPortfolio() && in_array($project_it->get('LinkedProject'), array('','0')) ) { ?>
     
     <a id="navbar-create-project" class="btn btn-warning" href="/projects/new">
-    	<i class="icon-plus icon-white"></i> <?=translate('Ñîçäàòü ïðîåêò')?>
+    	<i class="icon-plus icon-white"></i> <?=translate('Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ Ð¿Ñ€Ð¾ÐµÐºÑ‚')?>
     </a>
             
     <?php } ?>

@@ -13,13 +13,5 @@ if ( is_array($module) )
 if ( $pageclass != '' )
 {
 	$page = new $pageclass;
-}
-else
-{
-	exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
-}
-
-if ( is_object($page) )
-{
 	$page->render();
 }

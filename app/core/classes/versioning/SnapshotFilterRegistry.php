@@ -8,7 +8,7 @@ class SnapshotFilterRegistry extends ObjectRegistrySQL
 
 		array_unshift($data, array (
 				'cms_SnapshotId' => '',
-				'Caption' => translate('Òåêóùàÿ')
+				'Caption' => translate('Ğ¢ĞµĞºÑƒÑ‰Ğ°Ñ')
 		));
 		
 		return $this->createIterator($data);

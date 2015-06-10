@@ -20,7 +20,7 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
 		
 		if ( $methodology_it->HasPlanning() ) $entities[] = 'Iteration';
 		
-		if ( $this->getSession()->getProjectIt()->get('IsKnowledgeUsed') == 'Y' ) $entities[] = 'ProjectPage';
+		if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' ) $entities[] = 'ProjectPage';
 		
 		foreach( $entities as $entity_name )
 		{
@@ -32,7 +32,7 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
 			$task = $model_factory->getObject('pm_Task');
 			
 			$set->addObject( 
-				$task, '', $task->getDisplayName().': '.translate('любой тип')
+				$task, '', $task->getDisplayName().': '.translate('Р»СЋР±РѕР№ С‚РёРї')
 			);
 			
 			$type_it = getFactory()->getObject('pm_TaskType')->getRegistry()->Query(
@@ -55,7 +55,7 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
 		$request = $model_factory->getObject('pm_ChangeRequest');
 		
 		$set->addObject( 
-			$request, '', $request->getDisplayName().': '.translate('любой тип')
+			$request, '', $request->getDisplayName().': '.translate('Р»СЋР±РѕР№ С‚РёРї')
 		);
 		
 		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(

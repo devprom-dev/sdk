@@ -2,15 +2,34 @@
 
 class ObjectMetadata 
 {
+    private $object = null;
+    private $attributes = array();
+    private $persisters = array();
+	
 	public function __construct( Metaobject $object = null, array $attributes = array(), array $persisters = array() )
 	{
 		$this->setObject( $object );
-		
 		$this->setAttributes( $attributes );
-		
 		$this->setPersisters( $persisters );
 	}
 
+	public function __sleep()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __destruct()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __wakeup()
+	{
+		$this->object = null;
+	}
+	
     public function build()
     {
     	foreach( getSession()->getBuilders('ObjectMetadataBuilder') as $builder )
@@ -170,10 +189,4 @@ class ObjectMetadata
 				? substr($this->attributes[$attribute]['type'], 4, strlen($this->attributes[$attribute]['type']) - 6)
 				: '';
 	}
-	
-    private $object = array();
-    
-    private $attributes = array();
-    
-    private $persisters = array();
 }

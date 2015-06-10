@@ -14,8 +14,7 @@ class ProjectLinkCodeMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_ProjectLink' ) return;
-
-    	if ( $this->session->getProjectIt()->get('IsSubversionUsed') != 'Y' ) return;
+    	if ( $this->session->getProjectIt()->getMethodologyIt()->get('IsSubversionUsed') != 'Y' ) return;
     	
     	$metadata->setAttributeVisible( 'SourceCode', true );
     }

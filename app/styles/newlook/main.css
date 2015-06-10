@@ -601,10 +601,10 @@ th .header-caret
 }
 
 .user-mini {
-    width: 21px;
-    height: 21px;
+    width: 18px;
+    height: 18px;
     display: inline-block;
-    margin-bottom: -8px;
+    margin-bottom: -9px;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     -ms-border-radius: 3px;
@@ -890,6 +890,7 @@ a.file_attach img
 {
 	display: table-cell;
 	text-align: left;
+	cursor: move;
 }
 
 .right-on-card 
@@ -948,4 +949,29 @@ div.reorder-control div
 	width:10px;
     display:table-cell;
     vertical-align:top;
+}
+
+textarea.text-mono
+{
+	font-family: Courier New;
+}
+
+button.clipboard {
+	padding: 0;
+	line-height: 18px;
+}
+button.clipboard i {
+	margin-top: 0px;
+}
+
+.block-sign, .impl-sign {
+  float: right;
+  height: 16px;
+  width: 16px;
+  margin: 2px 0 -4px 2px;
+  background-image: url(/images/lock.png);
+}
+
+.impl-sign {
+  background-image: url(/images/table_link.png);
 }

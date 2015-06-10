@@ -8,6 +8,6 @@ class ModuleCategoryBuilderCode extends ModuleCategoryBuilder
 	
     public function build( ModuleCategoryRegistry & $object )
     {
-    	$object->add( self::AREA_UID, translate('Ðàçðàáîòêà') );
+    	$object->add( self::AREA_UID, translate('Ð Ð°Ð·Ñ€Ð°Ð±Ð¾Ñ‚ÐºÐ°') );
     }
 }

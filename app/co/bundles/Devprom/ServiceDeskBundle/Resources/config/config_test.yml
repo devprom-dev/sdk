@@ -6,6 +6,7 @@ parameters:
     db_user: devprom
     db_pass: devprompass
     db_name: devprom
+    app_charset: utf-8
 
     systemLanguage: ru
     adminEmail: admin@domain

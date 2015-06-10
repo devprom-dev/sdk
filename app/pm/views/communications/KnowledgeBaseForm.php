@@ -8,7 +8,7 @@ class KnowledgeBaseForm extends PMWikiForm
  	{
 		parent::__construct( $_REQUEST['IsTemplate'] > 0 ? $template_object : $object, $template_object );
 		
-		$this->object->addAttribute('Template', '', translate('Шаблон'), false, false, '', 15);
+		$this->object->addAttribute('Template', '', translate('РЁР°Р±Р»РѕРЅ'), false, false, '', 15);
  	}
  	
  	function getTraceActions( $page_it )
@@ -33,26 +33,8 @@ class KnowledgeBaseForm extends PMWikiForm
     		array_push($actions, array( '' ) );
     		
     		$actions[] = array( 
-    		    'name' => translate('Экспорт'),
+    		    'name' => translate('Р­РєСЃРїРѕСЂС‚'),
     			'items' => $export_actions
-    		);
-		}
-		
-		if ( !getFactory()->getAccessPolicy()->can_modify($page_it) || $this->IsTemplate($page_it) )
-		{
-			return $actions;
-		}
-		
-		$session = getSession();
-		
-		if ( $page_it->get('ParentPage') > 0 )
-		{
-    		array_push($actions, array( '' ) );
-    		
-    		$actions[] = array( 
-    		    'name' => translate('Права доступа'),
-    			'url' => $session->getApplicationUrl().'participants/rights?class='.
-     			            get_class($page_it->object).'&id='.$page_it->getId()
     		);
 		}
 		

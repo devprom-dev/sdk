@@ -61,7 +61,7 @@ class FieldTask extends Field
  		$_REQUEST['Transition'] = $transition;
 		
 		echo '<div style="float:left;padding-bottom:8px;">';
-			echo '<a id="btn-more-tasks" class="btn btn-success btn-small" onclick="javascript: taskboxShow();"><i class="icon-plus icon-white"></i> '.translate('Еще задачу').'</a>';
+			echo '<a id="btn-more-tasks" class="btn btn-success btn-small" onclick="javascript: taskboxShow();"><i class="icon-plus icon-white"></i> '.translate('Р•С‰Рµ Р·Р°РґР°С‡Сѓ').'</a>';
 		echo '</div>';
 
 		echo '<div class="clearfix">&nbsp;</div>';
@@ -173,7 +173,7 @@ class FieldTask extends Field
 			 	
 			 	if ( !is_a($ref, 'TaskIterator') )
 			 	{
-			 		echo '<i class="icon-remove"></i> <a class="dashed" onclick="javascript: taskboxClose('.$form->getFormId().');">'.translate('Скрыть').'</a>';
+			 		echo '<i class="icon-remove"></i> <a class="dashed" onclick="javascript: taskboxClose('.$form->getFormId().');">'.translate('РЎРєСЂС‹С‚СЊ').'</a>';
 			 	}
 			
 			echo '</span>';

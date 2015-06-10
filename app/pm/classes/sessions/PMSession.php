@@ -7,6 +7,7 @@ include SERVER_ROOT_PATH.'pm/classes/model/ModelFactoryProject.php';
 include SERVER_ROOT_PATH.'pm/classes/model/permissions/AccessPolicyProject.php';
 
 include SERVER_ROOT_PATH.'pm/classes/widgets/ModuleCategoryBuilderCommon.php';
+include SERVER_ROOT_PATH.'pm/classes/widgets/ObjectsListWidgetBuilderCommon.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceBuilder.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceCustomReportsBuilder.php';
 
@@ -25,9 +26,11 @@ include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderTask.php
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderRequest.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderIssue.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderTask.php";
+include SERVER_ROOT_PATH."pm/classes/workflow/TransitionMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ApplyBusinessActionsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/events/ResetFieldsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/resources/ResourceBuilderTerminology.php";
+include SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderWorkflow.php";
 
 include SERVER_ROOT_PATH."pm/classes/settings/DictionaryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/settings/WorkflowBuilderCommon.php";
@@ -47,6 +50,7 @@ include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueModifyProjectTrigger.p
 include SERVER_ROOT_PATH."pm/classes/issues/VersionedObjectRegistryBuilderIssue.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/RequestFeatureUpdateMetricsEventHandler.php";
+include SERVER_ROOT_PATH."pm/classes/issues/events/RequestIterationHandler.php";
 
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataPermissionsBuilder.php";
@@ -73,6 +77,7 @@ include_once SERVER_ROOT_PATH."pm/classes/notificators/EmailNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/notificators/PMChangeLogNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetWorkItemDatesTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetPlanItemDatesTrigger.php";
+include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearCommentsEvent.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
@@ -190,9 +195,12 @@ class PMSession extends SessionBase
  	            		new HistoricalObjectsRegistryBuilderCommon(),
  	            		new ProjectTemplateSectionsRegistryBuilderCommon($this),
  	            		new VersionedObjectRegistryBuilderIssue(),
+ 	            		new TransitionMetadataBuilder(),
  	            		
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
+ 	            		new BulkActionBuilderWorkflow(),
+ 	            		new ObjectsListWidgetBuilderCommon(),
  	            		
  	            		// triggers
  	            		new WikiPageNewVersionTrigger(),
@@ -200,7 +208,8 @@ class PMSession extends SessionBase
  	            		new WikiBreakTraceTrigger(),
  	            		new CustomReportModelEventsHandler(),
  	            		new FeatureUpdateMetricsEventHandler(),
- 	            		new RequestFeatureUpdateMetricsEventHandler()
+ 	            		new RequestFeatureUpdateMetricsEventHandler(),
+ 	            		new RequestIterationHandler()
  	            ),
  	            parent::createBuilders(),
  	            array (
@@ -217,7 +226,8 @@ class PMSession extends SessionBase
  	            		new ResetFieldsEventHandler(),
  	            		new ApplyBusinessActionsEventHandler(),
  	            		new ResetTasksEventHandler(),
- 	            		new UpdateLeftWorkEventHandler()
+ 	            		new UpdateLeftWorkEventHandler(),
+ 	            		new ClearCommentsEvent()
  	            )
  	    );
  	}
@@ -331,14 +341,12 @@ class PMSession extends SessionBase
  		if ( !is_object($user_it) )
  		{
  			$result['participant'] = $part->createCachedIterator( array() );
- 			 
  			return $result;
  		}
 
  		if ( $user_it->getId() < 1 )
  		{
  			$result['participant'] = $part->createCachedIterator( array() );
- 			 
  			return $result;
  		}
 
@@ -354,6 +362,37 @@ class PMSession extends SessionBase
 		{
 			$project_roles = $part_it->getBaseRoles();
 		}
+		elseif ( !class_exists('PortfolioMyProjectsBuilder', false) )
+ 		{
+ 			$role = new ProjectRole();
+ 			$role_it = $role->getRegistry()->Query(
+ 					array (
+ 							new FilterAttributePredicate('ReferenceName', 'lead'),
+ 							new FilterVpdPredicate($this->project_it->get('VPD'))
+ 					)
+ 				);
+
+ 			$part_id = $part->add_parms(
+ 					array (
+ 							'SystemUser' => $user_it->getId(),
+ 							'Project' => $this->project_it->getId(),
+ 							'IsActive' => 'Y',
+ 							'VPD' => $this->project_it->get('VPD'),
+ 							'Notification' => $this->project_it->getDefaultNotificationType()
+ 					)
+ 			);
+ 			$role = new ParticipantRole();
+ 			$role->add_parms(
+ 					array (
+ 							'Participant' => $part_id,
+ 							'Project' => $this->project_it->getId(),
+ 							'ProjectRole' => $role_it->getId(),
+ 							'VPD' => $this->project_it->get('VPD')
+ 					)
+ 			);
+ 			$part_it = $part->getExact($part_id);
+ 			$project_roles = $part_it->getBaseRoles();
+ 		}
 		else
 		{
 			$part_it = $part->createCachedIterator( array ( 

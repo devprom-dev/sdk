@@ -2,6 +2,7 @@
 
 include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
+include_once SERVER_ROOT_PATH."core/methods/ObjectModifyWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php';
 
@@ -273,21 +274,13 @@ class TransitionStateMethod extends WebMethod
 						new SortOrderedClause()
 				)
 		);
-		
-		if ( $target_it->count() < 1 )
+
+		if ( $source_it->getId() == $target_it->getId() )
 		{
-			$result = array (
-				"message" => "denied",
-				"description" =>
-						str_replace('%1', getSession()->getApplicationUrl().'project/workflow/'.$object->getStateClassName(), 
-								IteratorBase::wintoutf8(text(1860)))				
-			);
-			
-			echo JsonWrapper::encode($result);
-			
+			echo '{"message":"ok"}';
 			return;
 		}
-
+			
 		$transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
 				$parms['transition'] > 0
 				? array (
@@ -302,6 +295,18 @@ class TransitionStateMethod extends WebMethod
 				  )
 		);
 
+ 		if ( $transition_it->count() < 1 )
+		{
+			$method = new ObjectModifyWebMethod($source_it);
+			$result = array (
+				"message" => "denied",
+				"description" => IteratorBase::wintoutf8(str_replace('%1', $method->getJsCall(), text(1860)))				
+			);
+			
+			echo JsonWrapper::encode($result);
+			return;
+		}
+		
 		$this->setObjectIt( $object_it );
 		
 		$reason = '';
@@ -313,15 +318,12 @@ class TransitionStateMethod extends WebMethod
 			if ( !$this->hasAccess() )
 			{
 				$reason = $this->getReasonHasNoAccess();
-				
 				$transition_it->moveNext();
-				
 				continue;
 			}
 
 			// extend model to get visible|required attributes
 			$model_builder = new WorkflowTransitionAttributesModelBuilder( $transition_it );
-			
 			$model_builder->build( $object );
 			
 			$attributes = array();
@@ -348,7 +350,6 @@ class TransitionStateMethod extends WebMethod
 	 	 		$url = $object_it->getEditUrl().'&Transition='.$transition_it->getId().'&formonly=true';
 	 	 		
 				echo '{"message":"redirect","url":"'.$url.'"}';
-				
 				return;
 			}
 			else
@@ -365,18 +366,25 @@ class TransitionStateMethod extends WebMethod
 				);
 				
 				echo '{"message":"ok"}';
-				
 				return;
 			}
 			
 			$transition_it->moveNext();
 		}
 		
+		$transition_it->moveFirst();
+		$method = new ObjectModifyWebMethod($transition_it);
+		$method->setObjectUrl(
+				getSession()->getApplicationUrl().'project/workflow/'.$object->getStateClassName().$transition_it->getEditUrl()
+			);
+		
 		$result = array (
 			"message" => "denied",
-			"description" => $reason != '' ? $reason :
-					str_replace('%1', getSession()->getApplicationUrl().'project/workflow/'.$object->getStateClassName(), 
-							IteratorBase::wintoutf8(text(1012)))				
+			"description" => IteratorBase::wintoutf8(
+									str_replace('%1', $method->getJsCall(), 
+											str_replace('%2', $reason, $reason == '' ? text(1012) : text(2018))
+							 		)
+							 )
 		);
 		
 		echo JsonWrapper::encode($result);
@@ -408,13 +416,13 @@ class TransitionStateMethod extends WebMethod
 
  	function getCaption()
  	{
- 		return translate('Ñîñòîÿíèå');
+ 		return translate('Ð¡Ð¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ');
  	}
  	
  	function getValues()
  	{
   		$values = array (
- 			'all' => translate('Ëþáîå'),
+ 			'all' => translate('Ð›ÑŽÐ±Ð¾Ðµ'),
  			);
  		
  		while ( !$this->state_it->end() )
@@ -500,7 +508,7 @@ class TransitionStateMethod extends WebMethod
  	function getValues()
  	{
   		$values = array (
- 			'all' => translate('Âñå'),
+ 			'all' => translate('Ð’ÑÐµ'),
  			);
  		
  		$transition = getFactory()->getObject('Transition');

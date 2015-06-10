@@ -20,7 +20,7 @@ class CommentWebMethod extends ObjectCreateNewWebMethod
 	
 	function getCaption() 
 	{
-		return translate('Добавить комментарий');
+		return translate('Р”РѕР±Р°РІРёС‚СЊ РєРѕРјРјРµРЅС‚Р°СЂРёР№');
 	}
 	
 	function hasAccess()

@@ -112,7 +112,7 @@
 	function drawMainWindowLink()
 	{
 		echo '<a class=modify_image href="'.$this->getMainWindowLink().
-			'" title="'.translate('Îòêðûòü').'"><img src="/images/application_get.png" border=0 style="margin-bottom:-4px;"></a>';
+			'" title="'.translate('ÐžÑ‚ÐºÑ€Ñ‹Ñ‚ÑŒ').'"><img src="/images/application_get.png" border=0 style="margin-bottom:-4px;"></a>';
 	}
 	
 	function getMainWindowLink()

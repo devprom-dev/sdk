@@ -6,7 +6,8 @@ include "TaskChart.php";
 include "TaskBoardList.php";
 include "IteratorExportTaskBoard.php";
 include_once SERVER_ROOT_PATH.'pm/methods/c_task_methods.php';
-include SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
+include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
+include_once SERVER_ROOT_PATH.'pm/methods/StateExFilterWebMethod.php';
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 
@@ -116,7 +117,7 @@ class TaskTable extends PMPageTable
 	{
 	    $iteration = getFactory()->getObject('Iteration');
  		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		$iterations = new FilterObjectMethod($iteration, translate('Èòåğàöèÿ'), 'release', false);
+		$iterations = new FilterObjectMethod($iteration, translate('Ğ˜Ñ‚ĞµÑ€Ğ°Ñ†Ğ¸Ñ'), 'release', false);
 		$iterations->setType('singlevalue');
 		$iterations->setHasNone(false);
 		
@@ -125,12 +126,12 @@ class TaskTable extends PMPageTable
 		
  	function getFiltersBase()
 	{
-		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_TaskType'), translate('Òèï'), 'tasktype');
+		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_TaskType'), translate('Ğ¢Ğ¸Ğ¿'), 'tasktype');
 		
 		$type_method->setIdFieldName( 'ReferenceName' );
 		
 		$filters = array(
-			new ViewTaskStateWebMethod(),
+			$this->buildStateFilter(),
             $this->buildIterationFilter(),
 			$type_method,
 			new FilterObjectMethod( getFactory()->getObject('Priority'), '', 'taskpriority' ),
@@ -145,6 +146,20 @@ class TaskTable extends PMPageTable
 		return array_merge( $filters, PMPageTable::getFilters() ); 		
 	}
 
+	protected function buildStateFilter()
+	{
+		if ( getSession()->getProjectIt()->IsPortfolio() )
+		{
+			$metastate = getFactory()->getObject('StateMeta');
+	 		$metastate->setAggregatedStateObject(getFactory()->getObject('TaskState'));
+	 		$state_it = $metastate->getRegistry()->getAll();
+		} 
+		else {
+			$state_it = getFactory()->getObject('TaskState')->getAll();
+		}
+		return new StateExFilterWebMethod($state_it, 'taskstate');
+	}
+	
 	protected function buildAssigneeFilter()
 	{
 		return new FilterObjectMethod( getFactory()->getObject('ProjectUser'), text(753), 'taskassignee' );
@@ -156,13 +171,13 @@ class TaskTable extends PMPageTable
 		{
 			$release = getFactory()->getObject('Release');
 	 		$release->addFilter( new ReleaseTimelinePredicate('not-passed') );
-			return new FilterObjectMethod($release, translate('Ğåëèç'), 'issue-release');
+			return new FilterObjectMethod($release, translate('Ğ ĞµĞ»Ğ¸Ğ·'), 'issue-release');
 		}
 		else
 		{ 
 			$iteration = getFactory()->getObject('Iteration');
 	 		$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-			return new FilterObjectMethod($iteration, translate('Èòåğàöèÿ'), 'iteration');
+			return new FilterObjectMethod($iteration, translate('Ğ˜Ñ‚ĞµÑ€Ğ°Ñ†Ğ¸Ñ'), 'iteration');
 		}
 	}
 	
@@ -206,7 +221,7 @@ class TaskTable extends PMPageTable
 		$actions = array();
 
 		$method = new ExcelExportWebMethod();
-		$url = $method->getJSCall( translate('Çàäà÷è') );
+		$url = $method->getJSCall( translate('Ğ—Ğ°Ğ´Ğ°Ñ‡Ğ¸') );
 
 		array_push($actions, array( 'name' => $method->getCaption(),
 			'url' => $url ) );
@@ -219,33 +234,6 @@ class TaskTable extends PMPageTable
 		array_push($actions, array( 'name' => $method->getCaption(),
 			'url' => $method->getJSCall() ) );
 
-		///
-		$list = $this->getListRef();
-
-		if ( $list->IsNeedToSelect() )
-		{
-            if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-			$actions[] = array( 
-			    'name' => translate('Âûáğàòü âñå'),
-				'url' => 'javascript: checkRowsTrue(\''.$list->getId().'\');', 
-				'title' => text(969),
-				'radio' => true
-			);
-		}
-		
-		$bulk_actions_access = 
-				getFactory()->getAccessPolicy()->can_modify($this->getObject()) 
-				&& !getSession()->getProjectIt()->object instanceof Portfolio;
-	    
-		if ( $bulk_actions_access )
-		{
-			$actions[] = array( 
-					'name' => translate('Ìàññîâûå îïåğàöèè'),
-					'url' => 'javascript: processBulkMethod();', 
-					'title' => text(651)
-			);
-		}
-		
 		return $actions;
 	}
 
@@ -263,7 +251,7 @@ class TaskTable extends PMPageTable
 				
 		    if ( $this->getReportBase() == 'mytasks' )
 		    {
-		    	$parms['Assignee'] = getSession()->getParticipantIt()->getId();
+		    	$parms['Assignee'] = getSession()->getUserIt()->getId();
 		    }
 
 		    $uid = 'append-task';
@@ -279,7 +267,7 @@ class TaskTable extends PMPageTable
 		{
 			$method->setRedirectUrl('donothing');
 			$append_actions[] = array(
-					'name' => translate('Èòåğàöèÿ'),
+					'name' => translate('Ğ˜Ñ‚ĞµÑ€Ğ°Ñ†Ğ¸Ñ'),
 					'url' => $method->getJSCall() 
 			);
 		}
@@ -301,8 +289,9 @@ class TaskTable extends PMPageTable
 
 	protected function buildAssigneeWorkload()
 	{
-		$list = $this->getListRef();
-		$task_ids = $list->getIteratorRef()->idsToArray();
+		$task_ids = $this->getObject()->getRegistry()->Query(
+				$this->getFilterPredicates()
+		)->idsToArray();
 		
 		$object = getFactory()->getObject('Task');
 		$object->addFilter( new FilterInPredicate($task_ids) );
@@ -385,7 +374,7 @@ class TaskTable extends PMPageTable
 
 				$project_prefix = ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '');
 				
-				$data['title'] = $project_prefix.translate('Èòåğàöèÿ').': '.$iteration_it->getDisplayName();
+				$data['title'] = $project_prefix.translate('Ğ˜Ñ‚ĞµÑ€Ğ°Ñ†Ğ¸Ñ').': '.$iteration_it->getDisplayName();
 				$data['number'] = $iteration_it->get('ShortCaption');
 				$data['capacity'] = $iteration_it->getLeftCapacity() * $part_it->get('Capacity');
 				

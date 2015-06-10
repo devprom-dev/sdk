@@ -23,7 +23,7 @@ class CustomResource extends Resource
 
  	function getDisplayName()
  	{
- 		return translate('Терминология');
+ 		return translate('РўРµСЂРјРёРЅРѕР»РѕРіРёСЏ');
  	}
  	
  	function getCacheEnabled()
@@ -127,13 +127,17 @@ class CustomResource extends Resource
  		}
  		else
  		{
- 			if ( $parms['ResourceValue'] == '' )
+ 			while( !$object_it->end() )
  			{
- 				$result = $this->delete( $object_it->getId() );
- 			}
- 			else
- 			{
- 				$result = parent::modify_parms( $object_it->getId(), $parms );
+	 			if ( $parms['ResourceValue'] == '' )
+	 			{
+	 				$result = $this->delete( $object_it->getId() );
+	 			}
+	 			else
+	 			{
+	 				$result = parent::modify_parms( $object_it->getId(), $parms );
+	 			}
+	 			$object_it->moveNext();
  			}
  		}
  		

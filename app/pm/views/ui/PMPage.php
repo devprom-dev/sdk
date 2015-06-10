@@ -16,13 +16,11 @@ include 'PageSectionLifecycle.php';
 include 'PMLastChangesSection.php';
 include 'FieldCustomDictionary.php';
 include 'FieldWYSIWYG.php';
+include_once 'BulkForm.php';
 
 include_once SERVER_ROOT_PATH.'pm/classes/common/ObjectMetadataSharedProjectBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
-
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
-
-
 include SERVER_ROOT_PATH.'pm/views/versioning/IteratorExportSnapshot.php';
 
 class PMPage extends Page
@@ -37,11 +35,8 @@ class PMPage extends Page
     
     function PMPage()
  	{
- 		global $_REQUEST, $model_factory;
-
  		// extend metadata with the "Project" field for entities shared between projects, it impacts on UI representation
 	    getSession()->addBuilder( new ObjectMetadataSharedProjectBuilder() );
-	    
 	    getSession()->addBuilder( new WorkflowModelBuilder() );
 	    
  		parent::Page();
@@ -170,7 +165,7 @@ class PMPage extends Page
 			header("Pragma: no-cache"); // HTTP/1.0
 			header('Content-type: application/json; charset=utf-8');
 			
-			echo JsonWrapper::encode($service->get( $_REQUEST['entity'], $_REQUEST['object']));
+			echo JsonWrapper::encode($service->get($_REQUEST['entity'], $_REQUEST['object'], 'html'));
 			
 			die();
 		}
@@ -300,7 +295,8 @@ class PMPage extends Page
 				'description' => $menu['title'],
 				'url' => $menu['url'],
 				'items' => $menu['actions'],
-				'icon' => $menu['icon']
+				'icon' => $menu['icon'],
+				'id' => $menu['id']
 			);
 		}
  		
@@ -457,8 +453,9 @@ class PMPage extends Page
 			$menus[] = array (
 				'class' => 'header_popup',
 				'button_class' => 'btn-warning',
-				'title' => translate('Ñîçäàòü'),
-				'items' => $actions
+				'title' => translate('Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ'),
+				'items' => $actions,
+				'id' => 'navbar-quick-create'
 			);
 		}
 							
@@ -471,7 +468,7 @@ class PMPage extends Page
 		$user_name = $part_it->getDisplayName();
 
 		$actions[] = array ( 
-		    'name' => translate('Ïðîôèëü ïîëüçîâàòåëÿ'),
+		    'name' => translate('ÐŸÑ€Ð¾Ñ„Ð¸Ð»ÑŒ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ñ'),
 			'url' => '/profile'
 		);
 		
@@ -484,7 +481,7 @@ class PMPage extends Page
 			$user_name = $part_it->getDisplayName();
 
 			$actions[] =  array ( 
-			    'name' => translate('Ïðîôèëü ó÷àñòíèêà'),
+			    'name' => translate('ÐŸÑ€Ð¾Ñ„Ð¸Ð»ÑŒ ÑƒÑ‡Ð°ÑÑ‚Ð½Ð¸ÐºÐ°'),
 				'url' => getSession()->getApplicationUrl().'profile' 
 			);
 		}
@@ -503,7 +500,7 @@ class PMPage extends Page
     	    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
     	    
     	    array_push( $actions, array ( 
-    	        'name' => translate('Âûéòè'),
+    	        'name' => translate('Ð’Ñ‹Ð¹Ñ‚Ð¸'),
     		    'url' => '/logoff' 
     		));
 		}
@@ -534,6 +531,11 @@ class PMPage extends Page
  			default:
  				return parent::export();
  		}
+ 	}
+ 	
+ 	function getBulkForm()
+ 	{
+ 	    return new BulkForm($this->getObject());
  	}
  	
  	function getFormBase()
@@ -615,7 +617,7 @@ class PMPage extends Page
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 		header("Pragma: no-cache"); // HTTP/1.0
-		header('Content-type: text/html; charset=windows-1251');
+		header('Content-type: text/html; charset='.APP_ENCODING);
 	 	
 		$control_uid = md5($object->getClassName().$object_it->getId());
 		
@@ -634,7 +636,10 @@ class PMPage extends Page
 			
 			$form->setControlUID( $control_uid );	
 			
-			$form->setRedirectUrl( 'javascript: refreshCommentsThread(\\\''.$control_uid.'\\\');' ); 
+			if ( !$object instanceof WikiPage )
+			{
+				$form->setRedirectUrl( 'javascript: refreshCommentsThread(\\\''.$control_uid.'\\\');' );
+			}
 					
 			$parms['prevcomment'] = $_REQUEST['prevcomment'];
 			
@@ -668,15 +673,15 @@ class PMPage extends Page
 		{
 		    $portfolio_it = $project_it;
 		    
-		    $parms['portfolio_title'] = translate('Ãðóïïà ïðîåêòîâ');
-		    $parms['subprojects_title'] = translate('Ïðîåêòû â ãðóïïå');
+		    $parms['portfolio_title'] = translate('Ð“Ñ€ÑƒÐ¿Ð¿Ð° Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð¾Ð²');
+		    $parms['subprojects_title'] = translate('ÐŸÑ€Ð¾ÐµÐºÑ‚Ñ‹ Ð² Ð³Ñ€ÑƒÐ¿Ð¿Ðµ');
 		}
 		else
 		{
 		    $portfolio_it = $project_it;
 		    
-		    $parms['portfolio_title'] = translate('Ïðîãðàììà');
-		    $parms['subprojects_title'] = translate('Ïîäïðîåêòû');
+		    $parms['portfolio_title'] = translate('ÐŸÑ€Ð¾Ð³Ñ€Ð°Ð¼Ð¼Ð°');
+		    $parms['subprojects_title'] = translate('ÐŸÐ¾Ð´Ð¿Ñ€Ð¾ÐµÐºÑ‚Ñ‹');
 		}
 		
 		$parms['current_portfolio'] = $portfolio_it->get('CodeName');
@@ -684,15 +689,22 @@ class PMPage extends Page
 		
 	 	if ( $portfolio_it->get('CodeName') == 'my' )
 		{
-		    $parms['title'] = translate('Ìîè ïðîåêòû');
+		    $parms['title'] = translate('ÐœÐ¾Ð¸ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ñ‹');
 		}
 		else
 		{
-		    $parms['title'] = translate('Ïîäïðîåêòû');
+		    $parms['title'] = translate('ÐŸÐ¾Ð´Ð¿Ñ€Ð¾ÐµÐºÑ‚Ñ‹');
 		}
 		
- 		$portfolio_actions = array();
+		$parms['portfolio_actions'] = $this->getProgramNavitationActions($portfolio_it);
+		$parms['project_actions'] = $this->getProjectNavitationActions();
 
+		return $parms;
+ 	}
+ 	
+ 	function getProgramNavitationActions($portfolio_it)
+ 	{
+ 	 	$portfolio_actions = array();
 		if ( $portfolio_it->IsProgram() )
 		{
 			$url = '/pm/'.$portfolio_it->get('CodeName').'/module/ee/projectlinks'.getFactory()->getObject('ProjectLink')->getPageNameObject();
@@ -703,11 +715,14 @@ class PMPage extends Page
 					'name' => text('ee204')
 			);
 		}
-		
-		$project_actions = array();
+		return array_merge($portfolio_actions, $this->getAddParticipantActions());
+ 	}
+ 	
+ 	function getProjectNavitationActions()
+ 	{
+ 		$project_actions = array();
 		
 		$module_it = getFactory()->getObject('Module')->getExact('ee/projectlinks');
-		
 		if ( $module_it->getId() != '' )
 		{
 			$url = $module_it->get('Url').getFactory()->getObject('ProjectLink')->getPageNameObject();
@@ -723,12 +738,28 @@ class PMPage extends Page
 					'url' => $url.ProjectLinkTypeSet::PROGRAM_QUERY_STRING,
 					'name' => text('ee205')
 			);
+		} 		
+		
+		return array_merge($project_actions, $this->getAddParticipantActions());
+ 	}
+ 	
+ 	function getAddParticipantActions()
+ 	{
+ 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return parent::getAddParticipantActions();
+
+ 		$actions = array();
+ 		
+ 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
+		if ( $method->hasAccess() )
+		{
+			$method->setRedirectUrl("function(){javascript:window.location='".getFactory()->getObject('Module')->getExact('permissions/participants')->get('Url')."'}");
+			$actions[] = array (
+					'icon' => 'icon-user', 
+			        'name' => text(2001),
+					'url' => $method->getJSCall()
+		    );
 		}
-
-		$parms['portfolio_actions'] = $portfolio_actions;
-		$parms['project_actions'] = $project_actions;
-
-		return $parms;
+ 		return $actions;
  	}
  	
  	function getHint()

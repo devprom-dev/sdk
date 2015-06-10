@@ -65,7 +65,7 @@ class CustomAttributeEntityForm extends PMForm
 
 	function getButtonText()
 	{
-		return translate('Продолжить');
+		return translate('РџСЂРѕРґРѕР»Р¶РёС‚СЊ');
 	}
 
 	function getWidth()

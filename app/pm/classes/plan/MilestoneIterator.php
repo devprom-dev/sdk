@@ -33,22 +33,22 @@ class MilestoneIterator extends OrderedIterator
         			
         			if ( $title == 'IterationStart' )
         			{
-        				$prefix = translate('Íà÷àëî èòåðàöèè');
+        				$prefix = translate('ÐÐ°Ñ‡Ð°Ð»Ð¾ Ð¸Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ð¸');
         			}
         
         			if ( $title == 'IterationFinish' )
         			{
-        				$prefix = translate('Îêîí÷àíèå èòåðàöèè');
+        				$prefix = translate('ÐžÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ðµ Ð¸Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ð¸');
         			}
         			
         			if ( $title == 'ReleaseStart' )
         			{
-        				$prefix = translate('Íà÷àëî ðåëèçà');
+        				$prefix = translate('ÐÐ°Ñ‡Ð°Ð»Ð¾ Ñ€ÐµÐ»Ð¸Ð·Ð°');
         			}
         
         			if ( $title == 'ReleaseFinish' )
         			{
-        				$prefix = translate('Îêîí÷àíèå ðåëèçà');
+        				$prefix = translate('ÐžÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ðµ Ñ€ÐµÐ»Ð¸Ð·Ð°');
         			}
         
         			return $prefix.' '.$iteration_it->getDisplayName();

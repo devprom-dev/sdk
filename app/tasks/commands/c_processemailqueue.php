@@ -28,12 +28,12 @@
 		
 		$process_items = $parameters['limit'] > 0 ? $parameters['limit'] : 10;  
 
-		// âûáåðåì âñå î÷åðåäè
+		// Ð²Ñ‹Ð±ÐµÑ€ÐµÐ¼ Ð²ÑÐµ Ð¾Ñ‡ÐµÑ€ÐµÐ´Ð¸
 		$queue_it = $queue->getLatest($process_items);
 		while ( !$queue_it->end() )
 		{
    			$body = $queue_it->getHtmlDecoded('Description');
-	
+			
 			if ( $queue_it->get('MailboxClass') != '' )
 			{
 				$mailbox_class = $queue_it->get('MailboxClass');
@@ -60,7 +60,7 @@
 			
 			$from_address = $queue_it->getHtmlDecoded('FromAddress');
 			
-			// âûáåðåì ïîäïèñ÷èêîâ
+			// Ð²Ñ‹Ð±ÐµÑ€ÐµÐ¼ Ð¿Ð¾Ð´Ð¿Ð¸ÑÑ‡Ð¸ÐºÐ¾Ð²
 			$address_it = $address->getByRef(
 				'EmailQueue', $queue_it->getId());
 				
@@ -106,12 +106,8 @@
 
 				if ( $to_address != '' )
 				{
-					$transport = defined('EMAIL_TRANSPORT') 
-						? (EMAIL_TRANSPORT == '1' ? 'SMTP' : 'IMAP') : 'SMTP';
+					$transport = defined('EMAIL_TRANSPORT') ? (EMAIL_TRANSPORT == '1' ? 'SMTP' : 'IMAP') : 'SMTP';
 					
-					// to avoid php's mail limitations
-					$body = wordwrap($body, 70, "\n");
-						
 					switch ( $transport )
 					{
 						case 'IMAP':

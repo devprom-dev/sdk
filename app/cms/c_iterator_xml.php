@@ -54,11 +54,12 @@ class IteratorXml extends IteratorBase
 
 				foreach ( $object_tag['children'] as $attr_tag )
 				{
-					if ( $attr_tag['attrs']['ENCODING'] != '' )
-					{
-						$attr_tag['tagData'] = base64_decode($attr_tag['tagData']);
+					if ( $attr_tag['attrs']['ENCODING'] != '' ) {
+							$attr_tag['tagData'] = base64_decode($attr_tag['tagData']);
 					}
-					
+					if ( in_array($entity['attrs']['ENCODING'], array('','windows-1251')) ) {
+							$attr_tag['tagData'] = $this->wintoutf8($attr_tag['tagData']);
+					}
 					$record[$attr_tag['attrs']['NAME']] = $attr_tag['tagData'];
 				}
 				
@@ -117,4 +118,21 @@ class IteratorXml extends IteratorBase
 		 	$_FILES[$key]['type'] = $info['extension'];
  	    }
  	}
+
+	static function wintoutf8($s)
+ 	{
+ 		if ( function_exists('mb_convert_encoding') ) return mb_convert_encoding($s, "utf-8", "cp1251");
+ 		if ( function_exists('iconv') ) return iconv("cp1251", "utf-8//IGNORE", $s);
+		  $t = '';
+		  for ($i = 0, $m = strlen($s); $i < $m; $i++) {
+		    $c = ord($s[$i]);
+		    if ($c <= 127) { $t .= chr($c); continue; }
+		    if ($c >= 192 && $c <= 207) { $t .= chr(208) . chr($c - 48); continue; }
+		    if ($c >= 208 && $c <= 239) { $t .= chr(208) . chr($c - 48); continue; }
+		    if ($c >= 240 && $c <= 255) { $t .= chr(209) . chr($c - 112); continue; }
+		    if ($c == 184) { $t .= chr(209) . chr(209); continue; };
+		    if ($c == 168) { $t .= chr(208) . chr(129); continue; };
+		  }
+		  return $t;
+ 	}   
 }

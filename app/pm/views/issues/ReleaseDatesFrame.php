@@ -31,7 +31,7 @@ class ReleaseDatesFrame
 		echo '<div style="float:left;">';
 		if ( $start_date != '' || $finish_date != '' )
 		{
-			echo translate('По плану').':<br/>';
+			echo translate('РџРѕ РїР»Р°РЅСѓ').':<br/>';
 			echo $start_date.'&nbsp;-&nbsp;'.$finish_date;
 			
 			$need_delimiter = true;
@@ -44,13 +44,13 @@ class ReleaseDatesFrame
 				echo '<br/>';
 			}
 			
-			echo translate('Фактические').':<br/>';
+			echo translate('Р¤Р°РєС‚РёС‡РµСЃРєРёРµ').':<br/>';
 			echo $estimated_start.'&nbsp;-&nbsp;'.$estimated_finish;
 
 			$offset = $this->release_it->getFinishOffsetDays();
 			if ( $offset > 0 )
 			{
-				echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
+				echo '<br/><span style="color:red;">'.translate('РћС‚РєР»РѕРЅРµРЅРёРµ РѕС‚ РіСЂР°С„РёРєР°').': '.$offset.' '.translate('РґРЅ.').'</span>';
 			}	
 			
 			$need_delimiter = true;
@@ -83,7 +83,7 @@ class ReleaseDatesFrame
 							echo '<br/>';
 					}
 			
-					echo translate('Итерация').': '.$iteration_it->getDisplayName();
+					echo translate('РС‚РµСЂР°С†РёСЏ').': '.$iteration_it->getDisplayName();
 					
 					echo '<div style="padding:15px;">';
 

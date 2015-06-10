@@ -133,7 +133,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		}
  		else
  		{
- 			$parms[$attribute['name']] = html_entity_decode($parms[$attribute['name']], ENT_QUOTES | ENT_HTML401, 'cp1251');
+ 			$parms[$attribute['name']] = html_entity_decode($parms[$attribute['name']], ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  		}
  		
  		$use_default = $object->IsAttributeRequired($attribute['name'])

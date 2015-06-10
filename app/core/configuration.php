@@ -1,10 +1,5 @@
 <?php
 
-// locale
-setlocale(LC_CTYPE, 'ru_RU.CP1251');
-
-// default server time zone
-if ( date_default_timezone_get() != "UTC" ) date_default_timezone_set('UTC');
 
 // environment
 $_SERVER['APP_IID'] = INSTALLATION_UID;
@@ -42,7 +37,8 @@ if ( file_exists(DOCUMENT_ROOT.'conf/logger.xml') )
 
 if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS )
 {
-	$handlers[] = new ExceptionHandlerListenerDevprom();
+	//$handlers[] = new ExceptionHandlerListenerDevprom();
+	$handlers[] = new ExceptionHandlerListenerRaven();
 }
 
 new core\classes\ExceptionHandler( $handlers );

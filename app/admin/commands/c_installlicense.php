@@ -55,7 +55,7 @@
 			
 			if ( $user_it->getId() > 0 )
 			{
-    			$this->replyRedirect( '/pm/my/', $this->getResultDescription( -1 ) );
+    			$this->replyRedirect( $_SERVER['ENTRY_URL'], $this->getResultDescription( -1 ) );
 			}
 			else
 			{

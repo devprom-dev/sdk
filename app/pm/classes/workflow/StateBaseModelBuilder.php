@@ -13,11 +13,18 @@ class StateBaseModelBuilder extends ObjectModelBuilder
 			'REF_StateAttributeId', text(1800), true);
 
 		$object->addAttribute('Actions', 
-			'REF_StateActionId', translate('Ñèñòåìíûå äåéñòâèÿ'), true);
+			'REF_StateActionId', translate('Ð¡Ð¸ÑÑ‚ÐµÐ¼Ð½Ñ‹Ðµ Ð´ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ'), true);
 		
 		$object->addPersister( new StateBaseModelPersister() );
 		
 		$object->setAttributeCaption('OrderNum', text(1923));
 		$object->setAttributeDescription('OrderNum', text(1924));
+		
+		$object->setAttributeVisible('ReferenceName', false);
+		
+		foreach( array('QueueLength','RelatedColor') as $attribute )
+		{
+			$object->addAttributeGroup($attribute, 'nonbulk');
+		}
     }
 }

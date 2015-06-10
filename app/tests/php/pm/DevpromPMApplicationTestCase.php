@@ -3,6 +3,7 @@
 include_once SERVER_ROOT_PATH."core/classes/user/User.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."core/classes/project/Project.php";
+include_once SERVER_ROOT_PATH."core/classes/project/ProjectImportance.php";
 include_once SERVER_ROOT_PATH."pm/classes/settings/Methodology.php";
 include_once SERVER_ROOT_PATH."pm/classes/sessions/PMSession.php";
 
@@ -19,7 +20,7 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
         parent::setUp();
         
         // project mock
-        $this->project_mock = $this->getMock('Project', array('createIterator'));
+        $this->project_mock = $this->getMock('Project', array('createIterator'), array(), '', false);
         
         $project_iterator = $this->getMock('ProjectIterator', array('getMethodologyIt'), array($this->project_mock));
          

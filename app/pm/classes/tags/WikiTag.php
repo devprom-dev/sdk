@@ -12,9 +12,9 @@ class WikiTag extends Tag
  	{
  		parent::Metaobject('WikiTag');
 
-		$this->addAttribute('Caption', 'TEXT', translate('Íàçâàíèå'), false);
+		$this->addAttribute('Caption', 'TEXT', translate('ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ'), false);
 		
-		$this->addAttribute('ItemCount', 'INTEGER', translate('Êîëè÷åñòâî'), false);
+		$this->addAttribute('ItemCount', 'INTEGER', translate('ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾'), false);
 
 		$this->addPersister( new WikiTagCaptionPersister() );
  	}

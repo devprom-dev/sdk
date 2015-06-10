@@ -45,7 +45,6 @@ abstract class AccessPolicyBase extends COAccessPolicy
     function getEntityAccess( $action_kind, &$object ) 
  	{
         if ( !is_object($this->project_it)) $this->project_it = $this->session->getProjectIt();
-        
         if ( !is_object($this->methodology_it)) $this->methodology_it = $this->project_it->getMethodologyIt();
 		
  		// methodology based access rights
@@ -89,7 +88,7 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		{
 		    case 'projectpage':
 		        
-		        if ( $this->project_it->get('IsKnowledgeUsed') != 'Y' ) return false;
+		        if ( $this->methodology_it->get('IsKnowledgeUsed') != 'Y' ) return false;
 		        
 		        break;
 		}

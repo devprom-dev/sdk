@@ -11,6 +11,6 @@ class SmtpEncryptionMode extends MetaobjectCacheable
     
     function getDisplayName()
     {
-        return translate('Шифрование');
+        return translate('РЁРёС„СЂРѕРІР°РЅРёРµ');
     }
 }

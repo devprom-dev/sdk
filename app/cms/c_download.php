@@ -70,7 +70,7 @@
 		}
 		 
 		header("Content-Length: ".($file_size - $offset)); 
-		header("Content-Type: ".$mime."; charset=windows-1251;"); 
+		header("Content-Type: ".$mime."; charset=".APP_ENCODING); 
 		header("Accept-Ranges: bytes"); 
 		header("Content-Range: bytes ".$offset."-".($file_size - 1)."/".$file_size); 
 

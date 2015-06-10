@@ -20,9 +20,9 @@ class SetupSupportProjectSettings extends Installable
     	{
     		if ( $result[1] != '' )
     		{
-		    	$project_it = getFactory()->getObject('Project')->getRegistry()->Query(
+		    	$project_it = getFactory()->getObject('Methodology')->getRegistry()->Query(
 			    			array (
-			    					new FilterInPredicate(array($result[1]))
+			    					new FilterAttributePredicate('Project', array($result[1]))
 			    			)
 				   	);
 		    	if ( $project_it->getId() != '' )

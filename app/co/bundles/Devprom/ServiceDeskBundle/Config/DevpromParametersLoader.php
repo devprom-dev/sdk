@@ -19,12 +19,13 @@ class DevpromParametersLoader {
         $params['DB_USER'] = DB_USER;
         $params['DB_PASS'] = DB_PASS;
         $params['DB_NAME'] = DB_NAME;
+        $params['APP_CHARSET'] = APP_CHARSET;
 
         $settings = $this->queryDevpromSettings();
 
         $params['systemLanguage'] = $settings['langCode'];
         $params['adminEmail'] = $settings['adminEmail'];
-        $clientName = mb_convert_encoding($settings['clientName'], 'utf-8', 'windows-1251');
+        $clientName = mb_convert_encoding($settings['clientName'], 'utf-8', APP_ENCODING);
         $params['supportName'] = sprintf("%s Support", TextUtil::unescapeHtml($clientName));
 
         return $params;
@@ -64,8 +65,8 @@ class DevpromParametersLoader {
                                  IF(rm.EmailAddress NOT LIKE '%%@%%', CONCAT(rm.EmailAddress, '@', rm.HostAddress), rm.EmailAddress),
                                  (SELECT s.AdminEmail FROM cms_SystemSettings s))
                                   ) supportEmail
-                    FROM pm_Project p LEFT JOIN co_RemoteMailbox rm ON rm.Project = p.pm_ProjectId 
-        		   WHERE p.IsSupportUsed = 'Y' ";
+                    FROM pm_Project p LEFT JOIN co_RemoteMailbox rm ON rm.Project = p.pm_ProjectId
+        		   WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) ";
         $r2 = DAL::Instance()->Query($sql);
         $result = array();
         $ids = array();

@@ -6,7 +6,7 @@ class ViewSubmmitedBeforeDateWebMethod extends FilterDateWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Добавлено до');
+ 		return translate('Р”РѕР±Р°РІР»РµРЅРѕ РґРѕ');
  	}
 
 	function getStyle()

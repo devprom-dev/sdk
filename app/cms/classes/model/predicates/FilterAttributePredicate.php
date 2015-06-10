@@ -149,16 +149,16 @@ class FilterAttributePredicate extends FilterPredicate
  	{
  		if ( in_array($this->getObject()->getAttributeType($this->getAttribute()), array('char','varchar','text','wysiwyg')) )
  		{
- 			$field = "IFNULL(t.".$this->getAttribute().",'".$this->getObject()->getDefaultAttributeValue($this->getAttribute())."')"; 
+ 			$field = "IFNULL(".$this->getAlias().".".$this->getAttribute().",'".$this->getObject()->getDefaultAttributeValue($this->getAttribute())."')"; 
  		}
  		else
  		{
- 			$field = "t.".$this->getAttribute();
+ 			$field = $this->getAlias().".".$this->getAttribute();
  		}
  		
  	 	if ( $this->hasNullValue() )
  		{
- 			return " AND (".$field." IN (".join($this->getIds(),',').") OR t.".$this->getAttribute()." IS NULL )";
+ 			return " AND (".$field." IN (".join($this->getIds(),',').") OR ".$this->getAlias().".".$this->getAttribute()." IS NULL )";
  		}
  		else
  		{

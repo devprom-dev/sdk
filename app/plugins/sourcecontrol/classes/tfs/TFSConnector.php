@@ -152,19 +152,19 @@ class TFSConnector extends SCMConnector
         {
 	        switch ($file['change-type']) {
 	            case 'add' :
-	                $action = translate('Добавлено');
+	                $action = translate('Р”РѕР±Р°РІР»РµРЅРѕ');
 	                break;
 	            case 'edit' :
-	                $action = translate('Изменено');
+	                $action = translate('РР·РјРµРЅРµРЅРѕ');
 	                break;
 	            case 'delete' :
-	                $action = translate('Удалено');
+	                $action = translate('РЈРґР°Р»РµРЅРѕ');
 	                break;
 	            case 'rename' :
-	                $action = translate('Добавлено (Переименование)');
+	                $action = translate('Р”РѕР±Р°РІР»РµРЅРѕ (РџРµСЂРµРёРјРµРЅРѕРІР°РЅРёРµ)');
 	                break;
 	            case 'delete, source rename' :
-	                $action = translate('Удалено (Переименование)');
+	                $action = translate('РЈРґР°Р»РµРЅРѕ (РџРµСЂРµРёРјРµРЅРѕРІР°РЅРёРµ)');
 	                break;
 	        }
 	

@@ -40,14 +40,13 @@ class MainApplicationKernel extends Kernel
 
     public function getCharset()
     {
-        return 'windows-1251';
+        return APP_ENCODING;
     }
 
-    function boot()
+    function initializeContainer()
     {
-		$lock = new \CacheLock();
+    	$lock = new \CacheLock();
 		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
-    	
-		parent::boot();
+    	parent::initializeContainer();
     }
 }

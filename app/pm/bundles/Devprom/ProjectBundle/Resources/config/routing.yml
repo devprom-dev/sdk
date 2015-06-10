@@ -34,6 +34,10 @@ _css:
     pattern:  /pm/{project}/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
 
+bulk:
+    pattern:  /pm/{project}/bulk
+    defaults: { _controller: ProjectBundle:Bulk:form }
+
 invite:
     pattern:  /pm/{project}/invite
     defaults: { _controller: ProjectBundle:Invitation:form }

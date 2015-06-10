@@ -29,11 +29,11 @@ class ToggleSystemCheckWebMethod extends WebMethod
 	{
 		if ( is_object($this->entry) && $this->entry->enabled() )
 		{
-			return translate('Îòêëş÷èòü');
+			return translate('ĞÑ‚ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ');
 		}
 		else
 		{
-			return translate('Âêëş÷èòü');
+			return translate('Ğ’ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ');
 		}
 	}
 

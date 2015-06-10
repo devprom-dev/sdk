@@ -6,7 +6,7 @@ class TaskBulkForm extends BulkForm
 {
  	function getForm()
  	{
- 		return new TaskForm();
+ 		return new TaskForm($this->getObject());
  	}
  	
  	function IsAttributeModifiable( $attr )
@@ -21,13 +21,9 @@ class TaskBulkForm extends BulkForm
 	    }
 	}
  	
- 	function getBulkActions( $object_it )
- 	{
- 		return parent::getBulkActions($object_it);
- 	}
- 	
  	function getAttributeType( $attr )
  	{
+ 		return 'custom';
  		switch ( $attr )
  		{
  			case 'Release':
@@ -44,7 +40,7 @@ class TaskBulkForm extends BulkForm
  		switch ( $attr )
  		{
  			case 'Release':
- 				return translate('Èòåðàöèÿ');
+ 				return translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ');
  				
  			default:
  				return parent::getName( $attr );
@@ -53,16 +49,18 @@ class TaskBulkForm extends BulkForm
  	
  	function drawCustomAttribute( $attribute, $value, $tab_index )
  	{
- 		global $model_factory;
- 		
  		switch ( $attribute )
  		{
  			case 'Release':
-				$field = new FieldAutoCompleteObject( $model_factory->getObject('Iteration') );
+				$field = new FieldAutoCompleteObject(getFactory()->getObject('Iteration'));
 				$field->SetName($attribute);
 				$field->SetId('Release');
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
+
+ 		 		if ( $this->showAttributeCaption() ) {
+					echo $this->getObject()->getAttributeUserName($attribute);
+				}
 				$field->draw();
 				break;
 				
@@ -74,7 +72,9 @@ class TaskBulkForm extends BulkForm
 				$field->SetTabIndex($tab_index);
 				$field->SetRequired(true);
 				
-				echo $field->getName();
+ 				if ( $this->showAttributeCaption() ) {
+					echo $this->getObject()->getAttributeUserName($attribute);
+				}
 				$field->draw();
 				break;
 				
@@ -82,9 +82,4 @@ class TaskBulkForm extends BulkForm
  				parent::drawCustomAttribute( $attribute, $value, $tab_index );
  		}
  	}
- 	
-	function getWidth()
-	{
-		return '65%';
-	}
 }

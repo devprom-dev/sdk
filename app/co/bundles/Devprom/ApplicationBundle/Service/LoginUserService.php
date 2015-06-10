@@ -135,7 +135,7 @@ class LoginUserService
 	{
  		$settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
 
-		$message = translate('Çäðàâñòâóéòå, %s!').Chr(10).Chr(10);
+		$message = translate('Ð—Ð´Ñ€Ð°Ð²ÑÑ‚Ð²ÑƒÐ¹Ñ‚Ðµ, %s!').Chr(10).Chr(10);
 		$message = str_replace('%s', $user_it->getDisplayName(), $message);
 		
 		$body = $message.text(59);

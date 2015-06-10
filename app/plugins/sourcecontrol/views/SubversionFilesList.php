@@ -20,10 +20,10 @@ class SubversionFilesList extends SubversionList
     
     function getColumns()
     {
-        $this->object->addAttribute('File', '', translate('Èìÿ êàòàëîãà èëè ôàéëà'), true);
-        $this->object->addAttribute('Author', '', translate('Àâòîð'), true);
-        $this->object->addAttribute('Size', '', translate('Ðàçìåð'), true);
-        $this->object->addAttribute('LastModification', '', translate('Ïîñëåäíåå èçìåíåíèå'), true);
+        $this->object->addAttribute('File', '', translate('Ð˜Ð¼Ñ ÐºÐ°Ñ‚Ð°Ð»Ð¾Ð³Ð° Ð¸Ð»Ð¸ Ñ„Ð°Ð¹Ð»Ð°'), true);
+        $this->object->addAttribute('Author', '', translate('ÐÐ²Ñ‚Ð¾Ñ€'), true);
+        $this->object->addAttribute('Size', '', translate('Ð Ð°Ð·Ð¼ÐµÑ€'), true);
+        $this->object->addAttribute('LastModification', '', translate('ÐŸÐ¾ÑÐ»ÐµÐ´Ð½ÐµÐµ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ'), true);
 
         return parent::getColumns();
     }
@@ -73,7 +73,7 @@ class SubversionFilesList extends SubversionList
         {
             if ( $object_it->get('Length') != '' )
             {
-                echo $object_it->get('Length').' '.translate('áàéò');
+                echo $object_it->get('Length').' '.translate('Ð±Ð°Ð¹Ñ‚');
             }
         }
 

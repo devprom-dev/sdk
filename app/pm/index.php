@@ -40,14 +40,6 @@
 
 	$page->render();
  }
- elseif( $mode == 'versionsettings' )
- {
-	include('views/settings/VersionSettingsPage.php');
-	
- 	$page = new VersionSettingsPage();
-
- 	$page->render();
- }
  elseif( in_array($mode, array('settings', 'import-settings', 'export-settings')) )
  {
  	include('views/settings/ProjectSettingsPage.php');

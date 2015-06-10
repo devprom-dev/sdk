@@ -7,12 +7,7 @@ class PMUserSettingsExportRegistry extends ObjectRegistrySQL
 		return array_merge(
 				parent::getFilters(),
 				array (
-					new FilterAttributePredicate('Participant', 
-							array(
-	 	    						getSession()->getParticipantIt()->getId(), // search for user's settings 
-	 	    						'-1' // search for common settings
-	 	    				)
-	 	    		),
+					new SettingExportPredicate(),
 					new FilterBaseVpdPredicate()
 				)
 		);

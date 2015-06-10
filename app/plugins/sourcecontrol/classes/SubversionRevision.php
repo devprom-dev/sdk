@@ -14,15 +14,15 @@ class SubversionRevision extends Metaobject
  	{
  		parent::__construct('pm_SubversionRevision');
  		
- 		$this->addAttribute( 'Issues', 'REF_RequestId', translate('Ïîæåëàíèÿ'), false);
+ 		$this->addAttribute( 'Issues', 'REF_RequestId', translate('ÐŸÐ¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ'), false);
  		
  		$this->addPersister( new SourceCodeRequestPersister() );
  		
- 		$this->addAttribute( 'Tasks', 'REF_TaskId', translate('Çàäà÷è'), false);
+ 		$this->addAttribute( 'Tasks', 'REF_TaskId', translate('Ð—Ð°Ð´Ð°Ñ‡Ð¸'), false);
  		
  		$this->addPersister( new SourceCodeTaskPersister() );
 
- 		$this->addAttribute( 'Participant', 'REF_ParticipantId', translate('Àâòîð'), false);
+ 		$this->addAttribute( 'Participant', 'REF_ParticipantId', translate('ÐÐ²Ñ‚Ð¾Ñ€'), false);
  		
  		$this->addPersister( new SourceCodeParticipantPersister() );
  		

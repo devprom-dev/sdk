@@ -5,7 +5,7 @@ include_once "WebMethod.php";
 class ObjectModifyWebMethod extends WebMethod
 {
 	private $object_it;
-	
+	private $object_url = '';	
 	private static $uid_service = null;
 	
 	function __construct( $object_it = null )
@@ -15,6 +15,7 @@ class ObjectModifyWebMethod extends WebMethod
 		if ( !is_object(self::$uid_service) ) self::$uid_service = new ObjectUID();
 		 
 		$this->object_it = $object_it;
+		$this->setObjectUrl($this->object_it->getEditUrl());
 		
 		$this->setRedirectUrl( 'function() { window.location.reload(); }' );
 	}
@@ -24,21 +25,33 @@ class ObjectModifyWebMethod extends WebMethod
 		return $this->object_it->object;
 	}
 	
+	public function setObjectUrl( $url )
+	{
+		$this->object_url = $url;
+	}
+	
+	public function getObjectUrl()
+	{
+		return $this->object_url;
+	}
+	
 	function getJSCall( $parms = array() )
 	{
+		$title = $this->getObject()->getDisplayName().': '.mb_substr(self::$uid_service->getUidTitle($this->object_it), 0, 120);
+		
 		$method_parms = array (
-				'form_url' => $this->object_it->getEditUrl(),
+				'form_url' => $this->getObjectUrl(),
 				'class_name' => get_class($this->getObject()),
 				'entity_ref' => $this->getObject()->getEntityRefName(),
 				'object_id' => $this->object_it->getId(),
-				'form_title' => substr(self::$uid_service->getUidTitle($this->object_it), 0, 120),
+				'form_title' => $title,
 				'can_delete' => var_export(getFactory()->getAccessPolicy()->can_delete($this->object_it), true),
 				'delete_reason' => getFactory()->getAccessPolicy()->getReason()
 		);
 		
 		foreach( $method_parms as $key => $parm )
 		{
-			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, 'windows-1251'));
+			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 		}
 		
 		foreach( $method_parms as $key => $parm )

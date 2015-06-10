@@ -53,12 +53,12 @@ class FieldWatchers extends FieldForm
 		echo '</div>';
 	}
 	
-	function render( & $view )
+	function render( $view )
 	{
 	    $this->drawBody( $view );
 	}
 	
-	function drawBody( & $view = null )
+	function drawBody( $view = null )
 	{
 		global $model_factory;
 		

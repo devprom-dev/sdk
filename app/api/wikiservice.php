@@ -75,87 +75,49 @@
  // Returns wiki hierarchy transformed to Html
  function getWikiTreeHtml( $token, $wiki_id )
  {
- 	global $soap, $model_factory;
+ 	global $soap;
  	
  	$soap->login( $token );
 
- 	$wiki = $model_factory->getObject('WikiPage');
+	$wiki_it = getFactory()->getObject('WikiPage')->getRegistry()->Query( 
+			array_merge( 
+					array(
+		 				new WikiRootTransitiveFilter($wiki_id),
+						new SortDocumentClause()
+					) 
+			)
+	);
  	
- 	$wiki_it = $wiki->getExact( $wiki_id ); 
-
  	if ( $wiki_it->getId() < 1 ) return array();
  	
-	$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
-	
-	$editor->setObjectIt( $wiki_it );
-	
- 	$parser = $editor->getHtmlParser();
- 	
- 	$parser->setObjectIt( $wiki_it );
- 	
- 	$parser->setRequiredExternalAccess();
- 	
- 	$parser->setExternalAccessUserAuthorization(false);
- 	
- 	$result = array();
-
- 	array_push( $result, 
- 		array (
- 			'WikiId' => $wiki_it->getId(),
- 			'ParentWikiId' => $soap->systemValueToSoap($wiki_it, 'ParentPage'),
- 			'Caption' => $soap->systemValueToSoap($wiki_it, 'Caption'),
- 			'Content' => base64_encode($parser->parse($wiki_it->getHtmlDecoded('Content'))),
- 			'LevelNumber' => 0,
- 			'RecordVersion' => $wiki_it->get('RecordVersion') == '' ? '0' : $wiki_it->get('RecordVersion')
- 		)
- 	);
-
- 	_getWikiTreeHtml( $wiki_it, 1, $result );
+	$result = array();
+ 	while( !$wiki_it->end() )
+ 	{
+ 		$object_it = $wiki_it->copy();
+		$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
+		$editor->setObjectIt($object_it);
+		
+	 	$parser = $editor->getHtmlParser();
+	 	$parser->setObjectIt($object_it);
+	 	$parser->setRequiredExternalAccess();
+	 	$parser->setExternalAccessUserAuthorization(false);
+	 	
+	 	array_push( $result, 
+	 		array (
+	 			'WikiId' => $wiki_it->getId(),
+	 			'ParentWikiId' => $soap->systemValueToSoap($wiki_it, 'ParentPage'),
+	 			'Caption' => $soap->systemValueToSoap($wiki_it, 'Caption'),
+	 			'Content' => base64_encode($parser->parse($wiki_it->getHtmlDecoded('Content'))),
+	 			'LevelNumber' => max(0,count($wiki_it->getParentsArray()) - 1),
+	 			'RecordVersion' => $wiki_it->get('RecordVersion') == '' ? '0' : $wiki_it->get('RecordVersion')
+	 		)
+	 	);
+	 	$wiki_it->moveNext();
+ 	}
 
  	return $result; 	
  }
  
- function _getWikiTreeHtml( $wiki_it, $level, & $result )
- {
- 	global $soap;
- 	
-	$parent_id = $wiki_it->getId();
-	$children_it = $wiki_it->getChildrenIt();
- 	
-	while ( $children_it->get('ParentPage') == $parent_id )
-	{
-	 	$editor = WikiEditorBuilder::build($children_it->get('ContentEditor'));
-
-	 	$editor->setObjectIt( $children_it );
-		
-		$parser = $editor->getHtmlParser();
-		
-	 	$parser->setObjectIt( $children_it );
-	 	
-	 	$parser->setRequiredExternalAccess();
-	 	
-	 	$parser->setExternalAccessUserAuthorization();
-		
- 		array_push( $result, 
- 			array (
- 				'WikiId' => $children_it->getId(),
- 				'ParentWikiId' => $soap->systemValueToSoap($children_it, 'ParentPage'),
- 				'Caption' => $soap->systemValueToSoap($children_it, 'Caption'),
- 				'Content' => base64_encode($parser->parse($children_it->getHtmlDecoded('Content'))),
- 				'LevelNumber' => $level,
- 				'RecordVersion' => $children_it->get('RecordVersion') == '' ? '0' : $children_it->get('RecordVersion')
- 			)
- 		);
- 		
-		$id = $children_it->getId();
-		
- 		_getWikiTreeHtml( $children_it, $level + 1, $result );
- 		
-		$children_it->moveTo('WikiPageId', $id);
- 		$children_it->moveNext();
-	}
- }
-
  // Returns wiki list transformed to Html
  function getWikiListHtml( $token, $nodes )
  {

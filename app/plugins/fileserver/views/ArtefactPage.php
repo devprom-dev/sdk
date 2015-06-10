@@ -2,7 +2,6 @@
 
 include "ArtefactTable.php";
 include "ArtefactForm.php";
-include "ArtefactBulkForm.php";
 
 class ArtefactPage extends PMPage
 {
@@ -23,14 +22,7 @@ class ArtefactPage extends PMPage
  	
  	function getForm() 
  	{
- 		if ( $_REQUEST['mode'] == 'bulk' )
- 		{
- 			return new ArtefactBulkForm( $this->getObject() );
- 		}
- 		else
- 		{
- 			return new ArtefactForm( $this->getObject() );
- 		}
+		return new ArtefactForm( $this->getObject() );
  	}
 }
  

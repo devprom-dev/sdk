@@ -8,15 +8,15 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  {
  	function getCaption()
  	{
-		return translate('Тип отчета');
+		return translate('РўРёРї РѕС‚С‡РµС‚Р°');
  	}
  	
  	function getValues()
  	{
   		return array (
- 			'all' => $this->getCaption().': '.translate('все'),
- 			'user' => translate('Пользовательские'),
- 			'system' => translate('Системные')
+ 			'all' => $this->getCaption().': '.translate('РІСЃРµ'),
+ 			'user' => translate('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ'),
+ 			'system' => translate('РЎРёСЃС‚РµРјРЅС‹Рµ')
  			);
 	}
 	
@@ -52,7 +52,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  	
  	function getCaption() 
 	{
-		return translate('Сохранить');
+		return translate('РЎРѕС…СЂР°РЅРёС‚СЊ');
 	}
 	
 	function getJSCall( $values, $redirect_url = '' )

@@ -181,7 +181,8 @@ class PageList extends ListTable
 		return $this->references_it[$attribute] = $object->createCachedIterator(
 				$object->getRegistry()->Query(
 						array(
-								new FilterInPredicate(join(',',$ids))
+								new FilterInPredicate(join(',',$ids)),
+								new SortReverseKeyClause()
 						)
 				)->getRowset()
 		);
@@ -463,14 +464,7 @@ class PageList extends ListTable
 			default:
 				if ( $object_it->get($group_field) == '' )
 				{
-					if ( $object_it->object->IsReference($group_field) )
-					{
-						echo translate($object_it->object->getAttributeUserName($group_field)).': '.translate('íå çàäàíî');
-					}
-					else
-					{
-						echo translate('Íå çàäàíî');
-					}
+					echo translate($object_it->object->getAttributeUserName($group_field)).': '.text(2030);
 				}
 				else
 				{
@@ -504,15 +498,10 @@ class PageList extends ListTable
 		switch ( $attr )
 		{
 			case 'State':
-				
-				$state_it = $object_it->getStateIt();
-				
-				echo $state_it->getDisplayName();
-				
+				echo $object_it->getStateIt()->getDisplayName();
 				break;
 				
 			default:
-				
 				foreach( $this->plugins_interceptors as $plugin )
 				{
 					if ( $plugin->interceptMethodListDrawRefCell( $this, $entity_it, $object_it, $attr ) ) return;
@@ -541,24 +530,40 @@ class PageList extends ListTable
 				        break;
 				        
 				    default:
-
                 		$items = array();
+                		$ids = array();
+                		$separator = ' ';
                 		
                 		while ( !$entity_it->end() )
                 		{
+                			$ids[] = $entity_it->getId();
                 			if ( $this->uid_service->hasUid($entity_it) )
                 			{
-                				$items[] = $this->uid_service->getUidIconGlobal($entity_it, true);
+                				$items[] = $this->uid_service->getUidIconGlobal($entity_it, false);
                 			}
                 			else
                 			{
                 				$items[] = $entity_it->getDisplayName();
+                				$separator = '<br/>';
                 			}
-                			
                 			$entity_it->moveNext();
                 		}
                 		
-                		echo join($items, ', ');
+                		$url = $this->getReferencesListWidget($entity_it->object);
+                		if ( $url != '' && count($items) > 1 )
+                		{
+                			$url .= strtolower(get_class($entity_it->object)).'='.join(',',$ids);
+                			$text = count($items) > 10 
+                					? str_replace('%1', count($items) - 10, text(2028))
+                					: text(2034);
+                			
+                			echo join(array_slice($items, 0, 10), $separator).'&nbsp; ';
+                			echo '<a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
+                		}
+                		else
+                		{
+                			echo join($items, $separator);
+                		}
 				}
 		}
 	}
@@ -686,7 +691,7 @@ class PageList extends ListTable
 	    
 	    $form->show($object_it);
 	    
-	    return $form->getActions( $object_it );
+	    return $form->getActions();
 	}
 	
 	function getActions( $object_it )
@@ -694,17 +699,21 @@ class PageList extends ListTable
 		$actions = $this->getItemActions('', $object_it);
 		
 	    $form = $this->getTable()->getPage()->getFormRef();
-	    
 	    if ( !$form instanceof PageForm ) return $actions;
+	    
+	    $form->show($object_it);
 		
-	    $delete = $form->getDeleteActions( $object_it );
-        
-        if ( count($delete) > 0 )
-        {
+	    $delete = $form->getDeleteActions();
+        if ( count($delete) > 0 ) {
 		    $actions = array_merge($actions, array(array()), $delete); 
         }
 		
         return $actions;
+	}
+	
+	function getReferencesListWidget( $object )
+	{
+		return '';
 	}
 	
 	function getMaxOnPage()
@@ -844,7 +853,7 @@ class PageList extends ListTable
 	    if ( count($column_actions) > 0 )
 	    {
 	        $actions['columns'] = array ( 
-	            'name' => translate('Ñòîëáöû'),
+	            'name' => translate('Ð¡Ñ‚Ð¾Ð»Ð±Ñ†Ñ‹'),
 	            'items' => $column_actions , 
 	            'title' => '', 
 	            'uid' => 'columns' 
@@ -883,12 +892,12 @@ class PageList extends ListTable
 	
 	            array_push( $group_actions,
     	            array (),
-    	            array ( 'url' => $script, 'name' => translate('Áåç ãðóïïèðîâêè'),
+    	            array ( 'url' => $script, 'name' => translate('Ð‘ÐµÐ· Ð³Ñ€ÑƒÐ¿Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ¸'),
             	            'checked' => $used_group == 'none', 'radio' => true )
     	        );
     	
 	            array_push($actions, array (
-    	            'name' => translate('Ãðóïïèðîâêà'),
+    	            'name' => translate('Ð“Ñ€ÑƒÐ¿Ð¿Ð¸Ñ€Ð¾Ð²ÐºÐ°'),
     	            'items' => $group_actions )
     	        );
 	        }
@@ -897,10 +906,10 @@ class PageList extends ListTable
 	    // sort by
 	    $sorts = array();
 	    $sort_parms = array(
-	            'sort' => translate('Ïîëå 1'),
-	            'sort2' => translate('Ïîëå 2'),
-	            'sort3' => translate('Ïîëå 3'),
-	            'sort4' => translate('Ïîëå 4')
+	            'sort' => translate('ÐŸÐ¾Ð»Ðµ 1'),
+	            'sort2' => translate('ÐŸÐ¾Ð»Ðµ 2'),
+	            'sort3' => translate('ÐŸÐ¾Ð»Ðµ 3'),
+	            'sort4' => translate('ÐŸÐ¾Ð»Ðµ 4')
 	    );
 	
 	    foreach( $sort_parms as $sort_parm => $sort_title )
@@ -942,16 +951,16 @@ class PageList extends ListTable
 	            array_push( $sort_actions,
 	                array (),
     	            array ( 'url' => "javascript: filterLocation.setup( '".$sort_parm."=none', 0 ); ",
-            	            'name' => translate('Íå çàäàíà'), 'radio' => true,
+            	            'name' => translate('ÐÐµ Ð·Ð°Ð´Ð°Ð½Ð°'), 'radio' => true,
             	            'checked' => $parts[0] == 'none' || $parts[0] == '' ),
             	    array (),
             	    array ( 'url' => "javascript: filterLocation.setSortType( '".$sort_parm."', 'asc' ); ",
-            	            'name' => translate('Ïî âîçðàñòàíèþ'), 'checked' => $parts[1] == 'A' || $parts[1] == '', 
+            	            'name' => translate('ÐŸÐ¾ Ð²Ð¾Ð·Ñ€Ð°ÑÑ‚Ð°Ð½Ð¸ÑŽ'), 'checked' => $parts[1] == 'A' || $parts[1] == '', 
             	            'uid' => $sort_parm.'-a',
             	            'radio-group' => 'direction',
             	            'radio' => true ),
 	                array ( 'url' => "javascript: filterLocation.setSortType( '".$sort_parm."', 'desc' ); ",
-            	            'name' => translate('Ïî óáûâàíèþ'), 'checked' => $parts[1] == 'D', 
+            	            'name' => translate('ÐŸÐ¾ ÑƒÐ±Ñ‹Ð²Ð°Ð½Ð¸ÑŽ'), 'checked' => $parts[1] == 'D', 
             	            'uid' => $sort_parm.'-d',
             	            'radio-group' => 'direction',
             	            'radio' => true )
@@ -967,7 +976,7 @@ class PageList extends ListTable
 	    if ( count($sorts) > 0 )
 	    {
 	        $actions['sorts'] = array ( 
-        		'name' => translate('Ñîðòèðîâêà'),
+        		'name' => translate('Ð¡Ð¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ°'),
         		'items' => $sorts
 	        );
 	    }
@@ -987,7 +996,7 @@ class PageList extends ListTable
 	            $script = "javascript: filterLocation.setup( 'rows=".$value."', 0 ); ";
 	            	
 	            array_push( $rows_actions,
-	            array ( 'url' => $script, 'name' => $value.' '.translate('ñòðîê'),
+	            array ( 'url' => $script, 'name' => $value.' '.translate('ÑÑ‚Ñ€Ð¾Ðº'),
 	            'checked' => $checked, 'radio' => true )
 	            );
 	        }
@@ -995,12 +1004,12 @@ class PageList extends ListTable
 	        $script = "javascript: filterLocation.setup( 'rows=all', 0 ); ";
 	
 	        array_push( $rows_actions,
-	        array ( 'url' => $script, 'name' => translate('Âñå ñòðîêè'),
+	        array ( 'url' => $script, 'name' => translate('Ð’ÑÐµ ÑÑ‚Ñ€Ð¾ÐºÐ¸'),
 	        'checked' => in_array($filter_values['rows'], array('999','all')), 'radio' => true )
 	        );
 	
 	        array_push($actions, array (
-	        'name' => translate('Êîëè÷åñòâî ñòðîê'),
+	        'name' => translate('ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÑ‚Ñ€Ð¾Ðº'),
 	        'items' => $rows_actions
 	        ));
 	    }
@@ -1109,7 +1118,8 @@ class PageList extends ListTable
 			'reorder' => false,
 			'sort_field' => $sort_field,
 			'sort_type' => $sort_type,
-			'show_header' => $this->IsNeedHeader()
+			'show_header' => $this->IsNeedHeader(),
+			'autorefresh' => true
 		);
 	}
 	
@@ -1142,12 +1152,14 @@ class PageList extends ListTable
 	    return "core/PageList.php";
 	}
 	
-	function render( &$view, $parms )
+	function render( $view, $parms )
 	{
 	    $this->view = $view;
 	    
-		echo $view->render( $this->getTemplate(), 
-			array_merge($parms, $this->getRenderParms()) ); 
+		echo $view->render( $this->getTemplate(), array_merge($parms, $this->getRenderParms()) );
+
+		unset($this->view);
+		$this->view = null;
 	}
 }
 

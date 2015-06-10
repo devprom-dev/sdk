@@ -9,6 +9,10 @@ class UserWorkerPredicate extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
+ 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) {
+ 			return " AND NOT EXISTS (SELECT 1 FROM cms_BlackList bl WHERE bl.SystemUser = t.cms_UserId) ";
+ 		}
+ 			
  		$ids = array_filter(
 	 				array_merge(
 			 				array(getSession()->getProjectIt()->getId()),

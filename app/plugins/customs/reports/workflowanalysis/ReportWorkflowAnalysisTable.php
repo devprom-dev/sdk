@@ -6,6 +6,7 @@ include "model/WorkflowTimeScale.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
+include_once SERVER_ROOT_PATH."pm/methods/StateExFilterWebMethod.php";
 
 class ReportWorkflowAnalysisTable extends PMPageTable
 {
@@ -31,7 +32,7 @@ class ReportWorkflowAnalysisTable extends PMPageTable
 	function getFilters()
 	{
 		$filters = array(
-			new ViewRequestStateWebMethod(),
+			new StateExFilterWebMethod(getFactory()->getObject('IssueState')->getAll()),
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
 			$this->buildTimeScaleFilter()

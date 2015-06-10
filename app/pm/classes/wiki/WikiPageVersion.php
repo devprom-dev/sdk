@@ -11,7 +11,7 @@ class WikiPageVersion extends Metaobject
 	
 	public function getDisplayName()
 	{
-		return translate('Версия');
+		return translate('Р’РµСЂСЃРёСЏ');
 	}
 	
 	public function getObjectClass()

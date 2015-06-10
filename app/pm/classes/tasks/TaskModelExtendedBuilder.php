@@ -23,13 +23,13 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		$object->addAttribute('IssueTraces', 'TEXT', text(1902), false);
 		$object->addPersister( new TaskIssueArtefactsPersister() );
 		
-		$object->addAttribute('RecentComment', 'RICHTEXT', translate('Êîììåíòàğèè'), false);
+		$object->addAttribute('RecentComment', 'WYSIWYG', translate('ĞšĞ¾Ğ¼Ğ¼ĞµĞ½Ñ‚Ğ°Ñ€Ğ¸Ğ¸'), false);
 		$comment = getFactory()->getObject('Comment');
 		$object->addPersister( new CommentRecentPersister() );
 		
         if ( $methodology_it->IsTimeTracking() )
         {
-            $object->addAttribute('Spent', 'REF_ActivityTaskId', translate('Ñïèñàíèå âğåìåíè'), false);
+            $object->addAttribute('Spent', 'REF_ActivityTaskId', translate('Ğ¡Ğ¿Ğ¸ÑĞ°Ğ½Ğ¸Ğµ Ğ²Ñ€ĞµĞ¼ĞµĞ½Ğ¸'), false);
             $object->addPersister( new TaskSpentTimePersister() );
         }
  
@@ -39,7 +39,7 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		$object->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1898), false);
 		$object->addPersister( new TaskDatesPersister() );
 		
-		$object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Ğåëèç'), false);
+		$object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Ğ ĞµĞ»Ğ¸Ğ·'), false);
 		$object->addPersister( new TaskReleasePersister() );
     }
 }

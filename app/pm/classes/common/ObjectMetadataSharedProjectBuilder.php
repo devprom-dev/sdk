@@ -23,7 +23,7 @@ class ObjectMetadataSharedProjectBuilder extends ObjectMetadataBuilder
         
 	    if ( !$this->shared_set->sharedInProject($metadata->getObject(), getSession()->getProjectIt()) ) return;
 	    
-		$metadata->addAttribute('Project', 'REF_pm_ProjectId', translate('Ïðîåêò'), false);
+		$metadata->addAttribute('Project', 'REF_pm_ProjectId', translate('ÐŸÑ€Ð¾ÐµÐºÑ‚'), false);
 
 		$metadata->addPersister( new EntityProjectPersister );
     }

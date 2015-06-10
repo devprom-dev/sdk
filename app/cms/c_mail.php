@@ -80,11 +80,11 @@ class MailBox
 	}
 	
 	function getContentType() {
-		return "Content-Type: text/plain; charset=windows-1251";
+		return "Content-Type: text/plain; charset=".APP_ENCODING;
 	}
 	
 	function encode( $text ) {
-		return '=?Windows-1251?B?'.base64_encode($text).'?=';
+		return '=?'.APP_ENCODING.'?B?'.base64_encode($text).'?=';
 	}
 	
 	function encodeAddress( $address ) {
@@ -130,7 +130,7 @@ class MailBox
 		$this->body = "\r\n\r\n--" . $this->boundary . "\r\n";
 		$this->body .= "Content-Type: text/plain; charset=\"utf-8\"\r\n\r\n";
 				
-		$texted = strip_tags(html_entity_decode($body, ENT_COMPAT | ENT_HTML401, 'cp1251'));
+		$texted = strip_tags(html_entity_decode($body, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 		
 		$texted = preg_replace('/\s{2,}/', PHP_EOL, $texted);
 		$texted = preg_replace('/[\r\n]{2,}/', PHP_EOL.PHP_EOL, $texted);
@@ -140,12 +140,12 @@ class MailBox
 		$this->body .= "\r\n\r\n--" . $this->boundary . "\r\n";
 		$this->body .= "Content-Type: text/html; charset=\"utf-8\"\r\n\r\n";
 		
-		$this->body .= $this->applyStyles(
+		$this->body .= $this->textWrap($this->applyStyles(
 		    '<html>'.PHP_EOL.
 		    '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>'.PHP_EOL.
-		    '<body>'.IteratorBase::wintoutf8($body).'</body>'.PHP_EOL.
+		    '<body>'.IteratorBase::wintoutf8(preg_replace('/[\r\n]+/', '', $body)).'</body>'.PHP_EOL.
 		    '</html>'
-		);
+		));
 
 		$this->body .= "\r\n\r\n--" . $this->boundary . "--";
 	}
@@ -166,5 +166,21 @@ class MailBox
         
         return $html;
 	}
+	
+ 	function textWrap($text) { 
+        $new_text = ''; 
+        $text_1 = explode('>',$text); 
+        $sizeof = sizeof($text_1); 
+        for ($i=0; $i<$sizeof; ++$i) { 
+            $text_2 = explode('<',$text_1[$i]); 
+            if (!empty($text_2[0])) { 
+                $new_text .= wordwrap($text_2[0], 255, PHP_EOL, true); 
+            } 
+            if (!empty($text_2[1])) { 
+                $new_text .= '<' . wordwrap($text_2[1], 255, PHP_EOL, true) . '>';    
+            } 
+        } 
+        return $new_text; 
+    } 	
  }
  

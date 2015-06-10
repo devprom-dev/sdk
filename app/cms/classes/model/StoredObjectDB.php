@@ -64,11 +64,6 @@ class StoredObjectDB extends Object
 		$this->vpd_context = '';
 	}
 	
-	public function __clone()
-	{
-		$this->registry = $this->getRegistry();
-	}
-	
 	function getEntityRefName()
 	{
 		return $this->getClassName();
@@ -272,7 +267,7 @@ class StoredObjectDB extends Object
 			$objectid .= ' ';
 			
 			$objectid = DAL::Instance()->Escape(
-				htmlspecialchars($objectid, ENT_COMPAT | ENT_HTML401, 'cp1251'));
+				htmlspecialchars($objectid, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 
 			$search1 = '[^[:alnum:]]*'.str_replace(' ', '[^[:alnum:]]+', 
 				addslashes(preg_quote($this->utf8towin(str_replace('-', ' ', trim($objectid))))) ).'[^[:alnum:]]*';
@@ -318,7 +313,7 @@ class StoredObjectDB extends Object
 		$this->registry->setObject($this);
 	}
 	
-	public function & getRegistry()
+	public function getRegistry()
 	{
 		$registry = clone $this->registry;
 		
@@ -336,7 +331,7 @@ class StoredObjectDB extends Object
 	}
 	
 	// to be removed
-	public function & getRegistryDefault()
+	public function getRegistryDefault()
 	{
 		$registry = clone $this->registry;
 		
@@ -890,7 +885,7 @@ class StoredObjectDB extends Object
 		{
 			$sql .= $this->getAttributeRDBMSDefinition($keys[$i]).',';
 		}
-		$sql = substr($sql, 0, strlen($sql) - 1).' ) ENGINE=MyISAM DEFAULT CHARSET=cp1251 ';
+		$sql = substr($sql, 0, strlen($sql) - 1).' ) ENGINE=MyISAM DEFAULT CHARSET='.APP_CHARSET.' ';
 
         DAL::Instance()->Query($sql);
 
@@ -924,7 +919,7 @@ class StoredObjectDB extends Object
 	{
 		global $model_factory;
 		
-       	// Формируем запрос для вставки записи в таблицу
+       	// Р¤РѕСЂРјРёСЂСѓРµРј Р·Р°РїСЂРѕСЃ РґР»СЏ РІСЃС‚Р°РІРєРё Р·Р°РїРёСЃРё РІ С‚Р°Р±Р»РёС†Сѓ
 		$sql = "INSERT INTO ".$this->getEntityRefName()." ( RecordCreated,RecordModified,VPD,";
 		
 		if ( $parms[$this->getEntityRefName().'Id'] > 0 )
@@ -1034,7 +1029,7 @@ class StoredObjectDB extends Object
 		}
 		elseif( $r2 === true )
 		{		    
-    		// получим идентификатор записи
+    		// РїРѕР»СѓС‡РёРј РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ Р·Р°РїРёСЃРё
     		$r3 = DAL::Instance()->Query('SELECT LAST_INSERT_ID()');
     		
     		$d = mysql_fetch_array($r3);
@@ -1053,11 +1048,11 @@ class StoredObjectDB extends Object
         {
 			$new_object_it = $this->getExact($id);
 			
-			// загружаем изображения
+			// Р·Р°РіСЂСѓР¶Р°РµРј РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
 			for($i=0; $i < count($imageattributes); $i++) {
 				$this->fs_image->storeFile( $imageattributes[$i], $new_object_it );
 			}
-			// загружаем файлы
+			// Р·Р°РіСЂСѓР¶Р°РµРј С„Р°Р№Р»С‹
 			for($i=0; $i < count($fileattributes); $i++) {
 				$this->fs_file->storeFile( $fileattributes[$i], $new_object_it );
 			}
@@ -1134,7 +1129,7 @@ class StoredObjectDB extends Object
 				? $deleting_object_it->get('RecordVersion') : 0;
 		}
 		
-		// удаляем запись
+		// СѓРґР°Р»СЏРµРј Р·Р°РїРёСЃСЊ
 		$id = DAL::Instance()->Escape( $id );
 		
 		$sql = "DELETE FROM ".$this->getEntityRefName().
@@ -1303,7 +1298,7 @@ class StoredObjectDB extends Object
 
 		DAL::Instance()->Query($sql);
 		
-		// устанавливаем новый порядковый номер
+		// СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј РЅРѕРІС‹Р№ РїРѕСЂСЏРґРєРѕРІС‹Р№ РЅРѕРјРµСЂ
 		if( $this->isOrdered() ) 
 		{
 			$this->modify_parms( $new_id, 
@@ -1313,7 +1308,7 @@ class StoredObjectDB extends Object
 		$source_it = $this->getExact($id);
 		$target_it = $this->getExact($new_id);
 		
-		// копируем файлы и изображения
+		// РєРѕРїРёСЂСѓРµРј С„Р°Р№Р»С‹ Рё РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
 		$keys = array_keys($this->getAttributes());
 		for($i=0; $i < count($keys); $i++) 
 		{
@@ -1327,27 +1322,27 @@ class StoredObjectDB extends Object
 			}
 		}
 		
-		// копируем агрегированные объекты
+		// РєРѕРїРёСЂСѓРµРј Р°РіСЂРµРіРёСЂРѕРІР°РЅРЅС‹Рµ РѕР±СЉРµРєС‚С‹
 		for($i = 0; $i < count($this->aggregates); $i++) {
 			$class = $this->aggregates[$i]->getClassName();
-			// экземпляр агрегата из старого контейнера
+			// СЌРєР·РµРјРїР»СЏСЂ Р°РіСЂРµРіР°С‚Р° РёР· СЃС‚Р°СЂРѕРіРѕ РєРѕРЅС‚РµР№РЅРµСЂР°
 			$aggregate = new $class( $source_it );
-			// экземпляр агрегата из нового контейнера
+			// СЌРєР·РµРјРїР»СЏСЂ Р°РіСЂРµРіР°С‚Р° РёР· РЅРѕРІРѕРіРѕ РєРѕРЅС‚РµР№РЅРµСЂР°
 			$aggregate_new = new $class( $target_it );
 
-			// итератор по экземплярам агрегата
+			// РёС‚РµСЂР°С‚РѕСЂ РїРѕ СЌРєР·РµРјРїР»СЏСЂР°Рј Р°РіСЂРµРіР°С‚Р°
 			$it = $aggregate->getAll();
 			for($j = 0; $j < $it->count(); $j++) {
 				if($it->getId() == '') continue;
-				// создаем экземпляр агрегата на основе текущего
+				// СЃРѕР·РґР°РµРј СЌРєР·РµРјРїР»СЏСЂ Р°РіСЂРµРіР°С‚Р° РЅР° РѕСЃРЅРѕРІРµ С‚РµРєСѓС‰РµРіРѕ
 				$agg_id = $aggregate_new->createLike( $it->getId() );
 
-				// меняем контейнер созданного агрегата
+				// РјРµРЅСЏРµРј РєРѕРЅС‚РµР№РЅРµСЂ СЃРѕР·РґР°РЅРЅРѕРіРѕ Р°РіСЂРµРіР°С‚Р°
 				$_REQUEST[$this->getEntityRefName().'Id'] = $new_id;
 				$aggregate_new->modify( $agg_id );
 				
 				/*
-				// перезадаем порядковый номер
+				// РїРµСЂРµР·Р°РґР°РµРј РїРѕСЂСЏРґРєРѕРІС‹Р№ РЅРѕРјРµСЂ
 				if( $aggregate_new->isOrdered()) {
 					echo $aggregate_new->getDefaultAttributeValue('OrderNum');;
 					$_REQUEST['OrderNum'] = $aggregate_new->getDefaultAttributeValue('OrderNum');
@@ -1409,10 +1404,10 @@ class StoredObjectDB extends Object
 				
 			case 'float':
 			case 'integer':
-				return htmlspecialchars($value, ENT_QUOTES | ENT_HTML401, 'cp1251');
+				return htmlspecialchars($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 		}
 		
-		return "'".htmlspecialchars(trim($value), ENT_QUOTES | ENT_HTML401, 'cp1251')."'";
+		return "'".htmlspecialchars(trim($value), ENT_QUOTES | ENT_HTML401, APP_ENCODING)."'";
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
@@ -1636,5 +1631,22 @@ class StoredObjectDB extends Object
 	{
 		if ( !is_numeric( $this->limit ) ) return;
 		if ( $this->limit > 0 ) return ' LIMIT '.$this->limit;
+	}
+
+	public function __sleep()
+	{
+		unset($this->registry);
+		$this->registry = null;
+	}
+	
+	public function __destruct()
+	{
+		unset($this->registry);
+		$this->registry = null;
+	}
+	
+	public function __wakeup()
+	{
+		$this->registry = null;
 	}
 }

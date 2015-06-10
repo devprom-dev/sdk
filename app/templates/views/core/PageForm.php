@@ -14,7 +14,6 @@ else
 $no_sections_class = is_a($form, 'PMWikiForm') ? 'span12' : 'span10';
 
 $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_title;
-
 ?>
 
 <div class="<?=($formonly ? '' : ($draw_sections && count($sections) > 0 ? 'span8' : $no_sections_class))?>">
@@ -34,7 +33,14 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
                     
                         <?php if ( $has_caption ) { ?>
                     	<li>
-                   	        <?=($uid_icon != '' ? $uid_icon : $caption)?>
+                   	        <?
+                   	        if ( $uid != '' ) {
+                   	        	 echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid));
+                   	        }
+                   	        else {
+								echo $caption;
+							}
+							?>
                     	</li>
                     	<?php } ?>
                     </ul> <!-- end breadcrumb -->
@@ -48,7 +54,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     		        
         		        <div class="btn-group">
         					<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-        						<?=translate('Äåéñòâèÿ')?>
+        						<?=translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ')?>
         						<span class="caret"></span>
         					</a>
         					<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
@@ -97,7 +103,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     
 			if ( $bottom_hint != '' )
 			{
-				echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $class_name));
+				echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $form_id));
 			}
 
             ?>
@@ -151,7 +157,7 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 <script type="text/javascript">
 
     devpromOpts.saveButtonName = '<?=$button_save_title?>';
-    devpromOpts.closeButtonName = '<?=translate('Îòìåíèòü')?>';
-    devpromOpts.deleteButtonName = '<?=translate('Óäàëèòü')?>';
+    devpromOpts.closeButtonName = '<?=translate('ÐžÑ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ')?>';
+    devpromOpts.deleteButtonName = '<?=translate('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ')?>';
 
 </script>

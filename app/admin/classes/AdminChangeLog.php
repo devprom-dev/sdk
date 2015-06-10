@@ -12,7 +12,7 @@ class AdminChangeLog extends Metaobject
  		$this->addSort( new SortAttributeClause('RecordCreated.D') );
  		$this->addSort( new SortAttributeClause('OrderNum.D') );
 		
-		$this->addAttribute( 'ChangeDate', 'DATE', translate('Äàòà èçìåíåíèÿ'), false, false );
+		$this->addAttribute( 'ChangeDate', 'DATE', translate('Ð”Ð°Ñ‚Ð° Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ñ'), false, false );
 		
 		$this->addPersister( new AdminChangeLogPersister() );
 	}

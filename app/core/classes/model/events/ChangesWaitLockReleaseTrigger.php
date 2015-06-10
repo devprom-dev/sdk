@@ -57,7 +57,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 
 			foreach( class_parents($class_name) as $class )
 			{
-				if ( strpos(strtolower($class), 'metaobject') != false ) break;
+				if ( in_array($class, array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable')) ) break;
 				$this->storeAffectedRows($class, $object_it);
 			}
 		}
@@ -84,7 +84,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			
     		foreach( class_parents($class_name) as $class )
 			{
-				if ( strpos(strtolower($class), 'metaobject') != false ) break;
+				if ( in_array($class, array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable')) ) break;
 				$this->storeAffectedRows($class, $ref_it);
 			}
     	}
@@ -140,9 +140,9 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	function getDescendants( $class_name )
 	{
 		if ( $class_name == 'Metaobject' ) return array();
+		if ( $class_name == 'Object' ) return array();
 		
- 		return array_filter( get_declared_classes(), function($value) use($class_name) 
- 		{
+ 		return array_filter( get_declared_classes(), function($value) use($class_name) {
  			return is_subclass_of($value, $class_name);
  		});
 	}
@@ -167,7 +167,18 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			    	);
 		    	}
 		    
+		    case 'pm_ChangeRequest':
+		    	if ( $object_it->get('Links') != '' ) {
+			    	return array( 
+			    		'Request' => $object_it->getRef('Links')
+			    	);
+		    	}
+		    	return array();
+		    	
 		    case 'pm_Release':
+		    	return array( 
+		    		'Stage' => $object_it->copy()
+		    	);
 		    case 'pm_Version': 
 		    	return array( 
 		    		'Stage' => $object_it->copy()
@@ -192,16 +203,27 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    	);
 
 		    case 'pm_AttributeValue':
-		    	
 		    	$class = getFactory()->getClass($object_it->getRef('CustomAttribute')->get('EntityReferenceName'));
-		    	
 		    	if ( !class_exists($class) ) return array();
 		    	
 		    	$ref_object = getFactory()->getObject($class);
-		    	
 		    	return array (
 		    			get_class($ref_object) => $ref_object->getExact($object_it->get('ObjectId'))
 		    	);
+		}
+		
+		if ( $object_it->object instanceof Stage )
+		{
+			if ( $object_it->get('Release') != '' ) { 
+		    	return array( 
+		    		'Iteration' => getFactory()->getObject('Iteration')->getExact($object_it->get('Release')),
+		    	);
+			}
+			else {
+		    	return array( 
+		    		'Release' => getFactory()->getObject('Release')->getExact($object_it->get('Version'))
+		    	);
+			}
 		}
 		
 		if ( $object_it->object instanceof Watcher || $object_it->object instanceof Comment )

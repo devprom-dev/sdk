@@ -17,6 +17,7 @@ class AccessPolicyProject extends AccessPolicyBase
  	function buildRoles()
  	{
  		$project_roles = getSession()->getRoles();
+ 		$this->project_it = getSession()->getProjectIt();
  		
  		$user_it = getSession()->getUserIt();
  		
@@ -278,8 +279,6 @@ class AccessPolicyProject extends AccessPolicyBase
  	
  	function getDefaultEntityAccessRole( $action_kind, &$object, $role_id ) 
  	{
- 		global $model_factory, $session, $project_it;
- 		
  		$array = is_object(getSession()->getPluginsManager()) ? getSession()->getPluginsManager()->getPluginsForSection('pm') : array();
 			
 		foreach ( $array as $plugin )
@@ -343,11 +342,12 @@ class AccessPolicyProject extends AccessPolicyBase
 						return $action_kind == ACCESS_READ || $action_kind == ACCESS_MODIFY;
 							
 					case 'pm_Participant':
+					case 'pm_Invitation':
 					case 'pm_ProjectRole':
 					case 'pm_ParticipantRole':
 						if ( $action_kind == ACCESS_CREATE )
 						{
-							$lead_it = $project_it->getLeadIt();
+							$lead_it = $this->project_it->getLeadIt();
 							if ( $lead_it->count() < 1 ) return true;
 						}
 						return $action_kind == ACCESS_READ && 
@@ -365,7 +365,7 @@ class AccessPolicyProject extends AccessPolicyBase
 			    {
 			        case 'Blog':
 			        case 'BlogPost':
-			            return $project_it->get('IsBlogUsed') == 'Y';
+			            return $this->project_it->getMethodologyIt()->get('IsBlogUsed') == 'Y';
 			            
 			        case 'pm_Project':
 			        case 'pm_Methodology':
@@ -383,7 +383,6 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_Build':
 						return $action_kind == ACCESS_READ;
 
-					case 'pm_Function':
 					case 'pm_Competitor':
 					case 'pm_FeatureAnalysis':
 						return true;
@@ -395,7 +394,6 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_Version':
 					case 'pm_Release':
 					case 'pm_Methodology':
-					case 'pm_VersionSettings':
 					case 'pm_ProjectStage':
 					case 'pm_ProjectRole':
 					case 'pm_ParticipantRole':
@@ -407,6 +405,7 @@ class AccessPolicyProject extends AccessPolicyBase
 						return $action_kind == ACCESS_READ;
 						
 					case 'pm_Participant':
+					case 'pm_Invitation':
 						return in_array($action_kind, array(ACCESS_READ));
 						
 					case 'pm_Project': 
@@ -417,12 +416,12 @@ class AccessPolicyProject extends AccessPolicyBase
 
 					case 'Blog':
 					case 'BlogPost':
-						return $project_it->get('IsBlogUsed') == 'Y';
+						return $this->project_it->getMethodologyIt()->get('IsBlogUsed') == 'Y';
 				}
 				
 				if ( strtolower(get_class($object)) == 'projectpage' )
 				{
-					return $project_it->get('IsKnowledgeUsed') == 'Y';
+					return $this->project_it->getMethodologyIt()->get('IsKnowledgeUsed') == 'Y';
 				}
 		}
 	}
@@ -539,8 +538,6 @@ class AccessPolicyProject extends AccessPolicyBase
 	
  	function getObjectAccessRole( $action_kind, &$object_it, $role_id )
  	{ 
- 		global $model_factory;
-
 		$ref_name = $object_it->object->getClassName();
 
  		if ( $this->access_it->count() > 0 )
@@ -634,11 +631,9 @@ class AccessPolicyProject extends AccessPolicyBase
  	 	
  	function getDefaultObjectAccessRole( $action_kind, &$object_it, $role_id ) 
  	{
-       	global $model_factory;
-
 		$ref_name = $object_it->object->getClassName();	
 
-		$project_it = getSession()->getProjectIt();
+		$this->project_it = getSession()->getProjectIt();
 		
 		$user_it = getSession()->getUserIt();
 		
@@ -656,7 +651,7 @@ class AccessPolicyProject extends AccessPolicyBase
 						return $action_kind != ACCESS_DELETE;
 					}
 					
-					$lead_it = $project_it->getLeadIt();
+					$lead_it = $this->project_it->getLeadIt();
 					
 					while ( !$lead_it->end() )
 					{
@@ -681,7 +676,7 @@ class AccessPolicyProject extends AccessPolicyBase
 				
 				if ( $ref_name == 'pm_ProjectRole' && $action_kind == ACCESS_DELETE ) 
 				{
-					$part = $model_factory->getObject('pm_Participant');
+					$part = getFactory()->getObject('pm_Participant');
 					return !$part->hasTeamMembers( $object_it );
 				}
 
@@ -714,7 +709,7 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_ArtefactType':
 						if ( !isset($this->artefact) )
 						{
-							$this->artefact = $model_factory->getObject('pm_Artefact');
+							$this->artefact = getFactory()->getObject('pm_Artefact');
 						}
 	
 						$this->artefact_it = $this->artefact->getByRef('Kind', $object_it->getId());

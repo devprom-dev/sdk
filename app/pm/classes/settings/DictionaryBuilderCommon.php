@@ -14,7 +14,6 @@ class DictionaryBuilderCommon extends DictionaryBuilder
  		$methodology_it = $this->session->getProjectIt()->getMethodologyIt();
 		
  		$registry->addEntity( getFactory()->getObject('PMCustomAttribute') );
- 		$registry->addEntity( getFactory()->getObject('pm_ProjectRole') );
  		$registry->addEntity( getFactory()->getObject('pm_IssueType') );
  		$registry->addEntity( getFactory()->getObject('RequestTemplate') );
  		

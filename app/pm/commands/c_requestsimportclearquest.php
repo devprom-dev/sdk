@@ -72,11 +72,11 @@
  		unset($captions[2]);
  		$captions = array_values($captions);
 
-		array_push($captions, translate('Èñòîðèÿ èçìåíåíèé'));
-		array_push($captions, translate('Êîììåíòàðèè'));
-		array_push($captions, translate('Îòâåòñòâåííûé'));
+		array_push($captions, translate('Ð˜ÑÑ‚Ð¾Ñ€Ð¸Ñ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ð¹'));
+		array_push($captions, translate('ÐšÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¸'));
+		array_push($captions, translate('ÐžÑ‚Ð²ÐµÑ‚ÑÑ‚Ð²ÐµÐ½Ð½Ñ‹Ð¹'));
 
-		array_push($captions, translate('Ïðèëîæåíèÿ'));
+		array_push($captions, translate('ÐŸÑ€Ð¸Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ'));
 
 		return $captions;
 	}
@@ -215,14 +215,14 @@
 
 		switch ( trim($value) )
 		{
-			case translate('Çàêðûòî'):
+			case translate('Ð—Ð°ÐºÑ€Ñ‹Ñ‚Ð¾'):
 
 				$parms = array_merge($parms,
 					array( 'State' => 'resolved' ) );
 
 				break;
 
-			case translate('Ðåøåíî'):
+			case translate('Ð ÐµÑˆÐµÐ½Ð¾'):
 				
 				$iteration_it = $this->release_it->getRecentIterationIt();
 
@@ -375,9 +375,9 @@
 					array( 'Date' => $date_parts[3].'-'.$date_parts[1].'-'.
 										$date_parts[2].' '.$date_parts[4].':'.$date_parts[5],
 						   'User' => $line[$fields_keys['user_name']],
-						   'Content' => translate('Äåéñòâèå').': '.$line[$fields_keys['action_name']].chr(10).
-						   		translate('Ïðåäûäóùåå ñîñòîÿíèå').': '.$line[$fields_keys['old_state']].chr(10).
-						   		translate('Íîâîå ñîñòîÿíèå').': '.$line[$fields_keys['new_state']]
+						   'Content' => translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ').': '.$line[$fields_keys['action_name']].chr(10).
+						   		translate('ÐŸÑ€ÐµÐ´Ñ‹Ð´ÑƒÑ‰ÐµÐµ ÑÐ¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ').': '.$line[$fields_keys['old_state']].chr(10).
+						   		translate('ÐÐ¾Ð²Ð¾Ðµ ÑÐ¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ').': '.$line[$fields_keys['new_state']]
 					)
 				);
 			} 
@@ -457,9 +457,9 @@
 					array_push($changes,
 						array( 'Date' => $history[$key][0],
 							   'User' => $this->users_map[$history[$key][1]],
-							   'Content' => translate('Äåéñòâèå').': '.$history[$key][2].chr(10).
-							   		translate('Èñõîäíîå ñîñòîÿíèå').': '.$history[$key][3].chr(10).
-							   		translate('Öåëåâîå ñîñòîÿíèå').': '.$history[$key][4] ) 
+							   'Content' => translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ðµ').': '.$history[$key][2].chr(10).
+							   		translate('Ð˜ÑÑ…Ð¾Ð´Ð½Ð¾Ðµ ÑÐ¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ').': '.$history[$key][3].chr(10).
+							   		translate('Ð¦ÐµÐ»ÐµÐ²Ð¾Ðµ ÑÐ¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ').': '.$history[$key][4] ) 
 						);
 				}
 			} 
@@ -472,12 +472,12 @@
 			
 			// state conversion
 			$state_map = array (
-				'Submitted' => translate('Äîáàâëåíî'), 
-				'Opened' => translate('Äîáàâëåíî'), 
-				'Assigned' => translate('Äîáàâëåíî'), 
-				'Declined' => translate('Äîáàâëåíî'), 
-				'Resolved' => translate('Ðåøåíî'), 
-				'Closed' => translate('Çàêðûòî')
+				'Submitted' => translate('Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¾'), 
+				'Opened' => translate('Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¾'), 
+				'Assigned' => translate('Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¾'), 
+				'Declined' => translate('Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¾'), 
+				'Resolved' => translate('Ð ÐµÑˆÐµÐ½Ð¾'), 
+				'Closed' => translate('Ð—Ð°ÐºÑ€Ñ‹Ñ‚Ð¾')
 				);
 				
 			// parse attachments

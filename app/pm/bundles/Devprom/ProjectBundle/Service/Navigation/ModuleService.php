@@ -51,7 +51,7 @@ class ModuleService
 					'id' => $report_it->getId(),
 					'title' => \IteratorBase::wintoutf8($report_it->getDisplayName()),
 					'type' => 'report',
-					'desc' => \IteratorBase::wintoutf8($report_it->get('Description')),
+					'desc' => $report_it->get('Description') != '' ? $report_it->get('Description') : '',
 					'reportUrl' => $info['url'] != '' ? $info['url'] : '#'
 			);
 			
@@ -81,7 +81,7 @@ class ModuleService
 					'id' => $module_it->getId(),
 					'title' => \IteratorBase::wintoutf8($module_it->getDisplayName()),
 					'type' => 'module',
-					'desc' => \IteratorBase::wintoutf8($module_it->get('Description')),
+					'desc' => $module_it->get('Description') != '' ? $module_it->get('Description') : '',
 					'reportUrl' => $module_it->get('Url') != '' ? $module_it->get('Url') : '#'
 			);
 			

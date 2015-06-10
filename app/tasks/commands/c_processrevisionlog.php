@@ -26,7 +26,10 @@ class ProcessRevisionLog extends TaskCommand
 		// pull new chunks
 		if ( count($ids) < 1 )
 		{
-			$ids = getFactory()->getObject('pm_Subversion')->getRegistry()->getAll()->idsToArray();
+			$repo = getFactory()->getObject('pm_Subversion');
+			$ids = $repo->getRegistry()->Query(
+						array( new RepositoryActivePredicate() )
+				)->idsToArray();
 
 			$parameters = $this->getData()->getParameters();
 			$step = $parameters['limit'] > 0 ? $parameters['limit'] : 30;

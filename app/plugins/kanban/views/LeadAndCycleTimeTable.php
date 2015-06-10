@@ -42,7 +42,7 @@ class LeadAndCycleTimeTable extends PMPageTable
 	{
 		global $model_factory;
 		
-		$type_method = new FilterObjectMethod( $model_factory->getObject('pm_IssueType'), translate('Òèï'), 'type');
+		$type_method = new FilterObjectMethod( $model_factory->getObject('pm_IssueType'), translate('Ð¢Ð¸Ð¿'), 'type');
 		
 		$type_method->setIdFieldName( 'ReferenceName' );
 		

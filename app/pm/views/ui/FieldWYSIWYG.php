@@ -36,10 +36,10 @@ class FieldWYSIWYG extends Field
  	
  	function setObjectIt( $object_it )
  	{
- 		$this->object_it = $object_it;
+ 		$this->object_it = $object_it->copy();
  		
  		$editor = $this->getEditor();
- 		$editor->setObjectIt( $object_it );
+ 		$editor->setObjectIt($this->object_it);
  	}
  	
  	function setObject( $object )
@@ -100,7 +100,7 @@ class FieldWYSIWYG extends Field
 		
 		$parser->setObjectIt( $this->object_it );
 		
-		return $parser->parse( html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, 'cp1251') );
+		return $parser->parse( html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );
 	}
 	
 	function drawReadonly()

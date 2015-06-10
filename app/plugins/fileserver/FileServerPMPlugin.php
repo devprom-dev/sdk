@@ -4,7 +4,7 @@ include "classes/widgets/ModuleCategoryBuilderFileServer.php";
 include "classes/widgets/FunctionalAreaFileServerBuilder.php";
 include "classes/widgets/FunctionalAreaMenuFileServerBuilder.php";
 include "classes/SearchableObjectsFilesBuilder.php";
-include "classes/ProjectMetadataFilesBuilder.php";
+include "classes/MethodologyFilesModelBuilder.php";
 include "classes/ChangeLogEntitiesFileServerBuilder.php";
 include "classes/CustomizableObjectBuilderFileServer.php";
 include "classes/ProjectTemplateFileServerSectionsRegistryBuilder.php";
@@ -19,7 +19,7 @@ class FileServerPMPlugin extends PluginPMBase
  				array(
  					'includes' => array( 'fileserver/views/ArtefactPage.php' ),
  					'classname' => 'ArtefactPage',
- 					'title' => translate('Ôàéëû'),
+ 					'title' => translate('Ð¤Ð°Ð¹Ð»Ñ‹'),
  					'description' => text('fileserver3'),
  				    'AccessEntityReferenceName' => 'pm_Artefact',
  					'area' => ModuleCategoryBuilderFileServer::AREA_UID
@@ -28,7 +28,7 @@ class FileServerPMPlugin extends PluginPMBase
  				array(
  					'includes' => array( 'fileserver/views/ArtefactTypePage.php' ),
  					'classname' => 'ArtefactTypePage',
- 					'title' => translate('Êàòàëîãè'),
+ 					'title' => translate('ÐšÐ°Ñ‚Ð°Ð»Ð¾Ð³Ð¸'),
  					'description' => text('fileserver5'),
  				    'AccessEntityReferenceName' => 'pm_Artefact',
  					'area' => ModuleCategoryBuilderFileServer::AREA_UID
@@ -45,7 +45,7 @@ class FileServerPMPlugin extends PluginPMBase
  	            new FunctionalAreaFileServerBuilder(),
  	            new FunctionalAreaMenuFileServerBuilder(),
  	            new SearchableObjectsFilesBuilder(getSession()),
- 	            new ProjectMetadataFilesBuilder(),
+ 	            new MethodologyFilesModelBuilder(),
  	            new ChangeLogEntitiesFileServerBuilder(),
  	            new CustomizableObjectBuilderFileServer(getSession()),
  	    		new ProjectTemplateFileServerSectionsRegistryBuilder(getSession()),

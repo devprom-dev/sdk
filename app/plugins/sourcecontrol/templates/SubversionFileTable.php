@@ -32,11 +32,11 @@ $file = $parts[count($parts) - 1];
 unset($parts[count($parts) - 1]);
 $directory = join('/', $parts);
 
-echo '<h4 class="bs">'.$name.' '. ($version != '' ? ' &nbsp; ['.translate('версия').': '.$version.']' : '').'</h4>';
+echo '<h4 class="bs">'.$name.' '. ($version != '' ? ' &nbsp; ['.translate('РІРµСЂСЃРёСЏ').': '.$version.']' : '').'</h4>';
 
 echo '<pre style="display:block;overflow:auto;">';
     echo '<code>'.Chr(10);
-        echo htmlspecialchars($file_body, ENT_COMPAT | ENT_HTML401, 'windows-1251').Chr(10);
+        echo htmlspecialchars($file_body, ENT_COMPAT | ENT_HTML401, APP_ENCODING).Chr(10);
     echo '</code>';
 echo '</pre>';
 

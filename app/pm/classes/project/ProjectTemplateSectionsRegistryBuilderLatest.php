@@ -14,10 +14,19 @@ class ProjectTemplateSectionsRegistryBuilderLatest extends ProjectTemplateSectio
     public function build ( ProjectTemplateSectionsRegistry & $registry )
     {
  		$items = array (
+ 			getFactory()->getObject('RequestTag'),
+ 			getFactory()->getObject('WikiTag'),
+ 			getFactory()->getObject('TaskTraceTask'),
+ 			getFactory()->getObject('RequestTraceMilestone'),
+ 			getFactory()->getObject('Attachment'),
+ 			getFactory()->getObject('Activity'),
+ 			getFactory()->getObject('PMEntityCluster'),
+ 			getFactory()->getObject('Comment'),
  			getFactory()->getObject('WikiPageChange'),
  			getFactory()->getObject('Snapshot'),
  			getFactory()->getObject('SnapshotItem'),
- 			getFactory()->getObject('SnapshotItemValue')
+ 			getFactory()->getObject('SnapshotItemValue'),
+ 			getFactory()->getObject('ChangeLogTemplate')
  		);
 
     	foreach( $items as $object )

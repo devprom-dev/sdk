@@ -18,6 +18,15 @@ class RequestPlanningForm extends PMPageForm
 		$builder->build( $this->getObject() );
 
     	parent::extendModel();
+    	
+    	$this->getObject()->setAttributeRequired('Owner', false);
+    	$this->getObject()->setAttributeVisible('Owner', false);
+
+    	if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
+		{
+	    	$this->getObject()->setAttributeRequired('PlannedRelease', false);
+	    	$this->getObject()->setAttributeVisible('PlannedRelease', false);
+		}
     }
     
 	function getEmbeddedForm()
@@ -32,11 +41,13 @@ class RequestPlanningForm extends PMPageForm
 
 	function getTransitionAttributes()
 	{
-		$attributes = array('Caption', 'Release', 'Priority', 'Estimation');
+		$attributes = array('Caption', 'Priority', 'Estimation');
 		
-		if ( $this->getFieldValue('Description') != '' ) 
-		{
+		if ( $this->getFieldValue('Description') != '' ) {
 		    $attributes[] = 'Description';
+		}
+		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() ) {
+			$attributes[] = 'Release';
 		}
 		
 		return $attributes;
@@ -44,45 +55,32 @@ class RequestPlanningForm extends PMPageForm
 	
 	function createFieldObject( $attr_name )
 	{
-		global $_REQUEST, $model_factory;
-		
 		$object_it = $this->getObjectIt();
-		
  		switch ( $attr_name ) 
  		{
  		    case 'Tasks':
- 		        
- 		        $iteration = $model_factory->getObject('Iteration');
- 		        
- 		        $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
- 		        
- 		        $iteration_it = $iteration->getAll();
- 		        
+ 		        $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+ 		        		array (
+ 		        			new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+ 		        			new FilterVpdPredicate()
+ 		        		)
+ 		        	);
 				return new FieldTask($object_it, $iteration_it);
 		
 		    case 'Release':
-
- 		        $iteration = $model_factory->getObject('Iteration');
- 		        
+ 		        $iteration = getFactory()->getObject('Iteration');
  		        $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		        
 				return new FieldDictionary( $iteration );
 		
 			case 'Estimation':
-			    
 				$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-
 				$field = $strategy->getEstimationFormField( $this );
-				
-				if ( !is_object($field) )
-				{
+				if ( !is_object($field) ) {
 					return parent::createFieldObject( $attr_name );
 				}
-				else
-				{
+				else {
 					return $field;
 				}
-				
 			default:
 				return parent::createFieldObject( $attr_name );
  		}	

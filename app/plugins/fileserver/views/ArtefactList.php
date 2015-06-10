@@ -12,7 +12,7 @@ class ArtefactList extends PMPageList
 		
 	function getColumns()
 	{
-		$this->object->addAttribute('Size', '', translate('Ðàçìåð'), true);
+		$this->object->addAttribute('Size', '', translate('Ð Ð°Ð·Ð¼ÐµÑ€'), true);
 		
 		return parent::getColumns();
 	}

@@ -4,7 +4,7 @@ class BackupFormComplete extends AdminForm
 {
  	function getAddCaption()
  	{
- 		return '3. '.translate('Подготовка резервной копии');
+ 		return '3. '.translate('РџРѕРґРіРѕС‚РѕРІРєР° СЂРµР·РµСЂРІРЅРѕР№ РєРѕРїРёРё');
  	}
  	
  	function getCommandClass()

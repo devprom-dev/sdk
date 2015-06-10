@@ -147,7 +147,7 @@ class TaskBoardList extends PMPageBoard
 		
 		if ( array_key_exists( 'Planned', $attrs ) )
 		{
-			$this->object->addAttribute( 'Progress', '', translate('Ïðîãðåññ'), false );
+			$this->object->addAttribute( 'Progress', '', translate('ÐŸÑ€Ð¾Ð³Ñ€ÐµÑÑ'), false );
 		}
 		
 		return parent::getColumns();
@@ -316,12 +316,12 @@ class TaskBoardList extends PMPageBoard
 							if ( in_array($task_state, $this->terminal_states) ) continue;
 							 
 							$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($task_id));
-							echo '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'"><img title="'.text(390).'" src="/images/delete.png"></a> ';
+							echo '<a class="with-tooltip block-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(390).'"></a>';
 							break;
 						}
 					
 						if ( $this->visible_column['OrderNum'] && $object_it->get('OrderNum') != '' ) {
-							echo '<span class="order" title="'.translate('Íîìåð').'">';
+							echo '<span class="order" title="'.translate('ÐÐ¾Ð¼ÐµÑ€').'">';
 								echo $object_it->get('OrderNum');
 							echo '</span>';
 						}
@@ -332,7 +332,7 @@ class TaskBoardList extends PMPageBoard
 
 			case 'Basement':
    				
-				echo '<div style="display:table;width:100%;margin-bottom:3px;height:23px;">';
+				echo '<div class="item-footer">';
 					echo '<div style="display:table-cell;text-align:left;">';
 						if ( $object_it->get('OwnerPhotoId') != '' )
 						{
@@ -405,17 +405,11 @@ class TaskBoardList extends PMPageBoard
 		switch ( $group_field )
 		{
 			case 'Assignee':
-				
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
-				
-				if ( count($workload) > 0 )
-				{
-						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
-									'user' => $object_it->getRef('Assignee')->getDisplayName(),
-									'data' => $workload[$object_it->get($group_field)]
-							));
-				}				
-					
+				echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
+							'user' => $object_it->getRef('Assignee')->getDisplayName(),
+							'data' => $workload[$object_it->get($group_field)]
+					));
 				break;
 				
 			default:
@@ -503,7 +497,7 @@ class TaskBoardList extends PMPageBoard
 		{
 			$actions[] = array();
 			$actions[] = array(
-					'name' => translate('Ïðèîðèòåò'),
+					'name' => translate('ÐŸÑ€Ð¸Ð¾Ñ€Ð¸Ñ‚ÐµÑ‚'),
 					'items' => $priority_actions
 			);
 		}

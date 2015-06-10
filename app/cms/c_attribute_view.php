@@ -18,7 +18,7 @@
  class AttributeForm extends Form
  {
  	function getCaption() {
-		return 'Свойство';
+		return 'РЎРІРѕР№СЃС‚РІРѕ';
 	}
 	
 	function createFieldObject( $name ) {
@@ -39,7 +39,7 @@
 		<table width=100% cellpadding=3 cellspacing=3>
 			<tr><td>
 				<a href="<? echo $ent->getPageNameEditMode($_REQUEST['entityId']); ?>">
-					Перейти к классу</a> »
+					РџРµСЂРµР№С‚Рё Рє РєР»Р°СЃСЃСѓ</a> В»
 			</td></tr>
 		</table>
 	<?	
@@ -64,7 +64,7 @@
  class FieldCheckIsRequired extends FieldCheck
  {
  	function FieldCheckIsRequired() {
-		$this->checkName = 'Обязательно для заполнения';
+		$this->checkName = 'РћР±СЏР·Р°С‚РµР»СЊРЅРѕ РґР»СЏ Р·Р°РїРѕР»РЅРµРЅРёСЏ';
 	}
  }
 
@@ -72,7 +72,7 @@
  class FieldCheckIsVisible extends FieldCheck
  {
  	function FieldCheckIsVisible() {
-		$this->checkName = 'Видимо на форме';
+		$this->checkName = 'Р’РёРґРёРјРѕ РЅР° С„РѕСЂРјРµ';
 	}
  }
  
@@ -88,16 +88,16 @@
 	
  	function draw()
 	{
-		$values = array( array('TEXT', 'Строка'),
-						 array('LARGETEXT', 'Текст'),
-						 array('RICHTEXT', 'Текст с форматированием'),
-						 array('INTEGER', 'Число'),
-						 array('FLOAT', 'Число с запятой'),
-						 array('DATE', 'Дата/Время'),
-						 array('CHAR', 'Галочка'),
-						 array('PRICE', 'Цена'),
-						 array('IMAGE', 'Изображение'),
-						 array('FILE', 'Файл'),
+		$values = array( array('TEXT', 'РЎС‚СЂРѕРєР°'),
+						 array('LARGETEXT', 'РўРµРєСЃС‚'),
+						 array('RICHTEXT', 'РўРµРєСЃС‚ СЃ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµРј'),
+						 array('INTEGER', 'Р§РёСЃР»Рѕ'),
+						 array('FLOAT', 'Р§РёСЃР»Рѕ СЃ Р·Р°РїСЏС‚РѕР№'),
+						 array('DATE', 'Р”Р°С‚Р°/Р’СЂРµРјСЏ'),
+						 array('CHAR', 'Р“Р°Р»РѕС‡РєР°'),
+						 array('PRICE', 'Р¦РµРЅР°'),
+						 array('IMAGE', 'РР·РѕР±СЂР°Р¶РµРЅРёРµ'),
+						 array('FILE', 'Р¤Р°Р№Р»'),
 						 );
 						 
 		$ents = new Entity;
@@ -105,7 +105,7 @@
 		
 		for($j = 0; $j < $entity_it->count(); $j++)
 		{
-			array_push($values, array('REF_'.$entity_it->get('ReferenceName').'Id', 'Ссылка: '.$entity_it->getCaption()));
+			array_push($values, array('REF_'.$entity_it->get('ReferenceName').'Id', 'РЎСЃС‹Р»РєР°: '.$entity_it->getCaption()));
 			$entity_it->moveNext();
 		}
 	?>

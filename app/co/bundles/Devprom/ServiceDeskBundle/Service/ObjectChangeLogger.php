@@ -76,7 +76,7 @@ class ObjectChangeLogger
         $ocl = new ObjectChangeLog();
         $ocl->setCaption($user->getUsername());
         $ocl->setEntityRefName('cms_ExternalUser');
-        $ocl->setEntityName('Âíåøíèé ïîëüçîâàòåëü');
+        $ocl->setEntityName('Ð’Ð½ÐµÑˆÐ½Ð¸Ð¹ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒ');
         $ocl->setChangeKind('added');
         $ocl->setClassName('externaluser');
         $ocl->setObjectId($user->getId());

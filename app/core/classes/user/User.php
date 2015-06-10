@@ -30,7 +30,7 @@ class User extends Metaobject
 		    $this->setAttributeVisible( $attribute, false );
 		}
 		
-		$this->setAttributeCaption( 'Phone', translate('Контакты') );
+		$this->setAttributeCaption( 'Phone', translate('РљРѕРЅС‚Р°РєС‚С‹') );
 		
 		$this->setAttributeVisible( 'Phone', true );
 		
@@ -367,5 +367,16 @@ class User extends Metaobject
 			   " ORDER BY u.Caption ASC ";
 			   
 		return $this->createSQLIterator( $sql );
+	}
+	
+	function DeletesCascade( $object )
+	{
+		switch($object->getEntityRefName()) {
+			case 'pm_Task':
+			case 'pm_ChangeRequest':
+			case 'pm_Question':
+				return false;
+		}
+		return true;
 	}
 }

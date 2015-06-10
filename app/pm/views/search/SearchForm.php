@@ -4,7 +4,7 @@ class SearchForm extends PMForm
 {
  	function getAddCaption()
  	{
- 		return translate('Поиск');
+ 		return translate('РџРѕРёСЃРє');
  	}
  	
  	function getCommandClass()
@@ -77,8 +77,8 @@ class SearchForm extends PMForm
 			    $script = "javascript: submitSearchRequest();";
 			    
         		echo '<div class="input-append" style="width:100%;">';
-          			echo '<input style="width:90%;" name="searchrequest" id="searchrequest" type="text" value="'.htmlentities($_REQUEST['quick'], ENT_QUOTES | ENT_HTML401, 'windows-1251').'">';
-          			echo '<input type="submit" class="btn btn-primary" onclick="'.$script.'" value="'.translate('Найти').'">';
+          			echo '<input style="width:90%;" name="searchrequest" id="searchrequest" type="text" value="'.htmlentities($_REQUEST['quick'], ENT_QUOTES | ENT_HTML401, APP_ENCODING).'">';
+          			echo '<input type="submit" class="btn btn-primary" onclick="'.$script.'" value="'.translate('РќР°Р№С‚Рё').'">';
         		echo '</div>';
 
           		echo '<input type="hidden" id="parameters" name="parms">';

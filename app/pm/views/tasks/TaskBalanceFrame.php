@@ -51,7 +51,7 @@ class TaskBalanceFrame
  		
  		$diff = $planned - $fact;
  		
-		echo '<table class="progress-table" width="100%" cellpadding=0 cellspacing=1 style="min-width:40px;margin-top:2px;border:1px solid #d0d0e0;" title="'.text(1855).': '.round($planned, 1).' / '.round($fact, 1).' '.translate('÷.').'">';
+		echo '<table class="progress-table" width="100%" cellpadding=0 cellspacing=1 style="min-width:40px;margin-top:2px;border:1px solid #d0d0e0;" title="'.text(1855).': '.round($planned, 1).' / '.round($fact, 1).' '.translate('Ñ‡.').'">';
 			echo '<tr>';
 				echo '<td width="50%" class="progress-left" style="background:#DAF2BA;">';
 					echo '<div style="font-size:1px;height:8px;width:'.$less_percent.'%;background:'.$color1.';"> </div>';

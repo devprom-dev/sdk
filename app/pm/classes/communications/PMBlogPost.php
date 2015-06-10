@@ -11,7 +11,7 @@ class PMBlogPost extends BlogPost
     {
         parent::BlogPost();
          
-        $this->addAttribute( 'Tags', 'REF_BlogPostTagId', translate('Òýãè'), false );
+        $this->addAttribute( 'Tags', 'REF_BlogPostTagId', translate('Ð¢ÑÐ³Ð¸'), false );
          
         $this->addPersister( new BlogPostTagsPersister() );
     }

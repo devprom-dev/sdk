@@ -1,6 +1,9 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelCommonBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderTasks.php";
 
 include "TaskForm.php";
 include "TaskBulkForm.php";
@@ -16,6 +19,8 @@ class TaskPlanningPage extends PMPage
  		global $_REQUEST, $model_factory;
 
  		getSession()->addBuilder( new TaskModelExtendedBuilder() );
+ 		getSession()->addBuilder( new TaskViewModelCommonBuilder() );
+ 		getSession()->addBuilder( new BulkActionBuilderTasks() );
  		
  		parent::PMPage();
  		
@@ -56,7 +61,13 @@ class TaskPlanningPage extends PMPage
  	
  	function getObject()
  	{
- 		return getFactory()->getObject('Task');
+ 		$object = getFactory()->getObject('Task');
+ 		
+	    foreach(getSession()->getBuilders('TaskViewModelBuilder') as $builder ) {
+    		$builder->build($object);
+    	}
+    	
+ 		return $object;
  	}
  	
  	function getTableDefault()
@@ -95,15 +106,13 @@ class TaskPlanningPage extends PMPage
 		return in_array($_REQUEST['mode'], array('bulk','group')) || parent::needDisplayForm();
 	}
 	
+	function getBulkForm()
+	{
+		return new TaskBulkForm($this->getObject());
+	}
+	
  	function getForm() 
  	{
- 		switch ( $_REQUEST['mode'] )
- 		{
- 		    case 'bulk':
- 		        return new TaskBulkForm( $this->getObject() );
- 		    
- 		    default:
-				return new TaskForm( $this->getObject() );
- 		}
+ 		return new TaskForm($this->getObject());
  	}
 }

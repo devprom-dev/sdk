@@ -31,7 +31,9 @@ class IssueFormType extends AbstractType
                 'query_builder' => function(EntityRepository $er) use ($vpds) {
                     $qb = $er->createQueryBuilder('it');
                     return $qb->where($qb->expr()->eq('it.vpd', '\''.array_pop($vpds).'\''));
-                }
+                },
+                'empty_value' => 'issue_type_name',
+                'required' => false     
             ))
             ->add('severity');
             
@@ -49,11 +51,6 @@ class IssueFormType extends AbstractType
 		else
 		{
 			$vpd = array_pop($vpds);
-			
-// 			$project_id = $this->em->createQueryBuilder()
-// 				->select('pm_ProjectId')
-// 				->from('Devprom\ServiceDeskBundle\Entity\Project')
-				
 			
 			$builder->add('project', 'entity_hidden', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Project'

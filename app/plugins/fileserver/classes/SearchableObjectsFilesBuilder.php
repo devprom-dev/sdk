@@ -13,7 +13,7 @@ class SearchableObjectsFilesBuilder extends SearchableObjectsBuilder
 	
     public function build ( SearchableObjectRegistry $set )
     {
-    	if( $this->session->getProjectIt()->get('IsFileServer') != 'Y' ) return;
+    	if( $this->session->getProjectIt()->getMethodologyIt()->get('IsFileServer') != 'Y' ) return;
     	
         $set->add( 'Artefact', array('Caption', 'Description') );
     }

@@ -13,7 +13,7 @@ class WikiPageTemplate extends Metaobject
          
 		$this->setAttributeType( 'UserField1', 'CHAR' );
 		
-		$this->setAttributeCaption( 'UserField1', translate('Шаблон по умолчанию') );
+		$this->setAttributeCaption( 'UserField1', translate('РЁР°Р±Р»РѕРЅ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ') );
     }
      
     function createIterator()

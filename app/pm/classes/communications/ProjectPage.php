@@ -15,7 +15,7 @@ class ProjectPage extends PMWikiPage
  	
  	function getDisplayName() 
  	{
-		return translate('База знаний');
+		return translate('Р‘Р°Р·Р° Р·РЅР°РЅРёР№');
 	}
 	
  	function getAttributes()

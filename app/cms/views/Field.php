@@ -25,7 +25,7 @@ class Field
 	function draw() {}
 	function drawToolbar() {}
 	
-	function render( & $view )
+	function render( $view )
 	{
         $this->draw( $view );
 	}
@@ -68,7 +68,7 @@ class Field
 		}
 		else
 		{
-			return IteratorBase::getHtmlValue( html_entity_decode($this->getValue(), ENT_COMPAT | ENT_HTML401, 'cp1251' ) );
+			return IteratorBase::getHtmlValue( html_entity_decode($this->getValue(), ENT_COMPAT | ENT_HTML401, APP_ENCODING) );
 		}
 	}
 	
@@ -95,8 +95,8 @@ class Field
 	function getEncodedValue()
 	{
 	    return htmlspecialchars(
-	    			html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, 'cp1251'),
-	    					ENT_COMPAT | ENT_HTML401, 'cp1251');
+	    			html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING),
+	    					ENT_COMPAT | ENT_HTML401, APP_ENCODING);
 	}    
 	
 	function setReadOnly( $flag )

@@ -12,10 +12,10 @@
 		$pages = array();
 		
 		$pages['main'] = array( 
-			'name' => translate('Íàñòðîéêè'),
+			'name' => translate('ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸'),
 		    'uid' => 'main',
 			'items' => array(
-				array( 'url' => '/profile', 'name' => translate('Ïðîôèëü') )   
+				array( 'url' => '/profile', 'name' => translate('ÐŸÑ€Ð¾Ñ„Ð¸Ð»ÑŒ') )   
 			) 
 		);
 

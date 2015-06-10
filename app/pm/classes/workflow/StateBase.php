@@ -18,12 +18,13 @@ class StateBase extends MetaobjectCacheable
  	function __construct() 
  	{
  		parent::__construct('pm_State', new StateBaseRegistry($this));
- 		
  		$this->defaultsort = " OrderNum ASC ";
  		
  		$this->setAttributeDescription('RelatedColor', text(1835));
- 		
  		$this->setAttributeType('ReferenceName', 'varchar');
+ 		
+ 		$this->addAttributeGroup('ReferenceName', 'system');
+ 		$this->addAttributeGroup('ObjectClass', 'system');
  	}
  	
  	function createIterator() 
@@ -42,6 +43,9 @@ class StateBase extends MetaobjectCacheable
  		{
  			case 'ObjectClass':
  				return $this->getObjectClass();
+ 				
+ 			case 'ReferenceName':
+ 				return uniqid('State_');
  				
  			default:
  				return parent::getDefaultAttributeValue( $attr ); 

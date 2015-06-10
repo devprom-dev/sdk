@@ -248,7 +248,7 @@ class WikiSyntaxEditor extends WikiEditorBase
 		$script = "javascript: $('.preview').find('a').trigger('mousedown');";
 		
 		echo '<input class="btn btn-primary" tabindex="'.$tabindex.'" style="float:left;margin-right:18px;" onclick="'.$script.'" type="button" id="previewbtn" title="'.
-			text(1509).'" value="'.translate('Просмотр').'">';
+			text(1509).'" value="'.translate('РџСЂРѕСЃРјРѕС‚СЂ').'">';
 	}
 	
 	function getDescription()
@@ -269,7 +269,7 @@ class WikiSyntaxEditor extends WikiEditorBase
  	{
  		parent::drawHelpSection();
  		
- 		echo '<tr><td class="wiki_sub" height=15 valign=middle>'.translate('Дополнительно').'</td></tr>';
+ 		echo '<tr><td class="wiki_sub" height=15 valign=middle>'.translate('Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ').'</td></tr>';
  		echo '<tr><td style="padding-top:6px;"><a href="http://devprom.ru/docs#2474">'.text(1165).'</a></td></tr>';
  	}
  	

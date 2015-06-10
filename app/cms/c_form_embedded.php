@@ -32,7 +32,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  			$this->iterator = $this->object->getAll();
  		}
 
- 		$this->button_text = translate('добавить');
+ 		$this->button_text = translate('РґРѕР±Р°РІРёС‚СЊ');
  		$this->extendModel();
  	}
  	
@@ -314,7 +314,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 		echo '</div>';
 	}
 	
- 	function draw( & $view = null )
+ 	function draw( $view = null )
  	{
  		global $_REQUEST, $model_factory, $tabindex;
  		
@@ -389,12 +389,12 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 				? 'function(formid,data,row_number) { if ( typeof '.$this->getSaveCallback().' == \'function\' ) {'.$this->getSaveCallback().'(formid,data,row_number);}}' : 'function(formid,data,row_number) {}';
 			 
 			$html .= '<div class="embedded_footer clearfix">';
-				$html .= '<input class="btn btn-primary btn-small" tabindex="'.$tabindex.'" id="saveEmbedded'.$this->form_id.'" style="float:left;" action="save" type="button" value="'.translate('Добавить').'" '.
+				$html .= '<input class="btn btn-primary btn-small" tabindex="'.$tabindex.'" id="saveEmbedded'.$this->form_id.'" style="float:left;" action="save" type="button" value="'.translate('Р”РѕР±Р°РІРёС‚СЊ').'" '.
 					'onclick="javascript: saveEmbeddedItem(\''.$this->form_id.'\', [\''.join("','", $fields).'\'], [\''.join("','", $required).'\'], '.$callback.')">';
 	
 			$tabindex++;
 			
-				$html .= ' <input class="btn btn-link btn-small" tabindex="'.$tabindex.'" id="closeEmbedded'.$this->form_id.'" style="float:left;" action="cancel" type="button" value="'.translate('Отменить').'" ' .
+				$html .= ' <input class="btn btn-link btn-small" tabindex="'.$tabindex.'" id="closeEmbedded'.$this->form_id.'" style="float:left;" action="cancel" type="button" value="'.translate('РћС‚РјРµРЅРёС‚СЊ').'" ' .
 					'onclick="javascript: closeEmbeddedForm('.$this->form_id.')">';
 			$html .= '</div>';
 		}
@@ -439,7 +439,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
     					{
     					    $actions = array( array( 
     					        'url' => 'javascript:;', 
-    					        'name' => translate('Удалить'),
+    					        'name' => translate('РЈРґР°Р»РёС‚СЊ'),
     					        'uid' => 'delete'
     					    ));
     					    
@@ -562,7 +562,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 							
 							if ( $_REQUEST[$field_name] != '' )
 							{
-								echo '<input type="hidden" name="'.$field_name.'" value="'.htmlentities($_REQUEST[$field_name], ENT_QUOTES | ENT_HTML401, 'windows-1251').'">';
+								echo '<input type="hidden" name="'.$field_name.'" value="'.htmlentities($_REQUEST[$field_name], ENT_QUOTES | ENT_HTML401, APP_ENCODING).'">';
 							}
 						}
 						
@@ -572,7 +572,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 							
 							if ( $_REQUEST[$field_name] != '' && $this->object->getAttributeType($names[$j]) == 'file' )
 							{
-								echo '<input type="hidden" name="'.$field_name.'" value="'.htmlentities($_REQUEST[$field_name], ENT_QUOTES | ENT_HTML401, 'windows-1251').'">';
+								echo '<input type="hidden" name="'.$field_name.'" value="'.htmlentities($_REQUEST[$field_name], ENT_QUOTES | ENT_HTML401, APP_ENCODING).'">';
 							}
 						}
 						
@@ -849,7 +849,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	    {
      		return array(
     			array( 'click' => $script,
-    				   'name' => translate('Удалить'),
+    				   'name' => translate('РЈРґР°Р»РёС‚СЊ'),
     			       'uid' => 'delete' )
     		);
  	    }
@@ -857,7 +857,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	    {
      		return array(
     			array( 'url' => $script,
-    				   'name' => translate('Удалить'),
+    				   'name' => translate('РЈРґР°Р»РёС‚СЊ'),
     			       'uid' => 'delete' )
     		);
  	    }

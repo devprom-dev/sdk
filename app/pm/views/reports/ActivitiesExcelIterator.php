@@ -148,7 +148,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		}
  		
 		$fields = array_merge($fields, 
-			array( 'Total' => translate('Èòîãî')) );
+			array( 'Total' => translate('Ð˜Ñ‚Ð¾Ð³Ð¾')) );
 
  		return $fields;
  	}

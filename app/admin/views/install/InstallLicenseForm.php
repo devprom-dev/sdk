@@ -104,7 +104,7 @@ class InstallLicenseForm extends AdminForm
 	
 	function getButtonText()
 	{
-		return translate('Установить');
+		return translate('РЈСЃС‚Р°РЅРѕРІРёС‚СЊ');
 	}
 	
 	function drawCustomAttribute( $attribute, $value, $tab_index )

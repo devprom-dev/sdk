@@ -21,7 +21,7 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 						IteratorBase::utf8towin(
 								urldecode($json['t'])
         				),
-						ENT_QUOTES | ENT_HTML401, 'windows-1251'
+						ENT_QUOTES | ENT_HTML401, APP_ENCODING
         		)
         );
 	}
