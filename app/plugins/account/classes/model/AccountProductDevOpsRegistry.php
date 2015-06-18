@@ -11,8 +11,8 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,
-        				'PriceRUB' => 1200,
-        				'PriceUSD' => 120
+        				'PriceRUB' => 12000,
+        				'PriceUSD' => 60
         		),
         		array ( 
         				'entityId' => 'LicenseDevOpsBoardUnlimited', 
@@ -20,8 +20,8 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,
-        				'PriceRUB' => 1200,
-        				'PriceUSD' => 300
+        				'PriceRUB' => 12000,
+        				'PriceUSD' => 290
         		)
         ));
     }

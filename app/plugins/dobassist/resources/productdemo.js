@@ -117,7 +117,7 @@ toursQueue.unshift(new Tour({
 		path: '/pm/productA/issues/board/issuesboardcrossproject?report=issuesboardcrossproject&basemodule=issues-board&&area=favs',
 		orphan: true,
 		template: "",
-		onShow: function(tour) { 
+		onShown: function(tour) { 
 			$('div.intercom-launcher-button').waitUntilExists(function(){tour.next();}); 
 		}
 	  },

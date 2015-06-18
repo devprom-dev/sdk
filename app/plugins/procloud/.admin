@@ -1,0 +1,14 @@
+Options +FollowSymLinks
+RewriteEngine On
+
+RewriteBase /admin
+
+RewriteRule ^(scripts|license|mailer|log|info).*$ /app/pageadmin.php [L,QSA]
+RewriteRule ^module/([^/]+)/([^/\.]+)$ /admin/page.php?namespace=$1&module=$2 [L,QSA]
+RewriteRule ^module/([^/]+)/([^/]+)$ /admin/$2?namespace=$1 [L,QSA]
+RewriteRule ^(\/?|index.+)$ /admin/activity.php [L,QSA,R=301]
+
+AuthUserFile /home/saas/.htpasswd
+AuthName "Restricted area"
+AuthType Basic
+Require valid-user

@@ -54,7 +54,7 @@ class CreateInstance extends CommandForm
  	
  		list($this->userlogin, $server) = preg_split('/\@/', $this->email);
 
- 		$this->username = htmlentities(IteratorBase::utf8towin($_REQUEST['username']), ENT_COMPAT | ENT_HTML401, 'utf-8');
+ 		$this->username = htmlentities($_REQUEST['username'], ENT_COMPAT | ENT_HTML401, 'utf-8');
  		
 		return true;
  	}

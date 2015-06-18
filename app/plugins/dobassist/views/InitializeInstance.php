@@ -273,7 +273,7 @@ class InitializeInstance extends Page
 				$service->execute(
 						array(
 								'CodeName' => 'incidentsA',
-								'Caption' => 'Incidents',
+								'Caption' => 'Monitoring',
 								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'incidents_en.xml')))->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true

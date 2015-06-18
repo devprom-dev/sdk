@@ -70,7 +70,7 @@ class InitializeInstance extends Page
 		}
 		else
 		{
-			exit(header('Location: /'));
+			exit(header('Location: /projects/welcome'));
 		}
 	}
  	
