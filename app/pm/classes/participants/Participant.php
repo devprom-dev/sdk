@@ -27,15 +27,15 @@ class Participant extends Metaobject
 		
 		$this->defaultsort = " IFNULL(IsActive, 'N') DESC, Caption ASC ";
 		
-		$this->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Роль в проекте'), false, false, '', 100);
+		$this->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Р РѕР»СЊ РІ РїСЂРѕРµРєС‚Рµ'), false, false, '', 100);
 		
-		$this->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Роль'), false, false, '', 101);
+		$this->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Р РѕР»СЊ'), false, false, '', 101);
 
 		$this->setAttributeRequired('ProjectRole', true);
 		
 		$this->addPersister( new ParticipantRolesPersister() );
 		
-		$this->setAttributeCaption('Capacity', translate('Ежедневная загрузка, ч.'));
+		$this->setAttributeCaption('Capacity', translate('Р•Р¶РµРґРЅРµРІРЅР°СЏ Р·Р°РіСЂСѓР·РєР°, С‡.'));
 		
 		$this->setAttributeOrderNum('Capacity', 102);
 		
@@ -88,7 +88,7 @@ class Participant extends Metaobject
 		$setting->add_parms(
 				array (
 						'Setting' => md5('emailnotification'),
-						'Value' => 'email='.$parms['Notification'],
+						'Value' => $parms['Notification'] == '' ? '' : 'email='.$parms['Notification'],
 						'Participant' => $part_id,
 						'VPD' => $parms['VPD'] 
 				)
@@ -148,12 +148,12 @@ class Participant extends Metaobject
 	{
 		$session = getSession();
 		
-		return $session->getApplicationUrl().'participants/list?';
+		return $session->getApplicationUrl().'module/permissions/participants?';
 	}
  
 	function getAttributeUserName( $name ) 
 	{
-		if($name == 'RepeatPassword') return 'Повтор пороля';
+		if($name == 'RepeatPassword') return 'РџРѕРІС‚РѕСЂ РїРѕСЂРѕР»СЏ';
 		return parent::getAttributeUserName( $name );
 	}
 	

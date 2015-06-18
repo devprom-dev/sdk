@@ -71,8 +71,6 @@ class MethodologyForm extends PMPageForm
                 return text(19);
             case 'UseFunctionalDecomposition':
                 return text(20);
-            case 'IsDeadlineUsed':
-                return text(35);
             case 'IsReportsOnActivities':
                 return text(410);
             case 'IsReleasesUsed':

@@ -194,12 +194,12 @@
 					data[i] = $(e).is(":has(>ul:visible)") ? 1 : 0;
 				});
 
-				$.cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
-				$.cookies.set(settings.cookieId, data.join("") );
+				cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
+				cookies.set(settings.cookieId, data.join("") );
 			}
 			
 			function deserialize() {
-				var stored = $.cookies.get(settings.cookieId);
+				var stored = cookies.get(settings.cookieId);
 				if ( stored ) {
 					var data = stored.split("");
 					

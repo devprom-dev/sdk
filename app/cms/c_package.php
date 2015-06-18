@@ -17,9 +17,9 @@
  {
  	function Package()
 	{
-		$this->attributes = array( 'Caption' => array('TEXT', 'Íàçâàíèå', true),
-								   'Description' => array('TEXT', 'Îïèñàíèå', true),
-								   'OrderNum' => array('INTEGER', 'Ïîðÿäêîâûé íîìåð', true)
+		$this->attributes = array( 'Caption' => array('TEXT', 'ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ', true),
+								   'Description' => array('TEXT', 'ÐžÐ¿Ð¸ÑÐ°Ð½Ð¸Ðµ', true),
+								   'OrderNum' => array('INTEGER', 'ÐŸÐ¾Ñ€ÑÐ´ÐºÐ¾Ð²Ñ‹Ð¹ Ð½Ð¾Ð¼ÐµÑ€', true)
 								    );
 		$this->defaultsort = 'OrderNum';
 

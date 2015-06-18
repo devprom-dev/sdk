@@ -8,11 +8,11 @@ class WikiPageTraceTypeRegistry extends ObjectRegistrySQL
 				array (
 						array (
 								'entityId' => 'coverage',
-								'Caption' => translate('Покрытие')
+								'Caption' => translate('РџРѕРєСЂС‹С‚РёРµ')
 						),
 						array (
 								'entityId' => 'branch',
-								'Caption' => translate('Копия')
+								'Caption' => translate('РљРѕРїРёСЏ')
 						)
 				)
 		);

@@ -13,8 +13,6 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuMyProjectsBui
 		
 		$items = array();
 		
-		$items[] = $report->getExact('features-chart')->buildMenuItem();
-        
 		$module_it = $module->getExact('issues-board');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
@@ -27,9 +25,11 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuMyProjectsBui
 			$items[] = $report->getExact('tasksboardcrossproject')->buildMenuItem();
         }
 		
-		$items[] = $report->getExact('project-blog')->buildMenuItem();
+		$item = $report->getExact('project-blog')->buildMenuItem();
+		$item['name'] = text(2000);
+		$items[] = $item;
 		
-		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
+		$menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
 		
 		$this->buildResourcesFolder($menus);
 		
@@ -38,13 +38,14 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuMyProjectsBui
 
 	protected function createCustomReports()
     {
+    	if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return parent::createCustomReports();
     	// skip creating custom reports like My Tasks, etc.
     }
 
     protected function buildResourcesFolder( &$menus )
     {
     	$menus['resources'] = array (
- 	        'name' => translate('Περσπρϋ'),
+ 	        'name' => translate('Π ΠµΡΡƒΡ€ΡΡ‹'),
             'uid' => 'resources',
             'items' => array(
             				getFactory()->getObject('PMReport')->getExact('activitiesreport')->buildMenuItem('group=SystemUser')

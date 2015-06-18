@@ -6,13 +6,13 @@ class DateWeekdayRegistry extends ObjectRegistrySQL
  	{
  		$this->items = array();
  		
-		array_push($this->items, array('Caption' => 'Âîñêğåñåíüå'));
-		array_push($this->items, array('Caption' => 'Ïîíåäåëüíèê'));
-		array_push($this->items, array('Caption' => 'Âòîğíèê'));
-		array_push($this->items, array('Caption' => 'Ñğåäà'));
-		array_push($this->items, array('Caption' => '×åòâåğã'));
-		array_push($this->items, array('Caption' => 'Ïÿòíèöà'));
-		array_push($this->items, array('Caption' => 'Ñóááîòà'));
+		array_push($this->items, array('Caption' => 'Ğ’Ğ¾ÑĞºÑ€ĞµÑĞµĞ½ÑŒĞµ'));
+		array_push($this->items, array('Caption' => 'ĞŸĞ¾Ğ½ĞµĞ´ĞµĞ»ÑŒĞ½Ğ¸Ğº'));
+		array_push($this->items, array('Caption' => 'Ğ’Ñ‚Ğ¾Ñ€Ğ½Ğ¸Ğº'));
+		array_push($this->items, array('Caption' => 'Ğ¡Ñ€ĞµĞ´Ğ°'));
+		array_push($this->items, array('Caption' => 'Ğ§ĞµÑ‚Ğ²ĞµÑ€Ğ³'));
+		array_push($this->items, array('Caption' => 'ĞŸÑÑ‚Ğ½Ğ¸Ñ†Ğ°'));
+		array_push($this->items, array('Caption' => 'Ğ¡ÑƒĞ±Ğ±Ğ¾Ñ‚Ğ°'));
  		
  		foreach ( array_keys($this->items) as $key )
  		{

@@ -4,8 +4,6 @@ include_once SERVER_ROOT_PATH."co/classes/COAccessPolicy.php";
 
 class AdminAccessPolicy extends COAccessPolicy
 {
-    var $license_it;
-    
 	function getEntityAccess( $action_kind, &$object )
 	{
 		if( is_object($object) )
@@ -28,16 +26,6 @@ class AdminAccessPolicy extends COAccessPolicy
 			if ( is_bool($result) ) return $result;
 		}
 
-		if ( $action_kind == ACCESS_CREATE  )
-		{
-			if ( !is_object($this->license_it) )
-			{
-			    $this->license_it = getFactory()->getObject('LicenseInstalled')->getAll();
-			}
-			
-		    if ( !$this->license_it->allowCreate( $object ) ) return false;
-		}
-		
 		return parent::getEntityAccess( $action_kind, $object );
 	}
 

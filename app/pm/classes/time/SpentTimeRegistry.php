@@ -35,27 +35,26 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 				break;
 		}
 		$registry = $row_object->getRegistry();
-		$registry->setPersisters(array(
-				new CustomAttributesPersister()
-		));
-		
+
 		$group = preg_replace(
 				'/%1/', 
-				"CONVERT_TZ(t.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')", 
+				"CONVERT_TZ(t2.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')", 
 				$group_function
 		);
 		
-		$sql = " SELECT ".$group." Day, t.*, t2.* " .
+		$sql = " SELECT ".$registry->getSelectClause('t').",".
+			   "        ".$group." Day, ".
+		       "		t2.* " .
 			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, " .
 			   "				a.VPD, p.SystemUser, p.Project, p.pm_ParticipantId " .
 			   "		   FROM pm_Activity a, pm_Task t, pm_Participant p ".
 			   "  	      WHERE a.Task = t.pm_TaskId ".
 			   "			AND a.Participant = p.SystemUser ".
 			   "			AND t.VPD = p.VPD ".
-			   "        ) t, ".
-			   "		(SELECT ".$registry->getSelectClause('t')." FROM ".$registry->getQueryClause()." t) t2 " .
-			   "  WHERE 1 = 1 ".$this->getFilterPredicate().
-			   "	AND t.".$row_field." = t2.".$row_object->getIdAttribute();
+			   "        ) t2, ".
+			   "		".$registry->getQueryClause()." t " .
+			   "  WHERE 1 = 1 ".$this->getFilterPredicate('t2').
+			   "	AND t2.".$row_field." = t.".$row_object->getIdAttribute();
 
 		$activity_it = parent::createSQLIterator($sql);
 		

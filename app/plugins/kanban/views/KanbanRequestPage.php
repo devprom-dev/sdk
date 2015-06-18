@@ -22,8 +22,6 @@ class KanbanRequestPage extends RequestPage
  		$_REQUEST['view'] = 'board';
 
  		$this->addInfoSection( new FullScreenSection() );
- 		$this->addInfoSection(new KanbanComulativeFlowSection($this->getReleaseIt()));
- 		$this->addInfoSection(new KanbanEstimationSection($this->getReleaseIt()));
  	}
  	
  	function getDefaultTable()

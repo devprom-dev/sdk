@@ -1,5 +1,5 @@
 {% block subject %}
-    {{ 'issue.updated.subject'|trans({ '%id%' : issue.id }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+    {{ 'issue.updated.subject'|trans({ '%id%' : issue.id }, 'emails', language) }}
 {% endblock subject %}
 
 {% block body_html %}
@@ -12,7 +12,7 @@
                 '%title%' : issue.caption,
                 '%link%' : issueLink,
                 '%changes%' : changes,
-            }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+            }, 'emails', language) }}
             {% endautoescape %}
         {% endblock body %}
     {% endembed %}

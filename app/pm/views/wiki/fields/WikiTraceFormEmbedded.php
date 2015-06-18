@@ -73,7 +73,7 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
  		
 		array_push ( $actions, array( 
 			'click' => "javascript: window.location = '".$page_it->getViewUrl()."&baseline=".$object_it->get('Baseline')."';",
-			'name' => translate('ŒÚÍ˚Ú¸') ) 
+			'name' => translate('–û—Ç–∫—Ä—ã—Ç—å') ) 
 		);
 
 		$baseline_it = $model_factory->getObject('Snapshot')->getRegistry()->Query( array (
@@ -159,7 +159,7 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
 		
 		array_push ( $actions, array( 
 			'click' => "javascript: window.location = '".$history_url."';", 
-			'name' => translate('»ÒÚÓËˇ ËÁÏÂÌÂÌËÈ') )
+			'name' => translate('–ò—Å—Ç–æ—Ä–∏—è –∏–∑–º–µ–Ω–µ–Ω–∏–π') )
 		);
  		
 		array_push ( $actions, array() );

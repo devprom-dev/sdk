@@ -7,6 +7,9 @@ class Methodology extends Metaobject
  	function __construct() 
  	{
 		parent::Metaobject('pm_Methodology');
+		
+		$this->setAttributeDescription('IsBlogUsed', text(679));
+		$this->setAttributeDescription('IsKnowledgeUsed', text(678));
 	}
 	
 	function createIterator() 

@@ -56,7 +56,7 @@ class ImportTextForm extends PMForm
 
 	function getButtonText()
 	{
-		return translate('Импортировать');
+		return translate('РРјРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ');
 	}
 
  	function getRedirectUrl()

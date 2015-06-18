@@ -6,7 +6,7 @@
 <?php 
 foreach( $checkpoint_alerts as $key => $alert )
 {
-	$checkpoint_alerts[$key] = ($key + 1).'.'.str_replace(' ', '&nbsp;', $checkpoint_alerts[$key]).':&nbsp;<font color="red">'.translate('νες').'</font>';
+	$checkpoint_alerts[$key] = ($key + 1).'.'.str_replace(' ', '&nbsp;', $checkpoint_alerts[$key]).':&nbsp;<font color="red">'.translate('Π½ΠµΡ‚').'</font>';
 }
 ?>
 <div class="btn-group last">
@@ -20,7 +20,7 @@ foreach( $checkpoint_alerts as $key => $alert )
 	   loaded="true" 
 	   info="" 
 	   href="/admin/checks.php"
-	   data-content="<?=htmlentities(join('<br/>',$checkpoint_alerts), ENT_QUOTES | ENT_HTML401, 'windows-1251')?>">
+	   data-content="<?=htmlentities(join('<br/>',$checkpoint_alerts), ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
 			<b><?=count($checkpoint_alerts)?></b>
 	</a>
 </div>	<!-- end btn-group -->	
@@ -45,9 +45,9 @@ foreach( $checkpoint_alerts as $key => $alert )
 <div class="btn-group last">
 	<?php if ( $menu['title'] != '' ) { ?>
 		<?php if ( $menu['url'] != '' ) { ?>
-		<a id="navbar-quick-create" class="btn <?=$menu['button_class']?>" href="<?=$menu['url']?>" title="<?=$menu['description']?>">
+		<a id="<?=$menu['id']?>" class="btn <?=$menu['button_class']?>" href="<?=$menu['url']?>" title="<?=$menu['description']?>">
 		<?php } else { ?>
-		<a id="navbar-quick-create" class="btn dropdown-toggle <?=$menu['button_class']?>" data-toggle="dropdown" href="#">
+		<a id="<?=$menu['id']?>" class="btn dropdown-toggle <?=$menu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$menu['description']?>">
 		<?php } ?>
 			<?php if ( $menu['icon'] != '' ) { ?>
 				<i class="<?=$menu['icon']?>"></i>

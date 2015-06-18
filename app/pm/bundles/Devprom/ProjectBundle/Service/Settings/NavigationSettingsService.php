@@ -7,8 +7,34 @@ class NavigationSettingsService implements SettingsService
 {
 	public function reset()
 	{
-		$service = new WorkspaceService();
-		$service->removeWorkspaces();
+ 		// disable any model events handler
+		getFactory()->setEventsManager( new \ModelEventsManager() );
+		
+		$xml = $this->getTemplateXml();
+		$context = new \CloneContext();
+		
+ 		foreach ( $this->getIterators() as $data_it )
+		{
+			switch ( $data_it->object->getEntityRefName() )
+			{
+				case 'pm_Workspace':
+					$system_it = $data_it->object->getRegistry()->Query(
+							array (
+									new \FilterAttributePredicate('SystemUser', array(getSession()->getUserIt()->getId(), 'none')),
+									new \FilterBaseVpdPredicate(),
+							)
+					);
+					while( !$system_it->end() )
+					{
+						$system_it->delete();
+						$system_it->moveNext();
+					}
+					break;
+			}
+			$iterator = $data_it->object->createXMLIterator($xml);
+			\CloneLogic::Run( $context, $data_it->object, $iterator, getSession()->getProjectIt() ); 
+		}
+		getSession()->truncate();
 	}
 	
 	public function makeDefault()
@@ -16,9 +42,33 @@ class NavigationSettingsService implements SettingsService
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
 		
-		// prepare settings object
+ 		$context = new \CloneContext();
+ 		foreach ( $this->getIterators() as $data_it )
+		{
+			switch ( $data_it->object->getEntityRefName() )
+			{
+				case 'pm_Workspace':
+					$system_it = $data_it->object->getRegistry()->Query(
+							array (
+									new \FilterAttributePredicate('SystemUser', 'none'),
+									new \FilterBaseVpdPredicate(),
+							)
+					);
+					while( !$system_it->end() )
+					{
+						$system_it->delete();
+						$system_it->moveNext();
+					}
+					break;
+			}
+			\CloneLogic::Run( $context, $data_it->object, $data_it, getSession()->getProjectIt() ); 
+		}
+		getSession()->truncate();
+	}
+
+	protected function getIterators()
+	{
 		$iterators = array();
-		
    		$iterators[] = getFactory()->getObject('pm_CustomReport')->getRegistry()->Query(
    				array (
    						new \CustomReportMyPredicate(),
@@ -49,30 +99,15 @@ class NavigationSettingsService implements SettingsService
 	 					new \SortOrderedClause()
 	 			)
 	 	);
-		
- 		$context = new \CloneContext();
- 		foreach ( $iterators as $data_it )
-		{
-			switch ( $data_it->object->getEntityRefName() )
-			{
-				case 'pm_Workspace':
-					$system_it = $workspace->getRegistry()->Query(
-							array (
-									new \FilterAttributePredicate('SystemUser', 'none'),
-									new \FilterBaseVpdPredicate(),
-							)
-					);
-					while( !$system_it->end() )
-					{
-						$system_it->delete();
-						$system_it->moveNext();
-					}
-					break;
-			}
+	 	return $iterators;
+	}
 
-			\CloneLogic::Run( $context, $data_it->object, $data_it, getSession()->getProjectIt() ); 
-		}
-
-		getSession()->truncate();
+	protected function getTemplateXml()
+	{
+ 		return file_get_contents(
+ 				getFactory()->getObject('ProjectTemplate')->getTemplatePath(
+ 						getSession()->getProjectIt()->get('Tools')
+				)
+ 			);
 	}
 }

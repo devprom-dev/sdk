@@ -24,7 +24,7 @@ class SubversionFileRevisionsSection extends InfoSection
 
     function getCaption() 
     {
-        return translate('Версии');
+        return translate('Р’РµСЂСЃРёРё');
     }
 
     function getParameters()

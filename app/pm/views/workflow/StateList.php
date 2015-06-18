@@ -4,7 +4,7 @@ class StateList extends PMPageList
 {
     function getColumns()
     {
-        $this->object->addAttribute('Transitions', '', translate('Переходы'), true);
+        $this->object->addAttribute('Transitions', '', translate('РџРµСЂРµС…РѕРґС‹'), true);
 
         return parent::getColumns();
     }
@@ -34,14 +34,14 @@ class StateList extends PMPageList
 				        $method->setRedirectUrl('donothing');
 	                    $actions[] = array (
 	                        'url' => $method->getJSCall(),
-	                        'name' => translate('Изменить')
+	                        'name' => translate('РР·РјРµРЅРёС‚СЊ')
 	                    );
 			        }
 			        else
 			        {
 	                    $actions[] = array (
 	                        'url' => $method->getJSCall(),
-	                        'name' => translate('Просмотр')
+	                        'name' => translate('РџСЂРѕСЃРјРѕС‚СЂ')
 	                    );
 			        }
 

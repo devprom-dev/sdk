@@ -58,7 +58,7 @@ class BackupAndRecoveryStrategy
 		}
 		else
 		{
-			$command = 'mysqldump --set-charset --default-character-set=cp1251 ' .
+			$command = 'mysqldump --set-charset --default-character-set='.APP_CHARSET.' ' .
 				' --host='.DB_HOST.' --user='.DB_USER.' --password='.DB_PASS.
 				' --add-drop-table --force '.DB_NAME.' > '.
 				$sql_path.'devprom.sql';
@@ -91,11 +91,11 @@ class BackupAndRecoveryStrategy
  		$strings = array (
  			"",
  			"DROP DATABASE IF EXISTS ".DB_NAME.";",
-			"SET character_set_server=cp1251;",
-			"SET character_set_database=cp1251;",
-			"SET collation_database=cp1251_general_ci;",
-			"SET NAMES 'cp1251' COLLATE 'cp1251_general_ci';",
-			"SET CHARACTER SET cp1251;",
+			"SET character_set_server=".APP_CHARSET.";",
+			"SET character_set_database=".APP_CHARSET.";",
+			"SET collation_database=".APP_CHARSET."_general_ci;",
+			"SET NAMES '".APP_CHARSET."' COLLATE '".APP_CHARSET."_general_ci';",
+			"SET CHARACTER SET ".APP_CHARSET.";",
 			"CREATE DATABASE ".DB_NAME.";",
 			"USE ".DB_NAME.";",
  			""

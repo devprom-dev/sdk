@@ -15,13 +15,10 @@ class TaskCodeMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Task' ) return;
-
-    	if ( $this->session->getProjectIt()->get('IsSubversionUsed') != 'Y' ) return;
+    	if ( $this->session->getProjectIt()->getMethodologyIt()->get('IsSubversionUsed') != 'Y' ) return;
     	
-		$metadata->addAttribute( 'SourceCode', 'REF_pm_SubversionRevisionId', translate('Èñõîäíûé êîä'), true );
-
+		$metadata->addAttribute( 'SourceCode', 'REF_pm_SubversionRevisionId', translate('Ð˜ÑÑ…Ð¾Ð´Ð½Ñ‹Ð¹ ÐºÐ¾Ð´'), true );
 		$metadata->addPersister( new TaskSourceCodePersister() );
-
         $metadata->addAttributeGroup('SourceCode', 'trace');
     }
 }

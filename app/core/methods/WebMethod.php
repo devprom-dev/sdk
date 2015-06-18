@@ -20,7 +20,7 @@ class WebMethod
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 		header("Pragma: no-cache"); // HTTP/1.0
-		header('Content-type: text/html; charset=windows-1251');
+		header('Content-type: text/html; charset='.APP_ENCODING);
  	}
  	
  	function execute_request() {
@@ -138,6 +138,16 @@ class WebMethod
 	
  	function getValue()
  	{
+		$default = $this->getFreezeMethod();
+		if ( is_object($default) && $this->filter_name != '' )
+		{
+			return $default->getValue( $this->getValueParm() );
+		}
+		return '';
+ 	}
+
+ 	function getValue2()
+ 	{
  		if ( $this->getValueParm() != '' && !in_array($_REQUEST[$this->getValueParm()], array('')) )
  		{
  			return $_REQUEST[$this->getValueParm()];
@@ -152,7 +162,7 @@ class WebMethod
  			}
  		}
  	}
-	
+ 	
 	function getUrl( $parms_array )
 	{
  		$module_name = $this->getModule();

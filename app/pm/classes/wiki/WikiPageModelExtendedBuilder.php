@@ -21,15 +21,15 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 		
 		$object->addPersister( new CommentRecentPersister() );
 		
-		$object->addAttribute('Attachments', 'REF_WikiPageFileId', translate('Ïğèëîæåíèÿ'), false);
+		$object->addAttribute('Attachments', 'REF_WikiPageFileId', translate('ĞŸÑ€Ğ¸Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ñ'), false);
 
 		$object->addPersister( new WikiPageAttachmentsPersister() );
 		
-		$object->addAttribute('Tags', 'REF_TagId', translate('Òıãè'), false );
+		$object->addAttribute('Tags', 'REF_TagId', translate('Ğ¢ÑĞ³Ğ¸'), false );
 		
 		$object->addPersister( new WikiTagsPersister() );
 		
-		$object->addAttribute('Watchers', 'REF_cms_UserId', translate('Íàáëşäàòåëè'), false);
+		$object->addAttribute('Watchers', 'REF_cms_UserId', translate('ĞĞ°Ğ±Ğ»ÑĞ´Ğ°Ñ‚ĞµĞ»Ğ¸'), false);
 
 		$object->addPersister( new WatchersPersister() );
     }

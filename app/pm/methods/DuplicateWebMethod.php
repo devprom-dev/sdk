@@ -15,6 +15,7 @@ class DuplicateWebMethod extends WebMethod
 		);
 		
 		parent::__construct();
+		$this->setRedirectUrl('function(){window.location.reload();}');
 	}
 	
 	protected function buildContext()
@@ -49,20 +50,10 @@ class DuplicateWebMethod extends WebMethod
 		return 'Method:'.get_class($this).':Project';
 	}
 	
-	function getLink( $project_id = '' )
-	{
-		$url = '?mode=bulk&ids='.$this->getObjectIt()->getId().
-					'&bulkmode=complete&operation='.$this->getMethodName().'&redirect='.urlencode($_SERVER['REQUEST_URI']);
-		if ( $project_id != '' )
-		{
-			$url .= '&Project='.$project_id;
-		}
-		return $url;
-	}
-	
 	function getJSCall( $parms = array() )
 	{
- 		return "javascript: processBulkMethod('".$this->getMethodName()."'); ";
+		$id = $this->object_it->getId() != '' ? $this->object_it->getId() : '0';
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&Project=".$parms['Project']."', ".$id.", ".$this->getRedirectUrl().")";
 	}
 	
 	function getReferences()
@@ -132,7 +123,7 @@ class DuplicateWebMethod extends WebMethod
  	    // prepare list of objects to be serilalized
  	    $references = $this->getReferences();
  	    
- 	    $xml = '<?xml version="1.0" encoding="windows-1251"?><entities>';
+ 	    $xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?><entities>';
  	    
  	    $ids_map = array();
  	    
@@ -145,23 +136,35 @@ class DuplicateWebMethod extends WebMethod
  	    
  	    $xml .= '</entities>';
   
- 	    $source_ids = $this->getObjectIt()->idsToArray();
+ 	    $object_it = $this->getObjectIt();
+ 	    $source_ids = $object_it->idsToArray();
 
  	    // duplicate serialized data in the target project
  	    $session = new PMSession( $project_it );
  	    
  	    $context = $this->buildContext();
- 	    
  	    $context->setIdsMap( $ids_map );
-
  	    // bind data to existing objects if any
  	    $context->setUseExistingReferences( true );
- 	     	    
+
  	    foreach( $references as $object )
  	    {
- 	        $object = $model_factory->getObject( get_class($object) );
+ 	        $object = getFactory()->getObject( get_class($object) );
+ 	        $iterator = $object->createXMLIterator($xml);
+ 	        
+ 	        if ( get_class($object_it->object) == get_class($object) )
+ 	        {
+ 	        	// override entity values with user ones
+ 	        	$defaults = array();
+ 	        	foreach( $object->getAttributes() as $attribute => $info ) {
+ 	        		if ( $_REQUEST[$attribute] != '' ) {
+ 	        			$defaults[$attribute] = $_REQUEST[$attribute]; 
+ 	        		}
+ 	        	}
+ 	        	$iterator->setData(array_merge($iterator->getData(), $defaults));
+ 	        }
 
-     	    CloneLogic::Run( $context, $object, $object->createXMLIterator($xml), $project_it);
+     	    CloneLogic::Run( $context, $object, $iterator, $project_it);
  	    }
 
  	    return $context;

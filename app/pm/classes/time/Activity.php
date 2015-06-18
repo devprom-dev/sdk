@@ -26,7 +26,7 @@ class Activity extends Metaobject
  	
  	function getDisplayName()
  	{
- 		return translate('Списание времени');
+ 		return translate('РЎРїРёСЃР°РЅРёРµ РІСЂРµРјРµРЅРё');
  	}
  	
 	function getByTask( $task_it )

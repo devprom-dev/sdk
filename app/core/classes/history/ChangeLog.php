@@ -10,6 +10,7 @@ include "predicates/ChangeLogExceptParticipantFilter.php";
 include "predicates/ChangeLogExceptUserFilter.php";
 include "predicates/ChangeLogFinishFilter.php";
 include "predicates/ChangeLogItemFilter.php";
+include "predicates/ChangeLogItemDateFilter.php";
 include "predicates/ChangeLogObjectFilter.php";
 include "predicates/ChangeLogParticipantFilter.php";
 include "predicates/ChangeLogStartFilter.php";
@@ -24,8 +25,9 @@ class ChangeLog extends Metaobject
  		parent::__construct('ObjectChangeLog', is_object($registry) ? $registry : new ChangeLogRegistry($this));
  		
  		$this->setAttributeType( 'Author', 'REF_pm_ParticipantId' );
+ 		$this->setAttributeType( 'Content', 'WYSIWYG' );
  		
- 		$this->addAttribute( 'ChangeDate', 'DATE', translate('Äàòà èçìåíåíèÿ'), false, false );
+ 		$this->addAttribute( 'ChangeDate', 'DATE', translate('Ð”Ð°Ñ‚Ð° Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ñ'), false, false );
  		$this->addPersister( new ChangeLogDetailsPersister() );
 
  		$this->setSortDefault( array( 

@@ -99,20 +99,19 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
 	function getCaption() 
 	{
-		return translate('Ïåðåíåñòè â èòåðàöèþ');
+		return translate('ÐŸÐµÑ€ÐµÐ½ÐµÑÑ‚Ð¸ Ð² Ð¸Ñ‚ÐµÑ€Ð°Ñ†Ð¸ÑŽ');
 	}
 
-	function getLink()
+ 	function getMethodName()
 	{
-	    global $model_factory;
-	    
-	    $query = '?mode=bulk&ids='.$this->request_it->getId().'&bulkmode=complete&&operation=AttributeIterations';
-	    
-	    $item = $model_factory->getObject('Module')->getExact('issues-backlog')->buildMenuItem($query);
-
-		return $item['url'];
+		return 'AttributeIterations';
 	}
- 	
+	
+	function getJSCall( $parms = array() )
+	{
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."',".$this->request_it->getId().")";
+	}
+	
  	function hasAccess()
  	{
  		return getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() 
@@ -130,6 +129,9 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  		parent::__construct();
  		
  		$this->setRequestIt($request_it);
+ 		$this->setRedirectUrl(
+ 				"function(){window.location='".getFactory()->getObject('PMReport')->getExact('allissues')->get('Url')."';}"
+		);
  	}
  	
  	function setRequestIt($request_it)
@@ -139,23 +141,19 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
 	function getCaption() 
 	{
-		return translate('Ïåðåíåñòè â ïðîåêò');
+		return translate('ÐŸÐµÑ€ÐµÐ½ÐµÑÑ‚Ð¸ Ð² Ð¿Ñ€Ð¾ÐµÐºÑ‚');
 	}
 
-	function getLink( $target_id = '' )
+ 	function getMethodName()
 	{
-		$redirect_url = $_SERVER['REQUEST_URI'];
-		
-		if ( strpos($redirect_url, "=".$this->request_it->getId()) > 0 )
-		{
-		    $redirect_url = $this->request_it->object->getPage();
-		}
-		
-		return '?mode=bulk&ids='.$this->request_it->getId().
-			'&bulkmode=complete&operation=AttributeProject&Project='.$target_id.
-		    '&redirect='.urlencode($redirect_url);
+		return 'AttributeProject';
 	}
 	
+ 	function getJSCall( $parms = array() )
+	{
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&Project=".$parms['Project']."', ".$this->request_it->getId().", ".$this->getRedirectUrl().")";
+	}
+		
 	function hasAccess()
 	{
 		return getFactory()->getAccessPolicy()->can_modify($this->request_it->object);
@@ -181,7 +179,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
 	function getCaption() 
 	{
-		return translate('Ñîçäàòü çàäà÷ó');
+		return translate('Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ Ð·Ð°Ð´Ð°Ñ‡Ñƒ');
 	}
 	
 	function hasAccess()
@@ -254,7 +252,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  {
  	function getCaption()
  	{
- 		return translate('Âñòàâèòü â áëîã');
+ 		return translate('Ð’ÑÑ‚Ð°Ð²Ð¸Ñ‚ÑŒ Ð² Ð±Ð»Ð¾Ð³');
  	}
  	
  	function getDiscription()
@@ -270,8 +268,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  	function hasAccess()
  	{
- 		return getSession()->getProjectIt()->get('IsBlogUsed') == 'Y'
- 			&& getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('BlogPost'));
+ 		return getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('BlogPost'));
  	}
  }
 
@@ -342,112 +339,8 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
- class ViewRequestStateWebMethod extends ViewRequestWebMethod
- {
- 	private $iterator = null;
- 	private $non_terminal_it = null;
- 	private $terminal_it = null;
- 	
- 	function __construct( $iterator = null )
- 	{
- 		parent::__construct();
- 		
- 		$this->iterator = is_object($iterator) ? $iterator : $this->getDefaultIterator();
 
- 		$data = $this->iterator->getRowset();
- 		foreach( $data as $key => $row )
- 		{
- 			$data[$key]['ReferenceName'] = str_replace(',','-',$data[$key]['ReferenceName']);  
- 		}
- 		$this->iterator = $this->iterator->object->createCachedIterator($data);
- 		
- 		$this->buildTerminals();
- 		$this->setDefaultValue(join(',',$this->non_terminal_it->fieldToArray('ReferenceName')));
- 	}
- 	
- 	function getCaption()
- 	{
- 		return translate('Ñòàòóñ');
- 	}
- 	
- 	function getValues()
- 	{
-  		$values = array ();
- 		$values['all'] = translate('Âñå');
-  		
-		while ( !$this->iterator->end() )
-		{
-			$values[$this->iterator->get('ReferenceName')] = $this->iterator->getDisplayName();
-			$this->iterator->moveNext();
-		}
-
-		$state = join(',',$this->terminal_it->fieldToArray('ReferenceName'));
-		if ( count($values) > 1 && !array_key_exists($state, $values) ) $values[$state] = translate('Çàâåðøåíî'); 
-		
-		$state = join(',',$this->non_terminal_it->fieldToArray('ReferenceName'));
-		if ( count($values) > 1 && !array_key_exists($state, $values) ) $values[$state] = translate('Íå çàâåðøåíî');
-		
-		return $values;
-	}
-	
-	protected function getDefaultIterator()
-	{
-		return getFactory()->getObject('IssueState')->getAll();
-	}
-	
-	protected function buildTerminals()
-	{
-		$this->non_terminal_it = $this->iterator->object->createCachedIterator(
-					array_values(array_filter($this->iterator->getRowset(), function($row) {
-							return $row['IsTerminal'] == 'N';
-					}))
-			);
-			
-		$this->terminal_it = $this->iterator->object->createCachedIterator(
-					array_values(array_filter($this->iterator->getRowset(), function($row) {
-							return $row['IsTerminal'] == 'Y';
-					}))
-			);
-	}
-	
-	function getStyle()
-	{
-		return 'width:185px;';
-	}
-	
-	function getValueParm()
-	{
-		return 'state';
-	}
- }
     
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewRequestSubmittedWebMethod extends FilterAutoCompleteWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Îáíàðóæåíî â âåðñèè');
- 	}
-
- 	function ViewRequestSubmittedWebMethod()
- 	{
- 		global $model_factory;
- 		
- 		parent::FilterAutoCompleteWebMethod(
- 			$model_factory->getObject('Version'), $this->getCaption() );
- 	}
- 	
- 	function getValueParm()
- 	{
- 		return 'subversion';
- 	}
- 	
- 	function getStyle()
- 	{
- 		return 'width:170px;';
- 	}
- }
-
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestTagWebMethod extends ViewRequestWebMethod
  {
@@ -469,13 +362,13 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  	function getCaption()
  	{
- 		return translate('Òýãè');
+ 		return translate('Ð¢ÑÐ³Ð¸');
  	}
 
  	function getValues()
  	{
   		$values = array (
- 			'all' => translate('Âñå'),
+ 			'all' => translate('Ð’ÑÐµ'),
  			);
  		
  		while ( !$this->tag_it->end() )
@@ -494,7 +387,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
      		}
  		}
  		             		        
-		$values[' 0'] = translate('Íå çàäàíû');
+		$values[' 0'] = translate('ÐÐµ Ð·Ð°Ð´Ð°Ð½Ñ‹');
 
  		return $values;
 	}
@@ -523,7 +416,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
  	function getCaption()
  	{
- 		return translate('Ôóíêöèÿ');
+ 		return translate('Ð¤ÑƒÐ½ÐºÑ†Ð¸Ñ');
  	}
 
 	function getStyle()
@@ -547,7 +440,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  {
  	function getCaption()
  	{
- 		return translate('Òðóäîåìêîñòü');
+ 		return translate('Ð¢Ñ€ÑƒÐ´Ð¾ÐµÐ¼ÐºÐ¾ÑÑ‚ÑŒ');
  	}
 
  	function getValues()
@@ -556,10 +449,10 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  		
   		$values = array (
  			'all' => $this->getCaption().':',
- 			'simple' => translate('Ïðîñòûå').' (0..3)',
- 			'normal' => translate('Ñðåäíèå').' (4..13)',
- 			'hard' => translate('Ñëîæíûå').' (> 13)',
- 			'undefined' => translate('Íåîöåíåííûå'),
+ 			'simple' => translate('ÐŸÑ€Ð¾ÑÑ‚Ñ‹Ðµ').' (0..3)',
+ 			'normal' => translate('Ð¡Ñ€ÐµÐ´Ð½Ð¸Ðµ').' (4..13)',
+ 			'hard' => translate('Ð¡Ð»Ð¾Ð¶Ð½Ñ‹Ðµ').' (> 13)',
+ 			'undefined' => translate('ÐÐµÐ¾Ñ†ÐµÐ½ÐµÐ½Ð½Ñ‹Ðµ'),
  			);
  		
  		return $values;
@@ -593,16 +486,16 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  	function getCaption()
  	{
- 		return translate('Âèä');
+ 		return translate('Ð’Ð¸Ð´');
  	}
 
  	function getValues()
  	{
   		return array (
- 			'list' => translate('Ñïèñîê'), 
- 			'board' => translate('Äîñêà'),
- 			'trace' => translate('Òðàññèðîâêà'),
- 			'chart' => translate('Ãðàôèê')
+ 			'list' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº'), 
+ 			'board' => translate('Ð”Ð¾ÑÐºÐ°'),
+ 			'trace' => translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°'),
+ 			'chart' => translate('Ð“Ñ€Ð°Ñ„Ð¸Ðº')
  			);
 	}
 
@@ -651,7 +544,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  	function getCaption()
  	{
-		return translate('Âûïîëíåíî â âåðñèè');
+		return translate('Ð’Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¾ Ð² Ð²ÐµÑ€ÑÐ¸Ð¸');
  	}
 
  	function getValueParm()
@@ -691,7 +584,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  		$type->addSort ( new SortAttributeClause('Caption') );
  		$type_it = $type->getAll();
  		
- 		$values = array( 'all' => translate('Âñå') );
+ 		$values = array( 'all' => translate('Ð’ÑÐµ') );
  		
  		while ( !$type_it->end() )
  		{
@@ -731,7 +624,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  		global $model_factory;
  		
  		$values = array( 
-			'all' => translate('Âñå'),
+			'all' => translate('Ð’ÑÐµ'),
 		);
  		
 		$state = $model_factory->getObject('TaskState');
@@ -741,7 +634,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		{
 			if ( $state_it->get('ReferenceName') == 'resolved' )
 			{
-				$values['notresolved'] = translate('Íå âûïîëíåíî');
+				$values['notresolved'] = translate('ÐÐµ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¾');
 			}
 			$values[$state_it->get('ReferenceName')] = $state_it->getDisplayName();
 			$state_it->moveNext();
@@ -774,54 +667,54 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	}
  	
 	function getCaption() {
-		return translate('Èçìåíèòü àòðèáóò');
+		return translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ Ð°Ñ‚Ñ€Ð¸Ð±ÑƒÑ‚');
 	}
 
  	function execute_request()
  	{
- 		if ( is_object($this->request_it) )
- 		{
+ 		if ( is_object($this->request_it) ) {
  			$_REQUEST['ChangeRequest'] = join(',', $this->request_it->idsToArray()); 
  		}
+ 		if ( $_REQUEST['ids'] != '' ) {
+ 			$_REQUEST['ChangeRequest'] = join(',', preg_split('/-/', $_REQUEST['ids']));
+ 		}
 
-	 	if ( $_REQUEST['ChangeRequest'] != '' ) 
-	 	{
-	 		$this->execute(
-	 				$_REQUEST['ChangeRequest'], 
-	 				$_REQUEST['attr'], 
-	 				IteratorBase::utf8towin($_REQUEST['value']), 
-	 				$_REQUEST['notify']
- 			);
-	 	}
+	 	if ( $_REQUEST['ChangeRequest'] == '' ) throw new Exception('Requests required'); 
+
+ 		$this->execute(
+ 				$_REQUEST['ChangeRequest'], 
+ 				$_REQUEST['attr'], 
+ 				IteratorBase::utf8towin($_REQUEST['value']), 
+ 				$_REQUEST['notify']
+		);
  	}
  	
  	function execute( $object_id, $attribute, $value, $notify )
  	{
- 		global $model_factory, $_REQUEST, $project_it;
- 		
- 		$request = $model_factory->getObject('pm_ChangeRequest');
-		
+ 		$request = getFactory()->getObject('pm_ChangeRequest');
  		$request->removeNotificator( 'EmailNotificator' );
 
 		$request_it = $request->getExact( preg_split('/,/', $object_id) );
-		
  		if ( $request_it->count() < 1 ) return;
- 		 
+
 		if ( array_key_exists('Tag', $_REQUEST) )
 		{
-			$request_tag = $model_factory->getObject('pm_RequestTag');
-			
+			$request_tag = getFactory()->getObject('pm_RequestTag');
  			$request_tag->removeNotificator( 'EmailNotificator' );
 			
  			while ( !$request_it->end() )
  			{
-    	 		$request_tag_it = $request_tag->getByAK( $request_it->getId(), $value );
-     				
+ 				$parms = array (
+ 						'Request' => $request_it->getId(),
+    					'Tag' => $value
+ 				);
+ 				$mapper = new ModelDataTypeMapper();
+				$mapper->map( $request_tag, $parms );
+ 				
+    	 		$request_tag_it = $request_tag->getByAK( $request_it->getId(), $parms['Tag'] );
     			if ( $request_tag_it->count() < 1 )
     			{
-    				$request_tag->add_parms( 
-    					array('Request' => $request_it->getId(),
-    						  'Tag' => $value ) );
+    				$request_tag->add_parms($parms);
     			}
     			
     			$request_it->moveNext();
@@ -829,12 +722,10 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		}
 		else if ( array_key_exists('RemoveTag', $_REQUEST) )
 		{
-			$request_tag = $model_factory->getObject('pm_RequestTag');
-			
+			$request_tag = getFactory()->getObject('pm_RequestTag');
 			while ( !$request_it->end() )
 			{
 			    $request_tag->removeTags( $request_it->getId() );
-			    
 			    $request_it->moveNext();
 			}
 		}

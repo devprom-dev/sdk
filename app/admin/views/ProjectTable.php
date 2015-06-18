@@ -34,7 +34,7 @@ class ProjectTable extends PageTable
 	function getFilters()
 	{
 		return array(
-			new FilterAutoCompleteWebMethod($this->getObject(), translate('Íàçâàíèå ïðîåêòà') ),
+			new FilterAutoCompleteWebMethod($this->getObject(), translate('ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð°') ),
 			$this->buildStateFilter()
 		);
 	}
@@ -62,10 +62,15 @@ class ProjectTable extends PageTable
 			
 		return array(
 				array (
-						'name' => translate('Ñîçäàòü'),
+						'name' => translate('Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ'),
 						'url' => '/projects/new'
 				)
 		);
+	}
+	
+	function getBulkActions()
+	{
+		return array();
 	}
 	
 	function getDeleteActions()

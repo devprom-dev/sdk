@@ -51,7 +51,7 @@ class FilterObjectMethod extends FilterWebMethod
 
  		if ( $this->parmvalue == '' ) $this->parmvalue = $_REQUEST['object'];
  		
- 		$this->none_title = translate('<нет значения>');
+ 		$this->none_title = translate('<РЅРµС‚ Р·РЅР°С‡РµРЅРёСЏ>');
 	}
  	
  	function getModule() 
@@ -152,7 +152,7 @@ class FilterObjectMethod extends FilterWebMethod
 		
 		if ( $this->has_all )
 		{
-			$values = array_merge( array ( 'all' => translate('Все') ), $values );
+			$values = array_merge( array ( 'all' => translate('Р’СЃРµ') ), $values );
 		}
 		
  		if ( $selected_value_found || count(array_intersect($selected_values, array('', 'all', 'none'))) > 0 ) return $values;

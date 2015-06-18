@@ -105,13 +105,13 @@ class InstallLicenseTypeForm extends AjaxForm
 		return array (
 				array (
 						'url' => "javascript: $('#action".$this->getId()."').val(1);",
-						'name' => translate('Ïîëó÷èòü êëş÷'),
+						'name' => translate('ĞŸĞ¾Ğ»ÑƒÑ‡Ğ¸Ñ‚ÑŒ ĞºĞ»ÑÑ‡'),
 						'class' => 'btn-primary',
 						'type' => 'submit'
 				),
 				array (
 						'url' => "javascript: $('#action".$this->getId()."').val(3);",
-						'name' => translate('Ââåñòè êëş÷'),
+						'name' => translate('Ğ’Ğ²ĞµÑÑ‚Ğ¸ ĞºĞ»ÑÑ‡'),
 						'type' => 'submit'
 				)
 		);    	

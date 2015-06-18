@@ -4,7 +4,6 @@ class SortReverseKeyClause extends SortClauseBase
 {
  	function clause()
  	{
- 		$object = $this->getObject();
- 		return " ".$object->getClassName()."Id DESC ";
+ 		return " ".$this->getObject()->getClassName()."Id DESC ";
  	}
 }

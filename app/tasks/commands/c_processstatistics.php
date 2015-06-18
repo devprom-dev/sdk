@@ -33,7 +33,9 @@ class ProcessStatistics extends TaskCommand
 		}
 		else
 		{
-			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query()->idsToArray();
+			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
+					array( new FilterAttributePredicate('IsClosed', 'N') )
+				)->idsToArray();
 			
 			$chunks = array_chunk($ids, $step);
 	

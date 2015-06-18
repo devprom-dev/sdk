@@ -60,4 +60,41 @@ class PMPageBoard extends PageBoard
 				parent::drawCell( $object_it, $attr );
 		}
 	}
+	
+	function getHeaderActions( $board_value )
+	{
+		$actions = parent::getHeaderActions($board_value);
+
+		$custom_actions = array();
+		
+		$iterator = $this->getBoardAttributeIterator();
+		$iterator->moveTo('ReferenceName', $board_value);
+		
+		if ( $iterator->getId() != '' && !$this->getTable()->hasCrossProjectFilter() )
+		{
+			$method = new ObjectModifyWebMethod($iterator);
+			if ( $method->hasAccess() ) {
+				$custom_actions[] = array (
+						'name' => translate('Изменить'),
+						'url' => $method->getJSCall() 
+				);
+				$custom_actions[] = array();
+			}
+
+			$method = new ObjectCreateNewWebMethod($iterator->object);
+			if ( $method->hasAccess() ) {
+				$custom_actions[] = array (
+						'name' => text(2011),
+						'url' => $method->getJSCall(array('OrderNum' => $iterator->get('OrderNum') + 2)) 
+				);
+				$custom_actions[] = array (
+						'name' => text(2012),
+						'url' => $method->getJSCall(array('OrderNum' => max(1,$iterator->get('OrderNum') - 2))) 
+				);
+				$custom_actions[] = array();
+			}
+		}
+		
+		return array_merge($custom_actions, $actions);
+	}
 }

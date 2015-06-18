@@ -33,21 +33,21 @@ class UserParticipatesModelBuilder extends ObjectModelBuilder
 
 		// project roles
 		
-		$object->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Ðîëü â ïðîåêòå'), true, false, '', 100);
+		$object->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Ð Ð¾Ð»ÑŒ Ð² Ð¿Ñ€Ð¾ÐµÐºÑ‚Ðµ'), true, false, '', 100);
 		
-		$object->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Ðîëü'), false, false, '', 101);
+		$object->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Ð Ð¾Ð»ÑŒ'), false, false, '', 101);
 		
 		$object->addAttributeGroup('ProjectRole', 'system');
 
-		$object->addAttribute('Capacity', 'FLOAT', translate('Åæåäíåâíàÿ çàãðóçêà, ÷.'), true, false, '', 102);
+		$object->addAttribute('Capacity', 'FLOAT', translate('Ð•Ð¶ÐµÐ´Ð½ÐµÐ²Ð½Ð°Ñ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐ°, Ñ‡.'), true, false, '', 102);
 		
-		$object->addAttribute('Project', 'REF_ProjectId', translate('Ïðîåêò'), false, false, '', 103);
+		$object->addAttribute('Project', 'REF_ProjectId', translate('ÐŸÑ€Ð¾ÐµÐºÑ‚'), false, false, '', 103);
 		
-		$object->addAttribute('Participant', 'REF_ParticipantId', translate('Ó÷àñòíèê'), false, false, '', 104);
+		$object->addAttribute('Participant', 'REF_ParticipantId', translate('Ð£Ñ‡Ð°ÑÑ‚Ð½Ð¸Ðº'), false, false, '', 104);
 
 		$object->addAttributeGroup('Participant', 'system');
 
-		$object->addAttribute('ParticipanceType', 'REF_UserParticipanceTypeId', translate('Ó÷àñòèå'), false, false, '', 105);
+		$object->addAttribute('ParticipanceType', 'REF_UserParticipanceTypeId', translate('Ð£Ñ‡Ð°ÑÑ‚Ð¸Ðµ'), false, false, '', 105);
 		
 		$object->addAttributeGroup('ParticipanceType', 'system');
 		

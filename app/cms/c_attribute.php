@@ -19,14 +19,14 @@
  {
  	function __construct( $class_it = null, ObjectRegistrySQL $registry = null )
 	{
-		$this->attributes = array( 'Caption' => array('TEXT', 'Íàçâàíèå', true, true, '', '', 10),
-								   'ReferenceName' => array('TEXT', 'Ññûëî÷íîå èìÿ', true, true, '', '', 20),
-								   'AttributeType' => array('TEXT', 'Òèï ñâîéñòâà', true, true, '', '', 30),
-								   'DefaultValue' => array('TEXT', 'Çíà÷åíèå ïî óìîë÷àíèþ', true, true, '', '', 40),
-								   'IsRequired' => array('CHAR', 'Îáÿçàòåëüíîñòü', true, true, '', '', 50),
-								   'IsVisible' => array('CHAR', 'Âèäèìîñòü', true, true, '', '', 60),
-								   'entityId' => array('INTEGER', 'Ñóùíîñòü', false, true, '', '', 70),
-								   'OrderNum' => array('INTEGER', 'Ïîðÿäêîâûé íîìåð', true, true, '', '', 80)
+		$this->attributes = array( 'Caption' => array('TEXT', 'ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ', true, true, '', '', 10),
+								   'ReferenceName' => array('TEXT', 'Ð¡ÑÑ‹Ð»Ð¾Ñ‡Ð½Ð¾Ðµ Ð¸Ð¼Ñ', true, true, '', '', 20),
+								   'AttributeType' => array('TEXT', 'Ð¢Ð¸Ð¿ ÑÐ²Ð¾Ð¹ÑÑ‚Ð²Ð°', true, true, '', '', 30),
+								   'DefaultValue' => array('TEXT', 'Ð—Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ', true, true, '', '', 40),
+								   'IsRequired' => array('CHAR', 'ÐžÐ±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚ÑŒ', true, true, '', '', 50),
+								   'IsVisible' => array('CHAR', 'Ð’Ð¸Ð´Ð¸Ð¼Ð¾ÑÑ‚ÑŒ', true, true, '', '', 60),
+								   'entityId' => array('INTEGER', 'Ð¡ÑƒÑ‰Ð½Ð¾ÑÑ‚ÑŒ', false, true, '', '', 70),
+								   'OrderNum' => array('INTEGER', 'ÐŸÐ¾Ñ€ÑÐ´ÐºÐ¾Ð²Ñ‹Ð¹ Ð½Ð¾Ð¼ÐµÑ€', true, true, '', '', 80)
 								    );
 		$this->defaultsort = 'OrderNum';
 

@@ -52,7 +52,7 @@ class UpdateUploadForm extends AdminForm
 	
 	function getButtonText()
 	{
-		return translate('Загрузить');
+		return translate('Р—Р°РіСЂСѓР·РёС‚СЊ');
 	}
 }
  

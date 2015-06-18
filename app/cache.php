@@ -1,4 +1,6 @@
 <?php
+
+	$cachedir = dirname(__FILE__) . '/cache';
 	$cssdir   = dirname(__FILE__) . '/';
 	$jsdir    = dirname(__FILE__) . '/scripts';
 
@@ -7,27 +9,19 @@
 	switch ( $_GET['type'] )
 	{
 		case 'css':
-			switch( $_GET['asset'] )
-			{
-				case '1':
-					$_GET['files'] = 
-						'styles/jquery-ui/jquery-ui-1.8.16.custom.css,' .
-						'styles/bootstrap/css/bootstrap.css,'.
-						'styles/bootstrap/css/bootstrap-responsive.min.css,'.
-						'styles/select/jquery_select.css,' .
-						'styles/fancybox/fancy.css';
-					break;
-				case '2':
-					$_GET['files'] = 
-						'styles/newlook/main.css,'.
-						'styles/newlook/extended.css,'.
-						'styles/newlook/medium-fonts.css,'.
-						'styles/jquery/jquery.treeview.css,' .
-						'scripts/color-picker/colorPicker.css,'.
-						'styles/newlook/board.css,'.
-						'styles/newlook/sidebar.css';
-					break;
-			}
+			$_GET['files'] = 
+				'styles/jquery-ui/jquery-ui-1.8.16.custom.css,' .
+				'styles/bootstrap/css/bootstrap.css,'.
+				'styles/bootstrap/css/bootstrap-responsive.min.css,'.
+				'styles/select/jquery_select.css,' .
+				'styles/fancybox/fancy.css,'. 
+				'styles/newlook/main.css,'.
+				'styles/newlook/extended.css,'.
+				'styles/newlook/medium-fonts.css,'.
+				'styles/jquery/jquery.treeview.css,' .
+				'scripts/color-picker/colorPicker.css,'.
+				'styles/newlook/board.css,'.
+				'styles/newlook/sidebar.css';
 			break;
 		
 		case 'print':
@@ -41,7 +35,7 @@
 			{
 				case '1':
 					$_GET['files'] = 
-						'jquery/jquery.min.js,'.
+						'jquery/jquery-1.11.3.min.js,'.
 						'jquery/jquery-migrate-1.2.1.js,'.
 						'jquery/jquery.form.js,'.
 						'jquery/jquery.treeview.js,'.
@@ -64,7 +58,7 @@
 						'color-picker/jquery.colorPicker.min.js,'.
 						'time/jstz-1.0.4.min.js';
 					break;
-				case '3':
+				default:
 					$_GET['files'] = 
 						'pm/common.js,'.
 		                'pm/board.js,'.

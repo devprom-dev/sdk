@@ -6,7 +6,7 @@ class WrtfCKEditorWikiParser extends WikiParser
 {
  	function parse( $content = null )
 	{
-		return html_entity_decode( parent::parse($content), ENT_QUOTES | ENT_HTML401, 'cp1251' );
+		return html_entity_decode( parent::parse($content), ENT_QUOTES | ENT_HTML401, APP_ENCODING );
 	}
 }
  

@@ -5,8 +5,8 @@ class WorkflowTimeScaleRegistry extends ObjectRegistrySQL
     function createSQLIterator( $sql )
     {
         return $this->createIterator( array (
-                array ( 'entityId' => 1, 'ReferenceName' => 'hours', 'Caption' => translate('÷àñû') ),
-                array ( 'entityId' => 2, 'ReferenceName' => 'days', 'Caption' => translate('äíè') )
+                array ( 'entityId' => 1, 'ReferenceName' => 'hours', 'Caption' => translate('Ñ‡Ð°ÑÑ‹') ),
+                array ( 'entityId' => 2, 'ReferenceName' => 'days', 'Caption' => translate('Ð´Ð½Ð¸') )
         ));
     }
 }

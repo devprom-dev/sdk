@@ -4,8 +4,8 @@ class FilesWikiPagesList extends PMStaticPageList
 {
 	function getColumns()
 	{
-		$this->object->addAttribute('Size', '', translate('Размер'), true);
-		$this->object->addAttribute('LastChange', '', translate('Последнее изменение'), true);
+		$this->object->addAttribute('Size', '', translate('Р Р°Р·РјРµСЂ'), true);
+		$this->object->addAttribute('LastChange', '', translate('РџРѕСЃР»РµРґРЅРµРµ РёР·РјРµРЅРµРЅРёРµ'), true);
 		
 		return parent::getColumns();
 	}

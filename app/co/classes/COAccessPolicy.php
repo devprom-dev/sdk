@@ -3,10 +3,9 @@
 class CoAccessPolicy extends AccessPolicy
 {
 	private $group_it = null;
-	
  	private $subject_key = '';
- 			
  	private $group_access_it = null;
+ 	private $license_it = null;
 	
 	public function getGroupIt()
  	{
@@ -86,6 +85,14 @@ class CoAccessPolicy extends AccessPolicy
 			return getFactory()->getObject('User')->getRecordCount() > 0;
 		}
 
+ 		if ( $action_kind == ACCESS_CREATE  )
+		{
+			if ( !is_object($this->license_it) ) {
+			    $this->license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+			}
+		    if ( !$this->license_it->allowCreate( $object ) ) return false;
+		}
+		
 		return true;
 	}
 	

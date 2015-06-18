@@ -7,12 +7,12 @@ class UserParticipanceTypeRegistry extends ObjectRegistrySQL
         global $model_factory;
         
         $data = array (
-                array ( 'entityId' => 1, 'ReferenceName' => 'participant', 'Caption' => translate('Ó÷àñòíèêè ïðîåêòà') )
+                array ( 'entityId' => 1, 'ReferenceName' => 'participant', 'Caption' => translate('Ð£Ñ‡Ð°ÑÑ‚Ð½Ð¸ÐºÐ¸ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð°') )
         );
         
         if ( $model_factory->getObject('User')->getAttributeType('GroupId') != '' )
         {
-            $data[] = array ( 'entityId' => 2, 'ReferenceName' => 'linked', 'Caption' => translate('Ó÷àñòíèêè ñâÿçàííûõ ïðîåêòîâ') );
+            $data[] = array ( 'entityId' => 2, 'ReferenceName' => 'linked', 'Caption' => translate('Ð£Ñ‡Ð°ÑÑ‚Ð½Ð¸ÐºÐ¸ ÑÐ²ÑÐ·Ð°Ð½Ð½Ñ‹Ñ… Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð¾Ð²') );
         }
         
         $data[] = array ( 'entityId' => 3, 'ReferenceName' => 'guest', 'Caption' => text(1370) ); 

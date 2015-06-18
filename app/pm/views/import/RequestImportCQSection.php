@@ -3,7 +3,7 @@
 class RequestImportCQSection extends InfoSection
 {
  	function getCaption() {
- 		return translate('Описание');
+ 		return translate('РћРїРёСЃР°РЅРёРµ');
  	}
  	
  	function drawBody()

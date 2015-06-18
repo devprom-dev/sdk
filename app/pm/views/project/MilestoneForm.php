@@ -44,8 +44,9 @@ class MilestoneForm extends PMPageForm
 		switch ( $name )
 		{
 			case 'TraceRequests':
-				
-				return new FieldIssueInverseTrace( $this->getObjectIt(), getFactory()->getObject('RequestInversedTraceMilestone') );
+				$field = new FieldIssueInverseTrace($this->getObjectIt(), getFactory()->getObject('RequestInversedTraceMilestone'));
+				$field->showDeliveryDate();
+				return $field;
 
 			default:
 				

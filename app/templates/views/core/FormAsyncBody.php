@@ -1,3 +1,4 @@
+<?php if ( !$formonly ) { ?>
 <script language="javascript">
 
 	var originalFormState = '';
@@ -14,10 +15,11 @@
 		<?php } ?>		
 	});
 </script>
+<?php } ?>
 
 <form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded">
 	<fieldset>
-		<?php if ( $form_title != '' ) { ?>
+		<?php if ( !$formonly && $form_title != '' ) { ?>
 
 		<legend class="<?=(count($actions) > 0 ? 'span10' : 'span12')?>"> 
 		    <?=$form_title?>
@@ -27,7 +29,7 @@
 			<div class="actions">
 				<div class="btn-group">
 					<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-						<?=translate('Äåéñòâèÿ')?>
+						<?=translate('Ð”ÐµÐ¹ÑÑ‚Ð²Ð¸Ñ')?>
 						<span class="caret"></span>
 					</a>
 					<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
@@ -108,7 +110,7 @@
 
     <?php 
     
-    if ( $buttons_template != '' )
+    if ( $buttons_template != '' && !$formonly )
     {
 	    echo $view->render($buttons_template, array_merge($buttons_parms, array(
 	            'b_has_preview' => $b_has_preview,

@@ -5,15 +5,17 @@ include_once "Metaobject.php";
 class MetaobjectCacheable extends Metaobject
 {
 	private $check_is_cacheable = true;
+	private $cache_category = '';
     
 	function __construct( $ref_name, ObjectRegistrySQL $registry = null )
 	{
 	    parent::__construct( $ref_name, $registry );
+	    $this->cache_category = getFactory()->getEntityOriginationService()->getCacheCategory($this);
 	}
 	
     function getCacheCategory()
 	{
-		return getFactory()->getEntityOriginationService()->getCacheCategory($this);
+		return $this->cache_category;
 	}
 	
 	function getCacheKey( $getter, $class_name = '' )

@@ -56,7 +56,7 @@ class TaskList extends PMPageList
 		
 		if ( array_key_exists( 'Planned', $attrs ) )
 		{
-			$this->object->addAttribute( 'Progress', '', translate('Ïðîãðåññ'), false );
+			$this->object->addAttribute( 'Progress', '', translate('ÐŸÑ€Ð¾Ð³Ñ€ÐµÑÑ'), false );
 		}
 		
 		return parent::getColumns();
@@ -247,7 +247,7 @@ class TaskList extends PMPageList
 
 					$type_it = $this->request_it->getRef('Type');
 					
-						echo '<img title="'.translate('Ïðèîðèòåò').': '.$title.'" src="/images/'.
+						echo '<img title="'.translate('ÐŸÑ€Ð¸Ð¾Ñ€Ð¸Ñ‚ÐµÑ‚').': '.$title.'" src="/images/'.
 							$this->priority_frame->getIcon($this->request_it->get('Priority')).'" style="padding-right:4px;">';
 						
 						echo '<img src="/images/'.IssueTypeFrame::getIcon($type_it).'" style="margin-top:0;">&nbsp;';

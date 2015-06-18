@@ -20,7 +20,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  {
 	function getCaption() 
 	{
-		return translate('Ïðîéäåíà');
+		return translate('ÐŸÑ€Ð¾Ð¹Ð´ÐµÐ½Ð°');
 	}
 	
 	function hasAccess()
@@ -46,7 +46,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  class SetCurrentWebMethod extends MilestoneWebMethod
  {
 	function getCaption() {
-		return translate('Àêòèâíà');
+		return translate('ÐÐºÑ‚Ð¸Ð²Ð½Ð°');
 	}
 	
 	function hasAccess()
@@ -73,15 +73,15 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Ñòàòóñ');
+ 		return translate('Ð¡Ñ‚Ð°Ñ‚ÑƒÑ');
  	}
  	
  	function getValues()
  	{
   		return array (
-  			'all' => translate('Âñå'),
- 			'N' => translate('Àêòóàëüíûå'),
- 			'Y' => translate('Ïðîøåäøèå')
+  			'all' => translate('Ð’ÑÐµ'),
+ 			'N' => translate('ÐÐºÑ‚ÑƒÐ°Ð»ÑŒÐ½Ñ‹Ðµ'),
+ 			'Y' => translate('ÐŸÑ€Ð¾ÑˆÐµÐ´ÑˆÐ¸Ðµ')
  			);
 	}
 

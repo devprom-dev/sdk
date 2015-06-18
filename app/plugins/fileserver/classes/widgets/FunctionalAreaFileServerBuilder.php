@@ -10,7 +10,7 @@ class FunctionalAreaFileServerBuilder extends FunctionalAreaBuilder
  	    
  	    if ( $project_it instanceof PortfolioIterator ) return;
  	    
- 	    if ( $project_it->get('IsFileServer') != 'Y' ) return;
+ 	    if ( $project_it->getMethodologyIt()->get('IsFileServer') != 'Y' ) return;
         
         $set->addArea( ModuleCategoryBuilderFileServer::AREA_UID );
     }

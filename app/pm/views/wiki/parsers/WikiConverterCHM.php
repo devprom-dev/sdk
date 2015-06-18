@@ -31,9 +31,7 @@ class WikiConverterCHM
  		$this->content_tree = array();
  		$this->files = array();
  		
- 		$object_it = $this->getObjectIt();
- 		$object_it = $object_it->_clone();
- 		
+ 		$object_it = $this->getObjectIt()->copyAll();
 		$file_name = $this->transform( $object_it );
 
 		$this->content_tree[$file_name] = 
@@ -120,7 +118,7 @@ class WikiConverterCHM
 		
  		$parser->setObjectIt( $wiki_it );
 		
-		$html .= html_entity_decode($parser->parse( $wiki_it->getHtmlDecoded('Content')), ENT_QUOTES | ENT_HTML401, 'cp1251'); 
+		$html .= html_entity_decode($parser->parse( $wiki_it->getHtmlDecoded('Content')), ENT_QUOTES | ENT_HTML401, APP_ENCODING); 
 				
 		if ( $this->template_it->count() > 0 )
 		{
@@ -152,7 +150,7 @@ class WikiConverterCHM
  	function display()
  	{
 		// create contents file
-		$html = '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1251">';
+		$html = '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset='.APP_ENCODING.'">';
 		$html .= "\r\n<!-- Sitemap 1.0 -->\r\n";
 		$html .= '</HEAD><BODY><OBJECT type="text/site properties"><param name="ImageType" value="Folder"></OBJECT>';
 		$html .= "<UL>";
@@ -215,10 +213,10 @@ class WikiConverterCHM
 	static function translit($string)
 	{
        static $ru = array(
-               'А', 'а', 'Б', 'б', 'В', 'в', 'Г', 'г', 'Д', 'д', 'Е', 'е', 'Ё', 'ё', 'Ж', 'ж', 'З', 'з',
-               'И', 'и', 'Й', 'й', 'К', 'к', 'Л', 'л', 'М', 'м', 'Н', 'н', 'О', 'о', 'П', 'п', 'Р', 'р',
-               'С', 'с', 'Т', 'т', 'У', 'у', 'Ф', 'ф', 'Х', 'х', 'Ц', 'ц', 'Ч', 'ч', 'Ш', 'ш', 'Щ', 'щ',
-               'Ъ', 'ъ', 'Ы', 'ы', 'Ь', 'ь', 'Э', 'э', 'Ю', 'ю', 'Я', 'я'
+               'Рђ', 'Р°', 'Р‘', 'Р±', 'Р’', 'РІ', 'Р“', 'Рі', 'Р”', 'Рґ', 'Р•', 'Рµ', 'РЃ', 'С‘', 'Р–', 'Р¶', 'Р—', 'Р·',
+               'Р', 'Рё', 'Р™', 'Р№', 'Рљ', 'Рє', 'Р›', 'Р»', 'Рњ', 'Рј', 'Рќ', 'РЅ', 'Рћ', 'Рѕ', 'Рџ', 'Рї', 'Р ', 'СЂ',
+               'РЎ', 'СЃ', 'Рў', 'С‚', 'РЈ', 'Сѓ', 'Р¤', 'С„', 'РҐ', 'С…', 'Р¦', 'С†', 'Р§', 'С‡', 'РЁ', 'С€', 'Р©', 'С‰',
+               'РЄ', 'СЉ', 'Р«', 'С‹', 'Р¬', 'СЊ', 'Р­', 'СЌ', 'Р®', 'СЋ', 'РЇ', 'СЏ'
        );
 
        static $en = array(

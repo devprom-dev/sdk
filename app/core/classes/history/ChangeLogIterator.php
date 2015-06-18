@@ -23,7 +23,7 @@ class ChangeLogIterator extends OrderedIterator
  					
  					$content = parent::get('Content');
  					
- 					if ( strpos( $content, translate('Содержание') ) !== false )
+ 					if ( strpos( $content, translate('РЎРѕРґРµСЂР¶Р°РЅРёРµ') ) !== false )
  					{
  						return '';
  					}
@@ -38,7 +38,7 @@ class ChangeLogIterator extends OrderedIterator
 		 			
 			 		if ( !$this->object->canreadcapacity )
 			 		{
-			 			$value = str_replace(translate('Фактическая'), 'fact', $value);
+			 			$value = str_replace(translate('Р¤Р°РєС‚РёС‡РµСЃРєР°СЏ'), 'fact', $value);
 			 			$value = preg_replace('/fact.+\n/mi', '', $value);
 			 		}	
 			 		
@@ -54,15 +54,15 @@ class ChangeLogIterator extends OrderedIterator
 		switch ($this->get('ChangeKind')) 
 		{
 			case 'added': 
-				$change_kind = translate('добавлено'); 
+				$change_kind = translate('РґРѕР±Р°РІР»РµРЅРѕ'); 
 				break;
 				
 			case 'modified': 
-				$change_kind = translate('изменено'); 
+				$change_kind = translate('РёР·РјРµРЅРµРЅРѕ'); 
 				break;
 
 			case 'deleted': 
-				$change_kind = translate('удалено'); 
+				$change_kind = translate('СѓРґР°Р»РµРЅРѕ'); 
 				break;
 		}
 	

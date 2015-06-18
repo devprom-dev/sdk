@@ -3,6 +3,7 @@
 include SERVER_ROOT_PATH."core/classes/auth/AuthenticationFactorySet.php";
 include SERVER_ROOT_PATH."core/classes/widgets/ModuleBuilder.php";
 include SERVER_ROOT_PATH."core/classes/widgets/ModulePluginsBuilder.php";
+include SERVER_ROOT_PATH."core/classes/widgets/BulkActionBuilderCommon.php";
 include SERVER_ROOT_PATH."core/classes/ResourceBuilderLanguageFiles.php";
 include SERVER_ROOT_PATH."core/classes/ResourceBuilderPluginsLanguageFiles.php";
 include SERVER_ROOT_PATH."core/classes/model/events/CacheResetTrigger.php";
@@ -10,9 +11,9 @@ include SERVER_ROOT_PATH."core/classes/model/events/AccessPolicyModelEventsHandl
 include SERVER_ROOT_PATH."core/classes/model/events/ChangesWaitLockReleaseTrigger.php";
 include SERVER_ROOT_PATH."core/classes/versioning/triggers/SnapshotDeleteCascadeTrigger.php";
 include SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilderCommon.php";
-include SERVER_ROOT_PATH."core/classes/project/PortfolioCommonBuilder.php";
 include SERVER_ROOT_PATH."core/classes/project/ProjectMetadataBuilder.php";
 include SERVER_ROOT_PATH."core/classes/resources/ContextResourceFileBuilder.php";
+include SERVER_ROOT_PATH."core/classes/model/events/UserCreatedEvent.php";
 
 class SessionBase
 {
@@ -46,6 +47,8 @@ class SessionBase
  		$this->language = $language;
  		
  		$this->configure();
+ 		
+		$_SERVER['ENTRY_URL'] = class_exists('PortfolioMyProjectsBuilder', false) ? '/pm/my' : '/pm/all';
  	}
  	
  	public function configure()
@@ -316,15 +319,16 @@ class SessionBase
  	    return array (
  	    		new LicenseRegistryBuilderCommon(),
                 new ModulePluginsBuilder($this->getSite()),
-                new PortfolioCommonBuilder(),
  	    		
  	    		// triggers
  	    		new AccessPolicyModelEventsHandler(),
  	    		new CacheResetTrigger(),
  	    		new SnapshotDeleteCascadeTrigger(),
  	    		new ChangesWaitLockReleaseTrigger(),
+ 	    		new UserCreatedEvent(),
  	    		
- 	    		new ContextResourceFileBuilder($this)
+ 	    		new ContextResourceFileBuilder($this),
+ 	    		new BulkActionBuilderCommon()
         );
  	}
  	

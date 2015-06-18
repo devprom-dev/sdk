@@ -42,7 +42,7 @@ class WikiConverterPreview
  	
  	function parse()
  	{
- 		header('Content-Type: text/html; charset=windows-1251');
+ 		header('Content-Type: text/html; charset='.APP_ENCODING);
 
  		$this->drawBegin();
  		$this->drawTitle();
@@ -54,7 +54,7 @@ class WikiConverterPreview
 	{
 	?>
 		<html>
-		<meta http-equiv="content-type" content="text/html; charset=Windows-1251">
+		<meta http-equiv="content-type" content="text/html; charset=".APP_ENCODING>
 	<?
 		$this->drawCSS();
 	?>

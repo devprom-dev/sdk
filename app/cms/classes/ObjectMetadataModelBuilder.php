@@ -61,7 +61,7 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 		{
 			$attributes['OrderNum'] = array (
 				'dbtype' => 'INTEGER',
-				'caption' => 'Íîìåð',
+				'caption' => 'ÐÐ¾Ð¼ÐµÑ€',
 				'visible' => $entity_it->get('IsDictionary') == 'Y',
 				'stored' => true,
 				'type' => 'INTEGER',
@@ -75,7 +75,7 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 		// creation and modification dates
 		$attributes['RecordCreated'] = array (
 			'dbtype' => 'DATETIME',
-			'caption' => 'Äàòà ñîçäàíèÿ',
+			'caption' => 'Ð”Ð°Ñ‚Ð° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ',
 			'visible' => false,
 			'stored' => true,
 			'type' => 'DATETIME',
@@ -86,7 +86,7 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 
 		$attributes['RecordModified'] = array (
 			'dbtype' => 'DATETIME',
-			'caption' => 'Äàòà èçìåíåíèÿ',
+			'caption' => 'Ð”Ð°Ñ‚Ð° Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ñ',
 			'visible' => false,
 			'stored' => true,
 			'type' => 'DATETIME',

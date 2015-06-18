@@ -12,6 +12,6 @@ class ChangeLogAction extends CacheableSet
 	
     function getDisplayName()
     {
-        return translate('Активность');
+        return translate('РђРєС‚РёРІРЅРѕСЃС‚СЊ');
     }
 }

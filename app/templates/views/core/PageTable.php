@@ -19,6 +19,7 @@ echo $view->render('core/PageTableBody.php', array (
 	'object_id' => $object_id,
     'actions' => $actions,
     'additional_actions' => $additional_actions,
+	'bulk_actions' => $bulk_actions,
     'list' => $list,
     'navigation_url' => $navigation_url,
     'navigation_title' => $navigation_title,
@@ -26,3 +27,4 @@ echo $view->render('core/PageTableBody.php', array (
     'changed_ids' => $changed_ids,
 	'save_settings_alert' => $save_settings_alert
 ));
+

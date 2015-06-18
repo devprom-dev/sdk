@@ -6,7 +6,7 @@ class HtmlExportWebMethod extends ExportWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Печать списка');
+ 		return translate('РџРµС‡Р°С‚СЊ СЃРїРёСЃРєР°');
  	}
  	
  	function getJSCall( $class = 'IteratorExportHtml' )

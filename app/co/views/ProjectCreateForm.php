@@ -17,7 +17,7 @@
  	
  	function getAddCaption()
  	{
- 		return translate('Создание нового проекта');
+ 		return translate('РЎРѕР·РґР°РЅРёРµ РЅРѕРІРѕРіРѕ РїСЂРѕРµРєС‚Р°');
  	}
 
  	function getCommandClass()
@@ -123,16 +123,16 @@
 		switch ( $attribute )
 		{
 			case 'CodeName':
-				return translate('Кодовое название проекта');
+				return translate('РљРѕРґРѕРІРѕРµ РЅР°Р·РІР°РЅРёРµ РїСЂРѕРµРєС‚Р°');
 
 			case 'Caption':
-				return translate('Название проекта');
+				return translate('РќР°Р·РІР°РЅРёРµ РїСЂРѕРµРєС‚Р°');
 
 			case 'Template':
-				return translate('Шаблон начальных настроек проекта');
+				return translate('РЁР°Р±Р»РѕРЅ РЅР°С‡Р°Р»СЊРЅС‹С… РЅР°СЃС‚СЂРѕРµРє РїСЂРѕРµРєС‚Р°');
 
 			case 'Participants':
-				return translate('Пригласить участников');
+				return translate('РџСЂРёРіР»Р°СЃРёС‚СЊ СѓС‡Р°СЃС‚РЅРёРєРѕРІ');
 
 			case 'DemoData':
 				return text(1869);

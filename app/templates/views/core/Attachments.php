@@ -2,9 +2,11 @@
 
 <?php $file = array_pop($files); ?>
 
-<a class="<?=$file['type']?>_attach" href="<?=$file['url']?>&.png" title="<?=$file['name']?> (<?=$file['size']?> KB)">
-	<img src="/images/<?=($file['type'] == 'image' ? 'image' : 'attach')?>.png">
-</a>
+<div class="btn-group" style="margin:2px 2px 0 0;">
+	<a class="<?=$file['type']?>_attach" href="<?=$file['url']?>&.png" title="<?=$file['name']?> (<?=$file['size']?> KB)">
+		<img src="/images/<?=($file['type'] == 'image' ? 'image' : 'attach')?>.png">
+	</a>
+</div>
 
 <?php } else { ?>
 
@@ -24,14 +26,13 @@ foreach( $files as $file )
 ?>
 
 <?php if ( count($actions) > 0 ) { ?>
-<div class="btn-group" style="margin:0;height:16px;">
+<div class="btn-group" style="margin:2px 2px 0 2px;">
 	<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 		<img src="/images/image.png">
 	</a>
 	
 	<? echo $this->render('core/PopupMenu.php', array ( 'items' => $actions )); ?>
 </div>
-<sup><?=count($files)?></sup>
 
 <?php } ?>
 

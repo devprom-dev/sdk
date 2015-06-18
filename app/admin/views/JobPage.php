@@ -31,8 +31,11 @@ class JobPage extends AdminPage
 
 	function getObject()
 	{
-		global $model_factory;
-		return $model_factory->getObject('co_ScheduledJob');
+		$object = getFactory()->getObject('co_ScheduledJob');
+		foreach( array('LastDuration','AverageDuration') as $attribute ) {
+			$object->addAttributeGroup($attribute, 'nonbulk');
+		}
+		return $object;
 	}
 	
 	function getTable()
@@ -55,7 +58,7 @@ class JobPage extends AdminPage
 		}
 		else
 		{
-			return new JobForm;
+			return new JobForm($this->getObject());
 		}
 	}
 }

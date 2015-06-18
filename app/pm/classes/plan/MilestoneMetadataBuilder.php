@@ -11,15 +11,15 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Milestone' ) return;
 
-    	$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('Ïîæåëàíèÿ'), true );
+    	$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('ÐŸÐ¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ'), true );
 	    
 	    $metadata->addPersister( new MilestoneRequestPersister() );
 	    
-	    $metadata->addAttribute('Overdue', 'INTEGER', translate('Ñìåùåíèå'), false );
+	    $metadata->addAttribute('Overdue', 'INTEGER', translate('Ð¡Ð¼ÐµÑ‰ÐµÐ½Ð¸Ðµ'), false );
 	    
 	    $metadata->addPersister( new MilestoneDatesPersister() );
 	    
-	    $metadata->addAttribute('RecentComment', 'TEXT', translate('Êîììåíòàðèè'), false );
+	    $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('ÐšÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¸'), false );
 	    
 	    $metadata->addPersister( new CommentRecentPersister() );
     }

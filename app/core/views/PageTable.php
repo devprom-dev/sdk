@@ -18,8 +18,8 @@ class PageTable extends ViewTable
  	var $rows, $filters, $filter_values, $infosections, $page, $view;
  	
  	private $system_attributes = array();
- 	
  	private $persistent_filter = null;
+ 	private $filter_defaults = array();
  	
  	function PageTable( $object )
  	{
@@ -90,11 +90,10 @@ class PageTable extends ViewTable
 
 	function getFiltersDefault()
 	{
+		if ( count($this->filters) < 5 )  return array('any');
+		
 		$values = $this->getFilterValues();
-		
 		foreach( $this->getFilterParms() as $parm ) unset($values[$parm]);
-		
-		if ( count($values) < 5 )  return array('any');
 		
 		$filters = array_filter($values, function($value) {
 				return $value != '';
@@ -136,38 +135,46 @@ class PageTable extends ViewTable
 		if ( is_array($this->filter_values) ) return $this->filter_values;
 
 		// filter parms driven by filters
-	    $values = array();
-	    
 		$this->filter_values = $this->buildFilterValuesByDefault($this->filters);
 
-		// filter parms driven by other parameters (rows, group, sort)
-		$filter = $this->getPersistentFilter();
+		// apply persisted filters settings
+		$persistent_filter = $this->getPersistentFilter();
+		foreach ( $this->filters as $filter )
+		{
+			$filter->setFreezeMethod($persistent_filter);
+			$value = $filter->getValue();
+			if ( $value == '' ) continue;
+			$this->filter_values[$filter->getValueParm()] = $value;	
+		}
+	
+		// backward compatiibility to old settings
+		if ( is_object($persistent_filter) ) {
+			foreach( array_merge(array_keys($this->filter_values), $this->getFilterParms()) as $parm )
+			{
+			    $filter_value = $persistent_filter->getValue($parm);
+			    if ( $filter_value == '' ) continue;
+			    if ( $parm == 'hide' )
+			    {
+			    	// backward compatibility
+	 	    		$columns = preg_split('/-/', $persistent_filter->getValue('show'));
+	 	    		$filter_value = join('-',array_diff(array_keys($this->getObject()->getAttributes()), $columns));
+			    }
+				$this->filter_values[$parm] = $filter_value;
+			}
+		}
+		$this->filter_defaults = $this->filter_values;
 
+		// apply web-session based filters settings
 		foreach( array_merge(array_keys($this->filter_values), $this->getFilterParms()) as $parm )
 		{
-		    $filter_value = is_object($filter) ? $filter->getValue($parm) : '';
-
-		    if ( $filter_value == '' && !array_key_exists($parm, $_REQUEST) ) continue;
-
-		    if ( is_object($filter) && $parm == 'hide' )
-		    {
-		    	// backward compatibility
- 	    		$columns = preg_split('/-/', $filter->getValue('show'));
-
- 	    		$filter_value = join('-',array_diff(array_keys($this->getObject()->getAttributes()), $columns));
-		    }
-		    
-			$this->filter_values[$parm] = array_key_exists($parm, $_REQUEST) 
-					? $_REQUEST[$parm] 
-					: ( is_object($filter) ? $filter_value : $this->filter_values[$parm]);
+		    if ( !array_key_exists($parm, $_REQUEST) ) continue;
+			$this->filter_values[$parm] = $_REQUEST[$parm];
 		}
 
 		if ( !in_array($this->filter_values['infosections'], array('', 'none')) )
 		{
 			$temp = preg_split('/,/', $this->filter_values['infosections']);
-			
 			$sections = array_intersect($temp, array_keys($this->getPage()->getInfoSections()));
-			
 			$this->filter_values['infosections'] = count($sections) > 0 ? join(',', $sections) : 'none'; 
 		}
 		
@@ -178,24 +185,13 @@ class PageTable extends ViewTable
 	{
 		$values = array();
 		
-		foreach ( $filters as $filter )
-		{
-			$filter->setFreezeMethod( $this->getPersistentFilter() );
-			
-			$value = $filter->getValue();
-			    
-			$values[$filter->getValueParm()] = $value;	
-		}
-		
 		foreach( array('sort', 'sort2', 'sort3', 'sort4') as $parm )
 		{
 		    $values[$parm] = $this->getSortDefault($parm);
 		}
-		
 		$values['color'] = $this->getDefaultColorScheme();
-		
 		$values['infosections'] = join(',', $this->getSectionsDefault());
-		
+
 		return $values;
 	}
 	
@@ -219,27 +215,20 @@ class PageTable extends ViewTable
 	
 	function IsFilterPersisted()
 	{
-	    $persisted = $this->getPersistentFilter();
-	    
 	    if ( !array_key_exists('filterlocation', $_REQUEST) ) return true;
-	     
-	    $parms = $this->getFilterParms();
-	    
-	    foreach( $parms as $parm )
+
+	    foreach( array_keys($this->filter_values) as $parm )
 	    {
-	        if ( $parm == 'infosections' && $persisted->getValue($parm) == '' ) continue;
-	        
-	        if ( $this->filter_values[$parm] != $persisted->getValue($parm) )
+	        if ( $parm == 'infosections' && $this->filter_defaults[$parm] == '' ) continue;
+	        if ( $this->filter_values[$parm] != $this->filter_defaults[$parm] )
 	        {
 	            return false;
 	        }
 	    }
-	    
 	    foreach ( $this->filters as $filter )
 	    {
 	        if ( !in_array($_REQUEST[$filter->getValueParm()], array('hide','all')) ) continue;
-	        
-	        if ( $_REQUEST[$filter->getValueParm()] != $persisted->getValue($filter->getValueParm()) )
+	        if ( $_REQUEST[$filter->getValueParm()] != $this->filter_defaults[$filter->getValueParm()] )
 	        {
 	            return false;
 	        }
@@ -284,7 +273,7 @@ class PageTable extends ViewTable
 			return in_array('any', $defaults) || in_array($filter, $defaults);
 		}
 		
-		return count($this->filter_values) < 11;
+		return count($this->filters) < 11;
 	}
 
 	function getActions()
@@ -294,19 +283,17 @@ class PageTable extends ViewTable
 	
 	function getDeleteActions()
 	{
-		if( !$this->IsNeedToDelete() ) return array(); 
+		if( !$this->IsNeedToDelete() ) return array();
+		if( !is_object($this->getListRef()) ) return array();
+		if( !$this->getListRef() instanceof PageBoard ) return array();
 		
-		$actions = array();
-		
-		$method = new BulkDeleteWebMethod();
-		
-		$actions[] = array ( 
-				'name' => $method->getCaption(),
-				'url' => $method->getJSCall($this->getObject()),
-				'title' => $method->getDescription() 
+		return array (
+			array( 
+					'name' => translate('Ğ’Ñ‹Ğ±Ñ€Ğ°Ñ‚ÑŒ Ğ²ÑĞµ'),
+					'url' => 'javascript: checkRowsTrue(\''.$this->getListRef()->getId().'\');',
+					'title' => text(969)
+			)
 		);
-		
-		return $actions;
 	}
 	
 	function getNewActions()
@@ -324,7 +311,7 @@ class PageTable extends ViewTable
 			$uid = strtolower('new-'.get_class($this->getObject()));
 			
 			$actions[$uid] = array ( 
-					'name' => translate('Äîáàâèòü'),
+					'name' => translate('Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ'),
 					'uid' => $uid,
 					'url' => $method->getJSCall(
 									array( 
@@ -376,7 +363,7 @@ class PageTable extends ViewTable
 		
 		if ( count($filter_actions) > 0 )
 		{
-			array_push($actions, array ( 'name' => translate('Ôèëüòğû'), 
+			array_push($actions, array ( 'name' => translate('Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€Ñ‹'), 
 				'items' => $filter_actions , 'title' => '' ) );
 		}
 
@@ -413,7 +400,7 @@ class PageTable extends ViewTable
 		
 		if ( count($section_actions) > 0 )
 		{
-			array_push($actions, array ( 'name' => translate('Ñåêöèè'), 
+			array_push($actions, array ( 'name' => translate('Ğ¡ĞµĞºÑ†Ğ¸Ğ¸'), 
 				'items' => $section_actions , 'title' => '' ) );
 		}
 		
@@ -440,7 +427,7 @@ class PageTable extends ViewTable
 		array_push($actions, array());
 		
 		array_push($actions, array ( 
-			'name' => translate('Ñîõğàíèòü'), 
+			'name' => translate('Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ'), 
 			'items' => $save_actions,
 			'id' => 'save'
 		));
@@ -448,6 +435,54 @@ class PageTable extends ViewTable
 		$list->buildFilterActions( $actions );
 				    	
 		return $actions;
+	}
+	
+	function getBulkActions()
+	{
+		$action = new BulkAction($this->getObject());
+		$action_it = $action->getAll();
+		
+		$workflow_actions = array();
+		$delete_actions = array();
+		$modify_actions = array();
+		
+		$url = '?formonly=true';
+		
+		while( !$action_it->end() )
+		{
+			$action_url = "javascript:processBulk('".$action_it->get('Caption')."','".$url.'&operation='.$action_it->getId()."');";
+			switch( $action_it->get('package') )
+			{
+			    case 'workflow':
+			    	$workflow_actions[] = array (
+			    		'name' => $action_it->get('Caption'),
+			    		'url' => $action_url,
+			    		'state' => $action_it->get('ReferenceName')
+			    	);
+			    	break;
+			    case 'delete':
+			    	$delete_actions[] = array (
+			    		'uid' => 'bulk-delete',
+			    		'name' => $action_it->get('Caption'),
+			    		'url' => $action_url
+			    	);
+			    	break;
+			    case 'modify':
+			    	$modify_actions[] = array (
+			    		'name' => $action_it->get('Caption'),
+			    		'url' => $action_url
+			    	);
+			    	break;
+			}
+			
+			$action_it->moveNext();
+		}
+		
+		return array (
+				'workflow' => $workflow_actions,
+				'delete' => $delete_actions,
+				'modify' => $modify_actions
+		);
 	}
 	
 	function getUrl() 
@@ -585,7 +620,7 @@ class PageTable extends ViewTable
 		return null;
 	}
 
-	function draw( &$view = null )
+	function draw( $view = null )
 	{
 	}
 	
@@ -804,7 +839,7 @@ class PageTable extends ViewTable
 	        
 	        $title = join(',',$title_items);
 	        
-	        if ( strlen($title) > 20 ) $title = substr($title, 0, 20).'...'; 
+	        if ( mb_strlen($title) > 12 ) $title = mb_substr($title, 0, 12).'...'; 
 	        
 	        $filter_items[] = array (
                 'type' => $filter->getType(),
@@ -823,7 +858,7 @@ class PageTable extends ViewTable
 	    if ( count($new_actions) > 0 )
 	    {
 	    	$additional_actions[] = array (
-				'name' => translate('Äîáàâèòü'),
+				'name' => translate('Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ'),
 				'items' => $new_actions
 			); 
 	    }
@@ -868,6 +903,7 @@ class PageTable extends ViewTable
             'filter_modified' => !$this->IsFilterPersisted(),
             'actions' => $actions,
             'additional_actions' => $additional_actions,
+			'bulk_actions' => $this->getBulkActions(),
 			'save_settings_alert' => $this->buildSaveSettingsAlert()
 		));
 	}
@@ -886,15 +922,14 @@ class PageTable extends ViewTable
 		return "core/PageTable.php";
 	}
 	
-	function render( &$view, $parms )
+	function render( $view, $parms )
 	{
-	    $parms = $this->getRenderParms($parms);
-	    
-		$this->view = $view;
-	    
-		echo $view->render( $this->getTemplate(), $parms ); 
+		$parms = $this->getRenderParms($parms);
 
-		unset($this->view);
+		$this->view = $view;
+		
+		echo $view->render( $this->getTemplate(), $parms );
+
 		$this->view = null;
 	}
 }

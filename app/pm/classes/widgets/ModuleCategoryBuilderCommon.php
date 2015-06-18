@@ -6,10 +6,10 @@ class ModuleCategoryBuilderCommon extends ModuleCategoryBuilder
 {
     public function build( ModuleCategoryRegistry & $object )
     {
-        $object->add( FUNC_AREA_FAVORITES, translate('Избранное') );
+        $object->add( FUNC_AREA_FAVORITES, translate('РР·Р±СЂР°РЅРЅРѕРµ') );
          
-        $object->add( FUNC_AREA_MANAGEMENT, translate('Управление проектом') );
+        $object->add( FUNC_AREA_MANAGEMENT, translate('РЈРїСЂР°РІР»РµРЅРёРµ РїСЂРѕРµРєС‚РѕРј') );
 
-        $object->add( FunctionalAreaMenuSettingsBuilder::AREA_UID, translate('Настройки') );
+        $object->add( FunctionalAreaMenuSettingsBuilder::AREA_UID, translate('РќР°СЃС‚СЂРѕР№РєРё') );
     }
 }

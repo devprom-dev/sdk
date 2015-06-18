@@ -4,7 +4,7 @@ class BackupFormApplication extends AdminForm
 {
  	function getAddCaption()
  	{
- 		return '2. '.translate('Копирование приложения');
+ 		return '2. '.translate('РљРѕРїРёСЂРѕРІР°РЅРёРµ РїСЂРёР»РѕР¶РµРЅРёСЏ');
  	}
  	
  	function getCommandClass()

@@ -4,19 +4,26 @@ include_once "Lock.php";
 
 class LockFileSystem extends Lock
 {
+	static $cache_dir = '';
+	
     public function __construct ( $name )
     {
-        $this->file_name = preg_replace("/([^\w\s\d\-_~,;:\[\]\(\]]|[\.]{2,})/", '', $name).'.lock';
+        if ( self::$cache_dir == '' ) {
+    		$dir_name = sys_get_temp_dir().'/'.md5(DOCUMENT_ROOT);
+    		if ( !is_dir($dir_name) ) mkdir($dir_name, 755, true);
+        	self::$cache_dir = $dir_name; 
+        }
+        $this->file_name = self::$cache_dir.'/'.preg_replace("/([^\w\s\d\-_~,;:\[\]\(\]]|[\.]{2,})/", '', $name).'.lock';
     }
     
     public function Lock()
     {
-        file_put_contents( $this->getLockFileName(), time() );
+        file_put_contents( $this->file_name, time() );
     }
     
     public function Release()
     {
-        @unlink( $this->getLockFileName() );
+        @unlink($this->file_name);
     }
 
     public function Locked( $timeout = 10 )
@@ -30,32 +37,37 @@ class LockFileSystem extends Lock
     
     public function getLockTime()
     {
-        return file_exists($this->getLockFileName()) ? file_get_contents( $this->getLockFileName() ) : 0;
+        return @file_get_contents($this->file_name);
     }
     
-    public function LockAndWait( $timeout )
+    public function LockAndWait( $timeout, $callable = null )
     {
         $this->Lock();
-        
-        return $this->Wait( $timeout );
+        return $this->Wait($timeout, $callable);
     }
     
-    public function Wait( $timeout )
+    public function Wait( $timeout, $callable = null )
     {
     	$skip = 0;
     	
         while( $this->Locked($timeout) && !connection_aborted() )
         {
-        	sleep(1);
+        	usleep(200000);
         	
-        	if ( $skip > 3 )
+        	if ( $skip > 15 )
         	{
         		// check client connection is active (using connection_aborted func.)
 	        	echo(" ");
+	        	ob_flush();
 	        	flush();
 
 	        	// send data once in 3 seconds
 	        	$skip = 0;
+	        	
+	        	if ( !is_null($callable) && is_callable($callable) ) {
+	        		$result = call_user_func_array($callable, array());
+	        		if ( $result ) break;
+	        	}
         	}
         	
         	$skip++;
@@ -67,13 +79,4 @@ class LockFileSystem extends Lock
     /* private members */
 
     private $file_name;
-    
-    private function getLockFileName()
-    {
-    	$dir_name = sys_get_temp_dir().'/'.md5(DOCUMENT_ROOT);
-    	
-    	if ( !is_dir($dir_name) ) mkdir($dir_name, 755, true);
-    	
-        return $dir_name.'/'.$this->file_name;
-    }
 }

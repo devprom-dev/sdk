@@ -260,17 +260,17 @@ class SubversionConnector extends SCMConnector
 			{
 				if ( isset($logs[0]['add_files']) && in_array($files[$i], $logs[0]['add_files']) )
 				{
-					$action = translate('Добавлено');
+					$action = translate('Р”РѕР±Р°РІР»РµРЅРѕ');
 				}
 				
 				if ( isset($logs[0]['mod_files']) && in_array($files[$i], $logs[0]['mod_files']) )
 				{
-					$action = translate('Изменено');
+					$action = translate('РР·РјРµРЅРµРЅРѕ');
 				}
 	
 				if ( isset($logs[0]['del_files']) && in_array($files[$i], $logs[0]['del_files']) )
 				{
-					$action = translate('Удалено');
+					$action = translate('РЈРґР°Р»РµРЅРѕ');
 				}
 	
 				array_push($output,

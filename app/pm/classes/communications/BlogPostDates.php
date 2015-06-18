@@ -11,6 +11,6 @@ class BlogPostDates extends Metaobject
     
     function getDisplayName()
     {
-    	return translate('Àğõèâ');
+    	return translate('ĞÑ€Ñ…Ğ¸Ğ²');
     }
 }

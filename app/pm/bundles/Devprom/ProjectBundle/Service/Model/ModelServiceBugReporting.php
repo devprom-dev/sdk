@@ -16,7 +16,7 @@ class ModelServiceBugReporting extends ModelService
 				'address' => $data['ServerAddress'],
 				'version' => $data['SubmittedVersion'],
 				'source' => 'Devprom Backend',
-				'project' => 'af4078b6e4630da32f3c164d121ea2b1'
+				'project' => defined('DEVOPSKEY') ? DEVOPSKEY : 'af4078b6e4630da32f3c164d121ea2b1'
 		);
 		
 		$cmd = "curl -X POST -H 'Content-Type: application/json' ";

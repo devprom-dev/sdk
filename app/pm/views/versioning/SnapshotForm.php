@@ -87,7 +87,7 @@ class SnapshotForm extends PMForm
 		
 		if ( $value == '' )
 		{
-			$value = htmlentities($_REQUEST[$attribute], ENT_QUOTES | ENT_HTML401, 'windows-1251'); 
+			$value = htmlentities($_REQUEST[$attribute], ENT_QUOTES | ENT_HTML401, APP_ENCODING); 
 		}
 
 		return $value;

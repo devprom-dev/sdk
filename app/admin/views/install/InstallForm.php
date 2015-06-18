@@ -101,7 +101,7 @@ class InstallForm extends AjaxForm
 
 	function getButtonText()
 	{
-		return translate('Установить');
+		return translate('РЈСЃС‚Р°РЅРѕРІРёС‚СЊ');
 	}
 
 	function getSite()

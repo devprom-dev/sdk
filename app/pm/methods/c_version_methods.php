@@ -8,7 +8,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Версия продукта');
+ 		return translate('Р’РµСЂСЃРёСЏ РїСЂРѕРґСѓРєС‚Р°');
  	}
  	
  	function ViewVersionWebMethod()

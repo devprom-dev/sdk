@@ -2,7 +2,7 @@
 include_once(SERVER_ROOT_PATH . 'core/classes/exceptions/ExceptionHandler.php');
 
 /**
- * Тесты для \core\classes\ExceptionHandlerTest
+ * РўРµСЃС‚С‹ РґР»СЏ \core\classes\ExceptionHandlerTest
  *
  * - halt
  * - getErrorTypeStr
@@ -13,10 +13,10 @@ include_once(SERVER_ROOT_PATH . 'core/classes/exceptions/ExceptionHandler.php');
 class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * Тестирование halt
+     * РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ halt
      *
-     * @param array   $data Данные по ошибке
-     * @param integer $code Код ошибки
+     * @param array   $data Р”Р°РЅРЅС‹Рµ РїРѕ РѕС€РёР±РєРµ
+     * @param integer $code РљРѕРґ РѕС€РёР±РєРё
      *
      * @dataProvider providerHalt
      */
@@ -39,7 +39,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Провайдер для halt
+     * РџСЂРѕРІР°Р№РґРµСЂ РґР»СЏ halt
      *
      * @return array
      */
@@ -58,7 +58,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Тестирование getErrorTypeStr
+     * РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ getErrorTypeStr
      */
     public function testGetErrorTypeStr()
     {
@@ -69,7 +69,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Тестирование CaptureError
+     * РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ CaptureError
      *
      * @dataProvider providerCaptureError
      */
@@ -82,7 +82,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
         $mock->expects($this->any())->method('_debug_backtrace')->will($this->returnValueMap(array(array($debug_from))));
 
         $errno      = E_PARSE;
-        $errstr     = 'Моя ошибочка';
+        $errstr     = 'РњРѕСЏ РѕС€РёР±РѕС‡РєР°';
         $errfile    = __FILE__;
         $errline    = 10;
 
@@ -124,7 +124,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Провайдер для testCaptureError
+     * РџСЂРѕРІР°Р№РґРµСЂ РґР»СЏ testCaptureError
      *
      * @return array
      */
@@ -134,7 +134,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
             array(
                 // debug_from
                 array(
-                    array('Удалится'),
+                    array('РЈРґР°Р»РёС‚СЃСЏ'),
                     array(
                         'file'     => 'D:\var\www\devprom\feature-a\dev\apache\htdocs\cache\symfony2\classes.php',
                         'line'     => 4532,
@@ -173,14 +173,14 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Тестирование exceptionError
+     * РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ exceptionError
      *
-     * @param array   $trace   Трассировка
-     * @param string  $message Текст ошибки
-     * @param integer $code    Код ошибки
-     * @param string  $file    Файл
-     * @param integer $line    Строка в файле
-     * @param array   $result  Данные которые должны получиться
+     * @param array   $trace   РўСЂР°СЃСЃРёСЂРѕРІРєР°
+     * @param string  $message РўРµРєСЃС‚ РѕС€РёР±РєРё
+     * @param integer $code    РљРѕРґ РѕС€РёР±РєРё
+     * @param string  $file    Р¤Р°Р№Р»
+     * @param integer $line    РЎС‚СЂРѕРєР° РІ С„Р°Р№Р»Рµ
+     * @param array   $result  Р”Р°РЅРЅС‹Рµ РєРѕС‚РѕСЂС‹Рµ РґРѕР»Р¶РЅС‹ РїРѕР»СѓС‡РёС‚СЊСЃСЏ
      *
      * @dataProvider providerExceptionError
      */
@@ -211,7 +211,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Провайдер для testCaptureError
+     * РџСЂРѕРІР°Р№РґРµСЂ РґР»СЏ testCaptureError
      *
      * @return array
      */
@@ -297,7 +297,7 @@ class ExceptionHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Тестирование endError
+     * РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ endError
      *
      * @param $error
      * @param $result

@@ -38,7 +38,7 @@ $view['slots']->output('_content');
 <div class="pull-left" style="width:73%;">
 <?php 
 
-echo '<h4 class="bs">'.$name.' '.($version != '' ? ' &nbsp; ['.translate('версии').': '.$version.' - '.$preversion.']' : '').'</h4>';
+echo '<h4 class="bs">'.$name.' '.($version != '' ? ' &nbsp; ['.translate('РІРµСЂСЃРёРё').': '.$version.' - '.$preversion.']' : '').'</h4>';
 
 echo '<pre style="display:block;overflow:auto;">';
 echo '<code>';

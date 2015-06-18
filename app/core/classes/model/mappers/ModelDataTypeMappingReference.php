@@ -11,8 +11,6 @@ class ModelDataTypeMappingReference extends ModelDataTypeMapping
 	
 	public function map( $value )
 	{
-		if ( !is_numeric($value) ) return '';
-	
 		return $value;
 	}
 }

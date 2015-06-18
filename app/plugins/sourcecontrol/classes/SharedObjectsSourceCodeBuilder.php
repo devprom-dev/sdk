@@ -11,7 +11,7 @@ class SharedObjectsSourceCodeBuilder extends SharedObjectsBuilder
     
     public function checkSharedInProject( $project_it )
     {
-        return $project_it->get('IsSubversionUsed') == 'Y';
+        return $project_it->getMethodologyIt()->get('IsSubversionUsed') == 'Y';
     }
     
     public function build( SharedObjectRegistry & $set )

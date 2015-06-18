@@ -18,12 +18,12 @@ class FieldStateAttribute extends FieldForm
  	    $this->state_it = $state_it;
  	}
  	
- 	function render( & $view )
+ 	function render( $view )
  	{
  	    $this->draw( $view );
  	}
  	
- 	function draw( & $view = null )
+ 	function draw( $view = null )
  	{
  		$state_class = $this->object_it instanceof IteratorBase 
  			? get_class($this->object_it->object) : get_class($this->object_it);

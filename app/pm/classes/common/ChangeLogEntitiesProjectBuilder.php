@@ -7,7 +7,6 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
     public function build( ChangeLogEntityRegistry $set )
     {
         $project_it = getSession()->getProjectIt();
-        
         $methodology_it = $project_it->getMethodologyIt();
         
         $entities = array (
@@ -17,7 +16,6 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
 			'pm_Participant',
 			'pm_Project',
 			'pm_Methodology',
-			'pm_VersionSettings',
 			'pm_ChangeRequest',
 			'pm_ChangeRequestTrace',
 			'pm_ChangeRequestLink',
@@ -37,13 +35,13 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
         	'pm_FunctionTrace'
  		);
         
-        if ( $project_it->get('IsBlogUsed') == 'Y' )
+        if ( $methodology_it->get('IsBlogUsed') == 'Y' )
         {
             $entities[] = 'BlogPost';
             $entities[] = 'BlogPostFile';
         }
         
-        if ( $project_it->get('IsKnowledgeUsed') == 'Y' )
+        if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' )
         {
             $entities[] = 'ProjectPage';
         }

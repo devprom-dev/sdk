@@ -4,7 +4,7 @@ class RecoveryFormApplication extends RecoveryWizardFormBase
 {
  	function getAddCaption()
  	{
- 		return '3. '.translate('Восстановление приложения');
+ 		return '3. '.translate('Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїСЂРёР»РѕР¶РµРЅРёСЏ');
  	}
  	
  	function getCommandClass()

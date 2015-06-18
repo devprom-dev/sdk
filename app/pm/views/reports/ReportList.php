@@ -111,7 +111,7 @@ class ReportList extends PageList
 			    }
 			    else
 			    {
-				    echo translate('Îò÷åòû');
+				    echo translate('ÐžÑ‚Ñ‡ÐµÑ‚Ñ‹');
 			    }
 				
 				break;
@@ -146,7 +146,7 @@ class ReportList extends PageList
 			    
 				$actions[] = array(
 				    'url' => $method->getJSCall(), 
-				    'name' => translate('Èçìåíèòü')
+				    'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ')
 				);
 			}
 			

@@ -70,7 +70,7 @@
         {% if errors and errors|first != "" %}
             <div class="alert alert-danger">
                 {% for error in errors %}
-                    {{ error.message|convert_encoding('windows-1251', 'UTF-8') }}
+                    {{ error.message }}
                 {% endfor %}
             </div>
         {% endif %}

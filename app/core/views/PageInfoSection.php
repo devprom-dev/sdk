@@ -139,7 +139,7 @@
 		);
 	}
 	
-	function render( &$view )
+	function render( $view )
 	{
 		echo $view->render( $this->getTemplate(), $this->getRenderParms() ); 
 	}

@@ -40,7 +40,7 @@ class FunctionTraceIterator extends OrderedIterator
  		
  		$uid = new ObjectUID;
  		
- 		return translate('Òðàññèðîâêà').': '.$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
+ 		return translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°').': '.$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
  	}
  	
  	function getBacktraceDisplayName()
@@ -49,6 +49,6 @@ class FunctionTraceIterator extends OrderedIterator
  		
  		$uid = new ObjectUID;
  		
- 		return translate('Òðàññèðîâêà').': '.$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
+ 		return translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°').': '.$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
  	}
 }

@@ -6,7 +6,7 @@ RewriteRule ^install$ /install/ [R=301,L]
 RewriteRule ^install/$ /app/pageadmin.php [L,QSA]
 
 RewriteRule ^favicon.*$ /images/favicon.ico [L,QSA]
-RewriteRule ^projects$ /pm/my [R=301,L]
+RewriteRule ^projects$ / [R=301,L]
 
 RewriteRule ^app/servicedesk\.php(/(.*)|$) /servicedesk/$2 [R=301,L]
 
@@ -17,7 +17,7 @@ RewriteRule ^cache/?$ /cache.php [QSA,L]
 RewriteRule ^cache-after/?$ /cache-after.php [QSA,L]
 RewriteRule ^module/([^/]+)/([^/]+)/(.+)$ /app/front.php?namespace=$1&module=$2&page=$3 [L,QSA]
 RewriteRule ^module/([^/]+)/(.+)$ /app/front.php?namespace=$1&module=$2 [L,QSA]
-RewriteRule ^(join-project|login|recovery|reset|logoff|40[\d]{1}|50[\d]{1}|500\.zip|310|profile|projects.*|menu.*|tooltip.*|news/.+)$ /app/front.php [L,QSA]
+RewriteRule ^(invite|join-project|login|recovery|reset|logoff|40[\d]{1}|50[\d]{1}|500\.zip|310|profile|projects.*|menu.*|tooltip.*|news/.+)$ /app/front.php [L,QSA]
 RewriteRule ^$ /app/front.php [L,QSA]
 
 RewriteRule ^file/([^/]+)/([^/]+)/([^\.]+).external$ /file/download.php?class=$1&project=$2&id=$3 [L,QSA]

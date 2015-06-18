@@ -27,11 +27,11 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 	{
 		if ( $this->wiki_it->IsArchived() )
 		{
-			return translate('Извлечь из архива');
+			return translate('РР·РІР»РµС‡СЊ РёР· Р°СЂС…РёРІР°');
 		}
 		else
 		{
-			return translate('Переместить в архив');
+			return translate('РџРµСЂРµРјРµСЃС‚РёС‚СЊ РІ Р°СЂС…РёРІ');
 		}
 	}
 	
@@ -210,7 +210,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  {
  	function getCaption()
  	{
- 		return translate('Экспорт в PDF');
+ 		return translate('Р­РєСЃРїРѕСЂС‚ РІ PDF');
  	}
  	
  	function getJSCall( $page_it = null, $class = 'WikiIteratorExportPdf' )
@@ -252,7 +252,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  {
  	function getCaption()
  	{
- 		return translate('Экспорт в HTML');
+ 		return translate('Р­РєСЃРїРѕСЂС‚ РІ HTML');
  	}
  	
  	function getJSCall( $page_it = null, $template = '', $class = 'WikiIteratorExportHtml' )
@@ -266,7 +266,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  {
  	function getCaption()
  	{
- 		return translate('Экспорт в CHM');
+ 		return translate('Р­РєСЃРїРѕСЂС‚ РІ CHM');
  	}
  	
  	function getJSCall( $page_it = null, $template = '', $class = 'WikiIteratorExportCHM' )

@@ -103,7 +103,7 @@ class WikiHistoryTable extends ProjectLogTable
 				array (
 						'navigation_title' => $page_it->getDisplayName(),
 						'navigation_url' => $page_it->getViewUrl(),
-						'title' => translate('История изменений')
+						'title' => translate('РСЃС‚РѕСЂРёСЏ РёР·РјРµРЅРµРЅРёР№')
 				)
 		);
 	}

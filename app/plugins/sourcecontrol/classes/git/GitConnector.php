@@ -266,15 +266,15 @@ class GitConnector extends SCMConnector
  			{
  				if ( preg_match('/dev\/null/i', $item->getOld()) )
  				{
- 					$action = translate('Äîáàâëåíî');
+ 					$action = translate('Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¾');
  				}
  				else if ( preg_match('/dev\/null/i', $item->getNew()) )
  				{
- 					$action = translate('Óäàëåíî');
+ 					$action = translate('Ð£Ð´Ð°Ð»ÐµÐ½Ð¾');
  				}	
  				else
  				{
- 					$action = translate('Èçìåíåíî');
+ 					$action = translate('Ð˜Ð·Ð¼ÐµÐ½ÐµÐ½Ð¾');
  				}
  				
  				$registry->addFileAction( 

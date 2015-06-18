@@ -9,7 +9,7 @@ class RequestTraceMilestone extends RequestTraceBase
  	{
  		parent::__construct();
  		
- 		$this->setAttributeCaption('ObjectId', translate('Âåõà'));
+ 		$this->setAttributeCaption('ObjectId', translate('Ð’ÐµÑ…Ð°'));
  		
  		$this->addAttribute('Deadline', 'DATE', text(1170), true);
 

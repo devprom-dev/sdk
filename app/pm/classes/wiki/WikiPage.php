@@ -36,7 +36,7 @@ class WikiPage extends MetaobjectStatable
 		
  	 	$this->setSortDefault( array( new SortAttributeClause('Caption') ));
 
-		$this->addAttribute('DocumentVersion', 'VARCHAR', translate('Áåéçëàéí'), false, false, '', 40);
+		$this->addAttribute('DocumentVersion', 'VARCHAR', translate('Ð‘ÐµÐ¹Ð·Ð»Ð°Ð¹Ð½'), false, false, '', 40);
 
 		$this->addPersister( new DocumentVersionPersister() );
 		
@@ -280,7 +280,7 @@ class WikiPage extends MetaobjectStatable
 		if ( $object_it->getId() == '' ) return;
 		$parent_id = $object_it->get('ParentPage') != '' ? $object_it->get('ParentPage') : $object_it->getId();
 		
-		$sql = " CREATE TEMPORARY TABLE tmp_WikiPageSort (WikiPageId INTEGER, SortIndex VARCHAR(32767) ) ENGINE=MEMORY DEFAULT CHARSET=cp1251 AS ".
+		$sql = " CREATE TEMPORARY TABLE tmp_WikiPageSort (WikiPageId INTEGER, SortIndex VARCHAR(16384) ) ENGINE=MEMORY AS ".
 			   " SELECT t.WikiPageId, ".
 			   "        (SELECT GROUP_CONCAT(LPAD(u.OrderNum, 10, '0') ORDER BY LENGTH(u.ParentPath)) ".
  		       "    	   FROM WikiPage u WHERE t.ParentPath LIKE CONCAT('%,',u.WikiPageId,',%')) SortIndex ".
@@ -395,37 +395,6 @@ class WikiPage extends MetaobjectStatable
 	    return null;
 	}
 	
- 	function cacheDeps( $page_it = null )
-	{
-		global $model_factory;
-
-		if ( !is_object($this->cache) )
-		{
-			$object = $model_factory->getObject(get_class($this));
-			
-			$object->setFilters( $this->getFilters() );
-			$object->addFilter( new WikiNotArchivedPredicate() );
-			
-			$object->addSort( new SortAttributeClause('ParentPage') );
-			$object->addSort( new SortOrderedClause() );
-			
-			$this->cache = $object->getAll();
-
-			$this->cache->buildPositionHash( array( 'WikiPageId', 'ParentPage' ) );
-		}
-	}
-		
-	function getChildrenIt( $parent_it )
-	{
-		global $model_factory;
-		
-		$this->cacheDeps( $parent_it );
-
-		$this->cache->moveTo('ParentPage', $parent_it->getId() );
-		
-		return $this->cache;
-	}
-
  	function _fillValues( $object_it, $values, $level, $actual, &$items_count )
  	{
  		for($i = 0; $i < $object_it->count(); $i++)

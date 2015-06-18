@@ -2,6 +2,7 @@
 
 include "SubversionIterator.php";
 include "SCMConnector.php";
+include "predicates/RepositoryActivePredicate.php";
 
 class Subversion extends Metaobject
 {

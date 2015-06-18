@@ -107,7 +107,7 @@ class WikiRtfCKEditor extends WikiEditorBase
  	
  	function draw( $content, $b_editable = false )
  	{
- 		$lang = strtolower(getSession()->getLanguage()->getLanguage());
+ 		$lang = strtolower(getSession()->getLanguageUid());
  		
 		$field = $this->getFieldName();
 
@@ -136,7 +136,7 @@ class WikiRtfCKEditor extends WikiEditorBase
  			
  			$form->drawScripts();
  			
- 			$form->setAddButtonText( translate('Á‡„ÛÁËÚ¸ ËÁÓ·‡ÊÂÌËÂ') );
+ 			$form->setAddButtonText( translate('–∑–∞–≥—Ä—É–∑–∏—Ç—å –∏–∑–æ–±—Ä–∞–∂–µ–Ω–∏–µ') );
  			
  			ob_start();
  			
@@ -169,12 +169,12 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php } else { ?>
 			
-			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=htmlentities($content, ENT_QUOTES | ENT_HTML401, 'cp1251')?>">
+			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=htmlentities($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
 
 			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="min-height:<?=$height?>px;" contenteditable="true" objectId="<?=$object_id?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
 			    <? 
 				        // decode is required because of edit mode is displayed like html (div)
-			        echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, 'cp1251'); 
+			        echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); 
 			    ?>
 			</div>
 			

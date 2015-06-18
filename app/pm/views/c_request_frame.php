@@ -16,7 +16,7 @@
  	{
  		if ( is_array($this->progress['R']) && $this->progress['R'][0] > 0 )
  		{
- 			$this->drawLine( translate('Выполнено пожеланий'), $this->progress['R'][0],
+ 			$this->drawLine( translate('Р’С‹РїРѕР»РЅРµРЅРѕ РїРѕР¶РµР»Р°РЅРёР№'), $this->progress['R'][0],
  				$this->progress['R'][1], '#E6B51E', '#F8EABE' );
  		}
  		
@@ -24,25 +24,25 @@
  		{
 	 		if ( is_array($this->progress['A']) && $this->progress['A'][0] > 0 )
 	 		{
-	 			$this->drawLine( translate('Анализ'), $this->progress['A'][0],
+	 			$this->drawLine( translate('РђРЅР°Р»РёР·'), $this->progress['A'][0],
 	 				$this->progress['A'][1], '#D6632A', '#F2CCBA' );
 	 		}
 
 	 		if ( is_array($this->progress['D']) && $this->progress['D'][0] > 0 )
 	 		{
-	 			$this->drawLine( translate('Реализация'), $this->progress['D'][0],
+	 			$this->drawLine( translate('Р РµР°Р»РёР·Р°С†РёСЏ'), $this->progress['D'][0],
 	 				$this->progress['D'][1], '#9ADC44', '#DAF2BA' );
 	 		}
 
 	 		if ( is_array($this->progress['T']) && $this->progress['T'][0] > 0 )
 	 		{
-	 			$this->drawLine( translate('Тестирование'), $this->progress['T'][0],
+	 			$this->drawLine( translate('РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ'), $this->progress['T'][0],
 	 				$this->progress['T'][1], '#7D7A79', '#DAD9D8' );
 	 		}
 
 	 		if ( is_array($this->progress['H']) && $this->progress['H'][0] > 0 )
 	 		{
-	 			$this->drawLine( translate('Документирование'), $this->progress['H'][0],
+	 			$this->drawLine( translate('Р”РѕРєСѓРјРµРЅС‚РёСЂРѕРІР°РЅРёРµ'), $this->progress['H'][0],
 	 				$this->progress['H'][1], '#5C9CCE', '#C6DEF0' );
 	 		}
  		}
@@ -56,7 +56,7 @@
  		    echo '<div class="bar '.($progress == 100 ? 'bar-success' : 'bar-warning').'" style="width:'.$progress.'%;"></div>';
  		echo '</div>'; 
 
-		if ( $this->drawtasks && $stage == translate('Выполнено пожеланий') )
+		if ( $this->drawtasks && $stage == translate('Р’С‹РїРѕР»РЅРµРЅРѕ РїРѕР¶РµР»Р°РЅРёР№') )
 		{
  			echo '<div style="border-bottom:1px dotted grey;margin-top:3px;margin-bottom:8px;"></div>';
 		}
@@ -84,22 +84,22 @@
  	{
 		switch ( $stage )
 		{
-			case translate('Анализ'):
+			case translate('РђРЅР°Р»РёР·'):
 				$letter = $stage[0];
 				$this->type_it->moveTo('ReferenceName', 'analysis');
 				break;
 
-			case translate('Реализация'):
+			case translate('Р РµР°Р»РёР·Р°С†РёСЏ'):
 				$letter = $stage[0];
 				$this->type_it->moveTo('ReferenceName', 'development');
 				break;
 
-			case translate('Тестирование'):
+			case translate('РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ'):
 				$letter = $stage[0];
 				$this->type_it->moveTo('ReferenceName', 'testing');
 				break;
 
-			case translate('Документирование'):
+			case translate('Р”РѕРєСѓРјРµРЅС‚РёСЂРѕРІР°РЅРёРµ'):
 				$letter = $stage[0];
 				$this->type_it->moveTo('ReferenceName', 'documenting');
 				break;
@@ -191,7 +191,7 @@
 				if ( $this->request_agg_it->get('Critical') > 0 )
 				{
 					echo '<div style="float:left;">';
-						echo '<a href="'.$this->url.'&priority=1"><img src="/images/exclamation.png" title="'.translate('Критичные').'" style="margin-bottom:-2px;"></a><sup>'.
+						echo '<a href="'.$this->url.'&priority=1"><img src="/images/exclamation.png" title="'.translate('РљСЂРёС‚РёС‡РЅС‹Рµ').'" style="margin-bottom:-2px;"></a><sup>'.
 							$this->request_agg_it->get('Critical').'</sup>';
 					echo '&nbsp;</div>';
 				}
@@ -199,7 +199,7 @@
 				if ( $this->request_agg_it->get('High') > 0 )
 				{
 					echo '<div style="float:left;">';
-						echo '<a href="'.$this->url.'&priority=2"><img src="/images/error.png" title="'.translate('С высоким приоритетом').'" style="margin-bottom:-2px;"></a><sup>'.
+						echo '<a href="'.$this->url.'&priority=2"><img src="/images/error.png" title="'.translate('РЎ РІС‹СЃРѕРєРёРј РїСЂРёРѕСЂРёС‚РµС‚РѕРј').'" style="margin-bottom:-2px;"></a><sup>'.
 							$this->request_agg_it->get('High').'</sup>';
 					echo '&nbsp;</div>';
 				}
@@ -208,7 +208,7 @@
 			if ( $this->request_agg_it->get('Bugs') > 0 )
 			{
 				echo '<div style="float:left;">';
-					echo '<a href="'.$this->url.'&type=bug"><img src="/images/bug.png" title="'.translate('Ошибки').'" style="margin-bottom:-2px;"></a><sup>'.
+					echo '<a href="'.$this->url.'&type=bug"><img src="/images/bug.png" title="'.translate('РћС€РёР±РєРё').'" style="margin-bottom:-2px;"></a><sup>'.
 						$this->request_agg_it->get('Bugs').'</sup>';
 				echo '&nbsp;</div>';
 				
@@ -220,7 +220,7 @@
 				$filter = 'type='.join($this->notbugs,',');
 				
 				echo '<div style="float:left;">';
-					echo '<a href="'.$this->url.'&'.$filter.'"><img src="/images/layout_add.png" title="'.translate('Пожелания и доработки').'" style="margin-bottom:-2px;"></a><sup>'.
+					echo '<a href="'.$this->url.'&'.$filter.'"><img src="/images/layout_add.png" title="'.translate('РџРѕР¶РµР»Р°РЅРёСЏ Рё РґРѕСЂР°Р±РѕС‚РєРё').'" style="margin-bottom:-2px;"></a><sup>'.
 						$this->request_agg_it->get('Issues').'</sup>';
 				echo '&nbsp;</div>';
 
@@ -238,7 +238,7 @@
 			{
 				echo '<div class="line"></div>';
 				echo '<div>';
-					echo '<a href="'.$this->url.'">'.translate('Все пожелания').'</a>: '.$total;
+					echo '<a href="'.$this->url.'">'.translate('Р’СЃРµ РїРѕР¶РµР»Р°РЅРёСЏ').'</a>: '.$total;
 				echo '&nbsp;</div>';
 			}
 		}

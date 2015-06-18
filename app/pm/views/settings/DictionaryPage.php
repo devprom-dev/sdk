@@ -28,13 +28,19 @@ class DictionaryPage extends PMPage
  		}
  		
  		parent::__construct();
+ 		
+ 		if ( $this->needDisplayForm() ) $this->buildFormSections( $this->getObjectIt() );
+ 	}
+ 	
+ 	function getObject()
+ 	{
+ 		return $this->getDictionary();
  	}
  	
  	function getDictionary()
  	{
  		global $_REQUEST, $model_factory;
  		
-		getSession()->addBuilder( new TransitionModelBuilder() );
 		getSession()->addBuilder( new StateBaseModelBuilder() );
  		
  		switch ( $_REQUEST['dict'] )
@@ -145,5 +151,14 @@ class DictionaryPage extends PMPage
  		}
  		
  		return parent::render($view);
+ 	}
+ 	
+ 	function buildFormSections( $object_it )
+ 	{
+ 		if ( !is_object($object_it) ) return;
+ 		if ( $object_it->object->getAttributeType('RecentComment') != '' )
+ 		{
+ 			$this->addInfoSection( new PageSectionComments($object_it) );
+ 		}
  	}
 }

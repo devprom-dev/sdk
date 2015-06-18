@@ -206,6 +206,5 @@ class FieldAutoCompleteObject extends Field
 			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$this->getEncodedValue().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" >';
 			echo '</div>';
 		}
-		echo '<div style="clear:both;"></div>';
  	}
 }

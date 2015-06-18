@@ -12,7 +12,7 @@ class ParticipantBaseRolePredicate extends FilterPredicate
 		if ( $role_it->count() > 0 )
 		{
 			return " AND EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole prr " .
-				   "			  WHERE r.Participant = t.pm_ParticipantId" .
+				   "			  WHERE r.Participant = ".$this->getAlias().".pm_ParticipantId" .
 				   "				AND r.ProjectRole = prr.pm_ProjectRoleId" .
 				   "				AND prr.ProjectRoleBase = ".$role_it->getId()." ) ";
 		}

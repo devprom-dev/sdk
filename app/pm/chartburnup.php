@@ -76,12 +76,12 @@
  header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
  header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
  header("Pragma: no-cache"); // HTTP/1.0
- header('Content-type: application/json; charset=windows-1251');
+ header('Content-type: application/json; charset='.APP_ENCODING);
 
  $lines = array( 
-	translate('Оценка') => $total, 
-	translate('Выполнено') => $resolved,
-	translate('Прогноз') => $prognosis 
+	translate('РћС†РµРЅРєР°') => $total, 
+	translate('Р’С‹РїРѕР»РЅРµРЅРѕ') => $resolved,
+	translate('РџСЂРѕРіРЅРѕР·') => $prognosis 
  );
 
  $labels = array();

@@ -18,12 +18,18 @@ class WorkflowService
 		
 		$this->state_object = getFactory()->getObject($this->object->getStateClassName());
 	}
+
+	public function getStateObject()
+	{
+		return $this->state_object;
+	}
 	
 	public function moveToState( $object_it, $target_state_ref_name, $comment = '', $parms = array(), $fire_event = true )
 	{
+		$target_state_ref_name = !is_array($target_state_ref_name) ? preg_split('/,/',$target_state_ref_name) : $target_state_ref_name;
+		
 		if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
-
-		if ( $object_it->get('State') == $target_state_ref_name ) return;
+		if ( in_array($object_it->get('State'), $target_state_ref_name) ) return;
 		
 	    $source_it = $this->state_object->getRegistry()->Query(
     			array (
@@ -34,24 +40,25 @@ class WorkflowService
     	);
 
     	$this->logger->info( "[WorkflowService] Source state is ".$source_it->getId() );
-	    	
+    	
 	    $target_it = $this->state_object->getRegistry()->Query(
     			array (
-    					$target_state_ref_name == self::RESOLVE
+    					in_array(self::RESOLVE, $target_state_ref_name)
     							? new \FilterAttributePredicate('IsTerminal', 'Y')
     							: new \FilterAttributePredicate('ReferenceName', $target_state_ref_name),
-    					new \FilterVpdPredicate($object_it->get('VPD'))
+    					new \FilterVpdPredicate($object_it->get('VPD')),
+    					new \SortOrderedClause()
     			)
     	);
 	    
-	    if ( $target_it->getId() == '' ) throw new \Exception('Target state "'.$target_state_ref_name.'" is undefined');
+	    if ( $target_it->getId() == '' ) throw new \Exception('Target state "'.join(',',$target_it->fieldToArray('Caption')).'" is undefined');
 	    
-	    $this->logger->info( "[WorkflowService] Target state is ".$target_it->getId() );
+	    $this->logger->info( "[WorkflowService] Target states are ".join(',',$target_it->idsToArray()) );
 	    
 	    $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
 	    		array (
 	    				new \FilterAttributePredicate('SourceState', $source_it->getId()),
-	    				new \FilterAttributePredicate('TargetState', $target_it->getId())
+	    				new \FilterAttributePredicate('TargetState', $target_it->idsToArray())
 	    		)
 	    );
 

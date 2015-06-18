@@ -23,7 +23,6 @@ class AccessPolicyPortfolio extends AccessPolicyBase
  	        case 'pm_Methodology':
  	        case 'pm_AccessRight':
  	        case 'pm_CustomAttribute':
- 	        case 'pm_VersionSettings':
  	            return false;
 
  	        case 'pm_ChangeRequest':

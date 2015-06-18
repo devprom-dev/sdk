@@ -20,7 +20,7 @@ class ChangePriorityWebMethod extends WebMethod
  	
  	function drawMethod( $object_it, $attribute ) 
  	{
- 		echo '<div id="methodBody'.$object_it->getId().'" style="width:100%;" title="'.translate('Ïðèîðèòåò').'">';
+ 		echo '<div id="methodBody'.$object_it->getId().'" style="width:100%;" title="'.translate('ÐŸÑ€Ð¸Ð¾Ñ€Ð¸Ñ‚ÐµÑ‚').'">';
  		    $this->drawBody( $object_it, $attribute );
  		echo '</div>';
  	}

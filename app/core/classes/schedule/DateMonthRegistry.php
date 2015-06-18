@@ -6,18 +6,18 @@ class DateMonthRegistry extends ObjectRegistrySQL
 	{
  		$this->items = array();
  		
-		array_push($this->items, array('Caption' => 'ßíâàğü'));
-		array_push($this->items, array('Caption' => 'Ôåâğàëü'));
-		array_push($this->items, array('Caption' => 'Ìàğò'));
-		array_push($this->items, array('Caption' => 'Àïğåëü'));
-		array_push($this->items, array('Caption' => 'Ìàé'));
-		array_push($this->items, array('Caption' => 'Èşíü'));
-		array_push($this->items, array('Caption' => 'Èşëü'));
-		array_push($this->items, array('Caption' => 'Àâãóñò'));
-		array_push($this->items, array('Caption' => 'Ñåíòÿáğü'));
-		array_push($this->items, array('Caption' => 'Îêòÿáğü'));
-		array_push($this->items, array('Caption' => 'Íîÿáğü'));
-		array_push($this->items, array('Caption' => 'Äåêàáğü'));
+		array_push($this->items, array('Caption' => 'Ğ¯Ğ½Ğ²Ğ°Ñ€ÑŒ'));
+		array_push($this->items, array('Caption' => 'Ğ¤ĞµĞ²Ñ€Ğ°Ğ»ÑŒ'));
+		array_push($this->items, array('Caption' => 'ĞœĞ°Ñ€Ñ‚'));
+		array_push($this->items, array('Caption' => 'ĞĞ¿Ñ€ĞµĞ»ÑŒ'));
+		array_push($this->items, array('Caption' => 'ĞœĞ°Ğ¹'));
+		array_push($this->items, array('Caption' => 'Ğ˜ÑĞ½ÑŒ'));
+		array_push($this->items, array('Caption' => 'Ğ˜ÑĞ»ÑŒ'));
+		array_push($this->items, array('Caption' => 'ĞĞ²Ğ³ÑƒÑÑ‚'));
+		array_push($this->items, array('Caption' => 'Ğ¡ĞµĞ½Ñ‚ÑĞ±Ñ€ÑŒ'));
+		array_push($this->items, array('Caption' => 'ĞĞºÑ‚ÑĞ±Ñ€ÑŒ'));
+		array_push($this->items, array('Caption' => 'ĞĞ¾ÑĞ±Ñ€ÑŒ'));
+		array_push($this->items, array('Caption' => 'Ğ”ĞµĞºĞ°Ğ±Ñ€ÑŒ'));
  		
  		foreach ( array_keys($this->items) as $key )
  		{

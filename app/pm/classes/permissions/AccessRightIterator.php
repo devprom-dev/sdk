@@ -143,11 +143,11 @@ class AccessRightIterator extends OrderedIterator
  		switch ( $this->get('ReferenceType') )
  		{
  			case 'Y':
- 				$caption .= ': '.translate('Îáúåêò');
+ 				$caption .= ': '.translate('ÐžÐ±ÑŠÐµÐºÑ‚');
  				break;
 
  			case 'A':
- 				$caption .= ': '.translate('Àòðèáóò');
+ 				$caption .= ': '.translate('ÐÑ‚Ñ€Ð¸Ð±ÑƒÑ‚');
  				break;
  				
  			case 'O':
@@ -182,15 +182,15 @@ class AccessRightIterator extends OrderedIterator
  		switch ( $this->get('AccessType') )
  		{
  			case 'none':
- 				$caption .= ' ['.translate('Íåò').']';
+ 				$caption .= ' ['.translate('ÐÐµÑ‚').']';
  				break;
 
  			case 'view':
- 				$caption .= ' ['.translate('Ïðîñìîòð').']';
+ 				$caption .= ' ['.translate('ÐŸÑ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€').']';
  				break;
 
  			case 'modify':
- 				$caption .= ' ['.translate('Èçìåíåíèå').']';
+ 				$caption .= ' ['.translate('Ð˜Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ').']';
  				break;
  		}
  		
@@ -231,8 +231,9 @@ class AccessRightIterator extends OrderedIterator
  	
  	function getViewUrl()
  	{
- 	    $session = getSession();
- 		return $session->getApplicationUrl().'participants/rights?role='.$this->get('ProjectRole');
+ 		$info = getFactory()->getObject('Module')
+ 					->getExact('permissions/settings')->buildMenuItem('role='.$this->get('ProjectRole'));
+ 		return $info['url'];
  	}
  	
  	function getRecordKey( $reference_name, $reference_type, $project_role )

@@ -186,7 +186,7 @@ class FunctionList extends PMPageList
 		    case 'Workload':
 			    $value = $object_it->get('Workload') == '' ? 0 : $object_it->get('Workload');
 			     
-			    echo round($value, 1).' '.translate('дн.');
+			    echo round($value, 1).' '.translate('РґРЅ.');
 			    
 			    if ( $value > 0 )
 			    {

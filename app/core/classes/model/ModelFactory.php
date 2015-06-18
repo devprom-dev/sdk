@@ -154,12 +154,12 @@ class ModelFactory extends ModelFactoryBase
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-function &getModelFactory()
+function getModelFactory()
 {
     return ModelFactory::get();
 }
 
-function &getFactory()
+function getFactory()
 {
     return ModelFactory::get();
 }

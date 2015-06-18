@@ -84,14 +84,14 @@
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 		header("Pragma: no-cache"); // HTTP/1.0
-		header('Content-type: text/xml; charset=windows-1251');
+		header('Content-type: text/xml; charset='.APP_ENCODING);
 
 		echo '<reply>';
 			echo '<state>';
 				echo ($is_error ? 'error' : 'success');
 			echo '</state>';
 			echo '<text>';
-				echo htmlspecialchars($message, ENT_COMPAT | ENT_HTML401, 'cp1251');
+				echo htmlspecialchars($message, ENT_COMPAT | ENT_HTML401, APP_ENCODING);
 			echo '</text>';
 		echo '</reply>';
 		
@@ -245,11 +245,11 @@
 				}
 				else
 				{
-					return translate('Çàïèñü íå óíèêàëüíà');
+					return translate('Ð—Ð°Ð¿Ð¸ÑÑŒ Ð½Ðµ ÑƒÐ½Ð¸ÐºÐ°Ð»ÑŒÐ½Ð°');
 				}
 
 			default:
-				return translate('Íåèçâåñòíûé ðåçóëüòàò');
+				return translate('ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ñ‹Ð¹ Ñ€ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚');
 		}
 	}
 	
@@ -311,7 +311,7 @@
 		$this->logFinish();
 	}
 
-	function replySuccess( $message, $object_id )
+	function replySuccess( $message, $object_id = '' )
 	{
 		$log = $this->getLogger();
 		if ( is_object($log) ) $log->info( $message );
@@ -378,5 +378,3 @@
         die();
     }
  } 
-
-?>

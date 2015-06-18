@@ -153,22 +153,17 @@ include "DateFormatRussian.php";
  	
  	function getDaysWording( $days ) 
  	{
- 		if( abs($days) == 1 ) 
- 			return 'äåíü';
- 		elseif( abs($days) > 1 and abs($days) < 5 )
- 			return 'äíÿ';
- 		else
- 			return 'äíåé';
+ 		return $this->dateformat->getDaysWording($days);
  	}
 
  	function getWeeksWording( $weeks ) 
  	{
  		if( abs($weeks) == 1 ) 
- 			return 'íåäåëÿ';
+ 			return 'Ð½ÐµÐ´ÐµÐ»Ñ';
  		elseif( abs($weeks) > 1 and abs($weeks) < 5 )
- 			return 'íåäåëè';
+ 			return 'Ð½ÐµÐ´ÐµÐ»Ð¸';
  		else
- 			return 'íåäåëü';
+ 			return 'Ð½ÐµÐ´ÐµÐ»ÑŒ';
  	}
  	
  	function getDateWording( $db_date )
@@ -176,12 +171,12 @@ include "DateFormatRussian.php";
  		$today = strtotime(date('Y-m-d'));
  		
 		$map = array (
-			strftime('%Y-%m-%d', $today) => translate('ñåãîäíÿ'), 		
-			strftime('%Y-%m-%d', strtotime('-1 day', $today)) => translate('â÷åðà'), 		
-			strftime('%Y-%m-%d', strtotime('-2 day', $today)) => translate('ïîçàâ÷åðà'), 		
-			strftime('%Y-%m-%d', strtotime('-6 day', $today)) => translate('íà íåäåëå'), 		
-			strftime('%Y-%m-%d', strtotime('-1 week', $today)) => translate('íåäåëþ íàçàä'), 		
-			strftime('%Y-%m-%d', strtotime('-2 week', $today)) => translate('2 íåäåëè íàçàä')
+			strftime('%Y-%m-%d', $today) => translate('ÑÐµÐ³Ð¾Ð´Ð½Ñ'), 		
+			strftime('%Y-%m-%d', strtotime('-1 day', $today)) => translate('Ð²Ñ‡ÐµÑ€Ð°'), 		
+			strftime('%Y-%m-%d', strtotime('-2 day', $today)) => translate('Ð¿Ð¾Ð·Ð°Ð²Ñ‡ÐµÑ€Ð°'), 		
+			strftime('%Y-%m-%d', strtotime('-6 day', $today)) => translate('Ð½Ð° Ð½ÐµÐ´ÐµÐ»Ðµ'), 		
+			strftime('%Y-%m-%d', strtotime('-1 week', $today)) => translate('Ð½ÐµÐ´ÐµÐ»ÑŽ Ð½Ð°Ð·Ð°Ð´'), 		
+			strftime('%Y-%m-%d', strtotime('-2 week', $today)) => translate('2 Ð½ÐµÐ´ÐµÐ»Ð¸ Ð½Ð°Ð·Ð°Ð´')
 			);
 
 		foreach( $map as $date => $wording )

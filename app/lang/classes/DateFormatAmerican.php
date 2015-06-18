@@ -47,4 +47,13 @@ class DateFormatAmerican extends DateFormatBase
 		
 		return $year."-".$month."-".$day;
  	}
+
+ 	function getDaysWording( $days )
+ 	{
+ 		if ( $days == 1 ) {
+ 			return 'day';
+ 		} else {
+ 			return 'days';
+ 		}
+ 	}
 }

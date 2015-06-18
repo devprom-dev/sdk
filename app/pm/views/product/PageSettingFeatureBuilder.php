@@ -35,5 +35,18 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
         		)
         );
         $settings->add( $setting );
+        
+        // traces report
+        $setting = new ReportSetting('featurestrace');
+ 	    $visible = array_merge( 
+ 	    		array(
+ 	    				'UID', 
+ 	    				'Caption',
+ 	    				'Issues'
+ 	    		), 
+		    	getFactory()->getObject('Feature')->getAttributesByGroup('trace')
+		);
+        $setting->setVisibleColumns($visible);
+        $settings->add( $setting );
     }
 }

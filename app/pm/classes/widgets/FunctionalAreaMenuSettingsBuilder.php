@@ -24,12 +24,6 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 		
-		$module_part_it = $module->getExact('participants');
-		if ( getFactory()->getAccessPolicy()->can_read($module_part_it) )
-		{
-    		$items[] = $module_part_it->buildMenuItem();
-		}
-		
 		$module_it = $module->getExact('methodology');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
@@ -48,12 +42,6 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 		
-    	$module_it = $module->getExact('rights');
-    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-    		$items[] = $module_it->buildMenuItem();
-		}
-
 	    $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
  	    
  	    $items = array();
@@ -70,7 +58,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 	    }
 
  	    $menus['workflow'] = array (
- 	        'name' => translate('Ñîñòîÿíèÿ'),
+ 	        'name' => translate('Ğ¡Ğ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ñ'),
             'uid' => 'workflow',
             'items' => $items
  	    );
@@ -97,7 +85,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 	    }
 
  	    $menus['dicts'] = array (
- 	        'name' => translate('Ñïğàâî÷íèêè'),
+ 	        'name' => translate('Ğ¡Ğ¿Ñ€Ğ°Ğ²Ğ¾Ñ‡Ğ½Ğ¸ĞºĞ¸'),
             'uid' => 'dicts',
             'items' => $items
  	    );
@@ -133,7 +121,7 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 		}
 		
  	    $menus['settings'] = array (
- 	        'name' => translate('Äîïîëíèòåëüíî'),
+ 	        'name' => translate('Ğ”Ğ¾Ğ¿Ğ¾Ğ»Ğ½Ğ¸Ñ‚ĞµĞ»ÑŒĞ½Ğ¾'),
             'uid' => 'settings',
             'items' => $items
  	    );

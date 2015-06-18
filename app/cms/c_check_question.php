@@ -49,7 +49,7 @@
  	
  	function getDisplayName()
  	{
- 		return translate('Ââåäèòå ÷èñëî').' '.$this->generated;
+ 		return translate('Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ñ‡Ð¸ÑÐ»Ð¾').' '.$this->generated;
  	}
  	
  	function getAnswer()

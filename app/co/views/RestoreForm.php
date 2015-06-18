@@ -56,7 +56,7 @@ class ForgetPasswordForm extends AjaxForm
 	
 	function getButtonText()
 	{
-		return translate('Отправить');
+		return translate('РћС‚РїСЂР°РІРёС‚СЊ');
 	}
 	
 	function getTemplate()

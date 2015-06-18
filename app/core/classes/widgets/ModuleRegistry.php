@@ -6,15 +6,11 @@ class ModuleRegistry extends ObjectRegistrySQL
 	
  	function createSQLIterator( $sql )
  	{
- 	    $builders = getSession()->getBuilders('ModuleBuilder');
-
- 	    foreach( $builders as $builder )
- 	    {
+ 	    foreach( getSession()->getBuilders('ModuleBuilder') as $builder ) {
  	        $builder->build( $this );
  	    }
  	    
  	    $vpd_value = array_shift($this->getObject()->getVpds());
- 	    
  	    foreach ( $this->getData() as $key => $row ) $this->data[$key]['VPD'] = $vpd_value;
 
  	    return $this->createIterator( $this->data );

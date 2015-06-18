@@ -17,7 +17,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Изменено после');
+ 		return translate('РР·РјРµРЅРµРЅРѕ РїРѕСЃР»Рµ');
  	}
 
 	function getStyle()
@@ -36,15 +36,15 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Вид');
+ 		return translate('Р’РёРґ');
  	}
  	
  	function getValues()
  	{
   		return array (
- 			'list' => translate('Список'), 
- 			'trace' => translate('Трассировка'),
- 			'chart' => translate('График')
+ 			'list' => translate('РЎРїРёСЃРѕРє'), 
+ 			'trace' => translate('РўСЂР°СЃСЃРёСЂРѕРІРєР°'),
+ 			'chart' => translate('Р“СЂР°С„РёРє')
   		);
 	}
 
@@ -87,9 +87,9 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	function getValues()
  	{
   		return array (
- 			'all' => translate('Все'), 
- 			'actual' => translate('Синхронизированы'),
- 			'nonactual' => translate('Рассинхронизированы')
+ 			'all' => translate('Р’СЃРµ'), 
+ 			'actual' => translate('РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅС‹'),
+ 			'nonactual' => translate('Р Р°СЃСЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅС‹')
  			);
 	}
 
@@ -244,7 +244,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
 	function getCaption() 
 	{
-		return translate('Удалить');
+		return translate('РЈРґР°Р»РёС‚СЊ');
 	}
 	
 	function getDescription() 
@@ -288,7 +288,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
 	function getCaption() 
 	{
-		return translate('Отменить');
+		return translate('РћС‚РјРµРЅРёС‚СЊ');
 	}
 	
 	function getJSCall( $object_it, $change_it ) 
@@ -341,7 +341,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	
  	function getCaption()
  	{
- 		return translate('Тэги');
+ 		return translate('РўСЌРіРё');
  	}
 
  	function getValues()
@@ -349,7 +349,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  		global $model_factory;
  		
   		$values = array (
- 			'all' => translate('Все'),
+ 			'all' => translate('Р’СЃРµ'),
  			);
  		
  		while ( !$this->tag_it->end() )
@@ -371,7 +371,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
      		}
  		}
  		
-		$values[' 0'] = translate('Тэги: не заданы');
+		$values[' 0'] = translate('РўСЌРіРё: РЅРµ Р·Р°РґР°РЅС‹');
 
  		return $values;
 	}
@@ -392,15 +392,15 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Содержание');
+ 		return translate('РЎРѕРґРµСЂР¶Р°РЅРёРµ');
  	}
 
  	function getValues()
  	{
   		$values = array (
- 			'all' => translate('Любое'),
-  			'nonempty' => translate('Есть содержимое'),
-  			'empty' => translate('Нет содержимого')
+ 			'all' => translate('Р›СЋР±РѕРµ'),
+  			'nonempty' => translate('Р•СЃС‚СЊ СЃРѕРґРµСЂР¶РёРјРѕРµ'),
+  			'empty' => translate('РќРµС‚ СЃРѕРґРµСЂР¶РёРјРѕРіРѕ')
  			);
  		
  		return $values;
@@ -427,14 +427,14 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('В архиве');
+ 		return translate('Р’ Р°СЂС…РёРІРµ');
  	}
 
  	function getValues()
  	{
   		$values = array (
- 			'current' => translate('Нет'),
-  			'archived' => translate('В архиве')
+ 			'current' => translate('РќРµС‚'),
+  			'archived' => translate('Р’ Р°СЂС…РёРІРµ')
  			);
  		
  		return $values;
@@ -461,14 +461,14 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Покрытие');
+ 		return translate('РџРѕРєСЂС‹С‚РёРµ');
  	}
 
  	function getValues()
  	{
   		$values = array (
- 			'all' => translate('Любое'),
-  			'none' => translate('Без требований')
+ 			'all' => translate('Р›СЋР±РѕРµ'),
+  			'none' => translate('Р‘РµР· С‚СЂРµР±РѕРІР°РЅРёР№')
  			);
  		
  		return $values;
@@ -495,14 +495,14 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Форматирование');
+ 		return translate('Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ');
  	}
  	
  	function getValues()
  	{
   		return array (
- 			'text' => translate('Только текст'),
-  			'full' => translate('Текст и стили') 
+ 			'text' => translate('РўРѕР»СЊРєРѕ С‚РµРєСЃС‚'),
+  			'full' => translate('РўРµРєСЃС‚ Рё СЃС‚РёР»Рё') 
  			);
 	}
 

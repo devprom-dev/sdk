@@ -1,5 +1,5 @@
 {% block subject %}
-    {{ 'issue.resolved.subject'|trans({ '%id%' : issue.id }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+    {{ 'issue.resolved.subject'|trans({ '%id%' : issue.id }, 'emails', language) }}
 {% endblock subject %}
 
 {% block body_html %}
@@ -13,14 +13,14 @@
                         '%title%' : issue.caption,
                         '%link%' : issueLink,
                         '%comment%' : comment,
-                    }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+                    }, 'emails', language) }}
                 {% else %}
                     {{ 'issue.resolved-version.body'|trans({
                         '%title%' : issue.caption,
                         '%link%' : issueLink,
                         '%comment%' : comment,
                         '%version%' : version,
-                    }, 'emails', language)|convert_encoding('UTF-8', 'windows-1251') }}
+                    }, 'emails', language) }}
                 {% endif %}
             {% endautoescape %}
         {% endblock body %}

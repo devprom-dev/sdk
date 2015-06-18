@@ -26,7 +26,7 @@ class FlotChartDataSource
 			
 			if ( trim($value) == '' )
 			{
-				$value = translate('Не задано');
+				$value = text(2030);
 			}
 			
 			if ( count($aggs) > 1 )

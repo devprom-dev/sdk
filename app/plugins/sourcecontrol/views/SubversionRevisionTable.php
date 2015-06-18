@@ -51,14 +51,14 @@ class SubversionRevisionTable extends PMPageTable
         return array (
                 new FilterObjectMethod( $model_factory->getObject('pm_Subversion') ),
         		$this->buildAuthorFilter(),
-                new ViewStartDateWebMethod( translate('Íà÷àëî'), true ),
+                new ViewStartDateWebMethod( translate('ÐÐ°Ñ‡Ð°Ð»Ð¾'), true ),
                 new ViewFinishDateWebMethod()
         );
     }
     
     function buildAuthorFilter()
     {
-    	$filter = new FilterObjectMethod(getFactory()->getObject('SubversionAuthor'), translate('Àâòîð'));
+    	$filter = new FilterObjectMethod(getFactory()->getObject('SubversionAuthor'), translate('ÐÐ²Ñ‚Ð¾Ñ€'));
     	$filter->setIdFieldName('ReferenceName');
     	$filter->setHasNone(false);
     	return $filter;
@@ -106,7 +106,7 @@ class SubversionRevisionTable extends PMPageTable
     	{
 		    $job_it = getFactory()->getObject('co_ScheduledJob')->getByRef('ClassName', 'processrevisionlog');
 		    $actions[] = array ( 
-		            'name' => translate('Îáíîâèòü'),
+		            'name' => translate('ÐžÐ±Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'),
 		    		'uid' => 'refresh-commits', 
 		            'url' => '/tasks/command.php?class=runjobs&job='.$job_it->getId().
 		    						'&chunk='.join(',',$connector->getAll()->idsToArray()).

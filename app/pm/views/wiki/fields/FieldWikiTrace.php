@@ -47,12 +47,12 @@ class FieldWikiTrace extends FieldForm
 		return new WikiTraceFormEmbedded( $trace, 'SourcePage' );
 	}
 	
-	function render( & $view )
+	function render( $view )
 	{
 	    $this->drawBody( $view );
 	}
 	
-	function drawBody( & $view = null )
+	function drawBody( $view = null )
 	{
 		global $model_factory;
 		

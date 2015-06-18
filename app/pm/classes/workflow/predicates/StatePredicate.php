@@ -18,19 +18,16 @@ class StatePredicate extends FilterPredicate
 					join($object->getTerminalStates(), "','")."') ";
 				
 			default:
-		 		$state = getFactory()->getObject($object->getStateClassName());
-		 		
-		 		$state_it = $state->getByRefArray( array (
-		 			'ReferenceName' => preg_split('/[,-]/', $filter) 
-		 		));
-		 		
-		 		if ( $state_it->count() > 0 )
-		 		{
-		 			return " AND t.State IN ('".
-		 				join($state_it->fieldToArray('ReferenceName'), "','")."')";
+		 		$state_it = getFactory()->getObject($object->getStateClassName())->getRegistry()->Query(
+		 				array (
+		 					new FilterAttributePredicate('ReferenceName', preg_split('/[,-]/', $filter)),
+		 					new FilterVpdPredicate()
+		 				)
+		 			);
+		 		if ( $state_it->count() > 0 ) {
+		 			return " AND t.State IN ('".join($state_it->fieldToArray('ReferenceName'), "','")."')";
 		 		}
-		 		else
-		 		{
+		 		else {
 		 			return " AND 1 = 2 ";
 		 		}
 		}

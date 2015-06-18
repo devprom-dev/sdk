@@ -2,6 +2,6 @@
 
 {% block body %}
     {% autoescape false %}
-    {{ 'registration.email.message'|trans({'%login%': login, '%password%': password, '%clientName%': client_name, '%link%' : site_url}, 'emails')|convert_encoding('UTF-8', 'windows-1251') }}
+    {{ 'registration.email.message'|trans({'%login%': login, '%password%': password, '%clientName%': client_name, '%link%' : site_url}, 'emails') }}
     {% endautoescape %}
 {% endblock body %}

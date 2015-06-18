@@ -108,27 +108,13 @@ class PMWikiList extends PMPageList
 		{
 			case 'WikiPage':
 				
-				$uid = new ObjectUid;
-
 				$baselines = array();
-						
 				foreach( preg_split('/,/', $object_it->get('SourcePageBaseline')) as $trace )
 				{
 					list( $page_id, $baseline ) = preg_split('/:/', $trace);
-					
 					$baselines[$page_id] = $baseline;
 				}
-
-				$items = array();
-				
-				while( !$entity_it->end() )
-				{
-              		$uid->setBaseline( $baselines[$entity_it->getId()] );
-                			
-           			$items[] = $uid->getUidIconGlobal($entity_it, true);
-					
-					$entity_it->moveNext();
-				}
+				$this->getUidService()->setBaseline($baselines[$entity_it->getId()]);
 				
 				echo '<div class="tracing-ref">';
 					if ( $entity_it->get('BrokenTraces') != "" )
@@ -140,7 +126,7 @@ class PMWikiList extends PMPageList
 								)
 						);
 					}
-					echo join($items, ', ');
+					parent::drawRefCell( $entity_it, $object_it, $attr );
 				echo '</div>';
 				
 				break;

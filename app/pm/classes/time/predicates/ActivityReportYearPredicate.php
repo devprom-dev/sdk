@@ -6,6 +6,6 @@ class ActivityReportYearPredicate extends FilterPredicate
  	{
  	    if ( $filter < 1 || !is_numeric($filter) ) return " AND 1 = 2 ";
  	    
-		return " AND YEAR(CONVERT_TZ(t.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')) = ".$filter;
+		return " AND YEAR(CONVERT_TZ(".$this->getAlias().".ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')) = ".$filter;
  	}
 }

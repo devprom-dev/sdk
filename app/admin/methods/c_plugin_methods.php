@@ -19,11 +19,11 @@ class TogglePluginWebMethod extends WebMethod
 			
 		if ( $plugins->pluginEnabled($this->filename) )
 		{
-			return translate('Отключить');
+			return translate('РћС‚РєР»СЋС‡РёС‚СЊ');
 		}
 		else
 		{
-			return translate('Подключить');
+			return translate('РџРѕРґРєР»СЋС‡РёС‚СЊ');
 		}
 	}
 

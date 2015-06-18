@@ -8,6 +8,6 @@ class ModuleCategoryBuilderFileServer extends ModuleCategoryBuilder
 	
     public function build( ModuleCategoryRegistry & $object )
     {
-    	$object->add( self::AREA_UID, translate('Ðàçâåðòûâàíèå') );
+    	$object->add( self::AREA_UID, translate('Ð Ð°Ð·Ð²ÐµÑ€Ñ‚Ñ‹Ð²Ð°Ð½Ð¸Ðµ') );
     }
 }

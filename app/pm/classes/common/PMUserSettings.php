@@ -1,6 +1,7 @@
 <?php
 
 include "predicates/SettingGlobalPredicate.php";
+include "predicates/SettingExportPredicate.php";
 include "PMUserSettingsExportRegistry.php";
 
 class PMUserSettings extends MetaobjectCacheable

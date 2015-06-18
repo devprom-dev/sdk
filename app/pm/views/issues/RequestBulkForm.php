@@ -6,19 +6,16 @@ class RequestBulkForm extends BulkForm
 {
  	function getForm()
  	{
- 		return new RequestForm();
+ 		return new RequestForm($this->getObject());
  	}
  	
 	function getAttributeType( $attr )
  	{
  		switch ( $attr )
  		{
- 			case 'SubmittedVersion':
- 			case 'ClosedInVersion':
  			case 'Tag':
  			case 'Project':
  			case 'Iterations':
- 			case 'Owner':
  			case 'LinkType':
  				return 'custom';
  				
@@ -32,16 +29,13 @@ class RequestBulkForm extends BulkForm
  		switch ( $attr )
  		{
  			case 'Tag':
- 				return translate('Òýã');
+ 				return translate('Ð¢ÑÐ³');
  				
- 			case 'Project':
- 				return translate('Ïðîåêò');
-
  			case 'Iterations':
- 				return translate('Èòåðàöèÿ');
+ 				return translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ');
 
  			case 'LinkType':
- 				return translate('Òèï ñâÿçè');
+ 				return translate('Ð¢Ð¸Ð¿ ÑÐ²ÑÐ·Ð¸');
  				
  			default:
  				return parent::getName( $attr );
@@ -74,72 +68,49 @@ class RequestBulkForm extends BulkForm
  	
  	function drawCustomAttribute( $attribute, $value, $tab_index )
  	{
- 		global $model_factory;
- 		
  		switch ( $attribute )
  		{
- 			case 'SubmittedVersion':
- 			case 'ClosedInVersion':
-				$version = $model_factory->getObject('Version');
-
-				$field = new FieldAutoCompleteObject( $version );
-				$field->SetName($attribute);
-				$field->SetId('Version');
-				$field->SetValue($value);
-				$field->SetTabIndex($tab_index);
-				
-				echo $this->getName($attribute);
-				
-				$field->draw();
-				
-				break;
-
  			case 'Project':
-
  				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
- 				
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				$field->SetRequired(true);
 				
-				echo $this->getName($attribute);
-				
+ 				if ( $this->showAttributeCaption() ) {
+					echo $this->getObject()->getAttributeUserName($attribute);
+				}
 				$field->draw();
-				
 				break;
 
  			case 'Iterations':
-				
- 			    $iteration = $model_factory->getObject('Iteration');
- 			    
+ 			    $iteration = getFactory()->getObject('Iteration');
  			    $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
- 			    
  			    $field = new FieldAutoCompleteObject( $iteration );
-				
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
 				
-				echo $this->getName($attribute);
-				
+ 				if ( $this->showAttributeCaption() ) {
+					echo $this->getName($attribute);
+				}
 				$field->draw();
-				
 				break;
 				
  			case 'Tag':
-				$field = new FieldAutoCompleteObject( $model_factory->getObject('Tag') );
+				$field = new FieldAutoCompleteObject( getFactory()->getObject('Tag') );
 				$field->SetId($attribute);
 				$field->SetName('value');
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
+				$field->setAppendable();
 				
-				echo $this->getName($attribute);
-				
+ 				if ( $this->showAttributeCaption() ) {
+					echo $this->getName($attribute);
+				}
 				$field->draw();
-				
 				break;
 				
  			case 'LinkType':
@@ -152,69 +123,13 @@ class RequestBulkForm extends BulkForm
 				$field->SetTabIndex($tab_index);
 				
 				echo $this->getName($attribute);
-				
 				$field->draw();
 				
 				break;
-				
-			case 'Owner':
-    			$worker = getFactory()->getObject('User');
-    			$worker->addFilter( new UserWorkerPredicate() );
-				
-				$field = new FieldDictionary( $worker );
-				$field->SetId($attribute);
-				$field->SetName($attribute);
-				$field->SetValue($value);
-				$field->SetTabIndex($tab_index);
-				
-				echo $this->getName($attribute);
-				$field->draw();
-				break;
- 			    
+
 			default:
  				parent::drawCustomAttribute( $attribute, $value, $tab_index );
  		}
  	}
- 	
-	function getWidth()
-	{
-		return '65%';
-	}
-	
-	function getActionAttributes()
-	{
-		$attributes = parent::getActionAttributes();
-		
-		$key = array_search('Fact', $attributes);
-		
-		if ( $key !== false ) unset($attributes[$key]);
-		
-		return $attributes;
-	}
-		
-	function getBulkActions( $object_it = null )
-	{
-	    if ( !is_object($object_it) ) $object_it = $this->getIt();
-	    
-		$actions = parent::getBulkActions($object_it);
-		
-		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return $actions;
-		
-		if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
-		
-		$key = 'Method:ModifyRequestWebMethod:Tag';
-		$actions[$key] = text(861);
-
-		$key = 'Method:ModifyRequestWebMethod:RemoveTag';
-		$actions[$key] = text(862);
-
-		if ( count($actions) > 0 ) $actions[count($actions).'-'] = '';
-
-		$method = new DuplicateIssuesWebMethod();
-		$key = $method->getMethodName();
-		$actions[$key] = text(867);
-		
-		return $actions;
-	}
 }
  

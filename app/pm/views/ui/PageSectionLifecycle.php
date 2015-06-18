@@ -12,7 +12,7 @@
  	
  	function getCaption()
  	{
- 		return translate('Æèçíåííûé öèêë');
+ 		return translate('Ð–Ð¸Ð·Ð½ÐµÐ½Ð½Ñ‹Ð¹ Ñ†Ð¸ÐºÐ»');
  	}
  	
  	function getObjectIt()
@@ -87,7 +87,7 @@
  		
  		$change_it = $object->getRegistry()->Query(
 				array (
-						new ChangeLogItemFilter($this->object_it),
+						new ChangeLogItemDateFilter($this->object_it),
 						new SortAttributeClause('RecordCreated')
 				)
 		);

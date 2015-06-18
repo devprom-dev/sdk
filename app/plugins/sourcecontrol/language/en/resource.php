@@ -2,8 +2,8 @@
 
  $plugin_text_array = array 
  (
-    'Ðåïîçèòîðèé' => 'Repository',
-    'âåðñèè' => 'revisions',
+    'Ð ÐµÐ¿Ð¾Ð·Ð¸Ñ‚Ð¾Ñ€Ð¸Ð¹' => 'Repository',
+    'Ð²ÐµÑ€ÑÐ¸Ð¸' => 'revisions',
     1 => 'Integration with systems of version control',
  	2 => 'Repository',
  	3 => 'Repository files',

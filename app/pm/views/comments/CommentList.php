@@ -8,6 +8,7 @@ include_once 'CommentForm.php';
 class CommentList 
 {
  	var $object_it, $object, $control_uid, $attachment_it, $comments;
+ 	private $uid_service = null;
  	
  	private $baseline = '';
  	
@@ -41,6 +42,7 @@ class CommentList
 		$this->comments = 0;
 		
 		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId());
+		$this->uid_service = new ObjectUID();
  	}
  	
  	function setControlUID( $uid )
@@ -65,14 +67,7 @@ class CommentList
  	
 	function getActions( $object_it )
 	{
-		global $project_it;
-		
 		$actions = array();
-		
-		$actions[] = array (
-			'url' => '/pm/'.$project_it->get('CodeName').'/O-'.$object_it->getId(),
-			'name' => translate('Ññûëêà') 
-		);
 		
 		if ( $object_it->get('AuthorId') == getSession()->getUserIt()->getId() )
 		{
@@ -80,7 +75,7 @@ class CommentList
 			$actions[] = array (
 				'url' => 'javascript: showCommentForm(\''.$this->url.
 					'\',$(\'#commentsreply'.$object_it->getId().'\'), \''.$object_it->getId().'\', \'\');',
-				'name' => translate('Èçìåíèòü') 
+				'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ') 
 			);
 		}
 
@@ -107,9 +102,7 @@ class CommentList
 	
  	function getRenderParms()
 	{
-		global $model_factory;
-		
-		$form = new CommentForm( $model_factory->getObject('Comment') );
+		$form = new CommentForm( getFactory()->getObject('Comment') );
 		
 		$form->setAnchorIt( $this->object_it );
 		$form->setControlUID( $this->control_uid );	
@@ -119,11 +112,12 @@ class CommentList
 			'form' => $form,
 			'control_uid' => $this->control_uid,
 			'url' => $this->url,
-			'form_ready' => $_REQUEST['formonly'] == 'true'
+			'form_ready' => $_REQUEST['formonly'] == 'true' && $_REQUEST['entity'] == 'Comment',
+			'comments_count' => $this->comment_it->count()
 		);
 	}
 	
-	function render( &$view, $parms )
+	function render( $view, $parms )
 	{
 		echo $view->render("pm/CommentsList.php", 
 			array_merge($parms, $this->getRenderParms()) ); 
@@ -167,7 +161,8 @@ class CommentList
  				'actions' => $this->getActions( $comment_it ),
  				'html' => $text,
  				'thread_it' => $comment_it->getThreadIt(),
- 			    'files' => $files
+ 			    'files' => $files,
+ 				'uid_info' => $this->uid_service->getUidInfo($comment_it)
  			);
  			
  			$comment_it->moveNext();
@@ -179,11 +174,12 @@ class CommentList
 			'form' => $form,
 			'control_uid' => $this->control_uid,
 			'url' => $this->url,
-			'comments' => $comments
+			'comments' => $comments,
+			'readonly' => false
 		);
 	}
 	
-	function renderThread( &$view, $comment_it = null, $level = 0 )
+	function renderThread( $view, $comment_it = null, $level = 0 )
 	{
  		if ( !is_object($comment_it) ) $comment_it = $this->comment_it;
  		

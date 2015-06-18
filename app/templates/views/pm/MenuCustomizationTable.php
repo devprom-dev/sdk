@@ -12,7 +12,7 @@
 					</section><!-- end #functional-group-selector -->
 				</div>
 				<div class="span2">
-					<a id="close-btn" class="pull-right btn btn-inverse" href="<?=$close_url?>"><?=translate('Çàêðûòü')?></a>
+					<a id="close-btn" class="pull-right btn btn-inverse" href="<?=$close_url?>"><?=translate('Ð—Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ')?></a>
 				</div>
 			</div>
 			<div class="row-fluid">
@@ -47,7 +47,7 @@
 											      <div class="menu-button pull-right" id="restore-control"></div>
 											      <div class="menu-button pull-right">
 											      	<div class="save-button-view">
-											      		<button id="menu-reset" class="btn"><span class="message"><?=translate('Î÷èñòèòü')?></span> <span class="loader"></span></button>
+											      		<button id="menu-reset" class="btn"><span class="message"><?=translate('ÐžÑ‡Ð¸ÑÑ‚Ð¸Ñ‚ÑŒ')?></span> <span class="loader"></span></button>
 											      	</div>
 											      </div>
 											      </div>
@@ -64,8 +64,7 @@
 								    <section id="pages">	
 										<form class="filter">
 										    <div class="input-append" style="width:100%;">
-											<input id="appendedInput" class="span11" type="text" placeholder="<?=text(1810)?>">
-											<span class="add-on"><i class="icon-search"></i></span>
+											<input id="appendedInput" class="span11" type="text" placeholder="<?=text(1810)?>"><span class="add-on"><i class="icon-search"></i></span>
 										    </div>
 										</form>
 										<div class="pages-content"></div>
@@ -87,9 +86,9 @@
 	<script id="page-list-node-template" type="text/template">
 	    <div class="hdr"><%= title %></div>
 		<% if ( id == 'favs' ) { %>
-		<div class="hdr-ref"><a target="_blank" href="<?=$reports_edit_url?>"><?=translate('ðåäàêòèðîâàòü')?></a></div>
+		<div class="hdr-ref"><a target="_blank" href="<?=$reports_edit_url?>"><?=translate('Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ')?></a></div>
 		<% } else if ( reportUrl != '' ) { %>
-		<div class="hdr-ref"><a target="_blank" href="<%= reportUrl %>"><?=translate('ïðîñìîòð')?></a></div>
+		<div class="hdr-ref"><a target="_blank" href="<%= reportUrl %>"><?=translate('Ð¿Ñ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€')?></a></div>
 		<% } %>
 		<div class="desc"><%= desc %></div>
 	    <ul></ul>
@@ -110,20 +109,14 @@
 	
 	
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.marionette/json2.js" type="text/javascript" charset="UTF-8"></script>
-	<!--<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.marionette/jquery.js" type="text/javascript" charset="UTF-8"></script>-->
-	
-	<!--<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/jquery-ui-1.10.3.js" type="text/javascript" charset="UTF-8"></script>-->
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/jquery-blindover.js" type="text/javascript" charset="UTF-8"></script>
-	
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.marionette/underscore.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.marionette/backbone.js" type="text/javascript" charset="UTF-8"></script>
-	
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.marionette/backbone.marionette.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.marionette/backbone.babysitter.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/backbone.treemodel.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/libs/underi18n.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/locals/<?=$language_code?>/resource.js" type="text/javascript" charset="UTF-8"></script>
-	
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/app.js" type="text/javascript" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/models/MenuGroupItem.js" charset="UTF-8"></script>
 	<script src="/pm/bundles/Devprom/ProjectBundle/Resources/public/js/models/MenuItem.js" charset="UTF-8"></script>

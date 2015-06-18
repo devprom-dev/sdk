@@ -6,10 +6,10 @@ class ChangeLogActionRegistry extends ObjectRegistrySQL
     {
         return $this->createIterator(
 				array (
-						array ( 'entityId' => 1, 'ReferenceName' => 'added', 'Caption' => translate('Создание') ),
-						array ( 'entityId' => 2, 'ReferenceName' => 'modified', 'Caption' => translate('Изменение') ),
-						array ( 'entityId' => 3, 'ReferenceName' => 'deleted', 'Caption' => translate('Удаление') ),
-						array ( 'entityId' => 4, 'ReferenceName' => 'commented', 'Caption' => translate('Обсуждение') )
+						array ( 'entityId' => 1, 'ReferenceName' => 'added', 'Caption' => translate('РЎРѕР·РґР°РЅРёРµ') ),
+						array ( 'entityId' => 2, 'ReferenceName' => 'modified', 'Caption' => translate('РР·РјРµРЅРµРЅРёРµ') ),
+						array ( 'entityId' => 3, 'ReferenceName' => 'deleted', 'Caption' => translate('РЈРґР°Р»РµРЅРёРµ') ),
+						array ( 'entityId' => 4, 'ReferenceName' => 'commented', 'Caption' => translate('РћР±СЃСѓР¶РґРµРЅРёРµ') )
 	        	)
 		);
     }

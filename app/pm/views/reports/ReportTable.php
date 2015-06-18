@@ -19,7 +19,7 @@ class ReportTable extends PMPageTable
 		
 		$search->setStyle( 'width:340px' );
 		
-		$category = new FilterObjectMethod( $model_factory->getObject('PMReportCategory'), translate('Ðàçäåë') );
+		$category = new FilterObjectMethod( $model_factory->getObject('PMReportCategory'), translate('Ð Ð°Ð·Ð´ÐµÐ»') );
 		
 		$category->setIdFieldName('ReferenceName');
 		$category->setHasNone(false);
@@ -75,23 +75,6 @@ class ReportTable extends PMPageTable
 		return array();
 	}
 	
-	function getDeleteActions()
-	{
-		$actions = array();
-		
-		$method = new BulkDeleteWebMethod();
-		
-		$method->setRedirectUrl('');
-		
-		$actions[] = array ( 
-				'name' => $method->getCaption(),
-				'url' => $method->getJSCall( getFactory()->getObject('PMCustomReport') ),
-				'title' => $method->getDescription() 
-		);
-
-		return $actions;
-    }
-    
     function drawScripts()
 	{
 	    parent::drawScripts();

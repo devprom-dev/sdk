@@ -21,10 +21,9 @@ class IteratorBase
 	
 	var $id_field = '';
 	
-	function IteratorBase( & $object ) 
+	function IteratorBase( $object ) 
 	{
 		$this->setObject($object);
-		
 		$this->id_field = $object->getIdAttribute();
 	}
 	
@@ -52,7 +51,7 @@ class IteratorBase
 	    
 	    $this->fetch();
 	}
-
+	
 	public function setObject( & $object )
 	{
 		$this->object = $object;
@@ -255,7 +254,8 @@ class IteratorBase
 
 	function getHtmlDecoded( $attribute )
 	{
-		return html_entity_decode( $this->get_native($attribute), ENT_QUOTES | ENT_HTML401, 'cp1251' );		
+		return html_entity_decode( $this->get_native($attribute), ENT_QUOTES | ENT_HTML401, APP_ENCODING );		
+
 	}
 
 	function setData( $data )
@@ -581,12 +581,6 @@ class IteratorBase
 		return str_replace('"', '\'\'', $this->get_native($attribute));
 	}
 	
-	function _clone()
-	{
-		global $model_factory;
-		return $model_factory->_clone( $this );
-	}
-	
 	function getRef( $attribute, $object = null ) 
 	{
 		if ( is_null($object) )
@@ -672,16 +666,16 @@ class IteratorBase
 	
 	function getEditLink() 
 	{
-		return '<a href="'.$this->getEditUrl().'">'.translate('Изменить').'</a>';
+		return '<a href="'.$this->getEditUrl().'">'.translate('РР·РјРµРЅРёС‚СЊ').'</a>';
 	}
 	
 	function getEditImageLink() {
-		return '<a class=modify_image title="'.translate('Изменить').'" href="'.$this->getEditUrl().'">'.
+		return '<a class=modify_image title="'.translate('РР·РјРµРЅРёС‚СЊ').'" href="'.$this->getEditUrl().'">'.
 			'<img src="/images/shape_square_edit.png" border=0 style="margin-bottom:-4px;">'.'</a>';
 	}
 
 	function getRefImageLink() {
-		return '<a class=modify_image title="'.translate('Открыть').'" href="'.$this->getViewUrl().'">'.
+		return '<a class=modify_image title="'.translate('РћС‚РєСЂС‹С‚СЊ').'" href="'.$this->getViewUrl().'">'.
 			'<img src="/images/shape_square_go.png" border=0 style="margin-bottom:-4px;">'.'</a>';
 	}
 	
@@ -764,83 +758,12 @@ class IteratorBase
  	
 	function Utf8ToWin($fcontents) 
 	{
- 		if ( function_exists('mb_convert_encoding') )
- 		{
- 			return mb_convert_encoding($fcontents, "cp1251", "utf-8");
- 		}
-		
- 		if ( function_exists('iconv') )
- 		{
- 			$result = iconv("UTF-8", "CP1251//IGNORE", $fcontents);
- 			if ( $result != '' ) return $result;
- 		}
-
-	    $out = $c1 = '';
-	    $byte2 = false;
-	    for ($c = 0;$c < strlen($fcontents);$c++) {
-	        $i = ord($fcontents[$c]);
-	        if ($i <= 127) {
-	            $out .= $fcontents[$c];
-	        }
-	        if ($byte2) {
-	            $new_c2 = ($c1 & 3) * 64 + ($i & 63);
-	            $new_c1 = ($c1 >> 2) & 5;
-	            $new_i = $new_c1 * 256 + $new_c2;
-	            if ($new_i == 1025) {
-	                $out_i = 168;
-	            } else {
-	                if ($new_i == 1105) {
-	                    $out_i = 184;
-	                } else {
-	                    $out_i = $new_i - 848;
-	                }
-	            }
-	            // UKRAINIAN fix
-	            switch ($out_i){
-	                case 262: $out_i=179;break;// і
-	                case 182: $out_i=178;break;// І 
-	                case 260: $out_i=186;break;// є
-	                case 180: $out_i=170;break;// Є
-	                case 263: $out_i=191;break;// ї
-	                case 183: $out_i=175;break;// Ї
-	                case 321: $out_i=180;break;// ґ
-	                case 320: $out_i=165;break;// Ґ
-	            }
-	            $out .= chr($out_i);
-	            $byte2 = false;
-	        }
-	        if (($i >> 5) == 6) {
-	            $c1 = $i;
-	            $byte2 = true;
-	        }
-	    }
-	    return $out;
+		return $fcontents;
 	}
 
 	static function wintoutf8($s)
  	{
- 		if ( function_exists('mb_convert_encoding') )
- 		if ( function_exists('mb_convert_encoding') )
- 		{
- 			return mb_convert_encoding($s, "utf-8", "cp1251");
- 		}
- 		
- 		if ( function_exists('iconv') )
- 		{
- 			return iconv("cp1251", "utf-8//IGNORE", $s);
- 		}
- 		
-	  $t = '';
-	  for ($i = 0, $m = strlen($s); $i < $m; $i++) {
-	    $c = ord($s[$i]);
-	    if ($c <= 127) { $t .= chr($c); continue; }
-	    if ($c >= 192 && $c <= 207) { $t .= chr(208) . chr($c - 48); continue; }
-	    if ($c >= 208 && $c <= 239) { $t .= chr(208) . chr($c - 48); continue; }
-	    if ($c >= 240 && $c <= 255) { $t .= chr(209) . chr($c - 112); continue; }
-	    if ($c == 184) { $t .= chr(209) . chr(209); continue; };
-	    if ($c == 168) { $t .= chr(208) . chr(129); continue; };
-	  }
-	  return $t;
+ 		return $s;
  	}   
 
  	function serialize2Xml()
@@ -855,7 +778,7 @@ class IteratorBase
 			
 			for( $i = 0; $i < count($keys); $i++ )
 			{
-				$value = html_entity_decode(addslashes($this->get_native($keys[$i])), ENT_COMPAT | ENT_HTML401, 'cp1251');
+				$value = html_entity_decode(addslashes($this->get_native($keys[$i])), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
 
 				$encoding = '';
 				
@@ -910,7 +833,7 @@ class IteratorBase
  	}
 } 
 
- // упорядоченный итератор
+ // СѓРїРѕСЂСЏРґРѕС‡РµРЅРЅС‹Р№ РёС‚РµСЂР°С‚РѕСЂ
  class OrderedIterator extends IteratorBase
  {
  	function OrderedIterator ( $object )
@@ -948,7 +871,7 @@ class IteratorBase
 	}
 }
  
- // итератор по дереву
+ // РёС‚РµСЂР°С‚РѕСЂ РїРѕ РґРµСЂРµРІСѓ
  class TreeIterator extends OrderedIterator
  {
  	function getChildren()

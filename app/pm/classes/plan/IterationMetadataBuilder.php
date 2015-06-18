@@ -13,11 +13,11 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
 
     	$metadata->addPersister( new CapacityPersister() );
     	
-    	$metadata->addAttribute('EstimatedStartDate', 'DATETIME', translate('Îöåíêà íà÷àëà'), false, false);
-		$metadata->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Îöåíêà îêîí÷àíèÿ'), false, false);
+    	$metadata->addAttribute('EstimatedStartDate', 'DATETIME', translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð½Ð°Ñ‡Ð°Ð»Ð°'), false, false);
+		$metadata->addAttribute('EstimatedFinishDate', 'DATETIME', translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð¾ÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ñ'), false, false);
 		$metadata->addPersister( new IterationMetricsPersister() );
  		
-    	$metadata->addAttribute( 'Caption', 'TEXT', translate('Èòåðàöèÿ'), false );
+    	$metadata->addAttribute( 'Caption', 'TEXT', translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ'), false );
     	$metadata->addPersister( new IterationTitlePersister() );
     	
     	$metadata->setAttributeRequired('FinishDate', !getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease()); 

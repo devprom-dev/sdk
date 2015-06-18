@@ -2,7 +2,7 @@
 
 class ObjectPersister
 {
- 	var $object;
+ 	private $object = null;
  	
  	function __construct()
  	{
@@ -34,4 +34,21 @@ class ObjectPersister
  	function delete( $object_id )
  	{
  	}
+
+	public function __sleep()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __destruct()
+	{
+		unset($this->object);
+		$this->object = null;
+	}
+	
+	public function __wakeup()
+	{
+		$this->object = null;
+	}
 }

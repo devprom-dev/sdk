@@ -67,7 +67,7 @@ class SubversionFilesTable extends PMPageTable
         $filter->setHasNone(false);
         $filter->setDefaultValue($repository->getRegistry()->Query(array(new FilterVpdPredicate()))->getId());
 
-        $path = new FilterTextWebMethod( translate('Òåêóùèé êàòàëîã'), 'path' );
+        $path = new FilterTextWebMethod( translate('Ð¢ÐµÐºÑƒÑ‰Ð¸Ð¹ ÐºÐ°Ñ‚Ð°Ð»Ð¾Ð³'), 'path' );
         $path->setStyle( 'width:600px;' );
         
         return array ( $filter,	$path );

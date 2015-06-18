@@ -48,7 +48,7 @@ class FileServerPlugin extends PluginBase
 
         if ( !is_object($project_it) ) return false;
         
-        return $project_it->get('IsFileServer') == 'Y';
+        return $project_it->getMethodologyIt()->get('IsFileServer') == 'Y';
  	}
  	
  	function getClasses()

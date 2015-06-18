@@ -38,7 +38,7 @@ class FilterAutoCompleteWebMethod extends AutocompleteWebMethod
 
  		$default_value = $this->getValue();
  		
- 		if ( $default_value != '' && $default_value != 'all' )
+ 		if ( !in_array($default_value, array('', 'all','none','hide')) )
  		{
  			$uid = new ObjectUID;
  			
@@ -52,9 +52,14 @@ class FilterAutoCompleteWebMethod extends AutocompleteWebMethod
  					)
  			);
 
- 			$value = $uid->hasUid($value_it)
- 				? '['.$uid->getObjectUid($value_it).'] '.$value_it->getDisplayName()
- 				: $value_it->getDisplayName();
+ 			if ( $value_it->getId() == '' ) {
+ 				$value = htmlentities($default_value);
+ 			}
+ 			else {
+	 			$value = $uid->hasUid($value_it)
+	 				? '['.$uid->getObjectUid($value_it).'] '.$value_it->getDisplayName()
+	 				: $value_it->getDisplayName();
+ 			}
  		}
 
 	 	echo '<input type="text" class="btn-small input-xxlarge" placeholder="'.$this->getCaption().'" id="filter_'.$this->getValueParm().'" style="'.

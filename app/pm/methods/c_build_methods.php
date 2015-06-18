@@ -10,7 +10,7 @@
  {
  	function getCaption()
  	{
- 		return translate('Óâåäîìèòü î ñáîğêå');
+ 		return translate('Ğ£Ğ²ĞµĞ´Ğ¾Ğ¼Ğ¸Ñ‚ÑŒ Ğ¾ ÑĞ±Ğ¾Ñ€ĞºĞµ');
  	}
 
  	function execute_request()
@@ -39,14 +39,14 @@
    			$part_it->moveNext();
    		}
 
-		$body = translate('Âûïóùåíà íîâàÿ ñáîğêà').': '.
+		$body = translate('Ğ’Ñ‹Ğ¿ÑƒÑ‰ĞµĞ½Ğ° Ğ½Ğ¾Ğ²Ğ°Ñ ÑĞ±Ğ¾Ñ€ĞºĞ°').': '.
 			$build_it->getFullNumber().Chr(10).Chr(10);
 
-		$body .= translate('Ñîñòàâ ñáîğêè äîñòóïåí ïî ññûëêå').' '.
+		$body .= translate('Ğ¡Ğ¾ÑÑ‚Ğ°Ğ² ÑĞ±Ğ¾Ñ€ĞºĞ¸ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿ĞµĞ½ Ğ¿Ğ¾ ÑÑÑ‹Ğ»ĞºĞµ').' '.
 			_getServerUrl().'/pm/'.$project_it->get('CodeName').'/issues/list/resolved?build='.$build_it->getId();
 		
    		$mail->setBody($body);
-   		$mail->setSubject('['.$project_it->get('CodeName').']: '.translate('Íîâàÿ ñáîğêà'));
+   		$mail->setSubject('['.$project_it->get('CodeName').']: '.translate('ĞĞ¾Ğ²Ğ°Ñ ÑĞ±Ğ¾Ñ€ĞºĞ°'));
    		$mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 		$mail->send();
  	}

@@ -12,6 +12,6 @@ class CycleState extends CacheableSet
  	
  	function getDisplayName()
  	{
- 		return translate('Состояние');
+ 		return translate('РЎРѕСЃС‚РѕСЏРЅРёРµ');
  	}
 }

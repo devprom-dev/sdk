@@ -39,12 +39,12 @@ class FieldIssueTrace extends FieldForm
 		return new ObjectTraceFormEmbedded( $trace, 'ChangeRequest' );
 	}
 	
- 	function render( & $view )
+ 	function render( $view )
 	{
 	    $this->drawBody( $view );    
 	}
 	
-	function drawBody( & $view = null )
+	function drawBody( $view = null )
 	{
 		$filters = $this->getFilters();
 		

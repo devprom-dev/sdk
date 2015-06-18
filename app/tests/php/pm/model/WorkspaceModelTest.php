@@ -15,7 +15,7 @@ class WorkspaceModelTest extends DevpromDummyTestCase
         
         $entity->expects($this->any())->method('getAll')->will( $this->returnValue(
                 $entity->createCachedIterator(array(
-                        array( 'pm_WorkspaceId' => '1', 'Caption' => 'Óïðàâëåíèå ïðîåêòàìè', 'UID' => 'mgmt' )
+                        array( 'pm_WorkspaceId' => '1', 'Caption' => 'Ð£Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ðµ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð°Ð¼Ð¸', 'UID' => 'mgmt' )
                 ))
         ));
         
@@ -39,7 +39,7 @@ class WorkspaceModelTest extends DevpromDummyTestCase
         
         $workspace->expects($this->any())->method('getExact')->will( $this->returnValue(
                 $workspace->createCachedIterator(array(
-                        array( 'pm_WorkspaceId' => '1', 'Caption' => 'Óïðàâëåíèå ïðîåêòàìè', 'UID' => 'mgmt' )
+                        array( 'pm_WorkspaceId' => '1', 'Caption' => 'Ð£Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ðµ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð°Ð¼Ð¸', 'UID' => 'mgmt' )
                 ))
         ));
         
@@ -47,7 +47,7 @@ class WorkspaceModelTest extends DevpromDummyTestCase
         
         $workspace_menu->expects($this->any())->method('getAll')->will( $this->returnValue(
                 $workspace_menu->createCachedIterator(array(
-                        array( 'pm_WorkspaceMenuId' => '1', 'Caption' => 'Ïðîåêò', 'UID' => 'project', 'Workspace' => 1 )
+                        array( 'pm_WorkspaceMenuId' => '1', 'Caption' => 'ÐŸÑ€Ð¾ÐµÐºÑ‚', 'UID' => 'project', 'Workspace' => 1 )
                 ))
         ));
         
@@ -78,7 +78,7 @@ class WorkspaceModelTest extends DevpromDummyTestCase
         
         $workspace_menu->expects($this->any())->method('getExact')->will( $this->returnValue(
                 $workspace_menu->createCachedIterator(array(
-                        array( 'pm_WorkspaceMenuId' => '1', 'Caption' => 'Ïðîåêò', 'UID' => 'project' )
+                        array( 'pm_WorkspaceMenuId' => '1', 'Caption' => 'ÐŸÑ€Ð¾ÐµÐºÑ‚', 'UID' => 'project' )
                 ))
         ));
         
@@ -86,7 +86,7 @@ class WorkspaceModelTest extends DevpromDummyTestCase
         
         $workspace_menu_item->expects($this->any())->method('getAll')->will( $this->returnValue(
                 $workspace_menu_item->createCachedIterator(array(
-                        array( 'pm_WorkspaceMenuItemId' => '1', 'Caption' => 'Àêòèâíîñòè', 'UID' => 'activity', 'WorkspaceMenu' => 1 )
+                        array( 'pm_WorkspaceMenuItemId' => '1', 'Caption' => 'ÐÐºÑ‚Ð¸Ð²Ð½Ð¾ÑÑ‚Ð¸', 'UID' => 'activity', 'WorkspaceMenu' => 1 )
                 ))
         ));
         

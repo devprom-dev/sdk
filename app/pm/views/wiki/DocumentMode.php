@@ -12,6 +12,6 @@ class DocumentMode extends PMObjectCacheable
     
     function getDisplayName()
     {
-        return translate('Ðåæèì');
+        return translate('Ð ÐµÐ¶Ð¸Ð¼');
     }
 }

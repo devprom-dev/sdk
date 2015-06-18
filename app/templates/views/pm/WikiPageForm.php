@@ -29,7 +29,7 @@ if ( count($sections) > 0 )
 
 <div class="title-cell" style="width:1%;">
 	<span class="label label-inverse">
-		<?=translate('Èçìåíåíèå').': '.$revision['id']?>
+		<?=translate('Ð˜Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ').': '.$revision['id']?>
 	</span>
 </div>
 <div class="title-cell" style="width:1%;"></div>
@@ -38,7 +38,9 @@ if ( count($sections) > 0 )
 
 <?php if ( $persisted && $uid_icon != '' ) { ?>
 
-<div class="title-cell" style="width:1%;"><?=$uid_icon?></div>
+<div class="title-cell" style="width:1%;white-space:nowrap;">
+	<? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
+</div>
 <div class="title-cell" style="width:1%;"></div>
 
 <?php } ?>
@@ -151,7 +153,7 @@ $props_object = $form->getObjectIt()->object->getEntityRefName();
 
 	<div class="bottom-link" style="display:table-cell;text-align:right;vertical-align:top;width:80px;">
 		<span class="document-item-bottom-hidden">
-			&uarr; <a class="dashed" onclick="javascript: $('body, html').animate({ scrollTop: 0 }, 50)"><?=translate('íàâåðõ')?></a>
+			&uarr; <a class="dashed" onclick="javascript: $('body, html').animate({ scrollTop: 0 }, 50)"><?=translate('Ð½Ð°Ð²ÐµÑ€Ñ…')?></a>
 		</span>
 	</div>
 </div>	

@@ -18,8 +18,8 @@ class MetaobjectStatable extends Metaobject
  	    
  		if ( $this->getAttributeType('Project') == '' )
 	    {
-			$this->addAttribute('Project', 'REF_pm_ProjectId', translate('Ïðîåêò'), false);
-	
+			$this->addAttribute('Project', 'REF_pm_ProjectId', translate('ÐŸÑ€Ð¾ÐµÐºÑ‚'), false);
+			$this->setAttributeRequired('Project', true);
 			$this->addPersister( new EntityProjectPersister );
 	    }
  	    

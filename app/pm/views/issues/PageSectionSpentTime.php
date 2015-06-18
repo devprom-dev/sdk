@@ -13,7 +13,7 @@ class PageSectionSpentTime extends InfoSection
  	
  	function getCaption()
  	{
- 		return translate('Затраченное время');
+ 		return translate('Р—Р°С‚СЂР°С‡РµРЅРЅРѕРµ РІСЂРµРјСЏ');
  	}
  	
  	function getObjectIt()

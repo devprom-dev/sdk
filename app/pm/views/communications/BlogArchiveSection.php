@@ -39,6 +39,6 @@ class BlogArchiveSection extends InfoSection
 
  	function getCaption()
  	{
- 		return translate('Архив');
+ 		return translate('РђСЂС…РёРІ');
  	}
  }

@@ -4,7 +4,6 @@ namespace Devprom\ApplicationBundle\Controller;
 
 use Devprom\CommonBundle\Controller\PageController;
 use Devprom\ApplicationBundle\Service\CreateProjectService;
-use Devprom\CommonBundle\Service\Project\InviteService;
 
 include_once SERVER_ROOT_PATH."co/views/Common.php";
 include SERVER_ROOT_PATH."co/views/ProjectCreatePage.php";
@@ -62,33 +61,30 @@ class ProjectController extends PageController
 			return $this->replyError(text(706));
 		}
 
-        $parms['DemoData'] = in_array(strtolower($request->request->get('DemoData')), array('Y','on'));
-		
+        $parms['DemoData'] = in_array(strtolower(trim($request->request->get('DemoData'))), array('y','on'));
+
+    	if ( $request->request->get('Participants') != '' ) {
+			if ( !class_exists('PortfolioMyProjectsBuilder', false) ) {
+				$invite_service = new \Devprom\CommonBundle\Service\Users\InviteService($this, getSession());
+				$invite_service->inviteByEmails($request->request->get('Participants'));
+			}
+		}
+        
 		$strategy = new CreateProjectService();
-		
 		$result = $strategy->execute($parms);
 		
-		if ( $result < 1 ) 
-		{
+		if ( $result < 1 ) {
 		    return $this->replyError( $strategy->getResultDescription($result) );
 		}
 
-		$emails = array_filter(
-				preg_split('/,/', $request->request->get('Participants')), 
-				function($value) {
-						return $value != '' && filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
-				}
-        );
-		
-		if ( count($emails) > 0 )
-		{
-			$invite_service = new InviteService($this, getSession());
-			$invite_service->inviteByEmails($emails);
+		if ( $request->request->get('Participants') != '' )	{
+			if ( class_exists('PortfolioMyProjectsBuilder', false) ) {
+				$invite_service = new \Devprom\CommonBundle\Service\Project\InviteService($this, getSession());
+				$invite_service->inviteByEmails($request->request->get('Participants'));
+			}
 		}
 		
-		return $this->replySuccess(
-				$strategy->getResultDescription(0), $parms['CodeName'].'/'
-		); 
+		return $this->replySuccess($strategy->getResultDescription(0), $parms['CodeName'].'/');
     }
     
     public function welcomeAction()

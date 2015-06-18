@@ -69,7 +69,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		}
 		
 		$actions['create'] = array( 
-	        'name' => translate('Ðàçäåë'),
+	        'name' => translate('Ð Ð°Ð·Ð´ÐµÐ»'),
 			'url' => $url,
 			'uid' => 'create'
 		);
@@ -101,7 +101,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
    		$actions[] = array();
     		
         $actions[] = array( 
-			'name' => translate('Èìïîðòèðîâàòü'),
+			'name' => translate('Ð˜Ð¼Ð¿Ð¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ'),
 			'url' => '?view=import&mode=xml&object=projectpage'
 		);
 		

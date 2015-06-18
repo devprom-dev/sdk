@@ -10,9 +10,9 @@ class ModelVersionAttributesBuilder extends ObjectModelBuilder
     {
     	if ( $object->getEntityRefName() != 'WikiPage' ) return;
     	
-    	$object->addAttribute('Version', 'INTEGER', translate('Âåðñèÿ'), true);
+    	$object->addAttribute('Version', 'INTEGER', translate('Ð’ÐµÑ€ÑÐ¸Ñ'), true);
     	
-    	$object->addAttribute('VersionName', 'TEXT', translate('Âåðñèÿ'), true);
+    	$object->addAttribute('VersionName', 'TEXT', translate('Ð’ÐµÑ€ÑÐ¸Ñ'), true);
     	
     	$object->addPersister( new DataModelVersionPersister() );
     }

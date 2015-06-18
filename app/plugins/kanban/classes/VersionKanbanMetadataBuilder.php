@@ -17,6 +17,6 @@ class VersionKanbanMetadataBuilder extends ObjectMetadataEntityBuilder
 
     	if ( $this->session->getProjectIt()->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) return;
     	
- 		$metadata->addAttribute( 'Progress', '', translate('Прогресс'), false, false, '', 80 );
+ 		$metadata->addAttribute( 'Progress', '', translate('РџСЂРѕРіСЂРµСЃСЃ'), false, false, '', 80 );
     }
 }

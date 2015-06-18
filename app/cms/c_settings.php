@@ -8,7 +8,7 @@
  {
  	function Settings()
 	{
-		$this->attributes = array( 'FontSize' => array('INTEGER', 'Размер шрифта', true)
+		$this->attributes = array( 'FontSize' => array('INTEGER', 'Р Р°Р·РјРµСЂ С€СЂРёС„С‚Р°', true)
 								    );
 		parent::SingletonDB();
 	}
@@ -38,7 +38,7 @@
  class SettingsForm extends Form
  {
  	function getCaption() {
-		return 'Общие настройки';
+		return 'РћР±С‰РёРµ РЅР°СЃС‚СЂРѕР№РєРё';
 	}
 	
 	function createFieldObject( $name ) {

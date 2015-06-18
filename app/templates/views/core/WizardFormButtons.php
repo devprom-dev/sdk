@@ -3,7 +3,7 @@
 echo '<div style="margin-left:1px;">';		
 	$script = "javascript: window.location = '?';";
 
-	echo '<input class="btn" value="'.translate('Îòìåíèòü').'" style="float:left;" type="button" onclick="'.$script.'">';
+	echo '<input class="btn" value="'.translate('ÐžÑ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ').'" style="float:left;" type="button" onclick="'.$script.'">';
 echo '</div>';
 
 ?>

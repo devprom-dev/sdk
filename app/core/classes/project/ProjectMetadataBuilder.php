@@ -10,7 +10,8 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
     	
  		$metadata->addPersister( new ProjectVPDPersister() );
 
-        $metadata->addAttribute( 'LinkedProject', 'REF_pm_ProjectId', translate('Ñâÿçàííûå ïðîåêòû'), false );
+		$metadata->setAttributeType( 'Importance', 'REF_ProjectImportanceId' );
+ 		$metadata->addAttribute( 'LinkedProject', 'REF_pm_ProjectId', translate('Ð¡Ð²ÑÐ·Ð°Ð½Ð½Ñ‹Ðµ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ñ‹'), false );
         $metadata->addPersister( new ProjectLinkedPersister() );
  		
  		$metadata->setAttributeVisible( 'IsPollUsed', false );
@@ -30,8 +31,8 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
 		}
 		
 		$system_attributes = array(
-		        'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsKnowledgeUsed', 'IsBlogUsed', 'IsFileServer', 
-		        'MainWikiPage', 'StartDate', 'FinishDate', 'IsSubversionUsed', 'HasMeetings', 'IsConfigurations', 
+		        'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsBlogUsed', 
+		        'MainWikiPage', 'StartDate', 'FinishDate', 'HasMeetings', 'IsConfigurations', 
 		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'RequirementsWikiPage', 'Tools', 'Language'
 		);
 		

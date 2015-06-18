@@ -44,7 +44,7 @@ class IteratorExportExcel extends IteratorExport
 
  	function workbook()
  	{
- 		$result = '<?xml version="1.0" encoding="windows-1251"?>'.
+ 		$result = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.
 			'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">';
  		
  		$result .= $this->properties();
@@ -119,7 +119,7 @@ class IteratorExportExcel extends IteratorExport
  	 
  	protected function sanitizeWorkSheetName( $name )
  	{
- 		return preg_replace('/[\/\\\*\?\[\]]+/', '', substr($name, 0, 31));
+ 		return preg_replace('/[\/\\\*\?\[\]]+/', '', mb_substr($name, 0, 31));
  	}
  	
  	function worksheet()
@@ -201,7 +201,7 @@ class IteratorExportExcel extends IteratorExport
  				if ( $comment != '' )
  				{
 	 				$result .= '<Comment><Data><![CDATA['.
-	 					html_entity_decode($comment, ENT_COMPAT | ENT_HTML401, 'cp1251').']]></Data></Comment>';
+	 					html_entity_decode($comment, ENT_COMPAT | ENT_HTML401, APP_ENCODING).']]></Data></Comment>';
  				}
  				
 				$result .= '</Cell>';
@@ -252,7 +252,7 @@ class IteratorExportExcel extends IteratorExport
  		    
  		    if ( is_array($value) ) $value = join(chr(10), $value);
  		    
-		 	$value = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, 'cp1251');
+		 	$value = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 		 	
  			if ( is_numeric($value) )
  			{

@@ -23,7 +23,7 @@ class TagIterator extends OrderedIterator
 			
 			if ( $participant_it->count() > 0 )
 			{
-				$display_name .= '©'.$participant_it->getDisplayName().'';
+				$display_name .= 'Â©'.$participant_it->getDisplayName().'';
 			}
 		}
  		

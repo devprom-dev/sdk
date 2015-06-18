@@ -4,7 +4,7 @@ class DocumentationInfo extends InfoSection
 {
 	function getCaption()
 	{
-		return translate('Документация');
+		return translate('Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ');
 	}
 
 	function drawBody()

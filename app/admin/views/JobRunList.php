@@ -31,8 +31,8 @@ class JobRunList extends StaticPageList
 
 	function getColumns()
 	{
-		$this->object->addAttribute('ExecutionTime', 'INTEGER', translate('Âðåìÿ âûïîëíåíèÿ'), true);
-		$this->object->addAttribute('Result', 'INTEGER', translate('Ðåçóëüòàò'), true);
+		$this->object->addAttribute('ExecutionTime', 'INTEGER', translate('Ð’Ñ€ÐµÐ¼Ñ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ñ'), true);
+		$this->object->addAttribute('Result', 'INTEGER', translate('Ð ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚'), true);
 
 		return parent::getColumns();
 	}
@@ -49,7 +49,7 @@ class JobRunList extends StaticPageList
 
 			case 'Result':
 
-			    echo html_entity_decode($object_it->getWordsOnlyValue($object_it->get('Result'), 40), ENT_COMPAT | ENT_HTML401, 'cp1251');
+			    echo html_entity_decode($object_it->getWordsOnlyValue($object_it->get('Result'), 40), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
 
 			    break;
 		}

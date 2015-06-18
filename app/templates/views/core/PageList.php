@@ -38,7 +38,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 		<tr class="header-row">
 			<?php if ( $display_numbers ) { ?>
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
-				<?=translate('¹')?>
+				<?=translate('â„–')?>
 			</th>
 			<?php $columns_number++; } ?>
 
@@ -128,7 +128,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 				
 				?>
 				
-				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" group-id="<?=$group_field_value?>" modified="<?=$it->get('AffectedDate')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
+				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=ObjectUID::getProject($it)?>" group-id="<?=$group_field_value?>" modified="<?=$it->get('AffectedDate')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
 				
 					<? if ( $display_numbers ) { ?>
 					<td name="row-num">
@@ -211,7 +211,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 	
 <div id="documentCache" style="overflow:hidden;height:1px;width:1px;"></div>
 
-<?php if ( !$tableonly ) { ?> 
+<?php if ( !$tableonly && $autorefresh ) { ?> 
 
 <script language="javascript">
 	$(document).ready(function() 

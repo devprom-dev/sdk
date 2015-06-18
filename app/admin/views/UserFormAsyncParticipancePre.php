@@ -14,7 +14,7 @@ class UserParticipancePreForm extends AdminForm
 
 	function getAddCaption()
 	{
-		return translate('Включение пользователя в проект');
+		return translate('Р’РєР»СЋС‡РµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ РїСЂРѕРµРєС‚');
 	}
 
 	function getCommandClass()
@@ -35,7 +35,7 @@ class UserParticipancePreForm extends AdminForm
 		switch ( $attribute )
 		{
 			case 'SystemUser':
-				return translate('Пользователь');
+				return translate('РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ');
 
 			default:
 				return parent::getName( $attribute );
@@ -113,6 +113,6 @@ class UserParticipancePreForm extends AdminForm
 
 	function getButtonText()
 	{
-		return translate('Продолжить');
+		return translate('РџСЂРѕРґРѕР»Р¶РёС‚СЊ');
 	}
 }

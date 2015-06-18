@@ -23,28 +23,28 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 		if ( $methodology_it->getId() > 0 && $methodology_it->IsTimeTracking() )
 		{
-			$metadata->addAttribute('Fact', 'FLOAT', translate('Çàòðà÷åíî, ÷.'), false, false, '', 35);
+			$metadata->addAttribute('Fact', 'FLOAT', translate('Ð—Ð°Ñ‚Ñ€Ð°Ñ‡ÐµÐ½Ð¾, Ñ‡.'), false, false, '', 35);
 		    $metadata->addPersister( new RequestFactPersister() );
 		    $metadata->addAttributeGroup('Fact', 'transition');
 		}
 		
-		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Ïðèëîæåíèÿ'), true);
-		$metadata->addAttribute('Tags', 'REF_TagId', translate('Òýãè'), true, false, '');
+		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('ÐŸÑ€Ð¸Ð»Ð¾Ð¶ÐµÐ½Ð¸Ñ'), true);
+		$metadata->addAttribute('Tags', 'REF_TagId', translate('Ð¢ÑÐ³Ð¸'), true, false, '');
 		$metadata->addPersister( new RequestTagsPersister() );
 		
-		$metadata->addAttribute( 'Links', 'REF_pm_ChangeRequestId', 'Ñâÿçàííûå ïîæåëàíèÿ', true);
+		$metadata->addAttribute( 'Links', 'REF_pm_ChangeRequestId', 'Ð¡Ð²ÑÐ·Ð°Ð½Ð½Ñ‹Ðµ Ð¿Ð¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ', true);
 		$metadata->addAttributeGroup('Links', 'trace');
 		
-	    $metadata->addAttribute('Question', '', '', false);
+	    $metadata->addAttribute('Question', 'REF_QuestionId', text(2037), false);
 		$metadata->addAttributeGroup('Question', 'trace');
 	    
 	    if ( $methodology_it->HasTasks() )
 		{
-			$metadata->addAttribute( 'Tasks', 'REF_pm_TaskId', translate('Çàäà÷è'), true, false, '', 200);
+			$metadata->addAttribute( 'Tasks', 'REF_pm_TaskId', translate('Ð—Ð°Ð´Ð°Ñ‡Ð¸'), true, false, text(2010), 200);
 		    $metadata->addAttributeGroup('Tasks', 'transition');
 		    $metadata->addAttributeGroup('Tasks', 'trace');
 		    
-			$metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', translate('Íåçàâåðøåííûå çàäà÷è'), false, false, '', 210);
+			$metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', translate('ÐÐµÐ·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð½Ñ‹Ðµ Ð·Ð°Ð´Ð°Ñ‡Ð¸'), false, false, '', 210);
 		    $metadata->addAttributeGroup('OpenTasks', 'trace');
 			$metadata->addPersister( new RequestTasksPersister() );
 		}
@@ -59,6 +59,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 	    $metadata->setAttributeCaption('SubmittedVersion', text(1335));
 	    $metadata->setAttributeCaption('ClosedInVersion', text(1334));
+	    $metadata->setAttributeVisible('ClosedInVersion', false);
 		
 		$metadata->setAttributeType( 'Description', 'wysiwyg' );
 		$metadata->setAttributeType( 'Function', 'REF_FeatureId' );
@@ -107,11 +108,11 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		if ( $methodology_it->HasMilestones() )
 		{	
-			$metadata->addAttribute('Deadlines', 'REF_pm_MilestoneId', translate('Ñðîêè'), true, false, '');
+			$metadata->addAttribute('Deadlines', 'REF_pm_MilestoneId', translate('Ð¡Ñ€Ð¾ÐºÐ¸'), true, false, '');
 			$metadata->addPersister( new RequestMilestonesPersister() );
 	    }
 		
-		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Íàáëþäàòåëè'), true);
+		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('ÐÐ°Ð±Ð»ÑŽÐ´Ð°Ñ‚ÐµÐ»Ð¸'), true);
 		$metadata->setAttributeDescription('StartDate', text(1839));
 		$metadata->setAttributeDescription('FinishDate', text(1840));
 		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
@@ -136,7 +137,6 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 	 	if ( $methodology_it->getId() > 0 && !$methodology_it->HasReleases() ) {
 	 	 	$metadata->removeAttribute( 'PlannedRelease' );
-	 	 	$metadata->removeAttribute( 'SubmittedVersion' );
  	 	}
  	 	
         $strategy = $methodology_it->getEstimationStrategy();

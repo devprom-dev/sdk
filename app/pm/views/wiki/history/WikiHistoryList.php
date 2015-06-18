@@ -141,7 +141,7 @@ class WikiHistoryList extends ProjectLogList
 		            
 		            if ( $diff == '' )
 		            {
-						echo ($this->prev_content[$page_id] != $this->curr_content[$page_id] ? text(1508) : translate('Íåò èçìåíåíèé'));
+						echo ($this->prev_content[$page_id] != $this->curr_content[$page_id] ? text(1508) : translate('ÐÐµÑ‚ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ð¹'));
 		            }
 		            else
 		            {
@@ -187,7 +187,7 @@ class WikiHistoryList extends ProjectLogList
 		{
 			$actions[] = array();
 			$actions[] = array(
-				'name' => translate('Îòìåíèòü'),
+				'name' => translate('ÐžÑ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ'),
 				'url' => $method->getJSCall( $page_it, $object_it ) 
 			);
 		}

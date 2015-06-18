@@ -41,7 +41,7 @@ class StateMetaRegistry extends ObjectRegistrySQL
 										$this->getObject()->getStatesDelimiter(),
 										array_unique($ref_names['initial'])
 								), 
-								'Caption' => translate('Добавлено'),
+								'Caption' => translate('Р”РѕР±Р°РІР»РµРЅРѕ'),
 								'IsTerminal' => 'N'
 						),
 						array ( 
@@ -50,7 +50,7 @@ class StateMetaRegistry extends ObjectRegistrySQL
 										$this->getObject()->getStatesDelimiter(),
 										array_unique($ref_names['progress'])
 								), 
-								'Caption' => translate('В работе'),
+								'Caption' => translate('Р’ СЂР°Р±РѕС‚Рµ'),
 								'IsTerminal' => 'N'
 						),
 						array ( 
@@ -59,7 +59,7 @@ class StateMetaRegistry extends ObjectRegistrySQL
 										$this->getObject()->getStatesDelimiter(),
 										array_unique($ref_names['final'])
 								),
-								'Caption' => translate('Выполнено'),
+								'Caption' => translate('Р’С‹РїРѕР»РЅРµРЅРѕ'),
 								'IsTerminal' => 'Y'
 						)
 				)

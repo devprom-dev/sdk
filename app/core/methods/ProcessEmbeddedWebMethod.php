@@ -173,7 +173,7 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		{
 	 		    foreach( $attrs as $field => $data )
 	 		    {
-	 			    $attrs[$field] = html_entity_decode($data, ENT_COMPAT | ENT_HTML401, 'cp1251');
+	 			    $attrs[$field] = html_entity_decode($data, ENT_COMPAT | ENT_HTML401, APP_ENCODING);
 
 	 			    $attrs[$field] = $attrs[$field] == 'NULL' ? '' : $attrs[$field];
 	 		    }

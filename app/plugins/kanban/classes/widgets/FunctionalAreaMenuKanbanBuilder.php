@@ -23,13 +23,18 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
  	    $set->setAreaMenus( FUNC_AREA_MANAGEMENT, array() );
  	    
  	    $menu = $set->getAreaMenus( FUNC_AREA_FAVORITES );
+        unset($menu['quick']['items']['project-log']);
  	    
  	    // quick
  		$items = array();
  	    
- 	    $items['board'] = $model_factory->getObject('PMReport')->getExact('kanbanboard')->buildMenuItem();
+ 		$item = $model_factory->getObject('PMReport')->getExact('kanbanboard')->buildMenuItem();
+ 		$item['order'] = 5;
+ 	    $items['board'] = $item;
  	    
- 	    $items['knowledgebase'] = $model_factory->getObject('Module')->getExact('project-knowledgebase')->buildMenuItem();
+ 	    $item = $model_factory->getObject('Module')->getExact('project-knowledgebase')->buildMenuItem();
+ 	    $item['order'] = 9999;
+ 	    $items['knowledgebase'] = $item;
  	    
 		$menu['quick']['items'] = array_merge($items, $menu['quick']['items']); 
 
@@ -44,7 +49,7 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
  	    $items['activity']['name'] = text('kanban20');
  	    
  	    $menu['reports'] = array (
- 	        'name' => translate('Îò÷åòû'),
+ 	        'name' => translate('ĞÑ‚Ñ‡ĞµÑ‚Ñ‹'),
  	        'uid' => 'reports',
  	        'items' => $items
  	    );
@@ -75,7 +80,7 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
 		$items[] = $item;
 		
  	    $menu['settings'] = array (
- 	            'name' => translate('Íàñòğîéêè'),
+ 	            'name' => translate('ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸'),
  	            'uid' => 'settings',
  	            'items' => $items
  	    );

@@ -21,7 +21,7 @@ class Snapshot extends Metaobject
 	
 	function getDisplayName()
 	{
-		return translate('Версия');
+		return translate('Р’РµСЂСЃРёСЏ');
 	}
 	
 	/*

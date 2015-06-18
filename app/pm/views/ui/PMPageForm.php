@@ -15,6 +15,11 @@ class PMPageForm extends PageForm
         parent::__construct($object);
     }
     
+    function getId()
+    {
+    	return parent::getId().$this->getTransitionIt()->getId();
+    }
+    
     protected function extendModel()
     {
         $this->buildCustomAttributes();
@@ -330,5 +335,20 @@ class PMPageForm extends PageForm
 	    }
 	}
 
+ 	function getHint()
+	{
+		if ( $this->getTransitionIt()->getId() != '' )
+		{
+			$method = new ObjectModifyWebMethod($this->getTransitionIt());
+			$method->setObjectUrl(
+					getSession()->getApplicationUrl().'project/workflow/'.$this->getObject()->getStateClassName().$this->getTransitionIt()->getEditUrl()
+				);
+			$method_state = new ObjectModifyWebMethod($this->getTransitionIt()->getRef('TargetState'));
+			return str_replace('%1', $method->getJsCall(), 
+						str_replace('%2', $method_state->getJsCall(), text(2020)));
+		}
+		return parent::getHint();
+	}
+	
     private $state_it = null;
 }

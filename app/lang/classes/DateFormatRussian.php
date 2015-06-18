@@ -47,4 +47,14 @@ class DateFormatRussian extends DateFormatBase
 		
 		return $year."-".$month."-".$day;
  	}
+
+ 	function getDaysWording( $days )
+ 	{
+ 		if( abs($days) == 1 ) 
+ 			return 'день';
+ 		elseif( abs($days) > 1 and abs($days) < 5 )
+ 			return 'дня';
+ 		else
+ 			return 'дней';
+ 	}
 }

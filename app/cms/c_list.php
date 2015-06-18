@@ -97,8 +97,8 @@
 								<td style="background:#eaeaea;border:.5pt solid #d5d5df;height:24">
 									<table width=100%>
 										<tr>
-            								<td align=center>Название</td>
-            								<td align=center width=115 style="border-left:.5pt solid #d5d5df;padding-left:3pt;">Операции</td>
+            								<td align=center>РќР°Р·РІР°РЅРёРµ</td>
+            								<td align=center width=115 style="border-left:.5pt solid #d5d5df;padding-left:3pt;">РћРїРµСЂР°С†РёРё</td>
 										</tr>
 									</table>
 								</td>
@@ -108,7 +108,7 @@
 						{
 						?>
 						<tr>
-							<td style="border:.5pt solid #d5d5df;padding:2pt;">Нет записей</td>
+							<td style="border:.5pt solid #d5d5df;padding:2pt;">РќРµС‚ Р·Р°РїРёСЃРµР№</td>
 						</tr>
 						<?						
 						}
@@ -129,7 +129,7 @@
 														if($_REQUEST[$this->object->getClassName().'Id'] == $it->getId()) {
 														?>
 														<td width=5 style="font-family:wingdings;font-size:13pt;color:#6F32EA;padding-top:3pt;">
-															р
+															СЂ
 														</td>
 														<?
 														}
@@ -172,13 +172,13 @@
         <table width=100% cellpadding=0 cellspacing=0>
         	<tr>
 				<td align=left>
-					Список объектов
+					РЎРїРёСЃРѕРє РѕР±СЉРµРєС‚РѕРІ
 				</td>
         		<td align=right valign=top>
 				<?
 					if($it->count() > 0) {
 					?>
-					Страницы: 
+					РЎС‚СЂР°РЅРёС†С‹: 
 					<?
 					}
 				?>
@@ -223,7 +223,7 @@
         			<input type="hidden" name="oldordernum" value="<? echo $it->getOrderNum(); ?>">
         			<input type="hidden" name="newid" value="<? echo $it->getId(); ?>">
         			<input type="hidden" name="newordernum" value="<? echo $this->it_reorder->getOrderNum(); ?>">
-        			<input type="submit" value="с" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
+        			<input type="submit" value="СЃ" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
         		</form>
     			<?
     			}
@@ -241,7 +241,7 @@
         			<input type="hidden" name="oldordernum" value="<? echo $this->it_reorder->getOrderNum(); ?>">
         			<input type="hidden" name="newid" value="<? echo $this->it_reorder->getId(); ?>">
         			<input type="hidden" name="newordernum" value="<? echo $it->getOrderNum(); ?>">
-        			<input type="submit" value="т" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
+        			<input type="submit" value="С‚" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
         		</form>
     			<?
     			}
@@ -266,7 +266,7 @@
                     			<form action="<? echo $this->object->getPageNameEditMode($it->getId()); ?>" method="post">
                     				<input type="hidden" name="<? echo $this->object->getClassName(); ?>action" value="show">
                     				<input type="hidden" name="<? echo $this->object->getClassName().'Id'; ?>" value="<? echo $it->getId(); ?>">
-                    				<input style="width:40pt;" type="submit" value="Редакт.">
+                    				<input style="width:40pt;" type="submit" value="Р РµРґР°РєС‚.">
                     			</form>
 							</td>
 							<td width=4></td>
@@ -274,7 +274,7 @@
                     			<form action="<? echo $this->getUrl(); ?>" method="post">
                     				<input type="hidden" name="<? echo $this->object->getClassName(); ?>action" value="list.delete">
                     				<input type="hidden" name="<? echo $this->object->getClassName().'Id'; ?>" value="<? echo $it->getId(); ?>">
-                    				<input style="width:40pt;" type="submit" value="Удал." onclick="javascript: return confirm('Вы действительно хотите удалить запись?');">
+                    				<input style="width:40pt;" type="submit" value="РЈРґР°Р»." onclick="javascript: return confirm('Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ Р·Р°РїРёСЃСЊ?');">
                     			</form>
 							</td>
 						</tr>
@@ -311,16 +311,16 @@
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
 		$freshnews = 0;
-		// название страницы
+		// РЅР°Р·РІР°РЅРёРµ СЃС‚СЂР°РЅРёС†С‹
 		$pagename = $this->getUrl();
-		// общее число страниц
+		// РѕР±С‰РµРµ С‡РёСЃР»Рѕ СЃС‚СЂР°РЅРёС†
         $pages = ($object_it->count() - $freshnews) / $this->getMaxOnPage();
         
         if ( $pages < 1 ) return;
         
         echo '<div class="btn-toolbar"><div class="btn-group">';
         
-		// выводим номера страниц
+		// РІС‹РІРѕРґРёРј РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС†
         for ($i = 0; $i < $pages; $i++)
         {
 			$pageurl = $pagename.(strpos($pagename, '?') !== false ? '&' : '?').'offset='.($i * $this->getMaxOnPage() + $freshnews);
@@ -345,7 +345,7 @@
 	{
 		parent::ListForm( $object );
 
-		$this->addItemAction( 'IsActive', 'Опубликовать', 'Снять' );
+		$this->addItemAction( 'IsActive', 'РћРїСѓР±Р»РёРєРѕРІР°С‚СЊ', 'РЎРЅСЏС‚СЊ' );
 	}
  
  	function drawItem( $object_it )
@@ -410,10 +410,10 @@
             					<form action="<? echo $this->getNoSearchUrl(); ?>" method=post>
                 					<table width=100% cellpadding=0 cellspacing=0>
                 						<tr>
-                							<td width=45 valign=top>Поиск: </td>
+                							<td width=45 valign=top>РџРѕРёСЃРє: </td>
                 							<td valign=top><input name="search" style="width:100%;margin-top:-1pt;" value="<? echo $search; ?>"/></td>
 											<td width=4></td>
-                							<td width=44 valign=top><input type="submit" style="width:40pt;margin-top:0pt;" value="Найти"/></td>
+                							<td width=44 valign=top><input type="submit" style="width:40pt;margin-top:0pt;" value="РќР°Р№С‚Рё"/></td>
                 						</tr>
                 					</table>
             					</form>
@@ -422,7 +422,7 @@
 							<td width=20 valign=top>
             					<form action="<? echo $this->getNoSearchUrl(); ?>" method=post>
         							<input type="hidden" name="search" value="">
-        							<input title="Сбросить" style="width:16pt;margin-top:0pt;" type="submit" value="X">
+        							<input title="РЎР±СЂРѕСЃРёС‚СЊ" style="width:16pt;margin-top:0pt;" type="submit" value="X">
             					</form>
 							</td>
 						</tr>
@@ -431,7 +431,7 @@
 				<td></td>
 				<td align=right valign=top>
 					<table cellpadding=0 cellspacing=0><tr>
-						<td valign=top>Страницы: </td>
+						<td valign=top>РЎС‚СЂР°РЅРёС†С‹: </td>
 							<? $this->drawNavigator( $it ); ?>
 						<td></td>
 					</tr></table>
@@ -478,7 +478,7 @@
 	{
 		global $_REQUEST;
 
-		// в режиме редактирования определим путь до родителя
+		// РІ СЂРµР¶РёРјРµ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РѕРїСЂРµРґРµР»РёРј РїСѓС‚СЊ РґРѕ СЂРѕРґРёС‚РµР»СЏ
 		if(isset($_REQUEST[$this->object->getClassName().'Id']) || isset($_REQUEST['tree_level'])) 
 		{
 			$object_id = $_REQUEST[$this->object->getClassName().'Id'];
@@ -526,8 +526,8 @@
 								<td style="background:#eaeaea;border:.5pt solid #d5d5df;">
 									<table width=100%>
 										<tr>
-            								<td align=center>Описание</td>
-            								<td align=center width=115 style="border-left:.5pt solid #d5d5df;padding-left:3pt;">Операции</td>
+            								<td align=center>РћРїРёСЃР°РЅРёРµ</td>
+            								<td align=center width=115 style="border-left:.5pt solid #d5d5df;padding-left:3pt;">РћРїРµСЂР°С†РёРё</td>
 										</tr>
 									</table>
 								</td>
@@ -566,7 +566,7 @@
 					if($_REQUEST[$this->object->getClassName().'Id'] == $object_it->getId()) {
 					?>
 					<td width=5 style="font-family:wingdings;font-size:13pt;color:#6F32EA;padding-top:1pt;">
-						р
+						СЂ
 					</td>
 					<?
 					}
@@ -808,8 +808,8 @@
 		switch ( strtolower($this->object->getAttributeDbType($attr)) )
 		{
 			case 'char':
-				echo $object_it->get($attr) == 'Y' ? translate('Да') : 
-					( $object_it->get($attr) != '' ? translate('Нет') : '' );
+				echo $object_it->get($attr) == 'Y' ? translate('Р”Р°') : 
+					( $object_it->get($attr) != '' ? translate('РќРµС‚') : '' );
 				break;
 				
 			case 'date':
@@ -854,17 +854,17 @@
 	//---------------------------------------------------------------------------------------------------------
 	function drawNavigator( $b_top_navigator )
 	{
-		// название страницы
+		// РЅР°Р·РІР°РЅРёРµ СЃС‚СЂР°РЅРёС†С‹
 		$pagename = $this->getUrl();
 		
-		// общее число страниц
+		// РѕР±С‰РµРµ С‡РёСЃР»Рѕ СЃС‚СЂР°РЅРёС†
         $pages = $this->getPages();
         $offset_page = max(1, $this->offset / $this->getMaxOnPage() - 3);
         
         echo '<div class="pull-left pagination">';
 		
         echo '<ul>';
-        // выводим номера страниц
+        // РІС‹РІРѕРґРёРј РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС†
 	    if ( $offset_page > 2 )
         {
         	//echo '<div class="btn-group">';
@@ -877,7 +877,7 @@
         }
 
         //echo '<div class="btn-group">';
-        // выводим номера страниц
+        // РІС‹РІРѕРґРёРј РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС†
         for ($i = 0; $i < min($pages, 7); $i++)
         {
         	if ( $i + $offset_page >= $pages )
@@ -1002,7 +1002,7 @@
 		
 		array_push( $actions, array(
 		    'url' => $object_it->getEditUrl(), 
-		    'name' => translate('Изменить')) 
+		    'name' => translate('РР·РјРµРЅРёС‚СЊ')) 
 		);
 		
 		return $actions;
@@ -1103,7 +1103,7 @@
 			<?
 				if($this->IsNeedToDisplayNumber()) 
 				{
-					echo '<td width="'.$this->getNumbersColumnWidth().'" class=list_header>'.translate('№').'</td>';
+					echo '<td width="'.$this->getNumbersColumnWidth().'" class=list_header>'.translate('в„–').'</td>';
 					$columns_amount++;
 				}
 				
@@ -1112,11 +1112,11 @@
 					$columns_amount++;
 				}
 				
-				// получим список атрибутов для сущности
+				// РїРѕР»СѓС‡РёРј СЃРїРёСЃРѕРє Р°С‚СЂРёР±СѓС‚РѕРІ РґР»СЏ СЃСѓС‰РЅРѕСЃС‚Рё
 				$attrs = $this->columns;
 
-				// формируем массив индексов столбцов, отсортированных
-				// в нужном пользователю порядке
+				// С„РѕСЂРјРёСЂСѓРµРј РјР°СЃСЃРёРІ РёРЅРґРµРєСЃРѕРІ СЃС‚РѕР»Р±С†РѕРІ, РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹С…
+				// РІ РЅСѓР¶РЅРѕРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ РїРѕСЂСЏРґРєРµ
 				$columns_order = array_flip($this->getColumnsOrder());
 				$attr_index = array();
 
@@ -1160,7 +1160,7 @@
 				if($this->IsNeedToDisplayLinks())
 				{
 			?>
-				<td width=100 class=list_header><? echo_lang('Связи') ?></td>
+				<td width=100 class=list_header><? echo_lang('РЎРІСЏР·Рё') ?></td>
 			<?
 					$columns_amount++;
 				}
@@ -1169,7 +1169,7 @@
 				{
 					$width = $this->getColumnWidth( 'Actions' );
 			?>			
-				<td class=list_header width=<? echo $width ?> ><? echo_lang('Операции') ?></td>
+				<td class=list_header width=<? echo $width ?> ><? echo_lang('РћРїРµСЂР°С†РёРё') ?></td>
 			<?
 					$columns_amount++;
 				}
@@ -1321,7 +1321,7 @@
 	
 	function getNoItemsMessage()
 	{
-		return translate('Нет элементов');
+		return translate('РќРµС‚ СЌР»РµРјРµРЅС‚РѕРІ');
 	}
 	
 	function getCurrentAction()

@@ -4,40 +4,25 @@ if ( !class_exists('IssuesProgressFrame', false) ) include(SERVER_ROOT_PATH.'/pm
 
 class VersionList extends PMPageList
 {
- 	var $release_it, $iteration_it, $version_settings;
+ 	var $release_it, $iteration_it;
  	
- 	function __construct( $object )
- 	{
- 		parent::PMPageList( $object );
- 		
- 		$temp = getFactory()->getObject('pm_VersionSettings');
-
- 		$this->version_settings = $temp->getAll();
- 	}
- 		
 	function getIt( $object_it )
 	{
 		if ( $object_it->get('Release') > 0 )
 		{
-			if ( !is_object($this->iteration_it) )
-			{
+			if ( !is_object($this->iteration_it) ) {
 				$this->iteration_it = getFactory()->getObject('pm_Release')->getAll();
 			}
-			
 			$this->iteration_it->moveToId($object_it->get('Release'));
-
 			return $this->iteration_it->getCurrentIt();
 		}
 
 		if ( $object_it->get('Version') > 0 )
 		{
-			if ( !is_object($this->release_it) )
-			{
+			if ( !is_object($this->release_it) ) {
 				$this->release_it = getFactory()->getObject('pm_Version')->getAll();
 			}
-			
 			$this->release_it->moveToId($object_it->get('Version'));
-			
 			return $this->release_it->getCurrentIt();
 		}
 		
@@ -45,7 +30,6 @@ class VersionList extends PMPageList
 	}
 	
 	function IsNeedToDisplayNumber( ) { return false; }
-
 	function IsNeedToDelete( ) { return false; }
 
 	function drawCell( $source_it, $attr )
@@ -80,7 +64,7 @@ class VersionList extends PMPageList
 					$offset = '0px';
 					echo '<div style="padding-left:'.$offset.';">';
 						$caption = $object_it->getDisplayName();
-						if ( is_numeric($caption) ) $caption = translate('Релиз').' '.$caption;
+						if ( is_numeric($caption) ) $caption = translate('Р РµР»РёР·').' '.$caption;
 						echo $caption;
 					echo '</div>';		
 					break;
@@ -89,7 +73,7 @@ class VersionList extends PMPageList
 					$offset = '0px';
 					echo '<div style="padding-left:'.$offset.';">';
 						$caption = $object_it->getDisplayName();
-						if ( is_numeric($caption) ) $caption = translate('Итерация').' '.$caption;
+						if ( is_numeric($caption) ) $caption = translate('РС‚РµСЂР°С†РёСЏ').' '.$caption;
 						echo $caption;
 					echo '</div>';		
 					break;
@@ -116,18 +100,11 @@ class VersionList extends PMPageList
 			switch ( $object_it->object->getClassName() )
 			{
 				case 'pm_Version':
-					if ( $this->version_settings->get('UseRelease') == 'Y' )
-					{
-						echo $source_it->get('Caption');
-					}
+					echo $source_it->get('Caption');
 					break;
 
 				case 'pm_Release':
-					if ( $this->version_settings->get('UseIteration') == 'Y' )
-					{
-						echo $source_it->get('Caption');
-					}
-
+					echo $source_it->get('Caption');
 					break;
 			}
 		}
@@ -148,19 +125,19 @@ class VersionList extends PMPageList
 							
 							if ( $start_date != '' || $finish_date != '' )
 							{
-								echo translate('По плану').':<br/>';
+								echo translate('РџРѕ РїР»Р°РЅСѓ').':<br/>';
 								echo $start_date.'&nbsp;-&nbsp;'.$finish_date.'<br/><br/>';
 							}
 							
 							if ( $start_date != $estimated_start || $finish_date != $estimated_finish )
 							{
-								echo translate('Фактические').':<br/>';
+								echo translate('Р¤Р°РєС‚РёС‡РµСЃРєРёРµ').':<br/>';
 								echo $estimated_start.'&nbsp;-&nbsp;'.$estimated_finish;
 		
 								$offset = $object_it->getFinishOffsetDays();
 								if ( $offset > 0 )
 								{
-									echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
+									echo '<br/><span style="color:red;">'.translate('РћС‚РєР»РѕРЅРµРЅРёРµ РѕС‚ РіСЂР°С„РёРєР°').': '.$offset.' '.translate('РґРЅ.').'</span>';
 								}	
 							}
 						}
@@ -191,17 +168,17 @@ class VersionList extends PMPageList
 	
 						if ( $offset > 0 )
 						{
-							echo translate('По плану').':<br/>';
+							echo translate('РџРѕ РїР»Р°РЅСѓ').':<br/>';
 							echo $object_it->getDateFormat('StartDate');
 							echo '&nbsp;-&nbsp;';
 							echo $object_it->getDateFormat('FinishDate');
 	
-							echo '<br/><br/>'.translate('Фактические').':<br/>';
+							echo '<br/><br/>'.translate('Р¤Р°РєС‚РёС‡РµСЃРєРёРµ').':<br/>';
 							echo $object_it->getDateFormat('EstimatedStartDate');
 							echo '&nbsp;-&nbsp;';
 							echo $object_it->getDateFormat('EstimatedFinishDate');
 	
-							echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
+							echo '<br/><span style="color:red;">'.translate('РћС‚РєР»РѕРЅРµРЅРёРµ РѕС‚ РіСЂР°С„РёРєР°').': '.$offset.' '.translate('РґРЅ.').'</span>';
 						}
 						else
 						{
@@ -384,18 +361,11 @@ class VersionList extends PMPageList
 
 	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
 	            {
-	                if ( $this->version_settings->get('UseRelease') == 'Y' )
-	                {
-	                    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array(); 
-	                    array_push($actions,
-	                    array('url' => $report_it->getUrl().'kind=submitted&subversion='.$it->getDisplayName(),
-	                    'name' => translate('Обнаружены пожелания')));
-	                    $need_separator = false;
-	                }
-	                else
-	                {
-	                    $need_separator = true;
-	                }
+                    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array(); 
+                    array_push($actions,
+                    array('url' => $report_it->getUrl().'kind=submitted&subversion='.$it->getDisplayName(),
+                    'name' => translate('РћР±РЅР°СЂСѓР¶РµРЅС‹ РїРѕР¶РµР»Р°РЅРёСЏ')));
+                    $need_separator = false;
 	            }
 	    
 	            $report_it = $report->getExact('resolvedissues');
@@ -417,7 +387,7 @@ class VersionList extends PMPageList
 	                array_push( $actions, array() );
 	                array_push($actions,
 	                array('url' => $report_it->getUrl().'&iteration='.$object_it->get('Iterations'),
-	                'name' => translate('Задачи')));
+	                'name' => translate('Р—Р°РґР°С‡Рё')));
 	            }
 	            	
 	            break;
@@ -428,14 +398,10 @@ class VersionList extends PMPageList
 	            
 	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
 	            {
-	                if ( $this->version_settings->get('UseIteration') == 'Y' )
-	                {
-	                    array_push($actions, array() );
-	                    
-	                    array_push($actions,
-    	                    array('url' => $report_it->getUrl().'kind=submitted&subversion='.$it->getDisplayName(),
-    	                    'name' => translate('Обнаружены пожелания')));
-	                }
+                    array_push($actions, array() );
+                    array_push($actions,
+   	                    array('url' => $report_it->getUrl().'kind=submitted&subversion='.$it->getDisplayName(),
+   	                    'name' => translate('РћР±РЅР°СЂСѓР¶РµРЅС‹ РїРѕР¶РµР»Р°РЅРёСЏ')));
 	            }
 	    
 	            $report_it = $report->getExact('resolvedissues');
@@ -454,7 +420,7 @@ class VersionList extends PMPageList
 	                array_push( $actions, array() );
 	                array_push($actions,
 	                array('url' => $report_it->getUrl().'&iteration='.$object_it->get('Iterations'),
-	                'name' => translate('Задачи')));
+	                'name' => translate('Р—Р°РґР°С‡Рё')));
 	            }
 	            
 	            break;
@@ -489,7 +455,7 @@ class VersionList extends PMPageList
 	    
 	        array_push($actions,
 	        array('url' => $report_it->getUrl().'&version='.$object_it->getDisplayName(),
-	        'name' => translate('Результаты тестирования')));
+	        'name' => translate('Р РµР·СѓР»СЊС‚Р°С‚С‹ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ')));
 	    }
 	    
 	    return $actions;
@@ -516,7 +482,7 @@ class VersionList extends PMPageList
 	            {
 	                $actions[] = array(
 	                    'url' => $report_it->getUrl().'&release='.$it->getId(),
-	                    'name' => translate('Все артефакты')
+	                    'name' => translate('Р’СЃРµ Р°СЂС‚РµС„Р°РєС‚С‹')
 	                );
 	            }
 	    
@@ -530,7 +496,7 @@ class VersionList extends PMPageList
 	            {
 	                $actions[] = array(
 	                    'url' => $report_it->getUrl().'&iteration='.$it->getId(),
-	                    'name' => translate('Все артефакты')
+	                    'name' => translate('Р’СЃРµ Р°СЂС‚РµС„Р°РєС‚С‹')
 	                );
 	            }
 	    
@@ -597,7 +563,7 @@ class VersionList extends PMPageList
 				    	
 					$actions[] = array(
 					    'url' => $method->getJSCall( array('Version' => $it->getId()) ), 
-						'name' => translate('Создать итерацию')
+						'name' => translate('РЎРѕР·РґР°С‚СЊ РёС‚РµСЂР°С†РёСЋ')
 					);
 
 					$need_separator = true;
@@ -627,7 +593,7 @@ class VersionList extends PMPageList
 				    
 	                $actions[] = array( 
 	                    'url' => $info['url'],
-	                    'name' => translate('Баклог релиза')
+	                    'name' => translate('Р‘Р°РєР»РѕРі СЂРµР»РёР·Р°')
 	                );
 	            }
 
@@ -659,7 +625,7 @@ class VersionList extends PMPageList
 				    
 	                $actions[] = array(
 	                    'url' => $info['url'],
-	                    'name' => translate('Баклог итерации')
+	                    'name' => translate('Р‘Р°РєР»РѕРі РёС‚РµСЂР°С†РёРё')
 	                );
 	            }
 
@@ -672,7 +638,7 @@ class VersionList extends PMPageList
 		{
 			if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
 			
-		    $actions[] = array ( 'name' => translate('Трассировка'), 'items' => $trace_actions );
+		    $actions[] = array ( 'name' => translate('РўСЂР°СЃСЃРёСЂРѕРІРєР°'), 'items' => $trace_actions );
 		}
 		
 		$report_actions = $this->getReportActions( $object_it );
@@ -681,12 +647,37 @@ class VersionList extends PMPageList
 		{
 			if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
 			
-		    $actions[] = array ( 'name' => translate('Отчеты'), 'items' => $report_actions );
+		    $actions[] = array ( 'name' => translate('РћС‚С‡РµС‚С‹'), 'items' => $report_actions );
 		}
 		
 		return $actions;
 	}
 		
+	function getActions( $object_it )
+	{
+		$actions = $this->getItemActions('', $object_it);
+		$it = $this->getIt( $object_it );
+		
+		switch ( $it->object->getClassName() )
+		{
+			case 'pm_Version':
+				$form = new ReleaseForm();
+				break;
+			case 'pm_Release':
+				$form = new IterationForm();
+				break;
+		}
+		
+	    $form->show($it);
+		
+	    $delete = $form->getDeleteActions();
+        if ( count($delete) > 0 ) {
+		    $actions = array_merge($actions, array(array()), $delete); 
+        }
+		
+        return $actions;
+	}
+	
  	function getColumnWidth( $attr )
  	{
  		switch ( $attr )

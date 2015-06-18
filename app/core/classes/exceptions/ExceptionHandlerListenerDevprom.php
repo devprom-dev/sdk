@@ -5,23 +5,26 @@ include_once "ExceptionHandlerListener.php";
 class ExceptionHandlerListenerDevprom extends ExceptionHandlerListener
 {
 	private $transport = 'tcp';
-	private $host = 'hq.devprom.ru';
-	private $port = '80';
-	private $path = '/pm/errors/api/v1/bugs';
-	private $user = 'errorhandler';
-	private $password = '8S3b7x5h-evCFa:';
+	private $path = '/api/v1.0/errors';
+	private $host = '';
+	private $port = '';
 	
 	public function handle( $data, $code )
 	{
+		$url_parts = parse_url(DEVOPSSRV);
+		$this->host = $url_parts['host'];
+		$this->port = $url_parts['port'];
 		try
 		{
 			$this->post( 
 					array (
-							'Caption' => $data['error']['message'],
-							'Description' => nl2br(var_export($data, true)),
-							'ServerName' => $data['server']['SERVER_NAME'],
-							'ServerAddress' => $data['server']['SERVER_ADDR'],
-							'SubmittedVersion' => $_SERVER['APP_VERSION']
+							'caption' => $data['error']['message'],
+							'stacktrace' => nl2br(var_export($data, true)),
+							'host' => $data['server']['SERVER_NAME'],
+							'address' => $data['server']['SERVER_ADDR'],
+							'version' => $_SERVER['APP_VERSION'],
+							'source' => 'Devprom Application',
+							'project' => INSTALLATION_UID
 					)
 			);
 		}
@@ -50,17 +53,14 @@ class ExceptionHandlerListenerDevprom extends ExceptionHandlerListener
       	else
       	{
 	      	$context = stream_context_create();
-	      	
       		$fp = stream_socket_client($remote, $err, $errstr, 10, STREAM_CLIENT_CONNECT, $context);
-
     	    if ($fp)
         	{
         		$data_to_send = JsonWrapper::encode($data_to_send);
         		
 	          	$req = '';
     	      	$req .= "POST $this->path HTTP/1.1\r\n";
-        	  	$req .= "Host: $this->host\r\n";
-        	  	$req .= "Authorization: Basic " . base64_encode($this->user.':'.$this->password);
+        	  	$req .= "Host: ".$this->host."\r\n";
 				$req .= "Content-type: application/json\r\n";    	      	
         	  	$req .= 'Content-length: ' . strlen($data_to_send) . "\r\n";
         	  	$req .= "Connection: close\r\n\r\n";

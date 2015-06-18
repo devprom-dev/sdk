@@ -11,7 +11,7 @@ class SearchParameters extends InfoSection
     
  	function getCaption() 
  	{
- 		return translate('Параметры поиска');
+ 		return translate('РџР°СЂР°РјРµС‚СЂС‹ РїРѕРёСЃРєР°');
  	}
  	
  	function drawBody()
@@ -19,13 +19,13 @@ class SearchParameters extends InfoSection
  	    global $model_factory;
  	    
  	    echo '<div class="btn-group">';
-    		echo '<a class="btn" href="javascript:" onclick="$(\':checkbox\').attr(\'checked\',true);">'.translate('Выбрать все').'</a>';
+    		echo '<a class="btn" href="javascript:" onclick="$(\':checkbox\').attr(\'checked\',true);">'.translate('Р’С‹Р±СЂР°С‚СЊ РІСЃРµ').'</a>';
         echo '</div>';
         
         echo ' &nbsp; ';
         
     	echo '<div class="btn-group">';
-    		echo '<a class="btn" href="javascript:" onclick="$(\':checkbox\').attr(\'checked\',false);">'.translate('Очистить').'</a>';
+    		echo '<a class="btn" href="javascript:" onclick="$(\':checkbox\').attr(\'checked\',false);">'.translate('РћС‡РёСЃС‚РёС‚СЊ').'</a>';
         echo '</div>';
         
  	    echo '<label></label>';

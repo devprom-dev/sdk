@@ -135,7 +135,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		
 		$this->object->setAttributeCaption('Caption', $values[$method->getValue()]);
 		
-		$this->object->addAttribute('Total', '', translate('Èòîãî'), true);
+		$this->object->addAttribute('Total', '', translate('Ð˜Ñ‚Ð¾Ð³Ð¾'), true);
 
 		return parent::getColumns();
 	}
@@ -150,10 +150,17 @@ class ReportSpentTimeList extends PMStaticPageList
 		if ( $rows_object instanceof Request )
 		{
 			$attributes = array();
+			$skip_attributes = array_merge(
+					$rows_object->getAttributesByGroup('system'),
+					$rows_object->getAttributesByGroup('trace'),
+					$rows_object->getAttributesByGroup('workflow')
+			);
 			foreach($rows_object->getAttributes() as $attribute => $info) {
 				if ( $attribute == 'Owner' ) continue;
+				if ( $attribute == 'Attachment' ) continue;
+				if ( $attribute == 'Watchers' ) continue;
 				if ( !$rows_object->IsReference($attribute) ) continue;
-				if ( !$rows_object->IsAttributeStored($attribute) && $rows_object->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) continue;
+				if ( in_array($attribute, $skip_attributes) ) continue;
 				$attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
 			}
 			$attributes[] = 'SystemUser';

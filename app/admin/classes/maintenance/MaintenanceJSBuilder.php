@@ -13,7 +13,7 @@ class MaintenanceJSBuilder extends ScriptBuilder
 	
     public function build( ScriptRegistry & $object )
     {
- 		$language = strtolower($this->session->getLanguage()->getLanguage());
+ 		$language = strtolower($this->session->getLanguageUid());
  		$content = file_get_contents(SERVER_ROOT_PATH."admin/bundles/Devprom/AdministrativeBundle/Resources/public/js/maintenance.js");
     	$content = preg_replace('/%iid%/', INSTALLATION_UID, $content);
  		$file_name = tempnam(sys_get_temp_dir(), 'maintenance');

@@ -18,7 +18,7 @@
  class EntityForm extends Form
  {
  	function getCaption() {
-		return 'Сущность';
+		return 'РЎСѓС‰РЅРѕСЃС‚СЊ';
 	}
 
 	function createFieldObject( $name ) 
@@ -51,7 +51,7 @@
 		<table width=100% cellpadding=3 cellspacing=3>
 			<tr><td>
 				<a href="<? echo $attribute->getPageName(); ?>">
-					Редактировать атрибуты</a> »
+					Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ Р°С‚СЂРёР±СѓС‚С‹</a> В»
 			</td></tr>
 		</table>
 	<?	
@@ -76,7 +76,7 @@
  class FieldCheckIsOrdered extends FieldCheck
  {
  	function FieldCheckIsOrdered() {
-		$this->checkName = 'Экземпляры упорядочены';
+		$this->checkName = 'Р­РєР·РµРјРїР»СЏСЂС‹ СѓРїРѕСЂСЏРґРѕС‡РµРЅС‹';
 	}
  }
 
@@ -84,7 +84,7 @@
  class FieldCheckIsDictionary extends FieldCheck
  {
  	function FieldCheckIsDictionary() {
-		$this->checkName = 'Является справочником';
+		$this->checkName = 'РЇРІР»СЏРµС‚СЃСЏ СЃРїСЂР°РІРѕС‡РЅРёРєРѕРј';
 	}
  }
  

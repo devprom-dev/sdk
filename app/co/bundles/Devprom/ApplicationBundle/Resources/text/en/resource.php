@@ -48,5 +48,7 @@ $text_array = array
 	46 => 'Support for IT-systems of your business',
 	47 => 'Your department is supporting a whole business branch, which employs various IT-systems. Devprom.ALM allows to organize general backlog of requests to support or develop systems, control over completion of requests, supporting general business and system requirements, along with supporting the specifics of particular systems and developing system manuals for personnel.',
 	48 => 'Organizing work of the department',
-	49 => 'Besides participation of personnel in various projects, there are always tasks that are not directly related to the projects. Organize joint work over tasks of the department, involving all staff.'
+	49 => 'Besides participation of personnel in various projects, there are always tasks that are not directly related to the projects. Organize joint work over tasks of the department, involving all staff.',
+	50 => 'Incidents',
+	51 => 'Applications bug reports, monitoring tools alerts, infrastructure alerts'
 );

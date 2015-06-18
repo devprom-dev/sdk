@@ -36,7 +36,7 @@ class ConnectorList extends PMPageList
             ->buildMenuItem('?connection='.$object_it->getId());
         
         $actions[] = array (
-            'name' => translate('Îòëàäêà'),
+            'name' => translate('ĞÑ‚Ğ»Ğ°Ğ´ĞºĞ°'),
             'url' => $menu['url']  
         );
         

@@ -16,11 +16,8 @@ class ObjectRegistrySQL extends ObjectRegistry
 		parent::__construct( $object );
 		
 		if ( is_array($persisters) ) $this->setPersisters($persisters);
-		
 		if ( is_array($filters) ) $this->setFilters($filters);
-		
 		if ( is_array($groups) ) $this->setGroups($groups);
-		
 		if ( is_array($sorts) ) $this->setSorts($sorts);
 	}
 	
@@ -183,19 +180,15 @@ class ObjectRegistrySQL extends ObjectRegistry
 	}
 	
 	// to be protected
-	public function getFilterPredicate()
+	public function getFilterPredicate( $alias = 't' )
 	{
 		$predicate = '';
-		
 		foreach( $this->getFilters() as $filter )
 		{
-			$filter->setAlias('t');
-			
+			$filter->setAlias($alias);
 			$filter->setObject( $this->getObject() );
-			
 			$predicate .= $filter->getPredicate();
 		}
-
 		return $predicate;
 	}
 	
@@ -371,5 +364,31 @@ class ObjectRegistrySQL extends ObjectRegistry
 	
 	protected function checkUpdateOnly( $sql )
 	{
+	}
+
+	public function __sleep()
+	{
+		parent::__sleep();
+		unset($this->persisters);
+		$this->persisters = array();
+		unset($this->filters);
+		$this->filters = array();
+		unset($this->groups);
+		$this->groups = array();
+		unset($this->sorts);
+		$this->sorts = array();
+	}
+	
+	public function __destruct()
+	{
+		parent::__destruct();
+		unset($this->persisters);
+		$this->persisters = array();
+		unset($this->filters);
+		$this->filters = array();
+		unset($this->groups);
+		$this->groups = array();
+		unset($this->sorts);
+		$this->sorts = array();
 	}
 }

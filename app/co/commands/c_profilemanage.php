@@ -56,9 +56,6 @@
 	{
 		switch($result)
 		{
-			case 2:
-				return text(185);
-				
 			case 1001:
 				return text(187);
 
@@ -68,4 +65,3 @@
 	}
  }
  
-?>

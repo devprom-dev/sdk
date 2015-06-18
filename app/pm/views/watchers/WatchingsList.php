@@ -9,7 +9,7 @@ class WatchingsList extends PMPageList
 	
 	function getColumns()
 	{
-		$this->object->addAttribute('Object', '', translate('Œ·˙ÂÍÚ'), true);
+		$this->object->addAttribute('Object', '', translate('–û–±—ä–µ–∫—Ç'), true);
 		
 		return parent::getColumns();
 	}
@@ -68,7 +68,7 @@ class WatchingsList extends PMPageList
 		
 		array_push($actions, array( 
 		    'url' => $session->getApplicationUrl().'project/log?object='.$anchor_it->object->getClassName().'&'.$class.'='.$anchor_it->getId(), 
-		    'name' => translate('»ÒÚÓËˇ ËÁÏÂÌÂÌËÈ') 
+		    'name' => translate('–ò—Å—Ç–æ—Ä–∏—è –∏–∑–º–µ–Ω–µ–Ω–∏–π') 
 		));
 
 		return $actions;

@@ -73,9 +73,24 @@ class PageController extends MainController
     
     protected function responsePage( $page )
     {
+        $plugins_paths = array();
+		foreach( getSession()->getPluginsManager()->getNamespaces() as $plugin )
+		{
+			$path = realpath(SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/templates');
+			if ( is_dir($path) ) $plugins_paths[] = $path.'/%name%';
+		}
+    	
         $templating = new PhpEngine(
  			new TemplateNameParser(), 
- 			new FilesystemLoader(SERVER_ROOT_PATH.'/templates/views/%name%'), 
+ 			new FilesystemLoader(
+ 					array_merge(
+ 							$plugins_paths,
+ 							array (
+ 									SERVER_ROOT_PATH.'/templates/views/%name%',
+ 									SERVER_ROOT_PATH.'/templates/views/core/%name%'
+ 							)
+ 					)
+ 			), 
  			array (
 				new SlotsHelper(),
  			    new RouterHelper($this->get('router')->getGenerator())

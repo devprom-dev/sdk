@@ -49,8 +49,8 @@ function load(settings, root, child, container) {
 
         if ( typeof settings.asyncCallback != 'undefined' ) settings.asyncCallback();
 
-        $.cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
-		if ( root != 'source' ) $.cookies.set(settings.cookieId, root );
+        cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
+		if ( root != 'source' ) cookies.set(settings.cookieId, root );
     }
 	
 	if ( typeof settings.treeData != 'undefined' && settings.treeData.length > 0 )

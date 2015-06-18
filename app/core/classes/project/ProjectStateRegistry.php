@@ -8,12 +8,12 @@ class ProjectStateRegistry extends ObjectRegistrySQL
  	            array (
  	                    'entityId' => 1,
  	            		'ReferenceName' => 'N',
- 	                    'Caption' => translate('Îòêðûòû')
+ 	                    'Caption' => translate('ÐžÑ‚ÐºÑ€Ñ‹Ñ‚Ñ‹')
  	            ),
  	            array (
  	                    'entityId' => 2,
  	            		'ReferenceName' => 'Y',
- 	                    'Caption' => translate('Çàêðûòû')
+ 	                    'Caption' => translate('Ð—Ð°ÐºÑ€Ñ‹Ñ‚Ñ‹')
  	            )
  	 	));
  	}

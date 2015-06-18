@@ -23,15 +23,13 @@ $form_id = 'myForm';
 	    <label>&nbsp;</label>
         
         <div class="input-prepend input-block-level">
-          <span class="add-on"><i class="icon-user"></i></span>			    
-	      <input type="text" class="span11" id="login" name="login" placeholder="<?=translate('Ëîãèí')?>">
+          <span class="add-on"><i class="icon-user"></i></span><input type="text" class="span11" id="login" name="login" placeholder="<?=translate('Ð›Ð¾Ð³Ð¸Ð½')?>">
 	    </div>
 
 	    <label>&nbsp;</label>
 	    
         <div class="input-prepend input-block-level">
-          <span class="add-on"><i class="icon-lock"></i></span>			    
-		  <input type="password" class="span11" id="pass" name="pass" placeholder="<?=translate('Ïàðîëü')?>">
+          <span class="add-on"><i class="icon-lock"></i></span><input type="password" class="span11" id="pass" name="pass" placeholder="<?=translate('ÐŸÐ°Ñ€Ð¾Ð»ÑŒ')?>">
         </div>
         
 	    <label>&nbsp;</label>
@@ -44,7 +42,7 @@ $form_id = 'myForm';
         
       <div class="pull-left">
         <div>
-            <button type="submit" class="btn btn-primary" style="padding-left:30px;padding-right:30px;" onclick="<?="javascript: $('#action').val('".$form_action."');"?>" ><?=translate('Âîéòè')?></button>
+            <button type="submit" class="btn btn-primary" style="padding-left:30px;padding-right:30px;" onclick="<?="javascript: $('#action').val('".$form_action."');"?>" ><?=translate('Ð’Ð¾Ð¹Ñ‚Ð¸')?></button>
         </div>
       </div>
       <div class="pull-left" style="padding:6px 0 0 20px;">

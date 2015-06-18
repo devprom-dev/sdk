@@ -40,12 +40,12 @@ class FieldTagTrace extends FieldForm
 	    return new TagFormEmbedded( $this->getTagObject(), $this->getField() );
 	}
 	
- 	function render( & $view )
+ 	function render( $view )
 	{
 	    $this->drawBody( $view );    
 	}
 	
-	function drawBody( & $view = null )
+	function drawBody( $view = null )
 	{
 		global $model_factory;
 		

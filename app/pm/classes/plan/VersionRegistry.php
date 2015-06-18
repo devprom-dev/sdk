@@ -4,6 +4,10 @@ class VersionRegistry extends ObjectRegistrySQL
 {
  	function getQueryClause()
  	{
+ 		$release = getFactory()->getObject('Release');
+ 		$iteration = getFactory()->getObject('Iteration');
+ 		$build = getFactory()->getObject('Build');
+ 		
  		$sql = " SELECT LPAD(v.Caption, 8, '0') VersionNumber, " .
  			   "		v.Caption Caption, ".
  			   "		v.Caption pm_VersionId, ".
@@ -12,7 +16,7 @@ class VersionRegistry extends ObjectRegistrySQL
  			   "		'' Build, " .
  			   "		v.Description, v.Project, v.VPD, v.StartDate, v.FinishDate, v.RecordCreated, v.RecordModified" .
  			   "   FROM pm_Version v ".
- 			   "  WHERE 1 = 1 ".$this->getObject()->getVpdPredicate('v');
+ 			   "  WHERE 1 = 1 ".$release->getVpdPredicate('v');
  		
 		$sql .= 			   
 		   "  UNION ".
@@ -25,7 +29,7 @@ class VersionRegistry extends ObjectRegistrySQL
 		   "		r.Description, ".
 		   "		v.Project, v.VPD, r.StartDate, r.FinishDate, r.RecordCreated, r.RecordModified " .
 		   "   FROM pm_Release r, pm_Version v ".
-		   "  WHERE 1 = 1 ".$this->getObject()->getVpdPredicate('r').
+		   "  WHERE 1 = 1 ".$iteration->getVpdPredicate('r').
 		   "    AND v.pm_VersionId = r.Version ";
  	    
 		$sql .= 			   
@@ -39,7 +43,7 @@ class VersionRegistry extends ObjectRegistrySQL
 		   "		b.Description, ".
 		   "		v.Project, b.VPD, v.StartDate, v.FinishDate, v.RecordCreated, v.RecordModified " .
 		   "   FROM pm_Build b, pm_Version v ".
-		   "  WHERE 1 = 1 ".$this->getObject()->getVpdPredicate('b').
+		   "  WHERE 1 = 1 ".$build->getVpdPredicate('b').
 		   "    AND v.pm_VersionId = b.Version ";
 		
 		$sql .= 			   
@@ -53,7 +57,7 @@ class VersionRegistry extends ObjectRegistrySQL
 		   "		b.Description, ".
 		   "		v.Project, b.VPD, r.StartDate, r.FinishDate, r.RecordCreated, r.RecordModified " .
 		   "   FROM pm_Build b, pm_Release r, pm_Version v ".
-		   "  WHERE 1 = 1 ".$this->getObject()->getVpdPredicate('b').
+		   "  WHERE 1 = 1 ".$build->getVpdPredicate('b').
 		   "    AND r.pm_ReleaseId = b.Release ".
 		   "    AND v.pm_VersionId = r.Version ";
 		
@@ -70,7 +74,7 @@ class VersionRegistry extends ObjectRegistrySQL
 		   "        b.VPD, ".
 		   "        NOW(), NOW(), b.RecordCreated, b.RecordModified " .
 		   "   FROM pm_Build b ".
-		   "  WHERE 1 = 1 ".$this->getObject()->getVpdPredicate('b').
+		   "  WHERE 1 = 1 ".$build->getVpdPredicate('b').
 		   "    AND b.Release IS NULL ".
 		   "    AND b.Version IS NULL ";
 		

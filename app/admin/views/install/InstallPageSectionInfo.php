@@ -4,7 +4,7 @@ class InstallationInfo extends InfoSection
 {
 	function getCaption()
 	{
-		return translate('Шаги установки');
+		return translate('РЁР°РіРё СѓСЃС‚Р°РЅРѕРІРєРё');
 	}
 
 	function drawBody()

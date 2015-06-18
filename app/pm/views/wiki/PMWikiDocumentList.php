@@ -127,7 +127,7 @@ class PMWikiDocumentList extends PMWikiList
  	{
  	 	if ( $this->getAttributesVisible() )
  		{
- 			$this->getObject()->addAttribute('Attributes', '', translate('¿ÚË·ÛÚ˚'), true);
+ 			$this->getObject()->addAttribute('Attributes', '', translate('–ê—Ç—Ä–∏–±—É—Ç—ã'), true);
  		}
  		
  		parent::setupColumns();

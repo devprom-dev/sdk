@@ -27,7 +27,7 @@ class TaskBusinessActionResolveIssue extends BusinessAction
 		// if there are no open tasks then resolve an issue
 		if ( $task_it->end() )
 		{
-			$resolution = translate('Ğåçóëüòàò').': '.$object_it->get('Result');
+			$resolution = translate('Ğ ĞµĞ·ÑƒĞ»ÑŒÑ‚Ğ°Ñ‚').': '.$object_it->get('Result');
 
 			$terminals = $request_it->object->getTerminalStates();
 			

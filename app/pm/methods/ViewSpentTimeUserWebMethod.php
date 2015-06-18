@@ -4,7 +4,7 @@ class ViewSpentTimeUserWebMethod extends FilterAutoCompleteWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Участник');
+ 		return translate('РЈС‡Р°СЃС‚РЅРёРє');
  	}
  	
  	function ViewSpentTimeUserWebMethod()

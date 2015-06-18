@@ -13,7 +13,7 @@ class ContextResourceFileBuilder extends ContextResourceBuilder
 	
     function build( ContextResourceRegistry $object )
     {
-    	$language = strtolower($this->session->getLanguage()->getLanguage());
+    	$language = strtolower($this->session->getLanguageUid());
 
     	$strings = include(SERVER_ROOT_PATH."co/bundles/Devprom/CommonBundle/Resources/text/".$language."/context-resource.php");
     	

@@ -130,10 +130,6 @@ class phpsvnclient {
 
 	function phpsvnclient($url = 'http://phpsvnclient.googlecode.com/svn/', $user = false, $pass = false) {
 		$this->construct($url, $user, $pass);
-		if ( method_exists($this, '__destruct'))
-		{
-			register_shutdown_function(array(&$this, '__destruct'));
-		}
 	}
 
 	function construct($url = 'http://phpsvnclient.googlecode.com/svn/', $user = false, $pass = false) {

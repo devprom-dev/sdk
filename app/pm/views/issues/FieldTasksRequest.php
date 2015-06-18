@@ -11,12 +11,12 @@ class FieldTasksRequest extends FieldForm
  		$this->object_it = $object_it;
  	}
  	
- 	function render( & $view )
+ 	function render( $view )
 	{
 	    $this->draw( $view );    
 	}
  	
- 	function draw( & $view = null )
+ 	function draw( $view = null )
  	{
  		$task = getFactory()->getObject('pm_Task');
  		$task->disableVpd();

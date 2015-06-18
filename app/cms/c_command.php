@@ -66,7 +66,7 @@
 			<tr>
 				<td align=right>
 					<input type="hidden" name="<? echo get_class($this); ?>action" value="command.execute">
-					<input type="submit" value="Выполнить">
+					<input type="submit" value="Р’С‹РїРѕР»РЅРёС‚СЊ">
 				</td>
 			</tr>
 		</table>

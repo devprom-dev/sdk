@@ -1,9 +1,15 @@
 <?php
 
 include( dirname(__FILE__).'/AdminPageMenu.php');
+include "ui/BulkFormAdmin.php";
 
 class AdminPage extends Page
 {
+	function getBulkForm()
+	{
+		return new BulkFormAdmin($this->getObject());
+	}
+	
 	function getRenderParms()
 	{
 		return array_merge( parent::getRenderParms(), array (
@@ -45,7 +51,7 @@ class AdminPage extends Page
 		}
 		
 		$actions = array( array ( 
-			'name' => translate('Íàñòðîèòü ïðîôèëü'),
+			'name' => translate('ÐÐ°ÑÑ‚Ñ€Ð¾Ð¸Ñ‚ÑŒ Ð¿Ñ€Ð¾Ñ„Ð¸Ð»ÑŒ'),
 			'url' => '/profile' 
 		));
 
@@ -74,7 +80,7 @@ class AdminPage extends Page
 			}
 				
 			array_push( $actions, array ( 
-				'name' => translate('Âûéòè'),
+				'name' => translate('Ð’Ñ‹Ð¹Ñ‚Ð¸'),
 				'url' => '/logoff' 
 			));
 		}

@@ -13,24 +13,20 @@ class BulkDeleteWebMethod extends WebMethod
 	
  	function getCaption()
  	{
- 		return translate('Óäàëèòü');
+ 		return translate('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ');
  	}
 
 	function getDescription()
 	{
 		return text(911); 	
 	}
+
+	function getJSCall( $object, $ids = '' )
+	{
+		if ( $ids == '' ) $ids = '0';
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=Method:BulkDeleteWebMethod:class=".strtolower(get_class($object)).":objects=%ids%', ".$ids.", ".$this->getRedirectUrl().")";
+	}
 	
- 	function getJSCall( $object )
- 	{
- 		return "javascript: bulkDelete('".strtolower(get_class($object))."', 'bulkdeletewebmethod', '".$this->getRedirectUrl()."'); ";
- 	}
- 	
-  	function getBulkJSCall( $object )
- 	{
- 		return "javascript: processBulkMethod('Method:BulkDeleteWebMethod:class=".strtolower(get_class($object)).":objects=%ids'); ";
- 	}
- 	
  	function execute_request()
  	{
  		global $_REQUEST, $model_factory;
@@ -43,7 +39,7 @@ class BulkDeleteWebMethod extends WebMethod
 		
 		$object = $model_factory->getObject($class);
 		
-		$ids = preg_split('/-/', trim($_REQUEST['objects'], '-'));
+		$ids = preg_split('/[,-]/', trim($_REQUEST['objects'], '-'));
 		
 		$object_it = $object->getExact($ids); 
 

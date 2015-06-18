@@ -130,7 +130,7 @@ class ProfileForm extends AjaxForm
  	    if ( $auth_factory->credentialsRequired() )
  	    {
  	        $actions[] = array (
- 	            'name' => translate('Èçìåíèòü ïàðîëü'),
+ 	            'name' => translate('Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ Ð¿Ð°Ñ€Ð¾Ð»ÑŒ'),
  	            'url' => '/reset?key='.$user_it->getResetPasswordKey()
  	        );
  	    }

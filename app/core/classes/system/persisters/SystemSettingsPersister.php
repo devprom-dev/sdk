@@ -37,6 +37,13 @@ class SystemSettingsPersister extends ObjectSQLPersister
 				'EMAIL_SENDER_TYPE', $parms['EmailSender'], $file_content );
 		}
 
+ 		if ( array_key_exists('TimeZoneUTC', $parms) )
+		{ 
+			$parts = preg_split('/:/', $parms['TimeZoneUTC']);
+			$value = array_shift($parts);
+			$file_content = $this->updateContent('DEFAULT_UTC_OFFSET', $value, $file_content);
+		}
+		
 		$file = fopen($settings_path, 'w', 1);
 		fwrite( $file, $file_content );
 		fclose( $file );
@@ -49,9 +56,9 @@ class SystemSettingsPersister extends ObjectSQLPersister
  		$columns = array();
  		
  		array_push( $columns, "'".EnvironmentSettings::getCustomServerName()."' ServerName " );
-
  		array_push( $columns, "'".EnvironmentSettings::getCustomServerPort()."' ServerPort " );
-
+		array_push( $columns, "'".EnvironmentSettings::getUTCOffset()."' TimeZoneUTC " );
+ 		
  		$value = defined('EMAIL_TRANSPORT') ? EMAIL_TRANSPORT : '1';
  		array_push( $columns, "'".$value."' EmailTransport " );
  		

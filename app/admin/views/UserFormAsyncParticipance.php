@@ -74,7 +74,7 @@ class UserParticipanceForm extends UserParticipancePreForm
 
 	function getButtonText()
 	{
-		return translate('Сохранить');
+		return translate('РЎРѕС…СЂР°РЅРёС‚СЊ');
 	}
 
 	function getRedirectUrl()

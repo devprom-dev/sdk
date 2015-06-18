@@ -22,8 +22,7 @@ class ProjectForm extends PMPageForm
     function IsAttributeVisible( $attr_name )
     {
         $visible = array(
-		        'IsKnowledgeUsed', 'IsBlogUsed', 'IsFileServer', 
-		        'IsSubversionUsed', 'DaysInWeek', 'WikiEditorClass', 'Language'
+		        'DaysInWeek', 'WikiEditorClass', 'Language'
 		);
 
         return in_array($attr_name, $visible) ? true : parent::IsAttributeVisible( $attr_name ); 
@@ -35,12 +34,6 @@ class ProjectForm extends PMPageForm
         {
             case 'IsClosed':
                 return text(663);
-
-            case 'IsKnowledgeUsed':
-                return text(678);
-
-            case 'IsBlogUsed':
-                return text(679);
 
             case 'DaysInWeek':
                 return text(1023);

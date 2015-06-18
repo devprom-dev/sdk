@@ -32,7 +32,7 @@ class FunctionalAreaMenuCommonBuilder extends FunctionalAreaMenuProjectBuilder
        	$items['featurestrace'] = $report->getExact('featurestrace')->buildMenuItem();
 		
 		$menus['features'] = array( 
-		   'name' => $methodology_it->HasFeatures() ? translate('Ïğîäóêò') : translate('Ïîæåëàíèÿ'), 
+		   'name' => $methodology_it->HasFeatures() ? translate('ĞŸÑ€Ğ¾Ğ´ÑƒĞºÑ‚') : translate('ĞŸĞ¾Ğ¶ĞµĞ»Ğ°Ğ½Ğ¸Ñ'), 
 		   'items' => $items,
 		   'uid' => 'features' 
 		);
@@ -48,7 +48,7 @@ class FunctionalAreaMenuCommonBuilder extends FunctionalAreaMenuProjectBuilder
 		 	$items['tasks-board'] = $module->getExact('tasks-board')->buildMenuItem('?');
 			
     		$menus['tasks'] = array( 
-    		   'name' => translate('Çàäà÷è'), 
+    		   'name' => translate('Ğ—Ğ°Ğ´Ğ°Ñ‡Ğ¸'), 
     		   'items' => $items,
     		   'uid' => 'tasks' 
     		);

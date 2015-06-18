@@ -12,7 +12,7 @@ class WikiPageBranch extends Metaobject
 	
 	public function getDisplayName()
 	{
-		return translate('Бейзлайн');
+		return translate('Р‘РµР№Р·Р»Р°Р№РЅ');
 	}
 	
 	public function getObjectClass()

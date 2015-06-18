@@ -7,21 +7,6 @@ include "FieldTransitionResetField.php";
 
 class TransitionForm extends PMPageForm
 {
- 	function IsAttributeVisible( $attr_name ) 
- 	{
- 		switch ( $attr_name )
- 		{
- 			case 'ProjectRoles':
- 			case 'Attributes':
- 			case 'Predicates':
- 			case 'ResetFields':
- 				return true;
-
- 			default:
- 				return parent::IsAttributeVisible( $attr_name );
- 		}
- 	}
- 	
  	function getFieldDescription( $attr )
  	{
  		switch( $attr )

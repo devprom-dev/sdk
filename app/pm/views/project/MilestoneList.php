@@ -67,11 +67,6 @@ class MilestoneList extends PMPageList
 				if ( $object_it->get('ObjectClass') == 'pm_Milestone' )
 				{
 					parent::drawCell( $object_it, $attr );
-					
-					echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
-							'object_it' => $object_it,
-							'redirect' => ''
-					));
 				}
 				break;
 				
@@ -102,7 +97,7 @@ class MilestoneList extends PMPageList
 
 		if ( $object_it->get('Overdue') == 0 )
 		{
-			$date_caption = translate('сегодня');
+			$date_caption = translate('СЃРµРіРѕРґРЅСЏ');
 		}
 		else
 		{

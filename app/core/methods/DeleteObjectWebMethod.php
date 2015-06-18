@@ -15,7 +15,7 @@ class DeleteObjectWebMethod extends WebMethod
  	
  	function getCaption() 
 	{
-		return translate('Удалить');
+		return translate('РЈРґР°Р»РёС‚СЊ');
 	}
 	
 	function getWarning()
@@ -37,7 +37,7 @@ class DeleteObjectWebMethod extends WebMethod
 	
 	function execute_request()
 	{
-		if ( $_REQUEST['object'] < 1 ) return;
+		if ( $_REQUEST['object'] == '' ) return;
 		
 		$class = getFactory()->getClass($_REQUEST['class']);
 		

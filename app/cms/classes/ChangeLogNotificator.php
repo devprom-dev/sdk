@@ -89,8 +89,8 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 			} 
 			else 
 			{
-				if ( $now_value == 'Y' ) $now_value = translate('Äà'); 
-				if ( $now_value == 'N' ) $now_value = translate('Íåò'); 
+				if ( $now_value == 'Y' ) $now_value = translate('Ð”Ð°'); 
+				if ( $now_value == 'N' ) $now_value = translate('ÐÐµÑ‚'); 
 
 				$content .= translate($object_it->object->getAttributeUserName($att_name))
 								.': '.$now_value.Chr(10).Chr(13);
@@ -110,7 +110,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		
 		$class_name = strtolower(get_class($object_it->object));
 		
-		$parms['Caption'] = html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, 'cp1251' );
+		$parms['Caption'] = html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING );
 		$parms['ObjectId'] = $object_it->getId();
 		$parms['ClassName'] = $class_name == 'metaobject' ? $object_it->object->getClassName() : $class_name;
 		$parms['EntityRefName'] = $object_it->object->getEntityRefName();

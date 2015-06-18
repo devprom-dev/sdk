@@ -78,7 +78,7 @@ class FormLinkedEmbedded extends PMFormEmbedded
 	    $target_it = $this->getTargetIt( $object_it );
 
 	    $actions = array ( array (
-	            'name' => translate('Ïåðåéòè'),
+	            'name' => translate('ÐŸÐµÑ€ÐµÐ¹Ñ‚Ð¸'),
 	            'url' => $target_it->getViewUrl()     
 	    ));
 	

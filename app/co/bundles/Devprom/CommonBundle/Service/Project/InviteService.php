@@ -2,7 +2,6 @@
 
 namespace Devprom\CommonBundle\Service\Project;
 
-include_once SERVER_ROOT_PATH."pm/classes/participants/Invitation.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/ParticipantRole.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/ProjectRole.php";
@@ -15,12 +14,21 @@ class InviteService
 		$this->controller = $controller;
 		$this->session = $session;
 		
-		$lang = strtolower($this->session->getLanguage()->getLanguage());
+		$lang = strtolower($this->session->getLanguageUid());
 		$this->email_template = 'CommonBundle:Emails/'.$lang.':invite.html.twig';
 	}
 	
 	public function inviteByEmails( $emails )
 	{
+		if ( !is_array($emails) ) {
+			$emails = array_filter(
+					preg_split('/[,\s;]/', $emails), 
+					function($value) {
+							return $value != '' && filter_var(trim($value), FILTER_VALIDATE_EMAIL) !== false;
+					}
+	        );
+		}
+		
 		if ( !getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Participant')) ) return;
 
 		foreach( $emails as $email )

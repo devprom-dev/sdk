@@ -33,7 +33,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  		$values = array();
  		$lov = array();
  		
- 		$values['all'] = translate('Все');
+ 		$values['all'] = translate('Р’СЃРµ');
  		$values[] = '';
  		
  		$attr = $model_factory->getObject('pm_CustomAttribute');
@@ -57,7 +57,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  		}
  		
  		$values[] = '';
- 		$values['none'] = translate('Не задано');
+ 		$values['none'] = text(2030);
  		
   		return $values;
 	}

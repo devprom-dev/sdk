@@ -1,10 +1,29 @@
 <?php
 
+include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateTransitionsPersister.php";
 include "FieldStateAction.php";
 include "FieldStateAttribute.php";
+include "FieldStateTransitions.php";
 
 class StateForm extends PMPageForm
 {
+	function extendModel()
+	{
+		parent::extendModel();
+
+		$this->getObject()->addAttribute('Transitions', 'INTEGER', text(2016), true, false, 
+				str_replace('%1', $this->getObject()->getPage(), text(2013)), 25);
+		$this->getObject()->addPersister( new StateTransitionsPersister() );		
+
+		$this->getObject()->setAttributeOrderNum('ReferenceName', 998);
+		$this->getObject()->setAttributeVisible('ReferenceName', $this->getMode() != 'new');
+		
+		$this->getObject()->setAttributeType('Description', 'VARCHAR');
+		$this->getObject()->setAttributeOrderNum('Description', 999);
+		
+		$this->getObject()->setAttributeOrderNum('OrderNum', 997);
+	}
+	
  	function validateInputValues( $id, $action )
  	{
  		global $_REQUEST;
@@ -58,14 +77,14 @@ class StateForm extends PMPageForm
 		{
 			case 'Actions':
 				$field = new FieldStateAction($this->getObjectIt());
-				
 				$field->setObject( getFactory()->getObject($this->getRelatedEntity()->getObjectClass()) );
-				
 				return $field;
 				
 			case 'Attributes':
-
 				return new FieldStateAttribute(is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject());
+				
+			case 'Transitions':
+				return new FieldStateTransitions(is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject()); 
 				
 			default:
 				return parent::createFieldObject( $attr_name );

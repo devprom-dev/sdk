@@ -37,13 +37,13 @@ class UpdateTable extends StaticPageTable
 	{
 		return array (
 			array (
-				'name' => translate('Ñêà÷àòü îáíîâëåíèå'),
+				'name' => translate('Ğ¡ĞºĞ°Ñ‡Ğ°Ñ‚ÑŒ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğµ'),
 				'url' => 'javascript: downloadUpdate()',
 				'uid' => 'download'
 			),
 			array(),
 			array (
-				'name' => translate('Óñòàíîâèòü'),
+				'name' => translate('Ğ£ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ'),
 				'url' => '?action=upload',
 				'uid' => 'upload'
 			)

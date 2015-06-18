@@ -6,7 +6,7 @@ class ViewRevisionViewWebMethod extends FilterWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Вид');
+ 		return translate('Р’РёРґ');
  	}
  	
 	function getStyle()

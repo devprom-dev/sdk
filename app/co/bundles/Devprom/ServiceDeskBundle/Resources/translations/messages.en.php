@@ -28,6 +28,7 @@ return array(
 	'issue_attachments' => 'Attachments',
     'issue_comments' => 'Comments',
 	'issue_version' => 'Version',
+	'issue_type_name' => 'Issue',
 		
     'issue.edit' => 'Edit request',
     'issue.add' => 'Add new request',
@@ -45,7 +46,7 @@ return array(
     'issue.comment.prompt' => 'Enter your message..',
     'issue.add.comment' => 'Add comment',
 
-    'change.log.commented' => '[O-%commentId%] êîììåíòàðèé: %comment%',
+    'change.log.commented' => '[O-%commentId%] ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¹: %comment%',
 
     'attachment.new.title' => 'Attaching file to request',
     'attachment.upload' => 'Upload',

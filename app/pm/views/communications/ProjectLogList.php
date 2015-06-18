@@ -12,8 +12,8 @@ class ProjectLogList extends PMStaticPageList
  	
 	function setupColumns()
 	{
-		$this->object->addAttribute('UserAvatar', '', translate('Àâòîð'), true, false, '', 1);
-		$this->object->setAttributeCaption( 'SystemUser', translate('Èìÿ àâòîðà') );
+		$this->object->addAttribute('UserAvatar', '', translate('ÐÐ²Ñ‚Ð¾Ñ€'), true, false, '', 1);
+		$this->object->setAttributeCaption( 'SystemUser', translate('Ð˜Ð¼Ñ Ð°Ð²Ñ‚Ð¾Ñ€Ð°') );
 		$this->object->setAttributeOrderNum( 'SystemUser', 2 );
 		
 		parent::setupColumns();

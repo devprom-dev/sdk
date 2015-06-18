@@ -18,7 +18,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Год');
+ 		return translate('Р“РѕРґ');
  	}
  	
  	function getValues()
@@ -72,7 +72,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Месяц');
+ 		return translate('РњРµСЃСЏС†');
  	}
 
  	function getValues()
@@ -126,7 +126,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	var $title, $default;
  	
- 	function __construct ( $title = 'Начало' )
+ 	function __construct ( $title = 'РќР°С‡Р°Р»Рѕ' )
  	{
  		$this->title = translate($title);
 
@@ -163,7 +163,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Окончание');
+ 		return translate('РћРєРѕРЅС‡Р°РЅРёРµ');
  	}
 
 	function getStyle()
@@ -182,7 +182,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Изменено до');
+ 		return translate('РР·РјРµРЅРµРЅРѕ РґРѕ');
  	}
 
 	function getStyle()
@@ -201,7 +201,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  {
  	function getCaption()
  	{
- 		return translate('Изменено после');
+ 		return translate('РР·РјРµРЅРµРЅРѕ РїРѕСЃР»Рµ');
  	}
 
 	function getStyle()

@@ -38,7 +38,7 @@ if ( is_array($data['Iterations']) ) {
 							array(round($used_volume, 1), round($full_volume, 1), abs(round($left_volume,2))),
 							$left_volume < 0 ? text(1900) : text(1899)
 					   ),
-			'name' => substr($iteration_data['number'], 0, 20),
+			'name' => mb_substr($iteration_data['number'], 0, 20),
 			'progress' => $overload
 								? '<div class="progress"><div class="bar bar-danger" style="width: 100%;"></div></div>'
 								: '<div class="progress"><div class="bar bar-success" style="width:'.$filled_volume.'%;"></div></div>',

@@ -27,7 +27,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	
 	function getCaption() 
 	{
-		return translate('Ïåðåíåñòè â èòåðàöèþ').' '.
+		return translate('ÐŸÐµÑ€ÐµÐ½ÐµÑÑ‚Ð¸ Ð² Ð¸Ñ‚ÐµÑ€Ð°Ñ†Ð¸ÑŽ').' '.
 			$this->release_it->getDisplayName();
 	}
 
@@ -79,70 +79,11 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
- class ViewTaskStateWebMethod extends ViewTaskWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Ñòàòóñ');
- 	}
- 	
-	function getValueParm()
-	{
-		return 'taskstate';
-	}
-
- 	function getValues()
- 	{
- 		global $model_factory;
- 		
- 		$values = array();
- 		$values['all'] = translate('Âñå');
- 		
-		$state = $model_factory->getObject('TaskState');
-		$task = $model_factory->getObject('pm_Task');
-		
-		$state_it = $state->getAll();
-		while ( !$state_it->end() )
-		{
-			$values[$state_it->get('ReferenceName')] = $state_it->getDisplayName();
-			$state_it->moveNext();
-		}
-
-		$state = join(',',$task->getTerminalStates());
-		if ( !array_key_exists($state, $values) ) $values[$state] = translate('Çàâåðøåíî'); 
-		
-		$state = join(',',$task->getNonTerminalStates());
-		if ( !array_key_exists($state, $values) ) $values[$state] = translate('Íå çàâåðøåíî');
-		
- 		return $values;
- 	}
-
- 	function getStyle()
- 	{
- 		return 'width:185px;';
- 	}
- 	
- 	function getValue()
- 	{
- 		global $model_factory;
- 		
- 		$value = parent::getValue();
- 		if ( $value == '' )
- 		{
-			$task = $model_factory->getObject('pm_Task');
- 			$value = join(',',$task->getNonTerminalStates()); 
- 		}
- 		
- 		return $value;
- 	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
  class ViewTaskListWebMethod extends ViewTaskWebMethod
  {
  	function getCaption()
  	{
- 		return translate('Âèä');
+ 		return translate('Ð’Ð¸Ð´');
  	}
  	
  	function hasAccess()
@@ -158,11 +99,11 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	function getValues()
  	{
  		$values = array( 
-			'board' => translate('Äîñêà çàäà÷'), 
-			'tasks' => translate('Ñïèñîê çàäà÷'), 
-			'issues' => translate('Ïîæåëàíèÿ'), 
-			'trace' => translate('Òðàññèðîâêà'), 
-			'chart' => translate('Ãðàôèê') 
+			'board' => translate('Ð”Ð¾ÑÐºÐ° Ð·Ð°Ð´Ð°Ñ‡'), 
+			'tasks' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð·Ð°Ð´Ð°Ñ‡'), 
+			'issues' => translate('ÐŸÐ¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ'), 
+			'trace' => translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°'), 
+			'chart' => translate('Ð“Ñ€Ð°Ñ„Ð¸Ðº') 
 		);
  		
  		return $values;
@@ -199,10 +140,10 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	function getValues()
  	{
  		$values = array( 
-			'list' => translate('Ñïèñîê çàäà÷'), 
-			'board' => translate('Äîñêà çàäà÷'), 
-			'trace' => translate('Òðàññèðîâêà'),
-			'chart' => translate('Ãðàôèê') 
+			'list' => translate('Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð·Ð°Ð´Ð°Ñ‡'), 
+			'board' => translate('Ð”Ð¾ÑÐºÐ° Ð·Ð°Ð´Ð°Ñ‡'), 
+			'trace' => translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°'),
+			'chart' => translate('Ð“Ñ€Ð°Ñ„Ð¸Ðº') 
 		);
  		
  		return $values;

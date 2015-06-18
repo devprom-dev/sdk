@@ -35,7 +35,7 @@ class Iteration extends Metaobject
 
 	function getDisplayName()
 	{
-		return translate('Èòåðàöèÿ');
+		return translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ');
 	}
 	
 	function createIterator() 
@@ -47,23 +47,7 @@ class Iteration extends Metaobject
 	{
 		global $_REQUEST, $model_factory;
 		
-		if ( $name == 'StartDate' ) 
-		{
-		    if ( $_REQUEST['Version'] > 0 )
-		    {
-    			$release = $model_factory->getObject('pm_Version');
-    			
-    			$release_it = $release->getExact($_REQUEST['Version']);
-    			
-    			if ( $release_it->count() > 0 )
-    			{
-    				return $release_it->getNextIterationStart();
-    			}
-		    }
-		    
-		    return date( 'Y-m-j' );
-		} 
-		elseif ( $name == 'ReleaseNumber' ) 
+		if ( $name == 'ReleaseNumber' ) 
 		{
 			$iteration = $model_factory->getObject('Iteration');
 			$iteration->addSort( new SortRecentNumberClause() );

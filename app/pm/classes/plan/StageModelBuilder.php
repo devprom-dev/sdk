@@ -10,12 +10,12 @@ class StageModelBuilder extends ObjectModelBuilder
     	
     	$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
-		$object->addAttribute('Stage', '', translate('Ñòàäèÿ ïðîåêòà'), true, true, '', 10);
-		$object->addAttribute('Deadlines', '', translate('Ñðîêè'), true);
-		$object->addAttribute('EstimatedStartDate', 'DATETIME', translate('Îöåíêà íà÷àëà'), false, false);
-		$object->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Îöåíêà îêîí÷àíèÿ'), false, false);
-		$object->addAttribute('ActualStartDate', 'DATE', translate('Íà÷àëî ïî ïëàíó'), false, true);
-		$object->addAttribute('ActualFinishDate', 'DATE', translate('Îêîí÷àíèå ïî ïëàíó'), false, true);
+		$object->addAttribute('Stage', '', translate('Ð¡Ñ‚Ð°Ð´Ð¸Ñ Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð°'), true, true, '', 10);
+		$object->addAttribute('Deadlines', '', translate('Ð¡Ñ€Ð¾ÐºÐ¸'), true);
+		$object->addAttribute('EstimatedStartDate', 'DATETIME', translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð½Ð°Ñ‡Ð°Ð»Ð°'), false, false);
+		$object->addAttribute('EstimatedFinishDate', 'DATETIME', translate('ÐžÑ†ÐµÐ½ÐºÐ° Ð¾ÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ñ'), false, false);
+		$object->addAttribute('ActualStartDate', 'DATE', translate('ÐÐ°Ñ‡Ð°Ð»Ð¾ Ð¿Ð¾ Ð¿Ð»Ð°Ð½Ñƒ'), false, true);
+		$object->addAttribute('ActualFinishDate', 'DATE', translate('ÐžÐºÐ¾Ð½Ñ‡Ð°Ð½Ð¸Ðµ Ð¿Ð¾ Ð¿Ð»Ð°Ð½Ñƒ'), false, true);
 		$object->addAttribute('Burndown', '', translate('Burndown'), true);
 		
 		if ( $methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
@@ -23,7 +23,7 @@ class StageModelBuilder extends ObjectModelBuilder
 			$object->addAttribute('Burnup', '', translate('Burnup'), true);
 		}
 		
-		$object->addAttribute('Indexes', '', translate('Ïîêàçàòåëè'), true);
+		$object->addAttribute('Indexes', '', translate('ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÐµÐ»Ð¸'), true);
 		
 		$hidden = array ('StartDate', 'FinishDate', 'InitialVelocity', 'Caption', 'Description');
 		foreach( $hidden as $attribute )

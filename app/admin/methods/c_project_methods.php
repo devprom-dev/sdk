@@ -24,7 +24,7 @@ class ProjectDeleteWebMethod extends ProjectWebMethod
 
 	function getCaption()
 	{
-		return translate('Удалить');
+		return translate('РЈРґР°Р»РёС‚СЊ');
 	}
 
 	function getJSCall( $object )

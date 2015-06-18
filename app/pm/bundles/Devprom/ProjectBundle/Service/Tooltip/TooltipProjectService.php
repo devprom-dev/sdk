@@ -25,12 +25,12 @@ class TooltipProjectService extends TooltipService
     	return array_merge( parent::getData(), array (
     			'lifecycle' =>
     				array (
-    						'name' => translate('Æèçíåííûé öèêë'),
+    						'name' => translate('Ğ–Ğ¸Ğ·Ğ½ĞµĞ½Ğ½Ñ‹Ğ¹ Ñ†Ğ¸ĞºĞ»'),
     						'data' => $this->buildLifecycle( $this->getObjectIt() )
     				),
     			'comments' => 
     				array (
-    						'name' => translate('Êîììåíòàğèé'), 
+    						'name' => translate('ĞšĞ¾Ğ¼Ğ¼ĞµĞ½Ñ‚Ğ°Ñ€Ğ¸Ğ¹'), 
     						'data' => $this->buildComments( $this->getObjectIt() )
     				),
     			'type' => 
@@ -64,7 +64,7 @@ class TooltipProjectService extends TooltipService
  	 	{
  	 		$data[] = array (
  	 				'name' => 'Baseline',
- 	 				'title' => translate('Áåéçëàéí'),
+ 	 				'title' => translate('Ğ‘ĞµĞ¹Ğ·Ğ»Ğ°Ğ¹Ğ½'),
  	 				'type' => 'text',
  	 				'text' => getFactory()->getObject('Snapshot')->getExact($this->baseline)->getDisplayName()
  	 		);
@@ -109,7 +109,7 @@ class TooltipProjectService extends TooltipService
 		{
 			$data[] = array (
 					'name' => 'Tasks',
-					'title' => translate('Çàäà÷è'),
+					'title' => translate('Ğ—Ğ°Ğ´Ğ°Ñ‡Ğ¸'),
 					'type' => 'tasks',
 					'text' => $states 
 			);

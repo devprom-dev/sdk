@@ -9,12 +9,12 @@ namespace Devprom\ServiceDeskBundle\Util;
 class TextUtil {
 
     public static function escapeHtml($str) {
-        return htmlspecialchars($str, ENT_COMPAT, 'cp1251');
+        return htmlspecialchars($str, ENT_COMPAT, APP_ENCODING);
     }
 
     /**
-     * эскепим ввод пользователя дважды, чтобы html-разметка, введенная в Сервисдеске, отображалась текстом в Девпроме.
-     * Переносы строк сохраняем
+     * СЌСЃРєРµРїРёРј РІРІРѕРґ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РґРІР°Р¶РґС‹, С‡С‚РѕР±С‹ html-СЂР°Р·РјРµС‚РєР°, РІРІРµРґРµРЅРЅР°СЏ РІ РЎРµСЂРІРёСЃРґРµСЃРєРµ, РѕС‚РѕР±СЂР°Р¶Р°Р»Р°СЃСЊ С‚РµРєСЃС‚РѕРј РІ Р”РµРІРїСЂРѕРјРµ.
+     * РџРµСЂРµРЅРѕСЃС‹ СЃС‚СЂРѕРє СЃРѕС…СЂР°РЅСЏРµРј
      */
     public static function escapeForDevpromWysiwygFields($str) {
         return self::escapeHtml(nl2br(self::escapeHtml($str)));

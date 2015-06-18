@@ -107,7 +107,7 @@ define('NORMAL', 'Normal');
 	{
 		if ( $level > 0 )
 		{
-			$title = html_entity_decode($parent_it->get('Caption'), ENT_QUOTES | ENT_HTML401, 'cp1251');
+			$title = html_entity_decode($parent_it->get('Caption'), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 			
 			$this->rtf .= $this->styles[LEVEL.min($level, 10)]."{".$title."}\\par \\pard\\plain ".$this->styles[NORMAL];
 		}
@@ -315,7 +315,7 @@ define('NORMAL', 'Normal');
 			$code = array();
 
 			preg_match('/<pre'.$i.'[^>]*>(.+)<\/pre'.$i.'>/si', $html, $code);
-			$code[1] = str_replace(chr(10), "\\par\n", html_entity_decode($code[1], ENT_QUOTES | ENT_HTML401, 'cp1251'));
+			$code[1] = str_replace(chr(10), "\\par\n", html_entity_decode($code[1], ENT_QUOTES | ENT_HTML401, APP_ENCODING));
 			
 			array_push($codeblocks, $code[1]);
 			
@@ -576,7 +576,7 @@ define('NORMAL', 'Normal');
 		$this->rtf .= "\n}\n}\n";
 
 		$file_name = preg_replace('/[\.\,\+\)\(\)\:\;]/i', '_', 
-			html_entity_decode($this->getTitle(), ENT_QUOTES | ENT_HTML401, 'cp1251')).'.rtf';
+			html_entity_decode($this->getTitle(), ENT_QUOTES | ENT_HTML401, APP_ENCODING)).'.rtf';
 
  		if ( EnvironmentSettings::getBrowserPostUnicode() )
 		{ 

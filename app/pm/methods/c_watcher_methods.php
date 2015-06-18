@@ -45,11 +45,11 @@
 	{ 	
 		if ( $this->object_it->get('Watchers') != '' )
 		{
-			return translate('Прекратить наблюдение');
+			return translate('РџСЂРµРєСЂР°С‚РёС‚СЊ РЅР°Р±Р»СЋРґРµРЅРёРµ');
 		}
 		else
 		{
-			return translate('Наблюдать за изменениями');
+			return translate('РќР°Р±Р»СЋРґР°С‚СЊ Р·Р° РёР·РјРµРЅРµРЅРёСЏРјРё');
 		}
 	}
 	

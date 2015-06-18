@@ -9,8 +9,9 @@ class SetupUserGroups extends Installable
 
 	function skip()
 	{
+		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return true;
+		
     	$group = new Metaobject('co_UserGroup');
-    	
     	return $group->getRecordCount() > 0;
 	}
     
@@ -21,7 +22,7 @@ class SetupUserGroups extends Installable
     	
     	$group_id = $group->add_parms(
     			array (
-    					'Caption' => translate('Руководители')
+    					'Caption' => translate('Р СѓРєРѕРІРѕРґРёС‚РµР»Рё')
     			)
 		);
         

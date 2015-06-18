@@ -52,7 +52,7 @@ class FeatureHierarchyPersister extends ObjectSQLPersister
 	{
 		$parent_id = $object_it->get('ParentFeature') != '' ? $object_it->get('ParentFeature') : $object_it->getId();
 		
-		$sql = " CREATE TEMPORARY TABLE tmp_FunctionSort (pm_FunctionId INTEGER, SortIndex VARCHAR(32767) ) ENGINE=MEMORY DEFAULT CHARSET=cp1251 AS ".
+		$sql = " CREATE TEMPORARY TABLE tmp_FunctionSort (pm_FunctionId INTEGER, SortIndex VARCHAR(16384) ) ENGINE=MEMORY AS ".
 			   " SELECT t.pm_FunctionId, ".
 			   "        (SELECT GROUP_CONCAT(LPAD(u.OrderNum, 10, '0') ORDER BY LENGTH(u.ParentPath)) ".
  		       "    	   FROM pm_Function u WHERE t.ParentPath LIKE CONCAT('%,',u.pm_FunctionId,',%')) SortIndex ".

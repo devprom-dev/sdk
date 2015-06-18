@@ -36,7 +36,8 @@ class StageRegistry extends ObjectRegistrySQL
     		   "           FROM pm_Release m" .
     		   "          WHERE m.Version = v.pm_VersionId) Iterations, ".
     		   "		v.RecordCreated, ".
-    		   "		v.RecordModified ".
+    		   "		v.RecordModified, ".
+    		   "		UNIX_TIMESTAMP(v.RecordModified) * 100000 AffectedDate ".
     		   "   FROM (SELECT v.*," .
  			   "		        IFNULL((SELECT m.MetricValueDate FROM pm_VersionMetric m " .
  			   "		  			     WHERE m.Version = v.pm_VersionId " .
@@ -68,8 +69,8 @@ class StageRegistry extends ObjectRegistrySQL
  		   "		r.FinishDate ActualFinishDate, " .
 		   "		r.StartDate IterationDate," .
 		   "		r.Description, ".
-		   "		v.Project, ".
-		   "        v.VPD, ".
+		   "		r.Project, ".
+		   "        r.VPD, ".
 		   "        r.IsActual, ".
 		   "        r.StartDate, ".
 		   "        r.FinishDate, " .
@@ -78,8 +79,9 @@ class StageRegistry extends ObjectRegistrySQL
 		   "			AND s.State IN ('".join("','",$states)."')) UncompletedItems, ".
  		   "        r.pm_ReleaseId Iterations, ".
     	   "		r.RecordCreated, ".
-    	   "		r.RecordModified ".
- 		   "   FROM pm_Version v, ".
+    	   "		r.RecordModified, ".
+    	   "		UNIX_TIMESTAMP(v.RecordModified) * 100000 AffectedDate ".
+    	   "   FROM pm_Version v, ".
 		   "        (SELECT r.*, ".
  		   "		        IFNULL((SELECT m.MetricValueDate FROM pm_IterationMetric m " .
  		   "		  			     WHERE m.Iteration = r.pm_ReleaseId " .

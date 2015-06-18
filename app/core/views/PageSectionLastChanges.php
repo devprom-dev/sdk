@@ -15,7 +15,7 @@ class LastChangesSection extends InfoSection
  	
  	function getCaption() 
  	{
- 		return translate('Последние изменения');
+ 		return translate('РџРѕСЃР»РµРґРЅРёРµ РёР·РјРµРЅРµРЅРёСЏ');
  	}
  	
  	function getIterator() 
@@ -28,7 +28,7 @@ class LastChangesSection extends InfoSection
  		
 		return $this->iterator = $registry->Query(
 				array (
-						new ChangeLogItemFilter($this->object),
+						new ChangeLogItemDateFilter($this->object),
 						new SortReverseKeyClause()
 				)
 		);

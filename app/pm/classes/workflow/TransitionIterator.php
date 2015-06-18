@@ -12,23 +12,18 @@ class TransitionIterator extends OrderedIterator
  	
  	function appliable()
  	{
- 		global $model_factory;
- 		
- 		$role = $model_factory->getObject('pm_TransitionRole');
- 		
- 		$role_it = $role->getByRef('Transition', $this->getId());
- 		
+ 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return true;
+ 			
+ 		$role_it = getFactory()->getObject('pm_TransitionRole')->getByRef('Transition', $this->getId());
  		if ( $role_it->count() < 1 )
  		{
  			return $this->checkDefaultAccess();
  		}
  		
- 		$role = $model_factory->getObject('pm_ProjectRole');
-
+ 		$role = getFactory()->getObject('pm_ProjectRole');
  		$role_it = $role_it->count() > 0 ? $role->getExact($role_it->fieldToArray('ProjectRole')) : $role->getEmptyIterator();
  		
  		$roles = getSession()->getParticipantIt()->getBaseRoles();
-
  		while ( !$role_it->end() )
  		{
  			foreach( $roles as $role_ref => $data )
@@ -64,6 +59,7 @@ class TransitionIterator extends OrderedIterator
 	 		if ( $rule_it->getId() != '' && !$rule_it->check( $object_it ) ) 
 	 		{
 	 			$this->nondoablereason = $rule_it->getNegativeReason();
+	 			if ( $this->nondoablereason == '' ) $this->nondoablereason = $rule_it->getDisplayName(); 
 	 			
 	 			return false;
 	 		}

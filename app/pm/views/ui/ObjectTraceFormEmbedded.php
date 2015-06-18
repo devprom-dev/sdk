@@ -127,7 +127,7 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  	    $anchor_it = $this->getTargetIt($object_it);
  	    
  	    $actions = array ( array (
- 	        'name' => translate('Ïåðåéòè'),
+ 	        'name' => translate('ÐŸÐµÑ€ÐµÐ¹Ñ‚Ð¸'),
  	        'url' => $anchor_it->getViewUrl()
  	    ));
  	    

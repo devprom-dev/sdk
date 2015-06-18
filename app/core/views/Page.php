@@ -24,12 +24,12 @@
  
  include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
  include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
- include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportJSON.php';
  include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
  include_once SERVER_ROOT_PATH.'core/classes/system/Coloring.php';
  include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 
  include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
+ include "BulkFormBase.php";
  
  class Page
  {
@@ -46,12 +46,7 @@
  	{
  		global $model_factory, $plugins, $_REQUEST, $_SERVER;
 
- 		// initialize visual items
- 		$module = $model_factory->getObject('Module');
- 		
- 		$module_it = $module->getAll();
- 		
- 	    $this->form = $this->getForm();
+ 	    $this->form = $this->buildForm();
  		
  		if ( is_object($this->form) && is_a($this->form, 'PageForm') )
 		{
@@ -119,6 +114,19 @@
  		return $this->table;
  	}
  	
+  	function getBulkForm()
+ 	{
+ 		return new BulkFormBase($this->getObject());
+ 	}
+ 	
+ 	function buildForm()
+ 	{
+ 		if ( $_REQUEST['bulkmode'] != '' ) {
+ 			return $this->getBulkForm();
+ 		}
+ 		return $this->getForm();
+ 	}
+ 	
  	function getForm() 
  	{
  		return null;
@@ -131,8 +139,7 @@
 
  	function needDisplayForm() 
  	{
- 		global $_REQUEST;
- 		return $_REQUEST['entity'] != '' || $_REQUEST['action_mode'] == 'form';
+ 		return $_REQUEST['entity'] != '' || $_REQUEST['action_mode'] == 'form' || $_REQUEST['bulkmode'] != '';
  	}
  	
  	function showFullPage()
@@ -350,7 +357,7 @@
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 		header("Pragma: no-cache"); // HTTP/1.0
-		header('Content-type: text/html; charset=windows-1251');
+		header('Content-type: text/html; charset='.APP_ENCODING);
   	
 		$section->render( $this->getRenderView(), $this->getRenderParms() );
  	 	
@@ -429,8 +436,7 @@
 		    {
 		    	$query_parms = array (
           				new ProjectStatePredicate('active'),
-          				new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject'))),
-		    			new FilterAttributePredicate('IsTender', 'N'),
+          				new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject')))
            		);
 		    	
 		   		if ( $program_it->get('IsParticipant') < 1 )
@@ -480,7 +486,7 @@
 		        $portfolio_it->moveNext(); continue;
 		    }
 
-		    if ( $portfolio_it->get('CodeName') != 'all' )
+		    if ( $portfolio_it->get('CodeName') != 'all' || !class_exists('PortfolioMyProjectsBuilder', false) )
 		    {
 		        $linked_it = $portfolio_it->get('LinkedProject') != '' 
 		                ? getFactory()->getObject('Project')->getRegistry()->Query(
@@ -535,6 +541,7 @@
 		        foreach( $projects[$program_id] as $project_id => $project )
 		        {
 		            unset( $projects['my'][$project_id] );
+		            unset( $projects['all'][$project_id] );
 		        }
 		    }
 		}
@@ -551,44 +558,99 @@
 		    }
 		}
 	
-		$company_actions = array();
+		return array (
+				'programs' => $programs,
+				'portfolios' => $portfolios,
+				'projects' => $projects,
+				'company_actions' => $this->getProjectNavigatorActions(),
+				'admin_actions' => $this->getAdministrationActions()
+		);
+ 	}
+ 	
+ 	function getProjectNavigatorActions()
+ 	{
+ 		$company_actions = array();
 		
 		if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) )
 		{
 			$skip_welcome = getFactory()->getObject('UserSettings')->getSettingsValue('projects-welcome-page');
-			
 			$company_actions[] = array (
 					'icon' => 'icon-plus',
 					'url' =>  $skip_welcome != 'off' && !defined('SKIP_WELCOME_PAGE')
 									? '/projects/welcome'
 									: '/projects/new',
-					'name' => translate('������� ������')
+					'name' => translate('Создать проект')
 			);
 		}
-		
-		return array (
-				'programs' => $programs,
-				'portfolios' => $portfolios,
-				'projects' => $projects,
-				'company_actions' => $company_actions
-		);
+		return $company_actions;
+ 	}
+ 	
+ 	function getAdministrationActions()
+ 	{
+ 		$actions = array();
+ 		if ( getSession()->getUserIt()->get('IsAdmin') == 'Y' )
+ 		{
+			$actions[] = array (
+					'icon' => 'icon-wrench', 
+			        'name' => translate('Администрирование'),
+					'url' => '/admin/'
+		    );
+ 		}
+ 		return array_merge($this->getAddParticipantActions(),$actions);
+ 	}
+ 	
+ 	function getAddParticipantActions()
+ 	{
+ 		$actions = array();
+		if ( !defined('INVITE_USERS_ANYBODY') || INVITE_USERS_ANYBODY !== false )
+		{
+		 	$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
+			if ( $method->hasAccess() )
+			{
+				$actions[] = array (
+						'icon' => 'icon-user', 
+				        'name' => text(2001),
+						'url' => $method->getJSCall(array(), text(2001))
+			    );
+			}
+		}
+		return $actions;
  	}
  	
  	function getRenderParms()
  	{
  		if ( count($this->render_parms) > 0 ) return $this->render_parms;
  		 
+ 		$sections = array();
+		$infos = $this->getInfoSections();
+		if ( is_array($infos) )	{
+			foreach ( $infos as $section ) {
+				if ( !$section->isActive() ) continue;
+				$sections[$section->getId()] = $section;
+			}
+		}
+		
+     	$bottom_sections = array();
+        foreach( $sections as $key => $section ) { 
+            if ( is_a($section, 'PageSectionComments') ) {
+                $bottom_sections[$section->getId()] = $section;
+                unset($sections[$key]);
+            }
+        }
+ 		
  		$this->render_parms = array(
  			'current_version' => $_SERVER['APP_VERSION'],
  			'object_class' => get_class($this->getObject()),
  			'object_id' => is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : '',
             'license_name' => getFactory()->getObject('LicenseState')->getAll()->getDisplayName(),
-            'language_code' => strtolower(getLanguage()->getLanguage()),
+            'language_code' => strtolower(getSession()->getLanguageUid()),
  		    'datelanguage' => getLanguage()->getLocaleFormatter()->getDatepickerLanguage(),
             'dateformat' => getLanguage()->getDatepickerFormat(),
  		    'company_name' => getFactory()->getObject('cms_SystemSettings')->getAll()->get('Caption'),
  		    'application_url' => $this->getApplicationUrl(),
- 		    'display_form' => $this->needDisplayForm()
+ 		    'display_form' => $this->needDisplayForm(),
+ 			'sections' => $sections,
+        	'bottom_sections' => $bottom_sections,
  		);
  		
  		return $this->render_parms;
@@ -596,37 +658,11 @@
  	
  	function getFullPageRenderParms()
  	{
-		$sections = array();
-		
-		$infos = $this->getInfoSections();
-		
-		if ( is_array($infos) )
-		{
-			foreach ( $infos as $section ) 
-			{
-				if ( !$section->isActive() ) continue;
-			    			
-				$sections[$section->getId()] = $section;
-			}
-		}
-		
-     	$bottom_sections = array();
-    
-        foreach( $sections as $key => $section )
-        { 
-            if ( is_a($section, 'PageSectionComments') )
-            {
-                $bottom_sections[$section->getId()] = $section;
-                
-                unset($sections[$key]);
-            }
-        }
-		
         // get active functional area
         
         $areas = $this->getAreas();
  
-        $parts = preg_split('/\?/', $_SERVER['REQUEST_URI']);
+        $parts = preg_split('/\?/', $_SERVER['REDIRECT_URL']);
         
         $active_url = str_replace(getSession()->getApplicationUrl(), '', $parts[0]);
    
@@ -694,10 +730,8 @@
  			'has_horizontal_menu' => count($areas) > 1,
  		    'areas' => $areas,
  		    'tabs_parms' => $this->getTabsParameters(),
- 			'sections' => $sections,
  		    'tab_uid' => $tab_uid,
  		    'active_area_uid' => $active_area_uid,
- 		    'bottom_sections' => $bottom_sections,
  			'project_navigation_parms' => $this->getProjectNavigationParms($tab_uid),
         	'javascript_paths' => $script_service->getJSPaths(),
         	'hint' => !$this->needDisplayForm() && getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
@@ -709,12 +743,23 @@
  	
  	function getRenderView()
  	{
+ 		$plugins_paths = array();
+		foreach( getSession()->getPluginsManager()->getNamespaces() as $plugin )
+		{
+			$path = realpath(SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/templates');
+			if ( is_dir($path) ) $plugins_paths[] = $path.'/%name%';
+		}
+ 		
  		return new PhpEngine(
  			new TemplateNameParser(), 
  			new FilesystemLoader(
- 					array (
- 							SERVER_ROOT_PATH.'/templates/views/%name%',
- 							SERVER_ROOT_PATH.'/plugins/%name%'
+ 					array_merge(
+ 							$plugins_paths,
+		 					array (
+		 							SERVER_ROOT_PATH.'/templates/views/%name%',
+		 							SERVER_ROOT_PATH.'/templates/views/core/%name%',
+		 							SERVER_ROOT_PATH.'/plugins/%name%'
+		 					)
  					)
  			), 
  			array (
@@ -735,35 +780,53 @@
 		$render_parms = $this->getRenderParms();
  	    if ( !is_object($view) ) $view = $this->getRenderView();
  	    
- 	    if ( $_REQUEST['export'] != '' )
+ 		if ( $_REQUEST['export'] != '' )
 		{
 			$this->export();
-			
 			die();
 		}
 
+		$render_parms = $this->getRenderParms();
+ 	    if ( !is_object($view) ) $view = $this->getRenderView();
+ 	    
 		if ( $_REQUEST['tableonly'] != '' && is_object($this->table) )
 		{
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 			header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 			header("Pragma: no-cache"); // HTTP/1.0
-			header('Content-type: text/html; charset=windows-1251');
+			header('Content-type: text/html; charset='.APP_ENCODING);
 			
 			// wait for changes of objects
 		    if ( $_REQUEST['wait'] != '' ) 
 		    {
 				// long living session shouldn't modify cache
 				getFactory()->getCacheService()->setReadonly();
-		    	
-		        $object = $_REQUEST['class'] != '' ? $model_factory->getObject($_REQUEST['class']) : $this->table->getObject();
-		        $lock = new LockFileSystem(get_class($object));
-		        $lock->LockAndWait(180);
+
+				$object = $_REQUEST['class'] != '' ? getFactory()->getObject($_REQUEST['class']) : $this->table->getObject();
+		        $affected = getFactory()->getObject('AffectedObjects');
+		        $class = get_class($object);
+		        $vpds = $object->getVpds();
+		        $from_date = SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 seconds', strtotime(SystemDateTime::date()))));
+
+		        // wait for entity-level lock has been released or new modifications has appeared
+		        $lock = new LockFileSystem($class);
+		        $lock->LockAndWait(180, function() use ($affected, $class, $vpds, $from_date)
+		        {
+		        	 getFactory()->resetCachedIterator($affected);
+        	         return $affected->getRegistry()->Count(
+				         		array (
+				         				new FilterAttributePredicate('ObjectClass', $class),
+				         				new FilterModifiedAfterPredicate($from_date),
+				         				new FilterVpdPredicate($vpds),
+				         				new SortRecentClause()
+				         		)
+			         	) > 0;
+		        });
 		        
 		        getFactory()->resetCache();
 		        
 		        $ids = $this->getRecentChangedObjectIds( $this->table );
-
 		        if ( count($ids) < 1 ) $ids[] = 0;
 		        
 		        $_REQUEST['object'] = $_REQUEST[strtolower(get_class($object))] = join(',', $ids); 
@@ -774,7 +837,7 @@
 		    
  			$this->table->render($view, $render_parms);
 			
-			return;
+			exit();
 		}
 
 		if ( $_REQUEST['formonly'] != '' && is_object($this->form) )
@@ -783,7 +846,7 @@
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 			header("Cache-Control: no-cache, must-revalidate, max-age=0, no-store, post-check=0, pre-check=0"); // HTTP/1.1
 			header("Pragma: no-cache "); // HTTP/1.0
-			header('Content-type: text/html; charset=windows-1251');
+			header('Content-type: text/html; charset='.APP_ENCODING);
 
 			if ( is_a($this->form, 'PMPageForm') )
 			{
@@ -822,7 +885,7 @@
 	 		
 	 		if ( !is_object($object_it) || is_object($object_it) && $object_it->getId() != '' )
 	 		{
-	 		    header('Content-type: text/html; charset=windows-1251');
+	 		    header('Content-type: text/html; charset='.APP_ENCODING);
 	 		    			
     	 		$form->render($view, $render_parms);
     	 		
@@ -836,7 +899,7 @@
 			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 			header("Cache-Control: no-cache, must-revalidate, max-age=0, no-store, must-revalidate, post-check=0, pre-check=0"); // HTTP/1.1
 			header("Pragma: no-cache "); // HTTP/1.0
-	 		header('Content-type: text/html; charset=windows-1251');
+	 		header('Content-type: text/html; charset='.APP_ENCODING);
 	 		
 	 		$this->table->render($view, $render_parms);
 	 		
@@ -911,7 +974,7 @@
  	
  	function getRecentChangedObjectIds( $table )
  	{
- 		 $from_date = strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 seconds', strtotime(SystemDateTime::date())));
+ 		 $from_date = SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 seconds', strtotime(SystemDateTime::date()))));
  		
          $ids = getFactory()->getObject('AffectedObjects')->getRegistry()->Query(
          		array (

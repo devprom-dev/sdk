@@ -124,11 +124,11 @@ class IssueController extends Controller
 
         $issue->setCaption(TextUtil::unescapeHtml($issue->getCaption()));
 
-        // óáèðàåì ýêðàíèðâàíèå html ðàçìåòêè îò Äåâïðîìà
+        // ÑƒÐ±Ð¸Ñ€Ð°ÐµÐ¼ ÑÐºÑ€Ð°Ð½Ð¸Ñ€Ð²Ð°Ð½Ð¸Ðµ html Ñ€Ð°Ð·Ð¼ÐµÑ‚ÐºÐ¸ Ð¾Ñ‚ Ð”ÐµÐ²Ð¿Ñ€Ð¾Ð¼Ð°
         $descr = TextUtil::unescapeHtml($issue->getDescription());
-        // óáèðàåì âñþ html ðàçìåòêó îò Äåâïðîìà
+        // ÑƒÐ±Ð¸Ñ€Ð°ÐµÐ¼ Ð²ÑÑŽ html Ñ€Ð°Ð·Ð¼ÐµÑ‚ÐºÑƒ Ð¾Ñ‚ Ð”ÐµÐ²Ð¿Ñ€Ð¾Ð¼Ð°
         $descr = strip_tags($descr);
-        // óáèðàåì ýêðàíèðîâàíèå html ðàçìåòêè èç Ñåðâèñäåñêà
+        // ÑƒÐ±Ð¸Ñ€Ð°ÐµÐ¼ ÑÐºÑ€Ð°Ð½Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ html Ñ€Ð°Ð·Ð¼ÐµÑ‚ÐºÐ¸ Ð¸Ð· Ð¡ÐµÑ€Ð²Ð¸ÑÐ´ÐµÑÐºÐ°
         $descr = TextUtil::unescapeHtml($descr);
         $issue->setDescription($descr);
 

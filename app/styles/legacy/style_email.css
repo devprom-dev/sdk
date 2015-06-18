@@ -1,35 +1,3 @@
-.list_header 
-{
-    background:#e0e0e0;
-    border-top:1px solid silver;
-    border-bottom:1px solid silver;
-    padding:6px;
-    vertical-align:top;
-}
-
-.list_cell 
-{
-    border-top:1px solid #e3e3e3;
-    border-bottom:1px solid #e3e3e3;
-    padding:6px;
-    vertical-align:top;
-}
-
-.list_table 
-{
-    border-collapse:collapse;
-}
-
-.list_group 
-{
-    border-top:1px solid #e3e3e3;
-    border-bottom:1px solid #e3e3e3;
-    padding:2pt;
-    vertical-align:top;
-    font-weight:normal;
-    text-align:left;
-}
-
 .prefix {}
 
 .block {}

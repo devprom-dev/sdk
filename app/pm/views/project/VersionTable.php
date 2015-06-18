@@ -21,7 +21,7 @@ class VersionTable extends PMPageTable
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
 		{
 			$actions[] = array(
-					'name' => translate('Èòåðàöèÿ'),
+					'name' => translate('Ð˜Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ'),
 					'url' => $method->getJSCall() 
 			);
 		}
@@ -32,12 +32,22 @@ class VersionTable extends PMPageTable
 		if ( $method->hasAccess() )
 		{
 			$actions[] = array( 
-					'name' => translate('Ðåëèç'),
+					'name' => translate('Ð ÐµÐ»Ð¸Ð·'),
 					'url' => $method->getJSCall() 
 			);
 		}
 		
     	return $actions; 
+	}
+	
+	function getBulkActions()
+	{
+		return array_merge(
+				parent::getBulkActions(),
+				array (
+						'modify' => array()
+				)
+		);
 	}
 	
 	function getSortFields()

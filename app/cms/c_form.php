@@ -64,6 +64,11 @@ class Form
 		return $this->action;
 	}
 	
+	function setAction( $action )
+	{
+		$this->action = $action;
+	}
+	
 	function getMode()
 	{
 		if ( $this->getAction() == 'show' ) return is_object($this->getObjectIt()) ? 'edit' : 'new';
@@ -336,7 +341,7 @@ class Form
 	}
 	
 	function getCaption() {
-		return '¡ÂÁ Ì‡Á‚‡ÌËˇ';
+		return '–ë–µ–∑ –Ω–∞–∑–≤–∞–Ω–∏—è';
 	}
 	
 	function getObject()
@@ -418,19 +423,6 @@ class Form
 	
 	function workDynamically() 
 	{
-		if ( $this->action != '' )
-		{
-			header('Content-Type: text/html; charset=windows-1251');
-			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
-			header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
-			header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
-			header("Pragma: no-cache"); // HTTP/1.0
-			
-			$this->dynamic_mode = true;
-			$this->draw();
-			
-			die();
-		}
 	}
 	
 	function redirectOnAdded( $object_it, $redirect_url = '' ) 
@@ -607,6 +599,11 @@ class Form
 		return $this->warning_message;
 	}
 	
+	function setWarningMessage( $message )
+	{
+		$this->warning_message = $message;
+	}
+	
 	function getButtonName( $button ) 
 	{
 		return $button;
@@ -625,7 +622,7 @@ class Form
 			$key = substr($button_name, 0, 1);
 		}
 		
-		if( getSession()->getLanguage()->getLanguage() == 'EN' )
+		if( getSession()->getLanguageUid() == 'EN' )
 		{
 			return $key;
 		}
@@ -633,9 +630,9 @@ class Form
 		{
 			switch( strtoupper($key) )
 			{
-				case '—': return 'C';
-				case '”': return 'E';
-				case 'Œ': return 'J';
+				case '–°': return 'C';
+				case '–£': return 'E';
+				case '–û': return 'J';
 			}
 			
 		}
@@ -654,14 +651,14 @@ class Form
 		
 		$value = is_object($object_it) && $object_it->count() > 0 
 			? ( $_REQUEST[$field] != '' 
-				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251') 
+				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
 				: ($object_it->get_native( $field ) == '' && $this->getEditMode()  
 		  			? $this->getDefaultValue( $field ) 
 		  			: $object_it->get_native( $field ) 
 		  		   ) 
 		  	  )
 			: ($this->required_attributes_warning 
-				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251') 
+				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
 				: ( $_REQUEST[$field] == '' || $this->object->getAttributeDbType($field) == 'CHAR' 
 						? $this->getDefaultValue( $field ) 
 						: $_REQUEST[$field]
@@ -682,14 +679,14 @@ class Form
 
 		return is_object($object_it) && $object_it->count() > 0 
 			? ( $_REQUEST[$field] != '' 
-				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251') 
+				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
 				: ($object_it->get_native( $field ) == ''  
 		  			? $this->object->getDefaultAttributeValue( $field ) 
 		  			: $object_it->get_native( $field ) 
 		  		   ) 
 		  	  )
 			: ( $_REQUEST[$field] != '' 
-				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, 'windows-1251') 
+				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
 				: $this->object->getDefaultAttributeValue( $field )
 			  );
 	}
@@ -704,7 +701,7 @@ class Form
 		$has_access = $this->checkAccess();
 		if ( !$has_access )
 		{
-			echo '<div class=form_warning>'.translate('¬ÌËÏ‡ÌËÂ!').' '.$this->check_access_message.'</div>';
+			echo '<div class=form_warning>'.translate('–í–Ω–∏–º–∞–Ω–∏–µ!').' '.$this->check_access_message.'</div>';
 			return;
 		}
 		
@@ -727,7 +724,7 @@ class Form
 		if($this->required_attributes_warning) 
 		{
 		?>
-		<div class=form_warning><? echo translate('¬ÌËÏ‡ÌËÂ!').' '.$this->getWarningMessage(); ?></div>
+		<div class=form_warning><? echo translate('–í–Ω–∏–º–∞–Ω–∏–µ!').' '.$this->getWarningMessage(); ?></div>
 		<?
 		}
 
@@ -855,7 +852,7 @@ class Form
 					
 				 	echo '<div style="float:left;padding-left:25px;">';
 				 	?>
-       				<input class="btn" onclick="javascript: submitForm('delete');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('”‰‡ÎËÚ¸'))?>" tabindex="1002" <? if ( !$access ) echo 'disabled'; ?> type="button" title="<? echo $reason ?>" value="<? echo_lang($this->getButtonName('”‰‡ÎËÚ¸')) ?>">
+       				<input class="btn" onclick="javascript: submitForm('delete');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('–£–¥–∞–ª–∏—Ç—å'))?>" tabindex="1002" <? if ( !$access ) echo 'disabled'; ?> type="button" title="<? echo $reason ?>" value="<? echo_lang($this->getButtonName('–£–¥–∞–ª–∏—Ç—å')) ?>">
             		<?
            			echo '</div>';
 					break;
@@ -863,7 +860,7 @@ class Form
 				case 'save':
 					echo '<div style="float:left">';
 					?>
-                	<input class="btn btn-primary" onclick="javascript: submitForm('modify');" type="button" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('—Óı‡ÌËÚ¸'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" value="<? echo_lang($this->getButtonName('—Óı‡ÌËÚ¸')) ?>">
+                	<input class="btn btn-primary" onclick="javascript: submitForm('modify');" type="button" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('–°–æ—Ö—Ä–∞–Ω–∏—Ç—å'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" value="<? echo_lang($this->getButtonName('–°–æ—Ö—Ä–∞–Ω–∏—Ç—å')) ?>">
     	            <?
                		echo '</div>';
 					break;
@@ -871,7 +868,7 @@ class Form
 				case 'new':
 				 	echo '<div style="float:left">';
 					?>
-               		<input class="btn " tabindex="1000" type="button" onclick="javascript: submitForm('new');" value="<? echo_lang($this->getButtonName('ÕÓ‚ÓÂ')) ?>">
+               		<input class="btn " tabindex="1000" type="button" onclick="javascript: submitForm('new');" value="<? echo_lang($this->getButtonName('–ù–æ–≤–æ–µ')) ?>">
 					<?
                		echo '</div>';
 					break;
@@ -879,7 +876,7 @@ class Form
 				case 'add':
 				 	echo '<div style="float:left">';
             		?>
-            		<input class="btn btn-primary" onclick="javascript: submitForm('add');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('—ÓÁ‰‡Ú¸'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" type="button" value="<? echo_lang($this->getButtonName('—ÓÁ‰‡Ú¸')) ?>">
+            		<input class="btn btn-primary" onclick="javascript: submitForm('add');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('–°–æ–∑–¥–∞—Ç—å'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" type="button" value="<? echo_lang($this->getButtonName('–°–æ–∑–¥–∞—Ç—å')) ?>">
                 	<?
                		echo '</div>';
 					break;
@@ -887,14 +884,14 @@ class Form
 				case 'cancel':
 				 	echo '<div style="float:left">';
     			 	?>
-               		<input class="btn btn-link" onclick="javascript: submitForm('cancel');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('ŒÚÏÂÌËÚ¸'))?>" tabindex="1001" type="button" value="<? echo_lang($this->getButtonName('ŒÚÏÂÌËÚ¸')) ?>">
+               		<input class="btn btn-link" onclick="javascript: submitForm('cancel');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('–û—Ç–º–µ–Ω–∏—Ç—å'))?>" tabindex="1001" type="button" value="<? echo_lang($this->getButtonName('–û—Ç–º–µ–Ω–∏—Ç—å')) ?>">
                 	<?
 	            	echo '</div>';
 					break;
 	
 				case 'modify':
 				 	echo '<div style="float:left;">';
-						echo '<input class="btn " type="button" value="'.translate('»ÁÏÂÌËÚ¸').'" onclick="javascript: {tmp = window.location; tmp = String(tmp).replace(/#/,\'&\'); window.location = encodeURI(tmp + \'&'.$this->object->getEntityRefName().'action=show\'); return;}">';
+						echo '<input class="btn " type="button" value="'.translate('–ò–∑–º–µ–Ω–∏—Ç—å').'" onclick="javascript: {tmp = window.location; tmp = String(tmp).replace(/#/,\'&\'); window.location = encodeURI(tmp + \'&'.$this->object->getEntityRefName().'action=show\'); return;}">';
 	            	echo '</div>';
 					break;
 			}
@@ -1084,7 +1081,7 @@ class Form
 		if ( count($actions) > 0 )
 		{
 			$popup = new PopupMenu();
-			$popup->draw("list_menu", translate('ƒÂÈÒÚ‚Ëˇ'), $actions); 
+			$popup->draw("list_menu", translate('–î–µ–π—Å—Ç–≤–∏—è'), $actions); 
 		
 			echo '<div style="clear:both;"></div>';
 		}

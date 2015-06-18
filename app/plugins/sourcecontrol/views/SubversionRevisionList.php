@@ -7,7 +7,7 @@ class SubversionRevisionList extends SubversionList
 
         $revision = $this->object;
 
-        $revision->addAttribute('Content', '', translate('Содержание'), true);
+        $revision->addAttribute('Content', '', translate('РЎРѕРґРµСЂР¶Р°РЅРёРµ'), true);
 
         $rep_id = $revision->getFirst(1)->get('Repository');
         
@@ -57,7 +57,7 @@ class SubversionRevisionList extends SubversionList
                     ->buildMenuItem('?mode=details&subversion='.$object_it->get('Repository').'&version='.$object_it->get('Version'));
                 
                 echo '<a href="'.$menu['url'].'">';
-                    echo translate('Файлы');
+                    echo translate('Р¤Р°Р№Р»С‹');
                 echo '</a>';
                 
                 break;

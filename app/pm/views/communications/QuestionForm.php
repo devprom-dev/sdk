@@ -6,6 +6,8 @@ include "FieldQuestionTagTrace.php";
 
 class QuestionForm extends PMPageForm
 {
+	private $create_issue_method = null;
+	
     protected function extendModel()
     {
     	$this->getObject()->setAttributeVisible('Comments', false);
@@ -13,8 +15,19 @@ class QuestionForm extends PMPageForm
     	$this->getObject()->setAttributeVisible('Tags', true);
    		$this->getObject()->setAttributeVisible('Author', 
    				is_object($this->getObjectIt()) && $this->getAction() != 'show');
+
+   		$this->buildMethods();
    		
    		return parent::extendModel();
+    }
+    
+    protected function buildMethods()
+    {
+   		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_ChangeRequest'));
+   		if ( $method->hasAccess() ) {
+   			$method->setRedirectUrl('donothing');
+   			$this->create_issue_method = $method; 
+    	}
     }
     
 	function draw()
@@ -28,7 +41,7 @@ class QuestionForm extends PMPageForm
 		if ( isset($object_it) )
 		{
 			echo '<div style="padding:4px;"><b>';
-				echo_lang('Комментарии');
+				echo_lang('РљРѕРјРјРµРЅС‚Р°СЂРёРё');
 			echo '</b></div>';
 
 			echo '<div style="padding:10px 0 0 4px;">';
@@ -75,17 +88,15 @@ class QuestionForm extends PMPageForm
 		$actions = parent::getActions();
 		
 		$object_it = $this->getObjectIt();
-		
 		if ( is_object($object_it) )
 		{
-			if ( $actions[count($actions) - 1]['name'] != '' ) array_push($actions, array());
-			
-			$method = new ConvertQuestionWebMethod( $object_it );
-			
-			array_push($actions, array( 
-				'name' => $method->getCaption(), 
-				'url' => $method->getJSCall() 
-			));
+			if ( is_object($this->create_issue_method) ) {
+				if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
+				$actions[] = array( 
+					'name' => text(747), 
+					'url' => $this->create_issue_method->getJSCall(array('Question' => $object_it->getId())) 
+				);
+			}
 		}
 	
 		return $actions;	

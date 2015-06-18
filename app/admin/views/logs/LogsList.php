@@ -4,7 +4,7 @@ class LogsList extends StaticPageList
 {
 	function setupColumns()
 	{
-		$this->getObject()->addAttribute('Size', '', translate('Ðàçìåð'), true);
+		$this->getObject()->addAttribute('Size', '', translate('Ð Ð°Ð·Ð¼ÐµÑ€'), true);
 		
 		parent::setupColumns();
 		

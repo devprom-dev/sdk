@@ -16,7 +16,7 @@ class IteratorExportIssueBoard extends IteratorExport
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-control: no-store");
 
-		header('Content-Type: text/html; charset=windows-1251');
+		header('Content-Type: text/html; charset='.APP_ENCODING);
 
  		$fields = $this->getFields();
  		$keys = array_keys($fields);

@@ -75,6 +75,37 @@ class IterationForm extends PMPageForm
 		    			)->getId();
 		    	}
 		    	break;
+		    	
+		    case 'StartDate':
+		    	$predicates = array( new FilterVpdPredicate() );
+		    		
+		    	$release = parent::getDefaultValue('Version');
+		    	if ( $release != '' ) {
+		    			$predicates[] = new FilterAttributePredicate('Version', $release);
+		    	}
+		    	
+	 			$iteration = getFactory()->getObject('Iteration');
+	 			foreach( $predicates as $predicate ) {
+	 				$iteration->addFilter($predicate);
+	 			}
+	 			
+	 			$aggregate = new \AggregateBase( 'Project', 'FinishDate', 'MAX' );
+				$iteration->addAggregate($aggregate);
+				$last_date = $iteration->getAggregated()->get($aggregate->getAggregateAlias());
+				
+				if ( $last_date != '' ) return date('Y-m-j', strtotime('1 day', strtotime($last_date)));
+				
+				$predicates = array (
+						new SortAttributeClause('StartDate.D'),
+						new FilterVpdPredicate()
+				);
+				if ( $release != '' ) {
+		    			$predicates[] = new FilterInPredicate($release);
+		    	}
+	 			$release_it = getFactory()->getObject('Release')->getRegistry()->Query($predicates);
+	 			if ( $release_it->getId() != '' ) return $release_it->get('StartDate');
+
+	 			return SystemDateTime::date('Y-m-j');
 		}
 		
 		return $value;
@@ -87,12 +118,7 @@ class IterationForm extends PMPageForm
 		switch ( $attr )
 		{
 			case 'FinishDate':
-				
-				if ( getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease() )
-				{
-					$field->setReadonly( true );
-				}
-				
+				if ( getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease() ) $field->setReadonly( true );
 				break;
 		}
 		

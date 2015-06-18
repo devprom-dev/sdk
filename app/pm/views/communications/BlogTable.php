@@ -95,7 +95,7 @@ class BlogTable extends PMPageTable
         ));
     }
     
-    function draw( & $view, $post_it )
+    function draw( $view, $post_it )
     {
         while ( !$post_it->end() )
         {
@@ -105,7 +105,7 @@ class BlogTable extends PMPageTable
         }
     }
 
-    function renderPost( &$view, &$post_it )
+    function renderPost( $view, &$post_it )
     {
         $this->form->setFormIndex( $post_it->getId() );
         
@@ -115,7 +115,7 @@ class BlogTable extends PMPageTable
         	
         $this->form->render( $view, array_merge($page->getRenderParms(), array(
                 'formonly' => true,
-                'title' => translate('Áëîã')
+                'title' => translate('Ð‘Ð»Ð¾Ð³')
         )));
     }
 }

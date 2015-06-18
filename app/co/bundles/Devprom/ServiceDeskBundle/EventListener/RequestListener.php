@@ -5,30 +5,32 @@ use Devprom\ServiceDeskBundle\Security\LicenseChecker;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\Security\Core\SecurityContext;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Twig_Environment;
 
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  */
-class RequestListener {
-
+class RequestListener implements EventSubscriberInterface
+{
     /** @var SecurityContext  */
     protected $securityContext;
-
     /** @var  Twig_Environment */
     protected $twig;
+    protected $defaultLocale;
 
-    public function __construct(SecurityContext $securityContext, Twig_Environment $twig)
+    public function __construct(SecurityContext $securityContext, Twig_Environment $twig, $defaultLocale = 'en')
     {
         $this->securityContext = $securityContext;
         $this->twig = $twig;
+        $this->defaultLocale = $defaultLocale;
     }
 
-    public function onKernelController(GetResponseEvent $event)
+    public function onKernelRequest(GetResponseEvent $event)
     {
         $this->checkLicense($event);
-
         $this->setRequestAndSessionLocale($event);
     }
 
@@ -50,7 +52,9 @@ class RequestListener {
         if ($lang) {
             $request->getSession()->set("_locale", $lang);
         }
-        $request->setLocale($request->getSession()->get("_locale"));
+        if ($request->getSession()->get("_locale") != '' ) {
+        	$request->setLocale($request->getSession()->get("_locale"));
+        }
     }
 
     /**
@@ -65,4 +69,11 @@ class RequestListener {
         return null;
     }
 
+ 	static public function getSubscribedEvents()
+    {
+        return array(
+            // must be registered before the default Locale listener
+            KernelEvents::REQUEST => array(array('onKernelRequest', 17)),
+        );
+    }    
 }

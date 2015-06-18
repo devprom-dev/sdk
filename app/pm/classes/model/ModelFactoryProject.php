@@ -29,7 +29,6 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_changerequestlink' => array('RequestLink'),
 		    'pm_changerequestlinktype' => array('RequestLinkType'),
 		    'pm_accessright' => array('AccessRight'),
-			'pm_versionsettings' => array('VersionSettings'),
 			'pm_version' => array( 'Release'),
 			'pm_watcher' => array( 'Watcher' ),
 			'pm_objectaccess' => array( 'AccessObject' ),

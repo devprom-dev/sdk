@@ -83,10 +83,6 @@ class ProjectIterator extends OrderedIterator
  		return $this->get('IsProjectInfo') == 'Y';
  	}
  	 
- 	function IsPublicKnowledgeBase() {
- 		return $this->get('IsKnowledgeUsed') == 'Y';
- 	}
- 	
  	function IsPublicBlog() {
  		return $this->get('IsBlog') == 'Y';
  	}
@@ -580,6 +576,10 @@ class ProjectIterator extends OrderedIterator
 		    case 'ticket_ru.xml':
 		    case 'ticket_en.xml':
 		    	return 'system';
+		    	
+		    case 'incidents_ru.xml':
+		    case 'incidents_en.xml':
+		    	return '';
 		    	
 		    default:
 				return 'every1hour';    	

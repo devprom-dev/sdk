@@ -14,7 +14,7 @@
 	
 	<div class="btn-group">
     	<a id="navbar-administration" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
-		    <?=translate('Àäìèíèñòðèðîâàíèå')?> 
+		    <?=translate('ÐÐ´Ð¼Ð¸Ð½Ð¸ÑÑ‚Ñ€Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ')?> 
         </a>
 	</div>
 </div> <!-- end btn-toolbar -->

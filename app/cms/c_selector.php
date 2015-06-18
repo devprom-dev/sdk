@@ -64,12 +64,12 @@
 					{
 				?>
 				<td width=23>
-					<button title="<? echo_lang('Выбрать') ?>" style="font-family:verdana;font-size:8pt;border-style:groove;border:.5pt solid #d5d5df;background:#f5f5f5;margin-top:-1px;width:21px;height:21px;"
+					<button title="<? echo_lang('Р’С‹Р±СЂР°С‚СЊ') ?>" style="font-family:verdana;font-size:8pt;border-style:groove;border:.5pt solid #d5d5df;background:#f5f5f5;margin-top:-1px;width:21px;height:21px;"
 							onclick="return select<? echo $this->name; ?>();">...</button>
 				</td>
 				<? 	if($this->IsNeedToClear()) { ?>
 				<td width=23>
-					<button title="<? echo_lang('Очистить') ?>" style="font-family:verdana;font-size:8pt;border-style:groove;border:.5pt solid #d5d5df;background:#f5f5f5;margin-top:-1px;width:21px;height:21px;"
+					<button title="<? echo_lang('РћС‡РёСЃС‚РёС‚СЊ') ?>" style="font-family:verdana;font-size:8pt;border-style:groove;border:.5pt solid #d5d5df;background:#f5f5f5;margin-top:-1px;width:21px;height:21px;"
 							onclick="return clear<? echo $this->name; ?>();">X</button>
 				</td>
 				<? 	}
@@ -80,7 +80,7 @@
 					{
 				?>
 				<td width=23>
-					<button title="<? echo_lang('Перейти к объекту') ?>" style="font-family:verdana;font-size:8pt;border-style:groove;border:.5pt solid #d5d5df;background:#f5f5f5;margin-top:-1px;width:21px;height:21px;"
+					<button title="<? echo_lang('РџРµСЂРµР№С‚Рё Рє РѕР±СЉРµРєС‚Сѓ') ?>" style="font-family:verdana;font-size:8pt;border-style:groove;border:.5pt solid #d5d5df;background:#f5f5f5;margin-top:-1px;width:21px;height:21px;"
 							onclick="return goto<? echo $this->name; ?>();">></button>
 				</td>
 				<?
@@ -138,7 +138,7 @@
 				window.close();
 			}
 		</script>
-		<title>Выбор объекта</title>
+		<title>Р’С‹Р±РѕСЂ РѕР±СЉРµРєС‚Р°</title>
 		<body>
     		<table cellpadding=0 cellspacing=0 width=100% height=100%>
     			<tr><td height=10>
@@ -223,9 +223,9 @@
             					<form action="<? echo $this->getUrl(); ?>" method=post>
                 					<table width=100%>
                 						<tr>
-                							<td width=45>Поиск: </td>
+                							<td width=45>РџРѕРёСЃРє: </td>
                 							<td><input name="search" style="width:100%" value="<? echo $search; ?>"/></td>
-                							<td width=44><input type="submit" style="width:40pt;" value="Найти"/></td>
+                							<td width=44><input type="submit" style="width:40pt;" value="РќР°Р№С‚Рё"/></td>
                 						</tr>
                 					</table>
             					</form>
@@ -233,7 +233,7 @@
 							<td width=20>
             					<form action="<? echo $this->getUrl(); ?>" method=post>
         							<input type="hidden" name="search" value="">
-        							<input title="Сбросить" style="width:16pt;" type="submit" value="X">
+        							<input title="РЎР±СЂРѕСЃРёС‚СЊ" style="width:16pt;" type="submit" value="X">
             					</form>
 							</td>
 						</tr>
@@ -242,7 +242,7 @@
 				<td></td>
 				<td align=right>
 					<table><tr>
-						<td>Страницы: </td>
+						<td>РЎС‚СЂР°РЅРёС†С‹: </td>
 						<? $this->drawNavigator( $this->it ); ?>
 						<td></td>
 					</tr></table>
@@ -260,8 +260,8 @@
 	?>
         <table width=100%>
 			<tr>
-				<td width=20 style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;">№</td>
-				<td style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;">Название</td>
+				<td width=20 style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;">в„–</td>
+				<td style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;">РќР°Р·РІР°РЅРёРµ</td>
 			</tr>
         <?
 			for($i=0; $i < min($this->it->count() - $offset, $this->maxonpage); $i++)
@@ -287,11 +287,11 @@
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
 		$freshnews = 0;
-		// название страницы
+		// РЅР°Р·РІР°РЅРёРµ СЃС‚СЂР°РЅРёС†С‹
 		$pagename = $this->getUrl(); //'c_selector.php?class='.$this->object->getClassName().'&kind=listselector&field='.$this->field;
-		// общее число страниц
+		// РѕР±С‰РµРµ С‡РёСЃР»Рѕ СЃС‚СЂР°РЅРёС†
         $pages = ($object_it->count() - $freshnews) / $this->maxonpage;
-		// выводим номера страниц
+		// РІС‹РІРѕРґРёРј РЅРѕРјРµСЂР° СЃС‚СЂР°РЅРёС†
         for ($i = 0; $i < $pages; $i++)
         {
 			$pageurl = $pagename.(strpos($pagename, '?') > 0 ? '&' : '?').'offset='.($i * $this->maxonpage + $freshnews);
@@ -338,7 +338,7 @@
 					<table cellpadding=0 cellspacing=0 width=100% style="border-collapse:collapse;">
 						<tr>
 							<td width=20 style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;"></td>
-							<td style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;">Название</td>
+							<td style="background:#eaeaea;border:.5pt solid #d5d5df;padding:4pt;">РќР°Р·РІР°РЅРёРµ</td>
 						</tr>
 					</table>
 				</td>

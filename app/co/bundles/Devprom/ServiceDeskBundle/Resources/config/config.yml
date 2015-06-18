@@ -6,8 +6,7 @@ imports:
 framework:
     #esi:             ~
     translator:
-      fallback: "ru"
-      enabled: true
+        fallback: en
     secret:          %secret%
     router:
         resource: "%kernel.root_dir%/Resources/config/routing.yml"
@@ -18,7 +17,7 @@ framework:
     templating:
         engines: ['twig']
         #assets_version: SomeVersionScheme
-    default_locale:  %systemLanguage%
+    default_locale: %systemLanguage%
     trusted_proxies: ~
     session:
             save_path: ~
@@ -36,7 +35,7 @@ doctrine:
         dbname:   %DB_NAME%
         user:     %DB_USER%
         password: %DB_PASS%
-        charset:  cp1251
+        charset:  %APP_CHARSET%
         driver_class: Devprom\CommonBundle\Doctrine\DBAL\Driver\PDOMySql\Driver
         wrapper_class: Devprom\CommonBundle\Doctrine\DBAL\Connection
         types:

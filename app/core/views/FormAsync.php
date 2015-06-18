@@ -270,11 +270,11 @@ class AjaxForm
 	{
 		if ( isset($this->object_it) )
 		{
-			return translate('Сохранить');
+			return translate('РЎРѕС…СЂР°РЅРёС‚СЊ');
 		}
 		else
 		{
-			return translate('Создать');
+			return translate('РЎРѕР·РґР°С‚СЊ');
 		}
 	}
 	
@@ -361,7 +361,7 @@ class AjaxForm
 					<textarea class="input-block-level" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>"
 						style="overflow-x:hidden;overflow-y: scroll;" 
 						tabindex="<? echo $tab_index ?>" 
-						wrap="virtual" rows="6" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, 'windows-1251')?>"><? echo $value ?></textarea>
+						wrap="virtual" rows="6" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>"><? echo $value ?></textarea>
 					<?
 					break;
 					
@@ -372,7 +372,7 @@ class AjaxForm
 						<textarea class="input-block-level" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>"
 							style="overflow-x:hidden;overflow-y: scroll;" 
 							tabindex="<? echo $tab_index ?>" 
-							wrap="virtual" rows="6" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, 'windows-1251')?>"><? echo $value ?></textarea>
+							wrap="virtual" rows="6" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>"><? echo $value ?></textarea>
 						<?
 					}
 					else
@@ -381,7 +381,7 @@ class AjaxForm
 						<textarea class="input-block-level" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>"
 							style="overflow-x:hidden;overflow-y: scroll;" 
 							tabindex="<? echo $tab_index ?>" 
-							wrap="virtual" rows="1" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, 'windows-1251')?>"><? echo $value ?></textarea>
+							wrap="virtual" rows="1" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>"><? echo $value ?></textarea>
 						<?
 					}
 					break;
@@ -419,14 +419,14 @@ class AjaxForm
 				case 'file':
 					?>
 					<span>
-					<input class="input-block-level" type="file" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, 'windows-1251')?>">
+					<input class="input-block-level" type="file" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
 					</span>
 					<?
 					break;							
 
 				case 'password':
 					?>
-					<input class="input-block-level" type="password" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, 'windows-1251')?>">
+					<input class="input-block-level" type="password" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
 					<?
 					break;				
 
@@ -557,7 +557,7 @@ class AjaxForm
 		return "core/FormAsync.php";
 	}
 	
-	function render( &$view, $parms )
+	function render( $view, $parms )
 	{
 	    $this->view = $view;
 

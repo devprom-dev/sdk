@@ -10,10 +10,10 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
     {
     	if ( $object->getEntityRefName() != 'pm_Function' ) return;
  	    
-	    $object->addAttribute('Request', 'REF_pm_ChangeRequestId', translate('Ïîæåëàíèÿ'), false);
+	    $object->addAttribute('Request', 'REF_pm_ChangeRequestId', translate('ÐŸÐ¾Ð¶ÐµÐ»Ð°Ð½Ð¸Ñ'), false);
 		$object->addPersister( new FeatureRequestPersister() );
  		
-    	$object->addAttribute('Progress', '', translate('Ïðîãðåññ'), false);
+    	$object->addAttribute('Progress', '', translate('ÐŸÑ€Ð¾Ð³Ñ€ÐµÑÑ'), false);
     	
     	$module_it = getFactory()->getObject('Module')->getExact('dicts-featuretype');
 	    $object->setAttributeDescription('Type', 

@@ -12,7 +12,7 @@ class BlogService
 		
 		$object_it = $this->getObjectIt($project_it);
 		
-		$xml = '<?xml version="1.0" encoding="windows-1251"?>' .
+		$xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>' .
 				'<feed xmlns="http://www.w3.org/2005/Atom">'.Chr(10);
 		
 		$xml .= '<link rel="alternate" type="text/html" hreflang="en"/>'.Chr(10);
@@ -51,7 +51,7 @@ class BlogService
 				'title' => '<![CDATA['.$object_it->get('Caption').']]>',
 				'id' => 'devprom.post: '.$object_it->getId(),
 				'updated' => $object_it->getDateFormatUser('RecordCreated', '%Y-%m-%dT%H:%I:%SZ'),
-				'content' => htmlspecialchars($content, ENT_COMPAT | ENT_HTML401, 'cp1251')
+				'content' => htmlspecialchars($content, ENT_COMPAT | ENT_HTML401, APP_ENCODING)
 				);
 			
 			$xml .= $this->convert($entry);
@@ -70,7 +70,7 @@ class BlogService
 
 	public function getUrl( $project_it )
 	{
-		return _getServerUrl().htmlspecialchars('/news/'.$this->getKey($project_it), ENT_COMPAT | ENT_HTML401, 'cp1251');
+		return _getServerUrl().htmlspecialchars('/news/'.$this->getKey($project_it), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
 	}
 	
 	private function getKey( $project_it )

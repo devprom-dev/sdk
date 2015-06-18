@@ -53,26 +53,18 @@ class WikiConverterMPdf
  	
  	function parse()
  	{
- 		global $model_factory;
-	
 		$this->pdf = new mPDF('ru', 'A4');
-
 		$this->pdf->WriteHTML(file_get_contents(SERVER_ROOT_PATH.'styles/newlook/main.css'), 1);
-		
 		$this->pdf->WriteHTML(file_get_contents(SERVER_ROOT_PATH.'styles/newlook/extended.css'), 1);
-		
 		$this->pdf->WriteHTML(file_get_contents(SERVER_ROOT_PATH.'styles/wysiwyg/msword.css'), 1);
-		
 		$this->pdf->WriteHTML(' body {background:white;font-size:14px;line-height:160%;} td {font-size:14px;line-height:160%;} ', 1);
 
  		$object_it = $this->getObjectIt();
-		
  		if ( $this->getTitle() == '' ) $this->setTitle($object_it->getDisplayName());
  		
  		while( !$object_it->end() )
 		{
-			$this->transformWiki( $object_it, count($object_it->getParentsArray()) - 1 );
-
+			$this->transformWiki( $object_it->copy(), count($object_it->getParentsArray()) - 1 );
 			$object_it->moveNext();
 		}
 		
@@ -91,13 +83,12 @@ class WikiConverterMPdf
 		}
 		
 		$editor = WikiEditorBuilder::build($parent_it->get('ContentEditor'));
-
 		$editor->setObjectIt( $parent_it );
 
  		$parser = $editor->getHtmlParser();
- 		
  		$parser->setObjectIt( $parent_it );
  		$parser->setRequiredExternalAccess();
+
 		$parser->setHrefResolver(function($wiki_it) {
  			return '#'.$wiki_it->getHtmlDecoded('Caption');
  		});
@@ -106,11 +97,9 @@ class WikiConverterMPdf
  		});
  		
 		$content = $parser->parse( $content );
-    		
 		if ( $level > 0 || $content != '' )
 		{
     		$title = $parent_it->getHtmlDecoded('Caption');
-    		
     		$heading_level = max(min($level, 4), 1);  
     		
     		$this->transform( 
@@ -118,9 +107,8 @@ class WikiConverterMPdf
     			        '<h'.$heading_level.' '.($this->headers_passed < 1 ? 'style="page-break-before:avoid;"' : '').'><a name="'.$title.'" level="'.$level.'"></a>'.$title.'</h'.$heading_level.'>'.
     			        ''.$content.'', 
     			        'UTF-8', 
-    			        'windows-1251') 
+    			        APP_ENCODING) 
     			);
-    		
     		$this->headers_passed++;
 		}
 	}
@@ -135,7 +123,7 @@ class WikiConverterMPdf
 
  	function display()
  	{
-		$file_name = preg_replace('/[\.\,\+\)\(\)\:\;]/i', '_', html_entity_decode($this->getTitle(), ENT_QUOTES | ENT_HTML401, 'cp1251')).'.pdf';
+		$file_name = preg_replace('/[\.\,\+\)\(\)\:\;]/i', '_', html_entity_decode($this->getTitle(), ENT_QUOTES | ENT_HTML401, APP_ENCODING)).'.pdf';
 
 		if ( EnvironmentSettings::getBrowserPostUnicode() )
 		{ 

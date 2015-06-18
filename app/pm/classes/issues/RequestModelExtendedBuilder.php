@@ -2,6 +2,7 @@
 
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once "persisters/RequestSpentTimePersister.php";
+include_once "persisters/RequestQuestionsPersister.php";
 
 class RequestModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -10,17 +11,16 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
     	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
     	
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
     	if ( $methodology_it->HasMilestones() )
 		{	
-			$object->addAttribute('DeadlinesDate', 'DATE', translate('Ñðîêè'), false);
+			$object->addAttribute('DeadlinesDate', 'DATE', translate('Ð¡Ñ€Ð¾ÐºÐ¸'), false);
 		}
 		
    		if ( $methodology_it->IsTimeTracking() )
 		{
-			$object->addAttribute( 'Spent', 'REF_ActivityRequestId', translate('Ñïèñàíèå âðåìåíè'), false );
-			
+			$object->addAttribute( 'Spent', 'REF_ActivityRequestId', translate('Ð¡Ð¿Ð¸ÑÐ°Ð½Ð¸Ðµ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð¸'), false );
 		    $object->addPersister( new RequestSpentTimePersister() );
 		}
+		$object->addPersister( new RequestQuestionsPersister() );
     }
 }

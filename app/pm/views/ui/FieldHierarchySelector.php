@@ -26,7 +26,7 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 	    		$tabindex++;
 	    		
 	        	echo '<button type="button" tabindex="'.$tabindex.'" field-id="'.$this->getId().'" class="btn btn-small btn-success" style="margin-top:4px;" onclick="javascript: '.$script.'">';
-	            	echo '<i class="icon-search icon-white"></i> '.translate('Βϋαπΰςό β δεπεβε');
+	            	echo '<i class="icon-search icon-white"></i> '.translate('Π’Ρ‹Π±Ρ€Π°Ρ‚Ρ Π² Π΄ΠµΡ€ΠµΠ²Πµ');
 				echo '</button>';
 			echo '</div>';
 		echo '</div>';

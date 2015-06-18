@@ -34,7 +34,7 @@ class MessageLogger implements Swift_Events_SendListener {
                 date(DateTime::RFC822, $message->getDate()),
                 join(",", array_keys($message->getTo())),
                 join(",", array_keys($message->getFrom())),
-                ImapMailbox::decodeMimeStr($message->getSubject(), 'windows-1251')
+                ImapMailbox::decodeMimeStr($message->getSubject(), APP_ENCODING)
             )
         );
     }

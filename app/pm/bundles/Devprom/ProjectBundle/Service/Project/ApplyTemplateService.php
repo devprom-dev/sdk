@@ -24,10 +24,7 @@ class ApplyTemplateService
  		
  		$context->setResetState($this->reset_state);
  		
- 		$template_path = $template_it->object->getTemplatePath($template_it->get('FileName') );
-
- 		$file = fopen ( $template_path, 'r' );
- 		$xml = fread( $file, filesize($template_path) );
+ 		$xml = file_get_contents($template_it->object->getTemplatePath($template_it->get('FileName')));
 
  		$state_objects = array();
  		

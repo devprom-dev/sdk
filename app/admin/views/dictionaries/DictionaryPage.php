@@ -21,6 +21,11 @@ class DictionaryPage extends AdminPage
 		parent::Page();
 	}
 
+	function getObject()
+	{
+		return $this->getDictionary();
+	}
+	
 	function getDictionary()
 	{
 		switch ( $_REQUEST['dict'] )

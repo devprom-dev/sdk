@@ -30,12 +30,12 @@ class RequestTraceBaseIterator extends OrderedIterator
  		$uid = new ObjectUID;
  		if ( $uid->hasUid($object_it) )
  		{
-	 		return translate('Òðàññèðîâêà').': '.
+	 		return translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°').': '.
 	 			$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
  		}
  		else
  		{
-	 		return translate('Òðàññèðîâêà').': '.$object_it->getDisplayName();
+	 		return translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°').': '.$object_it->getDisplayName();
  		}
  	}
 
@@ -44,7 +44,7 @@ class RequestTraceBaseIterator extends OrderedIterator
 	 	$uid = new ObjectUID;
 	 	$request_it = $this->getRef('ChangeRequest');
 	
- 		return translate('Òðàññèðîâêà').': '.
+ 		return translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°').': '.
  			$uid->getObjectUid($request_it).' '.$request_it->getDisplayName();
  	}
 

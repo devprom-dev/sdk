@@ -22,7 +22,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 		$lines = array();
 		foreach( $items as $key => $item )
 		{
-			$lines[] = $key.'&nbsp;('.$item.'&nbsp;'.translate('÷.').')';
+			$lines[] = $key.'&nbsp;('.$item.'&nbsp;'.translate('Ñ‡.').')';
 		}
 		
 		if ( count($lines) > 0 )

@@ -35,7 +35,7 @@ class AttachmentController extends Controller
         $this->checkUserIsAuthorized($issue);
 
         $response = new BinaryFileResponse($attachment->getFilePath());
-        $filename = mb_convert_encoding($attachment->getOriginalFilename(), 'UTF-8', 'windows-1251');
+        $filename = mb_convert_encoding($attachment->getOriginalFilename(), 'UTF-8', APP_ENCODING);
         $response->headers->set('Content-Disposition', 'attachment; filename=' . rawurlencode($filename));
         $response->headers->set('Content-Type', $attachment->getContentType());
 

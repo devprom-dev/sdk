@@ -12,7 +12,7 @@ $method->setRedirectUrl($redirect != '' ? $redirect : 'function() {window.locati
 <div>
 	<a class="btn btn-mini btn-success" title="<?=$method->getCaption()?>" onclick="<?=$method->getJSCall()?>">
 		<i class="icon-comment icon-white"></i>
-		<?=translate('Îòâåòèòü')?>
+		<?=translate('ÐžÑ‚Ð²ÐµÑ‚Ð¸Ñ‚ÑŒ')?>
 	</a>
 </div>
 												

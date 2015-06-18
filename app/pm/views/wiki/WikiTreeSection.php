@@ -116,6 +116,6 @@ class WikiTreeSection extends InfoSection
 	
  	function getCaption()
  	{
- 		return translate('Разделы');
+ 		return translate('Р Р°Р·РґРµР»С‹');
  	}
 }

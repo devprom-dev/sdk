@@ -41,7 +41,7 @@ class BlogForm extends PMPageForm
         if( getFactory()->getAccessPolicy()->can_modify($page_it) && !$this->getEditMode() )
         {
             array_push($actions, array( 
-                'name' => translate('Редактировать'),
+                'name' => translate('Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ'),
                 'url' => $page_it->getEditUrl(),
                 'type' => 'button'
             ));
@@ -182,13 +182,9 @@ class BlogForm extends PMPageForm
 		}
 		
 		$editor = $this->getEditor();
-		$editor->setObjectIt( $post_it );
-		
 		$parser = $editor->getEditorParser( 'wikisyntaxeditor' );
-		
 		if ( is_object($parser) )
 		{
-			$parser->setObjectIt( $post_it );
 			return $parser->parse( $description );
 		}
 		else
@@ -329,7 +325,7 @@ class BlogForm extends PMPageForm
 			    {
 			        $field = parent::createFieldObject($name);
 			        
- 				    $field->setDefault( translate('Название') );
+ 				    $field->setDefault( translate('РќР°Р·РІР°РЅРёРµ') );
 			    }
                 	
                 return $field;

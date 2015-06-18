@@ -16,6 +16,6 @@ class ProfilePage extends CoPage
  	
  	function getTitle()
  	{
- 		return translate('Профиль');
+ 		return translate('РџСЂРѕС„РёР»СЊ');
  	}
 }

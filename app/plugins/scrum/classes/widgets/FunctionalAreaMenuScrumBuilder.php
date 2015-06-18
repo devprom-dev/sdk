@@ -15,7 +15,6 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
         if ( is_a($project_it->object, 'Portfolio') || is_a($project_it->object, 'Program') ) return;
         
         $this->buildManagement( $set );
-        
         $this->buildFavorites( $set );
         
         if ( class_exists('ModuleCategoryBuilderRequirements') )
@@ -26,13 +25,11 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
     
     function buildFavorites( $set )
     {
-        global $model_factory;
-        
         $module = getFactory()->getObject('Module');
-        
         $report = getFactory()->getObject('PMReport');
         
  	    $menu = $set->getAreaMenus( FUNC_AREA_FAVORITES );
+        unset($menu['quick']['items']['project-log']);
         
  	    $items = array();
  	    
@@ -40,7 +37,10 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
 		$items['backlog'] = $report->getExact('productbacklog')->buildMenuItem();
 		$items['plan'] = $module->getExact('project-plan-hierarchy')->buildMenuItem();
  	    $items['tasks'] = $module->getExact('tasks-board')->buildMenuItem();
-		$items['knowledgebase'] = $module->getExact('project-knowledgebase')->buildMenuItem();
+ 	    
+ 	    $item = $module->getExact('project-knowledgebase')->buildMenuItem();
+ 	    $item['order'] = 9999;
+		$items['knowledgebase'] = $item;
  	    
 		$menu['quick']['items'] = array_merge($items, $menu['quick']['items']); 
 		
@@ -56,7 +56,7 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
         $items['mettings'] = $module->getExact('scrum/meetings')->buildMenuItem();
  	    
  	    $menu['reports'] = array (
- 	        'name' => translate('Îò÷åòû'),
+ 	        'name' => translate('ÐžÑ‚Ñ‡ÐµÑ‚Ñ‹'),
  	        'uid' => 'reports',
  	        'items' => $items
  	    );
@@ -72,7 +72,7 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
 		$items[] = $item;
 		
  	    $menu['settings'] = array (
- 	            'name' => translate('Íàñòðîéêè'),
+ 	            'name' => translate('ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸'),
  	            'uid' => 'settings',
  	            'items' => $items
  	    );
@@ -82,10 +82,7 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
     
     function buildManagement( $set )
     {
-        global $model_factory;
-        
  	    $settings_menu = $set->getAreaMenus( FUNC_AREA_MANAGEMENT );
- 	    
  	    if ( count($settings_menu) < 1 ) return;
  	    
  	    $set->setAreaMenus( FUNC_AREA_MANAGEMENT, array() );
@@ -93,19 +90,12 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
     
     function buildAnalysis( $set )
     {
-        global $model_factory;
-        
         $menus = $set->getAreaMenus(ModuleCategoryBuilderRequirements::AREA_UID);
-        
         if ( count($menus) < 1 ) return;
          
  	    // features tab 
- 	    
-        $module_it = $model_factory->getObject('PMReport')->getExact('issues-trace');
-        
-        $menus['features']['items'][] =  $module_it->buildMenuItem();
+        $menus['features']['items'][] = getFactory()->getObject('PMReport')->getExact('issues-trace')->buildMenuItem();
 
  		$set->setAreaMenus( ModuleCategoryBuilderRequirements::AREA_UID, $menus );
-        
     }
 }

@@ -45,7 +45,7 @@ class IterationBurndownSection extends InfoSection
                 echo '<td style="min-width:300px;">';
 				    echo '<table class="table"><thead><tr><th style="white-space:normal;">';
                 		echo ($self_project_it->getId() != $project_it->getId() ? '{'.$self_project_it->get('CodeName').'} ' : '').
-            	            translate('Итерация').': '.$iteration_it->getDisplayName();
+            	            translate('РС‚РµСЂР°С†РёСЏ').': '.$iteration_it->getDisplayName();
         		    echo '</th></tr></thead>';
         		    
         		    echo '<tbody><tr><td>';
@@ -79,7 +79,7 @@ class IterationBurndownSection extends InfoSection
 		echo '<div>';
 			if ( $start_date != '' || $finish_date != '' )
 			{
-				echo translate('По плану').':<br/>';
+				echo translate('РџРѕ РїР»Р°РЅСѓ').':<br/>';
 				echo $start_date.'&nbsp;-&nbsp;'.$finish_date;
 				
 				$need_delimiter = true;
@@ -92,13 +92,13 @@ class IterationBurndownSection extends InfoSection
 					echo '<br/><br/>';
 				}
 				
-				echo translate('Фактические').':<br/>';
+				echo translate('Р¤Р°РєС‚РёС‡РµСЃРєРёРµ').':<br/>';
 				echo $estimated_start.'&nbsp;-&nbsp;'.$estimated_finish;
 	
 				$offset = $iteration_it->getFinishOffsetDays();
 				if ( $offset > 0 )
 				{
-					echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
+					echo '<br/><span style="color:red;">'.translate('РћС‚РєР»РѕРЅРµРЅРёРµ РѕС‚ РіСЂР°С„РёРєР°').': '.$offset.' '.translate('РґРЅ.').'</span>';
 				}	
 				
 				echo '<br/><br/>';
@@ -155,7 +155,7 @@ class IterationBurndownSection extends InfoSection
 		{
 			array_push( $actions, array (
 				'url' => $this->release_it->getEditUrl(),
-				'name' => translate('Изменить')
+				'name' => translate('РР·РјРµРЅРёС‚СЊ')
 			));
 		}
 		

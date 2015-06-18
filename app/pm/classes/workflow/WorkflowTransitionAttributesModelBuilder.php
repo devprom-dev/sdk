@@ -23,6 +23,8 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
  	    {
  	    	$object->setAttributeVisible($attribute, false);
  	    }
+
+ 	    if ( $this->transition_it->getId() == '' ) return;
  	    
         $attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
 				array (

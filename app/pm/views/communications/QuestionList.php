@@ -1,7 +1,5 @@
 <?php
 
-include(SERVER_ROOT_PATH.'pm/methods/c_question_methods.php');
-
 class QuestionList extends PMPageList
 {
     var $comment_it;

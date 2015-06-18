@@ -2,11 +2,15 @@
 
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderIssues.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelCommonBuilder.php";
 
 include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
 include SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
 
 include "RequestForm.php";
+include "RequestFormDuplicate.php";
 include "RequestTable.php";
 include "RequestBulkForm.php";
 include "RequestPlanningForm.php";
@@ -27,7 +31,10 @@ class RequestPage extends PMPage
  	{
  		global $_REQUEST, $model_factory;
 
- 		getSession()->addBuilder( new PageSettingIssuesBuilder() ); 
+ 		getSession()->addBuilder( new PageSettingIssuesBuilder() );
+ 		getSession()->addBuilder( new RequestViewModelCommonBuilder() );
+ 		getSession()->addBuilder( new BulkActionBuilderIssues() ); 
+ 		getSession()->addBuilder( new RequestModelExtendedBuilder() );
  		
 		if ( $_REQUEST['release'] > 0 )
 		{
@@ -48,17 +55,13 @@ class RequestPage extends PMPage
  		    
  		    if( is_object($object_it) && $object_it->getId() > 0 )
  		    {
- 		        if ( !$form->getEditMode() )
- 		        {
- 		            $this->addInfoSection( new PageSectionComments($object_it) );
- 		        }
-	 			
- 		        $this->addInfoSection( new StatableLifecycleSection( $object_it ) );
+	            $this->addInfoSection( new PageSectionComments($object_it) );
  		        if ( $object_it->object->getAttributeType('Spent') != '' )
  		        {
  		        	$this->addInfoSection( new PageSectionSpentTime( $object_it ) );
  		        }
-	 			$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
+ 		        $this->addInfoSection( new StatableLifecycleSection( $object_it ) );
+ 		        $this->addInfoSection( new PMLastChangesSection ( $object_it ) );
  		    }
  		}
  		elseif ( $_REQUEST['mode'] == '' )
@@ -84,7 +87,6 @@ class RequestPage extends PMPage
 	 		if ( !$this->needDisplayForm() && is_object($table) )
 	 		{
 	 		    $this->addInfoSection( new IssueBurndownSection() );
-	 			$this->addInfoSection( new IssueEstimationSection() );
 	 		}
  		}
  		
@@ -96,9 +98,13 @@ class RequestPage extends PMPage
  	
 	function getObject()
 	{
-		getSession()->addBuilder( new RequestModelExtendedBuilder() );
+		$object = getFactory()->getObject('Request');
 		
- 		return getFactory()->getObject('Request');
+	    foreach(getSession()->getBuilders('RequestViewModelBuilder') as $builder ) {
+    		$builder->build($object);
+    	}
+    	
+ 		return $object;
 	}
  	
  	function getReleaseIt()
@@ -143,6 +149,11 @@ class RequestPage extends PMPage
  				? true : parent::needDisplayForm();
  	}
  	
+ 	function getBulkForm()
+ 	{
+ 		return new RequestBulkForm( $this->getObject() );
+ 	}
+ 	
  	function getForm() 
  	{
  		switch ( $_REQUEST['mode'] )
@@ -151,16 +162,15 @@ class RequestPage extends PMPage
 	 			$form = new RequestPlanningForm($this->getObject());
 	 			$form->edit( $_REQUEST['ChangeRequest'] );
 	 			return $form;
-	 			
- 			case 'bulk':
- 				return new RequestBulkForm( $this->getObject() );
  		}
- 		
  		if ( $_REQUEST['view'] == 'import' )
  		{
  		    return new ImportXmlForm($this->getObject());
  		}
- 		
+ 		if ( $_REQUEST['Request'] != '' )
+ 		{
+ 			return new RequestFormDuplicate($this->getObject());
+ 		}
 		return new RequestForm($this->getObject());
  	}
 }

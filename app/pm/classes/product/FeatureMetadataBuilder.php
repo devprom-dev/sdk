@@ -20,7 +20,7 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
  		$metadata->addPersister( new FeatureTitlePersister() );
  		$metadata->addPersister( new FeatureHierarchyPersister() );
  		
- 		$metadata->addAttribute( 'Tags', 'REF_TagId', translate('Òýãè'), false, false, '', 40 );
+ 		$metadata->addAttribute( 'Tags', 'REF_TagId', translate('Ð¢ÑÐ³Ð¸'), false, false, '', 40 );
  		$tag = getFactory()->getObject('CustomTag');
  		$metadata->addPersister( new FeatureTagPersister() );
  		
@@ -28,6 +28,11 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
 		{
 			$metadata->addAttributeGroup($attribute, 'tooltip');
 			$metadata->addAttributeGroup($attribute, 'permissions');
+		}
+
+    	foreach ( array('Workload', 'Estimation', 'EstimationLeft') as $attribute )
+		{
+			$metadata->addAttributeGroup($attribute, 'system');
 		}
     }
 }

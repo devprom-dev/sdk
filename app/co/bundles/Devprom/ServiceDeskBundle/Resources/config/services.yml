@@ -34,8 +34,9 @@ services:
             arguments:
                 securityContext: "@security.context"
                 twig: "@twig"
+                defaultLocale: %locale%
             tags:
-                - { name: kernel.event_listener, event: kernel.request, method: onKernelController }
+                - { name: kernel.event_subscriber }
     settings_request_listener:
             class: Devprom\ServiceDeskBundle\EventListener\SettingsRequestListener
             arguments:

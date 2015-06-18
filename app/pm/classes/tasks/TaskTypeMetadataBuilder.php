@@ -10,7 +10,10 @@ class TaskTypeMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( !$metadata->getObject() instanceof TaskType ) return;
 
-		$metadata->addAttribute('Stages', 'REF_pm_ProjectStageId', translate('Ñòàäèè ïðîöåññà'), false);
+		$metadata->setAttributeVisible('ProjectRole', false);
+		$metadata->setAttributeRequired('ProjectRole', false);
+    	
+		$metadata->addAttribute('Stages', 'REF_pm_ProjectStageId', translate('Ð¡Ñ‚Ð°Ð´Ð¸Ð¸ Ð¿Ñ€Ð¾Ñ†ÐµÑÑÐ°'), false);
 		$metadata->addPersister( new TaskTypeStagePersister() );
 		
 		$metadata->setAttributeCaption('ReferenceName', text(1868));
@@ -21,7 +24,6 @@ class TaskTypeMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 		$metadata->setAttributeRequired('ReferenceName', true);
 		
-		$metadata->setAttributeDescription('ProjectRole', text(1849));
  		$metadata->setAttributeDescription( 'RelatedColor', text(1856) );
  		$metadata->setAttributeDescription( 'IsDefault', text(1877) );
     }

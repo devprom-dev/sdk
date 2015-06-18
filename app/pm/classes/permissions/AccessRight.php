@@ -21,9 +21,9 @@ class AccessRight extends Metaobject
 
 	function getPage() 
 	{
-		$session = getSession();
-		
-		return $session->getApplicationUrl().'participants/rights?role='.SanitizeUrl::parseUrl($_REQUEST['role']).'&';
+ 		$info = getFactory()->getObject('Module')
+ 					->getExact('permissions/settings')->buildMenuItem('role='.SanitizeUrl::parseUrl($_REQUEST['role']));
+ 		return $info['url'];
 	}
 	
 	function getAllForUser( $user_it )

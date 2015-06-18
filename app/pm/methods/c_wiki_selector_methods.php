@@ -59,7 +59,7 @@
  		$method_id = $submitwebmethod_number;
  		$text_id = 'select_'.$method_id;
  		?>
-		<input type="button" value="<? echo_lang('Продолжить') ?>" id="<? echo $text_id ?>" 
+		<input type="button" value="<? echo_lang('РџСЂРѕРґРѕР»Р¶РёС‚СЊ') ?>" id="<? echo $text_id ?>" 
 			class="button" onclick="javascript: submit_<? echo get_class($this) ?>( <? echo $method_id ?>, '<? echo $url ?>' )">
 		<?
  	}

@@ -17,7 +17,7 @@ class GetAttributeWebMethod extends WebMethod
 		 
 		while( !$object_it->end() )
 		{
-    		$result = html_entity_decode($object_it->get_native($_REQUEST['attr']), ENT_COMPAT | ENT_HTML401, 'cp1251');
+    		$result = html_entity_decode($object_it->get_native($_REQUEST['attr']), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
     
             if ( $_REQUEST['converter'] == 'html2text' )
     	 	{
@@ -32,7 +32,7 @@ class GetAttributeWebMethod extends WebMethod
     		 		break;
     
     	 		default:
-    		 		$result = html_entity_decode($object_it->getHtmlValue($result), ENT_COMPAT | ENT_HTML401, 'cp1251');
+    		 		$result = html_entity_decode($object_it->getHtmlValue($result), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
     	 	}
     	 	
     	 	echo $result;

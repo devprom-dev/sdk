@@ -31,6 +31,6 @@ class SearchPage extends PMPage
  
  	function getTitle()
  	{
- 		return translate('Поиск');
+ 		return translate('РџРѕРёСЃРє');
  	}
 }

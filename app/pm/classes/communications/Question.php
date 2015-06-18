@@ -15,19 +15,19 @@ class Question extends MetaobjectStatable
  	    
  		parent::__construct('pm_Question');
  		
-		$this->addAttribute( 'Owner', 'REF_pm_ParticipantId', translate('Îòâåòñòâåííûé'), true, true );
+		$this->addAttribute( 'Owner', 'REF_pm_ParticipantId', translate('ĞÑ‚Ğ²ĞµÑ‚ÑÑ‚Ğ²ĞµĞ½Ğ½Ñ‹Ğ¹'), true, true );
 			
- 		$this->addAttribute('Comments', '', translate('Êîììåíòàğèè'), true);
+ 		$this->addAttribute('Comments', '', translate('ĞšĞ¾Ğ¼Ğ¼ĞµĞ½Ñ‚Ğ°Ñ€Ğ¸Ğ¸'), true);
 		
-		$this->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Ïğèëîæåíèÿ'), true);
+		$this->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('ĞŸÑ€Ğ¸Ğ»Ğ¾Ğ¶ĞµĞ½Ğ¸Ñ'), true);
  		
-		$this->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('Ïîæåëàíèÿ'), true );
+		$this->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('ĞŸĞ¾Ğ¶ĞµĞ»Ğ°Ğ½Ğ¸Ñ'), true );
 		
  		$this->addPersister( new QuestionRequestPersister() );
 		
  		$tag = $model_factory->getObject('CustomTag');
 		
- 		$this->addAttribute( 'Tags', 'REF_TagId', translate('Òıãè'), false, false, '', 40 );
+ 		$this->addAttribute( 'Tags', 'REF_TagId', translate('Ğ¢ÑĞ³Ğ¸'), false, false, '', 40 );
  		
  		$this->addPersister( new QuestionTagPersister() );
  		

@@ -34,7 +34,7 @@ class UpdateList extends PageList
 		
 	function getColumns()
 	{
-		$this->object->setAttributeCaption('RecordCreated', translate('Äàòà óñòàíîâêè'));
+		$this->object->setAttributeCaption('RecordCreated', translate('Ð”Ð°Ñ‚Ð° ÑƒÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ¸'));
 		
 		return parent::getColumns();
 	}
@@ -73,10 +73,10 @@ class UpdateList extends PageList
 	    if ( $object_it->getId() == '0' )
 	    {
 	        $actions = array(
-                array( 'name' => translate('Óñòàíîâèòü'), 'url' => '?action=download&parms='.$object_it->get('Caption') ),
+                array( 'name' => translate('Ð£ÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ'), 'url' => '?action=download&parms='.$object_it->get('Caption') ),
                 array(),
                 array( 
-                		'name' => translate('Ñêà÷àòü îáíîâëåíèå'), 
+                		'name' => translate('Ð¡ÐºÐ°Ñ‡Ð°Ñ‚ÑŒ Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ðµ'), 
                 		'url' => $object_it->get('DownloadUrl').'&iid='.INSTALLATION_UID,
                 		'uid' => 'download'
 	        	)

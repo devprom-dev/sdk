@@ -49,7 +49,7 @@ class WikiParser
 		global $wiki_parser;
 		$wiki_parser = $this;
 
-		$result = html_entity_decode($content, ENT_QUOTES | ENT_HTML401, 'windows-1251');
+		$result = html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 
 		$result = preg_replace_callback('/\r?\n?\[code\]\r?\n?(.*?)\r?\n?\[\/code\]/si', preg_code_callback_store, $result);
 		$result = preg_replace_callback('/\[uml\](.*?)\[\/uml\]/si', preg_uml_callback_store, $result);
@@ -128,7 +128,7 @@ class WikiParser
 		// font size
 		$result = preg_replace('/^h(\d)\s*([^\r\n]+)/mi', '<h\\1>\\2</h\\1>', $result);
 
-		// выполняем пустые строки
+		// РІС‹РїРѕР»РЅСЏРµРј РїСѓСЃС‚С‹Рµ СЃС‚СЂРѕРєРё
 		$result = preg_replace('/^[\r\n]*$/im', '<p>&nbsp;</p>', $result);
 		$result = preg_replace('/^([^<\[].+)[\r\n]*$/im', '<p>\\1</p>', $result);
 		$result = preg_replace('/^(.+[^>\]])[\r\n]*$/im', '<p>\\1</p>', $result);
@@ -136,7 +136,7 @@ class WikiParser
 		$result = preg_replace('/(!(\*)+|!(\+)+)/', '\\2', $result);
 		$result = preg_replace('/(!(\*)+|!(\+)+|!(_)+|!(\-)+|!(h\d)+|!(http:|https:)+|!(\#)+)/', '\\2\\3\\4\\5\\6\\7\\8', $result);
 		
-		// после форматирования вставляем обратно блоки текста с исходным кодом
+		// РїРѕСЃР»Рµ С„РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёСЏ РІСЃС‚Р°РІР»СЏРµРј РѕР±СЂР°С‚РЅРѕ Р±Р»РѕРєРё С‚РµРєСЃС‚Р° СЃ РёСЃС…РѕРґРЅС‹Рј РєРѕРґРѕРј
 		$result = preg_replace_callback('/\[code\]([0-9]+)\[\/code\]/mi', preg_code_callback_restore, $result);
 		$result = preg_replace_callback('/\[uml\]([0-9]+)\[\/uml\]/mi', preg_uml_callback_restore, $result);
 		
@@ -369,7 +369,7 @@ class WikiParser
 		
 		$match = array();
 
-		$href = html_entity_decode($href, ENT_QUOTES | ENT_HTML401, 'windows-1251');
+		$href = html_entity_decode($href, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 		
 		if ( preg_match('/'.$file_class.'\/([^\/]+)\/([^\/\?]+)/i', $href, $match) )
 		{
@@ -463,7 +463,7 @@ class WikiParser
 	{
 		if ( is_object($object_it) )
 		{
-			$this->object_it = $object_it->_clone();
+			$this->object_it = $object_it->copyAll();
 		}
 	}
 
@@ -644,7 +644,7 @@ class WikiParser
 	 		
 	 		if ( $this->hasImageTitle() && $image_caption != '' )
 	 		{
-			   $result .= '<div align=center class="image"> Рис. '.$image_num.'. '.$image_caption.'</div>';
+			   $result .= '<div align=center class="image"> Р РёСЃ. '.$image_num.'. '.$image_caption.'</div>';
 	 		}
 	 		
 	 		return $result;
@@ -779,7 +779,7 @@ class WikiParser
 			
 			if($parent_wiki_id > 0) {
 	 			return '<span style="border-bottom:.5pt dashed navy;">'.$path_parts[count($path_parts)-1].
-					'</span> <a title="Страница не найдена. Создать страницу?" target="_self" href="'.$parent_it->getViewUrl().'&wiki_parent='.$parent_wiki_id.
+					'</span> <a title="РЎС‚СЂР°РЅРёС†Р° РЅРµ РЅР°Р№РґРµРЅР°. РЎРѕР·РґР°С‚СЊ СЃС‚СЂР°РЅРёС†Сѓ?" target="_self" href="'.$parent_it->getViewUrl().'&wiki_parent='.$parent_wiki_id.
 					'&wiki_mode=new&Caption='.$path_parts[count($path_parts)-1].'">?</a>';
 			}
 		}
@@ -855,7 +855,7 @@ class WikiParser
 	}
 
  	return '<div style="float:left;width:100%;"><pre class="code">'.
- 			htmlentities($wiki_parser->code_array[$match[1] - 1], ENT_QUOTES | ENT_HTML401, 'windows-1251').
+ 			htmlentities($wiki_parser->code_array[$match[1] - 1], ENT_QUOTES | ENT_HTML401, APP_ENCODING).
 		'</pre></div><div style="clear:both;"></div>';
  }
  
@@ -880,7 +880,7 @@ class WikiParser
 	}
 	
  	return '[image=http://www.plantuml.com/plantuml/img/'.
- 		encodep(html_entity_decode($wiki_parser->uml_array[$match[1] - 1], ENT_QUOTES | ENT_HTML401, 'cp1251')).']';
+ 		encodep(html_entity_decode($wiki_parser->uml_array[$match[1] - 1], ENT_QUOTES | ENT_HTML401, APP_ENCODING)).']';
  } 
  
  function preg_note_callback_store( $match )

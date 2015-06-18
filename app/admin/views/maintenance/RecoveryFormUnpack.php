@@ -4,7 +4,7 @@ class RecoveryFormUnpack extends RecoveryWizardFormBase
 {
  	function getAddCaption()
  	{
- 		return '1. '.translate('Открытие архива резервной копии');
+ 		return '1. '.translate('РћС‚РєСЂС‹С‚РёРµ Р°СЂС…РёРІР° СЂРµР·РµСЂРІРЅРѕР№ РєРѕРїРёРё');
  	}
  	
  	function getCommandClass()

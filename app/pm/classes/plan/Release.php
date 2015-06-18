@@ -14,8 +14,8 @@ class Release extends Metaobject
 		
 		$this->setSortDefault( array( new SortAttributeClause('StartDate'), new SortAttributeClause('Caption')) );
 		 
-		$this->addAttribute('EstimatedStartDate', 'DATETIME', translate('Îöåíêà íà÷àëà'), false, false);
-		$this->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Îöåíêà îêîí÷àíèÿ'), false, false);
+		$this->addAttribute('EstimatedStartDate', 'DATETIME', translate('ĞÑ†ĞµĞ½ĞºĞ° Ğ½Ğ°Ñ‡Ğ°Ğ»Ğ°'), false, false);
+		$this->addAttribute('EstimatedFinishDate', 'DATETIME', translate('ĞÑ†ĞµĞ½ĞºĞ° Ğ¾ĞºĞ¾Ğ½Ñ‡Ğ°Ğ½Ğ¸Ñ'), false, false);
 
 		$this->addPersister( new ReleaseMetricsPersister() );
 	}

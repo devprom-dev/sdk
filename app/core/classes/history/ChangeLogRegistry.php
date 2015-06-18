@@ -56,7 +56,7 @@ class ChangeLogRegistry extends ObjectRegistrySQL
  		            $value = strtolower(get_class(getFactory()->getObject($value)));
  		        }); 
  		    }
- 		    else if ( is_a($predicate, 'ChangeLogItemFilter') )
+ 		    else if ( $predicate instanceof ChangeLogItemFilter or $predicate instanceof ChangeLogItemDateFilter )
  		    {
  		        return ""; 
  		    }

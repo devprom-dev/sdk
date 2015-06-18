@@ -21,7 +21,7 @@ function beginPage($title)
 								$parts = preg_split('/\//', $_SERVER['PHP_SELF']);
 								if($parts[count($parts)-1] != 'index.php') {
 								?>
-									<a href="index.php" style="text-decoration:none;color:white;font-weight:bold">Главная »</a>
+									<a href="index.php" style="text-decoration:none;color:white;font-weight:bold">Р“Р»Р°РІРЅР°СЏ В»</a>
 								<?
 								}
 								
@@ -36,13 +36,13 @@ function beginPage($title)
 								   style="text-decoration:none;color:white;font-weight:bold"><? echo $title; ?></a>
 							</td>
 							<td align=right>
-								<a href="model.php" style="text-decoration:none;color:white;font-weight:bold">Модель</a>
+								<a href="model.php" style="text-decoration:none;color:white;font-weight:bold">РњРѕРґРµР»СЊ</a>
 								&nbsp&nbsp
 								<a href="object.php?class=settings&settingsId=1&settingsaction=show" 
-								   style="text-decoration:none;color:white;font-weight:bold">Настройки</a>
+								   style="text-decoration:none;color:white;font-weight:bold">РќР°СЃС‚СЂРѕР№РєРё</a>
 								&nbsp&nbsp
 								<a href="sqllog.php" 
-								   style="text-decoration:none;color:white;font-weight:bold">Журнал SQL</a>
+								   style="text-decoration:none;color:white;font-weight:bold">Р–СѓСЂРЅР°Р» SQL</a>
 							</td>
 						</tr>
 					</table>

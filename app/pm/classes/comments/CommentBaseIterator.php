@@ -6,7 +6,7 @@ class CommentBaseIterator extends OrderedIterator
 {
  	function getPlainText( $attr )
  	{
-		$totext = new html2text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, 'cp1251') );
+		$totext = new html2text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );
 		
 		return $totext->get_text();
  	}

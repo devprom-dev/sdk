@@ -169,12 +169,12 @@ class EmailNotificatorHandler
 		
 		if ( $value == 'N' )
 		{
-			$value = translate('Нет');
+			$value = translate('РќРµС‚');
 		}
 		
 		if ( $value == 'Y' )
 		{
-			$value = translate('Да');
+			$value = translate('Р”Р°');
 		}
 
 		return $value;

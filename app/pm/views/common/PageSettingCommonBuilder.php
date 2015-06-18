@@ -22,15 +22,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $setting->setGroup( 'none' );
         
         $visible_attributes = array('UID', 'Caption', 'State', 'Assignee', 'TaskType', 'ChangeRequest', 'Progress', 'TraceTask');
-        
-    	if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
-		{
-		    $visible_attributes[] = 'OrderNum';
-		}
-		else
-		{
-		    $visible_attributes[] = 'Priority';
-		}
+	    $visible_attributes[] = 'Priority';
 		
 		$setting->setVisibleColumns( $visible_attributes );
         
@@ -105,16 +97,8 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         // tasks table
         
         $setting = new PageListSetting('TaskBoardList');
-
         $columns = array('UID', 'Caption', 'RecentComment', 'Fact', 'Attachment', 'Assignee', 'Progress');
-
-        if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
-		{
-		    $columns[] = 'OrderNum';
-		}
-        
         $setting->setVisibleColumns($columns);
-        
         $settings->add( $setting );
 
         
@@ -133,6 +117,12 @@ class PageSettingCommonBuilder extends PageSettingBuilder
 		    $setting->setSorts( array('Priority') );
 		}
         
+        $settings->add( $setting );
+    
+        // issuesboardcrossproject
+        $setting = new ReportSetting('tasksboardcrossproject');
+        $setting->setGroup( 'Assignee' );
+        $setting->setFilters( array('taskstate', 'iteration', 'tasktype', 'target') );
         $settings->add( $setting );
     }
 

@@ -18,7 +18,7 @@ class UserTable extends PageTable
 	{
 		return array (
     		new FilterAutoCompleteWebMethod(
-        			getFactory()->getObject('cms_User'), translate('Èìÿ ïîëüçîâàòåëÿ')
+        			getFactory()->getObject('cms_User'), translate('Ð˜Ð¼Ñ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ñ')
 			),
     		new UserFilterRoleWebMethod(),
     		new UserFilterStateWebMethod()
@@ -47,13 +47,12 @@ class UserTable extends PageTable
 		if( !$this->IsNeedToAdd() ) return $actions;
 
 		$method = new ObjectCreateNewWebMethod($this->getObject());
-
 		if ( $this->getObject()->getRecordCount() > 0 ) $method->setRedirectUrl('donothing');
 		
 		$uid = strtolower('new-'.get_class($this->getObject()));
 		
 		$actions[$uid] = array ( 
-				'name' => translate('Äîáàâèòü'),
+				'name' => translate('Ð”Ð¾Ð±Ð°Ð²Ð¸Ñ‚ÑŒ'),
 				'uid' => $uid,
 				'url' => $method->getJSCall(
 								array( 
@@ -62,6 +61,17 @@ class UserTable extends PageTable
 						 ) 
 		);
 
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
+		if ( $method->hasAccess() )
+		{
+			if ( $this->getObject()->getRecordCount() > 0 ) $method->setRedirectUrl('donothing');
+			$actions['invite-by-email'] = array ( 
+			        'name' => text(1861),
+					'url' => $method->getJSCall(array(), text(2001)),
+					'uid' => 'invite-email'
+		    );
+		}
+		
 		return $actions;
 	}
 }

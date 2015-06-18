@@ -12,6 +12,7 @@ class DALMySQL extends DAL
     public function Connect( $info )
     {
         $this->connectionInfo = $info;
+		$this->Close();
         $this->connection = @mysql_connect($info->getHost(), $info->getUser(), $info->getPassword(), true);
         if ( $this->connection === false ) {
         	throw new Exception(mysql_error()); 
@@ -20,7 +21,7 @@ class DALMySQL extends DAL
         	throw new Exception(mysql_error());
         }
         @mysql_query("SET time_zone = '".EnvironmentSettings::getUTCOffset().":00'", $this->connection);
-        @mysql_query("SET NAMES 'cp1251' COLLATE 'cp1251_general_ci'", $this->connection);
+        @mysql_query("SET NAMES '".APP_CHARSET."' COLLATE '".APP_CHARSET."_general_ci'", $this->connection);
     }
     
     public function Reconnect()
@@ -29,6 +30,11 @@ class DALMySQL extends DAL
     	{
 	    	$this->Connect( $this->connectionInfo );
     	}
+    }
+
+    function __destruct()
+    {
+    	$this->Close();
     }
     
     public function Query( $sql )
@@ -83,5 +89,13 @@ class DALMySQL extends DAL
 		if ( !is_object($log) ) return;
 		
 		$log->info( $message );
+    }
+
+    protected function Close()
+    {
+       	if ( is_resource($this->connection) ) {
+	    	mysql_close($this->connection);
+	    	$this->connection = null;
+       	}
     }
 }

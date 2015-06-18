@@ -39,12 +39,12 @@
  {
  	function __construct( ObjectRegistrySQL $registry = null )
 	{
-		$this->attributes = array( 'Caption' => array('TEXT', 'Íàçâàíèå', true, true),
-								   'ReferenceName' => array('TEXT', 'Íàçâàíèå òàáëèöû', true, true),
-								   'packageId' => array('INTEGER', 'Ïàêåò', true, true),
-								   'IsOrdered' => array('CHAR', 'Ïîðÿäîê õðàíåíèÿ ýêçåìïëÿðîâ', true, true),
-								   'IsDictionary' => array('CHAR', 'Ñïðàâî÷íèê', true, true),
-								   'OrderNum' => array('INTEGER', 'Ïîðÿäêîâûé íîìåð', true, true)
+		$this->attributes = array( 'Caption' => array('TEXT', 'ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ', true, true),
+								   'ReferenceName' => array('TEXT', 'ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹', true, true),
+								   'packageId' => array('INTEGER', 'ÐŸÐ°ÐºÐµÑ‚', true, true),
+								   'IsOrdered' => array('CHAR', 'ÐŸÐ¾Ñ€ÑÐ´Ð¾Ðº Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ñ ÑÐºÐ·ÐµÐ¼Ð¿Ð»ÑÑ€Ð¾Ð²', true, true),
+								   'IsDictionary' => array('CHAR', 'Ð¡Ð¿Ñ€Ð°Ð²Ð¾Ñ‡Ð½Ð¸Ðº', true, true),
+								   'OrderNum' => array('INTEGER', 'ÐŸÐ¾Ñ€ÑÐ´ÐºÐ¾Ð²Ñ‹Ð¹ Ð½Ð¾Ð¼ÐµÑ€', true, true)
 								    );
 		
 		$this->defaultsort = 'OrderNum';

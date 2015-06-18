@@ -29,25 +29,9 @@ class FunctionTraceList extends FunctionList
  	
  	function setupColumns()
  	{
-		$this->object->addAttribute('Issues', '', translate('Пожелания'), true, false, '', 40);
+		$this->object->addAttribute('Issues', '', translate('РџРѕР¶РµР»Р°РЅРёСЏ'), true, false, '', 40);
  	    
 		parent::setupColumns();
- 	    
- 	    $visible = array_merge( 
- 	    		array(
- 	    				'UID', 
- 	    				'Caption', 
- 	    				'Issues'
- 	    		), 
-		    	$this->getObject()->getAttributesByGroup('trace')
-		);
-
-		$attrs = $this->object->getAttributes();
-		
-		foreach( $attrs as $key => $attr )
-		{
-			$this->object->setAttributeVisible( $key, in_array($key, $visible) ); 
-		}
  	}
 	
 	function drawCell( $object_it, $attr )

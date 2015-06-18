@@ -22,8 +22,7 @@ class Project extends Metaobject
  	function __construct( ObjectRegistrySQL $registry = null ) 
  	{
 		parent::__construct('pm_Project', $registry);
-
-		$this->setSortDefault( new SortAttributeClause('Caption') );
+		$this->setSortDefault( new SortAttributeClause('Importance') );
  	}
 	
  	function createIterator() 
@@ -299,13 +298,16 @@ class Project extends Metaobject
 		switch( $attr )
 		{
 		    case 'Caption':
-		    	return translate('Ïğîåêò').' '.($this->getRegistry()->Count() + 1);
+		    	return translate('ĞŸÑ€Ğ¾ĞµĞºÑ‚').' '.($this->getRegistry()->Count() + 1);
 		    	
 		    case 'CodeName':
 		    	return 'project'.($this->getRegistry()->Count() + 1);
 		    	
 		    case 'OrderNum':
 		    	return '';
+		    	
+		    case 'Importance':
+		    	return 3;
 		    	
 		    default:
 		    	return parent::getDefaultAttributeValue( $attr );

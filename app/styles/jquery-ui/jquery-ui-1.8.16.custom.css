@@ -816,11 +816,11 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 .ui-tabs { padding: .2em; zoom: 1; border:0px;} /* position: relative prevents IE scroll bug (element with position: relative inside container with overflow: auto appear as "fixed") */
 
 
-.ui-tabs .ui-tabs-nav li:hover, .ui-tabs .ui-tabs-nav li a:hover{
+.ui-tabs .ui-tabs-nav li:hover:not(.ui-state-active), .ui-tabs .ui-tabs-nav li a:hover{
   background:whiteSmoke;
   border-bottom:1px solid #ddd;
   padding-bottom:0px;
-   color:#00438A;
+  color:#00438A;
 }
 
 

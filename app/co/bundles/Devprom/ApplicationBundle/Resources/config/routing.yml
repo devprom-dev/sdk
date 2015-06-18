@@ -56,6 +56,10 @@ profile:
     requirements:
         _method:  GET
 
+app_user_invitation_form:
+    pattern:  /invite
+    defaults: { _controller: ApplicationBundle:Invitation:form }
+
 project_new:
     pattern:  /projects/new
     defaults: { _controller: ApplicationBundle:Project:new }

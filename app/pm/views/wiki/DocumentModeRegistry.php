@@ -8,12 +8,12 @@ class DocumentModeRegistry extends ObjectRegistrySQL
                 array ( 
                 		'entityId' => 1, 
                 		'ReferenceName' => 'view',
-                		'Caption' => translate('Ïðîñìîòð')
+                		'Caption' => translate('ÐŸÑ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€')
                 ),
                 array ( 
                 		'entityId' => 2,
                 		'ReferenceName' => 'edit',
-                		'Caption' => translate('Ðåäàêòèðîâàíèå')
+                		'Caption' => translate('Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ')
                 )
         ));
     }

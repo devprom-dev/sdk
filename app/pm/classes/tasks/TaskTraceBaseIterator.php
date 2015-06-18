@@ -33,7 +33,7 @@ class TaskTraceBaseIterator extends OrderedIterator
  		$uid = new ObjectUID;
  		$object_it = $this->getObjectIt();
  		
- 		return translate('Òðàññèðîâêà').': '.
+ 		return translate('Ð¢Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°').': '.
  			$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
  	}
  	

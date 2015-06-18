@@ -43,7 +43,6 @@ class Issue extends BaseEntity {
     /**
      * @ORM\OneToOne(targetEntity="IssueType")
      * @ORM\JoinColumn(name="Type", referencedColumnName="pm_IssueTypeId")
-     * @Assert\NotBlank
      * @var IssueType
      */
     private $issueType;

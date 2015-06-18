@@ -5,6 +5,7 @@ include "views/EstimationStrategyScrumBuilder.php";
 include "classes/VelocityReportsBuilder.php";
 include "classes/events/ScrumReportedEvent.php";
 include "classes/notificators/ScrumChangeNotificator.php";
+include "classes/predicates/ProjectScrumPredicate.php";
 
 class ScrumPMPlugin extends PluginPMBase
 {
@@ -13,11 +14,8 @@ class ScrumPMPlugin extends PluginPMBase
  	function checkEnabled()
  	{
  	    if ( isset($this->enabled) ) return $this->enabled;
-
  	    if ( !is_a(getSession(), 'PMSession') ) return false;
- 	    
  		$this->enabled = getSession()->getProjectIt()->getMethodologyIt()->get('UseScrums') == 'Y';
- 		
  		return $this->enabled;
     }
 
@@ -59,11 +57,42 @@ class ScrumPMPlugin extends PluginPMBase
 
  	function getObjectAccess( $action, $role_ref_name, & $object_it )
  	{
- 	    switch ( $object_it->object->getEntityRefName() )
- 	    {
- 	        case 'pm_Scrum':
- 	            
-				return $action == ACCESS_READ || $object_it->get('Participant') == getSession()->getParticipantIt()->getId();
- 	    }
+ 		if ( $object_it->object instanceof Scrum ) {
+ 			return $action == ACCESS_READ || $object_it->get('Participant') == getSession()->getParticipantIt()->getId();
+ 		}
  	}
+
+	function getObjectActions( $object_it )
+	{
+		if ( $object_it->object instanceof Request ) {
+			return $this->getIssueActions($object_it);
+		}
+		return array();
+	}
+ 	
+	protected function getIssueActions( $object_it )
+	{
+		if ( !is_object($this->method_toepic) )
+		{
+			if ( is_null($this->scrum_vpds) ) {
+				$this->scrum_vpds = getFactory()->getObject('Project')->getRegistry()->Query(
+						array(new ProjectScrumPredicate())
+					)->fieldToArray('VPD');
+			}
+			
+			$this->method_toepic = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature')); 
+		}
+		if ( !in_array($object_it->get('VPD'), $this->scrum_vpds) ) return array();
+		return array (
+				array (
+						'name' => text('scrum19'),
+						'url' => $this->method_toepic->getJSCall(array(
+										'Request' => $object_it->getId()
+									))
+				)
+			);
+	}
+	
+	private $method_toepic = null;
+	private $scrum_vpds = null;
 }

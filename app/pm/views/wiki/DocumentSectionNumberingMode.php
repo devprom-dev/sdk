@@ -12,6 +12,6 @@ class DocumentSectionNumberingMode extends PMObjectCacheable
     
     function getDisplayName()
     {
-        return translate('Нумерация');
+        return translate('РќСѓРјРµСЂР°С†РёСЏ');
     }
 }

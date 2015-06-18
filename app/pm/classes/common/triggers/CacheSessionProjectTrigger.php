@@ -86,13 +86,10 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 	public function invalidateCache()
 	{
 		getSession()->truncate();
-
 		getFactory()->getAccessPolicy()->invalidateCache();
-		
 		getFactory()->getEntityOriginationService()->invalidateCache();
-		
 		// skip any cache modifications after it was truncated during the current script execution
  		getFactory()->getCacheService()->setReadonly();
- 	}
+	}
 }
  

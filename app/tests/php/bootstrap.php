@@ -1,7 +1,10 @@
 <?php
 
 define( 'SERVER_ROOT_PATH', dirname(__FILE__).'/../../');
+define( 'DOCUMENT_ROOT', SERVER_ROOT_PATH);
 define( 'CACHE_PATH', dirname(__FILE__).'/../../cache');
+define( 'APP_ENCODING', 'utf-8');
+define( 'APP_CHARSET', 'utf8');
 
 include SERVER_ROOT_PATH.'ext/vendor/autoload.php';
 

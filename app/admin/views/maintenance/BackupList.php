@@ -18,8 +18,8 @@ class BackupList extends PageList
 
 	function getColumns()
 	{
-		$this->object->addAttribute('Description', '', translate('Îïèñàíèå'), true);
-		$this->object->addAttribute('Size', '', translate('Ðàçìåð'), true);
+		$this->object->addAttribute('Description', '', translate('ÐžÐ¿Ð¸ÑÐ°Ð½Ð¸Ðµ'), true);
+		$this->object->addAttribute('Size', '', translate('Ð Ð°Ð·Ð¼ÐµÑ€'), true);
 
 		return parent::getColumns();
 	}
@@ -64,7 +64,7 @@ class BackupList extends PageList
 		
 		array_push( $actions, array (
 			'url' => '?export=download&backup_file_name='.$object_it->get('Caption'),
-			'name' => translate('Ñêà÷àòü'),
+			'name' => translate('Ð¡ÐºÐ°Ñ‡Ð°Ñ‚ÑŒ'),
 			'uid' => 'download'
 		));
 		
@@ -72,7 +72,7 @@ class BackupList extends PageList
 		
 		array_push( $actions, array (
 			'url' => '?action=recoveryunpack&parms='.$object_it->get('Caption'),
-			'name' => translate('Âîññòàíîâèòü')
+			'name' => translate('Ð’Ð¾ÑÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ')
 		));
 		
 		$method = new DeleteObjectWebMethod( $object_it );
@@ -82,7 +82,7 @@ class BackupList extends PageList
 		    array_push( $actions, array() );
 		    array_push( $actions, array (
     			'url' => $method->getJSCall(),
-    			'name' => translate('Óäàëèòü')
+    			'name' => translate('Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ')
     		));
 		}
 

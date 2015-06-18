@@ -22,7 +22,7 @@ class JobRunTable extends StaticPageTable
 
 	function getCaption()
 	{
-		return translate('Ðåçóëüòàòû âûïîëíåíèÿ çàäàíèÿ').': '.$this->job_it->getDisplayName();
+		return translate('Ð ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚Ñ‹ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ñ Ð·Ð°Ð´Ð°Ð½Ð¸Ñ').': '.$this->job_it->getDisplayName();
 	}
 
 	function getFilterActions()

@@ -8,7 +8,7 @@ foreach( $commits as $commit ) { ?>
 <?php 
 
 $actions = array ( array(), array( 
-    'name' => translate('Ïðîñìîòð'), 
+    'name' => translate('ÐŸÑ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€'), 
     'url' => $commit['version-url'] 
 ));
 
@@ -17,7 +17,7 @@ if ( $commit['diff-url'] != '' )
     $actions[] = array();
     
     $actions[] = array( 
-        'name' => translate('Èçìåíåíèÿ'), 
+        'name' => translate('Ð˜Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ñ'), 
         'url' => $commit['diff-url'] 
     );
 }

@@ -571,7 +571,7 @@ function refreshListItems()
     			restoreCache(function() {
     				if ( localOptions.reorder ) reorderSections();
     			});
-    		}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 1 : 180000);
+    		}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 100 : 180000);
 	    },
 	    error: function (xhr, ajaxOptions, thrownError) {
     		setTimeout( function() {
@@ -727,9 +727,7 @@ function makeupUI( container )
 		event.stopImmediatePropagation();
 
 		$('.actions-button').not(this).parent().removeClass('open');
-		
 		$(this).addClass('properties-armed'); 
-
 		$(this).next('.comments-section').toggle();
 		$(this).toggle();
 	});
@@ -744,4 +742,11 @@ function makeupUI( container )
 			container.find('#'+parts[1]).parents('.comments-section').prev('.dropdown-comments').click();
 		}
 	}
+	container.find("tr[object-id]").each( function(i,e) {
+		if ( cookies.get('comments-state-'+$(this).attr('object-id')) == 'open' && $(this).find('.comments-section:visible').length < 1 ) {
+			$(this).find('.dropdown-comments').click();
+		}
+	});
+	
+	toggleBulkActions();
 }

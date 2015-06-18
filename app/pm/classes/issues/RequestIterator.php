@@ -98,21 +98,9 @@ class RequestIterator extends StatableIterator
 		if ( $this->object->hasAttribute('PlannedRelease') && $this->get('PlannedRelease') != '' ) return $this->getRef('PlannedRelease');
 	}
 		
-	function getDuplicateIt()
-	{
-		global $model_factory;
-		
-		$it = $this->object->cacheLinks();
-		$it->setStop( 'StopWord', $this->getId().',duplicates' );
-		
-		return $model_factory->_clone($it);
-	}
-	
 	function getBlockedIt()
 	{
-		global $model_factory;
-		
-		$it = $model_factory->_clone($this->object->cacheBlocks());
+		$it = $this->object->cacheBlocks()->copyAll();
 		$it->setStop( 'StopWord', $this->getId().',blocked' );
 		
 		return $it;
@@ -165,13 +153,6 @@ class RequestIterator extends StatableIterator
 			$stage = $stage_it->object->getDisplayName().' '.$stage_name;
 			
  			$pattern = text(811);
-
-			if ( !is_object($this->version_settings) )
-			{
-				$version_settings = $model_factory->getObject('pm_VersionSettings');
-				
-		 		$this->version_settings = $version_settings->getAll();
-			}
 		}
 
  		if ( $stage == "" )
@@ -197,7 +178,7 @@ class RequestIterator extends StatableIterator
 	 			
 				if ( $implementation_completed )
 				{
-					$message = translate('Ðåàëèçîâàíî');
+					$message = translate('Ð ÐµÐ°Ð»Ð¸Ð·Ð¾Ð²Ð°Ð½Ð¾');
 				}
 				else
 				{
@@ -214,7 +195,7 @@ class RequestIterator extends StatableIterator
 			case 'release':
 				if ( $this->get('PlannedRelease') > 0 )
 		 		{
-					$message = translate('Â ðåëèçå').' '.$stage;
+					$message = translate('Ð’ Ñ€ÐµÐ»Ð¸Ð·Ðµ').' '.$stage;
 					array_push($state, $message );
 		 		}
 				break;
@@ -274,8 +255,8 @@ class RequestIterator extends StatableIterator
  		
  		if ( $it->count() > 0 )
  		{
- 			return translate('Çàâåðøåíèå ðåàëèçàöèè').': '.
- 				translate('èòåðàöèÿ').' '.$it->get('LatestRelease').' ('.
+ 			return translate('Ð—Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð¸Ðµ Ñ€ÐµÐ°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ð¸').': '.
+ 				translate('Ð¸Ñ‚ÐµÑ€Ð°Ñ†Ð¸Ñ').' '.$it->get('LatestRelease').' ('.
  				$it->getDateFormat('FinishDate').')';
  		}
  		else

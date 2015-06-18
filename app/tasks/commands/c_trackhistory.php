@@ -27,7 +27,9 @@ class TrackHistory extends TaskCommand
         }
 		else
 		{
-			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(array())->idsToArray();
+			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
+						array( new FilterAttributePredicate('IsClosed', 'N') )
+				)->idsToArray();
 			
 			$chunks = array_chunk($ids, $step);
 	
@@ -107,7 +109,7 @@ class TrackHistory extends TaskCommand
 					{
 						$items = $it->get($group->getAggregateAlias());
 
-						$this->logInfo("Found records: ".count(preg_split('/,/', $items)));
+						$this->logDebug("Found records: ".count(preg_split('/,/', $items)));
 						
 						$history->add_parms(
 							array (
@@ -134,6 +136,10 @@ class TrackHistory extends TaskCommand
  		$log = $this->getLogger();
  		if( is_object($log) ) $log->info( $message );
  	}
+
+  	function logDebug( $message )
+ 	{
+ 		$log = $this->getLogger();
+ 		if( is_object($log) ) $log->debug( $message );
+ 	}
 }
- 
-?>

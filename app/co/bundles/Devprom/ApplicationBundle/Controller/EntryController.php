@@ -19,6 +19,6 @@ class EntryController extends MainController
     		return new RedirectResponse($this->generateUrl('login')); 
     	}
     	
-    	return $this->redirect('/pm/my');
+    	return $this->redirect($_SERVER['ENTRY_URL']);
     }
 }
