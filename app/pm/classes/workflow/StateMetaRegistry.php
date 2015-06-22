@@ -6,7 +6,11 @@ class StateMetaRegistry extends ObjectRegistrySQL
 	{
 		$aggregated_state = $this->getObject()->getAggregatedStateObject();
 		
-		$ref_names = array();
+		$ref_names = array(
+				'final' => array(),
+				'initial' => array(),
+				'progress' => array()
+		);
 		
 		$state_it = $aggregated_state->getAll();
 		

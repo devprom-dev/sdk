@@ -53,7 +53,7 @@
         									</tr>
         									<tr>
         						            	<td align="left" valign="top" width="600" style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
-        						            		Последние изменения в проекте, <a href="{{ log_url }}">подробнее</a>:
+        						            		РџРѕСЃР»РµРґРЅРёРµ РёР·РјРµРЅРµРЅРёСЏ РІ РїСЂРѕРµРєС‚Рµ, <a href="{{ log_url }}">РїРѕРґСЂРѕР±РЅРµРµ</a>:
         						            	</td>
         						            </tr>
         						            <tr>
@@ -195,11 +195,11 @@
         																						<td style="font-size: 16px; color: #4c4c4c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none; vertical-align: middle;">
         																							{% if log.content == "" %}
         																								{% if log.action == "added" %}
-        																								Добавлено
+        																								Р”РѕР±Р°РІР»РµРЅРѕ
         																								{% elseif log.action == "deleted" %}
-        																								Удалено
+        																								РЈРґР°Р»РµРЅРѕ
         																								{% elseif log.action == "modified" %}
-        																								Изменено
+        																								РР·РјРµРЅРµРЅРѕ
         																								{% endif %}
         																							{% else %}
         																								{{ log.content | raw }}
@@ -248,9 +248,9 @@
         	                            	<tr>
         	                            	<td align="left" valign="top" width="33" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         		                            <td align="left" valign="top" style="font-size: 12px; color: #9c9c9c; font-family: Helvetica, Arial, sans-serif; -webkit-text-size-adjust: none; -moz-text-size-adjust: none; -ms-text-size-adjust: none; text-size-adjust: none;">
-        		                            	Вы подписаны на <b>периодические дайджесты</b> об изменениях в проекте.
-        		                            	Вы можете изменить частоту уведомлений или выбрать другой вариант уведомлений, например, получать только адресованные вам уведомления от приложения.
-        		                            	Для этого укажите вариант получения уведомлений в настройках <a href="{{ profile_url }}">своего профиля</a>.
+        		                            	Р’С‹ РїРѕРґРїРёСЃР°РЅС‹ РЅР° <b>РїРµСЂРёРѕРґРёС‡РµСЃРєРёРµ РґР°Р№РґР¶РµСЃС‚С‹</b> РѕР± РёР·РјРµРЅРµРЅРёСЏС… РІ РїСЂРѕРµРєС‚Рµ.
+        		                            	Р’С‹ РјРѕР¶РµС‚Рµ РёР·РјРµРЅРёС‚СЊ С‡Р°СЃС‚РѕС‚Сѓ СѓРІРµРґРѕРјР»РµРЅРёР№ РёР»Рё РІС‹Р±СЂР°С‚СЊ РґСЂСѓРіРѕР№ РІР°СЂРёР°РЅС‚ СѓРІРµРґРѕРјР»РµРЅРёР№, РЅР°РїСЂРёРјРµСЂ, РїРѕР»СѓС‡Р°С‚СЊ С‚РѕР»СЊРєРѕ Р°РґСЂРµСЃРѕРІР°РЅРЅС‹Рµ РІР°Рј СѓРІРµРґРѕРјР»РµРЅРёСЏ РѕС‚ РїСЂРёР»РѕР¶РµРЅРёСЏ.
+        		                            	Р”Р»СЏ СЌС‚РѕРіРѕ СѓРєР°Р¶РёС‚Рµ РІР°СЂРёР°РЅС‚ РїРѕР»СѓС‡РµРЅРёСЏ СѓРІРµРґРѕРјР»РµРЅРёР№ РІ РЅР°СЃС‚СЂРѕР№РєР°С… <a href="{{ profile_url }}">СЃРІРѕРµРіРѕ РїСЂРѕС„РёР»СЏ</a>.
         		                            </td>
         		                            <td align="left" valign="top" width="33" style="font-size: 0px; line-height: 0;">&nbsp;</td>
         	                            	</tr>
