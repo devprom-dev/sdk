@@ -99,7 +99,7 @@ class GetLicenseKey extends CommandForm
 			   		$mail = new HtmlMailbox;
 		   			$mail->appendAddress('marketing@devprom.ru');
 			   		
-		   			$body = 'Пользователь %1 (%4) запросил лицензионный ключ для Devprom.ALM:<br/><br/>Идентификатор инсталляции: %2<br/>Пользователей:%3<br/><br/>%5<br/>';
+		   			$body = 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ %1 (%4) Р·Р°РїСЂРѕСЃРёР» Р»РёС†РµРЅР·РёРѕРЅРЅС‹Р№ РєР»СЋС‡ РґР»СЏ Devprom.ALM:<br/><br/>РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РёРЅСЃС‚Р°Р»Р»СЏС†РёРё: %2<br/>РџРѕР»СЊР·РѕРІР°С‚РµР»РµР№:%3<br/><br/>%5<br/>';
 		   			
 		   			$body = str_replace('%1', $user_it->getDisplayName(), $body);
 		   			$body = str_replace('%4', $user_it->get('Email'), $body);
@@ -108,7 +108,7 @@ class GetLicenseKey extends CommandForm
 		   			$body = str_replace('%5', $user_it->getHtmlDecoded('Description'), $body);
 		   			
 			   		$mail->setBody($body);
-			   		$mail->setSubject( 'Запрос лицензии Devprom.ALM: '.$_REQUEST['LicenseType'] );
+			   		$mail->setSubject( 'Р—Р°РїСЂРѕСЃ Р»РёС†РµРЅР·РёРё Devprom.ALM: '.$_REQUEST['LicenseType'] );
 			   		$mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 					
 			   		$mail->send();
@@ -147,7 +147,7 @@ class GetLicenseKey extends CommandForm
 		
 		if ( $license_data['key'] == '#' )
 		{
-			$this->replySuccess('Ваш запрос передан в отдел продаж, наши сотрудники свяжутся с вами в течение одного рабочего дня.');
+			$this->replySuccess('Р’Р°С€ Р·Р°РїСЂРѕСЃ РїРµСЂРµРґР°РЅ РІ РѕС‚РґРµР» РїСЂРѕРґР°Р¶, РЅР°С€Рё СЃРѕС‚СЂСѓРґРЅРёРєРё СЃРІСЏР¶СѓС‚СЃСЏ СЃ РІР°РјРё РІ С‚РµС‡РµРЅРёРµ РѕРґРЅРѕРіРѕ СЂР°Р±РѕС‡РµРіРѕ РґРЅСЏ.');
 		}
 		else
 		{
@@ -157,7 +157,7 @@ class GetLicenseKey extends CommandForm
 		    $mail = new HtmlMailbox;
 		    $mail->appendAddress('marketing@devprom.ru');
 		    
-		    $body = 'Пользователь %1 (%4) получил лицензионный ключ.<br/><br/>Идентификатор инсталляции: %2<br/>Пользователей:%3<br/><br/>%5<br/>';
+		    $body = 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ %1 (%4) РїРѕР»СѓС‡РёР» Р»РёС†РµРЅР·РёРѕРЅРЅС‹Р№ РєР»СЋС‡.<br/><br/>РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РёРЅСЃС‚Р°Р»Р»СЏС†РёРё: %2<br/>РџРѕР»СЊР·РѕРІР°С‚РµР»РµР№:%3<br/><br/>%5<br/>';
 		    
 		    $body = str_replace('%1', $user_it->getDisplayName(), $body);
 		    $body = str_replace('%4', $user_it->get('Email'), $body);
@@ -166,7 +166,7 @@ class GetLicenseKey extends CommandForm
 		    $body = str_replace('%5', $user_it->getHtmlDecoded('Description'), $body);
 		    
 		    $mail->setBody($body);
-		    $mail->setSubject( 'Генерация лицензии: '.$license_data['type'] );
+		    $mail->setSubject( 'Р“РµРЅРµСЂР°С†РёСЏ Р»РёС†РµРЅР·РёРё: '.$license_data['type'] );
 		    $mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 		    	
 		    $mail->send();

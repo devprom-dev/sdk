@@ -76,7 +76,10 @@ class InitializeInstance extends Page
  	
  	protected function createUser( $name, $login, $email )
  	{
- 		$user_id = getFactory()->getObject('User')->add_parms(
+ 		$user = getFactory()->getObject('User');
+ 		$user->setNotificationEnabled(false);
+ 		
+ 		$user_id = $user->add_parms(
  				array (
  						'Caption' => $name,
  						'Login' => $login,

@@ -47,6 +47,11 @@
  		global $project_it;
  		return $project_it->get('Description');
  	}
+ 	
+ 	function getDescription()
+ 	{
+ 		return $this->getTitle();
+ 	}
 
 	function drawComments( $object_it )
 	{

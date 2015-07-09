@@ -119,17 +119,17 @@ class ProcessOrder extends CommandForm
 	    
 	    if ( $value < 2 )
 	    {
-	    	$value = $value.' месяц';
+	    	$value = $value.' РјРµСЃСЏС†';
 	    }
 
 		if ( $value > 1 and $value < 5 )
 	    {
-	    	$value = $value.' месяца';
+	    	$value = $value.' РјРµСЃСЏС†Р°';
 	    }
 	    
 		if ( $value > 4 )
 	    {
-	    	$value = $value.' месяцев';
+	    	$value = $value.' РјРµСЃСЏС†РµРІ';
 	    }
 	    
 	    $body = preg_replace('/\%value\%/', $value, $body);

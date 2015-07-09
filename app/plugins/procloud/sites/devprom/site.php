@@ -791,6 +791,18 @@ include( 'MainDevpromTable.php');
 		return $title;
 	}
  	
+ 	function getDescription()
+	{
+		if ( $_REQUEST['id'] == '' ) return parent::getDescription();
+
+		$post_it = getFactory()->getObject('BlogPost')->getExact($_REQUEST['id']);
+		if ( $post_it->getId() < 1 ) return parent::getDescription();
+		
+		$parser = new SiteBlogParser($post_it, getSession()->getProjectIt());
+		$text = new html2text($parser->parse_substr( null, 840, $more_text ));
+		return $text->get_text();
+	}
+	
  	function drawComments2( $object_it )
  	{
 	?>
@@ -958,10 +970,15 @@ include( 'MainDevpromTable.php');
 	function getKeywords()
  	{
  		return array (
+			translate('канбан'),
+			translate('скрам'),
+			translate('тестирование'),
+			translate('требования'),
+			translate('трассировка'),
+ 			translate('agile'),	
  			translate('новости'),	
- 			translate('читать'),	
- 			translate('подписка'),	
- 			translate('rss')	
+ 			translate('kanban'),	
+			translate('scrum'),
  		);
  	}
  }
