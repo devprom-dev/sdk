@@ -11,6 +11,9 @@ class ActivityMetadataBuilderExample extends ObjectMetadataEntityBuilder
     	 * DB model has to be extended:
     	 * ALTER TABLE pm_Activity ADD COLUMN IsOvertime CHAR(1) DEFAULT 'N';
     	 */
+    	
+    	/* Uncomment the following after DB will be upgraded
+    	 * 
 		$metadata->addAttribute(
 				'IsOvertime', 		// system name of the attribute, mapped onto table column 
 				'CHAR', 			// db-type of the attribute 
@@ -19,5 +22,6 @@ class ActivityMetadataBuilderExample extends ObjectMetadataEntityBuilder
 				true,				// attributes is persisted (corresponding column should be in place in DB)
 				''					// description of the attribute is displayed on form
 		);
+		*/		
     }
 }

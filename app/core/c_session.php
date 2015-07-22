@@ -47,7 +47,7 @@ class SessionBase
  		$this->language = $language;
  		
  		$this->configure();
- 		
+
 		$_SERVER['ENTRY_URL'] = class_exists('PortfolioMyProjectsBuilder', false) ? '/pm/my' : '/pm/all';
  	}
  	
@@ -243,10 +243,7 @@ class SessionBase
  	
  	function getProjectIt()
  	{
- 	    global $model_factory;
- 	    
- 		$project = $model_factory->getObject('pm_Project');
- 	    
+ 		$project = new Project;
  	    return $project->createCachedIterator( array() );
  	}
 

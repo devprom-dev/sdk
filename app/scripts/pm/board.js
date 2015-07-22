@@ -86,10 +86,12 @@ var draggableOptions = {
 				{
 					methods.push({
 						url: controllerUrl+'methods.php?method=modifyattributewebmethod',
-						data: { 'attribute': 'OrderNum', 
-						 		 'value': tobe_seq, 
-						 		 'object': item.attr("object"),
-						 		 'class': this.className }
+						data: { 
+							'attribute': 'OrderNum', 
+						 	'value': tobe_seq, 
+						 	'object': item.attr("object"),
+						 	'class': this.className
+						}
 					});
 				}
 			}
@@ -108,12 +110,16 @@ var draggableOptions = {
 			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
 			{
 				controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
+				var dataObject = { 
+						'source': jQuery.trim(item.attr("more")), 
+					 	'target': jQuery.trim(cell.attr("more")), 
+					 	'object': item.attr("object"),
+					 	'class': this.className
+					};
+				if ( this.groupAttribute != '' ) dataObject[this.groupAttribute] = jQuery.trim(cell.attr("group")); 
 				methods.push({ 
 					url: controllerUrl+'methods.php?method=modifystatewebmethod',
-					data: { 'source': jQuery.trim(item.attr("more")), 
-					 		 'target': jQuery.trim(cell.attr("more")), 
-					 		 'object': item.attr("object"),
-					 		 'class': this.className }
+					data: dataObject
 				});
 			}
 			
@@ -335,7 +341,7 @@ function processActionResult( result, item, options )
 							beforeClose: function(event, ui) 
 							{
 								redrawBoardItem( item, options );
-								formDestroy();
+								formDestroy($('#modal-form form').attr('id'));
 							},
 							buttons: [
 								{
@@ -343,7 +349,7 @@ function processActionResult( result, item, options )
 								 	click: function() {
 										var dialogVar = $(this);
 										
-										if ( !validateForm($('#modal-form form[name=object_form]')) ) return false;
+										if ( !validateForm($('#modal-form form[id]')) ) return false;
 										
 										// submit the form
 										$('#'+options.className+'action').val('modify');
@@ -354,7 +360,7 @@ function processActionResult( result, item, options )
 											.attr('disabled', true)
 											.addClass("ui-state-disabled");
 										
-										$('#modal-form form[name=object_form]').ajaxSubmit({
+										$('#modal-form form[id]').ajaxSubmit({
 											dataType: 'html',
 											success: function( data ) 
 											{
@@ -368,7 +374,7 @@ function processActionResult( result, item, options )
 														.removeClass("ui-state-disabled");
 													
 													$('.form_warning').remove();
-													$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[name=object_form]'));
+													$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
 												}
 												else 
 												{
@@ -458,13 +464,13 @@ function createBoardItem( query_string, options, data, callback )
 				$('body').append( '<div id="modal-form" style="display:none;" title="'+options.classUserName+'">'+
 					result+'</div>' );
 
-				$('form[name=object_form]').attr('action', url);
+				$('form[id]').attr('action', url);
 
 				$('#'+options.className+'action').val('add');
 				$('#'+options.className+'redirect').val(url);
 				
 				$.each(data, function( key, value ) {
-					$('form[name=object_form]').append(
+					$('form[id]').append(
 						'<input type="hidden" name="'+key+'" value="'+value+'">');
 				});
 				
@@ -479,9 +485,9 @@ function createBoardItem( query_string, options, data, callback )
 					{
 						completeUIExt($('#modal-form').parent());
 						
-						$('#modal-form form[name=object_form] input:visible:first').blur();
+						$('#modal-form form[id] input:visible:first').blur();
 						
-						focusField('object_form');
+						focusField('#modal-form form[id]');
 					},
 					create: function() 
 					{
@@ -489,7 +495,7 @@ function createBoardItem( query_string, options, data, callback )
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy();
+						formDestroy($('#modal-form form').attr('id'));
 						filterLocation.hideActivity();
 					},
 					buttons: [
@@ -498,12 +504,12 @@ function createBoardItem( query_string, options, data, callback )
 						 	click: function() {
 								var dialogVar = $(this);
 								
-								if ( !validateForm($('#modal-form form[name=object_form]')) ) return false;
+								if ( !validateForm($('#modal-form form[id]')) ) return false;
 								
 								$('#modal-form').parent()
 									.find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
 								
-								$('form[name=object_form]').ajaxSubmit({
+								$('form[id]').ajaxSubmit({
 									dataType: 'html',
 									success: function( data ) 
 									{
@@ -515,7 +521,7 @@ function createBoardItem( query_string, options, data, callback )
 												.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 											
 											$('.form_warning').remove();
-											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('form[name=object_form]'));
+											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('form[id]'));
 										}
 										else 
 										{

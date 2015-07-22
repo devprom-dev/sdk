@@ -136,14 +136,20 @@ class WebMethod
 		$this->parm = $parm;
 	}
 	
- 	function getValue()
- 	{
+	function getPersistedValue()
+	{
 		$default = $this->getFreezeMethod();
 		if ( is_object($default) && $this->filter_name != '' )
 		{
 			return $default->getValue( $this->getValueParm() );
 		}
-		return '';
+		return null;
+	}
+	
+ 	function getValue()
+ 	{
+ 		$persisted = $this->getPersistedValue();
+		return !is_null($persisted) ? $persisted : '';
  	}
 
  	function getValue2()

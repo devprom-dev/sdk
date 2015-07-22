@@ -61,7 +61,7 @@
 	{
 		cookies.set('comments-state-<?=$form->getAnchorIt()->getId()?>', 'open', {hoursToLive:0});
 	
-		formDestroy();
+		formDestroy('<?=$form->getId()?>');
 
 		lastForm.html(lastFormContent);
 		
@@ -96,14 +96,14 @@
 
 	function hideCommentForm()
 	{
-		formDestroy();
+		formDestroy('<?=$form->getId()?>');
 
 		lastForm.html(lastFormContent);
 	}
 
 	function refreshCommentsThread( thread_id )
 	{
-		if ( !validateForm($('form[name=object_form]')) ) return false; 
+		if ( !validateForm($('form[id]')) ) return false; 
 
 		$('#commentsreply'+thread_id).html('<img src="/images/ajax-loader.gif">');
 		
@@ -120,7 +120,7 @@
 			{
 				$('#commentsreply'+thread_id).html('');
 				
-				formDestroy();
+				formDestroy('<?=$form->getId()?>');
 				
 				$('#commentsthread'+thread_id).html(result);
 				

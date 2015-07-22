@@ -3,6 +3,7 @@
 include "ProjectTemplateIterator.php";
 include "sorts/SortProjectTemplateLanguageClause.php";
 include "predicates/ProjectTemplateExceptEditionPredicate.php";
+include "predicates/ProjectTemplateLicensedPackagesPredicate.php";
 include "ProjectTemplateRegistryTeam.php";
 
 class ProjectTemplate extends Metaobject

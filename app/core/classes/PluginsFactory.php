@@ -506,23 +506,7 @@ class PluginsFactory
  		{
 	 		foreach ( $namespace as $plugin )
 	 		{
-	 			$plugin_sections = $plugin->getPageInfoSections( $page );
-	 			
-	 			if ( is_array($plugin_sections) )
-	 			{
-	 				if ( !class_exists($plugin_sections['classname']) && is_array($plugin_sections['includes']) )
-	 				{
-		 				foreach ( $plugin_sections['includes'] as $include )
-		 				{
-			 				include ( SERVER_ROOT_PATH.'plugins/'.$include );
-		 				}
-
-		 				if ( class_exists($plugin_sections['classname']) )
-		 				{
-			 				array_push($sections, new $plugin_sections['classname']);
-		 				}
-	 				}
-	 			}
+	 			$sections = array_merge($sections, $plugin->getPageInfoSections( $page ));
 	 		}
  		}
  		

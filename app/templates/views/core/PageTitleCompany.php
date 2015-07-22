@@ -1,3 +1,7 @@
+<?
+$has_portfolio_programs = count($portfolios) + count($programs) > 0;
+?>
+
 <ul class="dropdown-menu">
     <li>
         <div class="container-fluid">
@@ -6,12 +10,15 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <? if ( $has_portfolio_programs ) { ?>
                             <th><?=(translate('Портфели').(count($programs) > 0 ? ' / '.translate('Программы') : ''))?></th>
+                            <? } ?>
                             <th><?=translate('Проекты')?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <? if ( $has_portfolio_programs ) { ?>
                             <td>
                                 <?php if ( count($programs) > 0 ) { ?>
                                     <?php foreach( $programs as $program_id => $item ) { ?>
@@ -28,6 +35,7 @@
                                     <?php if ( count($projects[$portfolio_id]) < 1 ) { ?> <br/> <?php } ?>
                                 <?php } ?>
                             </td>
+                            <? } ?>
                             <td>
                                 <?php if ( count($programs) > 0 ) { ?>
                                     <?php foreach( $programs as $program_id => $program ) { ?>
@@ -46,6 +54,9 @@
                                     <?php } ?>
                                     <br/>
                                 <?php } ?>
+                                <?php if (is_array($projects[0]) ) foreach( $projects[0] as $project_id => $project ) { ?>
+                                    <a href="<?=$project['url']?>"><?=$project['name']?></a><br/>
+                                <?php } ?>
                             </td>
                         </tr>
                         <tr>
@@ -53,8 +64,10 @@
                             <?php foreach ( $admin_actions as $action ) { ?>
                                 <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                             <?php } ?>
+                            <? if ( $has_portfolio_programs ) { ?>
                             </td>
                             <td>
+                            <?php } ?>
                                 <?php foreach ( $company_actions as $action ) { ?>
                                 <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>

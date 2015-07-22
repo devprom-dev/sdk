@@ -19,8 +19,8 @@ class JobList extends PageList
 		$this->object->addAttribute('Schedule', '', translate('Расписание'), true);
 		$this->object->addAttribute('LastRun', '', translate('Предыдущий запуск'), true);
 
-		$this->object->addAttribute('LastDuration', 'INTEGER', text(1124), true, true);
-		$this->object->addAttribute('AverageDuration', 'INTEGER', text(1125), true, true);
+		$this->object->addAttribute('LastDuration', 'INTEGER', text(1124), true);
+		$this->object->addAttribute('AverageDuration', 'INTEGER', text(1125), true);
 
 		return parent::getColumns();
 	}

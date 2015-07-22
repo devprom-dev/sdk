@@ -473,6 +473,8 @@ function refreshListItems()
 			
 			var html = $(data);
 			
+			beforeUnload($('.table-inner:first form[id]').attr('id'));
+
 			html.find(".object-changed[object-id]").each( function(index, value) 
 			{
 				itemSelector = 'tr[object-id="'+$(this).attr('object-id')+'"]';
@@ -603,16 +605,14 @@ function clearRow( element )
 		element.find('td#content div.cke_editable').each( function() 
 		{
 			var editor = CKEDITOR.instances[$(this).attr('id')];
-			
 			if ( !editor ) return true;
-			
+
 			editor.persist();
 			editor.destroy();
 		});
 	}
 
 	element.find('td').each( function() { $(this).html(''); }); 
-	
 	element.addClass('row-empty');
 }
 
@@ -629,8 +629,7 @@ function gotoRandomPage( page_id, load_pages, use_cache )
 	
 	if ( $.active > 1 ) return;
 
-	beforeUnload();
-	
+	beforeUnload($('.table-inner:first form[id]').attr('id'));
 	$('tr[object-id]').each( function() { clearRow($(this)); });
 
 	scrollToPage(page_id);
@@ -701,7 +700,7 @@ function makeupUI( container )
 		});
 	});
 	
-	container.find("tr:not(.info) td").dblclick( function(e) {
+	container.find("tr:not(.info) td:not(#content)").dblclick( function(e) {
 		if (window.getSelection)
 	        window.getSelection().removeAllRanges();
 	    else if (document.selection)

@@ -139,17 +139,25 @@ class PageTable extends ViewTable
 
 		// apply persisted filters settings
 		$persistent_filter = $this->getPersistentFilter();
+		$filter_keys = array();
 		foreach ( $this->filters as $filter )
 		{
+			$filter_name = $filter->getValueParm();
+			$filter_keys[] = $filter_name;
 			$filter->setFreezeMethod($persistent_filter);
-			$value = $filter->getValue();
-			if ( $value == '' ) continue;
-			$this->filter_values[$filter->getValueParm()] = $value;	
+			$value = $filter->getPersistedValue();
+			if ( !is_null($value) ) {
+				$this->filter_values[$filter_name] = $value;
+				continue;	
+			}
+			$default_value = $filter->getValue();
+			if ( $default_value == '' || array_key_exists($filter_name,$this->filter_values) ) continue; 
+			$this->filter_values[$filter_name] = $default_value;
 		}
 	
 		// backward compatiibility to old settings
 		if ( is_object($persistent_filter) ) {
-			foreach( array_merge(array_keys($this->filter_values), $this->getFilterParms()) as $parm )
+			foreach( array_merge($filter_keys, $this->getFilterParms()) as $parm )
 			{
 			    $filter_value = $persistent_filter->getValue($parm);
 			    if ( $filter_value == '' ) continue;
@@ -165,7 +173,7 @@ class PageTable extends ViewTable
 		$this->filter_defaults = $this->filter_values;
 
 		// apply web-session based filters settings
-		foreach( array_merge(array_keys($this->filter_values), $this->getFilterParms()) as $parm )
+		foreach( array_merge($filter_keys, $this->getFilterParms()) as $parm )
 		{
 		    if ( !array_key_exists($parm, $_REQUEST) ) continue;
 			$this->filter_values[$parm] = $_REQUEST[$parm];
@@ -265,7 +273,6 @@ class PageTable extends ViewTable
 		$defaults = $this->getFiltersDefault();
 		
 		if ( $this->filter_values[$filter] == 'hide' ) return false;
-			
 		if ( $this->filter_values[$filter] != '' ) return true;
 		
 		if ( count($defaults) > 0 )

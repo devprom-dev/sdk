@@ -6,7 +6,8 @@ class LicenseTeamIterator extends LicenseIterator
 {
 	function valid()
 	{
-		return md5(INSTALLATION_UID.TEAMUID) == trim($this->get(LICENSE_WORD.'Key'));
+		if ( json_decode(trim($this->get('LicenseValue'))) != null ) return parent::valid();
+		return md5(INSTALLATION_UID . TEAMUID) == trim($this->get(LICENSE_WORD . 'Key'));
 	}
 
 	function getName()

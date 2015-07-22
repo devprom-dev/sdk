@@ -1,9 +1,10 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 
 class RunJobs extends Command
 {
+	private $timeWaitedForPrevInstance = 300;
+
  	function execute()
 	{
 		global $model_factory, $plugins, $_REQUEST, $_SERVER;
@@ -11,7 +12,7 @@ class RunJobs extends Command
 		$lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME);
 
 		// single background job should be running at the same time 
-		if ( $lock->Locked(60) )
+		if ( $lock->Locked($this->timeWaitedForPrevInstance) )
 		{
 		    if ( is_object($this->getLogger()) )
 		    {

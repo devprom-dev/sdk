@@ -10,7 +10,7 @@ class DictionaryItemsTable extends PageTable
 	{
 		$this->object = $object;
 
-		parent::PageTable();
+		parent::__construct($object);
 	}
 
 	function getObject()
