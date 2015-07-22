@@ -233,20 +233,15 @@ class ModifyAttributeWebMethod extends WebMethod
 			break;
 		}
 		
-		$skip_events = preg_split('/,/', $user_parms['SkipEvents']);
-		
-		foreach( $skip_events as $event )
-		{
-			getFactory()->getEventsManager()->removeNotificator($event);
+		if ( is_array($user_parms) && array_key_exists('SkipEvents', $user_parms) ) {
+			$object->setNotificationEnabled(false);
 		}
 		
-		if ( $has_changes )
-		{
+		if ( $has_changes )	{
 			$object->modify_parms($object_it->getId(), $parms);
 		}
 
 		$object->addPersister( new ObjectAffectedDatePersister() );
-		
 		$object_it = $object->getExact($object_it->getId());
 		
 		echo '{"message":"ok", "modified":"'.$object_it->get_native('AffectedDate').'"}';

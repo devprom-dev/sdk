@@ -67,7 +67,7 @@
     		}
 
     		$(window).on('beforeunload', function() {
-    			return beforeUnload();
+    			return beforeUnload($('form[id]').attr('id'));
     		});
 
     		cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});

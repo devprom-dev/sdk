@@ -13,7 +13,7 @@
     </ul>
     <?php } ?>
     <div id="tab-main">
-	    <form class="form-horizontal" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" name="object_form" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>">
+	    <form class="form-horizontal" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>">
 	    	<fieldset>
 	    	  	<input id="<?=$action_mode?>" type="hidden" name="action_mode" value="form">
 	    	  	<input name="entity" value="<?=$entity?>" type="hidden">

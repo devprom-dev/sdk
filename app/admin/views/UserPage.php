@@ -4,7 +4,6 @@ include_once SERVER_ROOT_PATH."admin/classes/UserModelExtendedBuilder.php";
 
 include ('UserForm.php');
 include ('UserTable.php');
-include ('UserPageSectionProjects.php');
 include ('UserFormAsyncParticipancePre.php');
 include ('UserFormAsyncParticipance.php');
 
@@ -20,8 +19,6 @@ class UserPage extends AdminPage
 
 		if ( $this->needDisplayForm() && is_object($object_it) && $object_it->getId() > 0 )
 		{
-			$this->addInfoSection( new UserProjectsSection( $object_it ) );
-			
 			$this->addInfoSection( new LastChangesSection( $object_it ) );
 		}
 	}

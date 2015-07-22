@@ -9,9 +9,7 @@ class LicenseStateRegistry extends ObjectRegistrySQL
 		if ( count(self::$license_state) < 1 )
 		{
 			$it = getFactory()->getObject('LicenseInstalled')->getAll();
-		
-			if ( !class_exists($it->get('LicenseType')) )
-			{
+			if ( !class_exists($it->get('LicenseType')) ) {
 				return $this->getObject()->getEmptyIterator();
 			}
 			
@@ -19,10 +17,12 @@ class LicenseStateRegistry extends ObjectRegistrySQL
 					'cms_LicenseId' => $it->getId(),
 					'IsValid' => $it->valid() ? 'Y' : 'N',
 					'Caption' => $it->getName(),
-					'LicenseType' => $it->get('LicenseType')
+					'LicenseType' => $it->get('LicenseType'),
+					'Options' => $it->getOptions()
 			); 
 		}
 
 		return $this->createIterator(self::$license_state);
 	}
 }
+

@@ -14,9 +14,7 @@ var devpromOpts = {
  	version: ''
 };
 
-var formValidators = [];
-var formDestructorHandlers = [];
-var beforeUnloadHandlers = [];
+var formHandlers = new Array();
 var originalState = '';
 
  var filterLocation = 
@@ -854,8 +852,7 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 			{
 	 			if ( (new RegExp('Internal Server Error')).exec( data ) != null || (new RegExp('fatal', 'i')).exec( data ) != null )
  				{
-	 				resetUnloadHandlers();
-	 				
+	 				resetUnloadHandlers($("#embeddedForm"+form_id).parents('form').attr('id'));
 	 				window.location = '/500';
  				}
 	 			else
@@ -1164,7 +1161,7 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 	
 	var jqe_text_id = jqe_text.attr('id');
 	
-	registerFormValidator( function(form)
+	registerFormValidator( jqe_field.parents('form').attr('id'), function(form)
 	{
 		var choosen = form.find('#'+jqe_text_id).val();
 		jqe_field = form.find('#'+jqe_text_id).next('input');
@@ -1286,37 +1283,53 @@ function donothing( result )
 {
 }
 
-function registerBeforeUnloadHandler( callback )
+function registerBeforeUnloadHandler( id, callback )
 {
-	beforeUnloadHandlers.unshift( callback );
+	getFormHandlers(id).unloaders.unshift( callback );
 }
 
-function resetUnloadHandlers()
+function resetUnloadHandlers(id)
 {
-	beforeUnloadHandlers = [];
+	getFormHandlers(id).unloaders = [];
 }
 
-function beforeUnload()
+function beforeUnload(id)
 {
-	for ( var i = 0; i < beforeUnloadHandlers.length; i++ )
+	var handlers = getFormHandlers(id).unloaders;
+	for ( var i = 0; i < handlers.length; i++ )
 	{
-		var result = beforeUnloadHandlers[i]();
+		var result = handlers[i]();
 		if ( typeof result == 'string' ) return result;
 	}
 }
 
-function registerFormValidator( callback )
+function registerFormValidator( id, callback )
 {
-	formValidators.push( callback );
+	getFormHandlers(id).validators.push(callback);
+}
+
+function getFormHandlers( id )
+{
+	for ( var i = 0; i < formHandlers.length; i++ ) {
+		if ( formHandlers[i].id == id ) {
+			return formHandlers[i];
+		}
+	}
+	return formHandlers[formHandlers.push({
+		'id': id,
+		'validators': [],
+		'destructors': [],
+		'unloaders': []
+	})-1];
 }
 
 function validateForm( form )
 {
 	var valid = true;
+	var validators = getFormHandlers(form.attr('id')).validators;
 	
-	for ( var i = 0; i < formValidators.length; i++ )
-	{
-		if ( ! formValidators[i](form) ) valid = false;
+	for ( var i = 0; i < validators.length; i++ ) {
+		if ( ! validators[i](form) ) valid = false;
 	}
 
 	if ( !valid ) return valid;
@@ -1343,21 +1356,20 @@ function validateForm( form )
 	return valid;
 }
 
-function registerFormDestructorHandler( callback )
+function registerFormDestructorHandler( id, callback )
 {
-	formDestructorHandlers.push( callback );
+	getFormHandlers(id).destructors.push(callback);
 }
 
-function formDestroy()
+function formDestroy( id )
 {
-	for ( var i = 0; i < formDestructorHandlers.length; i++ )
-	{
-		formDestructorHandlers[i]();
-	}
-	
-	formValidators = new Array();
-	formDestructorHandlers = new Array();
-	beforeUnloadHandlers = new Array();
+	var handlers = getFormHandlers(id);
+	$.each(handlers.destructors, function(i,handler) {
+		handler();
+	});
+	handlers.validators = [];
+	handlers.destructors = [];
+	handlers.unloaders = [];
 }
 
 function getRGB(color) 
@@ -1825,9 +1837,8 @@ function makeAsyncForm( formId, url, message, options )
 	
 	focusField(formId);
 
-	registerBeforeUnloadHandler(function() {
-		if ( originalFormState != $('#'+formId).formSerialize() ) 
-    	{
+	registerBeforeUnloadHandler(formId, function() {
+		if ( originalFormState != $('#'+formId).formSerialize() ) {
 			return message;
 		}
 	});
@@ -1863,8 +1874,7 @@ function makeAsyncForm( formId, url, message, options )
 		success: function( response, status, xhr ) 
 		{
 			options.successCallback(response);
-			
-			resetUnloadHandlers();
+			resetUnloadHandlers(formId);
 			
 			try
 			{
@@ -1945,11 +1955,9 @@ function makeAsyncForm( formId, url, message, options )
 	return formOptions;
 }
 
-function makeForm( action )
+function makeForm( formid, action )
 {
 	originalState = '';
-	
-	var formid = 'object_form';
 	
 	if ( action == 'show' ) 
 	{
@@ -1960,7 +1968,7 @@ function makeForm( action )
 
 	if ( action == 'view' ) return;
 
-	registerFormValidator( function(form) 
+	registerFormValidator( formid, function(form) 
 	{
 		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
@@ -1971,46 +1979,41 @@ function makeForm( action )
 		}).length < 1;
 	});
 
-	registerBeforeUnloadHandler(checkUnsavedForm);
+	registerBeforeUnloadHandler(formid, function(){ return checkUnsavedForm(formid); });
 	
 	if ( !$.browser.msie )
 	{
-  		originalState = $('#'+formid).formSerialize();
+  		originalState = $('#'+formid+' *:visible').fieldSerialize();
 	}
 }
 
-function checkUnsavedForm()
+function checkUnsavedForm(formid)
 {
-	var formid = 'object_form';
-	
     var action = $('#'+formid+' input[type="hidden"][action="true"]').val();
     
     if ( action == 'modify' || action == 'add' ) return;
     
-	if ( originalState != $('#'+formid).formSerialize() ) 
-	{
+	var nowState = $('#'+formid+' *:visible').fieldSerialize();
+	if ( originalState != nowState ) {
 		return $('#'+formid+' #unsavedMessage').val();
 	}
+	originalState = nowState;
+	
+	$('input[type="button"]').attr('disabled', true);
 }
 	
-function submitForm( action )
+function submitForm( formid,action )
 {
-	var formid = 'object_form';
-	
 	if ( action == 'delete' )
 	{
 		if ( !confirm($('#'+formid+' #deleteMessage').val()) ) return;
 	}
 
-	if ( action != 'cancel' && action != 'delete' && !validateForm($('form[name=object_form]')) ) return false; 
-		
-	$('input[type="button"]').attr('disabled', true);
-	
-	$('#'+formid+' input[type="hidden"][action="true"]').val(action);
+	if ( action != 'cancel' && action != 'delete' && !validateForm($('#'+formid)) ) return false; 
 
-	originalState = $('#'+formid).formSerialize();
+	$('#'+formid+' input[type="hidden"][action="true"]').val(action); 
 	
-	document.object_form.submit();
+	document.getElementById(formid).submit();
 }
 
 function filterReports( text )
@@ -2130,7 +2133,7 @@ function workflowRunMethod(method, callback)
 							    },
 								beforeClose: function(event, ui) 
 								{
-									formDestroy();
+									formDestroy($('#modal-form form').attr('id'));
 								},
 								buttons: [
 									{
@@ -2140,7 +2143,7 @@ function workflowRunMethod(method, callback)
 									 	click: function() {
 											var dialogVar = $(this);
 											
-											if ( !validateForm($('#modal-form form[name=object_form]')) ) return false;
+											if ( !validateForm($('#modal-form form[id]')) ) return false;
 											
 											// submit the form
 											$('#modal-form #'+method.entityName+'action').val('modify');
@@ -2151,7 +2154,7 @@ function workflowRunMethod(method, callback)
 												.attr('disabled', true)
 												.addClass("ui-state-disabled");
 											
-											$('#modal-form form[name=object_form]').ajaxSubmit({
+											$('#modal-form form[id]').ajaxSubmit({
 												dataType: 'html',
 												success: function( data ) 
 												{
@@ -2165,7 +2168,7 @@ function workflowRunMethod(method, callback)
 															.removeClass("ui-state-disabled");
 														
 														$('.form_warning').remove();
-														$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[name=object_form]'));
+														$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
 													}
 													else 
 													{
@@ -2210,7 +2213,7 @@ function workflowMakeupDialog()
 {
 	completeUIExt($('#modal-form').parent());
 
-	registerFormValidator( function(form) 
+	registerFormValidator( $('#modal-form form').attr('id'), function(form) 
 	{
 		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
@@ -2221,9 +2224,9 @@ function workflowMakeupDialog()
 		}).length < 1;
 	});
 	
-	$('#modal-form form[name=object_form] input:visible:first').blur();
+	$('#modal-form form[id] input:visible:first').blur();
 	
-	focusField('modal-form form[name=object_form]');
+	focusField('modal-form form[id]');
 }
 
 function workflowNewObject( form_url, class_name, entity_ref, form_title, data, callback ) 
@@ -2270,13 +2273,13 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 
 				$(result).prependTo($('#modal-form'));
 				
-				$('#modal-form form[name=object_form]').attr('action', form_url);
+				$('#modal-form form[id]').attr('action', form_url);
 
 				$('#modal-form #'+entity_ref+'action').val('add');
 				
 				$('#modal-form #'+entity_ref+'redirect').val(form_url);
 				
-				var scale = $('form[name=object_form]').find('.control-column').length < 2 ? 3/5 : 4/5;
+				var scale = $('form[id]').find('.control-column').length < 2 ? 3/5 : 4/5;
 				
 				$('#modal-form').dialog({
 					width: Math.max(950, $(window).width()*scale),
@@ -2287,7 +2290,7 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 					{
 						$.each(data, function( key, value ) 
 						{
-							var fields = $('#modal-form form[name=object_form] *[name="'+key+'"]');
+							var fields = $('#modal-form form[id] *[name="'+key+'"]');
 							
 							fields.each( function() {
 								$(this).val(value);
@@ -2295,7 +2298,7 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 							
 							if ( fields.length < 1 )
 							{
-								$('#modal-form form[name=object_form]').append('<input type="hidden" name="'+key+'" value="'+value+'">');
+								$('#modal-form form[id]').append('<input type="hidden" name="'+key+'" value="'+value+'">');
 							}
 						});
 						
@@ -2307,8 +2310,8 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy();
-						
+						formDestroy($('#modal-form form').attr('id'));
+						$('#modal-form').parent().detach();
 						filterLocation.hideActivity();
 					},
 					buttons: [
@@ -2320,12 +2323,12 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 						 	{
 								var dialogVar = $(this);
 								
-								if ( !validateForm($('#modal-form form[name=object_form]')) ) return false;
+								if ( !validateForm($('#modal-form form[id]')) ) return false;
 								
 								$('#modal-form').parent()
 									.find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
 								
-								$('#modal-form form[name=object_form]').ajaxSubmit({
+								$('#modal-form form[id]').ajaxSubmit({
 									dataType: 'html',
 									success: function( data ) 
 									{
@@ -2337,7 +2340,7 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 												.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 											
 											$('.form_warning').remove();
-											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[name=object_form]'));
+											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
 										}
 										else 
 										{
@@ -2418,7 +2421,7 @@ function workflowModify( options, callback )
 				var form = $(result);
 				form.prependTo($('#modal-form'));
 				
-				$('#modal-form form[name=object_form]').attr('action', options.form_url);
+				$('#modal-form form[id]').attr('action', options.form_url);
 				$('#modal-form #'+options.entity_ref+'action').val('modify');
 				$('#modal-form #'+options.entity_ref+'redirect').val(options.form_url);
 				
@@ -2455,7 +2458,7 @@ function workflowModify( options, callback )
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy();
+						formDestroy($('#modal-form form').attr('id'));
 						filterLocation.hideActivity();
 					},
 					buttons: [
@@ -2467,11 +2470,11 @@ function workflowModify( options, callback )
 						 	{
 								var dialogVar = $(this);
 								
-								if ( !validateForm($('#modal-form form[name=object_form]')) ) return false;
+								if ( !validateForm($('#modal-form form[id]')) ) return false;
 								
 								$('#modal-form').parent().find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
 								
-								$('#modal-form form[name=object_form]').ajaxSubmit({
+								$('#modal-form form[id]').ajaxSubmit({
 									dataType: 'html',
 									success: function( data ) 
 									{
@@ -2483,7 +2486,7 @@ function workflowModify( options, callback )
 												.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 											
 											$('.form_warning').remove();
-											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[name=object_form]'));
+											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
 										}
 										else 
 										{
@@ -2536,7 +2539,7 @@ function workflowModify( options, callback )
 
 										$('#modal-form').parent().find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
 
-										$('#modal-form form[name=object_form]').ajaxSubmit({
+										$('#modal-form form[id]').ajaxSubmit({
 											dataType: 'html',
 											complete: function( data ) 
 											{
@@ -2589,11 +2592,11 @@ function workflowProperties( form_url, object_id, entity_ref, form_title, callba
 
 				$(result).prependTo($('#modal-form'));
 				
-				$('form[name=object_form]').attr('action', form_url);
+				$('#modal-form form[id]').attr('action', form_url);
 
-				$('#'+entity_ref+'action').val('add');
+				$('#modal-form #'+entity_ref+'action').val('add');
 				
-				$('#'+entity_ref+'redirect').val(form_url);
+				$('#modal-form #'+entity_ref+'redirect').val(form_url);
 
 				$('#modal-form').dialog({
 					width: Math.max($(window).width() * 2/3, 750),
@@ -2609,7 +2612,7 @@ function workflowProperties( form_url, object_id, entity_ref, form_title, callba
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy();
+						formDestroy($('#modal-form form[id]').attr('id'));
 						
 						filterLocation.hideActivity();
 					},
@@ -2670,7 +2673,7 @@ function workflowTable( form_url, title )
 					},
 					beforeClose: function(event, ui) 
 					{
-						formDestroy();
+						formDestroy($('#modal-form form').attr('id'));
 						
 						filterLocation.hideActivity();
 					},

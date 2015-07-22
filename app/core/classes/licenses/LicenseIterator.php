@@ -4,21 +4,64 @@ class LicenseIterator extends OrderedIterator
 {
 	function valid()
 	{
-		return false;
+		if ($this->checkV1()) return false;
+		return openssl_verify(
+			trim($this->getHtmlDecoded('LicenseValue')) . INSTALLATION_UID,
+			base64_decode(trim($this->get('LicenseKey'))),
+			file_get_contents(SERVER_ROOT_PATH . 'templates/config/license.pub'),
+			OPENSSL_ALGO_SHA512) == 1;
 	}
-	
-	function allowCreate( & $object )
+
+	function allowCreate(& $object)
 	{
-	    return true;    
+		return true;
 	}
-	
+
 	function getName()
 	{
 		return '';
 	}
-	
-	function restrictionMessage( $license_key = '' )
+
+	function restrictionMessage($license_key = '')
 	{
-	    return '';
+		return '';
+	}
+
+	function getOptions()
+	{
+		if ($this->checkV1()) {
+			return array('users' => $this->get('LicenseValue'));
+		}
+		return json_decode($this->getHtmlDecoded('LicenseValue'), true);
+	}
+
+	function getTimestamp()
+	{
+		$options = $this->getOptions();
+		return $options['timestamp'];
+	}
+
+	function getLeftDays()
+	{
+		if ( $this->getTimestamp() == '' ) return '';
+		$dt1 = new DateTime($this->getTimestamp());
+		$dt2 = new DateTime();
+		return $dt2->diff($dt1)->format('%d');
+	}
+
+	function getUsers()
+	{
+		$options = $this->getOptions();
+		return $options['users'] > 0 ? $options['users'] : 0;
+	}
+
+	function checkV1()
+	{
+		return is_numeric($this->get('LicenseValue'));
+	}
+
+	function getScheme()
+	{
+		return 2;
 	}
 }

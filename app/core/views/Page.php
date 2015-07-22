@@ -16,7 +16,7 @@
  include($path.'/PageChart.php');
  include($path.'/PageForm.php');
  include($path.'/PageMenu.php');
- include($path.'/PageInfoSection.php');
+ include_once($path.'/PageInfoSection.php');
  include($path.'/PageSectionLastChanges.php');
  include "FullScreenSection.php";
 
@@ -524,7 +524,21 @@
 		    
 		    $portfolio_it->moveNext();
 		}
-		
+
+		if ( count($projects) < 1 ) {
+			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
+					array ( new ProjectStatePredicate('active') )
+				);
+			while ( !$linked_it->end() )
+			{
+				$projects[0][$linked_it->get('CodeName')] = array (
+					'name' => $linked_it->getDisplayName(),
+					'url' => '/pm/'.$linked_it->get('CodeName')
+				);
+				$linked_it->moveNext();
+			}
+		}
+
 		foreach( $projects as $key => $dummy )
 		{
 		    uasort($projects[$key], function( $left, $right ) {

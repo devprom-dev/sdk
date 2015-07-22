@@ -15,6 +15,8 @@ class BulkActionBuilderCommon extends BulkActionBuilder
 					'Method:BulkDeleteWebMethod:class='.strtolower(get_class($object)).':objects=%ids%'
 			);
 		}
+
+ 	 	if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
 		
  		// modifiable attributes
  		$system_attributes = array_merge(

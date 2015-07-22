@@ -146,17 +146,6 @@ class UserForm extends AdminPageForm
 		
 		if ( !is_object($object_it) ) return $actions;
 
-		$method = new UserRelateToProjectWebMethod($object_it);
-		if ( $method->hasAccess() )
-		{
-		    if ( $actions[count($actions) - 1]['name'] != '' ) array_push($actions, array( '' ) );
-		    
-		    $actions[] = array( 
-		        'name' => $method->getCaption(),
-				'url' => $method->getJSCall( array('user' => $object_it->getId()) ) 
-		    );
-		}
-
 		if ( $object_it->get('Blocks') > 0 )
 		{
 			$method = new UnBlockUserWebMethod;
