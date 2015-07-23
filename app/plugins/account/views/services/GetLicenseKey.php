@@ -292,11 +292,14 @@ class GetLicenseKey extends CommandForm
 		$clientQuery .= "&Email=".$email;
 		$clientQuery .= "&FailUrl=".urlencode($url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed');
 
+        $license_value = json_decode(urldecode($_REQUEST['WasLicenseValue']), true);
+        if ( is_null($license_value) ) $license_value = $_REQUEST['WasLicenseValue'];
+
 		$order_info = array (
 				'LicenseType' => $_REQUEST['LicenseType'],
 				'LicenseValue' => $_REQUEST['LicenseValue'],
-				'WasLicenseKey' => $_REQUEST['WasLicenseKey'],
-				'WasLicenseValue' => $_REQUEST['WasLicenseValue'],
+				'WasLicenseKey' => urlencode(urlencode($_REQUEST['WasLicenseKey'])),
+				'WasLicenseValue' => $license_value,
 				'InstallationUID' => $_REQUEST['InstallationUID'],
 				'LicenseScheme' => $_REQUEST['LicenseScheme'],
                 'LicenseOptions' => $store_parms['Options'],
@@ -333,7 +336,7 @@ class GetLicenseKey extends CommandForm
         $selected_options = array();
 		if ( is_array($product_it->get('Options')) ) {
 			foreach( $product_it->get('Options') as $option ) {
-				if ( array_key_exists($licence_type.'Option_'.$option['OptionId'], $_REQUEST) ) {
+				if ( array_key_exists($licence_type.'Option_'.$option['OptionId'], $_REQUEST) || $_REQUEST['LicenseScheme'] == '' ) {
 					$parms['Price'] += intval($option[$price_field]);
                     $selected_options[] = $option['OptionId'];
 				}

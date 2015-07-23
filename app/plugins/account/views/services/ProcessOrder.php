@@ -26,7 +26,8 @@ class ProcessOrder extends CommandForm
 		if ( $_REQUEST['OrderInfo'] == '' ) $this->delete();
 		
 		$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
-		
+		Logger::getLogger('Commands')->info('ORDER: '.var_export($order_info, true));
+
 		$orderId = $_REQUEST['OrderId'];
 		
 		if ( $order_info['OrderId'] != $orderId ) $this->delete();

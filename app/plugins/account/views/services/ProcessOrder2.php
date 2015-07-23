@@ -18,9 +18,11 @@ class ProcessOrder2 extends ProcessOrder
 		$date = new DateTime();
 		$date->add(new DateInterval('P'.$days.'D'));
 
-		$was_parms = json_decode($order_info['WasLicenseValue']);
+		$was_parms = $order_info['WasLicenseValue'];
+		Logger::getLogger('Commands')->info('WASKEY: '.var_export($was_parms, true));
+
 		$license_verified = openssl_verify(
-				trim($order_info['WasLicenseValue']) . $order_info['InstallationUID'],
+				json_encode($was_parms) . $order_info['InstallationUID'],
 				base64_decode(trim($order_info['WasLicenseKey'])),
 				file_get_contents(SERVER_ROOT_PATH . 'templates/config/license.pub'),
 				OPENSSL_ALGO_SHA512) == 1;

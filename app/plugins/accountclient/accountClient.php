@@ -57,7 +57,7 @@ class accountClientPlugin extends PluginBase
 
  		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
  		
- 		$display_buy_button = false || $license_it->get('LicenseValue') < 30;
+ 		$display_buy_button = false || $license_it->getDays() < 30;
  	    foreach( getCheckpointFactory()->getCheckpoint('CheckpointSystem')->getEntries() as $entry )
         {
             if ( !$entry->enabled() || $entry->check() ) continue;
