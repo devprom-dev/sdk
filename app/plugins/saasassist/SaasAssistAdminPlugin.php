@@ -45,7 +45,7 @@ class SaasAssistAdminPlugin extends PluginAdminBase
  	    	
  	    	if ( class_exists('AccountSiteJSBuilder') )
  	    	{
- 	    		$script = AccountSiteJSBuilder::getScriptToBuy(); 
+ 	    		$script = AccountSiteJSBuilder::getScriptToBuy();
  	    	}
  	    	else
  	    	{

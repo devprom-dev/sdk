@@ -78,7 +78,7 @@ class accountClientPlugin extends PluginBase
   				array (
  						'caption' => str_replace('%1', $left_days.' '.getSession()->getLanguage()->getDaysWording($left_days), text('accountclient2')),
  						'class' => 'btn-success',
- 						'url' => "javascript: ".AccountSiteJSBuilder::getScriptToBuy().";",
+ 						'url' => "javascript: ".urlencode(AccountSiteJSBuilder::getScriptToBuy()).";",
  						'icon' => 'icon-white icon-shopping-cart'
  				),
  				array('class' => 'empty'),
