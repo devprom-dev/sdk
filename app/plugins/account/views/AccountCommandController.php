@@ -3,6 +3,7 @@
 include_once "AccountController.php";
 include "services/GetLicenseKey.php";
 include "services/ProcessOrder.php";
+include "services/ProcessOrder2.php";
 
 class AccountCommandController extends AccountController
 {
@@ -29,7 +30,12 @@ class AccountCommandController extends AccountController
  		    	break; 
 
  		    case 'processorder':
- 		    	$command = new ProcessOrder();
+				$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
+				if ( is_numeric($order_info['WasLicenseValue']) ) {
+					$command = new ProcessOrder();
+				} else {
+					$command = new ProcessOrder2();
+				}
  		    	$command->execute();
  		    	break; 
  		}

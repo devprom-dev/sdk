@@ -1,5 +1,7 @@
 <?php
 
+define ('SAASSALT', 'b49ca47b46v46c581u3c34dlc0ac85d2');
+
 include_once SERVER_ROOT_PATH."core/c_command.php";
 include_once SERVER_ROOT_PATH."cms/c_mail.php";
 
@@ -42,30 +44,24 @@ class ProcessOrder extends CommandForm
 		if ( $_REQUEST['SecurityKey'] != md5($queryWithSecurityKey) ) $this->delete();
 
 		$licensed_days = $order_info['LicenseValue'] * 30;
-		
+		$order_info['LicenseValue'] = $licensed_days;
+
+		$license_value = $this->getLicenseValue($order_info);
+		$license_key = $this->getLicenseKey($order_info['InstallationUID'], $license_value, $order_info);
+
 		$query_parms = array (
 				'InstallationUID' => $order_info['InstallationUID'],
 				'LicenseType' => $order_info['LicenseType'],
-				'LicenseValue' => $order_info['LicenseValue'],
-				'LicenseKey' => 
-						$this->getLicenseKey(
-								$order_info['InstallationUID'], 
-								$licensed_days, 
-								$order_info['LicenseType'],
-								$order_info['WasLicenseValue'],
-								$order_info['WasLicenseKey']
-						)
+				'LicenseValue' => $license_value,
+				'LicenseKey' => $license_key
 		);
-		
 		$this->updateSupportSubscription(
 				$order_info['InstallationUID'], 
 				$licensed_days, 
 				$order_info['LicenseType'], 
 				$order_info['Redirect']
 		);
-		$this->sendMail($query_parms['LicenseKey'], $query_parms['LicenseValue']);
-		
-		$query_parms['LicenseValue'] = $licensed_days;
+		$this->sendMail($query_parms['LicenseKey'], round($licensed_days / 30, 0));
 		$this->replyRedirect('/module/accountclient/process?'.http_build_query($query_parms));
 	}
 	
@@ -77,37 +73,38 @@ class ProcessOrder extends CommandForm
 		exit(header('Location: '.$url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].$url));
 	}
 	
-	protected function getLicenseKey( $uid, & $value, $type, $was_license_value, $was_license_key )
+	protected function getLicenseKey( $uid, $value )
 	{
-		define ('SAASSALT', 'b49ca47b46v46c581u3c34dlc0ac85d2');
-
-		$salt = SAASSALT;
-		
 		date_default_timezone_set('UTC');
-		
 		$today_date = strtotime('-0 day', strtotime(date('Y-m-j')));
+		return md5($uid.$value.SAASSALT.date('#2fee3ffY#3fe2a32m-@3@j', $today_date));
+	}
+
+	protected function getLicenseValue( $order_info )
+	{
+		$uid = $order_info['InstallationUID'];
+		$was_license_value = $order_info['WasLicenseValue'];
+		$was_license_key = $order_info['WasLicenseKey'];
+		date_default_timezone_set('UTC');
 
 		$index = 0;
 		$left_days = 0;
- 				
 		while( $index < 365 )
 		{
-			$date = strtotime('-'.$index.' day', strtotime(date('Y-m-j')));			
-				
-			if ( md5($uid.$was_license_value.$salt.date('#2fee3ffY#3fe2a32m-@3@j', $date)) == trim($was_license_key) )
-			{ 
-		 		$left_days = abs($was_license_value - $index);
+			$date = strtotime('-'.$index.' day', strtotime(date('Y-m-j')));
+			if ( md5($uid.$was_license_value.SAASSALT.date('#2fee3ffY#3fe2a32m-@3@j', $date)) == trim($was_license_key) )
+			{
+				$left_days = abs($was_license_value - $index);
 				break;
-		 	}
-				 			
+			}
 			$index++;
 		}
-		
+
+		$value = $order_info['LicenseValue'];
 		$value += $left_days;
-		
-		return md5($uid.$value.$salt.date('#2fee3ffY#3fe2a32m-@3@j', $today_date));
+		return $value;
 	}
-	
+
 	protected function sendMail( $key, $value )
 	{
 	    $mail = new HtmlMailbox;

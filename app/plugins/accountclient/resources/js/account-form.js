@@ -12,7 +12,7 @@ function showAccountForm(url)
 
 	$('#modal-form').dialog({
 		width: 750,
-		height: $(window).height()*2/3,
+		height: $(window).height()*4/5,
 		modal: true,
 		resizable: true,
 		open: function() {

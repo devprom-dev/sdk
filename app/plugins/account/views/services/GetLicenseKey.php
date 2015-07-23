@@ -140,11 +140,6 @@ class GetLicenseKey extends CommandForm
 		
 		$license_it->modify( $license_data );
 		
-		if ( $license_data['type'] == 'LicenseTrial' )
-		{
-			$this->exportToCRM( $user_it, $license_data );
-		}
-		
 		if ( $license_data['key'] == '#' )
 		{
 			$this->replySuccess('Ваш запрос передан в отдел продаж, наши сотрудники свяжутся с вами в течение одного рабочего дня.');
@@ -285,14 +280,14 @@ class GetLicenseKey extends CommandForm
 		
 		$baseQuery = "MerchantId=".$merchantId.
                      "&OrderId=".$orderId.
-                     "&Amount=".$amount.	
+                     "&Amount=".$amount.
                      "&Currency=".$currency;
 
 		$queryWithSecurityKey = $baseQuery."&PrivateSecurityKey=".$securityKey;
 
 		$hash = md5($queryWithSecurityKey);
 		$url_parts = parse_url($_REQUEST['Redirect']);
-		
+
 		$clientQuery = $baseQuery."&SecurityKey=".$hash;
 		$clientQuery .= "&Email=".$email;
 		$clientQuery .= "&FailUrl=".urlencode($url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed');
@@ -303,13 +298,15 @@ class GetLicenseKey extends CommandForm
 				'WasLicenseKey' => $_REQUEST['WasLicenseKey'],
 				'WasLicenseValue' => $_REQUEST['WasLicenseValue'],
 				'InstallationUID' => $_REQUEST['InstallationUID'],
+				'LicenseScheme' => $_REQUEST['LicenseScheme'],
+                'LicenseOptions' => $store_parms['Options'],
 				'Redirect' => $_REQUEST['Redirect'],
 				'Amount' => $amount,
 				'OrderId' => $orderId,
 				'Currency' => $currency
 		);
 		$clientQuery .= "&OrderInfo=".urlencode(JsonWrapper::encode($order_info));
-		
+
 		$paymentFormAddress = $store_parms['Url'].$clientQuery;
 		
 		$this->replyRedirect($paymentFormAddress);
@@ -317,23 +314,38 @@ class GetLicenseKey extends CommandForm
 	
 	function getStoreParameters( $licence_type )
 	{
-		$product_it = $this->getProduct($licence_type);
-		if ( getSession()->getUserIt()->get('Language') == 1 ) {
-			return array (
-					'Currency' => 'RUB',
-					'Url' => "https://secure.payonlinesystem.com/ru/payment/?",
-					'Price' => $product_it->get('PriceRUB')
+		if ( in_array(getSession()->getUserIt()->get('Language'), array('',1)) ) {
+			$parms = array (
+				'Currency' => 'RUB',
+				'Url' => "https://secure.payonlinesystem.com/ru/payment/?"
 			);
+			$price_field = 'PriceRUB';
 		}
 		else {
-			return array (
-					'Currency' => 'USD',
-					'Url' => "https://secure.payonlinesystem.com/en/payment/?",
-					'Price' => $product_it->get('PriceUSD')
+			$parms = array (
+				'Currency' => 'USD',
+				'Url' => "https://secure.payonlinesystem.com/en/payment/?"
 			);
+			$price_field = 'PriceUSD';
 		}
+		$product_it = $this->getProduct($licence_type);
+		$parms['Price'] = intval($product_it->get($price_field));
+        $selected_options = array();
+		if ( is_array($product_it->get('Options')) ) {
+			foreach( $product_it->get('Options') as $option ) {
+				if ( array_key_exists($licence_type.'Option_'.$option['OptionId'], $_REQUEST) ) {
+					$parms['Price'] += intval($option[$price_field]);
+                    $selected_options[] = $option['OptionId'];
+				}
+                if ( $option[$price_field] == '' ) {
+                    $selected_options[] = $option['OptionId'];
+                }
+			}
+		}
+        $parms['Options'] = join(',', $selected_options);
+		return $parms;
 	}
-	
+
 	protected function getProduct($licence_type)
 	{
 		$products = array (

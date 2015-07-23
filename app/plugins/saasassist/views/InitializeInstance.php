@@ -106,18 +106,26 @@ class InitializeInstance extends Page
  	
  	protected function createLicense()
  	{
- 		$key_file = $this->getKeyFile();
- 				
- 		if ( file_exists($key_file) ) include $key_file;
- 		
+		date_default_timezone_set('UTC');
+		$date = new DateTime();
+		$date->add(new DateInterval('P14D'));
+
+		$license_value = json_encode(array (
+			'timestamp' =>  $date->format('Y-m-d'),
+			'days' => 14,
+			'users' => 10
+		));
+
+		openssl_sign($license_value.INSTALLATION_UID, $signature, include($this->getKeyFile()), OPENSSL_ALGO_SHA512);
+		$key_value = base64_encode($signature);
+
  		getFactory()->getObject('LicenseInstalled')->getAll()->modify(
  				array (
  						'LicenseType' => 'LicenseSAASALM',
- 						'LicenseValue' => '14',
+ 						'LicenseValue' => $license_value,
  						'LicenseKey' => $key_value
  				)
  		);
- 		
  		return $key_value;
  	}
  	

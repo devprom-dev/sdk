@@ -50,7 +50,7 @@ class DOBAssistAdminPlugin extends PluginAdminBase
  	    			),
  	    			array (
  	    					'url' => "javascript: $('#action".$form->getId()."').val(3);",
- 	    					'name' => translate('Ââåñòè êëş÷'),
+ 	    					'name' => translate('Ğ’Ğ²ĞµÑÑ‚Ğ¸ ĞºĞ»ÑÑ‡'),
  	    					'type' => 'submit'
  	    			)
  	    	);

@@ -14,6 +14,7 @@ class LicenseForm extends AjaxForm
 
     function getAttributes()
     {
+        $product_it = $this->getProduct();
     	$attributes = array();
     	
     	if ( getSession()->getUserIt()->getId() < 1 )
@@ -31,12 +32,11 @@ class LicenseForm extends AjaxForm
     	}
     	
         $attributes = array_merge($attributes, array('LicenseType', 'InstallationUID'));
-        
-        $product_it = $this->getProduct();
+
         if ( $product_it->get('ValueName') != '' ) {
         	$attributes[] = 'LicenseValue';
         }
-        
+
         $fields = $product_it->get('RequiredFields');
         if ( is_array($fields) ) $attributes = array_merge($attributes, $fields); 
         
@@ -49,6 +49,7 @@ class LicenseForm extends AjaxForm
         {
             case 'InstallationUID':
             case 'LicenseValue':
+            case 'Options':
             case 'UserName':
             case 'Email':
             	return 'text';
@@ -112,7 +113,6 @@ class LicenseForm extends AjaxForm
             	return text('account16');
             case 'ExistPassword':
             	return text('account22');
-            	
             default:
                 return parent::getName( $attribute );
         }
@@ -154,6 +154,14 @@ class LicenseForm extends AjaxForm
 
     function drawCustomAttribute( $attribute, $value, $tab_index )
     {
+        switch( getSession()->getLanguageUid() ) {
+            case 'RU':
+                $price_field = 'PriceRUB';
+                break;
+            case 'EN':
+                $price_field = 'PriceUSD';
+                break;
+        }
         switch( $attribute )
         {
         	case 'LicenseType':
@@ -164,10 +172,9 @@ class LicenseForm extends AjaxForm
 				while( !$product_it->end() ) { 
 				?>
 				<label class="radio" style="padding-left:">
-		  			<input type="radio" name="<?=$attribute?>" value="<?=$product_it->getId()?>" <?=($this->getProduct()->getId() == $product_it->getId() ? 'checked' : '')?>>
-		  			<?=$product_it->getDisplayName()?>
+		  			<input type="radio" name="<?=$attribute?>" value="<?=$product_it->getId()?>" <?=($this->getProduct()->getId() == $product_it->getId() ? 'checked' : '')?> onchange="switchProduct('<?=$product_it->getId()?>');">
+		  			<?=$product_it->getDisplayName()?> <?=str_replace('%1', $product_it->get($price_field), text('account34'))?>
 				</label>
-				<br/>
 				<?php
 				$product_it->moveNext();
 				}
@@ -176,8 +183,47 @@ class LicenseForm extends AjaxForm
 				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlspecialchars($_REQUEST['WasLicenseValue']).'">';
 				echo '<input type="hidden" name="Redirect" value="'.htmlspecialchars($_REQUEST['Redirect']).'">';
 				echo '<input type="hidden" name="Email" value="'.htmlspecialchars($_REQUEST['Email']).'">';
-				break;
-        		
+                echo '<input type="hidden" name="LicenseScheme" value="'.htmlspecialchars($_REQUEST['LicenseScheme']).'">';
+
+                if ( is_array($this->getProduct()->get('Options')) ) {
+                    echo '<br/>';
+                    echo '<b>' . text('account35') . '</b>';
+                    echo '<div/><br/>';
+
+                    $product_it->moveFirst();
+                    while( !$product_it->end() ) {
+                        echo '<div class="options-area" id="Options'.$product_it->getId().'" style="display: '.($this->getProduct()->getId() == $product_it->getId() ? 'block':'none').'">';
+                        $options = $product_it->get('Options');
+                        foreach ($options as $option_id => $option) {
+                            ?>
+                            <label class="checkbox" style="padding-left:">
+                                <input type="checkbox" class="checkbox" name="<?=$product_it->getId()?>Option_<?= $option['OptionId'] ?>"
+                                       checked <?=($option[$price_field] < 1 ? 'disabled' : '')?>>
+                                <?=$option['Caption']?>
+                                <? if ( $option[$price_field] > 0 ) { ?>
+                                <?=str_replace('%1', $option[$price_field], text('account36')) ?>
+                                <? } ?>
+                            </label>
+                            <?php
+                        }
+                        $product_it->moveNext();
+                        echo '</div>';
+                    }
+                    echo '<br/>';
+                    ?>
+                    <script type="text/javascript">
+                        function switchProduct(id) {
+                            $('.options-area').hide();
+                            $('#Options'+id).show();
+                        }
+                    </script>
+                    <?
+                }
+                break;
+
+            case 'Options':
+                break;
+
         	case 'PaymentServiceInfo':
         		echo text('account13');
         		break;

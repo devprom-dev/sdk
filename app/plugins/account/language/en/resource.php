@@ -22,5 +22,8 @@ $plugin_text_array = array
 		26 => 'DevOps Board <b>Team</b> (up to 5 users only)',
 		27 => 'Renewing of license',
 		28 => 'Specififed kind of licensing is not supported',
-		29 => 'DevOps Board <b>Unlimited</b>'
+		29 => 'DevOps Board <b>Unlimited</b>',
+		34 => ' starting at $%1 per month',
+		35 => 'Choose required options',
+		36 => '(+ $%1 per month)'
 );

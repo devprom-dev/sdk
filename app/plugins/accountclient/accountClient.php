@@ -10,7 +10,7 @@ include "PMPlugin.php";
 class accountClientPlugin extends PluginBase
 {
 	const SERVER_URL = 'http://devprom.ru';
-	
+
 	// this is plugin's unique internal name
  	function getNamespace()
  	{

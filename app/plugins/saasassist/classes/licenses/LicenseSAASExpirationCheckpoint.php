@@ -13,7 +13,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 		
 		$left_days = $license_it->get('LeftDays');
 		
-		if ( $license_it->get('LicenseValue') > $this->trial_period_length )
+		if ( $license_it->getDays() > $this->trial_period_length )
 		{
 			$this->setValue( $left_days >= $this->days_left_to_warning ? "1" : "0" );
 			if ( $left_days == '' ) return;

@@ -724,6 +724,9 @@ include( 'MainDevpromTable.php');
 				<table cellspacing="0" cellpadding="0" border="0">
 					<tr><td><?php echo $content ?></td></tr>
 					<tr><td>
+					<div class="comments" style="background-image:none;margin: 16px 0 34px 21px;">
+						<div style="float:left;margin-left:-20px;margin-top:-5px;"><script src="http://connect.facebook.net/en_US/all.js#xfbml=1"></script><fb:like ref="top_left" show_faces="false" layout="standard" width="270px"></fb:like></div>
+					</div>
 				<h3>Еще интересные статьи на эту тему:</h3>
 				<ul>
 				<?php 
@@ -800,7 +803,7 @@ include( 'MainDevpromTable.php');
 		
 		$parser = new SiteBlogParser($post_it, getSession()->getProjectIt());
 		$text = new html2text($parser->parse_substr( null, 840, $more_text ));
-		return $text->get_text();
+		return preg_replace('/\[[^\]]+\]/','',$text->get_text());
 	}
 	
  	function drawComments2( $object_it )
@@ -1278,19 +1281,28 @@ include( 'MainDevpromTable.php');
  		echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
 		echo '<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">';
  		echo '<head>';
-			echo '<meta property="og:image" content="http://devprom.ru/style/images/logo.png"/>';
-			echo '<meta property="og:image:secure_url" content="https://devprom.ru/style/images/logo.png"/>';
+			echo '<meta property="og:title" content="'.$title.'" />';
+			echo '<meta property="og:url" content="http://devprom.ru'.IteratorBase::utf8towin($_SERVER['REQUEST_URI']).'" />';
+			echo '<meta property="og:type" content="website" />';
+			echo '<meta itemprop="name" content="'.$title.'" />';
+			echo '<meta itemprop="description" content="'.$this->table->getDescription().'" />';
+			echo '<meta property="og:description" content="'.$this->table->getDescription().'" />';
+			echo '<meta property="og:site_name" content="Devprom ALM" />';
+			echo '<meta property="og:image" content="http://devprom.ru/style/images/fb-logo.png" />';
+			echo '<meta property="og:image:secure_url" content="https://devprom.ru/style/images/fb-logo.png" />';
+			echo '<meta property="fb:admins" content="522782579" />';
  			echo '<meta name="keywords" content="'.$keywords.'" />';
-			echo '<meta name="description" content="'.$title.'" />';
-			echo '<meta name="verify-v1" content="5MUI1iVXFzgP0cnAnP5q/9RyJGTSJ9fNCA6z79mu7BQ=" />';
-			echo "<meta name='yandex-verification' content='7f3c1f3c6f915686' />";
-			echo "<meta name='yandex-verification' content='79d2efa72f1f9986' />";
-			echo '<meta name="google-site-verification" content="Eu3jj0zEb0hZP8QV4JdqdpuzI06-cIl6NqE494BCfGE" />';
+			echo '<meta name="description" content="'.$this->table->getDescription().'" />';
  			echo '<title>'.$title.'</title>';
+ 			echo '<link rel="image_src" href="http://devprom.ru/style/images/fb-logo.png">';
  			echo '<link rel="stylesheet" type="text/css" href="/stylex">';
  			echo '<link rel="stylesheet" type="text/css" href="'.$style_url.'"/>';
 			echo '<link type="application/rss+xml" rel="alternate" href="'.$url.'rss"/>';
  			echo '<script type="text/javascript" src="/jscripts"></script>';
+			echo '<meta name="verify-v1" content="5MUI1iVXFzgP0cnAnP5q/9RyJGTSJ9fNCA6z79mu7BQ=" />';
+			echo "<meta name='yandex-verification' content='7f3c1f3c6f915686' />";
+			echo "<meta name='yandex-verification' content='79d2efa72f1f9986' />";
+			echo '<meta name="google-site-verification" content="Eu3jj0zEb0hZP8QV4JdqdpuzI06-cIl6NqE494BCfGE" />';
  		echo '</head>';
  		echo '<body>';
 

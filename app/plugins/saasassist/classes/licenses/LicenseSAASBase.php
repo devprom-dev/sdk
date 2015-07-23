@@ -10,11 +10,8 @@ class LicenseSAASBase extends LicenseInstalled
 		parent::__construct();
 
  		$this->addAttribute( 'Caption', 'VARCHAR', 'text(saasassist10)', true, false, 'text(saasassist11)', 0 );
- 		
- 		$this->addAttribute( 'LicenseValue', 'INTEGER', "text(saasassist12)", true, true );
-
+ 		$this->addAttribute( 'LicenseValue', 'VARCHAR', "text(saasassist12)", true, true );
  		$this->addAttribute( 'LicenseKey', 'VARCHAR', "text(saasassist13)", true, true );
-	
  		$this->addAttribute( 'LeftDays', 'VARCHAR', 'text(saasassist14)', true, false, 'text(saasassist15)' );
 	}
 
@@ -39,7 +36,7 @@ class LicenseSAASBase extends LicenseInstalled
 
  		$license_data = @file_get_contents(SERVER_ROOT_PATH.'conf/license.dat');
  		
- 		if ( $license_data == '' ) return $iterator->get('LicenseValue');
+ 		if ( $license_data == '' ) return $iterator->getLeftDays();
  		
  		$license = unserialize($license_data);
  		

@@ -28,6 +28,7 @@ class AccountSiteJSBuilder extends ScriptBuilder
  						'LicenseType' => $license_it->get('LicenseType'),
  						'WasLicenseValue' => $license_it->get('LicenseValue'),
  						'WasLicenseKey' => $license_it->get('LicenseKey'),
+						'LicenseScheme' => $license_it->getScheme(),
  						'InstallationUID' => INSTALLATION_UID,
  						'Email' => getSession()->getUserIt()->get('Email'),
  						'UserName' => IteratorBase::wintoutf8(getSession()->getUserIt()->get('Caption')),

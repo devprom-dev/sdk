@@ -6,7 +6,7 @@ class LicenseSAASBaseIterator extends LicenseIterator
 	{
 	    return $this->object->checkLicense($this);
 	}
-	
+
 	function get( $attr )
 	{
 		if ( $attr == 'LeftDays' ) return $this->object->getLeftDays($this);
