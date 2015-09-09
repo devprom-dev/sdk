@@ -4,6 +4,7 @@ namespace Devprom\ProjectBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Devprom\ProjectBundle\Service\Settings\ModulesSettingsService;
@@ -11,23 +12,23 @@ use Devprom\ProjectBundle\Service\Settings\NavigationSettingsService;
 
 class SettingsController extends Controller
 {
-    public function indexAction()
+    public function indexAction(Request $request)
     {
-    	if ( $this->getRequest()->get('area') == "" )
+    	if ( $request->get('area') == "" )
     	{
     		throw $this->createNotFoundException('Settings area is undefined but required');
     	}
 
-        if ( $this->getRequest()->get('action') == "" )
+        if ( $request->get('action') == "" )
     	{
     		throw $this->createNotFoundException('Action is undefined but required');
     	}
     	
-    	$service = $this->getService($this->getRequest()->get('area'));
+    	$service = $this->getService($request->get('area'));
     	
     	if ( !is_object($service) ) throw \Exception('Settings service wasn\'t found');
     	
-    	switch( $this->getRequest()->get('action') )
+    	switch( $request->get('action') )
     	{
     	    case 'reset':
     	    	$service->reset();

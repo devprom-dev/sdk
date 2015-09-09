@@ -12,7 +12,11 @@ class Version20150408160123 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        $this->addSql('ALTER TABLE cms_ExternalUser ADD Description TEXT');
+        try {
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD Description TEXT');
+        }
+        catch(Exception $e) {
+        }
     }
 
     public function down(Schema $schema)

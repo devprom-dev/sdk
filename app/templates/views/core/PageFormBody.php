@@ -89,7 +89,7 @@ $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 			    </div>
 			  </div>
 		
-		<?php } else { ?>
+		<?php } else if ( is_object($attribute['field']) || $attribute['html'] != '' ) { ?>
 		    
 			  <div class="control-group row-fluid" id="fieldRow<?=$key?>">
 			    <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>

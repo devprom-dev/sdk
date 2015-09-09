@@ -69,7 +69,7 @@ class DigestHandler extends EmailNotificatorHandler
 				'title' => $log_it->getWordsOnly('Caption', 20),
 				'uid' => $uid_info['uid'],
 				'url' => $uid_info['url'],
-				'content' => nl2br($log_it->getHtmlDecoded('Content')),
+				'content' => $log_it->getHtmlValue($log_it->getHtmlDecoded('Content')),
 				'time' => getSession()->getLanguage()->getTimeFormatted($log_it->get('RecordCreated'))
 			);
 			

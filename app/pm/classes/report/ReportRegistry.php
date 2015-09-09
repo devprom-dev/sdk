@@ -90,13 +90,15 @@ class ReportRegistry extends ObjectRegistrySQL
 
 function report_category_sort( $left, $right )
 {
- 	if ( $left['category-index'] == $right['category-index'] )
- 	{
- 		if ( $left['title'] == $right['title'] ) return 0;
-
- 		return $left['title'] > $right['title'] ? 1 : -1;
+ 	if ( $left['category-index'] == $right['category-index'] ) {
+ 		if ( $left['type'] == $right['type'] ) {
+            if ( $left['title'] == $right['title'] ) {
+                return 0;
+            }
+            return $left['title'] > $right['title'] ? 1 : -1;
+		}
+ 		return $left['type'] > $right['type'] ? 1 : -1;
  	}
- 	
  	return $left['category-index'] > $right['category-index'] ? 1 : -1;
 }
  

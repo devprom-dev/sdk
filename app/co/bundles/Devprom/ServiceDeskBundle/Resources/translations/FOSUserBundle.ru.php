@@ -9,7 +9,7 @@ return array(
     'group.flash.deleted' => 'Группа удалена',
 
 # Security
-    'Bad credentials.' => 'Неправильный email или пароль',
+    'Invalid credentials.' => 'Неправильный email или пароль',
 
     'security.login.username' => 'Адрес электронной почты:',
     'security.login.username.prompt' => 'Адрес электронной почты',

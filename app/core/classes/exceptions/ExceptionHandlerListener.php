@@ -2,5 +2,6 @@
 
 abstract class ExceptionHandlerListener
 {
-	abstract function handle( $data, $code );
+	abstract public function handle( $data, $code );
+	abstract public function captureException( $e );
 }

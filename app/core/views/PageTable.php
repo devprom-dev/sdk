@@ -44,7 +44,7 @@ class PageTable extends ViewTable
 
  	function resetData()
  	{
- 	    $this->getListRef()->setIterator( $dummy );
+ 	    $this->getListRef()->setIterator(null);
  	}
  	
  	function setPage( & $page )
@@ -154,7 +154,7 @@ class PageTable extends ViewTable
 			if ( $default_value == '' || array_key_exists($filter_name,$this->filter_values) ) continue; 
 			$this->filter_values[$filter_name] = $default_value;
 		}
-	
+
 		// backward compatiibility to old settings
 		if ( is_object($persistent_filter) ) {
 			foreach( array_merge($filter_keys, $this->getFilterParms()) as $parm )
@@ -170,6 +170,11 @@ class PageTable extends ViewTable
 				$this->filter_values[$parm] = $filter_value;
 			}
 		}
+        foreach( $this->filter_values as $key => $value ) {
+            if ( $value == 'user-id' ) {
+                $this->filter_values[$key] = getSession()->getUserIt()->getId();
+            }
+        }
 		$this->filter_defaults = $this->filter_values;
 
 		// apply web-session based filters settings
@@ -200,6 +205,12 @@ class PageTable extends ViewTable
 		$values['color'] = $this->getDefaultColorScheme();
 		$values['infosections'] = join(',', $this->getSectionsDefault());
 
+		foreach( $this->getFilters() as $filter ) {
+			if ( $filter instanceof FilterWebMethod && $filter->getDefaultValue() != '' ) {
+				$values[$filter->getValueParm()] = $filter->getDefaultValue();
+			}
+		}
+
 		return $values;
 	}
 	
@@ -218,7 +229,8 @@ class PageTable extends ViewTable
 		return array( 'rows', 'group', 'sort', 'sort2', 
 			'sort3', 'sort4', 'show', 'hide', 'aggby', 
 			'aggregator', 'infosections', 'hiddencolumns',
-			'chartlegend', 'chartdata', 'addobjects', 'color' );
+			'chartlegend', 'chartdata', 'addobjects', 'color',
+			'groupfunc' );
 	}
 	
 	function IsFilterPersisted()

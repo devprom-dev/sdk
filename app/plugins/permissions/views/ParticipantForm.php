@@ -8,7 +8,13 @@ class ParticipantForm extends PMPageForm
 	{
 		parent::__construct( getFactory()->getObject('pm_Participant') );
 	}
-		
+
+    protected function extendModel()
+    {
+    	parent::extendModel();
+    	$this->getObject()->setAttributeDescription('SystemUser', text(2040));
+    }
+	
 	function editable()
 	{
 		$object_it = $this->getObjectIt();

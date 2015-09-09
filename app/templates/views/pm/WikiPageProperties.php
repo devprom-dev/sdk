@@ -114,7 +114,7 @@ $buttons = array();
 			<tbody>
 				<tr>
 					<td>
-						<table class="properties-table">
+						<table class="properties-table properties-table-trace">
 							<?php foreach( $trace_properties as $ref_name ) { ?>
 								<?php $attribute = $attributes[$ref_name]; ?>
 								<tr>

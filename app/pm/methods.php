@@ -61,18 +61,18 @@ include_once "methods/StateExFilterWebMethod.php";
 
 if ( !class_exists($_REQUEST['method'], false) ) throw new Exception('There is no such method');
 
-$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 
-$strategy = $methodology_it->getEstimationStrategy();
- 
-$filter = $strategy->getEstimationFilter();
- 
 getSession()->addBuilder( new WorkflowModelBuilder() );
 
 $method = new $_REQUEST['method'];
- 
 if ( !is_a($method, 'WebMethod') ) throw new Exception('Unknown method class: '.$_REQUEST['method']);
 
-$method->exportHeaders();
-
-$method->execute_request();
+try
+{
+    $method->exportHeaders();
+    $method->execute_request();
+}
+catch( Exception $e )
+{
+    $logger = \Logger::getLogger('System');
+    if ( is_object($logger) ) $logger->error($e->getMessage());
+}

@@ -83,6 +83,9 @@
 		if ( is_object($plugins) )
 		{
  			$this->infosections = $plugins->getPageInfoSections( $this );
+            foreach( $this->infosections as $key => $section ) {
+                $this->infosections[$key]->setPage($this);
+            }
 		}
  	}
  	
@@ -371,6 +374,7 @@
  	
  	function getNavigationContext( & $areas, $active_url )
  	{
+		$active_area_uid = '';
  	    foreach( $areas as $key => $area )
         {
             foreach ( $area['menus'] as $tab_key => $tab )
@@ -525,13 +529,13 @@
 		    $portfolio_it->moveNext();
 		}
 
-		if ( count($projects) < 1 ) {
+		if ( $portfolio_it->count() < 1 ) {
 			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-					array ( new ProjectStatePredicate('active') )
-				);
+				array ( new ProjectStatePredicate('active') )
+			);
 			while ( !$linked_it->end() )
 			{
-				$projects[0][$linked_it->get('CodeName')] = array (
+				$projects[''][$linked_it->get('CodeName')] = array (
 					'name' => $linked_it->getDisplayName(),
 					'url' => '/pm/'.$linked_it->get('CodeName')
 				);
@@ -736,8 +740,6 @@
  		    'navigation_title' => $tab_title != '' ? $tab_title : $this->getTitle(),
  		    'navigation_url' => $tab_url,
  			'checkpoint_alerts' => $this->getCheckpointAlerts(),
- 			'b_display_sections' => $percent > 0 && !$this->notfound,
- 			'percent' => $percent,
  			'menu_template' => $this->getMenuTemplate(),
  			'menus' => $this->getMenus(),
  			'tabs_template' => $this->getTabsTemplate(),
@@ -751,7 +753,8 @@
         	'hint' => !$this->needDisplayForm() && getFactory()->getObject('UserSettings')->getSettingsValue($page_uid) != 'off' ? $this->getHint() : '',
         	'page_uid' => $page_uid,
         	'module' => $this->getModule(),
-        	'public_iid' => md5(INSTALLATION_UID.CUSTOMER_UID)
+        	'public_iid' => md5(INSTALLATION_UID.CUSTOMER_UID),
+            'user_id' => getSession()->getUserIt()->getId()
  		);
  	}
  	
@@ -789,20 +792,14 @@
  	
  	function render( $view = null )
  	{
- 	    global $model_factory;
- 	     	    
 		$render_parms = $this->getRenderParms();
  	    if ( !is_object($view) ) $view = $this->getRenderView();
- 	    
- 		if ( $_REQUEST['export'] != '' )
-		{
+
+ 		if ( $_REQUEST['export'] != '' ) {
 			$this->export();
 			die();
 		}
 
-		$render_parms = $this->getRenderParms();
- 	    if ( !is_object($view) ) $view = $this->getRenderView();
- 	    
 		if ( $_REQUEST['tableonly'] != '' && is_object($this->table) )
 		{
 			header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
@@ -817,11 +814,13 @@
 				// long living session shouldn't modify cache
 				getFactory()->getCacheService()->setReadonly();
 
-				$object = $_REQUEST['class'] != '' ? getFactory()->getObject($_REQUEST['class']) : $this->table->getObject();
-		        $affected = getFactory()->getObject('AffectedObjects');
+				$object = $this->getObject();
+                if ( !is_object($object) ) return;
+
 		        $class = get_class($object);
 		        $vpds = $object->getVpds();
 		        $from_date = SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 seconds', strtotime(SystemDateTime::date()))));
+                $affected = getFactory()->getObject('AffectedObjects');
 
 		        // wait for entity-level lock has been released or new modifications has appeared
 		        $lock = new LockFileSystem($class);

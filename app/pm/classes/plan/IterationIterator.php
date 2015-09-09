@@ -236,15 +236,12 @@ class IterationIterator extends OrderedIterator
 		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getCapacity();
 		$capacity = $it->get('PlannedWorkload') > 0 ? $it->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
 		
-		if ( $project_it->getMethodologyIt()->HasFixedRelease() )
-		{
+		if ( $project_it->getMethodologyIt()->HasFixedRelease() && $duration > 0 ) {
 			$velocity = $this->getVelocity() / $duration;
 		}
-		else
-		{
+		else {
 			$velocity = $this->getVelocity();
 		}
-
 		return array( $duration, $capacity, $velocity ); 
 	}
 	

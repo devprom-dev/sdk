@@ -2,7 +2,7 @@
 
 define( 'SERVER_ROOT_PATH', dirname(__FILE__).'/../../');
 define( 'DOCUMENT_ROOT', SERVER_ROOT_PATH);
-define( 'CACHE_PATH', dirname(__FILE__).'/../../cache');
+define( 'CACHE_PATH', sys_get_temp_dir().'/cache/');
 define( 'APP_ENCODING', 'utf-8');
 define( 'APP_CHARSET', 'utf8');
 
@@ -25,3 +25,6 @@ include_once SERVER_ROOT_PATH . '/app/Devprom/Component/HttpKernel/ServiceDeskAp
 
 // default server time zone
 date_default_timezone_set('UTC');
+
+// clear cache directory
+FileSystem::rmdirr(CACHE_PATH);

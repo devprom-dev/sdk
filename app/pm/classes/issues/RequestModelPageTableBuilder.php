@@ -22,8 +22,6 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
 		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  	    
-		$object->addPersister( new IssueLinkedIssuesPersister() );
-		
     	if ( $methodology_it->HasReleases() )
     	{
     		$object->addAttribute('ReleaseStartDate', 'DATE', translate('Релиз').': '.translate('Начало'), false);

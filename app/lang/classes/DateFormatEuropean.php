@@ -22,9 +22,13 @@ class DateFormatEuropean extends DateFormatBase
  		return '%d/%m/%Y';
  	}
 
- 	function getDateFormatShort() 
+ 	function getDateFormatShort( $date )
  	{
- 		return '%d/%m/%y';
+		if ( strftime('%Y', $date) == date('Y') ) {
+			return 'j - M';
+		} else {
+			return 'j - M Y';
+		}
  	}
  	
  	function getPhpDate( $time )

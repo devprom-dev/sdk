@@ -118,24 +118,18 @@ class IteratorBase
  	function buildPositionHash( $fields )
  	{
  		$this->stop = array();
- 		
  		$pos = $this->getPos();
  		
-		foreach ( $fields as $field )
-		{
+		foreach ( $fields as $field ) {
  			$this->hashes[$field] = array();
 		}
 		
  		$this->moveFirst();
- 		
- 		while ( !$this->end() )
- 		{
- 			foreach ( $fields as $field )
- 			{
- 				if ( !array_key_exists( $this->data[$field], $this->hashes[$field] ) )
- 				{
- 					$this->hashes[$field][$this->data[$field]] = $this->getPos();
- 				}
+ 		while ( !$this->end() ) {
+ 			foreach ( $fields as $field ) {
+                if ( !isset($this->hashes[$field][$this->data[$field]]) ) {
+                    $this->hashes[$field][$this->data[$field]] = $this->getPos();
+                }
  			}
  			$this->moveNext();
  		}
@@ -147,29 +141,25 @@ class IteratorBase
 	{
 		if ( is_resource($this->rs) )
 		{
-			if ( isset($this->hashes[$attr][$value]) )
-			{
-				$this->moveToPos( $this->hashes[$attr][$value] );
-			}
-			
-			$this->moveFirst();
-			
-			while ( !$this->end() )
-			{
-				if ( $this->get($attr) == $value )
-				{
-					break;
-				}
-				
-				$this->moveNext();
-			}
+			if ( is_array($this->hashes[$attr]) ) {
+                if ( isset($this->hashes[$attr][$value]) ) {
+                    $this->moveToPos( $this->hashes[$attr][$value] );
+                } else {
+                    $this->pos = $this->count();
+                }
+			} else {
+                $this->moveFirst();
+                while ( !$this->end() ) {
+                    if ( $this->data[$attr] == $value ) break;
+                    $this->moveNext();
+                }
+            }
 		}
 		elseif ( !is_null($this->rs) )
 		{
 			if ( isset($this->hashes[$attr][$value]) )
 			{
 				$this->pos = $this->hashes[$attr][$value];
-				
 				$this->data = $this->rs[$this->pos];
 			}
 			else
@@ -177,7 +167,6 @@ class IteratorBase
 				$result = array_filter($this->rs, function( $row ) use ($attr, $value) { 
 			        return $row[$attr] != '' && $row[$attr] == $value;
 			    });
-	
 			    $this->moveToPos( array_pop(array_keys($result)) );
 			}
 		}
@@ -202,22 +191,11 @@ class IteratorBase
 
 	function get_native( $attribute )	
 	{
-		if ( is_string($this->data[$attribute]) )
-		{
-	        return stripslashes($this->data[$attribute]);
-		}
-	    
 		return $this->data[$attribute];
 	}
 
 	function get( $attribute )	
 	{
-		if ( is_string($this->data[$attribute]) )
-		{
-    		return preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', 
-    			iterator_text_callback, stripslashes($this->data[$attribute]) );
-		}
-		
 		return $this->data[$attribute];
 	}
 
@@ -233,23 +211,15 @@ class IteratorBase
 		$shrink_length = 30;
 
 		$text = preg_replace('/&quot;/', '"', $text);
-		
 		$text = preg_replace_callback(
 			'/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im', 
 				htmllink_shrinker_callback, $text );
-
         $text = preg_replace_callback('/\[url=([^\]]+)\s+text=([^\]]+)]/im', iterator_url_callback, $text);
-		
 		$text = preg_replace_callback('/\[url=([^\]]+)]/im', iterator_url_callback, $text);
-        
-        $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi',
-			iterator_uid_callback, $text);
-
+        $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi', iterator_uid_callback, $text);
 		$text = preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $text );
 
-		$text = str_replace(chr(10), '<br/>', $text);
-		
-		return $text;
+		return nl2br($text);
 	}
 
 	function getHtmlDecoded( $attribute )
@@ -291,6 +261,18 @@ class IteratorBase
 	    {
 	        return $this->rs;
 	    }
+	}
+
+	function getSubset( $key, $value )
+	{
+		$data = array();
+		$this->moveTo( $key, $value );
+		while( $this->data[$key] == $value && !$this->end() )
+		{
+			$data[] = $this->data;
+			$this->moveNext();
+		}
+		return $data;
 	}
 
 	function getResource()
@@ -344,8 +326,8 @@ class IteratorBase
 		if ( is_resource($this->rs) )
 		{
 			$this->data = mysql_fetch_array($this->rs);
-			
 			if ( is_bool($this->data) ) return false;
+			$this->data = array_map('stripslashes', $this->data);
 		}
 		else
 		{
@@ -383,10 +365,11 @@ class IteratorBase
 	
 	function getUniqueId()
 	{
+        $uid = '';
 		$unique_array = $this->object->getUniqueAttributes();
 		for ( $i = 0; $i < count($unique_array); $i++ )
 		{
-			$uid .= $this->get($unique_array[$i]);
+			$uid .= $this->data[$unique_array[$i]];
 		}
 		return md5($uid);
 	}	
@@ -403,7 +386,7 @@ class IteratorBase
 	        if ( $attribute == 'RecordModified' ) continue;
 	        if ( $attribute == 'OrderNum' ) continue;
 	        
-	        $key[$attribute] = $this->get($attribute);
+	        $key[$attribute] = $this->data[$attribute];
 	    }
 	    
 	    return $key;
@@ -560,9 +543,15 @@ class IteratorBase
 
 	function getDateFormat($attribute) 
 	{
-		return getSession()->getLanguage()->getDateFormatted(	$this->get_native($attribute) );
+		return getSession()->getLanguage()->getDateFormatted( $this->get_native($attribute) );
 	}
-	function getDateFormatUser($attribute, $format) 
+
+	function getDateFormatShort($attribute)
+	{
+		return getSession()->getLanguage()->getDateFormattedShort( $this->get_native($attribute) );
+	}
+
+	function getDateFormatUser($attribute, $format)
 	{
 		return getSession()->getLanguage()->getDateUserFormatted(	$this->get_native($attribute), $format );
 	}
@@ -769,7 +758,7 @@ class IteratorBase
  	function serialize2Xml()
  	{
  		$this->moveFirst();
- 		
+		$xml = '';
 		while ( !$this->end() )
 		{
 			$xml .= '<object id="'.$this->getId().'">';

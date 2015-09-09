@@ -404,8 +404,12 @@ class Metaobject extends StoredObjectDB
 			}
 			elseif ( $object->IsUpdatedCascade($this) )
 			{
-				$reference_it = $object->getByRef( $attribute, $object_id );
-				
+				$reference_it = $object->getRegistry()->Query(
+					array (
+						new FilterAttributePredicate($attribute,$object_id)
+					)
+				);
+
 				$modified_list[] = $object->createCachedIterator($reference_it->getRowset());
 				
 				$this->UpdatesCascade( $attribute, $self_it, $reference_it ); 
@@ -414,7 +418,7 @@ class Metaobject extends StoredObjectDB
 			$object->enableVpd();
 		}
 
-		$result = parent::delete($object_id, $use_notification);
+		$result = parent::delete($object_id);
 		
 		foreach( $deleted_list as $object_it )
 		{

@@ -10,6 +10,7 @@ class permissionsPM extends PluginPMBase
 	// returns builders which extend application behavior 
 	public function getBuilders()
 	{
+		if ( !$this->getBasePlugin()->checkLicense() ) return array();
 		return array(
 				new TransitionMetadataPermissionsBuilder(),
 				new TaskTypeMetadataPermissionsBuilder(),
@@ -21,6 +22,7 @@ class permissionsPM extends PluginPMBase
 	
     function getModules()
  	{
+		if ( !$this->getBasePlugin()->checkLicense() ) return array();
 		return array (
  			'settings' => 
  				array(
@@ -50,7 +52,7 @@ class permissionsPM extends PluginPMBase
     			&& $object_it->get('ParentPage') != ''
     			&& getFactory()->getAccessPolicy()->can_modify($object_it);
     	
-    	if ( $can_set_permissions )
+    	if ( $can_set_permissions && $this->getBasePlugin()->checkLicense() )
     	{
     		if ( !is_object($this->module_permissions_it) ) {
     			$this->module_permissions_it = getFactory()->getObject('Module')->getExact('permissions/settings');

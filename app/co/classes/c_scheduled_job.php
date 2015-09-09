@@ -3,8 +3,13 @@
  ////////////////////////////////////////////////////////////////////////////////////////////////////////
  class CoScheduledJobIterator extends OrderedIterator
  {
- 	function getParameters()
- 	{
+	 function get( $attribute )
+	 {
+		 return preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, parent::get($attribute));
+	 }
+
+	 function getParameters()
+ 	 {
  		if ( function_exists('json_decode') )
  		{
  			$json = json_decode( $this->getHtmlDecoded('Parameters'), true );
@@ -14,13 +19,13 @@
  		{
  			return array();
  		}
- 	}
+ 	 }
  	
- 	function getType()
- 	{
+ 	 function getType()
+ 	 {
  		$parms = $this->getParameters();
  		return $parms['type']; 
- 	}
+ 	 }
  }
 
  ////////////////////////////////////////////////////////////////////////////////////////////////////////

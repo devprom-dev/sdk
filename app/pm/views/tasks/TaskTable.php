@@ -34,7 +34,7 @@ class TaskTable extends PMPageTable
 	{
 		$predicates = parent::getPredicates($filters);
 
-		if ( $this->getTable()->getReportBase() != 'issuesboardcrossproject' )
+		if ( $this->getTable()->getReportBase() != 'tasksboardcrossproject' )
 		{
 			$predicates[] = new FilterBaseVpdPredicate();
 		}
@@ -327,7 +327,7 @@ class TaskTable extends PMPageTable
 			
 			$task_it->moveNext();
 		}
-		
+
 		$project_it = getSession()->getProjectIt();
 		$iteration_registry = getFactory()->getObject('Iteration')->getRegistry();
 		$part_registry = getFactory()->getObject('Participant')->getRegistry();

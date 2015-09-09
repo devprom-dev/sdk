@@ -46,4 +46,21 @@ class permissionsPlugin extends PluginBase
  	{
  		return false;
  	}
+
+	function checkLicense()
+	{
+		if ( !isset($this->license) )
+		{
+			$license_it = getFactory()->getObject('LicenseState')->getAll();
+			$this->license =
+				$license_it->get('IsValid') == 'Y'
+				&& in_array(
+					$license_it->get('LicenseType'),
+					array('LicenseTrial','LicenseEnterprise','LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge','LicenseDevOpsBoard')
+				);
+		}
+		return $this->license;
+	}
+
+	private $license;
 }

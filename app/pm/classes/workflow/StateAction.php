@@ -1,6 +1,7 @@
 <?php
 
 include "StateActionIterator.php";
+include "predicates/StateActionReferencePredicate.php";
 
 class StateAction extends Metaobject
 {

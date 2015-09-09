@@ -66,7 +66,7 @@ div.board-item-fact a
 
 .bi-cap {
     clear:both;
-    word-wrap:none;
+    word-wrap:normal;
     overflow:hidden;	
 }
 
@@ -171,6 +171,25 @@ div.board-item-fact a
 .board-size-xs .title-on-card img {
     display:none;
 }
+
+.board-size-xl .date-attr {
+	padding: 0;
+}
+.board-size-l .date-attr {
+	padding: 0;
+	font-size: 0.9em;
+}
+.board-size-m .date-attr {
+	padding: 0;
+	font-size: 0.87em;
+}
+.board-size-s .date-attr {
+	display: none;
+}
+.board-size-xs .date-attr {
+	display:none;
+}
+
 
 #board-slider {
 	float:left;

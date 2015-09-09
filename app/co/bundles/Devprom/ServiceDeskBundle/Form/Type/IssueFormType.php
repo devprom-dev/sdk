@@ -4,7 +4,7 @@ namespace Devprom\ServiceDeskBundle\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Doctrine\ORM\EntityRepository;
 
 class IssueFormType extends AbstractType
@@ -27,7 +27,7 @@ class IssueFormType extends AbstractType
             ->add('description', 'textarea')
             ->add('issueType', 'entity', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\IssueType',
-                'property' => 'name',
+                'choice_label' => 'name',
                 'query_builder' => function(EntityRepository $er) use ($vpds) {
                     $qb = $er->createQueryBuilder('it');
                     return $qb->where($qb->expr()->eq('it.vpd', '\''.array_pop($vpds).'\''));
@@ -41,7 +41,7 @@ class IssueFormType extends AbstractType
 		{
 			$builder->add('project', 'entity', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Project',
-                'property' => 'name',
+                'choice_label' => 'name',
                 'query_builder' => function(EntityRepository $er) use ($vpds) {
                     return $er->createQueryBuilder('p')->where('p.vpd IN (:vpdarray)')->setParameter('vpdarray', $vpds);
                 },
@@ -57,7 +57,7 @@ class IssueFormType extends AbstractType
             ));
 			$builder->add('product', 'entity', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Product',
-                'property' => 'name',
+                'choice_label' => 'name',
                 'query_builder' => function(EntityRepository $er) use ($vpd) {
                     $qb = $er->createQueryBuilder('p');
                     return $qb->where($qb->expr()->eq('p.vpd', '\''.$vpd.'\''));
@@ -73,7 +73,7 @@ class IssueFormType extends AbstractType
         }
     }
 
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
+    public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
             'data_class' => 'Devprom\ServiceDeskBundle\Entity\Issue'

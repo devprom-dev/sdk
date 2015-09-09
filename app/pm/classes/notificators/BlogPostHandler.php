@@ -7,13 +7,17 @@ class BlogPostHandler extends EmailNotificatorHandler
 {
 	function getParticipants( $object_it, $prev_object_it, $action ) 
 	{
-		$result = array();
-		
-		if ( $action != 'add' ) return $result; 
-			
+		if ( $action != 'add' ) return array();
 		return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
-	}	
-	
+	}
+
+	function getUsers( $object_it, $prev_object_it, $action )
+	{
+		if ( $action != 'add' ) return array();
+		if ( class_exists('PortfolioMyProjectsBuilder', false) ) return array();
+		return getFactory()->getObject('UserActive')->getAll()->fieldToArray('Email');
+	}
+
 	public static function getValue( $object_it, $attr )
 	{
 		switch ( $attr )

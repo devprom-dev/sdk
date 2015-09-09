@@ -9,33 +9,33 @@ use Devprom\CommonBundle\Service\Tooltip\TooltipService;
 
 class TooltipController extends Controller
 {
-    public function showAction()
+    public function showAction(Request $request)
     {
-    	if ( $this->getRequest()->get('classname') == "" )
+    	if ( $request->get('classname') == "" )
     	{
     		throw $this->createNotFoundException('Class name is undefined');
     	}
 
-    	if ( $this->getRequest()->get('objects') == "" )
+    	if ( $request->get('objects') == "" )
     	{
     		throw $this->createNotFoundException('Objects are undefined');
     	}
     	
-    	$class = getFactory()->getClass($this->getRequest()->get('classname'));
+    	$class = getFactory()->getClass($request->get('classname'));
     	
     	if ( !class_exists($class) )
     	{
     		throw $this->createNotFoundException('Class name doesn\'t exist');
     	}
     	
-    	if ( getFactory()->getObject($this->getRequest()->get('classname'))->getVpdValue() != '' )
+    	if ( getFactory()->getObject($request->get('classname'))->getVpdValue() != '' )
     	{
     		throw $this->createNotFoundException('Access permitted to the entity');
     	}
     	
     	$service = new TooltipService(
-    			$this->getRequest()->get('classname'), 
-            	$this->getRequest()->get('objects')
+			$request->get('classname'),
+			$request->get('objects')
 		);
  	
     	return $this->render( 'ApplicationBundle:Tooltip:show.html.twig',

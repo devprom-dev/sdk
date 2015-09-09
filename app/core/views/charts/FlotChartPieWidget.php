@@ -39,6 +39,7 @@ class FlotChartPieWidget extends FlotChartWidget
 					show: false
 				},
 				radius: 1
+				<? if ( count($this->getColors()) > 0 ) { ?> ,colors: ['<?=join("','",$this->getColors())?>'] <? } ?>
 			});
 		});
 		</script>

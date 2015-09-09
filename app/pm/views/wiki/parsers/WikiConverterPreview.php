@@ -150,13 +150,6 @@ class WikiConverterPreview
 		{
 			$i++;
 
-			if ( $children_it->IsArchived() )
-			{
-				$children_it->moveNext();
-				$i--;
-				continue;
-			}
-			
 			$id = $children_it->getId();
 			if($this->b_draw_section_num) {
 				$level_name = $parent_level_name.$i;
@@ -186,13 +179,6 @@ class WikiConverterPreview
 
 		for ( $i = 0; $children_it->get('ParentPage') == $parent_id; $i++ ) 
 		{
-			if ( $children_it->IsArchived() )
-			{
-				$children_it->moveNext();
-				$i--;
-				continue;
-			}
-
 			$id = $children_it->getId();
 			if($this->b_draw_section_num) 
 			{

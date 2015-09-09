@@ -196,7 +196,6 @@ return array (
     'Подпроекты' => 'Sub-projects',
     'Программа' => 'Program',
     'Список разделов' => 'List of sections',
-    'Обнаруженные ошибки' => 'Found bugs',
     'Сценарии' => 'Scenarios',
     'Добавлены мной' => 'Submitted by me',
     'Выбрать в дереве' => 'Select from tree',

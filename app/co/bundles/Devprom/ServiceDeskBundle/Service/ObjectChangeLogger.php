@@ -173,9 +173,11 @@ class ObjectChangeLogger
     protected function notifyIssueCreated(Issue $issue)
     {
     	$this->buildProjectSession($issue);
-		getFactory()->getEventsManager()->notify_object_add(
-				getFactory()->getObject('Request')->getExact($issue->getId()), array()
-			);
+		$object_it = getFactory()->getObject('Request')->getExact($issue->getId());
+		
+		getFactory()->getEventsManager()->notify_object_add($object_it, array());
+		getFactory()->getEventsManager()
+	    	->executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
     }
 
     protected function notifyIssueModified(Issue $issue)

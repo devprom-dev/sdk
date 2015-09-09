@@ -60,12 +60,6 @@ class WikiConverterCHM
 		
 		while ( $wiki_it->get('ParentPage') == $parent_id )
 		{
-			if ( $wiki_it->IsArchived() )
-			{
-				$wiki_it->moveNext();
-				continue;
-			}
-			
 			$id = $wiki_it->getId();
 			$file_name = $this->transform( $wiki_it );	
 

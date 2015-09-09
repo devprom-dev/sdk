@@ -4,10 +4,9 @@ include "TransitionResetFieldIterator.php";
 
 class TransitionResetField extends MetaobjectCacheable
 {
- 	function TransitionResetField() 
+ 	function __construct()
  	{
- 		parent::Metaobject('pm_TransitionResetField');
- 		
+ 		parent::__construct('pm_TransitionResetField');
  		$this->setSortDefault( new SortAttributeClause('Transition') );
  	}
  	

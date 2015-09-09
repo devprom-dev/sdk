@@ -1,6 +1,7 @@
 <?php
 namespace Devprom\ProjectBundle\Controller\Rest;
 
+use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
 use Devprom\ProjectBundle\Service\Model\ModelService;
@@ -10,19 +11,19 @@ include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.ph
 
 abstract class RestController extends FOSRestController implements ClassResourceInterface
 {
-    abstract protected function getEntity();
-    abstract protected function getFilterResolver();
+    abstract protected function getEntity(Request $request);
+    abstract protected function getFilterResolver(Request $request);
 	
-	public function cgetAction()
+	public function cgetAction(Request $request)
 	{
 		try    	
 		{
 	        return $this->handleView(
 	        		$this->view(
-			        		$this->getModelService()->find(
-			        				$this->getEntity(),
-			        				$this->getRequest()->get('limit'),
-			        				$this->getRequest()->get('offset')
+			        		$this->getModelService($request)->find(
+			        				$this->getEntity($request),
+									$request->get('limit'),
+									$request->get('offset')
 							), 200
 					)->setHeader("Cache-Control", "no-cache, must-revalidate")
 			);
@@ -30,19 +31,18 @@ abstract class RestController extends FOSRestController implements ClassResource
 		catch( \Exception $e )
 		{
 			\Logger::getLogger('System')->error($e->getMessage());
-			
 			throw $this->createNotFoundException($e->getMessage(), $e);
 		}
 	}
 	
-    public function getAction($id)
+    public function getAction(Request $request, $id)
     {
 		try    	
 		{
 	        return $this->handleView(
 	        		$this->view(
-			        		$this->getModelService()->get(
-			        				$this->getEntity(), $id
+			        		$this->getModelService($request)->get(
+			        				$this->getEntity($request), $id
 							), 200
 					)->setHeader("Cache-Control", "no-cache, must-revalidate")
 			);
@@ -50,20 +50,19 @@ abstract class RestController extends FOSRestController implements ClassResource
 		catch( \Exception $e )
 		{
 			\Logger::getLogger('System')->error($e->getMessage());
-			
 			throw $this->createNotFoundException($e->getMessage(), $e);
 		}
     }
 	
-	public function cpostAction()
+	public function cpostAction(Request $request)
     {
 		try    	
 		{
 	        return $this->handleView(
 	        		$this->view(
-			        		$this->getModelService()->set(
-			        				$this->getEntity(),
-				        			$this->getRequest()->request->all()
+			        		$this->getModelService($request)->set(
+			        				$this->getEntity($request),
+				        			$this->getPostData($request)
 							), 200
 					)->setHeader("Cache-Control", "no-cache, must-revalidate")
 			);
@@ -71,20 +70,19 @@ abstract class RestController extends FOSRestController implements ClassResource
 		catch( \Exception $e )
 		{
 			\Logger::getLogger('System')->error($e->getMessage());
-			
 			throw $this->createNotFoundException($e->getMessage(), $e);
 		}
     }
     
-	public function putAction($id)
+	public function putAction(Request $request, $id)
     {
 		try    	
 		{
 	        return $this->handleView(
 	        		$this->view(
-			        		$this->getModelService()->set(
-			        				$this->getEntity(),
-				        			$this->getRequest()->request->all(),
+			        		$this->getModelService($request)->set(
+			        				$this->getEntity($request),
+				        			$this->getPostData($request),
 			        				$id
 							), 200
 					)->setHeader("Cache-Control", "no-cache, must-revalidate")
@@ -93,19 +91,18 @@ abstract class RestController extends FOSRestController implements ClassResource
 		catch( \Exception $e )
 		{
 			\Logger::getLogger('System')->error($e->getMessage());
-			
 			throw $this->createNotFoundException($e->getMessage());
 		}
     }
 
-	public function deleteAction($id)
+	public function deleteAction(Request $request, $id)
     {
 		try    	
 		{
 	        return $this->handleView(
 	        		$this->view(
-			        		$this->getModelService()->delete(
-			        				$this->getEntity(),
+			        		$this->getModelService($request)->delete(
+			        				$this->getEntity($request),
 			        				$id
 							), 200
 					)->setHeader("Cache-Control", "no-cache, must-revalidate")
@@ -114,12 +111,16 @@ abstract class RestController extends FOSRestController implements ClassResource
 		catch( \Exception $e )
 		{
 			\Logger::getLogger('System')->error($e->getMessage());
-			
 			throw $this->createNotFoundException($e->getMessage());
 		}
     }
     
-    protected function getModelService()
+    protected function getPostData(Request $request)
+    {
+    	return $request->request->all();
+    }
+    
+    protected function getModelService(Request $request)
     {
     	return new ModelService(
     			new \ModelValidator(
@@ -129,7 +130,7 @@ abstract class RestController extends FOSRestController implements ClassResource
     					)
 				), 
     			new \ModelDataTypeMapper(), 
-    			$this->getFilterResolver()
+    			$this->getFilterResolver($request)
 		);
     }
 }

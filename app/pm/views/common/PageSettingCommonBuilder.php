@@ -78,20 +78,20 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $settings->add( $setting );
         
         // tasks-trace report
-        
-        $setting = new ReportSetting('tasks-trace');
-        
+        $object = getFactory()->getObject('Task');
  	    $visible = array_merge( 
  	    		array(
  	    				'UID', 
  	    				'Caption',
  	    				'ChangeRequest'
- 	    		), 
-		    	getFactory()->getObject('Task')->getAttributesByGroup('trace')
+ 	    		),
+                array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
+                    return $object->IsAttributeVisible($value);
+                })
 		);
-        
+
+        $setting = new ReportSetting('tasks-trace');
         $setting->setVisibleColumns($visible);
-        
         $settings->add( $setting );
         
         // tasks table

@@ -3,21 +3,22 @@ namespace Devprom\ProjectBundle\Controller\Rest;
 
 use Devprom\ProjectBundle\Service\Model\ModelServiceBugReporting; 
 use Devprom\ProjectBundle\Controller\Rest\RestController;
+use Symfony\Component\HttpFoundation\Request;
 use Devprom\ProjectBundle\Service\Model\FilterResolver\CommonFilterResolver;
 
 class BugController extends RestController
 {
-	function getEntity()
+	function getEntity(Request $request)
 	{
 		return 'Request';
 	}
 
-	protected function getFilterResolver()
+	protected function getFilterResolver(Request $request)
 	{
 		return array();
 	}
 	
-    protected function getModelService()
+    protected function getModelService(Request $request)
     {
     	return new ModelServiceBugReporting(
     			new \ModelValidator(

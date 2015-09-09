@@ -39,7 +39,7 @@ class Form
 		$this->object = $object;
 		$this->readonly = false;
 		$this->dynamic_mode = $dynamic_mode;
-		$this->form_id = 'object_form';
+		$this->form_id = uniqid(get_class($this));
 
 		$class_name = $this->object->getEntityRefName();
 		
@@ -705,13 +705,6 @@ class Form
 			return;
 		}
 		
-		if ( $this->dynamic_mode ) {
-			$this->form_id = $this->object->getEntityRefName();
-		}
-		else {
-			$this->form_id = 'object_form';
-		}
-		
 		$formname = $this->getFormPage();
 		
 		if ( $this->has_title )
@@ -730,7 +723,7 @@ class Form
 
        	$submitId = $this->object->getEntityRefName().'SubmitBtn';
         ?>
-        <form action="<? echo $formname; ?>" method="post" id="<? echo $this->form_id ?>" name="object_form" enctype="multipart/form-data" style="margin-top:0pt;margin-bottom:0pt;">
+        <form action="<? echo $formname; ?>" method="post" id="<? echo $this->form_id ?>" enctype="multipart/form-data" style="margin-top:0pt;margin-bottom:0pt;">
 		  <input id="<? echo $this->object->getEntityRefName().'action_mode'; ?>" type="hidden" name="action_mode" value="form">
 		  <input name="entity" value="<? echo ($_REQUEST['entity'] != '' ? $_REQUEST['entity'] : $this->object->getEntityRefName()); ?>" type="hidden">
 		  <input name="WasRecordVersion" value="<? echo $this->getFieldValue('RecordVersion'); ?>" type="hidden">
@@ -852,7 +845,7 @@ class Form
 					
 				 	echo '<div style="float:left;padding-left:25px;">';
 				 	?>
-       				<input class="btn" onclick="javascript: submitForm('delete');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Удалить'))?>" tabindex="1002" <? if ( !$access ) echo 'disabled'; ?> type="button" title="<? echo $reason ?>" value="<? echo_lang($this->getButtonName('Удалить')) ?>">
+       				<input class="btn" onclick="javascript: submitForm('<?=$this->getId()?>','delete');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Удалить'))?>" tabindex="1002" <? if ( !$access ) echo 'disabled'; ?> type="button" title="<? echo $reason ?>" value="<? echo_lang($this->getButtonName('Удалить')) ?>">
             		<?
            			echo '</div>';
 					break;
@@ -860,7 +853,7 @@ class Form
 				case 'save':
 					echo '<div style="float:left">';
 					?>
-                	<input class="btn btn-primary" onclick="javascript: submitForm('modify');" type="button" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Сохранить'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" value="<? echo_lang($this->getButtonName('Сохранить')) ?>">
+                	<input class="btn btn-primary" onclick="javascript: submitForm('<?=$this->getId()?>','modify');" type="button" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Сохранить'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" value="<? echo_lang($this->getButtonName('Сохранить')) ?>">
     	            <?
                		echo '</div>';
 					break;
@@ -868,7 +861,7 @@ class Form
 				case 'new':
 				 	echo '<div style="float:left">';
 					?>
-               		<input class="btn " tabindex="1000" type="button" onclick="javascript: submitForm('new');" value="<? echo_lang($this->getButtonName('Новое')) ?>">
+               		<input class="btn " tabindex="1000" type="button" onclick="javascript: submitForm('<?=$this->getId()?>','new');" value="<? echo_lang($this->getButtonName('Новое')) ?>">
 					<?
                		echo '</div>';
 					break;
@@ -876,7 +869,7 @@ class Form
 				case 'add':
 				 	echo '<div style="float:left">';
             		?>
-            		<input class="btn btn-primary" onclick="javascript: submitForm('add');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Создать'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" type="button" value="<? echo_lang($this->getButtonName('Создать')) ?>">
+            		<input class="btn btn-primary" onclick="javascript: submitForm('<?=$this->getId()?>','add');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Создать'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" type="button" value="<? echo_lang($this->getButtonName('Создать')) ?>">
                 	<?
                		echo '</div>';
 					break;
@@ -884,7 +877,7 @@ class Form
 				case 'cancel':
 				 	echo '<div style="float:left">';
     			 	?>
-               		<input class="btn btn-link" onclick="javascript: submitForm('cancel');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Отменить'))?>" tabindex="1001" type="button" value="<? echo_lang($this->getButtonName('Отменить')) ?>">
+               		<input class="btn btn-link" onclick="javascript: submitForm('<?=$this->getId()?>','cancel');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Отменить'))?>" tabindex="1001" type="button" value="<? echo_lang($this->getButtonName('Отменить')) ?>">
                 	<?
 	            	echo '</div>';
 					break;

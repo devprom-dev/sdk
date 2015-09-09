@@ -155,8 +155,8 @@ class RunJobs extends Command
 					}
 					catch( Exception $e )
 					{
-						if ( is_object($this->getLogger()) )
-						{
+						core\classes\ExceptionHandler::Instance()->captureException($e);
+						if ( is_object($this->getLogger()) ) {
 							$this->getLogger()->error( get_class($command).': '.$e->getMessage() );
 						}
 					}

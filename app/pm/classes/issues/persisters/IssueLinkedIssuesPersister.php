@@ -21,7 +21,13 @@ class IssueLinkedIssuesPersister extends ObjectSQLPersister
  		
  		$columns[] =  
  			" CONCAT_WS(',',".
- 			"     (SELECT GROUP_CONCAT(CONCAT_WS(':',lkt.BackwardCaption,CAST(l.SourceRequest AS CHAR),CASE lkt.ReferenceName WHEN 'blocks' THEN 'blocked' ELSE lkt.ReferenceName END, sr.State, 1)) " .
+ 			"     (SELECT GROUP_CONCAT(".
+ 			"				CONCAT_WS(':',".
+ 			"						  lkt.BackwardCaption,CAST(l.SourceRequest AS CHAR),".
+ 			"						  CASE lkt.ReferenceName WHEN 'blocks' THEN 'blocked' ELSE lkt.ReferenceName END,".
+ 			"						  sr.State,".
+ 			"						  CASE lkt.ReferenceName WHEN 'blocks' THEN 2 ELSE 1 END".
+ 			"			  )) " .
 			"        FROM pm_ChangeRequestLink l," .
             "             pm_ChangeRequestLinkType lkt," .
             "			  pm_ChangeRequest sr ".

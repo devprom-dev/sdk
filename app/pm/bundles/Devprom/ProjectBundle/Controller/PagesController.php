@@ -4,6 +4,7 @@
  */
 namespace Devprom\ProjectBundle\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Routing\ClassResourceInterface,
     FOS\RestBundle\Controller\FOSRestController,
 	Devprom\ProjectBundle\Service\Navigation\ModuleService;

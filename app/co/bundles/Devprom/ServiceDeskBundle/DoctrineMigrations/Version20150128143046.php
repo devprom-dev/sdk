@@ -12,7 +12,11 @@ class Version20150128143046 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        $this->addSql('DROP INDEX UNIQ_59F2E2C792FC23A8 ON cms_ExternalUser');
+        try {
+            $this->addSql('DROP INDEX UNIQ_59F2E2C792FC23A8 ON cms_ExternalUser');
+        }
+        catch(Exception $e) {
+        }
     }
 
     public function down(Schema $schema)

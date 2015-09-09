@@ -22,11 +22,8 @@ class CacheEngineFS extends CacheEngine
 		if ( !is_dir($this->cache_dir) )
 		{
 	        $was_mask = umask(0);
-	        
-		    mkdir($this->cache_dir, 0777, true);
-		    
+		    @mkdir($this->cache_dir, 0777, true);
 		    chmod($this->cache_dir, 0777);
-		    
 		    umask($was_mask);
 		}
 	}

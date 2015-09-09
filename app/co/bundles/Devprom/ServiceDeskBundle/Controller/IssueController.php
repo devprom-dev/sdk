@@ -209,15 +209,16 @@ class IssueController extends Controller
     /**
      * Lists all Issue entities.
      *
-     * @Route("/{filter}/{sortColumn}/{sortDirection}", name="issue_list", defaults={"filter" = "my", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
+     * @Route("/{filter}/{sortColumn}/{sortDirection}", name="issue_list", requirements={"filter" = "my|company"}, defaults={"filter" = "my", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
      * @Method("GET")
      * @Template()
      */
     public function indexAction($filter, $sortColumn, $sortDirection)
     {
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
-    	
-    	if ( $filter == 'my' || $this->getUser()->getCompany()->getSeeCompanyIssues() != 'Y' )
+
+        $company = $this->getUser()->getCompany();
+    	if ( $filter == 'my' || (is_object($company) && $company->getSeeCompanyIssues() != 'Y') )
     	{
 	        $issues = $this->getIssueService()->getIssuesByAuthor(
 	            $this->getUser()->getEmail(), $sortColumn, $sortDirection

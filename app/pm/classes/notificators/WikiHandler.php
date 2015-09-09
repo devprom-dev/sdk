@@ -8,33 +8,57 @@ class WikiHandler extends EmailNotificatorHandler
 {
 	function getParticipants( $object_it, $prev_object_it, $action ) 
 	{
-		global $model_factory, $project_it;
-		
-		$result = array();
+		// notify author of wiki page
+		$result = array(
+				$object_it->get('Author')
+		);
 
-		switch ( $object_it->object->getReferenceName() )
+		// notify co-authors of wiki page
+		if ( $action == 'modify' )
 		{
-			case WikiTypeRegistry::Requirement:
-		 		// notification will be sent only if content of the requirement was changed
-		 		if ( $action == 'modify' && $object_it->get('Content') != $prev_object_it->get('Content') )
-		 		{
-		 			// notification is required only when state of the requirement was behind "In Progress"
-		 			$state_it = $prev_object_it->getStateIt();
-		 			
-		 			if ( $state_it->get('ReferenceName') != 'submitted' )
-		 			{ 
-		 				return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
-		 			}
-		 		}
-		 		break;
-		 		
-			case WikiTypeRegistry::KnowledgeBase:
-				return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
+			$change_it = getFactory()->getObject('WikiPageChange')->getByRef('WikiPage', $object_it->getId());
+			$result = array_merge($result, $change_it->fieldToArray('Author')); 
 		}
-		
+
 		return $result;
 	}	
  	
+	function getUsers( $object_it, $prev_object_it, $action ) 
+	{
+		$result = array();
+
+		// notify assignee and owners of tasks and issues related to wiki page
+		if ( $object_it->get('Tasks') != '' ) {
+			$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
+					array (
+							new FilterInPredicate($object_it->get('Tasks')),
+							new StatePredicate('notresolved')
+					)
+			);
+			$result = array_merge($result, $task_it->fieldToArray('Assignee'));
+		}
+
+		if ( $object_it->get('Increments') != '' ) {
+			$issue_it = getFactory()->getObject('Request')->getRegistry()->Query(
+					array (
+							new FilterInPredicate($object_it->get('Increments')),
+							new StatePredicate('notresolved')
+					)
+			);
+			$result = array_merge($result, $issue_it->fieldToArray('Owner'));
+			
+			$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
+					array (
+							new FilterAttributePredicate('ChangeRequest', $issue_it->idsToArray()),
+							new StatePredicate('notresolved')
+					)
+			);
+			$result = array_merge($result, $task_it->fieldToArray('Assignee'));
+		}
+		
+		return $result;
+	}
+	
 	protected function getFields( $action, $object_it, $prev_object_it )
 	{
 		$fields = parent::getFields( $action, $object_it, $prev_object_it );

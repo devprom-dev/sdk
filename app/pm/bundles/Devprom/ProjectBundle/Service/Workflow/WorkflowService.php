@@ -29,8 +29,7 @@ class WorkflowService
 		$target_state_ref_name = !is_array($target_state_ref_name) ? preg_split('/,/',$target_state_ref_name) : $target_state_ref_name;
 		
 		if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
-		if ( in_array($object_it->get('State'), $target_state_ref_name) ) return;
-		
+
 	    $source_it = $this->state_object->getRegistry()->Query(
     			array (
     					new \FilterAttributePredicate('ReferenceName', $object_it->get('State')),
@@ -64,7 +63,11 @@ class WorkflowService
 
 	    if ( $transition_it->getId() == '' )
 	    {
-	    	throw new \Exception('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
+			$logger = \Logger::getLogger('System');
+			if ( is_object($logger) ) {
+				$logger->error('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
+				return false;
+			}
 	    }
 	    
 		$object_it->object->modify_parms($object_it->getId(), 
@@ -75,14 +78,13 @@ class WorkflowService
 						)
 				)
 		);
-		
 		$object_it = $object_it->object->getExact($object_it->getId());
-				
 		if ( $fire_event )
 		{
 			getFactory()->getEventsManager()->
 	    		executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
 		}
+        return true;
 	}
 	
 	private $object = null;

@@ -16,6 +16,7 @@ var devpromOpts = {
 
 var formHandlers = new Array();
 var originalState = '';
+var text = underi18n.MessageFactory(messages);
 
  var filterLocation = 
  {
@@ -1265,9 +1266,9 @@ function focusField( form )
 		if ( $(this).is('.wysiwyg') )
 		{
 			var element = $(this);
-			
-			setTimeout( function() { CKEDITOR.instances[element.attr('id')].focus(); }, 510 );
-			
+            if ( CKEDITOR.instances[element.attr('id')] ) {
+                setTimeout( function() { CKEDITOR.instances[element.attr('id')].focus(); }, 510 );
+            }
 			return false;
 		}
 
@@ -1443,8 +1444,9 @@ function completeUIExt( jqe )
 	{
 		filterLocation.setup('', 1);
 		
-		$('.popover').toggleClass('in').remove();
-		
+		$('.popover.with-popover').toggleClass('in').remove();
+        $('.popover.with-tooltip').toggleClass('in').remove();
+
 		if ( $(e.target).is('.title>a, .title>a>strike') )
 		{
 			e.stopPropagation();
@@ -1592,7 +1594,7 @@ function completeUIExt( jqe )
         }
         
         window.setTimeout( function() {
-        	boardItemOptions.resizeCards();
+			if ( boardItemOptions ) boardItemOptions.resizeCards();
         }, 350);
         
     });
@@ -1876,28 +1878,20 @@ function makeAsyncForm( formId, url, message, options )
 			options.successCallback(response);
 			resetUnloadHandlers(formId);
 			
-			try
-			{
+			try	{
 				data = jQuery.parseJSON(response);
+                $('#result'+formId).html('');
 			}
 			catch( e )
 			{
-
-	 			if ( (new RegExp('Internal Server Error')).exec( response ) != null )
- 				{
+	 			if ( (new RegExp('Internal Server Error')).exec( response ) != null ) {
 	 				window.location = '/500';
  				}
-	 			
-	 			$('#result'+formId)
-					.removeClass('alert-success alert-error').addClass('alert alert-error').html(response);
-	 			
+	 			$('#result'+formId).removeClass('alert-success alert-error').addClass('alert alert-error').html(response);
 	 			return;
 			}
-			
-			$('#result'+formId).html('');
-			
-			if ( typeof data != 'object' )
-			{
+
+			if ( data == null || typeof data != 'object' ) {
 				$('.btn[type=submit]').attr('disabled', false);
 				return;
 			}
@@ -2133,7 +2127,7 @@ function workflowRunMethod(method, callback)
 							    },
 								beforeClose: function(event, ui) 
 								{
-									formDestroy($('#modal-form form').attr('id'));
+                                    return workflowHandleBeforeClose(event, ui);
 								},
 								buttons: [
 									{
@@ -2212,8 +2206,9 @@ function workflowRunMethod(method, callback)
 function workflowMakeupDialog()
 {
 	completeUIExt($('#modal-form').parent());
+    var formId = $('#modal-form form').attr('id');
 
-	registerFormValidator( $('#modal-form form').attr('id'), function(form) 
+	registerFormValidator( formId, function(form)
 	{
 		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
@@ -2223,9 +2218,19 @@ function workflowMakeupDialog()
 			 return this.id.match(/embeddedForm\d+/);
 		}).length < 1;
 	});
-	
+
+    registerBeforeUnloadHandler(formId, function() {
+        if ( originalFormState != $('#'+formId).formSerialize() ) {
+            return text('form-modified');
+        }
+    });
+
 	$('#modal-form form[id] input:visible:first').blur();
-	
+
+    if ( !$.browser.msie ) {
+        originalFormState = $('#modal-form form[id]').formSerialize();
+    }
+
 	focusField('modal-form form[id]');
 }
 
@@ -2310,9 +2315,7 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy($('#modal-form form').attr('id'));
-						$('#modal-form').parent().detach();
-						filterLocation.hideActivity();
+                        return workflowHandleBeforeClose(event, ui);
 					},
 					buttons: [
 						{
@@ -2378,6 +2381,23 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 				});
 			}
 	});
+}
+
+function workflowHandleBeforeClose( event, ui )
+{
+    var frmid = $('#modal-form form').attr('id');
+
+    if ( typeof event.which != 'undefined' && (event.which == 1 || event.which == 27) ) {
+        var result = beforeUnload(frmid);
+        if ( typeof result == 'string' ) {
+            if ( !confirm(text('form-modified')) ) return false;
+        };
+    }
+
+    formDestroy(frmid);
+    $('#modal-form').parent().detach();
+    filterLocation.hideActivity();
+    return true;
 }
 
 function workflowModify( options, callback ) 
@@ -2458,8 +2478,7 @@ function workflowModify( options, callback )
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy($('#modal-form form').attr('id'));
-						filterLocation.hideActivity();
+                        return workflowHandleBeforeClose(event, ui);
 					},
 					buttons: [
 						{
@@ -2612,9 +2631,7 @@ function workflowProperties( form_url, object_id, entity_ref, form_title, callba
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy($('#modal-form form[id]').attr('id'));
-						
-						filterLocation.hideActivity();
+                        return workflowHandleBeforeClose(event, ui);
 					},
 					buttons: [
 						{
@@ -2752,10 +2769,12 @@ function openAjaxForm(title, url, callback)
 					width: 750,
 					modal: true,
 					resizable: true,
-					open: function()
-					{
+					open: function() {
 						workflowMakeupDialog();
 					},
+                    beforeClose: function(event, ui) {
+                        return workflowHandleBeforeClose(event, ui);
+                    },
 					buttons: [
 						{
 							tabindex: 10,

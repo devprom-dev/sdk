@@ -95,10 +95,11 @@ class WikiHistoryList extends ProjectLogList
 	
 	function getChangeIt( $object_it )
  	{
-		if ( preg_match('/\&version=([\d]+)/i', $object_it->getHtmlDecoded('Content'), $matches) )
+		$history_url = $object_it->getHtmlDecoded('ObjectUrl');
+		if ( $history_url == '' ) $history_url = $object_it->getHtmlDecoded('Content');
+		if ( preg_match('/\&version=([\d]+)/i', $history_url, $matches) )
 		{
 			$this->change_it->moveToId($matches[1]);
-
 			return $this->change_it->copy();
 		}
 		else
@@ -165,7 +166,7 @@ class WikiHistoryList extends ProjectLogList
 
 	function IsNeedToDisplayOperations( ) { return true; }
 	
-	function getItemActions( $column_name, $object_it ) 
+	function getActions( $object_it ) 
 	{
 		$actions = array();
 		

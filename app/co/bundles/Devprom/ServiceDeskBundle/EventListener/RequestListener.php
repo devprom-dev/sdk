@@ -4,7 +4,7 @@ namespace Devprom\ServiceDeskBundle\EventListener;
 use Devprom\ServiceDeskBundle\Security\LicenseChecker;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\Security\Core\SecurityContext;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Twig_Environment;
@@ -15,15 +15,15 @@ use Twig_Environment;
  */
 class RequestListener implements EventSubscriberInterface
 {
-    /** @var SecurityContext  */
-    protected $securityContext;
+    /** @var TokenStorage  */
+    protected $tokenStorage;
     /** @var  Twig_Environment */
     protected $twig;
     protected $defaultLocale;
 
-    public function __construct(SecurityContext $securityContext, Twig_Environment $twig, $defaultLocale = 'en')
+    public function __construct(TokenStorage $tokenStorage, Twig_Environment $twig, $defaultLocale = 'en')
     {
-        $this->securityContext = $securityContext;
+        $this->tokenStorage = $tokenStorage;
         $this->twig = $twig;
         $this->defaultLocale = $defaultLocale;
     }
@@ -55,25 +55,25 @@ class RequestListener implements EventSubscriberInterface
         if ($request->getSession()->get("_locale") != '' ) {
         	$request->setLocale($request->getSession()->get("_locale"));
         }
-    }
+}
 
-    /**
-     * @return mixed
-     */
-    protected function getUserLanguage()
-    {
-        $token = $this->securityContext->getToken();
-        if ($token && is_object($user = $token->getUser())) {
-            return $token->getUser()->getLanguage();
-        }
-        return null;
+/**
+ * @return mixed
+ */
+protected function getUserLanguage()
+{
+    $token = $this->tokenStorage->getToken();
+    if ($token && is_object($user = $token->getUser())) {
+        return $token->getUser()->getLanguage();
     }
+    return null;
+}
 
- 	static public function getSubscribedEvents()
-    {
-        return array(
-            // must be registered before the default Locale listener
-            KernelEvents::REQUEST => array(array('onKernelRequest', 17)),
-        );
-    }    
+static public function getSubscribedEvents()
+{
+    return array(
+        // must be registered before the default Locale listener
+        KernelEvents::REQUEST => array(array('onKernelRequest', 17)),
+    );
+}
 }

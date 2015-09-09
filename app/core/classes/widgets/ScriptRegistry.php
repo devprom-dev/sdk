@@ -19,7 +19,7 @@ class ScriptRegistry extends ObjectRegistrySQL
  	function addScriptFile( $file_name )
  	{
  	    $this->data[] = array (
- 	    		'Caption' => addslashes(file_get_contents($file_name))
+ 	    		'Caption' => file_get_contents($file_name)
  	    );
  	}
 

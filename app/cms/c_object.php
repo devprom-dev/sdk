@@ -18,8 +18,9 @@ include('c_iterator.php');
 	var $defaultsort;
 	var $model_factory;
 	
-	function createIterator() {
-		return new Iterator( $this );
+	function createIterator()
+    {
+		return null;
 	}
 	
 	function getExcelIterator( $parms ) 
@@ -726,7 +727,7 @@ include('c_iterator.php');
  	{
  		$this->object = $object;
  		
- 	 	if ( in_array($this->object->getAttributeType($this->attribute), array('date', 'datetime')) )
+ 	 	if ( in_array($this->object->getAttributeType($this->attribute), array('date', 'datetime')) && $this->group_function == '' )
  		{
  			$this->setGroupFunction('UNIX_TIMESTAMP');
  		}
@@ -753,11 +754,14 @@ include('c_iterator.php');
  			case 'month':
  			case 'quarter':
  			case 'year':
+                $this->group_function = $function.'(';
+                break;
+
  			case 'unix_timestamp':
  				$this->group_function = '(SELECT @row_num:=@row_num+1) + '.$function.'(';
- 				
+				break;
+
  			default:
- 			    
  			    if ( preg_match('/extract/', $function) )
  			    {
  			        $this->group_function = $function;
@@ -809,7 +813,7 @@ include('c_iterator.php');
  	function getInnerColumn()
  	{
  		$computed = $this->object->getAttributeDbType($this->getAttribute()) != '' && !$this->object->IsAttributeStored($this->getAttribute());
- 		
+
  	 	if ( $computed )
  		{
  			return $this->attribute; 

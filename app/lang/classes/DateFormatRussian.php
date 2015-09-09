@@ -22,9 +22,13 @@ class DateFormatRussian extends DateFormatBase
  		return '%d.%m.%Y';
  	}
 
- 	function getDateFormatShort() 
+ 	function getDateFormatShort( $date )
  	{
- 		return '%d.%m.%y';
+		if ( strftime('%Y', $date) == date('Y') ) {
+			return 'j - '.$this->names_map[date('M', $date)];
+		} else {
+			return 'j - '.$this->names_map[date('M', $date)].' Y';
+		}
  	}
  	
  	function getPhpDate( $time )
@@ -57,4 +61,19 @@ class DateFormatRussian extends DateFormatBase
  		else
  			return 'дней';
  	}
+
+	private $names_map = array(
+		'Jan' => 'Янв',
+		'Feb' => 'Февр',
+		'Mar' => 'Март',
+		'Apr' => 'Апр',
+		'May' => 'Май',
+		'Jun' => 'Июнь',
+		'Jul' => 'Июль',
+		'Aug' => 'Авг',
+		'Sep' => 'Сент',
+		'Oct' => 'Окт',
+		'Nov' => 'Нояб',
+		'Dec' => 'Дек',
+	);
 }

@@ -110,79 +110,12 @@ class RequestTable extends PMPageTable
 	function getNewActions()
 	{
 	    $append_actions = array();
+		$group = $this->getListRef()->getGroup();
 	    
-	    $filter_values = $this->getFilterValues();
-	    
-		$method = new ObjectCreateNewWebMethod($this->getObject());
-		$method->setRedirectUrl('donothing');
-		
-		if ( $method->hasAccess() )
-		{
-			$parms = array (
-					'area' => $this->getPage()->getArea()
-			);
-				
-			$report = $this->getReportBase();
-			    
-		    if ( $report == 'myissues' )
-		    { 
-		    	$parms['Owner'] = getSession()->getUserIt()->getId(); 
-			}
-				
-			$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
-					array (
-							new FilterBaseVpdPredicate(),
-							new FilterAttributePredicate('ReferenceName', $filter_values['type'])
-					)
-			);
-			
-			while ( !$type_it->end() )
-			{
-				$parms['Type'] = $type_it->getId();
-				
-				$uid = 'append-issue-'.$type_it->get('ReferenceName');
-				
-				$append_actions[$uid] = array ( 
-					'name' => $type_it->getDisplayName(),
-					'uid' => $uid,
-					'url' => $url != '' 
-							? preg_replace('/\%query\%/', 'Type='.$type_it->getId(), $url) 
-							: $method->getJSCall($parms, $type_it->getDisplayName())
-				);
-				
-				$type_it->moveNext();
-			}
-			
-			unset($parms['Type']);
-			
-			if ( in_array($filter_values['type'], array('','all')) || strpos($filter_values['type'],'none') !== false )
-			{
-				$uid = 'append-issue';
-				
-				$append_actions[$uid] = array ( 
-					'name' => $this->object->getDisplayName(),
-					'uid' => $uid,
-					'url' => $url != '' ? preg_replace('/\%query\%/', '', $url) : $method->getJSCall($parms)
-				);
-			}
-			
-			$template_it = getFactory()->getObject('RequestTemplate')->getAll();
-			if ( $template_it->count() > 0 ) $append_actions[] = array();
-			
-			while( !$template_it->end() )
-			{
-				$parms['template'] = $template_it->getId();
-				
-				$append_actions[] = array ( 
-						'name' => $template_it->getDisplayName(),
-						'url' => $url != '' ? preg_replace('/\%query\%/', 'template='.$template_it->getId(), $url) : $method->getJSCall($parms)
-				);
-				
-				$template_it->moveNext();
-			}
+		if ( $group != 'Project' && getFactory()->getAccessPolicy()->can_create($this->getObject()) ) {
+			$append_actions = $this->getNewCardActions(getSession()->getProjectIt());
 		}
 
-		$group = $this->getListRef()->getGroup();
 		if ( in_array($group, array('Function', 'PlannedRelease', 'Iterations')) )
 		{
 			$method = new ObjectCreateNewWebMethod(
@@ -204,6 +137,79 @@ class RequestTable extends PMPageTable
 	                   		 ) 
 				);
 			}
+		}
+		
+		return $append_actions;
+	}
+	
+	function getNewCardActions( $project_it )
+	{
+		$append_actions = array();
+		$filter_values = $this->getFilterValues();
+		
+		$object = $this->getObject();
+		$object->setVpdContext($project_it);
+		
+		$method = new ObjectCreateNewWebMethod($object);
+		$method->setRedirectUrl('donothing');
+		
+		$parms = array (
+				'area' => $this->getPage()->getArea()
+		);
+			
+		$report = $this->getReportBase();
+	    if ( $report == 'myissues' ) { 
+	    	$parms['Owner'] = getSession()->getUserIt()->getId(); 
+		}
+			
+		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
+				array (
+						new FilterVpdPredicate($project_it->get('VPD')),
+						new FilterAttributePredicate('ReferenceName', $filter_values['type']),
+						new SortOrderedClause()
+				)
+		);
+		
+		while ( !$type_it->end() )
+		{
+			$parms['Type'] = $type_it->getId();
+			$uid = 'append-issue-'.$type_it->get('ReferenceName');
+			
+			$append_actions[$uid] = array ( 
+				'name' => $type_it->getDisplayName(),
+				'uid' => $uid,
+				'url' => $method->getJSCall($parms, $type_it->getDisplayName())
+			);
+			
+			$type_it->moveNext();
+		}
+		
+		unset($parms['Type']);
+		
+		if ( in_array($filter_values['type'], array('','all')) || strpos($filter_values['type'],'none') !== false )
+		{
+			$uid = 'append-issue';
+			$append_actions[$uid] = array ( 
+				'name' => $this->object->getDisplayName(),
+				'uid' => $uid,
+				'url' => $url != '' ? preg_replace('/\%query\%/', '', $url) : $method->getJSCall($parms)
+			);
+		}
+		
+		$template_it = getFactory()->getObject('RequestTemplate')->getRegistry()->Query(
+				array ( new FilterVpdPredicate($project_it->get('VPD')) )
+		);
+		if ( $template_it->count() > 0 ) $append_actions[] = array();
+		
+		while( !$template_it->end() )
+		{
+			$parms['template'] = $template_it->getId();
+			$append_actions[] = array ( 
+					'name' => $template_it->getDisplayName(),
+					'url' => $url != '' ? preg_replace('/\%query\%/', 'template='.$template_it->getId(), $url) : $method->getJSCall($parms)
+			);
+			
+			$template_it->moveNext();
 		}
 		
 		return $append_actions;
@@ -306,11 +312,8 @@ class RequestTable extends PMPageTable
 	
 	function getFiltersBase()
 	{
-		global $model_factory;
-		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
-		
 		// build Responsible filter
 		
 		$filters = array (
@@ -334,46 +337,34 @@ class RequestTable extends PMPageTable
 			$filters[] = $this->buildFilterType();
 		}
 			
-		if ( $methodology_it->HasFeatures() )
-		{
+		if ( $methodology_it->HasFeatures() ) {
 			$filters[] = $this->buildFilterFunction();
 		}
 		
 		if ( $methodology_it->HasReleases() )
 		{
-			$release = $model_factory->getObject('Release');
+			$release = getFactory()->getObject('Release');
 			$release->addFilter( new ReleaseTimelinePredicate('current') );
-			
 			$releases = new FilterObjectMethod( $release, translate('Релизы'), 'release');
-			
 			$filters = array_merge( array_slice($filters, 0, 1), array( $releases ), array_slice($filters, 1) );
 		}
 		
 		if ( $methodology_it->HasPlanning() )
 		{
-		    $iteration = $model_factory->getObject('Iteration');
-		    
+		    $iteration = getFactory()->getObject('Iteration');
 		    $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-		    
 			$filters[] = new FilterObjectMethod( $iteration, translate('Итерации'), 'iteration');
 		}
 		
 		array_push( $filters, $this->buildFilterSubmittedVersion() );
 
 		$strategy = $methodology_it->getEstimationStrategy();
-		
 		$filter = $strategy->getEstimationFilter();
-		
 		if ( is_object($filter) ) array_push( $filters, $filter );
 		
 	    $filter = $this->buildSnapshotFilter();
+	    if ( is_object($filter) ) $filters[] = $filter;
 	    
-	    if ( is_object($filter) ) $filters[] = $filter; 
-	    
-	    $list_object = $this->getListRef();
-	    
-	    $report_name = $this->getReport();
-
 		return array_merge( $filters, parent::getFilters() );
 	}
 	
@@ -392,7 +383,7 @@ class RequestTable extends PMPageTable
 		$predicates[] = new FilterSubmittedAfterPredicate($values['submittedon']);
 		$predicates[] = new FilterSubmittedBeforePredicate($values['submittedbefore']);
 		$predicates[] = new RequestSubmittedFilter($values['subversion']);
-		$predicates[] = new FilterAttributePredicate('Function', $values['function']);
+		$predicates[] = new RequestFeatureFilter($values['function']);
 		$predicates[] = new RequestTagFilter($values['tag']);
 		$predicates[] = new RequestReleasePredicate($values['release']);
 		$predicates[] = new RequestTestResultPredicate($_REQUEST['test']);
@@ -514,5 +505,29 @@ class RequestTable extends PMPageTable
 	{
 		$filter = new FilterAutoCompleteWebMethod(getFactory()->getObject('Version'), translate('Обнаружено в версии'), 'subversion');
 		return $filter;
+	}
+	
+	function getFeatureTitle( $feature_it, $object_it, $uid )
+	{
+		if ( $object_it->get('Function') == '' ) {
+			return '';
+		}
+		else {
+			$feature_it->moveToId($object_it->get('Function'));
+					
+			$parents = $feature_it->getParentsArray();
+			if ( count($parents) > 1 ) {
+				$parent_it = $feature_it->object->getExact($parents);
+				$titles = array();
+				while( !$parent_it->end() ) {
+					$titles[$parent_it->get('SortIndex')] = $parent_it->getDisplayName();
+					$parent_it->moveNext();  
+				}
+				ksort($titles);
+				return translate($object_it->object->getAttributeUserName('Function')).': '.
+						$uid->getUidIconGlobal($feature_it).' '.join(' / ', $titles);
+			}
+		}
+		return '';
 	}
 } 

@@ -517,7 +517,7 @@ div.embeddedRowTitle .transparent-btn
 	    width: 25%;
 	}
 	.properties-column-31, .properties-column-41 {
-	    width: 32%;
+	    width: 25%;
 	}
 	.properties-column-42 {
         width: 0;
@@ -528,25 +528,25 @@ div.embeddedRowTitle .transparent-btn
         width: 37%;
     }   
     .hidden-tv {
-        display: visible !important;
+        display: block !important;
     }
 }
 
 @media (min-width: 1281px) {
     .properties-column-30 {
-        width: 25%;
+        width: 30%;
     }
     .properties-column-31 {
-        width: 32%;
+        width: 30%;
     }
     .properties-column-32 {
         width: auto;
     }
 	.properties-column-40 {
-        width: 18%;
+        width: 22%;
     }
     .properties-column-41 {
-        width: 18%;
+        width: 20%;
     }
     .properties-column-42 {
         width: auto;
@@ -893,6 +893,10 @@ body.fullpage
 .properties-table th
 {
 	cursor: pointer;
+}
+
+.properties-table-trace th {
+    white-space: nowrap;
 }
 
 .ui-corner-all

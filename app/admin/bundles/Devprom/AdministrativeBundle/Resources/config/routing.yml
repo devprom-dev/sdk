@@ -1,57 +1,55 @@
 _admin_entry:
-    pattern:  /
+    path:  /
     defaults: { _controller: AdministrativeBundle:Main:index }
 
 _admin_install:
-    pattern:  /install/
+    path:  /install/
     defaults: { _controller: AdministrativeBundle:Install:index }
 
 _admin_license:
-    pattern:  /admin/license/
+    path:  /admin/license/
     defaults: { _controller: AdministrativeBundle:License:index }
 
 _admin_info:
-    pattern:  /admin/info
+    path:  /admin/info
     defaults: { _controller: AdministrativeBundle:Info:index }
 
 _admin_mailer:
-    pattern:  /admin/mailer/
+    path:  /admin/mailer/
     defaults: { _controller: AdministrativeBundle:Mailer:index }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 _mailer_store:
-    pattern:  /admin/mailer/
+    path:  /admin/mailer/
     defaults: { _controller: AdministrativeBundle:Mailer:store }
-    requirements:
-        _method:  POST
+    methods:  POST
     
 _admin_logs:
-    pattern:  /admin/log/
+    path:  /admin/log/
     defaults: { _controller: AdministrativeBundle:Logs:index }
 
 _admin_systemplates:
-    pattern:  /admin/systemtemplates/
+    path:  /admin/systemtemplates/
     defaults: { _controller: AdministrativeBundle:SystemTemplate:index }
     
 _admin_scripts:
-    pattern:  /admin/scripts/javascript/
+    path:  /admin/scripts/javascript/
     defaults: { _controller: CommonBundle:Scripts:js }
 
 _admin_css:
-    pattern:  /admin/scripts/css/
+    path:  /admin/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
 
 _admin_module:
-    pattern:  /{module}
+    path:  /{module}
     defaults: { _controller: AdministrativeBundle:Main:index }
 
 _admin_namespace:
-    pattern:  /{module}/{namespace}
+    path:  /{module}/{namespace}
     defaults: { _controller: AdministrativeBundle:Main:index }
 
 _admin_page:
-    pattern:  /{module}/{namespace}/{page}
+    path:  /{module}/{namespace}/{page}
     defaults: { _controller: AdministrativeBundle:Main:index }
 
     

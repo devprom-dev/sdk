@@ -93,7 +93,7 @@ class FilterObjectMethod extends FilterWebMethod
 	{
 		return $this->title;
 	}
-	
+
 	function getValues()
 	{
 		$values = array();
@@ -188,24 +188,5 @@ class FilterObjectMethod extends FilterWebMethod
  				  'object' => $this->getValueParm() ), 
  			$this->getValue() 
  		);
- 	}
- 	
- 	function getValue2()
- 	{
- 		$value = parent::getValue();
- 		if ( $value == '' )
- 		{
- 			if ( $this->has_all ) return 'all';
- 			
- 			$values = $this->getValues();
- 			foreach( $values as $key => $value )
- 			{
- 				return $key;
- 			}
- 		}
- 		else
- 		{
- 			return $value;
- 		}
  	}
 }

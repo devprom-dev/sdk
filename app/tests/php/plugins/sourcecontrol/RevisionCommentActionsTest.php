@@ -100,6 +100,31 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
         ), TRIGGER_ACTION_ADD);
     }
 
+    function test2WorkItemBinding()
+    {
+        $this->handler->expects($this->exactly(2))->method('bindObjects')->with(
+        		$this->anything(),
+			    $this->callback(function($o) { 
+			    	$uid = new ObjectUID;
+			    	foreach( $o as $value ) { 
+			    		if (!$uid->isValidUid($value)) return false;
+			    	}
+			    	return true;
+			    })
+        );
+        
+    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    			array (
+	        		array (
+	        				'pm_SubversionRevisionId' => 1,
+	        				'Description' => 
+	        					'[T-686] #resolve #time 2h #comment asdasd'.PHP_EOL.
+	        					'[T-687] #resolve #time 2h #comment asdasd'
+	        		)
+    			)
+        ), TRIGGER_ACTION_ADD);
+    }
+    
     function testWorkflowActions()
     {
     	$commit_it = (new SubversionRevision)->createCachedIterator(

@@ -80,7 +80,6 @@ class CloneLogic
 				case 'pm_TaskType':
 				case 'WikiPageType':
 				case 'pm_IssueType':
-				case 'pm_Environment':
 				case 'pm_TestExecutionResult':
 				case 'pm_CustomAttribute':
 					$id = CloneLogic::applyToLegacy( $context, 'ReferenceName', $attrs, $iterator, $project_it );
@@ -810,12 +809,8 @@ class CloneLogic
  	
  	static function replaceUser( $value )
  	{
- 		$user_it = getSession()->getUserIt();
- 		
- 		$value = preg_replace('/taskassignee=[\d]+/i', 'taskassignee='.$user_it->getId(), $value);
-				
-		$value = preg_replace('/owner=[\d]+/i', 'owner='.$user_it->getId(), $value);
-		
+ 		$value = preg_replace('/taskassignee=[\d]+/i', 'taskassignee=user-id', $value);
+		$value = preg_replace('/owner=[\d]+/i', 'owner=user-id', $value);
 		return $value;
  	}
 }

@@ -41,7 +41,7 @@ if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS )
 	$handlers[] = new ExceptionHandlerListenerRaven();
 }
 
-new core\classes\ExceptionHandler( $handlers );
+core\classes\ExceptionHandler::Instance($handlers);
 
 // profiling
 MetricsServer::Instance()->Start();

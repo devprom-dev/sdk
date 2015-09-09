@@ -159,45 +159,16 @@ class Release extends Metaobject
 	
 	function modify_parms( $object_id, $parms )
 	{
-		global $model_factory;
-		
-		$was_object_it = $this->getExact( $object_id );
-		
 		$parms['FinishDate'] = $this->getDefaultFinishDate($parms['StartDate'], $parms['FinishDate']);
 		
 		$result = parent::modify_parms( $object_id, $parms );
-		
 		if ( $result < 1 ) return $result;
 		
 		$object_it = $this->getExact( $object_id );
 		
-		if ( $parms['StartDate'] != '' )
-		{
-			$object_it->resetBurndown();
-		}
+		if ( $parms['StartDate'] != '' ) $object_it->resetBurndown();
 
 		$object_it->storeMetrics();
-		
-		// update "Resolved in" field across all issues were resolved in the release
-		if ( $was_object_it->getDisplayName() != $object_it->getDisplayName() )
-		{
-			$request = $model_factory->getObject('pm_ChangeRequest');
-			$request->removeNotificator('EmailNotificator');
-			
-			$request->addFilter( 
-				new FilterAttributePredicate("ClosedInVersion", $was_object_it->getDisplayName()) );
-				 
-			$request_it = $request->getAll();
-
-			while( !$request_it->end() )
-			{
-				$request->modify_parms($request_it->getId(), array (
-					"ClosedInVersion" => $object_it->getDisplayName()
-				));
-				$request_it->moveNext();
-			}
-		}
-
 		return $result;
 	}
 }

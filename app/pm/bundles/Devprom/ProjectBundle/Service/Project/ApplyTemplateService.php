@@ -3,6 +3,7 @@
 namespace Devprom\ProjectBundle\Service\Project;
 use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
 
+include_once SERVER_ROOT_PATH."ext/xml/xml2Array.php";
 include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
 class ApplyTemplateService
@@ -24,22 +25,27 @@ class ApplyTemplateService
  		
  		$context->setResetState($this->reset_state);
  		
- 		$xml = file_get_contents($template_it->object->getTemplatePath($template_it->get('FileName')));
-
  		$state_objects = array();
- 		
- 		$objects = count($sections) > 0 
+
+        $rowsets = $this->getRowsets(file_get_contents($template_it->object->getTemplatePath($template_it->get('FileName'))));
+ 		$objects = count($sections) > 0
  				? $this->getSectionObjects($sections, $except_sections) 
  				: $this->getAllObjects($except_sections);
- 				
+
 		foreach ( $objects as $object )
 		{
+            $class_name = get_class($object);
+            if ( $class_name == 'Metaobject' ) {
+                $class_name = get_class(getFactory()->getObject($object->getEntityRefName()));
+            }
+            $rowset = $rowsets[$class_name];
+
+            if ( !is_array($rowset) || count($rowset) < 1 ) continue;
+
+            $iterator = $object->createCachedIterator($rowset);
 			$object->resetFilters();
-			
 			$object->addFilter( new \FilterBaseVpdPredicate() );
-			
-			$iterator = $object->createXMLIterator($xml);
-			
+
 			switch ( $object->getEntityRefName() )
 			{
 				case 'cms_Resource':
@@ -204,4 +210,67 @@ class ApplyTemplateService
  		
  		return $result;
  	}
+
+	protected function getRowsets( $xml )
+	{
+        $xml_array = new \xml2Array;
+        $xml_data = $xml_array->xmlParse($xml);
+
+        $entity = $xml_data;
+        if ( strtolower($xml_data['name']) != 'entities' )
+        {
+            $data[0] = $xml_data;
+        }
+        else
+        {
+            $data = $xml_data['children'];
+        }
+
+        $result = array();
+
+        foreach ( $data as $entity )
+        {
+            $class_name = getFactory()->getClass($entity['attrs']['CLASS']);
+
+            if ( $class_name == '' || !class_exists($class_name, false ) ) continue;
+            if ( !is_array($entity['children']) ) continue;
+
+            $object = getFactory()->getObject($class_name);
+            $class_name = get_class($object);
+
+            foreach ( $entity['children'] as $object_tag )
+            {
+                $record[$object->getEntityRefName().'Id'] = $object_tag['attrs']['ID'];
+                foreach ( $object_tag['children'] as $attr_tag )
+                {
+                    if ( $attr_tag['attrs']['ENCODING'] != '' ) {
+                        $attr_tag['tagData'] = base64_decode($attr_tag['tagData']);
+                    }
+                    if ( in_array($entity['attrs']['ENCODING'], array('','windows-1251')) ) {
+                        $attr_tag['tagData'] = $this->wintoutf8($attr_tag['tagData']);
+                    }
+                    $record[$attr_tag['attrs']['NAME']] = $attr_tag['tagData'];
+                }
+                $result[$class_name][] = $record;
+            }
+        }
+        return $result;
+	}
+
+    protected static function wintoutf8($s)
+    {
+        if ( function_exists('mb_convert_encoding') ) return mb_convert_encoding($s, "utf-8", "cp1251");
+        if ( function_exists('iconv') ) return iconv("cp1251", "utf-8//IGNORE", $s);
+        $t = '';
+        for ($i = 0, $m = strlen($s); $i < $m; $i++) {
+            $c = ord($s[$i]);
+            if ($c <= 127) { $t .= chr($c); continue; }
+            if ($c >= 192 && $c <= 207) { $t .= chr(208) . chr($c - 48); continue; }
+            if ($c >= 208 && $c <= 239) { $t .= chr(208) . chr($c - 48); continue; }
+            if ($c >= 240 && $c <= 255) { $t .= chr(209) . chr($c - 112); continue; }
+            if ($c == 184) { $t .= chr(209) . chr(209); continue; };
+            if ($c == 168) { $t .= chr(208) . chr(129); continue; };
+        }
+        return $t;
+    }
 }

@@ -29,6 +29,7 @@ class FlotChartBurnupWidget extends FlotChartWidget
 				},
 				success: function( data ) 
 				{
+					if ( data == null ) data = [];
 					$.plot($("#<?=$chart_id?>"), data, 
 					{
 						colors: ["rgb(225,63,63)", "rgb(63,225,63)", "rgb(63,63,225)"],

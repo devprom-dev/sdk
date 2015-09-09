@@ -10,9 +10,10 @@ class SubversionRevisionTable extends PMPageTable
 
     function getList( $mode = '' )
     {
-        switch ( $mode )
+        switch ( $_REQUEST['report'] )
         {
-            case 'chart':
+            case 'commitsfreqperauthors':
+            case 'scm-commitsperauthors':
                 return new SubversionRevisionChart( $this->object );
 
             default:
@@ -46,14 +47,15 @@ class SubversionRevisionTable extends PMPageTable
     
     function getFilters()
     {
-        global $model_factory;
-
-        return array (
-                new FilterObjectMethod( $model_factory->getObject('pm_Subversion') ),
+        $filters = array (
+                new FilterObjectMethod(getFactory()->getObject('pm_Subversion')),
         		$this->buildAuthorFilter(),
-                new ViewStartDateWebMethod( translate('Начало'), true ),
-                new ViewFinishDateWebMethod()
         );
+        if ( count($this->getListRef()->getIds()) < 1 ) {
+            $filters[] = new ViewStartDateWebMethod(translate('Начало'));
+            $filters[] = new ViewFinishDateWebMethod();
+        }
+        return $filters;
     }
     
     function buildAuthorFilter()

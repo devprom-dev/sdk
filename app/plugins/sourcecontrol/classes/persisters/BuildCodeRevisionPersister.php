@@ -2,13 +2,22 @@
 
 class BuildCodeRevisionPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
- 	{
- 		return array( 
- 			" ( SELECT '' ) BuildRevision " 
- 		);
+		function getSelectColumns( $alias )
+		{
+			return array(
+				" ( SELECT GROUP_CONCAT(DISTINCT CAST(r.pm_SubversionRevisionId AS CHAR))
+ 			 	  FROM pm_SubversionRevision r, pm_SubversionRevision r2, pm_Subversion s
+ 			 	  WHERE r.RecordCreated <= r2.RecordCreated
+ 			 	  	AND t.BuildRevision = r2.pm_SubversionRevisionId
+ 			 	  	AND r2.Repository = r.Repository
+ 			 	    AND r.RecordCreated >
+ 			 	    	(SELECT MAX(r.RecordCreated) FROM pm_Build b, pm_SubversionRevision r
+ 			 	    	  WHERE b.pm_BuildId < t.pm_BuildId
+ 			 	    	    AND b.BuildRevision = r.pm_SubversionRevisionId
+ 			 	    	    AND b.VPD IN ('".join("','",$this->getObject()->getVpds())."'))) Commits "
+			);
  	}
- 	
+
  	function add( $object_id, $parms )
  	{
  		if ( $parms['BuildRevision'] == '' ) return;

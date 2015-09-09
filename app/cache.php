@@ -5,7 +5,8 @@
 	$jsdir    = dirname(__FILE__) . '/scripts';
 
 	if ( $_GET['type'] == '' ) $_GET['type'] = 'javascript';
-	 
+	if ( !in_array($_GET['l'], array('ru','en')) ) $_GET['l'] = 'en';
+
 	switch ( $_GET['type'] )
 	{
 		case 'css':
@@ -56,10 +57,12 @@
 						'jquery/jquery.ba-resize.min.js,'.
 						'jquery/imagesloaded.pkgd.min.js,'.
 						'color-picker/jquery.colorPicker.min.js,'.
+						'locale/underi18n.js,' .
 						'time/jstz-1.0.4.min.js';
 					break;
 				default:
-					$_GET['files'] = 
+					$_GET['files'] =
+						'pm/locale/'.$_GET['l'].'/resources.js,'.
 						'pm/common.js,'.
 		                'pm/board.js,'.
 						'pm/document.js';

@@ -7,23 +7,20 @@ class ReportsCommonBuilder extends ReportsBuilder
     public function build( ReportRegistry & $object )
     {
    		global $model_factory;
- 		
- 		$module = $model_factory->getObject('Module');
- 		
+
+        $areas = getFactory()->getObject('ModuleCategory')->getAll()->fieldToArray('ReferenceName');
+        $qa_area = in_array('qa', $areas) ? 'qa' : FUNC_AREA_MANAGEMENT;
+
+        $module = $model_factory->getObject('Module');
 		$request = $model_factory->getObject('pm_ChangeRequest');
 		
-		$session = getSession();
-		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
 		$project_it = getSession()->getProjectIt();
 		
 		$terminal = $request->getTerminalStates();
-		
 		$nonterminal = $request->getNonTerminalStates();
 		
 		$issues_list_it = $module->getExact('issues-list');
-		
 		if ( getFactory()->getAccessPolicy()->can_read($issues_list_it) )
 		{
 			$object->addReport(
@@ -58,10 +55,10 @@ class ReportsCommonBuilder extends ReportsBuilder
 
 			$object->addReport(
 				array ( 'name' => 'bugs',
-				        'title' => translate('Обнаруженные ошибки'),
+				        'title' => text(2043),
 						'description' => text(781),
 						'category' => FUNC_AREA_MANAGEMENT,
-				        'query' => 'type=bug&show=RecordCreated&sort=RecordCreated.D&modifiedafter=last-month',
+				        'query' => 'type=bug&modifiedafter=last-month',
 				        'module' => $issues_list_it->getId() )
 			);
 
@@ -165,7 +162,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 						'title' => text(996),
 				        'description' => text(1402),
 				        'query' => 'group=history&aggby=State&type=bug&state='.join(',',$convergence_states).'&infosections=none&modifiedafter=last-month',
-				        'category' => FUNC_AREA_MANAGEMENT,
+				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
 			);
@@ -175,7 +172,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 						'title' => text(1004),
 				        'description' => text(1401),
 				        'query' => 'group=history&aggby=LastTransition&type=bug&infosections=none&state=all&modifiedafter=last-month&transition='.join(',',$this->getReopenTransitions($request)),
-				        'category' => FUNC_AREA_MANAGEMENT,
+				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
 			);
@@ -185,7 +182,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 						'title' => text(1885),
 				        'description' => text(1886),
 				        'query' => 'group=Owner&aggby=Priority&aggregator=none&infosections=none&state=all&was-transition='.join(',',$this->getReopenTransitions($request)),
-				        'category' => FUNC_AREA_MANAGEMENT,
+				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
 			);
@@ -195,7 +192,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 						'title' => text(997),
 				        'description' => text(1415),
 				        'query' => 'group=history&aggby=Priority&infosections=none&state=all&modifiedafter=last-month',
-				        'category' => FUNC_AREA_MANAGEMENT,
+				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
 			);
@@ -205,11 +202,33 @@ class ReportsCommonBuilder extends ReportsBuilder
 						'title' => text(998),
 				        'description' => text(1403),
 				        'query' => 'group=Author&aggby=Priority&infosections=none&aggregator=none&type=bug&state=all&modifiedafter=last-month',
-				        'category' => FUNC_AREA_MANAGEMENT,
+				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
 			);
-			
+
+			$object->addReport(
+				array (
+                    'name' => 'bugstable',
+					'title' => text(2046),
+					'description' => text(2047),
+					'query' => 'group=State&aggby=Priority&infosections=none&aggregator=none&type=bug&state=all',
+					'category' => $qa_area,
+					'type' => 'chart',
+					'module' => $issues_chart_it->getId() )
+			);
+
+			$object->addReport(
+				array (
+					'name' => 'reportedperweek',
+					'title' => text(2051),
+					'description' => text(2052),
+					'query' => 'group=WeekCreated&aggby=Author&infosections=none&aggregator=none&type=bug&state=all',
+					'category' => $qa_area,
+					'type' => 'chart',
+					'module' => $issues_chart_it->getId() )
+			);
+
 			if ( $methodology_it->HasReleases() )
 			{
 				$object->addReport(

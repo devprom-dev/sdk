@@ -59,18 +59,21 @@ class UnBlockUserWebMethod extends UserWebMethod
 
 	function execute( $parms )
 	{
-		if ( $this->hasAccess() )
-		{
-			$list = new Metaobject('cms_BlackList');
-			$list_it = $list->getByRef('SystemUser',
-			$parms['user']);
-				
-			if ( $list_it->count() > 0 )
-			{
-				$list->delete($list_it->getId());
-			}
+		if ( !$this->hasAccess() ) return;
 
-			echo '/admin/blacklist.php';
+		$list = new Metaobject('cms_BlackList');
+		$list_it = $list->getByRef('SystemUser', $parms['user']);
+		while( !$list_it->end() ) {
+			$list->delete($list_it->getId());
+			$list_it->moveNext();
+		}
+
+		$list = new Metaobject('cms_LoginRetry');
+		$list_it = $list->getByRef('SystemUser', $parms['user']);
+
+		while( !$list_it->end() ) {
+			$list->delete($list_it->getId());
+			$list_it->moveNext();
 		}
 	}
 

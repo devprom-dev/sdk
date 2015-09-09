@@ -204,10 +204,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 			$(document).ready( function() 
 			{
 				setup<?=$id?>();
-			
-				if ( $('#<?=$id?>').is('.wysiwyg-text') )
-				{
-
+				if ( $('#<?=$id?>').is('.wysiwyg-text') ) {
 					$('#<?=$id?>.wysiwyg-text[contenteditable="true"]').parent()
 						.hover(function() { 
 							if ( !$(this).find('.wysiwyg-text').is('.cke_focus') ) $(this).addClass('wysiwyg-hover');
@@ -223,7 +220,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 		    function setup<?=$id?>()
 		    {
 		    	if ( $('#<?=$id?>').is('.cke_editable') ) return;
-		    	
+		    	if ( typeof setupWysiwygEditor == 'undefined' ) return;
 				setupWysiwygEditor(
 	    			'<?=$id ?>', 
 	    			<?=($this->getMode() & WIKI_MODE_INPLACE_INPUT ? "''" : $toolbar) ?>, 

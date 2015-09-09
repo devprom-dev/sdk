@@ -2,16 +2,17 @@
 namespace Devprom\ProjectBundle\Controller\Rest;
 
 use Devprom\ProjectBundle\Controller\Rest\RestController;
+use Symfony\Component\HttpFoundation\Request;
 use Devprom\ProjectBundle\Service\Model\FilterResolver\IterationFilterResolver;
 
 class ReleaseController extends RestController
 {
-	function getEntity()
+	function getEntity(Request $request)
 	{
 		return 'Release';
 	}
 	
-	function getFilterResolver()
+	function getFilterResolver(Request $request)
 	{
 		return array();
 	}

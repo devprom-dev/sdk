@@ -11,6 +11,7 @@ class WikiConverterMPdf
  	var $wiki_it, $parser, $pdf;
  	
  	private $title = '';
+ 	private $level = 0;
  	
  	function setTitle( $title )
  	{
@@ -30,6 +31,7 @@ class WikiConverterMPdf
  		}
  		else
  		{
+ 			$this->level = count($wiki_it->getParentsArray());
 	 		$this->wiki_it = $wiki_it->object->getRegistry()->Query( 
 	 				array_merge( 
 	 						array(
@@ -64,7 +66,7 @@ class WikiConverterMPdf
  		
  		while( !$object_it->end() )
 		{
-			$this->transformWiki( $object_it->copy(), count($object_it->getParentsArray()) - 1 );
+			$this->transformWiki( $object_it->copy(), count($object_it->getParentsArray()) - $this->level);
 			$object_it->moveNext();
 		}
 		
@@ -104,7 +106,7 @@ class WikiConverterMPdf
     		
     		$this->transform( 
     			mb_convert_encoding(
-    			        '<h'.$heading_level.' '.($this->headers_passed < 1 ? 'style="page-break-before:avoid;"' : '').'><a name="'.$title.'" level="'.$level.'"></a>'.$title.'</h'.$heading_level.'>'.
+    			        '<a name="'.$title.'" level="'.$level.'"/><h'.$heading_level.' '.($this->headers_passed < 1 || true ? 'style="page-break-before:avoid;"' : '').'>'.$title.'</h'.$heading_level.'>'.
     			        ''.$content.'', 
     			        'UTF-8', 
     			        APP_ENCODING) 

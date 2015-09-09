@@ -32,11 +32,19 @@ services:
     request_listener:
             class: Devprom\ServiceDeskBundle\EventListener\RequestListener
             arguments:
-                securityContext: "@security.context"
+                tokenStorage: "@security.token_storage"
                 twig: "@twig"
                 defaultLocale: %locale%
             tags:
                 - { name: kernel.event_subscriber }
+
+    user_registered_listener:
+            class: Devprom\ServiceDeskBundle\EventListener\UserRegisteredListener
+            arguments:
+                objectChangeLogger: "@object_change_logger"
+            tags:
+                - { name: kernel.event_subscriber }
+
     settings_request_listener:
             class: Devprom\ServiceDeskBundle\EventListener\SettingsRequestListener
             arguments:
@@ -123,11 +131,6 @@ services:
         tags:
             - { name: form.type, alias: entity_hidden }
     
-    servicedesk_logging_registration_form_handler:
-        class: Devprom\ServiceDeskBundle\Form\Handler\LoggingRegistrationFormHandler
-        scope: request
-        arguments: ["@fos_user.registration.form", "@request", "@fos_user.user_manager", "@fos_user.mailer", "@fos_user.util.token_generator", "@object_change_logger", "@model_factory", "@service_container"]
-   
     clear_cache_service:
         class: Devprom\CommonBundle\Service\ClearCacheService
         arguments:

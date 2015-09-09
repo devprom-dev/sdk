@@ -12,11 +12,31 @@ class Version20150128143045 extends AbstractMigration
 {
     public function up(Schema $schema)
     {
-        $this->addSql('ALTER TABLE cms_ExternalUser ADD Company INTEGER');
-        $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
-        $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordModified TIMESTAMP');
-        $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordVersion INTEGER DEFAULT 0');
-    	$this->addSql('ALTER TABLE cms_ExternalUser ADD VPD VARCHAR(32)');
+        try {
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD Company INTEGER');
+        }
+        catch(Exception $e) {
+        }
+        try {
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+        }
+        catch(Exception $e) {
+        }
+        try {
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordModified TIMESTAMP');
+        }
+        catch(Exception $e) {
+        }
+        try {
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordVersion INTEGER DEFAULT 0');
+        }
+        catch(Exception $e) {
+        }
+        try {
+    	    $this->addSql('ALTER TABLE cms_ExternalUser ADD VPD VARCHAR(32)');
+        }
+        catch(Exception $e) {
+        }
     }
 
     public function down(Schema $schema)

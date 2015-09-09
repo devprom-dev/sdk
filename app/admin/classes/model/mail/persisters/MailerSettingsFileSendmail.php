@@ -20,7 +20,7 @@ class MailerSettingsFileSendmail extends MailerSettingsFile
 		$parameter = $this->mapParameterName($parameter);
 		
 		if ( $parameter == '' ) return;
-		
+
 		$content = file_get_contents($this->getIniPath());
 		
 		$content = preg_replace('/^'.$parameter.'=.*$/mi', $parameter.'='.$value, $content);

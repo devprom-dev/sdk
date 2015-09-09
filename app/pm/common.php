@@ -32,34 +32,41 @@ if ( $_REQUEST['project'] == '')
 
 // resolve project code
 $cache = new ProjectCache();
-
 $cache_it = $cache->getByRef('CodeName', $_REQUEST['project']);
 
 if ( $cache_it->getId() < 1 )
 {
 	// build portfolios
 	$portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-
-	// build session object for the given portfolio
 	while( !$portfolio_it->end() )
 	{
-	     if ( !getFactory()->getAccessPolicy()->can_read($portfolio_it) )
-	     {
+	     if ( !getFactory()->getAccessPolicy()->can_read($portfolio_it) ) {
 	         $portfolio_it->moveNext(); continue;
 	     }
-	     
-	     if ( $_REQUEST['project'] == $portfolio_it->get('CodeName') )
-	     {
+	     if ( $_REQUEST['project'] == $portfolio_it->get('CodeName') ) {
+			 if ( $portfolio_it->get('CodeName') == 'my' ) {
+				 // when user participates only in one project, then redirect into it
+                 $accessible = new ProjectAccessible();
+				 $project_it = $accessible->getAll();
+				 if ( $project_it->count() == 1 ) {
+					 $session = new PMSession($project_it);
+					 break;
+				 }
+			 }
+			 // build session object for the given portfolio
 	     	$session = $portfolio_it->getSession();
-
 	     	break;
 	     }
-
 	     $portfolio_it->moveNext();
 	}
+	if ( $portfolio_it->getId() < 1 ) {
+		// when there is no any portfolio available then redirect into the first project
+		$project_it = $cache->getAll();
+		if ( $project_it->getId() < 1 ) exit(header('Location: /projects/welcome'));
+		$session = new PMSession($project_it);
+	}
 }
-else
-{
+else {
 	$session = new PMSession($cache_it);
 }
 

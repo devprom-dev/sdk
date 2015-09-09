@@ -94,20 +94,30 @@ class PageForm extends MetaObjectForm
  	{
  		if ( !$this->getObject() instanceof MetaobjectStatable ) return;
  		
- 		$state_it = $this->getObject()->cacheStates()->copyAll();
- 		
+ 		$state_it = $this->getObject()->cacheStates();
+        $target_it = $state_it->copyAll();
+
+        $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('SourceState', $state_it->idsToArray()),
+                new TransitionSourceStateSort()
+            )
+        );
+        $transition_it->buildPositionHash(array('SourceState'));
+        $transition_it->object->setStateAttributeType( $state_it->object );
+
  		while( !$state_it->end() )
  		{
- 			$transition_it = $state_it->getTransitionIt();
- 			$this->transitions_array[$state_it->get('VPD').'-'.$state_it->get('ReferenceName')] = $transition_it->copyAll();
- 			while( !$transition_it->end() )
+ 			$tmp_it = $transition_it->object->createCachedIterator($transition_it->getSubset('SourceState', $state_it->getId()));
+ 			$this->transitions_array[$state_it->get('VPD').'-'.$state_it->get('ReferenceName')] = $tmp_it;
+
+ 			while( !$tmp_it->end() )
  			{
- 				$this->target_states_array[$transition_it->getId()] = $transition_it->getRef('TargetState')->copy();
- 				$this->transition_appliable[$transition_it->getId()] = $transition_it->appliable();
- 				 
- 				$transition_it->moveNext();
+                $target_it->moveToId($tmp_it->get('TargetState'));
+ 				$this->target_states_array[$tmp_it->getId()] = $target_it->copy();
+ 				$this->transition_appliable[$tmp_it->getId()] = $tmp_it->appliable();
+                $tmp_it->moveNext();
  			}
- 			
  			$state_it->moveNext();
  		}
 
@@ -131,22 +141,16 @@ class PageForm extends MetaObjectForm
  	function getTransitionIt()
  	{
  		if ( is_object($this->transition_it) ) return $this->transition_it; 
- 		
  		if ( $_REQUEST['Transition'] != '' )
  		{
- 			foreach( $this->transitions_array as $transition_it )
- 			{
- 				$transition_it->moveToId($_REQUEST['Transition']);
- 				
- 				if ( $transition_it->getId() != '' )
- 				{
- 					return $this->transition_it = $transition_it->copy();
- 				}
- 				
- 				$transition_it->moveFirst();
- 			}
+			$object_it = $this->getObjectIt();
+			$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
+
+			$transition_it->moveToId($_REQUEST['Transition']);
+			if ( $transition_it->getId() != '' ) {
+				return $this->transition_it = $transition_it->copy();
+			}
  		}
- 		
  		return $this->transition_it = getFactory()->getObject('pm_Transition')->getEmptyIterator();
  	}
  	
@@ -327,8 +331,7 @@ class PageForm extends MetaObjectForm
 					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall() 
 			);
 
-			$transition_actions = $this->getTransitionActions($object_it);
-
+			$transition_actions = $this->getTransitionActions();
 			if ( count($transition_actions) > 0 )
 			{
 				$actions[] = array();
@@ -347,10 +350,11 @@ class PageForm extends MetaObjectForm
 		return $actions;
 	}
 
- 	function getTransitionActions( $object_it )
+ 	function getTransitionActions()
 	{
 		$actions = array();
-		
+		$object_it = $this->getObjectIt();
+
 		$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
 		
 		if ( !is_object($transition_it) ) $transition_it = array_shift(array_values($this->transitions_array));		

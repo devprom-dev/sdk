@@ -101,7 +101,7 @@ foreach( $filter_items as $filter )
 	</div>
 <?php } ?>
 <?php foreach( $bulk_actions['delete'] as $item ) { ?>
-	<div class="btn-group pull-left">
+	<div class="btn-group">
 		<a id="<?=$item['uid']?>" class="btn btn-small btn-danger" href="<?=$item['url']?>">
 	   		<?=$item['name']?>
 	   	</a>

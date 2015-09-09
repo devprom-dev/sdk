@@ -2,6 +2,8 @@
 
 namespace Devprom\ServiceDeskBundle\Entity;
 use DateTime;
+use DateTimeZone;
+use DateInterval;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -41,8 +43,9 @@ abstract class BaseEntity {
      */
     function prePersist()
     {
-        $this->setCreatedAt(new DateTime());
-        $this->setModifiedAt(new DateTime());
+    	$time = $this->getNowDateTime();
+        $this->setCreatedAt($time);
+        $this->setModifiedAt($time);
         $this->setVersion(1);
     }
 
@@ -51,7 +54,7 @@ abstract class BaseEntity {
      */
     function preUpdate()
     {
-        $this->setModifiedAt(new DateTime());
+        $this->setModifiedAt($this->getNowDateTime());
         $this->setVersion($this->getVersion() + 1);
     }
 
@@ -119,5 +122,11 @@ abstract class BaseEntity {
         return $this->version;
     }
 
+    protected function getNowDateTime()
+    {
+		$time = new DateTime("now", new DateTimeZone("UTC"));
+		return $time->add(DateInterval::createFromDateString(\EnvironmentSettings::getUTCOffset()." hours"));
+    }
+    
 
 }

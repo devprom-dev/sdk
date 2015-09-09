@@ -65,7 +65,7 @@ class LastChangesSection extends InfoSection
 			$rows[] = array(
 				'author' => $it->get('AuthorName'),
 			 	'datetime' => $it->getDateTimeFormat('RecordModified'),
-			    'caption' => $it->getHtml('Content'),
+			    'caption' => $it->getHtmlDecoded('Content'),
 				'icon' => $it->get('ChangeKind') == 'added' ? 'icon-plus-sign' : 'icon-pencil'
 			); 
 			

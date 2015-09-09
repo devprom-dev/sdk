@@ -105,27 +105,26 @@ class PageList extends ListTable
 			$object->addSort( $sort );
 		}
 
-		$value = $_REQUEST[strtolower(get_class($this->getObject()))];
+        $ids = $this->getIds();
 
-		$ids = array_filter(preg_split('/,/', $value), function( $value )
-		{
-				return $value != 'all' && is_numeric($value) && $value != '';
-		});
-		
-		if ( count($ids) > 0 )
-		{
+		if ( count($ids) > 0 ) {
 			$object->addFilter( new FilterInPredicate($ids) );
 		}
 
 		$object->setLimit( $this->getLimit() );
-			
 		$iterator = $object->getAll();
-		
 		$this->iterator_data = $iterator->getRowset();
-		
+
 		return $iterator;
 	}
-	
+
+    function getIds()
+    {
+        return array_filter(preg_split('/,/', $_REQUEST[strtolower(get_class($this->getObject()))]), function( $value ) {
+            return $value != 'all' && is_numeric($value) && $value > 0;
+        });
+    }
+
 	function getGroupIt()
 	{
 		if ( is_object($this->group_it) ) return $this->group_it;
@@ -552,6 +551,7 @@ class PageList extends ListTable
                 		$url = $this->getReferencesListWidget($entity_it->object);
                 		if ( $url != '' && count($items) > 1 )
                 		{
+							if ( strpos($url, '?') === false ) $url .= '?';
                 			$url .= strtolower(get_class($entity_it->object)).'='.join(',',$ids);
                 			$text = count($items) > 10 
                 					? str_replace('%1', count($items) - 10, text(2028))
@@ -608,7 +608,7 @@ class PageList extends ListTable
     			    	    
             				foreach( $dates as $key => $date )
             				{
-            					$dates[$key] = getSession()->getLanguage()->getDateFormatted($date);
+            					$dates[$key] = getSession()->getLanguage()->getDateFormattedShort($date);
             				}
 
             				echo join(', ', $dates);
@@ -759,7 +759,7 @@ class PageList extends ListTable
 			
 			array_push( $fields, $key );
 		}
-		
+
 		return $fields;
 	}
 	

@@ -45,5 +45,7 @@
  	41 => 'Accounts',
 	42 => 'To automatically complete tasks, write off time and leave comments using <a target="_blank" href="http://devprom.ru/docs/%D0%90%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5-%D0%B2%D1%8B%D0%BF%D0%BE%D0%BB%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5-%D0%B7%D0%B0%D0%B4%D0%B0%D1%87">special commands in the commit text</a>, you need to link Devprom user to an account in the version control system',
 	43 => 'Specify the user name in the version control system',
-	44 => 'Password is required only if in order to view a repository as this user, one needs a password access. For example, due to the configuration of access to the repository.'
+	44 => 'Password is required only if in order to view a repository as this user, one needs a password access. For example, due to the configuration of access to the repository.',
+	45 => 'Commits',
+	46 => 'Commits were included into the build'
  );

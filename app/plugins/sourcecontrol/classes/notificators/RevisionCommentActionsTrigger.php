@@ -27,7 +27,10 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 
 	    if ( !is_a($object_it->object, 'SubversionRevision') ) return;
 	    
-	    $this->parseDescription( $object_it );
+		$descriptions = explode(PHP_EOL, $object_it->get('Description'));
+	    foreach( $descriptions as $description ) {
+			$this->parseDescription( $description, $object_it );
+	    }
 	}
 	
 	function getExpression()
@@ -46,12 +49,10 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 		return $expression;
 	}
 	
-	function parseDescription( & $object_it )
+	function parseDescription( $description, &$object_it )
 	{
-		if ( !preg_match_all($this->getExpression(), $object_it->get('Description'), $match_result) )
-		{
+		if ( !preg_match_all($this->getExpression(), $description, $match_result) ) {
 			$this->info( "Skip user comments: ".$object_it->get('Description') );
-			
 			return;
 		}
 		

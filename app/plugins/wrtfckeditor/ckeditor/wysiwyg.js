@@ -139,6 +139,7 @@ function setupEditorGlobal( filesTitle )
 
 function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHtml, appVersion ) 
 {
+	if ( typeof CKEDITOR == 'undefined' ) return;
 	CKEDITOR.timestamp = appVersion;
 		
 	var element = document.getElementById(editor_id);
@@ -157,9 +158,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			contentsCss: ['/pm/'+devpromOpts.project+'/scripts/css?v='+appVersion],
 			startupFocus: $(element).is(':focus')
 		});
-		
-		if ( editor == null ) 
-		{
+		if ( editor == null ) {
 			reportBrowserError(element);
 			return;
 		}
@@ -170,20 +169,20 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 
 			e.editor.updateElement();
 			
-	      	registerBeforeUnloadHandler(function() 
+	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
 	      	{
 		      	e.editor.updateElement(); 
 		      	return true;
 	      	});
 
-	      	registerFormValidator(function() 
+	      	registerFormValidator($(element).parents('form').attr('id'), function() 
 	      	{ 
 	      		e.editor.custom.updateForm();
 		      	e.editor.updateElement();
 		      	return true; 
 	      	});
 	      	
-	      	registerFormDestructorHandler(function () {
+	      	registerFormDestructorHandler($(element).parents('form').attr('id'), function () {
 	      		e.editor.destroy();
 	      	});
 	      	
@@ -203,14 +202,13 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			allowedContent: toolbar != '',
 			language: devpromOpts.language == '' ? 'en' : devpromOpts.language
 		});
-
-		if ( editor == null ) 
-		{
+		if ( editor == null ) {
 			reportBrowserError(element);
 			return;
 		}
-		
-		editor.persist = function() 
+
+		editor.purgeTimeoutValue = 180000;
+		editor.persist = function()
 		{
 			var element = $('#' + this.name ); 
 			var editorInstance = this;
@@ -221,26 +219,29 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			}
 			else if ( editorInstance.checkDirty() )
 			{
-				runMethod(modify_url, {
-					'class': $(element).attr('objectClass'),
-					'object': $(element).attr('objectId'),
-					'attribute': $(element).attr('attributeName'),
-					'value': this.getData(),
-					'parms': { 
-						ContentEditor: 'WikiRtfCKEditor'
-					}
-				}, 
-				function(result) 
-				{
-					editorInstance.resetDirty();
-				
-					var resultJson = jQuery.parseJSON(result);
-					
-					if ( typeof resultJson.modified != 'undefined' ) {
-						$(element).parents('[modified]').attr('modified', resultJson.modified);
-					}
-				}, 
-				'');
+				if ( typeof editorInstance.purgeTimeout == 'number' ) {
+					clearTimeout(editorInstance.purgeTimeout);
+				}
+				editorInstance.purgeTimeout = setTimeout(function() { 
+					runMethod(modify_url, 
+					{
+						'class': $(element).attr('objectClass'),
+						'object': $(element).attr('objectId'),
+						'attribute': $(element).attr('attributeName'),
+						'value': editorInstance.getData(),
+						'parms': { 
+							ContentEditor: 'WikiRtfCKEditor'
+						}
+					}, 
+					function(result) {
+						editorInstance.resetDirty();
+						var resultJson = jQuery.parseJSON(result);
+						if ( typeof resultJson.modified != 'undefined' ) {
+							$(element).parents('[modified]').attr('modified', resultJson.modified);
+						}
+					}, 
+					'');
+				}, editorInstance.purgeTimeoutValue);
 			}
 		};
 		
@@ -251,22 +252,23 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 
 		editor.on('instanceReady', function(e) 
 		{
-	      	registerBeforeUnloadHandler(function() 
+	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
 	      	{
+	      		e.editor.purgeTimeoutValue = 0;
 		      	e.editor.persist();
 		      	return true;
 	      	});
 	    			
 			if ( $(element).hasClass('wysiwyg-field') )
 			{
-		      	registerFormValidator(function() 
+		      	registerFormValidator($(element).parents('form').attr('id'), function() 
       			{ 
 		      		e.editor.custom.updateForm();
 		      		e.editor.persist();
 		      		return true; 
 			    });
 		      	
-		      	registerFormDestructorHandler(function () {
+		      	registerFormDestructorHandler($(element).parents('form').attr('id'), function () {
 		      		e.editor.destroy();
 		      	});
 			}
@@ -285,8 +287,14 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			
 			$(e.editor.editable().$).on( 'paste', pasteImage);
 		});
-	}
 
+		editor.on('destroy', function(e) 
+		{
+			e.editor.purgeTimeoutValue = 0;
+			e.editor.persist();
+		});
+	}
+	
 	editor.custom = { 
 		id: $(element).attr('id'),
 		attachmentsHtml: html_entity_decode(attachmentsHtml),

@@ -6,16 +6,7 @@ class ManageComment extends CommandForm
 {
  	function validate()
  	{
-		// proceeds with validation
-		$this->checkRequired( array('Caption') );
-
-		// check authorization was successfull
-		if ( getSession()->getUserIt()->getId() < 1 )
-		{
-			return false;
-		}
-		
-		return true;
+		return getSession()->getUserIt()->getId() > 0;
  	}
  	
  	function create()

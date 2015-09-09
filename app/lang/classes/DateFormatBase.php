@@ -10,7 +10,7 @@ class DateFormatBase
  	{
  	}
 
- 	function getDateFormatShort() 
+ 	function getDateFormatShort( $date )
  	{
  	}
  	

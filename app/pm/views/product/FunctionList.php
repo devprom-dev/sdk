@@ -135,7 +135,7 @@ class FunctionList extends PMPageList
 							getFactory()->getObject('Request')->getRegistry()->Query(
 										array (
 												new RequestStagePredicate($filters['stage']),
-												new FilterAttributePredicate('Function', $object_it->getId())			
+												new RequestFeatureFilter($object_it->getId())			
 										)
 								)->getProgress(), false 
 					);

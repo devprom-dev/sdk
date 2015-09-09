@@ -48,7 +48,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		}
 	}
 
-	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '') 
+	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
 	{
 		global $model_factory;
 
@@ -273,21 +273,19 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 								new FilterInPredicate($object_it->get('ObjectId'))
 						)
 					);
-					
-					$text = $object_it->getRef('State')->getDisplayName();
-					
-					if ( $object_it->get('Comment') != '' )
-					{
-						$text .= ": ".$object_it->getHtmlDecoded('Comment');
-					}
-					
+
+                    $text = '';
+
 					$transition_it = $object_it->getRef('Transition');
-	
-					if ( $transition_it->count() > 0 )
-					{
-						$text .= chr(10).preg_replace('/%1/', $transition_it->getDisplayName(), text(904)).chr(10);
+					if ( $transition_it->count() > 0 ) {
+						$text .= $transition_it->getDisplayName().' &rarr; ';
 					}
-					
+
+                    $text .= $object_it->getRef('State')->getDisplayName();
+                    if ( $object_it->get('Comment') != '' ) {
+                        $text .= ": ".$object_it->getHtmlDecoded('Comment');
+                    }
+
 					$this->setModifiedAttributes(array('State'));
 					
 					if ( $ref_it->object->getClassName() == 'pm_ChangeRequest' )
@@ -375,13 +373,12 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			    switch( $kind )
 			    {
 			        case 'added':
-
 					    $page_it = $object_it->getRef('WikiPage');
+						$history_url = $page_it->getHistoryUrl();
+					    $content = '[url='.$history_url.' text='.translate('История изменений').']';
 					    
-					    $content = '[url='.$page_it->getHistoryUrl().'&version='.$object_it->getId().' text='.translate('История изменений').']';
-					    
-					    parent::process( $page_it, 'modified', $content, $visibility, $author_email );
-			        	
+					    parent::process( $page_it, 'modified', $content, $visibility, $author_email,
+								array('ObjectUrl' => $history_url.'&version='.$object_it->getId()) );
 			        	break;
 			        	
 			        case 'deleted':

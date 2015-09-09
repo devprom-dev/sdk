@@ -9,8 +9,6 @@ class SetupUserGroups extends Installable
 
 	function skip()
 	{
-		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return true;
-		
     	$group = new Metaobject('co_UserGroup');
     	return $group->getRecordCount() > 0;
 	}

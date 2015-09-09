@@ -222,7 +222,7 @@ class CreateProjectService
 					)
 			);
 		}
-		
+
 		// turn on email notifications
 		$notification = $model_factory->getObject('Notification');
 		$notification->store( $project_it->getDefaultNotificationType(), $part_it );
@@ -251,12 +251,9 @@ class CreateProjectService
 		$parms['Content'] = '';
 		$parms['VisibilityLevel'] = 1;
 		$parms['SystemUser'] = $this->user_id;
-	
 		$change_log->add_parms($parms);
 
-		$this->invalidateCache();
-		
-		return $project_id;
+		return $project_it;
  	}
  	
  	function createByTemplate( $template_it, $project_it )
@@ -287,27 +284,28 @@ class CreateProjectService
 		);
  	}
  	
- 	protected function invalidateCache()
+ 	public function invalidateCache()
  	{
 		$lock = new \CacheLock();
 		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
  		
  		getFactory()->getObject('ProjectCache')->resetCache();
-
 	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-	    while( !$portfolio_it->end() )
-	    {
+	    while( !$portfolio_it->end() ) {
 	        getSession()->truncateForProject( $portfolio_it );
 	        $portfolio_it->moveNext();
 	    }
-		
-		$command = new \Symfony\Bundle\FrameworkBundle\Command\CacheClearCommand;
-    	$command->setContainer(ServiceDeskAppKernel::loadWithoutRequest()->getContainer()); 
-    	
-    	$output = new \Symfony\Component\Console\Output\NullOutput();
-    	$command->run(new \Symfony\Component\Console\Input\ArgvInput(array('', '--no-warmup')), $output);
  	}
- 	
+
+	public function invalidateServiceDeskCache()
+	{
+		$command = new \Symfony\Bundle\FrameworkBundle\Command\CacheClearCommand;
+		$command->setContainer(ServiceDeskAppKernel::loadWithoutRequest()->getContainer());
+
+		$output = new \Symfony\Component\Console\Output\NullOutput();
+		$command->run(new \Symfony\Component\Console\Input\ArgvInput(array('', '--no-warmup')), $output);
+	}
+
 	static function getResultDescription( $result )
 	{
 		switch($result)

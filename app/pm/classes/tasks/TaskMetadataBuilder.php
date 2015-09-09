@@ -24,9 +24,10 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttribute('Fact', 'FLOAT', 
 			translate('Фактическая трудоемкость, ч.'), 
 				is_object($methodology_it) && $methodology_it->IsTimeTracking(), 
-					true, '', 8 );
+					true, '', 13 );
 		
-		$metadata->setAttributeOrderNum('LeftWork', 9);
+		$metadata->setAttributeOrderNum('Planned', 11);
+		$metadata->setAttributeOrderNum('LeftWork', 12);
 
 		if ( $methodology_it->IsTimeTracking() )
 		{
@@ -44,8 +45,8 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true, false, '', 110);
 		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
 		
-		$metadata->setAttributeDescription( 'StartDate', text(1841) );
-		$metadata->setAttributeDescription( 'FinishDate', text(1842) );
+		$metadata->setAttributeOrderNum( 'StartDate', 11 );
+		$metadata->setAttributeOrderNum( 'FinishDate', 12 );
 
 		$metadata->addPersister( new TaskAssigneePersister() );
 

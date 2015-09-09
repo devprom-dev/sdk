@@ -66,6 +66,7 @@ class FlotChartLineWidget extends FlotChartWidget
 					clickable: true,
 					borderColor: 'rgb(192,192,192)'
 				}
+				<? if ( count($this->getColors()) > 0 ) { ?> ,colors: ['<?=join("','",$this->getColors())?>'] <? } ?>
 			});
 	    });
 		</script>

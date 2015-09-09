@@ -129,7 +129,7 @@
  			}
  		}
  	}
- 	
+
  	function checkUnique( $object, $key, $key2 = null )
  	{
  		global $_REQUEST;

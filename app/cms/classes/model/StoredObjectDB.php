@@ -315,18 +315,14 @@ class StoredObjectDB extends Object
 	
 	public function getRegistry()
 	{
+		if ( !is_object($this->registry) ) return $this->registry;
+		
 		$registry = clone $this->registry;
-		
 		$registry->setObject($this);
-		
 		$registry->setFilters(array());
-		
 		$registry->setGroups(array());
-		
 		$registry->setSorts(array()); 
-		
 		$registry->setPersisters( $this->persisters );
-		
 		return $registry;
 	}
 	
@@ -389,6 +385,7 @@ class StoredObjectDB extends Object
 	function getByRefArrayWhere( $field_values, $limited_records = 0, $alias = 't') 
 	{
 		$reference_field = array_keys($field_values);
+		$sql = '';
 		
 		for($i = 0; $i < count($reference_field); $i++) 
 		{
@@ -759,6 +756,9 @@ class StoredObjectDB extends Object
 	//----------------------------------------------------------------------------------------------------------
 	function getAggregatedHistory( $predicates = array(), $sorts = array() )
 	{
+		$agg_predicate = '';
+		$object_predicate = '';
+
 		$aggs = $this->aggregate_objects;
 		$aggregate = $aggs[count($this->aggregate_objects) - 1];
 		 
@@ -1221,7 +1221,7 @@ class StoredObjectDB extends Object
 		
 		if ( count($imageattributes) > 0 || count($fileattributes) > 0 )
 		{
-		    if ( !is_object($now_object_it) ) $now_object_it = $this->getExact($id);
+		    $now_object_it = $this->getExact($id);
 		    
 		    foreach( $imageattributes as $attribute )
 		    {

@@ -17,9 +17,11 @@ class MailerSettingsPersister extends ObjectSQLPersister
 	public function __construct()
 	{
 		$this->files = array (
-					new MailerSettingsFileSendmail(),
 					new MailerSettingsFileSwiftMailer()
 				);
+		if ( EnvironmentSettings::getWindows() ) {
+			$this->files[] = new MailerSettingsFileSendmail();
+		}
 	}
 	
  	function modify( $object_id, $parms )

@@ -48,7 +48,7 @@ class PMReportIterator extends OrderedIterator
         	        return $module_it->getDisplayName();
         	    }
         	    
-        	    return $value;
+        	    return preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $value);
 			
             case 'QueryString':
 			    

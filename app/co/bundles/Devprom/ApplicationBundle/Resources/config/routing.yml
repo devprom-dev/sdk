@@ -1,130 +1,119 @@
 _entry:
-    pattern:  /
+    path:  /
     defaults: { _controller: ApplicationBundle:Entry:index }
 
 logoff:
-    pattern:  /logoff
+    path:  /logoff
     defaults: { _controller: ApplicationBundle:Security:logoff }
 
 news:
-    pattern:  /news/{key}
+    path:  /news/{key}
     defaults: { _controller: ApplicationBundle:Atom:news}
 
 login:
-    pattern:  /login
+    path:  /login
     defaults: { _controller: ApplicationBundle:Security:login }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 login_process:
-    pattern:  /login
+    path:  /login
     defaults: { _controller: ApplicationBundle:Security:loginProcess }
-    requirements:
-        _method:  POST
+    methods:  POST
 
 recovery:
-    pattern:  /recovery
+    path:  /recovery
     defaults: { _controller: ApplicationBundle:Security:restore }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 recovery_process:
-    pattern:  /recovery
+    path:  /recovery
     defaults: { _controller: ApplicationBundle:Security:restoreProcess }
-    requirements:
-        _method:  POST
+    methods:  POST
     
 join:
-    pattern:  /join-project
+    path:  /join-project
     defaults: { _controller: ApplicationBundle:Security:join }
 
 reset:
-    pattern:  /reset
+    path:  /reset
     defaults: { _controller: ApplicationBundle:Security:reset }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 reset_process:
-    pattern:  /reset
+    path:  /reset
     defaults: { _controller: ApplicationBundle:Security:resetProcess }
-    requirements:
-        _method:  POST
+    methods:  POST
 
 profile:
-    pattern:  /profile
+    path:  /profile
     defaults: { _controller: ApplicationBundle:Profile:form }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 app_user_invitation_form:
-    pattern:  /invite
+    path:  /invite
     defaults: { _controller: ApplicationBundle:Invitation:form }
 
 project_new:
-    pattern:  /projects/new
+    path:  /projects/new
     defaults: { _controller: ApplicationBundle:Project:new }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 project_create:
-    pattern:  /projects/new
+    path:  /projects/new
     defaults: { _controller: ApplicationBundle:Project:create }
-    requirements:
-        _method:  POST
+    methods:  POST
 
 project_welcome:
-    pattern:  /projects/welcome
+    path:  /projects/welcome
     defaults: { _controller: ApplicationBundle:Project:welcome }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 menu_config:
-    pattern:  /menu/config
+    path:  /menu/config
     defaults: { _controller: ApplicationBundle:Menu:config }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 error_404:
-    pattern:  /404
+    path:  /404
     defaults: { _controller: ApplicationBundle:Error:error }
 
 error_500:
-    pattern:  /500
+    path:  /500
     defaults: { _controller: ApplicationBundle:Error:error }
 
 error_500_zip:
-    pattern:  /500.zip
+    path:  /500.zip
     defaults: { _controller: ApplicationBundle:Error:errorZip }
 
 error_310:
-    pattern:  /310
+    path:  /310
     defaults: { _controller: ApplicationBundle:Error:error } 
 
 error_503:
-    pattern:  /503
+    path:  /503
     defaults: { _controller: ApplicationBundle:Error:error }
 
 _app_tooltip:
-    pattern:  /tooltip/{classname}/{objects}
+    path:  /tooltip/{classname}/{objects}
     defaults: { _controller: ApplicationBundle:Tooltip:show }
 
 _namespace:
-    pattern:  /{module}/{namespace}
+    path:  /{module}/{namespace}
     defaults: { _controller: CommonBundle:Page:module }
 
 _page:
-    pattern:  /{module}/{namespace}/{page}
+    path:  /{module}/{namespace}/{page}
     defaults: { _controller: CommonBundle:Page:module }
 
 _file:
-    pattern:  /{module}/{namespace}/{page}/{file}
+    path:  /{module}/{namespace}/{page}/{file}
     defaults: { _controller: CommonBundle:Page:module }
 
 _admin_scripts:
-    pattern:  /co/scripts/javascript/
+    path:  /co/scripts/javascript/
     defaults: { _controller: CommonBundle:Scripts:js }
 
 _admin_css:
-    pattern:  /co/scripts/css/
+    path:  /co/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
    

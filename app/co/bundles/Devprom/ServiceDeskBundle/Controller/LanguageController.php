@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 
 
 /**
@@ -20,8 +21,9 @@ class LanguageController extends Controller {
      * @Route("/language/{lang}", name="set_lang")
      * @Method("GET")
      */
-    public function setLocaleAction($lang) {
-        $this->getRequest()->getSession()->set('_locale', $lang);
+    public function setLocaleAction(Request $request, $lang)
+    {
+        $request->getSession()->set('_locale', $lang);
         if ($this->getUser()) {
             $em = $this->getDoctrine()->getManager();
             $user = $em->getRepository("DevpromServiceDeskBundle:User")->find($this->getUser()->getId());
@@ -30,7 +32,7 @@ class LanguageController extends Controller {
             $em->flush($user);
         }
 
-        $referer = $this->getRequest()->headers->get('referer');
+        $referer = $request->headers->get('referer');
         $url = !$referer ? $this->generateUrl("issue_list") : $referer;
 
         $response = new RedirectResponse($url);

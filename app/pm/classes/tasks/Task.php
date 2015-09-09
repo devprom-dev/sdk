@@ -61,58 +61,7 @@ class Task extends MetaobjectStatable
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
-		if( $name == 'Assignee' && !$methodology_it->IsParticipantsTakesTasks() && $_REQUEST['TaskType'] > 0 ) 
-		{
-			$TaskType = $_REQUEST['TaskType']; 
-			$Assignee = $_REQUEST['Assignee'];
-
-			$tasktype = $model_factory->getObject('pm_TaskType');
-			$tasktype_it = $tasktype->getExact($TaskType);
-
-			// автоматически подставим единственного исполнителя
-			//
-			switch($tasktype_it->get('ReferenceName')) 
-			{
-				case 'development':
-				case 'support':
-					$role_kind = 'developer'; // developer;
-					break;
-					
-				case 'testing':
-					$role_kind = 'tester'; // tester;
-					break;
-					
-				case 'analysis':
-					$role_kind = 'analyst'; // analyst;
-					break;
-					
-				case 'accepting':
-					$role_kind = 'client'; // client;
-					break;
-					
-				case 'design':
-					$role_kind = ''; // designer;
-					break;
-					
-				default:
-					$role_kind = '';
-			}
-
-			if($role_kind != '') 
-			{
-				$role = getFactory()->getObject('pm_ParticipantRole');
-				
-				$project_role = getFactory()->getObject('pm_ProjectRole');
-				$project_role_it = $project_role->getByRef('ReferenceName', $role_kind);
-				
-				$role_it = $role->getInArray('ProjectRole', $project_role_it->idsToArray());
-				if($role_it->count() == 1) {
-					$Assignee = $role_it->getRef('Participant')->get('SystemUser'); 
-					return $Assignee;
-				}
-			}
-		}
-		elseif( $name == 'Release' )
+		if( $name == 'Release' )
 		{
 			return $_REQUEST['Release'];
 		}

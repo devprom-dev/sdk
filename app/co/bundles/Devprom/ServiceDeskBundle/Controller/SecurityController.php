@@ -1,6 +1,7 @@
 <?php
 
 namespace Devprom\ServiceDeskBundle\Controller;
+use Symfony\Component\HttpFoundation\Request;
 use FOS\UserBundle\Controller\SecurityController as BaseController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -10,14 +11,14 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 class SecurityController extends BaseController {
 
-    public function loginAction()
+    public function loginAction(Request $request)
     {
         $supportProjects = $this->container->getParameter('supportProjects');
         if (count($supportProjects)<1) {
             $settingsUrl = $this->container->get('router')->generate('settings_dashboard', array(), true);
             return new RedirectResponse($settingsUrl);
         }
-        return parent::loginAction();
+        return parent::loginAction($request);
     }
 
 

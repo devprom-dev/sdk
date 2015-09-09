@@ -5,30 +5,21 @@ class TaskIterator extends StatableIterator
  	function getDisplayName() 
  	{
  		$type_name = $this->getType();
- 		
  		return $type_name != "" ? $type_name.': '.$this->get('Caption') : parent::getDisplayName();
     }
 
  	function getType() 
  	{
  		if ( $this->get('TaskTypeDisplayName') != '' ) return $this->get('TaskTypeDisplayName');
- 		
- 		$task_type_it = $this->getRef('TaskType');
- 		
- 		if ( $task_type_it->getId() < 1 ) return '';
- 		
-		return $task_type_it->getDisplayName();
+		if ( $this->object->getAttributeType('TaskType') != '' ) {
+			$task_type_it = $this->getRef('TaskType');
+			if ( $task_type_it->getId() < 1 ) return '';
+			return $task_type_it->getDisplayName();
+		}
+		return '';
 	}
 	
-	function getSplitUrl()
-	{
-		return $this->object->getPage().'class=metaobject&entity=pm_Task&pm_TaskId=&Release='.$this->get('Release').'&'.
-			'ChangeRequest='.$this->get('ChangeRequest').'&PercentComplete=0&TaskType='.$this->get('TaskType').
-			'&Priority='.$this->get('Priority').'&Planned='.$this->get('Planned').
-			'&pm_Taskaction=show&Original='.$this->getId();
-	}
-
-	function IsFinished() 
+	function IsFinished()
 	{
 		return in_array($this->get('State'), $this->object->getTerminalStates());
 	}
@@ -66,20 +57,6 @@ class TaskIterator extends StatableIterator
 		
 		$trace = $model_factory->getObject('TaskTraceTask');
 		return $trace->getObjectIt( $this );
-	}
-	
-	function isDevelopment()
-	{
-		$type_it = $this->getRef('TaskType');
-
-		return $type_it->get('ReferenceName') == 'development' || $type_it->get('ReferenceName') == 'support';
-	}
-	
-	function isTesting()
-	{
-		$type_it = $this->getRef('TaskType');
-
-		return $type_it->get('ReferenceName') == 'testing';
 	}
 	
   	function getProgress()

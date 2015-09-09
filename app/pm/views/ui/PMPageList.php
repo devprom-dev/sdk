@@ -104,7 +104,18 @@ class PMPageList extends PageList
 			    break;
 			    
 			case 'RecentComment':
-				parent::drawCell( $object_it, $attr );
+                if ( $object_it->get('RecentCommentAuthor') != '' ) {
+                    echo '<div class="recent-comments">';
+                        echo $this->getTable()->getView()->render('core/UserPictureMini.php', array (
+                            'id' => $object_it->get('RecentCommentAuthor'),
+                            'image' => 'userpics-mini',
+                            'class' => 'user-mini'
+                        ));
+                        echo '<span>';
+                            parent::drawCell( $object_it, $attr );
+                        echo '</span>';
+                    echo '</div>';
+                }
 				echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
 						'object_it' => $object_it,
 						'redirect' => 'donothing'

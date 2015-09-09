@@ -43,4 +43,8 @@ class ExceptionHandlerListenerRaygun extends ExceptionHandlerListener
 	    	}
 	    }
 	}
+
+	public function captureException( $e )
+	{
+	}
 }

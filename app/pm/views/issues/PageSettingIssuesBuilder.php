@@ -62,14 +62,17 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         $settings->add( $setting );
 
         // tasks-trace report
+        $object = getFactory()->getObject('Request');
         $setting = new ReportSetting('issues-trace');
  	    $visible = array_merge( 
  	    		array(
  	    				'UID', 
  	    				'Caption',
  	    				'Function'
- 	    		), 
-		    	getFactory()->getObject('Request')->getAttributesByGroup('trace')
+ 	    		),
+                array_filter($object->getAttributesByGroup('trace'), function($value) use ($object) {
+                    return $object->IsAttributeVisible($value);
+                })
 		);
         $setting->setVisibleColumns($visible);
         $settings->add( $setting );
@@ -78,6 +81,14 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         $setting = new ReportSetting('issuesboardcrossproject');
         $setting->setGroup( 'Project' );
         $setting->setFilters( array('state', 'type', 'priority', 'target') );
+        $settings->add( $setting );
+
+        // bugs
+        $setting = new ReportSetting('bugs');
+        $setting->setVisibleColumns(
+            array('UID', 'Caption', 'Author', 'RecordCreated', 'SubmittedVersion', 'ClosedInVersion', 'TestFound', 'TestExecution')
+        );
+        $setting->setSorts(array('RecordCreated.D'));
         $settings->add( $setting );
     }
 }

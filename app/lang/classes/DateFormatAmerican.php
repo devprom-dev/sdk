@@ -21,10 +21,14 @@ class DateFormatAmerican extends DateFormatBase
  	{
  		return '%m/%d/%Y';
  	}
- 	
- 	function getDateFormatShort() 
+
+ 	function getDateFormatShort( $date )
  	{
- 		return '%m/%d/%y';
+		if ( strftime('%Y', $date) == date('Y') ) {
+			return 'j - M';
+		} else {
+			return 'j - M Y';
+		}
  	}
  	
  	function getDateJSFormat()

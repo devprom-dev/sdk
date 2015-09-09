@@ -19,7 +19,8 @@ class FieldRequestState extends Field
 				'terminal' => $this->object_it->get('StateTerminal') == 'Y',
 				'id' => $this->getId()
 		)); 		
-		
+
+		echo '<br/>';
 		if ( $this->object_it->object->getAttributeType('Tasks') != '' )
 		{
 			echo $view->render('pm/TasksIcons.php', array (
