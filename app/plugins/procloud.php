@@ -87,12 +87,12 @@ include "procloud/classes/MethodologyProcloudMetadataBuilder.php";
  	{
  	   	if ( $object->getEntityRefName() == 'pm_Project' && $action == ACCESS_CREATE )
  	   	{
- 	   		return (new Metaobject('pm_Participant'))->getRegistry()->Count(
-	 	   				array (
-	 	   						new FilterAttributePredicate('IsActive', 'Y'),
-	 	   						new FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId())
-	 	   				)
- 	   			) < 3;	
+            return getFactory()->getObject('Project')->getRegistry()->Count(
+                array (
+                    new ProjectStatePredicate('active'),
+                    new ProjectParticipatePredicate()
+                )
+            ) < 3;
  	   	}
  	}
     
@@ -180,12 +180,12 @@ include "procloud/classes/MethodologyProcloudMetadataBuilder.php";
  	{
  	   	if ( $object->getEntityRefName() == 'pm_Project' && $action == ACCESS_CREATE )
  	   	{
- 	   		return getFactory()->getObject('Participant')->getRegistry()->Count(
-	 	   				array (
-	 	   						new FilterAttributePredicate('IsActive', 'Y'),
-	 	   						new FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId())
-	 	   				)
- 	   			) < 3;	
+ 	   		return getFactory()->getObject('Project')->getRegistry()->Count(
+				array (
+					new ProjectStatePredicate('active'),
+					new ProjectParticipatePredicate()
+				)
+			) < 3;
  	   	}
  	}
     

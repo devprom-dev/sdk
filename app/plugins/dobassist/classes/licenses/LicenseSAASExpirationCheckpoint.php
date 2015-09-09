@@ -10,21 +10,18 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	function execute()
 	{
 		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+
 		$left_days = $license_it->get('LeftDays');
-		
+		$this->setValue( $left_days >= $this->days_left_to_warning ? "1" : "0" );
+
 		if ( $license_it->get('LicenseValue') > $this->trial_period_length )
 		{
-			$this->setValue( $left_days >= $this->days_left_to_warning ? "1" : "0" );
 			if ( $left_days == '' ) return;
-			
-			if ( $left_days >= 0 && $left_days < $this->days_left_to_warning && $this->timeToSendLicenseNotification() )
-			{
+			if ( $left_days >= 0 && $left_days < $this->days_left_to_warning && $this->timeToSendLicenseNotification() ) {
 				$this->sendLicenseNotification($left_days);
 			}
 		}
-
-		if ( $left_days <= -7 && $this->timeToSendTerminationNotification() )
-		{
+		if ( $left_days <= -7 && $this->timeToSendTerminationNotification() ) {
 			$this->sendTerminationNotification($left_days);
 		}
 	}

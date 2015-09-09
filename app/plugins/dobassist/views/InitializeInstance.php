@@ -7,6 +7,8 @@ include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 
 class InitializeInstance extends Page
 {
+	private $trial_length = '14';
+
 	public function __construct()
 	{
 	}
@@ -88,11 +90,12 @@ class InitializeInstance extends Page
  		getFactory()->getObject('LicenseInstalled')->getAll()->modify(
  				array (
  						'LicenseType' => 'LicenseDevOpsBoard',
- 						'LicenseValue' => '14',
+ 						'LicenseValue' => $this->trial_length,
  						'LicenseKey' => $key_value
  				)
  		);
- 		
+		file_put_contents(SERVER_ROOT_PATH.'/conf/license.dat', serialize(array('leftdays' => $this->trial_length)));
+
  		return $key_value;
  	}
  	
@@ -257,8 +260,7 @@ class InitializeInstance extends Page
 		$template = getFactory()->getObject('pm_ProjectTemplate');
 		$template->setRegistry( new ObjectRegistrySQL() );
 		
-		$support_it = $project->getExact(
-				$service->execute(
+		$support_it = $service->execute(
 						array(
 								'CodeName' => 'supportA',
 								'Caption' => 'Support',
@@ -266,11 +268,9 @@ class InitializeInstance extends Page
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
-				)
-		);
+			);
 
-		$incidents_it = $project->getExact(
-				$service->execute(
+		$incidents_it = $service->execute(
 						array(
 								'CodeName' => 'incidentsA',
 								'Caption' => 'Monitoring',
@@ -278,11 +278,9 @@ class InitializeInstance extends Page
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
-				)
-		);
+			);
 
-		$program_it = $project->getExact(
-				$service->execute(
+		$program_it = $service->execute(
 						array(
 								'CodeName' => 'productA',
 								'Caption' => 'Product',
@@ -290,8 +288,7 @@ class InitializeInstance extends Page
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
-				)
-		);
+			);
 
 		$link = getFactory()->getObject('ProjectLink');
 		$link->add_parms(
@@ -324,7 +321,10 @@ class InitializeInstance extends Page
 						'Requirements' => 3
 				)
 		);
-		
+
+		$service->invalidateCache();
+		$service->invalidateServiceDeskCache();
+
 		return $program_it;
 	}
 }

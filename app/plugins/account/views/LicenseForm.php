@@ -209,7 +209,6 @@ class LicenseForm extends AjaxForm
                         $product_it->moveNext();
                         echo '</div>';
                     }
-                    echo '<br/>';
                     ?>
                     <script type="text/javascript">
                         function switchProduct(id) {
@@ -219,6 +218,7 @@ class LicenseForm extends AjaxForm
                     </script>
                     <?
                 }
+                echo '<br/>';
                 break;
 
             case 'Options':

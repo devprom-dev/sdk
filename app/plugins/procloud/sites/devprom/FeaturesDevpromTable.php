@@ -376,7 +376,17 @@ class FeaturesDevpromTable extends BaseDEVPROMTable
 		
 		return $tag_it->fieldToArray('Caption');
 	}
-	
+
+	function getDescription()
+	{
+		$text = new html2text(preg_replace('/h\d/','p',$this->page_it->getHtmlDecoded('Content')));
+		return trim(preg_replace('/\[[^\]]+\]/','',
+            str_replace($this->getTitle(), '',
+                preg_replace('/[\r\n\s]+/', ' ', substr($text->get_text(), 0, 320))
+            )
+        ));
+	}
+
 	function getPage2TagsMap()
 	{
 		return array (

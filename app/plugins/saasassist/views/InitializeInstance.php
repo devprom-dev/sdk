@@ -7,6 +7,8 @@ include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 
 class InitializeInstance extends Page
 {
+	private $trial_length = 14;
+
 	public function __construct()
 	{
 	}
@@ -112,7 +114,7 @@ class InitializeInstance extends Page
 
 		$license_value = json_encode(array (
 			'timestamp' =>  $date->format('Y-m-d'),
-			'days' => 14,
+			'days' => $this->trial_length,
 			'users' => 10
 		));
 
@@ -126,6 +128,8 @@ class InitializeInstance extends Page
  						'LicenseKey' => $key_value
  				)
  		);
+		file_put_contents(SERVER_ROOT_PATH.'/conf/license.dat', serialize(array('leftdays' => $this->trial_length)));
+
  		return $key_value;
  	}
  	
@@ -281,15 +285,17 @@ class InitializeInstance extends Page
 		$parms['DemoData'] = true;
 
 		$service = new CreateProjectService();
-		
-		$project_it = getFactory()->getObject('Project')->getExact($service->execute($parms));
-		
+		$project_it = $service->execute($parms);
 		$project_it->modify(
 				array(
 						'Platform' => 'demo'
 				)
 		);
-		
+		$service->invalidateCache();
+		if ( $project_it->getMethodologyIt()->get('IsSupportUsed') == 'Y') {
+			$service->invalidateServiceDeskCache();
+		}
+
 		return $project_it;
 	}
 }
