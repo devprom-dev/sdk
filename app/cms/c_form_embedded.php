@@ -401,7 +401,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 		else
 		{
 			echo '<script type="text/javascript">';
-				echo " $(document).ready(function()	{ registerFormValidator( " .
+				echo " $(document).ready(function()	{ registerFormValidator( $('embeddedForm".$this->form_id."').parents('form').attr('id'), " .
 						" function () { return validateEmbedded(".$this->form_id.", ['".join("','", $required)."']) }); }); ";
 			echo '</script>';
 		}
@@ -772,30 +772,34 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	
 						// check for required fields
 						$keys = array_keys($embedded->getAttributesSorted());
+                        $was_errors = false;
 
 						foreach ( $keys as $key ) 
 						{
-							if ( $embedded->getAttributeType( $key ) == 'file' && $parms[$key] != 'file' )
-							{
-							    throw new Exception('File wasn\'t uploaded for the "'.get_class($embedded).'" entity');
+							if ( $embedded->getAttributeType( $key ) == 'file' && $parms[$key] != 'file' ) {
+                                $this->logError('File wasn\'t uploaded for the "'.get_class($embedded).'" entity');
+                                $was_errors = true;
+                                break;
 							}
 							
 							$check_tobe_required = $this->isAttributeRequired( $key );
-							
-							if ( $check_tobe_required && $parms[$key] == '' ) 
+							if ( $check_tobe_required && $parms[$key] == '' )
 							{
 								$parms[$key] = $embedded->getDefaultAttributeValue( $key );
 								
 								if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
-								
-								if ( $parms[$key] == '' )
-								{
-								    throw new Exception('Attribute "'.$key.'" of the "'.get_class($embedded).'" entity is required but empty');
+								if ( $parms[$key] == '' ) {
+                                    $this->logError('Attribute "'.$key.'" of the "'.get_class($embedded).'" entity is required but empty');
+                                    $was_errors = true;
+                                    break;
 								}
 							}
 						}
-
-						$this->processAdded( $embedded->getExact( $embedded->add_parms( $parms ) ) );
+                        if ( !$was_errors ) {
+                            $this->processAdded( $embedded->getExact( $embedded->add_parms( $parms ) ) );
+                        } else {
+                            $this->logError('Embedded item skipped because of errors found');
+                        }
 					}
 					
 					// remove temporary files
@@ -833,6 +837,13 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 			
 			$file_it->moveNext();
 		}
+	}
+
+	protected function logError( $message )
+	{
+        $logger = \Logger::getLogger('System');
+        if ( !is_object($logger) ) return;
+        $logger->error($message);
 	}
 
  	function processAdded( $object_it )

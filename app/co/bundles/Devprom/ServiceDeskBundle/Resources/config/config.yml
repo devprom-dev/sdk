@@ -47,9 +47,8 @@ doctrine:
         auto_mapping: true
 
 twig:
-    form:
-        resources:
-            - DevpromServiceDeskBundle:Form:fields.html.twig
+    form_themes:
+        - DevpromServiceDeskBundle:Form:fields.html.twig
 
 # Swiftmailer Configuration
 swiftmailer:

@@ -11,9 +11,10 @@ class BuildCodeMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Build' ) return;
         
-		$metadata->addAttribute('BuildRevision', 'REF_SubversionRevisionId', 
-				text('sourcecontrol35'), true, false, text('sourcecontrol36'), 15);
-		
+		$metadata->addAttribute('BuildRevision', 'REF_SubversionRevisionId', text('sourcecontrol35'), true, true, text('sourcecontrol36'), 15);
+
+		$metadata->addAttribute('Commits', 'REF_SubversionRevisionId', text('sourcecontrol45'), true, false, text('sourcecontrol46'));
+		$metadata->addAttributeGroup('Commits', 'trace');
 		$metadata->addPersister( new BuildCodeRevisionPersister() );
     }
 }

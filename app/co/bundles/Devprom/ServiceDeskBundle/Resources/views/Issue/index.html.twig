@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('/co/bundles/Devprom/ServiceDeskBundle/public/css/responsive-tables.css') }}" />
+    <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/responsive-tables.css') }}" />
 {% endblock %}
 
 {% block content -%}
@@ -69,7 +69,10 @@
                     	{% endif %}
                         <tr>
                             <td class="issue-id-cell"  data-title="{{ 'issue_id'|trans }}">
-                            	<img src="/images/{{ issueTypeIconFilename(issue.issueType.referenceName) }}">&nbsp;<a href="{{ path('issue_show', { 'id': issue.id }) }}">[I-{{ issue.id }}]</a>
+                                {% if issue.issueType != null %}
+                            	    <img src="/co/bundles/Devprom/ServiceDeskBundle/public/images/{{ issueTypeIconFilename(issue.issueType.referenceName) }}">&nbsp;
+                                {% endif %}
+                                <a href="{{ path('issue_show', { 'id': issue.id }) }}">[I-{{ issue.id }}]</a>
                             </td>
                             <td class="issue-caption-cell" data-title="{{ 'issue_caption'|trans }}">
                                 <a href="{{ path('issue_show', { 'id': issue.id }) }}">

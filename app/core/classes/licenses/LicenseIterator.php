@@ -46,7 +46,8 @@ class LicenseIterator extends OrderedIterator
 		if ( $this->getTimestamp() == '' ) return '';
 		$dt1 = new DateTime($this->getTimestamp());
 		$dt2 = new DateTime();
-		return $dt2->diff($dt1)->format('%d');
+		$interval = $dt2->diff($dt1);
+		return ($interval->invert ? -1 : 1) * $interval->days;
 	}
 
 	function getUsers()
@@ -54,6 +55,12 @@ class LicenseIterator extends OrderedIterator
 		$options = $this->getOptions();
 		return $options['users'] > 0 ? $options['users'] : 0;
 	}
+
+    function getDays()
+    {
+        $options = $this->getOptions();
+        return $options['days'] > 0 ? $options['days'] : 0;
+    }
 
 	function checkV1()
 	{

@@ -22,12 +22,14 @@ class ModelServiceTest extends DevpromDummyTestCase
 	                			array (
 	                					'pm_IssueTypeId' => 1,
 	                					'Caption' => 'Test 1',
-	                					'ReferenceName' => 'Height'
+	                					'ReferenceName' => 'Height',
+										'OrderNum' => 1
 	                			),
 	                			array (
 	                					'pm_IssueTypeId' => 2,
 	                					'Caption' => 'Test 2',
-	                					'ReferenceName' => 'Low'
+	                					'ReferenceName' => 'Low',
+										'OrderNum' => 2
 	                			)
 	                		)
 	        		) 
@@ -45,5 +47,11 @@ class ModelServiceTest extends DevpromDummyTestCase
     	
     	$it->moveFirst();
     	$this->assertEquals(1, ModelService::queryXPath($it, 'contains(ReferenceName,"low")')->count());
-    }
+
+		$it->moveFirst();
+		$this->assertEquals(2, ModelService::queryXPath($it, 'OrderNum>"0"')->count());
+
+		$it->moveFirst();
+		$this->assertEquals(1, ModelService::queryXPath($it, 'OrderNum<"2"')->count());
+	}
 }

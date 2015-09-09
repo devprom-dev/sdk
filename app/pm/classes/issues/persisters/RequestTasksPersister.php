@@ -11,7 +11,6 @@ class RequestTasksPersister extends ObjectSQLPersister
 			"  WHERE s.ChangeRequest = ".$this->getPK($alias)." ) Tasks ";
 
  		$states = getFactory()->getObject('Task')->getTerminalStates();
- 		
  		if ( count($states) < 1 ) $states[] = 'dummy';
  		
  		$columns[] =

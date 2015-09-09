@@ -8,6 +8,7 @@ use Devprom\ServiceDeskBundle\Form\Type\AttachmentFormType;
 use Devprom\ServiceDeskBundle\Service\AttachmentService;
 use Devprom\ServiceDeskBundle\Service\IssueService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -47,12 +48,12 @@ class AttachmentController extends Controller
      * @Method("POST")
      * @Template()
      */
-    public function uploadAction($issueId)
+    public function uploadAction(Request $request, $issueId)
     {
         $attachment = new IssueAttachment();
 
         $form = $this->createForm(new AttachmentFormType(), $attachment);
-        $form->bind($this->getRequest());
+        $form->bind($request);
 
         $issue = $this->getIssueService()->getIssueById($issueId);
 

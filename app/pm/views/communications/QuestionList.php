@@ -42,7 +42,7 @@ class QuestionList extends PMPageList
 		{
 			case 'UID': 
 			case 'Content': 
-			case 'Comments':
+			case 'RecentComment':
 			case 'TraceRequests': 
 			case 'Attachment': 
 				return true;
@@ -69,37 +69,8 @@ class QuestionList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Content':
-				
 			    drawMore($object_it, 'Content', 20);
-				
 			    break;
-				
-			case 'Comments':
-				$this->comment_it->moveTo( 'ObjectId', $object_it->getId() );
-			    
-			    if ( $this->comment_it->get('ObjectId') != $object_it->getId() ) break;
-			    
-			    $user_it = $this->comment_it->getRef('AuthorId');
-
-		        echo '<div class="row-fluid">';
-    				echo '<span class="span1" style="width:55px;">';
-		    	    	echo $this->getTable()->getView()->render('core/UserPicture.php', array (
-							'id' => $user_it->getId(), 
-		    	    		'class' => 'user-avatar',
-		    	    		'title' => $user_it->getDisplayName()
-						));
-    				echo '</span>';
-    				
-    				echo '<span class="span9">';
-    				    echo '<div>'.$user_it->getDisplayName().'</div>';
-    				    echo '<div>';
-    				        drawMore($this->comment_it, 'Caption', 35);
-    				    echo '</div>';
-    				echo '</span>';
-				echo '</div>';
-
-			    break;
-			
 			default:
 				parent::drawCell( $object_it, $attr );
 		}			

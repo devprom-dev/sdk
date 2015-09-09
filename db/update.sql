@@ -1769,6 +1769,33 @@ ALTER TABLE pm_Subversion MODIFY SVNPassword BLOB;
 ALTER TABLE pm_AttributeValue MODIFY PasswordValue BLOB;
 ALTER TABLE pm_SubversionUser MODIFY UserPassword BLOB;
 
+IF NOT check_column_exists('BuildRevision', 'pm_Build') THEN
+ALTER TABLE pm_Build ADD BuildRevision INTEGER;
+END IF;
+
+UPDATE pm_ChangeRequest r SET r.Type = (SELECT t.pm_IssueTypeId FROM pm_IssueType t WHERE t.pm_IssueTypeId = r.Type);
+DELETE FROM co_ScheduledJob WHERE ClassName = 'meetingremember';
+
+IF NOT check_index_exists('I$pm_Test$TestScenario') THEN
+CREATE INDEX I$pm_Test$TestScenario ON pm_Test (TestScenario);
+END IF;
+
+IF NOT check_index_exists('I$WikiPage$RefNameTmplVPD') THEN
+CREATE INDEX I$WikiPage$RefNameTmplVPD ON WikiPage (VPD, ReferenceName, IsTemplate);
+END IF;
+
+IF NOT check_index_exists('I$cms_Snapshot$ObjectClass') THEN
+CREATE INDEX I$cms_Snapshot$ObjectClass ON cms_Snapshot (ObjectId, ObjectClass);
+END IF;
+
+IF NOT check_index_exists('I$cms_Snapshot$ObjectClassType') THEN
+CREATE INDEX I$cms_Snapshot$ObjectClassType ON cms_Snapshot (ObjectId, ObjectClass, Type);
+END IF;
+
+IF NOT check_index_exists('I$WikiPageFile$WikiPage') THEN
+CREATE INDEX I$WikiPageFile$WikiPage ON WikiPageFile (WikiPage);
+END IF;
+
 --
 --
 --

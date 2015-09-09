@@ -14,7 +14,6 @@ include "predicates/WikiSectionFilter.php";
 include "predicates/WikiNonRootFilter.php";
 include "predicates/WikiRootFilter.php";
 include "predicates/WikiNonRootEmptyFilter.php";
-include "predicates/WikiNotArchivedPredicate.php";
 include "predicates/WikiTagFilter.php";
 include "predicates/WikiRootTransitiveFilter.php";
 include "persisters/WikiPageRevisionPersister.php";
@@ -399,16 +398,7 @@ class WikiPage extends MetaobjectStatable
  	{
  		for($i = 0; $i < $object_it->count(); $i++)
  		{
- 			if ( $actual )
- 			{
- 				$skip_item = $object_it->IsArchived();
- 			}
- 			else
- 			{
- 				$skip_item = !$object_it->IsArchived();
- 			}
- 			
- 			$skip_item = $skip_item || !$object_it->IsSelectable();
+ 			$skip_item = !$object_it->IsSelectable();
 			
  			$values = array_merge( $values, 
  				array( ' '.$object_it->getId() => 

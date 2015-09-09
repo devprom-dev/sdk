@@ -5,6 +5,7 @@ namespace Devprom\ProjectBundle\Controller;
 use Devprom\CommonBundle\Controller\PageController;
 use Devprom\CommonBundle\Service\Project\InviteService;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 include_once SERVER_ROOT_PATH."pm/views/ui/Common.php";
@@ -17,9 +18,9 @@ class InvitationController extends PageController
     	return $this->responsePage( new \InvitationPage() );
     }
 
-    public function formProcessAction()
+    public function formProcessAction(Request $request)
     {
-    	$emails = preg_split('/,/', $this->getRequest()->request->get('Addressee'));
+    	$emails = preg_split('/,/', $request->request->get('Addressee'));
     	
     	if ( count($emails) < 1 ) return;
 

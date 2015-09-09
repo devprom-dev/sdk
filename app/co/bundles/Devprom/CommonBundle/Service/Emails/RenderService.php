@@ -19,7 +19,7 @@ class RenderService
 		$lang = strtolower($session->getLanguageUid());
 
 		$paths = array (
- 			SERVER_ROOT_PATH.'/co/bundles/Devprom/CommonBundle/Resources/views/Emails/'.$lang,
+ 			SERVER_ROOT_PATH.'co/bundles/Devprom/CommonBundle/Resources/views/Emails/'.$lang,
  			rtrim($additional_path,"\\/").'/'.$lang
  		);
 		foreach( $paths as $key => $value ) {

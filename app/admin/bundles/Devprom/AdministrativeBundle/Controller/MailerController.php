@@ -5,6 +5,7 @@ namespace Devprom\AdministrativeBundle\Controller;
 use Devprom\AdministrativeBundle\Controller\BaseController;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class MailerController extends BaseController
@@ -18,7 +19,7 @@ class MailerController extends BaseController
     	return $this->responsePage(new \MailerPage);
     }
     
-    public function storeAction()
+    public function storeAction(Request $request)
     {
     	if ( is_object($response = $this->checkAccess()) ) return $response;
     	
@@ -28,12 +29,12 @@ class MailerController extends BaseController
     	
     	foreach( $settings->getAttributes() as $attribute => $data )
     	{
-    		$parms[$attribute] = $this->getRequest()->request->get($attribute); 
+    		$parms[$attribute] = $request->request->get($attribute);
     	}
     	
     	$settings->modify_parms($settings->getAll()->getId(), $parms);
     	
-    	$test_email = $this->getRequest()->request->get("MailTestEmail");
+    	$test_email = $request->request->get("MailTestEmail");
     	
     	if ( $test_email != '' )
     	{

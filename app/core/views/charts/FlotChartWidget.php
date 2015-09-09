@@ -3,6 +3,7 @@
 abstract class FlotChartWidget
 {
  	var $legend, $points, $data;
+	private $colors = array();
  	
  	function __construct()
  	{
@@ -40,6 +41,14 @@ abstract class FlotChartWidget
  	{
  	    return $this->data;
  	}
+
+	function setColors( $colors ) {
+		$this->colors = $colors;
+	}
+
+	function getColors() {
+		return $this->colors;
+	}
 
  	abstract public function draw( $chart_id );
 }

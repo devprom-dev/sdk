@@ -1,9 +1,12 @@
 <?php
 namespace Devprom\ProjectBundle\Service\Model;
 
+include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
+include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
+
 class ModelService
 {
-	public function __construct( $validator_serivce, $mapping_service, $filter_resolver )
+	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array() )
 	{
 		$this->validator_service = $validator_serivce;
 		
@@ -43,9 +46,6 @@ class ModelService
 		
 		if ( $message != '' ) throw new \Exception($message);
 		
-		// check record extists already
-		$query = array();
-
 		// remove client data
 		unset($data['RecordCreated']);
 		unset($data['RecordModified']);
@@ -54,44 +54,28 @@ class ModelService
 		$this->mapping_service->map($object, $data);
 
 		// check an object exists already (search by Id or alternative key)
-		$object_it = $object->getRegistry()->Query(
-				$id != '' ? array(new \FilterInPredicate($id)) : $this->buildSearchQuery($object, $data)
-		);
-		
+		$object_it = $id != ''
+				? $object->getRegistry()->Query(array(new \FilterInPredicate($id)))
+				: $object->getEmptyIterator();
+
 		if ( $object_it->getId() < 1 )
 		{
-			if ( !getFactory()->getAccessPolicy()->can_create($object) )
-			{
+			if ( !getFactory()->getAccessPolicy()->can_create($object) ) {
 				throw new \Exception('Lack of permissions to create object of '.get_class($object));
 			}
 
-			// convert to internal charset
-			foreach( $data as $key => $value )
-			{
-				$data[$key] = \IteratorBase::utf8towin($value);
-			}
-			
 			$result = $this->create($object, $data);
-			
 			if ( $result < 1 ) throw new \Exception('Unable create new record of '.get_class($object));
 			
 			return $this->get($entity, $result);
 		}
 		else
 		{
-			if ( !getFactory()->getAccessPolicy()->can_modify($object_it) )
-			{
+			if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) {
 				throw new \Exception('Lack of permissions to modify object of '.get_class($object));
 			}
 			
-			// convert to internal charset
-			foreach( $data as $key => $value )
-			{
-				$data[$key] = \IteratorBase::utf8towin($value);
-			}
-			
-			if ( $this->modify($object_it, $data) < 1 )
-			{
+			if ( $this->modify($object_it, $data) < 1 ) {
 				throw new \Exception('Unable update the record ('.$object_it->getId().') of '.get_class($object));
 			}
 			
@@ -101,19 +85,15 @@ class ModelService
 	
 	public function get( $entity, $id = '', $output = 'text' )
 	{
-		if ( $id == '' ) $id = 0;
-		
+        $ids = array_filter(preg_split('/,/', $id), function($value) {
+                return $value != '';
+        });
+        if ( count($ids) < 1 ) return array();
+
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
-		
-		$object_it = $object->getRegistry()->Query(
-				array (
-						new \FilterInPredicate($id),
-						new \FilterVpdPredicate()
-				)
-		);
-		
-		if ( $object_it->getId() < 1 )
-		{
+        $object_it = $object->getExact($ids);
+
+		if ( $object_it->getId() < 1 ) {
 			throw new \Exception('There is no record ('.$id.') of '.get_class($object));
 		}
 
@@ -176,14 +156,19 @@ class ModelService
 		{
 			$xml .= '<Object id="'.$object_it->getId().'">';
 			foreach( $attributes as $attribute => $data )
-			{	
-				if ( $object_it->object->IsReference($attribute) ) {
-					$value = $object_it->getRef($attribute)->getDisplayName();
+			{
+				if ( in_array($object_it->object->getAttributeType($attribute), array('integer','float')) ) {
+					$xml .= '<'.$attribute.'>'.$object_it->get($attribute).'</'.$attribute.'>';
 				}
 				else {
-					$value = $object_it->getHtmlDecoded($attribute);
+					if ( $object_it->object->IsReference($attribute) ) {
+						$value = $object_it->getRef($attribute)->getDisplayName();
+					}
+					else {
+						$value = $object_it->getHtmlDecoded($attribute);
+					}
+					$xml .= '<'.$attribute.'><![CDATA['.mb_strtolower($value).']]></'.$attribute.'>';
 				}
-				$xml .= '<'.$attribute.'><![CDATA['.\IteratorBase::wintoutf8(strtolower($value)).']]></'.$attribute.'>';
 			}
 			$xml .= '</Object>';
 			$object_it->moveNext();
@@ -197,7 +182,7 @@ class ModelService
 				if ( $attribute == 'id' ) $ids[] = (string) $value; 
 			}
 		}
-		
+
 		$id_attribute = $object_it->object->getIdAttribute();
 		
 		return $object_it->object->createCachedIterator(
@@ -245,9 +230,10 @@ class ModelService
 				$result[$attribute] = \IteratorBase::wintoutf8(
 						html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING)
 				);
-				
 				if ( $output == 'html' ) {
-					$result[$attribute] = \IteratorBase::getHtmlValue($result[$attribute]);
+					if ( in_array($object->getAttributeType($attribute), array('wysiwyg')) ) {
+						$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), '', $result[$attribute]));
+					}
 				}
 			}
 			
@@ -261,6 +247,16 @@ class ModelService
 				// hard hack. make unique modified attributes for REST API /changes service
 				$result[$attribute] = join(',',array_unique(preg_split('/,/', $result[$attribute])));
 			}
+		}
+		
+		foreach( $object->getAttributes() as $attribute => $info )
+		{
+			if ( !in_array($object->getAttributeType($attribute), array('file','image')) ) continue;
+		
+			$path = $data['FilePath'];
+			if ( !file_exists($path) ) continue;
+			
+			$result[$attribute] = base64_encode(file_get_contents($path));
 		}
 		
 		unset($result['RecordVersion']);

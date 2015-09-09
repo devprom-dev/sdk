@@ -5,14 +5,13 @@ namespace Devprom\AdministrativeBundle\Controller;
 use Devprom\AdministrativeBundle\Controller\BaseController;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class MainController extends BaseController
 {
-    public function indexAction()
+    public function indexAction(Request $request)
     {
-    	$request = $this->getRequest();
-
     	// check if an update is installing then skip controlling of deployment state
     	if ( preg_match('/backup|update|command|accountclient/i', $request->getBaseUrl()) ) return;
 

@@ -10,7 +10,7 @@ call %TEST_ROOT%../../dev/php/php %COMPOSER_HOME%/composer.phar self-update
 
 del composer.lock
 
-call %TEST_ROOT%../../dev/php/php %COMPOSER_HOME%/composer.phar --dev install
+call %TEST_ROOT%../../dev/php/php %COMPOSER_HOME%/composer.phar --dev update
 
 cd %TEST_ROOT%
 

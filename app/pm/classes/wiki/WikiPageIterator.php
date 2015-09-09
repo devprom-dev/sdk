@@ -104,31 +104,6 @@ class WikiPageIterator extends StatableIterator
 		return $this->object->getByRefArray($parms);
 	}
 	
-	function hasArchivedChildren()
-	{
-		$sql = " SELECT p.WikiPageId, p.IsArchived FROM WikiPage p " .
-			   "  WHERE p.ParentPage = ".$this->getId();
-			   
-		$it = $this->object->createSQLIterator( $sql );
-		
-		while ( !$it->end() )
-		{
-			if ( $it->IsArchived() )
-			{
-				return true;
-			}
-
-			if ( $it->hasArchivedChildren() )
-			{
-				return true;
-			}
-			
-			$it->moveNext();
-		}
-		
-		return false;
-	}
-	
 	function getParentsArray()
 	{
 		return array_filter(preg_split('/,/', trim($this->get('ParentPath'), ',')), function($value) {
@@ -217,12 +192,7 @@ class WikiPageIterator extends StatableIterator
 		return is_numeric($this->get('RecordVersion'));
 	}
 	
-	function IsArchived() 
-	{
-		return $this->get('IsArchived') == 'Y';
-	}
-
-	function IsDraft() 
+	function IsDraft()
 	{
 		return $this->get('IsDraft') == 'Y';
 	}

@@ -9,6 +9,15 @@ namespace core\classes;
 
 class ExceptionHandler
 {
+    protected static $singleInstance = null;
+
+    public static function Instance( array $listeners = array() )
+    {
+        if ( is_object(static::$singleInstance) ) return static::$singleInstance;
+        static::$singleInstance = new static($listeners);
+        return static::$singleInstance;
+    }
+
 	private $listeners = array();
 	
     /**
@@ -163,14 +172,7 @@ class ExceptionHandler
      */
     public function captureError($errno, $errstr, $errfile, $errline, $errcontext)
     {
-        if ( $errno == E_NOTICE ) return true;
-        
-        if ( $errno == E_STRICT ) return true;
-        
-        if ( $errno == E_WARNING ) return true;
-        
-        if ( $errno == E_DEPRECATED ) return true;
-        
+        if ( in_array($errno, array(E_NOTICE,E_STRICT,E_WARNING,E_DEPRECATED,E_USER_DEPRECATED)) ) return true;
         if ( strpos($_SERVER['REQUEST_URI'], '/500', 0) !== false ) return true;
 
         $debug = $this->_debug_backtrace();
@@ -370,5 +372,12 @@ class ExceptionHandler
         unset($data_array['PHP_AUTH_PW']);
         
         return $data_array;
+    }
+
+    public function captureException( $e )
+    {
+        foreach( $this->listeners as $listener ) {
+            $listener->captureException($e);
+        }
     }
 }

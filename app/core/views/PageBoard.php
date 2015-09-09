@@ -189,9 +189,9 @@ class PageBoard extends PageList
 	    
 	    if ( !$form instanceof PageForm ) return array();
 	    
-	    $form->show($object_it);
+	    $form->show($object_it->copy());
 	    
-	    $transition_actions = $form->getTransitionActions( $object_it );
+	    $transition_actions = $form->getTransitionActions();
 	    if ( count($transition_actions) < 1 ) return $actions;
 
 	    $plugin_actions = array();
@@ -314,17 +314,15 @@ class PageBoard extends PageList
 		            case 'date':
 		            case 'datetime':
 		                
-    					echo '<div style="padding:0 0 0 0;word-wrap:none;overflow:hidden;" title="'.translate($this->object->getAttributeUserName($attr)).'">';
-    						echo '<img src="/images/date.png" style="float:left;margin:2px 3px 0 0;"> ';
-    						echo '<div style="float:left;">';
-    						    parent::drawCell( $object_it, $attr );
-    						echo '</div>';
+    					echo '<div class="date-attr" style="white-space:nowrap;" title="'.translate($this->object->getAttributeUserName($attr)).'">';
+    						echo '<img src="/images/date.png"> ';
+							parent::drawCell( $object_it, $attr );
     					echo '</div>';
 		                
     					break;
 		                
 		            default:
-    					echo '<div style="clear:both;padding:0 0 0 0;word-wrap:none;overflow:hidden;">';
+    					echo '<div style="clear:both;padding:0 0 0 0;overflow:hidden;">';
     					    echo translate($this->object->getAttributeUserName($attr)).': ';
     					    parent::drawCell( $object_it, $attr );
     				    echo '</div>';

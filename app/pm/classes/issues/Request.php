@@ -22,6 +22,7 @@ include_once "predicates/RequestReleasePredicate.php";
 include_once "predicates/RequestDuplicatesOfFilter.php";
 include_once "predicates/RequestImplementationFilter.php";
 include_once "predicates/RequestDependencyFilter.php";
+include_once "predicates/RequestFeatureFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
 include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
@@ -29,9 +30,9 @@ class Request extends MetaobjectStatable
 {
  	var $blocks_it, $links_it;
  	
- 	function __construct() 
+ 	function __construct( $registry = null ) 
  	{
-		parent::__construct('pm_ChangeRequest', null, getSession()->getCacheKey());
+		parent::__construct('pm_ChangeRequest', $registry, getSession()->getCacheKey());
  	}
  	
 	function createIterator() 

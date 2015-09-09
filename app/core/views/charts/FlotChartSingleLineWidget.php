@@ -61,6 +61,7 @@ class FlotChartSingleLineWidget extends FlotChartWidget
 					hoverable: true,
 					clickable: true
 				}
+				<? if ( count($this->getColors()) > 0 ) { ?> ,colors: ['<?=join("','",$this->getColors())?>'] <? } ?>
 			});
 		});			
 		</script>

@@ -10,17 +10,12 @@ class LoginUserService
  	
  	function validate( $login = '', $password = '', $email = '')
  	{
-		$login = \IteratorBase::utf8towin($login == '' ? $_REQUEST['login'] : $login);
+		$login = $login == '' ? $_REQUEST['login'] : $login;
+		$pass = $password == '' ? $_REQUEST['pass'] : $password;
+		
+		if( trim($login) == '' || trim($pass) == '' ) return 1;
 
-		$pass = \IteratorBase::utf8towin($password == '' ? $_REQUEST['pass'] : $password);
-		
-		if( $login == '' || $pass == '' ) 
-		{
-			return 1;
-		}
-		
 		$cls_user = getFactory()->getObject('cms_User');
-		
 		$password_hash = $cls_user->getHashedPassword( $pass );
 		
 	    $this->user_it = $cls_user->getByRefArray(
@@ -37,6 +32,8 @@ class LoginUserService
 				
 			if ( $this->user_it->count() > 0 )
 			{
+				if ( $this->user_it->get('Password') == '' ) return 5;
+
 				$retry = new \Metaobject('cms_LoginRetry');
 				$retry_it = $retry->getByRef('SystemUser', $this->user_it->getId());
 				
@@ -125,6 +122,9 @@ class LoginUserService
 
 			case 4:
 				return text(380);
+
+            case 5:
+                return text(2048);
 
 			default:
 				return $result;

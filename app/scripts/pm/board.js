@@ -7,31 +7,26 @@ var draggableOptions = {
 		helper: "clone",
 		cursor: "move",
 		redrawBoardItemCustom: function ( item, result )
-		{			
+		{
 			item.each(function() {
 				var objectid = $(this).attr('object');
-				
+
 				var newCard = $(result).find('.board_item[object="'+objectid+'"]');
 				var oldCard = $('.board_item[object="'+objectid+'"]');
-				
+
 				new_more = newCard.attr('more');
 				new_group = newCard.parent().attr('group');
 				old_more = oldCard.attr('more');
 				old_group = oldCard.parent('.list_cell').attr('group');
 
-				if( $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]').length < 1 )
-				{
-					window.location.reload();
-					return;
-				}
-				
+				if( $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]').length < 1 ) return;
+
 				var itemFound = false;
-				
 				$('.list_cell[more="'+new_more+'"][group="'+new_group+'"][sort="OrderNum"] > .board_item')
 					.each(function() {
-						if ( parseInt($(this).attr('order')) >= parseInt(newCard.attr('order')) ) 
+						if ( parseInt($(this).attr('order')) >= parseInt(newCard.attr('order')) )
 						{
-							newCard.insertBefore($(this)); 
+							newCard.insertBefore($(this));
 							oldCard.remove();
 							
 							itemFound = true; 
@@ -166,7 +161,7 @@ var draggableOptions = {
 		groupAttribute: '',
 		boardCreated: '',
 		itemFormUrl: '',
-		resetParms: '&view=board&state=all&rows=all&offset2=0&infosections=none',
+		resetParms: '&view=board&rows=all&offset2=0&infosections=none',
 		waitRequest: null,
 		resizeCards: function () 
 		{
@@ -341,7 +336,7 @@ function processActionResult( result, item, options )
 							beforeClose: function(event, ui) 
 							{
 								redrawBoardItem( item, options );
-								formDestroy($('#modal-form form').attr('id'));
+								return workflowHandleBeforeClose(event, ui);
 							},
 							buttons: [
 								{
@@ -483,11 +478,7 @@ function createBoardItem( query_string, options, data, callback )
 					resizable: false,
 					open: function()
 					{
-						completeUIExt($('#modal-form').parent());
-						
-						$('#modal-form form[id] input:visible:first').blur();
-						
-						focusField('#modal-form form[id]');
+						workflowMakeupDialog();
 					},
 					create: function() 
 					{
@@ -495,8 +486,7 @@ function createBoardItem( query_string, options, data, callback )
 				    },
 					beforeClose: function(event, ui) 
 					{
-						formDestroy($('#modal-form form').attr('id'));
-						filterLocation.hideActivity();
+						return workflowHandleBeforeClose(event, ui);
 					},
 					buttons: [
 						{

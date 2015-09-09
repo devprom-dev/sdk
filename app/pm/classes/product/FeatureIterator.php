@@ -7,6 +7,13 @@ class FeatureIterator extends OrderedIterator
 		return $this->get('CaptionAndType');
 	}
 	
+	function getParentsArray()
+	{
+		return array_filter(preg_split('/,/',$this->get('ParentPath')), function($value) {
+					return is_numeric($value);
+		});		
+	}
+	
  	function getTransitiveRootArray()
 	{
 	    $roots = array();

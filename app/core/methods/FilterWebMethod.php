@@ -18,6 +18,11 @@ class FilterWebMethod extends SelectRefreshWebMethod
 	{
 	    return $this->default_value = $value;
 	}
+
+	function getDefaultValue()
+	{
+		return $this->default_value;
+	}
 	
  	function hasAccess()
  	{
@@ -50,7 +55,7 @@ class FilterWebMethod extends SelectRefreshWebMethod
  	function getValue()
  	{
  		$value = parent::getValue();
- 		
+
  		if ( $value != '' ) return $value;
  		
 		return $this->default_value;

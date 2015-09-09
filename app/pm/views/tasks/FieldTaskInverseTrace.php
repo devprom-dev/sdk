@@ -1,6 +1,6 @@
 <?php
 
-include "FieldTaskTrace.php";
+include_once "FieldTaskTrace.php";
 include "TaskTraceInverseFormEmbedded.php";
  
 class FieldTaskInverseTrace extends FieldTaskTrace

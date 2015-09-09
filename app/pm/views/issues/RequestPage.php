@@ -99,6 +99,7 @@ class RequestPage extends PMPage
 	function getObject()
 	{
 		$object = getFactory()->getObject('Request');
+		$object->addPersister( new IssueLinkedIssuesPersister() );
 		
 	    foreach(getSession()->getBuilders('RequestViewModelBuilder') as $builder ) {
     		$builder->build($object);

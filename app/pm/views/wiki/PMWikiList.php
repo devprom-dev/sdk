@@ -95,9 +95,21 @@ class PMWikiList extends PMPageList
 
 				echo join(array_unique($stages), ', ');
 				break;
-				
+
+			case 'Workflow':
+                if ( $object_it->get($attr) != '' ) {
+                    $lines = array();
+                    $rows = json_decode($object_it->getHtmlDecoded($attr), true);
+                    foreach( $rows as $row ) {
+                        $lines[] = '<div style="white-space:nowrap">'.str_replace('%1', $row['action'],
+                                        str_replace('%2', $row['author'],
+                                                str_replace('%3', getSession()->getLanguage()->getDateTimeFormatted($row['date']), text(2045)))).'</div>';
+                    }
+                    echo join('', $lines);
+                }
+				break;
+
 			default:
-				
 				parent::drawCell( $object_it, $attr );
 		}
 	}

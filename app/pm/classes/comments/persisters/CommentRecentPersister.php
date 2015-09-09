@@ -9,13 +9,19 @@ class CommentRecentPersister extends ObjectSQLPersister
  		$columns[] =  
  			"( SELECT so.Caption FROM Comment so ".
  			"   WHERE so.ObjectId = ".$this->getPK($alias).
- 			"     AND LCASE(so.ObjectClass) = '".strtolower(get_class($this->getObject()))."'".
+ 			"     AND so.ObjectClass = '".get_class($this->getObject())."'".
  			"   ORDER BY so.RecordCreated DESC LIMIT 1 ) RecentComment ";
- 		
- 		$columns[] =  
+
+		$columns[] =
+			"( SELECT so.AuthorId FROM Comment so ".
+			"   WHERE so.ObjectId = ".$this->getPK($alias).
+			"     AND so.ObjectClass = '".get_class($this->getObject())."'".
+			"   ORDER BY so.RecordCreated DESC LIMIT 1 ) RecentCommentAuthor ";
+
+ 		$columns[] =
  			"( SELECT COUNT(1) FROM Comment so ".
  			"   WHERE so.ObjectId = ".$this->getPK($alias).
- 			"     AND LCASE(so.ObjectClass) = '".strtolower(get_class($this->getObject()))."' ) CommentsCount ";
+ 			"     AND so.ObjectClass = '".get_class($this->getObject())."' ) CommentsCount ";
 
  		return $columns;
  	}

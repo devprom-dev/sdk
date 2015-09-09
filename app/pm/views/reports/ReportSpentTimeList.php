@@ -44,7 +44,7 @@ class ReportSpentTimeList extends PMStaticPageList
 			? $rows_object->getRegistry()->Query( array(new FilterInPredicate($items)) )
 			: $rows_object->getEmptyIterator();
 		
-		$this->group_it = $this->getGroupObject()->getAll();
+		$this->report_group_it = $this->getGroupObject()->getAll();
 		
 		$it->moveFirst();
 		return $it;
@@ -303,9 +303,9 @@ class ReportSpentTimeList extends PMStaticPageList
 		if( $attr == 'Caption' ) 
 		{
 			if ( $object_it->get('Group') > 0 ) {
-					$this->group_it->moveToId($object_it->get('ItemId'));
+					$this->report_group_it->moveToId($object_it->get('ItemId'));
 					echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">'; 
-						echo $this->group_it->getDisplayName();
+						echo $this->report_group_it->getDisplayName();
     				echo '</div>';
 			}
 			else {

@@ -13,6 +13,7 @@ include_once SERVER_ROOT_PATH . "/plugins/support/classes/MailboxScanner.php";
 include_once SERVER_ROOT_PATH . "/plugins/support/classes/MailboxMessage.php";
 include_once SERVER_ROOT_PATH . "/ext/imap/ImapMailbox.php";
 include_once SERVER_ROOT_PATH . "/core/classes/project/Project.php";
+include_once SERVER_ROOT_PATH . "/core/classes/project/ProjectImportance.php";
 include_once SERVER_ROOT_PATH . "/pm/classes/comments/Comment.php";
 include_once SERVER_ROOT_PATH . "/pm/classes/issues/Request.php";
 include_once SERVER_ROOT_PATH . "/core/classes/user/User.php";
@@ -41,27 +42,43 @@ class MailboxScannerTest extends DevpromTestCase {
         $this->userServiceMock = $this->getMock("UserService", array("authorizeExistingUser", "isServicedeskProject"));
         $this->userServiceMock->expects($this->any())->method("isServicedeskProject")->will($this->returnValue(false));
 
-        $this->requestMock = $this->getMock("Request", array("add_parms", "getByRefArray", "createSQLIterator"));
+        $this->requestMock = $this->getMock("Request", array("add_parms", "getExact", "getByRefArray", "createSQLIterator", "getTerminalStates"));
+        $this->requestMock->expects($this->any())->method('add_parms')->will($this->returnValue(1));
+        $this->requestMock->expects($this->any())->method('getExact')->will(
+        		$this->returnValue(
+						$this->requestMock->createCachedIterator(array(
+	   						array( 
+	   								'Caption' => "Existing request",
+	  								'pm_ChangeRequestId' => '1'
+	   						)))        		
+        		));
         $this->requestMock->expects($this->any())->method('createSQLIterator')->will(
         		$this->returnValue(
-        				$this->requestMock->createCachedIterator(array(array( 'Caption' => "Existing request" )))
+        				$this->requestMock->createCachedIterator(array(
+        						array( 
+        								'Caption' => "Existing request",
+        								'pm_ChangeRequestId' => '1'
+        						)))
         		));
 
         $this->requestItMock = $this->requestMock->createSQLIterator('');
-
-        $this->project = $this->getMock('Project', array('createIterator'), array(), '', false);
-        $this->projectIt = $this->getMock("ProjectIterator", array(), array($this->project));
-        $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
-        $this->session = $this->getSessionObject();
-
         $this->watcherMock = $this->getMock("Watcher", array("add_parms", "createSQLIterator"), array($this->requestMock->createSQLIterator('')));
+        $this->project = $this->watcherMock;
         
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
             array (
                 array ( 'pm_Watcher', $this->requestMock->createSQLIterator(''), $this->watcherMock ),
-                array ( 'Watcher', $this->requestMock->createSQLIterator(''), $this->watcherMock )
+                array ( 'Watcher', $this->requestMock->createSQLIterator(''), $this->watcherMock ),
+                array ( 'ProjectImportance', null, new \ProjectImportance() ),
+                array ( 'pm_Project', null, $this->project ),
+                array ( 'Project', null, $this->project )
             )
         ));
+                
+        $this->project = $this->getMock('Project', array('createIterator'));
+        $this->projectIt = $this->getMock("ProjectIterator", array(), array($this->project));
+        $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
+        $this->session = $this->getSessionObject();
 
         $this->mockScannerBuilder = new MockScannerBuilder(
             $this->requestMock, $this->commentMock, $this->attachmentMock,  $this->userServiceMock, $this->objectUID,
@@ -128,47 +145,6 @@ class MailboxScannerTest extends DevpromTestCase {
 
         // exercise
         $scanner = $this->buildScanner();
-        $mail_message = $this->buildMessage($subject);
-        $scanner->processMessage($mail_message, $this->session, $this->projectIt);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldAddNewWatcherWhenExternalUserCreatesRequest() {
-        $subject = "Some request";
-
-        $this->watcherMock->expects($this->any())->method('createSQLIterator')->will(
-        		$this->returnValue(
-        				$this->watcherMock->createCachedIterator(array())
-        		));
-        // set up expectations
-        $this->watcherMock->expects($this->once())->method("add_parms")
-            ->with(array('Email' => "test@test", 'VPD' => ''));
-
-        // exercise
-        $scanner = $this->buildScanner();
-        $mail_message = $this->buildMessage($subject);
-        $scanner->processMessage($mail_message, $this->session, $this->projectIt);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldAddNewWatcherWhenInternalUserCreatesRequest() {
-        $subject = "Some request";
-
-        $scanner = $this->mockScannerBuilder->newInstance()->forInternalUser()->get();
-
-        $this->watcherMock->expects($this->any())->method('createSQLIterator')->will(
-        		$this->returnValue(
-        				$this->watcherMock->createCachedIterator(array())
-        		));
-        // set up expectations
-        $this->watcherMock->expects($this->once())->method("add_parms")
-            ->with(array('Email' => "test@test", "VPD" => ""));
-
-        // exercise
         $mail_message = $this->buildMessage($subject);
         $scanner->processMessage($mail_message, $this->session, $this->projectIt);
     }

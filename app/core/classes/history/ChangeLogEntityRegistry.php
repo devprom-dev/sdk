@@ -39,4 +39,8 @@ class ChangeLogEntityRegistry extends ObjectRegistrySQL
 
  	    return $this->createIterator( $data );
  	}
+
+	public function getLimit() {
+		return 256;
+	}
 }

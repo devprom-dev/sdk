@@ -34,7 +34,11 @@ class ExceptionHandlerListenerDevprom extends ExceptionHandlerListener
 			error_log('Unhandled exception: '.print_r($data, true));
 		}
 	}
-	
+
+	public function captureException( $e )
+	{
+	}
+
     private function post($data_to_send)
     {
 		$headers = 0;

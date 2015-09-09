@@ -54,7 +54,7 @@ $has_portfolio_programs = count($portfolios) + count($programs) > 0;
                                     <?php } ?>
                                     <br/>
                                 <?php } ?>
-                                <?php if (is_array($projects[0]) ) foreach( $projects[0] as $project_id => $project ) { ?>
+                                <?php if (is_array($projects['']) ) foreach( $projects[''] as $project_id => $project ) { ?>
                                     <a href="<?=$project['url']?>"><?=$project['name']?></a><br/>
                                 <?php } ?>
                             </td>

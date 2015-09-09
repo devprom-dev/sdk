@@ -1,5 +1,5 @@
 <?php
-
+include SERVER_ROOT_PATH."pm/classes/communications/QuestionModelExtendedBuilder.php";
 include "QuestionTable.php";
 include "QuestionForm.php";
 
@@ -9,14 +9,10 @@ class QuestionPage extends PMPage
  	{
  		parent::__construct();
 
-		if ( $this->needDisplayForm() )
-		{
+		if ( $this->needDisplayForm() )	{
 			$object_it = $this->getObjectIt();
-			
-			if ( is_object($object_it) && $object_it->count() > 0 )
-			{
+			if ( is_object($object_it) && $object_it->count() > 0 ) {
  				$this->addInfoSection( new PageSectionComments($object_it) );
- 				
 			    $this->addInfoSection( new StatableLifecycleSection($object_it) );
 			}
 		}
@@ -24,8 +20,8 @@ class QuestionPage extends PMPage
  	
 	function getObject()
 	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_Question');
+		getSession()->addBuilder(new QuestionModelExtendedBuilder());
+ 		return getFactory()->getObject('pm_Question');
 	}
 	
  	function getTable() 

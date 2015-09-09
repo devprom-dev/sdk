@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
+
 include "FieldTaskResultDictionary.php";
 include_once "FieldTaskTypeDictionary.php";
 include_once SERVER_ROOT_PATH.'pm/views/time/FieldSpentTimeTask.php';
@@ -10,6 +12,7 @@ include_once SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
+include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskInverseTrace.php";
 include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 
 class TaskForm extends PMPageForm
@@ -125,7 +128,11 @@ class TaskForm extends PMPageForm
 
 	function getNewObjectAttributes()
 	{
-		return array('Caption', 'Priority', 'Planned', 'Assignee', 'Release', 'TaskType', 'ChangeRequest', 'Attachment', 'OrderNum');
+		$attributes = array('Caption', 'Priority', 'Planned', 'Assignee', 'Release', 'TaskType', 'ChangeRequest', 'Attachment');
+		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' ) {
+			$attributes[] = 'OrderNum';
+		}
+		return $attributes;
 	}
 	
 	function createFieldObject( $name ) 
@@ -156,7 +163,11 @@ class TaskForm extends PMPageForm
 
 			case 'TraceTask':
 				return new FieldTaskTrace( $object_it_for_trace, 
-					$model_factory->getObject('TaskTraceTask') );
+					getFactory()->getObject('TaskTraceTask') );
+
+			case 'TraceInversedTask':
+				return new FieldTaskInverseTrace( $object_it_for_trace,
+					getFactory()->getObject('TaskInversedTraceTask') );
 
 			case 'SourceCode':
 				return new FieldTaskTrace( $object_it_for_trace, 
@@ -289,6 +300,20 @@ class TaskForm extends PMPageForm
 		return parent::getFieldValue( $attr );
 	}
 	
+	function getDefaultValue( $attr )
+	{
+		switch( $attr )
+		{
+			case 'Assignee':
+				$type_id = $this->getFieldValue('TaskType');
+				return $type_id > 0 
+					? TaskDefaultsService::getAssignee($type_id) : parent::getDefaultValue( $attr );
+
+			default:
+				return parent::getDefaultValue( $attr );
+		}
+	}
+	
 	function getDeleteActions()
 	{
 		$actions = parent::getDeleteActions();
@@ -311,11 +336,14 @@ class TaskForm extends PMPageForm
 		return $actions;
 	}
 	
-	function getTransitionActions($object_it)
+	function getTransitionActions()
 	{
-		$actions = parent::getTransitionActions($object_it);
-		
-		if( !$object_it->IsFinished() ) 
+		$object_it = $this->getObjectIt();
+		if ( !is_object($object_it) ) return array();
+
+		$actions = parent::getTransitionActions();
+
+		if( !$object_it->IsFinished() )
 		{
 			$move_actions = array();
 			

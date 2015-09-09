@@ -278,16 +278,14 @@ class TaskList extends PMPageList
 				break;
 				
 			case 'Assignee':
-				
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
-				
 				if ( count($workload) > 0 )
 				{
-						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
-									'data' => $workload[$object_it->get($group_field)]
-							));
+						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+								'user' => $object_it->getRef('Assignee')->getDisplayName(),
+								'data' => $workload[$object_it->get($group_field)]
+						));
 				}				
-					
 				break;
 				
 			default:

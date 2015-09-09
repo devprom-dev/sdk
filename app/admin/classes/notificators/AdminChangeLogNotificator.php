@@ -15,7 +15,9 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
             'co_ScheduledJob',
             'co_RemoteMailbox',
             'pm_Participant',
-            'pm_Project'
+            'pm_Project',
+			'cms_Backup',
+			'cms_Update'
         );
     }
     

@@ -19,6 +19,7 @@ include_once 'SDKSetup.php';
 include_once 'AttachCustomersToCompanies.php';
 include_once 'SetupSupportProjectSettings.php';
 include_once 'MigrateDatabaseUTF8.php';
+include_once "RepairDatabase.php";
 
 class InstallationFactory
 {
@@ -62,6 +63,7 @@ class InstallationFactory
         	new SDKSetup(),
         	new AttachCustomersToCompanies(),
         	new SetupSupportProjectSettings(),
+			new RepairDatabase(),
 	        new ClearCache()
 	    );
     }

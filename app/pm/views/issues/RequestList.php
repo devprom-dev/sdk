@@ -99,6 +99,24 @@ class RequestList extends PMPageList
 		return 'white';
 	}
 
+	function drawGroup($group_field, $object_it)
+	{
+		switch ( $group_field )
+		{
+			case 'Function':
+				$title = $this->getTable()->getFeatureTitle($this->getGroupIt(), $object_it, $this->getUIDService());
+				if ( $title == '' ) {
+					parent::drawGroup($group_field, $object_it);
+				}
+				else {
+					echo $title;
+				}
+				break;
+			default:
+				parent::drawGroup($group_field, $object_it);				
+		}
+	}
+	
 	function drawRefCell( $entity_it, $object_it, $attr ) 
 	{
 		switch ( $attr )

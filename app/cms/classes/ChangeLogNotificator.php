@@ -100,7 +100,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
         return array($content, $modified_attributes);
 	}
 	
-	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '') 
+	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
 	{
 		if( !$this->is_active($object_it) ) return;
 

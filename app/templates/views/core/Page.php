@@ -88,6 +88,9 @@
         		site: '<?=EnvironmentSettings::getServerAddress()?>'
         	}
         }).install();
+		Raven.setUserContext({
+			id: <?=$user_id?>
+		});
 		<?php }?>
     </script>
 

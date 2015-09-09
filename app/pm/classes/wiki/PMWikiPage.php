@@ -6,7 +6,6 @@ include "predicates/PMWikiStageFilter.php";
 include "predicates/PMWikiLinkedStateFilter.php";
 include "predicates/PMWikiSourceFilter.php";
 include "predicates/WikiRelatedIssuesPredicate.php";
-include "predicates/WikiInArchivePredicate.php";
 
 class PMWikiPage extends WikiPage 
 {

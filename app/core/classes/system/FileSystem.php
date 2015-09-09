@@ -18,13 +18,13 @@ class FileSystem
                     }
                     else
                     {
-                        unlink( $dir . $file );
+                        @unlink( $dir . $file );
                     }
                 }
             }
             
             closedir($dh);
-            rmdir( $dir );
+            @rmdir( $dir );
        }
 	}
 }

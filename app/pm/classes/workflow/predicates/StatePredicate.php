@@ -10,11 +10,11 @@ class StatePredicate extends FilterPredicate
 		{
 			case 'notresolved':
 			case 'notterminal':
-				return " AND IFNULL(t.State,'submitted') NOT IN ('".
+				return " AND IFNULL(".$this->getAlias().".State,'submitted') NOT IN ('".
 					join($object->getTerminalStates(), "','")."') ";
 
 			case 'terminal':
-				return " AND IFNULL(t.State,'submitted') IN ('".
+				return " AND IFNULL(".$this->getAlias().".State,'submitted') IN ('".
 					join($object->getTerminalStates(), "','")."') ";
 				
 			default:
@@ -25,7 +25,7 @@ class StatePredicate extends FilterPredicate
 		 				)
 		 			);
 		 		if ( $state_it->count() > 0 ) {
-		 			return " AND t.State IN ('".join($state_it->fieldToArray('ReferenceName'), "','")."')";
+		 			return " AND ".$this->getAlias().".State IN ('".join($state_it->fieldToArray('ReferenceName'), "','")."')";
 		 		}
 		 		else {
 		 			return " AND 1 = 2 ";

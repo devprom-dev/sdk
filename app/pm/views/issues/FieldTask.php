@@ -1,5 +1,7 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
+
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueTasks.php";
 include_once "FormTaskEmbedded.php";
 
@@ -108,27 +110,21 @@ class FieldTask extends Field
  	
  	function drawByTypes( $task )
  	{
- 		global $model_factory;
- 		
- 		$tasktype = $model_factory->getObject('pm_TaskType');
- 		
-		$tasktype->addFilter( new TaskTypePlannablePredicate() );
-		
-		$tasktype->addFilter( new FilterBaseVpdPredicate() ); 
-		
-		if ( is_object($this->iteration_it) && $this->iteration_it->get('ProjectStage') != '' )
-		{
- 			$tasktype->addFilter( new TaskTypeStageRelatedPredicate(
- 				$this->iteration_it->get('ProjectStage')) );
+ 		$filters = array (
+ 				new TaskTypePlannablePredicate(),
+ 				new FilterBaseVpdPredicate()
+ 		);
+		if ( is_object($this->iteration_it) && $this->iteration_it->get('ProjectStage') != '' ) {
+			$filters[] = new TaskTypeStageRelatedPredicate($this->iteration_it->get('ProjectStage'));
 		}
-		$tasktype_it = $tasktype->getAll();
+		$tasktype_it = getFactory()->getObject('pm_TaskType')->getRegistry()->Query($filters);
 		
  		$taskboxes = 0;
- 		
+
  		$parms = array (
  				'Priority' => $this->request_it->get('Priority')
  		);
- 		
+
  		while ( !$tasktype_it->end() )
  		{
  			if ( $tasktype_it->get('ReferenceName') == 'support' )
@@ -138,6 +134,7 @@ class FieldTask extends Field
  			}
  			
  			$parms['TaskType'] = $tasktype_it->getId();
+ 			$parms['Assignee'] = TaskDefaultsService::getAssignee($tasktype_it->getId());
 	 		
 			$this->drawForm( $task, $taskboxes, '', $parms );		
 
@@ -152,9 +149,7 @@ class FieldTask extends Field
  	function drawForm( $ref, $taskbox, $style = '', $parms )
  	{
 	 	$form = new FormTaskEmbedded( is_a($ref, 'Task') ? $ref : $ref->object, 'ChangeRequest' );
-
  		$form->setSingleton( true );
-
  		$form->setReadonly( false );
  		
  		if ( is_a($ref, 'TaskIterator') ) $form->setObjectIt($ref);

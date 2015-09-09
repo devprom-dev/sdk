@@ -16,11 +16,13 @@ class TaskBoardList extends PMPageBoard
  	private $priority_actions = array();
  	private $terminal_states = array();
  	private $method_spend_time = null;
+    private $estimation_strategy = null;
  	
  	function __construct( $object ) 
 	{
 		$this->priority_frame = new PriorityFrame();
-		
+        $this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+
 		parent::__construct( $object );
 		
 		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
@@ -212,6 +214,11 @@ class TaskBoardList extends PMPageBoard
 	function getGroupIt()
 	{
 		$values = $this->getFilterValues();
+		if ( $this->getTable()->hasCrossProjectFilter() ) {
+			$vpd_filter = new FilterVpdPredicate();
+		} else {
+			$vpd_filter = new FilterBaseVpdPredicate();
+		}
 		switch($this->getGroup())
 		{
 			case 'Release':
@@ -221,7 +228,7 @@ class TaskBoardList extends PMPageBoard
 								array (
 										new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
 										new SortAttributeClause('StartDate'),
-										new FilterVpdPredicate(),
+                                        $vpd_filter,
 										$values['iteration'] != '' 
 												? new FilterInPredicate(preg_split('/,/', $values['iteration'])) : null
 								)
@@ -411,7 +418,29 @@ class TaskBoardList extends PMPageBoard
 							'data' => $workload[$object_it->get($group_field)]
 					));
 				break;
-				
+
+			case 'Release':
+            case 'PlannedRelease':
+				parent::drawGroup($group_field, $object_it);
+				echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
+
+				$release_it = $this->getGroupIt();
+				$release_it->moveToId($object_it->get($group_field));
+
+				if ( $release_it->getId() > 0 ) {
+					$estimation = $release_it->getTotalWorkload();
+					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
+					echo sprintf(
+						text(2053),
+						$release_it->getDateFormatShort('StartDate'),
+                        $release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
+						$this->estimation_strategy->getDimensionText(round($maximum, 1)),
+                        $estimation > $maximum ? 'label label-important' : ($estimation < $maximum ? 'label label-success': ''),
+						$this->estimation_strategy->getDimensionText(round($estimation, 1))
+					);
+				}
+				break;
+
 			default:
 				parent::drawGroup($group_field, $object_it);
 		}
@@ -514,13 +543,9 @@ class TaskBoardList extends PMPageBoard
 			$(document).ready( function()
 			{
 				boardItemOptions.itemFormUrl = '/tasks/board';
-				boardItemOptions.resetParms = boardItemOptions.resetParms + "&taskstate=all"; 
-				
-				if ( typeof draggableOptions != 'undefined' )
-				{
+				if ( typeof draggableOptions != 'undefined' ) {
 					boardItemOptions.initializeBoardItemCustom = refreshHelpSections;	
 				}
-
 				board( boardItemOptions );
 			});
 

@@ -310,7 +310,7 @@ class PMPage extends Page
 			$info = getFactory()->getObject('PMReport')->getExact('productbacklog')->buildMenuItem();
 			
 			$method->setRedirectUrl(
-					"function() { window.location = '".$info['url']."'; }"
+					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
 			);
 		}
 		else
@@ -383,7 +383,7 @@ class PMPage extends Page
 			$info = getFactory()->getObject('PMReport')->getExact('iterationplanningboard')->buildMenuItem();
 			
 			$method->setRedirectUrl(
-					"function() { window.location = '".$info['url']."'; }"
+					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
 			);
 		}
 		else
@@ -415,7 +415,7 @@ class PMPage extends Page
 			$info = getFactory()->getObject('PMReport')->getExact('project-question')->buildMenuItem();
 			
 			$method->setRedirectUrl(
-					"function() { window.location = '".$info['url']."'; }"
+					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
 			);
 		}
  		else

@@ -1,5 +1,4 @@
 <?php
- 
 include_once SERVER_ROOT_PATH.'core/c_session.php';
 include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
 
@@ -42,6 +41,7 @@ include SERVER_ROOT_PATH."pm/classes/settings/EstimationStrategyCommonBuilder.ph
 include SERVER_ROOT_PATH."pm/classes/report/ReportsCommonBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/report/events/CustomReportModelEventsHandler.php";
 
+include SERVER_ROOT_PATH."pm/classes/communications/QuestionMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/issues/RequestMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/issues/RequestMetadataPermissionsBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/RequestTriggersCommon.php";
@@ -62,6 +62,7 @@ include SERVER_ROOT_PATH."pm/classes/tasks/events/TaskModifyProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/plan/IterationMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/ReleaseMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/MilestoneMetadataBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/plan/events/ModifyIssuesVersionNumber.php";
 
 include SERVER_ROOT_PATH."pm/classes/product/FeatureMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/product/events/FeatureUpdateMetricsEventHandler.php";
@@ -196,6 +197,7 @@ class PMSession extends SessionBase
  	            		new ProjectTemplateSectionsRegistryBuilderCommon($this),
  	            		new VersionedObjectRegistryBuilderIssue(),
  	            		new TransitionMetadataBuilder(),
+						new QuestionMetadataBuilder(),
  	            		
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
@@ -209,7 +211,8 @@ class PMSession extends SessionBase
  	            		new CustomReportModelEventsHandler(),
  	            		new FeatureUpdateMetricsEventHandler(),
  	            		new RequestFeatureUpdateMetricsEventHandler(),
- 	            		new RequestIterationHandler()
+ 	            		new RequestIterationHandler(),
+						new ModifyIssuesVersionNumber()
  	            ),
  	            parent::createBuilders(),
  	            array (

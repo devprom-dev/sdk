@@ -4,7 +4,8 @@ include "DateFormatBase.php";
 include "DateFormatEuropean.php";
 include "DateFormatAmerican.php";
 include "DateFormatRussian.php";
- 
+include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
+
  ////////////////////////////////////////////////////////////////////////////////// 
  class Language  
  {
@@ -46,6 +47,10 @@ include "DateFormatRussian.php";
  	
  	protected function buildCache($resource, $cache_path)
  	{
+		$lock = new CacheLock();
+		$lock->Wait(3);
+		$lock->Lock();
+
  		$records = array();
  	    $resource_it = $resource->getAll();
  	    $data = $resource_it->getRowset();
@@ -99,11 +104,6 @@ include "DateFormatRussian.php";
  		return $this->dateformat->getDateFormat();
  	}
 
- 	function getDateFormatShort() 
- 	{
- 		return $this->dateformat->getDateFormatShort();
- 	}
- 	
  	function getDateFormatted( $value )
  	{
  		if ( $value == '' ) return $value;
@@ -114,8 +114,7 @@ include "DateFormatRussian.php";
  	function getDateFormattedShort( $value )
  	{
  		if ( $value == '' ) return $value;
- 		
- 		return strftime($this->dateformat->getDateFormatShort(), strtotime(SystemDateTime::convertToClientTime($value)));
+ 		return SystemDateTime::convertToClientTime($value, $this->dateformat->getDateFormatShort(strtotime($value)));
  	}
  	
  	function getDateUserFormatted( $value, $format )

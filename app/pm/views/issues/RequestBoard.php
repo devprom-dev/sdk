@@ -22,6 +22,7 @@ class RequestBoard extends PMPageBoard
  	private $task_uid_service = null;
  	private $estimation_actions = array();
  	private $estimation_title = '';
+    private $estimation_strategy = null;
  	private $method_spend_time = null;
  	
  	function __construct( $object )
@@ -31,6 +32,7 @@ class RequestBoard extends PMPageBoard
  		parent::__construct( $object );
  		
  		$this->task_uid_service = new ObjectUid('', getFactory()->getObject('Task'));
+        $this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
  		
 		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
  	}
@@ -222,6 +224,11 @@ class RequestBoard extends PMPageBoard
 	function getGroupIt()
 	{
 		$values = $this->getFilterValues();
+		if ( $this->getTable()->hasCrossProjectFilter() ) {
+			$vpd_filter = new FilterVpdPredicate();
+		} else {
+			$vpd_filter = new FilterBaseVpdPredicate();
+		}
 		switch($this->getGroup())
 		{
 			case 'PlannedRelease':
@@ -231,7 +238,7 @@ class RequestBoard extends PMPageBoard
 								array (
 										new ReleaseTimelinePredicate('not-passed'),
 										new SortAttributeClause('StartDate'),
-										new FilterVpdPredicate(),
+										$vpd_filter,
 										$values['release'] != '' 
 												? new FilterInPredicate(preg_split('/,/', $values['release'])) : null
 								)
@@ -244,7 +251,7 @@ class RequestBoard extends PMPageBoard
 						array (
 								new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
 								new SortAttributeClause('StartDate'),
-								new FilterVpdPredicate(),
+								$vpd_filter,
 								$values['iterations'] != '' 
 										? new FilterInPredicate(preg_split('/,/', $values['iterations'])) : null
 						)
@@ -253,7 +260,7 @@ class RequestBoard extends PMPageBoard
 				return getFactory()->getObject('Feature')->getRegistry()->Query(
 						array (
 								new SortAttributeClause('Importance'),
-								new FilterVpdPredicate(),
+								$vpd_filter,
 								$values['function'] != '' 
 										? new FilterInPredicate(preg_split('/,/', $values['function'])) : null
 						)
@@ -337,23 +344,53 @@ class RequestBoard extends PMPageBoard
 		switch ( $group_field )
 		{
 			case 'Function':
-				
 				echo '<div class="feature-group" modifiable="1" object="'.$object_it->get($group_field).'">';
-					parent::drawGroup($group_field, $object_it);
+					$title = $this->getTable()->getFeatureTitle($this->getGroupIt(), $object_it, $this->getUIDService());
+					if ( $title == '' ) {
+						parent::drawGroup($group_field, $object_it);
+					}
+					else {
+						echo $title;
+					}
 				echo '</div>';
-				
 				break;
 
 			case 'Estimation':
-				
 				echo $object_it->object->getAttributeUserName($group_field).': '.$object_it->get($group_field);
-				
+				break;
+
+			case 'PlannedRelease':
+                parent::drawGroup($group_field, $object_it);
+                echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
+
+                $release_it = $this->getGroupIt();
+                $release_it->moveToId($object_it->get($group_field));
+
+                if ( $release_it->getId() > 0 ) {
+                    $estimation = $release_it->getTotalWorkload();
+                    list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
+                    echo sprintf(
+                        text(2053),
+                        $release_it->getDateFormatShort('StartDate'),
+                        $release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
+                        $this->estimation_strategy->getDimensionText(round($maximum, 1)),
+                        $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+                        $this->estimation_strategy->getDimensionText(round($estimation, 1))
+                    );
+                }
+				break;
+
+			case 'Project':
+				parent::drawGroup($group_field, $object_it);
+				$project_it = $this->getGroupIt();
+				$project_it->moveToId($object_it->get($group_field));
+				echo $this->getTable()->getView()->render('pm/RowGroupActions.php', array (
+						'actions' => $this->getTable()->getNewCardActions($project_it)
+					));
 				break;
 				
 			default:
-				
 				parent::drawGroup($group_field, $object_it);
-				
 				break;
 		}
 	}

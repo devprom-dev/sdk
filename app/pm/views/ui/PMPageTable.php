@@ -296,12 +296,11 @@ class PMPageTable extends PageTable
 		{
 			// snapshot items predicate
 			getFactory()->getObject('Snapshot');
-			
 			$predicates[] = new SnapshotObjectPredicate($values['baseline']);
 		}
 
     	if ( !$this->hasCrossProjectFilter() ) $predicates[] = new FilterBaseVpdPredicate();
-		
+
 		return array_merge($predicates, parent::getFilterPredicates());
 	}
 
@@ -386,7 +385,6 @@ class PMPageTable extends PageTable
 		    	foreach( $sorts as $sort_key => $sort_value )
 		    	{
 		    		if ( $sort_value == '' ) continue;
-		    	
 		    		$values[$sort_key] = $sort_value;
 		    	}
 	    	}
@@ -436,8 +434,9 @@ class PMPageTable extends PageTable
         // filters driven by custom attributes
         $filters = array_merge($filters, $this->buildCustomFilters());
 
-    	if ( $this->hasCrossProjectFilter() ) $filters[] = $this->buildProjectFilter();
-        
+        $filter = $this->buildProjectFilter();
+        if ( is_object($filter) ) $filters[] = $filter;
+
 	    switch ( $this->getObject()->getEntityRefName() )
 	    {
 	        case 'pm_ChangeRequest':
@@ -454,11 +453,24 @@ class PMPageTable extends PageTable
     protected function buildProjectFilter()
     {
    		$project = getFactory()->getObject('pm_Project');
-  		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
 
+        if ( !$this->hasCrossProjectFilter() ) {
+            if ( getSession()->getProjectIt()->IsProgram() ) {
+                $project->addFilter(new ProjectCurrentPredicate());
+                $filter = new FilterObjectMethod($project, translate('Проект'), 'target');
+                $filter->setUseUid(false);
+                $filter->setHasAll(false);
+                $filter->setHasNone(false);
+                $filter->setDefaultValue(getSession()->getProjectIt()->getId());
+                return $filter;
+            }
+        }
+
+  		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
 		if ( !getSession()->getProjectIt()->IsPortfolio() ) $ids[] = getSession()->getProjectIt()->getId();
    		$project->addFilter( new FilterInPredicate($ids) );
-        
+
+        if ( $project->getAll()->count() < 2 ) return;
    		if ( count($ids) > 20 ) {
 			$filter = new FilterAutocompleteWebMethod( $project, translate('Проект'), 'target' );
    		}

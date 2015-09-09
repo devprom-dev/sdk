@@ -1,6 +1,7 @@
 <?php
 
 include SERVER_ROOT_PATH."core/classes/FlotChartDataSource.php";
+include SERVER_ROOT_PATH."core/classes/schedule/DateYearWeekModelBuilder.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBarWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartLineWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartPieWidget.php";
@@ -11,7 +12,10 @@ class PageChart extends StaticPageList
 {
  	function PageChart( $object ) 
 	{
-		parent::StaticPageList( $object );
+		$builder = new DateYearWeekModelBuilder();
+        $builder->build($object);
+
+		parent::__construct( $object );
 	}
 
 	function getIterator()
@@ -151,16 +155,19 @@ class PageChart extends StaticPageList
 		}
 		elseif ( $this->getAggregator() == 'none' )
 		{
+			$agg = new AggregateBase( $this->getGroup(), '', '' );
+			$agg->setGroupFunction( $this->getGroupFunction() );
+
 			return array (
-				new AggregateBase( $this->getGroup(), '', '' ), 
-				new AggregateBase( $this->getAggregateBy(), '1', 'COUNT' ) 
+				$agg,
+				new AggregateBase($this->getAggregateBy(), '1', 'COUNT')
 			);
 		}
 		else
 		{
 			$agg = new AggregateBase( $this->getGroup(), 
 				$this->getAggregateBy(), $this->getAggregator() );
-			
+
 			$agg->setGroupFunction( $this->getGroupFunction() );
 				
 			return array ( $agg );
@@ -232,15 +239,7 @@ class PageChart extends StaticPageList
 	function getGroupFunction()
 	{
 		$values = $this->getFilterValues();
-		
-		if ( $values['groupfunc'] != '' )
-		{
-			return $values['groupfunc'];
-		}
-		else
-		{
-			return '';
-		}
+		return $values['groupfunc'];
 	}
 	
 	function getLegendVisible()
@@ -260,14 +259,14 @@ class PageChart extends StaticPageList
 	function getTableVisible()
 	{
 		$values = $this->getFilterValues();
-		
+
 		if ( $values['chartdata'] != '' )
 		{
 			return $values['chartdata'] != 'hide';
 		}
 		else
 		{
-			return 'show';
+			return $this->getGroup() != 'history';
 		}
 	}
 	
@@ -288,16 +287,13 @@ class PageChart extends StaticPageList
 		
 		$clause = $object->getRegistry()->getSelectClause('', false);
 		$attrs = $object->getAttributes();
-		
+
 		foreach ( $attrs as $key => $attr )
 		{
 			if ( $key == 'OrderNum' ) continue;
 			if ( in_array($key, $skip_attributes) ) continue;
-			
-			$skip = !$this->object->IsAttributeStored( $key ) && !preg_match('/\)\s+\`?'.$key.'\`?\s+,/', $clause);
-			if ( $skip ) continue;
-
-			if ( in_array($this->object->getAttributeType($key), array('','text','wysiwyg','largetext','char','varchar')) ) continue;
+			if ( !$this->object->IsAttributeStored( $key ) && !preg_match('/\)\s+\`?'.$key.'\`?\s+,/', $clause) ) continue;
+			if ( $key != 'State' && in_array($this->object->getAttributeType($key), array('','text','wysiwyg','largetext','char','varchar')) ) continue;
 			
 			array_push( $fields, $key );
 		}
@@ -320,7 +316,7 @@ class PageChart extends StaticPageList
 		foreach( $fields as $key => $field )
 		{
 			if ( in_array($field, $skip_attributes) ) unset ( $fields[$key] );
-			if ( in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) unset ( $fields[$key] );
+			if ( $field != 'State' && in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) unset ( $fields[$key] );
 		}
 		
 		return $fields;
@@ -489,6 +485,7 @@ class PageChart extends StaticPageList
 	    
 	    if ( count($aggs) < 2 )
 		{
+            $color_attribute = $aggs[0]->getAttribute();
 			switch ( strtolower($aggs[0]->getAggregate()) )
 			{
 				case 'count':
@@ -501,6 +498,7 @@ class PageChart extends StaticPageList
 		}
 		else
 		{
+            $color_attribute = $aggs[1]->getAttribute();
 			if ( $this->getGroup() == 'history' )
 			{
 				$widget = new FlotChartLineWidget();
@@ -510,7 +508,14 @@ class PageChart extends StaticPageList
 				$widget = new FlotChartBarWidget();
 			}
 		}
-		
+
+        if ( $this->getObject()->IsReference($color_attribute) ) {
+            $ref = $this->getObject()->getAttributeObject($color_attribute);
+            if ( $ref->getAttributeType('RelatedColor') != '' ) {
+                $widget->setColors($ref->getAll()->fieldToArray('RelatedColor'));
+            }
+        }
+
 		return $widget;
 	}
 	
@@ -546,7 +551,14 @@ class PageChart extends StaticPageList
 		
 		echo '</div>';
 
-		if ( count($aggs) < 2 && $this->getTableVisible() )
+        if ( count($aggs) == 2 && $this->getTableVisible() )
+        {
+            echo '<div style="clear:both;"></div>';
+            echo '<div style="padding:16px 22px 0;">';
+                $this->drawLegendTable( $data, $aggs );
+            echo '</div>';
+        }
+        else if ( count($aggs) < 2 && $this->getTableVisible() )
 		{
 		    if ( is_a($widget, 'FlotChartPieWidget') )
 		    {
@@ -600,6 +612,43 @@ class PageChart extends StaticPageList
 
 		echo '</table>';		
 	}
+
+    function drawLegendTable( $data, & $aggs )
+    {
+        $object = $this->getObject();
+        $agg_rows = $aggs[0];
+        $agg_cols = $aggs[1];
+
+        echo '<table class="table table-hover">';
+        $agg_title = '';
+        $attribute = $agg_cols->getAttribute();
+        if ($attribute != '' && $attribute != '1') {
+            $agg_title .= translate($object->getAttributeUserName($attribute));
+        }
+        $attribute = $agg_rows->getAttribute();
+        if ($attribute != '' && $attribute != '1') {
+            $agg_title .= ' \ '. translate($object->getAttributeUserName($attribute));
+        }
+        echo '<tr>';
+        echo '<th>'.$agg_title.'</th>';
+        foreach ($data as $column => $item) {
+            echo '<th>' . $column . '</th>';
+        }
+        echo '</tr>';
+        $tmp = array_shift(array_values($data));
+        if ( is_array($tmp) ) {
+            $rows = array_keys($tmp['data']);
+            foreach ($rows as $row_name) {
+                echo '<tr>';
+                echo '<td>' . $row_name . '</td>';
+                foreach ($data as $column => $item) {
+                    echo '<td>' . $data[$column]['data'][$row_name] . '</td>';
+                }
+                echo '</tr>';
+            }
+        }
+        echo '</table>';
+    }
 	
 	function IsNeedNavigator()
 	{
@@ -645,10 +694,9 @@ class PageChart extends StaticPageList
 			    });
 					
 			    $("#<?=$chart_id?>").bind("plothover", function (event, pos, item) {
-			        $("#x").text(pos.x.toFixed(2));
-		    	    $("#y").text(pos.y.toFixed(2));
-		 
-		            if (item) {
+					if ( pos && pos.x ) $("#x").text(pos.x.toFixed(2));
+		    	    if ( pos && pos.y ) $("#y").text(pos.y.toFixed(2));
+		            if ( item ) {
 		                if (previousPoint != item.dataIndex) {
 	    	                previousPoint = item.dataIndex;
 	            	        $("#charttooltip").remove();

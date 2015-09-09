@@ -16,11 +16,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PmApplicationKernel extends Kernel
 {
-    
-    public function init(){
-	if($this->environment === 'dev'){
-	    $this->errorReportingLevel = E_ALL & ~E_STRICT & ~E_DEPRECATED & ~E_NOTICE;
-	}
+    function __construct($environment, $debug)
+    {
+        parent::__construct($environment, $debug);
+        if($environment === 'dev'){
+            $this->errorReportingLevel = E_ALL & ~E_STRICT & ~E_DEPRECATED & ~E_NOTICE;
+        }
     }
     
     public function registerBundles()

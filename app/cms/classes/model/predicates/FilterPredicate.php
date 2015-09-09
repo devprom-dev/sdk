@@ -4,7 +4,7 @@ class FilterPredicate
 {
  	private $filter = '';
  	private $object = null;
- 	private $alias = '';
+ 	private $alias = 't';
  	
  	function FilterPredicate ( $filter )
  	{

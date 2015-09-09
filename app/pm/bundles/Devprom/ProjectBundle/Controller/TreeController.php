@@ -10,20 +10,20 @@ use Devprom\ProjectBundle\Service\TreeviewModel\WikiService;
 
 class TreeController extends Controller
 {
-    public function indexAction()
+    public function indexAction(Request $request)
     {
-    	if ( $this->getRequest()->get('classname') == "" )
+    	if ( $request->get('classname') == "" )
     	{
     		throw $this->createNotFoundException('Class name is undefined but required');
     	}
 
-    	if ( in_array(strtolower($this->getRequest()->get('classname')), array('feature','featureterminal')) )
+    	if ( in_array(strtolower($request->get('classname')), array('feature','featureterminal')) )
     	{
-    		$service = new FeatureService($this->getRequest()->get('root'));
+    		$service = new FeatureService($request->get('root'));
     	}
     	else
     	{
-    		$service = new WikiService($this->getRequest()->get('classname'), $this->getRequest()->get('root'));
+    		$service = new WikiService($request->get('classname'), $request->get('root'));
     	}
     	
     	return new JsonResponse($service->getData());

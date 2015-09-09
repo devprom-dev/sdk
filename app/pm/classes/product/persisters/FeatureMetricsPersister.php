@@ -29,7 +29,7 @@ class FeatureMetricsPersister extends ObjectSQLPersister
              "	    AND r.State NOT IN ('".join("','", $terminal)."')) MetricEstimationLeft ";
          
          $columns[] = 
-             "	(SELECT IF(pr.Rating <= 0, 0, ROUND(".$strategy->getEstimationAggregate()."(r.Estimation) / pr.Rating, 1)) ".
+             "	(SELECT ROUND(".$strategy->getEstimationAggregate()."(IF(pr.Rating <= 0, 0, r.Estimation / pr.Rating)), 1) ".
              "	   FROM pm_ChangeRequest r, pm_Project pr, pm_Function f" .
              "	  WHERE r.Function = f.pm_FunctionId ".
          	 "		AND f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')".
@@ -42,14 +42,14 @@ class FeatureMetricsPersister extends ObjectSQLPersister
              "	     FROM pm_ChangeRequest r, pm_Function f" .
              "	    WHERE r.Function = f.pm_FunctionId ".
          	 "		AND f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')), ".
-             "    (SELECT FROM_DAYS(TO_DAYS(GREATEST(pr.FinishDate,NOW())) ".
+             "    (SELECT MAX(FROM_DAYS(TO_DAYS(GREATEST(pr.FinishDate,NOW())) ".
              "		  		+ IF(pr.Rating <= 0, 0, ROUND(IFNULL( ".
              "												(SELECT ".$strategy->getEstimationAggregate()."(r.Estimation) ".
              "												   FROM pm_ChangeRequest r ".
              "												  WHERE r.Function = f.pm_FunctionId ".
              "													AND r.Project = pr.pm_ProjectId ".
              "													AND r.State NOT IN ('".join("','", $terminal)."')),".
-             "											  	0) / pr.Rating, 1))) ".
+             "											  	0) / pr.Rating, 1)))) ".
              "	   FROM pm_Project pr, pm_Function f " .
              "	  WHERE f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')".
              "		AND f.VPD = pr.VPD ) ".

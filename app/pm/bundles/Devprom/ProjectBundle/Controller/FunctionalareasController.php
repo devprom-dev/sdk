@@ -4,6 +4,7 @@
  */
 namespace Devprom\ProjectBundle\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Routing\ClassResourceInterface,
     FOS\RestBundle\Controller\FOSRestController,
 	Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
@@ -17,9 +18,9 @@ class FunctionalareasController extends FOSRestController implements ClassResour
         return $this->handleView($this->view($service->getWorkspaces(), 200));
     }
     
-    public function putAction($areaId)
+    public function putAction(Request $request, $areaId)
     {
-    	$workspace = $this->getRequest()->request->all();
+    	$workspace = $request->request->all();
 
     	$service = new WorkspaceService();
     	
@@ -28,9 +29,9 @@ class FunctionalareasController extends FOSRestController implements ClassResour
     	return $this->handleView($this->view($workspace, 200));
 	}
 
-    public function patchAction($areaId)
+    public function patchAction(Request $request, $areaId)
     {
-    	$workspace = $this->getRequest()->request->all();
+    	$workspace = $request->request->all();
 
     	$service = new WorkspaceService();
     	

@@ -1,9 +1,7 @@
 <?php
 
 namespace Devprom\CommonBundle\Service;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\Finder\Finder;
-
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>

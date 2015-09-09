@@ -9,7 +9,7 @@ return array(
     'group.flash.deleted' => 'The group has been deleted',
 
 # Security
-    'Bad credentials.' => 'Invalid email or password',
+    'Invalid credentials.' => 'Invalid email or password',
 
     'security.login.username' => 'Username:',
     'security.login.username.prompt' => 'Username',

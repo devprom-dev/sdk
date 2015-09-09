@@ -3,6 +3,7 @@
 include "classes/widgets/ModuleCategoryBuilderCode.php";
 include "classes/widgets/FunctionalAreaDevelopmentBuilder.php";
 include "classes/widgets/FunctionalAreaMenuDevelopmentBuilder.php";
+include "classes/widgets/ObjectsListWidgetBuilderCode.php";
 include "classes/ReportsSourceControlBuilder.php";
 include "classes/SharedObjectsSourceCodeBuilder.php";
 include "classes/SearchableObjectsCodeBuilder.php";
@@ -18,6 +19,7 @@ include "classes/TaskCodeMetadataBuilder.php";
 include "classes/RequestTraceSourceCode.php";
 include "classes/TaskTraceSourceCode.php";
 include "classes/ProjectTemplateSectionsCodeRegistryBuilder.php";
+include "classes/RequirementCodeMetadataBuilder.php";
 
 class SourceControlPMPlugin extends PluginPMBase
 {
@@ -59,9 +61,8 @@ class SourceControlPMPlugin extends PluginPMBase
     function getBuilders()
     {
         return array (
-        	// widgets
         	new ModuleCategoryBuilderCode(),
-        		
+
             new SharedObjectsSourceCodeBuilder(),
             new FunctionalAreaDevelopmentBuilder(),
             new FunctionalAreaMenuDevelopmentBuilder(),
@@ -78,7 +79,11 @@ class SourceControlPMPlugin extends PluginPMBase
         	new HistoricalObjectsRegistryBuilderCode(),
         	new ProjectLinkCodeMetadataBuilder(getSession()),
         	new RequestCodeMetadataBuilder(getSession()),
-        	new TaskCodeMetadataBuilder(getSession())
+        	new TaskCodeMetadataBuilder(getSession()),
+            new RequirementCodeMetadataBuilder(getSession()),
+
+        	// widgets
+            new ObjectsListWidgetBuilderCode()
         );
     }
 }

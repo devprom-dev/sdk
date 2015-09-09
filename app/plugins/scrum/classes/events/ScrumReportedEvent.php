@@ -10,14 +10,15 @@ class ScrumReportedEvent extends SystemTriggersBase
 	    if ( $object_it->object->getEntityRefName() != 'pm_Scrum' ) return;
 	    if ( $kind != TRIGGER_ACTION_ADD ) return;
 
-	    $render_service = new RenderService(
-	    		getSession(), SERVER_ROOT_PATH."plugins/scrum/views/Emails"
-		);
-	    
+	    $render_service = new RenderService(getSession());
    		$mail = new \HtmlMailbox;
-   		
    		$mail->setFromUser(getSession()->getUserIt());
-   		foreach( getSession()->getProjectIt()->getParticipantIt()->fieldToArray('Email') as $email )
+
+		$emails = class_exists('PortfolioMyProjectsBuilder', false)
+			? getSession()->getProjectIt()->getParticipantIt()->fieldToArray('Email')
+			: getFactory()->getObject('UserActive')->getAll()->fieldToArray('Email');
+
+   		foreach( $emails as $email )
    		{
    			$mail->appendAddress($object_it->get('Email'));
    		}
@@ -29,7 +30,6 @@ class ScrumReportedEvent extends SystemTriggersBase
    					'blockers' => $object_it->getHtmlDecoded('CurrentProblems')
    				)
    		));
-   		
    		$mail->send();
 	}
 }

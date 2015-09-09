@@ -275,12 +275,6 @@ class TransitionStateMethod extends WebMethod
 				)
 		);
 
-		if ( $source_it->getId() == $target_it->getId() )
-		{
-			echo '{"message":"ok"}';
-			return;
-		}
-			
 		$transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
 				$parms['transition'] > 0
 				? array (
@@ -331,10 +325,11 @@ class TransitionStateMethod extends WebMethod
 			foreach( $object->getAttributes() as $attribute => $data )
 			{
 				if ( !$object->IsAttributeVisible($attribute) ) continue;
+				if ( $parms[$attribute] != '' ) continue;
 				
 				$attributes[] = $attribute;
 			}
-			        	
+	
 			if ( $object instanceof Request && in_array('Tasks', $attributes, true) )
 			{
 	   	 	 		$url = getSession()->getApplicationUrl($object_it).

@@ -6,22 +6,18 @@ class WikiPageRegistry extends ObjectRegistrySQL
 	{
 	    $attributes = array();
 	    
-	    foreach( $this->getObject()->getAttributes() as $attribute => $data )
-	    {
+	    foreach( $this->getObject()->getAttributes() as $attribute => $data ) {
 	        if ( $attribute == 'Content' ) continue;
 	        if ( $attribute == 'UserField3' ) continue;
-	        
 	        if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
-	        
-	        $attributes[] = $attribute;
-	    }        
-	
-	    if ( $this->getObject()->getReferenceName() != '' )
-	    {
-	    	$reference_predicate .= " AND ReferenceName = ".$this->getObject()->getReferenceName()." ";
+	        $attributes[] = "t.".$attribute;
+	    }
+
+	    if ( $this->getObject()->getReferenceName() != '' ) {
+	    	$reference_predicate = " AND t.ReferenceName = ".$this->getObject()->getReferenceName()." ";
 	    }
 	    
-	    return " (SELECT WikiPageId, VPD, RecordVersion, ".join(",",$attributes).", IF(Content<>'', 'Y', 'N') ContentPresents, DocumentId, SortIndex ".
-	    	   "	FROM WikiPage WHERE 1 = 1 ".$reference_predicate." AND IsTemplate = 0) ";
+	    return " (SELECT t.WikiPageId, t.VPD, t.RecordVersion, ".join(",",$attributes).", IF(t.Content<>'', 'Y', 'N') ContentPresents, t.DocumentId, t.SortIndex ".
+	    	   "	FROM WikiPage t WHERE 1 = 1 ".$this->getFilterPredicate().$reference_predicate." AND t.IsTemplate = 0) ";
 	}
 }

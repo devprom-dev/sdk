@@ -139,7 +139,7 @@ class ModelFactoryBase
 	function cacheIterator( $entity_ref_name, $sql, $iterator )
 	{
 		if ( !$this->sql_cache_enabled ) return;
-		$this->sql_cache[$entity_ref_name][md5($sql)] = $iterator;
+		$this->sql_cache[$entity_ref_name][md5($sql)] = $iterator->copyAll();
 	}
 
 	function resetCachedIterator( $object )

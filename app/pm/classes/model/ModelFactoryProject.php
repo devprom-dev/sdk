@@ -52,7 +52,8 @@ class ModelFactoryProject extends ModelFactoryExtended
 		    'pm_workspacemenuitem' => array( 'WorkspaceMenuItem' ),
 		    'pm_projectuse' => array( 'ProjectUse' ),
 			'pm_projectstage' => array( 'ProjectStage' ),
-			'pm_featuretype' => array( 'FeatureType' )
+			'pm_featuretype' => array( 'FeatureType' ),
+			'pm_stateattribute' => array( 'StateAttribute' )
 		));
 	}	
 }

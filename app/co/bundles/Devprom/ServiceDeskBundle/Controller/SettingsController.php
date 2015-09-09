@@ -26,11 +26,11 @@ class SettingsController extends Controller {
      * @Method("GET")
      * @Template()
      */
-    public function dashboardAction()
+    public function dashboardAction(Request $request)
     {
         $settings = $this->getSettingsService()->load();
         if (!$settings['appUrl']) {
-            $settings['appUrl'] = str_replace($this->getRequest()->getPathInfo(), "", $this->getRequest()->getUri());
+            $settings['appUrl'] = str_replace($request->getPathInfo(), "", $request->getUri());
         }
         $form = $this->createSettingsForm($settings);
 

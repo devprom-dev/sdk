@@ -164,14 +164,14 @@ section.content .span4 .nav.nav-tabs {
 	margin-bottom:0px;
 }
 
-.right-side-tab ul[class!=dropdown-menu] {
+.right-side-tab ul:not('.dropdown-menu') {
 	list-style:none !important;
 	margin:0px !important;
 	padding:0px !important;
 	color:#404040 !important;
 }
 
-.right-side-tab ul[class!=dropdown-menu] li {
+.right-side-tab ul:not('.dropdown-menu') li {
 	margin:0px !important;
 	padding:0px !important;
 	margin-bottom:14px !important;
@@ -237,16 +237,24 @@ a.more:hover {
 }
 
 .properties-table th {
-	width:25%;
 	font-weight:normal;
 	text-align:left;
 	color:gray;
 	padding-right:15px;
+	width: 5%;
+}
+
+.properties-table .btn-group {
+	white-space: normal;
+}
+
+.properties-table .btn {
+	text-align: left;
 }
 
 a.dashed {
 	TEXT-DECORATION: none;
-	color:#C0C0C0;
+	color:#686868;
 	border-bottom:#C0C0C0 1px dashed;
 }
 
@@ -974,4 +982,21 @@ button.clipboard i {
 
 .impl-sign {
   background-image: url(/images/table_link.png);
+}
+
+td.board-group .btn-group {
+    visibility:hidden;
+}
+
+td.board-group:hover .btn-group {
+    visibility:visible;
+}
+
+.recent-comments {
+	padding-bottom: 12px;
+}
+
+.recent-comments .user-mini {
+	margin-right: 4px;
+	margin-bottom: -6px;
 }

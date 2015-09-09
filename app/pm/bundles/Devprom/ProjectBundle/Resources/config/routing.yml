@@ -1,54 +1,52 @@
 config:
-    pattern: /pm/{project}/menu/{report}
+    path: /pm/{project}/menu/{report}
     defaults: { _controller: ProjectBundle:Navigation:index }
 
 settings:
-    pattern: /pm/{project}/settings/{area}/{action}
+    path: /pm/{project}/settings/{area}/{action}
     defaults: { _controller: ProjectBundle:Settings:index }
 
 _broken_trace_explain:
-    pattern:  /pm/{project}/tooltip/explain/{object}
+    path:  /pm/{project}/tooltip/explain/{object}
     defaults: { _controller: ProjectBundle:Tooltip:explain }
 
 _tooltip:
-    pattern:  /pm/{project}/tooltip/{classname}/{objects}
+    path:  /pm/{project}/tooltip/{classname}/{objects}
     defaults: { _controller: ProjectBundle:Tooltip:show }
 
 _tooltip_objects_list:
-    pattern:  /pm/{project}/tooltip/objectlist/{classname}/{objects}
+    path:  /pm/{project}/tooltip/objectlist/{classname}/{objects}
     defaults: { _controller: ProjectBundle:Tooltip:list }
 
 _treemodel_select:
-    pattern:  /pm/{project}/treemodel/{classname}
+    path:  /pm/{project}/treemodel/{classname}
     defaults: { _controller: ProjectBundle:Tree:index }
 
 _export:
-    pattern:  /pm/{project}/export
+    path:  /pm/{project}/export
     defaults: { _controller: ProjectBundle:Project:export }
 
 _scripts:
-    pattern:  /pm/{project}/scripts/javascript/
+    path:  /pm/{project}/scripts/javascript/
     defaults: { _controller: CommonBundle:Scripts:js }
 
 _css:
-    pattern:  /pm/{project}/scripts/css/
+    path:  /pm/{project}/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
 
 bulk:
-    pattern:  /pm/{project}/bulk
+    path:  /pm/{project}/bulk
     defaults: { _controller: ProjectBundle:Bulk:form }
 
 invite:
-    pattern:  /pm/{project}/invite
+    path:  /pm/{project}/invite
     defaults: { _controller: ProjectBundle:Invitation:form }
-    requirements:
-        _method:  GET
+    methods:  GET
 
 invite_process:
-    pattern:  /pm/{project}/invite
+    path:  /pm/{project}/invite
     defaults: { _controller: ProjectBundle:Invitation:formProcess }
-    requirements:
-        _method:  POST
+    methods:  POST
 
 pages:
     type:     rest
@@ -99,4 +97,9 @@ rest_bug:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\BugController
     prefix:   /pm/{project}/api/v1
+
+rest_attachment:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\AttachmentController
+    prefix:   /pm/{project}/api/v1/{class}/{object}
     

@@ -22,5 +22,4 @@ $row = floor($id / $sprites_on_row);
 $column = $id - $row * $sprites_on_row - 1;
 
 ?>
-
 <div class="<?=$class?>" title="<?=$title?>" style="background: url('/images/<?=$image?>.png') no-repeat -<?=($column * $size)?>px -<?=($row * $size)?>px;"></div>

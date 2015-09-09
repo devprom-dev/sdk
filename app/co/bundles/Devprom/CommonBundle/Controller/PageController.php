@@ -3,6 +3,7 @@
 namespace Devprom\CommonBundle\Controller;
 use Devprom\CommonBundle\Controller\MainController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Templating\PhpEngine;
 use Symfony\Component\Templating\TemplateNameParser;
@@ -17,15 +18,13 @@ class PageController extends MainController
 {
     var $logger;
     
-    public function moduleAction()
+    public function moduleAction(Request $request)
     {
         global $plugins, $model_factory;
         
-        $request = $this->getRequest();
-        
         if ( $request->query->get('module') != 'initialize' )
         {
-	    	$response = $this->checkDeploymentState();
+	    	$response = $this->checkDeploymentState($request);
 	    	
 	    	if ( is_object($response) ) return $response;
         }
@@ -63,7 +62,7 @@ class PageController extends MainController
         
     	if( $page->authorizationRequired() ) 
     	{
-    	    $response = $this->checkUserAuthorized();
+    	    $response = $this->checkUserAuthorized($request);
     	    
     	    if ( is_object($response) ) return $response;
     	}
@@ -174,10 +173,8 @@ class PageController extends MainController
 		return new Response(\JsonWrapper::encode($result), 200, $headers);
 	}
 	
- 	protected function checkRequired( $fields )
+ 	protected function checkRequired( Request $request, $fields )
  	{
- 		$request = $this->getRequest();
- 		
  		for( $i = 0; $i < count($fields); $i++ )
  		{
  			if ( $request->request->get($fields[$i]) == '' )

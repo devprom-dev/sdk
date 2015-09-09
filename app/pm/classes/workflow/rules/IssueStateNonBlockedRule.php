@@ -4,10 +4,18 @@ include_once "BusinessRulePredicate.php";
 
 class IssueStateNonBlockedRule extends BusinessRulePredicate
 {
+	private $object = null;
+	private $terminals = array();
+	
+	function __construct()
+	{
+		$this->object = getFactory()->getObject('pm_ChangeRequest');
+		$this->terminals = $this->object->getTerminalStates(); 
+	}
+	
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_ChangeRequest');
+ 		return $this->object;
  	}
  	
  	function getDisplayName()
@@ -17,7 +25,12 @@ class IssueStateNonBlockedRule extends BusinessRulePredicate
  	
  	function check( $object_it )
  	{
- 		return !$object_it->IsBlocked();
+ 		foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
+		{
+			list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
+			if ( $type_ref == 'blocked' && $direction == 2 && !in_array($link_state,$this->terminals)) return false;
+		}
+ 		return true;
  	}
  	
  	function getNegativeReason()

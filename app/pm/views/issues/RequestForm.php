@@ -149,9 +149,12 @@ class RequestForm extends PMPageForm
 	
 	function getNewObjectAttributes()
 	{
-		$attributes = array('Caption', 'Description', 'Priority', 'Function', 'Tasks', 'Attachment', 'OrderNum');
+		$attributes = array('Caption', 'Description', 'Priority', 'Function', 'Tasks', 'Attachment');
 		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) {
 			$attributes[] = 'Owner';
+		}
+		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' ) {
+			$attributes[] = 'OrderNum';
 		}
 		return $attributes;
 	}
@@ -546,14 +549,14 @@ class RequestForm extends PMPageForm
 		return $actions;
 	}
 	
- 	function getTransitionActions( $object_it )
+ 	function getTransitionActions()
 	{
-		$actions = parent::getTransitionActions( $object_it );
-		
+		$actions = parent::getTransitionActions();
 		$actions[] = array (
 				'uid' => 'middle'
 		);
-		
+
+		$object_it = $this->getObjectIt();
 		if ( is_object($this->method_duplicate) )
 		{
 			$parms = array(

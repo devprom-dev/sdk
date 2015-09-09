@@ -15,4 +15,8 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 				new GroupAttributeClause('VPD')
 		);
 	}
+
+	public function getLimit() {
+		return 256;
+	}
 }

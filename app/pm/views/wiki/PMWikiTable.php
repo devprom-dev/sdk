@@ -128,20 +128,9 @@ class PMWikiTable extends PMPageTable
 	
 	function getFilterPredicates()
 	{
-		global $_REQUEST;
-		
 		$values = $this->getFilterValues();
 		
-		if ( $_REQUEST['wiki_mode'] == 'archive' )
-		{
-			$archive = new WikiArchivedPredicate();
-		}
-		else
-		{
-			$archive = new WikiNotArchivedPredicate();
-		}
-
-		$predicates = array ( $archive,
+		$predicates = array (
 			new PMWikiStageFilter( $values['version'] ),
 			new StatePredicate( $values['state'] ),
 			new FilterAttributePredicate( 'PageType', $values['type'] ),
@@ -151,7 +140,6 @@ class PMWikiTable extends PMPageTable
 			new WikiTagFilter( $values['tag'] ),
 			new WikiContentFilter( $values['content'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
-			new WikiInArchivePredicate( $values['archive'] ),
 		    new WikiRootTransitiveFilter( $values['document'] ),
 			new FilterModifiedAfterPredicate($values['modifiedafter'])
 		);

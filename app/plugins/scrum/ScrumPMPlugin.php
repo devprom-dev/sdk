@@ -82,7 +82,7 @@ class ScrumPMPlugin extends PluginPMBase
 			
 			$this->method_toepic = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature')); 
 		}
-		if ( !in_array($object_it->get('VPD'), $this->scrum_vpds) ) return array();
+		if ( !in_array($object_it->get('VPD'), $this->scrum_vpds) || $object_it->IsFinished() ) return array();
 		return array (
 				array (
 						'name' => text('scrum19'),

@@ -3,6 +3,7 @@
 namespace Devprom\ApplicationBundle\Controller;
 
 use Devprom\CommonBundle\Controller\PageController;
+use Symfony\Component\HttpFoundation\Request;
 use Devprom\ApplicationBundle\Service\CreateProjectService;
 
 include_once SERVER_ROOT_PATH."co/views/Common.php";
@@ -11,21 +12,20 @@ include SERVER_ROOT_PATH."co/views/ProjectWelcomePage.php";
  
 class ProjectController extends PageController
 {
-    public function newAction()
+    public function newAction(Request $request)
     {
-        $response = $this->checkUserAuthorized();
+        $response = $this->checkUserAuthorized($request);
         
         if ( is_object($response) ) return $response;
         
     	return $this->responsePage( new \CreateProjectPage() );
     }
     
-    public function createAction()
+    public function createAction(Request $request)
     {
-        $response = $this->checkUserAuthorized();
+        $response = $this->checkUserAuthorized($request);
         if ( is_object($response) ) return $response;
 
-        $request = $this->getRequest();
 		$prj_cls = getFactory()->getObject('pm_Project');
         
 		$parms = array();
@@ -71,10 +71,10 @@ class ProjectController extends PageController
 		}
         
 		$strategy = new CreateProjectService();
-		$result = $strategy->execute($parms);
+		$project_it = $strategy->execute($parms);
 		
-		if ( $result < 1 ) {
-		    return $this->replyError( $strategy->getResultDescription($result) );
+		if ( !is_object($project_it) ) {
+		    return $this->replyError( $strategy->getResultDescription($project_it) );
 		}
 
 		if ( $request->request->get('Participants') != '' )	{
@@ -83,13 +83,17 @@ class ProjectController extends PageController
 				$invite_service->inviteByEmails($request->request->get('Participants'));
 			}
 		}
-		
-		return $this->replySuccess($strategy->getResultDescription(0), $parms['CodeName'].'/');
+
+		$strategy->invalidateCache();
+		if ( $project_it->getMethodologyIt()->get('IsSupportUsed') == 'Y' ) {
+			$strategy->invalidateServiceDeskCache();
+		}
+		return $this->replySuccess($strategy->getResultDescription(0), $project_it->get('CodeName').'/');
     }
     
-    public function welcomeAction()
+    public function welcomeAction(Request $request)
     {
-        if ( is_object($response = $this->checkUserAuthorized()) ) return $response;
+        if ( is_object($response = $this->checkUserAuthorized($request)) ) return $response;
         
     	return $this->responsePage( new \ProjectWelcomePage() );
     }

@@ -356,6 +356,15 @@ class AjaxForm
 		{
 			switch ( $attribute_type )
 			{
+				case 'hugetext':
+					?>
+					<textarea class="input-block-level" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>"
+							  style="overflow-x:hidden;overflow-y: scroll;"
+							  tabindex="<? echo $tab_index ?>"
+							  wrap="virtual" rows="34" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>"><? echo $value ?></textarea>
+					<?
+					break;
+
 				case 'largetext':
 					?>
 					<textarea class="input-block-level" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>"

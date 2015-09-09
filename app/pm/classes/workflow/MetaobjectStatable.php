@@ -261,9 +261,9 @@ class MetaobjectStatable extends Metaobject
 			);
 			
 			if ( $state_it->getId() > 0 ) $parms['State'] = $state_it->get('ReferenceName');
+			$state_it = $this->moveToState($object_it, $parms);
 		}
-		
-		if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )
+		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )
 		{
 			$state_it = $this->moveToState($object_it, $parms);
 		}

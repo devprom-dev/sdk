@@ -2,7 +2,7 @@
 
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 
-class ReportList extends PageList
+class ReportList extends PMPageList
 {
 	private $first_area_it = null;
 	
@@ -92,7 +92,12 @@ class ReportList extends PageList
 		
 		return $fields;
 	}
-	
+
+	function getGroupFields()
+	{
+		return array('Category');
+	}
+
 	function drawGroup( $group_field, $object_it ) 
 	{
 		global $model_factory;

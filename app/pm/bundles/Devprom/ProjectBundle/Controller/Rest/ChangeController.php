@@ -2,11 +2,12 @@
 namespace Devprom\ProjectBundle\Controller\Rest;
 
 use Devprom\ProjectBundle\Controller\Rest\RestController;
+use Symfony\Component\HttpFoundation\Request;
 use Devprom\ProjectBundle\Service\Model\FilterResolver\ChangesFilterResolver;
 
 class ChangeController extends RestController
 {
-	function getEntity()
+	function getEntity(Request $request)
 	{
 		$registry = new \ChangeLogGranularityRegistry();
 		
@@ -16,20 +17,20 @@ class ChangeController extends RestController
 		);
 				
 		$registry->setGranularity(
-				isset($granularity_map[$this->getRequest()->get('granularity')]) 
-						? $granularity_map[$this->getRequest()->get('granularity')] : \ChangeLogGranularityRegistry::SECOND    
+				isset($granularity_map[$request->get('granularity')])
+						? $granularity_map[$request->get('granularity')] : \ChangeLogGranularityRegistry::SECOND
 		);
 		
 		return new \ChangeLog($registry);
 	}
 	
-	function getFilterResolver()
+	function getFilterResolver(Request $request)
 	{
 		return array (
 				new ChangesFilterResolver(
-					$this->getRequest()->get('classes'),
-					$this->getRequest()->get('date'),
-					$this->getRequest()->get('from')
+					$request->get('classes'),
+					$request->get('date'),
+					$request->get('from')
 				)
 		);
 	}
