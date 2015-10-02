@@ -99,7 +99,13 @@ include( 'MainDevpromTable.php');
 		{
 		    $this->exportUpdatesJson();
 		}
-		
+
+		if ( array_key_exists('payed', $_REQUEST) != '' )
+		{
+			echo $this->exportPayedJson();
+			die();
+		}
+
 		if ( $_REQUEST['key'] != '' )
 		{
 			$this->script = '<script type="text/javascript">$().ready(function(){getRestoreForm("'.$_REQUEST['key'].'");});</script>';
@@ -111,7 +117,18 @@ include( 'MainDevpromTable.php');
 				'connectors' => 674
 		);
 	}
-	
+
+	 function exportPayedJson()
+	 {
+		 $service_it = $this->getServiceIt($_REQUEST['iid']);
+		 if ( !is_object($service_it) ) return '{}';
+		 if ( $service_it->getId() == '' ) return '{}';
+
+		 return json_encode(array(
+			 'till' => $service_it->get('PayedTill')
+		 ));
+	 }
+
 	function exportUpdatesJson()
 	{
 	    global $model_factory, $project_it;
@@ -350,32 +367,45 @@ include( 'MainDevpromTable.php');
 	
   	function paymentRequired( $iid, $artefact_it )
  	{
- 		switch( $artefact_it->getDisplayName() )
- 		{
- 		    case 'DevpromUpdate34.zip':
- 		    case 'DevpromUpdate35.zip':
- 		    	$service_it = $this->getServiceIt($iid);
- 		    	if ( !is_object($service_it) ) return true;
- 		    	if ( $service_it->getId() == '' ) return true;
- 		    	if ( $service_it->get('PayedTill') < date('Y-m-d') ) return true;
- 		    	return false;
- 		    	
- 		    default:
- 		    	return false;
- 		}
+		$service_it = $this->getServiceIt($iid);
+        if ( $service_it->get('License') == 'LicenseTeam') {
+            switch( $artefact_it->getDisplayName() )
+            {
+                case 'TeamUpdate35.zip':
+                    return $service_it->get('PayedTill') < date('Y-m-d');
+                default:
+                    return false;
+            }
+        }
+        else {
+            switch( $artefact_it->getDisplayName() )
+            {
+                case 'DevpromUpdate34.zip':
+                case 'DevpromUpdate35.zip':
+                    if ( !is_object($service_it) ) return true;
+                    if ( $service_it->getId() == '' ) return true;
+                    if ( $service_it->get('PayedTill') < date('Y-m-d') ) return true;
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
  	}
  	
  	function getServiceIt($iid)
  	{
- 	    if ( !preg_match('/^[a-z0-9{-]+$/im', $iid, $matches) ) return null;
- 		
-		if ( $_SERVER['HTTP_REFERER'] != '' )
-		{
+		$service = getFactory()->getObject('ServicePayed');
+
+		if ( !preg_match('/^[a-z0-9{}\-]+$/im', strtolower($iid), $matches) ) {
+			return $service->getEmptyIterator();
+		}
+		if ( $_SERVER['HTTP_REFERER'] != '' ) {
 			$parts = parse_url($_SERVER['HTTP_REFERER']);
 			$title = $parts['host'];
 		}
-		
-		$service_it = getFactory()->getObject('ServicePayed')->getByRef('VPD', $iid);
+
+		$service_it = $service->getByRef('VPD', $iid);
 		if ( $service_it->getId() < 1 )
 		{
 			if ( $title == '' && $_SERVER['REMOTE_HOST'] != '' )
@@ -403,7 +433,9 @@ include( 'MainDevpromTable.php');
 					array (
 							'Caption' => $title,
 							'IID' => $iid,
-							'Description' => $description
+							'Description' => $description,
+							'Users' => $_REQUEST['users'],
+							'License' => $_REQUEST['license']
 					)
 			);
  		}
@@ -411,11 +443,12 @@ include( 'MainDevpromTable.php');
 		{
  			$service_it->object->modify_parms( $service_it->getId(),
 					array (
-							'Caption' => $title
+							'Caption' => $title,
+							'Users' => $_REQUEST['users'],
+							'License' => $_REQUEST['license']
 					)
 			);
 		}
-		
 		return $service_it;
  	}
  }
@@ -972,17 +1005,15 @@ include( 'MainDevpromTable.php');
  	
 	function getKeywords()
  	{
- 		return array (
+		return array (
 			translate('канбан'),
 			translate('скрам'),
-			translate('тестирование'),
-			translate('требования'),
-			translate('трассировка'),
- 			translate('agile'),	
- 			translate('новости'),	
- 			translate('kanban'),	
-			translate('scrum'),
- 		);
+			translate('итерация'),
+			translate('приоритезация'),
+			translate('бэклог'),
+			translate('alm'),
+			translate('тестовый')
+		);
  	}
  }
 
@@ -1179,6 +1210,7 @@ include( 'MainDevpromTable.php');
 		 			return new RssTable;
 	
 				case 'price':
+				case 'company':
 					return new PriceDEVPROMTable;
 	 				
 	 			case 'search':
@@ -1281,6 +1313,7 @@ include( 'MainDevpromTable.php');
  		echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
 		echo '<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">';
  		echo '<head>';
+			echo '<meta name="keywords" content="'.$keywords.'" />';
 			echo '<meta property="og:title" content="'.$title.'" />';
 			echo '<meta property="og:url" content="http://devprom.ru'.IteratorBase::utf8towin($_SERVER['REQUEST_URI']).'" />';
 			echo '<meta property="og:type" content="website" />';
@@ -1291,7 +1324,6 @@ include( 'MainDevpromTable.php');
 			echo '<meta property="og:image" content="http://devprom.ru/style/images/fb-logo.png" />';
 			echo '<meta property="og:image:secure_url" content="https://devprom.ru/style/images/fb-logo.png" />';
 			echo '<meta property="fb:admins" content="522782579" />';
- 			echo '<meta name="keywords" content="'.$keywords.'" />';
 			echo '<meta name="description" content="'.$this->table->getDescription().'" />';
  			echo '<title>'.$title.'</title>';
  			echo '<link rel="image_src" href="http://devprom.ru/style/images/fb-logo.png">';

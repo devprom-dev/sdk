@@ -373,8 +373,20 @@ class FeaturesDevpromTable extends BaseDEVPROMTable
 		$tag = $model_factory->getObject('WikiTag');
 		
 		$tag_it = $tag->getByRef('Wiki', $this->page_it->getId());
-		
-		return $tag_it->fieldToArray('Caption');
+
+		return array_merge(
+			array (
+				translate('канбан'),
+				translate('доска'),
+				translate('скрам'),
+				translate('итерация'),
+				translate('приоритезация'),
+				translate('бэклог'),
+				translate('alm'),
+				translate('тестовый')
+			),
+			$tag_it->fieldToArray('Caption')
+		);
 	}
 
 	function getDescription()

@@ -19,8 +19,10 @@ class ServicePayed extends Metaobject
         	$this->setAttributeRequired($attribute, false);
         }
         $this->addAttribute('IID', 'VARCHAR', 'IID', true, false, '', 15);
-        $this->addAttribute('PayedTill', 'DATE', 'РћРїР»Р°С‡РµРЅРѕ РґРѕ', true, true, '', 18);
-        
+        $this->addAttribute('PayedTill', 'DATE', 'Оплачено до', true, true, '', 18);
+        $this->addAttribute('Users', 'INTEGER', 'Пользователей', true, true, '', 20);
+        $this->addAttribute('License', 'VARCHAR', 'Лицензия', true, true, '', 22);
+
         $this->removeAttribute('Category');
         $this->removeAttribute('Author');
         $this->removeAttribute('Team');

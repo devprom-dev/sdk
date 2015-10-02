@@ -21,8 +21,9 @@ class InitializeInstance extends Page
 
  	function render() 
  	{
+		$this->setupLoggers();
+
  		if ( getFactory()->getObject('User')->getAll()->count() > 0 ) return;
- 		
  		$log = 'License given: '.$this->createLicense().PHP_EOL;
  		
  		$user_id = $this->createUser( 
@@ -30,19 +31,13 @@ class InitializeInstance extends Page
 		);
  		
  		$user_it = getFactory()->getObject('User')->getExact($user_id);
- 		
  		$log .= 'User created: '.$user_id;
  		
  		$this->updateSystemSettings();
  		
  		unlink( $this->getKeyFile() );
- 		
-		$checkpoint_factory = getCheckpointFactory();
-		$checkpoint = $checkpoint_factory->getCheckpoint( 'CheckpointSystem' );
-		$checkpoint->executeDynamicOnly();
+		getCheckpointFactory()->getCheckpoint( 'CheckpointSystem' )->executeDynamicOnly();
 		
-		$this->sendMail($user_it);
-		$this->setupLoggers();
 		$this->setupBackgroundTasks();
 		
 		getSession()->close();
@@ -51,6 +46,7 @@ class InitializeInstance extends Page
 		file_put_contents(dirname(SERVER_ROOT_PATH).'/initialize.log', $log);
 		
 		$project_it = $this->setupDemoProject();
+		$this->sendMail($user_it);
 
 		$installation_factory = InstallationFactory::getFactory();
 		$clear_cache_action = new ClearCache();
@@ -179,7 +175,8 @@ class InitializeInstance extends Page
 		mkdir($local_dir, 0755, true);
 		
 		$settings_file = DOCUMENT_ROOT.'conf/logger.xml';
-		file_put_contents($settings_file, str_replace($default_path, $local_dir, file_get_contents($settings_file))); 
+		copy(SERVER_ROOT_PATH.'templates/config/logger-linux.xml', $settings_file);
+		file_put_contents($settings_file, str_replace($default_path, $local_dir, file_get_contents($settings_file)));
  	}
  	
 	protected function sendMail( $user_it )

@@ -281,4 +281,18 @@ class DocsDEVPROMTable extends BaseDEVPROMTable
 		</ul>
 		<?
  	}
+
+	function getKeywords()
+ 	{
+		return array (
+			translate('канбан'),
+			translate('доска'),
+			translate('скрам'),
+			translate('итерация'),
+			translate('приоритезация'),
+			translate('бэклог'),
+			translate('alm'),
+			translate('тестовый')
+		);
+ 	}
 }

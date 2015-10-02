@@ -128,4 +128,17 @@ class GlossaryDEVPROMTable extends BaseDEVPROMTable
 		</script>
  		<?
  	}
+
+	function getKeywords()
+	{
+		return array (
+			translate('канбан'),
+			translate('скрам'),
+			translate('итерация'),
+			translate('приоритезация'),
+			translate('бэклог'),
+			translate('alm'),
+			translate('тестовый')
+		);
+	}
 }
