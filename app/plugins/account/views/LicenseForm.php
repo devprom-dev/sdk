@@ -102,7 +102,8 @@ class LicenseForm extends AjaxForm
             case 'LicenseValue':
            		return $this->getProduct()->get('ValueName');
             case 'Aggreement':
-            	return text('account6');
+                $text = $this->getProduct()->get('AggreementText');
+                return $text != '' ? $text : text('account6');
             case 'PaymentServiceInfo':
             	return '';
             case 'UserName':
@@ -173,7 +174,7 @@ class LicenseForm extends AjaxForm
 				?>
 				<label class="radio" style="padding-left:">
 		  			<input type="radio" name="<?=$attribute?>" value="<?=$product_it->getId()?>" <?=($this->getProduct()->getId() == $product_it->getId() ? 'checked' : '')?> onchange="switchProduct('<?=$product_it->getId()?>');">
-		  			<?=$product_it->getDisplayName()?> <?=str_replace('%1', $product_it->get($price_field), text('account34'))?>
+		  			<?=$product_it->getDisplayName()?> <?=str_replace('%1', $product_it->get($price_field), $product_it->get('CaptionText'))?>
 				</label>
 				<?php
 				$product_it->moveNext();
@@ -225,7 +226,7 @@ class LicenseForm extends AjaxForm
                 break;
 
         	case 'PaymentServiceInfo':
-        		echo text('account13');
+                echo text('account13');
         		break;
         		
         	case 'UserTitle':
@@ -272,7 +273,8 @@ class LicenseForm extends AjaxForm
 		$products = array (
 			new AccountProduct(),
 			new AccountProductSaas(),
-			new AccountProductDevOps()
+			new AccountProductDevOps(),
+            new AccountProductSupport()
 		);
 
 		foreach( $products as $product )

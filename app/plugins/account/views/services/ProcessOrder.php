@@ -44,7 +44,17 @@ class ProcessOrder extends CommandForm
 
 		if ( $_REQUEST['SecurityKey'] != md5($queryWithSecurityKey) ) $this->delete();
 
-		$licensed_days = $order_info['LicenseValue'] * 30;
+		switch( $order_info['LicenseType'] )
+		{
+			case 'LicenseTeam':
+			case 'LicenseTeamSupported':
+			case 'LicenseTeamSupportedCompany':
+			case 'LicenseTeamSupportedUnlimited':
+				$licensed_days = $order_info['LicenseValue'];
+				break;
+			default:
+				$licensed_days = $order_info['LicenseValue'] * 30;
+		}
 		$order_info['LicenseValue'] = $licensed_days;
 
 		$license_value = $this->getLicenseValue($order_info);

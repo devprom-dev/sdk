@@ -1,14 +1,15 @@
 <?php
 
 define ('ACCOUNT_HOST', 'https://devprom.ru');
-define ('MERCHANT_ID', 7742);
-define ('MERCHANT_KEY', 'efef1ce9-6c7b-401f-8430-1e96540636fc');
-//define ('MERCHANT_ID', 62021);
-//define ('MERCHANT_KEY', '30cfcab4-ce10-413f-bbfd-4a367823bc1c');
+//define ('MERCHANT_ID', 7742);
+//define ('MERCHANT_KEY', 'efef1ce9-6c7b-401f-8430-1e96540636fc');
+define ('MERCHANT_ID', 62021);
+define ('MERCHANT_KEY', '30cfcab4-ce10-413f-bbfd-4a367823bc1c');
 
 include "classes/model/AccountProduct.php";
 include "classes/model/AccountProductSaas.php";
 include "classes/model/AccountProductDevOps.php";
+include "classes/model/AccountProductSupport.php";
 include "classes/model/AccountLicenseData.php";
 include "classes/model/ServicePayed.php";
 include "classes/model/predicates/FilterInstallationUIDPredicate.php";

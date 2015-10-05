@@ -8,6 +8,7 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
         		array ( 
         				'entityId' => 'LicenseDevOpsBoard', 
         				'Caption' => text('account26'),
+						'CaptionText' => text('account34'),
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,
@@ -17,6 +18,7 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
         		array ( 
         				'entityId' => 'LicenseDevOpsBoardUnlimited', 
         				'Caption' => text('account29'),
+						'CaptionText' => text('account34'),
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,

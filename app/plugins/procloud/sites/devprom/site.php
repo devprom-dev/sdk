@@ -368,28 +368,21 @@ include( 'MainDevpromTable.php');
   	function paymentRequired( $iid, $artefact_it )
  	{
 		$service_it = $this->getServiceIt($iid);
-        if ( $service_it->get('License') == 'LicenseTeam') {
-            switch( $artefact_it->getDisplayName() )
-            {
-                case 'TeamUpdate35.zip':
-                    return $service_it->get('PayedTill') < date('Y-m-d');
-                default:
-                    return false;
-            }
-        }
-        else {
-            switch( $artefact_it->getDisplayName() )
-            {
-                case 'DevpromUpdate34.zip':
-                case 'DevpromUpdate35.zip':
-                    if ( !is_object($service_it) ) return true;
-                    if ( $service_it->getId() == '' ) return true;
-                    if ( $service_it->get('PayedTill') < date('Y-m-d') ) return true;
-                    return false;
+        switch( $artefact_it->getDisplayName() )
+        {
+            case 'TeamUpdate35.zip':
+                if ( !in_array($service_it->get('License'), array('LicenseTeam','LicenseTeamSupported','LicenseTeamSupportedCompany','LicenseTeamSupportedUnlimited')) ) return true;
+                return $service_it->get('PayedTill') < date('Y-m-d');
 
-                default:
-                    return false;
-            }
+            case 'DevpromUpdate34.zip':
+            case 'DevpromUpdate35.zip':
+                if ( $service_it->getId() == '' ) return true;
+				if ( in_array($service_it->get('License'), array('LicenseTeam','LicenseTeamSupported','LicenseTeamSupportedCompany','LicenseTeamSupportedUnlimited')) ) return true;
+                if ( $service_it->get('PayedTill') < date('Y-m-d') ) return true;
+                return false;
+
+            default:
+                return false;
         }
  	}
  	
@@ -444,8 +437,8 @@ include( 'MainDevpromTable.php');
  			$service_it->object->modify_parms( $service_it->getId(),
 					array (
 							'Caption' => $title,
-							'Users' => $_REQUEST['users'],
-							'License' => $_REQUEST['license']
+							'Users' => $_REQUEST['users'] != '' ? $_REQUEST['users'] : $service_it->get('Users'),
+							'License' => $_REQUEST['license'] != '' ? $_REQUEST['license'] : $service_it->get('License')
 					)
 			);
 		}

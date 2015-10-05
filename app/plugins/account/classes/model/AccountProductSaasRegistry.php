@@ -8,6 +8,7 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
         		array ( 
         				'entityId' => 'LicenseSAASALM', 
         				'Caption' => text('account10'),
+						'CaptionText' => text('account34'),
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,
@@ -47,6 +48,7 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
         		array ( 
         				'entityId' => 'LicenseSAASALMMiddle', 
         				'Caption' => text('account11'),
+						'CaptionText' => text('account34'),
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,
@@ -86,6 +88,7 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
         		array ( 
         				'entityId' => 'LicenseSAASALMLarge',
         				'Caption' => text('account12'),
+						'CaptionText' => text('account34'),
         				'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
         				'ValueName' => text('account4'),
         				'ValueDefault' => 12,

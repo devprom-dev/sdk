@@ -46,7 +46,8 @@ class GetLicenseKey extends CommandForm
 	{
 		global $model_factory;
 
- 	 	if ( !getSession()->getUserIt()->IsReal() ) $this->replyError( text('account18') );
+		$user_it = getSession()->getUserIt();
+ 	 	if ( !$user_it->IsReal() ) $this->replyError( text('account18') );
  	 	
  	 	$product_it = $this->getProduct($_REQUEST['LicenseType']);
  	 	$required = $product_it->get('RequiredFields');
@@ -56,10 +57,9 @@ class GetLicenseKey extends CommandForm
 			$this->replyError( text('account21') ); 
 		}
  	 	
-		$user_it = getSession()->getUserIt();
-		
 		if ( ($product_it->get('PriceRUB') != '' || $product_it->get('PriceUSD') != '') && $_REQUEST['LicenseKey'] == '' )
 		{
+			if ( $_REQUEST['LicenseValue'] == '' ) $_REQUEST['LicenseValue'] = $product_it->get('ValueDefault');
 			$this->redirectToStore( $user_it->get('Email') );
 		}
 		
@@ -80,6 +80,7 @@ class GetLicenseKey extends CommandForm
 				
 				break;
 			}
+
 			
 			$license_it->moveNext();
 		}
@@ -184,7 +185,7 @@ class GetLicenseKey extends CommandForm
 		
 		$parts = preg_split('/\n/', $user_it->getHtmlDecoded('Description'));
 
-		$organization .= IteratorBase::wintoutf8(trim($parts[0]).', '.$url_parts['host'].', '.$license_data['uid']); 
+		$organization = IteratorBase::wintoutf8(trim($parts[0]).', '.$url_parts['host'].', '.$license_data['uid']);
 
 		$data = array (
 				'item_type' => 'org',
@@ -273,7 +274,7 @@ class GetLicenseKey extends CommandForm
 		$securityKey = MERCHANT_KEY;
 		$currency = $store_parms['Currency'];
 		
-    	$amount = round($_REQUEST['LicenseValue'] * $store_parms['Price'], 0); 
+    	$amount = round($_REQUEST['LicenseValue'] * $store_parms['Price'], 0);
 		$amount .= ".00"; 
 
 		$orderId = abs(crc32($_REQUEST['InstallationUID'].date('Y-m-d H:s:i')));
@@ -354,7 +355,8 @@ class GetLicenseKey extends CommandForm
 		$products = array (
 			new AccountProduct(),
 			new AccountProductSaas(),
-			new AccountProductDevOps()
+			new AccountProductDevOps(),
+			new AccountProductSupport()
 		);
 
 		foreach( $products as $product )
