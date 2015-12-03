@@ -6,7 +6,8 @@ class LicenseTeamIterator extends LicenseIterator
 {
 	function valid()
 	{
-		if ( json_decode(trim($this->get('LicenseValue'))) != null ) return parent::valid();
+		$value = trim($this->get('LicenseValue'));
+		if ( json_decode($value) != $value ) return parent::valid();
 		return md5(INSTALLATION_UID . TEAMUID) == trim($this->get(LICENSE_WORD . 'Key'));
 	}
 
@@ -22,6 +23,6 @@ class LicenseTeamIterator extends LicenseIterator
 
 	function getLeftDays()
 	{
-		return max(file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::FILE), 0);
+		return max(CheckpointSupportPayed::getPayedDays(), 0);
 	}
 }

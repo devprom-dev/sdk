@@ -23,7 +23,7 @@ class CacheParameters extends Installable
 			"<?php
 			\$_SERVER['APP_VERSION'] = '".getFactory()->getObject('cms_Update')->getLatest()->getDisplayName()."';
 			\$_SERVER['APP_IID'] = '".INSTALLATION_UID."';
-			?>"
+			"
 		);
 
 		return true;
