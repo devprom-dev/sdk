@@ -95,24 +95,18 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  		switch ( $attr )
  		{
  			case 'ObjectId':
-
  			    $object = $this->getAttributeObject( $attr );
-
- 			    if ( $object instanceof WikiPage )
- 			    {
- 			    	$field = new FieldWikiPageTrace( $object );
+ 			    if ( $object instanceof WikiPage ) {
+ 			    	$field = new FieldWikiPageTrace($object, $this->getFormId());
+                    $field->setBaselineAttribute($this->getObject()->getBaselineReference());
  			    }
- 			    else
- 			    {
-					$field = new FieldAutoCompleteObject( $object );
+ 			    else {
+					$field = new FieldAutoCompleteObject($object);
  			    }
-				
-				$field->setTitle( $object->getDisplayName() ); 
-				
+				$field->setTitle( $object->getDisplayName() );
 				return $field;
 				
  			default:
- 				
  			    return parent::createField( $attr );
  		}
  	}
@@ -125,14 +119,20 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  	function getActions( $object_it, $item )
  	{
  	    $anchor_it = $this->getTargetIt($object_it);
- 	    
- 	    $actions = array ( array (
- 	        'name' => translate('Перейти'),
- 	        'url' => $anchor_it->getViewUrl()
- 	    ));
- 	    
- 	    $actions[] = array();
- 	    
+
+		$url = $anchor_it->getViewUrl();
+		if ( $object_it->get('Baseline') != '' ) {
+			$url .= strpos($url, '?') >= 0
+					? '&baseline='.$object_it->get('Baseline')
+					: '?baseline='.$object_it->get('Baseline');
+		}
+ 	    $actions = array(
+			array (
+				'name' => translate('Перейти'),
+				'url' => $url
+	 	    ),
+			array()
+		);
  	    return array_merge($actions, parent::getActions( $object_it, $item ));
  	} 	
 }

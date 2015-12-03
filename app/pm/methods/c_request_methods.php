@@ -130,7 +130,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  		
  		$this->setRequestIt($request_it);
  		$this->setRedirectUrl(
- 				"function(){window.location='".getFactory()->getObject('PMReport')->getExact('allissues')->get('Url')."';}"
+ 				"function(){window.location='".getSession()->getApplicationUrl()."';}"
 		);
  	}
  	
@@ -175,11 +175,12 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	function setRequestIt( $request_it )
  	{
  		$this->request_it = $request_it;
+		$this->setVpd($this->request_it->get('VPD'));
  	}
  	
 	function getCaption() 
 	{
-		return translate('Создать задачу');
+		return translate('Задача');
 	}
 	
 	function hasAccess()
@@ -348,13 +349,9 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  	function ViewRequestTagWebMethod()
  	{
- 		global $model_factory;
- 		
- 		$tag = $model_factory->getObject('Tag');
-
- 		$request_tag = $model_factory->getObject('pm_RequestTag');
+ 		$tag = getFactory()->getObject('Tag');
+ 		$request_tag = getFactory()->getObject('pm_RequestTag');
  		$tag->addFilter( new TagRequestFilter('related') );
- 		
  		$this->tag_it = $tag->getAll();
  		
  		parent::WebMethod();
@@ -370,17 +367,22 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
   		$values = array (
  			'all' => translate('Все'),
  			);
- 		
+		$items = array();
+
  		while ( !$this->tag_it->end() )
  		{
- 			$values[' '.$this->tag_it->get('TagId')] = $this->tag_it->get('Caption');
+ 			$items[$this->tag_it->get('Caption')][] = $this->tag_it->getId();
  			$this->tag_it->moveNext();
  		}
- 		
+
+		foreach( $items as $key => $ids ) {
+			$items[$key] = ' '.join('-',$ids);
+		}
+		$values = array_merge($values, array_flip($items));
+
  		if ( !in_array($this->getValue(), array('', 'all')) )
  		{
 	 		$tag_it = $this->tag_it->object->getExact($this->getValue());
- 		
      		if ( $tag_it->count() > 0 )
      		{
     			$values[' '.$tag_it->get('TagId')] = $tag_it->get('Caption');

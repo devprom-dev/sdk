@@ -1,10 +1,9 @@
 <?php
 
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+include_once "BusinessActionWorkflow.php";
 
-include_once "BusinessAction.php";
-
-class WikiPageBusinessActionChildrenSyncState extends BusinessAction
+class WikiPageBusinessActionChildrenSyncState extends BusinessActionWorkflow
 {
  	function getId()
  	{
@@ -27,7 +26,7 @@ class WikiPageBusinessActionChildrenSyncState extends BusinessAction
 		{
 			try {
 				$service->moveToState(
-						$page_it, $object_it->get('State'), $object_it->get('TransitionComment'), array(), false
+						$page_it, $object_it->get('State'), '', array(), false
 					);
 			}
 			catch( Exception $e ) {

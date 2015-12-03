@@ -32,7 +32,9 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
 			'Comment',
 			'pm_CustomAttribute',
         	'pm_Watcher',
-        	'pm_FunctionTrace'
+        	'pm_FunctionTrace',
+            'cms_Snapshot',
+            'cms_SnapshotItem'
  		);
         
         if ( $methodology_it->get('IsBlogUsed') == 'Y' )

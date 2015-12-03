@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include_once "ObjectRegistry.php";
 
@@ -8,10 +10,10 @@ class ObjectRegistrySQL extends ObjectRegistry
 	protected $filters = array();
 	protected $groups = array();
 	protected $sorts = array();
-	protected $limit = '';
+	protected $limit = '4096';
 	protected $default_sort = '';
 
-	public function __construct( Object $object = null, array $persisters = null, array $filters = null, array $sorts = null, array $groups = null )
+	public function __construct( $object = null, array $persisters = null, array $filters = null, array $sorts = null, array $groups = null )
 	{
 		parent::__construct( $object );
 		
@@ -36,7 +38,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->filters = $filters;
 	}
 	
-	public function & getFilters()
+	public function getFilters()
 	{
 		return $this->filters;
 	}
@@ -46,7 +48,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->groups = $groups;
 	}
 	
-	public function & getGroups()
+	public function getGroups()
 	{
 		return $this->groups;
 	}
@@ -61,7 +63,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->sorts[] = $sort;
 	}
 	
-	public function & getSorts()
+	public function getSorts()
 	{
 		return $this->sorts;
 	}
@@ -277,7 +279,11 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$sql = "";
 		
 		$object = $this->getObject();
-		
+
+		foreach ( $this->persisters as $persister ) {
+			$persister->map( $data );
+		}
+
 		$pre_sql = "UPDATE ".$object->getEntityRefName()." SET RecordModified = ".
 		   ($data['RecordModified'] != '' ? "'".DAL::Instance()->Escape($data['RecordModified'])."'" : "NOW()").", ";
 
@@ -313,10 +319,10 @@ class ObjectRegistrySQL extends ObjectRegistry
 			
 			$sql .= '`'.$key.'` = '.$object->formatValueForDB($key, DAL::Instance()->Escape(addslashes($value))).',';
 		}
-		
+
 		if ( $data['VPD'] != '' ) $sql .= "`VPD` = '".DAL::Instance()->Escape(addslashes($data['VPD']))."',";
 		
-		$model_factory->info( JsonWrapper::encode($parms) );
+		$model_factory->info( JsonWrapper::encode($data) );
 				
 		if ( $sql != '' )
 		{
@@ -348,8 +354,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 			$model_factory->error( 'SQL query to update attributes is empty: '.$pre_sql );
 		}
 		
-		foreach ( $this->persisters as $persister )
-		{
+		foreach ( $this->persisters as $persister ) {
 			$persister->modify( $object_it->getId(), $data );
 		}		
 		
@@ -368,7 +373,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 	public function __sleep()
 	{
-		parent::__sleep();
+		$attributes = parent::__sleep();
 		unset($this->persisters);
 		$this->persisters = array();
 		unset($this->filters);
@@ -377,6 +382,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->groups = array();
 		unset($this->sorts);
 		$this->sorts = array();
+		return array_merge($attributes, array());
 	}
 	
 	public function __destruct()

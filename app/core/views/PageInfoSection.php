@@ -139,8 +139,11 @@
 		);
 	}
 	
-	function render( $view )
+	function render( $view, $parms = array() )
 	{
-		echo $view->render( $this->getTemplate(), $this->getRenderParms() ); 
+		echo $view->render(
+				$this->getTemplate(),
+				array_merge($parms, $this->getRenderParms())
+		);
 	}
  }

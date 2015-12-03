@@ -259,7 +259,7 @@ a.dashed {
 }
 
 a.dashed:hover {
-	border:none;
+	border-bottom:white 1px solid;
 }
 
 .list-tasks {
@@ -723,6 +723,7 @@ input.spent-time
     margin-top: 0;
     padding-bottom: 5px;
     display: table-cell;
+	vertical-align: middle;
 }
 
 table.table-document
@@ -733,6 +734,7 @@ table.table-document
     border-spacing: 0;
 	width: 100%;
     margin: 0;
+	table-layout: fixed;
 }
 
 table.table-document > thead:first-child > tr:first-child th,
@@ -826,7 +828,6 @@ a.file_attach img
 
 .wiki-page-document .comments-section
 {
-	margin-top: 3px;
 }
 
 .document-item-bottom-hidden
@@ -984,12 +985,16 @@ button.clipboard i {
   background-image: url(/images/table_link.png);
 }
 
-td.board-group .btn-group {
+td.board-group .btn-group:not(.row-group) {
     visibility:hidden;
 }
 
-td.board-group:hover .btn-group {
+td.board-group:hover .btn-group:not(.row-group) {
     visibility:visible;
+}
+
+.row-group .btn {
+	padding: 0;
 }
 
 .recent-comments {
@@ -999,4 +1004,63 @@ td.board-group:hover .btn-group {
 .recent-comments .user-mini {
 	margin-right: 4px;
 	margin-bottom: -6px;
+}
+
+div#tab-main .source-left {
+	display: table-cell;
+	width: 60%;
+	padding-right: 16px;
+	vertical-align: top;
+}
+
+div#tab-main .source-text {
+	border-left: 1px solid #ddd;
+	display: table-cell;
+	width: 38%;
+	padding-left: 16px;
+	vertical-align: top;
+}
+
+a.trace-history {
+	display: none;
+}
+
+div.trace-artefact:hover a.trace-history {
+	display: block;
+}
+
+div.page-attachments {
+	display: table;
+	width: 100%;
+}
+div.page-attachments:hover .embedded-append-link a {
+	display: block;
+}
+
+div.page-attachments div.embdded-items-list {
+	display: table-cell;
+	padding-right: 26px;
+}
+
+div.page-attachments .embedded-append-link {
+	display: table-cell;
+	vertical-align: top;
+	height: 28px;
+}
+div.page-attachments .embedded-append-link a {
+	display:none;
+}
+
+.table-header div.filter-reset-cnt {
+	width: 30px;
+}
+.table-header:hover a.filter-reset-btn {
+	display: block;
+}
+a.filter-reset-btn {
+	display: none;
+	padding: 2px 0 2px 0;
+}
+a.filter-reset-btn i.icon-trash {
+	background-position: -457px 0;
 }

@@ -4,19 +4,22 @@ include "TaskTypeIterator.php";
 include "predicates/TaskTypeBaseIterationRelatedPredicate.php";
 include "predicates/TaskTypeFixBugPredicate.php";
 include "predicates/TaskTypeNonBugFixPredicate.php";
-include "predicates/TaskTypePlannablePredicate.php";
 include "predicates/TaskTypeStageRelatedPredicate.php";
 include "predicates/TaskTypeBaseCategoryPredicate.php";
+include "predicates/TaskTypeStateRelatedPredicate.php";
 
 class TaskType extends MetaobjectCacheable 
 {
  	function __construct() 
  	{
 		parent::__construct('pm_TaskType');
-		
-		$this->defaultsort = "(SELECT tt.OrderNum FROM pm_TaskType tt WHERE tt.pm_TaskTypeId = t.ParentTaskType), OrderNum";
-		
+		$this->setSortDefault(new SortAttributeClause('Caption'));
 		$this->setAttributeDescription('ParentTaskType', text(1883));
+
+		foreach( array('Description','OrderNum','ReferenceName') as $attribute ) {
+			$this->addAttributeGroup($attribute, 'additional');
+			$this->setAttributeRequired($attribute, false);
+		}
  	}
 	
 	function createIterator() 
@@ -28,7 +31,18 @@ class TaskType extends MetaobjectCacheable
 	{
 	    return getSession()->getApplicationUrl($this).'project/dicts/TaskType?';
 	}
-	
+
+	function getDefaultAttributeValue( $attr )
+	{
+		switch ( $attr )
+		{
+			case 'ReferenceName':
+				return uniqid('TaskType_');
+			default:
+				return parent::getDefaultAttributeValue( $attr );
+		}
+	}
+
 	function getForRole( $project_role_it )
 	{
 		return $this->getByRefArray(

@@ -10,8 +10,13 @@ class BulkActionBuilderWorkflow extends BulkActionBuilder
  		if ( !$object instanceof MetaobjectStatable ) return;
  		if ( $object->getStateClassName() == '' ) return;
  	 	if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
- 		
- 		$state_it = $object->cacheStates();
+
+		$state_it = getFactory()->getObject($object->getStateClassName())->getRegistry()->Query(
+			array (
+				new FilterVpdPredicate(),
+				new SortAttributeClause('VPD')
+			)
+		);
 		$transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
 			array (
 				new FilterAttributePredicate('SourceState', $state_it->idsToArray()),

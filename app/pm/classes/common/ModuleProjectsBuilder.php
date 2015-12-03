@@ -63,7 +63,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-reports';
-        $item['Caption'] = translate('Все отчеты');
+        $item['Caption'] = text(2069);
         $item['Description'] = text(1824);
         $item['AccessEntityReferenceName'] = 'cms_Report';
         $item['Url'] = 'project/reports';
@@ -100,7 +100,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-backlog';
-        $item['Caption'] = translate('Баклог');
+        $item['Caption'] = translate('Бэклог');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/list';
         
@@ -133,20 +133,17 @@ class ModuleProjectsBuilder extends ModuleBuilder
         
         $modules[] = $item;
 
+        $item = array();
+        $item['cms_PluginModuleId'] = 'tasks-list';
+        $item['Caption'] = text(1356);
+        $item['AccessEntityReferenceName'] = 'pm_Task';
+        $item['Url'] = 'tasks/list';
+
+        $modules[] = $item;
+
         if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
         {
 	        // tasks modules
-	        $plugin = translate('Задачи');
-	        
-	        $item = array();
-	        
-	        $item['cms_PluginModuleId'] = 'tasks-list';
-	        $item['Caption'] = text(1356);
-	        $item['AccessEntityReferenceName'] = 'pm_Task';
-	        $item['Url'] = 'tasks/list';
-	        
-	        $modules[] = $item;
-	        
 	        $item = array();
 	        
 	        $item['cms_PluginModuleId'] = 'tasks-board';
@@ -184,26 +181,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         
         $modules[] = $item;
         
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'features-trace';
-        $item['Caption'] = translate('Трассировка функций');
-        $item['AccessEntityReferenceName'] = 'pm_Function';
-        $item['Url'] = 'features/trace';
-        
-        $modules[] = $item;
-        
-        /*
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'features-chart';
-        $item['Caption'] = text(1339);
-        $item['AccessEntityReferenceName'] = 'pm_Function';
-        $item['Url'] = 'features/chart';
-
-        $modules[] = $item;
-        */
-        
         foreach( $modules as $module )
         {
         	$module['Area'] = FUNC_AREA_MANAGEMENT;
@@ -219,6 +196,20 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessType'] = ACCESS_CREATE;
         $item['Url'] = 'issues/board';
         
+        $object->addModule( $item );
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'metrics';
+        $item['Caption'] = text(2089);
+        $item['AccessEntityReferenceName'] = 'pm_ProjectMetric';
+        $item['Url'] = 'metrics';
+        $object->addModule( $item );
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'attachments';
+        $item['Caption'] = text(2097);
+        $item['AccessEntityReferenceName'] = 'Attachment';
+        $item['Url'] = 'attachments';
         $object->addModule( $item );
     }
     
@@ -238,7 +229,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         
         $modules[] = $item;
 
-        $item['cms_PluginModuleId'] = 'navigation-settings';
+        $item['cms_PluginModuleId'] = 'menu';
         $item['Caption'] = text(1807);
         $item['AccessEntityReferenceName'] = 'pm_CustomReport';
         $item['Url'] = 'menu';

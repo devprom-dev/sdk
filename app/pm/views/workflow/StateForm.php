@@ -17,8 +17,9 @@ class StateForm extends PMPageForm
 
 		$this->getObject()->setAttributeOrderNum('ReferenceName', 998);
 		$this->getObject()->setAttributeVisible('ReferenceName', $this->getMode() != 'new');
+		$this->getObject()->setAttributeRequired('ReferenceName', false);
 		
-		$this->getObject()->setAttributeType('Description', 'VARCHAR');
+		$this->getObject()->setAttributeType('Description', 'TEXT');
 		$this->getObject()->setAttributeOrderNum('Description', 999);
 		
 		$this->getObject()->setAttributeOrderNum('OrderNum', 997);

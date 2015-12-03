@@ -99,8 +99,8 @@ $display_operations = $list->IsNeedToDisplayOperations();
 			}
 			
 			// get an array of group fields
-			if ( !in_array($group_field, $groups) ) $group_field = '';
-		
+			if ( !in_array($group_field, array_keys($it->object->getAttributes())) ) $group_field = '';
+
 			$group_field_prev_value = '{83C23330-E68F-4852-83D7-6BE4E49FF985}';
 
 			for( $i = 0; $i < $rows_num; $i++)
@@ -108,7 +108,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 				if ( $group_field != '' )
 				{
 					$group_field_value = $it->get($group_field);
-					
+
 					if( $group_field_value != $group_field_prev_value ) 
 					{
 					?>
@@ -179,7 +179,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 						{
 							?>
 								<div class="btn-group operation last">
-								  <a class="btn btn-small dropdown-toggle actions-button" data-toggle="dropdown" href="#">
+								  <a class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
 									<i class="icon-asterisk icon-gray"></i>
 									<span class="caret"></span>
 								  </a>
@@ -209,9 +209,7 @@ $display_operations = $list->IsNeedToDisplayOperations();
 	</table>
 </div> <!-- end wrapper-scroll -->
 	
-<div id="documentCache" style="overflow:hidden;height:1px;width:1px;"></div>
-
-<?php if ( !$tableonly && $autorefresh ) { ?> 
+<?php if ( !$tableonly && $autorefresh ) { ?>
 
 <script language="javascript">
 	$(document).ready(function() 

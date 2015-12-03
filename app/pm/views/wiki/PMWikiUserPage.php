@@ -11,7 +11,6 @@ include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 
 include "PMWikiTable.php";
 include "PMWikiDocument.php";
-include "WikiFilesTable.php";
 include "WikiTreeSection.php";
 include "WikiDocumentSettingBuilder.php";
 include "WikiPageSettingBuilder.php";
@@ -33,7 +32,7 @@ class PMWikiUserPage extends PMPage
  	function PMWikiUserPage()
  	{
  		getSession()->addBuilder( new WikiPageModelExtendedBuilder() );
- 		
+
  		parent::PMPage();
  		
  		getSession()->addBuilder( new WikiDocumentSettingBuilder() );
@@ -42,7 +41,7 @@ class PMWikiUserPage extends PMPage
  		
 	    $table = $this->getTableRef();
  		    
-	    if ( is_a($table, 'PMWikiDocument') && $table->getDocumentIt()->getId() > 0 )
+	    if ( $table instanceof PMWikiDocument && $table->getDocumentIt()->getId() > 0 )
 	    {
 			$this->addInfoSection( new WikiTreeSection(
 	            		$table->getObjectIt()->getId() > 0 
@@ -56,6 +55,26 @@ class PMWikiUserPage extends PMPage
  		{
  			$this->addInfoSection( new ImportWikiPageFromExcelSection($this->getObject()));
  		}
+
+		if ( $this->needDisplayForm() && $_REQUEST['view'] != 'templates' )
+		{
+			$this->addInfoSection(
+				new PageSectionAttributes($this->getObject(), 'additional', translate('Дополнительно'))
+			);
+			$this->addInfoSection(
+				new PageSectionAttributes(
+					$this->getObject(),
+					array('trace','source-attribute'),
+					translate('Трассировки')
+				)
+			);
+			$object_it = $this->getObjectIt();
+			if (is_object($object_it) && $object_it->getId() > 0) {
+				$this->addInfoSection(new PageSectionComments($object_it));
+				$this->addInfoSection(new StatableLifecycleSection($object_it));
+				$this->addInfoSection(new PMLastChangesSection ($object_it));
+			}
+		}
  	}
  	
  	function getObject()
@@ -92,16 +111,6 @@ class PMWikiUserPage extends PMPage
  	{
  		switch( $_REQUEST['view'] )
  		{
- 			case 'files':
-
- 				$file = getFactory()->getObject('WikiPageFile');
- 		
- 				$file->setAttributeType('WikiPage', 'REF_'.get_class($this->getObject()).'Id');
- 				
- 				$file->addFilter( new WikiFileReferenceFilter($this->getObject()->getReferenceName()) );
- 		
- 				return new WikiFilesTable($file);
- 				
  			case 'templates':
  				
  				getSession()->addBuilder( new WikiTemplateSettingBuilder() );
@@ -197,7 +206,7 @@ class PMWikiUserPage extends PMPage
  		$snapshot_it = $_REQUEST['baseline'] != ''
  				? getFactory()->getObject('Snapshot')->getExact($_REQUEST['baseline'])
  				: getFactory()->getObject('Snapshot')->getEmptyIterator();
- 		
+
  		if ( $snapshot_it->getId() > 0 )
  		{
  			$registry = new WikiPageRegistryVersion();
@@ -339,13 +348,24 @@ class PMWikiUserPage extends PMPage
  		    'page_id' => $object_it->getId()
         ));
  	}
- 	
+
+	function getPageUid()
+	{
+		switch ( $_REQUEST['view'] )
+		{
+			case 'docs':
+				if ( $_REQUEST['document'] > 0 ) return 'doc-mode';
+				break;
+		}
+		return parent::getPageUid();
+	}
+
 	function getHint()
  	{
 	    switch ( $_REQUEST['view'] )
 	    {
 	        case 'docs':
-	        	if ( $_REQUEST['document'] > 0 ) return '';
+	        	if ( $_REQUEST['document'] > 0 ) return text(2090);
 	        	break;
 	    }
 	   	return parent::getHint();

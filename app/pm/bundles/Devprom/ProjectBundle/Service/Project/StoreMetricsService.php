@@ -10,8 +10,8 @@ class StoreMetricsService
  	function execute( $project_it )
  	{
  		$this->storeProjectMetrics($project_it);
- 		
-		$this->storeFeatureMetrics( 
+
+		$this->storeFeatureMetrics(
 				getFactory()->getObject('Feature')->getRegistry()->Query(
 		 				array (
 		 						new \FilterVpdPredicate($project_it->get('VPD')),
@@ -54,6 +54,8 @@ class StoreMetricsService
  	
  	function storeProjectMetrics( $project_it )
  	{
+        getFactory()->resetCachedIterator($project_it->object);
+
  		if ( !$project_it->getMethodologyIt()->HasReleases() )
  		{
  			$request = getFactory()->getObject('Request');
@@ -95,11 +97,18 @@ class StoreMetricsService
 						'RecordModified' => $project_it->get('RecordModified')
 				)
 		);
+
+        $metrics_registry = getFactory()->getObject('ProjectMetric')->getRegistry();
+        foreach( $project_it->object->getAttributesByGroup('metrics') as $attribute ) {
+            $metrics_registry->setMetric($attribute, $project_it->get($attribute));
+        }
  	}
  	
  	function storeFeatureMetrics( $feature_it )
  	{
+        getFactory()->resetCachedIterator($feature_it->object);
  		$feature_it->object->setNotificationEnabled(false);
+
  		while( !$feature_it->end() )
  		{
 	 		$feature_it->object->modify_parms(
@@ -119,18 +128,30 @@ class StoreMetricsService
  	
  	function storeIssueMetrics( $issue_it )
  	{
+        getFactory()->resetCachedIterator($issue_it->object);
 		$issue_it->object->setNotificationEnabled(false);
+
  		while( !$issue_it->end() )
  		{
- 			if ( $issue_it->get('MetricDeliveryDate') != $issue_it->get('DeliveryDate') )
- 			{ 
-		 		$issue_it->object->modify_parms(
-		 				$issue_it->getId(),
-		 				array (
-		 						'DeliveryDate' => $issue_it->get('MetricDeliveryDate'),
-		 						'RecordModified' => $issue_it->get('RecordModified')
-		 				)
-		 		);
+			$parms = array();
+ 			if ( $issue_it->get('MetricDeliveryDate') != $issue_it->get('DeliveryDate') ) {
+                $parms['DeliveryDate'] = $issue_it->get('MetricDeliveryDate');
+            }
+
+            list($total, $tasks) = preg_split('/:/', $issue_it->get('MetricSpentHoursData'));
+            list($total_parent, $tasks_parent) = preg_split('/:/', $issue_it->get('MetricSpentHoursParentData'));
+            $total += $total_parent;
+            $tasks = join(',', array($tasks, $tasks_parent));
+            if ( $issue_it->get('Fact') != $total ) {
+                $parms['Fact'] = $total;
+            }
+            if ( $issue_it->get('FactTasks') != $tasks ) {
+                $parms['FactTasks'] = $tasks;
+            }
+
+            if ( count($parms) > 0 ) {
+                $parms['RecordModified'] = $issue_it->get('RecordModified');
+		 		$issue_it->object->modify_parms( $issue_it->getId(),$parms );
  			}
  			$issue_it->moveNext();
  		}

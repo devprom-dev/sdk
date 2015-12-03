@@ -1,29 +1,20 @@
 <?php
 
-$parts = preg_split('/\?/', $_SERVER['REQUEST_URI']);
-
-$active_url = $parts[0];
-
 foreach ( $items as $item_key => $item )
 {
     foreach( $item['items'] as $child_key => $child ) 
     { 
         if ( $child['url'] == '' || $child['name'] == '' ) continue;
         
-        $parts = preg_split('/\?/', $child['url']);
+        $child_url = str_replace($application_url, '', array_shift(preg_split('/\?/', $child['url'])));
 
-        $child_url = str_replace($application_url, '', $parts[0]);
-        
-        if ( $child_url == $active_url )
-        {
+        if ( $child_url == $active_url ) {
             $items[$item_key]['state'] = 'open';
             $items[$item_key]['items'][$child_key]['state'] = 'active expanded';
         } 
         
-        if ( $child['uid'] == 'navigation-settings' )
-        {
+        if ( $child['uid'] == 'navigation-settings' ) {
             $setup_menu_item = $child; 
-            
             unset($items[$item_key]['items'][$child_key]);
         }
 

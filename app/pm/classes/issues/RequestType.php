@@ -15,7 +15,18 @@ class RequestType extends MetaobjectCacheable
 	{
 	    return new RequestTypeIterator( $this );
 	}
-	
+
+	function getDefaultAttributeValue( $attr )
+	{
+		switch ( $attr )
+		{
+			case 'ReferenceName':
+				return uniqid('IssueType_');
+			default:
+				return parent::getDefaultAttributeValue( $attr );
+		}
+	}
+
 	function getPage()
 	{
 	    return getSession()->getApplicationUrl($this).'project/dicts/RequestType?';

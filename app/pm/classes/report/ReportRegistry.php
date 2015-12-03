@@ -60,13 +60,19 @@ class ReportRegistry extends ObjectRegistrySQL
  	function createSQLIterator( $sql )
  	{
  	    $data_array = array();
- 	    
+
+		$resource = getFactory()->getObject('ContextResource');
  	    $vpd_value = array_shift($this->getObject()->getVpds());
  	    
  	    foreach( $this->reports as $report )
  	    {
  	        $data = array();
- 	        
+
+			if ( $report['description'] == '' ) {
+				$resource_it = $resource->getExact($report['name']);
+				$report['description'] = preg_replace('/<\/?strong>/i', '', $resource_it->getHtmlDecoded('Caption'));
+			}
+
     		$data['cms_ReportId'] = $report['name'];
     		$data['Caption'] = $report['title'];
     		$data['Description'] = $report['description'];

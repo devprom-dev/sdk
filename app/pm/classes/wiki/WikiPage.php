@@ -18,7 +18,9 @@ include "predicates/WikiTagFilter.php";
 include "predicates/WikiRootTransitiveFilter.php";
 include "persisters/WikiPageRevisionPersister.php";
 include 'persisters/DocumentVersionPersister.php';
+include 'persisters/WikiPageTracesRevisionsPersister.php';
 include 'predicates/WikiSameBranchFilter.php';
+include 'predicates/WikiDocumentSearchPredicate.php';
 include "WikiPageDeleteStrategyMove.php";
 include_once "sorts/SortParentPathClause.php";
 include_once "sorts/SortDocumentClause.php";
@@ -79,7 +81,9 @@ class WikiPage extends MetaobjectStatable
 	
 	function getPageNameViewMode( $objectid ) 
 	{
-		return $this->getPage().'&page='.$objectid;
+        $url = $this->getPage().'&page='.$objectid;
+        if ( $_REQUEST['search'] != '' ) $url .= '&search='.urlencode($_REQUEST['search']);
+		return $url;
 	}
 	
 	function getDefaultAttributeValue( $name ) 

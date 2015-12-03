@@ -6,15 +6,17 @@ class BuildCodeRevisionPersister extends ObjectSQLPersister
 		{
 			return array(
 				" ( SELECT GROUP_CONCAT(DISTINCT CAST(r.pm_SubversionRevisionId AS CHAR))
- 			 	  FROM pm_SubversionRevision r, pm_SubversionRevision r2, pm_Subversion s
+ 			 	  FROM pm_SubversionRevision r, pm_SubversionRevision r2
  			 	  WHERE r.RecordCreated <= r2.RecordCreated
  			 	  	AND t.BuildRevision = r2.pm_SubversionRevisionId
  			 	  	AND r2.Repository = r.Repository
  			 	    AND r.RecordCreated >
  			 	    	(SELECT MAX(r.RecordCreated) FROM pm_Build b, pm_SubversionRevision r
  			 	    	  WHERE b.pm_BuildId < t.pm_BuildId
+ 			 	    	    AND IFNULL(b.Application,'') = IFNULL(t.Application,'')
  			 	    	    AND b.BuildRevision = r.pm_SubversionRevisionId
- 			 	    	    AND b.VPD IN ('".join("','",$this->getObject()->getVpds())."'))) Commits "
+ 			 	    	    AND b.VPD IN ('".join("','",$this->getObject()->getVpds())."'))) Commits ",
+				" (SELECT sr.Repository FROM pm_SubversionRevision sr WHERE sr.pm_SubversionRevisionId = t.BuildRevision) Repository "
 			);
  	}
 

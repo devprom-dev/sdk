@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 if ( !class_exists('CoPage', false) ) include SERVER_ROOT_PATH."co/views/Common.php";
+include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorPasswordLength.php";
 
 include SERVER_ROOT_PATH."co/views/LoginPage.php";
 include SERVER_ROOT_PATH."co/views/RestorePage.php";
@@ -20,11 +21,9 @@ class SecurityController extends PageController
     public function loginAction(Request $request)
     {
         $response = $this->checkDeploymentState($request);
-        
         if ( is_object($response) ) return $response;
 
     	$user_it = getSession()->getUserIt();
-    	
         if ( $user_it->getId() > 0 )
         {
             return new RedirectResponse( 
@@ -34,7 +33,6 @@ class SecurityController extends PageController
         else 
         {
         	$user_it = getFactory()->getObject('User')->getRegistry()->getAll();
-        	
         	if ( $user_it->count() < 1 )
         	{
         		return new RedirectResponse('/install');
@@ -46,35 +44,58 @@ class SecurityController extends PageController
 
     public function loginProcessAction(Request $request)
     {
-    	$command = new LoginUserService();
-		
-    	$result = $command->validate( 
-    	        trim($request->request->get('login')),
-    	        trim($request->request->get('pass')) 
-    	);
+        $session = getSession();
 
-		if( $result > 0 )
-		{
-			$log = $this->getLogger();
-		
-			if ( is_object($log) )
-			{
-				$log->info( 'Login used: '.$request->request->get('login') );
-				$log->info( 'Password hash: '.getFactory()->getObject('User')->getHashedPassword(trim($request->request->get('pass'))) );
-			}
-			
-			return $this->replyError( $command->getResultDescription( $result ) );
-		} 
-    	
-		$session = getSession();
-		
-		$session->open( $command->getUserIt() );
+        if ( $session->getUserIt()->getId() == '' )
+        {
+            $auth_factory = $session->getAuthenticationFactory();
+            if ( $auth_factory->credentialsRequired() )
+            {
+                $command = new LoginUserService();
+                $result = $command->validate(
+                    trim($request->request->get('login')),
+                    trim($request->request->get('pass'))
+                );
 
-        return $this->replyRedirect(
-        		$request->request->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->request->get('redirect')
-		);
+                if( $result > 0 ) {
+                    $log = $this->getLogger();
+                    if ( is_object($log) ) {
+                        $log->info( 'Login used: '.$request->request->get('login') );
+                        $log->info( 'Password hash: '.getFactory()->getObject('User')->getHashedPassword(trim($request->request->get('pass'))) );
+                    }
+                    return $this->replyError( $command->getResultDescription( $result ) );
+                }
+                $session->open( $command->getUserIt() );
+            }
+            else {
+                $command = new LoginUserService();
+                return $this->replyRedirectError('/logoff', $command->getResultDescription(2));
+            }
+        }
+
+        if ( getSession()->getUserIt()->get('AskChangePassword') == 'Y' ) {
+            return $this->replyRedirect(
+                '/reset?key='.getSession()->getUserIt()->getResetPasswordKey()
+            );
+        } else {
+            return $this->replyRedirect(
+                $request->request->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->request->get('redirect')
+            );
+        }
     }
-    
+
+    public function loginCheckAction(Request $request)
+    {
+        if ( getSession()->getUserIt()->getId() > 0 ) {
+            return $this->replyRedirect(
+                $request->request->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->request->get('redirect')
+            );
+        } else {
+            $command = new LoginUserService();
+            return $this->replyRedirectError('/logoff', $command->getResultDescription(2));
+        }
+    }
+
     # region Restore Password
     
     public function restoreAction(Request $request)
@@ -91,20 +112,17 @@ class SecurityController extends PageController
         if ( $request->request->get('email') == '' ) return $this->replyError(text(219));
 
 		$part_cls = getFactory()->getObject('cms_User');
-		
 		$part_it = $part_cls->getByRef('LCASE(Email)', strtolower(trim($request->request->get('email'))));
 
 		if ( $part_it->getId() < 1) return $this->replyError(text(220));
+        if ( $part_it->get('Password') == '' ) return $this->replyError(text(2061));
 
 		// send email notification with the url to reset password
-		$settings = getFactory()->getObject('cms_SystemSettings');
-		
- 		$settings_it = $settings->getAll();
+ 		$settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
 		
 		$body = str_replace( '%1', \EnvironmentSettings::getServerUrl().'/reset?key='.$part_it->getResetPasswordKey(), text(221));
 		
    		$mail = new \HtmlMailbox;
-   		
    		$mail->appendAddress($part_it->get('Email'));
    		$mail->setBody($body);
    		$mail->setSubject( text(222) );
@@ -135,22 +153,28 @@ class SecurityController extends PageController
 		if ( is_object($response) ) return $response;
 		if( $request->query->get('key') == '' ) return $this->replyError( text(231) );
 		if( $request->request->get('NewPassword') != $request->request->get('RepeatPassword') ) return $this->replyError( text(232) );
-		
-    	$session = getSession();
-    	
+
     	$user = getFactory()->getObject('cms_User');
+        $parms['Password'] = $request->request->get('NewPassword');
+
+        $validators = new \ModelValidator();
+        $validators->addValidator( new \ModelValidatorPasswordLength() );
+        $message = $validators->validate( $user, $parms );
+        if ( $message != "" ) {
+            return $this->replyError($message);
+        }
 
 		$user->setNotificationEnabled(false);
     	
     	$user_it = $user->getAll();
-
-		while ( !$user_it->end() ) 
+		while ( !$user_it->end() )
 		{
 			if( trim($request->query->get('key')) == $user_it->getResetPasswordKey() ) 
 			{
 				$user->modify_parms($user_it->getId(),
 						array(
-						    'Password' => \IteratorBase::utf8towin($request->request->get('NewPassword'))
+						    'Password' => \IteratorBase::utf8towin($request->request->get('NewPassword')),
+                            'AskChangePassword' => 'N'
 						)
 				);
 					

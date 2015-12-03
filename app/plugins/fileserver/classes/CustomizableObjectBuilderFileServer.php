@@ -8,6 +8,6 @@ class CustomizableObjectBuilderFileServer extends CustomizableObjectBuilder
     {
 		if( $this->getSession()->getProjectIt()->getMethodologyIt()->get('IsFileServer') != 'Y' ) return;
         
-        $set->addObject( getFactory()->getObject('pm_Artefact') );
+        $set->add( 'Artefact' );
     }
 }

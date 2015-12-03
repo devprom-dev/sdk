@@ -30,7 +30,9 @@ class ContextResourceFileBuilder extends ContextResourceBuilder
 						IteratorBase::utf8towin($text)
 				);	
 
-    		$text = preg_replace('/\%host\%/i', EnvironmentSettings::getServerUrl(),$text);	
+    		$text = preg_replace('/\%host\%/i', EnvironmentSettings::getServerUrl(),$text);
+			$text = preg_replace('/\%schema\%/i', EnvironmentSettings::getServerSchema(),$text);
+			$text = preg_replace('/\%servername\%/i', EnvironmentSettings::getServerName(),$text);
     		
     		$object->addText($module, $text);
     	}

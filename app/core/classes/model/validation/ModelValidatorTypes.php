@@ -2,6 +2,7 @@
 
 include_once "ModelValidatorInstance.php";
 include_once "ModelValidatorTypeNumeric.php";
+include_once "ModelValidatorTypeFloat.php";
 include_once "ModelValidatorTypeBoolean.php";
 include_once "ModelValidatorTypeDate.php";
 include_once "ModelValidatorTypeNull.php";
@@ -19,6 +20,7 @@ class ModelValidatorTypes extends ModelValidatorInstance
 		
 		$this->type_validators = array (
 				new ModelValidatorTypeNumeric(),
+				new ModelValidatorTypeFloat(),
 				new ModelValidatorTypeBoolean(),
 				new ModelValidatorTypeDate(),
 				new ModelValidatorTypeReference(),
@@ -36,21 +38,20 @@ class ModelValidatorTypes extends ModelValidatorInstance
 		{
 			if ( !array_key_exists($attribute, $parms) ) continue;
 			if ( !$object->IsAttributeStored($attribute) ) continue;
-				
+
 			$validator = $this->getTypeValidator( $object->getAttributeType($attribute) );
-			
 			if ( !$validator->validate($parms[$attribute]) )
 			{
-				$result = translate('Вы указали некорректное значение поля').' "'.
+				$result = $validator->getMessage();
+				if ( $result == '' ) {
+					$result = translate('Вы указали некорректное значение поля').' "'.
 						translate($object->getAttributeUserName($attribute)).'" ['.$attribute.']';
-				
-				if ( $object->getAttributeTypeName($attribute) != '' )
-				{
-					$result .= ' ('.$object->getAttributeTypeName($attribute).")"; 
+					if ( $object->getAttributeTypeName($attribute) != '' )
+					{
+						$result .= ' ('.$object->getAttributeTypeName($attribute).")";
+					}
+					$result .= ': '.$parms[$attribute];
 				}
-				
-				$result .= ': '.$parms[$attribute];
-	
 				return $result;
 			}
 		}

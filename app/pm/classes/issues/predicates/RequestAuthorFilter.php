@@ -14,8 +14,7 @@ class RequestAuthorFilter extends FilterPredicate
  		
  		if ( count($users) > 0 )
  		{
- 			$predicate = " t.Author IN (".join(',',$users).") ".
- 				" AND NOT EXISTS (SELECT 1 FROM pm_Watcher w WHERE w.Email <> '' AND w.ObjectId = t.pm_ChangeRequestId) ";
+ 			$predicate = " t.Author IN (".join(',',$users).") AND t.Customer IS NULL ";
  		}
  		
  	 	if ( count($emails) > 0 )
@@ -29,14 +28,13 @@ class RequestAuthorFilter extends FilterPredicate
  			if ( count($emails) > 0 )
  			{
 	 			$predicate .= ($predicate != '' ? " OR " : "").
-	 					" EXISTS (SELECT 1 FROM pm_Watcher w WHERE w.Email IN ('".join("','", $emails)."') AND w.ObjectId = t.pm_ChangeRequestId) ";
+	 					" EXISTS (SELECT 1 FROM cms_ExternalUser u WHERE u.email IN ('".join("','", $emails)."') AND u.cms_ExternalUserId = t.Customer) ";
  			}
  		}
  		
  		if ( in_array('none', $emails) )
  		{
- 			$predicate .= ($predicate != '' ? " OR " : "").
- 					" t.Author IS NULL AND NOT EXISTS (SELECT 1 FROM pm_Watcher w WHERE w.Email <> '' AND w.ObjectId = t.pm_ChangeRequestId) ";
+ 			$predicate .= ($predicate != '' ? " OR " : "")." t.Author IS NULL AND t.Customer IS NULL ";
  		}
  		
  		if ( $predicate == '' ) return " AND 1 = 2 ";

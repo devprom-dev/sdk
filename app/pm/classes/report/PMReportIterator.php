@@ -76,8 +76,6 @@ class PMReportIterator extends OrderedIterator
 	
  	function buildMenuItem( $query_string = '' )
 	{
-	    global $model_factory;
-	    
 	    if ( !getFactory()->getAccessPolicy()->can_read($this) ) return array();
 
 	    $module_uid = $this->get('Module');
@@ -101,22 +99,21 @@ class PMReportIterator extends OrderedIterator
 	    
 	    if ( $module_uid != '' )
 	    {
-	        $module = $model_factory->getObject('Module');
-
-	        $module_it = $module->getExact( $module_uid );
-	        
+	        $module_it = getFactory()->getObject('Module')->getExact( $module_uid );
 	        if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return array();
 
 	        $url = $url == '' ? $module_it->get('Url') : $url;
+			if ( $this->getId() != $module_it->getId() ) {
+				$url .= '/'.$this->getId();
+			}
 	    }
 	    else
 	    {
 	        $parts = parse_url( $url );
- 	    
- 	        if ( $parts['scheme'] == '' )
- 	        {
+ 	        if ( $parts['scheme'] == '' ) {
  	            $url = getSession()->getApplicationUrl().$url;
  	        }
+			$url .= '/'.$this->getId();
 	    }
 
 	    if ( $url == '' ) return array();
@@ -126,7 +123,7 @@ class PMReportIterator extends OrderedIterator
 	    return array(
             'name' => $this->getDisplayName(),
 	        'title' => $this->getDisplayName(),
-            'url' => $url.'/'.$this->getId().'?report='.$this->getId().$base_parm.'&'.$query_string,
+            'url' => $url.'?report='.$this->getId().$base_parm.'&'.$query_string,
             'uid' => $this->getId(),
 	    	'report' => $this->getId()
 	    );

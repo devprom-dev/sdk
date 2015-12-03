@@ -27,7 +27,7 @@ class GitConnector extends SCMConnector
  			
 			if ( !file_exists( $local_repository.'/config' ) ) 
 	 		{
-				mkdir( $local_repository, 0777, true );
+				@mkdir( $local_repository, 0777, true );
 				
 				try
 				{
@@ -100,9 +100,6 @@ class GitConnector extends SCMConnector
  		try
  		{
  			if ( !is_object($this->repository) ) throw new Exception('Repository object has not been initialized');
- 			
- 			$path = array_pop(preg_split('/\//', $path));
- 			
  			if ( $path == $this->getCredentials()->getPath() )
  			{
  				$path = $this->repository->getBranchTree("origin/".$this->getCredentials()->getPath());
@@ -226,14 +223,20 @@ class GitConnector extends SCMConnector
  		{
  			if ( !is_object($this->repository) ) throw new Exception('Repository object has not been initialized');
 
- 			$path = array_pop(preg_split('/\//', $path));
- 			
  			$commits = $this->repository->getCommits("--all -- ".$path);
- 			
+
  			$this->log("File commits have been fetched: ".count($commits));
- 			
+
+			$skip = $final_version != -1;
  			foreach( $commits as $commit )
  			{
+				if ( $skip ) {
+					if ( $final_version == $commit->getShortHash() ) {
+						$skip = false;
+					} else {
+						continue;
+					}
+				}
  				$registry->addCommit( 
  						$commit->getShortHash(), 
  						$commit->getDate()->format('Y-m-d H:i:s'), 
@@ -303,8 +306,6 @@ class GitConnector extends SCMConnector
 		try
  		{
  			if ( !is_object($this->repository) ) throw new Exception('Repository object has not been initialized');
- 			
- 			$path = array_pop(preg_split('/\//', $path));
  			
  			if ( $version != '' ) $path = $version.":".$path;
  			

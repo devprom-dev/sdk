@@ -22,6 +22,7 @@ include SERVER_ROOT_PATH."pm/classes/common/ChangeLogEntitiesProjectBuilder.php"
 include SERVER_ROOT_PATH."pm/classes/common/CustomizableObjectBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/permissions/AccessRightEntitySetCommonBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderTask.php";
+include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderWikiPage.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessActionBuilderRequest.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderIssue.php";
 include SERVER_ROOT_PATH."pm/classes/workflow/StateBusinessRuleBuilderTask.php";
@@ -47,10 +48,11 @@ include SERVER_ROOT_PATH."pm/classes/issues/RequestMetadataPermissionsBuilder.ph
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/RequestTriggersCommon.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueOrderNumTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueModifyProjectTrigger.php";
-include SERVER_ROOT_PATH."pm/classes/issues/VersionedObjectRegistryBuilderIssue.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/RequestFeatureUpdateMetricsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/RequestIterationHandler.php";
+
+include SERVER_ROOT_PATH."pm/classes/time/events/TimeSpentEvent.php";
 
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataPermissionsBuilder.php";
@@ -65,11 +67,13 @@ include SERVER_ROOT_PATH."pm/classes/plan/MilestoneMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/events/ModifyIssuesVersionNumber.php";
 
 include SERVER_ROOT_PATH."pm/classes/product/FeatureMetadataBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/product/ProjectTemplateArtefactsBuilderProduct.php";
 include SERVER_ROOT_PATH."pm/classes/product/events/FeatureUpdateMetricsEventHandler.php";
 
 include SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderLatest.php";
+include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateArtefactsBuilderWorkItems.php";
 
 include SERVER_ROOT_PATH."pm/classes/common/triggers/CacheSessionProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/communications/triggers/DeleteCommentsTrigger.php";
@@ -79,6 +83,8 @@ include_once SERVER_ROOT_PATH."pm/classes/notificators/PMChangeLogNotificator.ph
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetWorkItemDatesTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetPlanItemDatesTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearCommentsEvent.php";
+include_once SERVER_ROOT_PATH."pm/classes/model/events/StoreTextChangesEvent.php";
+include_once SERVER_ROOT_PATH."pm/classes/model/events/BusinessActionModifiedEvent.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
@@ -109,7 +115,7 @@ class PMSession extends SessionBase
  	
  	public function configure()
  	{
- 		global $model_factory, $plugins;
+ 		global $model_factory;
  		
         $this->setup($this->project_info);
  		
@@ -126,8 +132,8 @@ class PMSession extends SessionBase
  		$this->getCacheEngine()->setDefaultPath($this->getCacheKey());
         
  		// create the new model factory
- 		$model_factory = new ModelFactoryProject( 
- 				$plugins, 
+ 		$model_factory = new ModelFactoryProject(
+				$model_factory->getPluginsManager(),
  				$this->getCacheEngine(), 
  				$this->buildAccessPolicy($this->getCacheEngine()),
  				null,
@@ -148,7 +154,7 @@ class PMSession extends SessionBase
  		return new AccessPolicyProject( $cache_service, $this );
  	}
  	
- 	public function & buildOriginationService( $cache_service )
+ 	public function buildOriginationService( $cache_service )
  	{
  		return new ModelProjectOriginationService($this, $cache_service);
  	}
@@ -176,8 +182,6 @@ class PMSession extends SessionBase
  	                    new ReleaseMetadataBuilder(),
  	                    new MilestoneMetadataBuilder(),
  	                    new RequestMetadataPermissionsBuilder(),
- 	                    new PMChangeLogNotificator(),
- 	                    new EmailNotificator(),
  	                    new RequestTriggersCommon(),
  	                    new IssueOrderNumTrigger(),
  	                    new TaskOrderNumTrigger(),
@@ -189,13 +193,15 @@ class PMSession extends SessionBase
  	            		new FeatureMetadataBuilder(),
  	            		new StateBusinessActionBuilderTask(),
  	                    new StateBusinessActionBuilderRequest(),
+						new StateBusinessActionBuilderWikiPage(),
  	                    new StateBusinessRuleBuilderIssue(),
  	                    new StateBusinessRuleBuilderTask(),
  	            		new DictionaryBuilderCommon($this),
  	            		new WorkflowBuilderCommon($this),
  	            		new HistoricalObjectsRegistryBuilderCommon(),
  	            		new ProjectTemplateSectionsRegistryBuilderCommon($this),
- 	            		new VersionedObjectRegistryBuilderIssue(),
+						new ProjectTemplateArtefactsBuilderProduct($this),
+						new ProjectTemplateArtefactsBuilderWorkItems($this),
  	            		new TransitionMetadataBuilder(),
 						new QuestionMetadataBuilder(),
  	            		
@@ -230,7 +236,13 @@ class PMSession extends SessionBase
  	            		new ApplyBusinessActionsEventHandler(),
  	            		new ResetTasksEventHandler(),
  	            		new UpdateLeftWorkEventHandler(),
- 	            		new ClearCommentsEvent()
+ 	            		new ClearCommentsEvent(),
+                        new StoreTextChangesEvent($this),
+						new TimeSpentEvent(),
+                        new BusinessActionModifiedEvent(),
+
+                        new PMChangeLogNotificator(),
+                        new EmailNotificator()
  	            )
  	    );
  	}
@@ -414,9 +426,12 @@ class PMSession extends SessionBase
 			
 			$shared_access = count($linked_project_ids) > 0 ? $guest_it->count() > 0 : false;
             
-			$project_roles['guest'] = true;
-			
-			if ( $shared_access ) $project_roles['linkedguest'] = true;
+			if ( $shared_access ) {
+				$project_roles['linkedguest'] = true;
+			}
+			else {
+				$project_roles['guest'] = true;
+			}
 		}
 		
 		$result['roles'] = $project_roles;
@@ -478,13 +493,6 @@ class PMSession extends SessionBase
  	    return $this->part_it;
  	}
  	
- 	function setParticipantIt( $participant_it )
- 	{
- 	    $this->open( $participant_it->getRef('SystemUser') );
- 	    
- 	    $this->part_it = $participant_it;
- 	}
-	 	
  	function getSessionKey( & $project_it = null, & $user_it = null )
  	{
  		if ( !is_object($project_it) ) $project_it = $this->getProjectIt();
@@ -608,7 +616,7 @@ class PMSession extends SessionBase
  	    $vpd_context = is_a($object, 'Metaobject') ? $object->getVpdContext() : $object->get('VPD');
  	    
  	    if ( $vpd_context == '' || $this->getProjectIt()->get('VPD') == $vpd_context )
- 	    { 
+ 	    {
  	        return '/pm/'.$this->getProjectIt()->get('CodeName').'/';
  	    }
  	    

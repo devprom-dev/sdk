@@ -40,7 +40,21 @@ class RequestMetricsPersister extends ObjectSQLPersister
          	 "				) ".
              " 	 		)  ".
              "	) MetricDeliveryDate ";
-             
+
+		 $columns[] =
+			 "  (SELECT CONCAT_WS(':',IFNULL(SUM(a.Capacity),0),GROUP_CONCAT(DISTINCT CAST(a.Task AS CHAR)))
+			      FROM pm_Activity a, pm_Task s
+                 WHERE s.ChangeRequest = t.pm_ChangeRequestId
+			       AND s.pm_TaskId = a.Task) MetricSpentHoursData ";
+
+         $columns[] =
+             "  (SELECT CONCAT_WS(':',IFNULL(SUM(r.Fact),0),GROUP_CONCAT(r.FactTasks))
+			      FROM pm_ChangeRequestLink l, pm_ChangeRequestLinkType lt, pm_ChangeRequest r
+				 WHERE t.pm_ChangeRequestId = l.SourceRequest
+				   AND l.TargetRequest = r.pm_ChangeRequestId
+				   AND l.LinkType = lt.pm_ChangeRequestLinkTypeId
+				   AND lt.ReferenceName = 'implemented') MetricSpentHoursParentData ";
+
          return $columns;
      }
 }

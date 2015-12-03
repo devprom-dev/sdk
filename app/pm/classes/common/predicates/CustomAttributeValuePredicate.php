@@ -18,38 +18,34 @@ class CustomAttributeValuePredicate extends FilterPredicate
  		$object = $this->getObject();
  		
  		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($object);
-
  	 	while ( !$attr_it->end() )
  		{
  			if ( $attr_it->get('ReferenceName') == $this->attribute ) break;
- 		
  			$attr_it->moveNext();
  		}
- 		
  		if ( $attr_it->end() ) return " AND 1 = 2";
  			
- 		if ( $filter == 'none' )
- 		{
- 			return " AND NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
- 				   "			  	  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
- 				   "			    	AND av.CustomAttribute = ".$attr_it->getId()." ) ";
- 		}
- 		
  		$mapper = new ModelDataTypeMapper();
- 				
  		$value_column = $attr_it->getRef('AttributeType')->getValueColumn();
 
+		if ( $filter == 'none' )
+		{
+			return " AND NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
+			"			  	  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
+			"				    AND av.".$value_column." IS NOT NULL".
+			"			    	AND av.CustomAttribute = ".$attr_it->getId()." ) ";
+		}
+
  		$values = array();
- 				
  		foreach( preg_split('/,/',$filter) as $value )
  		{
-	 		$data = array( 
-	 				$this->attribute => $value
-	 		);
-
-	 		$mapper->map( $object, $data );
-
-	 		$values[] = $object->formatValueForDB($this->attribute, $data[$this->attribute]);
+			if ( $value == 'none' ) {
+				$values[] = 'NULL';
+			} else {
+				$data = array( $this->attribute => $value );
+				$mapper->map( $object, $data );
+				$values[] = $object->formatValueForDB($this->attribute, $data[$this->attribute]);
+			}
  		}
  				
  		if ( count($values) == 1 && $values[0] == 'NULL' )

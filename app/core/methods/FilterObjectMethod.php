@@ -102,17 +102,17 @@ class FilterObjectMethod extends FilterWebMethod
 		
 		if ( !is_object($this->it) )
 		{
-	 		$this->it = $this->object->getAll(); 
+			$registry = $this->object->getRegistryDefault();
+			$registry->setPersisters(array());
+	 		$this->it = $registry->getAll();
 		}
 
 		$selected_values = preg_split('/,/', $this->getValue());
-		
 		$selected_value_found = false;
 
 		while ( !$this->it->end() )
 		{
 			$display_name = $this->use_uid ? $uid->getUidTitle($this->it) : ' '.$this->it->getDisplayName();
-			
 			$item_value = $this->it->get($this->idfieldname);
 
 			if ( $item_value == '' ) 
@@ -144,7 +144,7 @@ class FilterObjectMethod extends FilterWebMethod
 		array_walk( $values, function(&$value) {
 				$value = trim($value);
 		});
-		
+
 		if ( $this->has_none )
 		{
 			$values = array_merge( array ( 'none' => $this->none_title ), $values );
@@ -172,7 +172,7 @@ class FilterObjectMethod extends FilterWebMethod
 			
 			$object_it->moveNext();
 		}
-		
+
 		return $values;
 	}
 	

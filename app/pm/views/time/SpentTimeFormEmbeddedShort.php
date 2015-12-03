@@ -28,7 +28,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 		if ( count($lines) > 0 )
 		{
 			echo '<div class="btn-group" style="vertical-align:top;" title="'.text(1874).'">';
-				echo '<div class="btn dropdown-toggle transparent-btn" data-toggle="dropdown" href="#" style="display:table;width:auto;" onclick="javascript:uiShowSpentTime();">';
+				echo '<div class="btn dropdown-toggle transparent-btn spent-short" data-toggle="dropdown" href="#" style="display:table;width:auto;" onclick="javascript:uiShowSpentTime();">';
 					echo '<span class="title" style="display:table-cell;">'.join('<br/>', $lines).'</span>';
 				echo '</div>';
 			echo '</div><br/>';

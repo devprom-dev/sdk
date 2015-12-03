@@ -11,7 +11,7 @@ class AuthenticationFactory
  	
  	function ready()
  	{
- 	    return true;
+ 	    return false;
  	}
  	
  	// to use authentication password is required to be stored in the database  
@@ -28,19 +28,15 @@ class AuthenticationFactory
 
  	function authorize()
  	{
- 		global $model_factory;
-
- 		if ( is_object($this->user) ) return $this->user;
+ 		if ( is_object($this->getUser()) ) return $this->getUser();
  		
-		$user = $model_factory->getObject('cms_User');
-		
-		$user->addFilter( new FilterAttributePredicate('IsAdmin', 'Y') );
-		
-		$user_it = $user->getAll(); 
-		
-		return $user->createCachedIterator( array( array(
-			'IsAdministrator' => $user_it->count() > 0 ? 'N' : 'Y') 
-		));
+		$user = new User();
+		return $user->createCachedIterator( array(
+			array(
+				'IsAdministrator' => $user->getRegistry()->Count(array(new FilterAttributePredicate('IsAdmin', 'Y'))) > 0
+					? 'N' : 'Y')
+			)
+		);
  	}
  	
  	function logoff()
@@ -72,11 +68,21 @@ class AuthenticationFactory
 
  	function validateUser( $user_it )
  	{
- 		return true;
+ 		return false;
  	}
  	
  	function getTitle()
  	{
  		return '';
  	}
+
+    function readOnly()
+    {
+        return false;
+    }
+
+    function writeOnly()
+    {
+        return false;
+    }
 }

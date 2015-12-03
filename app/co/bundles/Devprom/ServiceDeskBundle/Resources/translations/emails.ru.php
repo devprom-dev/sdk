@@ -18,19 +18,32 @@ return array(
     	',
 
 		
-    'issue.updated.subject' => '[I-%id%] Ваша заявка была изменена',
+    'issue.updated.subject' => '[I-%id%] Состояние заявки изменилось',
     'issue.updated.body' =>
 		'
         <p>Здрaвcтвуйте!</p>
-        <p>Ваша заявка "<a href="%link%">%title%</a>" была обновлена сотрудником службы поддержки:</p>
+        <p>Ваша заявка "<a href="%link%">%title%</a>" изменила состояние:</p>
         %changes%
         <br/>
         <hr>
         <p>Вы можете просмотреть детали заявки и оставить свои комментарии по ссылке: <a href="%link%">%link%</a></p>
     	',
 
-		
-    'issue.commented.subject' => '[I-%id%] К вашей заявке оставлен комментарий',
+	'issue.updated-comment.body' =>
+		'
+        <p>Здрaвcтвуйте!</p>
+        <p>Ваша заявка "<a href="%link%">%title%</a>" изменила состояние:</p>
+        %changes%
+        <br/>
+        <p><b>Комментарий:</b></p>
+        <blockquote>%comment%</blockquote>
+        <br/>
+        <hr>
+        <p>Вы можете просмотреть детали заявки и оставить свои комментарии по ссылке: <a href="%link%">%link%</a></p>
+    	',
+
+
+		'issue.commented.subject' => '[I-%id%] К вашей заявке оставлен комментарий',
     'issue.commented.body' =>
 		'
         <p>Здрaвcтвуйте!</p>

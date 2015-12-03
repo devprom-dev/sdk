@@ -62,7 +62,7 @@ class DALMySQL extends DAL
     
     public function GetAffectedRows()
     {
-        return mysql_affected_rows();
+        return mysql_affected_rows($this->connection);
     }
 
     protected function getLogger()

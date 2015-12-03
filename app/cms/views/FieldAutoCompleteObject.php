@@ -46,8 +46,9 @@ class FieldAutoCompleteObject extends Field
  	
  	function setDefault( $value )
  	{
- 		$this->setValue( $value );
- 		
+		if ( $value != '' ) {
+			$this->setValue( $value );
+		}
  		parent::setDefault( $value );
  	}
  	
@@ -109,7 +110,6 @@ class FieldAutoCompleteObject extends Field
  	function getObjectIt()
  	{
  	    $value = $this->getValue();
-
  	    if ( $value == '' ) return $this->getObject()->createCachedIterator(array());
  	    
  	    if ( $this->search_enabled )
@@ -117,13 +117,14 @@ class FieldAutoCompleteObject extends Field
 	 	    $ids = array_filter(preg_split('/[,-]/',$value), function($id) {
 	 	    			return is_numeric($id);
 	 	    		});
-	
-	 	    if (  count($ids) > 0 )
-	 	    {
+
+	 	    if ( count($ids) > 0 ) {
 	 	    	return $this->getObject()->getExact($ids);
 	 	    }
-	 	    else
-	 	    {
+	 	    else {
+				$object_it = $this->getObject()->getExact($value);
+				if ( $object_it->getId() != '' ) return $object_it;
+
 		 	    return $this->getObject()->getRegistry()->Query(
 		 	    		array (
 	    						new FilterAttributePredicate('Caption', $value)
@@ -161,10 +162,8 @@ class FieldAutoCompleteObject extends Field
  	
  	function draw()
  	{
- 		global $model_factory;
-
  		$object = $this->getObject();
-		
+		$project = getSession()->getProjectIt()->get('CodeName');
  		$object_it = $this->getObjectIt();
 
 		if ( $this->readOnly() )
@@ -203,7 +202,7 @@ class FieldAutoCompleteObject extends Field
 			
 			echo '<div class="autocomplete">';
 			 	echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" value="'.$object_it->getDisplayName().'" '.($this->getRequired() ? 'required' : '').' >';
-			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$this->getEncodedValue().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" >';
+			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$this->getEncodedValue().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
 			echo '</div>';
 		}
  	}

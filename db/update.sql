@@ -1573,11 +1573,11 @@ END IF;
 IF NOT check_column_exists('Severity', 'pm_ChangeRequest') THEN
 ALTER TABLE pm_ChangeRequest ADD Severity INTEGER;
 UPDATE pm_ChangeRequest SET Severity = Priority;
+ALTER TABLE ObjectChangeLog MODIFY Author VARCHAR(255);
 END IF;
 
 UPDATE attribute SET AttributeType = 'VARCHAR' WHERE ReferenceName = 'Author' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'ObjectChangeLog');
 
-ALTER TABLE ObjectChangeLog MODIFY Author VARCHAR(255);
 ALTER TABLE Comment MODIFY Caption MEDIUMTEXT;
 
 DELETE FROM pm_ProjectTemplate WHERE FileName = 'ba_ru.xml';
@@ -1609,7 +1609,7 @@ END IF;
 
 INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
 SELECT NOW(), NOW(), NULL,'text(2006)','IsIncidentsUsed','CHAR',NULL,'N','N',e.entityId,90
-  FROM entity e WHERE e.ReferenceName = 'pm_ChangeRequest' 
+  FROM entity e WHERE e.ReferenceName = 'pm_Methodology' 
    AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'IsIncidentsUsed')
  LIMIT 1;
 
@@ -1796,6 +1796,401 @@ IF NOT check_index_exists('I$WikiPageFile$WikiPage') THEN
 CREATE INDEX I$WikiPageFile$WikiPage ON WikiPageFile (WikiPage);
 END IF;
 
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+  SELECT 'Изменения файла', 'pm_ScmFileChanges', 7, 'N', 10, 'N'
+  FROM (SELECT 1) t
+  WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'pm_ScmFileChanges');
+
+IF NOT check_table_exists('pm_ScmFileChanges') THEN
+CREATE TABLE `pm_ScmFileChanges` (
+  `pm_ScmFileChangesId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `OrderNum` int(11) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`pm_ScmFileChangesId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Репозиторий','Repository','REF_pm_SubversionId',NULL,'Y','N',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Repository')
+  LIMIT 1;
+
+IF NOT check_column_exists('Repository', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD Repository INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Коммит','Revision','REF_pm_SubversionRevisionId',NULL,'Y','N',e.entityId,20
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Revision')
+  LIMIT 1;
+
+IF NOT check_column_exists('Revision', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD Revision INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Автор','Author','VARCHAR',NULL,'Y','N',e.entityId,30
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Author')
+  LIMIT 1;
+
+IF NOT check_column_exists('Author', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD Author VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Файл','FilePath','VARCHAR',NULL,'Y','N',e.entityId,40
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'FilePath')
+  LIMIT 1;
+
+IF NOT check_column_exists('FilePath', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD FilePath TEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Добавлено','Inserted','INTEGER',NULL,'Y','N',e.entityId,60
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Inserted')
+  LIMIT 1;
+
+IF NOT check_column_exists('Inserted', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD Inserted INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Удалено','Deleted','INTEGER',NULL,'Y','N',e.entityId,70
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Deleted')
+  LIMIT 1;
+
+IF NOT check_column_exists('Deleted', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD Deleted INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Изменено','Modified','INTEGER',NULL,'Y','N',e.entityId,80
+  FROM entity e WHERE e.ReferenceName = 'pm_ScmFileChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Modified')
+  LIMIT 1;
+
+IF NOT check_column_exists('Modified', 'pm_ScmFileChanges') THEN
+ALTER TABLE pm_ScmFileChanges ADD Modified INTEGER;
+END IF;
+
+delete from attribute where entityId = (select entityId from entity where ReferenceName = 'pm_ChangeRequest') AND ReferenceName = 'IsIncidentsUsed';
+
+IF NOT check_index_exists('I$ObjectChangeLog$SystemUser') THEN
+CREATE INDEX I$ObjectChangeLog$SystemUser ON ObjectChangeLog (SystemUser);
+END IF;
+
+IF NOT check_index_exists('I$pm_Build$Revision') THEN
+CREATE INDEX I$pm_Build$Revision ON pm_Build (BuildRevision);
+END IF;
+
+IF NOT check_index_exists('I$pm_Build$Vpd') THEN
+CREATE INDEX I$pm_Build$Vpd ON pm_Build (VPD);
+END IF;
+
+IF NOT check_index_exists('I$pm_SubversionRevision$RecordCreated') THEN
+CREATE INDEX I$pm_SubversionRevision$RecordCreated ON pm_SubversionRevision (RecordCreated);
+END IF;
+
+IF NOT check_index_exists('I$pm_SubversionRevision$Repository') THEN
+CREATE INDEX I$pm_SubversionRevision$Repository ON pm_SubversionRevision (Repository);
+END IF;
+
+UPDATE entity SET Caption = 'Блокировка пользователя' WHERE ReferenceName = 'cms_BlackList';
+
+IF NOT check_index_exists('I$pm_CalendarInterval$YearMonth') THEN
+CREATE INDEX I$pm_CalendarInterval$YearMonth ON pm_CalendarInterval (IntervalYear, IntervalMonth, Kind);
+END IF;
+
+UPDATE entity SET Caption = 'Уровень декомпозиции' WHERE ReferenceName = 'pm_FeatureType';
+UPDATE attribute SET Caption = 'Входит в' WHERE ReferenceName = 'ParentFeature' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_Function');
+UPDATE attribute SET OrderNum = 27 WHERE ReferenceName = 'Type' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_Function');
+
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+  SELECT 'Изменения текста', 'pm_TextChanges', 7, 'N', 10, 'N'
+  FROM (SELECT 1) t
+  WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'pm_TextChanges');
+
+IF NOT check_table_exists('pm_TextChanges') THEN
+CREATE TABLE `pm_TextChanges` (
+  `pm_TextChangesId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `OrderNum` int(11) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`pm_TextChangesId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Класс объекта','ObjectClass','VARCHAR',NULL,'Y','N',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_TextChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ObjectClass')
+  LIMIT 1;
+
+IF NOT check_column_exists('ObjectClass', 'pm_TextChanges') THEN
+ALTER TABLE pm_TextChanges ADD ObjectClass VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Ид объекта','ObjectId','INTEGER',NULL,'Y','N',e.entityId,20
+  FROM entity e WHERE e.ReferenceName = 'pm_TextChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ObjectId')
+  LIMIT 1;
+
+IF NOT check_column_exists('ObjectId', 'pm_TextChanges') THEN
+ALTER TABLE pm_TextChanges ADD ObjectId INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Автор','Author','REF_cms_UserId',NULL,'Y','N',e.entityId,30
+  FROM entity e WHERE e.ReferenceName = 'pm_TextChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Author')
+  LIMIT 1;
+
+IF NOT check_column_exists('Author', 'pm_TextChanges') THEN
+ALTER TABLE pm_TextChanges ADD Author INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Добавлено','Inserted','INTEGER',NULL,'Y','N',e.entityId,60
+  FROM entity e WHERE e.ReferenceName = 'pm_TextChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Inserted')
+  LIMIT 1;
+
+IF NOT check_column_exists('Inserted', 'pm_TextChanges') THEN
+ALTER TABLE pm_TextChanges ADD Inserted INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Удалено','Deleted','INTEGER',NULL,'Y','N',e.entityId,70
+  FROM entity e WHERE e.ReferenceName = 'pm_TextChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Deleted')
+  LIMIT 1;
+
+IF NOT check_column_exists('Deleted', 'pm_TextChanges') THEN
+ALTER TABLE pm_TextChanges ADD Deleted INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Изменено','Modified','INTEGER',NULL,'Y','N',e.entityId,80
+  FROM entity e WHERE e.ReferenceName = 'pm_TextChanges' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Modified')
+  LIMIT 1;
+
+IF NOT check_column_exists('Modified', 'pm_TextChanges') THEN
+ALTER TABLE pm_TextChanges ADD Modified INTEGER;
+END IF;
+
+IF NOT check_index_exists('I$pm_TextChanges$ObjectClass') THEN
+CREATE INDEX I$pm_TextChanges$ObjectClass ON pm_TextChanges (ObjectClass, VPD);
+END IF;
+
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'text(2073)','AskChangePassword','CHAR','N','N','N',e.entityId,65
+  FROM entity e WHERE e.ReferenceName = 'cms_User' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'AskChangePassword')
+  LIMIT 1;
+
+IF NOT check_column_exists('AskChangePassword', 'cms_User') THEN
+ALTER TABLE cms_User ADD AskChangePassword CHAR(1);
+END IF;
+
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Затрачено, ч.','Fact','FLOAT',NULL,'N','N',e.entityId,200
+  FROM entity e WHERE e.ReferenceName = 'pm_ChangeRequest' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Fact')
+  LIMIT 1;
+
+IF NOT check_column_exists('Fact', 'pm_ChangeRequest') THEN
+ALTER TABLE pm_ChangeRequest ADD Fact FLOAT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Задачи с затратами','FactTasks','TEXT',NULL,'N','N',e.entityId,210
+  FROM entity e WHERE e.ReferenceName = 'pm_ChangeRequest' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'FactTasks')
+  LIMIT 1;
+
+IF NOT check_column_exists('FactTasks', 'pm_ChangeRequest') THEN
+ALTER TABLE pm_ChangeRequest ADD FactTasks TEXT;
+END IF;
+
+
+UPDATE attribute SET Caption = 'Задачи' WHERE ReferenceName = 'Tasks' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_ProjectLink');
+UPDATE attribute SET Caption = 'Пожелания' WHERE ReferenceName = 'Requests' AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_ProjectLink');
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Функции','Features','INTEGER',NULL,'Y','N',e.entityId,26
+  FROM entity e WHERE e.ReferenceName = 'pm_ProjectLink' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Features')
+  LIMIT 1;
+
+IF NOT check_column_exists('Features', 'pm_ProjectLink') THEN
+ALTER TABLE pm_ProjectLink ADD Features INTEGER;
+UPDATE pm_ProjectLink SET Features = Requests;
+END IF;
+
+ALTER TABLE pm_Build MODIFY COLUMN Caption VARCHAR(255);
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Ссылка на комментарий','CommentObject','REF_CommentId','','N','N',e.entityId,26
+  FROM entity e WHERE e.ReferenceName = 'pm_StateObject' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'CommentObject')
+  LIMIT 1;
+
+IF NOT check_column_exists('CommentObject', 'pm_StateObject') THEN
+ALTER TABLE pm_StateObject ADD CommentObject INTEGER;
+END IF;
+
+DELETE FROM attribute WHERE ReferenceName = 'UsedInPlanning';
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+  SELECT 'Привязка типа задачи к состоянию', 'pm_TaskTypeState', 7, 'N', 10, 'N'
+    FROM (SELECT 1) t WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'pm_TaskTypeState');
+
+IF NOT check_table_exists('pm_TaskTypeState') THEN
+CREATE TABLE `pm_TaskTypeState` (
+  `pm_TaskTypeStateId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `OrderNum` int(11) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`pm_TaskTypeStateId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Тип задачи','TaskType','REF_pm_TaskTypeId',NULL,'Y','N',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_TaskTypeState' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'TaskType')
+  LIMIT 1;
+
+IF NOT check_column_exists('TaskType', 'pm_TaskTypeState') THEN
+ALTER TABLE pm_TaskTypeState ADD TaskType INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Состояние','State','VARCHAR',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_TaskTypeState' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'State')
+  LIMIT 1;
+
+IF NOT check_column_exists('State', 'pm_TaskTypeState') THEN
+ALTER TABLE pm_TaskTypeState ADD State VARCHAR(128);
+END IF;
+
+UPDATE attribute SET DefaultValue = NULL WHERE ReferenceName IN ('Fact','FactTasks') AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_ChangeRequest');
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Состояние','State','VARCHAR','inprogress','N','Y',e.entityId,40
+  FROM entity e WHERE e.ReferenceName = 'pm_Build' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'State')
+  LIMIT 1;
+
+IF NOT check_column_exists('State', 'pm_Build') THEN
+ALTER TABLE pm_Build ADD State VARCHAR(128);
+END IF;
+
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Начать','PlannedStartDate','DATE',NULL,'N','N',e.entityId,100
+  FROM entity e WHERE e.ReferenceName = 'pm_Task' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'PlannedStartDate')
+  LIMIT 1;
+
+IF NOT check_column_exists('PlannedStartDate', 'pm_Task') THEN
+ALTER TABLE pm_Task ADD PlannedStartDate DATE;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Завершить к','PlannedFinishDate','DATE',NULL,'N','N',e.entityId,110
+  FROM entity e WHERE e.ReferenceName = 'pm_Task' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'PlannedFinishDate')
+  LIMIT 1;
+
+IF NOT check_column_exists('PlannedFinishDate', 'pm_Task') THEN
+ALTER TABLE pm_Task ADD PlannedFinishDate DATE;
+END IF;
+
+UPDATE entity SET Caption = 'Приложение' WHERE ReferenceName IN ('WikiPageFile','BlogPostFile');
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Внешний автор','Customer','INTEGER',NULL,'N','N',e.entityId,200
+  FROM entity e WHERE e.ReferenceName = 'pm_ChangeRequest' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Customer')
+  LIMIT 1;
+
+IF NOT check_column_exists('Customer', 'pm_ChangeRequest') THEN
+ALTER TABLE pm_ChangeRequest ADD Customer INTEGER;
+UPDATE pm_ChangeRequest r SET r.Customer = (SELECT MAX(u.cms_ExternalUserId) FROM cms_ExternalUser u, pm_Watcher w WHERE u.email = w.Email AND w.SystemUser IS NULL AND w.ObjectId = r.pm_ChangeRequestId);
+UPDATE pm_ChangeRequest SET DeliveryDate = NULL;
+END IF;
+
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+  SELECT 'Метрика проекта', 'pm_ProjectMetric', 7, 'N', 10, 'N'
+  FROM (SELECT 1) t WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'pm_ProjectMetric');
+
+IF NOT check_table_exists('pm_ProjectMetric') THEN
+CREATE TABLE `pm_ProjectMetric` (
+  `pm_ProjectMetricId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `OrderNum` int(11) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`pm_ProjectMetricId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Проект','Project','REF_pm_ProjectId',NULL,'Y','N',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_ProjectMetric' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Project')
+  LIMIT 1;
+
+IF NOT check_column_exists('Project', 'pm_ProjectMetric') THEN
+ALTER TABLE pm_ProjectMetric ADD Project INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Метрика','Metric','VARCHAR',NULL,'Y','N',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_ProjectMetric' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Metric')
+  LIMIT 1;
+
+IF NOT check_column_exists('Metric', 'pm_ProjectMetric') THEN
+ALTER TABLE pm_ProjectMetric ADD Metric VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Значение метрики','MetricValue','FLOAT',NULL,'N','N',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_ProjectMetric' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'MetricValue')
+  LIMIT 1;
+
+IF NOT check_column_exists('MetricValue', 'pm_ProjectMetric') THEN
+ALTER TABLE pm_ProjectMetric ADD MetricValue FLOAT;
+END IF;
+
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Бейзлайн','Baseline','REF_cms_SnapshotId',NULL,'N','N',e.entityId,100
+  FROM entity e WHERE e.ReferenceName = 'pm_ChangeRequestTrace' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Baseline')
+  LIMIT 1;
+
+IF NOT check_column_exists('Baseline', 'pm_ChangeRequestTrace') THEN
+ALTER TABLE pm_ChangeRequestTrace ADD Baseline INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+   SELECT NOW(), NOW(), NULL,'Бейзлайн','SourceBaseline','REF_cms_SnapshotId',NULL,'N','N',e.entityId,100
+   FROM entity e WHERE e.ReferenceName = 'WikiPageTrace' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'SourceBaseline')
+   LIMIT 1;
+
+IF NOT check_column_exists('SourceBaseline', 'WikiPageTrace') THEN
+ALTER TABLE WikiPageTrace ADD SourceBaseline INTEGER;
+END IF;
+
+UPDATE co_ScheduledJob SET OrderNum = 500 WHERE ClassName = 'processcheckpoints'  AND OrderNum IS NULL;
+UPDATE co_ScheduledJob SET OrderNum = 95 WHERE ClassName = 'processdigest' AND OrderNum IS NULL;
+UPDATE co_ScheduledJob SET OrderNum = 1 WHERE ClassName = 'processbackup';
+UPDATE co_ScheduledJob SET OrderNum = 400 WHERE ClassName = 'support/scanmailboxes';
+UPDATE co_ScheduledJob SET OrderNum = 410 WHERE ClassName = 'processrevisionlog';
+UPDATE co_ScheduledJob SET OrderNum = 110 WHERE ClassName = 'processstatistics';
+
+DELETE FROM pm_ObjectAccess WHERE LCASE(ObjectClass) = 'projectpage' AND NOT EXISTS (SELECT 1 FROM WikiPage p WHERE p.WikiPageId = pm_ObjectAccess.ObjectId);
+UPDATE attribute SET Caption = 'Номер' WHERE ReferenceName = 'SectionNumber';
+
 --
 --
 --
@@ -1808,4 +2203,5 @@ INSERT INTO cms_Update(Caption,RecordCreated,RecordModified) VALUES(TRIM(update_
 END$$
 
 DELIMITER ;
+
 

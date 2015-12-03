@@ -9,22 +9,24 @@ class UpdateList extends PageList
 	{
 	    $it = parent::getIterator();
 	    
-	    $data = file_get_contents(DOCUMENT_ROOT.'conf/new-updates.json');
-	    
+	    $data = file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE);
 	    if ( $data == '' ) return $it;
 
-	    $data = JsonWrapper::decode($data);
-	    
+	    $data = CheckpointUpdatesAvailable::getNewUpdatesOnly(JsonWrapper::decode($data));
 	    if ( count($data) < 1 ) return $it;
 
 	    $rowset = $it->getRowset();
-	    
 	    foreach( $data as $update_info )
 	    {
+			if ( $update_info['description'] != '' ) $update_info['description'] = '<br/>'.$update_info['description'];
+
 	        array_unshift($rowset, array(
 	            'cms_UpdateId' => 0,
 	            'Caption' => $update_info['version'],
-	            'Description' => IteratorBase::utf8towin($update_info['description']),
+	            'Description' =>
+					(defined('UPDATES_URL')
+						? str_replace('%1', UPDATES_URL, text(2065))
+						: '').$update_info['description'],
 	            'DownloadUrl' => $update_info['download_url']
 	        ));
 	    }	   

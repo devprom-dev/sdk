@@ -19,6 +19,11 @@ class CheckpointEntryBase
         return '';
     }
 
+    function getUrl()
+    {
+        return '/admin/checks.php';
+    }
+
     function getValue()
     {
         return '';
@@ -60,7 +65,7 @@ class CheckpointEntryBase
  		{
  			if ( !is_object($this->logger) )
  			{
- 				$this->logger = Logger::getLogger('System');
+ 				$this->logger = Logger::getLogger('Commands');
  			}
  			
  			return $this->logger;

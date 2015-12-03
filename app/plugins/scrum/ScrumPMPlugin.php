@@ -6,6 +6,7 @@ include "classes/VelocityReportsBuilder.php";
 include "classes/events/ScrumReportedEvent.php";
 include "classes/notificators/ScrumChangeNotificator.php";
 include "classes/predicates/ProjectScrumPredicate.php";
+include "classes/widgets/ScrumTourScriptBuilder.php";
 
 class ScrumPMPlugin extends PluginPMBase
 {
@@ -21,25 +22,26 @@ class ScrumPMPlugin extends PluginPMBase
 
     function getModules()
     {
-        if ( !$this->checkEnabled() ) return array();
+		$modules = array (
+			'velocitychart' => array(
+				'includes' => array( 'scrum/views/VelocityPage.php' ),
+				'classname' => 'VelocityPage',
+				'title' => text('scrum9'),
+				'AccessEntityReferenceName' => 'pm_Version',
+				'area' => FUNC_AREA_MANAGEMENT
+			)
+		);
+
+        if ( !$this->checkEnabled() ) return $modules;
         	
-        $modules = array (
-                'meetings' => array(
-                    'includes' => array( 'scrum/views/ScrumPage.php' ),
-                    'classname' => 'ScrumPage',
-                    'title' => text('scrum1'),
-                	'description' => text('scrum18'),
-                    'AccessEntityReferenceName' => 'pm_Scrum',
-                	'area' => FUNC_AREA_MANAGEMENT
-                ),
-                'velocitychart' => array(
-                    'includes' => array( 'scrum/views/VelocityPage.php' ),
-                    'classname' => 'VelocityPage',
-                    'title' => text('scrum9'),
-                    'AccessEntityReferenceName' => 'pm_Version',
-                	'area' => FUNC_AREA_MANAGEMENT
-                )
-        );
+        $modules['meetings'] = array(
+			'includes' => array( 'scrum/views/ScrumPage.php' ),
+			'classname' => 'ScrumPage',
+			'title' => text('scrum1'),
+			'description' => text('scrum18'),
+			'AccessEntityReferenceName' => 'pm_Scrum',
+			'area' => FUNC_AREA_MANAGEMENT
+		);
 
         return $modules;
     }
@@ -51,7 +53,8 @@ class ScrumPMPlugin extends PluginPMBase
                 new VelocityReportsBuilder(),
                 new EstimationStrategyScrumBuilder(),
                 new ScrumChangeNotificator(),
-                new ScrumReportedEvent()
+                new ScrumReportedEvent(),
+				new ScrumTourScriptBuilder(getSession())
         );
     }
 
@@ -79,9 +82,9 @@ class ScrumPMPlugin extends PluginPMBase
 						array(new ProjectScrumPredicate())
 					)->fieldToArray('VPD');
 			}
-			
-			$this->method_toepic = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature')); 
+			$this->method_toepic = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
 		}
+
 		if ( !in_array($object_it->get('VPD'), $this->scrum_vpds) || $object_it->IsFinished() ) return array();
 		return array (
 				array (

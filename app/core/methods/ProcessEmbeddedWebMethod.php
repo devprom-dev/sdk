@@ -25,27 +25,24 @@ class ProcessEmbeddedWebMethod extends WebMethod
             }
          }
  		 
- 		 if( $file_field == '' )
- 		 {
- 		     foreach( $indexes as $form_index )
- 		     {
-     		     $class_name = strtolower($_REQUEST['embedded'.$form_index]);
-     		     
-     		     if ( $class_name == '' ) continue;
-     		     
-    	  		 switch ( $class_name )
-         		 {
-         		 	case 'wikipagefile':
-         		 	case 'blogpostfile':
-         		 	    $file_field = 'Content';
-         		 		break;
-         		 		
-         		 	default:
-         		 		$file_field = 'File';
-         		 		break;
-         		 }
- 		     }
- 		 }
+		 foreach( $indexes as $form_index )
+		 {
+			 $class_name = strtolower($_REQUEST['embedded'.$form_index]);
+
+			 if ( $class_name == '' ) continue;
+
+			 switch ( $class_name )
+			 {
+				case 'wikipagefile':
+				case 'blogpostfile':
+					$file_field = 'Content';
+					break;
+
+				default:
+					$file_field = 'File';
+					break;
+			 }
+		 }
 
  		 $fields = array_keys($_FILES);
  		 
@@ -135,15 +132,6 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 		foreach ( $fields as $field )
 	 		{
 	 		    $attrs[$field] = $this->decode($_REQUEST[$prefix.$field]);
-
-	 			if ( $object->IsReference($field) && $attrs[$field] != '' && $field != 'Tag' )
-	 			{
-	 			    $ref = $object->getAttributeObject($field);
-
-	 			    $ref_it = $ref->getExact( $attrs[$field] );
-	 			    
-	 			    $attrs[$field] = $ref_it->getId(); 
-	 			}
 	 		}
 
 	 		if ( is_object($anchor_it) )
@@ -181,9 +169,9 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 			$mapper = new ModelDataTypeMapper();
 	 			
 	 			$mapper->map( $object, $attrs );
-	 		    
+
 	 		    $it->setData( $attrs );
-	 		    			 	
+
 	 			$result['id'] = 0; 
 	 		}
 

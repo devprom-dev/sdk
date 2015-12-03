@@ -16,26 +16,19 @@ class EstimationNoneStrategy extends EstimationStrategy
 	
 	function getEstimation( $object = null, $estimation = 'Estimation', $group = 'Project' )
 	{
-		global $model_factory;
-		
-		if ( !is_object($object) ) 
-			$object = $model_factory->getObject('pm_ChangeRequest'); 
-			
+		if ( !is_object($object) ) $object = getFactory()->getObject('pm_ChangeRequest');
+		$estimation = 'Priority';
+
 		$sum_aggregate = new AggregateBase( $group, $estimation, $this->getEstimationAggregate() );
-		
 		$object->addAggregate( $sum_aggregate );
-		
 		$request_it = $object->getAggregated();
-		
+
 		$data = array();
-		
 		while ( !$request_it->end() )
 		{
 		    $data[$request_it->get( $sum_aggregate->getAttribute() )] = $request_it->get( $sum_aggregate->getAggregateAlias() );
-		     
 		    $request_it->moveNext();
 		}
-		
 		return $data;
 	}
 	
@@ -66,7 +59,7 @@ class EstimationNoneStrategy extends EstimationStrategy
 		
 		if ( (!$methodology_it->HasPlanning() || $object instanceof Iteration) && $methodology_it->HasFixedRelease() )
 		{
-			return text(1118);
+			return text(1117);
 		}
 		else
 		{

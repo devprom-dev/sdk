@@ -1,55 +1,66 @@
 <?php
+include_once "FunctionalAreaMenuProjectBuilder.php";
 
-include_once "FunctionalAreaMenuMyProjectsBuilder.php";
-
-class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuMyProjectsBuilder
+class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilder
 {
     public function build( FunctionalAreaMenuRegistry & $set )
     {
+		$this->report = getFactory()->getObject('PMReport');
+
  	    $menus = parent::build($set);
  	    
-		$module = getFactory()->getObject('Module');
-		$report = getFactory()->getObject('PMReport');
-		
 		$items = array();
-		
-		$module_it = $module->getExact('issues-board');
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-			$items[] = $report->getExact('issuesboardcrossproject')->buildMenuItem();
-		}
-
-        $task_chart_it = $module->getExact('tasks-board');
-        if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
-        {
-			$items[] = $report->getExact('tasksboardcrossproject')->buildMenuItem();
-        }
-		
-		$item = $report->getExact('project-blog')->buildMenuItem();
+		$items['issuesboard'] = $this->report->getExact('issuesboardcrossproject')->buildMenuItem();
+		$items[] = $this->report->getExact('discussions')->buildMenuItem();
+		$item = $this->report->getExact('project-blog')->buildMenuItem();
 		$item['name'] = text(2000);
 		$items[] = $item;
-		
 		$menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
-		
-		$this->buildResourcesFolder($menus);
-		
+
+		// plan items
+		$this->buildPlansFolder($menus);
+
+		// documents items
+		$this->buildDocumentsFolder( $menus );
+
+		// reports items
+		$this->buildReportsFolder( $menus );
+
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
     }
 
-	protected function createCustomReports()
-    {
-    	if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return parent::createCustomReports();
-    	// skip creating custom reports like My Tasks, etc.
-    }
+	protected function buildDocumentsFolder( &$menus )
+	{
+		$menus['documents'] = array (
+				'name' => translate('Документы'),
+				'uid' => 'documents',
+				'items' => array()
+		);
+	}
 
-    protected function buildResourcesFolder( &$menus )
+    protected function buildPlansFolder( &$menus )
     {
     	$menus['resources'] = array (
- 	        'name' => translate('Ресурсы'),
+ 	        'name' => translate('Планы'),
             'uid' => 'resources',
             'items' => array(
-            				getFactory()->getObject('PMReport')->getExact('activitiesreport')->buildMenuItem('group=SystemUser')
-    				   )
+					$this->report->getExact('projectplan')->buildMenuItem(),
+					$this->report->getExact('tasksboardcrossproject')->buildMenuItem()
+			)
  	    );
     }
+
+	protected function buildReportsFolder( &$menus )
+	{
+		$menus['reports'] = array (
+				'name' => translate('Отчеты'),
+				'uid' => 'reports',
+				'items' => array(
+						'activitiesreport' => $this->report->getExact('activitiesreport')->buildMenuItem('group=SystemUser'),
+						'project-log' => $this->report->getExact('project-log')->buildMenuItem()
+				)
+		);
+	}
+
+	private $report = null;
 }

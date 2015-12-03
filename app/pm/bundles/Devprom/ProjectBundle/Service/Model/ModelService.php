@@ -21,29 +21,24 @@ class ModelService
 
 		foreach( $data as $key => $value )
 		{
-			if ( is_array($value) && $object->IsReference($key) )
-			{
-				// resolve subobjects into references
+			if ( is_array($value) && $object->IsReference($key) ) {
+				// resolve embedded objects into references
 				$ref = $object->getAttributeObject($key);
 				$data[$key] = $ref->getRegistry()->Query($this->buildSearchQuery($ref, $value))->getId(); 
 			}
-			else
-			{
-				if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' )
-				{
+			else {
+				if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' ) {
 					unset($data[$key]); continue;
 				}
 			}
 		}
 
-		if ( $id != '' )
-		{
+		if ( $id != '' ) {
 			$data[$object->getEmptyIterator()->getIdAttribute()] = $id;
 		}
 		
 		// validate field values
 		$message = $this->validator_service->validate( $object, $data );
-		
 		if ( $message != '' ) throw new \Exception($message);
 		
 		// remove client data
@@ -54,9 +49,16 @@ class ModelService
 		$this->mapping_service->map($object, $data);
 
 		// check an object exists already (search by Id or alternative key)
+		$key_filters = array();
+		foreach( $object->getAttributesByGroup('alternative-key') as $key ) {
+			$key_filters[] = new \FilterAttributePredicate($key, $data[$key]);
+		}
+
 		$object_it = $id != ''
 				? $object->getRegistry()->Query(array(new \FilterInPredicate($id)))
-				: $object->getEmptyIterator();
+				: (count($key_filters) > 0
+						? $object->getRegistry()->Query($key_filters)
+						: $object->getEmptyIterator());
 
 		if ( $object_it->getId() < 1 )
 		{

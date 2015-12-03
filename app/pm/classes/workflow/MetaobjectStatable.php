@@ -215,18 +215,12 @@ class MetaobjectStatable extends Metaobject
 	//----------------------------------------------------------------------------------------------------------
 	function add_parms( $parms )
 	{
-		global $model_factory;
-		
 		$state_it = $this->cacheStates();
-		
-		if ( $state_it->getId() != '' && $parms['State'] == '' )
-		{
+		if ( $state_it->getId() != '' && $parms['State'] == '' ) {
 			$parms['State'] = $state_it->get('ReferenceName');
 		}
 		
-		
-		if ( $state_it->getId() != '' && array_key_exists('State', $parms) && $parms['State'] == '' )
-		{
+		if ( $state_it->getId() != '' && array_key_exists('State', $parms) && $parms['State'] == '' ) {
 			throw new Exception('Unable assing empty state to the object');
 		}
 		
@@ -316,15 +310,29 @@ class MetaobjectStatable extends Metaobject
 		
 		$parms['PersistStateDuration'] = true;
 		
-		$parms['StateDuration'] = $parms['StateDuration'] == '' ? $object_it->get('StateDuration') : $parms['StateDuration']; 
-		
+		$parms['StateDuration'] = $parms['StateDuration'] == '' ? $object_it->get('StateDuration') : $parms['StateDuration'];
+
+		$comment_id = '';
+		if ( $parms['TransitionComment'] != '' )
+		{
+			$comment = getFactory()->getObject('Comment');
+			$comment->setNotificationEnabled(false);
+			$comment_id = $comment->add_parms(
+				array (
+					'ObjectId' => $object_it->getId(),
+					'ObjectClass' => get_class($this),
+					'AuthorId' => getSession()->getUserIt()->getId(),
+					'Caption' => $parms['TransitionComment']
+				)
+			);
+		}
 		$parms['StateObject'] = getFactory()->getObject('pm_StateObject')->add_parms( 
 				array ( 
 						'ObjectId' => $object_it->getId(),
 						'ObjectClass' => $this->getStatableClassName(),
 						'State' => $state_it->getId(),
 						'Transition' => $parms['Transition'],
-						'Comment' => $parms['TransitionComment'],
+						'CommentObject' => $comment_id,
 						'Author' => getSession()->getUserIt()->getId(),
 						'VPD' => $object_it->get('VPD')
 				)

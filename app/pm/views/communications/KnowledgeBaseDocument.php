@@ -24,6 +24,10 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	{
 		return 1;
 	}
+
+	function getSectionName() {
+		return translate('Страница');
+	}
 	
 	function getList( $type = '', $iterator = null )
 	{
@@ -39,44 +43,21 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		$filters = array();
 		
 		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
-
 		$filters[] = new ViewWikiTagWebMethod( $this->getObject() );
-		
-		$filters[] = new FilterAutoCompleteWebMethod( 
+		$filters[] = new FilterAutoCompleteWebMethod(
 				$this->getObject()->getAttributeObject('Author'), 
 				translate($this->getObject()->getAttributeUserName( 'Author' )) 
 			);
-		
+		$filters[] = new FilterTextWebMethod( text(2087), 'search', 'width:380px;' );
+
 		return $filters;
 	}
 
 	function getFiltersDefault()
 	{
-		return array('tag');
+		return array('tag', 'search');
 	}
 	
-	function getNewActions()
-	{
-		if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return array();
-		
-		$actions = array();
-		
-		$url = $this->object->getPageNameObject();
-		
-		if ( $this->getDocumentIt()->getId() > 0 )
-		{
-			$url .= '&ParentPage='.$this->getDocumentIt()->getId();
-		}
-		
-		$actions['create'] = array( 
-	        'name' => translate('Раздел'),
-			'url' => $url,
-			'uid' => 'create'
-		);
-		
-		return $actions;
-	}
-
 	function getTraceActions()
 	{
 		$actions = parent::getTraceActions();

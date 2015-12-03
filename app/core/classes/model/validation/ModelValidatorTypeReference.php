@@ -13,7 +13,7 @@ class ModelValidatorTypeReference extends ModelValidatorType
 	{
 		$ids = array_filter(preg_split('/,/', $value), function( $value ) 
 		{
-			return strval(intval($value)) == $value;
+			return trim($value) != '';
 		});
 
 		return $value == '' || count($ids) > 0;

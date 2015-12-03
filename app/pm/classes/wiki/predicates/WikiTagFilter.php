@@ -4,7 +4,7 @@ class WikiTagFilter extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		$ids = array_filter(preg_split('/,/', $filter), function($value) {
+ 		$ids = array_filter(preg_split('/[,-]/', $filter), function($value) {
  			return $value >= 0; 
  		});
  		

@@ -23,7 +23,7 @@ class PluginsFactory
  		$this->buildPlugins();
  	}
  	
- 	private function buildPlugins()
+ 	function buildPlugins()
  	{
  		$classes = array_filter( get_declared_classes(), function($value) 
  		{

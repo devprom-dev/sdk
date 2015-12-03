@@ -31,5 +31,6 @@ $plugin_text_array = array
  	27 => 'Use the chart to control the duration of the tasks (cycle time), which should decrease with time. Columns correspond to the duration of each task. By clicking on a column you can go to the view of the selected task. The blue line corresponds to the average value of the cycle-time tasks for the week.',
     28 => 'Tasks types',
  	29 => 'On Kanban board it is shown the limits of work (WIP) per each column. If the limit is exceeded, the name of the column will be highlighted in red. Limits are configured on a form of the corresponding status in the settings of the tasks workflow.',
-	30 => 'The use of Cumulative Flow Diagram is very simple. On a vertical axis we have a number of tasks. On a horizontal one we have a timeline. The curves are basically a number of items in any possible state shown in a time perspective. The whole trick is that they are shown cumulatively.',		
+	30 => 'The use of Cumulative Flow Diagram is very simple. On a vertical axis we have a number of tasks. On a horizontal one we have a timeline. The curves are basically a number of items in any possible state shown in a time perspective. The whole trick is that they are shown cumulatively.',
+	31 => 'for demo puproses'
 );

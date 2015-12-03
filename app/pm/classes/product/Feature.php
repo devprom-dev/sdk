@@ -4,6 +4,7 @@ include "FeatureIterator.php";
 include "predicates/FeatureStateFilter.php";
 include "predicates/FeatureStageFilter.php";
 include "predicates/FeatureRootFilter.php";
+include "predicates/FeatureParentTransitiveFilter.php";
 include "sorts/SortFeatureStartClause.php";
 include "sorts/SortFeatureHierarchyClause.php";
 

@@ -6,14 +6,13 @@ class ReportsCommonBuilder extends ReportsBuilder
 {
     public function build( ReportRegistry & $object )
     {
-   		global $model_factory;
-
         $areas = getFactory()->getObject('ModuleCategory')->getAll()->fieldToArray('ReferenceName');
         $qa_area = in_array('qa', $areas) ? 'qa' : FUNC_AREA_MANAGEMENT;
 
-        $module = $model_factory->getObject('Module');
-		$request = $model_factory->getObject('pm_ChangeRequest');
-		
+        $module = getFactory()->getObject('Module');
+		$request = getFactory()->getObject('pm_ChangeRequest');
+		$bug_type = getFactory()->getObject('RequestType')->getByRef('ReferenceName', 'bug')->get('ReferenceName');
+
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		$project_it = getSession()->getProjectIt();
 		
@@ -32,18 +31,6 @@ class ReportsCommonBuilder extends ReportsBuilder
 				        'module' => $issues_list_it->getId() )
 			);
 			
-			if ( !$methodology_it->HasTasks() )
-			{
-				$object->addReport(
-					array ( 'name' => 'myissues',
-							'title' => translate('Мои пожелания'),
-					        'description' => text(1407),
-							'category' => FUNC_AREA_MANAGEMENT,
-					        'query' => 'state='.join(',',$nonterminal).'&owner=user-id',
-					        'module' => $issues_list_it->getId() )
-				);
-			}
-			
 			$object->addReport(
 				array ( 'name' => 'resolvedissues',
 						'title' => text(1249),
@@ -58,7 +45,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				        'title' => text(2043),
 						'description' => text(781),
 						'category' => FUNC_AREA_MANAGEMENT,
-				        'query' => 'type=bug&modifiedafter=last-month',
+				        'query' => 'type='.$bug_type.'&modifiedafter=last-month',
 				        'module' => $issues_list_it->getId() )
 			);
 
@@ -98,8 +85,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 		
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
-			if ( !$project_it->IsPortfolio() )
-			{
+			if ( !$project_it->IsPortfolio() && $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) {
 				$object->addReport(
 					array ( 'name' => 'issuesboard',
 					        'description' => text(1394),
@@ -161,7 +147,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'defectsconvergencechart',
 						'title' => text(996),
 				        'description' => text(1402),
-				        'query' => 'group=history&aggby=State&type=bug&state='.join(',',$convergence_states).'&infosections=none&modifiedafter=last-month',
+				        'query' => 'group=history&aggby=State&type='.$bug_type.'&state='.join(',',$convergence_states).'&infosections=none&modifiedafter=last-month',
 				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
@@ -171,7 +157,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'defectsreopenedchart',
 						'title' => text(1004),
 				        'description' => text(1401),
-				        'query' => 'group=history&aggby=LastTransition&type=bug&infosections=none&state=all&modifiedafter=last-month&transition='.join(',',$this->getReopenTransitions($request)),
+				        'query' => 'group=history&aggby=LastTransition&type='.$bug_type.'&infosections=none&state=all&modifiedafter=last-month&transition='.join(',',$this->getReopenTransitions($request)),
 				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
@@ -201,7 +187,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				array ( 'name' => 'issuesbytesterschart',
 						'title' => text(998),
 				        'description' => text(1403),
-				        'query' => 'group=Author&aggby=Priority&infosections=none&aggregator=none&type=bug&state=all&modifiedafter=last-month',
+				        'query' => 'group=Author&aggby=Priority&infosections=none&aggregator=none&type='.$bug_type.'&state=all&modifiedafter=last-month',
 				        'category' => $qa_area,
 						'type' => 'chart',
 				        'module' => $issues_chart_it->getId() )
@@ -212,7 +198,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                     'name' => 'bugstable',
 					'title' => text(2046),
 					'description' => text(2047),
-					'query' => 'group=State&aggby=Priority&infosections=none&aggregator=none&type=bug&state=all',
+					'query' => 'group=State&aggby=Priority&infosections=none&aggregator=none&type='.$bug_type.'&state=all',
 					'category' => $qa_area,
 					'type' => 'chart',
 					'module' => $issues_chart_it->getId() )
@@ -223,7 +209,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 					'name' => 'reportedperweek',
 					'title' => text(2051),
 					'description' => text(2052),
-					'query' => 'group=WeekCreated&aggby=Author&infosections=none&aggregator=none&type=bug&state=all',
+					'query' => 'group=WeekCreated&aggby=Author&infosections=none&aggregator=none&type='.$bug_type.'&state=all',
 					'category' => $qa_area,
 					'type' => 'chart',
 					'module' => $issues_chart_it->getId() )
@@ -291,29 +277,24 @@ class ReportsCommonBuilder extends ReportsBuilder
 		}
 
     	$task = getFactory()->getObject('pm_Task');
-    	
+		$terminal_states = $task->getTerminalStates();
+
 		$task_list_it = $module->getExact('tasks-list');
-	    
 		if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_list_it) )
 		{
-    		$states = $task->getNonTerminalStates();
-    		
+
+			$query_common = '';
+			if ( $methodology_it->HasPlanning() ) {
+				$query_common .= '&group=Release';
+			}
+
 		    $object->addReport(
 				array ( 'name' => 'currenttasks',
 						'title' => text(530),
 				        'description' => text(1417),
-				        'query' => 'iteration=all&taskstate=all',
+				        'query' => $query_common.'&iteration=all&taskstate=all',
 				        'category' => FUNC_AREA_MANAGEMENT,
 				        'module' => $task_list_it->getId() )
-			);
-			
-			$object->addReport( array ( 
-			        'name' => 'mytasks',
-			        'title' => translate('Мои задачи'),
-			        'description' => text(1406),
-			        'query' => 'taskassignee=user-id',
-			        'category' => FUNC_AREA_MANAGEMENT,
-				    'module' => $task_list_it->getId() )
 			);
 			
 			$object->addReport(
@@ -326,8 +307,16 @@ class ReportsCommonBuilder extends ReportsBuilder
 			);
 		}
 
-        $task_chart_it = $module->getExact('tasks-board');
+		$object->addReport( array (
+				'name' => 'mytasks',
+				'title' => translate('Мои задачи'),
+				'description' => text(1406),
+				'query' => $query_common.'&taskassignee=user-id',
+				'category' => FUNC_AREA_MANAGEMENT,
+				'module' => $task_list_it->getId() )
+		);
 
+		$task_chart_it = $module->getExact('tasks-board');
         if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
         {
         	if ( !$project_it->IsPortfolio() )
@@ -364,7 +353,6 @@ class ReportsCommonBuilder extends ReportsBuilder
         }
         
  	    $task_chart_it = $module->getExact('tasks-trace');
-
         if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
         {
 			$object->addReport(
@@ -377,7 +365,6 @@ class ReportsCommonBuilder extends ReportsBuilder
         }
         
         $task_chart_it = $module->getExact('tasks-chart');
-
         if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
         {
 			$object->addReport(
@@ -440,6 +427,21 @@ class ReportsCommonBuilder extends ReportsBuilder
 				        'module' => $task_chart_it->getId() )
 			);
 
+			if ( $methodology_it->TaskEstimationUsed() )
+			{
+				$object->addReport(
+					array(
+						'name' => 'tasksplanbyfact',
+						'title' => text(2063),
+						'category' => FUNC_AREA_MANAGEMENT,
+						'query' => 'chartdata=hide&chartlegend=hide&aggregator=AVG&group=FinishDate&aggby=PlanFact&taskstate=' .
+										join(',', $terminal_states) . '&infosections=none&modifiedafter=last-month',
+						'type' => 'chart',
+						'module' => $task_chart_it->getId()
+					)
+				);
+			}
+
 			if ( $methodology_it->HasPlanning() )
 			{
 				$object->addReport(
@@ -470,7 +472,7 @@ class ReportsCommonBuilder extends ReportsBuilder
    		        array ( 'name' => 'navigation-settings',
    		                'title' => text(1326),
    		                'category' => FunctionalAreaMenuSettingsBuilder::AREA_UID,
-   		                'module' => $module->getExact('navigation-settings')->getId() )
+   		                'module' => $module->getExact('menu')->getId() )
    		);
 		
 		$module_it = $module->getExact('project-knowledgebase');
@@ -567,14 +569,13 @@ class ReportsCommonBuilder extends ReportsBuilder
 			);
 		}
 
-		$module_it = $module->getExact('features-trace');
+		$module_it = $module->getExact('attachments');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
 			$object->addReport(
-				array ( 'name' => 'featurestrace',
-				        'description' => text(1390),
-						'category' => FUNC_AREA_MANAGEMENT,
-				        'module' => $module_it->getId() )
+					array ( 'name' => 'attachments',
+							'category' => FUNC_AREA_MANAGEMENT,
+							'module' => $module_it->getId() )
 			);
 		}
     }

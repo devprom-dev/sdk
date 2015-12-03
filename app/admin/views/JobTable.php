@@ -11,11 +11,7 @@ class JobTable extends PageTable
 
 	function getSortDefault( $sort_parm )
 	{
-		if ( $sort_parm == 'sort' )
-		{
-			return 'OrderNum';
-		}
-
+		if ( $sort_parm == 'sort' ) return 'OrderNum';
 		return parent::getSortDefault( $sort_parm );
 	}
 }

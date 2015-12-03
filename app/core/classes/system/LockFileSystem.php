@@ -11,7 +11,7 @@ class LockFileSystem extends Lock
     public function __construct ( $name )
     {
         if ( self::$cache_dir == '' ) {
-    		$dir_name = sys_get_temp_dir().'/'.md5(DOCUMENT_ROOT);
+    		$dir_name = sys_get_temp_dir().'/'.INSTALLATION_UID;
     		if ( !is_dir($dir_name) ) mkdir($dir_name, 755, true);
         	self::$cache_dir = $dir_name; 
         }

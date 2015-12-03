@@ -2,8 +2,6 @@
 
 include SERVER_ROOT_PATH.'pm/views/issues/RequestPage.php';
 
-include "KanbanComulativeFlowSection.php";
-include "KanbanEstimationSection.php";
 include "KanbanRequestTable.php";
 include "KanbanPageSettingsBuilder.php";
 

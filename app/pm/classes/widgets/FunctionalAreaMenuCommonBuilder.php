@@ -17,21 +17,15 @@ class FunctionalAreaMenuCommonBuilder extends FunctionalAreaMenuProjectBuilder
 		$items = array();
 
 		$items['features-list'] = $module->getExact('features-list')->buildMenuItem();
-        
-		$items['myissues'] = $report->getExact('myissues')->buildMenuItem();
- 			    
 		$items['productbacklog'] = $report->getExact('productbacklog')->buildMenuItem();
 
 		$module_it = $module->getExact('issues-board');
-		    
  		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
  		{
         	$items['issues-board'] = $module_it->buildMenuItem();
  		}
 
-       	$items['featurestrace'] = $report->getExact('featurestrace')->buildMenuItem();
-		
-		$menus['features'] = array( 
+		$menus['features'] = array(
 		   'name' => $methodology_it->HasFeatures() ? translate('Продукт') : translate('Пожелания'), 
 		   'items' => $items,
 		   'uid' => 'features' 

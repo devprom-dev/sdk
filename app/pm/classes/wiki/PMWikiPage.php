@@ -30,43 +30,6 @@ class PMWikiPage extends WikiPage
 		return '';
  	}
 
-	//----------------------------------------------------------------------------------------------------------
-	function getVersionsIt()
-	{
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
-		{
-			$sql = 
-				"SELECT tr.ObjectId WikiId, rl.Version, rl.pm_ReleaseId `Release` ".
-			    " 		   FROM pm_ChangeRequestTrace tr, pm_Task ts, pm_Release rl " .
- 			    "		  WHERE tr.ObjectClass = '".strtolower(get_class($this))."'" .
- 			    "			AND ts.ChangeRequest = tr.ChangeRequest" .
- 			    "			AND ts.Release = rl.pm_ReleaseId" .
- 			    "		  UNION " .
- 			    "		 SELECT tr.ObjectId WikiId, rl.Version, rl.pm_ReleaseId ".
-			    " 		   FROM pm_TaskTrace tr, pm_Task ts, pm_Release rl " .
- 			    "		  WHERE tr.ObjectClass = '".strtolower(get_class($this))."'" .
- 			    "			AND ts.pm_TaskId = tr.Task" .
- 			    "			AND ts.Release = rl.pm_ReleaseId ";
-		}
-		else
-		{
-			$sql = 
-				"SELECT tr.ObjectId WikiId, req.PlannedRelease Version, NULL `Release` ".
-		        " 		   FROM pm_ChangeRequestTrace tr, pm_ChangeRequest req " .
- 			    "		  WHERE tr.ObjectClass = '".strtolower(get_class($this))."'" .
- 			    "			AND tr.ChangeRequest = req.pm_ChangeRequestId ";
-		}
-		
-		$sql = " SELECT t.WikiPageId, v.Version, v.Release ".
-			   "   FROM ".$this->getRegistry()->getQueryClause()." t, ".
-			   "        (".$sql.") v ".	
-			   "  WHERE v.WikiId = t.WikiPageId ".
-			   $this->getVpdPredicate().$this->getFilterPredicate().
-		       "  ORDER BY t.WikiPageId ";
-		
-		return $this->createSQLIterator( $sql );
-	}
-	
 	function getTypeIt()
 	{
 		return null;

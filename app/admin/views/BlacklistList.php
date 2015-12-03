@@ -2,13 +2,8 @@
 
 include ('methods/c_user_methods.php');
 
-class BlackList extends PageList
+class BlacklistList extends PageList
 {
-	function BlackList( $object )
-	{
-		parent::PageList( $object );
-	}
-
 	function IsNeedToDisplayLinks( )
 	{
 		return false;

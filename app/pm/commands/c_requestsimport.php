@@ -33,7 +33,16 @@
  	function getFields()
  	{
  		$object = $this->getObject();
- 		return array_keys($object->getAttributes());
+ 		return array_merge(
+				array_diff(
+					array_keys($object->getAttributes()),
+					$object->getAttributesByGroup('system'),
+					$object->getAttributesByGroup('trace')
+				),
+				array (
+					'ContentEditor'
+				)
+		);
  	}
  	
 	function getCaptions()
@@ -287,8 +296,12 @@
 					
 					if ( $value == '' ) $value = $default_value;
 					
-					$ref_it = is_numeric($value) ? $ref->getExact( $value ) : $ref->getByRef('Caption', $value);
-					
+					$ref_it = is_numeric($value)
+							? $ref->getExact( $value )
+							: ($ref->getAttributeType('Caption') != ''
+									? $ref->getByRef('Caption', $value)
+									: $ref->getEmptyIterator());
+
 					if ( $ref_it->getId() < 1 ) $ref_it = $ref->getExact( $default_value );
 					
 					$value = $ref_it->getId() > 0 
@@ -343,7 +356,7 @@
 					}
 				}
 				
-				$xml .= '<td>'.$value.'</td>';
+				$xml .= '<td id="'.$fields[$j].'">'.$value.'</td>';
 			}
 			$xml .= '</tr>';
 		}

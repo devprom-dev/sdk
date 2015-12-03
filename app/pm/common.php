@@ -7,27 +7,31 @@ include SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 include SERVER_ROOT_PATH.'pm/classes/sessions/SessionPortfolio.php';
 include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
-$plugins = new PluginsFactory();
+// allow OPTIONS to be requested from any domain (CORS support)
+if ( $_SERVER['REQUEST_METHOD'] == 'OPTIONS' )
+{
+	header('Access-Control-Allow-Origin: *');
+	header('Access-Control-Allow-Methods: OPTIONS, GET, POST, PUT, DELETE');
+	header('Access-Control-Allow-Headers: X-Devprom-Key,Content-Type');
+	exit();
+}
 
+$plugins = new PluginsFactory();
 $model_factory = new ModelFactoryExtended( $plugins, getCacheService() );
 
 $session = new COSession();
-
 $state = new DeploymentState();
 
-if ( !$state->IsReadyToBeUsed() )
-{
- 	exit(header('Location: /install'));
-}
- 
-if ( $state->IsMaintained() )
-{
-	exit(header('Location: /503'));
-}
- 
-if ( $_REQUEST['project'] == '')
-{
+if ( !$state->IsReadyToBeUsed() ) exit(header('Location: /install'));
+if ( $state->IsMaintained() ) exit(header('Location: /503'));
+
+if ( $_REQUEST['project'] == '') {
  	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+}
+if ( getSession()->getUserIt()->getId() < 1 )
+{
+	getSession()->close();
+	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /login?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 // resolve project code
@@ -81,11 +85,6 @@ if ( !is_object($project_it) )
 if ( $project_it->getId() < 1 )
 {
  	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
-}
-
-if ( getSession()->getUserIt()->getId() < 1 )
-{
-	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /login?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 if ( !getFactory()->getAccessPolicy()->can_read($project_it) )

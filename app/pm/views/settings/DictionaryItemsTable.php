@@ -25,14 +25,10 @@ class DictionaryItemsTable extends PMPageTable
 	
 	function getFilters()
 	{
-	    global $model_factory;
-
 		switch ( $this->getObject()->getClassName() )
 		{
 			case 'pm_CustomAttribute':
-			    
-			    $filter = new FilterObjectMethod($model_factory->getObject('CustomizableObjectSet'), translate('Сущность'), 'customattributeentity');
-			    
+			    $filter = new FilterObjectMethod(getFactory()->getObject('CustomizableObjectSet'), translate('Сущность'), 'customattributeentity');
 			    $filter->setHasNone(false);
 			    $filter->setIdFieldName('ReferenceName');
 			    

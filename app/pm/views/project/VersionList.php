@@ -5,7 +5,27 @@ if ( !class_exists('IssuesProgressFrame', false) ) include(SERVER_ROOT_PATH.'/pm
 class VersionList extends PMPageList
 {
  	var $release_it, $iteration_it;
- 	
+	private $issues_widget = '';
+	private $tasks_widget = '';
+
+	function __construct( $object )
+	{
+		parent::__construct($object);
+
+		$report = getFactory()->getObject('PMReport');
+
+		$report_it = $report->getExact('issues-trace');
+		if ( getFactory()->getAccessPolicy()->can_read($report_it) ) {
+			$menu = $report_it->buildMenuItem();
+			$this->issues_widget = $menu['url'];
+		}
+		$report_it = $report->getExact('tasks-trace');
+		if ( getFactory()->getAccessPolicy()->can_read($report_it) ) {
+			$menu = $report_it->buildMenuItem();
+			$this->tasks_widget = $menu['url'];
+		}
+	}
+
 	function getIt( $object_it )
 	{
 		if ( $object_it->get('Release') > 0 )
@@ -50,10 +70,20 @@ class VersionList extends PMPageList
 				$this->drawBurndown( $object_it );
 				break;
 
-			case 'Burnup':
-				if ( $object_it->object->getClassName() == 'pm_Version' )
-					$this->drawBurnUpChart( $object_it );
-				break;
+            case 'Artefacts':
+                $objects = preg_split('/,/', $source_it->get($attr));
+                $uids = array();
+
+                foreach( $objects as $object_info )
+                {
+                    list($class, $id) = preg_split('/:/',$object_info);
+                    $class = getFactory()->getClass($class);
+                    if ( $class == '' ) continue;
+                    $ref_it = getFactory()->getObject($class)->getExact($id);
+                    $uids[] = $this->getUidService()->getUidIcon($ref_it);
+                }
+                echo join(', ',$uids);
+                return;
 		}
 		
 		if ( $attr == 'Stage' || $attr == 'VersionNumber' )
@@ -274,14 +304,14 @@ class VersionList extends PMPageList
 				$velocity = round($object_it->getVelocity(), 1);
 				$estimation = $object_it->getTotalWorkload();
 				$strategy = $methodology_it->getEstimationStrategy();
-				
+
 				echo '<div class="line">';
 					echo str_replace('%1', $velocity, $strategy->getVelocityText($object_it->object));
 				echo '</div>';
 
 				list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
 
-				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedItems') > 0;
+				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedIssues') > 0;
 				
 				echo '<div class="line">';
 					echo text(1020).': '.$strategy->getDimensionText(round($maximum, 1));
@@ -290,15 +320,6 @@ class VersionList extends PMPageList
 					echo text(1021).': '.$strategy->getDimensionText(round($estimation));
 				echo '</div>';
 				
-				$request = $model_factory->getObject('pm_ChangeRequest');
-				
-				$request->addFilter( new FilterAttributePredicate('PlannedRelease', $object_it->getId()) );
-				$request->addFilter( new StatePredicate('notterminal') );
-				
-				echo '<div class="line">';
-					echo str_replace('%1', $request->getRecordCount(), text(1431));
-				echo '</div>';
-
 				break;
 				
 			case 'pm_Release':
@@ -318,7 +339,7 @@ class VersionList extends PMPageList
 					$estimation = 0; 
 				}
 
-				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedItems') > 0;
+				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedTasks') > 0;
 				
 				echo '<div class="line">';
 					echo text(1020).': '.$strategy->getDimensionText(round($maximum, 1));
@@ -327,209 +348,19 @@ class VersionList extends PMPageList
 					echo text(1021).': '.$strategy->getDimensionText(round($estimation,0));
 				echo '</div>';
 				
-				$task = $model_factory->getObject('pm_Task');
-				
-				$task->addFilter( new FilterAttributePredicate('Release', $object_it->getId()) );
-				$task->addFilter( new StatePredicate('notterminal') );
-				
-				echo '<div class="line">';
-					echo str_replace('%1', $task->getRecordCount(), text(1432));
-				echo '</div>';
-				
 				break;
 		}
 	}
 	
-	function getReportActions( $object_it )
+	function getReferencesListWidget( $object )
 	{
-	    global $model_factory;
-	    
-	    $actions = array();
-	    
-	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-	    
-	    $iteration = $model_factory->getObject('pm_Release');
-	    $report = $model_factory->getObject('PMReport');
-
-		$it = $this->getIt( $object_it );
-	    
-	    switch ( $it->object->getClassName() )
-	    {
-	        case 'pm_Version':
-	            
-	            $report_it = $report->getExact('allissues');
-
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-                    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array(); 
-                    array_push($actions,
-                    array('url' => $report_it->getUrl().'kind=submitted&subversion='.$it->getDisplayName(),
-                    'name' => translate('Обнаружены пожелания')));
-                    $need_separator = false;
-	            }
-	    
-	            $report_it = $report->getExact('resolvedissues');
-	            
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-	                if ( $need_separator && $actions[count($actions)-1]['name'] != '' ) $actions[] = array(); 
-	                array_push($actions,
-	                array('url' => $report_it->getUrl().'&modifiedafter=all&version='.$it->getDisplayName(),
-	                'name' => $report_it->getDisplayName()));
-	    
-	                $need_separator = true;
-	            }
-	    
-	            $report_it = $report->getExact('currenttasks');
-	            
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-	                array_push( $actions, array() );
-	                array_push($actions,
-	                array('url' => $report_it->getUrl().'&iteration='.$object_it->get('Iterations'),
-	                'name' => translate('Задачи')));
-	            }
-	            	
-	            break;
-	    
-	        case 'pm_Release':
-	            
-	            $report_it = $report->getExact('allissues');
-	            
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-                    array_push($actions, array() );
-                    array_push($actions,
-   	                    array('url' => $report_it->getUrl().'kind=submitted&subversion='.$it->getDisplayName(),
-   	                    'name' => translate('Обнаружены пожелания')));
-	            }
-	    
-	            $report_it = $report->getExact('resolvedissues');
-	            
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-	                array_push($actions,
-	                array('url' => $report_it->getUrl().'&modifiedafter=all&version='.$it->getDisplayName(),
-	                'name' => $report_it->getDisplayName()));
-	            }
-	            	
-	    	    $report_it = $report->getExact('currenttasks');
-	    	    
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-	                array_push( $actions, array() );
-	                array_push($actions,
-	                array('url' => $report_it->getUrl().'&iteration='.$object_it->get('Iterations'),
-	                'name' => translate('Задачи')));
-	            }
-	            
-	            break;
-	    }
-	    
-	    $b_need_separator = true;
-	    
-	    $report_it = $report->getExact('testplan');
-	    
-	    if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	    {
-	        if ( $b_need_separator )
-	        {
-	            array_push( $actions, array() );
-	            $b_need_separator = false;
-	        }
-	    
-	        array_push($actions,
-	        array('url' => $report_it->getUrl().'&version='.$object_it->getDisplayName(),
-	        'name' => $report_it->getDisplayName() ) );
-	    }
-	    
-	    $report_it = $report->getExact('testsofreleasereport');
-	    
-	    if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	    {
-	        if ( $b_need_separator )
-	        {
-	            array_push( $actions, array() );
-	            $b_need_separator = false;
-	        }
-	    
-	        array_push($actions,
-	        array('url' => $report_it->getUrl().'&version='.$object_it->getDisplayName(),
-	        'name' => translate('Результаты тестирования')));
-	    }
-	    
-	    return $actions;
-	}
-	
-	function getTraceActions( $object_it )
-	{
-	    global $model_factory;
-	    
-	    $actions = array();
-	    
-	    $iteration = $model_factory->getObject('pm_Release');
-	    $report = $model_factory->getObject('PMReport');
-
-		$it = $this->getIt( $object_it );
-
-	    switch ( $it->object->getClassName() )
-	    {
-	        case 'pm_Version':
-
-   	            $report_it = $report->getExact('issues-trace');
-   	            
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-	                $actions[] = array(
-	                    'url' => $report_it->getUrl().'&release='.$it->getId(),
-	                    'name' => translate('Все артефакты')
-	                );
-	            }
-	    
-	            break;
-	    
-	        case 'pm_Release':
-	            	
-	    	    $report_it = $report->getExact('tasks-trace');
-	    	    
-	            if ( getFactory()->getAccessPolicy()->can_read($report_it) )
-	            {
-	                $actions[] = array(
-	                    'url' => $report_it->getUrl().'&iteration='.$it->getId(),
-	                    'name' => translate('Все артефакты')
-	                );
-	            }
-	    
-	            break;
-	    }
-	    
-	    return $actions;
-	}	
-	
-	function drawBurnUpChart( $release_it )
-	{
-		global $model_factory;
-		
-		if ( $release_it->IsFuture() ) return;
-		
-		echo '<div style="padding-right:8px;">';
-			
-		    $flot = new FlotChartBurnupWidget();
-			
-			$report_it = $model_factory->getObject('PMReport')->getExact('releaseburnup');
-		
-			$url = $report_it->getUrl().'&release='.$release_it->getId();
-		
-			$chart_id = 'chart'.md5($url);
-			
-			echo '<div id="'.$chart_id.'" class="plot" url="'.$url.'" style="height:90px;width:180px;"></div>';
-
-			$flot->setUrl( getSession()->getApplicationUrl().
-				'chartburnup.php?release='.$release_it->getId().'&json=1' );
-			
-			$flot->draw($chart_id);
-
-		echo '</div>';
+		if ( $object instanceof Task ) {
+			return $this->tasks_widget;
+		}
+		if ( $object instanceof Request ) {
+			return $this->issues_widget;
+		}
+		return parent::getReferencesListWidget( $object );
 	}
 
 	function IsNeedToDisplayOperations()
@@ -593,7 +424,7 @@ class VersionList extends PMPageList
 				    
 	                $actions[] = array( 
 	                    'url' => $info['url'],
-	                    'name' => translate('Баклог релиза')
+	                    'name' => translate('Бэклог релиза')
 	                );
 	            }
 
@@ -625,31 +456,13 @@ class VersionList extends PMPageList
 				    
 	                $actions[] = array(
 	                    'url' => $info['url'],
-	                    'name' => translate('Баклог итерации')
+	                    'name' => translate('Бэклог итерации')
 	                );
 	            }
 
 				break;
 		}
 
-		$trace_actions = $this->getTraceActions( $object_it );
-		
-		if ( count($trace_actions) > 0 )
-		{
-			if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-			
-		    $actions[] = array ( 'name' => translate('Трассировка'), 'items' => $trace_actions );
-		}
-		
-		$report_actions = $this->getReportActions( $object_it );
-		
-		if ( count($report_actions) > 0 )
-		{
-			if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-			
-		    $actions[] = array ( 'name' => translate('Отчеты'), 'items' => $report_actions );
-		}
-		
 		return $actions;
 	}
 		

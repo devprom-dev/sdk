@@ -19,7 +19,8 @@
 		<?php 
 				echo $view->render($menu_template, array( 
 						'menus' => $menus, 
-						'checkpoint_alerts' => $checkpoint_alerts 
+						'checkpoint_alerts' => $checkpoint_alerts,
+						'checkpoint_url' => $checkpoint_url
 				)); 
 		?>
 	</div> 
@@ -50,13 +51,14 @@
 			<!-- aside item: Menu -->
 			<div id="sidebar">
 			<?php
-			
+
 		    foreach( $areas as $area ) 
             {
 			        echo $view->render('core/VerticalMenu.php', array( 
                         'items' => $area['menus'], 
                         'area_id' => count($areas) > 1 ? $area['uid'] : $active_area_uid, 
                         'active_area_uid' => $active_area_uid,
+						'active_url' => array_shift(preg_split('/\?/',$navigation_url)),
                         'application_url' => $application_url
                     ));
             }

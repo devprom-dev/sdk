@@ -13,7 +13,7 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
  	{
  		$object_class = get_class($object_it->object);
  	}
- 	
+
  	$object_id = $object_it->getId();
  	$object_uid = md5($object_class.$object_id.$attr_name.rand(1, 1000)); 
 	$max_width = 300;
@@ -24,7 +24,7 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
 	{
 	    if ( $attribute_type == 'wysiwyg' ) {
             // special case for wysiwyg attribute
-            $attr_value = str_replace(chr(10), '', $object_it->getHtmlDecoded($attr_name));
+            $attr_value = preg_replace('/^<p>(.+)<\/p>$/i', "\\1", str_replace(chr(10), '', $object_it->getHtmlDecoded($attr_name)));
         }
         else {		
             $attr_value = str_replace(chr(10), '', $object_it->get($attr_name));

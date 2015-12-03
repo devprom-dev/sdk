@@ -85,15 +85,19 @@ class Issue extends BaseEntity {
     private $newAttachment;
 
     /**
-     * @var string
+     * @ORM\OneToOne(targetEntity="InternalUser")
+     * @ORM\JoinColumn(name="Author", referencedColumnName="cms_UserId")
+     * @var User
      */
-    private $authorEmail;
+    private $author;
 
     /**
-     * @var string
+     * @ORM\OneToOne(targetEntity="User")
+     * @ORM\JoinColumn(name="Customer", referencedColumnName="cms_ExternalUserId")
+     * @var User
      */
-    private $authorName;
-    
+    private $customer;
+
     /**
      * @ORM\OneToMany(targetEntity="IssueComment", mappedBy="issue", fetch="EAGER", cascade={"all"})
      * @ORM\OrderBy({"createdAt" = "ASC"})
@@ -211,37 +215,37 @@ class Issue extends BaseEntity {
     }
 
     /**
-     * @param string $createdBy
+     * @param User $createdBy
      */
-    public function setAuthorEmail($createdBy)
+    public function setCustomer($customer)
     {
-        $this->authorEmail = $createdBy;
+        $this->customer = $customer;
     }
 
     /**
-     * @return string
+     * @return User
      */
-    public function getAuthorEmail()
+    public function getCustomer()
     {
-        return $this->authorEmail;
+        return $this->customer;
     }
 
     /**
-     * @param string $createdBy
+     * @param User $user
      */
-    public function setAuthorName($createdBy)
+    public function setAuthor($user)
     {
-        $this->authorName = $createdBy;
+        $this->author = $user;
     }
 
     /**
-     * @return string
+     * @return User
      */
-    public function getAuthorName()
+    public function getAuthor()
     {
-        return $this->authorName;
+        return $this->author;
     }
-    
+
     /**
      * @param string $description
      */

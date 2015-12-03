@@ -13,23 +13,29 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 {
     public function build( Metaobject $object )
     {
-    	if ( $object->getEntityRefName() != 'WikiPage' ) return;
+    	if ( !$object instanceof WikiPage ) return;
     	
 		$object->addPersister( new WikiPageDetailsPersister() );
 
         $object->addAttribute('Workflow', 'TEXT', text(2044), false);
-        $object->addPersister( new WikiPageWorkflowPersister() );
+        $object->addPersister( new WikiPageWorkflowPersister(array('Workflow')) );
 
-		$object->addAttribute('Attachments', 'REF_WikiPageFileId', translate('Приложения'), false);
-		$object->addPersister( new WikiPageAttachmentsPersister() );
+		$object->addAttribute('Attachments', 'REF_WikiPageFileId', translate('Приложения'), false, false, '', 50);
+		$object->addPersister( new WikiPageAttachmentsPersister(array('Attachments')) );
 		
 		$object->addAttribute('Tags', 'REF_TagId', translate('Тэги'), false );
-		$object->addPersister( new WikiTagsPersister() );
+		$object->addPersister( new WikiTagsPersister(array('Tags')) );
 		
 		$object->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), false);
-		$object->addPersister( new WatchersPersister() );
+		$object->addPersister( new WatchersPersister(array('Watchers')) );
 
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
-		$object->addPersister( new CommentRecentPersister() );
+		$object->addPersister( new CommentRecentPersister(array('RecentComment')) );
+
+		foreach( array('Tags', 'Attachments', 'Watchers', 'Author') as $attribute ) {
+			$object->addAttributeGroup($attribute, 'additional');
+			$object->setAttributeRequired($attribute, false);
+		}
+		$object->setAttributeOrderNum('Author', 400);
     }
 }

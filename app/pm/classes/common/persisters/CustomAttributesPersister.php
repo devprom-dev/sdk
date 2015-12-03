@@ -7,7 +7,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 {
  	var $attrs;
  	
- 	function getAttributes()
+ 	protected function getAttributesInfo()
  	{
  		if ( is_array( $this->attrs) ) return $this->attrs;
  		
@@ -46,7 +46,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
  	
  	protected function set( $object_id, $parms )
  	{
- 	 	$attributes = $this->getAttributes();
+ 	 	$attributes = $this->getAttributesInfo();
  		
  		$ids = array();
  		
@@ -98,16 +98,12 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
  	function delete( $object_id )
  	{
- 		global $model_factory;
- 		
- 		$attributes = $this->getAttributes();
+ 		$attributes = $this->getAttributesInfo();
 
  		$ids = array();
+ 		foreach( $attributes as $attribute ) $ids[] = $attribute['id'];
  		
- 		foreach( $attributes as $attribute ) $ids[] = $attribute['id']; 
- 		
- 		$value = $model_factory->getObject('pm_AttributeValue');
- 		
+ 		$value = getFactory()->getObject('pm_AttributeValue');
  		$value_it = $value->getByRefArray(
  			array( 'CustomAttribute' => $ids,
  				   'ObjectId' => $object_id ) 
@@ -115,7 +111,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		
  		while( !$value_it->end() ) 
  		{
- 			$value_it->delete();
+			$value->delete($value_it->getId());
  			$value_it->moveNext();
  		}
  	}
@@ -153,7 +149,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		$columns = array();
  		$alias = $alias != '' ? $alias."." : "";
  		
- 		$attributes = $this->getAttributes();
+ 		$attributes = $this->getAttributesInfo();
  		
  		$object = $this->getObject();
  		

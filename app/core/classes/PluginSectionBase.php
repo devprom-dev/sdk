@@ -95,18 +95,6 @@ class PluginSectionBase
  	
  	function interceptMethodFormGetActions( & $form, & $actions )
  	{
- 		$object_it = $form->getObjectIt();
- 		
- 		if ( !is_a($object_it, 'IteratorBase') ) return;
- 		
-		$plugin_actions = $this->getObjectActions( $object_it );
-		
-		if ( count($plugin_actions) > 0 )
-		{
-			array_push($actions, array( '' ) );
-			
-			$actions = array_merge( $actions, $plugin_actions );
-		}
  	}
 
  	function interceptMethodFormDrawScripts( & $form )

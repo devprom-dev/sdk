@@ -71,4 +71,9 @@ class LicenseIterator extends OrderedIterator
 	{
 		return 2;
 	}
+
+	function getSupportIncluded()
+	{
+		return true;
+	}
 }

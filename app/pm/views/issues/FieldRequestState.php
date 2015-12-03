@@ -26,12 +26,12 @@ class FieldRequestState extends Field
 			echo $view->render('pm/TasksIcons.php', array (
 					'states' => $this->object_it->getRef('Tasks')->getStatesArray()
 			));
+			echo ' &nbsp; ';
 		}
 		
         if ( $this->object_it->get('TransitionComment') != '' )
         {
-        	echo ' &nbsp; ';
-            drawMore($this->object_it, 'TransitionComment');		
+            drawMore($this->object_it, 'TransitionComment');
         }
 	}
 }

@@ -13,6 +13,11 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 	{
 		return parent::getMethodName().':LinkType';
 	}
+
+	function getObject()
+	{
+		return getFactory()->getObject('Request');
+	}
 	
 	function getReferences()
 	{
@@ -20,7 +25,7 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 		
  	    $references[] = getFactory()->getObject('pm_IssueType');
  	    $references[] = getFactory()->getObject('Priority');
- 	    
+
  	    $request = getFactory()->getObject('pm_ChangeRequest');
  	    $request->addFilter( new FilterInPredicate($this->getObjectIt()->idsToArray()) );
    	    $references[] = $request;
@@ -29,9 +34,9 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 	 	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');
 			$trace->addFilter( new FilterAttributePredicate('ChangeRequest', $this->getObjectIt()->idsToArray()) );
 			$references[] = $trace;
- 	    } 
+ 	    }
 
- 	    return $references;
+		return $references;
 	}
 	
  	function duplicate( $project_it )

@@ -122,8 +122,10 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 			$object_it->moveNext();
  			}
 
-	 		$this->storeBranch( $map, $this->getObject() );
- 			
+			if ( count($map) > 0 ) {
+				$this->storeBranch( $map, $this->getObject() );
+			}
+
  			return new CloneContext();
  		}
  		else
@@ -175,6 +177,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 
 		foreach( $this->getObjectIt()->idsToArray() as $object_id )
 		{
+			if ( $map[$object->getEntityRefName()][$object_id] == '' ) continue;
 			$snapshot->add_parms( array (
 					'Caption' => IteratorBase::utf8towin($_REQUEST['Version']),
 					'Description' => IteratorBase::utf8towin($_REQUEST['Description']),

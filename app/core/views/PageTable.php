@@ -554,13 +554,23 @@ class PageTable extends ViewTable
 	function getRowsOnPage()
 	{
 	    $values = $this->getFilterValues();
-	    
-	    return $values['rows'] == 'all' ? 9999 : (is_numeric($values['rows']) ? $values['rows'] : $this->getDefaultRowsOnPage()); 
+	    return $values['rows'] == 'all'
+				? 9999 : (
+					is_numeric($values['rows'])
+							? $values['rows']
+							: $this->getDefaultRowsOnPage()
+				);
 	}
 
  	function getDefaultRowsOnPage()
 	{
-		return 999;
+		$default = $this->getFilterParms();
+		$values = $this->getFilterValues();
+		foreach( $values as $key => $value ) {
+			if ( in_array($key,$default) ) continue;
+			if ( !in_array($value, array('','all')) ) return 999;
+		}
+		return 100;
 	}
 	
  	function getSortFields()

@@ -6,15 +6,11 @@ include ('classes/SoapService.php');
 include ('classes/SOAPSession.php');
 include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
-$plugins = new PluginsFactory();
- 
 $cache_service = getCacheService();
-
 $model_factory = new ModelFactoryProject(
-		$plugins, 
+		new PluginsFactory(),
 		$cache_service, 
-		new APIAccessPolicy($cache_service), 
-		$model_factory->getEventsManager()
+		new APIAccessPolicy($cache_service)
 );
 
 // create session object

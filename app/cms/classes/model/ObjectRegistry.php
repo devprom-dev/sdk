@@ -1,10 +1,12 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 abstract class ObjectRegistry
 {
 	protected $object = null;
 	
-	public function __construct( Object $object = null )
+	public function __construct( $object = null )
 	{
 		$this->setObject($object);
 	}
@@ -13,6 +15,7 @@ abstract class ObjectRegistry
 	{
 		unset($this->object);
 		$this->object = null;
+		return array();
 	}
 	
 	public function __destruct()

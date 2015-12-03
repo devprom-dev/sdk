@@ -1,6 +1,7 @@
 <?php
 namespace Devprom\ProjectBundle\Controller\Rest;
 
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -18,6 +19,10 @@ abstract class RestController extends FOSRestController implements ClassResource
 	{
 		try    	
 		{
+			if ( getSession()->getAuthenticationFactory()->writeOnly() ) {
+				throw new Exception("Access restricted");
+			}
+
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->find(
@@ -25,8 +30,7 @@ abstract class RestController extends FOSRestController implements ClassResource
 									$request->get('limit'),
 									$request->get('offset')
 							), 200
-					)->setHeader("Cache-Control", "no-cache, must-revalidate")
-			);
+					));
 		}
 		catch( \Exception $e )
 		{
@@ -39,13 +43,16 @@ abstract class RestController extends FOSRestController implements ClassResource
     {
 		try    	
 		{
+            if ( getSession()->getAuthenticationFactory()->writeOnly() ) {
+                throw new Exception("Access restricted");
+            }
+
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->get(
 			        				$this->getEntity($request), $id
 							), 200
-					)->setHeader("Cache-Control", "no-cache, must-revalidate")
-			);
+					));
 		}
 		catch( \Exception $e )
 		{
@@ -58,14 +65,17 @@ abstract class RestController extends FOSRestController implements ClassResource
     {
 		try    	
 		{
+            if ( getSession()->getAuthenticationFactory()->readOnly() ) {
+                throw new Exception("Access restricted");
+            }
+
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->set(
 			        				$this->getEntity($request),
 				        			$this->getPostData($request)
 							), 200
-					)->setHeader("Cache-Control", "no-cache, must-revalidate")
-			);
+					));
 		}
 		catch( \Exception $e )
 		{
@@ -78,6 +88,11 @@ abstract class RestController extends FOSRestController implements ClassResource
     {
 		try    	
 		{
+            $factory = getSession()->getAuthenticationFactory();
+            if ( $factory->readOnly() || $factory->writeOnly() ) {
+                throw new Exception("Access restricted");
+            }
+
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->set(
@@ -85,8 +100,7 @@ abstract class RestController extends FOSRestController implements ClassResource
 				        			$this->getPostData($request),
 			        				$id
 							), 200
-					)->setHeader("Cache-Control", "no-cache, must-revalidate")
-			);
+					));
 		}
 		catch( \Exception $e )
 		{
@@ -99,14 +113,18 @@ abstract class RestController extends FOSRestController implements ClassResource
     {
 		try    	
 		{
+            $factory = getSession()->getAuthenticationFactory();
+            if ( $factory->readOnly() || $factory->writeOnly() ) {
+                throw new Exception("Access restricted");
+            }
+
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->delete(
 			        				$this->getEntity($request),
 			        				$id
 							), 200
-					)->setHeader("Cache-Control", "no-cache, must-revalidate")
-			);
+					));
 		}
 		catch( \Exception $e )
 		{
@@ -114,7 +132,7 @@ abstract class RestController extends FOSRestController implements ClassResource
 			throw $this->createNotFoundException($e->getMessage());
 		}
     }
-    
+
     protected function getPostData(Request $request)
     {
     	return $request->request->all();
@@ -133,4 +151,17 @@ abstract class RestController extends FOSRestController implements ClassResource
     			$this->getFilterResolver($request)
 		);
     }
+
+	function getClassName(Request $request)
+	{
+		switch( $request->get('class') )
+		{
+			case 'issues':
+				return 'request';
+			case 'tasks':
+				return 'task';
+			default:
+				return 'dummy';
+		}
+	}
 }

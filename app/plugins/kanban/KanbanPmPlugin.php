@@ -1,12 +1,10 @@
 <?php
 
-include "views/KanbanVersionList.php";
 include "classes/widgets/FunctionalAreaMenuKanbanBuilder.php";
 include "classes/ReportsKanbanBuilder.php";
 include "classes/MethodologyKanbanMetadataBuilder.php";
 include "classes/StateKanbanMetadataBuilder.php";
-include "classes/RequestKanbanMetadataBuilder.php";
-include "classes/VersionKanbanMetadataBuilder.php";
+include "classes/widgets/KanbanTourScriptBuilder.php";
 
 class KanbanPmPlugin extends PluginPMBase
 {
@@ -28,8 +26,6 @@ class KanbanPmPlugin extends PluginPMBase
  	
  	function getModules()
  	{
- 		if ( getSession()->getProjectIt()->IsPortfolio() ) return array();
- 		
 		$modules = array (
 		    'avgleadtime' => 
  				array(
@@ -59,28 +55,17 @@ class KanbanPmPlugin extends PluginPMBase
 
  	function getBuilders()
  	{
- 	    return array (
- 	            new ReportsKanbanBuilder( getSession() ),
- 	            new FunctionalAreaMenuKanbanBuilder(),
- 	    		
- 	    		// model extenders
- 	    		new StateKanbanMetadataBuilder( getSession() ),
- 	    		new RequestKanbanMetadataBuilder( getSession() ),
- 	    		new VersionKanbanMetadataBuilder( getSession() ),
- 	    		new MethodologyKanbanMetadataBuilder()
+		return array (
+			new ReportsKanbanBuilder( getSession() ),
+			new FunctionalAreaMenuKanbanBuilder(),
+
+			// model extenders
+			new StateKanbanMetadataBuilder( getSession() ),
+			new MethodologyKanbanMetadataBuilder(),
+
+			// widgets
+			new KanbanTourScriptBuilder(getSession())
  	    );
- 	}
- 	
-  	function interceptMethodListDrawCell( & $list, & $object_it, $attr )
- 	{ 	
- 	    if ( !$this->checkEnabled() ) return;
- 	    
- 	    if ( is_a($list, 'VersionList') )
- 	    {
- 	        return KanbanVersionList::drawCell( $list->getIt( $object_it ), $attr );
- 	    }
- 	    
- 		return false;
  	}
  	
  	function interceptMethodListSetupColumns( & $list  )

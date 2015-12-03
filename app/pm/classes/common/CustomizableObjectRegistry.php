@@ -4,18 +4,17 @@ class CustomizableObjectRegistry extends ObjectRegistrySQL
 {
  	protected $objects = array();
 
- 	function addObject( &$object, $key = '', $title = '' )
+ 	function add( $class_name, $key = '', $title = '' )
  	{
  		$this->objects[] = array( 
- 			'key' => $key == '' ? strtolower(get_class($object)) : $key,
- 			'title' => $title == '' ? $object->getDisplayName() : $title
+ 			'key' => $key == '' ? strtolower($class_name) : $key,
+			'title' => $title
  		);
  	}
  	
  	function createSQLIterator()
  	{
- 		foreach( getSession()->getBuilders('CustomizableObjectBuilder') as $builder )
- 		{
+ 		foreach( getSession()->getBuilders('CustomizableObjectBuilder') as $builder ) {
  		    $builder->build($this);
  		}
  		
@@ -25,10 +24,14 @@ class CustomizableObjectRegistry extends ObjectRegistrySQL
  			$data[] = array (
  				'entityId' => $object['key'],
  				'ReferenceName' => $object['key'],
- 				'Caption' => $object['title']
+				'Caption' => $object['title']
  			);
  		}
  		
  		return $this->createIterator( $data );
  	}
+
+	public function getData() {
+		return $this->object;
+	}
 }

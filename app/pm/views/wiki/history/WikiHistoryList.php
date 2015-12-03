@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
+include_once SERVER_ROOT_PATH.'ext/html/html2textdiff.php';
 
 class WikiHistoryList extends ProjectLogList
 {
@@ -203,13 +204,12 @@ class WikiHistoryList extends ProjectLogList
 		switch ( $method->getValue() )
 		{
 			case 'text':
+				$parser = $this->editor->getComparerParser();
 
-				$parser = $this->editor->getHtmlParser();
-				
-			    $html2text = new Html2Text($parser->parse($prev_content));
+			    $html2text = new html2textdiff($parser->parse($prev_content));
 				$prev_content = $html2text->get_text(); //preg_replace('/[\r\n]+/', '<br/>', $html2text->get_text());
 
-				$html2text = new Html2Text($parser->parse($curr_content));
+				$html2text = new html2textdiff($parser->parse($curr_content));
 				$curr_content = $html2text->get_text(); //preg_replace('/[\r\n]+/', '<br/>', $html2text->get_text());
 
 				return $this->editor->getDiff( $prev_content, $curr_content );

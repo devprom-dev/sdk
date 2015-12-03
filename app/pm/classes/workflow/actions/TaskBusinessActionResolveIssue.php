@@ -2,10 +2,10 @@
 
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 
-include_once "BusinessAction.php";
+include_once "BusinessActionWorkflow.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 
-class TaskBusinessActionResolveIssue extends BusinessAction
+class TaskBusinessActionResolveIssue extends BusinessActionWorkflow
 {
  	function getId()
  	{

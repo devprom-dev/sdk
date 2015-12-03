@@ -1,8 +1,7 @@
 <?php
+include_once "BusinessActionWorkflow.php";
 
-include_once "BusinessAction.php";
-
-class TaskBusinessActionResetAssignee extends BusinessAction
+class TaskBusinessActionResetAssignee extends BusinessActionWorkflow
 {
  	function getId()
  	{

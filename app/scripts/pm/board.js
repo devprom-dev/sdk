@@ -19,7 +19,10 @@ var draggableOptions = {
 				old_more = oldCard.attr('more');
 				old_group = oldCard.parent('.list_cell').attr('group');
 
-				if( $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]').length < 1 ) return;
+				if( $('.list_cell[more="'+new_more+'"][group="'+new_group+'"]').length < 1 ) {
+					setTimeout(function() { window.location.reload(); }, 200);
+					return;
+				}
 
 				var itemFound = false;
 				$('.list_cell[more="'+new_more+'"][group="'+new_group+'"][sort="OrderNum"] > .board_item')
@@ -71,53 +74,41 @@ var draggableOptions = {
 		{
 			var controllerUrl = item.attr("project") != '' ? '/pm/'+item.attr("project")+'/' : '';
 			var methods = new Array();
+			var dataObject = {
+				'object': item.attr("object"),
+				'class': this.className
+			};
+			var url = '';
 
 			if( parseInt(cell.attr("order")) >= 0 )
 			{
 				var tobe_seq = parseInt(cell.attr("order")) == parseInt(item.attr("order"))
 					? Math.max(parseInt(cell.attr("order")) - 1, 0) : parseInt(cell.attr("order"));
 
-				if ( parseInt(item.attr("order")) != tobe_seq )
-				{
-					methods.push({
-						url: controllerUrl+'methods.php?method=modifyattributewebmethod',
-						data: { 
-							'attribute': 'OrderNum', 
-						 	'value': tobe_seq, 
-						 	'object': item.attr("object"),
-						 	'class': this.className
-						}
-					});
+				if ( parseInt(item.attr("order")) != tobe_seq ) {
+					dataObject.attribute = 'OrderNum';
+					dataObject.value = tobe_seq;
+					url = controllerUrl+'methods.php?method=modifyattributewebmethod';
 				}
 			}
 
 			if( jQuery.trim(item.attr("group")) != jQuery.trim(cell.attr("group")) )
 			{
-				methods.push({
-					url: controllerUrl+'methods.php?method=modifyattributewebmethod',
-					data: { 'attribute': this.groupAttribute, 
-					 		 'value': jQuery.trim(cell.attr("group")), 
-					 		 'object': item.attr("object"),
-					 		 'class': this.className }
-				});
+				dataObject.attribute = this.groupAttribute;
+				dataObject.value = jQuery.trim(cell.attr("group"));
+				url = controllerUrl+'methods.php?method=modifyattributewebmethod';
 			}
 
 			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
 			{
 				controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
-				var dataObject = { 
-						'source': jQuery.trim(item.attr("more")), 
-					 	'target': jQuery.trim(cell.attr("more")), 
-					 	'object': item.attr("object"),
-					 	'class': this.className
-					};
-				if ( this.groupAttribute != '' ) dataObject[this.groupAttribute] = jQuery.trim(cell.attr("group")); 
-				methods.push({ 
-					url: controllerUrl+'methods.php?method=modifystatewebmethod',
-					data: dataObject
-				});
+				url = controllerUrl+'methods.php?method=modifystatewebmethod';
+				dataObject.source = jQuery.trim(item.attr("more"));
+				dataObject.target = jQuery.trim(cell.attr("more"));
 			}
-			
+			if ( url != '' ) {
+				methods.push({url: url, data: dataObject});
+			}
 			return methods;
 		},
 		afterItemModified: function( item, options )
@@ -269,6 +260,9 @@ function processActionResult( result, item, options )
 {
 	filterLocation.showActivity();
 	resultObject = jQuery.parseJSON(result);
+	if ( !resultObject ) {
+		resultObject = {message:''};
+	}
 
 	switch ( resultObject.message )
 	{
@@ -323,7 +317,10 @@ function processActionResult( result, item, options )
 						window.onbeforeunload = null;
 						
 						$('#modal-form').dialog({
-							width: resultObject.url.match(/issues\/board\?mode\=group/) ? $(window).width() - 300 : 750,
+							width:
+								(typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
+									? $(window).width() - 300
+									: 750),
 							modal: true,
 							open: function()
 							{
@@ -341,6 +338,7 @@ function processActionResult( result, item, options )
 							buttons: [
 								{
 									text: options.saveButtonName,
+									id: options.className+'SubmitBtn',
 								 	click: function() {
 										var dialogVar = $(this);
 										
@@ -359,21 +357,22 @@ function processActionResult( result, item, options )
 											dataType: 'html',
 											success: function( data ) 
 											{
-												var warning = $(data).find('.form_warning');
-												
-												if ( warning.length > 0 )
-												{
-													$('#modal-form').parent()
-														.find('.ui-button')
-														.attr('disabled', false)
-														.removeClass("ui-state-disabled");
-													
-													$('.form_warning').remove();
-													$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
-												}
-												else 
-												{
+												try {
+													var object = jQuery.parseJSON(data);
 													dialogVar.dialog('close');
+												}
+												catch(e) {
+													var warning = $(data).find('.form_warning');
+													if ( warning.length > 0 )
+													{
+														$('#modal-form').parent()
+															.find('.ui-button')
+															.attr('disabled', false)
+															.removeClass("ui-state-disabled");
+
+														$('.form_warning').remove();
+														$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
+													}
 												}
 											},
 											error: function( xhr )
@@ -388,6 +387,7 @@ function processActionResult( result, item, options )
 								},
 								{
 									text: options.closeButtonName,
+									id: options.className+'CancelBtn',
 									click: function() 
 									{
 										$(this).dialog('close');
@@ -491,6 +491,7 @@ function createBoardItem( query_string, options, data, callback )
 					buttons: [
 						{
 							text: options.saveButtonName,
+							id: options.className+'SubmitBtn',
 						 	click: function() {
 								var dialogVar = $(this);
 								
@@ -503,23 +504,22 @@ function createBoardItem( query_string, options, data, callback )
 									dataType: 'html',
 									success: function( data ) 
 									{
-										var warning = $(data).find('.form_warning');
-										
-										if ( warning.length > 0 ) 
-										{
-											$('#modal-form').parent()
-												.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-											
-											$('.form_warning').remove();
-											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('form[id]'));
-										}
-										else 
-										{
-											var objectid = $(data).find('#'+options.className+'Id').val();
-											
+										try {
+											var object = jQuery.parseJSON(data);
 											dialogVar.dialog('close');
-											
-											if ( typeof callback == 'function' ) callback( objectid, options ); 
+											if ( typeof callback == 'function' ) {
+												callback( object.Id, options );
+											}
+										}
+										catch(e) {
+											var warning = $(data).find('.form_warning');
+											if (warning.length > 0) {
+												$('#modal-form').parent()
+													.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+
+												$('.form_warning').remove();
+												$('<div class="alert alert-error form_warning">' + warning.html() + '</div>').insertBefore($('form[id]'));
+											}
 										}
 									},
 									error: function( xhr )

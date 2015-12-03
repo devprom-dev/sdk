@@ -138,28 +138,6 @@ class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function shouldStripOutHtmlTagsIfRequested() {
-        $content = "Some reply <div>with tags</div>";
-
-        $result = $this->processor->process($content, true);
-
-        $this->assertEquals("Some reply with tags", $result);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldNotStripOutHtmlTagsIfNotRequested() {
-        $content = "Some reply <div>with tags</div>";
-
-        $result = $this->processor->process($content, false);
-
-        $this->assertEquals($content, $result);
-    }
-
-    /**
-     * @test
-     */
     public function shouldTrimAdjacentLines() {
         $meaningfullPart = "Some reply\r\n\r\nSecond paragraph";
         $adjacentLines = "\r\n\r\n>On 12:12:12:\r\n>\r\n>";

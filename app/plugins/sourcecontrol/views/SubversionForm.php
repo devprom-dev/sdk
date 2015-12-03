@@ -49,11 +49,10 @@ class SubversionForm extends PMPageForm
 
             case 'SVNPath':
             case 'RootPath':
-                foreach( $connectors as $connector )
-                {
+                $text = '';
+                foreach( $connectors as $connector ) {
                     $text .= '<span for-class="'.strtolower(get_class($connector)).'">'.$connector->getCredentialsParmDescription( $name ).'</span>';
                 }
-                
                 return $text;
                 
             default:
@@ -61,15 +60,6 @@ class SubversionForm extends PMPageForm
         }
     }
 
-    function redirectOnAdded( $object_it, $url )
-    {
-        global $project_it;
-
-        $url = '/pm/'.$project_it->get('CodeName').'/module/sourcecontrol/revision?subversion='.$object_it->getId();
-
-        exit(header('Location: '.$url));
-    }
-    
 	function drawScripts()
 	{
 		parent::drawScripts();

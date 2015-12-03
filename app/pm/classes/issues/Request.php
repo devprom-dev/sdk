@@ -210,20 +210,6 @@ class Request extends MetaobjectStatable
 			}
 		}
 
-		if ( $attr_name == 'ClosedInVersion' && $_REQUEST['pm_ChangeRequestId'] > 0 )
-		{
-			$request = $model_factory->getObject('pm_ChangeRequest');
-			
-			$request_it = $request->getExact($_REQUEST['pm_ChangeRequestId']);
-
-			$stage_it = $request_it->getStageIt();
-			
-			if ( is_object($stage_it) )
-			{
-				return $stage_it->getDisplayName();
-			}
-		}
-
 		return parent::getDefaultAttributeValue( $attr_name );
 	}
 	

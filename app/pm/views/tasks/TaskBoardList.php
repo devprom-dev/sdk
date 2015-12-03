@@ -213,15 +213,14 @@ class TaskBoardList extends PMPageBoard
 	
 	function getGroupIt()
 	{
+		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupIt();
+
 		$values = $this->getFilterValues();
-		if ( $this->getTable()->hasCrossProjectFilter() ) {
-			$vpd_filter = new FilterVpdPredicate();
-		} else {
-			$vpd_filter = new FilterBaseVpdPredicate();
-		}
-		switch($this->getGroup())
+		$vpd_filter = new FilterVpdPredicate();
+
+		switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
 		{
-			case 'Release':
+			case 'pm_Release':
 				$object = getFactory()->getObject('Iteration');
 				$ids = array_merge(
 						$object->getRegistry()->Query(
@@ -236,7 +235,7 @@ class TaskBoardList extends PMPageBoard
 						parent::getGroupIt()->idsToArray()
 				);
 				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
-			case 'Assignee':
+			case 'cms_User':
 				return getFactory()->getObject('User')->getRegistry()->Query(
 						array (
 								new UserWorkerPredicate(),
@@ -419,31 +418,11 @@ class TaskBoardList extends PMPageBoard
 					));
 				break;
 
-			case 'Release':
-            case 'PlannedRelease':
-				parent::drawGroup($group_field, $object_it);
-				echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
-
-				$release_it = $this->getGroupIt();
-				$release_it->moveToId($object_it->get($group_field));
-
-				if ( $release_it->getId() > 0 ) {
-					$estimation = $release_it->getTotalWorkload();
-					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
-					echo sprintf(
-						text(2053),
-						$release_it->getDateFormatShort('StartDate'),
-                        $release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
-						$this->estimation_strategy->getDimensionText(round($maximum, 1)),
-                        $estimation > $maximum ? 'label label-important' : ($estimation < $maximum ? 'label label-success': ''),
-						$this->estimation_strategy->getDimensionText(round($estimation, 1))
-					);
-				}
-				break;
-
 			default:
 				parent::drawGroup($group_field, $object_it);
 		}
+
+		$this->getTable()->drawGroup($group_field, $object_it);
 	}
 		
 	function getGroupBackground2( $object_it, $attr_it ) 

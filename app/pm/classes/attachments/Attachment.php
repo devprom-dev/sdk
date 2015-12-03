@@ -1,6 +1,5 @@
 <?php
-
-include "AttachmentIterator.php";
+include_once "AttachmentIterator.php";
 include "predicates/AttachmentObjectPredicate.php";
 
 class Attachment extends Metaobject

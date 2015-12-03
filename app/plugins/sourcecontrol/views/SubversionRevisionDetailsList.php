@@ -45,10 +45,7 @@ class SubversionRevisionDetailsList extends SubversionList
             	
                 if ( $object_it->get('Action') != translate('Удалено') )
 	            {
-	                $path = $object_it->utf8towin($object_it->get('Path'));
-	                
-	                $content = preg_split('/\//', $object_it->get('ContentType'));
-	
+	                $path = $object_it->get('Path');
                     echo '<a href="/pm/'.$project_it->get('CodeName').
 	                    '/module/sourcecontrol/files?path='.urlencode($path).
 	                    '&version='.SanitizeUrl::parseUrl($_REQUEST['version']).'&subversion='.$repo_it->getId().
@@ -57,18 +54,15 @@ class SubversionRevisionDetailsList extends SubversionList
 	            }
 	            else
 	            {
-	                echo $object_it->utf8towin($object_it->get('Name'));
+	                echo $object_it->get('Name');
 	            }
             	
             	break;
             	
             case 'Path':
-            	
-                if ( $object_it->get('Action') != translate('Удалено') )
-	            {
-	                echo $object_it->utf8towin($object_it->get('Path'));
+                if ( $object_it->get('Action') != translate('Удалено') ) {
+	                echo $object_it->get('Path');
 	            }
-	            
 	            break;
 	            
             case 'Change':
@@ -79,7 +73,7 @@ class SubversionRevisionDetailsList extends SubversionList
 	            {
 	                $log_it = $this->connector->getFileLogs(
 	                        $object_it->get('Path'), 0, $_REQUEST['version'] );
-	                 
+
 	                $preversion = $log_it->get('Version');
 	                $log_it->moveNext();
 	                 

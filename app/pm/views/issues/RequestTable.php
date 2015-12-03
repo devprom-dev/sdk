@@ -14,10 +14,12 @@ include "RequestTraceList.php";
 class RequestTable extends PMPageTable
 {
  	var $view_filter;
- 	
+	private $estimation_strategy = null;
+
  	function __construct( & $object )
  	{
- 		parent::__construct( $object );
+		$this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+		parent::__construct( $object );
  	}
 	
 	function getList( $mode = '' )
@@ -69,6 +71,7 @@ class RequestTable extends PMPageTable
 		$method = new ExcelExportWebMethod();
 		array_push($actions, array( 'name' => $method->getCaption(),
 			'url' => $method->getJSCall( $this->getShortCaption() ) ) );
+		$actions[] = array();
 		
 		$method = new BoardExportWebMethod();
 		array_push($actions, array( 'name' => $method->getCaption(),
@@ -78,15 +81,25 @@ class RequestTable extends PMPageTable
 		array_push($actions, array( 'name' => $method->getCaption(),
 			'url' => $method->getJSCall() ) );
 
-		$module_it = $model_factory->getObject('Module')->getExact('issues-import');
-	    
+		$module = getFactory()->getObject('Module');
+
+		$module_it = $module->getExact('attachments');
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+		{
+			$item = $module_it->buildMenuItem('class=request');
+			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
+			$actions[] = array(
+					'name' => text(1373),
+					'url' => $item['url']
+			);
+		}
+
+		$module_it = $module->getExact('issues-import');
 	    if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 	    {
         	if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-        	
 	        $item = $module_it->buildMenuItem('?view=import&mode=xml&object=request');
-	        
-		    $actions[] = array( 
+		    $actions[] = array(
                 'name' => translate('Импортировать'),
 				'url' => $item['url']
             );
@@ -96,7 +109,6 @@ class RequestTable extends PMPageTable
         if ( count($trace_attributes) > 0 )
         {
             if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-            
     		$actions['trace'] = array (
     		        'uid' => 'trace', 
     		        'name' => translate('Трассировка'),
@@ -156,12 +168,17 @@ class RequestTable extends PMPageTable
 		$parms = array (
 				'area' => $this->getPage()->getArea()
 		);
-			
-		$report = $this->getReportBase();
-	    if ( $report == 'myissues' ) { 
-	    	$parms['Owner'] = getSession()->getUserIt()->getId(); 
+
+		if ( in_array($filter_values['type'], array('','all')) || strpos($filter_values['type'],'none') !== false )
+		{
+			$uid = 'append-issue';
+			$append_actions[$uid] = array (
+				'name' => $this->object->getDisplayName(),
+				'uid' => $uid,
+				'url' => $method->getJSCall($parms)
+			);
 		}
-			
+
 		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
 				array (
 						new FilterVpdPredicate($project_it->get('VPD')),
@@ -169,7 +186,6 @@ class RequestTable extends PMPageTable
 						new SortOrderedClause()
 				)
 		);
-		
 		while ( !$type_it->end() )
 		{
 			$parms['Type'] = $type_it->getId();
@@ -185,16 +201,6 @@ class RequestTable extends PMPageTable
 		}
 		
 		unset($parms['Type']);
-		
-		if ( in_array($filter_values['type'], array('','all')) || strpos($filter_values['type'],'none') !== false )
-		{
-			$uid = 'append-issue';
-			$append_actions[$uid] = array ( 
-				'name' => $this->object->getDisplayName(),
-				'uid' => $uid,
-				'url' => $url != '' ? preg_replace('/\%query\%/', '', $url) : $method->getJSCall($parms)
-			);
-		}
 		
 		$template_it = getFactory()->getObject('RequestTemplate')->getRegistry()->Query(
 				array ( new FilterVpdPredicate($project_it->get('VPD')) )
@@ -214,24 +220,6 @@ class RequestTable extends PMPageTable
 		
 		return $append_actions;
 	}
-	
-    function getVersioningActions()
-    {
-    	$actions = parent::getVersioningActions();
-    	
-    	if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('cms_Snapshot')) )
-		{
-			$method = new MakeSnapshotWebMethod();
-			
-			$actions[] = array( 
-				'name' => $method->getCaption(),
-				'url' => $method->getJSCall(),
-				'uid' => 'save-version'
-			);
-		}
-
-		return $actions;
-    }
 	
 	function getViewFilter()
 	{
@@ -434,7 +422,7 @@ class RequestTable extends PMPageTable
 	
 	protected function buildFilterType()
 	{
-		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_IssueType'), translate('Тип'), 'type');
+		$type_method = new FilterObjectMethod( getFactory()->getObject('RequestType'), translate('Тип'), 'type');
 		$type_method->setIdFieldName( 'ReferenceName' );
 		$type_method->setNoneTitle( getFactory()->getObject('Request')->getDisplayName() );
 		return $type_method;
@@ -529,5 +517,39 @@ class RequestTable extends PMPageTable
 			}
 		}
 		return '';
+	}
+
+	function drawGroup( $group_field, $object_it )
+	{
+		switch ( $group_field )
+		{
+			case 'PlannedRelease':
+				echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
+
+				$release_it = $this->getListRef()->getGroupIt();
+				$release_it->moveToId($object_it->get($group_field));
+
+				if ( $release_it->getId() > 0 ) {
+					$estimation = $release_it->getTotalWorkload();
+					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
+					echo sprintf(
+						getSession()->getProjectIt()->IsPortfolio() ? text(2076) : text(2053),
+						$release_it->getDateFormatShort('StartDate'),
+						$release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
+						$this->estimation_strategy->getDimensionText(round($maximum, 1)),
+						$estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+						$this->estimation_strategy->getDimensionText(round($estimation, 1))
+					);
+				}
+				break;
+
+			case 'Project':
+				$project_it = $this->getListRef()->getGroupIt();
+				$project_it->moveToId($object_it->get($group_field));
+				echo $this->getView()->render('pm/RowGroupActions.php', array (
+					'actions' => $this->getNewCardActions($project_it)
+				));
+				break;
+		}
 	}
 } 

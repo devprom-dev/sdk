@@ -68,5 +68,6 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 				);
 			$attribute_it->moveNext();
 		}
-    }
+		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false);
+	}
 }

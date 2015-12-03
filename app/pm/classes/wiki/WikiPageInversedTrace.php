@@ -10,4 +10,9 @@ class WikiPageInversedTrace extends WikiPageTrace
  	{
  		return new WikiPageInversedTraceIterator( $this );
  	}
+
+	function getBaselineReference()
+	{
+		return 'SourceBaseline';
+	}
 }

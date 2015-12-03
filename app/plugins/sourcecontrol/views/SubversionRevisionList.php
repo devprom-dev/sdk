@@ -63,18 +63,13 @@ class SubversionRevisionList extends SubversionList
                 break;
 
             case 'Author':
-                
-                $part_it = $object_it->getRef('Participant');
-                
-                if ( $part_it->getId() > 0 )
-                {
+                $part_it = $object_it->getRef('SystemUser');
+                if ( $part_it->getId() > 0 ) {
                     echo $part_it->getDisplayName();
                 }
-                else
-                {
+                else {
                     parent::drawCell( $object_it, $attr );
                 }
-                
                 break;
 
             default:

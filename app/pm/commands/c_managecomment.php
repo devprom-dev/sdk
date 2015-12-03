@@ -1,5 +1,5 @@
 <?php
- 
+
 include_once SERVER_ROOT_PATH."cms/c_form_embedded.php";
 
 class ManageComment extends CommandForm

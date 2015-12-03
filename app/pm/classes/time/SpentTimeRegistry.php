@@ -5,7 +5,11 @@ class SpentTimeRegistry extends ObjectRegistrySQL
  	function createSQLIterator( $sql ) 
  	{
 		$this->report_year = $this->getObject()->getReportYear();
+		if ( !is_numeric($this->report_year) ) $this->report_year = date('Y');
+
 		$this->report_month = $this->getObject()->getReportMonth();
+		if ( !is_numeric($this->report_month) ) $this->report_month = date('m');
+
 		$this->view = $this->getObject()->getView();
  		
 		$group_field = $this->getObject()->getGroup();
@@ -45,27 +49,34 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		$sql = " SELECT ".$registry->getSelectClause('t').",".
 			   "        ".$group." Day, ".
 		       "		t2.* " .
-			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, " .
-			   "				a.VPD, p.SystemUser, p.Project, p.pm_ParticipantId " .
-			   "		   FROM pm_Activity a, pm_Task t, pm_Participant p ".
-			   "  	      WHERE a.Task = t.pm_TaskId ".
-			   "			AND a.Participant = p.SystemUser ".
-			   "			AND t.VPD = p.VPD ".
+			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, a.Description, " .
+			   "				a.VPD, a.Participant SystemUser, ".
+			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project" .
+			   "		   FROM pm_Activity a, pm_Task t, pm_CalendarInterval i ".
+			   "  	      WHERE a.Task = t.pm_TaskId AND a.ReportDate = i.StartDateOnly ".
+			   "			AND i.Kind = 'day' AND i.IntervalYear = ".$this->report_year." AND i.IntervalMonth = ".$this->report_month.
+               $this->getObject()->getVpdPredicate('t').
 			   "        ) t2, ".
 			   "		".$registry->getQueryClause()." t " .
 			   "  WHERE 1 = 1 ".$this->getFilterPredicate('t2').
 			   "	AND t2.".$row_field." = t.".$row_object->getIdAttribute();
 
 		$activity_it = parent::createSQLIterator($sql);
-		
+
 		$rows = array();
+		$comments = array();
 		$groups = array();
-		
+
 		while( !$activity_it->end() )
 		{
 			$rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Day'.$activity_it->get('Day')] 
 					+= $activity_it->get('Capacity');
-			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')] 
+            $rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Comment'.$activity_it->get('Day')][] =
+                array (
+                    'Task' => $activity_it->get('Task'),
+                    'Text' => $activity_it->get('Description')
+                );
+			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')]
 					+= $activity_it->get('Capacity');
 			$activity_it->moveNext();
 		}
@@ -73,7 +84,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		$data = array();
 		foreach( $groups as $group_id => $values )
 		{
-			if ( $group_id > 0 ) {
+			if ( $group_id != '' ) {
 				$data[] = array_merge(
 						array (
 							'Item' => $group_field,
@@ -102,7 +113,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		}
 
 		$it = $this->createIterator($data);
-		$it->setDaysMap($this->days_map);
+        $it->setDaysMap($this->days_map);
 		
 		return $it; 
  	}

@@ -1,5 +1,8 @@
 <?php
- 
+
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
+
 include SERVER_ROOT_PATH.'cms/c_object.php';
 include SERVER_ROOT_PATH.'cms/c_entity.php'; 
 include SERVER_ROOT_PATH.'cms/c_iterator_xml.php';
@@ -22,7 +25,7 @@ class Metaobject extends StoredObjectDB
 	var $reference_parsers;
 	
 	private $entity_ref_name = '';
-	
+	private $attributes_removed = array();
 	private $entity_title = '';
 	
  	function Metaobject( $entity_refname, ObjectRegistrySQL $registry = null, $metadata_cache_category = '' )
@@ -48,9 +51,10 @@ class Metaobject extends StoredObjectDB
 			
 		$metadata = getFactory()->getMetadataRegistry()->getMetadata($this, $metadata_cache_category);
 		$metadata->setObject($this);
-		
+
 		$this->setPersisters( $metadata->getPersisters() ); 
 		$attributes = $metadata->getAttributes();
+		$this->attributes_removed = $metadata->getAttributesRemoved();
 		
 		$this->setAttributes($attributes);
 		foreach( $attributes as $key => $attribute )
@@ -116,7 +120,9 @@ class Metaobject extends StoredObjectDB
 
 	function getDisplayName() 
 	{
-		return $this->entity_title;
+		return preg_replace_callback (
+			'/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $this->entity_title
+		);
 	}
 	
 	function getPage() 
@@ -161,6 +167,11 @@ class Metaobject extends StoredObjectDB
 	function DeletesCascade( $object )
 	{
 		return true;
+	}
+
+	function getAttributesRemoved()
+	{
+		return $this->attributes_removed;
 	}
 
 	//----------------------------------------------------------------------------------------------------------
@@ -447,24 +458,9 @@ class Metaobject extends StoredObjectDB
 			$reference_it->moveNext();
 		}
 	}
-	
+
 	public function __sleep()
 	{
-		parent::__sleep();
-		unset($this->entity);
-		$this->entity = null;
-	}
-	
-	public function __destruct()
-	{
-		parent::__destruct();
-		unset($this->entity);
-		$this->entity = null;
-	}
-	
-	public function __wakeup()
-	{
-		parent::__wakeup();
-		$this->entity = null;
+		throw new Exception('Unable serialize Metaobject');
 	}
 }

@@ -25,14 +25,14 @@ class WikiConverterMPdf
  	
  	function setObjectIt( $wiki_it )
  	{
+        $this->level = count($wiki_it->getParentsArray());
  		if ( $wiki_it->count() > 1 )
  		{
  			$this->wiki_it = $wiki_it;
  		}
  		else
  		{
- 			$this->level = count($wiki_it->getParentsArray());
-	 		$this->wiki_it = $wiki_it->object->getRegistry()->Query( 
+	 		$this->wiki_it = $wiki_it->object->getRegistry()->Query(
 	 				array_merge( 
 	 						array(
 					 				new WikiRootTransitiveFilter($wiki_it->getId()),
@@ -63,7 +63,7 @@ class WikiConverterMPdf
 
  		$object_it = $this->getObjectIt();
  		if ( $this->getTitle() == '' ) $this->setTitle($object_it->getDisplayName());
- 		
+
  		while( !$object_it->end() )
 		{
 			$this->transformWiki( $object_it->copy(), count($object_it->getParentsArray()) - $this->level);
@@ -97,22 +97,19 @@ class WikiConverterMPdf
  		$parser->setReferenceTitleResolver(function($info) {
  			return $info['caption'];
  		});
- 		
+
 		$content = $parser->parse( $content );
-		if ( $level > 0 || $content != '' )
-		{
-    		$title = $parent_it->getHtmlDecoded('Caption');
-    		$heading_level = max(min($level, 4), 1);  
-    		
-    		$this->transform( 
-    			mb_convert_encoding(
-    			        '<a name="'.$title.'" level="'.$level.'"/><h'.$heading_level.' '.($this->headers_passed < 1 || true ? 'style="page-break-before:avoid;"' : '').'>'.$title.'</h'.$heading_level.'>'.
-    			        ''.$content.'', 
-    			        'UTF-8', 
-    			        APP_ENCODING) 
-    			);
-    		$this->headers_passed++;
-		}
+        $title = $parent_it->getHtmlDecoded('Caption');
+        $heading_level = max(min($level, 4), 1);
+
+        $this->transform(
+            mb_convert_encoding(
+                    '<a name="'.$title.'" level="'.$level.'"/><h'.$heading_level.' '.($this->headers_passed < 1 || true ? 'style="page-break-before:avoid;"' : '').'>'.$title.'</h'.$heading_level.'>'.
+                    ''.$content.'',
+                    'UTF-8',
+                    APP_ENCODING)
+            );
+        $this->headers_passed++;
 	}
 
 	function transform( &$html )

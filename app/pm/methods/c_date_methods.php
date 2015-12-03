@@ -122,22 +122,13 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
- class ViewStartDateWebMethod extends FilterDateWebMethod
- {
- 	var $title, $default;
- 	
+class ViewStartDateWebMethod extends FilterDateWebMethod
+{
  	function __construct ( $title = 'Начало' )
  	{
- 		$this->title = translate($title);
-
- 		$this->default = getSession()->getLanguage()->getPhpDate(strtotime('-1 weeks', strtotime(date('Y-m-j'))));
-
+ 		$this->setCaption(translate($title));
+ 		$this->setDefault(getSession()->getLanguage()->getPhpDate(strtotime('-1 weeks', strtotime(date('Y-m-j')))));
 		parent::__construct();
- 	}
- 	
- 	function getCaption()
- 	{
- 		return $this->title;
  	}
 
 	function getStyle()
@@ -149,33 +140,25 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 	{
 		return 'start';
 	}
-	
-	function getValue()
-	{
-		$value = parent::getValue();
-		
-		return $value == '' ? $this->default : $value;
-	}
- }
+}
 
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewFinishDateWebMethod extends FilterDateWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Окончание');
- 	}
+///////////////////////////////////////////////////////////////////////////////////////
+class ViewFinishDateWebMethod extends FilterDateWebMethod
+{
+	 function __construct( $title = 'Окончание' )
+	 {
+		 $this->setCaption(translate($title));
+		 parent::__construct();
+	 }
 
-	function getStyle()
-	{
+	function getStyle() {
 		return 'width:100px;';
 	}
 
-	function getValueParm()
-	{
+	function getValueParm() {
 		return 'finish';
 	}
- }
+}
 
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewModifiedBeforeDateWebMethod extends FilterDateWebMethod
@@ -214,5 +197,3 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 		return 'modifiedafter';
 	}
  }
- 
-?>

@@ -143,30 +143,30 @@ class html2text
      *  @see $replace
      */
     var $search = array(
-        '/\s{1,}/',                             // Runs of spaces, pre-handling
-        '/<script[^>]*>.*?<\/script>/i',         // <script>s -- which strip_tags supposedly has problems with
-        '/<style[^>]*>.*?<\/style>/i',           // <style>s -- which strip_tags supposedly has problems with
-        '/<h[123][^>]*>(.*?)<\/h[123]>/ie',      // H1 - H3
-        '/<h[456][^>]*>(.*?)<\/h[456]>/ie',      // H4 - H6
-        '/<p[^>]*>/i',                           // <P>
-        '/<br[^>]*>/i',                          // <br>
-        '/<b[^>]*>(.*?)<\/b>/ie',                // <b>
-        '/<strong[^>]*>(.*?)<\/strong>/ie',      // <strong>
-        '/<i[^>]*>(.*?)<\/i>/i',                 // <i>
-        '/<em[^>]*>(.*?)<\/em>/i',               // <em>
-        '/(<ul[^>]*>|<\/ul>)/i',                 // <ul> and </ul>
-        '/(<ol[^>]*>|<\/ol>)/i',                 // <ol> and </ol>
-        '/<li[^>]*>(.*?)<\/li>/i',               // <li> and </li>
-        '/<li[^>]*>/i',                          // <li>
-        '/<a [^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/ie',
+        '/[\p{Z}\s]{1,}/u',                             // Runs of spaces, pre-handling
+        '/<script[^>]*>.*?<\/script>/ui',         // <script>s -- which strip_tags supposedly has problems with
+        '/<style[^>]*>.*?<\/style>/iu',           // <style>s -- which strip_tags supposedly has problems with
+        '/<h[123][^>]*>(.*?)<\/h[123]>/uie',      // H1 - H3
+        '/<h[456][^>]*>(.*?)<\/h[456]>/iue',      // H4 - H6
+        '/<p[^>]*>/ui',                           // <P>
+        '/<br[^>]*>/ui',                          // <br>
+        '/<b[^>]*>(.*?)<\/b>/uie',                // <b>
+        '/<strong[^>]*>(.*?)<\/strong>/uie',      // <strong>
+        '/<i[^>]*>(.*?)<\/i>/ui',                 // <i>
+        '/<em[^>]*>(.*?)<\/em>/ui',               // <em>
+        '/(<ul[^>]*>|<\/ul>)/ui',                 // <ul> and </ul>
+        '/(<ol[^>]*>|<\/ol>)/ui',                 // <ol> and </ol>
+        '/<li[^>]*>(.*?)<\/li>/ui',               // <li> and </li>
+        '/<li[^>]*>/ui',                          // <li>
+        '/<a [^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/uie',
                                                  // <a href="">
-        '/<hr[^>]*>/i',                          // <hr>
-        '/(<table[^>]*>|<\/table>)/i',           // <table> and </table>
-        '/<tr[^>]*>/i',                 		 // <tr>
-        '/<\/tr>/i',                 			 // </tr>
-        '/<td[^>]*>(.*?)<\/td>/i',               // <td> and </td>
-        '/<th[^>]*>(.*?)<\/th>/ie',              // <th> and </th>
-        '/<\/p[^>]*>/i'                         // </P>
+        '/<hr[^>]*>/iu',                          // <hr>
+        '/(<table[^>]*>|<\/table>)/iu',           // <table> and </table>
+        '/<tr[^>]*>/iu',                 		 // <tr>
+        '/<\/tr>/iu',                 			 // </tr>
+        '/<td[^>]*>(.*?)<\/td>/iu',               // <td> and </td>
+        '/<th[^>]*>(.*?)<\/th>/ieu',              // <th> and </th>
+        '/<\/p[^>]*>/ui'                         // </P>
     );
 
     /**
@@ -182,7 +182,7 @@ class html2text
         '',                                     // <style>s -- which strip_tags supposedly has problems with
         "strtoupper(\"\n\n\\1\n\n\")",          // H1 - H3
         "ucwords(\"\n\n\\1\n\n\")",             // H4 - H6
-        "",                               		// <P>
+        "\n",                               		// <P>
         "\n",                                   // <br>
         'strtoupper("\\1")',                    // <b>
         'strtoupper("\\1")',                    // <strong>
@@ -195,11 +195,11 @@ class html2text
         '$this->_build_link_list("\\1", "\\2")',
                                                 // <a href="">
         "\n-------------------------\n",        // <hr>
-        "\n\n",                                 // <table> and </table>
-        "\n|",                                   // <tr>
+        "",                                 // <table> and </table>
+        "",                                   // <tr>
         "",                                   // </tr>
-        "\\1|",                            // <td> and </td>
-        "strtoupper(\"\\1|\")",            // <th> and </th>
+        "\\1",                            // <td> and </td>
+        "strtoupper(\"\\1\")",            // <th> and </th>
         ''                                    // </P>
     );
 

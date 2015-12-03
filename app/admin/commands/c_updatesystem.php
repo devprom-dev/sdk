@@ -17,23 +17,16 @@ class UpdateSystem extends MaintenanceCommand
 		
 	    // executes installation scripts
 	    $result = array();
-	    
-	    $installation_factory = InstallationFactory::getFactory();
-	    
-	    if ( !$installation_factory->install( $result ) )
-	    {
+	    if ( !InstallationFactory::getFactory()->install( $result ) ) {
 	        $this->replyError(str_replace('%1', join(', ', $result), text(1053)));
 	    }
 
 	    // rerun checks on checkpoints
-		$checkpoint_factory = getCheckpointFactory();
-		
-		$checkpoint = $checkpoint_factory->getCheckpoint( 'CheckpointSystem' );
+		getCheckpointFactory()->getCheckpoint('CheckpointSystem')->executeDynamicOnly();
 
-		$checkpoint->executeDynamicOnly();
-		
+		// rebuild cached list of plugins
 		$plugins->buildPluginsList();
-	    
+
 		$this->replyRedirect( '?' );
 	}
 }

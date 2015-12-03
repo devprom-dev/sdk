@@ -13,7 +13,8 @@ class AccessPolicyProject extends AccessPolicyBase
  	var $access_it, $base_role_map, $object_access_it,
  		$role_manager, $role_user, $role_guest, $role_linkedguest,
  		$linked_vpds, $role_it, $check_type, $role_reference_names;
- 	
+ 	private $project_it = null;
+
  	function buildRoles()
  	{
  		$project_roles = getSession()->getRoles();

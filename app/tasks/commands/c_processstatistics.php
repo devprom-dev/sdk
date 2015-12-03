@@ -54,22 +54,26 @@ class ProcessStatistics extends TaskCommand
 	
 	function processChunk( $chunk )
 	{
-		global $model_factory, $session;
+		global $session;
 		
 		$auth_factory = new AuthenticationFactory();
-			
-		$auth_factory->setUser( $model_factory->getObject('cms_User')->getEmptyIterator() );
-		
-		$project = $model_factory->getObject('pm_Project');
-		
-		$project_it = $project->getInArray('pm_ProjectId', $chunk );
+		$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
 
+		$project_it = getFactory()->getObject('pm_Project')->getInArray('pm_ProjectId', $chunk );
 		while ( !$project_it->end() )
 		{
-			$session = new PMSession($project_it->get('CodeName'), $auth_factory);
+			$session = new PMSession($project_it->copy(), $auth_factory);
+
+			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
+			getFactory()->resetCache();
+
+			$project = getFactory()->getObject('pm_Project');
+			foreach( $session->getBuilders('ProjectMetricsModelBuilder') as $builder ) {
+				$builder->build($project);
+			}
 
 			$service = new StoreMetricsService();
-			$service->execute($project_it);
+			$service->execute($project->getExact($project_it->getId()));
 			
 			$project_it->moveNext();
 		}

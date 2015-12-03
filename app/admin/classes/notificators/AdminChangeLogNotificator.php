@@ -14,10 +14,10 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
             'Priority',
             'co_ScheduledJob',
             'co_RemoteMailbox',
-            'pm_Participant',
             'pm_Project',
 			'cms_Backup',
-			'cms_Update'
+			'cms_Update',
+			'cms_BlackList'
         );
     }
     

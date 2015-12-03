@@ -131,7 +131,7 @@ var sortableTree = (function() {
         sortableTree.sortable2("disable");
         $.ajax({ url: url, dataType: 'json', type: 'POST'})
             .success(function (data) {
-                if (data.state === 'success') {
+                if (data != null && data.state === 'success') {
                     _hideLoadingIndicator(item);
                     backupItem.remove();
                 } else {

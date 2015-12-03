@@ -36,7 +36,8 @@ class FieldTaskTypeDictionary extends FieldDictionary
 	 	$type_it = $this->getObject()->getRegistry()->Query(
 	 		array(
 	 			new FilterBaseVpdPredicate(),
-	 			new SortAttributeClause('ParentTaskType')
+	 			new SortAttributeClause('ParentTaskType'),
+				new SortAttributeClause('Caption')
 	 		)
 	 	);
 	 	

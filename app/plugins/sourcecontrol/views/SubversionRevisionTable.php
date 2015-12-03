@@ -72,8 +72,8 @@ class SubversionRevisionTable extends PMPageTable
 
         return array (
                 new SubversionRevisionRequirementPredicate( $_REQUEST['requirement'] ),
-                new FilterSubmittedAfterPredicate( $values['start'] ),
-                new FilterSubmittedBeforePredicate( $values['finish'] ),
+                new FilterModifiedAfterPredicate( $values['start'] ),
+                new FilterModifiedBeforePredicate( $values['finish'] ),
                 new FilterAttributePredicate( 'Repository', $values['subversion'] ),
         		new FilterAttributePredicate( 'Author', $values['subversionauthor'] ),
         );

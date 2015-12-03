@@ -34,7 +34,6 @@ class DevpromParametersLoader {
     public function loadProjectSettings()
     {
     	$data = $this->queryProjectSettings();
-        $settings['supportEmail'] = $this->normalizeEmailAddress($data['supportEmail']);
         $settings['supportProjects'] = $data['supportProjects'];
         $settings['supportProjectVpds'] = $data['supportProjectVpds'];
         return $settings;
@@ -47,7 +46,7 @@ class DevpromParametersLoader {
     {
     	if (!\DeploymentState::IsInstalled()) return array();
         DALMySQL::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
-        $sql = "SELECT LOWER(l.CodeName) langCode, AdminEmail adminEmail, s.Caption clientName
+        $sql = "SELECT LOWER(l.CodeName) langCode, IFNULL(AdminEmail, ' ') adminEmail, s.Caption clientName
                     FROM cms_SystemSettings s, cms_Language l
                     WHERE s.LANGUAGE = l.cms_languageId";
         $r2 = DAL::Instance()->Query($sql);
@@ -59,40 +58,19 @@ class DevpromParametersLoader {
     {
     	if (!\DeploymentState::IsInstalled()) return array();
     	DALMySQL::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
-        $sql = "SELECT p.pm_ProjectId, p.VPD, IF(rm.SenderAddress IS NOT NULL,
-                              rm.SenderAddress,
-                                  IF(rm.EmailAddress IS NOT NULL,
-                                 IF(rm.EmailAddress NOT LIKE '%%@%%', CONCAT(rm.EmailAddress, '@', rm.HostAddress), rm.EmailAddress),
-                                 (SELECT s.AdminEmail FROM cms_SystemSettings s))
-                                  ) supportEmail
-                    FROM pm_Project p LEFT JOIN co_RemoteMailbox rm ON rm.Project = p.pm_ProjectId
-        		   WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) ";
+        $sql = "SELECT p.pm_ProjectId, p.VPD
+                  FROM pm_Project p
+        		 WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) ";
         $r2 = DAL::Instance()->Query($sql);
         $result = array();
         $ids = array();
         $vpds = array();
         while($data = mysql_fetch_assoc($r2)) {
-        	$result['supportEmail'] = $data['supportEmail'];
         	$ids[] = $data['pm_ProjectId'];
         	$vpds[] = $data['VPD'];
         }
         $result['supportProjects'] = $ids; 
         $result['supportProjectVpds'] = $vpds;
         return $result;
-    }
-    
-    /**
-     * @param $supportEmail
-     * @return string
-     */
-    protected function normalizeEmailAddress($supportEmail)
-    {
-        if (!$supportEmail) {
-            return " ";
-        } else if (preg_match("/.+<(.+)>/", html_entity_decode($supportEmail), $matches)) {
-            return $matches[1];
-        }
-
-        return $supportEmail;
     }
 }

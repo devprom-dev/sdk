@@ -6,18 +6,9 @@ class PMWikiList extends PMPageList
  	
 	function retrieve()
 	{
-		global $model_factory, $session;
-		
 		parent::retrieve();
 
-		$object = $this->getObject();
-		
-		$this->version_it = $object->getVersionsIt();
-		
-		$this->version_it->buildPositionHash( array('WikiPageId') ); 
-
-		$this->stage = $model_factory->getObject('Stage');
-		
+		$this->stage = getFactory()->getObject('Stage');
 		$this->stage->disableVpd();
 	}
 	
@@ -60,42 +51,6 @@ class PMWikiList extends PMPageList
 
 				break;
 				
-			case 'Stage':
-				$stages = array();
-				
-				$this->version_it->setStop( 'WikiPageId', $object_it->getId() );
-				$releases = array();
-				
-				while ( !$this->version_it->end() )
-				{
-					if ( in_array( $this->version_it->get('Version'), $releases) )
-					{
-						$this->version_it->moveNext();
-						continue;
-					}
-					
-					if ( $this->version_it->get('Release') > 0 )
-					{
-    					$stage_it = $this->stage->getExact( 
-    						$this->version_it->get('Version').'.'.$this->version_it->get('Release') );
-					}
-					else if ( $this->version_it->get('Version') > 0 )
-					{
-    					$stage_it = $this->stage->getExact( $this->version_it->get('Version') );
-					}
-					
-					if( is_object($stage_it) ) 
-					{
-						array_push( $releases, $this->version_it->get('Version') );
-						array_push( $stages, $stage_it->getDisplayName() );
-					}
-
-					$this->version_it->moveNext();
-				}
-
-				echo join(array_unique($stages), ', ');
-				break;
-
 			case 'Workflow':
                 if ( $object_it->get($attr) != '' ) {
                     $lines = array();
@@ -119,15 +74,6 @@ class PMWikiList extends PMPageList
 		switch ( $entity_it->object->getClassName() )
 		{
 			case 'WikiPage':
-				
-				$baselines = array();
-				foreach( preg_split('/,/', $object_it->get('SourcePageBaseline')) as $trace )
-				{
-					list( $page_id, $baseline ) = preg_split('/:/', $trace);
-					$baselines[$page_id] = $baseline;
-				}
-				$this->getUidService()->setBaseline($baselines[$entity_it->getId()]);
-				
 				echo '<div class="tracing-ref">';
 					if ( $entity_it->get('BrokenTraces') != "" )
 					{
@@ -140,7 +86,6 @@ class PMWikiList extends PMPageList
 					}
 					parent::drawRefCell( $entity_it, $object_it, $attr );
 				echo '</div>';
-				
 				break;
 				
 		    case 'WikiPageFile':

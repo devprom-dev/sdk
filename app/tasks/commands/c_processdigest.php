@@ -229,7 +229,7 @@ class ProcessDigest extends TaskCommand
 				);
 			}
 			
-			$session = new PMSession($project_it, $auth_factory);
+			$session = new PMSession($project_it->copy(), $auth_factory);
 			
 			$log_registry = $log->getRegistry();
 			

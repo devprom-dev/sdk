@@ -19,45 +19,41 @@ class OpenBrokenTraceWebMethod extends WebMethod
 		);
 
 		if ( $trace_it->getId() < 1 ) throw new Exception('No broken trace was found');
-
 		if ( $trace_it->get('Type') == 'branch' )
 		{
 			$type_it = getFactory()->getObject('WikiType')->getExact($page_it->get('ReferenceName'));
-			
-			$broken_it = getFactory()->getObject($type_it->get('ClassName'))->createCachedIterator(array($page_it->getData()));
-			
-			$snapshot = new WikiPageComparableSnapshot($broken_it->getRootIt());
-	 		
-	 		$snapshot_it = $snapshot->getAll();
-			
-	 		$snapshot_it->moveTo('ObjectId', $trace_it->get('SourceDocumentId'));
-	 		
-	 		if ( $snapshot_it->getId() > 0 )
-	 		{
-				echo $broken_it->getViewUrl().'&compareto='.$snapshot_it->getId();
-	 		}
-	 		else
-	 		{
-				echo $broken_it->getViewUrl().'&compareto=document:'.$trace_it->get('SourceDocumentId');
-	 		}
+
+			$broken = getFactory()->getObject($type_it->get('ClassName'));
+			$broken_it = $broken->createCachedIterator(array($page_it->getData()));
+
+			$url = $broken_it->getViewUrl().'&linkstate=nonactual';
+
+			foreach( $broken->getAttributesByGroup('source-attribute') as $attribute ) {
+				if ( $broken->getAttributeClass($attribute) == get_class($broken) ) {
+					$url .= '&hide=all&show=Content-'.$attribute;
+				}
+			}
+
+			echo $url;
 		}
 		else
 		{
-			$type_it = getFactory()->getObject('WikiType')->getExact($trace_it->get('SourcePageReferenceName'));
-			
-			$broken_it = getFactory()->getObject($type_it->get('ClassName'))->getExact($trace_it->get('SourcePage'));
-			
-			$change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
-				array (
-					new FilterAttributePredicate('WikiPage', $page_it->getId()),
-					new SortRecentClause()
-				)
-			);
-			
-			$url = $broken_it->getHistoryUrl();
-			if ( $change_it->getId() != '' ) {
-				$url .= '&start='.$change_it->getDateTimeFormat('RecordCreated');  
+			$type = getFactory()->getObject('WikiType');
+
+			$source_type_it = $type->getExact($trace_it->get('SourcePageReferenceName'));
+			$target_type_it = $type->getExact($trace_it->get('TargetPageReferenceName'));
+
+			$target = getFactory()->getObject($target_type_it->get('ClassName'));
+			$target_it = $target->getExact($trace_it->get('TargetPage'));
+
+			$url = $target_it->getViewUrl().'&linkstate=nonactual';
+
+			foreach( $target->getAttributesByGroup('source-attribute') as $attribute ) {
+				if ( $target->getAttributeClass($attribute) == $source_type_it->get('ClassName') ) {
+					$url .= '&hide=all&show=Content-'.$attribute;
+				}
 			}
+			
 			echo $url;
 		}
 	}

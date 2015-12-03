@@ -1,11 +1,10 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
-
-include "predicates/TaskFactPersister.php";
-include "persisters/TaskTracePersister.php";
-include "persisters/TaskDetailsPersister.php";
-include "persisters/TaskAssigneePersister.php";
+include_once "predicates/TaskFactPersister.php";
+include_once "persisters/TaskTracePersister.php";
+include_once "persisters/TaskDetailsPersister.php";
+include_once "persisters/TaskAssigneePersister.php";
+include_once "persisters/TaskTypePersister.php";
 
 class TaskMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
@@ -13,10 +12,6 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Task' ) return;
 
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-
-    	$object = $metadata->getObject();
-        
     	$metadata->addPersister( new TaskDetailsPersister() );
     	
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
@@ -25,40 +20,52 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 			translate('Фактическая трудоемкость, ч.'), 
 				is_object($methodology_it) && $methodology_it->IsTimeTracking(), 
 					true, '', 13 );
-		
-		$metadata->setAttributeOrderNum('Planned', 11);
-		$metadata->setAttributeOrderNum('LeftWork', 12);
 
-		if ( $methodology_it->IsTimeTracking() )
-		{
-			$metadata->addPersister( new TaskFactPersister );
+		$metadata->setAttributeOrderNum('Priority', 11);
+		$metadata->setAttributeOrderNum('Assignee', 12);
+		$metadata->setAttributeOrderNum('Planned', 13);
+		$metadata->setAttributeOrderNum('LeftWork', 14);
+
+		if ( $methodology_it->IsTimeTracking() ) {
+			$metadata->addPersister( new TaskFactPersister(array('Fact')) );
 		}
-			
-		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true);
-		$metadata->addAttribute('TraceInversedTask', 'REF_TaskId', text(1921), true);
-		$metadata->addPersister( new TaskTracePersister() );
+
+		$metadata->addAttribute('TypeBase', 'REF_TaskTypeUnifiedId', translate('Тип'), false);
+		$metadata->addAttributeGroup('TypeBase', 'system');
+		$metadata->addPersister(new TaskTypePersister(array('TaskType')));
+
+		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true, false, '', 80);
+		$metadata->addAttribute('TraceInversedTask', 'REF_TaskId', text(1921), true, false, '', 81);
+		$metadata->addPersister( new TaskTracePersister(array('TraceTask','TraceInversedTask')) );
 		
 		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
 		$metadata->setAttributeVisible('Priority', $methodology_it->get('IsRequestOrderUsed') != 'Y');
 		$metadata->setAttributeRequired('Assignee', !$methodology_it->IsParticipantsTakesTasks());
 
-		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true, false, '', 110);
+		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true, false, '', 75);
 		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
 		
-		$metadata->setAttributeOrderNum( 'StartDate', 11 );
-		$metadata->setAttributeOrderNum( 'FinishDate', 12 );
+		$metadata->setAttributeOrderNum( 'PlannedStartDate', 18 );
+		$metadata->setAttributeOrderNum( 'PlannedFinishDate', 19 );
 
 		$metadata->addPersister( new TaskAssigneePersister() );
 
-    	foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask') as $attribute )
-		{
+    	foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'permissions');
 		}
-        foreach ( array('Result') as $attribute )
-		{
+        foreach ( array('Result') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
-		
+		foreach ( array('PlannedStartDate','PlannedFinishDate','StartDate','FinishDate') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'deadlines');
+		}
+		foreach ( array('TraceTask','TraceInversedTask','Watchers') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'trace');
+		}
+		foreach ( array('Caption','Description','Planned','Fact','LeftWork','Attachment','ChangeRequest') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'nonbulk');
+		}
+
 		$this->removeAttributes( $metadata, $methodology_it );
     }
     

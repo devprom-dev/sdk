@@ -50,23 +50,34 @@ if ( count($items) < 1 ) return;
 
 ?>
 
-<ul class="dropdown-menu" role="menu">
+<ul class="dropdown-menu" role="menu" uid="<?=$uid?>">
 
 <?php foreach ( $items as $action ) { ?> 
 
-	<?php  if ( is_array($action['items']) ) { ?>
-		
-	<li class="dropdown-submenu">
-		<a href="#"><?=$action['name']?></a>
-		<?php echo $view->render('core/PopupMenuBody.php', array( 'items' => $action['items'] )); ?>
-	</li>
-		
-	<?php } else { ?>
-	
+	<?php
+	if ( is_array($action['items']) )
+	{
+		$first_item = array_pop(array_values($action['items']));
+		if ( $first_item['name'] != '' ) {
+			?>
+			<li class="dropdown-submenu">
+				<a href="#"><?= $action['name'] ?></a>
+				<?php echo $view->render('core/PopupMenuBody.php', array('items' => $action['items'])); ?>
+			</li>
+
+			<?php
+		}
+		else {
+			$action['name'] = ''; // mark empty sub-menu as separator
+		}
+	}
+	else
+	{
+		?>
 		<?php  if ( $action['url'] == '' && $action['click'] == '' || $action['name'] == '' ) { ?>
-		
-		<li class="divider"></li>
-			
+			<? if ( $last_action['name'] != '') { ?>
+				<li class="divider"></li>
+			<? } ?>
 		<?php } else { ?>
 		
 		<?php $class = (isset($action['multiselect']) ? "checkable" : (isset($action['radio']) ? "radio" : "") ); ?>
@@ -97,6 +108,9 @@ if ( count($items) < 1 ) return;
 		
 		<?php } ?>
 	<?php } ?>
-<?php } ?>
+<?php
+
+$last_action = $action;
+} ?>
 
 </ul>

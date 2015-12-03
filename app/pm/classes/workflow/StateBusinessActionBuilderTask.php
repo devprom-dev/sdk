@@ -6,6 +6,8 @@ include "actions/TaskBusinessActionDeclineIssue.php";
 include "actions/TaskBusinessActionAssignParticipant.php";
 include "actions/TaskBusinessActionResetAssignee.php";
 include "actions/TaskBusinessActionReopenIssue.php";
+include "actions/TaskBusinessActionGetIssueInWork.php";
+include "actions/TaskBusinessActionMoveIssueNextState.php";
 
 class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
 {
@@ -21,5 +23,7 @@ class StateBusinessActionBuilderTask extends StateBusinessActionBuilder
  		$set->registerRule( new TaskBusinessActionAssignParticipant() );
  		$set->registerRule( new TaskBusinessActionResetAssignee() );
  		$set->registerRule( new TaskBusinessActionReopenIssue() );
+        $set->registerRule( new TaskBusinessActionGetIssueInWork() );
+        $set->registerRule( new TaskBusinessActionMoveIssueNextState() );
     }
 }

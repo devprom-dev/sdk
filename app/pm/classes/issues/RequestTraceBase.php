@@ -25,8 +25,12 @@ class RequestTraceBase extends Metaobject
  	{
  		return new RequestTraceBaseIterator( $this );
  	}
- 	
- 	function getObjectClass()
+
+	function getBaselineReference() {
+		return 'Baseline';
+	}
+
+	function getObjectClass()
  	{
  		return '';
  	}

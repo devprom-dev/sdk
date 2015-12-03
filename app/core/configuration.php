@@ -1,9 +1,5 @@
 <?php
 
-
-// environment
-$_SERVER['APP_IID'] = INSTALLATION_UID;
-
 // exception handling and logging
 $handlers = array();
 
@@ -48,21 +44,9 @@ MetricsServer::Instance()->Start();
 MetricsClient::Instance()->Start();
 
 // database connection
-if ( !DeploymentState::IsInstalled() )
-{
+if ( !DeploymentState::IsInstalled() ) {
      DALDummy::Instance()->Connect( '' );
 }
-else
-{
+else {
      DALMySQL::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
-}
-
-// model 		
-$model_factory = $factory = new ModelFactory(
-		new CacheEngine(), new AccessPolicy(new CacheEngine())
-);
-
-if ( DeploymentState::IsInstalled() )
-{
-	$_SERVER['APP_VERSION'] = $model_factory->getObject('cms_Update')->getLatest()->getDisplayName();
 }

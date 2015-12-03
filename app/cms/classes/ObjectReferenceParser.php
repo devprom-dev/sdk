@@ -1,5 +1,8 @@
 <?php
 
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
+
 class ObjectReferenceParser
 {
  	private $object = null;
@@ -22,6 +25,7 @@ class ObjectReferenceParser
 	{
 		unset($this->object);
 		$this->object = null;
+		return array();
 	}
 	
 	public function __destruct()

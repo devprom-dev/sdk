@@ -41,19 +41,13 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
  		switch ( $attr )
  		{
  			case $this->getMenuField():
-
  			    $object = $this->getAttributeObject( $attr );
-
-				$field = new FieldWikiPageTrace( $object );
-				
-				$field->setFormId( $this->getFormId() );
-				
-				$field->setTitle( $object->getDisplayName() ); 
-				
+				$field = new FieldWikiPageTrace($object, $this->getFormId());
+				$field->setTitle( $object->getDisplayName() );
+				$field->setBaselineAttribute($this->getObject()->getBaselineReference());
 				return $field;
 				
  			default:
- 				
  			    return parent::createField( $attr );
  		}
  	}
@@ -72,7 +66,7 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
  		$page_it = $object_it->getRef($this->getMenuField());
  		
 		array_push ( $actions, array( 
-			'click' => "javascript: window.location = '".$page_it->getViewUrl()."&baseline=".$object_it->get('Baseline')."';",
+			'click' => "javascript: window.location = '".$page_it->getViewUrl()."&baseline=".$object_it->get($object_it->object->getBaselineReference())."';",
 			'name' => translate('Открыть') ) 
 		);
 
@@ -146,7 +140,7 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
 
 		$history_url = $page_it->getHistoryUrl();
 		
-		$baseline_it = $object_it->getRef('Baseline');
+		$baseline_it = $object_it->getRef($object_it->object->getBaselineReference());
 		
 		if ( $baseline_it->getId() > 0 )
 		{

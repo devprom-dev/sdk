@@ -30,6 +30,18 @@ class NavigationSettingsService implements SettingsService
 						$system_it->moveNext();
 					}
 					break;
+                case 'pm_CustomReport':
+                    $it = $data_it->object->getRegistry()->Query(
+                        array (
+                            new \CustomReportCommonPredicate(),
+                            new \FilterBaseVpdPredicate()
+                        )
+                    );
+                    while( !$it->end() ) {
+                        $data_it->object->delete($it->getId());
+                        $it->moveNext();
+                    }
+                    break;
 			}
 			$iterator = $data_it->object->createXMLIterator($xml);
 			\CloneLogic::Run( $context, $data_it->object, $iterator, getSession()->getProjectIt() ); 
@@ -41,7 +53,7 @@ class NavigationSettingsService implements SettingsService
 	{
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
-		
+
  		$context = new \CloneContext();
  		foreach ( $this->getIterators() as $data_it )
 		{

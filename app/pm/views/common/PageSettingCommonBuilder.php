@@ -31,20 +31,21 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         // mytasks report
         
         $setting = new ReportSetting('mytasks');
-        
         $setting->setVisibleColumns(
         		array_merge(
         				array (
         						'Spent',
-        						'IssueTraces'
+        						'IssueTraces',
+                                'Description',
+                                'RecentComment',
+                                'DueDate'
         				),
         				array_filter( $visible_attributes, function($value)
         				{
-        						return !in_array($value, array('Assignee', 'Progress')); 
+        						return !in_array($value, array('Assignee', 'ChangeRequest'));
         				})
         		)
         );
-        
         $settings->add( $setting );
 
         // currenttasks report

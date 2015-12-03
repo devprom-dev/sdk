@@ -8,6 +8,9 @@
 				<b><?=$row['author']?></b>: 
 			<?php } ?>
 			<?=$row['datetime']?>
+			<? if ( $row['duration'] >= 0 ) { ?>
+			(<?=str_replace('%1', $row['duration'], text(2100))?>)
+			<? } ?>
 		</div>
 		
 		<?=$row['state']?>

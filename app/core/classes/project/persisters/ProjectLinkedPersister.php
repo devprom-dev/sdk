@@ -34,7 +34,13 @@ class ProjectLinkedPersister extends ObjectSQLPersister
 			   "		AND pl.Target = pr2.pm_ProjectId ".
 			   "		AND pr2.IsTender = 'N' ".
 			   "		AND pl.LinkType = 1 ".
-			   "        AND IFNULL(pr.IsClosed, 'N') = 'N') ".
+			   "        AND IFNULL(pr.IsClosed, 'N') = 'N'), ".
+				"    (SELECT GROUP_CONCAT(CAST(pr.pm_ProjectId AS CHAR)) " .
+				"       FROM co_ProjectGroupLink pg1, co_ProjectGroupLink pg2, pm_Project pr " .
+				"      WHERE pg1.ProjectGroup = pg2.ProjectGroup" .
+				"        AND pg1.Project = ".$this->getPK($alias).
+				"        AND pg2.Project = pr.pm_ProjectId".
+				"        AND IFNULL(pr.IsClosed, 'N') = 'N') ".
 			   "  ) LinkedProject ";
  	    
  		$columns[] = $sql;

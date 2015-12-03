@@ -51,11 +51,12 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
         		)))
             ));
 
-        $session_mock = $this->getMock('PMSession', array(), 
-                array(
-                        $this->getProjectIt(),
-                        $auth_factory_mock
-                     )
+        $session_mock = $this->getMock('PMSession',
+            array('configure','getBuilders','getProjectIt','getUserIt','getParticipantIt'),
+            array(
+                $this->getProjectIt(),
+                $auth_factory_mock
+            )
         );
 
         $session_mock->expects($this->any())->method('getBuilders')

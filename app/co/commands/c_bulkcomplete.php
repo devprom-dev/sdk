@@ -114,21 +114,28 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 		{
 		    case 'Attribute':
 		        $key = array();
+				$attribute = array_pop(array_keys($data['attributes']));
+
+				if ( $attribute == 'Project' && $object_it->object instanceof WikiPage ) {
+					$object_it = $object_it->object->getRegistry()->Query(
+						array ( new WikiRootTransitiveFilter($object_it->idsToArray()) )
+					);
+				}
+
 				while ( !$object_it->end() )
     			{
-    				try { 
+    				try {
 	    		        $this->processEmbeddedForms( $object_it, $key );
-	    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']); 
+	    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']);
     				}
     				catch( Exception $e ) {
 	   					$except_items[] = array (
 	   							'it' => $object_it->copy(),
 	   							'ex' => $e
-	   					); 
+	   					);
     				}
     				$object_it->moveNext();
     			}
-		        
 		        break;
 		        
 		    case 'Transition':

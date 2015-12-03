@@ -36,18 +36,15 @@ try
             ) 
         ); 	
         
-        $result = file_get_contents( $url.'/tasks/command.php?class=runjobs&filter='.join(',',$classes), false, $ctx );
-        
+        $result = @file_get_contents( $url.'/tasks/command.php?class=runjobs&filter='.join(',',$classes), false, $ctx );
         if ( $result === false )
         {
             $info = error_get_last();
-            
             if ( is_object($log) ) $log->error( 'Couldn\'t run background tasks on url: '.$url.' ('.$info['message'].')');
         }
         else
         {
             echo $result;
-            
             break; // stop trying to execute background tasks
         }
 	}

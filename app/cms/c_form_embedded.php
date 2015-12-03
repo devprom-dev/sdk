@@ -320,6 +320,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  		
 		$prefix = $this->getPrefix();
 		$names = $this->getAttributes();
+		$html = '';
 
 		// prepare form for new records
 		$fields = array();
@@ -467,14 +468,14 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 				echo '<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
 				echo '<input type="hidden" id="embeddedActive'.$this->form_id.'" name="embeddedActive'.$this->form_id.'" value="'.($this->getFieldValue('FormActive') == 'N' ? 'N' : 'Y').'">';
 				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" name="'.$this->getFormField().'" value="1">';
-				echo '<input type="hidden" id="'.$this->form_id.'Id'.$item.'" name="'.$prefix.'Id'.$this->form_id.'" value="'.(is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : "").'">';
+				echo '<input type="hidden" id="'.$this->form_id.'Id" name="'.$prefix.'Id'.$this->form_id.'" value="'.(is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : "").'">';
 				
 	 		echo '<div style="clear:both"></div>';
 	 		echo '</div>';
 		}
 		else
 		{
-			echo '<div id="embeddedList'.$this->form_id.'">';
+			echo '<div class="embdded-items-list" id="embeddedList'.$this->form_id.'">';
 				echo '<div>';
 							
 					echo $anchor_credentials;
@@ -595,16 +596,12 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 
 					echo '<input type="hidden" name="'.$this->getFormField().'" id="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
 				echo '</div>';
-				
-				if ( !$this->readonly && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
-				{
-					$this->drawAddButton( $this->tabindex );
-				}
-				else
-				{
-					echo '<div>&nbsp;</div>';
-				}
-	 		echo '</div>';
+			echo '</div>';
+
+			if ( !$this->readonly && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
+			{
+				$this->drawAddButton( $this->tabindex );
+			}
 	 		echo '</div>';
 		}
  	}
@@ -626,7 +623,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	
  	function drawAddButton( $tabindex )
  	{
- 		echo '<a class="dashed" tabindex="'.$tabindex.'" onclick="javascript: appendEmbeddedItem('.
+ 		echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" onclick="javascript: appendEmbeddedItem('.
 			$this->getFormId().');" onkeyup="javascript: if (event.keyCode == 13) { $(this).trigger(\'click\'); }">'.$this->getAddButtonText().'</a>';
  	}
  	
@@ -802,24 +799,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
                         }
 					}
 					
-					// remove temporary files
-					foreach ( $fields as $field )
-					{
-						$field_name = $prefix.$field.'Tmp'.$i;
-						
-						if ( $_REQUEST[$field_name] != '' && $embedded->getAttributeType($field) == 'file' )
-						{
-							$tmp_file = $model_factory->getObject('cms_TempFile');
-							$file_it = $tmp_file->getByRef('Caption', $_REQUEST[$field_name]);
-							
-							if ( $file_it->count() > 0 )
-							{
-								$tmp_file->delete($file_it->getId());
-							}
-						}
-					}
-					
-					$_FILES = array();		            	
+					$_FILES = array();
 	            }
 	        }
 		}

@@ -8,6 +8,7 @@ class PageBoard extends PageList
     var $view;
     
     private $board_attribute_iterator = null;
+	private $column_descriptions = array();
     private $plugins = null;
 
  	function PageBoard( $object ) 
@@ -56,8 +57,15 @@ class PageBoard extends PageList
  		{
  			return $this->board_attribute_iterator->copyAll();
  		}
- 		
- 		return $this->board_attribute_iterator = $this->buildBoardAttributeIterator();
+
+		$it = $this->buildBoardAttributeIterator();
+		while( !$it->end() ) {
+			$this->column_descriptions[$it->get('ReferenceName')] = $it->getHtmlDecoded('Description');
+			$it->moveNext();
+		}
+
+		$it->moveFirst();
+ 		return $this->board_attribute_iterator = $it;
  	}
 
  	function getBoardStates()
@@ -149,16 +157,17 @@ class PageBoard extends PageList
 	
  	function getGroupFieldObject( $field_name )
  	{
- 		global $model_factory;
- 		
- 		if ( $this->object->IsReference($field_name) )
- 		{
+ 		if ( $this->object->IsReference($field_name) ) {
  			return $this->object->getAttributeObject( $field_name );
  		}
  		else
  		{
  		}
  	}
+
+	function getGroupNullable( $field_name ) {
+		return $this->getObject()->getAttributeType($field_name) != '' && !$this->getObject()->IsAttributeRequired($field_name);
+	}
 
  	function getGroupStyle()
  	{
@@ -205,11 +214,27 @@ class PageBoard extends PageList
 			$transition_actions = array_merge( $transition_actions, $plugin_actions );
 		}
 	    
-	    return array_merge(
+	    $actions = array_merge(
 	    		$actions,
 	    		array(array()),
 	    		$transition_actions		
 	    );
+
+		$actions[] = array();
+		$actions['create'] = array (
+			'name' => translate('Создать'),
+			'items' => $form->getNewRelatedActions(),
+			'uid' => 'create'
+		);
+
+		$plugins = getSession()->getPluginsManager();
+		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($form->getSite()) : array();
+
+		foreach( $plugins_interceptors as $plugin ) {
+			$plugin->interceptMethodFormGetActions( $form, $actions );
+		}
+
+		return $actions;
 	}
 	
 	function getHeaderActions( $board_value )
@@ -282,8 +307,8 @@ class PageBoard extends PageList
 			echo $board_title;
 			return;
 		}
-		
-		echo '<div id="context-menu-'.$board_value.'">';
+
+		echo '<div id="context-menu-'.$board_value.'" title="'.htmlentities($this->column_descriptions[$board_value]).'">';
 			echo $this->view->render('core/TextMenu.php', array (
 			        'title' => $board_title,
 			        'items' => $actions
@@ -341,7 +366,7 @@ class PageBoard extends PageList
 		    	parent::drawRefCell( $ref_it, $object_it, $attr );
 		    	
 		    	break;
-		    	
+
 		    default:
 
 		    	echo '<div style="padding:0 0 0 0;">';
@@ -466,12 +491,9 @@ class PageBoard extends PageList
 		$it->moveFirst();
     	
 		$filter_values = $this->getFilterValues();
-		
-    	$columns_amount = 0;
-    	
     	$sort_values = preg_split('/\./', $this->getTable()->getSort());
-    	
     	$entity_ref_name = $it->object->getEntityRefName();
+        $new_action = array_shift($this->getTable()->getNewActions());
     	
     	$references = array();
     	
@@ -600,11 +622,18 @@ class PageBoard extends PageList
 				foreach($column_keys as $key => $value ) {
 					$board_cells[''][$value] = array();
 				}
-				$rows_keys = array( '' => $this->getObject()->createCachedIterator(
-								array (
-									array ( $group_field => '' ) 
-								)
-						));
+				if ( $this->getGroupNullable($group_field) ) {
+					$rows_keys = array(
+							'' => $this->getObject()->createCachedIterator(
+									array (
+										array ( $group_field => '' )
+									)
+							)
+					);
+				}
+				else {
+					$rows_keys = array();
+				}
 			}
 			
 			$group_it = $this->getGroupIt();
@@ -679,11 +708,11 @@ class PageBoard extends PageList
 			
 			foreach( $board_cells as $group_key => $row )
 			{
-				//if ( count(max($row)) < 1 || count(max($row)) > 0 && max(max($row)) < 1 ) continue;
-				
+				$row_it = $rows_keys[$group_key];
+				if ( $group_field != '' && !is_object($row_it) ) continue;
+
 				if ( $group_field != '' && $this->getGroupStyle() == GROUP_STYLE_ROW )
 				{
-					$row_it = $rows_keys[$group_key];
 					echo '<tr class="info" group-id="'.$group_key.'">';
 						echo '<td class="board-group" colspan="'.$columns_number.'" style="background:'.$this->getGroupBackground($group_field, $row_it).'">';
 							$this->drawGroup($group_field, $row_it);
@@ -691,7 +720,7 @@ class PageBoard extends PageList
 					echo '</tr>'; 
 				}
 				
-				echo '<tr>';
+				echo '<tr class="row-cards">';
 				
 				if ( $group_field != '' && $this->getGroupStyle() == GROUP_STYLE_COLUMN )
 				{
@@ -745,22 +774,44 @@ class PageBoard extends PageList
 								}
 							}
 
-							$this->drawItemMenu($column_it);
-							
 							echo '</div>';
-							
+
+                        $this->drawItemMenu($column_it);
 						echo '</div>';
 						echo '</div>';
 					}
-					echo '</div>'; 
-					echo '</td>';
+					echo '</div>';
+                    echo '</td>';
 				}
 				echo '</tr>';
+
+                if ( is_array($new_action) )
+                {
+                    echo '<tr>';
+                    foreach( $row as $prev_board_index => $columns ) {
+                        $parms = array('State' => $board_values[$prev_board_index]);
+                        if ($group_field != '') $parms[$group_field] = $group_key;
+
+                        $url = preg_replace_callback('/({[^}]*})/', function ($matches) use ($parms) {
+                            return str_replace('"', "'",
+                                json_encode(
+                                    array_merge(
+                                        json_decode(
+                                            str_replace("'", "\"", $matches[1]), true
+                                        ), $parms
+                                    ), JSON_HEX_APOS)
+                            );
+                        }, $new_action['url']);
+
+                        echo '<td class="cell-add-btn"><a href="' . $url . '" class="btn btn-mini btn-success"><i class="icon-plus icon-white"></i></a></td>';
+                    }
+                    echo '</tr>';
+                }
 			}
 
 			if ( $this->it->count() < 1 && count($board_cells) < 1 )
 			{
-				echo '<tr><td class="list_cell board-column" colspan="'.($columns_number).'" style="padding:6px;">';
+				echo '<tr class="row-cards"><td class="list_cell board-column" colspan="'.($columns_number).'" style="padding:6px;">';
 					echo $this->getNoItemsMessage();
 				echo '</td></tr>';
 			}
@@ -811,8 +862,8 @@ class PageBoard extends PageList
 				var minWidth = $('.left-on-card a').first().width() + 30;
 				var sizes = new Array('xs','s','m','l','xl');
 				var maxSizes = {
-						'xl': <?=$columns?> <= 4 ? 140 : 120,
-						'l': <?=$columns?> <= 4 ? 120 : 110,
+						'xl': <?=($columns <= 4 ? 140 : 120)?>,
+						'l': <?=($columns <= 4 ? 120 : 110)?>,
 						'm': Math.max(minWidth,90),
 						's': Math.max(minWidth,80),
 						'xs': Math.max(minWidth,70)	

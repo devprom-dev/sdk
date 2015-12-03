@@ -52,8 +52,8 @@ class WikiPageIterator extends StatableIterator
  				new FilterInPredicate($this->getId())
  			));
  		
- 		$this->content_storage[$this->getId()] = $it->get_native('PageContent');
- 		$this->style_storage[$this->getId()] = $it->get_native('PageStyle');
+ 		$this->content_storage[$this->getId()] = $it->get_native('Content');
+ 		$this->style_storage[$this->getId()] = $it->get_native('UserField3');
     }
  	
 	function getChildrenIt()

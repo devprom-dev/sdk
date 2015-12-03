@@ -3,6 +3,7 @@
 include_once "AuthenticationAppKeyFactory.php";
 include_once "AuthenticationCookiesFactory.php";
 include_once "AuthenticationHttpBasicFactory.php";
+include_once "AuthenticationAPIKeyFactory.php";
 
 class AuthenticationFactorySet
 {
@@ -23,7 +24,8 @@ class AuthenticationFactorySet
  	    $result = array();
  	    
         $result[] = new AuthenticationAppKeyFactory();
- 	    
+ 	    $result[] = new AuthenticationAPIKeyFactory();
+
         $plugins = $this->session->getPluginsManager();
  	    
         if ( is_object($plugins) )

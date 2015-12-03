@@ -6,19 +6,20 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 {
     function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
-	    if ( $kind != TRIGGER_ACTION_ADD ) return;
-
-	    if ( $object_it->object->getEntityRefName() == 'WikiPageChange' )
-	    { 
+	    if ( $kind == TRIGGER_ACTION_ADD and $object_it->object->getEntityRefName() == 'WikiPageChange' ) {
 	    	// if page is changed notify user to review items covers the changed one
 			$this->breakTraces( $object_it->getRef('WikiPage') );
 	    }
 	    
-		if ( $object_it->object->getEntityRefName() == 'WikiPage' )
-	    { 
+		if ( $kind == TRIGGER_ACTION_ADD and $object_it->object->getEntityRefName() == 'WikiPage' ) {
 	    	// if new page is added notify user that branches should be reviewed
 			$this->breakParentTraces( $object_it );
 	    }
+
+		if ( $kind != TRIGGER_ACTION_MODIFY and $object_it->object->getEntityRefName() == 'WikiPageFile' ) {
+			// if page is changed notify user to review items covers the changed one
+			$this->breakTraces( $object_it->getPageIt() );
+		}
 	}
     
 	function breakTraces( $object_it )
@@ -30,22 +31,18 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    			new FilterAttributePredicate('SourcePage', $object_it->getId() )
 	    		)
 	    	);
-	    
 	    while ( !$trace_it->end() )
 	    {
-	    	if ( $trace_it->get('Baseline') > 0 )
+	    	if ( $trace_it->get('Baseline') > 0 || $trace_it->get('SourceBaseline') > 0 )
 	    	{
 	    		// skip traces linked to concrete versions
 	    		$trace_it->moveNext();
-	    		
 	    		continue;
 	    	}
-	    	
 	    	$trace_it->object->modify_parms( $trace_it->getId(), array(
 	    			'IsActual' => 'N',
 	    			'UnsyncReasonType' => 'text-changed'
 	    	));
-	    	
 	    	$trace_it->moveNext();
 	    }
 	}

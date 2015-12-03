@@ -14,4 +14,14 @@ class LicenseTeamIterator extends LicenseIterator
 	{
 		return 'Devprom.AgileTeam';
 	}
+
+	function getSupportIncluded()
+	{
+		return false;
+	}
+
+	function getLeftDays()
+	{
+		return max(file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::FILE), 0);
+	}
 }

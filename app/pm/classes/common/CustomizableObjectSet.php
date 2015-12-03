@@ -2,6 +2,7 @@
 
 include_once SERVER_ROOT_PATH."pm/classes/common/PMObjectCacheable.php";
 include "CustomizableObjectRegistry.php";
+include "CustomizableObjectIterator.php";
 
 class CustomizableObjectSet extends PMObjectCacheable
 {
@@ -14,4 +15,9 @@ class CustomizableObjectSet extends PMObjectCacheable
  	{
  		return in_array(strtolower(get_class($object)), $this->getAll()->fieldToArray('ReferenceName'));
  	}
+
+	function createIterator()
+	{
+		return new CustomizableObjectIterator($this);
+	}
 }

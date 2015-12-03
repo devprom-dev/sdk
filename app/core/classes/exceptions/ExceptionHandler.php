@@ -370,7 +370,7 @@ class ExceptionHandler
     function cleanData( $data_array )
     {
         unset($data_array['PHP_AUTH_PW']);
-        
+        unset($data_array['HTTP_SESSION']);
         return $data_array;
     }
 

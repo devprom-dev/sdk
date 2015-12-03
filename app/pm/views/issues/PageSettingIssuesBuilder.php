@@ -19,14 +19,6 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
 		$setting->setSorts( $methodology_it->get('IsRequestOrderUsed') == 'Y' ? array('Priority','OrderNum') : array('Priority') );
         $settings->add( $setting );
 
-        // myissues report
-        $setting = new ReportSetting('myissues');
-        $setting->setFilters( array('state', 'owner') );
-        $setting->setVisibleColumns( array('UID', 'Caption', 'State', 'Priority', 'Spent') );
-        $setting->setSections( array('none') );
-        $setting->setGroup( 'none' );
-        $settings->add( $setting );
-
         // newissues report
         $setting = new ReportSetting('newissues');
         $setting->setSorts( array('RecordCreated.D') );
@@ -53,7 +45,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         
         // board
         $setting = new PageListSetting('RequestBoard');
-        $columns = array('UID', 'Caption', 'Tasks', 'RecentComment', 'Fact', 'Estimation', 'Attachment');
+        $columns = array('UID', 'Caption', 'OpenTasks', 'RecentComment', 'Fact', 'Estimation', 'Attachment', 'Links', 'Tags');
         if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
         {
         	//$columns[] = 'OrderNum';
@@ -87,6 +79,14 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         $setting = new ReportSetting('bugs');
         $setting->setVisibleColumns(
             array('UID', 'Caption', 'Author', 'RecordCreated', 'SubmittedVersion', 'ClosedInVersion', 'TestFound', 'TestExecution')
+        );
+        $setting->setSorts(array('RecordCreated.D'));
+        $settings->add( $setting );
+
+        // resolvedissues
+        $setting = new ReportSetting('resolvedissues');
+        $setting->setVisibleColumns(
+            array('UID', 'Caption', 'ClosedInVersion', 'Tasks', 'TestExecution', 'PlannedRelease', 'Priority')
         );
         $setting->setSorts(array('RecordCreated.D'));
         $settings->add( $setting );

@@ -30,11 +30,11 @@ class FlotChartBurndownWidget extends FlotChartWidget
 				success: function( data ) 
 				{
 					if ( data == null ) data = [];
-					$.plot($("#<?=$chart_id?>"), data, 
+					$.plot($("#<?=$chart_id?>"), data,
 					{
 						colors: ["rgb(225,63,63)", "rgb(247,239,59)", "rgb(63,225,63)", "rgb(63,63,225)"],
 						series: {
-							lines: { 
+							lines: {
 								show: true,
 								fill: false
 							},
@@ -46,8 +46,8 @@ class FlotChartBurndownWidget extends FlotChartWidget
 							show: false,
 							position: 'nw'
 						},
-						xaxis: { mode: 'time', tickDecimals: 0, color: 'rgb(192,192,192)' },
-						yaxis: { tickDecimals: 0, color: 'rgb(192,192,192)' },
+						xaxis: { mode: 'time', tickDecimals: 0, color: 'rgb(192,192,192)', tickLength:0 },
+						yaxis: { tickDecimals: 0, color: 'rgb(192,192,192)', tickLength:0 },
 						grid: {
 							borderWidth: 1,
 							hoverable: true,

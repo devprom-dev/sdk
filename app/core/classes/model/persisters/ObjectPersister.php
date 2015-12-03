@@ -1,11 +1,15 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class ObjectPersister
 {
  	private $object = null;
+	private $attributes = array();
  	
- 	function __construct()
+ 	function __construct( array $attributes = array() )
  	{
+		$this->attributes = $attributes;
  	}
  	
  	function getId()
@@ -22,7 +26,16 @@ class ObjectPersister
  	{
  		return $this->object;
  	}
- 	
+
+	function getAttributes()
+	{
+		return $this->attributes;
+	}
+
+	function map( & $parms )
+	{
+	}
+
  	function add( $object_id, $parms )
  	{
  	}
@@ -39,6 +52,7 @@ class ObjectPersister
 	{
 		unset($this->object);
 		$this->object = null;
+		return array('attributes');
 	}
 	
 	public function __destruct()

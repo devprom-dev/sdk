@@ -31,14 +31,11 @@ class CommentList
  		
  		$this->object->addAttribute( 'Attachment', 'REF_pm_AttachmentId', '', false );
  		
- 		$this->object->addPersister( new AttachmentsPersister() );
-
  		$this->url = '?export=commentsthread&object='.$this->object_it->getId().'&objectclass='.get_class($this->object_it->object);
 
-		$this->object->defaultsort = 'RecordCreated ASC';
+		$this->object->addPersister(new AttachmentsPersister());
+		$this->comment_it = $this->object->getAllRootsForObject($this->object_it, array(new AttachmentsPersister()));
 
-		$this->comment_it = $this->object->getAllRootsForObject($this->object_it);
-		
 		$this->comments = 0;
 		
 		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId());
@@ -73,7 +70,7 @@ class CommentList
 		{
 			$actions[] = array ();
 			$actions[] = array (
-				'url' => 'javascript: showCommentForm(\''.$this->url.
+				'click' => 'javascript: showCommentForm(\''.$this->url.
 					'\',$(\'#commentsreply'.$object_it->getId().'\'), \''.$object_it->getId().'\', \'\');',
 				'name' => translate('Изменить') 
 			);
@@ -84,7 +81,7 @@ class CommentList
 		{
 			$actions[] = array ();
 			$actions[] = array (
-				'url' => $method->getJSCall(),
+				'click' => $method->getJSCall(),
 				'name' => $method->getCaption() 
 			);
 		}
@@ -138,9 +135,8 @@ class CommentList
 	   		ob_end_clean();
 	   		
 	        $files = array();
-	        
+
 	        $file_it = $comment_it->getRef('Attachment');
-	        
 	        while( !$file_it->end() )
 	        {
 	            $files[] = array (
@@ -162,7 +158,7 @@ class CommentList
  				'html' => $text,
  				'thread_it' => $comment_it->getThreadIt(),
  			    'files' => $files,
- 				'uid_info' => $this->uid_service->getUidInfo($comment_it)
+ 				'uid_info' => $_REQUEST['formonly'] != '' ? '' : $this->uid_service->getUidInfo($comment_it)
  			);
  			
  			$comment_it->moveNext();
@@ -171,7 +167,6 @@ class CommentList
 		
 		return array(
 			'list' => $this,
-			'form' => $form,
 			'control_uid' => $this->control_uid,
 			'url' => $this->url,
 			'comments' => $comments,

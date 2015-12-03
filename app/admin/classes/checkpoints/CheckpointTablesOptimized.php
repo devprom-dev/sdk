@@ -12,8 +12,18 @@ class CheckpointTablesOptimized extends CheckpointEntryDynamic
         $tables = $system_it->fieldToArray('Name');
         if ( count($tables) > 0 && $tables[0] != '0' )
         {
-            $system->createSQLIterator( "optimize table ".join(",", $tables) );
-            $system->createSQLIterator( "analyze table ".join(",", $tables) );
+            $this->info(
+                var_export(
+                    $system->createSQLIterator("optimize table ".join(",", $tables))->getRowset(),
+                    true
+                )
+            );
+            $this->info(
+                var_export(
+                    $system->createSQLIterator("analyze table ".join(",", $tables))->getRowset(),
+                    true
+                )
+            );
         }
 
         $this->setValue( '1' );

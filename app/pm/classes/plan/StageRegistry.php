@@ -4,16 +4,13 @@ class StageRegistry extends ObjectRegistrySQL
 {
  	function getQueryClause()
  	{
- 	    global $model_factory;
- 	    
- 	    $release = $model_factory->getObject('Release');
- 	    
-		$issue = $model_factory->getObject('pm_ChangeRequest');
-		
-		$states = $issue->getNonTerminalStates();
- 	    
+ 	    $release = getFactory()->getObject('Release');
+		$states = getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates();
+		$task_states = getFactory()->getObject('Task')->getNonTerminalStates();
+
  		$sql = " SELECT LPAD(v.Caption, 8, '0') VersionNumber, " .
  			   "		v.Caption Caption, ".
+               "		CONCAT('".translate('Релиз')." ', v.Caption) CaptionType, ".
  			   "		v.pm_VersionId pm_VersionId, ".
  			   "		v.pm_VersionId Version, " .
  			   "	    '' `Release`, " .
@@ -29,13 +26,19 @@ class StageRegistry extends ObjectRegistrySQL
  			   "        v.IsActual, ".
  			   "        v.StartDate, ".
  			   "        v.FinishDate, " .
-		       "        (SELECT COUNT(1) FROM pm_ChangeRequest s " .
-		       "	      WHERE s.PlannedRelease = v.pm_VersionId" .
-		       "			AND s.State IN ('".join("','",$states)."')) UncompletedItems, ".
+			   "        (SELECT GROUP_CONCAT(CAST(s.pm_ChangeRequestId AS CHAR)) FROM pm_ChangeRequest s " .
+			   "	      WHERE s.PlannedRelease = v.pm_VersionId ) Issues, ".
+			   "        (SELECT COUNT(1) FROM pm_ChangeRequest s " .
+			   "	      WHERE s.PlannedRelease = v.pm_VersionId" .
+			   "			AND s.State IN ('".join("','",$states)."')) UncompletedIssues, ".
+			   "        (SELECT GROUP_CONCAT(CAST(s.pm_TaskId AS CHAR)) FROM pm_Task s, pm_Release r " .
+			   "	      WHERE r.Version = v.pm_VersionId" .
+			   "            AND r.pm_ReleaseId = s.Release ) Tasks, ".
+			   "         0 UncompletedTasks, ".
      		   "        (SELECT GROUP_CONCAT(CAST(m.pm_ReleaseId AS CHAR)) " .
     		   "           FROM pm_Release m" .
     		   "          WHERE m.Version = v.pm_VersionId) Iterations, ".
-    		   "		v.RecordCreated, ".
+               "		v.RecordCreated, ".
     		   "		v.RecordModified, ".
     		   "		UNIX_TIMESTAMP(v.RecordModified) * 100000 AffectedDate ".
     		   "   FROM (SELECT v.*," .
@@ -50,16 +53,13 @@ class StageRegistry extends ObjectRegistrySQL
  		
  		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() ) return "(".$sql.")";
  		
- 		$iteration = $model_factory->getObject('Iteration');
- 		
-	    $task = $model_factory->getObject('pm_Task');
-		
-		$states = $task->getNonTerminalStates();
- 		
+ 		$iteration = getFactory()->getObject('Iteration');
+
 		$sql .= 			   
 		   "  UNION ".
 		   " SELECT concat(LPAD(v.Caption,8,'0'), '.', LPAD(r.ReleaseNumber,8,'0')), " .
 		   "		concat(v.Caption, '.', r.ReleaseNumber), " .
+           "		CONCAT('".translate('Итерация')." ',v.Caption,'.',r.ReleaseNumber), ".
 		   "		r.pm_ReleaseId, " .
 		   "		r.Version, " .
 		   "		r.pm_ReleaseId, '', " .
@@ -74,9 +74,15 @@ class StageRegistry extends ObjectRegistrySQL
 		   "        r.IsActual, ".
 		   "        r.StartDate, ".
 		   "        r.FinishDate, " .
+		   "        (SELECT GROUP_CONCAT(CAST(s.pm_ChangeRequestId AS CHAR)) FROM pm_ChangeRequest s, pm_Task k " .
+		   "	      WHERE k.ChangeRequest = s.pm_ChangeRequestId " .
+		   "            AND k.Release = r.pm_ReleaseId ) Issues, ".
+		   "         0 UncompletedIssues, ".
+		   "        (SELECT GROUP_CONCAT(CAST(s.pm_TaskId AS CHAR)) FROM pm_Task s " .
+		   "	      WHERE r.pm_ReleaseId = s.Release ) Tasks, ".
 		   "        (SELECT COUNT(1) FROM pm_Task s " .
-		   "	      WHERE s.Release = r.pm_ReleaseId" .
-		   "			AND s.State IN ('".join("','",$states)."')) UncompletedItems, ".
+		   "	      WHERE r.pm_ReleaseId = s.Release ".
+		   "			AND s.State IN ('".join("','",$task_states)."')) UncompletedTasks, ".
  		   "        r.pm_ReleaseId Iterations, ".
     	   "		r.RecordCreated, ".
     	   "		r.RecordModified, ".

@@ -16,7 +16,7 @@
  $namespace = 'tns';
  $url = _getServerUrl().'/api/testservice'; 
  
- $server->configureWSDL($webservice, $namespace, $url, 'document');
+ $server->configureWSDL($webservice, $namespace, $url, 'rpc');
  $server->wsdl->schemaTargetNamespace = $url;
 
  // export complex types (classes)
@@ -61,7 +61,7 @@
 		'object' => $namespace.':testscenario' 
 		),          
     array('return' => $namespace.':testscenario'),
-    $namespace, $namespace.'.Create', 'document', 'literal', ''
+    $namespace, $namespace.'.Create', 'rpc', 'encoded', ''
  ); 
  	
  $server->register('Find',
@@ -70,7 +70,7 @@
 		'object' => $namespace.':testscenario' 
 		),          
     array('return' => $namespace.':testscenario'),
-    $namespace, $namespace.'.Find', 'document', 'literal', ''
+    $namespace, $namespace.'.Find', 'rpc', 'encoded', ''
  ); 
 
  $server->register('Append',
@@ -80,7 +80,7 @@
 		'object' => $namespace.':testscenario' 
 		),          
     array('return' => $namespace.':testscenario'),
-    $namespace, $namespace.'.Append', 'document', 'literal', ''
+    $namespace, $namespace.'.Append', 'rpc', 'encoded', ''
  ); 
 
  $server->register('Run',
@@ -93,7 +93,7 @@
     array(
 		'return' => $namespace.':testexecution'
 		),
-    $namespace, $namespace.'.Run', 'document', 'literal', ''
+    $namespace, $namespace.'.Run', 'rpc', 'encoded', ''
  ); 
 
  $server->register('ReportResult',
@@ -105,7 +105,7 @@
 		'description' => 'xsd:string', 
 		),          
     array(),
-    $namespace, $namespace.'.ReportResult', 'document', 'literal', ''
+    $namespace, $namespace.'.ReportResult', 'rpc', 'encoded', ''
  ); 
 
  $server->register('ReportIssue',
@@ -118,7 +118,7 @@
     array(
 		'return' => $namespace.':request'
     	),
-    $namespace, $namespace.'.ReportIssue', 'document', 'literal', ''
+    $namespace, $namespace.'.ReportIssue', 'rpc', 'encoded', ''
  ); 
 
  $server->register('ReportFile',
@@ -130,7 +130,7 @@
 		),          
     array(
     	),
-    $namespace, $namespace.'.ReportFile', 'document', 'literal', ''
+    $namespace, $namespace.'.ReportFile', 'rpc', 'encoded', ''
  ); 
 
  $server->register('GetResult',
@@ -141,7 +141,7 @@
     array(
 		'return' => $namespace.':testexecutionresult'
 		),
-    $namespace, $namespace.'.GetResult', 'document', 'literal', ''
+    $namespace, $namespace.'.GetResult', 'rpc', 'encoded', ''
  ); 
 
  $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';

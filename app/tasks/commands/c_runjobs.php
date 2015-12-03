@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
+include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
 
 class RunJobs extends Command
 {
@@ -9,25 +10,19 @@ class RunJobs extends Command
 	{
 		global $model_factory, $plugins, $_REQUEST, $_SERVER;
 
-		$lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME);
-
-		// single background job should be running at the same time 
-		if ( $lock->Locked($this->timeWaitedForPrevInstance) )
-		{
-		    if ( is_object($this->getLogger()) )
-		    {
-				$this->getLogger()->info( 'Another instance of background job is running at the moment' );
-		    }
-		    
-		    return;
+		$maintainLock = new LockFileSystem(MAINTENANCE_LOCK_NAME);
+		if ( $maintainLock->Locked($this->timeWaitedForPrevInstance) ) {
+			if ( is_object($this->getLogger()) ) {
+				$this->getLogger()->info('Maintenance is in progress, abort');
+			}
+			return;
 		}
+		$maintainLock = new GlobalLock();
 
-		// mark the background task is running
-		$lock->Lock();
-		
 		$this->logStart();
-		
+
 		$jobs_to_run = array();
+		$jobs_locks = array();
 
 		// recover table
 		$this->repairTables();
@@ -80,8 +75,7 @@ class RunJobs extends Command
 				$this->checkForPattern( SystemDateTime::date('j'), trim($job_it->get('Days'), ' '.chr(10).chr(13)) ) &&
 				$this->checkForPattern( SystemDateTime::date('w'), trim($job_it->get('WeekDays'), ' '.chr(10).chr(13)) );
 			
-			if ( $runjob )
-			{
+			if ( $runjob ) {
 				array_push($jobs_to_run, $job_it->getId() );
 			}
 			
@@ -92,9 +86,19 @@ class RunJobs extends Command
 		if ( count($jobs_to_run) > 0 )
 		{
 			$job_it = $job->getInArray('co_ScheduledJobId', $jobs_to_run);
-			
 			while ( !$job_it->end() )
 			{
+				$lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME.'-'.$job_it->getId());
+				if ( $lock->Locked($this->timeWaitedForPrevInstance) ) {
+					if ( is_object($this->getLogger()) ) {
+						$this->getLogger()->info( 'Another instance of background job is running at the moment: '.$job_it->getDisplayName() );
+					}
+					$job_it->moveNext();
+					continue;
+				}
+				$lock->Lock();
+				$jobs_locks[] = $lock;
+
 				$model_factory = new ModelFactoryExtended($plugins);
 				
 				$session = new COSession();
@@ -184,8 +188,11 @@ class RunJobs extends Command
 		}
 		
 		$this->logFinish();
-		
-		$lock->Release();
+
+		foreach( $jobs_locks as $lock ) {
+			$lock->Release();
+		}
+		$maintainLock->Release();
 	}
 	
 	function checkForPattern( $value, $pattern )

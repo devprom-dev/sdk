@@ -8,6 +8,7 @@ class RequestIterationHandler extends SystemTriggersBase
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 	    if ( !$object_it->object instanceof Request ) return;
+		if ( $kind != 'modify' ) return;
 
 	    $data = $this->getRecordData();	    
 	    if ( !array_key_exists('Iterations', $data) ) return;

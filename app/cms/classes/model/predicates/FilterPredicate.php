@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class FilterPredicate
 {
@@ -129,6 +131,7 @@ class FilterPredicate
 	{
 		unset($this->object);
 		$this->object = null;
+		return array('filter', 'alias');
 	}
 	
 	public function __destruct()

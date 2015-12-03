@@ -67,7 +67,7 @@
 					 
 					$('#<?=$section->getId()?>').html(result);
 	
-					completeChartsUI(); 
+					completeChartsUI($('#<?=$section->getId()?>'));
 				}
 			});				
 		

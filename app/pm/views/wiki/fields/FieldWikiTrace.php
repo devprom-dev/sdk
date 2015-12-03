@@ -4,15 +4,14 @@ include "WikiTraceFormEmbedded.php";
 
 class FieldWikiTrace extends FieldForm
 {
- 	var $object_it, $trace, $writable, $trace_object;
+ 	private $object_it;
+	private $trace;
+	private $trace_object;
  	
  	function FieldWikiTrace( $object_it, $trace, $trace_object )
  	{
- 		global $model_factory;
- 		
  		$this->object_it = $object_it;
  		$this->trace = $trace;
- 		$this->writable = $writable;
  		$this->trace_object = $trace_object;
  	}
 
@@ -21,7 +20,7 @@ class FieldWikiTrace extends FieldForm
  		return $this->object_it;
  	}
  	
- 	function & getTrace()
+ 	function getTrace()
  	{
  		return $this->trace;
  	}

@@ -15,11 +15,11 @@ class EntryController extends MainController
         if ( preg_match('/command/i', $request->getBaseUrl()) ) {
     		return new Response();
     	}
-    	
+
     	if ( getSession()->getUserIt()->getId() < 1 ) {
-    		return new RedirectResponse($this->generateUrl('login')); 
+    		return new RedirectResponse($this->generateUrl('login'));
     	}
-    	
+
     	return $this->redirect($_SERVER['ENTRY_URL']);
     }
 }

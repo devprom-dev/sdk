@@ -12,7 +12,7 @@ class PMPageList extends PageList
     {
         parent::PageList($object);
     }
-    
+
 	function buildMethods()
 	{
 		// reorder method
@@ -104,18 +104,20 @@ class PMPageList extends PageList
 			    break;
 			    
 			case 'RecentComment':
-                if ( $object_it->get('RecentCommentAuthor') != '' ) {
-                    echo '<div class="recent-comments">';
-                        echo $this->getTable()->getView()->render('core/UserPictureMini.php', array (
-                            'id' => $object_it->get('RecentCommentAuthor'),
-                            'image' => 'userpics-mini',
-                            'class' => 'user-mini'
-                        ));
-                        echo '<span>';
-                            parent::drawCell( $object_it, $attr );
-                        echo '</span>';
-                    echo '</div>';
-                }
+				if ( $object_it->get($attr) != '' ) {
+					echo '<div class="recent-comments">';
+					if ( $object_it->get('RecentCommentAuthor') != '' ) {
+						echo $this->getTable()->getView()->render('core/UserPictureMini.php', array (
+							'id' => $object_it->get('RecentCommentAuthor'),
+							'image' => 'userpics-mini',
+							'class' => 'user-mini'
+						));
+					}
+					echo '<span>';
+					parent::drawCell( $object_it, $attr );
+					echo '</span>';
+					echo '</div>';
+				}
 				echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
 						'object_it' => $object_it,
 						'redirect' => 'donothing'
@@ -147,7 +149,7 @@ class PMPageList extends PageList
                 parent::drawRefCell( $entity_it, $object_it, $attr );
         }
     }
-    
+
 	function getReferencesListWidget( $object )
 	{
 		return $this->reference_widgets[get_class($object)];
@@ -169,7 +171,16 @@ class PMPageList extends PageList
 	{
 		return array_merge(parent::getColumnFields(), $this->getObject()->getAttributesByGroup('workflow'));
 	}
-	
+
+	function getGroupFields()
+	{
+		$skip = array_filter($this->getObject()->getAttributesByGroup('workflow'), function($value) {
+			return $value != 'State';
+		});
+		$skip = array_merge($skip, $this->getObject()->getAttributesByGroup('trace'));
+		return array_diff(parent::getGroupFields(), $skip );
+	}
+
  	function getGroupDefault()
  	{
  		$default = parent::getGroupDefault();

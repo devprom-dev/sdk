@@ -6,7 +6,7 @@ class ModelValidatorTypeNumeric extends ModelValidatorType
 {
 	public function applicable( $type_name )
 	{
-		return in_array($type_name, array('integer', 'float', 'price'));
+		return in_array($type_name, array('integer', 'price'));
 	}
 	
 	public function validate( & $value )
@@ -14,12 +14,8 @@ class ModelValidatorTypeNumeric extends ModelValidatorType
 		if ( $value == '' ) return true;
 		
 		$values = preg_split('/,/', $value);
-		
-		foreach( $values as $value )
-		{
-			$value = str_replace(',', '.', $value);
-			
-			if( !is_numeric($value) ) return false; 
+		foreach( $values as $value ) {
+			if( !is_numeric($value) ) return false;
 		}
 		
 		return true;

@@ -10,6 +10,7 @@ include "TaskBulkForm.php";
 include "IterationBurndownSection.php";
 include "WorkloadSection.php";
 include "TaskTable.php";
+include "WorkItemTable.php";
 include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
 
 class TaskPlanningPage extends PMPage
@@ -18,7 +19,6 @@ class TaskPlanningPage extends PMPage
  	{
  		global $_REQUEST, $model_factory;
 
- 		getSession()->addBuilder( new TaskModelExtendedBuilder() );
  		getSession()->addBuilder( new TaskViewModelCommonBuilder() );
  		getSession()->addBuilder( new BulkActionBuilderTasks() );
  		
@@ -28,17 +28,14 @@ class TaskPlanningPage extends PMPage
  		
  		if ( $this->needDisplayForm() )
  		{
+			$this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
+			$this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
+			$this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
+
  			$object_it = $this->getObjectIt();
- 			
  			if ( is_object($object_it) && $object_it->count() > 0 )
  			{
-				$form = $this->getFormRef();
-			
-				if ( $_REQUEST['Transition'] == '' )
-				{
- 				    $this->addInfoSection( new PageSectionComments($object_it) );
-				}
-				
+			    $this->addInfoSection( new PageSectionComments($object_it) );
  				$this->addInfoSection( new StatableLifecycleSection( $object_it ) );
  				$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
  			}
@@ -50,8 +47,7 @@ class TaskPlanningPage extends PMPage
  		    $workload_section = new WorkloadSection();
  			if (getSession()->getProjectIt()->getMethodologyIt()->HasReleases())
  			{
- 			 	if ( getFactory()->getObject('PMReport')->getExact('iterationburndown')->getId() != '' )
-	 			{
+ 			 	if ( getFactory()->getObject('PMReport')->getExact('iterationburndown')->getId() != '' ) {
 	 				$this->addInfoSection( new IterationBurndownSection () );
 	 			}
  				if ( count($workload_section->getData()) > 0 ) $this->addInfoSection($workload_section);
@@ -61,18 +57,30 @@ class TaskPlanningPage extends PMPage
  	
  	function getObject()
  	{
- 		$object = getFactory()->getObject('Task');
- 		
+		if ( $this->getSessionReportName() == 'mytasks' ) {
+			$object = getFactory()->getObject('WorkItem');
+		} else {
+			$object = getFactory()->getObject('Task');
+		}
+
 	    foreach(getSession()->getBuilders('TaskViewModelBuilder') as $builder ) {
     		$builder->build($object);
     	}
-    	
+
+		$builder = new TaskModelExtendedBuilder();
+		$builder->build($object);
+
  		return $object;
  	}
  	
  	function getTableDefault()
  	{
- 	    return new TaskTable($this->getObject());
+		if ( $this->getSessionReportName() == 'mytasks' ) {
+			return new WorkItemTable($this->getObject());
+		}
+		else {
+			return new TaskTable($this->getObject());
+		}
  	}
  	
  	function getTable() 
@@ -115,4 +123,18 @@ class TaskPlanningPage extends PMPage
  	{
  		return new TaskForm($this->getObject());
  	}
+
+	function getSessionReportName()
+	{
+		$report_it = getFactory()->getObject('PMReport')->getExact($_REQUEST['report']);
+		if ( is_numeric($report_it->getId()) ) {
+			return $report_it->get('Report');
+		}
+		return $report_it->getId();
+	}
+
+	function getPageWidgets()
+	{
+		return array('tasksboard');
+	}
 }

@@ -2,86 +2,50 @@
 
 class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
 {
-    private $url = 'http://devprom.ru/download?json';
-    
+    function getUrl()
+    {
+        return '/admin/updates.php';
+    }
+
     function execute()
     {
-        $data = $this->getAllUpdates();
+        $data = JsonWrapper::decode(
+            file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE)
+        );
 
-        $new_only = count($data) > 0 ? $this->getNewUpdatesOnly($data) : array();
+        $new_only = count($data) > 0
+            ? $this->getNewUpdatesOnly($data)
+            : array();
 
-        $info_path = DOCUMENT_ROOT.'conf/new-updates.json';
+        $this->debug('Current version is '.$_SERVER['APP_VERSION']);
+        $this->debug('New updates found '.count($new_only));
 
-        $file = fopen( $info_path, 'w+' );
-        
-        if ( $file === false )
-        {
-            $this->debug('Unable to write the file: '.$info_path);
+        $license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+        if ( method_exists($license_it, 'getSupportIncluded') && !$license_it->getSupportIncluded() ) {
+            $support_days_left = file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::FILE);
+            if ( $support_days_left <= 0 ) {
+                $this->setValue(1);
+                return;
+            }
         }
-        else
-        {
-            fwrite( $file, JsonWrapper::encode($new_only) );
-            
-            fclose( $file );
-        }
-        
+
         $this->setValue( count($new_only) > 0 ? '0' : '1' );
     }
     
-    function getAllUpdates()
+    static function getNewUpdatesOnly( $data )
     {
-        $this->debug('Download updates json: '.$this->url);
-        
-        $curl = curl_init();
-        
-        $url = $this->url.'&version='.$_SERVER['APP_VERSION'].'&iid='.INSTALLATION_UID;
-        
-        curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-		curl_setopt($curl, CURLOPT_HEADER, false);
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($curl, CURLOPT_HTTPGET, true);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
-		
-		$result = curl_exec($curl);
-		
-		if ( $result === false )
-		{
-		    $this->debug( curl_error($curl) );
-		}
-		
-		$data = JsonWrapper::decode($result);
-		
-		curl_close($curl);
-		
-		$this->debug('Updates found: '.count($data));
-		
-		return $data;
-    }
-    
-    function getNewUpdatesOnly( $data )
-    {
-		$this->debug('Current version: '.$_SERVER['APP_VERSION']);
-		
-		$current = $this->transformUpdateVersion($_SERVER['APP_VERSION']);
+		$current = self::transformUpdateVersion($_SERVER['APP_VERSION']);
 		
 		$new_only = array();
-		
-		foreach( $data as $update_info )
-		{
-		    if ( $this->transformUpdateVersion($update_info['version']) > $current )
-		    {
+		foreach( $data as $update_info ) {
+		    if ( self::transformUpdateVersion($update_info['version']) > $current ) {
 		        $new_only[] = $update_info;
 		    }
 		}
-		
-		$this->debug('New updates found: '.count($new_only));
-		
 		return $new_only;
     }
 
-    function transformUpdateVersion( $version )
+    static function transformUpdateVersion( $version )
     {
         $parts = preg_split('/\./', $version);
         

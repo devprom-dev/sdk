@@ -119,18 +119,12 @@ class CustomAttributeEntityForm extends PMForm
 	
  	function drawEntities( $value, $tab_index )
 	{
-		global $model_factory;
-		
-		$objects = $model_factory->getObject('CustomizableObjectSet');
-
-		$object_it = $objects->getAll();
-		
 		$keys = array();
 
+		$object_it = getFactory()->getObject('CustomizableObjectSet')->getAll();
 		while ( !$object_it->end() )
 		{
 			$keys[$object_it->getId()] = $object_it->getDisplayName();
-			
 			$object_it->moveNext();
 		}
 

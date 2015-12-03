@@ -211,12 +211,12 @@ foreach( $attributes as $name => $attribute )
 	
 	<!--  -->
 	<div class="accordion-heading">
-	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
+	  <a class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
 		<span class="caret"></span>
 		<?=$attributes['Description']['name']?>
 	  </a>
 	</div>
-	<div id="collapseTwo" class="accordion-body collapse">
+	<div id="collapseTwo" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'':'in')?> collapse">
 		<? 
 		if ( is_a($attributes['Description']['field'], 'Field') )
 		{
@@ -287,14 +287,13 @@ foreach( $attributes as $name => $attribute )
 <?php if (!$formonly && $draw_sections) { ?>
 
 	<div class="accordion-heading">
-	  <a id="comments-section" class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseComments" tabindex="-1">
+	  <a id="comments-section" class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseComments']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseComments" tabindex="-1">
 		<span class="caret"></span>
 		<?=text(1346)?>
 		<?=($comments_count > 0 ? ' ('.$comments_count.')' : '')?>
 	  </a>
 	</div>
-				
-	<div id="collapseComments" class="accordion-body collapse">
+	<div id="collapseComments" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseComments']=='0'?'':'in')?> collapse">
         <?php 
         	echo $view->render('core/PageSections.php', array(
         		'sections' => array_merge($bottom_sections, $sections),
@@ -318,13 +317,6 @@ foreach( $attributes as $name => $attribute )
 		  	      	$(this).hasClass('collapsed') ? '1' : '0');
 			});
 		
-		$(".accordion-heading > a")
-			.slice(1).each(function( index ) {
-				if(cookies.get('devprom.request.form.section' + $(this).attr('href')) == '1') {
-					if ( $(this).hasClass('collapsed') ) $(this).click();
-				}
-			});
-
 		var locstr = new String(window.location);
 		
 		if ( locstr.indexOf('#comment') > 0 && $('#comments-section').hasClass('collapsed') )

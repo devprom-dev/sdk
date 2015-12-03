@@ -13,6 +13,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Routing\Exception;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Nelmio\CorsBundle;
 
 class PmApplicationKernel extends Kernel
 {
@@ -35,6 +36,7 @@ class PmApplicationKernel extends Kernel
 	    	new \Devprom\CommonBundle\CommonBundle(),
         	new \Devprom\ProjectBundle\ProjectBundle(),
 	    	new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
+            new \Nelmio\CorsBundle\NelmioCorsBundle()
         );
 
         return $bundles;

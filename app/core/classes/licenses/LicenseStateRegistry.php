@@ -15,7 +15,7 @@ class LicenseStateRegistry extends ObjectRegistrySQL
 			
 			self::$license_state[] = array (
 					'cms_LicenseId' => $it->getId(),
-					'IsValid' => $it->valid() ? 'Y' : 'N',
+					'IsValid' => $it->valid() && $it->getLeftDays() >=0 ? 'Y' : 'N',
 					'Caption' => $it->getName(),
 					'LicenseType' => $it->get('LicenseType'),
 					'Options' => $it->getOptions()

@@ -258,8 +258,6 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
  {
  	global $text_data;
 
- 	//if ( $key == 'ee44' ) echo 'asd';
- 	
  	$result = $text_data[$key];
  	
  	return $result != '' ? $result : $key;

@@ -87,29 +87,20 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $object_it->get('ChangeRequest') > 0 )
 				{
 					$request_it = $object_it->getRef('ChangeRequest');
-					
 					$this->setModifiedAttributes(array('Tasks'));
 					
 					if($kind == 'added' || $kind == 'deleted')
 					{
-						if ( $object_it->getDisplayName() != $request_it->getDisplayName() )
-						{
+						if ( $object_it->getDisplayName() != $request_it->getDisplayName() ) {
 							$task_caption = ': '.$object_it->getDisplayName();
 						}
-						
-						parent::process( $request_it, 'modified', 
+						parent::process( $request_it, 'modified',
 							$uid->getObjectUid($object_it).' '.$task_caption.' ('.$caption.')', $visibility, $author_email );
-					}
-					else
-					{
-						parent::process( $request_it, 'modified', '', $visibility + 1, $author_email );
 					}
 				}
 				
 				$this->setModifiedAttributes($modified_attributes);
-				
 				parent::process( $object_it, $kind, $content, $visibility, $author_email );
-				
 				break;
 				
 			case 'pm_Attachment':
@@ -132,10 +123,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 
 			case 'WikiPageFile':
-				$anchor_it = $object_it->getRef('WikiPage');
-				
+				$anchor_it = $object_it->getPageIt();
+
 				$this->setModifiedAttributes(array('Attachments'));
-				
+
 				parent::process( $anchor_it, 'modified', 
 					$object_it->object->getDisplayName().': '.$object_it->getFileName('Content').
 						' ('.$caption.')', $visibility, $author_email );
@@ -179,9 +170,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 				
 			case 'pm_ChangeRequestTrace':
-				
-				if ( strtolower($object_it->get('ObjectClass')) == strtolower('SubversionRevision') ) break;
-				
 				$request_it = $object_it->getRef('ChangeRequest');
 				$related_it = $object_it->getObjectIt();
 				
@@ -197,8 +185,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 
 			case 'pm_TaskTrace':
-				if ( strtolower($object_it->get('ObjectClass')) == strtolower('SubversionRevision') ) break;
-				
 				$task_it = $object_it->getRef('Task');
 				$related_it = $object_it->getObjectIt();
 				
@@ -263,6 +249,26 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				parent::process( $plan_it, 'modified', 
 					$object_it->getDisplayName().' ('.$caption.')', $visibility + 1, $author_email );
 					
+				break;
+
+			case 'cms_Snapshot':
+				if ( $object_it instanceof SnapshotIterator )
+				{
+					$anchor_it = $object_it->getAnchorIt();
+					if ( $anchor_it->getId() != '' ) {
+						parent::process( $anchor_it, 'modified', str_replace('%1', $object_it->getDisplayName(), text(2096)), $visibility, $author_email );
+					}
+				}
+				break;
+
+			case 'cms_SnapshotItem':
+				if ( $object_it instanceof SnapshotItemIterator )
+				{
+					$anchor_it = $object_it->getAnchorIt();
+					if ( $anchor_it->getId() != '' ) {
+						parent::process( $anchor_it, 'modified', str_replace('%1', $object_it->getDisplayName(), text(2096)), $visibility + 2, $author_email );
+					}
+				}
 				break;
 
 			case 'pm_StateObject':

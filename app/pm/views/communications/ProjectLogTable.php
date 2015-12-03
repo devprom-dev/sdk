@@ -30,24 +30,18 @@ class ProjectLogTable extends PMPageTable
 	
 	function buildObjectIt()
 	{
-		global $model_factory;
-		
 		if ( in_array($_REQUEST['object'], array('','all','none')) ) return $this->getObject()->getEmptyIterator();
 		 
 	    $classes = preg_split('/,/', $_REQUEST['object']);
-		    
 		if ( count($classes) != 1 ) return $this->getObject()->getEmptyIterator();
 		
-		$class_name = $model_factory->getClass($classes[0]);
-		
+		$class_name = getFactory()->getClass($classes[0]);
 		if ( !class_exists($class_name) ) return $this->getObject()->getEmptyIterator();
 		
-		$object = $model_factory->getObject($class_name);
-
+		$object = getFactory()->getObject($class_name);
         $object_id = $_REQUEST[strtolower(get_class($object))];
         
-    	if ( $object_id < 1 )
-    	{
+    	if ( $object_id < 1 ) {
 			return $this->getObject()->getEmptyIterator();
     	} 
     		
@@ -57,10 +51,7 @@ class ProjectLogTable extends PMPageTable
 	function getObjectIt()
 	{
 		if ( is_object($this->object_it) ) return $this->object_it;
-
-		$this->object_it = $this->buildObjectIt();
-		
-        return $this->object_it;
+		return $this->object_it = $this->buildObjectIt();
 	}
 	
 	function getFilters()
@@ -129,21 +120,26 @@ class ProjectLogTable extends PMPageTable
 			new ChangeLogActionFilter( $values['action'] ),
 			new ChangeLogParticipantFilter( $values['participant'] ),
 			new ChangeLogStartFilter( $values['start'] ),
-			new ChangeLogFinishFilter( $values['finish'] )
+			new ChangeLogFinishFilter( $values['finish'] ),
+			new ChangeLogVisibilityFilter()
 		);
 		
 		$object_it = $this->getObjectIt();
-		
 		if ( $object_it->getId() > 0 )
 		{
-			$filters[] = new ChangeLogItemDateFilter( $object_it );
+			if ( $object_it->count() == 1 && $object_it->object instanceof WikiPage ) {
+				$object_it = $object_it->object->getRegistry()->Query(
+					array(
+						new WikiRootTransitiveFilter($object_it->getId())
+					)
+				);
+			}
+			$filters[] = new ChangeLogItemFilter($object_it);
 		}
 		else if ( !in_array($_REQUEST['object'], array('','all','none')) )
 		{
 		    $classes = preg_split('/,/', $_REQUEST['object']);
-		    
 	    	$class_name = $model_factory->getClass($classes[0]);
-				
 	    	if ( class_exists($class_name) ) $filters[] = new ChangeLogObjectFilter( $class_name );
 		}
  		

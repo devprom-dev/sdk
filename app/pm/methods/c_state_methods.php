@@ -3,6 +3,7 @@
 include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ObjectModifyWebMethod.php";
+include_once SERVER_ROOT_PATH."core/methods/ModifyAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php';
 
@@ -210,14 +211,14 @@ class TransitionStateMethod extends WebMethod
 
  	function execute( $parms )
  	{
+		global $session;
+
  		getSession()->addBuilder( new WorkflowModelBuilder() );
  		
  		$class_name = getFactory()->getClass($parms['class']);
- 		
  		if ( !class_exists($class_name) ) throw new Exception('Unknown class name: '.$parms['class']);
  		
 		$object = getFactory()->getObject($class_name);
-		
 		if ( $parms['object'] > 0 )
 		{
 			$object_it = $object->getExact( $parms['object'] ); 		
@@ -225,25 +226,52 @@ class TransitionStateMethod extends WebMethod
 		else
 		{
 			$index = $object->getRecordCount() + 1;
-			
 			$parms['Caption'] = $object->getDisplayName().' '.$index;
-			
-			$object_it = $object->getExact( 
-				$object->add_parms( $parms ) ); 		
-
+			$object_it = $object->getExact( $object->add_parms( $parms ) );
 			echo '{"message":"ok","object":"'.$object_it->getId().'"}';
 			return;
 		}
-		
+
+		if ( $parms['attribute'] != '' ) {
+			try {
+				if ( $parms['attribute'] == 'Project' ) {
+					$session = new PMSession(
+						getFactory()->getObject('Project')->getByRef('VPD', $object_it->get('VPD')),
+						getSession()->getAuthenticationFactory()
+					);
+				}
+
+				ob_start();
+				$method = new ModifyAttributeWebMethod();
+				$method->execute_request($parms);
+				ob_end_clean();
+
+				if ( $parms['attribute'] == 'Project' ) {
+					$session = new PMSession(
+						getFactory()->getObject('Project')->getExact($parms['value']),
+						getSession()->getAuthenticationFactory()
+					);
+				}
+			}
+			catch( Exception $e ) {
+				echo JsonWrapper::encode(array (
+					"message" => "denied",
+					"description" => $e->getMessage()
+				));
+				return;
+			}
+		}
+
+		getFactory()->resetCache();
+		$object_it = getFactory()->getObject($class_name)->getExact($parms['object']);
+
 		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) )
 		{
 			$result = array (
 				"message" => "denied",
-				"description" => IteratorBase::wintoutf8(text(707))				
+				"description" => IteratorBase::wintoutf8(text(707))
 			);
-		
 			echo JsonWrapper::encode($result);
-			
 			return;
 		}
 
@@ -326,6 +354,7 @@ class TransitionStateMethod extends WebMethod
 			{
 				if ( !$object->IsAttributeVisible($attribute) ) continue;
 				if ( $parms[$attribute] != '' ) continue;
+				if ( $parms['attribute'] == $attribute && $object_it->get($attribute) == $parms['value'] ) continue;
 				
 				$attributes[] = $attribute;
 			}
@@ -391,15 +420,13 @@ class TransitionStateMethod extends WebMethod
  {
  	var $state_it, $object;
  	
- 	private $default;
- 	
  	function FilterStateMethod( $object = null )
  	{
  		if ( is_object($object) )
  		{
 	 		$this->object = $object;
-
 	 		$this->state_it = $this->object->getAll();
+			$this->setDefaultValue($this->state_it->get('ReferenceName'));
 
  			parent::FilterWebMethod( $object->getClassName() );
  		}
@@ -441,33 +468,14 @@ class TransitionStateMethod extends WebMethod
  		return 'state';
  	}
  	
- 	function setDefaultValue( $value )
- 	{
- 	    $this->default = $value;
- 	}
- 	
  	function getValue()
  	{
  		$value = parent::getValue();
- 		
- 		if ( $value == '' )
- 		{
- 	        if ( $this->default != '' ) return $this->default;
- 	    
- 		    $state_it = $this->object->getSuitableToRoles( getSession()->getParticipantIt()->getRoles() );
- 			
- 			if ( $state_it->count() > 0 )
- 			{
-	 			return $state_it->get('ReferenceName');
- 			}
- 			else
- 			{
-	 			$this->state_it->moveFirst();
-	 			
-	 			return $this->state_it->get('ReferenceName');
- 			}
- 		}
- 		
+
+ 		if ( $value == '' && $this->getDefaultValue() != '' ) {
+			return $this->getDefaultValue();
+		}
+
  		return $value;
  	}
  	

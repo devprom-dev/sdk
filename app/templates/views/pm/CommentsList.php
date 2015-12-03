@@ -89,7 +89,9 @@
 			{
 				placeholder.html(result);
 
-				$('#Caption*').focus();
+				setTimeout(function() {
+					$('.comments-section #Caption*').focus();
+				}, 300);
 			}
 		});				
 	}

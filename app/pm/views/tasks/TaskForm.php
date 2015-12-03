@@ -10,6 +10,7 @@ include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/validators/ModelValidatorTaskDeadlines.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskInverseTrace.php";
@@ -26,7 +27,18 @@ class TaskForm extends PMPageForm
     {
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
 		$this->getObject()->addPersister( new WatchersPersister() );
-		
+
+		foreach ( array('PlannedStartDate','PlannedFinishDate') as $attribute ) {
+			$this->getObject()->setAttributeVisible($attribute, true);
+		}
+
+		if ( is_object($this->getObjectIt()) )
+		{
+			if ( $this->getObjectIt()->get('IssueDescription') != '' ) {
+				$this->getObject()->setAttributeVisible('IssueDescription', true);
+			}
+		}
+
 		parent::extendModel();
 
 		$transition_it = $this->getTransitionIt();
@@ -52,7 +64,14 @@ class TaskForm extends PMPageForm
 		
 		$this->buildMethods();
     }
-	
+
+	function buildModelValidator()
+	{
+		$validator = parent::buildModelValidator();
+		$validator->addValidator( new ModelValidatorTaskDeadlines() );
+		return $validator;
+	}
+
 	public function buildMethods()
 	{
 		$project_roles = getSession()->getRoles();
@@ -126,16 +145,7 @@ class TaskForm extends PMPageForm
 		return $fields;
 	}
 
-	function getNewObjectAttributes()
-	{
-		$attributes = array('Caption', 'Priority', 'Planned', 'Assignee', 'Release', 'TaskType', 'ChangeRequest', 'Attachment');
-		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' ) {
-			$attributes[] = 'OrderNum';
-		}
-		return $attributes;
-	}
-	
-	function createFieldObject( $name ) 
+	function createFieldObject( $name )
 	{
 		global $_REQUEST, $model_factory;
 		
@@ -224,8 +234,6 @@ class TaskForm extends PMPageForm
 	
 	function createField( $attr )
 	{
-		global $_REQUEST, $model_factory;
-		
 		$field = parent::createField( $attr );
 		
 		$object_it = $this->getObjectIt();
@@ -245,28 +253,21 @@ class TaskForm extends PMPageForm
 			case 'Release':
 				if ( is_object($object_it) && $object_it->getId() > 0 ) return $field;
 				
-				$object = $this->getObject();
-				
-				$value = $object->getDefaultAttributeValue( $attr );
-				
+				$value = $this->getObject()->getDefaultAttributeValue( $attr );
 				if ( $value != '' ) return $field;
 				
-				$iteration = $field->getObject();
-				
-				$iteration_it = $iteration->getFirst();
-				
-				$field->setValue( $iteration_it->getId() );
-				
-				return $field; 
+				$field->setValue( $field->getObject()->getFirst()->getId() );
+				return $field;
 			
 			case 'ChangeRequest':
 				$field->setDefault($this->getDefaultValue($attr));
-				
 				return $field;
-				    		
-			default:
+
+			case 'IssueDescription':
+				$field->setReadOnly(true);
 				return $field;
 		}
+		return $field;
 	}
 	
 	function getFieldValue( $attr )
@@ -274,9 +275,22 @@ class TaskForm extends PMPageForm
 		switch( $attr )
 		{
 		    case 'TaskType':
-		    	
 		    	if ( $this->getMode() == 'new' )
 		    	{
+					$request_id = parent::getFieldValue('ChangeRequest');
+					if ( $request_id > 0 )
+					{
+						$type_it = getFactory()->getObject('TaskType')->getRegistry()->Query(
+							array (
+								new FilterBaseVpdPredicate(),
+								new TaskTypeStateRelatedPredicate(
+									getFactory()->getObject('Request')->getExact($request_id)->get('State')
+								)
+							)
+						);
+						if ( $type_it->getId() != '' ) return $type_it->getId();
+					}
+
 			    	return getFactory()->getObject('TaskType')->getRegistry()->Query(
 					    		array (
 					    				new FilterBaseVpdPredicate(),
@@ -320,17 +334,16 @@ class TaskForm extends PMPageForm
 		
 		$object_it = $this->getObjectIt();
 		if ( !is_object($object_it) ) return $actions;
-		
-		$method = new WatchWebMethod( $object_it );
-		if ( $method->hasAccess() )
-		{
-			$method->setRedirectUrl('donothing');
-			
-			array_unshift($actions, array());
-			array_unshift($actions, array( 
-			        'name' => $method->getCaption(),
-				    'url' => $method->getJSCall() 
-			));
+
+		if ( $this->IsFormDisplayed() ) {
+			$method = new WatchWebMethod($object_it);
+			if ($method->hasAccess()) {
+				array_unshift($actions, array());
+				array_unshift($actions, array(
+					'name' => $method->getCaption(),
+					'url' => $method->getJSCall()
+				));
+			}
 		}
 
 		return $actions;
@@ -381,6 +394,13 @@ class TaskForm extends PMPageForm
 		
 		return $actions;
 	}
+
+	function getNewRelatedActions()
+	{
+		return array(
+			array()
+		);
+	}
 	
 	function getDiscriminatorField()
  	{
@@ -389,8 +409,6 @@ class TaskForm extends PMPageForm
 	
  	function getDiscriminator()
  	{
- 		global $model_factory, $_REQUEST;
- 		
  		$object_it = $this->getObjectIt();
  		if ( is_object($object_it) )
  		{
@@ -407,4 +425,15 @@ class TaskForm extends PMPageForm
  			return $ref_it->get('ReferenceName');
  		}
  	}
+
+	function getSourceIt()
+	{
+		if ( $_REQUEST['ChangeRequest'] != '' ) {
+			return array (
+				getFactory()->getObject('Request')->getExact($_REQUEST['ChangeRequest']),
+				'Description'
+			);
+		}
+		return parent::getSourceIt();
+	}
 }

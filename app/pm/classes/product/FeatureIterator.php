@@ -4,7 +4,7 @@ class FeatureIterator extends OrderedIterator
 {
 	function getDisplayName()
 	{
-		return $this->get('CaptionAndType');
+		return $this->get('CaptionAndType') != '' ? $this->get('CaptionAndType') : parent::getDisplayName();
 	}
 	
 	function getParentsArray()

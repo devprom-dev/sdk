@@ -12,7 +12,6 @@ if ( !$tableonly )
 
     <div class="wiki-page-document">
         <?php
-
         echo $view->render('core/PageTableBody.php', array (
             'table' => $table,
             'caption' => $caption,
@@ -30,7 +29,11 @@ if ( !$tableonly )
         	'object_class' => $object_class,
         	'save_settings_alert' => $save_settings_alert
         ));
-        
+        if ( $document_hint != '' )
+        {
+            echo '<span class="clearfix"></span>';
+            echo $view->render('core/Hint.php', array('title' => $document_hint, 'name' => $page_uid));
+        }
         ?>
     </div>
 
@@ -44,7 +47,9 @@ if ( !$tableonly )
         echo $view->render('core/PageSections.php', array(
             'sections' => $sections,
             'object_class' => $object_class,
-            'object_id' => $object_id
+            'object_id' => $object_id,
+            'page_uid' => $page_uid,
+            'document_hint' => $document_hint
         ));
     
         ?>

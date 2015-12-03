@@ -29,9 +29,7 @@ class AttachmentIterator extends OrderedIterator
 	function getAnchorIt()
 	{
 	    $class_name = getFactory()->getClass($this->get('ObjectClass'));
-	    
-	    if ( !class_exists($class_name) ) return null;
-	    
+	    if ( !class_exists($class_name) ) return $this->object->getEmptyIterator();
 	    return getFactory()->getObject($class_name)->getExact($this->get('ObjectId'));
 	}
 }

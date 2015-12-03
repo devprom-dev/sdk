@@ -26,7 +26,8 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  	function getValue()
  	{
  		$value = parent::getValue();
- 		return !in_array($value, array('','all')) ? $value : $this->default_value;
+		if ( $value == 'all' ) return '';
+ 		return $value != '' ? $value : $this->default_value;
  	}
  	
  	function hasAccess()
@@ -57,7 +58,7 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  		if ( $_REQUEST['valueparm'] != '' ) {
  			$this->setValueParm($_REQUEST['valueparm']);
  		}
- 		
+ 		if ( $_REQUEST['value'] == '' ) $_REQUEST['value'] = 'all';
  		if ( $this->getValueParm() != '' ) {
  			echo $this->getValueParm().'='.trim($_REQUEST['value']);
  		}

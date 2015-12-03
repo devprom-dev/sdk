@@ -12,8 +12,24 @@ include "classes/ReportsFileServerBuilder.php";
 
 class FileServerPMPlugin extends PluginPMBase
 {
+	private $enabled;
+
+	function checkEnabled()
+	{
+		if ( isset($this->enabled) ) return $this->enabled;
+
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		if ( is_object($methodology_it) ) {
+			return ($this->enabled = $methodology_it->get('IsFileServer') == 'Y');
+		}
+
+		return false;
+	}
+
  	function getModules()
  	{
+		if ( !$this->checkEnabled() ) return array();
+
 		$modules = array (
  			'files' => 
  				array(

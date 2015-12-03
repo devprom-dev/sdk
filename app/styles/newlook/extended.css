@@ -175,9 +175,8 @@ td.list_cell
     white-space: inherit;
     font-size: inherit;
     font-weight: normal;
-    line-height: 18px;
-    top: -2;
-    padding: 2px 4px 3px 4px;
+    line-height: 20px;
+    padding: 0 4px 0 4px;
 }
 
 .tab-content
@@ -999,4 +998,29 @@ th.list_header li
 
 .board-tasks + .board-tasks {
     margin-right: 0;
+}
+
+.cke_dialog_contents_body .embeddedRow {
+    padding-bottom: 12px !important;
+}
+
+.cke_dialog_contents_body a.dashed {
+    text-decoration: underline !important;
+}
+
+.changes-section .alert p
+{
+    margin: 0;
+}
+
+div.btn.spent-short {
+    padding: 0;
+}
+
+span.cke_widget_wrapper.cke_image_nocaption {
+    width:100%;
+}
+
+.btn-mini i.icon-asterisk {
+    margin-top: 0;
 }

@@ -12,11 +12,9 @@ class TaskList extends PMPageList
  	
  	function TaskList( $object ) 
 	{
-		global $model_factory;
-		
 		$this->priority_frame = new PriorityFrame();
 		
-		parent::PMPageList( $object );
+		parent::__construct( $object );
 	}
 
 	function buildRelatedDataCache()
@@ -252,7 +250,6 @@ class TaskList extends PMPageList
 						
 						echo '<img src="/images/'.IssueTypeFrame::getIcon($type_it).'" style="margin-top:0;">&nbsp;';
 		
-						echo $number;
 						$object_uid->drawUidInCaption( $this->request_it, 0 );
 				}
 				else 
@@ -291,6 +288,8 @@ class TaskList extends PMPageList
 			default:
 				parent::drawGroup($group_field, $object_it);
 		}
+
+		$this->getTable()->drawGroup($group_field, $object_it);
 	}
  	
  	function getColumnWidth( $attr ) 

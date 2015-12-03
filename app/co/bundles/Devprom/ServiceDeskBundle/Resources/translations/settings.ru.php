@@ -9,7 +9,8 @@ return array(
     'settings.dashboard.cancel' => 'Отмена',
     'settings.supportProjectId.title' => 'Связать с проектом',
     'settings.appUrl.title' => 'URL службы поддержки',
-    'settings.appUrl.description' => 'Если ваша конфигурация службы поддержки использует адрес, отличный от адреса Девпрома,
-     укажите этот адрес здесь. Например, <b>http://support.devprom.ru/</b>',
+    'settings.appUrl.description' =>
+        'Вы можете изменить адрес сайта поддержки, чтобы ваши пользователи оставляли и просматривали заявки на сайте компании в специальном разделе, например, http://support.company-name.ru.
+        Для этого вам необходимо в DNS настройках домена вашей компании добавить <b>CNAME-запись</b> со значением <b>%support_url%</b>',
     'settings.supportProjectId.description' => '',
 );

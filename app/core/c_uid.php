@@ -133,22 +133,21 @@ class ObjectUID
  				return $this->map[$this->getClassName($object_it)].'-'.$object_it->getId();	
  		}
  	}
- 	
- 	function getProject( $object_it )
- 	{
- 		global $project_cache_it;
- 		
- 		if ( !is_object($project_cache_it) )
- 		{
- 			$project_cache_it = getFactory()->getObject('ProjectCache')->getAll();
 
- 			$project_cache_it->buildPositionHash(array('VPD'));
- 		}
- 		
- 		$project_cache_it->moveTo('VPD', $object_it->get('VPD'));
- 		
- 		return $project_cache_it->get('CodeName');
- 	}
+	function getProject( $object_it )
+	{
+		global $project_cache_it;
+
+		if ( $object_it->get('ProjectCodeName') != '' ) return $object_it->get('ProjectCodeName');
+
+		if ( !is_object($project_cache_it) ) {
+			$project_cache_it = getFactory()->getObject('ProjectCache')->getAll();
+			$project_cache_it->buildPositionHash(array('VPD'));
+		}
+
+		$project_cache_it->moveTo('VPD', $object_it->get('VPD'));
+		return $project_cache_it->get('CodeName');
+	}
  	
  	function getGotoUrl( $object_it ) 
  	{
@@ -194,27 +193,24 @@ class ObjectUID
  	
  	function getObjectIt( $uid ) 
  	{
- 		global $model_factory;
- 		
  		list($type, $object_id) = preg_split('/-/', $uid);
  		$class = array_search(strtoupper($type), $this->map);
- 		if($class === false) 
- 		{
- 			$object = $model_factory->getObject('cms_TempFile');
- 			return $object->getExact(-1);
+ 		if($class === false) {
+ 			return getFactory()->getObject('cms_TempFile')->getEmptyIterator();
  		}
 
- 		$class = $model_factory->getClass($class);
- 		
- 		if ( $class == '' || !class_exists($class, false)) return null;
- 		
- 		$object = $model_factory->getObject($class);
-
-		switch ( $class )
-		{
-			default:
- 				return $object_id > 0 ? $object->getExact($object_id) : $object->getEmptyIterator();
+ 		$class = getFactory()->getClass($class);
+ 		if ( $class == '' || !class_exists($class, false)) {
+			return getFactory()->getObject('cms_TempFile')->getEmptyIterator();
 		}
+ 		
+ 		$object = getFactory()->getObject($class);
+		$registry = $object->getRegistry();
+		$registry->setPersisters(array());
+
+		return $object_id > 0
+			? $registry->Query(array(new FilterInPredicate($object_id)))
+			: $object->getEmptyIterator();
  	}
 
  	function drawUidNameIcon( $object_it ) {
@@ -296,6 +292,7 @@ class ObjectUID
  	
   	function getUidOnly( $object_it )
  	{
+		if ( $object_it->getId() == '' ) return '';
  		if ( !$this->hasUid( $object_it ) ) return '';
  		
  		$info = $this->getUIDInfo( $object_it );
@@ -334,7 +331,7 @@ class ObjectUID
         {
         	$info['tooltip-url'] .= '?baseline='.$this->getBaseline();
         	
-        	$info['url'] .= strpos($info['url'], '?') > 0 ? '&baseline='.$this->getBaseline() : '?'.$this->getBaseline(); 
+        	$info['url'] .= strpos($info['url'], '?') > 0 ? '&baseline='.$this->getBaseline() : '?baseline='.$this->getBaseline();
         }
         
         $html = '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
@@ -362,6 +359,8 @@ class ObjectUID
 
  	function getUidWithCaption( $object_it, $words = 15, $baseline = '' ) 
  	{
+		if ( !is_object($object_it) ) return '';
+		if ( $object_it->getId() == '' ) return '';
  		$text = $this->getUidIcon( $object_it );
  		$text .= ' '.$object_it->getWordsOnlyValue($object_it->getDisplayName(), $words);
  		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')'; 

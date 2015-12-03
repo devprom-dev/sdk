@@ -5,6 +5,7 @@ include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 class DuplicateWebMethod extends WebMethod
 {
 	private $object_it = null;
+	private $result_it = null;
 	
 	private $context = null;
 
@@ -35,6 +36,14 @@ class DuplicateWebMethod extends WebMethod
 		$this->object_it = $object_it;
 	}
 
+	public function setResult( $result_it ) {
+		$this->result_it = $result_it;
+	}
+
+	public function getResult() {
+		return $this->result_it;
+	}
+
  	function hasAccess()
  	{
  		return getFactory()->getAccessPolicy()->can_create($this->getObjectIt()->object) || getSession()->getProjectIt()->IsPortfolio();
@@ -60,6 +69,13 @@ class DuplicateWebMethod extends WebMethod
 	{
 		return array();
 	}
+
+	function getObject()
+	{
+		$class = getFactory()->getClass($_REQUEST['class']);
+		if ( !class_exists($class) ) return null;
+		return getFactory()->getObject($class);
+	}
 	
 	function getIdsMap( & $object )
 	{
@@ -70,14 +86,10 @@ class DuplicateWebMethod extends WebMethod
  	{
  		if ( $this->object_it->getId() == '' )
  		{
- 			$class = getFactory()->getClass($_REQUEST['class']);
- 			
- 			if ( !class_exists($class) ) return;
- 			
  			$this->setObjectIt(
  					$_REQUEST['objects'] != '' 
- 						? getFactory()->getObject($class)->getExact(preg_split('/-/', $_REQUEST['objects']))
- 						: getFactory()->getObject($class)->getEmptyIterator()
+ 						? $this->getObject()->getExact(preg_split('/-/', $_REQUEST['objects']))
+ 						: $this->getObject()->getEmptyIterator()
  			);
  		}
  		
@@ -112,8 +124,8 @@ class DuplicateWebMethod extends WebMethod
     	// for single object automatically redirect to the duplicate
     	
 	    $duplicate_it->moveFirst();
-	    
-    	$this->setRedirectUrl( $duplicate_it->getViewUrl() );
+		$this->setResult($duplicate_it);
+	    $this->setRedirectUrl( $duplicate_it->getViewUrl() );
  	}
  	
  	function duplicate( $project_it )

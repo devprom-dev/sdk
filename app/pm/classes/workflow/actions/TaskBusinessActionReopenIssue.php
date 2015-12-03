@@ -1,9 +1,9 @@
 <?php
 
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
-include_once "BusinessAction.php";
+include_once "BusinessActionWorkflow.php";
 
-class TaskBusinessActionReopenIssue extends BusinessAction
+class TaskBusinessActionReopenIssue extends BusinessActionWorkflow
 {
  	function getId()
  	{

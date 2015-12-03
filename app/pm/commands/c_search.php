@@ -1,9 +1,11 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/classes/common/ObjectSearchRegistry.php";
+include SERVER_ROOT_PATH."pm/classes/common/predicates/CustomAttributeSearchPredicate.php";
+include_once SERVER_ROOT_PATH."ext/locale/LinguaStemRu.php";
 
 class Search extends CommandForm
 {
+	private $length_constraint = 2;
+
     function validate()
     {
         $this->checkRequired( array('searchrequest') );
@@ -13,146 +15,122 @@ class Search extends CommandForm
     
  	function preview()
 	{
-	    $this->searchByUid( $_REQUEST['searchrequest'] );
-	    
-	    $this->searchByAttributes( $_REQUEST['searchrequest'], $_REQUEST['parms'] );
+		$searchparms = preg_split('/,/', $_REQUEST['parms']);
+		$search = $_REQUEST['searchrequest'];
+
+		//
+	    $this->searchByUid($search);
+		//
+	    $results = $this->searchByAttributes($search, $searchparms);
+
+		$items_found = 0;
+		foreach( $results as $result ) {
+			$items_found += $result['object']->count();
+		}
+
+		if ( $items_found == 1 && $searchparms['select'] != 'true' )
+		{
+			$values = array_shift($results);
+			$url = $values['object']->getViewUrl();
+
+			if ( $url[0] == '/' || strstr($url, 'http') ) {
+				$this->replyRedirect($url, text(1309));
+			}
+			else {
+				$this->replyRedirect(getSession()->getApplicationUrl().$url, text(1309));
+			}
+		}
+		else
+		{
+			if ( count($results) < 1 ) {
+				if ( strlen($search) < $this->length_constraint + 1 ) {
+					$this->replyError(text(1252));
+				}
+				else {
+					$this->replyError(text(1253));
+				}
+			}
+			else {
+				$this->replyResults( $results, $search );
+			}
+		}
 	}
 	
 	function searchByAttributes( $search, $paramters )
 	{
-	 	global $model_factory;
- 		
- 		$length_constraint = 2;
- 		
- 		$search = IteratorBase::Utf8ToWin($search);
-
- 		$searchparms = preg_split('/,/', $paramters);
- 		
 		$results = array();
-		$this->items = 0;
-		$last_url = '';
-		
-		$searchable = $model_factory->getObject('SearchableObjectSet');
-		
+
+		$searchable = getFactory()->getObject('SearchableObjectSet');
 		$searchable_it = $searchable->getAll();
 		
 		while( !$searchable_it->end() )
 		{
 			$object = getFactory()->getObject($searchable_it->get('ReferenceName'));
-			$object->setRegistry( new ObjectSearchRegistry() );
-			
-			if( !getFactory()->getAccessPolicy()->can_read($object) ) 
-			{
+			if (!getFactory()->getAccessPolicy()->can_read($object)) {
 				$searchable_it->moveNext();
 				continue;
 			}
 
-			if ( count($searchparms) > 0 && !in_array(get_class($object), $searchparms) )
-			{
+			if ( count($paramters) > 0 && !in_array(get_class($object), $paramters) ) {
 				$searchable_it->moveNext();
-			    continue;
+				continue;
 			}
-			
-			if ( is_numeric($search) )
-			{
-				$exact_object_it = $object->getRegistry()->Query(
+
+			if ($object instanceof WikiPage) {
+				$object->setRegistry(new WikiPageRegistryContent($this));
+			}
+			$registry = $object->getRegistry();
+
+			if ( is_numeric($search) ) {
+				$object_it = $registry->Query(
 						array(
 								new FilterInPredicate($search),
 								new FilterVpdPredicate(),
 								new SortRecentClause() 
 						)
 				);
+				if ( $object_it->getId() != '' ) {
+					$results[$searchable_it->getId()] = array (
+						'object' => $object->createCachedIterator($object_it->getRowset())
+					);
+				}
 			}
 
-			if ( strlen($search) > $length_constraint )
-			{
-				$object_it = $object->getRegistry()->Query(
+			if ( strlen($search) > $this->length_constraint ) {
+				$object_it = $registry->Query(
 						array(
 								new FilterSearchAttributesPredicate($search, $searchable_it->get('attributes')),
 								new FilterVpdPredicate(),
 								new SortRecentClause()
 						)
 				);
-				
-				if ( is_a($object, 'WikiPage') )
-				{
-					$oldset = $object_it->getRowset();
-					
-					$newset = array();
-					
-					$ref_name = $object->getReferenceName();
-					
-					foreach( $oldset as $key => $row )
-					{
-						if ( $row['ReferenceName'] == $ref_name ) $newset[] = $row; 
-					}
-					
-					$object_it = $object->createCachedIterator($newset);
+				if ( $object_it->count() > 0 ) {
+					$results[$searchable_it->getId()] = array(
+						'object' => $object->createCachedIterator($object_it->getRowset()),
+						'attributes' => $searchable_it->get('attributes')
+					);
 				}
-			}
-			
-			$exact_found = is_object($exact_object_it) && $exact_object_it->count() > 0
-				&& is_a($exact_object_it->object, get_class($object));
-
-			if ( $exact_found )
-			{
-				$results[$searchable_it->getId()] = array (
-				    'object' => $object->createCachedIterator($exact_object_it->getRowset())
-				); 
-					
-				$this->items += 1;
-			}
-			
-			if ( is_object($object_it) && $object_it->count() > 0 )
-			{
-				$attributes = $searchable_it->get('attributes');
-				
-				$results[$searchable_it->getId()] = array (
-					'object' => $object->createCachedIterator($object_it->getRowset()),
-					'attributes' => $attributes
+				$object_it = $registry->Query(
+					array(
+						new CustomAttributeSearchPredicate($search, $searchable_it->get('attributes')),
+						new FilterVpdPredicate(),
+						new SortRecentClause()
+					)
 				);
-					
-				$this->items += $object_it->count();
+				if ( $object_it->count() > 0 ) {
+					$results[$searchable_it->getId()] = array(
+						'object' => $object->createCachedIterator($object_it->getRowset()),
+						'attributes' => array_filter(array_keys($object->getAttributes()), function($key) use ($object) {
+							return $object->getAttributeOrigin($key) == ORIGIN_CUSTOM;
+						})
+					);
+				}
 			}
 			
 			$searchable_it->moveNext();
 		}
 
-		if ( $this->items == 1 && $parms['select'] != 'true' )
-		{
-			$values = array_values($results);
-			
-			$url = $values[0]['object']->getViewUrl();
-			
-			if ( $url[0] == '/' || strstr($url, 'http') )
-			{
-				$this->replyRedirect($url, text(1309));
-			}
-			else
-			{
-			    $session = getSession();
-			    
-				$this->replyRedirect($session->getApplicationUrl().$url, text(1309));
-			}
-		}
-		else
-		{
-			if ( $this->items < 1 )
-			{
-		 		if ( strlen($search) < $length_constraint + 1 )
-		 		{
-					$this->replyError(text(1252));
-		 		}
-		 		else
-		 		{
-					$this->replyError(text(1253));
-		 		}
-			}
-			else
-			{ 	
-			    $this->replyResults( $results, $search );
-			}
-		}
+		return $results;
 	}
 	
 	function searchByUid( $uid )
@@ -180,21 +158,31 @@ class Search extends CommandForm
 	
 	function replyResults( $results, $search )
 	{
-	    global $model_factory;
-	    
 	    $uid = new ObjectUID;
 	    
 	    $size = 180;
-	    
-		$report = $model_factory->getObject('PMReport');
-		
-	    $searchable = $model_factory->getObject('SearchableObjectSet');
-	    
+		$html = '';
+
+        $stem = new Stem\LinguaStemRu();
+        $search_items = array_map(
+            function($word) use($stem) {
+                return $stem->stem_word($word);
+            },
+            array_filter(
+                preg_split('/\s+/', $search),
+                function( $value ) {
+                    return trim($value) != '';
+                }
+            )
+        );
+
+		$report = getFactory()->getObject('PMReport');
+	    $searchable = getFactory()->getObject('SearchableObjectSet');
 		$searchable_it = $searchable->getAll();
 		
 		foreach ( $results as $entity => $result )
 		{
-			$object = $model_factory->getObject($entity);
+			$object = getFactory()->getObject($entity);
 
 	        $html .= '<table class="table"><thead>';
 	        $html .= '<tr><th>'.$object->getDisplayName().'</th><th width="60%">'.translate('Найдено').'</th></tr>';
@@ -205,24 +193,30 @@ class Search extends CommandForm
 	        while ( !$object_it->end() )
 	        {
 	            $html .= '<tr><td>'.$uid->getUidWithCaption($object_it).'</td>'; 
-	            
+
 	            foreach ( $result['attributes'] as $attribute )
 	            {
     	            $text = new html2text( $object_it->getHtmlDecoded($attribute) );
-    	            
     	            $text = str_replace(chr(10), ' ', $text->get_text());
     	            $text = str_replace(chr(13), ' ', $text);
-	                
-    	            $position = strpos($text, $search); 
-	                
-	                if ( $position === false ) continue;
-	                
-	                $text = str_replace($search, '<strong>'.$search.'</strong>', 
-	                    mb_substr($text, max(0, $position - $size), mb_substr($search) + $size));
-                    
-    	            $html .= '<td>'.translate($object_it->object->getAttributeUserName($attribute)).': '.$text.'</td>';
 
-    	            break;
+                    $text = preg_replace(
+                        array_map(
+                            function($value) {
+                                return '#'.$value.'#iu';
+                            },
+                            $search_items
+                        ),
+                        '<span class="label">\\0</span>',
+                        $text
+                    );
+
+                    $parts = explode('<span', $text);
+                    if ( count($parts) > 1 ) {
+                        $text = join('<span', array_slice($parts, 0, 2));
+						$html .= '<td>' . translate($object_it->object->getAttributeUserName($attribute)) . ': ' . $text . '</td>';
+						break;
+                    }
 	            }
 	            
                 $html .= '</tr>';

@@ -187,11 +187,14 @@ class Task extends MetaobjectStatable
 						// reset left work value to 0
 						//
 						$parms['LeftWork'] = 0;
-						
-						$parms['TransitionComment'] = translate('Результат').': '.
-							( $parms['Result'] == '' ? $object_it->get('Result') : $parms['Result'] ).
-							chr(10).$parms['TransitionComment'];
-					}				
+
+						if ( $parms['TransitionComment'] == '' ) {
+							$result = $parms['Result'] == '' ? $object_it->get('Result') : $parms['Result'];
+							if ( $result != '' ) {
+								$parms['TransitionComment'] = translate('Результат').': '.$result;
+							}
+						}
+					}
 					break;
 			}
 		}

@@ -12,10 +12,6 @@ class TransitionAttributesPersister extends ObjectSQLPersister
  			"( SELECT so.Transition FROM pm_StateObject so ".
  			"   WHERE so.pm_StateObjectId = ".$objectPK." ) LastTransition " );
 
- 		array_push( $columns, 
- 			"( SELECT so.Comment FROM pm_StateObject so ".
- 			"   WHERE so.pm_StateObjectId = ".$objectPK." ) TransitionComment " );
- 		
  		return $columns;
  	}
 }

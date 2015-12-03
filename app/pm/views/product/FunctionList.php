@@ -216,16 +216,11 @@ class FunctionList extends PMPageList
  			    return 80;
 
  			case 'Workload':
- 				return '10%';
-
- 			case 'Request':
- 				return '15%';
- 				
  			case 'DeliveryDate':
  			case 'StartDate':
-		    case 'UncompletedIssues':
+			case 'FinishDate':
 		    case 'Stage':
- 				return '8%';
+ 				return '7%';
 
  			default:
  				switch ( $attr )
@@ -234,7 +229,7 @@ class FunctionList extends PMPageList
  						return 90;
  						
  					default:
- 						if ( in_array($attr, $this->trace_attributes) ) return '15%';
+ 						if ( in_array($attr, $this->trace_attributes) ) return '8%';
  						return parent::getColumnWidth( $attr );
  				}
  		}

@@ -31,7 +31,7 @@ class BulkForm extends BulkFormBase
 		switch ( $attribute )
 		{
 			case 'TransitionComment':
-				return 'largetext'; 	
+				return 'wysiwyg';
 
 			case 'Watchers':
 				return 'custom';
@@ -51,23 +51,28 @@ class BulkForm extends BulkFormBase
 		$match = preg_match('/Transition(.+)/mi', $_REQUEST['operation'], $attributes);
 		if ( $match )
 		{
-			$model_builder = new WorkflowTransitionAttributesModelBuilder( 
+			$object = $this->getIt()->object;
+
+			$system_attributes =
+					array_merge(
+							$object->getAttributesByGroup('system'),
+							$object->getAttributesByGroup('nonbulk')
+					);
+
+			$model_builder = new WorkflowTransitionAttributesModelBuilder(
 					getFactory()->getObject('Transition')->getExact( trim($attributes[1]) )
 			);
 			
-		    $object_it = $this->getIt();
-			
-		    $model_builder->build($object_it->object);
+		    $model_builder->build($object);
 		    
 		    $ref_names = array();
-		    
-			foreach( $object_it->object->getAttributes() as $attribute => $data )
+			foreach( $object->getAttributes() as $attribute => $data )
 			{
-				if ( !$object_it->object->IsAttributeVisible($attribute) ) continue;
+				if ( in_array($attribute, $system_attributes) ) continue;
+				if ( !$object->IsAttributeVisible($attribute) ) continue;
 				
 				$ref_names[] = $attribute;
 			}
-		    
 		    return $ref_names;
 		}
 		
@@ -125,6 +130,21 @@ class BulkForm extends BulkFormBase
 						
 						return;
 					}
+				}
+
+				if ( $this->getObject()->getAttributeType($attribute) == 'wysiwyg' )
+				{
+					$field = new FieldWYSIWYG();
+					$field->setObject($this->getObject());
+					$editor = $field->getEditor();
+					$editor->setMode( WIKI_MODE_MINIMAL );
+					$field->setCssClassName( 'wysiwyg-text' );
+
+					$field->SetId($attribute);
+					$field->SetName($attribute);
+					$field->SetTabIndex($tab_index);
+					$field->draw();
+					return;
 				}
 
 				parent::drawCustomAttribute( $attribute, $value, $tab_index );

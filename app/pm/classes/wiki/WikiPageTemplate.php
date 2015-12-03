@@ -8,11 +8,10 @@ class WikiPageTemplate extends Metaobject
     function __construct()
     {
 		parent::__construct('WikiPage', new WikiPageTemplateRegistry($this));
-        
+
 		$this->setSortDefault( new SortOrderedClause() );
-         
+
 		$this->setAttributeType( 'UserField1', 'CHAR' );
-		
 		$this->setAttributeCaption( 'UserField1', translate('Шаблон по умолчанию') );
     }
      

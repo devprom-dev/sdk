@@ -26,13 +26,6 @@
                                 {{ 'issue.add.comment'|trans }}
                             </button>
                         </div>
-                    	{% if issue.stateComment.comment != "" %}
-                    	<p id="issue-state-comment">
-                    		{{ 'issue.state.comment'|trans }}<br/><br/>
-                    	    {% autoescape false %}{{ issue.stateComment.comment|unescapeHtml }}{% endautoescape %}
-                    	    <br/><br/>{{ 'issue.original.title'|trans }}
-                    	</p> 
-                    	{% endif %}
                         <p id="issue-description">{% autoescape false %}{{ issue.description|unescapeHtml }}{% endautoescape %}</p>
                     </div> <!-- /col-sm-8 -->
 

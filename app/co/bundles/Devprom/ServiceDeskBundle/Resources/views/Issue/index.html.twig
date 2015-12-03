@@ -44,7 +44,7 @@
                                 </a>
                             </th>
                             {% if app.request.get('filter') == "company" %}
-                            <th class="no-wrap hidden-xs{% if sortColumn == 'issue.authorname' %} {{ sortDirectionClass }}{% endif %}" width="20%">
+                            <th class="no-wrap hidden-xs{% if sortColumn == 'issue.customer.username' %} {{ sortDirectionClass }}{% endif %}" width="20%">
                             	{{ 'issue_author'|trans }}
                             </th>
                             {% endif %}
@@ -84,7 +84,7 @@
                             </td>
                             {% if app.request.get('filter') == "company" %}
                             <td class="hidden-xs" data-title="{{ 'issue_author'|trans }}">
-                                {{ issue.authorname }}
+                                {{ issue.customer.username }}
                             </td>
                             {% endif %}
                             <td data-title="{{ 'issue_createdAt'|trans|slice(0,7) }}." class="hidden-xs">{% if issue.createdAt %}{{ issue.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>

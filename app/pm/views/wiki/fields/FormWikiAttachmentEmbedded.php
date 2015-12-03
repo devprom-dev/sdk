@@ -63,7 +63,7 @@ class FormWikiAttachmentEmbedded extends PMFormEmbedded
 		}
 
 		return '<a class="'.$this->image_class.'" href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('Content').'">'.
-			'<img src="/images/attach.png" style="margin-bottom:-4px;"> '.$object_it->getFileName('Content').'</a>'.
+			'<img src="/images/attach.png"> '.$object_it->getFileName('Content').'</a>'.
 				' ('.$object_it->getFileSizeKb('Content').' Kb)'; 		
 	}
  	

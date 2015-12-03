@@ -4,11 +4,11 @@ include_once SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilde
 
 class HistoricalObjectsRegistryBuilderCode extends HistoricalObjectsRegistryBuilder
 {
-    public function build ( HistoricalObjectsRegistry & $registry )
-    {
- 		$registry->add( 'SubversionRevision', array (
+	public function build ( HistoricalObjectsRegistry & $registry )
+	{
+		$registry->add( 'SubversionRevision', array (
 			'Author',
 			'Repository'
 		));
-    }
+	}
 }

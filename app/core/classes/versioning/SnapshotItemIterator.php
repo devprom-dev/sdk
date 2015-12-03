@@ -4,16 +4,15 @@ class SnapshotItemIterator extends OrderedIterator
 {
  	function getAnchorIt()
  	{
- 		global $model_factory;
- 		
- 		if ( $this->get('ObjectClass') == '' || $this->get('ObjectId') < 1 )
- 		{
- 			return $this->object->getExact(0);
+ 		if ( $this->get('ObjectClass') == '' || $this->get('ObjectId') < 1 ) {
+ 			return $this->object->getEmptyIterator();
  		}
- 		else
- 		{
- 			$anchor = $model_factory->getObject($this->get('ObjectClass'));
- 			return $anchor->getExact($this->get('ObjectId'));
+ 		else {
+ 			return getFactory()->getObject($this->get('ObjectClass'))->getExact($this->get('ObjectId'));
  		}
  	}
+
+	function getDisplayName() {
+		return $this->getRef('Snapshot')->getDisplayName();
+	}
 }

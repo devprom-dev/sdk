@@ -37,29 +37,18 @@ class ObjectModifyWebMethod extends WebMethod
 	
 	function getJSCall( $parms = array() )
 	{
-		$title = $this->getObject()->getDisplayName().': '.mb_substr(self::$uid_service->getUidTitle($this->object_it), 0, 120);
-		
-		$method_parms = array (
+		$method_parms = array_merge(
+			array (
 				'form_url' => $this->getObjectUrl(),
 				'class_name' => get_class($this->getObject()),
 				'entity_ref' => $this->getObject()->getEntityRefName(),
 				'object_id' => $this->object_it->getId(),
-				'form_title' => $title,
+				'form_title' => $this->getObject()->getDisplayName(),
 				'can_delete' => var_export(getFactory()->getAccessPolicy()->can_delete($this->object_it), true),
 				'delete_reason' => getFactory()->getAccessPolicy()->getReason()
-		);
+			),$parms);
 		
-		foreach( $method_parms as $key => $parm )
-		{
-			$method_parms[$key] = addslashes(htmlspecialchars($parm, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
-		}
-		
-		foreach( $method_parms as $key => $parm )
-		{
-			$options[] = $key.": '".$parm."'";
-		}
-		
-		return "javascript: workflowModify({".join(',',$options)."}, ".$this->getRedirectUrl().")";
+		return "javascript: workflowModify(".str_replace('"',"'",json_encode($method_parms, JSON_HEX_APOS)).", ".$this->getRedirectUrl().")";
 	}
 	
 	function hasAccess()

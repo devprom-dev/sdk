@@ -10,7 +10,6 @@ class LicenseInstalledRegistry extends ObjectRegistrySQL
 		if ( !class_exists($iterator->get('LicenseType')) ) return $iterator;
 		
 		$class_name = $iterator->get('LicenseType');
-		
 		$license = new $class_name;
 		
 		return $license->createCachedIterator($iterator->getRowset());

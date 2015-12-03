@@ -1,5 +1,6 @@
 <?php
 
+include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorPasswordLength.php";
 include (dirname(__FILE__).'/../methods/c_user_methods.php');
 
 class UserForm extends AdminPageForm
@@ -8,39 +9,34 @@ class UserForm extends AdminPageForm
 
 	function __construct( $object )
 	{
-		global $model_factory;
-
-		$object = $model_factory->getObject('cms_User');
-
-		parent::PageForm( $object );
+		parent::__construct( $object );
 		
-
 		$object_it = $this->getObjectIt();
 
 		$has_password = true;
-		
 		if ( is_object($object_it) && $object_it->getId() > 0 )
 		{
 		    $factory_set = new AuthenticationFactorySet(getSession());
-		    
-		    foreach( $factory_set->getFactories() as $factory )
-		    {
-    		    if ( $factory->validateUser( $object_it ) )
-    		    {
+		    foreach( $factory_set->getFactories() as $factory ) {
+    		    if ( $factory->validateUser( $object_it ) ) {
     		        $has_password = $has_password & $factory->credentialsRequired();
     		    }
 		    }
 		}
 		
-		$object->addAttribute( 'RepeatPassword', 'PASSWORD', translate('Повтор пароля'), false, false, '', 65 );
-		
-		$object->setAttributeRequired('Password', $has_password);
+		$object->addAttribute( 'RepeatPassword', 'PASSWORD', translate('Повтор пароля'), false, false, '', 61 );
 
-	    $object->setAttributeRequired('RepeatPassword', $has_password);
+        foreach( array('Password','RepeatPassword','AskChangePassword') as $attribute ) {
+            $object->setAttributeRequired($attribute, $has_password);
+            $object->setAttributeVisible($attribute, $this->getEditMode() && $has_password);
+        }
+	}
 
-	    $object->setAttributeVisible('Password', $this->getEditMode() && $has_password);
-
-	    $object->setAttributeVisible('RepeatPassword', $this->getEditMode() && $has_password);
+	function buildModelValidator()
+	{
+		$validators = parent::buildModelValidator();
+		$validators->addValidator( new ModelValidatorPasswordLength() );
+		return $validators;
 	}
 
 	function validateInputValues( $id, $action )
@@ -116,23 +112,23 @@ class UserForm extends AdminPageForm
 
 	function getFieldValue( $attr )
 	{
-	    switch ( $attr )
+        switch ( $attr )
 	    {
 	        case 'RepeatPassword':
-
 	            return parent::getFieldValue( 'Password' );
 
 	        case 'Language':
-	            
 	            $value = parent::getFieldValue( $attr );
-	            
-	            if ( $value == '' )
-	            {
+	            if ( $value == '' ) {
 	                return $this->object->getDefaultAttributeValue( $attr );
 	            }
-	            
 	            return $value;
-	            
+
+            case 'AskChangePassowrd':
+                $value = parent::getFieldValue( $attr );
+                if ( $value == '' ) return 'Y';
+                return $value;
+
 	        default:
 	            return parent::getFieldValue( $attr );
 	    }

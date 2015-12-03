@@ -58,7 +58,8 @@ class ProjectController extends PageController
 		// check access policy
 		if ( !getFactory()->getAccessPolicy()->can_create($prj_cls) )
 		{
-			return $this->replyError(text(706));
+			$result = getFactory()->getAccessPolicy()->getReason() != '' ? getFactory()->getAccessPolicy()->getReason() : text(706);
+			return $this->replyError($result);
 		}
 
         $parms['DemoData'] = in_array(strtolower(trim($request->request->get('DemoData'))), array('y','on'));

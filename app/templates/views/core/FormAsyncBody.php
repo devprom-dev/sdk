@@ -1,7 +1,5 @@
 <?php if ( !$formonly ) { ?>
 <script language="javascript">
-
-	var originalFormState = '';
 	var formOptions = {};
 	
 	$(document).ready(function() 

@@ -79,12 +79,9 @@ class BulkFormBase extends AjaxForm
 	
 	function getActionAttributes()
 	{
-		global $_REQUEST, $model_factory;
-		
 		$attributes = array();
 		
 		$match = preg_match('/Attribute(.+)/mi', $_REQUEST['operation'], $attributes);
-		
 		if ( $match ) return array($attributes[1]);
 		
 		$match = preg_match('/Method:(.+)/mi', $_REQUEST['operation'], $attributes);
@@ -106,13 +103,10 @@ class BulkFormBase extends AjaxForm
 			}
 			
 			$attributes = array();
-			
 			foreach( $attrs as $attribute => $value )
 			{
 				if ( $value != '' ) continue;
-				
 				$attributes[] = $attribute;
-				
 			    $this->object->setAttributeVisible( $attribute, true );
 			}
 
@@ -129,7 +123,7 @@ class BulkFormBase extends AjaxForm
 			case 'ids':
 			case 'operation':
 				return false;
-				
+
 			default:
 				return parent::IsAttributeRequired( $attribute );
 		}
@@ -149,12 +143,13 @@ class BulkFormBase extends AjaxForm
 	
 	function IsAttributeModifiable( $attr )
 	{
-	    $system_attributes = $this->getObject()->getAttributesByGroup('system');
-	    if ( in_array($attr, $system_attributes) )
-	    {
-	        return false;
-	    }
-	    
+	    $system_attributes =
+				array_merge(
+						$this->getObject()->getAttributesByGroup('system'),
+						$this->getObject()->getAttributesByGroup('nonbulk')
+				);
+	    if ( in_array($attr, $system_attributes) ) return false;
+
 	    $type = $this->getObject()->getAttributeType($attr);
 	    switch ( $type )
 	    {
@@ -214,7 +209,7 @@ class BulkFormBase extends AjaxForm
 	    global $_REQUEST;
 
 	    if ( is_object($this->it) ) return $this->it->object->createCachedIterator($this->it->getRowset());
-	    
+
 	    $object = $this->getObject();
 
 	    $this->it = $object->getExact(preg_split('/-/', trim($_REQUEST['ids'], '-')));
@@ -228,7 +223,7 @@ class BulkFormBase extends AjaxForm
 		
 		$uid = new ObjectUID;
 		$object = $this->getObject();
-		
+
 		$it = $this->getIt();
 	
 		echo '<label><b>'.text(1303).'</b></label>';

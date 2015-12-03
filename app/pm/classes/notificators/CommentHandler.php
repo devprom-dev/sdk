@@ -18,15 +18,12 @@ class CommentHandler extends EmailNotificatorHandler
 	
 	function getParticipants( $object_it, $prev_object_it, $action ) 
 	{
-		global $model_factory;
-
 		$project_it = getSession()->getProjectIt();
 		$result = array();
 		
 		if ( $action != 'add' ) return $result;
 
 		$anchor_it = $object_it->getAnchorIt();
-		
 		if ( $anchor_it->count() < 1 ) return $result;
 
 		switch( $anchor_it->object->getClassName() )
@@ -54,7 +51,7 @@ class CommentHandler extends EmailNotificatorHandler
 			    array_push($result, $anchor_it->get('AuthorId'));
 			    break;
 		}
-		
+
 		return $result;
 	}	
 	

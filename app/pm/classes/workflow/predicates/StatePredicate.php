@@ -18,10 +18,9 @@ class StatePredicate extends FilterPredicate
 					join($object->getTerminalStates(), "','")."') ";
 				
 			default:
-		 		$state_it = getFactory()->getObject($object->getStateClassName())->getRegistry()->Query(
+		 		$state_it = getFactory()->getObject('StateBase')->getRegistry()->Query(
 		 				array (
-		 					new FilterAttributePredicate('ReferenceName', preg_split('/[,-]/', $filter)),
-		 					new FilterVpdPredicate()
+		 					new FilterAttributePredicate('ReferenceName', preg_split('/[,-]/', $filter))
 		 				)
 		 			);
 		 		if ( $state_it->count() > 0 ) {

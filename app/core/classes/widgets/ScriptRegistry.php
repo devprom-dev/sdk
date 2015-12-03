@@ -29,4 +29,11 @@ class ScriptRegistry extends ObjectRegistrySQL
  	    		'ReferenceName' => $file_name
  	    );
  	}
+
+	function addScriptText( $text )
+	{
+		$this->data[] = array (
+			'Caption' => $text
+		);
+	}
 }

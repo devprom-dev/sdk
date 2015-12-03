@@ -48,63 +48,53 @@ class TrackHistory extends TaskCommand
 	
 	function processChunk( $projects )
 	{
-		global $model_factory, $session;
+		global $session;
 		
 		$auth_factory = new AuthenticationFactory();
-			
-		$auth_factory->setUser( $model_factory->getObject('cms_User')->getEmptyIterator() );
+		$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
 				
-		$project = $model_factory->getObject('pm_Project');
-		
-		$history = $model_factory->getObject('PMEntityCluster');
-		
-		$project_it = $project->getExact( $projects );
-		
+		$history = getFactory()->getObject('PMEntityCluster');
+		$project_it = getFactory()->getObject('pm_Project')->getExact( $projects );
+
 		while ( !$project_it->end() )
 		{
-			$this->logInfo("Track history for: ".$project_it->getDisplayName()." [".$project_it->get('CodeName')."]");
+			$this->logDebug("Track history for: ".$project_it->getDisplayName()." [".$project_it->get('CodeName')."]");
 			
-			$session = new PMSession($project_it->get('CodeName'), $auth_factory);
-			
-			$session->addBuilder( new WorkflowModelBuilder() );			
-			
+			$session = new PMSession($project_it->copy(), $auth_factory);
+			$session->addBuilder( new WorkflowModelBuilder() );
+
+			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
+			getFactory()->resetCache();
+
 			$history->deleteLatest();
 			
 			$cluster_parms = array();
 			
-			$objects = $model_factory->getObject('HistoricalObjects');
-		
-    		$object_it = $objects->getAll();
-    		
+    		$object_it = getFactory()->getObject('HistoricalObjects')->getAll();
     		while ( !$object_it->end() )
     		{
     			$cluster_parms[$object_it->getId()] = $object_it->get('attributes');
-    			 
     			$object_it->moveNext();
     		}
 
 			foreach ( $cluster_parms as $entity => $attributes )
 			{
-				$this->logInfo("Process entity: ".$entity);
+				$this->logDebug("Process entity: ".$entity);
 				
 				$class_name = getFactory()->getClass($entity);
-				
 				if ( !class_exists($class_name) ) continue;
 				
 				$object = getFactory()->getObject($class_name);
-				
 				foreach ( $attributes as $attribute )
 				{
-					$this->logInfo("Process attribute: ".$attribute);
+					$this->logDebug("Process attribute: ".$attribute);
 
 					$object->resetAggregates();
 
 					$group = new AggregateBase( $attribute, $object->getClassName().'Id', 'GROUP_CONCAT');
-					
-					$object->addAggregate( $group ); 
+					$object->addAggregate( $group );
 					
 					$it = $object->getAggregated();
-					
 					while ( !$it->end() )
 					{
 						$items = $it->get($group->getAggregateAlias());

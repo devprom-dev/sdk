@@ -137,7 +137,12 @@ class EnvironmentSettings
     {
     	return defined('DEFAULT_UTC_OFFSET') ? DEFAULT_UTC_OFFSET : '+00';
     }
-    
+
+    static public function getPasswordLength()
+    {
+        return defined('PASSWORD_LENGTH') ? PASSWORD_LENGTH : '1';
+    }
+
     static public function getClientTimeZone()
     {
     	return $_COOKIE['devprom-client-tz'] != '' 

@@ -8,7 +8,7 @@ class ModelValidatorIssueAuthor extends ModelValidatorInstance
 	{
 		if ( !is_numeric($parms['Author']) )
 		{
-			$parms['Customer'] = $parms['Author'];
+			$parms['CustomerEmail'] = $parms['Author'];
 			$parms['Author'] = '';
 		}
 		return ""; 		

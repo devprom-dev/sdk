@@ -113,10 +113,10 @@ class IssueService {
 	    $issue->setVpd($vpd);
         $issue->setState($this->getFirstIssueStateForProject($projectId));
         $issue->setPriority($issue->getSeverity());
+        $issue->setCustomer($author);
         $this->em->persist($issue);
         $this->em->flush();
 
-        $this->addIssueWatcher($issue, $author->getEmail(), $vpd);
         $this->objectChangeLogger->logIssueCreated($issue);
         $this->mailer->sendIssueCreatedMessage($issue, $author->getEmail(), $author->getLanguage());
     }
@@ -173,4 +173,8 @@ class IssueService {
         $this->em->flush();
     }
 
+    public function getProductsAvailable( $vpd )
+    {
+        return $this->em->getRepository('DevpromServiceDeskBundle:Product')->findBy(array("vpd" => array_pop($vpd)), null, 1);
+    }
 }

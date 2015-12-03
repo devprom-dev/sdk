@@ -63,14 +63,11 @@ class WorkflowService
 
 	    if ( $transition_it->getId() == '' )
 	    {
-			$logger = \Logger::getLogger('System');
-			if ( is_object($logger) ) {
-				$logger->error('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
-				return false;
-			}
+			$this->logger->error('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
+			return false;
 	    }
 	    
-		$object_it->object->modify_parms($object_it->getId(), 
+		$result = $object_it->object->modify_parms($object_it->getId(),
 				array_merge( $parms, 
 						array( 
 					        'Transition' => $transition_it->getId(),
@@ -78,6 +75,12 @@ class WorkflowService
 						)
 				)
 		);
+
+		if ( $result < 1 ) {
+			$this->logger->error('Unable move object from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
+			return false;
+		}
+
 		$object_it = $object_it->object->getExact($object_it->getId());
 		if ( $fire_event )
 		{

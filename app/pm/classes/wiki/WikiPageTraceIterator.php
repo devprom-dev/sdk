@@ -8,7 +8,7 @@ class WikiPageTraceIterator extends OrderedIterator
     {
         return 'TargetPage';
     }
-    
+
  	function getDisplayName()
  	{
  		global $model_factory;
@@ -29,7 +29,7 @@ class WikiPageTraceIterator extends OrderedIterator
  	{
  		$object_it = $this->getRef( 'TargetPage' );
  		
- 		$uid = new ObjectUID;
+ 		$uid = new ObjectUID($this->get($this->object->getBaselineReference()));
  		
  		return translate('Трассировка').': '.$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
  	}
@@ -38,7 +38,7 @@ class WikiPageTraceIterator extends OrderedIterator
  	{
  		$object_it = $this->getRef( 'SourcePage' );
  		
- 		$uid = new ObjectUID;
+ 		$uid = new ObjectUID($this->get($this->object->getBaselineReference()));
  		
  		return translate('Трассировка').': '.$uid->getObjectUid($object_it).' '.$object_it->getDisplayName();
  	}
