@@ -180,7 +180,7 @@ include( 'MainDevpromTable.php');
                 continue;
             }
 
-            if ( $this->paymentRequired($_REQUEST['iid'], $artefact_it) )
+            if ( !$this->updateAvailable($_REQUEST['iid'], $artefact_it) )
             {
                 $artefact_it->moveNext();
                 continue;
@@ -364,20 +364,41 @@ include( 'MainDevpromTable.php');
 	{
  		return "Загрузить";
 	}
-	
+
+	function updateAvailable( $iid, $artefact_it )
+	{
+		 $service_it = $this->getServiceIt($iid);
+		 switch( $artefact_it->getDisplayName() )
+		 {
+			 case 'TeamUpdate35.zip':
+			 case 'TeamUpdate35p.zip':
+				 return in_array($service_it->get('License'), array('','LicenseTeam','LicenseTeamSupported','LicenseTeamSupportedCompany','LicenseTeamSupportedUnlimited'));
+
+			 case 'DevpromUpdate34.zip':
+			 case 'DevpromUpdate35.zip':
+				 return !in_array($service_it->get('License'), array('','LicenseTeam','LicenseTeamSupported','LicenseTeamSupportedCompany','LicenseTeamSupportedUnlimited'));
+
+			 default:
+				 return false;
+		 }
+	}
+
   	function paymentRequired( $iid, $artefact_it )
  	{
 		$service_it = $this->getServiceIt($iid);
         switch( $artefact_it->getDisplayName() )
         {
             case 'TeamUpdate35.zip':
-                if ( !in_array($service_it->get('License'), array('LicenseTeam','LicenseTeamSupported','LicenseTeamSupportedCompany','LicenseTeamSupportedUnlimited')) ) return true;
-                return $service_it->get('PayedTill') < date('Y-m-d');
+                if ( !$this->updateAvailable($iid, $artefact_it) ) return true;
+                return false;
+			case 'TeamUpdate35p.zip':
+				if ( !$this->updateAvailable($iid, $artefact_it) ) return true;
+				return $service_it->get('PayedTill') < date('Y-m-d');
 
             case 'DevpromUpdate34.zip':
             case 'DevpromUpdate35.zip':
                 if ( $service_it->getId() == '' ) return true;
-				if ( in_array($service_it->get('License'), array('LicenseTeam','LicenseTeamSupported','LicenseTeamSupportedCompany','LicenseTeamSupportedUnlimited')) ) return true;
+				if ( !$this->updateAvailable($iid, $artefact_it) ) return true;
                 if ( $service_it->get('PayedTill') < date('Y-m-d') ) return true;
                 return false;
 

@@ -412,4 +412,29 @@ class GetLicenseKey extends CommandForm
 	    $mail->setFrom("Devprom Software <".getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail').">");
 	    $mail->send();
 	}
+
+	function _reply( $state, $text, $object )
+	{
+		header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
+		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
+		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+		header("Pragma: no-cache"); // HTTP/1.0
+		header('Content-type: text/html; charset=utf-8');
+
+		$log = $this->getLogger();
+
+		$result = array (
+			'state' => $state,
+			'message' => $text,
+			'object' => $object
+		);
+
+		if ( is_object($log) ) $log->info( $result );
+
+		echo JsonWrapper::encode($result);
+
+		if ( is_object($log) ) $log->info( str_replace('%1', get_class($this), text(1208)) );
+
+		exit();
+	}
 }
