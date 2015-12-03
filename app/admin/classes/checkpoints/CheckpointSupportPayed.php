@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."admin/classes/CheckpointEntryDynamic.php";
 
 class CheckpointSupportPayed extends CheckpointEntryDynamic
 {
