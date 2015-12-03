@@ -21,7 +21,7 @@ include "CheckpointUpdatesAvailable.php";
 include "CheckpointTablesPartitioned.php";
 include "CheckpointMySQLVariables.php";
 include "CheckpointBackups.php";
-include "CheckpointSupportPayed.php";
+include_once "CheckpointSupportPayed.php";
 
 class CheckpointRegistryBuilderSystem extends CheckpointRegistryBuilder
 {

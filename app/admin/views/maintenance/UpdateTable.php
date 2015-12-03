@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH."admin/classes/checkpoints/CheckpointSupportPayed.php";
 include('UpdateList.php');
 
 class UpdateTable extends StaticPageTable

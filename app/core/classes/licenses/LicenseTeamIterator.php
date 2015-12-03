@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."admin/classes/checkpoints/CheckpointSupportPayed.php";
 
 define ('TEAMUID', '682FEE73-1B33-4266-9192-474F5D59405D');
 
