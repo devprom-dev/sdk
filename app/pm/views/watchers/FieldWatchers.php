@@ -1,5 +1,4 @@
 <?php
-
 include "FormWatcherEmbedded.php";
 
 class FieldWatchers extends FieldForm

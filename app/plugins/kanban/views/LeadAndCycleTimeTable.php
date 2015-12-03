@@ -4,6 +4,7 @@ include "LeadAndCycleTimeChart.php";
 
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
+include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
 
 class LeadAndCycleTimeTable extends PMPageTable
 {
@@ -19,6 +20,8 @@ class LeadAndCycleTimeTable extends PMPageTable
  		return array (
 			new FilterSubmittedAfterPredicate($values['submittedon']),
 			new FilterSubmittedBeforePredicate($values['submittedbefore']),
+			new FilterModifiedAfterPredicate($values['modifiedafter']),
+			new RequestAuthorFilter( $values['author'] ),
  			new FilterAttributePredicate( 'Type', $values['type'] ),
  			new FilterAttributePredicate( 'Priority', $values['priority'])
  		);
@@ -26,28 +29,30 @@ class LeadAndCycleTimeTable extends PMPageTable
 
 	function getFilters()
 	{
-		global $model_factory;
-		
 		$filters = array(
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
-			new FilterObjectMethod( $model_factory->getObject('Priority'), '', 'priority'),
-			$this->buildTypeFilter()
+			new ViewModifiedAfterDateWebMethod(),
+			new FilterObjectMethod( getFactory()->getObject('Priority'), '', 'priority'),
+			$this->buildTypeFilter(),
+			$this->buildFilterAuthor()
 		);
-		
-		return array_merge( $filters, parent::getFilters() ); 		
+		return array_merge( $filters, parent::getFilters() );
 	}
 	
 	function buildTypeFilter()
 	{
-		global $model_factory;
-		
-		$type_method = new FilterObjectMethod( $model_factory->getObject('pm_IssueType'), translate('Тип'), 'type');
-		
+		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_IssueType'), translate('Тип'), 'type');
 		$type_method->setIdFieldName( 'ReferenceName' );
-		
-		$type_method->setNoneTitle( $model_factory->getObject('Request')->getDisplayName() );
-		
+		$type_method->setNoneTitle( getFactory()->getObject('Request')->getDisplayName() );
 		return $type_method;
 	}
-} 
+
+	protected function buildFilterAuthor()
+	{
+		$author = getFactory()->getObject('IssueActualAuthor');
+		$filter = new FilterAutoCompleteWebMethod($author, translate('Автор'), 'author');
+		$filter->setIdFieldName('Login');
+		return $filter;
+	}
+}

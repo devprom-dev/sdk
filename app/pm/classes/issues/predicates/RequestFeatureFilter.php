@@ -17,7 +17,7 @@ class RequestFeatureFilter extends FilterPredicate
  	    }
  	    
  	    if ( count($likes) < 1 ) return " AND 1 = 2 ";
- 	    
+
 		return " AND (".join("OR", $likes).") ";
  	}
 }

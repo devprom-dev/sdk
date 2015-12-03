@@ -29,7 +29,21 @@ return array(
         <p>You can see your request and leave your comments here: <a href="%link%">%link%</a></p>
     	',
 
-		
+
+	'issue.updated-comment.body' =>
+		'
+        <p>Hi!</p>
+        <p>You request "<a href="%link%">%title%</a>" have been updated by support engineer:</p>
+        %changes%
+        <br/>
+        <p><b>Comment from support engineer:</b></p>
+        <blockquote>%comment%</blockquote>
+        <br/>
+        <hr>
+        <p>You can see your request and leave your comments here: <a href="%link%">%link%</a></p>
+    	',
+
+
     'issue.commented.subject' => '[I-%id%] Your request has been commented',
     'issue.commented.body' =>
 		'

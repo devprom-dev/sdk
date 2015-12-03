@@ -14,7 +14,7 @@ abstract class WikiEditorBase
  	var $tabindex = 0;
 	var $index;
 	var $minimum_rows = 6;
-	var $maximum_rows = 30;
+	var $maximum_rows = 25;
 	var $css_class_name = '';
 	var $required = false;
  	

@@ -21,6 +21,7 @@ include "CheckpointUpdatesAvailable.php";
 include "CheckpointTablesPartitioned.php";
 include "CheckpointMySQLVariables.php";
 include "CheckpointBackups.php";
+include "CheckpointSupportPayed.php";
 
 class CheckpointRegistryBuilderSystem extends CheckpointRegistryBuilder
 {
@@ -42,6 +43,7 @@ class CheckpointRegistryBuilderSystem extends CheckpointRegistryBuilder
 			new CheckpointTablesOptimized(),
 		    new CheckpointTablesPartitioned(),
 			new CheckpointBackups(),
+			new CheckpointSupportPayed(),
 		    new CheckpointUpdatesAvailable()
 		);
 

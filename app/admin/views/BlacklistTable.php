@@ -7,7 +7,7 @@ class BlackTable extends PageTable
 	function getList()
 	{
 		$this->object->defaultsort = 'RecordCreated DESC';
-		return new BlackList( $this->object );
+		return new BlacklistList( $this->object );
 	}
 
 	function getTablePageUrl()

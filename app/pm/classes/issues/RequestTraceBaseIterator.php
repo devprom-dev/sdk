@@ -2,11 +2,10 @@
 
 class RequestTraceBaseIterator extends OrderedIterator
 {
-     function getDisplayNameReference()
-     {
-         return 'ObjectId';
-     }
-     
+    function getDisplayNameReference() {
+        return 'ObjectId';
+    }
+
  	function getDisplayName()
  	{
  		$object_it = $this->getRef($this->getDisplayNameReference());

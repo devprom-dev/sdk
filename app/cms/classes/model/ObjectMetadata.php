@@ -1,9 +1,12 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class ObjectMetadata 
 {
     private $object = null;
     private $attributes = array();
+	private $removed = array();
     private $persisters = array();
 	
 	public function __construct( Metaobject $object = null, array $attributes = array(), array $persisters = array() )
@@ -17,6 +20,7 @@ class ObjectMetadata
 	{
 		unset($this->object);
 		$this->object = null;
+		return array('attributes', 'persisters', 'removed');
 	}
 	
 	public function __destruct()
@@ -98,12 +102,17 @@ class ObjectMetadata
     {
     	$this->attributes[$attribute]['visible'] = $visible;
     }
-    
+
     public function removeAttribute($attribute)
-    {
-    	unset($this->attributes[$attribute]);
-    }
-    
+	{
+		$this->removed[$attribute] = $this->attributes[$attribute];
+		unset($this->attributes[$attribute]);
+	}
+
+	public function getAttributesRemoved() {
+		return $this->removed;
+	}
+
     public function setAttributeType($attribute, $type)
     {
     	$this->attributes[$attribute]['type'] = $this->attributes[$attribute]['dbtype'] = $type;
@@ -144,7 +153,7 @@ class ObjectMetadata
     	$this->attributes[$attribute]['ordernum'] = $ordernum;
     }
     
-    public function getAttributeOrderNum()
+    public function getAttributeOrderNum($attribute)
     {
     	return $this->attributes[$attribute]['ordernum'];
     }

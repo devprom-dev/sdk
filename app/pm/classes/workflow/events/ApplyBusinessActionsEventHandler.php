@@ -7,7 +7,6 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
 	function handle( $object_it )
 	{
 		$state_it = $object_it->getStateIt();
-		
 		if ( $state_it->getId() < 1 ) return;
 		
  		$action_it = getFactory()->getObject('StateAction')->getRegistry()->Query(
@@ -15,13 +14,13 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
  						new FilterAttributePredicate('State', $state_it->getId()),
  				)
  		);
-
+		$action = getFactory()->getObject('StateBusinessAction');
  		while ( !$action_it->end() )
  		{
-	 		$rule_it = $action_it->getRef('ReferenceName', getFactory()->getObject('StateBusinessAction'));
-
-	 		if ( is_object($rule_it) ) $rule_it->apply( $object_it ); 
-
+	 		$rule_it = $action_it->getRef('ReferenceName', $action);
+	 		if ( is_object($rule_it) && $rule_it->checkType('BusinessActionWorkflow') ) {
+				$rule_it->apply( $object_it );
+			}
 	 		$action_it->moveNext();
  		}
 	}

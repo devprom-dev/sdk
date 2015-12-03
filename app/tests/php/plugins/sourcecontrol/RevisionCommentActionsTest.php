@@ -32,7 +32,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
                 array (
                         array ( 'Request', null, $request ),
                         array ( 'Task', null, $task ),
-                        array ( 'Participant', null, new Participant() )
+                        array ( 'User', null, new User() )
                 ) 
         ));
     }

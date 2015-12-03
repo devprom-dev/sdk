@@ -47,7 +47,7 @@ class WikiSyntaxEditor extends WikiEditorBase
  	{
  		if ( !$b_editable )
  		{
-			echo '<div class="readonly" id="'.$this->getFieldId().'">';
+			echo '<div class="readonly" id="'.$this->getFieldId().'" attributeName="'.$this->getFieldName().'">';
 				echo ($content == '' ? ' &nbsp; ' : $content);
 			echo '</div>';
 			

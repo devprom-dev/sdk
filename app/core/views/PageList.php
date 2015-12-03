@@ -1,25 +1,19 @@
 <?php
 
+include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectUIDPersister.php";
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectAffectedDatePersister.php";
 
 class PageList extends ListTable
 {
  	private $table = null;
- 	
  	private $view = null;
- 	
  	private $list_mode = '';
- 	
  	private $group_it = null;
- 	
  	private $references_it = array();
- 	
  	private $system_attributes = array();
- 	
  	private $uid_service = null;
- 	
  	private $iterator_data = null;
- 	
+
  	function PageList( $object )
  	{
  		$this->uid_service = new ObjectUID('', $object);
@@ -27,7 +21,6 @@ class PageList extends ListTable
 	    if ( $this->uid_service->hasUidObject( $object ) )
 		{
 			$object->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
-
 			$object->addPersister( new ObjectUIDPersister() );
 		}
 		
@@ -72,8 +65,6 @@ class PageList extends ListTable
 
  	function getIterator() 
 	{
-	    global $model_factory;
-	    
 		$object = $this->getObject();
 
 		$filters = $this->getFilterValues();
@@ -90,9 +81,41 @@ class PageList extends ListTable
 		{
 		    $plugin->interceptMethodListGetPredicates( $this, $predicates, $filters );
 		}
-		
+
+		$group = $this->getGroup();
+		$sorts = array();
+		foreach( $this->getSorts() as $sort ) {
+			if ( $sort instanceof SortAttributeClause ) {
+				$sorts[] = $sort->getAttributeName();
+			}
+		}
+		$persisters = $object->getPersisters();
+		foreach( $persisters as $key => $persister )
+		{
+			$attributes = $persister->getAttributes();
+			if ( count($attributes) < 1 ) continue;
+
+			$visible = false;
+			foreach( $attributes as $attribute ) {
+				if ( $object->getAttributeType($attribute) == '' ) continue;
+				if ( $this->getColumnVisibility($attribute) ) {
+					$visible = true;
+					break;
+				}
+				if ( $attribute == $group ) {
+					$visible = true;
+					break;
+				}
+				if ( in_array($attribute,$sorts) ) {
+					$visible = true;
+					break;
+				}
+			}
+			if ( !$visible ) unset($persisters[$key]);
+		}
+		$object->setPersisters($persisters);
 		$object->addPersister( new ObjectAffectedDatePersister() );
-		
+
 		foreach ( $predicates as $predicate )
 		{
 			$object->addFilter( $predicate );
@@ -111,8 +134,12 @@ class PageList extends ListTable
 			$object->addFilter( new FilterInPredicate($ids) );
 		}
 
-		$object->setLimit( $this->getLimit() );
+		if ( $this->getLimit() > 0 ) {
+			$object->setLimit( $this->getLimit() );
+		}
+
 		$iterator = $object->getAll();
+
 		$this->iterator_data = $iterator->getRowset();
 
 		return $iterator;
@@ -147,7 +174,7 @@ class PageList extends ListTable
 		if ( count($ids) < 1 ) {
 				return $this->group_it = $this->getObject()->getEmptyIterator();
 		}
-		
+
 		return $this->group_it = $group_object->getRegistry()->Query(
 				array(
 						new FilterInPredicate(join(',',$ids))
@@ -161,28 +188,35 @@ class PageList extends ListTable
 		 
 		$object = $this->getObject()->getAttributeObject($attribute);
 
-		if ( !is_object($object) || count($this->iterator_data) < 1 )
-		{
+		if ( !is_object($object) || count($this->iterator_data) < 1 ) {
 				return $this->references_it[$attribute] = $this->getObject()->getEmptyIterator();
 		}
 		
-		$data = array_filter($this->iterator_data, function($value) use ($attribute) 
-		{
+		$data = array_filter($this->iterator_data, function($value) use ($attribute) {
 				return $value[$attribute] != '';
 		});
-		
 		if ( count($data) < 1 ) return $this->references_it[$attribute] = $this->getObject()->getEmptyIterator();
 
 		$ids = array();
 		
-		foreach( $data as $key => $row ) $ids[] = $row[$attribute]; 
-		
+		foreach( $data as $key => $row ) $ids[] = $row[$attribute];
+
+		$sorts = array();
+		if ( $object instanceof MetaobjectStatable ) {
+			$sorts[] = new SortAttributeClause('State');
+		}
+		$sorts[] = new SortReverseKeyClause();
+
+		$registry = $object->getRegistry();
+		$registry->setPersisters(array_filter($registry->getPersisters(), function($persister) {
+			return is_a($persister, 'StateDetailsPersister') || is_a($persister, 'TestExecutionResultPersister');
+		}));
+
 		return $this->references_it[$attribute] = $object->createCachedIterator(
-				$object->getRegistry()->Query(
-						array(
+				$registry->Query(
+						array_merge( array(
 								new FilterInPredicate(join(',',$ids)),
-								new SortReverseKeyClause()
-						)
+						), $sorts)
 				)->getRowset()
 		);
 	}
@@ -404,7 +438,7 @@ class PageList extends ListTable
 		
 		$sort_type = $parts[1];
 
-		if ( !in_array($object->getAttributeDbType($attr), array('', 'COLOR')) )
+		if ( !in_array($object->getAttributeDbType($attr), array('', 'COLOR', 'IMAGE')) )
 		{
             $classname = "";
 			if ( $sort == $attr )
@@ -474,15 +508,32 @@ class PageList extends ListTable
 						foreach( preg_split('/,/', $object_it->get($group_field)) as $group_id )
 						{
 							$ref_it = $this->getGroupIt();
-							
 							$ref_it->moveToId($group_id);
 							
                				$items[] = $this->uid_service->hasUid($ref_it) 
                						? $this->uid_service->getUidWithCaption($ref_it) 
                						: $this->uid_service->getUidTitle($ref_it);
 						}
-						
-						echo translate($object_it->object->getAttributeUserName($group_field)).': '.join($items, ', ');
+
+						$group_title = translate($object_it->object->getAttributeUserName($group_field)).': '.join($items, ', ');
+
+						if ( count($items) == 1 && $ref_it->object->getPage() != '?' )
+						{
+							$method = new ObjectModifyWebMethod($ref_it);
+							if ( $method->hasAccess() ) {
+								echo $this->getTable()->getView()->render('core/RowGroupMenu.php', array (
+									'title' => $group_title,
+									'items' => array(
+										array (
+											'name' => translate('Изменить'),
+											'url' => $method->getJSCall()
+										)
+									)
+								));
+								return;
+							}
+						}
+						echo $group_title;
 					}
 					else
 					{
@@ -499,7 +550,7 @@ class PageList extends ListTable
 			case 'State':
 				echo $object_it->getStateIt()->getDisplayName();
 				break;
-				
+
 			default:
 				foreach( $this->plugins_interceptors as $plugin )
 				{
@@ -529,34 +580,19 @@ class PageList extends ListTable
 				        break;
 				        
 				    default:
-                		$items = array();
-                		$ids = array();
-                		$separator = ' ';
-                		
-                		while ( !$entity_it->end() )
-                		{
-                			$ids[] = $entity_it->getId();
-                			if ( $this->uid_service->hasUid($entity_it) )
-                			{
-                				$items[] = $this->uid_service->getUidIconGlobal($entity_it, false);
-                			}
-                			else
-                			{
-                				$items[] = $entity_it->getDisplayName();
-                				$separator = '<br/>';
-                			}
-                			$entity_it->moveNext();
-                		}
-                		
+						$separator = $this->uid_service->hasUid($entity_it) ? ' ' : '<br/>';
+                		$ids = $entity_it->idsToArray();
+						$items = $this->getRefNames($entity_it, $object_it, $attr);
+
                 		$url = $this->getReferencesListWidget($entity_it->object);
                 		if ( $url != '' && count($items) > 1 )
                 		{
 							if ( strpos($url, '?') === false ) $url .= '?';
                 			$url .= strtolower(get_class($entity_it->object)).'='.join(',',$ids);
-                			$text = count($items) > 10 
+                			$text = count($items) > 10
                 					? str_replace('%1', count($items) - 10, text(2028))
                 					: text(2034);
-                			
+
                 			echo join(array_slice($items, 0, 10), $separator).'&nbsp; ';
                 			echo '<a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
                 		}
@@ -567,8 +603,45 @@ class PageList extends ListTable
 				}
 		}
 	}
-	
-	function drawCell( $object_it, $attr ) 
+
+	protected function getRefNames($entity_it, $object_it, $attr )
+	{
+		$items = array();
+        $baselines_data = $object_it->get($attr.'Baselines');
+
+        if ( $baselines_data == '' )
+        {
+            $uid_used = $this->uid_service->hasUid($entity_it);
+            while ( !$entity_it->end() )
+            {
+                if ( $uid_used ) {
+                    $items[] = $this->uid_service->getUidIconGlobal($entity_it, false);
+                }
+                else {
+                    $items[] = $entity_it->getDisplayName();
+                }
+                $entity_it->moveNext();
+            }
+        }
+        else {
+            $baselines = array();
+            foreach( preg_split('/,/',$baselines_data) as $info ) {
+                list($id, $baseline) = preg_split('/:/', $info);
+                $baselines[$id] = $baseline;
+            }
+            while ( !$entity_it->end() )
+            {
+                $this->uid_service->setBaseline($baselines[$entity_it->getId()]);
+                $items[] = $this->uid_service->getUidIconGlobal($entity_it, false);
+                $entity_it->moveNext();
+            }
+            $this->uid_service->setBaseline('');
+        }
+
+		return $items;
+	}
+
+    function drawCell( $object_it, $attr )
 	{
 	    $plugins = getSession()->getPluginsManager();
 	    
@@ -595,7 +668,7 @@ class PageList extends ListTable
 			    {
 			        case 'text':
 			        case 'wysiwyg':
-			            
+
 			            drawMore($object_it, $attr);
 			            
 			            break;
@@ -663,11 +736,16 @@ class PageList extends ListTable
 		}
 	}
 
+	function getForm( $object_it )
+	{
+		return $this->getTable()->getPage()->getFormRef();
+	}
+
 	function getItemActions( $column_name, $object_it ) 
 	{
 	    $actions = array();
 	    
-	    $form = $this->getTable()->getPage()->getFormRef();
+	    $form = $this->getForm($object_it);
 	    
 	    if ( !$form instanceof PageForm )
 	    {
@@ -698,7 +776,7 @@ class PageList extends ListTable
 	{
 		$actions = $this->getItemActions('', $object_it);
 		
-	    $form = $this->getTable()->getPage()->getFormRef();
+	    $form = $this->getForm($object_it);
 	    if ( !$form instanceof PageForm ) return $actions;
 	    
 	    $form->show($object_it);
@@ -731,7 +809,7 @@ class PageList extends ListTable
 	function getGroup() 
 	{
 	    $values = $this->getFilterValues();
-    
+
 		if ( $values['group'] != '' )
 		{
 			return $values['group'] != 'none' ? $values['group'] : '';
@@ -813,7 +891,11 @@ class PageList extends ListTable
 		global $_REQUEST;
 		return $_REQUEST['limit'];
 	}
-	
+
+	function getScrollable() {
+		return false;
+	}
+
 	function buildFilterActions( & $base_actions )
 	{
 	    $actions = array();
@@ -1114,7 +1196,7 @@ class PageList extends ListTable
 		    'table_class_name' => 'table table-hover',
 		    'list_mode' => $this->list_mode,
 			'created_datetime' => SystemDateTime::date(),
-			'scrollable' => false,
+			'scrollable' => $this->getScrollable(),
 			'reorder' => false,
 			'sort_field' => $sort_field,
 			'sort_type' => $sort_type,
@@ -1162,18 +1244,3 @@ class PageList extends ListTable
 		$this->view = null;
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-class ObjectUIDPersister extends ObjectSQLPersister
-{
- 	function getSelectColumns( $alias )
- 	{
- 		$alias = $alias != '' ? $alias."." : "";
- 		
-		$object = $this->getObject();
-  		$objectPK = $alias.$object->getClassName().'Id';
- 		
- 		return array( " (SELECT ".$objectPK." ) UID " );
- 	}
-}
-

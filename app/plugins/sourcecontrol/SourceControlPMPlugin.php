@@ -4,6 +4,7 @@ include "classes/widgets/ModuleCategoryBuilderCode.php";
 include "classes/widgets/FunctionalAreaDevelopmentBuilder.php";
 include "classes/widgets/FunctionalAreaMenuDevelopmentBuilder.php";
 include "classes/widgets/ObjectsListWidgetBuilderCode.php";
+include "classes/widgets/ModuleBuilderCode.php";
 include "classes/ReportsSourceControlBuilder.php";
 include "classes/SharedObjectsSourceCodeBuilder.php";
 include "classes/SearchableObjectsCodeBuilder.php";
@@ -12,6 +13,7 @@ include "classes/MethodologyModelCodeBuilder.php";
 include "classes/BuildCodeMetadataBuilder.php";
 include "classes/SubversionModelBuilder.php";
 include_once "classes/notificators/RevisionCommentActionsTrigger.php";
+include "classes/events/BuildCommitChangesEvent.php";
 include "classes/HistoricalObjectsRegistryBuilderCode.php";
 include "classes/ProjectLinkCodeMetadataBuilder.php";
 include "classes/RequestCodeMetadataBuilder.php";
@@ -25,8 +27,6 @@ class SourceControlPMPlugin extends PluginPMBase
 {
     function getModules()
     {
-        global $model_factory;
-        	
         $modules = array (
             'files' =>
                 array(
@@ -43,6 +43,14 @@ class SourceControlPMPlugin extends PluginPMBase
                         'title' => text('sourcecontrol4'),
                         'AccessEntityReferenceName' => 'pm_SubversionRevision',
                 		'area' => ModuleCategoryBuilderCode::AREA_UID
+                ),
+            'changes' =>
+                array(
+                    'includes' => array( 'sourcecontrol/views/ScmFileChangesPage.php' ),
+                    'classname' => 'ScmFileChangesPage',
+                    'title' => text('sourcecontrol47'),
+                    'AccessEntityReferenceName' => 'pm_SubversionRevision',
+                    'area' => ModuleCategoryBuilderCode::AREA_UID
                 )
         );
 
@@ -62,16 +70,18 @@ class SourceControlPMPlugin extends PluginPMBase
     {
         return array (
         	new ModuleCategoryBuilderCode(),
+            new ModuleBuilderCode(getSession()),
 
             new SharedObjectsSourceCodeBuilder(),
             new FunctionalAreaDevelopmentBuilder(),
             new FunctionalAreaMenuDevelopmentBuilder(),
-            new ReportsSourceControlBuilder(),
+            new ReportsSourceControlBuilder(getSession()),
             new SearchableObjectsCodeBuilder(),
             new AccessRightEntitySetCodeBuilder(),
             new MethodologyModelCodeBuilder(),
             new BuildCodeMetadataBuilder(),
-            new RevisionCommentActionsTrigger( getSession() ),
+            new RevisionCommentActionsTrigger(getSession()),
+            new BuildCommitChangesEvent(getSession()),
         	new ProjectTemplateSectionsCodeRegistryBuilder(getSession()),
         		
         	// model extenders

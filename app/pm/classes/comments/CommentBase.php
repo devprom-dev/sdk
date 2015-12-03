@@ -7,6 +7,7 @@ include "predicates/CommentObjectStatePredicate.php";
 include "predicates/CommentStartFilter.php";
 include "predicates/CommentFinishFilter.php";
 include "predicates/CommentObjectFilter.php";
+include "predicates/CommentRootFilter.php";
 
 class CommentBase extends Metaobject
 {
@@ -50,12 +51,19 @@ class CommentBase extends Metaobject
 			'LCASE(ObjectClass)', strtolower(get_class($object_it->object)) );
 	}
 	
-	function getAllRootsForObject( $object_it ) 
+	function getAllRootsForObject( $object_it, $query_parms = array() )
 	{
-		return $this->getByRefArray(
-			array('ObjectId' => $object_it->getId(),
-				  'LCASE(ObjectClass)' => strtolower(get_class($object_it->object)),
-				  'PrevComment' => 'NULL' ) ); 
+		return $this->getRegistry()->Query(
+			array_merge(
+                $query_parms,
+                array(
+                    new FilterAttributePredicate('ObjectId', $object_it->getId()),
+                    new FilterAttributePredicate('ObjectClass', strtolower(get_class($object_it->object))),
+                    new CommentRootFilter(),
+                    new SortKeyClause()
+                )
+            )
+		);
 	}
 	
 	function getNew( $days, $limit = 0 ) 

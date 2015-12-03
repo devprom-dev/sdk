@@ -169,7 +169,7 @@ class MailboxScannerTest extends DevpromTestCase {
     }
 
     protected function buildScanner() {
-        return new MailboxScanner($this->requestMock, $this->commentMock, $this->attachmentMock,
+        return new MailboxScanner($this->requestMock, $this->commentMock, $this->attachmentMock, $this->attachmentMock,
             $this->userServiceMock, $this->objectUID);
     }
 
@@ -221,7 +221,7 @@ class MockScannerBuilder {
      * @return MockScannerBuilder
      */
     public function newInstance() {
-        $this->scanner = new MailboxScanner($this->requestMock, $this->commentMock, $this->attachmentMock,
+        $this->scanner = new MailboxScanner($this->requestMock, $this->commentMock, $this->attachmentMock, $this->attachmentMock,
             $this->userServiceMock, $this->objectUID);
         return $this;
     }

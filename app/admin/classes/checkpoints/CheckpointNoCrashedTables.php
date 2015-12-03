@@ -21,11 +21,14 @@ class CheckpointNoCrashedTables extends CheckpointEntryDynamic
         $system_it = $system->createSQLIterator( "show table status where Comment like '%crashed%'" );
 
         $tables = $system_it->fieldToArray('Name');
-        
         if ( count($tables) > 0 && $tables[0] != '0' )
         {
-            $system->createSQLIterator( "repair table ".join(",", $tables)." use_frm " );
-            	
+            $this->info(
+                var_export(
+                    $system->createSQLIterator("repair table ".join(",", $tables)." use_frm ")->getRowset(),
+                    true
+                )
+            );
             $system_it = $system->createSQLIterator( "show table status where Comment like '%crashed%'" );
             $this->setValue( $system_it->count() < 1 ? '1' : '-1' );
         }

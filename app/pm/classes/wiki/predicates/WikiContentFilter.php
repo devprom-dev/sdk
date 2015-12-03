@@ -7,10 +7,10 @@ class WikiContentFilter extends FilterPredicate
  		switch ( $filter )
  		{
  			case 'empty':
- 				return " AND t.ContentPresents = 'N' ";
+ 				return " AND t.Content IS NULL ";
 
  			case 'nonempty':
- 				return " AND t.ContentPresents = 'Y' ";
+ 				return " AND t.Content IS NOT NULL ";
  				
  			default:
  				return " AND 1 = 2 ";

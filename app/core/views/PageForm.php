@@ -22,6 +22,7 @@ class PageForm extends MetaObjectForm
 	private $transition_rules_it = null;
 	private $transition_appliable = array();
 	private $transition_messages = array();
+	private $plugins = array();
      
   	function PageForm( $object )
  	{
@@ -30,7 +31,11 @@ class PageForm extends MetaObjectForm
  		$this->setRedirectUrl( $this->buildRedirectUrl() );
  		
  		$this->system_attributes = $this->buildSystemAttributes();
- 		
+
+		$plugins = getSession()->getPluginsManager();
+		$this->plugins = is_object($plugins)
+			? $plugins->getPluginsForSection(getSession()->getSite()) : array();
+
  		$this->buildRelatedDataCache();
  	}
  	
@@ -254,22 +259,12 @@ class PageForm extends MetaObjectForm
 		return false;
 	}
 	
-	function IsAttributeVisible( $attr_name )
-	{
-	    // hide system attributes
-		if ( in_array($key, $this->system_attributes) ) return false;
-	    
-	    return parent::IsAttributeVisible( $attr_name );
-	}
-	
 	function getFieldValue( $field )
 	{
-		global $_REQUEST;
-		
 		switch ( $field )
 		{
-			case 'TransitionComment':
 			case 'Transition':
+			case 'TransitionComment':
 				return htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 			
 			default:
@@ -284,9 +279,7 @@ class PageForm extends MetaObjectForm
 
 	function createFieldObject( $name ) 
 	{
-		$plugins = getSession()->getPluginsManager();
-		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
-   	    foreach( $plugins_interceptors as $plugin )
+   	    foreach( $this->plugins as $plugin )
         {
         	$field = $plugin->interceptMethodFormCreateFieldObject( $this, $name );
         	if ( is_object($field) ) return $field;
@@ -311,7 +304,12 @@ class PageForm extends MetaObjectForm
 	{
 		return $_REQUEST[$this->getObject()->getEntityRefName().'action'] != '' ;
 	}
-	
+
+	function setFormDisplayed()
+	{
+		$_REQUEST[$this->getObject()->getEntityRefName().'action'] = $this->action;
+	}
+
 	function getActions()
 	{
 		global $model_factory;
@@ -319,16 +317,18 @@ class PageForm extends MetaObjectForm
 		$actions = array();
 
 		$object_it = $this->getObjectIt();
-		
+
+		$actions['modify'] = array();
 		if( getFactory()->getAccessPolicy()->can_modify($object_it) )
 		{
 			$method = new ObjectModifyWebMethod($object_it);
 			$method->setRedirectUrl('donothing');
 			
-			$actions[] = array(
+			$actions['modify'] = array(
 					'name' => translate('Изменить'),
 					'url' => $this->IsFormDisplayed() ? $object_it->getEditUrl() : '#', 
-					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall() 
+					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
+					'uid' => 'modify'
 			);
 
 			$transition_actions = $this->getTransitionActions();
@@ -338,15 +338,27 @@ class PageForm extends MetaObjectForm
 				$actions = array_merge($actions, $transition_actions);
 			}
 		}
-		
-		$plugins = getSession()->getPluginsManager();
-		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
-		
-		foreach( $plugins_interceptors as $plugin )
-		{
+
+		$actions[] = array();
+		$actions['create'] = array (
+			'name' => translate('Создать'),
+			'items' => $this->getNewRelatedActions(),
+			'uid' => 'create'
+		);
+
+		$plugin_actions = array();
+		foreach( $this->plugins as $plugin ) {
+			$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
+		}
+		if ( count($plugin_actions) > 0 ) {
+			$actions[] = array();
+			$actions = array_merge( $actions, $plugin_actions );
+		}
+
+		foreach( $this->plugins as $plugin ) {
 			$plugin->interceptMethodFormGetActions( $this, $actions );
 		}
-				
+
 		return $actions;
 	}
 
@@ -395,7 +407,8 @@ class PageForm extends MetaObjectForm
 			}
 			
 			$method = new TransitionStateMethod( $transition_it, $object_it );
-			$method->setTargetStateRefName($this->target_states_array[$transition_it->getId()]->get('ReferenceName'));
+			$target_state = $this->target_states_array[$transition_it->getId()]->get('ReferenceName');
+			$method->setTargetStateRefName($target_state);
 			
 			if ( !$this->IsFormDisplayed() )
 			{
@@ -405,7 +418,8 @@ class PageForm extends MetaObjectForm
 			$actions[] = array ( 
 					'name' => $method->getCaption(), 
 					'url' => $method->getJSCall(),
-					'title' => $method->getDescription()
+					'title' => $method->getDescription(),
+					'uid' => 'workflow-'.$target_state
 			);
 			
 			$transition_it->moveNext();
@@ -413,7 +427,12 @@ class PageForm extends MetaObjectForm
 
 		return $actions;
 	}
-	
+
+	function getNewRelatedActions()
+	{
+		return array();
+	}
+
 	function getDeleteActions()
 	{
 	    $actions = array();
@@ -474,10 +493,9 @@ class PageForm extends MetaObjectForm
 	
 	function getRenderParms()
 	{
-		global $_REQUEST, $model_factory;
-		
 		$object_it = $this->getObjectIt();
-		
+		$uid = new ObjectUid;
+
 		$attributes = array();
 		$scripts = '';
 		$index = 1;
@@ -498,15 +516,25 @@ class PageForm extends MetaObjectForm
 			);
 			
 			$field = $this->createField( $key );
-			
 			if ( !is_object($field) ) continue;
-			
+
+			if ( $field instanceof FieldAutoCompleteObject && $this->getEditMode() )
+			{
+				$ref_it = $field->getObjectIt();
+				if ( $ref_it->getId() != '' && $uid->hasUid($ref_it) ) {
+					$info = $uid->getUidInfo($ref_it);
+					if ( $info['url'] != '' ) {
+						$attributes[$key]['description'] =
+							'<a class="dashed" href="'.$info['url'].'">'.text(2084).'</a> &nbsp; &nbsp; '.$attributes[$key]['description'];
+					}
+				}
+			}
+
 			$attributes[$key]['text'] = $field->getText();
 			
 			if ( !$visible ) continue;
 		    			
 			$field->setTabIndex( $index++ );
-
 		    $field->setRequired( $attributes[$key]['required'] );
 		    
  			ob_start();
@@ -541,7 +569,6 @@ class PageForm extends MetaObjectForm
 		
 		if ( is_object($object_it) )
 		{
-			$uid = new ObjectUid;
 			if ( $uid->hasUid( $object_it ) )
 			{
 				$info = $uid->getUidInfo($object_it);
@@ -592,7 +619,8 @@ class PageForm extends MetaObjectForm
 			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getId()) != 'off' ? $this->getHint() : '',
 			'alert' => join('<br/>',$this->transition_messages),
 			'uid' => $uid_number,
-			'uid_url' => $uid_url
+			'uid_url' => $uid_url,
+			'source_parms' => $this->getSourceParms()
 		);
 	}
 	
@@ -628,6 +656,20 @@ class PageForm extends MetaObjectForm
 	{
 		$render_parms = $this->getRenderParms();
 
+		if ( is_array($parms['sections']) )	{
+			foreach ( $parms['sections'] as $section ) {
+				if ( $section instanceof PageSectionAttributes ) {
+					$attributes = $section->getAttributes();
+					foreach( $attributes as $key => $attribute ) {
+						if ( !$this->IsAttributeVisible($attribute) ) unset($attributes[$key]);
+					}
+					if ( count($attributes) < 1 ) {
+						unset($parms['sections'][$section->getId()]);
+					}
+				}
+			}
+		}
+
 		echo $view->render( $this->getTemplate(), array_merge($parms, $render_parms) ); 
 	}
 	
@@ -660,15 +702,27 @@ class PageForm extends MetaObjectForm
 	
 	function drawScripts()
 	{
-	    $plugins = getSession()->getPluginsManager();
-	    
-	    $plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
-	
-	    foreach( $plugins_interceptors as $plugin )
-	    {
+	    foreach( $this->plugins as $plugin ) {
 	        $result = $plugin->interceptMethodFormDrawScripts( $this );
-	        	
 	        if ( is_bool($result) ) return;
 	    }
+	}
+
+	protected function getSourceParms()
+	{
+		$uid = new ObjectUid();
+		list($source_it, $text_attribute) = $this->getSourceIt();
+		return array (
+			'uid' => $uid->getUidWithCaption($source_it),
+			'text' => $source_it->getHtmlDecoded($text_attribute)
+		);
+	}
+
+	protected function getSourceIt()
+	{
+		return array(
+			$this->getObject()->getEmptyIterator(),
+			'Unknown'
+		);
 	}
 }

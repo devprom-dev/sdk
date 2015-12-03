@@ -35,18 +35,27 @@ class UpdateTable extends StaticPageTable
 	
 	function getNewActions()
 	{
-		return array (
-			array (
-				'name' => translate('Скачать обновление'),
-				'url' => 'javascript: downloadUpdate()',
-				'uid' => 'download'
-			),
-			array(),
-			array (
+		$actions = array();
+
+		$data = file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE);
+		if ( $data != '' ) {
+			$data = CheckpointUpdatesAvailable::getNewUpdatesOnly(JsonWrapper::decode($data));
+			if ( count($data) > 0 ) {
+				$actions[] = array (
+					'name' => translate('Скачать обновление'),
+					'url' => 'javascript: downloadUpdate()',
+					'uid' => 'download'
+				);
+			}
+		}
+		if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) ) {
+			$actions[] = array();
+			$actions[] = array (
 				'name' => translate('Установить'),
 				'url' => '?action=upload',
 				'uid' => 'upload'
-			)
-		);
+			);
+		}
+		return $actions;
 	}
 }

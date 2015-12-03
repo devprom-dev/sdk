@@ -15,7 +15,7 @@ class RequestTagFilter extends FilterPredicate
 		{
 			$tag = $model_factory->getObject('Tag');
 			
-			$tag_it = $tag->getExact( preg_split('/,/', $filter) );
+			$tag_it = $tag->getExact( preg_split('/[,-]/', $filter) );
 			
 			if ( $tag_it->count() > 0 )
 			{

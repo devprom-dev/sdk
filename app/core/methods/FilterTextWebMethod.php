@@ -6,12 +6,12 @@ class FilterTextWebMethod extends WebMethod
 {
  	var $method_name, $title, $parm, $style, $script;
  	
- 	function FilterTextWebMethod( $title = '', $parm = 'search' )
+ 	function FilterTextWebMethod( $title = '', $parm = 'search', $style = 'width:230px;' )
  	{
  		$this->method_name = md5($this->getMethodName());
  		$this->title = $title;
  		$this->setValueParm($parm);
- 		$this->style = 'width:230px;';
+ 		$this->style = $style;
 
  		$this->script = "javascript: filterLocation.setup('".$this->getValueParm()."='+$(this).val())";
  		
@@ -45,7 +45,9 @@ class FilterTextWebMethod extends WebMethod
 
  	function drawSelect( $parms_array = array() ) 
  	{
-		echo '<input type="text" valueparm="'.$this->getValueParm().'" class="btn-small input-large" placeholder="'.$this->title.'" style="'.$this->getStyle().'" value="'.$this->getValue().'" onchange="'.$this->script.'">';
+		$value_text = $this->getValue();
+		if ( in_array($value_text, array('none','all')) ) $value_text = '';
+		echo '<input type="text" valueparm="'.$this->getValueParm().'" class="btn-small input-large" placeholder="'.$this->title.'" style="'.$this->getStyle().'" value="'.$value_text.'" onchange="'.$this->script.'">';
  	}
  	
  	function execute_request()

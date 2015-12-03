@@ -6,18 +6,19 @@ class FieldAttachments extends FieldForm
 {
  	var $object_it, $attachments, $caution, $anchor_field;
  	private $image_class = 'image_attach';
+	private $object = null;
  	
  	function FieldAttachments( $object_it = null, $writable = true, $caution = true )
  	{
- 		global $model_factory;
- 		
  		if ( is_a($object_it, 'IteratorBase') )
  		{
  		    $this->object_it = $object_it;
+			$this->object = $object_it->object;
  		}
  		else
  		{
- 		    $this->object_it = $object_it->createCachedIterator(array());
+			$this->object = $object_it;
+ 		    $this->object_it = $object_it->getEmptyIterator();
  		}
  		
  		// reports the caution message that form values may be lost
@@ -65,6 +66,11 @@ class FieldAttachments extends FieldForm
  	{
  		return $this->object_it;
  	}
+
+	function getObject()
+	{
+		return $this->object;
+	}
  	
  	function draw()
 	{
@@ -90,21 +96,15 @@ class FieldAttachments extends FieldForm
 	
 	function drawBody( $view = null )
 	{
-		global $model_factory;
-		
-		$object_it = $this->getObjectIt();
-		
 		$form = $this->getForm();
-		
- 		if ( is_object($object_it) )
- 		{
+
+		$object_it = $this->getObjectIt();
+ 		if ( is_object($object_it) ) {
  			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
  		}
 
  		$form->setReadonly( $this->readOnly() );
- 			
  		$form->setTabIndex( $this->getTabIndex() );
- 		
  		$form->setFormId( 1000 + $form->getFormId() );
 
  		$form->draw( $view );

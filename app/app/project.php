@@ -1,6 +1,6 @@
 <?php
 
-include (dirname(__FILE__).'/../pm/common.php'); 
+include (dirname(__FILE__).'/../pm/common.php');
 
 use Devprom\Component\HttpFoundation\DevpromRequest;
 use Devprom\Component\HttpKernel\PmApplicationKernel;

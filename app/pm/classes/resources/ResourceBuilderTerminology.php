@@ -7,7 +7,7 @@ class ResourceBuilderTerminology extends ResourceBuilder
     {
     	$resource = new Resource(new ObjectRegistrySQL());
     	$resource_it = $resource->getAll();
-    		
+
     	while( !$resource_it->end() )
     	{
     		$object->addText(

@@ -20,6 +20,7 @@ include_once 'AttachCustomersToCompanies.php';
 include_once 'SetupSupportProjectSettings.php';
 include_once 'MigrateDatabaseUTF8.php';
 include_once "RepairDatabase.php";
+include_once "CacheParameters.php";
 
 class InstallationFactory
 {
@@ -64,6 +65,7 @@ class InstallationFactory
         	new AttachCustomersToCompanies(),
         	new SetupSupportProjectSettings(),
 			new RepairDatabase(),
+			new CacheParameters(),
 	        new ClearCache()
 	    );
     }

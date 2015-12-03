@@ -16,11 +16,11 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
 			$object->addAttribute('DeadlinesDate', 'DATE', translate('Сроки'), false);
 		}
 		
-   		if ( $methodology_it->IsTimeTracking() )
+   		if ( $methodology_it->IsTimeTracking() && $object->getAttributeType('Fact') != '' )
 		{
 			$object->addAttribute( 'Spent', 'REF_ActivityRequestId', translate('Списание времени'), false );
-		    $object->addPersister( new RequestSpentTimePersister() );
+		    $object->addPersister( new RequestSpentTimePersister(array('Spent')) );
 		}
-		$object->addPersister( new RequestQuestionsPersister() );
+		$object->addPersister( new RequestQuestionsPersister(array('Question')) );
     }
 }

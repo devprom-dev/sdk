@@ -14,7 +14,7 @@ class LoginForm extends AjaxForm
 	
 	function getActions()
 	{
-	    return array ( 
+	    return array (
             array ( 'name' => text(1330), 'url' => "/recovery" )
         );
 	}

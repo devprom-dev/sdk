@@ -7,6 +7,7 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 		$content = parent::parse($content);
 		
         $content = preg_replace_callback('/<img\s+alt="([^"]+)"[^>]+>/i', array($this, 'parseUMLImage'), $content);
+		$content = preg_replace('/<img[^>]+>/i', str_pad(' '.translate('Изображение').' ', 120, '-', STR_PAD_BOTH), $content);
 
 	    return $content;
 	}
@@ -16,13 +17,13 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 		// decode %u0444 symbols
 		$json = JsonWrapper::decode('{"t":"'.str_replace('%u', '\u', base64_decode($match[1])).'"}');
 
-		return str_replace("\n", '<p/>', 
-				htmlentities(
-						IteratorBase::utf8towin(
-								urldecode($json['t'])
-        				),
-						ENT_QUOTES | ENT_HTML401, APP_ENCODING
-        		)
-        );
+		$uml_code = urldecode($json['t']);
+		if ( $uml_code == '' ) return $match[0];
+
+		$uml_separator = str_pad(' UML ', 120, '-', STR_PAD_BOTH);
+		return
+			'<p>'.$uml_separator.'</p>'.
+			'<p>'.preg_replace('/[\r\n]/', '<p></p>', $uml_code).'</p>'.
+			'<p>'.$uml_separator.'</p>';
 	}
 }

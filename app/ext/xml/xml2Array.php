@@ -16,6 +16,7 @@ class xml2Array {
 
 	function xmlParse($strInputXML) {
 		$this->resParser = xml_parser_create ();
+
 		xml_set_object($this->resParser,$this);
 		xml_set_element_handler($this->resParser, "tagOpen", "tagClosed");
 		xml_set_character_data_handler($this->resParser, "tagData");

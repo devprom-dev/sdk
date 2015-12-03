@@ -36,6 +36,11 @@ class SettingsTwigExtension extends \Twig_Extension
         return array(
             'client_name' => $settings->getClientName(),
             'site_url' => $this->router->generate('issue_list', array(), true),
+            'support_url' =>
+                defined('SUPPORT_PORTAL_URL')
+                    ? preg_replace('/http[s]?:\/\/%1/',
+                            array_shift(preg_split('/\./', \EnvironmentSettings::getServerName())), SUPPORT_PORTAL_URL)
+                    : \EnvironmentSettings::getServerName()
         );
     }
 

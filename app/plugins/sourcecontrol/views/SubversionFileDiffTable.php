@@ -34,7 +34,7 @@ class SubversionFileDiffTable extends PMPageTable
         $directory = join('/', $parts);
         
         $connector = $this->subversion_it->getConnector();
-        
+
         return array_merge( parent::getRenderParms( $parms ), array (
                 'file_body' => $this->getDifference(
            								$connector->getTextFile($_REQUEST['path'], $_REQUEST['version']),
@@ -50,15 +50,17 @@ class SubversionFileDiffTable extends PMPageTable
     function getDifference( $left, $right )
     {
  		include_once SERVER_ROOT_PATH."ext/diff/finediff.php";
- 		
+
  		$diff = new FineDiff (
- 				$left, 
- 				$right, 
- 				array(
-					FineDiff::wordDelimiters
-				)
+            preg_replace('/[\r\n]+/', PHP_EOL, $left),
+            preg_replace('/[\r\n]+/', PHP_EOL, $right),
+            array(
+                FineDiff::paragraphDelimiters,
+                FineDiff::sentenceDelimiters,
+                FineDiff::wordDelimiters
+            )
 		);
  		
- 		return IteratorBase::utf8towin(html_entity_decode($diff->renderDiffToHtml(), ENT_COMPAT | ENT_HTML401, 'UTF-8'));
+ 		return html_entity_decode($diff->renderDiffToHtml(), ENT_COMPAT | ENT_HTML401);
     }
 } 

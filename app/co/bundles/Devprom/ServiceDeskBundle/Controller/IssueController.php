@@ -70,7 +70,9 @@ class IssueController extends Controller
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
         $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
-        $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true), $issue);
+        $products = $this->getIssueService()->getProductsAvailable($this->getProjectVpds());
+
+        $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true, $products), $issue);
 
         return array(
             'issue' => $issue,
@@ -121,7 +123,6 @@ class IssueController extends Controller
         }
 
         $this->checkUserIsAuthorized($issue);
-
         $issue->setCaption(TextUtil::unescapeHtml($issue->getCaption()));
 
         // убираем экранирвание html разметки от Девпрома
@@ -132,7 +133,8 @@ class IssueController extends Controller
         $descr = TextUtil::unescapeHtml($descr);
         $issue->setDescription($descr);
 
-        $editForm = $this->createForm(new IssueFormType($this->getProjectVpds()), $issue);
+        $products = $this->getIssueService()->getProductsAvailable($this->getProjectVpds());
+        $editForm = $this->createForm(new IssueFormType($this->getProjectVpds(), false, count($products) > 0), $issue);
 
         return array(
             'issue' => $issue,
@@ -285,10 +287,10 @@ class IssueController extends Controller
      */
     protected function checkUserIsAuthorized(Issue $issue)
     {
-        if ($issue->getAuthorEmail() == $this->getUser()->getEmail()) return;
+        if ($issue->getCustomer()->getEmail() == $this->getUser()->getEmail()) return;
         
         $service = $this->container->get('user_service');
-        if ( $service->isCollegues($issue->getAuthorEmail(), $this->getUser()->getEmail()) ) return;
+        if ( $service->isCollegues($issue->getCustomer()->getEmail(), $this->getUser()->getEmail()) ) return;
         
         throw new HttpException(403);
     }

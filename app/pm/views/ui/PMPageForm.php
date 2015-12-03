@@ -35,10 +35,21 @@ class PMPageForm extends PageForm
         }
         else
         {
-        	$model_builder = new WorkflowStateAttributesModelBuilder(
-        			$this->getStateIt(), 
-        			!is_object($this->getObjectIt()) ? $this->getNewObjectAttributes() : array()
-    		);
+            if ( !is_object($this->getObjectIt()) )
+            {
+                $state_it = $this->getStateIt();
+                if ( $_REQUEST['State'] != '' ) {
+                    $state_it->moveTo('ReferenceName', trim($_REQUEST['State']));
+                }
+                $model_builder = new WorkflowStateAttributesModelBuilder(
+                    $state_it, array()
+                );
+            }
+            else {
+                $model_builder = new WorkflowStateAttributesModelBuilder(
+                    $this->getStateIt(), array()
+                );
+            }
         }
 
         $model_builder->build( $this->getObject() );
@@ -47,17 +58,14 @@ class PMPageForm extends PageForm
 	protected function buildCustomAttributes()
 	{
 		if ( !getFactory()->getObject('CustomizableObjectSet')->checkObject($this->getObject()) ) return;
-		
+
         $it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
-        
-        while (!$it->end()) 
+        while (!$it->end())
         {
             $this->customtypes[$it->get('ReferenceName')] = $it->getRef('AttributeType')->get('ReferenceName');
-
             $this->customdefault[$it->get('ReferenceName')] = true;
             
-            if ($it->get('ObjectKind') != '')
-            {
+            if ($it->get('ObjectKind') != '') {
             	$this->customkinds[$it->get('ReferenceName')] = $it->get('ObjectKind');
             }
 
@@ -185,22 +193,11 @@ class PMPageForm extends PageForm
 				    	);
     }
     
- 	function IsAttributeVisible( $attr )
- 	{
- 		if ( array_key_exists( $attr, $this->customkinds ) )
- 		{
- 			if ( $this->getDiscriminator() != $this->customkinds[$attr] ) return false;
- 		}
- 		
- 		return parent::IsAttributeVisible( $attr );
- 	}
- 	
  	function IsAttributeRequired( $attr )
  	{
  		if ( array_key_exists( $attr, $this->customkinds ) )
  		{
  			$discriminator = $this->getDiscriminator();
- 			
  			if ( $discriminator != $this->customkinds[$attr] ) return false;
  		}
 		
@@ -279,11 +276,6 @@ class PMPageForm extends PageForm
 		return array();
 	}
 	
-	function getNewObjectAttributes()
-	{
-		return array();
-	}
-    	
     function process()
     {
         $this->extendModel();
@@ -306,32 +298,16 @@ class PMPageForm extends PageForm
 	{
 	    parent::drawScripts();
 	    
-	    $object = $this->getObject();
-	    
 	    if ( $this->getDiscriminatorField() != '' )
 	    {
-	    
-	    $discriminatorField = $object->getClassName().$this->getDiscriminatorField();
- 		
+	    $discriminatorField = $this->getObject()->getClassName().$this->getDiscriminatorField();
     	?>
     	<script type="text/javascript">
-        var customFields = ['<?=join("','", array_keys($this->customkinds))?>'];
-    
-        $('#<?=$discriminatorField?>').change( function() {
-            jQuery.each(customFields, function(key, value) {
-                $('#fieldRow'+value).hide();
-            });
-            selected = $(this).find('option[value="'+$(this).val()+'"]').attr('referenceName');
-            <?php foreach( $this->customkinds as $field => $value ) { ?>
-            if ( selected == '<?=$value?>' ) $('#fieldRow<?=$field?>').show();
-            <?php } ?>
-        });
-
-        $('#<?=$discriminatorField?>').change();
-        
+            if ( typeof completeUICustomFields != 'undefined' ) {
+                completeUICustomFields('<?=$discriminatorField?>', <?=json_encode(array_keys($this->customkinds))?>, <?=json_encode(array_values($this->customkinds))?>);
+            }
     	</script>
     	<?php
-    	
 	    }
 	}
 

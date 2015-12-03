@@ -2,6 +2,7 @@
 
 include "PMCustomReportIterator.php";
 include "predicates/CustomReportMyPredicate.php";
+include "predicates/CustomReportCommonPredicate.php";
 include "CustomReportMyRegistry.php";
 
 class PMCustomReport extends Metaobject

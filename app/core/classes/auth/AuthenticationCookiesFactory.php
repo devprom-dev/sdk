@@ -6,7 +6,10 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
 {
  	function ready()
  	{
- 	    return is_array($_COOKIE['devprom']);
+ 	    return is_array($_COOKIE['devprom'])
+			&& $_SERVER['AUTH_TYPE'] == ''
+			&& $_SERVER['no-auth'] == ''
+			&& $_SERVER['REDIRECT_no-auth'] == '';
  	}
  	
  	function tokenRequired()
@@ -69,39 +72,32 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
 
   	function authorize()
  	{
-		global $_COOKIE, $model_factory, $session;
-		
-	 	$user = $model_factory->getObject('cms_User');
-	 	
+		if ( is_object($this->getUser()) ) return $this->getUser();
+
+	 	$user = getFactory()->getObject('cms_User');
 		$cookies = is_array($_COOKIE['devprom']) ? array_values($_COOKIE['devprom']) : array('*');
 		
 		foreach( $cookies as $cookie )
 		{
-	 		$data = $session->get('session-'.$cookie, 'usr');
-
+	 		$data = getSession()->get('session-'.$cookie, 'usr');
 	 		if ( is_array($data) )
 	 		{
 	 		    $user_it = $user->createCachedIterator( $data );
-	 		    
 	 		    $this->setUser( $user_it->getId() );
-	 		    
 	 			return $user_it;
 	 		}
 		}
 		
 		$user->addPersister( new UserDetailsPersister() );
-		
 		$user->addFilter( new UserSessionPredicate($cookies) );
 
  		$user_it = $user->getAll();
-
  		if ( $user_it->count() < 1 ) return parent::authorize();
  		
  		$this->setUser( $user_it->getId() );
-
  		foreach( $cookies as $cookie )
 		{
- 			$session->set('session-'.$cookie, $user_it->getRowset(), 'usr');
+ 			getSession()->set('session-'.$cookie, $user_it->getRowset(), 'usr');
 		}
  		
 		return $user_it;
@@ -111,4 +107,9 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  	{
  		return text(1041);
  	}
+
+	function validateUser( $user_it )
+	{
+		return $user_it->get('Password') != '';
+	}
 }

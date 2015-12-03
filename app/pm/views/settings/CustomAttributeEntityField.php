@@ -10,8 +10,7 @@ class CustomAttributeEntityField extends FieldDictionary
 
 		while ( !$object_it->end() )
 		{
-			$keys[$object_it->getId()] = $object_it->get('Caption');
-			
+			$keys[$object_it->getId()] = $object_it->getDisplayName();
 			$object_it->moveNext();
 		}
 

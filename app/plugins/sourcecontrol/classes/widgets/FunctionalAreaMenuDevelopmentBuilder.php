@@ -23,11 +23,11 @@ class FunctionalAreaMenuDevelopmentBuilder extends FunctionalAreaMenuCommonBuild
         $items = array();
         	
         $items['commitsfreqperauthors'] = $report->getExact('commitsfreqperauthors')->buildMenuItem();
-        
+        $items['scm-filechanges'] = $report->getExact('scm-filechanges')->buildMenuItem();
+
         $items['project-reports'] = $module->getExact('project-reports')
         		->buildMenuItem('&pmreportcategory=dev&'.ModuleCategoryBuilderCode::AREA_UID);
-        
-        $items['project-reports']['name'] = translate('Все отчеты');
+        $items['project-reports']['name'] = text(2069);
         
  		$menu[] = array ( 
  		    'module' => 'files', 

@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaMenuBuilder.php";
 
 class FunctionalAreaMenuPortfolioResManBuilder extends FunctionalAreaMenuBuilder
@@ -13,10 +12,10 @@ class FunctionalAreaMenuPortfolioResManBuilder extends FunctionalAreaMenuBuilder
         if ( getSession()->getProjectIt()->get('CodeName') == 'my' ) return;
 
         $report = getFactory()->getObject('PMReport');
-        $menus['resources']['items'] = array_merge( 
+        $menus['resources']['items'] = array_merge(
+                $menus['resources']['items'],
         		array( $report->getExact('resourceavailability')->buildMenuItem('?') ),
-        		array( $report->getExact('resourceusage')->buildMenuItem('?') ),
-                $menus['resources']['items']
+        		array( $report->getExact('resourceusage')->buildMenuItem('?') )
         );
 
  		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );

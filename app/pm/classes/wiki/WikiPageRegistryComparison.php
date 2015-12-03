@@ -17,26 +17,37 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 		$persisters = array();
 		
 		$query_filters = array();
-		
+		$registry = $this->page_it->object->getRegistry();
+
 		if ( $this->baseline_it->get('Type') == 'document' )
 		{
 			$document_id = $this->baseline_it->get('ObjectId');
+			$registry = new WikiPageRegistryContent($this->page_it->object);
 		}
 		else
 		{
-			// version or baseline given
-			if ( $this->baseline_it->get('Type') != 'branch' )
+			// version given
+			if ( $this->baseline_it->object instanceof WikiPageComparableSnapshot )
 			{
-				// just version of the document
-				$persisters[] = new SnapshotItemValuePersister($this->baseline_it->getId());
-				
-				$query_filters = array ( 
+				if ( $this->baseline_it->get('Type') != 'branch' ) {
+					// just version of the document
+					$persisters[] = new SnapshotItemValuePersister($this->baseline_it->getId());
+					$query_filters = array (
 						new FilterInPredicate($this->page_it->getId())
-				); 
+					);
+				}
+				else {
+					// or baseline given
+					$document_id = $this->baseline_it->get('ObjectId');
+				}
 			}
-			else
-			{
-				$document_id = $this->baseline_it->get('ObjectId');
+			else {
+				// or the document as itself
+				$document_id = $this->baseline_it->getId();
+				$query_filters = array (
+					new FilterInPredicate($document_id)
+				);
+				$registry = new WikiPageRegistryContent($this->page_it->object);
 			}
 		}			
 
@@ -50,21 +61,20 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 		
 		if ( count($query_filters) < 1 && $document_id > 0 )
 		{
+			// baseline given
+			$query_filters = array();
+
 			if ( !$this->page_it->IsPersisted() )
 			{ 
 				$query_filters = array ( 
 						new FilterInPredicate($this->page_it->getId())
-				); 
+				);
 			}
-			
-			// baseline given
-			$query_filters = array();
-			 
+
 			// transitive origins (baselines) of the document
 			$trace_registry = getFactory()->getObject('WikiPageTrace')->getRegistry();
 			
 			$source = $this->page_it->getId();
-		
 			while( count($query_filters) < 1 && $source > 0 )
 			{
 				$trace_it = $trace_registry->Query(
@@ -113,9 +123,8 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 			
 			if ( count($query_filters) < 1 ) $query_filters[] = new FilterInPredicate(0);
 		}
-							
-		$this->page_it->object->setSortDefault(array());
-		return $this->page_it->object->getRegistry()->Query(array_merge($query_filters, $persisters));		
+
+		return $registry->Query(array_merge($query_filters, $persisters));
 	}
 	
 	private $baseline_it;

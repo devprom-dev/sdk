@@ -15,21 +15,20 @@ class SubversionRevision extends Metaobject
  		parent::__construct('pm_SubversionRevision');
  		
  		$this->addAttribute( 'Issues', 'REF_RequestId', translate('Пожелания'), false);
- 		
  		$this->addPersister( new SourceCodeRequestPersister() );
  		
  		$this->addAttribute( 'Tasks', 'REF_TaskId', translate('Задачи'), false);
- 		
  		$this->addPersister( new SourceCodeTaskPersister() );
 
- 		$this->addAttribute( 'Participant', 'REF_ParticipantId', translate('Автор'), false);
- 		
+ 		$this->addAttribute( 'SystemUser', 'REF_cms_UserId', translate('Автор'), false);
  		$this->addPersister( new SourceCodeParticipantPersister() );
  		
 		foreach ( array('Version', 'Description', 'Author', 'CommitDate') as $attribute )
 		{
         	$this->addAttributeGroup($attribute, 'tooltip');
 		}
+
+		$this->setSortDefault( new SortRecentClause() );
  	}
  	
  	function createIterator() 
@@ -46,4 +45,9 @@ class SubversionRevision extends Metaobject
  	{
  	    return getSession()->getApplicationUrl().'module/sourcecontrol/revision?mode=details&'; 
  	}
+
+	function DeletesCascade( $object )
+	{
+		return false;
+	}
 }

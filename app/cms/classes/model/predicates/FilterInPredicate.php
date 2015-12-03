@@ -7,9 +7,8 @@ class FilterInPredicate extends FilterPredicate
  		$filter = !is_array($filter) ? preg_split('/,/', $filter) : $filter;
  		
  		$ids = array_filter($filter, function( $value ) {
- 		    return is_numeric($value) && $value != '';
+ 		    return $value != '';
  		});
-
  		if ( count($ids) > 0 )
  		{
 	 		array_walk($ids, function( &$value, $key ) {

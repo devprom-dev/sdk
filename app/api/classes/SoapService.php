@@ -43,7 +43,7 @@ class SoapService
 	    global $session, $server;
 	    
 	    $_REQUEST['token'] = $token;
-	    
+
 		$session = new SOAPSession();
 		
 		$user_it = $session->getUserIt();
@@ -226,15 +226,13 @@ class SoapService
 		}
 
 		$attrs = $this->getAttributes( $object );
-		
+
+		unset($parms['RecordVersion']);
+		unset($parms['RecordCreated']);
+		unset($parms['RecordModified']);
+
 		foreach( array_keys($parms) as $key )
 		{
-			if ( $key == 'RecordVersion' )
-			{
-				$parms[$key] = $it->get('RecordVersion');
-				continue;
-			}
-			
 			$parms[$key] = $this->soapValueToSystem(
 				$attrs[$key]['type'], $parms[$key] );
 		}
@@ -276,16 +274,14 @@ class SoapService
 				return;
 			}
 
-			foreach( $object_parms as $key => $param )
-			{
-				if ( $key == 'RecordVersion' ) 
-				{
-					$object_parms[$key] = $it->get('RecordVersion');
-					continue;
-				}
-				
-				$object_parms[$key] = $this->soapValueToSystem(
-					$attrs[$key]['type'], $param );
+			// plugin should process it correctly first
+			// $object_parms['WasRecordVersion'] = addslashes($object_parms['RecordVersion']);
+			unset($object_parms['RecordVersion']);
+			unset($object_parms['RecordCreated']);
+			unset($object_parms['RecordModified']);
+
+			foreach( $object_parms as $key => $param ) {
+				$object_parms[$key] = $this->soapValueToSystem($attrs[$key]['type'], $param );
 			}
 
 			$this->storeFiles( $object, $object_parms );
@@ -293,7 +289,9 @@ class SoapService
 				
 			$id = $object->modify_parms($it->getId(), $object_parms);
 
-			if ( $id < 1 ) $server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
+			if ( $id < 1 ) {
+				$server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
+			}
 		}
 	}
 
@@ -457,14 +455,12 @@ class SoapService
 	{
 		$attrs = array();
 		$attributes = array_keys($object->getAttributes());
+		$system_attributes = $object->getAttributesByGroup('system');
 
 		for( $i = 0; $i < count($attributes); $i++ )
 		{
-			if ( $object->getAttributeDbType($attributes[$i]) == '' )
-			{
-				continue;
-			}
-
+			if ( in_array($attributes[$i], $system_attributes) && !in_array($attributes[$i], array('DaysInWeek','WikiEditorClass','ContentEditor','UserField3','ReferenceName')) ) continue;
+			if ( $object->getAttributeDbType($attributes[$i]) == '' ) continue;
 			if ( $object->IsReference($attributes[$i]) )
 			{
 				switch ( $attributes[$i] )

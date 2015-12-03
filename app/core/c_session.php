@@ -38,9 +38,10 @@ class SessionBase
 		 	            new ResourceBuilderLanguageFiles(),
 		 	            new ResourceBuilderPluginsLanguageFiles(),
  						new ProjectMetadataBuilder()
- 				)
+ 				),
+				$this->getPluginsManager()->getCommonBuilders()
  		);
- 		
+
 		$this->setAuthenticationFactory( $factory );
  		
 		$this->cache_engine = is_object($cache_service) ? $cache_service : getFactory()->getCacheService();
@@ -57,25 +58,13 @@ class SessionBase
  		$this->getCacheEngine()->setDefaultPath($this->getCacheKey());
 
  		$this->builders = array_merge($this->builders, $this->createBuilders());
- 		
-		$plugins = $this->getPluginsManager();
-
-		if ( is_object($plugins) )
-		{
-			$this->builders = array_merge($this->builders, $plugins->getCommonBuilders());
-			
-			if ( $this->getSite() != '' )
-			{
-				$this->builders = array_merge($this->builders, $plugins->getSectionBuilders($this->getSite()));
-			}
+		if ( $this->getSite() != '' ) {
+			$this->builders = array_merge($this->builders, $this->getPluginsManager()->getSectionBuilders($this->getSite()));
 		}
 
  		$notificators = $this->getBuilders( 'ObjectFactoryNotificator' );
- 		
- 		if ( is_array($notificators) )
- 		{
- 		    foreach( $notificators as $notificator )
-     		{
+ 		if ( is_array($notificators) ) {
+ 		    foreach( $notificators as $notificator ) {
      		    getFactory()->getEventsManager()->registerNotificator( $notificator );
      		}
  		}
@@ -95,8 +84,7 @@ class SessionBase
  	
  	function getPluginsManager()
  	{
- 	    global $plugins;
- 	    return $plugins;
+ 	    return getFactory()->getPluginsManager();
  	}
  	
  	function getLanguageUid()
@@ -145,7 +133,7 @@ class SessionBase
  	function open( $user_it )
  	{
  		global $model_factory, $_REQUEST;
- 		
+
  		$factory = $this->getAuthenticationFactory();
  		
  		if ( !is_object($factory) )
@@ -195,36 +183,40 @@ class SessionBase
  	function getUserIt()
  	{
  	    if ( is_object($this->user_it) ) return $this->user_it;
-
  	    if ( is_object($this->factory) )
  	    {
- 	        $this->user_it = $this->factory->authorize();
- 	        
- 	        if ( $this->user_it->count() > 0 ) return $this->user_it;
+			if ( is_object($this->factory->getUser()) ) {
+				return $this->user_it = $this->factory->getUser();
+			}
+			else if ( $this->factory->ready() ) {
+				$this->user_it = $this->factory->authorize();
+				if ( $this->user_it->count() > 0 ) return $this->user_it;
+			}
  	    }
  	    
  		$auth_factories = new AuthenticationFactorySet($this);
-
  		foreach( $auth_factories->getFactories() as $factory )
  		{
  		    if ( !$factory->ready() ) continue;
- 		    
+
+			$this->factory = $factory;
  			$this->user_it = $factory->authorize();
- 			
- 			if ( $this->user_it->getId() > 0 )
- 			{
- 			    $this->factory = $factory;
- 			    
- 			    break;
- 			}
+
+ 			if ( $this->user_it->getId() > 0 ) break;
  		}
- 		
- 		if ( !is_object($this->user_it) )
+
+		if ( !is_object($this->user_it) || $this->user_it->getId() < 1 )
  		{
- 		    $this->user_it = $auth_factories->getDefaultFactory()->authorize();
+			$this->factory = $auth_factories->getDefaultFactory();
+			if ( $this->factory->ready() ) {
+				$this->user_it = $this->factory->authorize();
+			} else {
+				$factory = new AuthenticationFactory();
+				$this->user_it = $factory->authorize();
+			}
  		}
- 		else if ( $this->user_it->get('Blocks') > 0 ) 
- 		{
+
+		if ( $this->user_it->get('Blocks') > 0 ) {
      		// check blocked user unable to access the system
  			$this->user_it->setRowset( array() );
  		}

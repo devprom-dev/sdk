@@ -15,7 +15,7 @@ class CloneLogic
 			$parms = array();
 
 			$attrs = array();
-			
+
 			foreach( $object->getAttributes() as $ref_name => $attribute )
 			{
 			    if ( !$object->IsAttributeStored($ref_name) ) continue;
@@ -24,11 +24,15 @@ class CloneLogic
 
 			switch ( $object->getEntityRefName() )
 			{
+				case 'pm_CustomReport':
+					$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::applyToCustomReport( $context, $attrs, $iterator, $project_it );
+					break;
+
 				// special case of template importing
 				case 'pm_Project':
-					
+
 				    CloneLogic::applyToProject( $context, $attrs, $iterator, $project_it );
-					
+
 				    break;
 
 				// special case of template importing
@@ -517,21 +521,6 @@ class CloneLogic
 				}
 				break;
 				
-			case 'pm_CustomReport':
-				
-				// each participant should have his own mytasks/mysissues report
-				if ( in_array($it->get('ReportBase'), array('mytasks', 'myissues')) )
-				{
-					$parms = array();
-				}
-				else
-				{
-					$parms['Author'] = -1;
-					$parms['Url'] = self::replaceUser($it->get('Url'));
-				}
-
-				break;
-				
 			case 'ObjectChangeLog':
 				$parms['ObjectId'] = $ids_map[$it->get('EntityRefName')][$it->get('ObjectId')];
 				if ( $parms['ObjectId'] < 1 )
@@ -571,21 +560,18 @@ class CloneLogic
 				$parms['ObjectId'] = $anchor_id;
 
 				break;
+
+            case 'pm_ChangeRequest':
+            case 'pm_Task':
+                $parms['StartDate'] = '';
+                if ( $it->get('FinishDate') != '' ) $parms['FinishDate'] = SystemDateTime::date();
+                break;
 		}
-		
-		if ( $context->getResetState() && is_a($it->object, 'MetaobjectStatable') )
-		{
-		    if ( !in_array($parms['State'], $it->object->getStates()) )
-		    { 
-		        $parms['State'] = array_shift($it->object->getNonTerminalStates());
-		    }
-		    else
-		    {
-		    	unset($parms['State']);
-		    }
-		    
-		    $parms['StateObject'] = '';
-		    $parms['LifecycleDuration'] = '';
+
+		if ( $it->object instanceof MetaobjectStatable && $context->getResetState() ) {
+			$parms['State'] = '';
+			$parms['StateObject'] = '';
+			$parms['LifecycleDuration'] = '';
 		}
 
 		return $parms;
@@ -689,6 +675,7 @@ class CloneLogic
  		
  		if ( $object_it->getId() != '' )
  		{
+			$parms = array();
 			foreach ( $attrs as $attr )
 			{
 				if ( $parms[$attr] == '' ) $parms[$attr] = $it->get_native($attr);
@@ -701,7 +688,47 @@ class CloneLogic
  		
  		return $object_it->count() < 1 ? 0 : $object_it->getId();
  	}
- 	
+
+	static function applyToCustomReport( & $context, & $attrs, & $it, & $project_it )
+	{
+		$parms = array();
+
+		// each participant should have his own mytasks/mysissues report
+		if ( in_array($it->get('ReportBase'), array('mytasks')) )
+		{
+			$parms = array();
+		}
+		else
+		{
+			$parms = self::applyToObject( $context, $attrs, $parms, $it, $project_it );
+			$parms['Author'] = -1;
+			$parms['Url'] = self::replaceUser($it->getHtmlDecoded('Url'));
+
+			$report_it = $it->object->getRegistry()->Query(
+				array(
+					new FilterInPredicate($it->getId()),
+					new FilterBaseVpdPredicate()
+				)
+			);
+			if ( $report_it->getId() != '' ) {
+				$parms[$it->object->getIdAttribute()] = $report_it->getId();
+			}
+		}
+
+        $has_id = $parms[$it->object->getIdAttribute()];
+		if ( $has_id > 0 ) {
+            $it->object->modify_parms(
+                $has_id, $parms
+			);
+			return $has_id;
+		}
+		else {
+			return self::duplicate($it, $parms);
+		}
+
+		return $parms;
+	}
+
  	static function applyToMethodology( & $context, & $attrs, & $it, & $project_it )
  	{
 		$parms = array();
@@ -748,32 +775,25 @@ class CloneLogic
 
 	static function duplicate( $iterator, $parms ) 
 	{
-		$attributes = array_keys( $iterator->object->getAttributes() );
+		$attributes = array_diff(
+				array_keys( $iterator->object->getAttributes() ),
+				array( 'RecordCreated', 'RecordModified' )
+		);
 
 		$id_attribute = $iterator->getIdAttribute();
-		
-		if ( $parms[$id_attribute] > 0 )
-		{
+		if ( $parms[$id_attribute] > 0 ) {
 			// special case for moving objects, use the same record ID
 			$temp_it = $iterator->object->getExact($parms[$id_attribute]);
 			
 			if ( $temp_it->getId() == '' ) $attributes[] = $id_attribute;
-		}  
-		
-		$values = array();
+		}
 
-		foreach ( $attributes as $attribute )
-		{
-			if ( array_key_exists( $attribute, $parms) )
-			{
-				$values[$attribute] = $parms[$attribute];
-			}
-			else
-			{
+		$values = $parms;
+		foreach ( $attributes as $attribute ) {
+			if ( !array_key_exists( $attribute, $parms) ) {
 				$values[$attribute] = $iterator->getHtmlDecoded($attribute);
 			}
 		}
-		
 		return $iterator->object->add_parms( $values );
 	}
 	

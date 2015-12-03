@@ -41,6 +41,7 @@ class PageSectionSpentTime extends InfoSection
 		
 		return array_merge( parent::getRenderParms(), array (
 			'section' => $this,
+			'spent_hours' => $this->object_it->get('Fact'),
 			'activities' => $activities
 		));
 	}

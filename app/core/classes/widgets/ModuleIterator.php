@@ -20,4 +20,10 @@ class ModuleIterator extends OrderedIterator
  	        'module' => $this->getId()
 		);
  	}
+
+	function getUrl( $query_string = '' )
+	{
+		$info = $this->buildMenuItem($query_string);
+		return $info['url'];
+	}
 }

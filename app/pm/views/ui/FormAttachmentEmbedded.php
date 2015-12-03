@@ -65,7 +65,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 			return parent::getItemDisplayName( $object_it );
 		}
 
-		return '<a class="'.$this->image_class.'" href="'.$object_it->getFileUrl().'" name="'.$object_it->getFileName('File').'">'.
+		return '<a class="'.$this->image_class.'" href="'.$object_it->getFileUrl().'" style="padding-bottom:6px;" name="'.$object_it->getFileName('File').'">'.
 			'<img src="/images/attach.png" style="margin-bottom:-4px;"> '.$object_it->getFileName('File').'</a>'.
 				' ('.$object_it->getFileSizeKb('File').' Kb)'; 		
 	}

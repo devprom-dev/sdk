@@ -69,10 +69,10 @@ class ProcessRevisionLog extends TaskCommand
 			$project_it = $scm_it->getRef('Project');
 
 			$auth_factory = new AuthenticationFactory();
-			
 			$auth_factory->setUser( $user->getEmptyIterator() );
 			
-			$session = new PMSession($project_it, $auth_factory);
+			$session = new PMSession($project_it->copy(), $auth_factory);
+			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
 			
 			ob_start();
 

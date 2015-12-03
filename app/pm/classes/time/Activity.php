@@ -1,7 +1,5 @@
 <?php
-
 include "ActivityIterator.php";
-
 include "predicates/ActivityIterationOnlyPredicate.php";
 include "predicates/ActivityOtherIterationsPredicate.php";
 include "predicates/ActivityRequestPredicate.php";
@@ -12,8 +10,7 @@ class Activity extends Metaobject
 {
  	function Activity() 
  	{
- 		parent::Metaobject('pm_Activity');
- 		
+ 		parent::__construct('pm_Activity');
 		$this->defaultsort = 'RecordCreated ASC';
 		
 		$this->setAttributeOrderNum('Capacity', 3);

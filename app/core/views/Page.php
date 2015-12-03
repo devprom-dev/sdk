@@ -1,38 +1,35 @@
 <?php
 
- use Symfony\Component\Templating\PhpEngine;
+use Symfony\Component\Templating\PhpEngine;
  use Symfony\Component\Templating\TemplateNameParser;
  use Symfony\Component\Templating\Loader\FilesystemLoader;
  use Symfony\Component\Templating\Helper\SlotsHelper;
  use Devprom\CommonBundle\Service\Widget\ScriptService;
  
- $path = dirname(__FILE__);
- 
- include($path.'/PageTable.php');
- include($path.'/PageTableStatic.php');
- include($path.'/PageList.php');
- include($path.'/PageListStatic.php');
- include($path.'/PageBoard.php');
- include($path.'/PageChart.php');
- include($path.'/PageForm.php');
- include($path.'/PageMenu.php');
- include_once($path.'/PageInfoSection.php');
- include($path.'/PageSectionLastChanges.php');
- include "FullScreenSection.php";
+include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
+include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
+include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
+include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
+include_once SERVER_ROOT_PATH.'core/classes/system/Coloring.php';
+include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
+include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
 
- if ( !class_exists('html2text') ) include( SERVER_ROOT_PATH.'ext/html/html2text.php' );
+include_once 'PageInfoSection.php';
+include 'PageTable.php';
+include 'PageTableStatic.php';
+include 'PageList.php';
+include 'PageListStatic.php';
+include 'PageBoard.php';
+include 'PageChart.php';
+include 'PageForm.php';
+include 'PageMenu.php';
+include 'PageSectionLastChanges.php';
+include "FullScreenSection.php";
+include "PageSectionAttributes.php";
+include "BulkFormBase.php";
  
- include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
- include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
- include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
- include_once SERVER_ROOT_PATH.'core/classes/system/Coloring.php';
- include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
-
- include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
- include "BulkFormBase.php";
- 
- class Page
- {
+class Page
+{
  	var $infosections;
  	var $table;
  	var $form;
@@ -98,8 +95,7 @@
  	function addInfoSection( $infosection_object ) 
  	{
  		$infosection_object->setPage( $this );
-		
- 		$this->infosections[strtolower(get_class($infosection_object))] = $infosection_object;
+ 		$this->infosections[$infosection_object->getId()] = $infosection_object;
  	}
  	
  	function & getInfoSections()
@@ -403,11 +399,10 @@
                 }
             }
         }
-        
+
         if ( !is_array($tab_item) )
         {
         	$tab_url = getSession()->getApplicationUrl().$active_url;
-        	
         	$module_it = getFactory()->getObject('Module')->getByRef('Url', $tab_url);
          	
         	$active_area_uid = 'favs';
@@ -644,6 +639,10 @@
 		if ( is_array($infos) )	{
 			foreach ( $infos as $section ) {
 				if ( !$section->isActive() ) continue;
+				if ( $section instanceof PageSectionAttributes ) {
+					if ( $_REQUEST['formonly'] == '' ) continue;
+					if ( count($section->getAttributes()) < 1 ) continue;
+				}
 				$sections[$section->getId()] = $section;
 			}
 		}
@@ -664,6 +663,7 @@
             'language_code' => strtolower(getSession()->getLanguageUid()),
  		    'datelanguage' => getLanguage()->getLocaleFormatter()->getDatepickerLanguage(),
             'dateformat' => getLanguage()->getDatepickerFormat(),
+			'datejsformat' => getLanguage()->getLocaleFormatter()->getDateJSFormat(),
  		    'company_name' => getFactory()->getObject('cms_SystemSettings')->getAll()->get('Caption'),
  		    'application_url' => $this->getApplicationUrl(),
  		    'display_form' => $this->needDisplayForm(),
@@ -679,15 +679,11 @@
         // get active functional area
         
         $areas = $this->getAreas();
- 
-        $parts = preg_split('/\?/', $_SERVER['REDIRECT_URL']);
-        
-        $active_url = str_replace(getSession()->getApplicationUrl(), '', $parts[0]);
-   
+        $active_url = str_replace(getSession()->getApplicationUrl(), '', array_shift(preg_split('/\?/', $this->getPageUrl())));
+
         foreach( $areas as $key => $area )
         {
-    		if ( $this->getArea() != '' && $area['uid'] == $this->getArea() )
-            {
+    		if ( $this->getArea() != '' && $area['uid'] == $this->getArea() ) {
             	$active_area_uid = $area['uid'];
 			}
 
@@ -713,7 +709,7 @@
 		}
    
         $context = $this->getNavigationContext( $areas, $active_url );
-        
+
         $active_area_uid = $active_area_uid != '' && array_key_exists($active_area_uid, $areas)
             ? $active_area_uid : ($context['area_uid'] != '' && array_key_exists($context['area_uid'], $areas) 
                     ? $context['area_uid'] : array_shift(array_keys($areas)));
@@ -733,13 +729,16 @@
         $script_service = new ScriptService();
         
         $page_uid = $this->getPageUid();
-        
+
+		list($alerts, $alerts_url) = $this->getCheckpointAlerts();
+
         return array(
  			'inside' => count($first_menu['menus']) > 0,
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
  		    'navigation_title' => $tab_title != '' ? $tab_title : $this->getTitle(),
  		    'navigation_url' => $tab_url,
- 			'checkpoint_alerts' => $this->getCheckpointAlerts(),
+ 			'checkpoint_alerts' => $alerts,
+			'checkpoint_url' => $alerts_url,
  			'menu_template' => $this->getMenuTemplate(),
  			'menus' => $this->getMenus(),
  			'tabs_template' => $this->getTabsTemplate(),
@@ -875,7 +874,6 @@
 		}
 		
 		$redirect_url = $this->getRedirect();
-		
 		if ( $redirect_url != '' )
 		{
 			exit(header('Location: '.$redirect_url));
@@ -960,7 +958,12 @@
  	{
  		return get_class($this);
  	}
- 		
+
+	function getPageUrl()
+	{
+		return str_replace(EnvironmentSettings::getServerUrl(), '', $_SERVER['REQUEST_URI']);
+	}
+
  	function getMenuTemplate()
  	{
  		return 'core/PageMenu.php';
@@ -979,10 +982,19 @@
  	function getCheckpointAlerts()
  	{
         $user_it = getSession()->getUserIt();
- 		
  		if ( $user_it->getId() < 1 || !$user_it->IsAdministrator() ) return array();
- 		
-		return  getCheckpointFactory()->getCheckpoint( 'CheckpointSystem' )->checkDetails();
+
+		$details = array();
+		$urls = array();
+		foreach( getCheckpointFactory()->getCheckpoint('CheckpointSystem')->getEntries() as $entry )
+		{
+			if ( $entry->enabled() && $entry->notificationRequired() && !$entry->check() )
+			{
+				$details[] = $entry->getTitle();
+				$urls[] = $entry->getUrl();
+			}
+		}
+		return array($details, array_pop($urls));
  	}
  	
  	function getRecentChangedObjectIds( $table )

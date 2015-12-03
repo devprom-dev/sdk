@@ -26,7 +26,11 @@ class FunctionTrace extends Metaobject
  	{
  		return new FunctionTraceIterator( $this );
  	}
- 	
+
+	function getBaselineReference() {
+		return 'Baseline';
+	}
+
  	function getObjectClass()
  	{
  		return '';

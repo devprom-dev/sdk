@@ -6,7 +6,7 @@ class ReportList extends PMPageList
 {
 	private $first_area_it = null;
 	
-	private $favorite_it = null;
+	private $favorite_reports = array();
 	
     function getIterator()
     {
@@ -61,8 +61,7 @@ class ReportList extends PMPageList
 		$it = $object->createCachedIterator( array_values($rowset) );
 		
 		$service = new WorkspaceService();
-		
-		$this->favorite_it = $service->getItemOnFavoritesWorkspace($it->fieldToArray('cms_ReportId'));
+		$this->favorite_reports = $service->getItemOnFavoritesWorkspace($it->fieldToArray('cms_ReportId'));
 
 		return $it;
     }
@@ -127,9 +126,12 @@ class ReportList extends PMPageList
 	{
 		$actions = array();
 
-		$this->favorite_it->moveTo('UID', $object_it->getId());
+		$id = $object_it->getId();
+		$filtered = array_filter($this->favorite_reports, function($value) use ($id) {
+			return $value['id'] == $id;
+		});
 
-		if ( $this->favorite_it->getId() == '' )
+		if ( count($filtered) < 1 )
 		{
 			$info = $object_it->buildMenuItem();
 			

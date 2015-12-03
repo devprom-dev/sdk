@@ -17,20 +17,25 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
     			'RequestLink' => 'Requests',
     			'IssueState' => 'Requests',
     			'RequestType' => 'Requests',
-     	        'Feature' => 'Requests',
-     			'FeatureType' => 'Requests',
-    		    'TaskType' => 'Requests',
+     	        'Feature' => 'Features',
+     			'FeatureType' => 'Features',
+    		    'TaskType' => 'Tasks',
     			'PMBlogPost' => 'Blog',
     			'BlogPostFile' => 'Blog',
      	        'StateBase' => '3',
      			'Activity' => '3',
+				'Attachment' => '3',
      			'Question' => '3',
     			'Comment' => '3',
     			'ChangeLog' => '3',
     			'ChangeLogAggregated' => '3',
     			'SpentTime' => '3',
      	        'Project' => '3',
-    			'ProjectPage' => 'KnowledgeBase'
+    			'ProjectPage' => 'KnowledgeBase',
+				'CustomTag' => '3',
+				'RequestTag' => '3',
+				'WikiTag' => '3',
+				'Tag' => '3'
     		);
     
 		foreach( $entities as $key => $category )

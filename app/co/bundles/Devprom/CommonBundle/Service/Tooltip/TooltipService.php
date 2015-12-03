@@ -44,25 +44,18 @@ class TooltipService
     	$object = $object_it->object;
     	
     	$tooltip_attributes = $object->getAttributesByGroup('tooltip');
- 		
 	    $system_attributes = $object->getAttributesByGroup('system');
  		
  		foreach ( $object->getAttributes() as $attribute => $parms )
  	 	{
  	 		if ( $attribute == 'State' ) continue;
- 	 		
- 	 		$type = $object->getAttributeType($attribute);
+			if ( in_array($attribute, $system_attributes) ) continue;
+			if ( $object_it->get($attribute) == '' ) continue;
 
+ 	 		$type = $object->getAttributeType($attribute);
  	 		if ( $type == '' ) continue;
 
- 	 		if ( $object_it->get($attribute) == '' ) continue;
- 	 		
- 	 		if ( in_array($attribute, $system_attributes) ) continue;
-
- 	 		if ( count($tooltip_attributes) > 0 && !in_array($attribute, $tooltip_attributes) || count($tooltip_attributes) < 1 && !$object->IsAttributeVisible($attribute) )
- 	 		{
- 	 		    if ( $attribute != 'State' || !is_a($object, 'MetaobjectStatable') ) continue;
- 	 		}
+ 	 		if ( !$object->IsAttributeVisible($attribute) && !in_array($attribute, $tooltip_attributes) ) continue;
 
  	 		$data[] = array (
  	 				'name' => $attribute,
@@ -86,7 +79,7 @@ class TooltipService
  		switch ( $type )
  		{
 			case 'char':
-			    return $object_it->get($attribue) == 'Y' ? translate('Да') : translate('Нет');
+			    return $object_it->get($attribute) == 'Y' ? translate('Да') : translate('Нет');
 			    
  		    case 'text':
 			    $totext = new \html2text( $object_it->getHtmlDecoded($attribute) );

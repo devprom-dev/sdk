@@ -11,11 +11,13 @@ class IssueFormType extends AbstractType
 {
     private $vpds = array();
     private $allowAttachment;
+    private $showProducts = true;
 
-    function __construct($vpds, $allowAttachment = false)
+    function __construct($vpds, $allowAttachment = false, $showProducts = true)
     {
         $this->vpds = $vpds;
         $this->allowAttachment = $allowAttachment;
+        $this->showProducts = $showProducts;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -55,15 +57,18 @@ class IssueFormType extends AbstractType
 			$builder->add('project', 'entity_hidden', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Project'
             ));
-			$builder->add('product', 'entity', array(
-                'class' => 'Devprom\ServiceDeskBundle\Entity\Product',
-                'choice_label' => 'name',
-                'query_builder' => function(EntityRepository $er) use ($vpd) {
-                    $qb = $er->createQueryBuilder('p');
-                    return $qb->where($qb->expr()->eq('p.vpd', '\''.$vpd.'\''));
-                },
-                'required' => false
-            ));
+
+            if ( $this->showProducts ) {
+                $builder->add('product', 'entity', array(
+                    'class' => 'Devprom\ServiceDeskBundle\Entity\Product',
+                    'choice_label' => 'name',
+                    'query_builder' => function(EntityRepository $er) use ($vpd) {
+                        $qb = $er->createQueryBuilder('p');
+                        return $qb->where($qb->expr()->eq('p.vpd', '\''.$vpd.'\''));
+                    },
+                    'required' => false
+                ));
+            }
 		}
             
         if ($this->allowAttachment) {

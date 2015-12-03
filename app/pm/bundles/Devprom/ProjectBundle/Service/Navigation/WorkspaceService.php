@@ -65,11 +65,9 @@ class WorkspaceService
 	public function storeWorkspace( & $data )
 	{
 		$workspace = getFactory()->getObject('Workspace');
-		
 		$menu = getFactory()->getObject('WorkspaceMenu');
-		
 		$item = getFactory()->getObject('WorkspaceMenuItem');
-		
+
 		// merge workspace
 		$workspace_it = $workspace->getRegistry()->Query( 
 					array (
@@ -96,15 +94,11 @@ class WorkspaceService
 		}
 		
 		// merge nodes
-		$ids = array();
-		
 		foreach( $data['menuNodes'] as $key => $node )
 		{
 			if ( $node['id'] == '' ) $data['menuNodes'][$key]['id'] = $node['id'] = $key;
 			 
-			$ids[] = $node['id'];
-			
-			$menu_it = $menu->getRegistry()->Query( 
+			$menu_it = $menu->getRegistry()->Query(
 						array (
 								new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
 								new \FilterAttributePredicate('UID', $node['id'])
@@ -127,17 +121,14 @@ class WorkspaceService
 			}
 			
 			// merge node items
-			$node_item_ids = array();
-			
 			if ( is_array($node['nodes']) )
 			{
 				foreach($node['nodes'] as $key => $node_item )
 				{
 					$uid = $node_item['report']['id'];
+					if ( $uid == '' ) continue;
 					
-					$node_item_ids[] = $uid;
-					
-					$item_it = $item->getRegistry()->Query( 
+					$item_it = $item->getRegistry()->Query(
 								array (
 										new \FilterAttributePredicate('WorkspaceMenu', $menu_it->getId()),
 										new \FilterAttributePredicate('UID', $uid)
@@ -151,7 +142,7 @@ class WorkspaceService
 							'WorkspaceMenu' => $menu_it->getId(),
 							'OrderNum' => $key + 1 
 					);
-					
+
 					if ( $item_it->getId() > 0 )
 					{
 						$item->modify_parms($item_it->getId(), $parms); 
@@ -162,34 +153,6 @@ class WorkspaceService
 					}
 				}
 			}
-			
-			// remove deleted node items
-			$item_it = $item->getRegistry()->Query( 
-						array (
-								new \FilterAttributePredicate('WorkspaceMenu', $menu_it->getId()),
-								new \FilterHasNoAttributePredicate('UID', $node_item_ids)
-						)
-				);
-			
-			while( !$item_it->end() )
-			{
-				$item_it->delete();
-				$item_it->moveNext();
-			}
-		}
-
-		// remove deleted nodes
-		$menu_it = $menu->getRegistry()->Query( 
-					array (
-							new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
-							new \FilterHasNoAttributePredicate('UID', $ids)
-					)
-			);
-		
-		while( !$menu_it->end() )
-		{
-			$menu_it->delete();
-			$menu_it->moveNext();
 		}
 	}
 	
@@ -259,36 +222,25 @@ class WorkspaceService
 		}
 	}
 	
-	public function getItemOnFavoritesWorkspace( $uid )
+	public function getItemOnFavoritesWorkspace( $uids )
 	{
-    	$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->getDefault(
-    			array (
-    					new \FilterAttributePredicate('UID', FUNC_AREA_FAVORITES)
-    			)
-		);
-    	
-    	if ( $workspace_it->getId() < 1 )
-    	{
-    		return getFactory()->getObject('WorkspaceMenuItem')->getEmptyIterator();
-    	}
-    	
-    	$menu_it = getFactory()->getObject('WorkspaceMenu')->getRegistry()->Query(
-    			array (
-    					new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
-    			)
-    	);
-    	
-	    if ( $menu_it->getId() < 1 )
-    	{
-    		return getFactory()->getObject('WorkspaceMenuItem')->getEmptyIterator();
-    	}
-    	
-    	return getFactory()->getObject('WorkspaceMenuItem')->getRegistry()->Query(
-    			array (
-    					new \FilterAttributePredicate('WorkspaceMenu', $menu_it->idsToArray()),
-    					new \FilterAttributePredicate('UID', $uid)
-    			)
-    	);
+		$reports = array();
+		$workspaces = $this->getWorkspaces();
+
+		foreach( $workspaces as $workspace_key => $workspace ) {
+			if ( $workspace['id'] != FUNC_AREA_FAVORITES ) continue;
+
+			foreach( $workspace['menuNodes'] as $node_key => $node ) {
+				$reports =
+					array_merge(
+						$reports,
+						array_filter($workspace['menuNodes'][$node_key]['nodes'], function($item) use($uids) {
+							return in_array($item['report']['id'], $uids, true);
+						})
+					);
+			}
+		}
+		return $reports;
 	}
 	
 	public function getFunctionalAreas()
@@ -315,48 +267,27 @@ class WorkspaceService
  	    getSession()->insertBuilder( new \FunctionalAreaMenuSettingsBuilder() ); 
 		
 	    $area_set = new \FunctionalArea();
- 	    
  	    $area_it = $area_set->getAll();
 
- 		$category = getFactory()->getObject('PMReportCategory');
- 	    
- 	    $category_it = $category->getAll();
- 		
- 		$module = getFactory()->getObject('Module');
- 		
- 		$module_it = $module->getAll();
- 	    
- 		$report = getFactory()->getObject('PMReport');
- 	    
- 	    $report_it = $report->getAll();
- 	    
  	    $area_menu = new \FunctionalAreaMenuSet();
-
- 	    $workspace_it = getFactory()->getObject('Workspace')->getRegistry()->getDefault();
- 	    
  	    $area_menu_it = $area_menu->getAll();
 
- 	    $areas = array();
- 	    
+		$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->getDefault();
+
+		$areas = array();
  	    while( !$area_it->end() )
  	    {
  	    	$workspace_it->moveTo('UID', $area_it->getId());
- 	    	
- 	    	if ( !$workspace_it->end() )
+ 	    	if ( $workspace_it->get('UID') == $area_it->getId() )
  	    	{
  	    		$areas[$area_it->getId()] = $this->loadWorkspace($workspace_it);
-
  	            $area_it->moveNext();
- 	            
  	            continue;
  	    	}
  	    	
  	        $area_menu_it->moveTo('Workspace', $area_it->getId());
- 	         
- 	        if ( count($area_menu_it->get('items')) < 1 )
- 	        {
+ 	        if ( count($area_menu_it->get('items')) < 1 ) {
  	            $area_it->moveNext();
- 	            
  	            continue;
  	        }
  	        
@@ -404,7 +335,6 @@ class WorkspaceService
 							new \SortOrderedClause()
 					)
 			);
-			
 			while( !$item_it->end() )
 			{
 				if ( $item_it->get('ReportUID') != '' )

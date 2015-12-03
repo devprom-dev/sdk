@@ -6,20 +6,19 @@ class FieldStateAttributeDictionary extends FieldDictionary
 	{
  		$object = $this->getObject();
  		
- 		$attributes = $object->getAttributes();
- 		
- 		$options = array();
+ 		$system_attributes = array_merge(
+			$object->getAttributesByGroup('system'),
+			$object->getAttributesByGroup('non-form'),
+			$object->getAttributesByGroup('workflow')
+		);
 
- 		$system_attributes = $this->getObject()->getAttributesByGroup('system');
- 		
- 		foreach ( $attributes as $key => $attribute ) 
+		$options = array();
+ 		foreach ( $object->getAttributes() as $key => $attribute )
  		{
  			if ( $key == 'Project' ) continue;
- 			
  			if ( in_array($key, $system_attributes) ) continue;
  			
  			$title = translate($object->getAttributeUserName($key));
- 			
  			if ( $title == '' ) continue;
  			
  			$options[$key] = $title;
@@ -28,7 +27,6 @@ class FieldStateAttributeDictionary extends FieldDictionary
  		asort($options);
 	    
  		$result = array();
- 		
  		foreach( $options as $key => $value )
  		{
  		    $result[] = array (
@@ -36,7 +34,6 @@ class FieldStateAttributeDictionary extends FieldDictionary
                 'caption' => $value
             );
  		}
- 		
  		return $result;
 	}
 }

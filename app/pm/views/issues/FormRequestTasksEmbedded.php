@@ -126,7 +126,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 				} else {
 					$text = text(1936);
 				}
-	 		    echo '<a class="dashed" style="margin-left:20px;" target="_blank" href="'.$report_it->getUrl().'&issue='.$this->getObjectIt()->getId().'&iteration=all&clickedonform" tabindex="-1">'.$text.'</a>';
+	 		    echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$report_it->getUrl().'&issue='.$this->getObjectIt()->getId().'&iteration=all&clickedonform" tabindex="-1">'.$text.'</a>';
 			}
  		}
  	}

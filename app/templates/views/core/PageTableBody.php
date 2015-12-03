@@ -52,27 +52,30 @@
 
 if ( !$tableonly )
 {
-foreach( $filter_items as $filter )
-{
-    if ( $filter['html'] != '' )
-    {
-        echo '<div class="btn-group pull-left">'.$filter['html'].'</div>';
-    }
-    else 
-    {
-    ?>
-    <div class="btn-group pull-left">
-    	<a class="btn btn-small dropdown-toggle <?=(in_array($filter['value'],array('','all')) ? '' : 'btn-info')?>" uid="<?=$filter['name']?>" href="#" data-toggle="dropdown">
-    		<?=$filter['title']?>
-    		<span class="caret"></span>
-    	</a>
-    	<? echo $view->render('core/PopupMenu.php', array ('items' => $filter['actions'])); ?>
-    </div>
-    <?php   
-    }
-}
-}
+	foreach( $filter_items as $filter )
+	{
+		if ( $filter['html'] != '' )
+		{
+			echo '<div class="btn-group pull-left">'.$filter['html'].'</div>';
+		}
+		else
+		{
+		?>
+		<div class="btn-group pull-left">
+			<a class="btn btn-small dropdown-toggle <?=(in_array($filter['value'],array('','all')) ? '' : 'btn-info')?>" uid="<?=$filter['name']?>" href="#" data-toggle="dropdown">
+				<?=$filter['title']?>
+				<span class="caret"></span>
+			</a>
+			<? echo $view->render('core/PopupMenu.php', array ('items' => $filter['actions'], 'uid' => $filter['name'])); ?>
+		</div>
+		<?php
+		}
+	}
 
+	if ( count($filter_items) > 0 ) {
+		echo '<div class="filter-reset-cnt btn-group pull-left"><a class="filter-reset-btn btn btn-small" onclick="javascript: filterLocation.resetFilter();" title="'.text(2088).'"><i class="icon-trash"></i></a></div>';
+	}
+}
 ?>
 
 <?php } // if ( count($filter_actions) > 0 || count($filter_items) > 0 ) ?>
@@ -177,14 +180,13 @@ foreach( $filter_items as $filter )
     		: $table->draw( $view ); 
      ?>
 </div>
-
-<?php $is_need_navigator = $table->IsNeedNavigator() && is_object($list) && $list->moreThanOnePage(); ?>
-
-<?php if ( is_object($list) && $is_need_navigator ) $list->drawNavigator(false); else $table->drawFooter(); ?>
-
-<?php if ( !$tableonly ) { ?> 
-
-<?php $table->drawScripts(); ?>
+<div id="documentCache" style="overflow:hidden;height:1px;width:1px;">
+</div>
 
 <?php
+$is_need_navigator = $table->IsNeedNavigator() && is_object($list) && $list->moreThanOnePage();
+if ( is_object($list) && $is_need_navigator ) $list->drawNavigator(false); else $table->drawFooter();
+
+if ( !$tableonly ) {
+	$table->drawScripts();
 }

@@ -2,8 +2,12 @@
 
 class WikiPageRegistryContent extends ObjectRegistrySQL
 {
-	function getQueryClause()
+	function getFilters()
 	{
-	    return " (SELECT WikiPageId, Caption, Content PageContent, UserField3 PageStyle FROM WikiPage) ";
+		return array_merge(parent::getFilters(),
+			array (
+				new FilterAttributePredicate('ReferenceName', $this->getObject()->getReferenceName()),
+				new FilterAttributePredicate('IsTemplate', 0),
+			));
 	}
 }

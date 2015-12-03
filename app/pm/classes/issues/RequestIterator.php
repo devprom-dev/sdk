@@ -106,6 +106,19 @@ class RequestIterator extends StatableIterator
 		return $it;
 	}
 
+	function getImplementationIds()
+	{
+		$result = array();
+		$items = preg_split('/,/', $this->get('LinksWithTypes'));
+		foreach( $items as $item ) {
+			list($title, $id, $link_type, $state, $blocked) = preg_split('/:/', $item);
+			if ( $link_type == 'implemented' ) {
+				$result[] = $id;
+			}
+		}
+		return $result;
+	}
+
 	function getDate( $date_field )
 	{
 		if ( !is_object($this->object->dates_it) )

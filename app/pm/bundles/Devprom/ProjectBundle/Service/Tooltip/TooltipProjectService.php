@@ -4,6 +4,8 @@ namespace Devprom\ProjectBundle\Service\Tooltip;
 
 use Devprom\CommonBundle\Service\Tooltip\TooltipService;
 
+include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDetailsPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDurationPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/IssueLinkedIssuesPersister.php";
 
@@ -25,7 +27,7 @@ class TooltipProjectService extends TooltipService
     	return array_merge( parent::getData(), array (
     			'lifecycle' =>
     				array (
-    						'name' => translate('Жизненный цикл'),
+    						'name' => translate('Состояние'),
     						'data' => $this->buildLifecycle( $this->getObjectIt() )
     				),
     			'comments' => 
@@ -45,13 +47,9 @@ class TooltipProjectService extends TooltipService
     {
     	$object->addPersister( new \AttachmentsPersister() );
     	
-    	if ( $object instanceof \Request )
-    	{
-    		$object->addPersister( new \IssueLinkedIssuesPersister() );
-    	}
-    	
     	if ( $object instanceof \MetaobjectStatable )
     	{
+			$object->addPersister( new \StateDetailsPersister() );
     		$object->addPersister( new \StateDurationPersister() );
     	}
     }
@@ -64,8 +62,8 @@ class TooltipProjectService extends TooltipService
  	 	{
  	 		$data[] = array (
  	 				'name' => 'Baseline',
- 	 				'title' => translate('Бейзлайн'),
- 	 				'type' => 'text',
+ 	 				'title' => translate('Версия'),
+ 	 				'type' => 'varchar',
  	 				'text' => getFactory()->getObject('Snapshot')->getExact($this->baseline)->getDisplayName()
  	 		);
  	 	}

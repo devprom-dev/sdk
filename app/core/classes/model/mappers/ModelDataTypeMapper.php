@@ -34,20 +34,18 @@ class ModelDataTypeMapper
 	
 	public function map( Metaobject $object, & $values )
 	{
+		$skip_attributes = $object->getAttributesByGroup('skip-mapper');
+
 		foreach( $object->getAttributes() as $attribute => $attribute_data )
 		{
-			$mapper = $this->getMapper($object->getAttributeType($attribute));
-			
 			if ( !array_key_exists($attribute, $values) ) continue;
+			if ( in_array($attribute, $skip_attributes) ) continue;
 
-			$mapped_value = $mapper->mapInstance($attribute, $values);
-			
-			if ( is_null($mapped_value) )
-			{
+			$mapped_value = $this->getMapper($object->getAttributeType($attribute))->mapInstance($attribute, $values);
+			if ( is_null($mapped_value) ) {
 				unset($values[$attribute]);
 			}
-			else
-			{
+			else {
 				$values[$attribute] = $mapped_value;
 			}
 		}
@@ -55,11 +53,9 @@ class ModelDataTypeMapper
 	
 	public function getMapper( $type )
 	{
-		foreach( $this->mappers as $mapper )
-		{
+		foreach( $this->mappers as $mapper ) {
 			if ( $mapper->applicable(strtolower($type)) ) return $mapper;
 		}
-		
-		return new ModelDataTypeMappingNull(); 
+		return new ModelDataTypeMappingNull();
 	}
 }

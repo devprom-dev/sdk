@@ -64,7 +64,7 @@
     array(
 		'return' => $namespace.':request'
     	),
-    $namespace, $namespace.'.RaiseIssue', 'document', 'literal', ''
+    $namespace, $namespace.'.RaiseIssue', 'rpc', 'encoded', ''
  ); 
 
  $server->register('AttachFile',
@@ -75,7 +75,7 @@
 		),          
     array(
     	),
-    $namespace, $namespace.'.AttachFile', 'document', 'literal', ''
+    $namespace, $namespace.'.AttachFile', 'rpc', 'encoded', ''
  ); 
 
  $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
@@ -102,9 +102,6 @@
 
 	$file_parms['ObjectClass'] = 'request';
 	$file_parms['ObjectId'] = $request_result[0]['Id'];
-	$file_parms['File'] = base64_decode($file_parms['File']);
-	
+
 	return $soap->add( $token, 'attachment', $file_parms );
  }
-  
-?>

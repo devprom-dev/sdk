@@ -36,7 +36,7 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 				'origin' => ORIGIN_METADATA
 			));
 			
-			if ( $type == 'FILE' )
+			if ( in_array($type, array('FILE','IMAGE')) )
 			{
 				$attributes[$ref_name.'Ext'] = $attributes[$ref_name];
 				$attributes[$ref_name.'Ext']['visible'] = false; 
@@ -95,9 +95,11 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 			'origin' => ORIGIN_METADATA
 		);
 
-		foreach( $attributes as $key => $attribute )
-		{
+		foreach( $attributes as $key => $attribute ) {
 			$metadata->setAttribute( $key, $attribute );
+		}
+		foreach( array('RecordCreated', 'RecordModified') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'non-form');
 		}
     }
 }

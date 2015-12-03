@@ -10,12 +10,21 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
  	    
 		$report = getFactory()->getObject('PMReport');
 
-		$this->createCustomReports();
-		
 		$items = array();
 
 		$this->buildQuickItems($items);
-		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']); 
+		$menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
+
+		$has_mytasks = false;
+		foreach( $items as $item ) {
+			if ( $item['uid'] == 'mytasks' ) {
+				$has_mytasks = true;
+				break;
+			}
+		}
+		if ( !$has_mytasks ) {
+			array_unshift($menus['quick']['items'], $report->getExact('mytasks')->buildMenuItem());
+		}
 		$menus['quick']['items'][] = $report->getExact('discussions')->buildMenuItem();
 		$menus['quick']['items'] = array_merge($menus['quick']['items'],
 				array (
@@ -23,43 +32,9 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 				)
 		);
 		
-		$this->buildDocumentsFolder( $menus );
-		
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
 		
 		return $menus;
-    }
-    
-    protected function createCustomReports()
-    {
-		$report = getFactory()->getObject('PMReport');
-		$custom = getFactory()->getObject('pm_CustomReport');
-        $custom_it = $custom->getMyRegistry()->getAll();
-		
-	    // append default reports
-	    $report_it = $report->getExact('mytasks');
-	    if ( $report_it->getId() != '' && !in_array('mytasks', $custom_it->fieldToArray('ReportBase')) )
-	    {
-    	    $custom->add_parms( array (
-    	            'Caption' => $report_it->get('Caption'),
-    	            'ReportBase' => $report_it->getId(),
-    	            'Category' => FUNC_AREA_FAVORITES,
-    	            'Url' => $report_it->get('QueryString'),
-    	    		'OrderNum' => 10
-    	    ));
-	    }
-		    
-	    $report_it = $report->getExact('myissues');
-	    if ( $report_it->getId() != '' && !in_array('myissues', $custom_it->fieldToArray('ReportBase')) )
-	    {
-   		    $custom->add_parms( array (
-   		            'Caption' => $report_it->get('Caption'),
-   		            'ReportBase' => $report_it->getId(),
-   		            'Category' => FUNC_AREA_FAVORITES,
-   		            'Url' => $report_it->get('QueryString'),
-   		    		'OrderNum' => 11
-   		    ));
-	    }
     }
     
     protected function buildQuickItems( &$items )
@@ -94,16 +69,5 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 			
 			$custom_it->moveNext();
 		}
-    }
-    
-    protected function buildDocumentsFolder( &$menus )
-    {
-    	if ( !getSession()->getProjectIt()->object instanceof Portfolio ) return;
-    	
-    	$menus['documents'] = array (
- 	        'name' => translate('Документы'),
-            'uid' => 'documents',
-            'items' => array()
- 	    );
     }
 }

@@ -10,6 +10,8 @@ include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBurnupWidget.php";
 
 class PageChart extends StaticPageList
 {
+	private $demo = false;
+
  	function PageChart( $object ) 
 	{
 		$builder = new DateYearWeekModelBuilder();
@@ -18,111 +20,106 @@ class PageChart extends StaticPageList
 		parent::__construct( $object );
 	}
 
+	function setDemo( $demo = true ) {
+		$this->demo = $demo;
+	}
+
+	function getDemo() {
+		return $this->demo;
+	}
+
 	function getIterator()
 	{
-	    global $model_factory;
-	    
 	    $iterator = parent::getIterator();
-	    
+		$minSizeValuable = 1;
+
 		$object = $this->getObject();
 		
 		$aggs = $this->getAggregates();
-		
-		foreach ( $aggs as $agg )
-		{
+		foreach ( $aggs as $agg ) {
 			$object->addAggregate( $agg );
 		}
 		
 		$aggby = $this->getAggregateBy();
-		
 	    if ( $this->getGroup() == 'history' )
 		{
-		    $values = $this->getFilterValues();
-		    
-		    $object->addFilter(new FilterClusterPredicate($values['modifiedafter']));		
-		    
+			$values = $this->getFilterValues();
+		    $object->addFilter(new FilterClusterPredicate($values['modifiedafter']));
 		    $it = $object->getAggregatedHistory( $object->getFilters() );
 		}
 		else
 		{
 			$it = $object->getAggregated('t');
 		}
-		
-		$data = $it->getRowset();
 
+		$data = $it->getRowset();
 		if ( $this->getGroup() == 'history' )
 		{
+			$minSizeValuable = 2;
 		    // restore values missed on timeline
-		    
     		$keys_by_aggregate = array();
     		
-    	    foreach( $data as $key => $item )
-            {
+    	    foreach( $data as $key => $item ) {
                 $keys_by_aggregate[$item[$aggby]][] = $item['DayDate'];
             }
             
             $common_keys = array();
             
-            foreach( $keys_by_aggregate as $aggregate => $keys )
-            {
+            foreach( $keys_by_aggregate as $aggregate => $keys ) {
                 $common_keys = array_merge($common_keys, $keys_by_aggregate[$aggregate]);
             }
 
             $common_keys = array_unique($common_keys);
-            
             asort($common_keys);
             
 		    foreach( $keys_by_aggregate as $aggregate => $keys )
             {
                 $additional_keys = array_diff($common_keys, $keys);
-                
                 if ( count($additional_keys) < 1 ) continue;
                 
-                foreach( $additional_keys as $daydate )
-                {
+                foreach( $additional_keys as $daydate ) {
                      $data[] = array( $aggby => $aggregate, 'DayDate' => $daydate, $aggs[0]->getAggregateAlias() => 0);
                 }
             }
 		}
 		
 		// sort data according states ordering
-		 
 		if ( $this->getGroup() == 'State' || $aggby == 'State' )
 		{
-		    $state = $model_factory->getObject($object->getStateClassName());
-		    
-		    $state_it = $state->getAll();
-
-		    $this->state_sort_index = array();
-
+			$this->state_sort_index = array();
+		    $state_it = $object->cacheStates();
 		    while ( !$state_it->end() )
 		    {
 		        $this->state_sort_index[$state_it->get('ReferenceName')] = $state_it->get('OrderNum');
-		         
 		        $state_it->moveNext();
 		    }   
 		    
 		    usort($data, array($this, $aggby == 'State' ? 'sortByStateDesc' : 'sortByStateAsc'));
 
 		    $state_it->moveFirst();
-		    
 			while ( !$state_it->end() )
 		    {
-		        foreach( $data as $key => $item )
-		        {
-		            if ( $item['State'] == $state_it->get('ReferenceName') )
-		            {
+		        foreach( $data as $key => $item ) {
+		            if ( $item['State'] == $state_it->get('ReferenceName') ) {
 		                $data[$key]['State'] = $state_it->getDisplayName();
 		            }
 		        }
-		        
 		        $state_it->moveNext();
-		    }   
+		    }
+
+			if ( $this->getGroup() == 'history' ) {
+				$minSizeValuable = count($this->state_sort_index);
+			}
 		}
 
-		return $object->createCachedIterator( $data );
+		return $object->createCachedIterator( count($data) < $minSizeValuable ? $this->getDemoData($aggs) : $data );
 	}
-	
+
+	protected function getDemoData($aggs)
+	{
+		return array();
+	}
+
 	function sortByStateAsc( $left, $right )
 	{
 	    if ( $left['State'] == $right['State'] )
@@ -212,7 +209,7 @@ class PageChart extends StaticPageList
 	{
 		$values = $this->getFilterValues();
 		
-		if ( $values['aggby'] != '' )
+		if ( !in_array($values['aggby'],array('','all','none')) )
 		{
 			return $values['aggby'];
 		}
@@ -226,7 +223,7 @@ class PageChart extends StaticPageList
 	{
 		$values = $this->getFilterValues();
 		
-		if ( $values['aggregator'] != '' )
+		if ( !in_array($values['aggregator'],array('','all','none')) )
 		{
 			return $values['aggregator'];
 		}
@@ -516,6 +513,14 @@ class PageChart extends StaticPageList
             }
         }
 
+		if ( $this->getDemo() ) {
+			$widget->setColors(
+					array(
+							'rgb(128,128,128)'
+					)
+			);
+		}
+
 		return $widget;
 	}
 	
@@ -543,10 +548,8 @@ class PageChart extends StaticPageList
 	    
 		echo '<div style="float:left;width:67%;">';
 
-    		echo '<div id="'.$chart_id.'" style="'.$this->getStyle().'"></div>';
-    		
+    		echo '<div id="'.$chart_id.'" class="plot plot-wide" style="'.$this->getStyle().'"></div>';
 		    $widget->setLegend( $this->getLegendVisible() );
-		    
     		$widget->draw($chart_id);
 		
 		echo '</div>';
@@ -574,8 +577,6 @@ class PageChart extends StaticPageList
 				echo '</div>';
 		    }
 		}
-		
-		$this->drawScripts( $chart_id );
 	}
 	
 	function drawLegend( $data, & $aggs )
@@ -654,122 +655,17 @@ class PageChart extends StaticPageList
 	{
 		return false;
 	}
-	
-	function drawScripts( $chart_id )
+
+	function getRenderParms()
 	{
-	    /*
-		if ( $this->url == '' ) return;
-		?>
-		<script type="text/javascript">
-			$('#<? echo $id ?>').bind("plotclick", function (event, pos, item) {
-				window.location = "<? echo $this->url ?>";
-			}).css('cursor', 'pointer');
-		</script>
-		<?
-		*/
-	    
-		$dateformat = getLanguage()->getLocaleFormatter()->getDateJSFormat();
-		
-	    ?>
-		<script type="text/javascript">
-
-	        $("#<?=$chart_id?>").css('width', $('#tablePlaceholder').width() - 20);
-		
-		    var previousPoint = null;
-
-			$(function () 
-			{
-			    $("#<?=$chart_id?>").bind("plotclick", function (event, pos, item) {
-			    	 if (item) {
-				    	 if ( typeof item.series.urls != 'undefined' )
-				    	 {
-				    		 var url = item.series.urls[item.datapoint[0]];
-
-				    		 if ( typeof url != 'undefined' )
-				    		 {
-					    		 window.location = url; 
-				    		 }
-				    	 }
-			    	 }
-			    });
-					
-			    $("#<?=$chart_id?>").bind("plothover", function (event, pos, item) {
-					if ( pos && pos.x ) $("#x").text(pos.x.toFixed(2));
-		    	    if ( pos && pos.y ) $("#y").text(pos.y.toFixed(2));
-		            if ( item ) {
-		                if (previousPoint != item.dataIndex) {
-	    	                previousPoint = item.dataIndex;
-	            	        $("#charttooltip").remove();
-
-	            	        var xValue = '';
-	            	        switch( typeof item.datapoint[0] )
-	            	        {
-	            	        case 'number':
-		            	        if ( item.datapoint[0] > 1000000 )
-		            	        {
-			            	        var dt = new Date(item.datapoint[0]);
-			            	        xValue = dt.toString('<?=$dateformat?>');
-		            	        }
-		            	        else
-		            	        {
-			            	        xValue = item.datapoint[0];
-		            	        }
-		            	        break;
-		            	    default:
-		            	        xValue = item.datapoint[0];
-	            	        }
-
-	            	        if ( item.series.xaxis.ticks.length > 0 )
-	            	        {
-		            	        if ( typeof xValue == 'number' ) xValue = item.series.xaxis.ticks[xValue].label;
-	            	        }
-
-	            	        if ( typeof item.series.label != 'undefined' )
-	            	        {
-	            	        	yValue = item.series.data[item.dataIndex][1];
-	            	        }
-	            	        else
-	            	        {
-	            	        	yValue = "";
-	            	        }
-	            	        
-	            	        if ( typeof item.series.axisDescription != 'undefined' )
-	            	        {
-    	            	        if ( typeof item.series.axisDescription.xaxis != 'undefined' )
-    	            	        {
-    	            	        	xValue = item.series.axisDescription.xaxis + ": " + xValue;
-    	            	        }
-    	            	        else
-    	            	        {
-    	            	        	xValue = "";
-    	            	        }
-    
-    	            	        if ( typeof item.series.axisDescription.yaxis != 'undefined' )
-    	            	        {
-    	            	        	yValue = item.series.axisDescription.yaxis + ": " + item.series.data[item.dataIndex][1];
-    	            	        }
-    	            	        else
-    	            	        {
-    	            	        	yValue = "";
-    	            	        }
-	            	        }
-	            	        
-	                	    var text = (typeof item.series.label != 'undefined' ? item.series.label + ": " : "")
-	                	        + yValue + ( xValue != '' ? " [" + xValue + "]" : "" );
-	                    
-	                    	showFlotTooltip(item.pageX, item.pageY, text);
-		                }
-		            }
-	    	        else {
-	        	        $("#charttooltip").remove();
-	            	    previousPoint = null;            
-	            	}
-			    });
-    	    });
-		</script>
-	    <?php 
+		return array_merge(
+			parent::getRenderParms(),
+			array (
+				'demo_hint' => $this->getDemo() ? text(2095) : ''
+			)
+		);
 	}
-	
+
 	function render( $view, $parms )
 	{
 		echo $view->render("core/PageChart.php", 

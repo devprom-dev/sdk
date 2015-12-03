@@ -124,9 +124,6 @@ abstract class BaseEntity {
 
     protected function getNowDateTime()
     {
-		$time = new DateTime("now", new DateTimeZone("UTC"));
-		return $time->add(DateInterval::createFromDateString(\EnvironmentSettings::getUTCOffset()." hours"));
+		return new DateTime("now", \EnvironmentSettings::getClientTimeZone());
     }
-    
-
 }

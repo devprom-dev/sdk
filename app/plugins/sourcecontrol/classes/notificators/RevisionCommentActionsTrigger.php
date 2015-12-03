@@ -55,19 +55,27 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 			$this->info( "Skip user comments: ".$object_it->get('Description') );
 			return;
 		}
-		
-		$this->info( "Make actions: ".var_export($match_result, true) );
+
+        // get committer
+        $committer_it = $object_it->getRef('SystemUser');
+        if ( $committer_it->getId() < 1 ) {
+            $this->info( "Activity comitter wasnt found" );
+        } else {
+            $this->info( "Set session user: ".$committer_it->getId() );
+
+            $factory = $this->session->getAuthenticationFactory();
+            $factory->setUser($committer_it);
+            $this->session->setAuthenticationFactory($factory);
+        }
+
+        $this->info( "Make actions: ".var_export($match_result, true) );
 
 		// bind the commit to the given objects
 	 	$objects = $this->bindObjects( $object_it, $match_result[TASKS_UID] );
-
-	 	if ( count($objects) < 1 )
-	 	{
+	 	if ( count($objects) < 1 ) {
 	 		$this->info( "Object not found: ".$match_result[TASKS_UID] );
-	 		
 	 		return;
 	 	}
-
 		$this->info( "Objects found: ".count($objects) );
 	 	
 		// check for user actions
@@ -79,7 +87,6 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	 		$spent_hours = ((int) str_replace('d', '', $match_result[TASKS_TIME+1][$index])) * 8
 	 			+ (int) str_replace('h', '', $match_result[TASKS_TIME+2][$index]);
 	 	}
-
 		$this->info( "Work log: ".$spent_hours );
 	 	
 		// check for comments
@@ -90,14 +97,6 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 
 		$this->info( "Comment is given: ".$comments );
 	 	
-		// get committer 
-	    $committer_it = $object_it->getRef('Participant');
-	    
-	    if ( $committer_it->getId() < 1 )
-	    {
-	        $this->info( "Activity comitter wasnt found" );
-	    }
-
 	    // make actions
 	    $comment_added = false;
 	    $target_state = trim($match_result[TASKS_STATE][$index], ' #');
@@ -111,7 +110,7 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 		$methodology_it = $this->session->getProjectIt()->getMethodologyIt();
 	    if ( $methodology_it->IsTimeTracking() && is_object($committer_it) && $committer_it->getId() > 0 && $spent_hours > 0 )
 	    {
-	        $this->addWorkLog( $objects, $committer_it->getRef('SystemUser'), $spent_hours, !$comment_added ? $comments : '' );
+	        $this->addWorkLog( $objects, $committer_it, $spent_hours, !$comment_added ? $comments : '' );
 	        $comment_added = true;
 	    }
 	    
@@ -222,24 +221,15 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 	 		
 	 		$activity_parms['Task'] = $object_it->getId();
 	 		$activity_parms['Participant'] = $committer_it->getId();
-
 	        $this->info( "Activity commiter is: ".$committer_it->getDisplayName() );
  			
 			$result = $activity->add_parms( $activity_parms ); 
-			
 	        $this->info( "Activity object has been created: ".$result );
 	 	}
 	}
 	
 	function moveObjects( & $objects, $comments, & $committer_it, $target_state )
 	{
-	    if ( is_object($committer_it) && $committer_it->getId() > 0 )
-	    {
-	        $this->info( "Set session participant: ".$committer_it->getId() );
-	        
-	        $this->session->setParticipantIt( $committer_it );
-	    }
-
 	    foreach( $objects as $object_it )
 	    {
 	    	$this->info( "Process object: ".$object_it->getId() );
@@ -265,7 +255,7 @@ class RevisionCommentActionsTrigger extends SystemTriggersBase
 				array (
 					'ObjectId' => $object_it->getId(),
 					'ObjectClass' => get_class($object_it->object),
-					'AuthorId' => $committer_it->get('SystemUser'),
+					'AuthorId' => $committer_it->getId(),
 					'Caption' => $text
 				)
 			);

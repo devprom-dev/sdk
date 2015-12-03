@@ -28,7 +28,10 @@ class WikiTypeBase extends MetaobjectCacheable
  		{
  			case 'PageReferenceName':
  				return strtolower($this->getReferenceName());
- 				
+
+			case 'ReferenceName':
+				return uniqid('PageType_');
+
  			case 'WikiEditor':
  				return getSession()->getProjectIt()->get('WikiEditorClass');
  			

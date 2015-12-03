@@ -46,8 +46,10 @@
 						'excanvas/excanvas.compiled.js,'.
 						'flot/jquery.flot.min.js,'.
 						'flot/jquery.flot.pie.min.js,'.
+						'flot/jquery.flot.time.min.js,'.
 						'flot/jquery.flot.stack.min.js,'.
-						'flot/jquery.flot.crosshair.min.js';
+						'flot/jquery.flot.crosshair.min.js,'.
+						'flot/jquery.flot.threshold.min.js';
 					break;
 				case '2':
 					$_GET['files'] = 

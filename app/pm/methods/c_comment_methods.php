@@ -1,9 +1,8 @@
 <?php
  
- //////////////////////////////////////////////////////////////////////////////////////
- class CommentDeleteWebMethod extends WebMethod
- {
- 	var $comment_it, $control_id;
+class CommentDeleteWebMethod extends WebMethod
+{
+    var $comment_it, $control_id;
  	
  	function CommentDeleteWebMethod ( $comment_it = null, $control = 0 )
  	{
@@ -13,9 +12,12 @@
  		parent::WebMethod();
  	}
  	
-	function getCaption() 
-	{
+	function getCaption() {
 		return translate('Удалить');
+	}
+
+	function getWarning() {
+        return text(636);
 	}
 	
 	function hasAccess()
@@ -49,6 +51,4 @@
  	{
  		return 'function(){ refreshCommentsThread(\''.$this->control_id.'\'); }';
  	}
- }
- 
-?>
+}

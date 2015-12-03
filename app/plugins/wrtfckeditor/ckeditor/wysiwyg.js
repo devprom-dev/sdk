@@ -47,9 +47,10 @@ function setupDialogTable( dialogDefinition )
 function html_entity_decode(str)
 {
 	var tarea=document.createElement('textarea');
-	
-  	tarea.innerHTML = str; return tarea.value;
-  	tarea.parentNode.removeChild(tarea);
+  	tarea.innerHTML = str;
+	var value = tarea.value;
+	$(tarea).remove();
+	return value;
 }
  
 function setupDialogImage( filesTitle, dialogDefinition )
@@ -219,29 +220,33 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			}
 			else if ( editorInstance.checkDirty() )
 			{
+				var purgeFunc = function() {
+					runMethod(modify_url,
+						{
+							'class': $(element).attr('objectClass'),
+							'object': $(element).attr('objectId'),
+							'attribute': $(element).attr('attributeName'),
+							'value': editorInstance.getData(),
+							'parms': {
+								ContentEditor: 'WikiRtfCKEditor'
+							}
+						},
+						function(result) {
+							editorInstance.resetDirty();
+							var resultJson = jQuery.parseJSON(result);
+							if ( typeof resultJson.modified != 'undefined' ) {
+								$(element).parents('[modified]').attr('modified', resultJson.modified);
+							}
+						}, '', false);
+				};
 				if ( typeof editorInstance.purgeTimeout == 'number' ) {
 					clearTimeout(editorInstance.purgeTimeout);
 				}
-				editorInstance.purgeTimeout = setTimeout(function() { 
-					runMethod(modify_url, 
-					{
-						'class': $(element).attr('objectClass'),
-						'object': $(element).attr('objectId'),
-						'attribute': $(element).attr('attributeName'),
-						'value': editorInstance.getData(),
-						'parms': { 
-							ContentEditor: 'WikiRtfCKEditor'
-						}
-					}, 
-					function(result) {
-						editorInstance.resetDirty();
-						var resultJson = jQuery.parseJSON(result);
-						if ( typeof resultJson.modified != 'undefined' ) {
-							$(element).parents('[modified]').attr('modified', resultJson.modified);
-						}
-					}, 
-					'');
-				}, editorInstance.purgeTimeoutValue);
+				if ( editorInstance.purgeTimeoutValue > 0 ) {
+					editorInstance.purgeTimeout = setTimeout(purgeFunc, editorInstance.purgeTimeoutValue);
+				} else {
+					purgeFunc();
+				}
 			}
 		};
 		
@@ -342,7 +347,6 @@ function pasteImage(e) {
 function pasteTemplate( field, content )
 {
 	var editor_id = $('textarea[id*='+field+']').attr('id');
-	$('body', window.frames[0].document).focus(); 
 	var instance = CKEDITOR.instances[editor_id];
 	if ( !instance.checkDirty() ) {
 		instance.setData(content, function() {

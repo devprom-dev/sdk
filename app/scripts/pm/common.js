@@ -17,6 +17,8 @@ var devpromOpts = {
 var formHandlers = new Array();
 var originalState = '';
 var text = underi18n.MessageFactory(messages);
+var previousPoint = null;
+var originalFormState = '';
 
  var filterLocation = 
  {
@@ -50,6 +52,17 @@ var text = underi18n.MessageFactory(messages);
  		this.timeout = window.setTimeout(
 			" window.location = '"+location+"'; ", timeout );
  	},
+
+	 resetFilter: function()
+	 {
+		 for ( var key in this.parms )
+		 {
+			 if ($.inArray(key,['','show','hide','group','sort','sort2','sort3','sort4','infosections','color']) >= 0) continue;
+			 if ($.inArray(this.parms[key],['','all']) >= 0) continue;
+			 this.location = updateLocation( key+'=all', this.location );
+		 }
+		 window.location = this.location;
+	 },
 
 	restoreColumns: function()
 	{
@@ -312,7 +325,17 @@ var text = underi18n.MessageFactory(messages);
  	hiddenColumns: [],
  	parms: []
  };
- 
+
+ if(!(window.console && console.log)) {
+	console = {
+		log: function(){},
+		debug: function(){},
+		info: function(){},
+		warn: function(){},
+		error: function(){}
+	};
+ }
+
  function is_firefox() 
  {
 	return navigator.userAgent.indexOf("Firefox")!=-1;
@@ -438,10 +461,11 @@ function toggleBulkActions()
 	ids.length > 0 ? $('.bulk-filter-actions').show() : $('.bulk-filter-actions').hide(); 
 }
 
-function runMethod( method, data, url, warning )
+function runMethod( method, data, url, warning, async )
 {
 	if ( warning != '' && !confirm(warning) ) return;
-	if ( method.substr(0, 4) != '/pm/' && devpromOpts.project != '' ) method = '/pm/'+devpromOpts.project+'/'+method; 
+	if ( method.substr(0, 4) != '/pm/' && devpromOpts.project != '' ) method = '/pm/'+devpromOpts.project+'/'+method;
+	if ( typeof async == 'undefined' ) async = true;
 
 	filterLocation.showActivity();
 
@@ -464,7 +488,7 @@ function runMethod( method, data, url, warning )
 		url: method,
 		dataType: "html",
 		data: data,
-		async: true,
+		async: async,
 		success: 
 			function(result, status, xhr) 
 			{
@@ -663,7 +687,7 @@ function appendEmbeddedItem( form_id )
 		body = $('#embeddedForm'+form_id).html();
 		if ( $.browser.msie && $.browser.version < 9 )
 		{
-			$('#embeddedForm'+form_id).html('<form id="embeddedFormBody'+form_id+'" method="post" enctype="multipart/form-data">' + 
+			$('#embeddedForm'+form_id).html('<form id="embeddedFormBody'+form_id+'" method="post" enctype="multipart/form-data">' +
 				body + '</form>');
 		}
 		else
@@ -687,6 +711,7 @@ function appendEmbeddedItem( form_id )
 	}
 
 	$('#embeddedList'+form_id).hide();
+	$('#embeddedList'+form_id).parent().find('a.embedded-add-button').hide();
 	$('#embeddedForm'+form_id).show();
 	
 	$('#embeddedForm'+form_id+' input:visible, #embeddedForm'+form_id+' textarea, #embeddedForm'+form_id+' select')
@@ -722,7 +747,7 @@ function appendEmbeddedItem( form_id )
 		completeUIExt($('#embeddedFormBody'+form_id));
 	});
 
-	if ( !($.browser.msie && document.documentMode < 9) )
+	if ( !($.browser.msie && document.documentMode <= 9) )
 	{
 		$("#embeddedForm"+form_id).find("input:file")
 			.unbind('change')
@@ -749,6 +774,7 @@ function closeEmbeddedForm( form_id )
 {
 	$('#embeddedForm'+form_id).hide();
 	$('#embeddedList'+form_id).show();
+    $('#embeddedList'+form_id).parent().find('a.embedded-add-button').show();
 
 	jQuery.each($('input'), function() {
 		if ( $(this).attr('type') == 'submit' || $(this).attr('type') == 'button' ) {
@@ -767,9 +793,7 @@ function validateEmbedded( form_id, required )
 	
 	if ( required == '' ) return valid;
 
-	beforeUnload();
-	
-	jQuery.each(required, function() 
+	jQuery.each(required, function()
 	{
 		if ( $('#'+this).is(':not(div):visible') && $('#'+this).val() == '' || $('#'+this).is('div') && $('#'+this+'Value').val() == '' )
 		{
@@ -836,7 +860,7 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 		dataType: 'html',
 		async: false,
 		cache: false,
-		error: function( xhr, status, e ) 
+		error: function( xhr, status, e )
 		{
 			$("#embeddedForm"+form_id)
 				.find("input[type='button']").removeAttr('disabled');
@@ -1081,10 +1105,15 @@ function setupAutocomplete( $e )
 	});
 }
 
-function objectAutoComplete( jqe_field, classname, caption, attributes, additional_attributes )
+function objectAutoComplete( jqe_field, classname, caption, attributes, additional_attributes, project )
 {
 	var method_url = 'methods.php';
-	if ( devpromOpts.project != '' ) method_url = '/pm/'+devpromOpts.project+'/'+method_url;
+	if ( typeof project != 'undefined' && project != '' ) {
+		method_url = '/pm/'+project+'/'+method_url;
+	}
+	else if ( devpromOpts.project != '' ) {
+		method_url = '/pm/'+devpromOpts.project+'/'+method_url;
+	}
 
 	jqe_text = jqe_field.prev('input'); 
 	
@@ -1311,6 +1340,10 @@ function registerFormValidator( id, callback )
 
 function getFormHandlers( id )
 {
+	if ( typeof id == 'undefined' ) {
+		id = 'global';
+	}
+
 	for ( var i = 0; i < formHandlers.length; i++ ) {
 		if ( formHandlers[i].id == id ) {
 			return formHandlers[i];
@@ -1340,6 +1373,13 @@ function validateForm( form )
 		{
 			if ( $(this).is('input:not(.autocomplete-text),select,textarea') && $(this).val() == '' || $(this).is('div') && $(this).text() == '' ) 
 			{
+				if ( !$(this).is(':visible') ) {
+					var tabId = $(this).parents('.ui-tabs-panel').attr('id');
+					if ( typeof tabId != 'undefined' ) {
+						$('.ui-dialog a[href="#'+tabId+'"]').click();
+					}
+				}
+
 				$(this).fadeOut(0, function(){ $(this).css('background', '#ffafaf');} ).
 					fadeIn().fadeOut().fadeIn(300, function(){ $(this).css('background', 'white'); } );
 					
@@ -1594,7 +1634,7 @@ function completeUIExt( jqe )
         }
         
         window.setTimeout( function() {
-			if ( boardItemOptions ) boardItemOptions.resizeCards();
+			if ( typeof boardItemOptions != 'undefined' ) boardItemOptions.resizeCards();
         }, 350);
         
     });
@@ -1648,7 +1688,8 @@ function completeUIExt( jqe )
 			$(this).attr('object'), 
 			$(this).attr('caption'), 
 			$(this).attr('searchattrs').split(','), 
-			$(this).attr('additional').split(',')
+			$(this).attr('additional').split(','),
+			$(this).attr('project')
 		);
 	});
 	
@@ -1685,6 +1726,8 @@ function completeUIExt( jqe )
 			$(event.target).popover('show');
 		});
 	});
+
+    completeChartsUI(jqe);
 }
 
 function markupDiff( el )
@@ -1758,12 +1801,88 @@ function buildSnapshotSelect( field, form_id, baseline_name, data )
 	selected.length > 0 ? select.parent().parent().show() : select.parent().parent().hide();
 }
 
-function completeChartsUI()
+function completeChartsUI( jqe )
 {
-	$('.plot[url]').bind("plotclick", function (event, pos, item) 
-	{
-		window.location = $(this).attr('url');
-	}).css('cursor', 'pointer');
+    jqe.find('.plot[url]').bind("plotclick", function (event, pos, item) {
+        window.location = $(this).attr('url');
+    }).css('cursor', 'pointer');
+
+    jqe.find('.plot-wide').each(function(index) {
+        $(this).css('width', $('#tablePlaceholder').width() - 20);
+    });
+
+    jqe.find('.plot').each(function(index) {
+		$(this).bind("plotclick", function (event, pos, item) {
+			if (!item) return;
+			if ( typeof item.series.urls != 'undefined' )
+			{
+				var url = item.series.urls[item.datapoint[0]];
+				if ( typeof url != 'undefined' ) window.location = url;
+			}
+		});
+		$(this).bind("plothover", function (event, pos, item) {
+			if ( pos && pos.x ) $("#x").text(pos.x.toFixed(2));
+			if ( pos && pos.y ) $("#y").text(pos.y.toFixed(2));
+			if ( item ) {
+				if (previousPoint != item.dataIndex) {
+					previousPoint = item.dataIndex;
+					$("#charttooltip").remove();
+
+					var xValue = '';
+                    var yValue = '';
+					switch( typeof item.datapoint[0] )
+					{
+						case 'number':
+							if ( item.datapoint[0] > 1000000 ) {
+								var dt = new Date(item.datapoint[0]);
+								xValue = dt.toString(devpromOpts.datejsformat);
+							}
+							else {
+								xValue = item.datapoint[0];
+							}
+							break;
+						default:
+							xValue = item.datapoint[0];
+					}
+                    if ( typeof bar_labels != 'undefined' ) {
+                        xValue = bar_labels[item.datapoint[0]];
+                    }
+					if ( xValue == "" && typeof item.series.xaxis.ticks != 'undefined' && item.series.xaxis.ticks.length > 0 ) {
+						if ( typeof xValue == 'number' ) xValue = item.series.xaxis.ticks[xValue].label;
+					}
+					else if ( typeof item.series.label != 'undefined' ) {
+						yValue = item.series.data[item.dataIndex][1];
+					}
+					else {
+						yValue = "";
+					}
+
+					if ( typeof item.series.axisDescription != 'undefined' ) {
+						if ( typeof item.series.axisDescription.xaxis != 'undefined' ) {
+							xValue = item.series.axisDescription.xaxis + ": " + xValue;
+						}
+						else {
+							xValue = "";
+						}
+						if ( typeof item.series.axisDescription.yaxis != 'undefined' ) {
+							yValue = item.series.axisDescription.yaxis + ": " + item.series.data[item.dataIndex][1];
+						}
+						else {
+							yValue = "";
+						}
+					}
+					var text = (typeof item.series.label != 'undefined' ? item.series.label + ": " : "")
+						+ yValue + ( xValue != '' ? " [" + xValue + "]" : "" );
+
+					showFlotTooltip(item.pageX, item.pageY, text);
+				}
+			}
+			else {
+				$("#charttooltip").remove();
+				previousPoint = null;
+			}
+		});
+	});
 }
 
 function ajaxErrorExplain( jqXHR, exception )
@@ -1887,7 +2006,7 @@ function makeAsyncForm( formId, url, message, options )
 	 			if ( (new RegExp('Internal Server Error')).exec( response ) != null ) {
 	 				window.location = '/500';
  				}
-	 			$('#result'+formId).removeClass('alert-success alert-error').addClass('alert alert-error').html(response);
+	 			$('#result'+formId).removeClass('alert alert-success alert-error').addClass('alert alert-error').html(response);
 	 			return;
 			}
 
@@ -1908,11 +2027,29 @@ function makeAsyncForm( formId, url, message, options )
 					 	.removeClass('alert-success alert-error')
 						.addClass('alert alert-success')
 						.html(message);
-				}
+				} else {
+                    $('#result'+formId).removeClass('alert alert-success alert-error').html('');
+                }
 				
 				window.location = data.object;
 				return;
 			}
+
+            if ( state == 'redirect-error' )
+            {
+                if ( message != '' )
+                {
+                    $('#result'+formId)
+                        .removeClass('alert-success alert-error')
+                        .addClass('alert alert-error')
+                        .html(message);
+                } else {
+                    $('#result'+formId).removeClass('alert alert-success alert-error').html('');
+                }
+
+                setTimeout(function() { window.location = data.object; }, 1000);
+                return;
+            }
 
 			$('.btn[type=submit]').attr('disabled', false);
 			
@@ -1928,7 +2065,9 @@ function makeAsyncForm( formId, url, message, options )
 					.removeClass('alert-success alert-error')
 					.addClass('alert alert-'+state)
 					.html(message);
-			}
+            } else {
+                $('#result'+formId).removeClass('alert-success alert-error').html('');
+            }
 
 			if ( state == 'success' && url != '' )
 			{
@@ -2115,7 +2254,9 @@ function workflowRunMethod(method, callback)
 							$('#modal-form').attr('title', method.transitionTitle);
 							
 							$('#modal-form').dialog({
-								width: resultObject.url.match(/issues\/board\?mode\=group/) ? $(window).width() - 300 : 750,
+								width: (typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
+									? $(window).width() - 300
+									: 750),
 								modal: true,
 								open: function()
 								{
@@ -2152,23 +2293,23 @@ function workflowRunMethod(method, callback)
 												dataType: 'html',
 												success: function( data ) 
 												{
-													var warning = $(data).find('.form_warning');
-													
-													if ( warning.length > 0 )
-													{
-														$('#modal-form').parent()
-															.find('.ui-button')
-															.attr('disabled', false)
-															.removeClass("ui-state-disabled");
-														
-														$('.form_warning').remove();
-														$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
-													}
-													else 
-													{
+													try {
+														var object = jQuery.parseJSON(data);
 														dialogVar.dialog('close');
-														
 														if ( typeof callback == 'function' ) callback(resultObject);
+													}
+													catch(e) {
+														var warning = $(data).find('.form_warning');
+														if ( warning.length > 0 )
+														{
+															$('#modal-form').parent()
+																.find('.ui-button')
+																.attr('disabled', false)
+																.removeClass("ui-state-disabled");
+
+															$('.form_warning').remove();
+															$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
+														}
 													}
 												},
 												error: function( xhr )
@@ -2190,7 +2331,8 @@ function workflowRunMethod(method, callback)
 									{
 										tabindex: 11,
 										text: method.closeButtonName,
-										click: function() 
+                                        id: method.entityName+'CancelBtn',
+										click: function()
 										{
 											$(this).dialog('close');
 										}
@@ -2205,6 +2347,8 @@ function workflowRunMethod(method, callback)
 
 function workflowMakeupDialog()
 {
+    beforeUnload();
+
 	completeUIExt($('#modal-form').parent());
     var formId = $('#modal-form form').attr('id');
 
@@ -2234,6 +2378,38 @@ function workflowMakeupDialog()
 	focusField('modal-form form[id]');
 }
 
+function workflowBuildDialog( dlg, options )
+{
+	if ( $('#modal-form .tabs>ul>li').length > 0 ) {
+		$('.ui-dialog .tabs').tabs({
+			create: function(e, ui) {
+				$(this).parent().find('.ui-icon-closethick').click(function() {
+					dlg.dialog('close');
+				});
+			}
+		});
+		dlg.parent().children('.ui-dialog-titlebar').replaceWith($('#modal-form .tabs'));
+		dlg.attr('id', 'dummy');
+		$('.ui-dialog .tabs').attr('id', 'modal-form').attr('style', dlg.attr('style')).append(dlg.detach());
+		dlg.attr('style', 'display:none');
+		if ( typeof options.tab != 'undefined' ) {
+			$('.ui-dialog .tabs').tabs( "option", "selected", options.tab );
+		}
+	}
+	dlg.dialog( "option", "draggable", true );
+	dlg.css("maxHeight", $(window).height() - 200);
+}
+
+function workflowCompleteData( data )
+{
+	$.each(data, function(i, value) {
+		if ( typeof window[value] == 'function' ) {
+			data[i] = window[value]();
+		}
+	});
+	return data;
+}
+
 function workflowNewObject( form_url, class_name, entity_ref, form_title, data, callback ) 
 {
 	if ( form_url.indexOf('?') < 0 ) 
@@ -2250,12 +2426,12 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 	if ( typeof setupEditorGlobal == 'undefined' ) form_url += "&global-scripts=true"; 
 	 
 	filterLocation.showActivity();
-	
+
 	$.ajax({
 		type: "GET",
 		url: form_url,
 		dataType: "html",
-		data: data,
+		data: workflowCompleteData(data),
 		async: true,
 		cache: false,
 		success: 
@@ -2284,8 +2460,9 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 				
 				$('#modal-form #'+entity_ref+'redirect').val(form_url);
 				
-				var scale = $('form[id]').find('.control-column').length < 2 ? 3/5 : 4/5;
-				
+				var scale = $('form[id]').find('#tab-main .control-column').length < 2 ? 3/5 : 4/5;
+                if ( $('form[id]').find('.source-text').length > 0 ) scale = 5/6;
+
 				$('#modal-form').dialog({
 					width: Math.max(950, $(window).width()*scale),
 					modal: true,
@@ -2311,7 +2488,7 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 					},
 					create: function() 
 					{
-				        $(this).css("maxHeight", $(window).height() - 200);      
+						workflowBuildDialog($(this),{});
 				    },
 					beforeClose: function(event, ui) 
 					{
@@ -2335,23 +2512,28 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 									dataType: 'html',
 									success: function( data ) 
 									{
-										var warning = $(data).find('.form_warning');
-										
-										if ( warning.length > 0 ) 
-										{
-											$('#modal-form').parent()
-												.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-											
-											$('.form_warning').remove();
-											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
-										}
-										else 
-										{
-											var objectid = $(data).find('#'+entity_ref+'Id').val();
-											
+										try {
+											var object = jQuery.parseJSON(data);
 											dialogVar.dialog('close');
-											
-											if ( typeof callback == 'function' ) callback( objectid ); 
+											if ( typeof callback == 'function' ) {
+												callback( object.Id );
+											}
+										}
+										catch(e) {
+											var warning = '';
+											try {
+												warning = $(data).find('.form_warning').html();
+											}
+											catch(e) {
+												warning = e.message;
+											}
+											if ( warning != '' )
+											{
+												$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+												$('.form_warning').remove();
+												$('<div class="alert alert-error form_warning">'+warning+'</div>').insertBefore($('#modal-form form[id]'));
+												return false;
+											}
 										}
 									},
 									error: function( xhr )
@@ -2444,9 +2626,10 @@ function workflowModify( options, callback )
 				$('#modal-form form[id]').attr('action', options.form_url);
 				$('#modal-form #'+options.entity_ref+'action').val('modify');
 				$('#modal-form #'+options.entity_ref+'redirect').val(options.form_url);
-				
-				var scale = form.find('.control-column').length < 2 ? 3/5 : 4/5;
-				
+
+                var scale = $('#modal-form').find('ul.ui-dialog-titlebar li').length < 4 ? 3/5 : 4/5;
+                if ( $('form[id]').find('.source-text').length > 0 ) scale = 5/6;
+
 				$('#modal-form').dialog({
 					width: Math.max(950, $(window).width()*scale),
 					modal: true,
@@ -2459,22 +2642,7 @@ function workflowModify( options, callback )
 					},
 					create: function() 
 					{
-						var dlg = $(this);
-						if ( $('#modal-form .tabs>ul>li').length > 0 ) {
-							$('.ui-dialog .tabs').tabs({
-					            create: function(e, ui) {
-					                $(this).parent().find('.ui-icon-closethick').click(function() {
-					                	dlg.dialog('close');
-					                });
-					            }            
-					        });
-							dlg.parent().children('.ui-dialog-titlebar').replaceWith($('#modal-form .tabs'));
-							dlg.attr('id', 'dummy');
-							$('.ui-dialog .tabs').attr('id', 'modal-form').attr('style', dlg.attr('style')).append(dlg.detach());
-							dlg.attr('style', 'display:none');
-						}
-						$(this).dialog( "option", "draggable", true );
-				        $(this).css("maxHeight", $(window).height() - 200);      
+						workflowBuildDialog($(this), options);
 				    },
 					beforeClose: function(event, ui) 
 					{
@@ -2497,23 +2665,23 @@ function workflowModify( options, callback )
 									dataType: 'html',
 									success: function( data ) 
 									{
-										var warning = $(data).find('.form_warning');
-										
-										if ( warning.length > 0 ) 
-										{
-											$('#modal-form').parent()
-												.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-											
-											$('.form_warning').remove();
-											$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
-										}
-										else 
-										{
-											var objectid = $(data).find('#'+options.entity_ref+'Id').val();
-											
+										try {
+											var object = jQuery.parseJSON(data);
 											dialogVar.dialog('close');
-											
-											if ( typeof callback == 'function' ) callback( objectid ); 
+											if ( typeof callback == 'function' ) {
+												callback( options.object_id );
+											}
+										}
+										catch(e) {
+											var warning = $(data).find('.form_warning');
+											if ( warning.length > 0 )
+											{
+												$('#modal-form').parent()
+													.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+
+												$('.form_warning').remove();
+												$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
+											}
 										}
 									},
 									error: function( xhr )
@@ -2577,78 +2745,7 @@ function workflowModify( options, callback )
 	});
 }
 
-function workflowProperties( form_url, object_id, entity_ref, form_title, callback ) 
-{
-	if ( form_url.indexOf('?') < 0 ) 
-	{
-		form_url += '?formonly=true';
-	}
-	else 
-	{
-		form_url += '&formonly=true';
-	}
-
-	form_url += '&'+entity_ref+'action=view&entity='+entity_ref+'&'+entity_ref+'Id='+object_id;
-	
-	if ( typeof setupEditorGlobal == 'undefined' ) form_url += "&global-scripts=true"; 
-	 
-	filterLocation.showActivity();
-	
-	$.ajax({
-		type: "GET",
-		url: form_url,
-		dataType: "html",
-		async: true,
-		cache: false,
-		success: 
-			function(result) 
-			{
-				var scripts = new Array();
-				
-				$('#modal-form').parent().detach();
-				
-				$('body').append('<div id="modal-form" style="display:none;" title="'+form_title+'"></div>');
-
-				$(result).prependTo($('#modal-form'));
-				
-				$('#modal-form form[id]').attr('action', form_url);
-
-				$('#modal-form #'+entity_ref+'action').val('add');
-				
-				$('#modal-form #'+entity_ref+'redirect').val(form_url);
-
-				$('#modal-form').dialog({
-					width: Math.max($(window).width() * 2/3, 750),
-					height: $(window).height() * 2/3,
-					modal: true,
-					open: function()
-					{
-						workflowMakeupDialog();
-					},
-					create: function() 
-					{
-				        $(this).css("maxHeight", $(window).height() - 200);      
-				    },
-					beforeClose: function(event, ui) 
-					{
-                        return workflowHandleBeforeClose(event, ui);
-					},
-					buttons: [
-						{
-							text: "Ok",
-							id: entity_ref+'SubmitBtn',
-						 	click: function() 
-						 	{
-						 		$(this).dialog('close');
-							}
-						}
-					]
-				});
-			}
-	});
-}
-
-function workflowTable( form_url, title ) 
+function workflowTable( form_url, title )
 {
 	if ( form_url.indexOf('?') < 0 ) 
 	{
@@ -3005,7 +3102,10 @@ function setupLocationParameter( param )
 
 function moveNextCase()
 {
-	if ( $('.pagination a.btn-primary').length < 1 ) return;
+	if ( $('.pagination a.btn-primary').length < 1 ) {
+		window.location.reload();
+		return;
+	}
 	try {
 		if ($('.pagination a.btn-primary').parent('li').is(':last-child')) return;
 		var nextCase = parseInt($('.pagination a.btn-primary').text());
@@ -3013,4 +3113,18 @@ function moveNextCase()
 	}
 	catch(e) {
 	}
+}
+
+function completeUICustomFields( anchor, fields, values )
+{
+	$('#'+anchor).change( function() {
+		jQuery.each(fields, function(key, value) {
+			$('#fieldRow'+value).hide();
+		});
+		selected = $(this).find('option[value="'+$(this).val()+'"]').attr('referenceName');
+		jQuery.each(fields, function(key, value) {
+			if ( selected == values[key] ) $('#fieldRow'+value).show();
+		});
+	});
+	$('#'+anchor).change();
 }

@@ -125,7 +125,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			$this->affected->add_parms(
 					array (
 							'ObjectClass' => $class_name,
-							'ObjectId' => $object_it->getId()
+							'ObjectId' => $object_it->getId(),
+							'VPD' => $object_it->get('VPD')
 					)
 			);
 			
@@ -168,13 +169,19 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    	}
 		    
 		    case 'pm_ChangeRequest':
+				$classes = array('WorkItem' => $object_it->copy());
 		    	if ( $object_it->get('Links') != '' ) {
-			    	return array( 
-			    		'Request' => $object_it->getRef('Links')
-			    	);
+					$classes = array_merge(
+						$classes,
+						array('Request' => $object_it->getRef('Links'))
+						);
 		    	}
-		    	return array();
-		    	
+		    	return $classes;
+
+			case 'pm_Task':
+				$classes = array('WorkItem' => $object_it->copy());
+				return $classes;
+
 		    case 'pm_Release':
 		    	return array( 
 		    		'Stage' => $object_it->copy()

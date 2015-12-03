@@ -34,9 +34,8 @@
  	function CoScheduledJob() 
  	{
  		parent::Metaobject('co_ScheduledJob');
- 		$this->defaultsort = ' OrderNum ';
- 		
  		$this->addPersister( new DurationPersister() );
+		$this->setSortDefault( new SortOrderedClause() );
  	}
  	
  	function createIterator() 

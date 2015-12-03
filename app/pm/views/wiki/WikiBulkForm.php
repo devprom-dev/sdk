@@ -14,7 +14,9 @@ class WikiBulkForm extends BulkForm
 	{
 		$iterator = parent::getIt();
 
-		if ( strpos($_REQUEST['operation'], 'BulkDeleteWebMethod') === false ) return $iterator;  
+		if ( $this->getObject() instanceof WikiPageTemplate ) return $iterator;
+		if ( strpos($_REQUEST['operation'], 'BulkDeleteWebMethod') === false ) return $iterator;
+
 		return $this->object->getRegistry()->Query(
 				array (
 						new WikiRootTransitiveFilter($iterator->idsToArray())

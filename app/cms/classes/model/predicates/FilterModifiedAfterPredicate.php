@@ -7,6 +7,6 @@ class FilterModifiedAfterPredicate extends FilterPredicate
  	function _predicate( $filter )
  	{
  		$mapper = new ModelDataTypeMappingDateTime();
- 		return " AND t.RecordModified >= '".$mapper->map(DAL::Instance()->Escape($filter))."' ";
+ 		return " AND ".$this->getAlias().".RecordModified >= '".$mapper->map(DAL::Instance()->Escape($filter))."' ";
  	}
 }

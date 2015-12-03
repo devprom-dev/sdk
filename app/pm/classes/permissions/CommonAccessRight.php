@@ -69,29 +69,25 @@ class CommonAccessRight extends Metaobject
 	
 	function getDataAccess()
 	{
-		global $model_factory;
-		
 		$data = array();
-		
-		$object_class = $this->getFilterValue( 'CommonAccessClassPredicate' );
-		
- 		$access = $model_factory->getObject('pm_ObjectAccess');
- 		$access_it = $access->getAll();
 
+		$object_class = $this->getFilterValue( 'CommonAccessClassPredicate' );
+		$role_filter = $this->getFilterValue( 'CommonAccessRolePredicate' );
+
+		$access_it = getFactory()->getObject('pm_ObjectAccess')->getRegistry()->Query(
+				array (
+					new FilterBaseVpdPredicate(),
+					new FilterAttributePredicate('ObjectClass', $object_class),
+					new FilterAttributePredicate('ProjectRole', $role_filter)
+				)
+		);
  		while( !$access_it->end() )
  		{
- 			if ( !in_array($object_class, array('', 'all', strtolower($access_it->get('ObjectClass')) )) )
- 			{
- 				$access_it->moveNext();
- 				continue;
- 			}
- 			
  			$data[] = array (
  				'ReferenceName' => $access_it->get('ObjectClass').'.'.$access_it->get('ObjectId'),
  				'ReferenceType' => 'O',
  				'DisplayName' => $access_it->get('ObjectClass')
  			);
- 			
  			$access_it->moveNext();
  		}
 		
@@ -171,38 +167,34 @@ class CommonAccessRight extends Metaobject
 	
 	function getDataAttributes()
 	{
-		global $model_factory;
-		
 		$data = array();
-
 		$entity_filter = $this->getFilterValue( 'CommonAccessEntityPredicate' );
 		
-		$entity = getFactory()->getObject('AttributePermissionEntity');
-		
-		$object_it = $entity->getAll();
-		
+		$object_it = getFactory()->getObject('AttributePermissionEntity')->getAll();
 		while( !$object_it->end() )
 		{
-			$object = $model_factory->getObject($object_it->getId());
+			if ( !in_array($entity_filter, array('', 'all', $object_it->getId() )) ) continue;
 
-			if ( !in_array($entity_filter, array('', 'all', $object_it->getId() )) )
- 			{
- 				continue;
- 			}			
-			
+			$object = getFactory()->getObject($object_it->getId());
+
 			$attributes = $object->getAttributesByGroup('permissions');
-				    
 			foreach( $attributes as $attribute )
 			{
-				if ( $object->getAttributeType($attribute) == '' ) continue;
-				
 	 			$data[] = array (
 	 				'ReferenceName' => get_class($object).'.'.$attribute,
 	 				'ReferenceType' => 'A',
 	 				'DisplayName' => $object->getDisplayName().'.'.translate($object->getAttributeUserName($attribute))
 	 			);
 			}
-			
+			foreach( $object->getAttributesRemoved() as $attribute => $info )
+			{
+				$data[] = array (
+						'ReferenceName' => get_class($object).'.'.$attribute,
+						'ReferenceType' => 'A',
+						'DisplayName' => $object->getDisplayName().'.'.translate($info['caption'])
+				);
+			}
+
 			$object_it->moveNext();
 		}
 		

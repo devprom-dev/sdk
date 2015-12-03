@@ -16,7 +16,10 @@ class WrtfCKEditorPageParser extends WikiParser
 		$content = preg_replace_callback(REGEX_UPDATE_UID, array($this, 'parseUpdateUidCallback'), $content);
 		$content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $content);
         $content = preg_replace_callback('/\s+src="([^"]*)"/i', preg_image_src_callback, $content);
-        
+
+        // check if VML is in place, just return content with the native styles
+        if ( strpos($content, '<style>') !== false ) return $content;
+
         $was_state = libxml_use_internal_errors(true);
         
         $htmldoc = new InlineStyle(
@@ -31,14 +34,12 @@ class WrtfCKEditorPageParser extends WikiParser
             $page_css = preg_replace('/<\!--|-->/', '', $page_css);
             $htmldoc->applyStylesheet($page_css);
         }
-
     	if ( file_exists(SERVER_ROOT_PATH.'plugins/wrtfckeditor/ckeditor/custom.css') ) {
 		    $htmldoc->applyStylesheet(file_get_contents(SERVER_ROOT_PATH.'plugins/wrtfckeditor/ckeditor/custom.css'));
 		}
-        
         $htmldoc->applyStylesheet(file_get_contents(SERVER_ROOT_PATH.'styles/wysiwyg/msword.css'));
+
         $html = IteratorBase::utf8towin($htmldoc->getHTML());
-        
         libxml_clear_errors();
         libxml_use_internal_errors($was_state);
 

@@ -12,7 +12,7 @@ fos_user:
         email:
             template: DevpromServiceDeskBundle:Resetting:email.html.twig
             from_email:
-                address: "%supportEmail%"
+                address: "%adminEmail%"
                 sender_name: "%supportName%"
 
 security:
@@ -33,8 +33,7 @@ security:
                 provider: fos_userbundle
             logout:       true
             anonymous:    true
-            http_basic:
-                realm: "Devprom ServiceDesk App"
+            http_basic:   false
 
     access_control:
         - { path: ^/css, roles: IS_AUTHENTICATED_ANONYMOUSLY }

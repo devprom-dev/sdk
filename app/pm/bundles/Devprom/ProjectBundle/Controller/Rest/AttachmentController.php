@@ -37,17 +37,4 @@ class AttachmentController extends RestController
 				)
 		);
 	}
-		
-	function getClassName(Request $request)
-	{
-		switch( $request->get('class') )
-		{
-			case 'issues':
-				return 'request';
-			case 'tasks':
-				return 'task';
-			default:
-				return 'dummy';
-		}
-	}
 }

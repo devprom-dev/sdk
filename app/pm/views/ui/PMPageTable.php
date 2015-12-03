@@ -242,9 +242,7 @@ class PMPageTable extends PageTable
     	
     	$widget_id = $report_id != '' ? $report_id : $module_id;
     	
-    	$favs_it = $service->getItemOnFavoritesWorkspace($widget_id);
-
-    	if ( $favs_it->getId() > 0 ) return;
+    	if ( count($service->getItemOnFavoritesWorkspace($widget_id)) > 0 ) return;
     	
     	$save_action_key = '';
     	
@@ -311,15 +309,12 @@ class PMPageTable extends PageTable
 		if ( !getFactory()->getObject('CustomizableObjectSet')->checkObject($this->getObject()) ) return $predicates;
 		
         $attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->getObject() );
-        
         while( !$attr_it->end() )
         {
         	$type = $attr_it->getRef('AttributeType')->get('ReferenceName');
-        	
         	$value = $attr_it->get('ReferenceName');
         	
-            if ( in_array($type, array('dictionary','reference')) )
-            {
+            if ( in_array($type, array('dictionary','reference')) ) {
             	$predicates[] = new CustomAttributeValuePredicate($value, $values[$value]);
             } 
 
@@ -466,19 +461,24 @@ class PMPageTable extends PageTable
             }
         }
 
-  		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
-		if ( !getSession()->getProjectIt()->IsPortfolio() ) $ids[] = getSession()->getProjectIt()->getId();
-   		$project->addFilter( new FilterInPredicate($ids) );
+		$project_it = getSession()->getProjectIt();
+		if ( $project_it->IsPortfolio() || $project_it->IsProgram() )
+		{
+			$ids = $project_it->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
 
-        if ( $project->getAll()->count() < 2 ) return;
-   		if ( count($ids) > 20 ) {
-			$filter = new FilterAutocompleteWebMethod( $project, translate('Проект'), 'target' );
-   		}
-   		else {
-			$filter = new FilterObjectMethod( $project, translate('Проект'), 'target' );
-	        $filter->setUseUid(false);
-   		}
-        		
+			if ( !$project_it->IsPortfolio() ) $ids[] = $project_it->getId();
+			$project->addFilter( new FilterInPredicate($ids) );
+
+			if ( $project->getAll()->count() < 2 ) return;
+			if ( count($ids) > 20 ) {
+				$filter = new FilterAutocompleteWebMethod( $project, translate('Проект'), 'target' );
+			}
+			else {
+				$filter = new FilterObjectMethod( $project, translate('Проект'), 'target' );
+				$filter->setUseUid(false);
+			}
+		}
+
    		return $filter;
     }
     
@@ -486,12 +486,7 @@ class PMPageTable extends PageTable
     {
     	$filters = array();
     	
-        $attr = getFactory()->getObject('pm_CustomAttribute');
-        
-        $attr_it = $attr->getByEntity( $this->getObject() );
-
-        $dictionaries = array();
-
+        $attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->getObject() );
         while( !$attr_it->end() )
         {
             if ( $attr_it->getRef('AttributeType')->get('ReferenceName') == 'dictionary' )

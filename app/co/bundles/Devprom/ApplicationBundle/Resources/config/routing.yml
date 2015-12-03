@@ -15,10 +15,13 @@ login:
     defaults: { _controller: ApplicationBundle:Security:login }
     methods:  GET
 
-login_process:
-    path:  /login
+login_process_auth:
+    path:  /auth
     defaults: { _controller: ApplicationBundle:Security:loginProcess }
-    methods:  POST
+
+login_process_success:
+    path:  /logged
+    defaults: { _controller: ApplicationBundle:Security:loginCheck }
 
 recovery:
     path:  /recovery

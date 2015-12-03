@@ -12,12 +12,9 @@ class LeadAndCycleTimePage extends PMPage
  	
 	function getObject()
 	{
-	    global $model_factory;
-	    
 	    getSession()->addBuilder( new LeadCycleTimeModelBuilder() );
 	    
- 		$object = $model_factory->getObject('pm_ChangeRequest');
- 		
+ 		$object = getFactory()->getObject('pm_ChangeRequest');
  		$object->addFilter( new StatePredicate('terminal') );
  		
  		return $object;

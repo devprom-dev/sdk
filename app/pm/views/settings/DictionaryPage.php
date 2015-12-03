@@ -155,9 +155,15 @@ class DictionaryPage extends PMPage
  	
  	function buildFormSections( $object_it )
  	{
+		$this->addInfoSection(
+				new PageSectionAttributes(
+						$this->getFormRef()->getObject(), 'additional', translate('Дополнительно')
+				)
+		);
+
  		if ( !is_object($object_it) ) return;
- 		if ( $object_it->object->getAttributeType('RecentComment') != '' )
- 		{
+
+ 		if ( $object_it->object->getAttributeType('RecentComment') != '' ) {
  			$this->addInfoSection( new PageSectionComments($object_it) );
  		}
  	}

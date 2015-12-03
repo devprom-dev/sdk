@@ -4,9 +4,11 @@
 <div style="clear:both;"></div>
 
 <div id="treeview-hints">
-	<?php if ( $hint_display ) { ?>
-		<? echo $view->render('core/HintLight.php', array('title' => text(1322), 'name' => $hint_name)); ?>
-	<?php } ?>
+	<?php
+	if ( $document_hint != '' ) {
+		echo $view->render('core/Hint.php', array('title' => text(1322), 'name' => $page_uid));
+	}
+	?>
 </div>
 
 <script type="text/javascript" src="/scripts/jquery/jquery-sortable.js"></script>
@@ -17,15 +19,14 @@
         treeData = <?=$data?>;
 
 	$(function() {
+		$('div.treeview').html('<ul id="wikitree" class="filetree" style="width:100%;"></ul>');
 		loadContentTree();
 	});
 
 	function loadContentTree()
 	{
-		$('div.treeview').html('<div id="treeview-placeholder" class="placeholder">&nbsp;</div><ul id="wikitree" class="filetree" style="width:100%;"></ul>');
-		
-        var tree = $('#wikitree');
-
+		$('<ul id="wikitreecache" class="filetree" style="width:100%;"></ul>').insertAfter($('#wikitree'));
+        var tree = $('#wikitreecache');
         tree.treeview({
     		root: '<?=$root_id?>',
     		async: true,
@@ -34,21 +35,16 @@
 			url: '<?=$url?>',
 			treeData: treeData,
 			asyncCallback: function() {
-    			$('#treeview-placeholder').remove();
     			treeData = [];
-
                 sortableTree.init(
-                    tree.find('ul.treeview:first'),
-                    {
+                    tree.find('ul.treeview:first'), {
                         applicationUrl: '<?= $base_app_url ?>',
                         objectClass: '<?= $object_class ?>'
 			        }
                 );
+				$('#wikitree').replaceWith($('#wikitreecache').attr('id', 'wikitree'));
             }
 		});
-
-
-
 		$('li[uid=open-new]>a').click(function() {
 			$(this).attr('target', '_blank'); 
 		});

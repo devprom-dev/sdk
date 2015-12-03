@@ -8,11 +8,20 @@
     {% embed "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
         {% block body %}
             {% autoescape false %}
-            {{ 'issue.updated.body'|trans({
-                '%title%' : issue.caption,
-                '%link%' : issueLink,
-                '%changes%' : changes,
-            }, 'emails', language) }}
+                {% if comment == '' %}
+                    {{ 'issue.updated.body'|trans({
+                        '%title%' : issue.caption,
+                        '%link%' : issueLink,
+                        '%changes%' : changes,
+                    }, 'emails', language) }}
+                {% else %}
+                    {{ 'issue.updated-comment.body'|trans({
+                        '%title%' : issue.caption,
+                        '%link%' : issueLink,
+                        '%changes%' : changes,
+                        '%comment%' : comment,
+                    }, 'emails', language) }}
+                {% endif %}
             {% endautoescape %}
         {% endblock body %}
     {% endembed %}

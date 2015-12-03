@@ -17,8 +17,7 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
     	
 		$object->addPersister( new RequestPhotosPersister() );
-		$object->addPersister( new WatchersPersister() );
-		$object->addPersister( new AttachmentsPersister() );
+		$object->addPersister( new AttachmentsPersister(array('Attachment')) );
 		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  	    
@@ -28,29 +27,26 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     		$object->addAttribute('ReleaseFinishDate', 'DATE', translate('Релиз').': '.translate('Окончание'), false);
     		$object->addAttribute('ReleaseEstimatedStart', 'DATE', translate('Релиз').': '.translate('Оценка начала'), false);
     		$object->addAttribute('ReleaseEstimatedFinish', 'DATE', translate('Релиз').': '.translate('Оценка окончания'), false);
-    		$object->addPersister( new RequestReleaseDatesPersister() );
 
     		$attributes = array('ReleaseStartDate', 'ReleaseFinishDate', 'ReleaseEstimatedStart', 'ReleaseEstimatedFinish');
-    	    foreach ( $attributes as $attribute )
-        	{
+			$object->addPersister( new RequestReleaseDatesPersister($attributes) );
+
+    	    foreach ( $attributes as $attribute ) {
         		$object->addAttributeGroup($attribute, 'dates');
         	}
     	}
     	
         if ( $methodology_it->HasPlanning() )
     	{
- 	        $object->addAttribute('Iterations', 'REF_IterationId', translate('Итерация'), false);
- 	        $object->addPersister( new RequestIterationsPersister() );
-    		
  	        $object->addAttribute('IterationStartDate', 'DATE', translate('Итерация').': '.translate('Начало'), false);
     		$object->addAttribute('IterationFinishDate', 'DATE', translate('Итерация').': '.translate('Окончание'), false);
     		$object->addAttribute('IterationEstimatedStart', 'DATE', translate('Итерация').': '.translate('Оценка начала'), false);
     		$object->addAttribute('IterationEstimatedFinish', 'DATE', translate('Итерация').': '.translate('Оценка окончания'), false);
-    		$object->addPersister( new RequestIterationDatesPersister() );
 
     		$attributes = array('IterationStartDate', 'IterationFinishDate', 'IterationEstimatedStart', 'IterationEstimatedFinish');
-    	    foreach ( $attributes as $attribute )
-        	{
+			$object->addPersister( new RequestIterationDatesPersister($attributes) );
+
+    	    foreach ( $attributes as $attribute ) {
         		$object->addAttributeGroup($attribute, 'dates');
         	}
     	}
@@ -58,20 +54,21 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
 		
 		$comment = getFactory()->getObject('Comment');
-		$object->addPersister( new CommentRecentPersister() );
-		
- 	    $object->addAttribute('TasksPlanned', 'FLOAT', text(1934), false);
- 	    $object->addPersister( new RequestEstimatesPersister() );
-		
+		$object->addPersister( new CommentRecentPersister(array('RecentComment')) );
+
+		if ( $methodology_it->HasTasks() && $object->getAttributeType('Fact') != '' ) {
+			$object->addAttribute('TasksPlanned', 'FLOAT', text(1934), false);
+			$object->addPersister( new RequestEstimatesPersister(array('TasksPlanned')) );
+		}
+
        	$dates_attributes = array( 'Estimation', 'EstimationLeft', 'Fact', 'Spent', 'TasksPlanned' );
-    	foreach ( $dates_attributes as $attribute )
-    	{
+    	foreach ( $dates_attributes as $attribute ) {
     		$object->addAttributeGroup($attribute, 'time');
     	}
 
 		$object->addAttribute('DueDays', 'INTEGER', text(1937), false);
 		$object->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1938), false);
-		$object->addPersister( new RequestDueDatesPersister() );
+		$object->addPersister( new RequestDueDatesPersister(array('DueDays','DueWeeks')) );
     	
     	$dates_attributes = array( 'RecordModified', 'RecordCreated', 'StartDate', 'FinishDate', 'Deadlines', 'DeadlinesDate', 'DeliveryDate', 'DueWeeks', 'DueDays' );
     	foreach ( $dates_attributes as $attribute )

@@ -1,8 +1,8 @@
 <?php
 
-include_once "BusinessAction.php";
+include_once "BusinessActionWorkflow.php";
 
-class RequestBusinessActionAssignParticipant extends BusinessAction
+class RequestBusinessActionAssignParticipant extends BusinessActionWorkflow
 {
  	function getId()
  	{

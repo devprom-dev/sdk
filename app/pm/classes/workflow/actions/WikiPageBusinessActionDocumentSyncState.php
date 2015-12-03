@@ -1,10 +1,9 @@
 <?php
 
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+include_once "BusinessActionWorkflow.php";
 
-include_once "BusinessAction.php";
-
-class WikiPageBusinessActionDocumentSyncState extends BusinessAction
+class WikiPageBusinessActionDocumentSyncState extends BusinessActionWorkflow
 {
  	function getId()
  	{
@@ -34,7 +33,7 @@ class WikiPageBusinessActionDocumentSyncState extends BusinessAction
 		$service = new WorkflowService($object_it->object);
 		try {
 			$service->moveToState(
-						$root_it, $state, $object_it->get('TransitionComment'), array(), false
+						$root_it, $state, '', array(), false
 				);
 		}
  		catch( Exception $e ) {

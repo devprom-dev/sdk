@@ -43,7 +43,6 @@ class resmanPM extends PluginPMBase
  	    
  	    if ( is_a($table, 'ReportSpentTimeTable') )
  	    {
- 	    	if ( getSession()->getProjectIt()->IsPortfolio() ) $filters[] = new ResourceFilterProjectWebMethod();
 			$filters[] = new ResourceFilterRoleWebMethod();
 			$filters[] = new ResourceFilterUserWebMethod();
  	    }

@@ -4,7 +4,7 @@ class CustomAttributeTypeClassNameField extends FieldDictionary
 {
  	function getOptions()
 	{
-		$objects = array('participant', 'request');
+		$objects = array('user', 'request');
 		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		

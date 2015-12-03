@@ -14,29 +14,27 @@ class ReportsKanbanBuilder extends ReportsBuilder
     public function build( ReportRegistry & $object )
     {
      	$project_it = $this->session->getProjectIt();
-    	
-     	if ( $project_it->IsPortfolio() ) return;
-    	
-		$module_it = getFactory()->getObject('Module')->getExact('issues-chart');
-		
-     	$object->addReport( array ( 
-            'name' => 'commulativeflow',
-			'title' => text('kanban18'),
-			'category' => FUNC_AREA_MANAGEMENT,
-		    'query' => 'group=history&aggby=State&state=all&infosections=none&modifiedafter=last-month',
-	        'type' => 'chart',
-     		'description' => text('kanban30'),
-	        'module' => $module_it->getId() 
-		));
-		
+
+     	if ( !$project_it->IsPortfolio() ) {
+			$module_it = getFactory()->getObject('Module')->getExact('issues-chart');
+			$object->addReport( array (
+					'name' => 'commulativeflow',
+					'title' => text('kanban18'),
+					'category' => FUNC_AREA_MANAGEMENT,
+					'query' => 'group=history&aggby=State&state=all&infosections=none&modifiedafter=last-month',
+					'type' => 'chart',
+					'description' => text('kanban30'),
+					'module' => $module_it->getId()
+			));
+		}
+
      	$module_it = getFactory()->getObject('Module')->getExact('kanban/avgleadtime');
-     	
-		$object->addReport( array ( 
+		$object->addReport( array (
 	        'name' => 'avgleadtime',
 			'title' => text('kanban19'),
 			'category' => FUNC_AREA_MANAGEMENT,
-		    'query' => 'chartdata=hide&chartlegend=hide&aggregator=AVG&group=FinishDate&aggby=LifecycleDuration&state='.
-		        join(',',getFactory()->getObject('Request')->getTerminalStates()).'&infosections=none',
+		    'query' => 'type=all&priority=all&chartdata=hide&chartlegend=hide&aggregator=AVG&group=FinishDate&aggby=LifecycleDuration&state='.
+		        join(',',getFactory()->getObject('Request')->getTerminalStates()).'&infosections=none&modifiedafter=last-month',
 	        'type' => 'chart',
 			'description' => $module_it->get('Description'),
 	        'module' => $module_it->getId() 
@@ -45,8 +43,7 @@ class ReportsKanbanBuilder extends ReportsBuilder
      	if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) return;
 
      	$module_it = getFactory()->getObject('Module')->getExact('kanban/requests');
-     	
-		$object->addReport( array ( 
+		$object->addReport( array (
             'name' => 'kanbanboard',
 			'title' => text('kanban17'),
 			'description' => $module_it->get('Description'),

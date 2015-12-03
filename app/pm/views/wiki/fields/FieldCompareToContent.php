@@ -18,21 +18,21 @@ class FieldCompareToContent extends FieldStatic
 	function draw()
 	{
 		$editor = WikiEditorBuilder::build($this->page_it->get('ContentEditor'));
-		
+
 		echo '<div class="reset wysiwyg">';
 		
 			$parser = $editor->getComparerParser();
 
 	 		$diff = html_diff(
  						$this->compare_to_page_it->getId() > 0
- 							? IteratorBase::wintoutf8($parser->parse($this->compare_to_page_it->getHtmlDecoded('Content')))
+ 							? $parser->parse($this->compare_to_page_it->getHtmlDecoded('Content'))
  							: "", 
-	 					IteratorBase::wintoutf8($parser->parse($this->page_it->getHtmlDecoded('Content')))
+	 					$parser->parse($this->page_it->getHtmlDecoded('Content'))
 			);
-			
+
 	 		if ( strpos($diff, "diff-html-") !== false )
 	 		{
-	 			echo IteratorBase::utf8towin( $diff );  
+	 			echo $diff;
 	 		}
 	 		else
 	 		{

@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include "ObjectRegistrySQL.php";
 include "predicates/FilterPredicate.php";
@@ -744,7 +746,7 @@ class StoredObjectDB extends Object
 
 		$sql = " SELECT ".join($outer_columns, ',').", ".join($agg_columns, ',').
 			   "   FROM (SELECT ".$inner_select.
-			   "		   FROM ".$this->getRegistry()->getQueryClause()." t, (SELECT @row_num:=0) foo " .
+			   "		   FROM ".$this->getRegistryDefault()->getQueryClause()." t, (SELECT @row_num:=0) foo " .
 			   "          WHERE 1 = 1 ".$this->getVpdPredicate().$this->getFilterPredicate().
 			   ($sort_clause != '' ? " ORDER BY ".$sort_clause : "").
 			   "		) t ".
@@ -761,24 +763,27 @@ class StoredObjectDB extends Object
 
 		$aggs = $this->aggregate_objects;
 		$aggregate = $aggs[count($this->aggregate_objects) - 1];
-		 
-		foreach( $predicates as $filter )
-		{
-			$agg_predicate .= $filter->getPredicate();
-		}
 
-		foreach( $this->getFilters() as $filter )
-		{
-		    $filter_sql = $filter->getPredicate();
+        foreach( $predicates as $filter )
+        {
+            if ( $filter instanceof FilterModifiedAfterPredicate || $filter instanceof FilterModifiedBeforePredicate ) {
+                $filter->setAlias('h');
+                $agg_predicate .= $filter->getPredicate();
+            }
+        }
+        foreach( $this->getFilters() as $filter )
+        {
+			if ( $filter instanceof FilterModifiedAfterPredicate || $filter instanceof FilterModifiedBeforePredicate ) continue;
 
-			if ( strpos($filter_sql, $aggregate->getColumn().' ') !== false )
-    		{
-    		    $object_predicate .= str_replace( $aggregate->getColumn(), 'h.AttributeValue', $filter_sql );
-    		}
-		    
-			$object_predicate .= $filter_sql;
-		}
-		
+            $filter->setAlias('t');
+            $filter_sql = $filter->getPredicate();
+
+            if ( strpos($filter_sql, $aggregate->getColumn().' ') !== false ) {
+                $object_predicate .= str_replace( $aggregate->getColumn(), 'h.AttributeValue', $filter_sql );
+            }
+            $object_predicate .= $filter_sql;
+        }
+
 		if ( $object_predicate != '' )
 		{
 		    $sql = " SELECT UNIX_TIMESTAMP(FROM_DAYS(TO_DAYS(t.RecordCreated))) DayDate, " .
@@ -788,8 +793,9 @@ class StoredObjectDB extends Object
 				   "           FROM ".$this->getEntityRefName()." t," .
 				   " 	    		cms_EntityCluster h ".
 				   "  		  WHERE 1 = 1 ".
-									$this->getVpdPredicate('h').$this->getVpdPredicate('t').
+									$this->getVpdPredicate('t').
 									$agg_predicate.$object_predicate.
+                   "    		AND h.VPD = t.VPD " .
 				   "    		AND h.ObjectClass = '".get_class($this)."' " .
 				   "    		AND h.ObjectAttribute = '".$aggregate->getAttribute()."'" .
 				   "    		AND h.ObjectIds LIKE CONCAT('%,',t.".$this->getEntityRefName()."Id,',%') ".
@@ -798,19 +804,21 @@ class StoredObjectDB extends Object
 		}
 		else
 		{
-		    $sql = " SELECT UNIX_TIMESTAMP(FROM_DAYS(TO_DAYS(t.RecordCreated))) DayDate, " .
+            $sql = " SELECT UNIX_TIMESTAMP(FROM_DAYS(TO_DAYS(t.RecordCreated))) DayDate, " .
 				   "		".$aggregate->getColumn().", " .
 				   " 		SUM(t.TotalCount) ".$aggregate->getAggregateAlias().
 				   "   FROM (SELECT h.RecordCreated, h.RecordModified, ".
 				   "                h.TotalCount, h.AttributeValue ".$aggregate->getAttribute().
 				   "           FROM cms_EntityCluster h ".
-				   "  		  WHERE 1 = 1 ".$this->getVpdPredicate('h').$agg_predicate.
+				   "  		  WHERE 1 = 1 ".$agg_predicate.
 				   "    		AND h.ObjectClass = '".get_class($this)."' " .
 				   "    		AND h.ObjectAttribute = '".$aggregate->getAttribute()."' ".
 				   " 		) t ".
 				   "  GROUP BY 1, 2";
 		}
-
+        if ( $this->registry->getLimit() > 0 ) {
+            $sql .= " LIMIT ".$this->registry->getLimit();
+        }
 		return $this->createSQLIterator( $sql );
 	}
 
@@ -1480,7 +1488,7 @@ class StoredObjectDB extends Object
 		$this->registry->setFilters($empty);
 	}
 	
-	function & getFilters()
+	function getFilters()
 	{
 		return $this->registry->getFilters();
 	}
@@ -1635,18 +1643,6 @@ class StoredObjectDB extends Object
 
 	public function __sleep()
 	{
-		unset($this->registry);
-		$this->registry = null;
-	}
-	
-	public function __destruct()
-	{
-		unset($this->registry);
-		$this->registry = null;
-	}
-	
-	public function __wakeup()
-	{
-		$this->registry = null;
+		throw new Exception('Unable serialize StoredObjectDB');
 	}
 }

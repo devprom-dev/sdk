@@ -6,13 +6,16 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
 {
     public function build( PageSettingSet & $settings )
     {
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        $feature = getFactory()->getObject('Feature');
         
         $setting = new PageListSetting('FunctionList');
         $setting->setVisibleColumns( 
-        		array(
-        			'UID', 'Caption', 'Progress', 'Workload', 'StartDate', 'DeliveryDate', 'Requirement', 'Request'
-        		)
+        	array_merge(
+                array( 'UID', 'Caption', 'Progress', 'Workload', 'StartDate', 'DeliveryDate', 'Request' ),
+                array_filter($feature->getAttributesByGroup('trace'), function($value) use ($feature) {
+                    return true;
+                })
+            )
         );
         $feature_levels = getFactory()->getObject('FeatureType')->getRegistry()->Count(
         	array ( new FilterVpdPredicate() )
@@ -23,7 +26,7 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
         $setting = new PageTableSetting('FunctionTable');
 		$setting->setFilters(
 				array (
-						'state', 'tag', 'type', 'importance'
+						'state', 'tag', 'type', 'importance', 'parent'
 				)
         );
         $settings->add( $setting );
@@ -34,22 +37,6 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
         			'UID', 'Caption', 'Workload', 'StartDate', 'DeliveryDate'
         		)
         );
-        $settings->add( $setting );
-        
-        // traces report
-        $object = getFactory()->getObject('Feature');
-        $setting = new ReportSetting('featurestrace');
- 	    $visible = array_merge( 
- 	    		array(
-                    'UID',
-                    'Caption',
-                    'Issues'
- 	    		),
-                array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
-                    return true;
-                })
-		);
-        $setting->setVisibleColumns($visible);
         $settings->add( $setting );
     }
 }

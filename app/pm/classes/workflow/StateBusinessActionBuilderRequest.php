@@ -11,6 +11,7 @@ include "actions/RequestBusinessActionResolveDuplicates.php";
 include "actions/RequestBusinessActionGetInWorkDuplicates.php";
 include "actions/RequestBusinessActionResolveImplemented.php";
 include "actions/RequestBusinessActionGetInWorkImplementation.php";
+include "actions/RequestBusinessActionMoveImplementedNextState.php";
 
 class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
 {
@@ -32,5 +33,6 @@ class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
  		$set->registerRule( new RequestBusinessActionGetInWorkImplementation() );
  		$set->registerRule( new RequestBusinessActionResolveDuplicates() );
  		$set->registerRule( new RequestBusinessActionGetInWorkDuplicates() );
+		$set->registerRule( new RequestBusinessActionMoveImplementedNextState() );
     }
 }

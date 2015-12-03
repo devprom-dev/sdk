@@ -4,6 +4,7 @@ include_once "classes/widgets/ModuleBuilderPermissions.php";
 include_once "classes/TransitionMetadataPermissionsBuilder.php";
 include_once "classes/widgets/FunctionalAreaMenuPermissionsSettingsBuilder.php";
 include_once "classes/TaskTypeMetadataPermissionsBuilder.php";
+include_once "classes/events/ClearObjectAccessEvent.php";
 
 class permissionsPM extends PluginPMBase
 {
@@ -16,7 +17,8 @@ class permissionsPM extends PluginPMBase
 				new TaskTypeMetadataPermissionsBuilder(),
 				new PortfolioMyProjectsBuilder(),
 				new ModuleBuilderPermissions(),
-				new FunctionalAreaMenuPermissionsSettingsBuilder()
+				new FunctionalAreaMenuPermissionsSettingsBuilder(),
+				new ClearObjectAccessEvent()
 		);
 	}
 	
@@ -31,15 +33,17 @@ class permissionsPM extends PluginPMBase
  					'title' => text('permissions3'),
  					'description' => text(1817),
  					'AccessEntityReferenceName' => 'pm_AccessRight',
- 					'AccessType' => ACCESS_MODIFY
+ 					'AccessType' => ACCESS_MODIFY,
+					'area' => FunctionalAreaMenuSettingsBuilder::AREA_UID
  				),
  			'participants' => 
  				array(
  					'includes' => array( 'permissions/views/ParticipantPage.php' ),
  					'classname' => 'ParticipantPage',
  					'title' => text('permissions5'),
- 					'description' => text(1815),
- 					'AccessEntityReferenceName' => 'pm_Participant'
+ 					'AccessEntityReferenceName' => 'pm_Participant',
+					'AccessType' => ACCESS_MODIFY,
+					'area' => FunctionalAreaMenuSettingsBuilder::AREA_UID
  				)
 		);
  	}

@@ -88,9 +88,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		$items = array();
 
 		$items[] = $report->getExact('features-chart')->buildMenuItem();
-		
 		$items[] = $report->getExact('activitiesreport')->buildMenuItem();
-		
 		$items['all'] = $module->getExact('project-reports')->buildMenuItem(FUNC_AREA_MANAGEMENT);
 		
 		$menus['reports'] = array (

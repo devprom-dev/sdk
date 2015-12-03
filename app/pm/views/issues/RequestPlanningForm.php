@@ -41,11 +41,8 @@ class RequestPlanningForm extends PMPageForm
 
 	function getTransitionAttributes()
 	{
-		$attributes = array('Caption', 'Priority', 'Estimation');
+		$attributes = array('Caption', 'Priority', 'Estimation', 'Description');
 		
-		if ( $this->getFieldValue('Description') != '' ) {
-		    $attributes[] = 'Description';
-		}
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() ) {
 			$attributes[] = 'Release';
 		}
@@ -89,7 +86,7 @@ class RequestPlanningForm extends PMPageForm
 	function getDefaultValue( $attr )
 	{
 		$value = parent::getDefaultValue( $attr );
-		
+
 		switch( $attr )
 		{
 		    case 'Release':
@@ -108,31 +105,19 @@ class RequestPlanningForm extends PMPageForm
         
     	switch ( $name )
     	{
-			case 'Caption':
-			
-			    if ( $_REQUEST['Transition'] > 0 )
-			    {
-			        $field->setReadonly( true );
-			    }
-			
-			    return $field;
-			
 			case 'Description':
-			
-			    if ( is_a($field, 'FieldText') )
-			    {
+			    if ( is_a($field, 'FieldText') ) {
 			        $field->setRows( 6 );
 			    }
-			
-			    if ( $_REQUEST['Transition'] > 0 )
-			    {
-			        $field->setReadonly( true );
-			    }
-			
 			    return $field;
     			     
     		default:
     			return parent::createField( $name );
     	}
     }
+
+	function getHint()
+	{
+		return '';
+	}
 }

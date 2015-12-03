@@ -115,11 +115,10 @@ class AttachmentController extends Controller
     protected function checkUserIsAuthorized(Issue $issue)
     {
     	$issue = $this->getIssueService()->getIssueById($issue->getId());
-
-        if ($issue->getAuthorEmail() == $this->getUser()->getEmail()) return;
+        if ($issue->getCustomer()->getEmail() == $this->getUser()->getEmail()) return;
         
         $service = $this->container->get('user_service');
-        if ( $service->isCollegues($issue->getAuthorEmail(), $this->getUser()->getEmail()) ) return;
+        if ( $service->isCollegues($issue->getCustomer()->getEmail(), $this->getUser()->getEmail()) ) return;
 
         throw new HttpException(403);
     }

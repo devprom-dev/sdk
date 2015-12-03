@@ -25,6 +25,11 @@ class StateBase extends MetaobjectCacheable
  		
  		$this->addAttributeGroup('ReferenceName', 'system');
  		$this->addAttributeGroup('ObjectClass', 'system');
+
+		foreach( array('Description','OrderNum','ReferenceName') as $attribute ) {
+			$this->addAttributeGroup($attribute, 'additional');
+			$this->setAttributeRequired($attribute, false);
+		}
  	}
  	
  	function createIterator() 

@@ -17,11 +17,7 @@ class WikiHistoryTable extends ProjectLogTable
 	
 	function getWikiPageIt()
 	{
-		if ( !is_object($this->page_it) )
-		{
-			$this->page_it = parent::buildObjectIt();
-		}
-		
+		if ( !is_object($this->page_it) ) $this->getObjectIt();
 		return $this->page_it;
 	}
 	
@@ -37,7 +33,6 @@ class WikiHistoryTable extends ProjectLogTable
 						array (new WikiRootTransitiveFilter($object_it->getId()))
 				);
 		}
-		
 		return $object_it;
 	}
 	
@@ -68,9 +63,15 @@ class WikiHistoryTable extends ProjectLogTable
 	
 	function getFilterPredicates()
 	{
-		return array_filter( parent::getFilterPredicates(), function($predicate) {
-				return !$predicate instanceof ChangeLogVisibilityFilter; 
-		});
+		$object_it = $this->getWikiPageIt();
+		if ( $object_it->get('ParentPage') == '' ) return parent::getFilterPredicates();
+
+		return array_filter(
+				parent::getFilterPredicates(),
+				function($predicate) {
+					return !$predicate instanceof ChangeLogVisibilityFilter;
+				}
+		);
 	}
 	
 	function getActions()

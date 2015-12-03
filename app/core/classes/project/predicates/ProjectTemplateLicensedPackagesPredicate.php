@@ -37,8 +37,8 @@ class ProjectTemplateLicensedPackagesPredicate extends FilterPredicate
 				$templates[] = $template;
 			}
 		}
-		if ( count($templates) < 1 ) return " AND 1 = 2 ";
-
- 		return " AND t.FileName NOT IN ('".join("','",$templates)."') ";
+ 		return count($templates) < 1
+				? " AND 1 = 1 "
+				: " AND t.FileName NOT IN ('".join("','",$templates)."') ";
  	}
 }

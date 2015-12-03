@@ -19,11 +19,6 @@ class ProjectWelcomeTable extends CoPageTable
     							$this->buildTiles(),
     					'solutions' => 
     							$this->buildSolutions(),
-    					'javascript_skip' => 
-    							$method->getJSCall( 
-					    				array('setting' => $skip_setting_name, 'value' => 'off'), 
-					    				"function() {} "
-					    		),
     					'custom_template_exists' =>
     							getFactory()->getObject('ProjectTemplate')->getRegistry()->Count(
     									array (new FilterAttributePredicate('ProductEdition', 'none'))
@@ -98,20 +93,15 @@ class ProjectWelcomeTable extends CoPageTable
     					'url' => 'http://devprom.ru/features/%D0%A0%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BF%D0%BE-%D0%BE%D1%80%D0%B3%D0%B0%D0%BD%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D0%B8-%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B8-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%BD%D1%8B%D1%85-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%BE%D0%B2?lookingforsolution'
     			),
     			array (
-    					'name' => text('co36'),
-    					'description' => text('co37'),
-    					'url' => 'http://devprom.ru/features/%D0%90%D1%83%D1%82%D1%81%D0%BE%D1%80%D1%81%D0%B8%D0%BD%D0%B3-%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B8-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%BD%D0%BE%D0%B3%D0%BE-%D0%BE%D0%B1%D0%B5%D1%81%D0%BF%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D1%8F?lookingforsolution'
+    					'name' => text('co48'),
+    					'description' => text('co49'),
+    					'url' => 'http://devprom.ru/features/Внедрение-типовых-решений?lookingforsolution'
     			),
-    			array (
-    					'name' => text('co38'),
-    					'description' => text('co39'),
-    					'url' => 'http://devprom.ru/features/%D0%9A%D0%BE%D0%BE%D1%80%D0%B4%D0%B8%D0%BD%D0%B0%D1%86%D0%B8%D1%8F-%D0%B2%D1%81%D0%B5%D1%85-%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D1%81%D1%82%D0%B5%D0%B9-%D0%BF%D0%BE-%D0%BA%D0%BE%D0%BC%D0%BF%D0%B0%D0%BD%D0%B8%D0%B8?lookingforsolution'
-    			),
-    			array (
-    					'name' => text('co40'),
-    					'description' => text('co41'),
-    					'url' => 'http://devprom.ru/features/%D0%9F%D0%BB%D0%B0%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5-%D0%B1%D0%B0%D0%BB%D0%B0%D0%BD%D1%81%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BA%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D1%8C-%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%BE%D0%B2?lookingforsolution'
-    			),
+				array (
+						'name' => text('co36'),
+						'description' => text('co37'),
+						'url' => 'http://devprom.ru/features/%D0%90%D1%83%D1%82%D1%81%D0%BE%D1%80%D1%81%D0%B8%D0%BD%D0%B3-%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B8-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%BD%D0%BE%D0%B3%D0%BE-%D0%BE%D0%B1%D0%B5%D1%81%D0%BF%D0%B5%D1%87%D0%B5%D0%BD%D0%B8%D1%8F?lookingforsolution'
+				),
     			array (
     					'name' => text('co46'),
     					'description' => text('co47'),
@@ -128,10 +118,10 @@ class ProjectWelcomeTable extends CoPageTable
     					'url' => 'http://devprom.ru/features/%D0%A0%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%B0-%D0%BF%D0%BE%D0%B4-%D0%BD%D0%B5%D1%81%D0%BA%D0%BE%D0%BB%D1%8C%D0%BA%D0%BE-%D0%BF%D0%BB%D0%B0%D1%82%D1%84%D0%BE%D1%80%D0%BC?lookingforsolution'
     			),
     			array (
-    					'name' => text('co48'),
-    					'description' => text('co49'),
-    					'url' => 'http://devprom.ru/features/%D0%9E%D1%80%D0%B3%D0%B0%D0%BD%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%8B-%D0%BE%D1%82%D0%B4%D0%B5%D0%BB%D0%B0?lookingforsolution'
-    			)
+						'name' => text('co38'),
+						'description' => text('co39'),
+						'url' => 'http://devprom.ru/features/%D0%9A%D0%BE%D0%BE%D1%80%D0%B4%D0%B8%D0%BD%D0%B0%D1%86%D0%B8%D1%8F-%D0%B2%D1%81%D0%B5%D1%85-%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D0%BE%D1%81%D1%82%D0%B5%D0%B9-%D0%BF%D0%BE-%D0%BA%D0%BE%D0%BC%D0%BF%D0%B0%D0%BD%D0%B8%D0%B8?lookingforsolution'
+				)
     	);
     }
 }

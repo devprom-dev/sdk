@@ -26,7 +26,7 @@ foreach ( $states as $key => $state )
 	<a class="with-tooltip dropdown-toggle" data-toggle="dropdown" href="#" data-placement="right" data-original-title="" data-content="" info="<?=$state['url']?>">
 	<?php } ?>
 		
-		<? if ( $state['photo_id'] != '' ) { ?>
+		<? if ( $state['photo_id'] != '' && $state['class'] != 'label-success' ) { ?>
 		
 			<? echo $view->render('core/UserPicture.php', array ( 'id' => $state['photo_id'], 'class' => 'user-mini', 'image' => 'userpics-mini', 'title' => $state['photo_title'] )); ?>
 		

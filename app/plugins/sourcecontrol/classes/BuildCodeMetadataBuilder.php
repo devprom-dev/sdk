@@ -15,6 +15,8 @@ class BuildCodeMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		$metadata->addAttribute('Commits', 'REF_SubversionRevisionId', text('sourcecontrol45'), true, false, text('sourcecontrol46'));
 		$metadata->addAttributeGroup('Commits', 'trace');
+		$metadata->addAttribute('Repository', 'REF_SubversionId', text('sourcecontrol50'), false, false);
+		$metadata->addAttributeGroup('Repository', 'trace');
 		$metadata->addPersister( new BuildCodeRevisionPersister() );
     }
 }

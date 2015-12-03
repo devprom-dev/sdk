@@ -51,4 +51,9 @@ class AuthenticationHttpBasicFactory extends AuthenticationFactory
  		
 		return $user_it;
  	}
+
+	function validateUser( $user_it )
+	{
+		return $user_it->get('Password') != '';
+	}
 }

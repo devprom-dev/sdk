@@ -15,6 +15,7 @@ class ProjectTemplateSectionsRegistryBuilderLatest extends ProjectTemplateSectio
     {
  		$items = array (
  			getFactory()->getObject('RequestTag'),
+			getFactory()->getObject('RequestLink'),
  			getFactory()->getObject('WikiTag'),
  			getFactory()->getObject('TaskTraceTask'),
  			getFactory()->getObject('RequestTraceMilestone'),

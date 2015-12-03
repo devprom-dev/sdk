@@ -74,7 +74,24 @@ class ReportTable extends PMPageTable
 	{
 		return array();
 	}
-	
+
+	function getBulkActions()
+	{
+		$action = new BulkAction(getFactory()->getObject('PMCustomReport'));
+		$action_it = $action->getAll();
+        $url = '?formonly=true';
+		$action_url = "javascript:processBulk('".$action_it->get('Caption')."','".$url.'&operation='.$action_it->getId()."');";
+		return array (
+			'delete' => array(
+                array (
+                    'uid' => 'bulk-delete',
+                    'name' => $action_it->get('Caption'),
+                    'url' => $action_url
+                )
+			)
+		);
+	}
+
     function drawScripts()
 	{
 	    parent::drawScripts();

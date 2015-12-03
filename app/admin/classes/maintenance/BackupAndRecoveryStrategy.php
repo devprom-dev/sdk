@@ -20,7 +20,9 @@ class BackupAndRecoveryStrategy
  	
  	function getBackupName() 
  	{
- 		if($this->backup_name == '') $this->backup_name = 'backup.'.strftime('%Y.%m.%d.%H.%M', time()).'.'.md5(time()); 
+ 		if($this->backup_name == '') {
+			$this->backup_name = 'backup.'.strftime('%Y.%m.%d.%H.%M', time()).'.'.EnvironmentSettings::getServerName().'.'.md5(INSTALLATIONU_UID.time());
+		}
  		return $this->backup_name;
  	}
 

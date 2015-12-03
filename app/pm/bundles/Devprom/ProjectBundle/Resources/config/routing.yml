@@ -48,6 +48,28 @@ invite_process:
     defaults: { _controller: ProjectBundle:Invitation:formProcess }
     methods:  POST
 
+metrics:
+    path:  /pm/{project}/metrics/{report}
+    defaults: { _controller: ProjectBundle:Metrics:page }
+    methods:  GET
+
+attachments:
+    path:  /pm/{project}/attachments
+    defaults: { _controller: ProjectBundle:Attachments:page }
+    methods:  GET
+
+api_key:
+    path:  /pm/{project}/api/key
+    defaults: { _controller: ProjectBundle:Apikey:full }
+
+api_readonly:
+    path:  /pm/{project}/api/key-readonly
+    defaults: { _controller: ProjectBundle:Apikey:readonly }
+
+api_writeonly:
+    path:  /pm/{project}/api/key-writeonly
+    defaults: { _controller: ProjectBundle:ApiKey:writeonly }
+
 pages:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\PagesController
@@ -102,4 +124,13 @@ rest_attachment:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\AttachmentController
     prefix:   /pm/{project}/api/v1/{class}/{object}
-    
+
+rest_comment:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\CommentController
+    prefix:   /pm/{project}/api/v1/{class}/{object}
+
+rest_hour:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\HourController
+    prefix:   /pm/{project}/api/v1/{class}/{object}

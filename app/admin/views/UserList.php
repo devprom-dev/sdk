@@ -25,7 +25,6 @@ class UserList extends PageList
 	    switch( $attr )
 	    {
     	    case 'Photo':
-    	    	
     	    	echo $this->getTable()->getView()->render('core/UserPicture.php', array (
 					'id' => $object_it->getId(), 
 					'class' => 
@@ -33,17 +32,21 @@ class UserList extends PageList
 					'image' => 'userpics-middle',
 					'title' => $object_it->getDisplayName()
 				));
-		        
 		        break;
 		        
     	    case 'Caption':
-    	        
     	        echo $object_it->getRefLink();
-    	        
     	        break;
-    	        
+
+			case 'LastActivityDate':
+				if ( $object_it->get($attr) == '' ) {
+					echo text(2060);
+				} else {
+					parent::drawCell( $object_it, $attr );
+				}
+				break;
+
     	    default:
-    	        
     	        parent::drawCell( $object_it, $attr );
 	    }
 	}

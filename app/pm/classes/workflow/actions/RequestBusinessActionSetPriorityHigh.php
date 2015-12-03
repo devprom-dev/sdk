@@ -1,8 +1,7 @@
 <?php
+include_once "BusinessActionWorkflow.php";
 
-include_once "BusinessAction.php";
-
-class RequestBusinessActionSetPriorityHigh extends BusinessAction
+class RequestBusinessActionSetPriorityHigh extends BusinessActionWorkflow
 {
  	function getId()
  	{

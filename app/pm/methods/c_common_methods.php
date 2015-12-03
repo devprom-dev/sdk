@@ -1,24 +1,16 @@
 <?php
-
-include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewCommonWebMethod extends FilterWebMethod
- {
- }
-  
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewCustomDictionaryWebMethod extends ViewCommonWebMethod
- {
+class ViewCustomDictionaryWebMethod extends FilterWebMethod
+{
  	var $object, $attribute;
  	
- 	function ViewCustomDictionaryWebMethod( $object = null, $attribute = '' )
+ 	function __construct( $object = null, $attribute = '' )
  	{
  		$this->object = $object;
  		$this->attribute = $attribute;
  		
- 		parent::FilterWebMethod();
+ 		parent::__construct();
  	}
  	
  	function getCaption()
@@ -28,18 +20,13 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 
  	function getValues()
  	{
- 		global $model_factory;
- 		
  		$values = array();
  		$lov = array();
- 		
+
  		$values['all'] = translate('Все');
- 		$values[] = '';
- 		
- 		$attr = $model_factory->getObject('pm_CustomAttribute');
- 		
- 		$attribute_it = $attr->getByEntity( $this->object );
- 		
+        $values['none'] = translate('<нет значения>');
+
+ 		$attribute_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->object );
  		while( !$attribute_it->end() )
  		{
  			if ( $attribute_it->get('ReferenceName') == $this->attribute )
@@ -51,14 +38,10 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  			$attribute_it->moveNext();
  		}
  		
- 		foreach( $lov as $key => $value )
- 		{
+ 		foreach( $lov as $key => $value ) {
  			$values[' '.$key] = $value;
  		}
- 		
- 		$values[] = '';
- 		$values['none'] = text(2030);
- 		
+
   		return $values;
 	}
 	
@@ -84,11 +67,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 		return $this->attribute;
 	}
 	
-	function getType()
-	{
-		return 'singlevalue';
-	}
-	
 	function drawSelect()
 	{
 		parent::drawSelect( 
@@ -107,5 +85,3 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  		parent::execute_request();
  	}
  }
-
-?>

@@ -502,21 +502,10 @@ class IteratorBase
 
 	function getFileUrl() 
 	{
-		global $model_factory;
-		
-		if ( $this->get('VPD') != "" && $this->object->isVpdEnabled() )
-		{
- 			$sql = " SELECT p.CodeName FROM pm_Project p, pm_PublicInfo i" .
- 				   "  WHERE i.Project = p.pm_ProjectId" .
- 				   "    AND i.VPD = '".$this->get('VPD')."'";
- 			
- 			$project = $model_factory->getObject('pm_Project');
- 			$it = $project->createSQLIterator( $sql );
- 			
-			return '/file/'.$this->object->getClassName().'/'.$it->get('CodeName').'/'.$this->getId();
+		if ( $this->get('ProjectCodeName') != "" ) {
+			return '/file/'.$this->object->getClassName().'/'.$this->get('ProjectCodeName').'/'.$this->getId();
 		}
-		else
-		{
+		else {
 			return '/file/'.$this->object->getClassName().'/'.$this->getId();
 		}
 	}
@@ -767,7 +756,7 @@ class IteratorBase
 			
 			for( $i = 0; $i < count($keys); $i++ )
 			{
-				$value = html_entity_decode(addslashes($this->get_native($keys[$i])), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
+				$value = $this->getHtmlDecoded($keys[$i]);
 
 				$encoding = '';
 				

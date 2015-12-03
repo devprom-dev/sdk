@@ -46,7 +46,8 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  			getFactory()->getObject('pm_ProjectStage'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
-			getFactory()->getObject('TaskTypeStage'), 				
+			getFactory()->getObject('TaskTypeStage'),
+			getFactory()->getObject('TaskTypeState'),
 	 		$methodology
 	 	);
 	 	
@@ -138,10 +139,7 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  			getFactory()->getObject('Iteration'),
  			getFactory()->getObject('Milestone'),
  			getFactory()->getObject('PMBlogPost'),
- 			getFactory()->getObject('Tag'),
- 			getFactory()->getObject('Feature'),
- 			getFactory()->getObject('Request'),
-			getFactory()->getObject('Task')
+ 			getFactory()->getObject('Tag')
  		);
  		
 		$registry->addSection($registry, 'ProjectArtefacts', $items, true, text(1834));

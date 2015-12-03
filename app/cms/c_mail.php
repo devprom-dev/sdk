@@ -1,6 +1,8 @@
 <?php
 
 use \InlineStyle\InlineStyle;
+include_once SERVER_ROOT_PATH."ext/html/html2text.php";
+include_once SERVER_ROOT_PATH.'core/classes/html/HtmlImageConverter.php';
 
 class MailBox
 {
@@ -11,7 +13,8 @@ class MailBox
 		$this->to_address = array();
 	}
 	
-	function appendAddress( $address ) {
+	function appendAddress( $address )
+	{
 		array_push($this->to_address, $address);
 	}
 	
@@ -24,19 +27,47 @@ class MailBox
 		return $this->body;
 	}
 
-	function setSubject( $subject )	{
+	function setSubject( $subject )
+	{
 		$this->subject = $this->encode($subject);
 	}
 
-	function setFrom( $from_address )	{
-		$this->from_address = $from_address;
+	function setFrom( $from_address, $override = true )
+	{
+        if ( is_array($from_address) ) {
+			$address = $this->quoteEmail(array_pop(array_values($from_address)).' <'.array_pop(array_keys($from_address)).'>');
+
+        } else {
+			$address = $this->quoteEmail($from_address);
+        }
+		if ( $override && defined('EMAIL_SENDER_TYPE') && EMAIL_SENDER_TYPE == 'admin' )
+		{
+			$address = $this->addressUpdateEmail($address, self::getSystemEmail());
+		}
+		$this->from_address = $address;
 	}
 	
 	function setFromUser( $user_it )
 	{
-		$this->from_address = $this->quoteEmail($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
+		$this->setFrom($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
 	}
-	
+
+	static function getSystemEmail()
+	{
+		$settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
+		if ( $settings_it->get('AdminEmail') != '' )
+		{
+			$email_match = array();
+			if ( preg_match('/<([^>]+)>/', $settings_it->getHtmlDecoded('AdminEmail'), $email_match) ) {
+				return $email_match[1];
+			}
+			else {
+				return $settings_it->getHtmlDecoded('AdminEmail');
+			}
+		}
+		return '';
+	}
+
  	private function quoteEmail( $email )
  	{
  		if ( strpos($email,",") !== false ) {
@@ -79,19 +110,19 @@ class MailBox
 		return $queue_id;	
 	}
 	
-	function getContentType() {
+	static function getContentType() {
 		return "Content-Type: text/plain; charset=".APP_ENCODING;
 	}
 	
-	function encode( $text ) {
+	static function encode( $text ) {
 		return '=?'.APP_ENCODING.'?B?'.base64_encode($text).'?=';
 	}
 	
-	function encodeAddress( $address ) {
+	static function encodeAddress( $address ) {
 		list($display, $email) = preg_split('/</',$address);
 		
 		if($email != '') {
-			return $this->encode($display).'<'.$email;
+			return self::encode($display).'<'.$email;
 		}
 		else {
 			return $address;
@@ -104,83 +135,91 @@ class MailBox
 	}
  }
  
- class HtmlMailBox extends MailBox
- {
- 	private $boundary = '';
+class HtmlMailBox extends MailBox
+{
+    const boundary = '5446b4677d9475446b481adbb3';
+    const boundary_related = 'e61f23g3cba093338679c352faf8';
  	
- 	function __construct()
- 	{
- 		parent::__construct();
- 		
- 		$this->boundary = "devprom-5446b4677d9475446b481adbb3";
- 	}
- 	
-	function getContentType() 
-	{
-		return "MIME-Version: 1.0\r\n".
-			   "Content-Type: multipart/alternative; boundary=\"".$this->boundary."\"";
+	static function getContentType() {
+		return "MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary=".self::boundary_related."\r\n";
 	}
 	
-	function encode( $text ) {
-	    return '=?UTF-8?B?'.base64_encode(IteratorBase::wintoutf8($text)).'?=';
+	static function encode( $text ) {
+	    return '=?UTF-8?B?'.base64_encode($text).'?=';
 	}
 
 	function setBody( $body ) 
 	{
-		$this->body = "\r\n\r\n--" . $this->boundary . "\r\n";
-		$this->body .= "Content-Type: text/plain; charset=\"utf-8\"\r\n\r\n";
-				
-		$texted = strip_tags(html_entity_decode($body, ENT_COMPAT | ENT_HTML401, APP_ENCODING));
+        // convert linked images into embedded ones
+        $body = preg_replace_callback( '/<img\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceImageCallback'), $body);
+
+		// process embedded images
+		$images_body = '';
+		$images_count = 0;
+		$boundary = self::boundary_related;
+
+		$body = preg_replace_callback('/src="data:([^;]+);base64,([^"]+)"/i',
+			function($matches) use (&$images_body, &$images_count, $boundary)
+			{
+				list($type, $ext) = preg_split('/\//', $matches[1]);
+				$image_name = 'image'.($images_count+1).'.'.$ext;
+				$image_id = 'ii_'.(round(microtime(true) * 1000) + $images_count);
+
+				$images_body .= "--".$boundary."\r\n";
+				$images_body .= "Content-Type: ".$matches[1]."; name=\"".$image_name."\"\r\n";
+				$images_body .= "Content-Disposition: inline; filename=\"".$image_name."\"\r\n";
+				$images_body .= "Content-Transfer-Encoding: base64\r\n";
+				$images_body .= "Content-ID: <".$image_id.">\r\n\r\n";
+				$images_body .= $matches[2]."\r\n";
+
+				$images_count++;
+				return 'alt="'.text(2074).' '.($images_count).'" src="cid:'.$image_id.'"';
+			}, $body);
+
+        $this->body .= "--".self::boundary_related."\r\n";
+        $this->body .= "Content-Type: multipart/alternative; boundary=".self::boundary."\r\n\r\n";
+        $this->body .= "--".self::boundary."\r\n";
+        $this->body .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $this->body .= "Content-Transfer-Encoding: base64\r\n\r\n";
+
+		// process texted part
+        $html2text = new \html2text($body);
+		$texted = $html2text->get_text();
 		
 		$texted = preg_replace('/\s{2,}/', PHP_EOL, $texted);
 		$texted = preg_replace('/[\r\n]{2,}/', PHP_EOL.PHP_EOL, $texted);
 		
-		$this->body .= IteratorBase::wintoutf8($texted);
-		
-		$this->body .= "\r\n\r\n--" . $this->boundary . "\r\n";
-		$this->body .= "Content-Type: text/html; charset=\"utf-8\"\r\n\r\n";
-		
-		$this->body .= $this->textWrap($this->applyStyles(
+		$this->body .= base64_encode($texted)."\r\n";
+
+		// process html part
+        $this->body .= "--" . self::boundary . "\r\n";
+        $this->body .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $this->body .= "Content-Transfer-Encoding: base64\r\n\r\n";
+		$this->body .= base64_encode($this->applyStyles(
 		    '<html>'.PHP_EOL.
-		    '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>'.PHP_EOL.
-		    '<body>'.IteratorBase::wintoutf8(preg_replace('/[\r\n]+/', '', $body)).'</body>'.PHP_EOL.
+		    '<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head>'.PHP_EOL.
+		    '<body>'.preg_replace('/[\r\n]+/', '', $body).'</body>'.PHP_EOL.
 		    '</html>'
 		));
+		$this->body .= "\r\n--" . self::boundary . "--\r\n";
 
-		$this->body .= "\r\n\r\n--" . $this->boundary . "--";
-	}
+        $this->body .= $images_body;
+        $this->body .= "--".self::boundary_related."--";
+
+        $this->body = wordwrap($this->body, 76, PHP_EOL, true);
+    }
 	
 	function applyStyles( $html )
 	{
 	    $was_state = libxml_use_internal_errors(true);
 	    
 	    $htmldoc = new \InlineStyle\InlineStyle($html);
-	    
 	    $htmldoc->applyStylesheet(file_get_contents(SERVER_ROOT_PATH.'styles/legacy/style_email.css'));
-	    
         $html = $htmldoc->getHTML();
-        
-        libxml_clear_errors();
 
+        libxml_clear_errors();
         libxml_use_internal_errors($was_state);
-        
         return $html;
 	}
-	
- 	function textWrap($text) { 
-        $new_text = ''; 
-        $text_1 = explode('>',$text); 
-        $sizeof = sizeof($text_1); 
-        for ($i=0; $i<$sizeof; ++$i) { 
-            $text_2 = explode('<',$text_1[$i]); 
-            if (!empty($text_2[0])) { 
-                $new_text .= wordwrap($text_2[0], 255, PHP_EOL, true); 
-            } 
-            if (!empty($text_2[1])) { 
-                $new_text .= '<' . wordwrap($text_2[1], 255, PHP_EOL, true) . '>';    
-            } 
-        } 
-        return $new_text; 
-    } 	
- }
+}
  

@@ -14,38 +14,51 @@ class ReportSpentTimeList extends PMStaticPageList
 		
 		$plugins = getSession()->getPluginsManager();
  		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
-		foreach( $plugins_interceptors as $plugin )
-		{
+		foreach( $plugins_interceptors as $plugin ) {
 		    $plugin->interceptMethodListGetPredicates( $this, $predicates, $this->getFilterValues() );
 		}
 		
-		foreach ( array_merge($predicates, $this->getTable()->getFilterPredicates()) as $predicate )
-		{
+		foreach ( array_merge($predicates, $this->getTable()->getFilterPredicates()) as $predicate ) {
 			$object->addFilter( $predicate );
 		}
 		
 		$this->group = $this->getGroup();
-		if ( !in_array($this->group, array('', 'none')) )
-		{
+		if ( !in_array($this->group, array('', 'none')) ) {
 		    $object->setGroup($this->group);
 		}
 
-		$it = $object->getAll();
+        $rows_object = $this->getRowsObject();
+        $attribute = $this->getGroup();
+
+        if ( !$object->IsReference($attribute) && $rows_object->IsReference($attribute) ) {
+            $object->addAttribute(
+                $attribute,
+                $rows_object->getAttributeDbType($attribute),
+                $rows_object->getAttributeUserName($attribute),
+                false
+            );
+        }
+
+        $it = $object->getAll();
 		$this->days_map = $it->getDaysMap();
-		
+
 		$this->setupColumns();
 	
 		$items = array_filter($it->fieldToArray('ItemId'), function( $value ) {
 		    return $value > 0;
 		});
 		
-		$rows_object = $this->getRowsObject();
-		$this->row_it = count($items) > 0 
+		$this->row_it = count($items) > 0
 			? $rows_object->getRegistry()->Query( array(new FilterInPredicate($items)) )
 			: $rows_object->getEmptyIterator();
-		
-		$this->report_group_it = $this->getGroupObject()->getAll();
-		
+
+        if ( $object->IsReference($this->getGroup()) ) {
+            $this->report_group_it = $object->getAttributeObject($this->getGroup())->getAll();
+        }
+        else {
+            $this->report_group_it = $rows_object->getEmptyIterator();
+        }
+
 		$it->moveFirst();
 		return $it;
 	}
@@ -67,29 +80,9 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 	}
 	
-	function getGroupObject()
-	{
-		if ( $this->group == '' ) return $this->getObject();
-		if ( !$this->getRowsObject()->IsReference($this->group) ) {
-			switch($this->group) {
-				case 'Project':
-					return getFactory()->getObject('Project');
-				case 'SystemUser':
-					return getFactory()->getObject('User');
-				default:
-					return $this->getObject();
-			}
-		}
-		return $this->getRowsObject()->getAttributeObject($this->group);
-	}
-	
 	function setupColumns()
 	{
-		if ( !is_array($this->days_map) )
-		{
-			return;
-		}
-		
+		if ( !is_array($this->days_map) ) return;
 		parent::setupColumns();
 	}
 	
@@ -127,14 +120,7 @@ class ReportSpentTimeList extends PMStaticPageList
     		}
 		}
 
-		$method = new ViewSpentTimeWebMethod();
-		
-		$method->setFilter( $this->getFiltersName() );
-		
-		$values = $method->getValues();
-		
-		$this->object->setAttributeCaption('Caption', $values[$method->getValue()]);
-		
+		$this->object->setAttributeCaption('Caption', $this->getRowsObject()->getDisplayName());
 		$this->object->addAttribute('Total', '', translate('Итого'), true);
 
 		return parent::getColumns();
@@ -147,25 +133,44 @@ class ReportSpentTimeList extends PMStaticPageList
 	function getGroupFields()
 	{
 		$rows_object = $this->getRowsObject();
+
+        $attributes = array();
+        $skip_attributes = array_merge(
+            $rows_object->getAttributesByGroup('system'),
+            $rows_object->getAttributesByGroup('trace'),
+            $rows_object->getAttributesByGroup('workflow')
+        );
+
 		if ( $rows_object instanceof Request )
 		{
-			$attributes = array();
-			$skip_attributes = array_merge(
-					$rows_object->getAttributesByGroup('system'),
-					$rows_object->getAttributesByGroup('trace'),
-					$rows_object->getAttributesByGroup('workflow')
-			);
 			foreach($rows_object->getAttributes() as $attribute => $info) {
-				if ( $attribute == 'Owner' ) continue;
+                if ( $attribute == 'Type' ) continue;
 				if ( $attribute == 'Attachment' ) continue;
 				if ( $attribute == 'Watchers' ) continue;
 				if ( !$rows_object->IsReference($attribute) ) continue;
 				if ( in_array($attribute, $skip_attributes) ) continue;
 				$attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
 			}
-			$attributes[] = 'SystemUser';
+            foreach( array('TypeBase') as $attribute ) {
+                $attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
+            }
 			return $attributes;
 		}
+        elseif ( $rows_object instanceof Task ) {
+            foreach($rows_object->getAttributes() as $attribute => $info) {
+                if ( $attribute == 'TaskType' ) continue;
+                if ( $attribute == 'ChangeRequest' ) continue;
+                if ( $attribute == 'Attachment' ) continue;
+                if ( $attribute == 'Watchers' ) continue;
+                if ( !$rows_object->IsReference($attribute) ) continue;
+                if ( in_array($attribute, $skip_attributes) ) continue;
+                $attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
+            }
+            foreach( array('TypeBase') as $attribute ) {
+                $attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
+            }
+            return $attributes;
+        }
 		else
 		{
 			return array('SystemUser', 'Project');
@@ -265,8 +270,6 @@ class ReportSpentTimeList extends PMStaticPageList
 	
 	function drawHeader( $column )
 	{
-		global $model_factory;
-		
 		if ( strpos($column, 'Day') !== false )
 		{
 		    if ( count($this->days_map) > 12 )
@@ -286,7 +289,8 @@ class ReportSpentTimeList extends PMStaticPageList
 
 	function drawGroupRow( $group, $object_it, $columns )
 	{
-		if ( $object_it->get('Group') < 1 ) return;
+        if ( $object_it->get('Group') == '' ) return;
+
 		foreach( $this->getObject()->getAttributes() as $attribute => $data )
 		{
 			if ( !in_array($attribute, array('Caption','Total')) && strpos($attribute, 'Day') === false ) continue;
@@ -298,11 +302,9 @@ class ReportSpentTimeList extends PMStaticPageList
 	
 	function drawCell( $object_it, $attr ) 
 	{
-		global $model_factory;
-		
-		if( $attr == 'Caption' ) 
+		if( $attr == 'Caption' )
 		{
-			if ( $object_it->get('Group') > 0 ) {
+			if ( $object_it->get('Group') != '' ) {
 					$this->report_group_it->moveToId($object_it->get('ItemId'));
 					echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">'; 
 						echo $this->report_group_it->getDisplayName();
@@ -330,7 +332,26 @@ class ReportSpentTimeList extends PMStaticPageList
 		else {
 			$hours = $object_it->get($attr);
 			if ( $hours > 0 ) {
-				echo $hours;
+				$comment_attr = preg_replace('/Day(\d+)/', 'Comment\\1', $attr);
+				$actions = array();
+				if ( is_array($object_it->get($comment_attr)) ) {
+					foreach ($object_it->get($comment_attr) as $task) {
+						if ($task['Text'] == '') continue;
+						$actions[] = array(
+							'url' => $this->getUidService()->getObjectUrl('T-' . $task['Task']),
+							'name' => 'T-' . $task['Task'] . ' ' . substr($task['Text'], 0, 120)
+						);
+					}
+				}
+				if ( count($actions) > 0 ) {
+					echo $this->getTable()->getView()->render('core/SpentTimeMenu.php', array (
+						'title' => $hours,
+						'items' => $actions
+					));
+				}
+				else {
+					echo $hours;
+				}
 			}
 			else {
 				echo '<span style="color:#dfdfdf;">0</span>';
@@ -356,11 +377,11 @@ class ReportSpentTimeList extends PMStaticPageList
 	
 	function IsNeedToDisplayRow($object_it)
 	{
-		return $object_it->get('Group') < 1 || in_array($this->group, array('','none'));
+		return $object_it->get('Group') == '' || in_array($this->group, array('','none'));
 	}
 
 	function getRowBackgroundColor( $object_it )
 	{
-		return $object_it->get('Group') > 0 ? '#F6F3FE' : 'white'; 
+		return $object_it->get('Group') != '' ? '#F6F3FE' : 'white';
 	}	
 }

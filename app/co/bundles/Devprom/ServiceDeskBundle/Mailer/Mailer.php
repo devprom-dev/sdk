@@ -30,18 +30,19 @@ class Mailer extends TwigSwiftMailer {
             'language' => $language
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress(), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
     }
 
-    public function sendIssueUpdatedMessage(Issue $issue, $changes, $toEmail, $language = 'ru') {
+    public function sendIssueUpdatedMessage(Issue $issue, $comment, $changes, $toEmail, $language = 'ru') {
         $template = 'DevpromServiceDeskBundle:Email:issue_updated.html.twig';
         $context = array(
             'issue' => $issue,
             'changes' => $changes,
-            'language' => $language
+            'language' => $language,
+            'comment' => $comment
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress(), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
     }
 
     public function sendIssueCommentedMessage(Issue $issue, $comment, $toEmail, $language = 'ru') {
@@ -52,7 +53,7 @@ class Mailer extends TwigSwiftMailer {
             'language' => $language
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress(), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
     }
 
     public function sendIssueResolvedMessage(Issue $issue, $comment, $toEmail, $language = 'ru', $version = '') {
@@ -64,18 +65,73 @@ class Mailer extends TwigSwiftMailer {
         	'version' => $version
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress(), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
     }
 
     /**
      * @return array
      */
-    public function getFromAddress()
+    public function getFromAddress( $vpd = '' )
     {
+        $supportEmail = $this->parameters['from_email']['default']['address'];
+
+        $emails = $this->getEntityManager()
+            ->getConnection()
+            ->query("SELECT p.VPD vpd, IF(rm.SenderAddress IS NOT NULL, rm.SenderAddress, IF(rm.EmailAddress IS NOT NULL, IF(rm.EmailAddress NOT LIKE '%%@%%', CONCAT(rm.EmailAddress, '@', rm.HostAddress), rm.EmailAddress), ' ')) email
+                       FROM co_RemoteMailbox rm, pm_Project p WHERE p.pm_ProjectId = rm.Project;")
+            ->fetchAll();
+
+        if ( count($emails) > 0 ) {
+            $supportEmail = $emails[0]['email'];
+        }
+
+        foreach( $emails as $email ) {
+            if ( $email['vpd'] == $vpd ) {
+                $supportEmail = $email['email'];
+                break;
+            }
+        }
+
         return array(
-            $this->parameters['from_email']['default']['address']
-            =>
-            $this->parameters['from_email']['default']['sender_name']);
+            $supportEmail => $this->parameters['from_email']['default']['sender_name']);
     }
 
+    protected function getEntityManager()
+    {
+        return $this->parameters['em'];
+    }
+
+    /**
+     * @param string $templateName
+     * @param array  $context
+     * @param string $fromEmail
+     * @param string $toEmail
+     */
+    protected function sendMessage($templateName, $context, $fromEmail, $toEmail)
+    {
+        $context = $this->twig->mergeGlobals($context);
+        $template = $this->twig->loadTemplate($templateName);
+
+        $mail = new \HtmlMailbox;
+        $mail->appendAddress($toEmail);
+        $mail->setBody($template->renderBlock('body_html', $context));
+        $mail->setSubject($template->renderBlock('subject', $context));
+        $mail->setFrom($this->normalizeEmailAddress($fromEmail), false);
+        $mail->send();
+   }
+
+    /**
+     * @param $supportEmail
+     * @return string
+     */
+    protected function normalizeEmailAddress($supportEmail)
+    {
+        if (!$supportEmail) {
+            return " ";
+        } else if (preg_match("/.+<(.+)>/", html_entity_decode($supportEmail), $matches)) {
+            return $matches[1];
+        }
+
+        return $supportEmail;
+    }
 }

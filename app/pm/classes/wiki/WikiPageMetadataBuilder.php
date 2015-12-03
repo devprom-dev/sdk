@@ -11,7 +11,9 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
     	$object = $metadata->getObject();
     	
 		$metadata->setAttributeType('ParentPage', 'REF_'.get_class($object).'Id');
-		
+		$metadata->addAttributeGroup('ParentPage', 'nonbulk');
+		$metadata->addAttributeGroup('Author', 'nonbulk');
+
 		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', translate('Документ'), false);
 		
     	$system_attributes = array( 
@@ -25,8 +27,7 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
 		        'ContentEditor'
 	    );
 		        
-		foreach( $system_attributes as $attribute )
-		{
+		foreach( $system_attributes as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
    }

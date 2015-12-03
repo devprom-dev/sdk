@@ -2,7 +2,7 @@
 
 include "BulkActionRegistry.php";
 
-class BulkAction extends Metaobject
+class BulkAction extends MetaobjectCacheable
 {
     function __construct( $object )
     {
@@ -14,6 +14,22 @@ class BulkAction extends Metaobject
     {
     	return $this->base_object;
     }
-	
+
+    function getVpds()
+    {
+        return array();
+    }
+
+    function getCacheKey( $getter, $class_name = '' )
+    {
+        return parent::getCacheKey( $getter, $class_name ).'-'.get_class($this->base_object);
+    }
+
+    function getCacheCategory()
+    {
+        // participant-wide cache
+        return getSession()->getCacheKey();
+    }
+
     private $base_object = null;
 }

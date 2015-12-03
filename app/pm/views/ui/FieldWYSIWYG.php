@@ -107,7 +107,7 @@ class FieldWYSIWYG extends Field
 	{
 		$editor = $this->getEditor();
 	    
-		echo '<div class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'">';
+		echo '<div class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" attributename="'.$this->getName().'">';
 		    echo $this->getText();
 		echo '</div>';
 	}

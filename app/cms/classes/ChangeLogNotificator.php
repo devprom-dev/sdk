@@ -105,11 +105,9 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		if( !$this->is_active($object_it) ) return;
 
 		$change_log = getFactory()->getObject('ObjectChangeLog');
-		
 		$change_log->setVpdContext( $object_it );
 		
 		$class_name = strtolower(get_class($object_it->object));
-		
 		$parms['Caption'] = html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING );
 		$parms['ObjectId'] = $object_it->getId();
 		$parms['ClassName'] = $class_name == 'metaobject' ? $object_it->object->getClassName() : $class_name;
@@ -124,7 +122,6 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$id = $change_log->add_parms($parms);
 		
 		$log_attribute = getFactory()->getObject('ObjectChangeLogAttribute');
-		
 		foreach( $this->modified_attributes as $attribute )
 		{
 			$log_attribute->add_parms(

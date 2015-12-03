@@ -115,39 +115,51 @@ div.board-item-fact a
     font-size: 0.9em;
 }
 
+.board-size-l .board_item_attributes {
+	font-size: 0.9em;
+}
 .board-size-l .bi-cap {
 	padding: 0;
 	height: 3.7em;
-	font-size: 0.9em;
 	line-height: 14px;
 }
 .board-size-l .title-on-card a.with-tooltip {
-	font-size: 0.9em;
 }
 .board-size-l .title-on-card img {
     display:none;
 }
 
+.board-size-m .board_item_attributes {
+	font-size: 0.87em;
+}
 .board-size-m .bi-cap {
     padding: 0;
     height: 2.1em;
-    font-size: 0.87em;
     line-height: 12px;
     margin-bottom: 3px;
 }
 .board-size-m .title-on-card a.with-tooltip {
-    font-size: 0.87em;
 }
 .board-size-m .title-on-card img {
 	display:none;
 }
+.board-size-m .board_item_body .label {
+	font-size: 10px;
+}
 
-.board-size-s .bi-cap {
+.board-size-s .board_item_attributes > div:not(.title-on-card) {
+	display: none;
+}
+.board-size-s .board_item_attributes > div.bi-cap {
     padding: 0;
     height: 2.1em;
-    font-size: 0.87em;
+	font-size: 0.87em;
     line-height: 12px;
     margin-bottom: 4px;
+	display: block;
+}
+.board-size-s .bi-cap + div {
+	display: none;
 }
 .board-size-s .title-on-card a.with-tooltip {
     font-size: 0.87em;
@@ -159,8 +171,8 @@ div.board-item-fact a
     display:none;
 }
 
-.board-size-xs .bi-cap {
-	display:none;
+.board-size-xs .board_item_attributes > div:not(.title-on-card) {
+	display: none;
 }
 .board-size-xs .item-footer {
     display: none;
@@ -170,6 +182,9 @@ div.board-item-fact a
 }
 .board-size-xs .title-on-card img {
     display:none;
+}
+.board-size-xs .title-on-card .right-on-card {
+	display:none;
 }
 
 .board-size-xl .date-attr {
@@ -189,6 +204,13 @@ div.board-item-fact a
 .board-size-xs .date-attr {
 	display:none;
 }
+.board-size-s .date-label {
+	display: none;
+}
+.board-size-xs .date-label {
+	display:none;
+}
+
 
 
 #board-slider {
@@ -196,4 +218,30 @@ div.board-item-fact a
 	width: 90px;
 	margin-top:17px;
 	margin-right:16px;
+}
+
+td.board-column {
+	border-bottom: none;
+}
+td.cell-add-btn:hover a {
+	display: inline-block;
+}
+td.cell-add-btn {
+	border-top: none;
+	height: 26px;
+	text-align: right;
+}
+td.cell-add-btn a {
+	display: none;
+	margin-right: 4px;
+}
+
+tr.row-cards:last-child td.board-column {
+	border-bottom: 1px solid #dddddd;
+}
+
+.board-header-up {
+	display:table-cell;
+	width:1%;
+	padding-left:2px;
 }

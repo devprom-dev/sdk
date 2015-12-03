@@ -5,7 +5,12 @@ class IssueActualAuthorRegistry extends ObjectRegistrySQL
 	function createSQLIterator( $sql )
 	{
 		$object = getFactory()->getObject('Request');
-		
+		$object->setPersisters(
+			array_filter( $object->getPersisters(), function($persister) {
+				return is_a($persister,'IssueAuthorPersister');
+			})
+		);
+
 		$aggregage = new AggregateBase( 'Author', 'Author', 'COUNT' );
 		$object->addAggregate( $aggregage );
 		$it = $object->getAggregated();

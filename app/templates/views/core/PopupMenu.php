@@ -1,1 +1,1 @@
-<?php echo $view->render('core/PopupMenuBody.php', array( 'items' => $items)); ?>
+<?php echo $view->render('core/PopupMenuBody.php', array( 'items' => $items, 'uid' => $uid)); ?>

@@ -25,7 +25,7 @@ class BlockUserWebMethod extends UserWebMethod
 	{
 		if ( $this->hasAccess() )
 		{
-			$list = new Metaobject('cms_BlackList');
+			$list = getFactory()->getObject('BlackList');
 			$list_it = $list->getByRef('SystemUser',
 			$parms['user']);
 				
@@ -61,8 +61,9 @@ class UnBlockUserWebMethod extends UserWebMethod
 	{
 		if ( !$this->hasAccess() ) return;
 
-		$list = new Metaobject('cms_BlackList');
+		$list = getFactory()->getObject('BlackList');
 		$list_it = $list->getByRef('SystemUser', $parms['user']);
+
 		while( !$list_it->end() ) {
 			$list->delete($list_it->getId());
 			$list_it->moveNext();

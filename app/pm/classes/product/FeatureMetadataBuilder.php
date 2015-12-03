@@ -15,8 +15,6 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeDescription('StartDate', text(1837));
 	    $metadata->setAttributeDescription('DeliveryDate', text(1838));
     	
-	    $metadata->addAttributeGroup('Request', 'trace');
-    	
  		$metadata->addPersister( new FeatureTitlePersister() );
  		$metadata->addPersister( new FeatureHierarchyPersister() );
  		
@@ -29,6 +27,8 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
 			$metadata->addAttributeGroup($attribute, 'tooltip');
 			$metadata->addAttributeGroup($attribute, 'permissions');
 		}
+
+		$metadata->setAttributeOrderNum('Workload', 132);
 
     	foreach ( array('Workload', 'Estimation', 'EstimationLeft') as $attribute )
 		{

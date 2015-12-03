@@ -47,9 +47,10 @@ class RequestForm extends PMPageForm
 		$this->getObject()->setAttributeVisible('State', !$this->getEditMode());
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
     	
-    	if ( getFactory()->getObject('RequestType')->getAll()->count() < 1 ) {
+    	if ( getFactory()->getObject('RequestType')->getAll()->count() < 1 || $_REQUEST['Type'] != '' ) {
     		$this->getObject()->setAttributeVisible('Type', false);
     	}
+
     	parent::extendModel();
     }
     
@@ -81,20 +82,22 @@ class RequestForm extends PMPageForm
 	{
 		$object = $this->getObject();
 		$object_it = $object->getEmptyIterator();
-		
- 		$method = new RequestCreateTaskWebMethod($object_it);
- 		if ( $method->hasAccess() )
- 		{
- 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
- 			$this->method_create_task = $method;
- 		}
- 		
-		$method = new ObjectCreateNewWebMethod($object);
-		if ( $method->hasAccess() )
-		{
- 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-			$this->method_duplicate = $method;
+
+		$referenceName = '';
+		if ( $_REQUEST['Type'] != '' ) {
+			$referenceName = getFactory()->getObject('RequestType')->getExact($_REQUEST['Type'])->get('ReferenceName');
 		}
+		if ( $referenceName == '' ) {
+			$object->addAttributeGroup('SubmittedVersion', 'additional');
+		}
+
+ 		$method = new RequestCreateTaskWebMethod($object_it);
+		if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+		$this->method_create_task = $method;
+
+		$method = new ObjectCreateNewWebMethod($object);
+		if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+		$this->method_duplicate = $method;
 
 		$method = new MoveToProjectWebMethod($object_it);
 		if ( $method->hasAccess() )
@@ -102,14 +105,15 @@ class RequestForm extends PMPageForm
  			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
 			$this->method_move = $method;
 		}
-		
-		$method = new WatchWebMethod($object_it);
-		if ( $method->hasAccess() )
-		{
- 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-			$this->method_watch = $method;
+
+		if ( $this->IsFormDisplayed() ) {
+			$method = new WatchWebMethod($object_it);
+			if ( $method->hasAccess() )
+			{
+				$this->method_watch = $method;
+			}
 		}
-		
+
 	 	$method = new SpendTimeWebMethod($object_it);
  		if ( $method->hasAccess() )
  		{
@@ -118,24 +122,29 @@ class RequestForm extends PMPageForm
  		}
 		
 		$this->new_template_url = getFactory()->getObject('RequestTemplate')->getPageNameObject().'&ObjectId=%object-id%&items=%object-id%';
-		
-		if ( getSession()->getProjectIt()->get('LinkedProject') != '' )
+
+		$projects = array_filter(
+				preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject')),
+				function ($value) { return $value != ''; }
+		);
+		if ( count($projects) > 0 && count($projects) < 7 )
 		{
 			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-					array (
-							new FilterInPredicate(preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject'))),
-							new SortAttributeClause('Caption')
-					)
+				array ( new FilterInPredicate($projects) )
 			);
-	
 			while( !$linked_it->end() )
 			{
-				$this->target_projects[$linked_it->getId()] = $linked_it->getDisplayName();
+				$this->target_projects[$linked_it->getId()] = array (
+					'title' => $linked_it->getDisplayName(),
+					'vpd' => $linked_it->get('VPD')
+				);
 				$linked_it->moveNext();
 			}
-			if ( !getSession()->getProjectIt()->IsPortfolio() )
-			{
-				$this->target_projects[getSession()->getProjectIt()->getId()] = getSession()->getProjectIt()->getDisplayName();
+			if ( !getSession()->getProjectIt()->IsPortfolio() ) {
+				$this->target_projects[getSession()->getProjectIt()->getId()] = array (
+					'title' => getSession()->getProjectIt()->getDisplayName(),
+					'vpd' => getSession()->getProjectIt()->get('VPD')
+				);
 			}
 		}
 		
@@ -147,18 +156,6 @@ class RequestForm extends PMPageForm
 		return array('Caption');
 	}
 	
-	function getNewObjectAttributes()
-	{
-		$attributes = array('Caption', 'Description', 'Priority', 'Function', 'Tasks', 'Attachment');
-		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) {
-			$attributes[] = 'Owner';
-		}
-		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' ) {
-			$attributes[] = 'OrderNum';
-		}
-		return $attributes;
-	}
-
 	function createFieldObject( $name )
 	{
 		global $_REQUEST, $model_factory;
@@ -209,12 +206,7 @@ class RequestForm extends PMPageForm
 
 			case 'Fact':
 				$field = new FieldSpentTimeRequest( $this->object_it );
-				 
-				if ( !$this->getEditMode() )
-				{
-					$field->setShortMode();
-				}
-				
+				if ( !$this->getEditMode() ) $field->setShortMode();
 				return $field;
 				
 			case 'Estimation':
@@ -307,7 +299,7 @@ class RequestForm extends PMPageForm
 		}
 		elseif ( in_array($name, array('SubmittedVersion', 'ClosedInVersion')) )
 		{
-		    $field = new FieldAutoCompleteObject( $model_factory->getObject('Version') );
+		    $field = new FieldAutoCompleteObject( getFactory()->getObject('Version') );
 		    $field->setAppendable();
 		    return $field;
 		}
@@ -399,8 +391,6 @@ class RequestForm extends PMPageForm
    	
     function getFieldValue( $attr )
     {
-        global $model_factory;
-        
         if ( is_object($this->template_it) && $this->template_it->get($attr) != '' )
         {
         	return $this->template_it->get($attr);
@@ -426,38 +416,12 @@ class RequestForm extends PMPageForm
     		    {
     		        return '';
     		    }
-    		    
-    		case 'SubmittedVersion':
-
-    			if ( !is_object($this->getObjectIt()) )
-    			{
-    				$test_id = $this->getFieldValue('TestExecution');
-    				
-    				if ( $test_id > 0 )
-    				{
-    					$test_it = getFactory()->getObject('pm_Test')->getExact($test_id);
-    					
-						if ( $test_it->get('Build') > 0 )
-						{
-							return $test_it->getRef('Build')->getFullNumber(); 
-						}
-						else if ( $test_it->get('Release') > 0 )
-						{
-							return $test_it->getRef('Release')->getDisplayName(); 
-						}
-    				}
-    			}
-    			
 				return parent::getFieldValue( $attr );
     			
     		default:
-
     			if ( $_REQUEST['Question'] > 0 )
         		{
-        			$question = $model_factory->getObject('pm_Question');
-        			
-        			$question_it = $question->getExact($_REQUEST['Question']);
-        			
+        			$question_it = getFactory()->getObject('pm_Question')->getExact($_REQUEST['Question']);
         			switch ( $attr )
         			{
         				case 'Description':
@@ -491,16 +455,6 @@ class RequestForm extends PMPageForm
 		if ( !is_object($object_it) ) return $actions;
 
 		if ( $actions[count($actions) - 1]['name'] != '' ) array_push($actions, array( '' ) );
-		
-		if ( is_object($this->method_create_task) )
-		{
-			$this->method_create_task->setRequestIt($object_it);
-			
-			$actions[] = array ( 
-				'name' => $this->method_create_task->getCaption(), 
-				'url' => $this->method_create_task->getJSCall() 
-			);
-		}
 
 		if ( $this->IsFormDisplayed() && is_object($this->method_duplicate) )
 		{
@@ -514,16 +468,6 @@ class RequestForm extends PMPageForm
 				);
 			}
 		}
-		
-		if ( is_object($this->method_duplicate) )
-		{
-			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array( '' );
-	
-			$actions[] = array( 
-					'name' => text(1519),
-					'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url)
-			);
-		}		
 		
 		return $actions;
 	}
@@ -566,32 +510,34 @@ class RequestForm extends PMPageForm
 			if ( count($this->target_projects) > 0 )
 			{
 				$items = array();
-				
-				foreach( $this->target_projects as $id => $title )
+
+				foreach( $this->target_projects as $id => $data )
 				{
 					if ( $id == $object_it->get('Project') ) continue;
+					$this->method_duplicate->setVpd($data['vpd']);
 					$items[] = array (
-							'name' => $title,
+							'name' => $data['title'],
 							'url' => $this->method_duplicate->getJSCall(
 											array_merge($parms, array('Project'=>$id))
-									 )							
+									 )
 					);
 				}
-				
+
 				$items[] = array();
+				$this->method_duplicate->setVpd($object_it->get('VPD'));
 				$items[] = array (
 						'name' => translate('Выбрать'),
-						'url' => $this->method_duplicate->getJSCall($parms)							
+						'url' => $this->method_duplicate->getJSCall($parms)
 				);
-				
-				$actions[] = array( 
+
+				$actions[] = array(
 					'name' => text(867),
 					'items' => $items
 				);
 			}
 			else
 			{
-				$actions[] = array( 
+				$actions[] = array(
 						'name' => translate('Реализовать'),
 						'url' => $this->method_duplicate->getJSCall($parms)
 				);
@@ -601,65 +547,91 @@ class RequestForm extends PMPageForm
 		if ( is_object($this->method_move) )
 		{
 			$this->method_move->setRequestIt($object_it);
-			
+
 			if ( count($this->target_projects) > 0 )
 			{
 				$items = array();
-				
-				foreach( $this->target_projects as $id => $title )
+
+				foreach( $this->target_projects as $id => $data )
 				{
 					if ( $id == $object_it->get('Project') ) continue;
 					$items[] = array (
-							'name' => $title,
-							'url' => $this->method_move->getJsCall(array('Project'=>$id))							
+							'name' => $data['title'],
+							'url' => $this->method_move->getJsCall(array('Project'=>$id))
 					);
 				}
-				
+
 				$items[] = array();
 				$items[] = array (
 						'name' => translate('Выбрать'),
-						'url' => $this->method_move->getJsCall()							
+						'url' => $this->method_move->getJsCall()
 				);
-				
-				$actions[] = array( 
+
+				$actions[] = array(
 					'name' => $this->method_move->getCaption(),
 					'items' => $items
 				);
 			}
 			else
 			{
-				$actions[] = array( 
+				$actions[] = array(
 						'name' => $this->method_move->getCaption(),
 						'url' => $this->method_move->getJsCall()
 				);
 			}
 		}
-		
-		if ( $this->IsFormDisplayed() )
-		{
-			$method = new ObjectCreateNewWebMethod($this->getObject());
-			$actions[] = array( 
-					'name' => text(2025),
-					'url' => $method->getJSCall(
-								array('Request' => $object_it->getId(), 'Project' => $object_it->get('Project'))
-							 )
-			);
-		}
 
 		if ( is_object($this->method_spend_time) )
 		{
 			$this->method_spend_time->setAnchorIt($object_it);
-			
+
 			$actions[] = array();
-			$actions[] = array ( 
-				'name' => $this->method_spend_time->getCaption(), 
-				'url' => $this->method_spend_time->getJSCall() 
+			$actions[] = array (
+				'name' => $this->method_spend_time->getCaption(),
+				'url' => $this->method_spend_time->getJSCall()
 			);
 		}
 
 		return $actions;
 	}
-	
+
+	function getNewRelatedActions()
+	{
+		$actions = array();
+		$object_it = $this->getObjectIt();
+
+		if ( is_object($this->method_create_task) ) {
+			$this->method_create_task->setRequestIt($object_it);
+			$actions[] = array (
+				'name' => $this->method_create_task->getCaption(),
+				'url' => $this->method_create_task->getJSCall(),
+				'uid' => 'new-task'
+			);
+		}
+
+		if ( $this->IsFormDisplayed() )
+		{
+			$method = new ObjectCreateNewWebMethod($this->getObject());
+			$actions[] = array(
+				'name' => text(2025),
+				'url' => $method->getJSCall(
+					array('Request' => $object_it->getId(), 'Project' => $object_it->get('Project'))
+				)
+			);
+		}
+
+		if ( $this->IsFormDisplayed() && is_object($this->method_duplicate) )
+		{
+			$actions[] = array(
+				'name' => text(1519),
+				'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url),
+				'uid' => 'as-template'
+			);
+		}
+
+		return $actions;
+	}
+
    	function getDiscriminatorField()
  	{
  		return $this->getEditMode() ? 'Type' : '';
@@ -693,16 +665,12 @@ class RequestForm extends PMPageForm
 	function getRenderParms()
 	{
 		$object_it = $this->getObjectIt();
-		
-		$refs_actions = array();
-		
-		if ( is_object($object_it) )
-		{
-    		$comments_count = getFactory()->getObject('Comment')->getCount($object_it);
-		}
-		
+
 		$parms = array (
-			'comments_count' => $comments_count,
+			'comments_count' =>
+					is_object($object_it)
+							? getFactory()->getObject('Comment')->getCount($object_it)
+							: '',
 			'refs_actions' => 
 					is_object($object_it) 
 							? $this->buildReferencesActions( $object_it ) 
@@ -779,4 +747,20 @@ class RequestForm extends PMPageForm
 			 parent::render( $view, $parms );
 		}
 	}
+
+	function getSourceIt()
+	{
+		if ( $_REQUEST['Requirement'] != '' )
+		{
+			$req = getFactory()->getObject('Requirement');
+			if ( $_REQUEST['Baseline'] != '' ) {
+				$req->addPersister(
+					new SnapshotItemValuePersister($_REQUEST['Baseline'])
+				);
+			}
+			return array($req->getExact($_REQUEST['Requirement']), 'Content');
+		}
+		return parent::getSourceIt();
+	}
+
 }

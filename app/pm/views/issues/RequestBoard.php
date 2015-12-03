@@ -14,7 +14,6 @@ class RequestBoard extends PMPageBoard
  	private $priority_actions = array();
  	private $task_transitions_array = array();
  	private $task_target_states_array = array();
- 	private $method_create_task = null;
  	private $method_comment = null;
  	private $visible_column = array();
  	private $spent_time_title = '';
@@ -22,7 +21,6 @@ class RequestBoard extends PMPageBoard
  	private $task_uid_service = null;
  	private $estimation_actions = array();
  	private $estimation_title = '';
-    private $estimation_strategy = null;
  	private $method_spend_time = null;
  	
  	function __construct( $object )
@@ -32,8 +30,7 @@ class RequestBoard extends PMPageBoard
  		parent::__construct( $object );
  		
  		$this->task_uid_service = new ObjectUid('', getFactory()->getObject('Task'));
-        $this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
- 		
+
 		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
  	}
  	
@@ -61,13 +58,6 @@ class RequestBoard extends PMPageBoard
  			$state_it->moveNext();
  		}
  		
- 		$method = new RequestCreateTaskWebMethod( $object->getEmptyIterator() );
- 		if ( $method->hasAccess() )
- 		{
- 			$method->setRedirectUrl('donothing');
- 			$this->method_create_task = $method;
- 		}
-
  		$method = new CommentWebMethod( $object->getEmptyIterator() );
  		if ( $method->hasAccess() )
  		{
@@ -217,21 +207,26 @@ class RequestBoard extends PMPageBoard
 	function getGroup() 
 	{
 		$group = parent::getGroup();
-		if ( $group == 'OwnerUser' ) return 'Owner'; 
+		if ( $group == 'OwnerUser' ) return 'Owner';
+		if ( $group == 'Type' ) return 'TypeBase';
 		return $group;
 	}
-	
+
+	function getGroupNullable( $field_name )
+	{
+		return $field_name == 'TypeBase' ? false : parent::getGroupNullable( $field_name );
+	}
+
 	function getGroupIt()
 	{
+		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupIt();
+
 		$values = $this->getFilterValues();
-		if ( $this->getTable()->hasCrossProjectFilter() ) {
-			$vpd_filter = new FilterVpdPredicate();
-		} else {
-			$vpd_filter = new FilterBaseVpdPredicate();
-		}
-		switch($this->getGroup())
+		$vpd_filter = new FilterVpdPredicate();
+
+		switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
 		{
-			case 'PlannedRelease':
+			case 'pm_Version':
 				$object = getFactory()->getObject('Release');
 				$ids = array_merge(
 						$object->getRegistry()->Query(
@@ -246,7 +241,7 @@ class RequestBoard extends PMPageBoard
 						parent::getGroupIt()->idsToArray()
 				);
 				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
-			case 'Iterations':
+			case 'pm_Release':
 				return getFactory()->getObject('Iteration')->getRegistry()->Query(
 						array (
 								new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
@@ -256,7 +251,7 @@ class RequestBoard extends PMPageBoard
 										? new FilterInPredicate(preg_split('/,/', $values['iterations'])) : null
 						)
 					);
-			case 'Function':
+			case 'pm_Function':
 				return getFactory()->getObject('Feature')->getRegistry()->Query(
 						array (
 								new SortAttributeClause('Importance'),
@@ -265,15 +260,20 @@ class RequestBoard extends PMPageBoard
 										? new FilterInPredicate(preg_split('/,/', $values['function'])) : null
 						)
 					);
-			case 'Owner':
-				return getFactory()->getObject('User')->getRegistry()->Query(
-						array (
-								new UserWorkerPredicate(),
-								new SortAttributeClause('Caption'),
-								$values['owner'] != '' 
-										? new FilterInPredicate(preg_split('/,/', $values['owner'])) : null
-						)
-					);
+			case 'cms_User':
+                if ( $this->getGroup() == 'Author' ) {
+                    return parent::getGroupIt();
+                }
+				else {
+                    return getFactory()->getObject('User')->getRegistry()->Query(
+                        array (
+                            new UserWorkerPredicate(),
+                            new SortAttributeClause('Caption'),
+                            $values['owner'] != ''
+                                ? new FilterInPredicate(preg_split('/,/', $values['owner'])) : null
+                        )
+                    );
+                }
 			case 'Priority':
 				return getFactory()->getObject('Priority')->getRegistry()->Query(
 						array (
@@ -299,7 +299,6 @@ class RequestBoard extends PMPageBoard
  	function getColumnVisibility( $attribute )
  	{
  		if ( $attribute == 'Basement' ) return array_sum($this->visible_column) > 0;
- 		
  		return parent::getColumnVisibility( $attribute );
  	}
  	
@@ -343,56 +342,16 @@ class RequestBoard extends PMPageBoard
 	{
 		switch ( $group_field )
 		{
-			case 'Function':
-				echo '<div class="feature-group" modifiable="1" object="'.$object_it->get($group_field).'">';
-					$title = $this->getTable()->getFeatureTitle($this->getGroupIt(), $object_it, $this->getUIDService());
-					if ( $title == '' ) {
-						parent::drawGroup($group_field, $object_it);
-					}
-					else {
-						echo $title;
-					}
-				echo '</div>';
-				break;
-
 			case 'Estimation':
 				echo $object_it->object->getAttributeUserName($group_field).': '.$object_it->get($group_field);
 				break;
 
-			case 'PlannedRelease':
-                parent::drawGroup($group_field, $object_it);
-                echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
-
-                $release_it = $this->getGroupIt();
-                $release_it->moveToId($object_it->get($group_field));
-
-                if ( $release_it->getId() > 0 ) {
-                    $estimation = $release_it->getTotalWorkload();
-                    list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
-                    echo sprintf(
-                        text(2053),
-                        $release_it->getDateFormatShort('StartDate'),
-                        $release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
-                        $this->estimation_strategy->getDimensionText(round($maximum, 1)),
-                        $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
-                        $this->estimation_strategy->getDimensionText(round($estimation, 1))
-                    );
-                }
-				break;
-
-			case 'Project':
-				parent::drawGroup($group_field, $object_it);
-				$project_it = $this->getGroupIt();
-				$project_it->moveToId($object_it->get($group_field));
-				echo $this->getTable()->getView()->render('pm/RowGroupActions.php', array (
-						'actions' => $this->getTable()->getNewCardActions($project_it)
-					));
-				break;
-				
 			default:
 				parent::drawGroup($group_field, $object_it);
 				break;
 		}
+
+		$this->getTable()->drawGroup($group_field, $object_it);
 	}
 
 	function drawRefCell( $ref_it, $object_it, $attr )
@@ -410,22 +369,14 @@ class RequestBoard extends PMPageBoard
 				
 			case 'Attachment':
 			case 'Tasks':
+			case 'OpenTasks':
+			case 'Tags':
 				break;
 				
 			case 'Author':
-				if ( $object_it->get('Author') == '' )
-				{
-					$value = $object_it->get('ExternalAuthor');
-				}
-				else
-				{
-					$value = $ref_it->getDisplayName();
-				}
-					
-				echo '<div style="overflow:hidden;height:1.7em;word-break:break-all" title="'.$value.'">';
-					echo $value;
+				echo '<div style="overflow:hidden;height:1.7em;word-break:break-all">';
+					PageList::drawRefCell( $ref_it, $object_it, $attr );
 				echo '</div>';
-				
 				break;
 				
 			default:
@@ -467,23 +418,48 @@ class RequestBoard extends PMPageBoard
 						}
 					echo '</div>';
 				echo '</div>';
-				
 				break;
-				
+
+            case 'DeadlinesDate':
+                $deadline_alert =
+                    in_array($object_it->get('State'), $this->non_terminal_states)
+                    && $object_it->get('DueDays') < 3 && $object_it->get('DeadlinesDate') != '';
+
+                if ( $deadline_alert ) {
+                    echo '<span class="date-label label '.($object_it->get('DueDays') < 1 ? 'label-important' : 'label-warning').'">';
+                        parent::drawCell($object_it, $attr);
+                    echo '</span>';
+                } else {
+                    parent::drawCell($object_it, $attr);
+                }
+                break;
+
 			case 'Basement':
-   				
-				echo '<div class="item-footer">';
+				$deadline_alert =
+					in_array($object_it->get('State'), $this->non_terminal_states)
+					&& $object_it->get('DueDays') < 3 && $object_it->get('DeadlinesDate') != '';
+
+                if ( !$this->visible_column['DeadlinesDate'] && $deadline_alert )
+                {
+                    echo '<div style="padding-bottom:4px;">';
+                        echo '<span class="label '.($object_it->get('DueDays') < 1 ? 'label-important' : 'label-warning').'">';
+                            echo '<img src="/images/date.png"> ';
+                            echo $object_it->getDateFormatShort('DeadlinesDate');
+                        echo '</span>';
+                    echo '</div>';
+                }
+
+                echo '<div class="item-footer">';
 					echo '<div style="display:table-cell;text-align:left;">';
-						if ( $this->visible_column['Tasks'] && is_array($this->tasks_array[$object_it->getId()]) )
+						if ( ($this->visible_column['Tasks'] || $this->visible_column['OpenTasks']) && is_array($this->tasks_array[$object_it->getId()]) )
 						{
 							$states = array();
 	
 						 	foreach( $this->tasks_array[$object_it->getId()] as $task_it ) 
 					 		{
-					 			if ( in_array($task_it->get('State'), $this->task_terminal_states) ) continue;
+					 			if ( $this->visible_column['OpenTasks'] && in_array($task_it->get('State'), $this->task_terminal_states) ) continue;
 	
 					 			$info = $this->task_uid_service->getUidInfo($task_it);
-					 			
 					 			$states[] = array (
 					 					'id' => $task_it->getId(),
 					 					'name' => $task_it->get('TaskTypeShortName'),
@@ -515,8 +491,16 @@ class RequestBoard extends PMPageBoard
 								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
 							echo '</div>';
 						}
+						if ( $this->visible_column['Tags'] )
+						{
+                            $html = array();
+                            foreach( preg_split('/,/', $object_it->get('TagNames')) as $name ) {
+                                $html[] = '<span class="label label-info">'.$name.'</span>';
+                            }
+                            echo join(' ',$html);
+				        }
 					echo '</div>';
-						
+
 					echo '<div style="display:table-cell;text-align:right;">';
 						if ( $this->visible_column['Estimation'] )
 						{
@@ -543,7 +527,7 @@ class RequestBoard extends PMPageBoard
 							$this->method_spend_time->setAnchorIt($object_it);
 							
 							echo '<div class="board-item-fact" title="'.$this->spent_time_title.'">';
-								echo '<a href="'.$this->method_spend_time->getJSCall().'">'.$object_it->get('Fact').'</a>';
+								echo '<a href="'.$this->method_spend_time->getJSCall().'">'.number_format($object_it->get('Fact'), 1).'</a>';
 		    				echo '</div>';
 						}
 	
@@ -577,14 +561,25 @@ class RequestBoard extends PMPageBoard
  		$this->buildRelatedDataCache();
 		
 		$parms = parent::getRenderParms();
-		
-		foreach( array('Tasks', 'Attachment', 'RecentComment', 'OrderNum', 'Estimation', 'RecentComment', 'Fact') as $column )
+
+		$attributes = array(
+			'Tasks',
+			'OpenTasks',
+			'Attachment',
+			'RecentComment',
+			'OrderNum',
+			'Estimation',
+			'RecentComment',
+			'Fact',
+			'DeadlinesDate',
+			'Tags'
+		);
+		foreach( $attributes as $column )
 		{
 			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
-			
 			$this->visible_column[$column] = $this->getColumnVisibility($column);
 		}
-		
+
 		return $parms; 
 	}
 	
@@ -634,18 +629,7 @@ class RequestBoard extends PMPageBoard
 					array_slice($actions, $pos)
 			); 
 		}
-		
-		if ( is_object($this->method_create_task) )
-		{
-			$this->method_create_task->setRequestIt($object_it);
-			
-			$actions[] = array();
-			$actions[] = array ( 
-				'name' => $this->method_create_task->getCaption(), 
-				'url' => $this->method_create_task->getJSCall() 
-			);
-		}
-				
+
 		if ( is_object($this->method_comment) )
 		{
 			$this->method_comment->setAnchorIt($object_it);
@@ -711,16 +695,6 @@ class RequestBoard extends PMPageBoard
 	{
 	    // priority driven coloring
 	    $style = ';background:'.$this->priority_frame->getColor($object_it->get('Priority')).';';
-	    
-	    // deadlines driven coloring
-	    $deadline_alert = 
-	    		in_array($object_it->get('State'), $this->non_terminal_states) 
-	    		&& $object_it->get('DueDays') < 1 && $object_it->get('DeadlinesDate') != '';
-	    
-	    if ($deadline_alert) {
-	    	$style .= 'border: 2px solid red;';
-	    }
-	    					
 		return parent::getItemStyle( $object_it ).$style;
 	}
  	

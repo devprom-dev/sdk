@@ -1,6 +1,6 @@
 <?php
-
 include "FieldTaskTypeStages.php";
+include "FieldTaskTypeStates.php";
 
 class TaskTypeForm extends PMPageForm
 {
@@ -20,6 +20,7 @@ class TaskTypeForm extends PMPageForm
  			case 'ReferenceName':
  			case 'ParentTaskType':
  			case 'Stages':
+			case 'States':
  				return true;
 
  			default:
@@ -29,18 +30,18 @@ class TaskTypeForm extends PMPageForm
 
 	function createFieldObject( $attr_name ) 
 	{
-		global $model_factory;
-
 		$this->object_it = $this->getObjectIt();
-				
 		switch( $attr_name )
 		{
 			case 'ParentTaskType': 
-				return new FieldDictionary( $model_factory->getObject('TaskTypeBase') );
+				return new FieldDictionary( getFactory()->getObject('TaskTypeBase') );
 
 			case 'Stages':
 				return new FieldTaskTypeStages($this->object_it);
-								
+
+			case 'States':
+				return new FieldTaskTypeStates($this->object_it);
+
 			default:
 				return parent::createFieldObject( $attr_name );
 		}
@@ -50,9 +51,6 @@ class TaskTypeForm extends PMPageForm
 	{
 		switch ( $attr_name )
 		{
-			case 'UsedInPlanning':
-				return text(695);
-
 			case 'Stages':
 				return text(750);
 		}

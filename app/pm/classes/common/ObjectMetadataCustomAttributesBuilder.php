@@ -7,11 +7,19 @@ include "persisters/CustomAttributesPersister.php";
 
 class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder 
 {
+	private $classes = array();
+
+	public function __construct()
+	{
+		$result = mysql_fetch_array(DAL::Instance()->Query("SELECT GROUP_CONCAT(DISTINCT EntityReferenceName) Classes FROM pm_CustomAttribute"));
+		$this->classes = preg_split('/,/',$result[0]);
+	}
+
     public function build( ObjectMetadata $metadata )
     {
         $object = $metadata->getObject();
-        
-        if ( !in_array($object->getEntityRefName(), array('pm_TestCaseExecution', 'pm_Environment', 'pm_Question', 'pm_Task', 'pm_Function', 'pm_Version', 'pm_Release', 'pm_ChangeRequest', 'WikiPage')) ) return;
+
+        if ( !in_array(strtolower(get_class($object)), $this->classes) ) return;
         
         $attr = getFactory()->getObject('pm_CustomAttribute');
         

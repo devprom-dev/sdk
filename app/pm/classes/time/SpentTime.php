@@ -14,6 +14,7 @@ class SpentTime extends Metaobject
  		parent::__construct('pm_Activity', new SpentTimeRegistry($this) );
  		
  		$this->addAttribute('SystemUser', 'REF_cms_UserId', translate('Пользователь'), false, false);
+		$this->removeAttribute('Iteration');
  	}
  	
  	function createIterator() 

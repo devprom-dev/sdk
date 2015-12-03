@@ -53,7 +53,7 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 		    		"	 AND iv.ReferenceName = '".$attribute."') as ".$attribute;
 	    	}
 	    }
-	    
+
 	    return " (SELECT WikiPageId, VPD, RecordVersion, ".join(",",array_merge($real_attributes, $attributes)).
 	    	   "	FROM WikiPage ".
 	    	   "   WHERE ReferenceName = ".$this->getObject()->getReferenceName()." AND IsTemplate = 0 ".

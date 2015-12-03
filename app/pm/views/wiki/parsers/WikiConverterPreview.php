@@ -4,18 +4,18 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 
 class WikiConverterPreview 
 {
- 	var $parser, $wiki_it, $b_draw_contents, $b_draw_section_num;
+ 	var $parser, $wiki_it, $b_draw_contents, $b_draw_section_num = true;
+	private $root_it;
  	
  	function setObjectIt( $wiki_it )
  	{
- 		$this->wiki_it = $wiki_it;
- 		
-		$editor = WikiEditorBuilder::build($this->wiki_it->get('ContentEditor'));
+		$this->root_it = $wiki_it->copy();
 
-		$editor->setObjectIt( $this->wiki_it );
+		$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
+		$editor->setObjectIt($wiki_it);
 		
  		$this->parser = $editor->getHtmlSelfSufficientParser();
- 		$this->parser->setObjectIt( $this->wiki_it );
+ 		$this->parser->setObjectIt($wiki_it);
 
  		$this->parser->setHrefResolver(function($wiki_it) {
  			return '#'.$wiki_it->getId();
@@ -23,6 +23,21 @@ class WikiConverterPreview
  		$this->parser->setReferenceTitleResolver(function($info) {
  			return $info['caption'];
  		});
+
+		if ( $wiki_it->count() > 1 ) {
+			$this->wiki_it = $wiki_it;
+		}
+		else {
+			$this->wiki_it = $wiki_it->object->getRegistry()->Query(
+				array_merge(
+					array(
+						new WikiRootTransitiveFilter($wiki_it->getId()),
+                        new FilterNotInPredicate($wiki_it->getId()),
+						new SortDocumentClause()
+					)
+				)
+			);
+		}
  	}
 	
 	function getFileUrl( $file_it )
@@ -88,41 +103,31 @@ class WikiConverterPreview
 		<div class=header>
 		<? $this->drawHeader(); ?>
 		</div>
-		<? if($this->b_draw_contents && $this->wiki_it->count() < 2) { ?>
+		<? if($this->b_draw_contents && $this->root_it->count() < 2) { ?>
 		<div class=content>
-		<?  
-			$this->drawChildrenLink($this->wiki_it);
+		<?
+        while ( !$this->wiki_it->end() )
+        {
+            $this->drawChildrenLink($this->wiki_it);
+            $this->wiki_it->moveNext();
+        }
+        $this->wiki_it->moveFirst();
 		?>
 		</div>
 		<?
 		}
-
 		?>
-		<div class=introduction>
-		<? 
+
+		<div class=body>
+		<?
 		while ( !$this->wiki_it->end() )
 		{
-			$this->drawSeparator(); 
-			
-			echo '<a name="'.$this->wiki_it->getId().'"></a>';
-			echo '<h3>'.$this->wiki_it->get('Caption').'</h3>';
-			
-			$this->setObjectIt( $this->wiki_it );
-			echo $this->parser->parse( $this->wiki_it->getHtmlDecoded('Content') );
-			
+			$this->drawChildren($this->wiki_it->copy());
 			$this->wiki_it->moveNext();
 		}
 		?>
 		</div>
-		<div class=body>
-		<?
-		if ( $this->wiki_it->count() < 2 )
-		{
-			$this->wiki_it->moveFirst();
-			$this->drawChildren($this->wiki_it, 1, '' );
-		}
-		?>
-		</div>
+
 		<div class=footer>
 		<? $this->drawFooter(); ?>
 		</div>
@@ -137,72 +142,37 @@ class WikiConverterPreview
 	{
 	}
 	
-	function drawChildrenLink( $wiki_it, $level_num = 0, $parent_level_name = '' ) 
+	function drawChildrenLink($wiki_it)
 	{
-		$parent_id = $wiki_it->getId();
-		$children_it = $wiki_it->getChildrenIt();
-
-		$left_offset = $level_num * 15;
-		$parent_level_name = $parent_level_name == '' ? $parent_level_name : $parent_level_name.'.';
-		$i = 0;
-		
-		while( $children_it->get('ParentPage') == $parent_id ) 
-		{
-			$i++;
-
-			$id = $children_it->getId();
-			if($this->b_draw_section_num) {
-				$level_name = $parent_level_name.$i;
-			}
-			echo '<div style="padding-bottom:2pt;padding-left:'.$left_offset.'">';
-		?>
-			<? echo $level_name ?>&nbsp;&nbsp;
-			<a href="#<? echo $children_it->getId(); ?>">
-				<? echo $children_it->get('Caption'); ?>
+        if($this->b_draw_section_num) {
+            $level_name = $wiki_it->get('SectionNumber').' &nbsp;&nbsp; ';
+        }
+        echo '<div style="padding-bottom:2pt;">';
+        echo $level_name
+        ?>
+			<a href="#<? echo $wiki_it->getId(); ?>">
+				<? echo $wiki_it->getHtmlDecoded('Caption'); ?>
 			</a>
 		<?
-			echo '</div>';
-			$this->drawChildrenLink( $children_it, $level_num + 1, $level_name );
-			
-			$children_it->moveTo('WikiPageId', $id);
-			$children_it->moveNext();
-		}
+        echo '</div>';
 	}
 	
-	function drawChildren( $wiki_it, $level_num, $parent_level_name ) 
+	function drawChildren( $wiki_it )
 	{
-		$parent_id = $wiki_it->getId();
-		$children_it = $wiki_it->getChildrenIt();
-
-		$parent_level_name = $parent_level_name == '' ? 
-			$parent_level_name : $parent_level_name.'.';
-
-		for ( $i = 0; $children_it->get('ParentPage') == $parent_id; $i++ ) 
-		{
-			$id = $children_it->getId();
-			if($this->b_draw_section_num) 
-			{
-				$level_name = $parent_level_name.($i+1).'&nbsp;  ';
-			}
-			?>
-			<div class=section>
-				<a name="<? echo $children_it->getId(); ?>"></a>
-				<h3><? echo $level_name.$children_it->get('Caption'); ?></h3>
-			</div>
-			<div class=text>
-			<?
-				$this->setObjectIt( $children_it );
-				echo $this->parser->parse( $children_it->getHtmlDecoded('Content') );
-			?>
-			</div>
-			<?
-			$this->drawSeparator(); 
-
-			$this->drawChildren( $children_it, $level_num + 1, $level_name );
-
-			$children_it->moveTo('WikiPageId', $id);
-			$children_it->moveNext();
-		}
+		if($this->b_draw_section_num) $level_name = $wiki_it->get('SectionNumber').' &nbsp; ';
+		?>
+		<div class=section>
+			<a name="<? echo $wiki_it->getId(); ?>"></a>
+			<h3><? echo $level_name.$wiki_it->getHtmlDecoded('Caption'); ?></h3>
+		</div>
+		<div class=text>
+		<?
+            $this->parser->setObjectIt($wiki_it);
+			echo $this->parser->parse( $wiki_it->getHtmlDecoded('Content') );
+		?>
+		</div>
+		<?
+		$this->drawSeparator();
 	}
 	
 	function drawEnd() 

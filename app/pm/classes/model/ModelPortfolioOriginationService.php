@@ -14,18 +14,15 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	        case 'co_ProjectGroup':
             case 'cms_User':
  	        case 'pm_CustomAttribute':
-                
+			case 'cms_Resource':
                 return array( '-' );
 
  	        case 'pm_CustomReport':
  	        case 'pm_UserSetting':
  	        case 'cms_PluginModule':
- 	            
  	            return array( $this->getSession()->getProjectIt()->get('VPD') );
 
-            case 'cms_Resource':
             case 'pm_State':
-            	
                 return $this->getSession()->getLinkedIt()->fieldToArray('VPD');
  	            
  	        default:

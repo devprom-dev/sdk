@@ -18,12 +18,12 @@ class PMWikiTable extends PMPageTable
  	    parent::__construct( $object );
  	}
  	
- 	function & getForm()
+ 	function getForm()
  	{
  	    return $this->form;
  	}
  	
-	function & getStateObject()
+	function getStateObject()
 	{
 	    return $this->state_object;
 	}
@@ -72,33 +72,23 @@ class PMWikiTable extends PMPageTable
 	
 	function getFilters()
 	{
-		global $model_factory;
-		
-		$session = getSession();
-		
 		$object = $this->getObject();
 		
 		$parent_filter = new FilterAutoCompleteWebMethod( 
 			$object, translate($object->getAttributeUserName( 'ParentPage' )) 
 		);
-		
 		$parent_filter->setValueParm( 'parentpage' );
 
-		$document = $model_factory->getObject(get_class($object));
-		
+		$document = getFactory()->getObject(get_class($object));
 		$document->addFilter( new WikiRootFilter() );
-		
 		$document_filter = new FilterObjectMethod( $document, translate('Документ'), 'document' );
-		
 		$document_filter->setType( 'singlevalue' );
 		$document_filter->setUseUid( true );
 		
 		$filters = array( $document_filter );
-		
 		if ( is_a($this->getStateObject(), 'StateBase') )
 		{
 		    $filters[] = new FilterStateMethod( $this->getStateObject() );
-        
 		    $filters[] = new FilterStateTransitionMethod( $this->getStateObject() );
 		}
 		
@@ -113,13 +103,10 @@ class PMWikiTable extends PMPageTable
 		$filters[] = new ViewWikiContentWebMethod();
 			
 		$type_it = $this->object->getTypeIt();
-		
 		if ( is_object($type_it) )
 		{
 		    $filter = new FilterObjectMethod( $type_it, '', 'type' );
-		    
 		    $filter->setIdFieldName( 'ReferenceName' );
-		    
 			$filters[] = $filter;
 		}
 		
@@ -154,31 +141,29 @@ class PMWikiTable extends PMPageTable
 	
 	function getNewActions()
 	{
-		if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return array();
-		
 		$actions = array();
-		
+
+		$method = new ObjectCreateNewWebMethod($this->getObject());
+		if ( !$method->hasAccess() ) return $actions;
+		$method->setRedirectUrl('donothing');
+
 		$actions['create'] = array( 
 	        'name' => $this->object->getDisplayName(),
-			'url' => $this->object->getPageNameObject(),
+			'url' => $method->getJSCall(),
 			'uid' => 'create' 
 		);
-		
-		$type_it = $this->getForm()->getTypeIt();
-		
-		while ( is_object($type_it) && !$type_it->end() )
-		{
-			$uid = 'create'.$type_it->get('ReferenceName');
-			
-			$actions[$uid] = array( 
-		        'name' => $type_it->getDisplayName(),
-				'url' => $this->object->getPageNameObject().'&PageType='.$type_it->getId(),
-				'uid' => $uid
-			);
-			
-			$type_it->moveNext();
-		}
-		
+
+        $type_it = $this->getForm()->getTypeIt();
+        while ( is_object($type_it) && !$type_it->end() )
+        {
+            $uid = 'create'.$type_it->get('ReferenceName');
+            $actions[$uid] = array(
+                'name' => $type_it->getDisplayName(),
+                'url' => $method->getJSCall(array('PageType'=>$type_it->getId())),
+                'uid' => $uid
+            );
+            $type_it->moveNext();
+        }
 		return $actions;
 	}
 	
@@ -213,7 +198,6 @@ class PMWikiTable extends PMPageTable
 		$actions = array();
 		
 		$export_actions = $this->getExportActions();
-		
 		if ( count($export_actions) > 0 )
 		{
 			$actions[] = array( 
@@ -224,18 +208,27 @@ class PMWikiTable extends PMPageTable
 		}
 
 		$trace_actions = $this->getTraceActions();
-		
 		if ( count($trace_actions) > 0 )
 		{
 	        if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-	            
 			$actions[] = array (
 				'uid' => 'trace', 
 				'name' => translate('Трассировка'),
 				'items' => $trace_actions 
 			);
 		}
-		
+
+		$module_it = getFactory()->getObject('Module')->getExact('attachments');
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+		{
+			$item = $module_it->buildMenuItem('class='.get_class($this->getObject()));
+			$actions[] = array();
+			$actions[] = array(
+					'name' => text(1373),
+					'url' => $item['url']
+			);
+		}
+
 		return array_merge($actions, parent::getActions());
 	}
 

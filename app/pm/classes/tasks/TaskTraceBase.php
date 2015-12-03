@@ -26,7 +26,11 @@ class TaskTraceBase extends Metaobject
  	{
  		return new TaskTraceBaseIterator( $this );
  	}
- 	
+
+	function getBaselineReference() {
+		return 'Baseline';
+	}
+
  	function getObjectClass()
  	{
  		return '';
@@ -110,7 +114,7 @@ class TaskTraceBase extends Metaobject
 						'ChangeRequest' => $task_it->get('ChangeRequest'),
 					  	'ObjectId' => $parms['ObjectId'],
 					  	'ObjectClass' => $this->getObjectClass(),
-						'Type' => 'autotrace'
+						'Type' => REQUEST_TRACE_REQUEST
 				));
 			}
 		}

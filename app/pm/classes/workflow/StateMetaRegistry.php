@@ -11,31 +11,28 @@ class StateMetaRegistry extends ObjectRegistrySQL
 				'initial' => array(),
 				'progress' => array()
 		);
-		
-		$state_it = $aggregated_state->getAll();
-		
-		while( !$state_it->end() )
-		{
-			if ( $state_it->get('IsTerminal') == 'Y' )
-			{
-				$ref_names['final'][] = $state_it->get('ReferenceName'); 
-			}
-			else
-			{
-				if ( !isset($ref_names['initial'][$state_it->get('VPD')]) )
-				{
-					$ref_names['initial'][$state_it->get('VPD')] = $state_it->get('ReferenceName'); 
+
+		if ( !is_array($aggregated_state) ) $aggregated_state = array($aggregated_state);
+
+		foreach( $aggregated_state as $state_object ) {
+            $refnames = array_unique($state_object->getAll()->fieldToArray('ReferenceName'));
+            if ( count($refnames) > 0 ) {
+                $ref_names['initial'][] = array_shift($refnames);
+            }
+            $state_it = $state_object->getAll();
+			while (!$state_it->end()) {
+				if ($state_it->get('IsTerminal') == 'Y') {
+					$ref_names['final'][] = $state_it->get('ReferenceName');
 				}
-				else
-				{
-					$ref_names['progress'][] = $state_it->get('ReferenceName');
-				}
+                elseif ( !in_array($state_it->get('ReferenceName'), $ref_names['initial']) ) {
+                    $ref_names['progress'][] = $state_it->get('ReferenceName');
+                }
+				$state_it->moveNext();
 			}
-			
-			$state_it->moveNext();
 		}
-		
+        if ( count($ref_names['initial']) < 1 ) $ref_names['initial'][] = 'submitted';
 		if ( count($ref_names['progress']) < 1 ) $ref_names['progress'][] = 'inprogress';
+        if ( count($ref_names['final']) < 1 ) $ref_names['final'][] = 'resolved';
 
 		return $this->createIterator(
 				array (

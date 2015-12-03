@@ -10,7 +10,16 @@ class KnowledgeBaseForm extends PMWikiForm
 		
 		$this->object->addAttribute('Template', '', translate('Шаблон'), false, false, '', 15);
  	}
- 	
+
+	function getAppendActionName()
+	{
+		return translate('Статья');
+	}
+
+	function getTemplatesModule() {
+		return 'kbtemplates';
+	}
+
  	function getTraceActions( $page_it )
 	{
 		return array();
@@ -18,21 +27,16 @@ class KnowledgeBaseForm extends PMWikiForm
 	
 	function getActions( $page_it = null )
 	{
-		global $model_factory;
-		
 		if ( !is_object($page_it) ) $page_it = $this->getObjectIt();
-		
 		if ( !is_object($page_it) ) return array();
 		
 		$actions = parent::getActions( $page_it );
-		
+
 		$export_actions = $this->getExportActions( $page_it );
-		
 		if ( count($export_actions) > 0 )
 		{
     		array_push($actions, array( '' ) );
-    		
-    		$actions[] = array( 
+    		$actions[] = array(
     		    'name' => translate('Экспорт'),
     			'items' => $export_actions
     		);

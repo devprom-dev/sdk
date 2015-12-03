@@ -6,6 +6,7 @@ include "CustomResourceIterator.php";
 include "CustomResourceRegistry.php";
 include "predicates/LangResourceTermPredicate.php";	
 include "predicates/LangResourceOverridenPredicate.php";
+include "predicates/CustomResourceKeyPredicate.php";
 
 class CustomResource extends Resource
 {
@@ -106,13 +107,14 @@ class CustomResource extends Resource
  	function modify_parms( $object_id, $parms )
  	{
  	    $this->cache_enabled = false;
- 	    
+
  		$object_it = $this->getRegistry()->Query(
  				array( 
- 						new FilterAttributePredicate('ResourceKey', $object_id ),
+ 						new CustomResourceKeyPredicate($object_id ),
  						new FilterBaseVpdPredicate()
  				)
  		);
+
  		if ( $object_it->getId() == '' )
  		{    
  			if ( $parms['ResourceValue'] != '' )

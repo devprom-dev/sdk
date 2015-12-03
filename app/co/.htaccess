@@ -1,9 +1,9 @@
 Options +FollowSymLinks
 RewriteEngine On
 
-RewriteRule ^module/([^/]+)/([^/]+)$ /app/front.php?namespace=$1&module=$2 [L,QSA]
+RewriteRule ^module/([^/]+)/([^/]+)$ /app/module.php?namespace=$1&module=$2 [L,QSA]
 RewriteRule ^images/([^/]+)$ /images/$1 [L]
-RewriteRule ^scripts/.+$ /app/front.php [L]
+RewriteRule ^scripts/.+$ /app/scripts.php [L]
 
 RewriteRule ^login\.php$ /login [R=301,L]
 RewriteRule ^projects\.php$ / [R=301,L]

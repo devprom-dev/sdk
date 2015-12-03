@@ -41,10 +41,10 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
         				'getEventsManager'
         		),
         		array (
-        				null,
-        				new CacheEngine(),
-        				$this->access_policy,
-        				$this->events_manager
+                    $this->getMock('PluginsFactory', array('buildPlugins'), array()),
+        			new CacheEngine(),
+        			$this->access_policy,
+        			$this->events_manager
         		)
         );
 
@@ -78,7 +78,7 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
         return $this->dal_mock;
     }
 
-    function & getObjectFactoryMock()
+    function getObjectFactoryMock()
     {
         return $this->access_policy;
     }

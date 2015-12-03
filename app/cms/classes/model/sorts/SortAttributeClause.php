@@ -103,7 +103,11 @@ class SortAttributeClause extends SortClauseBase
 					}
 	 			}
 
-	 			if ( in_array($object->getAttributeType($attr), array('integer','float')) ) { 
+				if ( in_array($object->getAttributeType($attr), array('image','file')) ) {
+					$sql_attr = " '-' ";
+				}
+
+	 			if ( in_array($object->getAttributeType($attr), array('integer','float')) ) {
 	 				$sql_attr = " IFNULL(".$sql_attr.", 0) ";
 	 			}
 

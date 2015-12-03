@@ -14,7 +14,8 @@ class Watcher extends Metaobject
  		parent::Metaobject('pm_Watcher', new WatcherRegistry($this));
  		
  		$this->setAttributeType('SystemUser', 'REF_ProjectUserId');
- 		
+        $this->addAttributeGroup('SystemUser', 'skip-mapper');
+
 		$this->object_it = $object_it;
  	}
  	
@@ -93,15 +94,17 @@ class Watcher extends Metaobject
 	
 	function add_parms( $parms )
 	{
+		if ( $parms['Email'] == '' && !is_numeric($parms['SystemUser']) ) {
+			$parms['Email'] = $parms['SystemUser'];
+			unset($parms['SystemUser']);
+		}
+
 	    if ( is_object($this->object_it) )
 	    {
-	        if ( !array_key_exists('ObjectId', $parms) )
-	        {
+	        if ( !array_key_exists('ObjectId', $parms) ) {
 	            $parms['ObjectId'] = $this->object_it->getId();
 	        }
-
-	        if ( !array_key_exists('ObjectClass', $parms) )
-	        {
+	        if ( !array_key_exists('ObjectClass', $parms) ) {
 	            $parms['ObjectClass'] = strtolower(get_class($this->object_it->object));
 	        }
 	    }

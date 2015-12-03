@@ -10,7 +10,7 @@ foreach( $checkpoint_alerts as $key => $alert )
 }
 ?>
 <div class="btn-group last">
-	<a class="btn btn-navbar btn-link" href="/admin/checks.php">
+	<a class="btn btn-navbar btn-link" href="<?=$checkpoint_url?>">
 		<?=text(1128)?>
 	</a>
 </div>	<!-- end btn-group -->	
@@ -19,7 +19,7 @@ foreach( $checkpoint_alerts as $key => $alert )
 	   placement="bottom"
 	   loaded="true" 
 	   info="" 
-	   href="/admin/checks.php"
+	   href="<?=$checkpoint_url?>"
 	   data-content="<?=htmlentities(join('<br/>',$checkpoint_alerts), ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
 			<b><?=count($checkpoint_alerts)?></b>
 	</a>

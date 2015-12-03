@@ -6,23 +6,20 @@ class FieldCustomDictionary extends FieldDictionary
  	
  	function __construct( $object, $reference_name )
  	{
+		parent::__construct($object);
+
  		$attr = getFactory()->getObject('pm_CustomAttribute');
  		
  		$this->attribute_it = $attr->getByEntity( $object );
- 		
  		while( !$this->attribute_it->end() )
  		{
- 			if ( $this->attribute_it->get('ReferenceName') == $reference_name )
- 			{
+ 			if ( $this->attribute_it->get('ReferenceName') == $reference_name ) {
  				$this->lov = $this->attribute_it->toDictionary();
- 				
+				$this->setNullOption($this->attribute_it->get('IsRequired') != 'Y');
  				break;
  			}
- 			
  			$this->attribute_it->moveNext();
  		}
-
- 		parent::__construct($object);
  	}
  	
  	function getOptions()

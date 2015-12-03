@@ -13,7 +13,7 @@ class ModelValidatorIncludePage extends ModelValidatorInstance
 		});
 		
 		if ( count($ids) < 1 ) return "";
-		
+
 		$last_id = array_pop($ids);
 		$order_num = 10;
 		
@@ -25,7 +25,7 @@ class ModelValidatorIncludePage extends ModelValidatorInstance
 							new FilterVpdPredicate()
 					)
 			);
-	
+
 			while( !$include_it->end() )
 			{
 				$object->add_parms(

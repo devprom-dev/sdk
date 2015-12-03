@@ -6,17 +6,7 @@ class SearchableObjectRegistry extends ObjectRegistrySQL
  	
  	function add( $class_name, $attributes = array(), $report = '' )
  	{
- 		$object = getFactory()->getObject($class_name);
- 		
- 		foreach( $object->getAttributes() as $attribute => $info )
- 		{
- 			if ( $object->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) continue;
- 			if ( !in_array($object->getAttributeType($attribute), array('text', 'varchar', 'wysiwyg')) ) continue;
- 			
- 			$attributes[] = $attribute;
- 		}
- 		
- 		$this->objects[] = array( 
+ 		$this->objects[] = array(
  			'class' => $class_name,
  			'attributes' => $attributes,
  			'report' => $report
@@ -25,13 +15,11 @@ class SearchableObjectRegistry extends ObjectRegistrySQL
  	
  	function createSQLIterator( $sql )
  	{
- 	    foreach( getSession()->getBuilders('SearchableObjectsBuilder') as $builder )
- 	    {
+ 	    foreach( getSession()->getBuilders('SearchableObjectsBuilder') as $builder ) {
  	        $builder->build( $this );
  	    }
  	    
  	    $data = array();
- 	    
  	 	foreach( $this->objects as $object )
  		{
  			$data[] = array (

@@ -8,7 +8,7 @@ class ModelValidatorTypePassword extends ModelValidatorType
 	{
 		return in_array($type_name, array('password'));
 	}
-	
+
 	public function validate( & $value )
 	{
 		return true;

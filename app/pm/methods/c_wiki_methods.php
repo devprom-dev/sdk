@@ -351,14 +351,18 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
   		$values = array (
  			'all' => translate('Все'),
  			);
- 		
+		$items = array();
+
  		while ( !$this->tag_it->end() )
  		{
- 			$values[' '.$this->tag_it->get('Tag')] = $this->tag_it->get('Caption');
- 			
+ 			$items[$this->tag_it->get('Caption')][] = $this->tag_it->get('Tag');
  			$this->tag_it->moveNext();
  		}
- 		
+		foreach( $items as $key => $ids ) {
+			$items[$key] = ' '.join('-',$ids);
+		}
+		$values = array_merge($values, array_flip($items));
+
  		if ( !in_array($this->getValue(), array('', 'all')) )
  		{
      		$tag = $model_factory->getObject('Tag');

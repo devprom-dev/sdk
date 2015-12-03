@@ -1,40 +1,31 @@
 <?php
-
 include "FormTaskTypeStageEmbedded.php";
 
 class FieldTaskTypeStages extends FieldForm
 {
- 	var $object_it;
+ 	private $object_it;
  	
- 	function FieldTaskTypeStages ( $object_it )
- 	{
+ 	function __construct ( $object_it ) {
  		$this->object_it = $object_it;
  	}
  	
- 	function render( $view )
- 	{
+ 	function render( $view ) {
  	    $this->draw( $view );
  	}
  	
  	function draw( $view = null )
  	{
- 		global $model_factory;
-
-		$anchor = $model_factory->getObject( 'TaskTypeStage' );
+		$anchor = getFactory()->getObject( 'TaskTypeStage' );
 		
-		if ( is_object($this->object_it) )
-		{
-			$anchor->addFilter( new TaskTypeStageTaskTypePredicate($this->object_it->getId()) );
+		if ( is_object($this->object_it) ) {
+			$anchor->addFilter(new FilterAttributePredicate('TaskType', $this->object_it->getId()));
 		}
-		else
-		{
-			$anchor->addFilter( new TaskTypeStageTaskTypePredicate(0) );
+		else {
+			$anchor->addFilter(new FilterAttributePredicate('TaskType', 0));
 		}
 
  		$form = new FormTaskTypeStageEmbedded( $anchor, 'TaskType' );
-
  		$form->setReadonly( $this->readOnly() );
- 			
  		$form->draw($view);
  	}
 }

@@ -68,18 +68,6 @@ class ModelValidatorTest extends DevpromTestCase
 								new \ModelValidatorTypes()
     					));
     	
-    	$data = array( 'SystemUser' => 'asd' );
-
-    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
-
-        $data = array( 'SystemUser' => '14645.646456' );
-    	
-    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
-    	
-    	$data = array( 'SystemUser' => '14645646456' ); // more than integer
-    	
-    	$this->assertNotEquals("", $validator->validate(new Snapshot(), $data)); 
-    	
     	$data = array( 'SystemUser' => '1' );
     	
     	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 

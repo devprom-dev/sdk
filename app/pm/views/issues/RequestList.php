@@ -90,7 +90,8 @@ class RequestList extends PMPageList
 	function getGroup() 
 	{
 		$group = parent::getGroup();
-		if ( $group == 'OwnerUser' ) return 'Owner'; 
+		if ( $group == 'OwnerUser' ) return 'Owner';
+		if ( $group == 'Type' ) return 'TypeBase';
 		return $group;
 	}
 	
@@ -115,6 +116,8 @@ class RequestList extends PMPageList
 			default:
 				parent::drawGroup($group_field, $object_it);				
 		}
+
+		$this->getTable()->drawGroup($group_field, $object_it);
 	}
 	
 	function drawRefCell( $entity_it, $object_it, $attr ) 
@@ -296,7 +299,7 @@ class RequestList extends PMPageList
 		
 		foreach ( $cols as $key => $col )
 		{
-			if ( $col == 'UID' || $col == 'Transition' || $col == 'TransitionComment' || $col == 'Spent' )
+			if ( $col == 'UID' || $col == 'Transition' || $col == 'Spent' )
 			{
 				continue;
 			}

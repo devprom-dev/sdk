@@ -58,10 +58,15 @@ class PMWikiDocument extends PMWikiTable
 	
 	function getPreviewPagesNumber()
 	{
-		return 3;
+		return 6;
 	}
-	
-	function & getRevisionIt()
+
+	function getDefaultRowsOnPage()
+	{
+		return 9999;
+	}
+
+	function getRevisionIt()
 	{
 		global $model_factory;
 		
@@ -95,20 +100,7 @@ class PMWikiDocument extends PMWikiTable
 	
 	function getFilters()
 	{
-	    $parent_filters = parent::getFilters();
-	    
-	    foreach( $parent_filters as $key => $filter )
-	    {
-	        if ( is_a($filter, 'FilterStateMethod') ) $filter->setDefaultValue('all');
-	        
-	        if ( $filter->getValueParm() == 'document' )
-	        {
-	        	unset($parent_filters[$key]);
-	        	
-	        	$parent_filters = array_values($parent_filters);
-	        }
-	    }
-	    
+		$parent_filters = $this->getDataFilters();
 		return array_merge( 
 		        array_slice($parent_filters, 0, 1),
 		        array ( 
@@ -118,11 +110,34 @@ class PMWikiDocument extends PMWikiTable
 		        array_slice($parent_filters, 1)
 		       );
 	}
+
+	function getFiltersDefault()
+	{
+		return array_merge(parent::getFiltersDefault(), array('search'));
+	}
+
+	function getDataFilters()
+	{
+		$parent_filters = parent::getFilters();
+
+		foreach( $parent_filters as $key => $filter ) {
+			if ( is_a($filter, 'FilterStateMethod') ) $filter->setDefaultValue('all');
+			if ( $filter->getValueParm() == 'document' ) {
+				unset($parent_filters[$key]);
+				$parent_filters = array_values($parent_filters);
+			}
+		}
+		$parent_filters[] = new FilterTextWebMethod( text(2085), 'search' );
+		return $parent_filters;
+	}
 	
 	function getFilterPredicates()
 	{
+		$values = $this->getFilterValues();
+
 		$predicates = array ( 
-		    new FilterAttributePredicate('DocumentId', $this->getDocumentIt()->idsToArray())
+		    new FilterAttributePredicate('DocumentId', $this->getDocumentIt()->idsToArray()),
+			new FilterSearchAttributesPredicate($values['search'], array('Caption', 'Content'))
 		);
 		
 		return array_merge(parent::getFilterPredicates(), $predicates);
@@ -167,19 +182,19 @@ class PMWikiDocument extends PMWikiTable
 		if ( is_object($this->compareto_it) ) return $this->compareto_it;
 	 
 		$snapshot = new WikiPageComparableSnapshot($this->getDocumentIt());
-		
 		if ( !in_array($_REQUEST['compareto'], array('', 'none', 'all')) )
 		{ 
 			$snapshot_it = $snapshot->getExact($_REQUEST['compareto']);
-			
 			if ( $snapshot_it->getId() != '' ) return $this->compareto_it = $snapshot_it;
 		}
     			
 		$matches = array();
-		
 		if( preg_match('/document:(\d+)/', $_REQUEST['compareto'], $matches) )
 		{
-			return $this->compareto_it = $this->getObject()->getExact($matches[1]);
+			if ( $matches[1] != $this->getRevisionIt()->getId() ) {
+				$registry = new WikiPageRegistryContent($this->getObject());
+				return $this->compareto_it = $registry->Query(array(new FilterInPredicate($matches[1])));
+			}
 		}
 		
     	return $snapshot->getEmptyIterator();
@@ -321,7 +336,17 @@ class PMWikiDocument extends PMWikiTable
  	{
 		$parent_parms = parent::getRenderParms( $parms );
 
+        if ( $this->dataFilterApplied() ) {
+            // hide the tree if data (items) are filtered
+            unset($parent_parms['sections']);
+        }
+
 		$form_parms = $this->getForm()->getRenderParms();
+
+		if ( $this->getPreviewPagesNumber() > 1 ) {
+			$parent_parms['document_hint'] = $parent_parms['hint'];
+		}
+		unset($parent_parms['hint']);
 		
 		return array_merge( $parent_parms, array (
  	        'scripts' => $form_parms['scripts'],
@@ -337,21 +362,32 @@ class PMWikiDocument extends PMWikiTable
 	    
 	    return $list;
 	}
- 	
+
+	protected function getSectionName() {
+		return $this->getObject()->getDisplayName();
+	}
+
 	function getNewActions()
 	{
- 		if ( $this->getRevisionIt()->getId() > 0 ) return array();
-		
- 		$actions = parent::getNewActions();
-	    
-	    foreach( $actions as $key => $action )
-	    {
-	        $actions[$key]['url'] .= '&ParentPage='.$this->getDocumentIt()->getId();
-	    }
-	    
-	    return $actions;
+		if ( $this->getRevisionIt()->getId() > 0 ) return array();
+		$actions = array();
+
+		$method = new ObjectCreateNewWebMethod($this->getObject());
+		if ( !$method->hasAccess() ) return $actions;
+		$method->setRedirectUrl('function(id) {showCreatedPage(id,0);}');
+
+		$parms = array();
+		if ( $this->getDocumentIt()->getId() > 0 ) {
+			$parms['ParentPage'] = $this->getDocumentIt()->getId();
+		}
+		$actions['create'] = array(
+				'name' => $this->getSectionName(),
+				'url' => $method->getJSCall($parms),
+				'uid' => 'create'
+		);
+		return $actions;
 	}
-	
+
 	function getTraceActions()
 	{
 		return $this->getForm()->getTraceActions( $this->getDocumentIt() );
@@ -401,17 +437,28 @@ class PMWikiDocument extends PMWikiTable
 		if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
 		
 		$history_url = $this->getDocumentIt()->getHistoryUrl();
-		
 		if ( $this->getRevisionIt()->getId() > 0 )
 		{
 			$history_url .= '&start='.$this->getRevisionIt()->getDateTimeFormat('RecordCreated'); 
 		}
-		
-		$actions[] = array( 
+		$actions[] = array(
 		        'name' => translate('История изменений'),
 				'url' => $history_url,
 		        'uid' => 'history'
 		);
+
+		$report_it = getFactory()->getObject('PMReport')->getExact('discussions');
+		if ( $report_it->getId() != '' )
+		{
+			$class_name = strtolower(get_class($this->getObject()));
+			$item = $report_it->buildMenuItem('object='.$class_name.'&'.$class_name.'='.$this->getDocumentIt()->getId());
+
+			$actions[] = array(
+				'name' => $report_it->getDisplayName(),
+				'url' => $item['url'],
+				'uid' => 'document-discussion'
+			);
+		}
 			
  		if ( $this->getRevisionIt()->getId() > 0 )
  		{
@@ -496,5 +543,16 @@ class PMWikiDocument extends PMWikiTable
 	
  	function drawFooter()
  	{
- 	}	
+ 	}
+
+    function dataFilterApplied()
+    {
+        $values = $this->getFilterValues();
+        foreach( $this->getDataFilters() as $filter ) {
+            if ( !in_array($values[$filter->getValueParm()],array('','all')) ) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

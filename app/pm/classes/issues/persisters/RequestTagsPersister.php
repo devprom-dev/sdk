@@ -6,31 +6,25 @@ class RequestTagsPersister extends ObjectSQLPersister
  	
  	function getSelectColumns( $alias )
  	{
- 		$columns = array();
- 		$alias = $alias != '' ? $alias."." : "";
- 		
-		$object = $this->getObject();
-  		$objectPK = $alias.$object->getClassName().'Id';
- 		
- 		array_push( $columns, 
+ 		$columns[] =
  			"(SELECT GROUP_CONCAT(CAST(wt.Tag AS CHAR)) FROM pm_RequestTag wt " .
-			"  WHERE wt.Request = ".$objectPK." ) ".$this->column_name." " );
+			"  WHERE wt.Request = ".$this->getPK($alias)." ) ".$this->column_name." ";
+
+		$columns[] =
+			"(SELECT GROUP_CONCAT(tg.Caption) FROM pm_RequestTag wt, Tag tg " .
+			"  WHERE wt.Request = ".$this->getPK($alias)." AND wt.Tag = tg.TagId ) TagNames ";
 
  		return $columns;
  	}
 
  	function modify( $object_id, $parms )
  	{
- 		global $model_factory;
- 		
  		if ( trim($parms[$this->column_name]) == '' ) return;
  		
- 		$tag = $model_factory->getObject('RequestTag');
- 		
+ 		$tag = getFactory()->getObject('RequestTag');
  		$tag->removeTags( $object_id );
  		
- 		foreach( preg_split('/,/', $parms[$this->column_name]) as $tag_id )
- 		{
+ 		foreach( preg_split('/,/', $parms[$this->column_name]) as $tag_id ) {
  			$tag->bindToObject( $object_id, $tag_id );
  		}
  	}

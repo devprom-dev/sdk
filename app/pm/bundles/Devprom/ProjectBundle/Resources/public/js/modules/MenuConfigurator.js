@@ -22,7 +22,9 @@ App.module("MenuConfigurator", function(MenuConfigurator, App, Backbone, Marione
     },
     
     this.resetCurrentMenu = function() {
-    	menuNodesCollection.set({});
+    	if ( typeof menuNodesCollection != 'undefined' ) {
+			menuNodesCollection.set({});
+		}
     };
     
     //Private

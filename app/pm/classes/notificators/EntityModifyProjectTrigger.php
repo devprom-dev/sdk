@@ -69,13 +69,14 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
  	    
  	    // bind data to existing objects if any
  	    $context->setUseExistingReferences( true );
+		$context->setResetState(false);
  	    $context->setResetDates(false);
  	    $context->setIdsMap($ids_map);
  	    
  	 	foreach( $references as $object )
  	    {
  	    	$object = getFactory()->getObject(get_class($object));
- 	    	
+
      	    CloneLogic::Run( $context, $object, $object->createXMLIterator($xml), $target_it);
  	    }
  	    
@@ -100,7 +101,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	protected function updateChangeLog( $object_it, $target_it )
 	{
 	    global $model_factory;
-	    
+
 	    $project_it = getSession()->getProjectIt();
 	    
 		// store message the issue has been moved
@@ -118,30 +119,22 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 			'SystemUser' => getSession()->getUserIt()->getId()
 		);
 
-		$change = $model_factory->getObject('ObjectChangeLog');
-		
+		$change = getFactory()->getObject('ObjectChangeLog');
+		$change->disableVpd();
 		$change->add_parms( $change_parms );
 
 		// move related changes into target project
-		$change->addFilter( new ChangeLogItemFilter($object_it) );
-		$change->addFilter( new FilterAttributePredicate('ChangeKind', 'added,modified,commented' ) );
-		
-		$change_it = $change->getAll();
-		
-		while ( !$change_it->end() )
-		{
-			$change->modify_parms( $change_it->getId(), array(
-			    'VPD' => $target_it->get('VPD'),
-			    'RecordModified' => $change_it->get('RecordModified') 
-			));
-				
-			$change_it->moveNext();
-		}
-		
+		$change_it = $change->getRegistry()->Query(
+			array (
+				new ChangeLogItemFilter($object_it),
+				new FilterAttributePredicate('ChangeKind', 'added,modified,commented' )
+			)
+		);
+		DAL::Instance()->Query(" UPDATE ObjectChangeLog SET VPD = '".$target_it->get('VPD')."' WHERE ObjectChangeLogId IN (".join(',',$change_it->idsToArray()).")");
+
 		$change_parms['ChangeKind'] = 'added';
 		$change_parms['VPD'] = $target_it->get('VPD');
-		
-		$change->add_parms( $change_parms );	    
+		$change->add_parms( $change_parms );
 	}
 }
  

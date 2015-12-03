@@ -96,6 +96,7 @@ services:
             router: "@router"
             twig: "@twig"
             parameters:
+                em: "@doctrine.orm.entity_manager"
                 template:
                     confirmation: %fos_user.registration.confirmation.template%
                     resetting: %fos_user.resetting.email.template%
@@ -104,7 +105,7 @@ services:
                     confirmation: %fos_user.registration.confirmation.from_email%
                     resetting: %fos_user.resetting.email.from_email%
                     default:
-                        address: "%supportEmail%"
+                        address: "%adminEmail%"
                         sender_name: "%supportName%"
 
     mail_transport_logger:

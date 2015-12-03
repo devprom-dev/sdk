@@ -62,6 +62,11 @@ class LastChangesSection extends InfoSection
 
 		for($i = 0; $i < min($it->count(), $this->items); $i++) 
 		{
+			if ( $it->get('Content') == '' && $it->get('ChangeKind') == 'modified' ) {
+				$it->moveNext();
+				continue;
+			}
+
 			$rows[] = array(
 				'author' => $it->get('AuthorName'),
 			 	'datetime' => $it->getDateTimeFormat('RecordModified'),

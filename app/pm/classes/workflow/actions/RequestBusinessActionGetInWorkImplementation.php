@@ -1,10 +1,9 @@
 <?php
 
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
+include_once "BusinessActionWorkflow.php";
 
-include_once "BusinessAction.php";
-
-class RequestBusinessActionGetInWorkImplementation extends BusinessAction
+class RequestBusinessActionGetInWorkImplementation extends BusinessActionWorkflow
 {
  	function getId()
  	{

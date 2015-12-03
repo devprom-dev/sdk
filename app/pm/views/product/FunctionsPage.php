@@ -24,11 +24,12 @@ class FunctionsPage extends PMPage
  	
  	function getObject()
  	{
-		global $model_factory;
+ 		$object = getFactory()->getObject('Feature');
 
-		getSession()->addBuilder( new FeatureModelExtendedBuilder() );
-		
- 		return $model_factory->getObject('Feature');
+		$builder = new FeatureModelExtendedBuilder();
+		$builder->build($object);
+
+		return $object;
  	}
  	
  	function getTable() 

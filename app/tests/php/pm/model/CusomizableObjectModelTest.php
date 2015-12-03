@@ -8,7 +8,7 @@ class CustomizableObjectBuilderTest extends CustomizableObjectBuilder
 {
     public function build( CustomizableObjectRegistry & $set )
     {
-    	$set->addObject( $set, 'request:RequestSubType', 'Some text' );
+    	$set->add( 'Request', 'request:RequestSubType', 'Some text' );
     }
 }
     	

@@ -23,7 +23,7 @@ class FunctionalareasController extends FOSRestController implements ClassResour
     	$workspace = $request->request->all();
 
     	$service = new WorkspaceService();
-    	
+		$service->removeWorkspace($areaId);
     	$service->storeWorkspace($workspace);
     		
     	return $this->handleView($this->view($workspace, 200));
@@ -31,10 +31,7 @@ class FunctionalareasController extends FOSRestController implements ClassResour
 
     public function patchAction(Request $request, $areaId)
     {
-    	$workspace = $request->request->all();
-
     	$service = new WorkspaceService();
-    	
     	$service->removeWorkspace($areaId);
     	
     	$workspace = array_pop(array_filter($service->getWorkspaces(), function($value) use ($areaId) {

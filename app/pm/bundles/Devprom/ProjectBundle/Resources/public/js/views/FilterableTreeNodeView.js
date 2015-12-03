@@ -23,6 +23,10 @@ var FilterableTreeNodeView = TreeNodeView.extend({
 
     initialize: function()
     {
+		RegExp.escape = function(text) {
+			return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+		};
+
 		if(this.filter instanceof String)
 		    this.ui.filter = $(this.filter);
 		else
@@ -52,7 +56,7 @@ var FilterableTreeNodeView = TreeNodeView.extend({
 		}
 		
 		var is_matched = false;
-		var regExp = new RegExp('(' + filterValue +')','i');
+		var regExp = new RegExp('(' + RegExp.escape(filterValue) +')','i');
 		var tree = this;
 		
 		$.each(this.filterAttributes, function(index, item)
@@ -77,7 +81,7 @@ var FilterableTreeNodeView = TreeNodeView.extend({
 	    
     match: function(matches, container, source, filterValue)
     {
-		var match = new RegExp('(' + filterValue +')','i');
+		var match = new RegExp('(' + RegExp.escape(filterValue) +')','i');
 	
 		source = source.replace(match, this.matchTemplate({matchClass: this.matchClass, matchedText: matches[0]}));
 		

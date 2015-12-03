@@ -4,20 +4,50 @@ include "FlotChartLeadAndCycleTimeWidget.php";
 
 class LeadAndCycleTimeChart extends PMPageChart
 {
+	private $widget = null;
+
  	function __construct( $object )
  	{
 		parent::__construct( $object );
+
+		$this->widget = new FlotChartLeadAndCycleTimeWidget();
+		$this->widget->setIterator( $this->getObject()->getAll() );
  	}
 
 	function getChartWidget()
 	{
-		$widget = new FlotChartLeadAndCycleTimeWidget();
-		
-		$widget->setIterator( $this->getObject()->getAll() );
-		
-		return $widget;
+		return $this->widget;
 	}
-	
+
+	protected function getDemoData($aggs)
+	{
+		$x_attribute = $aggs[0]->getAttribute();
+		$y_attribute = $aggs[0]->getAggregateAlias();
+		$x_value = time() / 1000;
+		$x_delta = 70000;
+
+		$data = array();
+		foreach( array(5, 3, 1) as $max_index => $max ) {
+			for( $i = 0; $i < 20; $i++ ) {
+				$data[] = array (
+						$x_attribute => $x_value + $x_delta * ($i + 1) * ($max_index + 1),
+						$y_attribute => rand($max - 1, $max)
+				);
+			}
+		}
+
+		$this->setDemo();
+		$this->widget->setDemo($this->getDemo());
+		$this->widget->setColors(
+				array(
+					"rgb(192,192,192)",
+					"rgb(96,96,96)"
+				)
+		);
+
+		return $data;
+	}
+
 	function getColumnFields()
 	{
 		return array();
@@ -36,5 +66,9 @@ class LeadAndCycleTimeChart extends PMPageChart
 	function getAggregators()
 	{
 		return array();
+	}
+
+	function drawLegend( $data, & $aggs )
+	{
 	}
 }

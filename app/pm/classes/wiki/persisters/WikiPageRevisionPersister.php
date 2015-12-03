@@ -4,12 +4,11 @@ include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectSQLPersister.
 
 class WikiPageRevisionPersister extends ObjectSQLPersister
 {
-	private $revision_it = null;
+	private $revision = null;
 	
-	function __construct( $revision_it )
+	function __construct( $revision )
 	{
-		$this->revision_it = $revision_it; 
-		
+		$this->revision = $revision instanceof IteratorBase ? $revision->getId() : $revision;
 		parent::__construct();
 	}
 	
@@ -19,7 +18,7 @@ class WikiPageRevisionPersister extends ObjectSQLPersister
  		
  		$columns[] = " (SELECT ch.Content FROM WikiPageChange ch ".
  					 "	 WHERE ch.WikiPage = ".$this->getPK($alias).
- 				     "	   AND ch.WikiPageChangeId = ".$this->revision_it->getId().") Content ";
+ 				     "	   AND ch.WikiPageChangeId = ".$this->revision.") Content ";
  		
  		return $columns;
  	}

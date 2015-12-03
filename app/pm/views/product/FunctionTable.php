@@ -1,7 +1,6 @@
 <?php
 
 include "FunctionList.php";
-include "FunctionTraceList.php";
 include "FunctionChartList.php";
 
 class FunctionTable extends PMPageTable
@@ -10,12 +9,8 @@ class FunctionTable extends PMPageTable
 	{
 		switch ( $mode )
 		{
-			case 'trace':
-				return new FunctionTraceList( $this->getObject() );
-
 			case 'chart':
 				return new FunctionChartList( $this->getObject() );
-				
 			default:
 				return new FunctionList( $this->getObject() );
 		}
@@ -77,8 +72,9 @@ class FunctionTable extends PMPageTable
 			$this->buildFilterType(),
 			new FilterTagWebMethod( getFactory()->getObject('FeatureTag') ),
 			new FilterObjectMethod( getFactory()->getObject('Importance'), '', 'importance'),
-			new FunctionFilterStageWebMethod()
-			);
+			new FunctionFilterStageWebMethod(),
+			new FilterAutoCompleteWebMethod($this->getObject(), text(2094), 'parent')
+		);
 
 		$view = new FunctionFilterViewWebMethod();
 		$view->setFilter( $this->getFiltersName() );
@@ -100,7 +96,8 @@ class FunctionTable extends PMPageTable
 			new FeatureStageFilter( $filters['stage'] ),
 			new CustomTagFilter( $this->getObject(), $filters['tag'] ),
 			new FilterAttributePredicate( 'Importance', $filters['importance'] ),
-			new FilterAttributePredicate( 'Type', $filters['type'] )
+			new FilterAttributePredicate( 'Type', $filters['type'] ),
+			new FeatureParentTransitiveFilter( $filters['parent'] )
 		);
 		
 		return array_merge(parent::getFilterPredicates(), $predicates);

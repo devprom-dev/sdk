@@ -11,23 +11,22 @@ class StageModelBuilder extends ObjectModelBuilder
     	$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
 		$object->addAttribute('Stage', '', translate('Стадия проекта'), true, true, '', 10);
-		$object->addAttribute('Deadlines', '', translate('Сроки'), true);
-		$object->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false);
-		$object->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Оценка окончания'), false, false);
-		$object->addAttribute('ActualStartDate', 'DATE', translate('Начало по плану'), false, true);
-		$object->addAttribute('ActualFinishDate', 'DATE', translate('Окончание по плану'), false, true);
-		$object->addAttribute('Burndown', '', translate('Burndown'), true);
+		$object->addAttribute('Deadlines', '', translate('Сроки'), true, false, '', 20);
+		$object->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false, '', 30);
+		$object->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Оценка окончания'), false, false, '', 40);
+		$object->addAttribute('ActualStartDate', 'DATE', translate('Начало по плану'), false, true, '', 50);
+		$object->addAttribute('ActualFinishDate', 'DATE', translate('Окончание по плану'), false, true, '', 60);
+		$object->addAttribute('Burndown', '', translate('Burndown'), true, false, '', 70);
 		
-		if ( $methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
-		{
-			$object->addAttribute('Burnup', '', translate('Burnup'), true);
+		$object->addAttribute('Issues', 'REF_pm_ChangeRequestId', translate('Пожелания'), true, false, '', 90);
+		if ( $methodology_it->HasPlanning() && $methodology_it->HasTasks() ) {
+			$object->addAttribute('Tasks', 'REF_pm_TaskId', translate('Задачи'), true, false, '', 100);
 		}
-		
-		$object->addAttribute('Indexes', '', translate('Показатели'), true);
+
+		$object->addAttribute('Indexes', '', translate('Показатели'), true, false, '', 900);
 		
 		$hidden = array ('StartDate', 'FinishDate', 'InitialVelocity', 'Caption', 'Description');
-		foreach( $hidden as $attribute )
-		{
+		foreach( $hidden as $attribute ) {
 		    $object->setAttributeVisible($attribute, false);
 		}
     }

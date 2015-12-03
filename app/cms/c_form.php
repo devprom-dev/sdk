@@ -115,20 +115,11 @@ class Form
 	    {
 			// get url from which the form had been called
 			$this->redirect_url = $this->getRedirectUrl();
-
-			if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return; 
+			if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return;
 			
 		    $this->persist();
 
-			if ( $_REQUEST['formonly'] == 'true' )
-			{
-				$this->edit($this->object_it->getId());
-			}
-			else
-			{
-				$this->redirectOnAdded($this->object_it, $this->redirect_url);
-			}
-			
+			$this->redirectOnAdded($this->object_it, $this->redirect_url);
 			return;
 	    }
 	    
@@ -427,28 +418,28 @@ class Form
 	
 	function redirectOnAdded( $object_it, $redirect_url = '' ) 
 	{
-		if ( !is_object($object_it) )
-		{
-		    $object = $this->getObject();
-		    
-			$redirect_url = $object->getPage(); 
-		}
-		else if ( $object_it->getId() < 1 )
-		{
-			$redirect_url = $object_it->object->getPage(); 
+		if( $_REQUEST['formonly'] != '' ) {
+			echo json_encode(array('Id' => $object_it->getId()));
+			exit();
 		}
 
-		if ( $redirect_url != '' )
-		{ 
+		if ( !is_object($object_it) ) {
+			$redirect_url = getSession()->getApplicationUrl();
+		}
+		else if ( $object_it->getId() < 1 ) {
+			$redirect_url = getSession()->getApplicationUrl();
+		}
+
+		if ( $redirect_url != '' ) {
 			exit(header('Location: '.$redirect_url));
 		}
-		else
-		{
+		else {
 			exit(header('Location: '.$object_it->getViewUrl() ));
 		}
 	}
 	
-	function redirectOnModified( $object_it, $redirect_url = '' ) {
+	function redirectOnModified( $object_it, $redirect_url = '' )
+	{
 		$this->redirectOnAdded( $object_it, $redirect_url );
 	}
 
@@ -502,9 +493,8 @@ class Form
 		{
 			$this->setObjectIt( $objectid > 0 ? $this->object->getExact( $objectid ) : null );
 		}
-		
+
 		$this->action = 'view';
-		
 		$this->readonly = true;
 	}
 
@@ -664,7 +654,7 @@ class Form
 						: $_REQUEST[$field]
 				   ) 
 			   );
-		
+
 		if ( in_array($this->getObject()->getAttributeType($field), array('datetime')) )
 		{
 			$value = SystemDateTime::convertToClientTime($value);
@@ -1039,28 +1029,22 @@ class Form
 
     	if( !is_object($field) ) return null;
 
-    	$object_it = $this->getObjectIt();
-    	
+    	$field->setId($this->object->getEntityRefName().$name);
       	$field->setReadOnly( !$this->checkAccess() || !$this->IsAttributeEditable($name) );
-    	 
     	$field->setEditMode( $this->getEditMode() );
-    	
     	$field->setName($name);
 
-    	$field->setValue($this->getFieldValue($name));
-    	
-    	if ( $this->getEditMode() && $this->IsAttributeRequired($name) )
-    	{
+    	if ( $this->getEditMode() && $this->IsAttributeRequired($name) ) {
     		$field->setDefault($this->getDefaultValue($name));
     	}
-    	
-    	if ( is_a($field, 'FieldFile') )
-    	{
+
+    	if ( is_a($field, 'FieldFile') ) {
     	    $field->setValue( $this->getFieldValue($name.'Ext') );
     	}
-    	
-    	$field->setId($this->object->getEntityRefName().$name);
-    	       	
+    	else {
+            $field->setValue($this->getFieldValue($name));
+    	}
+
     	return $field;
     }
 

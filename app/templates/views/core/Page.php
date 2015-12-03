@@ -1,9 +1,9 @@
 <!DOCTYPE html>    
 <html class="<?=($inside ? 'inside' : '' )?>">
   <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=<?=APP_ENCODING?>"></meta>
-  	<title><?=($title == '' ? $navigation_title : $title)?></title>
+	  <meta http-equiv="Content-Type" content="text/html; charset=<?=APP_ENCODING?>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  	<title><?=($title == '' ? $navigation_title : $title)?></title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
 	<link rel="stylesheet" type="text/css" href="/cache/?v=<?=$current_version?>&asset=1&type=css"/>
@@ -45,6 +45,7 @@
         devpromOpts.language = '<?=$language_code?>';
         devpromOpts.datepickerLanguage = '<?=$datelanguage?>';
         devpromOpts.dateformat = '<?=$dateformat?>';
+		devpromOpts.datejsformat = '<?=$datejsformat?>';
         devpromOpts.saveButtonName = '<?=translate('Сохранить')?>';
         devpromOpts.completeButtonName = '<?=translate('Выполнить')?>';
         devpromOpts.closeButtonName = '<?=translate('Закрыть')?>';
@@ -76,7 +77,6 @@
         
 		<?php if ( !defined('UI_EXTENSION') || UI_EXTENSION ) { ?>
 		completeUIExt( $(document) );
-		completeChartsUI( $(document) );
 		setUXData();
         <?php } ?>
     	<?php if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS ) { ?>
@@ -89,7 +89,7 @@
         	}
         }).install();
 		Raven.setUserContext({
-			id: <?=$user_id?>
+			id: <?=($user_id < 1 ? 0 : $user_id)?>
 		});
 		<?php }?>
     </script>

@@ -25,7 +25,12 @@ class WikiPageTrace extends Metaobject
  	{
  		return new WikiPageTraceIterator( $this );
  	}
- 	
+
+	function getBaselineReference()
+	{
+		return 'Baseline';
+	}
+
 	function IsDeletedCascade( $object )
 	{
 		if ( is_a($object, 'WikiPage') )return true;

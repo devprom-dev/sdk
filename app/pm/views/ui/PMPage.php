@@ -82,7 +82,7 @@ class PMPage extends Page
 		if ( $_REQUEST['report'] != '' )
         {
             $report_it = $report->getExact($_REQUEST['report']);
-            
+
             if ( is_numeric($_REQUEST['report']) && !getFactory()->getAccessPolicy()->can_read($report_it) )
             {
                 $custom_it = getFactory()->getObject('pm_CustomReport')->getExact($_REQUEST['report']);
@@ -97,7 +97,7 @@ class PMPage extends Page
                     : ($_REQUEST['basemodule'] != ''
                            ? getFactory()->getObject('Module')->getExact($_REQUEST['basemodule'])
                             : $report->getEmptyIterator());
-                
+
                 if ( $base_it->getId() != '' )
                 {
                     $item = $base_it->buildMenuItem(preg_replace('/report=[^&]*|project=[^&]*|view=[^&]*/', '', $_SERVER['QUERY_STRING']));
@@ -107,17 +107,14 @@ class PMPage extends Page
             }
             else
             {
-	            $this->setReport($report_it->getId());
-	                
+	            $this->setReport($_REQUEST['report']);
 	            $this->setReportBase(
-	            	$report_it->get('Report') != '' 
-	                	? $report_it->get('Report') : $this->getReport()
+	            	$report_it->get('Report') != '' ? $report_it->get('Report') : $this->getReport()
 	 	        );
-	                
 	            $this->setModule( $report_it->get('Module') );
             }
         }
-        
+
  		return parent::getRenderParms();
  	}
  	
@@ -190,7 +187,7 @@ class PMPage extends Page
 	 		
 	 		break;
  		}
- 		
+
  		if ( $_REQUEST['tab'] != '' )
  		{
  		    $parts = preg_split('/\//', $_REQUEST['tab']);
@@ -223,7 +220,7 @@ class PMPage extends Page
 
  		$use_entry_point = trim($_SERVER['REQUEST_URI'],'/') == trim(getSession()->getApplicationUrl(),'/')
  		    || $_REQUEST['tab'] != '';
- 		    
+
  		if ( $use_entry_point )
  		{
  		    // if no tab is specified then use default entry
@@ -582,23 +579,18 @@ class PMPage extends Page
  	    if ( !parent::hasAccess() ) return false;
 
  	    if ( $this->needDisplayForm() ) return true;
- 	    
+
  	    // report based permissions to display the page
         $report_uid = $this->getReport();
-
-        if ( $report_uid != '' )
-        {
+		if ( $report_uid != '' ) {
             return getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('PMReport')->getExact($report_uid));
         }
 
         $module_uid = $this->getModule();
-
-        if ( $module_uid != '' )
-        {
+        if ( $module_uid != '' ) {
         	return getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Module')->getExact($module_uid));
         }
- 	    
- 		return false;
+ 		return true;
  	}
     
  	function exportCommentsThread()
@@ -707,11 +699,12 @@ class PMPage extends Page
  	 	$portfolio_actions = array();
 		if ( $portfolio_it->IsProgram() )
 		{
-			$url = '/pm/'.$portfolio_it->get('CodeName').'/module/ee/projectlinks'.getFactory()->getObject('ProjectLink')->getPageNameObject();
-			
+			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('ProjectLink'));
+			parse_str(ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $parms);
+
 			$portfolio_actions[] = array (
 					'icon' => 'icon-plus',
-					'url' => $url.ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING,
+					'url' => $method->getJSCall($parms),
 					'name' => text('ee204')
 			);
 		}
@@ -725,17 +718,19 @@ class PMPage extends Page
 		$module_it = getFactory()->getObject('Module')->getExact('ee/projectlinks');
 		if ( $module_it->getId() != '' )
 		{
-			$url = $module_it->get('Url').getFactory()->getObject('ProjectLink')->getPageNameObject();
-			
-			$project_actions[] = array (
-					'icon' => 'icon-plus',
-					'url' => $url.ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING,
-					'name' => text('ee204')
-			);
+			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('ProjectLink'));
+
+			parse_str(ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $sub_parms);
+			parse_str(ProjectLinkTypeSet::PROGRAM_QUERY_STRING, $program_parms);
 
 			$project_actions[] = array (
+					'icon' => 'icon-plus',
+					'url' => $method->getJSCall($sub_parms),
+					'name' => text('ee204')
+			);
+			$project_actions[] = array (
 					'icon' => 'icon-arrow-right',
-					'url' => $url.ProjectLinkTypeSet::PROGRAM_QUERY_STRING,
+					'url' => $method->getJSCall($program_parms),
 					'name' => text('ee205')
 			);
 		} 		
@@ -768,19 +763,19 @@ class PMPage extends Page
 		$template = array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools')));
 		
 		$resource_it = $resource->getExact($this->getReport());
-		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		if ( $resource_it->getId() != '' ) return $this->parseHint($resource_it->get('Caption'));
 		
 		$resource_it = $resource->getExact($this->getReportBase());
-		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		if ( $resource_it->getId() != '' ) return $this->parseHint($resource_it->get('Caption'));
 
 		$resource_it = $resource->getExact($this->getReportBase().':'.$template);
-		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		if ( $resource_it->getId() != '' ) return $this->parseHint($resource_it->get('Caption'));
 		
 		$resource_it = $resource->getExact($this->getModule().':'.$template);
-		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+		if ( $resource_it->getId() != '' ) return $this->parseHint($resource_it->get('Caption'));
 		
 		$parent = parent::getHint();
-		if ( $parent != '' ) return $parent;
+		if ( $parent != '' ) return $this->parseHint($parent);
 		
 		$report = $this->getReport();
 		if ( $report == '' ) $report = $this->getReportBase(); 		
@@ -788,15 +783,86 @@ class PMPage extends Page
 		if ( $report != '' )
 		{
 		    $text = getFactory()->getObject('PMReport')->getExact($report)->get('Description');
-		    if ( $text != '' ) return '<p>'.$text.'</p>';
+		    if ( $text != '' ) return '<p>'.$this->parseHint($text).'</p>';
 		}
 
 		if ( $this->getModule() != '' )
 		{
 			$text = getFactory()->getObject('Module')->getExact($this->getModule())->get('Description');
-			if ( $text != '' ) return '<p>'.$text.'</p>';
+			if ( $text != '' ) return '<p>'.$this->parseHint($text).'</p>';
 		}
 		
 		return '';
+	}
+
+	function parseHint( $text )
+	{
+		$text = preg_replace('/\%project\%/i', getSession()->getProjectIt()->get('CodeName'), $text);
+		return $text;
+	}
+
+	function getPageWidgets()
+	{
+		return array();
+	}
+
+	function getPageUrl()
+	{
+		if ( !$this->needDisplayForm() ) return parent::getPageUrl();
+
+		$report = getFactory()->getObject('PMReport');
+		$module = getFactory()->getObject('Module');
+		$service = new WorkspaceService();
+		$urls = array();
+
+		foreach( $this->getPageWidgets() as $widget )
+		{
+			$report_it = $report->getExact($widget);
+			if ( $report_it->getId() != '' )
+			{
+				$uids = array ( $report_it->getId() );
+				if ( $report_it->get('Report') != '' ) {
+					$uids = array_merge(
+							$uids,
+							array($report_it->get('Report')),
+							$report->getByRef('Report', $report_it->get('Report'))->idsToArray()
+					);
+				}
+				if ( $report_it->get('Module') != '' ) {
+					$uids = array_merge(
+							$uids,
+							array($report_it->get('Module')),
+							$report->getByRef('Module', $report_it->get('Module'))->idsToArray()
+					);
+				}
+			}
+			else {
+				$report_it = $module->getExact($widget);
+				if ( $report_it->getId() != '' ) {
+					$uids = array_merge(
+							array($report_it->getId()),
+							$report->getByRef('Module', $report_it->getId())->idsToArray()
+					);
+				}
+			}
+
+			if ( count($uids) > 0 )
+			{
+				$reports = $service->getItemOnFavoritesWorkspace($uids);
+				if ( count($reports) > 0 ) {
+					$item = $reports[0]['report'];
+					if ( $item['type'] == 'report' ) {
+						return $report->getExact($item['id'])->getUrl();
+					}
+					if ( $item['type'] == 'module' ) {
+						return $module->getExact($item['id'])->getUrl();
+					}
+				}
+				$urls[] = $report_it->getUrl();
+			}
+		}
+
+		if ( count($urls) > 0 ) return array_shift($urls);
+		return parent::getPageUrl();
 	}
 }

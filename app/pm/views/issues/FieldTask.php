@@ -31,23 +31,13 @@ class FieldTask extends Field
  		$transition = $_REQUEST['Transition'];
  		
  		$task = $model_factory->getObject( 'pm_Task' );
-		$state_it = $this->request_it->getStateIt();
-		
-		if ( $state_it->get('ReferenceName') != 'planned' )
-		{
-			$task_it = $this->request_it->getRef('OpenTasks');
-			
-			if ( $task_it->count() > 0 )
-			{
-				$taskboxes = $this->drawOpen( $task_it );
-			}
+
+		$task_it = $this->request_it->getRef('OpenTasks');
+		if ( $task_it->count() > 0 ) {
+			$this->drawOpen( $task_it, $taskboxes );
 		}
-		
-		if ( $taskboxes < 1 )
-		{
- 			$taskboxes = $this->drawByTypes( $task );
-		}
- 		 
+		$this->drawByTypes( $task, $taskboxes );
+
 		$parms = array (
 				'Priority' => $this->request_it->get('Priority'),
 				'FormActive' => 'N'
@@ -56,8 +46,7 @@ class FieldTask extends Field
 		for ( $i = $taskboxes; $i < 8; $i++ )
 		{
 			$this->drawForm( $task, $taskboxes, 'display:none;', $parms );
-			
-			$taskboxes++;		
+			$taskboxes++;
 		}
 
  		$_REQUEST['Transition'] = $transition;
@@ -76,13 +65,9 @@ class FieldTask extends Field
 		echo '</label>';
  	}
  	
-  	function drawOpen( & $task_it )
+  	function drawOpen( & $task_it, & $taskboxes )
  	{
- 		global $model_factory;
- 		
  		$attributes = $task_it->object->getAttributes();
- 		
- 		$taskboxes = 0;
  		
  		$parms = array();
  		
@@ -104,23 +89,19 @@ class FieldTask extends Field
 			
 	 		$task_it->moveNext();
  		}
-
- 		return $taskboxes;
- 	} 	
+ 	}
  	
- 	function drawByTypes( $task )
+ 	function drawByTypes( $task, & $taskboxes )
  	{
+		$target_it = getFactory()->getObject('Transition')->getExact($_REQUEST['Transition'])->getRef('TargetState');
+
  		$filters = array (
- 				new TaskTypePlannablePredicate(),
- 				new FilterBaseVpdPredicate()
+ 				new FilterBaseVpdPredicate(),
+				new TaskTypeStateRelatedPredicate($target_it->get('ReferenceName'), true)
  		);
-		if ( is_object($this->iteration_it) && $this->iteration_it->get('ProjectStage') != '' ) {
-			$filters[] = new TaskTypeStageRelatedPredicate($this->iteration_it->get('ProjectStage'));
-		}
+
 		$tasktype_it = getFactory()->getObject('pm_TaskType')->getRegistry()->Query($filters);
 		
- 		$taskboxes = 0;
-
  		$parms = array (
  				'Priority' => $this->request_it->get('Priority')
  		);
@@ -136,14 +117,12 @@ class FieldTask extends Field
  			$parms['TaskType'] = $tasktype_it->getId();
  			$parms['Assignee'] = TaskDefaultsService::getAssignee($tasktype_it->getId());
 	 		
-			$this->drawForm( $task, $taskboxes, '', $parms );		
+			$this->drawForm( $task, $taskboxes, 'display:block;', $parms );
 
 			$taskboxes++;
 			
 	 		$tasktype_it->moveNext();
  		}
- 		
- 		return $taskboxes;
  	}
  	
  	function drawForm( $ref, $taskbox, $style = '', $parms )
