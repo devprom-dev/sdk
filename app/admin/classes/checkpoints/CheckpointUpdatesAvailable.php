@@ -10,7 +10,7 @@ class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
     function execute()
     {
         $data = JsonWrapper::decode(
-            file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE)
+            @file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE)
         );
 
         $new_only = count($data) > 0
@@ -22,8 +22,7 @@ class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
 
         $license_it = getFactory()->getObject('LicenseInstalled')->getAll();
         if ( method_exists($license_it, 'getSupportIncluded') && !$license_it->getSupportIncluded() ) {
-            $support_days_left = file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::FILE);
-            if ( $support_days_left <= 0 ) {
+            if ( CheckpointSupportPayed::getPayedDays() <= 0 ) {
                 $this->setValue(1);
                 return;
             }

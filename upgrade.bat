@@ -1,7 +1,12 @@
 set ROOT=%~dp0
 set DEV_ROOT=%~dp0\dev\
-cd dev
 
+git remote add upstream https://github.com/devprom-dev/sdk.git
+git fetch upstream
+git checkout master
+git merge -s recursive -X theirs upstream/master
+
+cd dev
 call mysql\bin\mysqladmin -u root shutdown
 start mysql\bin\mysqld --defaults-file=mysql\my.ini --standalone --console
 

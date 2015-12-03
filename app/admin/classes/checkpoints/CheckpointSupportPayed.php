@@ -99,6 +99,12 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
         return $data;
     }
 
+    static function getPayedDays()
+    {
+        $days = @file_get_contents(DOCUMENT_ROOT.self::FILE);
+        return $days == '' ? 0 : $days;
+    }
+
     function getTitle()
     {
         return text(2057);
