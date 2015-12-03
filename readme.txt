@@ -22,15 +22,11 @@ dev\php\php lib/app/console build-plugin mypluginname
 
 Расположение дистрибутива плагина: build/plugin.mypluginname.zip
 
+
 --
 -- Синхронизация с основным репозиторием SDK
-(первоначальная настройка) git remote add upstream https://github.com/devprom-dev/sdk.git
+upgrade.bat
 
-git fetch upstream
-git checkout master
-git merge -s recursive -X theirs upstream/master
-run.bat
-(обновление базы данных) upgrade.bat
 
 --
 -- Примеры плагинов

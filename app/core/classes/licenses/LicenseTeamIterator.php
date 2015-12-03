@@ -22,6 +22,6 @@ class LicenseTeamIterator extends LicenseIterator
 
 	function getLeftDays()
 	{
-		return max(file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::FILE), 0);
+		return max(CheckpointSupportPayed::getPayedDays(), 0);
 	}
 }

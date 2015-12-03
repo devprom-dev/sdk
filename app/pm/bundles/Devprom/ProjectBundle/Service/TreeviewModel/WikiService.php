@@ -26,7 +26,16 @@ class WikiService
     				new \FilterVpdPredicate()
     			);
     		
-    	$this->setObjectIt( $this->object->getRegistry()->Query($predicates) );
+    	$this->setObjectIt(
+			$this->object->getRegistry()->Query(
+				array_merge(
+					array (
+						new \SortDocumentClause()
+					),
+					$predicates
+				)
+			)
+		);
 	}
 
 	public function setObjectIt( $object_it )
