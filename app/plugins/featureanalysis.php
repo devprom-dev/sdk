@@ -1,3 +1,3 @@
 <?php
 
-include "featureanalysis/FeatureAnalysisPlugin.php";
+//include "featureanalysis/FeatureAnalysisPlugin.php";

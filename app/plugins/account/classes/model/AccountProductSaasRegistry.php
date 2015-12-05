@@ -45,7 +45,47 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
 							)
 						)
         		),
-        		array ( 
+				array (
+						'entityId' => 'LicenseSAASALM20',
+						'Caption' => text('account42'),
+						'CaptionText' => text('account34'),
+						'RequiredFields' => array('AggreementForm','Aggreement','PaymentServiceInfo'),
+						'ValueName' => text('account4'),
+						'ValueDefault' => 12,
+						'PriceRUB' => 2500,
+						'PriceUSD' => 45,
+						'Options' => array (
+								array (
+										'OptionId' => 'agile',
+										'Caption' => text('account37')
+								),
+								array (
+										'OptionId' => 'support',
+										'Caption' => text('account30'),
+										'PriceRUB' => 1900,
+										'PriceUSD' => 33
+								),
+								array (
+										'OptionId' => 'reqs',
+										'Caption' => text('account31'),
+										'PriceRUB' => 1900,
+										'PriceUSD' => 33
+								),
+								array (
+										'OptionId' => 'qa',
+										'Caption' => text('account32'),
+										'PriceRUB' => 1550,
+										'PriceUSD' => 30
+								),
+								array (
+										'OptionId' => 'docs',
+										'Caption' => text('account33'),
+										'PriceRUB' => 1550,
+										'PriceUSD' => 30
+								)
+						)
+				),
+        		array (
         				'entityId' => 'LicenseSAASALMMiddle', 
         				'Caption' => text('account11'),
 						'CaptionText' => text('account34'),
