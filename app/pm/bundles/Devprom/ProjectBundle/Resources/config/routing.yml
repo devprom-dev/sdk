@@ -58,6 +58,11 @@ attachments:
     defaults: { _controller: ProjectBundle:Attachments:page }
     methods:  GET
 
+mentions:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\MentionController
+    prefix:   /pm/{project}
+
 api_key:
     path:  /pm/{project}/api/key
     defaults: { _controller: ProjectBundle:Apikey:full }
@@ -100,6 +105,11 @@ rest_build:
     resource: Devprom\ProjectBundle\Controller\Rest\BuildController
     prefix:   /pm/{project}/api/v1
 
+rest_requirement:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\RequirementController
+    prefix:   /pm/{project}/api/v1
+
 rest_issue:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\IssueController
@@ -120,6 +130,11 @@ rest_bug:
     resource: Devprom\ProjectBundle\Controller\Rest\BugController
     prefix:   /pm/{project}/api/v1
 
+rest_hour:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\HourController
+    prefix:   /pm/{project}/api/v1/{class}/{object}
+
 rest_attachment:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\AttachmentController
@@ -128,9 +143,4 @@ rest_attachment:
 rest_comment:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\CommentController
-    prefix:   /pm/{project}/api/v1/{class}/{object}
-
-rest_hour:
-    type:     rest
-    resource: Devprom\ProjectBundle\Controller\Rest\HourController
     prefix:   /pm/{project}/api/v1/{class}/{object}

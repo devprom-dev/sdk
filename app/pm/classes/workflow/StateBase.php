@@ -19,7 +19,8 @@ class StateBase extends MetaobjectCacheable
  	{
  		parent::__construct('pm_State', new StateBaseRegistry($this));
  		$this->defaultsort = " OrderNum ASC ";
- 		
+
+		$this->setAttributeDescription('IsTerminal', text(2106));
  		$this->setAttributeDescription('RelatedColor', text(1835));
  		$this->setAttributeType('ReferenceName', 'varchar');
  		

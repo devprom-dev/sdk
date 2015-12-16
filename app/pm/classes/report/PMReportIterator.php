@@ -129,10 +129,9 @@ class PMReportIterator extends OrderedIterator
 	    );
 	}
 	
-	function getUrl()
+	function getUrl( $query_string = '' )
 	{
-	    $info = $this->buildMenuItem();
-	    
+	    $info = $this->buildMenuItem($query_string);
 	    return $info['url'];
 	}
 	

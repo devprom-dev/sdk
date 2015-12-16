@@ -47,8 +47,8 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 				'description' => $attr_it->get('Description'),
 				'ordernum' => $attr_it->get('OrderNum'),
 				'origin' => ORIGIN_CUSTOM,
-				'default' => $attr_it->getHtmlDecoded('DefaultValue'),
-				'required' => $attr_it->get('IsRequired') == 'Y',
+				'default' => $attr_it->get('ObjectKind') == '' ? $attr_it->getHtmlDecoded('DefaultValue') : '',
+				'required' => $attr_it->get('ObjectKind') == '' ? $attr_it->get('IsRequired') == 'Y' : false,
 				'groups' => $groups 
 			);
 			
@@ -65,6 +65,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		foreach( $attributes as $key => $attribute )
 		{
 			$metadata->setAttribute( $key, $attribute );
+			$metadata->addAttributeGroup($key, 'additional');
 		}
 		
 		$metadata->addPersister( new CustomAttributesPersister() );

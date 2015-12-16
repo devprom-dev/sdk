@@ -29,12 +29,13 @@ class PortfolioIterator extends ProjectIterator
  	    $methodology = $model_factory->getObject('pm_Methodology');
         
         $this->methodology_it = $methodology->createCachedIterator( array( array (
-            'pm_Methodology' => 9999999,
+            'pm_MethodologyId' => 9999999,
             'Project' => $this->getId(),
             'IsReportsOnActivities' => 'N',
             'IsPlanningUsed' => 'N',
         	'IsSupportUsed' => 'Y',
-        	'IsKnowledgeUsed' => 'Y'
+        	'IsKnowledgeUsed' => 'Y',
+            'RequestEstimationRequired' => 'estimationnonestrategy'
         )));
         
         $attributes = $methodology->getAttributes();
@@ -50,12 +51,13 @@ class PortfolioIterator extends ProjectIterator
             foreach ( $attributes as $key => $value )
             {
             	if ( $key == 'IsRequestOrderUsed' ) continue;
-                if ( $methodology_it->get($key) != 'N' ) $data[0][$key] = $methodology_it->get($key);
+                if ( $key == 'RequestEstimationRequired' ) continue;
+                if ( $methodology_it->get($key) == 'Y' ) $data[0][$key] = $methodology_it->get($key);
             }
             
             $methodology_it->moveNext();
         }
-        
+
         $this->methodology_it->setRowset( $data );
  	    
  		return $this->methodology_it;

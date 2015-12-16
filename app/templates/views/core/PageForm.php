@@ -103,7 +103,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     
 			if ( $bottom_hint != '' )
 			{
-				echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $form_id));
+				echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id));
 			}
 
             ?>

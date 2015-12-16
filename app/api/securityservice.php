@@ -15,7 +15,7 @@
  $namespace = 'tns';
  $url = _getServerUrl().'/api/securityservice'; 
  
- $server->configureWSDL($webservice, $namespace, $url, 'document');
+ $server->configureWSDL($webservice, $namespace, $url, $soap->getStyle());
  $server->wsdl->schemaTargetNamespace = $url;
 
  $server->wsdl->addComplexType(
@@ -35,7 +35,7 @@
     	'project' => 'xsd:string' 
     	),          
     array('return' => $namespace.':Token'),
-    $namespace, $namespace.'.Login', 'document', 'literal', 'Returns token to access other services'
+    $namespace, $namespace.'.Login', $soap->getStyle(), $soap->getUse(), 'Returns token to access other services'
  ); 
 
  $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';

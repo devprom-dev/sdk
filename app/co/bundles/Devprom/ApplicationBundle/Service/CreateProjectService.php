@@ -331,9 +331,6 @@ class CreateProjectService
 			case -7:
 				return text(206);
 				
-			case -8:
-				return text(207);
-				
 			case -9:
 				return text(1870);
 				

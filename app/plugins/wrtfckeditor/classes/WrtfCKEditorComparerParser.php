@@ -8,6 +8,7 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 		
         $content = preg_replace_callback('/<img\s+alt="([^"]+)"[^>]+>/i', array($this, 'parseUMLImage'), $content);
 		$content = preg_replace('/<img[^>]+>/i', str_pad(' '.translate('Изображение').' ', 120, '-', STR_PAD_BOTH), $content);
+		$content = preg_replace('/@(\w*)/u', '', $content);
 
 	    return $content;
 	}

@@ -62,7 +62,8 @@ $has_portfolio_programs = count($portfolios) + count($programs) > 0;
                         <tr>
                             <td>
                             <?php foreach ( $admin_actions as $action ) { ?>
-                                <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
+                                <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                             <?php } ?>
                             <? if ( $has_portfolio_programs ) { ?>
                             </td>

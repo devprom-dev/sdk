@@ -244,21 +244,19 @@ class MetaobjectStatable extends Metaobject
 	
 	function modify_parms( $object_id, $parms )
 	{
-		$object_it = $this->getExact($object_id);
+		$object_it = $object_id instanceof OrderedIterator ? $object_id : $this->getExact($object_id);
 
-		if ( $parms['Transition'] != '' )
-		{
+		if ( $parms['Transition'] != '' ) {
 			$state_it = getFactory()->getObject($this->getStateClassName())->getRegistry()->Query(
-					array (
-							new StateTransitionTargetPredicate($parms['Transition'])
-					)
+				array (
+					new StateTransitionTargetPredicate($parms['Transition'])
+				)
 			);
-			
 			if ( $state_it->getId() > 0 ) $parms['State'] = $state_it->get('ReferenceName');
+
 			$state_it = $this->moveToState($object_it, $parms);
 		}
-		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )
-		{
+		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] ) {
 			$state_it = $this->moveToState($object_it, $parms);
 		}
 

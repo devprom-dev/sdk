@@ -18,11 +18,9 @@ class PMWikiDocument extends PMWikiTable
  	
     function getDocumentIt()
 	{
-	    if ( is_object($this->document_it) )
-	    {
+	    if ( is_object($this->document_it) ) {
 	    	return $this->getObject()->createCachedIterator($this->document_it->getRowset());
 	    }
-	    
 	    return $this->document_it = $this->buildDocumentIt();
 	}
 	
@@ -30,7 +28,13 @@ class PMWikiDocument extends PMWikiTable
 	{
 		if ( !in_array($_REQUEST['document'], array('', 'all')) )
 	    {
-        	return $this->getObject()->getExact($_REQUEST['document']);    
+			$registry = new ObjectRegistrySQL($this->getObject());
+        	return $registry->Query(
+					array(
+							new DocumentVersionPersister(),
+							new FilterInPredicate($_REQUEST['document'])
+					)
+			);
 	    }
 	    else
 	    {
@@ -44,12 +48,13 @@ class PMWikiDocument extends PMWikiTable
 	    
 	    $key = 'page';
 	    
-	    if ( $_REQUEST[$key] != '' )
-	    {
-	        $this->object_it = $this->getObject()->getExact($_REQUEST[$key]);
+	    if ( $_REQUEST[$key] != '' ) {
+			$registry = new ObjectRegistrySQL($this->getObject());
+			$this->object_it = $registry->Query(
+					array(new FilterInPredicate($_REQUEST[$key]))
+			);
 	    }
-	    else
-	    {
+	    else {
 	        $this->object_it = $this->getObject()->getEmptyIterator();
 	    }
 	    
@@ -181,13 +186,6 @@ class PMWikiDocument extends PMWikiTable
 	{
 		if ( is_object($this->compareto_it) ) return $this->compareto_it;
 	 
-		$snapshot = new WikiPageComparableSnapshot($this->getDocumentIt());
-		if ( !in_array($_REQUEST['compareto'], array('', 'none', 'all')) )
-		{ 
-			$snapshot_it = $snapshot->getExact($_REQUEST['compareto']);
-			if ( $snapshot_it->getId() != '' ) return $this->compareto_it = $snapshot_it;
-		}
-    			
 		$matches = array();
 		if( preg_match('/document:(\d+)/', $_REQUEST['compareto'], $matches) )
 		{
@@ -196,8 +194,14 @@ class PMWikiDocument extends PMWikiTable
 				return $this->compareto_it = $registry->Query(array(new FilterInPredicate($matches[1])));
 			}
 		}
-		
-    	return $snapshot->getEmptyIterator();
+		else if ( !in_array($_REQUEST['compareto'], array('', 'none', 'all')) )
+		{
+			$snapshot = new WikiPageComparableSnapshot($this->getDocumentIt());
+			$snapshot_it = $snapshot->getExact($_REQUEST['compareto']);
+			if ( $snapshot_it->getId() != '' ) return $this->compareto_it = $snapshot_it;
+		}
+
+    	return $this->getObject()->getEmptyIterator();
 	}
 	
 	function getCompareToActions()
@@ -211,23 +215,20 @@ class PMWikiDocument extends PMWikiTable
 		$baselines = array();
 		
 		$selected = $this->getCompareToSnapshot()->getId();
-		
+
 		$title = text(1566);
 
 		while( !$snapshot_it->end() )
 		{
-			if ( $snapshot_it->getId() != $this->getRevisionIt()->getId() )
-			{
+			if ( $snapshot_it->getId() != $this->getRevisionIt()->getId() ) {
 				$actions[] = array (
 						'name' => $snapshot_it->getDisplayName(),
 						'url' => "javascript: window.location = updateLocation('compareto=".$snapshot_it->getId()."', window.location.toString());"
 				);
 			}
 			
-			if ( $selected == $snapshot_it->getId() )
-			{
+			if ( in_array($snapshot_it->getId(), array($selected,'document:'.$selected)) ) {
 				$title .= ": ".$snapshot_it->getDisplayName();
-				
 				if ( mb_strlen($title) > 30 ) $title = mb_substr($title, 0, 30).'...';
 			}
 			
@@ -260,7 +261,7 @@ class PMWikiDocument extends PMWikiTable
 			
 			$snapshot_it->moveNext();
 		}
-		
+
 		if ( $this->getRevisionIt()->getId() != '' )
 		{
 			$document_title = translate('Бейзлайн').': '.$this->getDocumentIt()->getDisplayName();
@@ -276,20 +277,17 @@ class PMWikiDocument extends PMWikiTable
 			);
 		}
 		
-		if ( count($actions) > 0 && $selected != '' )
-		{
+		if ( count($actions) > 0 && $selected != '' ) {
 			$actions[] = array();
-			
 			$actions[] = array (
 					'name' => text(1710),
 					'url' => "javascript: window.location = updateLocation('compareto=', window.location.toString());"
 			);
 		}
-		
+
 		if ( $this->getDocumentIt()->get('DocumentVersion') != '' )
 		{
 			$baseline_title = translate('Бейзлайн').': '.$this->getDocumentIt()->get('DocumentVersion');
-			
 			$baselines[] = array (
 				'name' => $baseline_title,
 				'url' => "javascript: window.location = updateLocation('baseline=', window.location.toString());"
@@ -298,7 +296,6 @@ class PMWikiDocument extends PMWikiTable
 		elseif ( count($baselines) > 0 )
 		{
 			$baseline_title = translate('Бейзлайн').': '.$this->getDocumentIt()->getDisplayName();
-			
 			$baselines[] = array (
 				'name' => $baseline_title,
 				'url' => "javascript: window.location = updateLocation('baseline=', window.location.toString());"

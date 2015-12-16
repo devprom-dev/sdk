@@ -3,7 +3,10 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
- include('common.php');
+include('common.php');
+
+if ( $_REQUEST['style'] == '' ) $_REQUEST['style'] = 'rpc';
+if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
 
  // Create SOAP service
  $server = new soap_server();
@@ -16,7 +19,7 @@
  $namespace = 'tns';
  $url = _getServerUrl().'/api/testservice'; 
  
- $server->configureWSDL($webservice, $namespace, $url, 'rpc');
+ $server->configureWSDL($webservice, $namespace, $url, $soap->getStyle());
  $server->wsdl->schemaTargetNamespace = $url;
 
  // export complex types (classes)
@@ -61,7 +64,7 @@
 		'object' => $namespace.':testscenario' 
 		),          
     array('return' => $namespace.':testscenario'),
-    $namespace, $namespace.'.Create', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.Create', $soap->getStyle(), $soap->getUse(), ''
  ); 
  	
  $server->register('Find',
@@ -70,7 +73,7 @@
 		'object' => $namespace.':testscenario' 
 		),          
     array('return' => $namespace.':testscenario'),
-    $namespace, $namespace.'.Find', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.Find', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('Append',
@@ -80,7 +83,7 @@
 		'object' => $namespace.':testscenario' 
 		),          
     array('return' => $namespace.':testscenario'),
-    $namespace, $namespace.'.Append', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.Append', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('Run',
@@ -93,7 +96,7 @@
     array(
 		'return' => $namespace.':testexecution'
 		),
-    $namespace, $namespace.'.Run', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.Run', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('ReportResult',
@@ -105,7 +108,7 @@
 		'description' => 'xsd:string', 
 		),          
     array(),
-    $namespace, $namespace.'.ReportResult', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.ReportResult', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('ReportIssue',
@@ -118,7 +121,7 @@
     array(
 		'return' => $namespace.':request'
     	),
-    $namespace, $namespace.'.ReportIssue', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.ReportIssue', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('ReportFile',
@@ -130,7 +133,7 @@
 		),          
     array(
     	),
-    $namespace, $namespace.'.ReportFile', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.ReportFile', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('GetResult',
@@ -141,7 +144,7 @@
     array(
 		'return' => $namespace.':testexecutionresult'
 		),
-    $namespace, $namespace.'.GetResult', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.GetResult', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';

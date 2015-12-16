@@ -38,7 +38,7 @@ class EmailNotificator extends ObjectFactoryNotificator
  	
 	function add( $object_it ) 
 	{
-		$this->process( 'add', $object_it, $object_it );
+		$this->process( 'add', $object_it, $object_it->object->getEmptyIterator() );
 	}
 
  	function modify( $prev_object_it, $object_it ) 
@@ -48,7 +48,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 
  	function delete( $object_it ) 
 	{
-		$this->process( 'delete', $object_it, $object_it );
+		$this->process( 'delete', $object_it->object->getEmptyIterator(), $object_it );
 	}
 	 
  	public function & getHandler( $object_it ) 
@@ -66,37 +66,40 @@ class EmailNotificator extends ObjectFactoryNotificator
 	{
 		$queues = array();
 		
-	    $render_service = new RenderService(
-	    		getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
-		);
-		
 		$from = $this->getSender($object_it, $action);
-		if( $from == '' )
-		{
+		if( $from == '' ) {
 			$this->info('Sender is undefined');
 			return $queues;
 		}
-		
-		$recipients = $this->getRecipientArray($object_it, $prev_object_it, $action);
-		if( count($recipients) < 1 )
-		{
-			$this->info('Recipients are unknown');
+
+		$self_emails = array();
+		$this->addRecipient(getSession()->getUserIt(), $self_emails);
+
+		$recipients = array_diff(
+				array_unique($this->getRecipientArray($object_it, $prev_object_it, $action)),
+				$self_emails
+		);
+		if( count($recipients) < 1 ) {
+			$this->info('There are no recipients');
 			return $queues;
-		} 
+		}
+
+		$render_service = new RenderService(
+				getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
+		);
 
 		$keys = array_keys($recipients);
 		for($i = 0; $i < count($keys); $i++) 
 		{
 			$recipient = $recipients[$keys[$i]];
-			
+
+			$parms = $this->getRenderParms($action, $object_it, $prev_object_it, $recipient);
+			if ( count($parms['fields']) < 1 ) continue;
+
 			$mail = new HtmlMailBox();
 			$mail->setFrom($from);
-			
 			$mail->appendAddress( $this->getAddress($recipient) );
-
 			$mail->setSubject( $this->getSubject( $object_it, $prev_object_it, $action, $recipient ) );
-	
-			$parms = $this->getRenderParms($action, $object_it, $prev_object_it, $recipient);
 	   		$mail->setBody($render_service->getContent($parms['template'], $parms));
 			
 			$queues[] = $mail->send();
@@ -215,15 +218,9 @@ class EmailNotificator extends ObjectFactoryNotificator
 
 	protected function getRecipientArray( $object_it, $prev_object_it, $action ) 
 	{
-		global $model_factory;
-		
 		$project_it = getSession()->getProjectIt();
-		
-		$part_it = getSession()->getParticipantIt();
-		
-		$user_it = getSession()->getUserIt();
-		
-		$notification = $model_factory->getObject('Notification');
+
+		$notification = getFactory()->getObject('Notification');
 		
 		$handler = $this->getHandler( $object_it );
 
@@ -232,22 +229,16 @@ class EmailNotificator extends ObjectFactoryNotificator
 		$users = $handler->getUsers( $object_it, $prev_object_it, $action );
 		
 		// include participants who wants to receive all notifications
-		$participant = $model_factory->getObject('Participant');
-		
+		$participant = getFactory()->getObject('Participant');
 		$participant->addFilter( new ParticipantActivePredicate() );
-		
 		$it = $participant->getAll();
 		
-		while ( !$it->end() )
-		{
-			if ( $notification->getType( $it ) != 'all' )
-			{
+		while ( !$it->end() ) {
+			if ( $notification->getType( $it ) != 'all' ) {
 			    $it->moveNext();
-			    
 			    continue;
 			}
-			
-			array_push( $participants, $it->getId() );
+			$participants[] = $it->getId();
 			
 			$it->moveNext();
 		}
@@ -255,61 +246,34 @@ class EmailNotificator extends ObjectFactoryNotificator
 		// make email addresses
 		$emails = array();
 
-		if ( is_object($part_it) )
-		{
-			$current_part_id = $part_it->getId();
-			$current_user_id = $part_it->get('SystemUser');
-		}
-		else if ( is_object($user_it) )
-		{
-			$current_user_id = $user_it->getId();
-		}
-
 		// process users
-		$user = $model_factory->getObject('cms_User');
-		
-		if ( count($users) > 0 )
-		{
+		$user = getFactory()->getObject('cms_User');
+		if ( count($users) > 0 ) {
 		    $systemuser_it = $user->getExact($users);
 		}
-		else
-		{
+		else {
 		    $systemuser_it = $user->getEmptyIterator();
 		}
 		
 		while( !$systemuser_it->end() )
 		{
-			// exclude a user who initiated the notification
-			if ( $systemuser_it->getId() == $current_user_id && $current_user_id != '' )
-			{
-				$this->info($systemuser_it->getDisplayName().' skipped as current');
-				$systemuser_it->moveNext();
-				continue;
-			}
-			
 			// check if user is a prticipant
 			$it = $project_it->getParticipantForUserIt( $systemuser_it );
-			if ( $it->count() < 1 )
-			{
-				$systemuser_it->moveNext();
-				continue;
+			if ( $it->count() < 1 ) {
+				$this->addRecipient($systemuser_it, $emails);
 			}
-			
-			array_push($participants, $it->getId());
-			 
+			else {
+				$participants[] = $it->getId();
+			}
 			$systemuser_it->moveNext();
 		}
 
 		// process participants
-		$part = $model_factory->getObject('pm_Participant');
-		
-		if ( count($participants) > 0 )
-		{
-		    $participant_it = $part->getExact($participants);
+		if ( count($participants) > 0 ) {
+		    $participant_it = $participant->getExact($participants);
 		}
-		else
-		{
-		    $participant_it = $part->getEmptyIterator();
+		else {
+		    $participant_it = $participant->getEmptyIterator();
 		}
 		
 		while( !$participant_it->end() )
@@ -322,14 +286,6 @@ class EmailNotificator extends ObjectFactoryNotificator
 				continue;
 			}
 			
-			// exclude a participant who initiated the notification
-			if ( $participant_it->getId() == $current_part_id && $current_part_id != "" )
-			{
-				$this->info($participant_it->getDisplayName().' skipped as current');
-				$participant_it->moveNext();
-				continue;
-			}
-
 			// exclude those who don't want to receive direct notifications
 			if ( !$handler->IsParticipantNotified($participant_it) )
 			{
@@ -358,36 +314,85 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 		
 		// process watchers on the object
-		$watcher = $model_factory->getObject2('pm_Watcher', is_a($object_it->object, 'Comment') ? $object_it->getAnchorIt() : $object_it);
+		$emails = array_merge($emails, $this->addWatchers($object_it));
 
-		$watcher_it = $watcher->getAll();
-		
-		while ( !$watcher_it->end() )
-		{
-			if ( $watcher_it->get('SystemUser') < 1 )
-			{
-				$watcher_it->moveNext();
-				continue;
-			}
-			
-			if ( $watcher_it->get('SystemUser') == $user_it->getId() )
-			{
-				$watcher_it->moveNext();
-				continue;
-			}
-			
-			$systemuser_it = $watcher_it->getRef('SystemUser');
-			
-			$address = $this->addRecipient($systemuser_it, $emails);
-			
-			$this->notification_reason[$address] = text(1066);
-			
-			$watcher_it->moveNext();
-		}
-		
+		// process mentions on the content
+		$emails = array_merge($emails, $this->addMentions($object_it));
+
 		return $emails;
 	}
-		
+
+	protected function addWatchers( $object_it )
+	{
+		$emails = array();
+
+		$watcher_it = getFactory()->getObject2('pm_Watcher',
+			is_a($object_it->object, 'Comment') ? $object_it->getAnchorIt() : $object_it)->getAll();
+
+		while ( !$watcher_it->end() )
+		{
+			// skip current user or external emails
+			if ( in_array($watcher_it->get('SystemUser'), array('', getSession()->getUserIt()->getId())) ) {
+				$watcher_it->moveNext();
+				continue;
+			}
+
+			$systemuser_it = $watcher_it->getRef('SystemUser');
+			$address = $this->addRecipient($systemuser_it, $emails);
+			$this->notification_reason[$address] = text(1066);
+
+			$watcher_it->moveNext();
+		}
+
+		return $emails;
+	}
+
+	protected function addMentions( $object_it )
+	{
+		$emails = array();
+		$matches = array();
+
+		// get any available text
+		$texts = $object_it->getHtmlDecoded('Caption');
+		$texts .= $object_it->getHtmlDecoded('Content');
+		$texts .= $object_it->getHtmlDecoded('Description');
+
+		if ( !preg_match_all('/@(\w*)/u', $texts, $matches) ) return $emails;
+		array_shift($matches);
+		$matches = array_shift($matches);
+
+		// convert mentions into system users
+		$user_ids = array();
+		$mention_it = getFactory()->getObject('Mentioned')->getAll();
+		while( !$mention_it->end() ) {
+			if ( in_array($mention_it->getId(), $matches) ) {
+				$user_ids[] = $mention_it->get('User');
+			}
+			$mention_it->moveNext();
+		}
+
+		// skip current user
+		$user_id = getSession()->getUserIt()->getId();
+		$user_ids = array_filter(
+				preg_split('/,/',join(',',$user_ids)),
+				function($value) use ($user_id) {
+					return $value != '' && trim($value) != $user_id;
+				}
+		);
+		if ( count($user_ids) < 1 ) return $emails;
+
+		// convert users into emails
+		$user_it = getFactory()->getObject('User')->getExact($user_ids);
+		while ( !$user_it->end() )
+		{
+			$address = $this->addRecipient($user_it, $emails);
+			$this->notification_reason[$address] = text(2103);
+			$user_it->moveNext();
+		}
+
+		return $emails;
+	}
+
 	protected function getSubject( $object_it, $prev_object_it, $action, $recipient )
 	{
 		return $this->getHandler($object_it)->getSubject( $subject, $object_it, $prev_object_it, $action, $recipient );

@@ -81,18 +81,21 @@ class CommonAccessRight extends Metaobject
 					new FilterAttributePredicate('ProjectRole', $role_filter)
 				)
 		);
+
  		while( !$access_it->end() )
  		{
  			$data[] = array (
  				'ReferenceName' => $access_it->get('ObjectClass').'.'.$access_it->get('ObjectId'),
  				'ReferenceType' => 'O',
- 				'DisplayName' => $access_it->get('ObjectClass')
+ 				'DisplayName' => $access_it->get('ObjectClass'),
+				'ProjectRole' => $access_it->get('ProjectRole'),
+				'ProjectRoleName' => $access_it->get('ProjectRoleName')
  			);
  			$access_it->moveNext();
  		}
 		
  		usort( $data, 'usort_display_name' );
- 			
+
  		return $data;
 	}
 	
@@ -216,11 +219,6 @@ class CommonAccessRight extends Metaobject
 			$data = array_merge($data, $this->getDataEntities());	
 		}
 		
-		if ( in_array($filter_kind, array('', 'all', 'object')) )
-		{
-			$data = array_merge($data, $this->getDataAccess());	
-		}
-		
 		if ( in_array($filter_kind, array('', 'all', 'module')) )
 		{
 			$data = array_merge($data, $this->getDataModules());	
@@ -263,7 +261,12 @@ class CommonAccessRight extends Metaobject
  			
 			$role_it->moveNext();
 		}
-		
+
+		if ( in_array($filter_kind, array('', 'all', 'object')) )
+		{
+			$recordset = array_merge($recordset, $this->getDataAccess());
+		}
+
 		foreach ( $this->getRegistryDefault()->getSorts() as $sort )
 		{
 			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ReferenceName' )

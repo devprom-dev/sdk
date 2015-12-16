@@ -8,10 +8,10 @@ include "sorts/SortReleaseEstimatedStartClause.php";
 
 class Release extends Metaobject
 {
- 	function Release() 
+ 	function __construct( $registry = null )
  	{
-		parent::Metaobject('pm_Version', new ReleaseRegistry($this));
-		
+		parent::__construct('pm_Version', is_object($registry) ? $registry : new ReleaseRegistry($this));
+
 		$this->setSortDefault( array( new SortAttributeClause('StartDate'), new SortAttributeClause('Caption')) );
 		 
 		$this->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false);

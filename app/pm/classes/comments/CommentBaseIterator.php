@@ -18,23 +18,6 @@ class CommentBaseIterator extends OrderedIterator
 			'LCASE(ObjectClass)', strtolower($this->get('ObjectClass')) );
  	}
  
- 	function getThreadUserIt()
- 	{
- 		global $model_factory;
- 		
-		$comment_user = $model_factory->getObject('cms_User');
-		$comment_it = $this->getRollupIt();
-		
-		$participants = array(); 
-		for($i = 0; $i < $comment_it->count(); $i++) 
-		{
-			array_push($participants, $comment_it->get('AuthorId'));
-			$comment_it->moveNext();
-		}
-		
-		return $comment_user->getInArray('cms_UserId', $participants);
- 	}
-
  	function getThreadEmails( $emails = array() )
  	{
 		$comment_it = $this->getRollupIt();
@@ -93,48 +76,32 @@ class CommentBaseIterator extends OrderedIterator
 			1 );
 	}
 	
-	function getCommentInDayIt( $comment_date ) 
-	{
- 		$this->object->defaultsort = 'RecordCreated DESC';
- 		
- 		return $this->object->getByRefArray(
-			array( 'ObjectId' => $this->get('ObjectId'), 
-				   'LCASE(ObjectClass)' => strtolower($this->get('ObjectClass')),
-				   'DATE(RecordModified)' => $comment_date ), 3 );
-	}
-
-	function getLastCommentInDayIt( $comment_date ) 
-	{
- 		$this->object->defaultsort = 'RecordCreated DESC';
- 		
- 		return $this->object->getByRefArray(
-			array( 'ObjectId' => $this->get('ObjectId'), 
-				   'LCASE(ObjectClass)' => strtolower($this->get('ObjectClass')),
-				   'DATE(RecordModified)' => $comment_date ), 1 );
-	}
-
 	function getThreadIt()
 	{
-		return $this->object->getByRef( 'PrevComment', $this->getId() );
+		return $this->object->getRegistry()->Query(
+				array (
+						new FilterAttributePredicate('PrevComment', $this->getId()),
+						new SortAttributeClause('RecordCreated')
+				)
+		);
 	}
 	
-	function getRollupIt( $limit = 0 )
+	function getRollupIt()
 	{
 		$comment_array = array();
 		$comment_it = $this;
 		
-		while( $comment_it->count() > 0 )
+		while( $comment_it->getId() > 0 )
 		{
-			array_push($comment_array, $comment_it->getId());
-			$comment_it = $comment_it->getRef('PrevComment');
-			
-			if ( count($comment_array) >= $limit && $limit > 0 )
-			{
-				break;
-			}
+			$comment_array[] = $comment_it->getData();
+			if ( $comment_it->get('PrevComment') < 1 ) break;
+
+			$comment_it = $comment_it->object->getRegistry()->Query(
+				array ( new FilterInPredicate($comment_it->get('PrevComment')) )
+			);
 		}
 		
-		return $this->object->getInArray('CommentId', $comment_array);
+		return $this->object->createCachedIterator($comment_array);
 	}
 	
 	function getAnchorIt()

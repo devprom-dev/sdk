@@ -117,8 +117,7 @@ class PMWikiList extends PMPageList
 	{
 		$fields = parent::getColumnFields();
 		
-		foreach( $fields as $key => $value )
-		{
+		foreach( $fields as $key => $value ) {
 			if ( $value == 'Content' ) unset($fields[$key]);
 		}
 		
@@ -129,21 +128,13 @@ class PMWikiList extends PMPageList
 	
 	function getGroupFields()
 	{
-		$fields = array();
-		
-		$object = $this->getObject();
-		
-		if ( is_object($object->getTypeIt()) )
-		{
-			array_push( $fields, 'PageType' );
-		}
-		
-		if ( $object->IsStatable() )
-		{
-			array_push( $fields, 'State' );
-		}
-		
-		array_push( $fields, 'Project', 'ChangeRequest', 'Tags', 'DocumentId' );
+		$fields = array_diff(
+			parent::getGroupFields(),
+			$this->getObject()->getAttributesByGroup('source-attribute'),
+		    array (
+				'Watchers', 'Attachments', 'ParentPage'
+			)
+		);
 		
 		return $fields;
 	}

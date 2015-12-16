@@ -2,16 +2,11 @@
 
 class CommonAccessRolePredicate extends FilterPredicate
 {
- 	function _predicate( $filter )
- 	{
- 		global $model_factory;
- 		
- 		$role = $model_factory->getObject('pm_ProjectRole');
- 		$role_it = $role->getExact( $filter );
- 		
- 		if ( $role_it->count() > 0 )
- 		{
- 			return " AND pm_ProjectRoleId = ".$role_it->getId();
- 		}
- 	}
+	function _predicate( $filter )
+	{
+		$role_it = getFactory()->getObject('pm_ProjectRole')->getExact(preg_split('/,/', $filter));
+		if ( $role_it->count() < 1 ) return " AND 1 = 2 ";
+
+		return " AND pm_ProjectRoleId IN (".join(',',$role_it->idsToArray()).")";
+	}
 }

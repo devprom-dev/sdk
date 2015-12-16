@@ -40,7 +40,7 @@ class BulkFormBase extends AjaxForm
 				return 'custom'; 	
 
 			default:
-				if ( is_object($this->form) ) return 'custom';
+				if ( is_object($this->getForm()) ) return 'custom';
 				return parent::getAttributeType( $attribute );
 		}
 	}
@@ -74,6 +74,16 @@ class BulkFormBase extends AjaxForm
 	
 	function getForm()
 	{
+		if ( !is_object($this->form) ) {
+			$this->form = $this->buildForm();
+			if ( is_object($this->form) ) {
+				$this->form->setObjectIt($this->getIt());
+			}
+		}
+		return $this->form;
+	}
+
+	protected function buildForm() {
 		return null;
 	}
 	
@@ -258,8 +268,6 @@ class BulkFormBase extends AjaxForm
 
 	function getRenderParms()
 	{
-		$this->form = $this->getForm();
-		
 		return parent::getRenderParms();
 	}
 	

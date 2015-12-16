@@ -89,9 +89,11 @@
 			<? echo $form->drawCustomAttribute($key, $attribute['value'], $attribute['index']); ?>
 			
     		<?php } else { ?>
-			
+
+			<? if ( $attribute['caption'] != '' ) { ?>
 			<label><?=$attribute['caption']?></label>
-			
+			<? } ?>
+
 			<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
 
 			<?php } ?>
@@ -100,7 +102,7 @@
 			
 			<span class="help-block"><?=$attribute['description']?></span>
 			<br/>
-			
+
 			<?php } ?>
 
 		<?php } ?>

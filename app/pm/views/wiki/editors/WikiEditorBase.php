@@ -17,6 +17,7 @@ abstract class WikiEditorBase
 	var $maximum_rows = 25;
 	var $css_class_name = '';
 	var $required = false;
+	private $description;
  	
  	function WikiEditorBase( $object = null )
  	{
@@ -32,6 +33,7 @@ abstract class WikiEditorBase
 	 			$this->object = $object;
 	 		}
  		}
+		$this->setDescription(text(606));
  	}
  	
  	function setObjectIt( $object_it )
@@ -256,14 +258,13 @@ abstract class WikiEditorBase
 	function drawPreviewButton()
 	{
 	}
-	
-	function getDescription()
-	{
-		global $model_factory;
-		
-		$info = $model_factory->getObject('Module')->getExact('project-settings')->buildMenuItem();
-		
-		return str_replace('%1', $info['url'], text(606));
+
+	function setDescription( $text ) {
+		$this->descrition = $text;
+	}
+
+	function getDescription() {
+		return $this->descrition;
 	}
 	
  	function drawHelpSection()

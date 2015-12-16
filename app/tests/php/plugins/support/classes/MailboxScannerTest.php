@@ -41,6 +41,10 @@ class MailboxScannerTest extends DevpromTestCase {
 
         $this->userServiceMock = $this->getMock("UserService", array("authorizeExistingUser", "isServicedeskProject"));
         $this->userServiceMock->expects($this->any())->method("isServicedeskProject")->will($this->returnValue(false));
+        $this->userServiceMock->expects($this->any())->method('authorizeExistingUser')->will(
+            $this->returnValue(
+                (new \User())->getEmptyIterator()
+            ));
 
         $this->requestMock = $this->getMock("Request", array("add_parms", "getExact", "getByRefArray", "createSQLIterator", "getTerminalStates"));
         $this->requestMock->expects($this->any())->method('add_parms')->will($this->returnValue(1));

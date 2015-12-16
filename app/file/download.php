@@ -4,10 +4,7 @@ include_once dirname(__FILE__).'/../common.php';
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
-$plugins = new PluginsFactory();
-
-$model_factory = new ModelFactoryExtended($plugins);
-
+$model_factory = new ModelFactoryExtended(PluginsFactory::Instance());
 $http_basic_factory = new AuthenticationHttpBasicFactory();
 
 if ( $http_basic_factory->ready() )

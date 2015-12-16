@@ -24,21 +24,25 @@ class PMWikiDocumentList extends PMWikiList
     {
     	$snapshot_it = $this->getTable()->getCompareToSnapshot();
 
-   		if ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch', 'document')) )
-   		{
+   		if ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch','document')) ) {
    			$registry = new WikiPageRegistryBaseline();
    			$registry->setDocumentIt($this->getTable()->getDocumentIt());
    			$registry->setBaselineIt($this->getObject()->getExact($snapshot_it->get('ObjectId')));
     		$this->getObject()->setRegistry($registry);
    		}
-   		elseif ( $snapshot_it->getId() != '' && $snapshot_it->object instanceof WikiPageComparableSnapshot )
-   		{
+   		elseif ( $snapshot_it->getId() != '' && $snapshot_it->object instanceof WikiPageComparableSnapshot ) {
    			$registry = new WikiPageRegistryVersion();
    			$registry->setDocumentIt($this->getTable()->getDocumentIt());
    			$registry->setSnapshotIt($snapshot_it);
     		$this->getObject()->setRegistry($registry);
    		}
-    	
+		elseif ( $snapshot_it->getId() != '' ) {
+			$registry = new WikiPageRegistryBaseline();
+			$registry->setDocumentIt($this->getTable()->getDocumentIt());
+			$registry->setBaselineIt($snapshot_it);
+			$this->getObject()->setRegistry($registry);
+		}
+
     	$version_it = $this->getTable()->getRevisionIt();
     	if ( $version_it->getId() > 0 )
     	{
@@ -47,8 +51,12 @@ class PMWikiDocumentList extends PMWikiList
     		$registry->setSnapshotIt($version_it);
 	    	$this->getObject()->setRegistry($registry);
     	}
-    	
-        if ( $_REQUEST['revision'] > 0 )
+
+		if ( $snapshot_it->getId() != '' ) {
+			$this->getObject()->addPersister( new WikiPageBranchesPersister() );
+		}
+
+		if ( $_REQUEST['revision'] > 0 )
     	{
     		$this->revision_it = getFactory()->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
     		if ( $this->revision_it->getId() > 0 ) {

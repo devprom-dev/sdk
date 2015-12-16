@@ -346,6 +346,17 @@ class RequestBoard extends PMPageBoard
 				echo $object_it->object->getAttributeUserName($group_field).': '.$object_it->get($group_field);
 				break;
 
+			case 'Owner':
+				$workload = $this->getTable()->getAssigneeWorkload();
+				if ( count($workload) > 0 )
+				{
+					echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+							'user' => $object_it->getRef('Owner')->getDisplayName(),
+							'data' => $workload[$object_it->get($group_field)]
+					));
+				}
+				break;
+
 			default:
 				parent::drawGroup($group_field, $object_it);
 				break;
@@ -378,7 +389,7 @@ class RequestBoard extends PMPageBoard
 					PageList::drawRefCell( $ref_it, $object_it, $attr );
 				echo '</div>';
 				break;
-				
+
 			default:
 				parent::drawRefCell( $ref_it, $object_it, $attr );
 		}

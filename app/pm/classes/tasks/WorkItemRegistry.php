@@ -82,7 +82,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
                        AND l.ObjectClass NOT IN ('Task')) IssueTraces,
 				   ".join(',',$task_columns)."
 			  FROM pm_Task t
-			 WHERE 1 = 1 ".$task->getVpdPredicate('t').($methodology_it->HasTasks() ? '' : ' AND 1 = 2 ')."
+			 WHERE 1 = 1 ".$task->getVpdPredicate('t').$this->getInnerFilterPredicate($task,$this->getTaskFilters()).($methodology_it->HasTasks() ? '' : ' AND 1 = 2 ')."
 			 UNION
 			SELECT t.pm_ChangeRequestId,
 				   'Request' as ObjectClass,
@@ -113,9 +113,54 @@ class WorkItemRegistry extends ObjectRegistrySQL
                        AND l.ObjectClass NOT IN ('Task', 'Milestone')) IssueTraces,
 				   ".join(',',$issue_columns)."
 			  FROM pm_ChangeRequest t
-			 WHERE 1 = 1 ".$request->getVpdPredicate('t')."
+			 WHERE 1 = 1 ".$request->getVpdPredicate('t').$this->getInnerFilterPredicate($request,$this->getIssueFilters())."
 		";
 
  	    return "(".$sql.")";
  	}
+
+    protected function getInnerFilterPredicate( $object, $filters )
+    {
+        $predicate = '';
+        foreach( $filters as $filter ) {
+            $filter->setObject($object);
+            $filter->setAlias('t');
+            $predicate .= $filter->getPredicate();
+        }
+        return $predicate;
+    }
+
+    protected function getTaskFilters()
+    {
+        $filters = array();
+        foreach( $this->getFilters() as $filter ) {
+            if ( $filter instanceof FilterAttributePredicate and $filter->getAttribute() == 'Assignee') {
+                $filters[] = $filter;
+            }
+            if ( $filter instanceof StatePredicate ) {
+                $filters[] = $filter;
+            }
+            if ( $filter instanceof FilterInPredicate ) {
+                $filters[] = $filter;
+            }
+        }
+        return $filters;
+    }
+
+    protected function getIssueFilters()
+    {
+        $filters = array();
+        foreach( $this->getFilters() as $filter ) {
+            if ( $filter instanceof FilterAttributePredicate and $filter->getAttribute() == 'Assignee') {
+                $filters[] = new FilterAttributePredicate('Owner', $filter->getValue());
+            }
+            if ( $filter instanceof StatePredicate ) {
+                $filters[] = $filter;
+            }
+            if ( $filter instanceof FilterInPredicate ) {
+                $filters[] = $filter;
+            }
+        }
+        return $filters;
+    }
 }

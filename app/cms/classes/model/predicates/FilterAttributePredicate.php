@@ -100,6 +100,7 @@ class FilterAttributePredicate extends FilterPredicate
  		if ( $object->IsReference( $this->attr ) )
  		{
  			$ref = $object->getAttributeObject( $this->attr );
+			$registry = new ObjectRegistrySQL($ref);
  			
  			if ( $is_numeric_value || $ref->getAttributeDbType('ReferenceName') == '' )
  			{
@@ -109,10 +110,10 @@ class FilterAttributePredicate extends FilterPredicate
  			    
  			    if ( count($values) > 0 )
  			    {
- 			    	$ref_it = $ref->getRegistry()->Query( 
- 			    			array (
- 			    					new FilterInPredicate($values)
- 			    			)
+ 			    	$ref_it = $registry->Query(
+						array (
+							new FilterInPredicate($values)
+						)
  			    	);
  			    }
  			    else
@@ -122,9 +123,9 @@ class FilterAttributePredicate extends FilterPredicate
  			}
  			else
  			{
-		    	$ref_it = $ref->getRegistry()->Query( array (
-		    			new FilterAttributePredicate('ReferenceName', $values),
-		    			new FilterVpdPredicate($object->getVpds())
+		    	$ref_it = $registry->Query( array (
+					new FilterAttributePredicate('ReferenceName', $values),
+					new FilterVpdPredicate($object->getVpds())
 		    	));
  			}
  			
@@ -132,8 +133,7 @@ class FilterAttributePredicate extends FilterPredicate
  		}
  		else
  		{
- 			foreach( $values as $key => $value )
- 			{
+ 			foreach( $values as $key => $value ) {
  				$values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
  			}
  		}

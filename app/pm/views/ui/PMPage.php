@@ -254,7 +254,14 @@ class PMPage extends Page
                     }
 	            }
  		    }
- 		}		
+ 		}
+
+		if ( array_key_exists('fitmenu', $_REQUEST) ) {
+			$url = $this->getPageWidgetNearestUrl();
+			if ( $url != self::getPageUrl() ) {
+				return $url;
+			}
+		}
 	}
 	
 	function getTabsTemplate()
@@ -806,10 +813,8 @@ class PMPage extends Page
 		return array();
 	}
 
-	function getPageUrl()
+	function getPageWidgetNearestUrl()
 	{
-		if ( !$this->needDisplayForm() ) return parent::getPageUrl();
-
 		$report = getFactory()->getObject('PMReport');
 		$module = getFactory()->getObject('Module');
 		$service = new WorkspaceService();
@@ -861,8 +866,13 @@ class PMPage extends Page
 				$urls[] = $report_it->getUrl();
 			}
 		}
+		array_shift($urls);
+	}
 
-		if ( count($urls) > 0 ) return array_shift($urls);
-		return parent::getPageUrl();
+	function getPageUrl()
+	{
+		if ( !$this->needDisplayForm() ) return parent::getPageUrl();
+		$url = $this->getPageWidgetNearestUrl();
+		return $url != '' ? $url : parent::getPageUrl();
 	}
 }

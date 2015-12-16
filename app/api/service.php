@@ -16,7 +16,7 @@
  $url = _getServerUrl().'/service/'.
  	$_REQUEST['namespace'].'/'.$_REQUEST['module']; 
  
- $server->configureWSDL($webservice, $globalurn, $url);
+ $server->configureWSDL($webservice, $globalurn, $url, $soap->getStyle());
  $server->wsdl->schemaTargetNamespace = $url;
 
  $module = $plugins->useModule( $_REQUEST['namespace'], 
@@ -24,4 +24,3 @@
  	
  $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
  $server->service($HTTP_RAW_POST_DATA);
-?>

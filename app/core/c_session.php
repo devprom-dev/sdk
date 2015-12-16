@@ -132,26 +132,19 @@ class SessionBase
  	 */
  	function open( $user_it )
  	{
- 		global $model_factory, $_REQUEST;
-
  		$factory = $this->getAuthenticationFactory();
- 		
- 		if ( !is_object($factory) )
- 		{
+ 		if ( !is_object($factory) ) {
  		    $auth_factories = new AuthenticationFactorySet($this);
- 		    
  		    $factory = $auth_factories->getDefaultFactory();
  		}
- 		
- 		$factory->setUser( $user_it->getId() );
- 		
- 		$this->user_it = $user_it;
- 		
+
+		$this->setUserIt($user_it);
+
  		$session_hash = $factory->logon( 
  			in_array('remember', array_keys($_REQUEST)) );
  		
  		// get the recent user's visit
-		$stored_session = $model_factory->getObject('pm_ProjectUse');
+		$stored_session = getFactory()->getObject('pm_ProjectUse');
 	    $stored_session->defaultsort = 'RecordModified DESC';
 
 		$prev_logon_it = $stored_session->getByRefArray(
@@ -179,6 +172,15 @@ class SessionBase
 		 	$stored_session->add_parms($parms);
 		} 	
  	}
+
+	function setUserIt( $user_it )
+	{
+		$this->user_it = $user_it;
+		$factory = $this->getAuthenticationFactory();
+		if ( is_object($factory) ) {
+			$factory->setUser( $user_it->getId() );
+		}
+	}
 
  	function getUserIt()
  	{

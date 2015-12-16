@@ -11,6 +11,7 @@ include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueTrace.php";
 include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueFeatureLevel.php";
 
 include "FieldTasksRequest.php";
@@ -210,17 +211,18 @@ class RequestForm extends PMPageForm
 				return $field;
 				
 			case 'Estimation':
-				$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-				
-				$field = $strategy->getEstimationFormField( $this );
-
-				if ( !is_object($field) )
+				if ( $this->getEditMode() )
 				{
-					return parent::createFieldObject( $name );
+					$field = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getEstimationFormField( $this );
+					if ( !is_object($field) ) {
+						return parent::createFieldObject( $name );
+					}
+					else {
+						return $field;
+					}
 				}
-				else
-				{
-					return $field;
+				else {
+					return new FieldIssueEstimation($this->object_it, true);
 				}
 				break;
 				
@@ -274,8 +276,12 @@ class RequestForm extends PMPageForm
 		}
 		elseif($name == 'PlannedRelease') 
 		{
-			$release = getFactory()->getObject('Release');
-			$release->addFilter( new ReleaseTimelinePredicate('not-passed') );
+			if ( $this->getTransitionIt()->getId() > 0 ) {
+				$release = getFactory()->getObject('ReleaseActual');
+			}
+			else {
+				$release = getFactory()->getObject('ReleaseRecent');
+			}
 			return new FieldAutoCompleteObject( $release );
 		}
 		elseif($name == 'Type') 

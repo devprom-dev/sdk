@@ -90,6 +90,7 @@ include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigge
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageMetadataBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/events/DocumentStateChangedEventHandler.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/events/RemoveObsoleteAttachmentsEventHandler.php";
 
 ///////////////////////////////////////////////////////////////////////
 class PMSession extends SessionBase
@@ -218,7 +219,8 @@ class PMSession extends SessionBase
  	            		new FeatureUpdateMetricsEventHandler(),
  	            		new RequestFeatureUpdateMetricsEventHandler(),
  	            		new RequestIterationHandler(),
-						new ModifyIssuesVersionNumber()
+						new ModifyIssuesVersionNumber(),
+						new RemoveObsoleteAttachmentsEventHandler()
  	            ),
  	            parent::createBuilders(),
  	            array (

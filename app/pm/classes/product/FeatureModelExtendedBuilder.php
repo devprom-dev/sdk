@@ -10,6 +10,7 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
     {
     	if ( $object->getEntityRefName() != 'pm_Function' ) return;
 
+		$object->addAttribute('CaptionShort', 'VARCHAR', text(2105), false, false, '', 10);
 		$object->addAttribute('Progress', '', translate('Прогресс'), false, false, '', 135);
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();

@@ -3,12 +3,13 @@
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 include_once SERVER_ROOT_PATH."pm/views/time/FieldSpentTimeRequest.php";
+include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
 include_once SERVER_ROOT_PATH."core/views/c_priority_view.php";
 
 class RequestList extends PMPageList
 {
-	private $estimation_actions = array();
+	private $estimation_field = null;
 	private $visible_columns = array();
 	private $priority_method = null;
 	private $type_it = null;
@@ -32,23 +33,9 @@ class RequestList extends PMPageList
 		{
 			$this->priority_method = new ChangePriorityWebMethod( getFactory()->getObject('Priority')->getAll() );
 		}
-		
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		foreach( $strategy->getScale() as $item )
-		{
-			$method = new ModifyAttributeWebMethod($this->getObject()->getEmptyIterator(), 'Estimation', $item);
-				
-			if ( $method->hasAccess() )
-			{
-				$method->setCallback( "donothing" );
-					
-				$this->estimation_actions[$item] = array( 
-					    'name' => $item,
-						'method' => $method 
-				);
-			}
-		}
-		
+
+		$this->estimation_field = new FieldIssueEstimation();
+
 		$this->type_it = getFactory()->getObject('RequestType')->getAll();
 	}
 	
@@ -111,6 +98,16 @@ class RequestList extends PMPageList
 				}
 				else {
 					echo $title;
+				}
+				break;
+			case 'Owner':
+				$workload = $this->getTable()->getAssigneeWorkload();
+				if ( count($workload) > 0 )
+				{
+					echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+							'user' => $object_it->getRef('Owner')->getDisplayName(),
+							'data' => $workload[$object_it->get($group_field)]
+					));
 				}
 				break;
 			default:
@@ -196,20 +193,8 @@ class RequestList extends PMPageList
 			break;
 			
 			case 'Estimation':
-			    
-				$actions = $this->estimation_actions;
-				
-				foreach( $actions as $key => $action )
-				{
-					$method = $action['method'];
-					$actions[$key]['url'] = $method->getJSCall(array(), $object_it);
-				}
-				
-				echo $this->getTable()->getView()->render('pm/EstimationIcon.php', array (
-						'data' => $object_it->get('Estimation') != '' ? $object_it->get('Estimation') : '0',
-						'items' => $actions
-				));
-			    
+				$this->estimation_field->setObjectIt($object_it);
+				$this->estimation_field->draw($this->getTable()->getView());
     			break;
     			
 			default:

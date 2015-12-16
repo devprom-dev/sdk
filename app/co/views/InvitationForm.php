@@ -23,9 +23,9 @@ class InvitationForm extends PageForm
     		$this->setRequiredAttributesWarning();
     		$this->setWarningMessage(text(2036));
     		$this->edit('');
-    		$this->setAction('show');
     		return;
-    	} 
+    	}
+		$this->redirectOnAdded($this->getObject()->getEmptyIterator());
 	}
 	
 	function getRenderParms()

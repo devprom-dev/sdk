@@ -12,14 +12,6 @@ class WikiHandler extends EmailNotificatorHandler
 		$result = array(
 				$object_it->get('Author')
 		);
-
-		// notify co-authors of wiki page
-		if ( $action == 'modify' )
-		{
-			$change_it = getFactory()->getObject('WikiPageChange')->getByRef('WikiPage', $object_it->getId());
-			$result = array_merge($result, $change_it->fieldToArray('Author')); 
-		}
-
 		return $result;
 	}	
  	
@@ -62,62 +54,61 @@ class WikiHandler extends EmailNotificatorHandler
 	protected function getFields( $action, $object_it, $prev_object_it )
 	{
 		$fields = parent::getFields( $action, $object_it, $prev_object_it );
-		
-		if ( $action == 'modify' )
+		if ( array_key_exists('Content', $fields) )
 		{
-			$change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
-					array (
-							new FilterAttributePredicate('WikiPage', $object_it->getId()),
-							new SortRecentClause()
-					)
-				);
-
-			$editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
-			$editor->setObjectIt( $object_it );
-			
-			$diff_content = $this->getDiff( $editor, $change_it, $object_it );
-			
-			$diff_content = str_replace("diff-html-removed", '" style="background:#F59191;', $diff_content);
-			$diff_content = str_replace("diff-html-added", '" style="background:#90EC90;', $diff_content);
-			
-			$fields['Content']['value'] = $diff_content;
-			unset($fields['Content']['was_value']);
+			if ( $action == 'modify' && $fields['Content']['was_value'] != '' )
+			{
+				$diff_content = $this->getDiff( $fields['Content']['was_value'], $fields['Content']['value'] );
+				if ( trim(preg_replace('/[\s\r\n]/', '', $diff_content)) == '' ) {
+					unset($fields['Content']);
+				}
+				else {
+					$fields['Content']['value'] = $diff_content;
+					unset($fields['Content']['was_value']);
+				}
+			}
+			else {
+				$fields['Content']['value'] = parent::getValue( $object_it, 'Content' );
+				unset($fields['Content']['was_value']);
+			}
 		}
-		
 		return $fields;
 	}
 	
-	protected function getDiff( & $editor, & $change_it, & $object_it )
+	protected function getDiff( $was_value, $now_value )
 	{
-		$parser = $editor->getComparerParser();
-
  		$diff = html_diff(
-						IteratorBase::wintoutf8($parser->parse($change_it->getHtmlDecoded('Content'))),
-	 					IteratorBase::wintoutf8($parser->parse($object_it->getHtmlDecoded('Content')))
+			IteratorBase::wintoutf8($was_value),
+			IteratorBase::wintoutf8($now_value)
 		);
 			
  		if ( strpos($diff, "diff-html-") !== false )
  		{
- 			return IteratorBase::utf8towin( $diff );  
+			$diff = str_replace("diff-html-removed", '" style="background:#F59191;', $diff);
+			$diff = str_replace("diff-html-added", '" style="background:#90EC90;', $diff);
+ 			return $diff;
  		}
  		else
  		{
- 			return $editor->getPageParser()->parse($object_it->getHtmlDecoded('Content'));
+ 			return '';
  		}
 	}
-		
+
+	public static function getWasValue( $object_it, $attr )
+	{
+		return self::getValue( $object_it, $attr );
+	}
+
 	public static function getValue( $object_it, $attr )
 	{
-		switch ( $attr )
+		switch( $attr )
 		{
 			case 'Content':
-				$editor = WikiEditorBuilder::build( $object_it->get('ContentEditor') );
+				$editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
 				$editor->setObjectIt( $object_it );
-				
-				$parser = $editor->getHtmlParser();
-				$parser->setObjectIt( $object_it );
+				$parser = $editor->getComparerParser();
 				return $parser->parse($object_it->getHtmlDecoded('Content'));
-				
+
 			default:
 				return parent::getValue( $object_it, $attr );
 		}
@@ -129,23 +120,12 @@ class WikiHandler extends EmailNotificatorHandler
 		{
 			case 'Content':
 				return true;
-				
+
+			case 'Author':
+				return false;
+
 			default:
 				return parent::IsAttributeVisible( $attribute_name, $object_it, $action );
 		}		
-	}
-	
-	protected function IsAttributeRequired( $attribute_name, $object_it, $action )
-	{
-		switch ( $attribute_name )
-		{
-			case 'Caption':
-			case 'Author':
-			case 'ParentPage':
-				return false;
-				
-			default:
-				return parent::IsAttributeRequired( $attribute_name, $object_it, $action );
-		}
 	}
 }

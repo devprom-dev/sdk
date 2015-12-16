@@ -1714,7 +1714,7 @@ function completeUIExt( jqe )
 	jqe.find('input[type="checkbox"][name*="to_delete"]').change(function(){
 		toggleBulkActions();
 	});
-	
+
 	var client = new ZeroClipboard(jqe.find('.clipboard'));
 	client.on( 'ready', function(event) {
 		client.on('aftercopy', function(event) {
@@ -1724,6 +1724,7 @@ function completeUIExt( jqe )
 				'placement': 'right'
 			});
 			$(event.target).popover('show');
+			setTimeout(function() {$(event.target).popover('hide');}, 2000);
 		});
 	});
 

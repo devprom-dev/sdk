@@ -73,7 +73,20 @@ if ( !$tableonly )
 	}
 
 	if ( count($filter_items) > 0 ) {
-		echo '<div class="filter-reset-cnt btn-group pull-left"><a class="filter-reset-btn btn btn-small" onclick="javascript: filterLocation.resetFilter();" title="'.text(2088).'"><i class="icon-trash"></i></a></div>';
+	?>
+			<? if ( $module_url != '' ) { ?>
+		<div class="filter-reset-cnt btn-group pull-left">
+			<a class="btn btn-small clipboard" data-clipboard-text="<?=$module_url?>" data-message="<?=text(2107)?>" tabindex="-1">
+				<i class="icon-share"></i>
+			</a>
+		</div>
+			<? } ?>
+		<div class="filter-reset-cnt btn-group pull-left">
+			<a class="filter-reset-btn btn btn-small" onclick="javascript: filterLocation.resetFilter();" title="<?=text(2088)?>">
+				<i class="icon-trash"></i>
+			</a>
+		</div>
+	<?php
 	}
 }
 ?>

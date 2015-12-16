@@ -2190,6 +2190,20 @@ UPDATE co_ScheduledJob SET OrderNum = 110 WHERE ClassName = 'processstatistics';
 
 DELETE FROM pm_ObjectAccess WHERE LCASE(ObjectClass) = 'projectpage' AND NOT EXISTS (SELECT 1 FROM WikiPage p WHERE p.WikiPageId = pm_ObjectAccess.ObjectId);
 UPDATE attribute SET Caption = 'Номер' WHERE ReferenceName = 'SectionNumber';
+UPDATE pm_Project SET Importance = 3 WHERE Importance IS NULL;
+
+
+IF NOT check_index_exists('I$pm_TaskTrace$ObjectClass') THEN
+CREATE INDEX I$pm_TaskTrace$ObjectClass ON pm_TaskTrace (ObjectId, ObjectClass);
+END IF;
+
+IF NOT check_index_exists('I$cms_Snapshot$ClassType') THEN
+CREATE INDEX I$cms_Snapshot$ClassType ON cms_Snapshot (ObjectClass, Type);
+END IF;
+
+IF NOT check_index_exists('I$cms_Snapshot$ClassTypeId') THEN
+CREATE INDEX I$cms_Snapshot$ClassTypeId ON cms_Snapshot (ObjectId, ObjectClass, Type);
+END IF;
 
 --
 --

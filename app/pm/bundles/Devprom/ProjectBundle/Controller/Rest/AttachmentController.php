@@ -3,38 +3,37 @@ namespace Devprom\ProjectBundle\Controller\Rest;
 
 use Devprom\ProjectBundle\Controller\Rest\RestController;
 use Symfony\Component\HttpFoundation\Request;
-use Devprom\ProjectBundle\Service\Model\FilterResolver\AttachmentFilterResolver;
 
 class AttachmentController extends RestController
 {
-	function getEntity(Request $request)
-	{
-		$object = getFactory()->getObject('Attachment');
+	private $controller = null;
 
-		foreach( array('FilePath', 'ObjectId', 'ObjectClass', 'Description') as $field ) {
-			$object->addAttributeGroup($field, 'system');
+	function buildSpecificController(Request $request) {
+		if ( is_subclass_of($this->getClassName($request), 'WikiPage') ) {
+			return new WikiFileController();
 		}
-		
-		return $object;
+		else {
+			return new AttachmentFileController();
+		}
+	}
+
+	function getSpecificController(Request $request) {
+		if ( !is_object($this->controller) ) $this->controller = $this->buildSpecificController($request);
+		return $this->controller;
+	}
+
+	function getEntity(Request $request) {
+		return $this->getSpecificController($request)->getEntity($request);
 	}
 	
-    protected function getPostData(Request $request)
-	{
+    protected function getPostData(Request $request) {
 		return array_merge(
-				parent::getPostData($request),
-				array (
-						'ObjectId' => $request->get('object'),
-						'ObjectClass' => $this->getClassName($request)
-				)
+			parent::getPostData($request),
+			$this->getSpecificController($request)->getPostData($request)
 		);
 	}
 	
-	function getFilterResolver(Request $request)
-	{
-		return array (
-				new AttachmentFilterResolver(
-						$this->getClassName($request), $request->get('object')
-				)
-		);
+	function getFilterResolver(Request $request) {
+		return $this->getSpecificController($request)->getFilterResolver($request);
 	}
 }

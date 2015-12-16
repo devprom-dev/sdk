@@ -15,432 +15,400 @@ include_once "fields/FieldWikiDocumentAttachment.php";
 
 class PMWikiForm extends PMPageForm
 {
-    private $template_object;
-    
- 	var $review_mode = false;
- 	var $readonly_mode = false;
- 	var $form_index = '';
- 	
- 	private $revision_it;
+	private $template_object;
+
+	var $review_mode = false;
+	var $readonly_mode = false;
+	var $form_index = '';
+
+	private $revision_it;
 	private $page_to_compare_it;
- 	private $document_it;
- 	private $descriminator_value = null;
- 	private $trace_actions_template = array();
- 	private $template_mode = false;
- 	private $editable = true;
- 	private $appendable = true;
- 	private $append_methods = array();
- 	private $delete_method = null;
+	private $document_it;
+	private $descriminator_value = null;
+	private $trace_actions_template = array();
+	private $template_mode = false;
+	private $editable = true;
+	private $appendable = true;
+	private $append_methods = array();
+	private $delete_method = null;
 	private $search_text = array();
- 	
- 	function __construct( $object, $template_object ) 
+
+	function __construct($object, $template_object)
 	{
 		$this->template_object = $template_object;
-		
-		$object->addPersister( new WatchersPersister() );
-		
-		parent::__construct( $object );
+
+		$object->addPersister(new WatchersPersister());
+
+		parent::__construct($object);
 
 		$this->template_mode = is_a($object, get_class($template_object));
 		$this->editable = getFactory()->getAccessPolicy()->can_modify($object);
 		$this->appendable = getFactory()->getAccessPolicy()->can_create($object);
-		
+
 		$this->buildMethods();
 	}
- 	
+
 	protected function buildMethods()
 	{
-        $method = new ObjectCreateNewWebMethod($this->getObject());
-        $method->setRedirectUrl('function(id){showCreatedPage(id,0);}');
+		$method = new ObjectCreateNewWebMethod($this->getObject());
+		$method->setRedirectUrl('function(id){showCreatedPage(id,0);}');
 
-		$this->append_methods[] = array( 
-            'name' => $this->getAppendActionName(),
-            'uid' => 'append-child-page',
-            'method' => $method,
-            'parms' => array()
+		$this->append_methods[] = array(
+				'name' => $this->getAppendActionName(),
+				'method' => $method,
+				'parms' => array()
 		);
-		
-		$type_it = $this->getTypeIt();
-		while ( is_object($type_it) && !$type_it->end() )
-		{
-			$this->append_methods[] = array( 
-                'name' => translate('Добавить').': '.$type_it->getDisplayName(),
-                'method' => $method,
-                'parms' => array (
-                    'PageType' => $type_it->getId()
-                )
-			);
-			$type_it->moveNext();
-		}
-		
+
 		$method = new BulkDeleteWebMethod();
-		if ( $this->checkAccess() && !$this->getReadonly() && $method->hasAccess() )
-		{
-		    if ( $this->IsFormDisplayed() || $this->getReviewMode() ) {
-		    	$method->setRedirectUrl('function() { if ( typeof loadContentTree != \'undefined\' ) loadContentTree();}');
-		    }
-		    else {
-		    	$method->setRedirectUrl('donothing');
-		    }
+		if ($this->checkAccess() && !$this->getReadonly() && $method->hasAccess()) {
+			if ($this->IsFormDisplayed() || $this->getReviewMode()) {
+				$method->setRedirectUrl('function() { if ( typeof loadContentTree != \'undefined\' ) loadContentTree();}');
+			} else {
+				$method->setRedirectUrl('donothing');
+			}
 			$this->delete_method = $method;
 		}
 	}
-	
-    protected function extendModel()
-    {
-    	$object = $this->getObject();
-    	
-    	foreach( array('OrderNum', 'ContentEditor') as $attribute ) {
-    		$object->setAttributeVisible($attribute, false);
-    	}
-		
+
+	protected function extendModel()
+	{
+		$object = $this->getObject();
+
+		foreach (array('OrderNum', 'ContentEditor') as $attribute) {
+			$object->setAttributeVisible($attribute, false);
+		}
+
 		$object->setAttributeVisible('ParentPage', $this->getEditMode());
 		$object->setAttributeVisible('PageType', is_object($this->getTypeIt()));
-		
-        foreach( array('Caption', 'Content', 'Tags', 'Watchers', 'Attachments') as $attribute ) {
-    		$object->setAttributeVisible($attribute, true);
-    	}
 
-		if ( false && $_REQUEST['formonly'] != '' ) {
-			foreach( $object->getAttributesByGroup('trace') as $attribute ) {
+		foreach (array('Caption', 'Content', 'Tags', 'Watchers', 'Attachments') as $attribute) {
+			$object->setAttributeVisible($attribute, true);
+		}
+
+		if (false && $_REQUEST['formonly'] != '') {
+			foreach ($object->getAttributesByGroup('trace') as $attribute) {
 				$object->setAttributeVisible($attribute, false);
 			}
-			foreach( $object->getAttributesByGroup('source-attribute') as $attribute ) {
+			foreach ($object->getAttributesByGroup('source-attribute') as $attribute) {
 				$object->setAttributeVisible($attribute, false);
 			}
-			foreach( array('Tags', 'Watchers', 'Attachments') as $attribute ) {
+			foreach (array('Tags', 'Watchers', 'Attachments') as $attribute) {
 				$object->setAttributeVisible($attribute, false);
 			}
 		}
 
- 		parent::extendModel();
-    }
+		parent::extendModel();
+	}
 
-	function setSearchText( $text )
+	function setSearchText($text)
 	{
 		$stem = new Stem\LinguaStemRu();
 
 		$this->search_text = array_map(
-			function($word) use($stem) {
-				return $stem->stem_word($word);
-			},
-			array_filter(
-				preg_split('/\s+/', $text),
-				function( $value ) {
-					return trim($value) != '';
-				}
-			)
+				function ($word) use ($stem) {
+					return $stem->stem_word($word);
+				},
+				array_filter(
+						preg_split('/\s+/', $text),
+						function ($value) {
+							return trim($value) != '';
+						}
+				)
 		);
 	}
 
-   	function getDiscriminatorField()
- 	{
- 		return 'PageType';
- 	}
-	
-	function getDiscriminator()
- 	{
- 		if ( !is_null($this->descriminator_value) ) return $this->descriminator_value;
- 		 
- 		$value = $this->getFieldValue($this->getDiscriminatorField());
+	function getDiscriminatorField()
+	{
+		return 'PageType';
+	}
 
- 		if ( $value == '' ) return $this->descriminator_value = '';
- 		
- 		return $this->descriminator_value = 
- 			$this->getObject()->getAttributeObject($this->getDiscriminatorField())
- 				->getExact($value)->get('ReferenceName');
- 	}
- 	
+	function getDiscriminator()
+	{
+		if (!is_null($this->descriminator_value)) return $this->descriminator_value;
+
+		$value = $this->getFieldValue($this->getDiscriminatorField());
+
+		if ($value == '') return $this->descriminator_value = '';
+
+		return $this->descriminator_value =
+				$this->getObject()->getAttributeObject($this->getDiscriminatorField())
+						->getExact($value)->get('ReferenceName');
+	}
+
 	function getRedirectUrl()
 	{
-		if ( $this->getAction() == 'delete' )
-		{
+		if ($this->getAction() == 'delete') {
 			$object_it = $this->getObjectIt();
-			
+
 			$root_it = $object_it->getRootIt();
-			
-			if ( $root_it->getId() > 0 )
-			{
+
+			if ($root_it->getId() > 0) {
 				$uid = new ObjectUID();
-				
+
 				$info = $uid->getUidInfo($root_it);
-				
+
 				return $info['url'];
-			}
-			else
-			{
+			} else {
 				return $this->getObject()->getPage();
 			}
 		}
-		
+
 		$object_it = $this->getObjectIt();
-		
-		if ( is_object($object_it) )
-		{
-			if ( $this->IsTemplate($object_it) ) 
-			{
-				return parent::getRedirectUrl(); 
-			}
-			else
-			{
+
+		if (is_object($object_it)) {
+			if ($this->IsTemplate($object_it)) {
+				return parent::getRedirectUrl();
+			} else {
 				$uid = new ObjectUID();
-				
+
 				$info = $uid->getUidInfo($object_it);
-				
+
 				return $info['url'];
 			}
 		}
-		
+
 		return '';
 	}
-	
-	function processEmbeddedForms( $object_it )
+
+	function processEmbeddedForms($object_it)
 	{
-	    if ( !is_object($object_it) )
-	    {
-	        throw new Exception('Trying to process empty iterator object');
-	    }
-	    
-		if ( $object_it->getId() == '' )
-	    {
-	        throw new Exception('Trying to process empty object');
-	    }
-	    
-	    parent::processEmbeddedForms( $object_it );
+		if (!is_object($object_it)) {
+			throw new Exception('Trying to process empty iterator object');
+		}
+
+		if ($object_it->getId() == '') {
+			throw new Exception('Trying to process empty object');
+		}
+
+		parent::processEmbeddedForms($object_it);
 	}
-	
+
 	function getTemplateObject()
 	{
-	    return $this->template_object;
+		return $this->template_object;
 	}
-	
+
 	function getTraceObject()
 	{
-		return getFactory()->getObject('WikiPageTrace');	
+		return getFactory()->getObject('WikiPageTrace');
 	}
-	
-	function setFormIndex( $index )
+
+	function getAppendMethods()
 	{
-	    $this->form_index = $index;
+		return $this->append_methods;
 	}
-	
+
+	function setFormIndex($index)
+	{
+		$this->form_index = $index;
+	}
+
 	function getAppendActionName()
 	{
 		return $this->getObject()->getDisplayName();
 	}
-	
+
 	function setReviewMode()
 	{
 		$this->review_mode = true;
 	}
-	
+
 	function getReviewMode()
 	{
 		return $this->review_mode;
 	}
-	
-	function setReadonly( $readonly = true )
+
+	function setReadonly($readonly = true)
 	{
-	    $this->readonly_mode = $readonly;
+		$this->readonly_mode = $readonly;
 	}
-	
+
 	function getReadonly()
 	{
-	    return $this->readonly_mode;
+		return $this->readonly_mode;
 	}
-	
-	function setRevisionIt( $revision_it )
+
+	function setRevisionIt($revision_it)
 	{
 		$this->revision_it = $revision_it;
 	}
-	
+
 	function getRevisionIt()
 	{
 		return $this->revision_it;
 	}
-	
-	function setCompareTo( $page_it )
+
+	function setCompareTo($page_it)
 	{
 		$this->page_to_compare_it = $page_it;
 	}
-	
+
 	function getCompareTo()
 	{
 		return $this->page_to_compare_it;
 	}
-	
-	function setDocumentIt( $document_it )
+
+	function setDocumentIt($document_it)
 	{
 		$this->document_it = $document_it;
 	}
-	
+
 	function getDocumentIt()
 	{
 		return $this->document_it;
 	}
-	
-	function IsWatchable( $page_it )
+
+	function IsWatchable($page_it)
 	{
 		return !$this->IsTemplate($page_it);
 	}
 
- 	function IsTemplate( $page_it = null )
+	function IsTemplate($page_it = null)
 	{
-	    if ( is_object($page_it) )
-	    {
-	        return is_a($page_it->object, get_class($this->getTemplateObject()) );
-	    }
-	    else
-	    {
-	        return is_a($this->object, get_class($this->getTemplateObject()) );
-	    }
+		if (is_object($page_it)) {
+			return is_a($page_it->object, get_class($this->getTemplateObject()));
+		} else {
+			return is_a($this->object, get_class($this->getTemplateObject()));
+		}
 	}
-	
+
 	function getTraceActionsTemplate()
 	{
-		if ( count($this->trace_actions_template) > 0 ) return $this->trace_actions_template;
-		
+		if (count($this->trace_actions_template) > 0) return $this->trace_actions_template;
+
 		return $this->trace_actions_template = $this->buildTraceActionsTemplate();
 	}
-	
+
 	function buildTraceActionsTemplate()
 	{
 		$actions = array();
-		
+
 		$report_it = getFactory()->getObject('PMReport')->getExact('currenttasks');
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($report_it) )
-		{
-			$actions[] = array( 
+
+		if (getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($report_it)) {
+			$actions[] = array(
 					'name' => translate('Задачи'),
-					'url' => $report_it->getUrl().'&state=all&trace='.strtolower(get_class($this->getObject())).':%page-id%'
+					'url' => $report_it->getUrl() . '&state=all&trace=' . strtolower(get_class($this->getObject())) . ':%page-id%'
 			);
 		}
 
 		return $actions;
 	}
-	
- 	function getNewRelatedActions()
+
+	function getNewRelatedActions()
 	{
 		$actions = array();
 		$page_it = $this->getObjectIt();
 
 		$not_readonly = !$this->getReadonly() && !$this->getEditMode();
-		if ( $this->appendable && $not_readonly )
-		{
-			foreach( $this->append_methods as $action )
-			{
-                $method = $action['method'];
-                $parms = array_merge( $action['parms'],
-                    array (
-                        'ParentPage' => is_object($page_it) ? $page_it->getId() : ''
-                    ));
+		if ($this->appendable && $not_readonly) {
+			foreach ($this->append_methods as $action) {
+				$method = $action['method'];
+				$parms = array_merge($action['parms'],
+						array(
+								'ParentPage' => is_object($page_it) ? $page_it->getId() : ''
+						));
 				$action['url'] = $method->getJSCall($parms);
+				$action['uid'] = 'append-child-page';
 				$actions[] = $action;
 			}
 		}
-		
+
 		return $actions;
 	}
-	
-	function getDeleteActions( $object_it = null )
+
+	function getDeleteActions($object_it = null)
 	{
-	    $actions = array();
-		if ( !is_object($object_it) ) $object_it = $this->getObjectIt();
-		
-		if ( is_object($this->delete_method) && is_object($object_it) )
-		{
-            if ( $this->template_mode ) {
-                $this->delete_method->setRedirectUrl('function() {window.location.reload();}');
-            }
-		    $actions[] = array(
-			    'name' => $this->delete_method->getCaption(), 
-		    	'url' => $this->delete_method->getJSCall(
-		    					$object_it->object,
-		    					$object_it->getId()
-		    			 ) 
-		    );
+		$actions = array();
+		if (!is_object($object_it)) $object_it = $this->getObjectIt();
+
+		if (is_object($this->delete_method) && is_object($object_it)) {
+			if ($this->template_mode) {
+				$this->delete_method->setRedirectUrl('function() {window.location.reload();}');
+			}
+			$actions[] = array(
+					'name' => $this->delete_method->getCaption(),
+					'url' => $this->delete_method->getJSCall(
+							$object_it->object,
+							$object_it->getId()
+					)
+			);
 		}
-		
+
 		return $actions;
 	}
-	
-	function getExportActions( $page_it )
+
+	function getExportActions($page_it)
 	{
 		global $model_factory;
-		
-		$actions =  array();
 
-		if ( $this->IsTemplate($page_it) ) return $actions;
-		
+		$actions = array();
+
+		if ($this->IsTemplate($page_it)) return $actions;
+
 		$method = new WikiExportPreviewWebMethod();
-		
-		array_push($actions, array( 
-			'name' => $method->getCaption(), 
-			'url' => $method->getJSCall( $page_it ) 
+
+		array_push($actions, array(
+				'name' => $method->getCaption(),
+				'url' => $method->getJSCall($page_it)
 		));
 
-		if ( !is_object($this->template_it) )
-		{
+		if (!is_object($this->template_it)) {
 			$this->template_it = getFactory()->getObject('TemplateHTML')->getAll();
-		}
-		else
-		{
+		} else {
 			$this->template_it->moveFirst();
 		}
-		
-		while ( !$this->template_it->end() )
-		{
+
+		while (!$this->template_it->end()) {
 			$method = new WikiExportPreviewWebMethod();
-			
-			array_push($actions, array( 
-				'name' => $method->getCaption().': '.$this->template_it->getDisplayName(), 
-				'url' => $method->getJSCall( $page_it, $this->template_it->getId() ) 
+
+			array_push($actions, array(
+					'name' => $method->getCaption() . ': ' . $this->template_it->getDisplayName(),
+					'url' => $method->getJSCall($page_it, $this->template_it->getId())
 			));
 
 			$this->template_it->moveNext();
 		}
-		
+
 		$method = new WikiExportPdfWebMethod();
-		
-		array_push($actions, array( 
-			'name' => $method->getCaption(), 
-			'url' => $method->getJSCall( $page_it ) 
+
+		array_push($actions, array(
+				'name' => $method->getCaption(),
+				'url' => $method->getJSCall($page_it)
 		));
-			
+
 		return array_merge($actions, $this->getEditor()->getExportActions($page_it));
 	}
-	
- 	function getTraceActions( $page_it )
+
+	function getTraceActions($page_it)
 	{
 		global $model_factory;
-		
+
 		$actions = array();
-		
-		if ( $this->IsTemplate($page_it) ) return $actions;
-			 
+
+		if ($this->IsTemplate($page_it)) return $actions;
+
 		$report = $model_factory->getObject('PMReport');
-		
+
 		$report_it = $report->getExact('currenttasks');
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($report_it) )
-		{
+
+		if (getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && getFactory()->getAccessPolicy()->can_read($report_it)) {
 			$class_name = strtolower(get_class($page_it->object));
-			
-			array_push ( $actions, 
-				array( 'name' => translate('Задачи'),
-					   'url' => $report_it->getUrl().
-							'&state=all&trace='.$class_name.':'.join(',',$page_it->idsToArray()) ) 
-				);
+
+			array_push($actions,
+					array('name' => translate('Задачи'),
+							'url' => $report_it->getUrl() .
+									'&state=all&trace=' . $class_name . ':' . join(',', $page_it->idsToArray()))
+			);
 		}
 
 		return $actions;
 	}
 
-	function getActions( $page_it = null )
+	function getActions($page_it = null)
 	{
-        if ( !is_object($page_it) ) $page_it = $this->getObjectIt();
-		if ( !is_object($page_it) ) return array();
+		if (!is_object($page_it)) $page_it = $this->getObjectIt();
+		if (!is_object($page_it)) return array();
 
 		$actions = parent::getActions();
 
@@ -448,264 +416,264 @@ class PMWikiForm extends PMPageForm
 		$method->setRedirectUrl('donothing');
 		$actions['modify'] = array(
 				'name' => !$this->getReadonly() && !$this->getEditMode() && $this->editable
-								? translate('Изменить') : translate('Просмотр'),
+						? translate('Изменить') : translate('Просмотр'),
 				'url' => $method->getJSCall(),
 				'type' => 'button',
 				'uid' => 'modify'
 		);
-		if ( $this->template_mode )
-		{
+		if ($this->template_mode) {
 			unset($actions['create']);
 			return $actions;
 		}
 
-		$trace_actions = $this->getTraceActions( $page_it );
-		if ( count($trace_actions) > 0 )
-		{
-			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-		    
-		    array_push ( $actions, array( 
-				'id' => 'tracing',
-				'name' => translate('Трассировка'),
-				'items' => $trace_actions
+		$trace_actions = $this->getTraceActions($page_it);
+		if (count($trace_actions) > 0) {
+			if ($actions[array_pop(array_keys($actions))]['name'] != '') $actions[] = array();
+
+			array_push($actions, array(
+					'id' => 'tracing',
+					'name' => translate('Трассировка'),
+					'items' => $trace_actions
 			));
 		}
 
-		if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
+		if ($actions[array_pop(array_keys($actions))]['name'] != '') $actions[] = array();
 
 		$history_url = $page_it->getHistoryUrl();
-		if ( is_object($this->getRevisionIt()) && $this->getRevisionIt()->getId() != '' ) {
-			$history_url .= '&start='.$this->getRevisionIt()->getDateTimeFormat('RecordCreated');
+		if (is_object($this->getRevisionIt()) && $this->getRevisionIt()->getId() != '') {
+			$history_url .= '&start=' . $this->getRevisionIt()->getDateTimeFormat('RecordCreated');
 		}
-		$actions['history'] = array( 
-		        'name' => translate('История изменений'),
+		$actions['history'] = array(
+				'name' => translate('История изменений'),
 				'url' => $history_url,
-		        'uid' => 'history'
+				'uid' => 'history'
 		);
-		
-		if ( $this->IsWatchable($page_it) )
-		{
- 			$watch_method = new WatchWebMethod( $page_it );
- 			if ( $watch_method->hasAccess() )
- 			{
- 				$watch_method->setRedirectUrl('donothing');
- 				$actions[] = array();
-				$actions[] = array( 
+
+		if ($this->IsWatchable($page_it)) {
+			$watch_method = new WatchWebMethod($page_it);
+			if ($watch_method->hasAccess()) {
+				$watch_method->setRedirectUrl('donothing');
+				$actions[] = array();
+				$actions[] = array(
 						'name' => $watch_method->getCaption(),
-						'url' => $watch_method->getJSCall() 
+						'url' => $watch_method->getJSCall()
 				);
- 			}
+			}
 		}
 		return $actions;
 	}
-	
-	function getCompareActions( $object_it )
-	{
-		if ( !is_object($object_it) ) return array();
 
-		if ( !$object_it->IsPersisted() && $object_it->get('ParentPage') != '' && is_object($this->getCompareTo()) ) 
-		{
+	function getCompareActions($object_it)
+	{
+		if (!is_object($object_it)) return array();
+
+		if (!$object_it->IsPersisted() && $object_it->get('ParentPage') != '' && is_object($this->getCompareTo())) {
 			$trace_it = $this->getTraceObject()->getRegistry()->Query(
-					array (
+					array(
 							new FilterAttributePredicate('SourcePage', $this->getCompareTo()->get('ParentPage')),
 							new FilterAttributePredicate('Type', 'branch'),
 							new WikiTraceTargetDocumentPredicate($this->getDocumentIt()->getId())
 					)
-				);
+			);
 
-			if ( $trace_it->getId() == '' ) return array();
-			
-			$method = $this->getDuplicateMethod( $object_it );
-			
-			if ( !is_object($method) ) return array();
-			
-			$parms = array (
+			if ($trace_it->getId() == '') return array();
+
+			$method = $this->getDuplicateMethod($object_it);
+
+			if (!is_object($method)) return array();
+
+			$parms = array(
 					'class' => get_class($object_it->object),
 					'objects' => $object_it->getId(),
 					'CopyOption' => 'on',
 					'parent' => $trace_it->get('TargetPage')
 			);
-			
-			$script = "javascript: runMethod('methods.php?method=".get_class($method)."', ".str_replace('"', "'", JsonWrapper::encode($parms)).", donothing, '')";
-						
-			$actions[] = array( 
-				'url' => $script,
-				'name' => text(1735) 
+
+			$script = "javascript: runMethod('methods.php?method=" . get_class($method) . "', " . str_replace('"', "'", JsonWrapper::encode($parms)) . ", donothing, '')";
+
+			$actions[] = array(
+					'url' => $script,
+					'name' => text(1735)
 			);
-			
+
 			return $actions;
 		}
-		
-		if ( $object_it->get('BrokenTraces') == '' ) return array();
-		
+
+		if ($object_it->get('BrokenTraces') == '') return array();
+
 		$trace_it = $this->getTraceObject()->getRegistry()->Query(
-				array (
+				array(
 						new FilterAttributePredicate('SourcePage', preg_split('/,/', $object_it->get('BrokenTraces'))),
 						new FilterAttributePredicate('TargetPage', $object_it->getId())
 				)
-			);
-		if ( $trace_it->count() < 1 ) return array();
-		
+		);
+		if ($trace_it->count() < 1) return array();
+
 		$actions = array();
-		while( !$trace_it->end() )
-		{
+		while (!$trace_it->end()) {
 			$trace_actions = array();
-			
+
 			$method = new OpenBrokenTraceWebMethod();
-			$trace_actions[] = array (
+			$trace_actions[] = array(
 					'name' => text(1933),
-					'url' => $method->getJSCall(array('object'=>$object_it->getId()))
+					'url' => $method->getJSCall(array('object' => $object_it->getId()))
 			);
 			$trace_actions[] = array();
-			 
-			if ( $trace_it->get('Type') == 'branch' ) {
+
+			if ($trace_it->get('Type') == 'branch') {
 				$method = new SyncWikiLinkWebMethod($trace_it);
 				$method->setRedirectUrl("donothing");
-				$trace_actions[] = array( 
-					'url' => $method->getJSCall(),
-					'name' => $method->getCaption() 
+				$trace_actions[] = array(
+						'url' => $method->getJSCall(),
+						'name' => $method->getCaption()
 				);
-				
+
 				$method = new IgnoreWikiLinkWebMethod($trace_it);
 				$method->setRedirectUrl("donothing");
-				$trace_actions[] = array( 
-					'url' => $method->getJSCall(),
-					'name' => $method->getCaption() 
+				$trace_actions[] = array(
+						'url' => $method->getJSCall(),
+						'name' => $method->getCaption()
 				);
 			} else {
 				$method = new ActuateWikiLinkWebMethod($trace_it);
-                $method->setRedirectUrl("donothing");
-				$trace_actions[] = array( 
-					'url' => $method->getJSCall(),
-					'name' => $method->getCaption() 
+				$method->setRedirectUrl("donothing");
+				$trace_actions[] = array(
+						'url' => $method->getJSCall(),
+						'name' => $method->getCaption()
 				);
 			}
-			
-			$actions[] = array (
+
+			$actions[] = array(
 					'name' => $trace_it->getRef('SourcePage')->getDisplayName(),
 					'items' => $trace_actions
 			);
-			
+
 			$trace_it->moveNext();
 		}
 
 		return count($actions) > 1 ? $actions : $actions[0]['items'];
 	}
-	
-	function getDuplicateMethod( $object_it )
+
+	function getDuplicateMethod($object_it)
 	{
 		return null;
 	}
-	
-  	function getTreeMenu( $object_it )
- 	{
- 		$actions = array();
-   		$actions[] = array(
-   		    'name' => text(1556),
-       		'url' => $object_it->getViewUrl(),
-   		    'uid' => 'open-new' 
-   		);
-   		$actions[] = array();
-   		$actions[] = array(
-   		    'name' => translate('Перейти'),
-       		'url' => "javascript: gotoRandomPage(".$object_it->getId().", 3, true)" 
-   		);
-   		
- 		if ( $this->IsTemplate($object_it) ) return $actions;
+
+	function getTreeMenu($object_it)
+	{
+		$actions = array();
+		$actions[] = array(
+				'name' => text(1556),
+				'url' => $object_it->getViewUrl(),
+				'uid' => 'open-new'
+		);
+		$actions[] = array();
+		$actions[] = array(
+				'name' => translate('Перейти'),
+				'url' => "javascript: gotoRandomPage(" . $object_it->getId() . ", 3, true)"
+		);
+
+		if ($this->IsTemplate($object_it)) return $actions;
 
 		$method = new ObjectModifyWebMethod($object_it);
 		$method->setRedirectUrl('donothing');
- 		if ( !$this->getReadonly() && $method->hasAccess() )
- 		{
-			if ( $actions[count($actions)-1]['name'] != '' ) array_push($actions, array());
- 		    $actions[] = array(
-				'name' => translate('Редактировать'),
-				'url' => $method->getJSCall()
+		if (!$this->getReadonly() && $method->hasAccess()) {
+			if ($actions[count($actions) - 1]['name'] != '') array_push($actions, array());
+			$actions[] = array(
+					'name' => translate('Редактировать'),
+					'url' => $method->getJSCall()
 			);
- 		}
+		}
 
 		$method = new ObjectCreateNewWebMethod($this->getObject());
-		$method->setRedirectUrl('function(id){showCreatedPage(id,'.$object_it->getId().');}');
-		if ( !$this->getReadonly() && $method->hasAccess() )
-		{
-			if ( $actions[count($actions)-1]['name'] != '' ) array_push($actions, array());
+		$method->setRedirectUrl('function(id){showCreatedPage(id,' . $object_it->getId() . ');}');
+		if (!$this->getReadonly() && $method->hasAccess()) {
+			if ($actions[count($actions) - 1]['name'] != '') array_push($actions, array());
 			$actions[] = array(
-				'name' => translate('Добавить'),
-				'url' => $method->getJSCall(array('ParentPage'=>$object_it->getId()))
+					'name' => translate('Добавить'),
+					'url' => $method->getJSCall(array('ParentPage' => $object_it->getId()))
 			);
 		}
 
 		$delete_actions = $this->getDeleteActions($object_it);
-		if ( count($delete_actions) > 0 )
-		{
+		if (count($delete_actions) > 0) {
 			$actions[] = array();
-			$actions = array_merge($actions, $delete_actions); 
+			$actions = array_merge($actions, $delete_actions);
 		}
-			
+
 		return $actions;
- 	}
- 	
- 	function getEditor()
+	}
+
+	function getEditor()
 	{
 		$object_it = $this->getObjectIt();
-		
+
 		$type_it = $this->getTypeIt();
-		
+
 		$editor_class = is_object($object_it) ? $object_it->get('ContentEditor') : "";
-		
-		if ( is_object($type_it) && $_REQUEST['PageType'] != '' )
-		{
+
+		if (is_object($type_it) && $_REQUEST['PageType'] != '') {
 			$type_id = $_REQUEST['PageType'];
-			
-			$type_it->moveToId( $type_id );
-	
-			if ( $type_it->getId() == $type_id ) $editor_class = $type_it->get('WikiEditor');
+
+			$type_it->moveToId($type_id);
+
+			if ($type_it->getId() == $type_id) $editor_class = $type_it->get('WikiEditor');
 		}
-		
+
 		$editor = WikiEditorBuilder::build($editor_class);
-		
-		if ( is_object($object_it) && $_REQUEST['wiki_mode'] != 'new' )
-		{
-			$editor->setObjectIt( $object_it );
-		}
-		else
-		{
-			$editor->setObject( $this->getObject() );
+
+		if (is_object($object_it) && $_REQUEST['wiki_mode'] != 'new') {
+			$editor->setObjectIt($object_it);
+		} else {
+			$editor->setObject($this->getObject());
 		}
 
 		return $editor;
 	}
-	
+
 	function getTypeIt()
 	{
 		return null;
 	}
-	
+
 	function getDefaultTemplateIt()
 	{
 		global $_REQUEST, $model_factory;
-		
-		$template = $this->getTemplateObject();
-		
-		if ( !is_object($template) ) return $this->getObject()->getEmptyIterator();
 
-		if ( $_REQUEST['PageType'] != '' )
-		{
+		$template = $this->getTemplateObject();
+
+		if (!is_object($template)) return $this->getObject()->getEmptyIterator();
+
+		if ($_REQUEST['PageType'] != '') {
 			$type_it = $this->getTypeIt();
-			
-			$type_it->moveToId( $_REQUEST['PageType'] );
-			
-			if ( $type_it->get('DefaultPageTemplate') > 0 )
-			{
-				return $template->getExact( $type_it->get('DefaultPageTemplate') );
+
+			$type_it->moveToId($_REQUEST['PageType']);
+
+			if ($type_it->get('DefaultPageTemplate') > 0) {
+				return $template->getExact($type_it->get('DefaultPageTemplate'));
 			}
-		}
-		else
-		{
+		} else {
 			return $template->getDefaultIt();
 		}
 	}
-	
+
+	function getDefaultValue( $field )
+	{
+		$default = parent::getDefaultValue($field);
+
+		switch( $field ) {
+			case 'PageType':
+				$parent = $this->getFieldValue('ParentPage');
+				if ( $default == '' && $parent != '' ) {
+					$parent_it = $this->getObject()->getExact($parent);
+					return $parent_it->get('PageType');
+				}
+				break;
+		}
+
+		return $default;
+	}
+
 	function getFieldValue( $field )
 	{
 		$object_it = $this->getObjectIt();

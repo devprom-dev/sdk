@@ -52,7 +52,7 @@ foreach( $sections as $key => $section ) {
 							'formonly' => $formonly,
 							'form' => $form
 						));
-						if ( $bottom_hint != '' ) echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $form_id));
+						if ( $bottom_hint != '' ) echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id));
 					?>
 					</div>
 					<? if ( $source_parms['uid'] != '' ) { ?>

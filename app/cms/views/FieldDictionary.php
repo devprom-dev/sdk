@@ -142,7 +142,7 @@ class FieldDictionary extends Field
 			<?php } ?>
 			<?
 			$valueinlist = false;
-			
+
 			foreach( $groups as $group )
 			{
 				if ( !is_array($group) ) continue;
@@ -157,7 +157,7 @@ class FieldDictionary extends Field
 						<option value="<? echo $option['value']; ?>" <? echo $selected; ?> referenceName="<?=$option['referenceName']?>" <?=($option['disabled'] ? 'disabled' : '')?> ><?=$option['caption']?></option>
 					<?
 					
-					if ( $selected )
+					if ( $selected || $option['value'] == $this->getValue() )
 					{
 						$valueinlist = true;
 					}

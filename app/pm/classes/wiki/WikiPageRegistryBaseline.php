@@ -31,7 +31,7 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 	    	   "	FROM WikiPage t ".
 	    	   "   WHERE t.ReferenceName = ".$this->getObject()->getReferenceName()." AND t.IsTemplate = 0 ".
 	    	   "   UNION ".
-	    	   "  SELECT t.WikiPageId, t.VPD, NULL, ".$this->document_it->getId().", t.SortIndex, NULL, NULL, ".join(",",$attributes).
+	    	   "  SELECT t.WikiPageId, t.VPD, NULL, ".$this->document_it->getId().", 99999999999999, NULL, NULL, ".join(",",$attributes).
 	    	   "	FROM WikiPage t ".
 	    	   "   WHERE t.DocumentId = ".$this->baseline_it->getId().
 	    	   "     AND NOT EXISTS (SELECT 1 FROM WikiPageTrace tr, WikiPage p ".

@@ -1,5 +1,5 @@
 <?php
-
+if ( $text == '' ) $text = translate('Ответить');
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
 
 $method = new CommentWebMethod( $object_it );
@@ -12,7 +12,7 @@ $method->setRedirectUrl($redirect != '' ? $redirect : 'function() {window.locati
 <div>
 	<a class="btn btn-mini btn-success" title="<?=$method->getCaption()?>" onclick="<?=$method->getJSCall()?>">
 		<i class="icon-comment icon-white"></i>
-		<?=translate('Ответить')?>
+		<?=$text?>
 	</a>
 </div>
 												

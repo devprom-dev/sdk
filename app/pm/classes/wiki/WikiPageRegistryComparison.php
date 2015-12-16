@@ -44,12 +44,9 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 			else {
 				// or the document as itself
 				$document_id = $this->baseline_it->getId();
-				$query_filters = array (
-					new FilterInPredicate($document_id)
-				);
 				$registry = new WikiPageRegistryContent($this->page_it->object);
 			}
-		}			
+		}
 
 		if ( count($query_filters) < 1 && !$this->page_it->IsPersisted() )
 		{
@@ -58,76 +55,31 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 					new FilterInPredicate($this->page_it->getId())
 			); 
 		}
-		
+
 		if ( count($query_filters) < 1 && $document_id > 0 )
 		{
 			// baseline given
 			$query_filters = array();
 
-			if ( !$this->page_it->IsPersisted() )
-			{ 
-				$query_filters = array ( 
-						new FilterInPredicate($this->page_it->getId())
+			$ids = array();
+			foreach( preg_split('/,/',$this->page_it->get('TargetBranches').','.$this->page_it->get('SourceBranches')) as $item ) {
+				list($doc_id, $page_id) = preg_split('/:/', $item);
+				if ( $doc_id == $document_id ) $ids[] = $page_id;
+			}
+			if ( count($ids) > 0 ) {
+				$query_filters = array (
+						new FilterInPredicate($ids)
 				);
 			}
 
-			// transitive origins (baselines) of the document
-			$trace_registry = getFactory()->getObject('WikiPageTrace')->getRegistry();
-			
-			$source = $this->page_it->getId();
-			while( count($query_filters) < 1 && $source > 0 )
-			{
-				$trace_it = $trace_registry->Query(
-						array (
-								new FilterAttributePredicate('TargetPage', $source),
-								new WikiTraceSourceDocumentPredicate($document_id),
-								new FilterAttributePredicate('Type', 'branch')
-						)
-					);
-
-				if ( $trace_it->count() > 0 )
-				{
-					$query_filters = array (
-							new FilterInPredicate($trace_it->fieldToArray('SourcePage'))		
-					);
-					
-					break;
-				}
-				
-				$source = $trace_it->get('SourcePage');
+			if ( count($query_filters) < 1 ) {
+				$query_filters[] = new FilterInPredicate($this->page_it->getId());
 			}
-
-			$source = $this->page_it->getId();
-		
-			while( count($query_filters) < 1 && $source > 0 )
-			{
-				$trace_it = $trace_registry->Query(
-						array (
-								new FilterAttributePredicate('SourcePage', $source),
-								new WikiTraceTargetDocumentPredicate($document_id),
-								new FilterAttributePredicate('Type', 'branch')
-						)
-					);
-
-				if ( $trace_it->count() > 0 )
-				{
-					$query_filters = array (
-							new FilterInPredicate($trace_it->fieldToArray('TargetPage'))		
-					);
-					
-					break;
-				}
-				
-				$source = $trace_it->get('TargetPage');
-			}
-			
-			if ( count($query_filters) < 1 ) $query_filters[] = new FilterInPredicate(0);
 		}
 
 		return $registry->Query(array_merge($query_filters, $persisters));
 	}
 	
 	private $baseline_it;
-	
 	private $page_it;
 }

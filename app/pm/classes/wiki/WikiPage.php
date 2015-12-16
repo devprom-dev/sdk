@@ -19,6 +19,7 @@ include "predicates/WikiRootTransitiveFilter.php";
 include "persisters/WikiPageRevisionPersister.php";
 include 'persisters/DocumentVersionPersister.php';
 include 'persisters/WikiPageTracesRevisionsPersister.php';
+include "persisters/WikiPageBranchesPersister.php";
 include 'predicates/WikiSameBranchFilter.php';
 include 'predicates/WikiDocumentSearchPredicate.php';
 include "WikiPageDeleteStrategyMove.php";
@@ -150,27 +151,26 @@ class WikiPage extends MetaobjectStatable
 	
 	function modify_parms( $id, $parms )
 	{
-		$object_it = $this->getExact( $id );
-		
+		$registry = new ObjectRegistrySQL($this);
+		$registry->setPersisters($this->getPersisters());
+		$object_it = $registry->Query(
+				array( new FilterInPredicate($id) )
+		);
+
 		if ( $parms['ParentPage'] > 0 )
 		{
 		    $parent_it = $this->getExact($parms['ParentPage']);
-		    
 		    $roots = $parent_it->getTransitiveRootArray();
-		    
-		    if ( in_array($id, $roots) )
-		    {
+		    if ( in_array($id, $roots) ) {
 		        throw new Exception('Cyclic reference found in ParentPage attribute of WikiPage entity');
 		    }
 		}
 		
-		if ( $object_it->get('PageType') > 0 )
-		{
+		if ( $object_it->get('PageType') > 0 ) {
 			$editor = $object_it->getRef('PageType')->get('WikiEditor');
 		}
 
-		if ( $editor == '' && $object_it->get('Project') > 0 )
-		{
+		if ( $editor == '' && $object_it->get('Project') > 0 ) {
 			$editor = $object_it->getRef('Project')->get('WikiEditorClass');
 		}
 		
@@ -178,7 +178,7 @@ class WikiPage extends MetaobjectStatable
 		
 		$was_content = $object_it->getHtmlDecoded('Content');
 		
-		$result = parent::modify_parms( $id, $parms );
+		$result = parent::modify_parms( $object_it, $parms );
 
 		$now_it = $this->getExact( $id );
 		

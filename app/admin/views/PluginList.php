@@ -14,13 +14,10 @@ class PluginList extends StaticPageList
 		$this->plugins = $plugins;
 
 		$it = new IteratorFile( $this->getObject(), dirname(__FILE__).'/../../plugins' );
-			
 		$rowset = $it->getRowset();
 		
-		foreach( $rowset as $row => $data )
-		{
-			if ( $data['Caption'] == 'plugins.php' )
-			{
+		foreach( $rowset as $row => $data ) {
+			if ( in_array($data['Caption'], array('plugins.php','_factory.php','_methods.php')) ) {
 				unset($rowset[$row]);
 			}
 		}

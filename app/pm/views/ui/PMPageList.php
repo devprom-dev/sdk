@@ -118,9 +118,13 @@ class PMPageList extends PageList
 					echo '</span>';
 					echo '</div>';
 				}
+				else {
+					$text = translate('Добавить');
+				}
 				echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
 						'object_it' => $object_it,
-						'redirect' => 'donothing'
+						'redirect' => 'donothing',
+						'text' => $text
 				));
 				break;
 			    
@@ -152,6 +156,9 @@ class PMPageList extends PageList
 
 	function getReferencesListWidget( $object )
 	{
+		foreach( $this->reference_widgets as $key => $widget ) {
+			if ( is_a($object, $widget) ) return $widget;
+		}
 		return $this->reference_widgets[get_class($object)];
 	}
     

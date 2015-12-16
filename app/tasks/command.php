@@ -11,9 +11,7 @@ if ( !DeploymentState::IsInstalled() )
 	die();
 }
 
-$plugins = new PluginsFactory();
- 
-$model_factory = new ModelFactoryExtended($plugins);
+$model_factory = new ModelFactoryExtended(PluginsFactory::Instance());
 
 $state = $model_factory->getObject('DeploymentState');
 

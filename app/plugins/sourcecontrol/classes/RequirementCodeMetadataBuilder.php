@@ -21,7 +21,7 @@ class RequirementCodeMetadataBuilder extends ObjectMetadataEntityBuilder
  			? $metadata->getAttributeOrderNum('Links') : $metadata->getLatestOrderNum();
     	
         $metadata->addAttribute( 'SourceCode', 'REF_pm_SubversionRevisionId', translate('Исходный код'), true, false, '', $orderNum + 10);
-        $metadata->addPersister( new RequirementCodePersister() );
+        $metadata->addPersister( new RequirementCodePersister(array('SourceCode')) );
         $metadata->addAttributeGroup('SourceCode', 'trace');
     }
 }

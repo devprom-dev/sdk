@@ -1,5 +1,4 @@
 <?php
-
 include "ReportWorkflowAnalysisList.php";
 include "model/WorkflowTimeScale.php";
 
@@ -7,38 +6,30 @@ include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/StateExFilterWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/views/issues/RequestTable.php";
 
-class ReportWorkflowAnalysisTable extends PMPageTable
+class ReportWorkflowAnalysisTable extends RequestTable
 {
  	function getFilterPredicates()
  	{
  		$values = $this->getFilterValues();
- 		
  		return array_merge(
  				parent::getFilterPredicates(),
  				array (
-		 			new StatePredicate( $values['state'] ),
-					new FilterSubmittedAfterPredicate($values['submittedon']),
-					new FilterSubmittedBeforePredicate($values['submittedbefore'])
 		 		)
  			);
  	}
 
-	function getList()
-	{
+	function getList() {
 		return new ReportWorkflowAnalysisList( $this->getObject() );
 	}
 
 	function getFilters()
 	{
 		$filters = array(
-			new StateExFilterWebMethod(getFactory()->getObject('IssueState')->getAll()),
-			new ViewSubmmitedAfterDateWebMethod(),
-			new ViewSubmmitedBeforeDateWebMethod(),
 			$this->buildTimeScaleFilter()
 		);
-		
-		return array_merge( $filters, parent::getFilters() ); 		
+		return array_merge( parent::getFilters(), $filters );
 	}
 	
 	function buildTimeScaleFilter()
@@ -54,18 +45,19 @@ class ReportWorkflowAnalysisTable extends PMPageTable
 		return $fitler;
 	}
 	
-	function getNewActions()
-	{
+	function getNewActions() {
 		return array();
 	}
 	
-	function getActions()
-	{
+	function getActions() {
 		return array();
 	}
 	
-	function getDeleteActions()
-	{
+	function getDeleteActions() {
+		return array();
+	}
+
+	function getBulkActions() {
 		return array();
 	}
 } 
