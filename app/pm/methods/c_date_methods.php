@@ -140,6 +140,18 @@ class ViewStartDateWebMethod extends FilterDateWebMethod
 	{
 		return 'start';
 	}
+
+	function getPersistedValue()
+	{
+		return null;
+	}
+
+	function getValue()
+	{
+		$value = $_REQUEST[$this->getValueParm()];
+		if ( in_array($value, array('','all')) ) return $this->getDefault();
+		return $value;
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

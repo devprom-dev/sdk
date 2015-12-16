@@ -1,82 +1,94 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include 'PluginBase.php';
-
-if ( file_exists(SERVER_ROOT_PATH."plugins/plugins.php") ) include SERVER_ROOT_PATH."plugins/plugins.php";
+@include SERVER_ROOT_PATH."plugins/plugins.php";
+@include SERVER_ROOT_PATH."plugins/_methods.php";
 
 class PluginsFactory
 {
- 	var $namespaces, $plugins, $resources;
- 	
+	private static $singleInstance = null;
+ 	private $namespaces = array();
+	private $plugins = array();
+	private $resources = array();
  	private $plugins_by_sections = array();
- 	
- 	function __construct()
+
+	public static function Instance()
+	{
+		global $plugins;
+
+		if ( is_object(static::$singleInstance) ) return static::$singleInstance;
+
+		$data = @file_get_contents(self::getFileName());
+		if ( $data != '' ) {
+			static::$singleInstance = unserialize($data);
+		}
+		else {
+			static::$singleInstance = new static();
+		}
+
+		$plugins = static::$singleInstance;
+		return static::$singleInstance;
+	}
+
+	protected function __construct()
  	{
- 		global $plugins;
- 		
- 		$this->plugins = array();
- 		$this->namespaces = array();
- 		$this->resources = array();
- 		
- 		$plugins = $this;
- 		
  		$this->buildPlugins();
  	}
- 	
- 	function buildPlugins()
+
+	public function __sleep()
+	{
+		return array('namespaces', 'plugins', 'resources', 'plugins_by_sections');
+	}
+
+	public function __wakeup()
+	{
+	}
+
+ 	protected function buildPlugins()
  	{
- 		$classes = array_filter( get_declared_classes(), function($value) 
- 		{
+ 		$classes = array_filter( get_declared_classes(), function($value) {
  			return is_subclass_of($value, 'PluginBase');
  		});
 
- 		foreach( $classes as $class_name )
- 		{
+ 		foreach( $classes as $class_name ) {
  			$this->registerPlugin(new $class_name);
  		}
- 			
 		usort( $this->namespaces, "plugins_factory_index_sort" );
 
 		$plugins = array();
-
-		foreach( $this->namespaces as $plugin )
-		{
+		foreach( $this->namespaces as $plugin ) {
 		    $plugins[$plugin->getNamespace()] = $this->plugins[$plugin->getNamespace()];
 		}
 		
 		$this->plugins = $plugins;
+		$this->buildMethods();
 
-		$this->loadMethods();
+		file_put_contents(self::getFileName(), serialize($this));
  	}
  	
- 	function registerPlugin( $plugin )
+ 	protected function registerPlugin( $plugin )
  	{
- 		array_push($this->namespaces, $plugin);
-
+ 		$this->namespaces[] = $plugin;
 		$this->plugins[$plugin->getNamespace()] = array();
 
 		$sectionplugins = $plugin->getSectionPlugins();
-		
-		foreach ( $sectionplugins as $section )
-		{
+		foreach ( $sectionplugins as $section ) {
 			$section->setNamespace( $plugin );
-			
-			array_push($this->plugins[$plugin->getNamespace()], $section);
+			$this->plugins[$plugin->getNamespace()][] = $section;
 		}
 	
 		// register resource files
 		$namespace = strtolower($plugin->getNamespace());
-		
-		$lang_file = SERVER_ROOT_PATH.'plugins/'.$namespace.
-			'/language/%lang%/resource.php';
-			
-		$this->resources[$namespace] = $lang_file; 
+		$lang_file = SERVER_ROOT_PATH.'plugins/'.$namespace.'/language/%lang%/resource.php';
+		$this->resources[$namespace] = $lang_file;
  	}
 
 	function initializeResources( $language )
 	{
 		global $plugin_text_array;
-		
+
 		$text_array = array();
 		
 		$this->resources = array_unique($this->resources);
@@ -540,89 +552,57 @@ class PluginsFactory
 		
 		if ( $handle = opendir(SERVER_ROOT_PATH.'plugins') ) 
 		{
-		    while (false !== ($file = readdir($handle))) 
-		    {
+		    while (false !== ($file = readdir($handle)))
+			{
 		    	$path = SERVER_ROOT_PATH.'plugins/'.$file;
-		    	
-		    	if ( in_array($file, array(".","..","plugins.php")) || is_dir($path) ) continue;
-
+		    	if ( in_array($file, array(".","..","plugins.php","_factory.php","_methods.php")) || is_dir($path) ) continue;
 		    	if ( file_exists(SERVER_ROOT_PATH.'plugins/blocked/'.$file) ) continue;
-
 		    	$files[] = $file;
 		    }
-		    
 	    	closedir($handle);
 		}
-		
 		asort($files);
 		
 		$plugins = array();
-
-		foreach( $files as $file )
-		{
+		foreach( $files as $file ) {
         	$plugins[] = 'include SERVER_ROOT_PATH."plugins/'.$file.'";';
 		}
-		
 		file_put_contents(SERVER_ROOT_PATH.'plugins/plugins.php', '<?php '.PHP_EOL.join(PHP_EOL,$plugins));
-		
+
+		unlink(self::getFileName());
+		unlink(SERVER_ROOT_PATH."plugins/_methods.php");
+
 	    // reset opcache after list of plugins have been changed
 	    if ( function_exists('opcache_reset') ) opcache_reset();
 	}
 	
- 	protected function loadMethods()
+ 	protected function buildMethods()
  	{
- 		global $_REQUEST;
- 		
  		$namespaces = array();
- 		
- 		foreach ( $this->plugins as $namespace )
- 		{
-	 		foreach ( $namespace as $plugin )
-	 		{
-	 			$namespaces[$plugin->getNamespace()] = 
-	 				SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/methods';
+ 		foreach ( $this->plugins as $namespace ) {
+	 		foreach ( $namespace as $plugin ) {
+	 			$namespaces[$plugin->getNamespace()] = 'plugins/'.$plugin->getNamespace().'/methods';
 	 		}
  		}
- 		
+
+		$data = '<?php '.PHP_EOL;
  		foreach ( $namespaces as $methods_dir )
  		{
-			if ( is_dir($methods_dir) && $handle = opendir($methods_dir) ) 
-			{
-			    while (false !== ($file = readdir($handle))) 
-			    {
-			        if ( $file != "." && $file != ".." && !is_dir($methods_dir.'/'.$file) ) 
-			        {
-			            include_once ($methods_dir.'/'.$file);
+			if ( is_dir(SERVER_ROOT_PATH.$methods_dir) && $handle = opendir(SERVER_ROOT_PATH.$methods_dir) ) {
+			    while (false !== ($file = readdir($handle))) {
+			        if ( $file != "." && $file != ".." && !is_dir($methods_dir.'/'.$file) ) {
+						$data .= "include_once SERVER_ROOT_PATH.'".$methods_dir.'/'.$file."';".PHP_EOL;
 			        }
 			    }
-			    
 		    	closedir($handle);
 			}
  		}
- 		
- 		return false;
+		file_put_contents(SERVER_ROOT_PATH."plugins/_methods.php", $data);
+
+		// reset opcache after list of plugins have been changed
+		if ( function_exists('opcache_reset') ) opcache_reset();
  	}
 
- 	function _scanForPlugins()
- 	{
- 		global $plugins;
- 		
-		if ( $handle = opendir(SERVER_ROOT_PATH.'plugins') ) 
-		{
-		    while (false !== ($file = readdir($handle))) 
-		    {
-		    	$path = SERVER_ROOT_PATH.'plugins/'.$file;
-		    	
-		        if ($file != "." && $file != ".." && $file != "plugins.php" && !is_dir($path) ) 
-		        {
-	            	include_once $path;
-		        }
-		    }
-		    
-	    	closedir($handle);
-		}
- 	}
- 	
  	function _getPluginClass4Section ( $section )
  	{
  		switch ( $section )
@@ -640,6 +620,10 @@ class PluginsFactory
  				return 'PluginAPIase';
  		}
  	}
+
+	protected static function getFileName() {
+		return SERVER_ROOT_PATH."plugins/_factory.php";
+	}
 }
 
 function plugins_factory_index_sort( $left, $right )

@@ -71,15 +71,20 @@ class ParticipantIterator extends OrderedIterator
  	function getRoles() 
  	{
  		if ( $this->getId() < 1 ) return array(0); // guest
- 		
- 		if ( $this->get('ProjectRole') == '' )
- 		{
- 			return array (
- 					getFactory()->getObject('pm_ProjectRole')->getByRef('ReferenceName', 'linkedguest')->getId()
- 			);
+
+ 		if ( $this->get('ProjectRole') == '' ) {
+			$roles = getFactory()->getObject('pm_ProjectRole')->getByRef('ReferenceName', 'linkedguest')->getId();
+			if ( $roles == '' ) return array(0); // guest
  		}
- 		
- 		return preg_split('/,/', $this->get('ProjectRole'));
+		else {
+			$roles = $this->get('ProjectRole');
+		}
+
+ 		return array_filter( preg_split('/,/', $roles),
+				function($value) {
+					return $value > 0;
+				}
+		);
 	}
 
 	function getProjects()

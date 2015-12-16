@@ -12,7 +12,7 @@ class TimeFilterResolver
 	
 	public function resolve()
 	{
-		if ( $this->class_name == 'request' ) {
+		if ( $this->class_name == 'Request' ) {
 			$predicates = array(
 				new \ActivityRequestPredicate($this->object_id)
 			);

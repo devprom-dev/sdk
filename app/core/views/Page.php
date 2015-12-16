@@ -435,7 +435,9 @@ class Page
 		    {
 		    	$query_parms = array (
           				new ProjectStatePredicate('active'),
-          				new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject')))
+          				new FilterInPredicate(preg_split('/,/', $program_it->get('LinkedProject'))),
+						new SortAttributeClause('Importance'),
+						new SortAttributeClause('Caption')
            		);
 		    	
 		   		if ( $program_it->get('IsParticipant') < 1 )
@@ -491,28 +493,26 @@ class Page
 		                ? getFactory()->getObject('Project')->getRegistry()->Query(
 		                		array (
 		                				new ProjectStatePredicate('active'),
-		                				new FilterInPredicate(preg_split('/,/', $portfolio_it->get('LinkedProject')))
+		                				new FilterInPredicate(preg_split('/,/', $portfolio_it->get('LinkedProject'))),
+										new SortAttributeClause('Importance'),
+										new SortAttributeClause('Caption')
 		                		)
 		                  )
 		                : $model_factory->getObject('Project')->getEmptyIterator();
-		        
-		        while ( !$linked_it->end() )
-		        {
-		        	if ( $portfolio_it->getId() == $linked_it->getId() || array_key_exists($linked_it->get('CodeName'), $programs) ) 
-		        	{
+
+		        while ( !$linked_it->end() ) {
+		        	if ( $portfolio_it->getId() == $linked_it->getId() || array_key_exists($linked_it->get('CodeName'), $programs) ) {
 		        		$linked_it->moveNext();
 		        		continue;
 		        	}
-		        	
 		            $projects[$portfolio_it->get('CodeName')][$linked_it->get('CodeName')] = array (
 		                'name' => $linked_it->getDisplayName(),
 		                'url' => '/pm/'.$linked_it->get('CodeName')
 		            ); 
-		            
 		            $linked_it->moveNext();
 		        }
 		    }
-		
+
 		    if ( in_array($portfolio_it->get('CodeName'), array('all', 'my')) || count($projects[$portfolio_it->get('CodeName')]) > 0 )
 		    {
 		        $portfolios[$portfolio_it->get('CodeName')] = array (
@@ -526,7 +526,11 @@ class Page
 
 		if ( $portfolio_it->count() < 1 ) {
 			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-				array ( new ProjectStatePredicate('active') )
+				array (
+						new ProjectStatePredicate('active'),
+						new SortAttributeClause('Importance'),
+						new SortAttributeClause('Caption')
+				)
 			);
 			while ( !$linked_it->end() )
 			{
@@ -537,14 +541,14 @@ class Page
 				$linked_it->moveNext();
 			}
 		}
-
+/*
 		foreach( $projects as $key => $dummy )
 		{
 		    uasort($projects[$key], function( $left, $right ) {
 		        return $left['name'] > $right['name'] ? 1 : -1;
 		    });
 		}
-		
+*/
 		if ( count($programs) > 0 )
 		{
 		    foreach( $programs as $program_id => $program )
@@ -561,16 +565,16 @@ class Page
 
 		foreach( $portfolios as $portfolio_id => $portfolio )
 		{
-		    if ( $portfolio_id == 'my' ) continue;
-		    
+		    if ( in_array($portfolio_id, array('my','all')) ) continue;
 		    if ( !is_array($projects[$portfolio_id]) ) continue;
 		    
 		    foreach( $projects[$portfolio_id] as $project_id => $project )
 		    {
 		        unset( $projects['my'][$project_id] );
+				unset( $projects['all'][$project_id] );
 		    }
 		}
-	
+
 		return array (
 				'programs' => $programs,
 				'portfolios' => $portfolios,

@@ -3,8 +3,11 @@
  // PHPLOCKITOPT NOENCODE
  // PHPLOCKITOPT NOOBFUSCATE
 
- include('common.php');
- 
+include('common.php');
+
+if ( $_REQUEST['style'] == '' ) $_REQUEST['style'] = 'rpc';
+if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
+
  // Create SOAP service
  $server = new soap_server();
 
@@ -15,7 +18,7 @@
  $namespace = 'tns';
  $url = _getServerUrl().'/api/systemservice'; 
  
- $server->configureWSDL($webservice, $namespace, $url, 'document');
+ $server->configureWSDL($webservice, $namespace, $url, $soap->getStyle());
  $server->wsdl->schemaTargetNamespace = $url;
 
  $server->wsdl->addComplexType(
@@ -45,13 +48,13 @@
  $server->register('getPlugins',
     array( 'token' => 'xsd:string' ),          
     array( 'return' => $namespace.':PluginArray' ),
-    $namespace, $namespace.'.getPlugins', 'rpc', 'encoded', 'Returns the list of registered plugins'
+    $namespace, $namespace.'.getPlugins', $soap->getStyle(), $soap->getUse(), 'Returns the list of registered plugins'
  ); 
 
  $server->register('getMyActiveProjects',
          array( 'token' => 'xsd:string' ),
          array( 'return' => $namespace.':projectArray' ),
-         $namespace, $namespace.'.getMyProjects', 'rpc', 'encoded', 'Returns the list of projects accessible to the user'
+         $namespace, $namespace.'.getMyProjects', $soap->getStyle(), $soap->getUse(), 'Returns the list of projects accessible to the user'
  );
  
  $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';

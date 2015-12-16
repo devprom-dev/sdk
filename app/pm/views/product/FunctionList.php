@@ -21,28 +21,44 @@ class FunctionList extends PMPageList
  	
 	function retrieve()
 	{
-		global $model_factory, $project_it;
-
-		$this->group_defined = !in_array($this->getGroup(), array('','none')); 
+		$this->group_defined = !in_array($this->getGroup(), array('','none'));
 		
 		parent::retrieve();
-		
-		$it = $this->getIteratorRef();
+
+		$rowset = $this->getIteratorRef()->getRowset();
+		$roots = array_filter($rowset, function($row) {
+			return $row['ParentFeature'] == '';
+		});
+
+		$dataset = array();
+		foreach($roots as $row ) {
+			$dataset[] = $row;
+			self::buildChildRows($row, $rowset, $dataset);
+		}
+		$this->setIterator($this->getObject()->createCachedIterator($dataset));
 
 		// cache requests per feature
 		$filters = $this->getFilterValues();
 		
-		$request = $model_factory->getObject('pm_ChangeRequest');
+		$request = getFactory()->getObject('pm_ChangeRequest');
 		
 		$request->addFilter( new RequestStagePredicate($filters['stage']) );
-
 		$request->addFilter( new StatePredicate('notresolved') );
 		
 		$this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
 		$this->request_agg_it = $request->getRequestsAggByFunction();
-		
 		$this->request_agg_it->buildPositionHash( array('Function') );
+	}
+
+	protected static function buildChildRows( $parent_row, &$rowset, &$data )
+	{
+		$roots = array_filter($rowset, function($row) use ($parent_row) {
+			return $row['ParentFeature'] == $parent_row['pm_FunctionId'];
+		});
+		foreach($roots as $row) {
+			$data[] = $row;
+			self::buildChildRows($row, $rowset, $data);
+		}
 	}
 
 	function getSorts()
@@ -51,18 +67,11 @@ class FunctionList extends PMPageList
 		
 		$values = $this->getFilterValues();
 		
-		if ( $values['view'] == 'chart' )
-		{
+		if ( $values['view'] == 'chart' ) {
 			array_push( $sorts, new SortFeatureStartClause() );
 		}
-		else
-		{
+		else {
 			array_push( $sorts, new SortAttributeClause('Caption') );
-		}
-		
-		if ( !$this->group_defined )
-		{
-			array_unshift($sorts, new SortFeatureHierarchyClause());
 		}
 		
 		return $sorts;
@@ -110,6 +119,18 @@ class FunctionList extends PMPageList
 		
 		switch( $attr )
 		{
+			case 'CaptionShort':
+				if ( !$this->group_defined ) {
+					$arcs = array_filter(preg_split('/,/', $object_it->get('ParentPath')), function($value) { return $value != ''; });
+					$offset = (count($arcs) - 1) * 25;
+				} else {
+					$offset = 0;
+				}
+				echo '<div style="padding-left:'.$offset.'px;">';
+					parent::drawCell($object_it, 'Caption');
+				echo '</div>';
+				break;
+
 		    case 'Caption':
 		    	if ( !$this->group_defined ) {
 			    	$arcs = array_filter(preg_split('/,/', $object_it->get('ParentPath')), function($value) { return $value != ''; });
@@ -117,7 +138,6 @@ class FunctionList extends PMPageList
 		    	} else {
 		    		$offset = 0;
 		    	}
-		    	
 		    	echo '<div style="padding-left:'.$offset.'px;">';
    		    		echo $object_it->get($this->visible_columns['Type'] ? 'Caption' : 'CaptionAndType');
    		    	echo '</div>';

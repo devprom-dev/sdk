@@ -760,18 +760,38 @@ class SoapService
 	            '',
 	            $this->getAttributes( $object )
 	    );
-	    
-	    $server->wsdl->addComplexType(
-	            $class.'Array',
-	            'complexType',
-	            'array',
-	            '',
-	            'SOAP-ENC:Array',
-	            array(),
-	            array( array('ref'=>'SOAP-ENC:arrayType',
-	                    'wsdl:arrayType'=>$namespace.':'.$class.'[]') ),
-	            $namespace.':'.$class
-	    );
+
+		if ( $this->getStyle() == 'document' ) {
+			$server->wsdl->addComplexType(
+					$class.'Array',
+					'complexType',
+					'array',
+					'sequence',
+					'',
+					array(
+							'x' => array (
+									'minOccurs' => 0,
+									'maxOccurs' => 'unbounded',
+									'type' => $namespace.':'.$class
+							)
+					),
+					array(),
+					$namespace.':'.$class.'Array'
+			);
+		}
+		else {
+			$server->wsdl->addComplexType(
+					$class.'Array',
+					'complexType',
+					'array',
+					'',
+					'SOAP-ENC:Array',
+					array(),
+					array( array('ref'=>'SOAP-ENC:arrayType',
+							'wsdl:arrayType'=>$namespace.':'.$class.'[]') ),
+					$namespace.':'.$class
+			);
+		}
 	}
 	
 	function dataService( $classes, $namespace, & $server )
@@ -788,7 +808,7 @@ class SoapService
 					'id' => 'xsd:int'
 					),
 					array('return' => $namespace.':'.$class),
-					$namespace, $namespace.'#Load'.$class, 'rpc', 'encoded', 'Load object data using the given ID'
+					$namespace, $namespace.'#Load'.$class, $soap->getStyle(), $soap->getUse(), 'Load object data using the given ID'
 					);
 
 					$server->register($class.'.RemoteAdd',
@@ -797,7 +817,7 @@ class SoapService
 					'parms' => $namespace.':'.$class
 					),
 					array('return' => $namespace.':'.$class),
-					$namespace, $namespace.'#Add'.$class, 'rpc', 'encoded', 'Appends new object with the given parms'
+					$namespace, $namespace.'#Add'.$class, $soap->getStyle(), $soap->getUse(), 'Appends new object with the given parms'
 					);
 						
 					$server->register($class.'.RemoteAddBatch',
@@ -806,7 +826,7 @@ class SoapService
 					'parms' => $namespace.':'.$class.'Array'
 					),
 					array('return' => $namespace.':'.$class.'Array'),
-					$namespace, $namespace.'#AddBatch'.$class, 'rpc', 'encoded', 'Appends array of given objects'
+					$namespace, $namespace.'#AddBatch'.$class, $soap->getStyle(), $soap->getUse(), 'Appends array of given objects'
 					);
 
 					$server->register($class.'.RemoteStore',
@@ -814,14 +834,14 @@ class SoapService
 					  'id' => 'xsd:int',
 					  'parms' => $namespace.':'.$class ),
 					array('return' => 'xsd:int'),
-					$namespace, $namespace.'#Store'.$class, 'rpc', 'encoded', 'Stores modified object with the given id and parms'
+					$namespace, $namespace.'#Store'.$class, $soap->getStyle(), $soap->getUse(), 'Stores modified object with the given id and parms'
 					);
 
 					$server->register($class.'.RemoteStoreBatch',
 					array('token' => 'xsd:string',
 					  'parms' => $namespace.':'.$class.'Array' ),
 					array(),
-					$namespace, $namespace.'#StoreBatch'.$class, 'rpc', 'encoded', 'Stores array of objects'
+					$namespace, $namespace.'#StoreBatch'.$class, $soap->getStyle(), $soap->getUse(), 'Stores array of objects'
 					);
 
 					$server->register($class.'.RemoteDelete',
@@ -830,7 +850,7 @@ class SoapService
 					'id' => 'xsd:int' 
 					),
 					array(),
-					$namespace, $namespace.'#Delete'.$class, 'rpc', 'encoded', 'Stores modified object with the given id and parms'
+					$namespace, $namespace.'#Delete'.$class, $soap->getStyle(), $soap->getUse(), 'Stores modified object with the given id and parms'
 					);
 
 					$server->register($class.'.RemoteDeleteBatch',
@@ -839,7 +859,7 @@ class SoapService
 					'parms' => $namespace.':'.$class.'Array'
 					),
 					array(),
-					$namespace, $namespace.'#DeleteBatch'.$class, 'rpc', 'encoded', 'Removes array of objects'
+					$namespace, $namespace.'#DeleteBatch'.$class, $soap->getStyle(), $soap->getUse(), 'Removes array of objects'
 					);
 
 					$server->register($class.'.RemoteGetAll',
@@ -847,14 +867,14 @@ class SoapService
 					'token' => 'xsd:string'
 					),
 					array('return' => $namespace.':'.$class.'Array'),
-					$namespace, $namespace.'#GetAll'.$class, 'rpc', 'encoded', 'Returns all records of the given type'
+					$namespace, $namespace.'#GetAll'.$class, $soap->getStyle(), $soap->getUse(), 'Returns all records of the given type'
 					);
 						
 					$server->register($class.'.RemoteFind',
 					array('token' => 'xsd:string',
 					  'parms' => $namespace.':'.$class),
 					array('return' => $namespace.':'.$class.'Array'),
-					$namespace, $namespace.'#Find'.$class, 'rpc', 'encoded', 'Searches for records of the given type using field value'
+					$namespace, $namespace.'#Find'.$class, $soap->getStyle(), $soap->getUse(), 'Searches for records of the given type using field value'
 					);
 		}
 
@@ -870,6 +890,12 @@ class SoapService
 		$this->logInfo("RESPONSE: ".$result);
 		echo $result;
 	}
-}
 
-?>
+	function getStyle() {
+		return $_REQUEST['style'] == 'rpc' ? 'rpc' : 'document';
+	}
+
+	function getUse() {
+		return $_REQUEST['use'] == 'encoded' ? 'encoded' : 'literal';
+	}
+}

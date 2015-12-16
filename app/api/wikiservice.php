@@ -3,8 +3,11 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
- include('common.php');
- include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorBuilder.php";
+include('common.php');
+include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorBuilder.php";
+
+if ( $_REQUEST['style'] == '' ) $_REQUEST['style'] = 'rpc';
+if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
 
  // Create SOAP service
  $server = new soap_server();
@@ -16,7 +19,7 @@
  $namespace = 'tns';
  $url = _getServerUrl().'/api/wikiservice'; 
  
- $server->configureWSDL($webservice, $namespace, $url);
+ $server->configureWSDL($webservice, $namespace, $url, $soap->getStyle());
  $server->wsdl->schemaTargetNamespace = $url;
 
  // export common methods to wiki related entities
@@ -58,7 +61,7 @@
     	'wiki' => 'xsd:int' 
     ),          
     array( 'return' => $namespace.':WikiNodeArray' ),
-    $namespace, $namespace.'.getWikiTreeHtml', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.getWikiTreeHtml', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
  $server->register('getWikiListHtml',
@@ -67,7 +70,7 @@
     	'nodeList' => $namespace.':WikiNodeArray'
     ),          
     array( 'return' => $namespace.':WikiNodeArray' ),
-    $namespace, $namespace.'.getWikiListHtml', 'rpc', 'encoded', ''
+    $namespace, $namespace.'.getWikiListHtml', $soap->getStyle(), $soap->getUse(), ''
  ); 
  
  $soap->dataService( $classes, $namespace, $server );

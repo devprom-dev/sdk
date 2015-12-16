@@ -398,8 +398,9 @@ function mergeRows( container, data )
 
     $.each(sourceTable.find("tr[object-id]"), function(index, value) {
         var treeItem = $('.treeview-label[object-id="'+$(value).attr('object-id')+'"]');
-        if ( treeItem.length > 0 ) {
-            treeItem.find('span.title').text($(value).find('div[attributename="Caption"]').text());
+		var row = $(value).find('div[attributename="Caption"]');
+        if ( treeItem.length > 0 && row.length > 0 ) {
+            treeItem.find('span.title').text(row.text());
         }
     });
 

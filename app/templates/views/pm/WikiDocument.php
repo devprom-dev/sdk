@@ -27,7 +27,8 @@ if ( !$tableonly )
             'changed_ids' => $changed_ids,
         	'object_id' => $object_id,
         	'object_class' => $object_class,
-        	'save_settings_alert' => $save_settings_alert
+        	'save_settings_alert' => $save_settings_alert,
+            'sections' => array(new FullScreenSection())
         ));
         if ( $document_hint != '' )
         {

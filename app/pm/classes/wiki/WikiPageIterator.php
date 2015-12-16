@@ -219,12 +219,9 @@ class WikiPageIterator extends StatableIterator
 
 	function Version( $was_content )
 	{
-		global $model_factory;
-		
-		$change = $model_factory->getObject('WikiPageChange');
-		
+		$change = getFactory()->getObject('WikiPageChange');
 		$change->setAttributeType('WikiPage', 'REF_'.get_class($this->object).'Id');
-		
+
 		$change->add_parms( array(
 		    'WikiPage' => $this->getId(),
 		    'Content' => $was_content,

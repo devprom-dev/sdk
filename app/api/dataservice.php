@@ -6,6 +6,9 @@
 include('common.php');
 include('classes/model/DataModel.php');
 
+if ( $_REQUEST['style'] == '' ) $_REQUEST['style'] = 'rpc';
+if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
+
 // Create SOAP service
 $server = new soap_server();
 
@@ -16,7 +19,7 @@ $webservice = 'DataService';
 $namespace = 'tns';
 $url = _getServerUrl().'/api/'.strtolower($webservice);
 
-$server->configureWSDL($webservice, $namespace, $url);
+$server->configureWSDL($webservice, $namespace, $url, $soap->getStyle());
 $server->wsdl->schemaTargetNamespace = $url;
 
 $model = new DataModel();

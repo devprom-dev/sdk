@@ -341,7 +341,9 @@ class BackupAndRecoveryStrategy
 	function update_htdocs() 
 	{
 		$this->writeLog("UPDATE code\n");
-
+		if ( is_dir(SERVER_UPDATE_PATH.'htdocs/ext') ) {
+			$this->full_delete( SERVER_ROOT_PATH.'ext/' );
+		}
 		$this->full_copy( SERVER_UPDATE_PATH.'htdocs/', SERVER_ROOT_PATH );
 	}
 

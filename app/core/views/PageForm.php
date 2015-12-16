@@ -152,9 +152,7 @@ class PageForm extends MetaObjectForm
 			$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
 
 			$transition_it->moveToId($_REQUEST['Transition']);
-			if ( $transition_it->getId() != '' ) {
-				return $this->transition_it = $transition_it->copy();
-			}
+			return $this->transition_it = $transition_it->copy();
  		}
  		return $this->transition_it = getFactory()->getObject('pm_Transition')->getEmptyIterator();
  	}
@@ -616,7 +614,8 @@ class PageForm extends MetaObjectForm
 			'button_save_title' => translate('Сохранить'),
 			'transition' => $this->getTransitionIt()->getId(),
 			'form_class_name' => strtolower(get_class($this)),
-			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getId()) != 'off' ? $this->getHint() : '',
+			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off' ? $this->getHint() : '',
+			'bottom_hint_id' => $this->getHintId(),
 			'alert' => join('<br/>',$this->transition_messages),
 			'uid' => $uid_number,
 			'uid_url' => $uid_url,
@@ -686,7 +685,11 @@ class PageForm extends MetaObjectForm
 	{
 		return 'co';
 	}
-	
+
+	function getHintId() {
+		return get_class($this);
+	}
+
  	function getHint()
 	{
 		$resource = getFactory()->getObject('ContextResource');

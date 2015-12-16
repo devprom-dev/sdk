@@ -165,7 +165,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
     		    'SourcePage' => $source_id,
     			'TargetPage' => $map[$object->getEntityRefName()][$source_id],
     			'IsActual' => 'Y',
-    			'Baseline' => $_REQUEST['Snapshot'],
+    			'SourceBaseline' => $_REQUEST['Snapshot'],
     			'Type' => 'branch'
     		));
  	    }

@@ -16,8 +16,7 @@ if ( $_SERVER['REQUEST_METHOD'] == 'OPTIONS' )
 	exit();
 }
 
-$plugins = new PluginsFactory();
-$model_factory = new ModelFactoryExtended( $plugins, getCacheService() );
+$model_factory = new ModelFactoryExtended( PluginsFactory::Instance(), getCacheService() );
 
 $session = new COSession();
 $state = new DeploymentState();

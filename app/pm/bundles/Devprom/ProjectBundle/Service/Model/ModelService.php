@@ -214,24 +214,28 @@ class ModelService
 	{
 		$id_attribute = $object->getIdAttribute();
 		$system_attributes = $object->getAttributesByGroup('system');
+		$attributes = array_merge(
+			array_keys($object->getAttributes()),
+			array(
+				$id_attribute,
+				'Attributes'
+			)
+		);
 		if ( is_a($object, 'MetaobjectStatable') ) $terminal_states = $object->getTerminalStates();
-		
+
 		$result = array();
 		
 		foreach( $data as $attribute => $value )
 		{
-			if ( is_numeric($attribute) || in_array($attribute, $system_attributes) ) continue;
+			if ( !in_array($attribute, $attributes) ) continue;
+			if ( in_array($attribute, $system_attributes) ) continue;
 			if ( $id_attribute == $attribute ) $attribute = "Id";
-			
-			if ( in_array($object->getAttributeType($attribute), array('datetime')) )
-			{
+
+			if ( in_array($object->getAttributeType($attribute), array('datetime')) ) {
 				$result[$attribute] = \SystemDateTime::convertToClientTime($value);
 			}
-			else
-			{
-				$result[$attribute] = \IteratorBase::wintoutf8(
-						html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING)
-				);
+			else {
+				$result[$attribute] = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 				if ( $output == 'html' ) {
 					if ( in_array($object->getAttributeType($attribute), array('wysiwyg')) ) {
 						$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), '', $result[$attribute]));
@@ -239,23 +243,21 @@ class ModelService
 				}
 			}
 			
-			if ( $attribute == 'State' && is_array($terminal_states) )
-			{
+			if ( $attribute == 'State' && is_array($terminal_states) ) {
 				$result['Completed'] = in_array($value, $terminal_states);
 			}
 			
-			if ( $attribute == 'Attributes' )
-			{
+			if ( $attribute == 'Attributes' ) {
 				// hard hack. make unique modified attributes for REST API /changes service
 				$result[$attribute] = join(',',array_unique(preg_split('/,/', $result[$attribute])));
 			}
 		}
 		
-		foreach( $object->getAttributes() as $attribute => $info )
+		foreach( $attributes as $attribute )
 		{
 			if ( !in_array($object->getAttributeType($attribute), array('file','image')) ) continue;
 		
-			$path = $data['FilePath'];
+			$path = $data[$attribute.'Path'];
 			if ( !file_exists($path) ) continue;
 			
 			$result[$attribute] = base64_encode(file_get_contents($path));

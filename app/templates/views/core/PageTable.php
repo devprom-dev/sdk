@@ -25,6 +25,7 @@ echo $view->render('core/PageTableBody.php', array (
     'navigation_title' => $navigation_title,
 	'title' => $title,
     'changed_ids' => $changed_ids,
-	'save_settings_alert' => $save_settings_alert
+	'save_settings_alert' => $save_settings_alert,
+	'module_url' => $module_url
 ));
 

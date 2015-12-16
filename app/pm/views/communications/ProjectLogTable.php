@@ -85,10 +85,10 @@ class ProjectLogTable extends PMPageTable
 	
 	function buildStartFilter()
 	{
+		if( array_key_exists('start',$_REQUEST) and in_array($_REQUEST['start'],array('','all','hide')) ) {
+			unset($_REQUEST['start']);
+		}
 		$filter = new ViewStartDateWebMethod();
-		$filter->setDefault(
-				getSession()->getLanguage()->getPhpDate(strtotime('-4 weeks', strtotime(SystemDateTime::date('Y-m-j'))))
-		);
 		return $filter;
 	}
 	
@@ -184,4 +184,4 @@ class ProjectLogTable extends PMPageTable
 	}
 	
 	function IsNeedToDelete() { return false; }
-} 
+}

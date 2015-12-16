@@ -15,6 +15,7 @@ class Comment extends CommentBase
  		$this->addAttributeGroup('ObjectClass', 'system');
  		$this->addAttributeGroup('ObjectId', 'system');
  		$this->addAttributeGroup('PrevComment', 'system');
+		$this->setAttributeDescription('Caption', text(2104));
  		
  		$this->addPersister( new CommentAuthorPersister() );
  	}

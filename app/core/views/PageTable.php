@@ -145,8 +145,9 @@ class PageTable extends ViewTable
 			$filter_name = $filter->getValueParm();
 			$filter_keys[] = $filter_name;
 			$filter->setFreezeMethod($persistent_filter);
+			$filter->setFilter($this->getFiltersName());
 			$value = $filter->getPersistedValue();
-			if ( !is_null($value) ) {
+			if ( !is_null($value) && $value != '' ) {
 				$this->filter_values[$filter_name] = $value;
 				continue;	
 			}
@@ -154,10 +155,9 @@ class PageTable extends ViewTable
 			if ( $default_value == '' || array_key_exists($filter_name,$this->filter_values) ) continue; 
 			$this->filter_values[$filter_name] = $default_value;
 		}
-
-		// backward compatiibility to old settings
 		if ( is_object($persistent_filter) ) {
-			foreach( array_merge($filter_keys, $this->getFilterParms()) as $parm )
+			// backward compatiibility to old settings
+			foreach( $this->getFilterParms() as $parm )
 			{
 			    $filter_value = $persistent_filter->getValue($parm);
 			    if ( $filter_value == '' ) continue;
@@ -170,7 +170,7 @@ class PageTable extends ViewTable
 				$this->filter_values[$parm] = $filter_value;
 			}
 		}
-        foreach( $this->filter_values as $key => $value ) {
+		foreach( $this->filter_values as $key => $value ) {
             if ( $value == 'user-id' ) {
                 $this->filter_values[$key] = getSession()->getUserIt()->getId();
             }
@@ -936,7 +936,7 @@ class PageTable extends ViewTable
 			'save_settings_alert' => $this->buildSaveSettingsAlert()
 		));
 	}
-	
+
 	function buildSaveSettingsAlert()
 	{
 		$personal_script = "javascript: $('li[uid=personal-persist]>a').addClass('checked'); window.location = $('li[uid=personal-persist]>a[href]').length > 0 ? $('li[uid=personal-persist]>a').attr('href') : $('li[uid=personal-persist]>a').attr('onkeydown')";

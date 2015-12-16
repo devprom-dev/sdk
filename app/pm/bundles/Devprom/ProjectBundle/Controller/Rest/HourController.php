@@ -16,10 +16,9 @@ class HourController extends RestController
 			$object = getFactory()->getObject('ActivityTask');
 		}
 
-		foreach( array('Participant', 'Completed', 'Iteration', 'OrderNum','Caption') as $field ) {
+		foreach( array('Participant', 'Iteration', 'OrderNum','Caption') as $field ) {
 			$object->addAttributeGroup($field, 'system');
 		}
-		
 		return $object;
 	}
 	

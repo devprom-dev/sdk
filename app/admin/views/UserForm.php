@@ -55,11 +55,6 @@ class UserForm extends AdminPageForm
 			}
 		}
 		
-		if(strpos($_REQUEST['Login'], '@') !== false)
-		{
-			return text(207);
-		}
-
 		if ( !$this->checkUniqueExcept($id, 'Login') )
 		{
 			return text(214);

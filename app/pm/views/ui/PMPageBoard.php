@@ -65,6 +65,7 @@ class PMPageBoard extends PageBoard
                 '/pm/'.$this->parent_it->get('CodeName').'/',
                 $this->report_up_url
             );
+            $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
             echo '<div class="board-header-up"><a href="'.$report_url.'" title="'.text(2099).'"><i class="icon icon-th"></i></a></div>';
             echo '<div style="display:table-cell;">';
                 parent::drawHeader($board_value, $board_title);
@@ -106,6 +107,7 @@ class PMPageBoard extends PageBoard
                     getSession()->getApplicationUrl($object_it),
                     $this->report_down_url
                 );
+                $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
                 echo '<i class="icon icon-th"></i><a class="btn btn-link" href="'.$report_url.'">'.$ref_it->getDisplayName().'</a>';
                 break;
 

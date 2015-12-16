@@ -552,4 +552,54 @@ class RequestTable extends PMPageTable
 				break;
 		}
 	}
-} 
+
+	function getAssigneeWorkload() {
+		return $this->workload;
+	}
+
+	protected function buildAssigneeWorkload( $iterator )
+	{
+		$object = $this->getObject();
+		$object->addFilter( new FilterInPredicate($iterator->idsToArray()) );
+
+		// cache aggregates on workload and spent time
+		$planned_aggregate = new AggregateBase( 'Owner', 'Estimation', 'SUM' );
+		$object->addAggregate( $planned_aggregate );
+
+		$left_aggregate = new AggregateBase( 'Owner', 'EstimationLeft', 'SUM' );
+		$object->addAggregate( $left_aggregate );
+
+		$fact_aggregate = new AggregateBase( 'Owner', 'Fact', 'SUM' );
+		$object->addAggregate( $fact_aggregate );
+
+		$object_it = $object->getAggregated();
+		while( !$object_it->end() )
+		{
+			$value = $object_it->get($planned_aggregate->getAggregateAlias());
+			if ( $value == '' ) $value = 0;
+			$this->workload[$object_it->get('Owner')]['Planned'] = $value;
+
+			$value = $object_it->get($left_aggregate->getAggregateAlias());
+			if ( $value == '' ) $value = 0;
+			$this->workload[$object_it->get('Owner')]['LeftWork'] = $value;
+
+			$value = $object_it->get($fact_aggregate->getAggregateAlias());
+			if ( $value == '' ) $value = 0;
+			$this->workload[$object_it->get('Owner')]['Fact'] = $value;
+
+			$object_it->moveNext();
+		}
+	}
+
+	function getRenderParms( $parms )
+	{
+		$parms = parent::getRenderParms($parms);
+
+		$list = $this->getListRef();
+		if ( $list->getGroup() == 'Owner' ) {
+			$this->buildAssigneeWorkload($list->getIteratorRef());
+		}
+
+		return $parms;
+	}
+}

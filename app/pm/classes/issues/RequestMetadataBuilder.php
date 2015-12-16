@@ -161,7 +161,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
  	 	}
  	 	
         $strategy = $methodology_it->getEstimationStrategy();
-			
+
 		if ( $methodology_it->getId() > 0 && !$strategy->hasEstimationValue() ) {
 		    $metadata->removeAttribute( 'Estimation' );
 		    $metadata->removeAttribute( 'EstimationLeft' );

@@ -52,6 +52,7 @@ class BulkForm extends BulkFormBase
 		if ( $match )
 		{
 			$object = $this->getIt()->object;
+			$_REQUEST['Transition'] = trim($attributes[1]);
 
 			$system_attributes =
 					array_merge(

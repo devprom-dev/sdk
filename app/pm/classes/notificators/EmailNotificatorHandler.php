@@ -76,62 +76,62 @@ class EmailNotificatorHandler
 		foreach( array_keys($object_it->object->getAttributesSorted()) as $attribute ) 
 		{
 			if( !$this->isAttributeVisible($attribute, $object_it, $action) ) continue;
-	
-			$was_value = $this->getValue( $prev_object_it, $attribute );
-			$now_value = $this->getValue( $object_it, $attribute );
+
 			$attribute_title = translate($object_it->object->getAttributeUserName($attribute));
-			
-			if( $was_value != '' || $now_value != '' ) 
+			$was_value = $this->getWasValue( $prev_object_it, $attribute );
+			$now_value = $this->getValue( $object_it, $attribute );
+
+			if( $was_value != '' && $was_value != $now_value )
 			{
 				if($object_it->object->IsReference($attribute)) 
 				{
-					if( $was_value != $now_value ) 
-					{
-						$parms[$attribute] = array (
-								'name' => $attribute_title,
-								'value' => $object_it->getRef($attribute)->getDisplayName(),
-								'was_value' => $prev_object_it->getRef($attribute)->getDisplayName(),
-								'type' => 'ref'
-						);
-					}
-					elseif( $this->isAttributeRequired($attribute, $object_it, $action) )
-					{
-						$parms[$attribute] = array (
-								'name' => $attribute_title,
-								'value' => $object_it->getRef($attribute)->getDisplayName(),
-								'type' => 'ref'
-						);
-					}
-				} 
+					$parms[$attribute] = array (
+							'name' => $attribute_title,
+							'value' => $object_it->getRef($attribute)->getDisplayName(),
+							'was_value' => $prev_object_it->getRef($attribute)->getDisplayName(),
+							'type' => 'ref'
+					);
+				}
 				else 
 				{
-					if ( $was_value != $now_value ) 
-					{
-						$parms[$attribute] = array (
-								'name' => $attribute_title,
-								'value' => $now_value,
-								'was_value' => $was_value,
-								'type' => $object_it->object->getAttributeType($attribute)
-						);
-					}
-					else
-					{
-						if( $this->isAttributeRequired($attribute, $object_it, $action) )
-						{
-							$parms[$attribute] = array (
-									'name' => $attribute_title,
-									'value' => $now_value,
-									'type' => $object_it->object->getAttributeType($attribute)
-							);
-						}
-					}
+					$parms[$attribute] = array (
+							'name' => $attribute_title,
+							'value' => $now_value,
+							'was_value' => $was_value,
+							'type' => $object_it->object->getAttributeType($attribute)
+					);
 				}
 			}
-		}		
-		
+
+			if( $was_value == '' && $now_value != '' && !array_key_exists($attribute, $parms) )
+			{
+				if($object_it->object->IsReference($attribute))
+				{
+					$parms[$attribute] = array (
+							'name' => $attribute_title,
+							'value' => $object_it->getRef($attribute)->getDisplayName(),
+							'type' => 'ref'
+					);
+				}
+				else
+				{
+					$parms[$attribute] = array (
+							'name' => $attribute_title,
+							'value' => $now_value,
+							'type' => $object_it->object->getAttributeType($attribute)
+					);
+				}
+			}
+		}
+
 		return $parms;
 	}
-		
+
+	public static function getWasValue( $object_it, $attr )
+	{
+		return self::getValue( $object_it, $attr );
+	}
+
 	public static function getValue( $object_it, $attr )
 	{
 		switch ( $attr )
@@ -179,7 +179,7 @@ class EmailNotificatorHandler
 
 		return $value;
 	}
-	
+
 	protected function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
 		if ( $attribute_name == 'Caption' ) return false;
@@ -236,59 +236,16 @@ class EmailNotificatorHandler
 		}
 	}
 
-	protected function isAttributeRequired( $attribute_name, $object_it, $action )
-	{
-		switch ( $object_it->object->getClassName() )
-		{
-			case 'pm_ChangeRequest':
-				switch ( $attribute_name )
-				{
-					case 'ClosedInVersion':
-					case 'Project':
-					case 'Owner':
-						return false;
-				}				
-				return true;
-
-			case 'pm_Task':
-				switch ( $attribute_name )
-				{
-					case 'ChangeRequest':
-					case 'LeftWork':
-					case 'Assignee':
-						return false;					
-				}
-				return true;
-
-			case 'pm_Question':
-				switch ( $attribute_name )
-				{
-					case 'Caption':
-					case 'Author':
-						return false;					
-				}
-				return true;
-
-			case 'BlogPost':
-				switch ( $attribute_name )
-				{
-					case 'Caption':
-						return false;					
-				}
-				return true;
-				
-			default:	
-				return true;
-		}
-	}
-	
 	protected function getSystemAttributes( $object_it )
 	{
-		if ( isset($this->system_attributes[get_class($object_it->object)]) )
-		{
+		if ( isset($this->system_attributes[get_class($object_it->object)]) ) {
 			return $this->system_attributes[get_class($object_it->object)];
 		}
 		
-		return $this->system_attributes[get_class($object_it->object)] = $object_it->object->getAttributesByGroup('system');
-	}	
+		return $this->system_attributes[get_class($object_it->object)] =
+				array_merge(
+						$object_it->object->getAttributesByGroup('system'),
+						$object_it->object->getAttributesByGroup('trace')
+				);
+	}
 }

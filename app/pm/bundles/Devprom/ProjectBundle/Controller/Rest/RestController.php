@@ -157,9 +157,11 @@ abstract class RestController extends FOSRestController implements ClassResource
 		switch( $request->get('class') )
 		{
 			case 'issues':
-				return 'request';
+				return 'Request';
 			case 'tasks':
-				return 'task';
+				return 'Task';
+			case 'requirements':
+				return 'Requirement';
 			default:
 				return 'dummy';
 		}

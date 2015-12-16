@@ -4,7 +4,7 @@ include_once SERVER_ROOT_PATH.'pm/views/ui/BulkForm.php';
 
 class RequestBulkForm extends BulkForm
 {
- 	function getForm()
+ 	function buildForm()
  	{
  		return new RequestForm($this->getObject());
  	}

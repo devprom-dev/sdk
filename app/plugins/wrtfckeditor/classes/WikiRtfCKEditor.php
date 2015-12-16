@@ -227,7 +227,8 @@ class WikiRtfCKEditor extends WikiEditorBase
 				    '<?=$height ?>', 
 				    '<?=$modify_url ?>', 
 				    <?=JsonWrapper::encode(htmlentities(IteratorBase::wintoutf8($attachments_html), ENT_QUOTES | ENT_HTML401, 'UTF-8')) ?>, 
-				    '<?=$_SERVER['APP_VERSION'] ?>'
+				    '<?=$_SERVER['APP_VERSION'] ?>',
+					'<?=getSession()->getProjectIt()->get('CodeName')?>'
 				);
 		    }
 		</script>

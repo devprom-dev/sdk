@@ -25,13 +25,6 @@ class TaskTable extends PMPageTable
 	function buildRelatedDataCache()
 	{
 		$this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-
-		$list = $this->getListRef();
-		
-		if ( $list->getGroup() == 'Assignee' )
-		{
-			$this->buildAssigneeWorkload();
-		}
 	}
 	
 	function getPredicates($filters)
@@ -318,14 +311,10 @@ class TaskTable extends PMPageTable
 		return $cols;
 	}
 
-	protected function buildAssigneeWorkload()
+	protected function buildAssigneeWorkload( $iterator )
 	{
-		$task_ids = $this->getObject()->getRegistry()->Query(
-				$this->getFilterPredicates()
-		)->idsToArray();
-		
 		$object = getFactory()->getObject('Task');
-		$object->addFilter( new FilterInPredicate($task_ids) );
+		$object->addFilter( new FilterInPredicate($iterator->idsToArray()) );
 		
 		// cache aggregates on workload and spent time
 		$planned_aggregate = new AggregateBase( 'Assignee', 'Planned', 'SUM' );
@@ -453,5 +442,17 @@ class TaskTable extends PMPageTable
 				}
 				break;
 		}
+	}
+
+	function getRenderParms( $parms )
+	{
+		$parms = parent::getRenderParms($parms);
+
+		$list = $this->getListRef();
+		if ( $list->getGroup() == 'Assignee' ) {
+			$this->buildAssigneeWorkload($list->getIteratorRef());
+		}
+
+		return $parms;
 	}
 }

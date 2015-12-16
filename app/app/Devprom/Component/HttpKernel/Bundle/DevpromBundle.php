@@ -26,7 +26,7 @@ class DevpromBundle extends Bundle
 	
 	protected function buildPluginsFactory()
 	{
-		return new \PluginsFactory();
+		return \PluginsFactory::Instance();
 	}
 	
 	protected function buildAccessPolicy()

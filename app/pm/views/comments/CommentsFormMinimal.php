@@ -39,20 +39,16 @@ class CommentsFormMinimal extends PMPageForm
 		switch ( $attribute )
 		{
 		    case 'Caption':
-		    		
                 $field = new FieldWYSIWYG();
 						
  				is_object($this->getObjectIt()) 
  					? $field->setObjectIt( $this->getObjectIt() ) : $field->setObject( $this->getObject() );
 
 				$editor = $field->getEditor();
+				$editor->setMode( WIKI_MODE_MINIMAL );
 
 				$field->setHasBorder( false );
-
-				$editor->setMode( WIKI_MODE_MINIMAL );
-						
 				$field->setName($attribute);
-				
 				return $field;
 				
 		    default:

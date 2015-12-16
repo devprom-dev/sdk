@@ -482,6 +482,14 @@ th .header-caret
 	visibility:visible;
 }
 
+.wishes tr .btn-success {
+	visibility:hidden;
+}
+
+.wishes tr:hover .btn-success {
+	visibility:visible;
+}
+
 .wishes .btn-toolbar .btn-group {
 	margin-left:0px;
 	margin-right:4px;
@@ -625,6 +633,26 @@ th .header-caret
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
+}
+
+.user-mini-mention {
+	width: 18px;
+	height: 18px;
+	display: inline-block;
+	margin-bottom: -4px;
+	margin-right: 6px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	-ms-border-radius: 3px;
+	-o-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-box-shadow: inset 0px 0px 8px rgba(0, 0, 0, 0.3);
+	-moz-box-shadow: inset 0px 0px 8px rgba(0, 0, 0, 0.3);
+	box-shadow: inset 0px 0px 8px rgba(0, 0, 0, 0.3);
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
 }
 
 ul.changes-section {
@@ -1051,16 +1079,35 @@ div.page-attachments .embedded-append-link a {
 	display:none;
 }
 
-.table-header div.filter-reset-cnt {
-	width: 30px;
+.table-header div.filter-reset-cnt a.clipboard {
+	width: 28px;
+	padding: 2px 0 2px 0;
 }
 .table-header:hover a.filter-reset-btn {
 	display: block;
 }
 a.filter-reset-btn {
+	width: 30px;
 	display: none;
 	padding: 2px 0 2px 0;
 }
 a.filter-reset-btn i.icon-trash {
 	background-position: -457px 0;
+}
+
+.textcomplete-dropdown a {
+	cursor: pointer;
+}
+
+.textcomplete-dropdown a i {
+	margin-right: 7px;
+	margin-left: 2px;
+}
+
+.cke_widget_wrapper {
+	max-width: 100%;
+	width: inherit !important;
+}
+span.cke_image_resizer_wrapper {
+	display: inherit;
 }

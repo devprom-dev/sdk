@@ -17,7 +17,8 @@ $fields_dont_skip_if_empty = array (
 	'Watchers',
 	'Deadlines',
 	'Fact',
-	'Tags'
+	'Tags',
+	'Estimation'
 );
 
 $fields_dont_skip_if_hidden = array (
@@ -55,9 +56,9 @@ foreach( $attributes as $name => $attribute )
 	if ( !in_array($name, $important_attributes) ) continue;
 
 	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
-	
+
 	if ( $attribute['value'] == '' && !in_array($name, $fields_dont_skip_if_empty) ) continue;
-	
+
 	$columns[$recent_column][$name] = $attribute;
 }
 

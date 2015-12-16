@@ -1203,10 +1203,15 @@ class StoredObjectDB extends Object
 	{
 		if ( count($parms) < 1 ) throw new Exception('There are no attributes to be updated');
 
-		$prev_object_it = $this->getExact($id);
+		if ( $id instanceof OrderedIterator ) {
+			$prev_object_it = $id;
+			$id = $prev_object_it->getId();
+		}
+		else {
+			$prev_object_it = $this->getExact($id);
+			if ( $prev_object_it->getId() == '' ) throw new Exception('There is no object "'.$id.'" of the entity "'.get_class($this).'"');
+		}
 
-		if ( $prev_object_it->getId() == '' ) throw new Exception('There is no object "'.$id.'" of the entity "'.get_class($this).'"');
-		
 		$imageattributes = array();
 		$fileattributes = array();
 

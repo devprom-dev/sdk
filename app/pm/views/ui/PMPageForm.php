@@ -63,7 +63,7 @@ class PMPageForm extends PageForm
         while (!$it->end())
         {
             $this->customtypes[$it->get('ReferenceName')] = $it->getRef('AttributeType')->get('ReferenceName');
-            $this->customdefault[$it->get('ReferenceName')] = true;
+            $this->customdefault[$it->get('ReferenceName')] = $it->get('DefaultValue');
             
             if ($it->get('ObjectKind') != '') {
             	$this->customkinds[$it->get('ReferenceName')] = $it->get('ObjectKind');
@@ -75,6 +75,13 @@ class PMPageForm extends PageForm
 	
     function persist()
     {
+        // unset values defined for other kinds of entity
+        foreach( $this->customkinds as $attribute => $value ) {
+            if ( $this->getDiscriminator() != $value ) {
+                unset($_REQUEST[$attribute]);
+            }
+        }
+
     	if ( !parent::persist() ) return false;
     	
     	$object_it = $this->getObjectIt();
@@ -204,18 +211,19 @@ class PMPageForm extends PageForm
  		return parent::IsAttributeRequired( $attr );
  	}
 
-    function getFieldValue( $field )
-	{
-	    $value = parent::getFieldValue( $field );
-	    
- 		if ( $value == '' && array_key_exists( $field, $this->customdefault ) && $this->getEditMode() )
- 		{
- 		    $value = $this->object->getDefaultAttributeValue( $field );
- 		}
- 		
- 		return $value;
-	}
-	    
+    function getDefaultValue( $field )
+    {
+        $value = parent::getDefaultValue( $field );
+
+        if ( array_key_exists( $field, $this->customdefault ) && $this->getEditMode() ) {
+            if ( $this->getDiscriminator() == $this->customkinds[$field] ) {
+                $value = $this->customdefault[$field];
+            }
+        }
+
+        return $value;
+    }
+
     function createFieldObject($attr)
     {
         switch ($attr) 
@@ -310,6 +318,15 @@ class PMPageForm extends PageForm
     	<?php
 	    }
 	}
+
+    function getHintId() {
+        if ( $this->getTransitionIt()->getId() != '' ) {
+            return parent::getHintId().'State';
+        }
+        else {
+            return parent::getHintId();
+        }
+    }
 
  	function getHint()
 	{

@@ -25,6 +25,11 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
 		$ref->setAccessible(true);
 		$ref->setValue(null, $this->dal_mock);
 
+        $this->plugins_mock = $this->getMock('PluginsFactory', array('buildPlugins'), array(), '', false);
+        $ref = new \ReflectionProperty('PluginsFactory', 'singleInstance');
+        $ref->setAccessible(true);
+        $ref->setValue(null, $this->plugins_mock);
+
 		// prepare session
 		$this->access_policy = $this->getMock('AccessPolicy', array('check_access'), array(new CacheEngine));
         $this->access_policy->expects($this->any())->method('check_access')->will( $this->returnValue(true) );
@@ -41,7 +46,7 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
         				'getEventsManager'
         		),
         		array (
-                    $this->getMock('PluginsFactory', array('buildPlugins'), array()),
+                    $this->plugins_mock,
         			new CacheEngine(),
         			$this->access_policy,
         			$this->events_manager

@@ -4,7 +4,7 @@ include_once SERVER_ROOT_PATH.'pm/views/ui/BulkForm.php';
 
 class TaskBulkForm extends BulkForm
 {
- 	function getForm()
+ 	function buildForm()
  	{
  		return new TaskForm($this->getObject());
  	}

@@ -50,6 +50,6 @@ class resmanPlugin extends PluginBase
     function checkLicense()
     {
 		$license_it = getModelFactory()->getObject('LicenseState')->getAll();
- 		return $license_it->get('IsValid') == 'Y' && in_array($license_it->get('LicenseType'), array('LicenseTrial','LicenseEnterprise','LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge','LicenseDevOpsBoard'));
+ 		return $license_it->get('IsValid') == 'Y' && in_array($license_it->get('LicenseType'), array('LicenseTrial','LicenseEnterprise','LicenseSAASALM20','LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge','LicenseDevOpsBoard'));
     }
 }

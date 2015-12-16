@@ -56,7 +56,7 @@ class permissionsPlugin extends PluginBase
 				$license_it->get('IsValid') == 'Y'
 				&& in_array(
 					$license_it->get('LicenseType'),
-					array('LicenseTrial','LicenseEnterprise','LicenseSAASALM', 'LicenseSAASALMMiddle', 'LicenseSAASALMLarge','LicenseDevOpsBoard')
+					array('LicenseTrial','LicenseEnterprise','LicenseSAASALM', 'LicenseSAASALM20','LicenseSAASALMMiddle', 'LicenseSAASALMLarge','LicenseDevOpsBoard')
 				);
 		}
 		return $this->license;

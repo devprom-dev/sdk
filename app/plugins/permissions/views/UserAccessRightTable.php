@@ -10,10 +10,14 @@ class UserAccessRightTable extends AccessRightTable
 
     public function __construct( $object )
     {
-    	global $model_factory;
-    	
-        $this->user_it = $model_factory->getObject('User')->getExact($_REQUEST['user']);
-    	
+        $this->user_it = getFactory()->getObject('User')->getExact($_REQUEST['user']);
+        $this->participant_it = getFactory()->getObject('Participant')->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('SystemUser', $this->user_it->getId()),
+                new FilterBaseVpdPredicate()
+            )
+        );
+
         parent::__construct( $object );
     }
     
@@ -30,13 +34,6 @@ class UserAccessRightTable extends AccessRightTable
 
     function getList()
     {
-        $this->participant_it = getFactory()->getObject('Participant')->getRegistry()->Query(
-        		array (
-        				new FilterAttributePredicate('SystemUser', $this->user_it->getId()),
-        				new FilterBaseVpdPredicate()
-        		)
-        );
-        
         return new UserAccessRightList( $this->getObject(), $this->participant_it );
     }
 
@@ -82,10 +79,11 @@ class UserAccessRightTable extends AccessRightTable
     
     function getFilterPredicates()
     {
-        return array_merge( parent::getFilterPredicates(), 
-        		array( 
-        				new CommonAccessRolePredicate( array_shift(getFactory()->getObject('ProjectRole')->getAll()->idsToArray())) 
-        			) 
+        return array_merge(
+            parent::getFilterPredicates(),
+            array(
+                new CommonAccessRolePredicate($this->participant_it->get('ProjectRole'))
+            )
         );
     }
 }

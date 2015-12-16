@@ -119,7 +119,26 @@ class PMPageTable extends PageTable
         return $base_actions;
     }
 
-    function getSaveActions()
+	function getFiltersUrl()
+	{
+		$url = '';
+		$values = $this->getFilterValues();
+		foreach ( $values as $key => $value ) {
+			$url .= $key.'='.$value.'&';
+		}
+
+		if ( $this->getReport() != '' ) {
+			$action_url = getFactory()->getObject('PMReport')->getExact($this->getReport())->getUrl($url);
+		}
+		else if ( $this->getPage()->getModule() != '' ) {
+			$action_url = getFactory()->getObject('Module')->getExact($this->getPage()->getModule())->getUrl($url);
+		}
+		if ( $action_url == '' ) return $action_url;
+
+		return EnvironmentSettings::getServerUrl().$action_url;
+	}
+
+	function getSaveActions()
     {
         $actions = array();
 
@@ -242,7 +261,7 @@ class PMPageTable extends PageTable
     	
     	$widget_id = $report_id != '' ? $report_id : $module_id;
     	
-    	if ( count($service->getItemOnFavoritesWorkspace($widget_id)) > 0 ) return;
+    	if ( count($service->getItemOnFavoritesWorkspace(array($widget_id))) > 0 ) return;
     	
     	$save_action_key = '';
     	
@@ -558,4 +577,13 @@ class PMPageTable extends PageTable
 		
 		return $fields;
 	}
-}
+
+	function getFullPageRenderParms( $parms )
+	{
+		return array_merge(
+				parent::getFullPageRenderParms( $parms ),
+				array(
+					'module_url' => htmlentities($this->getFiltersUrl())
+				)
+		);
+	}}

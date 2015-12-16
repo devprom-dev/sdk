@@ -8,7 +8,7 @@ include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
 $cache_service = getCacheService();
 $model_factory = new ModelFactoryProject(
-		new PluginsFactory(),
+		PluginsFactory::Instance(),
 		$cache_service, 
 		new APIAccessPolicy($cache_service)
 );

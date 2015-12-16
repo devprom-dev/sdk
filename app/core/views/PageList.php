@@ -215,7 +215,7 @@ class PageList extends ListTable
 		return $this->references_it[$attribute] = $object->createCachedIterator(
 				$registry->Query(
 						array_merge( array(
-								new FilterInPredicate(join(',',$ids)),
+								new FilterInPredicate(join(',',array_unique($ids))),
 						), $sorts)
 				)->getRowset()
 		);
@@ -248,7 +248,7 @@ class PageList extends ListTable
 		$values = $this->getFilterValues();
 
 		$values['_group'] = $this->getGroup();
-		
+
 		foreach( $sort_parms as $sort_parm )
 		{
         	$sort_field = $values[$sort_parm];
@@ -582,23 +582,23 @@ class PageList extends ListTable
 				    default:
 						$separator = $this->uid_service->hasUid($entity_it) ? ' ' : '<br/>';
                 		$ids = $entity_it->idsToArray();
-						$items = $this->getRefNames($entity_it, $object_it, $attr);
 
                 		$url = $this->getReferencesListWidget($entity_it->object);
-                		if ( $url != '' && count($items) > 1 )
+                		if ( $url != '' && count($ids) > 1 )
                 		{
 							if ( strpos($url, '?') === false ) $url .= '?';
                 			$url .= strtolower(get_class($entity_it->object)).'='.join(',',$ids);
-                			$text = count($items) > 10
-                					? str_replace('%1', count($items) - 10, text(2028))
+                			$text = count($ids) > 10
+                					? str_replace('%1', count($ids) - 10, text(2028))
                 					: text(2034);
 
-                			echo join(array_slice($items, 0, 10), $separator).'&nbsp; ';
+							$item_it = $entity_it->object->createCachedIterator(array_slice($entity_it->getRowset(),0,10));
+                			echo join($this->getRefNames($item_it, $object_it, $attr), $separator).'&nbsp; ';
                 			echo '<a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
                 		}
                 		else
                 		{
-                			echo join($items, $separator);
+                			echo join($this->getRefNames($entity_it, $object_it, $attr), $separator);
                 		}
 				}
 		}
