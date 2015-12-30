@@ -18,7 +18,7 @@ class LanguageSettingsPersister extends ObjectSQLPersister
 		
 		$language_it = $language->getExact( $parms['cms_LanguageId'] );
 		
-		$file_content = $this->updateContent( 
+		$file_content = SettingsFile::setSettingValue(
 			'LANG_DATEFORMAT_'.$language_it->get('CodeName'), $parms['DateFormatClass'], $file_content );
 		
 		$file = fopen($settings_path, 'w', 1);
@@ -27,31 +27,6 @@ class LanguageSettingsPersister extends ObjectSQLPersister
 		fclose( $file );
 		
 		if ( function_exists('opcache_reset') ) opcache_reset();
- 	}
- 	
- 	function updateContent( $parm, $value, $file_content )
- 	{
-		$regexp = "/(define\(\'".$parm."\'\,\s*\'[^']*\'\);)/mi";
-		
-		if ( preg_match( $regexp, $file_content, $match ) > 0 )
-		{
-			$file_content = preg_replace( $regexp,
-				"define('".$parm."', '".$value."');", $file_content);
-		}
-		else
-		{
-		    if ( strpos($file_content, "?>") !== false )
-		    {
-    			$file_content = preg_replace( "/(\?>)/mi",
-    				"\n\tdefine('".$parm."', '".$value."');\n?>", $file_content);
-		    }
-		    else
-		    {
-		        $file_content .= "\n\tdefine('".$parm."', '".$value."');\n";
-		    }
-		}
-		
-		return $file_content;
  	}
 
  	function getSelectColumns( $alias )

@@ -55,7 +55,12 @@ class WikiParserTest extends DevpromTestCase
                 '<p><a class="uid" href="url">[K-1] Caption</a></p>', 
                 preg_replace_callback(REGEX_UID, array($parser, 'parseUidCallback'), '<p>K-1</p>')
         );
-        
+
+        $this->assertContains(
+            '<span><a class="uid" href="url">[K-1] Caption</a></span>',
+            preg_replace_callback(REGEX_UID, array($parser, 'parseUidCallback'), '<span>K-1</span>')
+        );
+
         $this->assertContains(
                 '<p>K-2</p>', 
                 preg_replace_callback(REGEX_UID, array($parser, 'parseUidCallback'), '<p>K-2</p>')

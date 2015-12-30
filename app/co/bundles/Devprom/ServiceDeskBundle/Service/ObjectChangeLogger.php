@@ -38,16 +38,16 @@ class ObjectChangeLogger
     }
 
 
-    public function logIssueCreated(Issue $issue) {
+    public function logIssueCreated(Issue $issue, User $user) {
 		$lock = new \LockFileSystem( 'Request' );
         $lock->Release();
-        $this->notifyIssueCreated($issue);
+        $this->notifyIssueCreated($issue,$user);
     }
 
-    public function logCommentCreated(IssueComment $comment) {
+    public function logCommentCreated(IssueComment $comment, User $user) {
 		$lock = new \LockFileSystem( 'Comment' );
         $lock->Release();
-        $this->notifyCommentCreated($comment);
+        $this->notifyCommentCreated($comment,$user);
     }
 
     /**
@@ -143,21 +143,19 @@ class ObjectChangeLogger
 			);
     }
     
-    protected function buildProjectSession($issue)
+    protected function buildProjectSession($issue, User $user)
     {
-    	$system_it = getFactory()->getObject('SystemSettings')->getAll();
-    	
 		return $this->project_session = new \PMSession(
 				getFactory()->getObject('Project')->getExact($issue->getProject()->getId()), 
 				new \AuthenticationFactory(
 						getFactory()->getObject('User')->createCachedIterator(
-								array (
-										array (
-												'Caption' => $system_it->getDisplayName(),
-												'Email' => $system_it->get('AdminEmail')
-										)
-								)
-							)						
+                            array (
+                                array (
+                                    'Caption' => $user->getUsername(),
+                                    'Email' => $user->getEmail()
+                                )
+                            )
+                        )
         		)
 			);
     }
@@ -170,9 +168,9 @@ class ObjectChangeLogger
 			);
     }
     
-    protected function notifyIssueCreated(Issue $issue)
+    protected function notifyIssueCreated(Issue $issue, User $user)
     {
-    	$this->buildProjectSession($issue);
+    	$this->buildProjectSession($issue, $user);
 		$object_it = getFactory()->getObject('Request')->getExact($issue->getId());
 		
 		getFactory()->getEventsManager()->notify_object_add($object_it, array());
@@ -180,18 +178,9 @@ class ObjectChangeLogger
 	    	->executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
     }
 
-    protected function notifyIssueModified(Issue $issue)
+    protected function notifyCommentCreated(IssueComment $comment, User $user)
     {
-    	$this->buildProjectSession($issue);
-    	$issue_it = getFactory()->getObject('Request')->getExact($issue->getId());
-		getFactory()->getEventsManager()->notify_object_modify(
-				$issue_it, $issue_it, array()
-			);
-    }
-
-    protected function notifyCommentCreated(IssueComment $comment)
-    {
-    	$this->buildProjectSession($comment->getIssue());
+    	$this->buildProjectSession($comment->getIssue(), $user);
     	getFactory()->getEventsManager()->notify_object_add(
 				getFactory()->getObject('Comment')->getExact($comment->getId()), array()
 			);

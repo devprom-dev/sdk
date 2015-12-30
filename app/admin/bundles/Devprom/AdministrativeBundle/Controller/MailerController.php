@@ -8,6 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
+include_once SERVER_ROOT_PATH . 'admin/install/Installable.php';
+include_once SERVER_ROOT_PATH . 'admin/install/ClearCache.php';
+
 class MailerController extends BaseController
 {
     public function indexAction()
@@ -23,40 +26,29 @@ class MailerController extends BaseController
     {
     	if ( is_object($response = $this->checkAccess()) ) return $response;
     	
-    	$settings = getFactory()->getObject('MailerSettings');
-    	
     	$parms = array();
-    	
-    	foreach( $settings->getAttributes() as $attribute => $data )
-    	{
+
+		$settings = getFactory()->getObject('MailerSettings');
+    	foreach( $settings->getAttributes() as $attribute => $data ) {
     		$parms[$attribute] = $request->request->get($attribute);
     	}
     	
     	$settings->modify_parms($settings->getAll()->getId(), $parms);
-    	
+
+		$command = new \ClearCache();
+		$command->install();
+		getCheckpointFactory()->getCheckpoint('CheckpointSystem')->checkOnly(array('CheckpointWindowsSMTP'));
+
     	$test_email = $request->request->get("MailTestEmail");
-    	
     	if ( $test_email != '' )
     	{
-    		$from_address = $parms['AdminEmail'];
-    		
-    		if ( $from_address == '' )
-    		{
-    			return $this->replyError(text(1267));
-    		}
-    		
-			$mail_result = mail(
-					$test_email, 
-					'=?UTF-8?B?'.base64_encode(\IteratorBase::wintoutf8(text(1523))).'?=', 
-					'<html>'.PHP_EOL.
-		    			'<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>'.PHP_EOL.
-		    			'<body>'.\IteratorBase::wintoutf8(text(1524)).'</body>'.PHP_EOL.
-		    		'</html>',
-					"Sender: ".$from_address."\r\nFrom: ".$from_address."\r\n".
-					"MIME-Version: 1.0\r\nContent-type: text/html; charset=utf-8\r\n", 
-					"-f ".$from_address
-    		);
-			
+			$mail = new \HtmlMailbox;
+			$mail->setFromUser(getSession()->getUserIt());
+			$mail->appendAddress($test_email);
+			$mail->setSubject(text(1523));
+			$mail->setBody(text(1524));
+			$mail->send();
+
 			return $this->replySuccess(text(1706).'<br/><br/>'.text(1526));
     	}
     	else

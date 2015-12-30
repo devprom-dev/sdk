@@ -37,18 +37,15 @@ class PMWikiList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-				if ( $object_it->get('BrokenTraces') != "" )
-				{
+				if ( $object_it->get('BrokenTraces') != "" ) {
 					echo $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php', 
-							array ( 
-									'id' => $object_it->getId(),
-									'url' => getSession()->getApplicationUrl($object_it) 
-							)
+						array (
+							'id' => $object_it->getId(),
+							'url' => getSession()->getApplicationUrl($object_it)
+						)
 					);					
 				}
-				
 				echo $object_it->getDisplayName();
-
 				break;
 				
 			case 'Workflow':
@@ -75,13 +72,12 @@ class PMWikiList extends PMPageList
 		{
 			case 'WikiPage':
 				echo '<div class="tracing-ref">';
-					if ( $entity_it->get('BrokenTraces') != "" )
-					{
+					if ( $entity_it->get('BrokenTraces') != "" ) {
 						echo $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php', 
-								array ( 
-										'id' => $entity_it->getId(),
-										'url' => getSession()->getApplicationUrl($entity_it)
-								)
+							array (
+								'id' => $entity_it->getId(),
+								'url' => getSession()->getApplicationUrl($entity_it)
+							)
 						);
 					}
 					parent::drawRefCell( $entity_it, $object_it, $attr );

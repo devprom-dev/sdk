@@ -313,7 +313,9 @@ class TaskTable extends PMPageTable
 
 	protected function buildAssigneeWorkload( $iterator )
 	{
-		$object = getFactory()->getObject('Task');
+		$object = getFactory()->getObject(get_class($this->getObject()));
+		$object->resetPersisters();
+		$object->setRegistry(new ObjectRegistrySQL($object));
 		$object->addFilter( new FilterInPredicate($iterator->idsToArray()) );
 		
 		// cache aggregates on workload and spent time
@@ -450,7 +452,10 @@ class TaskTable extends PMPageTable
 
 		$list = $this->getListRef();
 		if ( $list->getGroup() == 'Assignee' ) {
-			$this->buildAssigneeWorkload($list->getIteratorRef());
+			$iterator = $_REQUEST['tableonly'] == 'true'
+				? $this->getObject()->getRegistry()->Query($this->getFilterPredicates())
+				: $list->getIteratorRef();
+			$this->buildAssigneeWorkload($iterator);
 		}
 
 		return $parms;

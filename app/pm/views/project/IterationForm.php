@@ -24,7 +24,21 @@ class IterationForm extends PMPageForm
     		$object->setAttributeDescription('FinishDate', $text);
 		}
 	}
-	
+
+	function extendModel()
+	{
+		$stages_num = getFactory()->getObject('pm_ProjectStage')->getRegistry()->Count(
+				array (
+					new FilterVpdPredicate()
+				)
+		);
+		if ( $stages_num < 1 ) {
+			$this->getObject()->setAttributeVisible('ProjectStage', false);
+		}
+
+		parent::extendModel();
+	}
+
 	function buildModelValidator()
 	{
 		$validator = parent::buildModelValidator();
@@ -93,7 +107,7 @@ class IterationForm extends PMPageForm
 				$iteration->addAggregate($aggregate);
 				$last_date = $iteration->getAggregated()->get($aggregate->getAggregateAlias());
 				
-				if ( $last_date != '' ) return date('Y-m-j', strtotime('1 day', strtotime($last_date)));
+				if ( $last_date != '' ) return date('Y-m-j', strtotime('1 weekday', strtotime($last_date)));
 				
 				$predicates = array (
 						new SortAttributeClause('StartDate.D'),
@@ -130,26 +144,21 @@ class IterationForm extends PMPageForm
 		parent::drawScripts();
 		
 		$locale = getSession()->getLanguage()->getLocaleFormatter();
-		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		 
-		if ( $methodology_it->HasFixedRelease() )
+		if ( $methodology_it->getReleaseDuration() > 0 )
 		{
 		?>
 		<script type="text/javascript">
-	
-		$().ready( function() {
-	
-			$('#pm_ReleaseStartDate').change( function() 
-			{
-				var start = Date.parse($(this).val());
-				var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
-				 
-				$('#pm_ReleaseFinishDate').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
-			}).trigger('change');
-			
-		});
-		
+			$().ready( function() {
+				$('#pm_ReleaseStartDate').change( function() {
+					<? if ( !$methodology_it->HasFixedRelease() ) { ?>
+					if ( $('#pm_ReleaseFinishDate').val() != '' ) return;
+					<? } ?>
+					var start = Date.parse($(this).val());
+					var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
+					$('#pm_ReleaseFinishDate').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
+				}).trigger('change');
+			});
 		</script>
 		<?php
 		}

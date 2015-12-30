@@ -30,7 +30,7 @@ include "BulkFormBase.php";
  
 class Page
 {
- 	var $infosections;
+ 	var $infosections = array();
  	var $table;
  	var $form;
  	var $notfound;
@@ -75,11 +75,9 @@ class Page
 		}
  		
 		$this->notfound = false;
-		$this->infosections = array();
-		
 		if ( is_object($plugins) )
 		{
- 			$this->infosections = $plugins->getPageInfoSections( $this );
+ 			$this->infosections = array_merge($this->infosections, $plugins->getPageInfoSections( $this ));
             foreach( $this->infosections as $key => $section ) {
                 $this->infosections[$key]->setPage($this);
             }

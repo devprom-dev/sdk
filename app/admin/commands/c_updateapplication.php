@@ -13,26 +13,23 @@ class UpdateApplication extends MaintenanceCommand
 
 	function create()
 	{
+		global $plugins;
+
 		$strategy = new StrategyUpdate($_REQUEST['parms']);
 		
 	    $this->updateCode($strategy);
-	    
 	    $this->updateDatabase($strategy);
 	    
-	    $update = $strategy->getUpdate();
-	    
-	    $update->update_clean();
+		$strategy->getUpdate()->update_clean();
 	    
 	    // clear old cache
-	    $installation_factory = InstallationFactory::getFactory();
-	    
+	    InstallationFactory::getFactory();
 	    $clear_cache_action = new ClearCache();
-	    
 	    $clear_cache_action->install();
 
-	    // reset opcache after new files have been uploaded
-	    if ( function_exists('opcache_reset') ) opcache_reset();
-	    
+		// rebuild cached list of plugins
+		$plugins->buildPluginsList();
+
 	    // go to the next step
 	    $strategy->release();
 

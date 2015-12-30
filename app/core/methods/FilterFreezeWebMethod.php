@@ -46,14 +46,16 @@ class FilterFreezeWebMethod extends WebMethod
 		return text(1285);
 	}
 	
-	function getJSCall( $element_selector, $redirect = "donothing" )
+	function getJSCall( $element_selector, $persisted, $redirect = "donothing" )
 	{
 		$this->redirect = $redirect;
 		
 		return parent::getJSCall( 
 			array( 'filter' => $this->filter,
 				   'items' => 'function() { return filterLocation.getParametersString(); }',
-				   'values' => 'function() { return $(\''.$element_selector.'\').hasClass(\'checked\') ? filterLocation.getValuesString() : filterLocation.getEmptyValuesString(); }',
+				   'values' => $persisted
+						? 'function() { return filterLocation.getEmptyValuesString(); }'
+						: 'function() { return $(\''.$element_selector.'\').hasClass(\'checked\') ? filterLocation.getValuesString() : filterLocation.getEmptyValuesString(); }',
 				   'subject' => $this->subject )
 			);
 	}
@@ -73,27 +75,17 @@ class FilterFreezeWebMethod extends WebMethod
 		$object = getSession()->getUserSettings();
 		
 		$stored = $object->getSettingsValue($this->filters_name, $this->subject);
-		
-		if ( $stored == '' )
-		{
-			$stored = $object->getSettingsValue($this->filters_name, -1); 
-		}
-		
-		if ( $stored == '' ) return false;
+		if ( in_array($stored, array('','-')) ) return false;
 		
 		$filters = preg_split('/;/', $stored);
 		
 		$stored_values = array();
-		
-		foreach( $filters as $filter_item )
-		{
+		foreach( $filters as $filter_item ) {
 		    list( $filter_name, $filter_value ) = preg_split('/=/', $filter_item);
-		    
 		    $stored_values[$filter_name] = $filter_value;
 		}
 		
-		foreach( $values as $key => $value )
-		{
+		foreach( $values as $key => $value ) {
 		    if ( count(array_diff(preg_split('/[-,;]/',$stored_values[$key]), preg_split('/[-,;]/',$value))) > 0 ) {
 		    	return false;
 		    }
@@ -121,26 +113,20 @@ class FilterFreezeWebMethod extends WebMethod
 			$this->filter_values = array();
 
 			$settings = getSession()->getUserSettings();
-			
 			if ( !is_object($settings) ) return '';
 			
 			$value = $settings->getSettingsValue($this->filters_name);
-			
-			if ( $value == '' )
-			{
+			if ( in_array($value, array('','-')) ) {
 				$value = $settings->getSettingsValue($this->filters_name, -1); 
 			}
 			
 			if ( $value == '' ) return '';
 			
 			$filters = preg_split( '/;/', $value );
-		
 			if ( count($filters) == 1 ) $filters = preg_split( '/,/', $value );
 			
-			foreach ( $filters as $value )
-			{
+			foreach ( $filters as $value ) {
 				list($f_name, $f_value) = preg_split('/=/', $value);
-				
 				$this->filter_values[$f_name] = $f_value;
 			}
 		}

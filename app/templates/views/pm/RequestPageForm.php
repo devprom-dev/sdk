@@ -43,7 +43,8 @@ $important_attributes = array(
 	'Estimation', 
 	'Deadlines',
 	'OrderNum',
-    'PlannedRelease'
+    'PlannedRelease',
+	'Iterations'
 );
 
 $columns = array();

@@ -16,17 +16,11 @@ class MetaobjectStatable extends Metaobject
  	    
 		$this->addAttribute('StateObject', 'INTEGER', '', false, true);
  	    
- 		if ( $this->getAttributeType('Project') == '' )
-	    {
+ 		if ( $this->getAttributeType('Project') == '' ) {
 			$this->addAttribute('Project', 'REF_pm_ProjectId', translate('Проект'), false);
-			$this->setAttributeRequired('Project', true);
 			$this->addPersister( new EntityProjectPersister );
 	    }
- 	    
- 	    $attributes = array( 'LifecycleDuration', 'StateObject' );
-    	
-    	foreach ( $attributes as $attribute )
-    	{
+    	foreach ( array( 'LifecycleDuration', 'StateObject' ) as $attribute ) {
     		$this->addAttributeGroup($attribute, 'system');
     	}
  	}

@@ -9,6 +9,8 @@ class ProjectAccessiblePredicate extends FilterPredicate
 	
  	function _predicate( $filter )
  	{
+		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return " AND 1 = 1 ";
+
 		$user_id = getSession()->getUserIt()->getId();
 		if ( $user_id == '' ) $user_id = 0;
 

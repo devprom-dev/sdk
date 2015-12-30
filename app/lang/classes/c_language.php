@@ -183,6 +183,39 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 			if ( $db_date >= $date ) return $wording;
 		}
  	}
+
+	protected function convertHours( $hours )
+	{
+		$monthes = floor($hours / (30 * 8));
+		$hours -= $monthes * 8 * 30;
+		$days = floor($hours / 8);
+		$hours -= $days * 8;
+		 return array (
+			 $monthes,
+			 $days,
+			 floor($hours),
+			 round(($hours - floor($hours)) * 60,0)
+		 );
+	}
+
+	function getDurationWording( $hours )
+	{
+		list( $monthes, $days, $hours, $minutes ) = $this->convertHours($hours);
+		$result = '';
+		if ( $monthes > 0 ) {
+			$result .= $monthes.'мес ';
+		}
+		if ( $days > 0 ) {
+			$result .= $days.'д ';
+		}
+		if ( $hours > 0 ) {
+			$result .= $hours.'ч ';
+		}
+		if ( $minutes > 0 ) {
+			$result .= $minutes.'м ';
+		}
+		return trim($result);
+	}
  }
  
  ////////////////////////////////////////////////////////////////////////////////// 
@@ -226,6 +259,25 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
  		else
  			return 'weeks';
  	}
+
+	 function getDurationWording( $hours )
+	 {
+		 list( $monthes, $days, $hours, $minutes ) = $this->convertHours($hours);
+		 $result = '';
+		 if ( $monthes > 0 ) {
+			 $result .= $monthes.'mo ';
+		 }
+		 if ( $days > 0 ) {
+			 $result .= $days.'d ';
+		 }
+		 if ( $hours > 0 ) {
+			 $result .= $hours.'h ';
+		 }
+		 if ( $minutes > 0 ) {
+			 $result .= $minutes.'m ';
+		 }
+		 return trim($result);
+	 }
  }
  
  //////////////////////////////////////////////////////////////////////////////////

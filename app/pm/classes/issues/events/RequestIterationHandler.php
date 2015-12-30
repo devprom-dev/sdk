@@ -13,22 +13,6 @@ class RequestIterationHandler extends SystemTriggersBase
 	    $data = $this->getRecordData();	    
 	    if ( !array_key_exists('Iterations', $data) ) return;
 
-	    $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
-	    		array ( new FilterInPredicate(preg_split('/,/',$data['Iterations'])) )
-	    );
-	    if ( $iteration_it->getId() < 1 ) return;
-
-	    $task_it = $object_it->getRef('OpenTasks');
-	    while( !$task_it->end() )
-	    {
-	    	$task_it->object->modify_parms($task_it->getId(),
-	    			array (
-	    					'Release' => $iteration_it->getId() 
-	    			)
-	    	);
-	    	$task_it->moveNext();
-	    }
-	    
 	    $service = new StoreMetricsService();
     	$service->storeIssueMetrics($object_it);
 	}

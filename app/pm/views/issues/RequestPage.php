@@ -48,6 +48,7 @@ class RequestPage extends PMPage
 
 		if ($this->needDisplayForm()) {
 			$form = $this->getFormRef();
+			$this->addInfoSection(new PageSectionAttributes($form->getObject(), 'deadlines', translate('Сроки')));
 			$this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
 			$this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
 

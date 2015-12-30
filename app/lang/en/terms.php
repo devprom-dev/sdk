@@ -468,8 +468,7 @@ return array (
 	'Комментарии' => 'Comments',
 	'Действия' => 'Actions',
 	'Планируемая трудоемкость, ч.' => 'Planned capacity, hrs',
-	'Фактическая трудоемкость, ч.' => 'Actual capacity, hrs',
-	'Фактическая трудоемкость' => 'Actual workload',
+	'Затрачено' => 'Time spent',
 	'дн.' => 'days',
 	'осталось' => 'remained',
 	'Осталось' => 'Remained',
@@ -1918,7 +1917,7 @@ return array (
 	'Сложные' => 'Hard',
 	'Неоцененные' => 'Unestimated',
 	'Добавить позиции' => 'Add items',
-	'Затрачено, ч.' => 'Spent, hrs.',
+	'Затрачено' => 'Time spent',
 	'Оставшаяся трудоемкость, ч.' => 'Left capacity, hrs',
 	'Право доступа' => 'Access permission',
 	'Закладка' => 'Menu tab',
@@ -2021,5 +2020,8 @@ return array (
 	'Начать' => 'Start at',
 	'Завершить к' => 'Due date',
 	'комментарии' => 'discussion',
-	'Планы' => 'Work plans'
+	'Планы' => 'Work plans',
+	'Осталось обработать' => 'Left to process',
+	'Всего обработано' => 'Processed totally',
+		'Лог' => 'Log'
 );

@@ -19,6 +19,9 @@ class BulkActionBuilderCommon extends BulkActionBuilder
  	 	if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
 		
  		// modifiable attributes
+		$bulk_attributes = array_merge(
+				$object->getAttributesByGroup('bulk')
+		);
  		$system_attributes = array_merge(
  				$object->getAttributesByGroup('system'),
  				$object->getAttributesByGroup('nonbulk'),
@@ -31,9 +34,10 @@ class BulkActionBuilderCommon extends BulkActionBuilder
 		foreach ( $object->getAttributes() as $key => $attribute )
 		{
 			if ( in_array($key, $system_attributes) ) continue;
-			if ( in_array($object->getAttributeType($key), $system_types) ) continue;
-			if ( !$object->IsAttributeStored($key) ) continue;
-			
+			if ( !in_array($key, $bulk_attributes) ) {
+				if ( in_array($object->getAttributeType($key), $system_types) ) continue;
+				if ( !$object->IsAttributeStored($key) ) continue;
+			}
 			$registry->addModifyAction(
 					translate($object->getAttributeUserName($key)),
 					$key

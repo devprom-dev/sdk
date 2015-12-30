@@ -102,7 +102,7 @@ class IssueService {
         $this->em->persist($issue);
         $this->em->flush();
 
-        $this->objectChangeLogger->logCommentCreated($issueComment);
+        $this->objectChangeLogger->logCommentCreated($issueComment,$author);
     }
 
     protected function createIssue(Issue $issue, User $author)
@@ -116,9 +116,7 @@ class IssueService {
         $issue->setCustomer($author);
         $this->em->persist($issue);
         $this->em->flush();
-
-        $this->objectChangeLogger->logIssueCreated($issue);
-        $this->mailer->sendIssueCreatedMessage($issue, $author->getEmail(), $author->getLanguage());
+        $this->objectChangeLogger->logIssueCreated($issue,$author);
     }
 
     protected function updateIssue(Issue $issue)

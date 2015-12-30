@@ -209,7 +209,9 @@ class PageList extends ListTable
 
 		$registry = $object->getRegistry();
 		$registry->setPersisters(array_filter($registry->getPersisters(), function($persister) {
-			return is_a($persister, 'StateDetailsPersister') || is_a($persister, 'TestExecutionResultPersister');
+			return is_a($persister, 'StateDetailsPersister')
+				|| is_a($persister, 'TestExecutionResultPersister')
+				|| is_a($persister, 'WikiPageDetailsPersister');
 		}));
 
 		return $this->references_it[$attribute] = $object->createCachedIterator(
@@ -984,7 +986,7 @@ class PageList extends ListTable
     	        );
 	        }
 	    }
-	
+
 	    // sort by
 	    $sorts = array();
 	    $sort_parms = array(

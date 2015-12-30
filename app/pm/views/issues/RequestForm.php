@@ -52,6 +52,16 @@ class RequestForm extends PMPageForm
     		$this->getObject()->setAttributeVisible('Type', false);
     	}
 
+		if ( is_object($this->getObjectIt()) ) {
+			$state_it = $this->getStateIt();
+			if ( $state_it->get('IsTerminal') == 'Y' ) {
+				$this->getObject()->setAttributeVisible('FinishDate', true);
+			}
+			else {
+				$this->getObject()->setAttributeVisible('DeliveryDate', true);
+			}
+		}
+
     	parent::extendModel();
     }
     
@@ -88,8 +98,9 @@ class RequestForm extends PMPageForm
 		if ( $_REQUEST['Type'] != '' ) {
 			$referenceName = getFactory()->getObject('RequestType')->getExact($_REQUEST['Type'])->get('ReferenceName');
 		}
-		if ( $referenceName == '' ) {
+		if ( $referenceName != 'bug' ) {
 			$object->addAttributeGroup('SubmittedVersion', 'additional');
+			$object->addAttributeGroup('Environment', 'additional');
 		}
 
  		$method = new RequestCreateTaskWebMethod($object_it);
@@ -131,7 +142,10 @@ class RequestForm extends PMPageForm
 		if ( count($projects) > 0 && count($projects) < 7 )
 		{
 			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-				array ( new FilterInPredicate($projects) )
+				array (
+					new FilterInPredicate($projects),
+					new ProjectAccessiblePredicate()
+				)
 			);
 			while( !$linked_it->end() )
 			{
@@ -349,17 +363,13 @@ class RequestForm extends PMPageForm
    			    break;
    			    
    			case 'Description':
-   			    
-   			    if ( is_a($field, 'FieldText') )
-   			    {
+   			    if ( is_a($field, 'FieldText') ) {
    			        $field->setRows( 6 );
    			    }
-
-   		        if ( $field instanceof FieldWYSIWYG && !$this->getEditMode() )
-		    	{
-		    		$field->setCssClassName( 'wysiwyg-text' );
+   		        if ( $field instanceof FieldWYSIWYG ) {
+					if ( !$this->getEditMode() ) $field->setCssClassName( 'wysiwyg-text' );
+					$field->setRows(10);
 		    	}
-   			    
    			    break;
         }
 
@@ -381,7 +391,12 @@ class RequestForm extends PMPageForm
    		    	break;
    		    	
    		    case 'PlannedRelease':
-   		    	if ( $value == '' && $this->IsAttributeRequired($attr) ) {
+   		    	if ( $value == '' && $this->IsAttributeRequired($attr) )
+				{
+					if ( $_REQUEST['Iterations'] != '' ) {
+						$release_id = getFactory()->getObject('Iteration')->getExact(preg_split('/,/',$_REQUEST['Iterations']))->get('Version');
+						if ( $release_id != '' ) return $release_id;
+					}
 	   		    	return getFactory()->getObject('Release')->getRegistry()->Query(
 	   		    				array (
 	   		    					new FilterVpdPredicate(),
@@ -447,35 +462,10 @@ class RequestForm extends PMPageForm
 	    switch( $attribute )
 	    {
 			case 'ExternalAuthor': return false;
+			case 'DeliveryDate': return false;
 
 			default: return parent::IsAttributeEditable( $attribute );
 	    }
-	}
-	
-	function getActions()
-	{
-		$actions = parent::getActions();
-		
-		$object_it = $this->getObjectIt();
-		
-		if ( !is_object($object_it) ) return $actions;
-
-		if ( $actions[count($actions) - 1]['name'] != '' ) array_push($actions, array( '' ) );
-
-		if ( $this->IsFormDisplayed() && is_object($this->method_duplicate) )
-		{
-			$method = new SetRequestIterationWebMethod( $object_it );
-			if ( $method->hasAccess() )
-			{
-				if ( $actions[count($actions) - 1]['name'] != '' ) array_push($actions, array( '' ) );
-				$actions[] = array( 
-						'name' => $method->getCaption(),
-						'url' => $method->getJSCall()
-				);
-			}
-		}
-		
-		return $actions;
 	}
 	
 	function getDeleteActions()
@@ -513,13 +503,16 @@ class RequestForm extends PMPageForm
 					'Request' => $object_it->getId()
 			);
 			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-			if ( count($this->target_projects) > 0 )
+
+			$vpd = $object_it->get('VPD');
+			$other_projects = array_filter($this->target_projects, function($project,$key) use ($vpd) {
+				return $project['vpd'] != $vpd;
+			});
+			if ( count($other_projects) > 0 )
 			{
 				$items = array();
-
-				foreach( $this->target_projects as $id => $data )
+				foreach( $other_projects as $id => $data )
 				{
-					if ( $id == $object_it->get('Project') ) continue;
 					$this->method_duplicate->setVpd($data['vpd']);
 					$items[] = array (
 							'name' => $data['title'],
@@ -553,14 +546,10 @@ class RequestForm extends PMPageForm
 		if ( is_object($this->method_move) )
 		{
 			$this->method_move->setRequestIt($object_it);
-
-			if ( count($this->target_projects) > 0 )
+			if ( count($other_projects) > 0 )
 			{
 				$items = array();
-
-				foreach( $this->target_projects as $id => $data )
-				{
-					if ( $id == $object_it->get('Project') ) continue;
+				foreach( $other_projects as $id => $data ) {
 					$items[] = array (
 							'name' => $data['title'],
 							'url' => $this->method_move->getJsCall(array('Project'=>$id))
@@ -737,7 +726,15 @@ class RequestForm extends PMPageForm
    				'name' => text(1828),
 				'url' => $url.'&environment='.$object_it->get('Environment')
    		);
-   		
+		$refs_actions['PlannedRelease'] = array(
+				'name' => text(1828),
+				'url' => $url.'&release='.$object_it->get('PlannedRelease')
+		);
+		$refs_actions['Iterations'] = array(
+				'name' => text(1828),
+				'url' => $url.'&iteration='.$object_it->get('Iterations')
+		);
+
    		return $refs_actions;
 	}	
  	

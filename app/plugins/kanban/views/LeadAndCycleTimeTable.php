@@ -20,10 +20,10 @@ class LeadAndCycleTimeTable extends PMPageTable
  		return array (
 			new FilterSubmittedAfterPredicate($values['submittedon']),
 			new FilterSubmittedBeforePredicate($values['submittedbefore']),
-			new FilterModifiedAfterPredicate($values['modifiedafter']),
+			new RequestFinishAfterPredicate($values['modifiedafter']),
 			new RequestAuthorFilter( $values['author'] ),
- 			new FilterAttributePredicate( 'Type', $values['type'] ),
- 			new FilterAttributePredicate( 'Priority', $values['priority'])
+ 			new FilterAttributePredicate('Type', $values['type']),
+ 			new FilterAttributePredicate('Priority', $values['priority'])
  		);
  	}
 

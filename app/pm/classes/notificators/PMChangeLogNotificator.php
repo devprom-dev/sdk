@@ -398,12 +398,26 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			        	
 			        	break;
 			    }
-			    
 			    break;
+
+			case 'WikiPage':
+				switch( $kind )
+				{
+					case 'deleted':
+						if ( $object_it->get('ParentPage') != '' ) {
+							$page_it = $object_it->getRef('ParentPage');
+							parent::process( $page_it, 'modified', $object_it->getDisplayName().' ('.$caption.')', $visibility, $author_email );
+							return;
+						}
+						break;
+				}
+				if ( $kind != 'modified' || $content != '' ) {
+					parent::process( $object_it, $kind, $content, $visibility, $author_email );
+				}
+				break;
 
 			default:
 				if ( $kind != 'modified' || $content != '' ) parent::process( $object_it, $kind, $content, $visibility, $author_email );
-			    
 				break;
 		}
 	}

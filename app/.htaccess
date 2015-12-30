@@ -21,6 +21,5 @@ RewriteRule ^(auth|join-project|login|recovery|reset|404|50[\d]{1})$ /app/module
 RewriteRule ^(logged|invite|logoff|500\.zip|310|profile|projects.*|menu.*|tooltip.*|news/.+)$ /app/front.php [L,QSA]
 RewriteRule ^$ /app/front.php [L,QSA]
 
-RewriteRule ^file/([^/]+)/([^/]+)/([^\.]+).external$ /file/download.php?class=$1&project=$2&id=$3 [L,QSA]
 RewriteRule ^file/([^/]+)/([^/]+)/(.+)$ /pm/file.php?class=$1&project=$2&id=$3 [L,QSA]
 RewriteRule ^file/([^/]+)/([^/]+)$ /co/file.php?class=$1&id=$2 [L,QSA]

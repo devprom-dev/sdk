@@ -69,4 +69,16 @@ class PluginBase
  	{
  		return true;
  	}
+
+	function checkLicense() {
+		return true;
+	}
+
+	function checkEnabled() {
+		return true;
+	}
+
+	function getHeaderMenus() {
+		return array();
+	}
 }

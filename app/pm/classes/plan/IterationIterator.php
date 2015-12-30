@@ -251,7 +251,7 @@ class IterationIterator extends OrderedIterator
 
 		$duration = $this->getLeftCapacity();
 		
-		$capacity = $in_velocity > 0 ? ceil($duration * $in_velocity) : $this->getEstimation();
+		$capacity = $in_velocity > 0 ? ceil($duration * $in_velocity) : 0;
 				
 		return array( $duration, $capacity, $in_velocity );
 	}
@@ -875,18 +875,16 @@ class IterationIterator extends OrderedIterator
 
 	function getFinishOffsetDays()
 	{
-		$project_it = $this->getRef('Project');
-		
 		list( $left_days, $est_capacity, $est_velocity ) = $this->getEstimatedBurndownMetrics();
-		
-		if ( $left_days > 0 )
+
+		$left_minutes = $left_days * 24 * 60 - 1;
+		if ( $left_minutes > 0 )
 		{
-			$sql = " SELECT GREATEST(TO_DAYS(GREATEST(NOW(), r.StartDate)) + ".$left_days." - TO_DAYS(r.FinishDate), 0) days".
+			$sql = " SELECT GREATEST(TO_DAYS(DATE_ADD(DATE(GREATEST(NOW(),r.StartDate)), INTERVAL ".$left_minutes." MINUTE)) - TO_DAYS(r.FinishDate), 0) days".
 				   "   FROM pm_Release r " .
 				   "  WHERE r.pm_ReleaseId = ".$this->getId();
-			
+
 			$it = $this->object->createSQLIterator($sql);
-			
 			$left_days = $it->get('days');
 		}
 

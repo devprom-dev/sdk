@@ -55,7 +55,7 @@ class VersionList extends PMPageList
 	function drawCell( $source_it, $attr )
 	{
 		global $model_factory;
-		
+
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
 		$object_it = $this->getIt( $source_it );
@@ -195,7 +195,7 @@ class VersionList extends PMPageList
 					if ( $attr == 'Deadlines' )
 					{
 						$offset = $object_it->getFinishOffsetDays();
-	
+
 						if ( $offset > 0 )
 						{
 							echo translate('По плану').':<br/>';

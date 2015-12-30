@@ -209,7 +209,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 					'name' => 'reportedperweek',
 					'title' => text(2051),
 					'description' => text(2052),
-					'query' => 'group=WeekCreated&aggby=Author&infosections=none&aggregator=none&type='.$bug_type.'&state=all',
+					'query' => 'group=WeekCreated&aggby=Author&infosections=none&aggregator=none&submittedon=last-month&type='.$bug_type.'&state=all',
 					'category' => $qa_area,
 					'type' => 'chart',
 					'module' => $issues_chart_it->getId() )

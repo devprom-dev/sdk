@@ -17,4 +17,9 @@ class CheckpointSystemAdminEmail extends CheckpointEntryDynamic
 	{
 		return str_replace('%1', '/admin/mailer/', text(1267));
 	}
+
+	function getUrl()
+	{
+		return '/admin/mailer/';
+	}
 }

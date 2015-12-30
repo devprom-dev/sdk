@@ -12,8 +12,9 @@ class ModulesSettingsService implements SettingsService
 		getFactory()->setEventsManager( new \ModelEventsManager() );
 
 		$xml = $this->getTemplateXml();
+		if ( $xml == '' ) return;
+
 		$context = new \CloneContext();
-		
 		foreach( $this->getObjects() as $object )
 		{
 			$object_it = $object->getAll();

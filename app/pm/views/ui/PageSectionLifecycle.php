@@ -70,7 +70,7 @@
 			$rows[] = array(
 				'author' => $state_it->getRef('Author')->getDisplayName(),
 			 	'datetime' => $state_it->getDateTimeFormat('RecordCreated'),
-				'duration' => $duration,
+				'duration' => getSession()->getLanguage()->getDurationWording($duration),
 				'state' => $state,
 				'transition' => $transition,
 				'comment' => $comment,
@@ -98,7 +98,7 @@
 			$rows[] = array(
 				'author' => $change_it->get('AuthorName'),
 			 	'datetime' => $change_it->getDateTimeFormat('RecordCreated'),
-				'duration' => $duration,
+				'duration' => getSession()->getLanguage()->getDurationWording($duration),
 				'icon' => 'icon-plus-sign'
 			); 
 		}

@@ -10,6 +10,7 @@ class PageBoard extends PageList
     private $board_attribute_iterator = null;
 	private $column_descriptions = array();
     private $plugins = null;
+	private $uid_visible = true;
 
  	function PageBoard( $object ) 
 	{
@@ -321,7 +322,7 @@ class PageBoard extends PageList
 		switch( $attr )
 		{
 			case 'Caption':
-			    echo '<div class="bi-cap">';
+			    echo '<div class="bi-cap '.($this->uid_visible ? '' : 'bi-cap-large').'">';
 					echo $object_it->getWordsOnly('Caption', 16);
 				echo '</div>';
 				break;
@@ -942,7 +943,20 @@ class PageBoard extends PageList
 	
 	function render( $view, $parms )
 	{
+		$this->uid_visible = $this->getColumnVisibility('UID');
+
 		echo $view->render("core/PageBoard.php", 
 			array_merge($parms, $this->getRenderParms()) ); 
+	}
+
+	function getMaxOnPage()
+	{
+		$values = $this->getFilterValues();
+		return in_array($values['rows'], array('all',''))
+				? 9999
+				: (is_numeric($values['rows'])
+						? $values['rows']
+						: 9999
+				);
 	}
 }

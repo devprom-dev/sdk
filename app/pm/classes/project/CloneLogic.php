@@ -427,7 +427,7 @@ class CloneLogic
 								return $file_id != ''
 										? 'file/'.$matches[1].'/'.$project_it->get('CodeName').'/'.$file_id
 										: $matches[0];
-						}, $it->getHtmlDecoded('Content')
+						}, $it->get('Content')
 					);
 				
 				if ( $it->get('ParentPage') == '' && $it->get('ReferenceName') == WikiTypeRegistry::KnowledgeBase )
@@ -532,14 +532,14 @@ class CloneLogic
 					$parms['Content'] = preg_replace_callback('/\&version=([\d]+)/i', 
 							function($matches) use ($ids_map) {
 									return '&version='.$ids_map['WikiPageChange'][$matches[1]];
-							}, $it->getHtmlDecoded('Content')
+							}, $it->get('Content')
 						);
 					
 					$uid = new ObjectUID();
 					$parms['Content'] = preg_replace_callback('/\[(([A-Z]{1})-(\d+))\]/i', 
 							function($matches) use ($ids_map, $uid) {
 									return $matches[2].'-'.$ids_map[$uid->getClassNameByUid($matches[1])][$matches[3]];
-							}, $it->getHtmlDecoded('Content')
+							}, $it->get('Content')
 						);
 				}
 				

@@ -3,7 +3,7 @@
 include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
  
-define( 'REGEX_UID', '/(^|<[^as][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
+define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
 define( 'REGEX_INCLUDE_PAGE', '/\{\{([^\}]+)\}\}/si' );
 define( 'REGEX_UPDATE_UID', '/<a\s*class="uid"\s*(href="([^"]+)"\s*|[^=>]+="[^"]*"\s*)+>/i' );
 
@@ -18,6 +18,7 @@ class WikiParser
  	var $external_access_user_authorization = false;
 	private $href_resolver_func = null;
 	private $title_resolver_func = null;
+	private $display_hints = false;
  	
 	function __construct( $wiki_it ) 
 	{
@@ -94,8 +95,6 @@ class WikiParser
 		$result = preg_replace('/#\*\s*([^\r\n]+)(\r?\n*|$)/mi', '<ul><li>\\1</li></ul>', $result);
 		$result = preg_replace('/^(<li>(.+)<\/li>)([\r\n]*|$|[^<]+)/mi', '<ol>\\1</ol>'.chr(10).'\\3', $result);
 
-		$result = preg_replace_callback('/(\[file=([^\[]+)\])/im', preg_file_callback, $result);
-
 		if ( $this->hasPages() )
 		{
 			$result = preg_replace_callback('/(\[page=([^\[]+)\s+text=([^\[]+)\]|\[page=([^\[]+)\])/im', preg_page_callback, $result);
@@ -147,7 +146,15 @@ class WikiParser
 
 		return $result;
 	}
-	
+
+	function displayHints( $flag = true ) {
+		$this->display_hints = $flag;
+	}
+
+	function getDisplayHints() {
+		return $this->display_hints;
+	}
+
 	function parse_table( $text )
 	{
 		$rows = preg_split ( '/^\|/mi', $text );
@@ -403,16 +410,6 @@ class WikiParser
 	{
 	    $url = $this->getFileUrl( $file_it );
 		
-		if ( $this->getRequiredExternalAccess() )
-		{
-			$url .= '.external';
-			
-        	if ( !$this->getExternalAccessUserAuthorization() )
-    		{
-    		    $url .= '?appkey='.AuthenticationAppKeyFactory::getKey(getSession()->getUserIt()->getId());
-    		}
-		}
-		
 		$url .= strpos($url, '?') === false ? '?&.png' : '&.png';
 		
 		return $url;
@@ -507,15 +504,11 @@ class WikiParser
 	function getUidInfo( $uid )
 	{
 	    $uid_resolver = new ObjectUID;
-    
      	$object_it = $uid_resolver->getObjectIt($uid);
-     	
      	if ( is_object($object_it) && $object_it->getId() > 0 )
      	{
 			$info = $uid_resolver->getUidInfo($object_it);
-     		
      		$info['object_it'] = $object_it;
-     		
      	    return $info;
      	}
      	else 
@@ -576,19 +569,22 @@ class WikiParser
     {
 		$matches = array();
 
-		if ( preg_match('/([A-Z]{1}-[0-9]+)/mi', $match[1], $matches) )
-		{
+		if ( preg_match('/([A-Z]{1}-[0-9]+)/mi', $match[1], $matches) ) {
 			$info = $this->getUidInfo(trim($matches[1], '[]'));
-			
 	 		$object_it = $info['object_it'];
 		}
-		
-	 	if ( !is_object($object_it) || $object_it->getId() < 1 )
-	 	{
+	 	if ( !is_object($object_it) || $object_it->getId() < 1 ) {
 	 		return str_replace('%1', $match[1], text(1166));
 	 	}
-	 	
- 		return $object_it->getHtmlDecoded('Content');
+
+		$content = $object_it->getHtmlDecoded('Content');
+		if ( !$this->display_hints ) return $content;
+
+		if ( $content != '' ) {
+			$uid = new ObjectUID();
+			$content .= '<div class="wiki-page-help">'.str_replace('%1', $uid->getUidIcon($object_it), text(2114)).'</div>';
+		}
+		return $content;
     }
     
     function replaceImageCallback( $match )
@@ -597,6 +593,7 @@ class WikiParser
 	
 		$image_num += 1;
 		$image_width = '';
+		$result = '';
 		
 		$width_array = array();
 		if ( preg_match('/width=([0-9]+[\%]?)/i', $match[1], $width_array) > 0 )
@@ -715,23 +712,7 @@ class WikiParser
 	}
  }
 
- function preg_file_callback( $match ) 
- {
- 	global $wiki_form, $wiki_parser;
-	$model_factory =& getModelFactory();
-	$file_it = $wiki_parser->getFileByName($match[2]);
-	
-	if($file_it->count() > 0) 
-	{
- 		return '<a title="'.$file_it->getHintFormat('Description').'" target="_blank" href="'.$wiki_parser->_getFileUrl($file_it).'">'.$file_it->get('Caption').'</a>';
-	}
-	elseif ( getFactory()->getAccessPolicy()->can_modify($wiki_parser->object_it) )
-	{
-		return '<div><span style="border-bottom:1px dashed navy;">'.$match[2].'</span></div>';
-	}
- }
-
- function preg_page_callback( $match ) 
+ function preg_page_callback( $match )
  {
  	global $wiki_parser, $model_factory;
 
@@ -932,55 +913,44 @@ class WikiParser
   
  function preg_image_src_callback( $match )
  {
- 	global $wiki_parser, $model_factory;
- 	
- 	$user_it = getSession()->getUserIt();
- 	
- 	if ( preg_match('/\/file\//', $match[1], $result) )
- 	{
+ 	global $wiki_parser;
+
+ 	if ( preg_match('/\/file\//', $match[1], $result) ) {
  	    // replace server name
  	    $parts = parse_url($match[1]);
- 	    
- 	    if ( preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) )
- 	    {
- 	        $file_class = $result[1];
- 	        $file_project = $result[2];
- 	        $file_id = $result[3];
- 	        
- 	        if ( $model_factory->getClass($file_class) != '' )
- 	        {
- 	            $object = $model_factory->getObject($file_class);
- 	            
- 	            $object->addPersister(new EntityProjectPersister() );
- 	            
- 	            $file_it = $object->getExact($file_id);
+ 	    if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) ) {
+			if ( !preg_match('/file\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) ) return $match[0];
+			$file_class = $result[1];
+			$file_id = $result[2];
+		}
+		else {
+			$file_class = $result[1];
+			$file_id = $result[3];
+		}
+		if ( getFactory()->getClass($file_class) == '' ) return $match[0];
 
- 	            if ( $file_it->getId() > 0 )
- 	            {
- 	                $project_it = $model_factory->getObject('Project')->getExact($file_it->get('Project'));
- 	                
- 	                $parts['path'] = '/file/'.$file_class.'/'.$project_it->get('CodeName').'/'.$file_id;
- 	            }
- 	        }
- 	    }
- 	    
-        $url = _getServerUrl().$parts['path'];
+		$object = getFactory()->getObject($file_class);
+		$object->addPersister(new EntityProjectPersister() );
+		$file_it = $object->getExact($file_id);
+		if ( $file_it->getId() == '' ) return $match[0];
 
- 		if ( $wiki_parser->getRequiredExternalAccess() )
- 		{
- 		    $url = preg_replace(array('/\.external/','/\.png/','/\?/','/\&/'), '', $url);
- 		    
- 		    $url .= '.external';
- 		    
-	 		if ( !$wiki_parser->getExternalAccessUserAuthorization() )
-     		{
-     		    $url .= '?appkey='.AuthenticationAppKeyFactory::getKey($user_it->getId());
-     		}
- 		}
- 	    
- 		$url .= strpos($url, '?') === false ? '?&.png' : '&.png';
- 		
- 	    return ' src="'.$url.'"';
+		if ( $wiki_parser->getRequiredExternalAccess() )
+		{
+			$finfo = new \finfo(FILEINFO_MIME_TYPE);
+			foreach( $object->getAttributes() as $attribute => $data ) {
+				if ( in_array($object->getAttributeType($attribute), array('file','image')) ) {
+					$path = $file_it->getFilePath($attribute);
+					return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
+				}
+			}
+			return $match[0];
+		}
+		else
+		{
+			$parts['path'] = '/file/'.$file_class.'/'.$file_it->get('ProjectCodeName').'/'.$file_id;
+			$url = _getServerUrl().$parts['path'];
+			return ' src="'.$url.'"';
+		}
  	}
 
  	if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
@@ -997,8 +967,7 @@ class WikiParser
  	}
  		
   	// empty url
- 	if ( $match[1] == '' )
- 	{
+ 	if ( $match[1] == '' ) {
  	    return ' src="'._getServerUrl().'/images/warning.png"';
  	}
  	

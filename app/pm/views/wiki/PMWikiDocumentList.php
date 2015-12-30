@@ -86,28 +86,33 @@ class PMWikiDocumentList extends PMWikiList
  	
  	function setupColumns()
  	{
- 	 	if ( $this->getAttributesVisible() )
- 		{
+ 	 	if ( $this->getAttributesVisible() ) {
  			$this->getObject()->addAttribute('Attributes', '', translate('Атрибуты'), true);
  		}
  		
  		parent::setupColumns();
  		
- 	 	if ( $this->getAttributesVisible() )
- 		{
+ 	 	if ( $this->getAttributesVisible() ) {
  			$this->getObject()->setAttributeVisible('Attributes', true);
  		}
  	}
     
 	function getColumnFields()
 	{
-		$fields = parent::getColumnFields();
-		
-		unset($fields[array_search('Attributes', $fields)]);
-		unset($fields[array_search('UID', $fields)]);
-		unset($fields[array_search('State', $fields)]);
-		
-		return $fields;
+		return array_filter(parent::getColumnFields(), function($value) {
+			return !in_array($value, array (
+				'Attributes',
+				'UID',
+				'State',
+				'RecentComment',
+				'DocumentId',
+				'Watchers',
+				'Caption',
+				'Attachments',
+				'Project',
+				'ParentPage'
+			));
+		});
 	}
  	
 	function IsNeedToDisplayNumber()
@@ -210,6 +215,8 @@ class PMWikiDocumentList extends PMWikiList
 	
 	function drawSourcePage( $entity_it, $object_it, $attr, $revisions )
 	{
+		$registry = new ObjectRegistrySQL($entity_it->object);
+
 		$baselines = array();
 		$baselines_data = $object_it->get($attr.'Baselines');
 		if ( $baselines_data != '' ) {
@@ -221,28 +228,30 @@ class PMWikiDocumentList extends PMWikiList
 
 		while( !$entity_it->end() )
 		{
-			$source_it = $entity_it;
-			if ( $baselines[$source_it->getId()] != '' )
-			{
-				$source_it = $source_it->object->getRegistry()->Query(
-						array (
-								new FilterInPredicate($source_it->getId()),
-								new SnapshotItemValuePersister($baselines[$source_it->getId()])
-						)
+			$source_it = $registry->Query(
+				array (
+					new FilterInPredicate($entity_it->getId())
+				)
+			);
+			if ( $baselines[$source_it->getId()] != '' ) {
+				$source_it = $registry->Query(
+					array (
+						new FilterInPredicate($source_it->getId()),
+						new SnapshotItemValuePersister($baselines[$source_it->getId()])
+					)
 				);
 			}
 
             $compare_to = $source_it;
             foreach( $revisions as $revision ) {
-                if ( $revision[$entity_it->getId()] > 0 ) {
-                    $compare_to = $entity_it->object->getRegistry()->Query(
-                        array (
-                            new FilterInPredicate($entity_it->getId()),
-                            new WikiPageRevisionPersister($revision[$entity_it->getId()])
-                        )
-                    );
-                    break;
-                }
+                if ( $revision[$entity_it->getId()] == '' ) continue;
+				$compare_to = $registry->Query(
+					array (
+						new FilterInPredicate($entity_it->getId()),
+						new WikiPageRevisionPersister($revision[$entity_it->getId()])
+					)
+				);
+				break;
             }
 
 			if ( count($revisions) > 0 && $compare_to->get('Content') == $source_it->get('Content') ) {
@@ -347,20 +356,17 @@ class PMWikiDocumentList extends PMWikiList
 		foreach( $this->getObject()->getAttributes() as $key => $attribute )
 		{
 			if ( in_array($key, $this->getColumns()) ) continue;
-			
 			if ( !$this->getColumnVisibility($key) ) continue;
+			if ( $object_it->get($key) == '' ) continue;
 			
 			echo translate($this->getObject()->getAttributeUserName($key)).': ';
 			
-			if ( $this->getObject()->IsReference($key) )
-			{
+			if ( $this->getObject()->IsReference($key) ) {
 				$this->drawRefCell( $object_it->getRef($key), $object_it, $key );
 			}
-			else
-			{
+			else {
 				$this->drawCell( $object_it, $key );
 			}
-			
 			echo '<br/>';
 		}
 	}
@@ -522,4 +528,16 @@ class PMWikiDocumentList extends PMWikiList
 			'reorder' => true
  	    ));
  	}
+
+	function buildFilterActions( &$base_actions )
+	{
+		parent::buildFilterActions( $base_actions );
+
+		foreach ( $base_actions as $key => $action ) {
+			if ( $action['uid'] == 'columns' ) {
+				$base_actions[$key]['name'] = translate('Атрибуты');
+				break;
+			}
+		}
+	}
 }

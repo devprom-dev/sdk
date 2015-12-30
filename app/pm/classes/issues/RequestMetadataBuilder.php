@@ -37,7 +37,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		{
 			$metadata->addAttribute('Deadlines', 'REF_pm_MilestoneId', translate('Сроки'), true, false, '', 180);
 			$metadata->addPersister( new RequestMilestonesPersister(array('Deadlines')) );
-			$metadata->addAttributeGroup('Deadlines', 'additional');
+			$metadata->addAttributeGroup('Deadlines', 'deadlines');
 		}
 
 		$metadata->addAttribute( 'Links', 'REF_pm_ChangeRequestId', 'Связанные пожелания', true);
@@ -46,6 +46,9 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 
 	    $metadata->addAttribute('Question', 'REF_QuestionId', text(2037), false);
 		$metadata->addAttributeGroup('Question', 'trace');
+
+		$metadata->setAttributeVisible( 'PlannedRelease', true );
+		$metadata->setAttributeOrderNum( 'PlannedRelease', 75 );
 
 		$metadata->setAttributeVisible( 'Owner', true );
 		$metadata->addPersister( new RequestOwnerPersister(array('Owner')) );
@@ -62,15 +65,14 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		}
 
 		if ( $methodology_it->HasPlanning() ) {
-			$metadata->addAttribute('Iterations', 'REF_IterationId', translate('Итерация'), false);
+			$metadata->addAttribute('Iterations', 'REF_IterationId', translate('Итерация'), true, false, '', 76);
 			$metadata->addPersister(new RequestIterationsPersister(array('Iterations')));
+			$metadata->addAttributeGroup('Iterations', 'bulk');
 		}
 
 		$metadata->setAttributeVisible('Project', false);
-		$metadata->addAttributeGroup('DeliveryDate', 'non-form');
-		
-		$metadata->removeAttribute( 'Environment' );
-		
+		$metadata->setAttributeVisible('Environment', true);
+
 	    $metadata->setAttributeCaption('SubmittedVersion', text(1335));
 	    $metadata->setAttributeCaption('ClosedInVersion', text(1334));
 	    $metadata->setAttributeVisible('ClosedInVersion', true);
@@ -127,16 +129,27 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
 		$metadata->addAttributeGroup('Watchers', 'additional');
+		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
+
+		$metadata->addAttributeGroup('DeliveryDate', 'non-form');
+		$metadata->setAttributeDescription('DeliveryDate', text(2113));
 		$metadata->setAttributeDescription('StartDate', text(1839));
 		$metadata->setAttributeDescription('FinishDate', text(1840));
-		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
+		foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iterations', 'DeliveryDate') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'deadlines');
+		}
+		$index = 190;
+		$metadata->setAttributeOrderNum('StartDate', $index);
+		$metadata->setAttributeOrderNum('FinishDate', $index+5);
+		$metadata->setAttributeOrderNum('DeliveryDate', $index+10);
 
 		$metadata->addAttribute('TypeBase', 'REF_RequestTypeUnifiedId', translate('Тип'), false);
 		$metadata->addAttributeGroup('TypeBase', 'system');
 		$metadata->addPersister(new RequestTypePersister(array('Type')));
 
 		$index = 210;
-		$metadata->setAttributeOrderNum('SubmittedVersion', $index);
+		$metadata->setAttributeOrderNum('Environment', $index);
+		$metadata->setAttributeOrderNum('SubmittedVersion', $index+5);
 		$metadata->setAttributeOrderNum('ClosedInVersion', $index+10);
 		$metadata->setAttributeOrderNum('Author', $index+20);
 		$this->removeAttributes( $metadata, $methodology_it );

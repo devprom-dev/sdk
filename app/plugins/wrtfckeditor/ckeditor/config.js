@@ -46,4 +46,5 @@ CKEDITOR.editorConfig = function( config ) {
 	];
 
 	config.removeDialogTabs = 'image:advanced;link:advanced';
+	config.codeSnippet_languages = {ones:"1C",apache:"Apache",bash:"Bash",coffeescript:"CoffeeScript",cpp:"C++",cs:"C#",css:"CSS",diff:"Diff",html:"HTML",http:"HTTP",ini:"INI",java:"Java",javascript:"JavaScript",json:"JSON",makefile:"Makefile",markdown:"Markdown",nginx:"Nginx",objectivec:"Objective-C",perl:"Perl",php:"PHP",python:"Python",ruby:"Ruby",sql:"SQL",vbscript:"VBScript",xhtml:"XHTML",xml:"XML"};
 };

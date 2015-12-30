@@ -51,7 +51,7 @@
 		$this->entity = $this->createIterator();
 
 		// aggregates own atributes
-		array_push($this->aggregates, new Attribute);
+		$this->aggregates = array(new Attribute);
 
 		parent::__construct( $registry );
 	}

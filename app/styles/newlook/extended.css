@@ -142,7 +142,6 @@ td.list_cell
 .progress-table
 {
 	border: 0;
-	border-color: none;
 }
 
 .progress-table td
@@ -620,15 +619,9 @@ div.embeddedRowTitle .btn-group .btn
 
 .controls,
 .popover,
-.tab-pane,
-.ui-tabs-panel,
+.tab-pane
 {
 	word-break: break-all;
-}
-
-.help-block
-{
-	word-break: break-word;
 }
 
 .inside body
@@ -1023,4 +1016,17 @@ span.cke_widget_wrapper.cke_image_nocaption {
 
 .btn-mini i.icon-asterisk {
     margin-top: 0;
+}
+
+.label-found,
+.badge-found {
+    background-color: #9414D6;
+}
+
+a.btn {
+    white-space: nowrap;
+}
+
+.ui-dialog {
+    overflow: inherit;
 }

@@ -2,9 +2,11 @@
 
 include SERVER_ROOT_PATH.'core/classes/licenses/License.php'; 
 include SERVER_ROOT_PATH.'core/classes/licenses/LicenseState.php';
-include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php'; 
-include SERVER_ROOT_PATH.'core/classes/user/User.php'; 
-include SERVER_ROOT_PATH.'core/classes/user/UserActive.php'; 
+include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php';
+include SERVER_ROOT_PATH.'core/classes/mail/MailerSettings.php';
+include SERVER_ROOT_PATH.'core/classes/mail/SmtpEncryptionMode.php';
+include SERVER_ROOT_PATH.'core/classes/user/User.php';
+include SERVER_ROOT_PATH.'core/classes/user/UserActive.php';
 include SERVER_ROOT_PATH.'cms/c_check_question.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/DateYear.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/DateMonth.php'; 

@@ -54,7 +54,7 @@ class InstallComplete extends CommandForm
 	{
 		DAL::Instance()->Query("UPDATE cms_SystemSettings SET Language = ".($lang == 2 ? 2 : 1));
 	}
-	
+
 	function gen_uuid()
 	{
 		list($usec, $sec) = explode(" ",microtime());

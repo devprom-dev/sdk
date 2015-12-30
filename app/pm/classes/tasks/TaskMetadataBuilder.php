@@ -17,9 +17,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
 		$metadata->addAttribute('Fact', 'FLOAT', 
-			translate('Фактическая трудоемкость, ч.'), 
-				is_object($methodology_it) && $methodology_it->IsTimeTracking(), 
-					true, '', 13 );
+			translate('Затрачено'), is_object($methodology_it) && $methodology_it->IsTimeTracking(), true, '', 13 );
 
 		$metadata->setAttributeOrderNum('Priority', 11);
 		$metadata->setAttributeOrderNum('Assignee', 12);

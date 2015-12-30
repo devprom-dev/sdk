@@ -8,7 +8,7 @@
 {% endif %}
 
 {% for attribute_name, attribute in attributes if type.uid != "" and attribute_name != "Caption" or type.uid == "" %}
-	<b>{{ attribute.title }}</b>:
+	<b>{{ attribute.title | raw }}</b>:
 	
 	{% if attribute.type == 'tasks'  %}
     	{% for state in attribute.text  %}

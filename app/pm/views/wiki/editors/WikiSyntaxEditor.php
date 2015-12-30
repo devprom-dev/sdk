@@ -4,7 +4,6 @@ include_once "WikiEditorBase.php";
 
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiParser.php";
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiHtmlParser.php";
-include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiHtmlSelfSufficientParser.php";
 
 class WikiSyntaxEditor extends WikiEditorBase
 {

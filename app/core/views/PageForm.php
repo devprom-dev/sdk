@@ -310,8 +310,6 @@ class PageForm extends MetaObjectForm
 
 	function getActions()
 	{
-		global $model_factory;
-		
 		$actions = array();
 
 		$object_it = $this->getObjectIt();
@@ -320,11 +318,16 @@ class PageForm extends MetaObjectForm
 		if( getFactory()->getAccessPolicy()->can_modify($object_it) )
 		{
 			$method = new ObjectModifyWebMethod($object_it);
-			$method->setRedirectUrl('donothing');
-			
+			if ( $this->IsFormDisplayed() ) {
+				$method->setRedirectUrl('function(){window.location.reload();}');
+			}
+			else {
+				$method->setRedirectUrl('donothing');
+			}
+
 			$actions['modify'] = array(
 					'name' => translate('Изменить'),
-					'url' => $this->IsFormDisplayed() ? $object_it->getEditUrl() : '#', 
+					'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
 					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
 					'uid' => 'modify'
 			);
@@ -658,6 +661,7 @@ class PageForm extends MetaObjectForm
 		if ( is_array($parms['sections']) )	{
 			foreach ( $parms['sections'] as $section ) {
 				if ( $section instanceof PageSectionAttributes ) {
+					$section->setObject($this->getObject());
 					$attributes = $section->getAttributes();
 					foreach( $attributes as $key => $attribute ) {
 						if ( !$this->IsAttributeVisible($attribute) ) unset($attributes[$key]);

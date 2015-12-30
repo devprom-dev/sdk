@@ -214,6 +214,15 @@ class PMPageBoard extends PageBoard
         return parent::getRenderParms();
     }
 
+    function buildFilterActions( & $base_actions )
+    {
+        parent::buildFilterActions( $base_actions );
+        $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
+        $this->buildFilterColumnsGroup( $base_actions, 'trace' );
+        $this->buildFilterColumnsGroup( $base_actions, 'time' );
+        $this->buildFilterColumnsGroup( $base_actions, 'dates' );
+    }
+
     private $report_up_url = '';
     private $report_down_url = '';
     private $parent_it = null;

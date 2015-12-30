@@ -140,15 +140,11 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
  	$wiki_it = $wiki_it->object->getExact( $ids );
  	
 	$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
-
  	$editor->setObjectIt( $wiki_it );
 	
  	$parser = $editor->getHtmlParser();
- 	
  	$parser->setObjectIt( $wiki_it );
- 	
  	$parser->setRequiredExternalAccess();
- 	
  	$parser->setExternalAccessUserAuthorization();
  	
  	$result = array();

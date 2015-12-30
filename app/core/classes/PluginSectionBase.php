@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class PluginSectionBase
 {
@@ -7,7 +9,16 @@ class PluginSectionBase
  	function __construct()
  	{
  	}
- 	
+
+	public function __sleep()
+	{
+		return array('namespace');
+	}
+
+	public function __wakeup()
+	{
+	}
+
  	function setNamespace( $namespace )
  	{
  		$this->namespace = $namespace;
@@ -20,12 +31,13 @@ class PluginSectionBase
  	
  	function getBasePlugin()
  	{
- 		return $this->namespace;
+		if ( is_object($this->namespace) ) return $this->namespace;
+ 		return new PluginBase();
  	}
  	
  	function getNamespace()
  	{
- 		return $this->namespace->getNamespace();
+ 		return $this->getBasePlugin()->getNamespace();
  	}
 
  	function getModules()

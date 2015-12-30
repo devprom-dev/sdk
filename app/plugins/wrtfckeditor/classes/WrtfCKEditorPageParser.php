@@ -12,9 +12,9 @@ class WrtfCKEditorPageParser extends WikiParser
 
         $wiki_parser = $this;
 
+        $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $content);
 		$content = preg_replace_callback(REGEX_UID, array($this, 'parseUidCallback'), $content);
 		$content = preg_replace_callback(REGEX_UPDATE_UID, array($this, 'parseUpdateUidCallback'), $content);
-		$content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $content);
         $content = preg_replace_callback('/\s+src="([^"]*)"/i', preg_image_src_callback, $content);
 
         // check if VML is in place, just return content with the native styles

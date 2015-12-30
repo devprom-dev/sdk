@@ -127,7 +127,13 @@ class PMPageList extends PageList
 						'text' => $text
 				));
 				break;
-			    
+
+			case 'Fact':
+			case 'StateDuration':
+			case 'LeadTime':
+				echo getSession()->getLanguage()->getDurationWording($object_it->get($attr));
+				break;
+
             default:
                 parent::drawCell( $object_it, $attr );
         }
@@ -212,5 +218,14 @@ class PMPageList extends PageList
 		$this->buildMethods();
 		
 		return parent::getRenderParms();
+	}
+
+	function buildFilterActions( & $base_actions )
+	{
+		parent::buildFilterActions( $base_actions );
+		$this->buildFilterColumnsGroup( $base_actions, 'workflow' );
+		$this->buildFilterColumnsGroup( $base_actions, 'trace' );
+		$this->buildFilterColumnsGroup( $base_actions, 'time' );
+		$this->buildFilterColumnsGroup( $base_actions, 'dates' );
 	}
 }

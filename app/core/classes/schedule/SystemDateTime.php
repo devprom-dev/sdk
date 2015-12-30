@@ -80,4 +80,9 @@ class SystemDateTime
 		
 		return $time->format($format);
 	}
+
+	static public function getTimeParseRegex()
+	{
+		return text(2115);
+	}
 }

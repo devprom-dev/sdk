@@ -86,40 +86,6 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
- class SetRequestIterationWebMethod extends RequestWebMethod
- {
- 	var $request_it;
- 	
- 	function SetRequestIterationWebMethod( $request_it = null )
- 	{
- 		$this->request_it = $request_it;
- 		
- 		parent::RequestWebMethod();
- 	}
- 	
-	function getCaption() 
-	{
-		return translate('Перенести в итерацию');
-	}
-
- 	function getMethodName()
-	{
-		return 'AttributeIterations';
-	}
-	
-	function getJSCall( $parms = array() )
-	{
- 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."',".$this->request_it->getId().")";
-	}
-	
- 	function hasAccess()
- 	{
- 		return getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() 
- 			&& $this->request_it->get('OpenTasks') != '' && !$this->request_it->IsFinished();
- 	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
  class MoveToProjectWebMethod extends RequestWebMethod
  {
  	var $request_it;

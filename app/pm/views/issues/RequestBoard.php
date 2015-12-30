@@ -242,15 +242,20 @@ class RequestBoard extends PMPageBoard
 				);
 				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
 			case 'pm_Release':
-				return getFactory()->getObject('Iteration')->getRegistry()->Query(
-						array (
-								new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
-								new SortAttributeClause('StartDate'),
-								$vpd_filter,
-								$values['iterations'] != '' 
-										? new FilterInPredicate(preg_split('/,/', $values['iterations'])) : null
-						)
-					);
+				$object = getFactory()->getObject('Iteration');
+				$ids = array_merge(
+						$object->getRegistry()->Query(
+							array (
+									new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+									new SortAttributeClause('StartDate'),
+									$vpd_filter,
+									$values['iterations'] != ''
+											? new FilterInPredicate(preg_split('/,/', $values['iterations'])) : null
+							)
+						)->idsToArray(),
+						parent::getGroupIt()->idsToArray()
+				);
+				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
 			case 'pm_Function':
 				return getFactory()->getObject('Feature')->getRegistry()->Query(
 						array (
@@ -403,7 +408,6 @@ class RequestBoard extends PMPageBoard
 				
 				echo '<div class="title-on-card">';
 					echo '<div class="left-on-card">';
-						$this->drawCheckbox($object_it);
 						$type_image = $this->types_array[$object_it->get('Type')];
 						if ( $type_image != '' ) echo '<img src="/images/'.$type_image.'"> ';
 						parent::drawCell( $object_it, $attr );
@@ -446,6 +450,8 @@ class RequestBoard extends PMPageBoard
                 break;
 
 			case 'Basement':
+				$this->drawCheckbox($object_it);
+
 				$deadline_alert =
 					in_array($object_it->get('State'), $this->non_terminal_states)
 					&& $object_it->get('DueDays') < 3 && $object_it->get('DeadlinesDate') != '';
@@ -594,20 +600,7 @@ class RequestBoard extends PMPageBoard
 		return $parms; 
 	}
 	
-	function buildFilterActions( & $base_actions )
-	{
-	    parent::buildFilterActions( $base_actions );
-
-	    $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
-	    
-	    $this->buildFilterColumnsGroup( $base_actions, 'trace' );
-	    
-	    $this->buildFilterColumnsGroup( $base_actions, 'time' ); 
-	    
-	    $this->buildFilterColumnsGroup( $base_actions, 'dates' ); 
-	}
-	
-	function getActions( $object_it ) 
+	function getActions( $object_it )
 	{
 		$actions = parent::getActions( $object_it );
 
@@ -712,7 +705,6 @@ class RequestBoard extends PMPageBoard
 	function getCardColor( $object_it )
 	{ 	
 		$values = $this->getFilterValues();
-		
 		switch ( $values['color'] )
 		{
 		    case 'state':
@@ -724,7 +716,14 @@ class RequestBoard extends PMPageBoard
 		    			: '';
 		    	
 		    case 'type':
-		    	return $object_it->getRef('Type')->get('RelatedColor');
+				if ( $object_it->get('Type') == '' ) {
+					return is_object($this->priorities_array[$object_it->get('Priority')])
+						? $this->priorities_array[$object_it->get('Priority')]->get('RelatedColor')
+						: '';
+				}
+				else {
+					return $object_it->getRef('Type')->get('RelatedColor');
+				}
 		}
 	}
 	

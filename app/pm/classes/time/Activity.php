@@ -12,8 +12,10 @@ class Activity extends Metaobject
  	{
  		parent::__construct('pm_Activity');
 		$this->defaultsort = 'RecordCreated ASC';
-		
+
+		$this->setAttributeCaption('Capacity', translate('Затрачено'));
 		$this->setAttributeOrderNum('Capacity', 3);
+		$this->setAttributeDescription('Capacity', text(2116));
  	}
  	
  	function createIterator() 

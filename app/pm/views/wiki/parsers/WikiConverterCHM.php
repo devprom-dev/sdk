@@ -97,12 +97,10 @@ class WikiConverterCHM
 
 		$editor->setObjectIt($wiki_it);
 		
- 		$parser = $editor->getHtmlSelfSufficientParser();
-
+ 		$parser = $editor->getHtmlParser();
+		$parser->setRequiredExternalAccess();
  		$parser->setObjectIt($wiki_it);
- 		
- 		$parser->setRequiredExternalAccess();
- 		
+
 		$parser->setHrefResolver(function($wiki_it) {
  			return WikiConverterCHM::translit($wiki_it->getDisplayName()).'_'.$wiki_it->getId().'.html';
  		});

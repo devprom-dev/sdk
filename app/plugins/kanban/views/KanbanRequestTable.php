@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."plugins/kanban/classes/predicates/ProjectUseKanbanPredicate.php";
 include "KanbanRequestBoard.php";
 
 class KanbanRequestTable extends RequestTable
@@ -45,13 +46,15 @@ class KanbanRequestTable extends RequestTable
         if ( !getSession()->getProjectIt()->IsPortfolio() ) {
             $ids[] = getSession()->getProjectIt()->getId();
         }
+
         $project_it = getFactory()->getObject('Project')->getRegistry()->Query(
             array (
-                new FilterAttributePredicate('Tools', array('kanban_ru.xml','kanban_en.xml')),
+                new ProjectUseKanbanPredicate(),
                 new FilterInPredicate($ids)
             )
         );
-        return $project_it->fieldToArray('VPD');
+        $vpds = $project_it->fieldToArray('VPD');
+        return count($vpds) > 0 ? $vpds : array(getSession()->getProjectIt()->get('VPD'));
     }
 
 	protected function buildFilterState()

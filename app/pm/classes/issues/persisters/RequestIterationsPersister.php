@@ -15,12 +15,25 @@ class RequestIterationsPersister extends ObjectSQLPersister
 
 	function map( & $parms )
 	{
-		if ( $parms['Iterations'] == '' ) return;
-		$iteration_it = $this->getObject()->getAttributeObject('Iterations')->getExact(preg_split('/,/', $parms['Iterations']));
-		$parms['PlannedRelease'] = $iteration_it->getId();
+		if ( !array_key_exists('Iterations',$parms) ) return;
+
+        if ( $parms['Iterations'] == '' ) {
+            $parms['PlannedRelease'] = '';
+        }
+        else {
+            $iteration_it = $this->getObject()->getAttributeObject('Iterations')->getExact(preg_split('/,/', $parms['Iterations']));
+            $parms['PlannedRelease'] = $iteration_it->get('Version');
+        }
 	}
 
- 	function modify( $object_id, $parms )
+    function add($object_id, $parms)
+    {
+        if ( array_key_exists('Iterations', $parms) ) {
+            $this->updateRelatedTasks($object_id, $parms);
+        }
+    }
+
+    function modify( $object_id, $parms )
  	{
 		if ( array_key_exists('Iterations', $parms) ) {
             $this->updateRelatedTasks($object_id, $parms);
@@ -41,6 +54,8 @@ class RequestIterationsPersister extends ObjectSQLPersister
                 new FilterAttributePredicate('ChangeRequest', $object_id)
             )
         );
+        if ( $task_it->getId() == '' ) return;
+
         $task->modify_parms($task_it->getId(), array (
             'Planned' => $parms['Estimation'],
             'LeftWork' => $parms['Estimation']

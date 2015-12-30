@@ -324,19 +324,6 @@ class RequestList extends PMPageList
 	    return parent::getNoItemsMessage();
 	}
 	
-	function buildFilterActions( & $base_actions )
-	{
-	    parent::buildFilterActions( $base_actions );
-
-	    $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
-	    
-	    $this->buildFilterColumnsGroup( $base_actions, 'trace' );
-	    
-	    $this->buildFilterColumnsGroup( $base_actions, 'time' ); 
-	    
-	    $this->buildFilterColumnsGroup( $base_actions, 'dates' ); 
-	}
-	
 	function getRenderParms()
 	{
 		$this->buildRelatedDataCache();

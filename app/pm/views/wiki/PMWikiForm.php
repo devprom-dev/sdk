@@ -837,7 +837,7 @@ class PMWikiForm extends PMPageForm
 								},
 								$this->search_text
 							),
-							'<span class="label">\\0</span>',
+							'<span class="label label-found">\\0</span>',
 							$field->getValue())
 					);
 				}

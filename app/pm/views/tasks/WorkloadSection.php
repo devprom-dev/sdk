@@ -119,7 +119,6 @@ class WorkloadSection extends InfoSection
 				echo '<div>'.$part_it->get('Caption').'</div>';
 			}
 			
-			$measure = translate('ч.');
 			$full_volume = $part_capacity;
 			$used_volume = $left_work;
 			

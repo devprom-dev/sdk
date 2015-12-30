@@ -361,11 +361,6 @@ class TaskBoardList extends PMPageBoard
 					{
 						if ( $object_it->IsFinished() )
 						{
-							$frame = new TaskBalanceFrame( $object_it->get('Planned'), $object_it->get('Fact') );
-							
-							echo '<div style="display:table-cell;text-align:right;">';
-								$frame->draw();
-							echo '</div>';
 						}
 						elseif ( $object_it->get('Planned') > 0 )
 						{

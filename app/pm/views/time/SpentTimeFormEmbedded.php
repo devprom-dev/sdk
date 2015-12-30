@@ -100,7 +100,7 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
     					echo '</div>';
     					$script = "javascript: updateLeftWork($('#".$field_name."'), $('#".$this->getFieldName('LeftWork')."'));";
     
-    					echo '<input type="text" class="spent-time input-block-level" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'">';
+    					echo '<input type="text" class="spent-time input-block-level" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
     				echo '</div>';
 				
     				if ( $this->IsAttributeVisible('LeftWork') )

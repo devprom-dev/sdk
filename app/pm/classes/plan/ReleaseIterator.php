@@ -81,7 +81,7 @@ class ReleaseIterator extends OrderedIterator
 		// gets remain capacity of the release
 		$duration = $this->getLeftCapacity();
 		
-		$capacity = $in_velocity > 0 && $duration > 0 ? ceil($duration * $in_velocity) : $this->getTotalWorkload();
+		$capacity = $in_velocity > 0 && $duration > 0 ? ceil($duration * $in_velocity) : 0;
 		
 		if ( $capacity < 1 ) $capacity = $in_velocity;
 		

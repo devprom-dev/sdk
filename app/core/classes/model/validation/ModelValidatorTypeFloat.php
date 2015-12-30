@@ -12,7 +12,10 @@ class ModelValidatorTypeFloat extends ModelValidatorType
 	public function validate( & $value )
 	{
 		if ( $value == '' ) return true;
-		
+
+		$match = array();
+		if ( preg_match(SystemDateTime::getTimeParseRegex(), $value, $match) and count($match) > 1 ) return true;
+
 		$value = str_replace(',', '.', $value);
 		if( !is_numeric($value) ) return false;
 

@@ -155,6 +155,7 @@ class PageTable extends ViewTable
 			if ( $default_value == '' || array_key_exists($filter_name,$this->filter_values) ) continue; 
 			$this->filter_values[$filter_name] = $default_value;
 		}
+
 		if ( is_object($persistent_filter) ) {
 			// backward compatiibility to old settings
 			foreach( $this->getFilterParms() as $parm )
@@ -428,25 +429,25 @@ class PageTable extends ViewTable
 		if ( is_object($filter) )
 		{
 		    $persisted = $filter->compareStored($this->filter_values);
-		    
-			$save_actions = array(
-				array ( 'url' => $filter->getJSCall(
-				                    "li[uid=personal-persist]>a", 
-				                    "function() { $('.alert-filter').hide(); ".($persisted ? "window.location.reload();" : "")." }"
-				                 ), 
-				        'name' => $filter->getCaption(),
-				    	'title' => $filter->getDescription(),
-				        'checked' => $persisted,
-				        'multiselect' => true,
-				        'uid' => 'personal-persist' 
-				      )
+			$parms = array (
+				'url' => $filter->getJSCall(
+					"li[uid=personal-persist]>a",
+					$persisted,
+					"function() { $('.alert-filter').hide(); ".($persisted ? "filterLocation.restoreFilter();" : "")." }"
+				),
+				'name' => $persisted ? text(2112) : $filter->getCaption(),
+				'title' => !$persisted ? $filter->getDescription() : '',
+				'uid' => 'personal-persist'
 			);
+			if ( !$persisted ) {
+				$parms['multiselect'] = true;
+			}
+			$save_actions = array( $parms );
 		}
-
 		array_push($actions, array());
 		
-		array_push($actions, array ( 
-			'name' => translate('Сохранить'), 
+		array_push($actions, array (
+			'name' => translate('Настройки'),
 			'items' => $save_actions,
 			'id' => 'save'
 		));

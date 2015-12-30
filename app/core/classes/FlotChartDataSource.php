@@ -5,8 +5,32 @@ class FlotChartDataSource
     public static function getData( $it, $aggs )
     {
 		$data = array();
-
 		$object = $it->object;
+
+		$agg_values = array();
+		if ( count($aggs) > 1 ) {
+			$agg_attr = $aggs[1]->getAttribute();
+			if ( $object->IsReference($agg_attr) ) {
+				$ref = $object->getAttributeObject( $agg_attr );
+				if ( $ref->entity->get('IsDictionary') == 'Y' ) {
+					$ref_it = $ref->getAll();
+				}
+				else {
+					$values = $it->fieldToArray($aggs[1]->getAttribute());
+					if ( count($values) < 1 ) {
+						$ref_it = $ref->getEmptyIterator();
+					}
+					else {
+						$ref_it = $ref->getExact($values);
+					}
+				}
+				while ( !$ref_it->end() )
+				{
+					$agg_values[$ref_it->getDisplayName()] = 0;
+					$ref_it->moveNext();
+				}
+			}
+		}
 
 		while ( !$it->end() )
 		{
@@ -52,21 +76,10 @@ class FlotChartDataSource
 					if ( !is_array($data[$value]['data']) )
 					{
 						$agg_attr = $aggs[1]->getAttribute();
-						if ( $object->IsReference($agg_attr) )
-						{
-							$ref = $object->getAttributeObject( $agg_attr );
-							
-							$ref_it = $ref->getAll();
-							$values = array();
-							
-							while ( !$ref_it->end() )
-							{
-								$values[$ref_it->getDisplayName()] = 0;
-								$ref_it->moveNext();
-							}
+						if ( $object->IsReference($agg_attr) ) {
+							$values = $agg_values;
 						}
-						else
-						{
+						else {
 							$values = array( $inner_value => $it->get($agg_attr) ); 
 						}
 						 

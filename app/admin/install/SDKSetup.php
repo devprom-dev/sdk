@@ -53,7 +53,6 @@ class SDKSetup extends Installable
  		$settings->modify_parms($settings->getAll()->getId(),
  				array (
  						'Caption' => 'Devprom SDK',
- 						'EmailSender' => 'admin',
  						'AdminEmail' => 'Administrator',
  						'ServerName' => EnvironmentSettings::getServerName(),
  						'ServerPort' => 80

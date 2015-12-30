@@ -90,9 +90,13 @@ class BulkFormBase extends AjaxForm
 	function getActionAttributes()
 	{
 		$attributes = array();
-		
+
 		$match = preg_match('/Attribute(.+)/mi', $_REQUEST['operation'], $attributes);
-		if ( $match ) return array($attributes[1]);
+		if ( $match ) {
+			$attribute = $attributes[1];
+			$this->object->setAttributeVisible($attribute, true);
+			return array($attribute);
+		}
 		
 		$match = preg_match('/Method:(.+)/mi', $_REQUEST['operation'], $attributes);
 		if ( $match )
@@ -145,9 +149,11 @@ class BulkFormBase extends AjaxForm
 		{
 		    case 'operation':
 		    	return $this->getAttributeValue($attribute) == '';
-		    
+			case 'ids':
+				return true;
+
 		    default:
-		    	return true;
+		    	return parent::IsAttributeVisible( $attribute );
 		}
 	}
 	
@@ -195,7 +201,7 @@ class BulkFormBase extends AjaxForm
 					$field->SetRequired($this->getObject()->IsAttributeRequired($attribute));
 					
 					if ( $this->showAttributeCaption() ) {
-						echo $this->getObject()->getAttributeUserName($attribute);
+						echo translate($this->getObject()->getAttributeUserName($attribute));
 					}
 					
 					if ( is_a($field, 'FieldForm') )

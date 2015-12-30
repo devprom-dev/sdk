@@ -223,7 +223,7 @@ class PageChart extends StaticPageList
 	{
 		$values = $this->getFilterValues();
 		
-		if ( !in_array($values['aggregator'],array('','all','none')) )
+		if ( !in_array($values['aggregator'],array('','all')) )
 		{
 			return $values['aggregator'];
 		}
@@ -541,7 +541,7 @@ class PageChart extends StaticPageList
 	    $aggs = $this->getAggregates();
 	    
 	    $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
-	    
+
 	    $widget->setData( $data );
 
     	$chart_id = "chart".uniqid();

@@ -97,7 +97,7 @@ class FieldWYSIWYG extends Field
 		$editor = $this->getEditor();
 		
 		$parser = $editor->getPageParser();
-		
+		$parser->displayHints(true);
 		$parser->setObjectIt( $this->object_it );
 		
 		return $parser->parse( html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );

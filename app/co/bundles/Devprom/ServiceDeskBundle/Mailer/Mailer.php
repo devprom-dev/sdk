@@ -93,7 +93,8 @@ class Mailer extends TwigSwiftMailer {
         }
 
         return array(
-            $supportEmail => $this->parameters['from_email']['default']['sender_name']);
+            $supportEmail => $this->parameters['from_email']['default']['sender_name']
+        );
     }
 
     protected function getEntityManager()

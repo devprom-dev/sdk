@@ -70,7 +70,7 @@ class BulkForm extends BulkFormBase
 			foreach( $object->getAttributes() as $attribute => $data )
 			{
 				if ( in_array($attribute, $system_attributes) ) continue;
-				if ( !$object->IsAttributeVisible($attribute) ) continue;
+				if ( !$this->IsAttributeVisible($attribute) ) continue;
 				
 				$ref_names[] = $attribute;
 			}
@@ -126,7 +126,6 @@ class BulkForm extends BulkFormBase
 						$field->SetTabIndex($tab_index);
 						
 						echo $this->getName($attribute);
-						
 						$field->draw();
 						
 						return;

@@ -45,11 +45,11 @@ class CommentHandler extends EmailNotificatorHandler
 					$result[] = $implementor_it->getId();
 					$implementor_it->moveNext();
 				}
-				$result = array_merge( $result, $project_it->getLeadIt()->idsToArray() ); 
+				$result = array_merge( $result, $project_it->getLeadIt()->idsToArray() );
 				break;
 				
 			case 'pm_Task':
-				$result = array_merge( $result, $project_it->getLeadIt()->idsToArray() ); 
+				$result = array_merge( $result, $project_it->getLeadIt()->idsToArray() );
 				break;
 				
 			case 'WikiPage':

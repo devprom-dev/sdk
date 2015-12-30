@@ -169,13 +169,20 @@ class WikiBulkForm extends BulkForm
 		switch( $attribute )
 		{
 			case 'Snapshot':
-				
 				if ( $this->getIt()->count() > 1 ) return false;
-				
  				return $this->getSnapshotObject()->getRegistry()->Query(
  						array ( new FilterAttributePredicate('ObjectId', $this->getIt()->getId()) )
  					)->count() > 0;
-								
+
+			case 'Version':
+			case 'Project':
+			case 'ParentPage':
+				return $this->IsAttributeModifiable($attribute);
+
+			case 'CopyOption':
+			case 'Description':
+				return true;
+
 			default:
 				return parent::IsAttributeVisible( $attribute );
 		}

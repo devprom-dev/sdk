@@ -15,7 +15,7 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->IsTimeTracking() ) {
-			$object->addAttribute('Fact', 'FLOAT', translate('Затрачено, ч.'), false, false, '', 137);
+			$object->addAttribute('Fact', 'FLOAT', translate('Затрачено'), false, false, '', 137);
 		}
 
 		$object->addAttribute('Request', 'REF_pm_ChangeRequestId', translate('Пожелания'), false, false, '', 140);

@@ -374,6 +374,7 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestFeatureFilter($values['function']);
 		$predicates[] = new RequestTagFilter($values['tag']);
 		$predicates[] = new RequestReleasePredicate($values['release']);
+		$predicates[] = new RequestReleasePredicate($_REQUEST['plannedrelease']);
 		$predicates[] = new RequestTestResultPredicate($_REQUEST['test']);
 		$predicates[] = new RequestAuthorFilter( $values['author'] );
 		$predicates[] = new TransitionObjectPredicate( $this->getObject(), $values['transition'] );
@@ -382,7 +383,8 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestTaskStatePredicate( $values['taskstate'] );
 		$predicates[] = new RequestVersionFilter($values['version']);
 		$predicates[] = new RequestIterationFilter($values['iteration']);
-		
+		$predicates[] = new RequestIterationFilter($_REQUEST['iterations']);
+
 		$trace = $model_factory->getObject('pm_ChangeRequestTrace');
 
 		array_push($predicates, new RequestTracePredicate( $_REQUEST['trace'] ) );
@@ -543,6 +545,26 @@ class RequestTable extends PMPageTable
 				}
 				break;
 
+			case 'Iterations':
+				echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
+
+				$release_it = $this->getListRef()->getGroupIt();
+				$release_it->moveToId($object_it->get($group_field));
+
+				if ( $release_it->getId() > 0 ) {
+					$estimation = $release_it->getEstimation();
+					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
+					echo sprintf(
+							getSession()->getProjectIt()->IsPortfolio() ? text(2076) : text(2053),
+							$release_it->getDateFormatShort('StartDate'),
+							$release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
+							$this->estimation_strategy->getDimensionText(round($maximum, 1)),
+							$estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+							$this->estimation_strategy->getDimensionText(round($estimation, 1))
+					);
+				}
+				break;
+
 			case 'Project':
 				$project_it = $this->getListRef()->getGroupIt();
 				$project_it->moveToId($object_it->get($group_field));
@@ -559,7 +581,9 @@ class RequestTable extends PMPageTable
 
 	protected function buildAssigneeWorkload( $iterator )
 	{
-		$object = $this->getObject();
+		$object = getFactory()->getObject(get_class($this->getObject()));
+		$object->resetPersisters();
+		$object->setRegistry(new ObjectRegistrySQL($object));
 		$object->addFilter( new FilterInPredicate($iterator->idsToArray()) );
 
 		// cache aggregates on workload and spent time
@@ -597,7 +621,11 @@ class RequestTable extends PMPageTable
 
 		$list = $this->getListRef();
 		if ( $list->getGroup() == 'Owner' ) {
-			$this->buildAssigneeWorkload($list->getIteratorRef());
+			$iterator = $_REQUEST['tableonly'] == 'true'
+					? $this->getObject()->getRegistry()->Query($this->getFilterPredicates())
+					: $list->getIteratorRef();
+
+			$this->buildAssigneeWorkload($iterator);
 		}
 
 		return $parms;

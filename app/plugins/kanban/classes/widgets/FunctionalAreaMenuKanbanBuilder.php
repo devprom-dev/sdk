@@ -1,6 +1,6 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaMenuBuilder.php";
+include_once SERVER_ROOT_PATH."plugins/kanban/classes/predicates/ProjectUseKanbanPredicate.php";
 
 class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
 {
@@ -24,15 +24,19 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
 		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
 		$project_it = getFactory()->getObject('Project')->getRegistry()->Query(
 				array (
-						new FilterAttributePredicate('Tools', array('kanban_ru.xml','kanban_en.xml')),
+						new ProjectUseKanbanPredicate(),
 						new FilterInPredicate($ids)
 				)
 		);
-		if ( $project_it->count() != count($ids) ) return;
 
 		$menus = $set->getAreaMenus( FUNC_AREA_FAVORITES );
 
-		$menus['quick']['items']['issuesboard'] = $this->report->getExact('kanbanboard')->buildMenuItem();
+		if ( $project_it->count() == count($ids) ) {
+			$menus['quick']['items']['issuesboard'] = $this->report->getExact('kanbanboard')->buildMenuItem();
+		}
+		else {
+			$menus['quick']['items']['kanbanboard'] = $this->report->getExact('kanbanboard')->buildMenuItem();
+		}
 		$menus['reports']['items'][] = $this->report->getExact('avgleadtime')->buildMenuItem();
 
 		$set->setAreaMenus(FUNC_AREA_FAVORITES, $menus);

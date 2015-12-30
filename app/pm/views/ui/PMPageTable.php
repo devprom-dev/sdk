@@ -177,7 +177,8 @@ class PMPageTable extends PageTable
 		$actions[] = array ( 
 			'name' => text(1829),
 			'title' => text(1830),
-			'url' => "javascript: window.location = '".$action_url."&Url='+encodeURIComponent('".trim($url, '&')."');"
+			'url' => "javascript: window.location = '".$action_url."&Url='+encodeURIComponent('".trim($url, '&')."');",
+			'uid' => 'save-report'
         );
         
         return $actions;

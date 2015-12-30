@@ -22,7 +22,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 		$lines = array();
 		foreach( $items as $key => $item )
 		{
-			$lines[] = $key.'&nbsp;('.$item.'&nbsp;'.translate('ч.').')';
+			$lines[] = $key.'&nbsp;('.getSession()->getLanguage()->getDurationWording($item).')';
 		}
 		
 		if ( count($lines) > 0 )

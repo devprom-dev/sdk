@@ -18,7 +18,7 @@ include 'FieldCustomDictionary.php';
 include 'FieldWYSIWYG.php';
 include_once 'BulkForm.php';
 
-include_once SERVER_ROOT_PATH.'pm/classes/common/ObjectMetadataSharedProjectBuilder.php';
+include_once SERVER_ROOT_PATH . 'pm/classes/common/ObjectModelSharedProjectBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
 include SERVER_ROOT_PATH.'pm/views/versioning/IteratorExportSnapshot.php';
@@ -36,7 +36,7 @@ class PMPage extends Page
     function PMPage()
  	{
  		// extend metadata with the "Project" field for entities shared between projects, it impacts on UI representation
-	    getSession()->addBuilder( new ObjectMetadataSharedProjectBuilder() );
+	    getSession()->addBuilder( new ObjectModelSharedProjectBuilder() );
 	    getSession()->addBuilder( new WorkflowModelBuilder() );
 	    
  		parent::Page();

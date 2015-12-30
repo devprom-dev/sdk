@@ -32,12 +32,10 @@ class PMWikiUserPage extends PMPage
  	function PMWikiUserPage()
  	{
  		getSession()->addBuilder( new WikiPageModelExtendedBuilder() );
+		getSession()->addBuilder( new WikiDocumentSettingBuilder() );
+		getSession()->addBuilder( new WikiPageSettingBuilder() );
 
  		parent::PMPage();
- 		
- 		getSession()->addBuilder( new WikiDocumentSettingBuilder() );
- 		
- 		getSession()->addBuilder( new WikiPageSettingBuilder() );
  		
 	    $table = $this->getTableRef();
  		    

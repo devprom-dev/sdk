@@ -891,7 +891,7 @@ a.file_attach img
     display: table-cell;	
     vertical-align: top;
     width: 10px;
-    height: 100%;
+    height: 64px;
 }
 
 .board-table td.board-group
@@ -1110,4 +1110,8 @@ a.filter-reset-btn i.icon-trash {
 }
 span.cke_image_resizer_wrapper {
 	display: inherit;
+}
+
+div.wiki-page-help {
+	color: grey;
 }

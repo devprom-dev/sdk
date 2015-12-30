@@ -23,26 +23,9 @@ class BulkActionBuilderWorkflow extends BulkActionBuilder
 				new TransitionSourceStateSort()
 			)
 		);
-		$attr_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
-			array (
-				new FilterAttributePredicate('Transition', $transition_it->idsToArray()),
-                new TransitionAttributeSortClause()
-			)
-		);
-        $attr_it->buildPositionHash(array('Transition'));
-
 		while ( !$transition_it->end() )
 		{
-            $data = array_filter($attr_it->getSubset('Transition', $transition_it->getId()), function($value) {
-                return $value['ReferenceName'] == 'Tasks';
-            }) ;
-			if ( count($data) > 0 ) {
-				// skip those transitions where 'Tasks' attribute is defined as required one
-				$transition_it->moveNext();
-				continue;
-			}
             $state_it->moveToId($transition_it->get('SourceState'));
-
 			$registry->addWorkflowAction(
 					$state_it->get('ReferenceName'),
 					$transition_it->getDisplayName(),

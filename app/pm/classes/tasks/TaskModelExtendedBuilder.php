@@ -45,5 +45,13 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		
 		$object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Релиз'), false);
 		$object->addPersister( new TaskReleasePersister(array('PlannedRelease')) );
+
+		foreach ( array('StartDate','FinishDate','DueDays','DueWeeks','PlannedStartDate','PlannedFinishDate','RecordCreated','RecordModified') as $attribute ) {
+			$object->addAttributeGroup($attribute, 'dates');
+		}
+
+		foreach ( array('Planned','LeftWork','Fact','Spent') as $attribute ) {
+			$object->addAttributeGroup($attribute, 'time');
+		}
     }
 }

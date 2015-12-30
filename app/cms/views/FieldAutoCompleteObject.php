@@ -152,12 +152,15 @@ class FieldAutoCompleteObject extends Field
 		if ( $this->custom_text != '' ) return $this->custom_text;
 		
 		$object_it = $this->getObjectIt();
-		
 		if ( $object_it->getId() == '' ) return $this->getValue();
-		
+
 	    $uid = new ObjectUID;
-	    
-		return $uid->getUidTitle($object_it);
+		$titles = array();
+		while( !$object_it->end() ) {
+			$titles[] = $uid->getUidTitle($object_it);
+			$object_it->moveNext();
+		}
+		return join('<br/>', $titles);
 	}
  	
  	function draw()

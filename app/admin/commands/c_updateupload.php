@@ -110,16 +110,16 @@ class UpdateUpload extends MaintenanceCommand
 	function checkPoints()
 	{
 	    // check all required checkpoints are passed
-	    $checkpointFactory = new CheckpointFactory(SERVER_UPDATE_PATH.'htdocs/');
-	    
-	    $system = $checkpointFactory->getCheckpoint( 'CheckpointSystem' );
-	    
-	    if ( !is_object($system) ) return;
-	            
-	    $system->executeDynamicOnly();
-	    
-	    if ( !$system->checkRequired( $failed ) )
-	    {
+			$checkpointFactory = new CheckpointFactory(SERVER_UPDATE_PATH.'htdocs/');
+
+			$system = $checkpointFactory->getCheckpoint( 'CheckpointSystem' );
+
+			if ( !is_object($system) ) return;
+
+			$system->executeDynamicOnly();
+
+			if ( !$system->checkRequired( $failed ) )
+			{
 	        $description = array();
 	         
 	        foreach( $failed as $entry )

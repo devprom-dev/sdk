@@ -7,10 +7,12 @@ include_once SERVER_ROOT_PATH.'core/classes/html/HtmlImageConverter.php';
 class MailBox
 {
  	var $to_address, $body, $from_address, $subject;
+	private $mailer_settings = null;
 	
 	function __construct()
 	{
 		$this->to_address = array();
+		$this->mailer_settings = getFactory()->getObject('MailerSettings')->getAll();
 	}
 	
 	function appendAddress( $address )
@@ -40,16 +42,22 @@ class MailBox
         } else {
 			$address = $this->quoteEmail($from_address);
         }
-		if ( $override && defined('EMAIL_SENDER_TYPE') && EMAIL_SENDER_TYPE == 'admin' )
-		{
+
+		if ( $override && $this->mailer_settings->get('EmailSender') == 'admin' ) {
 			$address = $this->addressUpdateEmail($address, self::getSystemEmail());
 		}
+
 		$this->from_address = $address;
 	}
 	
 	function setFromUser( $user_it )
 	{
-		$this->setFrom($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
+		if ( $user_it->getId('Email') == '' ) {
+			$this->setFrom(self::getSystemEmail(), false);
+		}
+		else {
+			$this->setFrom($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
+		}
 	}
 
 	static function getSystemEmail()

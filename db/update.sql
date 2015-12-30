@@ -2205,6 +2205,51 @@ IF NOT check_index_exists('I$cms_Snapshot$ClassTypeId') THEN
 CREATE INDEX I$cms_Snapshot$ClassTypeId ON cms_Snapshot (ObjectId, ObjectClass, Type);
 END IF;
 
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Всего обработано','ProcessedTotal','INTEGER',0,'N','N',e.entityId,100
+  FROM entity e WHERE e.ReferenceName = 'co_RemoteMailbox' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ProcessedTotal')
+  LIMIT 1;
+
+IF NOT check_column_exists('ProcessedTotal', 'co_RemoteMailbox') THEN
+ALTER TABLE co_RemoteMailbox ADD ProcessedTotal INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Осталось обработать','LeftToProcess','INTEGER',0,'N','N',e.entityId,110
+  FROM entity e WHERE e.ReferenceName = 'co_RemoteMailbox' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'LeftToProcess')
+  LIMIT 1;
+
+IF NOT check_column_exists('LeftToProcess', 'co_RemoteMailbox') THEN
+ALTER TABLE co_RemoteMailbox ADD LeftToProcess INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Состояние','StatusText','TEXT',NULL,'N','N',e.entityId,120
+  FROM entity e WHERE e.ReferenceName = 'co_RemoteMailbox' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'StatusText')
+  LIMIT 1;
+
+IF NOT check_column_exists('StatusText', 'co_RemoteMailbox') THEN
+ALTER TABLE co_RemoteMailbox ADD StatusText MEDIUMTEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Лог','RecentLog','TEXT',NULL,'N','N',e.entityId,130
+  FROM entity e WHERE e.ReferenceName = 'co_RemoteMailbox' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'RecentLog')
+  LIMIT 1;
+
+IF NOT check_column_exists('RecentLog', 'co_RemoteMailbox') THEN
+ALTER TABLE co_RemoteMailbox ADD RecentLog MEDIUMTEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Параметр','Parameter','VARCHAR',NULL,'N','N',e.entityId,80
+  FROM entity e WHERE e.ReferenceName = 'pm_StateAction' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Parameter')
+  LIMIT 1;
+
+IF NOT check_column_exists('Parameter', 'pm_StateAction') THEN
+ALTER TABLE pm_StateAction ADD Parameter VARCHAR(255);
+END IF;
+
 --
 --
 --

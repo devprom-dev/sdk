@@ -47,13 +47,13 @@ class RequestBulkForm extends BulkForm
 		switch( $attribute )
 		{
 		    case 'RemoveTag':
+			case 'Tasks':
 		    	return false;
-		    
 		    default:
 		    	return parent::IsAttributeVisible( $attribute );
 		}
 	}
-	
+
  	function IsAttributeModifiable( $attr )
 	{
 	    switch ( $attr ) 

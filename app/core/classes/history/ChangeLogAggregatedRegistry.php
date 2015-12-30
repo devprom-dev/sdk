@@ -12,7 +12,8 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 				new GroupAttributeClause('ObjectId'),
 				new GroupAttributeClause('ClassName'),
 				new GroupAttributeClause('EntityRefName'),
-				new GroupAttributeClause('VPD')
+				new GroupAttributeClause('VPD'),
+				new GroupAttributeClause('ChangeKind')
 		);
 	}
 

@@ -23,62 +23,53 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 				$this->invalidateCache();
 			    break;
 
+			case 'pm_State':
+				$object = getFactory()->getObject($object_it->get('ObjectClass'));
+				$action = new BulkAction($object);
+				$action->resetCache();
+				break;
+			case 'pm_Transition':
+				$object = getFactory()->getObject($object_it->getRef('SourceState')->get('ObjectClass'));
+				$action = new BulkAction($object);
+				$action->resetCache();
+				break;
+
 			case 'cms_Resource':
 				$this->invalidateCache();
 				if ( function_exists('opcache_reset') ) opcache_reset();
  			    break;
 			    
 			case 'pm_CustomReport':
-				
 				getFactory()->getObject('PMReport')->resetCache();
-				
 				$this->invalidateCache();
-				
 				break;
 			    
 			case 'pm_ProjectLink':
-				
 			    // reset cached values for linked project
 			    $project_it = getSession()->getProjectIt()->getRef('LinkedProject');
-			    
-			    while( !$project_it->end() )
-			    {
+			    while( !$project_it->end() ) {
 			        $session->truncateForProject($project_it);
-			        
 			        $project_it->moveNext();
 			    }
-			    
 				$this->invalidateCache();
-				
 				break;
 				
 			case 'pm_Participant':
-
 			    $session->truncateForProject( $object_it->getRef('Project') );
-			    
+
 			    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-			    
-			    while( !$portfolio_it->end() )
-			    {
+			    while( !$portfolio_it->end() ) {
 			        $portfolio_it->setUser($object_it->getRef('SystemUser'));
-			        
 			        $session->truncateForProject( $portfolio_it );
-			        
 			        $portfolio_it->moveNext();
 			    }
-			    
 			    $this->invalidateCache();
-				
 				break;
 				
 			case 'pm_Project':
-			    
 				getFactory()->getObject('ProjectCache')->resetCache();
-				
 				$session->truncateForProject( $object_it );
-
 			    $this->invalidateCache();
-
          		break;
 		}
 	}

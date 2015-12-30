@@ -55,21 +55,15 @@ class ReleaseForm extends PMPageForm
 
 	function createField( $attr )
 	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
 		$field = parent::createField( $attr );
-		
-		$session = getSession();
 		
 		switch ( $attr )
 		{
 			case 'FinishDate':
-				
-				if ( !$methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
-				{
+				$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+				if ( !$methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() ) {
 					$field->setReadonly( true );
 				}
-				
 				break;
 		}
 		
@@ -78,28 +72,25 @@ class ReleaseForm extends PMPageForm
 	
 	function drawScripts()
 	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
 		parent::drawScripts();
 		
 		$locale = getSession()->getLanguage()->getLocaleFormatter();
-		
-		if ( !$methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
+		if ( !$methodology_it->HasPlanning() && $methodology_it->getReleaseDuration() )
 		{
 		?>
 		<script type="text/javascript">
-	
-		$().ready( function() 
-		{
-			$('#pm_VersionStartDate').change( function() 
-			{
-				var start = Date.parse($(this).val());
-				var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
-				 
-				$('#pm_VersionFinishDate').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
-			}).trigger('change');
-		});
-		
+			$().ready( function() {
+				$('#pm_VersionStartDate').change( function() {
+					<? if ( !$methodology_it->HasFixedRelease() ) { ?>
+					if ( $('#pm_VersionFinishDate').val() != '' ) return;
+					<? } ?>
+					var start = Date.parse($(this).val());
+					var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
+					$('#pm_VersionFinishDate').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
+				}).trigger('change');
+			});
 		</script>
 		<?php
 		}

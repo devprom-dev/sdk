@@ -26,10 +26,7 @@ class FieldDateTime extends Field
 	{
 		if ( $this->readOnly() )
 		{
-			echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:150px;">';
-				echo $this->getValue();
-			echo '</span>';
-			echo '<input name="'.$this->getName().'" type="hidden" value="'.$this->getValue().'">';
+			echo '<input class="input-medium" type="text" tabindex="'.$this->getTabIndex().'" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" '.($this->getRequired() ? 'required' : '').' readonly>';
 		}
 		else
 		{

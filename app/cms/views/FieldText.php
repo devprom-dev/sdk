@@ -34,7 +34,7 @@ class FieldText extends Field
 	{
 		if ( $this->readOnly() )
 		{
-		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;">';
+		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;word-break: break-all;">';
 		        echo $this->getText();
 		    echo '</span>';
 
