@@ -16,7 +16,7 @@
 
 ## Обновление версии SDK
     #> upgrade.bat
-
+    
 ## Примеры плагинов
 ### app/plugins/example1
 Пример создания триггеров на изменение данных: изменение задач, создание пользователя.
@@ -27,23 +27,15 @@
 Пример создания собственого отчета "Детализация времени цикла".
 
 ## Разработка плагинов
-<<<<<<< HEAD
 Команда для создания нового плагина:   
-    #> dev\php\php lib/app/console new-plugin mypluginname   
+    > dev\php\php lib/app/console new-plugin mypluginname   
+    
 Расположение кода плагина:   
-    #> cd app/plugins/mypluginname   
+    > cd app/plugins/mypluginname   
+    
 Подготовка дистрибутива для установки плагина:   
-    #> dev\php\php lib/app/console build-plugin mypluginname   
-       
-Расположение дистрибутива плагина:    
-    build/plugin.mypluginname.zip   
-Команда для создания нового плагина:   
-    #> dev\php\php lib/app/console new-plugin mypluginname   
-Расположение кода плагина:   
-    #> cd app/plugins/mypluginname   
-Подготовка дистрибутива для установки плагина:   
-    #> dev\php\php lib/app/console build-plugin mypluginname   
-       
+    > dev\php\php lib/app/console build-plugin mypluginname   
+         
 Расположение дистрибутива плагина:   
     build/plugin.mypluginname.zip
 
