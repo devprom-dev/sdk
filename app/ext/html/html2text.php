@@ -301,7 +301,7 @@ class html2text
             $this->_convert();
         }
 
-        return $this->text;
+        return trim($this->text, " \n\r");
     }
 
     /**

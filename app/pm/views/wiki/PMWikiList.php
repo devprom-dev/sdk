@@ -131,7 +131,12 @@ class PMWikiList extends PMPageList
 				'Watchers', 'Attachments', 'ParentPage'
 			)
 		);
-		
+
+		$values = $this->getFilterValues();
+		if ( !in_array($values['document'], array('','all','hide')) ) {
+			$fields = array_diff($fields, array('DocumentId'));
+		}
+
 		return $fields;
 	}
 	

@@ -18,7 +18,7 @@ class FieldShortText extends Field
 		}
 		else
 		{
-			echo '<input class="input-block-level" type="text" id="'.$this->getId().'" name="'.$this->getName().'" tabindex="'.$this->getTabIndex().'" value="'.$this->getEncodedValue().'" '.($this->getRequired() ? 'required' : '').' placeholder="'.$this->getDefault().'">';
+			echo '<input class="input-block-level" type="text" id="'.$this->getId().'" name="'.$this->getName().'" tabindex="'.$this->getTabIndex().'" value="'.$this->getEncodedValue().'" '.($this->getRequired() ? 'required' : '').' autocomplete="off" placeholder="'.$this->getDefault().'">';
 		}
 	}
 }

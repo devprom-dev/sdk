@@ -39,6 +39,7 @@ class User extends Metaobject
 		$this->setAttributeType( 'Phone', 'RICHTEXT' );
 		
 		$this->setAttributeOrderNum('Photo', 1);
+		$this->addAttributeGroup('Email', 'alternative-key');
  	}
 
  	function createIterator() 

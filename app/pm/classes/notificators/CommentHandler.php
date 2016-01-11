@@ -13,6 +13,10 @@ class CommentHandler extends EmailNotificatorHandler
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient ) 
 	{
 		$commented_it = $object_it->getAnchorIt();
+
+		if ( !is_object($commented_it) ) return '';
+		if ( $commented_it->getId() == '' ) return '';
+
 		return parent::getSubject( $subject, $commented_it, $commented_it, $action, $recipient );
 	}
 
@@ -34,7 +38,9 @@ class CommentHandler extends EmailNotificatorHandler
 		if ( $action != 'add' ) return $result;
 
 		$anchor_it = $object_it->getAnchorIt();
-		if ( $anchor_it->count() < 1 ) return $result;
+
+		if ( !is_object($anchor_it) ) return $result;
+		if ( $anchor_it->getId() == '' ) return $result;
 
 		switch( $anchor_it->object->getClassName() )
 		{
@@ -71,7 +77,9 @@ class CommentHandler extends EmailNotificatorHandler
 		if ( $action != 'add' ) return $result;
 
 		$anchor_it = $object_it->getAnchorIt();
-		if ( $anchor_it->count() < 1 ) return $result;
+
+		if ( !is_object($anchor_it) ) return $result;
+		if ( $anchor_it->getId() == '' ) return $result;
 		
 		switch( $anchor_it->object->getClassName() )
 		{
@@ -93,7 +101,10 @@ class CommentHandler extends EmailNotificatorHandler
 	function getRenderParms($action, $object_it, $prev_object_it)
 	{
 		$anchor_it = $object_it->getAnchorIt();
-		
+
+		if ( !is_object($anchor_it) ) return array();
+		if ( $anchor_it->getId() == '' ) return array();
+
 		$uid = new ObjectUID();
 		$info = $uid->getUidInfo($anchor_it);
 		

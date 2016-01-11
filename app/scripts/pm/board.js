@@ -238,6 +238,7 @@ function boardMake( options )
 					});
 				}
 				else {
+					if ( $(event.target).parents('.board_item_attributes').length < 1 ) return;
 					$('.board_item_body input[type=checkbox]').removeAttr('checked');
 					$(this).find('input[type=checkbox]').each(function() {
 						$(this).attr('checked', 'checked');

@@ -169,7 +169,7 @@ class RequestTable extends PMPageTable
 				'area' => $this->getPage()->getArea()
 		);
 
-		if ( in_array($filter_values['type'], array('','all')) || strpos($filter_values['type'],'none') !== false )
+		if ( in_array($filter_values['type'], array('','hide','all')) || strpos($filter_values['type'],'none') !== false )
 		{
 			$uid = 'append-issue';
 			$append_actions[$uid] = array (

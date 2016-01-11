@@ -82,6 +82,7 @@ class ActivityRequest extends Activity
 				)
 		);
 		if ( $request_it->getId() < 1 ) throw new Exception('Request identifier should be passed');
+		$parms['Issue'] = $parms['Task'];
 
 		$this->setVpdContext($request_it);
 		

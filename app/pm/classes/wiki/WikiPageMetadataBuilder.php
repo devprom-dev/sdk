@@ -14,6 +14,7 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeType('ParentPage', 'REF_'.get_class($object).'Id');
 		$metadata->addAttributeGroup('Author', 'nonbulk');
 		$metadata->addAttributeGroup('Content', 'nonbulk');
+		$metadata->setAttributeOrderNum('PageType', 12);
 
 		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', translate('Документ'), false);
 		

@@ -129,6 +129,9 @@ class PMPageList extends PageList
 				break;
 
 			case 'Fact':
+				echo getSession()->getLanguage()->getDurationWording($object_it->get($attr), 8);
+				break;
+
 			case 'StateDuration':
 			case 'LeadTime':
 				echo getSession()->getLanguage()->getDurationWording($object_it->get($attr));

@@ -3,15 +3,14 @@ namespace Devprom\ProjectBundle\Service\Model;
 
 include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
+include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 
 class ModelService
 {
 	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array() )
 	{
 		$this->validator_service = $validator_serivce;
-		
 		$this->mapping_service = $mapping_service;
-		
 		$this->filter_resolver = $filter_resolver;
 	}
 	
@@ -24,7 +23,7 @@ class ModelService
 			if ( is_array($value) && $object->IsReference($key) ) {
 				// resolve embedded objects into references
 				$ref = $object->getAttributeObject($key);
-				$data[$key] = $ref->getRegistry()->Query($this->buildSearchQuery($ref, $value))->getId(); 
+				$data[$key] = $ref->getRegistry()->Query($this->buildSearchQuery($ref, $value))->getId();
 			}
 			else {
 				if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' ) {
@@ -85,7 +84,7 @@ class ModelService
 		}
 	}
 	
-	public function get( $entity, $id = '', $output = 'text' )
+	public function get( $entity, $id = '', $output = 'text', $recursive = false )
 	{
         $ids = array_filter(preg_split('/,/', $id), function($value) {
                 return $value != '';
@@ -99,7 +98,17 @@ class ModelService
 			throw new \Exception('There is no record ('.$id.') of '.get_class($object));
 		}
 
-		return $this->sanitizeData($object_it->object, $object_it->getData(), $output);
+		$dataset = $object_it->getData();
+
+		if ( $recursive ) {
+			foreach( $object->getAttributes() as $attribute => $info ) {
+				if ( !$object->IsReference($attribute) ) continue;
+				if ( $object_it->get($attribute) == '' ) continue;
+				$ref_it = $object_it->getRef($attribute);
+				$dataset[$attribute] = $ref_it->count() > 1 ? $ref_it->getRowset() : $ref_it->getData();
+			}
+		}
+		return $this->sanitizeData($object_it->object, $dataset, $output);
 	}
 	
 	public function delete( $entity, $id )
@@ -207,7 +216,8 @@ class ModelService
 	
 	protected function modify( $object_it, $data )
 	{
-		return $object_it->object->modify_parms($object_it->getId(), $data);
+		$result = $object_it->object->modify_parms($object_it->getId(), $data);
+		return $result;
 	}
 	
 	protected function sanitizeData( $object, $data, $output = 'text' )
@@ -235,10 +245,27 @@ class ModelService
 				$result[$attribute] = \SystemDateTime::convertToClientTime($value);
 			}
 			else {
-				$result[$attribute] = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
-				if ( $output == 'html' ) {
+				if ( is_array($value) && $object->IsReference($attribute) ) {
+					$ref = $object->getAttributeObject($attribute);
+					if ( !array_key_exists($ref->getIdAttribute(), $value) ) {
+						foreach( $value as $item ) {
+							$result[$attribute][] = $this->sanitizeData($ref, $item, $output);
+						}
+					}
+					else {
+						$result[$attribute] = $this->sanitizeData($ref, $value, $output);
+					}
+				}
+				else {
+					$result[$attribute] = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 					if ( in_array($object->getAttributeType($attribute), array('wysiwyg')) ) {
-						$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), '', $result[$attribute]));
+						if ( $output == 'html' ) {
+							$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), '', $result[$attribute]));
+						}
+						else {
+							$html2text = new \html2text($result[$attribute]);
+							$result[$attribute] = $html2text->get_text();
+						}
 					}
 				}
 			}
@@ -261,12 +288,13 @@ class ModelService
 			if ( !file_exists($path) ) continue;
 			
 			$result[$attribute] = base64_encode(file_get_contents($path));
+			$result[$attribute.'Mime'] = $data[$attribute.'Mime'];
 		}
-		
-		unset($result['RecordVersion']);
-		unset($result['Project']);
-		unset($result['VPD']);
-		
+
+		foreach( $this->skipFields as $field ) {
+			unset($result[$field]);
+		}
+
 		return $result;
 	}
 	
@@ -281,28 +309,41 @@ class ModelService
 	
 	protected function buildSearchQuery( $object, $data )
 	{
-		foreach( $data as $attribute => $value )
-		{
-			if ( $object->getAttributeDbType($attribute) == '' ) continue;
-			if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
-			if ( !$object->IsAttributeStored($attribute) ) continue;
-			
-			if ( $attribute == "Description" ) continue;
-			
-			$predicate = new \FilterAttributePredicate($attribute, \IteratorBase::utf8towin($value));
-			$predicate->setHasMultipleValues(false);
-			
-			$query[] = $predicate;
+		$query = array();
+		if ( $data['Id'] != '' ) {
+			$query[] = new \FilterInPredicate($data['Id']);
 		}
-		
+		if ( count($query) < 1 ) {
+			foreach( $object->getAttributesByGroup('alternative-key') as $key ) {
+				$query[] = new \FilterAttributePredicate($key, $data[$key]);
+			}
+		}
+		if ( count($query) < 1 ) {
+			foreach( $data as $attribute => $value )
+			{
+				if ( $object->getAttributeDbType($attribute) == '' ) continue;
+				if ( $object->getAttributeOrigin($attribute) == ORIGIN_CUSTOM ) continue;
+				if ( !$object->IsAttributeStored($attribute) ) continue;
+
+				if ( $attribute == "Description" ) continue;
+
+				$predicate = new \FilterAttributePredicate($attribute, \IteratorBase::utf8towin($value));
+				$predicate->setHasMultipleValues(false);
+
+				$query[] = $predicate;
+			}
+		}
 		$query[] = new \FilterBaseVpdPredicate();
 		
 		return $query;
 	}
 
+	public function setSkipFields( $fieldsArray ) {
+		$this->skipFields = $fieldsArray;
+	}
+
 	private $validator_service = null;
-	
 	private $mapping_service = null;
-	
 	private $filter_resolver = null;
+	private $skipFields = array('VPD','Project','RecordVersion');
 }

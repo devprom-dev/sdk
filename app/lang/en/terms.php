@@ -2023,5 +2023,10 @@ return array (
 	'Планы' => 'Work plans',
 	'Осталось обработать' => 'Left to process',
 	'Всего обработано' => 'Processed totally',
-		'Лог' => 'Log'
+	'Лог' => 'Log',
+	'Интеграция' => 'Integration',
+	'Тип интеграции' => 'Direction',
+	'HTTP заголовки' => 'HTTP headers',
+	'Настройки мэппинга' => 'Mapping settings',
+	'Журнал выполнения' => 'Execution log'
 );

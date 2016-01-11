@@ -115,6 +115,11 @@ class PageChart extends StaticPageList
 		return $object->createCachedIterator( count($data) < $minSizeValuable ? $this->getDemoData($aggs) : $data );
 	}
 
+	protected function IsAttributeInQuery( $attribute ) {
+		return parent::IsAttributeInQuery( $attribute )
+			|| $this->getAggregateBy() == $attribute;
+	}
+
 	protected function getDemoData($aggs)
 	{
 		return array();

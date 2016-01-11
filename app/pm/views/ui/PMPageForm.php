@@ -37,6 +37,8 @@ class PMPageForm extends PageForm
         {
             if ( !is_object($this->getObjectIt()) )
             {
+                $this->getObject()->setAttributeVisible('IntegrationLink', false);
+
                 $state_it = $this->getStateIt();
                 if ( $_REQUEST['State'] != '' ) {
                     $state_it->moveTo('ReferenceName', trim($_REQUEST['State']));
@@ -46,6 +48,8 @@ class PMPageForm extends PageForm
                 );
             }
             else {
+                $this->getObject()->setAttributeVisible('IntegrationLink', $this->getObjectIt()->get('IntegrationLink') != '');
+
                 $model_builder = new WorkflowStateAttributesModelBuilder(
                     $this->getStateIt(), array()
                 );
@@ -278,8 +282,19 @@ class PMPageForm extends PageForm
                 return parent::createFieldObject($attr);
         }
     }
-    
-	function getTransitionAttributes()
+
+    function createField($name)
+    {
+        $field = parent::createField($name);
+        switch( $name ) {
+            case 'IntegrationLink':
+                $field->setReadOnly(true);
+                break;
+        }
+        return $field;
+    }
+
+    function getTransitionAttributes()
 	{
 		return array();
 	}

@@ -73,6 +73,24 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 
 		$self_emails = array();
+
+		// skip recipients who are support mailboxes to avoid notification cycles
+		$mailbox_it = getFactory()->getObject('co_RemoteMailbox')->getRegistry()->Query();
+		$self_emails = array_merge( $self_emails,
+			array_filter($mailbox_it->fieldToArray('EmailAddress'),
+				function($email) {
+					return $email != '';
+				}
+			)
+		);
+		$self_emails = array_merge( $self_emails,
+			array_filter($mailbox_it->fieldToArray('SenderAddress'),
+				function($email) {
+					return $email != '';
+				}
+			)
+		);
+		// skip current user
 		$this->addRecipient(getSession()->getUserIt(), $self_emails);
 
 		$recipients = array_diff(

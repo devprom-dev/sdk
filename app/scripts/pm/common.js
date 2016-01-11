@@ -1155,13 +1155,11 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 			select: function(event, ui) 
 			{ 
 				jqe_field = $(this).next('input');
-				
 				jqe_field.val(ui.item ? ui.item.id : "");
 				
 				$.each(additional_attributes, function(index,value) {
 					if ( value != "" ) jqe_field.attr(value, ui.item ? ui.item[value] : ""); 
 				});
-				
 				jqe_field.trigger('dblclick');
 			},
 			change: function(event, ui) 
@@ -1172,15 +1170,13 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 					if ( value != "" ) jqe_field.attr(value, ui.item ? ui.item[value] : ""); 
 				});
 
-				if ( ui.item )
-				{
-					jqe_field.val(ui.item.id);
+				if ( ui.item ) {
+					jqe_field.val(ui.item.id).trigger('change');
 				}	
-				else
-				{
+				else {
 					jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 
-						? jqe_field.val($(this).val()) 
-						: jqe_field.val($(this).val() != '' ? jqe_field.attr("default") : '');
+						? jqe_field.val($(this).val()).trigger('change')
+						: jqe_field.val($(this).val() != '' ? jqe_field.attr("default") : '').trigger('change');
 				}
 	        },
 			open: function()
@@ -3109,9 +3105,11 @@ function showTooltip(el)
 			var parent = tooltip.parents('.board_item_body');
 			var popover = tooltip.data('popover');
 			popover.tip().addClass('in-focus');
-			popover.tip().css({
-				'left': parent.length > 0 ? parent.offset().left + parent.width() : tooltip.offset().left + tooltip.width()
-			});
+			if ( parent.length > 0 ) {
+				popover.tip().css({
+					'left': parent.length > 0 ? parent.offset().left + parent.width() : tooltip.offset().left + tooltip.width()
+				});
+			}
 		}
 		return;
 	}

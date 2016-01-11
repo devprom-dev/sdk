@@ -98,7 +98,7 @@ class PageList extends ListTable
 			$visible = false;
 			foreach( $attributes as $attribute ) {
 				if ( $object->getAttributeType($attribute) == '' ) continue;
-				if ( $this->getColumnVisibility($attribute) ) {
+				if ( $this->IsAttributeInQuery($attribute) ) {
 					$visible = true;
 					break;
 				}
@@ -143,6 +143,10 @@ class PageList extends ListTable
 		$this->iterator_data = $iterator->getRowset();
 
 		return $iterator;
+	}
+
+	protected function IsAttributeInQuery( $attribute ) {
+		return $this->getColumnVisibility($attribute);
 	}
 
     function getIds()
@@ -811,13 +815,12 @@ class PageList extends ListTable
 	function getGroup() 
 	{
 	    $values = $this->getFilterValues();
-
-		if ( $values['group'] != '' )
-		{
-			return $values['group'] != 'none' ? $values['group'] : '';
+		if ( $values['group'] != '' ) {
+			return $values['group'] != 'none'
+				? (in_array($values['group'], $this->getGroupFields()) ? $values['group'] : '')
+				: '';
 		}
-		else
-		{
+		else {
 			return parent::getGroup();
 		}
 	}

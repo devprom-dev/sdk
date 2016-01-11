@@ -11,14 +11,12 @@ class ModifyIssuesVersionNumber extends ObjectFactoryNotificator
         if ($object_it->object instanceof Release) {
             if ( $object_it->get('Caption') == $prev_object_it->get('Caption') ) return;
             $was_data = $prev_object_it->getData();
-            $this->handleRelease($object_it, $was_data['Caption']);
+            $this->updateVersion($object_it->getDisplayName(), $was_data['Caption']);
         }
         if ($object_it->object instanceof Iteration) {
             if ( $object_it->get('ReleaseNumber') == $prev_object_it->get('ReleaseNumber') && $object_it->get('Version') == $prev_object_it->get('Version') ) return;
             $was_data = $prev_object_it->getData();
-            $release_it = getFactory()->getObject('Release')->getExact($was_data['Version']);
-            $was_version = $release_it->getDisplayName().'.'.$was_data['ReleaseNumber'];
-            $this->handleIteration($object_it, $was_version);
+            $this->updateVersion($object_it->get('ShortCaption'), $was_data['ShortCaption']);
         }
     }
 
@@ -32,11 +30,11 @@ class ModifyIssuesVersionNumber extends ObjectFactoryNotificator
         }
     }
 
-    protected function updateVersion( $object_it, $version )
+    protected function updateVersion( $new_version, $version )
     {
-        DAL::Instance()->Query("UPDATE pm_ChangeRequest SET SubmittedVersion = '".$object_it->getDisplayName()."' WHERE SubmittedVersion = '".$version."'");
-        DAL::Instance()->Query("UPDATE pm_ChangeRequest SET ClosedInVersion = '".$object_it->getDisplayName()."' WHERE ClosedInVersion = '".$version."'");
-        DAL::Instance()->Query("UPDATE pm_Test SET Version = '".$object_it->getDisplayName()."' WHERE Version = '".$version."'");
+        DAL::Instance()->Query("UPDATE pm_ChangeRequest SET SubmittedVersion = '".$new_version."' WHERE SubmittedVersion = '".$version."'");
+        DAL::Instance()->Query("UPDATE pm_ChangeRequest SET ClosedInVersion = '".$new_version."' WHERE ClosedInVersion = '".$version."'");
+        DAL::Instance()->Query("UPDATE pm_Test SET Version = '".$new_version."' WHERE Version = '".$version."'");
     }
 
     protected function clearVersion( $version ) {

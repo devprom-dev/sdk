@@ -1997,7 +1997,7 @@ END IF;
 
 
 INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
-  SELECT NOW(), NOW(), NULL,'Затрачено, ч.','Fact','FLOAT',NULL,'N','N',e.entityId,200
+  SELECT NOW(), NOW(), NULL,'Затрачено','Fact','FLOAT',NULL,'N','N',e.entityId,200
   FROM entity e WHERE e.ReferenceName = 'pm_ChangeRequest' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Fact')
   LIMIT 1;
 
@@ -2248,6 +2248,199 @@ INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceNam
 
 IF NOT check_column_exists('Parameter', 'pm_StateAction') THEN
 ALTER TABLE pm_StateAction ADD Parameter VARCHAR(255);
+END IF;
+
+UPDATE attribute SET Caption = 'Затрачено' WHERE ReferenceName IN ('Fact') AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_ChangeRequest');
+UPDATE attribute SET Caption = 'Осталось' WHERE ReferenceName IN ('LeftWork') AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_Task');
+UPDATE attribute SET Caption = 'Трудоемкость' WHERE ReferenceName IN ('Planned') AND entityId IN (SELECT entityId FROM entity WHERE ReferenceName = 'pm_Task');
+
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+  SELECT 'Интеграция', 'pm_Integration', 7, 'N', 10, 'N'
+  FROM (SELECT 1) t WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'pm_Integration');
+
+IF NOT check_table_exists('pm_Integration') THEN
+CREATE TABLE `pm_Integration` (
+  `pm_IntegrationId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `OrderNum` int(11) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`pm_IntegrationId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Приложение','Caption','VARCHAR',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Caption')
+  LIMIT 1;
+
+IF NOT check_column_exists('Caption', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD Caption VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'HTTP заголовки','HttpHeaders','TEXT',NULL,'N','Y',e.entityId,20
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'HttpHeaders')
+  LIMIT 1;
+
+IF NOT check_column_exists('HttpHeaders', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD HttpHeaders TEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Настройки мэппинга','MappingSettings','TEXT',NULL,'N','Y',e.entityId,30
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'MappingSettings')
+  LIMIT 1;
+
+IF NOT check_column_exists('MappingSettings', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD MappingSettings MEDIUMTEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Активна','IsActive','CHAR','Y','N','Y',e.entityId,40
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'IsActive')
+  LIMIT 1;
+
+IF NOT check_column_exists('IsActive', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD IsActive CHAR(1);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Статус','StatusText','TEXT','','N','N',e.entityId,50
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'StatusText')
+  LIMIT 1;
+
+IF NOT check_column_exists('StatusText', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD StatusText TEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Журнал выполнения','Log','TEXT','','N','Y',e.entityId,60
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Log')
+  LIMIT 1;
+
+IF NOT check_column_exists('Log', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD Log MEDIUMTEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Очередь','ItemsQueue','TEXT','','N','N',e.entityId,70
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ItemsQueue')
+  LIMIT 1;
+
+IF NOT check_column_exists('ItemsQueue', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD ItemsQueue MEDIUMTEXT;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Тип интеграции','Type','VARCHAR','read','Y','Y',e.entityId,15
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Type')
+  LIMIT 1;
+
+IF NOT check_column_exists('Type', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD Type VARCHAR(128);
+END IF;
+
+INSERT INTO `co_ScheduledJob` (`RecordCreated`,`RecordModified`,`OrderNum`,`Caption`,`ClassName`,`Minutes`,`Hours`,`Days`,`WeekDays`,`IsActive`,`Parameters`)
+SELECT NOW(),NOW(),100,'text(integration1)','integration/integrationtask','*','*','*','*','Y',NULL FROM (SELECT 1) t
+ WHERE NOT EXISTS (SELECT 1 FROM co_ScheduledJob WHERE ClassName = 'integration/integrationtask');
+
+IF NOT check_index_exists('I$ObjectChangeLogAttribute$ChangeLog') THEN
+CREATE INDEX I$ObjectChangeLogAttribute$ChangeLog ON ObjectChangeLogAttribute (ObjectChangeLogId);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'URL','URL','VARCHAR','','Y','Y',e.entityId,12
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'URL')
+  LIMIT 1;
+
+IF NOT check_column_exists('URL', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD URL VARCHAR(384);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Имя пользователя','HttpUserName','VARCHAR','','N','Y',e.entityId,17
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'HttpUserName')
+  LIMIT 1;
+
+IF NOT check_column_exists('HttpUserName', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD HttpUserName VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Пароль','HttpUserPassword','PASSWORD','','N','Y',e.entityId,18
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'HttpUserPassword')
+  LIMIT 1;
+
+IF NOT check_column_exists('HttpUserPassword', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD HttpUserPassword BLOB;
+END IF;
+
+INSERT INTO entity (Caption, ReferenceName, packageId, IsOrdered, OrderNum, IsDictionary)
+  SELECT 'Связь', 'pm_IntegrationLink', 7, 'N', 10, 'N'
+  FROM (SELECT 1) t WHERE NOT EXISTS (SELECT 1 FROM entity WHERE ReferenceName = 'pm_IntegrationLink');
+
+IF NOT check_table_exists('pm_IntegrationLink') THEN
+CREATE TABLE `pm_IntegrationLink` (
+  `pm_IntegrationLinkId` int(11) NOT NULL auto_increment,
+  `VPD` varchar(32) default NULL,
+  `OrderNum` int(11) default NULL,
+  `RecordCreated` datetime default NULL,
+  `RecordModified` datetime default NULL,
+  `RecordVersion` int(11) default '0',
+  PRIMARY KEY  (`pm_IntegrationLinkId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Класс','ObjectClass','VARCHAR',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_IntegrationLink' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ObjectClass')
+  LIMIT 1;
+
+IF NOT check_column_exists('ObjectClass', 'pm_IntegrationLink') THEN
+ALTER TABLE pm_IntegrationLink ADD ObjectClass VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Объект','ObjectId','INTEGER',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_IntegrationLink' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ObjectId')
+  LIMIT 1;
+
+IF NOT check_column_exists('ObjectId', 'pm_IntegrationLink') THEN
+ALTER TABLE pm_IntegrationLink ADD ObjectId INTEGER;
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'URL','URL','VARCHAR',NULL,'Y','Y',e.entityId,10
+  FROM entity e WHERE e.ReferenceName = 'pm_IntegrationLink' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'URL')
+  LIMIT 1;
+
+IF NOT check_column_exists('URL', 'pm_IntegrationLink') THEN
+ALTER TABLE pm_IntegrationLink ADD URL VARCHAR(256);
+END IF;
+
+IF NOT check_index_exists('I$pm_IntegrationLink$Object') THEN
+CREATE INDEX I$pm_IntegrationLink$Object ON pm_IntegrationLink (ObjectId, ObjectClass);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Проект','ProjectKey','VARCHAR','','N','Y',e.entityId,13
+  FROM entity e WHERE e.ReferenceName = 'pm_Integration' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'ProjectKey')
+  LIMIT 1;
+
+IF NOT check_column_exists('ProjectKey', 'pm_Integration') THEN
+ALTER TABLE pm_Integration ADD ProjectKey VARCHAR(128);
+END IF;
+
+INSERT INTO attribute ( RecordCreated,RecordModified,VPD,`Caption`,`ReferenceName`,`AttributeType`,`DefaultValue`,`IsRequired`,`IsVisible`,`entityId`,`OrderNum` )
+  SELECT NOW(), NOW(), NULL,'Пожелание','Issue','REF_pm_ChangeRequestId','','N','N',e.entityId,13
+  FROM entity e WHERE e.ReferenceName = 'pm_Activity' AND NOT EXISTS (SELECT 1 FROM attribute a WHERE a.entityId = e.entityId AND a.ReferenceName = 'Issue')
+  LIMIT 1;
+
+IF NOT check_column_exists('Issue', 'pm_Activity') THEN
+ALTER TABLE pm_Activity ADD Issue INTEGER;
 END IF;
 
 --

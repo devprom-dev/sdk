@@ -184,12 +184,12 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 		}
  	}
 
-	protected function convertHours( $hours )
+	protected function convertHours( $hours, $hoursInDay = 24 )
 	{
-		$monthes = floor($hours / (30 * 8));
-		$hours -= $monthes * 8 * 30;
-		$days = floor($hours / 8);
-		$hours -= $days * 8;
+		$monthes = floor($hours / (30 * $hoursInDay));
+		$hours -= $monthes * $hoursInDay * 30;
+		$days = floor($hours / $hoursInDay);
+		$hours -= $days * $hoursInDay;
 		 return array (
 			 $monthes,
 			 $days,
@@ -198,9 +198,9 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 		 );
 	}
 
-	function getDurationWording( $hours )
+	function getDurationWording( $hours, $hoursInDay = 24 )
 	{
-		list( $monthes, $days, $hours, $minutes ) = $this->convertHours($hours);
+		list( $monthes, $days, $hours, $minutes ) = $this->convertHours($hours, $hoursInDay);
 		$result = '';
 		if ( $monthes > 0 ) {
 			$result .= $monthes.'мес ';
@@ -260,9 +260,9 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
  			return 'weeks';
  	}
 
-	 function getDurationWording( $hours )
+	 function getDurationWording( $hours, $hoursInDay = 24 )
 	 {
-		 list( $monthes, $days, $hours, $minutes ) = $this->convertHours($hours);
+		 list( $monthes, $days, $hours, $minutes ) = $this->convertHours($hours, $hoursInDay);
 		 $result = '';
 		 if ( $monthes > 0 ) {
 			 $result .= $monthes.'mo ';

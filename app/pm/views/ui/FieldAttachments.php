@@ -29,26 +29,17 @@ class FieldAttachments extends FieldForm
  	
  	function getAttachments()
  	{
- 	    global $model_factory;
- 	    
  	    if ( is_object($this->attachments) ) return $this->attachments;
- 	    
- 		if ( is_object($this->object_it) )
- 		{
-			$this->attachments = $model_factory->getObject2('pm_Attachment', $this->object_it->count());
-
+ 		if ( is_object($this->object_it) ) {
+			$this->attachments = getFactory()->getObject('pm_Attachment');
 			$this->attachments->addFilter( new AttachmentObjectPredicate($this->object_it) );
-
  		    $this->attachments->setVpdContext($this->object_it);
 
  		}
- 		else
- 		{
- 		    $this->attachments = $model_factory->getObject('pm_Attachment');
- 		    	
+ 		else {
+ 		    $this->attachments = getFactory()->getObject('pm_Attachment');
  		    $this->attachments->addFilter( new AttachmentObjectPredicate(0) );
  		}
- 		
  		return $this->attachments;
  	}
  	

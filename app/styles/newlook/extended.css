@@ -457,6 +457,7 @@ section.modal-fullscreen .row-fluid
 .treeview .btn
 {
 	text-align:left;
+    word-break: normal;
 }
 .treeview .btn-group
 {
@@ -1029,4 +1030,8 @@ a.btn {
 
 .ui-dialog {
     overflow: inherit;
+}
+
+.popover-content {
+    word-break: normal;
 }

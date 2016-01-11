@@ -68,6 +68,7 @@ class MailboxScannerTest extends DevpromTestCase {
         $this->requestItMock = $this->requestMock->createSQLIterator('');
         $this->watcherMock = $this->getMock("Watcher", array("add_parms", "createSQLIterator"), array($this->requestMock->createSQLIterator('')));
         $this->project = $this->watcherMock;
+        $this->user = $this->watcherMock;
         
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
             array (
@@ -75,7 +76,9 @@ class MailboxScannerTest extends DevpromTestCase {
                 array ( 'Watcher', $this->requestMock->createSQLIterator(''), $this->watcherMock ),
                 array ( 'ProjectImportance', null, new \ProjectImportance() ),
                 array ( 'pm_Project', null, $this->project ),
-                array ( 'Project', null, $this->project )
+                array ( 'Project', null, $this->project ),
+                array ( 'cms_User', null, $this->user ),
+                array ( 'User', null, $this->user )
             )
         ));
                 

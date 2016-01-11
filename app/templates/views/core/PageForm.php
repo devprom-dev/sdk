@@ -17,7 +17,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
 ?>
 
 <div class="<?=($formonly ? '' : ($draw_sections && count($sections) > 0 ? 'span8' : $no_sections_class))?>">
-    <form class="form-horizontal" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>">
+    <form class="form-horizontal" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>" autocomplete="off">
     	<fieldset>
     	
     	    <?php if (!$formonly) { ?>

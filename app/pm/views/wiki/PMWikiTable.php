@@ -110,7 +110,10 @@ class PMWikiTable extends PMPageTable
 			$filters[] = $filter;
 		}
 		
-		return array_merge( $filters, parent::getFilters() );
+		return array_merge(
+			$filters,
+			parent::getFilters()
+		);
 	}
 	
 	function getFilterPredicates()
@@ -128,14 +131,13 @@ class PMWikiTable extends PMPageTable
 			new WikiContentFilter( $values['content'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
 		    new WikiRootTransitiveFilter( $values['document'] ),
-			new FilterModifiedAfterPredicate($values['modifiedafter'])
+			new FilterModifiedAfterPredicate($values['modifiedafter']),
+			new FilterSearchAttributesPredicate($values['search'], array('t.Caption','t.Content'))
 		);
 		
-		if ( $this->Statable($this->getObject()) )
-		{
+		if ( $this->Statable($this->getObject()) ) {
 		    $predicates[] = new TransitionObjectPredicate($this->getObject(), $values['transition']);
 		}
-		
 		return array_merge(parent::getFilterPredicates(), $predicates);
 	}
 	
@@ -153,17 +155,6 @@ class PMWikiTable extends PMPageTable
 			'uid' => 'create' 
 		);
 
-        $type_it = $this->getForm()->getTypeIt();
-        while ( is_object($type_it) && !$type_it->end() )
-        {
-            $uid = 'create'.$type_it->get('ReferenceName');
-            $actions[$uid] = array(
-                'name' => $type_it->getDisplayName(),
-                'url' => $method->getJSCall(array('PageType'=>$type_it->getId())),
-                'uid' => $uid
-            );
-            $type_it->moveNext();
-        }
 		return $actions;
 	}
 	

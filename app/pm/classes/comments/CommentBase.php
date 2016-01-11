@@ -11,9 +11,8 @@ include "predicates/CommentRootFilter.php";
 
 class CommentBase extends Metaobject
 {
- 	function __construct() 
- 	{
-		parent::Metaobject('Comment');
+ 	function __construct( $registry = null ) {
+		parent::__construct('Comment', $registry);
 	}
 	
 	function createIterator() 
@@ -190,12 +189,15 @@ class CommentBase extends Metaobject
  	
  	function add_parms( $parms )
  	{
+		if ( $parms['ObjectId'] < 1 ) throw new Exception('Object identifier is required');
+
+		if ( $parms['ObjectClass'] == '' ) {
+			$parms['ObjectClass'] = $this->getDefaultAttributeValue('ObjectClass');
+		}
+
  		$class_name = getFactory()->getClass($parms['ObjectClass']);
- 		
  		if ( !class_exists($class_name) ) throw new Exception('Object class is required');
- 		
- 		if ( $parms['ObjectId'] < 1 ) throw new Exception('Object identifier is required');
- 		
+
  		return parent::add_parms( $parms );
  	}
 }
