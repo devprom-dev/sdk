@@ -20,4 +20,15 @@ class LicenseSAASBaseIterator extends LicenseIterator
 	{
 		return text('saasassist19');
 	}
+
+	protected function getLimit()
+	{
+		$users = $this->getUsers();
+		return $users > 0 ? $users : $this->getLimitDefault();
+	}
+
+	protected function getLimitDefault()
+	{
+		return 0;
+	}
 }

@@ -109,10 +109,22 @@ class TrainingsDEVPROMTable extends BaseDEVPROMTable
 			</div>
 		</div> <!-- end menu2 -->
 		<div class="whiteRounded">
+		<?
+		$index = 1;
+		$parent_it = $page_it->getRef('ParentPage');
+		$parent_id = $parent_it->getId();
+		$children_it = $parent_it->getChildrenIt();
+		$count = 0;
+		while ( !$children_it->end() && $children_it->get('ParentPage') == $parent_id  ) {
+			$count++;
+			$children_it->moveNext();
+		}
+		$children_it = $parent_it->getChildrenIt();
+		?>
 			<div class="bgTop">
 			</div> <!-- end bgTop -->
 			<div class="bgCenter">
-				<div class="leftSide">
+				<div class="<?=($count > 1 ? "leftSide" : "")?>">
 					<div class="text wiki">
 					<?
 			 		$parser = new DEVPROMWikiParser( $page_it, $project_it );
@@ -120,16 +132,10 @@ class TrainingsDEVPROMTable extends BaseDEVPROMTable
 					?>
 					</div> <!-- end text -->
 				</div> <!-- end leftSide -->
+				<? if ($count > 1) { ?>
 				<div class="rightSideBar">
 					<ul class="rightMenu">
 					<?
-					$page_id = $page_it->getId();
-					$parent_it = $page_it->getRef('ParentPage');
-					
-					$index = 1;
-					$parent_id = $parent_it->getId();
-	 				$children_it = $parent_it->getChildrenIt();
-
 					while ( !$children_it->end() && $children_it->get('ParentPage') == $parent_id  )
 					{
 	 					$class = $children_it->getId() == $page_it->getId() ? 'current' : '';
@@ -147,6 +153,7 @@ class TrainingsDEVPROMTable extends BaseDEVPROMTable
 					?>
 					</ul>
 				</div> <!-- end rightSideBar -->
+				<? } ?>
 				<div class="clearFix">
 				</div>
 			</div> <!-- end bgCenter -->

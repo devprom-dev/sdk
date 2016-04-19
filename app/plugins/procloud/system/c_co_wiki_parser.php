@@ -68,10 +68,13 @@
  {
  	function parse( $content = null )
  	{
- 		if ( is_null($content) )
+		$this->file = getFactory()->getObject('BlogPostFile');
+
+		if ( is_null($content) )
  		{
  			$object_it = $this->getObjectIt();
- 			return parent::parse( $object_it->getHtmlDecoded('Content').chr(10) );
+			$content = parent::parse( $object_it->getHtmlDecoded('Content').chr(10) );
+			return preg_replace_callback('/\s+src="([^"]*)"/i', array($this, 'embedImages'), $content);
  		}
  		else
  		{
@@ -117,12 +120,35 @@
  
  	function hasUrlOnImage()
 	{
-		return true;
+		return false;
 	}
 	
 	function getUidInfo( $uid )
 	{
 		return array();
 	}
+
+	 function embedImages( $match )
+	 {
+		 $url = $match[1];
+
+		 $found = array();
+		 if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $url, $found) ) {
+			 if ( !preg_match('/file\/([^\/]+)\/([\d]+).*/', $url, $found) ) return $match[0];
+			 $file_class = $found[1];
+			 $file_id = $found[2];
+		 } else {
+			 $file_class = $found[1];
+			 $file_id = $found[3];
+		 }
+		 if ( $file_class != 'blogfile' ) return $match[0];
+
+		 $file_it = $this->file->getExact($file_id);
+		 if ( $file_it->getId() == '' ) return $match[0];
+
+		 $finfo = new \finfo(FILEINFO_MIME_TYPE);
+		 $path = $file_it->getFilePath('Content');
+		 return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
+	 }
  }
  

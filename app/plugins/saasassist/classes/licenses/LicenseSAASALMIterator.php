@@ -16,7 +16,7 @@ class LicenseSAASALMIterator extends LicenseSAASBaseIterator
 	    );
 	}
 	
-	protected function getLimit()
+	protected function getLimitDefault()
 	{
 		return 10;
 	}

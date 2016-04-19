@@ -7,7 +7,7 @@ class LicenseSAASALM20Iterator extends LicenseSAASALMIterator
 		return 'Devprom.SaaS (20)';
 	}
 
-	protected function getLimit()
+	protected function getLimitDefault()
 	{
 		return 20;
 	}

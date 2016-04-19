@@ -1834,9 +1834,18 @@
 		$xml .= '<link rel="self" type="application/atom+xml" href="'.$site_url.'rss"/>'.Chr(10);
 
 		$post = $model_factory->getObject('BlogPost');
+		$post->setLimit(10);
 
-		$post_it = $post->getByRefArray(
-			array( 'Blog' => $project_it->get('Blog') ), 10);
+		if ( $_REQUEST['tag'] != '' ) {
+			$tag = $model_factory->getObject('BlogPostTag');
+			$post_it = $tag->getPostsByTag( $_REQUEST['tag'] );
+			$post_it = $post->getByRef('BlogPostId', array_slice($post_it->idsToArray(), 0, 5));
+		}
+		else {
+			$post_it = $post->getByRefArray(
+				array( 'Blog' => $project_it->get('Blog') ), 10);
+		}
+
 
 		$common = array (
 			'title' => $project_it->wintoutf8(translate('Новости проекта').': '.$project_it->getDisplayName()),

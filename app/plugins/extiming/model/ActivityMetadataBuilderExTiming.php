@@ -9,5 +9,18 @@ class ActivityMetadataBuilderExTiming extends ObjectMetadataEntityBuilder
 
         $metadata->addAttribute('TaskType', 'REF_TaskTypeId', translate('Тип задачи'), true, false, '', 15);
         $metadata->setAttributeRequired('TaskType', true);
+
+        $tasktype = new Metaobject('pm_TaskType');
+        $type_it = $tasktype->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate(),
+                new FilterAttributePredicate('IsDefault','Y')
+            )
+        );
+        if ( $type_it->getId() > 0 ) {
+            $attributes = $metadata->getAttributes();
+            $attributes['TaskType']['default'] = $type_it->getId();
+            $metadata->setAttributes($attributes);
+        }
     }
 }

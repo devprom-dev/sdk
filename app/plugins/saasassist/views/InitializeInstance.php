@@ -192,10 +192,8 @@ class InitializeInstance extends Page
 	
 	protected function setupBackgroundTasks()
 	{
-		$instance_number = intval(trim(file_get_contents('/home/saas/instances.dat'), ' '.chr(10).chr(13)));
-		
-		$hours = round($instance_number / 60, 0);
-		$minutes = $instance_number % 60;
+		$hours = rand(0, 8);
+		$minutes = rand(0, 59);
 		
 		$job_it = getFactory()->getObject('co_ScheduledJob')->getRegistry()->Query(
 				array (
