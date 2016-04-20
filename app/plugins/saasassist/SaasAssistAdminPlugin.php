@@ -18,7 +18,7 @@ class SaasAssistAdminPlugin extends PluginAdminBase
         {
             case 'cms_PluginModule':
                 
-                if ( $object_it->getId() == 'update-upload' && getFactory()->getObject('LicenseState')->getAll()->get('LicenseType') != 'LicenseProcloud' )
+                if ( $object_it->getId() == 'file-upload' && getFactory()->getObject('LicenseState')->getAll()->get('LicenseType') != 'LicenseProcloud' )
                 {
                     return false;
                 }

@@ -17,25 +17,10 @@ class DOBAssistAdminPlugin extends PluginAdminBase
         switch ( $object_it->object->getEntityRefName() )
         {
             case 'cms_PluginModule':
-                
-                if ( $object_it->getId() == 'update-upload' && getFactory()->getObject('LicenseState')->getAll()->get('LicenseType') != 'LicenseProcloud' )
-                {
-                    return false;
-                }
-                
+                if ( $object_it->getId() == 'file-upload' ) return false;
                 break;
         }
     }
- 	
- 	function interceptMethodTableGetActions( & $table, & $actions )
- 	{
- 	    if ( is_a($table, 'UpdateTable') )
- 	    {
- 	    	if ( getFactory()->getObject('LicenseState')->getAll()->get('LicenseType') == 'LicenseProcloud' ) return;
- 	    	
- 	    	$actions = array();
- 	    }
- 	}
  	
  	function interceptMethodFormGetActions( & $form, & $actions )
  	{
@@ -61,8 +46,6 @@ class DOBAssistAdminPlugin extends PluginAdminBase
  	{
  	 	if ( is_a($table, 'UpdateList') )
  	    {
- 	    	if ( getFactory()->getObject('LicenseState')->getAll()->get('LicenseType') == 'LicenseProcloud' ) return;
- 	    	
  	    	foreach( $actions as $key => $action )
  	    	{
  	    		if ( $action['uid'] == 'download' )
@@ -75,8 +58,6 @@ class DOBAssistAdminPlugin extends PluginAdminBase
 
  	 	if ( is_a($table, 'BackupList') )
  	    {
- 	    	if ( getFactory()->getObject('LicenseState')->getAll()->get('LicenseType') == 'LicenseProcloud' ) return;
- 	    	
  	    	foreach( $actions as $key => $action )
  	    	{
  	    		if ( $action['uid'] == 'download' ) unset($actions[$key]);
