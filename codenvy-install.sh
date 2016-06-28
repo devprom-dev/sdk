@@ -2,6 +2,12 @@
 sudo apt-get -qq update
 sudo apt-get -qq upgrade
 sudo apt-get -y -q install anacron
+git config --global user.email "test@example.com"                                                                                                                                                 
+git config --global user.name "developer"
+git remote add upstream https://github.com/devprom-dev/sdk.git
+git fetch upstream
+git checkout master
+git merge -s recursive -X theirs upstream/master
 sudo cp /projects/sdk/deploy/codenvy/000-default.conf /etc/apache2/sites-available/
 sudo cp /projects/sdk/deploy/codenvy/php-devprom.ini /etc/php5/apache2/conf.d/
 sudo cp /projects/sdk/deploy/codenvy/php-devprom.ini /etc/php5/cli/conf.d/
@@ -30,11 +36,5 @@ sudo chmod -R 777 /projects/sdk
 sudo rm -r /projects/sdk/app/cache
 sudo rm -r /projects/sdk/app/conf/logger.xml
 cd /projects/sdk
-git config --global user.email "test@example.com"                                                                                                                                                 
-git config --global user.name "developer"
-git remote add upstream https://github.com/devprom-dev/sdk.git
-git fetch upstream
-git checkout master
-git merge -s recursive -X theirs upstream/master
 sudo service apache2 restart
 sudo service cron restart
