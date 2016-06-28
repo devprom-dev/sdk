@@ -25,11 +25,11 @@ cd /projects/sdk/app/ext
 composer install
 cd /projects/sdk/lib
 composer install
-cd /projects/sdk
 sudo chown -R www-data:www-data /projects/sdk
 sudo chmod -R 777 /projects/sdk
 sudo rm -r /projects/sdk/app/cache
 sudo rm -r /projects/sdk/app/conf/logger.xml
+cd /projects/sdk
 git config --global user.email "test@example.com"                                                                                                                                                 
 git config --global user.name "developer"
 git remote add upstream https://github.com/devprom-dev/sdk.git
