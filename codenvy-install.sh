@@ -2,6 +2,7 @@
 sudo apt-get -qq update
 sudo apt-get -qq upgrade
 sudo apt-get -y -q install anacron
+cd /projects/sdk/
 git config --global user.email "test@example.com"                                                                                                                                                 
 git config --global user.name "developer"
 git remote add upstream https://github.com/devprom-dev/sdk.git
@@ -35,6 +36,5 @@ sudo chown -R www-data:www-data /projects/sdk
 sudo chmod -R 777 /projects/sdk
 sudo rm -r /projects/sdk/app/cache
 sudo rm -r /projects/sdk/app/conf/logger.xml
-cd /projects/sdk
 sudo service apache2 restart
 sudo service cron restart
