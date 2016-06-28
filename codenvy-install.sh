@@ -23,4 +23,4 @@ git config --global user.email "test@example.com"
 git config --global user.name "developer"
 git remote add upstream https://github.com/devprom-dev/sdk.git
 sudo chown -R www-data:www-data /projects/sdk
-sudo chmod -R 775 /projects/sdk
+sudo chmod -R 777 /projects/sdk
