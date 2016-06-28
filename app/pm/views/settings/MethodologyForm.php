@@ -93,17 +93,18 @@ class MethodologyForm extends PMPageForm
         switch ( $attr )
         {
             case 'RequestEstimationRequired':
-
             	return new EstimationStrategyDictionary();
 
             case 'IsReleasesUsed':
-            	
             	$field = new FieldDictionary( new MethodologyPlanningMode() );
-            	
             	$field->setNullOption(false);
-            	
             	return $field;
-            	
+
+            case 'IsRequirements':
+                $field = new FieldDictionary( new ReqManagementMode() );
+                $field->setNullOption(false);
+                return $field;
+
             default:
                 return parent::createFieldObject( $attr );
         }
@@ -135,25 +136,20 @@ class MethodologyForm extends PMPageForm
         // convert methodology planning settings into model attributes
         switch ( $_REQUEST['IsReleasesUsed'] )
         {
-            case 'N':
-            	
+            case MethodologyPlanningModeRegistry::None:
             	$_REQUEST['IsPlanningUsed'] = 'N';
             	$_REQUEST['HasMilestones'] = 'N';
-            	
             	break;
             	
-            case 'Y':
-            	
+            case MethodologyPlanningModeRegistry::Releases:
             	$_REQUEST['IsPlanningUsed'] = 'N';
             	$_REQUEST['HasMilestones'] = 'Y';
-            	
             	break;
             	
-            case 'I':
-            	
+            case MethodologyPlanningModeRegistry::Iterations:
+            case MethodologyPlanningModeRegistry::IterationsOnly:
             	$_REQUEST['IsPlanningUsed'] = 'Y';
             	$_REQUEST['HasMilestones'] = 'Y';
-            	
             	break;
         }
         
@@ -166,33 +162,24 @@ class MethodologyForm extends PMPageForm
     	
     	?>
     	<script type="text/javascript">
-	
-			function toggleIterationProps()
-			{
-				var items = ['<?=MethodologyPlanningModeRegistry::Iterations?>','<?=MethodologyPlanningModeRegistry::Releases?>'];
-				
-				if ( $.inArray($('#pm_MethodologyIsReleasesUsed').val(),items) != -1 )
-				{
+			function toggleIterationProps() {
+				var items = ['<?=MethodologyPlanningModeRegistry::Iterations?>','<?=MethodologyPlanningModeRegistry::Releases?>','<?=MethodologyPlanningModeRegistry::IterationsOnly?>'];
+				if ( $.inArray($('#pm_MethodologyIsReleasesUsed').val(),items) != -1 ) {
 					$("#pm_MethodologyIsFixedRelease").parents('.control-group').show();
 					$("#pm_MethodologyReleaseDuration").parents('.control-group').show();
 				} 
-				else
-				{
+				else {
 					$("#pm_MethodologyIsFixedRelease").parents('.control-group').hide();
 					$("#pm_MethodologyReleaseDuration").parents('.control-group').hide();
 				}
 			}
 
-			$('#pm_MethodologyIsReleasesUsed').change( function()
-			{
+			$('#pm_MethodologyIsReleasesUsed').change( function() {
 				toggleIterationProps();
 			});
-			
-			$(document).ready( function()
-			{
+			$(document).ready( function() {
 				toggleIterationProps();
 			});
-    	
 		</script>
     	<?php
     }

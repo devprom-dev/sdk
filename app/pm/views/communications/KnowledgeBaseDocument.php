@@ -28,7 +28,13 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	function getSectionName() {
 		return translate('Страница');
 	}
-	
+
+	function getNewActions()
+	{
+		if ( getSession()->getProjectIt()->IsPortfolio() ) return array();
+		return parent::getNewActions();
+	}
+
 	function getList( $type = '', $iterator = null )
 	{
 	    $list = new KnowledgeBaseDocumentList( $this->getObject(), $iterator );
@@ -44,7 +50,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		
 		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
 		$filters[] = new ViewWikiTagWebMethod( $this->getObject() );
-		$filters[] = new FilterAutoCompleteWebMethod(
+		$filters[] = new FilterObjectMethod(
 				$this->getObject()->getAttributeObject('Author'), 
 				translate($this->getObject()->getAttributeUserName( 'Author' )) 
 			);
@@ -78,14 +84,15 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	function getActions()
 	{
 		$actions = parent::getActions();
-		
-   		$actions[] = array();
-    		
-        $actions[] = array( 
-			'name' => translate('Импортировать'),
-			'url' => '?view=import&mode=xml&object=projectpage'
-		);
-		
+
+		if ( !getSession()->getProjectIt()->IsPortfolio() ) {
+			$actions[] = array();
+			$actions[] = array(
+				'name' => translate('Импортировать'),
+				'url' => '?view=import&mode=xml&object=projectpage'
+			);
+		}
+
 		return $actions;
 	}
 }

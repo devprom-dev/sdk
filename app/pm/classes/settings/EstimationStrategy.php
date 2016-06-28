@@ -73,9 +73,9 @@ abstract class EstimationStrategy
 		return '';
 	}
 	
-	function getDimensionText()
+	function getDimensionText( $text )
 	{
-		return '';
+		return $text;
 	}
 	
 	function hasEstimationValue()

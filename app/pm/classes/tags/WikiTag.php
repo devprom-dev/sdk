@@ -29,7 +29,7 @@ class WikiTag extends Tag
 		return 'WikiPageId';
 	}
 
- 	function getPageNameObject( $object_id )
+ 	function getPageNameObject( $object_id = '' )
  	{
  		return '?state=all&tag='.$object_id;
  	}

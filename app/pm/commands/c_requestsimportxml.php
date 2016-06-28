@@ -29,7 +29,7 @@
 
  	function getLines()
 	{
-		global $_FILES, $model_factory, $project_it;
+		global $_FILES;
 
 		$xml2Array = new xml2Array();
 				
@@ -59,15 +59,14 @@
 								
 								foreach ( $row['children'] as $cell )
 								{
+									$data = $this->sanitizeData($cell['children'][0]['tagData']);
 									if ( $cell['attrs']['SS:INDEX'] > 0 )
 									{
-										$line[$cell['attrs']['SS:INDEX'] - 1] = 
-											$project_it->Utf8ToWin($cell['children'][0]['tagData']);
+										$line[$cell['attrs']['SS:INDEX'] - 1] = $data;
 									}
 									else
 									{
-										array_push( $line, 
-											$project_it->Utf8ToWin($cell['children'][0]['tagData']) );
+										array_push( $line, $data );
 									}
 								}
 

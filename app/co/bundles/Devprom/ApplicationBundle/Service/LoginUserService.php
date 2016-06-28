@@ -25,15 +25,18 @@ class LoginUserService
 		
 		if ( $this->user_it->count() < 1 )
 		{
-			// check if this is an attack on password 
 		    $this->user_it = $cls_user->getByRefArray(
 				array( 'LCASE(Login)' => strtolower(trim($login)) ) 
 				);
-				
+
 			if ( $this->user_it->count() > 0 )
 			{
+				$result = $this->validateUser($this->user_it);
+				if ( $result > 0 ) return $result;
+
 				if ( $this->user_it->get('Password') == '' ) return 5;
 
+				// check if this is an attack on password
 				$retry = new \Metaobject('cms_LoginRetry');
 				$retry_it = $retry->getByRef('SystemUser', $this->user_it->getId());
 				
@@ -69,16 +72,25 @@ class LoginUserService
 					$retry->add_parms( array('SystemUser' => $this->user_it->getId()) );
 				}
 			}
+			else {
+				$user_it = $cls_user->getByRefArray(
+					array(
+						'LCASE(Email)' => strtolower(trim($login)),
+						'Password' => $password_hash
+					)
+				);
+				if ( $user_it->count() > 0 ) {
+					return 6;
+				}
+			}
 				
 			return 2;
 		}
 		else
 		{
-			if ( $this->user_it->IsBlocked() )
-			{
-				return 4;
-			}
-			
+			$result = $this->validateUser($this->user_it);
+			if ( $result > 0 ) return $result;
+
 			$retry = new \Metaobject('cms_LoginRetry');
 			$retry_it = $retry->getByRef('SystemUser', $this->user_it->getId());
 			
@@ -98,7 +110,14 @@ class LoginUserService
 
  		return 0;
  	}
- 	
+
+	function validateUser( $user_it ) {
+		if ( !is_object($user_it) ) return 2;
+		if ( $user_it->getId() < 1 ) return 2;
+		if ( $user_it->IsBlocked() ) return 4;
+		return 0;
+	}
+
  	function getUserIt()
  	{
  		return $this->user_it;
@@ -126,6 +145,9 @@ class LoginUserService
             case 5:
                 return text(2048);
 
+			case 6:
+				return text(2156);
+
 			default:
 				return $result;
 		}
@@ -144,7 +166,6 @@ class LoginUserService
 
    		$mail = new \Mailbox;
    		$mail->appendAddress($user_it->get('Email'));
-   		$mail->appendAddress($settings_it->getHtmlDecoded('AdminEmail'));
    		$mail->setBody($body);
    		$mail->setSubject( text(227) );
    		$mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));

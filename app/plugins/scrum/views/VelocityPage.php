@@ -1,33 +1,24 @@
 <?php
-
 include "VelocityTable.php";
+include SERVER_ROOT_PATH . "plugins/scrum/classes/ReleaseModelVelocityBuilder.php";
+include SERVER_ROOT_PATH . "plugins/scrum/classes/IterationModelVelocityBuilder.php";
 
 class VelocityPage extends PMPage
 {
- 	function __construct()
- 	{
+ 	function __construct() {
  		parent::__construct();
  	}
  	
 	function getObject()
 	{
-	    global $model_factory;
-	    
-	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-	    
-	    if ( $methodology_it->HasPlanning() )
-	    {
-	        getSession()->addBuilder( new IterationMetadataVelocityBuilder() );
-	        
-	        $object = $model_factory->getObject('Iteration');
+	    if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() ) {
+	        getSession()->addBuilder( new IterationModelVelocityBuilder() );
+	        $object = getFactory()->getObject('Iteration');
 	    }
-	    else 
-	    {
-	        getSession()->addBuilder( new ReleaseMetadataVelocityBuilder() );
-	        
-	        $object = $model_factory->getObject('Release');
+	    else {
+	        getSession()->addBuilder( new ReleaseModelVelocityBuilder() );
+	        $object = getFactory()->getObject('Release');
 	    }
- 		
  		return $object;
 	}
 	

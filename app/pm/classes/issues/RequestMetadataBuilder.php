@@ -4,8 +4,8 @@ include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 
 include_once "persisters/RequestTagsPersister.php";
 include_once "persisters/RequestTasksPersister.php";
-include_once "persisters/RequestOwnerPersister.php";
 include_once "persisters/RequestDetailsPersister.php";
+include_once "persisters/RequestOwnerPersister.php";
 include "persisters/RequestTypePersister.php";
 
 class RequestMetadataBuilder extends ObjectMetadataEntityBuilder 
@@ -15,6 +15,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_ChangeRequest' ) return;
 
 		$metadata->addPersister( new WatchersPersister(array('Watchers')) );
+		$metadata->addPersister( new RequestOwnerPersister() );
 
 		$metadata->addAttributeGroup('Customer', 'system');
     	$metadata->setAttributeType('Author', 'REF_IssueAuthorId');
@@ -51,17 +52,18 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeOrderNum( 'PlannedRelease', 75 );
 
 		$metadata->setAttributeVisible( 'Owner', true );
-		$metadata->addPersister( new RequestOwnerPersister(array('Owner')) );
 
 	    if ( $methodology_it->HasTasks() ) {
 			$metadata->addAttribute( 'Tasks', 'REF_pm_TaskId', translate('Задачи'), true, false, text(2010), 200);
 		    $metadata->addAttributeGroup('Tasks', 'transition');
-
-			$metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', translate('Незавершенные задачи'), false, false, '', 210);
-		    $metadata->addAttributeGroup('OpenTasks', 'trace');
-			$metadata->addPersister( new RequestTasksPersister(array('OpenTasks')) );
-
 			$metadata->addAttributeGroup('Owner', 'additional');
+		}
+
+		$metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', text(2117), false, false, '', 210);
+		$metadata->addAttributeGroup('OpenTasks', 'skip-network');
+		$metadata->addPersister( new RequestTasksPersister(array('OpenTasks')) );
+		if ( !$methodology_it->HasTasks() ) {
+			$metadata->addAttributeGroup('OpenTasks', 'system');
 		}
 
 		if ( $methodology_it->HasPlanning() ) {
@@ -76,14 +78,12 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 	    $metadata->setAttributeCaption('SubmittedVersion', text(1335));
 	    $metadata->setAttributeCaption('ClosedInVersion', text(1334));
 	    $metadata->setAttributeVisible('ClosedInVersion', true);
-		$metadata->addAttributeGroup('ClosedInVersion', 'tooltip');
-		
+		foreach( array('ClosedInVersion','SubmittedVersion') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'bulk');
+		}
+
 		$metadata->setAttributeType( 'Description', 'wysiwyg' );
 		$metadata->setAttributeType( 'Function', 'REF_FeatureId' );
-
-		foreach( array('Function','ClosedInVersion','Author','Fact') as $attribute ) {
-			$metadata->addAttributeGroup($attribute, 'additional');
-		}
 
 		$strategy = $methodology_it->getEstimationStrategy();
 		
@@ -154,6 +154,12 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeOrderNum('Author', $index+20);
 		$this->removeAttributes( $metadata, $methodology_it );
 
+		foreach( array('Function','ClosedInVersion','Author','Fact') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'additional');
+		}
+		foreach ( array('Caption','Description','Priority','Tags','Type','Project','ClosedInVersion','Owner','Links','Attachments','Author') as $attribute ) {
+			$metadata->addAttributeGroup($attribute, 'tooltip');
+		}
 		foreach ( array('Caption','Description','Estimation','EstimationLeft','Attachment') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'nonbulk');
 		}

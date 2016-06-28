@@ -7,6 +7,7 @@ class RequestComment extends Comment
         parent::__construct(new RequestCommentRegistry($this));
         $this->setAttributeType('ObjectId', 'REF_RequestId');
         $this->setAttributeGroups('ObjectId', array());
+        $this->setAttributeRequired('AuthorId', false);
     }
 
     function getDefaultAttributeValue($name) {

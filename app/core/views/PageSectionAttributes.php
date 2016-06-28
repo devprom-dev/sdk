@@ -36,15 +36,4 @@ class PageSectionAttributes extends InfoSection
         }
         return $attributes;
     }
-
-    function getFields() {
-        $attributes = array();
-        foreach( $this->referenceName as $referenceName ) {
-            foreach( $this->object->getAttributesByGroup($referenceName) as $attribute ) {
-                if ( $this->object->IsAttributeRequired($attribute) ) continue;
-                $attributes[] = $this->object->getEntityRefName().$attribute;
-            };
-        }
-        return $attributes;
-    }
 }

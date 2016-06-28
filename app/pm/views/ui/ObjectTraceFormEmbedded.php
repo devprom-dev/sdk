@@ -72,10 +72,7 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  	
 	function getAttributeObject( $name )
 	{
-		global $model_factory;
-		
-		if ( $name == 'ObjectId' ) 
-		{
+		if ( $name == 'ObjectId' ) {
 			return $this->trace_object;
 		}
 		
@@ -102,6 +99,7 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  			    }
  			    else {
 					$field = new FieldAutoCompleteObject($object);
+					$field->setAdditionalAttributes($object->getAttributesByGroup('search'));
  			    }
 				$field->setTitle( $object->getDisplayName() );
 				return $field;
@@ -118,7 +116,25 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  	
  	function getActions( $object_it, $item )
  	{
+		$actions = array();
  	    $anchor_it = $this->getTargetIt($object_it);
+
+		$method = new ObjectModifyWebMethod($anchor_it);
+		$actions[] = array (
+			'name' => translate('Открыть'),
+			'url' => $method->getJSCall(),
+			'uid' => 'open-form'
+		);
+
+		if ( $anchor_it->object instanceof SubversionRevision ) {
+			$plugin_actions = array();
+			foreach( PluginsFactory::Instance()->getPluginsForSection(getSession()->getSite()) as $plugin ) {
+				$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $anchor_it ));
+			}
+			if ( count($plugin_actions) > 0 ) {
+				$actions = array_merge( $actions, array(array()), $plugin_actions );
+			}
+		}
 
 		$url = $anchor_it->getViewUrl();
 		if ( $object_it->get('Baseline') != '' ) {
@@ -126,13 +142,18 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
 					? '&baseline='.$object_it->get('Baseline')
 					: '?baseline='.$object_it->get('Baseline');
 		}
- 	    $actions = array(
-			array (
-				'name' => translate('Перейти'),
-				'url' => $url
-	 	    ),
-			array()
+		$actions[] = array();
+ 	    $actions[] = array (
+			'name' => $anchor_it->object instanceof WikiPage ? text(2163) : translate('Перейти'),
+			'url' => $url,
+			'uid' => 'show-in-document'
 		);
+		$actions[] = array();
+
  	    return array_merge($actions, parent::getActions( $object_it, $item ));
- 	} 	
+ 	}
+
+	function getListItemsAttribute() {
+		return 'ObjectId';
+	}
 }

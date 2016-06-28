@@ -11,8 +11,10 @@ class EmailNotificatorHandler
 	
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient )
 	{
+		$project = $object_it->get('ProjectCodeName');
+		if ( $project == '' ) $project = getSession()->getProjectIt()->get('CodeName');
 		$uid = new ObjectUid;
-		return $object_it->object->getDisplayName().' {'.getSession()->getProjectIt()->get('CodeName').'} ['.$uid->getObjectUid($object_it).']';
+		return $object_it->object->getDisplayName().' {'.$project.'} ['.$uid->getObjectUid($object_it).']';
 	}
 	
 	function getParticipants( $object_it, $prev_object_it, $action ) 
@@ -206,8 +208,6 @@ class EmailNotificatorHandler
 					case 'Version':
 					case 'Platform': 
 					case 'Tools':
-					case 'MainWikiPage':
-					case 'RequirementsWikiPage':
 					case 'Blog':
 					case 'IsConfigurations':
 					case 'Rating':

@@ -105,9 +105,6 @@ class CheckpointEntryBase
 
     function checkWindows()
     {
-        global $_SERVER;
-
-        return strpos($_SERVER['OS'], 'Windows') !== false
-            || $_SERVER['WINDIR'] != ''  || $_SERVER['windir'] != '';
+        return EnvironmentSettings::getWindows();
     }
 }

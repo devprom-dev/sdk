@@ -57,9 +57,9 @@ class StageRegistry extends ObjectRegistrySQL
 
 		$sql .= 			   
 		   "  UNION ".
-		   " SELECT concat(LPAD(v.Caption,8,'0'), '.', LPAD(r.ReleaseNumber,8,'0')), " .
-		   "		concat(v.Caption, '.', r.ReleaseNumber), " .
-           "		CONCAT('".translate('Итерация')." ',v.Caption,'.',r.ReleaseNumber), ".
+		   " SELECT IF(v.Caption IS NULL, LPAD(r.ReleaseNumber,8,'0'), concat(LPAD(v.Caption,8,'0'), '.', LPAD(r.ReleaseNumber,8,'0'))), " .
+		   "		IF(v.Caption IS NULL, r.ReleaseNumber, concat(v.Caption, '.', r.ReleaseNumber)), " .
+           "		IF(v.Caption IS NULL, CONCAT('".translate('Итерация')." ',r.ReleaseNumber), CONCAT('".translate('Итерация')." ',v.Caption,'.',r.ReleaseNumber)), ".
 		   "		r.pm_ReleaseId, " .
 		   "		r.Version, " .
 		   "		r.pm_ReleaseId, '', " .
@@ -87,8 +87,7 @@ class StageRegistry extends ObjectRegistrySQL
     	   "		r.RecordCreated, ".
     	   "		r.RecordModified, ".
     	   "		UNIX_TIMESTAMP(v.RecordModified) * 100000 AffectedDate ".
-    	   "   FROM pm_Version v, ".
-		   "        (SELECT r.*, ".
+    	   "   FROM (SELECT r.*, ".
  		   "		        IFNULL((SELECT m.MetricValueDate FROM pm_IterationMetric m " .
  		   "		  			     WHERE m.Iteration = r.pm_ReleaseId " .
  		   "						   AND m.Metric = 'EstimatedStart'), r.StartDate) EstimatedStartDate, " .
@@ -97,7 +96,7 @@ class StageRegistry extends ObjectRegistrySQL
  		   "						   AND m.Metric = 'EstimatedFinish'), r.FinishDate) EstimatedFinishDate" .
  		   "           FROM pm_Release r ".
 		   "		  WHERE 1 = 1 ".$iteration->getVpdPredicate('r').") r ".
-		   "  WHERE v.pm_VersionId = r.Version ";
+		   "		   	LEFT OUTER JOIN pm_Version v ON v.pm_VersionId = r.Version ";
  	    
  	    return "(".$sql.")";
  	}

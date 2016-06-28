@@ -9,54 +9,24 @@ include_once "persisters/RequestIterationDatesPersister.php";
 include_once "persisters/RequestPhotosPersister.php";
 include_once "persisters/RequestEstimatesPersister.php";
 include_once "persisters/RequestDueDatesPersister.php";
+include_once "persisters/RequestFeaturePersister.php";
 
 class RequestModelPageTableBuilder extends ObjectModelBuilder 
 {
     public function build( Metaobject $object )
     {
     	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
-    	
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
 		$object->addPersister( new RequestPhotosPersister() );
 		$object->addPersister( new AttachmentsPersister(array('Attachment')) );
-		
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 	    
-    	if ( $methodology_it->HasReleases() )
-    	{
-    		$object->addAttribute('ReleaseStartDate', 'DATE', translate('Релиз').': '.translate('Начало'), false);
-    		$object->addAttribute('ReleaseFinishDate', 'DATE', translate('Релиз').': '.translate('Окончание'), false);
-    		$object->addAttribute('ReleaseEstimatedStart', 'DATE', translate('Релиз').': '.translate('Оценка начала'), false);
-    		$object->addAttribute('ReleaseEstimatedFinish', 'DATE', translate('Релиз').': '.translate('Оценка окончания'), false);
 
-    		$attributes = array('ReleaseStartDate', 'ReleaseFinishDate', 'ReleaseEstimatedStart', 'ReleaseEstimatedFinish');
-			$object->addPersister( new RequestReleaseDatesPersister($attributes) );
-
-    	    foreach ( $attributes as $attribute ) {
-        		$object->addAttributeGroup($attribute, 'dates');
-        	}
-    	}
-    	
-        if ( $methodology_it->HasPlanning() )
-    	{
- 	        $object->addAttribute('IterationStartDate', 'DATE', translate('Итерация').': '.translate('Начало'), false);
-    		$object->addAttribute('IterationFinishDate', 'DATE', translate('Итерация').': '.translate('Окончание'), false);
-    		$object->addAttribute('IterationEstimatedStart', 'DATE', translate('Итерация').': '.translate('Оценка начала'), false);
-    		$object->addAttribute('IterationEstimatedFinish', 'DATE', translate('Итерация').': '.translate('Оценка окончания'), false);
-
-    		$attributes = array('IterationStartDate', 'IterationFinishDate', 'IterationEstimatedStart', 'IterationEstimatedFinish');
-			$object->addPersister( new RequestIterationDatesPersister($attributes) );
-
-    	    foreach ( $attributes as $attribute ) {
-        		$object->addAttributeGroup($attribute, 'dates');
-        	}
-    	}
-    	
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
 		
 		$comment = getFactory()->getObject('Comment');
 		$object->addPersister( new CommentRecentPersister(array('RecentComment')) );
 
-		if ( $methodology_it->HasTasks() && $object->getAttributeType('Fact') != '' ) {
+		if ( $methodology_it->HasTasks() ) {
 			$object->addAttribute('TasksPlanned', 'FLOAT', text(1934), false);
 			$object->addPersister( new RequestEstimatesPersister(array('TasksPlanned')) );
 		}
@@ -75,5 +45,13 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
     	{
     		$object->addAttributeGroup($attribute, 'dates');
     	}
-    }
+
+		$object->addAttribute('Features', 'REF_FeatureId', text(2153), false);
+		$object->addAttributeGroup('Features', 'trace');
+		$object->addPersister( new RequestFeaturePersister(array()) );
+
+		if ( class_exists('UserGroup') ) {
+			$object->addAttribute('UserGroup', 'REF_UserGroupId', text('user.group.name'), false);
+		}
+	}
 }

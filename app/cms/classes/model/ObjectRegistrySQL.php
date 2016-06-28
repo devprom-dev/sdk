@@ -28,7 +28,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$this->persisters = $persisters;
 	}
 	
-	public function & getPersisters()
+	public function getPersisters()
 	{
 		return $this->persisters;
 	}
@@ -163,18 +163,15 @@ class ObjectRegistrySQL extends ObjectRegistry
 		
 		$r2 = DAL::Instance()->Query($sql_query);
 
-   		if ( is_resource($r2) )
+   		if ( $r2 !== false )
    		{
    			$model_factory->info('Query: Ok');
-    		
     		$iterator = $this->createIterator( $r2 );
-
     		$model_factory->cacheIterator( $class_name, $sql_query, $iterator );
    		}
    		else
    		{
    			$model_factory->info('Query: Failed');
-   			
    			$iterator = $this->createIterator( array() );
    		}
 		
@@ -284,6 +281,10 @@ class ObjectRegistrySQL extends ObjectRegistry
 			$persister->map( $data );
 		}
 
+		if ( $data['RecordModified'] == '' ) {
+			$data['RecordModified'] = SystemDateTime::date();
+		}
+
 		$pre_sql = "UPDATE ".$object->getEntityRefName()." SET RecordModified = ".
 		   ($data['RecordModified'] != '' ? "'".DAL::Instance()->Escape($data['RecordModified'])."'" : "NOW()").", ";
 
@@ -351,15 +352,14 @@ class ObjectRegistrySQL extends ObjectRegistry
 		}
 		else
 		{
-			$model_factory->error( 'SQL query to update attributes is empty: '.$pre_sql );
+			$model_factory->debug( 'SQL query to update attributes is empty: '.$pre_sql );
 		}
-		
+
 		foreach ( $this->persisters as $persister ) {
 			$persister->modify( $object_it->getId(), $data );
-		}		
-		
+		}
 		$model_factory->resetCachedIterator($object);
-		
+
 		return 1;
 	}
 	

@@ -34,7 +34,7 @@ class FieldWikiTrace extends FieldForm
 				is_object($this->object_it) ? $this->object_it->getId() : 0 ) );
  	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();

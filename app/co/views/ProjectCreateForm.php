@@ -1,8 +1,8 @@
 <?php
+include "fields/FieldProjectTemplateDictionary.php";
 
- ////////////////////////////////////////////////////////////////////////////////
- class CreateProjectForm extends AjaxForm
- {
+class CreateProjectForm extends AjaxForm
+{
  	var $question_it;
  	
  	function CreateProjectForm ( $object )
@@ -36,7 +36,7 @@
  	
 	function getAttributes()
 	{
-		return array ( 'Caption', 'CodeName', 'Template', 'Participants', 'DemoData' );
+		return array ( 'Caption', 'CodeName', 'Template', 'Participants', 'DemoData', 'System' );
 	}
 	
 	function getAttributeType( $attribute )
@@ -52,27 +52,8 @@
 				return 'char';
 
 			case 'Template':
-				return 'object';
-		}
-	}
-
-	function getAttributeClass( $attribute )
-	{
-		switch ( $attribute )
-		{
-			case 'Template':
-				$template = getFactory()->getObject('pm_ProjectTemplate');
-				
-				$template->addFilter( new FilterAttributePredicate('Language', getSession()->getLanguage()->getLanguageId()) );
-				
-				$template->setSortDefault(
-		 				array (
-		 						new SortAttributeClause('Kind.D'),
-		 						new SortAttributeClause('OrderNum')	
-		 				)
-	 			);
-						
-				return $template;
+			case 'System':
+				return 'custom';
 		}
 	}
 
@@ -118,8 +99,6 @@
 	
 	function getName( $attribute )
 	{
-		global $model_factory;
-		
 		switch ( $attribute )
 		{
 			case 'CodeName':
@@ -160,4 +139,31 @@
 				return text(1865);
  		}
  	}
- }
+
+	 function drawCustomAttribute( $attribute, $value, $tab_index )
+	 {
+		 switch ( $attribute )
+		 {
+			 case 'Template':
+				 $field = new FieldProjectTemplateDictionary();
+				 $field->SetId($attribute);
+				 $field->SetName($attribute);
+				 $field->SetValue($value);
+				 $field->SetTabIndex($tab_index);
+				 $field->SetRequired(true);
+
+				 echo $this->getName($attribute);
+				 $field->draw();
+				 break;
+
+			 case 'System':
+				 if ( is_numeric($_REQUEST['portfolio']) ) {
+					 echo '<input type="hidden" name="portfolio" value="'.$_REQUEST['portfolio'].'">';
+				 }
+				 break;
+
+			 default:
+				 parent::drawCustomAttribute( $attribute, $value, $tab_index );
+		 }
+	 }
+}

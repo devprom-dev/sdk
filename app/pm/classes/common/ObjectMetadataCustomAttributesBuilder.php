@@ -1,8 +1,6 @@
 <?php
 
 define( 'ORIGIN_CUSTOM', 'custom' );
-
-include "PMCustomDictionary.php";
 include "persisters/CustomAttributesPersister.php";
 
 class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder 
@@ -11,7 +9,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 
 	public function __construct()
 	{
-		$result = mysql_fetch_array(DAL::Instance()->Query("SELECT GROUP_CONCAT(DISTINCT EntityReferenceName) Classes FROM pm_CustomAttribute"));
+		$result = DAL::Instance()->QueryArray("SELECT GROUP_CONCAT(DISTINCT EntityReferenceName) Classes FROM pm_CustomAttribute");
 		$this->classes = preg_split('/,/',$result[0]);
 	}
 
@@ -26,16 +24,26 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		$attr_it = $attr->getByEntity($object);
 		
 		$attributes = array();
-		
+		$firstTabAttributes = array();
     	while( !$attr_it->end() )
 		{
+			if ( $attr_it->get('ReferenceName') == 'UID' ) {
+				$attr_it->moveNext();
+				continue;
+			}
+
 			$groups = array('permissions');
-			
-			$db_type = $attr_it->getRef('AttributeType')->getDbType();
-			
-			if ( $db_type == 'reference' )
-			{
+			$description = $attr_it->get('Description');
+
+			$type_it = $attr_it->getRef('AttributeType');
+			$db_type = $type_it->getDbType();
+			if ( $db_type == 'reference' ) {
 				$db_type = "REF_".$attr_it->get('AttributeTypeClassName')."Id";
+			}
+
+			if ( $type_it->get('ReferenceName') == 'dictionary' ) {
+				$url = getSession()->getApplicationUrl($attr_it).'project/dicts/PMCustomAttribute'.$attr_it->getEditUrl();
+				$description .= ' '.str_replace('%1', $url, text(2183));
 			}
 			
 			$attributes[$attr_it->get('ReferenceName')] = array(
@@ -44,14 +52,16 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 				'visible' => $attr_it->get('IsVisible') == 'Y',
 				'stored' => false,
 				'type' => $db_type,
-				'description' => $attr_it->get('Description'),
+				'description' => $description,
 				'ordernum' => $attr_it->get('OrderNum'),
 				'origin' => ORIGIN_CUSTOM,
 				'default' => $attr_it->get('ObjectKind') == '' ? $attr_it->getHtmlDecoded('DefaultValue') : '',
 				'required' => $attr_it->get('ObjectKind') == '' ? $attr_it->get('IsRequired') == 'Y' : false,
 				'groups' => $groups 
 			);
-			
+			if ( $attr_it->get('ShowMainTab') == 'Y' ) {
+				$firstTabAttributes[] = $attr_it->get('ReferenceName');
+			}
 			$attr_it->moveNext();
 		}
 		
@@ -65,7 +75,10 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		foreach( $attributes as $key => $attribute )
 		{
 			$metadata->setAttribute( $key, $attribute );
-			$metadata->addAttributeGroup($key, 'additional');
+			if ( !in_array($key, $firstTabAttributes) ) {
+				$metadata->addAttributeGroup($key, 'additional');
+			}
+			$metadata->addAttributeGroup($key, 'bulk');
 		}
 		
 		$metadata->addPersister( new CustomAttributesPersister() );

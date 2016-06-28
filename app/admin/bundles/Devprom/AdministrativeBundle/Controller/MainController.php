@@ -13,7 +13,7 @@ class MainController extends BaseController
     public function indexAction(Request $request)
     {
     	// check if an update is installing then skip controlling of deployment state
-    	if ( preg_match('/backup|update|command|accountclient/i', $request->getBaseUrl()) ) return;
+    	if ( preg_match('/blacklist|users|backup|update|command|accountclient/i', $request->getBaseUrl()) ) return;
 
     	$state = getFactory()->getObject('DeploymentState');
     	

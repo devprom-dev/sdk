@@ -1,4 +1,12 @@
 [{
+  "Release": {
+    "url": "/rest/api/latest/version",
+    "link": "/projects/{project}/versions/{id}",
+    "Caption": "name",
+    "Description": "description",
+    "StartDate": "startDate",
+    "FinishDate": "releaseDate"
+  },
   "Request": {
     "url": "/rest/api/latest/issue",
     "link": "/browse/{id}",
@@ -17,11 +25,8 @@
       "readonly": "true"
     },
     "SubmittedVersion": "fields.versions:first.name",
-    "ClosedInVersion": "fields.fixVersions:first.name",
     "PlannedRelease": {
-      "reference": "fields.fixVersions:first",
-      "type": "Release",
-      "readonly": "true"
+      "Caption": "fields.fixVersions:first.name"
     },
     "comments": {
       "reference":"fields.comment.comments",
@@ -47,7 +52,7 @@
   "RequestComment": {
     "url": "/rest/api/latest/issue/{parent}/comment",
     "link": "/browse/{parentId}?focusedCommentId={id}&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-{id}",
-    "AuthorId": {"Email":"author.emailAddress"},
+    "AuthorId": {"Email":"author.emailAddress","Caption":"author.displayName"},
     "ObjectId": "{parentId}",
     "Caption": "body"
   },
@@ -98,6 +103,11 @@
       "mapping": [{"submitted":"Backlog"},{"analysis":"Selected for Development"},{"development":"In Progress"},{"resolved":"Done"}],
       "readonly": "true"
     },
+    "comments": {
+      "reference":"fields.comment.comments",
+      "type":"TaskComment",
+      "readonly": "true"
+    },
     "worklog": {
       "reference":"fields.worklog.worklogs",
       "type":"ActivityTask",
@@ -113,12 +123,11 @@
     "Capacity": "timeSpentSeconds",
     "ReportDate": "started"
   },
-  "Release": {
-    "url": "/rest/api/latest/version",
-    "link": "/projects/{project}/versions/{id}",
-    "Caption": "name",
-    "Description": "description",
-    "StartDate": "startDate",
-    "FinishDate": "releaseDate"
+  "TaskComment": {
+    "url": "/rest/api/latest/issue/{parent}/comment",
+    "link": "/browse/{parentId}?focusedCommentId={id}&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-{id}",
+    "AuthorId": {"Email":"author.emailAddress","Caption":"author.displayName"},
+    "ObjectId": "{parentId}",
+    "Caption": "body"
   }
 }]

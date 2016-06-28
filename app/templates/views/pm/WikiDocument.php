@@ -28,7 +28,8 @@ if ( !$tableonly )
         	'object_id' => $object_id,
         	'object_class' => $object_class,
         	'save_settings_alert' => $save_settings_alert,
-            'sections' => array(new FullScreenSection())
+            'sections' => array(new FullScreenSection()),
+            'placeholderClass' => ''
         ));
         if ( $document_hint != '' )
         {

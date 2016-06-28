@@ -7,15 +7,16 @@ class ModelValidatorParentPage extends ModelValidatorInstance
 	public function validate( Metaobject $object, array & $parms )
 	{
 		if ( is_numeric($parms['ParentPage']) ) return "";
-		
-		$parms['ParentPage'] = $object->add_parms(
+		if ( trim($parms['ParentPage']) != '' ) {
+			$parms['ParentPage'] = $object->add_parms(
 				array (
-						'Caption' => $parms['ParentPage'],
-						'IsTemplate' => 0,
-						'OrderNum' => 1
+					'Caption' => $parms['ParentPage'],
+					'IsTemplate' => 0,
+					'OrderNum' => 1
 				)
-		);
-		
+			);
+		}
+
 		return "";
 	}
 }

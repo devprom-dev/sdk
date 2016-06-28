@@ -5,6 +5,7 @@ include_once SERVER_ROOT_PATH."pm/classes/product/validation/ModelValidatorChild
 include_once SERVER_ROOT_PATH."pm/views/product/FieldFunctionTrace.php";
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 include "FieldFeatureTagTrace.php";
+include "FieldFeatureIssues.php";
 
 class FunctionForm extends PMPageForm
 {
@@ -195,7 +196,7 @@ class FunctionForm extends PMPageForm
 				return parent::getFieldValue( $attribute );
 			case 'Description':
 				if ( $this->request_it->getId() > 0 ) {
-					return strip_tags($this->request_it->getHtmlDecoded($attribute));
+					return $this->request_it->getHtmlDecoded($attribute);
 				}
 				return parent::getFieldValue( $attribute );
 			default:
@@ -213,22 +214,30 @@ class FunctionForm extends PMPageForm
 				return new FieldFunctionTrace( $this->object_it, 
 					$model_factory->getObject('FunctionTraceRequirement') );
 
-			case 'Description':
-				$field = parent::createFieldObject( $name );
-				$field->setRows( 8 );
-				return $field;
-		
 			case 'Tags':
 			    return new FieldFeatureTagTrace( 
 			        is_object($this->object_it) ? $this->object_it : null 
 			    );
-			    
+
+			case 'Request':
+				return new FieldFeatureIssues(is_object($this->object_it) ? $this->object_it : null);
+
 			case 'ParentFeature':
 				return new FieldHierarchySelector($this->getObject());
-			    
+
 			default:
 				return parent::createFieldObject( $name );
 		}
+	}
+
+	function IsAttributeEditable( $attr )
+	{
+		switch ( $attr )
+		{
+			case 'Description':
+				return $this->getEditMode();
+		}
+		return parent::IsAttributeEditable($attr);
 	}
 
 	function process()

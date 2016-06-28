@@ -11,9 +11,7 @@ class FieldBlogPostTagTrace extends FieldTagTrace
 
     function getTagObject()
     {
-        global $model_factory;
-
-        $tag = $model_factory->getObject('BlogPostTag');
+        $tag = getFactory()->getObject('BlogPostTag');
         
         $anchor_it = $this->getAnchorIt();
         	

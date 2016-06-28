@@ -1,9 +1,9 @@
 <?php
-
 include_once "classes/notificators/WrtfCKEditorChangeNotificator.php";
 include_once "classes/WikiRtfCKEditor.php";
 include_once "classes/ScriptWrtfCKEditorBuilder.php";
 include_once "classes/StylesheetWrtfCKEditorBuilder.php";
+include_once "model/WysiwygMetadataBuilder.php";
 
 class WikiRtfCKEditorPMPlugin extends PluginPMBase
 {
@@ -12,10 +12,11 @@ class WikiRtfCKEditorPMPlugin extends PluginPMBase
  	function getBuilders()
  	{
  	    return array (
- 	            new WikiRtfCKEditor(),
- 	    		new ScriptWrtfCKEditorBuilder(getSession()),
- 	    		new StylesheetWrtfCKEditorBuilder(getSession()),
- 	    		new WrtfCKEditorChangeNotificator()
+			new WikiRtfCKEditor(),
+			new ScriptWrtfCKEditorBuilder(getSession()),
+			new StylesheetWrtfCKEditorBuilder(getSession()),
+			new WrtfCKEditorChangeNotificator(),
+			new WysiwygMetadataBuilder()
  	    );
  	}
  	

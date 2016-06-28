@@ -28,16 +28,23 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
 						new FilterInPredicate($ids)
 				)
 		);
+		if ( $project_it->count() < 2 ) return;
 
 		$menus = $set->getAreaMenus( FUNC_AREA_FAVORITES );
 
 		if ( $project_it->count() == count($ids) ) {
-			$menus['quick']['items']['issuesboard'] = $this->report->getExact('kanbanboard')->buildMenuItem();
+			$item = $this->report->getExact('kanbanboard')->buildMenuItem();
+			$item['order'] = 7;
+			$menus['quick']['items']['issuesboard'] = $item;
 		}
 		else {
-			$menus['quick']['items']['kanbanboard'] = $this->report->getExact('kanbanboard')->buildMenuItem();
+			$item = $this->report->getExact('kanbanboard')->buildMenuItem();
+			$item['order'] = 7;
+			$menus['quick']['items']['kanbanboard'] = $item;
 		}
-		$menus['reports']['items'][] = $this->report->getExact('avgleadtime')->buildMenuItem();
+		if ( count($menus['reports']['items']) > 0 ) {
+			$menus['reports']['items'][] = $this->report->getExact('avgleadtime')->buildMenuItem();
+		}
 
 		$set->setAreaMenus(FUNC_AREA_FAVORITES, $menus);
 	}

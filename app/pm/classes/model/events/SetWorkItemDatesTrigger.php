@@ -9,9 +9,9 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 	{
 	    if ( !in_array($object_it->object->getEntityRefName(), array('pm_Task', 'pm_ChangeRequest')) ) return;
 	    if ( !in_array($kind, array(TRIGGER_ACTION_ADD, TRIGGER_ACTION_MODIFY)) ) return;
-	    
+
 	    $this->processStartDate( $object_it, $content );
-	    
+
 	    if ( array_key_exists('State', $content) ) {
 	    		$this->processFinishDate($object_it);
 	    }
@@ -20,24 +20,25 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 	    {
 		    $service = new StoreMetricsService();
 		    $request = new Request();
-		    
-	    	$service->storeIssueMetrics($request->getRegistry()->Query(
-	    			array (
-	    					new FilterInPredicate(array($object_it->getId())),
-	    					new RequestMetricsPersister()
-	    			)
-	    		));
+
+	    	$service->storeIssueMetrics(
+				$request->getRegistry(),
+				array (
+					new FilterInPredicate(array($object_it->getId())),
+					new RequestMetricsPersister()
+				)
+			);
 	    }
 	}
 	
 	function processFinishDate( $object_it )
 	{
-		$value = in_array($object_it->get('State'), $object_it->object->getTerminalStates()) ? 'NOW()' : "NULL"; 
+		$value = in_array($object_it->get('State'), $object_it->object->getTerminalStates()) ? 'NOW()' : "NULL";
 
 	    $table_name = $object_it->object->getEntityRefName();
 	    
 	    $sql = " UPDATE ".$table_name." SET FinishDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId();
-	    
+
 	    DAL::Instance()->Query($sql);
 	}
 
@@ -72,7 +73,7 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 		if ( $value == '' && array_key_exists('State', $content) )
 		{
 			$states = $object_it->object->getNonTerminalStates();
-			
+
 			// submitted
 			if ( $object_it->get('State') == array_shift($states) ) $value = "NULL";
 			

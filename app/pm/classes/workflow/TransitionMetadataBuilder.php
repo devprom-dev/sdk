@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
+include "persisters/TransitionDetailsPersister.php";
 
 class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
@@ -19,5 +20,7 @@ class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		$metadata->addAttribute('ResetFields', 
 			'REF_TransitionResetFieldId', translate('Очищаемые поля'), true);
+
+		$metadata->addPersister(new TransitionDetailsPersister());
     }
 }

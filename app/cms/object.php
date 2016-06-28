@@ -7,8 +7,7 @@
  include('c_entity_view.php');
  include('c_attribute_view.php');
  
- $model_factory =& getModelFactory();
-   $model_factory->enableVpd(false);
+ getFactory()->enableVpd(false);
  
  $entity = $_REQUEST['entity'];
  $class = $_REQUEST['class'];
@@ -26,16 +25,16 @@
  {
  	require_once('c_'.strtolower($aggregateentity).'.php');
 	
- 	$aggregate = $model_factory->getObject($aggregateentity);
+ 	$aggregate = getFactory()->getObject($aggregateentity);
 	
 	$container_it = $aggregate->getExact($aggregate_id);
-	$object = $model_factory->getObject2($class, $container_it);
+	$object = getFactory()->getObject2($class, $container_it);
  }
  elseif (isset($entity)) {
- 	$object = $model_factory->getObject2($class, $entity);
+ 	$object = getFactory()->getObject2($class, $entity);
  }
  else {
- 	$object = $model_factory->getObject($class);
+ 	$object = getFactory()->getObject($class);
  }
  $view = $object->createDefaultView();
  

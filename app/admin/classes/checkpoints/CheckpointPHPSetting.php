@@ -106,7 +106,6 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
     			"file_uploads" => true,
     			"allow_url_fopen" => true,
     			"short_open_tag" => true,
-    			"always_populate_raw_post_data" => true,
     			"log_errors" => true
     	);
     	
@@ -141,7 +140,6 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
    	{
    		return array (
    				"mbstring",
-   				"mysql",
    				"gd",
    				"zip",
    				"zlib",

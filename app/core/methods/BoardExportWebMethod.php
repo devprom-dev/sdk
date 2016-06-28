@@ -8,8 +8,8 @@ class BoardExportWebMethod extends ExportWebMethod
  	{
  		return translate('Печать карточек');
  	}
- 	
- 	function getJSCall( $class )
+
+ 	function url( $class )
  	{
  		return parent::getJSCall(
  			array( 'class' => $class ) );

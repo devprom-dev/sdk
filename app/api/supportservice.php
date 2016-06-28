@@ -55,8 +55,7 @@
     $namespace, $namespace.'.AttachFile', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
- $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
- $server->service($HTTP_RAW_POST_DATA);
+ $server->service(EnvironmentSettings::getRawPostData());
 
 function RaiseIssue( $token, $request_parms )
 {

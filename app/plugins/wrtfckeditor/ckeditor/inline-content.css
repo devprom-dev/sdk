@@ -13,14 +13,12 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 .wysiwyg-text[contenteditable=true]
 {
     position: relative;
-    left: -5px;
-    padding: 5px;
+	padding: 2px 0px 2px 1px;
 }
 
 .wysiwyg-input[contenteditable=true]
 {
-    left: -5px;
-    padding: 2px 5px 2px 5px;
+    padding: 2px 0px 2px 1px;
 }
 
 .wysiwyg-field[contenteditable=true]
@@ -42,10 +40,14 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	margin-bottom: -30px;
 }
 
+.editor-area {
+	padding: 2px;
+}
 .wysiwyg-hover
 {
     position: relative;
 	margin:-2px -2px -2px -2px;
+	padding: 2px;
 	border: 2px solid #f0f0f5;
 }
 
@@ -160,6 +162,9 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 {
 	white-space: pre-wrap; /* CSS 2.1 */
 	word-wrap: break-word; /* IE7 */
+	font-size: inherit;
+	font-family: monospace;
+	font-weight: inherit;
 }
 
 .wysiwyg a[href]
@@ -168,13 +173,10 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	word-break: break-all;
 }
 
-.wysiwyg pre
-{
-    font-size: inherit;
-    font-family: monospace;
-    font-weight: inherit;
-    padding: inherit;
-    color: inherit;
-    border: inherit;
-    background: inherit;
+.sticked .cke_panel {
+	position: fixed !important;
+}
+
+.documentToolbar .cke_shared {
+	border-bottom: none;
 }

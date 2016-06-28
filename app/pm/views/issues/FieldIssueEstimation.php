@@ -23,17 +23,19 @@ class FieldIssueEstimation extends Field
 		$this->object_it = $object_it;
 	}
 
-	function draw($view)
+	function draw( $view = null )
 	{
 		foreach( $this->actions as $key => $action )
 		{
 			$method = $action['method'];
-			$this->actions[$key]['url'] = $method->getJSCall(array(), $this->object_it);
+			$method->setObjectIt($this->object_it);
+			$this->actions[$key]['url'] = $method->getJSCall();
 		}
 
 		echo $view->render('pm/EstimationIcon.php', array (
-				'data' => $this->object_it->get('Estimation') != '' ? $this->object_it->get('Estimation') : '0',
-				'items' => $this->actions
+			'data' => $this->object_it->get('Estimation') != '' ? $this->object_it->get('Estimation') : '0',
+			'items' => $this->actions,
+			'random' => $this->object_it->getId()
 		));
 	}
 

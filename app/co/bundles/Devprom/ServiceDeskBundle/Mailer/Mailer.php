@@ -33,13 +33,14 @@ class Mailer extends TwigSwiftMailer {
         $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
     }
 
-    public function sendIssueUpdatedMessage(Issue $issue, $comment, $changes, $toEmail, $language = 'ru') {
+    public function sendIssueUpdatedMessage(Issue $issue, $comment, $changes, $toEmail, $language = 'ru', $version) {
         $template = 'DevpromServiceDeskBundle:Email:issue_updated.html.twig';
         $context = array(
             'issue' => $issue,
             'changes' => $changes,
             'language' => $language,
-            'comment' => $comment
+            'comment' => $comment,
+            'version' => $version
         );
 
         $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
@@ -51,18 +52,6 @@ class Mailer extends TwigSwiftMailer {
             'issue' => $issue,
             'comment' => $comment,
             'language' => $language
-        );
-
-        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
-    }
-
-    public function sendIssueResolvedMessage(Issue $issue, $comment, $toEmail, $language = 'ru', $version = '') {
-        $template = 'DevpromServiceDeskBundle:Email:issue_resolved.html.twig';
-        $context = array(
-            'issue' => $issue,
-            'comment' => $comment,
-            'language' => $language,
-        	'version' => $version
         );
 
         $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
@@ -92,6 +81,7 @@ class Mailer extends TwigSwiftMailer {
             }
         }
 
+        $supportEmail = $this->normalizeEmailAddress($supportEmail);
         return array(
             $supportEmail => $this->parameters['from_email']['default']['sender_name']
         );
@@ -117,7 +107,7 @@ class Mailer extends TwigSwiftMailer {
         $mail->appendAddress($toEmail);
         $mail->setBody($template->renderBlock('body_html', $context));
         $mail->setSubject($template->renderBlock('subject', $context));
-        $mail->setFrom($this->normalizeEmailAddress($fromEmail), false);
+        $mail->setFrom($fromEmail, false);
         $mail->send();
    }
 

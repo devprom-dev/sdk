@@ -50,7 +50,7 @@
 {
     border-color: #cccccc;
     background-color: white;
-    padding: 6px;
+    padding: 3px 6px 2px 6px;
     margin-bottom: 0;
 }
 
@@ -275,17 +275,18 @@ td.release-cell
 	background-color: #666666;
 }
 
-section.content-internal
-{
+section.content-internal {
     min-height: 550px;
     box-shadow: none;
 }
 
 @media screen 
 {
-	section.content-internal
-	{
+	section.content-internal {
         margin-left: 170px;
+    }
+    section.content-expanded {
+        margin-left: 57px;
     }
 }
 
@@ -333,7 +334,7 @@ input[type=text].datepicker
 
 .title-toolbar
 {
-	margin-left:12px;
+	margin-left:14px;
 }
 
 .title-toolbar .btn-navbar
@@ -497,9 +498,12 @@ div.embeddedRowTitle .transparent-btn
 	.properties-column-30, .properties-column-40 {
 		width: 40%;
 	}	
-	.properties-column-31, .properties-column-41 {
+	.properties-column-31 {
 	    width: 56%;
-	}   
+	}
+    .properties-column-41 {
+        width: 30%;
+    }
     .properties-column-32, .properties-column-42 {
         width: 0;
         display: none !important;
@@ -524,8 +528,7 @@ div.embeddedRowTitle .transparent-btn
         min-width: 240px;
     }
     .properties-column-32, .properties-column-43 {
-        width: 37%;
-    }   
+    }
     .hidden-tv {
         display: block !important;
     }
@@ -536,23 +539,23 @@ div.embeddedRowTitle .transparent-btn
         width: 30%;
     }
     .properties-column-31 {
-        width: 30%;
+        width: 25%;
     }
     .properties-column-32 {
         width: auto;
     }
 	.properties-column-40 {
-        width: 22%;
+        width: 20%;
     }
     .properties-column-41 {
-        width: 20%;
+        width: 12%;
     }
     .properties-column-42 {
         width: auto;
         min-width: 240px;
     }
     .properties-column-43 {
-        width: 30%;
+        width: 35%;
     }   
     .hidden-tv {
         display: none !important;
@@ -618,13 +621,6 @@ div.embeddedRowTitle .btn-group .btn
 	max-width: inherit;
 }
 
-.controls,
-.popover,
-.tab-pane
-{
-	word-break: break-all;
-}
-
 .inside body
 {
     background: none;
@@ -640,8 +636,9 @@ form .actions
 form .breadcrumb
 {
 	margin-top: 0;
-	padding-top: 10px;
+	padding-top: 6px;
 	padding-bottom: 10px;
+    margin-right: 0;
 }
 
 pre
@@ -734,10 +731,10 @@ td .progress
 .ui-dialog-content a.with-tooltip[href]
 {
 	color: #0088cc;
-	text-decoration: underline;
+	text-decoration: none;
 }
 
-.row-fluid [class*="span"] 
+.row-fluid [class*="span"]
 {
     min-height: 1px;
     -webkit-box-sizing: content-box;
@@ -915,8 +912,8 @@ body.fullpage
 	margin: 0;
 }
 
-span.label a.with-tooltip,
-span.label a.with-tooltip:hover
+span.label > a.with-tooltip[href],
+span.label > a.with-tooltip[href]:hover
 {
     color: white;	
 }
@@ -924,6 +921,7 @@ span.label a.with-tooltip:hover
 .tt-field-data
 {
 	max-height: 350px;
+    max-width: 590px;
 	overflow: hidden;
 }
 
@@ -933,8 +931,18 @@ input.search-query {
   width: 121px;
 }
 
-form.form-search {
+ul.vertical-menu form.form-search {
 	padding: 16px 0 10px 5px;
+}
+.btn-toolbar form.form-search {
+    margin-right: 25px;
+}
+.btn-toolbar input#quick-search {
+    padding: 2px 6px;
+    width: 262px;
+}
+.btn-toolbar .form-search button[type=submit] {
+    padding: 2px;
 }
 
 .form-search .btn {
@@ -990,10 +998,6 @@ th.list_header li
 	font-weight: bold;
 }
 
-.board-tasks + .board-tasks {
-    margin-right: 0;
-}
-
 .cke_dialog_contents_body .embeddedRow {
     padding-bottom: 12px !important;
 }
@@ -1034,4 +1038,73 @@ a.btn {
 
 .popover-content {
     word-break: normal;
+}
+
+.table-inner td table td {
+    border-top: inherit;
+}
+
+.well-small .inline {
+    margin: 0;
+}
+.well-traces {
+    margin: 7px 0 2px 0;
+}
+
+.btn-menu span.btn-link {
+    padding: 0;
+    color: #404040;
+    text-decoration: none;
+    outline: none;
+    line-height: 18px;
+    margin-bottom: 2px;
+}
+.btn-menu span.btn-link:hover
+{
+    color: #404040;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    -moz-text-decoration-line: underline;
+    -moz-text-decoration-style: dashed;
+}
+
+
+/**
+ * Progress bars with centered text
+ */
+.progress-text {
+    position: relative;
+}
+.bar-text {
+    z-index: 1;
+    position: absolute;
+}
+.progress-text span {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    color: white;
+    text-align: left;
+    margin-left: 6px;
+    margin-top: 1px;
+    width: 100%;
+}
+.progress-success span {
+    color: #404040;
+}
+
+.title-toolbar .btn-group.quick-btn {
+    margin-left: 30px;
+}
+a#navbar-quick-create i {
+    margin-top: 0px;
+}
+
+.btn-group.dropdown-fixed.last>.dropdown-menu {
+    left: auto;
+
+}
+
+li.dropdown-item-search input {
+    margin: 2px 8px 0 8px;
 }

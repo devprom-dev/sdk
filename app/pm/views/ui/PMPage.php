@@ -6,19 +6,20 @@ use Devprom\ProjectBundle\Service\Model\ModelService;
 include SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
 include SERVER_ROOT_PATH.'core/methods/BoardExportWebMethod.php';
 include SERVER_ROOT_PATH.'core/methods/HtmlExportWebMethod.php';
-
 include_once SERVER_ROOT_PATH.'pm/methods/c_report_methods.php';
 
 include 'PMFormEmbedded.php';
 include 'PMPageForm.php';
 include 'PMPageTable.php';
 include 'PageSectionLifecycle.php';
-include 'PMLastChangesSection.php';
+include "FieldHierarchySelectorAppendable.php";
 include 'FieldCustomDictionary.php';
 include 'FieldWYSIWYG.php';
+include 'NetworkSection.php';
+include_once 'PMLastChangesSection.php';
+include_once "DetailsInfoSection.php";
 include_once 'BulkForm.php';
 
-include_once SERVER_ROOT_PATH . 'pm/classes/common/ObjectModelSharedProjectBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
 include SERVER_ROOT_PATH.'pm/views/versioning/IteratorExportSnapshot.php';
@@ -35,10 +36,7 @@ class PMPage extends Page
     
     function PMPage()
  	{
- 		// extend metadata with the "Project" field for entities shared between projects, it impacts on UI representation
-	    getSession()->addBuilder( new ObjectModelSharedProjectBuilder() );
 	    getSession()->addBuilder( new WorkflowModelBuilder() );
-	    
  		parent::Page();
  	}
  	
@@ -124,7 +122,7 @@ class PMPage extends Page
 		
         if ( $this->getReport() == '' && $this->getModule() != '' )
         {
-			$report_it = $report->getByModule( $module_uid );
+			$report_it = $report->getByModule( $this->getModule() );
                 
             $this->setReport($report_it->getId());
                 
@@ -133,23 +131,96 @@ class PMPage extends Page
 
 		$parms = parent::getFullPageRenderParms();
                 
-	    if ( $this->getReport() != '' )
-        {
+	    if ( $this->getReport() != '' ) {
             $parms['navigation_title'] = $report->getExact( $this->getReport() )->getDisplayName();
         }
-	    
-		return array_merge( $parms, 
-				array (
-					'caption_template' => 'pm/PageTitle.php',
-				    'project_code' => getSession()->getProjectIt()->get('CodeName'),
-					'project_template' => getSession()->getProjectIt()->get('Tools'),
-					'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
-					'menus' => $this->getTopMenus(),
-					'report' => $this->getReportBase()
+
+		$bodyExpanded = $_COOKIE['menu-state'] == '' && defined('MENU_STATE_DEFAULT')
+							? MENU_STATE_DEFAULT == 'minimized' : ($_COOKIE['menu-state'] == 'minimized');
+
+		if ( $bodyExpanded ) {
+			$isPortfolio = getSession()->getProjectIt()->IsPortfolio();
+			if ( is_array($parms['areas']['stg']) ) {
+				$parms['areas']['stg']['menus']['']['items'] =
+					array (
+						array (
+							'name' => text(2197),
+							'url' => getSession()->getApplicationUrl().'settings'
+						)
+					);
+			}
+			$parms['areas']['more'] = array (
+				'name' => translate('Дополнительно'),
+				'menus' => array (
+					array (
+						'name' => '',
+						'items' => array (
+							($isPortfolio ?
+								array (
+									'name' => text(1292),
+									'url' => getSession()->getApplicationUrl().'profile'
+								) : array()),
+							array (
+								'name' => text(2194),
+								'url' => getSession()->getApplicationUrl().'project/reports'
+							)
+						)
+					)
 				)
+			);
+		}
+
+		return array_merge( $parms, 
+			array (
+				'caption_template' => 'pm/PageTitle.php',
+				'project_code' => getSession()->getProjectIt()->get('CodeName'),
+				'project_template' => getSession()->getProjectIt()->get('Tools'),
+				'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
+				'report' => $this->getReportBase(),
+				'details' => $this->getDetails(),
+				'details_parms' => $this->getDetailsParms(),
+				'widget_id' => $this->getReport() != '' ? $this->getReport() : $parms['module'],
+				'bodyExpanded' => $bodyExpanded,
+				'search_url' => getSession()->getApplicationUrl().'search.php',
+				'quickMenu' => array (
+					'class' => 'header_popup',
+					'button_class' => 'btn-warning',
+					'icon' => 'icon-plus icon-white',
+					'items' => $this->getQuickActions(),
+					'id' => 'navbar-quick-create'
+				)
+			)
 		);
 	}
- 	
+
+	function getDetailsParms() {
+		return array (
+			'visible' => false,
+			'active' => 'props'
+		);
+	}
+
+	function getDetails()
+	{
+		return array(
+			'props' => array (
+				'image' => 'icon-zoom-in',
+				'title' => text(2167),
+				'url' => getSession()->getApplicationUrl().'tooltip/'.get_class($this->getObject()).'/%id%?extended'
+			),
+			'discussions' => array (
+				'image' => 'icon-comment',
+				'title' => text(980),
+				'url' => getSession()->getApplicationUrl().'details/log?action=commented&tableonly=true'
+			),
+			'more' => array (
+				'image' => 'icon-time',
+				'title' => text(2166),
+				'url' => getSession()->getApplicationUrl().'details/log?tableonly=true'
+			)
+		);
+	}
+
 	function render( $view = null )
 	{
 		if ( $_REQUEST['attributeonly'] != '' )
@@ -224,7 +295,6 @@ class PMPage extends Page
  		if ( $use_entry_point )
  		{
  		    // if no tab is specified then use default entry
- 		    
 	        foreach( $this->areas as $area )
  		    {
  		    	if ( !is_array($area['menus']) ) continue;
@@ -235,7 +305,7 @@ class PMPage extends Page
                     {
                         if ( $item['entry-point'] && $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) )
                         {
-                            return $item['url'];
+							if ( $this->checkWidgetExists($item) ) return $item['url'];
                         }
                     }
 	            }
@@ -249,7 +319,7 @@ class PMPage extends Page
                     {
                         if ( $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) )
                         {
-                            return $item['url'];
+							if ( $this->checkWidgetExists($item) ) return $item['url'];
                         }
                     }
 	            }
@@ -262,6 +332,23 @@ class PMPage extends Page
 				return $url;
 			}
 		}
+	}
+
+	protected function checkWidgetExists( $item ) {
+		if ( $item['report'] != '' ) {
+			$report_it = getFactory()->getObject('PMReport')->getExact($item['report']);
+			if ( $report_it->getId() == '' ) return false;
+		}
+		if ( $item['module'] != '' ) {
+			$module_it = getFactory()->getObject('Module')->getExact($item['module']);
+			if ( $module_it->getId() == '' ) return false;
+		}
+		list($namespace, $module) = preg_split('/\//', $item['module']);
+		if ( $namespace != '' && $module != '' ) {
+			$module = PluginsFactory::Instance()->getModule( $namespace, 'pm', $module );
+			if ( !is_array($module) ) return false;
+		}
+		return true;
 	}
 	
 	function getTabsTemplate()
@@ -280,16 +367,13 @@ class PMPage extends Page
 	    ));
 	}
 	
-	function getTopMenus()
+	function getMenus()
  	{
- 		global $plugins, $model_factory;
- 		
  		$part_it = getSession()->getParticipantIt();
  		
  		$menus = array();
 
- 		$plugin_menus = $plugins->getHeaderMenus( 'pm' );
-
+ 		$plugin_menus = getFactory()->getPluginsManager()->getHeaderMenus( 'pm' );
 		foreach ( $plugin_menus as $menu )
 		{
 			$menus[] = array (
@@ -303,196 +387,21 @@ class PMPage extends Page
 				'id' => $menu['id']
 			);
 		}
- 		
- 		// quick menu actions
+
 		$actions = array();
-
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_ChangeRequest'));
-
-		if ( !in_array($this->getModule(), array('issues-backlog', 'issues-board', 'kanban/requests')) )
-		{
-			$info = getFactory()->getObject('PMReport')->getExact('productbacklog')->buildMenuItem();
-			
-			$method->setRedirectUrl(
-					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
-			);
-		}
-		else
-		{
-			$method->setRedirectUrl('donothing');
-		}
-		
-		if ( $method->hasAccess() )
-		{
-			
-			$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query( 
-					array (
-							new FilterBaseVpdPredicate()
-					)
-				);
-			
-			while ( !$type_it->end() )
-			{
-				$actions[] = array ( 
-						'name' => translate($type_it->getDisplayName()),
-						'url' => $method->getJSCall( 
-									array (
-										'Type' => $type_it->getId(),
-										'area' => $this->getArea()
-									),
-									translate($type_it->getDisplayName())
-								 ),
-						'uid' => $type_it->get('ReferenceName')
-						
-				);
-				
-				$type_it->moveNext();
-			}
-
-			$actions[] = array ( 
-					'name' => $method->getObject()->getDisplayName(),
-					'url' => $method->getJSCall( 
-								array (
-									'area' => $this->getArea()
-								)
-							 ),
-					'uid' => 'issue'
-			);
-			
-			$template_it = getFactory()->getObject('RequestTemplate')->getAll();
-			
-			if ( $template_it->count() > 0 && $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-			
-			while( !$template_it->end() )
-			{
-				$actions[] = array ( 
-						'name' => $template_it->getDisplayName(),
-						'url' => $method->getJSCall( 
-									array (
-										'template' => $template_it->getId(),
-										'area' => $this->getArea()
-									)
-								 ),
-						'uid' => 'template'.$template_it->getId()
-				);
-				
-				$template_it->moveNext();
-			}
-		}
-
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Task'));
-		
-		if ( !in_array($this->getModule(), array('tasks-list', 'tasks-board')) )
-		{
-			$info = getFactory()->getObject('PMReport')->getExact('iterationplanningboard')->buildMenuItem();
-			
-			$method->setRedirectUrl(
-					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
-			);
-		}
-		else
-		{
-			$method->setRedirectUrl('donothing');
-		}
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && $method->hasAccess() )
-		{
-			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-
-			$actions[] = array ( 
-					'name' => $method->getObject()->getDisplayName(),
-					'url' => $method->getJSCall( 
-								array (
-									'Assignee' => getSession()->getUserIt()->getId(),
-									'area' => $this->getArea()
-								)
-							 ),
-					'uid' => 'task'
-					
-			);
-		}
-
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Question'));
-		
-		if ( $this->getReportBase() != 'project-question' )
-		{
-			$info = getFactory()->getObject('PMReport')->getExact('project-question')->buildMenuItem();
-			
-			$method->setRedirectUrl(
-					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
-			);
-		}
- 		else
-		{
-			$method->setRedirectUrl('donothing');
-		}
-		
-		if ( $method->hasAccess() )
-		{
-			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-
-			$actions[] = array ( 
-					'name' => $method->getObject()->getDisplayName(),
-					'url' => $method->getJSCall( 
-								array (
-									'area' => $this->getArea()
-								)
-							 ),
-					'uid' => 'question'
-			);
-		}
-		
-		$quick_actions = $plugins->getQuickActions('pm');
-		
-		if ( count($quick_actions) > 0 )
-		{
-			foreach ( $quick_actions as $action )
-			{
-				array_push( $actions, $action );
-			}
-		}
-		
-		if ( count($actions) > 0 )
-		{
-			$menus[] = array (
-				'class' => 'header_popup',
-				'button_class' => 'btn-warning',
-				'title' => translate('Создать'),
-				'items' => $actions,
-				'id' => 'navbar-quick-create'
-			);
-		}
-							
- 		
- 		$actions = array();
-
-		// profile actions
-		$actions = array();
-
-		$user_name = $part_it->getDisplayName();
-
-		$actions[] = array ( 
+		$actions[] = array (
 		    'name' => translate('Профиль пользователя'),
 			'url' => '/profile'
 		);
 		
-		$policy = getFactory()->getAccessPolicy();
-		
-		if ( !in_array($policy->getRoleReferenceName(array_pop($policy->getRoles())), array('guest','linkedguest')) ) 
-		{
-		    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-		    
-			$user_name = $part_it->getDisplayName();
-
-			$actions[] =  array ( 
-			    'name' => translate('Профиль участника'),
-				'url' => getSession()->getApplicationUrl().'profile' 
-			);
-		}
-		
 		if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-		
-		$actions[] = array ( 
+		$actions[] =  array (
+			'name' => translate('Настройки'),
+			'url' => getSession()->getApplicationUrl().'profile'
+		);
+
+		if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+		$actions[] = array (
 			    'name' => text(1811),
 				'url' => getFactory()->getObject('Module')->getExact('project-reports')->get('Url') 
 		);
@@ -508,7 +417,15 @@ class PMPage extends Page
     		    'url' => '/logoff' 
     		));
 		}
-		
+
+		$menus[] = array (
+			'class' => 'header_popup',
+			'button_class' => 'btn-navbar btn-link',
+			'icon' => 'icon-white icon-question-sign',
+			'id' => 'menu-guide',
+			'items' => $this->getHelpActions()
+		);
+
 		$menus[] = array (
 			'class' => 'header_popup',
 			'title' => getSession()->getUserIt()->getDisplayName(),
@@ -518,6 +435,143 @@ class PMPage extends Page
  		return $menus;
  	}
 
+	function getQuickActions()
+	{
+		$actions = array();
+
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_ChangeRequest'));
+		if ( $method->hasAccess() )
+		{
+			$method->setRedirectUrl('donothing');
+			$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
+				array (
+					new FilterBaseVpdPredicate()
+				)
+			);
+			while ( !$type_it->end() ) {
+				$actions[] = array (
+					'name' => translate($type_it->getDisplayName()),
+					'url' => $method->getJSCall(
+						array (
+							'Type' => $type_it->getId(),
+							'area' => $this->getArea()
+						),
+						translate($type_it->getDisplayName())
+					),
+					'uid' => $type_it->get('ReferenceName')
+
+				);
+				$type_it->moveNext();
+			}
+			$actions[] = array (
+				'name' => $method->getObject()->getDisplayName(),
+				'url' => $method->getJSCall(
+					array (
+						'area' => $this->getArea()
+					)
+				),
+				'uid' => 'issue'
+			);
+
+			$template_it = getFactory()->getObject('RequestTemplate')->getAll();
+			while( !$template_it->end() ) {
+				$actions[] = array (
+					'name' => $template_it->getDisplayName(),
+					'url' => $method->getJSCall(
+						array (
+							'template' => $template_it->getId(),
+							'area' => $this->getArea()
+						)
+					),
+					'uid' => 'template'.$template_it->getId()
+				);
+				$template_it->moveNext();
+			}
+		}
+
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Task'));
+		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && $method->hasAccess() )
+		{
+			$method->setRedirectUrl('donothing');
+			$actions[] = array (
+				'name' => $method->getObject()->getDisplayName(),
+				'url' => $method->getJSCall(
+					array (
+						'Assignee' => getSession()->getUserIt()->getId(),
+						'area' => $this->getArea()
+					)
+				),
+				'uid' => 'task'
+			);
+		}
+
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
+		if( $method->hasAccess() ) {
+			$method->setRedirectUrl('donothing');
+			$actions[] = array(
+				'name' => translate('Функция'),
+				'url' => $method->getJSCall(),
+				'uid' => 'quick-feature'
+			);
+		}
+
+		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Question'));
+		if ( $method->hasAccess() )
+		{
+			$method->setRedirectUrl('donothing');
+			$actions[] = array (
+				'name' => $method->getObject()->getDisplayName(),
+				'url' => $method->getJSCall(
+					array (
+						'area' => $this->getArea()
+					)
+				),
+				'uid' => 'question'
+			);
+		}
+
+		$quick_actions = PluginsFactory::Instance()->getQuickActions('pm');
+		if ( count($quick_actions) > 0 ) {
+			foreach ( $quick_actions as $action ) {
+				array_push( $actions, $action );
+			}
+		}
+
+		return $actions;
+	}
+
+	function getHelpActions()
+	{
+		$community_url = defined('HELP_COMMUNITY_URL') ? HELP_COMMUNITY_URL : 'http://club.devprom.ru';
+		$docs_url = defined('HELP_DOCS_URL') ? HELP_DOCS_URL : 'http://devprom.ru/docs';
+		return array_merge(
+			array(
+				array (
+					'name' => text('guide.tour'),
+					'click' => 'javascript:reStartTour();',
+				),
+				array(),
+				($community_url != ''
+					? array (
+							'name' => text('guide.club'),
+							'url' =>  $community_url,
+							'target' => '_blank'
+						)
+					: array()),
+				array(),
+				($docs_url != ''
+					? array (
+						'name' => text('guide.userdocs'),
+						'url' => $docs_url,
+						'target' => '_blank'
+					  )
+					: array()
+				)
+			),
+			parent::getHelpActions()
+		);
+	}
+
  	function getAreas()
  	{
  	    return $this->areas;
@@ -525,13 +579,30 @@ class PMPage extends Page
  	
  	function export()
  	{
- 		global $_REQUEST;
- 		
  		switch ( $_REQUEST['export'] )
  		{
  			case 'commentsthread':
  				return $this->exportCommentsThread();
- 				
+
+			case 'traces':
+				$object_it = $this->getObject()->getExact(preg_split('/[,-]/',$_REQUEST['ids']));
+				if ( $object_it->getId() == '' ) return;
+
+				$reference = $this->getObject()->getAttributeObject($_REQUEST['attribute']);
+				$ids = join(',',$object_it->fieldToArray($_REQUEST['attribute']));
+				if ( $ids == '' ) $ids = '0';
+
+				$it = getFactory()->getObject('ObjectsListWidget')->getAll();
+				while( !$it->end() )
+				{
+					if ( is_a($reference, $it->get('Caption')) ) {
+						$widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
+						exit(header('Location: '.$widget_it->getUrl(strtolower(get_class($reference)).'='.$ids)));
+					}
+					$it->moveNext();
+				}
+				return;
+
  			default:
  				return parent::export();
  		}
@@ -660,42 +731,46 @@ class PMPage extends Page
  		
 		$project_it = getSession()->getProjectIt();
 
-		$parms['current_project'] = $project_it->get('CodeName'); 
+		$parms['current_project'] = $project_it->get('CodeName');
 		$parms['current_project_title'] = $project_it->getDisplayName();
 		
-		if ( !$project_it->IsPortfolio() && !$project_it->IsProgram() )
-		{
+		if ( !$project_it->IsPortfolio() && !$project_it->IsProgram() ) {
 			$project_it = $project_it->getParentIt();
 		}
-		
-		if ( $project_it->IsPortfolio() )
-		{
-		    $portfolio_it = $project_it;
-		    
+		$portfolio_it = $project_it;
+
+		$parms['subprojects_title'] = translate('Проект');
+		if ( $project_it->IsPortfolio() ) {
 		    $parms['portfolio_title'] = translate('Группа проектов');
-		    $parms['subprojects_title'] = translate('Проекты в группе');
 		}
-		else
-		{
-		    $portfolio_it = $project_it;
-		    
+		elseif ( $project_it->IsProgram() ) {
 		    $parms['portfolio_title'] = translate('Программа');
-		    $parms['subprojects_title'] = translate('Подпроекты');
+		    $parms['subprojects_title'] = translate('Подпроект');
+			$parms['program_actions'] = $this->getProgramNavitationActions($portfolio_it);
 		}
 		
 		$parms['current_portfolio'] = $portfolio_it->get('CodeName');
 		$parms['current_portfolio_title'] = $portfolio_it->getDisplayName();
-		
+
+		$current_it = getSession()->getProjectIt();
+		if ( !$current_it->IsPortfolio() ) {
+			if ( !is_array($parms['projects'][$portfolio_it->get('CodeName')][$current_it->get('CodeName')]) ) {
+				$parms['projects'][$portfolio_it->get('CodeName')][$current_it->get('CodeName')] = array (
+					'name' => $current_it->getDisplayName(),
+					'url' => '/pm/'.$current_it->get('CodeName')
+				);
+			}
+		}
+
 	 	if ( $portfolio_it->get('CodeName') == 'my' )
 		{
 		    $parms['title'] = translate('Мои проекты');
 		}
 		else
 		{
-		    $parms['title'] = translate('Подпроекты');
+		    //$parms['title'] = translate('Подпроект');
 		}
 		
-		$parms['portfolio_actions'] = $this->getProgramNavitationActions($portfolio_it);
 		$parms['project_actions'] = $this->getProjectNavitationActions();
 
 		return $parms;
@@ -704,64 +779,49 @@ class PMPage extends Page
  	function getProgramNavitationActions($portfolio_it)
  	{
  	 	$portfolio_actions = array();
-		if ( $portfolio_it->IsProgram() )
-		{
-			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('ProjectLink'));
-			parse_str(ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $parms);
-
-			$portfolio_actions[] = array (
-					'icon' => 'icon-plus',
-					'url' => $method->getJSCall($parms),
-					'name' => text('ee204')
-			);
-		}
-		return array_merge($portfolio_actions, $this->getAddParticipantActions());
+		$portfolio_actions[] = array (
+			'icon' => 'icon-wrench',
+			'url' => getSession()->getApplicationUrl().'settings',
+			'name' => text(2174)
+		);
+		return array_merge(
+			$this->getAddParticipantActions(),
+			$portfolio_actions
+		);
  	}
  	
  	function getProjectNavitationActions()
  	{
  		$project_actions = array();
-		
-		$module_it = getFactory()->getObject('Module')->getExact('ee/projectlinks');
-		if ( $module_it->getId() != '' )
-		{
-			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('ProjectLink'));
-
-			parse_str(ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $sub_parms);
-			parse_str(ProjectLinkTypeSet::PROGRAM_QUERY_STRING, $program_parms);
-
-			$project_actions[] = array (
-					'icon' => 'icon-plus',
-					'url' => $method->getJSCall($sub_parms),
-					'name' => text('ee204')
-			);
-			$project_actions[] = array (
-					'icon' => 'icon-arrow-right',
-					'url' => $method->getJSCall($program_parms),
-					'name' => text('ee205')
-			);
-		} 		
-		
-		return array_merge($project_actions, $this->getAddParticipantActions());
+		$project_actions[] = array (
+			'icon' => 'icon-wrench',
+			'url' => getSession()->getApplicationUrl().'settings',
+			'name' => text(2173)
+		);
+		return array_merge(
+			$this->getAddParticipantActions(),
+			$project_actions
+		);
  	}
  	
  	function getAddParticipantActions()
  	{
- 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return parent::getAddParticipantActions();
+ 		if ( !defined('PERMISSIONS_ENABLED') ) return parent::getAddParticipantActions();
 
- 		$actions = array();
- 		
  		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
-		if ( $method->hasAccess() )
-		{
+		if ( !$method->hasAccess() ) return parent::getAddParticipantActions();
+
+		if ( !getSession()->getProjectIt()->IsPortfolio() ) {
 			$method->setRedirectUrl("function(){javascript:window.location='".getFactory()->getObject('Module')->getExact('permissions/participants')->get('Url')."'}");
-			$actions[] = array (
-					'icon' => 'icon-user', 
-			        'name' => text(2001),
-					'url' => $method->getJSCall()
-		    );
 		}
- 		return $actions;
+
+		return array(
+			array (
+				'icon' => 'icon-user',
+				'name' => text(2001),
+				'url' => $method->getJSCall()
+			)
+		);
  	}
  	
  	function getHint()

@@ -12,7 +12,7 @@ class AccessRightEntitySetCommonBuilder extends AccessRightEntitySetBuilder
  			'pm_Project', 'pm_Version', 'pm_Release', 'pm_Build', 'pm_Task', 
 			'pm_ChangeRequest', 'pm_Participant', 'BlogPost', 'pm_Artefact',
 			'pm_Milestone', 'pm_Function', 'pm_AccessRight', 
-     		'pm_CustomReport', 'pm_Question'
+     		'pm_CustomReport', 'pm_Question', 'pm_Activity'
  		);
  		
  		foreach( $entities as $entity )

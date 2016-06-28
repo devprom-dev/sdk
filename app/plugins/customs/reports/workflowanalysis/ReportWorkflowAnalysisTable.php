@@ -2,8 +2,6 @@
 include "ReportWorkflowAnalysisList.php";
 include "model/WorkflowTimeScale.php";
 
-include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
-include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/StateExFilterWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/RequestTable.php";

@@ -5,8 +5,6 @@
  include('c_package_view.php');
  require_once('c_selector.php');
  
- $model_factory =& getModelFactory();
-
  $class = $_REQUEST['class'];
  $entity = $_REQUEST['entity'];
  $kind = $_REQUEST['kind'];
@@ -17,15 +15,12 @@
  {
 	if(isset($entity)) 
 	{
-		$object = $model_factory->getObject2($class, $entity );
+		$object = getFactory()->getObject2($class, $entity );
 	}
 	else 
 	{
-		$object = $model_factory->getObject($class);
+		$object = getFactory()->getObject($class);
 	}
 	
 	$selector = new $kind( $object, $field );
  }
-
-
-?>

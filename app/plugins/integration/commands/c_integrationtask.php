@@ -14,15 +14,9 @@ class IntegrationTask extends TaskCommand
 		$this->setupLogger();
 		
 		$system_it = getFactory()->getObject('SystemSettings')->getAll();
-		$user_it = getFactory()->getObject('User')->createCachedIterator(
-			array (
-				array (
-					'Caption' => $system_it->getDisplayName(),
-					'Email' => $system_it->get('AdminEmail')
-				)
-			)
-		);
-		$auth_factory = new \AuthenticationFactory($user_it);
+
+		$parameters = $this->getData()->getParameters();
+		$itemsToProcess = $parameters['limit'] > 0 ? $parameters['limit'] : 30;
 
 		$integration_it = getFactory()->getObject('Integration')->getRegistry()->Query(
 			array (
@@ -34,7 +28,15 @@ class IntegrationTask extends TaskCommand
 		{
 			$session = new \PMSession(
 				getFactory()->getObject('Project')->getExact($integration_it->get('Project')),
-				$auth_factory
+				new \AuthenticationFactory(
+					getFactory()->getObject('User')->createCachedIterator(
+						array (
+							array (
+								'Caption' => $integration_it->getDisplayName()
+							)
+						)
+					)
+				)
 			);
 			// reset all cached data/metadata
 			getFactory()->resetCache();
@@ -43,6 +45,7 @@ class IntegrationTask extends TaskCommand
 			ob_start();
 
 			$service = new IntegrationService($integration_it);
+			$service->setItemsToProcess($itemsToProcess);
 			$service->process();
 
 			$log_content = ob_get_contents();

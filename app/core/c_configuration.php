@@ -201,7 +201,7 @@
  		return new ImmediateCreationStrategy;
  	}
  	
- 	function setPublicInfoAttributes( $parms ) {
+ 	function setPublicInfoAttributes( $parms, $access_level = null ) {
 		$parms['IsProjectInfo'] = 'Y';
 		$parms['IsBlog'] = 'Y';
 		$parms['IsParticipants'] = 'Y';

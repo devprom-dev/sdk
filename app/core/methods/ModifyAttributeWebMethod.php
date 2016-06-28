@@ -43,6 +43,7 @@ class ModifyAttributeWebMethod extends WebMethod
  	function setObjectIt($object_it)
  	{
  		$this->object_it = $object_it;
+		$this->buildMethodScript();
  	}
  	
  	function hasAccess()
@@ -85,16 +86,9 @@ class ModifyAttributeWebMethod extends WebMethod
  		return $object->getDisplayName().': '.$object_it->getDisplayName();
  	}
 
- 	function getJSCall( $parms = array(), $object_it = null )
+ 	function getJSCall( $parms = array() )
  	{
- 		if ( !is_null($object_it) )
- 		{
- 			$this->object_it = $object_it;
- 			
- 			$this->buildMethodScript();
- 		}
- 		
-		$parms = array_merge($parms, array( 
+		$parms = array_merge($parms, array(
 			'class' => strtolower(get_class($this->object_it->object)),
  			'attribute' => $this->attribute,
  			'object' => $this->object_it->getId(),
@@ -127,6 +121,9 @@ class ModifyAttributeWebMethod extends WebMethod
 
 		
 		$object = getFactory()->getObject($_REQUEST['class']);
+		if ( $object instanceof WikiPage ) {
+			$object->setRegistry( new WikiPageRegistryContent() );
+		}
 		$object_it = $object->getExact($_REQUEST['object']);
 
 		if ( $object_it->getId() == '' )

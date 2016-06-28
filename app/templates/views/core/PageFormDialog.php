@@ -1,4 +1,7 @@
 <?php echo $scripts; ?>
+<script type="text/javascript">
+	$(document).unbind('tabsactivated');
+</script>
 <?php if ( !is_array($sections) || $transition != '' || $action != 'show' ) $sections = array(); ?>
 <?php if ( $transition == '' ) $sections = array_merge($bottom_sections,$sections);?>
 <?php
@@ -9,8 +12,8 @@ $secondary_sections = array();
 
 foreach( $sections as $key => $section ) {
 	if ( $section instanceof PageSectionAttributes ) {
-		$secondary_attributes[$section->getId()] = $section->getFields();
-		$skip_attributes = array_merge($skip_attributes, $section->getFields());
+		$secondary_attributes[$section->getId()] = $section->getAttributes();
+		$skip_attributes = array_merge($skip_attributes, $section->getAttributes());
 		$primary_sections[$key] = $section;
 	}
 	else {
@@ -21,7 +24,11 @@ foreach( $sections as $key => $section ) {
 <div class="tabs">
 	<?php if ( count($sections) > 0 ) { ?>
     <ul class="ui-dialog-titlebar">
-      <li><a href="#tab-main"><?=$caption.' '.$uid?></a></li>
+      <li>
+		  <a href="#tab-main">
+			  <?=$caption?>
+		  </a>
+	  </li>
 	  <?php foreach ( $primary_sections as $key => $section ) { ?>
 		<li><a href="#tab-<?=$section->getId()?>"><?=$section->getCaption()?></a></li>
 	  <?php } ?>
@@ -45,12 +52,10 @@ foreach( $sections as $key => $section ) {
 						echo $view->render( $form_body_template, array(
 							'warning' => $warning,
 							'alert' => $alert,
-							'attributes' => array_filter($attributes,
-												function($value) use($skip_attributes) {
-													return !in_array($value['id'], $skip_attributes);
-												}),
+							'attributes' => array_diff_key($attributes, array_flip($skip_attributes)),
 							'formonly' => $formonly,
-							'form' => $form
+							'form' => $form,
+							'object_id' => $object_id
 						));
 						if ( $bottom_hint != '' ) echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id));
 					?>
@@ -71,12 +76,10 @@ foreach( $sections as $key => $section ) {
 				foreach( $secondary_attributes as $referenceName => $secondary ) {
 					echo '<div id="tab-'.$referenceName.'">';
 					echo $view->render( $form_body_template, array(
-						'attributes' => array_filter($attributes,
-											function($value) use($secondary) {
-												return in_array($value['id'], $secondary);
-											}),
+						'attributes' => array_intersect_key($attributes, array_flip($secondary)),
 						'formonly' => $formonly,
-						'form' => $form
+						'form' => $form,
+						'object_id' => $object_id
 					));
 					echo '</div>';
 				}
@@ -94,6 +97,4 @@ foreach( $sections as $key => $section ) {
 
 <script type="text/javascript">
     devpromOpts.saveButtonName = '<?=$button_save_title?>';
-    devpromOpts.closeButtonName = '<?=translate('Отменить')?>';
-    devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
 </script>

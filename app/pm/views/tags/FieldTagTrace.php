@@ -13,7 +13,7 @@ class FieldTagTrace extends FieldForm
  		$this->field = $field;
  	}
 
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();

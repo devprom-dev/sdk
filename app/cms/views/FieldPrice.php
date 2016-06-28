@@ -4,7 +4,7 @@ class FieldPrice extends Field
 {
  	var $object_it;
 	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		$currency = array('EUR', 'USD', 'RUR');
 	?>

@@ -42,6 +42,8 @@ var sortableTree = (function() {
         if (parentDiv.height() == 0)
             parentDiv = sortableTree.parents('ul.filetree');
 
+        if ( parentDiv.length < 1 || item.length < 1 ) return false;
+
         var parentOffset = parentDiv.offset(),
             parentWidth = parentDiv.width(),
             parentHeight = parentDiv.height(),

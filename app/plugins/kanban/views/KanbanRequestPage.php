@@ -9,6 +9,8 @@ class KanbanRequestPage extends RequestPage
 {
  	function __construct()
  	{
+		$_REQUEST['view'] = 'board';
+
  		getSession()->addBuilder( new KanbanPageSettingsBuilder() );
  		
  		parent::__construct();
@@ -16,14 +18,16 @@ class KanbanRequestPage extends RequestPage
  		if ( $this->needDisplayForm() ) return;
  		
  		if ( !is_a($this->getTableRef(), 'KanbanRequestTable') ) return;
-
- 		$_REQUEST['view'] = 'board';
-
- 		$this->addInfoSection( new FullScreenSection() );
  	}
  	
  	function getDefaultTable()
  	{
 		return new KanbanRequestTable( $this->getObject() );
  	}
+
+	function getDetailsParms() {
+		return array (
+			'visible' => false
+		);
+	}
 }

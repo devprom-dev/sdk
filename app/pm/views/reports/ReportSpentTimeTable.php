@@ -34,8 +34,7 @@ class ReportSpentTimeTable extends PMPageTable
  		if ( !in_array($values['participant'], array('','all','none')) ) {
 			$predicates[] = new FilterAttributePredicate('SystemUser', preg_split('/,/', $values['participant']));
  		}
- 		
- 		return $predicates;
+ 		return array_merge( parent::getFilterPredicates(), $predicates );
 	}
 	
 	function getSortFields()
@@ -47,21 +46,22 @@ class ReportSpentTimeTable extends PMPageTable
 	{
 		$actions = array();
 
+		$values = $this->getFilterValues();
 		$method = new ExcelExportWebMethod();
 
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->getJSCall( translate('Затраченное время'), 'ActivitiesExcelIterator') ) );
+		$actions[] = array(
+			'name' => $method->getCaption(),
+			'url' => $method->url(translate('Затраченное время'), 'ActivitiesExcelIterator', $values)
+		);
 
 		return $actions;
 	}
 
-	function getNewActions()
-	{
+	function getNewActions() {
 		return array();
 	}
 	
-	function getDeleteActions()
-	{
+	function getDeleteActions() {
 		return array();
 	}
-} 
+}

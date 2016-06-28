@@ -10,7 +10,7 @@ class RequestIterator extends StatableIterator
 	 	{
 	 		return $this->get('TypeName').': '.parent::getDisplayName();
 	 	}
-	 	elseif( $this->getId() > 0 )
+	 	else
 	 	{
 		 	return $this->object->getDisplayName().': '.parent::getDisplayName();
 	 	}
@@ -31,9 +31,8 @@ class RequestIterator extends StatableIterator
  		return $this->get_native('PlannedRelease') != '';
  	}
 
- 	function IsFinished() 
- 	{
- 		return in_array( $this->get_native('State'), $this->object->getTerminalStates() );
+ 	function IsFinished() {
+ 		return $this->get('StateTerminal') == 'Y';
  	}
 
  	function IsImplemented()
@@ -204,14 +203,13 @@ class RequestIterator extends StatableIterator
  	function getPlannedDuration()
  	{
  		$duration = 0;
+		if ( $this->object->getAttributeType('Tasks') == '' ) return $duration;
+
  		$task_it = $this->getRef('Tasks');
- 		
- 		while ( !$task_it->end() && $task_it->get('ChangeRequest') == $this->getId() )
- 		{
+ 		while ( !$task_it->end() && $task_it->get('ChangeRequest') == $this->getId() ) {
 			$duration += $task_it->get("Planned");
  			$task_it->moveNext();
  		}	
- 		
  		return $duration;
  	} 	
 

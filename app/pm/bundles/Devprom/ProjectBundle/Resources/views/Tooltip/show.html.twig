@@ -1,9 +1,11 @@
+<div class="tooltip-body">
 {% if type.uid != "" %}
-	<b>{{ type.name }}</b>: [{{ type.uid }}] 
-	{% for attribute_name, attribute in attributes if attribute_name == "Caption" %}
-	    {{ attribute.text | raw }}
-	{% endfor %}
-	<br/>
+	<div class="tt-field-data">
+		<b>{{ type.name }}</b>: {{ type.uid | raw }}
+		{% for attribute_name, attribute in attributes if attribute_name == "Caption" %}
+			{{ attribute.text | raw }}
+		{% endfor %}
+	</div>
 	<br/>
 {% endif %}
 
@@ -47,3 +49,4 @@
 	{{ lifecycle.data.text | raw }}
 {% endif %}
 {% endif %}
+</div>

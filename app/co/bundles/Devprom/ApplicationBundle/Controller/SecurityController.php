@@ -8,6 +8,7 @@ use Devprom\CommonBundle\Service\Project\InviteService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\Response;
 
 if ( !class_exists('CoPage', false) ) include SERVER_ROOT_PATH."co/views/Common.php";
 include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorPasswordLength.php";
@@ -23,32 +24,54 @@ class SecurityController extends PageController
         $response = $this->checkDeploymentState($request);
         if ( is_object($response) ) return $response;
 
-    	$user_it = getSession()->getUserIt();
-        if ( $user_it->getId() > 0 )
-        {
-            return new RedirectResponse( 
-            		$request->query->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->query->get('redirect') 
-            );
+        $redirect = $request->query->get('redirect') == ''
+            ? $request->server->get('HTTP_REFERER')
+            : $request->query->get('redirect');
+
+        $url_parts = parse_url($redirect);
+        if ( in_array(trim($url_parts['path'],'/'), array('login','logoff')) ) {
+            $redirect = '';
         }
-        else 
-        {
-        	$user_it = getFactory()->getObject('User')->getRegistry()->getAll();
-        	if ( $user_it->count() < 1 )
-        	{
-        		return new RedirectResponse('/install');
-        	}
+        else {
+            $query_parts = array();
+            parse_str($request->server->get('QUERY_STRING'), $query_parts);
+            unset($query_parts['redirect']);
+            if ( count($query_parts) > 0 ) {
+                $redirect .= '&' . http_build_query($query_parts);
+            }
+            $request->getSession()->set('redirect', \SanitizeUrl::parseUrl($redirect));
         }
-    	
+
+        $set = new \AuthenticationFactorySet(getSession());
+        foreach( $set->getFactories() as $factory )
+        {
+            if ( $factory->ready() && $factory->authorize()->getId() > 0 ) {
+                return new RedirectResponse(
+                    $redirect == '' ? $_SERVER['ENTRY_URL'] : $redirect
+                );
+            }
+        }
+
+        $user_it = getFactory()->getObject('User')->getRegistry()->getAll();
+        if ( $user_it->count() < 1 ) {
+            return new RedirectResponse('/install');
+        }
     	return $this->responsePage( new \LoginPage() );
     }
 
     public function loginProcessAction(Request $request)
     {
-        $session = getSession();
+        $request->getSession()->set('redirect', \SanitizeUrl::parseUrl($request->request->get('redirect')));
+        $log = $this->getLogger();
 
+        $session = getSession();
         if ( $session->getUserIt()->getId() == '' )
         {
             $auth_factory = $session->getAuthenticationFactory();
+            if ( is_object($log) ) {
+                $log->info('Auth factory used: '.get_class($auth_factory));
+            }
+
             if ( $auth_factory->credentialsRequired() )
             {
                 $command = new LoginUserService();
@@ -58,7 +81,6 @@ class SecurityController extends PageController
                 );
 
                 if( $result > 0 ) {
-                    $log = $this->getLogger();
                     if ( is_object($log) ) {
                         $log->info( 'Login used: '.$request->request->get('login') );
                         $log->info( 'Password hash: '.getFactory()->getObject('User')->getHashedPassword(trim($request->request->get('pass'))) );
@@ -69,7 +91,12 @@ class SecurityController extends PageController
             }
             else {
                 $command = new LoginUserService();
-                return $this->replyRedirectError('/logoff', $command->getResultDescription(2));
+                return $this->replyRedirectError(
+                    '/logoff',
+                    $command->getResultDescription(
+                        $command->validateUser($auth_factory->authorize())
+                    )
+                );
             }
         }
 
@@ -86,24 +113,28 @@ class SecurityController extends PageController
 
     public function loginCheckAction(Request $request)
     {
+        $redirect = $request->request->get('redirect') == ''
+            ? $request->getSession()->get('redirect')
+            : $request->request->get('redirect');
+
         if ( getSession()->getUserIt()->getId() > 0 ) {
             return $this->replyRedirect(
-                $request->request->get('redirect') == '' ? $_SERVER['ENTRY_URL'] : $request->request->get('redirect')
+                $redirect == '' ? $_SERVER['ENTRY_URL'] : $redirect
             );
         } else {
             $command = new LoginUserService();
-            return $this->replyRedirectError('/logoff', $command->getResultDescription(2));
+            return $this->replyRedirectError(
+                '/logoff',
+                $command->getResultDescription(
+                    $command->validateUser(getSession()->getAuthenticationFactory()->authorize())
+                )
+            );
         }
     }
 
     # region Restore Password
-    
     public function restoreAction(Request $request)
     {
-        $response = $this->checkDeploymentState($request);
-        
-        if ( is_object($response) ) return $response;
-            	
     	return $this->responsePage( new \ForgetPasswordPage() );
     }
     
@@ -131,19 +162,14 @@ class SecurityController extends PageController
 		
 		return $this->replySuccess(text(223));
     }
-    
+    #endregion
+
     # region Reset Password
-     
     function resetAction(Request $request)
     {
-        $response = $this->checkDeploymentState($request);
-        if ( is_object($response) ) return $response;
-
         $auth_factory = getSession()->getAuthenticationFactory();
         if ( is_object($auth_factory) && !$auth_factory->credentialsRequired() ) return new RedirectResponse('/');
-    	
     	return $this->responsePage( new \ResetPasswordPage() );
-        
     }
     
     function resetProcessAction(Request $request)
@@ -197,12 +223,22 @@ class SecurityController extends PageController
 
 		return $this->replyError( text(233) );
     }
+    #endregion
     
-    public function logoffAction()
+    public function logoffAction(Request $request)
     {
         getSession()->close();
-        
-        return new RedirectResponse('/');
+
+        $redirect = $request->request->get('redirect') == ''
+            ? $request->getSession()->get('redirect')
+            : $request->request->get('redirect');
+
+        if ( $redirect != '' ) {
+            return new RedirectResponse('/login?redirect='.\SanitizeUrl::parseUrl($redirect));
+        }
+        else {
+            return new RedirectResponse('/login');
+        }
     }
     
     public function joinAction(Request $request)

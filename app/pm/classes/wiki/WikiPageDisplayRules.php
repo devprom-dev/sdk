@@ -19,7 +19,7 @@ class WikiPageDisplayRules
 	 	if ( !in_array($object_it->get($document_name_field), array('', $page_it->get('Caption'))) ) {
 	 		$title .= $object_it->get($document_name_field).' / ';
 	 	}
-	 	$title .= $caption;
+	 	$title .= $caption.' ('.$page_it->get('StateName').')';
 
 		if ( $object_it->get($object_it->object->getBaselineReference()) == '' ) return $title;
 		$title .= ' ['.$object_it->getRef($object_it->object->getBaselineReference())->getDisplayName().']';

@@ -23,20 +23,26 @@ class RequestBusinessActionResolveImplemented extends BusinessActionWorkflow
  	    while( !$duplicate_it->end() )
  	    {
  	        $state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
- 	        		array( 
- 	        				new FilterAttributePredicate('IsTerminal', 'Y'),
- 	        				new FilterVpdPredicate($duplicate_it->get('VPD'))
- 	        		)
+				array(
+					new FilterAttributePredicate('IsTerminal', 'Y'),
+					new FilterVpdPredicate($duplicate_it->get('VPD'))
+				)
  	        );
+			if ( $state_it->getId() == '' ) {
+				// if there is no terminal state than use latest one
+				$state_it = $state_it->object->getRegistry()->Query(
+					array(
+						new FilterVpdPredicate($duplicate_it->get('VPD')),
+						new SortRevOrderedClause()
+					)
+				);
+			}
  	        
- 	        if ( $state_it->getId() > 0 )
- 	        {
+ 	        if ( $state_it->getId() > 0 ) {
 				$service = new WorkflowService($request);
-				
-				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'), $this->getDisplayName());
+				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'));
  	        }
- 	        else
- 	        {
+ 	        else {
  	        	throw new Exception('There is no terminal state for the issue "'.$duplicate_it->getId().'"');
  	        }
  	    

@@ -101,7 +101,7 @@
 			<?php if ( $attribute['description'] != '' ) { ?>
 			
 			<span class="help-block"><?=$attribute['description']?></span>
-			<br/>
+			<?=$fields_separator?>
 
 			<?php } ?>
 

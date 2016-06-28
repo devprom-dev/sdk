@@ -1,3 +1,6 @@
+imports:
+    - { resource: parameters.yml }
+    - { resource: services.yml }
 framework:
     #esi:            ~
     secret:          123
@@ -8,3 +11,30 @@ framework:
     validation:      { enable_annotations: true }
     templating:
         engines: ['twig','php']
+    session:
+        save_path: ~
+        name: 'application'
+twig:
+    exception_controller:  CommonBundle:Exception:show
+swiftmailer:
+    transport:  smtp
+    host:       %mailer_host%
+    username:   %mailer_user%
+    password:   %mailer_password%
+    port:       %mailer_port%
+    encryption: %mailer_encryption%
+monolog:
+    handlers:
+        applog:
+            type: rotating_file
+            path: "%kernel.logs_dir%/application.log"
+            level: error
+            max_files: 5 # Set up to keep log files for 5 recent days only
+            channels: ["!mail"]
+        mail:
+            type: rotating_file
+            path: "%kernel.logs_dir%/mail.log"
+            level: debug
+            max_files: 5
+            channels: [mail]
+

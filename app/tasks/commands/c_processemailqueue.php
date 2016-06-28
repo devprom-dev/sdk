@@ -1,72 +1,78 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
+
 include_once SERVER_ROOT_PATH.'cms/c_mail.php';
+use Devprom\ApplicationBundle\Service\Mailer\DevpromSwiftMessage;
 
 class ProcessEmailQueue extends TaskCommand
 {
  	function execute()
 	{
-		global $model_factory;
-		
+		global $kernel;
+
 		$this->logStart();
-		$logger = $this->getLogger();
-		
-		$user = $model_factory->getObject('cms_User');
-		$queue = $model_factory->getObject('EmailQueue');
-		$address = $model_factory->getObject('EmailQueueAddress');
-		
-		$job = $model_factory->getObject('co_ScheduledJob');
+
+		getFactory()->setAccessPolicy( new \AccessPolicy() );
+		$mailer = $kernel->getContainer()->get('mailer');
+
+		$user = getFactory()->getObject('cms_User');
+		$queue = getFactory()->getObject('EmailQueue');
+		$address = getFactory()->getObject('EmailQueueAddress');
+
+		$job = getFactory()->getObject('co_ScheduledJob');
 		$job_it = $job->getExact($_REQUEST['job']);
 		$parameters = $job_it->getParameters();
-		
 		$process_items = $parameters['limit'] > 0 ? $parameters['limit'] : 10;
-		$admin_address = HtmlMailBox::getSystemEmail();
 
 		$queue_it = $queue->getLatest($process_items);
+		$this->getLogger()->info('Emails to be processed: '.$queue_it->count());
+
 		while ( !$queue_it->end() )
 		{
 			$body = $queue_it->getHtmlDecoded('Description');
 			$from_address = $queue_it->getHtmlDecoded('FromAddress');
-			
+
 			$address_it = $address->getByRef('EmailQueue', $queue_it->getId());
 			while ( !$address_it->end() )
 			{
 				$to_address = $address_it->getHtmlDecoded('ToAddress');
-					
-	   			$body = str_replace('<%EMAIL%>', $to_address, $body);
 
-				if ( $address_it->get('cms_UserId') > 0 )
-				{
+	   			$body = str_replace('<%EMAIL%>', $to_address, $body);
+				if ( $address_it->get('cms_UserId') > 0 ) {
 					$user_it = $user->getExact($address_it->get('cms_UserId'));
 		   			$body = str_replace('%USERNAME%', $user_it->getDisplayName(), $body);
 				}
 
-				$headers = "Sender: ".HtmlMailBox::encodeAddress($from_address)."\r\n";
-				$headers .= "From: ".HtmlMailBox::encodeAddress($from_address)."\r\n";
-				$headers .= HtmlMailBox::getContentType()."\r\n";
-
 				$address->delete($address_it->getId());
 
-				if ( $to_address != '' )
-				{
-					if ( $admin_address != '' ) $force = "-f ".$admin_address;
+				list($from_email, $from_name) = HtmlMailBox::parseAddressString($from_address);
+				list($to_email, $to_name) = HtmlMailBox::parseAddressString($to_address);
 
-					mail(HtmlMailBox::encodeAddress($to_address), $queue_it->get('Caption'), $body, $headers, $force);
+				try {
+					if ( $from_email == $to_email ) throw new \Exception("skip sending to itself ".$from_email);
 
-					$logger->info(
-						str_replace('%1', $queue_it->get('Caption'),
-							str_replace('%2', $to_address,
-								str_replace('%3', 'SMTP', text(1213)))) );
+					$mailer->send(
+						DevpromSwiftMessage::newInstance()
+							->setContentType(HtmlMailBox::getContentType())
+							->setFrom($from_email, $from_name != '' ? $from_name : null)
+							->setSender($from_email, $from_name != '' ? $from_name : null)
+							->setTo($to_email, $to_name != '' ? $to_name : null)
+							->setSubject($queue_it->getHtmlDecoded('Caption'))
+							->setBodyNative($body)
+					);
 				}
-						
+				catch (\Exception $e) {
+					$this->getLogger()->error("Unable send email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
+				}
+
 				$address_it->moveNext();
 			}
 
-			$address_it = $address->getByRef('EmailQueue', $queue_it->getId());
-			if ( $address_it->count() < 1) $queue->delete($queue_it->getId());
-
+			$queue->delete($queue_it->getId());
 			$queue_it->moveNext();
 		}
-		
+
 		$this->logFinish();
 	}
 }

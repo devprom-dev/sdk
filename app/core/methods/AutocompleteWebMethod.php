@@ -56,7 +56,6 @@ class AutocompleteWebMethod extends WebMethod
 	        if ( $object_uid->hasUid($object_it) )
  			{
  			    $info = $object_uid->getUIDInfo($object_it);
- 			    
  			    $completed = $info['completed'];
  			}
  			else
@@ -65,8 +64,8 @@ class AutocompleteWebMethod extends WebMethod
  			}
 	    	
  			 $result_item = array (
- 			    'id' => html_entity_decode(IteratorBase::wintoutf8($object_it->getId()), ENT_COMPAT | ENT_HTML401, 'utf-8'),
- 			    'label' => html_entity_decode(IteratorBase::wintoutf8($caption), ENT_COMPAT | ENT_HTML401, 'utf-8'),
+ 			    'id' => html_entity_decode($object_it->getId(), ENT_COMPAT | ENT_HTML401, 'utf-8'),
+ 			    'label' => html_entity_decode($caption, ENT_COMPAT | ENT_HTML401, 'utf-8'),
  			    'completed' => $completed
  			);
  			
@@ -87,54 +86,71 @@ class AutocompleteWebMethod extends WebMethod
  	
  	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
-
 		$object_uid = new ObjectUid;
 		
 		$attributes = preg_split('/,/', $_REQUEST['attributes']);
 		
 		if ( $_REQUEST['attributes'] == '' || count($attributes) < 1 ) $attributes = array('Caption');
 
- 		$object = $model_factory->getObject($_REQUEST['class']);
- 		
- 		if ( is_a($object, 'MetaobjectStatable') )
- 		{
- 		    $object->addSort( new SortAttributeClause('State') );
+ 		$object = getFactory()->getObject($_REQUEST['class']);
+
+		if ( $object->getVpdValue() != '' ) {
+			$queryParms = array(
+				in_array('cross', $attributes) ? new ProjectAccessiblePredicate() : new FilterVpdPredicate()
+			);
+		}
+ 		if ( is_a($object, 'MetaobjectStatable') ) {
+			$queryParms[] = new SortMetaStateClause();
  		}
+		if ( in_array('cross', $attributes) ) {
+			$queryParms[] = new SortProjectSelfFirstClause();
+			$queryParms[] = new SortProjectImportanceClause();
+		}
+		$registry = $object->getRegistry();
  		
  		$key = 'term';
      	
- 		$result = array();
- 		
-     	$_REQUEST[$key] = trim(IteratorBase::utf8towin($_REQUEST[$key])); 
-     	
+     	$_REQUEST[$key] = trim($_REQUEST[$key]);
  		if ( $_REQUEST[$key] == '' )
  		{
- 		    $record_count = $object->getRecordCount();
- 		    
- 		    $result = $this->getResult($record_count < 60 ? $object->getAll() : $object->getFirst(60), $_REQUEST['additional']); 
+ 		    $record_count = $registry->Count($queryParms);
+			if ( $record_count > 60 ) $registry->setLimit(60);
+ 		    $result = $this->getResult($registry->Query($queryParms), $_REQUEST['additional']);
  		}
  		else
  		{
-     		$data = array();
-     		$object_it = $object->getAll();
-     		while ( !$object_it->end() )
-     		{
-     			$caption = $object_uid->getUidTitle($object_it);
-     			foreach( $attributes as $attribute )
-     			{
-     				$value = $attribute == 'Caption' ? $caption : $object_it->get( $attribute );
-
-     				if ( mb_stripos( trim($value), $_REQUEST[$key], 0, APP_ENCODING ) !== false )
-     				{
-     					$data[] = $object_it->getData();
-     					break;
-     				}
-     			}
-    
-     			$object_it->moveNext();
-     		}
-     		$result = $this->getResult( $object_it->object->createCachedIterator($data), $_REQUEST['additional'] );
+			if ( $object_uid->isValidUid($_REQUEST[$key]) ) {
+				$_REQUEST[$key] = $object_uid->getObjectIt($_REQUEST[$key])->getId();
+			}
+			if ( is_numeric($_REQUEST[$key]) ) {
+				$result_it = $registry->Query(
+					array_merge(
+						$queryParms,
+						array (
+							new FilterInPredicate($_REQUEST[$key])
+						)
+					)
+				);
+			}
+			if ( !is_object($result_it) || is_object($result_it) && $result_it->getId() == '' ) {
+				$queryParms[] = new FilterSearchAttributesPredicate(
+					$_REQUEST[$key],
+					array_unique(
+						array_intersect(
+							array_keys($object->getAttributes()),
+							array_merge(
+								$attributes,
+								preg_split('/,/', $_REQUEST['additional']),
+								array (
+									'Caption'
+								)
+							)
+						)
+					)
+				);
+				$result_it = $registry->Query($queryParms);
+			}
+     		$result = $this->getResult( $result_it, $_REQUEST['additional'] );
  		}
 
  		echo JsonWrapper::encode($result);

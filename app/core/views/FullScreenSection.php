@@ -1,9 +1,17 @@
 <?php
+include_once "ButtonInfoSection.php";
 
-class FullScreenSection extends InfoSection
+class FullScreenSection extends ButtonInfoSection
 {
- 	function getCaption() 
- 	{
+	function getId() {
+		return 'toggle-fullscreen';
+	}
+
+ 	function getCaption() {
  		return text(1354);
  	}
+
+	function getIcon() {
+		return 'icon-fullscreen';
+	}
 }

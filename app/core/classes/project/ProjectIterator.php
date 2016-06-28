@@ -201,34 +201,9 @@ class ProjectIterator extends OrderedIterator
 					'SystemUser' => getSession()->getUserIt()->getId() ) ) > 0;
  	}
 
- 	function getUserIt()
- 	{
- 		$user = getFactory()->getObject('cms_User');
- 		
- 		$team_it = getFactory()->getObject('pm_Participant')->getTeam($this->getId());
- 		
- 		if ( $team_it->count() < 1 ) return $user->getEmptyIterator(); 
- 		
- 		return $user->getInArray('cms_UserId', $team_it->fieldToArray('SystemUser'));;
- 	}
-
  	function getLeadIt()
  	{
  		return getFactory()->getObject('pm_Participant')->getLeadTeam($this->getId());
- 	}
- 	
- 	function hasClient()
- 	{
- 		$sql = " SELECT COUNT(1) cnt" .
- 			   "   FROM pm_Participant p, pm_ParticipantRole r, pm_ProjectRole l " .
- 			   "  WHERE p.Project = ".$this->getId().
- 			   "    AND p.IsActive = 'Y' ".
- 			   "    AND r.Participant = p.pm_ParticipantId" .
- 			   "    AND r.ProjectRole = l.pm_ProjectRoleId" .
- 			   "	AND l.ReferenceName = 'client'";
- 			   
- 		$it = $this->object->createSQLIterator($sql);
- 		return $it->get('cnt') > 0;
  	}
  	
  	function getVotedIt()
@@ -267,19 +242,6 @@ class ProjectIterator extends OrderedIterator
  		return getFactory()->getObject('pm_Version')->createSQLIterator($sql);
  	}
  	
- 	function getKnowledgeBaseId()
- 	{
- 		return $this->get('MainWikiPage');
- 	}
-
- 	function getKBIt()
- 	{
- 		global $model_factory;
- 		
- 		$kb = $model_factory->getObject('ProjectPage');
- 		return $kb->getExact($this->get('MainWikiPage'));
- 	}
-
  	function getBlogId()
  	{
  		return $this->get('Blog');

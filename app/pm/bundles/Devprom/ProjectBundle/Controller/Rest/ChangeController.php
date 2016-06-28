@@ -26,12 +26,15 @@ class ChangeController extends RestController
 	
 	function getFilterResolver(Request $request)
 	{
-		return array (
+		return array_merge(
+			parent::getFilterResolver($request),
+			array (
 				new ChangesFilterResolver(
 					$request->get('classes'),
 					$request->get('date'),
 					$request->get('from')
 				)
+			)
 		);
 	}
 }

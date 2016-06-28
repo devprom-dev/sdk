@@ -34,6 +34,9 @@ class AttachmentController extends RestController
 	}
 	
 	function getFilterResolver(Request $request) {
-		return $this->getSpecificController($request)->getFilterResolver($request);
+		return array_merge(
+			parent::getFilterResolver($request),
+			$this->getSpecificController($request)->getFilterResolver($request)
+		);
 	}
 }

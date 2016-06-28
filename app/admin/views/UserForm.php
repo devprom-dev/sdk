@@ -6,6 +6,7 @@ include (dirname(__FILE__).'/../methods/c_user_methods.php');
 class UserForm extends AdminPageForm
 {
 	var $warning_message;
+	private $readonlyEnabled = true;
 
 	function __construct( $object )
 	{
@@ -30,6 +31,9 @@ class UserForm extends AdminPageForm
             $object->setAttributeRequired($attribute, $has_password);
             $object->setAttributeVisible($attribute, $this->getEditMode() && $has_password);
         }
+
+		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+		$this->readonlyEnabled = $license_it->allowCreate($this->getObject());
 	}
 
 	function buildModelValidator()
@@ -41,27 +45,20 @@ class UserForm extends AdminPageForm
 
 	function validateInputValues( $id, $action )
 	{
-		global $_REQUEST, $model_factory;
-
 		$result = parent::validateInputValues( $id, $action );
-		
 		if ( $result != '' ) return $result;
 
 		if( $_REQUEST['Password'] != SHADOW_PASS && array_key_exists('RepeatPassword', $_REQUEST) )
 		{
-			if($_REQUEST['Password'] != $_REQUEST['RepeatPassword'])
-			{
+			if($_REQUEST['Password'] != $_REQUEST['RepeatPassword']) {
 				return text(235);
 			}
 		}
 		
-		if ( !$this->checkUniqueExcept($id, 'Login') )
-		{
+		if ( !$this->checkUniqueExcept($id, 'Login') ) {
 			return text(214);
 		}
-
-		if ( !$this->checkUniqueExcept($id, 'Email') )
-		{
+		if ( !$this->checkUniqueExcept($id, 'Email') ) {
 			return text(213);
 		}
 		
@@ -79,6 +76,7 @@ class UserForm extends AdminPageForm
 
 	function IsAttributeVisible( $attr_name )
 	{
+		echo $attr_name;
 		switch ( $attr_name )
 		{
 			case 'OrderNum':
@@ -105,6 +103,24 @@ class UserForm extends AdminPageForm
 		}
 	}
 
+	function createField($name)
+	{
+		$field = parent::createField($name);
+
+		switch ( $name )
+		{
+			case 'IsReadonly':
+				$field->setReadOnly(
+					is_object($this->getObjectIt()) && $this->getObjectIt()->get('IsReadonly') == 'N'
+						? false
+						: !$this->readonlyEnabled
+				);
+				break;
+		}
+
+		return $field;
+	}
+
 	function getFieldValue( $attr )
 	{
         switch ( $attr )
@@ -128,7 +144,19 @@ class UserForm extends AdminPageForm
 	            return parent::getFieldValue( $attr );
 	    }
 	}
-	
+
+	function getDefaultValue($field)
+	{
+		switch ( $field )
+		{
+			case 'IsReadonly':
+				return $this->readonlyEnabled ? 'N' : 'Y';
+
+			default:
+				return parent::getDefaultValue( $field );
+		}
+	}
+
 	function getActions()
 	{
 		$actions = parent::getActions();

@@ -22,27 +22,20 @@ foreach ( $items as $item_key => $item )
     }
 }
 
-$session = getSession();
-
-if ( is_a($session, 'PMSession') ) 
-{
-    $project_it = $session->getProjectIt();
-    
-    $search_url = $application_url.'/pm/'.$project_it->get('CodeName').'/search.php';
-}
-
 ?>
 
-<ul class="menu vertical-menu" id="menu_<?=$area_id?>" style="margin:0;width:170px;display:<?=($area_id == $active_area_uid ? 'block': 'none')?>;">
+<ul class="menu vertical-menu" id="menu_<?=$area_id?>" style="display:<?=($area_id == $active_area_uid ? 'block': 'none')?>;">
     <?php if ( $search_url != '' ) { ?>
-    <li class="submenu open <?=( !is_array($items[0]['items']) ? 'search' : '')?>">
-        <form class="form-search" action="<?=$search_url?>" action="<?=$base_url?>search.php">
+    <li class="submenu open <?=( !is_array($items[0]['items']) ? 'search' : '')?>" style="border-top:none;">
+        <form class="form-search" action="<?=$search_url?>">
             <div class="input-append">
               <input id="quick-search-<?=$area_id?>" name="quick" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional=""><button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
             </div>
         </form>
     </li>
-    <?php } ?>
+    <?php } else { ?>
+        <div style="margin-top: 11px;""></div>
+    <? } ?>
     
     <?php foreach ( $items as $item_key => $item ) { ?>
     
@@ -86,14 +79,18 @@ if ( is_a($session, 'PMSession') )
 	<?php } ?>
 	
 	<?php if ( is_array($setup_menu_item) ) { ?>
-    	    
-    <li id="setup" class="setup <?=$setup_menu_item['state']?>">
-        <a href="<?=$setup_menu_item['url']?>" style="color:white;padding:20px 0 20px 10px;">
-            <span style="display:table-cell;"><i class="icon-wrench icon-white" ></i></span>
-            <span style="display:table-cell;padding:0 15px 0 10px;"><?=$setup_menu_item['name']?></span>
-        </a>
-	</li>
-	
+        <li id="setup" class="setup <?=$setup_menu_item['state']?>">
+            <a href="<?=$setup_menu_item['url']?>" style="color:white;padding:20px 0 10px 10px;">
+                <span style="display:table-cell;"><i class="icon-wrench icon-white" ></i></span>
+                <span style="display:table-cell;padding:0 15px 0 10px;"><?=$setup_menu_item['name']?></span>
+            </a>
+        </li>
+        <li class="setup">
+            <a onclick="switchMenuState('minimized');" style="color:white;padding:10px 0 20px 10px;">
+                <span style="display:table-cell;"><i class="icon-arrow-left icon-white" ></i></span>
+                <span style="display:table-cell;padding:0 15px 0 10px;"><?=text(2193)?></span>
+            </a>
+        </li>
 	<?php } ?>
 </ul>
 

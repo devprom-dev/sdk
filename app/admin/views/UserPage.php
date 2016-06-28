@@ -17,9 +17,14 @@ class UserPage extends AdminPage
 
 		$object_it = $this->getObjectIt();
 
-		if ( $this->needDisplayForm() && is_object($object_it) && $object_it->getId() > 0 )
+		if ( $this->needDisplayForm() )
 		{
-			$this->addInfoSection( new LastChangesSection( $object_it ) );
+			$this->addInfoSection(new PageSectionAttributes(
+				$this->getFormRef()->getObject(), 'additional', translate('Дополнительно'))
+			);
+			if ( is_object($object_it) && $object_it->getId() > 0 ) {
+				$this->addInfoSection(new LastChangesSection($object_it));
+			}
 		}
 	}
 	

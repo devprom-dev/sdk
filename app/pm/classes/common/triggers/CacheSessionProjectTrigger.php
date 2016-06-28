@@ -4,10 +4,12 @@ include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php'
 
 class CacheSessionProjectTrigger extends SystemTriggersBase
 {
+	private $invalidate = false;
+
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
-		$session = getSession();
-		
+		global $session;
+
         // clean session data		
 		switch( $object_it->object->getEntityRefName() )
 		{
@@ -27,16 +29,25 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 				$object = getFactory()->getObject($object_it->get('ObjectClass'));
 				$action = new BulkAction($object);
 				$action->resetCache();
+				WorkflowScheme::Instance()->invalidate();
 				break;
+
 			case 'pm_Transition':
 				$object = getFactory()->getObject($object_it->getRef('SourceState')->get('ObjectClass'));
 				$action = new BulkAction($object);
 				$action->resetCache();
+				WorkflowScheme::Instance()->invalidate();
+				break;
+
+			case 'pm_TransitionPredicate':
+			case 'pm_TransitionRole':
+			case 'pm_TransitionAttribute':
+			case 'pm_StateAttribute':
+				WorkflowScheme::Instance()->invalidate();
 				break;
 
 			case 'cms_Resource':
 				$this->invalidateCache();
-				if ( function_exists('opcache_reset') ) opcache_reset();
  			    break;
 			    
 			case 'pm_CustomReport':
@@ -67,9 +78,14 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 				break;
 				
 			case 'pm_Project':
+				$portfolio_it = getFactory()->getObject('Portfolio')->getAll();
+				while( !$portfolio_it->end() ) {
+					$session->truncateForProject( $portfolio_it );
+					$portfolio_it->moveNext();
+				}
 				getFactory()->getObject('ProjectCache')->resetCache();
 				$session->truncateForProject( $object_it );
-			    $this->invalidateCache();
+				$this->invalidateCache();
          		break;
 		}
 	}
@@ -80,7 +96,14 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 		getFactory()->getAccessPolicy()->invalidateCache();
 		getFactory()->getEntityOriginationService()->invalidateCache();
 		// skip any cache modifications after it was truncated during the current script execution
- 		getFactory()->getCacheService()->setReadonly();
+		getFactory()->getCacheService()->setReadonly();
+		$this->invalidate = true;
+	}
+
+	function __destruct()
+	{
+		if ( !$this->invalidate ) return;
+		if ( function_exists('opcache_reset') ) opcache_reset();
 	}
 }
  

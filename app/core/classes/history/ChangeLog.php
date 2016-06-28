@@ -16,6 +16,7 @@ include "predicates/ChangeLogParticipantFilter.php";
 include "predicates/ChangeLogStartFilter.php";
 include "predicates/ChangeLogVisibilityFilter.php";
 include "predicates/ChangeLogAccessFilter.php";
+include "predicates/ChangeLogStartServerFilter.php";
 include "sorts/SortChangeLogRecentClause.php";
 
 class ChangeLog extends Metaobject
@@ -27,11 +28,9 @@ class ChangeLog extends Metaobject
  		$this->setAttributeType( 'Author', 'REF_pm_ParticipantId' );
  		$this->setAttributeType( 'Content', 'WYSIWYG' );
  		
- 		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата изменения'), false, false );
  		$this->addPersister( new ChangeLogDetailsPersister() );
-
- 		$this->setSortDefault( array( 
- 		    new SortAttributeClause('ObjectChangeLogId.D')
+ 		$this->setSortDefault( array(
+ 		    new SortAttributeClause('RecordCreated.D')
  		));
  	}
  	
@@ -48,11 +47,35 @@ class ChangeLog extends Metaobject
  	function resetFilters()
  	{
  	    parent::resetFilters();
- 	    
  	    $this->addFilter( new ChangeLogAccessFilter() );
  	}
  	
  	function getDefaultAttributeValue( $name )
  	{
  	}
+
+	function beforeDelete($deleted_it) {
+	}
+
+	function IsDeletedCascade($object) {
+		return false;
+	}
+
+	function IsUpdatedCascade($object) {
+		return false;
+	}
+
+	function add_parms($parms)
+	{
+		$parms['Transaction'] = self::getTransaction();
+		return parent::add_parms($parms);
+	}
+
+	public static function getTransaction()
+	{
+		if ( static::$transactionId != '' ) return static::$transactionId;
+		return static::$transactionId = md5(microtime().uniqid('', true));
+	}
+
+	public static $transactionId = '';
 }

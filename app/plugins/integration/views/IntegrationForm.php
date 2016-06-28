@@ -43,7 +43,8 @@ class IntegrationForm extends PMPageForm
 		$method = new IntegrationTaskRunWebMethod($object_it);
 		if ( $method->hasAccess() )
 		{
-			if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+			$method->setRedirectUrl('donothing');
+			$actions[] = array();
 			$actions[] = array(
 				'url' => $method->getJSCall(),
 				'name' => $method->getCaption()

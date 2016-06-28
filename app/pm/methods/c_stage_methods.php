@@ -10,7 +10,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterAutoCompleteWebMethod.php";
  		return text(939);
  	}
  	
- 	function getJSCall( $object_it )
+ 	function url( $object_it )
  	{
  		return parent::getJSCall(
  			array ( 'class' => $object_it->object->getClassName(),

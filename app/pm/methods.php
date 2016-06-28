@@ -36,7 +36,6 @@ include_once('methods/c_request_methods.php');
 include_once('methods/c_tag_methods.php');
 include_once('methods/c_task_methods.php');
 include_once('methods/c_watcher_methods.php');
-include_once('methods/c_version_methods.php');
 include_once('methods/c_date_methods.php');
 include_once('methods/c_stage_methods.php');
 include_once('methods/c_function_methods.php');
@@ -45,7 +44,8 @@ include_once('methods/c_wiki_methods.php');
 include_once('methods/c_wiki_methods_base.php');
 include_once('methods/c_report_methods.php');
 include_once('methods/c_common_methods.php');
-include_once('methods/c_comment_methods.php');
+include_once('methods/CommentDeleteWebMethod.php');
+include_once('methods/CommentDeleteNextWebMethod.php');
 include_once('methods/ViewSpentTimeWebMethod.php');
 include_once "methods/WikiRemoveStyleWebMethod.php";
 include_once "methods/MakeSnapshotWebMethod.php";
@@ -58,6 +58,9 @@ include_once "methods/IgnoreWikiLinkWebMethod.php";
 include_once "methods/ReorderWebMethod.php";
 include_once "methods/GotoReportWebMethod.php";
 include_once "methods/StateExFilterWebMethod.php";
+include_once "methods/FilterStateTransitionMethod.php";
+include_once "methods/FilterStateMethod.php";
+include_once "methods/UndoWebMethod.php";
 
 if ( !class_exists($_REQUEST['method'], false) ) throw new Exception('There is no such method');
 

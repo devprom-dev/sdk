@@ -28,7 +28,8 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
 
         // resolvedissues report
         $setting = new ReportSetting('resolvedissues');
-        $setting->setSorts( array('RecordCreated.D') );
+        $setting->setSorts( array('FinishDate.D') );
+        $setting->setVisibleColumns( array('UID', 'Caption', 'Priority', 'FinishDate', 'ClosedInVersion') );
         $setting->setFilters( array('release', 'state', 'type', 'version') );
         $settings->add( $setting );
 
@@ -45,7 +46,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         
         // board
         $setting = new PageListSetting('RequestBoard');
-        $columns = array('UID', 'Caption', 'OpenTasks', 'RecentComment', 'Fact', 'Estimation', 'Attachment', 'Links', 'Tags');
+        $columns = array('UID','Caption','OpenTasks','RecentComment','Fact','Estimation','Attachment','Links','Tags');
         if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
         {
         	//$columns[] = 'OrderNum';
@@ -60,7 +61,8 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
  	    		array(
  	    				'UID', 
  	    				'Caption',
- 	    				'Function'
+ 	    				'Function',
+                        'OpenTasks'
  	    		),
                 array_filter($object->getAttributesByGroup('trace'), function($value) use ($object) {
                     return $object->IsAttributeVisible($value);
@@ -72,7 +74,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         // issuesboardcrossproject
         $setting = new ReportSetting('issuesboardcrossproject');
         $setting->setGroup( 'Project' );
-        $setting->setFilters( array('state', 'type', 'priority', 'target') );
+        $setting->setFilters( array('state', 'type', 'priority', 'target', 'usergroup') );
         $settings->add( $setting );
 
         // bugs

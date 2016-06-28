@@ -12,7 +12,7 @@ if ( $_SERVER['REQUEST_METHOD'] == 'OPTIONS' )
 {
 	header('Access-Control-Allow-Origin: *');
 	header('Access-Control-Allow-Methods: OPTIONS, GET, POST, PUT, DELETE');
-	header('Access-Control-Allow-Headers: X-Devprom-Key,Content-Type');
+	header('Access-Control-Allow-Headers: Devprom-Auth-Key,Content-Type');
 	exit();
 }
 
@@ -30,7 +30,7 @@ if ( $_REQUEST['project'] == '') {
 if ( getSession()->getUserIt()->getId() < 1 )
 {
 	getSession()->close();
-	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /login?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /logoff?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }
 
 // resolve project code
@@ -64,9 +64,8 @@ if ( $cache_it->getId() < 1 )
 	}
 	if ( $portfolio_it->getId() < 1 ) {
 		// when there is no any portfolio available then redirect into the first project
-		$project_it = $cache->getAll();
-		if ( $project_it->getId() < 1 ) exit(header('Location: /projects/welcome'));
-		$session = new PMSession($project_it);
+		$accessible = new ProjectAccessible();
+		$session = new PMSession($accessible->getAll());
 	}
 }
 else {
@@ -74,19 +73,18 @@ else {
 }
 
 // check if session has been configured
+$redirect = '';
 $project_it = getSession()->getProjectIt();
-
-if ( !is_object($project_it) )
-{
- 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+if ( !is_object($project_it) || $project_it->getId() < 1 ) {
+	if ( in_array($_REQUEST['project'], array('all','my')) ) {
+		$redirect = '/profile';
+	} else {
+		$redirect = '/404?redirect='.urlencode($_SERVER['REQUEST_URI']);
+	}
 }
-
-if ( $project_it->getId() < 1 )
-{
- 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+else if ( !getFactory()->getAccessPolicy()->can_read($project_it) ) {
+	$redirect = '/404?redirect='.urlencode($_SERVER['REQUEST_URI']);
 }
-
-if ( !getFactory()->getAccessPolicy()->can_read($project_it) )
-{
-	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
+if ( $redirect != '' ) {
+	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: '.$redirect));
 }

@@ -30,13 +30,11 @@ div.board_item_body input[type=checkbox] {
 }
 
 div.board_item_body.selected .board_item_attributes {
-	border: 1px solid #757273;
 	border-left: none;
+	background: rgba(255,255,255,0.5);
 }
 div.board_item_body.selected .board_item_spinner {
-	border-top: 1px solid #757273 !important;
-	border-left: 1px solid #757273 !important;
-	border-bottom: 1px solid #757273 !important;
+	opacity: 0.5;
 }
 
 div.board_item_spinner
@@ -50,8 +48,7 @@ div.board_item_spinner
 
 div.board_item_attributes
 {
-    padding:0 4px 0 4px;
-    border:1px solid #eaeaea;
+    padding:0 3px 1px 2px;
 	display: table-cell;
 	vertical-align: top;
 	width: 100%;
@@ -60,6 +57,7 @@ div.board_item_attributes
 th.list_header
 {
 	text-align: center;
+	min-width: 120px;
 }
 
 div.board-item-fact
@@ -96,6 +94,35 @@ div.board-item-fact a
     vertical-align:middle;	
 }
 
+.title-on-card
+{
+	display: table;
+	width: 100%;
+}
+
+.left-on-card
+{
+	display: table-cell;
+	text-align: left;
+	vertical-align: top;
+	cursor: move;
+}
+
+.right-on-card
+{
+	display: table-cell;
+	text-align: right;
+}
+
+.right-on-card .order
+{
+	background: #6666CC;
+	color: white;
+	font-size: 7pt;
+	padding: 3px 7px 3px 7px;
+	line-height: 8px;
+}
+
 .title-on-card .checkbox {
 	float:left;
 	height:15px;
@@ -110,16 +137,14 @@ div.board-item-fact a
 {
 }
 
-.board-tasks
-{
-    margin: 0;	
+.controls .board-tasks {
+	line-height: 14px;
 }
 
 .item-footer {
 	display:table;
 	width:100%;
-	margin-bottom:2px;
-	height:23px;
+	height:21px;
 }
 
 .board-size-xl .bi-cap {
@@ -139,6 +164,9 @@ div.board-item-fact a
 	height: 3.7em;
 	line-height: 14px;
 }
+.board-size-l .title-on-card {
+	line-height: 18px;
+}
 .board-size-l .title-on-card a.with-tooltip {
 }
 .board-size-l .title-on-card img {
@@ -153,6 +181,9 @@ div.board-item-fact a
     height: 2.1em;
     line-height: 12px;
     margin-bottom: 3px;
+}
+.board-size-m .title-on-card {
+	line-height: 16px;
 }
 .board-size-m .title-on-card a.with-tooltip {
 }
@@ -176,6 +207,9 @@ div.board-item-fact a
 }
 .board-size-s .bi-cap + div {
 	display: none;
+}
+.board-size-s .title-on-card {
+	line-height: 15px;
 }
 .board-size-s .title-on-card a.with-tooltip {
     font-size: 0.87em;
@@ -201,6 +235,15 @@ div.board-item-fact a
 }
 .board-size-xs .title-on-card .right-on-card {
 	display:none;
+}
+
+.date-attr  {
+	overflow:hidden;
+	white-space:nowrap;
+}
+
+.date-attr img {
+	margin-left: -1px;
 }
 
 .board-size-xl .date-attr {
@@ -242,11 +285,25 @@ div.board-item-fact a
 	margin-top: 3px;
 }
 
+.board-size-mic .board_item {
+	width: 20px;
+}
+.board-size-mic .board_item_spinner {
+	width: 20px;
+}
+.board-size-mic .board_item_attributes {
+	display: none;
+}
+.board-size-mic .item-footer {
+	display: none;
+}
+
+
 #board-slider {
 	float:left;
 	width: 90px;
 	margin-top:17px;
-	margin-right:16px;
+	margin-right:15px;
 }
 
 td.board-column {
@@ -255,10 +312,16 @@ td.board-column {
 td.cell-add-btn:hover a {
 	display: inline-block;
 }
+td.cell-add-btn a.btn {
+	height: 18px;
+	width: 18px;
+	padding: 0 2px;
+}
 td.cell-add-btn {
 	border-top: none;
 	height: 26px;
-	text-align: right;
+	padding-left:6px;
+	padding-right:1px;
 }
 td.cell-add-btn a {
 	display: none;
@@ -273,4 +336,31 @@ tr.row-cards:last-child td.board-column {
 	display:table-cell;
 	width:1%;
 	padding-left:2px;
+	vertical-align: top;
+}
+.board-header-op {
+	display:table-cell;
+	width: 1%;
+	padding-right:2px;
+	vertical-align: top;
+}
+.board-header-op .btn {
+	width: 25px;
+}
+.board-header-details {
+	font-weight: normal;
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid #e0e0e0;
+}
+
+.cell-add-btn .collapse-cards {
+	margin-right: 8px;
+}
+.cell-add-btn .append-card {
+	margin-left: 8px;
+}
+.cell-add-btn .planning-details {
+	padding-left: 4px;
+	margin-right: 8px;
 }

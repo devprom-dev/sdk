@@ -6,9 +6,23 @@ class RequestBulkForm extends BulkForm
 {
  	function buildForm()
  	{
- 		return new RequestForm($this->getObject());
+		$object = $this->getObject();
+		$object->addAttribute('TransitionComment', 'WYSIWYG', translate('Комментарий'), false);
+
+ 		return new RequestForm($object);
  	}
- 	
+
+	function getActionAttributes()
+	{
+		$attributes = parent::getActionAttributes();
+
+		if ( in_array('BlockReason', $attributes) ) {
+			$attributes[] = 'TransitionComment';
+		}
+
+		return $attributes;
+	}
+
 	function getAttributeType( $attr )
  	{
  		switch ( $attr )
@@ -17,6 +31,7 @@ class RequestBulkForm extends BulkForm
  			case 'Project':
  			case 'Iterations':
  			case 'LinkType':
+			case 'Comment':
  				return 'custom';
  				
  			default:
@@ -65,7 +80,7 @@ class RequestBulkForm extends BulkForm
 	            return parent::IsAttributeModifiable( $attr );
 	    }
 	}
- 	
+
  	function drawCustomAttribute( $attribute, $value, $tab_index )
  	{
  		switch ( $attribute )
@@ -124,7 +139,26 @@ class RequestBulkForm extends BulkForm
 				
 				echo $this->getName($attribute);
 				$field->draw();
-				
+				break;
+
+			case 'Comment':
+				$field = new FieldWYSIWYG();
+
+				is_object($this->getObjectIt())
+					? $field->setObjectIt( $this->getObjectIt() ) : $field->setObject( $this->getObject() );
+
+				$editor = $field->getEditor();
+				$editor->setMode( WIKI_MODE_MINIMAL );
+
+				$field->setHasBorder( false );
+				$field->setName($attribute);
+				$field->SetId($attribute);
+				$field->SetName($attribute);
+				$field->SetValue($value);
+				$field->SetTabIndex($tab_index);
+
+				echo $this->getName($attribute);
+				$field->draw();
 				break;
 
 			default:

@@ -83,7 +83,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  /////////////////////////////////////////////////////////////////////////// 
  class WikiExportBaseWebMethod extends ExportWebMethod
  {
- 	function getJSCall( $page_it = null, $class )
+ 	function url( $page_it = null, $class )
  	{
  		$objects = is_object($page_it) ? $page_it->getId() : '';
  		
@@ -107,9 +107,9 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  		return text(1511);
  	}
  	
- 	function getJSCall( $page_it = null, $class = 'WikiIteratorExportRtf' )
+ 	function url( $page_it = null, $class = 'WikiIteratorExportRtf' )
  	{
- 		return parent::getJSCall( $page_it, $class );
+ 		return parent::url( $page_it, $class );
  	}
  }
 
@@ -121,16 +121,16 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  		return translate('Экспорт в PDF');
  	}
  	
- 	function getJSCall( $page_it = null, $class = 'WikiIteratorExportPdf' )
+ 	function url( $page_it = null, $class = 'WikiIteratorExportPdf' )
  	{
- 		return parent::getJSCall( $page_it, $class );
+ 		return parent::url( $page_it, $class );
  	}
  }
  
  /////////////////////////////////////////////////////////////////////////// 
  class WikiExportTemplatedWebMethod extends ExportWebMethod
  {
- 	function getJSCall( $page_it = null, $template = '', $class )
+ 	function url( $page_it = null, $template = '', $class )
  	{
  		$objects = is_object($page_it) ? $page_it->getId() : '';
  		
@@ -163,9 +163,9 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  		return translate('Экспорт в HTML');
  	}
  	
- 	function getJSCall( $page_it = null, $template = '', $class = 'WikiIteratorExportHtml' )
+ 	function url( $page_it = null, $template = '', $class = 'WikiIteratorExportHtml' )
  	{
- 		return parent::getJSCall( $page_it, $template, $class );
+ 		return parent::url( $page_it, $template, $class );
  	}
  }
 
@@ -177,8 +177,8 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
  		return translate('Экспорт в CHM');
  	}
  	
- 	function getJSCall( $page_it = null, $template = '', $class = 'WikiIteratorExportCHM' )
+ 	function url( $page_it = null, $template = '', $class = 'WikiIteratorExportCHM' )
  	{
- 		return parent::getJSCall( $page_it, $template, $class );
+ 		return parent::url( $page_it, $template, $class );
  	}
  }

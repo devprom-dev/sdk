@@ -22,13 +22,13 @@ monolog:
         applog:
             type: rotating_file
             path: "%kernel.logs_dir%/pm_app_system.log"
-            level: debug
+            level: error
             max_files: 5 # Set up to keep log files for 5 recent days only
 
 nelmio_cors:
     paths:
         '^/pm/(.*)/api/v1/':
             allow_origin: ['*']
-            allow_headers: ['X-Devprom-Key']
+            allow_headers: ['Devprom-Auth-Key']
             allow_methods: ['POST', 'PUT', 'GET', 'DELETE']
             max_age: 3600

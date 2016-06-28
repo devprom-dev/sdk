@@ -4,7 +4,7 @@ class KanbanRequestBoard extends RequestBoard
 {
 	function buildBoardAttributeIterator()
 	{
-		return getFactory()->getObject($this->getBoardAttributeClassName())->getRegistry()->Query(
+		return getFactory()->getObject('IssueState')->getRegistry()->Query(
 				array (
 						new FilterVpdPredicate(array_shift($this->getTable()->getProjectVpds())),
 						new SortAttributeClause('OrderNum')
@@ -59,8 +59,7 @@ class KanbanRequestBoard extends RequestBoard
  	{
  		$object = new MetaobjectStatable($this->getObject()->getEntityRefName());
 		$object->disableVpd();
-		$object->resetPersisters();
-		
+
 		$object->addFilter( new StatePredicate($referenceName) );
 		$object->addFilter( new FilterVpdPredicate($this->getTable()->getProjectVpds()) );
 

@@ -8,21 +8,29 @@ include "classes.php";
 class ModelFactory extends ModelFactoryBase
 {
  	var $classes = array();
- 	
- 	var $logger;
+	private $plugins = null;
+	var $logger;
  	
  	private $origination_service = null;
  	
- 	function __construct($cache_engine = null, $access_policy = null, $events_manager = null, $origination_service = null )
+ 	function __construct($pluginsManager , $cache_engine = null, $access_policy = null, $events_manager = null, $origination_service = null )
  	{
+		global $plugins;
+
  	    parent::__construct($cache_engine, $access_policy, $events_manager);
- 	    
- 	    $this->classes = $this->buildClasses();
+
+		$plugins = $pluginsManager;
+		$this->plugins = $pluginsManager;
+		$this->classes = $this->buildClasses();
  	    
  	    $this->origination_service = is_object($origination_service) 
  	    		? $origination_service : new ModelEntityOriginationService($this->getCacheService());
  	}
- 	
+
+	public function getPluginsManager() {
+		return $this->plugins;
+	}
+
  	public function getEntityOriginationService()
  	{
  		return $this->origination_service;
@@ -53,7 +61,8 @@ class ModelFactory extends ModelFactoryBase
 			'cms_pluginmodule' => array( 'Module'),
 			'cms_resource' => array( 'Resource' ),
 			'pm_calendarinterval' => array( 'Calendar' ),
-			'pm_customattribute'  => array('PMCustomAttribute')
+			'pm_customattribute'  => array('PMCustomAttribute'),
+			'cms_tempfile' => array( 'TempFile' )
 		);
 	}
  	
@@ -124,11 +133,11 @@ class ModelFactory extends ModelFactoryBase
 	
 	function debug( $message )
 	{
-		$log = $this->getLogger();
-		
-		if ( !is_object($log) ) return;
-		
-		$log->debug( $message );
+		if ( defined('DEBUG_ENABLED') && DEBUG_ENABLED ) {
+			$log = $this->getLogger();
+			if ( !is_object($log) ) return;
+			$log->debug( $message );
+		}
 	}
 	
 	function info( $message )
@@ -144,19 +153,11 @@ class ModelFactory extends ModelFactoryBase
 	{
     	global $model_factory;
     
-    	if ( !is_object($model_factory) ) 
-    	{
-    		$model_factory = new ModelFactory;
+    	if ( !is_object($model_factory) ) {
+    		$model_factory = new ModelFactory(PluginsFactory::Instance());
     	}
-    	
     	return $model_factory;
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-function getModelFactory()
-{
-    return ModelFactory::get();
 }
 
 function getFactory()

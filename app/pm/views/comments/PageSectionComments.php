@@ -10,14 +10,15 @@ class PageSectionComments extends InfoSection
 	private $title = '';
 	private $id = '';
  	
- 	function PageSectionComments( $object_it, $baseline = '' )
+ 	function __construct( $object_it, $baseline = '' )
  	{
+		parent::__construct();
+
  		$this->object_it = $object_it;
  		$this->baseline = $baseline;
 		$this->setCaption(translate('Комментарии'));
 		$this->setId( parent::getId() );
-
- 		parent::__construct();
+		$this->setPlacement('bottom');
  	}
 
 	function setCaption( $title ) {

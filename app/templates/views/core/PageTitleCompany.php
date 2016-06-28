@@ -1,5 +1,11 @@
 <?
 $has_portfolio_programs = count($portfolios) + count($programs) > 0;
+foreach( $programs as $program_id => $item ) {
+    unset($projects[$program_id][$program_id]);
+}
+foreach( $portfolios as $portfolio_id => $item ) {
+    unset($projects[$portfolio_id][$portfolio_id]);
+}
 ?>
 
 <ul class="dropdown-menu">
@@ -60,19 +66,30 @@ $has_portfolio_programs = count($portfolios) + count($programs) > 0;
                             </td>
                         </tr>
                         <tr>
+                            <? if ( !$has_portfolio_programs ) { ?>
                             <td>
-                            <?php foreach ( $admin_actions as $action ) { ?>
-                                <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
-                                <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
-                            <?php } ?>
-                            <? if ( $has_portfolio_programs ) { ?>
-                            </td>
-                            <td>
-                            <?php } ?>
                                 <?php foreach ( $company_actions as $action ) { ?>
-                                <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                    <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                <?php } ?>
+                                <? if ( count($company_actions) > 0 ) { echo '<br/>'; } ?>
+                                <?php foreach ( $admin_actions as $action ) { ?>
+                                    <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
+                                    <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>
                             </td>
+                            <? } else { ?>
+                                <td>
+                                    <?php foreach ( $admin_actions as $action ) { ?>
+                                        <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
+                                        <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                    <?php } ?>
+                                </td>
+                                <td>
+                                    <?php foreach ( $company_actions as $action ) { ?>
+                                        <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                    <?php } ?>
+                                </td>
+                            <?php } ?>
                         </tr>
                    </tbody>
                 </table>

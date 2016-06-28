@@ -39,7 +39,7 @@ class SessionBase
 		 	            new ResourceBuilderPluginsLanguageFiles(),
  						new ProjectMetadataBuilder()
  				),
-				$this->getPluginsManager()->getCommonBuilders()
+				getFactory()->getPluginsManager()->getCommonBuilders()
  		);
 
 		$this->setAuthenticationFactory( $factory );
@@ -49,7 +49,7 @@ class SessionBase
  		
  		$this->configure();
 
-		$_SERVER['ENTRY_URL'] = class_exists('PortfolioMyProjectsBuilder', false) ? '/pm/my' : '/pm/all';
+		$_SERVER['ENTRY_URL'] = defined('PERMISSIONS_ENABLED') ? '/pm/my' : '/pm/all';
  	}
  	
  	public function configure()
@@ -59,13 +59,14 @@ class SessionBase
 
  		$this->builders = array_merge($this->builders, $this->createBuilders());
 		if ( $this->getSite() != '' ) {
-			$this->builders = array_merge($this->builders, $this->getPluginsManager()->getSectionBuilders($this->getSite()));
+			$this->builders = array_merge($this->builders, getFactory()->getPluginsManager()->getSectionBuilders($this->getSite()));
 		}
 
  		$notificators = $this->getBuilders( 'ObjectFactoryNotificator' );
  		if ( is_array($notificators) ) {
+			$manager = getFactory()->getEventsManager();
  		    foreach( $notificators as $notificator ) {
-     		    getFactory()->getEventsManager()->registerNotificator( $notificator );
+				$manager->registerNotificator( $notificator );
      		}
  		}
  		
@@ -80,11 +81,6 @@ class SessionBase
  	function setCacheEngine( $service )
  	{
  		$this->cache_engine = $service; 
- 	}
- 	
- 	function getPluginsManager()
- 	{
- 	    return getFactory()->getPluginsManager();
  	}
  	
  	function getLanguageUid()
@@ -331,9 +327,10 @@ class SessionBase
  	    
  	    $this->builders_cache[$interface_name] = array();
  	    
- 	    foreach( $this->builders as $builder )
- 	    {
-            if ( is_a($builder, $interface_name) ) $this->builders_cache[$interface_name][get_class($builder)] = $builder;
+ 	    foreach( $this->builders as $builder ) {
+            if ( $builder instanceof $interface_name ) {
+				$this->builders_cache[$interface_name][get_class($builder)] = $builder;
+			}
  	    }
  	    
  	    return $this->builders_cache[$interface_name];

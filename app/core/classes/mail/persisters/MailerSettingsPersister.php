@@ -1,5 +1,4 @@
 <?php
-include "MailerSettingsFileSendmail.php";
 include "MailerSettingsFileSwiftMailer.php";
 
 class MailerSettingsPersister extends ObjectSQLPersister
@@ -29,11 +28,8 @@ class MailerSettingsPersister extends ObjectSQLPersister
 	public function __construct()
 	{
 		$this->files = array (
-					new MailerSettingsFileSwiftMailer()
-				);
-		if ( EnvironmentSettings::getWindows() ) {
-			$this->files[] = new MailerSettingsFileSendmail();
-		}
+			new MailerSettingsFileSwiftMailer()
+		);
 	}
 	
  	function modify( $object_id, $parms )
@@ -84,7 +80,7 @@ class MailerSettingsPersister extends ObjectSQLPersister
  		
  		$columns = array();
 		foreach( $values as $attribute => $value ) {
-			$columns[] = "'".$value."' ".$attribute;
+			$columns[] = "'".addslashes(addslashes($value))."' ".$attribute;
 		}
 
 		$value = defined('EMAIL_SENDER_TYPE') ? EMAIL_SENDER_TYPE : 'admin';

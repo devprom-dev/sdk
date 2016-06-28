@@ -76,6 +76,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
  	 	foreach( $references as $object )
  	    {
  	    	$object = getFactory()->getObject(get_class($object));
+			$object->removeNotificator('ChangeLogNotificator');
 
      	    CloneLogic::Run( $context, $object, $object->createXMLIterator($xml), $target_it);
  	    }
@@ -127,7 +128,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 		$change_it = $change->getRegistry()->Query(
 			array (
 				new ChangeLogItemFilter($object_it),
-				new FilterAttributePredicate('ChangeKind', 'added,modified,commented' )
+				new FilterAttributePredicate('ChangeKind', 'modified,commented' )
 			)
 		);
 		DAL::Instance()->Query(" UPDATE ObjectChangeLog SET VPD = '".$target_it->get('VPD')."' WHERE ObjectChangeLogId IN (".join(',',$change_it->idsToArray()).")");

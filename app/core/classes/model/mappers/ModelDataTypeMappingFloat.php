@@ -15,7 +15,7 @@ class ModelDataTypeMappingFloat extends ModelDataTypeMapping
 		$match = array();
 		if ( preg_match(SystemDateTime::getTimeParseRegex(), $value, $match) and count($match) > 1 ) {
 			$value = 0;
-			$value += $match[2] * 24 * 60;
+			$value += $match[2] * 8 * 60;
 			$value += $match[4] * 60;
 			$value += $match[6];
 			return round($value / 60, 4);

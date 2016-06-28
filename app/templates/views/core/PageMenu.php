@@ -1,8 +1,20 @@
 <div class="btn-toolbar" style="padding-right:12px;">
 
+	<? if ( count($areas) > 0 ) { ?>
+		<div class="btn-group last">
+			<form class="form-search" action="<?=$search_url?>">
+				<div class="input-append">
+					<? $content = htmlentities($view->render('core/PageMenuShort.php',array('areas' => $areas))); ?>
+					<input id="quick-search" name="quick" type="text" class="search-query" placeholder="<?=text(2195)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="" data-content="<?=$content?>">
+					<button type="submit" class="btn medium-blue">
+						<i class="icon-search"></i>
+					</button>
+				</div>
+			</form>
+		</div>
+	<? } ?>
 
-
-<?php if ( count($checkpoint_alerts) > 0 ) { ?>
+	<?php if ( count($checkpoint_alerts) > 0 ) { ?>
 <?php 
 foreach( $checkpoint_alerts as $key => $alert )
 {
@@ -43,7 +55,7 @@ foreach( $checkpoint_alerts as $key => $alert )
 <?php if ( $menu['button_class'] != '' ) { ?>
 
 <div class="btn-group last">
-	<?php if ( $menu['title'] != '' ) { ?>
+	<?php if ( $menu['button_class'] != 'empty' ) { ?>
 		<?php if ( $menu['url'] != '' ) { ?>
 		<a id="<?=$menu['id']?>" class="btn <?=$menu['button_class']?>" href="<?=$menu['url']?>" title="<?=$menu['description']?>">
 		<?php } else { ?>
@@ -67,7 +79,7 @@ foreach( $checkpoint_alerts as $key => $alert )
 			?>
 		<?php } ?>
 	<?php } ?>
-</div>	<!-- end btn-group -->	
+</div>	<!-- end btn-group -->
 
 <?php } else { ?>
 
@@ -88,7 +100,7 @@ foreach( $checkpoint_alerts as $key => $alert )
 </div>	<!-- end btn-group -->	
 
 <?php } ?>
-
+	<div class="btn-group"></div>
 <?php } ?>
 
 </div> <!-- end btn-toolbar -->

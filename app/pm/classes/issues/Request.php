@@ -24,6 +24,7 @@ include_once "predicates/RequestImplementationFilter.php";
 include_once "predicates/RequestDependencyFilter.php";
 include_once "predicates/RequestFeatureFilter.php";
 include_once "predicates/RequestFinishAfterPredicate.php";
+include_once "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
 include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
@@ -301,7 +302,7 @@ class Request extends MetaobjectStatable
 		return parent::modify_parms( $object_id, $parms );
 	}
 	
-	function delete( $id )
+	function delete( $id, $record_version = ''  )
 	{
 		global $model_factory;
 		

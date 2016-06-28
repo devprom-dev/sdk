@@ -5,7 +5,7 @@ include_once "FieldHierarchySelector.php";
 
 class FieldHierarchySelectorAppendable extends FieldHierarchySelector
 {
-    function draw()
+    function draw( $view = null )
     {
     	$this->setAppendable();
     	parent::draw();

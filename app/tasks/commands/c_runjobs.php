@@ -88,6 +88,7 @@ class RunJobs extends Command
 			$job_it = $job->getInArray('co_ScheduledJobId', $jobs_to_run);
 			while ( !$job_it->end() )
 			{
+				/*
 				$lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME.'-'.$job_it->getId());
 				if ( $lock->Locked($this->timeWaitedForPrevInstance) ) {
 					if ( is_object($this->getLogger()) ) {
@@ -98,6 +99,7 @@ class RunJobs extends Command
 				}
 				$lock->Lock();
 				$jobs_locks[] = $lock;
+				*/
 
 				$model_factory = new ModelFactoryExtended($plugins);
 				

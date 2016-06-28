@@ -9,12 +9,17 @@
     	        <td width="1%" style="padding-left:0;padding-right:0;vertical-align:top;">
     	        	<?php echo $view->render('core/UserPicture.php', array ( 'id' => $comment['author_id'], 'class' => 'user-avatar', 'title' => $comment['author'] )); ?>
     	        </td>
-    	        <td style="padding-left:2px;">
+    	        <td>
                     <div class="comment-author">
-        	            <?php 
-        	            
-            	            echo $view->render('core/TextMenu.php', array ( 
-                    	        'title' => $comment['author'].' - '.$comment['created'].'&nbsp; ', 
+        	            <?php
+							$title = '';
+        	            	if ( $comment['photo_id'] == '' ) {
+								$title = $comment['author'].', ';
+							}
+							$title .=  $comment['created'];
+
+            	            echo $view->render('core/ActionsMenu.php', array (
+                    	        'title' => $title.'&nbsp; ',
                     	        'items' => $comment['actions']
                     	    ));
         	            
@@ -24,10 +29,9 @@
         	        </div>
                     <div class="comment-text">
                         <?php if ( count($comment['files']) > 0 ) { ?>
-                        <div>
+                        <div style="margin-bottom:8px;">
                         	<? echo $view->render('core/AttachmentTitles.php', array( 'files' => $comment['files'] )); ?>
                         </div>
-                        <br/>
                         <?php } ?>
                         
                         <? echo $view->render('core/PageFormAttribute.php', $comment); ?>
@@ -37,7 +41,7 @@
                     		<a name="comment_id_<?=$comment['id']?>"></a>
                     		<div id="commentsreply<?=$comment['id']?>">
                     			<div class="comment">
-                    				<input class="btn btn-small" type="button" onclick="javascript: showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['id']?>'), '', '<?=$comment['id']?>');" value="<?=translate('Ответить')?>">
+                    				<input class="btn btn-small" type="button" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['id']?>'), '', '<?=$comment['id']?>');" value="<?=translate('Ответить')?>">
                     			 </div>
                     		</div>
                     	</div>

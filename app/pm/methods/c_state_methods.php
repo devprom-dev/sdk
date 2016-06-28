@@ -112,14 +112,14 @@ class TransitionStateMethod extends WebMethod
 				get_class($this->object_it->object),
 				$this->object_it->object->getEntityRefName(),
 				$this->source_ref_name != ''
-						? $this->source_ref_name : $this->transition_it->getRef('SourceState')->get('ReferenceName'),
+						? $this->source_ref_name : $this->transition_it->get('SourceStateReferenceName'),
 				$this->target_ref_name != '' 
-						? $this->target_ref_name : $this->transition_it->getRef('TargetState')->get('ReferenceName'),
+						? $this->target_ref_name : $this->transition_it->get('TargetStateReferenceName'),
 				$this->transition_it->getId(), 
 				$this->transition_it->getDisplayName()
 		);
 		
-		return "javascript: workflowMoveObject('".join("','", $parms)."', ".$this->getRedirectUrl().")";
+		return "javascript: workflowMoveObject('".join("','", $parms)."', ".$this->getRedirectUrl().", ".str_replace('"',"'",json_encode($parms_array, JSON_HEX_APOS)).")";
 	}
 	
  	function execute_request()
@@ -136,15 +136,33 @@ class TransitionStateMethod extends WebMethod
 
 		$transition_it = $transition->getExact($_REQUEST['transition']);
  		
-		$this->setTransitionIt( $transition_it ); 
-	
+		$this->setTransitionIt( $transition_it );
+
+		$required = array();
+		foreach( $object->getAttributes() as $attribute => $info ) {
+			if( $_REQUEST[$attribute] != '' ) {
+				$required[$attribute] = $_REQUEST[$attribute];
+			}
+		}
+
 		if ( $this->getRedirectUrl() != '' )
 		{
-			echo '&Transition='.SanitizeUrl::parseUrl($_REQUEST['transition']);
+			echo '&'.http_build_query(
+				array_map(function($value) {
+						return SanitizeUrl::parseUrl($value);
+					},
+					array_merge(
+						$required,
+						array (
+							'Transition' => $_REQUEST['transition']
+						)
+					)
+				)
+			);
 		}
 		else
 		{
-			$this->execute( $_REQUEST['transition'], $_REQUEST['object'], $_REQUEST['class'] );
+			$this->execute( $_REQUEST['transition'], $_REQUEST['object'], $_REQUEST['class'], $required );
 		}
  	}
 
@@ -167,13 +185,10 @@ class TransitionStateMethod extends WebMethod
 		if ( $object->getAttributeType('State') == '' ) return;
 		
 		$state_it = $transition_it->getRef('TargetState');
-		
+
 		$required['State'] = $state_it->get('ReferenceName');
-		
 		$required['Transition'] = $transition_it->getId();
-		
-		foreach( $required as $key => $value )
-		{
+		foreach( $required as $key => $value ) {
 			if ( $required[$key] == '' ) unset($required[$key]);
 		}
 
@@ -359,20 +374,34 @@ class TransitionStateMethod extends WebMethod
 				$attributes[] = $attribute;
 			}
 	
-			if ( $object instanceof Request && in_array('Tasks', $attributes, true) )
-			{
-	   	 	 		$url = getSession()->getApplicationUrl($object_it).
-    	 	 			'issues/board?mode=group&ChangeRequest='.$object_it->getId().'&formonly=true&Transition='.$transition_it->getId();
-    	 	 		
-    				echo '{"message":"redirect","url":"'.$url.'"}';
-    				
-    		 	 	return;
-			}
-			
 			if ( count($attributes) > 0 )
 			{
-	 	 		$url = $object_it->getEditUrl().'&Transition='.$transition_it->getId().'&formonly=true';
-	 	 		
+				$required = array();
+				foreach( $object->getAttributes() as $attribute => $info ) {
+					if ( $parms[$attribute] != '' ) $required[$attribute] = $parms[$attribute];
+				}
+
+				$url = '&'.http_build_query(
+					array_map(function($value) {
+							return SanitizeUrl::parseUrl($value);
+						},
+						array_merge(
+							$required,
+							array (
+								'Transition' => $transition_it->getId(),
+								'formonly' => 'true'
+							)
+						)
+					)
+				);
+
+				if ( $object instanceof Request && in_array('Tasks', $attributes, true) ) {
+					$url = getSession()->getApplicationUrl($object_it).'issues/board?mode=group&ChangeRequest='.$object_it->getId().$url;
+				}
+				else {
+					$url = $object_it->getEditUrl().$url;
+				}
+
 				echo '{"message":"redirect","url":"'.$url.'"}';
 				return;
 			}
@@ -416,130 +445,5 @@ class TransitionStateMethod extends WebMethod
  }
   
  ///////////////////////////////////////////////////////////////////////////////////////
- class FilterStateMethod extends FilterWebMethod
- {
- 	var $state_it, $object;
- 	
- 	function FilterStateMethod( $object = null )
- 	{
- 		if ( is_object($object) )
- 		{
-	 		$this->object = $object;
-	 		$this->state_it = $this->object->getAll();
-			$this->setDefaultValue($this->state_it->get('ReferenceName'));
 
- 			parent::FilterWebMethod( $object->getClassName() );
- 		}
- 		else
- 		{
- 			parent::FilterWebMethod( '' );
- 		}
- 	}
 
- 	function getCaption()
- 	{
- 		return translate('Состояние');
- 	}
- 	
- 	function getValues()
- 	{
-  		$values = array (
- 			'all' => translate('Любое'),
- 			);
- 		
- 		while ( !$this->state_it->end() )
- 		{
- 			$values[$this->state_it->get('ReferenceName')] = 
- 				$this->state_it->getDisplayName();
- 				
- 			$this->state_it->moveNext();
- 		}
- 		
- 		return $values;
-	}
-	
-	function getStyle()
-	{
-		return 'width:120px;';
-	}
-
- 	function getValueParm()
- 	{
- 		return 'state';
- 	}
- 	
- 	function getValue()
- 	{
- 		$value = parent::getValue();
-
- 		if ( $value == '' && $this->getDefaultValue() != '' ) {
-			return $this->getDefaultValue();
-		}
-
- 		return $value;
- 	}
- 	
- 	function hasAccess()
- 	{
-		return $this->state_it->count() > 0;
- 	}
- }
- 
- ///////////////////////////////////////////////////////////////////////////////////////
- class FilterStateTransitionMethod extends FilterWebMethod
- {
- 	var $state, $state_it;
- 	
- 	function __construct( $state = null )
- 	{
- 		if ( is_object($state) )
- 		{
-	 		$this->state = $state;
- 			$this->state_it = $this->state->getAll();
- 			
- 			parent::__construct( $state->getClassName() );
- 		}
- 		else
- 		{
- 			parent::__construct( '' );
- 		}
- 		
- 		$this->setValueParm('transition');
- 		$this->setCaption(text(1867));
- 	}
-
- 	function getValues()
- 	{
-  		$values = array (
- 			'all' => translate('Все'),
- 			);
- 		
- 		$transition = getFactory()->getObject('Transition');
- 		$transition_it = $transition->getByRefArray(
- 			array( 'SourceState' => $this->state_it->idsToArray() )
- 			);
- 		
- 		while ( !$transition_it->end() )
- 		{
- 			$source_it = $transition_it->getRef('SourceState');
- 			$target_it = $transition_it->getRef('TargetState');
- 			
- 			$values[' '.$transition_it->getId()] = $transition_it->getDisplayName().' ('.
- 				$source_it->getDisplayName().' > '.$target_it->getDisplayName().')';
- 				
- 			$transition_it->moveNext();
- 		}
- 		
- 		return $values;
-	}
-	
-	function getStyle()
-	{
-		return 'width:120px;';
-	}
-
- 	function hasAccess()
- 	{
-		return $this->state_it->count() > 0;
- 	}
-}

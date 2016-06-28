@@ -4,28 +4,15 @@ class LanguageSettingsPersister extends ObjectSQLPersister
 {
  	function modify( $object_id, $parms )
  	{
- 		global $model_factory;
- 		
 		$settings_path = $_SERVER['DOCUMENT_ROOT'].'/settings_server.php';
 		
-		$file = fopen($settings_path, 'r', 1);
-
-		$file_content = fread($file, filesize($settings_path));
-		
-		fclose($file);
-
-		$language = $model_factory->getObject('cms_Language');
-		
-		$language_it = $language->getExact( $parms['cms_LanguageId'] );
+		$language_it = getFactory()->getObject('cms_Language')->getExact( $parms['cms_LanguageId'] );
 		
 		$file_content = SettingsFile::setSettingValue(
-			'LANG_DATEFORMAT_'.$language_it->get('CodeName'), $parms['DateFormatClass'], $file_content );
-		
-		$file = fopen($settings_path, 'w', 1);
-		
-		fwrite( $file, $file_content );
-		fclose( $file );
-		
+			'LANG_DATEFORMAT_'.$language_it->get('CodeName'), $parms['DateFormatClass'],
+				file_get_contents($settings_path) );
+
+		file_put_contents($settings_path, $file_content);
 		if ( function_exists('opcache_reset') ) opcache_reset();
  	}
 

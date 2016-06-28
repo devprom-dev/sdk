@@ -9,7 +9,7 @@ class HtmlExportWebMethod extends ExportWebMethod
  		return translate('Печать списка');
  	}
  	
- 	function getJSCall( $class = 'IteratorExportHtml' )
+ 	function url( $class = 'IteratorExportHtml' )
  	{
  		return parent::getJSCall(
  			array( 'class' => $class ) );

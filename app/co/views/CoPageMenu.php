@@ -12,7 +12,6 @@
 		$pages = array();
 		
 		$pages['main'] = array( 
-			'name' => translate('Настройки'),
 		    'uid' => 'main',
 			'items' => array(
 				array( 'url' => '/profile', 'name' => translate('Профиль') )   

@@ -12,7 +12,7 @@ class RequestBoard extends PMPageBoard
  	private $tasks_array = array();
  	private $priorities_array = array();
  	private $priority_actions = array();
- 	private $task_transitions_array = array();
+ 	private $task_transition_it = array();
  	private $task_target_states_array = array();
  	private $method_comment = null;
  	private $visible_column = array();
@@ -22,6 +22,8 @@ class RequestBoard extends PMPageBoard
  	private $estimation_actions = array();
  	private $estimation_title = '';
  	private $method_spend_time = null;
+	private $uidVisible = true;
+	private $task = null;
  	
  	function __construct( $object )
  	{
@@ -36,28 +38,71 @@ class RequestBoard extends PMPageBoard
  	
  	function buildRelatedDataCache()
  	{
+		$rowset = $this->getIteratorRef()->getRowset();
+
+		$ids = array_map(
+			function($val) {
+				return $val['pm_ChangeRequestId'];
+			},
+			$rowset
+		);
+		if ( count($ids) < 1 ) {
+			$task_it = getFactory()->getObject('Task')->getEmptyIterator();
+		}
+		else {
+			$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
+				array_merge(
+					array (
+						new FilterAttributePredicate('ChangeRequest', $ids),
+						new SortAttributeClause('ChangeRequest')
+					),
+					$this->visible_column['OpenTasks']
+						? array( new StatePredicate('notresolved') )
+						: array()
+				)
+			);
+		}
+
+		foreach( $task_it->getRowset() as $row ) {
+			$this->tasks_array[$row['ChangeRequest']][] = $row;
+		}
+		$this->task = getFactory()->getObject('Task');
+
+		$ids = array_filter(
+			array_map(function($val) {
+				return $val['Type'];
+			}, $rowset),
+			function($value) { return $value > 0; }
+		);
+		if ( count($ids) < 1 ) $ids = array(0);
+
+		$type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
+			array (
+				new FilterInPredicate($ids)
+			)
+		);
+		while( !$type_it->end() ) {
+			$this->types_array[$type_it->getId()] = IssueTypeFrame::getIcon($type_it);
+			$type_it->moveNext();
+		}
+		$this->types_array[''] = IssueTypeFrame::getIcon(getFactory()->getObject('RequestType')->getEmptyIterator());
+
  		$object = $this->getObject();
 		$object_it = $object->getEmptyIterator();
  		
  		$this->terminal_states = $object->getTerminalStates();
  		$this->non_terminal_states = $object->getNonTerminalStates();
- 		
+
  	 	$task = getFactory()->getObject('Task');
  		$this->task_terminal_states = $task->getTerminalStates();
- 		
- 		$state_it = $task->cacheStates();
- 		while( !$state_it->end() )
- 		{
- 			$transition_it = $state_it->getTransitionIt();
- 			$this->task_transitions_array[$state_it->get('ReferenceName')] = $transition_it;
- 		 	while( !$transition_it->end() )
- 			{
- 				$this->task_target_states_array[$transition_it->getId()] = $transition_it->getRef('TargetState');
- 				$transition_it->moveNext();
- 			}
- 			$state_it->moveNext();
- 		}
- 		
+
+		$this->task_transition_it = WorkflowScheme::Instance()->getTransitionIt($task);
+		while( !$this->task_transition_it->end() )
+		{
+			$this->task_target_states_array[$this->task_transition_it->getId()] = $this->task_transition_it->get('TargetStateReferenceName');
+			$this->task_transition_it->moveNext();
+		}
+
  		$method = new CommentWebMethod( $object->getEmptyIterator() );
  		if ( $method->hasAccess() )
  		{
@@ -107,73 +152,24 @@ class RequestBoard extends PMPageBoard
  		$this->estimation_title = $this->getObject()->getAttributeUserName('Estimation');
  	}
  	
-	function retrieve()
-	{
-		global $model_factory;
-		
-		parent::retrieve();
-
-		$iterator = $this->getIteratorRef()->copyAll();
-		
-		$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('ChangeRequest', $iterator->idsToArray()),
-						new SortAttributeClause('ChangeRequest')
-				)
-		);
-		
-		while( !$task_it->end() )
-		{
-			$this->tasks_array[$task_it->get('ChangeRequest')][] = $task_it->copy(); 
-			
-			$task_it->moveNext();
-		}
-
-		$ids = array_filter($this->getIteratorRef()->fieldToArray('Type'), function($value) {
-				return $value > 0;
-		});
-		
-		if ( count($ids) < 1 ) $ids = array(0);
-		
-		$type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
-				array (
-						new FilterInPredicate($ids)
-				)
-		);
-		
-		while( !$type_it->end() )
-		{
-			$this->types_array[$type_it->getId()] = IssueTypeFrame::getIcon($type_it);
-			
-			$type_it->moveNext();
-		}
-		
-		$this->types_array[''] = IssueTypeFrame::getIcon(getFactory()->getObject('RequestType')->getEmptyIterator());
-	}
-	
  	function buildBoardAttributeIterator()
  	{
-		if ( $this->getTable()->getReportBase() == 'issuesboardcrossproject' )
-		{
-			$class_name = $this->getBoardAttributeClassName();
-			if ( $this->hasCommonStates() )
-			{
-		 		return getFactory()->getObject($class_name)->getRegistry()->Query(
+		if ( $this->getTable()->getReportBase() == 'issuesboardcrossproject' ) {
+			if ( $this->hasCommonStates() ) {
+		 		return getFactory()->getObject('IssueState')->getRegistry()->Query(
 		 				array (
 		 						new FilterVpdPredicate(array_shift($this->getObject()->getVpds())),
 		 						new SortAttributeClause('OrderNum')
 		 				)
 		 		);
 			}
-			else
-			{
+			else {
 	 			$metastate = getFactory()->getObject('StateMeta');
-	 			$metastate->setAggregatedStateObject(getFactory()->getObject($class_name));
+	 			$metastate->setAggregatedStateObject(getFactory()->getObject('IssueState'));
 	 			return $metastate->getRegistry()->getAll();
 			}
 		}
-		else
-		{
+		else {
 			return parent::buildBoardAttributeIterator();
 		}
  	}
@@ -181,8 +177,11 @@ class RequestBoard extends PMPageBoard
 	function getGroupDefault()
 	{
 		if ( $this->getTable()->hasCrossProjectFilter() ) return 'Project';
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasReleases() ) return 'PlannedRelease'; 
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasFeatures() ) return 'Function'; 
+
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		if ( $methodology_it->HasReleases() ) return 'PlannedRelease';
+		if ( $methodology_it->HasPlanning() ) return 'Iterations';
+		if ( $methodology_it->HasFeatures() ) return 'Function';
 		
 		return '';
 	}
@@ -217,12 +216,43 @@ class RequestBoard extends PMPageBoard
 		return $field_name == 'TypeBase' ? false : parent::getGroupNullable( $field_name );
 	}
 
+	function getGroupFilterValue()
+	{
+		$values = array_filter($this->getFilterValues(), function($value) {
+			return !in_array($value, array('all','hide'));
+		});
+		$group = $this->getGroup();
+		if ( !$this->getObject()->IsReference($group) ) return '';
+
+		switch($this->getObject()->getAttributeObject($group)->getEntityRefName())
+		{
+			case 'pm_Version':
+				return $values['release'];
+			case 'pm_Release':
+				return $values['iterations'];
+			case 'pm_Function':
+				return $values['function'];
+			case 'cms_User':
+				return $this->getTable()->getFilterUsers($values['owner'], $values);
+			case 'Priority':
+				return $values['priority'];
+		}
+		return '';
+	}
+
 	function getGroupIt()
 	{
 		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupIt();
 
-		$values = $this->getFilterValues();
-		$vpd_filter = new FilterVpdPredicate();
+		$groupOrder = $this->getGroupOrder();
+		$groupFilter = $this->getGroupFilterValue();
+
+		foreach( $this->getTable()->getFilterPredicates() as $filter ) {
+			if ( $filter instanceof FilterVpdPredicate ) {
+				$vpd_filter = $filter;
+			}
+		}
+		if ( !is_object($vpd_filter) ) $vpd_filter = new FilterVpdPredicate();
 
 		switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
 		{
@@ -232,37 +262,45 @@ class RequestBoard extends PMPageBoard
 						$object->getRegistry()->Query(
 								array (
 										new ReleaseTimelinePredicate('not-passed'),
-										new SortAttributeClause('StartDate'),
 										$vpd_filter,
-										$values['release'] != '' 
-												? new FilterInPredicate(preg_split('/,/', $values['release'])) : null
+										$groupFilter != ''
+												? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 								)
 							)->idsToArray(),
 						parent::getGroupIt()->idsToArray()
 				);
-				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
+				return $object->getRegistry()->Query(
+					array(
+						new FilterInPredicate($ids),
+						new SortAttributeClause('StartDate.'.$groupOrder)
+					)
+				);
 			case 'pm_Release':
 				$object = getFactory()->getObject('Iteration');
 				$ids = array_merge(
 						$object->getRegistry()->Query(
 							array (
 									new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
-									new SortAttributeClause('StartDate'),
 									$vpd_filter,
-									$values['iterations'] != ''
-											? new FilterInPredicate(preg_split('/,/', $values['iterations'])) : null
+									$groupFilter != ''
+											? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 							)
 						)->idsToArray(),
 						parent::getGroupIt()->idsToArray()
 				);
-				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
+				return $object->getRegistry()->Query(
+					array(
+						new FilterInPredicate($ids),
+						new SortAttributeClause('StartDate.'.$groupOrder)
+					)
+				);
 			case 'pm_Function':
 				return getFactory()->getObject('Feature')->getRegistry()->Query(
 						array (
-								new SortAttributeClause('Importance'),
+								new SortAttributeClause('Importance.'.$groupOrder),
 								$vpd_filter,
-								$values['function'] != '' 
-										? new FilterInPredicate(preg_split('/,/', $values['function'])) : null
+								$groupFilter != ''
+										? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
 					);
 			case 'cms_User':
@@ -273,18 +311,19 @@ class RequestBoard extends PMPageBoard
                     return getFactory()->getObject('User')->getRegistry()->Query(
                         array (
                             new UserWorkerPredicate(),
-                            new SortAttributeClause('Caption'),
-                            $values['owner'] != ''
-                                ? new FilterInPredicate(preg_split('/,/', $values['owner'])) : null
+                            new SortAttributeClause('Caption.'.$groupOrder),
+							$groupFilter != ''
+                                ? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
                         )
                     );
                 }
 			case 'Priority':
 				return getFactory()->getObject('Priority')->getRegistry()->Query(
-						array (
-								$values['priority'] != '' 
-										? new FilterInPredicate(preg_split('/,/', $values['priority'])) : null
-						)
+					array (
+						$groupFilter != ''
+							? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null,
+						new SortAttributeClause('OrderNum.'.$groupOrder),
+					)
 				);
 			default:
 				return parent::getGroupIt();
@@ -296,14 +335,10 @@ class RequestBoard extends PMPageBoard
  		return 'State';
  	}
  	
- 	function getBoardAttributeClassName()
- 	{
- 		return 'IssueState';
- 	}
- 	
  	function getColumnVisibility( $attribute )
  	{
  		if ( $attribute == 'Basement' ) return array_sum($this->visible_column) > 0;
+		if ( $attribute == 'BlockReason' ) return true;
  		return parent::getColumnVisibility( $attribute );
  	}
  	
@@ -360,6 +395,9 @@ class RequestBoard extends PMPageBoard
 							'data' => $workload[$object_it->get($group_field)]
 					));
 				}
+				else {
+					parent::drawGroup($group_field, $object_it);
+				}
 				break;
 
 			default:
@@ -387,6 +425,7 @@ class RequestBoard extends PMPageBoard
 			case 'Tasks':
 			case 'OpenTasks':
 			case 'Tags':
+			case 'BlockReason':
 				break;
 				
 			case 'Author':
@@ -413,24 +452,7 @@ class RequestBoard extends PMPageBoard
 						parent::drawCell( $object_it, $attr );
 					echo '</div>';
 					echo '<div class="right-on-card">';
-						foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
-						{
-							list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
-							if ( $type_ref == 'blocked' && $direction == 2 && !in_array($link_state,$this->terminal_states)) {
-								$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
-								echo '<a class="with-tooltip block-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(961).'"></a>';
-							}
-							if ( $type_ref == 'implemented' && $direction == 2 && !in_array($link_state,$this->terminal_states)) {
-								$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
-								echo '<a class="with-tooltip impl-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(2035).'"></a>';
-							}
-						}
-					
-						if ( $this->visible_column['OrderNum'] && $object_it->get('OrderNum') != '' ) {
-							echo '<span class="order" title="'.translate('Номер').'">';
-								echo $object_it->get('OrderNum');
-							echo '</span>';
-						}
+						$this->drawImportantItems( $object_it );
 					echo '</div>';
 				echo '</div>';
 				break;
@@ -468,14 +490,13 @@ class RequestBoard extends PMPageBoard
 
                 echo '<div class="item-footer">';
 					echo '<div style="display:table-cell;text-align:left;">';
-						if ( ($this->visible_column['Tasks'] || $this->visible_column['OpenTasks']) && is_array($this->tasks_array[$object_it->getId()]) )
+						if ( ($this->visible_column['Tasks'] || $this->visible_column['OpenTasks']) && $object_it->get('Tasks') != '' )
 						{
 							$states = array();
-	
-						 	foreach( $this->tasks_array[$object_it->getId()] as $task_it ) 
+
+							$task_it = $this->task->createCachedIterator($this->tasks_array[$object_it->getId()]);
+						 	while( !$task_it->end() )
 					 		{
-					 			if ( $this->visible_column['OpenTasks'] && in_array($task_it->get('State'), $this->task_terminal_states) ) continue;
-	
 					 			$info = $this->task_uid_service->getUidInfo($task_it);
 					 			$states[] = array (
 					 					'id' => $task_it->getId(),
@@ -485,10 +506,12 @@ class RequestBoard extends PMPageBoard
 					 					'actions' => $this->getTaskActions($task_it),
 					 					'url' => $info['tooltip-url']
 					 			);
+								$task_it->moveNext();
 					 		}
 					 		
 							echo $this->getTable()->getView()->render('pm/TasksIcons.php', array (
-									'states' => $states
+								'states' => $states,
+								'random' => $object_it->getId()
 							));
 						}
 						else if ( $object_it->get('OwnerPhotoId') != '' )
@@ -502,23 +525,26 @@ class RequestBoard extends PMPageBoard
 								));
 							echo '</div>';
 						}
-						if ( $this->visible_column['Attachment'] )
+						if ( $this->visible_column['Attachment'] && $object_it->get('Attachment') != '' )
 						{
 							echo '<div class="btn-group" style="display:inline-block;">';
 								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
 							echo '</div>';
 						}
-						if ( $this->visible_column['Tags'] )
+						if ( $this->visible_column['Tags'] && $object_it->get('TagNames') != '' )
 						{
                             $html = array();
                             foreach( preg_split('/,/', $object_it->get('TagNames')) as $name ) {
-                                $html[] = '<span class="label label-info">'.$name.'</span>';
+                                $html[] = '<div class="btn-group" style="display:inline-block;"><span class="label label-info">'.$name.'</span></div>';
                             }
-                            echo join(' ',$html);
+                           	echo join(' ',$html);
 				        }
 					echo '</div>';
 
 					echo '<div style="display:table-cell;text-align:right;">';
+						if ( !$this->uidVisible ) {
+							$this->drawImportantItems( $object_it );
+						}
 						if ( $this->visible_column['Estimation'] )
 						{
 							$actions = $this->estimation_actions;
@@ -526,26 +552,31 @@ class RequestBoard extends PMPageBoard
 							foreach( $actions as $key => $action )
 							{
 								$method = $action['method'];
-								
-								$actions[$key]['url'] = $method->getJSCall(array(), $object_it);
+								$method->setObjectIt($object_it);
+								$actions[$key]['url'] = $method->getJSCall();
 							}
 							
 							echo '<div style="display: inline-block;">';
 								echo $this->getTable()->getView()->render('pm/EstimationIcon.php', array (
-										'title' => $this->estimation_title,
-										'data' => $object_it->get('Estimation') != '' ? $object_it->get('Estimation') : '0',
-										'items' => $actions
+									'title' => $this->estimation_title,
+									'data' => $object_it->get('Estimation') != '' ? $object_it->get('Estimation') : '0',
+									'items' => $actions,
+									'random' => $object_it->getId()
 								));
 							echo '</div>';
 						}
 					
-						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 && is_object($this->method_spend_time) )
+						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 )
 						{
-							$this->method_spend_time->setAnchorIt($object_it);
-							
 							echo '<div class="board-item-fact" title="'.$this->spent_time_title.'">';
-								echo '<a href="'.$this->method_spend_time->getJSCall().'">'.number_format($object_it->get('Fact'), 1).'</a>';
-		    				echo '</div>';
+								if ( is_object($this->method_spend_time) ) {
+									$this->method_spend_time->setAnchorIt($object_it);
+									echo '<a href="'.$this->method_spend_time->getJSCall().'">'.number_format($object_it->get('Fact'), 1).'</a>';
+								}
+								else {
+									echo number_format($object_it->get('Fact'), 1);
+								}
+							echo '</div>';
 						}
 	
 						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
@@ -573,12 +604,35 @@ class RequestBoard extends PMPageBoard
 		}
 	}
 
+	function drawImportantItems( $object_it )
+	{
+		foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
+		{
+			list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
+			if ( $type_ref == 'blocked' && $direction == 2 && !in_array($link_state,$this->terminal_states))
+			{
+				$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
+				echo '<a class="with-tooltip block-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(961).'"></a>';
+			}
+			if ( $type_ref == 'implemented' && $direction == 2 && !in_array($link_state,$this->terminal_states))
+			{
+				$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
+				echo '<a class="with-tooltip impl-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(2035).'"></a>';
+			}
+		}
+		if ( $object_it->get('BlockReason') != '' ) {
+			echo '<a class="block-sign" tabindex="-1" data-toggle="popover" data-placement="right" data-original-title="" data-content="'.$object_it->getRef('BlockReason')->getDisplayName().'" href="#"></a>';
+		}
+
+		if ( $this->visible_column['OrderNum'] && $object_it->get('OrderNum') != '' ) {
+			echo '<span class="order" title="'.translate('Номер').'">';
+			echo $object_it->get('OrderNum');
+			echo '</span>';
+		}
+	}
+
 	function getRenderParms()
 	{
- 		$this->buildRelatedDataCache();
-		
-		$parms = parent::getRenderParms();
-
 		$attributes = array(
 			'Tasks',
 			'OpenTasks',
@@ -596,13 +650,25 @@ class RequestBoard extends PMPageBoard
 			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
 			$this->visible_column[$column] = $this->getColumnVisibility($column);
 		}
+		$this->uidVisible = $this->getColumnVisibility('UID');
 
-		return $parms; 
+		$this->buildRelatedDataCache();
+
+		return parent::getRenderParms();
 	}
 	
 	function getActions( $object_it )
 	{
 		$actions = parent::getActions( $object_it );
+
+		if ( !$this->uidVisible ) {
+			array_unshift($actions,
+				array (
+					'name' => translate('Открыть'),
+					'url' => getSession()->getApplicationUrl($object_it).'I-'.$object_it->getId()
+				)
+			);
+		}
 
 		$priority_actions = $this->priority_actions;
 		foreach( $priority_actions as $key => $action )
@@ -614,7 +680,8 @@ class RequestBoard extends PMPageBoard
 			}
 			
 			$method = $priority_actions[$key]['method'];
-			$priority_actions[$key]['url'] = $method->getJSCall(array(), $object_it);  
+			$method->setObjectIt($object_it);
+			$priority_actions[$key]['url'] = $method->getJSCall(array());
 		}
 
 		if ( count($priority_actions) > 0 )
@@ -652,46 +719,42 @@ class RequestBoard extends PMPageBoard
 	{
 		$actions = array();
 
+		$actions[] = array (
+			'name' => translate('Открыть'),
+			'url' => getSession()->getApplicationUrl($object_it).'T-'.$object_it->getId()
+		);
+
 		$method = new ObjectModifyWebMethod($object_it);
-		
 		$method->setRedirectUrl('donothing');
-		
 		$actions[] = array (
 				'name' => translate('Изменить'),
 				'url' => $method->getJSCall()
 		);
 
-		$transition_it = $this->task_transitions_array[$object_it->get('State')];
-		
-		if ( !is_object($transition_it) ) return $actions;
-		
-		$transition_it->moveFirst();
-
-		$need_separator = true;
-		
-		while ( !$transition_it->end() )
+		if ( $this->task_transition_it->count() > 0 && $object_it->get('State') != '' )
 		{
-			$method = new TransitionStateMethod( $transition_it, $object_it );
+			$this->task_transition_it->moveTo('SourceStateReferenceName', $object_it->get('State'));
+			$need_separator = true;
 
-			$method->setTargetStateRefName($this->task_target_states_array[$transition_it->getId()]->get('ReferenceName'));
-			
-			if ( $need_separator )
+			while ( $this->task_transition_it->get('SourceStateReferenceName') == $object_it->get('State') )
 			{
-				$actions[] = array();
-				
-				$need_separator = false;
-			}
+				$method = new TransitionStateMethod( $this->task_transition_it, $object_it );
+				$method->setTargetStateRefName($this->task_target_states_array[$this->task_transition_it->getId()]);
+				$method->setRedirectUrl('donothing');
 
-			$method->setRedirectUrl('donothing');
-			
-			$actions[] = array( 
-				'url' => $method->getJSCall(), 
-				'name' => $method->getCaption()
-			);
-			
-			$transition_it->moveNext();
+				if ( $need_separator ) {
+					$actions[] = array();
+					$need_separator = false;
+				}
+
+				$actions[] = array(
+					'url' => $method->getJSCall(),
+					'name' => $method->getCaption()
+				);
+				$this->task_transition_it->moveNext();
+			}
 		}
-			
+
 		return $actions;
 	}
 	

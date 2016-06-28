@@ -24,8 +24,6 @@
 	include(dirname(__FILE__).'/commands/c_'.$class.'.php');
  }
 
- $model_factory = getModelFactory();
- 
  if ( class_exists($class) )
  {
  	$command = new $class;	

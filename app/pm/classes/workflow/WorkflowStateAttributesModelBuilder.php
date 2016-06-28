@@ -31,17 +31,13 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 	 	    	$object->setAttributeRequired($attribute, false);
 	 	    }
 	 	    
- 	       	foreach( $this->attributes as $attribute )
-			{
+ 	       	foreach( $this->attributes as $attribute ) {
 				$object->setAttributeVisible($attribute, true);
 			}
  	    }
 
 		// show attributes visible on the first state
-		$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
-			array ( new FilterAttributePredicate('State', $object->cacheStates()->getId()) )
-		);
-
+		$attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object);
 		while( !$attribute_it->end() )
 		{
 			if ( $attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y' ) {
@@ -54,9 +50,7 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 		}
 
 		// apply attributes settings for the given state
-		$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
-				array ( new FilterAttributePredicate('State', $this->state_it->getId() > 0 ? $this->state_it->getId() : '-1') )
-		);
+		$attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->state_it->get('ReferenceName'));
 		while( !$attribute_it->end() )
 		{
 			$object->setAttributeRequired( 

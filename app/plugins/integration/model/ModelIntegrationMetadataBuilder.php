@@ -6,7 +6,7 @@ class ModelIntegrationMetadataBuilder extends ObjectMetadataEntityBuilder
 {
     public function build( ObjectMetadata $metadata )
     {
-    	if ( !in_array($metadata->getObject()->getEntityRefName(), array('pm_ChangeRequest','pm_Task')) ) return;
+    	if ( !in_array($metadata->getObject()->getEntityRefName(), array('pm_ChangeRequest','pm_Task','pm_ReviewRequest')) ) return;
 
 		$metadata->addAttribute('IntegrationLink', 'VARCHAR', text('integration8'), true, false);
 		$metadata->addAttributeGroup('IntegrationLink', 'additional');

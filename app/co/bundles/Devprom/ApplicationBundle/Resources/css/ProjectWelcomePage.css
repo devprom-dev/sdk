@@ -17,7 +17,19 @@
                 width: 16px;
                 height: 16px;
             }
-            
+            .create-project-header a:not(.btn) {
+                font-size: 15px;
+                border-bottom: 1px dashed #333333;
+                color: #333333;
+            }
+            .create-project-header a:not(.btn):hover {
+                text-decoration: none;
+                border-bottom: none;
+            }
+            .create-project-header .language-buttons {
+                margin-right: 28px;
+            }
+
     .create-project-info {
         background: #F0F0F0;
         padding: 9px 35px 9px 38px;
@@ -72,6 +84,19 @@
                     top: 8px;
                     right: 12px;
                     margin: 0;
+                }
+                .template i.icon-info {
+                    display: none;
+                    background: url(/images/icon-info-mini.png) 0 0 no-repeat;
+                    width: 28px;
+                    height: 28px;
+                    position: absolute;
+                    top: 7px;
+                    right: 10px;
+                    margin: 0;
+                }
+                .template:hover i.icon-info {
+                    display: block;
                 }
                 .template h6.bs {
                     font-size: 20px;

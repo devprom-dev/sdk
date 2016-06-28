@@ -54,13 +54,12 @@ return array(
 
 # Form field labels
     'form.group_name' => 'Название группы:',
-    'form.username' => 'Логин:',
-    'form.name' => 'Имя',
+    'form.username' => 'Имя:',
+    'form.name' => 'Имя:',
     'form.email' => 'Электронная почта:',
     'form.current_password' => 'Текущий пароль:',
     'form.password' => 'Пароль:',
     'form.password_confirmation' => 'Подтвердите пароль:',
     'form.new_password' => 'Новый пароль:',
-    'form.new_password_confirmation' => 'Подтвердите пароль:',
+    'form.new_password_confirmation' => 'Подтвердите пароль:'
 );
-?>

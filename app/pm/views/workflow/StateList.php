@@ -57,8 +57,9 @@ class StateList extends PMPageList
 					}
                     
                     echo $view->render('core/TextMenu.php', array (
-                            'title' => $transition_it->getFullName(),
-                            'items' => array_merge( array(), $actions )
+						'title' => $transition_it->getFullName(),
+						'items' => array_merge( array(), $actions ),
+						'random' => $transition_it->getId()
                     ));
                     
                     echo '<div class="clear-fix"></div>';
@@ -77,18 +78,15 @@ class StateList extends PMPageList
     {
         $actions = parent::getItemActions($column_name, $object_it);
 
-        if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-        
         $object = getFactory()->getObject('Transition');
-        
         $object->setVpdContext($object_it);
 
         $method = new ObjectCreateNewWebMethod($object);
-        
-        $method->setRedirectUrl('donothing');
-        
         if ( $method->hasAccess() )
         {
+			$method->setRedirectUrl('donothing');
+
+			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
         	$actions[] = array (
         			'name' => text(891),
         			'url' => $method->getJSCall(

@@ -23,6 +23,7 @@ class PageForm extends MetaObjectForm
 	private $transition_appliable = array();
 	private $transition_messages = array();
 	private $plugins = array();
+	private $workflowParms = array();
      
   	function PageForm( $object )
  	{
@@ -32,7 +33,7 @@ class PageForm extends MetaObjectForm
  		
  		$this->system_attributes = $this->buildSystemAttributes();
 
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		$this->plugins = is_object($plugins)
 			? $plugins->getPluginsForSection(getSession()->getSite()) : array();
 
@@ -98,61 +99,33 @@ class PageForm extends MetaObjectForm
  	function buildRelatedDataCache()
  	{
  		if ( !$this->getObject() instanceof MetaobjectStatable ) return;
- 		
- 		$state_it = $this->getObject()->cacheStates();
-        $target_it = $state_it->copyAll();
 
-        $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
-            array (
-                new FilterAttributePredicate('SourceState', $state_it->idsToArray()),
-                new TransitionSourceStateSort()
-            )
-        );
-        $transition_it->buildPositionHash(array('SourceState'));
-        $transition_it->object->setStateAttributeType( $state_it->object );
+ 		$state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
+		$transition_it = WorkflowScheme::Instance()->getTransitionIt($this->getObject());
 
- 		while( !$state_it->end() )
+ 		while( !$transition_it->end() )
  		{
- 			$tmp_it = $transition_it->object->createCachedIterator($transition_it->getSubset('SourceState', $state_it->getId()));
- 			$this->transitions_array[$state_it->get('VPD').'-'.$state_it->get('ReferenceName')] = $tmp_it;
+			$state_key = $transition_it->get('VPD').'-'.$transition_it->get('SourceStateReferenceName');
+ 			$this->transitions_array[$state_key][] = $transition_it->getData();
 
- 			while( !$tmp_it->end() )
- 			{
-                $target_it->moveToId($tmp_it->get('TargetState'));
- 				$this->target_states_array[$tmp_it->getId()] = $target_it->copy();
- 				$this->transition_appliable[$tmp_it->getId()] = $tmp_it->appliable();
-                $tmp_it->moveNext();
- 			}
- 			$state_it->moveNext();
- 		}
+			$state_it->moveToId($transition_it->get('TargetState'));
+			$this->target_states_array[$transition_it->getId()] = $state_it->copy();
+			$this->transition_appliable[$transition_it->getId()] = $transition_it->appliable();
 
- 		if ( count($this->target_states_array) > 0 )
- 		{
-	 		$rule = getFactory()->getObject('StateBusinessRule');
- 			$predicate_it = getFactory()->getObject('pm_TransitionPredicate')->getRegistry()->Query(
- 					array (
- 							new FilterAttributePredicate('Transition', array_keys($this->target_states_array))
- 					)
-	 		);
-	 		while ( !$predicate_it->end() )
- 			{
- 				$rule_it = $predicate_it->getRef('Predicate', $rule)->copy();
- 				$this->transition_rules_it[$predicate_it->get('Transition')][] = $rule_it;
-	 			$predicate_it->moveNext();
- 			}
+			$transition_it->moveNext();
  		}
+		foreach( $this->transitions_array as $key => $data ) {
+			$this->transitions_array[$key] = $transition_it->object->createCachedIterator($data);
+		}
+
+		$this->transition_rules_it = WorkflowScheme::Instance()->getStatePredicateIt($this->getObject());
  	}
  	
  	function getTransitionIt()
  	{
  		if ( is_object($this->transition_it) ) return $this->transition_it; 
- 		if ( $_REQUEST['Transition'] != '' )
- 		{
-			$object_it = $this->getObjectIt();
-			$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
-
-			$transition_it->moveToId($_REQUEST['Transition']);
-			return $this->transition_it = $transition_it->copy();
+ 		if ( $_REQUEST['Transition'] != '' ) {
+			return $this->transition_it = getFactory()->getObject('pm_Transition')->getExact($_REQUEST['Transition']);
  		}
  		return $this->transition_it = getFactory()->getObject('pm_Transition')->getEmptyIterator();
  	}
@@ -166,6 +139,10 @@ class PageForm extends MetaObjectForm
  	{
  	    return $this->page;
  	}
+
+	function setWorkflowParameters( $parms ) {
+		$this->workflowParms = $parms;
+	}
  	
  	function getFormPage()
  	{
@@ -283,15 +260,15 @@ class PageForm extends MetaObjectForm
         	if ( is_object($field) ) return $field;
 		}
     		    
-		if( $this->object->IsReference( $name ) ) 
+		if( $this->object->IsReference( $name ) )
 		{
     		$object = $this->object->getAttributeObject($name);
     		if ( is_object($this->getObjectIt()) && $object->getVpdValue() != '' )
     		{
     			$object->setVpdContext($this->getObjectIt());
     		}
-    				
-    		return $object->entity->get('IsDictionary') == 'Y' 
+
+    		return is_object($object->entity) && $object->entity->get('IsDictionary') == 'Y'
     			? new FieldDictionary( $object ) : new FieldAutoCompleteObject( $object );
     	}
 		
@@ -315,33 +292,49 @@ class PageForm extends MetaObjectForm
 		$object_it = $this->getObjectIt();
 
 		$actions['modify'] = array();
+
+		$method = new ObjectModifyWebMethod($object_it);
+		if ( $this->IsFormDisplayed() ) {
+			$method->setRedirectUrl('function(){window.location.reload();}');
+		}
+		else {
+			$method->setRedirectUrl('donothing');
+		}
+		$actions['modify'] = array(
+			'name' => $method->hasAccess() ? translate('Изменить') : translate('Открыть'),
+			'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
+			'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
+			'uid' => 'modify',
+			'view' => 'button',
+			'button-class' => 'btn-info',
+			'icon' => 'icon-pencil'
+		);
+
 		if( getFactory()->getAccessPolicy()->can_modify($object_it) )
 		{
-			$method = new ObjectModifyWebMethod($object_it);
-			if ( $this->IsFormDisplayed() ) {
-				$method->setRedirectUrl('function(){window.location.reload();}');
-			}
-			else {
-				$method->setRedirectUrl('donothing');
-			}
-
-			$actions['modify'] = array(
-					'name' => translate('Изменить'),
-					'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
-					'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
-					'uid' => 'modify'
-			);
-
 			$transition_actions = $this->getTransitionActions();
-			if ( count($transition_actions) > 0 )
+			if ( count($transition_actions) > 6 && !$this->IsFormDisplayed() )
+			{
+				$actions[] = array();
+				$actions[] = array (
+					'name' => translate('Состояние'),
+					'items' => $transition_actions
+				);
+			}
+			else if ( count($transition_actions) > 0 )
 			{
 				$actions[] = array();
 				$actions = array_merge($actions, $transition_actions);
 			}
 		}
 
-		$actions[] = array();
-		$actions['create'] = array (
+		$add_actions = $this->getMoreActions();
+		if ( count($add_actions) > 0 ) {
+			$actions[] = array('uid' => 'middle');
+			$actions = array_merge($actions, $add_actions);
+		}
+
+		$more_actions['create'] = array (
 			'name' => translate('Создать'),
 			'items' => $this->getNewRelatedActions(),
 			'uid' => 'create'
@@ -352,12 +345,14 @@ class PageForm extends MetaObjectForm
 			$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
 		}
 		if ( count($plugin_actions) > 0 ) {
-			$actions[] = array();
-			$actions = array_merge( $actions, $plugin_actions );
+			$more_actions = array_merge( $more_actions, array(array()), $plugin_actions );
 		}
 
 		foreach( $this->plugins as $plugin ) {
-			$plugin->interceptMethodFormGetActions( $this, $actions );
+			$plugin->interceptMethodFormGetActions( $this, $more_actions );
+		}
+		if ( count($more_actions) > 1 || count($more_actions['create']['items']) > 0 ) {
+			$actions = array_merge($actions, array(array()), $more_actions);
 		}
 
 		return $actions;
@@ -368,45 +363,39 @@ class PageForm extends MetaObjectForm
 		$actions = array();
 		$object_it = $this->getObjectIt();
 
-		$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
-		
-		if ( !is_object($transition_it) ) $transition_it = array_shift(array_values($this->transitions_array));		
+		if ( $object_it->get('State') == '' ) {
+			$transition_it = array_shift(array_values($this->transitions_array));
+		}
+		else {
+			$transition_it = $this->transitions_array[$object_it->get('VPD').'-'.$object_it->get('State')];
+		}
 		if ( !is_object($transition_it) ) return $actions;
-		
+
 		$transition_it->moveFirst();
-		
 		while ( !$transition_it->end() )
 		{
-			if ( !$this->transition_appliable[$transition_it->getId()] )
-			{
+			if ( !$this->transition_appliable[$transition_it->getId()] ) {
 				$transition_it->moveNext();
 				continue;
 			}
-			
-			$rules = $this->transition_rules_it[$transition_it->getId()];
-			if ( is_array($rules) )
-			{
-				$skip_transition = false;
-				
-				foreach( $rules as $rule_it )
-				{
-					if ( !$rule_it->check($object_it) )
-					{
-						$reason = $rule_it->getNegativeReason();
-						if ( $reason != '' ) $this->transition_messages[] = $reason;
-						
-						$skip_transition = true;
-						break;
-					}
+
+			$skip_transition = false;
+			$this->transition_rules_it->moveTo('Transition', $transition_it->getId());
+			while ( $this->transition_rules_it->get('Transition') == $transition_it->getId() ) {
+				if ( !$this->transition_rules_it->check($object_it) ) {
+					$reason = $this->transition_rules_it->getNegativeReason();
+					if ( $reason != '' ) $this->transition_messages[] = $reason;
+					$skip_transition = true;
+					break;
 				}
-				
-				if ( $skip_transition )
-				{
-					$transition_it->moveNext();
-					continue;
-				}
+				$this->transition_rules_it->moveNext();
 			}
-			
+
+			if ( $skip_transition ) {
+				$transition_it->moveNext();
+				continue;
+			}
+
 			$method = new TransitionStateMethod( $transition_it, $object_it );
 			$target_state = $this->target_states_array[$transition_it->getId()]->get('ReferenceName');
 			$method->setTargetStateRefName($target_state);
@@ -418,15 +407,22 @@ class PageForm extends MetaObjectForm
 
 			$actions[] = array ( 
 					'name' => $method->getCaption(), 
-					'url' => $method->getJSCall(),
+					'url' => $method->getJSCall($this->workflowParms),
 					'title' => $method->getDescription(),
-					'uid' => 'workflow-'.$target_state
+					'uid' => 'workflow-'.$target_state,
+					'view' => 'button',
+					'button-class' => ''
 			);
 			
 			$transition_it->moveNext();
 		}	
 
 		return $actions;
+	}
+
+	function getMoreActions()
+	{
+		return array();
 	}
 
 	function getNewRelatedActions()
@@ -456,35 +452,6 @@ class PageForm extends MetaObjectForm
 		return $actions;
 	}
 	
-	function checkAccess()
-	{
-		global $_REQUEST, $model_factory;
-		
-		if ( $_REQUEST['Transition'] > 0 )
-		{
-			$transition = $model_factory->getObject('pm_Transition');
-			$transition->setVpdContext( $this->getObjectIt() );
-			
-			$transition_it = $transition->getExact($_REQUEST['Transition']);
-
-	 		$object_it = $this->getObjectIt();
-	 		if ( is_object($object_it) )
-	 		{
-	 			$state_it = $object_it->getStateIt();
-	 			$access = $state_it->getId() == $transition_it->get('SourceState');
-	 			
-	 			if ( !$access )
-	 			{
-	 				$this->setCheckAccessMessage( text(984) );
-	 			}
-	 			
-	 			return $access;
-	 		}
-		}
-		
-		return parent::checkAccess();
-	}
-	
 	function drawButtons()
 	{
 	    if ( !$this->getEditMode() ) return;
@@ -505,11 +472,12 @@ class PageForm extends MetaObjectForm
 		{
 		    $visible = $this->IsAttributeVisible($key);
 
-		    if ( !$visible && !$this->object->IsAttributeStored($key) ) continue;
-		    
+		    if ( !$visible && !$this->object->IsAttributeStored($key) && $this->object->getAttributeOrigin($key) != ORIGIN_CUSTOM ) continue;
+
 			$attributes[$key] = array (
 				'visible' => $visible,
 				'required' => $this->IsAttributeRequired($key),
+				'custom' => $this->object->getAttributeOrigin($key) == ORIGIN_CUSTOM,
 				'name' => translate($this->object->getAttributeUserName($key)),
 				'description' => $this->getFieldDescription($key),
 				'type' => $this->object->getAttributeType($key),
@@ -531,8 +499,23 @@ class PageForm extends MetaObjectForm
 				}
 			}
 
-			$attributes[$key]['text'] = $field->getText();
-			
+			if ( $field instanceof FieldWYSIWYG ) {
+			}
+			else {
+				$attributes[$key]['text'] = $field->getText();
+			}
+
+			if ( !$visible && $this->getEditMode() && $field instanceof FieldDictionary ) {
+				if ( $field->getObject()->hasAttribute('ReferenceName') && $field->getValue() != '' ) {
+					$attributes[$key]['referenceName'] =
+						$field->getObject()->getRegistry()->Query(
+							array (
+								new FilterInPredicate($field->getValue())
+							)
+ 						)->get('ReferenceName');
+				}
+			}
+
 			if ( !$visible ) continue;
 		    			
 			$field->setTabIndex( $index++ );
@@ -593,7 +576,7 @@ class PageForm extends MetaObjectForm
 			
 		$scripts .= ob_get_contents();
 		ob_end_clean();
-		
+
 		return array(
 			'form' => $this,
 			'caption' => $this->getCaption(),
@@ -647,7 +630,7 @@ class PageForm extends MetaObjectForm
 	    
 		$uid = new ObjectUID;
 		
-		$uid_info = $uid->getUidInfo($object_it);
+		$uid_info = $uid->getUidInfo($object_it,true);
 		
 	    return $uid_info['uid'] != '' 
 	        ? $uid_info['uid'].' '.$uid_info['caption']
@@ -678,10 +661,20 @@ class PageForm extends MetaObjectForm
 	
 	function validateInputValues( $id, $action )
 	{
-		$message = $this->getModelValidator()->validate( $this->getObject(), $_REQUEST );
-		
+		//skip values user can't modify
+		$parms = $_REQUEST;
+
+		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
+			if ( !$this->IsAttributeEditable($attribute) ) {
+				unset($parms[$attribute]);
+			}
+		}
+
+		$message = $this->getModelValidator()->validate( $this->getObject(), $parms );
 		if ( $message != '' ) return $message;
-		
+
+		$_REQUEST = array_merge($_REQUEST, $parms);
+
 		return '';
 	}
 			
@@ -719,9 +712,24 @@ class PageForm extends MetaObjectForm
 	{
 		$uid = new ObjectUid();
 		list($source_it, $text_attribute) = $this->getSourceIt();
+
+		if ( $source_it->object->getAttributeType($text_attribute) == 'wysiwyg' ) {
+			$field = new FieldWYSIWYG(
+				$source_it->get('ContentEditor') != ''
+					? $source_it->get('ContentEditor')
+					: getSession()->getProjectIt()->get('WikiEditorClass')
+			);
+			$field->setValue($source_it->get($text_attribute));
+			$field->setObjectIt($source_it);
+			$text = $field->getText(true);
+		}
+		else {
+			$text = $source_it->getHtmlDecoded($text_attribute);
+		}
+
 		return array (
 			'uid' => $uid->getUidWithCaption($source_it),
-			'text' => $source_it->getHtmlDecoded($text_attribute)
+			'text' => $text
 		);
 	}
 

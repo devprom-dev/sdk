@@ -11,4 +11,8 @@ class KnowledgeBaseDocumentList extends PMWikiDocumentList
 	{
 	    return false;
 	}
-} 
+
+	protected function hasToolbar() {
+		return false;
+	}
+}

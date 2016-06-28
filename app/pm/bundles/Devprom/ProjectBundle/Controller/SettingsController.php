@@ -1,16 +1,16 @@
 <?php
-
 namespace Devprom\ProjectBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Response;
+use Devprom\CommonBundle\Controller\PageController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Devprom\ProjectBundle\Service\Settings\ModulesSettingsService;
 use Devprom\ProjectBundle\Service\Settings\NavigationSettingsService;
 
-class SettingsController extends Controller
+include_once SERVER_ROOT_PATH . "pm/views/ui/Common.php";
+include_once SERVER_ROOT_PATH . "pm/views/settings/ProjectSettingsPage.php";
+
+class SettingsController extends PageController
 {
     public function indexAction(Request $request)
     {
@@ -34,6 +34,10 @@ class SettingsController extends Controller
     	    	$service->reset();
     	    	break;
 
+			case 'resettodefault':
+				$service->resetToDefault();
+				break;
+
     	    case 'makedefault':
     	    	$service->makeDefault();
     	    	break;
@@ -56,4 +60,8 @@ class SettingsController extends Controller
     	    	return new NavigationSettingsService();
     	}
     }
+
+	public function projectAction(Request $request) {
+		return $this->responsePage( new \ProjectSettingsPage() );
+	}
 }

@@ -13,10 +13,14 @@ $view->extend('core/Page.php');
 					<form>
 						<fieldset>
 							<legend> 
-							    404/Not Found
+							    404 Not Found
 							</legend>
 						</fieldset>
-						<p><?=text(1570)?></p>
+                        <? if ( !is_array($_SESSION['error']) && $_SESSION['error'] != '' ) { ?>
+                            <p><?=$_SESSION['error']?></p>
+                        <? } else { ?>
+                            <p><?=text(1570)?></p>
+                        <? } ?>
 					</form>
                 </div>
             </div>

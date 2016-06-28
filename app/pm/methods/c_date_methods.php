@@ -194,10 +194,10 @@ class ViewFinishDateWebMethod extends FilterDateWebMethod
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewModifiedAfterDateWebMethod extends FilterDateWebMethod
  {
- 	function getCaption()
- 	{
- 		return translate('Изменено после');
- 	}
+	 function __construct() {
+		 parent::__construct();
+		 $this->setCaption(translate('Изменено после'));
+	 }
 
 	function getStyle()
 	{

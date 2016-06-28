@@ -5,7 +5,7 @@ class UserList extends PageList
 	function getPredicates( $values )
 	{
 		return array(
-    		new UserStatePredicate( $values['state'] ),
+    		new UserAccessPredicate( $values['state'] ),
     		new UserSystemRolePredicate( $values['role'] )
 		);
 	}
@@ -35,7 +35,13 @@ class UserList extends PageList
 		        break;
 		        
     	    case 'Caption':
-    	        echo $object_it->getRefLink();
+				$method = new ObjectModifyWebMethod($object_it);
+				if ( $method->hasAccess() ) {
+					echo '<a href="'.$method->getJSCall().'">'.$object_it->getDisplayName().'</a>';
+				}
+				else {
+					parent::drawCell( $object_it, $attr );
+				}
     	        break;
 
 			case 'LastActivityDate':
@@ -73,5 +79,30 @@ class UserList extends PageList
 	        default:
 	            return parent::getColumnWidth( $attr );
 	    }
+	}
+
+	function getColumnFields()
+	{
+		return array_merge(
+			parent::getColumnFields(),
+			array (
+				'IsReadonly'
+			)
+		);
+	}
+
+	function getRenderParms()
+	{
+		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
+		if ( !$license_it->allowCreate($this->getObject()) ) {
+			$message = text(2196);
+		}
+
+		return array_merge(
+			parent::getRenderParms(),
+			array (
+				'message' => $message
+			)
+		);
 	}
 }

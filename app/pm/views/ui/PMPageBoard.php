@@ -31,22 +31,15 @@ class PMPageBoard extends PageBoard
 	
 	function hasCommonStates()
 	{
- 		$classname = $this->getBoardAttributeClassName();
- 		if ( $classname == '' ) return false;
- 		
- 		$value_it = getFactory()->getObject($classname)->getRegistry()->Query(
- 				array (
- 						new FilterVpdPredicate()
- 				)
- 		);
- 		
- 		$values = array();
+        $values = array();
+
+ 		$value_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
  		while( !$value_it->end() )
  		{
  			$values[$value_it->get('VPD')][] = $value_it->get('Caption');
  			$value_it->moveNext();
  		}
- 		
+
  		$example = array_shift($values);
  		foreach( $values as $attributes )
  		{
@@ -94,17 +87,45 @@ class PMPageBoard extends PageBoard
 		}
 	}
 
+    function getGroupIt()
+    {
+        foreach( $this->getTable()->getFilterPredicates() as $filter ) {
+            if ( $filter instanceof FilterVpdPredicate ) {
+                $vpd_filter = $filter;
+            }
+        }
+        if ( !is_object($vpd_filter) ) {
+            $vpd_filter = new FilterVpdPredicate(join(',',$this->getObject()->getVpds()));
+        }
+
+        switch($this->getGroup())
+        {
+            case 'Project':
+                $values = $this->getFilterValues();
+                $groupFilter = in_array($values['target'],array('all','none','hide')) ? '' : $values['target'];
+
+                return getFactory()->getObject('Project')->getRegistry()->Query(
+                    array (
+                        $groupFilter != ''
+                            ? new FilterInPredicate(preg_split('/,/', $groupFilter))
+                            : $vpd_filter
+                    )
+                );
+            default:
+                return parent::getGroupIt();
+        }
+    }
+
     function drawGroup($group_field, $object_it)
     {
         switch ( $group_field )
         {
             case 'Project':
-                $ref_it = $this->getGroupIt();
-                $ref_it->moveToId($object_it->get($group_field));
+                $ref_it = $object_it->getRef($group_field);
 
                 $report_url = str_replace(
                     getSession()->getApplicationUrl(),
-                    getSession()->getApplicationUrl($object_it),
+                    getSession()->getApplicationUrl($ref_it),
                     $this->report_down_url
                 );
                 $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
@@ -125,7 +146,7 @@ class PMPageBoard extends PageBoard
 		$iterator = $this->getBoardAttributeIterator();
 		$iterator->moveTo('ReferenceName', $board_value);
 
-		if ( $iterator->getId() != '' && !$this->getTable()->hasCrossProjectFilter() )
+		if ( $iterator->getId() != '' && !getSession()->getProjectIt()->IsPortfolio() )
 		{
 			$method = new ObjectModifyWebMethod($iterator);
 			if ( $method->hasAccess() ) {
@@ -135,6 +156,27 @@ class PMPageBoard extends PageBoard
 				);
 				$custom_actions[] = array();
 			}
+
+            $transition_actions = array();
+            $transition_it = WorkflowScheme::Instance()->getStateTransitionIt($this->getObject(), $board_value);
+            while( !$transition_it->end() ) {
+                $method = new ObjectModifyWebMethod($transition_it);
+                if ( $method->hasAccess() ) {
+                    $method->setObjectUrl($iterator->object->getPage().$transition_it->getEditUrl());
+                    $transition_actions[] = array (
+                        'name' => $transition_it->getDisplayName(),
+                        'url' => $method->getJSCall()
+                    );
+                }
+                $transition_it->moveNext();
+            }
+            if ( count($transition_actions) > 0 ) {
+                $custom_actions[] = array (
+                    'name' => translate('Переходы'),
+                    'items' => $transition_actions
+                );
+                $custom_actions[] = array();
+            }
 
 			$method = new ObjectCreateNewWebMethod($iterator->object);
 			if ( $method->hasAccess() ) {

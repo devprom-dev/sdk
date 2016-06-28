@@ -100,3 +100,7 @@ pre
 	white-space: pre-wrap; /* CSS 2.1 */
 	word-wrap: break-word; /* IE7 */
 }
+
+span.math-tex {
+	font-size: 180%;
+}

@@ -21,7 +21,7 @@ class ErrorPage extends CoPage
  	function getTable() 
  	{
  	    $parts = preg_split('/\?/', $_SERVER['REQUEST_URI']);
- 	    
+
  		switch ( $parts[0] )
  		{
  			case '/404':

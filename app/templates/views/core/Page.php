@@ -46,10 +46,6 @@
         devpromOpts.datepickerLanguage = '<?=$datelanguage?>';
         devpromOpts.dateformat = '<?=$dateformat?>';
 		devpromOpts.datejsformat = '<?=$datejsformat?>';
-        devpromOpts.saveButtonName = '<?=translate('Сохранить')?>';
-        devpromOpts.completeButtonName = '<?=translate('Выполнить')?>';
-        devpromOpts.closeButtonName = '<?=translate('Закрыть')?>';
-        devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
         devpromOpts.template = '<?=$project_template?>';
         devpromOpts.mathJaxLib = '<?=(defined('MATH_JAX_LIB_SRC') ? MATH_JAX_LIB_SRC : "")?>';
         devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
@@ -68,7 +64,13 @@
     		}
 
     		$(window).on('beforeunload', function() {
-    			return beforeUnload($('form[id]').attr('id'));
+				var result = null;
+				$('form[id]').each(function() {
+					result = beforeUnload($(this).attr('id'));
+					if ( typeof result == 'string' ) return false;
+				});
+				if ( typeof result == 'string' ) return result;
+    			return beforeUnload('global');
     		});
 
     		cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
@@ -77,9 +79,9 @@
         
 		<?php if ( !defined('UI_EXTENSION') || UI_EXTENSION ) { ?>
 		completeUIExt( $(document) );
-		setUXData();
         <?php } ?>
     	<?php if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS ) { ?>
+		setUXData();
         Raven.config(window.location.protocol+'//<?=(defined('DEVOPSKEY') ? DEVOPSKEY : 'af4078b6e4630da32f3c164d121ea2b1')?>@api.devopsboard.com/sentry/1', {
         	logger: 'Devprom Front',
         	release: '<?=$current_version?>',

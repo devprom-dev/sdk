@@ -24,8 +24,14 @@ class RemoveObsoleteAttachmentsEventHandler extends ObjectFactoryNotificator
 
 	protected function getAttachments( $object_it ) {
 		$matches = array();
-		preg_match_all('/file\/WikiPageFile\/(\d+)/i', $object_it->getHtmlDecoded('Content'), $matches);
-		return $matches[1];
+		$files = array();
+		if ( preg_match_all('/file\/WikiPageFile\/(\d+)/i', $object_it->getHtmlDecoded('Content'), $matches) ) {
+			$files = array_merge($files, $matches[1]);
+		}
+		if ( preg_match_all('/file\/WikiPageFile\/[^\/]+\/(\d+)/i', $object_it->getHtmlDecoded('Content'), $matches) ) {
+			$files = array_merge($files, $matches[1]);
+		}
+		return $files;
 	}
 
 	function add( $object_it ) {

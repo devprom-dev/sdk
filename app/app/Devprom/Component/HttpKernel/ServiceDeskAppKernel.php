@@ -105,8 +105,12 @@ class ServiceDeskAppKernel extends Kernel
 
     function initializeContainer()
     {
-    	$lock = new \CacheLock();
-		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
-    	parent::initializeContainer();
+        $lock = new \CacheLock();
+        try {
+            parent::initializeContainer();
+        }
+        catch( \Exception $e ) {
+            error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
+        }
     }
 }

@@ -8,36 +8,35 @@ include "predicates/UserSessionPredicate.php";
 include "predicates/UserIssuesAuthorPredicate.php";
 include "predicates/UserStatePredicate.php";
 include "predicates/UserSystemRolePredicate.php";
+include "predicates/UserAccessPredicate.php";
 include "persisters/UserDetailsPersister.php";
+include "persisters/UserReadonlyPersister.php";
 
 class User extends Metaobject
 {
  	function User( $registry = null ) 
  	{
 		parent::Metaobject('cms_User', $registry);
-		
 		$this->setSortDefault( new SortAttributeClause('Caption') );
+		$this->addPersister( new UserReadonlyPersister() );
 		
-		$system_attributes = array ('IsAdmin', 'IsShared', 'Rating', 'IsActivated', 'SessionHash', 'ICQ', 'Skype', 'LDAPUID');     
-		        
-		foreach( $system_attributes as $attribute )
-		{
+		$system_attributes = array ('IsAdmin', 'IsShared', 'Rating', 'IsActivated', 'SessionHash', 'ICQ', 'Skype', 'LDAPUID', 'AskChangePassword', 'IsReadonly');
+		foreach( $system_attributes as $attribute ) {
     		$this->addAttributeGroup($attribute, 'system');
 		}
-		
-		foreach( array( 'ICQ', 'Skype' ) as $attribute )
-		{
+		$system_attributes = array ('Phone', 'Description', 'LDAPUID');
+		foreach( $system_attributes as $attribute ) {
+			$this->addAttributeGroup($attribute, 'additional');
+		}
+
+		foreach( array( 'ICQ', 'Skype' ) as $attribute ) {
 		    $this->setAttributeVisible( $attribute, false );
 		}
 		
 		$this->setAttributeCaption( 'Phone', translate('Контакты') );
-		
 		$this->setAttributeVisible( 'Phone', true );
-		
-		$this->setAttributeRequired( 'Language', false );
-
 		$this->setAttributeType( 'Phone', 'RICHTEXT' );
-		
+		$this->setAttributeRequired( 'Language', false );
 		$this->setAttributeOrderNum('Photo', 1);
 		$this->addAttributeGroup('Email', 'alternative-key');
  	}
@@ -71,15 +70,11 @@ class User extends Metaobject
 
 	function getActiveUsers()
 	{
-	    global $model_factory;
-	    
-	    $active = $model_factory->getObject('User');
-	    
-	    $active->addFilter( new UserStatePredicate('active') );
-	    
-	    $it = $active->getCount();
-	    
-	    return $it->get('Count');
+		return $this->getRegistry()->Count(
+			array (
+				new UserStatePredicate('active')
+			)
+		);
 	}
 	
  	function add_parms( $parms )
@@ -262,67 +257,6 @@ class User extends Metaobject
 		return $this->createSqlIterator($sql);
 	}
 	
-	function getOpenProjectIt( $user_it )
-	{
-		$users = $user_it->idsToArray();
-		
-		if ( count($users) < 1 )
-		{
-			return null;
-		}
-		
-		$sql = "select DISTINCT p.* " .
-			   "  from pm_Project p INNER JOIN pm_Participant a on a.Project = p.pm_ProjectId" .
-			   " where a.SystemUser IN (".join(',', $users).")".
-			   "   and IFNULL(p.IsClosed, 'N') = 'N' ".
-			   "   and IFNULL(a.IsActive, 'Y') = 'Y' ".
-			   " order by p.RecordModified DESC ";
-
-		return getFactory()->getObject('pm_Project')->createSqlIterator($sql);
-	}
-
-	function getPublicProjectIt( $user_it )
-	{
-		$users = $user_it->idsToArray();
-		
-		if ( count($users) < 1 )
-		{
-			return null;
-		}
-		
-		$sql = "select p.* " .
-			   "  from pm_Project p, pm_PublicInfo i " .
-			   " where exists (select 1 from pm_Participant a " .
-			   "			    where a.SystemUser IN (".join(',', $users).") " .
-			   "				  and a.Project = p.pm_ProjectId )".
-			   "   and p.pm_ProjectId = i.Project" .
-			   "   and i.IsProjectInfo = 'Y' ".
-			   " order by p.RecordCreated DESC ";
-
-		return getFactory()->getObject('pm_Project')->createSqlIterator($sql);
-	}
-
-	function getSubscribedProjectIt( $user_it )
-	{
-		$users = $user_it->idsToArray();
-		
-		if ( count($users) < 1 )
-		{
-			return null;
-		}
-		
-		$sql = "select p.* " .
-			   "  from pm_Project p, pm_PublicInfo i " .
-			   " where exists (select 1 from co_ProjectSubscription a " .
-			   "			    where a.SystemUser IN (".join(',', $users).") " .
-			   "				  and a.Project = p.pm_ProjectId )".
-			   "   and p.pm_ProjectId = i.Project" .
-			   "   and i.IsProjectInfo = 'Y' ".
-			   " order by p.RecordCreated DESC ";
-
-		return getFactory()->getObject('pm_Project')->createSqlIterator($sql);
-	}
-
 	function getCloseProjectIt( $user_it )
 	{
 		$users = $user_it->idsToArray();
@@ -354,20 +288,6 @@ class User extends Metaobject
 	function getAdministratorIt()
 	{
 		return $this->getByRef('IsAdmin', 'Y');
-	}
-	
-	function getUsedInProjectsIt()
-	{
-		$sql = " SELECT u.* " .
-			   "   FROM cms_User u" .
-			   "  WHERE EXISTS (SELECT 1 FROM pm_Participant p, pm_ParticipantRole r" .
-			   "			     WHERE p.SystemUser = u.cms_UserId" .
-			   "				   AND p.IsActive = 'Y'" .
-			   "				   AND r.Participant = p.pm_ParticipantId" .
-			   "				   AND r.Capacity > 0 )" .
-			   " ORDER BY u.Caption ASC ";
-			   
-		return $this->createSQLIterator( $sql );
 	}
 	
 	function DeletesCascade( $object )

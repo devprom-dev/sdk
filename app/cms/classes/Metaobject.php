@@ -358,94 +358,81 @@ class Metaobject extends StoredObjectDB
 		return $soap->find( $token, get_class($this), $parms );
 	}
 
-	//----------------------------------------------------------------------------------------------------------
-	function delete( $object_id )
+	protected function beforeDelete($deleted_it)
 	{
-		global $array_to_delete;
-		
-		if( !is_array($array_to_delete) ) $array_to_delete = array();
+		global $array_to_delete, $deleted_list;
 
-		$key = get_class($this).','.$object_id;
+		if ( $deleted_it->getId() < 1 ) return;
+
+		parent::beforeDelete($deleted_it);
+
+		$key = get_class($this).','.$deleted_it->getId();
 
 		// check if object has been deleted already
+		if( !is_array($array_to_delete) ) $array_to_delete = array();
 		if( in_array($key, $array_to_delete) ) return;
-		
+
 		$array_to_delete[] = $key;
 
-		$self_it = $this->getExact($object_id);
+		$self_it = $deleted_it;
 
-		$deleted_list = array();
-		
-		$modified_list = array();
-		
+		if ( strtolower(get_class($deleted_it->object)) != 'metaobject' ) {
+			UndoLog::Instance()->put($deleted_it);
+		}
+
 		// get items references to the current one
 		$references = getFactory()->getModelReferenceRegistry()->getBackwardReferences($this);
 
 		// delete objects have references to the given one
 		foreach ( $references as $attribute_path => $class_name )
 		{
-		    $parts = preg_split('/::/', $attribute_path);
-		    
-		    $attribute = $parts[1];
-		    
-		    $object = getFactory()->getObject($class_name);
-		    
-		    if ( !$object->IsAttributeStored($attribute) ) continue;
+			$parts = preg_split('/::/', $attribute_path);
+			$attribute = $parts[1];
 
-		    $object->setVpdContext( $self_it );
-		    
-		    $object->setNotificationEnabled(false);
-		    
-			if ( $this->DeletesCascade($object) && $object->IsDeletedCascade($this) )
-			{
-    			$object_it = $object->getRegistry()->Query( 
-    					array (
-    							new FilterAttributePredicate($attribute,$object_id) 
-    					)
-    			);
+			$object = getFactory()->getObject($class_name);
+			if ( !$object->IsAttributeStored($attribute) ) continue;
 
-				while( $object_it->getId() != '' )
-				{
+			if ( $this->DeletesCascade($object) && $object->IsDeletedCascade($this) ) {
+				$object_it = $object->getRegistry()->Query(
+					array (
+						new FilterAttributePredicate($attribute,$deleted_it->getId())
+					)
+				);
+				while( $object_it->getId() != '' ) {
 					$deleted_list[] = $object_it->copy();
-					
-				    $object->delete( $object_it->getId() );
-					
+					$object->deleteInternal( $object_it );
 					$object_it->moveNext();
 				}
 			}
-			elseif ( $object->IsUpdatedCascade($this) )
-			{
+			elseif ( $object->IsUpdatedCascade($this) ) {
 				$reference_it = $object->getRegistry()->Query(
 					array (
-						new FilterAttributePredicate($attribute,$object_id)
+						new FilterAttributePredicate($attribute,$deleted_it->getId())
 					)
 				);
-
-				$modified_list[] = $object->createCachedIterator($reference_it->getRowset());
-				
-				$this->UpdatesCascade( $attribute, $self_it, $reference_it ); 
+				$this->UpdatesCascade( $attribute, $self_it, $reference_it );
 			}
-			
-			$object->enableVpd();
 		}
+	}
 
-		$result = parent::delete($object_id);
-		
-		foreach( $deleted_list as $object_it )
-		{
+	//----------------------------------------------------------------------------------------------------------
+	function delete( $object_id, $record_version = '' )
+	{
+		global $deleted_list;
+		$deleted_list = array();
+
+		getFactory()->resetCachedIterator( $this );
+		$object_it = $this->getExact($object_id);
+		if ( $object_it->getId() == '' ) return 0;
+
+		$result = $this->deleteInternal( $object_it, $record_version );
+		$deleted_list[] = $object_it->copy();
+
+		getFactory()->resetCachedIterator($this);
+		foreach( $deleted_list as $object_it ) {
 			getFactory()->getEventsManager()->notify_object_delete($object_it);
 		}
-		
-		foreach( $modified_list as $object_it )
-		{
-			while( !$object_it->end() )
-			{
-				getFactory()->getEventsManager()->notify_object_modify($object_it, $object_it, array());
-				
-				$object_it->moveNext();
-			}
-		}
-		
+
 		return $result;
 	}
 	

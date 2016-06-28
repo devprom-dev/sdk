@@ -29,9 +29,14 @@ class FunctionList extends PMPageList
 		$roots = array_filter($rowset, function($row) {
 			return $row['ParentFeature'] == '';
 		});
+		if ( count($roots) < 1 ) {
+			$roots = $rowset;
+		}
 
 		$dataset = array();
-		foreach($roots as $row ) {
+		$index = 1;
+		foreach($roots as $key => $row ) {
+			$row['SortIndex'] = str_pad($index++,10,"0",STR_PAD_LEFT);
 			$dataset[] = $row;
 			self::buildChildRows($row, $rowset, $dataset);
 		}
@@ -55,10 +60,17 @@ class FunctionList extends PMPageList
 		$roots = array_filter($rowset, function($row) use ($parent_row) {
 			return $row['ParentFeature'] == $parent_row['pm_FunctionId'];
 		});
-		foreach($roots as $row) {
+		$index = 1;
+		foreach($roots as $key => $row) {
+			$row['SortIndex'] = $parent_row['SortIndex'].','.str_pad($index++,10,"0",STR_PAD_LEFT);
 			$data[] = $row;
 			self::buildChildRows($row, $rowset, $data);
 		}
+	}
+
+	function getIds()
+	{
+		return array();
 	}
 
 	function getSorts()

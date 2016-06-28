@@ -291,7 +291,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 		return translate('Отменить');
 	}
 	
-	function getJSCall( $object_it, $change_it ) 
+	function url( $object_it, $change_it )
 	{
 		return parent::getJSCall( array( 
 				'wiki' => $object_it->getId(),
@@ -350,7 +350,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  		
   		$values = array (
  			'all' => translate('Все'),
- 			);
+			' 0' => translate('<нет значения>')
+		);
 		$items = array();
 
  		while ( !$this->tag_it->end() )
@@ -375,8 +376,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
      		}
  		}
  		
-		$values[' 0'] = translate('Тэги: не заданы');
-
  		return $values;
 	}
 	

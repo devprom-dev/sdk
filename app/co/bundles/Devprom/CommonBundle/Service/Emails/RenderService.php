@@ -30,7 +30,7 @@ class RenderService
 		if ( is_dir(\SystemTemplate::getPath().$lang) ) {
 			$plugins_paths[] = \SystemTemplate::getPath().$lang;
 		}
-		foreach( $session->getPluginsManager()->getNamespaces() as $plugin )
+		foreach( getFactory()->getPluginsManager()->getNamespaces() as $plugin )
 		{
 			$path = realpath(SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/resources/'.$lang);
 			if ( is_dir($path) ) $plugins_paths[] = $path;

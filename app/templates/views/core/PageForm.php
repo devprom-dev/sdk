@@ -24,59 +24,46 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     
         	    <div class="pull-left">
                     <ul class="breadcrumb">
-            	        <?php if ( $navigation_title != '') { ?>
-            	        <li>
-            	            <a href="<?=$navigation_url?>"><?=$navigation_title?></a>
-            	            <?php if ( $has_caption ) { ?><span class="divider">/</span> <?php } ?>
-            	        </li>
-            	        <?php } ?>
-                    
-                        <?php if ( $has_caption ) { ?>
-                    	<li>
-                   	        <?
-                   	        if ( $uid != '' ) {
-                   	        	 echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid));
-                   	        }
-                   	        else {
-								echo $caption;
+						<?php
+						if ( $uid != '' ) {
+							if ( $navigation_url != '' ) {
+								echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
 							}
-							?>
-                    	</li>
-                    	<?php } ?>
+							else if ( $has_caption ) {
+								echo '<li>'.$caption.'<span class="divider">/</span></li>';
+							}
+							echo '<li>'.$view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)).'</li>';
+						}
+						else {
+							echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a></li>';
+						}
+						?>
                     </ul> <!-- end breadcrumb -->
         		</div>
 
-    		    <div class="pull-right actions">
+				<?php if ( $state_name != '' ) { ?>
+					<div class="pull-left" style="margin-top:6px;">
+						<?php
+						echo $view->render('pm/StateColumn.php', array (
+							'color' => $form->getObjectIt()->get('StateColor'),
+							'name' => $form->getObjectIt()->get('StateName'),
+							'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
+							'id' => 'state-label'
+						));
+						?>
+						&nbsp;
+					</div>
+				<?php } ?>
 
-    		        <?php $form->drawButtons(); ?>
-        		
-    		        <?php if ( count($actions) > 0 && $action != 'show' ) { ?>
-    		        
-        		        <div class="btn-group">
-        					<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-        						<?=translate('Действия')?>
-        						<span class="caret"></span>
-        					</a>
-        					<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
-        				</div>
-        				
-        			<?php } ?>
-        			
+    		    <div class="pull-right actions">
+    		        <?php
+					$form->drawButtons();
+					if ( count($actions) > 0 && $action != 'show' ) {
+						echo $view->render('core/PageFormButtons.php', array('actions' => $actions));
+					}
+					?>
     			</div> <!-- end actions -->
         			
-        	    <?php if ( $state_name != '' ) { ?>
-        		<div class="pull-right actions" style="margin-top:6px;">
-					<?php 
-						echo $view->render('pm/StateColumn.php', array (
-									'color' => $form->getObjectIt()->get('StateColor'),
-									'name' => $form->getObjectIt()->get('StateName'),
-									'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
-							)); 
-					?>        		
-       				&nbsp;
-        		</div>
-        		<?php } ?>
-        		
         		<div class="clearfix"></div>
     		
     		<?php } ?>
@@ -153,9 +140,5 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 <?php } ?>
 
 <script type="text/javascript">
-
     devpromOpts.saveButtonName = '<?=$button_save_title?>';
-    devpromOpts.closeButtonName = '<?=translate('Отменить')?>';
-    devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
-
 </script>

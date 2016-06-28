@@ -4,21 +4,17 @@ class UserRolePredicate extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
+		$ids = array_filter(preg_split('/,/',$filter), function($value) {
+			return $value > 0;
+		});
+		if ( count($ids) < 1 ) return " AND 1 = 2 ";
  		
- 		if ( $filter == 'all' ) return "";
- 		
- 		$role = $model_factory->getObject('ProjectRoleBase');
- 		$role_it = $role->getExact($filter);
+ 		$role_it = getFactory()->getObject('ProjectRoleBase')->getExact($ids);
+ 		if ( $role_it->count() < 1 ) return " AND 1 = 2 ";
 
- 		if ( $role_it->count() > 0 )
- 		{
-	 		$filter = "AND EXISTS ( SELECT 1 FROM pm_Participant r, pm_ParticipantRole o, pm_ProjectRole l " .
-					  "			 	 WHERE t.cms_UserId = r.SystemUser AND r.pm_ParticipantId = o.Participant " .
-					  "			   	   AND o.ProjectRole = l.pm_ProjectRoleId AND l.ProjectRoleBase = ".$role_it->getId().
-					  "    		   	   ) ";
- 		}
- 		
- 		return $filter;
+		return    " AND EXISTS ( SELECT 1 FROM pm_Participant r, pm_ParticipantRole o, pm_ProjectRole l " .
+				  "			 	 WHERE t.cms_UserId = r.SystemUser AND r.pm_ParticipantId = o.Participant " .
+				  "			   	   AND o.ProjectRole = l.pm_ProjectRoleId AND l.ProjectRoleBase IN ( ".join(',',$role_it->idsToArray()).") ".
+				  "    		   	   ) ";
  	}
 }

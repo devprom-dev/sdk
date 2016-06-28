@@ -8,20 +8,20 @@ class IteratorXml extends IteratorBase
  	
  	function IteratorXml ( $object, $xml )
  	{
- 		global $model_factory;
- 		
- 		parent::IteratorBase( $object );
- 		
-		$xml_array = new xml2Array;
-		$xml_data = $xml_array->xmlParse($xml);
+ 		parent::__construct( $object );
 
-		$entity = $xml_data;
-		if ( strtolower($xml_data['name']) != 'entities' )
-		{
+		if ( is_array($xml) ) {
+			$xml_data = $xml;
+		}
+		else {
+			$xml_array = new xml2Array;
+			$xml_data = $xml_array->xmlParse($xml);
+		}
+
+		if ( strtolower($xml_data['name']) != 'entities' ) {
 			$data[0] = $xml_data;
 		}
-		else
-		{
+		else {
 			$data = $xml_data['children'];
 		}
 
@@ -29,31 +29,25 @@ class IteratorXml extends IteratorBase
 		
 		foreach ( $data as $entity )
 		{
-			if ( strtolower(get_class($object)) == 'metaobject' )
-			{
+			if ( strtolower(get_class($object)) == 'metaobject' ) {
 				$matched_class = $entity['attrs']['CLASS'] == $object->getEntityRefName();
 			}
-			else
-			{
-			    $class_name = $model_factory->getClass($entity['attrs']['CLASS']);
-			    
+			else {
+			    $class_name = getFactory()->getClass($entity['attrs']['CLASS']);
 			    if ( $class_name == '' || !class_exists($class_name, false ) ) continue;
 			    
-				$tmp = $model_factory->getObject($class_name);
-				
+				$tmp = getFactory()->getObject($class_name);
 				$matched_class = is_a($tmp, get_class($object));
 			}
 				
 			if ( !$matched_class ) continue;
-			
 			if ( !is_array($entity['children']) ) continue;
 			
-			foreach ( $entity['children'] as $object_tag )
-			{
+			foreach ( $entity['children'] as $object_tag ) {
+				$record = array();
 				$record[$object->getEntityRefName().'Id'] = $object_tag['attrs']['ID'];
 
-				foreach ( $object_tag['children'] as $attr_tag )
-				{
+				foreach ( $object_tag['children'] as $attr_tag ) {
 					if ( $attr_tag['attrs']['ENCODING'] != '' ) {
 							$attr_tag['tagData'] = base64_decode($attr_tag['tagData']);
 					}
@@ -62,8 +56,7 @@ class IteratorXml extends IteratorBase
 					}
 					$record[$attr_tag['attrs']['NAME']] = $attr_tag['tagData'];
 				}
-				
-				array_push( $this->records, $record );
+				$this->records[] = $record;
 			}
 		}
 

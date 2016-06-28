@@ -39,8 +39,15 @@ class ApplyTemplateService
                 $class_name = get_class(getFactory()->getObject($object->getEntityRefName()));
             }
             $rowset = $rowsets[$class_name];
-
             if ( !is_array($rowset) || count($rowset) < 1 ) continue;
+
+			if ( $object instanceof \ProjectPage ) {
+				if ( (in_array('ProjectArtefacts', $except_sections) || count($except_sections) < 1) && !in_array('ProjectArtefacts', $sections) ) {
+					$rowset = array_filter($rowset, function ($row) {
+						return $row['ParentPage'] == '';
+					});
+				}
+			}
 
             $iterator = $object->createCachedIterator($rowset);
 			$object->resetFilters();
@@ -107,9 +114,7 @@ class ApplyTemplateService
 					break;
 					
 				case 'pm_State':
-					
 					$state_objects[] = $object;
-					
 					break;
 			}
 
@@ -216,18 +221,14 @@ class ApplyTemplateService
         $xml_array = new \xml2Array;
         $xml_data = $xml_array->xmlParse($xml);
 
-        $entity = $xml_data;
-        if ( strtolower($xml_data['name']) != 'entities' )
-        {
+        if ( strtolower($xml_data['name']) != 'entities' ) {
             $data[0] = $xml_data;
         }
-        else
-        {
+        else {
             $data = $xml_data['children'];
         }
 
         $result = array();
-
         foreach ( $data as $entity )
         {
             $class_name = getFactory()->getClass($entity['attrs']['CLASS']);
@@ -238,11 +239,10 @@ class ApplyTemplateService
             $object = getFactory()->getObject($class_name);
             $class_name = get_class($object);
 
-            foreach ( $entity['children'] as $object_tag )
-            {
+            foreach ( $entity['children'] as $object_tag ) {
+				$record = array();
                 $record[$object->getEntityRefName().'Id'] = $object_tag['attrs']['ID'];
-                foreach ( $object_tag['children'] as $attr_tag )
-                {
+                foreach ( $object_tag['children'] as $attr_tag ) {
                     if ( $attr_tag['attrs']['ENCODING'] != '' ) {
                         $attr_tag['tagData'] = base64_decode($attr_tag['tagData']);
                     }

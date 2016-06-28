@@ -12,7 +12,6 @@ class AdminPageMenu extends PageMenu
 		$pages = array();
 
 		array_push($pages, array( 
-			'name' => translate('Главная'),
 			'items' => array (
 				array ( 'name' => translate('Активности'), 'url' => '/admin/activity.php' ),  
 			    array ( 'name' => translate('Обновления'), 'url' => '/admin/updates.php' ),  
@@ -22,14 +21,18 @@ class AdminPageMenu extends PageMenu
 			)  
 		));
 		
-		array_push($pages, array( 'url' => '/admin/users.php', 'name' => translate('Пользователи'),
+		array_push($pages, array(
+			'uid' => 'users',
+			'url' => '/admin/users.php', 'name' => translate('Пользователи'),
 			'items' => array(
 				array( 'url' => '/admin/users.php', 'name' => translate('Список'), 'title' => translate('Список пользователей') ),
 				array(),
 				array( 'url' => '/admin/blacklist.php', 'name' => translate('Блокировки') )
 			)
 		));
-		array_push($pages, array( 'url' => '/admin/projects.php', 'name' => translate('Проекты'),
+		array_push($pages, array(
+			'uid' => 'projects',
+			'url' => '/admin/projects.php', 'name' => translate('Проекты'),
 			'items' => array(
 				array( 'url' => '/admin/projects.php', 'name' => translate('Список'), 'title' => translate('Список проектов') ),
 				array(),
@@ -37,7 +40,9 @@ class AdminPageMenu extends PageMenu
 			)
 		));
 
-		array_push($pages, array( 'url' => '/admin/commonsettings.php', 'name' => translate('Настройки'),
+		array_push($pages, array(
+			'uid' => 'settings',
+			'url' => '/admin/commonsettings.php', 'name' => translate('Настройки'),
 			'items' => array(
 				array( 'url' => '/admin/commonsettings.php', 'name' => text(1833) ),
 				array( 'url' => '/admin/mailer/', 'name' => translate('Почта') ),

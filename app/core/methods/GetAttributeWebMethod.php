@@ -1,7 +1,5 @@
 <?php
-
 include_once "WebMethod.php";
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 
 class GetAttributeWebMethod extends WebMethod
 {
@@ -21,9 +19,8 @@ class GetAttributeWebMethod extends WebMethod
     
             if ( $_REQUEST['converter'] == 'html2text' )
     	 	{
-    	 		$totext = new html2text( $result );
-    	 		
-    	 		$result = $totext->get_text(); 
+    	 		$totext = new \Html2Text\Html2Text( $result );
+    	 		$result = $totext->getText();
     	 	}
     		
     	 	switch ( $_REQUEST['encoding'] )

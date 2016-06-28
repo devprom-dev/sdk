@@ -34,7 +34,7 @@ class PageChart extends StaticPageList
 		$minSizeValuable = 1;
 
 		$object = $this->getObject();
-		
+
 		$aggs = $this->getAggregates();
 		foreach ( $aggs as $agg ) {
 			$object->addAggregate( $agg );
@@ -87,7 +87,7 @@ class PageChart extends StaticPageList
 		if ( $this->getGroup() == 'State' || $aggby == 'State' )
 		{
 			$this->state_sort_index = array();
-		    $state_it = $object->cacheStates();
+		    $state_it = WorkflowScheme::Instance()->getStateIt($object);
 		    while ( !$state_it->end() )
 		    {
 		        $this->state_sort_index[$state_it->get('ReferenceName')] = $state_it->get('OrderNum');
@@ -115,9 +115,11 @@ class PageChart extends StaticPageList
 		return $object->createCachedIterator( count($data) < $minSizeValuable ? $this->getDemoData($aggs) : $data );
 	}
 
-	protected function IsAttributeInQuery( $attribute ) {
+	protected function IsAttributeInQuery( $attribute )
+	{
 		return parent::IsAttributeInQuery( $attribute )
-			|| $this->getAggregateBy() == $attribute;
+			|| $this->getAggregateBy() == $attribute
+			|| $this->getGroup() == $attribute;
 	}
 
 	protected function getDemoData($aggs)
@@ -184,6 +186,22 @@ class PageChart extends StaticPageList
 			'AVG' => translate('Среднее'),
 			'MAX' => translate('Максимум'),
 			'MIN' => translate('Минимум')
+		);
+	}
+
+	function getAllowedGroupFields()
+	{
+		$disallowedFields = array();
+		return array_diff(
+			array_merge(
+				$this->getGroupFields(),
+				array_keys($this->getObject()->getAttributes()),
+				array (
+					'history',
+					'DayDate'
+				)
+			),
+			$disallowedFields
 		);
 	}
 
@@ -280,15 +298,20 @@ class PageChart extends StaticPageList
 	function getGroupFields()
 	{
 		$object = $this->getObject();
+		$attrs = $object->getAttributes();
 		$fields = array();
 		
 		$skip_attributes = array_merge(
 				$this->getSystemAttributes(),
 				$this->getObject()->getAttributesByGroup('trace')
 		);
-		
+		foreach( $attrs as $attribute => $info ) {
+			if ( !$this->getObject()->IsAttributeStored($attribute) && $this->getObject()->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) {
+				$skip_attributes[] = $attribute;
+			}
+		}
+
 		$clause = $object->getRegistry()->getSelectClause('', false);
-		$attrs = $object->getAttributes();
 
 		foreach ( $attrs as $key => $attr )
 		{
@@ -317,8 +340,18 @@ class PageChart extends StaticPageList
 		
 		foreach( $fields as $key => $field )
 		{
-			if ( in_array($field, $skip_attributes) ) unset ( $fields[$key] );
-			if ( $field != 'State' && in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) unset ( $fields[$key] );
+			if ( in_array($field, $skip_attributes) ) {
+				unset ( $fields[$key] );
+				continue;
+			}
+			if ( $field != 'State' && in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) {
+				unset ( $fields[$key] );
+				continue;
+			}
+			if ( !$this->getObject()->IsAttributeStored($field) ) {
+				unset ( $fields[$key] );
+				continue;
+			}
 		}
 		
 		return $fields;
@@ -537,12 +570,8 @@ class PageChart extends StaticPageList
 	function draw()
 	{
 	    $widget = $this->getChartWidget();
-	    
-	    if ( !is_object($widget) )
-	    {
-	        throw new Exception("Chart widget is undefined");
-	    }
-	    
+	    if ( !is_object($widget) ) throw new Exception("Chart widget is undefined");
+
 	    $aggs = $this->getAggregates();
 	    
 	    $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);

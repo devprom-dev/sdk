@@ -1,6 +1,10 @@
 <?php
 
 return array (
+	'Ревью' => 'Review',
+	'Коммит' => 'Commit',
+	'Декомпозиция' => 'Decomposition',
+	'Сеть' => 'Network',
 	'Реализовать' => 'Implement',
 	'Декомпозировать' => 'Decompose',
 	'Уровень декомпозиции' => 'Feature level',
@@ -220,7 +224,7 @@ return array (
 	'к списку проектов' => 'show projects',
 	'Обновления' => 'Updates',
 	'Свойства' => 'Properties',
-	'Списание времени' => 'Time spent',
+	'Списание времени' => 'Work logging',
 	'Формат' => 'Format',
 	'графический' => 'graphical',
 	'Разбивка' => 'Breakdown',
@@ -1369,7 +1373,6 @@ return array (
  	'Результаты последнего поиска' => 'Results of the last search',
  	'оставить сообщение' => 'send message',
  	'Добавить участника' => 'Add member',
- 	'Пригласить участника' => 'Invite member',
  	'эффективность' => 'efficiency',
  	'процент ошибок' => 'bugs percentage',
  	'Выполненные проекты' => 'Completed projects',
@@ -1917,7 +1920,6 @@ return array (
 	'Сложные' => 'Hard',
 	'Неоцененные' => 'Unestimated',
 	'Добавить позиции' => 'Add items',
-	'Затрачено' => 'Time spent',
 	'Оставшаяся трудоемкость, ч.' => 'Left capacity, hrs',
 	'Право доступа' => 'Access permission',
 	'Закладка' => 'Menu tab',
@@ -2028,5 +2030,8 @@ return array (
 	'Тип интеграции' => 'Direction',
 	'HTTP заголовки' => 'HTTP headers',
 	'Настройки мэппинга' => 'Mapping settings',
-	'Журнал выполнения' => 'Execution log'
+	'Журнал выполнения' => 'Execution log',
+	'Ещё...' => 'More...',
+	'Шаблон документа' => 'Specification template',
+	'Зависимости' => 'Dependencies'
 );

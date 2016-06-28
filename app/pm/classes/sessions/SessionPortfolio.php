@@ -63,19 +63,13 @@ class SessionPortfolio extends PMSession
     
     protected function buildParticipantData()
  	{
-        global $model_factory;
-        
         $result = array();
-
         $user_it = $this->getUserIt();
-        
-        $project_it = $this->getProjectIt();
-        
-        $participant = $model_factory->getObject('pm_Participant');
-        
+
+        $participant = new Participant();
         $result['participant'] = $participant->createCachedIterator( array( array(
             'pm_ParticipantId' => $user_it->getId(),
-            'Project' => $project_it->getId(),
+            'Project' => $this->getProjectIt()->getId(),
             'SystemUser' => $user_it->getId(),
             'Caption' => $user_it->getDisplayName(),
             'Email' => $user_it->get('Email')
@@ -84,11 +78,9 @@ class SessionPortfolio extends PMSession
         $result['roles'] = array (
             'lead' => true
         );
-
         $result['participant_roles'] = array (
             'lead' => true
         );
-        
         return $result;
  	}
 

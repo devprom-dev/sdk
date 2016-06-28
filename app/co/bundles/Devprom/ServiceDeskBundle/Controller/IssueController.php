@@ -3,7 +3,7 @@
 namespace Devprom\ServiceDeskBundle\Controller;
 
 use Devprom\ServiceDeskBundle\Entity\IssueComment;
-use Devprom\ServiceDeskBundle\Service\AttachmentService;
+use Devprom\ServiceDeskBundle\Service\IssueAttachmentService;
 use Devprom\ServiceDeskBundle\Service\IssueService;
 use Devprom\ServiceDeskBundle\Util\TextUtil;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,9 +40,6 @@ class IssueController extends Controller
         $form->bind($request);
 
         if ($form->isValid()) {
-        	if ( !is_object($issue->getProject()) ) {
-        		$issue->setProject(array_shift($this->container->getParameter('supportProjects')));
-        	}
             $this->getIssueService()->saveIssue($issue, $this->getUser());
             if ($issue->getNewAttachment()) {
                 $this->getAttachmentService()->save($issue->getNewAttachment(), $issue);
@@ -73,7 +70,6 @@ class IssueController extends Controller
         $products = $this->getIssueService()->getProductsAvailable($this->getProjectVpds());
 
         $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true, $products), $issue);
-
         return array(
             'issue' => $issue,
             'form' => $form->createView(),
@@ -249,9 +245,10 @@ class IssueController extends Controller
 	    		$customer_vpds[] = $project_ref->getProject()->getVpd();
 	    	}
     	}
-    	return count($customer_vpds) > 0 
-    		? array_intersect($customer_vpds, $this->container->getParameter('supportProjectVpds'))
-    		: $this->container->getParameter('supportProjectVpds');
+        $intersection = array_intersect($customer_vpds, $this->container->getParameter('supportProjectVpds'));
+        if ( count($intersection) > 0 ) return $intersection;
+
+    	return $this->container->getParameter('supportProjectVpds');
     }
     
     /**
@@ -275,10 +272,10 @@ class IssueController extends Controller
     }
 
     /**
-     * @return AttachmentService
+     * @return IssueAttachmentService
      */
     protected function getAttachmentService() {
-        return $this->container->get('attachment_service');
+        return $this->container->get('issue_attachment_service');
     }
 
     /**

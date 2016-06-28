@@ -8,7 +8,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
  		
  		$columns[] = 
  			"(SELECT GROUP_CONCAT(DISTINCT CAST(s.Release AS CHAR)) FROM pm_Task s " .
-			"  WHERE s.ChangeRequest = ".$this->getPK($alias)." ) Iterations ";
+			"  WHERE s.ChangeRequest = ".$this->getPK($alias)." ORDER BY s.Release) Iterations ";
 
  		return $columns;
  	}
@@ -17,10 +17,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
 	{
 		if ( !array_key_exists('Iterations',$parms) ) return;
 
-        if ( $parms['Iterations'] == '' ) {
-            $parms['PlannedRelease'] = '';
-        }
-        else {
+        if ( $parms['Iterations'] != '' ) {
             $iteration_it = $this->getObject()->getAttributeObject('Iterations')->getExact(preg_split('/,/', $parms['Iterations']));
             $parms['PlannedRelease'] = $iteration_it->get('Version');
         }
@@ -77,9 +74,6 @@ class RequestIterationsPersister extends ObjectSQLPersister
 
         if( $this->getObject()->getAttributeType('OpenTasks') != '' ) {
             $task_it = $object_it->getRef('OpenTasks');
-            if ( $task_it->count() < 1 ) {
-                $task_it = $object_it->getRef('Tasks');
-            }
         }
         else {
             $task_it = $task->getRegistry()->Query(
@@ -104,7 +98,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
         {
             $task->add_parms(
                 array (
-                    'Assignee' => getSession()->getUserIt()->getId(),
+                    'Assignee' => $object_it->get('Owner') != '' ? $object_it->get('Owner') : getSession()->getUserIt()->getId(),
                     'Planned' => $object_it->get('Estimation'),
                     'LeftWork' => $object_it->get('EstimationLeft'),
                     'TaskType' => getFactory()->getObject('TaskType')->getRegistry()->Query(
@@ -114,7 +108,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
                         )
                     )->getId(),
                     'ChangeRequest' => $object_it->getId(),
-                    'State' => array_pop($task->getTerminalStates()),
+                    'State' => array_shift($task->getStates()),
                     'Release' => $iteration_ids[0]
                 )
             );

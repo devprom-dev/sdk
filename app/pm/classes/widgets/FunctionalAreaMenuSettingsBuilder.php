@@ -120,9 +120,9 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     		$items[] = $module_it->buildMenuItem();
 		}
 		
- 	    $menus['settings'] = array (
+ 	    $menus['more'] = array (
  	        'name' => translate('Дополнительно'),
-            'uid' => 'settings',
+            'uid' => 'more',
             'items' => $items
  	    );
 

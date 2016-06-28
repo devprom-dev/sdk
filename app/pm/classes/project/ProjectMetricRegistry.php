@@ -28,17 +28,20 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
 
     function setMetric( $metric, $value )
     {
-        $this->setLimit(1);
-        $row_it = $this->Query(
+        $object = new Metaobject($this->getObject()->getEntityRefName());
+        $registry = $object->getRegistry();
+        $registry->setLimit(1);
+        $row_it = $registry->Query(
             array (
                 new FilterAttributePredicate('Metric', $metric),
                 new FilterAttributePredicate('Project', getSession()->getProjectIt()->getId()),
                 new SortRecentClause()
             )
         );
+        $rowId = $row_it->getId() != '' ? $row_it->getId() : 'NULL';
         DAL::Instance()->Query("
             REPLACE INTO pm_ProjectMetric (pm_ProjectMetricId, Project, VPD, Metric, MetricValue, RecordModified, RecordCreated)
-              VALUES ('".$row_it->getId()."', ".getSession()->getProjectIt()->getId().", '".getSession()->getProjectIt()->get('VPD')."', '".$metric."', '".$value."', NOW(), NOW())
+              VALUES (".$rowId.", ".getSession()->getProjectIt()->getId().", '".getSession()->getProjectIt()->get('VPD')."', '".$metric."', '".$value."', NOW(), NOW())
         ");
     }
 }

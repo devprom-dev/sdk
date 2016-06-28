@@ -13,8 +13,6 @@ class CommentHandler extends EmailNotificatorHandler
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient ) 
 	{
 		$commented_it = $object_it->getAnchorIt();
-
-		if ( !is_object($commented_it) ) return '';
 		if ( $commented_it->getId() == '' ) return '';
 
 		return parent::getSubject( $subject, $commented_it, $commented_it, $action, $recipient );
@@ -22,7 +20,8 @@ class CommentHandler extends EmailNotificatorHandler
 
 	function IsParticipantNotified( $participant_it )
 	{
-		return true;
+		$notification_type = getFactory()->getObject('Notification')->getType( $participant_it );
+		return $notification_type != '';
 	}
 
 	function participantHasAccess( $participant_it, $object_it )
@@ -38,8 +37,6 @@ class CommentHandler extends EmailNotificatorHandler
 		if ( $action != 'add' ) return $result;
 
 		$anchor_it = $object_it->getAnchorIt();
-
-		if ( !is_object($anchor_it) ) return $result;
 		if ( $anchor_it->getId() == '' ) return $result;
 
 		switch( $anchor_it->object->getClassName() )
@@ -77,8 +74,6 @@ class CommentHandler extends EmailNotificatorHandler
 		if ( $action != 'add' ) return $result;
 
 		$anchor_it = $object_it->getAnchorIt();
-
-		if ( !is_object($anchor_it) ) return $result;
 		if ( $anchor_it->getId() == '' ) return $result;
 		
 		switch( $anchor_it->object->getClassName() )
@@ -101,19 +96,17 @@ class CommentHandler extends EmailNotificatorHandler
 	function getRenderParms($action, $object_it, $prev_object_it)
 	{
 		$anchor_it = $object_it->getAnchorIt();
-
-		if ( !is_object($anchor_it) ) return array();
 		if ( $anchor_it->getId() == '' ) return array();
 
 		$uid = new ObjectUID();
 		$info = $uid->getUidInfo($anchor_it);
 		
 		return array (
-				'entity' => $anchor_it->object->getDisplayName(),
-				'title' => $anchor_it->getDisplayName(),
-				'url' => $info['url'],
-				'fields' => array(0),
-				'comments' => $this->getRecentComments($object_it)
+			'entity' => $anchor_it->object->getDisplayName(),
+			'title' => $anchor_it->getDisplayName(),
+			'url' => $info['url'],
+			'fields' => array(0),
+			'comments' => $this->getRecentComments($object_it)
 		);
 	}
 	
@@ -135,14 +128,17 @@ class CommentHandler extends EmailNotificatorHandler
  	{
  		$data = array();
  		$parser = $editor->getPageParser();
-		
+		$uid = new ObjectUID();
+
  		do 
  		{
+			$info = $uid->getUidInfo($comment_it);
  			$data[] = array (
-					'id' => $comment_it->getId(),
- 					'author' => $comment_it->get('AuthorName'),
- 					'date' => $comment_it->getDateTimeFormat('RecordCreated'),
- 					'text' => $parser->parse( $comment_it->getHtmlDecoded('Caption') )  
+				'id' => $comment_it->getId(),
+				'author' => $comment_it->get('AuthorName'),
+				'date' => $comment_it->getDateTimeFormat('RecordCreated'),
+				'text' => $parser->parse( $comment_it->getHtmlDecoded('Caption') ),
+				'url' => $info['url']
  			);
 			
 			$comment_it->moveNext();

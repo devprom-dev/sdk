@@ -3,6 +3,8 @@
 namespace Devprom\ServiceDeskBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -58,6 +60,16 @@ class IssueComment extends BaseEntity
      */
     private $externalEmail;
 
+    /**
+     * @ORM\OneToMany(targetEntity="IssueCommentAttachment", mappedBy="comment", fetch="EAGER", cascade={"all"})
+     * @var ArrayCollection
+     */
+    private $attachments;
+
+    function __construct()
+    {
+        $this->attachments = new ArrayCollection();
+    }
 
     /**
      * @param \Devprom\ServiceDeskBundle\Entity\User $author
@@ -181,9 +193,20 @@ class IssueComment extends BaseEntity
             : $this->getExternalEmail();
     }
 
+    /**
+     * @param ArrayCollection $attachments
+     */
+    public function setAttachments($attachments) {
+        $this->attachments = $attachments;
+    }
 
-
-
-
-
+    /**
+     * @return array
+     */
+    public function getAttachments()
+    {
+        return $this->attachments->matching(
+            Criteria::create()->where(Criteria::expr()->in("ObjectClass", array("comment","Comment")))
+        )->toArray();
+    }
 }

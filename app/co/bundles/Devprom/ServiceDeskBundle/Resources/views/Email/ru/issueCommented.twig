@@ -1,0 +1,6 @@
+<p>Здрaвcтвуйте!</p>
+<p>Сотрудник службы поддержки оставил комментарий к вашей заявке "<a href="{{ issueLink }}">{{ issue.caption }}</a>":</p>
+<blockquote>{{ comment | unescapeHtml | raw }}</blockquote>
+<br/>
+<hr>
+<p>Вы можете просмотреть детали заявки и оставить свои комментарии по ссылке: <a href="{{ issueLink }}">{{ issueLink }}</a></p>

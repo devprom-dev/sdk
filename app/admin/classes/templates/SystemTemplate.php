@@ -15,7 +15,11 @@ class SystemTemplate extends MetaobjectCacheable
 		
 		$this->addAttribute('Status', 'VARCHAR', text(2038), true, false); 
 		$this->addAttribute('Content', 'LARGETEXT', translate('Содержание'), false, false);
-		$this->addAttributeGroup('Content', 'system');
+		$this->addAttribute('Format', 'VARCHAR', translate('Формат'), false, true);
+
+		foreach( array('Content','Format') as $attribute ) {
+			$this->addAttributeGroup($attribute, 'system');
+		}
 	}
 	
 	function createIterator()
@@ -56,7 +60,7 @@ class SystemTemplate extends MetaobjectCacheable
 		return 1;
 	}
 	
-	function delete( $id )
+	function delete( $id, $record_version = ''  )
 	{
 		$it = $this->getExact($id);
 		

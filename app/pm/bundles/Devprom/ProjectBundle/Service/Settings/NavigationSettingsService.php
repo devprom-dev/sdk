@@ -7,6 +7,31 @@ class NavigationSettingsService implements SettingsService
 {
 	public function reset()
 	{
+		// disable any model events handler
+		getFactory()->setEventsManager( new \ModelEventsManager() );
+
+		foreach ( $this->getIterators() as $data_it ) {
+			switch ( $data_it->object->getEntityRefName() ) {
+				case 'pm_Workspace':
+					$system_it = $data_it->object->getRegistry()->Query(
+						array (
+							new \FilterAttributePredicate('SystemUser', array(getSession()->getUserIt()->getId(), 'none')),
+							new \FilterBaseVpdPredicate(),
+						)
+					);
+					while( !$system_it->end() ) {
+						$system_it->delete();
+						$system_it->moveNext();
+					}
+					break;
+			}
+		}
+
+		getSession()->truncate();
+	}
+
+	public function resetToDefault()
+	{
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
 		

@@ -15,7 +15,7 @@ class AdminAccessPolicy extends COAccessPolicy
 			return true;
 		}
 
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		
 		$array = is_object($plugins) ? $plugins->getPluginsForSection('admin') : array();
 		
@@ -61,7 +61,7 @@ class AdminAccessPolicy extends COAccessPolicy
 			    return $action_kind != ACCESS_DELETE;
 		}
 			
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		
 		$array = is_object($plugins) ? $plugins->getPluginsForSection('admin') : array();
 		

@@ -18,7 +18,7 @@ class BlogPostFile extends Metaobject
         return new BlogPostFileIterator( $this );
     }
     
-    function getPageNameObject( $object_id ) 
+    function getPageNameObject( $object_id = '' )
     {
         $file = getFactory()->getObject('BlogPostFile');
         $file_it = $file->getExact($object_id);

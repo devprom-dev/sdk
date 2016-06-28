@@ -1,6 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
-include_once "predicates/TaskFactPersister.php";
+include_once "persisters/TaskFactPersister.php";
 include_once "persisters/TaskTracePersister.php";
 include_once "persisters/TaskDetailsPersister.php";
 include_once "persisters/TaskAssigneePersister.php";
@@ -17,12 +17,15 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
 		$metadata->addAttribute('Fact', 'FLOAT', 
-			translate('Затрачено'), is_object($methodology_it) && $methodology_it->IsTimeTracking(), true, '', 13 );
+			translate('Затрачено'), is_object($methodology_it) && $methodology_it->IsTimeTracking(), true, '', 14 );
 
+		$metadata->setAttributeType('Caption', 'VARCHAR');
 		$metadata->setAttributeOrderNum('Priority', 11);
 		$metadata->setAttributeOrderNum('Assignee', 12);
 		$metadata->setAttributeOrderNum('Planned', 13);
+		$metadata->setAttributeRequired('Planned', false);
 		$metadata->setAttributeOrderNum('LeftWork', 14);
+		$metadata->setAttributeVisible('LeftWork', false);
 
 		if ( $methodology_it->IsTimeTracking() ) {
 			$metadata->addPersister( new TaskFactPersister(array('Fact')) );
@@ -50,6 +53,7 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 
     	foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'permissions');
+			$metadata->addAttributeGroup($attribute, 'tooltip');
 		}
         foreach ( array('Result') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
@@ -81,7 +85,6 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		if ( $methodology_it->getId() > 0 && !$methodology_it->TaskEstimationUsed() ) 
 		{
 		    $metadata->removeAttribute( 'Planned' );
-		    
 		    $metadata->removeAttribute( 'LeftWork' );
 		}
 

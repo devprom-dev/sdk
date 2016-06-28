@@ -28,20 +28,6 @@ class PMFormEmbedded extends FormEmbedded
         }
     }
 
-    function IsAttributeObject( $attr )
-    {
-    	switch( $attr )
-    	{
-    	    default:
-    	    	if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg' )
-    	    	{
-    	    		return true;
-    	    	}
-    	    	
-    	    	return parent::IsAttributeObject( $attr );
-    	}
-    }
-    
     function createField( $attr )
     {
         switch ( $attr )
@@ -57,21 +43,56 @@ class PMFormEmbedded extends FormEmbedded
                 
                 if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg')
                 {
-                    	$field = new FieldWYSIWYG();
-    
-                        $object_it = $this->getObjectIt();
-    
-                        is_object($object_it) ? $field->setObjectIt($object_it)
-                                : $field->setObject($this->getObject());
-    
-                        $editor = $field->getEditor();
-                        
-    					$editor->setMode( WIKI_MODE_MINIMAL | WIKI_MODE_INLINE );
-                        
-                        return $field;
+                    $field = new FieldWYSIWYG();
+
+                    $object_it = $this->getObjectIt();
+                    is_object($object_it) ? $field->setObjectIt($object_it)
+                            : $field->setObject($this->getObject());
+
+                    $editor = $field->getEditor();
+                    $editor->setMode( WIKI_MODE_MINIMAL | WIKI_MODE_INLINE );
+                    $field->setHasBorder(true);
+
+                    return $field;
                 }
                 
                 return parent::createField( $attr );
+        }
+    }
+
+    function getListItemsTitle() {
+        return text(1936);
+    }
+
+    function getListItemsAttribute() {
+        return '';
+    }
+
+    function drawAddButton( $tabindex ) {
+        parent::drawAddButton( $tabindex );
+
+        if( $this->getIteratorRef()->count() > 0 )
+        {
+            $attribute = $this->getListItemsAttribute();
+            if ( $attribute == '' ) {
+                $object = $this->getIteratorRef()->object;
+                $ids = $this->getIteratorRef()->idsToArray();
+            }
+            else {
+                $object = $this->getIteratorRef()->object->getAttributeObject($attribute);
+                $ids = preg_split('/,/',join(',',$this->getIteratorRef()->fieldToArray($attribute)));
+            }
+
+            $it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($object));
+            if ( $it->getId() != '' ) {
+                $widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
+                if ( $widget_it->getId() != '' ) {
+                    $url = $widget_it->getUrl(strtolower(get_class($object)).'='.join(',',$ids).'&clickedonform');
+                    echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$url.'" tabindex="-1">';
+                        echo $this->getListItemsTitle();
+                    echo '</a>';
+                }
+            }
         }
     }
 }

@@ -4,15 +4,19 @@ class UserParticipanceTypeRegistry extends ObjectRegistrySQL
 {
     function createSQLIterator( $sql )
     {
-        global $model_factory;
-        
         $data = array (
-                array ( 'entityId' => 1, 'ReferenceName' => 'participant', 'Caption' => translate('Участники проекта') )
+            array ( 'entityId' => 1, 'ReferenceName' => 'participant', 'Caption' => translate('Участники проекта') )
         );
-        
-        if ( $model_factory->getObject('User')->getAttributeType('GroupId') != '' )
-        {
-            $data[] = array ( 'entityId' => 2, 'ReferenceName' => 'linked', 'Caption' => translate('Участники связанных проектов') );
+
+        $project_it = getSession()->getProjectIt();
+        if ( $project_it->IsProgram() ) {
+            $data[] = array ( 'entityId' => 2, 'ReferenceName' => 'linked', 'Caption' => text('permissions7') );
+        }
+        else if ( $project_it->get('LinkedProject') != '' ) {
+            $parent_it = $project_it->getParentIt();
+            if ( $parent_it->IsProgram() ) {
+                $data[] = array ( 'entityId' => 2, 'ReferenceName' => 'linked', 'Caption' => text('permissions7') );
+            }
         }
         
         $data[] = array ( 'entityId' => 3, 'ReferenceName' => 'guest', 'Caption' => text(1370) ); 

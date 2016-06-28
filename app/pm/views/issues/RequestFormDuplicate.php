@@ -44,7 +44,8 @@ class RequestFormDuplicate extends RequestForm
 			case 'Estimation':
 			case 'PlannedRelease':
 			case 'SubmittedVersion':
-			case 'Description':
+			case 'Owner':
+			case 'Customer':
 				return parent::getFieldValue( $attribute );
 
 			case 'Author':
@@ -65,16 +66,26 @@ class RequestFormDuplicate extends RequestForm
 
 	function process()
 	{
-		global $session;
-
 		if ( $this->getAction() != 'add' ) return parent::process();
 		if ( $this->source_it->getId() == '' ) return parent::process();
 
-		$session = new PMSession( $this->source_it->getRef('Project') );
 		$method = new DuplicateIssuesWebMethod($this->source_it);
 		try {
-			$method->execute_request();
-			$this->redirectOnAdded($method->getResult());
+			if ( $this->source_it->get('Project') != getSession()->getProjectIt()->getId() ) {
+				if ( !$this->persist() ) return false;
+				$method->linkIssues(
+					array(
+						'pm_ChangeRequest' => array (
+							$this->source_it->getId() => $this->getObjectIt()->getId()
+						)
+					)
+				);
+				$this->redirectOnAdded($this->getObjectIt());
+			}
+			else {
+				$method->execute_request();
+				$this->redirectOnAdded($method->getResult());
+			}
 		}
 		catch( Exception $e ) {
 			$this->setRequiredAttributesWarning();

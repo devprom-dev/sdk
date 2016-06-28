@@ -1,7 +1,8 @@
 <?php
 
 if ( !class_exists('FilterTagWebMethod', false) ) include(SERVER_ROOT_PATH.'pm/methods/c_tag_methods.php');
-
+include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/FilterStateMethod.php";
 include "QuestionList.php";
 
 class QuestionTable extends PMPageTable
@@ -16,8 +17,8 @@ class QuestionTable extends PMPageTable
 		global $model_factory;
 		
 		$filters = array(
-			new FilterStateMethod( $model_factory->getObject('QuestionState') ),
-			new FilterStateTransitionMethod( $model_factory->getObject('QuestionState') ),
+			new FilterStateMethod( $this->getObject() ),
+			new FilterStateTransitionMethod( $this->getObject() ),
 			new FilterTagWebMethod( $model_factory->getObject('QuestionTag') ),
 			new FilterUserAuthorWebMethod()
 		);
@@ -54,12 +55,12 @@ class QuestionTable extends PMPageTable
 		$method = new ExcelExportWebMethod();
 
 		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->getJSCall( $this->getCaption(), 'IteratorExportExcel') ) );
+			'url' => $method->url( $this->getCaption(), 'IteratorExportExcel') ) );
 		
 		$method = new HtmlExportWebMethod();
 
 		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->getJSCall( 'IteratorExportHtml' ) ) );
+			'url' => $method->url( 'IteratorExportHtml' ) ) );
 
 		return $actions;
 	}	

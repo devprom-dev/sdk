@@ -3,6 +3,7 @@
  class InfoSection
  {
  	var $closable, $page, $async_load;
+	 private $placement = 'right';
  	
  	function InfoSection() 
  	{
@@ -34,7 +35,15 @@
  	{
  		$this->page = $page;
  	}
- 	
+
+	 public function setPlacement( $placement ) {
+		 $this->placement = $placement;
+	 }
+
+	 public function getPlacement() {
+		 return $this->placement;
+	 }
+
  	function & getPage()
  	{
  		return $this->page;

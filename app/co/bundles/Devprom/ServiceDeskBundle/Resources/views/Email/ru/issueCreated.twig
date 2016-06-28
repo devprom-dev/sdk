@@ -1,0 +1,12 @@
+<p>Здравствуйте!</p>
+<p>Вы добавили заявку "<a href="{{ issueLink }}">{{ issue.caption }}</a>":</p>
+<blockquote>{{ issue.description | unescapeHtml | raw }}</blockquote>
+<br/>
+<p><b>Тип:</b> {{ issue.issueType }}</p>
+<p><b>Продукт:</b> {{ issue.product != "" ? issue.product : issue.project }}</p>
+<p><b>Приоритет:</b> {{ issue.priority }}</p>
+<br/>
+<p>Специалисты службы поддержки уже занимаются вашей заявкой и свяжутся с Вами в ближайшее время.</p>
+<br/>
+<hr>
+<p>Вы можете просмотреть детали заявки и оставить свои комментарии по ссылке: <a href="{{ issueLink }}">{{ issueLink }}</a></p>

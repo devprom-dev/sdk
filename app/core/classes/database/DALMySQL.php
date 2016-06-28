@@ -1,7 +1,7 @@
 <?php
 
 include_once "DAL.php";
-include "MySQLConnectionInfo.php";
+include_once "MySQLConnectionInfo.php";
 
 class DALMySQL extends DAL
 {
@@ -36,7 +36,22 @@ class DALMySQL extends DAL
     {
     	$this->Close();
     }
-    
+
+    public function QueryAllRows( $sql )
+    {
+        return array();
+    }
+
+    public function QueryAssocArray($sql)
+    {
+        return mysql_fetch_assoc($this->Query($sql));
+    }
+
+    public function QueryArray($sql)
+    {
+        return mysql_fetch_array($this->Query($sql));
+    }
+
     public function Query( $sql )
     {
         $this->info( $sql );
@@ -54,7 +69,17 @@ class DALMySQL extends DAL
         
         return $resultSet;
     }
-     
+
+    public function Seek( &$result, $offset )
+    {
+        mysql_data_seek($result, $offset);
+    }
+
+    public function RowsNum( $result )
+    {
+        return mysql_num_rows($result);
+    }
+
     public function Escape( $sql_string )
     {
         return @mysql_real_escape_string($sql_string);

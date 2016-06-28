@@ -51,11 +51,10 @@ class ParticipantIterator extends OrderedIterator
 	
  	function getBaseRoles() 
  	{
- 		if ( $this->getId() < 1 )
- 		{
+ 		if ( $this->getId() < 1 ) {
 			return array('guest' => true);
  		}
- 		
+
  		$names = preg_split('/,/', $this->get('ProjectRoleReferenceName'));
  		
  		$roles = array();
@@ -87,16 +86,6 @@ class ParticipantIterator extends OrderedIterator
 		);
 	}
 
-	function getProjects()
-	{
-		$sql = 'SELECT DISTINCT prj.* FROM pm_Project prj, pm_Participant part ' .
-			   ' WHERE part.SystemUser = '.getSession()->getUserIt()->getId().
-			   '   AND part.Project = prj.pm_ProjectId ' .
-			   "   AND part.IsActive = 'Y' ";
-
-		return getFactory()->getObject('pm_Project')->createSQLIterator($sql);
-	}
-	
 	function isLead()
 	{
 		$roles = $this->getBaseRoles();
@@ -127,7 +116,7 @@ class ParticipantIterator extends OrderedIterator
 
 	function isActive()
 	{
-		return $this->get('IsActive') <> 'N';
+		return true;
 	}
 	
 	/*

@@ -12,7 +12,7 @@ class UserModelExtendedBuilder extends ObjectModelBuilder
 		$object->addAttribute( 'LastAuthTime', 'DATE', text(1866), false );
 		$object->addAttribute( 'LastActivityDate', 'DATE', text(2059), false );
 
-	    $object->addPersister( new UserActivityPersister() );
+	    $object->addPersister( new UserActivityPersister(array('LastAuthTime','LastActivityDate')) );
 	    $object->addPersister( new UserDetailsPersister() );
     }
 }

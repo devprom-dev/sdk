@@ -9,11 +9,7 @@
  	
  	function getLines()
  	{
- 		global $_REQUEST, $project_it;
- 		
-		$_REQUEST['Excel'] = $project_it->Utf8ToWin($_REQUEST['Excel']);
-
-		$lines = preg_split('/'.Chr(10).'/', $_REQUEST['Excel']);
+		$lines = preg_split('/'.Chr(10).'/', $this->sanitizeData($_REQUEST['Excel']));
 		
 		for ( $i = 0; $i < count($lines); $i++ )
 		{
@@ -29,6 +25,12 @@
 		
 		return $lines;
  	}
+
+	 function sanitizeData( $data ) {
+		 $data = htmlentities($data, null, APP_ENCODING);
+		 $data = str_replace("&nbsp;", " ", $data);
+		 return html_entity_decode($data, ENT_COMPAT | ENT_HTML401, APP_ENCODING);
+	 }
  	
  	function getFields()
  	{
@@ -50,34 +52,31 @@
 		$captions = array();
 		$object = $this->getObject();
 		
-		foreach( $this->getFields() as $key => $attr )
-		{
-			$captions[] = translate($object->getAttributeUserName($attr)); 
+		foreach( $this->getFields() as $key => $attr ) {
+			$captions[$attr] = translate($this->sanitizeData($object->getAttributeUserName($attr)));
 		}
-		
 		return $captions;
 	}
 	
  	function parse()
 	{
-		global $model_factory, $project_it, $part_it;
-
 		$lines = $this->getLines();
-		
+
 		$fields = array();
 		$object = $this->getObject();
-		
+
 		$captions = $this->getCaptions();
-		$field_names = $this->getFields();
-		
-		$caption_keys = array_flip($captions);
-		
-		for ( $i = 0; $i < count($lines[0]); $i++ )
-		{
-			if ( $caption_keys[trim($lines[0][$i])] >= 0 )
-			{
-				$fields = array_merge($fields, 
-					array( $field_names[$caption_keys[trim($lines[0][$i])]] => $i) );
+		array_walk( $captions,
+			function(&$value, $key) {
+				$value = md5(trim($value));
+			}
+		);
+		$captions = array_flip($captions);
+
+		for ( $i = 0; $i < count($lines[0]); $i++ ) {
+			$titleHash = md5(trim($lines[0][$i]));
+			if ( $captions[$titleHash] != '' ) {
+				$fields = array_merge($fields, array( $captions[$titleHash] => $i) );
 			}
 		}
 
@@ -156,16 +155,12 @@
 	function getId( $object_it, $value, $default )
 	{
 		$object_it->moveFirst();
-		
-		while ( !$object_it->end() )
-		{
-			if ( strtolower($object_it->getDisplayName()) == strtolower(trim($value)) )
-			{
+		while ( !$object_it->end() ) {
+			if ( mb_strtoupper($object_it->getHtmlDecoded('Caption')) == mb_strtoupper(trim($value)) ) {
 				return $object_it->getId();
 			}
 			$object_it->moveNext();
 		}
-		
 		return $value == '' ? $value : $default;
 	}
 	
@@ -196,11 +191,9 @@
  {
  	function create()
 	{
-		global $_REQUEST, $model_factory, $project_it;
-
 		$this->request = $this->getObject();
-		if ( !$this->useNotification() )
-		{
+
+		if ( !$this->useNotification() ) {
 			$this->request->removeNotificator( 'EmailNotificator' );
 		}
 
@@ -214,17 +207,21 @@
 				foreach( $result[$i] as $field => $value )
 				{
 					$match = array();
-					if ( $this->request->IsReference($field) && preg_match('/Undefined:(.+)/', $value, $match) )
+					if ( $this->request->IsReference($field) )
 					{
 						$object = $this->request->getAttributeObject($field);
-						
-						$model_factory->resetCachedIterator( $object );
-						 
-						$result[$i][$field] = $this->getId( 
-							$object->getAll(), trim($match[1]), 'NULL');
+						getFactory()->resetCachedIterator( $object );
+
+						if ( preg_match('/Undefined:(.+)/', $value, $match) ) {
+							$result[$i][$field] = $this->getId($object->getAll(), trim($match[1]), 'NULL');
+						}
+
+						if ( $result[$i][$field] > 0 && $object instanceof Project ) {
+							$result[$i]['VPD'] = $object->getExact($result[$i][$field])->get('VPD');
+						}
 					}
 				}				
-				
+
 				$request_id = $this->request->add_parms( $result[$i] );
 				if ( $request_id > 0 )
 				{
@@ -276,7 +273,7 @@
 		$xml .= '</tr>';
 
 		$state_it = $this->buildStateIterator($object);
-		
+
 		for ( $i = 0; $i < min(count($result), $max_issues_todisplay); $i++ )
 		{
 			$xml .= '<tr>';
@@ -290,12 +287,11 @@
 				{
 					$ref = $object->getAttributeObject($fields[$j]);
 					
-					$value = $result[$i][$fields[$j]];
-
+					$value = array_pop(preg_split('/:/', $result[$i][$fields[$j]]));
 					$default_value = $object->getDefaultAttributeValue($fields[$j]);
 					
 					if ( $value == '' ) $value = $default_value;
-					
+
 					$ref_it = is_numeric($value)
 							? $ref->getExact( $value )
 							: ($ref->getAttributeType('Caption') != ''
@@ -303,8 +299,8 @@
 									: $ref->getEmptyIterator());
 
 					if ( $ref_it->getId() < 1 ) $ref_it = $ref->getExact( $default_value );
-					
-					$value = $ref_it->getId() > 0 
+
+					$value = $ref_it->getId() > 0
 							? $ref_it->getDisplayName() 
 							: '';
 				}
@@ -334,24 +330,17 @@
 							break;
 	
 						case 'State':
-						    
-						    if ( is_object($state_it) )
-						    {
-						        $state_it->moveTo('Caption', $result[$i][$fields[$j]]);
-						        
-						        $value = $state_it->get('Caption'); 
+						    if ( is_object($state_it) ) {
+						        $state_it->moveTo('ReferenceName', $result[$i][$fields[$j]]);
+						        $value = $state_it->get('Caption');
 						    }
-						    
 						    break;
 						    
 						default:
 							$value = $result[$i][$fields[$j]];
-							
-							if ( $value == '' )
-							{
+							if ( $value == '' ) {
 								$value = $object->getDefaultAttributeValue($fields[$j]);
 							}
-							
 							$value = nl2br($value);
 					}
 				}
@@ -367,6 +356,4 @@
 		
 		$this->replyResultBinary( false, $xml);
 	}
- }
-
-?>
+}

@@ -7,6 +7,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 {
 	private $affected = null;
 	private $classes_list = array();
+	private $skipClasses = array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable','MetaobjectStatable');
 	
 	public function __construct()
 	{
@@ -46,18 +47,14 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		// put itself in the queue
 		$class_name = get_class($object_it->object);
 		
-		if ( strtolower($class_name) != 'metaobject' )
-		{
+		if ( !in_array($class_name, $this->skipClasses) ) {
 			$this->storeAffectedRows($class_name, $object_it);
 			
-			foreach( $this->getDescendants($class_name) as $class )
-			{
+			foreach( $this->getDescendants($class_name) as $class ) {
 				$this->storeAffectedRows($class, $object_it);
 			}
-
-			foreach( class_parents($class_name) as $class )
-			{
-				if ( in_array($class, array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable')) ) break;
+			foreach( class_parents($class_name) as $class ) {
+				if ( in_array($class, $this->skipClasses) ) break;
 				$this->storeAffectedRows($class, $object_it);
 			}
 		}
@@ -77,32 +74,25 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
     		$ref_it = $object_it->getRef($attribute);
    			$this->storeAffectedRows($class_name, $ref_it);
    			
-			foreach( $this->getDescendants($class_name) as $class )
-			{
+			foreach( $this->getDescendants($class_name) as $class ) {
 				$this->storeAffectedRows($class, $ref_it);
 			}
-			
-    		foreach( class_parents($class_name) as $class )
-			{
-				if ( in_array($class, array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable')) ) break;
+    		foreach( class_parents($class_name) as $class ) {
+				if ( in_array($class, $this->skipClasses) ) break;
 				$this->storeAffectedRows($class, $ref_it);
 			}
     	}
 
 		// put specific references not covered by metadata
-	    foreach( $this->getCustomReferences($kind, $object_it) as $class_name => $ref_it )
-	    {
+	    foreach( $this->getCustomReferences($kind, $object_it) as $class_name => $ref_it ) {
 			$this->storeAffectedRows($class_name, $ref_it);
 	    }
 
 	    // drop old records (purge the queue)
-	    $mapper = new ModelDataTypeMappingDate();
-	    
-		DAL::Instance()->Query( 
+		DAL::Instance()->Query(
 		 		"DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
-		 				$mapper->map(
-		 						strftime('%Y-%m-%d %H:%M:%S', strtotime('-40 seconds', strtotime(SystemDateTime::date())))
-         				)."' "
+		 				strftime('%Y-%m-%d %H:%M:%S', strtotime('-40 seconds', strtotime(SystemDateTime::date())))
+         				."' "
         );
 	    
 		// notify listeners data has been refreshed
@@ -113,8 +103,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	{
 		while( !$object_it->end() )
 		{
-			if ( !is_numeric($object_it->getId()) )
-			{
+			if ( !is_numeric($object_it->getId()) ) {
 				$object_it->moveNext();
 				continue;
 			}				
@@ -153,6 +142,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		switch ( $object_it->object->getEntityRefName() )
 		{
 		    case 'pm_Activity':
+				if ( $object_it->get('Task') == '' ) return array();
 		    	$ref_it = $object_it->getRef('Task');
 		    	
 		    	if ( $ref_it instanceof TaskIterator && $ref_it->object->getAttributeType('ChangeRequest') != '' )
@@ -202,7 +192,9 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		    	);
 		    	
 		    case 'WikiPageTrace':
-		    	return array( 
+				if ( $object_it->get('SourcePage') == '' ) return array();
+				if ( $object_it->get('TargetPage') == '' ) return array();
+		    	return array(
 		    		'Requirement' => $object_it->getRef('SourcePage'), 
 		    		'Requirement' => $object_it->getRef('TargetPage'), 
 		    		'TestScenario' => $object_it->getRef('SourcePage'),
@@ -236,9 +228,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		if ( $object_it->object instanceof Watcher || $object_it->object instanceof Comment )
 		{
 	    	$ref_it = $object_it->getAnchorIt();
-	    	
-	    	if ( is_object($ref_it) )
-	    	{
+	    	if ( $ref_it->getId() != '' ) {
 		    	return array( 
 		    		get_class($ref_it->object) => $ref_it
 		    	);

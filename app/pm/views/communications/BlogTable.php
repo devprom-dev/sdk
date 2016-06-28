@@ -20,13 +20,14 @@ class BlogTable extends PMPageTable
     function getNewActions()
     {
         $actions = array();
-    
-        if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) )
+
+        $method = new ObjectCreateNewWebMethod($this->getObject());
+        if ( $method->hasAccess() )
         {
-            array_push($actions, array(
+            $actions[] = array(
                 'name' => text(1353),
-                'url' => $this->object->getPageName()
-            ));
+                'url' => $method->getJSCall()
+            );
         }
     
         return $actions;

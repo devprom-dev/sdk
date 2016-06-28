@@ -10,14 +10,22 @@ class BulkActionRegistry extends ObjectRegistrySQL
 		);
 	}
 	
-	function addAction( $title, $method )
+	function addCustomAction( $title, $method )
 	{
-		$this->actions['modify'][] = array (
-				'name' => $title,
-				'url' => $method
+		$this->actions['action'][] = array (
+			'name' => $title,
+			'url' => $method
 		);
 	}
-	
+
+	function addActionUrl( $title, $url )
+	{
+		$this->actions['url'][] = array (
+			'name' => $title,
+			'url' => $url
+		);
+	}
+
 	function addDeleteAction( $title, $parms )
 	{
 		$this->actions['delete'][] = array (

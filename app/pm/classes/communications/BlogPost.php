@@ -9,6 +9,7 @@ class BlogPost extends Metaobject
     function BlogPost() 
     {
         parent::Metaobject('BlogPost');
+        $this->setAttributeType('Content', 'wysiwyg');
         $this->defaultsort = 'RecordCreated DESC';
     }
     

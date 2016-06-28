@@ -23,7 +23,7 @@ $text_array = array
 	21 => 'Bug tracker',
 	22 => 'Issues board, milestones, knowledge base, builds and source code',
 	23 => 'Choose an appropriate solution to your task',
-	24 => 'You can combine processes, practices and tools freely - just set up the <b>methodology settings</b> in the project',
+	24 => 'Start with appropriate tool you need right now, other tools you can switch on later',
 	25 => 'Do not show the page',
 	26 => 'Your process',
 	27 => 'Tune Devprom in according to specific needs and practices of your company',
@@ -50,5 +50,7 @@ $text_array = array
 	48 => 'Organizing work of the department',
 	49 => 'Besides participation of personnel in various projects, there are always tasks that are not directly related to the projects. Organize joint work over tasks of the department, involving all staff.',
 	50 => 'Incidents',
-	51 => 'Applications bug reports, monitoring tools alerts, infrastructure alerts'
+	51 => 'Applications bug reports, monitoring tools alerts, infrastructure alerts',
+	52 => 'Create a project for corresponding process, switch on required tools using the Methodlogy page at project settings area',
+	53 => 'Adjust templates'
 );

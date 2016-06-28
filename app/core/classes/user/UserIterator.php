@@ -49,8 +49,7 @@ class UserIterator extends OrderedIterator
  				'SystemUser' => $this->getId()
  				)
  			);
- 			
- 		return $cnt > 0; 
+ 		return $cnt > 0;
  	}
  	
  	/*

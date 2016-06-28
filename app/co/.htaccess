@@ -8,3 +8,5 @@ RewriteRule ^scripts/.+$ /app/scripts.php [L]
 RewriteRule ^login\.php$ /login [R=301,L]
 RewriteRule ^projects\.php$ / [R=301,L]
 RewriteRule ^projects$ / [R=301,L]
+
+RewriteRule ^\/?$ / [R=301,L]

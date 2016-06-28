@@ -38,7 +38,7 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
         {
             $rule_it = $action_it->getRef('ReferenceName', $action);
             if ( is_object($rule_it) && $rule_it->checkType('BusinessActionShift') ) {
-                $rule_it->getRule()->apply( $object_it, $attributes );
+                $rule_it->getRule()->applyContent( $object_it, $attributes );
             }
             $action_it->moveNext();
         }

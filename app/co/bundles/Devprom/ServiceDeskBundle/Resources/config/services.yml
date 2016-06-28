@@ -17,6 +17,10 @@ services:
         class: Devprom\ServiceDeskBundle\Twig\IssueTypeTwigExtention
         tags:
             - { name: twig.extension }
+    servicedesk_twig_assetpath:
+        class: Devprom\ServiceDeskBundle\Twig\AssetPathTwigExtension
+        tags:
+            - { name: twig.extension }
     servicedesk_twig_settings:
         class: Devprom\ServiceDeskBundle\Twig\SettingsTwigExtension
         arguments:
@@ -69,8 +73,12 @@ services:
             em: "@doctrine.orm.entity_manager"
             objectChangeLogger: "@object_change_logger"
             mailer: "@servicedesk_mailer"
-    attachment_service:
-        class: Devprom\ServiceDeskBundle\Service\AttachmentService
+    issue_attachment_service:
+        class: Devprom\ServiceDeskBundle\Service\IssueAttachmentService
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+    comment_attachment_service:
+        class: Devprom\ServiceDeskBundle\Service\CommentAttachmentService
         arguments:
             em: "@doctrine.orm.entity_manager"
 
@@ -107,19 +115,6 @@ services:
                     default:
                         address: "%adminEmail%"
                         sender_name: "%supportName%"
-
-    mail_transport_logger:
-        class: Devprom\ServiceDeskBundle\Mailer\MailTransportLogger
-        arguments:
-            logger: "@logger"
-        tags:
-            - { name: monolog.logger, channel: mail }
-    message_logger:
-        class: Devprom\ServiceDeskBundle\Mailer\MessageLogger
-        arguments:
-            logger: "@logger"
-        tags:
-            - { name: monolog.logger, channel: mail }
 
     servicedesk_registration_form_type:
         class: Devprom\ServiceDeskBundle\Form\Type\RegistrationFormType

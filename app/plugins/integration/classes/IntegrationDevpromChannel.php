@@ -36,11 +36,13 @@ class IntegrationDevpromChannel extends IntegrationChannel
         $log_it = $registry->Query(
             array (
                 new FilterVpdPredicate(),
-                new FilterModifiedAfterPredicate($timestamp),
+                new ChangeLogStartServerFilter($timestamp),
                 new \SortAttributeClause('ObjectChangeLogId.A')
             )
         );
 
+        $connectorName = $this->getObjectIt()->getDisplayName();
+        $mapping = $this->getMapping();
         $attachment = getFactory()->getObject('Attachment');
         $requestLink = getFactory()->getObject('RequestLink');
         $activity = getFactory()->getObject('Activity');
@@ -54,12 +56,39 @@ class IntegrationDevpromChannel extends IntegrationChannel
                 continue;
             }
 
-            $key = get_class(getFactory()->getObject($class)).$log_it->get('ObjectId');
+            $object = getFactory()->getObject($class);
+            $class = get_class($object);
+            if ( !is_array($mapping[$class]) ) {
+                $log_it->moveNext();
+                continue;
+            }
+
+            if ( $log_it->get('ChangeKind') != 'deleted' ) {
+                $object_it = $object->getExact($log_it->get('ObjectId'));
+                if ( $object_it->getId() == '' ) {
+                    // skip non-existent item
+                    $log_it->moveNext();
+                    continue;
+                }
+            }
+
+            if ( $log_it->get('Author') == $connectorName ) {
+                // skip item created by the connector
+                $log_it->moveNext();
+                continue;
+            }
+
+            $key = $class.$log_it->get('ObjectId');
             $items[$key] = array (
-                'class' => get_class(getFactory()->getObject($class)),
+                'class' => $class,
                 'id' => $log_it->get('ObjectId'),
                 'action' => $log_it->get('ChangeKind') == 'deleted' ? 'delete' : 'update'
             );
+
+            if ( $items[$key]['id'] < 1 ) {
+                $log_it->moveNext();
+                continue;
+            }
 
             $attachment_it = $attachment->getRegistry()->Query(
                 array (
@@ -147,7 +176,8 @@ class IntegrationDevpromChannel extends IntegrationChannel
             $result['SourceId'] = $class.$id;
             return $result;
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
+            $this->getLogger()->error($e->getMessage().PHP_EOL.$e->getTraceAsString());
             return array (
                 'Id' => $id
             );

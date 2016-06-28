@@ -1,7 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
-
 include "persisters/FeatureRequestPersister.php";
 
 class FeatureModelExtendedBuilder extends ObjectModelBuilder 
@@ -18,8 +16,7 @@ class FeatureModelExtendedBuilder extends ObjectModelBuilder
 			$object->addAttribute('Fact', 'FLOAT', translate('Затрачено'), false, false, '', 137);
 		}
 
-		$object->addAttribute('Request', 'REF_pm_ChangeRequestId', translate('Пожелания'), false, false, '', 140);
-		$object->addAttributeGroup('Request', 'trace');
+		$object->addAttribute('Request', 'REF_pm_ChangeRequestId', translate('Пожелания'), true, false, '', 140);
 		$object->addPersister( new FeatureRequestPersister() );
  		
     	$module_it = getFactory()->getObject('Module')->getExact('dicts-featuretype');

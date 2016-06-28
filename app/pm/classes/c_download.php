@@ -39,41 +39,6 @@
 		return 'artefacts.php?mode=downloads&';
 	}
 	
-	function getAll( $ids ) 
-	{
-		global $factory;
-		
-		if ( !isset($ids) || count($ids) < 1 )
-		{
-			$ids = array();
-			array_push($ids, 0);
-		}
-
-		$sql = 'SELECT m.*, ' .
-			   '       (SELECT COUNT(1) FROM pm_DownloadActor a ' .
-			   '		 WHERE a.DownloadAction = m.pm_DownloadActionId) Downloads,' .
-			   '       (SELECT MAX(a.RecordCreated) FROM pm_DownloadActor a ' .
-			   '         WHERE a.DownloadAction = m.pm_DownloadActionId) RecentDownload ' .
-			   '  FROM pm_DownloadAction m' .
-			   ' WHERE m.ObjectId IN ('.join(',', $ids).')'.
-			   ' ORDER BY RecordCreated DESC';
-			   
-		return $this->createSqlIterator($sql);
-	}
-	
-	function getAllForAdmin() 
-	{
-		$sql = 'SELECT m.*, ' .
-			   '       (SELECT COUNT(a.SystemUser) FROM pm_DownloadActor a  WHERE a.DownloadAction = m.pm_DownloadActionId ) Downloads, ' .
-			   '	   (SELECT MAX(a.RecordCreated) FROM pm_DownloadActor a  WHERE a.DownloadAction = m.pm_DownloadActionId ) RecentDownload,' .
-			   '	   (SELECT f.Caption FROM pm_Artefact f WHERE f.pm_ArtefactId = m.ObjectId) FileName' .
-			   '  FROM pm_DownloadAction m ' .
-			   ' WHERE m.EntityRefName = \'pm_Artefact\''.
-			   ' ORDER BY Downloads DESC, RecentDownload DESC ';
-			   
-		return $this->createSqlIterator($sql);
-	}
-
 	function process( $objectid, $entityrefname )
 	{
 		global $model_factory;

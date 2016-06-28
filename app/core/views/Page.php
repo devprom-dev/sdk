@@ -6,7 +6,6 @@ use Symfony\Component\Templating\PhpEngine;
  use Symfony\Component\Templating\Helper\SlotsHelper;
  use Devprom\CommonBundle\Service\Widget\ScriptService;
  
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
 include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
@@ -23,7 +22,7 @@ include 'PageBoard.php';
 include 'PageChart.php';
 include 'PageForm.php';
 include 'PageMenu.php';
-include 'PageSectionLastChanges.php';
+include_once 'PageSectionLastChanges.php';
 include "FullScreenSection.php";
 include "PageSectionAttributes.php";
 include "BulkFormBase.php";
@@ -41,31 +40,18 @@ class Page
  	
  	function Page() 
  	{
- 		global $model_factory, $plugins, $_REQUEST, $_SERVER;
+ 		global $plugins;
 
  	    $this->form = $this->buildForm();
  		
- 		if ( is_object($this->form) && is_a($this->form, 'PageForm') )
-		{
+ 		if ( is_object($this->form) && is_a($this->form, 'PageForm') ) {
 		    $this->form->setPage( $this );
 		}
 
-		if ( is_a($this->form, 'MetaobjectForm') )
-		{
-		    $decode_parms = $_REQUEST['formonly'] != '' && EnvironmentSettings::getBrowserPostUnicode();
-		    
-		    if ( $decode_parms && in_array($this->form->getAction(), array('add','modify')) )
-		    {
-		        array_walk($_REQUEST, function(&$item, $key) 
-		        {
-		            if ( !is_array($item) )
-		            {
-		                $item = IteratorBase::utf8towin( $item );
-		            }
-		        });
-		    }
-		    
-		    $this->form->process();
+		if ( is_a($this->form, 'MetaobjectForm') && $this->form->getAction() != '' ) {
+			if ( $this->needDisplayForm() ) {
+				$this->form->process();
+			}
 		}
 		
 		$this->table = $this->getTable();
@@ -136,7 +122,7 @@ class Page
 
  	function needDisplayForm() 
  	{
- 		return $_REQUEST['entity'] != '' || $_REQUEST['action_mode'] == 'form' || $_REQUEST['bulkmode'] != '';
+ 		return $_REQUEST['entity'] != '' || $_REQUEST['action_mode'] == 'form' || $_REQUEST['bulkmode'] != '' || $_REQUEST['formonly'] != '';
  	}
  	
  	function showFullPage()
@@ -148,8 +134,8 @@ class Page
  	{
  		$form = $this->getFormRef();
  		
- 		if ( !is_object($form) ) return null; 
- 		
+ 		if ( !is_object($form) ) return null;
+
  		return $this->getFormRef()->getObjectIt();
  	}
  	
@@ -218,13 +204,13 @@ class Page
  	
  	function export()
  	{
- 		global $_REQUEST;
+		// initialize page object
+ 		$parms = $this->getFullPageRenderParms();
  		
  		switch ( $_REQUEST['export'] )
  		{
  			case 'section':
  				return $this->exportSection();
- 				
  			default:
  				return $this->exportIterator();
  		}
@@ -233,7 +219,7 @@ class Page
  	function exportIterator()
  	{
  		global $_REQUEST, $model_factory;
- 	
+
  		$table = $this->getTableRef();
  		
 		if ( $_REQUEST['class'] == '' )
@@ -314,7 +300,7 @@ class Page
     			}
 			}
 			
-			if ( $_REQUEST['caption'] == '' ) $_REQUEST['caption'] = IteratorBase::wintoutf8($table->getCaption());
+			if ( $_REQUEST['caption'] == '' ) $_REQUEST['caption'] = $table->getCaption();
 		}
 
 		$eit = new $_REQUEST['class']( $it );
@@ -323,7 +309,7 @@ class Page
 		
 		$eit->setFields( $fields );
 
-		$eit->setName( IteratorBase::utf8towin($_REQUEST['caption']) );
+		$eit->setName($_REQUEST['caption']);
 
 		$eit->export();
 			
@@ -485,7 +471,7 @@ class Page
 		        $portfolio_it->moveNext(); continue;
 		    }
 
-		    if ( $portfolio_it->get('CodeName') != 'all' || !class_exists('PortfolioMyProjectsBuilder', false) )
+		    if ( $portfolio_it->get('CodeName') != 'all' || !defined('PERMISSIONS_ENABLED') )
 		    {
 		        $linked_it = $portfolio_it->get('LinkedProject') != '' 
 		                ? getFactory()->getObject('Project')->getRegistry()->Query(
@@ -522,67 +508,74 @@ class Page
 		    $portfolio_it->moveNext();
 		}
 
-		if ( $portfolio_it->count() < 1 ) {
+		if ( !defined('PERMISSIONS_ENABLED') ) {
 			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-				array (
-						new ProjectStatePredicate('active'),
-						new SortAttributeClause('Importance'),
-						new SortAttributeClause('Caption')
+				array(
+					new ProjectStatePredicate('active'),
+					new SortAttributeClause('Importance'),
+					new SortAttributeClause('Caption')
 				)
 			);
-			while ( !$linked_it->end() )
-			{
-				$projects[''][$linked_it->get('CodeName')] = array (
-					'name' => $linked_it->getDisplayName(),
-					'url' => '/pm/'.$linked_it->get('CodeName')
-				);
-				$linked_it->moveNext();
-			}
 		}
-/*
-		foreach( $projects as $key => $dummy )
-		{
-		    uasort($projects[$key], function( $left, $right ) {
-		        return $left['name'] > $right['name'] ? 1 : -1;
-		    });
+		else {
+			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
+				array (
+					new ProjectParticipatePredicate(),
+					new ProjectStatePredicate('active'),
+					new SortAttributeClause('Importance'),
+					new SortAttributeClause('Caption')
+				)
+			);
 		}
-*/
-		if ( count($programs) > 0 )
+		while ( !$linked_it->end() )
 		{
-		    foreach( $programs as $program_id => $program )
-		    {
-		    	if ( !is_array($projects[$program_id]) ) continue;
-		    	
-		        foreach( $projects[$program_id] as $project_id => $project )
-		        {
-		            unset( $projects['my'][$project_id] );
-		            unset( $projects['all'][$project_id] );
-		        }
-		    }
+			$projects[''][$linked_it->get('CodeName')] = array (
+				'name' => $linked_it->getDisplayName(),
+				'url' => '/pm/'.$linked_it->get('CodeName')
+			);
+			$linked_it->moveNext();
 		}
 
-		foreach( $portfolios as $portfolio_id => $portfolio )
-		{
+		foreach( $programs as $program_id => $program ) {
+			unset( $projects['my'][$program_id] );
+			unset( $projects['all'][$program_id] );
+			unset( $projects[''][$program_id] );
+			if ( !is_array($projects[$program_id]) ) continue;
+			foreach( $projects[$program_id] as $project_id => $project ) {
+				unset( $projects['my'][$project_id] );
+				unset( $projects['all'][$project_id] );
+				unset( $projects[''][$project_id] );
+			}
+		}
+		foreach( $portfolios as $portfolio_id => $portfolio ) {
 		    if ( in_array($portfolio_id, array('my','all')) ) continue;
 		    if ( !is_array($projects[$portfolio_id]) ) continue;
-		    
-		    foreach( $projects[$portfolio_id] as $project_id => $project )
-		    {
+		    foreach( $projects[$portfolio_id] as $project_id => $project ) {
 		        unset( $projects['my'][$project_id] );
 				unset( $projects['all'][$project_id] );
+				unset( $projects[''][$project_id] );
 		    }
+		}
+		foreach( $portfolios as $portfolio_id => $portfolio ) {
+			if ( !in_array($portfolio_id, array('my','all')) ) continue;
+			if ( is_array($projects[$portfolio_id]) ) {
+				foreach( $projects[$portfolio_id] as $project_id => $project ) {
+					unset( $projects[''][$project_id] );
+				}
+			}
 		}
 
 		return array (
-				'programs' => $programs,
-				'portfolios' => $portfolios,
-				'projects' => $projects,
-				'company_actions' => $this->getProjectNavigatorActions(),
-				'admin_actions' => $this->getAdministrationActions()
+			'programs' => $programs,
+			'portfolios' => $portfolios,
+			'projects' => $projects,
+			'company_actions' => $this->getProjectNavigatorActions($projects),
+			'portfolio_actions' => $this->getPortfolioActions($projects),
+			'admin_actions' => $this->getAdministrationActions()
 		);
  	}
  	
- 	function getProjectNavigatorActions()
+ 	function getProjectNavigatorActions( $projects )
  	{
  		$company_actions = array();
 		
@@ -594,11 +587,55 @@ class Page
 					'url' =>  $skip_welcome != 'off' && !defined('SKIP_WELCOME_PAGE')
 									? '/projects/welcome'
 									: '/projects/new',
-					'name' => translate('Создать проект')
+					'name' => text('project.new')
 			);
 		}
+
+		$portfolio = getFactory()->getObject('co_ProjectGroup');
+		if ( count($projects) > 0 && getFactory()->getAccessPolicy()->can_create($portfolio) )
+		{
+			$method = new ObjectCreateNewWebMethod($portfolio);
+			$method->setRedirectUrl('function(id){window.location=\'/pm/project-portfolio-\'+id;}');
+			$company_actions[] = array (
+				'icon' => 'icon-briefcase',
+				'url' => $method->getJSCall(),
+				'name' => text('portfolio.new')
+			);
+		}
+
 		return $company_actions;
  	}
+
+	function getPortfolioActions( $projects )
+	{
+		$actions = array();
+		if ( count($projects) < 2 ) return $actions;
+
+		$project_it = getSession()->getProjectIt();
+		if ( $project_it->get('ProjectGroupId') < 1 ) return $actions;
+
+		if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) ) {
+			$actions[] = array (
+				'icon' => 'icon-plus',
+				'url' =>  '/projects/welcome?portfolio='.$project_it->get('ProjectGroupId'),
+				'name' => text('project.new')
+			);
+		}
+
+		$portfolio = getFactory()->getObject('co_ProjectGroup');
+		if ( getFactory()->getAccessPolicy()->can_modify($portfolio) )
+		{
+			$method = new ObjectModifyWebMethod(
+				$portfolio->getExact($project_it->get('ProjectGroupId'))
+			);
+			$actions[] = array (
+				'icon' => 'icon-briefcase',
+				'url' => $method->getJSCall(),
+				'name' => translate('Изменить')
+			);
+		}
+		return $actions;
+	}
  	
  	function getAdministrationActions()
  	{
@@ -620,14 +657,11 @@ class Page
 		if ( !defined('INVITE_USERS_ANYBODY') || INVITE_USERS_ANYBODY !== false )
 		{
 		 	$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
-			if ( $method->hasAccess() )
-			{
-				$actions[] = array (
-						'icon' => 'icon-user', 
-				        'name' => text(2001),
-						'url' => $method->getJSCall(array(), text(2001))
-			    );
-			}
+			$actions[] = array (
+					'icon' => 'icon-user',
+					'name' => text(2001),
+					'url' => $method->getJSCall(array(), text(2001))
+			);
 		}
 		return $actions;
  	}
@@ -638,6 +672,7 @@ class Page
  		 
  		$sections = array();
 		$infos = $this->getInfoSections();
+
 		if ( is_array($infos) )	{
 			foreach ( $infos as $section ) {
 				if ( !$section->isActive() ) continue;
@@ -648,15 +683,25 @@ class Page
 				$sections[$section->getId()] = $section;
 			}
 		}
-		
+
      	$bottom_sections = array();
+		$last_sections = array();
         foreach( $sections as $key => $section ) { 
-            if ( is_a($section, 'PageSectionComments') ) {
-                $bottom_sections[$section->getId()] = $section;
+            if ( $_REQUEST['formonly'] == '' && $section->getPlacement() == 'bottom' ) {
+				if ( $section instanceof NetworkSection ) {
+					$last_sections[] = $section;
+				}
+				else if ( $section instanceof PageSectionComments ) {
+					$bottom_sections = array_merge($bottom_sections, array($section->getId() => $section));
+				}
+				else {
+					$bottom_sections[$section->getId()] = $section;
+				}
                 unset($sections[$key]);
             }
         }
- 		
+		$bottom_sections = array_merge($bottom_sections, $last_sections);
+
  		$this->render_parms = array(
  			'current_version' => $_SERVER['APP_VERSION'],
  			'object_class' => get_class($this->getObject()),
@@ -670,7 +715,7 @@ class Page
  		    'application_url' => $this->getApplicationUrl(),
  		    'display_form' => $this->needDisplayForm(),
  			'sections' => $sections,
-        	'bottom_sections' => $bottom_sections,
+        	'bottom_sections' => $bottom_sections
  		);
  		
  		return $this->render_parms;
@@ -721,8 +766,9 @@ class Page
         getSession()->setActiveTab( $tab_uid );
         
         $tab_title = $context['item']['title'] != '' ? $context['item']['title'] : $context['item']['name'];
-                        
-        $tab_url = $context['item']['url'];
+
+        $tab_url = $context['item']['uid'] != '' ? $context['item']['url'] : '';
+		$active_url = array_shift(preg_split('/\?/',$context['item']['url']));
 
         if ( $context['item']['module'] != '' ) $this->setModule($context['item']['module']);
 
@@ -734,14 +780,14 @@ class Page
 
 		list($alerts, $alerts_url) = $this->getCheckpointAlerts();
 
-        return array(
+		return array(
  			'inside' => count($first_menu['menus']) > 0,
  			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
  		    'navigation_title' => $tab_title != '' ? $tab_title : $this->getTitle(),
  		    'navigation_url' => $tab_url,
+			'active_url' => $active_url,
  			'checkpoint_alerts' => $alerts,
 			'checkpoint_url' => $alerts_url,
- 			'menu_template' => $this->getMenuTemplate(),
  			'menus' => $this->getMenus(),
  			'tabs_template' => $this->getTabsTemplate(),
  			'has_horizontal_menu' => count($areas) > 1,
@@ -762,7 +808,7 @@ class Page
  	function getRenderView()
  	{
  		$plugins_paths = array();
-		foreach( getSession()->getPluginsManager()->getNamespaces() as $plugin )
+		foreach( getFactory()->getPluginsManager()->getNamespaces() as $plugin )
 		{
 			$path = realpath(SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/templates');
 			if ( is_dir($path) ) $plugins_paths[] = $path.'/%name%';
@@ -812,45 +858,57 @@ class Page
 			// wait for changes of objects
 		    if ( $_REQUEST['wait'] != '' ) 
 		    {
-				// long living session shouldn't modify cache
-				getFactory()->getCacheService()->setReadonly();
-
 				$object = $this->getObject();
                 if ( !is_object($object) ) return;
 
-		        $class = get_class($object);
-		        $vpds = $object->getVpds();
-		        $from_date = SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 seconds', strtotime(SystemDateTime::date()))));
-                $affected = getFactory()->getObject('AffectedObjects');
+		        $classes = $this->getWatchedObjects();
+				$entityFilters = array (
+					new FilterAttributePredicate('ObjectClass', $classes),
+					new FilterVpdPredicate($object->getVpds()),
+					new SortRecentClause()
+				);
+				$ids = array_filter(preg_split('/[\-,]/', $_REQUEST[strtolower(get_class($object))]), function( $value ) {
+					return is_numeric($value) && $value >= 0;
+				});
+				if ( count($ids) > 0 ) {
+					$entityFilters[] = new FilterAttributePredicate('ObjectId', $ids);
+				}
+
+				$filters = array_merge(
+					$entityFilters,
+					array (
+						new FilterModifiedAfterPredicate(
+							SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 seconds', strtotime(SystemDateTime::date()))))
+						)
+					)
+				);
 
 		        // wait for entity-level lock has been released or new modifications has appeared
-		        $lock = new LockFileSystem($class);
-		        $lock->LockAndWait(180, function() use ($affected, $class, $vpds, $from_date)
+				$waitSeconds = defined('PAGE_WAIT_SECONDS') ? PAGE_WAIT_SECONDS : 60;
+				$affected = getFactory()->getObject('AffectedObjects');
+		        $lock = new LockFileSystem(array_shift(array_values($classes)));
+		        $lock->LockAndWait($waitSeconds, function() use ($affected, $filters)
 		        {
 		        	 getFactory()->resetCachedIterator($affected);
-        	         return $affected->getRegistry()->Count(
-				         		array (
-				         				new FilterAttributePredicate('ObjectClass', $class),
-				         				new FilterModifiedAfterPredicate($from_date),
-				         				new FilterVpdPredicate($vpds),
-				         				new SortRecentClause()
-				         		)
-			         	) > 0;
+        	         return $affected->getRegistry()->Count($filters) > 0;
 		        });
 		        
 		        getFactory()->resetCache();
 		        
-		        $ids = $this->getRecentChangedObjectIds( $this->table );
+		        $ids = $this->getRecentChangedObjectIds($entityFilters);
 		        if ( count($ids) < 1 ) $ids[] = 0;
 		        
 		        $_REQUEST['object'] = $_REQUEST[strtolower(get_class($object))] = join(',', $ids); 
 		    }
-		    
+
 		    $render_parms['tableonly'] = true;
 		    $render_parms['changed_ids'] = $ids;
-		    
+
  			$this->table->render($view, $render_parms);
-			
+
+			// long living session shouldn't modify cache
+			getFactory()->getCacheService()->setReadonly();
+
 			exit();
 		}
 
@@ -876,34 +934,33 @@ class Page
 		}
 		
 		$redirect_url = $this->getRedirect();
-		if ( $redirect_url != '' )
-		{
+		if ( $redirect_url != '' ) {
+			if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
+				setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
+			}
 			exit(header('Location: '.$redirect_url));
 		}
-		
+
 		$render_parms = array_merge( $render_parms, $this->getFullPageRenderParms() );
 
- 	 	if ( !$this->hasAccess() )
-		{
+ 	 	if ( !$this->hasAccess() ) {
+			if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
+				setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
+			}
 		 	exit(header('Location: '.getSession()->getApplicationUrl()));
 		}
-		
-		$display_form = $this->needDisplayForm();
 
-    	if( $display_form && is_object($this->form) ) 
+    	if( $this->needDisplayForm() && is_object($this->form) )
         {
-	 		$form = $this->getFormRef();
-	
-	 		$object_it = $form->getObjectIt();
-	 		
-	 		if ( !is_object($object_it) || is_object($object_it) && $object_it->getId() != '' )
-	 		{
+	 		$object_it = $this->getFormRef()->getObjectIt();
+	 		if ( !is_object($object_it) || is_object($object_it) && $object_it->getId() != '' ) {
 	 		    header('Content-type: text/html; charset='.APP_ENCODING);
-	 		    			
-    	 		$form->render($view, $render_parms);
-    	 		
+				$this->getFormRef()->render($view, $render_parms);
     	 		return;
 	 		}
+			else {
+				exit(header('Location: '.getSession()->getApplicationUrl()));
+			}
         } 
         
      	if( is_object($this->table) ) 
@@ -924,6 +981,20 @@ class Page
  	{
  		return array();
  	}
+
+	function getHelpActions()
+	{
+		$support_url = defined('HELP_SUPPORT_URL') ? HELP_SUPPORT_URL : 'http://support.devprom.ru/issue/new';
+		if ( $support_url == '' ) return array();
+		return array(
+			array(),
+			array (
+				'name' => text('guide.support'),
+				'url' => $support_url,
+				'target' => '_blank'
+			)
+		);
+	}
  	
  	function getTabs()
  	{
@@ -966,11 +1037,6 @@ class Page
 		return str_replace(EnvironmentSettings::getServerUrl(), '', $_SERVER['REQUEST_URI']);
 	}
 
- 	function getMenuTemplate()
- 	{
- 		return 'core/PageMenu.php';
- 	}
- 	
 	function getTabsTemplate()
 	{
 		return 'core/PageTabs.php'; 	
@@ -998,30 +1064,25 @@ class Page
 		}
 		return array($details, array_pop($urls));
  	}
- 	
- 	function getRecentChangedObjectIds( $table )
- 	{
- 		 $from_date = SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 seconds', strtotime(SystemDateTime::date()))));
- 		
-         $ids = getFactory()->getObject('AffectedObjects')->getRegistry()->Query(
-         		array (
-         				new FilterAttributePredicate('ObjectClass', get_class($table->getObject())),
-         				new FilterModifiedAfterPredicate($from_date),
-         				new FilterVpdPredicate($table->getObject()->getVpds()),
-         				new SortRecentClause()
-         		)
-         )->fieldToArray('ObjectId');
 
-         $mapper = new ModelDataTypeMappingDate();
- 	    
-		 DAL::Instance()->Query( 
-		 		" DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
-		 				$mapper->map(
-		 						strftime('%Y-%m-%d %H:%M:%S', strtotime('-25 seconds', strtotime(SystemDateTime::date())))
-         				)."' "
-         );
-		 
-		 return $ids;
+	function getWatchedObjects() {
+		return array(
+			get_class($this->getTableRef()->getObject())
+		);
+	}
+
+ 	function getRecentChangedObjectIds( $filters )
+ 	{
+         return getFactory()->getObject('AffectedObjects')->getRegistry()->Query(
+			array_merge(
+				$filters,
+				array (
+					new FilterModifiedAfterPredicate(
+						SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 seconds', strtotime(SystemDateTime::date()))))
+					)
+				)
+			)
+		 )->fieldToArray('ObjectId');
  	}
  	
  	function getHint()

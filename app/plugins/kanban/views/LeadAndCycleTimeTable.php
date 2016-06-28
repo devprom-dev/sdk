@@ -1,10 +1,6 @@
 <?php
-
-include "LeadAndCycleTimeChart.php";
-
-include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
-include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
+include "LeadAndCycleTimeChart.php";
 
 class LeadAndCycleTimeTable extends PMPageTable
 {
@@ -16,23 +12,28 @@ class LeadAndCycleTimeTable extends PMPageTable
  	function getFilterPredicates()
  	{
  		$values = $this->getFilterValues();
- 		
- 		return array (
-			new FilterSubmittedAfterPredicate($values['submittedon']),
-			new FilterSubmittedBeforePredicate($values['submittedbefore']),
-			new RequestFinishAfterPredicate($values['modifiedafter']),
-			new RequestAuthorFilter( $values['author'] ),
- 			new FilterAttributePredicate('Type', $values['type']),
- 			new FilterAttributePredicate('Priority', $values['priority'])
+ 		return array_merge(
+			parent::getFilterPredicates(),
+			array (
+				new FilterSubmittedAfterPredicate($values['submittedon']),
+				new FilterSubmittedBeforePredicate($values['submittedbefore']),
+				new RequestFinishAfterPredicate($values['modifiedafter']),
+				new RequestAuthorFilter( $values['author'] ),
+				new FilterAttributePredicate('Type', $values['type']),
+				new FilterAttributePredicate('Priority', $values['priority'])
+			)
  		);
  	}
 
 	function getFilters()
 	{
+		$filter = new ViewModifiedAfterDateWebMethod();
+		$filter->setCaption(text(2162));
+		
 		$filters = array(
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
-			new ViewModifiedAfterDateWebMethod(),
+			$filter,
 			new FilterObjectMethod( getFactory()->getObject('Priority'), '', 'priority'),
 			$this->buildTypeFilter(),
 			$this->buildFilterAuthor()
@@ -48,11 +49,7 @@ class LeadAndCycleTimeTable extends PMPageTable
 		return $type_method;
 	}
 
-	protected function buildFilterAuthor()
-	{
-		$author = getFactory()->getObject('IssueActualAuthor');
-		$filter = new FilterAutoCompleteWebMethod($author, translate('Автор'), 'author');
-		$filter->setIdFieldName('Login');
-		return $filter;
+	protected function buildFilterAuthor() {
+		return new FilterObjectMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
 	}
 }

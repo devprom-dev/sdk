@@ -23,7 +23,7 @@ class Version20150128143045 extends AbstractMigration
         catch(Exception $e) {
         }
         try {
-            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordModified TIMESTAMP');
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordModified TIMESTAMP DEFAULT NOW()');
         }
         catch(Exception $e) {
         }

@@ -11,10 +11,12 @@ if ( count($sections) > 0 )
 
 <div style="display:table;width:100%;">
 
-<?php if ( $show_section_number ) { ?>
+<?php if ( $show_section_number && $attributes['SectionNumber']['value'] != '' ) { ?>
 
 <h4 class="title-cell bs" style="width:1%;">
-    <?=$attributes['SectionNumber']['value'].'&nbsp;&nbsp;'?>
+	<div class="sec-num">
+    	<?=$attributes['SectionNumber']['value']?>
+	</div>
 </h4>
 
 <?php } ?>
@@ -38,10 +40,10 @@ if ( count($sections) > 0 )
 
 <?php if ( $persisted && $uid_icon != '' ) { ?>
 
+<div class="title-cell" style="width:1%;"></div>
 <div class="title-cell" style="width:1%;white-space:nowrap;">
 	<? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
 </div>
-<div class="title-cell" style="width:1%;"></div>
 
 <?php } ?>
 
@@ -60,12 +62,10 @@ if ( count($sections) > 0 )
 
 <?php } ?>
 
-
-<div class="title-cell" style="width:2%;"></div>
-
 <? if ( count($compare_actions) > 0 ) { ?>
 
-<div class="title-cell hidden-print" style="width:1%;">
+	<div class="title-cell" style="width:1%;"></div>
+	<div class="title-cell hidden-print" style="width:1%;">
     <div class="btn-group operation last">
       <a tabindex="-1" class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
     	<i class="icon-broken"></i>
@@ -111,8 +111,9 @@ if ( count($sections) > 0 )
 </div>
 
 <? $attributes['Content']['field']->draw(); ?>
+<? if ( $persisted ) echo $traces_html; ?>
 
-<?php if ( is_object($comments_section) ) { ?>
+<?php if ( $persisted && is_object($comments_section) ) { ?>
 <div class="document-page-bottom hidden-print">
 	<div style="display:table;width:100%;height:23px;">
 		<div style="display:table-cell;">
@@ -125,25 +126,11 @@ if ( count($sections) > 0 )
 		</div>
 		<div class="bottom-link" style="display:table-cell;text-align:right;vertical-align:top;width:70%;">
 			<span class="document-item-bottom-hidden">
-				<? if ( $new_sibling_url != '' ) { ?>
-				<span>
-					<i class=" icon-resize-vertical"></i>
-					<a class="dashed" onclick="<?=$new_sibling_url?>"><?=text(2092)?></a>
-				</span>
-				&nbsp;
-				<? } ?>
-				<? if ( $new_child_url != '' ) { ?>
-				<span>
-					<i class="icon-resize-horizontal"></i>
-					<a class="dashed" onclick="<?=$new_child_url?>"><?=text(2091)?></a>
-				</span>
-				&nbsp;
-				<? } ?>
-				<? if ( $attachments_modify_url != '' ) { ?>
-				<span>
-					<i class="icon-file"></i>
-					<a class="dashed" onclick="<?=$attachments_modify_url?>"><?=text(2082)?></a>
-				</span>
+				<? foreach( $structureActions as $action ) { ?>
+					<span class="document-structure-action">
+						<i class="<?=$action['icon']?>"></i>
+						<a class="dashed" onclick="<?=$action['url']?>"><?=$action['name']?></a>
+					</span>
 				<? } ?>
 			</span>
 		</div>

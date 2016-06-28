@@ -5,11 +5,7 @@ class MigrateDatabaseUTF8 extends Installable
     function skip()
     {
     	if ( APP_ENCODING != 'utf-8' ) return true;
-    	
-    	$result = mysql_fetch_array(
-    			DAL::Instance()->Query("SELECT DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA where SCHEMA_NAME = '".DB_NAME."'")
-    	);
-    	
+    	$result = DAL::Instance()->QueryArray("SELECT DEFAULT_CHARACTER_SET_NAME FROM information_schema.SCHEMATA where SCHEMA_NAME = '".DB_NAME."'");
     	return strtolower(trim($result[0])) == 'utf8';
     }
 
@@ -36,7 +32,7 @@ class MigrateDatabaseUTF8 extends Installable
     		
     		$this->info('Migration of '.$table_name);
     		
-    		$result = mysql_fetch_array(DAL::Instance()->Query("show create table ".$table_name));
+    		$result = DAL::Instance()->QueryArray("show create table ".$table_name);
     		if ( preg_match('/\([\r\n\s]+`([^`]+)Id`/i', $result[1], $matches) && strtolower($matches[1]) == strtolower($table_name) ) {
     			$table_name = $matches[1];
 	    		$this->info('Name adjusted '.$table_name);

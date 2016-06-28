@@ -1,30 +1,43 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/plan/validators/ModelValidatorDatesCausality.php";
 
 class ReleaseForm extends PMPageForm
 {
-	function __construct() 
+	function __construct() {
+		parent::__construct(getFactory()->getObject('pm_Version'));
+	}
+
+	function extendModel()
 	{
-		$object = getFactory()->getObject('pm_Version');
-		
-		parent::__construct( $object );
-		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
 		if ( !$methodology_it->HasPlanning() && $methodology_it->HasFixedRelease() )
 		{
-			$text = str_replace('%2', 
+			$text = str_replace('%2',
 				getSession()->getApplicationUrl().'project/methodology', text(1284));
-			
-			$text = str_replace('%1', 
+
+			$text = str_replace('%1',
 				$methodology_it->getReleaseDuration().' '.
-					getLanguage()->getWeeksWording($methodology_it->getReleaseDuration()), $text);
-			
-			$object->setAttributeDescription('FinishDate', $text);
+				getLanguage()->getWeeksWording($methodology_it->getReleaseDuration()), $text);
+
+			$this->getObject()->setAttributeDescription('FinishDate', $text);
 		}
+
+		foreach( array('Project','OrderNum') as $attribute ) {
+			$this->getObject()->setAttributeVisible($attribute, false);
+		}
+		foreach( array('StartDate') as $attribute ) {
+			$this->getObject()->setAttributeVisible($attribute, true);
+		}
+
+		if ( is_object($this->getObjectIt()) ) {
+			foreach( array('Issues', 'Tasks') as $attribute ) {
+				$this->getObject()->setAttributeVisible($attribute, true);
+			}
+		}
+
+		parent::extendModel();
 	}
-	
+
 	function buildModelValidator()
 	{
 		$validator = parent::buildModelValidator();
@@ -35,22 +48,6 @@ class ReleaseForm extends PMPageForm
 		}
 		
 		return $validator;
-	}
-
- 	function IsAttributeVisible( $attr_name ) 
- 	{
- 		switch ( $attr_name )
- 		{
- 			case 'OrderNum':
- 			case 'Project':
- 				return false;
- 				
- 			case 'StartDate':
- 				return true;
- 				
- 			default:
- 				return parent::IsAttributeVisible( $attr_name );
- 		}
 	}
 
 	function createField( $attr )
@@ -69,7 +66,21 @@ class ReleaseForm extends PMPageForm
 		
 		return $field; 
 	}
-	
+
+	function createFieldObject($attr)
+	{
+		switch ( $attr )
+		{
+			case 'Issues':
+			case 'Tasks':
+				if ( !is_object($this->getObjectIt()) ) return null;
+				return new FieldListOfReferences( $this->getObjectIt()->getRef($attr) );
+
+			default:
+				return parent::createFieldObject($attr);
+		}
+	}
+
 	function drawScripts()
 	{
 		parent::drawScripts();
@@ -82,13 +93,13 @@ class ReleaseForm extends PMPageForm
 		?>
 		<script type="text/javascript">
 			$().ready( function() {
-				$('#pm_VersionStartDate').change( function() {
+				$('input[name=StartDate]').change( function() {
 					<? if ( !$methodology_it->HasFixedRelease() ) { ?>
-					if ( $('#pm_VersionFinishDate').val() != '' ) return;
+					if ( $('input[name=FinishDate]').val() != '' ) return;
 					<? } ?>
 					var start = Date.parse($(this).val());
 					var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
-					$('#pm_VersionFinishDate').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
+					$('input[name=FinishDate]').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
 				}).trigger('change');
 			});
 		</script>
@@ -135,74 +146,20 @@ class ReleaseForm extends PMPageForm
 	
 	function getFieldDescription( $name )
 	{
-		global $model_factory;
-		
 		switch ( $name )
 		{
 			case 'InitialVelocity':
 				if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
 				{
-					$iteration = $model_factory->getObject('Iteration');
-					$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::PAST) );
-					$iteration->addSort( new SortAttributeClause('StartDate.D') );
-					
-					$iteration_it = $iteration->getAll();
-					if ( $iteration_it->count() > 2 )
-					{ 
-						$average = 0;
-						for( $i = 0; $i < 3; $i++ ) {
-							$average += $iteration_it->getVelocity();
-							$iteration_it->moveNext();
-						}
-						$average = $average / 3;
-					}
-					else
-					{
-						$average = 0;
-					}
-					
-					$release = $model_factory->getObject('Release');
-					
-					$release->addFilter( new ReleaseTimelinePredicate('past') );
-					$release->addFilter( new FilterBaseVpdPredicate() );
-					
-					$release->addSort( new SortAttributeClause('StartDate.D') );
-					
-					$release_it = $release->getAll();
-					
-					$velocity = $release_it->getId() > 0 ? $release_it->getVelocity() : 0;
-					
-					$title = str_replace( '%2', round($velocity, 1), 
+					list($average, $velocity) = getFactory()->getObject('Iteration')->getVelocitySuggested();
+					list($releaseAverage, $velocity) = $this->getObject()->getVelocitySuggested();
+					$title = str_replace( '%2', round($velocity, 1),
 						str_replace( '%1', round($average, 1), text(1028)));
 				}
 				else
 				{
-					$release = $model_factory->getObject('Release');
-					
-					$release->addFilter( new ReleaseTimelinePredicate('past') );
-					$release->addFilter( new FilterBaseVpdPredicate() );
-					
-					$release->addSort( new SortAttributeClause('StartDate.D') );
-					
-					$release_it = $release->getAll();
-				
-					$velocity = $release_it->getId() > 0 ? $release_it->getVelocity() : 0;
-					
-					if ( $release_it->count() > 2 )
-					{ 
-						$average = 0;
-						for( $i = 0; $i < 3; $i++ ) {
-							$average += $release_it->getVelocity();
-							$release_it->moveNext();
-						}
-						$average = $average / 3;
-					}
-					else
-					{
-						$average = 0;
-					}
-					
-					$title = str_replace( '%2', round($velocity, 1), 
+					list($average, $velocity) = $this->getObject()->getVelocitySuggested();
+					$title = str_replace( '%2', round($velocity, 1),
 						str_replace( '%1', round($average, 1), text(1029)));
 				}
 				return $title;

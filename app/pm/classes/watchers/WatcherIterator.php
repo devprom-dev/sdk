@@ -22,7 +22,7 @@ class WatcherIterator extends OrderedIterator
 	function getAnchorIt()
 	{
 		$object = getFactory()->getObject($this->get('ObjectClass'));
-		if ( !is_object($object) ) return null;
+		if ( !is_object($object) ) return $this->object->getEmptyIterator();
 		
 		return $object->getExact( $this->get('ObjectId') );
 	}

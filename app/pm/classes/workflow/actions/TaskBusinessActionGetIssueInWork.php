@@ -16,7 +16,10 @@ class TaskBusinessActionGetIssueInWork extends BusinessActionWorkflow
  	{
 		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) return true;
  		if ( $object_it->get('ChangeRequest') == '' ) return true;
- 		
+
+		$request = getFactory()->getObject('Request');
+		getFactory()->resetCachedIterator($request);
+
  		getSession()->addBuilder( new RequestModelExtendedBuilder() );
  		$request_it = $object_it->getRef('ChangeRequest');
 
@@ -29,7 +32,7 @@ class TaskBusinessActionGetIssueInWork extends BusinessActionWorkflow
 		$state_it->moveNext(); // move to the second state (In Work)
 		if ( $state_it->getId() > 0 ) {
 			$service = new WorkflowService($request_it->object);
-			$service->moveToState($request_it, $state_it->get('ReferenceName'), $this->getDisplayName());
+			$service->moveToState($request_it, $state_it->get('ReferenceName'));
 		}
 		else {
 			throw new Exception('State corresponding to In Work was not found "'.$request_it->getId().'"');

@@ -77,23 +77,10 @@ class CommentForm extends PMForm
 	{
 		switch ( $attribute )
 		{
-			case 'Caption': return true;
-			    
+			case 'Caption':
 			case 'Attachments':
-			    
-			    $anchor_it = $this->getAnchorIt();
-			    
-			    if ( !is_object($anchor_it) ) return false;
-			    
-			    switch( $anchor_it->object->getClassName() )
-			    {
-			        case 'pm_ChangeRequest':
-			        case 'pm_Task':
-			            return true;
-			    }    
-			             
-				return false;
-				
+				return true;
+
 			default:
 				return false; 	
 		}
@@ -170,28 +157,19 @@ class CommentForm extends PMForm
 				break;
 			
 			case 'Attachments':
-				$anchor_it = $this->getAnchorIt();
-				
-				if ( !is_object($anchor_it) ) return;
-				
-				switch( $anchor_it->object->getClassName() )
-				{
-					case 'pm_ChangeRequest':
-					case 'pm_Task':
-						$field = new FieldCommentAttachments( is_object($object_it) ? $object_it : $this->object );
-		
-						$field->setTabIndex($tab_index);
-						$field->setName($attribute);
-						$field->setReadonly(false);
-						
-						echo '<div class="uneditable-input" style="width:35%;height:auto;">';
-							$field->draw();
-						echo '</div>';
-						
-						break;
-				}
+				$field = new FieldCommentAttachments( is_object($object_it) ? $object_it : $this->object );
+
+				$field->setTabIndex($tab_index);
+				$field->setName($attribute);
+				$field->setReadonly(false);
+				$field->setAddButtonText(text(2081));
+
+				echo '<div class="uneditable-input" style="width:35%;height:auto;overflow:inherit;">';
+					$field->draw($this->getView());
+				echo '</div>';
+
 				break;
-				
+
 			default:
 				parent::drawCustomAttribute( $attribute, $value, $tab_index );
 		}
@@ -200,5 +178,15 @@ class CommentForm extends PMForm
 	function getTemplate()
 	{
 		return "pm/CommentsForm.php";
+	}
+
+	function getRenderParms()
+	{
+		return array_merge(
+			parent::getRenderParms(),
+			array (
+				'fields_separator' => ''
+			)
+		);
 	}
 }

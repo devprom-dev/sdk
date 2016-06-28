@@ -14,6 +14,9 @@ include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";
 include "persisters/ProjectLinkedPersister.php";
 include "validators/ModelValidatorProjectCodeName.php";
+include "sorts/SortProjectImportanceClause.php";
+include "sorts/SortImportanceClause.php";
+include "sorts/SortProjectSelfFirstClause.php";
 
 class Project extends Metaobject 
 {
@@ -22,7 +25,12 @@ class Project extends Metaobject
  	function __construct( ObjectRegistrySQL $registry = null ) 
  	{
 		parent::__construct('pm_Project', $registry);
-		$this->setSortDefault( new SortAttributeClause('Importance') );
+		$this->setSortDefault(
+			array (
+				new SortImportanceClause('Importance'),
+				new SortAttributeClause('Caption')
+			)
+		);
  	}
 	
  	function createIterator() 
@@ -108,7 +116,6 @@ class Project extends Metaobject
 			"		 INNER JOIN pm_Participant r ON p.pm_ProjectId = r.Project " .
 			"        LEFT OUTER JOIN pm_ProjectUse u ON u.Participant = r.SystemUser AND u.Project = p.pm_ProjectId " .
 			"  WHERE r.SystemUser = ".$user_id.
-			"    AND IFNULL(r.IsActive, 'N') = 'Y' " .
 			"    AND IFNULL(p.IsClosed, 'N') = 'N' ".
 			"  GROUP BY p.pm_ProjectId ORDER BY LastAccessed DESC";
 
@@ -123,7 +130,6 @@ class Project extends Metaobject
 			"        LEFT OUTER JOIN pm_ProjectUse u ON u.Participant = ".$user_id." AND u.Project = p.pm_ProjectId " .
 			"  WHERE EXISTS (SELECT 1 FROM pm_Participant r " .
 			"				  WHERE p.pm_ProjectId = r.Project" .
-			"					AND IFNULL(r.IsActive, 'N') = 'Y'" .
 			"					AND IFNULL(p.IsClosed, 'N') = 'N' ".
 			"					AND r.SystemUser = ".$user_id.
 			" 				  UNION " .
@@ -145,7 +151,7 @@ class Project extends Metaobject
 			"						ON u.Participant = r.SystemUser AND u.Project = r.Project" .
 			"		        WHERE p.pm_ProjectId = r.Project" .
 			"				  AND r.SystemUser = ".$user_it->getId().
-			"    			  AND IFNULL(r.IsActive, 'N') = 'Y' ) LastAccessed " . 
+			"    		   ) LastAccessed " .
 			"   FROM pm_Project p " .
 			"  WHERE IFNULL(p.IsClosed, 'N') = 'N'" .
 			"    AND EXISTS (SELECT 1" .
@@ -156,7 +162,6 @@ class Project extends Metaobject
 			"				 SELECT 1" .
 			"			       FROM pm_Participant t ".
 			"				  WHERE t.Project = p.pm_ProjectId" .
-			"    			    AND t.IsActive = 'Y'" .
 			"				    AND t.SystemUser = ".$user_it->getId()." )".
 			"  ORDER BY LastAccessed DESC ";
 
@@ -171,7 +176,7 @@ class Project extends Metaobject
 			"  WHERE (SELECT COUNT(1) FROM pm_Participant r ". 
 			"		   WHERE p.pm_ProjectId = r.Project " .
 			"  			 AND r.SystemUser IN (".join(',', $user_array).")" .
-			"    		 AND IFNULL(r.IsActive, 'N') = 'Y' ) = ".count($user_array);
+			"    	  ) = ".count($user_array);
 
 		return $this->createSQLIterator( $sql );
 	}
@@ -275,24 +280,6 @@ class Project extends Metaobject
 		return $this->createSQLIterator( $sql );
 	}
 
-	function validCodeName( $code_name )
-	{
-	    global $model_factory;
-	    
-	    if ( strlen($code_name) < 3 ) return false;
-	    
-	    $portfolio_it = $model_factory->getObject('Portfolio')->getAll();
-
-	    while( !$portfolio_it->end() )
-	    {
-	        if ( $portfolio_it->get('CodeName') == $code_name ) return false;
-	        
-	        $portfolio_it->moveNext();
-	    }
-		
-		return preg_match ("/^[a-zA-Z0-9][a-zA-Z0-9\-\_]+[a-zA-Z0-9]?$/i", $code_name);
-	}
-	
 	function getDefaultAttributeValue( $attr )
 	{
 		switch( $attr )

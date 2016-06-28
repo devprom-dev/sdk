@@ -88,6 +88,7 @@ class WikiSyntaxEditor extends WikiEditorBase
 			function countLineBreaks()
 			{
 				var area = document.getElementById('<? echo $this->getFieldId(); ?>');
+				if ( !area ) return;
 
 				textAreaWith = area.clientWidth == 0 ? area.offsetWidth : area.clientWidth;
 				nCols = Math.ceil(textAreaWith / 6.7);
@@ -191,9 +192,8 @@ class WikiSyntaxEditor extends WikiEditorBase
 	 					return false;
  					});
  				});
- 		   };
- 		   
-		   function editorFocus()
+		   }
+			function editorFocus()
  		   {
 			   $('#<? echo $this->getFieldId() ?>').focus();
  		   }
@@ -280,7 +280,7 @@ class WikiSyntaxEditor extends WikiEditorBase
 		
 		$actions[] = array( 
 			'name' => $method->getCaption(), 
-			'url' => $method->getJSCall( $object_it ) 
+			'url' => $method->url( $object_it )
 		);
  		
 		return $actions;

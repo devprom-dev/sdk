@@ -69,7 +69,7 @@ class ChangeLogIterator extends OrderedIterator
 		return $change_kind;
  	}
  	
- 	function getImage()
+ 	function getIcon()
  	{
 		switch ($this->get('ChangeKind')) 
 		{
@@ -117,7 +117,13 @@ class ChangeLogIterator extends OrderedIterator
 		$object->setVpdContext( $this );
 
 		if ( $this->get('ChangeKind') == 'deleted' ) {
-			return $object->getEmptyIterator();
+			return $object->createCachedIterator(
+				array (
+					array (
+						$object->getIdAttribute() => $this->get('ObjectId')
+					)
+				)
+			);
 		}
 
 		return $this->get('ObjectId') != '' 

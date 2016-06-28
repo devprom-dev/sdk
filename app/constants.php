@@ -1,5 +1,6 @@
 <?php
 
+ini_set('include_path', '.');
 define('DOCUMENT_ROOT', $_SERVER['DOCUMENT_ROOT'] != '' ? rtrim($_SERVER['DOCUMENT_ROOT'],'/\\').'/' : dirname(__FILE__).'/');
 include DOCUMENT_ROOT.'settings.php';
 if ( !defined('SERVER_ROOT_PATH') ) define('SERVER_ROOT_PATH', dirname(__FILE__).'/');

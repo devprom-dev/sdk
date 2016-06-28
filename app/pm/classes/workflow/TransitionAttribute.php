@@ -4,14 +4,13 @@ include "TransitionAttributeIterator.php";
 include "predicates/TransitionAttributeEntityAttributesPredicate.php";
 include "sorts/TransitionAttributeSortClause.php";
 
-class TransitionAttribute extends MetaobjectCacheable
+class TransitionAttribute extends Metaobject
 {
     var $state_it;
     
     function __construct() 
  	{
  		parent::__construct('pm_TransitionAttribute');
- 		
  		$this->setSortDefault( new TransitionAttributeSortClause() );
  	}
  	

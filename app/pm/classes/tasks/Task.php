@@ -18,6 +18,7 @@ include "predicates/TaskFromDatePredicate.php";
 include "predicates/TaskUntilDatePredicate.php";
 include "predicates/TaskBindedToObjectPredicate.php";
 include "predicates/TaskReleasePredicate.php";
+include "predicates/TaskFeaturePredicate.php";
 include "sorts/TaskAssigneeSortClause.php";
 include "sorts/TaskRequestOrderSortClause.php";
 include "sorts/TaskRequestPrioritySortClause.php";
@@ -65,7 +66,7 @@ class Task extends MetaobjectStatable
 		{
 			return $_REQUEST['Release'];
 		}
-		elseif( $name == 'TaskType' ) 
+		elseif( $name == 'TaskType' and getSession() instanceof PMSession )
 		{
 			$type = getFactory()->getObject('TaskType');
 			
@@ -159,17 +160,12 @@ class Task extends MetaobjectStatable
 	
 	function modify_parms( $object_id, $parms )
 	{
-		global $model_factory;
-
 		$object_it = $this->getExact($object_id);
 
-		if ( array_key_exists('Release', $parms) && $parms['Release'] == '' )
-		{
+		if ( array_key_exists('Release', $parms) && $parms['Release'] == '' ) {
 			$parms['Release'] = $this->getDefaultAttributeValue('Release');
 		}
-		
-		if ( $parms['Planned'] != '' && $object_it->get('Planned') != $parms['Planned'] )
-		{
+		if ( $parms['Planned'] != '' && $object_it->get('Planned') != $parms['Planned'] ) {
 			$parms['LeftWork'] = $parms['Planned'];
 		}
 		
@@ -181,19 +177,14 @@ class Task extends MetaobjectStatable
 			switch ( $target_state )
 			{
 				default:
-					if ( in_array($target_state, $this->getTerminalStates()) )
-					{
+					if ( in_array($target_state, $this->getTerminalStates()) ) {
 						// if the task is marked as completed then
 						// reset left work value to 0
 						//
 						$parms['LeftWork'] = 0;
-
-						if ( $parms['TransitionComment'] == '' ) {
-							$result = $parms['Result'] == '' ? $object_it->get('Result') : $parms['Result'];
-							if ( $result != '' ) {
-								$parms['TransitionComment'] = translate('Результат').': '.$result;
-							}
-						}
+					}
+					if ( $target_state == array_shift($this->getStates()) ) {
+						$parms['LeftWork'] = $parms['Planned'] != '' ? $parms['Planned'] : $object_it->get('Planned');
 					}
 					break;
 			}

@@ -65,9 +65,8 @@ class IteratorBase
 	{
 		$this->pos = 0;
 		
-		if ( $this->count() > 0 && is_resource($this->rs) )
-		{
-			mysql_data_seek($this->rs, $this->pos);
+		if ( $this->count() > 0 && !is_array($this->rs) ) {
+			DAL::Instance()->Seek($this->rs, $this->pos);
 		}
 		
 		$this->fetch();
@@ -84,13 +83,11 @@ class IteratorBase
 	{
 		$this->pos = $pos;
 		
-		if ( is_resource($this->rs) )
+		if ( !is_array($this->rs) )
 		{
-			if ( $this->count() > 0 )
-			{
-				mysql_data_seek($this->rs, $pos);
+			if ( $this->count() > 0 ) {
+				DAL::Instance()->Seek($this->rs, $pos);
 			}
-			
 			$this->fetch();
 		}
 
@@ -139,7 +136,7 @@ class IteratorBase
 
 	function moveTo( $attr, $value )
 	{
-		if ( is_resource($this->rs) )
+		if ( !is_array($this->rs) )
 		{
 			if ( is_array($this->hashes[$attr]) ) {
                 if ( isset($this->hashes[$attr][$value]) ) {
@@ -167,7 +164,7 @@ class IteratorBase
 				$result = array_filter($this->rs, function( $row ) use ($attr, $value) { 
 			        return $row[$attr] != '' && $row[$attr] == $value;
 			    });
-			    $this->moveToPos( array_pop(array_keys($result)) );
+			    $this->moveToPos( array_shift(array_keys($result)) );
 			}
 		}
 	}
@@ -218,14 +215,13 @@ class IteratorBase
 		$text = preg_replace_callback('/\[url=([^\]]+)]/im', iterator_url_callback, $text);
         $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi', iterator_uid_callback, $text);
 		$text = preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $text );
+		$text = TextUtils::breakLongWords($text);
 
 		return nl2br($text);
 	}
 
-	function getHtmlDecoded( $attribute )
-	{
-		return html_entity_decode( $this->get_native($attribute), ENT_QUOTES | ENT_HTML401, APP_ENCODING );		
-
+	function getHtmlDecoded( $attribute ) {
+		return trim(html_entity_decode( $this->get_native($attribute), ENT_QUOTES | ENT_HTML401, APP_ENCODING ));
 	}
 
 	function setData( $data )
@@ -240,21 +236,21 @@ class IteratorBase
 
 	function getRowset()
 	{	
-	    if ( is_resource($this->rs) )
+	    if ( !is_array($this->rs) )
 	    {
     		$data = array();
-    		
+
     		$this->moveFirst();
-    		
+
     		while( !$this->end() )
     		{
     			$data[] = $this->getData();
-    			
+
     			$this->moveNext();
     		}
-    		
+
     		$this->moveFirst();
-    		
+
     		return $data;
 	    }
 	    else
@@ -283,21 +279,23 @@ class IteratorBase
 	function setRowset( $rs )
 	{
 		$this->rs = $rs;
+		$this->count = 0;
 		
-		if ( is_resource($this->rs) )
-		{
-		    $this->count = mysql_num_rows($this->rs);
+		if ( !is_array($this->rs) ) {
+		    $this->count = DAL::Instance()->RowsNum($this->rs);
 		}
-		else
-		{
+		else if( is_array($rs) ) {
 			$this->hashes = array();
 			$id_attr = $this->getIdAttribute();
 		    $this->count = count($this->rs);
 			
-			foreach( $this->rs as $key => $row )
-			{
+			foreach( $this->rs as $key => $row ) {
 				$this->hashes[$id_attr][$row[$id_attr]] = $key; 
 			}
+		}
+		else {
+			$this->hashes = array();
+			$this->rs = array();
 		}
 		
 		$this->pos = 0;
@@ -323,19 +321,15 @@ class IteratorBase
 	
 	function fetch() 
 	{
-		if ( is_resource($this->rs) )
-		{
-			$this->data = mysql_fetch_array($this->rs);
+		if ( is_object($this->rs) ) {
+			$this->data = DAL::Instance()->QueryArray($this->rs);
 			if ( is_bool($this->data) ) return false;
 			$this->data = array_map('stripslashes', $this->data);
 		}
-		else
-		{
-			$this->data = $this->rs[$this->pos];
-			
+		else {
+			$this->data = count($this->rs) > 0 ? $this->rs[$this->pos] : array();
 			if ( is_null($this->data) ) return false;
 		}
-
 		return ($this->pos + 1) < $this->count();
 	}
 
@@ -719,18 +713,15 @@ class IteratorBase
  	function fieldToArray( $field )
  	{
  		$result = array();
-
  		$pos = $this->getPos();
- 		
- 		while ( !$this->end() )
-		{
-			array_push( $result, $this->get($field) );
-			
+
+		$this->moveFirst();
+ 		while ( !$this->end() ) {
+			$result[] = $this->get($field);
 			$this->moveNext();
 		}
 
  		$this->moveToPos( $pos );
- 		
  		return array_unique($result);
  	}
  	
@@ -764,39 +755,27 @@ class IteratorBase
 				
 				switch ( $type )
 				{
+					case 'wysiwyg':
+						$value = preg_replace_callback('/\s+src="([^"]*)"/i', array($this,'embedImages'), $value);
 				    case 'text':
-				    case 'wysiwyg':
 				    case 'varchar':
 				    case 'password':
-				    	
-				        if ( $value != '' ) 
-    					{
+				        if ( $value != '' ) {
     						$value = '<![CDATA['.base64_encode($value).']]>';
-    
     						$encoding = ' encoding="base64"';
     					}
-				        
     					break;
 
 				    case 'file':
-
-				        if ( file_exists( $this->getFilePath($keys[$i]) ) )
-				        {
+				        if ( file_exists( $this->getFilePath($keys[$i]) ) ) {
     						$value = '<![CDATA['.base64_encode(file_get_contents($this->getFilePath($keys[$i]))).']]>';
-    
     						$encoding = ' encoding="base64"';
 				        }
-				        
     					break;
 				}
 				
 				$xml .= '<attr name="'.$keys[$i].'" type="'.$type.'"'.$encoding.'>';
-				
-				if ( $value != '' ) 
-				{
-					$xml .= $value;
-				}
-				
+				if ( $value != '' ) $xml .= $value;
 				$xml .= '</attr>';
 			}
 
@@ -809,6 +788,29 @@ class IteratorBase
 		
 		return $xml;
  	}
+
+	function embedImages( $match )
+	{
+		$url = $match[1];
+
+		$found = array();
+		if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $url, $found) ) {
+			if ( !preg_match('/file\/([^\/]+)\/([\d]+).*/', $url, $found) ) return $match[0];
+			$file_class = $found[1];
+			$file_id = $found[2];
+		} else {
+			$file_class = $found[1];
+			$file_id = $found[3];
+		}
+		$file_it = getFactory()->getObject($file_class)->getExact($file_id);
+		if ( $file_it->getId() == '' ) return $match[0];
+
+		$finfo = new \finfo(FILEINFO_MIME_TYPE);
+		$path = $file_it->getFilePath(array_shift($file_it->object->getAttributesByType('file')));
+
+		return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
+	}
+
 } 
 
  // упорядоченный итератор

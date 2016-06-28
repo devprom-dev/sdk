@@ -83,7 +83,11 @@ class MailboxScannerTest extends DevpromTestCase {
         ));
                 
         $this->project = $this->getMock('Project', array('createIterator'));
-        $this->projectIt = $this->getMock("ProjectIterator", array(), array($this->project));
+
+        $this->projectIt = $this->getMock("ProjectIterator", array('getProjectIt','getMailboxIterator'), array($this->project));
+        $this->projectIt->expects($this->any())->method('getProjectIt')->will($this->returnValue($this->projectIt));
+        $this->projectIt->expects($this->any())->method('getMailboxIterator')->will($this->returnValue($this->projectIt));
+
         $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
         $this->session = $this->getSessionObject();
 
@@ -106,7 +110,7 @@ class MailboxScannerTest extends DevpromTestCase {
         		));
         
         // set up expectations
-        $this->requestMock->expects($this->once())->method('add_parms')->with($this->contains($body));
+        $this->requestMock->expects($this->once())->method('add_parms')->with($this->contains('<p>'.$body.'</p>'));
         $this->requestMock->expects($this->once())->method('add_parms')->with($this->contains($subject));
 
         // exercise

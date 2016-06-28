@@ -24,9 +24,11 @@ class ModifyIssuesVersionNumber extends ObjectFactoryNotificator
     {
         if ($object_it->object instanceof Release) {
             $this->clearVersion($object_it->getDisplayName());
+            DAL::Instance()->Query("UPDATE pm_ChangeRequest SET PlannedRelease = NULL WHERE PlannedRelease = ".$object_it->getId());
         }
         if ($object_it->object instanceof Iteration) {
             $this->clearVersion($object_it->getDisplayName());
+            DAL::Instance()->Query("UPDATE pm_Task SET `Release` = NULL WHERE `Release` = ".$object_it->getId());
         }
     }
 

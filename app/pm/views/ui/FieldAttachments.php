@@ -7,6 +7,7 @@ class FieldAttachments extends FieldForm
  	var $object_it, $attachments, $caution, $anchor_field;
  	private $image_class = 'image_attach';
 	private $object = null;
+	private $addButtonText = '';
  	
  	function FieldAttachments( $object_it = null, $writable = true, $caution = true )
  	{
@@ -52,7 +53,11 @@ class FieldAttachments extends FieldForm
  	{
  		$this->image_class = $class_name;
  	}
- 	
+
+	function setAddButtonText( $text ) {
+		$this->addButtonText = $text;
+	}
+	
  	function getObjectIt()
  	{
  		return $this->object_it;
@@ -63,7 +68,7 @@ class FieldAttachments extends FieldForm
 		return $this->object;
 	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();
@@ -76,6 +81,9 @@ class FieldAttachments extends FieldForm
  		
  		$form->setImageClass( $this->image_class );
  		$form->setAnchorIt( $this->getObjectIt() );
+		if ( $this->addButtonText != '' ) {
+			$form->setAddButtonText($this->addButtonText);
+		}
 
  		return $form;
 	}

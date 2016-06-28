@@ -29,11 +29,11 @@ class WatchersPersister extends ObjectSQLPersister
  		return $columns;
  	}
  	
-	function delete( $object_id )
+	function afterDelete( $object_it )
  	{
  		$it = getFactory()->getObject('Watcher')->getRegistry()->Query(
  			array (
- 				new FilterAttributePredicate('ObjectId', $object_id),
+ 				new FilterAttributePredicate('ObjectId', $object_it->getId()),
  				new FilterAttributePredicate('ObjectClass', strtolower(get_class($this->getObject())))
  			)
  		);

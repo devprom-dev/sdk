@@ -112,7 +112,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
  	function getMethodName()
 	{
-		return 'AttributeProject';
+		return 'AttributeProject:OpenList';
 	}
 	
  	function getJSCall( $parms = array() )
@@ -155,7 +155,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		    && getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Task'));
 	}
 
-	function getJSCall()
+	function getJSCall( $parms = array() )
 	{
 		return parent::getJSCall( array(
 			'ChangeRequest' => $this->request_it->getId()
@@ -168,13 +168,9 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  {
  	var $report_it;
  	
- 	function RequestWikiTraceWebMethod( $report_ref_name = '' )
+ 	function RequestWikiTraceWebMethod( $module = '' )
  	{
- 		global $model_factory;
- 		
- 		$report = $model_factory->getObject('PMReport');
- 		$this->report_it = $report->getExact( $report_ref_name );
- 		
+ 		$this->report_it = getFactory()->getObject('Module')->getExact( $module );
  		parent::RequestWebMethod();
  	}
  	
@@ -193,7 +189,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		return $this->report_it->getUrl();
 	}
 	
-	function getJSCall()
+	function getJSCall( $parms = array() )
 	{
 		return parent::getJSCall( 
 			array('report' => $this->report_it->getId() )
@@ -202,11 +198,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 	
  	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
- 		
- 		$report = $model_factory->getObject('PMReport');
- 		$this->report_it = $report->getExact( $_REQUEST['report'] );
- 		
+ 		$this->report_it = getFactory()->getObject('Module')->getExact( $_REQUEST['report'] );
  		if ( $this->report_it->count() > 0 )
  		{
  			echo '&issues='.SanitizeUrl::parseUrl($_REQUEST['objects']);
@@ -227,7 +219,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  		return text(758);
  	}
  	
- 	function getJSCall( $class = 'RequestIteratorExportBlog' )
+ 	function url( $class = 'RequestIteratorExportBlog' )
  	{
  		return parent::getJSCall(
  			array( 'class' => $class ) );
@@ -496,42 +488,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	
  }
 
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewRequestVersionWebMethod extends FilterAutoCompleteWebMethod
- {
- 	var $object;
- 	
- 	function ViewRequestVersionWebMethod()
- 	{
- 		global $model_factory;
- 		
-		$this->object = $model_factory->getObject('Version'); 
- 		
- 		parent::FilterAutoCompleteWebMethod( $this->object, $this->getCaption() );
- 	}
- 	
- 	function getCaption()
- 	{
-		return translate('Выполнено в версии');
- 	}
-
- 	function getValueParm()
- 	{
- 		return 'version';
- 	}
- 	
- 	function getStyle()
- 	{
- 		return 'width:150px;';
- 	}
- 	
-	function hasAccess()
-	{
-		return getSession()->getProjectIt()->getMethodologyIt()->HasReleases();
-	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestTaskTypeWebMethod extends ViewRequestWebMethod
  {
  	function getCaption()

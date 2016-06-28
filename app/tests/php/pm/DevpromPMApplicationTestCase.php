@@ -18,7 +18,12 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
         global $model_factory, $session;
 
         parent::setUp();
-        
+
+        $this->workflowMock = $this->getMock('WorkflowScheme', array('buildScheme','getStates'), array(), '', false);
+        $ref = new \ReflectionProperty('WorkflowScheme', 'singleInstance');
+        $ref->setAccessible(true);
+        $ref->setValue(null, $this->workflowMock);
+
         // project mock
         $this->project_mock = $this->getMock('Project', array('createIterator'), array(), '', false);
         

@@ -256,20 +256,7 @@ class IterationIterator extends OrderedIterator
 		return array( $duration, $capacity, $in_velocity );
 	}
 	
-	function getPlannedWorkSpeed() 
-	{
-		$sql = 'SELECT ROUND(SUM(r.Capacity)) Capacity '.
-			   '  FROM pm_Participant p, pm_ParticipantRole r '.
-			   ' WHERE r.Project = '.$this->get('Project').
-			   '   AND r.Participant = p.pm_ParticipantId '.
-			   "   AND p.IsActive = 'Y' ";
-			   
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->get('Capacity');
-	}
-
-	function getPlannedWorkSpeedByTasks() 
+	function getPlannedWorkSpeedByTasks()
 	{
 		$sql = 'SELECT ROUND(SUM(r.Capacity)) Capacity '.
 			   '  FROM pm_Participant p, pm_ParticipantRole r  '.
@@ -286,73 +273,20 @@ class IterationIterator extends OrderedIterator
 		return $it->get('Capacity');
 	}
 
-	function getLeftWorkParticipant( $part_it ) 
+	function getLeftWorkParticipant( $userId )
 	{
-		if ( $part_it->getId() < 1 ) return 0;
+		if ( $userId < 1 ) return 0;
 		
 		$sql = "SELECT SUM(IFNULL(t.LeftWork, 0)) leftwork ".
-			   "  FROM pm_Task t, pm_Participant p ".
-			   " WHERE t.State <> 'resolved' ".
-			   "   AND p.pm_ParticipantId = ".$part_it->getId().
-			   "   AND p.SystemUser = t.Assignee ".
+			   "  FROM pm_Task t ".
+			   " WHERE t.State IN ('".join("','", WorkflowScheme::Instance()->getNonTerminalStates(getFactory()->getObject('Task')))."') ".
+			   "   AND t.Assignee = ".$userId.
   		 	   "   AND t.Release = " .$this->getId();
 
 		$it = $this->object->createSQLIterator( $sql );			   
 		return $it->get('leftwork');
 	}
 	
-	function getTasksByPriorityByType( $task_type_it )
-	{
-		$result = array();
-
-		$sql = 'SELECT Priority, IFNULL(COUNT(1), 0) FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId().' AND t.State <> \'resolved\' '.
-			   '   AND t.TaskType = '.$task_type_it->getId().' GROUP BY t.Priority ORDER BY t.Priority';
-		
-		$r2 = DAL::Instance()->Query($sql);
-
-		$sql = 'SELECT Priority, COUNT(1) FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId().
-			   '   AND t.TaskType = '.$task_type_it->getId().' GROUP BY t.Priority ORDER BY t.Priority';
-		
-		$r3 = DAL::Instance()->Query($sql);
-
-		$prev_priority = 0;
-		$state_data = mysql_fetch_array($r2);
-		
-		for($i = 0; $i < mysql_num_rows($r3); $i++) {
-			$count_data = mysql_fetch_array($r3);
-			if($count_data[0] == $state_data[0]) {
-				array_push( $result, array( $count_data[0], $state_data[1], $count_data[1] ) );
-				$state_data = mysql_fetch_array($r2);
-			}
-		}
-		
-		return $result;
-	}
-
-	function getTasksByType( $task_type_it )
-	{
-		$result = array();
-
-		$sql = 'SELECT IFNULL(COUNT(1), 0) FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId().' AND t.State = \'resolved\' '.
-			   '   AND t.TaskType = '.$task_type_it->getId();
-		
-		$r2 = DAL::Instance()->Query($sql);
-
-		$sql = 'SELECT COUNT(1) FROM pm_Task t '.
-			   ' WHERE t.Release = '.$this->getId().
-			   '   AND t.TaskType = '.$task_type_it->getId();
-		
-		$r3 = DAL::Instance()->Query($sql);
-
-		$state_data = mysql_fetch_array($r2);
-		$count_data = mysql_fetch_array($r3);
-		
-		return array( $state_data[0], $count_data[0] );
-	}
-
 	function getParticipantInvolvement( $user_id, $stage )
 	{
 		global $model_factory;

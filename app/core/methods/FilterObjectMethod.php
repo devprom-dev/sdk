@@ -12,7 +12,8 @@ class FilterObjectMethod extends FilterWebMethod
  	var $none_title;
  	var $use_uid;
  	var $has_none;
- 	
+ 	private $rowsVisibilityLimit = 15;
+
  	function FilterObjectMethod( $object = null, $title = '', $parmvalue = '', $has_all = true )
  	{
  		global $_REQUEST;
@@ -140,21 +141,22 @@ class FilterObjectMethod extends FilterWebMethod
 		});
 
 		$values = array_flip($values);
+		$itemsCount = count($values);
 
 		array_walk( $values, function(&$value) {
 				$value = trim($value);
 		});
 
-		if ( $this->has_none )
-		{
+		if ( $this->has_none ) {
 			$values = array_merge( array ( 'none' => $this->none_title ), $values );
 		}
-		
-		if ( $this->has_all )
-		{
+		if ( $this->has_all ) {
 			$values = array_merge( array ( 'all' => translate('Все') ), $values );
 		}
-		
+		if ( $itemsCount > $this->rowsVisibilityLimit ) {
+			$values = array_merge( array ( 'search' => array( 'uid' => 'search') ), $values );
+		}
+
  		if ( $selected_value_found || count(array_intersect($selected_values, array('', 'all', 'none'))) > 0 ) return $values;
  		
 		$object_it = $this->object->getRegistry()->Query( 
@@ -165,11 +167,8 @@ class FilterObjectMethod extends FilterWebMethod
 						new FilterVpdPredicate()
 				)
 		);
-
-		while ( !$object_it->end() )
-		{
+		while ( !$object_it->end() ) {
 			$values[' '.$object_it->get($this->idfieldname)] = $uid->getUidTitle($object_it);
-			
 			$object_it->moveNext();
 		}
 

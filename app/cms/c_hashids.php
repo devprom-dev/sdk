@@ -42,7 +42,7 @@
  		return $hash;
  	}
  	
- 	function getIds( $hash )
+ 	function getHashIds( $hash )
  	{
  		$it = $this->getByRef('HashKey', $hash);
  		
@@ -56,5 +56,3 @@
  		}
  	}
  }
-
-?>

@@ -28,7 +28,13 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
  	    $priority->addFilter( new FilterInPredicate($object_it->fieldToArray('Priority')) );
  	    
  	    $request = getFactory()->getObject('pm_ChangeRequest');
- 	    $request->resetPersisters();
+		$persisters = $request->getPersisters();
+		foreach( $persisters as $key => $persister ) {
+			if ( $persister instanceof IssueAuthorPersister ) {
+				unset($persisters[$key]);
+			}
+		}
+		$request->setPersisters($persisters);
  	    $request->addFilter( new FilterInPredicate($ids) );
  	    
  	    $trace = getFactory()->getObject('pm_ChangeRequestTrace');

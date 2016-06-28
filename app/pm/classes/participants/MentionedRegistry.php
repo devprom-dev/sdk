@@ -4,14 +4,13 @@ class MentionedRegistry extends ObjectRegistrySQL
 {
  	function getQueryClause()
  	{
-		if ( class_exists('PortfolioMyProjectsBuilder', false) ) {
+		if ( defined('PERMISSIONS_ENABLED') ) {
 			$sql = "
 				SELECT LCASE(SUBSTRING_INDEX(t.Caption,' ',1)) entityId,
 					   t.Caption,
 					   t.OrderNum,
 					   (SELECT GROUP_CONCAT(CAST(u.cms_UserId AS CHAR)) FROM cms_User u, pm_Participant p, pm_ParticipantRole pr
 						 WHERE p.SystemUser = u.cms_UserId
-						   AND p.IsActive = 'Y'
 						   AND pr.Participant = p.pm_ParticipantId
 						   AND pr.ProjectRole = t.pm_ProjectRoleId) User,
 					   t.VPD,

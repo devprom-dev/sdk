@@ -12,6 +12,7 @@ var tc = underi18n.MessageFactory({
 });
 
 var scrumTourTitle = 'Scrum';
+var scrumTourId = 'ScrumTour';
 var scrumTourTemplate = "<div class='popover tour' style='max-width:550px;'>"+
     "<div class='arrow'></div>"+
     "<h3 class='popover-title' style='color:#fff;background-color: #428bca;border: 2px solid #428bca;'></h3>"+
@@ -32,45 +33,45 @@ var scrumSteps = [
         title: scrumTourTitle
     },
     {
-        element: "table.table-inner tr:eq(1) td:eq(3)",
+        element: "table.table-inner tr:eq(2) td:eq(3)",
         content: tc('scrum-backlog'),
         placement: 'bottom',
-        path: '/pm/%project%/issues/list/productbacklog?report=productbacklog&basemodule=issues-backlog&&area=favs',
+        path: '/pm/%project%/issues/list/productbacklog?report=productbacklog&basemodule=issues-backlog&&area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
     {
         element: "div.board_item_attributes:eq(0)",
         content: tc('scrum-planning'),
         placement: 'right',
-        path: '/pm/%project%/issues/board?area=favs',
+        path: '/pm/%project%/issues/board?area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
     {
         element: "table.board-table tr:eq(5) td.board-column:eq(1)",
         content: tc('scrum-taskboard'),
         placement: 'top',
-        path: '/pm/%project%/tasks/board?area=favs',
+        path: '/pm/%project%/tasks/board?area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
     {
         element: "ul#menu_favs a[uid='releaseburndown']",
         content: tc('scrum-burndown'),
         placement: 'right',
-        path: '/pm/%project%/issues/chart/releaseburndown?report=releaseburndown&basemodule=issues-chart&&area=favs',
+        path: '/pm/%project%/issues/chart/releaseburndown?report=releaseburndown&basemodule=issues-chart&&area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
     {
         element: "ul#menu_favs a[uid='velocitychart']",
         content: tc('scrum-velocity'),
         placement: 'right',
-        path: '/pm/%project%/module/scrum/velocitychart/velocitychart?report=velocitychart&basemodule=scrum/velocitychart&&area=favs',
+        path: '/pm/%project%/module/scrum/velocitychart/velocitychart?report=velocitychart&basemodule=scrum/velocitychart&&area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
     {
-        element: "div.wysiwyg-text[attributename='Caption']",
+        element: "h4.title-cell",
         content: tc('scrum-retro'),
         placement: 'bottom',
-        path: '/pm/%project%/knowledgebase/tree?area=favs',
+        path: '/pm/%project%/knowledgebase/tree?area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     }
 ];
@@ -81,7 +82,7 @@ if ( mode_reqs ) {
             element: "table.table-inner tr:eq(1) td:eq(3)",
             content: tc('scrum-modelling'),
             placement: 'bottom',
-            path: '/pm/%project%/module/requirements/docs?area=reqs',
+            path: '/pm/%project%/module/requirements/docs?area=reqs&tour='+scrumTourId,
             title: scrumTourTitle
         }
     );
@@ -92,7 +93,7 @@ if ( mode_qa ) {
             element: "table.table-inner tr:eq(2) td:eq(3)",
             content: tc('scrum-testing'),
             placement: 'bottom',
-            path: '/pm/%project%/module/testing/results/testsofreleasereport?report=testsofreleasereport&basemodule=testing/results&&area=qa',
+            path: '/pm/%project%/module/testing/results/testsofreleasereport?report=testsofreleasereport&basemodule=testing/results&&area=qa&tour='+scrumTourId,
             title: scrumTourTitle
         }
     );
@@ -103,7 +104,7 @@ if ( mode_code ) {
             element: "table.table-inner tr:eq(1) td:eq(3)",
             content: tc('scrum-code'),
             placement: 'bottom',
-            path: '/pm/%project%/module/sourcecontrol/revision?area=dev',
+            path: '/pm/%project%/module/sourcecontrol/revision?area=dev&tour='+scrumTourId,
             title: scrumTourTitle
         }
     );
@@ -113,25 +114,27 @@ scrumSteps.push(
     {
         orphan: true,
         duration: 1,
-        path: '/pm/%project%/issues/board?area=favs',
+        path: '/pm/%project%/issues/board?area=favs&tour='+scrumTourId,
     }
 );
 
-toursQueue.unshift(new Tour({
-    steps: scrumSteps,
-    name: "ScrumTour",
-    duration: 1000 * 120,
-    template: scrumTourTemplate,
-    onShow: function(tour) {
-        $('.with-tooltip').popover('disable');
-    },
-    onEnd: function(tour) {
-        $('.with-tooltip').popover('enable');
-        startTour();
-    },
-    onShown: function(tour) {
-        $('[data-role=stop]').click( function() {
-            tour.end();
-        });
-    }
-}));
+if ( cookies.get(scrumTourId+'Skip') == null ) {
+    toursQueue.unshift(new Tour({
+        steps: scrumSteps,
+        name: scrumTourId,
+        duration: 1000 * 120,
+        template: scrumTourTemplate,
+        onShow: function(tour) {
+            $('.with-tooltip').popover('disable');
+        },
+        onEnd: function(tour) {
+            $('.with-tooltip').popover('enable');
+            startNextTour();
+        },
+        onShown: function(tour) {
+            $('[data-role=stop]').click( function() {
+                tour.end();
+            });
+        }
+    }));
+}

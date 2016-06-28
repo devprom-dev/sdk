@@ -8,12 +8,11 @@
 class ImapMailbox {
 
 	protected $imapPath;
-
 	protected $login;
-
 	protected $password;
-
 	protected $serverEncoding;
+	protected $timeoutOpen = 5;
+	protected $timeoutRead = 30;
 
     /** @var bool */
 	protected $fetchAttachments;
@@ -24,6 +23,10 @@ class ImapMailbox {
 		$this->password = $password;
 		$this->serverEncoding = $serverEncoding;
         $this->fetchAttachments = $fetchAttachments;
+
+		// setup timeouts
+		@imap_timeout(IMAP_OPENTIMEOUT, defined('IMAP_TIMEOUT') ? IMAP_TIMEOUT : $this->timeoutOpen);
+		@imap_timeout(IMAP_READTIMEOUT, defined('IMAP_TIMEOUT') ? IMAP_TIMEOUT : $this->timeoutRead);
 	}
 
 	/**

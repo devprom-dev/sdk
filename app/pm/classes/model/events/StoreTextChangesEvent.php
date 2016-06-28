@@ -1,6 +1,4 @@
 <?php
-
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 include_once SERVER_ROOT_PATH."cms/classes/ObjectFactoryNotificator.php";
 include_once SERVER_ROOT_PATH."ext/diff/finediff.php";
 
@@ -67,11 +65,11 @@ class StoreTextChangesEvent extends ObjectFactoryNotificator
         $editor->setObjectIt($object_it);
         $parser = $editor->getComparerParser();
 
-        $html2text = new html2text($parser->parse($was_text));
-        $was_text = preg_replace('/[\r\n]+/', PHP_EOL, $html2text->get_text());
+        $html2text = new \Html2Text\Html2Text($parser->parse($was_text));
+        $was_text = preg_replace('/[\r\n]+/', PHP_EOL, $html2text->getText());
 
-        $html2text = new html2text($parser->parse($now_text));
-        $now_text = preg_replace('/[\r\n]+/', PHP_EOL, $html2text->get_text());
+        $html2text = new \Html2Text\Html2Text($parser->parse($now_text));
+        $now_text = preg_replace('/[\r\n]+/', PHP_EOL, $html2text->getText());
 
 		$diff = new FineDiff(
 			$was_text,

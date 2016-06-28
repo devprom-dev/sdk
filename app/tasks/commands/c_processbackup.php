@@ -50,8 +50,6 @@ class ProcessBackup extends TaskCommand
 			}
 		}
 		
-		$backup_name = $backup->getBackupName();
-		
 		$backup->backup_database();
 		$backup->backup_htdocs();
 
@@ -63,11 +61,26 @@ class ProcessBackup extends TaskCommand
 			'Caption' => text(1173),
 			'BackupFileName' => $backup->getBackupFileName()
 		));
-		
+
+		$this->shrinkUndoLog();
 		$this->logFinish();
 	}
 	
 	function resetLicenseCache()
 	{
+	}
+
+	function shrinkUndoLog()
+	{
+		$log = $this->getLogger();
+
+		$interval = strtotime("-7 days");
+		$undoPath = trim(UndoLog::Instance()->getDirectory(),'\/').'/*';
+		foreach ( glob($undoPath) as $file ) {
+			if (filemtime($file) <= $interval ) {
+				if ( is_object($log) ) $log->info('Delete expired undo file: ' . $file);
+				unlink($file);
+			}
+		}
 	}
 }

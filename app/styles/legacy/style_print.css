@@ -85,3 +85,7 @@
 		width: 470px;
 	}
 }
+
+.well-traces {
+	display: none;
+}

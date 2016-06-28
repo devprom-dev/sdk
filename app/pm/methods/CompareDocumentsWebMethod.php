@@ -17,8 +17,7 @@ class CompareDocumentsWebMethod extends WebMethod
 		return text(1713);
 	}
 	
-	function getJSCall()
-	{
+	function getJSCall( $parms = array() ) {
 		return parent::getJSCall( array(
 				'class' => get_class($this->object)
 		));

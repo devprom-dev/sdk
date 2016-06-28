@@ -12,7 +12,7 @@ class FieldNumber extends Field
     	return number_format(floatval($this->getValue()), 0, ',', ' ');
 	}
       
- 	function draw()
+ 	function draw( $view = null )
 	{
 		if ( $this->readOnly() )
 		{

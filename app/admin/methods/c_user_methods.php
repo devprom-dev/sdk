@@ -61,13 +61,20 @@ class UnBlockUserWebMethod extends UserWebMethod
 	{
 		if ( !$this->hasAccess() ) return;
 
+		$user_it = getFactory()->getObject('User')->getExact($parms['user']);
+		if ( $user_it->getId() == '' ) return;
+
 		$list = getFactory()->getObject('BlackList');
-		$list_it = $list->getByRef('SystemUser', $parms['user']);
+		$list_it = $list->getByRef('SystemUser', $user_it->getId());
 
 		while( !$list_it->end() ) {
 			$list->delete($list_it->getId());
 			$list_it->moveNext();
 		}
+
+		$user_it->object->modify_parms($user_it->getId(), array (
+			'Login' => $user_it->getHtmlDecoded('Login')
+		));
 
 		$list = new Metaobject('cms_LoginRetry');
 		$list_it = $list->getByRef('SystemUser', $parms['user']);
@@ -80,8 +87,7 @@ class UnBlockUserWebMethod extends UserWebMethod
 
 	function hasAccess()
 	{
-		return getSession()->getUserIt()->IsAdministrator()
-			&& getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('User')); 
+		return getSession()->getUserIt()->IsAdministrator();
 	}
 }
 
@@ -132,10 +138,8 @@ class UserFilterStateWebMethod extends FilterWebMethod
 
 	function getValues()
 	{
-		global $model_factory;
-			
 		$values = array (
- 			'active' => translate('Активны'),
+ 			'nonblocked' => translate('Активны'),
  			'blocked' => translate('Заблокированы')
 		);
 
@@ -155,14 +159,7 @@ class UserFilterStateWebMethod extends FilterWebMethod
 	function getValue()
 	{
 		$value = parent::getValue();
-
-		if ( $value == '' )
-		{
-			return 'active';
-		}
-
+		if ( $value == '' ) return 'nonblocked';
 		return $value;
 	}
 }
-
-?>

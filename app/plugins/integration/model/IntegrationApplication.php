@@ -7,6 +7,6 @@ class IntegrationApplication extends PMObjectCacheable
 {
 	public function __construct()
 	{
-		parent::__construct('entity', new IntegrationApplicationRegistry());
+		parent::__construct('entity', new IntegrationApplicationRegistry($this));
 	}
 }

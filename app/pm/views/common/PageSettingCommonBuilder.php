@@ -21,7 +21,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         
         $setting->setGroup( 'none' );
         
-        $visible_attributes = array('UID', 'Caption', 'State', 'Assignee', 'TaskType', 'ChangeRequest', 'Progress', 'TraceTask');
+        $visible_attributes = array('UID', 'Caption', 'State', 'Assignee', 'TaskType', 'ChangeRequest');
 	    $visible_attributes[] = 'Priority';
 		
 		$setting->setVisibleColumns( $visible_attributes );
@@ -82,9 +82,10 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $object = getFactory()->getObject('Task');
  	    $visible = array_merge( 
  	    		array(
- 	    				'UID', 
- 	    				'Caption',
- 	    				'ChangeRequest'
+                    'UID',
+                    'Caption',
+                    'State',
+                    'ChangeRequest'
  	    		),
                 array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
                     return $object->IsAttributeVisible($value);
@@ -123,7 +124,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         // issuesboardcrossproject
         $setting = new ReportSetting('tasksboardcrossproject');
         $setting->setGroup( 'Assignee' );
-        $setting->setFilters( array('taskstate', 'iteration', 'tasktype', 'target') );
+        $setting->setFilters( array('taskstate', 'iteration', 'tasktype', 'target','usergroup') );
         $settings->add( $setting );
     }
 

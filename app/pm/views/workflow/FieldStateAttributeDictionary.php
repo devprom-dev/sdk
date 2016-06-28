@@ -5,6 +5,7 @@ class FieldStateAttributeDictionary extends FieldDictionary
 	function getOptions()
 	{
  		$object = $this->getObject();
+		if ( !is_object($object) ) return array();
  		
  		$system_attributes = array_merge(
 			$object->getAttributesByGroup('system'),

@@ -9,7 +9,7 @@ class ChangeLogVisibilityFilter extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
- 		return " AND t.VisibilityLevel <= 2 ";
+ 		return " AND t.VisibilityLevel <= 2 AND ObjectId IS NOT NULL ";
  	}
 }
 

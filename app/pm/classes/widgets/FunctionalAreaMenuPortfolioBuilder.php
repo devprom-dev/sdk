@@ -10,7 +10,9 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
  	    $menus = parent::build($set);
  	    
 		$items = array();
-		$items['issuesboard'] = $this->report->getExact('issuesboardcrossproject')->buildMenuItem();
+		$item = $this->report->getExact('issuesboardcrossproject')->buildMenuItem();
+		$item['order'] = 5;
+		$items['issuesboard'] = $item;
 		$items[] = $this->report->getExact('discussions')->buildMenuItem();
 		$item = $this->report->getExact('project-blog')->buildMenuItem();
 		$item['name'] = text(2000);

@@ -307,7 +307,7 @@ class WorkspaceService
 	private function loadWorkspace( $workspace_it )
 	{
 		$data = array(
-				'name' => $workspace_it->get('Caption'),
+				'name' => translate($workspace_it->get('Caption')),
 				'uid' => $workspace_it->get('UID'),
 				'icon' => $workspace_it->get('Icon')
 		);
@@ -344,6 +344,10 @@ class WorkspaceService
 					$item['name'] = $report_it->get('Caption');
 					$item['report'] = $report_it->getId();
 					$item['module'] = $report_it->get('Module');
+					if ( $item['icon'] == '' && $item['module'] != '' ) {
+						$module_it = $module->getExact($report_it->get('Module'));
+						$item['icon'] = $module_it->get('Icon');
+					}
 				}
 				else if ( $item_it->get('ModuleUID') != '' )
 				{
@@ -366,7 +370,7 @@ class WorkspaceService
 			
 			$data['menus'][] = array (
 					'uid' => $menu_it->get('UID'),
-					'name' => $menu_it->get('Caption'),
+					'name' => translate($menu_it->get('Caption')),
 					'items' => $items
 			);
 			

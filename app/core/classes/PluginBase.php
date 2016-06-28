@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include ('PluginSectionBase.php');
 include ('PluginAPISectionBase.php');
@@ -8,6 +10,8 @@ include ('PluginAdminSectionBase.php');
 
 class PluginBase
 {
+	protected $license;
+
     function __construct()
     {
     }
@@ -71,6 +75,14 @@ class PluginBase
  	}
 
 	function checkLicense() {
+		if ( $this->license == '' ) {
+			$license_it = getFactory()->getObject('LicenseState')->getAll();
+			$this->license = $this->buildLicense($license_it) ? 'Y' : 'N';
+		}
+		return $this->license == 'Y';
+	}
+
+	function buildLicense( $license_it ) {
 		return true;
 	}
 
@@ -80,5 +92,12 @@ class PluginBase
 
 	function getHeaderMenus() {
 		return array();
+	}
+
+	public function __sleep() {
+		return array('license');
+	}
+
+	public function __wakeup() {
 	}
 }

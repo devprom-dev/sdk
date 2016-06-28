@@ -6,7 +6,7 @@ class UserActiveRegistry extends ObjectRegistrySQL
 	{
 		return array_merge( parent::getFilters(), 
 				array (
-						new UserStatePredicate('active')
+						new UserStatePredicate('nonblocked')
 				)
 		);
 	}

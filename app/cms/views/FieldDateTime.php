@@ -22,7 +22,7 @@ class FieldDateTime extends Field
 		parent::setValue( $value );
 	}
 	
-    function draw()
+    function draw( $view = null )
 	{
 		if ( $this->readOnly() )
 		{

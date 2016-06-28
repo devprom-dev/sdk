@@ -11,7 +11,6 @@ class ProjectLeadsPersister extends ObjectSQLPersister
 			   "				    WHERE r.Participant = p.pm_ParticipantId " .
 			   "                      AND r.ProjectRole = l.pm_ProjectRoleId" .
 			   "				      AND l.ReferenceName = 'lead' ) " .
-			   "           AND p.IsActive = 'Y' ".
 			   "           AND p.Project = ".$this->getPK($alias).") Coordinators ";
  	    
  		$columns[] = $sql;

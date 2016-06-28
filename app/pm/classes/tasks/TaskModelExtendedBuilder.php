@@ -20,11 +20,14 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		$object->addPersister( new AttachmentsPersister(array('Attachment')) );
 		$object->addPersister( new WatchersPersister(array('Watchers')) );
 
-		$object->addAttribute('IssueTraces', 'TEXT', text(1902), false);
-		$object->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
-		$object->addPersister( new TaskIssueArtefactsPersister(array('IssueTraces','IssueDescription')) );
-		foreach ( array('ChangeRequest', 'IssueDescription') as $attribute ) {
-			$object->addAttributeGroup($attribute, 'source-issue');
+		if ( $object->getAttributeType('ChangeRequest') != '' ) {
+			$object->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
+			$object->addAttribute('IssueAttachment', 'REF_pm_AttachmentId', text(2123), false, false, '', 41);
+			$object->addAttribute('IssueTraces', 'TEXT', text(1902), false, false, '', 42);
+			$object->addPersister( new TaskIssueArtefactsPersister(array('IssueTraces','IssueDescription','IssueAttachment')) );
+			foreach ( array('ChangeRequest','IssueDescription','IssueAttachment','IssueTraces') as $attribute ) {
+				$object->addAttributeGroup($attribute, 'source-issue');
+			}
 		}
 
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);

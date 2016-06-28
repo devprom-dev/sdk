@@ -1,0 +1,14 @@
+<p>Hi!</p>
+<p>You request "<a href="{{ issueLink }}">{{ issue.caption }}</a>" have been updated by support engineer:</p>
+{{ changes | unescapeHtml | raw }}
+<br/>
+{% if comment != '' %}
+    <p><b>Comment from support engineer:</b></p>
+    <blockquote>{{ comment | unescapeHtml | raw }}</blockquote>
+    <br/>
+{% endif %}
+{% if version != '' %}
+    <p><b>Resolved in version:</b>{{ version|unescapeHtml }}</p>
+{% endif %}
+<hr>
+<p>You can see your request and leave your comments here: <a href="{{ issueLink }}">{{ issueLink }}</a></p>

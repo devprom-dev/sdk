@@ -8,7 +8,10 @@ class ParticipantRolesPersister extends ObjectSQLPersister
  	    
  		$columns = array();
 
- 		$columns[] = 
+		$columns[] =
+			"( SELECT r.IsReadonly FROM cms_User r WHERE r.cms_UserId = ".$alias.".SystemUser ) IsReadonly ";
+
+ 		$columns[] =
      		"( SELECT GROUP_CONCAT(CAST(r.pm_ParticipantRoleId AS CHAR))" .
      		"  	 FROM pm_ParticipantRole r " .
      		" 	WHERE r.Participant = ".$this->getPK($alias)." ) ParticipantRole ";

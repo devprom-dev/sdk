@@ -1,6 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
  
 define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
@@ -22,7 +21,7 @@ class WikiParser
  	
 	function __construct( $wiki_it ) 
 	{
- 		global $wiki_parser, $was_table, $header_row;
+ 		global $was_table, $header_row;
 
 		$this->setObjectIt($wiki_it);
 		$this->code_array = array();
@@ -113,10 +112,6 @@ class WikiParser
 		// render an url
 		$result = preg_replace_callback('/(\[url=([^\[]+)\s+text=([^\[]*)\]|\[url=([^\[]+)\])/im', preg_url_callback, $result);
 
-		$result = preg_replace_callback(
-			'/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im', 
-				preg_link_callback, $result);
-	
 		// render a note
 		$result = preg_replace('/(\[note=([^\[\]]+)\])(\r?\n*|$)/si', '<div class="alert alert-warning">\\2</div>', $result);
 		$result = preg_replace('/(\[important=([^\[\]]+)\])(\r?\n*|$)/si', '<div class="alert alert-error">\\2</div>', $result);
@@ -276,14 +271,14 @@ class WikiParser
 	
 	function parse_text_substr( $width ) 
 	{
-		$html2text = new html2text( $this->parse() ); 
-		return substr($html2text->get_text(), 0, $width).'...';
+		$html2text = new \Html2Text\Html2Text( $this->parse() );
+		return substr($html2text->getText(), 0, $width).'...';
 	}
 
 	function parse_text( $width ) 
 	{
-		$html2text = new html2text( $this->parse() ); 
-		return $html2text->get_text();
+		$html2text = new \Html2Text\Html2Text( $this->parse() );
+		return $html2text->getText();
 	}
 
 	function getFileByName( $caption ) 
@@ -503,24 +498,49 @@ class WikiParser
 	
 	function getUidInfo( $uid )
 	{
+		$parms = array();
+		if ( is_object($this->getObjectIt()) ) {
+			$documentVersion = $this->getObjectIt()->get('DocumentVersion');
+			if ( $documentVersion != '' ) {
+				$parms[] = new WikiPageBranchFilter($documentVersion);
+			}
+		}
 	    $uid_resolver = new ObjectUID;
      	$object_it = $uid_resolver->getObjectIt($uid);
-     	if ( is_object($object_it) && $object_it->getId() > 0 )
+
+     	if ( $object_it->get('UID') != '' )
      	{
-			$info = $uid_resolver->getUidInfo($object_it);
-     		$info['object_it'] = $object_it;
-     	    return $info;
+			// remap references inside baseline
+			$registry = $object_it->object->getRegistry();
+			$registry->setPersisters(array());
+
+			$parms[] = new FilterAttributePredicate('UID', $object_it->get('UID'));
+			$result_it = $registry->Query($parms);
+			if ( $result_it->getId() > 0 ) $object_it = $result_it;
      	}
-     	else 
+     	elseif ( $object_it->object->IsAttributeStored('UID') )
      	{
-     	    return array();
+			$registry = $object_it->object->getRegistry();
+			$registry->setPersisters(array());
+			$parms[] = new FilterAttributePredicate('UID', $uid);
+			$result_it = $registry->Query($parms);
+			if ( $result_it->getId() > 0 ) $object_it = $result_it;
      	}
+
+		if ( $object_it->getId() > 0 ) {
+			$info = $uid_resolver->getUidInfo($object_it,true);
+			$info['object_it'] = $object_it;
+			return $info;
+		}
+		else {
+			return array();
+		}
 	}
 	
     function parseUidCallback ( $match )
     {
      	$info = $this->getUidInfo( trim($match[2], '[]') );
-     	
+
     	if ( is_object($info['object_it']) ) {
      		$object_it = $info['object_it'];
      		$url = $this->getPageUrl($object_it);
@@ -556,13 +576,7 @@ class WikiParser
     	$uid_info = $this->getUidInfo($uid);
     	if ( count($uid_info) < 1 ) return $match[0];
 
-    	$url_parts['host'] = EnvironmentSettings::getServerName();
-    	$url_parts['scheme'] = EnvironmentSettings::getServerSchema();
-    	$url_parts['port'] = EnvironmentSettings::getServerPort();
-    	$url_parts['path'] = '/pm/'.$uid_info['project'].'/'.$uid; 
-    	$url_updated = $this->unparse_url($url_parts);
-    	
-    	return '<a class="uid" href="'.$url_updated.'">';
+    	return '<a class="uid" href="'.$uid_info['url'].'">';
     }
     
 	function parseIncludePageCallback( $match )
@@ -577,8 +591,9 @@ class WikiParser
 	 		return str_replace('%1', $match[1], text(1166));
 	 	}
 
-		$content = $object_it->getHtmlDecoded('Content');
-		if ( !$this->display_hints ) return $content;
+		$count = 0;
+		$content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded('Content'), -1, $count);
+		if ( $count > 0 || !$this->display_hints ) return $content;
 
 		if ( $content != '' ) {
 			$uid = new ObjectUID();
@@ -651,8 +666,8 @@ class WikiParser
 			return $image_name; 
 		}    	
     }
-    
-	function unparse_url($parsed_url) { 
+
+	function unparse_url($parsed_url) {
 	  $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : ''; 
 	  $host     = isset($parsed_url['host']) ? $parsed_url['host'] : ''; 
 	  $port     = $parsed_url['scheme'] == 'http' && $parsed_url['port'] == 80 
@@ -667,7 +682,68 @@ class WikiParser
 	  $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : ''; 
 	  $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : ''; 
 	  return "$scheme$user$pass$host$port$path$query$fragment"; 
-	} 
+	}
+
+	function parseImageSrcCallback( $match )
+	{
+		if ( preg_match('/\/file\//', $match[1], $result) ) {
+			// replace server name
+			$parts = parse_url($match[1]);
+			if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) ) {
+				if ( !preg_match('/file\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) ) return $match[0];
+				$file_class = $result[1];
+				$file_id = $result[2];
+			}
+			else {
+				$file_class = $result[1];
+				$file_id = $result[3];
+			}
+			if ( !class_exists(getFactory()->getClass($file_class)) ) return $match[0];
+
+			$object = getFactory()->getObject($file_class);
+			$object->addPersister(new EntityProjectPersister() );
+			$file_it = $object->getExact($file_id);
+			if ( $file_it->getId() == '' ) return $match[0];
+
+			if ( $this->getRequiredExternalAccess() )
+			{
+				$finfo = new \finfo(FILEINFO_MIME_TYPE);
+				foreach( $object->getAttributes() as $attribute => $data ) {
+					if ( in_array($object->getAttributeType($attribute), array('file','image')) ) {
+						$path = $file_it->getFilePath($attribute);
+						return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
+					}
+				}
+				return $match[0];
+			}
+			else
+			{
+				$parts['path'] = '/file/'.$file_class.'/'.$file_it->get('ProjectCodeName').'/'.$file_id;
+				$url = _getServerUrl().$parts['path'];
+				return ' src="'.$url.'"';
+			}
+		}
+
+		if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
+		{
+			$url_components = parse_url($match[1]);
+			$server_components = defined('PLANTUML_SERVER_URL') ? parse_url(PLANTUML_SERVER_URL) : parse_url('http://plantuml.com');
+
+			$url_components['scheme'] = $server_components['scheme'];
+			$url_components['host'] = $server_components['host'];
+			$url_components['port'] = $server_components['port'] != '' ? ':'.$server_components['port'] : '';
+
+			return ' src="'.$url_components['scheme'].'://'.
+			$url_components['host'].$url_components['port'].$url_components['path'].'?t='.time().'"';
+		}
+
+		// empty url
+		if ( $match[1] == '' ) {
+			return ' src="'._getServerUrl().'/images/warning.png"';
+		}
+
+		return $match[0];
+	}
  }
  
  function preg_font_callback ( $match )
@@ -911,70 +987,7 @@ class WikiParser
  	return '<div class="alert alert-error">'.trim($wiki_parser->important_array[$match[1] - 1], ' '.chr(10)).'</div>';
  } 
   
- function preg_image_src_callback( $match )
- {
- 	global $wiki_parser;
 
- 	if ( preg_match('/\/file\//', $match[1], $result) ) {
- 	    // replace server name
- 	    $parts = parse_url($match[1]);
- 	    if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) ) {
-			if ( !preg_match('/file\/([^\/]+)\/([\d]+).*/', $parts['path'], $result) ) return $match[0];
-			$file_class = $result[1];
-			$file_id = $result[2];
-		}
-		else {
-			$file_class = $result[1];
-			$file_id = $result[3];
-		}
-		if ( getFactory()->getClass($file_class) == '' ) return $match[0];
-
-		$object = getFactory()->getObject($file_class);
-		$object->addPersister(new EntityProjectPersister() );
-		$file_it = $object->getExact($file_id);
-		if ( $file_it->getId() == '' ) return $match[0];
-
-		if ( $wiki_parser->getRequiredExternalAccess() )
-		{
-			$finfo = new \finfo(FILEINFO_MIME_TYPE);
-			foreach( $object->getAttributes() as $attribute => $data ) {
-				if ( in_array($object->getAttributeType($attribute), array('file','image')) ) {
-					$path = $file_it->getFilePath($attribute);
-					return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
-				}
-			}
-			return $match[0];
-		}
-		else
-		{
-			$parts['path'] = '/file/'.$file_class.'/'.$file_it->get('ProjectCodeName').'/'.$file_id;
-			$url = _getServerUrl().$parts['path'];
-			return ' src="'.$url.'"';
-		}
- 	}
-
- 	if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
- 	{
- 		$url_components = parse_url($match[1]);
- 		$server_components = defined('PLANTUML_SERVER_URL') ? parse_url(PLANTUML_SERVER_URL) : parse_url('http://plantuml.com');
- 		
- 		$url_components['scheme'] = $server_components['scheme']; 
- 		$url_components['host'] = $server_components['host'];
- 		$url_components['port'] = $server_components['port'] != '' ? ':'.$server_components['port'] : '';
- 		
- 		return ' src="'.$url_components['scheme'].'://'.
- 				$url_components['host'].$url_components['port'].$url_components['path'].'?t='.time().'"';
- 	}
- 		
-  	// empty url
- 	if ( $match[1] == '' ) {
- 	    return ' src="'._getServerUrl().'/images/warning.png"';
- 	}
- 	
- 	return $match[0];
- }
- 
-  
  // PlantUML injection
 function encodep($text) { 
      //$data = utf8_encode($text); 
@@ -1031,21 +1044,4 @@ function encode64($c) {
      } 
      return $str; 
 }  
- 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////
- function preg_link_callback( $match )
- {
- 	$context = $match[1].$match[5];
- 	if ( $context == '=""' || $context == '="">' ) return $match[0];
- 	
- 	$display_name = trim($match[2], "\.\,\;\:");
- 	
- 	$shrink_length = 80;
- 	if ( strlen($display_name) > $shrink_length )
- 	{
- 		$display_name = substr($display_name, 0, $shrink_length/2).'[...]'.
- 			substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
- 	}
- 	
- 	return $match[1].'<a href="'.trim($match[2], "\.\,\;\:").'">'.$display_name.'</a>'.$match[5];
- }
+

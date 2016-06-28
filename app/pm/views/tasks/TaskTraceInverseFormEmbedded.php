@@ -60,9 +60,13 @@ class TaskTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  	function getActions( $object_it, $item )
  	{
  		$task_it = $this->getTargetIt( $object_it );
- 		$form = new TaskForm($task_it->object);
- 		$form->show($task_it);
+ 		$form = new TaskForm(getFactory()->getObject('Task'));
+		$form->show($task_it);
  		$form->getRenderParms();
  		return $form->getActions();
  	}
+
+	function getListItemsAttribute() {
+		return 'Task';
+	}
 }

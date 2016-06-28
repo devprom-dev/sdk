@@ -71,8 +71,9 @@ class CoPage extends Page
 			$menus[] = array (
 				'class' => 'header_popup',
 				'button_class' => 'btn-warning',
-				'title' => translate('Создать'),
-				'items' => $actions
+				'icon' => 'icon-plus icon-white',
+				'items' => $actions,
+				'id' => 'navbar-quick-create'
 			);
 		}
  		
@@ -113,6 +114,13 @@ class CoPage extends Page
 		}
 
 		$menus[] = array (
+			'button_class' => 'btn-navbar btn-link',
+ 			'icon' => 'icon-white icon-question-sign',
+			'id' => 'menu-guide',
+			'items' => $this->getHelpActions()
+		);
+
+		$menus[] = array (
 			'class' => 'header_popup',
 			'title' => $user_it->getDisplayName(),
 			'items' => $actions
@@ -120,7 +128,28 @@ class CoPage extends Page
 
 		return $menus;
  	}
- 	
+
+	function getHelpActions()
+	{
+		$docs_url = defined('HELP_DOCS_URL') ? HELP_DOCS_URL : 'http://devprom.ru/docs';
+		return array_merge(
+			array(
+				array (
+					'name' => text('guide.club'),
+					'url' => 'http://club.devprom.ru',
+					'target' => '_blank'
+				),
+				array(),
+				array (
+					'name' => text('guide.userdocs'),
+					'url' => $docs_url,
+					'target' => '_blank'
+				)
+			),
+			parent::getHelpActions()
+		);
+	}
+
  	function getTabs()
  	{
  	    if ( getSession()->getUserIt()->getId() < 1 ) return array();

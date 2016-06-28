@@ -94,7 +94,7 @@
         			<tr><td valign=top>
         				<table width=100% cellpadding=0 cellspacing=0>
 							<tr>
-								<td style="background:#eaeaea;border:.5pt solid #d5d5df;height:24">
+								<td style="background:#eaeaea;border:1px solid #d5d5df;height:24px">
 									<table width=100%>
 										<tr>
             								<td align=center>Название</td>
@@ -223,7 +223,7 @@
         			<input type="hidden" name="oldordernum" value="<? echo $it->getOrderNum(); ?>">
         			<input type="hidden" name="newid" value="<? echo $it->getId(); ?>">
         			<input type="hidden" name="newordernum" value="<? echo $this->it_reorder->getOrderNum(); ?>">
-        			<input type="submit" value="с" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
+        			<input type="submit" value="с" style="font-family:wingdings;color:gray;width:13pt;height:13pt;cursor:hand;">
         		</form>
     			<?
     			}
@@ -241,7 +241,7 @@
         			<input type="hidden" name="oldordernum" value="<? echo $this->it_reorder->getOrderNum(); ?>">
         			<input type="hidden" name="newid" value="<? echo $this->it_reorder->getId(); ?>">
         			<input type="hidden" name="newordernum" value="<? echo $it->getOrderNum(); ?>">
-        			<input type="submit" value="т" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
+        			<input type="submit" value="т" style="font-family:wingdings;color:gray;width:13pt;height:13pt;cursor:hand;">
         		</form>
     			<?
     			}
@@ -274,7 +274,7 @@
                     			<form action="<? echo $this->getUrl(); ?>" method="post">
                     				<input type="hidden" name="<? echo $this->object->getClassName(); ?>action" value="list.delete">
                     				<input type="hidden" name="<? echo $this->object->getClassName().'Id'; ?>" value="<? echo $it->getId(); ?>">
-                    				<input style="width:40pt;" type="submit" value="Удал." onclick="javascript: return confirm('Вы действительно хотите удалить запись?');">
+                    				<input style="width:40pt;" type="submit" value="Удал." onclick="return confirm('Вы действительно хотите удалить запись?');">
                     			</form>
 							</td>
 						</tr>
@@ -670,6 +670,10 @@
 
 		return $offset;
 	}
+
+	 function setOffset( $offset ) {
+		 $_REQUEST[$this->offset_name] = $offset;
+	 }
 	
 	function getId()
 	{
@@ -723,7 +727,7 @@
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToDisplayOperations()
 	{
-		return getFactory()->getAccessPolicy()->can_modify($this->getObject());
+		return true;
 	}
 
 	//---------------------------------------------------------------------------------------------------------
@@ -860,7 +864,8 @@
 		// общее число страниц
         $pages = $this->getPages();
         $offset_page = max(1, $this->offset / $this->getMaxOnPage() - 3);
-        
+
+		echo '<div class="pull-left hover-holder">';
         echo '<div class="pull-left pagination">';
 		
         echo '<ul>';
@@ -898,7 +903,10 @@
        	echo '</ul></div>';
        	
         echo '<div class="pull-left pagination pagination-total">';
+			$script = "javascript: filterLocation.setup('rows=all',0);";
+			echo '<a onclick="'.$script.'" class="dashed dashed-hidden">' .text(2159).'</a> ';
 	        echo preg_replace('/%1/', $this->getIteratorRef()->count(), text(1884));
+		echo '</div>';
 		echo '</div>';
 	}
 	
@@ -1286,16 +1294,6 @@
 									$this->drawCell( $it, $attr );
 								echo '</td>';
 							}
-						}
-						
-						if($this->IsNeedToDisplayOperations()) 
-						{
-							$width = $this->getColumnWidth( 'Actions' );
-							?>
-							<td class=action_cell width="<?php echo $width?>">
-								<? $this->drawItemActions($user_columns[$j], $it->getCurrentIt()) ?>
-							</td>
-							<?
 						}
 						?>
 					</tr>

@@ -39,8 +39,7 @@ class RequestBusinessActionGetInWorkImplementation extends BusinessActionWorkflo
  	        if ( $state_it->getId() > 0 )
  	        {
 				$service = new WorkflowService($request);
-				
-				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'), $this->getDisplayName());
+				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'));
  	        }
  	        else
  	        {

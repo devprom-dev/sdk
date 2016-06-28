@@ -2,7 +2,7 @@
 
 class MailerSettingsRegistry extends ObjectRegistrySQL
 {
-    function getQueryClause( $sql ) {
+    function getQueryClause() {
         return " (SELECT 1 entityId, 1 OrderNum) ";
     }
 }

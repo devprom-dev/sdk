@@ -2,7 +2,18 @@
 
 class FieldHierarchySelector extends FieldAutoCompleteObject
 {
-    function draw()
+	private $treeObject = null;
+
+	function __construct( $object, $attributes = null ) {
+		parent::__construct($object, $attributes);
+		$this->setTreeObject($object);
+	}
+
+	function setTreeObject( $object ) {
+		$this->treeObject = $object;
+	}
+
+    function draw( $view = null )
     {
     	global $tabindex;
 
@@ -14,6 +25,10 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 		}
 		
 		$url = getSession()->getApplicationUrl().'treemodel/';
+		$class = get_class($this->treeObject);
+		if ( $this->getCrossProject()) {
+			$class .= '?cross';
+		}
 		
     	$script = "bindFindInTreeField('.find-in-tree > .btn[field-id=".$this->getId()."]', '".$url."'); return false;";
     	
@@ -30,7 +45,7 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 				echo '</button>';
 			echo '</div>';
 		echo '</div>';
-		echo '<span class="input-block-level well well-text find-in-tree-area" style="display:none;" field-class="'.get_class($this->getObject()).'" field-id="'.$this->getId().'" field-name="'.$this->getName().'">';
+		echo '<span class="input-block-level well well-text find-in-tree-area" style="display:none;" field-class="'.$class.'" field-id="'.$this->getId().'" field-name="'.$this->getName().'">';
 			echo '<ul class="filetree" style="width:100%;">'.text(1708).'</ul>';
 			echo '<div style="clear:both;"></div>';
 		echo '</span>';

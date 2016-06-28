@@ -23,16 +23,14 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 	public function getPersisters()
 	{
 		return array_merge(
-				array ( new ChangeLogGranularityPersister() ),
-				parent::getPersisters()
+			array ( new ChangeLogGranularityPersister() )
 		);
 	}
 
 	public function getSorts()
 	{
 		return array_merge(
-				array ( new SortAttributeClause('RecordCreated') ),
-				parent::getSorts()
+			array ( new SortChangeLogRecentClause() )
 		);
 	}
 	
@@ -48,6 +46,10 @@ class ChangeLogGranularityRegistry extends ChangeLogRegistry
 	{
 		$this->granularity = $granularity;
 	}
-	
+
+	public function getSelectClause( $alias, $select_all = true ) {
+		return parent::getSelectClause($alias, false);
+	}
+
 	private $granularity = 1;
 }

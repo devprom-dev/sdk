@@ -13,8 +13,6 @@ class UpdateApplication extends MaintenanceCommand
 
 	function create()
 	{
-		global $plugins;
-
 		$strategy = new StrategyUpdate($_REQUEST['parms']);
 		
 	    $this->updateCode($strategy);
@@ -28,7 +26,7 @@ class UpdateApplication extends MaintenanceCommand
 	    $clear_cache_action->install();
 
 		// rebuild cached list of plugins
-		$plugins->buildPluginsList();
+		getFactory()->getPluginsManager()->buildPluginsList();
 
 	    // go to the next step
 	    $strategy->release();

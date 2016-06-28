@@ -14,6 +14,11 @@ class RequestIterationHandler extends SystemTriggersBase
 	    if ( !array_key_exists('Iterations', $data) ) return;
 
 	    $service = new StoreMetricsService();
-    	$service->storeIssueMetrics($object_it);
+    	$service->storeIssueMetrics(
+			$object_it->object->getRegistry(),
+			array (
+				new FilterInPredicate($object_it->getId())
+			)
+		);
 	}
 }

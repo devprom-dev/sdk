@@ -10,9 +10,7 @@ class ObjectUID
  	
  	private $object = null;
  	
-// 	private static $terminal_states = array();
- 	
- 	function __construct( $baseline_id = '', $object = null ) 
+ 	function __construct( $baseline_id = '', $object = null )
  	{
  		$this->setBaseline( $baseline_id );
  		
@@ -25,6 +23,7 @@ class ObjectUID
  		    'KnowledgeBaseTemplate' => 'K',
  		    'HelpPage' => 'D',
  			'pm_Test' => 'E',
+			'pm_TestCaseExecution' => 'E',
  			'pm_Artefact' => 'A',
  			'TestScenario' => 'S',
  			'TestingTemplate' => 'S',
@@ -37,7 +36,8 @@ class ObjectUID
  			'Comment' => 'O',
  			'pm_TestPlan' => 'L',
  			'pm_Meeting' => 'G',
- 			'pm_SubversionRevision' => 'C'
+ 			'pm_SubversionRevision' => 'C',
+			'pm_ReviewRequest' => 'V'
  		);
  		
  		$this->server_url = EnvironmentSettings::getServerUrl().'/pm/';
@@ -124,15 +124,22 @@ class ObjectUID
  	function getObjectUid( $object_it ) 
  	{
  	    if ( $object_it->getId() < 1 ) return '';
- 	    
+
  		$class_name = $this->getClassName($object_it);
- 		
  		switch ( $class_name )
  		{
+			case 'pm_Project':
+				return $object_it->get('CodeName');
+			case 'pm_TestCaseExecution':
+				return $this->getObjectUidInt($class_name, $object_it->get('Test'));
  			default:
- 				return $this->map[$this->getClassName($object_it)].'-'.$object_it->getId();	
+ 				return $this->getObjectUidInt($class_name, $object_it->getId());
  		}
  	}
+
+	function getObjectUidInt( $className, $id ) {
+		return $this->map[$className].'-'.$id;
+	}
 
 	function getProject( $object_it )
 	{
@@ -191,7 +198,7 @@ class ObjectUID
  		return array_search(strtoupper($type), $this->map);
  	}
  	
- 	function getObjectIt( $uid ) 
+ 	function getObjectIt( $uid, $parms = array() )
  	{
  		list($type, $object_id) = preg_split('/-/', $uid);
  		$class = array_search(strtoupper($type), $this->map);
@@ -206,57 +213,57 @@ class ObjectUID
  		
  		$object = getFactory()->getObject($class);
 		$registry = $object->getRegistry();
-		$registry->setPersisters(array());
+		if ( $object instanceof WikiPage ) {
+			$registry->setPersisters(array());
+		}
 
 		return $object_id > 0
-			? $registry->Query(array(new FilterInPredicate($object_id)))
+			? $registry->Query(
+					array_merge(
+						$parms, array(new FilterInPredicate($object_id))
+					)
+				)
 			: $object->getEmptyIterator();
  	}
 
- 	function drawUidNameIcon( $object_it ) {
- 	?>
- 		<table cellpadding=0 cellspacing=0 width=100%>
- 			<tr>
- 				<td align=right><? $this->drawUidIcon($object_it) ?></td>
- 			</tr>
- 		</table>
- 	<?
- 	}
-
- 	function getUidIcon( $object_it ) 
+ 	function getUidIcon( $object_it )
  	{
  		return $this->getUidIconGlobal( $object_it );
  	}
 
- 	function getUIDInfo( $object_it )
+ 	function getUIDInfo( $object_it, $caption = false )
  	{
  	    if ( !$this->hasUid( $object_it ) ) return array();
 
 		$this->setObject($object_it->object);
 		
-	    $text = $this->getObjectUid($object_it);
+	    $uid = $this->getObjectUid($object_it);
 
 		$self_project_name = $this->getProject( $object_it );
 
 		$url = $this->server_url.$self_project_name;
-		
+
 		if ( !$object_it->object instanceof Project )
 		{
-			$url .= '/'.$text; 
+			$url .= '/'.$uid;
 		}
-		
-		return array(
-            'uid' => $text,
+
+		$result = array(
+            'uid' => $object_it->object->getAttributeType('UID') != 'integer' && $object_it->get('UID') != '' ? $object_it->getHtmlDecoded('UID') : $uid,
             'project' => $self_project_name,
-            'completed' => $object_it->get('StateTerminal') == 'Y', //is_array($terminal_states) && in_array( $object_it->get('State'), $terminal_states),
+            'completed' => $object_it->get('StateTerminal') == 'Y',
 			'state_name' => $object_it->get('StateName'),
             'url' => $url,
             'alien' => $self_project_name != '' && $object_it->get('VPD') != getSession()->getProjectIt()->get('VPD'),
-            'caption' => $object_it->getDisplayName(),
-			'tooltip-url' => $self_project_name == '' 
+			'tooltip-url' => $self_project_name == ''
 				? '/tooltip/'.get_class($object_it->object).'/'.$object_it->getId() 
 				: '/pm/'.$self_project_name.'/tooltip/'.get_class($object_it->object).'/'.$object_it->getId()
 		);
+		if ( $caption ) {
+			$result['caption'] = $object_it->getDisplayName();
+		}
+
+		return $result;
  	}
  	
  	function getUidTitle( $object_it )
@@ -279,13 +286,13 @@ class ObjectUID
  		    return $result;
  		}
  		
- 		$info = $this->getUIDInfo( $object_it );
+ 		$info = $this->getUIDInfo( $object_it, true );
  		
         $text = '['.$info['uid'].'] ';
 		
- 		if ( $info['alien'] ) $text .= ' {'.$info['project'].'} ';
+ 		if ( $info['alien'] && $object_it->object->getEntityRefName() != 'pm_Project' ) $text .= ' {'.$info['project'].'} ';
 
- 		$text .= $object_it->getDisplayName();
+ 		$text .= $info['caption'];
  		
  		return $text;
  	}
@@ -312,6 +319,9 @@ class ObjectUID
 		{
 			case 'Comment':
 				break;
+			case 'pm_Project':
+				$need_project = false;
+				break;
 			default:
 			    $title = str_replace('"', "'", html_entity_decode($object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 				break;
@@ -323,27 +333,45 @@ class ObjectUID
 		
 		if ( $info['completed'] ) $text = '<strike>'.$text.'</strike>';
 
+		if ( $need_project && $info['alien'] ) $text = $info['project'].":".$text;
+
 		$text = '['.$text.']';
 		
- 		if ( $need_project && $info['alien'] ) $text .= ' {'.$info['project'].'}';
- 		        
+
         if ( $this->getBaseline() != '' )
         {
         	$info['tooltip-url'] .= '?baseline='.$this->getBaseline();
         	
         	$info['url'] .= strpos($info['url'], '?') > 0 ? '&baseline='.$this->getBaseline() : '?baseline='.$this->getBaseline();
         }
-        
+
+		if ( $object_it->object instanceof TestCaseExecution ) {
+			$info['url'] .= strpos($info['url'], '?') > 0 ? '&case='.$object_it->getId() : '?case='.$object_it->getId();
+		}
+
         $html = '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
         
-        if ( $object_it->object instanceof TestExecution )
+        if ( $object_it->object instanceof TestExecution || $object_it->object instanceof TestCaseExecution )
         {
-        	$class = $object_it->get('ResultReferenceName') == 'failed' 
+        	$class = $object_it->get('ResultReferenceName') == 'failed'
  				? 'label-important' 
  				: ($object_it->get('ResultReferenceName') == 'succeeded' ? 'label-success' : 'label-warning');
         	$html = '<span class="label '.$class.'">'.$html.'</span>';
         }
-        
+
+		if ( $object_it->object instanceof ReviewRequest )
+		{
+			$class = $object_it->get('State') == 'submitted'
+				? 'label-success' : ($object_it->get('State') == 'discarded' ? 'label-inverse' : '');
+			$html = '<span class="label '.$class.'">'.$html.'</span>';
+		}
+		if ( $object_it->object instanceof SubversionRevision && $object_it->get('ReviewState') != '' )
+		{
+			$class = $object_it->get('ReviewState') == 'submitted'
+				? 'label-success' : ($object_it->get('ReviewState') == 'discarded' ? 'label-inverse' : '');
+			$html = '<span class="label '.$class.'">'.$html.'</span>';
+		}
+
         return $html;
 	}
 	
@@ -362,7 +390,7 @@ class ObjectUID
 		if ( !is_object($object_it) ) return '';
 		if ( $object_it->getId() == '' ) return '';
  		$text = $this->getUidIcon( $object_it );
- 		$text .= ' '.$object_it->getWordsOnlyValue($object_it->getDisplayName(), $words);
+ 		$text .= ' '.$object_it->getWordsOnlyValue(html_entity_decode($object_it->getDisplayName()), $words);
  		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')'; 
 		return $text;
  	}

@@ -22,5 +22,5 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
 		    $object->addPersister( new RequestSpentTimePersister(array('Spent')) );
 		}
 		$object->addPersister( new RequestQuestionsPersister(array('Question')) );
-    }
+	}
 }

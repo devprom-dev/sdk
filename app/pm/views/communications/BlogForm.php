@@ -35,25 +35,15 @@ class BlogForm extends PMPageForm
         $actions = array();
 
         if ( !is_object($page_it) ) $page_it = $this->getObjectIt();
-
         if ( !is_object($page_it) ) return $actions;
 
-        if( getFactory()->getAccessPolicy()->can_modify($page_it) && !$this->getEditMode() )
+        $method = new ObjectModifyWebMethod($page_it);
+        if( $method->hasAccess() && !$this->getEditMode() )
         {
             array_push($actions, array( 
                 'name' => translate('Редактировать'),
-                'url' => $page_it->getEditUrl(),
+                'url' => $method->getJSCall(),
                 'type' => 'button'
-            ));
-        }
-
-        if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) )
-        {
-            if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-            
-            array_push($actions, array( 
-                'name' => text(1359),
-                'url' => $this->object->getPageName() 
             ));
         }
 
@@ -80,6 +70,14 @@ class BlogForm extends PMPageForm
         return $editor;
     }
 
+    function validateInputValues( $id, $action )
+    {
+        if ( $_REQUEST['Blog'] == '' ) {
+            $_REQUEST['Blog'] = $project_it = getFactory()->getObject('Project')->getExact($_REQUEST['Project'] )->get('Blog');
+        }
+        return parent::validateInputValues( $id, $action );
+    }
+
     function getFieldValue( $field )
     {
         global $part_it;
@@ -96,21 +94,20 @@ class BlogForm extends PMPageForm
                 break;
 
             case 'ContentEditor':
-
                 return get_class( $this->getEditor() );
                 
             case 'Blog':
-                
-                $session = getSession();
-                
-                $project_it = $session->getProjectIt();
-                
+                $projectId = parent::getFieldValue('Project');
+                if ( $projectId == '' ) {
+                    $project_it = getSession()->getProjectIt();
+                }
+                else {
+                    $project_it = getFactory()->getObject('Project')->getExact($projectId);
+                }
                 return $project_it->get('Blog');
-                
+
             case 'Content':
-                
-                if ( $_REQUEST['from'] == 'requests' )
-                {
+                if ( $_REQUEST['from'] == 'requests' ) {
                     return $this->getReleaseNotes();
                 }
                 
@@ -125,7 +122,7 @@ class BlogForm extends PMPageForm
         global $model_factory;
         
 		$hashids = $model_factory->getObject('HashIds');
-		$ids = $hashids->getIds( $_REQUEST['items'] );
+		$ids = $hashids->getHashIds( $_REQUEST['items'] );
 		
  		$issue_type = $model_factory->getObject('pm_IssueType');
  		$issue_type_it = $issue_type->getByRef('ReferenceName', 'bug');
@@ -262,19 +259,19 @@ class BlogForm extends PMPageForm
         switch ( $name )
         {
             case 'Caption':
-
                 $field->setTabIndex( 1 );
-
                 $field->setId( $field->getId().$this->form_index );
-                
+                if ( !$this->getEditMode() ) {
+                    $field->setReadonly( true );
+                }
                 break;
 
             case 'Content':
-
                 $field->setTabIndex( 3 );
-                
                 $field->setId( $field->getId().$this->form_index );
-
+                if ( !$this->getEditMode() ) {
+                    $field->setReadonly( true );
+                }
                 break;
                 
             case 'AuthorId':
@@ -318,7 +315,7 @@ class BlogForm extends PMPageForm
      				is_object($this->object_it) ? 
     					$field->setObjectIt( $this->object_it ) : 
     						$field->setObject( $this->getObject() );
-    						
+
     			    $field->setMode( WIKI_MODE_INPLACE_INPUT );
 			    }
 			    else
@@ -341,7 +338,7 @@ class BlogForm extends PMPageForm
                 $field->setAttachmentsField( new FieldBlogAttachments(
                         is_object($this->object_it) ? $this->object_it : $this->object
                 ));
-                
+
         		if ( $this->getEditMode() )
 				{
 					$field->setHasBorder( false );
@@ -351,7 +348,8 @@ class BlogForm extends PMPageForm
 				{
     				$field->setCssClassName( 'wysiwyg-text' );
 				}
-
+                $field->setToolbar(WikiEditorBase::ToolbarFull);
+                $field->setRows(25);
                 return $field;
                 
             case 'AuthorId':
@@ -364,10 +362,10 @@ class BlogForm extends PMPageForm
     
     function getRenderParms()
     {
-        return array_merge( parent::getRenderParms(), 
+        return array_merge( parent::getRenderParms(),   
         		array (
 		            'comments' => new PageSectionComments( $this->getObjectIt() ),
-        			'comments_count' => is_object($this->getObjectIt()) ? getFactory()->getObject('Comment')->getCount($this->getObjectIt()) : 0,
+        			'comments_count' => is_object($this->getObjectIt()) ? getFactory()->getObject('Comment')->getCountForIt($this->getObjectIt()) : 0,
 		            'index' => $this->form_index
         		)
         );

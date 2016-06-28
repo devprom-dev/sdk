@@ -49,7 +49,7 @@ class ActuateWikiLinkWebMethod extends WebMethod
 		}
 	}
 	
-	function getJSCall() 
+	function getJSCall( $parms = array() )
 	{
 		return parent::getJSCall( array( 
 			'LinkId' => $this->object_it->getId(),

@@ -11,45 +11,42 @@ class StoreMetricsService
  	{
  		$this->storeProjectMetrics($project_it);
 
-		$this->storeFeatureMetrics(
-				getFactory()->getObject('Feature')->getRegistry()->Query(
-		 				array (
-		 						new \FilterVpdPredicate($project_it->get('VPD')),
-		 						new \FeatureMetricsPersister()
-		 				)
- 				)
-		 	);
+		$registry = getFactory()->getObject('Request')->getRegistry();
+ 		$this->storeIssueMetrics(
+			$registry,
+			array (
+				new \FilterVpdPredicate($project_it->get('VPD')),
+				new \StatePredicate('terminal'),
+				new \FilterAttributePredicate('DeliveryDate', 'none'),
+				new \RequestMetricsPersister()
+			)
+		);
+		$this->storeIssueMetrics(
+			$registry,
+			array (
+				new \FilterVpdPredicate($project_it->get('VPD')),
+				new \StatePredicate('notresolved'),
+				new \RequestMetricsPersister()
+			)
+		);
+ 		$this->storeIssueMetrics(
+			$registry,
+			array (
+				new \FilterVpdPredicate($project_it->get('VPD')),
+				new \StatePredicate('notresolved'),
+				new \RequestDependencyFilter('duplicates,implemented,blocked'),
+				new \RequestMetricsPersister()
+			)
+		);
 
-		$request = getFactory()->getObject('Request');
- 		$this->storeIssueMetrics( 
-				$request->getRegistry()->Query(
-		 				array (
-		 						new \FilterVpdPredicate($project_it->get('VPD')),
-		 						new \StatePredicate('terminal'),
-		 						new \FilterAttributePredicate('DeliveryDate', 'none'),
-		 						new \RequestMetricsPersister()
-		 				)
- 				)
-		 	);
-		$this->storeIssueMetrics( 
-				$request->getRegistry()->Query(
-		 				array (
-		 						new \FilterVpdPredicate($project_it->get('VPD')),
-		 						new \StatePredicate('notresolved'),
-		 						new \RequestMetricsPersister()
-		 				)
- 				)
-		 	);
- 		$this->storeIssueMetrics( 
-				$request->getRegistry()->Query(
-		 				array (
-		 						new \FilterVpdPredicate($project_it->get('VPD')),
-		 						new \StatePredicate('notresolved'),
-		 						new \RequestDependencyFilter('duplicates,implemented,blocked'),
-		 						new \RequestMetricsPersister()
-		 				)
- 				)
-		 	);
+		$registry = getFactory()->getObject('Feature')->getRegistry();
+		$this->storeFeatureMetrics(
+			$registry,
+			array (
+				new \FilterVpdPredicate($project_it->get('VPD')),
+				new \FeatureMetricsPersister()
+			)
+		);
  	}
  	
  	function storeProjectMetrics( $project_it )
@@ -84,7 +81,7 @@ class StoreMetricsService
 			
 			$velocity = $project_it->getVelocityDevider();
  		}
-		
+
  		$stage = getFactory()->getObject('Stage');
  		$stage_aggregate = new \AggregateBase( 'Project', 'EstimatedFinishDate', 'MAX' );
 		$stage->addAggregate($stage_aggregate);
@@ -104,33 +101,35 @@ class StoreMetricsService
         }
  	}
  	
- 	function storeFeatureMetrics( $feature_it )
+ 	function storeFeatureMetrics( $registry, $queryParms )
  	{
-        getFactory()->resetCachedIterator($feature_it->object);
- 		$feature_it->object->setNotificationEnabled(false);
+		$registry->setPersisters(array());
+		$feature_it = $registry->Query($queryParms);
 
+        getFactory()->resetCachedIterator($feature_it->object);
  		while( !$feature_it->end() )
  		{
-	 		$feature_it->object->modify_parms(
-	 				$feature_it->getId(),
+			$registry->Store(
+	 				$feature_it,
 	 				array (
-	 						'Estimation' => $feature_it->get('MetricEstimation'),
-	 						'EstimationLeft' => $feature_it->get('MetricEstimationLeft'),
-	 						'Workload' => $feature_it->get('MetricWorkload'),
-	 						'StartDate' => $feature_it->get('MetricStartDate'),
-	 						'DeliveryDate' => $feature_it->get('MetricDeliveryDate'),
-	 						'RecordModified' => $feature_it->get('RecordModified')
+						'Estimation' => $feature_it->get('MetricEstimation'),
+						'EstimationLeft' => $feature_it->get('MetricEstimationLeft'),
+						'Workload' => $feature_it->get('MetricWorkload'),
+						'StartDate' => $feature_it->get('MetricStartDate'),
+						'DeliveryDate' => $feature_it->get('MetricDeliveryDate'),
+						'RecordModified' => $feature_it->get('RecordModified')
 	 				)
 	 		);
  			$feature_it->moveNext();
  		}
  	}
  	
- 	function storeIssueMetrics( $issue_it )
+ 	function storeIssueMetrics( $registry, $queryParms  )
  	{
-        getFactory()->resetCachedIterator($issue_it->object);
-		$issue_it->object->setNotificationEnabled(false);
+		$registry->setPersisters(array());
+		$issue_it = $registry->Query($queryParms);
 
+        getFactory()->resetCachedIterator($issue_it->object);
  		while( !$issue_it->end() )
  		{
 			$parms = array();
@@ -151,7 +150,7 @@ class StoreMetricsService
 
             if ( count($parms) > 0 ) {
                 $parms['RecordModified'] = $issue_it->get('RecordModified');
-		 		$issue_it->object->modify_parms( $issue_it->getId(),$parms );
+				$registry->Store( $issue_it, $parms );
  			}
  			$issue_it->moveNext();
  		}

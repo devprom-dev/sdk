@@ -2,6 +2,7 @@
 
 define('ROLE_GUEST', 0);
 define('ROLE_LINKEDGUEST', -1);
+define('ROLE_READONLY', -2);
 
 define('CHECK_ALL', 0);
 define('CHECK_ROLE_BASED', 1);
@@ -25,7 +26,6 @@ class AccessPolicyProject extends AccessPolicyBase
  		if ( is_object($this->access_it) ) return;
  		
  		$permissions = $this->getCacheService()->get('permissions');
- 		
  		if ( is_array($permissions) )
  		{
  			$this->base_role_map = $permissions['roles_map'];
@@ -57,11 +57,11 @@ class AccessPolicyProject extends AccessPolicyBase
  		$role = getFactory()->getObject('pm_ProjectRole');
 
 		$this->role_it = $role->getAll();
-		
+		$this->base_role_map[ROLE_READONLY] = ROLE_READONLY;
+
 		while ( !$this->role_it->end() )
 		{
 			$this->base_role_map[$this->role_it->getId()] = $this->role_it->get('ProjectRoleBase');
-
 			switch ( $this->role_it->get('ReferenceName') )
  			{
  				case 'lead':
@@ -91,40 +91,55 @@ class AccessPolicyProject extends AccessPolicyBase
 	 	$part_it = getSession()->getParticipantIt();
 
 	 	if ( is_object($part_it) && $part_it->getId() != GUEST_UID )
-	 	{	
-	 		$this->access_it = $access->getAll();
-	 		
-	 		$roles = $part_it->getRoles();
-	 		
-	 		$lead_it = getSession()->getProjectIt()->getLeadIt();
+	 	{
+			$roles = $part_it->getRoles();
+			if ( $user_it->get('IsReadonly') == 'Y' ) {
+				$roles[] = ROLE_READONLY;
+				$this->access_it = $access->getRegistry()->Query(
+					array (
+						new FilterVpdPredicate(),
+						new AccessRightTypeNonePredicate()
+					)
+				);
+			}
+			else {
+				$lead_it = getSession()->getProjectIt()->getLeadIt();
+				if ( $this->role_manager < 1 || $lead_it->getId() < 1 )
+				{
+					// if there is no lead role in the project or there is no lead
+					// then any team member will be a lead
+					//
+					$base = getFactory()->getObject('ProjectRoleBase');
+					$base_it = $base->getByRef('ReferenceName', 'lead');
 
-	 		if ( $this->role_manager < 1 || $lead_it->getId() < 1 )
-	 		{
-	 			// if there is no lead role in the project or there is no lead 
-	 			// then any team member will be a lead
-	 			//
-	 			$base = getFactory()->getObject('ProjectRoleBase');
-	 			$base_it = $base->getByRef('ReferenceName', 'lead');
-	 				
-	 			$this->role_manager = $base_it->getId();
-				$this->base_role_map[$roles[0]] = $this->role_manager; 
-	 		}
+					$this->role_manager = $base_it->getId();
+					$this->base_role_map[$roles[0]] = $this->role_manager;
+				}
+				$this->access_it = $access->getAll();
+			}
 	 	}
 	 	else if ( is_object($user_it) && $user_it->count() > 0 )
 	 	{
-	 		$this->access_it = $access->getAll();
-
-	 		if ( $project_roles['linkedguest'] )
-			{
-	 			array_push($roles, $this->role_linkedguest);
+			if ( $user_it->get('IsReadonly') == 'Y' ) {
+				$roles[] = ROLE_READONLY;
+				$this->access_it = $access->getRegistry()->Query(
+					array (
+						new FilterVpdPredicate(),
+						new AccessRightTypeNonePredicate()
+					)
+				);
 			}
-
-	 		if ( $project_roles['guest'] )
-			{
-	 			array_push($roles, $this->role_guest);
+			else {
+				$this->access_it = $access->getAll();
+			}
+			if ( $project_roles['linkedguest'] ) {
+				$roles[] = $this->role_linkedguest;
+			}
+			if ( $project_roles['guest'] ) {
+				$roles[] = $this->role_guest;
 			}
 	 	}
- 		
+
 		$object_access = getFactory()->getObject('pm_ObjectAccess');
 		$this->object_access_it = $object_access->getAll(); 
  		
@@ -155,38 +170,28 @@ class AccessPolicyProject extends AccessPolicyBase
  	{
  		switch ( $this->base_role_map[$role_id] )
  		{
+			case ROLE_READONLY:
+				if ( getSession()->getParticipantIt()->getId() != GUEST_UID) return true;
  			case ROLE_GUEST:
- 				return false;
+ 				return parent::getObjectAccess(ACCESS_READ, getFactory()->getObject('Module')->getExact('ee/allprojects'));
  				
  			case ROLE_LINKEDGUEST:
  				return count(getFactory()->getEntityOriginationService()->getAvailableOrigins($object, SHARED_DIRECTION_BWD )) > 1;
  		}
  	}
  	
- 	function calculateAccess( $access_map )
- 	{
- 		$overriden_access = array_filter( $access_map, function($value) {
- 				return !is_null($value);  
- 		});
-  		
- 		// access permitted
- 		if ( array_sum($overriden_access) > 0 ) return true;
- 		
- 		// no access across all roles
- 		if ( count($access_map) == count($overriden_access) ) return false;
- 	}
- 	
- 	function getAttributeAccess( $action_kind, &$object, $attribute_refname, $reference_class = '' ) 
+ 	function getAttributeAccess( $action_kind, &$object, $attribute_refname, $reference_class = '' )
  	{
  		if ( $this->access_it->count() > 0 )
  		{
  			$access_map = array();
- 			
+
  			foreach( $this->getRoles() as $role_id )
  			{
+				if ( $role_id == ROLE_READONLY ) continue;
+
 				$access = $this->access_it->getAttributeAccess( $role_id, $object, $attribute_refname );
-	
-				$access_map[$role_id] = $access > -1 
+				$access_map[$role_id] = $access > -1
 						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
 						: null;
 
@@ -194,13 +199,11 @@ class AccessPolicyProject extends AccessPolicyBase
 	 			if ( is_null($access_map[$role_id]) && $reference_class != '' )
 	 			{
 						$access = $this->access_it->getClassAccess( $role_id, getFactory()->getClass($reference_class) );
-			
-						$access_map[$role_id] = $access > -1 
+						$access_map[$role_id] = $access > -1
 								? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
 								: null; 
 		
-						if ( is_null($access_map[$role_id]) )
-						{
+						if ( is_null($access_map[$role_id]) ) {
 			 				// only for backward compatibility
 							$access = $this->access_it->getEntityAccess( $role_id, $reference_class );
 				
@@ -210,9 +213,8 @@ class AccessPolicyProject extends AccessPolicyBase
 						} 
 	 			}
  			}
- 			
+
  			$access = $this->calculateAccess($access_map);
- 			
  			if ( is_bool($access) ) return $access;
  		}
 
@@ -225,11 +227,11 @@ class AccessPolicyProject extends AccessPolicyBase
  		{
  			$access_map = array();
  			
- 			foreach( $this->getRoles() as $role_id )
- 			{
+ 			foreach( $this->getRoles() as $role_id ) {
+				if ( $role_id == ROLE_READONLY ) continue;
+
 				$access = $this->access_it->getClassAccess( $role_id, get_class($object) );
-	
-				$access_map[$role_id] = $access > -1 
+				$access_map[$role_id] = $access > -1
 						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
 						: null; 
  			}
@@ -241,12 +243,12 @@ class AccessPolicyProject extends AccessPolicyBase
  			// only for backward compatibility
  			$access_map = array();
  			
- 			foreach( $this->getRoles() as $role_id )
- 			{
+ 			foreach( $this->getRoles() as $role_id ) {
+				if ( $role_id == ROLE_READONLY ) continue;
+
  				// obolete method
 				$access = $this->access_it->getEntityAccess( $role_id, $object->getEntityRefName() );
-	
-				$access_map[$role_id] = $access > -1 
+				$access_map[$role_id] = $access > -1
 						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
 						: null; 
  			}
@@ -262,25 +264,25 @@ class AccessPolicyProject extends AccessPolicyBase
  	function getDefaultEntityAccess( $action_kind, &$object ) 
  	{
  		$access_map = array();
- 		
-		// role bases access rights
-		foreach( $this->getRoles() as $role_id )
-		{
-			$access = $this->getDefaultEntityAccessRole($action_kind, $object, $role_id);
+		$roles = $this->getRoles();
 
+		// role bases access rights
+		foreach( $roles as $role_id ) {
+			if ( in_array(ROLE_READONLY, $roles) && $role_id != ROLE_READONLY ) continue;
+
+			$access = $this->getDefaultEntityAccessRole($action_kind, $object, $role_id);
 			$access_map[$role_id] = is_bool($access) ? ($access ? 1 : 0) : null;
 		}
 		
 		$access = $this->calculateAccess($access_map);
- 			
- 		if ( is_bool($access) ) return $access;		
-				
+ 		if ( is_bool($access) ) return $access;
+
 		return parent::getDefaultEntityAccess( $action_kind, $object ); 
  	}
  	
  	function getDefaultEntityAccessRole( $action_kind, &$object, $role_id ) 
  	{
- 		$array = is_object(getSession()->getPluginsManager()) ? getSession()->getPluginsManager()->getPluginsForSection('pm') : array();
+ 		$array = is_object(getFactory()->getPluginsManager()) ? getFactory()->getPluginsManager()->getPluginsForSection('pm') : array();
 			
 		foreach ( $array as $plugin )
 		{
@@ -300,28 +302,37 @@ class AccessPolicyProject extends AccessPolicyBase
 			return true;
 		}
 
-		switch( $this->base_role_map[$role_id] ) 
+		switch( $this->base_role_map[$role_id] )
 		{
-			case ROLE_LINKEDGUEST: 
+			case ROLE_LINKEDGUEST:
 				switch ( $ref_name )
 				{
 					case 'cms_Report':
 					case 'pm_CustomReport':
 					case 'pm_Workspace':
 						return true;
-					    
+
 				    case 'pm_Project':
 						return $action_kind == ACCESS_CREATE || $action_kind == ACCESS_READ;
 				}
-				
-			case ROLE_GUEST: 
+
+			case ROLE_READONLY:
+			case ROLE_GUEST:
 				switch ( $ref_name )
 				{
 					case 'cms_Report':
 					case 'pm_CustomReport':
 					    return true;
-				    
-				    case 'pm_PublicInfo':
+
+					case 'pm_Build':
+					case 'pm_Environment':
+					case 'pm_Test':
+					case 'pm_TestCaseExecution':
+					case 'pm_Subversion':
+					case 'pm_SubversionRevision':
+					case 'pm_Version':
+					case 'pm_Release':
+					case 'pm_Task':
 					case 'pm_State':
 					case 'pm_Transition':
 					case 'pm_TransitionAttribute':
@@ -330,6 +341,7 @@ class AccessPolicyProject extends AccessPolicyBase
 						return $action_kind == ACCESS_READ;
 						
 					case 'pm_ChangeRequest':
+					case 'pm_Function':
 					case 'pm_Question':
 					case 'Comment':
 					case 'ObjectChangeLog':
@@ -337,7 +349,17 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'EmailQueueAddress':
 					case 'cms_PluginModule':
 					case 'pm_Attachment':
+					case 'pm_Watcher':
+					case 'pm_RequestTag':
+					case 'pm_Tag':
+					case 'pm_ChangeRequestTrace':
+					case 'pm_ChangeRequestLink':
+					case 'pm_FunctionTrace':
+					case 'pm_CustomTag':
 						return true;
+
+					case 'pm_Milestone':
+						return $action_kind == ACCESS_CREATE || $action_kind == ACCESS_READ;
 
 					case 'pm_ProjectUse':
 						return $action_kind == ACCESS_READ || $action_kind == ACCESS_MODIFY;
@@ -356,7 +378,7 @@ class AccessPolicyProject extends AccessPolicyBase
 
 
 					default:
-						return $action_kind == ACCESS_READ && 
+						return $action_kind == ACCESS_READ &&
 							$this->getSharedAccess( $object, $role_id );
 				}
 
@@ -430,57 +452,25 @@ class AccessPolicyProject extends AccessPolicyBase
  	function getObjectAccess( $action_kind, &$object_it ) 
  	{
  		$access_map = array();
- 		
+ 		$roles = $this->getRoles();
+
 		// role bases access rights
-		foreach( $this->getRoles() as $role_id )
-		{
+		foreach( $roles as $role_id ) {
+			if ( in_array(ROLE_READONLY, $roles) && $role_id != ROLE_READONLY ) continue;
+
 			$access = $this->getObjectAccessRole($action_kind, $object_it, $role_id);
-			
 			$access_map[$role_id] = is_bool($access) ? ($access ? 1 : 0) : null;
 		}
 
 		$access = $this->calculateAccess($access_map);
-		
 		if ( is_bool($access) ) return $access;
 		
-		$ref_name = $object_it->object->getClassName();
-
- 	 	switch ( $ref_name )
+ 	 	switch ( $object_it->object->getClassName() )
 		{
-			case 'pm_Version':
-				if ( $action_kind == ACCESS_DELETE )
-				{
-					$iteration = getFactory()->getObject('Iteration');
-					
-					$count = $iteration->getByRefArrayCount(
-						array('Version' => $object_it->getId()) );
-							
-					if ( $count > 0 )
-					{
-						$this->setReason( text(919) );
-						return false;
-					}
-	
-					$request = getFactory()->getObject('Request');
-					
-					$count = $request->getByRefArrayCount(
-						array('PlannedRelease' => $object_it->getId()) );
-							
-					if ( $count > 0 )
-					{
-						$this->setReason( text(929) );
-						return false;
-					}
-				}
-				break;
-	
 			case 'pm_State':
-				if ( $action_kind == ACCESS_DELETE )
-				{
-					$this->setReason( text(927) );
-	
-					if ( $object_it->getObjectsCount() > 0 )
-					{
+				if ( $action_kind == ACCESS_DELETE ) {
+					if ( $object_it instanceof StateBaseIterator && $object_it->getObjectsCount() > 0 ) {
+						$this->setReason( text(927) );
 						return false;
 					}
 				}
@@ -614,19 +604,19 @@ class AccessPolicyProject extends AccessPolicyBase
  	function getDefaultObjectAccess( $action_kind, &$object_it ) 
  	{
  		$access_map = array();
- 		
+		$roles = $this->getRoles();
+
 		// role bases access rights
-		foreach( $this->getRoles() as $role_id )
-		{
+		foreach( $roles as $role_id ) {
+			if ( in_array(ROLE_READONLY, $roles) && $role_id != ROLE_READONLY ) continue;
+
 			$access = $this->getDefaultObjectAccessRole($action_kind, $object_it, $role_id);
-			
 			$access_map[$role_id] = is_bool($access) ? ($access ? 1 : 0) : null;
 		}
 		
 		$access = $this->calculateAccess($access_map);
- 			
- 		if ( is_bool($access) ) return $access;	
-				
+ 		if ( is_bool($access) ) return $access;
+
 		return parent::getDefaultObjectAccess( $action_kind, $object_it ); 
  	}
  	 	
@@ -699,6 +689,12 @@ class AccessPolicyProject extends AccessPolicyBase
 				
 				break;
 
+			case ROLE_READONLY:
+				switch ( $ref_name ) {
+					case 'pm_ChangeRequest':
+						return $object_it->get('Author') == $user_it->getId() || ACCESS_READ;
+				}
+
 			case ROLE_GUEST:
 			case ROLE_LINKEDGUEST: 
 
@@ -723,9 +719,6 @@ class AccessPolicyProject extends AccessPolicyBase
 					case 'pm_Question':
 						return $action_kind == ACCESS_READ || 
 							$object_it->get('Author') == $user_it->getId();
-
-					case 'pm_Project':
-						return $this->getEntityAccess( $action_kind, $object_it->object );
 				}
 				
 				break;
@@ -752,12 +745,10 @@ class AccessPolicyProject extends AccessPolicyBase
 						break;
 						
 					case 'cms_Snapshot':
-						
 						return $object_it->get('SystemUser') == $user_it->getId() || $action_kind == ACCESS_READ;
 						
 
 					case 'pm_CustomReport':
-
 						// common reports can be modified or deleted by lead only
 						return $object_it->get('Author') > 0 || $action_kind == ACCESS_READ;
 				}

@@ -15,27 +15,22 @@ class TaskBusinessActionResolveIssue extends BusinessActionWorkflow
 	function apply( $object_it )
  	{
 		if ( $object_it->get('ChangeRequest') == '' ) return true;
- 		
 		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) return true;
-		
+
+		$request = getFactory()->getObject('Request');
+		getFactory()->resetCachedIterator($request);
+
 		getSession()->addBuilder( new RequestModelExtendedBuilder() );
 		
 		$request_it = $object_it->getRef('ChangeRequest');
- 		
-		$task_it = $request_it->getRef('OpenTasks');
+		if ( !$request_it->getRef('OpenTasks')->end() ) return true; // if there are no open tasks then resolve an issue
 
-		// if there are no open tasks then resolve an issue
-		if ( $task_it->end() )
-		{
-			$resolution = translate('Результат').': '.$object_it->get('Result');
+		$service = new WorkflowService($request_it->object);
+		$service->moveToState(
+			$request_it,
+			array_shift($request_it->object->getTerminalStates())
+		);
 
-			$terminals = $request_it->object->getTerminalStates();
-			
-			$service = new WorkflowService($request_it->object);
-			
-			$service->moveToState($request_it, $terminals[0], $resolution);
-		}
- 		
  		return true;
  	}
 

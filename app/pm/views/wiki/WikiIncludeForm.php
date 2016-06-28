@@ -1,7 +1,4 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/classes/wiki/validators/ModelValidatorIncludePage.php";
-include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelectorAppendable.php";
 include_once "PMWikiForm.php";
 
 class WikiIncludeForm extends PMPageForm
@@ -15,7 +12,6 @@ class WikiIncludeForm extends PMPageForm
  		parent::extendModel();
  		
  		$object = $this->getObject();
- 		
  		foreach( $object->getAttributes() as $attribute => $data )
  		{
  			$object->setAttributeVisible($attribute, false);
@@ -36,14 +32,21 @@ class WikiIncludeForm extends PMPageForm
  			$object->setAttributeDescription('ParentPage', text('testing60'));
  		}
     }
-    
- 	function buildModelValidator()
- 	{
- 		$validator = parent::buildModelValidator();
- 		$validator->addValidator( new ModelValidatorIncludePage() );
- 		return $validator;
- 	}
-    
+
+	function persist()
+	{
+		if ( !parent::persist() ) return false;
+
+		if ( $this->getFieldValue('Include') == "1" ) {
+		}
+		else {
+			// redirect to document's page
+			$object_it = $this->getObjectIt();
+			$this->setObjectIt($object_it->getRef('DocumentId'));
+		}
+		return true;
+	}
+
 	function createFieldObject( $name )
 	{
 		switch ( $name )
@@ -52,7 +55,16 @@ class WikiIncludeForm extends PMPageForm
 				return new FieldHierarchySelectorAppendable( $this->getObject()->getAttributeObject($name) );
 				
 			case 'PageToInclude':
-				return new FieldHierarchySelector( $this->getObject()->getAttributeObject($name) );
+				$treeObject = $this->getObject()->getAttributeObject($name);
+				if ( $treeObject instanceof TestScenario ) {
+					$searchObject = new TestScenarioOnly();
+				}
+				else {
+					$searchObject = $treeObject;
+				}
+				$field = new FieldHierarchySelector($searchObject);
+				$field->setTreeObject($treeObject);
+				return $field;
 				
 			default:
 				return parent::createFieldObject( $name );

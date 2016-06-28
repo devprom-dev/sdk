@@ -7,7 +7,7 @@ class StateBaseRegistry extends ObjectRegistrySQL
 		return array_merge(
 				parent::getFilters(),
 				array (
-						new FilterAttributePredicate('ObjectClass', strtolower($this->getObject()->getObjectClass()))
+						new StateClassPredicate(strtolower($this->getObject()->getObjectClass()))
 				)
 		);
 	}

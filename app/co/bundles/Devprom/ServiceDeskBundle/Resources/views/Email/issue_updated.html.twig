@@ -4,25 +4,9 @@
 
 {% block body_html %}
     {% set issueLink %}{{ url("issue_show", { "id": issue.id }) }}{% endset %}
-
     {% embed "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
         {% block body %}
-            {% autoescape false %}
-                {% if comment == '' %}
-                    {{ 'issue.updated.body'|trans({
-                        '%title%' : issue.caption,
-                        '%link%' : issueLink,
-                        '%changes%' : changes,
-                    }, 'emails', language) }}
-                {% else %}
-                    {{ 'issue.updated-comment.body'|trans({
-                        '%title%' : issue.caption,
-                        '%link%' : issueLink,
-                        '%changes%' : changes,
-                        '%comment%' : comment,
-                    }, 'emails', language) }}
-                {% endif %}
-            {% endautoescape %}
+            {% include emailBody("issueStateChanged.twig",language) %}
         {% endblock body %}
     {% endembed %}
 {% endblock body_html %}

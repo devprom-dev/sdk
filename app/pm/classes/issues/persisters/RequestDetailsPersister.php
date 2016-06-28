@@ -2,6 +2,13 @@
 
 class RequestDetailsPersister extends ObjectSQLPersister
 {
+	function map( &$parms )
+	{
+		if ( $parms['Caption'] != '' ) {
+			$parms['Caption'] = TextUtils::stripAnyTags($parms['Caption']);
+		}
+	}
+
  	function getSelectColumns( $alias )
  	{
  		$columns = array();

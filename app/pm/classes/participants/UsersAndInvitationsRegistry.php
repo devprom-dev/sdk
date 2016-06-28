@@ -11,7 +11,7 @@ class UsersAndInvitationsRegistry extends ObjectRegistrySQL
 	{
 		return array_merge(
 				array (
-						new UserStatePredicate('active')
+						new UserStatePredicate('nonblocked')
 				),
 				parent::getFilters()
 		);
@@ -19,10 +19,10 @@ class UsersAndInvitationsRegistry extends ObjectRegistrySQL
 	
   	function getQueryClause()
  	{
- 	    return " ( SELECT t.cms_UserId, t.Caption, t.Email, t.Phone, t.RecordModified, t.RecordCreated, 0 Invitation ".
+ 	    return " ( SELECT t.cms_UserId, t.Caption, t.Email, t.Phone, t.RecordModified, t.RecordCreated, 0 Invitation, t.IsReadonly ".
  	           "	 FROM cms_User t ".
 			   "    UNION ALL ".
-			   "   SELECT 0, t.Addressee, t.Addressee, '', t.RecordModified, t.RecordCreated, t.pm_InvitationId ".
+			   "   SELECT 0, t.Addressee, t.Addressee, '', t.RecordModified, t.RecordCreated, t.pm_InvitationId, 'N' ".
 			   "	 FROM pm_Invitation t ".
 			   "	 WHERE t.Project = ".$this->project." ) ";
  	}

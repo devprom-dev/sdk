@@ -18,7 +18,7 @@ class ErrorController extends PageController
     public function errorAction()
     {
         $response = $this->responsePage( new \ErrorPage() );
-        
+
         $parts = preg_split('/\?/', $_SERVER['REQUEST_URI']);
         
         $response->headers->set('Status', trim($parts[0],'/'));

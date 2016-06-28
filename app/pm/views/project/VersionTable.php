@@ -1,8 +1,6 @@
 <?php
-
-include "VersionList.php";
-
 include SERVER_ROOT_PATH."pm/classes/plan/CycleState.php";
+include "VersionList.php";
 
 class VersionTable extends PMPageTable
 {
@@ -14,12 +12,12 @@ class VersionTable extends PMPageTable
 	function getNewActions()
 	{
 		$actions = array();
-		
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
-		$method->setRedirectUrl('donothing');
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
+		if ( $methodology_it->HasPlanning() && $method->hasAccess() )
 		{
+			$method->setRedirectUrl('donothing');
 			$actions[] = array(
 					'name' => translate('Итерация'),
 					'url' => $method->getJSCall() 
@@ -27,11 +25,10 @@ class VersionTable extends PMPageTable
 		}
 		
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Release'));
-		$method->setRedirectUrl('donothing');
-		
-		if ( $method->hasAccess() )
+		if ( $methodology_it->HasReleases() && $method->hasAccess() )
 		{
-			$actions[] = array( 
+			$method->setRedirectUrl('donothing');
+			$actions[] = array(
 					'name' => translate('Релиз'),
 					'url' => $method->getJSCall() 
 			);
@@ -100,6 +97,4 @@ class VersionTable extends PMPageTable
 	    
 	    return $filter;
 	}
-	
-	function IsNeedToDelete() { return false; }
-} 
+}

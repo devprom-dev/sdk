@@ -2,13 +2,11 @@
 
 class WikiPageRegistryComparison extends ObjectRegistrySQL
 {
-	public function setPageIt($page_it)
-	{
+	public function setPageIt($page_it)	{
 		$this->page_it = $page_it;
 	}
 	
-	public function setBaselineIt($baseline_it)
-	{
+	public function setBaselineIt($baseline_it)	{
 		$this->baseline_it = $baseline_it;
 	}
 	
@@ -59,22 +57,10 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 		if ( count($query_filters) < 1 && $document_id > 0 )
 		{
 			// baseline given
-			$query_filters = array();
-
-			$ids = array();
-			foreach( preg_split('/,/',$this->page_it->get('TargetBranches').','.$this->page_it->get('SourceBranches')) as $item ) {
-				list($doc_id, $page_id) = preg_split('/:/', $item);
-				if ( $doc_id == $document_id ) $ids[] = $page_id;
-			}
-			if ( count($ids) > 0 ) {
-				$query_filters = array (
-						new FilterInPredicate($ids)
-				);
-			}
-
-			if ( count($query_filters) < 1 ) {
-				$query_filters[] = new FilterInPredicate($this->page_it->getId());
-			}
+			$query_filters = array(
+				new FilterAttributePredicate('UID', $this->page_it->get('UID')),
+				new FilterAttributePredicate('DocumentId', $document_id)
+			);
 		}
 
 		return $registry->Query(array_merge($query_filters, $persisters));

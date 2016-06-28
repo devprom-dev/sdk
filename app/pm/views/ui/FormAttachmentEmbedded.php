@@ -54,7 +54,7 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 	function setAddButtonText( $text )
  	{
  		parent::setAddButtonText( $text );
- 		
+
  		$this->image_mode = true;
  	}
  	
@@ -70,11 +70,6 @@ include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 				' ('.$object_it->getFileSizeKb('File').' Kb)'; 		
 	}
 	
- 	function getShowMenu()
- 	{
-		return !$this->image_mode;
- 	}
- 	
  	function getSaveCallback()
 	{
 	    if ( !$this->image_mode ) return '';

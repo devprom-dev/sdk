@@ -95,6 +95,7 @@ class ObjectMetadata
     
     function addPersister( $persister )
     {
+		$persister->setObject($this->object);
     	$this->persisters[] = $persister;
     }
     
@@ -113,11 +114,20 @@ class ObjectMetadata
 		return $this->removed;
 	}
 
-    public function setAttributeType($attribute, $type)
-    {
+    public function setAttributeType($attribute, $type) {
     	$this->attributes[$attribute]['type'] = $this->attributes[$attribute]['dbtype'] = $type;
     }
-    
+
+	public function getAttributeType($attribute) {
+		return $this->attributes[$attribute]['type'];
+	}
+
+	public function hasAttributesOfType( $type ) {
+		return count(array_filter($this->attributes, function($attribute) use($type) {
+			return $attribute['type'] == $type;
+		}));
+	}
+
     public function setAttributeCaption($attribute, $caption)
     {
     	$this->attributes[$attribute]['caption'] = $caption;
@@ -183,13 +193,18 @@ class ObjectMetadata
 	function addAttributeGroup( $name, $group )
 	{ 
 		if ( !array_key_exists($name, $this->attributes) ) return;
-		
-		if ( !isset($this->attributes[$name]['groups']) )
-		{
+		if ( !isset($this->attributes[$name]['groups']) ) {
 			$this->attributes[$name]['groups'] = array();
 		}
-		
 		$this->attributes[$name]['groups'][] = $group;
+	}
+
+	function resetAttributeGroup( $name, $group )
+	{
+		if ( !array_key_exists($name, $this->attributes) ) return;
+		foreach( $this->attributes[$name]['groups'] as $key => $ingroup ) {
+			if ( $ingroup == $group ) unset($this->attributes[$name]['groups'][$key]);
+		}
 	}
 	
 	function getAttributeClass( $attribute )

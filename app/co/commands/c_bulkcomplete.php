@@ -58,9 +58,11 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 		if ( preg_match('/Attribute(.+)/mi', $_REQUEST['operation'], $attributes) )
 		{
 		    $data['operation'] = 'Attribute';
+			$attributes = preg_split('/:/', $attributes[1]);
+			$attribute = array_shift($attributes);
 		    
 		    $data['attributes'] = array (
-		            $attributes[1] => IteratorBase::utf8towin($_REQUEST[$attributes[1]])
+				$attribute => IteratorBase::utf8towin($_REQUEST[$attribute])
 		    );
 		}
 
@@ -122,11 +124,13 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 					);
 				}
 
+				$processedIds = array();
 				while ( !$object_it->end() )
     			{
     				try {
 	    		        $this->processEmbeddedForms( $object_it, $key );
 	    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']);
+						$processedIds[] = $object_it->getId();
     				}
     				catch( Exception $e ) {
 	   					$except_items[] = array (
@@ -136,6 +140,28 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
     				}
     				$object_it->moveNext();
     			}
+
+				if ( count($processedIds) > 0 ) {
+					$processedIt = $object_it->object->getExact($processedIds);
+					if ( $_REQUEST['OpenList'] != '' && $processedIt->count() > 0 ) {
+						if ( $processedIt->count() == 1 ) {
+							$_REQUEST['redirect'] = $processedIt->getViewUrl();
+						}
+						else {
+							$it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($object_it->object));
+							if ( $it->getId() != '' ) {
+								$widget = getFactory()->getObject($it->get('ReferenceName'));
+								$widget->setVpdContext($processedIt);
+								$widget_it = $widget->getExact($it->getId());
+								if ( $widget_it->getId() != '' ) {
+									$_REQUEST['redirect'] =
+										$url = $widget_it->getUrl(strtolower(get_class($object_it->object)).'='.join(',',$processedIt->idsToArray()).'&clickedonform');
+								}
+							}
+						}
+					}
+				}
+
 		        break;
 		        
 		    case 'Transition':
@@ -255,11 +281,11 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 		
 		if ( $_REQUEST['redirect'] != '' )
 		{
-			$this->replyRedirect( $_REQUEST['redirect'], text(496) );
+			$this->replyRedirect( $_REQUEST['redirect'], text(2130) );
 		}
 		else
 		{
-			$this->replySuccess( text(496) );
+			$this->replySuccess( text(2130) );
 		}
 	}
 	

@@ -23,7 +23,7 @@ class DeleteObjectWebMethod extends WebMethod
 		return text(636);
 	}
 	
-	function getJSCall()
+	function getJSCall($parms = array())
 	{
 		return parent::getJSCall( 
 			array( 'object' => $this->object_it->getId(),

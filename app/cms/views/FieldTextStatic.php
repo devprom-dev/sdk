@@ -2,7 +2,7 @@
 
 class FieldTextStatic extends Field
 {
- 	function draw()
+ 	function draw( $view = null )
 	{
 		$value = $this->getText();
 

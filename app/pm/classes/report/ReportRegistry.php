@@ -81,6 +81,7 @@ class ReportRegistry extends ObjectRegistrySQL
     		$data['Category'] = $report['category'];
     		$data['Type'] = $report['type'];
     		$data['Module'] = $report['module'];
+			$data['Icon'] = $report['icon'];
     		$data['Report'] = $report['report'];
     		$data['Author'] = $report['author'];
     		$data['WidgetClass'] = $report['widget'];

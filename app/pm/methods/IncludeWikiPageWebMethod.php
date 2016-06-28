@@ -20,8 +20,7 @@ class IncludeWikiPageWebMethod extends ObjectCreateNewWebMethod
 		return $url;
 	}
 	
-	function getJSCall( $scenarios_ids = array() )
-	{
+	function url( $scenarios_ids = array() ) {
 		$parms = array (
 				'PageToInclude' => join(',',$scenarios_ids)
 		);

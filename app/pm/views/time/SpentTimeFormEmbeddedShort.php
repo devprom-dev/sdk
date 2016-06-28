@@ -22,13 +22,13 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 		$lines = array();
 		foreach( $items as $key => $item )
 		{
-			$lines[] = $key.'&nbsp;('.getSession()->getLanguage()->getDurationWording($item, 8).')';
+			$lines[] = $key.'&nbsp;('.getSession()->getLanguage()->getHoursWording($item).')';
 		}
 		
 		if ( count($lines) > 0 )
 		{
 			echo '<div class="btn-group" style="vertical-align:top;" title="'.text(1874).'">';
-				echo '<div class="btn dropdown-toggle transparent-btn spent-short" data-toggle="dropdown" href="#" style="display:table;width:auto;" onclick="javascript:uiShowSpentTime();">';
+				echo '<div class="btn dropdown-toggle transparent-btn spent-short" data-toggle="dropdown" href="#" style="display:table;width:auto;" onclick="uiShowSpentTime();">';
 					echo '<span class="title" style="display:table-cell;">'.join('<br/>', $lines).'</span>';
 				echo '</div>';
 			echo '</div><br/>';

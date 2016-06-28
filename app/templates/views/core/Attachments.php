@@ -2,7 +2,7 @@
 
 <?php $file = array_pop($files); ?>
 
-<div class="btn-group" style="margin:2px 2px 0 0;">
+<div class="btn-group">
 	<a class="<?=$file['type']?>_attach" href="<?=$file['url']?>&.png" title="<?=$file['name']?> (<?=$file['size']?> KB)">
 		<img src="/images/<?=($file['type'] == 'image' ? 'image' : 'attach')?>.png">
 	</a>
@@ -26,7 +26,7 @@ foreach( $files as $file )
 ?>
 
 <?php if ( count($actions) > 0 ) { ?>
-<div class="btn-group" style="margin:2px 2px 0 2px;">
+<div class="btn-group">
 	<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 		<img src="/images/image.png">
 	</a>

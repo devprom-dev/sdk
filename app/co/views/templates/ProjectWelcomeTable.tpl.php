@@ -62,6 +62,16 @@
 						</div>
 					</form>
 				</div>
+				<div class="pull-right">
+					<a href="/admin/templates.php"><?=text('co53')?></a>
+				</div>
+				<? if ( count($languages) > 1 ) { ?>
+				<div class="pull-right language-buttons">
+					<? foreach( $languages as $language ) { ?>
+					<a href="?language=<?=$language['cms_LanguageId']?>" class="btn btn-small <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=$language['Caption']?></a>
+					<? } ?>
+				</div>
+				<? } ?>
 			</div>
 
 		<div class="create-project-info">
@@ -75,8 +85,12 @@
 				<?php if ( $tile['kind'] == 'methodology' ) continue; ?>
 				
 				<li class="template-list-item">
-					<div class="template <?=($tile['kind'] == 'process' ? 'green' : '')?> <?=(!$tile['active'] ? 'locked' : '')?>">
-						<?php if ( !$tile['active'] ) { ?><i class="icon-lock"></i> <?php } ?>
+					<div class="template <?=($tile['kind'] == 'case' ? 'green' : '')?> <?=(!$tile['active'] ? 'locked' : '')?>">
+						<?php if ( !$tile['active'] ) { ?>
+							<i class="icon-lock"></i>
+						<?php } else if ( $tile['url'] != '' ) { ?>
+							<a target="_blank" href="<?=$tile['url']?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+						<?php } ?>
 						<h6 class="bs"><?=$tile['name']?></h6>
 						<p>
 							<?=$tile['description']?>
@@ -89,18 +103,13 @@
 					</div>
 				</li>
 			<?php } ?>
-			
-			<?php if ( !$custom_template_exists && $custom_template_url != '' ) { ?>
-			<li class="template-list-item">
-				<div class="template grey">
-					<i class="icon-lock"></i>
-					<h6 class="bs"><?=text('co26')?></h6>
-					<p><?=text('co27')?></p>
-					<a href="<?=$custom_template_url?>" target="_blank" class="template-action"><?=text('co28')?></a>
-				</div>
-			</li>
-			<?php } ?>
 		</ul>
+
+		<div class="create-project-info">
+			<p>
+				<i class="icon-info"></i> <?=text('co52')?>
+			</p>
+		</div>
 
 		<ul class="template-list">
 			<?php foreach ( $tiles as $tile ) { ?>
@@ -108,7 +117,11 @@
 				
 				<li class="template-list-item">
 					<div class="template <?=(!$tile['active'] ? 'locked' : 'orange')?>">
-						<?php if ( !$tile['active'] ) { ?><i class="icon-lock"></i> <?php } ?>
+						<?php if ( !$tile['active'] ) { ?>
+							<i class="icon-lock"></i>
+						<?php } else if ( $tile['url'] != '' ) { ?>
+							<a target="_blank" href="<?=$tile['url']?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+						<?php } ?>
 						<h6 class="bs"><?=$tile['name']?></h6>
 						<p>
 							<?=$tile['description']?>
@@ -118,6 +131,17 @@
 						<?php } else { ?>
 						<a href="<?=$tile['url']?>" target="_blank" class="template-action"><?=text('co29')?></a>
 						<?php } ?>
+					</div>
+				</li>
+			<?php } ?>
+
+			<?php if ( !$custom_template_exists && $custom_template_url != '' ) { ?>
+				<li class="template-list-item">
+					<div class="template grey">
+						<i class="icon-lock"></i>
+						<h6 class="bs"><?=text('co26')?></h6>
+						<p><?=text('co27')?></p>
+						<a href="<?=$custom_template_url?>" target="_blank" class="template-action"><?=text('co28')?></a>
 					</div>
 				</li>
 			<?php } ?>

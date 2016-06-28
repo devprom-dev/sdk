@@ -2,16 +2,30 @@
 
 class StateDurationPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+	function getAttributes() {
+		return array('StateDuration', 'LeadTime');
+	}
+
+	function getSelectColumns( $alias )
  	{
  		$columns = array();
 		$terminal_states = ','.join(',',$this->getObject()->getTerminalStates()).',';
 
- 		array_push( $columns, 
+ 		array_push( $columns,
  			"( SELECT UNIX_TIMESTAMP(NOW()) / 3600 - ".
- 			"    IFNULL( (SELECT UNIX_TIMESTAMP(MAX(so.RecordCreated)) ".
- 			"               FROM pm_StateObject so WHERE so.pm_StateObjectId = ".$alias.".StateObject), ".
- 			"            UNIX_TIMESTAMP(".$alias.".RecordCreated)) / 3600 ) StateDuration " );
+ 			"    IFNULL( (SELECT UNIX_TIMESTAMP(MAX(self.RecordCreated)) / 3600 - IFNULL(SUM(so.Duration),0) ".
+ 			"               FROM pm_StateObject so, pm_StateObject self ".
+			"			   WHERE self.pm_StateObjectId = ".$alias.".StateObject ".
+			"     		     AND self.State = so.State ".
+			"     			 AND self.ObjectId = so.ObjectId), ".
+ 			"            UNIX_TIMESTAMP(".$alias.".RecordCreated)/ 3600 ) ) StateDuration " );
+
+		array_push( $columns,
+			"( SELECT UNIX_TIMESTAMP(NOW()) / 3600 - ".
+			"    IFNULL( (SELECT UNIX_TIMESTAMP(MAX(self.RecordCreated)) / 3600 ".
+			"               FROM pm_StateObject self ".
+			"			   WHERE self.pm_StateObjectId = ".$alias.".StateObject), ".
+			"            UNIX_TIMESTAMP(".$alias.".RecordCreated)/ 3600 ) ) StateDurationRecent " );
 
 		array_push( $columns,
 			"(SELECT IFNULL( ".
@@ -31,16 +45,19 @@ class StateDurationPersister extends ObjectSQLPersister
  	{
  		if ( !$parms['PersistStateDuration'] ) return;
 
- 		$object = $this->getObject();
-		
 		$objectstate = getFactory()->getObject('pm_StateObject');
 		$objectstate->addSort( new SortRecentClause() );
 		
 		$it = $objectstate->getByRefArray(
 			array ( 'ObjectId' => $object_id,
-					'ObjectClass' => $object->getStatableClassName() ), 2);
-		
-		if ( $it->count() > 1 ) $it->moveNext();
-		$objectstate->modify_parms($it->getId(), array( 'Duration' => $parms['StateDuration'] ));
+					'ObjectClass' => $this->getObject()->getStatableClassName() ), 2);
+
+		if ( $it->count() > 1 ) {
+			$it->moveNext();
+			$objectstate->modify_parms(
+				$it->getId(),
+				array( 'Duration' => $parms['StateDurationRecent'] )
+			);
+		}
  	}
 }

@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."core/views/PageInfoSection.php";
 
 class LastChangesSection extends InfoSection
 {
@@ -27,33 +28,34 @@ class LastChangesSection extends InfoSection
  		$registry->setLimit($this->items + 1);
  		
 		return $this->iterator = $registry->Query(
-				array (
-						new ChangeLogItemDateFilter($this->object),
-						new SortReverseKeyClause()
-				)
+			array (
+				new ChangeLogItemDateFilter($this->object),
+				new FilterBaseVpdPredicate(),
+				new SortReverseKeyClause()
+			)
 		);
  	}
- 	
- 	function getItems()
- 	{
+
+	function setItems( $items ) {
+		$this->items = $items;
+	}
+
+ 	function getItems() {
  		return $this->items;
  	}
  	
- 	function & getIteratorRef() 
- 	{
+ 	function & getIteratorRef() {
  		return $this->iterator;
  	}
  	
- 	function getObject()
- 	{
+ 	function getObject() {
  		return $this->object;
  	}
 
-	function getTemplate()
-	{
+	function getTemplate() {
 		return 'core/PageSectionLastChanges.php';
 	}
-	
+
 	function getRenderParms()
 	{
 		$rows = array();
@@ -66,9 +68,13 @@ class LastChangesSection extends InfoSection
 				$it->moveNext();
 				continue;
 			}
+			if ( $it->get('ChangeKind') == 'modified' && strpos($it->get('Content'), ';rarr;') !== false ) {
+				$it->moveNext();
+				continue;
+			}
 
 			$rows[] = array(
-				'author' => $it->get('AuthorName'),
+				'author' => $it->getHtmlDecoded('AuthorName'),
 			 	'datetime' => $it->getDateTimeFormat('RecordModified'),
 			    'caption' => $it->getHtmlDecoded('Content'),
 				'icon' => $it->get('ChangeKind') == 'added' ? 'icon-plus-sign' : 'icon-pencil'

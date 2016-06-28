@@ -1,6 +1,6 @@
 <?php
 
-$view->extend('core/Page.php'); 
+$view->extend('core/Page.php');
 
 ?>
 <div class="row-fluid">
@@ -18,7 +18,7 @@ $view->extend('core/Page.php');
 						</fieldset>
 						<p><?=text(1315)?></p>
 					    <br/>
-						<p><?=(isset($_SESSION['error']) ? $_SESSION['error']['error']['message'] : '')?></p>
+                        <p><?=htmlentities($text, ENT_QUOTES | ENT_HTML401, APP_ENCODING)?></p>
 					    <br/>
 					</form>
                 </div>

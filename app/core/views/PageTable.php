@@ -61,12 +61,17 @@ class PageTable extends ViewTable
  	{
  	    return $this->view;
  	}
- 	
+
+	function getMode()
+	{
+		return $_REQUEST['view'];
+	}
+
   	function getSection()
  	{
  	    return 'co';
  	}
- 	
+
  	function getSectionsDefault()
  	{
  		return array_keys($this->getPage()->getInfoSections());
@@ -118,7 +123,7 @@ class PageTable extends ViewTable
 	
 	    $this->filters = $this->getFilters();
 	
-	    $plugins = getSession()->getPluginsManager();
+	    $plugins = getFactory()->getPluginsManager();
 	    
 	    $plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSection()) : array();
 	
@@ -160,6 +165,7 @@ class PageTable extends ViewTable
 			// backward compatiibility to old settings
 			foreach( $this->getFilterParms() as $parm )
 			{
+				if ( $parm == 'infosections' ) continue;
 			    $filter_value = $persistent_filter->getValue($parm);
 			    if ( $filter_value == '' ) continue;
 			    if ( $parm == 'hide' )
@@ -185,13 +191,6 @@ class PageTable extends ViewTable
 			$this->filter_values[$parm] = $_REQUEST[$parm];
 		}
 
-		if ( !in_array($this->filter_values['infosections'], array('', 'none')) )
-		{
-			$temp = preg_split('/,/', $this->filter_values['infosections']);
-			$sections = array_intersect($temp, array_keys($this->getPage()->getInfoSections()));
-			$this->filter_values['infosections'] = count($sections) > 0 ? join(',', $sections) : 'none'; 
-		}
-		
 		return $this->filter_values;
 	}
 	
@@ -265,11 +264,9 @@ class PageTable extends ViewTable
 	
 	function IsNeedNavigator()
 	{
-		if ( $this->filter_values['rows'] == 'all' )
-		{
+		if ( $_REQUEST['rows'] == 'all' ) {
 			return false;
 		}
-		
 		if ( $_REQUEST['tableonly'] != '' ) return false;
 
 		$list =& $this->getListRef();
@@ -387,50 +384,14 @@ class PageTable extends ViewTable
 				'items' => $filter_actions , 'title' => '' ) );
 		}
 
-		// info sections
-		$sections = array();
-		
-		$values = $this->getFilterValues();
-		
-		$active = preg_split('/,/', $values['infosections']);
-		
-		$infosections = $this->getPage()->getInfoSections();
-		
-		foreach ( $infosections as $key => $section )
-		{
-			$infosections[$key]->setClosable();
-			
-			$checked = in_array($key, $active);
-			
-			$script = "javascript: $(this).hasClass('checked') ? filterLocation.turnOn('infosections', '".$key."', 0) : filterLocation.turnOff('infosections', '".$key."', 0); ";
-			
-			$sections[$section->getCaption()] = array ( 'url' => $script, 'checked' => $checked );
-		}
-		
-		ksort($sections);
-		$section_actions = array();
-		
-		foreach ( $sections as $caption => $section )
-		{
-			array_push( $section_actions, 
-				array ( 'url' => $section['url'], 'name' => $caption, 
-						'checked' => $section['checked'], 'multiselect' => true )
-			);
-		}
-		
-		if ( count($section_actions) > 0 )
-		{
-			array_push($actions, array ( 'name' => translate('Секции'), 
-				'items' => $section_actions , 'title' => '' ) );
-		}
-		
-		$filter = $this->getPersistentFilter();
+		$save_actions = array();
 
+		$filter = $this->getPersistentFilter();
 		if ( is_object($filter) )
 		{
 		    $persisted = $filter->compareStored($this->filter_values);
 			$parms = array (
-				'url' => $filter->getJSCall(
+				'url' => $filter->url(
 					"li[uid=personal-persist]>a",
 					$persisted,
 					"function() { $('.alert-filter').hide(); ".($persisted ? "filterLocation.restoreFilter();" : "")." }"
@@ -442,10 +403,10 @@ class PageTable extends ViewTable
 			if ( !$persisted ) {
 				$parms['multiselect'] = true;
 			}
-			$save_actions = array( $parms );
+			$save_actions = array( 'personal-persist' => $parms );
 		}
 		array_push($actions, array());
-		
+
 		array_push($actions, array (
 			'name' => translate('Настройки'),
 			'items' => $save_actions,
@@ -465,6 +426,7 @@ class PageTable extends ViewTable
 		$workflow_actions = array();
 		$delete_actions = array();
 		$modify_actions = array();
+		$custom_actions = array();
 		
 		$url = '?formonly=true';
 		
@@ -474,10 +436,9 @@ class PageTable extends ViewTable
 			switch( $action_it->get('package') )
 			{
 			    case 'workflow':
-			    	$workflow_actions[] = array (
+			    	$workflow_actions[$action_it->get('ReferenceName')][] = array (
 			    		'name' => $action_it->get('Caption'),
-			    		'url' => $action_url,
-			    		'state' => $action_it->get('ReferenceName')
+			    		'url' => $action_url
 			    	);
 			    	break;
 			    case 'delete':
@@ -493,15 +454,27 @@ class PageTable extends ViewTable
 			    		'url' => $action_url
 			    	);
 			    	break;
+				case 'action':
+					$custom_actions[] = array (
+						'name' => $action_it->get('Caption'),
+						'url' => $action_url
+					);
+					break;
+				case 'url':
+					$custom_actions[] = array (
+						'name' => $action_it->get('Caption'),
+						'url' => $action_it->getId()
+					);
+					break;
 			}
 			
 			$action_it->moveNext();
 		}
-		
 		return array (
 				'workflow' => $workflow_actions,
 				'delete' => $delete_actions,
-				'modify' => $modify_actions
+				'modify' => $modify_actions,
+				'action' => $custom_actions
 		);
 	}
 	
@@ -554,23 +527,15 @@ class PageTable extends ViewTable
 	
 	function getRowsOnPage()
 	{
-	    $values = $this->getFilterValues();
-	    return $values['rows'] == 'all'
+	    return $_REQUEST['rows'] == 'all'
 				? 9999 : (
-					is_numeric($values['rows'])
-							? $values['rows']
+					is_numeric($_REQUEST['rows'])
+							? $_REQUEST['rows']
 							: $this->getDefaultRowsOnPage()
 				);
 	}
 
- 	function getDefaultRowsOnPage()
-	{
-		$default = $this->getFilterParms();
-		$values = $this->getFilterValues();
-		foreach( $values as $key => $value ) {
-			if ( in_array($key,$default) ) continue;
-			if ( !in_array($value, array('','all')) ) return 999;
-		}
+ 	function getDefaultRowsOnPage() {
 		return 100;
 	}
 	
@@ -615,7 +580,7 @@ class PageTable extends ViewTable
 	    $parts = preg_split('/\./', $field);
 
 	    if ( !$this->getObject()->hasAttribute($parts[0]) ) return null;
-			
+
 		return new SortAttributeClause( $field );
 	}
 	
@@ -705,14 +670,14 @@ class PageTable extends ViewTable
 		}
     
 	    $list = $this->getListRef();
-    	
+
         if ( is_object($list) )
         {
             $list->setupColumns();
             
             $list->retrieve();
         }
-        
+
 		$parms = array_merge($parms, array(
 			'table' => $this,
 			'title' => $parms['navigation_title'] == $parms['title'] ? '' : $parms['title'],
@@ -732,7 +697,7 @@ class PageTable extends ViewTable
 	    $filter_values = $this->getFilterValues();
 	     
 	    $filter_items = array();
-	     
+
 	    foreach ( $this->filters as $filter )
 	    {
 	        if ( !$filter->hasAccess() ) continue;
@@ -812,7 +777,14 @@ class PageTable extends ViewTable
     	        
 	            foreach( $filter_options as $key => $value )
     	        {
-    	            $script = "javscript: $(this).hasClass('checked') ? filterLocation.turnOn('".$filter->getName()."', '".urlencode(trim($key))."', 0) : filterLocation.turnOff('".$filter->getName()."', '".urlencode(trim($key))."', 0);";
+					if ( $key == 'search' ) {
+						$actions[] = array(
+							'uid' => $key
+						);
+						continue;
+					}
+
+    	            $script = "javscript: $(this).hasClass('checked') ? filterLocation.turnOn('".$filter->getName()."', '".trim($key)."', 0) : filterLocation.turnOff('".$filter->getName()."', '".trim($key)."', 0);";
     	            
     	            $group_of_values = count(preg_split('/,/', $key)) > 1; 
     	             
@@ -841,9 +813,10 @@ class PageTable extends ViewTable
     	            $actions[] = array(
                         'name' => $value,
                         'url' => $script,
-                        'checked' => $checked_item || $checked_all
+                        'checked' => $checked_item || $checked_all,
+						'uid' => in_array($key,array('none','')) ? $key : ''
     	            );
-    
+
                     if ( count($filter_options) > 1 && ($key == '' || $key == 'all') )
                     {
                         // reset filter to nothing
@@ -866,11 +839,11 @@ class PageTable extends ViewTable
                     if ( $checked_item && !$checked_all ) $title_items[] = $value;
     	        }
 	        }
-	        
+
 	        $title = join(',',$title_items);
 	        
-	        if ( mb_strlen($title) > 12 ) $title = mb_substr($title, 0, 12).'...'; 
-	        
+	        if ( mb_strlen($title) > 12 ) $title = mb_substr(html_entity_decode($title,ENT_QUOTES | ENT_HTML401,APP_ENCODING), 0, 12).'...';
+
 	        $filter_items[] = array (
                 'type' => $filter->getType(),
                 'name' => $filter->getName(),
@@ -895,7 +868,7 @@ class PageTable extends ViewTable
 	    
 	    $actions = $this->getActions();
 	    
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 	    
 		$plugins_interceptors = is_object($plugins) 
 				? $plugins->getPluginsForSection(getSession()->getSite()) : array();
@@ -914,16 +887,10 @@ class PageTable extends ViewTable
 	    	$actions = array_merge($actions, $delete_actions);
 	    }
 
-	    if ( is_array($parms['sections']) )
-	    {
+	    if ( is_array($parms['sections']) ) {
 	        $values = $this->getFilterValues();
-	        
-    		$sectionnames = array_keys($parms['sections']);
-    		
     	    $sectionnames = preg_split('/,/', $values['infosections']);
-    
-    		foreach ( $parms['sections'] as $key => $section ) 
-    		{
+    		foreach ( $parms['sections'] as $key => $section ) {
     			if ( !in_array($key, $sectionnames) ) unset($parms['sections'][$key]);
     		}
 	    }

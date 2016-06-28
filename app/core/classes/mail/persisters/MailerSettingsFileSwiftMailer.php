@@ -9,7 +9,6 @@ class MailerSettingsFileSwiftMailer extends MailerSettingsFile
 	public function read( $parameter )
 	{
         $settings = Yaml::parse(file_get_contents($this->getSettingsPath()));
-        
         return $settings['parameters'][$this->mapParameterName($parameter)];
 	}
 	
@@ -24,8 +23,7 @@ class MailerSettingsFileSwiftMailer extends MailerSettingsFile
 		file_put_contents($this->getSettingsPath(), Yaml::dump($settings));
 	}
 	
-	public function exists()
-	{
+	public function exists() {
 		return file_exists($this->getSettingsPath());
 	}
 	
@@ -59,8 +57,7 @@ class MailerSettingsFileSwiftMailer extends MailerSettingsFile
 		}
 	}
 	
-	private function getSettingsPath()
-	{
-		return SERVER_ROOT_PATH.'co/bundles/Devprom/ServiceDeskBundle/Resources/config/settings.yml';
+	private function getSettingsPath() {
+		return SERVER_ROOT_PATH.'co/bundles/Devprom/ApplicationBundle/Resources/config/settings.yml';
 	}
 }

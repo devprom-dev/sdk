@@ -68,7 +68,7 @@ class Activity extends Metaobject
 		return 1;
 	}
 	
-	function delete( $id )
+	function delete( $id, $record_version = ''  )
 	{
 	    global $model_factory;
 	    

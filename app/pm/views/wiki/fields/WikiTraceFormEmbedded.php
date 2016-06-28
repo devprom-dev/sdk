@@ -160,4 +160,8 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
 		
 		return array_merge($actions, parent::getActions( $object_it, $item ));
 	}
+
+	function getListItemsAttribute() {
+		return $this->getMenuField();
+	}
 }

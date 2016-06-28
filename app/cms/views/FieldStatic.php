@@ -10,7 +10,7 @@ class FieldStatic extends Field
  		parent::Field(); 
  	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="input-border">';
 		?>

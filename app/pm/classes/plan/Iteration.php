@@ -89,7 +89,28 @@ class Iteration extends Metaobject
 		
 		return parent::getDefaultAttributeValue($name);
 	}
-	
+
+	function getVelocitySuggested()
+	{
+		$this->getRegistry()->setLimit(5);
+		$iteration_it = $this->getRegistry()->Query(
+			array (
+				new IterationTimelinePredicate(IterationTimelinePredicate::PAST),
+				new FilterBaseVpdPredicate(),
+				new SortAttributeClause('StartDate.D')
+			)
+		);
+		$velocity = $iteration_it->getId() > 0 ? $iteration_it->getVelocity() : 0;
+		$average = 0;
+		while( !$iteration_it->end() ) {
+			$average += $iteration_it->getVelocity();
+			$iteration_it->moveNext();
+		}
+		$average = $average / $iteration_it->count();
+
+		return array($average, $velocity);
+	}
+
 	function add_parms( $parms ) 
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();

@@ -1,4 +1,4 @@
-<div class="treeview">
+<div class="treeview sticks-top" heightStyle="window">
 </div>
 
 <div style="clear:both;"></div>
@@ -19,13 +19,13 @@
         treeData = <?=$data?>;
 
 	$(function() {
-		$('div.treeview').html('<ul id="wikitree" class="filetree" style="width:100%;"></ul>');
+		$('div.treeview').html('<ul id="wikitree" class="filetree sticks-top-body" style="width:100%;"></ul>');
 		loadContentTree();
 	});
 
-	function loadContentTree()
+	function loadContentTree( callback )
 	{
-		$('<ul id="wikitreecache" class="filetree" style="width:100%;"></ul>').insertAfter($('#wikitree'));
+		$('<ul id="wikitreecache" class="filetree sticks-top-body" style="width:100%;"></ul>').insertAfter($('#wikitree'));
         var tree = $('#wikitreecache');
         tree.treeview({
     		root: '<?=$root_id?>',
@@ -42,7 +42,9 @@
                         objectClass: '<?= $object_class ?>'
 			        }
                 );
-				$('#wikitree').replaceWith($('#wikitreecache').attr('id', 'wikitree'));
+				var style = $('#wikitree').attr('style');
+				$('#wikitree').replaceWith($('#wikitreecache').attr('id', 'wikitree').attr('style',style));
+				if ( typeof callback != 'undefined' ) callback();
             }
 		});
 		$('li[uid=open-new]>a').click(function() {

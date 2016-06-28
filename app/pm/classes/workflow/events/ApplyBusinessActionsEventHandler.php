@@ -18,8 +18,19 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
  		while ( !$action_it->end() )
  		{
 	 		$rule_it = $action_it->getRef('ReferenceName', $action);
-	 		if ( is_object($rule_it) && $rule_it->checkType('BusinessActionWorkflow') ) {
-				$rule_it->apply( $object_it );
+	 		if ( is_object($rule_it) && $rule_it->checkType('BusinessActionWorkflow') )
+			{
+				try {
+					Logger::getLogger('System')->info('Applying system action: '.$rule_it->getDisplayName());
+					$rule_it->apply( $object_it );
+				}
+				catch( Exception $e ) {
+					Logger::getLogger('System')->error(
+						'Unable complete system action "'.$rule_it->getDisplayName().'"'.PHP_EOL.
+						$e->getMessage().PHP_EOL.
+						$e->getTraceAsString()
+					);
+				}
 			}
 	 		$action_it->moveNext();
  		}

@@ -73,7 +73,7 @@ var draggableOptions = {
 		getMethodAttributes: function ( item, cell ) 
 		{
 			var controllerUrl = item.attr("project") != '' ? '/pm/'+item.attr("project")+'/' : '';
-			var methods = new Array();
+			var methods = [];
 			var dataObject = {
 				'object': item.attr("object"),
 				'class': this.className
@@ -102,9 +102,20 @@ var draggableOptions = {
 			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
 			{
 				controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
-				url = controllerUrl+'methods.php?method=modifystatewebmethod';
-				dataObject.source = jQuery.trim(item.attr("more"));
-				dataObject.target = jQuery.trim(cell.attr("more"));
+				if ( this.boardAttribute == "State" ) {
+					url = controllerUrl+'methods.php?method=modifystatewebmethod';
+					dataObject.source = jQuery.trim(item.attr("more"));
+					dataObject.target = jQuery.trim(cell.attr("more"));
+				}
+				else {
+					url = controllerUrl+'methods.php?method=modifyattributewebmethod';
+					dataObject.attribute = this.boardAttribute;
+					dataObject.value = jQuery.trim(cell.attr("more"));
+					if ( this.groupAttribute != '' ) {
+						dataObject.parms = {};
+						dataObject.parms[this.groupAttribute] = jQuery.trim(cell.attr("group"));
+					}
+				}
 			}
 			if ( url != '' ) {
 				methods.push({url: url, data: dataObject});
@@ -134,11 +145,11 @@ var draggableOptions = {
 		itemWidth: 999,
 		recentlyChangedTime: '',
 		drag: function( event, ui ) {
-			if ( event.ctrlKey ) return false;
+			if ( event.ctrlKey || event.metaKey ) return false;
 			if ( $('div[id*="context-menu"]>ul:visible').length > 0 ) return false;
 		},
 		start: function ( event, ui ) {
-			if ( event.ctrlKey ) return;
+			if ( event.ctrlKey || event.metaKey ) return;
 			if ( $('div[id*="context-menu"]>ul:visible').length > 0 ) return;
 			$('.popover.in-focus').toggleClass('in').remove();
 			$('.board_item_body input[type=checkbox]').removeAttr('checked');
@@ -153,14 +164,17 @@ var draggableOptions = {
 		className: '',
 		classUserName: '',
 		groupAttribute: '',
+		boardAttribute: 'State',
 		boardCreated: '',
 		itemFormUrl: '',
-		resetParms: '&view=board&rows=all&offset2=0&infosections=none',
+		resetParms: '&view=board&rows=all&offset2=0',
 		waitRequest: null,
 		resizeCards: function () 
 		{
-			$(this.itemCSSPath + ' div.bi-cap').width(this.getItemWidth() - 16);
-			$(this.itemCSSPath).width(this.getItemWidth());
+			var width = this.getItemWidth();
+			$('.list_cell:not(.board-size-mic) '+this.itemCSSPath + ' div.bi-cap').width(width - 10);
+			$('.list_cell:not(.board-size-mic) '+this.itemCSSPath).width(width);
+			$('.list_cell.board-size-mic '+this.itemCSSPath).css('width', 'auto');
 		},
 		sliderTitle: ''
 	};
@@ -184,7 +198,53 @@ function board( options )
 	    	  setBoardSize(options,ui.value);
 	      }
 	}).attr('title', options.sliderTitle);
-	
+
+	$('a.collapse-cards').click(function() {
+		var cell = $('.list_cell[more="'+$(this).attr('more')+'"][group="'+$(this).attr('group')+'"]');
+		if ( cell.length > 0 ) {
+			var cookieId = $(this).parents('.board-table').attr('id') + "[size/"
+				+ $(this).attr('more').trim() + "/" + $(this).attr('group').trim() + "]";
+			if ( cell.hasClass('board-size-mic') ) {
+				cell.removeClass('board-size-mic');
+				cookies.set(cookieId, null);
+			}
+			else {
+				cell.addClass('board-size-mic');
+				cookies.set(cookieId, "board-size-mic");
+			}
+			options.resizeCards();
+		}
+	});
+	$('a[id=collapse-cards]').click(function() {
+		var state = $(this).attr('alt');
+		var reset = $(this).parents('th').hasClass('board-size-mic');
+		$('.list_cell[more=" '+state+'"]').each(function() {
+			if ( reset ) {
+				$(this).removeClass('board-size-mic');
+			}
+			else {
+				$(this).addClass('board-size-mic');
+			}
+		});
+		var cookieId = $(this).parents('.board-table').attr('id') + "[column/" + state.trim() + "]";
+		if ( reset ) {
+			$(this).parents('th').removeClass('board-size-mic');
+			cookies.set(cookieId, null);
+		}
+		else {
+			$(this).parents('th').addClass('board-size-mic');
+			cookies.set(cookieId, "board-size-mic");
+		}
+		var title = $(this).text();
+		$(this).text($(this).attr('class'));
+		$(this).attr('class',title);
+		options.resizeCards();
+		var regCells = $('.list_header:not(.board-size-mic)');
+		$('.list_header:not(.board-size-mic)').attr('width',(100 / regCells.length) + '%');
+		$('.list_header.board-size-mic').attr('width','auto');
+		$('.dropdown .dropdown-toggle').dropdown('toggle');
+	});
+
 	setTimeout( function () { redrawBoardChanges(options); }, 500 );
 }
 
@@ -228,17 +288,16 @@ function boardMake( options )
 	$(options.itemCSSPath).not('.board-item-actions-armed').each( function() {
 			$(this).dblclick( function(event) {
 				$('.popover.in-focus').toggleClass('in').remove();
-				if ( event.ctrlKey ) return;
+				if ( event.ctrlKey || event.metaKey ) return;
 				modifyBoardItem( $(this), options, options.afterItemModified );
 			});
-			$(this).click( function(e) {
-				if(e.ctrlKey) {
+			$(this).click( function(event) {
+				if(event.ctrlKey || event.metaKey) {
 					$(this).find('input[type=checkbox]').each(function() {
 						$(this).is(':checked') ? $(this).removeAttr('checked') : $(this).attr('checked', 'checked');
 					});
 				}
 				else {
-					if ( $(event.target).parents('.board_item_attributes').length < 1 ) return;
 					$('.board_item_body input[type=checkbox]').removeAttr('checked');
 					$(this).find('input[type=checkbox]').each(function() {
 						$(this).attr('checked', 'checked');
@@ -331,10 +390,9 @@ function processActionResult( result, item, options )
 						window.onbeforeunload = null;
 						
 						$('#modal-form').dialog({
-							width:
-								(typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
-									? $(window).width() - 300
-									: 750),
+							width: (typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
+								? $(window).width() - 300
+								: $(window).width() * 3/5),
 							modal: true,
 							open: function()
 							{
@@ -351,7 +409,7 @@ function processActionResult( result, item, options )
 							},
 							buttons: [
 								{
-									text: options.saveButtonName,
+									text: text('form-submit'),
 									id: options.className+'SubmitBtn',
 								 	click: function() {
 										var dialogVar = $(this);
@@ -373,7 +431,7 @@ function processActionResult( result, item, options )
 											{
 												try {
 													var object = jQuery.parseJSON(data);
-													dialogVar.dialog('close');
+													workflowCloseDialog(dialogVar);
 												}
 												catch(e) {
 													var warning = $(data).find('.form_warning');
@@ -400,7 +458,7 @@ function processActionResult( result, item, options )
 									}
 								},
 								{
-									text: options.closeButtonName,
+									text: text('form-close'),
 									id: options.className+'CancelBtn',
 									click: function() 
 									{
@@ -504,7 +562,7 @@ function createBoardItem( query_string, options, data, callback )
 					},
 					buttons: [
 						{
-							text: options.saveButtonName,
+							text: text('form-submit'),
 							id: options.className+'SubmitBtn',
 						 	click: function() {
 								var dialogVar = $(this);
@@ -520,7 +578,7 @@ function createBoardItem( query_string, options, data, callback )
 									{
 										try {
 											var object = jQuery.parseJSON(data);
-											dialogVar.dialog('close');
+											workflowCloseDialog(dialogVar);
 											if ( typeof callback == 'function' ) {
 												callback( object.Id, options );
 											}
@@ -545,7 +603,7 @@ function createBoardItem( query_string, options, data, callback )
 							}
 						},
 						{
-							text: options.closeButtonName,
+							text: text('form-close'),
 							click: function() {
 								$(this).dialog('close');
 							}
@@ -560,11 +618,11 @@ function redrawBoardItem( item, options )
 {
 	var url = filterLocation.locationTableOnly();
 	
-	var itemSelectors = new Array();
+	var itemSelectors = [];
 	
 	if ( $.isArray(item) )
 	{
-		var objectIds = new Array();
+		var objectIds = [];
 		
 		$.each(item, function(index, value) {
 			itemSelectors.push(options.itemCSSPath+'[object='+value+']');
@@ -592,15 +650,9 @@ function redrawBoardItem( item, options )
 		success: 
 			function(result) 
 			{
-				$(result).find('.board-table th').each( function(index, value) {
-					$('.board-table th:eq('+index+')').html($(this).html());
-				});
+				updateBoardHeaders($(result));
 
-				$(result).find('.board-table tr.info').each( function(index, value) {
-					$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
-				});
-
-				var items = new Array();
+				var items = [];
 				
 				$.each(itemSelectors, function(key, value) 
 				{
@@ -641,16 +693,10 @@ function redrawBoardChanges( options )
 			dataType: "html",
 			success: function(result) 
 			{
-				$(result).find('.board-table th').each( function(index, value) {
-					$('.board-table th:eq('+index+')').html($(this).html());
-				});
-		
-				$(result).find('.board-table tr.info').each( function(index, value) {
-					$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
-				});
-				
-				var items = new Array();
-				var itemSelectors = new Array();
+				updateBoardHeaders($(result));
+
+				var items = [];
+				var itemSelectors = [];
 				
 				$(result).find(options.itemCSSPath).each( function(index, value) 
 				{
@@ -709,6 +755,19 @@ function redrawBoardChanges( options )
 	}
 }
 
+function updateBoardHeaders( result )
+{
+	result.find('.board-table th').each( function(index, value) {
+		$('.board-table th:eq('+index+')').html($(this).html());
+	});
+	result.find('.board-table tr.info').each( function(index, value) {
+		$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
+	});
+	result.find('.board-table tr.row-basement').each( function(index, value) {
+		$('.board-table tr.row-basement[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
+	});
+}
+
 function selectCards( column )
 {
 	$('.list_cell .checkbox').attr('checked',false);
@@ -718,7 +777,7 @@ function selectCards( column )
 
 function setBoardSize( options, value )
 {
-	var sizes = new Array('xs','s','m','l','xl');
+	var sizes = ['xs','s','m','l','xl'];
 	$.each(sizes, function(i,v) {
 	  $('.board-table').removeClass('board-size-'+v);
 	});

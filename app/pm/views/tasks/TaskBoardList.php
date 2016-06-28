@@ -17,6 +17,9 @@ class TaskBoardList extends PMPageBoard
  	private $terminal_states = array();
  	private $method_spend_time = null;
     private $estimation_strategy = null;
+	private $uidVisible = true;
+	private $planned_actions = array();
+	private $planned_title = '';
  	
  	function __construct( $object ) 
 	{
@@ -62,7 +65,23 @@ class TaskBoardList extends PMPageBoard
  			$method->setRedirectUrl('donothing');
  			$this->method_spend_time = $method;
  		}
- 		
+
+		if ( getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed() )
+		{
+			$strategy = new EstimationHoursStrategy();
+			foreach( $strategy->getScale() as $item ) {
+				$method = new ModifyAttributeWebMethod($object_it, 'Planned', $item);
+				if ( $method->hasAccess() ) {
+					$method->setCallback( "donothing" );
+					$this->planned_actions[] = array(
+						'name' => ' '.$item,
+						'method' => $method
+					);
+				}
+			}
+			$this->planned_title = $this->getObject()->getAttributeUserName('Planned');
+		}
+
 		$this->getTable()->buildRelatedDataCache();
 	}
 	
@@ -112,28 +131,22 @@ class TaskBoardList extends PMPageBoard
 	
  	function buildBoardAttributeIterator()
  	{
-		if ( $this->getTable()->getReportBase() == 'tasksboardcrossproject' )
-		{
-			if ( $this->hasCommonStates() )
-			{
-		 		return getFactory()->getObject($this->getBoardAttributeClassName())->getRegistry()->Query(
+		if ( $this->getTable()->getReportBase() == 'tasksboardcrossproject' ) {
+			if ( $this->hasCommonStates() ) {
+		 		return getFactory()->getObject('TaskState')->getRegistry()->Query(
 		 				array (
 		 						new FilterVpdPredicate(array_shift($this->getObject()->getVpds())),
 		 						new SortAttributeClause('OrderNum')
 		 				)
 		 		);
 			}
-			else
-			{
+			else {
 				$metastate = getFactory()->getObject('StateMeta');
-	 			
-	 			$metastate->setAggregatedStateObject(getFactory()->getObject($this->getBoardAttributeClassName()));
-	 			
+	 			$metastate->setAggregatedStateObject(getFactory()->getObject('TaskState'));
 	 			return $metastate->getRegistry()->getAll();
 			}
 		}
-		else
-		{
+		else {
 			return parent::buildBoardAttributeIterator();
 		}
  	}
@@ -194,12 +207,13 @@ class TaskBoardList extends PMPageBoard
 	{
 		$fields = parent::getGroupFields();
 
-		foreach( array('Spent', 'Watchers', 'Attachment', 'TraceTask') as $field )
+		foreach( array('Spent', 'Watchers', 'Attachment', 'TraceTask', 'IssueAttachment') as $field )
 		{
 			if ( in_array($field, $fields) ) unset($fields[array_search($field, $fields)]);
 		}
 		
 		$fields[] = 'DueDays';
+		$fields[] = 'Planned';
 		
 		return $fields;
 	}
@@ -210,45 +224,90 @@ class TaskBoardList extends PMPageBoard
 		if ( $group == 'AssigneeUser' ) return 'Assignee'; 
 		return $group;
 	}
-	
+
+	function getGroupFilterValue()
+	{
+		$values = array_filter($this->getFilterValues(), function($value) {
+			return !in_array($value, array('all','hide'));
+		});
+		$group = $this->getGroup();
+		if ( !$this->getObject()->IsReference($group) ) return '';
+
+		switch($this->getObject()->getAttributeObject($group)->getEntityRefName())
+		{
+			case 'pm_Release':
+				return $values['iteration'];
+			case 'cms_User':
+				return $this->getTable()->getFilterUsers($values['taskassignee'], $values);
+			case 'Priority':
+				return $values['taskpriority'];
+		}
+		return '';
+	}
+
 	function getGroupIt()
 	{
 		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupIt();
 
-		$values = $this->getFilterValues();
+		$groupOrder = $this->getGroupOrder();
 		$vpd_filter = new FilterVpdPredicate();
+		$groupFilter = $this->getGroupFilterValue();
 
 		switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
 		{
+			case 'pm_Version':
+				$object = getFactory()->getObject('Release');
+				$ids = array_merge(
+					$object->getRegistry()->Query(
+						array (
+							new ReleaseTimelinePredicate('not-passed'),
+							$vpd_filter,
+							$groupFilter != ''
+								? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
+						)
+					)->idsToArray(),
+					parent::getGroupIt()->idsToArray()
+				);
+				return $object->getRegistry()->Query(
+					array(
+						new FilterInPredicate($ids),
+						new SortAttributeClause('StartDate.'.$groupOrder)
+					)
+				);
 			case 'pm_Release':
 				$object = getFactory()->getObject('Iteration');
 				$ids = array_merge(
 						$object->getRegistry()->Query(
 								array (
-										new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
-										new SortAttributeClause('StartDate'),
-                                        $vpd_filter,
-										$values['iteration'] != '' 
-												? new FilterInPredicate(preg_split('/,/', $values['iteration'])) : null
+									new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+									new SortAttributeClause('StartDate'),
+									$vpd_filter,
+									$groupFilter != ''
+										? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 								)
 							)->idsToArray(),
 						parent::getGroupIt()->idsToArray()
 				);
-				return $object->getRegistry()->Query(array(new FilterInPredicate($ids)));
+				return $object->getRegistry()->Query(
+					array(
+						new FilterInPredicate($ids),
+						new SortAttributeClause('StartDate.'.$groupOrder)
+					)
+				);
 			case 'cms_User':
 				return getFactory()->getObject('User')->getRegistry()->Query(
 						array (
 								new UserWorkerPredicate(),
 								new SortAttributeClause('Caption'),
-								$values['taskassignee'] != '' 
-										? new FilterInPredicate(preg_split('/,/', $values['taskassignee'])) : null
+								$groupFilter != ''
+										? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
 					);
 			case 'Priority':
 				return getFactory()->getObject('Priority')->getRegistry()->Query(
 						array (
-							$values['taskpriority'] != '' 
-										? new FilterInPredicate(preg_split('/,/', $values['taskpriority'])) : null
+							$groupFilter != ''
+								? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
 				);
 			default:
@@ -261,12 +320,7 @@ class TaskBoardList extends PMPageBoard
  		return 'State';
  	}
  	
- 	function getBoardAttributeClassName()
- 	{
- 		return 'TaskState';
- 	}
- 	
-	function IsNeedToDisplay( $attr ) 
+	function IsNeedToDisplay( $attr )
 	{
 		switch( $attr ) 
 		{
@@ -304,10 +358,14 @@ class TaskBoardList extends PMPageBoard
 			case 'OrderNum':
 			case 'RecentComment':
 			case 'Progress':
+			case 'Planned':
 				break;
-			
+
+			case 'IssueTraces':
+				$this->getTable()->drawCell( $object_it, $attr );
+				break;
+
 			case 'UID':
-				
 				echo '<div class="title-on-card">';
 					echo '<div class="left-on-card">';
 						$this->drawCheckbox($object_it);
@@ -342,43 +400,52 @@ class TaskBoardList extends PMPageBoard
 					echo '<div style="display:table-cell;text-align:left;">';
 						if ( $object_it->get('OwnerPhotoId') != '' )
 						{
-							echo $this->getTable()->getView()->render('core/UserPicture.php', array ( 
-									'id' => $object_it->get('OwnerPhotoId'), 
-									'class' => 'user-mini', 
-									'image' => 'userpics-mini',
-									'title' => $object_it->get('OwnerPhotoTitle')
-							));
+							echo '<div class="btn-group">';
+								echo $this->getTable()->getView()->render('core/UserPicture.php', array (
+										'id' => $object_it->get('OwnerPhotoId'),
+										'class' => 'user-mini',
+										'image' => 'userpics-mini',
+										'title' => $object_it->get('OwnerPhotoTitle')
+								));
+							echo '</div>';
 						}
 						if ( $this->visible_column['Attachment'] )
 						{
-							echo '<div style="display: inline-block;vertical-align:bottom;">';
+							echo '<div class="btn-group" style="display:inline-block;">';
 								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
 							echo '</div>';
 						}
 					echo '</div>';
 					
-					if ( $this->visible_column['Progress'] )
-					{
-						if ( $object_it->IsFinished() )
+					echo '<div style="display:table-cell;text-align:right;">';
+						if ( ($this->visible_column['Progress'] || $this->visible_column['Planned']) and count($this->planned_actions) > 0 )
 						{
-						}
-						elseif ( $object_it->get('Planned') > 0 )
-						{
-							$frame = new TaskProgressFrame( $object_it->getProgress() );
-							
-							echo '<div style="display:table-cell;text-align:right;">';
-								$frame->draw();
+							$actions = $this->planned_actions;
+							foreach( $actions as $key => $action ) {
+								$method = $action['method'];
+								$method->setObjectIt($object_it);
+								$actions[$key]['url'] = $method->getJSCall();
+							}
+
+							echo '<div style="display: inline-block;">';
+							echo $this->getTable()->getView()->render('pm/EstimationIcon.php', array (
+								'title' => $this->planned_title,
+								'data' => $object_it->get('Planned') != '' ? $object_it->get('Planned') : '0',
+								'items' => $actions,
+								'random' => $object_it->getId()
+							));
 							echo '</div>';
 						}
-					}
-						
-					echo '<div style="display:table-cell;text-align:right;">';
-						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 && is_object($this->method_spend_time) )
+						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 )
 						{
-							$this->method_spend_time->setAnchorIt($object_it);
-							
 							echo '<div class="board-item-fact" title="'.$this->spent_time_title.'">';
-								echo '<a href="'.$this->method_spend_time->getJSCall().'">'.$object_it->get('Fact').'</a>';
+								if ( is_object($this->method_spend_time) ) {
+									$this->method_spend_time->setAnchorIt($object_it);
+									echo '<a href="'.$this->method_spend_time->getJSCall().'">'.$object_it->get('Fact').'</a>';
+								}
+								else {
+									echo $object_it->get('Fact');
+								}
 		    				echo '</div>';
 						}
 	
@@ -405,11 +472,13 @@ class TaskBoardList extends PMPageBoard
 	{
 		switch ( $group_field )
 		{
+			case 'Planned':
+				echo $object_it->object->getAttributeUserName($group_field).': '.$object_it->get($group_field);
+				break;
+
 			case 'Assignee':
-				$workload = $this->getTable()->getAssigneeUserWorkloadData();
-				echo $this->getTable()->getView()->render('pm/UserWorkload.php', array ( 
-							'user' => $object_it->getRef('Assignee')->getDisplayName(),
-							'data' => $workload[$object_it->get($group_field)]
+				echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+						'user' => $object_it->getRef('Assignee')->getDisplayName()
 					));
 				break;
 
@@ -470,7 +539,16 @@ class TaskBoardList extends PMPageBoard
 	function getActions( $object_it ) 
 	{
 		$actions = parent::getActions( $object_it );
-		
+
+		if ( !$this->uidVisible ) {
+			array_unshift($actions,
+				array (
+					'name' => translate('Открыть'),
+					'url' => getSession()->getApplicationUrl().'T-'.$object_it->getId()
+				)
+			);
+		}
+
 		if ( is_object($this->method_comment) )
 		{
 			$this->method_comment->setAnchorIt($object_it);
@@ -493,7 +571,8 @@ class TaskBoardList extends PMPageBoard
 			}
 			
 			$method = $priority_actions[$key]['method'];
-			$priority_actions[$key]['url'] = $method->getJSCall(array(), $object_it);  
+			$method->setObjectIt($object_it);
+			$priority_actions[$key]['url'] = $method->getJSCall();
 		}
 		
 		if ( count($priority_actions) > 0 )
@@ -537,12 +616,13 @@ class TaskBoardList extends PMPageBoard
 		
 		$parms = parent::getRenderParms();
 		
-		foreach( array( 'Attachment', 'RecentComment', 'Fact', 'OrderNum') as $column )
+		foreach( array( 'Attachment', 'RecentComment', 'Fact', 'OrderNum', 'Planned') as $column )
 		{
 			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
 			$this->visible_column[$column] = $this->getColumnVisibility($column);
 		}
 		$this->visible_column['Progress'] = $this->getColumnVisibility('Progress');
+		$this->uidVisible = $this->getColumnVisibility('UID');
 		
 		return $parms; 
 	}

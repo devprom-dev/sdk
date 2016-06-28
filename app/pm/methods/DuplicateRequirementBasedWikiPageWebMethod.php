@@ -2,8 +2,10 @@
 
 include_once SERVER_ROOT_PATH."pm/methods/DuplicateWikiPageWebMethod.php";
 
-class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMethod
+abstract class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMethod
 {
+	abstract protected function getRequirementAttribute();
+
  	function storeTraces( & $map, & $object )
  	{
  		foreach( $this->getObjectIt()->idsToArray() as $object_id )
@@ -16,7 +18,7 @@ class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMet
 			);
 	 		
 			$ids = array();
-			foreach( $object_it->fieldToArray('Requirement') as $req_id )
+			foreach( $object_it->fieldToArray($this->getRequirementAttribute()) as $req_id )
 			{
 				$ids = array_merge( $ids, array_filter(preg_split('/,/', $req_id), function( $value ) {
 						return $value > 0;
@@ -56,7 +58,7 @@ class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMet
 		
 		while( !$object_it->end() )
 		{
-			foreach( preg_split('/,/', $object_it->get('Requirement')) as $requirement_id )
+			foreach( preg_split('/,/', $object_it->get($this->getRequirementAttribute())) as $requirement_id )
 			{
 				$attributes = array( 
 	    		    'SourcePage' => $requirement_id,
@@ -79,7 +81,7 @@ class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiPageWebMet
 		
 		while( !$object_it->end() )
 		{
-			$ids = array_filter(preg_split('/,/', $object_it->get('Requirement')), function($value) {
+			$ids = array_filter(preg_split('/,/', $object_it->get($this->getRequirementAttribute())), function($value) {
 					return $value > 0;
 			});
 			

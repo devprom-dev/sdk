@@ -31,6 +31,7 @@ class ModulePluginsBuilder extends ModuleBuilder
  	        $item['Section'] = $module['section'];
  	        $item['Url'] = $module['url'];
  	        $item['Area'] = $module['area'];
+            $item['Icon'] = $module['icon'];
  	        
             $object->addModule( $item );
  	    }

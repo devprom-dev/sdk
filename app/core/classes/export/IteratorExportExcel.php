@@ -1,7 +1,5 @@
 <?php
-
 include_once "IteratorExport.php";
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
 
 class IteratorExportExcel extends IteratorExport
 {
@@ -60,8 +58,6 @@ class IteratorExportExcel extends IteratorExport
  	
  	function properties()
  	{
- 		global $model_factory;
- 		
  		$user_it = getSession()->getUserIt();
  		
  		$result = '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">';
@@ -117,9 +113,8 @@ class IteratorExportExcel extends IteratorExport
  		return $result;
  	}
  	 
- 	protected function sanitizeWorkSheetName( $name )
- 	{
- 		return preg_replace('/[\/\\\*\?\[\]]+/', '', mb_substr($name, 0, 31));
+ 	protected function sanitizeWorkSheetName( $name ) {
+ 		return htmlspecialchars(preg_replace('/[\/\\\*\?\[\]]+/', '', mb_substr($name, 0, 31)));
  	}
  	
  	function worksheet()
@@ -260,9 +255,8 @@ class IteratorExportExcel extends IteratorExport
  			}
  			else
  			{
- 			    $totext = new html2text( addslashes($value) );
-
-		 		$value = '<![CDATA['.$totext->get_text().']]>';
+ 			    $totext = new \Html2Text\Html2Text( addslashes($value) );
+		 		$value = '<![CDATA['.$totext->getText().']]>';
 		 		
 		 		$type = "String";
  			}
@@ -287,13 +281,8 @@ class IteratorExportExcel extends IteratorExport
 	 	header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-control: no-store");
-
 		header('Content-Type: application/vnd.ms-excel');
-		
-		$filename = EnvironmentSettings::getBrowserPostUnicode() 
-				? IteratorBase::wintoutf8($this->getName()) : $this->getName();  
-		
-		header('Content-Disposition: attachment; filename="'.$filename.'.xls"');
+		header(EnvironmentSettings::getDownloadHeader($this->getName().'.xls'));
 		
 		echo $this->workbook();
  	}

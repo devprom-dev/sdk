@@ -71,7 +71,7 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  							return $this->row_it->getDisplayName();
  						}
  						else {
-	 						$info = $uid->getUidInfo($this->row_it);
+	 						$info = $uid->getUidInfo($this->row_it, true);
 	 						$result = '['.$info['uid'].'] '.$info['caption'];
 	 						if ( $info['state_name'] != '' ) $result .= ' ('.$info['state_name'].')';
 	 						return $result;

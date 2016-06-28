@@ -45,7 +45,7 @@ class ExceptionHandler
     	{
     		echo 'Unhandled exception:<br/>'; 
     		
-    		print_r($_SESSION['error']);
+    		print_r($this->getLastError());
     		
     		die();
     	}
@@ -83,15 +83,12 @@ class ExceptionHandler
      */
     public function halt($data, $code = null)
     {
-        if (!session_id()) {
-            @session_start();
-        }
-        $_SESSION['error'] = array_merge(
+        $this->setLastError(array_merge(
             array(
                 'id' => time()
             ),
             $data
-        );
+        ));
 
         array_walk_recursive($data, function (&$item, $key) 
         {
@@ -196,7 +193,7 @@ class ExceptionHandler
                     } else if (gettype($value) == 'object') {
                         $value = get_class($value);
                     }
-                    return $value;
+                    return substr($value, 0, 1024);
                 }, is_array($value['args']) ? $value['args'] : array());
                 
                 return $value;
@@ -219,7 +216,9 @@ class ExceptionHandler
      */
     public function exceptionError($e)
     {
-    	if ( is_a($e, 'Symfony\Component\HttpKernel\Exception\NotFoundHttpException') ) return;
+    	if ( $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException ) {
+            $this->processSymfony404Exception($e);
+        }
     	
         $debug = $e->getTrace();
         unset($debug[0]);
@@ -241,7 +240,7 @@ class ExceptionHandler
                     } else if (gettype($value) == 'object') {
                         $value = get_class($value);
                     }
-                    return $value;
+                    return substr($value, 0, 1024);
                 }, is_array($value['args']) ? $value['args'] : array());
 
                 return $value;
@@ -257,6 +256,13 @@ class ExceptionHandler
         $this->halt($data, $e->getCode());
     }
 
+    protected function processSymfony404Exception( $e )
+    {
+        $this->setLastError($e->getMessage());
+
+        header('HTTP/1.1 404 Not Found', true, 400);
+        exit(header('Location: /404'));
+    }
     /**
      * Функция, для обработки фатальной ошибки
      *
@@ -308,10 +314,6 @@ class ExceptionHandler
      */
     public function getData()
     {
-        if (!session_id()) {
-            @session_start();
-        }
-
         // Получение списка файлов логов
         $files = array();
         foreach ($this->_getLoggers() as $logger) {
@@ -335,7 +337,7 @@ class ExceptionHandler
         }
         
         return array(
-            'error' => $_SESSION['error'],
+            'error' => $this->getLastError(),
             'files' => $files,
         );
     }
@@ -371,6 +373,7 @@ class ExceptionHandler
     {
         unset($data_array['PHP_AUTH_PW']);
         unset($data_array['HTTP_SESSION']);
+        unset($data_array['REDIRECT_HTTP_SESSION']);
         return $data_array;
     }
 
@@ -379,5 +382,17 @@ class ExceptionHandler
         foreach( $this->listeners as $listener ) {
             $listener->captureException($e);
         }
+    }
+
+    public function getLastError() {
+        return unserialize(file_get_contents($this->getFilePath()));
+    }
+
+    protected function setLastError( $exception ) {
+        file_put_contents($this->getFilePath(), serialize($exception));
+    }
+
+    protected function getFilePath() {
+        return DOCUMENT_ROOT . "conf/last-error.txt";
     }
 }

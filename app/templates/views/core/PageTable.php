@@ -26,6 +26,10 @@ echo $view->render('core/PageTableBody.php', array (
 	'title' => $title,
     'changed_ids' => $changed_ids,
 	'save_settings_alert' => $save_settings_alert,
-	'module_url' => $module_url
+	'module_url' => $module_url,
+	'details' => $details,
+	'details_parms' => $details_parms,
+	'widget_id' => $widget_id,
+	'placeholderClass' => 'placeholder-fixed'
 ));
 

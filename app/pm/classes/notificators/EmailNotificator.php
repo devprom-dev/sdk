@@ -261,7 +261,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 		if ( count($users) > 0 ) {
 		    $systemuser_it = $user->getRegistry()->Query(
 				array (
-					new UserStatePredicate('active'),
+					new UserStatePredicate('nonblocked'),
 					new FilterInPredicate($users)
 				)
 			);

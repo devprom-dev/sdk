@@ -4,11 +4,17 @@ class Error500Table extends CoPageTable
 {
     function getRenderParms( $parms )
     {
-         global $plugins;
-         
-         return array_merge( parent::getRenderParms( $parms ), array (
-             'text' => $plugins->hasIncluded('eecoplugin') ? text(673) : text(677)
-         ));
+		global $plugins;
+
+		$error = \core\classes\ExceptionHandler::Instance()->getLastError();
+
+        return array_merge(
+			 parent::getRenderParms( $parms ),
+			 array (
+             	'text' => $error['error']['message'] != ''
+					? $error['error']['message'] : ($plugins->hasIncluded('eecoplugin') ? text(673) : text(677))
+         	)
+		);
     }
      
  	function getCaption()

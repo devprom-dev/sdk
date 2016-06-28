@@ -63,8 +63,12 @@ class InstallSystem extends CommandForm
 		$password = $this->utf8towin($_REQUEST['DatabasePass']);
 
 		// check MySQL parameters
-		mysql_connect($hostname, $username, $password) or
-		$this->replyError( text(1514).': '.mysql_error() );
+		try {
+			DAL::Instance()->Connect($hostname, $username, $password);
+		}
+		catch( \Exception $e ) {
+			$this->replyError( text(1514).': '.$e->getMessage() );
+		}
 
 		// prepare database file
 		$parts = pathinfo(__FILE__);
@@ -177,16 +181,16 @@ class InstallSystem extends CommandForm
 				$this->replyError( text(1515).': '.$result.
 					' - '.$mysql_command );
 			}
-				
-			mysql_select_db($dbname) or
-			$this->replyError( text(1516).': '.mysql_error() );
-				
-			// check the database structure
-			$r2 = mysql_query('select * from cms_SystemSettings') or
-			$this->replyError( text(1517));
 
-			if(mysql_num_rows($r2) < 1)
-			{
+			try {
+				DAL::Instance()->Connect($hostname, $username, $password, $dbname);
+			}
+			catch( \Exception $e ) {
+				$this->replyError( text(1516).': '.$e->getMessage() );
+			}
+
+			// check the database structure
+			if ( DAL::Instance()->RowsNum('select * from cms_SystemSettings') < 1 ) {
 				$this->replyError( text(1517));
 			}
 		}

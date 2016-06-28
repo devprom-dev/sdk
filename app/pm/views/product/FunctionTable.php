@@ -23,13 +23,13 @@ class FunctionTable extends PMPageTable
 		$method = new ExcelExportWebMethod();
 		$actions[] = array( 
 				'name' => $method->getCaption(),
-				'url' => $method->getJSCall( $this->getCaption(), 'IteratorExportExcel')
+				'url' => $method->url( $this->getCaption(), 'IteratorExportExcel')
 		);
 		
 		$method = new HtmlExportWebMethod();
 		$actions[] = array( 
 				'name' => $method->getCaption(),
-				'url' => $method->getJSCall( 'IteratorExportHtml' )
+				'url' => $method->url( 'IteratorExportHtml' )
 		);
 		
 		return $actions;
@@ -73,7 +73,7 @@ class FunctionTable extends PMPageTable
 			new FilterTagWebMethod( getFactory()->getObject('FeatureTag') ),
 			new FilterObjectMethod( getFactory()->getObject('Importance'), '', 'importance'),
 			new FunctionFilterStageWebMethod(),
-			new FilterAutoCompleteWebMethod($this->getObject(), text(2094), 'parent')
+			new FilterObjectMethod($this->getObject(), text(2094), 'parent')
 		);
 
 		$view = new FunctionFilterViewWebMethod();

@@ -6,7 +6,7 @@
  	{
  	}
  	
- 	function getScriptExecutionDuration()
+ 	function getScriptExecutionDuration( $element_id )
  	{
  	}
  }
@@ -20,7 +20,7 @@
  		$this->start_time = microtime(true);
  	}
 
-  	function getScriptExecutionDuration()
+  	function getScriptExecutionDuration( $element_id )
  	{
  		return round(microtime(true) - $this->start_time, 3);
  	}

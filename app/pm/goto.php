@@ -11,12 +11,12 @@
  $object_uid = new ObjectUid;
  
  $object_it = $object_uid->getObjectIt($uid);
- 
+
  if ( !getFactory()->getAccessPolicy()->can_read($object_it) )
  {
  	exit(header('Location: /404'));
  }
- 
+
  $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
  
  switch ( $object_it->object->getClassName() )
@@ -32,17 +32,16 @@
  }
  
  $object_url = $object_uid->getObjectUrl($uid);
- 
- if ( is_numeric($_REQUEST['baseline']) && $_REQUEST['baseline'] > 0 )
- {
- 	$object_url .= strpos($object_url, '?') > 0 ? '&baseline='.$_REQUEST['baseline'] : '?baseline='.$_REQUEST['baseline']; 
- }
 
- if($object_url == '') 
- {
+foreach(array('baseline', 'case') as $parm ) {
+    if ( is_numeric($_REQUEST[$parm]) && $_REQUEST[$parm] > 0 ) {
+        $object_url .= strpos($object_url, '?') > 0 ? '&'.$parm.'='.$_REQUEST[$parm] : '?'.$parm.'='.$_REQUEST[$parm];
+    }
+}
+
+if($object_url == '') {
  	exit(header('Location: /404'));
- } 
- else 
- {
- 	exit(header('Location: '.$object_url));
- }
+}
+else {
+	exit(header('Location: '.$object_url));
+}

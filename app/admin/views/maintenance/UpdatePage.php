@@ -38,11 +38,14 @@ class UpdatePage extends AdminPage
 		switch ( $_REQUEST['action'] )
 		{
 		    case 'upload':
-		    	
-		    	$module_it = getFactory()->getObject('Module')->getExact('update-upload');
-		    	
+
+				$module = getFactory()->getObject('Module');
+		    	$module_it = $module->getExact('update-upload');
 		    	if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return false;
-		    	
+
+				$module_it = $module->getExact('file-upload');
+				if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return false;
+
 		        return new UpdateUploadForm( $object );
 		        
 		    case 'updateapplication':

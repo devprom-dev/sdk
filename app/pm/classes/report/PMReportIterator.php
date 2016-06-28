@@ -99,7 +99,9 @@ class PMReportIterator extends OrderedIterator
 	    
 	    if ( $module_uid != '' )
 	    {
-	        $module_it = getFactory()->getObject('Module')->getExact( $module_uid );
+			$module = getFactory()->getObject('Module');
+			$module->setVpdContext($this);
+	        $module_it = $module->getExact( $module_uid );
 	        if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return array();
 
 	        $url = $url == '' ? $module_it->get('Url') : $url;
@@ -111,20 +113,18 @@ class PMReportIterator extends OrderedIterator
 	    {
 	        $parts = parse_url( $url );
  	        if ( $parts['scheme'] == '' ) {
- 	            $url = getSession()->getApplicationUrl().$url;
+ 	            $url = getSession()->getApplicationUrl($this).$url;
  	        }
 			$url .= '/'.$this->getId();
 	    }
 
 	    if ( $url == '' ) return array();
-	    
-	    $language = getLanguage();
-	    
 	    return array(
             'name' => $this->getDisplayName(),
 	        'title' => $this->getDisplayName(),
             'url' => $url.'?report='.$this->getId().$base_parm.'&'.$query_string,
             'uid' => $this->getId(),
+			'icon' => $this->get('Icon') != '' ? $this->get('Icon') : (is_object($module_it) ? $module_it->get('Icon') : ''),
 	    	'report' => $this->getId()
 	    );
 	}

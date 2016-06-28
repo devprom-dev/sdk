@@ -18,10 +18,10 @@ class Search extends CommandForm
 		$searchparms = preg_split('/,/', $_REQUEST['parms']);
 		$search = $_REQUEST['searchrequest'];
 
-		//
-	    $this->searchByUid($search);
-		//
-	    $results = $this->searchByAttributes($search, $searchparms);
+	    $results = array_merge(
+			$this->searchByUid($search),
+			$this->searchByAttributes($search, $searchparms)
+		);
 
 		$items_found = 0;
 		foreach( $results as $result ) {
@@ -76,18 +76,23 @@ class Search extends CommandForm
 				continue;
 			}
 
+			$parms = array();
 			if ($object instanceof WikiPage) {
 				$object->setRegistry(new WikiPageRegistryContent($this));
+				$parms[] = new DocumentVersionPersister();
 			}
 			$registry = $object->getRegistry();
 
 			if ( is_numeric($search) ) {
 				$object_it = $registry->Query(
+					array_merge(
+						$parms,
 						array(
 								new FilterInPredicate($search),
 								new FilterVpdPredicate(),
 								new SortRecentClause() 
 						)
+					)
 				);
 				if ( $object_it->getId() != '' ) {
 					$results[$searchable_it->getId()] = array (
@@ -98,11 +103,14 @@ class Search extends CommandForm
 
 			if ( strlen($search) > $this->length_constraint ) {
 				$object_it = $registry->Query(
+					array_merge(
+						$parms,
 						array(
 								new FilterSearchAttributesPredicate($search, $searchable_it->get('attributes')),
 								new FilterVpdPredicate(),
 								new SortRecentClause()
 						)
+					)
 				);
 				if ( $object_it->count() > 0 ) {
 					$results[$searchable_it->getId()] = array(
@@ -111,10 +119,13 @@ class Search extends CommandForm
 					);
 				}
 				$object_it = $registry->Query(
-					array(
-						new CustomAttributeSearchPredicate($search, $searchable_it->get('attributes')),
-						new FilterVpdPredicate(),
-						new SortRecentClause()
+					array_merge(
+						$parms,
+						array(
+							new CustomAttributeSearchPredicate($search, $searchable_it->get('attributes')),
+							new FilterVpdPredicate(),
+							new SortRecentClause()
+						)
 					)
 				);
 				if ( $object_it->count() > 0 ) {
@@ -135,25 +146,47 @@ class Search extends CommandForm
 	
 	function searchByUid( $uid )
 	{
+		$results = array();
+		$searchable = getFactory()->getObject('SearchableObjectSet');
+		$searchable_it = $searchable->getAll();
+
+		while( !$searchable_it->end() ) {
+			$object = getFactory()->getObject($searchable_it->get('ReferenceName'));
+			if ( $object instanceof WikiPage ) {
+				$registry = $object->getRegistry();
+				$registry->setPersisters(array());
+				$object_it = $registry->Query(
+					array(
+						new DocumentVersionPersister(),
+						new FilterAttributePredicate('UID', $uid),
+						new FilterVpdPredicate(),
+						new SortRecentClause()
+					)
+				);
+				if ( $object_it->count() > 0 ) {
+					$results[$searchable_it->getId()] = array(
+						'object' => $object->createCachedIterator($object_it->getRowset()),
+						'attributes' => array('UID')
+					);
+				}
+			}
+			$searchable_it->moveNext();
+		}
+		if ( count($results) > 0 ) return $results;
+
 	    $object_uid = new ObjectUid;
-		 
-		if ( $object_uid->isValidUid($uid) ) 
-		{
+		if ( $object_uid->isValidUid($uid) ) {
 		    $object_it = $object_uid->getObjectIt($uid);
 		}
 		 
-		if ( !is_object($object_it) ) return;
-		 
-		if ( $object_it->count() < 1 ) return;
+		if ( !is_object($object_it) ) return $results;
+		if ( $object_it->count() < 1 ) return $results;
 
 	 	$url = $object_it->getViewUrl();
-	 	
-	 	if ( strpos($url, '/pm/') === false ) 
-	 	{
+	 	if ( strpos($url, '/pm/') === false ) {
 	 		$url = getSession()->getApplicationUrl().$url; 
 	 	}
-	 	
-	 	$this->replyRedirect( $url, text(1309) ); 
+	 	$this->replyRedirect( $url, text(1309) );
 	}
 	
 	function replyResults( $results, $search )
@@ -164,17 +197,7 @@ class Search extends CommandForm
 		$html = '';
 
         $stem = new Stem\LinguaStemRu();
-        $search_items = array_map(
-            function($word) use($stem) {
-                return $stem->stem_word($word);
-            },
-            array_filter(
-                preg_split('/\s+/', $search),
-                function( $value ) {
-                    return trim($value) != '';
-                }
-            )
-        );
+        $search_items = SearchRules::getSearchItems($search);
 
 		$report = getFactory()->getObject('PMReport');
 	    $searchable = getFactory()->getObject('SearchableObjectSet');
@@ -196,8 +219,8 @@ class Search extends CommandForm
 
 	            foreach ( $result['attributes'] as $attribute )
 	            {
-    	            $text = new html2text( $object_it->getHtmlDecoded($attribute) );
-    	            $text = str_replace(chr(10), ' ', $text->get_text());
+    	            $text = new \Html2Text\Html2Text( $object_it->getHtmlDecoded($attribute) );
+    	            $text = str_replace(chr(10), ' ', $text->getText());
     	            $text = str_replace(chr(13), ' ', $text);
 
                     $text = preg_replace(

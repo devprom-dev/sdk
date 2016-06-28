@@ -7,6 +7,6 @@ class IntegrationType extends PMObjectCacheable
 {
 	public function __construct()
 	{
-		parent::__construct('entity', new IntegrationTypeRegistry());
+		parent::__construct('entity', new IntegrationTypeRegistry($this));
 	}
 }

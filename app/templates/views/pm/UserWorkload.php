@@ -9,7 +9,7 @@ if ( is_array($data['Iterations']) ) {
 	foreach( $data['Iterations'] as $iteration_data ) {
 		$full_volume = $iteration_data['capacity'];
 		$used_volume = $iteration_data['leftwork'];
-		
+
 		$left_volume = $full_volume - $used_volume;
 		
 		if ( $full_volume > 0.0 )
@@ -18,8 +18,8 @@ if ( is_array($data['Iterations']) ) {
 		}
 		
 		$overload = false;
-		
-		if($left_volume < 0) 
+
+		if($left_volume < 0)
 		{
 			$overload = true;
 			if ( $filled_volume > 0.0 )
@@ -31,7 +31,7 @@ if ( is_array($data['Iterations']) ) {
 				$filled_volume = 0;
 			}
 		}
-		
+
 		$iterations[] = array (
 			'title' => $iteration_data['title'].' - '.preg_replace(
 							array('/%1/', '/%2/', '/%3/'),

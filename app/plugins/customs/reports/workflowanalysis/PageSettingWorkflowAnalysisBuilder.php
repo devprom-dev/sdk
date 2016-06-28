@@ -16,18 +16,15 @@ class PageSettingWorkflowAnalysisBuilder extends PageSettingBuilder
         
         $state_columns = array();
         
-        $state_it = getFactory()->getObject('Request')->cacheStates();
-    	
+        $state_it = WorkflowScheme::Instance()->getStateIt(getFactory()->getObject('Request'));
     	while( !$state_it->end() )
     	{
-    		if ( $state_it->get('IsTerminal') == 'Y' )
-    		{
+    		if ( $state_it->get('IsTerminal') == 'Y' ) {
     			$state_it->moveNext();
     			continue;
     		}
 
     		$state_columns[] = 'State_'.$state_it->getDbSafeReferenceName();
-    		
     		$state_it->moveNext();
     	}
         

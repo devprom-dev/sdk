@@ -1,24 +1,24 @@
 <?php
-
 include "ProjectForm.php";
+include "ProjectSettingsTable.php";
 
 class ProjectSettingsPage extends PMPage
 {
-    function __construct()
-    {
-        parent::__construct();
-        $this->addInfoSection(new PMLastChangesSection(getSession()->getProjectIt()));
+    function getObject() {
+        return getSession()->getProjectIt()->object;
     }
 
-    function needDisplayForm()
-    {
-        return true;
+    function getTable() {
+        return new ProjectSettingsTable($this->getObject());
     }
 
-    function getForm()
-    {
-		$form = new ProjectForm(getFactory()->getObject('Project'));
+    function getForm() {
+		$form = new ProjectForm($this->getObject());
 		$form->edit(getSession()->getProjectIt()->getId());
 		return $form;
+    }
+
+    function needDisplayForm() {
+        return $_REQUEST['mode'] == 'settings' || parent::needDisplayForm();
     }
 }

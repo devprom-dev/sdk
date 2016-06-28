@@ -3,40 +3,38 @@
 $last_key = key( array_slice( $attributes, -1, 1, TRUE ) );
 
 $colspan_attributes = array();
-
-if ( $form->getObject() instanceof Task )
-{
-	$colspan_attributes = array (
-			$attributes['Caption']['id']
-	);
+if ( $attributes['Caption']['visible'] ) {
+	$colspan_attributes[] = $attributes['Caption']['id'];
+}
+if ( $attributes['UID']['visible'] ) {
+	$colspan_attributes[] = $attributes['UID']['id'];
 }
 
-if ( $form->getObject() instanceof Request )
-{
-	$colspan_attributes = array (
-			$attributes['Caption']['id'],
-			$attributes['Description']['id']
-	);
+if ( $form->getObject() instanceof Request ) {
+	$colspan_attributes[] = $attributes['Description']['id'];
 }
 
 $invisible = array_filter( $attributes, function(&$value) {
 		return !$value['visible']; 
 });
 
-$colspan_visible = array_filter( $attributes, function(&$value) use($colspan_attributes)
-{
-		return $value['visible'] && in_array($value['id'], $colspan_attributes); 
+$colspan_visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
+	return $value['visible'] && in_array($value['id'], $colspan_attributes);
 });
 
-$visible = array_filter( $attributes, function(&$value) use($colspan_attributes)
-{
-		return $value['visible'] && !in_array($value['id'], $colspan_attributes); 
+$visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
+	return $value['visible'] && !in_array($value['id'], $colspan_attributes);
 });
 
 $attributes_per_column = count($visible) > 12 ? max(9, ceil(count($visible) / 2)) : count($visible);
-
 $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 
+$top = array();
+foreach( $attributes as $key => $attribute ) {
+	if ( in_array($key, array('Caption','UID')) && in_array($attribute['id'], $colspan_attributes) ) {
+		$top[$key] = $attribute;
+	}
+}
 ?>
 
 <?php if ( $warning != '' ) { ?>
@@ -51,8 +49,25 @@ $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 
 <?php } ?>
 
-<?php foreach( $colspan_visible as $key => $attribute ) { ?>
+<?php
+?>
 
+<div class="control-set title-set">
+	<? foreach($top as $key => $attribute ) { ?>
+	<div class="control-column">
+		<div class="control-group row-fluid" id="fieldRow<?=$key?>">
+			<label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+			<div class="controls">
+				<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+			</div>
+		</div>
+	</div>
+	<? } ?>
+</div>
+
+<?php foreach( $colspan_visible as $key => $attribute ) { ?>
+	<? if ( $key == 'Caption' ) continue; ?>
+	<? if ( $key == 'UID' ) continue; ?>
 	  <div class="control-group row-fluid" id="fieldRow<?=$key?>">
 	    <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
 	    <div class="controls">
@@ -115,7 +130,7 @@ $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 <?php foreach( $invisible as $key => $attribute ) { ?>
 
 	<?php if ( !$attribute['visible'] ) { ?>
-		<input id="<?=$attribute['id']?>" type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>">
+		<input id="<?=$attribute['id']?>" type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>" referenceName="<?=$attribute['referenceName']?>">
 	<?php continue; } ?>
 	
 <?php } ?> 

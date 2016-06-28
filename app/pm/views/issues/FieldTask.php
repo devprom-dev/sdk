@@ -22,7 +22,7 @@ class FieldTask extends Field
  		return new ModelValidatorIssueTasks();
  	}
  	
- 	function draw()
+ 	function draw( $view = null )
  	{
  		global $model_factory, $_REQUEST;
  		
@@ -52,7 +52,7 @@ class FieldTask extends Field
  		$_REQUEST['Transition'] = $transition;
 		
 		echo '<div style="float:left;padding-bottom:8px;">';
-			echo '<a id="btn-more-tasks" class="btn btn-success btn-small" onclick="javascript: taskboxShow();"><i class="icon-plus icon-white"></i> '.translate('Еще задачу').'</a>';
+			echo '<a id="btn-more-tasks" class="btn btn-success btn-small" onclick="taskboxShow();"><i class="icon-plus icon-white"></i> ' .translate('Еще задачу').'</a>';
 		echo '</div>';
 
 		echo '<div class="clearfix">&nbsp;</div>';
@@ -97,7 +97,8 @@ class FieldTask extends Field
 
  		$filters = array (
  				new FilterBaseVpdPredicate(),
-				new TaskTypeStateRelatedPredicate($target_it->get('ReferenceName'), true)
+				new TaskTypeStateRelatedPredicate($target_it->get('ReferenceName'), true),
+				new SortOrderedClause()
  		);
 
 		$tasktype_it = getFactory()->getObject('pm_TaskType')->getRegistry()->Query($filters);
@@ -147,7 +148,7 @@ class FieldTask extends Field
 			 	
 			 	if ( !is_a($ref, 'TaskIterator') )
 			 	{
-			 		echo '<i class="icon-remove"></i> <a class="dashed" onclick="javascript: taskboxClose('.$form->getFormId().');">'.translate('Скрыть').'</a>';
+			 		echo '<i class="icon-remove"></i> <a class="dashed" onclick="taskboxClose(' .$form->getFormId().');">'.translate('Скрыть').'</a>';
 			 	}
 			
 			echo '</span>';

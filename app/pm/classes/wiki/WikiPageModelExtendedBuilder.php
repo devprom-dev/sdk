@@ -3,8 +3,6 @@
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/comments/persisters/CommentRecentPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
-include "persisters/WikiPageFeaturePersister.php";
-include "persisters/WikiPageDetailsPersister.php";
 include "persisters/WikiTagsPersister.php";
 include "persisters/WikiPageAttachmentsPersister.php";
 include "persisters/WikiPageWorkflowPersister.php";
@@ -15,8 +13,6 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
     {
     	if ( !$object instanceof WikiPage ) return;
     	
-		$object->addPersister( new WikiPageDetailsPersister() );
-
         $object->addAttribute('Workflow', 'TEXT', text(2044), false);
         $object->addPersister( new WikiPageWorkflowPersister(array('Workflow')) );
 
@@ -31,6 +27,14 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
 		$object->addPersister( new CommentRecentPersister(array('RecentComment')) );
+
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		if( $methodology_it->HasFeatures() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Feature')) )
+		{
+			$object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), true, false);
+			$object->addPersister( new WikiPageFeaturePersister(array('Feature')) );
+			$object->addAttributeGroup('Feature', 'trace');
+		}
 
 		foreach( array('Tags', 'Attachments', 'Watchers', 'Author') as $attribute ) {
 			$object->addAttributeGroup($attribute, 'additional');

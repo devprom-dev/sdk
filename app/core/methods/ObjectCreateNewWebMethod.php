@@ -41,10 +41,16 @@ class ObjectCreateNewWebMethod extends WebMethod
 	
 	function getJSCall( $parms = array(), $title = '' )
 	{
+		$uid = new ObjectUID;
+		if ( $uid->hasUidObject($this->object) ) {
+			$absoluteUrl = getSession()->getApplicationUrl().$uid->getObjectUidInt($uid->getClassName($this->object->getEmptyIterator()), '');
+		}
+
 		$method_parms = array (
 				$this->getNewObjectUrl(),
 				get_class($this->object),
 				$this->object->getEntityRefName(),
+				$absoluteUrl,
 				$title != '' ? $title : $this->object->getDisplayName()
 		);
 		

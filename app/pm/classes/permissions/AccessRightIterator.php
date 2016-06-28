@@ -32,7 +32,7 @@ class AccessRightIterator extends OrderedIterator
 				
 			$this->moveNext();
 		}
-		
+
 		$this->moveFirst();
 	}
 	

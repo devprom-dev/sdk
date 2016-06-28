@@ -7,29 +7,30 @@ include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 class WikiService
 {
 	private $object = null;
-	
 	private $object_it = null;
+	private $root = 0;
 	
-	public function __construct( $class_name, $root )
+	public function __construct( $class_name, $root, $crossProject = false )
 	{
 		getSession()->addBuilder( new \WikiPageModelExtendedBuilder() );
 		
     	$this->object = getFactory()->getObject($class_name);
+		$this->root = $root;
 
-    	$predicates = $root > 0 
+    	$predicates = $this->root > 0
     		? array (
-    				new \FilterAttributePredicate('ParentPage', $root),
-    				new \FilterVpdPredicate()
+    				new \FilterAttributePredicate('ParentPage', $root)
     			)
     		: array (
     				new \WikiRootFilter(),
-    				new \FilterVpdPredicate()
+					$crossProject ? new \ProjectAccessiblePredicate() : new \FilterVpdPredicate()
     			);
     		
     	$this->setObjectIt(
 			$this->object->getRegistry()->Query(
 				array_merge(
 					array (
+						new \SortProjectSelfFirstClause(),
 						new \SortDocumentClause()
 					),
 					$predicates
@@ -76,13 +77,11 @@ class WikiService
 
     		$item = array();
 
-    		$title = \IteratorBase::wintoutf8($object_it->get('ParentPage') == '' ? $object_it->getDisplayName() : $object_it->get('Caption'));
-    		
+    		$title = $object_it->get('ParentPage') == '' ? $object_it->getDisplayName() : $object_it->get('Caption');
+
     		$uid_info = $uid->getUidInfo($object_it);
-    		
     		$uid_text = '['.$uid_info['uid'].']';
-    		
-    		if ( $uid_info['alien'] ) $uid_text .= ' {'.$uid_info['project'].'}'; 
+    		if ( $this->root < 1 && $uid_info['alien'] ) $uid_text .= ' {'.$uid_info['project'].'}';
     		
  			$item['text'] = 
  	 			'<div class="treeview-label '.$image.'">'.

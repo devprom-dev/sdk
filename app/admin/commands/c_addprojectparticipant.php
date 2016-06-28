@@ -51,10 +51,6 @@ class AddProjectParticipant extends CommandForm
 
 			$part_it = $participant->getExact($id);
 		}
-		else
-		{
-			$participant->modify_parms( $part_it->getId(), array ( 'IsActive' => 'Y' ));
-		}
 
 		if ( $part_it->count() < 1 ) $this->replyError( text(706) );
 		
@@ -92,8 +88,6 @@ class AddProjectParticipant extends CommandForm
 
 		// report result of the operation
 		//
-		$this->replySuccess( text(665) );
+		$this->replyRedirect( '/admin/users.php', text(665) );
 	}
 }
-
-?>

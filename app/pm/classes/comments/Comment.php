@@ -33,7 +33,7 @@ class Comment extends CommentBase
 	    return false;
 	}
 	
-	function delete( $id )
+	function delete( $id, $record_version = ''  )
 	{
 		global $model_factory;
 		

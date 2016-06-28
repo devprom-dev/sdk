@@ -40,30 +40,25 @@
 	function complete()
 	{
 		getFactory()->resetCache();
-		
+		getFactory()->getPluginsManager()->invalidate();
+
 		$it = getFactory()->getObject('LicenseInstalled')->getAll();
 		
 		if ( $it->get('LicenseType') == '' ) $this->replyError(text(1275));
-
 		if ( !$it->valid() ) $this->replyError($it->restrictionMessage($_REQUEST['LicenseValue']));
-		
+
 		$user = getFactory()->getObject('cms_User');
-		
 		if ( $user->getRecordCount() < 1 )
 		{
 			$user_it = $this->createUser();
-			
-			if ( $user_it->getId() > 0 )
-			{
+			if ( $user_it->getId() > 0 ) {
     			$this->replyRedirect( $_SERVER['ENTRY_URL'], $this->getResultDescription( -1 ) );
 			}
-			else
-			{
+			else {
     			$this->replyRedirect( $user->getPage(), $this->getResultDescription( -1 ) );
 			}
 		}
-		else
-		{
+		else {
     		// report result of the operation
     		$this->replyRedirect( '/admin/license/', $this->getResultDescription( -1 ) );
 		}
@@ -121,5 +116,3 @@
 		}
 	}
  }
- 
-?>

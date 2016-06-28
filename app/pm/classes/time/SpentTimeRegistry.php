@@ -13,6 +13,12 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		$this->view = $this->getObject()->getView();
  		
 		$group_field = $this->getObject()->getGroup();
+		if ( $this->getObject()->IsReference($group_field) && $this->getObject()->getAttributeObject($group_field) instanceof User ) {
+			$userField = $group_field;
+		}
+		else {
+			$userField = 'SystemUser';
+		}
  		$group_function = $this->report_month > 0 
  				? "DAYOFMONTH(%1)" 
  				: ($this->report_year > 0 ? "MONTH(%1)" : "YEAR(%1)");
@@ -50,10 +56,10 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 			   "        ".$group." Day, ".
 		       "		t2.* " .
 			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, a.Description, " .
-			   "				a.VPD, a.Participant SystemUser, ".
+			   "				a.VPD, a.Participant ".$userField.", ".($userField != 'SystemUser' ? "a.Participant SystemUser," : "").
 			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project" .
 			   "		   FROM pm_Activity a, pm_Task t, pm_CalendarInterval i ".
-			   "  	      WHERE a.Task = t.pm_TaskId AND a.ReportDate = i.StartDateOnly ".
+			   "  	      WHERE a.Task = t.pm_TaskId AND DATE(a.ReportDate) = i.StartDateOnly ".
 			   "			AND i.Kind = 'day' AND i.IntervalYear = ".$this->report_year." AND i.IntervalMonth = ".$this->report_month.
                $this->getObject()->getVpdPredicate('t').
 			   "        ) t2, ".

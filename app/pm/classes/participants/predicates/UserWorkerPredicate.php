@@ -9,8 +9,8 @@ class UserWorkerPredicate extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
- 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) {
- 			return " AND NOT EXISTS (SELECT 1 FROM cms_BlackList bl WHERE bl.SystemUser = t.cms_UserId) ";
+ 		if ( !defined('PERMISSIONS_ENABLED') ) {
+ 			return " AND NOT EXISTS (SELECT 1 FROM cms_BlackList bl WHERE bl.SystemUser = t.cms_UserId) AND t.IsReadonly = 'N' ";
  		}
  			
  		$ids = array_filter(
@@ -25,12 +25,11 @@ class UserWorkerPredicate extends FilterPredicate
  		
  		if ( count($ids) < 1 ) $ids = array(0);
  		
-		return " AND NOT EXISTS (SELECT 1 FROM cms_BlackList bl WHERE bl.SystemUser = t.cms_UserId) ".
+		return " AND NOT EXISTS (SELECT 1 FROM cms_BlackList bl WHERE bl.SystemUser = t.cms_UserId) AND t.IsReadonly = 'N' ".
 			   " AND EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_Participant pt " .
 			   "			  WHERE r.Participant = pt.pm_ParticipantId" .
 			   "			    AND pt.IsActive = 'Y' ".
 			   "			    AND pt.SystemUser = t.cms_UserId ".
-			   "				AND pt.Project IN (".join(',',$ids).") ".
-			   "			    AND r.Capacity > 0 ) ";
+			   "				AND pt.Project IN (".join(',',$ids).") ) ";
  	}
 }

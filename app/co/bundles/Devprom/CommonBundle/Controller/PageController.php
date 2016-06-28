@@ -72,41 +72,42 @@ class PageController extends MainController
     
     protected function responsePage( $page )
     {
-        $plugins_paths = array();
-		foreach( getSession()->getPluginsManager()->getNamespaces() as $plugin )
-		{
-			$path = realpath(SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/templates');
-			if ( is_dir($path) ) $plugins_paths[] = $path.'/%name%';
-		}
-    	
-        $templating = new PhpEngine(
- 			new TemplateNameParser(), 
- 			new FilesystemLoader(
- 					array_merge(
- 							$plugins_paths,
- 							array (
- 									SERVER_ROOT_PATH.'/templates/views/%name%',
- 									SERVER_ROOT_PATH.'/templates/views/core/%name%'
- 							)
- 					)
- 			), 
- 			array (
-				new SlotsHelper(),
- 			    new RouterHelper($this->get('router')->getGenerator())
-			)
-		);
-		
         ob_start();
-
-    	$page->render( $templating );
-    	
+    	$page->render( $this->getTemplatingEngine() );
     	$content = ob_get_contents();
-
     	ob_end_clean();
     	
     	return new Response($content);
     }
-    
+
+	protected function getTemplatingEngine()
+	{
+		$plugins_paths = array();
+		foreach( getFactory()->getPluginsManager()->getNamespaces() as $plugin )
+		{
+			$path = realpath(SERVER_ROOT_PATH.'plugins/'.$plugin->getNamespace().'/templates');
+			if ( is_dir($path) ) $plugins_paths[] = $path.'/%name%';
+		}
+
+		$templating = new PhpEngine(
+			new TemplateNameParser(),
+			new FilesystemLoader(
+				array_merge(
+					$plugins_paths,
+					array (
+						SERVER_ROOT_PATH.'/templates/views/%name%',
+						SERVER_ROOT_PATH.'/templates/views/core/%name%'
+					)
+				)
+			),
+			array (
+				new SlotsHelper(),
+				new RouterHelper($this->get('router')->getGenerator())
+			)
+		);
+		return $templating;
+	}
+
 	protected function replyError( $message )
 	{
 		$log = $this->getLogger();

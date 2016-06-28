@@ -84,7 +84,6 @@ class SystemSettingsForm extends PageForm
 		switch ( $attr )
 		{
 			case 'Parameters':
-				$field->setReadonly( true );
 				$field->setRows( 18 );
 				$field->setValue( $this->debugParameters() );
 				break;

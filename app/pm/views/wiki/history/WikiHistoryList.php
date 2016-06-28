@@ -1,7 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
-include_once SERVER_ROOT_PATH.'ext/html/html2textdiff.php';
+include_once SERVER_ROOT_PATH."ext/htmldiff/html_diff.php";
 
 class WikiHistoryList extends ProjectLogList
 {
@@ -28,7 +28,8 @@ class WikiHistoryList extends ProjectLogList
 		$this->can_revert = true; 
 		
 		$this->editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
-		
+		$this->parser = $this->editor->getComparerParser();
+
 		$this->change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
 				array (
 						new FilterAttributePredicate('WikiPage', $object_it->idsToArray()),
@@ -169,7 +170,7 @@ class WikiHistoryList extends ProjectLogList
 	
 	function getActions( $object_it ) 
 	{
-		$actions = array();
+		$actions = parent::getItemActions('', $object_it);
 		
 		if ( !is_object($this->change_it) ) return $actions;
 
@@ -190,7 +191,7 @@ class WikiHistoryList extends ProjectLogList
 			$actions[] = array();
 			$actions[] = array(
 				'name' => translate('Отменить'),
-				'url' => $method->getJSCall( $page_it, $object_it ) 
+				'url' => $method->url( $page_it, $object_it )
 			);
 		}
 		
@@ -199,24 +200,18 @@ class WikiHistoryList extends ProjectLogList
 	
 	function getPagesDiff( $prev_content, $curr_content )
 	{
-		$method = new WikiFilterHistoryFormattingWebMethod();
+		$html = '<div class="reset wysiwyg">';
 
-		switch ( $method->getValue() )
-		{
-			case 'text':
-				$parser = $this->editor->getComparerParser();
+		$diff = html_diff($this->parser->parse($prev_content), $this->parser->parse($curr_content));
+		if ( strpos($diff, "diff-html-") !== false ) {
+			$html .= $diff;
+		}
+		else {
+			$html .= $this->editor->getPageParser()->parse($curr_content);
+		}
 
-			    $html2text = new html2textdiff($parser->parse($prev_content));
-				$prev_content = $html2text->get_text(); //preg_replace('/[\r\n]+/', '<br/>', $html2text->get_text());
-
-				$html2text = new html2textdiff($parser->parse($curr_content));
-				$curr_content = $html2text->get_text(); //preg_replace('/[\r\n]+/', '<br/>', $html2text->get_text());
-
-				return $this->editor->getDiff( $prev_content, $curr_content );
-				
-			default:
-				return $this->editor->getDiff( $prev_content, $curr_content );
-		}		
+		$html .= '</div>';
+		return $html;
 	}
 }
  

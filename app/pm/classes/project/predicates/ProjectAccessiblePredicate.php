@@ -9,19 +9,18 @@ class ProjectAccessiblePredicate extends FilterPredicate
 	
  	function _predicate( $filter )
  	{
-		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return " AND 1 = 1 ";
+		if ( !defined('PERMISSIONS_ENABLED') ) return " AND 1 = 1 ";
 
 		$user_id = getSession()->getUserIt()->getId();
 		if ( $user_id == '' ) $user_id = 0;
 
- 		return    " AND t.pm_ProjectId IN ( ".
- 				  "		SELECT pp.pm_ProjectId FROM pm_Project pp " .
+ 		return    " AND t.VPD IN ( ".
+ 				  "		SELECT pp.VPD FROM pm_Project pp " .
 				  "		 WHERE EXISTS ( SELECT 1 FROM pm_Participant r ".
 				  "						 WHERE r.Project = pp.pm_ProjectId ".
-				  "						   AND r.SystemUser = ".$user_id.
-				  "						   AND IFNULL(r.IsActive, 'N') = 'Y' ) ".
+				  "						   AND r.SystemUser = ".$user_id." ) ".
  			      "		 UNION ALL ".
- 			      "		SELECT i.pm_ProjectId FROM pm_Project i, pm_AccessRight r, pm_ProjectRole pr ".
+ 			      "		SELECT i.VPD FROM pm_Project i, pm_AccessRight r, pm_ProjectRole pr ".
  			      "	     WHERE pr.VPD = i.VPD ".
  				  "		   AND pr.ReferenceName = 'guest' ".
  				  "		   AND pr.pm_ProjectRoleId = r.ProjectRole ".

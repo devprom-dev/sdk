@@ -14,6 +14,8 @@ class MainApplicationKernel extends Kernel
     public function registerBundles()
     {
         $bundles = array(
+            new \Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle(),
+            new \Symfony\Bundle\MonologBundle\MonologBundle(),
             new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
             new \Symfony\Bundle\TwigBundle\TwigBundle(),
         	new \Devprom\ApplicationBundle\ApplicationBundle(),
@@ -25,7 +27,9 @@ class MainApplicationKernel extends Kernel
     
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader->load(SERVER_ROOT_PATH.'co/bundles/Devprom/ApplicationBundle/Resources/config/config.yml');
+        $loader->load(SERVER_ROOT_PATH . 'co/bundles/Devprom/ApplicationBundle/Resources/config/config.yml');
+        $dynamicSettingsFile = SERVER_ROOT_PATH . 'co/bundles/Devprom/ApplicationBundle/Resources/config/settings.yml';
+        if (file_exists($dynamicSettingsFile)) $loader->load($dynamicSettingsFile);
     }
 
     public function getRootDir()
@@ -33,9 +37,14 @@ class MainApplicationKernel extends Kernel
     	return SERVER_ROOT_PATH."co/bundles/Devprom/ApplicationBundle";
     }
 
+    public function getLogDir()
+    {
+        return defined('SERVER_LOGS_PATH') ? SERVER_LOGS_PATH : dirname($this->getCacheDir()) . '/logs';
+    }
+
     public function getCacheDir()
     {
-    	return CACHE_PATH.'/symfony2';
+    	return CACHE_PATH.'/symfony2app';
     }
 
     public function getCharset()
@@ -45,8 +54,12 @@ class MainApplicationKernel extends Kernel
 
     function initializeContainer()
     {
-    	$lock = new \CacheLock();
-		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
-    	parent::initializeContainer();
+        $lock = new \CacheLock();
+        try {
+            parent::initializeContainer();
+        }
+        catch( \Exception $e ) {
+            error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
+        }
     }
 }

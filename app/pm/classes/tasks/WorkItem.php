@@ -1,6 +1,7 @@
 <?php
 include "WorkItemRegistry.php";
 include "WorkItemIterator.php";
+include "predicates/WorkItemStatePredicate.php";
 
 class WorkItem extends MetaobjectStatable
 {
@@ -20,6 +21,7 @@ class WorkItem extends MetaobjectStatable
             'State',
             'Project',
             'RecentComment',
+            'Fact',
             'Spent',
             'RecordCreated',
             'RecordModified',
@@ -28,7 +30,8 @@ class WorkItem extends MetaobjectStatable
             'OrderNum',
             'Release',
             'PlannedRelease',
-            'TraceTask'
+            'TraceTask',
+            'Attachment'
         );
 
         foreach( $this->getAttributes() as $attribute => $data ) {

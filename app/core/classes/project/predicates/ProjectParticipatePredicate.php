@@ -9,12 +9,11 @@ class ProjectParticipatePredicate extends FilterPredicate
 	
  	function _predicate( $filter )
  	{
- 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return " AND 1 = 1 ";
+ 		if ( !defined('PERMISSIONS_ENABLED') ) return " AND 1 = 1 ";
  		
  		return    " AND t.pm_ProjectId IN ( ".
  				  "		SELECT r.Project FROM pm_Participant r " .
 				  "		 WHERE r.SystemUser IN (".$filter.") ".
-				  "    	   AND IFNULL(r.IsActive, 'N') = 'Y' ".
  			      "		 UNION ALL ".
  			      "		SELECT i.pm_ProjectId FROM pm_Project i, pm_AccessRight r, pm_ProjectRole pr ".
  			      "	     WHERE pr.VPD = i.VPD ".

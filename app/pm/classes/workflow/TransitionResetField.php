@@ -2,7 +2,7 @@
 
 include "TransitionResetFieldIterator.php";
 
-class TransitionResetField extends MetaobjectCacheable
+class TransitionResetField extends Metaobject
 {
  	function __construct()
  	{

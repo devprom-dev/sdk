@@ -26,23 +26,20 @@ class Participant extends Metaobject
 		parent::__construct('pm_Participant', $registry);
 		
 		$this->defaultsort = " IFNULL(IsActive, 'N') DESC, Caption ASC ";
-		
-		$this->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Роль в проекте'), false, false, '', 100);
-		
-		$this->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Роль'), false, false, '', 101);
 
+		$this->setAttributeCaption('IsActive', text(2178));
+		$this->setAttributeDescription('IsActive', text(1054));
+
+		$this->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Роль в проекте'), false, false, '', 100);
+		$this->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Роль'), false, false, '', 101);
 		$this->setAttributeRequired('ProjectRole', true);
 		
 		$this->addPersister( new ParticipantRolesPersister() );
 		
 		$this->setAttributeCaption('Capacity', translate('Ежедневная загрузка, ч.'));
-		
 		$this->setAttributeOrderNum('Capacity', 102);
-		
 		$this->setAttributeRequired('Capacity', true);
-		
 		$this->addAttribute('Notification', 'VARCHAR', 'text(964)', false, false, '', 103);
-		
 		$this->addPersister( new ParticipantDetailsPersister() );
 		
 		$system_attributes = array (
@@ -100,16 +97,6 @@ class Participant extends Metaobject
 	function modify_parms( $object_id, $parms, $b_notification = true ) 
 	{
 		global $model_factory;
-		
-		if ( $parms['IsActive'] != 'on' )
-		{
-			$part_it = $this->getExact($object_id);
-			
-			if ( !getFactory()->getAccessPolicy()->can_delete($part_it) )
-			{
-				$parms['IsActive'] = 'Y';
-			}
-		}
 		
 		$result = parent::modify_parms( $object_id, $parms, $b_notification );
 		if ( $result < 1 ) return $result;
@@ -191,58 +178,9 @@ class Participant extends Metaobject
 		return $this->createSQLIterator($sql);
 	}
 	
-	function getDevelopmentTeam()
-	{
-		global $project_it;
-		
-		$sql = "SELECT p.* ".
-			   "  FROM pm_Participant p " .
-			   " WHERE EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole l" .
-			   "				WHERE r.Participant = p.pm_ParticipantId " .
-			   "                  AND r.ProjectRole = l.pm_ProjectRoleId" .
-			   "				  AND l.ReferenceName NOT IN ('client', 'guest') ) " .
-			   "   AND p.IsActive = 'Y' ".
-			   "   AND p.Project = ".$project_it->getId().
-			   " ORDER BY p.Caption ASC ";
-
-		return $this->createSQLIterator($sql);
-	}
-
-	function getDeveloperIt()
-	{
-		global $project_it;
-		
-		$sql = "SELECT p.* ".
-			   "  FROM pm_Participant p " .
-			   " WHERE EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole l" .
-			   "				WHERE r.Participant = p.pm_ParticipantId " .
-			   "                  AND r.ProjectRole = l.pm_ProjectRoleId" .
-			   "				  AND l.ReferenceName = 'developer' ) " .
-			   "   AND p.IsActive = 'Y' ".
-			   "   AND p.Project = ".$project_it->getId();
-
-		return $this->createSQLIterator($sql);
-	}
-
-	function getTesterIt()
-	{
-		global $project_it;
-		
-		$sql = "SELECT p.* ".
-			   "  FROM pm_Participant p " .
-			   " WHERE EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole l" .
-			   "				WHERE r.Participant = p.pm_ParticipantId " .
-			   "                  AND r.ProjectRole = l.pm_ProjectRoleId" .
-			   "				  AND l.ReferenceName = 'tester') " .
-			   "   AND p.IsActive = 'Y' ".
-			   "   AND p.Project = ".$project_it->getId();
-
-		return $this->createSQLIterator($sql);
-	}
-
 	function getLeadTeam( $project = 0 )
 	{
-		if ( $project < 1 ) $project = getSession()->getProjectIt()->getId();
+		if ( $project < 1 ) return $this->getEmptyIterator();
 		
 		$sql = "SELECT p.* ".
 			   "  FROM pm_Participant p " .
@@ -250,68 +188,19 @@ class Participant extends Metaobject
 			   "				WHERE r.Participant = p.pm_ParticipantId " .
 			   "                  AND r.ProjectRole = l.pm_ProjectRoleId" .
 			   "				  AND l.ReferenceName = 'lead' ) " .
-			   "   AND p.IsActive = 'Y' ".
 			   "   AND p.Project = ".$project;
-
-		return $this->createSQLIterator($sql);
-	}
-
-	function getTeam( $project = null )
-	{
-		global $project_it;
-		
-		if ( is_null($project) )
-		{
-			$project = $project_it->getId();
-		}
-		
-		$sql = "SELECT p.* ".
-			   "  FROM pm_Participant p " .
-			   " WHERE p.IsActive = 'Y' ".
-			   "   AND p.Project = ".$project;
-
-		return $this->createSQLIterator($sql);
-	}
-	
-	function getTeamWithCapacity()
-	{
-		$sql = "SELECT p.* ".
-			   "  FROM pm_Participant p " .
-			   " WHERE p.IsActive = 'Y'" .
-			   "   AND (SELECT SUM(r.Capacity) FROM pm_ParticipantRole r " .
-			   "	     WHERE r.Participant = p.pm_ParticipantId ) > 0 ".
-			   $this->getVpdPredicate();
-
-		return $this->createSQLIterator($sql);
-	}
-
-	function getTotallySubscribedIt()
-	{
-		global $project_it;
-		
-		$sql = "SELECT p.* ".
-			   "  FROM pm_Participant p " .
-			   " WHERE EXISTS (SELECT 1 FROM cms_UserSettings s " .
-			   "				WHERE s.User = p.pm_ParticipantId " .
-			   "                  AND s.Settings = 'SubscribeAllNotifications'" .
-			   " 				  AND s.Value = 'Y' ) " .
-			   "   AND p.IsActive = 'Y' ".
-			   "   AND p.Project = ".(is_object($project_it) && $project_it->count() > 0 ? $project_it->getId() : "0");
 
 		return $this->createSQLIterator($sql);
 	}
 
 	function hasTeamMembers( $role_it )
 	{
-		global $project_it;
-		
 		$sql = "SELECT COUNT(1) items ".
 			   "  FROM pm_Participant p " .
 			   " WHERE EXISTS (SELECT 1 FROM pm_ParticipantRole r, pm_ProjectRole l" .
 			   "				WHERE r.Participant = p.pm_ParticipantId " .
 			   "                  AND r.ProjectRole = ".$role_it->getId().") " .
-			   "   AND p.IsActive = 'Y' ".
-			   "   AND p.Project = ".$project_it->getId();
+			   "   AND p.Project = ".getSession()->getProjectIt()->getId();
 
 		$it = $this->createSQLIterator($sql);
 		return $it->get('items') > 0;
@@ -319,16 +208,12 @@ class Participant extends Metaobject
 
 	function getDefaultAttributeValue( $attr )
 	{
-		global $project_it;
-		
 		switch ( $attr )
 		{
 			case 'Project':
-				return $project_it->getId();
-				
+				return getSession()->getProjectIt()->getId();
 			case 'Capacity':
 			    return 0;
-			    
 			default:
 				return parent::getDefaultAttributeValue( $attr );
 		}

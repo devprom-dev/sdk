@@ -1,3 +1,4 @@
+var text = underi18n.MessageFactory(messages);
 var devpromOpts = {
  	language: '',
  	datepickerLanguage: '',
@@ -5,18 +6,14 @@ var devpromOpts = {
  	project: '',
  	template: '',
  	methodsUrl: 'methods.php',
- 	saveButtonName: '',
- 	closeButtonName: '',
- 	completeButtonName: '',
- 	deleteButtonName: 'delete',
+ 	saveButtonName: text('form-submit'),
  	url: '',
  	iid: '',
  	version: ''
 };
 
-var formHandlers = new Array();
+var formHandlers = [];
 var originalState = '';
-var text = underi18n.MessageFactory(messages);
 var previousPoint = null;
 var originalFormState = '';
 
@@ -58,7 +55,7 @@ var originalFormState = '';
 		 for ( var key in this.parms )
 		 {
 			 if ($.inArray(key,['','show','hide','group','sort','sort2','sort3','sort4','infosections','color']) >= 0) continue;
-			 if ($.inArray(this.parms[key],['','all']) >= 0) continue;
+			 if ($.inArray(this.parms[key],['','all','hide']) >= 0) continue;
 			 this.location = updateLocation( key+'=all', this.location );
 		 }
 		 window.location = this.location;
@@ -105,7 +102,7 @@ var originalFormState = '';
  	{
  		this.restoreColumns();
  		
-		var columns = new Array();
+		var columns = [];
 		for ( var i = 0; i < this.hiddenColumns.length; i++ )
 		{
  			if ( this.hiddenColumns[i] == name ) continue;
@@ -136,7 +133,7 @@ var originalFormState = '';
  	{
  		this.restoreColumns();
 
-		var columns = new Array();
+		var columns = [];
 		for ( var i = 0; i < this.visibleColumns.length; i++ )
 		{
  			if ( this.visibleColumns[i] == name ) continue;
@@ -176,13 +173,12 @@ var originalFormState = '';
 		
 		var values = this.parms[parm].split(',');
 		
-		var newvalues = new Array();
+		var newvalues = [];
 
 		found = false;
 		
 		for ( var i = 0; i < values.length; i++ )
 		{
-			if ( values[i] == 'none' ) continue;
 			if ( values[i] == 'all' ) continue;
 			if ( values[i] == '' ) continue;
 			
@@ -207,7 +203,7 @@ var originalFormState = '';
 		var values = this.parms[parm].split(',');
 		var names = name.split(',');
 		
-		var newvalues = new Array();
+		var newvalues = [];
 		
 		for ( var i = 0; i < values.length; i++ )
 		{
@@ -267,8 +263,8 @@ var originalFormState = '';
  	
  	hasActivity: function()
  	{
- 		return $('i.icon-cog').hasClass('filter-activity');;
- 	},
+		return $('i.icon-cog').hasClass('filter-activity');
+	},
  	
  	locationTableOnly: function()
  	{
@@ -292,7 +288,7 @@ var originalFormState = '';
  	
  	getParametersString: function ()
  	{
- 		var keys = new Array();
+ 		var keys = [];
  		
  		for ( var key in this.parms )
  		{
@@ -306,7 +302,7 @@ var originalFormState = '';
  	
  	getValuesString: function()
  	{
- 		var values = new Array();
+ 		var values = [];
  		
  		for ( var key in this.parms )
  		{
@@ -320,7 +316,7 @@ var originalFormState = '';
  	
  	getEmptyValuesString: function()
  	{
- 		var values = new Array();
+ 		var values = [];
  		
  		for ( var key in this.parms )
  		{
@@ -440,7 +436,7 @@ function bulkDelete( class_name, method, url )
 
 function processBulk(title, url, id, callback)
 {
-	var ids = new Array();
+	var ids = [];
 	if ( typeof id != 'undefined' && id > 0 ) ids.push(id);
 	$('.checkbox').each(function() {
 		if ( this.checked ) {
@@ -455,8 +451,8 @@ function processBulk(title, url, id, callback)
 function toggleBulkActions()
 {
 	showSelectedCards();
-	var ids = new Array();
-	var states = new Array();
+	var ids = [];
+	var states = [];
 	$('.checkbox').each(function() {
 		if ( this.checked ) {
 			ids.push(parseInt(this.name.toString().replace('to_delete_',''), 10));
@@ -471,7 +467,13 @@ function toggleBulkActions()
 	});
 	$('.bulk-filter-actions div[object-state]').hide();
 	if ( states.length == 1 ) $('.bulk-filter-actions div[object-state="'+states.pop()+'"]').show();
-	ids.length > 0 ? $('.bulk-filter-actions').show() : $('.bulk-filter-actions').hide(); 
+	if ( ids.length > 0 ) {
+		$(document).trigger("trackerItemSelected", ids[0]);
+		$('.bulk-filter-actions').show();
+	}
+	else {
+		$('.bulk-filter-actions').hide();
+	}
 }
 
 function runMethod( method, data, url, warning, async )
@@ -501,7 +503,7 @@ function runMethod( method, data, url, warning, async )
 		url: method,
 		dataType: "html",
 		data: data,
-		async: async,
+		async: async,	
 		success: 
 			function(result, status, xhr) 
 			{
@@ -544,6 +546,10 @@ function runMethod( method, data, url, warning, async )
 						}
 					}
 					catch( e ) {
+						if ( (new RegExp('Internal Server Error')).exec( result ) != null ) {
+							window.location = '/500';
+							return;
+						}
 					}
 
 					if ( typeof url != 'undefined' )
@@ -598,7 +604,7 @@ function selectRefreshMethod( method_url, id, parm_name )
 		}
 	});				
 
-	return;
+
 }
 
 function updateLocation( component, original )
@@ -726,7 +732,15 @@ function appendEmbeddedItem( form_id )
 	$('#embeddedList'+form_id).hide();
 	$('#embeddedList'+form_id).parent().find('a.embedded-add-button').hide();
 	$('#embeddedForm'+form_id).show();
-	
+
+	// initialize editors
+	$('#embeddedForm'+form_id).find('[contenteditable]').each(function(i) {
+		var funcName = 'setup' + $(this).attr('id');
+		if ( typeof window[funcName] != 'undefined' ) {
+			window[funcName]();
+		}
+	});
+
 	$('#embeddedForm'+form_id+' input:visible, #embeddedForm'+form_id+' textarea, #embeddedForm'+form_id+' select')
 		.each( function() { 
 			if ( $(this).attr('type') == 'button') return;
@@ -803,7 +817,10 @@ function validateEmbedded( form_id, required )
 	var valid = true;
 
 	if ( !$('#embeddedForm'+form_id).is(':visible') ) return valid;
-	
+
+	valid = validateForm($('#embeddedForm'+form_id+' form'));
+	if ( !valid ) return valid;
+
 	if ( required == '' ) return valid;
 
 	jQuery.each(required, function()
@@ -903,9 +920,11 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 			
 			$("#embeddedForm"+form_id)
 				.find("input[type='button']").removeAttr('disabled');
-			
-			display_rule = data.caption;
-			
+
+			var display_rule = '';
+			if ( typeof data.caption != 'undefined' ) {
+				display_rule = data.caption;
+			}
 			if ( display_rule == '' ) return;
 			
 			jQuery.each(jfields, function()
@@ -928,7 +947,7 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 				else
 				{
 					$('<input class="embval'+itemsCount+'" type="hidden" name="'+this+itemsCount+'">')
-						.val($('#'+this).val()).appendTo(cache);
+						.val($('#'+this+',[name="'+this+'"]').val()).appendTo(cache);
 
 					$('#'+this+'Text').val('');
 				}
@@ -1040,7 +1059,7 @@ function translate( text_id, callback )
 	 				window.location = '/500';
  				}
 	 			
-	 			return;
+
 			}
 		}
 	});				
@@ -1153,7 +1172,9 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 				});
 			},
 			select: function(event, ui) 
-			{ 
+			{
+				if ( typeof event.keyCode != 'undefined' && event.keyCode == 9 ) return false; // skip selection by TAB key
+
 				jqe_field = $(this).next('input');
 				jqe_field.val(ui.item ? ui.item.id : "");
 				
@@ -1165,18 +1186,30 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 			change: function(event, ui) 
 			{
 				jqe_field = $(this).next('input');
-				
+
 				$.each(additional_attributes, function(index,value) {
 					if ( value != "" ) jqe_field.attr(value, ui.item ? ui.item[value] : ""); 
 				});
 
 				if ( ui.item ) {
-					jqe_field.val(ui.item.id).trigger('change');
-				}	
+					if ( ui.item == 'commit' ) {
+						if ( $(this).val() == '' ) {
+							jqe_field.val(jqe_field.attr("default")).trigger('change');
+						}
+					}
+					else {
+						jqe_field.val(ui.item.id).trigger('change');
+					}
+				}
 				else {
-					jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 
-						? jqe_field.val($(this).val()).trigger('change')
-						: jqe_field.val($(this).val() != '' ? jqe_field.attr("default") : '').trigger('change');
+					if ( jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 ) {
+						jqe_field.val($(this).val()).trigger('change')
+					}
+					else {
+						if ( $(this).val() == '' ) {
+							jqe_field.val(jqe_field.attr("default")).trigger('change');
+						}
+					}
 				}
 	        },
 			open: function()
@@ -1256,6 +1289,9 @@ function quickSearchAutoComplete( field )
 	if ( devpromOpts.project != '' ) method_url = '/pm/'+devpromOpts.project+'/'+method_url;
 
 	$(field)
+		.keydown(function(e) {
+			$(this).popover('hide');
+		})
 		.autocomplete({
 			source: method_url+"?method=autocompletewebmethod&class="+$(field).attr("object")+"&attributes="+$(field).attr("searchattrs"),
 			select: function(event, ui) { 
@@ -1263,9 +1299,7 @@ function quickSearchAutoComplete( field )
 				},
 			open: function() {
 				$(this).autocomplete('widget').css({
-						'z-index': 9999,
-						'left': '16px',
-						'border-radius': 0
+						'z-index': 9999
 					});
 			}
 		});
@@ -1376,7 +1410,7 @@ function validateForm( form )
 	}
 
 	if ( !valid ) return valid;
-	
+
 	form.find('input[required], select[required], textarea[required], div.wysiwyg[required]')
 		.each( function ()
 		{
@@ -1488,6 +1522,27 @@ function completeUIExt( jqe )
             setTimeout(function() {$(e.target).trigger('onkeydown');}, 100);
         }
 	});
+
+	jqe.find('.dropdown-item-search input')
+		.on('click', function(e) {
+			e.stopImmediatePropagation();
+			return false;
+		})
+		.on('keyup', function(e) {
+			var items = $(this).parents('ul.dropdown-menu').find('li:not([uid=none]):not([uid=all]):not([uid=search]):not(.divider):not(:has(a.checked))');
+			if ( $(this).val() == "" ) {
+				var visibleItems = items.slice(0, 15);
+			}
+			else {
+				var text = $(this).val();
+				var visibleItems = items.filter(function(i, el) {
+					return $(el).text().match(new RegExp(text, "ig"));
+				});
+			}
+			items.hide();
+			visibleItems.show();
+		})
+		.trigger('keyup');
 	
 	jqe.find('body, .content-internal')
 		.on('click.dropdown.data-api', function(e) {
@@ -1497,6 +1552,14 @@ function completeUIExt( jqe )
 			$('.popover.in-focus').toggleClass('in').remove();
 			if ( $(e.target).is('.title>a, .title>a>strike') ) {
 				e.stopPropagation();
+			}
+
+			var target = $(e.target).parents('.dropdown-toggle').andSelf().attr('data-target');
+			if ( typeof target != 'undefined' ) {
+				target = $(target);
+				if ( target.is('.dropdown-fixed') ) {
+					target.css(dropdownMenuPosition(e, target));
+				}
 			}
 		});
 
@@ -1549,7 +1612,7 @@ function completeUIExt( jqe )
 	jqe.find('.with-tooltip').popover({
 		placement: function() {
 			if ( $(this.$element).is('[placement]') ) return $(this.$element).attr('placement');
-			return this.$element.offset().left < $(window).width() / 2 ? 'right' : 'left';
+			return $(this.$element).offset().left < $(window).width() / 2 ? 'right' : 'left';
 		},
 		html:true,
 		trigger: 'manual',
@@ -1598,7 +1661,18 @@ function completeUIExt( jqe )
         }, 350);
         
     });
-    
+	jqe.find('#toggle-detailspanel').button().off('click').on('click', function (e) {
+		var button = $(this);
+		e.stopImmediatePropagation();
+
+		if (!button.hasClass('active')) {
+			button.addClass('active');
+		} else {
+			button.removeClass('active');
+		}
+		toggleMasterDetails();
+	});
+
     if ( !$.browser.msie )
     {
     	jqe.find("input:file").filestyle({
@@ -1675,7 +1749,7 @@ function completeUIExt( jqe )
 		toggleBulkActions();
 	});
 
-	var client = new ZeroClipboard(jqe.find('.clipboard'));
+	var client = new ZeroClipboard(jqe.find('.clipboard'), {useNoCache: false});
 	client.on( 'ready', function(event) {
 		client.on('aftercopy', function(event) {
 			$(event.target).popover({
@@ -1687,6 +1761,62 @@ function completeUIExt( jqe )
 			setTimeout(function() {$(event.target).popover('hide');}, 2000);
 		});
 	});
+
+	if ( jqe.find('body').length > 0 ) {
+		jqe.scroll( function(event)
+		{
+			var scrollPos = $(this).scrollTop();
+			var contentStyle = 0;
+			$('.sticks-top').each(function() {
+				if ( !$(this).is(':visible') ) return false;
+				var treePos = $(this).position().top;
+				var body = $(this).parent().find('.sticks-top-body');
+				if ( scrollPos >= treePos ) {
+					if ( body.css('position') != 'fixed' ) {
+						body.attr('wasPosition', body.css('position'));
+						body.css({
+							position: 'fixed',
+							top: 0,
+							width: $(this).width(),
+							'overflow-y': 'auto',
+							'overflow-x': 'hidden',
+							height: $(this).attr("heightStyle") == "window" ? $(window).height() : 'auto'
+						});
+						body.addClass('sticked');
+						body.find('.cke_panel').hide();
+						contentStyle = 1;
+					}
+				}
+				else if ( body.css('position') == 'fixed' ) {
+					body.css({
+						position: body.attr('wasPosition'),
+						height: 'auto',
+						top: 'auto',
+						'overflow-y': 'hidden',
+						'overflow-x': 'hidden'
+					});
+					body.find('.cke_panel').hide();
+					body.removeClass('sticked');
+					contentStyle = 2;
+				}
+			});
+			if ( contentStyle == 1 ) {
+				$('.content-internal').css('min-height', $(window).height() * 1.1);
+				$('footer').hide();
+				$('.content-internal').addClass('content-internal-fullpage');
+				$('body').addClass('fullpage');
+				$('.alert').hide();
+			}
+			if ( contentStyle == 2 ) {
+				$('footer').show();
+				$('.content-internal').removeClass('content-internal-fullpage');
+				$('body').removeClass('fullpage');
+				$('.alert').show();
+			}
+		});
+	}
+
+	jqe.find('[data-toggle="popover"]').popover({trigger: 'hover'});
 
     completeChartsUI(jqe);
 }
@@ -2138,22 +2268,20 @@ function filterReports( text )
 	}).show();
 }
 
-function workflowMoveObject(project, object_id, object_class, entity_ref, from_state, to_state, transition, transition_title, callback)
+function workflowMoveObject(project, object_id, object_class, entity_ref, from_state, to_state, transition, transition_title, callback, parms)
 {
 	var method = { 
 			url: '/pm/'+project+'/methods.php?method=modifystatewebmethod',
-			data: {
-				'source': from_state, 
-		 		'target': to_state,
-		 		'transition': transition,
-		 		'object': object_id,
-		 		'class': object_class
-		 		},
+			data: $.extend({
+					'source': from_state,
+					'target': to_state,
+					'transition': transition,
+					'object': object_id,
+					'class': object_class
+				}, parms),
 		 	className: object_class,
 		 	entityName: entity_ref,
-		 	transitionTitle: transition_title,
-		 	saveButtonName: devpromOpts.saveButtonName,
-		 	closeButtonName: devpromOpts.closeButtonName
+		 	transitionTitle: transition_title
 	};
 	
 	workflowRunMethod( method, callback );
@@ -2162,7 +2290,8 @@ function workflowMoveObject(project, object_id, object_class, entity_ref, from_s
 function workflowRunMethod(method, callback)
 {
 	filterLocation.showActivity();
-	
+	beforeUnload();
+
 	runMethod( method.url, method.data, function ( result )
 	{
 		filterLocation.hideActivity();
@@ -2186,7 +2315,7 @@ function workflowRunMethod(method, callback)
 						resultObject.description+'</div>' );
 
 				$('#modal-form').dialog({
-					width: 450,
+					width: 570,
 					modal: true,
 					buttons: { "Ok": function() { $(this).dialog("close"); } }
 				});
@@ -2218,7 +2347,7 @@ function workflowRunMethod(method, callback)
 							$('#modal-form').dialog({
 								width: (typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
 									? $(window).width() - 300
-									: 750),
+									: $(window).width() * 3/5),
 								modal: true,
 								open: function()
 								{
@@ -2235,7 +2364,7 @@ function workflowRunMethod(method, callback)
 								buttons: [
 									{
 										tabindex: 10,
-										text: method.saveButtonName,
+										text: text('form-submit'),
 										id: method.entityName+'SubmitBtn',
 									 	click: function() {
 											var dialogVar = $(this);
@@ -2257,7 +2386,7 @@ function workflowRunMethod(method, callback)
 												{
 													try {
 														var object = jQuery.parseJSON(data);
-														dialogVar.dialog('close');
+														workflowCloseDialog(dialogVar);
 														if ( typeof callback == 'function' ) callback(resultObject);
 													}
 													catch(e) {
@@ -2292,7 +2421,7 @@ function workflowRunMethod(method, callback)
 									},
 									{
 										tabindex: 11,
-										text: method.closeButtonName,
+										text: text('form-close'),
                                         id: method.entityName+'CancelBtn',
 										click: function()
 										{
@@ -2309,17 +2438,20 @@ function workflowRunMethod(method, callback)
 
 function workflowMakeupDialog()
 {
-    beforeUnload();
-
 	completeUIExt($('#modal-form').parent());
     var formId = $('#modal-form form').attr('id');
 
 	registerFormValidator( formId, function(form)
 	{
+		form.find('.autocomplete-text').each(function() {
+			// hack to apply field changes before async submit of the form will occur
+			$(this).data('autocomplete').selectedItem = "commit";
+			$(this).data('autocomplete')._change();
+		});
+		form.parents('#modal-form').find('form[id] .btn-primary[type=submit]').click();
 		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
 		}).find('.btn-primary').click();
-	
 		return form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
 			 return this.id.match(/embeddedForm\d+/);
 		}).length < 1;
@@ -2334,7 +2466,7 @@ function workflowMakeupDialog()
 	$('#modal-form form[id] input:visible:first').blur();
 
     if ( !$.browser.msie ) {
-        originalFormState = $('#modal-form form[id]').formSerialize();
+		originalFormState = $('#'+formId).formSerialize();
     }
 
 	focusField('modal-form form[id]');
@@ -2348,6 +2480,9 @@ function workflowBuildDialog( dlg, options )
 				$(this).parent().find('.ui-icon-closethick').click(function() {
 					dlg.dialog('close');
 				});
+			},
+			select: function(e,ui) {
+				$(document).trigger('tabsactivated', [e,ui]);
 			}
 		});
 		dlg.parent().children('.ui-dialog-titlebar').replaceWith($('#modal-form .tabs'));
@@ -2372,9 +2507,24 @@ function workflowCompleteData( data )
 	return data;
 }
 
-function workflowNewObject( form_url, class_name, entity_ref, form_title, data, callback ) 
+function workflowCloseDialog( dialog ) {
+	filterLocation.hideActivity();
+
+	$('#modal-form form[id]').each(function() {
+		resetUnloadHandlers($(this).attr('id'));
+	});
+	dialog.dialog('option', 'beforeClose', function() {});
+	dialog.dialog('close');
+
+	formDestroy($('#modal-form form').attr('id'));
+	$('#modal-form').parent().detach();
+}
+
+function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_title, data, callback )
 {
-	if ( form_url.indexOf('?') < 0 ) 
+	beforeUnload();
+
+	if ( form_url.indexOf('?') < 0 )
 	{
 		form_url += '?formonly=true';
 	}
@@ -2421,8 +2571,8 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 				$('#modal-form #'+entity_ref+'action').val('add');
 				
 				$('#modal-form #'+entity_ref+'redirect').val(form_url);
-				
-				var scale = $('form[id]').find('#tab-main .control-column').length < 2 ? 3/5 : 4/5;
+
+				var scale = $('form[id]').find('#tab-main .control-column').length < 3 ? 3/5 : 4/5;
                 if ( $('form[id]').find('.source-text').length > 0 ) scale = 5/6;
 
 				$('#modal-form').dialog({
@@ -2456,97 +2606,133 @@ function workflowNewObject( form_url, class_name, entity_ref, form_title, data, 
 					{
                         return workflowHandleBeforeClose(event, ui);
 					},
-					buttons: [
-						{
-							tabindex: 10,
-							text: devpromOpts.saveButtonName,
-							id: entity_ref+'SubmitBtn',
-						 	click: function() 
-						 	{
-								var dialogVar = $(this);
-								
-								if ( !validateForm($('#modal-form form[id]')) ) return false;
-								
-								$('#modal-form').parent()
-									.find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
-								
-								$('#modal-form form[id]').ajaxSubmit({
-									dataType: 'html',
-									success: function( data ) 
-									{
-										try {
-											var object = jQuery.parseJSON(data);
-											dialogVar.dialog('close');
-											if ( typeof callback == 'function' ) {
-												callback( object.Id );
-											}
-										}
-										catch(e) {
-											var warning = '';
-											try {
-												warning = $(data).find('.form_warning').html();
-											}
-											catch(e) {
-												warning = e.message;
-											}
-											if ( warning != '' )
-											{
-												$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-												$('.form_warning').remove();
-												$('<div class="alert alert-error form_warning">'+warning+'</div>').insertBefore($('#modal-form form[id]'));
-												return false;
-											}
-										}
-									},
-									error: function( xhr )
-									{
-										$('#modal-form').parent()
-											.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-									},
-									statusCode:
-									{
-								      500: function(xhr) {
-								    	  window.location = '/500';
-								       }
+					buttons:
+						absoluteUrl == ""
+							? [
+								{
+									tabindex: 10,
+									text: devpromOpts.saveButtonName,
+									id: entity_ref+'SubmitBtn',
+									click: function () {
+										workflowSubmitForm($(this), callback);
 									}
-								});
-							}
-						},
-						{
-							tabindex: 11,
-							text: devpromOpts.closeButtonName,
-							id: entity_ref+'CancelBtn',
-							click: function()
-							{
-								$(this).dialog('close');
-							}
-						}
-					]
+								},
+								{
+									tabindex: 12,
+									text: text('form-close'),
+									id: entity_ref+'CancelBtn',
+									click: function()
+									{
+										$(this).dialog('close');
+									}
+								}
+							]
+							: [
+								{
+									tabindex: 10,
+									text: devpromOpts.saveButtonName,
+									id: entity_ref+'SubmitBtn',
+									click: function () {
+										workflowSubmitForm($(this), callback);
+									}
+								},
+								{
+									tabindex: 11,
+									text: text('form-submit-open'),
+									id: entity_ref+'SubmitOpenBtn',
+									click: function () {
+										workflowSubmitForm($(this), function(id) {
+											window.location = absoluteUrl + id;
+										});
+									}
+								},
+								{
+									tabindex: 12,
+									text: text('form-close'),
+									id: entity_ref+'CancelBtn',
+									click: function()
+									{
+										$(this).dialog('close');
+									}
+								}
+							]
 				});
 			}
 	});
 }
 
+function workflowSubmitForm(dialogVar, callback)
+{
+	if ( !validateForm($('#modal-form form[id]')) ) return false;
+
+	$('#modal-form').parent()
+		.find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
+
+	$('#modal-form form[id]').ajaxSubmit({
+		dataType: 'html',
+		success: function( data )
+		{
+			try {
+				var object = jQuery.parseJSON(data);
+				workflowCloseDialog(dialogVar);
+				if ( typeof callback == 'function' ) {
+					callback( object.Id );
+				}
+			}
+			catch(e) {
+				var warning = '';
+				try {
+					warning = $(data).find('.form_warning').html();
+				}
+				catch(e) {
+					warning = e.message;
+				}
+				if ( warning != '' )
+				{
+					$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+					$('.form_warning').remove();
+					$('<div class="alert alert-error form_warning">'+warning+'</div>').insertBefore($('#modal-form form[id]'));
+					return false;
+				}
+			}
+		},
+		error: function( xhr )
+		{
+			$('#modal-form').parent()
+				.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+		},
+		statusCode:
+		{
+			500: function(xhr) {
+				window.location = '/500';
+			}
+		}
+	});
+}
+
 function workflowHandleBeforeClose( event, ui )
 {
-    var frmid = $('#modal-form form').attr('id');
+	var result = null;
+	$('#modal-form form[id]').each(function() {
+		result = beforeUnload($(this).attr('id'));
+		if ( typeof result == 'string' ) return false;
+	});
+	if ( typeof result == 'string' ) {
+		if ( !confirm(text('form-modified')) ) return false;
+	}
 
-    if ( typeof event.which != 'undefined' && (event.which == 1 || event.which == 27) ) {
-        var result = beforeUnload(frmid);
-        if ( typeof result == 'string' ) {
-            if ( !confirm(text('form-modified')) ) return false;
-        };
-    }
-
-    formDestroy(frmid);
+    formDestroy($('#modal-form form').attr('id'));
     $('#modal-form').parent().detach();
     filterLocation.hideActivity();
+
     return true;
 }
 
 function workflowModify( options, callback ) 
 {
-	if ( options.form_url.indexOf('?') < 0 ) 
+	beforeUnload();
+
+	if ( options.form_url.indexOf('?') < 0 )
 	{
 		options.form_url += '?formonly=true';
 	}
@@ -2613,7 +2799,8 @@ function workflowModify( options, callback )
 					buttons: [
 						{
 							tabindex: 10,
-							text: devpromOpts.saveButtonName,
+							text: text('form-submit'),
+							disabled: options.can_modify == 'false',
 							id: options.entity_ref+'SubmitBtn',
 						 	click: function() 
 						 	{
@@ -2629,7 +2816,7 @@ function workflowModify( options, callback )
 									{
 										try {
 											var object = jQuery.parseJSON(data);
-											dialogVar.dialog('close');
+											workflowCloseDialog(dialogVar);
 											if ( typeof callback == 'function' ) {
 												callback( options.object_id );
 											}
@@ -2662,7 +2849,7 @@ function workflowModify( options, callback )
 						},
 						{
 							tabindex: 11,
-							text: devpromOpts.closeButtonName,
+							text: text('form-close'),
 							id: options.entity_ref+'CancelBtn',
 							click: function()
 							{
@@ -2671,7 +2858,7 @@ function workflowModify( options, callback )
 						},
 						{
 							tabindex: 12,
-							text: devpromOpts.deleteButtonName,
+							text: text('form-delete'),
 							id: options.entity_ref+'DeleteBtn',
 							disabled: options.can_delete == 'false',
 							title: options.can_delete == 'false' ? options.delete_reason : '',
@@ -2692,9 +2879,8 @@ function workflowModify( options, callback )
 											dataType: 'html',
 											complete: function( data ) 
 											{
-												dialogVar.dialog('close');
-													
-												if ( typeof callback == 'function' ) callback(); 
+												workflowCloseDialog(dialogVar);
+												if ( typeof callback == 'function' ) callback();
 											}
 										});
 									}
@@ -2731,7 +2917,7 @@ function workflowTable( form_url, title )
 		success: 
 			function(result) 
 			{
-				var scripts = new Array();
+				var scripts = [];
 				
 				$('#modal-form').parent().detach();
 				
@@ -2803,6 +2989,8 @@ function workflowGetField( options, callback )
 function openAjaxForm(title, url, callback) 
 {
 	filterLocation.showActivity();
+	beforeUnload();
+
 	$.ajax({
 		type: "GET",
 		url: url+'&formonly=true',
@@ -2837,7 +3025,7 @@ function openAjaxForm(title, url, callback)
 					buttons: [
 						{
 							tabindex: 10,
-							text: devpromOpts.completeButtonName,
+							text: text('form-complete'),
 							id: 'SubmitBtn',
 						 	click: function() 
 						 	{
@@ -2885,8 +3073,8 @@ function openAjaxForm(title, url, callback)
 											$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 										} else {
 											$('#modal-form').parent().find('.ui-button[id="CancelBtn"]').attr('disabled', false).removeClass("ui-state-disabled");
-											setTimeout(function() { 
-												dialogVar.dialog('close');
+											setTimeout(function() {
+												workflowCloseDialog(dialogVar);
 												if ( state == 'redirect' ) {
 													window.location = data.object;													
 												} else {
@@ -2915,7 +3103,7 @@ function openAjaxForm(title, url, callback)
 						},
 						{
 							tabindex: 11,
-							text: devpromOpts.closeButtonName,
+							text: text('form-close'),
 							id: 'CancelBtn',
 							click: function() {
 								$(this).dialog('close');
@@ -2968,20 +3156,7 @@ function updateLeftWorkAttribute( form_id, data, row_number )
 function setUXData()
 {
 	if ( devpromOpts.url == "" ) return;
-	
-	$(document).ajaxSend( function(event, xhr, options)
-	{
-		if ( options.url == devpromOpts.url ) return;
-		if ( $.inArray(xhr.statusText, ["error","timeout","parsererror"]) >= 0 ) return;
-		
-		var url = options.url;
-		
-		if ( options.data ) url += '&'+options.data.toString();
-		
-		sendUXData(url);
-	});
-	
-	sendUXData();
+	sendUXData( window.location.toString() );
 }
 
 function sendUXData( url )
@@ -3034,8 +3209,10 @@ function addToFavorites( widget_uid, widget_url, widget_type )
 
 function uiShowSpentTime()
 {
-	$('a[href*=pagesectionspenttime]').click();
-	window.scrollTo($('a[href*=pagesectionspenttime]').offset().left, $('a[href*=pagesectionspenttime]').offset().top);
+	var section = $('a[href*=pagesectionspenttime]');
+	if ( section.length < 1 ) return;
+	section.click();
+	window.scrollTo(section.offset().left, section.offset().top);
 }
 
 function reloadPage()
@@ -3077,18 +3254,25 @@ function moveNextCase()
 	}
 }
 
-function completeUICustomFields( anchor, fields, values )
+function completeUICustomFields( formId, anchor, fields, values )
 {
-	$('#'+anchor).change( function() {
+	$('#'+formId+' '+anchor).change( function() {
 		jQuery.each(fields, function(key, value) {
-			$('#fieldRow'+value).hide();
+			$('#'+formId+' #fieldRow'+value).hide();
 		});
-		selected = $(this).find('option[value="'+$(this).val()+'"]').attr('referenceName');
+		var selected = '';
+		var option = $(this).find('option[value="'+$(this).val()+'"]');
+		if ( option.length > 0 ) {
+			selected = option.attr('referenceName');
+		}
+		else {
+			selected = $(this).attr('referenceName');
+		}
 		jQuery.each(fields, function(key, value) {
-			if ( selected == values[key] ) $('#fieldRow'+value).show();
+			if ( selected == values[key] ) $('#'+formId+' #fieldRow'+value).show();
 		});
 	});
-	$('#'+anchor).change();
+	$(anchor).change();
 }
 
 function showTooltip(el)
@@ -3103,12 +3287,14 @@ function showTooltip(el)
 		if ( tooltip.parents('.open').length < 1 ) {
 			tooltip.data('popover').show();
 			var parent = tooltip.parents('.board_item_body');
-			var popover = tooltip.data('popover');
-			popover.tip().addClass('in-focus');
 			if ( parent.length > 0 ) {
-				popover.tip().css({
-					'left': parent.length > 0 ? parent.offset().left + parent.width() : tooltip.offset().left + tooltip.width()
-				});
+				var popover = tooltip.data('popover');
+				popover.tip().addClass('in-focus');
+				if ( tooltip.offset().left < $(window).width() / 2 ) {
+					popover.tip().css({
+						'left': parent.length > 0 ? parent.offset().left + parent.width() : tooltip.offset().left + tooltip.width()
+					});
+				}
 			}
 		}
 		return;
@@ -3142,10 +3328,14 @@ function showTooltip(el)
 				$('.popover').toggleClass('in').remove();
 				tooltip.data('popover').show();
 				var parent = tooltip.parents('.board_item_body');
-				popover.tip().addClass('in-focus');
-				popover.tip().css({
-					'left': parent.length > 0 ? parent.offset().left + parent.width() : tooltip.offset().left + tooltip.width()
-				});
+				if ( parent.length > 0 ) {
+					popover.tip().addClass('in-focus');
+					if ( tooltip.offset().left < $(window).width() / 2 ) {
+						popover.tip().css({
+							'left': parent.length > 0 ? parent.offset().left + parent.width() : tooltip.offset().left + tooltip.width()
+						});
+					}
+				}
 			}
 		}
 	});
@@ -3160,4 +3350,122 @@ function showSelectedCards()
 			$(this).parents('.board_item_body').removeClass('selected');
 		}
 	});
+}
+
+function bindTabHandler( tabname, handler )
+{
+	$(document).on('tabsactivated', function(event, e,ui) {
+		if ( $(ui.tab).attr('href').indexOf(tabname) > -1 ) {
+			handler();
+		}
+	});
+	$(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+		if ( $(e.target).attr('href').indexOf(tabname) > -1 ) {
+			handler();
+		}
+	});
+
+}
+
+function showTraces(attribute) {
+	window.location = '?export=traces&ids=' + getCheckedRows() + '&attribute=' + attribute;
+}
+
+function toggleMasterDetails() {
+	$('div.table-details').toggle();
+
+	cookies.set('toggle-detailspanel-' + $('.table-master table[uid]').attr('uid'), $('div.table-details').is(':visible'));
+	if ( $('div.table-details').is(':visible') ) {
+		$('div.table-master').addClass('details-visible');
+		detailsRefresh('');
+	}
+	else {
+		$('div.table-master').removeClass('details-visible');
+	}
+}
+
+var detailsOptions = {
+	setHeight: function() {
+		var details = this.el.parents('.page-details');
+		var master = $('div.table-master table[id]');
+		details.css('min-height', Math.max(master.height(),details.height()));
+		master.parents('table').css('min-height', Math.max(master.height(),details.height()));
+	}
+};
+function detailsInitialize( el, url, visible, doRefresh )
+{
+	detailsOptions.url = url;
+	detailsOptions.el = el;
+	detailsOptions.refresh = doRefresh;
+	detailsOptions.setHeight();
+	if ( visible ) {
+		detailsRefresh('');
+	}
+}
+
+function detailsRefresh( parms )
+{
+	if ( detailsOptions.waitRequest ) {
+		detailsOptions.waitRequest.abort();
+		detailsOptions.waitRequest = null;
+	}
+	if ( parms == '' ) {
+		detailsOptions.el.html('<div class="document-loader"></div>');
+	}
+	detailsOptions.waitRequest = $.ajax({
+		type: "GET",
+		url: detailsOptions.url + parms,
+		async: true,
+		cache: false,
+		dataType: "html",
+		success: function(data) {
+			detailsOptions.el.html(data);
+			detailsOptions.setHeight();
+			completeUIExt(detailsOptions.el);
+		},
+		complete: function(xhr, textStatus) {
+			if ( textStatus == "abort" || xhr.responseText == "" || $.inArray(xhr.status, [302,301,500,404]) != -1 ) {
+				detailsOptions.el.html('<div class="document-empty"></div>');
+				return;
+			}
+			if ( !detailsOptions.refresh ) return;
+
+			setTimeout( function() {
+				detailsRefresh('&wait=true');
+			}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 100 : 180000);
+		},
+		error: function (xhr, ajaxOptions, thrownError) {
+			detailsOptions.el.html('<div class="document-empty"></div>');
+			if ( !detailsOptions.refresh ) return;
+
+			setTimeout( function() {
+				detailsRefresh('&wait=true');
+			}, 180000);
+		}
+	});
+}
+
+function dropdownMenuPosition(e, $menu) {
+	var mouseX = e.clientX
+		, mouseY = e.clientY
+		, boundsX = $(window).width()
+		, menuWidth = $menu.find('.dropdown-menu').outerWidth()
+		, tp = {}
+		, Y
+		, X;
+	if ((mouseX + menuWidth > boundsX) && ((mouseX - menuWidth) > 0)) {
+		X = {"left": mouseX - menuWidth};
+	} else {
+		var alignTo = $menu.prevAll('.btn-group');
+		if ( alignTo.length > 0 ) {
+			X = {"left": Math.min(mouseX,alignTo.offset().left)};
+			Y = {"top": Math.max(mouseY,alignTo.offset().top + alignTo.height())};
+		}
+	}
+	return $.extend(tp, X, Y);
+}
+
+function switchMenuState(state) {
+	cookies.set('menu-state', state);
+	window.location.reload();
 }

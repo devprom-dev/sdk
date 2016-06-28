@@ -121,10 +121,6 @@ class UpgradeMySQL extends Installable
     
     function getMySQLVersion()
     {
-        $result = DAL::Instance()->Query('SELECT VERSION()');
-        
-        $data = mysql_fetch_array($result);
-        
-        return $data[0];
+        return array_shift(DAL::Instance()->QueryArray('SELECT VERSION()'));
     }
 }

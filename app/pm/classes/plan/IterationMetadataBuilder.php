@@ -19,8 +19,20 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
  		
     	$metadata->addAttribute( 'Caption', 'TEXT', translate('Итерация'), false );
     	$metadata->addPersister( new IterationTitlePersister() );
-    	
-    	$metadata->setAttributeRequired('FinishDate', !getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease()); 
+
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
+		$metadata->setAttributeRequired('FinishDate', !$methodology_it->HasFixedRelease());
+		$metadata->setAttributeVisible('InitialVelocity', true);
     	$metadata->setAttributeRequired('InitialVelocity', false);
+
+		if ( !$methodology_it->HasReleases() ) {
+			$metadata->setAttributeVisible('Version', false);
+			$metadata->setAttributeRequired('Version', false);
+		}
+		else {
+			$metadata->setAttributeVisible('Version', true);
+			$metadata->setAttributeRequired('Version', true);
+		}
     }
 }

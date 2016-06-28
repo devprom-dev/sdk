@@ -26,9 +26,15 @@ class WorkflowService
 	
 	public function moveToState( $object_it, $target_state_ref_name, $comment = '', $parms = array(), $fire_event = true )
 	{
-		$target_state_ref_name = !is_array($target_state_ref_name) ? preg_split('/,/',$target_state_ref_name) : $target_state_ref_name;
-		
+		global $session;
+
 		if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
+
+		if ( !in_array($object_it->get('Project'), array('',getSession()->getProjectIt()->getId())) )
+		{
+			$wasProjectIt = getSession()->getProjectIt()->copy();
+			$session = new \PMSession( $object_it->getRef('Project'), getSession()->getAuthenticationFactory() );
+		}
 
 	    $source_it = $this->state_object->getRegistry()->Query(
     			array (
@@ -39,7 +45,8 @@ class WorkflowService
     	);
 
     	$this->logger->info( "[WorkflowService] Source state is ".$source_it->getId() );
-    	
+
+		$target_state_ref_name = !is_array($target_state_ref_name) ? preg_split('/,/',$target_state_ref_name) : $target_state_ref_name;
 	    $target_it = $this->state_object->getRegistry()->Query(
     			array (
     					in_array(self::RESOLVE, $target_state_ref_name)
@@ -78,14 +85,16 @@ class WorkflowService
 
 		if ( $result < 1 ) {
 			$this->logger->error('Unable move object from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
-			return false;
+		}
+		else {
+			$object_it = $object_it->object->getExact($object_it->getId());
+			if ( $fire_event ) {
+				getFactory()->getEventsManager()->executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
+			}
 		}
 
-		$object_it = $object_it->object->getExact($object_it->getId());
-		if ( $fire_event )
-		{
-			getFactory()->getEventsManager()->
-	    		executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
+		if ( is_object($wasProjectIt) && $wasProjectIt->getId() != '' ) {
+			$session = new \PMSession( $wasProjectIt, getSession()->getAuthenticationFactory() );
 		}
         return true;
 	}

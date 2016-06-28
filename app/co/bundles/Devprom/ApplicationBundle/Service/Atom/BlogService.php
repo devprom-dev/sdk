@@ -33,27 +33,23 @@ class BlogService
 		
 		while ( !$object_it->end() )
 		{
+			$copy_it = $object_it->copy();
 			$editor = \WikiEditorBuilder::build($object_it->get('ContentEditor'));
-
-			$editor->setObjectIt( $object_it );
+			$editor->setObjectIt($copy_it);
 			
 			$parser = $editor->getHtmlParser();
-			
-			$parser->setObjectIt( $object_it );
+			$parser->setObjectIt($copy_it);
 
 		 	$parser->setRequiredExternalAccess();
-		 	
 			$content = $parser->parse( $object_it->getHtmlDecoded('Content') );
 			
 			$xml .= '<entry>'.Chr(10);
-
 			$entry = array (
 				'title' => '<![CDATA['.$object_it->get('Caption').']]>',
 				'id' => 'devprom.post: '.$object_it->getId(),
 				'updated' => $object_it->getDateFormatUser('RecordCreated', '%Y-%m-%dT%H:%I:%SZ'),
 				'content' => htmlspecialchars($content, ENT_COMPAT | ENT_HTML401, APP_ENCODING)
 				);
-			
 			$xml .= $this->convert($entry);
 			
 			$xml .= '<author><name>Devprom.ALM</name></author>'.Chr(10);

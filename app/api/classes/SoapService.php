@@ -55,20 +55,20 @@ class SoapService
 		}
 		
 		$project_id = $session->getProject();
-		
-	    if ( $project_id > 0 )
-		{
-			$builders = $session->getBuilders();
-			
-			$session = new PMSession(
-					getFactory()->getObject('Project')->getExact($project_id), 
-					$session->getAuthenticationFactory()
-			);
-			
-			foreach( $builders as $builder )
-			{
-				$session->addBuilder($builder);
-			}
+	    if ( $project_id < 1 ) return;
+
+		$builders = $session->getBuilders();
+
+		$project_it = getFactory()->getObject('Project')->getExact($project_id);
+		$session = new PMSession( $project_it, $session->getAuthenticationFactory() );
+
+		foreach( $builders as $builder ) {
+			$session->addBuilder($builder);
+		}
+
+		if ( !getFactory()->getAccessPolicy()->can_read($session->getProjectIt()) ) {
+			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(224))));
+			return;
 		}
 	}
 
@@ -362,16 +362,18 @@ class SoapService
 	// Returns collection of objects
 	function getAll( $token, $classname )
 	{
-		global $model_factory, $server;
+		global $server;
 		 
 		$this->login( $token );
+		$object = getFactory()->getObject($classname);
 
-		$object = $model_factory->getObject($classname);
-
-		if ( !getFactory()->getAccessPolicy()->can_read($object) )
-		{
+		if ( !getFactory()->getAccessPolicy()->can_read($object) ) {
 			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(549))));
 			return;
+		}
+
+		if ( $object instanceof Project ) {
+			$object->addFilter( new ProjectAccessiblePredicate() );
 		}
 
 		$object->setLimit(100);
@@ -796,7 +798,7 @@ class SoapService
 	
 	function dataService( $classes, $namespace, & $server )
 	{
-		global $soap, $HTTP_RAW_POST_DATA;
+		global $soap;
 
 		foreach ( $classes as $class )
 		{
@@ -878,11 +880,11 @@ class SoapService
 					);
 		}
 
-		$HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
-		$this->logInfo("REQUEST: ".$HTTP_RAW_POST_DATA);
+		$rawPost = EnvironmentSettings::getRawPostData();
+		$this->logInfo("REQUEST: ".$rawPost);
 		
 		ob_start();
-		$server->service($HTTP_RAW_POST_DATA);
+		$server->service($rawPost);
 		
 		$result = ob_get_contents();
 		ob_end_clean();

@@ -32,8 +32,8 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
 		
 		$system_attributes = array(
 		        'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsBlogUsed', 
-		        'MainWikiPage', 'StartDate', 'FinishDate', 'HasMeetings', 'IsConfigurations', 
-		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'RequirementsWikiPage', 'Tools', 'Language'
+		        'StartDate', 'FinishDate', 'HasMeetings', 'IsConfigurations',
+		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'Tools', 'Language'
 		);
 		
  		foreach ( $system_attributes as $attribute )

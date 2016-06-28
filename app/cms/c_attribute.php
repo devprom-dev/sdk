@@ -83,19 +83,6 @@
 		}
 	}
 	
-	function add()
-	{
-		$att_id = parent::add();
-		$this->addTableColumn($att_id);
-		return $att_id;
-	}
-	
-	function delete( $object_id )
-	{
-		$this->dropTableColumn( $object_id );
-		return parent::delete( $object_id );
-	}
-	
 	function modify( $object_id )
 	{
 		global $_REQUEST;

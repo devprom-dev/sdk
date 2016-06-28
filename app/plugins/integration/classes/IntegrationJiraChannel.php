@@ -1,6 +1,6 @@
 <?php
 
-class IntegrationJiraChannel extends IntegrationChannel
+class IntegrationJiraChannel extends IntegrationRestAPIChannel
 {
     const apiPath = "/rest/api/latest";
 
@@ -9,7 +9,7 @@ class IntegrationJiraChannel extends IntegrationChannel
         // build search query
         $jql = array();
         if ( $timestamp != '' ) {
-            $jql[] = 'updatedDate >= "'.strftime("%Y/%m/%d %H:%M", strtotime($timestamp)) .'"';
+            $jql[] = 'updatedDate >= "-'. round((strtotime(SystemDateTime::date()) - strtotime($timestamp)) / 60, 0) .'m"';
         }
         if ( $this->getObjectIt()->get('ProjectKey') != '' ) {
             $jql[] = 'project = '.$this->getObjectIt()->get('ProjectKey');
@@ -22,6 +22,9 @@ class IntegrationJiraChannel extends IntegrationChannel
         ));
 
         $mapping = $this->getMapping();
+        if ( $timestamp != '' ) {
+            $internalTimeStamp = $timestamp;
+        }
 
         // extract items ids
         $first = array();
@@ -38,11 +41,16 @@ class IntegrationJiraChannel extends IntegrationChannel
                 $class = 'Task';
             }
             else {
+                $class = 'Request';
+                foreach( $mapping as $className => $classMapping ) {
+                    if ( strpos($issue['self'], $classMapping['url']) !== false ) {
+                        $class = $className;
+                    }
+                }
                 $first[$issue['key']] = array (
-                    'class' => 'Request',
+                    'class' => $class,
                     'id' => $issue['key']
                 );
-                $class = 'Request';
             }
 
             // append references into the items queue
@@ -58,6 +66,7 @@ class IntegrationJiraChannel extends IntegrationChannel
                 if ( $value[$this->getKeyField()] == '' ) {
                     // one-to-many
                     foreach( $value as $item ) {
+                        if ( !$this->checkNewItem($internalTimeStamp, $item) ) continue; // skip non-modified items
                         $latest[] = array (
                             'class' => $column['type'],
                             'id' => $item[$this->getKeyField()],
@@ -67,6 +76,7 @@ class IntegrationJiraChannel extends IntegrationChannel
                 }
                 else {
                     // one-to-one
+                    if ( !$this->checkNewItem($internalTimeStamp, $value) ) continue; // skip non-modified items
                     if ( $value['key'] != '' ) $value['id'] = $value['key'];
                     $id = $value[$this->getKeyField()];
                     $first[$id] = array (
@@ -79,8 +89,12 @@ class IntegrationJiraChannel extends IntegrationChannel
 
         $releases = array();
         if ( $this->getObjectIt()->get('ProjectKey') != '' ) {
-            $result = $this->jsonGet('/rest/api/latest/project/'.$this->getObjectIt()->get('ProjectKey').'/versions');
+            $result = $this->jsonGet('/rest/api/latest/project/'.$this->getObjectIt()->get('ProjectKey').'/versions', array(), false);
             foreach( $result as $version ) {
+                if ( $timestamp != '' ) {
+                    // skip past releases
+                    if((time()-(60*60*24)) > strtotime($version['releaseDate'])) continue;
+                }
                 $releases[] = array (
                     'class' => 'Release',
                     'id' => $version[$this->getKeyField()]
@@ -94,29 +108,39 @@ class IntegrationJiraChannel extends IntegrationChannel
         );
     }
 
-    public function readItem($mapping, $class, $id, $parms = array())
+    protected function buildIdUrl( $url, $id ) {
+        return $url . '/' . $id;
+    }
+
+    protected function getUserEmailAttribute() {
+        return 'emailAddress';
+    }
+
+    protected function getHeaders()
     {
-        $data = $this->mapToInternal(
-            array_merge(
-                $this->jsonGet($mapping['url'].'/'.$id, array('expand' => 'renderedBody,renderedFields')),
-                $parms
-            ),
-            $mapping,
-            function($data, $attribute) {
-                $attribute_path = preg_split('/\./',$attribute);
-                $value = $data[array_shift($attribute_path)];
-                foreach( $attribute_path as $field ) {
-                    list($field, $shift) = preg_split('/:/', $field);
-                    if ( $shift == 'first' ) {
-                        $value = array_shift($value[$field]);
-                    }
-                    else {
-                        $value = $value[$field];
-                    }
-                }
-                return $value;
-            }
+        return array (
+            "X-Atlassian-Token: no-check",
+            "Content-Type: application/json"
         );
+    }
+
+    protected function buildUsersMap()
+    {
+        $map = array();
+        $users = $this->jsonGet(
+            self::apiPath.'/user/assignable/multiProjectSearch',
+            array('projectKeys' => $this->getObjectIt()->get('ProjectKey')),
+            false
+        );
+        foreach( $users as $user ) {
+            $map[$user['name']] = $user[$this->getUserEmailAttribute()];
+        }
+        return $map;
+    }
+
+    public function mapToInternal($source, $mapping, $getter)
+    {
+        $data = parent::mapToInternal($source, $mapping, $getter);
 
         foreach( $data as $attribute => $value ) {
             if ( $attribute == 'File' ) {
@@ -130,115 +154,33 @@ class IntegrationJiraChannel extends IntegrationChannel
         return $data;
     }
 
-    public function writeItem($mapping, $class, $id, $data)
+    public function mapFromInternal($source, $mapping, $setter)
     {
-        if ( $class == 'RequestLink' ) {
+        if ( array_key_exists('SourceRequest', $mapping) ) {
             $mapping['SourceRequest'] = array (
                 'reference' => 'inwardIssue',
                 'type' => 'Request'
             );
         }
 
-        foreach( $data as $attribute => $value ) {
+        foreach( $source as $attribute => $value ) {
             if ( $attribute == 'Capacity' ) {
-                $data[$attribute] = round($data[$attribute] * 60 * 60, 0);
+                $source[$attribute] = round($source[$attribute] * 60 * 60, 0);
             }
         }
 
-        $emails_map = array_flip($this->usersMap);
-        $put = $this->mapFromInternal( $data, $mapping,
-            function($attribute, $value) use($emails_map)
-            {
-                $attribute_path = preg_split('/\./',$attribute);
-                foreach( array_reverse($attribute_path) as $field ) {
-                    list($field, $shift) = preg_split('/:/', $field);
-                    if ( $shift == 'first' ) {
-                        if ( count(array_filter($value, function($v) { return $v != ''; })) < 1 ) {
-                            // skip empty value object
-                            return array();
-                        }
-                        $value = array( $field => array($value) );
-                    }
-                    else if ( $shift == 'intval' ) {
-                        $value = array( $field => intval($value) );
-                    }
-                    else {
-                        $value = array( $field => $value );
-                    }
-                    if ( $field == 'emailAddress' ) {
-                        $value['name'] = $emails_map[$value[$field]];
-                        if ( $value['name'] == '' ) return array();
-                    }
-                }
-                return $value;
-            }
-        );
+        $put = parent::mapFromInternal($source, $mapping, $setter);
 
-        // substitute project key
         if ( $this->getObjectIt()->get('ProjectKey') != '' ) {
-            if ( in_array($class, array('Request','Task')) ) {
+            if ( strpos($mapping['url'], '/issue') !== false ) {
                 $put['fields']['project']['key'] = $this->getObjectIt()->get('ProjectKey');
             }
-            if ( in_array($class, array('Release')) ) {
+            if ( strpos($mapping['url'], '/version') !== false ) {
                 $put['project'] = $this->getObjectIt()->get('ProjectKey');
             }
         }
 
-        // substitute issue type
-        switch( $class ) {
-            case 'Task':
-                if ( $data['ChangeRequest'] > 0 ) {
-                    $put['fields']['issuetype']['id'] = $this->taskIssueType;
-                }
-                else {
-                    $map = array_flip($this->issueTypeMap);
-                    $put['fields']['issuetype']['id'] = $map['Task'];
-                }
-                break;
-        }
-
-        if ( is_subclass_of($class, 'Attachment') )
-        {
-            if ( $id == '' ) {
-                $result = $this->filePost(
-                    $this->getObjectIt()->get('URL').$mapping['url-append'],
-                    $data['FilePath'],
-                    $data['FileExt'],
-                    $data['FileMime']
-                );
-            }
-        }
-        elseif ( $class == 'RequestLink' )
-        {
-            if ( $id == '' ) {
-                $result = array(
-                    $this->jsonPost($mapping['url'], $put, array('expand' => 'renderedBody'))
-                );
-            }
-        }
-        else {
-            if ( $id != '' ) {
-                $result = array (
-                    $this->jsonPut($mapping['url'].'/'.$id, $put, array('expand' => 'renderedBody'))
-                );
-            }
-            else {
-                $result = array(
-                    $this->jsonPost($mapping['url'], $put, array('expand' => 'renderedBody'))
-                );
-            }
-        }
-        return $result;
-    }
-
-    public function deleteItem($mapping, $class, $id)
-    {
-        try {
-            return $this->jsonDelete($mapping['url'].'/'.$id, array('deleteSubtasks' => 'true'));
-        }
-        catch( Exception $e ) {
-            return array();
-        }
+        return $put;
     }
 
     public function storeLink( $mapping, $class, $id, $link, $title )
@@ -257,20 +199,20 @@ class IntegrationJiraChannel extends IntegrationChannel
 
     function buildDictionaries()
     {
-        foreach( $this->jsonGet(self::apiPath.'/issuetype') as $issueType )
+        foreach( $this->jsonGet(self::apiPath.'/issuetype', array(), false) as $issueType )
         {
             $this->issueTypeMap[$issueType['id']] = $issueType['name'];
             if ( $issueType['subtask'] ) $this->taskIssueType = $issueType['id'];
         }
-        $users = $this->jsonGet(self::apiPath.'/user/assignable/multiProjectSearch',
-            array('projectKeys' => $this->getObjectIt()->get('ProjectKey'))
-        );
-        foreach( $users as $user ) {
-            $this->usersMap[$user['name']] = $user['emailAddress'];
-        }
+    }
+
+    protected function checkNewItem( $timestamp, $item )
+    {
+        if ( $timestamp != '' && $item['updated'] != '' && strtotime($timestamp) > strtotime($item['updated']) ) return false;
+        if ( $timestamp != '' && $item['created'] != '' && strtotime($timestamp) > strtotime($item['created']) ) return false;
+        return true;
     }
 
     private $issueTypeMap = array();
     private $taskIssueType = 0;
-    private $usersMap = array();
 }

@@ -44,31 +44,27 @@ class DigestHandler extends EmailNotificatorHandler
 		$app_url = EnvironmentSettings::getServerUrl().getSession()->getApplicationUrl();
 		
 		return array (
-				'user' => $this->recipient_it->getDisplayName(),
-				'log_url' => $app_url.'project/log?participant=all&mode=log&start='.urlencode($this->from_date),
-				'profile_url' => $app_url.'profile',
-				'dates' => $this->getChanges($object_it)
+			'user' => $this->recipient_it->getDisplayName(),
+			'log_url' => $app_url.'project/log?participant=all&mode=log&start='.urlencode($this->from_date),
+			'profile_url' => $app_url.'profile',
+			'dates' => $this->getChanges($object_it),
+			'fields' => array(0)
 		);
 	}
 	
 	function getChanges( $log_it )
 	{
-		$uid = new ObjectUID;
 		$dates = array();
 		
 		while ( !$log_it->end() )
 		{
 			$date_formatted = getSession()->getLanguage()->getDateFormatted($log_it->get('ChangeDate'));
-
 			$anchor_it = $log_it->getObjectIt();
-			$uid_info = $uid->getUidInfo( $anchor_it ); 
-			
+
 			$dates[$date_formatted][$log_it->get('AuthorName')][] = array (
 				'action' => $log_it->get('ChangeKind'),
 				'entity' => $anchor_it->object->getDisplayName(),
-				'title' => $log_it->getWordsOnly('Caption', 20),
-				'uid' => $uid_info['uid'],
-				'url' => $uid_info['url'],
+				'title' => $log_it->getHtmlValue($log_it->getHtmlDecoded('Caption')),
 				'content' => $log_it->getHtmlValue($log_it->getHtmlDecoded('Content')),
 				'time' => getSession()->getLanguage()->getTimeFormatted($log_it->get('RecordCreated'))
 			);

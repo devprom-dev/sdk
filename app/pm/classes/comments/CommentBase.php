@@ -28,7 +28,7 @@ class CommentBase extends Metaobject
 			);
 	}
 	
-	function getCount( $object_it ) 
+	function getCountForIt( $object_it )
 	{
 		return $this->getCount2( $object_it->getId(), get_class($object_it->object) );
 	}
@@ -149,10 +149,8 @@ class CommentBase extends Metaobject
 	
 	function getPageNameEditMode( $comment_id )
 	{
-		$factory = getModelFactory();
-
 		$comment_it = $this->getExact( $comment_id );
-		$class = $factory->getObject($comment_it->get('ObjectClass'));
+		$class = getFactory()->getObject($comment_it->get('ObjectClass'));
 		
 		if( is_object($class) ) return $class->getPageNameEditMode($comment_it->get('ObjectId')); 
 	}

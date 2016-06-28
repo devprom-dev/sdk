@@ -531,7 +531,7 @@ class AjaxForm
 		
 		$actions = $this->getActions();
 		
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		
 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
 		
@@ -557,7 +557,8 @@ class AjaxForm
             'redirect_url' => $this->getRedirectUrl(),
 			'form_url' => htmlentities($_SERVER['REQUEST_URI']), 
             'actions' => $actions,
-            'form_title' => $this->getCaption()
+            'form_title' => $this->getCaption(),
+			'fields_separator' => '<br/>'
 		);
 	}
 	

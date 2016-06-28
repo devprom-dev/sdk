@@ -42,15 +42,7 @@ class RequestList extends PMPageList
 	function setupColumns()
 	{
 		parent::setupColumns();
-	
 		$this->object->setAttributeVisible( 'Deadlines', false );
-		
-		$values = $this->getFilterValues();
-		
-		if ( !in_array($values['baseline'], array('all','hide','')) )
-		{
-			$this->object->setAttributeVisible( 'History', true );
-		}
 	}
 	
  	function IsNeedToSelect()
@@ -175,26 +167,25 @@ class RequestList extends PMPageList
 
 	function drawCell( $object_it, $attr )
 	{
-		global $model_factory;
-		
 		switch ( $attr )
 		{
 			case 'Caption':
     		    if ( !$this->visible_columns['Type'] && $this->type_it->count() > 0 )
     		    {
     		    	$this->type_it->moveToId($object_it->get('Type'));
-    		    	echo '<img src="/images/'.IssueTypeFrame::getIcon($this->type_it).'">&nbsp;';
-    		    	echo $object_it->getDisplayName();
+					echo '<img src="/images/'.IssueTypeFrame::getIcon($this->type_it).'">&nbsp;';
+					if ( $this->type_it->getId() != '' ) {
+						echo $this->type_it->getDisplayName().': ';
+					}
     		    }
-    		    else
-    		    {
-    		    	echo $object_it->get('Caption');
-    		    }
+				echo $object_it->getHtml('Caption');
 			break;
 			
 			case 'Estimation':
-				$this->estimation_field->setObjectIt($object_it);
-				$this->estimation_field->draw($this->getTable()->getView());
+				echo '<div style="margin-left:22px;">';
+					$this->estimation_field->setObjectIt($object_it);
+					$this->estimation_field->draw($this->getTable()->getView());
+				echo '</div>';
     			break;
     			
 			default:
@@ -229,8 +220,6 @@ class RequestList extends PMPageList
 	{
 	    switch( $attr ) 
 	    {
-	        case 'Estimation': return 'center';
-	            
 	        case 'Priority': return 'center';
 
 	        case 'Fact': return 'right';
@@ -314,7 +303,7 @@ class RequestList extends PMPageList
 	{
 	    $module_it = getFactory()->getObject('Module')->getExact('issues-import');
 	    
-	    if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+	    if ( getFactory()->getAccessPolicy()->can_read($module_it) && !getSession()->getProjectIt()->IsPortfolio() )
 	    {
 	        $item = $module_it->buildMenuItem('?view=import&mode=xml&object=request');
 	        

@@ -32,7 +32,7 @@ class FieldParticipantDictionary extends FieldDictionary
  				)
 		);
  		
- 		return class_exists('PortfolioMyProjectsBuilder', false)
+ 		return defined('PERMISSIONS_ENABLED')
  			? $this->getRoleBasedOptions($part_it)
  			: $this->getSimpleOptions($part_it);
 	}

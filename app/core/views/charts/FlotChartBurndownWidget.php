@@ -16,21 +16,48 @@ class FlotChartBurndownWidget extends FlotChartWidget
         return $this->url;
     }
     
-    public function draw( $chart_id )
+    public function draw( $chart_id, $sectionMode = false )
     {
+		if ( $sectionMode ) {
+			?>
+			<script type="text/javascript">
+				$(document).on('tabsactivated', function(event, e,ui) {
+					if ( $(ui.tab).attr('href').indexOf('burndownsection') > -1 ) {
+						$("#<?=$chart_id?>").css({
+							width: '100%',
+							height: $(window).height() * 0.5
+						});
+
+						<? $this->drawChart($chart_id) ?>
+					}
+				});
+			</script>
+			<?
+		}
+		else {
+			?>
+			<script type="text/javascript">
+				$(function () {
+					<? $this->drawChart($chart_id) ?>
+				});
+			</script>
+			<?
+		}
+    }
+
+	protected function drawChart( $chart_id )
+	{
 		?>
-		<script type="text/javascript">
-		$(function () {
-			$.ajax({
-				url: '<?=$this->getUrl()?>',
-				dataType: 'json',
-				error: function( xhr, status, e ) 
-				{
-				},
-				success: function( data ) 
-				{
-					if ( data == null ) data = [];
-					$.plot($("#<?=$chart_id?>"), data,
+		$.ajax({
+			url: '<?=$this->getUrl()?>',
+			dataType: 'json',
+			error: function( xhr, status, e )
+			{
+			},
+			success: function( data )
+			{
+				if ( data == null ) data = [];
+				$.plot($("#<?=$chart_id?>"), data,
 					{
 						colors: ["rgb(225,63,63)", "rgb(247,239,59)", "rgb(63,225,63)", "rgb(63,63,225)"],
 						series: {
@@ -55,10 +82,8 @@ class FlotChartBurndownWidget extends FlotChartWidget
 							borderColor: 'rgb(192,192,192)'
 						}
 					});
-				}
-			});				
-        });
-		</script>
+			}
+		});
 		<?
-    }
+	}
 }

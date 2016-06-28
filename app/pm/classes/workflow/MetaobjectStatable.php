@@ -2,24 +2,16 @@
 
 include "StatableIterator.php";
 include "predicates/StatePredicate.php";
-include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
 
 class MetaobjectStatable extends Metaobject 
 {
  	var $states, $project, $state_it;
  	
- 	private $attrs_cache = array();
- 	
- 	function __construct( $class, ObjectRegistrySQL $registry = null, $metadata_cache = '' ) 
+ 	function __construct( $class, ObjectRegistrySQL $registry = null, $metadata_cache = '' )
  	{
  	    parent::__construct($class, $registry, $metadata_cache);
  	    
 		$this->addAttribute('StateObject', 'INTEGER', '', false, true);
- 	    
- 		if ( $this->getAttributeType('Project') == '' ) {
-			$this->addAttribute('Project', 'REF_pm_ProjectId', translate('Проект'), false);
-			$this->addPersister( new EntityProjectPersister );
-	    }
     	foreach ( array( 'LifecycleDuration', 'StateObject' ) as $attribute ) {
     		$this->addAttributeGroup($attribute, 'system');
     	}
@@ -48,137 +40,32 @@ class MetaobjectStatable extends Metaobject
  		}
  	}
  	
- 	function getStates()
- 	{
- 	    $state_it = $this->cacheStates();
- 	    
- 	    return $state_it->fieldToArray('ReferenceName');
+ 	function getStates() {
+		return WorkflowScheme::Instance()->getStates($this);
  	}
  	
- 	function getTerminalStates()
- 	{
- 		$state_it = $this->cacheStates();
- 		
- 		return $state_it->getTerminal();	
+ 	function getTerminalStates() {
+		return WorkflowScheme::Instance()->getTerminalStates($this);
  	}
  	
- 	function getNonTerminalStates()
- 	{
- 		$state_it = $this->cacheStates();
- 		
- 		return array_diff($state_it->getNonTerminal(), $state_it->getTerminal());
+ 	function getNonTerminalStates() {
+		return WorkflowScheme::Instance()->getNonTerminalStates($this);
  	}
 
- 	function cacheStates( $iterator = null )
- 	{
- 		global $model_factory, $project_it, $session;
- 		
- 	 	if ( $this->getStateClassName() == '' )
- 		{
- 		    return $model_factory->getObject('pm_State')->createCachedIterator(array());
- 		}
- 		
- 		$vpd_context = !is_null($iterator) ? $iterator->get('VPD') : $this->getVpdContext();
- 		
- 		$state = $model_factory->getObject($this->getStateClassName());
- 		
- 		if ( isset($this->states[$vpd_context]) )
- 		{
- 		    return $state->createCachedIterator($this->states[$vpd_context]);
- 		} 
- 		
-		$state->setVpdContext( $vpd_context );
-
-		$state_it = $state->getAll();
-		
-		$this->states[$vpd_context] = $state_it->getRowset();
-
-		$attrs = $model_factory->getObject('pm_TransitionAttribute');
-		
-		$attrs->setVpdContext( $vpd_context );
-		
-		$attr_it = $attrs->getAll();
-		
-		$this->attrs_cache[$vpd_context] = $attr_it->getRowset();
-		
-		return $state_it;
- 	}
- 	
-	function createIterator() 
-	{
+	function createIterator() {
 		return new StatableIterator($this);
 	}
 	
-	function checkAttributeRequired( $attr, $transition_it )
-	{
-	    return in_array($attr, $this->getTransitionAttributesRequired( $transition_it ));
-	}
-	
-	function getAttributesRequired( $state_it )
-	{
-		return $this->getTransitionAttributesRequired(
-				getFactory()->getObject('Transition')->getByRef('TargetState', $state_it->getId())
-		);
-	}
-	
-	function getTransitionAttributesRequired( $transition_it )
-	{
-	    $transition_ids = $transition_it->idsToArray();
-	    
- 		$this->cacheStates();
- 		
- 		$vpd_context = $this->getVpdContext();
- 		
- 		$attribute = getFactory()->getObject('pm_TransitionAttribute');
- 		
- 		$cache = array();
- 		
- 		if ( is_array($this->attrs_cache[$vpd_context]) )
- 		{
-     		foreach( $this->attrs_cache[$vpd_context] as $row )
-     		{
-     		    if ( in_array($row['Transition'], $transition_ids) ) $cache[] = $row;
-     		}
- 		}
- 		
- 		$attr_it = $attribute->createCachedIterator($cache); 
- 		
-		$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('State', $transition_it->getRef('TargetState')->getId()),
-						new FilterAttributePredicate('IsRequired', 'Y')
-				)
-		);
-		
-		$attributes = array_merge(
-				$attr_it->fieldToArray( 'ReferenceName' ), 
-				$attribute_it->fieldToArray('ReferenceName')
-		);
- 		
-		if ( $transition_it->get('IsReasonRequired') == 'Y' ) $attributes[] = 'TransitionComment';
- 		
-		return $attributes;
-	}
-
 	function getDefaultAttributeValue( $attr )
 	{
-		global $_REQUEST, $model_factory;
-
 		switch ( $attr )
 		{
 		 	case 'Transition':
-		 	    
 		 		return $_REQUEST['Transition'];
 		 		
 		 	case 'State':
-		 	    
 		 		if ( $this->getStateClassName() == '' ) return '';
-		 		
-				$state = $model_factory->getObject($this->getStateClassName());
-				
-				$state_it = $state->getFirst();
-				
-				return $state_it->get('ReferenceName');
+				return array_shift(WorkflowScheme::Instance()->getStates($this));
 		}
 		
 		return parent::getDefaultAttributeValue( $attr );
@@ -186,8 +73,6 @@ class MetaobjectStatable extends Metaobject
 	
 	function getAttributeObject( $attr )
 	{
-		global $model_factory;
-		
 		switch ( $attr )
 		{
 		 	default:
@@ -209,33 +94,37 @@ class MetaobjectStatable extends Metaobject
 	//----------------------------------------------------------------------------------------------------------
 	function add_parms( $parms )
 	{
-		$state_it = $this->cacheStates();
-		if ( $state_it->getId() != '' && $parms['State'] == '' ) {
-			$parms['State'] = $state_it->get('ReferenceName');
+		$states = $this->getStates();
+
+		if ( count($states) > 0 ) {
+			// workflow is defined
+			$parms['State'] = $this->reMapState($states, $parms['State']);
 		}
-		
-		if ( $state_it->getId() != '' && array_key_exists('State', $parms) && $parms['State'] == '' ) {
-			throw new Exception('Unable assing empty state to the object');
-		}
-		
+
 		return parent::add_parms( $parms );
 	}
 
-	function createLike( $object_id )
+	protected function reMapState( $states, $state )
 	{
-		global $model_factory;
-		
-		$id = parent::createLike( $object_id );
-		
-		$state_it = $this->cacheStates();
-		
-		$object_it = $this->getExact( $id );
-		
-		$this->modify_parms( $id, array( 'State' => $state_it->get('ReferenceName') ) );
-		
-		return $id;
+		if ( $state == '' ) {
+			$state = array_shift($states);
+		}
+		else {
+			if ( !in_array($state, $states) ) {
+				if ( $state == 'resolved' ) {
+					$state = array_pop($states);
+				}
+				else {
+					$state = array_shift($states);
+				}
+			}
+		}
+		if ( $state == '' ) {
+			throw new Exception('Unable assing empty state to the object');
+		}
+		return $state;
 	}
-	
+
 	function modify_parms( $object_id, $parms )
 	{
 		$object_it = $object_id instanceof OrderedIterator ? $object_id : $this->getExact($object_id);
@@ -246,18 +135,24 @@ class MetaobjectStatable extends Metaobject
 					new StateTransitionTargetPredicate($parms['Transition'])
 				)
 			);
-			if ( $state_it->getId() > 0 ) $parms['State'] = $state_it->get('ReferenceName');
-
-			$state_it = $this->moveToState($object_it, $parms);
+			if ( $state_it->getId() > 0 ) {
+				$parms['State'] = $state_it->get('ReferenceName');
+			}
+			if ( $parms['State'] != '' ) {
+				$this->moveToState($object_it, $parms);
+			}
 		}
 		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] ) {
-			$state_it = $this->moveToState($object_it, $parms);
+			$parms['State'] = $this->reMapState($this->getStates(), $parms['State']);
+			if ( $object_it->get('State') != $parms['State'] ) {
+				$this->moveToState($object_it, $parms);
+			}
 		}
 
 		return parent::modify_parms( $object_id, $parms );
 	}
 	
-	function delete ( $id )
+	function delete ( $id, $record_version = ''  )
 	{
 		global $model_factory, $_REQUEST;
 		
@@ -286,23 +181,27 @@ class MetaobjectStatable extends Metaobject
 	
 	protected function moveToState( $object_it, & $parms )
 	{
-		if ( $this->getStateClassName() == '' )
-		{
+		if ( $this->getStateClassName() == '' ) {
 			return getFactory()->getObject('StateBase')->getEmptyIterator();
 		}
 		
         $state_it = getFactory()->getObject($this->getStateClassName())->getRegistry()->Query(
-        		array( 
-        				new FilterAttributePredicate('ReferenceName', $parms['State']),
-        				new FilterVpdPredicate($object_it->get('VPD'))
-        		)
+			array(
+				new FilterAttributePredicate('ReferenceName', $parms['State']),
+				new FilterVpdPredicate($object_it->get('VPD'))
+			)
         );
-        
-        if ( $state_it->getId() < 1 ) throw new Exception('Unable assing empty state to the object'); 
+        if ( $state_it->getId() < 1 ) throw new Exception('Unable assing empty state to the object');
 		
+		$registry = new ObjectRegistrySQL($this);
+		$self_it = $registry->Query(
+			array(
+				new StateDurationPersister(),
+				new FilterInPredicate($object_it->getId())
+			)
+		);
 		$parms['PersistStateDuration'] = true;
-		
-		$parms['StateDuration'] = $parms['StateDuration'] == '' ? $object_it->get('StateDuration') : $parms['StateDuration'];
+		$parms['StateDurationRecent'] = $self_it->get('StateDurationRecent');
 
 		$comment_id = '';
 		if ( $parms['TransitionComment'] != '' )

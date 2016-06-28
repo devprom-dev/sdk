@@ -148,4 +148,30 @@ class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
         $this->assertSame("Some reply<br />\r\n<br />\r\nSecond paragraph", $result);
     }
 
+    /**
+     * @test
+     */
+    public function processHtmlComment() {
+        $content = "<div>test</div>";
+        $result = $this->processor->process($content, true);
+        $this->assertEquals($content, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function processBrokenHtmlComment() {
+        $content = "<div><a>test</div>";
+        $result = $this->processor->process($content, true);
+        $this->assertEquals("<div><a>test</a></div>", $result);
+    }
+
+    /**
+     * @test
+     */
+    public function processUTF8HtmlComment() {
+        $content = "<div>Здесь текст на русском</div>";
+        $result = $this->processor->process($content, true);
+        $this->assertEquals($content, $result);
+    }
 }

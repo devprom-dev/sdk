@@ -9,7 +9,9 @@ class IntegrationSettingsBuilder extends PageSettingBuilder
         $setting->setVisibleColumns( array_merge(
         		array(
                     'Caption',
-                    'StatusText'
+                    'StatusText',
+                    'URL',
+                    'Type'
                 )
             )
        	);

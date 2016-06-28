@@ -14,7 +14,7 @@ class ScrumReportedEvent extends SystemTriggersBase
    		$mail = new \HtmlMailbox;
    		$mail->setFromUser(getSession()->getUserIt());
 
-		$emails = class_exists('PortfolioMyProjectsBuilder', false)
+		$emails = defined('PERMISSIONS_ENABLED')
 			? getSession()->getProjectIt()->getParticipantIt()->fieldToArray('Email')
 			: getFactory()->getObject('UserActive')->getAll()->fieldToArray('Email');
 

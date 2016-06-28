@@ -12,7 +12,7 @@ class TransitionIterator extends OrderedIterator
  	
  	function appliable()
  	{
- 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return true;
+ 		if ( !defined('PERMISSIONS_ENABLED') ) return true;
  			
  		$role_it = getFactory()->getObject('pm_TransitionRole')->getByRef('Transition', $this->getId());
  		if ( $role_it->count() < 1 )

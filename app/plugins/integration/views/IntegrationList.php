@@ -27,6 +27,13 @@ class IntegrationList extends PMPageList
                 else {
                     echo '<span class="label label-important">'.nl2br($object_it->getHtmlDecoded($attr)).'</span>';
                 }
+
+                $method = new ObjectModifyWebMethod($object_it);
+                $method->setRedirectUrl('donothing');
+                echo '<span style="margin-left:26px;">';
+                    echo '<i class="icon-file"></i> ';
+                    echo '<a class="dashed" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.text('integration15').'</a>';
+                echo '</span>';
                 break;
 
             default:

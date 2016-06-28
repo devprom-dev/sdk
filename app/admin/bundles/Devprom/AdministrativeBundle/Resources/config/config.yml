@@ -7,3 +7,10 @@ framework:
     csrf_protection: false
     validation:      { enable_annotations: true }
     templating:      { engines: ['php'] }
+monolog:
+    handlers:
+        applog:
+            type: rotating_file
+            path: "%kernel.logs_dir%/admin.log"
+            level: error
+            max_files: 5 # Set up to keep log files for 5 recent days only

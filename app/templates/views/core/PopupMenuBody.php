@@ -35,17 +35,6 @@ foreach( $items as $key => $action )
  	$items[$key]['url'] = preg_replace('/last-month/', $last_month,
  	        preg_replace('/last-week/', $last_week, $items[$key]['url']));
 }
-
-foreach( $items as $key => $action )
-{
-	if ( $action['name'] == '' && $action['url'] == '' )
-	{
-		unset($items[$key]); continue;
-	}
-	
-	break;
-}
-
 if ( count($items) < 1 ) return;
 
 ?>
@@ -71,10 +60,18 @@ if ( count($items) < 1 ) return;
 			$action['name'] = ''; // mark empty sub-menu as separator
 		}
 	}
+	else if ( $action['uid'] == 'search' ) {
+	?>
+		<li uid="search" class="dropdown-item-search">
+			<input class="" type="text" placeholder="<?=text(2186)?>">
+		</li>
+		<li class="divider"></li>
+	<?php
+	}
 	else
 	{
 		?>
-		<?php  if ( $action['url'] == '' && $action['click'] == '' || $action['name'] == '' ) { ?>
+		<?php  if ( $action['url'] == '' && $action['click'] == '' && $action['name'] == '' ) { ?>
 			<? if ( $last_action['name'] != '') { ?>
 				<li class="divider"></li>
 			<? } ?>
@@ -94,7 +91,7 @@ if ( count($items) < 1 ) return;
 		    
     		    <?php if ( $class == '' ) { ?>
     			
-    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" href="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" alt="<?=$action['alt']?>" target="<?=$action['target']?>" href="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
     		    
     		    <?php } else { ?>
     			

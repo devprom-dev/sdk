@@ -20,7 +20,7 @@ class FieldTaskTrace extends FieldForm
  		return $this->object_it;
  	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();

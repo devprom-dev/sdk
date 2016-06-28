@@ -43,12 +43,8 @@ class SetupObjectStateAttribute extends Installable
 	        // append attribute
 			$sql = " alter table ".$entity." add column StateObject INTEGER ";
 			
-			mysql_query( $sql ) or $this->raise( mysql_error().': '.$sql );
-	        
 			// copy data
 			$sql = " update ".$entity." set StateObject = (select t.pm_StateObjectId from pm_StateObject t where t.ObjectId = ".$entity."Id and t.ObjectClass = '".$class."' order by t.pm_StateObjectId DESC limit 1) where StateObject is null ";
-			
-			mysql_query( $sql ) or $this->raise( mysql_error().': '.$sql );
 	    }
 	    
 		return true;

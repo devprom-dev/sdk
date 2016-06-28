@@ -2,7 +2,16 @@
 
 class IterationMetricsPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+	function getAttributes()
+	{
+		return array (
+			'EstimatedStartDate',
+			'EstimatedFinishDate',
+			'Velocity'
+		);
+	}
+
+	function getSelectColumns( $alias )
  	{
  		$columns = array();
  		

@@ -4,6 +4,7 @@ switch ( $class )
 {
 	case 'fieldnumber':
 	case 'fieldtext':
+	case 'fieldlargetext':
 	case 'fieldshorttext':
 	case 'fielddatetime':
 		

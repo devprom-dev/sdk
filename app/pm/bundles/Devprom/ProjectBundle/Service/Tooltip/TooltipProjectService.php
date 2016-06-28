@@ -13,17 +13,18 @@ class TooltipProjectService extends TooltipService
 {
 	private $baseline;
 	
-	public function __construct( $class_name, $object_id, $baseline )
+	public function __construct( $class_name, $object_id, $extended, $baseline )
 	{
     	$this->baseline = $baseline;
 		
-    	parent::__construct($class_name, $object_id);
+    	parent::__construct($class_name, $object_id, $extended);
 	}
 	
     public function getData()
     {
+		if ( $this->getObjectIt()->getId() < 1 ) return array();
+
     	$uid = new \ObjectUID();
-    	
     	return array_merge( parent::getData(), array (
     			'lifecycle' =>
     				array (
@@ -38,7 +39,7 @@ class TooltipProjectService extends TooltipService
     			'type' => 
     				array (
     						'name' => $this->getObjectIt()->object->getDisplayName(),
-    						'uid' => $uid->getObjectUid($this->getObjectIt())
+    						'uid' => $uid->getUIDIcon($this->getObjectIt())
     				)
     	));
     }
@@ -79,10 +80,12 @@ class TooltipProjectService extends TooltipService
     protected function buildRequestAttributes( &$data, $object_it )
     {
     	// Tasks attribute
-    	$task_it = getFactory()->getObject('Task')->getRegistry()->Query(
-				array (
-						new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
-				)
+		$task = getFactory()->getObject('Task');
+		$this->extendModel($task);
+    	$task_it = $task->getRegistry()->Query(
+			array (
+				new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
+			)
 		);
 		
 		$states = $task_it->getStatesArray();
@@ -130,7 +133,7 @@ class TooltipProjectService extends TooltipService
 			if( $item == '' ) continue;
 			list($type_name, $object_id, $type_ref) = preg_split('/:/',$item);
 			
-			$info = $uid->getUIDInfo($object_it->object->getExact($object_id));
+			$info = $uid->getUIDInfo($object_it->object->getExact($object_id), true);
 			$types[$type_name][] = $info['uid'].' {'.$info['project'].'} '.$info['caption'].' ('.$info['state_name'].')'; 
 		}
 		

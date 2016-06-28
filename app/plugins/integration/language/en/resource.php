@@ -5,7 +5,7 @@ $plugin_text_array = array
  	1 => 'Integration with 3rd party tools',
 	2 => 'Read from application',
 	3 => 'Write into application',
-	4 => 'Synchronize data for both applications',
+	4 => 'Synchronize data between both applications',
 	5 => 'Integrations',
 	6 => 'Mapping',
 	7 => 'Execute',
@@ -15,5 +15,6 @@ $plugin_text_array = array
 	11 => 'Enter application web address and port if required, e.g. https://example.atlassian.net',
 	12 => 'Due to get or upload data for specific project of the application, just enter it\'s key (unique identifier)',
 	13 => 'There is wrong JSON in mapping settings field (%1)',
-	14 => 'Application'
+	14 => 'Application',
+	15 => 'view the log'
 );

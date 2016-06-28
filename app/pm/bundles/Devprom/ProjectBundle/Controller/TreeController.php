@@ -20,7 +20,7 @@ class TreeController extends Controller
     		$service = new FeatureService($request->get('root'));
     	}
     	else {
-    		$service = new WikiService($request->get('classname'), $request->get('root'));
+    		$service = new WikiService($request->get('classname'), $request->get('root'), $request->query->has('cross'));
     	}
     	
     	return new JsonResponse($service->getData());

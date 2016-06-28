@@ -1,0 +1,6 @@
+parameters:
+    mailer_encryption: null
+    mailer_host: 127.0.0.1
+    mailer_port: 25
+    mailer_user: ''
+    mailer_password: ''

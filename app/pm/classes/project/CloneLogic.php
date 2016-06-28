@@ -87,7 +87,7 @@ class CloneLogic
 				case 'pm_TestExecutionResult':
 				case 'pm_CustomAttribute':
 					$id = CloneLogic::applyToLegacy( $context, 'ReferenceName', $attrs, $iterator, $project_it );
-					
+
 					if ( $id > 0 )
 					{
 						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
@@ -105,7 +105,7 @@ class CloneLogic
 					{
 						unset($ids_map[$object->getEntityRefName()][$iterator->getId()]);
 					}
-					
+
 					break;
 
 				// special case of template importing				
@@ -171,21 +171,37 @@ class CloneLogic
 					}
 					
 					break;
-					
+
+				case 'WikiPage':
+					if( $iterator->object instanceof ProjectPage && $iterator->get('ParentPage') == '' ) {
+						// special case for KB becuase it has single parent for a project
+						$kbrootId = $object->getRootIt()->getId();
+						if ( $kbrootId < 1 ) {
+							$kbrootId = self::duplicate(
+								$iterator,
+								CloneLogic::applyToObject($context, $attrs, $parms, $iterator, $project_it)
+							);
+						}
+						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $kbrootId;
+					}
+					else {
+						// duplicate data in the project
+						$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
+						if ( count($parms) > 0 ) {
+							$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
+						}
+					}
+					break;
+
 				default:
-				    
-				    if ( count($object->getVpds()) < 1 )
-				    {
+				    if ( count($object->getVpds()) < 1 ) {
 				        // just copy the reference to global object
 				        $ids_map[$object->getEntityRefName()][$iterator->getId()] = $iterator->getId();
 				    }
-				    else
-				    {
+				    else {
 				        // duplicate data in the project
 				    	$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
-					
-    					if ( count($parms) > 0 )
-    					{
+    					if ( count($parms) > 0 ) {
     						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
     					}
 				    }
@@ -396,11 +412,11 @@ class CloneLogic
 					$reference_name = $it->get('ReferenceName');
 				}
 			
-				$base = $model_factory->getObject('TaskTypeBase');
-				$base_it = $base->getByRef('ReferenceName', $reference_name);
-				
-				$parms['ParentTaskType'] = $base_it->getId();
-				
+				$base_it = getFactory()->getObject('TaskTypeBase')->getByRef('ReferenceName', $reference_name);
+				if ( $base_it->getId() != '' ) {
+					$parms['ParentTaskType'] = $base_it->getId();
+				}
+
 				break;
 
 			default:
@@ -420,49 +436,17 @@ class CloneLogic
 				// rebuild hard links to images
 				$project_it = getSession()->getProjectIt();
 				
-				$parms['Content'] = preg_replace_callback('/file\/([^\/]+)\/([^\/]+)\/([\d]+)/i', 
-						function($matches) use ($ids_map, $project_it)
-						{
-								$file_id = $ids_map[$matches[1]][$matches[3]];
-								return $file_id != ''
-										? 'file/'.$matches[1].'/'.$project_it->get('CodeName').'/'.$file_id
-										: $matches[0];
-						}, $it->get('Content')
-					);
-				
-				if ( $it->get('ParentPage') == '' && $it->get('ReferenceName') == WikiTypeRegistry::KnowledgeBase )
-				{
-					$root = getFactory()->getObject('ProjectPage');
-					$root_it = $root->getRootIt();
-
-					if ( $root_it->getId() > 0 )
-					{
-						$root->modify_parms( $root_it->getId(),
-								array (
-										'Content' => $parms['Content']
-								) 
-						);
-						
-						return array();
-					}
-				}
-				
 				$parms['DocumentVersion'] = '';
-				
-				if ( $parms['ParentPage'] == '' )
-				{
+				if ( $parms['ParentPage'] == '' ) {
 					$parms['ParentPath'] = '';
 					$parms['SectionNumber'] = '';
 				}
 
 				// backward compatibility
-				if ( !is_numeric($parms['IsTemplate']) )
-				{
+				if ( !is_numeric($parms['IsTemplate']) ) {
 					$parms['IsTemplate'] = $parms['IsTemplate'] == 'Y' ? 1 : 0;
 				}
-				
-				if ( !is_numeric($parms['ReferenceName']) )
-				{
+				if ( !is_numeric($parms['ReferenceName']) ) {
 					$parms['ReferenceName'] = getFactory()->getObject('WikiPage')
 							->getByRef('ReferenceName', $parms['ReferenceName'])->getId();
 				}
@@ -497,26 +481,19 @@ class CloneLogic
 				); 
 				if ( $setting_it->getId() == '' )
 				{
-					$setting_it = $it->object->getRegistry()->Query(
-							array (
-									new FilterAttributePredicate('Setting', $it->get('Setting')),
-									new FilterBaseVpdPredicate()
-							)
-					);
-					if ( $setting_it->getId() == '' ) {
-						$parms['Participant'] = '-1';
-						$parms['Value'] = self::replaceUser($it->get('Value'));
-					} else {
-						return array();
-					}
+					$parms['Participant'] = '-1';
+					$parms['Value'] = self::replaceUser($it->get('Value'));
 				}
 				else
 				{
-					$it->object->modify_parms( $setting_it->getId(),
+					while( !$setting_it->end() ) {
+						$it->object->modify_parms( $setting_it->getId(),
 							array (
-									'Value' => self::replaceUser($it->get('Value'))
+								'Value' => self::replaceUser($it->get('Value'))
 							)
-					);
+						);
+						$setting_it->moveNext();
+					}
 					return array();
 				}
 				break;
@@ -565,6 +542,10 @@ class CloneLogic
             case 'pm_Task':
                 $parms['StartDate'] = '';
                 if ( $it->get('FinishDate') != '' ) $parms['FinishDate'] = SystemDateTime::date();
+				if ( $context->getResetAssignments() ) {
+					$parms['Assignee'] = '';
+					$parms['Owner'] = '';
+				}
                 break;
 		}
 
@@ -589,7 +570,6 @@ class CloneLogic
 				case 'CodeName':
 				case 'StartDate':
 				case 'FinishDate':
-				case 'MainWikiPage':
 				case 'Blog':
 				case 'IsTender':
 				case 'IsClosed':
@@ -673,16 +653,14 @@ class CloneLogic
  				)
  		);
  		
- 		if ( $object_it->getId() != '' )
+ 		if ( $object_it->getId() != '' && !$context->getUseExistingReferences() )
  		{
 			$parms = array();
-			foreach ( $attrs as $attr )
-			{
+			foreach ( $attrs as $attr ) {
 				if ( $parms[$attr] == '' ) $parms[$attr] = $it->get_native($attr);
 				if ( $attr == 'Project' ) unset($parms[$attr]);
 				if ( $attr == 'VPD' ) unset($parms[$attr]);
 			}
-	
 			$it->object->modify_parms($object_it->getId(), $parms);
  		}
  		

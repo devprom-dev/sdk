@@ -10,7 +10,7 @@ class WikiPageBusinessActionReturnToWork extends BusinessActionShift
  		return '4c3d7b22-ff66-4374-9871-60dd7b782490';
  	}
 	
-	function apply( $object_it, $attributes )
+	function applyContent( $object_it, $attributes )
  	{
         if ( !in_array('Content', $attributes) ) return true;
 

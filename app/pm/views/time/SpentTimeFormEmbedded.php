@@ -94,9 +94,9 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  				}
  				
  				echo '<div class="row-fluid">';
-    				echo '<div class="span6">';
+    				echo '<div class="'.($this->IsAttributeVisible('LeftWork') ? 'span6' : '').'">';
     	 				echo '<div class="line">';
-    						echo translate($this->object->getAttributeUserName('Capacity'));
+    						echo translate($this->object->getAttributeUserName('Capacity')).text(2191);
     					echo '</div>';
     					$script = "javascript: updateLeftWork($('#".$field_name."'), $('#".$this->getFieldName('LeftWork')."'));";
     

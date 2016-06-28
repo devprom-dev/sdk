@@ -11,7 +11,10 @@ $linked_attrs = array(
 	'TestScenario', 
 	'Requirement', 
 	'Question',
-	'Links' );
+	'Links',
+	'LinksAttachment',
+	'TestFound'
+);
 
 $fields_dont_skip_if_empty = array (
 	'Watchers',
@@ -25,12 +28,9 @@ $fields_dont_skip_if_hidden = array (
 	'State'
 );
 
-$fields_to_be_skiped = array_merge( $linked_attrs, array (
-	'Attachment',
-	'Tasks',
-	'Caption',
-	'Description'
-));
+$fields_to_be_skiped = array (
+	'FinishDate'
+);
 
 // attributes to be displayed in first column
 
@@ -44,7 +44,10 @@ $important_attributes = array(
 	'Deadlines',
 	'OrderNum',
     'PlannedRelease',
-	'Iterations'
+	'ClosedInVersion',
+	'SubmittedVersion',
+	'Iterations',
+	'Owner'
 );
 
 $columns = array();
@@ -54,7 +57,7 @@ $recent_column = 0;
 
 foreach( $attributes as $name => $attribute ) 
 {
-	if ( !in_array($name, $important_attributes) ) continue;
+	if ( !in_array($name, $important_attributes) && !$attribute['custom'] ) continue;
 
 	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
 
@@ -70,6 +73,7 @@ foreach( $attributes as $name => $attribute )
 {
 	if ( in_array($name, array_keys($columns[0])) ) continue;
 	if ( in_array($name, $linked_attrs) ) continue;
+	if ( in_array($name, $fields_to_be_skiped) ) continue;
 	
 	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
 	if ( in_array($name, array('Attachment', 'Tasks', 'Caption', 'Description')) ) continue;
@@ -79,24 +83,16 @@ foreach( $attributes as $name => $attribute )
 	$columns[$recent_column][$name] = $attribute;
 }
 
-// attributes to be displayed in third column
-
-if ( $attributes['Tasks']['visible'] )
-{
-	$recent_column++;
-	
-	$columns[$recent_column]['Tasks'] = $attributes['Tasks'];
-	
-	$section_class['Tasks'] = 'hidden-tv';
-	$section_class['Trace'] = 'hidden-desktop';
-}
-else
-{
-	$section_class['Trace'] = 'hidden-desktop';
-}
-
 // attributes to be displayed in fourth column
 $recent_column++;
+if ( is_array($attributes['Attachment']) ) {
+	$columns[$recent_column]['Attachment'] = $attributes['Attachment'];
+}
+if ( is_array($attributes['Tasks']) ) {
+	$columns[$recent_column]['Tasks'] = $attributes['Tasks'];
+}
+$section_class['Tasks'] = 'hidden-desktop';
+$section_class['Trace'] = 'hidden-desktop';
 
 foreach( $attributes as $name => $attribute ) 
 {
@@ -121,26 +117,28 @@ foreach( $attributes as $name => $attribute )
 ?>
 
 <div class="actions">
-	<div class="btn-group last">
-		<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-			<?=translate('Действия')?>
-			<span class="caret"></span>
-		</a>
-		<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
-	</div>
+	<?php
+	if ( count($actions) > 0 && $action != 'show' ) {
+		echo $view->render('core/PageFormButtons.php', array('actions' => $actions));
+	}
+	?>
 </div> <!-- end actions -->
 
 <ul class="breadcrumb">
-    <?php if ( $navigation_url != '' ) { ?>
-	<li><a href="<?=$navigation_url?>"><?=($navigation_title == '' ? $title : $navigation_title)?></a></li>
-	<?php } ?>
-	
-	<?php if ( $uid_icon != '' ) { ?>
-	<li>
-	    <?php if ( $navigation_url != '' ) { ?> <span class="divider">/</span> <?php } ?>
-	    <? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
-	</li>
-	<?php } ?>
+<?php
+	if ( $uid != '' ) {
+		if ( $navigation_url != '' ) {
+			echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
+		}
+		else if ( $caption != '' ) {
+			echo '<li>'.$caption.'<span class="divider">/</span></li>';
+		}
+		echo '<li>'.$view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)).'</li>';
+	}
+	else {
+		echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a></li>';
+	}
+?>
 </ul> <!-- end breadcrumb -->
 
 <h4 class="bs" style="width:90%;">
@@ -182,7 +180,7 @@ foreach( $attributes as $name => $attribute )
 				<table class="properties-table">
 				<?php foreach( $column as $ref_name => $attribute ) { ?>
 					<tr name="<?=$ref_name?>">
-						<th>										
+						<th title="<?=htmlentities(strip_tags($attribute['description']))?>">
 							<?=$attribute['name']?>:
 						</th>
 						<td>
@@ -319,7 +317,7 @@ foreach( $attributes as $name => $attribute )
 		  	      	$(this).hasClass('collapsed') ? '1' : '0');
 			});
 		
-		var locstr = new String(window.location);
+		var locstr = String(window.location);
 		
 		if ( locstr.indexOf('#comment') > 0 && $('#comments-section').hasClass('collapsed') )
 		{

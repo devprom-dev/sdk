@@ -46,7 +46,7 @@ class FilterFreezeWebMethod extends WebMethod
 		return text(1285);
 	}
 	
-	function getJSCall( $element_selector, $persisted, $redirect = "donothing" )
+	function url( $element_selector, $persisted, $redirect = "donothing" )
 	{
 		$this->redirect = $redirect;
 		

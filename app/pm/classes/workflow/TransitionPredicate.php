@@ -2,7 +2,7 @@
 
 include "TransitionPredicateIterator.php";
 
-class TransitionPredicate extends MetaobjectCacheable
+class TransitionPredicate extends Metaobject
 {
  	function __construct() 
  	{

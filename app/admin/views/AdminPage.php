@@ -86,6 +86,13 @@ class AdminPage extends Page
 		}
 
 		$menus[] = array (
+			'button_class' => 'btn-navbar btn-link',
+			'icon' => 'icon-white icon-question-sign',
+			'id' => 'menu-guide',
+			'items' => $this->getHelpActions()
+		);
+
+		$menus[] = array (
 			'class' => 'header_popup',
 			'title' => $user_it->getDisplayName(),
 			'items' => $actions
@@ -93,7 +100,21 @@ class AdminPage extends Page
 		
  		return $menus;
  	}
- 	
+
+	function getHelpActions()
+	{
+		return array_merge(
+			array(
+				array (
+					'name' => text('guide.userdocs'),
+					'url' => 'http://devprom.ru/docs/Руководство-администратора',
+					'target' => '_blank'
+				)
+			),
+			parent::getHelpActions()
+		);
+	}
+
  	function getTabs()
  	{
  		$menu = new AdminPageMenu();

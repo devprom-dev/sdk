@@ -14,6 +14,7 @@ include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueFeatureLevel.php";
 
+include "FieldIssueTypeDictionary.php";
 include "FieldTasksRequest.php";
 include "FieldLinkedRequest.php";
 include "FieldRequestState.php";
@@ -32,6 +33,8 @@ class RequestForm extends PMPageForm
 	private $target_projects = array();
  	private $method_spend_time = null;
  	private $feature_types = array();
+	private $links_it = null;
+	private $linkTypes = array();
 	
 	function __construct( $object ) 
 	{
@@ -59,6 +62,23 @@ class RequestForm extends PMPageForm
 			}
 			else {
 				$this->getObject()->setAttributeVisible('DeliveryDate', true);
+			}
+
+			if ( $this->getObjectIt()->get('Links') != '' ) {
+				$this->links_it = $this->getObject()->getRegistry()->Query(
+					array (
+						new FilterInPredicate(preg_split('/,/', $this->getObjectIt()->get('Links'))),
+						new AttachmentsPersister()
+					)
+				);
+				$attachments = array_filter($this->links_it->fieldToArray('Attachment'), function($value) {
+					return $value != '';
+				});
+				if ( count($attachments) > 0 ) {
+					$this->getObject()->addAttribute('LinksAttachment', 'VARCHAR', text(2124),
+						true, false, '', $this->getObject()->getAttributeOrderNum('Links') + 1);
+					$this->getObject()->addAttributeGroup('LinksAttachment', 'trace');
+				}
 			}
 		}
 
@@ -104,8 +124,10 @@ class RequestForm extends PMPageForm
 		}
 
  		$method = new RequestCreateTaskWebMethod($object_it);
-		if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-		$this->method_create_task = $method;
+		if ( $method->hasAccess() ) {
+			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+			$this->method_create_task = $method;
+		}
 
 		$method = new ObjectCreateNewWebMethod($object);
 		if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
@@ -139,14 +161,11 @@ class RequestForm extends PMPageForm
 				preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject')),
 				function ($value) { return $value != ''; }
 		);
-		if ( count($projects) > 0 && count($projects) < 7 )
+
+		$top_limit = getSession()->getProjectIt()->IsPortfolio() ? 11 : 199;
+		if ( count($projects) > 0 && count($projects) < $top_limit )
 		{
-			$linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-				array (
-					new FilterInPredicate($projects),
-					new ProjectAccessiblePredicate()
-				)
-			);
+			$linked_it = getFactory()->getObject('ProjectLinked')->getRegistry()->Query();
 			while( !$linked_it->end() )
 			{
 				$this->target_projects[$linked_it->getId()] = array (
@@ -164,6 +183,12 @@ class RequestForm extends PMPageForm
 		}
 		
 		$this->feature_types = getFactory()->getObject('pm_FeatureType')->getAll()->fieldToArray('ReferenceName');
+
+		$type_it = getFactory()->getObject('RequestLinkType')->getAll();
+		while( !$type_it->end() ) {
+			$this->linkTypes[$type_it->get('ReferenceName')] = $type_it->getId();
+			$type_it->moveNext();
+		}
 	}
 	
 	function getTransitionAttributes()
@@ -175,7 +200,7 @@ class RequestForm extends PMPageForm
 	{
 		global $_REQUEST, $model_factory;
 		
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
    	    foreach( $plugins_interceptors as $plugin )
         {
@@ -188,36 +213,32 @@ class RequestForm extends PMPageForm
 		switch ( $name )
 		{		
 			case 'TestExecution':
-			    
-			    if ( $_REQUEST['TestCaseExecution'] > 0 )
-			    {
-			        return new FieldAutoCompleteObject( getFactory()->getObject('pm_Test') );
-			    }
-			    else
-			    {
-    				return new FieldIssueTrace( $this->object_it, 
-    					$model_factory->getObject('RequestTraceTestExecution') );
-			    }
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceTestExecution') );
+
+			case 'TestFound':
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceTestCaseExecution') );
 
 			case 'HelpPage':
-				return new FieldIssueTrace( $this->object_it, 
-					$model_factory->getObject('RequestTraceHelpPage') );
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceHelpPage') );
 
 			case 'TestScenario':
-				return new FieldIssueTrace( $this->object_it, 
-					$model_factory->getObject('RequestTraceTestScenario') );
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceTestScenario') );
 
 			case 'Requirement':
-				return new FieldIssueTrace( $this->object_it, 
-					$model_factory->getObject('RequestTraceRequirement') );
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceRequirement') );
 
 			case 'SourceCode':
-				return new FieldIssueTrace( $this->object_it, 
-					$model_factory->getObject('RequestTraceSourceCode') );
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceSourceCode') );
 				
 			case 'Question':
-				return new FieldIssueTrace( $this->object_it, 
-					$model_factory->getObject('RequestTraceQuestion') );
+				return new FieldIssueTrace( $this->object_it,
+					getFactory()->getObject('RequestTraceQuestion') );
 
 			case 'Fact':
 				$field = new FieldSpentTimeRequest( $this->object_it );
@@ -235,7 +256,7 @@ class RequestForm extends PMPageForm
 						return $field;
 					}
 				}
-				else {
+				else if (is_object($this->object_it) && $this->object_it->getId() > 0) {
 					return new FieldIssueEstimation($this->object_it, true);
 				}
 				break;
@@ -271,9 +292,17 @@ class RequestForm extends PMPageForm
 			    return $field;
 			    
 			case 'Function':
-				return count($this->feature_types) > 0 
-					? new FieldHierarchySelector($this->getObject()->getAttributeObject($name))
-					: new FieldAutocompleteObject($this->getObject()->getAttributeObject($name));
+				if ( count($this->feature_types) > 0 ) {
+					return new FieldHierarchySelectorAppendable($this->getObject()->getAttributeObject($name));
+				}
+				else {
+					$field = new FieldAutocompleteObject($this->getObject()->getAttributeObject($name));
+					$field->setAppendable();
+					return $field;
+				}
+
+			case 'LinksAttachment':
+				return new FieldAttachments( is_object($this->links_it) ? $this->links_it : $this->object );
 		}
 		
 		if( $name == 'Attachment' )
@@ -298,13 +327,19 @@ class RequestForm extends PMPageForm
 			}
 			return new FieldAutoCompleteObject( $release );
 		}
-		elseif($name == 'Type') 
+		elseif($name == 'Iterations')
 		{
-			$type = $model_factory->getObject('pm_IssueType');
-			
-			$type->addFilter( new FilterBaseVpdPredicate() );
-			
-			return new FieldDictionary( $type );
+			if ( $this->getTransitionIt()->getId() > 0 ) {
+				$release = getFactory()->getObject('IterationActual');
+			}
+			else {
+				$release = getFactory()->getObject('IterationRecent');
+			}
+			return new FieldAutoCompleteObject( $release );
+		}
+		elseif($name == 'Type')
+		{
+			return new FieldIssueTypeDictionary($this->getObject());
 		}
 		elseif($name == 'Author') 
 		{
@@ -371,6 +406,10 @@ class RequestForm extends PMPageForm
 					$field->setRows(10);
 		    	}
    			    break;
+
+			case 'LinksAttachment':
+				$field->setReadonly(true);
+				break;
         }
 
     	return $field;
@@ -489,23 +528,21 @@ class RequestForm extends PMPageForm
 		return $actions;
 	}
 	
- 	function getTransitionActions()
+ 	function getMoreActions()
 	{
-		$actions = parent::getTransitionActions();
-		$actions[] = array (
-				'uid' => 'middle'
-		);
+		$actions = parent::getMoreActions();
 
 		$object_it = $this->getObjectIt();
 		if ( is_object($this->method_duplicate) )
 		{
 			$parms = array(
-					'Request' => $object_it->getId()
+				'Request' => $object_it->getId(),
+				'LinkType' => $this->linkTypes['implemented']
 			);
 			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
 
 			$vpd = $object_it->get('VPD');
-			$other_projects = array_filter($this->target_projects, function($project,$key) use ($vpd) {
+			$other_projects = array_filter($this->target_projects, function($project) use ($vpd) {
 				return $project['vpd'] != $vpd;
 			});
 			if ( count($other_projects) > 0 )
@@ -629,34 +666,9 @@ class RequestForm extends PMPageForm
 
    	function getDiscriminatorField()
  	{
- 		return $this->getEditMode() ? 'Type' : '';
+ 		return 'Type';
  	}
 	
-	function getDiscriminator()
- 	{
- 		global $model_factory, $_REQUEST;
- 		
- 		if ( $_REQUEST['Type'] > 0 )
- 		{
- 			$object = $this->getObject();
- 			
- 			$ref = $object->getAttributeObject('Type');
- 			$ref_it = $ref->getExact($_REQUEST['Type']);
- 			
- 			return $ref_it->get('ReferenceName');
- 		}
- 		else
- 		{
- 			$object_it = $this->getObjectIt();
- 			
-	 		if ( is_object($object_it) )
-	 		{
-	 			$ref_it = $object_it->getRef('Type');
-	 			return $ref_it->get('ReferenceName');
-	 		}
- 		}
- 	}
- 	
 	function getRenderParms()
 	{
 		$object_it = $this->getObjectIt();
@@ -664,7 +676,7 @@ class RequestForm extends PMPageForm
 		$parms = array (
 			'comments_count' =>
 					is_object($object_it)
-							? getFactory()->getObject('Comment')->getCount($object_it)
+							? getFactory()->getObject('Comment')->getCountForIt($object_it)
 							: '',
 			'refs_actions' => 
 					is_object($object_it) 
@@ -766,4 +778,13 @@ class RequestForm extends PMPageForm
 		return parent::getSourceIt();
 	}
 
+	function getCaption()
+	{
+		if ( is_object($this->getObjectIt()) && $this->getObjectIt()->get('TypeName') != ''  ) {
+			return $this->getObjectIt()->get('TypeName');
+		}
+		else {
+			return parent::getCaption();
+		}
+	}
 }

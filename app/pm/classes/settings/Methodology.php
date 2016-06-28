@@ -7,7 +7,7 @@ class Methodology extends Metaobject
  	function __construct() 
  	{
 		parent::Metaobject('pm_Methodology');
-		
+
 		$this->setAttributeDescription('IsBlogUsed', text(679));
 		$this->setAttributeDescription('IsKnowledgeUsed', text(678));
 	}
@@ -28,7 +28,17 @@ class Methodology extends Metaobject
 	    
 		return $session->getApplicationUrl().'project/methodology?';
 	}
-	
+
+	function getDefaultAttributeValue($name)
+	{
+		switch( $name ) {
+			case 'IsRequirements':
+				return 'N';
+			default:
+				return parent::getDefaultAttributeValue($name);
+		}
+	}
+
 	function modify_parms( $object_id, $parms )
 	{
 		$result = parent::modify_parms( $object_id, $parms );

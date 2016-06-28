@@ -33,7 +33,7 @@ class StateExFilterWebMethod extends FilterWebMethod
  	{
   		$values = array ();
  		$values['all'] = translate('Все');
-  		
+
 		while ( !$this->iterator->end() )
 		{
 			$values[$this->iterator->get('ReferenceName')] = $this->iterator->getDisplayName();
@@ -45,7 +45,7 @@ class StateExFilterWebMethod extends FilterWebMethod
 		
 		$state = join(',',$this->non_terminal_it->fieldToArray('ReferenceName'));
 		if ( count($values) > 1 && !array_key_exists($state, $values) ) $values[$state] = translate('Не завершено');
-		
+
 		return $values;
 	}
 	

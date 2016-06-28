@@ -10,9 +10,4 @@ class BuildController extends RestController
 	{
 		return 'Build';
 	}
-	
-	function getFilterResolver(Request $request)
-	{
-		return array();
-	}
 }

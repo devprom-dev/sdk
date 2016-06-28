@@ -16,12 +16,13 @@ class TimeSpentEvent extends SystemTriggersBase
 			$service = new StoreMetricsService();
 			$request = new Request();
 
-			$service->storeIssueMetrics($request->getRegistry()->Query(
+			$service->storeIssueMetrics(
+				$request->getRegistry(),
 				array (
 					new FilterInPredicate(array($task_it->get('ChangeRequest'))),
 					new RequestMetricsPersister()
 				)
-			));
+			);
 		}
 	}
 }

@@ -9,13 +9,22 @@ class LeadAndCycleTimeChart extends PMPageChart
  	function __construct( $object )
  	{
 		parent::__construct( $object );
-
 		$this->widget = new FlotChartLeadAndCycleTimeWidget();
-		$this->widget->setIterator( $this->getObject()->getAll() );
  	}
 
 	function getChartWidget()
 	{
+		$this->widget->setIterator(
+			$this->getObject()->getRegistry()->Query(
+				array_merge(
+					array(
+						new FilterVpdPredicate()
+					),
+					$this->getTable()->getFilterPredicates(),
+					$this->getSorts()
+				)
+			)
+		);
 		return $this->widget;
 	}
 

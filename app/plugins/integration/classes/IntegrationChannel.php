@@ -50,6 +50,14 @@ abstract class IntegrationChannel
         return 'id';
     }
 
+    public function getKeyValue( $data ) {
+        return $data[$this->getKeyField()];
+    }
+
+    protected function getHeaders() {
+        return array();
+    }
+
     protected function binaryGet( $url, $data = array() )
     {
         curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($data));
@@ -92,67 +100,92 @@ abstract class IntegrationChannel
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $content);
         curl_setopt($this->curl, CURLOPT_HTTPHEADER,
             array_merge(
-                array (
-                    "X-Atlassian-Token: no-check"
-                ),
+                $this->getHeaders(),
                 preg_split('/[\r\n]+/i', $this->object_it->getHtmlDecoded('HttpHeaders'))
             )
         );
         return $this->parseJsonResult();
     }
 
-    protected function jsonGet( $url, $data = array() )
+    protected function jsonGet( $url, $data = array(), $verbose = true )
     {
         $url = $this->object_it->get('URL').$url;
-        curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($data));
+        $url .= (strpos($url, '?') === FALSE ? '?' : '').http_build_query($data);
+        $this->getLogger()->info("GET: ".$url);
+
+        curl_setopt($this->curl, CURLOPT_URL, $url);
         curl_setopt($this->curl, CURLOPT_HTTPGET, true);
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "GET");
 
         $data = $this->parseJsonResult();
-        $this->getLogger()->debug("jsonGet: ".var_export($data,true));
+        if ( $verbose ) {
+            $this->getLogger()->debug("jsonGet: ".var_export($data,true));
+        }
 
         return $data;
     }
 
-    protected function jsonPost( $url, $post = array(), $parms = array() )
+    protected function jsonPost( $url, $post = array(), $parms = array(), $verbose = true )
     {
-        $this->getLogger()->info('POST: '.$url);
-        $this->getLogger()->debug('jsonPost data: '.var_export($post,true));
-
         $url = $this->object_it->get('URL').$url;
+        $post = $this->buildPostFields($post);
+
+        $this->getLogger()->info('POST: '.$url);
+        if ( $verbose ) {
+            $this->getLogger()->debug('jsonPost data: '.var_export($post,true));
+        }
+
         curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, true);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, json_encode($post));
+        curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
 
         $data = $this->parseJsonResult();
-        $this->getLogger()->debug('jsonPost result: '.var_export($data,true));
+        if ( $verbose ) {
+            $this->getLogger()->debug('jsonPost result: ' . var_export($data, true));
+        }
 
         return $data;
     }
 
-    protected function jsonPut( $url, $post = array(), $parms = array() )
-    {
-        $this->getLogger()->info('PUT: '.$url);
-        $this->getLogger()->info(var_export($post,true));
+    protected function buildPostFields( $post ) {
+        // application/x-www-form-urlencoded
+        return json_encode($post);
+    }
 
-        $url = $this->object_it->get('URL').$url;
+    protected function jsonPut( $url, $post = array(), $parms = array(), $verbose = false )
+    {
+        if ( strpos($url, 'http') === false ) {
+            $url = $this->object_it->get('URL').$url;
+        }
+        $post = $this->buildPostFields($post);
+
+        $this->getLogger()->info('PUT: '.$url);
+        if ( $verbose ) {
+            $this->getLogger()->debug(var_export($post,true));
+        }
+
         curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, false);
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, "PUT");
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, json_encode($post));
+        curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
 
-        return $this->parseJsonResult();
+        $data = $this->parseJsonResult();
+        if ( $verbose ) {
+            $this->getLogger()->debug('jsonPut result: ' . var_export($data, true));
+        }
+
+        return $data;
     }
 
     protected function jsonDelete( $url, $parms = array() )
     {
+        $url = $this->object_it->get('URL').$url;
         $this->getLogger()->info('DELETE: '.$url);
 
-        $url = $this->object_it->get('URL').$url;
         curl_setopt($this->curl, CURLOPT_URL, $url.(strpos($url, '?') === FALSE ? '?' : '').http_build_query($parms));
         curl_setopt($this->curl, CURLOPT_HTTPGET, false);
         curl_setopt($this->curl, CURLOPT_POST, false);
@@ -181,6 +214,7 @@ abstract class IntegrationChannel
     private function parseJsonResult()
     {
         $result = $this->parseResult();
+        if ( $result == "" ) return array();
 
         $data = JsonWrapper::decode($result);
         if ( !is_array($data) ) throw new Exception($result);
@@ -199,9 +233,7 @@ abstract class IntegrationChannel
         curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
         curl_setopt($curl, CURLOPT_HTTPHEADER,
             array_merge(
-                array (
-                    "Content-Type: application/json"
-                ),
+                $this->getHeaders(),
                 preg_split('/[\r\n]+/i', $this->object_it->getHtmlDecoded('HttpHeaders'))
             )
         );
@@ -218,6 +250,7 @@ abstract class IntegrationChannel
         $data = array();
         foreach( $mapping as $attribute => $column )
         {
+            if ( in_array($attribute, array('url','link','url-append','originalUrl','originalAppendUrl')) ) continue;
             if ( is_array($column) ) {
                 if ( $column['writeonly'] ) continue;
 
@@ -236,6 +269,7 @@ abstract class IntegrationChannel
                     if ( is_array($column['mapping']) )
                     {
                         $mappingField = array_shift(array_keys($value));
+                        $mapped = false;
                         foreach( $column['mapping'] as $field_mapping ) {
                             $internal = array_pop(array_keys($field_mapping));
                             $native = array_pop($field_mapping);
@@ -246,14 +280,23 @@ abstract class IntegrationChannel
                                 else {
                                     $value[$mappingField] = $internal;
                                 }
+                                $mapped = true;
                             }
+                        }
+                        if ( !$mapped ) {
+                            throw new Exception(
+                                sprintf(
+                                    "Skip import record because of mapping has not been resolved for the attribute: %s\nMapping is: %s\nValue is: %s",
+                                    $attribute, var_export($column['mapping'], true), var_export($value[$mappingField], true)
+                                )
+                            );
                         }
                     }
                     $data[$attribute] = $value;
                 }
             }
             else {
-                $data[$attribute] = call_user_func($getter, $source, $column);
+                $data[$attribute] = call_user_func($getter, $source, trim(array_shift(preg_split('/,/',$column))));
             }
         }
         return $data;
@@ -262,9 +305,10 @@ abstract class IntegrationChannel
     protected function mapFromInternal( $source, $mapping, $setter )
     {
         $data = array();
+
         foreach( $mapping as $attribute => $column )
         {
-            if ( in_array($attribute, array('url','link')) ) continue;
+            if ( in_array($attribute, array('url','link','url-append','originalUrl','originalAppendUrl')) ) continue;
             if ( in_array($column, array('{parent}','{parentId}')) ) continue;
             if ( is_array($column) )
             {
@@ -280,19 +324,30 @@ abstract class IntegrationChannel
                 else {
                     if ( is_array($column['mapping']) ) {
                         $mappingField = array_shift(array_keys($column));
+                        $mapped = false;
                         foreach( $column['mapping'] as $field_mapping ) {
                             $internal = array_pop(array_keys($field_mapping));
                             $native = array_pop($field_mapping);
                             if ( $mappingField == "." ) {
-                                if ( $internal == $source[$attribute] ) {
+                                if ( $internal == $source[$attribute] || is_array($source[$attribute]) && $internal == $source[$attribute]["Id"] ) {
                                     $source[$attribute] = array ( $mappingField => $native );
+                                    $mapped = true;
                                 }
                             }
                             else {
                                 if ( $internal == $source[$attribute][$mappingField] ) {
                                     $source[$attribute][$mappingField] = $native;
+                                    $mapped = true;
                                 }
                             }
+                        }
+                        if ( !$mapped ) {
+                            throw new Exception(
+                                sprintf(
+                                    "Skip export record because of mapping has not been resolved for the attribute: %s\nMapping is: %s\nValue is: %s",
+                                    $attribute, var_export($column['mapping'], true), var_export($source[$attribute], true)
+                                )
+                            );
                         }
                         unset($column['mapping']);
                     }
@@ -300,9 +355,12 @@ abstract class IntegrationChannel
                 }
             }
             else {
-                $value = call_user_func($setter, $column, strval($source[$attribute]));
+                $value = array();
+                foreach( preg_split('/,/', $column) as $int_column ) {
+                    $value = array_merge_recursive($value, call_user_func($setter, trim($int_column), strval($source[$attribute])));
+                }
             }
-            $data = array_merge_recursive($data, $value);
+                $data = array_merge_recursive($data, $value);
         }
         return $data;
     }

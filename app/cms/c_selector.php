@@ -20,7 +20,7 @@
 	}
 	
 	//-----------------------------------------------------------------------------------------------
- 	function draw()
+ 	function draw( $view = null )
 	{
 		if($this->value != '') {
 			$displayName = $this->object_it->getDisplayName();

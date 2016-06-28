@@ -2,6 +2,10 @@ config:
     path: /pm/{project}/menu/{report}
     defaults: { _controller: ProjectBundle:Navigation:index }
 
+_project_settings:
+    path: /pm/{project}/settings
+    defaults: { _controller: ProjectBundle:Settings:project }
+
 settings:
     path: /pm/{project}/settings/{area}/{action}
     defaults: { _controller: ProjectBundle:Settings:index }
@@ -22,6 +26,10 @@ _treemodel_select:
     path:  /pm/{project}/treemodel/{classname}
     defaults: { _controller: ProjectBundle:Tree:index }
 
+_network:
+    path:  /pm/{project}/network/{classname}/{object}
+    defaults: { _controller: ProjectBundle:Network:json }
+
 _export:
     path:  /pm/{project}/export
     defaults: { _controller: ProjectBundle:Project:export }
@@ -33,6 +41,17 @@ _scripts:
 _css:
     path:  /pm/{project}/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
+
+_section:
+    path:  /pm/{project}/section/{section}
+    defaults: { _controller: ProjectBundle:Section:draw }
+
+_details_log:
+    path:  /pm/{project}/details/log
+    defaults: { _controller: ProjectBundle:Details:log }
+_details_workload:
+    path:  /pm/{project}/details/workload
+    defaults: { _controller: ProjectBundle:Details:workload }
 
 bulk:
     path:  /pm/{project}/bulk

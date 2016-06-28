@@ -125,7 +125,7 @@ class FlotChartLeadAndCycleTimeWidget extends FlotChartBarWidget
 					show: <?=($this->getShowLegend() ? 'true' : 'false')?>,
 				},
 				xaxis: {
-					ticks: ticks,
+					ticks: [],
 					tickDecimals: 0,
 					tickLength: 0,
 					max: Math.max(ticks.length, 38)

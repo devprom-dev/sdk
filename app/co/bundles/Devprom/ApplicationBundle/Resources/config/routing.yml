@@ -10,6 +10,10 @@ news:
     path:  /news/{key}
     defaults: { _controller: ApplicationBundle:Atom:news}
 
+sprites:
+    path:  /sprite/{filename}
+    defaults: { _controller: CommonBundle:Sprite:show }
+
 login:
     path:  /login
     defaults: { _controller: ApplicationBundle:Security:login }
@@ -119,4 +123,3 @@ _admin_scripts:
 _admin_css:
     path:  /co/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
-   

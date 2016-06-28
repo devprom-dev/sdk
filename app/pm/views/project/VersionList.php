@@ -1,7 +1,5 @@
 <?php
 
-if ( !class_exists('IssuesProgressFrame', false) ) include(SERVER_ROOT_PATH.'/pm/views/c_request_frame.php');
-
 class VersionList extends PMPageList
 {
  	var $release_it, $iteration_it;
@@ -74,13 +72,21 @@ class VersionList extends PMPageList
                 $objects = preg_split('/,/', $source_it->get($attr));
                 $uids = array();
 
+				$branches = array();
+				foreach( $objects as $object_info ) {
+					list($class, $id, $type, $baseline) = preg_split('/:/', $object_info);
+					if ($type == 'branch') $branches[] = $id;
+				}
                 foreach( $objects as $object_info )
                 {
-                    list($class, $id) = preg_split('/:/',$object_info);
+                    list($class, $id, $type, $baseline) = preg_split('/:/',$object_info);
+					if ( $type != 'branch' && in_array($id, $branches) ) continue;
                     $class = getFactory()->getClass($class);
                     if ( $class == '' ) continue;
                     $ref_it = getFactory()->getObject($class)->getExact($id);
-                    $uids[] = $this->getUidService()->getUidIcon($ref_it);
+					if ( $type != 'branch' ) $this->getUidService()->setBaseline($baseline);
+                    $uids[] = $this->getUidService()->getUidIconGlobal($ref_it, false);
+					$this->getUidService()->setBaseline('');
                 }
                 echo join(', ',$uids);
                 return;
@@ -96,7 +102,7 @@ class VersionList extends PMPageList
 						$caption = $object_it->getDisplayName();
 						if ( is_numeric($caption) ) $caption = translate('Релиз').' '.$caption;
 						echo $caption;
-					echo '</div>';		
+					echo '</div>';
 					break;
 
 				case 'pm_Release':
@@ -105,7 +111,7 @@ class VersionList extends PMPageList
 						$caption = $object_it->getDisplayName();
 						if ( is_numeric($caption) ) $caption = translate('Итерация').' '.$caption;
 						echo $caption;
-					echo '</div>';		
+					echo '</div>';
 					break;
 			}
 		}
@@ -363,12 +369,7 @@ class VersionList extends PMPageList
 		return parent::getReferencesListWidget( $object );
 	}
 
-	function IsNeedToDisplayOperations()
-	{
-	    return true;    
-	}
-	
-	function getItemActions( $column_name, $object_it ) 
+	function getItemActions( $column_name, $object_it )
 	{
 		global $model_factory;
 		
@@ -376,10 +377,7 @@ class VersionList extends PMPageList
 
 		$actions = parent::getItemActions( $column_name, $it );
 
-		$version_number = '';
-		
 		$iteration = $model_factory->getObject('pm_Release');
-		
 		switch ( $it->object->getClassName() )
 		{
 			case 'pm_Version':
@@ -390,8 +388,7 @@ class VersionList extends PMPageList
 				
 				if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
 				{
-				    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-				    	
+					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 					$actions[] = array(
 					    'url' => $method->getJSCall( array('Version' => $it->getId()) ), 
 						'name' => translate('Создать итерацию')
@@ -404,10 +401,9 @@ class VersionList extends PMPageList
 				
 				if ( $method->hasAccess() )
 				{
-				    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-
-				    array_push( $actions, array( 
-				        'url' => $method->getJSCall( $it ), 
+					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
+				    array_push( $actions, array(
+				        'url' => $method->url( $it ),
 				        'name' => $method->getCaption() 
 				    ));
 				}
@@ -416,10 +412,9 @@ class VersionList extends PMPageList
 	            
 	            if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 	            {
-				    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 	                
 				    $states = $model_factory->getObject('Request')->getNonTerminalStates();
-				    
 				    $info = $module_it->buildMenuItem('?release='.$it->getId().'&group=State&state='.join(',',$states));
 				    
 	                $actions[] = array( 
@@ -436,10 +431,9 @@ class VersionList extends PMPageList
 				
 				if ( getFactory()->getAccessPolicy()->can_modify($it) && $method->hasAccess() )
 				{
-				    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-				    
-					array_push( $actions, array( 
-					    'url' => $method->getJSCall( $it ), 
+					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
+					array_push( $actions, array(
+					    'url' => $method->url( $it ),
 					    'name' => $method->getCaption() 
 					));
 				}
@@ -448,12 +442,11 @@ class VersionList extends PMPageList
 			    
 	            if ( getFactory()->getAccessPolicy()->can_read($task_list_it) )
 	            {
-				    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 	                
 				    $states = $model_factory->getObject('Task')->getNonTerminalStates();
-				    
 				    $info = $task_list_it->buildMenuItem('?iteration='.$it->getId().'&group=State&state='.join(',',$states));
-				    
+
 	                $actions[] = array(
 	                    'url' => $info['url'],
 	                    'name' => translate('Бэклог итерации')

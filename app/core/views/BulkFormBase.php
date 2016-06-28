@@ -11,7 +11,9 @@ class BulkFormBase extends AjaxForm
 
 	function getAttributes()
 	{
-		return array_merge( array('operation'), $this->getActionAttributes(), array('ids') ); 	
+		$attributes = $this->getActionAttributes();
+		$this->visibleAttributes = $attributes;
+		return array_merge( array('operation'), $attributes, array('ids') );
 	}
 	
 	function getName( $attribute )
@@ -22,8 +24,11 @@ class BulkFormBase extends AjaxForm
 				return ''; 	
 
 			case 'operation':
-				return translate('Действие'); 	
-				
+				return translate('Действие');
+
+			case 'OpenList':
+				return count($this->getIds()) < 2 ? text(2198) : text(2199);
+
 			default:
 				return parent::getName( $attribute );
 		}
@@ -37,7 +42,10 @@ class BulkFormBase extends AjaxForm
 				return 'custom'; 	
 
 			case 'operation':
-				return 'custom'; 	
+				return 'custom';
+
+			case 'OpenList':
+				return 'char';
 
 			default:
 				if ( is_object($this->getForm()) ) return 'custom';
@@ -93,9 +101,9 @@ class BulkFormBase extends AjaxForm
 
 		$match = preg_match('/Attribute(.+)/mi', $_REQUEST['operation'], $attributes);
 		if ( $match ) {
-			$attribute = $attributes[1];
-			$this->object->setAttributeVisible($attribute, true);
-			return array($attribute);
+			$attributes = preg_split('/:/', $attributes[1]);
+			$this->object->setAttributeVisible(array_shift(array_values($attributes)), true);
+			return $attributes;
 		}
 		
 		$match = preg_match('/Method:(.+)/mi', $_REQUEST['operation'], $attributes);
@@ -151,9 +159,8 @@ class BulkFormBase extends AjaxForm
 		    	return $this->getAttributeValue($attribute) == '';
 			case 'ids':
 				return true;
-
 		    default:
-		    	return parent::IsAttributeVisible( $attribute );
+		    	return parent::IsAttributeVisible($attribute) || in_array($attribute, $this->visibleAttributes);
 		}
 	}
 	
@@ -228,9 +235,13 @@ class BulkFormBase extends AjaxForm
 
 	    $object = $this->getObject();
 
-	    $this->it = $object->getExact(preg_split('/-/', trim($_REQUEST['ids'], '-')));
+	    $this->it = $object->getExact($this->getIds());
 	     
 	    return $this->it->object->createCachedIterator($this->it->getRowset());    
+	}
+
+	function getIds() {
+		return array_unique(preg_split('/-/', trim($_REQUEST['ids'], '-')));
 	}
 	
 	function drawIds( $value )
@@ -283,4 +294,5 @@ class BulkFormBase extends AjaxForm
 	}
 	
 	private $form = null;
+	private $visibleAttributes = array();
 }

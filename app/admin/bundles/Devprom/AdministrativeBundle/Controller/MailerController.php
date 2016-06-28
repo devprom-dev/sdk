@@ -32,24 +32,39 @@ class MailerController extends BaseController
     	foreach( $settings->getAttributes() as $attribute => $data ) {
     		$parms[$attribute] = $request->request->get($attribute);
     	}
-    	
+
     	$settings->modify_parms($settings->getAll()->getId(), $parms);
 
 		$command = new \ClearCache();
 		$command->install();
-		getCheckpointFactory()->getCheckpoint('CheckpointSystem')->checkOnly(array('CheckpointWindowsSMTP'));
 
     	$test_email = $request->request->get("MailTestEmail");
     	if ( $test_email != '' )
     	{
+			$settings_it = getFactory()->getObject('SystemSettings')->getAll();
+
 			$mail = new \HtmlMailbox;
-			$mail->setFromUser(getSession()->getUserIt());
+			if ( $settings_it->get('AdminEmail') != '' ) {
+				$mail->setFrom($settings_it->getDisplayName() . ' <'.$settings_it->get('AdminEmail').'>');
+			}
+			else {
+				$mail->setFromUser(getSession()->getUserIt());
+			}
 			$mail->appendAddress($test_email);
 			$mail->setSubject(text(1523));
 			$mail->setBody(text(1524));
 			$mail->send();
 
-			return $this->replySuccess(text(1706).'<br/><br/>'.text(1526));
+			$text = '<br/><br/>'.text(1526);
+			$log_it = getFactory()->getObject('SystemLog')->getAll();
+			while( !$log_it->end() ) {
+				if ( strpos($log_it->get('Caption'), 'mail') !== false ) {
+					$text = preg_replace('/\%1/', $log_it->getViewUrl(), $text);
+				}
+				$log_it->moveNext();
+			}
+
+			return $this->replySuccess(text(1706).$text);
     	}
     	else
     	{

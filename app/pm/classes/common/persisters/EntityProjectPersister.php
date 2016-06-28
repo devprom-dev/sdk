@@ -4,9 +4,12 @@ class EntityProjectPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 		return array(
-			"(SELECT r.pm_ProjectId FROM pm_Project r WHERE r.VPD = t.VPD LIMIT 1) Project ",
+ 		$columns = array(
 			"(SELECT r.CodeName FROM pm_Project r WHERE r.VPD = t.VPD LIMIT 1) ProjectCodeName "
 		);
+		if ( !$this->getObject()->IsAttributeStored('Project') ) {
+			$columns[] = "(SELECT r.pm_ProjectId FROM pm_Project r WHERE r.VPD = t.VPD LIMIT 1) Project ";
+		}
+		return $columns;
  	}
 }

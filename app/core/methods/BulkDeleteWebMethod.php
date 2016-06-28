@@ -21,7 +21,7 @@ class BulkDeleteWebMethod extends WebMethod
 		return text(911); 	
 	}
 
-	function getJSCall( $object, $ids = '' )
+	function url( $object, $ids = '' )
 	{
 		if ( $ids == '' ) $ids = '0';
  		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=Method:BulkDeleteWebMethod:class=".strtolower(get_class($object)).":objects=%ids%', ".$ids.", ".$this->getRedirectUrl().")";

@@ -123,12 +123,7 @@ class WikiConverterMPdf
  	function display()
  	{
 		$file_name = preg_replace('/[\.\,\+\)\(\)\:\;]/i', '_', html_entity_decode($this->getTitle(), ENT_QUOTES | ENT_HTML401, APP_ENCODING)).'.pdf';
-
-		if ( EnvironmentSettings::getBrowserPostUnicode() )
-		{ 
-			$file_name = IteratorBase::wintoutf8($file_name);
-		}
-		
+		$file_name = EnvironmentSettings::getBrowserIE() ? rawurlencode($file_name) : $file_name;
 		$this->pdf->Output($file_name, 'D');
  	}
 }

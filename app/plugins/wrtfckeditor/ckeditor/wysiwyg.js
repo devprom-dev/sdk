@@ -1,4 +1,7 @@
 var cket = underi18n.MessageFactory(ckeditor_resources);
+hljs.configure({
+	tabReplace: '    '
+});
 hljs.initHighlightingOnLoad();
 var mentions = [];
 
@@ -28,8 +31,7 @@ function addImagesAutomatically()
 			return false;
 		});
 	});
-};
-
+ }
 function setupDialogTable( dialogDefinition )
 {
     var infoTab = dialogDefinition.getContents('info');
@@ -113,6 +115,9 @@ function setupEditor( editor )
                 event.cancel();
             }
         }
+		originalEvent = event.data.domEvent.$;
+		if ((originalEvent.keyCode == 10 || originalEvent.keyCode == 13) && originalEvent.ctrlKey) {
+		}
     });
 }
 
@@ -155,7 +160,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			height: rows,
 			enterMode: CKEDITOR.ENTER_P,
 			removePlugins : 'elementspath',
-			resize_enabled : toolbar == 'FullToolbar',
+			resize_enabled : false,
 			language: devpromOpts.language == '' ? 'en' : devpromOpts.language,
 			contentsCss: ['/pm/'+project+'/scripts/css?v='+appVersion],
 			startupFocus: $(element).is(':focus')
@@ -168,12 +173,11 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 		editor.on('instanceReady', function(e) 
 		{
 			e.editor.config.autoGrow_minHeight = e.editor.config.height;
-
 			e.editor.updateElement();
 			
 	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
 	      	{
-		      	e.editor.updateElement(); 
+		      	e.editor.updateElement();
 		      	return true;
 	      	});
 
@@ -195,6 +199,11 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
             var editableElement = $(e.editor.editable().$);
             editableElement.on( 'paste', pasteImage);
 			makeupEditor(editableElement, 'body', project, $('#cke_'+editor_id+' .cke_wysiwyg_frame').offset());
+
+			if ( !$.browser.msie ) {
+				e.editor.updateElement();
+				originalFormState = $('#modal-form form[id]').formSerialize();
+			}
 		});
 	}
 	else
@@ -204,7 +213,8 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			toolbar: toolbar,
 			enterMode: toolbar == '' ? CKEDITOR.ENTER_BR : CKEDITOR.ENTER_P,
 			allowedContent: toolbar != '',
-			language: devpromOpts.language == '' ? 'en' : devpromOpts.language
+			language: devpromOpts.language == '' ? 'en' : devpromOpts.language,
+			sharedSpaces: {top: 'documentToolbar'}
 		});
 		if ( editor == null ) {
 			reportBrowserError(element);
@@ -217,63 +227,53 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			var element = $('#' + this.name ); 
 			var editorInstance = this;
 				
-			if ( typeof $(element).attr('objectClass') == 'undefined' )
-			{ 
+			if ( typeof $(element).attr('objectClass') == 'undefined' ) {
 				$('#'+$(element).attr('id')+'Value').val( editorInstance.getData() );
 			}
 			else if ( editorInstance.checkDirty() )
 			{
-				var purgeFunc = function() {
-					runMethod(modify_url,
-						{
-							'class': $(element).attr('objectClass'),
-							'object': $(element).attr('objectId'),
-							'attribute': $(element).attr('attributeName'),
-							'value': editorInstance.getData(),
-							'parms': {
-								ContentEditor: 'WikiRtfCKEditor'
-							}
-						},
-						function(result) {
-							editorInstance.resetDirty();
-							var resultJson = jQuery.parseJSON(result);
-							if ( typeof resultJson.modified != 'undefined' ) {
-								$(element).parents('[modified]').attr('modified', resultJson.modified);
-							}
-						}, '', false);
-				};
-				if ( typeof editorInstance.purgeTimeout == 'number' ) {
-					clearTimeout(editorInstance.purgeTimeout);
-				}
-				if ( editorInstance.purgeTimeoutValue > 0 ) {
-					editorInstance.purgeTimeout = setTimeout(purgeFunc, editorInstance.purgeTimeoutValue);
-				} else {
-					purgeFunc();
-				}
+				runMethod(modify_url, {
+					'class': $(element).attr('objectClass'),
+					'object': $(element).attr('objectId'),
+					'attribute': $(element).attr('attributeName'),
+					'value': editorInstance.getData(),
+					'parms': {
+						ContentEditor: 'WikiRtfCKEditor'
+					}
+				},
+				function(result) {
+					editorInstance.resetDirty();
+					var resultJson = jQuery.parseJSON(result);
+					if ( typeof resultJson.modified != 'undefined' ) {
+						$(element).parents('[modified]').attr('modified', resultJson.modified);
+					}
+				}, '', false);
 			}
 		};
 		
 		editor.on('blur', function(e) 
 		{
-			e.editor.persist();
+			if ( typeof e.editor.purgeTimeout == 'number' ) {
+				clearTimeout(e.editor.purgeTimeout);
+			}
+			e.editor.purgeTimeout = setTimeout(function() { e.editor.persist(); }, e.editor.purgeTimeoutValue);
 		});
 
 		editor.on('instanceReady', function(e) 
 		{
-	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
+	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function()
 	      	{
-	      		e.editor.purgeTimeoutValue = 0;
 		      	e.editor.persist();
 		      	return true;
 	      	});
 	    			
-			if ( $(element).hasClass('wysiwyg-field') )
+			if ( $(element).hasClass('wysiwyg-field') || $(element).parents('.embedded_form').length > 0 )
 			{
 		      	registerFormValidator($(element).parents('form').attr('id'), function() 
       			{ 
 		      		e.editor.custom.updateForm();
-		      		e.editor.persist();
-		      		return true; 
+					e.editor.persist();
+		      		return true;
 			    });
 		      	
 		      	registerFormDestructorHandler($(element).parents('form').attr('id'), function () {
@@ -302,6 +302,17 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			e.editor.purgeTimeoutValue = 0;
 			e.editor.persist();
 		});
+
+		editor.on('panelShow', function(e)
+		{
+			var panelElement = $(e.data.element.$);
+			var stickedParent = panelElement.parents('.sticked');
+			if (stickedParent.length < 1) return;
+			panelElement.css({
+				'left': panelElement.position().left + stickedParent.position().left
+			});
+		});
+
 	}
 	
 	editor.custom = { 
@@ -387,7 +398,7 @@ function makeupEditor( e, container, project, offset )
             var selected = $.map(mentions, function (mention) {
                 return mention.Caption == selectedMention ? mention.Id : null;
             });
-			return '@' + selected.shift() + '  ';
+			return '@' + selected.shift() + '&nbsp; @ ';
 		},
         template: function (value) {
             var selected = $.map(mentions, function (mention) {
@@ -397,10 +408,11 @@ function makeupEditor( e, container, project, offset )
                 return '<i class="icon-briefcase"></i>' + value;
             }
             else {
-                return '<div class="user-mini-mention" style="background: url(\'/images/userpics-mini.png\') no-repeat -'+(parseInt(selected[0].PhotoColumn) * 18)+'px -'+(parseInt(selected[0].PhotoRow) * 18)+'px;"></div>' + value;
+                return '<div class="user-mini-mention" style="background: url(/images/userpics-mini.png) no-repeat -'+(parseInt(selected[0].PhotoColumn) * 18)+'px -'+(parseInt(selected[0].PhotoRow) * 18)+'px;"></div>' + value;
             }
-        },
+        }
 	}], {
+		zIndex: 9000,
         appendTo: container,
         maxCount: 60,
         topOffset: offset ? offset.top : 0,

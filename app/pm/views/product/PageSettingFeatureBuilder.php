@@ -9,12 +9,15 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
         $feature = getFactory()->getObject('Feature');
         
         $setting = new PageListSetting('FunctionList');
-        $setting->setVisibleColumns( 
-        	array_merge(
-                array( 'UID', 'Caption', 'Progress', 'Workload', 'StartDate', 'DeliveryDate', 'Request' ),
-                array_filter($feature->getAttributesByGroup('trace'), function($value) use ($feature) {
-                    return true;
-                })
+        $setting->setVisibleColumns(
+            array_diff(
+                array_merge(
+                    array( 'UID', 'Caption', 'Progress', 'Workload', 'StartDate', 'DeliveryDate', 'Request' ),
+                    array_filter($feature->getAttributesByGroup('trace'), function($value) use ($feature) {
+                        return true;
+                    })
+                ),
+                $feature->getAttributesByGroup('system')
             )
         );
         $feature_levels = getFactory()->getObject('FeatureType')->getRegistry()->Count(

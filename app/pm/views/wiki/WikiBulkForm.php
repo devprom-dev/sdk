@@ -83,7 +83,7 @@ class WikiBulkForm extends BulkForm
 		switch ( $attribute )
 		{
 		    case 'CopyOption': 
-		    	return 'Y';
+		    	return 'N';
 		    	
 		    default:
 		    	return parent::getAttributeValue( $attribute );
@@ -106,9 +106,10 @@ class WikiBulkForm extends BulkForm
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				
-				echo translate('Версия документа');
-				
+
+				if ( $this->showAttributeCaption() ) {
+					echo translate('Версия документа');
+				}
 				$field->draw();
 				
 				break;
@@ -129,16 +130,16 @@ class WikiBulkForm extends BulkForm
 				break;
 				
  			case 'Project':
-
  				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
-				
  				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				
-				echo $this->getName($attribute);
-				
+				$field->setDefault(getSession()->getProjectIt()->getId());
+
+				if ( $this->showAttributeCaption() ) {
+					echo $this->getName($attribute);
+				}
 				$field->draw();
  								
 				break;
@@ -175,8 +176,6 @@ class WikiBulkForm extends BulkForm
  					)->count() > 0;
 
 			case 'Version':
-			case 'Project':
-			case 'ParentPage':
 				return $this->IsAttributeModifiable($attribute);
 
 			case 'CopyOption':

@@ -106,7 +106,7 @@ class WorkloadSection extends InfoSection
 		
 		for ( $i = 0; $i < $part_it->count(); $i++ )
 		{
-			$left_work = $iteration_it->getLeftWorkParticipant( $part_it );
+			$left_work = $iteration_it->getLeftWorkParticipant( $part_it->get('SystemUser') );
 
 			$part_capacity = $release_left_capacity * $part_it->get('Capacity');
 				

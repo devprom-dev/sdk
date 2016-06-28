@@ -1,6 +1,5 @@
 <?php 
 
-$columns_number = count($columns);	
 $table_row_id = $table_id.'_row_';
 
 $columns_info = array();
@@ -20,11 +19,26 @@ foreach( $columns as $key => $attr )
 	);
 }
 
+$columns_number = count($columns_info);
 $display_operations = $list->IsNeedToDisplayOperations();
+if ( $show_header && $display_numbers ) $columns_number++;
+if ( $show_header ) $columns_number++;
 
 ?>
+<? if ( $message != '' ) { ?>
+	<div class="alert">
+		<?=$message?>
+	</div>
+<? } ?>
 
 <a name="top<? echo $offset_name ?>"></a>
+
+<? if ( $toolbar ) { ?>
+			<div class="documentToolbar sticks-top" style="height:auto;overflow:hidden;">
+				<div class="sticks-top-body hidden-print" id="documentToolbar" style="z-index:2;"></div>
+			</div>
+<? } ?>
+
 
 <div>
 	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;">
@@ -32,51 +46,49 @@ $display_operations = $list->IsNeedToDisplayOperations();
         <tr>
         <td>
         <div class="<?=($list_mode == 'infinite' ? 'table-inner-div' : 'wishes')?>">
-        <table id="<?=$table_id?>" class="table-inner <?=$table_class_name?>" created="<?=$created_datetime?>">
-	
-		<?php if ( $show_header ) { ?>
+        <table id="<?=$table_id?>" class="table-inner <?=$table_class_name?>" created="<?=$created_datetime?>" uid="<?=$widget_id?>">
+
+
+			<?php if ( $show_header ) { ?>
 		<tr class="header-row">
 			<?php if ( $display_numbers ) { ?>
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
 				<?=translate('№')?>
 			</th>
-			<?php $columns_number++; } ?>
+			<?php } ?>
 
 			<th class="for-chk <?=($need_to_select ? 'visible' : 'hidden')?>" width="1%" uid="checkbox">
 				<?php if ( $need_to_select ) { ?>
 					<input id="to_delete_all<?=$table_id?>" tabindex="-1" type="checkbox" onclick="checkRows('<?=$table_id?>')">
 				<?php } ?>
 			</th>
-			<?php $columns_number++; ?>
-			
-			<?php 
+
+				<?php
 			foreach( $columns as $attr ) 
 			{
-				$align = $columns_info[$attr]['align'];
 				$width = $columns_info[$attr]['width'];
-				
 				$title = str_replace('"', "'", $it->object->getAttributeDescription($attr));
 				
 				$header_attrs = $list->getHeaderAttributes( $attr );
-				
-				?>
-				<th width="<?=$width?>" uid="<?=strtolower($attr)?>" title="<?=$title?>">
-				    <?php if ( $header_attrs['script'] != '#' ) { ?>
-				    	<a class="mode-sort" href="<?=$header_attrs['script']?>" style="display:table-cell;">
-    						<?=$header_attrs['name']?>
-    					</a>
-    					<?php if ( $header_attrs['class'] != '' ) { ?>
-    					<div class="header-caret <?=$header_attrs['class']?>"><span class="caret" style="margin-top:8px;"></span></div>
-    					<?php } ?>
-					<?php } else { ?>
-					    <?=$header_attrs['name']?>
-					<?php } ?>
-				</th>
-				<?
+
+				echo '<th width="'.$width.'" uid="'.strtolower($attr).'" title="'.$title.'">';
+				if ( $header_attrs['script'] != '#' ) {
+					echo '<a class="mode-sort" href="'.$header_attrs['script'].'" style="display:table-cell;">';
+						echo $header_attrs['name'];
+					echo '</a>';
+					if ( $header_attrs['class'] != '' ) {
+						echo '<div class="header-caret '.$header_attrs['class'].'"><span class="caret" style="margin-top:8px;"></span></div>';
+					}
+				}
+				else {
+					echo $header_attrs['name'];
+				}
+				echo '</th>';
 			}
 
 			if ( $list->IsNeedToDisplayOperations() )
 			{
+				$columns_number++;
 			$width = $list->getColumnWidth( 'Actions' );
 			?>
 			<th class="for-operation hidden-print" width="1%">
@@ -85,9 +97,8 @@ $display_operations = $list->IsNeedToDisplayOperations();
 			
         </tr>
         <?php } ?>
-			
+
 			<?
-			$columns_number++;
 
 			if ( $rows_num < 1 )
 			{
@@ -174,22 +185,32 @@ $display_operations = $list->IsNeedToDisplayOperations();
 						$actions = $list->getActions($it->getCurrentIt());
                     	?>
 						<td id="operations" class="hidden-print">
-						<?php 
-						if ( count($actions) > 0 ) 
+						<?php
+						if ( count($actions) == 1 )
 						{
+							$action = array_shift($actions);
 							?>
-								<div class="btn-group operation last">
-								  <a class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
-									<i class="icon-asterisk icon-gray"></i>
-									<span class="caret"></span>
-								  </a>
-								  <?php
-									echo $view->render('core/PopupMenu.php', array (
-										'items' => $actions
-									));
-								  ?>
-								</div>
+							<div class="btn-group operation last">
+								<a id="<?=$action['uid']?>" class="btn btn-info btn-mini dropdown-toggle actions-button" href="#" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
+							</div>
 							<?
+						} else if ( count($actions) > 0 )
+						{
+						?>
+						<div class="btn-group btn-group-actions operation">
+							<a class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#" data-target="#actions<?=$it->getId()?>">
+								<i class="icon-asterisk icon-gray"></i>
+								<span class="caret"></span>
+							</a>
+						</div>
+						<div class="btn-group dropdown-fixed last" id="actions<?=$it->getId()?>">
+							<?php
+							echo $view->render('core/PopupMenu.php', array (
+								'items' => $actions
+							));
+							?>
+						</div>
+						<?
 						}
 						?>
 					</td>
@@ -217,7 +238,10 @@ $display_operations = $list->IsNeedToDisplayOperations();
 		var options = {
 			className: "<?=strtolower($object_class)?>",
 			scrollable: <?=var_export($scrollable, true)?>,
-			reorder: <?=var_export($reorder, true)?>
+			reorder: <?=var_export($reorder, true)?>,
+			visiblePages: <?=($visible_pages < 1 ? 999 : $visible_pages)?>,
+			pageOpen: <?=(is_numeric($offset) ? $offset : 0)?>,
+			totalPages: <?=max($pages,1)?>
 		};
 
 		initializeDocument(<?=($object_id != '' ? $object_id : "''")?>, options);

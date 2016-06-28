@@ -4,14 +4,26 @@ include_once SERVER_ROOT_PATH."pm/methods/DuplicateWebMethod.php";
 
 class DuplicateIssuesWebMethod extends DuplicateWebMethod
 {
-	function getCaption() 
+	private $type_it = null;
+
+	function __construct( $object_it = null )
+	{
+		parent::__construct($object_it);
+		$link_type = getFactory()->getObject('RequestLinkType');
+		$this->type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
+		if ( $this->type_it->getId() < 1 ) {
+			$this->type_it = $link_type->getByRef('ReferenceName', 'duplicates');
+		}
+	}
+
+	function getCaption()
 	{
 		return text(867);
 	}
 
 	function getMethodName()
 	{
-		return parent::getMethodName().':LinkType';
+		return parent::getMethodName().':LinkType:OpenList';
 	}
 
 	function getObject()
@@ -41,27 +53,22 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 	
  	function duplicate( $project_it )
  	{
-		$link_type = getFactory()->getObject('RequestLinkType');
- 		$this->type_it = $_REQUEST['LinkType'] != '' ? $link_type->getExact($_REQUEST['LinkType']) : $link_type->getEmptyIterator();
-		if ( $this->type_it->getId() < 1 ) {
-			$this->type_it = $link_type->getByRef('ReferenceName', 'duplicates');
-		}
- 		
 		$context = parent::duplicate( $project_it );
-		
- 	 	$map = $context->getIdsMap();
- 	    $request = getFactory()->getObject('pm_ChangeRequest');
-		$link = getFactory()->getObject('pm_ChangeRequestLink');
-		
- 	    foreach( $this->getObjectIt()->idsToArray() as $source_id )
- 	    {
-    		$link->add_parms( array( 
-    		    'SourceRequest' => $source_id,
-    			'TargetRequest' => $map[$request->getClassName()][$source_id],
-    			'LinkType' => $this->type_it->getId() 
-    		));
- 	    }
- 	    
+ 	 	$this->linkIssues($context->getIdsMap());
  	    return $context;
  	}
+
+	function linkIssues( $map )
+	{
+		$request = getFactory()->getObject('pm_ChangeRequest');
+		$link = getFactory()->getObject('pm_ChangeRequestLink');
+
+		foreach( $this->getObjectIt()->idsToArray() as $source_id ) {
+			$link->add_parms( array(
+				'SourceRequest' => $source_id,
+				'TargetRequest' => $map[$request->getEntityRefName()][$source_id],
+				'LinkType' => $this->type_it->getId()
+			));
+		}
+	}
 }

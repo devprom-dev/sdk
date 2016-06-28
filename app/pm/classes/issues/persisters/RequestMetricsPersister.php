@@ -5,16 +5,20 @@ class RequestMetricsPersister extends ObjectSQLPersister
      function getSelectColumns( $alias )
      {
          $columns = array();
-         $terminal = getFactory()->getObject('Request')->getTerminalStates();
-         
+
+		 $terminalIds = array();
+		 $state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
+		 while( !$state_it->end() ) {
+			 if ( $state_it->get('IsTerminal') == 'Y' ) {
+				 $terminalIds[] = $state_it->getId();
+			 }
+			 $state_it->moveNext();
+		 }
+		 if ( count($terminalIds) < 1 ) $terminalIds = array(0);
+
          $columns[] =
          	 "  IFNULL( t.FinishDate, ". 
-         	 "  	IFNULL( (SELECT IFNULL((SELECT so.RecordCreated FROM pm_StateObject so WHERE so.pm_StateObjectId = t.StateObject), t.RecordModified) ".
-         	 "				   FROM pm_State st ".
-         	 "				  WHERE st.ReferenceName = t.State ".
-          	 "				    AND st.VPD = t.VPD	".
-          	 "				    AND st.ObjectClass = 'request'	".
-          	 "					AND st.IsTerminal = 'Y' LIMIT 1), ". 
+         	 "  	IFNULL( (SELECT so.RecordCreated FROM pm_StateObject so WHERE so.pm_StateObjectId = t.StateObject AND so.State IN (".join(',',$terminalIds).")), ".
          	 "				IFNULL( ".
          	 "					(SELECT MAX(r.DeliveryDate) ".
          	 "				   	   FROM pm_ChangeRequestLink l, pm_ChangeRequestLinkType lt, pm_ChangeRequest r ".
@@ -25,16 +29,8 @@ class RequestMetricsPersister extends ObjectSQLPersister
          	 "					IFNULL( ".
          	 "						(SELECT MAX(i.FinishDate) FROM pm_Release i, pm_Task s WHERE i.pm_ReleaseId = s.Release AND s.ChangeRequest = t.pm_ChangeRequestId), ".
          	 "						IFNULL( ".
-         	 "							(SELECT v.FinishDate ".
-         	 "					           FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
-             "							(SELECT FROM_DAYS(TO_DAYS(GREATEST(pr.FinishDate, NOW())) ".
-             "										+ IF(IFNULL(MAX(pr.Rating),0) <= 0, 0, GREATEST(0, ROUND(IFNULL(SUM(r.Estimation), 1) / MAX(pr.Rating), 1)))) ".
-             "	   	   		  	   	   	   FROM pm_Project pr, pm_ChangeRequest r " .
-             "	  	  		  	  	  	  WHERE t.VPD = pr.VPD ".
-         	 "							    AND r.Project = pr.pm_ProjectId ".
-         	 "							    AND r.PlannedRelease IS NULL ".
-         	 "							    AND NOT EXISTS (SELECT 1 FROM pm_Task s WHERE s.ChangeRequest = r.pm_ChangeRequestId AND s.Release IS NOT NULL) ".
-         	 "							    AND r.State NOT IN ('".join("','", $terminal)."') ) ".
+			 " 							(SELECT v.FinishDate FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
+             "							(SELECT FROM_DAYS(m.MetricValue) FROM pm_ProjectMetric m WHERE m.VPD = t.VPD AND m.Metric = 'EstimatedFinishDate' LIMIT 1) ".
          	 "						) ".
              "					) ".
          	 "				) ".

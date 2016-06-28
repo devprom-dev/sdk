@@ -15,12 +15,12 @@ class SetupSupportProjectSettings extends Installable
     
     function install()
     {
-    	$settings_file = file_get_contents(SERVER_ROOT_PATH.'co/bundles/Devprom/ServiceDeskBundle/Resources/config/settings.yml');
-    	
+		$serviceDeskSettingsFile = SERVER_ROOT_PATH.'co/bundles/Devprom/ServiceDeskBundle/Resources/config/settings.yml';
+
+		$settings_file = file_get_contents($serviceDeskSettingsFile);
     	if ( preg_match('/supportProjectId:\s*([\d]+)/i', $settings_file, $result) )
     	{
-    		if ( $result[1] != '' )
-    		{
+    		if ( $result[1] != '' ) {
 		    	$project_it = getFactory()->getObject('Methodology')->getRegistry()->Query(
 			    			array (
 			    					new FilterAttributePredicate('Project', array($result[1]))
@@ -37,6 +37,12 @@ class SetupSupportProjectSettings extends Installable
 		    	}
     		}
     	}
+
+		$applicationSettingsFile = SERVER_ROOT_PATH.'co/bundles/Devprom/ApplicationBundle/Resources/config/settings.yml';
+		if ( !file_exists($applicationSettingsFile) ) {
+			copy($serviceDeskSettingsFile, $applicationSettingsFile);
+		}
+
         return true;
     }
 }

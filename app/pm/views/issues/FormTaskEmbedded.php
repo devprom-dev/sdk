@@ -30,6 +30,7 @@ class FormTaskEmbedded extends PMFormEmbedded
  	    $object->setAttributeVisible( 'TaskType', true );
  	 	$object->setAttributeVisible( 'Planned', true );
  	 	$object->setAttributeVisible( 'Comments', true );
+		$object->setAttributeVisible( 'Assignee', true );
  	}
  	
  	function process( $object_it )
@@ -67,9 +68,6 @@ class FormTaskEmbedded extends PMFormEmbedded
  	{
  		switch ( $attribute )
  		{
- 			case 'Assignee':
-				return !getSession()->getProjectIt()->getMethodologyIt()->IsParticipantsTakesTasks();
-				
  			default:
  				return parent::IsAttributeVisible( $attribute );
  		}
@@ -81,7 +79,6 @@ class FormTaskEmbedded extends PMFormEmbedded
  		{
  			case 'Release':
 				return true;
-				
  			default:
  				return parent::IsAttributeRequired( $attribute );
  		}

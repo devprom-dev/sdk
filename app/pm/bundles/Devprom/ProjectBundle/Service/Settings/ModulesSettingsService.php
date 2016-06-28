@@ -11,25 +11,64 @@ class ModulesSettingsService implements SettingsService
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
 
+		foreach( $this->getIterators() as $object_it ) {
+			while(!$object_it->end()) {
+				// remove personal settings of the current user
+				if ( $object_it->get('Participant') == getSession()->getParticipantIt()->getId() ) {
+					$object_it->object->delete($object_it->getId());
+				}
+				$object_it->moveNext();
+			}
+		}
+
+		getSession()->truncate();
+	}
+
+	public function resetToDefault()
+	{
+		// disable any model events handler
+		getFactory()->setEventsManager( new \ModelEventsManager() );
+
 		$xml = $this->getTemplateXml();
 		if ( $xml == '' ) return;
 
 		$context = new \CloneContext();
-		foreach( $this->getObjects() as $object )
-		{
-			$object_it = $object->getAll();
-			while(!$object_it->end())
+		foreach( $this->getIterators() as $object_it ) {
+			switch ( $object_it->object->getEntityRefName() )
 			{
-				$object->delete($object_it->getId());
-				$object_it->moveNext();
+				case 'pm_UserSetting':
+					while(!$object_it->end()) {
+						if ( $object_it->get('Participant') < 1 ) {
+							$object_it->object->delete($object_it->getId());
+						}
+						$object_it->moveNext();
+					}
+					break;
+				case 'pm_CustomReport':
+					$it = $object_it->object->getRegistry()->Query(
+						array (
+							new \CustomReportCommonPredicate(),
+							new \FilterBaseVpdPredicate()
+						)
+					);
+					while( !$it->end() ) {
+						$object_it->object->delete($it->getId());
+						$it->moveNext();
+					}
+					break;
 			}
-			
-			$iterator = $object->createXMLIterator($xml);
-			\CloneLogic::Run( $context, $object, $iterator, getSession()->getProjectIt() ); 
+
+			\CloneLogic::Run(
+				$context,
+				$object_it->object,
+				$object_it->object->createXMLIterator($xml),
+				getSession()->getProjectIt()
+			);
 		}
+
 		getSession()->truncate();
 	}
-	
+
 	public function makeDefault()
 	{
  		// disable any model events handler
@@ -37,25 +76,54 @@ class ModulesSettingsService implements SettingsService
 		
 		// prepare settings object
  		$context = new \CloneContext();
- 		foreach ( $this->getObjects() as $object )
-		{
-			$object_it = $object->getAll();
-			while(!$object_it->end())
+ 		foreach ( $this->getIterators() as $object_it ) {
+			switch ( $object_it->object->getEntityRefName() )
 			{
-				$object->delete($object_it->getId());
-				$object_it->moveNext();
+				case 'pm_UserSetting':
+					// remove personal settings of the current user
+					while(!$object_it->end()) {
+						if ( $object_it->get('Participant') == getSession()->getParticipantIt()->getId() ) {
+							$object_it->object->delete($object_it->getId());
+						}
+						$object_it->moveNext();
+					}
+
+					// filter only personal settings to be copied as defaults
+					$object_it = $object_it->object->createCachedIterator(
+						array_filter($object_it->getRowset(), function($row) {
+							return $row['Participant'] == getSession()->getParticipantIt()->getId();
+						})
+					);
+					break;
 			}
-			$object_it->moveFirst();
-			\CloneLogic::Run( $context, $object, $object_it, getSession()->getProjectIt() ); 
+
+			\CloneLogic::Run(
+				$context,
+				$object_it->object,
+				$object_it,
+				getSession()->getProjectIt()
+			);
 		}
+
 		getSession()->truncate();
 	}
-	
-	protected function getObjects()
+
+	protected function getIterators()
 	{
+		$iterators = array();
+
+		$iterators[] = getFactory()->getObject('pm_CustomReport')->getRegistry()->Query(
+			array (
+				new \CustomReportMyPredicate(),
+				new \FilterVpdPredicate()
+			)
+		);
+
 		$settings = new \PMUserSettings();
  		$settings->setRegistry( new \PMUserSettingsExportRegistry() );
-		return array ( $settings );
+		$iterators[] = $settings->getAll();
+
+		return $iterators;
 	}
 
 	protected function getTemplateXml()

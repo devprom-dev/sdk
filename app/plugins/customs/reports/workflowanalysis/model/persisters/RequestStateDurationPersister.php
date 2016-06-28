@@ -4,20 +4,13 @@ class RequestStateDurationPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
-    	$state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
- 				array (
- 						new FilterBaseVpdPredicate()
- 				)
- 		);
- 		
  		$columns = array();
-
 		$is_first_state = true;
-		
+
+		$state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
 		while( !$state_it->end() )
 		{
-			if ( $state_it->get('IsTerminal') == 'Y' )
-			{
+			if ( $state_it->get('IsTerminal') == 'Y' ) {
 				$state_it->moveNext();
 				continue;
 			}

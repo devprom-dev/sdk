@@ -14,27 +14,28 @@ class ReportsKanbanBuilder extends ReportsBuilder
     public function build( ReportRegistry & $object )
     {
      	$project_it = $this->session->getProjectIt();
+		$module = getFactory()->getObject('Module');
 
      	if ( !$project_it->IsPortfolio() ) {
-			$module_it = getFactory()->getObject('Module')->getExact('issues-chart');
+			$module_it = $module->getExact('issues-chart');
 			$object->addReport( array (
 					'name' => 'commulativeflow',
 					'title' => text('kanban18'),
 					'category' => FUNC_AREA_MANAGEMENT,
-					'query' => 'group=history&aggby=State&state=all&infosections=none&modifiedafter=last-month',
+					'query' => 'group=history&aggby=State&state=all&modifiedafter=last-month',
 					'type' => 'chart',
 					'description' => text('kanban30'),
 					'module' => $module_it->getId()
 			));
 		}
 
-     	$module_it = getFactory()->getObject('Module')->getExact('kanban/avgleadtime');
+     	$module_it = $module->getExact('kanban/avgleadtime');
 		$object->addReport( array (
 	        'name' => 'avgleadtime',
 			'title' => text('kanban19'),
 			'category' => FUNC_AREA_MANAGEMENT,
 		    'query' => 'type=all&priority=all&chartdata=hide&chartlegend=hide&aggregator=AVG&group=FinishDate&aggby=LifecycleDuration&state='.
-		        join(',',getFactory()->getObject('Request')->getTerminalStates()).'&infosections=none&modifiedafter=last-month',
+		        join(',',getFactory()->getObject('Request')->getTerminalStates()).'&modifiedafter=last-month',
 	        'type' => 'chart',
 			'description' => $module_it->get('Description'),
 	        'module' => $module_it->getId() 
@@ -42,7 +43,7 @@ class ReportsKanbanBuilder extends ReportsBuilder
 
      	if ( $project_it->getMethodologyIt()->get('IsKanbanUsed') != 'Y' ) return;
 
-     	$module_it = getFactory()->getObject('Module')->getExact('kanban/requests');
+     	$module_it = $module->getExact('kanban/requests');
 		$object->addReport( array (
             'name' => 'kanbanboard',
 			'title' => text('kanban17'),
@@ -50,5 +51,16 @@ class ReportsKanbanBuilder extends ReportsBuilder
 			'category' => FUNC_AREA_MANAGEMENT,
 	        'module' => $module_it->getId() 
 		));
-    }
+
+		$module_it = $module->getExact('issues-chart');
+		$object->addReport( array (
+			'name' => 'blockreasonschart',
+			'title' => text('kanban32'),
+			'category' => FUNC_AREA_MANAGEMENT,
+			'query' => 'group=BlockReason&state=all&modifiedafter=last-month',
+			'type' => 'chart',
+			'description' => text('kanban33'),
+			'module' => $module_it->getId()
+		));
+	}
 }

@@ -9,10 +9,9 @@
                 <span class="caret"></span>
               </a>
               <?php
-              print_r(array_keys($actions));
-                echo $view->render('core/PopupMenu.php', array (
-                    'items' => $actions
-                ));
+                    echo $view->render('core/PopupMenu.php', array (
+                        'items' => $actions
+                    ));
               ?>
         </div>
     </div>

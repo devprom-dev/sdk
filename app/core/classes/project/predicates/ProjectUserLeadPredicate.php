@@ -15,7 +15,7 @@ class ProjectUserLeadPredicate extends FilterPredicate
 	 				"						      pm_ParticipantRole o, pm_ProjectRole l " .
 					  "			 	 WHERE t.pm_ProjectId = r.Project AND r.pm_ParticipantId = o.Participant " .
 					  "			   	   AND o.ProjectRole = l.pm_ProjectRoleId AND l.ReferenceName = 'lead' ".
-					  "    		   	   AND r.SystemUser = ".$user_it->getId()." AND IFNULL(r.IsActive, 'N') = 'Y' )";
+					  "    		   	   AND r.SystemUser = ".$user_it->getId()." )";
 
  			return $filter;
  		}

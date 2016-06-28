@@ -91,6 +91,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  		if ( strtolower($_REQUEST['CopyOption']) == "" )
  		{
 	 		$map = array();
+			$versionMap = array();
 	 		
  			$object_it = $this->getObjectIt();
  			$branch = getFactory()->getObject('Snapshot');
@@ -118,13 +119,16 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 			{
 	 				$map[$this->getObject()->getEntityRefName()][$object_it->getId()] = $object_it->getId();
 	 			}
-	 							
+				$versionMap[$this->getObject()->getEntityRefName()][$object_it->getId()] = $object_it->getId();
+
 	 			$object_it->moveNext();
  			}
 
 			if ( count($map) > 0 ) {
 				$this->storeBranch( $map, $this->getObject() );
 			}
+
+			$this->storeVersion( $versionMap, $this->getObject() );
 
  			return new CloneContext();
  		}
@@ -136,11 +140,12 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 			$map = $context->getIdsMap();
 			
 			// for documents only
-			if ( $this->getObjectIt()->get('ParentPage') == '' )
-			{
+			if ( $this->getObjectIt()->get('ParentPage') == '' ) {
 				// make the snapshot means it is a branch
 				$this->storeBranch( $map, $this->getObject() );
 			}
+
+			$this->storeVersion( $map, $this->getObject() );
 			
 			// make traces on source requirements
 			$this->storeTraces( $map, $this->getObject() );
@@ -189,6 +194,47 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 			));
 		}
  	}
- 	
- 	private $parent_it;
+
+	function storeVersion( & $map, & $object )
+	{
+		$snapshot = getFactory()->getObject('Snapshot');
+		$versioned = new VersionedObject();
+		$versioned_it = $versioned->getExact(get_class($object));
+
+		foreach( $this->getObjectIt()->idsToArray() as $object_id )
+		{
+			if ( $map[$object->getEntityRefName()][$object_id] == '' ) continue;
+			$object_id = $map[$object->getEntityRefName()][$object_id];
+
+			$branch_it = $snapshot->getRegistry()->Query(
+				array (
+					new FilterAttributePredicate('ObjectId', $object_id),
+					new FilterAttributePredicate('ObjectClass', get_class($object)),
+					new FilterAttributePredicate('Caption', $_REQUEST['Version']),
+					new FilterAttributePredicate('ListName', get_class($object).':'.$object_id)
+				)
+			);
+			if ( $branch_it->getId() != '' ) continue;
+
+			$snapshot->freeze(
+				$snapshot->add_parms( array (
+					'Caption' => $_REQUEST['Version'],
+					'Description' => $_REQUEST['Description'],
+					'ListName' => get_class($object).':'.$object_id,
+					'ObjectId' => $object_id,
+					'ObjectClass' => get_class($object),
+					'SystemUser' => getSession()->getUserIt()->getId()
+				)),
+				$versioned_it->getId(),
+				array($object_id),
+				$versioned_it->get('Attributes')
+			);
+		}
+	}
+
+	function hasAccess() {
+		return getFactory()->getAccessPolicy()->can_create($this->getObject());
+	}
+
+	private $parent_it;
 }

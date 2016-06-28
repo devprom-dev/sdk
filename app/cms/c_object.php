@@ -113,8 +113,8 @@ include('c_iterator.php');
 
  	function getAttributeUserName( $name ) 
  	{
-		return preg_replace_callback (
-			'/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $this->attributes[$name]['caption'] 
+		return preg_replace_callback ( '/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback,
+			html_entity_decode($this->attributes[$name]['caption'], ENT_COMPAT | ENT_HTML401, APP_ENCODING)
 		);
 	}
 	
@@ -144,7 +144,28 @@ include('c_iterator.php');
 		
 		return array_keys($attributes);
 	}
-	
+
+	 function getAttributesByOrigin( $origin ) {
+		 $attributes = array_filter( $this->attributes, function($value) use ($origin) {
+			 return $value['origin'] == $origin;
+		 });
+		 return array_keys($attributes);
+	 }
+
+	 function getAttributeByCaption( $caption ) {
+		 $attributes = array_filter( $this->attributes, function($value) use ($caption) {
+			 return $value['caption'] == $caption;
+		 });
+		 return array_shift(array_keys($attributes));
+	 }
+
+	 function getAttributesByType( $type ) {
+		 $attributes = array_filter( $this->attributes, function($value) use ($type) {
+			 return strcasecmp($value['type'], $type) === 0;
+		 });
+		 return array_keys($attributes);
+	 }
+
  	//----------------------------------------------------------------------------------------------------------
 	function getAttributeOrigin( $name ) 
 	{
@@ -169,26 +190,6 @@ include('c_iterator.php');
 	
  	function getDefaultAttributeValue( $name ) 
 	{
-	    global $model_factory;
-	    
-		if( $this->isOrdered() && $name == 'OrderNum') 
-		{
-			$sql = 'SELECT MAX(OrderNum) + 10 FROM '.$this->getClassName().' WHERE '.
-					$this->container_it->object->getClassName().'Id = '.$this->container_it->getId();
-            
-			if(is_object($model_factory) && $this->IsVPDEnabled() ) 
-			{
-            	$vpd_hash = $this->getVpdValue();
-            	if($vpd_hash != '') $sql = $sql." AND VPD = '".$vpd_hash."' ";
-            }
-			
-			$r2 = DAL::Instance()->Query($sql);
-			
-			$dt = mysql_fetch_array($r2);
-
-			if($dt[0] == null) return 10; else return $dt[0];
-		}
-
 		return $this->attributes[$name]['default'];
 	}
 	
@@ -295,8 +296,20 @@ include('c_iterator.php');
 	{
 		return $this->attributes;
 	}
-	
- 	function setAttributes( $attributes ) 
+
+	 function getAttributesVisible()
+	 {
+		 return array_keys(
+			 array_map(
+				 function($attribute) {
+					 return $attribute['visible'];
+			 	 },
+				 $this->attributes
+			 )
+		 );
+	 }
+
+ 	function setAttributes( $attributes )
 	{
 		$this->attributes = $attributes;
 	}
@@ -422,9 +435,6 @@ include('c_iterator.php');
  /////////////////////////////////////////////////////////////////////////////////////////////////////////
  class SingletonDB extends StoredObjectDB
  {
- 	function add() {}
- 	function delete() {}
-	
  	function Install()
 	{
 		parent::Install();
@@ -440,7 +450,7 @@ include('c_iterator.php');
 		$this->object = $object;
 	}
 	function getDataDefinition( $name ) {}
-	function readFile( $name ) {}
+	function readFile( $name, $it ) {}
 	function getCheckSum( $name, $it ) {}
 	function getSizeKb( $name, $it ) {}
 	function getSizeMb( $name, $it ) {}

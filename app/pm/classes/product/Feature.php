@@ -81,4 +81,9 @@ class Feature extends Metaobject
 		$this->versions_it = $this->createSQLIterator( $this->getVersionsSql() );
 		$this->versions_it->buildPositionHash( array('pm_FunctionId') );
 	}
+
+	function IsDeletedCascade( $object )
+	{
+		return false;
+	}
 }

@@ -2,7 +2,11 @@
 
 class TaskPlanFactPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+	function getAttributes() {
+		return array('PlanFact');
+	}
+
+	function getSelectColumns( $alias )
  	{
  		$columns = array();
  		

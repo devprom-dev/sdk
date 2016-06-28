@@ -147,12 +147,8 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
     $namespace, $namespace.'.GetResult', $soap->getStyle(), $soap->getUse(), ''
  ); 
 
- $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
- 
- SoapService::logInfo("REQUEST: ".$HTTP_RAW_POST_DATA);
-		
  ob_start();
- $server->service($HTTP_RAW_POST_DATA);
+ $server->service(EnvironmentSettings::getRawPostData());
 		
  $result = ob_get_contents();
  ob_end_clean();
@@ -259,6 +255,7 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
 					'Environment' => is_object($env_it) ? $env_it->getId() : ''
 			)
 	));
+\Logger::getLogger('Commands')->error(var_export($test_it->getData(),true));
 	return $soap->serializeToSoap( $test_it ); 
  }
 

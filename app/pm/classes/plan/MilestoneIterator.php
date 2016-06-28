@@ -4,11 +4,11 @@ class MilestoneIterator extends OrderedIterator
 {
  	 function getDisplayName()
  	 {
-		$title = $this->getDateFormat('MilestoneDate');
+		$title = getSession()->getLanguage()->getDateFormattedShort($this->get('MilestoneDate'));
 
 		$caption = $this->get('Caption');
 		
-		if ( $caption != '' ) $title .= ' '.$caption;
+		if ( $caption != '' ) $title .= ', '.$caption;
 		
 		return $title;
  	 }

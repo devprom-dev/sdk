@@ -2,14 +2,16 @@
 
 class PMWikiList extends PMPageList
 {
- 	var $version_it, $stage, $form, $form_render_parms;
+ 	var $version_it, $form, $form_render_parms;
+	private $displayContent = false;
+	private $searchText = '';
  	
 	function retrieve()
 	{
+		if ( $this->displayContent ) {
+			$this->getObject()->setRegistry( new WikiPageRegistryContent($this->getObject()) );
+		}
 		parent::retrieve();
-
-		$this->stage = getFactory()->getObject('Stage');
-		$this->stage->disableVpd();
 	}
 	
 	function & getStateObject()
@@ -37,15 +39,30 @@ class PMWikiList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
+				$title = $object_it->getDisplayName();
 				if ( $object_it->get('BrokenTraces') != "" ) {
-					echo $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php', 
+					$title = $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php',
 						array (
 							'id' => $object_it->getId(),
 							'url' => getSession()->getApplicationUrl($object_it)
 						)
-					);					
+					).$title;
 				}
-				echo $object_it->getDisplayName();
+				if ( $this->displayContent ) {
+					echo '<h5 class="title-cell bs">'.$title.'</h5>';
+				}
+				else {
+					echo $title;
+				}
+
+				if ( $this->displayContent && trim($object_it->get('Content')," \r\n") != '' ) {
+					$field = new FieldWYSIWYG($object_it->get('ContentEditor'));
+					$field->setValue($object_it->get('Content'));
+					$field->setObjectIt($object_it);
+					$field->setSearchText($this->searchText);
+					echo $field->getText(true);
+				}
+
 				break;
 				
 			case 'Workflow':
@@ -53,12 +70,30 @@ class PMWikiList extends PMPageList
                     $lines = array();
                     $rows = json_decode($object_it->getHtmlDecoded($attr), true);
                     foreach( $rows as $row ) {
-                        $lines[] = '<div style="white-space:nowrap">'.str_replace('%1', $row['action'],
-                                        str_replace('%2', $row['author'],
-                                                str_replace('%3', getSession()->getLanguage()->getDateTimeFormatted($row['date']), text(2045)))).'</div>';
+						$line = $this->getTable()->getView()->render('core/UserPicture.php', array (
+							'id' => $row['author_id'],
+							'class' => 'user-mini',
+							'image' => 'userpics-mini',
+							'title' => $row['author']
+						));
+						$line .= " " . $row['action'];
+						$line .= ", " . getSession()->getLanguage()->getDateFormattedShort($row['date']);
+                        $lines[] = '<div class="workflow-history">'.$line.'</div>';
                     }
                     echo join('', $lines);
                 }
+				break;
+
+			case 'Dependency':
+				$uids = array();
+				foreach( preg_split('/,/', $object_it->get($attr)) as $object_info )
+				{
+					list($class, $id) = preg_split('/:/',$object_info);
+					if ( !class_exists($class,false) ) continue;
+					$ref_it = getFactory()->getObject($class)->getExact($id);
+					$uids[] = $this->getUidService()->getUidIcon($ref_it);
+				}
+				echo join(' ',$uids);
 				break;
 
 			default:
@@ -71,7 +106,7 @@ class PMWikiList extends PMPageList
 		switch ( $entity_it->object->getClassName() )
 		{
 			case 'WikiPage':
-				echo '<div class="tracing-ref">';
+				echo '<span class="tracing-ref">';
 					if ( $entity_it->get('BrokenTraces') != "" ) {
 						echo $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php', 
 							array (
@@ -81,7 +116,7 @@ class PMWikiList extends PMPageList
 						);
 					}
 					parent::drawRefCell( $entity_it, $object_it, $attr );
-				echo '</div>';
+				echo '</span>';
 				break;
 				
 		    case 'WikiPageFile':
@@ -112,13 +147,7 @@ class PMWikiList extends PMPageList
 	function getColumnFields()
 	{
 		$fields = parent::getColumnFields();
-		
-		foreach( $fields as $key => $value ) {
-			if ( $value == 'Content' ) unset($fields[$key]);
-		}
-		
 		$fields[] = 'SectionNumber';
-		
 		return $fields;
 	}
 	
@@ -132,20 +161,34 @@ class PMWikiList extends PMPageList
 			)
 		);
 
-		$values = $this->getFilterValues();
-		if ( !in_array($values['document'], array('','all','hide')) ) {
-			$fields = array_diff($fields, array('DocumentId'));
-		}
-
 		return $fields;
 	}
 	
-	function IsNeedToSelectRow( $object_it )
-	{
+	function IsNeedToSelectRow( $object_it ) {
         return true;
 	}
-	
- 	function getColumnWidth( $column )
+
+	function getColumnVisibility($attr) {
+		return $attr == 'Content' ? false : parent::getColumnVisibility($attr);
+	}
+
+	function getColumnName($attr)
+	{
+		switch( $attr ) {
+			case 'Caption':
+				if ( $this->displayContent ) return text('2121');
+				return parent::getColumnName($attr);
+		}
+		return parent::getColumnName($attr);
+	}
+
+	function getRowBackgroundColor( $object_it )
+	{
+		if ( $this->displayContent ) return '';
+		return parent::getRowBackgroundColor( $object_it );
+	}
+
+	function getColumnWidth( $column )
  	{
  	    switch ( $column )
  	    {
@@ -162,4 +205,22 @@ class PMWikiList extends PMPageList
  	            return parent::getColumnWidth( $column );
  	    }
  	}
+
+	function getRenderParms()
+	{
+		$values = $this->getFilterValues();
+
+		if ( in_array($values['search'], array('','all','none')) ) {
+			$values['search'] = '';
+		}
+		$this->searchText = $values['search'];
+		$this->displayContent = !in_array($this->searchText, array('','all','hide')) || parent::getColumnVisibility('Content');
+
+		$parms = parent::getRenderParms();
+		return array_merge( $parms,
+			array (
+				'table_class_name' => $this->displayContent ? 'table wishes-table' : $parms['table_class_name']
+			)
+		);
+	}
 }

@@ -2,14 +2,14 @@
 
 namespace Devprom\CommonBundle\Service\Tooltip;
 
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
-
 class TooltipService
 {
 	private $object_it;
+	private $extended = false;
 	
-	public function __construct( $class_name, $object_id )
+	public function __construct( $class_name, $object_id, $extended = false )
 	{
+		$this->extended = $extended;
 		$object = getFactory()->getObject($class_name);
 		$this->extendModel($object);
     	$this->setObjectIt($object->getExact($object_id));
@@ -27,6 +27,7 @@ class TooltipService
 			
     public function getData()
     {
+		if ( $this->object_it->getId() < 1 ) return array();
     	return array (
     			'attributes' => 
     				$this->buildAttributes( $this->object_it )
@@ -42,8 +43,26 @@ class TooltipService
     	$data = array();
     	
     	$object = $object_it->object;
-    	
-    	$tooltip_attributes = $object->getAttributesByGroup('tooltip');
+
+		$tooltip_attributes = $object->getAttributesByGroup('tooltip');
+		if ( $this->extended ) {
+			$tooltip_attributes = array_diff(
+				array_merge(
+					$tooltip_attributes,
+					$object->getAttributesByGroup('trace'),
+					$object->getAttributesVisible()
+				),
+				array (
+					'OrderNum', 'RecordCreated', 'RecordModified', 'UID'
+				)
+			);
+		}
+		else {
+			$tooltip_attributes = array_merge(
+				array('Caption', 'Description'),
+				$tooltip_attributes
+			);
+		}
 	    $system_attributes = $object->getAttributesByGroup('system');
  		
  		foreach ( $object->getAttributes() as $attribute => $parms )
@@ -55,7 +74,7 @@ class TooltipService
  	 		$type = $object->getAttributeType($attribute);
  	 		if ( $type == '' ) continue;
 
- 	 		if ( !$object->IsAttributeVisible($attribute) && !in_array($attribute, $tooltip_attributes) ) continue;
+ 	 		if ( !in_array($attribute, $tooltip_attributes) ) continue;
 
  	 		$data[] = array (
  	 				'name' => $attribute,
@@ -82,8 +101,8 @@ class TooltipService
 			    return $object_it->get($attribute) == 'Y' ? translate('Да') : translate('Нет');
 			    
  		    case 'text':
-			    $totext = new \html2text( $object_it->getHtmlDecoded($attribute) );
-			    return $object_it->getWordsOnlyValue($totext->get_text(), 25);
+			    $totext = new \Html2Text\Html2Text( $object_it->getHtmlDecoded($attribute) );
+			    return $object_it->getWordsOnlyValue($totext->getText(), 25);
 
  			case 'wysiwyg':
 			    return $object_it->getHtmlDecoded($attribute);
@@ -101,7 +120,7 @@ class TooltipService
 					
 					while( !$ref_it->end() )
 					{
-						$titles[] = $uid->getUidTitle($ref_it); 
+						$titles[] = $this->extended ? $uid->getUidWithCaption($ref_it) : $uid->getUidTitle($ref_it);
 						$ref_it->moveNext();
 					}
 					

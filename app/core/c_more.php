@@ -1,6 +1,5 @@
 <?php
- 
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
+
 include_once SERVER_ROOT_PATH.'core/methods/GetWholeTextWebMethod.php';
 
 function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
@@ -19,7 +18,7 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
 	$max_width = 300;
 	$converter = '';
 	$attribute_type = $object_it->object->getAttributeType($attr_name);
- 
+
 	if( $max_words > 0 )
 	{
 	    if ( $attribute_type == 'wysiwyg' ) {
@@ -29,12 +28,12 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
         else {		
             $attr_value = str_replace(chr(10), '', $object_it->get($attr_name));
         }
-        
+
         $entity_name = $object_it->object->getClassName();
 		
-		$totext = new html2text( addslashes($attr_value) );
-		$attr_value = $totext->get_text();
-		
+		$totext = new \Html2Text\Html2Text( addslashes($attr_value) );
+		$attr_value = $totext->getText();
+
 		$converter = 'html2text';
 		$result_value = str_replace( '...', '', $object_it->getWordsOnlyValue($attr_value, $max_words) );
 	}

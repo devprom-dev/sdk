@@ -61,17 +61,7 @@
  		return 'entity';
  	}
  	
-	function add() 
-	{
-		$entity_id = parent::add();
-		
-		$entity = $this->getExact($entity_id);
-		
-		$metaobject = new Metaobject($entity->get('ReferenceName'));
-		$metaobject->Install();
-	}
-	
-	function delete( $id )
+	function delete( $id, $record_version = '' )
 	{
 		$entity = $this->getExact($id);
 		

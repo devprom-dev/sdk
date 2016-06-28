@@ -185,7 +185,7 @@ class WebMethod
 		return $module_name.$query_string;
 	}
 	
-	function getJSCall( $parms = array(), $redirect = '' )
+	function getJSCall( $parms = array() )
 	{
 		$keys = array_keys($parms);
 		$data = array();
@@ -197,8 +197,7 @@ class WebMethod
 			array_push( $data, "'".$key."' : ".$value );	
 		}
 		
-		$redirect = $redirect == '' ? $this->getRedirectUrl() : $redirect;
-		
+		$redirect = $this->getRedirectUrl();
 		if ( !preg_match('/function\s*\(/', $redirect) ) $redirect = "'".$redirect."'";
 		
 		return "javascript: runMethod('".$this->getModule().'?method='.get_class($this).

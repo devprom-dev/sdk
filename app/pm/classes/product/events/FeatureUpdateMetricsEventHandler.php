@@ -20,15 +20,15 @@ class FeatureUpdateMetricsEventHandler extends SystemTriggersBase
 		    				return $value > 0;
 		    		}
 	    	);
-
 	    if ( count($ids) < 1 ) return;
 	    
 	    $service = new StoreMetricsService();
-    	$service->storeFeatureMetrics($object_it->object->getRegistry()->Query(
-    			array (
-    					new FilterInPredicate($ids),
-    					new FeatureMetricsPersister()
-    			)
-    		));
+    	$service->storeFeatureMetrics(
+			$object_it->object->getRegistry(),
+			array (
+				new FilterInPredicate($ids),
+				new FeatureMetricsPersister()
+			)
+		);
 	}
 }

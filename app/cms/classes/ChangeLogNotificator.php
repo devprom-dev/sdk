@@ -106,15 +106,22 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
 		$change_log = getFactory()->getObject('ObjectChangeLog');
 		$change_log->setVpdContext( $object_it );
-		
+
+		$title = '';
+		$uid = new ObjectUID;
+		if ( $uid->hasUid( $object_it ) ) {
+			$title .= $uid->getUidOnly( $object_it );
+		}
+		$title .= html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING );
+
 		$class_name = strtolower(get_class($object_it->object));
-		$parms['Caption'] = html_entity_decode( $object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING );
+		$parms['Caption'] = $title;
 		$parms['ObjectId'] = $object_it->getId();
 		$parms['ClassName'] = $class_name == 'metaobject' ? $object_it->object->getClassName() : $class_name;
 		$parms['EntityRefName'] = $object_it->object->getEntityRefName();
 		$parms['EntityName'] = translate($object_it->object->getDisplayName());
 		$parms['ChangeKind'] = $kind;
-		$parms['Author'] = $author_email != '' ? $author_email : getSession()->getUserIt()->get('Email');
+		$parms['Author'] = $author_email != '' ? $author_email : (getSession()->getUserIt()->getId() < 1 ? getSession()->getUserIt()->getHtmlDecoded('Caption') : '');
 		$parms['Content'] = $content;
 		$parms['VisibilityLevel'] = $visibility;
 		$parms['SystemUser'] = getSession()->getUserIt()->getId();

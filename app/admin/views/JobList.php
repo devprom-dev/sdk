@@ -77,7 +77,7 @@ class JobList extends PageList
 	{
 		$actions = parent::getItemActions( $column_name, $object_it );
 
-		if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+		if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 		
 		array_push( $actions, array( 
 		    'url' => '/tasks/command.php?class=runjobs&job='.$object_it->getId().'&redirect=/admin/jobs.php', 

@@ -43,8 +43,12 @@ class ObjectPersister
  	function modify( $object_id, $parms )
  	{
  	}
- 	
- 	function delete( $object_id )
+
+	function beforeDelete( $object_id )
+	{
+	}
+
+ 	function afterDelete( $object_it )
  	{
  	}
 
