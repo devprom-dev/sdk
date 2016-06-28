@@ -22,8 +22,7 @@ call ..\dev\php\php composer/composer.phar install
 
 cd %ROOT%\dev
 chcp 1251
-call mysql\bin\mysql --user=devprom --password=devprom_pass -e "source ../build/create-db.sql"
+call mysql\bin\mysql -u root --password=  -e "create user devprom@localhost identified by 'devprom_pass'"
+call mysql\bin\mysql -u root --password=  -e "grant all privileges on *.* to devprom@localhost with grant option"
 call mysql\bin\mysql --user=devprom --password=devprom_pass --database=devprom -e "source ../db/devprom.sql"
-call mysql\bin\mysql --user=devprom --password=devprom_pass --database=devprom -e "source ../db/update.sql"
-call mysql\bin\mysql --user=devprom --password=devprom_pass --database=devprom -e "call upgrade_db('3.5.20');"
 call mysql\bin\mysql --user=devprom --password=devprom_pass --database=devprom -e "insert into cms_License (LicenseType, LicenseValue, LicenseKey) values ('LicenseTeam','2','073af8958ee59de0c67349d580b1def5');"
