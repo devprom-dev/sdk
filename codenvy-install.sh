@@ -17,6 +17,7 @@ mkdir sdk/backup
 mkdir sdk/update
 mkdir sdk/logs
 cd sdk/app/ext
+sudo composer self-update
 composer install
 cd /projects/sdk
 git config --global user.email "test@example.com"                                                                                                                                                 
