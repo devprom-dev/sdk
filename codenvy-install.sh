@@ -17,10 +17,10 @@ sudo cp /projects/sdk/deploy/codenvy/cron-devprom /etc/cron.d/
 sudo service mysql restart
 mysql -u root --password=  -e "create user devprom@localhost identified by 'devprom_pass'"
 mysql -u root --password=  -e "grant all privileges on *.* to devprom@localhost with grant option"
-mysql --user=devprom --password=devprom_pass --database=devprom -e "source /projects/sdk/db/devprom.sql"
+mysql --user=devprom --password=devprom_pass -e "source /projects/sdk/db/devprom.sql"
 mysql --user=devprom --password=devprom_pass --database=devprom -e "insert into cms_License (LicenseType, LicenseValue, LicenseKey) values ('LicenseTeam','2','073af8958ee59de0c67349d580b1def5');"
-cp -R /projects/sdk/dev/apache/htdocs/* sdk/app/
-cp /projects/sdk/deploy/codenvy/settings* sdk/app/
+cp -R /projects/sdk/dev/apache/htdocs/* /projects/sdk/app/
+cp /projects/sdk/deploy/codenvy/settings* /projects/sdk/app/
 mkdir /projects/sdk/app/cache
 mkdir /projects/sdk/files
 mkdir /projects/sdk/backup
