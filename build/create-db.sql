@@ -10,3 +10,6 @@ use devprom;
 
 SET wait_timeout=600;
 SET interactive_timeout=600;
+
+create user devprom@localhost identified by 'devprom_pass';
+grant all privileges on *.* to devprom@localhost with grant option;

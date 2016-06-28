@@ -131,7 +131,7 @@
     "klaussilveira/simple-shm": "*",
     "mindscape/raygun4php": "dev-master",
     "intercom/intercom-php": "1.*",
-    "raven/raven": "dev-master",
+    "sentry/sentry": "dev-master",
     "tequilarapido/letter-avatar": "*",
     "devprom-dev/php-htmldiff": "*",
     "html2text/html2text": "*"
