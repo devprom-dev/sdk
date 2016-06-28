@@ -1,7 +1,4 @@
 #!/bin/bash
-git config --global user.email "test@example.com"                                                                                                                                                 
-git config --global user.name "developer"
-git remote add upstream https://github.com/devprom-dev/sdk.git
 sudo cp sdk/deploy/codenvy/000-default.conf /etc/apache2/sites-available/
 sudo cp sdk/deploy/codenvy/php-devprom.ini /etc/php5/apache2/conf.d/
 sudo cp sdk/deploy/codenvy/mysql-devprom.cnf /etc/mysql/conf.d/
@@ -18,6 +15,12 @@ mkdir sdk/app/cache
 mkdir sdk/files
 mkdir sdk/backup
 mkdir sdk/update
-chown -R www-data:www-data sdk
+mkdir sdk/logs
 cd sdk/app/ext
 composer install
+cd /projects/sdk
+git config --global user.email "test@example.com"                                                                                                                                                 
+git config --global user.name "developer"
+git remote add upstream https://github.com/devprom-dev/sdk.git
+sudo chown -R www-data:www-data /projects/sdk
+sudo chmod -R 775 /projects/sdk
