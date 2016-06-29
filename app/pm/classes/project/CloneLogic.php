@@ -211,7 +211,7 @@ class CloneLogic
 		    
 			$iterator->moveNext();
 		}
-		
+
 		// restore broken references skiped first time because of absent dependencies
 		
 		$broken = $context->getBrokenReferences();
@@ -245,15 +245,13 @@ class CloneLogic
     
     static function getReferenceObject( $iterator, $attr )
     {
-        global $model_factory;
-        
-        if ( $attr == 'ObjectId' && $iterator->get('ObjectClass') != '' )
-        {
-            return $model_factory->getObject($iterator->get('ObjectClass'));
+        if ( $attr == 'ObjectId' && $iterator->get('ObjectClass') != '' ) {
+			$className = getFactory()->getClass($iterator->get('ObjectClass'));
+			if ( class_exists($className, false) ) {
+				return getFactory()->getObject($className);
+			}
         }
-        
-		if ( $iterator->object->IsReference($attr) )
-		{
+		if ( $iterator->object->IsReference($attr) ) {
 		    return $iterator->object->getAttributeObject($attr);
 		}
     }
@@ -263,7 +261,7 @@ class CloneLogic
  		global $model_factory;
 
         $ids_map = $context->getIdsMap();
- 		
+
 		foreach ( $attrs as $attr )
 		{
 			// special case for references
