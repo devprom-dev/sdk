@@ -24,7 +24,7 @@
     > cd /projects
     > git clone https://github.com/devprom-dev/sdk
     > chmod -R 775 /projects/sdk/*
-    > ./projects/sdk/codenvy-install.sh
+    > /projects/sdk/codenvy-install.sh
 
 После окончания работы скрипта codenvy-install.sh необходимо отредактировать команду среды "start apache" и в качестве Preview Url указать http://${server.port.80}, после выполнения этой команды в консоли будет отображена ссылка на установленное веб-приложение.
 При переходе по ссылке завершится установка Devprom SDK, автоматически создается пользователь admin/admin
