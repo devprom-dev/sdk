@@ -1,6 +1,5 @@
 #!/bin/bash
-sudo apt-get -qq update
-sudo apt-get -qq upgrade
+sudo apt-get update
 sudo apt-get -y -q install anacron
 cd /projects/sdk/
 git config --global user.email "test@example.com"                                                                                                                                                 
