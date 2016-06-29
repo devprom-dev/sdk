@@ -2,5 +2,5 @@
 
 $plugin_text_array = array 
 (
- 		1 => 'Example how to extend data model'
+ 		1 => 'Example 2'
 );

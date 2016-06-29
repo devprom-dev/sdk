@@ -65,7 +65,7 @@ class IteratorBase
 	{
 		$this->pos = 0;
 		
-		if ( $this->count() > 0 && !is_array($this->rs) ) {
+		if ( $this->count() > 0 && is_object($this->rs) ) {
 			DAL::Instance()->Seek($this->rs, $this->pos);
 		}
 		
@@ -83,7 +83,7 @@ class IteratorBase
 	{
 		$this->pos = $pos;
 		
-		if ( !is_array($this->rs) )
+		if ( is_object($this->rs) )
 		{
 			if ( $this->count() > 0 ) {
 				DAL::Instance()->Seek($this->rs, $pos);
@@ -281,7 +281,7 @@ class IteratorBase
 		$this->rs = $rs;
 		$this->count = 0;
 		
-		if ( !is_array($this->rs) ) {
+		if ( is_object($this->rs) ) {
 		    $this->count = DAL::Instance()->RowsNum($this->rs);
 		}
 		else if( is_array($rs) ) {

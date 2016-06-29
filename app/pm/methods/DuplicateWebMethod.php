@@ -134,7 +134,7 @@ class DuplicateWebMethod extends WebMethod
 				);
 			}
 		}
-		else {
+		elseif( $duplicate_it->count() == 1 ) {
 			$this->setRedirectUrl($duplicate_it->getViewUrl());
 		}
  	}
