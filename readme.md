@@ -9,10 +9,10 @@
 Пример расширения модели данных путем добавления нового поля в таблице и соответствующего атрибута на форме.
 #### app/plugins/example3
 Пример добавления дополнительного поля на форму списания времени, для указания типа задачи (активности) на что списано время.
-![Image of Example3](https://github.com/devprom-dev/sdk/images/example3.png)
+![Image of Example3](https://raw.githubusercontent.com/devprom-dev/sdk/master/images/example3.png)
 #### app/plugins/example4
 Пример реализации модуля, отображающего все заявки от пользователей.
-![Image of Example4](https://github.com/devprom-dev/sdk/images/example4.png)
+![Image of Example4](https://raw.githubusercontent.com/devprom-dev/sdk/master/images/example4.png)
 #### app/plugins/customs
 Пример создания собственого отчета "Детализация времени цикла".
 
