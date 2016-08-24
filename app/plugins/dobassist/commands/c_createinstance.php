@@ -9,6 +9,7 @@ class CreateInstance extends CommandForm
 	private $username = '';
 	private $userlogin = '';
 	private $template = '';
+	private $language = 'en';
 	private $names_restricted = array('docs','doc','api','support','www','account','news','blog');
 	
  	function validate()
@@ -21,7 +22,10 @@ class CreateInstance extends CommandForm
 
  		$this->instance = trim(strtolower($_REQUEST['instance']));
  		$this->template = trim(strtolower($_REQUEST['template']));
- 		
+		if ( in_array($_REQUEST['language'], array('ru','en')) ) {
+			$this->language = trim(strtolower($_REQUEST['language']));
+		}
+
  	 	if ( filter_var($_REQUEST['email'], FILTER_VALIDATE_EMAIL) === false ) $this->replyError(text('dobassist2'));
  		if ( !preg_match('/^[A-Za-z0-9]+$/', $this->instance, $matches) ) $this->replyError(text('dobassist3'));
  		if ( is_dir($this->getLogsDir()) || in_array($this->instance, $this->names_restricted) ) $this->replyError(text('dobassist5'));
@@ -42,7 +46,7 @@ class CreateInstance extends CommandForm
 		
 		$this->replyRedirect(
 				SAAS_SCHEME.'://'.$this->instance.'.'.SAAS_DOMAIN.'/module/dobassist/initialize?'.
-					'template='.$this->template.'&username='.$this->username.'&userlogin='.$this->userlogin.'&useremail='.$this->email,
+					'template='.$this->template.'&username='.$this->username.'&userlogin='.$this->userlogin.'&useremail='.$this->email.'&l='.$this->language,
 				text('dobassist34')
  		);
 	}
@@ -55,7 +59,7 @@ class CreateInstance extends CommandForm
 	protected function sendMail( $log )
 	{
 	    $mail = new HtmlMailbox;
-	    $mail->appendAddress('admin@devopsboard.com');
+	    $mail->appendAddress('info@devprom.ru');
 	    
 	    $body = 'DevOps Board instance is created<br/>';
 	    $body .= $this->instance.'.'.SAAS_DOMAIN.'<br/>';

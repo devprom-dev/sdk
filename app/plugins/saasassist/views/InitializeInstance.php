@@ -4,6 +4,7 @@ use Devprom\ApplicationBundle\Service\CreateProjectService;
 
 include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
+include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 
 class InitializeInstance extends Page
 {
@@ -22,9 +23,11 @@ class InitializeInstance extends Page
  	function render() 
  	{
  		if ( getFactory()->getObject('User')->getAll()->count() > 0 ) return;
- 		
+
  		$log = 'License given: '.$this->createLicense().PHP_EOL;
- 		
+
+        $installation_factory = InstallationFactory::getFactory();
+
  		$user_id = $this->createUser( 
  				$_REQUEST['username'], $_REQUEST['userlogin'], $_REQUEST['useremail']
 		);
@@ -62,9 +65,9 @@ class InitializeInstance extends Page
 			$project_it = $this->setupDemoProject($_REQUEST['template']);
 		}
 
-		$installation_factory = InstallationFactory::getFactory();
 		$clear_cache_action = new ClearCache();
 		$clear_cache_action->install();
+        PluginsFactory::Instance()->invalidate();
 
 		if ( is_object($project_it) && $project_it->getId() > 0 )
 		{
@@ -102,7 +105,10 @@ class InitializeInstance extends Page
 					)
 			); 
 		}
- 		
+
+        $generator = new UserPicSpritesGenerator();
+        $generator->storeSprites();
+
  		return $user_id;
  	}
  	
@@ -209,23 +215,29 @@ class InitializeInstance extends Page
 		
 		while( !$job_it->end() )
 		{
+		    $isActive = 'Y';
 			switch($job_it->get('ClassName'))
 			{
 			    case 'processbackup':
 			    	$modify_hours = $hours < 1 ? 23 : min($hours, 23);
 			    	break;
 			    	
-			    case 'processcheckpoints':
 			    case 'trackhistory':
 			    	$modify_hours = '*';
 			    	break;
-			}
+
+                case 'processcheckpoints':
+                    $modify_hours = '*';
+                    $isActive = 'N';
+                    break;
+            }
 			
 			$job_it->modify(
-					array (
-							'Minutes' => min(max($minutes, 0), 59),
-							'Hours' => $modify_hours
-					)
+                array (
+                    'Minutes' => min(max($minutes, 0), 59),
+                    'Hours' => $modify_hours,
+                    'IsActive' => $isActive
+                )
 			);
 			
 			$job_it->moveNext();

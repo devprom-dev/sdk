@@ -2,10 +2,18 @@
 
 include_once SERVER_ROOT_PATH."core/c_command.php";
 include_once SERVER_ROOT_PATH."cms/c_mail.php";
+include_once "PayonlineStore.php";
+include_once "YandexStore.php";
 
 class GetLicenseKey extends CommandForm
 {
- 	function validate()
+    function getStore()
+    {
+        $language = in_array(getSession()->getUserIt()->get('Language'), array('',1)) ? 'ru' : 'en';
+        return new PayonlineStore($language);
+    }
+
+    function validate()
  	{
 		$this->checkRequired( array('InstallationUID', 'LicenseType') );
 		
@@ -268,68 +276,53 @@ class GetLicenseKey extends CommandForm
 	
 	function redirectToStore( $email )
 	{
-		$store_parms = $this->getStoreParameters($_REQUEST['LicenseType']);
-		
-		$merchantId = MERCHANT_ID;
-		$securityKey = MERCHANT_KEY;
-		$currency = $store_parms['Currency'];
-		
-    	$amount = round($_REQUEST['LicenseValue'] * $store_parms['Price'], 0);
-		$amount .= ".00"; 
+		$product = $this->getProductParameters($_REQUEST['LicenseType']);
 
-		$orderId = abs(crc32($_REQUEST['InstallationUID'].date('Y-m-d H:s:i')));
-		
-		$baseQuery = "MerchantId=".$merchantId.
-                     "&OrderId=".$orderId.
-                     "&Amount=".$amount.
-                     "&Currency=".$currency;
+        $url_parts = parse_url(urldecode($_REQUEST['Redirect']));
+        $failUrl = $url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed';
+        $successUrl = $url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/process';
 
-		$queryWithSecurityKey = $baseQuery."&PrivateSecurityKey=".$securityKey;
-
-		$hash = md5($queryWithSecurityKey);
-		$url_parts = parse_url($_REQUEST['Redirect']);
-
-		$clientQuery = $baseQuery."&SecurityKey=".$hash;
-		$clientQuery .= "&Email=".$email;
-		$clientQuery .= "&FailUrl=".urlencode($url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed');
+    	$amount = round($_REQUEST['LicenseValue'] * $product['Price'], 0).".00";
+        $orderId = abs(crc32($_REQUEST['InstallationUID'].date('Y-m-d H:s:i')));
 
         $license_value = json_decode(urldecode($_REQUEST['WasLicenseValue']), true);
         if ( is_null($license_value) ) $license_value = $_REQUEST['WasLicenseValue'];
-
 		$order_info = array (
-				'LicenseType' => $_REQUEST['LicenseType'],
-				'LicenseValue' => $_REQUEST['LicenseValue'],
-				'WasLicenseKey' => urlencode(urlencode($_REQUEST['WasLicenseKey'])),
-				'WasLicenseValue' => $license_value,
-				'InstallationUID' => $_REQUEST['InstallationUID'],
-				'LicenseScheme' => $_REQUEST['LicenseScheme'],
-                'LicenseOptions' => $store_parms['Options'],
-				'Redirect' => $_REQUEST['Redirect'],
-				'Amount' => $amount,
-				'OrderId' => $orderId,
-				'Currency' => $currency
+            'LicenseType' => $_REQUEST['LicenseType'],
+            'LicenseValue' => $_REQUEST['LicenseValue'],
+            'WasLicenseKey' => urlencode(urlencode($_REQUEST['WasLicenseKey'])),
+            'WasLicenseValue' => $license_value,
+            'InstallationUID' => $_REQUEST['InstallationUID'],
+            'LicenseScheme' => $_REQUEST['LicenseScheme'],
+            'LicenseOptions' => $product['Options'],
+            'Redirect' => $_REQUEST['Redirect'],
+            'Amount' => $amount,
+            'OrderId' => $orderId,
+            'Currency' => $product['Currency'],
+            'Email'=> $email,
+            'Language' => getSession()->getUserIt()->get('Language')
 		);
-		$clientQuery .= "&OrderInfo=".urlencode(JsonWrapper::encode($order_info));
 
-		$paymentFormAddress = $store_parms['Url'].$clientQuery;
-		
-		$this->replyRedirect($paymentFormAddress);
+		$this->replyRedirect(
+            $this->getStore()->getPaymentFormUrl(
+                $orderId,
+                $amount,
+                $email,
+                $order_info,
+                $failUrl,
+                $successUrl
+            )
+        );
 	}
-	
-	function getStoreParameters( $licence_type )
+
+	function getProductParameters( $licence_type )
 	{
 		if ( in_array(getSession()->getUserIt()->get('Language'), array('',1)) ) {
-			$parms = array (
-				'Currency' => 'RUB',
-				'Url' => "https://secure.payonlinesystem.com/ru/payment/?"
-			);
+            $parms['Currency'] = 'RUB';
 			$price_field = 'PriceRUB';
 		}
 		else {
-			$parms = array (
-				'Currency' => 'USD',
-				'Url' => "https://secure.payonlinesystem.com/en/payment/?"
-			);
+            $parms['Currency'] = 'USD';
 			$price_field = 'PriceUSD';
 		}
 		$product_it = $this->getProduct($licence_type);

@@ -4,45 +4,80 @@ define ('SAASSALT', 'b49ca47b46v46c581u3c34dlc0ac85d2');
 
 include_once SERVER_ROOT_PATH."core/c_command.php";
 include_once SERVER_ROOT_PATH."cms/c_mail.php";
+include_once "PayonlineStore.php";
+include_once "YandexStore.php";
 
 class ProcessOrder extends CommandForm
 {
- 	function validate()
+    function getStore()
+    {
+        $language = in_array(getSession()->getUserIt()->get('Language'), array('',1)) ? 'ru' : 'en';
+        return new PayonlineStore($language);
+    }
+
+    function execute()
+    {
+        $this->logStart();
+        switch( $this->getAction() ) {
+            case CO_ACTION_CREATE:
+            case 'paymentAviso':
+                if ( $this->validate() ) $this->create();
+                if ( $this->validate() ) $this->install();
+                break;
+
+            case CO_ACTION_MODIFY:
+            case 'checkOrder':
+                if ( $this->validate() ) $this->modify( $_REQUEST['object_id'] );
+                break;
+
+            case CO_ACTION_DELETE:
+            case 'cancelOrder':
+                if ( $this->validate() ) $this->delete( $_REQUEST['object_id'] );
+                break;
+        }
+        $this->logFinish();
+    }
+
+    function validate()
  	{
- 		Logger::getLogger('Commands')->info('ACCOUNT: '.var_export($_REQUEST, true));
- 		
-		$this->checkRequired( array('OrderId','OrderInfo') );
-		
+		$this->checkRequired( array('OrderInfo') );
 		return true;
  	}
 
  	function delete()
  	{
+        Logger::getLogger('Commands')->error('ORDER FAILED: '.var_export($_REQUEST, true));
  		$this->replyRedirect('/module/accountclient/failed?ErrorCode='.intval($_REQUEST['ErrorCode']));
  	}
- 	
+
+    function modify()
+    {
+        $store = $this->getStore();
+        if ( $store->validateOrder($_REQUEST) ) {
+            Logger::getLogger('Commands')->info('ORDER CHECKED');
+            $store->replyOrderOk();
+        }
+        else {
+            Logger::getLogger('Commands')->error('VALIDATION FAILED: '.var_export($_REQUEST, true));
+            $store->replyOrderWrong();
+        }
+    }
+
  	function create()
 	{
-		if ( $_REQUEST['OrderInfo'] == '' ) $this->delete();
-		
-		$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
-		Logger::getLogger('Commands')->info('ORDER: '.var_export($order_info, true));
+        $order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
+        Logger::getLogger('Commands')->info('ORDER: '.var_export($order_info, true));
 
-		$orderId = $_REQUEST['OrderId'];
-		
-		if ( $order_info['OrderId'] != $orderId ) $this->delete();
-
-		$securityKey = MERCHANT_KEY;
-		
-		$baseQuery = "DateTime=".$_REQUEST['DateTime'].
-					 "&TransactionID=".$_REQUEST['TransactionID'].
-                     "&OrderId=".$orderId.
-                     "&Amount=".$order_info['Amount'].	
-                     "&Currency=".$order_info['Currency'];
-
-		$queryWithSecurityKey = $baseQuery."&PrivateSecurityKey=".$securityKey;
-
-		if ( $_REQUEST['SecurityKey'] != md5($queryWithSecurityKey) ) $this->delete();
+        $store = $this->getStore();
+        if ( !$store->checkProcessingParms($_REQUEST) ) {
+            Logger::getLogger('Commands')->error('SKIP PROCESSING');
+            return;
+        }
+        if ( !$store->validateOrder($_REQUEST) ) {
+            Logger::getLogger('Commands')->error('VALIDATION FAILED: '.var_export($_REQUEST, true));
+            $store->replyOrderWrong();
+        }
+        Logger::getLogger('Commands')->info('PROCESSING');
 
 		switch( $order_info['LicenseType'] )
 		{
@@ -69,13 +104,28 @@ class ProcessOrder extends CommandForm
 		$this->updateSupportSubscription(
 				$order_info['InstallationUID'], 
 				$licensed_days, 
-				$order_info['LicenseType'], 
+				JsonWrapper::encode($query_parms),
 				$order_info['Redirect']
 		);
-		$this->sendMail($query_parms['LicenseKey'], round($licensed_days / 30, 0));
-		$this->replyRedirect('/module/accountclient/process?'.http_build_query($query_parms));
+		//$this->sendMail($order_info['Email'], $order_info['Language'], $query_parms['LicenseKey'], round($licensed_days / 30, 0));
+        $store->replyProcessingOk(http_build_query($query_parms));
 	}
-	
+
+    function install()
+    {
+        $order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
+        Logger::getLogger('Commands')->info('ORDER: '.var_export($order_info, true));
+
+        $service_it = getFactory()->getObject('ServicePayed')->getByRef('VPD', $order_info['InstallationUID']);
+        if ( $service_it->getId() < 1 ) {
+            Logger::getLogger('Commands')->error('LICENSE WAS NOT FOUND: '.$order_info['InstallationUID']);
+            $this->delete();
+        }
+
+        $query_parms = JsonWrapper::decode($service_it->getHtmlDecoded('Description'));
+        $this->getStore()->replyLicenseInstalled(http_build_query($query_parms));
+    }
+
 	function replyRedirect( $url )
 	{
 		$order_info = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
@@ -116,27 +166,23 @@ class ProcessOrder extends CommandForm
 		return $value;
 	}
 
-	protected function sendMail( $key, $value )
+	protected function sendMail( $email, $language, $key, $value )
 	{
 	    $mail = new HtmlMailbox;
+	    $mail->appendAddress($email);
 
-	    $mail->appendAddress(getSession()->getUserIt()->get('Email'));
-	    $language = getSession()->getUserIt()->get('Language') == 1 ? 'ru' : 'en';
-	    
+	    $language = in_array($language,array('','1')) ? 'ru' : 'en';
 	    $body = file_get_contents(SERVER_ROOT_PATH.'plugins/account/resources/'.$language.'/order-confirmation.html');
 	    
-	    if ( $value < 2 )
-	    {
+	    if ( $value < 2 ) {
 	    	$value = $value.' месяц';
 	    }
 
-		if ( $value > 1 and $value < 5 )
-	    {
+		if ( $value > 1 and $value < 5 ) {
 	    	$value = $value.' месяца';
 	    }
 	    
-		if ( $value > 4 )
-	    {
+		if ( $value > 4 ) {
 	    	$value = $value.' месяцев';
 	    }
 	    
@@ -157,21 +203,22 @@ class ProcessOrder extends CommandForm
 		if ( $service_it->getId() > 0 )
 		{
 			$service_it->object->modify_parms($service_it->getId(), 
-					array (
-							'PayedTill' => $payed_till 
-					)
+                array (
+                    'PayedTill' => $payed_till,
+                    'Description' => $license_type
+                )
 			);
 		}
 		else
 		{
 			$url_parts = parse_url($redirect_url);
 			$service_it->object->add_parms(
-					array (
-							'Caption' => $url_parts['host'],
-							'IID' => $iid,
-							'PayedTill' => $payed_till,
-							'Description' => $license_type
-					)
+                array (
+                    'Caption' => $url_parts['host'],
+                    'IID' => $iid,
+                    'PayedTill' => $payed_till,
+                    'Description' => $license_type
+                )
 			);
 		}
 	}

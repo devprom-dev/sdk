@@ -1,7 +1,7 @@
 var tc = underi18n.MessageFactory({
-	"taskboard-intro": "Here is the <strong>common task board</strong> holds all issues across applications, infrastructure and development process related to your product or service.</p><p><br />Use this dashboard to <strong>identify</strong> issues, <strong>assign</strong> priorities and owners, <strong>resolve</strong> issues or <strong>push</strong> it into development pipeline.",
-	"taskboard-support": "Under swimlane called \"Support\" you\'ll find customers requests sent by <strong>emails</strong> to support mailbox or submitted using <strong>HelpDesk</strong> web site.</p><p><br />Use <strong>context menu</strong> on card to ask more info, put request to work or resolve by moving the card into corresponding column.</p><p>&nbsp;</p><p>If development is required then move the card under \"Product\" swimlane to put it into <strong>development pipeline</strong>.",
-	"taskboard-incidents": "Under swimlane called \"Incidents\" you\'ll find bugs, incidents and alerts raised by <strong>exception handlers</strong> somewhere in your application stack, raised by monitoring, APM, ARA, CI, CD tools and any other sources of applications and infrastructure <strong>issues</strong>.</p><p><br />Use <strong>context menu</strong> on card to define <strong>auto actions</strong> to change incidents priority, e.g. set Critical to unhandled exceptions and Low to hide not important incidents.</p><p><br />To <strong>resolve</strong> the incident put it into development pipeline by moving the card under \"Product\" swimlane.",
+	"taskboard-intro": "Here is the <strong>common board</strong> holds all issues across applications, infrastructure and development process related to your product or service.</p><p><br />Use this dashboard to <strong>identify</strong> issues, <strong>assign</strong> priorities and owners, <strong>resolve</strong> issues or <strong>push</strong> it into development pipeline.",
+	"taskboard-support": "Under swimlane called \"Support\" you\'ll find customers requests sent by <strong>emails</strong>&nbsp;or submitted via&nbsp;<strong>HelpDesk</strong>.</p><p><br />Use <strong>context menu</strong> on card to ask more info, put request to work or resolve by moving the card into corresponding column.</p><p>&nbsp;</p><p>If development is required then move the card under \"Development\" swimlane due to put it into <strong>development pipeline</strong>.",
+	"taskboard-incidents": "Under swimlane called \"Monitoring\" you\'ll find bugs, incidents and alerts raised by <strong>exception handlers</strong> somewhere in your application stack, or raised by monitoring, APM, ARA, CI, CD tools and any other sources of applications and infrastructure <strong>incidents</strong>.</p><p><br />Use <strong>context menu</strong> on card to define <strong>auto actions</strong> to change incidents priority, e.g. set Critical to unhandled exceptions and Low to hide not important incidents.</p><p><br />To <strong>resolve</strong> the incident put it into development pipeline by moving the card under \"Product\" swimlane.",
 	"kanban-backlog": "Development <strong>Backlog</strong> is full of submitted features, bugs, customers requests, applications bugs and infrastructure incidents should be resolved.</p><p><br />Use <strong>context menu</strong> on card to set <strong>priority</strong> or bulk actions to make <strong>prioritized backlog</strong> used by the team. Elaborate and estimate issues if required and put it in Ready queue by moving the card.</p><p><br />Team members do their work and <strong>visualize it state</strong> by moving cards into corresponding columns.",
 	"kanban-charts": "Adjust <strong>Kanban boar</strong>d correponding to your process: rename, append or remove <strong>columns</strong>, set <strong>WIPs</strong>, define fields should be filled on <strong>transitions</strong> between states, etc.</p><p><br />Use the <strong>charts</strong> do identify bottle necks of your process, to control the development velocity and gather other required <strong>metrics</strong>.",
 	"support-intro": "To be focused on <strong>support activity</strong> just drilldown to \"Support\" project. Here you can find backlog of customers requests, tickets board, knowledge base and correposnding reports.",
@@ -55,22 +55,20 @@ toursQueue.unshift(new Tour({
 	    element: "table.board-table tr.info:eq(1) td",
 	    title: 'Incidents swimlane',
 	    content: tc('taskboard-incidents'),
-	    placement: 'bottom',
-	    path: '/pm/productA/issues/board/issuesboardcrossproject?report=issuesboardcrossproject&basemodule=issues-board&&area=favs'
+	    placement: 'bottom'
 	  },
 	  {
 	    element: "table.board-table th:eq(0) span.title",
 	    title: 'Development Kanban board',
 	    content: tc('kanban-backlog'),
 	    placement: 'right',
-	    path: '/pm/productA/module/kanban/requests/kanbanboard?report=kanbanboard&basemodule=kanban/requests&&area=favs'
+	    path: '/pm/dev/module/kanban/requests/kanbanboard?report=kanbanboard&basemodule=kanban/requests&&area=favs'
 	  },
 	  {
-	    element: "ul#menu_favs a#menu-group-reports",
+		orphan: true,
 	    title: 'Kanban metrics',
 	    content: tc('kanban-charts'),
-	    placement: 'right',
-	    onShow: function() { setTimeout(function(){$('a#menu-group-reports').click();},1); }
+		path: '/pm/dev/module/kanban/avgleadtime/avgleadtime?report=avgleadtime&basemodule=kanban/avgleadtime&&area=favs'
 	  },
 	  {
 	    element: "a#navbar-project",
@@ -86,10 +84,10 @@ toursQueue.unshift(new Tour({
 	    placement: 'bottom'
 	  },
 	  {
-	    element: "ul#menu_stg a[uid=support-mailboxes]",
+	    element: "table.table-inner tr:eq(1)",
 	    title: 'Support mailboxes',
 	    content: tc('support-mailboxes'),
-	    placement: 'right',
+	    placement: 'bottom',
 	    path: '/pm/supportA/module/support/mailboxes?area=stg'
 	  },
 	  {
@@ -100,21 +98,21 @@ toursQueue.unshift(new Tour({
 	    path: '/pm/incidentsA/project/dicts/Environment?area=favs'
 	  },
 	  {
-	    element: "ul#menu_favs a[uid=support-autoactions]",
+	    element: "table.table-inner tr:eq(1)",
 	    title: 'Setup auto actions',
 	    content: tc('incidents-autoactions'),
-	    placement: 'right',
+	    placement: 'bottom',
 	    path: '/pm/incidentsA/module/support/autoactions?area=favs'
 	  },
 	  {
-	    element: "ul#menu_favs a[uid=incidents-settings]",
+	    element: "textarea",
 	    title: 'Integration settings',
 	    content: tc('incidents-settings'),
 	    placement: 'right',
 	    path: '/pm/incidentsA/module/incidents/settings?area=favs'
 	  },
 	  {
-		path: '/pm/productA/issues/board/issuesboardcrossproject?report=issuesboardcrossproject&basemodule=issues-board&&area=favs',
+		path: '/pm/project-portfolio-1/issues/board',
 		orphan: true,
 		template: "",
 		onShown: function(tour) { 

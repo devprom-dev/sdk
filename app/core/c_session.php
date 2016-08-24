@@ -37,8 +37,9 @@ class SessionBase
 		 	            new ObjectMetadataModelBuilder(),
 		 	            new ResourceBuilderLanguageFiles(),
 		 	            new ResourceBuilderPluginsLanguageFiles(),
- 						new ProjectMetadataBuilder()
- 				),
+ 						new ProjectMetadataBuilder(),
+                        new LicenseRegistryBuilderCommon(),
+                ),
 				$this->getPluginsManager()->getCommonBuilders()
  		);
 
@@ -308,7 +309,6 @@ class SessionBase
  	function createBuilders()
  	{
  	    return array (
- 	    		new LicenseRegistryBuilderCommon(),
                 new ModulePluginsBuilder($this->getSite()),
  	    		
  	    		// triggers

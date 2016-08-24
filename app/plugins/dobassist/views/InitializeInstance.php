@@ -4,10 +4,12 @@ use Devprom\ApplicationBundle\Service\CreateProjectService;
 
 include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
+include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 
 class InitializeInstance extends Page
 {
 	private $trial_length = '14';
+	private $language = 2;
 
 	public function __construct()
 	{
@@ -21,6 +23,8 @@ class InitializeInstance extends Page
 
  	function render() 
  	{
+		$this->language = $_REQUEST['l'] == 'ru' ? 1 : 2;
+
 		$this->setupLoggers();
 
  		if ( getFactory()->getObject('User')->getAll()->count() > 0 ) return;
@@ -45,21 +49,15 @@ class InitializeInstance extends Page
 
 		file_put_contents(dirname(SERVER_ROOT_PATH).'/initialize.log', $log);
 		
-		$project_it = $this->setupDemoProject();
+		$this->setupDemoProject();
 		$this->sendMail($user_it);
 
 		$installation_factory = InstallationFactory::getFactory();
 		$clear_cache_action = new ClearCache();
 		$clear_cache_action->install();
+        PluginsFactory::Instance()->invalidate();
 
-		if ( is_object($project_it) && $project_it->getId() > 0 )
-		{
-			exit(header('Location: /pm/'.$project_it->get('CodeName')));
-		}
-		else
-		{
-			exit(header('Location: /'));
-		}
+		exit(header('Location: /pm/project-portfolio-1/issues/board/issuesboardcrossproject'));
 	}
  	
  	protected function createUser( $name, $login, $email )
@@ -72,10 +70,13 @@ class InitializeInstance extends Page
  						'Login' => $login,
  						'Email' => $email,
  						'Password' => $login,
- 						'Language' => 2,
+ 						'Language' => $this->language,
  						'IsAdmin' => 'Y'
  				)
  		);
+
+        $generator = new UserPicSpritesGenerator();
+        $generator->storeSprites();
  	}
  	
  	protected function createLicense()
@@ -97,6 +98,8 @@ class InitializeInstance extends Page
  	
  	protected function updateSystemSettings()
  	{
+		DAL::Instance()->Query("INSERT INTO pm_ProjectTemplate( OrderNum, Caption, Description, FileName, Language, ProductEdition, Kind) VALUES (70, 'text(co50)', 'text(co51)', 'incidents_ru.xml', 1, 'ee', 'case')");
+
  		getFactory()->getObject('cms_SystemSettings')->getAll()->modify(
  				array (
  						'Caption' => 'DevOps Board',
@@ -104,16 +107,25 @@ class InitializeInstance extends Page
  						'AdminEmail' => SAAS_SENDER,
  						'ServerName' => EnvironmentSettings::getServerName(),
  						'ServerPort' => SAAS_SCHEME == 'http' ? 80 : 443,
- 						'Language' => 2
+ 						'Language' => $this->language
  				)
  		);
- 		
- 		$allowed_templates = array (
- 				'kanban_en.xml',
- 				'ticket_en.xml',
- 				'incidents_en.xml'
- 		);
- 		
+
+		if ( $this->language == 2 ) {
+			$allowed_templates = array (
+				'ticket_en.xml',
+				'kanban_en.xml',
+				'incidents_en.xml'
+			);
+		}
+		else {
+			$allowed_templates = array (
+				'ticket_ru.xml',
+				'kanban_ru.xml',
+				'incidents_ru.xml'
+			);
+		}
+
 		$template = getFactory()->getObject('pm_ProjectTemplate');
 		$template->setRegistry( new ObjectRegistrySQL() );
  		
@@ -260,8 +272,10 @@ class InitializeInstance extends Page
 		$support_it = $service->execute(
 						array(
 								'CodeName' => 'supportA',
-								'Caption' => 'Support',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'ticket_en.xml')))->getId(),
+								'Caption' => $this->language == 2 ? 'Support' : 'Поддержка',
+								'Template' => $template->getRegistry()->Query(
+													array (new FilterAttributePredicate('FileName', $this->language == 2 ? 'ticket_en.xml' : 'ticket_ru.xml'))
+												)->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
@@ -270,8 +284,10 @@ class InitializeInstance extends Page
 		$incidents_it = $service->execute(
 						array(
 								'CodeName' => 'incidentsA',
-								'Caption' => 'Monitoring',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'incidents_en.xml')))->getId(),
+								'Caption' => $this->language == 2 ? 'Monitoring' : 'Мониторинг',
+								'Template' => $template->getRegistry()->Query(
+													array (new FilterAttributePredicate('FileName', $this->language == 2 ? 'incidents_en.xml' : 'incidents_ru.xml'))
+												)->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
@@ -279,45 +295,32 @@ class InitializeInstance extends Page
 
 		$program_it = $service->execute(
 						array(
-								'CodeName' => 'productA',
-								'Caption' => 'Product',
-								'Template' => $template->getRegistry()->Query(array (new FilterAttributePredicate('FileName', 'kanban_en.xml')))->getId(),
+								'CodeName' => 'dev',
+								'Caption' => $this->language == 2 ? 'Development' : 'Разработка',
+								'Template' => $template->getRegistry()->Query(
+													array (new FilterAttributePredicate('FileName', $this->language == 2 ? 'kanban_en.xml' : 'kanban_ru.xml'))
+												)->getId(),
 								'User' => getSession()->getUserIt()->getId(),
 								'DemoData' => true
 						)
 			);
 
-		$link = getFactory()->getObject('ProjectLink');
-		$link->add_parms(
-				array (
-						'Source' => $program_it->getId(),
-						'Target' => $support_it->getId(),
-						'LinkType' => 1,
-						'Requests' => 1,
-						'Tasks' => 1,
-						'KnowledgeBase' => 3,
-						'Blog' => 3,
-						'SourceCode' => 1,
-						'HelpFiles' => 1,
-						'Testing' => 1,
-						'Requirements' => 3
-				)
+
+		$portfolio = getFactory()->getObject('co_ProjectGroup');
+		$group_id = $portfolio->add_parms(
+			array (
+				'Caption' => $this->language == 2 ? 'Brand New Product' : 'Новый продукт'
+			)
 		);
-		$link->add_parms(
+		$portfolioLink = getFactory()->getObject('co_ProjectGroupLink');
+		foreach( array($support_it->getId(), $program_it->getId(), $incidents_it->getId()) as $project_id ) {
+			$portfolioLink->add_parms(
 				array (
-						'Source' => $program_it->getId(),
-						'Target' => $incidents_it->getId(),
-						'LinkType' => 1,
-						'Requests' => 1,
-						'Tasks' => 1,
-						'KnowledgeBase' => 3,
-						'Blog' => 3,
-						'SourceCode' => 1,
-						'HelpFiles' => 1,
-						'Testing' => 1,
-						'Requirements' => 3
+					'ProjectGroup' => $group_id,
+					'Project' => $project_id
 				)
-		);
+			);
+		}
 
 		$service->invalidateCache();
 		$service->invalidateServiceDeskCache();
