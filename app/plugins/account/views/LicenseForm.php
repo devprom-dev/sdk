@@ -48,11 +48,13 @@ class LicenseForm extends AjaxForm
         switch ( $attribute )
         {
             case 'InstallationUID':
-            case 'LicenseValue':
             case 'Options':
             case 'UserName':
             case 'Email':
             	return 'text';
+
+            case 'LicenseValue':
+                return 'integer';
 
             case 'UserPassword':
             case 'ExistPassword':
@@ -167,7 +169,8 @@ class LicenseForm extends AjaxForm
         {
         	case 'LicenseType':
         		$product_it = $this->getProduct()->object->getAll();
-				
+
+                echo '<table width="100%"><tr><td valign="top">';
 				echo '<b>'.$this->getName($attribute).'</b>';
 				echo '<div/><br/>';
 				while( !$product_it->end() ) { 
@@ -185,9 +188,9 @@ class LicenseForm extends AjaxForm
 				echo '<input type="hidden" name="Redirect" value="'.htmlspecialchars($_REQUEST['Redirect']).'">';
 				echo '<input type="hidden" name="Email" value="'.htmlspecialchars($_REQUEST['Email']).'">';
                 echo '<input type="hidden" name="LicenseScheme" value="'.htmlspecialchars($_REQUEST['LicenseScheme']).'">';
-
+                echo '</td>';
                 if ( is_array($this->getProduct()->get('Options')) ) {
-                    echo '<br/>';
+                    echo '<td valign="top" width="70%">';
                     echo '<b>' . text('account35') . '</b>';
                     echo '<div/><br/>';
 
@@ -199,7 +202,7 @@ class LicenseForm extends AjaxForm
                             ?>
                             <label class="checkbox" style="padding-left:">
                                 <input type="checkbox" class="checkbox" name="<?=$product_it->getId()?>Option_<?= $option['OptionId'] ?>"
-                                       checked <?=($option[$price_field] < 1 ? 'disabled' : '')?>>
+                                       checked <?=($option['Required'] === true ? 'disabled' : '')?> >
                                 <?=$option['Caption']?>
                                 <? if ( $option[$price_field] > 0 ) { ?>
                                 <?=str_replace('%1', $option[$price_field], text('account36')) ?>
@@ -218,8 +221,10 @@ class LicenseForm extends AjaxForm
                         }
                     </script>
                     <?
+                    echo '</td>';
                 }
-                echo '<br/>';
+                echo '</tr></table>';
+                echo '<hr/>';
                 break;
 
             case 'Options':

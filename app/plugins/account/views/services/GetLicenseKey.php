@@ -10,7 +10,8 @@ class GetLicenseKey extends CommandForm
     function getStore()
     {
         $language = in_array(getSession()->getUserIt()->get('Language'), array('',1)) ? 'ru' : 'en';
-        return new PayonlineStore($language);
+        //return new PayonlineStore($language);
+        return new YandexStore($language);
     }
 
     function validate()
@@ -65,7 +66,7 @@ class GetLicenseKey extends CommandForm
 			$this->replyError( text('account21') ); 
 		}
  	 	
-		if ( ($product_it->get('PriceRUB') != '' || $product_it->get('PriceUSD') != '') && $_REQUEST['LicenseKey'] == '' )
+		if ( $product_it->get('PaymentRequired') && $_REQUEST['LicenseKey'] == '' )
 		{
 			if ( $_REQUEST['LicenseValue'] == '' ) $_REQUEST['LicenseValue'] = $product_it->get('ValueDefault');
 			$this->redirectToStore( $user_it->get('Email') );
@@ -330,7 +331,7 @@ class GetLicenseKey extends CommandForm
         $selected_options = array();
 		if ( is_array($product_it->get('Options')) ) {
 			foreach( $product_it->get('Options') as $option ) {
-				if ( array_key_exists($licence_type.'Option_'.$option['OptionId'], $_REQUEST) || $_REQUEST['LicenseScheme'] == '' ) {
+				if ( $option['Required'] || array_key_exists($licence_type.'Option_'.$option['OptionId'], $_REQUEST) || $_REQUEST['LicenseScheme'] == '' ) {
 					$parms['Price'] += intval($option[$price_field]);
                     $selected_options[] = $option['OptionId'];
 				}
@@ -399,9 +400,9 @@ class GetLicenseKey extends CommandForm
 			);
 
 	    $mail = new HtmlMailbox;
-	    $mail->appendAddress($user_it->get('Email'));
-	    $mail->setBody($body);
-	    $mail->setSubject(text('account25'));
+	    $mail->appendAddress(mb_convert_encoding($user_it->get('Email'), "cp1251", "utf-8"));
+	    $mail->setBody(mb_convert_encoding($body, "cp1251", "utf-8"));
+	    $mail->setSubject(mb_convert_encoding(text('account25'), "cp1251", "utf-8"));
 	    $mail->setFrom("Devprom Software <".getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail').">");
 	    $mail->send();
 	}

@@ -12,7 +12,8 @@ class ProcessOrder extends CommandForm
     function getStore()
     {
         $language = in_array(getSession()->getUserIt()->get('Language'), array('',1)) ? 'ru' : 'en';
-        return new PayonlineStore($language);
+        //return new PayonlineStore($language);
+        return new YandexStore($language);
     }
 
     function execute()
@@ -107,7 +108,7 @@ class ProcessOrder extends CommandForm
 				JsonWrapper::encode($query_parms),
 				$order_info['Redirect']
 		);
-		//$this->sendMail($order_info['Email'], $order_info['Language'], $query_parms['LicenseKey'], round($licensed_days / 30, 0));
+		$this->sendMail($order_info['Email'], $order_info['Language'], $query_parms['LicenseKey'], round($licensed_days / 30, 0), $license_value);
         $store->replyProcessingOk(http_build_query($query_parms));
 	}
 
@@ -166,7 +167,7 @@ class ProcessOrder extends CommandForm
 		return $value;
 	}
 
-	protected function sendMail( $email, $language, $key, $value )
+	protected function sendMail( $email, $language, $key, $value, $parameters )
 	{
 	    $mail = new HtmlMailbox;
 	    $mail->appendAddress($email);
@@ -188,9 +189,10 @@ class ProcessOrder extends CommandForm
 	    
 	    $body = preg_replace('/\%value\%/', $value, $body);
 	    $body = preg_replace('/\%key\%/', $key, $body);
-		
-	    $mail->setBody($body);
-	    $mail->setSubject(text('account27'));
+        $body = preg_replace('/\%license\%/', $parameters, $body);
+
+	    $mail->setBody(mb_convert_encoding($body, "cp1251", "utf-8"));
+	    $mail->setSubject(mb_convert_encoding(text('account27'), "cp1251", "utf-8"));
 	    $mail->setFrom("Devprom Software <".getFactory()->getObject('cms_SystemSettings')->getAll()->get('AdminEmail').">");
 	    $mail->send();
 	}

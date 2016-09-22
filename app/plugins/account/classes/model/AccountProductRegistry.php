@@ -8,16 +8,19 @@ class AccountProductRegistry extends ObjectRegistrySQL
                 array ( 
 					'entityId' => 'LicenseEnterprise',
 					'Caption' => text('account7'),
-					'ValueName' => text('account5')
+					'ValueName' => text('account5'),
+                    'PaymentRequired' => false
                 ),
                 array (
 					'entityId' => 'LicenseTrial',
 					'Caption' => text('account8'),
-					'ValueName' => text('account5')
+					'ValueName' => text('account5'),
+                    'PaymentRequired' => false
 				),
         		array (
 					'entityId' => 'LicenseTeam',
-					'Caption' => text('account9')
+					'Caption' => text('account9'),
+                    'PaymentRequired' => false
 				)
         ));
     }
