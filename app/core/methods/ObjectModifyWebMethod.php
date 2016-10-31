@@ -45,6 +45,7 @@ class ObjectModifyWebMethod extends WebMethod
 				'object_id' => $this->object_it->getId(),
 				'form_title' => $this->getObject()->getDisplayName(),
 				'can_delete' => var_export(getFactory()->getAccessPolicy()->can_delete($this->object_it), true),
+				'can_modify' => var_export(getFactory()->getAccessPolicy()->can_modify($this->object_it), true),
 				'delete_reason' => getFactory()->getAccessPolicy()->getReason()
 			),$parms);
 		

@@ -37,7 +37,7 @@ class ToggleSystemCheckWebMethod extends WebMethod
 		}
 	}
 
-	function getJSCall()
+	function getJSCall($parms = array())
 	{
 		return parent::getJSCall(
 		array('uid' => $this->entry->getUid() )

@@ -11,9 +11,4 @@ class ReleaseController extends RestController
 	{
 		return 'Release';
 	}
-	
-	function getFilterResolver(Request $request)
-	{
-		return array();
-	}
 }

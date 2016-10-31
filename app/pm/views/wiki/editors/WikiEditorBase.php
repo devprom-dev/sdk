@@ -13,12 +13,16 @@ abstract class WikiEditorBase
  	var $mode = WIKI_MODE_NORMAL;
  	var $tabindex = 0;
 	var $index;
-	var $minimum_rows = 6;
-	var $maximum_rows = 25;
+	var $minimum_rows = 10;
+	var $maximum_rows = 20;
 	var $css_class_name = '';
 	var $required = false;
 	private $description;
- 	
+
+	const ToolbarFull = 'full';
+	const ToolbarMini = 'mini';
+	private $toolbar;
+
  	function WikiEditorBase( $object = null )
  	{
  		if ( is_object($object) )
@@ -34,6 +38,7 @@ abstract class WikiEditorBase
 	 		}
  		}
 		$this->setDescription(text(606));
+		$this->setToolbar(self::ToolbarMini);
  	}
  	
  	function setObjectIt( $object_it )
@@ -56,7 +61,15 @@ abstract class WikiEditorBase
  	{
  		return $this->object;
  	}
- 	
+
+	function setToolbar( $mode ) {
+		$this->toolbar = $mode;
+	}
+
+	function getToolbar() {
+		return $this->toolbar;
+	}
+
  	function setMode( $mode )
  	{
  		$this->mode = $mode;
@@ -182,11 +195,6 @@ abstract class WikiEditorBase
  		return null;
  	}
 
- 	function getHtmlSelfSufficientParser()
- 	{
- 		return $this->getHtmlParser();
- 	}
- 	
  	function getComparerParser()
  	{
  		return null;
@@ -285,11 +293,6 @@ abstract class WikiEditorBase
  	
  	function drawScripts()
  	{
- 	}
- 	
- 	public function getExportActions( $object_it )
- 	{
- 		return array();
  	}
  	
  	abstract function draw( $content, $b_editable = false );

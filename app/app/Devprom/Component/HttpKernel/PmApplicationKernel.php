@@ -5,7 +5,6 @@
  * @author Vasiliy Pedak truvazia@gmail.com
  */
 namespace Devprom\Component\HttpKernel;
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
@@ -54,7 +53,7 @@ class PmApplicationKernel extends Kernel
 
     public function getCacheDir()
     {
-    	return CACHE_PATH.'/symfony2-pm';
+    	return CACHE_PATH.'/symfony2pm';
     }
 
     public function getCharset()
@@ -69,8 +68,11 @@ class PmApplicationKernel extends Kernel
     
     function initializeContainer()
     {
-    	$lock = new \CacheLock();
-		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
-    	parent::initializeContainer();
+        try {
+            parent::initializeContainer();
+        }
+        catch( \Exception $e ) {
+            error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
+        }
     }
 }

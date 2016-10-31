@@ -1,6 +1,6 @@
 <?php
-
 include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageComparableSnapshot.php";
+include_once SERVER_ROOT_PATH."pm/methods/FilterStateMethod.php";
 
 include "PMWikiDocumentList.php";
 include "DocumentMode.php";
@@ -9,12 +9,10 @@ include "DocumentSectionNumberingMode.php";
 class PMWikiDocument extends PMWikiTable
 {
  	private $object_it = null;
- 	
  	private $document_it = null;
- 	
  	private $revision_it = null;
- 	
  	private $compareto_it = null;
+    private $version_it = null;
  	
     function getDocumentIt()
 	{
@@ -63,7 +61,7 @@ class PMWikiDocument extends PMWikiTable
 	
 	function getPreviewPagesNumber()
 	{
-		return 6;
+		return 10;
 	}
 
 	function getDefaultRowsOnPage()
@@ -92,26 +90,50 @@ class PMWikiDocument extends PMWikiTable
  		
  		return $this->revision_it;
 	}
-	
-	function getFiltersName()
-	{
+
+	function getVersionIt()
+    {
+        if ( is_object($this->version_it) ) return $this->version_it;
+
+        $revision_it = $this->getRevisionIt();
+        if ( is_object($revision_it) ) {
+            $version = $revision_it->getDisplayName();
+        }
+        if ( $version == "" ) {
+            $version = $this->getDocumentIt()->get('DocumentVersion');
+        }
+        if ( $version == "" ) {
+            return $this->version_it = getFactory()->getObject('Baseline')->getEmptyIterator();
+        }
+        return $this->version_it = getFactory()->getObject('Baseline')->getByRef('Caption', $version);
+    }
+
+	function getFiltersName() {
         return parent::getFiltersName().'-'.$this->getDocumentIt()->getId();
 	}
 	
-	function getFilterParms()
-	{
+	function getFilterParms() {
 		return array_merge( parent::getFilterParms(), array( 'baseline' ));
 	}
-	
+
+    public function buildFilterValuesByDefault( & $filters )
+    {
+        $values = parent::buildFilterValuesByDefault($filters);
+
+        if ( !in_array($values['bydate'], array('','all')) || !in_array($_REQUEST['revision'], array('','all')) ) {
+            $_REQUEST['viewmode'] = 'view';
+        }
+        return $values;
+    }
+
 	function getFilters()
 	{
-		$parent_filters = $this->getDataFilters();
+		$parent_filters = $this->getDataFilters( parent::getFilters() );
 		return array_merge( 
 		        array_slice($parent_filters, 0, 1),
 		        array ( 
-		                $this->buildViewModeFilter(),
-		                $this->buildSectionNumberingModeFilter()
-		              ), 
+					$this->buildViewModeFilter(),
+				),
 		        array_slice($parent_filters, 1)
 		       );
 	}
@@ -121,10 +143,8 @@ class PMWikiDocument extends PMWikiTable
 		return array_merge(parent::getFiltersDefault(), array('search'));
 	}
 
-	function getDataFilters()
+	function getDataFilters( $parent_filters )
 	{
-		$parent_filters = parent::getFilters();
-
 		foreach( $parent_filters as $key => $filter ) {
 			if ( is_a($filter, 'FilterStateMethod') ) $filter->setDefaultValue('all');
 			if ( $filter->getValueParm() == 'document' ) {
@@ -138,42 +158,21 @@ class PMWikiDocument extends PMWikiTable
 	
 	function getFilterPredicates()
 	{
-		$values = $this->getFilterValues();
-
-		$predicates = array ( 
-		    new FilterAttributePredicate('DocumentId', $this->getDocumentIt()->idsToArray()),
-			new FilterSearchAttributesPredicate($values['search'], array('Caption', 'Content'))
-		);
-		
-		return array_merge(parent::getFilterPredicates(), $predicates);
+		return array_merge( parent::getFilterPredicates(),
+            array (
+                new FilterAttributePredicate('DocumentId', $this->getDocumentIt()->idsToArray()),
+            )
+        );
 	}
 	
 	
 	function buildViewModeFilter()
 	{
 	    $mode_filter = new FilterObjectMethod( new DocumentMode(), '', 'viewmode' );
-	    
 	    $mode_filter->setIdFieldName('ReferenceName');
 	    $mode_filter->setHasAll( false );
 	    $mode_filter->setHasNone( false );
 	    $mode_filter->setType( 'singlevalue' );
-	    
-	    $mode_filter->setFilter( $this->getFiltersName() );
-	    
-	    return $mode_filter;
-	}	
-	
-	function buildSectionNumberingModeFilter()
-	{
-	    $mode_filter = new FilterObjectMethod( new DocumentSectionNumberingMode(), '', 'numbering' );
-	    
-	    $mode_filter->setIdFieldName( 'ReferenceName' );
-	    $mode_filter->setHasAll( false );
-	    $mode_filter->setType( 'singlevalue' );
-	    $mode_filter->setNoneTitle( translate('Выкл.') );
-	    
-	    $mode_filter->setFilter( $this->getFiltersName() );
-	    
 	    return $mode_filter;
 	}	
 	
@@ -207,49 +206,55 @@ class PMWikiDocument extends PMWikiTable
 	function getCompareToActions()
 	{
 		$snapshot = new WikiPageComparableSnapshot($this->getDocumentIt());
-		
 		$snapshot_it = $snapshot->getAll();
-		
-		$actions = array();
-		
-		$baselines = array();
-		
+		$document_it = $this->getDocumentIt();
 		$selected = $this->getCompareToSnapshot()->getId();
+
+		$actions = array();
+		$baselines = array();
 
 		$title = text(1566);
 
 		while( !$snapshot_it->end() )
 		{
-			if ( $snapshot_it->getId() != $this->getRevisionIt()->getId() ) {
+			if ( $snapshot_it->getId() != $this->getRevisionIt()->getId() && $snapshot_it->getId() != 'document:'.$document_it->getId() ) {
 				$actions[] = array (
-						'name' => $snapshot_it->getDisplayName(),
-						'url' => "javascript: window.location = updateLocation('compareto=".$snapshot_it->getId()."', window.location.toString());"
+						'name' =>
+							$snapshot_it->get('Type') == 'branch' || strpos($snapshot_it->getId(), 'document') !== false
+								? translate('Бейзлайн').': '.$snapshot_it->getDisplayName()
+								: translate('Версия').': '.$snapshot_it->getDisplayName(),
+						'url' =>
+							"javascript: window.location = updateLocation('compareto=".$snapshot_it->getId()."', window.location.toString());"
 				);
 			}
 			
 			if ( in_array($snapshot_it->getId(), array($selected,'document:'.$selected)) ) {
 				$title .= ": ".$snapshot_it->getDisplayName();
-				if ( mb_strlen($title) > 30 ) $title = mb_substr($title, 0, 30).'...';
+				if ( mb_strlen($title) > 60 ) $title = mb_substr($title, 0, 60).'...';
 			}
 			
 			if ( $snapshot_it->get('Type') == 'branch' || strpos($snapshot_it->getId(), 'document') !== false )
 			{
-				$doc_it = $this->getObject()->getRegistry()->Query( 
-						array ( 
-								new FilterInPredicate($snapshot_it->get('ObjectId')) 
-						)
-					);
-				
+				$registry = new ObjectRegistrySQL($this->getObject());
+				$doc_it = $registry->Query(
+					array (
+						new FilterInPredicate($snapshot_it->get('ObjectId'))
+					)
+				);
+
 				$baseline_url = "javascript: window.location = '".$doc_it->getViewUrl()."';";
 				$baseline_title = translate('Бейзлайн').': '.$snapshot_it->getDisplayName();
+
+				if ( $document_it->getId() == $snapshot_it->get('ObjectId') ) {
+					$baseline_selected = $baseline_title;
+				}
 			}
 			else
 			{
 				$baseline_url = "javascript: window.location = updateLocation('baseline=".$snapshot_it->getId()."', window.location.toString());";
 				$baseline_title = translate('Версия').': '.$snapshot_it->getDisplayName();
 
-				if ( $this->getRevisionIt()->getId() == $snapshot_it->getId() )
-				{
+				if ( $this->getRevisionIt()->getId() == $snapshot_it->getId() ) {
 					$baseline_selected = $baseline_title;
 				}
 			}
@@ -264,13 +269,9 @@ class PMWikiDocument extends PMWikiTable
 
 		if ( $this->getRevisionIt()->getId() != '' )
 		{
-			$document_title = translate('Бейзлайн').': '.$this->getDocumentIt()->getDisplayName();
-			
-			if ( $this->getDocumentIt()->getId() == $selected )
-			{
-				$title = $document_title;
-			}
-			
+			$document_title = translate('Бейзлайн').': '.$document_it->getDisplayName();
+			if ( $document_it->getId() == $selected ) $title = $document_title;
+
 			$actions[] = array (
 				'name' => $document_title,
 				'url' => "javascript: window.location = updateLocation('compareto=document:".$this->getDocumentIt()->getId()."', window.location.toString());"
@@ -285,28 +286,12 @@ class PMWikiDocument extends PMWikiTable
 			);
 		}
 
-		if ( $this->getDocumentIt()->get('DocumentVersion') != '' )
-		{
-			$baseline_title = translate('Бейзлайн').': '.$this->getDocumentIt()->get('DocumentVersion');
-			$baselines[] = array (
-				'name' => $baseline_title,
-				'url' => "javascript: window.location = updateLocation('baseline=', window.location.toString());"
-			);
-		}
-		elseif ( count($baselines) > 0 )
-		{
-			$baseline_title = translate('Бейзлайн').': '.$this->getDocumentIt()->getDisplayName();
-			$baselines[] = array (
-				'name' => $baseline_title,
-				'url' => "javascript: window.location = updateLocation('baseline=', window.location.toString());"
-			);
-		}
 
 		if ( $baseline_selected == "" ) $baseline_selected = $baseline_title;
 		
-		if ( mb_strlen($baseline_selected) > 30 ) $baseline_selected = mb_substr($baseline_selected, 0, 30).'...';
+		if ( mb_strlen($baseline_selected) > 60 ) $baseline_selected = mb_substr($baseline_selected, 0,60).'...';
 		
-		if ( count($baselines) < 1 && count($actions) < 1 )
+		if ( count($baselines) < 2 && count($actions) < 2 )
 		{
 			return array();
 		}
@@ -328,7 +313,11 @@ class PMWikiDocument extends PMWikiTable
 			);
 		}
 	}
-	
+
+	function getBaselinesListWidget() {
+		return null;
+	}
+
  	function getRenderParms( $parms )
  	{
 		$parent_parms = parent::getRenderParms( $parms );
@@ -338,18 +327,28 @@ class PMWikiDocument extends PMWikiTable
             unset($parent_parms['sections']);
         }
 
-		$form_parms = $this->getForm()->getRenderParms();
-
-		if ( $this->getPreviewPagesNumber() > 1 ) {
-			$parent_parms['document_hint'] = $parent_parms['hint'];
+		if ( $this->getPreviewPagesNumber() < 2 ) {
+    		unset($parent_parms['hint']);
 		}
-		unset($parent_parms['hint']);
-		
+		else {
+            if ( !$parent_parms['hint_open'] ) {
+                unset($parent_parms['hint']);
+            }
+        }
+
+        $module_it = $this->getDocumentsModuleIt();
+
 		return array_merge( $parent_parms, array (
- 	        'scripts' => $form_parms['scripts'],
-		    'object_id' => $this->getObjectIt()->getId() > 0 ? $this->getObjectIt()->getId() : $this->getDocumentIt()->getId()
+		    'object_id' => $this->getObjectIt()->getId() > 0 ? $this->getObjectIt()->getId() : $this->getDocumentIt()->getId(),
+			'widget_id' => $this->getDocumentIt()->getId(),
+            'docs_title' => array_shift(explode(' ',$module_it->getDisplayName())),
+            'docs_url' => $module_it->getUrl()
  	    ));
  	}
+
+ 	function getDocumentsModuleIt() {
+ 	    return getFactory()->getObject('Module')->getExact($this->getPage()->getModule());
+    }
  	
 	function getList( $type = '', $iterator = null )
 	{
@@ -364,25 +363,13 @@ class PMWikiDocument extends PMWikiTable
 		return $this->getObject()->getDisplayName();
 	}
 
+    function getExportPageIt() {
+        return $this->getDocumentIt();
+    }
+
 	function getNewActions()
 	{
-		if ( $this->getRevisionIt()->getId() > 0 ) return array();
-		$actions = array();
-
-		$method = new ObjectCreateNewWebMethod($this->getObject());
-		if ( !$method->hasAccess() ) return $actions;
-		$method->setRedirectUrl('function(id) {showCreatedPage(id,0);}');
-
-		$parms = array();
-		if ( $this->getDocumentIt()->getId() > 0 ) {
-			$parms['ParentPage'] = $this->getDocumentIt()->getId();
-		}
-		$actions['create'] = array(
-				'name' => $this->getSectionName(),
-				'url' => $method->getJSCall($parms),
-				'uid' => 'create'
-		);
-		return $actions;
+	    return array();
 	}
 
 	function getTraceActions()
@@ -392,24 +379,11 @@ class PMWikiDocument extends PMWikiTable
 	
 	function getActions()
 	{
+ 		if ( $this->getRevisionIt()->getId() > 0 ) {
+ 			return $this->getVersioningActions();
+ 		}
+
 		$actions = array();
-		
- 		if ( $this->getRevisionIt()->getId() > 0 )
- 		{
- 			return array_merge($this->getExportActions(), $this->getVersioningActions());
- 		}
- 		
- 		$temp_actions = $this->getExportActions();
- 		
- 		if ( count($temp_actions) > 0 )
- 		{
- 			$actions[] = array (
-					'name' => translate('Экспорт'),
- 					'items' => $temp_actions,
- 					'uid' => 'export'
-			);
- 		}
- 		
 	 	$temp_actions = $this->getTraceActions();
  		
  		if ( count($temp_actions) > 0 )
@@ -439,7 +413,7 @@ class PMWikiDocument extends PMWikiTable
 			$history_url .= '&start='.$this->getRevisionIt()->getDateTimeFormat('RecordCreated'); 
 		}
 		$actions[] = array(
-		        'name' => translate('История изменений'),
+		        'name' => text(2238),
 				'url' => $history_url,
 		        'uid' => 'history'
 		);
@@ -523,14 +497,7 @@ class PMWikiDocument extends PMWikiTable
 	
 	function getCaption()
 	{
-		$title = $this->getDocumentIt()->getDisplayName();
-		
- 		if ( $this->getRevisionIt()->getId() > 0 )
- 		{
- 			$title .= ' [rev - '.$this->getRevisionIt()->getDisplayName().']'; 
- 		}
- 		
- 		return $title;
+		return $this->getDocumentIt()->getDisplayName();
 	}
 	
 	function getId()
@@ -546,10 +513,19 @@ class PMWikiDocument extends PMWikiTable
     {
         $values = $this->getFilterValues();
         foreach( $this->getDataFilters() as $filter ) {
-            if ( !in_array($values[$filter->getValueParm()],array('','all')) ) {
+            if ( !in_array($values[$filter->getValueParm()],array('','all','hide')) ) {
                 return true;
             }
         }
         return false;
+    }
+
+    function getForm()
+    {
+        $form = parent::getForm();
+        $form->setDocumentIt( $this->getDocumentIt() );
+        $form->setRevisionIt( $this->getRevisionIt() );
+        $form->setVersionIt( $this->getVersionIt() );
+        return $form;
     }
 }

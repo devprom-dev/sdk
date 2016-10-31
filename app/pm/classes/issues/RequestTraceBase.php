@@ -3,26 +3,23 @@
 include "RequestTraceBaseRegistry.php";
 include "RequestTraceBaseIterator.php";
 include "RequestInversedTraceBaseIterator.php";
-
 include "predicates/RequestTraceObjectPredicate.php";
 include "predicates/RequestTracePredicate.php";
+include "predicates/RequestTraceStatePredicate.php";
      
 class RequestTraceBase extends Metaobject
 {
- 	function __construct() 
+ 	function __construct( ObjectRegistry $registry = null )
  	{
- 		parent::__construct('pm_ChangeRequestTrace', new RequestTraceBaseRegistry());
+ 		parent::__construct('pm_ChangeRequestTrace', is_object($registry) ? $registry : new RequestTraceBaseRegistry());
  		
  		$object_class = $this->getObjectClass();
- 		
- 		if ( $object_class != '' )
- 		{
+ 		if ( $object_class != '' ) {
  		    $this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');
  		}
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new RequestTraceBaseIterator( $this );
  	}
 
@@ -30,8 +27,7 @@ class RequestTraceBase extends Metaobject
 		return 'Baseline';
 	}
 
-	function getObjectClass()
- 	{
+	function getObjectClass() {
  		return '';
  	}
 

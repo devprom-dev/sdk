@@ -183,7 +183,18 @@ class EnvironmentSettings
 	    return preg_match('/utf-8/i', $_SERVER['CONTENT_TYPE'])
 	        || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && !$browser_ie8_ie9; 
     }
-    
+
+    static public function getBrowserIE()
+    {
+        return isset($_SERVER['HTTP_USER_AGENT']) and (strpos($_SERVER['HTTP_USER_AGENT'],'MSIE') || strpos($_SERVER['HTTP_USER_AGENT'],'Trident/'));
+    }
+
+    static public function getDownloadHeader( $filename )
+    {
+        if ( self::getBrowserIE() ) $filename = rawurlencode($filename);
+        return 'Content-Disposition: attachment; filename="'.$filename.'"';
+    }
+
     static public function getServerSalt()
     {
     	return md5(INSTALLATION_UID.$_SERVER['SERVER_ADDR'].$_SERVER['PATH'].$_SERVER['SERVER_SOFTWARE']);
@@ -198,5 +209,9 @@ class EnvironmentSettings
     static public function getMaxFileSize()
     {
  		return defined('MAX_FILE_SIZE') ? MAX_FILE_SIZE : 104857600;
+    }
+
+    static public function getRawPostData() {
+        return file_get_contents("php://input");
     }
 }

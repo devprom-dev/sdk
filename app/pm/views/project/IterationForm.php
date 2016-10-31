@@ -4,27 +4,43 @@ include_once SERVER_ROOT_PATH."pm/classes/plan/validators/ModelValidatorDatesCau
 
 class IterationForm extends PMPageForm
 {
-	function __construct() 
-	{
-		$object = getFactory()->getObject('Iteration');
-		
-		parent::__construct( $object );
-		
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+	function __construct() {
+		parent::__construct(getFactory()->getObject('Iteration'));
+	}
 
+	function extendModel()
+	{
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->HasFixedRelease() )
 		{
-    		$text = str_replace('%2', 
-    			getSession()->getApplicationUrl().'project/methodology', text(1283));
-    		
-    		$text = str_replace('%1', 
-    			$methodology_it->getReleaseDuration().' '.
-    				getLanguage()->getWeeksWording($methodology_it->getReleaseDuration()), $text);
-    		
-    		$object->setAttributeDescription('FinishDate', $text);
+			$text = str_replace('%2',
+				getSession()->getApplicationUrl().'project/methodology', text(1283));
+
+			$text = str_replace('%1',
+				$methodology_it->getReleaseDuration().' '.
+				getLanguage()->getWeeksWording($methodology_it->getReleaseDuration()), $text);
+
+			$this->getObject()->setAttributeDescription('FinishDate', $text);
 		}
+
+		$stages_num = getFactory()->getObject('pm_ProjectStage')->getRegistry()->Count(
+				array (
+					new FilterVpdPredicate()
+				)
+		);
+		if ( $stages_num < 1 ) {
+			$this->getObject()->setAttributeVisible('ProjectStage', false);
+		}
+
+		if ( is_object($this->getObjectIt()) ) {
+			foreach( array('Issues', 'Tasks') as $attribute ) {
+				$this->getObject()->setAttributeVisible($attribute, true);
+			}
+		}
+
+		parent::extendModel();
 	}
-	
+
 	function buildModelValidator()
 	{
 		$validator = parent::buildModelValidator();
@@ -46,13 +62,6 @@ class IterationForm extends PMPageForm
  			case 'IsCurrent':
  			case 'IsDraft':
  				return false;
- 				
- 			case 'Version':
- 				return true;
- 				
- 			case 'InitialVelocity':
- 				return false;
-
  			default:
 				return parent::IsAttributeVisible( $attr_name );
  		}
@@ -65,7 +74,7 @@ class IterationForm extends PMPageForm
 		switch($attribute)
 		{
 		    case 'Version':
-		    	if ( $value == '' )
+		    	if ( $value == '' && getSession()->getProjectIt()->getMethodologyIt()->HasReleases() )
 		    	{
 		    		return getFactory()->getObject('Release')->getRegistry()->Query(
 			    				array (
@@ -75,6 +84,13 @@ class IterationForm extends PMPageForm
 		    			)->getId();
 		    	}
 		    	break;
+
+			case 'InitialVelocity':
+				$releaseId = $this->getDefaultValue('Version');
+				if ( $releaseId != '' ) {
+					return round(getFactory()->getObject('Release')->getExact($releaseId)->getVelocity(),0);
+				}
+				break;
 		    	
 		    case 'StartDate':
 		    	$predicates = array( new FilterVpdPredicate() );
@@ -93,7 +109,7 @@ class IterationForm extends PMPageForm
 				$iteration->addAggregate($aggregate);
 				$last_date = $iteration->getAggregated()->get($aggregate->getAggregateAlias());
 				
-				if ( $last_date != '' ) return date('Y-m-j', strtotime('1 day', strtotime($last_date)));
+				if ( $last_date != '' ) return date('Y-m-j', strtotime('1 weekday', strtotime($last_date)));
 				
 				$predicates = array (
 						new SortAttributeClause('StartDate.D'),
@@ -110,7 +126,21 @@ class IterationForm extends PMPageForm
 		
 		return $value;
 	}
-	
+
+	function getFieldDescription( $name )
+	{
+		switch ( $name )
+		{
+			case 'InitialVelocity':
+				list($average, $velocity) = $this->getObject()->getVelocitySuggested();
+				return str_replace( '%2', round($velocity, 1),
+							str_replace( '%1', round($average, 1), text(2125)));
+
+			default:
+				return parent::getFieldDescription( $name );
+		}
+	}
+
 	function createField( $attr )
 	{
 		$field = parent::createField( $attr );
@@ -124,32 +154,41 @@ class IterationForm extends PMPageForm
 		
 		return $field; 
 	}
-	
+
+	function createFieldObject($attr)
+	{
+		switch ( $attr )
+		{
+			case 'Issues':
+			case 'Tasks':
+				if ( !is_object($this->getObjectIt()) ) return null;
+				return new FieldListOfReferences( $this->getObjectIt()->getRef($attr) );
+
+			default:
+				return parent::createFieldObject($attr);
+		}
+	}
+
 	function drawScripts()
 	{
 		parent::drawScripts();
 		
 		$locale = getSession()->getLanguage()->getLocaleFormatter();
-		
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		 
-		if ( $methodology_it->HasFixedRelease() )
+		if ( $methodology_it->getReleaseDuration() > 0 )
 		{
 		?>
 		<script type="text/javascript">
-	
-		$().ready( function() {
-	
-			$('#pm_ReleaseStartDate').change( function() 
-			{
-				var start = Date.parse($(this).val());
-				var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
-				 
-				$('#pm_ReleaseFinishDate').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
-			}).trigger('change');
-			
-		});
-		
+			$().ready( function() {
+				$('input[name=StartDate]').change( function() {
+					<? if ( !$methodology_it->HasFixedRelease() ) { ?>
+					if ( $('input[name=FinishDate]').val() != '' ) return;
+					<? } ?>
+					var start = Date.parse($(this).val());
+					var finish = start.add({days: <?=($methodology_it->getReleaseDuration() * 7 - 1)?>});
+					$('input[name=FinishDate]').val(finish.toString('<?=$locale->getDateJSFormat()?>'));
+				}).trigger('change');
+			});
 		</script>
 		<?php
 		}

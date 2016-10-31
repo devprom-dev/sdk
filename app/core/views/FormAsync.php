@@ -434,10 +434,13 @@ class AjaxForm
 					break;							
 
 				case 'password':
-					?>
-					<input class="input-block-level" type="password" id="<? echo $attribute; ?>" name="<? echo $attribute; ?>" value="<? echo $value ?>" tabindex="<? echo $tab_index ?>" placeholder="<?=htmlentities($default,ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
-					<?
-					break;				
+					$field = new FieldPassword();
+					$field->SetTabindex($tab_index);
+					$field->SetName($attribute);
+					$field->SetValue($value);
+					$field->SetId($attribute);
+					$field->draw();
+					break;
 
 				case 'char':
 					
@@ -531,7 +534,7 @@ class AjaxForm
 		
 		$actions = $this->getActions();
 		
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		
 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getSite()) : array();
 		
@@ -557,7 +560,10 @@ class AjaxForm
             'redirect_url' => $this->getRedirectUrl(),
 			'form_url' => htmlentities($_SERVER['REQUEST_URI']), 
             'actions' => $actions,
-            'form_title' => $this->getCaption()
+            'form_title' => $this->getCaption(),
+			'fields_separator' => '<br/>',
+			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off' ? $this->getHint() : '',
+			'bottom_hint_id' => $this->getHintId(),
 		);
 	}
 	
@@ -583,5 +589,15 @@ class AjaxForm
 	    $actions = array();
 	
 	    return $actions;
+	}
+
+	function getHintId()
+	{
+		return '';
+	}
+
+	function getHint()
+	{
+		return '';
 	}
 }

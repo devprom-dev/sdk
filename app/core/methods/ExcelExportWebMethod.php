@@ -6,21 +6,32 @@ class ExcelExportWebMethod extends ExportWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Экспорт в Excel');
+ 		return text(2201);
  	}
  	
- 	function getJSCall( $caption = '', $class = 'IteratorExportExcel' )
+ 	function url( $caption = '', $class = 'IteratorExportExcel', $parms = array() )
  	{
- 		return parent::getJSCall( array( 
- 		    'caption' => $caption != '' ? $caption : $this->getCaption(),
- 		    'class' => $class
- 		));
+ 		return parent::getJSCall(
+			array_merge(
+				array(
+					'caption' => $caption != '' ? $caption : $this->getCaption(),
+					'class' => $class
+				),
+				$parms
+			)
+		);
  	}
  	
  	function execute_request()
  	{
  		parent::execute_request();
- 		
- 		echo '&caption='.SanitizeUrl::parseUrl($_REQUEST['caption']);
+ 		echo '&'.http_build_query(
+				array_map(
+					function($value) {
+						return SanitizeUrl::parseUrl($value);
+					},
+					$_POST
+				)
+			);
  	}
 }

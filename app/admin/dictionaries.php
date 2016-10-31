@@ -1,8 +1,7 @@
 <?php
 
 include ('header.php');
-include ('views/dictionaries/DictionaryPage.php');
+include('views/dictionaries/SystemDictionaryPage.php');
 
-$page = new DictionaryPage;
-
+$page = new SystemDictionaryPage;
 $page->render();

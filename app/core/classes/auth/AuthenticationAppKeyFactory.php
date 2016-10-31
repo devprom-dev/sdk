@@ -39,7 +39,7 @@ class AuthenticationAppKeyFactory extends AuthenticationFactory
 		{
 			if ( $this->getKey( $user_it->getId() ) == $_REQUEST['appkey'] )
 			{
-				$this->setUser( $user_it->getId() );
+				$this->setUser( $user_it );
 		
 				return $user_it;
 			}
@@ -53,7 +53,7 @@ class AuthenticationAppKeyFactory extends AuthenticationFactory
 				)
 		));
 		 
-		$this->setUser( $user_it->getId() );
+		$this->setUser( $user_it );
 		
 		return $user_it;
  	}

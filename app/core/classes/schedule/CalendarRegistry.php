@@ -7,9 +7,9 @@ class CalendarRegistry extends ObjectRegistrySQL
     	$sql = " SELECT IFNULL(MAX(IntervalYear) + 1,YEAR(NOW())-5) cnt FROM pm_CalendarInterval ";
 			   
 		$it = parent::createSQLIterator( $sql );
+        if ( $it->get('cnt') < 1 ) return $this->createIterator(array());
 
-   		for( $i = $it->get('cnt'); $i < date('Y') + 4; $i++ )
-		{
+   		for( $i = max($it->get('cnt'), date('Y')-5); $i < date('Y') + 4; $i++ ) {
 			$this->_createIntervals( $i );
 		}
 		

@@ -14,7 +14,7 @@ class SearchableObjectsCommonBuilder extends SearchableObjectsBuilder
 
  		if ( $methodology_it->HasTasks() )
  		{
-     		$set->add( 'Task', array('Caption', 'Comments', 'Result'), 'currenttasks' );
+     		$set->add( 'Task', array('Caption', 'Comments'), 'currenttasks' );
  		}
  			
  		if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' )

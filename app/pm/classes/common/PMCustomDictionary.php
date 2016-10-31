@@ -18,7 +18,7 @@ class PMCustomDictionary extends CacheableSet
 	    return getSession()->getCacheKey().get_class($this->object).$this->attribute;
 	}
 	
-	function getAttributeObject()
+	function getAttributeObject( $attribute )
 	{
 		return $this->object;
 	}

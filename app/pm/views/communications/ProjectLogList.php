@@ -1,6 +1,6 @@
 <?php
 
-class ProjectLogList extends PMStaticPageList
+class ProjectLogList extends PMPageList
 {
  	var $participant;
  	
@@ -23,13 +23,14 @@ class ProjectLogList extends PMStaticPageList
 	{
 		$sorts = parent::getSorts();
 		
-		foreach( $sorts as $key => $sort )
-		{
+		foreach( $sorts as $key => $sort ) {
 			if ( !$sort instanceof SortAttributeClause ) continue;
-			if ( $sort->getAttributeName() == 'ChangeDate' )
-			{
+			if ( in_array($this->getObject()->getAttributeType($sort->getAttributeName()), array('date','datetime')) ) {
 				$sorts[$key] = new SortChangeLogRecentClause();
 			}
+			if ( $sort->getAttributeName() == 'Content' ) {
+                $sorts[$key] = new SortChangeLogRecentClause();
+            }
 		}
 		
 		return $sorts;
@@ -57,40 +58,32 @@ class ProjectLogList extends PMStaticPageList
 	
 	function drawCell( $object_it, $attr ) 
 	{
-		global $model_factory;
-
-		switch( $attr ) 
+		switch( $attr )
 		{
 			case 'Caption':
-				
-			    $change_kind = $object_it->getImage();
-				
-				echo '<i class="'.$change_kind.' hidden-print" style="margin-right: 10px;"></i>';
+				echo '<i class="'.$object_it->getIcon().' hidden-print" style="margin-right: 10px;"></i>';
 
 				$anchor_it = $object_it->getObjectIt();
-				
-				$uid = new ObjectUID;
-
 				if ( $anchor_it->getId() != '' )
 				{
-    				if ( $uid->hasUid( $anchor_it ) )
-    				{
-    				    $uid->drawUidIcon( $anchor_it );
-    				    
-    				    echo ' ';
-    				}
-    				else
-    				{
-    				    echo $anchor_it->object->getDisplayName();
-    				    
-    				    echo ': ';
-    				}
-				} else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
+					$uid = new ObjectUID;
+					if ( strpos($object_it->get('Caption'), $uid->getObjectUid($anchor_it)) === false ) {
+						if ( $uid->hasUid( $anchor_it ) ) {
+						}
+						else {
+							echo $anchor_it->object->getDisplayName().': ';
+						}
+					}
+				}
+				else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
                     echo text(1360) . ': ';
-                } else {
+                }
+				else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
+				}
+				else {
 				    echo $anchor_it->object->getDisplayName().': ';
 				}
-				
+
 				drawMore($object_it, 'Caption', 20);
 
 				break;
@@ -174,5 +167,24 @@ class ProjectLogList extends PMStaticPageList
 	function getColumnFields()
 	{
 		return array('Caption', 'UserAvatar', 'EntityName', 'Content', 'SystemUser', 'RecordModified', 'Project');
+	}
+
+	function getItemActions($column_name, $object_it)
+	{
+		$actions = array();
+
+		$method = new UndoWebMethod($object_it->get('Transaction'));
+		if ( $method->hasAccess() ) {
+			$actions[] = array (
+				'name' => $method->getCaption(),
+				'url' => $method->getJSCall()
+			);
+		}
+
+		return $actions;
+	}
+
+	function IsNeedToSelect() {
+		return false;
 	}
 }

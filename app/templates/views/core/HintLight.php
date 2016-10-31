@@ -6,7 +6,7 @@ $script = "javscript: ".$method->getJSCall(array('setting' => $name, 'value' => 
 
 ?>
 
-<div class="alert">
+<div class="alert alert-hint">
   <button type="button" class="close" data-dismiss="alert" onclick="<?=$script?>">&times;</button>
   <?=$title?>
 </div>

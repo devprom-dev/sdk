@@ -24,8 +24,13 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
         
         // entity mocks
 
-        $entity = $this->getMock('Request', array('getExact', 'moveToState'));
-
+        $entity = $this->getMock('Request', array('getExact','moveToState','getStates'));
+        $entity->expects($this->any())->method('getStates')->will( $this->returnValue(
+            array (
+                'submitted',
+                'resolved'
+            )
+        ));
         $entity->expects($this->any())->method('getExact')->will( $this->returnValueMap(
                 array (
                         array ( '1', $entity->createCachedIterator(array(

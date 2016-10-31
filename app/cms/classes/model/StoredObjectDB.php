@@ -3,6 +3,8 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include "ObjectRegistrySQL.php";
+include "ObjectRegistryArray.php";
+include "ObjectRegistryMemory.php";
 include "predicates/FilterPredicate.php";
 include "predicates/FilterAdditionalObjectsPredicate.php";
 include "predicates/FilterAttributePredicate.php";
@@ -21,6 +23,7 @@ include "predicates/FilterSubmittedDatePredicate.php";
 include "predicates/FilterVpdPredicate.php";
 include "predicates/FilterHasNoAttributePredicate.php";
 include "predicates/FilterSearchAttributesPredicate.php";
+include "predicates/FilterTextExactPredicate.php";
 
 include "sorts/SortClauseBase.php";
 include "sorts/SortCaptionClause.php";
@@ -82,30 +85,17 @@ class StoredObjectDB extends Object
 	    switch ( $name )
 	    {
 	        case 'OrderNum':
-	            
-    			$it = $this->createSQLIterator(
-    			    "SELECT t.VPD, MAX(t.OrderNum) OrderNum FROM ".$this->getEntityRefName()." t ".
-    			    " WHERE 1 = 1 ".$this->getVpdPredicate()." GROUP BY t.VPD"
-    			);
-    			
-    			while( !$it->end() )
-    			{
-    			    if ( $it->get('VPD') == $this->getVpdValue() )
-    			    {
-    			        $seq = $it->get( 'OrderNum' );
-    			
-    			        return $seq == '' ? 10 : $seq + $this->getOrderStep();        
-    			    }
-    			    
-    			    $it->moveNext();
-    			}
+				if ( $this->entity->get('IsDictionary') == 'Y' || $this->IsAttributeRequired($name) ) {
+					if ( $this->getVpdValue() == '' ) {
+						return 0;
+					}
+					$it = $this->createSQLIterator(
+						"SELECT MAX(t.OrderNum) OrderNum FROM ".$this->getEntityRefName()." t WHERE t.VPD = '".$this->getVpdValue()."'"
+					);
+					return $it->get( 'OrderNum' ) == '' ? 1 : $it->get( 'OrderNum' ) + $this->getOrderStep();
+				}
+				return 0;
 
-    			$it->moveFirst();
-    			
-		        $seq = $it->get( 'OrderNum' );
-		
-		        return $seq == '' ? 1 : $seq + $this->getOrderStep();        
-    			
 	        default:
 	            return parent::getDefaultAttributeValue( $name );
 	    }
@@ -296,7 +286,7 @@ class StoredObjectDB extends Object
 				$sql .= ' ORDER BY '.$sort;
 			}
 			
-			return $this->createSQLIterator($sql);
+			return $this->createSQLIterator($sql.' LIMIT 1');
 		}
 		else
 		{
@@ -459,7 +449,7 @@ class StoredObjectDB extends Object
 					else
 					{
 						$field_values[$reference_field[$i]] = 
-							$this->formatValueForDB( $reference_field[$i], $field_values[$reference_field[$i]] );
+							$this->formatValueForDB( $reference_field[$i], addslashes($field_values[$reference_field[$i]]) );
 						
 						if( $this->isString($reference_field[$i]) )
 						{
@@ -528,17 +518,13 @@ class StoredObjectDB extends Object
 	//----------------------------------------------------------------------------------------------------------
 	function getByRefArrayCount( $field_values, $alias = 't' ) 
 	{
-		global $model_factory;
-		
 		$sql = 'SELECT COUNT(1) FROM '.$this->getRegistry()->getQueryClause().' '.$alias.' WHERE ';
 
 		$sql .= $this->getByRefArrayWhere( $field_values, 0, $alias );
 
 		$this->checkSelectOnly($sql);
 
-		$r2 = DAL::Instance()->Query($sql);
-
-		$data = mysql_fetch_row($r2);
+		$data = DAL::Instance()->QueryArray($sql);
 
    		return $data[0] == '' ? 0 : $data[0];
 	}
@@ -694,20 +680,28 @@ class StoredObjectDB extends Object
 		return $this->createSQLIterator($sql);
 	}
 
-	function getAggregated( $alias = 't', $sorts = array() )
+	function getAggregated( $alias = 't', $sorts = array(), $persisters = array() )
 	{
 		$aggs = $this->getAggregateObjects();
+
+		if ( count($persisters) < 1 ) $persisters = $this->getPersisters();
 		
 		$outer_columns = array();
 		$inner_columns = array();
 		$agg_attrs = array();
 		$agg_columns = array();
-		
+
+		$usedPersisters = array();
 		foreach ( $aggs as $aggregate )
 		{
+			foreach( $persisters as $persister ) {
+				if ( !$persister instanceof ObjectPersister ) continue;
+				if ( count(array_intersect(array($aggregate->getAggregatedAttribute(), $aggregate->getAttribute()), $persister->getAttributes())) < 1 ) continue;
+				$usedPersisters[] = $persister;
+			}
+
 			// custom attributes are part of inner select already, just skip it
-			if ( $this->getAttributeOrigin($aggregate->getAttribute()) != ORIGIN_CUSTOM )
-			{
+			if ( $this->getAttributeOrigin($aggregate->getAttribute()) != ORIGIN_CUSTOM ) {
 				$column = trim($aggregate->getInnerColumn());
 				if ( $column != '' ) array_push( $inner_columns, $column );
 			}
@@ -723,17 +717,16 @@ class StoredObjectDB extends Object
 			
 			$alias = $aggregate->getAlias();
 		}
-		
+
+		$registry = $this->getRegistryDefault();
+		$registry->setPersisters($usedPersisters);
+
 		$inner_columns = array_unique(array_merge( array_unique($inner_columns), array_unique($agg_attrs) ));
 		
-		$select_clause = $this->getRegistry()->getSelectClause($alias, false);
-		
-		foreach( $inner_columns as $key => $column )
-		{
+		$select_clause = $registry->getSelectClause($alias, false);
+		foreach( $inner_columns as $key => $column ) {
 			$column = str_replace($alias.'.', '', $column);
-			
-			if ( strpos( $select_clause, ') '.$column.' ' ) > 0 )
-			{
+			if ( strpos( $select_clause, ') '.$column.' ' ) > 0 || strpos( $select_clause, '`'.$column.'`' ) > 0 ) {
 			    unset($inner_columns[$key]);
 			} 
 		}
@@ -744,10 +737,15 @@ class StoredObjectDB extends Object
 			? join(',', array_merge($inner_columns, array($select_clause))) 
 			: join(',', $inner_columns));
 
+		$predicate = $this->getFilterPredicate();
+		if ( strpos($predicate, 'VPD') === false ) {
+			$vpdFilter = $this->isVpdEnabled() && $this->getVpdValue() != '' ? " AND t.VPD = '".$this->getVpdValue()."' " : "";
+		}
+
 		$sql = " SELECT ".join($outer_columns, ',').", ".join($agg_columns, ',').
 			   "   FROM (SELECT ".$inner_select.
-			   "		   FROM ".$this->getRegistryDefault()->getQueryClause()." t, (SELECT @row_num:=0) foo " .
-			   "          WHERE 1 = 1 ".$this->getVpdPredicate().$this->getFilterPredicate().
+			   "		   FROM ".$registry->getQueryClause()." t, (SELECT @row_num:=0) foo " .
+			   "          WHERE 1 = 1 ".$predicate.$vpdFilter.
 			   ($sort_clause != '' ? " ORDER BY ".$sort_clause : "").
 			   "		) t ".
 			   "  GROUP BY ".join($outer_columns, ',');
@@ -926,7 +924,7 @@ class StoredObjectDB extends Object
  	function add_parms( $parms )
 	{
 		global $model_factory;
-		
+
        	// Формируем запрос для вставки записи в таблицу
 		$sql = "INSERT INTO ".$this->getEntityRefName()." ( RecordCreated,RecordModified,VPD,";
 		
@@ -934,7 +932,13 @@ class StoredObjectDB extends Object
 		{
 		    $sql .= $this->getEntityRefName().'Id,';
 		}
-		
+
+		if ( $parms['RecordCreated'] == '' ) {
+			$parms['RecordCreated'] = SystemDateTime::date();
+		}
+		if ( $parms['RecordModified'] == '' ) {
+			$parms['RecordModified'] = SystemDateTime::date();
+		}
         $values = " VALUES ( ".
         	($parms['RecordCreated'] != '' ? "'".$parms['RecordCreated']."'" : "NOW()").", ".
         	($parms['RecordModified'] != '' ? "'".$parms['RecordModified']."'" : "NOW()").", ";
@@ -968,7 +972,11 @@ class StoredObjectDB extends Object
 		{
 		    $values .= $parms[$this->getEntityRefName().'Id'].',';
 		}
-		
+
+		foreach ( $this->persisters as $persister ) {
+			$persister->map( $parms );
+		}
+
 		$imageattributes = array();
 		$fileattributes = array();
 		
@@ -1037,11 +1045,7 @@ class StoredObjectDB extends Object
 		}
 		elseif( $r2 === true )
 		{		    
-    		// получим идентификатор записи
-    		$r3 = DAL::Instance()->Query('SELECT LAST_INSERT_ID()');
-    		
-    		$d = mysql_fetch_array($r3);
-    		
+    		$d = DAL::Instance()->QueryArray('SELECT LAST_INSERT_ID()');
     		$id = $d[0];
 		}
 
@@ -1081,48 +1085,47 @@ class StoredObjectDB extends Object
 		return $id;
 	}
 	
-	//----------------------------------------------------------------------------------------------------------
-	function add() {
-		global $_REQUEST;
-		return $this->add_parms($_REQUEST);
+	protected function beforeDelete( $object_it )
+	{
+		foreach ( $this->persisters as $persister ) {
+			$persister->beforeDelete( $object_it );
+		}
 	}
-	
+
 	//----------------------------------------------------------------------------------------------------------
 	function delete( $id, $record_version = '' )
 	{
-		global $_REQUEST, $model_factory;
+		getFactory()->resetCachedIterator( $this );
 
-    	$model_factory->resetCachedIterator( $this );
-    	
-    	// get file/image attributes
+		$object_it = $this->getExact($id);
+		if ( $object_it->getId() == '' ) return 0;
+
+		$rows = $this->deleteInternal( $object_it, $record_version );
+
+		getFactory()->resetCachedIterator($this);
+		if ( $this->getNotificationEnabled() ) {
+			getFactory()->getEventsManager()->notify_object_delete($object_it);
+		}
+
+		return $rows;
+	}
+
+	protected function deleteInternal( $object_it, $record_version = '' )
+	{
+		$this->beforeDelete($object_it);
+
+		// get file/image attributes
 		$keys = array_keys($this->getAttributes());
-		
 		$file_attributes = array();
-		
 		$image_attributes = array();
-		
-		for ( $i=0; $i < count($keys); $i++ ) 
-		{
-			if($this->getAttributeType($keys[$i]) == 'image') 
-			{
-			    $image_attributes[] = $keys[$i];
+		for ( $i=0; $i < count($keys); $i++ ) {
+			if($this->getAttributeType($keys[$i]) == 'image') {
+				$image_attributes[] = $keys[$i];
 			}
-			
-			if($this->getAttributeType($keys[$i]) == 'file') 
-			{
-			    $file_attributes[] = $keys[$i];
+			if($this->getAttributeType($keys[$i]) == 'file') {
+				$file_attributes[] = $keys[$i];
 			}
 		}
-		
-		if ( count($image_attributes) > 0 || count($file_attributes) > 0 )
-		{
-    	    $deleting_object_it = $this->getExact($id);
-		}
-
-    	if ( $this->getNotificationEnabled() && !is_object($deleting_object_it) )
-    	{
-    	    $deleting_object_it = $this->getExact($id);
-    	}
 
 		if ( $record_version != '' )
 		{
@@ -1131,52 +1134,37 @@ class StoredObjectDB extends Object
 		}
 		else
 		{
-       	    if ( !is_object($deleting_object_it)) $deleting_object_it = $this->getExact($id);
-		        	    
-			$parms['RecordVersion'] = $deleting_object_it->get('RecordVersion') != ''
-				? $deleting_object_it->get('RecordVersion') : 0;
+			$parms['RecordVersion'] = $object_it->get('RecordVersion') != ''
+				? $object_it->get('RecordVersion') : 0;
 		}
-		
+
 		// удаляем запись
-		$id = DAL::Instance()->Escape( $id );
-		
+		$id = DAL::Instance()->Escape( $object_it->getId() );
+
 		$sql = "DELETE FROM ".$this->getEntityRefName().
-			   " WHERE ".$this->getEntityRefName()."Id IN (".join(',',preg_split('/,/', $id)).")".
-			   "   AND RecordVersion = ".$parms['RecordVersion'];
+			" WHERE ".$this->getEntityRefName()."Id IN (".join(',',preg_split('/,/', $id)).")".
+			"   AND RecordVersion = ".$parms['RecordVersion'];
 
 		$this->checkDeleteOnly($sql);
-		
+
 		$r2 = DAL::Instance()->Query($sql);
 
 		$affected_rows = DAL::Instance()->GetAffectedRows();
-		
 		if ( $affected_rows < 1 ) return $affected_rows;
 
-		if ( count($image_attributes) > 0 || count($file_attributes) > 0 )
-		{
-			foreach( $image_attributes as $attribute )
-			{ 
-			    $this->fs_image->removeFile( $attribute, $deleting_object_it );
+		if ( count($image_attributes) > 0 || count($file_attributes) > 0 ) {
+			foreach( $image_attributes as $attribute ) {
+				$this->fs_image->removeFile( $attribute, $object_it );
 			}
-
-			foreach( $file_attributes as $attribute )
-			{ 
-			    $this->fs_file->removeFile( $attribute, $deleting_object_it );
+			foreach( $file_attributes as $attribute ) {
+				$this->fs_file->removeFile( $attribute, $object_it );
 			}
 		}
 
-		foreach ( $this->persisters as $persister )
-		{
-			$persister->delete( $id );
+		foreach ( $this->persisters as $persister ) {
+			$persister->afterDelete( $object_it );
 		}
-		
-		$model_factory->resetCachedIterator($this);
 
-	    if ( $this->getNotificationEnabled() && is_object($deleting_object_it) )
-    	{
-    	    getFactory()->getEventsManager()->notify_object_delete($deleting_object_it);
-    	}
-		
 		return $affected_rows;
 	}
 	
@@ -1265,128 +1253,6 @@ class StoredObjectDB extends Object
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
-	function createLike( $id, $use_notification = true )
-	{
-		global $model_factory;
-		
-		// preapare column list
-		$copied_keys = array();
-
-		$keys = array_keys($this->getAttributes());
-		array_push($keys, 'VPD');
-
-		for($i=0; $i < count($keys); $i++) 
-		{
-			if( $keys[$i] == 'RecordModified' || $keys[$i] == 'RecordCreated' ) continue;
-			if( !$this->IsAttributeStored($keys[$i]) && $keys[$i] != 'VPD' ) continue;
-
-			if($this->getAttributeType($keys[$i]) == 'image' || 
-			   $this->getAttributeType($keys[$i]) == 'file') 
-			{
-				continue;
-			}
-			
-			array_push($copied_keys, "`".$keys[$i]."`");
-		}
-
-		$column_list = join($copied_keys, ',');  
-
-		$sql = " create temporary table ".$this->getEntityRefName()."2 select * from ".$this->getEntityRefName()." where ".
-					$this->getEntityRefName()."Id = ".$id." ";
-					
-		DAL::Instance()->Query($sql);
-
-		$sql = " insert into ".$this->getEntityRefName()." (RecordCreated, ".$column_list.") " .
-			   " select NOW(), ".$column_list." from ".$this->getEntityRefName()."2 ";
-
-		DAL::Instance()->Query($sql);
-
-		$r3 = DAL::Instance()->Query('SELECT LAST_INSERT_ID()');
-
-		$d = mysql_fetch_array($r3);
-		$new_id = $d[0];
-		
-		// this code for mysql 3.23.58 only
-		$sql = " drop table ".$this->getEntityRefName()."2 ";
-
-		DAL::Instance()->Query($sql);
-		
-		// устанавливаем новый порядковый номер
-		if( $this->isOrdered() ) 
-		{
-			$this->modify_parms( $new_id, 
-				array('OrderNum' => $this->getDefaultAttributeValue('OrderNum')), false );
-		}
-
-		$source_it = $this->getExact($id);
-		$target_it = $this->getExact($new_id);
-		
-		// копируем файлы и изображения
-		$keys = array_keys($this->getAttributes());
-		for($i=0; $i < count($keys); $i++) 
-		{
-			if($this->getAttributeType($keys[$i]) == 'image') 
-			{
-				$this->fs_image->copyFile( $keys[$i], $source_it, $target_it );
-			}
-			if($this->getAttributeType($keys[$i]) == 'file') 
-			{
-				$this->fs_file->copyFile( $keys[$i], $source_it, $target_it );
-			}
-		}
-		
-		// копируем агрегированные объекты
-		for($i = 0; $i < count($this->aggregates); $i++) {
-			$class = $this->aggregates[$i]->getClassName();
-			// экземпляр агрегата из старого контейнера
-			$aggregate = new $class( $source_it );
-			// экземпляр агрегата из нового контейнера
-			$aggregate_new = new $class( $target_it );
-
-			// итератор по экземплярам агрегата
-			$it = $aggregate->getAll();
-			for($j = 0; $j < $it->count(); $j++) {
-				if($it->getId() == '') continue;
-				// создаем экземпляр агрегата на основе текущего
-				$agg_id = $aggregate_new->createLike( $it->getId() );
-
-				// меняем контейнер созданного агрегата
-				$_REQUEST[$this->getEntityRefName().'Id'] = $new_id;
-				$aggregate_new->modify( $agg_id );
-				
-				/*
-				// перезадаем порядковый номер
-				if( $aggregate_new->isOrdered()) {
-					echo $aggregate_new->getDefaultAttributeValue('OrderNum');;
-					$_REQUEST['OrderNum'] = $aggregate_new->getDefaultAttributeValue('OrderNum');
-					$aggregate_new->modify( $agg_id );
-				}
-				*/
-				$it->moveNext();
-			}
-		}
-
-		$model_factory->resetCachedIterator($this);
-		
-		getFactory()->getEventsManager()->notify_object_add($target_it);
-		
-		$parms = array();
-		$attributes = $this->getAttributes();
-		
-		foreach( $attributes as $key => $value )
-		{
-			$parms[$key] = $source_it->getHtmlDecoded($key); 
-		}
-		
-		foreach ( $this->persisters as $persister )
-		{
-			$persister->modify( $new_id, $parms );
-		}
-
-		return $new_id;
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
 	function formatValueForDB( $name, $value )
 	{
 		if ( in_array($value, array('', 'null', 'NULL')) ) return 'NULL';
@@ -1413,10 +1279,14 @@ class StoredObjectDB extends Object
 			case 'date':
 			case 'datetime':
 				if ( strtolower($value) == 'now()' ) return $value;
+				if ( $value == 0 ) return 'NULL';
+				if ( strpos($value, '0000-00-00') !== false ) return 'NULL';
 				break;
 				
 			case 'float':
 			case 'integer':
+                $value = str_replace(',', '.', $value);
+                if ( $value != '' && !is_numeric($value) ) $value = 0;
 				return htmlspecialchars($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 		}
 		
@@ -1503,9 +1373,9 @@ class StoredObjectDB extends Object
 		$this->registry->setFilters($filters);
 	}
 	
-	function getFilterPredicate()
+	function getFilterPredicate( $alias = 't' )
 	{
-		return $this->registry->getFilterPredicate();
+		return $this->registry->getFilterPredicate($alias);
 	}
 	
 	function setSortDefault( $clause )

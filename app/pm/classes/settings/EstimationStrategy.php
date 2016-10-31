@@ -73,9 +73,9 @@ abstract class EstimationStrategy
 		return '';
 	}
 	
-	function getDimensionText()
+	function getDimensionText( $text )
 	{
-		return '';
+		return $text;
 	}
 	
 	function hasEstimationValue()
@@ -97,9 +97,13 @@ abstract class EstimationStrategy
 	{
 		return array();
 	}
-	
-	function getEstimationFormField( $form )
+
+	function getFilterScale()
 	{
-		return null;
+		return array();
+	}
+
+	function hasDiscreteValues() {
+		return true;
 	}
 }

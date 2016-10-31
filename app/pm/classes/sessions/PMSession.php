@@ -1,4 +1,7 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
+
 include_once SERVER_ROOT_PATH.'core/c_session.php';
 include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
 
@@ -17,7 +20,8 @@ include SERVER_ROOT_PATH."pm/classes/common/SharedObjectsTasksBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/SharedObjectsPlanBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/ObjectMetadataCustomAttributesBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/ObjectModelCustomAttributesBuilder.php";
-include SERVER_ROOT_PATH."pm/classes/common/SearchableObjectsCommonBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/common/ProjectArtifactMetadataBuilder.php";
+include SERVER_ROOT_PATH."pm/classes/search/SearchableObjectsCommonBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/ChangeLogEntitiesProjectBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/common/CustomizableObjectBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/permissions/AccessRightEntitySetCommonBuilder.php";
@@ -50,7 +54,7 @@ include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueOrderNumTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueModifyProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/RequestFeatureUpdateMetricsEventHandler.php";
-include SERVER_ROOT_PATH."pm/classes/issues/events/RequestIterationHandler.php";
+include SERVER_ROOT_PATH."pm/classes/plan/events/MilestoneMetricsEventHandler.php";
 
 include SERVER_ROOT_PATH."pm/classes/time/events/TimeSpentEvent.php";
 
@@ -74,6 +78,8 @@ include SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilderComm
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderLatest.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateArtefactsBuilderWorkItems.php";
+include SERVER_ROOT_PATH."pm/classes/project/ProjectMetricsModelBuilderDates.php";
+include SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectLinkedSelfPredicate.php";
 
 include SERVER_ROOT_PATH."pm/classes/common/triggers/CacheSessionProjectTrigger.php";
 include SERVER_ROOT_PATH."pm/classes/communications/triggers/DeleteCommentsTrigger.php";
@@ -95,62 +101,77 @@ include_once SERVER_ROOT_PATH."pm/classes/wiki/events/RemoveObsoleteAttachmentsE
 ///////////////////////////////////////////////////////////////////////
 class PMSession extends SessionBase
 {
- 	var $part_it;
- 	var $project_roles;
- 	var $project_it;
- 	var $linked_it;
- 	var $shareable;
- 	var $module;
- 	var $language;
- 	
- 	private $shared_vpds = array();
- 	
- 	private $project_info = null;
+ 	protected $part_it;
+    protected $project_roles;
+    protected $project_it;
+    protected $linked_it;
+    protected $shareable;
+    protected $module;
+    protected $project_info = null;
  	
  	function __construct( $project_info, $factory = null, $builders = null, $cache_service = null )
  	{
  		$this->project_info = $project_info;
- 		
         parent::__construct( $factory, $builders, $cache_service );
  	}
- 	
- 	public function configure()
- 	{
- 		global $model_factory;
- 		
-        $this->setup($this->project_info);
- 		
+
+ 	function __sleep()
+    {
+        return array_merge( parent::__sleep(),
+            array ('part_it', 'project_roles', 'project_it', 'linked_it', 'shareable', 'module', 'project_info')
+        );
+    }
+
+    protected function buildFactories()
+    {
+        global $model_factory;
+
         // destroy services
         $model_factory->setAccessPolicy(null);
-        
         $model_factory->setEntityOriginationService(null);
-        
-        $origination_service = $this->buildOriginationService(getCacheService());
-        $origination_service->getCacheService()->setDefaultPath('pm-'.$this->getProjectIt()->get('VPD'));
-        
-        // reconfigure the cache
- 		$this->setCacheEngine(getCacheService());
- 		$this->getCacheEngine()->setDefaultPath($this->getCacheKey());
-        
- 		// create the new model factory
- 		$model_factory = new ModelFactoryProject(
-				$model_factory->getPluginsManager(),
- 				$this->getCacheEngine(), 
- 				$this->buildAccessPolicy($this->getCacheEngine()),
- 				null,
- 				$origination_service
- 		);
 
-        parent::configure();
- 		
-        $this->addBuilder(new ProjectTemplateSectionsRegistryBuilderLatest($this));
-        
-        $this->user_it = null;
-        
- 		getLanguage();
- 	}
+        $origination_service = $this->buildOriginationService(getCacheService());
+        $origination_service->getCacheService()->setDefaultPath('pm-' . $this->getProjectIt()->get('VPD'));
+
+        // reconfigure the cache
+        $this->setCacheEngine(getCacheService());
+        $this->getCacheEngine()->setDefaultPath($this->getCacheKey());
+
+        // create the new model factory
+        $model_factory = new ModelFactoryProject(
+            $model_factory->getPluginsManager(),
+            $this->getCacheEngine(),
+            $this->buildAccessPolicy($this->getCacheEngine()),
+            null,
+            $origination_service
+        );
+
+        parent::buildFactories();
+
+        WorkflowScheme::Reset();
+    }
+
+    public function configure()
+	{
+        $project_data = $this->buildProjectData(
+            $this->findProject($this->project_info)
+        );
+
+        $this->project_it = $project_data['project'];
+        $this->linked_it = $project_data['linked'];
+
+        $this->resetCaches();
+
+        $roles_data = $this->buildParticipantData();
+        $this->part_it = $roles_data['participant'];
+        $this->project_roles = $roles_data['roles'];
+
+		parent::configure();
+
+		$this->addBuilder(new ProjectTemplateSectionsRegistryBuilderLatest($this));
+	}
  	
- 	public function & buildAccessPolicy( $cache_service )
+ 	public function buildAccessPolicy( $cache_service )
  	{
  		return new AccessPolicyProject( $cache_service, $this );
  	}
@@ -178,11 +199,9 @@ class PMSession extends SessionBase
  	                    new RequestMetadataBuilder(),
  	            		new TaskTypeMetadataBuilder(),
  	                    new TaskMetadataBuilder(),
- 	                    new TaskMetadataPermissionsBuilder(),
  	                    new IterationMetadataBuilder(),
  	                    new ReleaseMetadataBuilder(),
  	                    new MilestoneMetadataBuilder(),
- 	                    new RequestMetadataPermissionsBuilder(),
  	                    new RequestTriggersCommon(),
  	                    new IssueOrderNumTrigger(),
  	                    new TaskOrderNumTrigger(),
@@ -205,6 +224,7 @@ class PMSession extends SessionBase
 						new ProjectTemplateArtefactsBuilderWorkItems($this),
  	            		new TransitionMetadataBuilder(),
 						new QuestionMetadataBuilder(),
+						new ProjectArtifactMetadataBuilder(),
  	            		
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
@@ -218,9 +238,9 @@ class PMSession extends SessionBase
  	            		new CustomReportModelEventsHandler(),
  	            		new FeatureUpdateMetricsEventHandler(),
  	            		new RequestFeatureUpdateMetricsEventHandler(),
- 	            		new RequestIterationHandler(),
 						new ModifyIssuesVersionNumber(),
-						new RemoveObsoleteAttachmentsEventHandler()
+						new RemoveObsoleteAttachmentsEventHandler(),
+                        new MilestoneMetricsEventHandler()
  	            ),
  	            parent::createBuilders(),
  	            array (
@@ -232,7 +252,8 @@ class PMSession extends SessionBase
  	            		new CustomizableObjectBuilderCommon($this),
  	            		new PMContextResourceBuilder(),
  	            		new PMContextResourceCustomReportsBuilder(),
- 	            		
+                        new ResourceBuilderTerminology(),
+
  	            		// model
  	            		new ResetFieldsEventHandler(),
  	            		new ApplyBusinessActionsEventHandler(),
@@ -242,72 +263,18 @@ class PMSession extends SessionBase
                         new StoreTextChangesEvent($this),
 						new TimeSpentEvent(),
                         new BusinessActionModifiedEvent(),
+						new ProjectMetricsModelBuilderDates(),
 
                         new PMChangeLogNotificator(),
-                        new EmailNotificator()
- 	            )
+                        new EmailNotificator(),
+
+						// latest to override custom builders
+					    new RequestMetadataPermissionsBuilder(),
+						new TaskMetadataPermissionsBuilder()
+				)
  	    );
  	}
  	
- 	function setup( $project_info )
- 	{
- 		global $part_it, $project_it;
- 		
- 		$this->initialize( $project_info );
- 		
- 		$part_it = $this->part_it;
- 		$project_it = $this->project_it;
- 	}
- 	
- 	private function initialize( $project_info )
- 	{
- 		global $model_factory;
- 		
- 		$this->project_it = $this->findProject($project_info);
-
- 		$data = $this->get($this->getSessionKey($this->project_it), 'usr');
- 		
- 		if ( is_array($data) )
- 		{
- 			$part = new Participant();
- 			
- 			$this->part_it = $part->createCachedIterator( $data['participant'] );
- 			
- 			$this->project_roles = $data['roles'];
- 			
- 			$this->project_it->setRowset( $data['project'] );
- 			
- 			$this->linked_it = $model_factory->getObject('pm_Project')->createCachedIterator( $data['linked'] );
-
- 			$link = $model_factory->getObject('pm_ProjectLink');
- 			
- 			$this->resetCaches();
- 			
- 			return;
- 		}
- 		
- 		$project_data = $this->buildProjectData( $this->project_it );
- 		
- 		$this->project_it = $project_data['project']; 
- 		$this->linked_it = $project_data['linked']; 
- 		
- 		$this->resetCaches();
- 		
- 		$roles_data = $this->buildParticipantData();
- 		
- 		$this->part_it = $roles_data['participant']; 
- 		$this->project_roles = $roles_data['roles']; 
- 		
-		$cached_session = array( 
-			'participant' => is_object($this->part_it) ? $this->part_it->getRowset() : array(),
-			'roles' => $this->project_roles,
-			'project' => is_object($this->project_it) ? $this->project_it->getRowset() : array(),
-			'linked' => is_object($this->linked_it) ? $this->linked_it->getRowset() : array(),
-		);
-
-		$this->set($this->getSessionKey(), $cached_session, 'usr');
- 	}
-
  	private function resetCaches()
  	{
  		global $model_factory;
@@ -327,15 +294,9 @@ class PMSession extends SessionBase
 		return getFactory()->getObject('Project')->getByRef('LCASE(CodeName)', strtolower(trim($parms,':')));
  	}
  	
- 	protected function buildProjectData( & $project_it )
+ 	protected function buildProjectData( $project_it )
  	{
- 		$object_it = $this->getProjectIt();
- 		
- 		if ( is_object($object_it) && $project_it->getId() != $object_it->getId() )
- 		{
-			getFactory()->resetCache();
- 		}
-
+ 	    // cache methodology data
  		$result = array (
  		    'project' => $project_it
  		);
@@ -355,14 +316,11 @@ class PMSession extends SessionBase
  		
  		$user_it = $this->getUserIt();
  		
- 		if ( !is_object($user_it) )
- 		{
+ 		if ( !is_object($user_it) ) {
  			$result['participant'] = $part->createCachedIterator( array() );
  			return $result;
  		}
-
- 		if ( $user_it->getId() < 1 )
- 		{
+ 		if ( $user_it->getId() < 1 ) {
  			$result['participant'] = $part->createCachedIterator( array() );
  			return $result;
  		}
@@ -370,8 +328,7 @@ class PMSession extends SessionBase
  		$part_it = $part->getRegistry()->Query(
  				array(
  						new FilterAttributePredicate('SystemUser', $user_it->getId()),
- 						new FilterAttributePredicate('Project', $this->project_it->getId()),
- 						new FilterAttributePredicate('IsActive', 'Y')
+ 						new FilterAttributePredicate('Project', $this->project_it->getId())
  				)
  		);
 
@@ -379,7 +336,7 @@ class PMSession extends SessionBase
 		{
 			$project_roles = $part_it->getBaseRoles();
 		}
-		elseif ( !class_exists('PortfolioMyProjectsBuilder', false) )
+		elseif ( !defined('PERMISSIONS_ENABLED') )
  		{
  			$role = new ProjectRole();
  			$role_it = $role->getRegistry()->Query(
@@ -416,16 +373,17 @@ class PMSession extends SessionBase
 				array( 'pm_ParticipantId' => GUEST_UID ) 
 			));
 			
-			$linked_project_ids = preg_split('/,/', $this->project_it->get('LinkedProject'));
+			$linked_project_ids = array_filter(preg_split('/,/', $this->project_it->get('LinkedProject')), function($value) {
+				return $value > 0;
+			});
+			if ( count($linked_project_ids) < 1 ) $linked_project_ids = array(0);
 
 	 		$guest_it = $part->getRegistry()->Query(
 	 				array(
 	 						new FilterAttributePredicate('SystemUser', $user_it->getId()),
-	 						new FilterAttributePredicate('Project', $linked_project_ids),
-	 						new FilterAttributePredicate('IsActive', 'Y')
+	 						new FilterAttributePredicate('Project', $linked_project_ids)
 	 				)
 	 		);
-			
 			$shared_access = count($linked_project_ids) > 0 ? $guest_it->count() > 0 : false;
             
 			if ( $shared_access ) {
@@ -447,23 +405,15 @@ class PMSession extends SessionBase
  	    return $this->getProjectIt()->get('Language') == 2 ? 'EN' : 'RU';
  	}
  	
- 	function getLanguage() 
- 	{
- 	    if ( is_object($this->language) ) return $this->language;
-    	$this->language = $this->getLanguageUid() == 'EN' 
-    			? new LanguageEnglish() : new Language();
-    	$this->addBuilder( new ResourceBuilderTerminology() );
-        $this->language->Initialize();
-		return $this->language; 
+ 	function getProjectIt() {
+        return $this->project_it;
  	}
- 	
- 	function getProjectIt()
- 	{
- 		return $this->project_it;
- 	}
- 	
- 	function setProjectIt( $project_it )
- 	{
+
+ 	function getProjectObject() {
+ 	    return new Project();
+    }
+
+ 	function setProjectIt( $project_it ) {
  		$this->project_it = $project_it;
  	}
  	
@@ -512,14 +462,16 @@ class PMSession extends SessionBase
  	{
  		$key = 'pm';
 
- 		if ( !is_object($project_it) ) $project_it = $this->getProjectIt();
+ 		if ( is_null($project_it) || $project_it === '' ) $project_it = $this->getProjectIt();
  		
  		if ( !is_object($user_it) ) $user_it = $this->getUserIt();
  		
- 		if ( is_object($project_it) && $project_it->get('VPD') != '' )
- 		{
+ 		if ( is_object($project_it) && $project_it->get('VPD') != '' ) {
  			$key .= '-'.$project_it->get('VPD');
  		}
+		if ( is_string($project_it) && $project_it != '' ) {
+			$key .= '-'.$project_it;
+		}
  		
  		if ( is_object($user_it) && $user_it->getId() > 0 )
  		{

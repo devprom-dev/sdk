@@ -16,8 +16,9 @@ class FieldRestMySettings extends Field
  		$project_roles = getSession()->getRoles();
  		
         echo $view->render('pm/FieldResetMySettings.php', array (
-        		'url' => $this->url,
-        		'lead_role' => $project_roles['lead']
+			'url' => $this->url,
+			'lead_role' => $project_roles['lead'],
+			'template' => getSession()->getProjectIt()->get('Tools')
         ));
     }
 }

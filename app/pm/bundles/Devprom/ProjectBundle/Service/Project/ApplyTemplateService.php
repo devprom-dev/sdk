@@ -15,7 +15,7 @@ class ApplyTemplateService
 		$this->reset_state = $flag;
 	}
 	
- 	function apply( $template_it, $project_it, $sections = array(), $except_sections = array() )
+ 	function apply( $xml, $project_it, $sections = array(), $except_sections = array() )
  	{
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
@@ -26,8 +26,8 @@ class ApplyTemplateService
  		$context->setResetState($this->reset_state);
  		
  		$state_objects = array();
+        $this->processXml($xml);
 
-        $rowsets = $this->getRowsets(file_get_contents($template_it->object->getTemplatePath($template_it->get('FileName'))));
  		$objects = count($sections) > 0
  				? $this->getSectionObjects($sections, $except_sections) 
  				: $this->getAllObjects($except_sections);
@@ -38,11 +38,21 @@ class ApplyTemplateService
             if ( $class_name == 'Metaobject' ) {
                 $class_name = get_class(getFactory()->getObject($object->getEntityRefName()));
             }
-            $rowset = $rowsets[$class_name];
+            $class_name = strtolower($class_name);
 
-            if ( !is_array($rowset) || count($rowset) < 1 ) continue;
+            if ( $this->entities[$class_name] == '' ) {
+                \Logger::getLogger('System')->info('Entity '.$class_name.' is missed in project template file');
+                continue;
+            }
 
-            $iterator = $object->createCachedIterator($rowset);
+            $iterator = $object->createXmlIterator($this->entities[$class_name]);
+            if ( $iterator->count() < 1 ) continue;
+
+			if ( $object instanceof \ProjectPage ) {
+			    $number = $object->getRegistry()->Count(array(new \FilterBaseVpdPredicate()));
+                if ( $number > 0 ) continue;
+			}
+
 			$object->resetFilters();
 			$object->addFilter( new \FilterBaseVpdPredicate() );
 
@@ -107,9 +117,7 @@ class ApplyTemplateService
 					break;
 					
 				case 'pm_State':
-					
 					$state_objects[] = $object;
-					
 					break;
 			}
 
@@ -136,7 +144,8 @@ class ApplyTemplateService
 		
 		$metrics_service = new StoreMetricsService();
 		$metrics_service->execute($project_it);
- 		
+
+        \SessionBuilder::Instance()->invalidate();
  		getSession()->truncate();
  	}
  	
@@ -211,52 +220,6 @@ class ApplyTemplateService
  		return $result;
  	}
 
-	protected function getRowsets( $xml )
-	{
-        $xml_array = new \xml2Array;
-        $xml_data = $xml_array->xmlParse($xml);
-
-        $entity = $xml_data;
-        if ( strtolower($xml_data['name']) != 'entities' )
-        {
-            $data[0] = $xml_data;
-        }
-        else
-        {
-            $data = $xml_data['children'];
-        }
-
-        $result = array();
-
-        foreach ( $data as $entity )
-        {
-            $class_name = getFactory()->getClass($entity['attrs']['CLASS']);
-
-            if ( $class_name == '' || !class_exists($class_name, false ) ) continue;
-            if ( !is_array($entity['children']) ) continue;
-
-            $object = getFactory()->getObject($class_name);
-            $class_name = get_class($object);
-
-            foreach ( $entity['children'] as $object_tag )
-            {
-                $record[$object->getEntityRefName().'Id'] = $object_tag['attrs']['ID'];
-                foreach ( $object_tag['children'] as $attr_tag )
-                {
-                    if ( $attr_tag['attrs']['ENCODING'] != '' ) {
-                        $attr_tag['tagData'] = base64_decode($attr_tag['tagData']);
-                    }
-                    if ( in_array($entity['attrs']['ENCODING'], array('','windows-1251')) ) {
-                        $attr_tag['tagData'] = $this->wintoutf8($attr_tag['tagData']);
-                    }
-                    $record[$attr_tag['attrs']['NAME']] = $attr_tag['tagData'];
-                }
-                $result[$class_name][] = $record;
-            }
-        }
-        return $result;
-	}
-
     protected static function wintoutf8($s)
     {
         if ( function_exists('mb_convert_encoding') ) return mb_convert_encoding($s, "utf-8", "cp1251");
@@ -273,4 +236,97 @@ class ApplyTemplateService
         }
         return $t;
     }
+
+    function processEntity( $tag_name, $entity )
+    {
+        if ( strtolower($tag_name) != 'entity' ) return false;
+
+        $class_name = getFactory()->getClass($entity['attrs']['CLASS']);
+        if ( !class_exists($class_name, false) ) return true;
+
+        $class_name = strtolower($class_name);
+        $this->entities[$class_name] = $entity;
+
+        return true;
+    }
+
+    function processXml( $xml )
+    {
+        $xml = preg_replace('/<\?xml[^\?]+\?>/', '', $xml);
+        $xml = preg_replace('/<\/?entities>/', '', $xml);
+        $delimiter = '<entity';
+        $strings = explode($delimiter, $xml);
+        $lastKey = array_pop(array_keys($strings));
+
+        foreach( $strings as $key => $string ) {
+            $string = $delimiter.$string;
+
+            $parser = xml_parser_create();
+            xml_set_object($parser,$this);
+            xml_set_element_handler($parser, "tagOpen", "tagClosed");
+            xml_set_character_data_handler($parser, "tagData");
+
+            $result = xml_parse($parser,$string,$key == $lastKey);
+            if(!$result) {
+                \Logger::getLogger('System')->error(
+                    sprintf("XML error: %s at line %d at column %d with text %s",
+                        xml_error_string(xml_get_error_code($parser)),
+                        xml_get_current_line_number($parser),
+                        xml_get_current_column_number($parser),
+                        $string
+                    )
+                );
+            }
+            xml_parser_free($parser);
+        }
+    }
+
+    protected function tagOpen($parser, $name, $attrs)
+    {
+        $tag=array("name"=>$name,"attrs"=>$attrs);
+        if ( strtolower($name) == 'entity' ) {
+            $this->accumulateData = true;
+        }
+        if ( $this->accumulateData ) {
+            array_push($this->nodeData,$tag);
+        }
+        else {
+            $this->nodeData = array();
+        }
+    }
+
+    protected function tagData($parser, $tagData) {
+        if(trim($tagData)) {
+            if(isset($this->nodeData[count($this->nodeData)-1]['tagData'])) {
+                $this->nodeData[count($this->nodeData)-1]['tagData'] .= $tagData;
+            } else {
+                $this->nodeData[count($this->nodeData)-1]['tagData'] = $tagData;
+            }
+        }
+        elseif ( $tagData == chr(10) )
+        {
+            if(isset($this->nodeData[count($this->nodeData)-1]['tagData'])) {
+                $this->nodeData[count($this->nodeData)-1]['tagData'] .= $tagData;
+            }
+        }
+    }
+
+    protected function tagClosed($parser, $name) {
+        $node = $this->nodeData[count($this->nodeData)-1];
+        if ( $this->processEntity($name, $node) ) {
+            $this->accumulateData = false;
+        }
+        if ( $this->accumulateData ) {
+            $this->nodeData[count($this->nodeData)-2]['children'][] = $node;
+            array_pop($this->nodeData);
+        }
+        else {
+            $this->nodeData = array();
+        }
+    }
+
+    private $accumulateData = false;
+    private $nodeData = array();
+    private $resParser = null;
+    private $entities = array();
 }

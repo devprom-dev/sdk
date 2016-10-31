@@ -11,15 +11,21 @@ class WikiPageDisplayRules
 			$title = "";
 		}
 
-	 	$uid = new ObjectUID($object_it->get($object_it->object->getBaselineReference()));
+		$baseline = $object_it->get($object_it->object->getBaselineReference());
+        if ( $object_it->get('Revision') != '' ) {
+            $baseline .= '&revision='.$object_it->get('Revision');
+        }
+
+	 	$uid = new ObjectUID($baseline);
 	 	$title .= $uid->getUidIcon( $page_it ).' ';
 	 	
 	 	$caption = $page_it->getDisplayName();
+
 	 	$document_name_field = $page_it->getId() == $object_it->get('TargetPage') ? 'TargetDocumentName' : 'SourceDocumentName';
 	 	if ( !in_array($object_it->get($document_name_field), array('', $page_it->get('Caption'))) ) {
 	 		$title .= $object_it->get($document_name_field).' / ';
 	 	}
-	 	$title .= $caption;
+	 	$title .= $caption.' ('.$page_it->get('StateName').')';
 
 		if ( $object_it->get($object_it->object->getBaselineReference()) == '' ) return $title;
 		$title .= ' ['.$object_it->getRef($object_it->object->getBaselineReference())->getDisplayName().']';

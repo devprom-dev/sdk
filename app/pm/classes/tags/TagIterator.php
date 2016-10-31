@@ -2,14 +2,6 @@
 
 class TagIterator extends OrderedIterator
 {
- 	function canDetach()
- 	{
- 		global $part_it;
- 		
- 		if ( $this->get('Owner') < 1 ) return true;
- 		return $this->get('Owner') == $part_it->getId();
- 	}
- 	
  	function getDisplayName()
  	{
  		global $model_factory;

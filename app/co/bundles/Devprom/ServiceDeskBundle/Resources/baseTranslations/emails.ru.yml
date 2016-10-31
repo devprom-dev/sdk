@@ -1,0 +1,15 @@
+issue:
+  created:
+    subject: "[I-%id%] Ваша заявка передана в службу поддержки"
+  updated:
+    subject: "[I-%id%] Состояние заявки изменилось"
+  commented:
+    subject: "[I-%id%] К вашей заявке оставлен комментарий"
+  resolved:
+    subject: "[I-%id%] Ваша заявка выполнена"
+resetting:
+  email:
+    subject: Сброс пароля
+registration:
+  email:
+    subject: Успешная регистрация в системе

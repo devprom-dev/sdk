@@ -4,14 +4,15 @@ include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelCommonBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderTasks.php";
+include_once SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
+include_once SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
 
 include "TaskForm.php";
 include "TaskBulkForm.php";
-include "IterationBurndownSection.php";
-include "WorkloadSection.php";
 include "TaskTable.php";
 include "WorkItemTable.php";
-include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
+include "import/ImportTasksFromExcelSection.php";
+
 
 class TaskPlanningPage extends PMPage
 {
@@ -28,30 +29,32 @@ class TaskPlanningPage extends PMPage
  		
  		if ( $this->needDisplayForm() )
  		{
-			$this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
-			$this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
-			$this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
+			if ($_REQUEST['view'] == 'import') {
+				$this->addInfoSection(new ImportTasksFromExcelSection($this->getObject()));
+			}
+			else {
+				$this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
+				$this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
+				$this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
 
- 			$object_it = $this->getObjectIt();
- 			if ( is_object($object_it) && $object_it->count() > 0 )
- 			{
-			    $this->addInfoSection( new PageSectionComments($object_it) );
- 				$this->addInfoSection( new StatableLifecycleSection( $object_it ) );
- 				$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
- 			}
+				$object_it = $this->getObjectIt();
+				if ( is_object($object_it) && $object_it->count() > 0 )
+				{
+					$this->addInfoSection( new NetworkSection($object_it) );
+					$this->addInfoSection( new PageSectionComments($object_it) );
+					$this->addInfoSection( new StatableLifecycleSection( $object_it ) );
+                    if ($object_it->object->getAttributeType('Spent') != '' && $_REQUEST['formonly'] == '') {
+                        $this->addInfoSection(new PageSectionSpentTime($object_it));
+                    }
+					$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
+                }
+			}
  		}
- 		elseif ( $_REQUEST['mode'] != 'bulk' )
- 		{
- 		    if ( $_REQUEST['view'] == 'board' ) $this->addInfoSection( new FullScreenSection() );
- 			
- 		    $workload_section = new WorkloadSection();
- 			if (getSession()->getProjectIt()->getMethodologyIt()->HasReleases())
- 			{
- 			 	if ( getFactory()->getObject('PMReport')->getExact('iterationburndown')->getId() != '' ) {
-	 				$this->addInfoSection( new IterationBurndownSection () );
-	 			}
- 				if ( count($workload_section->getData()) > 0 ) $this->addInfoSection($workload_section);
- 			}
+ 		else if ( $_REQUEST['mode'] != 'bulk' ) {
+ 		    if ( $_REQUEST['view'] == 'board' ) {
+				$this->addInfoSection( new FullScreenSection() );
+			}
+			$this->addInfoSection(new DetailsInfoSection());
  		}
  	}
  	
@@ -92,26 +95,16 @@ class TaskPlanningPage extends PMPage
 		switch ( $method->getValue() )
 		{
    		    case 'chart':
-         		        
-		        if ( $_REQUEST['report'] == '' )
-		        {
-					if ( $_REQUEST['pmreportcategory'] == '' ) $_REQUEST['pmreportcategory'] = 'tasks';
-	
-					return new ReportTable(getFactory()->getObject('PMReport'));
-				}
-				else
-				{
-					return $this->getTableDefault();
-				}
+				return $this->getTableDefault();
 
     		default:
-					return $this->getTableDefault();
+				return $this->getTableDefault();
  		}
  	}
 
 	function needDisplayForm()
 	{
-		return in_array($_REQUEST['mode'], array('bulk','group')) || parent::needDisplayForm();
+		return $_REQUEST['view'] == 'import' || in_array($_REQUEST['mode'], array('bulk','group')) || parent::needDisplayForm();
 	}
 	
 	function getBulkForm()
@@ -121,7 +114,12 @@ class TaskPlanningPage extends PMPage
 	
  	function getForm() 
  	{
- 		return new TaskForm($this->getObject());
+		if ($_REQUEST['view'] == 'import') {
+			return new ImportXmlForm($this->getObject());
+		}
+		else {
+			return new TaskForm($this->getObject());
+		}
  	}
 
 	function getSessionReportName()
@@ -136,5 +134,9 @@ class TaskPlanningPage extends PMPage
 	function getPageWidgets()
 	{
 		return array('tasksboard');
+	}
+
+	function isDetailsActive() {
+		return $this->getReportBase() != 'mytasks';
 	}
 }

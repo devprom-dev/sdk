@@ -7,6 +7,7 @@ class FieldAttachments extends FieldForm
  	var $object_it, $attachments, $caution, $anchor_field;
  	private $image_class = 'image_attach';
 	private $object = null;
+	private $addButtonText = '';
  	
  	function FieldAttachments( $object_it = null, $writable = true, $caution = true )
  	{
@@ -29,26 +30,17 @@ class FieldAttachments extends FieldForm
  	
  	function getAttachments()
  	{
- 	    global $model_factory;
- 	    
  	    if ( is_object($this->attachments) ) return $this->attachments;
- 	    
- 		if ( is_object($this->object_it) )
- 		{
-			$this->attachments = $model_factory->getObject2('pm_Attachment', $this->object_it->count());
-
+ 		if ( is_object($this->object_it) ) {
+			$this->attachments = getFactory()->getObject('pm_Attachment');
 			$this->attachments->addFilter( new AttachmentObjectPredicate($this->object_it) );
-
  		    $this->attachments->setVpdContext($this->object_it);
 
  		}
- 		else
- 		{
- 		    $this->attachments = $model_factory->getObject('pm_Attachment');
- 		    	
+ 		else {
+ 		    $this->attachments = getFactory()->getObject('pm_Attachment');
  		    $this->attachments->addFilter( new AttachmentObjectPredicate(0) );
  		}
- 		
  		return $this->attachments;
  	}
  	
@@ -61,7 +53,11 @@ class FieldAttachments extends FieldForm
  	{
  		$this->image_class = $class_name;
  	}
- 	
+
+	function setAddButtonText( $text ) {
+		$this->addButtonText = $text;
+	}
+	
  	function getObjectIt()
  	{
  		return $this->object_it;
@@ -72,7 +68,7 @@ class FieldAttachments extends FieldForm
 		return $this->object;
 	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();
@@ -85,6 +81,9 @@ class FieldAttachments extends FieldForm
  		
  		$form->setImageClass( $this->image_class );
  		$form->setAnchorIt( $this->getObjectIt() );
+		if ( $this->addButtonText != '' ) {
+			$form->setAddButtonText($this->addButtonText);
+		}
 
  		return $form;
 	}

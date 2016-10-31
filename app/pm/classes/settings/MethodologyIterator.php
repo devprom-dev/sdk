@@ -2,7 +2,13 @@
 
 class MethodologyIterator extends OrderedIterator
 {
- 	function get( $attr )
+    function __wakeup()
+    {
+        parent::__wakeup();
+        $this->setObject( new Methodology() );
+    }
+
+    function get( $attr )
  	{
  		global $project_it;
  	

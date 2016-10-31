@@ -30,10 +30,11 @@ class TooltipController extends Controller
     	{
     		throw $this->createNotFoundException('Class name doesn\'t exist');
     	}
-    	
+
     	$service = new TooltipProjectService(
     			$request->get('classname'), 
             	$request->get('objects'),
+				strpos($request->getQueryString(), 'extended') !== false,
             	$request->get('baseline')
 		);
  	

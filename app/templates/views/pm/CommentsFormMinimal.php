@@ -3,10 +3,13 @@
 <?php
 }
 
-$form->renderThread( $view );
+if ( $object_id == '' ) {
+    $form->renderThread( $view );
+    echo '<br/>';
+}
 
-echo '<br/>';
 echo $view->render('core/PageFormAttribute.php', $attributes['Caption']);
 if ( $attributes['Caption']['description'] != '' ) {
-    echo '<span class="help-block">'.$attributes['Caption']['description'].'</span>';
+    echo '<span class="help-block" style="margin-bottom:10px;">'.$attributes['Caption']['description'].'</span>';
 }
+echo $view->render('core/PageFormAttribute.php', $attributes['Attachment']);

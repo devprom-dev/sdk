@@ -45,8 +45,8 @@ class ProjectList extends PageList
 		if ( $method->HasAccess() )
 		{
 			$method->setRedirectUrl('donothing');
-			
-		    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+
+			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 		    
 		    $actions[] = array(
     		    'url' => $method->getJSCall(),
@@ -58,7 +58,7 @@ class ProjectList extends PageList
 		
 		if ( $method->HasAccess() )
 		{
-		    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
+			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 		    
 			$actions[] = array( 
 			    'url' => $method->getRedirectUrl(), 'name' => $method->getCaption() 

@@ -128,8 +128,16 @@ h6,
     padding-right: 0;
 }
 
+.chat-message .sender {
+    width: 160px;
+}
+
 .chat-message-body {
-    margin-left: 130px;
+    margin-left: 160px;
+}
+
+.chat-message .time {
+    text-align: left;
 }
 
 textarea.textarea-sm {
@@ -257,4 +265,11 @@ div.dev-footer a
 	background: rgba(51,51,51,0.4);
 	padding-left: 8px;
 	padding-right: 8px;
+}
+
+div.body img {
+    max-width:100%;
+}
+div.text img {
+    max-width:100%;
 }

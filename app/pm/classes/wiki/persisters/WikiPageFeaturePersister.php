@@ -2,21 +2,54 @@
 
 class WikiPageFeaturePersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
- 	{
- 		$columns = array();
- 		$alias = $alias != '' ? $alias."." : "";
- 		
-		$object = $this->getObject();
-  		$objectPK = $alias.$object->getClassName().'Id';
- 		
- 		array_push( $columns, 
- 			"(SELECT GROUP_CONCAT(CAST(r.Function AS CHAR)) ".
- 			"   FROM pm_ChangeRequest r, pm_ChangeRequestTrace tr " .
-			"  WHERE r.pm_ChangeRequestId = tr.ChangeRequest ".
- 		    "    AND tr.ObjectId = ".$objectPK." ".
- 		    "    AND tr.ObjectClass IN ('".strtolower(get_class($object))."') ) Feature " );
+	function getAttributes() {
+		return array('Feature');
+	}
 
- 		return $columns;
+	function getSelectColumns( $alias )
+ 	{
+ 		return array (
+			" IFNULL( ".
+			" 	(SELECT GROUP_CONCAT(DISTINCT CAST(r.Feature AS CHAR)) ".
+			"      FROM pm_FunctionTrace r " .
+			"  	  WHERE r.ObjectId = ".$this->getPK($alias).
+			"       AND r.ObjectClass IN ('Requirement','TestScenario','HelpPage') ), ".
+			" 	IFNULL( ".
+			" 		(SELECT GROUP_CONCAT(DISTINCT CAST(r.Feature AS CHAR)) ".
+			"      	   FROM pm_FunctionTrace r, WikiPageTrace tr " .
+			"  	  	  WHERE r.ObjectId = tr.SourcePage ".
+			"    		AND tr.TargetPage = ".$this->getPK($alias)." ), ".
+ 			"		(SELECT GROUP_CONCAT(DISTINCT CAST(r.Function AS CHAR)) ".
+ 			"      	   FROM pm_ChangeRequest r, pm_ChangeRequestTrace tr " .
+			"  	  	  WHERE r.pm_ChangeRequestId = tr.ChangeRequest ".
+ 		    "    		AND tr.ObjectId = ".$this->getPK($alias)." ".
+ 		    "    		AND tr.ObjectClass = '".strtolower(get_class($this->getObject()))."')".
+			"	)".
+			" ) Feature "
+		);
  	}
+
+ 	function modify($object_id, $parms)
+    {
+        if ( $parms['Feature'] != '' ) {
+            $registry = getFactory()->getObject('pm_FunctionTrace')->getRegistry();
+            $trace_it = $registry->Query(
+                array (
+                    new FilterAttributePredicate('ObjectId', $object_id),
+                    new FilterAttributePredicate('ObjectClass', get_class($this->getObject()))
+                )
+            );
+            while( !$trace_it->end() ) {
+                $registry->Delete($trace_it);
+                $trace_it->moveNext();
+            }
+            $registry->Create(
+                array(
+                    'ObjectId' => $object_id,
+                    'ObjectClass' => get_class($this->getObject()),
+                    'Feature' => $parms['Feature']
+                )
+            );
+        }
+    }
 }

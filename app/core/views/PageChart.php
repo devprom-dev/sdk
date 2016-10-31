@@ -34,7 +34,7 @@ class PageChart extends StaticPageList
 		$minSizeValuable = 1;
 
 		$object = $this->getObject();
-		
+
 		$aggs = $this->getAggregates();
 		foreach ( $aggs as $agg ) {
 			$object->addAggregate( $agg );
@@ -87,7 +87,7 @@ class PageChart extends StaticPageList
 		if ( $this->getGroup() == 'State' || $aggby == 'State' )
 		{
 			$this->state_sort_index = array();
-		    $state_it = $object->cacheStates();
+		    $state_it = WorkflowScheme::Instance()->getStateIt($object);
 		    while ( !$state_it->end() )
 		    {
 		        $this->state_sort_index[$state_it->get('ReferenceName')] = $state_it->get('OrderNum');
@@ -113,6 +113,13 @@ class PageChart extends StaticPageList
 		}
 
 		return $object->createCachedIterator( count($data) < $minSizeValuable ? $this->getDemoData($aggs) : $data );
+	}
+
+	protected function IsAttributeInQuery( $attribute )
+	{
+		return parent::IsAttributeInQuery( $attribute )
+			|| $this->getAggregateBy() == $attribute
+			|| $this->getGroup() == $attribute;
 	}
 
 	protected function getDemoData($aggs)
@@ -182,6 +189,22 @@ class PageChart extends StaticPageList
 		);
 	}
 
+	function getAllowedGroupFields()
+	{
+		$disallowedFields = array();
+		return array_diff(
+			array_merge(
+				$this->getGroupFields(),
+				array_keys($this->getObject()->getAttributes()),
+				array (
+					'history',
+					'DayDate'
+				)
+			),
+			$disallowedFields
+		);
+	}
+
 	function getGroup()
 	{
 		global $_REQUEST;
@@ -223,7 +246,7 @@ class PageChart extends StaticPageList
 	{
 		$values = $this->getFilterValues();
 		
-		if ( !in_array($values['aggregator'],array('','all','none')) )
+		if ( !in_array($values['aggregator'],array('','all')) )
 		{
 			return $values['aggregator'];
 		}
@@ -275,15 +298,20 @@ class PageChart extends StaticPageList
 	function getGroupFields()
 	{
 		$object = $this->getObject();
+		$attrs = $object->getAttributes();
 		$fields = array();
 		
 		$skip_attributes = array_merge(
 				$this->getSystemAttributes(),
 				$this->getObject()->getAttributesByGroup('trace')
 		);
-		
+		foreach( $attrs as $attribute => $info ) {
+			if ( !$this->getObject()->IsAttributeStored($attribute) && $this->getObject()->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) {
+				$skip_attributes[] = $attribute;
+			}
+		}
+
 		$clause = $object->getRegistry()->getSelectClause('', false);
-		$attrs = $object->getAttributes();
 
 		foreach ( $attrs as $key => $attr )
 		{
@@ -312,8 +340,18 @@ class PageChart extends StaticPageList
 		
 		foreach( $fields as $key => $field )
 		{
-			if ( in_array($field, $skip_attributes) ) unset ( $fields[$key] );
-			if ( $field != 'State' && in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) unset ( $fields[$key] );
+			if ( in_array($field, $skip_attributes) ) {
+				unset ( $fields[$key] );
+				continue;
+			}
+			if ( $field != 'State' && in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) {
+				unset ( $fields[$key] );
+				continue;
+			}
+			if ( !$this->getObject()->IsAttributeStored($field) ) {
+				unset ( $fields[$key] );
+				continue;
+			}
 		}
 		
 		return $fields;
@@ -528,37 +566,91 @@ class PageChart extends StaticPageList
 	{
 		return 'height:420px;';
 	}
+
+	function buildDataIterator()
+    {
+        $aggs = $this->getAggregates();
+        $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
+        $object = $this->getObject();
+
+        $entity = new \Metaobject('entity');
+        foreach( $entity->getAttributes() as $attribute => $info ) {
+            $entity->removeAttribute($attribute);
+        }
+
+        $agg_rows = $aggs[0];
+        $agg_cols = $aggs[1];
+
+        $agg_title = '';
+        if ( is_object($agg_cols) ) {
+            $attribute = $agg_cols->getAttribute();
+            if ($attribute != '' && $attribute != '1') {
+                $agg_title .= translate($object->getAttributeUserName($attribute));
+            }
+        }
+        if ( is_object($agg_rows) ) {
+            $attribute = $agg_rows->getAttribute();
+            if ($attribute != '' && $attribute != '1') {
+                if ( $agg_title != '' ) {
+                    $agg_title .= ' \\ ';
+                }
+                $agg_title .= translate($object->getAttributeUserName($attribute));
+            }
+        }
+
+        $columns = array(
+            $agg_title
+        );
+        $entity->addAttribute($agg_title, 'VARCHAR', $agg_title, true, true);
+        foreach ($data as $column => $item) {
+            $columns[] = $column;
+            $entity->addAttribute($column, 'VARCHAR', $column, true, true);
+        }
+
+        $result = array();
+        $tmp = array_shift(array_values($data));
+        if ( is_array($tmp) ) {
+            $rows = array_keys($tmp['data']);
+            foreach ($rows as $row_name) {
+                $resultRow = array(
+                    array_shift(array_values($columns)) => $row_name
+                );
+                foreach ($data as $column => $item) {
+                    $resultRow = array_merge(
+                        $resultRow,
+                        array (
+                            $column => $data[$column]['data'][$row_name]
+                        )
+                    );
+                }
+                $result[] = $resultRow;
+            }
+        }
+        return $entity->createCachedIterator($result);
+    }
 	
-	function draw()
+	function draw( $view )
 	{
 	    $widget = $this->getChartWidget();
-	    
-	    if ( !is_object($widget) )
-	    {
-	        throw new Exception("Chart widget is undefined");
-	    }
-	    
+	    if ( !is_object($widget) ) throw new Exception("Chart widget is undefined");
+
 	    $aggs = $this->getAggregates();
 	    
 	    $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
-	    
+
 	    $widget->setData( $data );
 
     	$chart_id = "chart".uniqid();
 	    
-		echo '<div style="float:left;width:67%;">';
-
-    		echo '<div id="'.$chart_id.'" class="plot plot-wide" style="'.$this->getStyle().'"></div>';
-		    $widget->setLegend( $this->getLegendVisible() );
-    		$widget->draw($chart_id);
+        echo '<div id="'.$chart_id.'" class="plot plot-wide" style="'.$this->getStyle().'"></div>';
+        $widget->setLegend( $this->getLegendVisible() );
+        $widget->draw($chart_id);
 		
-		echo '</div>';
-
         if ( count($aggs) == 2 && $this->getTableVisible() )
         {
             echo '<div style="clear:both;"></div>';
             echo '<div style="padding:16px 22px 0;">';
-                $this->drawLegendTable( $data, $aggs );
+                $this->drawLegendTable( $view );
             echo '</div>';
         }
         else if ( count($aggs) < 2 && $this->getTableVisible() )
@@ -614,39 +706,32 @@ class PageChart extends StaticPageList
 		echo '</table>';		
 	}
 
-    function drawLegendTable( $data, & $aggs )
+    function drawLegendTable( $view )
     {
-        $object = $this->getObject();
-        $agg_rows = $aggs[0];
-        $agg_cols = $aggs[1];
+        $dataIt = $this->buildDataIterator();
 
         echo '<table class="table table-hover">';
-        $agg_title = '';
-        $attribute = $agg_cols->getAttribute();
-        if ($attribute != '' && $attribute != '1') {
-            $agg_title .= translate($object->getAttributeUserName($attribute));
-        }
-        $attribute = $agg_rows->getAttribute();
-        if ($attribute != '' && $attribute != '1') {
-            $agg_title .= ' \ '. translate($object->getAttributeUserName($attribute));
-        }
         echo '<tr>';
-        echo '<th>'.$agg_title.'</th>';
-        foreach ($data as $column => $item) {
+        foreach (array_keys($dataIt->getData()) as $column ) {
             echo '<th>' . $column . '</th>';
         }
+        if ( $dataIt->count() > 0 ) {
+            echo '<th width="1%">';
+            echo $view->render('core/ButtonMenu.php', array(
+                'title' => translate('Экспорт'),
+                'items' => $this->getTable()->getExportActions()
+            ));
+            echo '</th>';
+        }
         echo '</tr>';
-        $tmp = array_shift(array_values($data));
-        if ( is_array($tmp) ) {
-            $rows = array_keys($tmp['data']);
-            foreach ($rows as $row_name) {
-                echo '<tr>';
-                echo '<td>' . $row_name . '</td>';
-                foreach ($data as $column => $item) {
-                    echo '<td>' . $data[$column]['data'][$row_name] . '</td>';
-                }
-                echo '</tr>';
+        while( !$dataIt->end() ) {
+            echo '<tr>';
+            foreach ($dataIt->getData() as $column => $value) {
+                echo '<td>' . $value . '</td>';
             }
+            echo '<td></td>';
+            echo '</tr>';
+            $dataIt->moveNext();
         }
         echo '</table>';
     }

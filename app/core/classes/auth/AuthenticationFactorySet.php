@@ -26,7 +26,7 @@ class AuthenticationFactorySet
         $result[] = new AuthenticationAppKeyFactory();
  	    $result[] = new AuthenticationAPIKeyFactory();
 
-        $plugins = $this->session->getPluginsManager();
+        $plugins = getFactory()->getPluginsManager();
  	    
         if ( is_object($plugins) )
         {

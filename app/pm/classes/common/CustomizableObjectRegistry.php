@@ -12,7 +12,7 @@ class CustomizableObjectRegistry extends ObjectRegistrySQL
  		);
  	}
  	
- 	function createSQLIterator()
+ 	function createSQLIterator( $sql_query )
  	{
  		foreach( getSession()->getBuilders('CustomizableObjectBuilder') as $builder ) {
  		    $builder->build($this);

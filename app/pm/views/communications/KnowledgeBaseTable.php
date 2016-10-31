@@ -11,8 +11,6 @@ class KnowledgeBaseTable extends PMWikiTable
 	
 	function getFilters()
 	{
-		global $model_factory;
-		
 		$object = $this->getObject();
 		
 		$filters = array(

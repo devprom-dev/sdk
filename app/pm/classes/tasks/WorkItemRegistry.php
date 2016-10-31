@@ -4,6 +4,8 @@ include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestDueDatesPersi
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestTracePersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskDatesPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskTracePersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskFactPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include "persisters/WorkItemStatePersister.php";
 include "persisters/WorkItemCommentPersister.php";
 
@@ -13,7 +15,8 @@ class WorkItemRegistry extends ObjectRegistrySQL
         return array(
             new EntityProjectPersister(),
             new WorkItemStatePersister(),
-            new WorkItemCommentPersister()
+            new WorkItemCommentPersister(),
+            new AttachmentsPersister()
         );
     }
 
@@ -22,7 +25,8 @@ class WorkItemRegistry extends ObjectRegistrySQL
             new ObjectUIDPersister(),
             new TaskDatesPersister(),
             new StateDurationPersister(),
-            new TaskTracePersister()
+            new TaskTracePersister(),
+            new TaskFactPersister()
         );
     }
 
@@ -51,6 +55,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
             $persister->setObject($request);
             $issue_columns = array_merge($issue_columns, $persister->getSelectColumns('t'));
         }
+        $issue_columns[] = 't.Fact';
 
 		$sql = "
 			SELECT t.pm_TaskId,
@@ -59,6 +64,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.Caption,
 				   (SELECT r.Description FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) Description,
 				   t.State,
+				   (SELECT s.pm_StateId FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'task' AND s.ReferenceName = t.State) StateMeta,
 				   t.StateObject,
 				   t.TaskType,
 				   (SELECT p.Caption FROM pm_TaskType p WHERE p.pm_TaskTypeId = t.TaskType) TypeName,
@@ -71,7 +77,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.OrderNum,
 				   t.LeftWork,
 				   t.Planned,
-				   t.Fact,
 				   t.Release,
 				   (SELECT r.Version FROM pm_Release r WHERE r.pm_ReleaseId = t.Release) PlannedRelease,
 				   t.VPD,
@@ -90,6 +95,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.Caption,
 				   t.Description,
 				   t.State,
+				   (SELECT s.pm_StateId FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'request' AND s.ReferenceName = t.State) StateMeta,
 				   t.StateObject,
 				   1000000 + IFNULL(t.Type, 0),
 				   (SELECT p.Caption FROM pm_IssueType p WHERE p.pm_IssueTypeId = t.Type) TypeName,
@@ -102,7 +108,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.OrderNum,
 				   t.EstimationLeft,
 				   t.Estimation,
-				   t.Fact,
 				   (SELECT MIN(r.pm_ReleaseId) FROM pm_Release r WHERE r.Version = t.PlannedRelease),
 				   t.PlannedRelease,
 				   t.VPD,
@@ -137,9 +142,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
             if ( $filter instanceof FilterAttributePredicate and $filter->getAttribute() == 'Assignee') {
                 $filters[] = $filter;
             }
-            if ( $filter instanceof StatePredicate ) {
-                $filters[] = $filter;
-            }
             if ( $filter instanceof FilterInPredicate ) {
                 $filters[] = $filter;
             }
@@ -153,9 +155,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
         foreach( $this->getFilters() as $filter ) {
             if ( $filter instanceof FilterAttributePredicate and $filter->getAttribute() == 'Assignee') {
                 $filters[] = new FilterAttributePredicate('Owner', $filter->getValue());
-            }
-            if ( $filter instanceof StatePredicate ) {
-                $filters[] = $filter;
             }
             if ( $filter instanceof FilterInPredicate ) {
                 $filters[] = $filter;

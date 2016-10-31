@@ -2,10 +2,6 @@
 
 $view->extend('core/PageBody.php'); 
 
-if (!session_id()) {
-    session_start();
-}
-
 ?>
 <form>
 	<fieldset>
@@ -18,9 +14,9 @@ if (!session_id()) {
 
 	<br/>
 
-    <p><?=(isset($_SESSION['error']) ? htmlentities($_SESSION['error']['error']['message'], ENT_QUOTES | ENT_HTML401, APP_ENCODING) : htmlentities($text, ENT_QUOTES | ENT_HTML401, APP_ENCODING))?></p>
+    <p><?=htmlentities($text, ENT_QUOTES | ENT_HTML401, APP_ENCODING)?></p>
     <br/>
-    
+
     <?php if ( defined('DISPLAY_ARCHIVE_ON_ERROR') && DISPLAY_ARCHIVE_ON_ERROR || !defined('DISPLAY_ARCHIVE_ON_ERROR') ) { ?>
     <p><?=text(1314)?></p>
     <ul>

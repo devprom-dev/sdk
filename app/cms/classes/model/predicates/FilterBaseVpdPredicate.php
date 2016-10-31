@@ -2,23 +2,18 @@
 
 class FilterBaseVpdPredicate extends FilterPredicate
 {
- 	function FilterBaseVpdPredicate()
- 	{
+ 	function FilterBaseVpdPredicate() {
  		parent::FilterPredicate('base');
  	}
  	
-  	function getPredicate()
+  	function getPredicate( $filter = '' )
  	{
- 		$object = $this->getObject();
- 		
- 		$vpd = $object->getVpdValue();
- 		
- 		if ( $vpd != '' )
- 		{
- 		    return " AND t.VPD = '".$vpd."'";
+ 		$vpd = $this->getObject()->getVpdValue();
+
+ 		if ( $vpd != '' ) {
+ 		    return " AND ".$this->getAlias().".VPD = '".$vpd."'";
  		}
- 		else
- 		{
+ 		else {
  		    return " ";
  		}
  	}

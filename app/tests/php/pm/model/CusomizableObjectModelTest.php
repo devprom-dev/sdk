@@ -29,7 +29,7 @@ class CusomizableObjectModelTest extends DevpromDummyTestCase
         
         // entity mocks
 
-        $entity = $this->getMock('CustomizableObjectSet', array('getExact', 'cacheStates'));
+        $entity = $this->getMock('CustomizableObjectSet', array('getExact'));
 
         $model_factory->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (

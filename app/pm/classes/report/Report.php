@@ -11,7 +11,7 @@ class Report extends MetaobjectCacheable
  	
 	function getCacheCategory()
 	{
-	    return getSession()->getCacheKey();
+	    return getSession()->getCacheKey( $this->getVpdValue() );
 	}
 }
 

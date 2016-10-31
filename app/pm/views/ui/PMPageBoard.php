@@ -7,6 +7,24 @@ class PMPageBoard extends PageBoard
         parent::PageBoard( $object );
     }
 
+    function extendModel()
+    {
+        parent::extendModel();
+
+        $object = new MetaobjectStatable($this->getObject()->getEntityRefName());
+        $object->addFilter( new FilterVpdPredicate($this->getObject()->getVpds()) );
+        $object->disableVpd();
+
+        $count_aggregate = new AggregateBase( 'State' );
+        $object->addAggregate( $count_aggregate );
+
+        $it = $object->getAggregated();
+        while( !$it->end() ) {
+            $this->stateObjects[$it->get('State')] = $it->get($count_aggregate->getAggregateAlias());
+            $it->moveNext();
+        }
+    }
+
     function getReportUrl() {
         return $this->report_url;
     }
@@ -15,13 +33,25 @@ class PMPageBoard extends PageBoard
 	{
 		$skip = array_merge(
             $this->getObject()->getAttributesByGroup('trace'),
-            $this->getObject()->getAttributesByGroup('workflow')
+            array_diff(
+                $this->getObject()->getAttributesByGroup('workflow'),
+                array(
+                    'State'
+                )
+            )
         );
 		return array_diff(parent::getGroupFields(), $skip );
 	}
 
-    function getGroupNullable( $field_name ) {
-        return $field_name == 'Project' ? false : parent::getGroupNullable($field_name);
+    function getGroupNullable( $field_name )
+    {
+        switch( $field_name ) {
+            case 'Project':
+            case 'State':
+                return false;
+            default:
+                return parent::getGroupNullable($field_name);
+        }
     }
 
 	function getColumnFields()
@@ -31,22 +61,15 @@ class PMPageBoard extends PageBoard
 	
 	function hasCommonStates()
 	{
- 		$classname = $this->getBoardAttributeClassName();
- 		if ( $classname == '' ) return false;
- 		
- 		$value_it = getFactory()->getObject($classname)->getRegistry()->Query(
- 				array (
- 						new FilterVpdPredicate()
- 				)
- 		);
- 		
- 		$values = array();
+        $values = array();
+
+ 		$value_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
  		while( !$value_it->end() )
  		{
  			$values[$value_it->get('VPD')][] = $value_it->get('Caption');
  			$value_it->moveNext();
  		}
- 		
+
  		$example = array_shift($values);
  		foreach( $values as $attributes )
  		{
@@ -55,6 +78,47 @@ class PMPageBoard extends PageBoard
  		
  		return true;
 	}
+
+    function getBoardNames()
+    {
+        $lengths = array();
+
+        $state_it = $this->getBoardAttributeIterator();
+        while( !$state_it->end() )
+        {
+            $ref_name = $state_it->get('ReferenceName');
+            $title = $state_it->get('Caption');
+
+            $lengths[$ref_name] += max(0, $state_it->get('QueueLength'));
+
+            $objects = 0;
+            foreach( preg_split('/,/', $ref_name) as $stateRefName ) {
+                $objects += $this->stateObjects[$stateRefName];
+            }
+
+            if ( $lengths[$ref_name] > 0 )
+            {
+                $title .= ' '.
+                    str_replace('%2', $lengths[$ref_name],
+                        str_replace('%1', $objects,
+                            str_replace(' ', '&nbsp;', text(2223))));
+
+                if ( $lengths[$ref_name] < $objects ) {
+                    $title = '<span class="wip-o">'.$title.'</span>';
+                }
+            }
+            else {
+                $title .= ' '.
+                    str_replace('%1', $objects,
+                        str_replace(' ', '&nbsp;', text(2224)));
+            }
+            $names[$ref_name] = $title;
+
+            $state_it->moveNext();
+        }
+
+        return $names;
+    }
 
     function drawHeader( $board_value, $board_title )
     {
@@ -66,7 +130,7 @@ class PMPageBoard extends PageBoard
                 $this->report_up_url
             );
             $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
-            echo '<div class="board-header-up"><a href="'.$report_url.'" title="'.text(2099).'"><i class="icon icon-th"></i></a></div>';
+            echo '<div class="board-header-up"><a href="'.$report_url.'" title="'.text(2099).'"><i class="icon icon-th-large"></i></a></div>';
             echo '<div style="display:table-cell;">';
                 parent::drawHeader($board_value, $board_title);
             echo '</div>';
@@ -94,21 +158,52 @@ class PMPageBoard extends PageBoard
 		}
 	}
 
+    function getGroupIt()
+    {
+        foreach( $this->getTable()->getFilterPredicates() as $filter ) {
+            if ( $filter instanceof FilterVpdPredicate ) {
+                $vpd_filter = $filter;
+            }
+        }
+        if ( !is_object($vpd_filter) ) {
+            $vpd_filter = new FilterVpdPredicate(join(',',$this->getObject()->getVpds()));
+        }
+
+        switch($this->getGroup())
+        {
+            case 'Project':
+                $values = $this->getFilterValues();
+                $groupFilter = in_array($values['target'],array('all','none','hide')) ? '' : $values['target'];
+
+                $registry = getFactory()->getObject('Project')->getRegistry();
+                $registry->setPersisters(array());
+                return $registry->Query(
+                    array (
+                        $groupFilter != ''
+                            ? new FilterInPredicate(preg_split('/,/', $groupFilter))
+                            : $vpd_filter
+                    )
+                );
+            default:
+                return parent::getGroupIt();
+        }
+    }
+
     function drawGroup($group_field, $object_it)
     {
         switch ( $group_field )
         {
             case 'Project':
-                $ref_it = $this->getGroupIt();
-                $ref_it->moveToId($object_it->get($group_field));
+                $ref_it = $object_it->getRef($group_field);
+                $this->buildCrossReports($ref_it);
 
                 $report_url = str_replace(
                     getSession()->getApplicationUrl(),
-                    getSession()->getApplicationUrl($object_it),
+                    getSession()->getApplicationUrl($ref_it),
                     $this->report_down_url
                 );
                 $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
-                echo '<i class="icon icon-th"></i><a class="btn btn-link" href="'.$report_url.'">'.$ref_it->getDisplayName().'</a>';
+                echo '<i class="icon icon-th-large"></i><a class="btn btn-link" href="'.$report_url.'">'.$ref_it->getDisplayName().'</a>';
                 break;
 
             default:
@@ -125,16 +220,37 @@ class PMPageBoard extends PageBoard
 		$iterator = $this->getBoardAttributeIterator();
 		$iterator->moveTo('ReferenceName', $board_value);
 
-		if ( $iterator->getId() != '' && !$this->getTable()->hasCrossProjectFilter() )
+		if ( $iterator->getId() != '' && !getSession()->getProjectIt()->IsPortfolio() )
 		{
 			$method = new ObjectModifyWebMethod($iterator);
 			if ( $method->hasAccess() ) {
 				$custom_actions[] = array (
-						'name' => translate('Изменить'),
+						'name' => translate('Редактировать'),
 						'url' => $method->getJSCall() 
 				);
 				$custom_actions[] = array();
 			}
+
+            $transition_actions = array();
+            $transition_it = WorkflowScheme::Instance()->getStateTransitionIt($this->getObject(), $board_value);
+            while( !$transition_it->end() ) {
+                $method = new ObjectModifyWebMethod($transition_it);
+                if ( $method->hasAccess() ) {
+                    $method->setObjectUrl($iterator->object->getPage().$transition_it->getEditUrl());
+                    $transition_actions[] = array (
+                        'name' => $transition_it->getDisplayName(),
+                        'url' => $method->getJSCall()
+                    );
+                }
+                $transition_it->moveNext();
+            }
+            if ( count($transition_actions) > 0 ) {
+                $custom_actions[] = array (
+                    'name' => text(2221),
+                    'items' => $transition_actions
+                );
+                $custom_actions[] = array();
+            }
 
 			$method = new ObjectCreateNewWebMethod($iterator->object);
 			if ( $method->hasAccess() ) {
@@ -153,7 +269,16 @@ class PMPageBoard extends PageBoard
 		return array_merge($custom_actions, $actions);
 	}
 
-    function getRenderParms()
+    function buildFilterActions( & $base_actions )
+    {
+        parent::buildFilterActions( $base_actions );
+        $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
+        $this->buildFilterColumnsGroup( $base_actions, 'trace' );
+        $this->buildFilterColumnsGroup( $base_actions, 'time' );
+        $this->buildFilterColumnsGroup( $base_actions, 'dates' );
+    }
+
+    protected function buildCrossReports( $object_it )
     {
         $reports_map = array (
             'issuesboard' => 'issues/board/issuesboardcrossproject',
@@ -167,9 +292,10 @@ class PMPageBoard extends PageBoard
         );
 
         $report_id = $this->getTable()->getReport();
-
         if ( $report_id != '' ) {
-            $report_it = getFactory()->getObject('PMReport')->getExact($report_id);
+            $report = getFactory()->getObject('PMReport');
+            $report->setVpdContext($object_it);
+            $report_it = $report->getExact($report_id);
             if (is_numeric($report_id)) {
                 $report_id = $report_it->get('Report') != '' ? $report_it->get('Report') : $report_it->get('Module');
             }
@@ -178,7 +304,9 @@ class PMPageBoard extends PageBoard
         if ( $report_id == '' ) {
             $report_id = $this->getTable()->getPage()->getModule();
             if ( $report_id != '' ) {
-                $report_it = getFactory()->getObject('Module')->getExact($report_id);
+                $module = getFactory()->getObject('Module');
+                $module->setVpdContext($object_it);
+                $report_it = $module->getExact($report_id);
             }
         }
 
@@ -210,12 +338,11 @@ class PMPageBoard extends PageBoard
                 $this->parent_it = $portfolio_it;
             }
         }
-
-        return parent::getRenderParms();
     }
 
     private $report_up_url = '';
     private $report_down_url = '';
     private $parent_it = null;
     private $report_link_drawn = false;
+    private $stateObjects = array();
 }

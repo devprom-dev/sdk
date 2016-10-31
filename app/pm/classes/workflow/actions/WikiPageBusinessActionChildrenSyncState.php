@@ -12,8 +12,6 @@ class WikiPageBusinessActionChildrenSyncState extends BusinessActionWorkflow
 	
 	function apply( $object_it )
  	{
-		if ( $object_it->get('ParentPage') != '' ) return true;
-
 		$page_it = $object_it->object->getRegistry()->Query(
 				array (
 						new WikiRootTransitiveFilter($object_it->getId()),

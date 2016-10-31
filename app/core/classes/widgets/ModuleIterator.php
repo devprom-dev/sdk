@@ -17,6 +17,7 @@ class ModuleIterator extends OrderedIterator
  	    				? $this->get('Url').$query_string.'?' 
  	    				: $this->get('Url').($query_string != '' ? '?'.trim($query_string, '?') : ''),
 			'uid' => preg_replace('/\//', '-', $this->getId()),
+			'icon' => $this->get('Icon'),
  	        'module' => $this->getId()
 		);
  	}

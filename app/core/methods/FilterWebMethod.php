@@ -57,7 +57,7 @@ class FilterWebMethod extends SelectRefreshWebMethod
  		$value = parent::getValue();
 
  		if ( $value != '' ) return $value;
- 		
+
 		return $this->default_value;
  	}
  	

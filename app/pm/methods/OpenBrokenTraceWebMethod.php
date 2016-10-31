@@ -26,12 +26,17 @@ class OpenBrokenTraceWebMethod extends WebMethod
 			$broken = getFactory()->getObject($type_it->get('ClassName'));
 			$broken_it = $broken->createCachedIterator(array($page_it->getData()));
 
-			$url = $broken_it->getViewUrl().'&linkstate=nonactual';
-
-			foreach( $broken->getAttributesByGroup('source-attribute') as $attribute ) {
-				if ( $broken->getAttributeClass($attribute) == get_class($broken) ) {
-					$url .= '&hide=all&show=Content-'.$attribute;
+			if ( $trace_it->get('UnsyncReasonType') == 'text-changed' )
+			{
+				$url = $broken_it->getViewUrl().'&linkstate=nonactual';
+				foreach( $broken->getAttributesByGroup('source-attribute') as $attribute ) {
+					if ( $broken->getAttributeClass($attribute) == get_class($broken) ) {
+						$url .= '&hide=all&show=Content-'.$attribute;
+					}
 				}
+			}
+			else {
+				$url = $broken_it->getViewUrl().'&compareto=document:'.$trace_it->get('SourceDocumentId');
 			}
 
 			echo $url;

@@ -15,8 +15,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  	{
   		return array (
  			'all' => $this->getCaption().': '.translate('все'),
- 			'user' => translate('Пользовательские'),
- 			'system' => translate('Системные')
+ 			'Y' => translate('Пользовательские'),
+ 			'N' => translate('Системные')
  			);
 	}
 	
@@ -55,11 +55,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 		return translate('Сохранить');
 	}
 	
-	function getJSCall( $values, $redirect_url = '' )
-	{
-	    $this->redirect_url = $redirect_url;
-	    
-		return parent::getJSCall( 
+	function getJSCall( $values = array() ) {
+		return parent::getJSCall(
 			array( 'report' => $this->report_it->getId(),
 				   'items' => join(array_keys($values), ','),
 				   'values' => join(array_values($values), ';') )

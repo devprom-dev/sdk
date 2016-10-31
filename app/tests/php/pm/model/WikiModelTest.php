@@ -17,18 +17,17 @@ class WikiModelTest extends DevpromDummyTestCase
         
         // entity mocks
         
-        $this->entity = $this->getMock('WikiPage', array('getExact', 'cacheStates', 'getByRefArray', 'getRegistry'));
-        
-        $this->entity->expects($this->any())->method('cacheStates')->will( $this->returnValue(
-                $this->entity->createCachedIterator(array()) 
-        ));
-
+        $this->entity = $this->getMock('WikiPage', array('getExact', 'getByRefArray', 'getRegistry', 'createIterator'));
         $this->registry = $this->getMock('ObjectRegistrySQL', array('Query'), array($this->entity));
+        $this->iterator = $this->getMock('WikiPageIterator', array('getTransitiveRootArray'), array($this->entity));
 
         $this->entity->expects($this->any())->method('getRegistry')->will( $this->returnValue(
                 $this->registry 
         ));
-        
+        $this->entity->expects($this->any())->method('createIterator')->will( $this->returnValue(
+            $this->iterator
+        ));
+
         $model_factory->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
                         array ( 'WikiPage', null, $this->entity ),
@@ -45,7 +44,10 @@ class WikiModelTest extends DevpromDummyTestCase
         $this->registry->expects($this->any())->method('Query')->will( $this->returnValue(
                 $this->entity->createCachedIterator(array()) 
         ));
-        
+        $this->iterator->expects($this->any())->method('getTransitiveRootArray')->will( $this->returnValue(
+            array(2,1)
+        ));
+
         $this->entity->expects($this->any())->method('getExact')->will( $this->returnValueMap(
                 array (
                         array ( '1', $this->entity->createCachedIterator(array(
@@ -73,12 +75,13 @@ class WikiModelTest extends DevpromDummyTestCase
     
     function testParentPathLong()
     {
-        global $model_factory;
-        
         $this->registry->expects($this->any())->method('Query')->will( $this->returnValue(
                 $this->entity->createCachedIterator(array()) 
         ));
-        
+        $this->iterator->expects($this->any())->method('getTransitiveRootArray')->will( $this->returnValue(
+            array(3,2,1)
+        ));
+
         $this->entity->expects($this->any())->method('getExact')->will( $this->returnValueMap(
                 array (
                         array ( '1', $this->entity->createCachedIterator(array(
@@ -109,12 +112,13 @@ class WikiModelTest extends DevpromDummyTestCase
     
     function testParentPathNewPage()
     {
-        global $model_factory;
-
         $this->registry->expects($this->any())->method('Query')->will( $this->returnValue(
                 $this->entity->createCachedIterator(array()) 
         ));
-        
+        $this->iterator->expects($this->any())->method('getTransitiveRootArray')->will( $this->returnValue(
+            array(2,1)
+        ));
+
         $this->entity->expects($this->any())->method('getExact')->will( $this->returnValueMap(
                 array (
                         array ( '1', $this->entity->createCachedIterator(array(

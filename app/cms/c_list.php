@@ -8,6 +8,7 @@
 	var $itemactions = array();
 	var $it_reorder;
 	var $action;
+	 private $offset = null;
 	
 	function ListForm( $object )
 	{
@@ -94,7 +95,7 @@
         			<tr><td valign=top>
         				<table width=100% cellpadding=0 cellspacing=0>
 							<tr>
-								<td style="background:#eaeaea;border:.5pt solid #d5d5df;height:24">
+								<td style="background:#eaeaea;border:1px solid #d5d5df;height:24px">
 									<table width=100%>
 										<tr>
             								<td align=center>Название</td>
@@ -223,7 +224,7 @@
         			<input type="hidden" name="oldordernum" value="<? echo $it->getOrderNum(); ?>">
         			<input type="hidden" name="newid" value="<? echo $it->getId(); ?>">
         			<input type="hidden" name="newordernum" value="<? echo $this->it_reorder->getOrderNum(); ?>">
-        			<input type="submit" value="с" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
+        			<input type="submit" value="с" style="font-family:wingdings;color:gray;width:13pt;height:13pt;cursor:hand;">
         		</form>
     			<?
     			}
@@ -241,7 +242,7 @@
         			<input type="hidden" name="oldordernum" value="<? echo $this->it_reorder->getOrderNum(); ?>">
         			<input type="hidden" name="newid" value="<? echo $this->it_reorder->getId(); ?>">
         			<input type="hidden" name="newordernum" value="<? echo $it->getOrderNum(); ?>">
-        			<input type="submit" value="т" style="font-family:wingdings;font-size:12;color:gray;width:13pt;height:13pt;cursor:hand;">
+        			<input type="submit" value="т" style="font-family:wingdings;color:gray;width:13pt;height:13pt;cursor:hand;">
         		</form>
     			<?
     			}
@@ -274,7 +275,7 @@
                     			<form action="<? echo $this->getUrl(); ?>" method="post">
                     				<input type="hidden" name="<? echo $this->object->getClassName(); ?>action" value="list.delete">
                     				<input type="hidden" name="<? echo $this->object->getClassName().'Id'; ?>" value="<? echo $it->getId(); ?>">
-                    				<input style="width:40pt;" type="submit" value="Удал." onclick="javascript: return confirm('Вы действительно хотите удалить запись?');">
+                    				<input style="width:40pt;" type="submit" value="Удал." onclick="return confirm('Вы действительно хотите удалить запись?');">
                     			</form>
 							</td>
 						</tr>
@@ -663,13 +664,21 @@
 	
 	function getOffset()
 	{
-		global $_REQUEST;
+		if ( is_numeric($this->offset) ) return $this->offset;
 
 		$offset = $_REQUEST[$this->offset_name];
 		if($offset == '') $offset = 0;
 
-		return $offset;
+		$this->offset = $offset;
+		$this->offset = $this->offset <= $this->getIteratorRef()->count()
+			&& $this->offset >= $this->getMaxOnPage() ? $this->offset : 0;
+
+		return $this->offset;
 	}
+
+	 function setOffset( $offset ) {
+		 $_REQUEST[$this->offset_name] = $offset;
+	 }
 	
 	function getId()
 	{
@@ -679,12 +688,8 @@
 	//---------------------------------------------------------------------------------------------------------
 	function retrieve()
 	{
-		$this->offset = $this->getOffset();
-		
+		$this->setupColumns();
 		$this->it = $this->getIterator();
-		
-		$this->offset = $this->offset <= $this->it->count()
-			&& $this->offset >= $this->getMaxOnPage() ? $this->offset : 0;
 	}
 	
 	function getMaxOnPage()
@@ -723,7 +728,7 @@
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToDisplayOperations()
 	{
-		return getFactory()->getAccessPolicy()->can_modify($this->getObject());
+		return true;
 	}
 
 	//---------------------------------------------------------------------------------------------------------
@@ -736,16 +741,16 @@
 		if ( count($this->delete_checks) < 1 )
 		{
 			$it = $this->getIteratorRef();
-			$it->moveToPos( $this->offset );
+			$it->moveToPos( $this->getOffset() );
 			
-			for( $i = 0; $i < min($it->count() - $this->offset, $this->getMaxOnPage()); $i++)
+			for( $i = 0; $i < min($it->count() - $this->getOffset(), $this->getMaxOnPage()); $i++)
 			{
     			$this->delete_checks[$it->getId()] = getFactory()->getAccessPolicy()->can_delete($it);
     			
 				$it->moveNext();
 			}
 		
-			$it->moveToPos( $this->offset );
+			$it->moveToPos( $this->getOffset() );
 		}
 		
 		$has_any = count($this->delete_checks) < 1 ? true : false;
@@ -859,8 +864,9 @@
 		
 		// общее число страниц
         $pages = $this->getPages();
-        $offset_page = max(1, $this->offset / $this->getMaxOnPage() - 3);
-        
+        $offset_page = max(1, $this->getOffset() / $this->getMaxOnPage() - 3);
+
+		echo '<div class="pull-left hover-holder">';
         echo '<div class="pull-left pagination">';
 		
         echo '<ul>';
@@ -898,7 +904,10 @@
        	echo '</ul></div>';
        	
         echo '<div class="pull-left pagination pagination-total">';
+			$script = "javascript: filterLocation.setup('rows=all',0);";
+			echo '<a onclick="'.$script.'" class="dashed dashed-hidden">' .text(2159).'</a> ';
 	        echo preg_replace('/%1/', $this->getIteratorRef()->count(), text(1884));
+		echo '</div>';
 		echo '</div>';
 	}
 	
@@ -908,7 +917,7 @@
 		$pageurl = $pagename.(strpos($pagename, '?') !== false ? '&' : '?').
 			$this->offset_name.'='.($i * $this->getMaxOnPage());
 			
-    	$current = $i * $this->getMaxOnPage() == $this->offset;
+    	$current = $i * $this->getMaxOnPage() == $this->getOffset();
     	
     	//$class_name = $current ? "btn btn-small btn-info" : "btn btn-small";
 		//echo '<button class="'.$class_name.'" onclick="javascript: window.location=\''.$pageurl.'\';">'.round($i+1).'</button>';
@@ -1086,7 +1095,7 @@
 		}
 		
 		$it = $this->it;
-		$it->moveToPos( $this->offset );
+		$it->moveToPos( $this->getOffset() );
 		
 		$table_row_id = $this->table_id.'_row_'; 
 		$table_col_id = $this->table_id.'_col_'; 
@@ -1188,7 +1197,7 @@
 				$group_field_prev_value = '{83C23330-E68F-4852-83D7-6BE4E49FF985}';
 				$row_num = 0;
 
-				for( $i = 0; $i < min($it->count() - $this->offset, $this->getMaxOnPage()); $i++)
+				for( $i = 0; $i < min($it->count() - $this->getOffset(), $this->getMaxOnPage()); $i++)
 				{
 					if ( !$this->IsNeedToDisplayRow($it) )
 					{
@@ -1233,13 +1242,13 @@
 						$group_field_prev_value = $group_field_value;
 					}
 					?>
-					<tr id="<? echo $table_row_id.($this->offset + $i + 1) ?>" style="background:<? echo $this->getRowBackgroundColor( $it ); ?>;">
+					<tr id="<? echo $table_row_id.($this->getOffset() + $i + 1) ?>" style="background:<? echo $this->getRowBackgroundColor( $it ); ?>;">
 					<?
 						if ( $this->IsNeedToDisplayNumber() ) 
 						{
 							$color = $this->getRowColor( $it, null );
 						?>
-						<td class=list_cell style="color:<? echo $color ?>;width:10pt;"><? $this->drawNumberColumn( $this->offset + $i + 1 ); ?></td>
+						<td class=list_cell style="color:<? echo $color ?>;width:10pt;"><? $this->drawNumberColumn( $this->getOffset() + $i + 1 ); ?></td>
 						<?
 						}
 						
@@ -1286,16 +1295,6 @@
 									$this->drawCell( $it, $attr );
 								echo '</td>';
 							}
-						}
-						
-						if($this->IsNeedToDisplayOperations()) 
-						{
-							$width = $this->getColumnWidth( 'Actions' );
-							?>
-							<td class=action_cell width="<?php echo $width?>">
-								<? $this->drawItemActions($user_columns[$j], $it->getCurrentIt()) ?>
-							</td>
-							<?
 						}
 						?>
 					</tr>

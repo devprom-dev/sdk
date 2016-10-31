@@ -44,9 +44,9 @@ class CustomTag extends Tag
 		return 'ObjectId';
 	}
 	
- 	function getPageNameObject( $tag_id ) 
+ 	function getPageNameObject( $object_id = '' )
  	{
- 		return $this->object->getPage().'&tag='.$tag_id;
+ 		return $this->object->getPage().'&tag='.$object_id;
  	}
 
  	function getByObject( $object_it )

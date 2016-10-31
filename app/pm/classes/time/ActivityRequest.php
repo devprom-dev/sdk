@@ -6,14 +6,12 @@ include_once SERVER_ROOT_PATH."pm/classes/time/Activity.php";
 
 class ActivityRequest extends Activity
 {
- 	function ActivityRequest() 
+ 	function __construct( ObjectRegistry $registry = null )
  	{
- 		parent::Activity();
+ 		parent::__construct($registry);
  		
 		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
-		if ( $strategy->hasEstimationValue() )
-		{
+		if ( $strategy->hasEstimationValue() ) {
 			$this->addAttribute('LeftWork', 'INTEGER', $strategy->getDimensionText(text(1161)), true, false, '', 25);
 		}
  	}
@@ -82,6 +80,7 @@ class ActivityRequest extends Activity
 				)
 		);
 		if ( $request_it->getId() < 1 ) throw new Exception('Request identifier should be passed');
+		$parms['Issue'] = $parms['Task'];
 
 		$this->setVpdContext($request_it);
 		

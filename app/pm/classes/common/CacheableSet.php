@@ -15,6 +15,6 @@ class CacheableSet extends MetaobjectCacheable
 	function getCacheCategory()
 	{
 		// participant-wide cache
-	    return getSession()->getCacheKey();
+	    return getSession()->getCacheKey($this->getVpdValue());
 	}
 }

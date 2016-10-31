@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
- 
 class ProcessFirstUserEvent extends SystemTriggersBase
 {
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
@@ -12,6 +10,7 @@ class ProcessFirstUserEvent extends SystemTriggersBase
 
 		if ( $object_it->object->getRecordCount() > 1 ) return;
 
+        getSession()->setAuthenticationFactory(null);
 		getSession()->open( $object_it );
 	}
 }

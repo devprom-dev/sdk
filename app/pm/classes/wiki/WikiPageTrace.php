@@ -7,6 +7,7 @@ include "predicates/WikiTraceTargetReferencePredicate.php";
 include "predicates/WikiTraceTargetDocumentPredicate.php";
 include "predicates/WikiTraceTargetBaselinePredicate.php";
 include "predicates/WikiTraceSourceDocumentPredicate.php";
+include "predicates/WikiTraceToBreakPredicate.php";
 include "WikiPageTraceRegistry.php";
 include "WikiPageTraceUnsyncReason.php";
 

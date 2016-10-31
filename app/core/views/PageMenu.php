@@ -14,7 +14,7 @@ class PageMenu
  	{
  		global $_REQUEST, $_SERVER, $session;
  		
- 		$plugins = getSession()->getPluginsManager();
+ 		$plugins = getFactory()->getPluginsManager();
  		
  		$section = $this->getSection();
 

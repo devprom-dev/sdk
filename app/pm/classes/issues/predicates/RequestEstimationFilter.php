@@ -2,24 +2,21 @@
 
 class RequestEstimationFilter extends FilterPredicate
 {
- 	function _predicate( $filter )
- 	{
- 		switch ( $filter )
- 		{
- 			case 'simple':
- 				return " AND t.Estimation BETWEEN 0 AND 3 ";
-
- 			case 'normal':
- 				return " AND t.Estimation BETWEEN 4 AND 13 ";
-
- 			case 'hard':
- 				return " AND t.Estimation > 13 ";
-
- 			case 'undefined':
- 				return " AND t.Estimation IS NULL ";
- 				
- 			default:
- 				return "";
- 		}
- 	}
+	function _predicate( $filter )
+	{
+		$parts = preg_split('/:/', $filter);
+		if ( count($parts) > 1 ) {
+			$left = is_numeric($parts[0]) ? $parts[0] : 0;
+			$right = is_numeric($parts[1]) ? $parts[1] : 0;
+			return " AND t.Estimation BETWEEN ".$left." AND ".$right." ";
+		}
+		else {
+			if ( is_numeric($parts[0]) ) {
+				return " AND t.Estimation > ".$parts[0];
+			}
+			else {
+				return " AND t.Estimation IS NULL ";
+			}
+		}
+	}
 }

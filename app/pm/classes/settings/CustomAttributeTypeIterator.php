@@ -5,15 +5,13 @@ class CustomAttributeTypeIterator extends OrderedIterator
  	function getDbType()
  	{
  		$type = $this->get('ReferenceName');
- 		
  		switch ( strtolower($type) )
  		{
  			case 'dictionary':
- 				return 'REF_pm_CustomDictionaryId';
- 				
+ 				return 'REF_PMCustomDictionaryId';
  			case 'string':
+			case 'computed':
  				return 'varchar';
- 				
  			default:
  				return $type;
  		}
@@ -33,6 +31,7 @@ class CustomAttributeTypeIterator extends OrderedIterator
 
  			case 'string':
  			case 'date':
+			case 'computed':
  				$value_column = 'StringValue';
  				break;
 

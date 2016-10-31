@@ -15,14 +15,12 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
     			'Request' => 'Requests', 
     			'RequestTraceBase' => 'Requests',
     			'RequestLink' => 'Requests',
-    			'IssueState' => 'Requests',
     			'RequestType' => 'Requests',
      	        'Feature' => 'Features',
      			'FeatureType' => 'Features',
     		    'TaskType' => 'Tasks',
     			'PMBlogPost' => 'Blog',
     			'BlogPostFile' => 'Blog',
-     	        'StateBase' => '3',
      			'Activity' => '3',
 				'Attachment' => '3',
      			'Question' => '3',
@@ -35,6 +33,7 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
 				'CustomTag' => '3',
 				'RequestTag' => '3',
 				'WikiTag' => '3',
+                'WikiPageFile' => '3',
 				'Tag' => '3'
     		);
     

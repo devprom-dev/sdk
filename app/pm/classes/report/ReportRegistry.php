@@ -1,6 +1,6 @@
 <?php
 
-class ReportRegistry extends ObjectRegistrySQL
+class ReportRegistry extends ObjectRegistryArray
 {
  	var $reports = array();
 	
@@ -60,16 +60,21 @@ class ReportRegistry extends ObjectRegistrySQL
  	function createSQLIterator( $sql )
  	{
  	    $data_array = array();
+        $vpd_value = array_shift($this->getObject()->getVpds());
 
+        $template = array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools')));
 		$resource = getFactory()->getObject('ContextResource');
- 	    $vpd_value = array_shift($this->getObject()->getVpds());
- 	    
+        $resource_it = $resource->getAll();
+
  	    foreach( $this->reports as $report )
  	    {
  	        $data = array();
 
 			if ( $report['description'] == '' ) {
-				$resource_it = $resource->getExact($report['name']);
+				$resource_it->moveToId($report['name']);
+                if ( $resource_it->getId() == '' ) {
+                    $resource_it->moveToId($report['name'].':'.$template);
+                }
 				$report['description'] = preg_replace('/<\/?strong>/i', '', $resource_it->getHtmlDecoded('Caption'));
 			}
 
@@ -79,8 +84,9 @@ class ReportRegistry extends ObjectRegistrySQL
     		$data['Url'] = $report['url'];
     		$data['QueryString'] = $report['query'];
     		$data['Category'] = $report['category'];
-    		$data['Type'] = $report['type'];
+    		$data['Type'] = $report['type'] != '' ? $report['type'] : 'table';
     		$data['Module'] = $report['module'];
+			$data['Icon'] = $report['icon'];
     		$data['Report'] = $report['report'];
     		$data['Author'] = $report['author'];
     		$data['WidgetClass'] = $report['widget'];

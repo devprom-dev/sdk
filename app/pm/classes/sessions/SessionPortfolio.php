@@ -8,8 +8,6 @@ include SERVER_ROOT_PATH."pm/views/common/PageSettingPortfolioBuilder.php";
 
 class SessionPortfolio extends PMSession
 {
-    var $area_set;
-    
  	public function buildAccessPolicy( $cache_service )
  	{
  		return new AccessPolicyPortfolio( $cache_service, $this );
@@ -50,12 +48,9 @@ class SessionPortfolio extends PMSession
     
     protected function buildProjectData( & $project_it )
     {
-        global $model_factory;
-        
         $result = array();
-        
+
         $result['project'] = $project_it;
-        
         $result['linked'] = $project_it->getRef('LinkedProject');
         
         return $result;
@@ -63,19 +58,13 @@ class SessionPortfolio extends PMSession
     
     protected function buildParticipantData()
  	{
-        global $model_factory;
-        
         $result = array();
-
         $user_it = $this->getUserIt();
-        
-        $project_it = $this->getProjectIt();
-        
-        $participant = $model_factory->getObject('pm_Participant');
-        
+
+        $participant = new Participant();
         $result['participant'] = $participant->createCachedIterator( array( array(
             'pm_ParticipantId' => $user_it->getId(),
-            'Project' => $project_it->getId(),
+            'Project' => $this->getProjectIt()->getId(),
             'SystemUser' => $user_it->getId(),
             'Caption' => $user_it->getDisplayName(),
             'Email' => $user_it->get('Email')
@@ -84,21 +73,21 @@ class SessionPortfolio extends PMSession
         $result['roles'] = array (
             'lead' => true
         );
-
         $result['participant_roles'] = array (
             'lead' => true
         );
-        
         return $result;
  	}
 
- 	public function & buildOriginationService( $cache_service )
- 	{
+ 	public function buildOriginationService( $cache_service ) {
  		return new ModelPortfolioOriginationService($this, $cache_service);
  	}
  	
- 	function getLanguageUid() 
- 	{
+ 	function getLanguageUid() {
  	    return $this->getUserIt()->get('Language') == 2 ? 'EN' : 'RU';
  	}
+
+    function getProjectObject() {
+        return new Portfolio();
+    }
 }

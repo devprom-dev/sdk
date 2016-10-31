@@ -16,7 +16,7 @@ class HourController extends RestController
 			$object = getFactory()->getObject('ActivityTask');
 		}
 
-		foreach( array('Participant', 'Iteration', 'OrderNum','Caption') as $field ) {
+		foreach( array('Iteration', 'OrderNum','Caption') as $field ) {
 			$object->addAttributeGroup($field, 'system');
 		}
 		return $object;
@@ -39,10 +39,13 @@ class HourController extends RestController
 	
 	function getFilterResolver(Request $request)
 	{
-		return array (
+		return array_merge(
+			parent::getFilterResolver($request),
+			array (
 				new TimeFilterResolver(
 						$this->getClassName($request), $request->get('object')
 				)
+			)
 		);
 	}
 }

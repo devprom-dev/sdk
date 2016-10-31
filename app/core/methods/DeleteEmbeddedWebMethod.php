@@ -7,13 +7,13 @@ class DeleteEmbeddedWebMethod extends WebMethod
  	function execute_request()
  	{
 		$class_name = getFactory()->getClass($_REQUEST['class']);
-		if ( $class_name == '' ) return;
- 		$object = getFactory()->getObject($class_name);
+		if ( !class_exists($class_name,false) ) return;
 
+ 		$object = getFactory()->getObject($class_name);
  	 	if ( $_REQUEST['anchorObject'] > 0 && $_REQUEST['anchorClass'] != '' )
  		{
 			$class_name = getFactory()->getClass($_REQUEST['anchorClass']);
-			if ( $class_name != '' ) {
+			if ( class_exists($class_name, false) ) {
 				$object->setVpdContext(getFactory()->getObject($class_name)->getExact($_REQUEST['anchorObject']));
 			}
  		}

@@ -6,7 +6,7 @@ class WysiwygExportWordPage extends PMPage
 {
     function getObject()
     {
-        return getFactory()->getObject('entity');
+        return getFactory()->getObject('cms_SystemSettings');
     }
 
     function getTable()

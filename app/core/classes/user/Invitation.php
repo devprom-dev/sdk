@@ -28,7 +28,7 @@ class Invitation extends Metaobject
 	
 	function getPageName()
 	{
-		return class_exists('PortfolioMyProjectsBuilder', false) && getSession() instanceof PMSession
+		return defined('PERMISSIONS_ENABLED') && getSession()->getProjectIt()->getId() != '' && !getSession()->getProjectIt()->IsPortfolio()
 			? getSession()->getApplicationUrl($this).'invite'
 			: '/invite';
 	}

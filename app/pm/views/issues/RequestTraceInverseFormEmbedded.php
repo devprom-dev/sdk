@@ -32,8 +32,8 @@ class RequestTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
 				$object = $this->getAttributeObject( $attr );
 
 				$field = new FieldAutoCompleteObject( $object );
-				$field->setTitle( $object->getDisplayName() ); 
-				
+				$field->setTitle( $object->getDisplayName() );
+				$field->setCrossProject();
 				return $field;
 				
  			default:
@@ -56,6 +56,10 @@ class RequestTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  		
  		return $title;
  	}
- 	
- 	private $show_delivery_date = false;
+
+	function getListItemsAttribute() {
+		return 'ChangeRequest';
+	}
+
+	private $show_delivery_date = false;
 }

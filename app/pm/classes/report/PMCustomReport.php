@@ -30,31 +30,27 @@ class PMCustomReport extends Metaobject
 	{
 		return getSession()->getApplicationUrl().'project/reports?';
 	}
-	
-	function getPageNameObject( $object_id = '', $report_it = null )
-	{
-		$area_it = getFactory()->getObject('FunctionalArea')->getAll();
-		
-	    $url = str_replace(
-	            $this->getPage(), 
-	            trim($this->getPage(),'?').'/'.$area_it->getId().'?', 
-	            parent::getPageNameObject($object_id)
-	    );
 
-	    if ( $report_it instanceof PMReportIterator )
-	    {
-	        $url .= '&Category='.$area_it->getId().'&ReportBase='.$report_it->getId();
-	    }
-	    
-		if ( $report_it instanceof ModuleIterator )
-	    {
-	        $url .= '&Category='.$area_it->getId().'&Module='.$report_it->getId();
-	    }
-	    
-	    return $url;
+	function getSaveUrl($object_id = '', $report_it = null)
+	{
+		$url = str_replace(
+			$this->getPage(),
+			trim($this->getPage(),'?').'/favs?',
+			$this->getPageNameObject($object_id)
+		);
+
+		if ( $report_it instanceof PMReportIterator ) {
+			$url .= '&Category=favs&ReportBase='.$report_it->getId();
+		}
+
+		if ( $report_it instanceof ModuleIterator ) {
+			$url .= '&Category=favs&Module='.$report_it->getId();
+		}
+
+		return $url;
 	}
-	
-	function getDefaultAttributeValue( $name ) 
+
+	function getDefaultAttributeValue( $name )
 	{
 		switch ( $name )
 		{

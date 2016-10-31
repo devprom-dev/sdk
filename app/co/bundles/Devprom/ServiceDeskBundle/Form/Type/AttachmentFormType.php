@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityRepository;
 
 class AttachmentFormType extends AbstractType
 {
-
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add('file', 'file', array(
@@ -20,7 +19,8 @@ class AttachmentFormType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            'data_class' => 'Devprom\ServiceDeskBundle\Entity\IssueAttachment'
+            'data_class' => 'Devprom\ServiceDeskBundle\Entity\IssueAttachment',
+            'csrf_protection' => false
         ));
     }
 

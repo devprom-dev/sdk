@@ -6,15 +6,16 @@ class WikiConverterPreview
 {
  	var $parser, $wiki_it, $b_draw_contents, $b_draw_section_num = true;
 	private $root_it;
- 	
+
  	function setObjectIt( $wiki_it )
  	{
 		$this->root_it = $wiki_it->copy();
 
 		$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
 		$editor->setObjectIt($wiki_it);
-		
- 		$this->parser = $editor->getHtmlSelfSufficientParser();
+
+ 		$this->parser = $editor->getHtmlParser();
+		$this->parser->setRequiredExternalAccess();
  		$this->parser->setObjectIt($wiki_it);
 
  		$this->parser->setHrefResolver(function($wiki_it) {
@@ -32,7 +33,6 @@ class WikiConverterPreview
 				array_merge(
 					array(
 						new WikiRootTransitiveFilter($wiki_it->getId()),
-                        new FilterNotInPredicate($wiki_it->getId()),
 						new SortDocumentClause()
 					)
 				)

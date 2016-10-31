@@ -129,6 +129,13 @@
                                         <div class="text">
                                             {% autoescape false %}{{ comment.text|unescapeHtml }}{% endautoescape %}
                                         </div>
+                                        <ul>
+                                            {% for attachment in comment.attachments %}
+                                                <li>
+                                                    <a href="{{ path('comment_attachment_download', { 'attachmentId' : attachment.id }) }}">{{ attachment.originalFilename }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
                                     </div>
                                 </div>
                             {% endfor %}

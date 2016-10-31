@@ -19,6 +19,11 @@ class CheckpointEntryBase
         return '';
     }
 
+    function getWarning()
+    {
+        return $this->getTitle().': '.translate('нет');
+    }
+
     function getUrl()
     {
         return '/admin/checks.php';
@@ -105,9 +110,6 @@ class CheckpointEntryBase
 
     function checkWindows()
     {
-        global $_SERVER;
-
-        return strpos($_SERVER['OS'], 'Windows') !== false
-            || $_SERVER['WINDIR'] != ''  || $_SERVER['windir'] != '';
+        return EnvironmentSettings::getWindows();
     }
 }

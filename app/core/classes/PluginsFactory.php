@@ -3,51 +3,89 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include 'PluginBase.php';
-@include SERVER_ROOT_PATH."plugins/plugins.php";
-@include SERVER_ROOT_PATH."plugins/_methods.php";
 
 class PluginsFactory
 {
-	private static $singleInstance = null;
- 	private $namespaces = array();
-	private $plugins = array();
-	private $resources = array();
- 	private $plugins_by_sections = array();
+	protected static $singleInstance = null;
+	protected $namespaces = array();
+	protected $plugins = array();
+	protected $resources = array();
+	protected $plugins_by_sections = array();
+	protected $classes = array();
+	protected $authFactories = null;
+	protected $persisted = false;
 
 	public static function Instance()
 	{
 		global $plugins;
 
 		if ( is_object(static::$singleInstance) ) return static::$singleInstance;
+        static::$singleInstance = new static();
+        $plugins = static::$singleInstance;
+        static::$singleInstance->persisted = true;
 
-		$data = @file_get_contents(self::getFileName());
+        if ( function_exists('opcache_invalidate') ) {
+            opcache_invalidate(SERVER_ROOT_PATH."plugins/plugins.php", true);
+        }
+        @include SERVER_ROOT_PATH."plugins/plugins.php";
+
+        $data = @file_get_contents(self::getFileName());
 		if ( $data != '' ) {
-			static::$singleInstance = unserialize($data);
+			static::$singleInstance = @unserialize($data);
+            if ( static::$singleInstance instanceof stdClass ) {
+                static::$singleInstance = new static();
+                static::$singleInstance->buildPlugins();
+            }
+            else if ( is_object(static::$singleInstance) ) {
+                foreach (static::$singleInstance->namespaces as $namespace) {
+                    if ($namespace instanceof __PHP_Incomplete_Class) {
+                        static::$singleInstance = new static();
+                        static::$singleInstance->buildPlugins();
+                        break;
+                    }
+                }
+            }
 		}
 		else {
-			static::$singleInstance = new static();
-		}
+            static::$singleInstance->buildPlugins();
+        }
 
+        if ( function_exists('opcache_invalidate') ) {
+            opcache_invalidate(static::getMethodsFileName(), true);
+        }
+		if ( !file_exists(static::getMethodsFileName()) ) {
+            static::$singleInstance->buildMethods();
+        }
+        include static::getMethodsFileName();
+
+        static::$singleInstance->persisted = false;
 		$plugins = static::$singleInstance;
 		return static::$singleInstance;
 	}
 
-	protected function __construct()
- 	{
- 		$this->buildPlugins();
- 	}
-
-	public function __sleep()
+	function __destruct()
 	{
-		return array('namespaces', 'plugins', 'resources', 'plugins_by_sections');
+		if ( $this->persisted ) return;
+        $this->persisted = true;
+
+        foreach( $this->namespaces as $plugin ) {
+            $plugin->checkLicense();
+        }
+        @mkdir(dirname(self::getFileName()), 0777, true);
+        @file_put_contents(self::getFileName(), serialize($this));
 	}
 
-	public function __wakeup()
-	{
+	public function __sleep() {
+		return array('namespaces', 'plugins', 'resources', 'plugins_by_sections', 'classes', 'authFactories', 'persisted');
+	}
+
+	public function __wakeup() {
 	}
 
  	protected function buildPlugins()
  	{
+		$cacheLock = new \CacheLock();
+
  		$classes = array_filter( get_declared_classes(), function($value) {
  			return is_subclass_of($value, 'PluginBase');
  		});
@@ -63,9 +101,9 @@ class PluginsFactory
 		}
 		
 		$this->plugins = $plugins;
-		$this->buildMethods();
+		$this->buildClasses();
 
-		file_put_contents(self::getFileName(), serialize($this));
+		$cacheLock->Release();
  	}
  	
  	protected function registerPlugin( $plugin )
@@ -125,17 +163,6 @@ class PluginsFactory
 	function getNamespaces()
 	{
 		return $this->namespaces; 	
-	}
-	
-	function getPluginByFileName( $filename )
-	{
- 		foreach ( $this->namespaces as $namespace )
- 		{
- 			if ( strtolower($namespace->getFileName()) == strtolower($filename) )
- 			{
- 				return $namespace;
- 			}
- 		}
 	}
 	
 	function getPluginsForSection( $section )
@@ -248,26 +275,20 @@ class PluginsFactory
  	
  	function getCommand( $namespace, $section, $name )
  	{
- 		if ( !is_array($this->plugins[$namespace]) )
- 		{
- 			return;
- 		}
- 		
- 		foreach ( $this->plugins[$namespace] as $plugin )
- 		{
- 			if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) )
- 			{
-	 			$command = $plugin->getCommand( $name );
-	 			
-			 	foreach ( $command['includes'] as $include )
-			 	{
-			 		include ( SERVER_ROOT_PATH.'plugins/'.$include );
-			 	}
-			 	
-			 	$command = new $name;
-			 	
-			 	return $command;
- 			}
+ 		if ( !is_array($this->plugins[$namespace]) ) return;
+
+ 		foreach ( $this->plugins[$namespace] as $plugin ) {
+ 			if ( !is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) ) continue;
+
+			$command = $plugin->getCommand( $name );
+			foreach ( $command['includes'] as $include ) {
+				include ( SERVER_ROOT_PATH.'plugins/'.$include );
+			}
+
+			if ( class_exists($name, false) ) {
+				$command = new $name;
+				return $command;
+			}
  		}
  	}
 
@@ -348,7 +369,7 @@ class PluginsFactory
 		 			foreach ( $plugin_tabs as $tab )
 		 			{
 		 				$tab['url'] = $base_url.$tab['module'].$tab['url'];
-		 				$tab['uid'] = $tab['module'];
+						if ( $tab['uid'] == '' ) $tab['uid'] = $tab['module'];
 		 				$skip = false;
 		 				
 		 				if ( is_array($tab['items']) )
@@ -368,7 +389,7 @@ class PluginsFactory
 	 			}
 	 		}
  		}
- 		
+
  		return $tabs;
  	}
 
@@ -396,28 +417,24 @@ class PluginsFactory
  		
  		return $menus;
  	}
- 	
- 	function getClasses()
+
+	function getClasses() {
+		return $this->classes;
+	}
+
+ 	protected function buildClasses()
  	{
- 		$classes = array();
- 		
- 		foreach ( $this->namespaces as $plugin )
- 		{
- 			$classes_dir = SERVER_ROOT_PATH.'plugins/'.
- 				$plugin->getNamespace().'/classes';
- 				
+ 		foreach ( $this->namespaces as $plugin ) {
+ 			$classes_dir = SERVER_ROOT_PATH . 'plugins/' . $plugin->getNamespace() . '/classes';
 			$info = $plugin->getClasses();
 			
-			foreach ( $info as $key => $class )
-			{
+			foreach ( $info as $key => $class ) {
 				$info[$key][1] = $classes_dir.'/'.$info[$key][1];
 				$info[$key][3] = 'plugins';
 			}
-			
- 			$classes = array_merge($classes, $info); 
+
+			$this->classes = array_merge($this->classes, $info);
  		}
- 		
- 		return $classes;
  	}
  	
  	function getCommonBuilders()
@@ -497,16 +514,19 @@ class PluginsFactory
  		return array();
 	}
 
-	function getAuthFactories()
+	function getAuthFactories() {
+		if ( !is_array($this->authFactories) ) {
+			$this->authFactories = $this->buildAuthFactories();
+		}
+		return $this->authFactories;
+	}
+
+	protected function buildAuthFactories()
 	{
 		$factories = array();
-		
-	 	foreach ( $this->namespaces as $namespace )
- 		{
-	 		$factories = array_merge(
-	 			$factories, $namespace->getAuthorizationFactories() );
+	 	foreach ( $this->namespaces as $namespace ) {
+	 		$factories = array_merge( $factories, $namespace->getAuthorizationFactories() );
  		}
- 		
  		return $factories;
 	}
 	
@@ -532,28 +552,24 @@ class PluginsFactory
 	
 	public function enablePlugin( $plugin_name, $enabled = true )
 	{
-		if ( $enabled )
-		{
+		if ( $enabled ) {
 			unlink(SERVER_ROOT_PATH.'plugins/blocked/'.$plugin_name);
 		}
-		else 
-		{
+		else  {
 			if ( !file_exists(SERVER_ROOT_PATH.'plugins/blocked') ) mkdir(SERVER_ROOT_PATH.'plugins/blocked');
-			
 			file_put_contents(SERVER_ROOT_PATH.'plugins/blocked/'.$plugin_name, '');
 		}
-		
+
 		$this->buildPluginsList();
 	}
 	
 	public function buildPluginsList()
 	{
+		$cacheLock = new \CacheLock();
 		$files = array();
-		
-		if ( $handle = opendir(SERVER_ROOT_PATH.'plugins') ) 
-		{
-		    while (false !== ($file = readdir($handle)))
-			{
+
+		if ( $handle = opendir(SERVER_ROOT_PATH.'plugins') ) {
+		    while (false !== ($file = readdir($handle))) {
 		    	$path = SERVER_ROOT_PATH.'plugins/'.$file;
 		    	if ( in_array($file, array(".","..","plugins.php","_factory.php","_methods.php")) || is_dir($path) ) continue;
 		    	if ( file_exists(SERVER_ROOT_PATH.'plugins/blocked/'.$file) ) continue;
@@ -569,11 +585,8 @@ class PluginsFactory
 		}
 		file_put_contents(SERVER_ROOT_PATH.'plugins/plugins.php', '<?php '.PHP_EOL.join(PHP_EOL,$plugins));
 
-		unlink(self::getFileName());
-		unlink(SERVER_ROOT_PATH."plugins/_methods.php");
-
-	    // reset opcache after list of plugins have been changed
-	    if ( function_exists('opcache_reset') ) opcache_reset();
+		$this->invalidate();
+		$cacheLock->Release();
 	}
 	
  	protected function buildMethods()
@@ -597,10 +610,9 @@ class PluginsFactory
 		    	closedir($handle);
 			}
  		}
-		file_put_contents(SERVER_ROOT_PATH."plugins/_methods.php", $data);
 
-		// reset opcache after list of plugins have been changed
-		if ( function_exists('opcache_reset') ) opcache_reset();
+        @mkdir(dirname(self::getMethodsFileName()), 0777, true);
+        file_put_contents(self::getMethodsFileName(), $data);
  	}
 
  	function _getPluginClass4Section ( $section )
@@ -621,9 +633,21 @@ class PluginsFactory
  		}
  	}
 
-	protected static function getFileName() {
-		return SERVER_ROOT_PATH."plugins/_factory.php";
+	public function invalidate()
+	{
+        unlink(self::getFileName());
+        unlink(self::getMethodsFileName());
+
+        $this->persisted = true;
 	}
+
+	protected static function getFileName() {
+		return CACHE_PATH."/appcache/global/pluginsFactory.php";
+	}
+
+	protected static function getMethodsFileName() {
+        return CACHE_PATH."/appcache/global/pluginsMethods.php";
+    }
 }
 
 function plugins_factory_index_sort( $left, $right )

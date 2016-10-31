@@ -1,24 +1,33 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 use Devprom\ProjectBundle\Service\Model\ModelService;
+use Devprom\ProjectBundle\Service\Tooltip\TooltipProjectService;
 
 include SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
 include SERVER_ROOT_PATH.'core/methods/BoardExportWebMethod.php';
 include SERVER_ROOT_PATH.'core/methods/HtmlExportWebMethod.php';
-
+include SERVER_ROOT_PATH.'core/methods/XmlExportWebMethod.php';
+include_once SERVER_ROOT_PATH."pm/methods/UndoWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/methods/c_report_methods.php';
+include_once SERVER_ROOT_PATH.'pm/methods/WikiExportBaseWebMethod.php';
+
 
 include 'PMFormEmbedded.php';
 include 'PMPageForm.php';
 include 'PMPageTable.php';
 include 'PageSectionLifecycle.php';
-include 'PMLastChangesSection.php';
+include "PageSectionSpentTime.php";
+include "FieldHierarchySelectorAppendable.php";
 include 'FieldCustomDictionary.php';
 include 'FieldWYSIWYG.php';
+include 'NetworkSection.php';
+include 'PMPageNavigation.php';
+include_once 'PMLastChangesSection.php';
+include_once "DetailsInfoSection.php";
 include_once 'BulkForm.php';
+include 'converters/WikiIteratorExportHtml.php';
+include 'converters/WikiIteratorExportPdf.php';
 
-include_once SERVER_ROOT_PATH.'pm/classes/common/ObjectMetadataSharedProjectBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
 include SERVER_ROOT_PATH.'pm/views/versioning/IteratorExportSnapshot.php';
@@ -32,13 +41,12 @@ class PMPage extends Page
     protected $report_uid;
     
     protected $report_base;
+	protected $defaultListWidget = null;
+    protected $nearestInfo = array();
     
     function PMPage()
  	{
- 		// extend metadata with the "Project" field for entities shared between projects, it impacts on UI representation
-	    getSession()->addBuilder( new ObjectMetadataSharedProjectBuilder() );
 	    getSession()->addBuilder( new WorkflowModelBuilder() );
-	    
  		parent::Page();
  	}
  	
@@ -70,17 +78,15 @@ class PMPage extends Page
  	
  	function getRenderParms()
  	{
- 		$builders = getSession()->getBuilders('PageSettingBuilder');
-        
-        foreach( $builders as $builder )
-        {
+ 	    $parms = parent::getRenderParms();
+
+        foreach( getSession()->getBuilders('PageSettingBuilder') as $builder ) {
             $builder->build( $this->getSettingsBuilder() );
         }
 
- 		$report = getFactory()->getObject('PMReport');
-	    
 		if ( $_REQUEST['report'] != '' )
         {
+            $report = getFactory()->getObject('PMReport');
             $report_it = $report->getExact($_REQUEST['report']);
 
             if ( is_numeric($_REQUEST['report']) && !getFactory()->getAccessPolicy()->can_read($report_it) )
@@ -113,43 +119,97 @@ class PMPage extends Page
 	 	        );
 	            $this->setModule( $report_it->get('Module') );
             }
+
+            if ( $this->getReport() == '' ) {
+                $report_it = $report->getByModule( $this->getModule() );
+                $this->setReport($report_it->getId());
+                $this->setReportBase($report_it->getId());
+            }
         }
 
- 		return parent::getRenderParms();
+        $infos = $this->getInfoSections();
+		if ( is_array($infos) )	{
+			foreach ( $infos as $section ) {
+				if ( $section instanceof DetailsInfoSection ) {
+					$section->setActive($this->isDetailsActive());
+				}
+			}
+		}
+
+		return $parms;
  	}
- 	
+
+    protected function buildNavigationParms() {
+        return new PMPageNavigation($this);
+    }
+
 	function getFullPageRenderParms()
 	{
-		$report = getFactory()->getObject('PMReport');
-		
-        if ( $this->getReport() == '' && $this->getModule() != '' )
-        {
-			$report_it = $report->getByModule( $module_uid );
-                
-            $this->setReport($report_it->getId());
-                
-            $this->setReportBase($report_it->getId());
-        }
-
 		$parms = parent::getFullPageRenderParms();
                 
-	    if ( $this->getReport() != '' )
-        {
-            $parms['navigation_title'] = $report->getExact( $this->getReport() )->getDisplayName();
+	    if ( $this->getReport() != '' ) {
+            $parms['navigation_title'] = getFactory()->getObject('PMReport')->getExact( $this->getReport() )->getDisplayName();
         }
-	    
-		return array_merge( $parms, 
-				array (
-					'caption_template' => 'pm/PageTitle.php',
-				    'project_code' => getSession()->getProjectIt()->get('CodeName'),
-					'project_template' => getSession()->getProjectIt()->get('Tools'),
-					'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
-					'menus' => $this->getTopMenus(),
-					'report' => $this->getReportBase()
+
+		$bodyExpanded = $_COOKIE['menu-state'] == '' && defined('MENU_STATE_DEFAULT')
+							? MENU_STATE_DEFAULT == 'minimized' : ($_COOKIE['menu-state'] == 'minimized');
+
+		if ( $bodyExpanded ) {
+			$isPortfolio = getSession()->getProjectIt()->IsPortfolio();
+			if ( is_array($parms['navigation_parms']['areas']['stg']) ) {
+                $parms['navigation_parms']['areas']['stg']['menus']['']['items'] =
+					array (
+						array (
+							'name' => text(2197),
+							'url' => getSession()->getApplicationUrl().'settings'
+						)
+					);
+			}
+			$parms['navigation_parms']['areas']['more'] = array (
+				'name' => translate('Дополнительно'),
+				'menus' => array (
+					array (
+						'name' => '',
+						'items' => array (
+							($isPortfolio ?
+								array (
+									'name' => text(1292),
+									'url' => getSession()->getApplicationUrl().'profile'
+								) : array()),
+							array (
+								'name' => text(2194),
+								'url' => getSession()->getApplicationUrl().'project/reports'
+							)
+						)
+					)
 				)
+			);
+		}
+
+        if ( $parms['navigation_url'] == '' && $this->needDisplayForm() ) {
+            $info = $this->getPageWidgetNearestUrl();
+            $parms['navigation_url'] = $info['url'];
+            $parms['navigation_title'] = $info['name'];
+        }
+
+		return array_merge( $parms, 
+			array (
+				'caption_template' => 'pm/PageTitle.php',
+				'project_code' => getSession()->getProjectIt()->get('CodeName'),
+				'project_template' => getSession()->getProjectIt()->get('Tools'),
+				'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
+				'report' => $this->getReportBase(),
+				'widget_id' => $this->getReport() != '' ? $this->getReport() : $this->getModule(),
+				'bodyExpanded' => $bodyExpanded,
+				'search_url' => getSession()->getApplicationUrl().'search.php'
+			)
 		);
 	}
- 	
+
+    function isDetailsActive() {
+        return true;
+    }
+
 	function render( $view = null )
 	{
 		if ( $_REQUEST['attributeonly'] != '' )
@@ -172,21 +232,12 @@ class PMPage extends Page
 	
 	function getRedirect()
 	{
-        $service = new WorkspaceService();
-        
- 		$this->areas = $service->getFunctionalAreas();
+        $state = new DeploymentState();
+        if ( !$state->IsReadyToBeUsed() ) return '/install';
+        if ( $state->IsMaintained() ) return '/503';
 
- 		foreach( $this->areas['favs']['menus'] as $menu => $value )
- 		{
-	 		foreach( $this->areas['favs']['menus'][$menu]['items'] as $key => $value )
-	 		{
-	 			$this->areas['favs']['menus'][$menu]['items'][$key]['entry-point'] = true;
-	 			
-	 			break;
-	 		}
-	 		
-	 		break;
- 		}
+	    $navigation_parms = $this->getNavigationParms();
+ 		$areas = $navigation_parms['areas'];
 
  		if ( $_REQUEST['tab'] != '' )
  		{
@@ -194,7 +245,7 @@ class PMPage extends Page
  		    
  		    if ( count($parts) == 3 )
  		    {
-     		    foreach( $this->areas as $area )
+     		    foreach( $areas as $area )
      		    {
      		    	if ( !is_array($area['menus']) ) continue;
      		    	
@@ -224,8 +275,7 @@ class PMPage extends Page
  		if ( $use_entry_point )
  		{
  		    // if no tab is specified then use default entry
- 		    
-	        foreach( $this->areas as $area )
+	        foreach( $areas as $area )
  		    {
  		    	if ( !is_array($area['menus']) ) continue;
  		    	
@@ -235,13 +285,13 @@ class PMPage extends Page
                     {
                         if ( $item['entry-point'] && $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) )
                         {
-                            return $item['url'];
+							if ( $this->checkWidgetExists($item) ) return $item['url'];
                         }
                     }
 	            }
  		    }
  		    
- 			foreach( $this->areas as $area )
+ 			foreach( $areas as $area )
  		    {
 	            foreach ( $area['menus'] as $menu )
 	            {
@@ -249,7 +299,7 @@ class PMPage extends Page
                     {
                         if ( $item['url'] != '' && !in_array($item['uid'], array('navigation-settings')) )
                         {
-                            return $item['url'];
+							if ( $this->checkWidgetExists($item) ) return $item['url'];
                         }
                     }
 	            }
@@ -257,11 +307,30 @@ class PMPage extends Page
  		}
 
 		if ( array_key_exists('fitmenu', $_REQUEST) ) {
-			$url = $this->getPageWidgetNearestUrl();
-			if ( $url != self::getPageUrl() ) {
-				return $url;
+			$info = $this->getPageWidgetNearestUrl();
+			if ( $info['url'] != self::getPageUrl() ) {
+				return $info['url'];
 			}
 		}
+
+		return parent::getRedirect();
+	}
+
+	protected function checkWidgetExists( $item ) {
+		if ( $item['report'] != '' ) {
+			$report_it = getFactory()->getObject('PMReport')->getExact($item['report']);
+			if ( $report_it->getId() == '' ) return false;
+		}
+		if ( $item['module'] != '' ) {
+			$module_it = getFactory()->getObject('Module')->getExact($item['module']);
+			if ( $module_it->getId() == '' ) return false;
+		}
+		list($namespace, $module) = preg_split('/\//', $item['module']);
+		if ( $namespace != '' && $module != '' ) {
+			$module = PluginsFactory::Instance()->getModule( $namespace, 'pm', $module );
+			if ( !is_array($module) ) return false;
+		}
+		return true;
 	}
 	
 	function getTabsTemplate()
@@ -269,271 +338,45 @@ class PMPage extends Page
 		return 'pm/PageTabs.php'; 	
 	}
 	
-	function getTabsParameters()
-	{
-	    $session = getSession();
-	     
-	    $project_it = $session->getProjectIt();
-	     
-	    return array_merge( parent::getTabsParameters(), array (
-	        'project_code' => $project_it->get('CodeName')
-	    ));
-	}
-	
-	function getTopMenus()
- 	{
- 		global $plugins, $model_factory;
- 		
- 		$part_it = getSession()->getParticipantIt();
- 		
- 		$menus = array();
-
- 		$plugin_menus = $plugins->getHeaderMenus( 'pm' );
-
-		foreach ( $plugin_menus as $menu )
-		{
-			$menus[] = array (
-				'class' => 'header_popup',
-				'button_class' => $menu['class'],
-				'title' => $menu['caption'],
-				'description' => $menu['title'],
-				'url' => $menu['url'],
-				'items' => $menu['actions'],
-				'icon' => $menu['icon'],
-				'id' => $menu['id']
-			);
-		}
- 		
- 		// quick menu actions
-		$actions = array();
-
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_ChangeRequest'));
-
-		if ( !in_array($this->getModule(), array('issues-backlog', 'issues-board', 'kanban/requests')) )
-		{
-			$info = getFactory()->getObject('PMReport')->getExact('productbacklog')->buildMenuItem();
-			
-			$method->setRedirectUrl(
-					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
-			);
-		}
-		else
-		{
-			$method->setRedirectUrl('donothing');
-		}
-		
-		if ( $method->hasAccess() )
-		{
-			
-			$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query( 
-					array (
-							new FilterBaseVpdPredicate()
-					)
-				);
-			
-			while ( !$type_it->end() )
-			{
-				$actions[] = array ( 
-						'name' => translate($type_it->getDisplayName()),
-						'url' => $method->getJSCall( 
-									array (
-										'Type' => $type_it->getId(),
-										'area' => $this->getArea()
-									),
-									translate($type_it->getDisplayName())
-								 ),
-						'uid' => $type_it->get('ReferenceName')
-						
-				);
-				
-				$type_it->moveNext();
-			}
-
-			$actions[] = array ( 
-					'name' => $method->getObject()->getDisplayName(),
-					'url' => $method->getJSCall( 
-								array (
-									'area' => $this->getArea()
-								)
-							 ),
-					'uid' => 'issue'
-			);
-			
-			$template_it = getFactory()->getObject('RequestTemplate')->getAll();
-			
-			if ( $template_it->count() > 0 && $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-			
-			while( !$template_it->end() )
-			{
-				$actions[] = array ( 
-						'name' => $template_it->getDisplayName(),
-						'url' => $method->getJSCall( 
-									array (
-										'template' => $template_it->getId(),
-										'area' => $this->getArea()
-									)
-								 ),
-						'uid' => 'template'.$template_it->getId()
-				);
-				
-				$template_it->moveNext();
-			}
-		}
-
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Task'));
-		
-		if ( !in_array($this->getModule(), array('tasks-list', 'tasks-board')) )
-		{
-			$info = getFactory()->getObject('PMReport')->getExact('iterationplanningboard')->buildMenuItem();
-			
-			$method->setRedirectUrl(
-					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
-			);
-		}
-		else
-		{
-			$method->setRedirectUrl('donothing');
-		}
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() && $method->hasAccess() )
-		{
-			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-
-			$actions[] = array ( 
-					'name' => $method->getObject()->getDisplayName(),
-					'url' => $method->getJSCall( 
-								array (
-									'Assignee' => getSession()->getUserIt()->getId(),
-									'area' => $this->getArea()
-								)
-							 ),
-					'uid' => 'task'
-					
-			);
-		}
-
-		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Question'));
-		
-		if ( $this->getReportBase() != 'project-question' )
-		{
-			$info = getFactory()->getObject('PMReport')->getExact('project-question')->buildMenuItem();
-			
-			$method->setRedirectUrl(
-					"function() { if($('form[id]').length < 1) window.location = '".$info['url']."'; }"
-			);
-		}
- 		else
-		{
-			$method->setRedirectUrl('donothing');
-		}
-		
-		if ( $method->hasAccess() )
-		{
-			if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
-
-			$actions[] = array ( 
-					'name' => $method->getObject()->getDisplayName(),
-					'url' => $method->getJSCall( 
-								array (
-									'area' => $this->getArea()
-								)
-							 ),
-					'uid' => 'question'
-			);
-		}
-		
-		$quick_actions = $plugins->getQuickActions('pm');
-		
-		if ( count($quick_actions) > 0 )
-		{
-			foreach ( $quick_actions as $action )
-			{
-				array_push( $actions, $action );
-			}
-		}
-		
-		if ( count($actions) > 0 )
-		{
-			$menus[] = array (
-				'class' => 'header_popup',
-				'button_class' => 'btn-warning',
-				'title' => translate('Создать'),
-				'items' => $actions,
-				'id' => 'navbar-quick-create'
-			);
-		}
-							
- 		
- 		$actions = array();
-
-		// profile actions
-		$actions = array();
-
-		$user_name = $part_it->getDisplayName();
-
-		$actions[] = array ( 
-		    'name' => translate('Профиль пользователя'),
-			'url' => '/profile'
-		);
-		
-		$policy = getFactory()->getAccessPolicy();
-		
-		if ( !in_array($policy->getRoleReferenceName(array_pop($policy->getRoles())), array('guest','linkedguest')) ) 
-		{
-		    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-		    
-			$user_name = $part_it->getDisplayName();
-
-			$actions[] =  array ( 
-			    'name' => translate('Профиль участника'),
-				'url' => getSession()->getApplicationUrl().'profile' 
-			);
-		}
-		
-		if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-		
-		$actions[] = array ( 
-			    'name' => text(1811),
-				'url' => getFactory()->getObject('Module')->getExact('project-reports')->get('Url') 
-		);
-		
-		$auth_factory = getSession()->getAuthenticationFactory();
-		 
-		if ( is_object($auth_factory) && $auth_factory->tokenRequired() )
-		{
-    	    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-    	    
-    	    array_push( $actions, array ( 
-    	        'name' => translate('Выйти'),
-    		    'url' => '/logoff' 
-    		));
-		}
-		
-		$menus[] = array (
-			'class' => 'header_popup',
-			'title' => getSession()->getUserIt()->getDisplayName(),
-			'items' => $actions
-		);
-		
- 		return $menus;
- 	}
-
- 	function getAreas()
- 	{
- 	    return $this->areas;
- 	}
- 	
  	function export()
  	{
- 		global $_REQUEST;
- 		
  		switch ( $_REQUEST['export'] )
  		{
  			case 'commentsthread':
  				return $this->exportCommentsThread();
- 				
+
+			case 'traces':
+				$object_it = $this->getObject()->getExact(preg_split('/[,-]/',$_REQUEST['ids']));
+				if ( $object_it->getId() == '' ) return;
+
+				$reference = $this->getObject()->getAttributeObject($_REQUEST['attribute']);
+				$ids = join(',',$object_it->fieldToArray($_REQUEST['attribute']));
+				if ( $ids == '' ) $ids = '0';
+
+				$it = getFactory()->getObject('ObjectsListWidget')->getAll();
+				while( !$it->end() )
+				{
+					if ( is_a($reference, $it->get('Caption')) ) {
+						$widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
+						exit(header('Location: '.$widget_it->getUrl(strtolower(get_class($reference)).'='.$ids)));
+					}
+					$it->moveNext();
+				}
+				return;
+
  			default:
- 				return parent::export();
+ 			    if ( $_REQUEST['export'] == 'html' && $this->needDisplayForm() ) {
+ 			        $object_it = $this->getObjectIt();
+                    if ( is_object($object_it) ) {
+                        $this->exportForm($object_it);
+                    }
+                    else {
+                        return parent::export();
+                    }
+                }
+                else {
+                    return parent::export();
+                }
  		}
  	}
  	
@@ -602,12 +445,9 @@ class PMPage extends Page
     
  	function exportCommentsThread()
  	{
- 		global $_REQUEST, $model_factory;
-
 		if ( $_REQUEST['object'] < 1 || $_REQUEST['objectclass'] == '' ) return;
 
-	 	$object = $model_factory->getObject($_REQUEST['objectclass']);
-	 	
+	 	$object = getFactory()->getObject($_REQUEST['objectclass']);
 	 	$object_it = $object->getExact($_REQUEST['object']);
 	 	
 	 	if ( !getFactory()->getAccessPolicy()->can_read($object_it) ) return;
@@ -622,148 +462,43 @@ class PMPage extends Page
 		
 		if ( $_REQUEST['form'] != '' )
 		{
-			$comment = $model_factory->getObject('Comment');
-			
+			$comment = getFactory()->getObject('Comment');
 			$comment->setVpdContext( $object_it );
 			
 		    $comment_it = $_REQUEST['comment'] > 0 
 		        ? $comment->getExact( $_REQUEST['comment'] )
 		        : $comment->getEmptyIterator();
-			
-			$form = new CommentForm( $comment_it->getId() > 0 
-				? $comment_it : $comment );
-			
-			$form->setControlUID( $control_uid );	
-			
-			if ( !$object instanceof WikiPage )
-			{
-				$form->setRedirectUrl( 'javascript: refreshCommentsThread(\\\''.$control_uid.'\\\');' );
-			}
-					
+
+            $form = $this->buildCommentForm( $comment_it, $control_uid );
+
 			$parms['prevcomment'] = $_REQUEST['prevcomment'];
 			
 			$form->render( $this->getRenderView(), $parms );
 		}
-		else
-		{
-			$comment_list = new CommentList( $object_it );
-			
-			$comment_list->setControlUID( $control_uid );	
-			
-			$comment_list->render( $this->getRenderView(), array() );
+		else {
+			$this->buildCommentList($object_it, $control_uid)->render( $this->getRenderView(), array() );
 		}
  	}
- 	
- 	function getProjectNavigationParms( $tab_uid )
- 	{
- 		$parms = parent::getProjectNavigationParms( $tab_uid );
- 		
-		$project_it = getSession()->getProjectIt();
 
-		$parms['current_project'] = $project_it->get('CodeName'); 
-		$parms['current_project_title'] = $project_it->getDisplayName();
-		
-		if ( !$project_it->IsPortfolio() && !$project_it->IsProgram() )
-		{
-			$project_it = $project_it->getParentIt();
-		}
-		
-		if ( $project_it->IsPortfolio() )
-		{
-		    $portfolio_it = $project_it;
-		    
-		    $parms['portfolio_title'] = translate('Группа проектов');
-		    $parms['subprojects_title'] = translate('Проекты в группе');
-		}
-		else
-		{
-		    $portfolio_it = $project_it;
-		    
-		    $parms['portfolio_title'] = translate('Программа');
-		    $parms['subprojects_title'] = translate('Подпроекты');
-		}
-		
-		$parms['current_portfolio'] = $portfolio_it->get('CodeName');
-		$parms['current_portfolio_title'] = $portfolio_it->getDisplayName();
-		
-	 	if ( $portfolio_it->get('CodeName') == 'my' )
-		{
-		    $parms['title'] = translate('Мои проекты');
-		}
-		else
-		{
-		    $parms['title'] = translate('Подпроекты');
-		}
-		
-		$parms['portfolio_actions'] = $this->getProgramNavitationActions($portfolio_it);
-		$parms['project_actions'] = $this->getProjectNavitationActions();
+ 	function buildCommentForm( $comment_it, $control_uid )
+    {
+        $form = new CommentForm(
+            $comment_it->getId() > 0 ? $comment_it : $comment_it->object
+        );
+        $form->setControlUID( $control_uid );
+        if ( $_REQUEST['dorefresh'] == 1 ) {
+            $form->setRedirectUrl( "javascript: refreshCommentsThread(\\'".$control_uid."\\');" );
+        }
+        return $form;
+    }
 
-		return $parms;
- 	}
- 	
- 	function getProgramNavitationActions($portfolio_it)
- 	{
- 	 	$portfolio_actions = array();
-		if ( $portfolio_it->IsProgram() )
-		{
-			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('ProjectLink'));
-			parse_str(ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $parms);
+    function buildCommentList( $object_it, $control_uid )
+    {
+        $comment_list = new CommentList( $object_it );
+        $comment_list->setControlUID( $control_uid );
+        return $comment_list;
+    }
 
-			$portfolio_actions[] = array (
-					'icon' => 'icon-plus',
-					'url' => $method->getJSCall($parms),
-					'name' => text('ee204')
-			);
-		}
-		return array_merge($portfolio_actions, $this->getAddParticipantActions());
- 	}
- 	
- 	function getProjectNavitationActions()
- 	{
- 		$project_actions = array();
-		
-		$module_it = getFactory()->getObject('Module')->getExact('ee/projectlinks');
-		if ( $module_it->getId() != '' )
-		{
-			$method = new ObjectCreateNewWebMethod(getFactory()->getObject('ProjectLink'));
-
-			parse_str(ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $sub_parms);
-			parse_str(ProjectLinkTypeSet::PROGRAM_QUERY_STRING, $program_parms);
-
-			$project_actions[] = array (
-					'icon' => 'icon-plus',
-					'url' => $method->getJSCall($sub_parms),
-					'name' => text('ee204')
-			);
-			$project_actions[] = array (
-					'icon' => 'icon-arrow-right',
-					'url' => $method->getJSCall($program_parms),
-					'name' => text('ee205')
-			);
-		} 		
-		
-		return array_merge($project_actions, $this->getAddParticipantActions());
- 	}
- 	
- 	function getAddParticipantActions()
- 	{
- 		if ( !class_exists('PortfolioMyProjectsBuilder', false) ) return parent::getAddParticipantActions();
-
- 		$actions = array();
- 		
- 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
-		if ( $method->hasAccess() )
-		{
-			$method->setRedirectUrl("function(){javascript:window.location='".getFactory()->getObject('Module')->getExact('permissions/participants')->get('Url')."'}");
-			$actions[] = array (
-					'icon' => 'icon-user', 
-			        'name' => text(2001),
-					'url' => $method->getJSCall()
-		    );
-		}
- 		return $actions;
- 	}
- 	
  	function getHint()
 	{
 		$resource = getFactory()->getObject('ContextResource');
@@ -815,6 +550,8 @@ class PMPage extends Page
 
 	function getPageWidgetNearestUrl()
 	{
+	    if ( count($this->nearestInfo) > 0 ) return $this->nearestInfo;
+
 		$report = getFactory()->getObject('PMReport');
 		$module = getFactory()->getObject('Module');
 		$service = new WorkspaceService();
@@ -857,22 +594,126 @@ class PMPage extends Page
 				if ( count($reports) > 0 ) {
 					$item = $reports[0]['report'];
 					if ( $item['type'] == 'report' ) {
-						return $report->getExact($item['id'])->getUrl();
+					    $report_it = $report->getExact($item['id']);
+                        $this->nearestInfo = array (
+                            'name' => $report_it->getDisplayName(),
+                            'url' => $report_it->getUrl(),
+                            'widget' => $report_it->copy()
+                        );
+						return $this->nearestInfo;
 					}
 					if ( $item['type'] == 'module' ) {
-						return $module->getExact($item['id'])->getUrl();
+					    $module_it = $module->getExact($item['id']);
+                        $this->nearestInfo = array (
+                            'name' => $module_it->getDisplayName(),
+                            'url' => $module_it->getUrl(),
+                            'widget' => $module_it->copy()
+                        );
+						return $this->nearestInfo;
 					}
 				}
-				$urls[] = $report_it->getUrl();
+                $urls[] = array (
+                    'name' => $report_it->getDisplayName(),
+                    'url' => $report_it->getUrl(),
+                    'widget' => $report_it->copy()
+                );
 			}
 		}
-		array_shift($urls);
+        return $this->nearestInfo = array_shift($urls);
 	}
 
 	function getPageUrl()
 	{
 		if ( !$this->needDisplayForm() ) return parent::getPageUrl();
-		$url = $this->getPageWidgetNearestUrl();
-		return $url != '' ? $url : parent::getPageUrl();
+        $info = $this->getPageWidgetNearestUrl();
+		return $info['url'] != '' ? $info['url'] : parent::getPageUrl();
 	}
+
+	function exportForm( $object_it )
+    {
+        if ( $_REQUEST['class'] == '' || !class_exists($_REQUEST['class']) ) {
+            throw new Exception('Required parameter is missed: "class" should be given');
+        }
+
+        $object_it = getFactory()->getObject('WikiPage')->createCachedIterator(
+            array (
+                array(
+                    'WikiPageId' => 1,
+                    'Caption' => $object_it->getDisplayName(),
+                    'Content' => $this->buildExportContent($object_it, true),
+                    'ContentEditor' => getSession()->getProjectIt()->get('WikiEditorClass')
+                )
+            )
+        );
+        $eit = new $_REQUEST['class']( $object_it );
+        $eit->setName($object_it->getDisplayName());
+        $eit->export();
+    }
+
+    protected function buildExportContent( $object_it, $skipTitle = false )
+    {
+        $extended = true;
+        $service = new TooltipProjectService( get_class($object_it->object), $object_it->getId(), $extended );
+        $data = $service->getData();
+        $traceAttributes = $object_it->object->getAttributesByGroup('trace');
+
+        ob_start();
+        if ( $skipTitle ) {
+            echo $data['type']['uid'];
+            echo '<br/>';
+            echo '<br/>';
+        }
+
+        foreach($data as $key => $section ) {
+            switch( $key ) {
+                case 'attributes':
+                    foreach( $section as $attribute ) {
+                        if ( $skipTitle && $attribute['name'] == 'Caption' ) continue;
+                        if ( in_array($attribute['name'], $traceAttributes) ) continue;
+
+                        echo '<b>'.$attribute['title'].'</b>: ';
+                        switch( $attribute['type'] ) {
+                            case 'wysiwyg':
+                                echo $attribute['text'];
+                                echo '<br/><br/>';
+                                break;
+                            default:
+                                if ( $attribute['name'] == 'Caption' ) {
+                                    echo $data['type']['uid'].' ';
+                                }
+                                echo $attribute['text'];
+                                echo '<br/>';
+                        }
+                    }
+                    break;
+                case 'lifecycle':
+                    echo '<b>'.$section['name'].'</b>: ';
+                    echo $section['data']['state'];
+                    echo '<br/>';
+                    break;
+                case 'type':
+                    echo '<b>'.translate('Тип').'</b>: ';
+                    echo $section['name'];
+                    break;
+            }
+        }
+        $html = ob_get_contents();
+        ob_end_clean();
+
+        if ( !$skipTitle ) return $html;
+
+        foreach( $traceAttributes as $attribute ) {
+            if ( $object_it->get($attribute) == '' ) continue;
+
+            $html .= '<h4>'.$object_it->object->getAttributeUserName($attribute).'</h4>';
+            $trace_it = $object_it->getRef($attribute);
+            while( !$trace_it->end() ) {
+                $html .= $this->buildExportContent($trace_it);
+                $html .= '<br/><br/>';
+                $trace_it->moveNext();
+            }
+        }
+
+        return $html;
+    }
 }

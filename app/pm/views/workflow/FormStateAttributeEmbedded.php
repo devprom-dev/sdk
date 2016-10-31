@@ -11,6 +11,7 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
  			case 'ReferenceName':
  			case 'IsVisible':
  			case 'IsRequired':
+            case 'IsReadonly':
  				return true;
 
  			default:

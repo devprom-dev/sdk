@@ -11,7 +11,7 @@ class RequestTraceBaseIterator extends OrderedIterator
  		$object_it = $this->getRef($this->getDisplayNameReference());
 
  		$uid = new ObjectUID;
- 		
+
  		if ( $uid->hasUid($object_it) )
  		{
  			return $uid->getUidWithCaption($object_it);

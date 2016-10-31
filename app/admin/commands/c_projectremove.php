@@ -6,8 +6,6 @@ class ProjectRemove extends Command
 {
 	function execute()
 	{
-		global $_REQUEST, $model_factory, $session;
-			
 		$this->logStart();
 		
 		if( !getSession()->getUserIt()->IsAdministrator() ) return;
@@ -54,5 +52,7 @@ class ProjectRemove extends Command
     	}
 
     	$object_it->delete();
+
+        \SessionBuilder::Instance()->invalidate();
 	}
 }

@@ -48,5 +48,10 @@ if ( !DeploymentState::IsInstalled() ) {
      DALDummy::Instance()->Connect( '' );
 }
 else {
-     DALMySQL::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
+	if ( function_exists('mysqli_connect') ) {
+		DALMySQLi::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
+	}
+	else {
+		DALMySQL::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
+	}
 }

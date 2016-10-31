@@ -76,4 +76,19 @@ class SpentTime extends Metaobject
 	{
 		return getFactory()->getObject('pm_Activity');
 	}
+
+	function DeletesCascade($object)
+	{
+		return false;
+	}
+
+	function IsUpdatedCascade($object)
+	{
+		return false;
+	}
+
+	function IsDeletedCascade($object)
+	{
+		return false;
+	}
 }

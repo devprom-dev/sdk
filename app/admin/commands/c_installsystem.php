@@ -55,16 +55,18 @@ class InstallSystem extends CommandForm
 
 	function create()
 	{
-		global $_REQUEST, $model_factory, $_SERVER;
-
 		$hostname = $this->utf8towin($_REQUEST['MySQLHost']);
 		$dbname = $this->utf8towin($_REQUEST['Database']);
 		$username = $this->utf8towin($_REQUEST['DatabaseUser']);
 		$password = $this->utf8towin($_REQUEST['DatabasePass']);
 
 		// check MySQL parameters
-		mysql_connect($hostname, $username, $password) or
-		$this->replyError( text(1514).': '.mysql_error() );
+		try {
+			$this->connect($hostname, $username, $password);
+		}
+		catch( \Exception $e ) {
+			$this->replyError( text(1514).': '.$e->getMessage() );
+		}
 
 		// prepare database file
 		$parts = pathinfo(__FILE__);
@@ -103,14 +105,16 @@ class InstallSystem extends CommandForm
 
 		$file_content = preg_replace("/optimize\s+table/mi", "-- optimize table", $file_content);
 		
-		if ( in_array('SkipCreation', array_keys($_REQUEST)) )
-		{
+		if ( in_array('SkipCreation', array_keys($_REQUEST)) ) {
 			$file_content = str_replace("create database devprom;", '', $file_content);
 		}
-		else
-		{
+		else {
 			$file_content = str_replace("create database devprom;", 'CREATE DATABASE '.$dbname.';', $file_content);
 		}
+
+        if ( TextUtils::versionToString($this->getMySQLVersion()) >= TextUtils::versionToString('5.6') ) {
+            $file_content = preg_replace('/engine\s*=\s*myisam/i', 'engine=innodb', $file_content);
+        }
 
 		fwrite($f, $file_content);
 		fclose($f);
@@ -177,17 +181,16 @@ class InstallSystem extends CommandForm
 				$this->replyError( text(1515).': '.$result.
 					' - '.$mysql_command );
 			}
-				
-			mysql_select_db($dbname) or
-			$this->replyError( text(1516).': '.mysql_error() );
-				
-			// check the database structure
-			$r2 = mysql_query('select * from cms_SystemSettings') or
-			$this->replyError( text(1517));
 
-			if(mysql_num_rows($r2) < 1)
-			{
-				$this->replyError( text(1517));
+			try {
+                $this->connect($hostname, $username, $password, $dbname);
+                // check the database structure
+                if ( count(DAL::Instance()->QueryArray('select * from cms_SystemSettings')) < 1 ) {
+                    $this->replyError(text(1517));
+                }
+			}
+			catch( \Exception $e ) {
+				$this->replyError( text(1516).': '.$e->getMessage() );
 			}
 		}
 
@@ -248,7 +251,9 @@ class InstallSystem extends CommandForm
 
 		fwrite($f, $file_content);
 		fclose($f);
-		
+
+        if ( function_exists('opcache_reset') ) opcache_reset();
+
 		// report result of the operation
 		$this->replyRedirect( '?' );
 	}
@@ -258,4 +263,21 @@ class InstallSystem extends CommandForm
 		list($usec, $sec) = explode(" ",microtime());
 		return md5(strftime('%d.%m.%Y.%M.%H.%S').((float)$usec + (float)$sec).rand());
 	}
+
+	function connect($hostname, $username, $password, $dbname = "")
+    {
+        DAL::Destroy();
+        $info = new MySQLConnectionInfo( $hostname, $dbname, $username, $password );
+
+        if ( function_exists('mysqli_connect') ) {
+            DALMySQLi::Instance()->Connect($info);
+        }
+        else {
+            DALMySQL::Instance()->Connect($info);
+        }
+    }
+
+    protected function getMySQLVersion() {
+        return array_shift(DAL::Instance()->QueryArray('SELECT VERSION()'));
+    }
 }

@@ -12,16 +12,14 @@ include SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
 
 include "RequestForm.php";
 include "RequestFormDuplicate.php";
+include "RequestFormLinked.php";
 include "RequestTable.php";
 include "RequestBulkForm.php";
 include "RequestPlanningForm.php";
-include "IssueBurndownSection.php";
-include "IssueEstimationSection.php";
 include "IssueCompoundSection.php";
 include "RequestIteratorExportBlog.php";
 include "IteratorExportIssueBoard.php"; 
 include "PageSettingIssuesBuilder.php";
-include "PageSectionSpentTime.php";
 include "import/ImportIssueFromExcelSection.php";
 
 class RequestPage extends PMPage
@@ -48,34 +46,46 @@ class RequestPage extends PMPage
 
 		if ($this->needDisplayForm()) {
 			$form = $this->getFormRef();
-			$this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
-			$this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
+            if ( $_REQUEST['mode'] == 'group' ) {
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
+                $this->addInfoSection(new PageSectionComments($form->getObjectIt()));
+            }
+            else {
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'deadlines', translate('Сроки')));
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
 
-			$object_it = $this->getObjectIt();
-			if (is_object($object_it) && $object_it->getId() > 0) {
-				$this->addInfoSection(new PageSectionComments($object_it));
+                $object_it = $this->getObjectIt();
+                if (is_object($object_it) && $object_it->getId() > 0) {
+                    $this->addInfoSection(new NetworkSection($object_it));
+                    $this->addInfoSection(new PageSectionComments($object_it));
 
-				$ids = $object_it->getImplementationIds();
-				if (count($ids) > 0) {
-					$it = $object_it->object->getRegistry()->Query(
-							array(new FilterInPredicate($ids))
-					);
-					while (!$it->end()) {
-						$section = new PageSectionComments($it->copy());
-						$section->setCaption($section->getCaption() . ' I-' . $it->getId());
-						$section->setId($section->getId() . $it->getId());
-						$this->addInfoSection($section);
-						$it->moveNext();
-					}
-				}
-				if ($object_it->object->getAttributeType('Spent') != '' && $_REQUEST['formonly'] == '') {
-					$this->addInfoSection(new PageSectionSpentTime($object_it));
-				}
-				$this->addInfoSection(new StatableLifecycleSection($object_it));
-				$this->addInfoSection(new PMLastChangesSection ($object_it));
-			}
-		} elseif ($_REQUEST['mode'] == '') {
+                    $ids = $object_it->getImplementationIds();
+                    if (count($ids) > 0) {
+                        $it = $object_it->object->getRegistry()->Query(
+                            array(new FilterInPredicate($ids))
+                        );
+                        while (!$it->end()) {
+                            $section = new PageSectionComments($it->copy());
+                            $section->setCaption($section->getCaption() . ' I-' . $it->getId());
+                            $section->setId($section->getId() . $it->getId());
+                            $this->addInfoSection($section);
+                            $it->moveNext();
+                        }
+                    }
+
+                    if ($object_it->object->getAttributeType('Spent') != '' && $_REQUEST['formonly'] == '') {
+                        $this->addInfoSection(new PageSectionSpentTime($object_it));
+                    }
+                    $this->addInfoSection(new StatableLifecycleSection($object_it));
+                    $this->addInfoSection(new PMLastChangesSection ($object_it));
+                }
+            }
+		}
+		elseif ($_REQUEST['mode'] == '') {
 			if ($_REQUEST['view'] == 'board') $this->addInfoSection(new FullScreenSection());
+			$this->addInfoSection(new DetailsInfoSection());
 
 			$table = $this->getTableRef();
 
@@ -89,10 +99,6 @@ class RequestPage extends PMPage
 					$release = $model_factory->getObject('Release');
 					$this->release_it = $release->getExact($value);
 				}
-			}
-
-			if (!$this->needDisplayForm() && is_object($table)) {
-				$this->addInfoSection(new IssueBurndownSection());
 			}
 		}
 
@@ -132,13 +138,7 @@ class RequestPage extends PMPage
 				return $this->getDefaultTable();
 
 			default:
-				if ($_REQUEST['view'] == 'chart' && $_REQUEST['report'] == '') {
-					if ($_REQUEST['pmreportcategory'] == '') $_REQUEST['pmreportcategory'] = 'issues';
-
-					return new ReportTable(getFactory()->getObject('PMReport'));
-				} else {
-					return $this->getDefaultTable();
-				}
+				return $this->getDefaultTable();
 		}
 	}
 
@@ -149,8 +149,8 @@ class RequestPage extends PMPage
 
 	function needDisplayForm()
 	{
-		return $_REQUEST['view'] == 'import' || in_array($_REQUEST['mode'], array('bulk', 'group'))
-				? true : parent::needDisplayForm();
+		if ( parent::needDisplayForm() ) return true;
+		return $_REQUEST['view'] == 'import' || in_array($_REQUEST['mode'], array('bulk', 'group'));
 	}
 
 	function getBulkForm()
@@ -169,7 +169,10 @@ class RequestPage extends PMPage
 		if ($_REQUEST['view'] == 'import') {
 			return new ImportXmlForm($this->getObject());
 		}
-		if ($_REQUEST['Request'] != '') {
+        if ($_REQUEST['IssueLinked'] != '' ) {
+            return new RequestFormLinked($this->getObject());
+        }
+		if ($_REQUEST['LinkType'] != '') {
 			return new RequestFormDuplicate($this->getObject());
 		}
 
@@ -182,5 +185,9 @@ class RequestPage extends PMPage
 	function getPageWidgets()
 	{
 		return array('kanbanboard', 'issuesboard', 'issues-backlog');
+	}
+
+	function isDetailsActive() {
+		return !in_array($this->getReportBase(), array('issuesboardcrossproject'));
 	}
 }

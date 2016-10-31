@@ -11,8 +11,10 @@ class EmailNotificatorHandler
 	
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient )
 	{
+		$project = $object_it->get('ProjectCodeName');
+		if ( $project == '' ) $project = getSession()->getProjectIt()->get('CodeName');
 		$uid = new ObjectUid;
-		return $object_it->object->getDisplayName().' {'.getSession()->getProjectIt()->get('CodeName').'} ['.$uid->getObjectUid($object_it).']';
+		return $object_it->object->getDisplayName().' {'.$project.'} ['.$uid->getObjectUid($object_it).']';
 	}
 	
 	function getParticipants( $object_it, $prev_object_it, $action ) 
@@ -129,7 +131,12 @@ class EmailNotificatorHandler
 
 	public static function getWasValue( $object_it, $attr )
 	{
-		return self::getValue( $object_it, $attr );
+	    switch( $attr ) {
+            case 'TransitionComment':
+                return "";
+            default:
+                return self::getValue( $object_it, $attr );
+        }
 	}
 
 	public static function getValue( $object_it, $attr )
@@ -155,6 +162,8 @@ class EmailNotificatorHandler
 			$parser->setObjectIt( $object_it );
 				
 			$value = $parser->parse( $object_it->getHtmlDecoded($attr) );
+            $value = TextUtils::breakLongWords($value);
+
 			return preg_replace('/\r|\n/', '', $value); 
 		}
 		
@@ -194,10 +203,12 @@ class EmailNotificatorHandler
 				break;
 			
 			case 'pm_Task':
-				if ( $attribute_name == 'PercentComplete' )
-				{
-					return false;
-				}				
+                switch ( $attribute_name )
+                {
+                    case 'PercentComplete':
+                    case 'Fact':
+                        return false;
+                }
 				break;
 
 			case 'pm_Project':
@@ -206,8 +217,6 @@ class EmailNotificatorHandler
 					case 'Version':
 					case 'Platform': 
 					case 'Tools':
-					case 'MainWikiPage':
-					case 'RequirementsWikiPage':
 					case 'Blog':
 					case 'IsConfigurations':
 					case 'Rating':
@@ -217,16 +226,22 @@ class EmailNotificatorHandler
 				break;
 				
 			case 'pm_ChangeRequest':
-				if ( $action == 'add' && $attribute_name == 'ExternalAuthor' && $object_it->get('ExternalAuthor') != '' )
-				{
-					return true;
-				}
+                switch ( $attribute_name )
+                {
+                    case 'Fact':
+                        return false;
+                    default:
+                        if ( $action == 'add' && $attribute_name == 'ExternalAuthor' && $object_it->get('ExternalAuthor') != '' ) {
+                            return true;
+                        }
+                }
 				break;
 		}
 
 		switch ( $attribute_name )
 		{
 			case 'Password': return false;
+            case 'State': return true;
 			
 			default:
 				if ( $object_it->object->getAttributeType( $attribute_name ) == 'password' ) return false;

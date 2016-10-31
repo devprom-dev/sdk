@@ -28,7 +28,7 @@ class BlogPostTag extends Tag
 		return new BlogPostTagIterator($this);
 	}
 	
-    function getPageNameObject( $object_id )
+    function getPageNameObject( $object_id = '' )
     {
         return $this->object->getPage().'&tag='.$object_id;
     }

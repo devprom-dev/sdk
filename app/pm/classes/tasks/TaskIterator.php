@@ -2,13 +2,36 @@
 
 class TaskIterator extends StatableIterator
 {
- 	function getDisplayName() 
+ 	function getDisplayName()
  	{
  		$type_name = $this->getType();
- 		return $type_name != "" ? $type_name.': '.$this->get('Caption') : parent::getDisplayName();
+ 		$title = $type_name != ""
+            ? $type_name.': '.$this->get('Caption')
+            : parent::getDisplayName();
+
+        if ( $this->get('TaskAssigneePhotoTitle') != '' ) {
+            $title .= ' ['.$this->get('TaskAssigneePhotoTitle').']';
+        }
+        return $title;
     }
 
- 	function getType() 
+	function getDisplayNameNative()
+	{
+		$title = '';
+		$type_name = $this->getType();
+		if ( $type_name != '' ) {
+			$title .= $type_name;
+			if ( $this->get('CaptionNative') != '' ) {
+				$title .= ': '.$this->get('CaptionNative');
+			}
+			return $title;
+		}
+		else {
+			return $this->get('CaptionNative');
+		}
+	}
+
+ 	function getType()
  	{
  		if ( $this->get('TaskTypeDisplayName') != '' ) return $this->get('TaskTypeDisplayName');
 		if ( $this->object->getAttributeType('TaskType') != '' ) {
@@ -19,17 +42,8 @@ class TaskIterator extends StatableIterator
 		return '';
 	}
 	
-	function IsFinished()
-	{
-		return in_array($this->get('State'), $this->object->getTerminalStates());
-	}
-	
-	function isFailed() 
-	{
-		$type_it = $this->getRef('TaskType');
-		
-		return $type_it->get('ReferenceName') == 'testing' && 
-			$this->get('Result') == translate(RESULT_FAILED);
+	function IsFinished() {
+		return $this->get('StateTerminal') == 'Y';
 	}
 	
 	function IsBlocked()

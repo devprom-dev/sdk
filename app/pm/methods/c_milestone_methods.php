@@ -23,10 +23,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 		return translate('Пройдена');
 	}
 	
-	function hasAccess()
-	{
-		global $part_it;
-		return $part_it->getId() != GUEST_UID;
+	function hasAccess() {
+		return getSession()->getParticipantIt()->getId() != GUEST_UID;
 	}
 	
  	function execute( $object_id )
@@ -49,10 +47,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 		return translate('Активна');
 	}
 	
-	function hasAccess()
-	{
-		global $part_it;
-		return $part_it->getId() != GUEST_UID;
+	function hasAccess() {
+		return getSession()->getParticipantIt()->getId() != GUEST_UID;
 	}
 	
  	function execute( $object_id )

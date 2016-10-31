@@ -1,7 +1,5 @@
 {% extends "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
 
 {% block body %}
-    {% autoescape false %}
-    {{ 'registration.email.message'|trans({'%login%': login, '%password%': password, '%clientName%': client_name, '%link%' : site_url}, 'emails') }}
-    {% endautoescape %}
+    {% include emailBody("registration.twig",app.request.locale) %}
 {% endblock body %}

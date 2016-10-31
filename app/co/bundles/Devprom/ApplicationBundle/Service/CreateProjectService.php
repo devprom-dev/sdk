@@ -6,18 +6,19 @@ use Devprom\ProjectBundle\Service\Project\ApplyTemplateService;
 use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 include "ActivateUserSettings.php";
 
 class CreateProjectService
 {
 	private $skip_demo_data = false;
+	private $portfolioId = '';
 	
  	function execute( $parms )
  	{
  		$this->user_id = getSession()->getUserIt()->getId();
  		$this->code_name = $parms['CodeName'];
  		$this->caption = $parms['Caption'];
+		$this->portfolioId = $parms['portfolio'];
  		$this->skip_demo_data = !$parms['DemoData'];
  		
  		$template = getFactory()->getObject('pm_ProjectTemplate');
@@ -39,7 +40,21 @@ class CreateProjectService
  		
  		$this->access = '';
  		
- 		return $this->createProject();
+ 		$project_it = $this->createProject();
+
+		if ( $this->portfolioId > 0 && $project_it->getId() > 0 ) {
+			// join the project to the portfolio given
+			if ( class_exists('ProjectGroupLink') ) {
+				getFactory()->getObject('ProjectGroupLink')->add_parms(
+					array (
+						'ProjectGroup' => $this->portfolioId,
+						'Project' => $project_it->getId()
+					)
+				);
+			}
+		}
+
+		return $project_it;
  	}
  	
  	function createProject()
@@ -49,16 +64,11 @@ class CreateProjectService
 		getFactory()->getEventsManager()->removeNotificator( new \ChangesWaitLockReleaseTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \CacheSessionProjectTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \CacheResetTrigger() );
-		
+
 		// check the use who creates a project is defined
-		$user_cls = new \Metaobject('cms_User');
-		$user_it = $user_cls->getExact($this->user_id);
-		
-		if($user_it->count() < 1) 
-		{
-			return -1;
-		}
-		
+		$user_it = getFactory()->getObject('User')->getExact($this->user_id);
+		if ( $user_it->count() < 1 ) return -1;
+
 		// создаем проект
 		$prj_cls = $model_factory->getObject('pm_Project');
 		$prj_it = $prj_cls->getByRef('CodeName', $this->code_name);
@@ -133,6 +143,7 @@ class CreateProjectService
 		$auth_factory->setUser( $user_it );
 		
 		$session = new \PMSession($project_it, $auth_factory);
+        getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
 
 		// включаем VPD
 		getFactory()->enableVpd(true);
@@ -223,6 +234,58 @@ class CreateProjectService
 			);
 		}
 
+		if ( class_exists('TestingDocType') ) {
+			$testType_it = getFactory()->getObject('TestingDocType')->getAll();
+			if ( $testType_it->count() < 1 ) {
+				$scenarioTypeId = $testType_it->object->add_parms(
+					array(
+						'Caption' => text('testing90'),
+						'ReferenceName' => 'scenario',
+						'PageReferenceName' => 3,
+						'WikiEditor' => $project_it->get('WikiEditorClass')
+					)
+				);
+				$testPlanTypeId = $testType_it->object->add_parms(
+					array(
+						'Caption' => text('testing89'),
+						'ReferenceName' => 'section',
+						'PageReferenceName' => 3,
+						'WikiEditor' => $project_it->get('WikiEditorClass')
+					)
+				);
+				$plan_it = $model_factory->getObject('TestScenario')->getRegistry()->Query(
+					array(
+						new \FilterVpdPredicate(),
+						new \WikiRootFilter()
+					)
+				);
+				while( !$plan_it->end() ) {
+					$plan_it->object->modify_parms(
+						$plan_it->getId(),
+						array (
+							'PageType' => $testPlanTypeId
+						)
+					);
+					$plan_it->moveNext();
+				}
+				$scenario_it = $plan_it->object->getRegistry()->Query(
+					array(
+						new \FilterVpdPredicate(),
+						new \WikiNonRootFilter()
+					)
+				);
+				while( !$scenario_it->end() ) {
+					$scenario_it->object->modify_parms(
+						$scenario_it->getId(),
+						array (
+							'PageType' => $scenarioTypeId
+						)
+					);
+					$scenario_it->moveNext();
+				}
+			}
+		}
+
 		// turn on email notifications
 		$notification = $model_factory->getObject('Notification');
 		$notification->store( $project_it->getDefaultNotificationType(), $part_it );
@@ -263,38 +326,40 @@ class CreateProjectService
 		getFactory()->getEventsManager()->removeNotificator( new \CacheResetTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
 		getFactory()->getEventsManager()->removeNotificator( new \EmailNotificator() );
-		
-		$meth_cls = getFactory()->getObject('pm_Methodology');
-		
-		$parms = array();
-		$parms['Project'] = $project_it->getId();
 
-		$methodology_it = $meth_cls->getExact( 
-			$meth_cls->add_parms($parms) ); 
+        getFactory()->getObject('pm_Methodology')->add_parms(
+            array(
+                'Project' => $project_it->getId(),
+                'IsReleasesUsed' => 'Y',
+                'IsPlanningUsed' => 'Y'
+            )
+        );
 
 		$service = new ApplyTemplateService();
 		$service->setResetState(false);
 		
 		// apply default template
 		$service->apply(
-				$template_it, 
+				$template_it->getXml(),
 				$project_it, 
 				array(), // import all data available in the template
-				$this->skip_demo_data ? array('ProjectArtefacts', 'Attributes') : array()
+				$this->skip_demo_data ? array('ProjectArtefacts') : array()
 		);
  	}
  	
  	public function invalidateCache()
  	{
-		$lock = new \CacheLock();
-		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
- 		
+        $lock = new \CacheLock();
+
  		getFactory()->getObject('ProjectCache')->resetCache();
 	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
 	    while( !$portfolio_it->end() ) {
 	        getSession()->truncateForProject( $portfolio_it );
 	        $portfolio_it->moveNext();
 	    }
+        $lock->Release();
+
+        \SessionBuilder::Instance()->invalidate();
  	}
 
 	public function invalidateServiceDeskCache()
@@ -318,15 +383,6 @@ class CreateProjectService
 				
 			case -3:
 				return text(202);
-				
-			case -4:
-				return text(203);
-
-			case -5:
-				return text(204);
-				
-			case -6:
-				return text(205);
 				
 			case -7:
 				return text(206);

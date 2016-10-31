@@ -41,9 +41,18 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
 					case 'Rating':
 						return false;
 				}
-
-			default:
-				return parent::isAttributeVisible( $attribute_name, $object_it, $action );
+				break;
+			case 'co_ScheduledJob':
+				switch ( $attribute_name )
+				{
+					case 'RecentLog':
+					case 'ProcessedTotal':
+					case 'LeftToProcess':
+					case 'StatusText':
+						return false;
+				}
+				break;
 		}
+		return parent::isAttributeVisible( $attribute_name, $object_it, $action );
 	}
 }

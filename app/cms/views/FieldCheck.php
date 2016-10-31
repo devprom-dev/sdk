@@ -16,7 +16,7 @@ class FieldCheck extends Field
 	    return !$this->getEditMode() || parent::readOnly();
 	}
 	
- 	function draw()
+ 	function draw( $view = null )
 	{
 	?>
 		<label class="checkbox">

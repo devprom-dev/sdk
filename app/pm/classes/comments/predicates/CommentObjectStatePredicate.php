@@ -19,7 +19,7 @@ class CommentObjectStatePredicate extends FilterPredicate
  					   "	   WHERE so.pm_StateObjectId = t.StateObject) IN ".
  					   "	 (SELECT s.pm_StateId FROM pm_State s ".
  					   "	   WHERE LCASE(s.ObjectClass) = LCASE(t.ObjectClass) ".
- 					   "		 AND s.IsTerminal = 'N' ".
+ 					   "		 AND s.IsTerminal <> 'Y' ".
  					   "		 AND s.VPD = t.VPD) ".
  					   "  OR NOT EXISTS (SELECT 1 FROM pm_StateObject so ".
  					   "	   			  WHERE so.pm_StateObjectId = t.StateObject)) ";

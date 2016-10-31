@@ -16,7 +16,7 @@ class TaskModelTest extends DevpromDummyTestCase
         
         // entity mocks
         
-        $this->entity = $this->getMock('Task', array('cacheStates'));
+        $this->entity = $this->getMock('Task', array('getTerminalStates','getNonTerminalStates'));
         
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
@@ -24,30 +24,12 @@ class TaskModelTest extends DevpromDummyTestCase
                         array ( 'TaskState', null, new TaskState )
                 ) 
         ));
-        
-        $this->entity->expects($this->any())->method('cacheStates')->will( 
-        		$this->returnValue(
-	                getFactory()->getObject('TaskState')->createCachedIterator(
-	                		array(
-	                			array (
-	                					'pm_StateId' => 1,
-	                					'ReferenceName' => 'new',
-	                					'IsTerminal' => 'N'
-	                			),
-	                			array (
-	                					'pm_StateId' => 1,
-	                					'ReferenceName' => 'active',
-	                					'IsTerminal' => 'N'
-	                			),
-	                			array (
-	                					'pm_StateId' => 2,
-	                					'ReferenceName' => 'closed',
-	                					'IsTerminal' => 'Y'
-	                			)
-	                		)
-	        		) 
-        		)
-	    );
+        $this->entity->expects($this->any())->method('getTerminalStates')->will(
+            $this->returnValue(array('closed'))
+        );
+        $this->entity->expects($this->any())->method('getNonTerminalStates')->will(
+            $this->returnValue(array('new','active'))
+        );
     }
 
     function testFinishDateChanged()
@@ -127,6 +109,9 @@ class TaskModelTest extends DevpromDummyTestCase
     function testFinishDateReset()
     {
         $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+            $this->stringContains("StartDate = NULL")
+        );
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
 

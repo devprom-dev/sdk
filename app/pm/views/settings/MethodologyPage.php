@@ -4,15 +4,7 @@ include "MethodologyForm.php";
 
 class MethodologyPage extends PMPage
 {
-    function __construct()
-    {
-        parent::__construct();
-
-        $this->addInfoSection( new PMLastChangesSection(getSession()->getProjectIt()->getMethodologyIt()) );
-    }
-
-    function getTable()
-    {
+    function getTable() {
         return null;
     }
 

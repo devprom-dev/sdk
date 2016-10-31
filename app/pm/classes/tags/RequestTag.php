@@ -19,14 +19,8 @@ class RequestTag extends Tag
 		$this->addPersister( new RequestTagCaptionPersister() );
  	}
 
- 	function getPageNameObject( $tag_id ) 
- 	{
- 		global $model_factory;
- 		
- 		$report = $model_factory->getObject('PMReport');
- 		$report_it = $report->getExact('allissues');
- 		
- 		return $report_it->getUrl().'&state=all&tag='.$tag_id;
+ 	function getPageNameObject( $object_id = '' ) {
+ 		return getFactory()->getObject('PMReport')->getExact('allissues')->getUrl().'&state=all&tag='.$object_id;
  	}
 
 	function createIterator() 

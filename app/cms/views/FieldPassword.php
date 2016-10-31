@@ -7,7 +7,7 @@ class FieldPassword extends Field
          return !$this->getEditMode() || parent::readOnly();
     }
       
- 	function draw()
+ 	function draw( $view = null )
 	{
 		if ( $this->readOnly() )
 		{
@@ -16,7 +16,7 @@ class FieldPassword extends Field
 		else
 		{
 		?>
-    	    <input class="input-block-level" type="password" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" tabindex="<? echo $this->getTabIndex() ?>" value="<? echo ($this->getValue() != '' ? SHADOW_PASS : '') ?>" <?=($this->getRequired() ? 'required' : '')?> >
+    	    <input class="input-block-level" type="password" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" tabindex="<? echo $this->getTabIndex() ?>" value="<? echo ($this->getValue() != '' ? SHADOW_PASS : '') ?>" <?=($this->getRequired() ? 'required' : '')?> autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 		<?
 		}
 	}

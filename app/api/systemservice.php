@@ -57,8 +57,7 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
          $namespace, $namespace.'.getMyProjects', $soap->getStyle(), $soap->getUse(), 'Returns the list of projects accessible to the user'
  );
  
- $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
- $server->service($HTTP_RAW_POST_DATA);
+ $server->service(EnvironmentSettings::getRawPostData());
  
  // Returns the list of registered plugins
  function getPlugins( $token )

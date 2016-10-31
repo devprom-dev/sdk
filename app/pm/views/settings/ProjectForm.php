@@ -64,7 +64,7 @@ class ProjectForm extends PMPageForm
     {
         return '';
     }
-    
+
     function getRedirectUrl()
 	{
 		return '/pm/'.$this->getObjectIt()->get('CodeName').'/project/settings';
@@ -73,7 +73,8 @@ class ProjectForm extends PMPageForm
     function getRenderParms()
     {
         return array_merge( parent::getRenderParms(), array (
-                'uid_icon' => ''
+            'uid_icon' => '',
+            'uid' => ''
         ));
     }
 }

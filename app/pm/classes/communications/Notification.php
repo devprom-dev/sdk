@@ -16,8 +16,7 @@ class Notification extends PMObjectCacheable
  		
  		$sql = " SELECT p.* " .
  			   "   FROM pm_Participant p " .
- 			   "  WHERE p.IsActive = 'Y' " .
- 			   "	AND EXISTS (SELECT 1 FROM pm_Project t WHERE t.pm_ProjectId = p.Project AND IFNULL(t.IsClosed,'N') = 'N') ". 
+ 			   "  WHERE EXISTS (SELECT 1 FROM pm_Project t WHERE t.pm_ProjectId = p.Project AND IFNULL(t.IsClosed,'N') = 'N') ".
  			   "	AND EXISTS (SELECT 1 FROM pm_UserSetting t " .
  			   "				 WHERE t.Value = CONCAT('email=', '".$notification_type."')" .
  			   "    			   AND t.Setting = '".md5( 'emailnotification' )."' ".

@@ -1,7 +1,7 @@
 <?php
 
 use Devprom\CommonBundle\Service\Emails\RenderService;
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
+
 
 class ScrumReportedEvent extends SystemTriggersBase
 {
@@ -14,7 +14,7 @@ class ScrumReportedEvent extends SystemTriggersBase
    		$mail = new \HtmlMailbox;
    		$mail->setFromUser(getSession()->getUserIt());
 
-		$emails = class_exists('PortfolioMyProjectsBuilder', false)
+		$emails = defined('PERMISSIONS_ENABLED')
 			? getSession()->getProjectIt()->getParticipantIt()->fieldToArray('Email')
 			: getFactory()->getObject('UserActive')->getAll()->fieldToArray('Email');
 

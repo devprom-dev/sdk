@@ -33,4 +33,9 @@ class CheckpointDiskSpace extends CheckpointEntryDynamic
 	{
 		return str_replace('%1', addslashes($this->dir_path), text(1136));
 	}
+
+    function getWarning()
+    {
+        return str_replace('%1', $this->dir_path, text(2258));
+    }
 }

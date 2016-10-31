@@ -9,6 +9,7 @@ class ReleaseRegistry extends ObjectRegistrySQL
 	    	   "		 DATE(t.FinishDate) FinishDateOnly, ".
 	    	   "		 DATE(GREATEST(NOW(), t.StartDate)) AdjustedStart, ".
 	    	   "		 DATE(LEAST(GREATEST(NOW(), t.StartDate), t.FinishDate)) AdjustedFinish ".
-	    	   "	FROM pm_Version t	) ";
+	    	   "	FROM pm_Version t ".
+			   "  WHERE 1 = 1 ".$this->getFilterPredicate('t').") ";
 	}
 }

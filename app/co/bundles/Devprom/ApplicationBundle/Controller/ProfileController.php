@@ -13,7 +13,7 @@ class ProfileController extends PageController
     public function formAction(Request $request)
     {
         $response = $this->checkUserAuthorized($request);
-        
+
         if ( is_object($response) ) return $response;
         
     	return $this->responsePage( new \ProfilePage() );

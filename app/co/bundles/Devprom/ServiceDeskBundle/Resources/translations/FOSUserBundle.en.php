@@ -71,4 +71,3 @@ return array(
     'form.new_password' => 'New password',
     'form.new_password_confirmation' => 'Verification',
 );
-?>

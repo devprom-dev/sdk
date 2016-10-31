@@ -7,7 +7,7 @@ class FieldColorPicker extends Field
          return !$this->getEditMode() || parent::readOnly();
     }
     
-    function draw()
+    function draw( $view = null )
 	{
 		if ( $this->readOnly() )
 		{

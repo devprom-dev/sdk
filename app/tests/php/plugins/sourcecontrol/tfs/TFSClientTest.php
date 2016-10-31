@@ -5,16 +5,6 @@ include_once SERVER_ROOT_PATH . "/plugins/sourcecontrol/classes/tfs/TFSClient.ph
 
 class TFSClientTest extends PHPUnit_Framework_TestCase
 {
-
-    /**
-     * @test
-     */
-    function shouldAssignDifferentWorkspacenamesForDifferentInstances() {
-        $firstClient = TFSClientWithCLIStubbed::createWithCredentials("http://server/defaultcollection", "user", "password");
-        $secondClient = TFSClientWithCLIStubbed::createWithCredentials("http://server/defaultcollection", "user", "password");
-        $this->assertNotSame(self::getPrivate($firstClient, 'workspacename'), self::getPrivate($secondClient, 'workspacename'));
-    }
-
     /**
      * @test
      */

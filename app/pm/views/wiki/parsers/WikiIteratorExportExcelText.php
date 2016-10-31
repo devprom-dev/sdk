@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/export/IteratorExportExcel.php";
 
 class WikiIteratorExportExcelText extends IteratorExportExcel

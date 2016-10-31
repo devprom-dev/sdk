@@ -33,4 +33,9 @@ class CheckpointExtentionLoaded extends CheckpointEntryDynamic
     {
         return text(1132);
     }
+
+    function getWarning()
+    {
+        return text(2255);
+    }
 }

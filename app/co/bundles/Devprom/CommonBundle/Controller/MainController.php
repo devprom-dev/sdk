@@ -12,7 +12,7 @@ class MainController extends Controller
     protected function checkDeploymentState(Request $request)
     {
     	// check if an update is installing then skip controlling of deployment state
-    	if ( preg_match('/backup|update|accountclient/i', $request->getQueryString()) ) return;
+    	if ( preg_match('/backup|update|accountclient|plugin/i', $request->getQueryString()) ) return;
 
     	// check other entry points
     	if ( preg_match('/login/i', $request->getPathInfo()) && getFactory()->getObject('User')->getRegistry()->Count() > 0 ) return;

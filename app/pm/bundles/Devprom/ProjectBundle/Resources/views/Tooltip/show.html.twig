@@ -1,14 +1,16 @@
+<div class="tooltip-body">
 {% if type.uid != "" %}
-	<b>{{ type.name }}</b>: [{{ type.uid }}] 
-	{% for attribute_name, attribute in attributes if attribute_name == "Caption" %}
-	    {{ attribute.text | raw }}
-	{% endfor %}
-	<br/>
+	<div class="tt-field-data">
+		<b>{{ type.name }}</b>: {{ type.uid | raw }}
+		{% for attribute_name, attribute in attributes if attribute_name == "Caption" %}
+			{{ attribute.text | raw }}
+		{% endfor %}
+	</div>
 	<br/>
 {% endif %}
 
 {% for attribute_name, attribute in attributes if type.uid != "" and attribute_name != "Caption" or type.uid == "" %}
-	<b>{{ attribute.title }}</b>:
+	<b>{{ attribute.title | raw }}</b>:
 	
 	{% if attribute.type == 'tasks'  %}
     	{% for state in attribute.text  %}
@@ -18,7 +20,7 @@
     	{% endfor %}
     {% else %}
     	{% if attribute.type == 'text' or attribute.type == 'wysiwyg' or attribute.name == 'Caption' %}
-			 <div class="tt-field-data">{{ attribute.text | raw }}</div>
+			 <div class="tt-field-data wysiwyg">{{ attribute.text | raw }}</div>
     	{% else %}
     		{{ attribute.text | raw }}
     	{% endif %}
@@ -47,3 +49,4 @@
 	{{ lifecycle.data.text | raw }}
 {% endif %}
 {% endif %}
+</div>

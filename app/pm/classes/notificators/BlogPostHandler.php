@@ -14,7 +14,7 @@ class BlogPostHandler extends EmailNotificatorHandler
 	function getUsers( $object_it, $prev_object_it, $action )
 	{
 		if ( $action != 'add' ) return array();
-		if ( class_exists('PortfolioMyProjectsBuilder', false) ) return array();
+		if ( defined('PERMISSIONS_ENABLED') ) return array();
 		return getFactory()->getObject('UserActive')->getAll()->fieldToArray('Email');
 	}
 

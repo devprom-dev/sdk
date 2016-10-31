@@ -86,7 +86,7 @@
 		$this->object_it = $object_it;
 	}
 	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		$values = array( array('TEXT', 'Строка'),
 						 array('LARGETEXT', 'Текст'),

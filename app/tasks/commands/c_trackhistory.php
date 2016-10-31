@@ -28,7 +28,7 @@ class TrackHistory extends TaskCommand
 		else
 		{
 			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
-						array( new FilterAttributePredicate('IsClosed', 'N') )
+						array( new FilterHasNoAttributePredicate('IsClosed', 'Y') )
 				)->idsToArray();
 			
 			$chunks = array_chunk($ids, $step);
@@ -85,16 +85,17 @@ class TrackHistory extends TaskCommand
 				if ( !class_exists($class_name) ) continue;
 				
 				$object = getFactory()->getObject($class_name);
+				$persisters = $object->getPersisters();
+
 				foreach ( $attributes as $attribute )
 				{
 					$this->logDebug("Process attribute: ".$attribute);
-
 					$object->resetAggregates();
 
 					$group = new AggregateBase( $attribute, $object->getClassName().'Id', 'GROUP_CONCAT');
 					$object->addAggregate( $group );
 					
-					$it = $object->getAggregated();
+					$it = $object->getAggregated( 't', array(), $persisters );
 					while ( !$it->end() )
 					{
 						$items = $it->get($group->getAggregateAlias());

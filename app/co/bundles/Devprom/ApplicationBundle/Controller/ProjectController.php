@@ -17,7 +17,7 @@ class ProjectController extends PageController
         $response = $this->checkUserAuthorized($request);
         
         if ( is_object($response) ) return $response;
-        
+
     	return $this->responsePage( new \CreateProjectPage() );
     }
     
@@ -63,9 +63,12 @@ class ProjectController extends PageController
 		}
 
         $parms['DemoData'] = in_array(strtolower(trim($request->request->get('DemoData'))), array('y','on'));
+		if ( is_numeric($request->request->get('portfolio')) ) {
+			$parms['portfolio'] = $request->request->get('portfolio');
+		}
 
     	if ( $request->request->get('Participants') != '' ) {
-			if ( !class_exists('PortfolioMyProjectsBuilder', false) ) {
+			if ( !defined('PERMISSIONS_ENABLED') ) {
 				$invite_service = new \Devprom\CommonBundle\Service\Users\InviteService($this, getSession());
 				$invite_service->inviteByEmails($request->request->get('Participants'));
 			}
@@ -79,7 +82,7 @@ class ProjectController extends PageController
 		}
 
 		if ( $request->request->get('Participants') != '' )	{
-			if ( class_exists('PortfolioMyProjectsBuilder', false) ) {
+			if ( defined('PERMISSIONS_ENABLED') ) {
 				$invite_service = new \Devprom\CommonBundle\Service\Project\InviteService($this, getSession());
 				$invite_service->inviteByEmails($request->request->get('Participants'));
 			}

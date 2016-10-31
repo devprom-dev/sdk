@@ -12,7 +12,7 @@ class ReportSpentTimeList extends PMStaticPageList
 
 		$predicates = array();
 		
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
  		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
 		foreach( $plugins_interceptors as $plugin ) {
 		    $plugin->interceptMethodListGetPredicates( $this, $predicates, $this->getFilterValues() );
@@ -144,9 +144,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		if ( $rows_object instanceof Request )
 		{
 			foreach($rows_object->getAttributes() as $attribute => $info) {
-                if ( $attribute == 'Type' ) continue;
-				if ( $attribute == 'Attachment' ) continue;
-				if ( $attribute == 'Watchers' ) continue;
+                if ( in_array($attribute,array('Type','Attachment','Watchers','Tasks','OpenTasks','Deadlines')) ) continue;
 				if ( !$rows_object->IsReference($attribute) ) continue;
 				if ( in_array($attribute, $skip_attributes) ) continue;
 				$attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
@@ -158,10 +156,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
         elseif ( $rows_object instanceof Task ) {
             foreach($rows_object->getAttributes() as $attribute => $info) {
-                if ( $attribute == 'TaskType' ) continue;
-                if ( $attribute == 'ChangeRequest' ) continue;
-                if ( $attribute == 'Attachment' ) continue;
-                if ( $attribute == 'Watchers' ) continue;
+				if ( in_array($attribute,array('TaskType','ChangeRequest','Attachment','Watchers')) ) continue;
                 if ( !$rows_object->IsReference($attribute) ) continue;
                 if ( in_array($attribute, $skip_attributes) ) continue;
                 $attributes[$rows_object->getAttributeUserName($attribute)] = $attribute;
@@ -173,7 +168,16 @@ class ReportSpentTimeList extends PMStaticPageList
         }
 		else
 		{
-			return array('SystemUser', 'Project');
+			$fields = array('SystemUser', 'Project');
+			switch( $this->getObject()->getView() ) {
+				case 'participants':
+					$fields = array_diff($fields, array('SystemUser'));
+					break;
+				case 'projects':
+					$fields = array_diff($fields, array('Project'));
+					break;
+			}
+			return $fields;
 		}
 	}
 	
@@ -298,6 +302,7 @@ class ReportSpentTimeList extends PMStaticPageList
 				echo $this->drawCell($object_it, $attribute);
 			echo '</td>';
 		}
+		echo '<td id="operations" style="background-color:white;font-weight:bold;"></td>';
 	}
 	
 	function drawCell( $object_it, $attr ) 
@@ -346,7 +351,8 @@ class ReportSpentTimeList extends PMStaticPageList
 				if ( count($actions) > 0 ) {
 					echo $this->getTable()->getView()->render('core/SpentTimeMenu.php', array (
 						'title' => $hours,
-						'items' => $actions
+						'items' => $actions,
+						'id' => $object_it->getId().$attr
 					));
 				}
 				else {

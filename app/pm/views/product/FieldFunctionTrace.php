@@ -8,8 +8,6 @@ class FieldFunctionTrace extends FieldForm
  	
  	function __construct( $object_it, $trace, $writable = true )
  	{
- 		global $model_factory;
- 		
  		$this->object_it = $object_it;
  		$this->trace = $trace;
  		$this->writable = $writable;
@@ -20,7 +18,7 @@ class FieldFunctionTrace extends FieldForm
  		return $this->object_it;
  	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();
@@ -36,7 +34,7 @@ class FieldFunctionTrace extends FieldForm
  	
  	function getForm( & $trace )
 	{
-		return new ObjectTraceFormEmbedded( $trace, 'Feature' );
+		return new ObjectTraceFormEmbedded( $trace, 'Feature', $this->getName() );
 	}
 	
  	function render( $view )
@@ -46,20 +44,18 @@ class FieldFunctionTrace extends FieldForm
 	
 	function drawBody( $view = null )
 	{
-		global $model_factory;
-		
 		$this->setFilters( $this->trace );
 		
  		$form = $this->getForm( $this->trace );
  		
- 		$form->setTraceObject( $model_factory->getObject(
+ 		$form->setTraceObject( getFactory()->getObject(
  			$this->trace->getObjectClass()) );
  			
 		$object_it = $this->getObjectIt();
-		
- 		if ( is_object($object_it) )
- 		{
- 			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
+ 		if ( is_object($object_it) ) {
+ 			if ( !$this->getEditMode() ) {
+ 			    $form->setObjectIt( $object_it );
+            }
  		}
 
  		$form->setReadonly( $this->readOnly() );

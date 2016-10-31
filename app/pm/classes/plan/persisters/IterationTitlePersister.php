@@ -6,7 +6,7 @@ class IterationTitlePersister extends ObjectSQLPersister
  	{
  		$columns = array();
  		
-  		$columns[] = "(SELECT CONCAT(v.Caption, '.', t.ReleaseNumber) FROM pm_Version v WHERE v.pm_VersionId = t.Version) ShortCaption ";
+  		$columns[] = "IFNULL((SELECT CONCAT(v.Caption, '.', t.ReleaseNumber) FROM pm_Version v WHERE v.pm_VersionId = t.Version), t.ReleaseNumber) ShortCaption ";
 
  		return $columns;
  	}

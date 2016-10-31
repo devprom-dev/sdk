@@ -2,7 +2,6 @@
 
 namespace Devprom\ProjectBundle\Service\Navigation;
 
-include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalArea.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaCommonBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaMyProjectsBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaPortfolioBuilder.php";
@@ -83,7 +82,7 @@ class WorkspaceService
 				'Caption' => \IteratorBase::utf8towin($data['title']),
 				'Icon' => $data['icon']
 		);
-		
+
 		if ( $workspace_it->getId() > 0 )
 		{
 			$workspace->modify_parms($workspace_it->getId(), $parms); 
@@ -110,7 +109,7 @@ class WorkspaceService
 					'Workspace' => $workspace_it->getId(),
 					'Caption' => \IteratorBase::utf8towin($node['title'])
 			);
-			
+
 			if ( $menu_it->getId() > 0 )
 			{
 				$menu->modify_parms($menu_it->getId(), $parms); 
@@ -215,7 +214,7 @@ class WorkspaceService
 					$workspace['menuNodes'][$node_key]['nodes'][] = array (
 							'report' => $report
 					);
-					
+
 					$this->storeWorkspace($workspace);
 				}
 			}
@@ -307,7 +306,7 @@ class WorkspaceService
 	private function loadWorkspace( $workspace_it )
 	{
 		$data = array(
-				'name' => $workspace_it->get('Caption'),
+				'name' => translate($workspace_it->get('Caption')),
 				'uid' => $workspace_it->get('UID'),
 				'icon' => $workspace_it->get('Icon')
 		);
@@ -344,6 +343,10 @@ class WorkspaceService
 					$item['name'] = $report_it->get('Caption');
 					$item['report'] = $report_it->getId();
 					$item['module'] = $report_it->get('Module');
+					if ( $item['icon'] == '' && $item['module'] != '' ) {
+						$module_it = $module->getExact($report_it->get('Module'));
+						$item['icon'] = $module_it->get('Icon');
+					}
 				}
 				else if ( $item_it->get('ModuleUID') != '' )
 				{
@@ -366,7 +369,7 @@ class WorkspaceService
 			
 			$data['menus'][] = array (
 					'uid' => $menu_it->get('UID'),
-					'name' => $menu_it->get('Caption'),
+					'name' => translate($menu_it->get('Caption')),
 					'items' => $items
 			);
 			

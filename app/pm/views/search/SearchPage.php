@@ -1,36 +1,17 @@
 <?php
+include "SearchTable.php";
 
-include "SearchForm.php";
-include "SearchParameters.php";
-        
 class SearchPage extends PMPage
 {
-    function __construct()
-    {
-        parent::__construct();
-        
-        $this->addInfoSection( new SearchParameters() );
+    function getObject() {
+        return getFactory()->getObject('SearchResult');
     }
-    
- 	function getTable() 
- 	{
- 		return null;
+
+ 	function getTable() {
+ 		return new SearchTable($this->getObject());
  	}
  	
- 	function needDisplayForm()
- 	{
- 	    return true;
- 	}
- 	
- 	function getForm() 
- 	{
- 	    global $model_factory;
- 	    
- 		return new SearchForm( $model_factory->getObject('entity') );
- 	}
- 
- 	function getTitle()
- 	{
+ 	function getTitle() {
  		return translate('Поиск');
  	}
 }

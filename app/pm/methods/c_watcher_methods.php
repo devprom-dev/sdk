@@ -58,7 +58,7 @@
 		return text(675);
 	}
 	
- 	function getJSCall()
+ 	function getJSCall($parms = array())
  	{
  		return parent::getJSCall(
  			array ( 'object' => $this->object_it->object->getClassName(),

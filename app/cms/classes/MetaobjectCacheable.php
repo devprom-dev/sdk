@@ -45,8 +45,6 @@ class MetaobjectCacheable extends Metaobject
 	
 	function getCachedQuery( $getter, $getter_handler )
 	{
-		global $model_factory, $times;
-		
 		$filters = $this->getFilters();
 		
 		$sort = $this->getSortClause();
@@ -284,7 +282,7 @@ class MetaobjectCacheable extends Metaobject
 	}
 
 	//----------------------------------------------------------------------------------------------------------
-	function delete( $object_id )
+	function delete( $object_id, $record_version = ''  )
 	{
 		$this->check_is_cacheable = false;
 

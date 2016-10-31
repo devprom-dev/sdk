@@ -34,10 +34,9 @@ class ReportSetting extends PageListSetting
     
     function setSorts( $sorts_array )
     {
-        foreach( $sorts_array as $sort )
-        {
+        $index = '';
+        foreach( $sorts_array as $sort ) {
             $this->sorts['sort'.$index] = $sort;
-            
             $index = $index == '' ? 2 : $index + 1;
         }
     }

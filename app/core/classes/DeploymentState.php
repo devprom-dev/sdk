@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
-
 class DeploymentState extends Metaobject
 {
 	function DeploymentState()

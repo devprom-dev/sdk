@@ -141,27 +141,17 @@ class FilterAttributePredicate extends FilterPredicate
  		if ( count($values) < 1 ) $values = array(0);
  		
  		$this->setIds($values);
- 		
+
  		return $this->getQueryPredicate();
  	}
  	
  	function getQueryPredicate()
  	{
- 		if ( in_array($this->getObject()->getAttributeType($this->getAttribute()), array('char','varchar','text','wysiwyg')) )
- 		{
- 			$field = "IFNULL(".$this->getAlias().".".$this->getAttribute().",'".$this->getObject()->getDefaultAttributeValue($this->getAttribute())."')"; 
- 		}
- 		else
- 		{
- 			$field = $this->getAlias().".".$this->getAttribute();
- 		}
- 		
- 	 	if ( $this->hasNullValue() )
- 		{
+		$field = $this->getAlias().".".$this->getAttribute();
+ 	 	if ( $this->hasNullValue() ) {
  			return " AND (".$field." IN (".join($this->getIds(),',').") OR ".$this->getAlias().".".$this->getAttribute()." IS NULL )";
  		}
- 		else
- 		{
+ 		else {
  			return " AND ".$field." IN (".join($this->getIds(),',').") ";
  		}
  	}

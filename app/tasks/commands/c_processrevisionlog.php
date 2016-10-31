@@ -6,8 +6,10 @@ class ProcessRevisionLog extends TaskCommand
 {
  	function execute()
 	{
+		if ( !class_exists('Subversion', false) ) return;
+
 		$this->logStart();
-		
+
 		$ids = $this->getChunk(); 
 
 		// shift the next chunk
@@ -78,21 +80,13 @@ class ProcessRevisionLog extends TaskCommand
 
 			$object = getFactory()->getObject('pm_Subversion');
 			
-			if ( !$object instanceof Subversion )
-			{
+			if ( !$object instanceof Subversion ) {
 				$scm_it->moveNext(); continue;
 			}
-			
-			$it = $object->getExact($scm_it->getId());
-			 
-			$connector = $it->getConnector();
-			
-			$it->refresh();
-			
-			$this->logInfo( ob_get_contents());
-			
-			ob_end_clean();
-			
+
+			$method = new CodeRefreshRepoWebMethod($object->getExact($scm_it->getId()));
+            $method->execute_request();
+
 			$scm_it->moveNext();
 		}
 	}

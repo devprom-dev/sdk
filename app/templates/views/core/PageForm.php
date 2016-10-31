@@ -17,66 +17,53 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
 ?>
 
 <div class="<?=($formonly ? '' : ($draw_sections && count($sections) > 0 ? 'span8' : $no_sections_class))?>">
-    <form class="form-horizontal" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>">
+    <form class="form-horizontal <?=$form_class?>" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" class_name="<?=$form_class_name?>" autocomplete="off">
     	<fieldset>
     	
     	    <?php if (!$formonly) { ?>
     
         	    <div class="pull-left">
                     <ul class="breadcrumb">
-            	        <?php if ( $navigation_title != '') { ?>
-            	        <li>
-            	            <a href="<?=$navigation_url?>"><?=$navigation_title?></a>
-            	            <?php if ( $has_caption ) { ?><span class="divider">/</span> <?php } ?>
-            	        </li>
-            	        <?php } ?>
-                    
-                        <?php if ( $has_caption ) { ?>
-                    	<li>
-                   	        <?
-                   	        if ( $uid != '' ) {
-                   	        	 echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid));
-                   	        }
-                   	        else {
-								echo $caption;
+						<?php
+						if ( $uid != '' ) {
+							if ( $navigation_url != '' ) {
+								echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
 							}
-							?>
-                    	</li>
-                    	<?php } ?>
+							else if ( $has_caption ) {
+								echo '<li>'.$caption.'<span class="divider">/</span></li>';
+							}
+							echo '<li>'.$view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)).'</li>';
+						}
+						else {
+							echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a></li>';
+						}
+						?>
                     </ul> <!-- end breadcrumb -->
         		</div>
 
-    		    <div class="pull-right actions">
+				<?php if ( $state_name != '' ) { ?>
+					<div class="pull-left" style="margin-top:6px;">
+						<?php
+						echo $view->render('pm/StateColumn.php', array (
+							'color' => $form->getObjectIt()->get('StateColor'),
+							'name' => $form->getObjectIt()->get('StateName'),
+							'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
+							'id' => 'state-label'
+						));
+						?>
+						&nbsp;
+					</div>
+				<?php } ?>
 
-    		        <?php $form->drawButtons(); ?>
-        		
-    		        <?php if ( count($actions) > 0 && $action != 'show' ) { ?>
-    		        
-        		        <div class="btn-group">
-        					<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-        						<?=translate('Действия')?>
-        						<span class="caret"></span>
-        					</a>
-        					<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
-        				</div>
-        				
-        			<?php } ?>
-        			
+    		    <div class="pull-right actions">
+    		        <?php
+					$form->drawButtons();
+					if ( count($actions) > 0 && $action != 'show' ) {
+						echo $view->render('core/PageFormButtons.php', array('actions' => $actions));
+					}
+					?>
     			</div> <!-- end actions -->
         			
-        	    <?php if ( $state_name != '' ) { ?>
-        		<div class="pull-right actions" style="margin-top:6px;">
-					<?php 
-						echo $view->render('pm/StateColumn.php', array (
-									'color' => $form->getObjectIt()->get('StateColor'),
-									'name' => $form->getObjectIt()->get('StateName'),
-									'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
-							)); 
-					?>        		
-       				&nbsp;
-        		</div>
-        		<?php } ?>
-        		
         		<div class="clearfix"></div>
     		
     		<?php } ?>
@@ -88,24 +75,18 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
     		<input type="hidden" id="<?=$class_name?>Id" name="<?=$class_name.'Id'?>" value="<?=$object_id?>">
     		<input id="<?=$class_name?>redirect" type="hidden" name="redirect" value="<?=$redirect_url?>">
     		<input type="hidden" id="unsavedMessage" value="<?=text(632)?>">
-    		<input type="hidden" id="deleteMessage" value="<?=$form->getDeleteMessage()?>">
     		<input type="hidden" name="Transition" value="<?=$transition?>">
     		
     		<?php 
-    		
-    		echo $view->render( $form_body_template, array(
-                'warning' => $warning,
-                'alert' => $alert,
-                'attributes' => $attributes,
-                'formonly' => $formonly,
-                'form' => $form
-            ));
-    
-			if ( $bottom_hint != '' )
-			{
-				echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id));
-			}
-
+				echo $view->render( $form_body_template, array(
+					'warning' => $warning,
+					'alert' => $alert,
+					'attributes' => $attributes,
+					'shortAttributes' => $shortAttributes,
+					'formonly' => $formonly,
+					'form' => $form
+				));
+				echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id, 'open' => $hint_open));
             ?>
        </fieldset>
     </form>
@@ -153,9 +134,5 @@ if ( !$formonly && $draw_sections && count($bottom_sections) > 0 )
 <?php } ?>
 
 <script type="text/javascript">
-
     devpromOpts.saveButtonName = '<?=$button_save_title?>';
-    devpromOpts.closeButtonName = '<?=translate('Отменить')?>';
-    devpromOpts.deleteButtonName = '<?=translate('Удалить')?>';
-
 </script>

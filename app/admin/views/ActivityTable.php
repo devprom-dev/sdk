@@ -52,8 +52,7 @@ class ActivityTable extends PageTable
 	
 	function IsNeedToDelete() { return false; }
 	
- 	function getDefaultRowsOnPage()
-	{
+ 	function getDefaultRowsOnPage() {
 		return 20;
 	}
 } 

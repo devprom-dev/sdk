@@ -9,7 +9,7 @@ class FieldStateTransitions extends Field
 		$this->state_it = $state_it instanceof OrderedIterator ? $state_it : $state_it->getEmptyIterator();
 	}
 
- 	function draw()
+ 	function draw( $view = null )
  	{
 		$targets = getFactory()->getObject('Transition')->getRegistry()->Query(
 					array (

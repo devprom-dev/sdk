@@ -69,7 +69,7 @@ class ChangeLogIterator extends OrderedIterator
 		return $change_kind;
  	}
  	
- 	function getImage()
+ 	function getIcon()
  	{
 		switch ($this->get('ChangeKind')) 
 		{
@@ -101,23 +101,30 @@ class ChangeLogIterator extends OrderedIterator
 				$change_kind = 'icon-edit'; 
 				break;
 		}
-		
 		return $change_kind;
  	}
  	
  	function getObjectIt()
  	{
- 		global $model_factory;
+ 		$class_name = getFactory()->getClass( $this->get('ClassName') );
+		if ( $class_name == 'metaobject' ) $class_name = getFactory()->getClass( $this->get('EntityRefName') );
 
- 		$class_name = $model_factory->getClass( $this->get('ClassName') );
+		if ( $class_name == '' || !class_exists($class_name, false) ) {
+			return $this->object->getEmptyIterator();
+		}
 		
-		if ( $class_name == 'metaobject' ) $class_name = $model_factory->getClass( $this->get('EntityRefName') );
- 		
-		if ( $class_name == '' || !class_exists($class_name, false) ) return $this->object->getEmptyIterator();
-		
-		$object = $model_factory->getObject($class_name);
-		
+		$object = getFactory()->getObject($class_name);
 		$object->setVpdContext( $this );
+
+		if ( $this->get('ChangeKind') == 'deleted' ) {
+			return $object->createCachedIterator(
+				array (
+					array (
+						$object->getIdAttribute() => $this->get('ObjectId')
+					)
+				)
+			);
+		}
 
 		return $this->get('ObjectId') != '' 
             ? $object->getExact($this->get('ObjectId')) 

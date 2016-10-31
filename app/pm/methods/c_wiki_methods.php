@@ -87,9 +87,10 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	function getValues()
  	{
   		return array (
- 			'all' => translate('Все'), 
- 			'actual' => translate('Синхронизированы'),
- 			'nonactual' => translate('Рассинхронизированы')
+ 			'all' => text(2248),
+ 			'actual' => text(2249),
+ 			'nonactual' => text(2250),
+            'empty' => text(2251)
  			);
 	}
 
@@ -291,7 +292,7 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
 		return translate('Отменить');
 	}
 	
-	function getJSCall( $object_it, $change_it ) 
+	function url( $object_it, $change_it )
 	{
 		return parent::getJSCall( array( 
 				'wiki' => $object_it->getId(),
@@ -350,7 +351,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  		
   		$values = array (
  			'all' => translate('Все'),
- 			);
+			' 0' => translate('<нет значения>')
+		);
 		$items = array();
 
  		while ( !$this->tag_it->end() )
@@ -375,8 +377,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
      		}
  		}
  		
-		$values[' 0'] = translate('Тэги: не заданы');
-
  		return $values;
 	}
 	
@@ -391,41 +391,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	}
  }
 
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewWikiContentWebMethod extends PMWikiFilterWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Содержание');
- 	}
-
- 	function getValues()
- 	{
-  		$values = array (
- 			'all' => translate('Любое'),
-  			'nonempty' => translate('Есть содержимое'),
-  			'empty' => translate('Нет содержимого')
- 			);
- 		
- 		return $values;
-	}
-	
-	function getStyle()
-	{
-		return 'width:130px;';
-	}
-
- 	function getValueParm()
- 	{
- 		return 'content';
- 	}
- 	
- 	function getType()
- 	{
- 		return 'singlevalue';
- 	}
- }
- 
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewWikiArchivedWebMethod extends PMWikiFilterWebMethod
  {
@@ -537,5 +502,3 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  		return 'singlevalue';
  	}
  } 
-  
-?>

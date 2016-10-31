@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
 use Devprom\ProjectBundle\Service\Model\ModelService;
+use Devprom\ProjectBundle\Service\Model\FilterResolver\ModifiedAfterFilterResolver;
 
 include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
@@ -13,8 +14,7 @@ include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.ph
 abstract class RestController extends FOSRestController implements ClassResourceInterface
 {
     abstract protected function getEntity(Request $request);
-    abstract protected function getFilterResolver(Request $request);
-	
+
 	public function cgetAction(Request $request)
 	{
 		try    	
@@ -26,9 +26,10 @@ abstract class RestController extends FOSRestController implements ClassResource
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->find(
-			        				$this->getEntity($request),
-									$request->get('limit'),
-									$request->get('offset')
+								$this->getEntity($request),
+								$request->get('limit'),
+								$request->get('offset'),
+								$request->query->has('extended')
 							), 200
 					));
 		}
@@ -50,7 +51,10 @@ abstract class RestController extends FOSRestController implements ClassResource
 	        return $this->handleView(
 	        		$this->view(
 			        		$this->getModelService($request)->get(
-			        				$this->getEntity($request), $id
+								$this->getEntity($request),
+								$id,
+								'text',
+								$request->query->has('extended')
 							), 200
 					));
 		}
@@ -165,5 +169,16 @@ abstract class RestController extends FOSRestController implements ClassResource
 			default:
 				return 'dummy';
 		}
+	}
+
+	protected function getFilterResolver(Request $request) {
+		return array(
+			new ModifiedAfterFilterResolver(
+				$request->get('updatedAfter'),
+				$request->get('updatedBefore'),
+				$request->get('createdAfter'),
+				$request->get('createdBefore')
+			)
+		);
 	}
 }

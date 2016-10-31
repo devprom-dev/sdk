@@ -1,5 +1,6 @@
 <?php
-
+include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/FilterStateMethod.php";
 include "PMWikiList.php";
 include "PMWikiChart.php";
 
@@ -53,13 +54,8 @@ class PMWikiTable extends PMPageTable
 		{
 			case 'chart':
 		 		return new PMWikiChart( $this->getObject(), $iterator );
-
-			case 'files':
-		 		return new FilesWikiPagesList( $this->getObject() );
-		 		
 			case 'templates':
 				return new WikiTemplateList( $this->getObject() );
-				 
 		 	default:
 		 		return new PMWikiList( $this->getObject() );
 		}
@@ -69,73 +65,90 @@ class PMWikiTable extends PMPageTable
 	{
         return md5($_REQUEST['view'].parent::getFiltersName());
 	}
+
+	function getCommonFilters()
+	{
+		$filters = array();
+
+		if ( $this->getObject()->IsStatable() ) {
+			$filters[] = new FilterStateMethod($this->getObject());
+		}
+		$filters[] = new ViewWikiTagWebMethod($this->getObject());
+		$filters[] = new FilterObjectMethod(
+			getFactory()->getObject('User'), translate($this->getObject()->getAttributeUserName('Author')), 'author'
+		);
+
+		return $filters;
+	}
 	
 	function getFilters()
 	{
 		$object = $this->getObject();
 		
-		$parent_filter = new FilterAutoCompleteWebMethod( 
-			$object, translate($object->getAttributeUserName( 'ParentPage' )) 
-		);
-		$parent_filter->setValueParm( 'parentpage' );
+		$filters = array( $this->buildFilterDocument() );
 
-		$document = getFactory()->getObject(get_class($object));
-		$document->addFilter( new WikiRootFilter() );
-		$document_filter = new FilterObjectMethod( $document, translate('Документ'), 'document' );
-		$document_filter->setType( 'singlevalue' );
-		$document_filter->setUseUid( true );
-		
-		$filters = array( $document_filter );
-		if ( is_a($this->getStateObject(), 'StateBase') )
-		{
-		    $filters[] = new FilterStateMethod( $this->getStateObject() );
-		    $filters[] = new FilterStateTransitionMethod( $this->getStateObject() );
-		}
-		
+		$filters[] = $this->buildByDateFilter();
 		$filters[] = new WikiFilterActualLinkWebMethod();
 		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
-		$filters[] = new ViewWikiTagWebMethod( $object );
+
+		$parent_filter = new FilterAutoCompleteWebMethod(
+			$object, translate($object->getAttributeUserName( 'ParentPage' ))
+		);
+		$parent_filter->setValueParm( 'parentpage' );
 		$filters[] = $parent_filter;
-		$filters[] = new FilterAutoCompleteWebMethod( 
-				$object->getAttributeObject('Author'), 
-				translate($object->getAttributeUserName( 'Author' )) 
-				);
-		$filters[] = new ViewWikiContentWebMethod();
-			
+
 		$type_it = $this->object->getTypeIt();
-		if ( is_object($type_it) )
-		{
-		    $filter = new FilterObjectMethod( $type_it, '', 'type' );
-		    $filter->setIdFieldName( 'ReferenceName' );
-			$filters[] = $filter;
+		if ( is_object($type_it) ) {
+			$filter = $this->buildTypeFilter($type_it);
+			if ( is_array($filter) ) {
+				$filters = array_merge($filters, $filter);
+			}
+			else {
+				$filters[] = $filter;
+			}
 		}
-		
-		return array_merge( $filters, parent::getFilters() );
+
+		if ( $this->getObject()->IsStatable() ) {
+			$filters[] = new FilterStateTransitionMethod($this->getObject());
+		}
+
+		return array_merge(
+			$this->getCommonFilters(),
+			$filters,
+			parent::getFilters()
+		);
 	}
 	
 	function getFilterPredicates()
 	{
 		$values = $this->getFilterValues();
-		
+
 		$predicates = array (
 			new PMWikiStageFilter( $values['version'] ),
 			new StatePredicate( $values['state'] ),
 			new FilterAttributePredicate( 'PageType', $values['type'] ),
+			new WikiTypePlusChildren($values['typepluschildren']),
 			new PMWikiLinkedStateFilter( $values['linkstate'] ),
-			new FilterAttributePredicate( 'Author', $values['participant'] ),
+			new WikiAuthorFilter( $values['author'] ),
 			new WikiRootTransitiveFilter( $values['parentpage'] ),
 			new WikiTagFilter( $values['tag'] ),
-			new WikiContentFilter( $values['content'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
-		    new WikiRootTransitiveFilter( $values['document'] ),
-			new FilterModifiedAfterPredicate($values['modifiedafter'])
+		    new WikiDocumentUIDFilter( $values['document'] ),
+			new FilterModifiedAfterPredicate($values['modifiedafter']),
+			new FilterSearchAttributesPredicate($values['search'], array('Caption','Content'))
 		);
-		
-		if ( $this->Statable($this->getObject()) )
-		{
+
+		if ( $this->Statable($this->getObject()) ) {
 		    $predicates[] = new TransitionObjectPredicate($this->getObject(), $values['transition']);
 		}
-		
+
+		if ( !in_array($values['bydate'], array('','all','hide')) ) {
+			$persister = new WikiPageHistoryPersister();
+			$persister->setSinceDate($values['bydate']);
+			$this->getObject()->addPersister( $persister );
+			$predicates[] = new FilterSubmittedBeforePredicate($values['bydate']);
+		}
+
 		return array_merge(parent::getFilterPredicates(), $predicates);
 	}
 	
@@ -153,71 +166,37 @@ class PMWikiTable extends PMPageTable
 			'uid' => 'create' 
 		);
 
-        $type_it = $this->getForm()->getTypeIt();
-        while ( is_object($type_it) && !$type_it->end() )
-        {
-            $uid = 'create'.$type_it->get('ReferenceName');
-            $actions[$uid] = array(
-                'name' => $type_it->getDisplayName(),
-                'url' => $method->getJSCall(array('PageType'=>$type_it->getId())),
-                'uid' => $uid
-            );
-            $type_it->moveNext();
-        }
 		return $actions;
 	}
 	
 	function getExportActions()
 	{
-	    $page_it = $this->getObject()->getEmptyIterator();
-	    
-	    $actions = $this->getForm()->getExportActions( $page_it );
+	    $actions = $this->getForm()->getExportActions( $this->getExportPageIt() );
 
 		$method = new ExcelExportWebMethod();
-		
-		$actions[] = array( 
-			'name' => $method->getCaption().' ('.translate('Текст').')',
-			'url' => $method->getJSCall( $this->getCaption(), 'WikiIteratorExportExcelText' ) 
+		$actions[] = array(
+			'uid' => 'export-excel-text',
+			'name' => 'Excel ('.translate('Текст').')',
+			'url' => $method->url( $this->getCaption(), 'WikiIteratorExportExcelText' )
 		);
-		
-		$actions[] = array( 
-			'name' => $method->getCaption().' ('.translate('HTML').')',
-			'url' => $method->getJSCall( $this->getCaption(), 'WikiIteratorExportExcelHtml' ) 
+		$actions[] = array(
+			'uid' => 'export-excel-html',
+			'name' => 'Excel ('.translate('HTML').')',
+			'url' => $method->url( $this->getCaption(), 'WikiIteratorExportExcelHtml' )
 		);
 		
 		return $actions;
 	}
-	
-	function getTraceActions()
-	{
-		return array();
-	}
+
+	function getExportPageIt()
+    {
+	    return $this->getObject()->getEmptyIterator();
+    }
 	
 	function getActions()
 	{
 		$actions = array();
 		
-		$export_actions = $this->getExportActions();
-		if ( count($export_actions) > 0 )
-		{
-			$actions[] = array( 
-			        'name' => translate('Экспорт'),
-					'items' => $export_actions,
-			        'uid' => 'export'
-			);
-		}
-
-		$trace_actions = $this->getTraceActions();
-		if ( count($trace_actions) > 0 )
-		{
-	        if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-			$actions[] = array (
-				'uid' => 'trace', 
-				'name' => translate('Трассировка'),
-				'items' => $trace_actions 
-			);
-		}
-
 		$module_it = getFactory()->getObject('Module')->getExact('attachments');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
@@ -255,4 +234,48 @@ class PMWikiTable extends PMPageTable
 	{
 		return new WikiFilterViewWebMethod();
 	}
+
+	function buildFilterDocument()
+	{
+		$document = getFactory()->getObject(get_class($this->getObject()));
+		$document->addFilter( new WikiRootFilter() );
+		$document_filter = new FilterObjectMethod( $document, translate('Документ'), 'document' );
+		$document_filter->setType( 'singlevalue' );
+		$document_filter->setUseUid( true );
+		$document_filter->setHasNone( false );
+		$document_filter->setIdFieldName('UID');
+		return $document_filter;
+	}
+
+	function buildByDateFilter()
+	{
+		$date = new FilterDateWebMethod();
+		$date->setValueParm( 'bydate' );
+		$date->setCaption(text(2122));
+		return $date;
+	}
+
+	function buildTypeFilter( $type_it )
+	{
+		$filter = new FilterObjectMethod( $type_it, translate('Тип'), 'type' );
+		$filter->setIdFieldName( 'ReferenceName' );
+		return $filter;
+	}
+
+	function getSortFields()
+	{
+		$fields = parent::getSortFields();
+		$fields[] = 'SectionNumber';
+		return $fields;
+	}
+
+    function getDetails()
+    {
+        foreach( $this->getPage()->getInfoSections() as $section ) {
+            if ( $section instanceof DetailsInfoSection ) {
+                return parent::getDetails();
+            }
+        }
+        return array();
+    }
 }

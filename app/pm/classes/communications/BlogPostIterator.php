@@ -36,4 +36,8 @@ class BlogPostIterator extends OrderedIterator
         $tag = $model_factory->getObject('BlogPostTag');
         return $tag->getTagsByPost( $this->getId() );
     }
+
+    function getViewUrl() {
+        return getSession()->getApplicationUrl($this).'project/blog?BlogPostId='.$this->getId();
+    }
 }

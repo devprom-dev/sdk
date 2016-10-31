@@ -3,15 +3,13 @@
 namespace plugins\support\classes;
 
 use DevpromTestCase;
-use IncomingMail;
+use PhpImap\IncomingMail;
 use MailboxMessage;
 use PHPUnit_Framework_MockObject_MockObject;
-use Project;
-use Request;
+use Devprom\ProjectBundle\Service\Model\ModelService;
 
 include_once SERVER_ROOT_PATH . "/plugins/support/classes/MailboxScanner.php";
 include_once SERVER_ROOT_PATH . "/plugins/support/classes/MailboxMessage.php";
-include_once SERVER_ROOT_PATH . "/ext/imap/ImapMailbox.php";
 include_once SERVER_ROOT_PATH . "/core/classes/project/Project.php";
 include_once SERVER_ROOT_PATH . "/core/classes/project/ProjectImportance.php";
 include_once SERVER_ROOT_PATH . "/pm/classes/comments/Comment.php";
@@ -37,7 +35,6 @@ class MailboxScannerTest extends DevpromTestCase {
         //$this->markTestSkipped("Невозможно поддерживать");
         $this->commentMock = $this->getMock("Comment", array("add_parms"));
         $this->attachmentMock = $this->getMock("Attachment");
-        $this->objectUID = $this->getMock("ObjectUID");
 
         $this->userServiceMock = $this->getMock("UserService", array("authorizeExistingUser", "isServicedeskProject"));
         $this->userServiceMock->expects($this->any())->method("isServicedeskProject")->will($this->returnValue(false));
@@ -68,6 +65,7 @@ class MailboxScannerTest extends DevpromTestCase {
         $this->requestItMock = $this->requestMock->createSQLIterator('');
         $this->watcherMock = $this->getMock("Watcher", array("add_parms", "createSQLIterator"), array($this->requestMock->createSQLIterator('')));
         $this->project = $this->watcherMock;
+        $this->user = $this->watcherMock;
         
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
             array (
@@ -75,19 +73,40 @@ class MailboxScannerTest extends DevpromTestCase {
                 array ( 'Watcher', $this->requestMock->createSQLIterator(''), $this->watcherMock ),
                 array ( 'ProjectImportance', null, new \ProjectImportance() ),
                 array ( 'pm_Project', null, $this->project ),
-                array ( 'Project', null, $this->project )
+                array ( 'Project', null, $this->project ),
+                array ( 'cms_User', null, $this->user ),
+                array ( 'User', null, $this->user )
             )
         ));
                 
         $this->project = $this->getMock('Project', array('createIterator'));
-        $this->projectIt = $this->getMock("ProjectIterator", array(), array($this->project));
+
+        $this->projectIt = $this->getMock("ProjectIterator", array('getProjectIt','getMailboxIterator'), array($this->project));
+        $this->projectIt->expects($this->any())->method('getProjectIt')->will($this->returnValue($this->projectIt));
+        $this->projectIt->expects($this->any())->method('getMailboxIterator')->will($this->returnValue($this->projectIt));
+
         $this->projectIt->expects($this->any())->method('getId')->will($this->returnValue(5));
         $this->session = $this->getSessionObject();
 
+        $this->objectUID = $this->getMock("ObjectUID", array("getUIDInfo","getProject","getObjectIt"));
+        $this->objectUID->expects($this->any())->method("getUIDInfo")->will($this->returnValue(array()));
+        $this->objectUID->expects($this->any())->method("getProject")->will($this->returnValue($this->projectIt));
+
+        $this->modelService = new ModelService(
+            new \ModelValidator(
+                array (
+                    new \ModelValidatorObligatory(),
+                    new \ModelValidatorTypes()
+                )
+            ),
+            new \ModelDataTypeMapper(),
+            array(),
+            $this->objectUID
+        );
+
         $this->mockScannerBuilder = new MockScannerBuilder(
             $this->requestMock, $this->commentMock, $this->attachmentMock,  $this->userServiceMock, $this->objectUID,
-            $this->userItMock, $this->requestItMock);
-
+            $this->userItMock, $this->requestItMock, $this->modelService);
     }
 
     /**
@@ -130,32 +149,6 @@ class MailboxScannerTest extends DevpromTestCase {
     /**
      * @test
      */
-    public function shouldCreateNewCommentIfRequestEqualToSubjectExists() {
-        $subject = "Existing request";
-
-        $this->requestMock->expects($this->any())->method('getByRefArray')->will(
-        		$this->returnValue(
-        				$this->requestMock->createSQLIterator('')
-        		));
-        
-        $this->watcherMock->expects($this->any())->method('createSQLIterator')->will(
-        		$this->returnValue(
-        				$this->watcherMock->createCachedIterator(array(array('pm_WatcherId' => 1)))
-        		));
-        
-        // set up expectations
-        $this->requestMock->expects($this->never())->method('add_parms');
-        $this->commentMock->expects($this->once())->method('add_parms');
-
-        // exercise
-        $scanner = $this->buildScanner();
-        $mail_message = $this->buildMessage($subject);
-        $scanner->processMessage($mail_message, $this->session, $this->projectIt);
-    }
-
-    /**
-     * @test
-     */
     public function shouldNotAddNewWatcherWhenCommentReceived() {
 
         $scanner = $this->mockScannerBuilder->newInstance()->receivedMailWithIssueIdInSubject()->get();
@@ -174,9 +167,8 @@ class MailboxScannerTest extends DevpromTestCase {
 
     protected function buildScanner() {
         return new MailboxScanner($this->requestMock, $this->commentMock, $this->attachmentMock, $this->attachmentMock,
-            $this->userServiceMock, $this->objectUID);
+            $this->userServiceMock, $this->objectUID, $this->modelService);
     }
-
 
     /**
      * @return MailboxMessage
@@ -211,7 +203,7 @@ class MockScannerBuilder {
     private $requestMock, $commentMock, $attachmentMock, $userServiceMock, $objectUID, $userItMock, $requestItMock;
 
     public function __construct(&$requestMock, &$commentMock, &$attachmentMock,
-                                &$userServiceMock, &$objectUID, &$userItMock, &$requestItMock) {
+                                &$userServiceMock, &$objectUID, &$userItMock, &$requestItMock,&$modelService) {
         $this->requestMock = $requestMock;
         $this->commentMock = $commentMock;
         $this->attachmentMock = $attachmentMock;
@@ -219,6 +211,7 @@ class MockScannerBuilder {
         $this->objectUID = $objectUID;
         $this->userItMock = $userItMock;
         $this->requestItMock = $requestItMock;
+        $this->modelService = $modelService;
     }
 
     /**
@@ -226,7 +219,7 @@ class MockScannerBuilder {
      */
     public function newInstance() {
         $this->scanner = new MailboxScanner($this->requestMock, $this->commentMock, $this->attachmentMock, $this->attachmentMock,
-            $this->userServiceMock, $this->objectUID);
+            $this->userServiceMock, $this->objectUID, $this->modelService);
         return $this;
     }
 

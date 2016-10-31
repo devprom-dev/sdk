@@ -5,7 +5,6 @@ include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder 
 {
 	private $state_it = null;
-	
 	private $attributes = array();
 	
 	public function __construct( $state_it, $attributes = array() )
@@ -18,6 +17,7 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
     {
     	if ( ! $object instanceof MetaobjectStatable ) return;
  	    if ( $object->getStateClassName() == '' ) return;
+        $visibleAttributes = array();
  	    
  	    if ( count($this->attributes) > 0 )
  	    {
@@ -31,17 +31,13 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 	 	    	$object->setAttributeRequired($attribute, false);
 	 	    }
 	 	    
- 	       	foreach( $this->attributes as $attribute )
-			{
+ 	       	foreach( $this->attributes as $attribute ) {
 				$object->setAttributeVisible($attribute, true);
 			}
  	    }
 
 		// show attributes visible on the first state
-		$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
-			array ( new FilterAttributePredicate('State', $object->cacheStates()->getId()) )
-		);
-
+		$attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object);
 		while( !$attribute_it->end() )
 		{
 			if ( $attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y' ) {
@@ -49,14 +45,13 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 				$object->setAttributeRequired(
 					$attribute_it->get('ReferenceName'), $attribute_it->get('IsRequired') == 'Y'
 				);
+                $visibleAttributes[] = $attribute_it->get('ReferenceName');
 			}
 			$attribute_it->moveNext();
 		}
 
 		// apply attributes settings for the given state
-		$attribute_it = getFactory()->getObject('StateAttribute')->getRegistry()->Query(
-				array ( new FilterAttributePredicate('State', $this->state_it->getId() > 0 ? $this->state_it->getId() : '-1') )
-		);
+		$attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->state_it->get('ReferenceName'));
 		while( !$attribute_it->end() )
 		{
 			$object->setAttributeRequired( 
@@ -66,7 +61,14 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 					$attribute_it->get('ReferenceName'), 
 					$attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y'
 				);
+            $object->setAttributeEditable(
+                $attribute_it->get('ReferenceName'), $attribute_it->get('IsReadonly') != 'Y'
+            );
+
 			$attribute_it->moveNext();
+            if ( $attribute_it->get('IsVisible') == 'Y' ) {
+                $visibleAttributes[] = $attribute_it->get('ReferenceName');
+            }
 		}
 		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false);
 	}

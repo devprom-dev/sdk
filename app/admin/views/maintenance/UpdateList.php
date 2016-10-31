@@ -72,29 +72,29 @@ class UpdateList extends PageList
 	function getItemActions( $column_name, $object_it )
 	{
 		$actions = array();
-		
-	    if ( $object_it->getId() == '0' )
-	    {
+
+		$module_it = getFactory()->getObject('Module')->getExact('update-upload');
+		if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return $actions;
+
+	    if ( $object_it->getId() == '0' ) {
 	        $actions = array(
-                array( 'name' => translate('Установить'), 'url' => '?action=download&parms='.$object_it->get('Caption') ),
-                array(),
-                array( 
-                		'name' => translate('Скачать обновление'), 
-                		'url' => $object_it->get('DownloadUrl').'&iid='.INSTALLATION_UID,
-                		'uid' => 'download'
-	        	)
+                array( 'name' => translate('Установить'), 'url' => 'javascript: window.location=\'?action=download&parms='.$object_it->get('Caption').'\'' ),
 	        );
 	    }
     
-		$plugins = getSession()->getPluginsManager();
-		
+		$plugins = getFactory()->getPluginsManager();
 		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection(getSession()->getSite()) : array();
-		
-		foreach( $plugins_interceptors as $plugin )
-		{
+		foreach( $plugins_interceptors as $plugin ) {
 			$plugin->interceptMethodListGetActions( $this, $actions );
 		}
 		
 		return $actions;
+	}
+
+	function getRenderParms()
+	{
+		$parms = parent::getRenderParms();
+		$parms['table_class_name'] .= ' visible-operations';
+		return $parms;
 	}
 }

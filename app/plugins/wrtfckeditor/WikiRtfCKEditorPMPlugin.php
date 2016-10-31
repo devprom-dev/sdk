@@ -1,21 +1,33 @@
 <?php
-
-include_once "classes/notificators/WrtfCKEditorChangeNotificator.php";
-include_once "classes/WikiRtfCKEditor.php";
-include_once "classes/ScriptWrtfCKEditorBuilder.php";
-include_once "classes/StylesheetWrtfCKEditorBuilder.php";
+include "classes/notificators/WrtfCKEditorChangeNotificator.php";
+include "classes/WikiRtfCKEditor.php";
+include "classes/ScriptWrtfCKEditorBuilder.php";
+include "classes/StylesheetWrtfCKEditorBuilder.php";
+include "model/WysiwygMetadataBuilder.php";
+include "classes/WikiConverterBuilderWYSIWYG.php";
+include "classes/WikiImporterBuilderPanDoc.php";
 
 class WikiRtfCKEditorPMPlugin extends PluginPMBase
 {
     var $enabled;
-     
+
  	function getBuilders()
  	{
- 	    return array (
- 	            new WikiRtfCKEditor(),
- 	    		new ScriptWrtfCKEditorBuilder(getSession()),
- 	    		new StylesheetWrtfCKEditorBuilder(getSession()),
- 	    		new WrtfCKEditorChangeNotificator()
+ 	    $builders = array (
+            new WikiRtfCKEditor(),
+            new ScriptWrtfCKEditorBuilder(getSession()),
+            new StylesheetWrtfCKEditorBuilder(getSession()),
+            new WrtfCKEditorChangeNotificator(),
+            new WysiwygMetadataBuilder()
+        );
+
+        if ( !$this->checkEnabled() ) return $builders;
+
+ 	    return array_merge($builders,
+            array (
+                new WikiConverterBuilderWYSIWYG(),
+                new WikiImporterBuilderPanDoc()
+            )
  	    );
  	}
  	

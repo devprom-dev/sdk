@@ -1,10 +1,7 @@
 <?php
 
-include_once SERVER_ROOT_PATH."core/classes/user/User.php";
-include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."core/classes/project/Project.php";
 include_once SERVER_ROOT_PATH."core/classes/project/ProjectImportance.php";
-include_once SERVER_ROOT_PATH."pm/classes/settings/Methodology.php";
 include_once SERVER_ROOT_PATH."pm/classes/sessions/PMSession.php";
 
 abstract class DevpromPMApplicationTestCase extends DevpromTestCase
@@ -18,7 +15,12 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
         global $model_factory, $session;
 
         parent::setUp();
-        
+
+        $this->workflowMock = $this->getMock('WorkflowScheme', array('buildScheme','getStates'), array(), '', false);
+        $ref = new \ReflectionProperty('WorkflowScheme', 'singleInstance');
+        $ref->setAccessible(true);
+        $ref->setValue(null, $this->workflowMock);
+
         // project mock
         $this->project_mock = $this->getMock('Project', array('createIterator'), array(), '', false);
         

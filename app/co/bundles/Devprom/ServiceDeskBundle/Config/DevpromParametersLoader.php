@@ -3,7 +3,7 @@
 namespace Devprom\ServiceDeskBundle\Config;
 
 use DAL;
-use DALMySQL;
+use DALMySQLi;
 use Devprom\ServiceDeskBundle\Util\TextUtil;
 use MySQLConnectionInfo;
 
@@ -45,19 +45,17 @@ class DevpromParametersLoader {
     protected function queryDevpromSettings()
     {
     	if (!\DeploymentState::IsInstalled()) return array();
-        DALMySQL::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
+        DALMySQLi::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
         $sql = "SELECT LOWER(l.CodeName) langCode, IFNULL(AdminEmail, ' ') adminEmail, s.Caption clientName
                     FROM cms_SystemSettings s, cms_Language l
                     WHERE s.LANGUAGE = l.cms_languageId";
-        $r2 = DAL::Instance()->Query($sql);
-        $data = mysql_fetch_assoc($r2);
-        return $data;
+        return DAL::Instance()->QueryAssocArray($sql);
     }
 
     protected function queryProjectSettings()
     {
     	if (!\DeploymentState::IsInstalled()) return array();
-    	DALMySQL::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
+        DALMySQLi::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
         $sql = "SELECT p.pm_ProjectId, p.VPD
                   FROM pm_Project p
         		 WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) ";
@@ -65,7 +63,7 @@ class DevpromParametersLoader {
         $result = array();
         $ids = array();
         $vpds = array();
-        while($data = mysql_fetch_assoc($r2)) {
+        while($data = DAL::Instance()->QueryAssocArray($r2)) {
         	$ids[] = $data['pm_ProjectId'];
         	$vpds[] = $data['VPD'];
         }

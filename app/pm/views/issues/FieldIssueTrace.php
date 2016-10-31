@@ -20,7 +20,7 @@ class FieldIssueTrace extends FieldForm
  		return $this->object_it;
  	}
  	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 			$this->drawBody();
@@ -36,7 +36,7 @@ class FieldIssueTrace extends FieldForm
  	
  	function getForm( & $trace )
 	{
-		return new ObjectTraceFormEmbedded( $trace, 'ChangeRequest' );
+		return new ObjectTraceFormEmbedded( $trace, 'ChangeRequest', $this->getName() );
 	}
 	
  	function render( $view )

@@ -27,16 +27,22 @@ class WikiFileController extends AttachmentController
 	function getFilterResolver(Request $request)
 	{
 		if ( is_subclass_of($this->getClassName($request), 'WikiPage') ) {
-			return array (
-				new WikiFileFilterResolver(
-					$request->get('object')
+			return array_merge(
+				RestController::getFilterResolver($request),
+				array (
+					new WikiFileFilterResolver(
+						$request->get('object')
+					)
 				)
 			);
 		}
 		else {
-			return array (
-				new AttachmentFilterResolver(
-					$this->getClassName($request), $request->get('object')
+			return array_merge(
+				RestController::getFilterResolver($request),
+				array (
+					new AttachmentFilterResolver(
+						$this->getClassName($request), $request->get('object')
+					)
 				)
 			);
 		}

@@ -150,7 +150,7 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 			$mapper = new ModelDataTypeMapper();
 	 			
 	 			$mapper->map( $object, $attrs );
-		 		
+
 	 			$id = $object->add_parms( $attrs );
 
 	 			$it = $object->getExact($id);
@@ -187,10 +187,9 @@ class ProcessEmbeddedWebMethod extends WebMethod
 	 			default:
 	 			    
 	 			    $uid = new ObjectUID;
-	 			    
-	 				$result['caption'] = IteratorBase::wintoutf8(
-	 				        $it->getId() > 0 ? $uid->getUidWithCaption($it) : $it->getDisplayName() 
-	 				);
+
+	 				$result['caption'] = $it->getId() > 0
+                        ? $uid->getUidWithCaption($it) : $it->getDisplayName();
 	 		}
 	 		
 	 		switch ( $object->getEntityRefName() )
@@ -210,7 +209,7 @@ class ProcessEmbeddedWebMethod extends WebMethod
 					$result['url'] = IteratorBase::wintoutf8($it->getFileUrl());
 					break;
 	 		}
-	 		
+
 			echo $_REQUEST['callback'].JsonWrapper::encode($result);
 
 	 		break;

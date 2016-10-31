@@ -3,11 +3,13 @@
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/comments/persisters/CommentRecentPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 include_once "persisters/TaskDatesPersister.php";
 include "persisters/TaskSpentTimePersister.php";
 include "persisters/TaskPhotoPersister.php";
 include "persisters/TaskIssueArtefactsPersister.php";
 include "persisters/TaskReleasePersister.php";
+include "persisters/TaskColorsPersister.php";
 
 class TaskModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -20,11 +22,15 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		$object->addPersister( new AttachmentsPersister(array('Attachment')) );
 		$object->addPersister( new WatchersPersister(array('Watchers')) );
 
-		$object->addAttribute('IssueTraces', 'TEXT', text(1902), false);
-		$object->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
-		$object->addPersister( new TaskIssueArtefactsPersister(array('IssueTraces','IssueDescription')) );
-		foreach ( array('ChangeRequest', 'IssueDescription') as $attribute ) {
-			$object->addAttributeGroup($attribute, 'source-issue');
+		if ( $object->getAttributeType('ChangeRequest') != '' ) {
+			$object->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
+			$object->addAttribute('IssueAttachment', 'REF_pm_AttachmentId', text(2123), false, false, '', 41);
+			$object->addAttribute('IssueTraces', 'TEXT', text(1902), false, false, '', 42);
+            $object->addAttribute('IssueVersion', 'VARCHAR', text(1334), false, false, '', 43);
+			$object->addPersister( new TaskIssueArtefactsPersister(array('IssueTraces','IssueDescription','IssueAttachment','IssueVersion')) );
+			foreach ( array('IssueDescription','IssueAttachment','IssueVersion') as $attribute ) {
+				$object->addAttributeGroup($attribute, 'source-issue');
+			}
 		}
 
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
@@ -45,5 +51,14 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		
 		$object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Релиз'), false);
 		$object->addPersister( new TaskReleasePersister(array('PlannedRelease')) );
+
+		foreach ( array('StartDate','FinishDate','DueDays','DueWeeks','PlannedStartDate','PlannedFinishDate','RecordCreated','RecordModified') as $attribute ) {
+			$object->addAttributeGroup($attribute, 'dates');
+		}
+
+		foreach ( array('Planned','LeftWork','Fact','Spent') as $attribute ) {
+			$object->addAttributeGroup($attribute, 'time');
+		}
+		$object->addPersister( new TaskColorsPersister() );
     }
 }

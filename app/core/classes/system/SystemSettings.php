@@ -10,11 +10,10 @@ class SystemSettings extends MetaobjectCacheable
  	{
 		parent::__construct('cms_SystemSettings');
 		
-		$this->addAttribute( 'EmailSender', 'VARCHAR', text(1223), true, false, text(1224), 35 );
 		$this->addAttribute( 'ServerName', 'VARCHAR', text(1076), true, false, text(1218) );
 		$this->addAttribute( 'ServerPort', 'VARCHAR', text(1151), true, false, text(465) );
 		$this->addAttribute( 'TimeZoneUTC', 'VARCHAR', text(2026), true, false, text(2027) );
-		$this->addAttribute( 'PasswordLength', 'INTEGER', text(2070), true, false, text(2071) );
+		$this->addAttribute( 'PasswordLength', 'INTEGER', text(2070), true, false, text(2071), 60 );
 
 		$this->setAttributeRequired( 'OrderNum', false );
 		$this->setAttributeCaption( 'AllowToChangeLogin', text(1345) );

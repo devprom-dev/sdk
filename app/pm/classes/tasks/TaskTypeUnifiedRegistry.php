@@ -4,14 +4,8 @@ class TaskTypeUnifiedRegistry extends ObjectRegistrySQL
 {
     function getQueryClause()
     {
-        $ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
-        if ( !getSession()->getProjectIt()->IsPortfolio() ) $ids[] = getSession()->getProjectIt()->getId();
-
-        $vpds = getFactory()->getObject('Project')->getRegistry()->Query(
-            array (
-                new FilterInPredicate($ids)
-            )
-        )->fieldToArray('VPD');
+        $vpds = getSession()->getLinkedIt()->fieldToArray('VPD');
+        if ( !getSession()->getProjectIt()->IsPortfolio() ) $vpds[] = getSession()->getProjectIt()->get('VPD');
 
         return "(
             SELECT DISTINCT

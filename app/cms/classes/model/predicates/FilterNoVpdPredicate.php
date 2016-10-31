@@ -7,7 +7,7 @@ class FilterNoVpdPredicate extends FilterPredicate
  		parent::FilterPredicate('base');
  	}
  	
- 	function getPredicate()
+ 	function getPredicate( $filter = '' )
  	{
  		return " AND t.VPD IS NULL ";
  	}

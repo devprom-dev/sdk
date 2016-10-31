@@ -15,9 +15,11 @@ class WorkItemList extends PMPageList
         $this->task = getFactory()->getObject('Task');
         $this->task->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
         $this->task->addAttribute('Description', 'WYSIWYG', translate('Описание'), true, false, '', 15);
+		$this->task->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
 
         $this->request = getFactory()->getObject('Request');
         $this->request->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+		$this->request->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
         $this->request_form = new RequestForm($this->request);
 
 		// cache priority method
@@ -29,6 +31,7 @@ class WorkItemList extends PMPageList
 		}
 
         $this->getTable()->buildRelatedDataCache();
+		$this->getTable()->cacheTraces('IssueTraces');
 	}
 
     function getIt( $object_it )
@@ -130,9 +133,14 @@ class WorkItemList extends PMPageList
 				{
 					list($class, $id, $baseline) = preg_split('/:/',$object_info);
 					if ( $class == '' ) continue;
-					$ref_it = getFactory()->getObject($class)->getExact($id);
+
 					$uid = $this->getUidService();
 					$uid->setBaseline($baseline);
+
+					$ref_it = $this->getTable()->getTraces($class);
+					$ref_it->moveToId($id);
+					if ( $ref_it->getId() == '' ) continue;
+
 					$uids[] = $uid->getUidIcon($ref_it);
 				}
 				echo join(' ',$uids);
@@ -173,9 +181,7 @@ class WorkItemList extends PMPageList
 
     function getActions( $object_it )
     {
-        $it = $this->getIt($object_it);
-
-        return parent::getActions( $it );
+        return parent::getActions($this->getIt($object_it));
     }
 
  	function getColumnWidth( $attr ) 
@@ -190,7 +196,7 @@ class WorkItemList extends PMPageList
             return 70;
 
 		if ( $attr == 'Spent' )
-			return 220;
+			return 190;
 		
 		if ( $attr == 'OrderNum' )
 			return '50';

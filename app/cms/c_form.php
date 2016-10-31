@@ -7,8 +7,8 @@ include "views/FieldCheck.php";
 include "views/FieldDateTime.php";
 include "views/FieldFile.php";
 include "views/FieldForm.php";
-include "views/FieldLargeText.php";
 include "views/FieldNumber.php";
+include "views/FieldHours.php";
 include "views/FieldPassword.php";
 include "views/FieldPrice.php";
 include "views/FieldShortText.php";
@@ -16,6 +16,7 @@ include "views/FieldStatic.php";
 include "views/FieldText.php";
 include "views/FieldTextStatic.php";
 include "views/FieldColorPicker.php";
+include "views/FieldLargeText.php";
 
 class Form
 {
@@ -34,12 +35,10 @@ class Form
 	
 	function Form( & $object, $dynamic_mode = false )
 	{
-		global $model_factory;
-		
 		$this->object = $object;
 		$this->readonly = false;
 		$this->dynamic_mode = $dynamic_mode;
-		$this->form_id = uniqid(get_class($this));
+		$this->form_id = md5(get_class($this).microtime());
 
 		$class_name = $this->object->getEntityRefName();
 		
@@ -88,7 +87,7 @@ class Form
 	function process()
 	{
 	    $object_it = $this->getObjectIt();
-	    
+
 		// first validate user input values
 		if ( $this->action == 'add' || $this->action == 'modify' )
 		{
@@ -110,16 +109,24 @@ class Form
 				return;
 			}
 		}
-	    
+
 	    if ( $this->action == 'add' )
 	    {
 			// get url from which the form had been called
 			$this->redirect_url = $this->getRedirectUrl();
 			if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return;
-			
-		    $this->persist();
 
-			$this->redirectOnAdded($this->object_it, $this->redirect_url);
+			try {
+		    	$this->persist();
+				$this->redirectOnAdded($this->object_it, $this->redirect_url);
+			}
+			catch( \Exception $e ) {
+				$this->setRequiredAttributesWarning();
+				$this->warning_message = $e->getMessage();
+				$this->edit('');
+				$this->redirect_url = $this->getRedirectUrl();
+				$this->action = 'show';
+			}
 			return;
 	    }
 	    
@@ -127,23 +134,21 @@ class Form
 	    {
 			// get url from which the form had been called
 			$this->redirect_url = $this->getRedirectUrl();
-	
 		    $this->redirectOnCancel($object_it, $this->redirect_url);
-		    
 		    return;
 	    }
 	    
 	    if ( !is_object($object_it) ) return;
 	    
 	    if ( $object_it->getId() == '' ) return;
-	    
+
 		switch ($this->action)
 		{
 			case 'view':
 				// get url from which the form had been called
 				$this->redirect_url = $this->getRedirectUrl();
 		
-				$this->show($object_it->getId());
+				$this->show($object_it);
 
 				break;
 			//
@@ -151,7 +156,7 @@ class Form
 				// get url from which the form had been called
 				$this->redirect_url = $this->getRedirectUrl();
 				
-				$this->edit($object_it->getId());
+				$this->edit($object_it);
 
 				break;
 
@@ -168,21 +173,23 @@ class Form
 				break;
 			//	
 			case 'modify':
-		
-				if ( !$this->editable() ) return;
 
 				$this->redirect_url = $this->getRedirectUrl();
-				
-				if ( !$this->persist() )
-				{
-					$this->required_attributes_warning = true;
-					$this->warning_message = text(1106);
-					
-					$this->edit($object_it->getId()); 
+
+				try {
+					if ( !$this->persist() ) {
+						$this->required_attributes_warning = true;
+						$this->warning_message = text(1106);
+						$this->edit($object_it);
+					}
+					else {
+						$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+					}
 				}
-				else
-				{
-					$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+				catch( \Exception $e ) {
+					$this->setRequiredAttributesWarning();
+					$this->warning_message = $e->getMessage();
+					$this->edit($object_it);
 				}
 
 				break;
@@ -350,11 +357,6 @@ class Form
 		$this->object_it = $object_it;
 	}
 	
-	function getDeleteMessage()
-	{
-		return text(636);
-	}
-	
 	function IsViewMode()
 	{
 		return $this->action == 'view';
@@ -418,18 +420,23 @@ class Form
 	
 	function redirectOnAdded( $object_it, $redirect_url = '' ) 
 	{
-		if( $_REQUEST['formonly'] != '' ) {
-			echo json_encode(array('Id' => $object_it->getId()));
-			exit();
-		}
-
 		if ( !is_object($object_it) ) {
 			$redirect_url = getSession()->getApplicationUrl();
 		}
 		else if ( $object_it->getId() < 1 ) {
 			$redirect_url = getSession()->getApplicationUrl();
 		}
-
+		else {
+            if( $_REQUEST['formonly'] != '' ) {
+                echo json_encode(
+                    array(
+                        'Id' => $object_it->getId(),
+                        'Url' => $object_it->getViewUrl()
+                    )
+                );
+                exit();
+            }
+		}
 		if ( $redirect_url != '' ) {
 			exit(header('Location: '.$redirect_url));
 		}
@@ -473,12 +480,14 @@ class Form
 
 	function edit( $objectid )
 	{
-		global $_REQUEST;
-		
-		$this->setObjectIt( $objectid > 0 ? $this->object->getExact( $objectid ) : null );
-		
-		if ( is_object($this->object_it) && $this->object_it->count() > 0 )
-		{
+		if ( is_a($objectid, 'OrderedIterator') ) {
+			$this->setObjectIt( $objectid->copy() );
+		}
+		else {
+			$this->setObjectIt( $objectid > 0 ? $this->object->getExact( $objectid ) : null );
+		}
+
+		if ( is_object($this->object_it) && $this->object_it->count() > 0 ) {
 			$_REQUEST[$this->object->getEntityRefName().'Id'] = $this->object_it->getId();
 		}
 	}
@@ -562,7 +571,8 @@ class Form
  	
 	function IsAttributeEditable( $attr_name )
 	{
-		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attr_name);
+		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attr_name)
+			&& $this->getObject()->getAttributeEditable($attr_name);
 	}
 	
 	function IsAttributeVisible( $attr_name ) 
@@ -835,7 +845,7 @@ class Form
 					
 				 	echo '<div style="float:left;padding-left:25px;">';
 				 	?>
-       				<input class="btn" onclick="javascript: submitForm('<?=$this->getId()?>','delete');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Удалить'))?>" tabindex="1002" <? if ( !$access ) echo 'disabled'; ?> type="button" title="<? echo $reason ?>" value="<? echo_lang($this->getButtonName('Удалить')) ?>">
+       				<input class="btn" onclick="submitForm('<?=$this->getId()?>','delete');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Удалить'))?>" tabindex="1002" <? if ( !$access ) echo 'disabled'; ?> type="button" title="<? echo $reason ?>" value="<? echo_lang($this->getButtonName('Удалить')) ?>">
             		<?
            			echo '</div>';
 					break;
@@ -843,7 +853,7 @@ class Form
 				case 'save':
 					echo '<div style="float:left">';
 					?>
-                	<input class="btn btn-primary" onclick="javascript: submitForm('<?=$this->getId()?>','modify');" type="button" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Сохранить'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" value="<? echo_lang($this->getButtonName('Сохранить')) ?>">
+                	<input class="btn btn-primary" onclick="submitForm('<?=$this->getId()?>','modify');" type="button" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Сохранить'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" value="<? echo_lang($this->getButtonName('Сохранить')) ?>">
     	            <?
                		echo '</div>';
 					break;
@@ -851,7 +861,7 @@ class Form
 				case 'new':
 				 	echo '<div style="float:left">';
 					?>
-               		<input class="btn " tabindex="1000" type="button" onclick="javascript: submitForm('<?=$this->getId()?>','new');" value="<? echo_lang($this->getButtonName('Новое')) ?>">
+               		<input class="btn " tabindex="1000" type="button" onclick="submitForm('<?=$this->getId()?>','new');" value="<? echo_lang($this->getButtonName('Новое')) ?>">
 					<?
                		echo '</div>';
 					break;
@@ -859,7 +869,7 @@ class Form
 				case 'add':
 				 	echo '<div style="float:left">';
             		?>
-            		<input class="btn btn-primary" onclick="javascript: submitForm('<?=$this->getId()?>','add');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Создать'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" type="button" value="<? echo_lang($this->getButtonName('Создать')) ?>">
+            		<input class="btn btn-primary" onclick="submitForm('<?=$this->getId()?>','add');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Создать'))?>" tabindex="1000" id="<? echo $this->object->getEntityRefName(); ?>SubmitBtn" type="button" value="<? echo_lang($this->getButtonName('Создать')) ?>">
                 	<?
                		echo '</div>';
 					break;
@@ -867,7 +877,7 @@ class Form
 				case 'cancel':
 				 	echo '<div style="float:left">';
     			 	?>
-               		<input class="btn btn-link" onclick="javascript: submitForm('<?=$this->getId()?>','cancel');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Отменить'))?>" tabindex="1001" type="button" value="<? echo_lang($this->getButtonName('Отменить')) ?>">
+               		<input class="btn btn-link" onclick="submitForm('<?=$this->getId()?>','cancel');" accesskey="<? echo $this->getAcceleratorKey($this->getButtonName('Отменить'))?>" tabindex="1001" type="button" value="<? echo_lang($this->getButtonName('Отменить')) ?>">
                 	<?
 	            	echo '</div>';
 					break;
@@ -1029,8 +1039,13 @@ class Form
 
     	if( !is_object($field) ) return null;
 
-    	$field->setId($this->object->getEntityRefName().$name);
-      	$field->setReadOnly( !$this->checkAccess() || !$this->IsAttributeEditable($name) );
+        if ( $field instanceof FieldDateTime ) {
+        	$field->setId($this->object->getEntityRefName().$name.$this->getId());
+        }
+        else {
+        	$field->setId($this->object->getEntityRefName().$name);
+        }
+      	$field->setReadOnly( !$this->IsAttributeEditable($name) );
     	$field->setEditMode( $this->getEditMode() );
     	$field->setName($name);
 

@@ -15,7 +15,7 @@
 </script>
 <?php } ?>
 
-<form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded">
+<form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off">
 	<fieldset>
 		<?php if ( !$formonly && $form_title != '' ) { ?>
 
@@ -101,11 +101,15 @@
 			<?php if ( $attribute['description'] != '' ) { ?>
 			
 			<span class="help-block"><?=$attribute['description']?></span>
-			<br/>
+			<?=$fields_separator?>
 
 			<?php } ?>
 
 		<?php } ?>
+
+		<?php
+			echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id, 'open' => $hint_open));
+		?>
 	</fieldset>
 
     <?php 

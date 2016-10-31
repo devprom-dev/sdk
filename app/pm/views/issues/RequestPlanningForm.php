@@ -1,53 +1,24 @@
 <?php
-
-include SERVER_ROOT_PATH."pm/classes/issues/RequestModelPlanningBuilder.php";
-
 include_once "FieldTask.php";
+include_once "FieldEstimationDictionary.php";
 
-class RequestPlanningForm extends PMPageForm
+class RequestPlanningForm extends RequestForm
 {
-    protected function extendModel()
-    {
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
-		{
-			$builder = new RequestModelPlanningBuilder();
-			$builder->build( $this->getObject() );
-		}
-
-		$builder = new RequestModelExtendedBuilder();
-		$builder->build( $this->getObject() );
-
-    	parent::extendModel();
-    	
-    	$this->getObject()->setAttributeRequired('Owner', false);
-    	$this->getObject()->setAttributeVisible('Owner', false);
-
-    	if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
-		{
-	    	$this->getObject()->setAttributeRequired('PlannedRelease', false);
-	    	$this->getObject()->setAttributeVisible('PlannedRelease', false);
-		}
-    }
-    
-	function getEmbeddedForm()
-	{
+	function getEmbeddedForm() {
 		return new FormTaskEmbedded();	
 	}
 	
- 	function IsNeedButtonDelete() 
- 	{
+ 	function IsNeedButtonDelete() {
 		return false;
 	}
 
 	function getTransitionAttributes()
 	{
-		$attributes = array('Caption', 'Priority', 'Estimation', 'Description');
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() ) {
-			$attributes[] = 'Release';
-		}
-		
-		return $attributes;
+		return array_merge(
+		    array('Caption', 'Priority', 'Estimation', 'Description'),
+            $this->getObject()->getAttributesByGroup('additional'),
+            $this->getObject()->getAttributesByGroup('trace')
+        );
 	}
 	
 	function createFieldObject( $attr_name )
@@ -56,27 +27,13 @@ class RequestPlanningForm extends PMPageForm
  		switch ( $attr_name ) 
  		{
  		    case 'Tasks':
- 		        $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
- 		        		array (
- 		        			new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
- 		        			new FilterVpdPredicate()
- 		        		)
- 		        	);
-				return new FieldTask($object_it, $iteration_it);
-		
-		    case 'Release':
- 		        $iteration = getFactory()->getObject('Iteration');
- 		        $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-				return new FieldDictionary( $iteration );
-		
+				return new FieldTask($object_it);
 			case 'Estimation':
-				$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-				$field = $strategy->getEstimationFormField( $this );
-				if ( !is_object($field) ) {
-					return parent::createFieldObject( $attr_name );
+				if ( getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->hasDiscreteValues() ) {
+					return new FieldEstimationDictionary($this->getObject());
 				}
 				else {
-					return $field;
+					return parent::createFieldObject( $attr_name );
 				}
 			default:
 				return parent::createFieldObject( $attr_name );
@@ -89,7 +46,19 @@ class RequestPlanningForm extends PMPageForm
 
 		switch( $attr )
 		{
-		    case 'Release':
+		    case 'Iteration':
+		        $registry = $this->createFieldObject($attr)->getObject()->getRegistry();
+                $registry->setLimit(1);
+                return $value == ''
+                    ? $registry->Query(
+                            array (
+                                new FilterAttributePredicate('Version', parent::getFieldValue('PlannedRelease')),
+                                new FilterVpdPredicate(),
+                                new SortAttributeClause('RecordCreated')
+                            )
+                        )->getId()
+                    : $value;
+
     		case 'PlannedRelease':
 		    	return $value == '' 
 		    			? $this->createFieldObject($attr)->getObject()->getFirst()->getId()
@@ -120,4 +89,22 @@ class RequestPlanningForm extends PMPageForm
 	{
 		return '';
 	}
+
+	function getFieldDescription($field_name)
+    {
+        switch( $field_name ) {
+            case 'Tasks':
+                $url = getFactory()->getObject('Module')->getExact('dicts-tasktype')->getUrl();
+                return str_replace('%1', $url, text(2234));
+            default:
+                return parent::getFieldDescription($field_name);
+        }
+    }
+
+    function getRenderParms()
+    {
+        return array_merge(parent::getRenderParms(), array(
+            'showtabs' => true
+        ));
+    }
 }

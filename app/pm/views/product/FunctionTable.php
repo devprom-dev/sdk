@@ -16,25 +16,6 @@ class FunctionTable extends PMPageTable
 		}
 	}
 
-	function getActions()
-	{
-		$actions = array();
-		
-		$method = new ExcelExportWebMethod();
-		$actions[] = array( 
-				'name' => $method->getCaption(),
-				'url' => $method->getJSCall( $this->getCaption(), 'IteratorExportExcel')
-		);
-		
-		$method = new HtmlExportWebMethod();
-		$actions[] = array( 
-				'name' => $method->getCaption(),
-				'url' => $method->getJSCall( 'IteratorExportHtml' )
-		);
-		
-		return $actions;
-	}
-
 	function getNewActions()
 	{
 		$type_it = getFactory()->getObject('FeatureType')->getAll();
@@ -73,7 +54,7 @@ class FunctionTable extends PMPageTable
 			new FilterTagWebMethod( getFactory()->getObject('FeatureTag') ),
 			new FilterObjectMethod( getFactory()->getObject('Importance'), '', 'importance'),
 			new FunctionFilterStageWebMethod(),
-			new FilterAutoCompleteWebMethod($this->getObject(), text(2094), 'parent')
+			new FilterObjectMethod($this->getObject(), text(2094), 'parent')
 		);
 
 		$view = new FunctionFilterViewWebMethod();

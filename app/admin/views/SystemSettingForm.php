@@ -1,7 +1,5 @@
 <?php
 
-include SERVER_ROOT_PATH."admin/views/ui/EmailSenderDictionary.php";
-
 class SystemSettingsForm extends PageForm
 {
 	function __construct()
@@ -68,9 +66,6 @@ class SystemSettingsForm extends PageForm
 
 		switch ( $attr_name )
 		{
-			case 'EmailSender':
-				return new EmailSenderDictionary();
-				
 			case 'Parameters':
 				return new FieldLargeText();
 
@@ -89,7 +84,6 @@ class SystemSettingsForm extends PageForm
 		switch ( $attr )
 		{
 			case 'Parameters':
-				$field->setReadonly( true );
 				$field->setRows( 18 );
 				$field->setValue( $this->debugParameters() );
 				break;

@@ -1,8 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/settings/EstimationStrategy.php";
-
-include_once "FieldStoryPoints.php";
 
 class EstimationFibonacciStrategy extends EstimationStrategy
 {
@@ -39,15 +36,14 @@ class EstimationFibonacciStrategy extends EstimationStrategy
 	{
 		return true;
 	}
-	
-	function getEstimationFilter()
+
+	function getFilterScale()
 	{
-		return new ViewRequestEstimationWebMethod();
-	}
-	
-	function getEstimationPredicate( $value )
-	{
-		return new RequestEstimationFilter( $value );
+		return array(
+			'0:3' => translate('Простые'),
+			'5:21' => translate('Средние'),
+			' 34' => translate('Сложные')
+		);
 	}
 	
 	function getScale()
@@ -66,23 +62,5 @@ class EstimationFibonacciStrategy extends EstimationStrategy
  			' 89' => 89,
  			' 144' => 144
 		);
-	}
-	
-	function getEstimationFormField( $form )
-	{
-		return new FieldStoryPoints( $form->getObject(), array (
- 			array( 'value' => ' 0', 'caption' => '0' ),
-		    array( 'value' => ' 1', 'caption' => '1' ),
- 			array( 'value' => ' 2', 'caption' => '2' ),
- 			array( 'value' => ' 3', 'caption' => '3' ),
- 			array( 'value' => ' 5', 'caption' => '5' ),
- 			array( 'value' => ' 8', 'caption' => '8' ),
- 			array( 'value' => ' 13', 'caption' => '13' ),
- 			array( 'value' => ' 21', 'caption' => '21' ),
- 			array( 'value' => ' 34', 'caption' => '34' ),
- 			array( 'value' => ' 55', 'caption' => '55' ),
-		    array( 'value' => ' 89', 'caption' => '89' ),
-		    array( 'value' => ' 144', 'caption' => '144' )
-		));
 	}
 }

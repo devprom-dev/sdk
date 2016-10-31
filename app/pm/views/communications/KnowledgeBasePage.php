@@ -12,9 +12,7 @@ class KnowledgeBasePage extends PMWikiUserPage
 {
  	function __construct()
  	{
- 		global $model_factory;
- 		
- 		$b_show_root = !$this->needDisplayForm() 
+ 		$b_show_root = !$this->needDisplayForm()
  			&& $_REQUEST['mode'] == '' && $_REQUEST['view'] == 'tree'
  			&& $_REQUEST['export'] == '';
  		
@@ -37,9 +35,14 @@ class KnowledgeBasePage extends PMWikiUserPage
  	function getObject() 
 	{
 		$object = getFactory()->getObject('ProjectPage');
-		
-		foreach ( $this->getPredicates() as $predicate )
-		{
+		$builders = array (
+			new WikiPageModelExtendedBuilder()
+		);
+		foreach( $builders as $builder ) {
+			$builder->build($object);
+		}
+
+		foreach ( $this->getPredicates() as $predicate ) {
 			$object->addFilter($predicate);
 		}
 		
@@ -53,7 +56,11 @@ class KnowledgeBasePage extends PMWikiUserPage
 
 	function getBulkForm()
 	{
-		return new WikiBulkForm( $this->getObject() );
+		return new WikiBulkForm(
+			$_REQUEST['view'] != 'templates'
+				? $this->getObject()
+				: $this->getTemplateObject()
+		);
 	}
 	
 	function getFormBase()
@@ -77,4 +84,13 @@ class KnowledgeBasePage extends PMWikiUserPage
  	{
         return new KnowledgeBaseTable( $this->getObject(), $this->getStateObject(), $this->getForm() );
  	}
+
+	function getExportPersisters() {
+		return array_merge(
+			parent::getExportPersisters(),
+			array (
+				new ProjectPageTitlePersister()
+			)
+		);
+	}
 }

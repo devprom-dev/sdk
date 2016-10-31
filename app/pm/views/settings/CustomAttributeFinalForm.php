@@ -16,7 +16,30 @@ class CustomAttributeFinalForm extends PMPageForm
 		
 		$object->setAttributeVisible( 'OrderNum', true );
 	}
-	
+
+	protected function getAttributeType()
+	{
+		$attr_type = $this->getFieldValue('AttributeType');
+		if ( $attr_type == '' ) return $attr_type;
+
+		return getFactory()->getObject('CustomAttributeType')->getExact($attr_type)->get('ReferenceName');
+	}
+
+	function extendModel()
+	{
+		$object = $this->getObject();
+		$object->setAttributeDescription('DefaultValue', text(1083));
+		$object->setAttributeVisible('ShowMainTab', true);
+
+		parent::extendModel();
+
+		$type = $this->getAttributeType();
+		if ( $type == 'computed' ) {
+			$object->setAttributeCaption('DefaultValue', text(2133));
+			$object->setAttributeDescription('DefaultValue', text(2134));
+		}
+	}
+
 	function validateInputValues( $id, $action )
 	{
 		global $_REQUEST, $model_factory;
@@ -31,6 +54,7 @@ class CustomAttributeFinalForm extends PMPageForm
 		foreach( $entity->getAttributes() as $key => $attribute )
 		{
 			if ( !$entity->IsAttributeStored( $key ) ) continue;
+			if ( $key == 'UID' ) continue;
 			
 			$reserved[] = strtolower($key);
 		}
@@ -110,25 +134,18 @@ class CustomAttributeFinalForm extends PMPageForm
 		return parent::validateInputValues( $id, $action );
 	}
 	
-	function getAttributeType()
-	{
-		$type = new CustomAttributeType();
-		
-		return $type->getExact($this->getFieldValue('AttributeType'))->get('ReferenceName');
-	}
-
 	function IsAttributeVisible( $attr_name )
 	{
 		switch ( $attr_name )
 		{
 			case 'ValueRange':
-				$type = $this->getAttributeType();
-				return $type == 'dictionary';
-				
+				return in_array($this->getAttributeType(), array('dictionary'));
 			case 'DefaultValue':
-				$type = $this->getAttributeType();
-				return $type != 'date' && $type != 'password';
-				
+				return !in_array($this->getAttributeType(), array('date','password'));
+			case 'IsRequired':
+				return !in_array($this->getAttributeType(), array('computed'));
+			case 'IsUnique':
+				return !in_array($this->getAttributeType(), array('computed'));
 			default:
 				return parent::IsAttributeVisible( $attr_name );
 		}
@@ -139,9 +156,7 @@ class CustomAttributeFinalForm extends PMPageForm
 		switch ( $attr_name )
 		{
 			case 'ValueRange':
-				$type = $this->getAttributeType();
-				return $type == 'dictionary';
-				
+				return $this->getAttributeType() == 'dictionary';
 			default:
 				return parent::IsAttributeRequired( $attr_name );
 		}
@@ -178,45 +193,34 @@ class CustomAttributeFinalForm extends PMPageForm
 		switch( $attr_name )
 		{
 			case 'EntityReferenceName':
-				
 				$field->setReadonly(true);
-
 				$field->setText( $this->getObject()->getEntityDisplayName(
-						$this->getFieldValue('EntityReferenceName'), $this->getFieldValue('ObjectKind')) 
+					$this->getFieldValue('EntityReferenceName'), $this->getFieldValue('ObjectKind'))
 				); 
-				
 				break;
 				
 			case 'AttributeType':
-				
 				$field->setReadonly(true);
-				
 				$type = new CustomAttributeType();
-		
 				$type_it = $type->getExact($this->getFieldValue('AttributeType'));
-
-				if ( $type_it->get('ReferenceName') == 'reference' )
-				{
+				if ( $type_it->get('ReferenceName') == 'reference' ) {
 					$field->setText(
-							$type_it->getDisplayName().': '.
-									getFactory()->getObject($this->getFieldValue('AttributeTypeClassName'))->getDisplayName()
+                        $type_it->getDisplayName().': '.
+                            getFactory()->getObject($this->getFieldValue('AttributeTypeClassName'))->getDisplayName()
 					);
 				}
-				
+				else {
+                    $field->setText($type_it->getDisplayName());
+                }
 				break;
 				
 			case 'OrderNum':
-				
 				$object_it = $this->getObjectIt();
-				
-				if ( !is_object($object_it) )
-				{
+				if ( !is_object($object_it) ) {
 					$ref = $model_factory->getObject( $this->getFieldValue('EntityReferenceName') );
-					
 					$field->setValue( $ref->getLatestOrderNum() + 10 );
 				}
-				
-				break;				
+				break;
 		}
 		
 		return $field;
@@ -233,9 +237,6 @@ class CustomAttributeFinalForm extends PMPageForm
 
 			case 'ReferenceName':
 				return text(1082);
-
-			case 'DefaultValue':
-				return text(1083);
 
 			case 'IsVisible':
 				return text(1084);

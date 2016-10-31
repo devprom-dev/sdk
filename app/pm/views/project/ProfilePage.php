@@ -38,15 +38,19 @@ class ProfilePage extends PMPage
 	
  	function getForm() 
  	{
- 		global $model_factory, $_REQUEST, $part_it;
- 		
-		$_REQUEST['pm_ParticipantId'] = $part_it->getId();
-		
-		if ( $_REQUEST['pm_Participantaction'] != 'modify' )
-		{
-			$_REQUEST['pm_Participantaction'] = 'show';
+		$object = getFactory()->getObject('pm_Participant');
+		$objectIt = $object->getExact(getSession()->getParticipantIt()->getId());
+
+		if ( getSession()->getProjectIt()->IsPortfolio() ) {
+			$objectIt = $object->createCachedIterator(array(
+				array (
+					'pm_ParticipantId' => PHP_INT_MAX
+				)
+			));
 		}
 
-		return new ProfileForm(getFactory()->getObject('pm_Participant'));
+		$form = new ProfileForm($object);
+		$form->edit($objectIt);
+		return $form;
  	}
 }

@@ -31,13 +31,9 @@ class Scrum extends Metaobject
 
  	function getDefaultAttributeValue( $name )
 	{
-		global $part_it;
-		
-		if( $name == 'Participant' )
-		{
-			return $part_it->getId();
+		if ( $name == 'Participant' ) {
+			return getSession()->getParticipantIt()->getId();
 		}
-		
 		return parent::getDefaultAttributeValue( $name );
 	}
 }

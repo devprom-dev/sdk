@@ -28,9 +28,9 @@ class BlacklistList extends PageList
 			$user_it = $object_it->getRef('SystemUser');
 				
 			$method = new UnBlockUserWebMethod;
-			
 			if ( $method->hasAccess() )
 			{
+				if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 				$actions[] = array( 
 				    'name' => $method->getCaption(), 
 				    'url' => $method->getJSCall(array('user' => $user_it->getId()))

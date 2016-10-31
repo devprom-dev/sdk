@@ -1,0 +1,15 @@
+issue:
+  created:
+    subject: "[I-%id%] Your request has been submitted to support team"
+  updated:
+    subject: "[I-%id%] Your request has been updated"
+  commented:
+    subject: "[I-%id%] Your request has been commented"
+  resolved:
+    subject: "[I-%id%] Your request has been completed"
+resetting:
+  email:
+    subject: Reset Password
+registration:
+  email:
+    subject: Successful registration

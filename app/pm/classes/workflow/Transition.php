@@ -5,16 +5,15 @@ include "predicates/TransitionObjectPredicate.php";
 include "predicates/TransitionStateClassPredicate.php";
 include "predicates/TransitionWasPredicate.php";
 include "sorts/TransitionSourceStateSort.php";
+include "predicates/TransitionStateRelatedPredicate.php";
 
-class Transition extends MetaobjectCacheable
+class Transition extends Metaobject
 {
- 	function __construct() 
- 	{
+ 	function __construct() {
  		parent::__construct('pm_Transition');
  	}
  	
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new TransitionIterator( $this );
  	}
  	

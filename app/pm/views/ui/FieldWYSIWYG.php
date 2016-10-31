@@ -1,7 +1,7 @@
 <?php
+define( 'REGEX_SHRINK', '/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]_]+[_\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im');
 
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
-
 include "FieldWYSIWYGFile.php";
 
 class FieldWYSIWYG extends Field
@@ -13,6 +13,7 @@ class FieldWYSIWYG extends Field
  	var $edit_mode;
  	var $editor_mode_default;
  	var $has_border = true;
+	private $search_text = array();
  	
  	function FieldWYSIWYG( $editor_class = '' )
  	{
@@ -28,7 +29,11 @@ class FieldWYSIWYG extends Field
  		
 		$this->editor->setMode( $this->editor_mode_default );
  	}
- 	
+
+	function setSearchText($text) {
+		$this->search_text = SearchRules::getSearchItems($text);
+	}
+
  	function showAttachments( $visible )
  	{
  		$this->show_attachments = $visible;
@@ -56,7 +61,11 @@ class FieldWYSIWYG extends Field
  	{
  	    $this->editor->setCSSClassName( $class_name );
  	}
- 	
+
+	function setToolbar( $mode ) {
+		$this->editor->setToolbar($mode);
+	}
+
  	function setRows( $rows )
  	{
  		$this->editor->setMinRows( $rows );
@@ -91,28 +100,53 @@ class FieldWYSIWYG extends Field
 	{
 		return $this->has_border;
 	}
-	
-	function getText()
+
+	function getValue()
+	{
+		$value = parent::getValue();
+		if ( count($this->search_text) > 0 ) {
+			$value = preg_replace(
+				array_map(
+					function($value) {
+						return '#'.$value.'#iu';
+					},
+					$this->search_text
+				),
+				'<span class="label label-found">\\0</span>',
+				$value
+			);
+		}
+		return $value;
+	}
+
+	function getText( $readonly = false )
 	{
 		$editor = $this->getEditor();
+
+		if ( $editor->getMode() & WIKI_MODE_INPLACE_INPUT ) {
+			return parent::getText();
+		}
 		
-		$parser = $editor->getPageParser();
-		
+		$parser = $readonly ? $editor->getHtmlParser() : $editor->getPageParser();
+		$parser->displayHints(true);
 		$parser->setObjectIt( $this->object_it );
-		
-		return $parser->parse( html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );
+
+		$content = $parser->parse(html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING));
+		if ( $readonly ) {
+			$content = preg_replace_callback(REGEX_SHRINK, array($this, 'shrinkLongUrl'), $content);
+			$content = TextUtils::breakLongWords($content);
+		}
+		return TextUtils::getValidHtml($content);
 	}
 	
 	function drawReadonly()
 	{
-		$editor = $this->getEditor();
-	    
-		echo '<div class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" attributename="'.$this->getName().'">';
-		    echo $this->getText();
+		echo '<div id="'.$this->getId().'" class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" attributename="'.$this->getName().'" name="'.$this->getName().'">';
+		    echo $this->getText(true);
 		echo '</div>';
 	}
 	
-	function draw()
+	function draw( $view = null )
 	{
 		if ( $this->readOnly() || !$this->getEditMode() && preg_match(REGEX_INCLUDE_PAGE, $this->getValue()) )
 		{
@@ -155,5 +189,20 @@ class FieldWYSIWYG extends Field
 
 	    $editor->drawScripts();
 	}
-	
+
+	function shrinkLongUrl( $match )
+	{
+		$context = $match[1].$match[5];
+		if ( $context == '=""' || $context == '="">' ) return $match[0];
+
+		$display_name = trim($match[2], "\.\,\;\:");
+
+		$shrink_length = 80;
+		if ( strlen($display_name) > $shrink_length )
+		{
+			$display_name = substr($display_name, 0, $shrink_length/2).'[...]'.
+				substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
+		}
+		return $match[1].$display_name.$match[5];
+	}
 }

@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
 include SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 
 class TogglePluginWebMethod extends WebMethod
@@ -34,15 +34,16 @@ class TogglePluginWebMethod extends WebMethod
 
 	function execute( $file_name )
 	{
-		global $plugins;
-			
-	    // clear old cache
-	    $installation_factory = InstallationFactory::getFactory();
-	    
-	    $clear_cache_action = new ClearCache();
-	    
-		$plugins->enablePlugin($file_name, !$plugins->pluginEnabled($file_name));
+		$globalLock = new \GlobalLock();
+		$installation_factory = InstallationFactory::getFactory();
 
-	    $clear_cache_action->install();
+        // clear old cache
+        $clear_cache_action = new ClearCache();
+        $clear_cache_action->install();
+
+		PluginsFactory::Instance()->enablePlugin(
+		    $file_name, !PluginsFactory::Instance()->pluginEnabled($file_name)
+        );
+        $globalLock->release();
 	}
 }

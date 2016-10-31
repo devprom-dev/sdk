@@ -3,6 +3,7 @@
 include "ReleaseIterator.php";
 include "ReleaseRegistry.php";
 include "predicates/ReleaseTimelinePredicate.php";
+include "predicates/ReleaseUserHasTasksPredicate.php";
 include "persisters/ReleaseMetricsPersister.php";
 include "sorts/SortReleaseEstimatedStartClause.php";
 
@@ -80,8 +81,29 @@ class Release extends Metaobject
 		
 		return $finish_date;
 	}
-	
-	function getPage() 
+
+	function getVelocitySuggested()
+	{
+		$this->getRegistry()->setLimit(5);
+		$release_it = $this->getRegistry()->Query(
+			array (
+				new ReleaseTimelinePredicate('past'),
+				new FilterBaseVpdPredicate(),
+				new SortAttributeClause('StartDate.D')
+			)
+		);
+		$velocity = $release_it->getId() > 0 ? $release_it->getVelocity() : 0;
+		$average = 0;
+		while( !$release_it->end() ) {
+			$average += $release_it->getVelocity();
+			$release_it->moveNext();
+		}
+		$average = $average / $release_it->count();
+
+		return array($average, $velocity);
+	}
+
+	function getPage()
 	{
 		return getSession()->getApplicationUrl().'plan/hierarchy?';
 	}

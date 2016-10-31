@@ -12,7 +12,7 @@ class ProjectCacheRegistry extends ObjectRegistrySQL
 		return array();
 	}
 
-	function getSortClause()
+	function getSortClause( $alias = 't' )
 	{
 		return "";
 	}

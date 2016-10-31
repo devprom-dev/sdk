@@ -25,19 +25,11 @@ class WatchingsList extends PMPageList
 
 	function drawCell( $object_it, $attr ) 
 	{
-		global $model_factory;
-		
-		if( $attr == 'Object' ) 
-		{
+		if( $attr == 'Object' ) {
 			$anchor_it = $object_it->getAnchorIt();
-			
-			if ( is_object($anchor_it) )
-			{
-			    $uid = new ObjectUID;
-			    	
+			if ( $anchor_it->getId() != '' ) {
 			    echo $anchor_it->object->getDisplayName().': ';
-			    
-			    $uid->drawUidInCaption( $anchor_it );
+			    $this->getUidService()->drawUidInCaption( $anchor_it );
 			}
 		}
 	}
@@ -54,6 +46,7 @@ class WatchingsList extends PMPageList
 		
 		if ( $method->hasAccess() )
 		{
+			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 			array_push($actions, array(
 			    'name' => $method->getCaption(),
 			    'url' => $method->getJSCall(
@@ -68,7 +61,7 @@ class WatchingsList extends PMPageList
 		
 		array_push($actions, array( 
 		    'url' => $session->getApplicationUrl().'project/log?object='.$anchor_it->object->getClassName().'&'.$class.'='.$anchor_it->getId(), 
-		    'name' => translate('История изменений') 
+		    'name' => text(2238)
 		));
 
 		return $actions;

@@ -21,7 +21,7 @@ return array(
     'issue_product' => 'Продукт',
     'issue_project' => 'Продукт',
 	'issue_newAttachment' => 'Прикрепить файл',
-    'issue_assignedTo' => 'Ответственный',
+    'issue_assignedTo' => 'Исполнитель',
     'issue_createdAt' => 'Дата создания',
     'issue_priority' => 'Приоритет',
     'issue_severity' => 'Приоритет',

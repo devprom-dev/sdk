@@ -31,12 +31,12 @@
    				$stat = stat($path.'/'.$file);
    				
    				$db_format = str_replace('%', '', getSession()->getLanguage()->getDateFormat().' %H:%i');
-   				
+
    				$createddate = date($db_format, $stat['ctime']);
-   				
+
    				array_push( $files,  array( 
    				    'created' => $createddate, 
-   				    'RecordCreated' => SystemDateTime::convertToClientTime($createddate, $db_format),
+   				    'RecordCreated' => $createddate,
    				    'name' => $file, 
    				    'Caption' => $file, 
    				    'size' => $stat['size'], 

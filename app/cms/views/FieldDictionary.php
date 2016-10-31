@@ -112,7 +112,7 @@ class FieldDictionary extends Field
 		return array( '' => '' );
 	}
 	
- 	function draw()
+ 	function draw( $view = null )
 	{
 		global $tabindex, $model_factory;
 
@@ -136,7 +136,7 @@ class FieldDictionary extends Field
 		}
 			
 		?>
-		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> >
+		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> default="<?=htmlentities($this->getDefault())?>">
 		<?php if ( $this->null_option ) { ?>
 			<option value="" referenceName=""></option>
 			<?php } ?>

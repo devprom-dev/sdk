@@ -11,53 +11,51 @@ class ReportTable extends PMPageTable
 
 	function getFilters()
 	{
-		global $model_factory;
-		
-		$search = new FilterTextWebMethod( text(1329), 'search-keywords' );
-		
-		$search->setScript( 'filterReports( $(this).val() )' );
-		
-		$search->setStyle( 'width:340px' );
-		
-		$category = new FilterObjectMethod( $model_factory->getObject('PMReportCategory'), translate('Раздел') );
-		
-		$category->setIdFieldName('ReferenceName');
-		$category->setHasNone(false);
-		
 		return array(
-		    $search, 
-			$category, 
+		    $this->buildSearchFilter(),
+			$this->buildTypeFilter(),
+			$this->buildCategoryFilter(),
 			new ViewReportTypeWebMethod()
 		); 		
+	}
+
+	function buildSearchFilter() {
+		$search = new FilterTextWebMethod( text(1329), 'search-keywords' );
+		$search->setScript( 'filterReports( $(this).val() )' );
+		$search->setStyle( 'width:340px' );
+		return $search;
+	}
+
+	function buildCategoryFilter() {
+		$category = new FilterObjectMethod( getFactory()->getObject('PMReportCategory'), translate('Раздел') );
+		$category->setIdFieldName('ReferenceName');
+		$category->setHasNone(false);
+		return $category;
+	}
+
+	function buildTypeFilter() {
+		$category = new FilterObjectMethod( getFactory()->getObject('ReportType'), translate('Категория') );
+		$category->setHasNone(false);
+		return $category;
 	}
 
 	function getFilterPredicates()
 	{
 		$values = $this->getFilterValues();
 		
-		switch ( $values['type'] )
-		{
-		    case 'user':
-		    	
-		    	$this->getObject()->setUsersOnly();
-		    	
-		    	break;
-		    	
-		    case 'system':
-		    	
-		    	$this->getObject()->setSystemOnly();
-		    	
-		    	break;
-		}
-
-		return array_merge( parent::getFilterPredicates(), array ( 
-				new PMReportCategoryPredicate( $values['pmreportcategory'] )
-		));
+		return array_merge(
+			parent::getFilterPredicates(),
+			array (
+				new FilterAttributePredicate( 'Category', $values['pmreportcategory'] ),
+				new FilterAttributePredicate( 'Type', $values['reporttype'] ),
+				new FilterAttributePredicate( 'IsCustomized', $values['type'] )
+			)
+		);
 	}
 	
 	function getFiltersDefault()
 	{
-	    return array('search-keywords', 'pmreportcategory');
+	    return array('search-keywords', 'reporttype', 'pmreportcategory');
 	}
 	
 	function getSortFields()
@@ -71,6 +69,11 @@ class ReportTable extends PMPageTable
 	}
 	
 	function getNewActions()
+	{
+		return array();
+	}
+
+	function getExportActions()
 	{
 		return array();
 	}

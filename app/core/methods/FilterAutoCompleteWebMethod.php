@@ -62,7 +62,7 @@ class FilterAutoCompleteWebMethod extends AutocompleteWebMethod
  			}
  		}
 
-	 	echo '<input type="text" class="btn-small input-xxlarge" placeholder="'.$this->getCaption().'" id="filter_'.$this->getValueParm().'" style="'.
+	 	echo '<input type="text" class="btn-small input-xxlarge" placeholder="'.$this->getCaption().'" uid="'.$this->getValueParm().'" id="filter_'.$this->getValueParm().'" style="'.
 	 		$this->getStyle().';'.($default_value != '' ? '' : '').'" value="'.$value.'" title="'.$this->getTitle().'">';
 	 		
 	 	echo '<script type="text/javascript">$(document).ready(function(){ filterAutoComplete("'.

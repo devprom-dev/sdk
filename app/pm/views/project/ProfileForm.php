@@ -11,28 +11,26 @@ class ProfileForm extends PMPageForm
 		
 		$object = $this->getObject();
 		
-		foreach( $object->getAttributes() as $attribute => $data )
-		{
+		foreach( $object->getAttributes() as $attribute => $data ) {
 			$object->setAttributeVisible($attribute, false);
+			$object->setAttributeRequired($attribute, false);
 		}
-		
-		$object->setAttributeVisible('Notification', true);
-		$object->setAttributeCaption('Notification', text(1912));
-		$object->setAttributeDescription('Notification', text(1913));
-		
-		$object->addAttribute('Buttons', '', '', true, false, '');
-		$object->addAttribute('ModuleSettings', '', text(1906), true, false, text(1910));
-		$object->addAttribute('MenuSettings', '', text(1907), true, false, '<br/>'.text(1911));
+
+		if ( getSession()->getProjectIt()->IsPortfolio() ) {
+			$object->addAttribute('ModuleSettings', '', text(1906), true, false, text(2187));
+			$object->addAttribute('MenuSettings', '', text(1907), true, false, '<br/>'.text(2188));
+		}
+		else {
+			$object->setAttributeVisible('Notification', true);
+			$object->setAttributeCaption('Notification', text(1912));
+			$object->setAttributeDescription('Notification', text(1913));
+			$object->addAttribute('Buttons', '', '', true, false, '');
+			$object->addAttribute('ModuleSettings', '', text(1906), true, false, text(1910));
+			$object->addAttribute('MenuSettings', '', text(1907), true, false, '<br/>'.text(1911));
+		}
 	}
 	
-	function transformInputValues( $id, $action )
-	{
-		global $_REQUEST;
-		
-		if($_REQUEST['IsActive'] == '') $_REQUEST['IsActive'] = 'Y';
-	}
- 	
- 	function getCaption() 
+ 	function getPageTitle()
  	{
  	    return text(1292);
 	}

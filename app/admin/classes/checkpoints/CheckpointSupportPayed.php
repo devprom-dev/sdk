@@ -77,7 +77,11 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
         $this->debug('Download updates json: '.self::UPDATES_URL);
 
         $license_it = getFactory()->getObject('LicenseInstalled')->getAll();
-        $users_count = getFactory()->getObject('UserActive')->getRegistry()->Count();
+        $users_count = getFactory()->getObject('UserActive')->getRegistry()->Count(
+            array (
+                new FilterAttributePredicate('IsReadonly', 'N')
+            )
+        );
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL,
@@ -114,5 +118,10 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
     function getDescription()
     {
         return text(2058);
+    }
+
+    function getWarning()
+    {
+        return text(2254);
     }
 }

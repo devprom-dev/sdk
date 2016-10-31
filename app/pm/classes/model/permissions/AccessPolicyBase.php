@@ -14,7 +14,7 @@ abstract class AccessPolicyBase extends COAccessPolicy
  	
  	private $subject_key = '';
     
-    function __construct( $cache_service, PMSession $session = null )
+    function __construct( $cache_service = null, PMSession $session = null )
     {
         $this->session = is_object($session) ? $session : getSession();
         
@@ -62,19 +62,6 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		        
 		        break;
 		        
-		    case 'pm_Release':
-
-		        
-		        if ( !$this->methodology_it->HasPlanning() ) return false;
-		        
-		        break;
-		        
-		    case 'pm_Version':
-		        
-		        if ( !$this->methodology_it->HasReleases() ) return false;
-		        
-		        break;
-
 		    case 'pm_Function':
 		        
 		        if ( !$this->methodology_it->HasFeatures() ) return false;
@@ -103,10 +90,8 @@ abstract class AccessPolicyBase extends COAccessPolicy
 	
  	function getObjectAccess( $action_kind, &$object_it ) 
  	{
-       	global $model_factory;
-
-		$array = is_object(getSession()->getPluginsManager()) 
-			? getSession()->getPluginsManager()->getPluginsForSection('pm') : array();
+		$array = is_object(getFactory()->getPluginsManager())
+			? getFactory()->getPluginsManager()->getPluginsForSection('pm') : array();
 			
 		foreach ( $array as $plugin )
 		{
@@ -124,26 +109,8 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		
  		switch ( $ref_name )
 		{
-			case 'pm_Project':
-
-			    if ( !$object_it->IsPortfolio() )
-			    {
-             		$part = $model_factory->getObject('pm_Participant');
-            
-             		$count = $part->getByRefArrayCount( array (
-             		        'SystemUser' => getSession()->getUserIt()->getId(), 
-             		        "IFNULL(IsActive,'Y')" => "Y"
-             		));
-
-             		if ( $count > 0 ) return true;
-			    }
-			    
-			    break;
-			    
 			case 'pm_Activity':
-			    
 			    if ( $action_kind != ACCESS_DELETE ) return true;
-			    
 			    return $object_it->get('Participant') == getSession()->getUserIt()->getId();
 		} 				
 
@@ -157,30 +124,21 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		switch ( $ref_name )
 		{
 		    case 'cms_PluginModule':
-		        
-                if ( $object_it->get('AccessEntityReferenceName') != '' )
-         		{
+                if ( $object_it->get('AccessEntityReferenceName') != '' ) {
          			$object = getFactory()->getObject($object_it->get('AccessEntityReferenceName'));
-         			
          			$access = $this->getEntityAccess(
          			        $object_it->get('AccessType') != '' ? $object_it->get('AccessType') : $action_kind,
          			        $object
 					);
-         			
          			if ( is_bool($access) ) return $access;
          		}
-		        
      		    break;
      		    
 		    case 'cms_Report':
-		    	
-		    	if ( $object_it->get('Module') != '' )
-		    	{
+		    	if ( $object_it->get('Module') != '' ) {
          			$module_it = getFactory()->getObject('Module')->getExact($object_it->get('Module'));
-         			
          			return $this->getObjectAccess(ACCESS_READ, $module_it);
 		    	}
-		    	
 		    	break;
 		} 		
 		

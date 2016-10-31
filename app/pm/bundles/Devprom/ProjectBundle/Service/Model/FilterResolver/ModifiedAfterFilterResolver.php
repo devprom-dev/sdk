@@ -1,0 +1,38 @@
+<?php
+
+namespace Devprom\ProjectBundle\Service\Model\FilterResolver;
+
+class ModifiedAfterFilterResolver
+{
+	public function __construct( $modifiedFrom = '', $modifiedTo = '', $createdFrom = '', $createdTo = '' )
+	{
+		$this->modifiedFrom = $modifiedFrom;
+		$this->modifiedTo = $modifiedTo;
+		$this->createdFrom = $createdFrom;
+		$this->createdTo = $createdTo;
+	}
+
+	public function resolve()
+	{
+		\EnvironmentSettings::setClientTimeZone('UTC');
+		$filters = array();
+		if ( $this->modifiedFrom != '' ) {
+			$filters[] = new \FilterModifiedAfterPredicate($this->modifiedFrom);
+		}
+		if ( $this->modifiedTo != '' ) {
+			$filters[] = new \FilterModifiedBeforePredicate($this->modifiedTo);
+		}
+		if ( $this->createdFrom != '' ) {
+			$filters[] = new \FilterSubmittedAfterPredicate($this->createdFrom);
+		}
+		if ( $this->createdTo != '' ) {
+			$filters[] = new \FilterSubmittedBeforePredicate($this->createdTo);
+		}
+		return $filters;
+	}
+
+	private $modifiedFrom = '';
+	private $modifiedTo = '';
+	private $createdFrom = '';
+	private $createdTo = '';
+}

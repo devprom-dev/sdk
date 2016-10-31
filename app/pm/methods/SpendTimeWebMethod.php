@@ -29,7 +29,7 @@ class SpendTimeWebMethod extends ObjectCreateNewWebMethod
 	
 	function hasAccess()
 	{
-		return getFactory()->getAccessPolicy()->can_create($this->getObject());
+		return getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('pm_Activity'));
 	}
 	
 	function getNewObjectUrl()

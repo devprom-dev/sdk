@@ -8,6 +8,7 @@ class CloneContext
     var $broken_references = array();
     private $reset_state_value = true;
     private $reset_dates = true;
+    private $resetAssignments = false;
     
     function getIdsMap()
     {
@@ -67,5 +68,13 @@ class CloneContext
     function getResetDates()
     {
     	return $this->reset_dates;
+    }
+
+    function setResetAssignments( $flag = true ) {
+        $this->resetAssignments = $flag;
+    }
+
+    function getResetAssignments() {
+        return $this->resetAssignments;
     }
 }

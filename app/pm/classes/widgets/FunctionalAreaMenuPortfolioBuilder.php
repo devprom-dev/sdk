@@ -6,13 +6,17 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
     public function build( FunctionalAreaMenuRegistry & $set )
     {
 		$this->report = getFactory()->getObject('PMReport');
+        $this->module = getFactory()->getObject('Module');
 
  	    $menus = parent::build($set);
  	    
 		$items = array();
-		$items['issuesboard'] = $this->report->getExact('issuesboardcrossproject')->buildMenuItem();
+		$item = $this->module->getExact('issues-board')->buildMenuItem();
+		$item['order'] = 5;
+		$items['issuesboard'] = $item;
 		$items[] = $this->report->getExact('discussions')->buildMenuItem();
-		$item = $this->report->getExact('project-blog')->buildMenuItem();
+        $items['knowledgebase'] = $this->module->getExact('project-knowledgebase')->buildMenuItem();
+        $item = $this->report->getExact('project-blog')->buildMenuItem();
 		$item['name'] = text(2000);
 		$items[] = $item;
 		$menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
@@ -44,8 +48,8 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
  	        'name' => translate('Планы'),
             'uid' => 'resources',
             'items' => array(
-					$this->report->getExact('projectplan')->buildMenuItem(),
-					$this->report->getExact('tasksboardcrossproject')->buildMenuItem()
+                $this->report->getExact('projectplan')->buildMenuItem(),
+                $this->module->getExact('tasks-board')->buildMenuItem()
 			)
  	    );
     }

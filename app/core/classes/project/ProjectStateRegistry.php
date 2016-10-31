@@ -7,12 +7,12 @@ class ProjectStateRegistry extends ObjectRegistrySQL
  	 	return $this->createIterator( array (
  	            array (
  	                    'entityId' => 1,
- 	            		'ReferenceName' => 'N',
+ 	            		'ReferenceName' => 'active',
  	                    'Caption' => translate('Открыты')
  	            ),
  	            array (
  	                    'entityId' => 2,
- 	            		'ReferenceName' => 'Y',
+ 	            		'ReferenceName' => 'closed',
  	                    'Caption' => translate('Закрыты')
  	            )
  	 	));

@@ -1,4 +1,5 @@
 <?php
+include SERVER_ROOT_PATH."admin/classes/templates/validators/SystemTemplateYamlValidator.php";
 
 class SystemTemplateForm extends AdminPageForm
 {
@@ -12,7 +13,14 @@ class SystemTemplateForm extends AdminPageForm
 		}
 		$this->getObject()->setAttributeVisible('Content', true);
 	}
-	
+
+	function buildModelValidator()
+	{
+		$validator = parent::buildModelValidator();
+		$validator->addValidator( new SystemTemplateYamlValidator() );
+		return $validator;
+	}
+
 	function createField( $attr )
 	{
 		$field = parent::createField($attr);
@@ -21,6 +29,7 @@ class SystemTemplateForm extends AdminPageForm
 		{
 		    case 'Content':
 		    	$field->setRows(40);
+				$field->setWrap(false);
 		    	break;
 		}
 		

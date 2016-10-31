@@ -27,7 +27,7 @@ class SystemTemplateIterator extends OrderedIterator
 		}
 	}
 	
-	function getFilePath()
+	function getFilePath($attribute)
 	{
 		$language = strtolower(getSession()->getLanguageUid());
 		return $this->object->getPath().$language.'/'.basename($this->get('BackupFileName'));

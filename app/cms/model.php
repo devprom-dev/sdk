@@ -6,12 +6,11 @@
   include('c_package_view.php');
   include('c_businessfunction.php');
 
-  $model_factory =& getModelFactory();
-  $model_factory->enableVpd(false);
+  getFactory()->enableVpd(false);
   
- $package = $model_factory->getObject('Package');
- $entity = $model_factory->getObject('Entity');
- $function = $model_factory->getObject('BusinessFunction');
+ $package = getFactory()->getObject('Package');
+ $entity = getFactory()->getObject('Entity');
+ $function = getFactory()->getObject('BusinessFunction');
  
  if ( $_REQUEST['mode'] == 'cache' )
  {
@@ -66,7 +65,7 @@
 										<td style="padding-left:20pt;">
 											<table cellpadding=2 cellspacing=2>
 											<?
-												$attribute = $model_factory->getObject2('Attribute', $entities_it);
+												$attribute = getFactory()->getObject2('Attribute', $entities_it);
 												$attr_it = $attribute->getAll();
 												
 												for($k = 0; $k < $attr_it->count(); $k++)
@@ -123,8 +122,6 @@ endPage();
 	
 function makeCache( $entity )
 {
-    global $model_factory;
-    
 	$cache = fopen ( dirname(__FILE__).'/c_generated.php', 'w+' );
 	
 	$it = $entity->getAll();
@@ -266,8 +263,6 @@ function makeCache( $entity )
 
 function makeDomainModel( $entity )
 {
-    global $model_factory;
-    
     $all_entities = array();
 
     $it = $entity->getAll();
@@ -279,7 +274,7 @@ function makeDomainModel( $entity )
 	    $it->moveNext();
 	}
 
-    $package = $model_factory->getObject('Package');
+    $package = getFactory()->getObject('Package');
 	
     $package_it = $package->getAll();
     
@@ -352,8 +347,6 @@ function makeDomainModel( $entity )
 
 function makeDatabaseModel( $entity )
 {
-    global $model_factory;
-    
     $all_entities = array();
 
     $it = $entity->getAll();
@@ -365,7 +358,7 @@ function makeDatabaseModel( $entity )
 	    $it->moveNext();
 	}
 
-    $package = $model_factory->getObject('Package');
+    $package = getFactory()->getObject('Package');
 	
     $package_it = $package->getAll();
     

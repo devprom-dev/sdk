@@ -2,8 +2,6 @@
 
 use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 
-include_once SERVER_ROOT_PATH."core/classes/model/events/SystemTriggersBase.php";
-
 class CustomReportModelEventsHandler extends SystemTriggersBase
 {
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 

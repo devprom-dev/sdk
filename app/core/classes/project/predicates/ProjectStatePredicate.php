@@ -6,7 +6,10 @@ class ProjectStatePredicate extends FilterPredicate
  	{
 		 switch( $filter )
 		 {
-		 	case 'current':
+			case 'all':
+				 return " AND 1 = 1 ";
+
+			case 'current':
 		 		return " AND IFNULL(t.IsClosed, 'N') = 'N' " .
 		 			   " AND EXISTS ( SELECT 1 FROM pm_Version v " .
 		 			   "			   WHERE v.Project = t.pm_ProjectId" .
@@ -19,11 +22,11 @@ class ProjectStatePredicate extends FilterPredicate
 		 			   "		 			    AND m.Metric = 'EstimatedFinish')" .
 		 			   "			) ";
 
-		 	case 'active':
-		 		return " AND IFNULL(t.IsClosed, 'N') = 'N' ";
-
-		 	case 'closed':
+			case 'closed':
 		 		return " AND IFNULL(t.IsClosed, 'N') = 'Y' ";
+
+		 	default:
+				 return " AND IFNULL(t.IsClosed, 'N') = 'N' ";
 		 }
  	}
 }

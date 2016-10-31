@@ -101,5 +101,8 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 		foreach( array('RecordCreated', 'RecordModified') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'non-form');
 		}
+		if ( $entity_it->get('IsDictionary') == 'Y' && array_key_exists('ReferenceName', $attributes) ) {
+			$metadata->addAttributeGroup('ReferenceName', 'alternative-key');
+		}
     }
 }

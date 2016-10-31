@@ -22,5 +22,4 @@
  $module = $plugins->useModule( $_REQUEST['namespace'], 
  	'api', $_REQUEST['module'] );
  	
- $HTTP_RAW_POST_DATA = isset($HTTP_RAW_POST_DATA) ? $HTTP_RAW_POST_DATA : '';
- $server->service($HTTP_RAW_POST_DATA);
+ $server->service(EnvironmentSettings::getRawPostData());

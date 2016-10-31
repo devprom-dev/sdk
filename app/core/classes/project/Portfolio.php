@@ -12,6 +12,7 @@ class Portfolio extends Project
         parent::__construct(new PortfolioRegistry($this));
         
         $this->addAttribute('RelatedProject', 'REF_ProjectId', '', false);
+        $this->addAttribute('LinkedProject', 'REF_pm_ProjectId', '', false);
     }
 
     function createIterator()

@@ -2,6 +2,15 @@
 
 class ReleaseMetricsPersister extends ObjectSQLPersister
 {
+	function getAttributes()
+	{
+		return array (
+			'EstimatedStartDate',
+			'EstimatedFinishDate',
+			'Velocity'
+		);
+	}
+
  	function getSelectColumns( $alias )
  	{
  		$columns = array();

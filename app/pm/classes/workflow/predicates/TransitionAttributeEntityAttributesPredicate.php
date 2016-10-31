@@ -7,20 +7,13 @@ class TransitionAttributeEntityAttributesPredicate extends FilterPredicate
  		parent::__construct('attrs');
  	}
  	
- 	function _predicate()
+ 	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
  		$object = $this->getObject();
  		
  		$entity_classname = $object->getDefaultAttributeValue('Entity');
- 		
  		if ( $entity_classname == '' ) return " AND 1 = 2 ";
  		
- 		$entity = $model_factory->getObject($entity_classname);
- 		
- 		$attributes = $entity->getAttributes();
- 		
- 		return " AND t.ReferenceName IN ('".join("','", array_keys($attributes))."') ";
+ 		return " AND t.ReferenceName IN ('".join("','", array_keys(getFactory()->getObject($entity_classname)->getAttributes()))."') ";
  	}
 }

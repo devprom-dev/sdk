@@ -22,7 +22,10 @@ class Field
 		//$this->value_was_set = false;
 	}
 	
-	function draw() {}
+	function draw( $view = null )
+	{
+	}
+
 	function drawToolbar() {}
 	
 	function render( $view )

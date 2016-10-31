@@ -34,6 +34,6 @@ $method = new $_REQUEST['method'];
  
 if ( !is_a($method, 'WebMethod') ) throw new Exception('Unknown method class: '.SanitizeUrl::parseUrl($_REQUEST['method']));
 
+FeatureTouch::Instance()->touch(strtolower(get_class($method)));
 $method->exportHeaders();
-
 $method->execute_request();

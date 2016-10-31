@@ -6,7 +6,6 @@ use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 class ServiceDeskAppKernel extends Kernel
 {
@@ -105,8 +104,12 @@ class ServiceDeskAppKernel extends Kernel
 
     function initializeContainer()
     {
-    	$lock = new \CacheLock();
-		$lock->Locked(1) ? $lock->Wait(10) : $lock->Lock();
-    	parent::initializeContainer();
+        $lock = new \CacheLock();
+        try {
+            parent::initializeContainer();
+        }
+        catch( \Exception $e ) {
+            error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
+        }
     }
 }

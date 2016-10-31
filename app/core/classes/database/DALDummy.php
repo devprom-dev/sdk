@@ -17,6 +17,28 @@ class DALDummy extends DAL
         return array();
     }
 
+    public function QueryAllRows( $sql )
+    {
+        return array();
+    }
+
+    public function QueryAssocArray( $sql )
+    {
+        return array();
+    }
+
+    public function QueryArray( $sql )
+    {
+        return array();
+    }
+
+    public function Seek( &$result, $offset ) {
+    }
+
+    public function RowsNum( $result ) {
+        return 0;
+    }
+
     public function Escape( $sql_string )
     {
         return $sql_string;

@@ -65,8 +65,7 @@ class SnapshotList extends PMPageList
 					
 					if ( $uid->hasUid($it) )
 					{
-						$info = $uid->getUidInfo($it);
-
+						$info = $uid->getUidInfo($it, true);
 						$url = $info['url'];
 						$title = '['.$info['uid'].'] '.$info['caption']; 
 					}
@@ -76,8 +75,11 @@ class SnapshotList extends PMPageList
 						$title = $it->getDisplayName();
 					}
 
-					if ( $object_it->get('Type') != 'branch' )
-					{
+					if ( $object_it->get('Type') == 'branch' ) {
+						$title = translate('Бейзлайн').': '.$title;
+					}
+					else {
+						$title = translate('Версия').': '.$title;
 						$url .= (strpos($url, '?') !== false ? '&' : '?').'baseline='.$object_it->getId();
 					}
 					

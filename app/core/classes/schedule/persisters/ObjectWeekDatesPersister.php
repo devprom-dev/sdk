@@ -3,7 +3,11 @@ include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectSQLPersister.
 
 class ObjectWeekDatesPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns()
+	function getAttributes() {
+		return array ('WeekCreated', 'WeekModified');
+	}
+
+	function getSelectColumns( $alias )
  	{
 		return array (
 			" YEARWEEK(t.RecordCreated) WeekCreated ",

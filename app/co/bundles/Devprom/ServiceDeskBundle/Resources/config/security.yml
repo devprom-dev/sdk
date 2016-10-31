@@ -7,7 +7,7 @@ fos_user:
     registration:
         form:
             type: servicedesk_registration_form
-            validation_groups:  [Registration, Default]
+            validation_groups:  [ServiceDeskRegistration, Default]
     resetting:
         email:
             template: DevpromServiceDeskBundle:Resetting:email.html.twig
@@ -34,6 +34,10 @@ security:
             logout:       true
             anonymous:    true
             http_basic:   false
+            remember_me:
+                key:      servicedesk_registration_form
+                lifetime: 31536000
+                path:     /
 
     access_control:
         - { path: ^/css, roles: IS_AUTHENTICATED_ANONYMOUSLY }

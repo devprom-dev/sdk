@@ -13,8 +13,6 @@ class UpdateSystem extends MaintenanceCommand
 
 	function create()
 	{
-		global $plugins;
-		
 	    // executes installation scripts
 	    $result = array();
 	    if ( !InstallationFactory::getFactory()->install( $result ) ) {
@@ -25,7 +23,9 @@ class UpdateSystem extends MaintenanceCommand
 		getCheckpointFactory()->getCheckpoint('CheckpointSystem')->executeDynamicOnly();
 
 		// rebuild cached list of plugins
-		$plugins->buildPluginsList();
+		PluginsFactory::Instance()->buildPluginsList();
+
+        if ( function_exists('opcache_reset') ) opcache_reset();
 
 		$this->replyRedirect( '?' );
 	}

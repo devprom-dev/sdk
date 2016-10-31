@@ -18,7 +18,7 @@ class StateTable extends PMPageTable
 	{
 		if ( $sort_parm == 'sort' ) return 'OrderNum';
 	    
-		return parent::getSortDefault( $sort );
+		return parent::getSortDefault( $sort_parm );
 	}
 
  	function getSortFields()
@@ -54,4 +54,18 @@ class StateTable extends PMPageTable
 				)
 		);
  	}
+
+ 	function getActions()
+    {
+        $actions = parent::getActions();
+        $module_it = getFactory()->getObject('Module')->getExact('process/storesettings');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+            $actions[] = array();
+            $actions[] = array (
+                'name' => $module_it->getDisplayName(),
+                'url' => $module_it->getUrl()
+            );
+        }
+        return $actions;
+    }
 }

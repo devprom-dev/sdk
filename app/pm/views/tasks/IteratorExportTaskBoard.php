@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExport.php';
 
 class IteratorExportTaskBoard extends IteratorExport
@@ -14,19 +13,13 @@ class IteratorExportTaskBoard extends IteratorExport
 	
 	function export()
 	{
-		global $model_factory;
-		
 	 	header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-control: no-store");
-
 		header('Content-Type: text/html; charset='.APP_ENCODING);
 
- 		$fields = $this->getFields();
- 		$keys = array_keys($fields);
- 		
  		$uid = new ObjectUID;
- 		$request = $model_factory->getObject('pm_ChangeRequest');
+ 		$request = getFactory()->getObject('pm_ChangeRequest');
  		
  		echo '<html><link rel="stylesheet" type="text/css" href="/cache/?type=print"><body style="background:white;">';
  		
@@ -38,7 +31,7 @@ class IteratorExportTaskBoard extends IteratorExport
  				echo '<tr>';
 	 				echo '<td class="left">';
 	 					echo '<div class="caption">';
-	 						echo $it->getDisplayName();
+	 						echo $it->get('Caption');
 		 				echo '</div>';
 	 				echo '</td>';
 	 				echo '<td class="right">';
@@ -74,7 +67,6 @@ class IteratorExportTaskBoard extends IteratorExport
  			$this->moveNext();
  		}
 
- 		$result .= '</body></html>';
- 		echo $result;
+ 		echo '</body></html>';
  	}
 }

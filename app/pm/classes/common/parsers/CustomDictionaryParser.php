@@ -6,7 +6,7 @@ class CustomDictionaryParser extends ObjectReferenceParser
  	{
  		switch ( $attribute_type )
  		{
- 			case 'REF_pm_CustomDictionaryId':
+ 			case 'REF_PMCustomDictionaryId':
  				return new PMCustomDictionary($this->getObject(), $reference_name);
  				
  			default:

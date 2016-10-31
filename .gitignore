@@ -1,7 +1,6 @@
 /app/ext/vendor
 /lib/vendor
-/dev/mysql/data/*
-/dev/mysql/data/mysql/*
+/dev/mysql/data
 /dev/apache/htdocs/cache
 /dev/apache/logs/*.log
 /dev/apache/logs/*.pid
@@ -15,4 +14,4 @@
 sync-release.bat
 /test/logs
 /test/test-output
-/.idea
+.idea

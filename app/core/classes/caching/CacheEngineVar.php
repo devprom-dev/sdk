@@ -4,32 +4,36 @@ include_once "CacheEngine.php";
 
 class CacheEngineVar extends CacheEngine
 {
-	function get( $key, $category )
+	function get( $key, $path = '' )
 	{
  		global $pm_session_cache;
  		
- 		if ( is_array($pm_session_cache[$category]) ) return $pm_session_cache[$category][$key];
+ 		if ( is_array($pm_session_cache[$path]) ) return $pm_session_cache[$path][$key];
  		
  		return '';
 	}
 	
-	function set( $key, $value, $category )
+	function set( $key, $value, $path = '' )
 	{
  		global $pm_session_cache;
  		
- 		if ( !is_array($pm_session_cache[$category]) ) $pm_session_cache[$category] = array();
+ 		if ( !is_array($pm_session_cache[$path]) ) $pm_session_cache[$path] = array();
  		
- 		$pm_session_cache[$category][$key] = $value;
+ 		$pm_session_cache[$path][$key] = $value;
 	}
 	
-	function reset( $key, $category )
+	function reset( $key, $path = '' )
 	{
-		unset($pm_session_cache[$category][$key]);
+		global $pm_session_cache;
+
+		unset($pm_session_cache[$path][$key]);
 	}
 	
-	function truncate( $category )
+	function truncate( $path )
 	{
-		unset($pm_session_cache[$category]);
+		global $pm_session_cache;
+
+		unset($pm_session_cache[$path]);
 	}
 	
 	function drop()

@@ -1,6 +1,5 @@
 <ul class="changes-section">
 <?php foreach( $rows as $row ) { ?>
-
 	<li>
 		<div class="title">
 			<i class="<?=$row['icon']?>"></i>
@@ -12,20 +11,14 @@
 			(<?=str_replace('%1', $row['duration'], text(2100))?>)
 			<? } ?>
 		</div>
-		
-		<?=$row['state']?>
-		
-		<br/>
-		<?=$row['transition']?>
-		
-		<?php if ( $row['comment'] != '' ) { ?>
-		
-		<div class="alert alert-info"><?=$row['comment']?></div>
-		
-		<?php } ?>
-		
-	</li>
-	
-<?php } ?>
 
+		<?=($row['transition'] != '' ? $row['transition'] . ' &rarr; ' : '')?>
+		<?=$row['state']?>
+		<br/>
+
+		<?php if ( $row['comment'] != '' ) { ?>
+			<div class="alert alert-info"><?=$row['comment']?></div>
+		<?php } ?>
+	</li>
+<?php } ?>
 </ul>

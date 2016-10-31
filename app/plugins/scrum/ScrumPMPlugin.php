@@ -28,7 +28,8 @@ class ScrumPMPlugin extends PluginPMBase
 				'classname' => 'VelocityPage',
 				'title' => text('scrum9'),
 				'AccessEntityReferenceName' => 'pm_Version',
-				'area' => FUNC_AREA_MANAGEMENT
+				'area' => FUNC_AREA_MANAGEMENT,
+				'icon' => 'icon-signal'
 			)
 		);
 
@@ -72,13 +73,15 @@ class ScrumPMPlugin extends PluginPMBase
 		}
 		return array();
 	}
- 	
+
 	protected function getIssueActions( $object_it )
 	{
 		if ( !is_object($this->method_toepic) )
 		{
 			if ( is_null($this->scrum_vpds) ) {
-				$this->scrum_vpds = getFactory()->getObject('Project')->getRegistry()->Query(
+                $registry = getFactory()->getObject('Project')->getRegistry();
+                $registry->setPersisters(array());
+                $this->scrum_vpds = $registry->Query(
 						array(new ProjectScrumPredicate())
 					)->fieldToArray('VPD');
 			}
@@ -86,6 +89,7 @@ class ScrumPMPlugin extends PluginPMBase
 		}
 
 		if ( !in_array($object_it->get('VPD'), $this->scrum_vpds) || $object_it->IsFinished() ) return array();
+		$this->method_toepic->setVpd($object_it->get('VPD'));
 		return array (
 				array (
 						'name' => text('scrum19'),
@@ -95,7 +99,7 @@ class ScrumPMPlugin extends PluginPMBase
 				)
 			);
 	}
-	
+
 	private $method_toepic = null;
 	private $scrum_vpds = null;
 }

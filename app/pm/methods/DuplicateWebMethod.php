@@ -62,7 +62,7 @@ class DuplicateWebMethod extends WebMethod
 	function getJSCall( $parms = array() )
 	{
 		$id = $this->object_it->getId() != '' ? $this->object_it->getId() : '0';
- 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&Project=".$parms['Project']."', ".$id.", ".$this->getRedirectUrl().")";
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&".http_build_query($parms)."', ".$id.", ".$this->getRedirectUrl().")";
 	}
 	
 	function getReferences()
@@ -119,13 +119,24 @@ class DuplicateWebMethod extends WebMethod
 	    getFactory()->getEventsManager()->
 	    		executeEventsAfterBusinessTransaction($duplicate_it->copyAll(), 'WorklfowMovementEventHandler');
 
-	    if ( $duplicate_it->count() > 1 ) return;
-	    
-    	// for single object automatically redirect to the duplicate
-    	
-	    $duplicate_it->moveFirst();
+		$duplicate_it->moveFirst();
 		$this->setResult($duplicate_it);
-	    $this->setRedirectUrl( $duplicate_it->getViewUrl() );
+
+		if ( $_REQUEST['OpenList'] != '' && $duplicate_it->count() > 0 ) {
+			if ( $duplicate_it->count() == 1 ) {
+				$this->setRedirectUrl($duplicate_it->getViewUrl());
+			}
+			else {
+				$this->setRedirectUrl(
+					getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
+						'request='.join(',',$duplicate_it->idsToArray())
+					)
+				);
+			}
+		}
+		elseif( $duplicate_it->count() == 1 ) {
+			$this->setRedirectUrl($duplicate_it->getViewUrl());
+		}
  	}
  	
  	function duplicate( $project_it )
@@ -158,6 +169,9 @@ class DuplicateWebMethod extends WebMethod
  	    $context->setIdsMap( $ids_map );
  	    // bind data to existing objects if any
  	    $context->setUseExistingReferences( true );
+		if ( $_REQUEST['Owner'] == '' ) {
+			$context->setResetAssignments();
+		}
 
  	    foreach( $references as $object )
  	    {
@@ -169,7 +183,7 @@ class DuplicateWebMethod extends WebMethod
  	        	// override entity values with user ones
  	        	$defaults = array();
  	        	foreach( $object->getAttributes() as $attribute => $info ) {
- 	        		if ( $_REQUEST[$attribute] != '' ) {
+ 	        		if ( $_REQUEST[$attribute] != '' || $attribute == 'Description' ) {
  	        			$defaults[$attribute] = $_REQUEST[$attribute]; 
  	        		}
  	        	}

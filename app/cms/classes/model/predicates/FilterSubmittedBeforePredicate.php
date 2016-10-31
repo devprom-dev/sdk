@@ -7,7 +7,6 @@ class FilterSubmittedBeforePredicate extends FilterPredicate
  	function _predicate( $filter )
  	{
  	    $mapper = new ModelDataTypeMappingDate();
- 	    
- 		return " AND t.RecordCreated <= '".$mapper->map(DAL::Instance()->Escape($filter))."' ";
+ 		return " AND DATE(t.RecordCreated) <= '".$mapper->map(DAL::Instance()->Escape($filter))."' ";
  	}
 }

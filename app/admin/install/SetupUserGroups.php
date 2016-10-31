@@ -9,6 +9,8 @@ class SetupUserGroups extends Installable
 
 	function skip()
 	{
+        if ( !defined('PERMISSIONS_ENABLED') ) return true;
+
     	$group = new Metaobject('co_UserGroup');
     	return $group->getRecordCount() > 0;
 	}

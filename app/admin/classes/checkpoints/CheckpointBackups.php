@@ -36,4 +36,9 @@ class CheckpointBackups extends CheckpointEntryDynamic
 	{
 		return text(1859);
 	}
+
+    function getWarning()
+    {
+        return text(2260);
+    }
 }

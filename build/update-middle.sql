@@ -1,2 +1,0 @@
-
-CALL upgrade_db('

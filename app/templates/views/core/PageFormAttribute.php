@@ -8,7 +8,7 @@ if ( is_a($field, 'FieldForm') )
 }
 else if ( is_a($field, 'FieldWYSIWYG') && $field->hasBorder() )
 {
-	echo '<div class="well well-wysiwyg '.($field->readOnly() ? "input-block-level well-text" : "").'">';
+	echo '<div class="well '.($field->readOnly() ? "input-block-level well-text" : "").' well-wysiwyg">';
 		$field->render( $view );
 	echo '</div>';
 }

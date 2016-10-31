@@ -11,7 +11,7 @@ class ProcessStatistics extends TaskCommand
 		$this->logStart();
 		
 		getFactory()->getObject('Calendar')->getAll();
-		
+
 		$job_data_it = $this->getData();
 		
 		$parameters = $job_data_it->getParameters();
@@ -34,7 +34,7 @@ class ProcessStatistics extends TaskCommand
 		else
 		{
 			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
-					array( new FilterAttributePredicate('IsClosed', 'N') )
+					array( new FilterHasNoAttributePredicate('IsClosed', 'Y') )
 				)->idsToArray();
 			
 			$chunks = array_chunk($ids, $step);
@@ -54,8 +54,6 @@ class ProcessStatistics extends TaskCommand
 	
 	function processChunk( $chunk )
 	{
-		global $session;
-		
 		$auth_factory = new AuthenticationFactory();
 		$auth_factory->setUser( getFactory()->getObject('cms_User')->getEmptyIterator() );
 

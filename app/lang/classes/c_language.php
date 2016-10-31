@@ -4,7 +4,6 @@ include "DateFormatBase.php";
 include "DateFormatEuropean.php";
 include "DateFormatAmerican.php";
 include "DateFormatRussian.php";
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
  ////////////////////////////////////////////////////////////////////////////////// 
  class Language  
@@ -29,11 +28,13 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 		}
  	}
  	
- 	function Initialize( $resource = null )
+ 	function Initialize()
  	{
  	    global $text_data;
- 	    if ( !is_object($resource) ) $resource = getFactory()->getObject('cms_Resource');
- 	    
+
+        $resource = getFactory()->getObject('cms_Resource');
+        $resource->setLanguageUid( $this->getLanguage() );
+
  	    $cache_path = $this->getCacheFilePath($resource);
  	    if ( file_exists($cache_path) ) {
  	    	$text_data = include($cache_path);
@@ -48,8 +49,6 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
  	protected function buildCache($resource, $cache_path)
  	{
 		$lock = new CacheLock();
-		$lock->Wait(3);
-		$lock->Lock();
 
  		$records = array();
  	    $resource_it = $resource->getAll();
@@ -143,11 +142,9 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
  	function getDbDate( $text )
  	{
-		list($year, $month, $day) = explode('-', $text);
-		
-		if ( $year > 0 && $month > 0 && $day > 0 && checkdate($month, $day, $year) ) return $text;
- 		
- 		return $this->dateformat->getDbDate($text);
+		$time = strtotime($text);
+		if ( $time === false ) return $this->dateformat->getDbDate($text);
+ 		return strftime("%Y-%m-%d", $time);
  	}
  	
  	function getDaysWording( $days ) 
@@ -183,6 +180,63 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 			if ( $db_date >= $date ) return $wording;
 		}
  	}
+
+	protected function convertHours( $hours, $hoursInDay = 24 )
+	{
+		$monthes = floor($hours / (30 * $hoursInDay));
+		$hours -= $monthes * $hoursInDay * 30;
+		$days = floor($hours / $hoursInDay);
+		$hours -= $days * $hoursInDay;
+		 return array (
+			 $monthes,
+			 $days,
+			 floor($hours),
+			 round(($hours - floor($hours)) * 60,0)
+		 );
+	}
+
+	 protected function convertToHoursAndMinutes( $hours )
+	 {
+		 return array (
+			 floor($hours),
+			 round(($hours - floor($hours)) * 60,0)
+		 );
+	 }
+
+	function getDurationWording( $givenHours, $hoursInDay = 24 )
+	{
+		list( $monthes, $days, $hours, $minutes ) = $this->convertHours($givenHours, $hoursInDay);
+		$result = '';
+		if ( $monthes > 0 ) {
+			$result .= $monthes.'мес ';
+		}
+		if ( $days > 0 ) {
+			$result .= $days.'д ';
+		}
+		if ( $hours > 0 ) {
+			$result .= $hours.'ч ';
+		}
+		if ( $minutes > 0 ) {
+			$result .= $minutes.'м ';
+		}
+		if ( $givenHours <= 0 ) {
+			$result .= 0;
+		}
+		return trim($result);
+	}
+
+	 function getHoursWording( $hours )
+	 {
+		 list( $hours, $minutes ) = $this->convertToHoursAndMinutes($hours);
+		 $result = '';
+		 if ( $hours > 0 ) {
+			 $result .= $hours.'ч ';
+		 }
+		 if ( $minutes > 0 ) {
+			 $result .= $minutes.'м ';
+		 }
+		 return trim($result);
+	 }
  }
  
  ////////////////////////////////////////////////////////////////////////////////// 
@@ -226,6 +280,41 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
  		else
  			return 'weeks';
  	}
+
+	 function getDurationWording( $givenHours, $hoursInDay = 24 )
+	 {
+		 list( $monthes, $days, $hours, $minutes ) = $this->convertHours($givenHours, $hoursInDay);
+		 $result = '';
+		 if ( $monthes > 0 ) {
+			 $result .= $monthes.'mo ';
+		 }
+		 if ( $days > 0 ) {
+			 $result .= $days.'d ';
+		 }
+		 if ( $hours > 0 ) {
+			 $result .= $hours.'h ';
+		 }
+		 if ( $minutes > 0 ) {
+			 $result .= $minutes.'m ';
+		 }
+		 if ( $givenHours <= 0 ) {
+			 $result .= 0;
+		 }
+		 return trim($result);
+	 }
+
+	 function getHoursWording( $hours )
+	 {
+		 list( $hours, $minutes ) = $this->convertToHoursAndMinutes($hours);
+		 $result = '';
+		 if ( $hours > 0 ) {
+			 $result .= $hours.'h ';
+		 }
+		 if ( $minutes > 0 ) {
+			 $result .= $minutes.'m ';
+		 }
+		 return trim($result);
+	 }
  }
  
  //////////////////////////////////////////////////////////////////////////////////

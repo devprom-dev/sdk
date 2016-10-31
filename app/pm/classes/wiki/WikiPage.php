@@ -9,19 +9,21 @@ include "WikiPageRegistryContent.php";
 include "WikiPageRegistryVersion.php";
 include "WikiPageRegistryBaseline.php";
 include "WikiPageRegistryComparison.php";
-include "predicates/WikiContentFilter.php";
 include "predicates/WikiSectionFilter.php";
 include "predicates/WikiNonRootFilter.php";
 include "predicates/WikiRootFilter.php";
 include "predicates/WikiNonRootEmptyFilter.php";
 include "predicates/WikiTagFilter.php";
 include "predicates/WikiRootTransitiveFilter.php";
+include "predicates/WikiAuthorFilter.php";
+include "predicates/WikiTypePlusChildren.php";
 include "persisters/WikiPageRevisionPersister.php";
 include 'persisters/DocumentVersionPersister.php';
 include 'persisters/WikiPageTracesRevisionsPersister.php';
-include "persisters/WikiPageBranchesPersister.php";
+include "persisters/WikiPageHistoryPersister.php";
 include 'predicates/WikiSameBranchFilter.php';
 include 'predicates/WikiDocumentSearchPredicate.php';
+include "predicates/WikiDocumentUIDFilter.php";
 include "WikiPageDeleteStrategyMove.php";
 include_once "sorts/SortParentPathClause.php";
 include_once "sorts/SortDocumentClause.php";
@@ -32,11 +34,11 @@ class WikiPage extends MetaobjectStatable
  	
  	private $delete_strategy = null;
 	
- 	function __construct() 
+ 	function __construct( $registry = null )
  	{
-		parent::__construct('WikiPage', new WikiPageRegistry($this));
+		parent::__construct('WikiPage', is_object($registry) ? $registry : new WikiPageRegistry($this));
 		
- 	 	$this->setSortDefault( array( new SortAttributeClause('Caption') ));
+ 	 	$this->setSortDefault( array( new SortOrderedClause() ));
 
 		$this->addAttribute('DocumentVersion', 'VARCHAR', translate('Бейзлайн'), false, false, '', 40);
 
@@ -79,6 +81,10 @@ class WikiPage extends MetaobjectStatable
 	{
 		return 'Wiki';
 	}
+
+	function getDocumentName() {
+        return $this->getDisplayName();
+    }
 	
 	function getPageNameViewMode( $objectid ) 
 	{
@@ -120,13 +126,11 @@ class WikiPage extends MetaobjectStatable
 	
 	function add_parms( $parms )
 	{
-		global $_REQUEST, $model_factory;
-		
 		$parms['ReferenceName'] = $this->getReferenceName();
 		
 		if ( $parms['ContentEditor'] == '' && $parms['PageType'] != '' )
 		{
-			$type = $model_factory->getObject('WikiPageType');
+			$type = getFactory()->getObject('WikiPageType');
 			$type_it = $type->getExact( $parms['PageType'] );
 			$parms['ContentEditor'] = $type_it->get('WikiEditor');
 		} 
@@ -142,10 +146,10 @@ class WikiPage extends MetaobjectStatable
 		
 		$object_it = $this->getExact($id);
 		
-		$this->updateParentPath($object_it);
-		
-		$this->updateSortIndexAndSections($object_it);
-		
+		$documentId = $this->updateParentPath($object_it);
+		$this->updateSortIndexAndSections($object_it, $documentId);
+		$this->updateUID($object_it);
+
 		return $id;
 	}
 	
@@ -177,31 +181,31 @@ class WikiPage extends MetaobjectStatable
 		if ( $object_it->get('ContentEditor') == '' ) $parms['ContentEditor'] = $editor; 
 		
 		$was_content = $object_it->getHtmlDecoded('Content');
-		
+
 		$result = parent::modify_parms( $object_it, $parms );
 
 		$now_it = $this->getExact( $id );
-		
 		$now_content = $now_it->getHtmlDecoded('Content');
 
-		// make new version of the page
+		if ( $was_content != $now_content && $parms['Revert'] == '' ) {
+		    $now_it->Version( $was_content ); // make new version of the page
+        }
 		
-		if ( $was_content != $now_content && $parms['Revert'] == '' ) $now_it->Version( $was_content );
-		
-		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') )
-		{
-			$this->updateParentPath($now_it);
+		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') ) {
+			$documentId = $this->updateParentPath($now_it);
 		}
 
-		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') || $object_it->get('OrderNum') != $now_it->get('OrderNum') )
-		{
-			$this->updateSortIndexAndSections($now_it);
+		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') || $object_it->get('OrderNum') != $now_it->get('OrderNum') ) {
+			if ( $documentId == '' ) {
+				$documentId = $now_it->get('DocumentId');
+			}
+			$this->updateSortIndexAndSections($now_it, $documentId);
 		}
 		
 		return $result; 
 	}
 
-	function delete( $id )
+	function delete( $id, $record_version = ''  )
 	{
 		$object_it = $this->getExact($id);
 		
@@ -214,46 +218,14 @@ class WikiPage extends MetaobjectStatable
 		return $result;
 	}
 	
-	function createLike( $object_id, $use_notification = true )
-	{
-		$new_object_id = parent::createLike( $object_id, $use_notification );
-		
-		$object_it = $this->getExact( $object_id );
-		$children_it = $object_it->_getChildren();
-		
-		for( $i = 0; $i < $children_it->count(); $i++ )
-		{
-			$new_children_id = $this->createLike($children_it->getId(), $use_notification);
-			
-			$this->modify_parms($new_children_id,
-				array( 'ParentPage' => $new_object_id ), $use_notification);
-				
-			$children_it->moveNext();
-		}
-		
-		$file = getFactory()->getObject('WikiPageFile');
-		$file_it = $file->getByRef('WikiPage', $object_id);
-		
-		for( $i = 0; $i < $file_it->count(); $i++ )
-		{
-			$new_file_id = $file->createLike($file_it->getId(), $use_notification);
-			
-			$file->modify_parms($new_file_id,
-				array( 'WikiPage' => $new_object_id ), $use_notification);
-
-			$file_it->moveNext();
-		}
-		
-		return $new_object_id;
-	}
-	
 	function updateParentPath( $object_it )
 	{
         $roots = $object_it->getTransitiveRootArray();
         
         $path_value = ','.join(',', array_reverse($roots)).',';
+		$document_id = array_pop($roots);
 
-		$sql = "UPDATE WikiPage t SET t.ParentPath = '".$path_value."', DocumentId = ".array_pop($roots)." WHERE t.WikiPageId = ".$object_it->getId();
+		$sql = "UPDATE WikiPage t SET t.ParentPath = '".$path_value."', DocumentId = ".$document_id." WHERE t.WikiPageId = ".$object_it->getId();
 
 		DAL::Instance()->Query( $sql );
 		
@@ -269,115 +241,122 @@ class WikiPage extends MetaobjectStatable
 			" WHERE t.ParentPath LIKE '%,".$object_it->getId().",%' ";
 
 		DAL::Instance()->Query( $sql );
+
+		return $document_id;
 	}
 	
-	function updateSortIndexAndSections( $object_it )
+	function updateSortIndexAndSections( $object_it, $documentId )
 	{
         $this->updateSiblingsOrderNum( $object_it );
-		$this->updateSortIndex( $object_it );
+		$this->updateSortIndex( $object_it, $documentId );
 		$this->updateSectionNumber( $object_it );
 	}
 	
-	function updateSortIndex( $object_it )
+	function updateSortIndex( $object_it, $documentId )
 	{
 		if ( $object_it->getId() == '' ) return;
+		if ( $documentId == '' ) return;
+
 		$parent_id = $object_it->get('ParentPage') != '' ? $object_it->get('ParentPage') : $object_it->getId();
 		
-		$sql = " CREATE TEMPORARY TABLE tmp_WikiPageSort (WikiPageId INTEGER, SortIndex VARCHAR(16384) ) ENGINE=MEMORY AS ".
+		$sql = " CREATE TEMPORARY TABLE tmp_WikiPageSort (WikiPageId INTEGER, SortIndex VARCHAR(128) ) ENGINE=MEMORY AS ".
 			   " SELECT t.WikiPageId, ".
 			   "        (SELECT GROUP_CONCAT(LPAD(u.OrderNum, 10, '0') ORDER BY LENGTH(u.ParentPath)) ".
- 		       "    	   FROM WikiPage u WHERE t.ParentPath LIKE CONCAT('%,',u.WikiPageId,',%')) SortIndex ".
+ 		       "    	   FROM WikiPage u WHERE u.DocumentId = t.DocumentId AND t.ParentPath LIKE CONCAT('%,',u.WikiPageId,',%')) SortIndex ".
 			   "   FROM WikiPage t ".
-			   "  WHERE t.ParentPath LIKE '%,".$parent_id.",%' ";                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-				
+			   "  WHERE t.DocumentId = ".$documentId." AND t.ParentPath LIKE '%,".$parent_id.",%' ";
 		DAL::Instance()->Query( $sql );
 		
-		$sql = " UPDATE WikiPage t SET t.SortIndex = (SELECT u.SortIndex FROM tmp_WikiPageSort u WHERE u.WikiPageId = t.WikiPageId) ".
-			   "  WHERE t.ParentPath LIKE '%,".$parent_id.",%' ";
-
-		DAL::Instance()->Query( $sql );
-		
+		DAL::Instance()->Query( "
+			UPDATE WikiPage t SET t.SortIndex = IFNULL((SELECT u.SortIndex FROM tmp_WikiPageSort u WHERE u.WikiPageId = t.WikiPageId),t.SortIndex)
+		" );
 		DAL::Instance()->Query( "DROP TABLE tmp_WikiPageSort" );
 
         $className = get_class($object_it->object);
 
         $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass) ".
             " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . $className . "' ".
-            "     FROM WikiPage w WHERE w.ParentPath LIKE '%,".$parent_id.",%' AND ParentPage <> ".$parent_id;
-
+            "     FROM WikiPage w WHERE w.DocumentId = ".$documentId." AND w.ParentPath LIKE '%,".$parent_id.",%' AND ParentPage <> ".$parent_id;
         DAL::Instance()->Query( $sql );
-
 	}
 	
 	function updateSectionNumber( $object_it )
 	{
 		if ( $object_it->getId() == '' ) return;
-		if ( $object_it->get('ParentPage') != '' )
-	    {
-	    	getFactory()->resetCachedIterator($object_it->object);
-	    	
-			DAL::Instance()->Query( "SET @r=0 " );
-			
-	    	$sql = "UPDATE WikiPage t SET t.SectionNumber = CONCAT('".$object_it->getRef('ParentPage')->get('SectionNumber')."', '.', (@r:= (@r+1))) ".
-	    		   " WHERE t.ParentPage = ".$object_it->get('ParentPage')." ORDER BY t.OrderNum";
+		getFactory()->resetCachedIterator($object_it->object);
 
-    		DAL::Instance()->Query( $sql );
-    		
-    		$parent_id = $object_it->get('ParentPage');
-	    }
-	    else
-	    {
-	    	$sql = "UPDATE WikiPage t SET t.SectionNumber = '1' WHERE t.WikiPageId = ".$object_it->getId();
+		if ( $object_it->get('ParentPage') < 1 ) {
+			$sql = "UPDATE WikiPage t SET t.SectionNumber = NULL WHERE t.WikiPageId = ".$object_it->getId();
+			DAL::Instance()->Query( $sql );
+		}
 
-    		DAL::Instance()->Query( $sql );
-    		
-    		$parent_id = $object_it->getId();
-	    }
-	    
-    	// get first children of my neighbours
-   		$sql = "SELECT (SELECT c.WikiPageId FROM WikiPage c WHERE c.ParentPage = t.WikiPageId LIMIT 1) WikiPageId, ".
-   			   "       t.WikiPageId ParentPage ".
-   			   "  FROM WikiPage t WHERE t.ParentPage = ".$parent_id;
-    		
-    	$children_it = $object_it->object->getRegistry()->createSQLIterator($sql);
-			
-		while( !$children_it->end() )
+		$registry = new ObjectRegistrySQL($this);
+		$registry->setPersisters(array(
+			new WikiPageDetailsPersister()
+		));
+
+		$object_it = $registry->Query(
+			array (
+				new WikiRootTransitiveFilter($object_it->get('ParentPage') ? $object_it->get('ParentPage') : $object_it->getId()),
+				new SortDocumentClause()
+			)
+		);
+		foreach( $object_it->fieldToArray('ParentPage') as $parentId )
 		{
-			if ( $children_it->getId() > 0 ) $this->updateSectionNumber( $children_it );
-				
-			$children_it->moveNext();
+			if ( $parentId < 1 ) continue;
+			DAL::Instance()->Query( "SET @r=0 " );
+			$sql = "
+				UPDATE WikiPage t 
+					   INNER JOIN (
+					   		SELECT t1.WikiPageId, 
+					   			   CONCAT(
+					   			   	  (SELECT IF(t2.SectionNumber IS NULL, '', CONCAT(t2.SectionNumber,'.')) FROM WikiPage t2 WHERE t2.WikiPageId = t1.ParentPage),
+					   			   	  (@r:= (@r+1))
+					   			    ) SectionNumber
+					   		  FROM WikiPage t1 WHERE t1.ParentPage = ".$parentId." ORDER BY t1.OrderNum
+					   		) t2 ON t2.WikiPageId = t.WikiPageId
+				   SET t.SectionNumber = t2.SectionNumber
+				 WHERE t.ParentPage = ".$parentId." 
+			";
+			DAL::Instance()->Query( $sql );
 		}
 	}
 
     function updateSiblingsOrderNum($object_it)
     {
-        $className = get_class($object_it->object);
-        $object = getFactory()->getObject($className);
+		if ( $object_it->get('ParentPage') == '' ) return;
 
-        $object->addSort( new SortOrderedClause() );
-
-        $object->addFilter( new WikiSameBranchFilter($object_it));
-        $object->addFilter( new FilterNextSiblingsPredicate($object_it) );
-
-        $seq_it = $object->getAll();
-
+		$registry = new ObjectRegistrySQL($this);
+		$registry->setPersisters(array());
+        $seq_it = $registry->Query(
+			array (
+				new WikiSameBranchFilter($object_it),
+				new FilterNextSiblingsPredicate($object_it),
+				new SortOrderedClause()
+			)
+		);
         if ( $seq_it->count() < 1 ) return;
+		$ids = $seq_it->idsToArray();
 
         $sql = "SET @r=".$object_it->get('OrderNum');
-
         DAL::Instance()->Query( $sql );
 
-        $sql = "UPDATE WikiPage w SET w.OrderNum = @r:= (@r+10), w.RecordModified = NOW() WHERE w.WikiPageId IN (".join(",", $seq_it->idsToArray()).") ORDER BY w.OrderNum ASC";
-
+        $sql = "UPDATE WikiPage w SET w.OrderNum = @r:= (@r+10), w.RecordModified = NOW() WHERE w.WikiPageId IN (".join(",", $ids).") ORDER BY w.OrderNum ASC";
         DAL::Instance()->Query( $sql );
 
         $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass) ".
-            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . $className . "' ".
-            "     FROM WikiPage w WHERE w.WikiPageId IN (".join(",", $seq_it->idsToArray()).") ";
-
+            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . get_class($this) . "' ".
+            "     FROM WikiPage w WHERE w.WikiPageId IN (".join(",", $ids).") ";
         DAL::Instance()->Query( $sql );
 	}
-	
+
+	function updateUID( $object_it )
+	{
+		$uid = new ObjectUID();
+		$sql = "UPDATE WikiPage w SET w.UID = '".$uid->getObjectUid($object_it)."' WHERE w.UID IS NULL AND w.WikiPageId IN (".join(",", array($object_it->getId())).")";
+		DAL::Instance()->Query( $sql );
+	}
+
 	function getTagged( $tag_id )
 	{
 		$wikitag_it = getFactory()->getObject2('WikiTag', $this)->getPages( $tag_id );

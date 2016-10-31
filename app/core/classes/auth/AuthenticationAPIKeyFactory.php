@@ -34,18 +34,18 @@ class AuthenticationAPIKeyFactory extends AuthenticationFactory
 			if ( $this->getReadOnlyAuthKey($user_it) == $headers[self::KEY_NAME] )
 			{
 				$this->readonly = true;
-				$this->setUser( $user_it->getId() );
+				$this->setUser( $user_it );
 				return $user_it;
 			}
 			if ( $this->getWriteOnlyAuthKey($user_it) == $headers[self::KEY_NAME] )
 			{
 				$this->writeonly = true;
-				$this->setUser( $user_it->getId() );
+				$this->setUser( $user_it );
 				return $user_it;
 			}
 			if ( $this->getAuthKey($user_it) == $headers[self::KEY_NAME] )
 			{
-				$this->setUser( $user_it->getId() );
+				$this->setUser( $user_it );
 				return $user_it;
 			}
 			$user_it->moveNext();
@@ -64,7 +64,16 @@ class AuthenticationAPIKeyFactory extends AuthenticationFactory
 	protected function getHeaders()
 	{
 		if ( count($this->headers) > 0 ) return $this->headers;
-		return $this->headers = apache_request_headers();
+        $this->headers = apache_request_headers();
+        if ( $_REQUEST['auth'] != '' ) {
+            $this->headers = array_merge(
+                $this->headers,
+                array (
+                    self::KEY_NAME => $_REQUEST['auth']
+                )
+            );
+        }
+		return $this->headers;
 	}
 
 	static function getAuthKey( $user_it ) {

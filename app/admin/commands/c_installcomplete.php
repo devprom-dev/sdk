@@ -11,19 +11,17 @@ class InstallComplete extends CommandForm
 
 	function create()
 	{
-		global $plugins;
-		
 		// run post installation scripts
 		$result = array();
 			
 		// setup server constants
 		$this->setupCustomerCredentials();
 		$this->setupDefaultLanguage( $_REQUEST['language'] );
-		$plugins->buildPluginsList();
+
+		getFactory()->getPluginsManager()->buildPluginsList();
 		
 		$installation_factory = InstallationFactory::getFactory();
-		if ( !$installation_factory->install( $result ) )
-		{
+		if ( !$installation_factory->install( $result ) ) {
 		    $this->replyError(str_replace('%1', join(', ', $result), text(1053)));
 		}
 		
@@ -54,7 +52,7 @@ class InstallComplete extends CommandForm
 	{
 		DAL::Instance()->Query("UPDATE cms_SystemSettings SET Language = ".($lang == 2 ? 2 : 1));
 	}
-	
+
 	function gen_uuid()
 	{
 		list($usec, $sec) = explode(" ",microtime());

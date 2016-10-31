@@ -31,10 +31,13 @@ class CommentController extends RestController
 	
 	function getFilterResolver(Request $request)
 	{
-		return array (
+		return array_merge(
+			parent::getFilterResolver($request),
+			array (
 				new AttachmentFilterResolver(
 						$this->getClassName($request), $request->get('object')
 				)
+			)
 		);
 	}
 }

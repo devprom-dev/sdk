@@ -2,7 +2,8 @@
 
 class FormTransitionPredicateEmbedded extends PMFormEmbedded
 {
- 	var $entity;
+ 	private $entity = null;
+    private $transitionIt = null;
  	
  	function IsAttributeVisible( $attribute )
  	{
@@ -16,15 +17,17 @@ class FormTransitionPredicateEmbedded extends PMFormEmbedded
  		}
  	}
  	
- 	function getNoItemsMessage()
- 	{
+ 	function getNoItemsMessage() {
  		return text(1141);
  	}
  	
- 	function setEntity( $entity )
- 	{
+ 	function setEntity( $entity ) {
  		$this->entity = $entity;
  	}
+
+ 	function setTransitionIt( $it ) {
+ 	    $this->transitionIt = $it;
+    }
  	
 	function createField( $attr_name ) 
 	{
@@ -44,4 +47,17 @@ class FormTransitionPredicateEmbedded extends PMFormEmbedded
 				return parent::createField( $attr_name );
 		}
 	}
+
+	function drawAddButton($view, $tabindex)
+    {
+        parent::drawAddButton($view, $tabindex);
+
+        echo '<br/>';
+        echo '<br/>';
+        echo $view->render('pm/ConditionsLogic.php', array (
+            'field' => 'PredicatesLogic',
+            'value' => is_object($this->transitionIt) ? $this->transitionIt->get('PredicatesLogic') : '',
+            'default' => 'all'
+        ));
+    }
 }

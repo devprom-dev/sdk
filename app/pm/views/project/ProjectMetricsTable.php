@@ -37,4 +37,9 @@ class ProjectMetricsTable extends PMPageTable
 	{
 		return array();
 	}
+
+    function getExportActions()
+    {
+        return array();
+    }
 }

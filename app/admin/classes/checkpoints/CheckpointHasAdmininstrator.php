@@ -22,4 +22,9 @@ class CheckpointHasAdmininstrator extends CheckpointEntryDynamic
     {
         return text(1160);
     }
+
+    function getWarning()
+    {
+        return text(2257);
+    }
 }

@@ -7,107 +7,112 @@ class PMWikiDocumentList extends PMWikiList
     private $revision_it;
     private $visible_ids = array();
     private $trace_source_attribute = array();
+    private $trace_attributes = array();
     private $data_filter_used = false;
+	private $displayContentHeader = false;
+    private $attributesVisible = false;
+    private $attributeFields = array();
 
     function __construct( $object )
     {
     	parent::__construct($object);
     	$this->trace_source_attribute = $this->getObject()->getAttributesByGroup('source-attribute');
+        $this->trace_attributes = $this->getObject()->getAttributesByGroup('trace');
     }
     
- 	function getSorts()
-	{
+ 	function getSorts() {
 	    return array( new SortDocumentClause() );
 	}
-    
-    function retrieve()
+
+	function extendModel()
     {
-    	$snapshot_it = $this->getTable()->getCompareToSnapshot();
+        parent::extendModel();
+        $this->getObject()->addAttribute('Attributes', 'TEXT', translate('Атрибуты'), true);
+    }
 
-   		if ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch','document')) ) {
-   			$registry = new WikiPageRegistryBaseline();
-   			$registry->setDocumentIt($this->getTable()->getDocumentIt());
-   			$registry->setBaselineIt($this->getObject()->getExact($snapshot_it->get('ObjectId')));
-    		$this->getObject()->setRegistry($registry);
-   		}
-   		elseif ( $snapshot_it->getId() != '' && $snapshot_it->object instanceof WikiPageComparableSnapshot ) {
-   			$registry = new WikiPageRegistryVersion();
-   			$registry->setDocumentIt($this->getTable()->getDocumentIt());
-   			$registry->setSnapshotIt($snapshot_it);
-    		$this->getObject()->setRegistry($registry);
-   		}
-		elseif ( $snapshot_it->getId() != '' ) {
-			$registry = new WikiPageRegistryBaseline();
-			$registry->setDocumentIt($this->getTable()->getDocumentIt());
-			$registry->setBaselineIt($snapshot_it);
-			$this->getObject()->setRegistry($registry);
-		}
+    protected function setPersisters( $object, $sorts )
+    {
+        parent::setPersisters($object, $sorts);
 
-    	$version_it = $this->getTable()->getRevisionIt();
-    	if ( $version_it->getId() > 0 )
-    	{
-    		$registry = new WikiPageRegistryVersion();
-    		$registry->setDocumentIt($this->getTable()->getDocumentIt());
-    		$registry->setSnapshotIt($version_it);
-	    	$this->getObject()->setRegistry($registry);
-    	}
+        $snapshot_it = $this->getTable()->getCompareToSnapshot();
 
-		if ( $snapshot_it->getId() != '' ) {
-			$this->getObject()->addPersister( new WikiPageBranchesPersister() );
-		}
+        if ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch','document')) ) {
+            $registry = new WikiPageRegistryBaseline();
+            $registry->setDocumentIt($this->getTable()->getDocumentIt());
+            $registry->setBaselineIt($object->getExact($snapshot_it->get('ObjectId')));
+            $object->setRegistry($registry);
+        }
+        elseif ( $snapshot_it->getId() != '' && $snapshot_it->object instanceof WikiPageComparableSnapshot ) {
+            $registry = new WikiPageRegistryVersion();
+            $registry->setDocumentIt($this->getTable()->getDocumentIt());
+            $registry->setSnapshotIt($snapshot_it);
+            $object->setRegistry($registry);
+        }
+        elseif ( $snapshot_it->getId() != '' ) {
+            $registry = new WikiPageRegistryBaseline();
+            $registry->setDocumentIt($this->getTable()->getDocumentIt());
+            $registry->setBaselineIt($snapshot_it);
+            $object->setRegistry($registry);
+        }
 
-		if ( $_REQUEST['revision'] > 0 )
-    	{
-    		$this->revision_it = getFactory()->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
-    		if ( $this->revision_it->getId() > 0 ) {
-    			$this->getObject()->addPersister( new WikiPageRevisionPersister($this->revision_it) );
-    		}    			
-    	}
+        $version_it = $this->getTable()->getRevisionIt();
+        if ( $version_it->getId() > 0 )
+        {
+            $registry = new WikiPageRegistryVersion();
+            $registry->setDocumentIt($this->getTable()->getDocumentIt());
+            $registry->setSnapshotIt($version_it);
+            $object->setRegistry($registry);
+        }
 
-        foreach( $this->trace_source_attribute as $attribute ) {
-            if ( $this->getColumnVisibility($attribute) ) {
-                $this->getObject()->addPersister( new WikiPageTracesRevisionsPersister() );
-                break;
+        if ( $_REQUEST['revision'] > 0 )
+        {
+            $this->revision_it = getFactory()->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
+            if ( $this->revision_it->getId() > 0 ) {
+                $object->addPersister( new WikiPageRevisionPersister($this->revision_it) );
             }
         }
 
-        return parent::retrieve();
+        foreach( $this->trace_source_attribute as $attribute ) {
+            if ( $this->getColumnVisibility($attribute) ) {
+                $object->addPersister( new WikiPageTracesRevisionsPersister() );
+                break;
+            }
+        }
     }
-    
+
  	function getGroupFields()
  	{
  		return array();
  	}
- 	
-	function getColumns()
-	{
-		return array_merge(array_merge(array('Content'), $this->trace_source_attribute), array('Attributes'));
-	}
- 	
- 	function setupColumns()
- 	{
- 	 	if ( $this->getAttributesVisible() )
- 		{
- 			$this->getObject()->addAttribute('Attributes', '', translate('Атрибуты'), true);
- 		}
- 		
- 		parent::setupColumns();
- 		
- 	 	if ( $this->getAttributesVisible() )
- 		{
- 			$this->getObject()->setAttributeVisible('Attributes', true);
- 		}
- 	}
-    
+
+    function getColumnVisibility($attr)
+    {
+        switch( $attr ) {
+            case 'Content':
+                return true;
+            case 'Attributes':
+                return $this->attributesVisible;
+            default:
+                return parent::getColumnVisibility($attr);
+        }
+    }
+
 	function getColumnFields()
 	{
-		$fields = parent::getColumnFields();
-		
-		unset($fields[array_search('Attributes', $fields)]);
-		unset($fields[array_search('UID', $fields)]);
-		unset($fields[array_search('State', $fields)]);
-		
-		return $fields;
+		return array_filter(parent::getColumnFields(), function($value) {
+			return !in_array($value, array (
+                'Attributes',
+				'UID',
+				'State',
+				'RecentComment',
+				'DocumentId',
+				'Watchers',
+				'Caption',
+				'Attachments',
+				'Project',
+				'ParentPage'
+			));
+		});
 	}
  	
 	function IsNeedToDisplayNumber()
@@ -210,6 +215,8 @@ class PMWikiDocumentList extends PMWikiList
 	
 	function drawSourcePage( $entity_it, $object_it, $attr, $revisions )
 	{
+		$registry = new ObjectRegistrySQL($entity_it->object);
+
 		$baselines = array();
 		$baselines_data = $object_it->get($attr.'Baselines');
 		if ( $baselines_data != '' ) {
@@ -221,28 +228,51 @@ class PMWikiDocumentList extends PMWikiList
 
 		while( !$entity_it->end() )
 		{
-			$source_it = $entity_it;
-			if ( $baselines[$source_it->getId()] != '' )
-			{
-				$source_it = $source_it->object->getRegistry()->Query(
-						array (
-								new FilterInPredicate($source_it->getId()),
-								new SnapshotItemValuePersister($baselines[$source_it->getId()])
-						)
+			if ( !$entity_it->object instanceof WikiPage ) {
+				echo '<div class="trace-artefact" style="padding-left:18px;">';
+					echo '<div style="margin-top: 2px;display:table;width:98%;">';
+						echo '<div style="display:table-cell;padding-right:8px;vertical-align: top;width:1%;">';
+							echo $this->getUidService()->getUidIcon($entity_it);
+						echo '</div>';
+						echo '<h4 class="bs" style="display:table-cell;">';
+							echo $entity_it->getDisplayName();
+						echo '</h4>';
+					echo '</div>';
+					echo '<div style="margin-top: 11px;">';
+						echo $entity_it->getHtmlDecoded('Description');
+					echo '</div>';
+				echo '</div>';
+				$entity_it->moveNext();
+				continue;
+			}
+
+			$source_it = $registry->Query(
+				array (
+					new FilterInPredicate($entity_it->getId()),
+					new DocumentVersionPersister()
+				)
+			);
+			if ( $baselines[$source_it->getId()] != '' ) {
+				$source_it = $registry->Query(
+					array (
+						new FilterInPredicate($source_it->getId()),
+						new DocumentVersionPersister(),
+						new SnapshotItemValuePersister($baselines[$source_it->getId()])
+					)
 				);
 			}
 
             $compare_to = $source_it;
             foreach( $revisions as $revision ) {
-                if ( $revision[$entity_it->getId()] > 0 ) {
-                    $compare_to = $entity_it->object->getRegistry()->Query(
-                        array (
-                            new FilterInPredicate($entity_it->getId()),
-                            new WikiPageRevisionPersister($revision[$entity_it->getId()])
-                        )
-                    );
-                    break;
-                }
+                if ( $revision[$entity_it->getId()] == '' ) continue;
+				$compare_to = $registry->Query(
+					array (
+						new FilterInPredicate($entity_it->getId()),
+						new DocumentVersionPersister(),
+						new WikiPageRevisionPersister($revision[$entity_it->getId()])
+					)
+				);
+				break;
             }
 
 			if ( count($revisions) > 0 && $compare_to->get('Content') == $source_it->get('Content') ) {
@@ -256,12 +286,14 @@ class PMWikiDocumentList extends PMWikiList
 						$this->getUidService()->setBaseline($baselines[$source_it->getId()]);
                         echo $this->getUidService()->getUidIcon($source_it);
                     echo '</div>';
-                    echo '<h4 class="title-cell bs" style="display:table-cell;">';
+                    echo '<h4 class="bs" style="display:table-cell;">';
                         echo $source_it->getDisplayName();
                     echo '</h4>';
-                    echo '<div style="display:table-cell;vertical-align: top;text-align: right;">';
-                        echo '<a class="trace-history" target="_blank" href="'.$source_it->getHistoryUrl().'">'.text(824).'</a>';
-                    echo '</div>';
+					if ( method_exists($source_it, 'getHistoryUrl') ) {
+						echo '<div style="display:table-cell;vertical-align: top;text-align: right;">';
+							echo '<a class="trace-history" target="_blank" href="'.$source_it->getHistoryUrl().'">'.text(824).'</a>';
+						echo '</div>';
+					}
                 echo '</div>';
                 echo '<div style="margin-top: 11px;">';
                     $field = new FieldCompareToContent($source_it,$compare_to);
@@ -278,10 +310,8 @@ class PMWikiDocumentList extends PMWikiList
 		$filter_values = $this->getFilterValues();
 		$form = $this->getTable()->getForm();
 
-		$form->setDocumentIt( $this->getTable()->getDocumentIt() );
-		$form->setRevisionIt( $this->getTable()->getRevisionIt() );
 		$form->setFormIndex( $object_it->getId() );
-		$form->show( $object_it->getCurrentIt() );
+		$form->show( $object_it );
 		$form->setPage( $this->getTable()->getPage() );
 
         if ( in_array($filter_values['search'], array('','all','none')) ) {
@@ -300,67 +330,113 @@ class PMWikiDocumentList extends PMWikiList
         		
 		if ( $filter_values['viewmode'] != 'view' )
 		{
-			$form_render_parms['sections'] = array( 
-            		new PageSectionComments($object_it, $this->getTable()->getRevisionIt()->getId()) 
-			);
+		    $section = new PageSectionComments($object_it, $this->getTable()->getRevisionIt()->getId());
+            $section->setOptions(
+                array (
+                    'collapsable' => true,
+                    'autorefresh' => false
+                )
+            );
+            $form_render_parms['sections'] = array( $section );
 		}
 
 		$form_render_parms['modifiable'] =
-        		$filter_values['viewmode'] != 'view'
-				&& $filter_values['search'] == ''
-        		&& $this->getTable()->getRevisionIt()->getId() < 1 && getFactory()->getAccessPolicy()->can_modify($object_it);
-        		
-		if ( is_object($this->revision_it) && $this->revision_it->getId() > 0 )
-        {
-			if ( $this->revision_it->get('WikiPage') == $object_it->getId() )
-			{
-				$form_render_parms['modifiable'] = false;
-        				
-				$form_render_parms['revision'] = array (
-						'id' => $_REQUEST['revision']
-	        		);
-        	}
+			$this->itemsEditable && getFactory()->getAccessPolicy()->can_modify($object_it);
+
+		$revision = $object_it->get('RevisionId');
+		if ( $revision == '' && is_object($this->revision_it) && $this->revision_it->get('WikiPage') == $object_it->getId() ) {
+			$revision = $this->revision_it->getId();
+		}
+		if ( $revision > 0 ) {
+			$form_render_parms['modifiable'] = false;
+			$form_render_parms['revision'] = array ( 'id' => $revision );
 		}
         		
 		if (!$form_render_parms['modifiable'] ) $form->setReadonly();
         		
-		$form_render_parms['show_section_number'] = $filter_values['numbering'] == 'display';
+		$form_render_parms['show_section_number'] = $this->getColumnVisibility('SectionNumber');
 
 		$comment = getFactory()->getObject('Comment');
-	    		
-		if ( $this->getTable()->getRevisionIt()->getId() > 0 )
-		{
+		if ( $form->getRevisionIt()->getId() > 0 ) {
 			$snapshot = getFactory()->getObject('Snapshot');
-	    			
 			$comment->addFilter( new SnapshotBeforeDatePredicate($this->getTable()->getRevisionIt()->getId()) );
 		}
-	    
-		$form_render_parms['comments_count'] = $comment->getCount($object_it);
+		$form_render_parms['comments_count'] = $comment->getCountForIt($object_it);
         		
 		$form->setReviewMode();
-        		
+
+		ob_start();
+		$this->drawTraceAttributes($object_it);
+		$form_render_parms['traces_html'] = ob_get_contents();
+		ob_end_clean();
+
 		$form->render( $this->getTable()->getView(), $form_render_parms);
 	}
-	
+
+	function drawTraceAttributes( $object_it )
+	{
+		$traces = array_intersect(
+			array_keys($this->getObject()->getAttributesSorted()),
+            array_merge(
+                $this->getObject()->getAttributesByGroup('trace'),
+                $this->getObject()->getAttributesByGroup('source-attribute')
+            )
+		);
+
+		$items = '';
+		foreach( $traces as $key => $attribute ) {
+			$items .= $object_it->get($attribute);
+		}
+		if ( $items == '' ) return;
+
+		echo '<div class="well well-small well-traces hover-holder hidden-print">';
+			echo '<ul class="inline">';
+				echo '<li><i class="icon-random"></i></li>';
+				foreach( $traces as $attribute ) {
+					if ( $object_it->get($attribute) == '' ) continue;
+					if ( $object_it->object->IsReference($attribute) ) {
+						$ref_it = $this->getFilteredReferenceIt($attribute, $object_it->get($attribute));
+						if ( $ref_it->count() < 1 ) continue;
+
+						echo '<li>';
+						echo $this->getObject()->getAttributeUserName($attribute).': ';
+						parent::drawRefCell($ref_it, $object_it, $attribute);
+						echo '</li>';
+					}
+					else {
+						echo '<li>';
+						echo $this->getObject()->getAttributeUserName($attribute).': ';
+						parent::drawCell($object_it, $attribute);
+						echo '</li>';
+					}
+				}
+				$method = new ObjectModifyWebMethod($object_it);
+				if ( $method->hasAccess() ) {
+					$method->setRedirectUrl('donothing');
+					echo '<li>';
+						echo '<a class="dashed dashed-hidden" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.translate('изменить').'</a>';
+					echo '</li>';
+				}
+		echo '</ul>';
+		echo '</div>';
+	}
+
 	function drawAttributes( $object_it )
 	{
 		foreach( $this->getObject()->getAttributes() as $key => $attribute )
 		{
-			if ( in_array($key, $this->getColumns()) ) continue;
-			
+			if ( !in_array($key, $this->attributeFields) ) continue;
 			if ( !$this->getColumnVisibility($key) ) continue;
-			
+			if ( $object_it->get($key) == '' ) continue;
+
 			echo translate($this->getObject()->getAttributeUserName($key)).': ';
 			
-			if ( $this->getObject()->IsReference($key) )
-			{
+			if ( $this->getObject()->IsReference($key) ) {
 				$this->drawRefCell( $object_it->getRef($key), $object_it, $key );
 			}
-			else
-			{
+			else {
 				$this->drawCell( $object_it, $key );
 			}
-			
 			echo '<br/>';
 		}
 	}
@@ -407,13 +483,13 @@ class PMWikiDocumentList extends PMWikiList
 	
 	function getAttributesVisible()
 	{
-		foreach( $this->getObject()->getAttributes() as $key => $attribute )
-		{
-			if ( $key == "Content" ) continue;
+		$trace = $this->getObject()->getAttributesByGroup('trace');
+		foreach( $this->getObject()->getAttributes() as $key => $attribute ) {
+			if ( in_array($key, array("Content","SectionNumber")) ) continue;
 			if ( in_array($key, $this->trace_source_attribute) ) continue;
+			if ( in_array($key, $trace) ) continue;
 			if ( $this->getColumnVisibility($key) ) return true;
 		}
-		
 		return false;
 	}
 	
@@ -422,41 +498,47 @@ class PMWikiDocumentList extends PMWikiList
 		switch ( $attr )
 		{
 		    case 'Content':
-
-		    	if ( $_REQUEST['tableonly'] != '' ) return; 
+		    	if ( $_REQUEST['tableonly'] != '' || $this->getTable()->dataFilterApplied() ) {
+					return array (
+						'script' => '#',
+						'name' => $this->displayContentHeader ? translate('Документ') : ''
+					);
+				}
 		    	
 	    		$documents = $this->getPagesWithDifferences($this->getTable()->getCompareToSnapshot());
-		    	
 		    	$compare_actions = $this->getTable()->getCompareToActions();
-		    		
 		    	if ( count($documents) + count($compare_actions) > 0 )
 		    	{
-			    	return array (
-			    			'script' => '#',
-			    			'name' => $this->getTable()->getView()->render('pm/WikiDocumentHeader.php',
-			    							array (
-			    									'documents' => $documents,
-			    									'actions' => $compare_actions
-			    							)
-			    					  )
+					$parms = array (
+						'documents' => $documents,
+						'actions' => $compare_actions
+					);
+
+					$widget = $this->getTable()->getBaselinesListWidget();
+					if ( is_object($widget) ) {
+						$parms['baselines_widget'] = array (
+							'name' => text(2161),
+							'url' => $widget->getUrl()
+						);
+					}
+
+
+					return array (
+						'script' => '#',
+						'name' => $this->getTable()->getView()->render('pm/WikiDocumentHeader.php', $parms)
 			    	);
 		    	}
 		    	else
 		    	{
 			    	return array (
 			    			'script' => '#',
-			    			'name' => translate($this->getObject()->getAttributeUserName($attr))
+			    			'name' => $this->displayContentHeader ? translate('Документ') : ''
 			    	);
 		    	}
 		    	
 		    default:
 		    	return parent::getHeaderAttributes( $attr );
 		}
-	}
-	
-	function getItemActions( $column_name, $object_it ) 
-	{
-		return array();
 	}
 	
 	function getSortingParms()
@@ -477,6 +559,15 @@ class PMWikiDocumentList extends PMWikiList
         $parent_parms = parent::getRenderParms();
 
         $this->data_filter_used = $this->getTable()->dataFilterApplied();
+        $this->attributesVisible = $this->getAttributesVisible();
+
+		$filter_values = $this->getFilterValues();
+		$this->itemsEditable =
+			$filter_values['viewmode'] != 'view'
+			&& $filter_values['search'] == ''
+			&& $this->getTable()->getRevisionIt()->getId() < 1
+			&& $this->getTable()->getCompareToSnapshot()->getId() < 1
+            && getFactory()->getAccessPolicy()->can_modify($this->getObject());
 
         if ( $_REQUEST['doc-visible-ids'] != '' )
         {
@@ -517,9 +608,56 @@ class PMWikiDocumentList extends PMWikiList
             }
         }
 
+		$attributes = array_merge(
+			$this->getObject()->getAttributesByGroup('source-attribute'),
+			array (
+				'Attributes'
+			)
+		);
+		foreach( $attributes as $attribute ) {
+			if ( $this->getColumnVisibility($attribute) ) {
+				$this->displayContentHeader = true;
+				break;
+			}
+		}
+
+        $visibleColumns = array_merge(array('Content','Attributes'), $this->trace_source_attribute);
+        $this->attributeFields =
+            array_diff(
+                array_filter($parent_parms['columns'], function($value) use ($visibleColumns) {
+                    return !in_array($value, $visibleColumns);
+                }),
+                $this->trace_source_attribute,
+                $this->trace_attributes,
+                array(
+                    'SectionNumber'
+                )
+            );
+
 		return array_merge( $parent_parms, array (
 		    'table_class_name' => 'table-document',
-			'reorder' => true
+			'reorder' => true,
+			'toolbar' => $this->hasToolbar(),
+			'visible_pages' => $this->getTable()->getPreviewPagesNumber(),
+            'columns' => array_filter($parent_parms['columns'], function($value) use ($visibleColumns) {
+                                return in_array($value, $visibleColumns);
+                            })
  	    ));
  	}
+
+	function buildFilterActions( &$base_actions )
+	{
+		parent::buildFilterActions( $base_actions );
+
+		foreach ( $base_actions as $key => $action ) {
+			if ( $action['uid'] == 'columns' ) {
+				$base_actions[$key]['name'] = translate('Атрибуты');
+				break;
+			}
+		}
+	}
+
+	protected function hasToolbar() {
+		return $this->itemsEditable;
+	}
 }

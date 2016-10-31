@@ -33,11 +33,10 @@ class PMUserSettings extends MetaobjectCacheable
 	 	        'Participant' => $user_id,
 	 	        'Setting' => $settings_name
 	 	));
- 		
+
 		if ( $value_it->getId() != '' )
 		{
 			$parms['Value'] = $value;
-			
 			$this->modify_parms($value_it->getId(), $parms);
 		}
 		else 

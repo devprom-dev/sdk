@@ -20,10 +20,11 @@ class InviteService
 					}
 	        );
 		}
-		
+		if ( count($emails) < 1 ) throw new \Exception(text(2158));
+
 		$user = getFactory()->getObject('User'); 
 		if ( !getFactory()->getAccessPolicy()->can_create($user) ) return false;
-		
+
 		foreach( $emails as $email )
 		{
 			$email = trim(strtolower($email));
@@ -48,7 +49,8 @@ class InviteService
 					)
 			);
 		}
-		
+
+        \SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 		
 		return true;

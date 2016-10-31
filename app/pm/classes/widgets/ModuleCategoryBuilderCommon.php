@@ -7,9 +7,7 @@ class ModuleCategoryBuilderCommon extends ModuleCategoryBuilder
     public function build( ModuleCategoryRegistry & $object )
     {
         $object->add( FUNC_AREA_FAVORITES, translate('Избранное') );
-         
-        $object->add( FUNC_AREA_MANAGEMENT, translate('Управление проектом') );
-
+        $object->add( FUNC_AREA_MANAGEMENT, text(907) );
         $object->add( FunctionalAreaMenuSettingsBuilder::AREA_UID, translate('Настройки') );
     }
 }

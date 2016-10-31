@@ -16,11 +16,6 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
         
         $this->buildManagement( $set );
         $this->buildFavorites( $set );
-        
-        if ( class_exists('ModuleCategoryBuilderRequirements') )
-        {
-        	$this->buildAnalysis( $set );
-        }
     }
     
     function buildFavorites( $set )
@@ -86,16 +81,5 @@ class FunctionalAreaMenuScrumBuilder extends FunctionalAreaMenuBuilder
  	    if ( count($settings_menu) < 1 ) return;
  	    
  	    $set->setAreaMenus( FUNC_AREA_MANAGEMENT, array() );
-    }
-    
-    function buildAnalysis( $set )
-    {
-        $menus = $set->getAreaMenus(ModuleCategoryBuilderRequirements::AREA_UID);
-        if ( count($menus) < 1 ) return;
-         
- 	    // features tab 
-        $menus['features']['items'][] = getFactory()->getObject('PMReport')->getExact('issues-trace')->buildMenuItem();
-
- 		$set->setAreaMenus( ModuleCategoryBuilderRequirements::AREA_UID, $menus );
     }
 }

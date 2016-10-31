@@ -24,7 +24,7 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  
  	function getSessionId()
  	{
- 		return md5(SystemDateTime::date("d.m.Y. h:i:s").PASS_KEY.$this->getUser().INSTALLATION_UID);
+ 		return md5(SystemDateTime::date("d.m.Y. h:i:s").PASS_KEY.$this->getUser()->getId().INSTALLATION_UID);
  	}
  	
  	function logon( $remember = false )
@@ -83,7 +83,7 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
 	 		if ( is_array($data) )
 	 		{
 	 		    $user_it = $user->createCachedIterator( $data );
-	 		    $this->setUser( $user_it->getId() );
+	 		    $this->setUser( $user_it );
 	 			return $user_it;
 	 		}
 		}
@@ -94,7 +94,7 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  		$user_it = $user->getAll();
  		if ( $user_it->count() < 1 ) return parent::authorize();
  		
- 		$this->setUser( $user_it->getId() );
+ 		$this->setUser( $user_it );
  		foreach( $cookies as $cookie )
 		{
  			getSession()->set('session-'.$cookie, $user_it->getRowset(), 'usr');

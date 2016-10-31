@@ -2,16 +2,6 @@
 
 class PMCustomAttributeIterator extends OrderedIterator
 {
-    function get2( $attr )
-    {
-        switch ( $attr )
-        {
-            case 'ReferenceName': return strtolower(parent::get($attr));
-
-            default: return parent::get($attr); 
-        }
-    }
-    
  	function toReferenceNames()
  	{
  		$names = array();
@@ -45,4 +35,33 @@ class PMCustomAttributeIterator extends OrderedIterator
  	{
  		return $this->object->getEntityDisplayName($this->get('EntityReferenceName'), $this->get('ObjectKind'));
  	}
+
+	function getEntityRegistry()
+	{
+		$class_name = getFactory()->getClass($this->get('EntityReferenceName'));
+		if ( !class_exists($class_name, false) ) return null;
+
+		$ref = getFactory()->getObject($class_name);
+		$registry = $ref->getRegistry();
+
+		$filters = $registry->getFilters();
+		$filters[] = new FilterVpdPredicate();
+
+		if ( $this->get('ObjectKind') != '' ) {
+			switch($ref->getEntityRefName()) {
+				case 'pm_ChangeRequest':
+					$filters[] = new FilterAttributePredicate('Type', $this->get('ObjectKind'));
+					break;
+				case 'pm_Task':
+					$filters[] = new FilterAttributePredicate('TaskType', $this->get('ObjectKind'));
+					break;
+				case 'WikiPage':
+					$filters[] = new FilterAttributePredicate('PageType', $this->get('ObjectKind'));
+					break;
+			}
+		}
+
+		$registry->setFilters($filters);
+		return $registry;
+	}
 }

@@ -60,6 +60,9 @@ class SortAttributeClause extends SortClauseBase
 		$sort_type = $this->getSortType(); 
 		
 		$attr = $this->getAttributeName();
+		if ( !$object->hasAttribute($attr) ) {
+			$attr = $object->getIdAttribute();
+		}
 
 		$sql_attr = $this->getColumn();
  		
@@ -70,7 +73,7 @@ class SortAttributeClause extends SortClauseBase
 				{
 					return " (SELECT MIN(s.OrderNum) FROM pm_State s " .
 						   "   WHERE s.ObjectClass = '".$object->getStatableClassName()."' " .
-						   "	 AND s.VPD IN ('".join("','",$object->getVpds())."') ".
+						   "	 AND s.VPD = ".$this->getAlias().".VPD".
 						   "     AND s.ReferenceName = ".$sql_attr.") ".$sort_type;
 				}
 				
@@ -78,28 +81,43 @@ class SortAttributeClause extends SortClauseBase
 	 			if ( $object->IsReference($attr) )
 	 			{ 
 	 				$ref = $object->getAttributeObject($attr);
-	 				
+
 					if ( $ref instanceof Metaobject && $ref->getEntity()->get('IsDictionary') == 'Y' )
 					{
 						$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
 						return " (SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
 					}
-					
+
 					$sorts = $ref->getSortDefault();
 					if ( count($sorts) > 0 && $ref->getEntityRefName() != $object->getEntityRefName() )
 					{
-						$clause = array_shift($sorts);
-						if ( $clause instanceof SortAttributeClause )
-						{
-			 				if ( in_array($object->getAttributeType($clause->getAttributeName()), array('varchar','text','largetext')) ) { 
- 								$default_val = "'!'";
-	 						} else {
-	 							$default_val = "0";
-	 						}
-							$sort_clause = " (SELECT IFNULL(s.".$clause->getAttributeName().", ".$default_val.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type;
-							$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
-							return $sort_clause.", (SELECT s.".$alt_sort_column." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
+						$titleSortFound = false;
+						foreach( $sorts as $sort ) {
+							if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'Caption' ) {
+								$titleSortFound = true;
+								break;
+							}
 						}
+						if ( !$titleSortFound && $ref->IsAttributeStored('Caption') ) {
+							$sort = new SortAttributeClause('Caption');
+							$sort->setObject($ref);
+							$sorts[] = $sort;
+						}
+
+						$sort_clauses = array();
+						foreach( $sorts as $sort ) {
+							if ( !$sort instanceof SortAttributeClause ) continue;
+							$clause = $sort->clause();
+							if ( strpos($clause, 'SELECT') === false ) {
+								$sort->setAlias('s');
+								$clause = preg_replace('/\s(ASC|DESC)\s/i', '', $sort->clause());
+								$sort_clauses[] = " (SELECT ".$clause." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type;
+							}
+							else {
+								$sort_clauses[] = $clause;
+							}
+						}
+						return join(',',$sort_clauses);
 					}
 	 			}
 
@@ -114,7 +132,7 @@ class SortAttributeClause extends SortClauseBase
 			 	if ( in_array($object->getAttributeType($attr), array('varchar','text','largetext')) ) { 
 	 				$sql_attr = " IFNULL(".$sql_attr.", '!') ";
 	 			}
-	 			
+
 				return $sql_attr." ".$sort_type." ";
 		}
  	}

@@ -7,8 +7,7 @@ class ModelServiceIssue extends ModelService
 {
 	function set( $entity, $data, $id = '' )
 	{
-		if ( !is_numeric($data['Author']) )
-		{
+		if ( !is_numeric($data['Author']) && !is_array($data['Author']) ) {
 			$data['CustomerEmail'] = $data['Author'];
 			unset($data['Author']);
 		}

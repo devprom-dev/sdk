@@ -10,14 +10,9 @@ class BugController extends RestController
 {
 	function getEntity(Request $request)
 	{
-		return 'Request';
+		return 'Bug';
 	}
 
-	protected function getFilterResolver(Request $request)
-	{
-		return array();
-	}
-	
     protected function getModelService(Request $request)
     {
     	return new ModelServiceBugReporting(
@@ -30,5 +25,12 @@ class BugController extends RestController
     			new \ModelDataTypeMapper(),
     			null
 		);
+    }
+
+    protected function getPostData(Request $request)
+    {
+        $data = $request->request->all();
+        if ( trim($data['Caption']) == '' ) return array();
+        return $data;
     }
 }

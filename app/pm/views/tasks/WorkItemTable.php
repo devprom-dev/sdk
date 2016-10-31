@@ -71,21 +71,15 @@ class WorkItemTable extends TaskTable
         return $type_method;
     }
 
-    protected function buildStateFilter()
-    {
-        $state_objects = array(getFactory()->getObject('IssueState'));
-        if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) {
-            $state_objects[] = getFactory()->getObject('TaskState');
-        }
-        if ( count($state_objects) > 1 ) {
-            $metastate = getFactory()->getObject('StateMeta');
-            $metastate->setAggregatedStateObject($state_objects);
-            $state_it = $metastate->getRegistry()->getAll();
-        }
-        else {
-            $object = array_pop($state_objects);
-            $state_it = $object->getAll();
-        }
-        return new StateExFilterWebMethod($state_it, 'taskstate');
+    protected function buildStateFilter() {
+        return new StateExFilterWebMethod(getFactory()->getObject('WorkItemState')->getAll(), 'taskstate');
+    }
+
+    function buildStatePredicate( $value ) {
+        return new WorkItemStatePredicate( $value );
+    }
+
+    function getDefaultRowsOnPage() {
+        return 20;
     }
 }

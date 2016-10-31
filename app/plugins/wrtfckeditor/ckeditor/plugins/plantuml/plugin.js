@@ -12,7 +12,7 @@ CKEDITOR.plugins.add( 'plantuml',
 		editor.addCommand( 'umlDialog',new CKEDITOR.dialogCommand( 'umlDialog' ) );
 		editor.ui.addButton( 'Plantuml',
 		{
-			label: 'Insert UML',
+			label: cket('uml-insert'),
 			command: 'umlDialog',
 			icon: iconPath
 		} );
@@ -26,7 +26,7 @@ CKEDITOR.plugins.add( 'plantuml',
 			editor.addMenuItem( 'umlItem',
 			{
 				// Item label.
-				label : 'Edit UML',
+				label : cket('uml-edit'),
 				// Item icon path using the variable defined above.
 				icon : iconPath,
 				// Reference to the plugin command name.
@@ -80,9 +80,9 @@ CKEDITOR.plugins.add( 'plantuml',
 			return {
 				// Basic properties of the dialog window: title, minimum size.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dialog.dialogDefinition.html
-				title : 'PlantUML source',
-				minWidth : 400,
-				minHeight : 400,
+				title : cket('uml-source'),
+				minWidth : $(window).width() * 5/6,
+				minHeight : $(window).height() * 4/5,
 				// Dialog window contents.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dialog.definition.content.html
 				contents :
@@ -91,37 +91,88 @@ CKEDITOR.plugins.add( 'plantuml',
 						// Definition of the Basic Settings dialog window tab (page) with its id, label and contents.
 						// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dialog.contentDefinition.html
 						id : 'tab1',
-						label : 'Basic Settings',
+						label : cket('uml-settings'),
 						elements :
 						[
 							{
-								type : 'html',
-								html : 'Enter here PlantUML diagram description'	,	
-							},
-							{
-								// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.ui.dialog.textInput.html
-								type : 'textarea',
-								rows : 22,
-								cols : 120,
-								id : 'plantuml',
-								validate : CKEDITOR.dialog.validate.notEmpty( "PlantUML source cannot be empty" ),
-								setup : function( element )
-								{
-								var alt = element.getAttribute("alt");
-									if (alt!=null) {
-										this.setValue(unescape($.base64.decode(alt)));
+								type: 'hbox',
+								widths: ['50%','50%'],
+								children: [
+									{
+										type: 'vbox',
+										children: [
+											{
+												type : 'html',
+												html : cket('uml-text'),
+											},
+											{
+												// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.ui.dialog.textInput.html
+												type : 'textarea',
+												rows : $(window).height() / 19.5,
+												cols : 120,
+												id : 'plantuml',
+												timer: 0,
+												validate : CKEDITOR.dialog.validate.notEmpty(cket('uml-message-notempty')),
+												setup : function( element ) {
+													var alt = element.getAttribute("alt");
+													if (alt!=null) {
+														this.setValue(unescape($.base64.decode(alt)));
+													}
+													var self = this;
+													$(this.getInputElement().$)
+														.css({
+															'font-family': 'Courier New'
+														})
+														.keypress(function() {
+															if ( self.timer > 0 ) {
+																clearTimeout(self.timer);
+															}
+															self.timer = setTimeout(function() {
+																self.preview(self);
+															}, 1000);
+														});
+													this.preview(this);
+												},
+												commit : function( element ) {
+													var u = compress(this.getValue());
+													u = editor.config.plantUMLServer + "/plantuml/img/"+u;
+													var altText = $.base64.encode(escape(this.getValue()));
+													element.setAttribute( "alt", altText );
+													element.setAttribute( "src", u );
+													element.setAttribute( "data-cke-saved-src", u );
+												},
+												preview: function (element) {
+													var value = element.getValue();
+													if ( value == '' ) {
+														var u = '/images/examples.png';
+													}
+													else {
+														var u = compress(element.getValue());
+														u = editor.config.plantUMLServer + "/plantuml/img/"+u;
+													}
+													$('.plantuml-preview>img').attr('src',u);
+												}
+											},
+
+										]
+									},
+									{
+										type: 'vbox',
+										style: 'padding-left:12px',
+										children: [
+											{
+												type : 'html',
+												html : cket('uml-preview-area')
+											},
+											{
+												type : 'html',
+												id: 'previewArea',
+												html : '<div class="plantuml-preview"><img src="/images/examples.png"></div>'
+											}
+										]
 									}
-								},
-								commit : function( element )
-								{
-									var u = compress(this.getValue());
-									u = editor.config.plantUMLServer + "/plantuml/img/"+u;
-									var altText = $.base64.encode(escape(this.getValue()));
-									element.setAttribute( "alt", altText );
-									element.setAttribute( "src", u );
-									element.setAttribute( "data-cke-saved-src", u );
-								}
-							},
+								]
+							}
 						]
 					},
 				],
@@ -163,7 +214,7 @@ CKEDITOR.plugins.add( 'plantuml',
 					
 					// Invoke the setup functions of the element.
 					this.setupContent( this.element );
-				},				
+				},
 				// This method is invoked once a user closes the dialog window, accepting the changes.
 				// http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.dialog.dialogDefinition.html#onOk
 				onOk : function()
@@ -399,16 +450,11 @@ var zip_deflate_data;
 var zip_deflate_pos;
 
 /* constant tables */
-var zip_extra_lbits = new Array(
-    0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0);
-var zip_extra_dbits = new Array(
-    0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13);
-var zip_extra_blbits = new Array(
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7);
-var zip_bl_order = new Array(
-    16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15);
-var zip_configuration_table = new Array(
-	new zip_DeflateConfiguration(0,    0,   0,    0),
+var zip_extra_lbits = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+var zip_extra_dbits = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+var zip_extra_blbits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7];
+var zip_bl_order = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+var zip_configuration_table = [new zip_DeflateConfiguration(0,    0,   0,    0),
 	new zip_DeflateConfiguration(4,    4,   8,    4),
 	new zip_DeflateConfiguration(4,    5,  16,    8),
 	new zip_DeflateConfiguration(4,    6,  32,   32),
@@ -417,7 +463,7 @@ var zip_configuration_table = new Array(
 	new zip_DeflateConfiguration(8,   16, 128,  128),
 	new zip_DeflateConfiguration(8,   32, 128,  256),
 	new zip_DeflateConfiguration(32, 128, 258, 1024),
-	new zip_DeflateConfiguration(32, 258, 258, 4096));
+	new zip_DeflateConfiguration(32, 258, 258, 4096)];
 
 /* objects (deflate) */
 

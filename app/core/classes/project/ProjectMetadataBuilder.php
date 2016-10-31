@@ -11,29 +11,28 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
  		$metadata->addPersister( new ProjectVPDPersister() );
 
 		$metadata->setAttributeType( 'Importance', 'REF_ProjectImportanceId' );
- 		$metadata->addAttribute( 'LinkedProject', 'REF_pm_ProjectId', translate('Связанные проекты'), false );
-        $metadata->addPersister( new ProjectLinkedPersister() );
- 		
+
  		$metadata->setAttributeVisible( 'IsPollUsed', false );
  		$metadata->setAttributeVisible( 'StartDate', false );
  		$metadata->setAttributeVisible( 'FinishDate', false );
  		
- 		$metadata->setAttributeType( 'CodeName', 'VARCHAR' );
  		$metadata->setAttributeType( 'Description', 'TEXT' );
  		
  		$metadata->setAttributeRequired( 'Budget', false );
  		$metadata->setAttributeRequired( 'Blog', false );
  		$metadata->setAttributeRequired( 'Version', false );
  		
-		foreach ( array('Caption', 'CodeName') as $attribute )
-		{
+		foreach ( array('Caption', 'CodeName') as $attribute ) {
 		    $metadata->addAttributeGroup($attribute, 'tooltip');
 		}
-		
+        foreach ( array('Importance', 'IsClosed') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'bulk');
+        }
+
 		$system_attributes = array(
 		        'IsTender', 'Rating', 'IsPollUsed', 'Blog', 'IsBlogUsed', 
-		        'MainWikiPage', 'StartDate', 'FinishDate', 'HasMeetings', 'IsConfigurations', 
-		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'RequirementsWikiPage', 'Tools', 'Language'
+		        'StartDate', 'FinishDate', 'HasMeetings', 'IsConfigurations',
+		        'Platform', 'DaysInWeek', 'WikiEditorClass', 'LinkedProject', 'Tools', 'Language'
 		);
 		
  		foreach ( $system_attributes as $attribute )

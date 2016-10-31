@@ -37,7 +37,7 @@ class LogForm extends AdminForm
 		echo '<textarea rows=40 style="width:100%;overflow:scroll;">'.$value.'</textarea>';
 	}
 	
-	private function getFileTail( $file_path, $lines = 640 )
+	private function getFileTail( $file_path, $lines = 1820 )
 	{
 		$fp = fopen($file_path, 'r');
 

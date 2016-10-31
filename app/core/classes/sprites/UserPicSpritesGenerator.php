@@ -1,5 +1,6 @@
 <?php
-
+use LetterAvatar\LetterAvatar;
+use LetterAvatar\ColorPalette;
 include_once "CssSpritesGenerator.php";
 
 class UserPicSpritesGenerator extends CssSpritesGenerator
@@ -17,14 +18,8 @@ class UserPicSpritesGenerator extends CssSpritesGenerator
 		$user_it = getFactory()->getObject('cms_User')->getRegistry()->Query(
 				array( new SortOrderedClause() )
 		);
-		
-		while( !$user_it->end() )
-		{
-			if( $user_it->getFileName('Photo') != '' )
-			{
-				$files[$user_it->getId()] = $user_it->getFilePath('Photo');
-			}
-			
+		while( !$user_it->end() ) {
+			$files[$user_it->getId()] = $this->getPhotoFilePath($user_it);
 			$user_it->moveNext();
 		}
 
@@ -51,5 +46,45 @@ class UserPicSpritesGenerator extends CssSpritesGenerator
 				$this->sprites_usual_size, 
 				SERVER_ROOT_PATH."images/userpic-grey.png"
 		);
+
+		foreach( $files as $file ) {
+            if ( strpos($file, SERVER_FILES_PATH) !== false ) continue;
+            if ( strpos($file, SERVER_ROOT_PATH) !== false ) continue;
+            unlink($file);
+		}
 	}
+
+	protected function getPhotoFilePath( $user_it )
+	{
+		if( $user_it->getFileName('Photo') != '' ) return $user_it->getFilePath('Photo');
+
+        $filePath = tempnam(sys_get_temp_dir(), 'sprite_');
+        if ( !file_exists($filePath) ) return SERVER_ROOT_PATH.'images/userpic-grey.png';
+
+		if ( count($this->colors) < 1 ) {
+			$this->colors = ColorPalette::getColors();
+		}
+		$background = $user_it->getId() % count($this->colors);
+
+		$title = trim(join('',
+            array_map(
+                function($value) {
+                    return mb_substr(mb_strtoupper($value),0,1);
+                },
+			    array_slice(explode(' ', $user_it->getDisplayName()),0,2)
+		    )
+        ));
+
+		$letterAvatar = new LetterAvatar;
+		$letterAvatar
+			->setBackgroundColors(array($this->colors[$background]))
+			->setFontRatio(0.6)
+			->setFontFile(SERVER_ROOT_PATH."ext/mpdf50/ttfonts/DejaVuSansCondensed.ttf")
+			->generate(array($title), 120)
+			->saveAsPng($filePath);
+
+		return $filePath;
+	}
+
+	private $colors = array();
 }

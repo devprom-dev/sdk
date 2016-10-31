@@ -165,7 +165,7 @@ class IterationBurndownSection extends InfoSection
 		{
 			if ( $actions[count($actions)-1]['name'] != '' ) array_push($actions, array() );
 			array_push( $actions, array( 
-				'url' => $method->getJSCall( $this->release_it ),
+				'url' => $method->url( $this->release_it ),
 				'name' => $method->getCaption() 
 			));
 		}

@@ -13,13 +13,17 @@
 				</div>
 				<div class="span2">
 					<a id="close-btn" class="pull-right btn btn-inverse" href="<?=$close_url?>"><?=translate('Закрыть')?></a>
+					<?php if ( $share_url != '' ) { ?>
+						<span class="pull-right span1"></span>
+						<a id="close-btn" class="pull-left btn btn-danger" href="<?=$share_url?>"><?=text(1909)?></a>
+					<?php } ?>
 				</div>
 			</div>
-			<div class="row-fluid">
-				<?php if ( $hint_top != '' ) { ?>
-					<?php echo $view->render('core/Hint.php', array('title' => $hint_top, 'name' => $page_uid)); ?>
-				<? } ?>
-			</div>
+			<?php if ( $hint_open ) { ?>
+				<div class="row-fluid">
+					<?php echo $view->render('core/Hint.php', array('title' => $hint_top, 'name' => $page_uid, 'open' => $hint_open)); ?>
+				</div>
+			<?php } ?>
 			<div class="row-fluid">
 			    <section id="menu-configurator">
 					<table class="table table-bordered">

@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
 
 class RunJobs extends Command
@@ -88,6 +87,7 @@ class RunJobs extends Command
 			$job_it = $job->getInArray('co_ScheduledJobId', $jobs_to_run);
 			while ( !$job_it->end() )
 			{
+				/*
 				$lock = new LockFileSystem(BACKGROUND_TASKS_LOCK_NAME.'-'.$job_it->getId());
 				if ( $lock->Locked($this->timeWaitedForPrevInstance) ) {
 					if ( is_object($this->getLogger()) ) {
@@ -98,11 +98,11 @@ class RunJobs extends Command
 				}
 				$lock->Lock();
 				$jobs_locks[] = $lock;
+				*/
 
 				$model_factory = new ModelFactoryExtended($plugins);
-				
-				$session = new COSession();
-				
+				SessionBuilderCommon::Instance()->openSession();
+
 				$_REQUEST['job'] = $job_it->getId();
 				 
  				$command = '';

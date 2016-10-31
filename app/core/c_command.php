@@ -69,7 +69,7 @@
 		$this->replyResult( true, $message );
 	}
 	
-	function replySuccess( $message )
+	function replySuccess( $message = '' )
 	{
 		$log = $this->getLogger();
 		if ( is_object($log) ) $log->info( $message );
@@ -311,10 +311,10 @@
 		$this->logFinish();
 	}
 
-	function replySuccess( $message, $object_id = '' )
+	function replySuccess( $message = '', $object_id = '' )
 	{
 		$log = $this->getLogger();
-		if ( is_object($log) ) $log->info( $message );
+		if ( is_object($log) && $message != '' ) $log->info( $message );
 		
 		$this->replyResult( false, $message, $object_id );
 	}
@@ -345,9 +345,9 @@
 		$log = $this->getLogger();
 
 		$result = array (
-		    'state' => IteratorBase::wintoutf8($state),
-		    'message' => IteratorBase::wintoutf8($text),
-		    'object' => IteratorBase::wintoutf8($object)
+		    'state' => $state,
+		    'message' => $text,
+		    'object' => $object
 		);
 		
 		if ( is_object($log) ) $log->info( $result );

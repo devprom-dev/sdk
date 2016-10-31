@@ -11,9 +11,8 @@ include "predicates/CommentRootFilter.php";
 
 class CommentBase extends Metaobject
 {
- 	function __construct() 
- 	{
-		parent::Metaobject('Comment');
+ 	function __construct( $registry = null ) {
+		parent::__construct('Comment', $registry);
 	}
 	
 	function createIterator() 
@@ -29,7 +28,7 @@ class CommentBase extends Metaobject
 			);
 	}
 	
-	function getCount( $object_it ) 
+	function getCountForIt( $object_it )
 	{
 		return $this->getCount2( $object_it->getId(), get_class($object_it->object) );
 	}
@@ -150,21 +149,19 @@ class CommentBase extends Metaobject
 	
 	function getPageNameEditMode( $comment_id )
 	{
-		$factory = getModelFactory();
-
 		$comment_it = $this->getExact( $comment_id );
-		$class = $factory->getObject($comment_it->get('ObjectClass'));
+		$class = getFactory()->getObject($comment_it->get('ObjectClass'));
 		
 		if( is_object($class) ) return $class->getPageNameEditMode($comment_it->get('ObjectId')); 
 	}
 	
  	function getAccessFilter()
  	{
- 		global $model_factory, $part_it;
+ 		global $model_factory;
  		
 		$rights = $model_factory->getObject('pm_AccessRight');
 		
-		$names_it = $rights->getEntitiesForParticipant($part_it->getId());
+		$names_it = $rights->getEntitiesForParticipant(getSession()->getParticipantIt()->getId());
 			
 		$noaccess = array();
 		
@@ -190,12 +187,15 @@ class CommentBase extends Metaobject
  	
  	function add_parms( $parms )
  	{
+		if ( $parms['ObjectId'] < 1 ) throw new Exception('Object identifier is required');
+
+		if ( $parms['ObjectClass'] == '' ) {
+			$parms['ObjectClass'] = $this->getDefaultAttributeValue('ObjectClass');
+		}
+
  		$class_name = getFactory()->getClass($parms['ObjectClass']);
- 		
  		if ( !class_exists($class_name) ) throw new Exception('Object class is required');
- 		
- 		if ( $parms['ObjectId'] < 1 ) throw new Exception('Object identifier is required');
- 		
+
  		return parent::add_parms( $parms );
  	}
 }

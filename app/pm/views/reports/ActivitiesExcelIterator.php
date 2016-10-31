@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
  
 class ActivitiesExcelIterator extends IteratorExportExcel
@@ -71,10 +70,8 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  							return $this->row_it->getDisplayName();
  						}
  						else {
-	 						$info = $uid->getUidInfo($this->row_it);
-	 						$result = '['.$info['uid'].'] '.$info['caption'];
-	 						if ( $info['state_name'] != '' ) $result .= ' ('.$info['state_name'].')';
-	 						return $result;
+	 						$html = new \Html2Text\Html2Text($uid->getUidWithCaption($this->row_it), array('do_links' => 'none'));
+	 						return $html->getText();
  						}
  				}
  				break;

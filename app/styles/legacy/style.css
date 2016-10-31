@@ -559,6 +559,7 @@ img.wiki_page_image
 {
     border:none;
     text-align:center;
+    cursor: pointer;
 }
 
 .menu_button

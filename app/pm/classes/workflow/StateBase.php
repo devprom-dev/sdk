@@ -13,24 +13,12 @@ include "predicates/StateHasNoObjectsPredicate.php";
 include "predicates/StateTransitionTargetPredicate.php";
 include "StateBaseModelBuilder.php";
 
-class StateBase extends MetaobjectCacheable
+class StateBase extends Metaobject
 {
  	function __construct() 
  	{
  		parent::__construct('pm_State', new StateBaseRegistry($this));
  		$this->defaultsort = " OrderNum ASC ";
-
-		$this->setAttributeDescription('IsTerminal', text(2106));
- 		$this->setAttributeDescription('RelatedColor', text(1835));
- 		$this->setAttributeType('ReferenceName', 'varchar');
- 		
- 		$this->addAttributeGroup('ReferenceName', 'system');
- 		$this->addAttributeGroup('ObjectClass', 'system');
-
-		foreach( array('Description','OrderNum','ReferenceName') as $attribute ) {
-			$this->addAttributeGroup($attribute, 'additional');
-			$this->setAttributeRequired($attribute, false);
-		}
  	}
  	
  	function createIterator() 
@@ -75,7 +63,7 @@ class StateBase extends MetaobjectCacheable
 		return getSession()->getApplicationUrl($this).'project/workflow/'.get_class($this).'?';
 	}
 
- 	function getPageNameObject()
+ 	function getPageNameObject( $object_id = '' )
 	{
 		return parent::getPageNameObject().'&entity='.get_class($this);
 	}
@@ -136,30 +124,40 @@ class StateBase extends MetaobjectCacheable
  	
 	function modify_parms( $id, $parms )
 	{
-		global $model_factory;
-		
 		$was_state_it = $this->getExact( $id );
 		
 		$result = parent::modify_parms( $id, $parms );
-		
 		if ( $result < 1 ) return $result;
 
 		$now_state_it = $this->getExact( $id );
 		
-		if ( $was_state_it->get('ReferenceName') != $now_state_it->get('ReferenceName') )
-		{
-			$class = $model_factory->getClass($this->getObjectClass());
-
+		if ( $was_state_it->get('ReferenceName') != $now_state_it->get('ReferenceName') ) {
+			$class = getFactory()->getClass($this->getObjectClass());
 			if ( class_exists($class, false) )
 			{
-				$object = $model_factory->getObject($class);
-				
-				$sql = " UPDATE ".$object->getEntityRefName()." SET State = '".$now_state_it->get('ReferenceName')."' WHERE State = '".$was_state_it->get('ReferenceName')."' AND VPD = '".$now_state_it->get('VPD')."' ";
-				
+				$sql = " UPDATE ".getFactory()->getObject($class)->getEntityRefName()." SET State = '".$now_state_it->get('ReferenceName')."' WHERE State = '".$was_state_it->get('ReferenceName')."' AND VPD = '".$now_state_it->get('VPD')."' ";
 				DAL::Instance()->Query($sql);
 			}
 		}
-		
-		return $id;
+
+		if ( $was_state_it->get('Caption') != $now_state_it->get('Caption') ) {
+			$transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
+				array (
+					new TransitionStateRelatedPredicate($id)
+				)
+			);
+			while( !$transition_it->end() ) {
+				if ( $transition_it->get('Caption') == $was_state_it->get('Caption') ) {
+					$transition_it->object->modify_parms($transition_it->getId(),
+						array (
+							'Caption' => $now_state_it->get('Caption')
+						)
+					);
+				}
+				$transition_it->moveNext();
+			}
+		}
+
+		return $result;
 	}
 }

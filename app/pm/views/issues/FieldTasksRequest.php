@@ -5,6 +5,7 @@ include "FormRequestTasksEmbedded.php";
 class FieldTasksRequest extends FieldForm
 {
  	var $object_it;
+    private $releaseId = '';
  	
  	function FieldTasksRequest( $object_it )
  	{
@@ -15,6 +16,10 @@ class FieldTasksRequest extends FieldForm
 	{
 	    $this->draw( $view );    
 	}
+
+	function setRelease( $value ) {
+	    $this->releaseId = $value;
+    }
  	
  	function draw( $view = null )
  	{
@@ -31,6 +36,7 @@ class FieldTasksRequest extends FieldForm
  		echo '<div id="'.$this->getId().'" class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 
  		    $form = new FormRequestTasksEmbedded( $task, 'ChangeRequest' );
+            $form->setRelease($this->releaseId);
 	 		
  		    if ( is_object($this->object_it) && !$this->getEditMode() ) $form->setObjectIt($this->object_it);
  		    

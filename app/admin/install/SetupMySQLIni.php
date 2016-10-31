@@ -11,7 +11,6 @@ class SetupMySQLIni extends Installable
     {
         return array (
                 'max_allowed_packet' => 67108864 /* 64M */,
-        		'open_files_limit' => $this->checkWindows() ? 2048 : 8192,
         		'lower_case_table_names' => 1,
 				'ft_min_word_len' => 3,
 				'group_concat_max_len' => 4294967295

@@ -1,15 +1,15 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
+
 
 class WrtfCKEditorChangeNotificator extends SystemTriggersBase
 {
-    function process( $object_it, $kind, $content = array(), $visibility = 1 ) 
+    function process( $object_it, $kind, $content = array(), $visibility = 1 )
 	{
 	    global $model_factory;
-	    
+
 	    if ( $kind == TRIGGER_ACTION_DELETE ) return;
-	    
+
 	    if ( $kind == TRIGGER_ACTION_MODIFY && !array_key_exists('Content', $content) ) return;
 	    
 		$entity_ref_name = $object_it->object->getEntityRefName();

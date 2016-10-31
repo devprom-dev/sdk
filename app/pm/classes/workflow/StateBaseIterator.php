@@ -21,9 +21,6 @@ class StateBaseIterator extends OrderedIterator
 	function getObjectsCount()
 	{
 		$object = $this->getObject();
-		
-		$object->resetPersisters();
-		
 		$object->addFilter( new ObjectStatePredicate($this) );
 		$object->addFilter( new FilterBaseVpdPredicate() );
 		

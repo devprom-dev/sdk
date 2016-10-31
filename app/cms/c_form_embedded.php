@@ -229,7 +229,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	
 	function drawField( $attr, $type, $value, $tabindex )
 	{
-	    echo '<div id="'.$this->getRowId($attr).'" style="padding-bottom:8px;">';
+	    echo '<div id="'.$this->getRowId($attr).'" style="padding-top:3px;">';
 	    
 	    if ( $type != 'char' )
 	    {
@@ -250,12 +250,13 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 			$field->setName( $field_name );
 			$field->setId( $field_name );
 			$field->setValue( $value );
+			$field->setDefault( $value != '' ? $value : $this->object->getDefaultAttributeValue($attr) );
 			$field->setTabIndex( $tabindex );
 
 			$field->draw();
 		}
 		else
-		{		
+		{
 			switch ( $type )
 			{
 				case 'date':
@@ -296,8 +297,16 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 					$field->setId( $field_name );
 					$field->setValue( $value );
 					$field->setTabIndex( $tabindex );
-	
-					$field->draw();
+					$field->setDefault( $this->object->getDefaultAttributeValue($attr) );
+
+					if ( $field instanceof FieldWYSIWYG and $field->hasBorder() ) {
+						echo '<div class="well well-wysiwyg">';
+							$field->draw();
+						echo '</div>';
+					}
+					else {
+						$field->draw();
+					}
 			}
 		}
 		
@@ -467,7 +476,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 		{
 				echo '<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
 				echo '<input type="hidden" id="embeddedActive'.$this->form_id.'" name="embeddedActive'.$this->form_id.'" value="'.($this->getFieldValue('FormActive') == 'N' ? 'N' : 'Y').'">';
-				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" name="'.$this->getFormField().'" value="1">';
+				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" value="1">';
 				echo '<input type="hidden" id="'.$this->form_id.'Id" name="'.$prefix.'Id'.$this->form_id.'" value="'.(is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : "").'">';
 				
 	 		echo '<div style="clear:both"></div>';
@@ -521,11 +530,11 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 							echo '<div class="embeddedRowTitle">';
 
 							    $actions = $this->getActions($object_it, $item);
-								
+
     							if ( is_object($view) && $this->getShowMenu() && !$this->readonly && $delete_value == 0 && count($actions) > 0 )
     							{
     								echo $view->render('core/EmbeddedRowTitleMenu.php', array (
-    								    'title' => $display_name.'&nbsp;',
+    								    'title' => $display_name,
     								    'items' => $actions,
     									'position' => 'last'
     								));
@@ -594,13 +603,14 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 
 					echo '</div>';
 
-					echo '<input type="hidden" name="'.$this->getFormField().'" id="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
+					echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
+                    echo '<div class="end-of-list"></div>';
 				echo '</div>';
 			echo '</div>';
 
 			if ( !$this->readonly && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
 			{
-				$this->drawAddButton( $this->tabindex );
+				$this->drawAddButton( $view, $this->tabindex );
 			}
 	 		echo '</div>';
 		}
@@ -621,7 +631,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  		return $this->button_text;
  	}
  	
- 	function drawAddButton( $tabindex )
+ 	function drawAddButton( $view, $tabindex )
  	{
  		echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" onclick="javascript: appendEmbeddedItem('.
 			$this->getFormId().');" onkeyup="javascript: if (event.keyCode == 13) { $(this).trigger(\'click\'); }">'.$this->getAddButtonText().'</a>';
@@ -765,8 +775,10 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 					}
 					else if ( count($parms) > 0 && getFactory()->getAccessPolicy()->can_create($embedded) )
 					{
-						$parms[$anchor_field] = $object_it->getId();
-	
+						if ( $parms[$anchor_field] == '' ) {
+							$parms[$anchor_field] = $object_it->getId();
+						}
+
 						// check for required fields
 						$keys = array_keys($embedded->getAttributesSorted());
                         $was_errors = false;
@@ -833,7 +845,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	function getActions( $object_it, $item )
  	{
  	    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) return array();
- 	    
+
  	    $script = 'javascript: deleteEmbeddedItem(\''.$this->form_id.'\', \''.$item.'\');';
  	    
  	    if ( $_REQUEST['formonly'] != '' )

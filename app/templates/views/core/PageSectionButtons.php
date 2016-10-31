@@ -2,14 +2,14 @@
 
 <?php foreach( $sections as $section ) { ?> 
 
-<?php if ( is_a($section, 'FullScreenSection') ) { ?>
-
-<div class="btn-group pull-left">
-	<a id="toggle-fullscreen" class="btn dropdown-toggle btn-small btn-info" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
-   		<i class="icon-fullscreen icon-white"></i>
-	</a>
-</div>
-
+<?php if ( $section instanceof ButtonInfoSection ) { ?>
+	<div class="btn-group pull-left">
+		<? $btnState = $_COOKIE[$section->getId().'-'.$table_id]; ?>
+		<? $btnState = $btnState == '' ? $section->IsActive() : $btnState == 'true'; ?>
+		<a id="<?=$section->getId()?>" class="btn dropdown-toggle btn-small btn-info <?=($btnState ? 'active' : '')?>" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
+			<i class="<?=$section->getIcon()?> icon-white"></i>
+		</a>
+	</div>
 <?php continue; } ?>
 
 <div class="btn-group pull-left last">
@@ -37,7 +37,7 @@
 <script type="text/javascript">
 	$(function() {
 		<?php foreach ( $sections as $key => $section ) { ?>
-			<?php if ( is_a($section, 'FullScreenSection') ) continue; ?>
+			<?php if ( $section instanceof ButtonInfoSection ) continue; ?>
 			<?php 
 				$parms = $section->getParameters();
 		

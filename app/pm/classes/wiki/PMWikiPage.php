@@ -16,13 +16,7 @@ class PMWikiPage extends WikiPage
 	
 	function IsStatable()
 	{
-		global $model_factory;
-		
-		if ( $this->getStateClassName() == '' ) return false;
-		
-		$state = $model_factory->getObject($this->getStateClassName());
-		
-		return $state->getRecordCount() > 0;
+		return count(WorkflowScheme::Instance()->getStates($this)) > 0;
 	}
 	
  	function getStateClassName()
@@ -42,7 +36,10 @@ class PMWikiPage extends WikiPage
 	function getPageHistory()
 	{
 	}
-	
+
+    function getPageVersions() {
+    }
+
 	function getAttributeObject( $attr )
 	{
 		switch ( $attr )

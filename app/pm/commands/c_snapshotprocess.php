@@ -58,7 +58,7 @@ class SnapshotProcess extends CommandForm
 
  		$ids = is_numeric($_REQUEST['items']) 
 			? array($_REQUEST['items'])
-			: getFactory()->getObject('HashIds')->getIds( $_REQUEST['items'] );
+			: getFactory()->getObject('HashIds')->getHashIds( $_REQUEST['items'] );
 		
  		$versioned = new VersionedObject();
  		

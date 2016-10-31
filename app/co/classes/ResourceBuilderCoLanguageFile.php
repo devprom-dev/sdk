@@ -8,12 +8,11 @@ class ResourceBuilderCoLanguageFile extends ResourceBuilder
     {
    		global $text_array;
 
-   		$file_name = strtolower(getSession()->getLanguageUid()).'/resource.php';
-   		        
+   		$file_name = strtolower($object->getObject()->getLanguageUid()).'/resource.php';
+
 		include SERVER_ROOT_PATH.'/co/bundles/Devprom/ApplicationBundle/Resources/text/'.$file_name;
    		        
-   		foreach ( $text_array as $key => $value )
-		{
+   		foreach ( $text_array as $key => $value ) {
 		    $object->addText('co'.$key, $value);
 		}
     }

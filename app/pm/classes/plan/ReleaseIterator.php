@@ -74,14 +74,14 @@ class ReleaseIterator extends OrderedIterator
 		return array( $duration, $capacity, $velocity ); 
 	}
 	
-	function getEstimatedBurndownMetrics()
+	function getRealBurndownMetrics()
 	{
 		list( $in_duration, $in_capacity, $in_velocity ) = $this->getInitialBurndownMetrics();
 			
 		// gets remain capacity of the release
 		$duration = $this->getLeftCapacity();
 		
-		$capacity = $in_velocity > 0 && $duration > 0 ? ceil($duration * $in_velocity) : $this->getTotalWorkload();
+		$capacity = $in_velocity > 0 && $duration > 0 ? ceil($duration * $in_velocity) : 0;
 		
 		if ( $capacity < 1 ) $capacity = $in_velocity;
 		
@@ -131,7 +131,7 @@ class ReleaseIterator extends OrderedIterator
 			$format = getSession()->getLanguage()->getDateFormat();
 		}
 
-		list( $duration, $est_capacity, $est_velocity ) = $this->getEstimatedBurndownMetrics();
+		list( $duration, $est_capacity, $est_velocity ) = $this->getRealBurndownMetrics();
 		
 		if ( $duration == '' )
 		{
@@ -351,7 +351,7 @@ class ReleaseIterator extends OrderedIterator
 				   'SnapshotDays' => $it->get("BeginDays")) 
 			);
 
-		list( $duration, $workload, $velocity ) = $this->getEstimatedBurndownMetrics();
+		list( $duration, $workload, $velocity ) = $this->getRealBurndownMetrics();
 		
 		$workload = $this->getTotalWorkload();
 		$plannedworkload = max($this->getPlannedTotalWorkload(), $duration * $velocity);
@@ -645,22 +645,19 @@ class ReleaseIterator extends OrderedIterator
 	    return round($this->get('ActualDurationInWorkingDays'), 0);
 	}
 
-	function getLeftWorkParticipant( $part_it )
+	function getLeftWorkParticipant( $userId )
 	{
-		global $model_factory;
-		
-		$request = $model_factory->getObject('pm_ChangeRequest');
-		$request->addFilter( new StatePredicate('notresolved') );
-		
-		$sql = " SELECT SUM(IFNULL(a.LeftWork, 0)) Workload " .
-			   "   FROM pm_ChangeRequest t, pm_Task a " .
-			   "  WHERE t.PlannedRelease = ".$this->getId().
-			   "	AND a.Assignee = ".$part_it->getId().
-			   "    AND a.ChangeRequest = t.pm_ChangeRequestId ".
-			   $request->getFilterPredicate();
-		
-		$it = $request->createSQLIterator( $sql );
-		
-		return $it->get('Workload');
+		if ( $userId < 1 ) return 0;
+		if ( $this->getId() < 1 ) return 0;
+
+		$sql = "SELECT SUM(IFNULL(t.LeftWork, 0)) leftwork ".
+			"  FROM pm_Task t, pm_ChangeRequest r ".
+			" WHERE t.State IN ('".join("','", WorkflowScheme::Instance()->getNonTerminalStates(getFactory()->getObject('Task')))."') ".
+			"   AND t.Assignee = ".$userId.
+			"   AND r.pm_ChangeRequestId = t.ChangeRequest ".
+			"	AND r.PlannedRelease = " .$this->getId();
+
+		$it = $this->object->createSQLIterator( $sql );
+		return $it->get('leftwork');
 	}
 }

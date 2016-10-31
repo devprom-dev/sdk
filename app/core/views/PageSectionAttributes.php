@@ -9,13 +9,17 @@ class PageSectionAttributes extends InfoSection
     function __construct( $object, $referenceName, $title )
     {
         $this->referenceName = !is_array($referenceName) ? array($referenceName) : $referenceName;
-        $this->object = $object;
+        $this->setObject($object);
         $this->title = $title;
         parent::__construct();
     }
 
     function getCaption() {
         return $this->title;
+    }
+
+    function setObject( $object ) {
+        $this->object = $object;
     }
 
     function getId() {
@@ -28,17 +32,6 @@ class PageSectionAttributes extends InfoSection
             foreach( $this->object->getAttributesByGroup($referenceName) as $attribute ) {
                 if ( $this->object->IsAttributeRequired($attribute) ) continue;
                 $attributes[] = $attribute;
-            };
-        }
-        return $attributes;
-    }
-
-    function getFields() {
-        $attributes = array();
-        foreach( $this->referenceName as $referenceName ) {
-            foreach( $this->object->getAttributesByGroup($referenceName) as $attribute ) {
-                if ( $this->object->IsAttributeRequired($attribute) ) continue;
-                $attributes[] = $this->object->getEntityRefName().$attribute;
             };
         }
         return $attributes;

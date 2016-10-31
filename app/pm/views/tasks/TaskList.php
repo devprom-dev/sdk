@@ -2,6 +2,7 @@
 
 include_once "TaskProgressFrame.php";
 include_once "TaskBalanceFrame.php";
+include_once "FieldTaskPlanned.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
 include_once SERVER_ROOT_PATH.'core/views/c_priority_view.php';
 include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
@@ -9,6 +10,7 @@ include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 class TaskList extends PMPageList
 {
  	var $has_grouping, $free_states;
+	private $planned_field = null;
  	
  	function TaskList( $object ) 
 	{
@@ -44,7 +46,8 @@ class TaskList extends PMPageList
 		{
 			$this->priority_method = new ChangePriorityWebMethod(getFactory()->getObject('Priority')->getAll());
 		}
-		
+
+		$this->planned_field = new FieldTaskPlanned();
 		$this->getTable()->buildRelatedDataCache();
 	}
 	
@@ -55,6 +58,7 @@ class TaskList extends PMPageList
 		if ( array_key_exists( 'Planned', $attrs ) )
 		{
 			$this->object->addAttribute( 'Progress', '', translate('Прогресс'), false );
+			$this->object->addAttributeGroup('Progress', 'time');
 		}
 		
 		return parent::getColumns();
@@ -142,7 +146,7 @@ class TaskList extends PMPageList
 
 				$states = array();
 				
-				if ( $entity_it->getId() != '' )
+				if ( $entity_it->getId() != '' && $entity_it->object->getAttributeType('Tasks') != '' )
 				{
 				    $states = $entity_it->getRef('Tasks')->getStatesArray();
 				}
@@ -152,7 +156,8 @@ class TaskList extends PMPageList
 				if ( count($states) > 0 )
 				{
 					echo $this->getTable()->getView()->render('pm/TasksIcons.php', array (
-							'states' => $states
+						'states' => $states,
+						'random' => $entity_it->getId()
 					));
 				}
 				
@@ -163,15 +168,11 @@ class TaskList extends PMPageList
 				break;
 				
 			case 'Spent':
-				
 			    $field = new FieldSpentTimeTask( $object_it );
-				
 				$field->setEditMode( false );
-				
+                $field->setShortMode();
 				$field->setReadonly( !getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, 'Fact') );
-				
 				$field->render( $this->getTable()->getView() );
-
 				break;
 				
 	        default:
@@ -195,19 +196,16 @@ class TaskList extends PMPageList
 				}
 				$frame->draw();
 				break;
-				
+
+			case 'Planned':
+				echo '<div style="margin-left:36px;">';
+					$this->planned_field->setObjectIt($object_it);
+					$this->planned_field->draw($this->getTable()->getView());
+				echo '</div>';
+				break;
+
 			case 'IssueTraces':
-				$objects = preg_split('/,/', $object_it->get($attr));
-				$uids = array();
-				
-				foreach( $objects as $object_info )
-				{
-					list($class, $id) = preg_split('/:/',$object_info);
-					if ( $class == '' ) continue;
-					$ref_it = getFactory()->getObject($class)->getExact($id);
-					$uids[] = $this->getUidService()->getUidIcon($ref_it); 
-				}
-				echo join(', ',$uids);
+				$this->getTable()->drawCell( $object_it, $attr );
 				break;
 				
 			default:
@@ -217,23 +215,17 @@ class TaskList extends PMPageList
  	
 	function drawGroup($group_field, $object_it)
 	{
-		global $model_factory, $row_num;
-		
+		global $row_num;
+
 		switch ( $group_field )
 		{
 			case 'ChangeRequest':
 				$row_num = 0;
 				
-				if( $object_it->get('ChangeRequest') != '' )
-				{
+				if( $object_it->get('ChangeRequest') != '' ) {
 					$this->request_it->moveToId( $object_it->get('ChangeRequest') );
-					$resolved = $this->request_it->IsFinished();
 				}
-				else
-				{
-					$resolved = false;
-				}
-				
+
 				echo '<div style="float:left">';
 				
 				if ( $object_it->get('ChangeRequest') != '' )
@@ -261,12 +253,13 @@ class TaskList extends PMPageList
 				
 				echo '<div style="float:left;">';
 					
-					if ( $object_it->get('ChangeRequest') != '' )
+					if ( $object_it->get('ChangeRequest') != '' && $this->request_it->object->getAttributeType('Tasks') != '' )
 					{
 					    $states = $this->request_it->getRef('Tasks')->getStatesArray();
 					
 						echo $this->getTable()->getView()->render('pm/TasksIcons.php', array (
-								'states' => $states
+							'states' => $states,
+							'random' => $object_it->getId()
 						));
 					}
 					
@@ -278,10 +271,10 @@ class TaskList extends PMPageList
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				if ( count($workload) > 0 )
 				{
-						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
-								'user' => $object_it->getRef('Assignee')->getDisplayName(),
-								'data' => $workload[$object_it->get($group_field)]
-						));
+                    echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+                        'user' => $object_it->getRef('Assignee')->getDisplayName(),
+                        'data' => $workload[$object_it->get($group_field)]
+                    ));
 				}				
 				break;
 				
@@ -296,12 +289,14 @@ class TaskList extends PMPageList
 	{
 		if ( $attr == 'Priority' )
 			return 80;
+		if ( $attr == 'Planned' )
+			return 80;
 
 		if ( $attr == 'State' )
 			return 80;
 		
 		if ( $attr == 'Spent' )
-			return 220;
+			return 190;
 		
 		if ( $attr == 'OrderNum' )
 			return '50';
@@ -312,6 +307,15 @@ class TaskList extends PMPageList
 		return parent::getColumnWidth( $attr );
 	}
 
+	function getColumnAlignment( $attr )
+	{
+		switch( $attr )
+		{
+			case 'Priority': return 'center';
+			case 'Fact': return 'right';
+			default: return parent::getColumnAlignment($attr);
+		}
+	}
 	function getRenderParms()
 	{
 		$this->buildRelatedDataCache();

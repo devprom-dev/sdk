@@ -1,16 +1,6 @@
 <?php
  
-define(RESULT_FAILED, 'Провален');
-define(RESULT_SUCCEEDED, 'Успешно пройден');
-define(RESULT_FIXED, 'Исправлена');
-define(RESULT_RESOLVED, 'Выполнена');
-define(RESULT_FIXEDINDIRECTLY, 'Уже сделана');
-define(RESULT_CANTREPRODUCE, 'Не воспроизводится');
-define(RESULT_FUNCTIONSASDESIGNED, 'Работает как задумано');
-define(RESULT_SCENARIOPREPARED, 'Подготовлен тестовый набор');
-
 include "TaskIterator.php";
-
 include "predicates/TaskCategoryPredicate.php";
 include "predicates/TaskTypeBasePredicate.php";
 include "predicates/TaskVersionPredicate.php";
@@ -18,11 +8,11 @@ include "predicates/TaskFromDatePredicate.php";
 include "predicates/TaskUntilDatePredicate.php";
 include "predicates/TaskBindedToObjectPredicate.php";
 include "predicates/TaskReleasePredicate.php";
+include "predicates/TaskFeaturePredicate.php";
+include "predicates/TaskIssueStatePredicate.php";
 include "sorts/TaskAssigneeSortClause.php";
 include "sorts/TaskRequestOrderSortClause.php";
 include "sorts/TaskRequestPrioritySortClause.php";
-
-include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
 class Task extends MetaobjectStatable 
 {
@@ -53,49 +43,6 @@ class Task extends MetaobjectStatable
 	    
 	    return is_object($methodology_it) && $methodology_it->get('IsRequestOrderUsed') == 'Y'
 	        ? 1 : parent::getOrderStep();
-	}
-	
-	function getDefaultAttributeValue( $name )
-	{
-		global $_REQUEST, $model_factory;
-
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
-		if( $name == 'Release' )
-		{
-			return $_REQUEST['Release'];
-		}
-		elseif( $name == 'TaskType' ) 
-		{
-			$type = getFactory()->getObject('TaskType');
-			
-			$type_it = $type->getRegistry()->Query(
-			    		array (
-			    				new FilterBaseVpdPredicate(),
-			    				new FilterAttributePredicate('ProjectRole', getSession()->getParticipantIt()->getRoles())
-			    		)
-				);
-			
-			if ( $type_it->getId() > 0 ) return $type_it->getId();
-		    				
-		    $type_it = $type->getRegistry()->Query(
-			    		array (
-			    				new FilterBaseVpdPredicate(),
-			    				new FilterAttributePredicate('IsDefault', 'Y')
-			    		)
-			    );
-
-			if ( $type_it->getId() > 0 ) return $type_it->getId();
-			    		
-    		return $type->getRegistry()->Query( 
-					array ( 
-							new FilterBaseVpdPredicate(),
-							new FilterAttributePredicate('ReferenceName', 'development')
-					)
-				)->getId();
-		}
-
-		return parent::getDefaultAttributeValue( $name );
 	}
 	
 	function IsDeletedCascade( $object )
@@ -159,17 +106,12 @@ class Task extends MetaobjectStatable
 	
 	function modify_parms( $object_id, $parms )
 	{
-		global $model_factory;
-
 		$object_it = $this->getExact($object_id);
 
-		if ( array_key_exists('Release', $parms) && $parms['Release'] == '' )
-		{
+		if ( array_key_exists('Release', $parms) && $parms['Release'] == '' ) {
 			$parms['Release'] = $this->getDefaultAttributeValue('Release');
 		}
-		
-		if ( $parms['Planned'] != '' && $object_it->get('Planned') != $parms['Planned'] )
-		{
+		if ( $parms['Planned'] != '' && $object_it->get('Planned') != $parms['Planned'] ) {
 			$parms['LeftWork'] = $parms['Planned'];
 		}
 		
@@ -181,19 +123,14 @@ class Task extends MetaobjectStatable
 			switch ( $target_state )
 			{
 				default:
-					if ( in_array($target_state, $this->getTerminalStates()) )
-					{
+					if ( in_array($target_state, $this->getTerminalStates()) ) {
 						// if the task is marked as completed then
 						// reset left work value to 0
 						//
 						$parms['LeftWork'] = 0;
-
-						if ( $parms['TransitionComment'] == '' ) {
-							$result = $parms['Result'] == '' ? $object_it->get('Result') : $parms['Result'];
-							if ( $result != '' ) {
-								$parms['TransitionComment'] = translate('Результат').': '.$result;
-							}
-						}
+					}
+					if ( $target_state == array_shift($this->getStates()) ) {
+						$parms['LeftWork'] = $parms['Planned'] != '' ? $parms['Planned'] : $object_it->get('Planned');
 					}
 					break;
 			}

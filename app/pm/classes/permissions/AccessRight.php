@@ -3,6 +3,7 @@
 include "AccessRightIterator.php";
 
 include "predicates/AccessRightUserPredicate.php";
+include "predicates/AccessRightTypeNonePredicate.php";
 include "persisters/AccessRightKeyPersister.php";
 
 class AccessRight extends Metaobject

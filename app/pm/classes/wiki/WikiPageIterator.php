@@ -3,32 +3,31 @@
 class WikiPageIterator extends StatableIterator
 {
 	private $content_storage;
-	
 	private $style_storage;
-	
+
    	function get_native( $attr )
  	{
  		switch ( $attr )
  		{
  			case 'Content':
- 				if ( $this->hasAttribute($attr) ) return parent::get_native( $attr );
- 				
- 				if ( !isset($this->content_storage[$this->getId()]) ) $this->cacheContentAndStyle(); 
- 				
+				$native = parent::get_native( $attr );
+ 				if ( parent::get_native('ContentPresents') != 'Y' ) return $native;
+				if ( $native != '' ) return $native;
+
+ 				if ( !isset($this->content_storage[$this->getId()]) ) $this->cacheContentAndStyle();
 		        return $this->content_storage[$this->getId()];
- 				
+
  			case 'UserField3':
- 				if ( $this->hasAttribute($attr) ) return parent::get_native( $attr );
- 				
- 				if ( !isset($this->style_storage[$this->getId()]) ) $this->cacheContentAndStyle(); 
- 				
+				if ( parent::get_native('ContentPresents') != 'Y' ) return parent::get_native( $attr );
+
+ 				if ( !isset($this->style_storage[$this->getId()]) ) $this->cacheContentAndStyle();
 		        return $this->style_storage[$this->getId()];
-		        
+
 		    default:
  				return parent::get_native( $attr );
  		}
  	}
-     
+
     function get( $attr )
  	{
  		switch ( $attr )
@@ -36,26 +35,26 @@ class WikiPageIterator extends StatableIterator
  			case 'Content':
  			case 'UserField3':
  				return $this->get_native($attr);
- 				
+
  			default:
  				return parent::get( $attr );
  		}
  	}
- 	
+
  	private function cacheContentAndStyle()
  	{
  		if ( $this->getId() < 1 ) return;
- 		
+
  		$registry = new WikiPageRegistryContent($this->object);
- 		
+
  		$it = $registry->Query(array(
  				new FilterInPredicate($this->getId())
  			));
- 		
+
  		$this->content_storage[$this->getId()] = $it->get_native('Content');
  		$this->style_storage[$this->getId()] = $it->get_native('UserField3');
     }
- 	
+
 	function getChildrenIt()
 	{
 		return $this->object->getRegistry()->Query(
@@ -110,6 +109,10 @@ class WikiPageIterator extends StatableIterator
 				return $value > 0;
 		});
 	}
+
+	function getLevel() {
+        return count(preg_split('/,/', $this->get('ParentPath'))) - 3;
+    }
 	
 	/*
 	 * returns root iterator for the given leaf
@@ -133,20 +136,25 @@ class WikiPageIterator extends StatableIterator
  	function getTransitiveRootArray()
 	{
 	    $roots = array();
-	    
+
 		$parent_page = $this->getId();
-		
-		while( $parent_page != '' ) 
-		{
-		    $roots[] = $parent_page;
-		    
-			$parent_page_it = $this->object->getExact($parent_page);
-			
-			if( $parent_page_it->get('ParentPage') == '' ) break; 
-			
-			$parent_page = $parent_page_it->get("ParentPage");
+		$roots[] = $parent_page;
+
+		$parent_page = $this->get('ParentPage');
+		if ( $parent_page != '' ) {
+			$registry = new WikiPageRegistryContent($this->object);
+			$registry->setPersisters(array());
+			$parent_it = $registry->Query(array(new FilterInPredicate($parent_page)));
+
+			$roots = array_merge($roots,
+				array_reverse(
+					array_filter(preg_split('/,/',$parent_it->get('ParentPath')), function($value) {
+						return $value > 0;
+					})
+				)
+			);
 		}
-		
+
 		return $roots;
 	}
 	
@@ -161,26 +169,6 @@ class WikiPageIterator extends StatableIterator
 		));
 	}
 	
-	function getDisplayName()
-	{
-		$title = $this->get('Caption');
-
-		if ( $this->get('DocumentVersion') != '' )
-		{
-			$title .= " [".$this->get('DocumentVersion')."]";
-		}
-		
-		return $title; 
-	}
-	
-	function getDisplayNamePath() 
-	{
-		$uid = new ObjectUID;
-
-		return $uid->getUidIcon( $this ).
-			' '.$this->getPath( $this->object->getPageNameObject( $this->getId() ) );
-	}	
-
 	function getRevertUrl()
 	{
 		$url = parent::getEditUrl();

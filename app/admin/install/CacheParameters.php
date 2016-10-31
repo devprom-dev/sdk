@@ -19,10 +19,13 @@ class CacheParameters extends Installable
 	// makes install actions
 	function install()
 	{
+		$_SERVER['APP_VERSION'] = getFactory()->getObject('cms_Update')->getLatest()->getDisplayName();
+		$_SERVER['APP_IID'] = INSTALLATION_UID;
+
 		file_put_contents( DOCUMENT_ROOT.'conf/settings.php',
 			"<?php
-			\$_SERVER['APP_VERSION'] = '".getFactory()->getObject('cms_Update')->getLatest()->getDisplayName()."';
-			\$_SERVER['APP_IID'] = '".INSTALLATION_UID."';
+			\$_SERVER['APP_VERSION'] = '".$_SERVER['APP_VERSION']."';
+			\$_SERVER['APP_IID'] = '".$_SERVER['APP_IID']."';
 			"
 		);
 

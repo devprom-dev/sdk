@@ -6,14 +6,14 @@ class RequestIterator extends StatableIterator
  	
 	function getDisplayName()
 	{
-	 	if ( $this->get('TypeName') != '' ) 
-	 	{
-	 		return $this->get('TypeName').': '.parent::getDisplayName();
+	    $result = parent::getDisplayName();
+	 	if ( $this->get('TypeName') != '' ) {
+            $result = $this->get('TypeName').': '.$result;
 	 	}
-	 	elseif( $this->getId() > 0 )
-	 	{
-		 	return $this->object->getDisplayName().': '.parent::getDisplayName();
+	 	else if ( $this->getId() != '' ) {
+            $result = $this->object->getDisplayName().': '.$result;
 	 	}
+	 	return $result;
 	}
 
  	function IsNew() 
@@ -31,29 +31,12 @@ class RequestIterator extends StatableIterator
  		return $this->get_native('PlannedRelease') != '';
  	}
 
- 	function IsFinished() 
- 	{
- 		return in_array( $this->get_native('State'), $this->object->getTerminalStates() );
+ 	function IsFinished() {
+ 		return $this->get('StateTerminal') == 'Y';
  	}
 
  	function IsImplemented()
  	{
- 		return false;
- 	}
- 	
- 	function IsBlocked()
- 	{
- 		$blocked_it = $this->getBlockedIt();
- 		while ( !$blocked_it->end() )
- 		{
-			if ( $blocked_it->get('IsTerminal') == 'N' )
- 			{
- 				return true;
- 			}
- 			
- 			$blocked_it->moveNext();
- 		}
- 		
  		return false;
  	}
  	
@@ -93,19 +76,10 @@ class RequestIterator extends StatableIterator
 			return $stage_it->getObjectIt();
 		}
 
-		if ( $this->object->hasAttribute('Iterations') && $this->get('Iterations') != '' ) return $this->getRef('Iterations');
-
+		if ( $this->object->hasAttribute('Iteration') && $this->get('Iteration') != '' ) return $this->getRef('Iteration');
 		if ( $this->object->hasAttribute('PlannedRelease') && $this->get('PlannedRelease') != '' ) return $this->getRef('PlannedRelease');
 	}
 		
-	function getBlockedIt()
-	{
-		$it = $this->object->cacheBlocks()->copyAll();
-		$it->setStop( 'StopWord', $this->getId().',blocked' );
-		
-		return $it;
-	}
-
 	function getImplementationIds()
 	{
 		$result = array();
@@ -119,17 +93,6 @@ class RequestIterator extends StatableIterator
 		return $result;
 	}
 
-	function getDate( $date_field )
-	{
-		if ( !is_object($this->object->dates_it) )
-		{
-			$this->object->cacheDates();
-		}
-
-		$this->object->dates_it->moveTo( 'pm_ChangeRequestId', $this->getId() );
-		return $this->object->dates_it->getDateFormat( $date_field );
-	}
-	
 	function isSubmittedIn( $version )
 	{
 		global $project_it;
@@ -145,87 +108,7 @@ class RequestIterator extends StatableIterator
 		return $it->get('cnt') > 0; 
 	}
 	
- 	function getStateExact() 
- 	{
- 		global $model_factory;
- 		
- 		$state = array();
- 		
- 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 		
-		$stage_it = $this->getStageIt();
-		
-		if ( is_object($stage_it) )
-		{
-		    $titles = array();
-		    
-		    while( !$stage_it->end() ) { $titles[] = $stage_it->getDisplayName(); $stage_it->moveNext(); }
-		    
-		    $stage_name = join(', ', $titles);
-		    
-			$stage = $stage_it->object->getDisplayName().' '.$stage_name;
-			
- 			$pattern = text(811);
-		}
-
- 		if ( $stage == "" )
-		{
-			$pattern = '%1';
-		}
-
-		switch ( $this->get('State') )
-		{
-			case 'planned':
-	 			$tasks_state = $this->object->getAttributeType('Tasks') != '' ? $this->getRef('Tasks')->getStatesArray() : array();
-	
-	 			$implementation_completed = false;
-	 			foreach ( $tasks_state as $task_state )
-	 			{
-	 				if ( (strtolower($task_state['type']) == 'development' || strtolower($task_state['type']) == 'support') 
-	 					 && $task_state['progress'] == '100%' )
-	 				{
-	 					$implementation_completed = true;
-	 					break;
-	 				}
-	 			}
-	 			
-				if ( $implementation_completed )
-				{
-					$message = translate('Реализовано');
-				}
-				else
-				{
-		 			$state_it = $this->getStateIt();
-					$message = $state_it->getDisplayName();
-				}
-				
-				$message = str_replace('%2', $stage, str_replace('%1', $message, $pattern) );
-				array_push( $state, $message );
-				
-	 			$state = array_merge( $state, $tasks_state );
- 				break;
-
-			case 'release':
-				if ( $this->get('PlannedRelease') > 0 )
-		 		{
-					$message = translate('В релизе').' '.$stage;
-					array_push($state, $message );
-		 		}
-				break;
-				
-			default:
-		 		$state_it = $this->getStateIt();
-				$message = str_replace('%2', $stage, str_replace('%1', $state_it->getDisplayName(), $pattern));
-	 			array_push( $state, $message );
-	 			
-	 			$state = array_merge( $state, $this->object->getAttributeType('Tasks') != '' ? $this->getRef('Tasks')->getStatesArray() : array() );
-				break;
-		}
-
- 		return $state;
- 	}
-
- 	function getFilledStages() 
+ 	function getFilledStages()
  	{
 		$sql_array =  
 			'SELECT t.TaskType' .
@@ -284,14 +167,13 @@ class RequestIterator extends StatableIterator
  	function getPlannedDuration()
  	{
  		$duration = 0;
+		if ( $this->object->getAttributeType('Tasks') == '' ) return $duration;
+
  		$task_it = $this->getRef('Tasks');
- 		
- 		while ( !$task_it->end() && $task_it->get('ChangeRequest') == $this->getId() )
- 		{
+ 		while ( !$task_it->end() && $task_it->get('ChangeRequest') == $this->getId() ) {
 			$duration += $task_it->get("Planned");
  			$task_it->moveNext();
  		}	
- 		
  		return $duration;
  	} 	
 

@@ -25,7 +25,7 @@ class ProjectTemplateLicensedPackagesPredicate extends FilterPredicate
 			'tracker_ru.xml' => 'agile'
 		);
 
-		$options = getModelFactory()->getObject('LicenseState')->getAll()->get('Options');
+		$options = getFactory()->getObject('LicenseState')->getAll()->get('Options');
 
 		$packages = $options['options'];
 		if ( $packages == '' ) return " AND 1 = 1 ";

@@ -11,7 +11,7 @@ class Backup extends MetaobjectCacheable
 		$this->defaultsort = 'RecordModified DESC';
 	}
 	
-	function delete( $id )
+	function delete( $id, $record_version = ''  )
 	{
 		$it = $this->getExact( $id );
 			

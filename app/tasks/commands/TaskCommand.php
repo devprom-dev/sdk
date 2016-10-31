@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . 'core/c_command.php';
 
 class TaskCommand extends Command
 {

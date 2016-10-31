@@ -1,7 +1,5 @@
 {% extends "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
 
 {% block body %}
-    {% autoescape false %}
-    {{ 'resetting.email.message'|trans({'%confirmationUrl%': confirmationUrl, '%clientName%': client_name, '%link%' : site_url}, 'emails') }}
-    {% endautoescape %}
+    {% include emailBody("resetPassword.twig",app.request.locale) %}
 {% endblock body %}

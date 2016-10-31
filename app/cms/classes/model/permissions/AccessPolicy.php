@@ -13,7 +13,7 @@ class AccessPolicy
  	
  	private $data = array();
  	
- 	function __construct( $cache_service )
+ 	function __construct( $cache_service = null )
  	{
  		$this->setCacheService( is_object($cache_service) ? $cache_service : getFactory()->getCacheService() );
 	

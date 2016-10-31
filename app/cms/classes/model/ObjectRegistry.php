@@ -6,9 +6,8 @@ abstract class ObjectRegistry
 {
 	protected $object = null;
 	
-	public function __construct( $object = null )
-	{
-		$this->setObject($object);
+	public function __construct( $object = null ) {
+        $this->setObject($object);
 	}
 	
 	public function __sleep()
@@ -53,4 +52,12 @@ abstract class ObjectRegistry
 	abstract public function getAll();
 	
 	abstract public function Store( OrderedIterator $object_it, array $data );
+
+    public function Create( array $data )
+    {
+    }
+
+    public function Delete( OrderedIterator $object_it )
+    {
+    }
 }

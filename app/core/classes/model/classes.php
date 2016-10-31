@@ -1,10 +1,13 @@
 <?php
 
-include SERVER_ROOT_PATH.'core/classes/licenses/License.php'; 
+include SERVER_ROOT_PATH.'core/classes/analytics/FeatureTouch.php';
+include SERVER_ROOT_PATH.'core/classes/licenses/License.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/LicenseState.php';
-include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php'; 
-include SERVER_ROOT_PATH.'core/classes/user/User.php'; 
-include SERVER_ROOT_PATH.'core/classes/user/UserActive.php'; 
+include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php';
+include SERVER_ROOT_PATH.'core/classes/mail/MailerSettings.php';
+include SERVER_ROOT_PATH.'core/classes/mail/SmtpEncryptionMode.php';
+include SERVER_ROOT_PATH.'core/classes/user/User.php';
+include SERVER_ROOT_PATH.'core/classes/user/UserActive.php';
 include SERVER_ROOT_PATH.'cms/c_check_question.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/DateYear.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/DateMonth.php'; 
@@ -37,11 +40,13 @@ include SERVER_ROOT_PATH.'core/classes/project/ProjectCache.php';
 include SERVER_ROOT_PATH.'core/classes/project/ProjectState.php';
 include SERVER_ROOT_PATH.'core/classes/locale/LanguageEntity.php'; 
 include SERVER_ROOT_PATH.'core/classes/project/ProjectUse.php'; 
-include SERVER_ROOT_PATH.'core/classes/project/ProjectTemplate.php'; 
+include SERVER_ROOT_PATH.'core/classes/project/ProjectTemplate.php';
 include SERVER_ROOT_PATH.'core/classes/project/ProjectImportance.php';
 include SERVER_ROOT_PATH.'cms/classes/AttributeGroup.php';
 include SERVER_ROOT_PATH.'core/classes/history/AffectedObjects.php';
 include SERVER_ROOT_PATH.'core/classes/resources/ContextResource.php';
 include SERVER_ROOT_PATH.'core/classes/schedule/DeadlineSwimlane.php';
 include SERVER_ROOT_PATH.'core/classes/user/Invitation.php';
+include SERVER_ROOT_PATH.'core/classes/files/TempFile.php';
+include SERVER_ROOT_PATH.'core/classes/locale/SearchRules.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php';

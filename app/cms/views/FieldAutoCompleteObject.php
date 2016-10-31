@@ -71,7 +71,17 @@ class FieldAutoCompleteObject extends Field
  	{
  		return in_array('itself', $this->attributes);
  	}
- 	
+
+	function setCrossProject()
+	{
+		$this->attributes[] = 'cross';
+	}
+
+	function getCrossProject()
+	{
+		return in_array('cross', $this->attributes);
+	}
+
  	function getAttributes()
  	{
  		return $this->attributes;
@@ -111,34 +121,41 @@ class FieldAutoCompleteObject extends Field
  	{
  	    $value = $this->getValue();
  	    if ( $value == '' ) return $this->getObject()->createCachedIterator(array());
- 	    
+
+		$registry = $this->getObject()->getRegistry();
+		$registry->setPersisters(array());
+
  	    if ( $this->search_enabled )
  	    {
-	 	    $ids = array_filter(preg_split('/[,-]/',$value), function($id) {
+	 	    $ids = array_filter(preg_split('/,/',$value), function($id) {
 	 	    			return is_numeric($id);
 	 	    		});
-
 	 	    if ( count($ids) > 0 ) {
-	 	    	return $this->getObject()->getExact($ids);
+	 	    	return $registry->Query(
+					array (
+						new FilterInPredicate($ids)
+					)
+				);
 	 	    }
 	 	    else {
 				$object_it = $this->getObject()->getExact($value);
 				if ( $object_it->getId() != '' ) return $object_it;
 
-		 	    return $this->getObject()->getRegistry()->Query(
-		 	    		array (
-	    						new FilterAttributePredicate('Caption', $value)
-		 	    		)
+                $registry->setLimit(1);
+		 	    return $registry->Query(
+					array (
+						new FilterAttributePredicate('Caption', $value)
+					)
 		 	    );
 	 	    }
  	    }
  	    else
  	    {
- 	    	return $this->getObject()->getRegistry()->Query(
-		 	    		array (
-	    						new FilterInPredicate($value)
-		 	    		)
-		 	    );
+ 	    	return $registry->Query(
+				array (
+					new FilterInPredicate($value)
+				)
+			);
  	    }
  	}
  	
@@ -152,15 +169,18 @@ class FieldAutoCompleteObject extends Field
 		if ( $this->custom_text != '' ) return $this->custom_text;
 		
 		$object_it = $this->getObjectIt();
-		
 		if ( $object_it->getId() == '' ) return $this->getValue();
-		
+
 	    $uid = new ObjectUID;
-	    
-		return $uid->getUidTitle($object_it);
+		$titles = array();
+		while( !$object_it->end() ) {
+			$titles[] = $uid->getUidTitle($object_it);
+			$object_it->moveNext();
+		}
+		return join('<br/>', $titles);
 	}
  	
- 	function draw()
+ 	function draw( $view = null )
  	{
  		$object = $this->getObject();
 		$project = getSession()->getProjectIt()->get('CodeName');
@@ -202,7 +222,7 @@ class FieldAutoCompleteObject extends Field
 			
 			echo '<div class="autocomplete">';
 			 	echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" value="'.$object_it->getDisplayName().'" '.($this->getRequired() ? 'required' : '').' >';
-			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$this->getEncodedValue().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
+			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$object_it->getId().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
 			echo '</div>';
 		}
  	}

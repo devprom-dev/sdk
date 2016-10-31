@@ -1,6 +1,7 @@
 <?php
 
 namespace Devprom\CommonBundle\Service\Project;
+use \Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."pm/classes/participants/ParticipantRole.php";
@@ -65,39 +66,22 @@ class InviteService
 		$email = trim(strtolower($email));
 		
 		$user = getFactory()->getObject('User');
-		
-		if ( !getFactory()->getAccessPolicy()->can_create($user) ) return $user->getEmptyIterator();
+		if ( !getFactory()->getAccessPolicy()->can_create($user) ) throw new NotFoundHttpException(text(2151));
 		
 		$user_it = $user->getRegistry()->Query(
-				array (
-						new \FilterAttributePredicate('Email', $email)
-				)
+			array (
+				new \FilterAttributePredicate('Email', $email)
+			)
 		);
-		
-		if ( $user_it->getId() > 0 )
-		{
-			return getFactory()->getObject('Participant')->getRegistry()->Query(
-					array (
-							new \FilterAttributePredicate('SystemUser', $user_it->getId())
-					)
-			);
-		}
-		
+		if ( $user_it->getId() > 0 ) return $user->getEmptyIterator();
+
 		$invite_it = getFactory()->getObject('Invitation')->getRegistry()->Query(
-				array (
-						new \FilterAttributePredicate('Addressee', $email)
-				)
+			array (
+				new \FilterAttributePredicate('Addressee', $email)
+			)
 		);
-		
-		if ( $invite_it->getId() < 1 )
-		{
-			return getFactory()->getObject('Participant')->getRegistry()->Query(
-					array (
-							new \FilterAttributePredicate('SystemUser', $user_it->getId())
-					)
-			);
-		}
-		
+		if ( $invite_it->getId() < 1 ) return $user->getEmptyIterator();
+
 		$parts = preg_split('/@/', $email);
 		
 		$login = $parts[0];

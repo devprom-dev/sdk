@@ -49,10 +49,6 @@ class ObjectSQLPasswordPersister extends ObjectSQLPersister
  		}
  	}
 
- 	function delete( $object_id )
- 	{
- 	}
- 	
  	function getSelectColumns( $alias )
  	{
  		$columns = array();

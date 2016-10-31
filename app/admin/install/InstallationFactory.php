@@ -19,8 +19,9 @@ include_once 'SDKSetup.php';
 include_once 'AttachCustomersToCompanies.php';
 include_once 'SetupSupportProjectSettings.php';
 include_once 'MigrateDatabaseUTF8.php';
-include_once "RepairDatabase.php";
+include_once 'MigrateDatabaseInnoDB.php';
 include_once "CacheParameters.php";
+include_once "DownloadProductChangesInfo.php";
 
 class InstallationFactory
 {
@@ -48,6 +49,7 @@ class InstallationFactory
     {
         return array (
         	new MigrateDatabaseUTF8(),
+			new MigrateDatabaseInnoDB(),
 	        new ApplyServicedeskMigrations(),
 	        new ChangeConfigurationPath(),
 	        new CheckLicense(),
@@ -64,9 +66,9 @@ class InstallationFactory
         	new SDKSetup(),
         	new AttachCustomersToCompanies(),
         	new SetupSupportProjectSettings(),
-			new RepairDatabase(),
 			new CacheParameters(),
-	        new ClearCache()
+	        new ClearCache(),
+			new DownloadProductChangesInfo()
 	    );
     }
     

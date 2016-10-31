@@ -3,7 +3,6 @@
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminChangeLogNotificator.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminSystemTriggers.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/ProcessFirstUserEvent.php";
-include SERVER_ROOT_PATH."admin/classes/model/events/UpdateBlockedParticipantsEvent.php";
 include SERVER_ROOT_PATH."admin/classes/model/events/RecentBackupCreatedEvent.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceModuleBuilder.php";
 include SERVER_ROOT_PATH."admin/classes/maintenance/MaintenanceJSBuilder.php";
@@ -14,7 +13,6 @@ class AdminSession extends SessionBase
 	function __construct()
 	{
 		parent::__construct();
-		
 		getLanguage();
 	}
 
@@ -45,7 +43,6 @@ class AdminSession extends SessionBase
 		 	            new AdminChangeLogNotificator(),
 		 	            new AdminSystemTriggers(),
 		 	    		new ProcessFirstUserEvent(),
-		 	    		new UpdateBlockedParticipantsEvent(),
 		 	    		new MaintenanceModuleBuilder(),
 		 	    		new RecentBackupCreatedEvent()
  	    		)

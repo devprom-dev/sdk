@@ -92,26 +92,21 @@ class PMCustomAttribute extends MetaobjectCacheable
  	            'LCASE(ReferenceName)' => strtolower($attribue)
  	    ));
  	}
- 	
+
  	function add_parms( $parms )
  	{
  		// check for uniqueness
  		$object_it = $this->getByRefArray( 
-	 				array (
-			 			'LCASE(EntityReferenceName)' => strtolower($parms['EntityReferenceName']),
-			 			'LCASE(ReferenceName)' => strtolower($parms['ReferenceName'])
-	 				)
+				array (
+					'LCASE(EntityReferenceName)' => strtolower($parms['EntityReferenceName']),
+					'LCASE(ReferenceName)' => strtolower($parms['ReferenceName'])
+				)
  			);
- 		
- 		if ( $object_it->count() > 0 )
- 		{
- 			return -1;
- 		}
- 		
+ 		if ( $object_it->count() > 0 ) return -1;
+
  		$object = getFactory()->getObject($parms['EntityReferenceName']);
  		
  		$move_value = $object->getAttributeType($parms['ReferenceName']) != '';
- 		
  		if ( $move_value ) $object_it = $object->getAll();
  		
  		$result = parent::add_parms( $parms );
@@ -119,30 +114,48 @@ class PMCustomAttribute extends MetaobjectCacheable
  		if ( $result > 0 && is_object($object_it) )
  		{
  			$type_it = $this->getAttributeObject('AttributeType')->getExact($parms['AttributeType']);
- 			
  			$value = getFactory()->getObject('pm_AttributeValue');
  			
  			while ( !$object_it->end() )
  			{
- 				if ( $object_it->get($parms['ReferenceName']) == '' )
- 				{
+ 				if ( $object_it->get($parms['ReferenceName']) == '' ) {
  					$object_it->moveNext(); continue;
  				}
- 				
-				$value->add_parms( array (
-					'CustomAttribute' => $result,
-					'ObjectId' => $object_it->getId(),
-					$type_it->getValueColumn() => $object_it->getHtmlDecoded($parms['ReferenceName'])
-				));
-				
+ 				if ( $parms['ReferenceName'] != 'UID' ) {
+                    $value->add_parms( array (
+                        'CustomAttribute' => $result,
+                        'ObjectId' => $object_it->getId(),
+                        $type_it->getValueColumn() => $object_it->getHtmlDecoded($parms['ReferenceName'])
+                    ));
+                }
 				$object_it->moveNext();
  			}
- 		}
+
+			if ( $type_it->get('ReferenceName') == 'computed' ) {
+				$this->rebuildComputedAttributes($result, $parms);
+			}
+		}
  		
  		return $result;
  	}
- 	
- 	function delete( $id )
+
+	function modify_parms($id, $parms)
+	{
+		$was_parms = $this->getExact($id)->getData();
+
+		$result = parent::modify_parms($id, $parms);
+
+		if ( $was_parms['DefaultValue'] != $parms['DefaultValue'] ) {
+			$type_it = getFactory()->getObject('CustomAttributeType')->getExact($parms['AttributeType']);
+			if ( $type_it->get('ReferenceName') == 'computed' ) {
+				$this->rebuildComputedAttributes($id, $parms);
+			}
+		}
+
+		return $result;
+	}
+
+	function delete( $id, $record_version = ''  )
  	{
  	    global $model_factory;
  	    
@@ -206,4 +219,29 @@ class PMCustomAttribute extends MetaobjectCacheable
  	    
  	    return parent::delete( $id );
  	}
+
+	protected function rebuildComputedAttributes( $id, $parms )
+	{
+		$registry = $this->getExact($id)->getEntityRegistry();
+		if ( !is_object($registry) ) return;
+
+		$persister = new CustomAttributesPersister();
+		$persister->setObject($registry->getObject());
+
+		$registry->setPersisters(array($persister));
+		$object_it = $registry->getAll();
+
+		$object_it->object->setNotificationEnabled(false);
+		$attribute = $parms['ReferenceName'];
+
+		while( !$object_it->end() ) {
+			$data = $object_it->getData();
+			$data[$attribute] = $parms['DefaultValue'];
+			unset($data['RecordCreated']);
+			unset($data['RecordVersion']);
+
+			$registry->Store($object_it, $data);
+			$object_it->moveNext();
+		}
+	}
 }

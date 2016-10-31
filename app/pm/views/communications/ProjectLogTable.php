@@ -20,11 +20,6 @@ class ProjectLogTable extends PMPageTable
 			return 'ChangeDate.D';
 		}
 		
-		if ( $sort_parm == 'sort2' )
-		{
-			return 'RecordModified.D';
-		}
-		
 		return parent::getSortDefault( $sort_parm );
 	}
 	
@@ -112,14 +107,16 @@ class ProjectLogTable extends PMPageTable
 	
 	function getFilterPredicates()
 	{
-		global $_REQUEST, $model_factory;
-		
 		$values = $this->getFilterValues();
-		
+
+		if ( in_array($_REQUEST['start'], array('','all','hide')) ) {
+			$_REQUEST['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-1 weeks', strtotime(date('Y-m-j'))));
+		}
+
 		$filters = array(
 			new ChangeLogActionFilter( $values['action'] ),
 			new ChangeLogParticipantFilter( $values['participant'] ),
-			new ChangeLogStartFilter( $values['start'] ),
+			new ChangeLogStartFilter( $_REQUEST['start'] ),
 			new ChangeLogFinishFilter( $values['finish'] ),
 			new ChangeLogVisibilityFilter()
 		);
@@ -139,7 +136,7 @@ class ProjectLogTable extends PMPageTable
 		else if ( !in_array($_REQUEST['object'], array('','all','none')) )
 		{
 		    $classes = preg_split('/,/', $_REQUEST['object']);
-	    	$class_name = $model_factory->getClass($classes[0]);
+	    	$class_name = getFactory()->getClass($classes[0]);
 	    	if ( class_exists($class_name) ) $filters[] = new ChangeLogObjectFilter( $class_name );
 		}
  		

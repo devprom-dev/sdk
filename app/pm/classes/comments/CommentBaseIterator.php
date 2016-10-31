@@ -1,14 +1,11 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php';
-
 class CommentBaseIterator extends OrderedIterator
 {
  	function getPlainText( $attr )
  	{
-		$totext = new html2text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );
-		
-		return $totext->get_text();
+		$totext = new \Html2Text\Html2Text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, APP_ENCODING), array('width'=>0) );
+		return $totext->getText();
  	}
  	
  	function getThreadCommentsIt() 
@@ -51,8 +48,7 @@ class CommentBaseIterator extends OrderedIterator
 			   "    AND u.cms_UserId = c.AuthorId ".
 			   "	AND NOT EXISTS (SELECT 1 FROM pm_Participant p " .
 			   "					 WHERE p.Project = ".$project_it->getId().
-			   "    				   AND p.SystemUser = c.AuthorId" .
-			   "					   AND p.IsActive = 'Y')";
+			   "    				   AND p.SystemUser = c.AuthorId)";
 		
 		$user = $model_factory->getObject('cms_User');
 		$user_it = $user->createSQLIterator( $sql );
@@ -107,24 +103,16 @@ class CommentBaseIterator extends OrderedIterator
 	function getAnchorIt()
 	{
 	    $class_name = getFactory()->getClass($this->get('ObjectClass'));
-	    
-	    if ( !class_exists($class_name) ) return null;
-	    
+	    if ( !class_exists($class_name) ) return $this->object->getEmptyIterator();
 	    return getFactory()->getObject($class_name)->getExact($this->get('ObjectId'));
 	}
 	
 	function getViewUrl()
 	{
-		global $project_it;
-		
-		$this->anchor_it = $this->getAnchorIt();
-
-		if ( isset($project_it) && $project_it->count() > 0 )
-		{ 		
-			return '/pm/'.$project_it->get('CodeName').'/O-'.$this->getId();		
+		if ( getSession()->getProjectIt()->getId() != '' ) {
+			return '/pm/'.getSession()->getProjectIt()->get('CodeName').'/O-'.$this->getId();
 		}
-		else
-		{
+		else {
 			return _getServerUrl().'O-'.$this->getId();		
 		}
 	}

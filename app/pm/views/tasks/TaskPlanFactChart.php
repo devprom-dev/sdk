@@ -7,7 +7,9 @@ class TaskPlanFactChart extends PMPageChart
 {
  	function __construct( $object )
  	{
+		$object->addAttribute('PlanFact', 'FLOAT', '', true, false);
 		$object->addPersister( new TaskPlanFactPersister() );
+
 		parent::__construct( $object );
  	}
 

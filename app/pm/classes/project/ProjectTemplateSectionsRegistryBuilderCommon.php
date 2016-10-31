@@ -50,12 +50,12 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 			getFactory()->getObject('TaskTypeState'),
 	 		$methodology
 	 	);
-	 	
-	 	$projectpage = getFactory()->getObject('ProjectPage');
-	 	$projectpage->addFilter( new WikiSectionFilter() );
+
+		$projectpage = getFactory()->getObject('ProjectPage');
+		$projectpage->addFilter( new WikiSectionFilter() );
 		$projectpage->addSort( new SortDocumentClause() );
 		$items[] = $projectpage;
-	 	
+
  		$registry->addSection($registry, 'pm_Project', $items, true, text(734));
     }
 
@@ -121,6 +121,7 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  		$items = array (
 	 		getFactory()->getObject('pm_State'),
 	 		getFactory()->getObject('pm_Transition'),
+            getFactory()->getObject('ProjectRole'),
 	 		getFactory()->getObject('pm_TransitionRole'),
 	 		getFactory()->getObject('pm_TransitionAttribute'),
 	 		getFactory()->getObject('pm_TransitionPredicate'),
@@ -141,7 +142,7 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  			getFactory()->getObject('PMBlogPost'),
  			getFactory()->getObject('Tag')
  		);
- 		
+
 		$registry->addSection($registry, 'ProjectArtefacts', $items, true, text(1834));
     }
 }

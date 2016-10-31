@@ -21,13 +21,9 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
  	
 	function getAttributeObject( $name )
 	{
-		global $model_factory;
-		
-		if ( $name == $this->getMenuField() ) 
-		{
+		if ( $name == $this->getMenuField() ) {
 			return $this->trace_object;
 		}
-		
 		return parent::getAttributeObject( $name );
 	}
 	
@@ -151,13 +147,39 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
 			$history_url .= '&start='.$object_it->getRef('TargetPage')->getDateTimeFormat('RecordCreated');
 		}
 		
-		array_push ( $actions, array( 
+		$actions[] = array(
 			'click' => "javascript: window.location = '".$history_url."';", 
-			'name' => translate('История изменений') )
+			'name' => text(2238)
 		);
+
+        $versions_url = $page_it->getPageVersions();
+        if ( $versions_url != '' ) {
+            $actions[] = array(
+                'url' => $versions_url,
+                'target' => "_blank",
+                'name' => text(2237)
+            );
+        }
  		
 		array_push ( $actions, array() );
 		
 		return array_merge($actions, parent::getActions( $object_it, $item ));
 	}
+
+	function getListItemsAttribute() {
+		return $this->getMenuField();
+	}
+
+	function drawAddButton($view, $tabindex)
+    {
+        parent::drawAddButton($view, $tabindex);
+
+        $value = $_REQUEST[$this->getFormField()];
+        if ( $value != '' ) {
+            $uid = new ObjectUID();
+            echo '<br/>';
+            echo '<br/>';
+            $uid->drawUidInCaption($this->trace_object->getExact($value));
+        }
+    }
 }

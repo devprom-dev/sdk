@@ -1,7 +1,7 @@
 <?php
  
 include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorBase.php";
-
+include_once SERVER_ROOT_PATH."plugins/wrtfckeditor/views/fields/FieldWYSIWYGTempFile.php";
 include 'WrtfCKEditorWikiParser.php';
 include 'WrtfCKEditorPageParser.php';
 include 'WrtfCKEditorHtmlParser.php';
@@ -9,7 +9,19 @@ include "WrtfCKEditorComparerParser.php";
  
 class WikiRtfCKEditor extends WikiEditorBase
 {
- 	function hasInlineEditingCapabilities()
+	function __construct()
+	{
+		parent::__construct();
+		parent::setAttachmentsField( new FieldWYSIWYGTempFile() );
+		$this->setToolbar(self::ToolbarMini);
+	}
+
+	function setAttachmentsField($field)
+	{
+		// disallow change attachments field object
+	}
+
+	function hasInlineEditingCapabilities()
  	{
  	    return true;
  	}
@@ -67,7 +79,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 
  	function getHtmlParser()
  	{
- 	    $base_editor = $this->getBaseParser($original_editor);
+ 	    $base_editor = $this->getBaseParser();
  	    
  	    if ( is_object($base_editor) ) return $base_editor;
  	    
@@ -89,22 +101,6 @@ class WikiRtfCKEditor extends WikiEditorBase
  		return "addImagesAutomatically";
  	}
  	
- 	public function getExportActions( $object_it )
- 	{
- 		$actions = array();
- 		
- 		if ( $object_it->object instanceof ProjectPage ) return $actions;
- 		
-		$method = new WysiwygExportWordWebMethod();
-		
-		$actions[] = array( 
-			'name' => $method->getCaption(), 
-			'url' => $method->getJSCall(array()) 
-		);
- 		
-		return $actions;
- 	}
- 	
  	function draw( $content, $b_editable = false )
  	{
  		$lang = strtolower(getSession()->getLanguageUid());
@@ -113,13 +109,11 @@ class WikiRtfCKEditor extends WikiEditorBase
 
 		$id = $this->getFieldId();
 		
-		$toolbar = $this->getMode() & WIKI_MODE_MINIMAL || !$b_editable 
-			? "'MiniToolbar'" : "'FullToolbar'";
-			
- 		$rows = ($this->getMode() & WIKI_MODE_MINIMAL ? $this->getMinRows() : $this->getMaxRows());
- 		
- 		$height = $rows * 15;
- 		 
+ 		$rows = $this->getMinRows();
+ 		$height = $rows * 16.9;
+
+		$toolbar = $this->getToolbar() == self::ToolbarMini ? "'MiniToolbar'" : "'FullToolbar'";
+
  		$object_it = $this->getObjectIt();
  		
  		$object_id = is_object($object_it) ? $object_it->getId() : '';
@@ -128,7 +122,7 @@ class WikiRtfCKEditor extends WikiEditorBase
  		
  		$attachment_field = $this->getAttachmentsField();
  		
- 		if ( is_object($attachment_field) )
+ 		if ( is_object($attachment_field) && !($this->getMode() & WIKI_MODE_INPLACE_INPUT) )
  		{
  		    $attachment_field->setReadonly( false );
  		    
@@ -160,12 +154,12 @@ class WikiRtfCKEditor extends WikiEditorBase
  		
 		?>
 		
-		<div>
+		<div class="editor-area">
 			<?php if ( $b_editable ) { ?>
 			
 			<?php if ( !($this->getMode() & WIKI_MODE_INLINE) ) { ?>
 			
-			<textarea class="input-block-level wysiwyg <?=$this->getCssClassName()?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" rows="<?=$rows?>" objectId="<?=$object_id?>" name="<?php echo $field; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
+			<textarea class="input-block-level wysiwyg <?=$this->getCssClassName()?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" rows="<?=($rows)?>" objectId="<?=$object_id?>" name="<?php echo $field; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
 			
 			<?php } else { ?>
 			
@@ -201,26 +195,26 @@ class WikiRtfCKEditor extends WikiEditorBase
 		</div>
 
 		<script type="text/javascript">
-			$(document).ready( function() 
-			{
-				setup<?=$id?>();
-				if ( $('#<?=$id?>').is('.wysiwyg-text') ) {
-					$('#<?=$id?>.wysiwyg-text[contenteditable="true"]').parent()
-						.hover(function() { 
-							if ( !$(this).find('.wysiwyg-text').is('.cke_focus') ) $(this).addClass('wysiwyg-hover');
-							$('.wysiwyg-welcome[for-id='+$(this).attr('id')+']').css('border-top', '2px solid white'); 
-						}, 
-						function() { 
-							$(this).removeClass('wysiwyg-hover'); 
-							$('.wysiwyg-welcome[for-id='+$(this).attr('id')+']').css('border', 'none'); 
-						});
- 				}
+			$(document).ready( function() {
+				if ( $('#<?=$id?>').parents('#documentCache,.embedded_form').length < 1 ) {
+					setup<?=$id?>();
+				}
 		    });
-
 		    function setup<?=$id?>()
 		    {
 		    	if ( $('#<?=$id?>').is('.cke_editable') ) return;
 		    	if ( typeof setupWysiwygEditor == 'undefined' ) return;
+				if ( $('#<?=$id?>').is('.wysiwyg-text') ) {
+					$('#<?=$id?>.wysiwyg-text[contenteditable="true"]').parent()
+						.hover(function() {
+								if ( !$(this).find('.wysiwyg-text').is('.cke_focus') ) $(this).addClass('wysiwyg-hover');
+								$('.wysiwyg-welcome[for-id='+$(this).attr('id')+']').css('border-top', '2px solid white');
+							},
+							function() {
+								$(this).removeClass('wysiwyg-hover');
+								$('.wysiwyg-welcome[for-id='+$(this).attr('id')+']').css('border', 'none');
+							});
+				}
 				setupWysiwygEditor(
 	    			'<?=$id ?>', 
 	    			<?=($this->getMode() & WIKI_MODE_INPLACE_INPUT ? "''" : $toolbar) ?>, 

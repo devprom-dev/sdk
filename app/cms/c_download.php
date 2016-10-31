@@ -1,8 +1,7 @@
 <?php
 
- //////////////////////////////////////////////////////////////////////////
- class Downloader
- {
+class Downloader
+{
  	var $attachment;
  	
  	function Downloader()
@@ -21,25 +20,22 @@
  	 */
  	function echoFile( $filepath, $filename = '', $mime = 'application/octet-stream' )
  	{
-		global $customerrorhandler, $_SERVER;
-
-		if ( is_object($customerrorhandler) )
-		{
-			$customerrorhandler->disable();
-			ob_end_clean();
-		}
- 		
- 		if ( !file_exists($filepath) )
- 		{
+ 		if ( !file_exists($filepath) ) {
  			exit(header("HTTP/1.0 404 Not Found"));
  		}
 
-		$file = fopen( $filepath, "rb" ); 
+		$file_time = gmdate( "D, d M Y H:i:s T", filemtime($filepath) );
+		$etagFile = md5($file_time);
 
-		if ( $file === false ) 
-		{ 
-		  	exit(header ("HTTP/1.0 403 Forbidden")); 
-		} 
+		$etagHeader=(isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim($_SERVER['HTTP_IF_NONE_MATCH']) : false);
+		if ($etagHeader == $etagFile) {
+			exit(header("HTTP/1.1 304 Not Modified"));
+		}
+
+		$file = fopen( $filepath, "rb" );
+		if ( $file === false ) {
+			exit(header ("HTTP/1.0 403 Forbidden"));
+		}
 
 		$offset = 0;
 		
@@ -52,21 +48,17 @@
 		  	if ( $offset > 0 ) fseek($file, $offset); 
 		}
 
-		$file_size = filesize($filepath); 
-		$file_time = date( "D, d M Y H:i:s T", filemtime($filepath) ); 
-
-		if ( $filename == '' )
-		{
+		$file_size = filesize($filepath);
+		if ( $filename == '' ) {
 			$filename = basename($filepath);
 		}
 
-	 	header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
-		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
-		header("Cache-control: no-store");
+		header('Cache-Control: public');
+		header("ETag: ". $etagFile);
+		header("Last-Modified: " . $file_time); // always modified
 
-		if ( $this->attachment )
-		{
-			header('Content-Disposition: attachment; filename="'.$filename.'"');
+		if ( $this->attachment ) {
+			header(EnvironmentSettings::getDownloadHeader($filename));
 		}
 		 
 		header("Content-Length: ".($file_size - $offset)); 
@@ -85,6 +77,4 @@
 
 		fclose($file); 
  	}
- }
-
-?>
+}

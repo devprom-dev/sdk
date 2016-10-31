@@ -1,12 +1,9 @@
 <?php
-
 include "ProjectAccessibleRegistry.php";
-include "predicates/ProjectAccessiblePredicate.php";
 
-class ProjectAccessible extends Metaobject
+class ProjectAccessible extends Project
 {
-	function __construct()
-	{
-		parent::__construct('pm_Project', new ProjectAccessibleRegistry());
+	function __construct() {
+		parent::__construct(new ProjectAccessibleRegistry());
 	}
 }

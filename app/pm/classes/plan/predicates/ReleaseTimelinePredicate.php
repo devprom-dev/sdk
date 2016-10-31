@@ -24,7 +24,7 @@ class ReleaseTimelinePredicate extends FilterPredicate
 			case 'current':
 			    
 				$states = getFactory()->getObject('pm_ChangeRequest')->getTerminalStates();
-				
+
 				return " AND (EXISTS (SELECT 1 " .
 					   "			   FROM pm_VersionMetric ms, pm_VersionMetric me " .
 					   "			  WHERE ms.Version = t.pm_VersionId" .

@@ -5,7 +5,13 @@ include_once 'CommentList.php';
 class CommentsFormMinimal extends PMPageForm
 {
 	private $anchor_it;
-	
+
+	function extendModel()
+	{
+		parent::extendModel();
+		$this->getObject()->addAttribute('Attachment', 'VARCHAR', '', true, false);
+	}
+
 	public function setAnchorIt( $anchor_it )
 	{
 		$this->anchor_it = $anchor_it;
@@ -13,7 +19,7 @@ class CommentsFormMinimal extends PMPageForm
 	
 	function IsAttributeVisible( $attr_name )
 	{
-		return $attr_name == 'Caption';
+		return in_array($attr_name, array('Caption','Attachment'));
 	}
 	
 	function getFieldValue( $attr )
@@ -50,7 +56,12 @@ class CommentsFormMinimal extends PMPageForm
 				$field->setHasBorder( false );
 				$field->setName($attribute);
 				return $field;
-				
+
+			case 'Attachment':
+				$field = new FieldCommentAttachments( is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject() );
+				$field->setAddButtonText(text(2081));
+				return $field;
+
 		    default:
 		    	return parent::createFieldObject( $attribute );
 		}

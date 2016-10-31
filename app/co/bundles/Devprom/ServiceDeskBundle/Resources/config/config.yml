@@ -50,27 +50,10 @@ twig:
     form_themes:
         - DevpromServiceDeskBundle:Form:fields.html.twig
 
-# Swiftmailer Configuration
-swiftmailer:
-    transport:  smtp
-    host:       %mailer_host%
-    username:   %mailer_user%
-    password:   %mailer_password%
-    port:       %mailer_port%
-    encryption: %mailer_encryption%
-    spool:      { type: memory }
-
 monolog:
     handlers:
         applog:
             type: rotating_file
             path: "%kernel.logs_dir%/servicedesk_system.log"
-            level: debug
+            level: error
             max_files: 5 # Set up to keep log files for 5 recent days only
-            channels: [!mail]
-        mail:
-            type: rotating_file
-            path: "%kernel.logs_dir%/servicedesk_mail.log"
-            level: debug
-            max_files: 5
-            channels: [mail]

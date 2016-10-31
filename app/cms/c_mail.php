@@ -1,16 +1,17 @@
 <?php
 
 use \InlineStyle\InlineStyle;
-include_once SERVER_ROOT_PATH."ext/html/html2text.php";
 include_once SERVER_ROOT_PATH.'core/classes/html/HtmlImageConverter.php';
 
 class MailBox
 {
  	var $to_address, $body, $from_address, $subject;
+	private $mailer_settings = null;
 	
 	function __construct()
 	{
 		$this->to_address = array();
+		$this->mailer_settings = getFactory()->getObject('MailerSettings')->getAll();
 	}
 	
 	function appendAddress( $address )
@@ -40,16 +41,22 @@ class MailBox
         } else {
 			$address = $this->quoteEmail($from_address);
         }
-		if ( $override && defined('EMAIL_SENDER_TYPE') && EMAIL_SENDER_TYPE == 'admin' )
-		{
+
+		if ( $override && $this->mailer_settings->get('EmailSender') == 'admin' ) {
 			$address = $this->addressUpdateEmail($address, self::getSystemEmail());
 		}
+
 		$this->from_address = $address;
 	}
 	
 	function setFromUser( $user_it )
 	{
-		$this->setFrom($user_it->get('Caption')).' <'.$user_it->get('Email').'>';
+		if ( $user_it->getId('Email') == '' ) {
+			$this->setFrom(self::getSystemEmail(), false);
+		}
+		else {
+			$this->setFrom($user_it->get('Caption').' <'.$user_it->get('Email').'>');
+		}
 	}
 
 	static function getSystemEmail()
@@ -129,6 +136,16 @@ class MailBox
 		}
 	}
 
+	static function parseAddressString( $address ) {
+		list($display, $email) = preg_split('/</',$address);
+		if ( $email == '' ) {
+			$email = $display;
+			$display = '';
+		}
+		$email = array_shift(preg_split('/>/', $email));
+		return array($email, $display);
+	}
+
 	function addressUpdateEmail( $address, $email ) 
 	{
 		return preg_replace('/\<([^>])+>/', '<'.$email.'>', $address); 
@@ -141,7 +158,7 @@ class HtmlMailBox extends MailBox
     const boundary_related = 'e61f23g3cba093338679c352faf8';
  	
 	static function getContentType() {
-		return "MIME-Version: 1.0\r\nContent-Type: multipart/related; boundary=".self::boundary_related."\r\n";
+		return "multipart/related; boundary=".self::boundary_related;
 	}
 	
 	static function encode( $text ) {
@@ -183,8 +200,8 @@ class HtmlMailBox extends MailBox
         $this->body .= "Content-Transfer-Encoding: base64\r\n\r\n";
 
 		// process texted part
-        $html2text = new \html2text($body);
-		$texted = $html2text->get_text();
+        $html2text = new \Html2Text\Html2Text($body, array('width'=>0));
+		$texted = $html2text->getText();
 		
 		$texted = preg_replace('/\s{2,}/', PHP_EOL, $texted);
 		$texted = preg_replace('/[\r\n]{2,}/', PHP_EOL.PHP_EOL, $texted);

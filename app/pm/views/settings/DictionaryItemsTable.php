@@ -86,4 +86,18 @@ class DictionaryItemsTable extends PMPageTable
 				)
 		);
  	}
-} 
+
+    function getActions()
+    {
+        $actions = parent::getActions();
+        $module_it = getFactory()->getObject('Module')->getExact('process/storesettings');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+            $actions[] = array();
+            $actions[] = array (
+                'name' => $module_it->getDisplayName(),
+                'url' => $module_it->getUrl()
+            );
+        }
+        return $actions;
+    }
+}

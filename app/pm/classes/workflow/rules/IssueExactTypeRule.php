@@ -1,37 +1,44 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include_once "BusinessRulePredicate.php";
 
 class IssueExactTypeRule extends BusinessRulePredicate
 {
- 	private $type_name;
- 	private $type_id;
- 	private $type_ref;
+ 	private $type_name = '';
+ 	private $type_id = '';
+ 	private $type_ref = '';
  	
- 	function __construct( $type_it )
+ 	function __construct( $type_it = null )
  	{
- 		$this->type_id = $type_it->getId();
- 		$this->type_ref = $type_it->get('ReferenceName');
- 		$this->type_name = $type_it->getDisplayName();
+		if ( $type_it instanceof OrderedIterator ) {
+			$this->type_id = $type_it->getId();
+			$this->type_ref = $type_it->get('ReferenceName');
+			$this->type_name = $type_it->getDisplayName();
+		}
+		else {
+			$this->type_name = $this->getObject()->getDisplayName();
+		}
  	}
- 	
- 	function getId()
- 	{
+
+	public function __sleep() {
+		return array('type_name','type_ref','type_id');
+	}
+
+ 	function getId() {
  		return abs(crc32(strtolower(get_class($this)).$this->type_ref));
  	}
  	
- 	function getObject()
- 	{
+ 	function getObject() {
  		return getFactory()->getObject('Request');
  	}
  	
- 	function getDisplayName()
- 	{
+ 	function getDisplayName() {
  		return str_replace('%1', $this->type_name, text(1157));
  	}
  	
- 	function check( $object_it )
- 	{
+ 	function check( $object_it ) {
  		return $object_it->get('Type') == $this->type_id;
  	}
 }

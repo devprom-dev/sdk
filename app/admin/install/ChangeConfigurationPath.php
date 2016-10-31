@@ -35,6 +35,16 @@ class ChangeConfigurationPath extends Installable
 	    {
 	        $this->moveFile( $source, $target );
 	    }
+
+		$unlink = array (
+			SERVER_ROOT_PATH."co/bundles/Devprom/ServiceDeskBundle/Resources/translations/client.en.php",
+			SERVER_ROOT_PATH."co/bundles/Devprom/ServiceDeskBundle/Resources/translations/client.ru.php",
+			SERVER_ROOT_PATH."co/bundles/Devprom/ServiceDeskBundle/Resources/translations/emails.ru.php",
+			SERVER_ROOT_PATH."co/bundles/Devprom/ServiceDeskBundle/Resources/translations/emails.en.php"
+		);
+		foreach( $unlink as $filepath ) {
+			@unlink($filepath);
+		}
 	    
 		return true;
 	}

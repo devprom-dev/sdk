@@ -4,9 +4,11 @@ class FieldIssueEstimation extends Field
 {
 	private $actions = null;
 	private $reload = false;
+	private $scale = array();
 
 	function __construct( $object_it = null, $reload = false ) {
 		$this->reload = $reload;
+		$this->scale = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getScale();
 		$this->actions = $this->buildActions();
 		$this->object_it = $object_it;
 	}
@@ -23,28 +25,33 @@ class FieldIssueEstimation extends Field
 		$this->object_it = $object_it;
 	}
 
-	function draw($view)
+	function draw( $view = null )
 	{
 		foreach( $this->actions as $key => $action )
 		{
 			$method = $action['method'];
-			$this->actions[$key]['url'] = $method->getJSCall(array(), $this->object_it);
+			$method->setObjectIt($this->object_it);
+			$this->actions[$key]['url'] = $method->getJSCall();
 		}
 
+		$flippedScale = array_flip($this->scale);
+		$mappedEstimation = $flippedScale[$this->object_it->get('Estimation')];
+		if ( $mappedEstimation == '' ) $mappedEstimation = $this->object_it->get('Estimation');
+
 		echo $view->render('pm/EstimationIcon.php', array (
-				'data' => $this->object_it->get('Estimation') != '' ? $this->object_it->get('Estimation') : '0',
-				'items' => $this->actions
+			'data' => $mappedEstimation != '' ? $mappedEstimation : 0,
+			'items' => $this->actions,
+			'random' => $this->object_it->getId()
 		));
 	}
 
 	protected function buildActions()
 	{
 		$actions = array();
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
 
-		foreach( $strategy->getScale() as $item )
+		foreach( $this->scale as $label => $value )
 		{
-			$method = new ModifyAttributeWebMethod(getFactory()->getObject('Request')->getEmptyIterator(), 'Estimation', $item);
+			$method = new ModifyAttributeWebMethod(getFactory()->getObject('Request')->getEmptyIterator(), 'Estimation', $value);
 			if ( $method->hasAccess() ) {
 				if ( !$this->reload ) {
 					$method->setCallback( "donothing" );
@@ -52,8 +59,8 @@ class FieldIssueEstimation extends Field
 				else {
 					$method->setCallback( "function() {window.location.reload();}" );
 				}
-				$actions[$item] = array(
-						'name' => $item,
+				$actions[$value] = array(
+						'name' => $label,
 						'method' => $method
 				);
 			}

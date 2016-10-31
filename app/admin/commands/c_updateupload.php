@@ -16,8 +16,8 @@ class UpdateUpload extends MaintenanceCommand
 		
 		if ( !is_uploaded_file($_FILES['Update']['tmp_name']) )
 		{
-			$this->replyError( str_replace('%1', 
-				$this->getErrorDescription($_FILES['Update']['error']), text(1255)) );
+			$this->replyError( str_replace('%1',
+				\FileSystem::translateError($_FILES['Update']['error']), text(1255)) );
 		}
 		
 		return true;
@@ -25,8 +25,6 @@ class UpdateUpload extends MaintenanceCommand
 
 	function create()
 	{
-		global $model_factory, $_FILES;
-		
 		$pathinfo = pathinfo($_FILES['Update']['name'] == '' ? $_REQUEST['parms'] : $_FILES['Update']['name']);
 		
 		$filepath = SERVER_UPDATE_PATH.$pathinfo['basename'];
@@ -59,7 +57,9 @@ class UpdateUpload extends MaintenanceCommand
 		DAL::Instance()->Reconnect();
 		
 		$this->checkUpdateIsValid();
-		
+
+        $this->checkPHPVersion();
+
 		$this->checkPlugins();
 		
 		$this->checkPoints();
@@ -110,16 +110,17 @@ class UpdateUpload extends MaintenanceCommand
 	function checkPoints()
 	{
 	    // check all required checkpoints are passed
-	    $checkpointFactory = new CheckpointFactory(SERVER_UPDATE_PATH.'htdocs/');
-	    
-	    $system = $checkpointFactory->getCheckpoint( 'CheckpointSystem' );
-	    
-	    if ( !is_object($system) ) return;
-	            
-	    $system->executeDynamicOnly();
-	    
-	    if ( !$system->checkRequired( $failed ) )
-	    {
+			$checkpointFactory = new CheckpointFactory(SERVER_UPDATE_PATH.'htdocs/');
+
+			$system = $checkpointFactory->getCheckpoint( 'CheckpointSystem' );
+
+			if ( !is_object($system) ) return;
+
+			$system->executeDynamicOnly();
+
+            $failed = false;
+			if ( !$system->checkRequired( $failed ) )
+			{
 	        $description = array();
 	         
 	        foreach( $failed as $entry )
@@ -185,27 +186,14 @@ class UpdateUpload extends MaintenanceCommand
 	        }
 	    }
 	}
-	
-	function getErrorDescription( $error )
-	{
-		switch( $error )
-		{
-			case '1': // UPLOAD_ERR_INI_SIZE
-				return text(1258);
-			case '2': // UPLOAD_ERR_FORM_SIZE
-				return text(1259);
-			case '3': // UPLOAD_ERR_PARTIAL
-				return text(1260);
-			case '6': // UPLOAD_ERR_NO_TMP_DIR
-				return text(1261);
-			case '7': // UPLOAD_ERR_CANT_WRITE
-				return text(1262);
-			case '8': // UPLOAD_ERR_EXTENSION
-				return text(1263);
-			default:
-				return '?';
-		}
-	}
-}
 
-?>
+	protected function checkPHPVersion()
+    {
+        $file_path = SERVER_UPDATE_PATH.'devprom/php.txt';
+        if ( !file_exists($file_path) ) return;
+        $requiredVersion = file_get_contents($file_path);
+        if ( TextUtils::versionToString(phpversion()) < TextUtils::versionToString($requiredVersion) ) {
+            $this->replyError(str_replace('%1', $requiredVersion, str_replace('%2', phpversion(), text(2226))));
+        }
+    }
+}

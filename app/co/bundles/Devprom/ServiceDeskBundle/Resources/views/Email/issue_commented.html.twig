@@ -4,16 +4,9 @@
 
 {% block body_html %}
     {% set issueLink %}{{ url("issue_show", { "id": issue.id }) }}{% endset %}
-
     {% embed "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
         {% block body %}
-            {% autoescape false %}
-            {{ 'issue.commented.body'|trans({
-                '%title%' : issue.caption,
-                '%link%' : issueLink,
-                '%comment%' : comment,
-            }, 'emails', language) }}
-            {% endautoescape %}
+            {% include emailBody("issueCommented.twig",language) %}
         {% endblock body %}
     {% endembed %}
 {% endblock body_html %}

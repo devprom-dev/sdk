@@ -10,7 +10,7 @@ class ModelEventsManager
  	{
  		$this->cascade = $cascade;
  	}
- 	
+
  	public function getCascade()
  	{
  		return $this->cascade;
@@ -36,7 +36,7 @@ class ModelEventsManager
 	function getNotificators( $base_class_name = '' )
 	{
 	    if ( $base_class_name == '' ) return is_array($this->notificators) ? $this->notificators : array();
-	    
+
 		$notificators = array();
 		
 		foreach ( $this->notificators as $key => $notificator )

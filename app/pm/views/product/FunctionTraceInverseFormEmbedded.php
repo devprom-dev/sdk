@@ -42,4 +42,8 @@ class FunctionTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  	{
  	    return $object_it->getRef('Feature');
  	}
+
+	function getListItemsAttribute() {
+		return 'Feature';
+	}
 }

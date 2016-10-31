@@ -18,7 +18,7 @@ class WikiRemoveStyleWebMethod extends WebMethod
  		return text(1502);
  	}
  	
- 	function getJSCall()
+ 	function getJSCall($parms = array())
  	{
  		return parent::getJSCall( array (
  				'object' => $this->object_it->getId(),
@@ -41,17 +41,25 @@ class WikiRemoveStyleWebMethod extends WebMethod
  		
  		while( !$object_it->end() )
  		{
- 			$content = $object_it->getHtmlDecoded('Content');
- 			
- 			$content = preg_replace('/(<[^>]+) style=".*?"/i', '$1', $content);
+ 			$content = preg_replace(
+				array (
+					'/(<[^>]+)\s+style\s*=/i',
+					'/(<[^>]+)\s+class\s*=/i',
+					'/(<table[^>]+)/i',
+					'/(<\/?span[^>]*>)/i',
+					'/(&nbsp;|\xC2\xA0)/i'
+				),
+				array (
+					'$1 was-style=',
+					'$1 was-class=',
+					'$1 border="1"',
+					'',
+					' '
+				),
+				$object_it->getHtmlDecoded('Content')
+			);
 
- 			$content = preg_replace('/(<[^>]+) class=".*?"/i', '$1', $content);
- 			
- 			$content = preg_replace('/(<table[^>]+)/i', '$1 border="1"', $content);
- 			
- 			$content = preg_replace('/(<\/?span[^>]*>)/i', '', $content);
-
- 			$content = preg_replace('/\xA0|&nbsp;/i', ' ', $content);
+ 			//$content = preg_replace('/\xA0|&nbsp;/i', ' ', $content);
  			
  			$object_it->object->getRegistry()->Store( $object_it, array (
  					'Content' => $content,

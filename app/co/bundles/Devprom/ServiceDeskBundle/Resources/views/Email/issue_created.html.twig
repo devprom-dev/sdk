@@ -4,19 +4,9 @@
 
 {% block body_html %}
     {% set issueLink %}{{ url("issue_show", { "id": issue.id }) }}{% endset %}
-
     {% embed "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
         {% block body %}
-            {% autoescape false %}
-            {{ 'issue.created.body'|trans({
-            '%title%' : issue.caption,
-            '%description%' : issue.description|unescapeHtml,
-            '%product%' : issue.product != "" ? issue.product : issue.project,
-            '%priority%' : issue.priority,
-            '%type%' : issue.issueType,
-            '%link%' : issueLink,
-            }, 'emails', language) }}
-            {% endautoescape %}
+            {% include emailBody("issueCreated.twig",language) %}
         {% endblock body %}
     {% endembed %}
 {% endblock body_html %}

@@ -29,9 +29,14 @@ class FunctionList extends PMPageList
 		$roots = array_filter($rowset, function($row) {
 			return $row['ParentFeature'] == '';
 		});
+		if ( count($roots) < 1 ) {
+			$roots = $rowset;
+		}
 
 		$dataset = array();
-		foreach($roots as $row ) {
+		$index = 1;
+		foreach($roots as $key => $row ) {
+			$row['SortIndex'] = str_pad($index++,10,"0",STR_PAD_LEFT);
 			$dataset[] = $row;
 			self::buildChildRows($row, $rowset, $dataset);
 		}
@@ -55,10 +60,17 @@ class FunctionList extends PMPageList
 		$roots = array_filter($rowset, function($row) use ($parent_row) {
 			return $row['ParentFeature'] == $parent_row['pm_FunctionId'];
 		});
-		foreach($roots as $row) {
+		$index = 1;
+		foreach($roots as $key => $row) {
+			$row['SortIndex'] = $parent_row['SortIndex'].','.str_pad($index++,10,"0",STR_PAD_LEFT);
 			$data[] = $row;
 			self::buildChildRows($row, $rowset, $data);
 		}
+	}
+
+	function getIds()
+	{
+		return array();
 	}
 
 	function getSorts()
@@ -103,8 +115,12 @@ class FunctionList extends PMPageList
 		unset($fields['ParentFeature']);
 		return $fields;
 	}
-	
-	function drawGroup($group_field, $object_it)
+
+    function getGroupDefault() {
+        return '';
+    }
+
+    function drawGroup($group_field, $object_it)
 	{
 		switch ( $group_field )
 		{
@@ -231,7 +247,6 @@ class FunctionList extends PMPageList
  		{
  			case 'Progress':
  				return 60;
- 				
  			case 'Estimation':
  			    return 80;
 
@@ -247,9 +262,7 @@ class FunctionList extends PMPageList
  				{
  					case 'Importance':
  						return 90;
- 						
  					default:
- 						if ( in_array($attr, $this->trace_attributes) ) return '8%';
  						return parent::getColumnWidth( $attr );
  				}
  		}

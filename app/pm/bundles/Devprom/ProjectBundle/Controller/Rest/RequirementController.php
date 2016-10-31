@@ -16,8 +16,11 @@ class RequirementController extends RestController
 
 	function getFilterResolver(Request $request)
 	{
-		return array (
-			new RequirementFilterResolver('')
+		return array_merge(
+			parent::getFilterResolver($request),
+			array (
+				new RequirementFilterResolver('')
+			)
 		);
 	}
 

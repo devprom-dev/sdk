@@ -4,21 +4,23 @@ class ObjectsListWidgetRegistry extends ObjectRegistrySQL
 {
 	private $data = array();
 	
-	public function addReport( $class_name, $report_uid )
+	public function addReport( $class_name, $report_uid, $title = '' )
 	{
 		$this->data[] = array (
 				'ReferenceName' => 'PMReport',
 				'Caption' => $class_name,
-				'entityId' => $report_uid
+				'entityId' => $report_uid,
+				'WidgetTitle' => $title
 		);
 	}
 	
-	public function addModule( $class_name, $module_uid )
+	public function addModule( $class_name, $module_uid, $title = '' )
 	{
 		$this->data[] = array (
 				'ReferenceName' => 'Module',
 				'Caption' => $class_name,
-				'entityId' => $module_uid
+				'entityId' => $module_uid,
+				'WidgetTitle' => $title
 		);
 	}
 	

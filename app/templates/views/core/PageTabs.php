@@ -33,24 +33,3 @@
 		</ul>
 	</div>
 </div>
-
-<script type="text/javascript">
-    $('.nav > li.dropdown > a').click( function() 
-    {
-    	$('.nav > li.dropdown').removeClass('active');
-
-    	$(this).parent('li').addClass('active');
-
-    	$('.vertical-menu').hide();
-
-    	var menu = $('#menu_'+$(this).parent('li').attr('area'));
-    	
-    	menu.show();
-
-    	adjustContainerHeight(menu);    	
-    });
-
-    $(document).ready( function() {
-    	adjustContainerHeight($('#menu_<?=$active_area_uid?>'));
-    });
-</script>

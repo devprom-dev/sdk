@@ -27,7 +27,7 @@ class ProjectDeleteWebMethod extends ProjectWebMethod
 		return translate('Удалить');
 	}
 
-	function getJSCall( $object )
+	function url( $object )
 	{
 	    return "javascript: bulkDelete('".strtolower(get_class($object))."', '".get_class($this)."', '".$this->getRedirectUrl()."'); ";
 	}

@@ -14,8 +14,11 @@ class IterationController extends RestController
 
 	function getFilterResolver(Request $request)
 	{
-		return array (
+		return array_merge(
+			parent::getFilterResolver($request),
+			array (
 				new IterationFilterResolver($request->get('filter'))
+			)
 		);
 	}
 }

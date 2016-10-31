@@ -21,7 +21,7 @@ class FieldWikiPageTrace extends FieldHierarchySelector
         $this->baseline_attribute = $attribute;
     }
 
-    function draw()
+    function draw( $view = null )
     {
 		$data = array();
     	$snapshot_it = getFactory()->getObject('Snapshot')->getRegistry()->Query(
@@ -45,6 +45,7 @@ class FieldWikiPageTrace extends FieldHierarchySelector
 
     	$this->setOnSelectCallback("buildSnapshotSelect('#".$this->getId()."', '".$this->getFormId()."','".$this->baseline_attribute."', [".join(',',$data)."])");
     	$this->setAdditionalAttributes( array('DocumentId') );
+		$this->setCrossProject();
 
     	parent::draw();
     	

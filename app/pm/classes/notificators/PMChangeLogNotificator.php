@@ -1,21 +1,14 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'cms/classes/ChangeLogNotificator.php';
-include_once SERVER_ROOT_PATH.'ext/html/html2text.php'; 
 
 class PMChangeLogNotificator extends ChangeLogNotificator
 {
-    protected $required_by_transition = array();
-     
-	function is_active( $object_it ) 
+	function is_active( $object_it )
 	{
-	    global $model_factory;
-	    
-	    if ( !is_object($this->entity_set) )
-	    {
-	        $set = $model_factory->getObject('ChangeLogEntitySet');
-	        
-	        $this->entity_set = $set->getAll();
+		if ( !is_object($object_it) ) return false;
+
+	    if ( !is_object($this->entity_set) ) {
+	        $this->entity_set = getFactory()->getObject('ChangeLogEntitySet')->getAll();
 	    }
 
 		$check = in_array( $object_it->object->getEntityRefName(), $this->entity_set->fieldToArray('ReferenceName') )
@@ -27,15 +20,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
  	function modify( $prev_object_it, $object_it, $visibility = 1 ) 
 	{
 		$entity_ref_name = $object_it->object->getEntityRefName();
-		
-	    if ( ($object_it->object instanceof MetaobjectStatable) && $object_it->object->getAttributeType('Transition') != '' )
-		{
-		    $this->required_by_transition = $object_it->object->getAttributesRequired($object_it->getStateIt()); 
-		}
-		else
-		{
-		    $this->required_by_transition = array();
-		}
 		
 		switch ( $entity_ref_name )
 		{
@@ -50,8 +34,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 
 	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
 	{
-		global $model_factory;
-
+		if( !is_object($object_it) ) return;
 		if( !$this->is_active($object_it) ) return;
 		
 		$modified_attributes = $this->getModifiedAttributes();
@@ -84,8 +67,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				
 			    if ( !$methodology_it->HasTasks() ) break;
 			    
-				if ( $object_it->get('ChangeRequest') > 0 )
-				{
+				if ( $object_it->get('ChangeRequest') > 0 && $object_it->object->getAttributeType('ChangeRequest') != '' ) {
 					$request_it = $object_it->getRef('ChangeRequest');
 					$this->setModifiedAttributes(array('Tasks'));
 					
@@ -239,15 +221,10 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 
 			case 'pm_Question':
-				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, '', $visibility, $author_email );
-					
-				break;
+				$content = str_replace( '%2', $object_it->getHtmlDecoded('Content'),
+					str_replace('%1', '['.$uid->getObjectUid( $object_it ).']', text(1057) ) );
 
-			case 'pm_TestPlanItem':
-				$plan_it = $object_it->getRef('TestPlan');
-				
-				parent::process( $plan_it, 'modified', 
-					$object_it->getDisplayName().' ('.$caption.')', $visibility + 1, $author_email );
+				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, $content, $visibility, $author_email );
 					
 				break;
 
@@ -357,21 +334,21 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 				
 			case 'pm_Activity':
-			    
-			    if ( $object_it->get('Task') == '' ) break;
-			    
-			    $anchor_it = getFactory()->getObject('Task')->getExact($object_it->get('Task'));
-			    
-			    if ( $object_it->get('Iteration') < 1 && $anchor_it->object->getAttributeType('ChangeRequest') != "" )
-			    {
-			        $anchor_it = $anchor_it->getRef('ChangeRequest');
-			    }
+				if ( $object_it->object instanceof Activity ) {
+					if ( $object_it->get('Task') == '' ) break;
 
-				$this->setModifiedAttributes(array('Fact'));
-			    
-			    parent::process( $anchor_it, 'modified',
-			        $object_it->getDisplayNameShort().' ('.$caption.')', $visibility, $author_email );
-			    
+					$anchor_it = getFactory()->getObject('Task')->getExact($object_it->get('Task'));
+					if ( $object_it->get('Iteration') < 1 && $anchor_it->get('ChangeRequest') != '' ) {
+						if ( $anchor_it->object->getAttributeType('ChangeRequest') != "" ) {
+							$anchor_it = $anchor_it->getRef('ChangeRequest');
+						}
+					}
+
+					$this->setModifiedAttributes(array('Fact'));
+
+					parent::process( $anchor_it, 'modified',
+						$object_it->getDisplayNameShort().' ('.$caption.')', $visibility, $author_email );
+				}
 			    break;
 			    
 			case 'WikiPageChange':
@@ -381,7 +358,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			        case 'added':
 					    $page_it = $object_it->getRef('WikiPage');
 						$history_url = $page_it->getHistoryUrl();
-					    $content = '[url='.$history_url.' text='.translate('История изменений').']';
+					    $content = '[url='.$history_url.' text='.text(2238).']';
 					    
 					    parent::process( $page_it, 'modified', $content, $visibility, $author_email,
 								array('ObjectUrl' => $history_url.'&version='.$object_it->getId()) );
@@ -398,20 +375,32 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			        	
 			        	break;
 			    }
-			    
 			    break;
+
+			case 'WikiPage':
+				switch( $kind )
+				{
+					case 'deleted':
+						if ( $object_it->get('ParentPage') != '' ) {
+							$page_it = $object_it->getRef('ParentPage');
+							parent::process( $page_it, 'modified', $object_it->getDisplayName().' ('.$caption.')', $visibility, $author_email );
+							return;
+						}
+						break;
+				}
+				if ( $kind != 'modified' || $content != '' ) {
+					parent::process( $object_it, $kind, $content, $visibility, $author_email );
+				}
+				break;
 
 			default:
 				if ( $kind != 'modified' || $content != '' ) parent::process( $object_it, $kind, $content, $visibility, $author_email );
-			    
 				break;
 		}
 	}
 	
 	function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
-		global $project_it, $_REQUEST;
-		
 		switch ( $object_it->object->getClassName() )
 		{
 			case 'pm_Participant':
@@ -477,6 +466,9 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						return true;
 				}
 				break;
+
+            case 'pm_Build':
+                return parent::isAttributeVisible( $attribute_name, $object_it, $action );
 		}
 
 		switch ( $attribute_name )
@@ -490,8 +482,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		    	return false;
 		        
 		    default:
-				if ( in_array($attribute_name, $this->required_by_transition) ) return true;
-		    	
 		        // trace changes of custom attributes always
 		        if ( $object_it->object->getAttributeOrigin($attribute_name) == ORIGIN_CUSTOM ) return true;
 		        

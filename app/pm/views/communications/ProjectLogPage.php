@@ -29,18 +29,17 @@ class ProjectLogPage extends PMPage
  		return null;
  	}
  	
- 	function getRecentChangedObjectIds( $table )
+ 	function getRecentChangedObjectIds( $filters )
  	{
- 		 $from_date = strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 minutes', strtotime(SystemDateTime::date())));
- 		
-         $ids = $this->getObject()->getRegistry()->Query(
+ 		 $from_date = SystemDateTime::convertToClientTime(
+			 strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 minutes', strtotime(SystemDateTime::date())))
+		 );
+         return $this->getObject()->getRegistry()->Query(
          		array (
          				new FilterModifiedAfterPredicate($from_date),
          				new FilterVpdPredicate(),
-         				new SortRecentClause()
+         				new SortChangeLogRecentClause()
          		)
-         )->idsToArray();
-		 
-		 return $ids;
+	         )->idsToArray();
  	}
 }

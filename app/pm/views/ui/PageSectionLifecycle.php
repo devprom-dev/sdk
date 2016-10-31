@@ -36,11 +36,8 @@
 		$base_it = $state_it->getRef('State');
 		$transition_it = $state_it->getRef('Transition');
 
-		$state_name = preg_replace('/%1/', $base_it->getDisplayName(), text(905));
-		
-		if ( $transition_it->count() > 0 ) {
-			$transition_name = preg_replace('/%1/', $transition_it->getDisplayName(), text(904));
-		}
+		$state_name = $base_it->getDisplayName();
+		$transition_name = $transition_it->getDisplayName();
 
 		if ( $state_it->get('CommentObject') != '' ) {
 			$comment_it = $state_it->getRef('CommentObject');
@@ -56,7 +53,7 @@
  	function getRenderParms()
 	{
 		$rows = array();
-		$duration = round($this->getObjectIt()->get('StateDuration'), 1);
+		$duration = round($this->getObjectIt()->get('StateDurationRecent'), 1);
 
  		$state_it = $this->getIterator();
  		while ( !$state_it->end() )
@@ -70,13 +67,13 @@
 			$rows[] = array(
 				'author' => $state_it->getRef('Author')->getDisplayName(),
 			 	'datetime' => $state_it->getDateTimeFormat('RecordCreated'),
-				'duration' => $duration,
+				'duration' => getSession()->getLanguage()->getDurationWording($duration),
 				'state' => $state,
 				'transition' => $transition,
 				'comment' => $comment,
 				'icon' => 'icon-pencil'
 			);
-			$duration = round((strtotime($state_it->get('RecordCreated')) - strtotime($this->getObjectIt()->get('RecordCreated'))) / (60 * 60), 1);
+			$lastDuration = (strtotime($state_it->get('RecordCreated')) - strtotime($this->getObjectIt()->get('RecordCreated'))) / (60 * 60);
  			$state_it->moveNext();
  		}
 
@@ -89,7 +86,7 @@
  		$change_it = $object->getRegistry()->Query(
 				array (
 						new ChangeLogItemDateFilter($this->object_it),
-						new SortAttributeClause('RecordCreated')
+						new SortAttributeClause('RecordModified')
 				)
 		);
  		
@@ -97,8 +94,8 @@
 		{
 			$rows[] = array(
 				'author' => $change_it->get('AuthorName'),
-			 	'datetime' => $change_it->getDateTimeFormat('RecordCreated'),
-				'duration' => $duration,
+			 	'datetime' => $change_it->getDateTimeFormat('RecordModified'),
+				'duration' => getSession()->getLanguage()->getDurationWording($lastDuration),
 				'icon' => 'icon-plus-sign'
 			); 
 		}

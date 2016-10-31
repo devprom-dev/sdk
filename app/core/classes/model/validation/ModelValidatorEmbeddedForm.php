@@ -18,16 +18,14 @@ class ModelValidatorEmbeddedForm extends ModelValidatorInstance
 		$rows = array();
 
 		if ( !$object->IsAttributeRequired($this->validate_field) ) return "";
-		
+		if ( $parms[$this->validate_field] != '' ) return "";
+
 		foreach( array_keys($parms) as $field )
 		{
-			 if ( preg_match('/F[\d]+_'.$this->check_embedded_field.'[\d]+/i', $field, $matches) && $parms[$field] != '' )
-			 {
+			 if ( preg_match('/F[\d]+_'.$this->check_embedded_field.'[\d]+/i', $field, $matches) && $parms[$field] != '' ) {
 			 	$rows[] = $parms[$field];
 			 }
-
-			 if ( preg_match('/F([\d]+)_Id([\d]+)/i', $field, $matches) && $parms[$field] != '' )
-			 {
+			 if ( preg_match('/F([\d]+)_Id([\d]+)/i', $field, $matches) && $parms[$field] != '' ) {
 			 	if ( $parms['F'.$matches[1].'_Delete'.$matches[2]] < 1 ) $rows[] = $parms[$field];
 			 }
 		}

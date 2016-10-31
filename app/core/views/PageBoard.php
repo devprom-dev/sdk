@@ -10,12 +10,13 @@ class PageBoard extends PageList
     private $board_attribute_iterator = null;
 	private $column_descriptions = array();
     private $plugins = null;
+	private $uid_visible = true;
 
  	function PageBoard( $object ) 
 	{
 		parent::__construct( $object );
 		
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 		$this->plugins = is_object($plugins) 
 				? $plugins->getPluginsForSection(getSession()->getSite()) : array();
 	}
@@ -26,35 +27,38 @@ class PageBoard extends PageList
 		
 		$table->resetFilterValues();
 	}
-	
+
+	function extendModel()
+	{
+		parent::extendModel();
+		$object = $this->getObject();
+
+		foreach( $object->getAttributes() as $attribute => $info ) {
+			if ( $object->getAttributeType($attribute) == 'datetime' ) {
+				$object->setAttributeType($attribute, 'date');
+			}
+		}
+	}
+
 	function getBoardAttribute()
  	{
- 		return '';
- 	}
- 	
- 	function getBoardAttributeClassName()
- 	{
- 		return '';
+ 		return 'State';
  	}
  	
  	function buildBoardAttributeIterator()
  	{
- 		$classname = $this->getBoardAttributeClassName();
-
- 		if ( $classname == '' ) return $this->getObject()->getEmptyIterator();
- 		
- 		return getFactory()->getObject($classname)->getRegistry()->Query(
- 				array (
- 						new FilterBaseVpdPredicate(),
- 						new SortAttributeClause('OrderNum')
- 				)
- 		);
+		$project = getSession()->getProjectIt()->getId();
+		$state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
+		return $state_it->object->createCachedIterator(
+			array_values(array_filter($state_it->getRowset(), function($row) use ($project) {
+				return $row['Project'] == $project;
+			}))
+		);
  	}
  	
  	function getBoardAttributeIterator()
  	{
- 		if ( is_object($this->board_attribute_iterator) )
- 		{
+ 		if ( is_object($this->board_attribute_iterator) ) {
  			return $this->board_attribute_iterator->copyAll();
  		}
 
@@ -78,20 +82,20 @@ class PageBoard extends PageList
  		
  		return $states;
  	}
- 	
- 	function getBoardValues()
- 	{
- 		$states = $this->getBoardStates();
 
- 		$boardvalues = array();
- 		
- 		foreach( $states as $value )
- 		{
- 			$boardvalues[$value] = ' '.$value;
- 		}
- 		
- 		return $boardvalues;
- 	}
+	function getBoardValues()
+	{
+		$states = $this->getBoardStates();
+
+		$boardvalues = array();
+
+		foreach( $states as $value )
+		{
+			$boardvalues[$value] = ' '.$value;
+		}
+
+		return $boardvalues;
+	}
 
  	function getBoardNames()
  	{
@@ -195,30 +199,39 @@ class PageBoard extends PageList
 		$actions = $this->getModifyActions( $object_it );
 		
 		$form = $this->getTable()->getPage()->getFormRef();
-	    
+
 	    if ( !$form instanceof PageForm ) return array();
-	    
-	    $form->show($object_it->copy());
-	    
+
+	    $form->show($object_it);
+
 	    $transition_actions = $form->getTransitionActions();
 	    if ( count($transition_actions) < 1 ) return $actions;
 
-	    $plugin_actions = array();
-    	foreach( $this->plugins as $plugin )
-		{
+		if ( count($transition_actions) > 4 ) {
+			$actions[] = array();
+			$actions[] = array (
+				'name' => translate('Состояние'),
+				'items' => $transition_actions
+			);
+		}
+		elseif ( count($transition_actions) > 0 ) {
+			$actions = array_merge( $actions, array(array()), $transition_actions );
+		}
+
+		$plugin_actions = array();
+		foreach( $this->plugins as $plugin ) {
 			$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
 		}
-		if ( count($plugin_actions) > 0 )
-		{
-			$transition_actions[] = array();
-			$transition_actions = array_merge( $transition_actions, $plugin_actions );
+		if ( count($plugin_actions) > 0 ) {
+			$actions[] = array();
+			$actions = array_merge( $actions, $plugin_actions );
 		}
-	    
-	    $actions = array_merge(
-	    		$actions,
-	    		array(array()),
-	    		$transition_actions		
-	    );
+
+		$more_actions = $form->getMoreActions();
+		if ( count($more_actions) > 0 ) {
+			$actions[] = array('uid' => 'middle');
+			$actions = array_merge($actions, $more_actions);
+		}
 
 		$actions[] = array();
 		$actions['create'] = array (
@@ -227,10 +240,7 @@ class PageBoard extends PageList
 			'uid' => 'create'
 		);
 
-		$plugins = getSession()->getPluginsManager();
-		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($form->getSite()) : array();
-
-		foreach( $plugins_interceptors as $plugin ) {
+		foreach( $this->plugins as $plugin ) {
 			$plugin->interceptMethodFormGetActions( $form, $actions );
 		}
 
@@ -247,8 +257,14 @@ class PageBoard extends PageList
 		);
 		$actions[] = array();
 		$actions[] = array (
-				'name' => translate('Спрятать'),
-				'url' => "javascript:filterLocation.turnOn('hiddencolumns', '".$board_value."', 1);"
+			'name' => $_COOKIE[$this->getId()]['column/'.trim($board_value)] == '' ? text(2149) : text(2150),
+			'alt' => $board_value,
+			'uid' => "collapse-cards",
+			'class' => $_COOKIE[$this->getId()]['column/'.trim($board_value)] == '' ? text(2150) : text(2149)
+		);
+		$actions[] = array (
+			'name' => text(2148),
+			'url' => "javascript:filterLocation.turnOn('hiddencolumns', '".$board_value."', 1);"
 		);
 
 		return $actions;
@@ -308,10 +324,11 @@ class PageBoard extends PageList
 			return;
 		}
 
-		echo '<div id="context-menu-'.$board_value.'" title="'.htmlentities($this->column_descriptions[$board_value]).'">';
+		echo '<div id="context-menu-'.$board_value.'">';
 			echo $this->view->render('core/TextMenu.php', array (
-			        'title' => $board_title,
-			        'items' => $actions
+				'title' => $board_title,
+				'items' => $actions,
+				'hint' => htmlentities($this->column_descriptions[$board_value])
 			));
 		echo '</div>';
 	}
@@ -321,7 +338,7 @@ class PageBoard extends PageList
 		switch( $attr )
 		{
 			case 'Caption':
-			    echo '<div class="bi-cap">';
+			    echo '<div class="bi-cap '.($this->uid_visible ? '' : 'bi-cap-large').'">';
 					echo $object_it->getWordsOnly('Caption', 16);
 				echo '</div>';
 				break;
@@ -339,7 +356,7 @@ class PageBoard extends PageList
 		            case 'date':
 		            case 'datetime':
 		                
-    					echo '<div class="date-attr" style="white-space:nowrap;" title="'.translate($this->object->getAttributeUserName($attr)).'">';
+    					echo '<div class="date-attr" title="'.translate($this->object->getAttributeUserName($attr)).'">';
     						echo '<img src="/images/date.png"> ';
 							parent::drawCell( $object_it, $attr );
     					echo '</div>';
@@ -359,39 +376,51 @@ class PageBoard extends PageList
 	{
 		if ( $object_it->get($attr) == '' ) return;
 
-		switch ( $object_it->object->getAttributeObject($attr)->getEntityRefName() )
+		switch ( $ref_it->object->getEntityRefName() )
 		{
 		    case 'pm_Attachment':
-				
 		    	parent::drawRefCell( $ref_it, $object_it, $attr );
-		    	
 		    	break;
 
 		    default:
-
-		    	echo '<div style="padding:0 0 0 0;">';
-		
-				if ( !$this->getUidService()->hasUID($ref_it) )
-				{
+				if ( !$this->getUidService()->hasUID($ref_it) ) {
 					echo translate($object_it->object->getAttributeUserName( $attr )).': ';
 				}
-	
 				parent::drawRefCell($ref_it , $object_it, $attr);
-				
-				echo '</div>';
 		}
 	}
-		
+
+	function drawCellBasement( $boardValue, $groupValue )
+	{
+		$parms = array($this->getBoardAttribute() => $boardValue);
+		if ($groupValue != '') $parms[$this->getGroup()] = $groupValue;
+		echo '<a more="'.$boardValue.'" group="'.$groupValue.'" class="btn btn-mini collapse-cards pull-left" title="'.text(2146).'"><i class="icon-resize-small"></i></a>';
+		if ( is_array($this->new_action) ) {
+			$url = preg_replace_callback('/({[^}]*})/', function ($matches) use ($parms) {
+				return str_replace('"', "'",
+					json_encode(
+						array_merge(
+							json_decode(
+								str_replace("'", "\"", $matches[1]), true
+							), $parms
+						), JSON_HEX_APOS)
+				);
+			}, $this->new_action['url']);
+			echo '<a href="' . $url . '" class="append-card btn btn-mini btn-success pull-right"><i class="icon-plus icon-white"></i></a>';
+		}
+	}
+
 	function buildFilterActions( & $base_actions )
 	{
 		parent::buildFilterActions( $base_actions );
 		
-		foreach ( $base_actions as $key => $action )
-		{
-		    if ( $action['uid'] == 'columns' )
-		    {
+		foreach ( $base_actions as $key => $action ) {
+		    if ( $action['uid'] == 'columns' ) {
 		        $base_actions[$key]['name'] = translate('Атрибуты');
 		    }
+			if ( $action['uid'] == 'rows' ) {
+				unset($base_actions[$key]);
+			}
 		}
 		
 		$base_actions = array_merge(
@@ -477,35 +506,42 @@ class PageBoard extends PageList
 	
 	function draw( $view )
 	{
-		global $_REQUEST, $offset;
-
 		$this->view = $view;
-		
-		$this->offset = $_REQUEST[$this->getOffsetName()] != '' ? $_REQUEST[$this->getOffsetName()] : 0;
-		
+		$this->offset = 0;
 		$this->it = $this->getIteratorRef()->copyAll();
  		$project_cache_it = getFactory()->getObject('ProjectCache')->getAll();
 		
 		$it = $this->it;
-    	
 		$it->moveFirst();
     	
 		$filter_values = $this->getFilterValues();
     	$sort_values = preg_split('/\./', $this->getTable()->getSort());
     	$entity_ref_name = $it->object->getEntityRefName();
-        $new_action = array_shift($this->getTable()->getNewActions());
-    	
+
     	$references = array();
-    	
-    	foreach( $this->getObject()->getAttributes() as $key => $attribute )
-    	{
+    	foreach( $this->getObject()->getAttributes() as $key => $attribute ) {
     		$references[$key] = $this->object->IsReference($key); 
     	}
-    	
+
+		$cellSettings = array();
+		$columnSettings = array();
+
+		if ( is_array($_COOKIE[$this->getId()]) ) {
+			foreach( $_COOKIE[$this->getId()] as $setting => $value ) {
+				$parts = preg_split("/\//", $setting);
+				if ( $parts[0] == 'size' ) {
+					$cellSettings[$parts[1]][$parts[2]] = $value;
+				}
+				if ( $parts[0] == 'column' ) {
+					$columnSettings[$parts[1]] = $value;
+				}
+			}
+		}
+
     	$modifiable = getFactory()->getAccessPolicy()->can_modify($this->getObject());
-    	
+		$globals = $view->getGlobals();
 		?>
-		<table id="<?php echo $this->getId() ?>" class="table board-table board-size-xl" cellspacing="0" cellpadding="0" border="0">
+		<table id="<?php echo $this->getId() ?>" class="table board-table board-size-xl" cellspacing="0" cellpadding="0" border="0" uid="<?=$globals['widget_id']?>">
 		    <tbody>
 			<tr>
 			<?
@@ -518,7 +554,7 @@ class PageBoard extends PageList
 			
 			// получим все значения опорного атрибута
 			$board_values = $this->getBoardValues();
-			
+
 			if ( $filter_values['hiddencolumns'] != '' )
 			{
 			    unset($board_names[$filter_values['hiddencolumns']]);
@@ -566,11 +602,18 @@ class PageBoard extends PageList
 					}
 				echo '</th>'; 
 			}
-			
-			// отрисовываем значения опорного атрибута в заголовке списка				
+
+			// отрисовываем значения опорного атрибута в заголовке списка
 			foreach( $board_names as $ref_name => $title )
 			{
-				echo '<th align=center class=list_header width="'.round(100 / (count($board_names)), 100).'%">';
+				$className = $columnSettings[trim($ref_name)];
+				if ( $className == '' ) {
+					$width = 'width="'.round(100 / (count($board_names)), 100).'%"';
+				}
+				else {
+					$width = 'width="1%"';
+				}
+				echo '<th align=center class="list_header '.$className.'" '.$width.'>';
 					$this->drawHeader($ref_name, $title);
 				echo '</th>'; 
 			}
@@ -597,45 +640,13 @@ class PageBoard extends PageList
 			ksort($attr_index);
 			$attr_index = array_values($attr_index);
 		
-			$prev_board_index = 0;
-
 			// отрисовываем строки
-			$max_rows_on_page = min($it->count() - $this->offset, $this->getMaxOnPage());
-
-			$column_offset = array();
-			$visible_rows_num = array();
-			
-			foreach( $board_values as $key => $value )
-			{
-				$visible_rows_num[$key] = 0;
-				$column_offset[$key] = $this->offset;
-			}
-			
 			$prev_group = "-1";
-			
+			$groupOrder = $this->getGroupOrder();
 			$column_keys = array_flip($board_values);
 			$board_cells = array();
 			$rows_keys = array();
-			
-			if ( $group_field != '' && !$this->getObject()->IsAttributeRequired($group_field) )
-			{
-				foreach($column_keys as $key => $value ) {
-					$board_cells[''][$value] = array();
-				}
-				if ( $this->getGroupNullable($group_field) ) {
-					$rows_keys = array(
-							'' => $this->getObject()->createCachedIterator(
-									array (
-										array ( $group_field => '' )
-									)
-							)
-					);
-				}
-				else {
-					$rows_keys = array();
-				}
-			}
-			
+
 			$group_it = $this->getGroupIt();
 			while( !$group_it->end() )
 			{
@@ -650,43 +661,48 @@ class PageBoard extends PageList
 				$group_it->moveNext();
 			}
 
+			if ( $group_field != '' && !$this->getObject()->IsAttributeRequired($group_field) && $this->getGroupFilterValue() == '' )
+			{
+				$cells = array();
+				foreach($column_keys as $key => $value ) {
+					$cells[$value] = array();
+				}
+				$keys = array();
+				if ( $this->getGroupNullable($group_field) ) {
+					$keys[''] = $this->getObject()->createCachedIterator(
+									array (
+										array ( $group_field => '' )
+									)
+								);
+				}
+				if ( $groupOrder == "A" ) {
+					$rows_keys = $keys + $rows_keys;
+					$board_cells = array('' => $cells) + $board_cells;
+				}
+				else {
+					$rows_keys = $rows_keys + $keys;
+					$board_cells = $board_cells + array('' => $cells);
+				}
+			}
+
+			$boardAttribute = $this->getBoardAttribute();
 			while( !$it->end() )
 			{
-			    $column_value = $it->get($this->getBoardAttribute());
+			    $column_value = array_pop(preg_split('/,/',$it->get($boardAttribute)));
 			    
 				$column = array_pop(
-						array_filter(array_keys($column_keys), function($value) use($column_value)
-						{
-								return in_array($column_value, preg_split('/,/', trim($value)));
-						})
+					array_filter(array_keys($column_keys), function($value) use($column_value) {
+						return in_array($column_value, preg_split('/,/', trim($value)));
+					})
 				);
-			    
-				if ( !array_key_exists($column, $column_keys) )
-				{
+				if ( !array_key_exists($column, $column_keys) ) {
 					$it->moveNext(); continue;
 				}
 				
 				$column = $column_keys[$column];
-				
-				if ( $column_offset[$column] > 0 )
-				{
-					$column_offset[$column]--;
-					
-					$it->moveNext();
-					continue;
-				}
 
-				$visible_rows_num[$column]++;					
-				
-				if ( $visible_rows_num[$column] > $max_rows_on_page )
-				{
-					$it->moveNext();
-					continue;
-				}
-				
 				$group_key = $group_field != '' ? $it->get($group_field) : '-2';
-				
-				if ( $group_key != $prev_group ) 
+				if ( $group_key != $prev_group )
 				{
 					$prev_board_index = 0;
 					$prev_group = $group_key;
@@ -736,10 +752,13 @@ class PageBoard extends PageList
 							$project_cache_it->moveToId($group_key);
 							$project_attr = ' project="'.$project_cache_it->get('CodeName').'"'; 
 					}
-					
+
+					$cellClass = $cellSettings[trim($board_values[$prev_board_index])][$group_key];
+					if ( $cellClass == '' ) $cellClass = $columnSettings[trim($board_values[$prev_board_index])];
+
 				    echo '<td class="board-column">';
 				    echo '<div class="list-left-cell">&nbsp;</div>';
-					echo '<div class="list_cell" more="'.$board_values[$prev_board_index].'" group="'.$group_key.'" sort="'.$sort_values[0].'" '.$project_attr.'>';
+					echo '<div class="list_cell '.$cellClass.'" more="'.$board_values[$prev_board_index].'" group="'.$group_key.'" sort="'.$sort_values[0].'" '.$project_attr.'>';
 					
 					foreach( $columns as $column_it )
 					{
@@ -759,7 +778,7 @@ class PageBoard extends PageList
 							if ( $spinner != '' ) echo '<div class="board_item_spinner" style="'.$spinner.'">&nbsp;</div>';
 							echo '<div class="board_item_attributes">';
 							echo '<div class="item_attrs" style="display:none;" modified="'.$column_it->get_native('RecordModified').'"></div>';
-
+							echo '<div class="ca-field">';
 							for( $j = 0; $j < count($attr_index); $j++)
 							{
 								$attr = $attrs[$attr_index[$j]];
@@ -773,7 +792,7 @@ class PageBoard extends PageList
 									$this->drawCell( $column_it, $attr );
 								}
 							}
-
+							echo '</div>';
 							echo '</div>';
 
                         $this->drawItemMenu($column_it);
@@ -785,28 +804,13 @@ class PageBoard extends PageList
 				}
 				echo '</tr>';
 
-                if ( is_array($new_action) )
-                {
-                    echo '<tr>';
-                    foreach( $row as $prev_board_index => $columns ) {
-                        $parms = array('State' => $board_values[$prev_board_index]);
-                        if ($group_field != '') $parms[$group_field] = $group_key;
-
-                        $url = preg_replace_callback('/({[^}]*})/', function ($matches) use ($parms) {
-                            return str_replace('"', "'",
-                                json_encode(
-                                    array_merge(
-                                        json_decode(
-                                            str_replace("'", "\"", $matches[1]), true
-                                        ), $parms
-                                    ), JSON_HEX_APOS)
-                            );
-                        }, $new_action['url']);
-
-                        echo '<td class="cell-add-btn"><a href="' . $url . '" class="btn btn-mini btn-success"><i class="icon-plus icon-white"></i></a></td>';
-                    }
-                    echo '</tr>';
-                }
+				echo '<tr class="row-basement" group-id="'.$group_key.'">';
+					foreach( $row as $prev_board_index => $columns ) {
+						echo '<td class="cell-add-btn">';
+							$this->drawCellBasement($board_values[$prev_board_index], $group_key);
+						echo '</td>';
+					}
+				echo '</tr>';
 			}
 
 			if ( $this->it->count() < 1 && count($board_cells) < 1 )
@@ -860,7 +864,7 @@ class PageBoard extends PageList
 			    
 				var cardSpace = 2;
 				var minWidth = $('.left-on-card a').first().width() + 30;
-				var sizes = new Array('xs','s','m','l','xl');
+				var sizes = ['xs','s','m','l','xl'];
 				var maxSizes = {
 						'xl': <?=($columns <= 4 ? 140 : 120)?>,
 						'l': <?=($columns <= 4 ? 120 : 110)?>,
@@ -890,11 +894,10 @@ class PageBoard extends PageList
 			boardItemOptions.cellCSSPath = ".board-column,.board_item_separator";
 			boardItemOptions.className =  '<? echo $this->object->getClassName() ?>';
 			boardItemOptions.classUserName = '<? echo $this->object->getDisplayName() ?>';
-			boardItemOptions.saveButtonName = '<? echo translate('Сохранить') ?>';
-			boardItemOptions.closeButtonName = '<? echo translate('Отменить') ?>';
 			boardItemOptions.transitionTitle = '<? echo text(1011) ?>';
 			boardItemOptions.locked = false;
 			boardItemOptions.groupAttribute = '<? echo $group_field; ?>';
+			boardItemOptions.boardAttribute = '<? echo $this->getBoardAttribute(); ?>';
 			boardItemOptions.boardCreated = '<?=SystemDateTime::date()?>';
 			boardItemOptions.droppableAcceptFunction = function ( draggable ) 
 			{
@@ -928,7 +931,7 @@ class PageBoard extends PageList
 		</script>
 		<?		
 		
-		$plugins = getSession()->getPluginsManager();
+		$plugins = getFactory()->getPluginsManager();
 	    
 	    $plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection(getSession()->getSite()) : array();
 	
@@ -942,7 +945,16 @@ class PageBoard extends PageList
 	
 	function render( $view, $parms )
 	{
+		$this->uid_visible = $this->getColumnVisibility('UID');
+		$this->new_action = array_shift($this->getTable()->getNewActions());
+
 		echo $view->render("core/PageBoard.php", 
 			array_merge($parms, $this->getRenderParms()) ); 
 	}
+
+	function getMaxOnPage() {
+		return 9999;
+	}
+
+	private $new_action = array();
 }

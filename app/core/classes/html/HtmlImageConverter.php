@@ -45,4 +45,35 @@ class HtmlImageConverter
 
         return $match[0];
     }
+
+    static function replaceExternalImageCallback( $match )
+    {
+        $attributes = $match[1];
+
+        if ( preg_match( '/src="([^"]+)"/i', $attributes, $attrs ) ) $url = $attrs[1];
+        if ( $url == '' ) return $match[0];
+        if ( strpos($url, 'base64') !== false ) return $match[0];
+
+        $image = file_get_contents($url);
+        if ( $image === false ) return $match[0];
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->buffer($image);
+
+        $src = 'data:'.$mime.';base64,'.base64_encode($image);
+        $match[0] = preg_replace('/src="[^"]+"/i', 'src="'.$src.'"', $match[0]);
+
+        return $match[0];
+    }
+
+    static function decodeBase64Image( $data )
+    {
+        $matches = array();
+        preg_match('/data:image([^;]*);base64,([^"\s]+)/', $data, $matches);
+        return base64_decode($matches[2]);
+    }
+
+    static function encodeBase64Image( $data ) {
+        return '<img src="data:image/png;base64,'.base64_encode($data).'">';
+    }
 }

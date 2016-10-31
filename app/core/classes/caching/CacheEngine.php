@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class CacheEngine
 {
@@ -10,7 +12,14 @@ class CacheEngine
 	{
 		$this->setDefaultPath($path);
 	}
-	
+
+    function __sleep()
+    {
+        return array (
+            'default_path'
+        );
+    }
+
 	public function setDefaultPath( $path )
 	{
 		$this->default_path = $path;

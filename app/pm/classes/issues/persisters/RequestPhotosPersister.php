@@ -6,8 +6,8 @@ class RequestPhotosPersister extends ObjectSQLPersister
  	{
  		$columns = array();
  		
- 		$columns[] = " ( SELECT u.cms_UserId FROM cms_User u WHERE u.cms_UserId = t.Owner AND u.PhotoPath IS NOT NULL) OwnerPhotoId ";
- 		$columns[] = " ( SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = t.Owner AND u.PhotoPath IS NOT NULL) OwnerPhotoTitle ";
+ 		$columns[] = " ( SELECT u.cms_UserId FROM cms_User u WHERE u.cms_UserId = t.Owner) OwnerPhotoId ";
+ 		$columns[] = " ( SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = t.Owner) OwnerPhotoTitle ";
  		
  		return $columns;
  	}

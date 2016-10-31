@@ -28,10 +28,12 @@ class WikiBulkForm extends BulkForm
  	{
  		switch ( $attr )
  		{
+            case 'Tag':
  			case 'Version':
  			case 'Snapshot':
  			case 'ParentPage':
  		    case 'Project':
+            case 'Feature':
  		    	return 'custom';
 
  			case 'CopyOption':
@@ -49,6 +51,9 @@ class WikiBulkForm extends BulkForm
  	{
  		switch ( $attr )
  		{
+            case 'Tag':
+                return translate('Тэг');
+
  			case 'CopyOption':
  				return text(1726);
  			
@@ -83,13 +88,13 @@ class WikiBulkForm extends BulkForm
 		switch ( $attribute )
 		{
 		    case 'CopyOption': 
-		    	return 'Y';
+		    	return 'N';
 		    	
 		    default:
 		    	return parent::getAttributeValue( $attribute );
 		}
 	}
- 	
+
  	function drawCustomAttribute( $attribute, $value, $tab_index )
  	{
  		global $model_factory;
@@ -106,9 +111,10 @@ class WikiBulkForm extends BulkForm
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				
-				echo translate('Версия документа');
-				
+
+				if ( $this->showAttributeCaption() ) {
+					echo translate('Версия документа');
+				}
 				$field->draw();
 				
 				break;
@@ -129,16 +135,16 @@ class WikiBulkForm extends BulkForm
 				break;
 				
  			case 'Project':
-
  				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
-				
  				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				
-				echo $this->getName($attribute);
-				
+				$field->setDefault(getSession()->getProjectIt()->getId());
+
+				if ( $this->showAttributeCaption() ) {
+					echo $this->getName($attribute);
+				}
 				$field->draw();
  								
 				break;
@@ -159,6 +165,32 @@ class WikiBulkForm extends BulkForm
 				
 				break;
 
+            case 'Feature':
+                $field = new FieldHierarchySelector(getFactory()->getObject('Feature'));
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->draw();
+                $field->drawScripts();
+
+                break;
+
+            case 'Tag':
+                $field = new FieldAutoCompleteObject( getFactory()->getObject('Tag') );
+                $field->SetId($attribute);
+                $field->SetName('value');
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->setAppendable();
+
+                if ( $this->showAttributeCaption() ) {
+                    echo $this->getName($attribute);
+                }
+                $field->draw();
+                break;
+
+
 			default:
  				parent::drawCustomAttribute( $attribute, $value, $tab_index );
  		}
@@ -169,13 +201,21 @@ class WikiBulkForm extends BulkForm
 		switch( $attribute )
 		{
 			case 'Snapshot':
-				
 				if ( $this->getIt()->count() > 1 ) return false;
-				
  				return $this->getSnapshotObject()->getRegistry()->Query(
  						array ( new FilterAttributePredicate('ObjectId', $this->getIt()->getId()) )
  					)->count() > 0;
-								
+
+			case 'Version':
+				return $this->IsAttributeModifiable($attribute);
+
+			case 'CopyOption':
+			case 'Description':
+				return true;
+
+            case 'RemoveTag':
+                return false;
+
 			default:
 				return parent::IsAttributeVisible( $attribute );
 		}

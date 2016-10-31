@@ -4,7 +4,6 @@ include_once "WikiEditorBase.php";
 
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiParser.php";
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiHtmlParser.php";
-include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiHtmlSelfSufficientParser.php";
 
 class WikiSyntaxEditor extends WikiEditorBase
 {
@@ -89,6 +88,7 @@ class WikiSyntaxEditor extends WikiEditorBase
 			function countLineBreaks()
 			{
 				var area = document.getElementById('<? echo $this->getFieldId(); ?>');
+				if ( !area ) return;
 
 				textAreaWith = area.clientWidth == 0 ? area.offsetWidth : area.clientWidth;
 				nCols = Math.ceil(textAreaWith / 6.7);
@@ -192,9 +192,8 @@ class WikiSyntaxEditor extends WikiEditorBase
 	 					return false;
  					});
  				});
- 		   };
- 		   
-		   function editorFocus()
+		   }
+			function editorFocus()
  		   {
 			   $('#<? echo $this->getFieldId() ?>').focus();
  		   }
@@ -271,19 +270,5 @@ class WikiSyntaxEditor extends WikiEditorBase
  		
  		echo '<tr><td class="wiki_sub" height=15 valign=middle>'.translate('Дополнительно').'</td></tr>';
  		echo '<tr><td style="padding-top:6px;"><a href="http://devprom.ru/docs#2474">'.text(1165).'</a></td></tr>';
- 	}
- 	
- 	public function getExportActions( $object_it )
- 	{
- 		$actions = array();
- 		
-		$method = new WikiExportRtfWebMethod();
-		
-		$actions[] = array( 
-			'name' => $method->getCaption(), 
-			'url' => $method->getJSCall( $object_it ) 
-		);
- 		
-		return $actions;
  	}
 }

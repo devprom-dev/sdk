@@ -26,7 +26,7 @@ class ProjectTable extends PageTable
 		return array_merge(
 				parent::getFilterPredicates(),
 				array (
-						new FilterAttributePredicate('IsClosed', $values['state'])
+					new ProjectStatePredicate($values['state'])
 				)
 		);
 	}
@@ -45,7 +45,7 @@ class ProjectTable extends PageTable
 		$filter->setIdFieldName('ReferenceName');
 		$filter->setHasNone(false);
 		$filter->setType('singlevalue');
-		$filter->setDefaultValue('N');
+		$filter->setDefaultValue('active');
 		return $filter;
 	}
 
@@ -68,26 +68,9 @@ class ProjectTable extends PageTable
 		);
 	}
 	
-	function getBulkActions()
-	{
-		return array();
-	}
-	
 	function getDeleteActions()
 	{
-	    $actions = array();
-	    
-	    $method = new ProjectDeleteWebMethod();
-	    
-	    if ( $method->HasAccess() )
-	    {
-	        array_push( $actions, array (
-    	        'url' => $method->getJSCall( $this->getObject() ),
-    	        'name' => $method->getCaption()
-	        ));
-	    }
-	     
-	    return $actions;
+	    return array();
 	}
 	
  	function getDefaultRowsOnPage()

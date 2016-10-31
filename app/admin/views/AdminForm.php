@@ -1,6 +1,5 @@
 <?php
 
-////////////////////////////////////////////////////////////////////////////////
 class AdminForm extends AjaxForm
 {
 	function AdminForm( $object )
@@ -23,5 +22,3 @@ class AdminForm extends AjaxForm
 		return false;
 	}
 }
-
-?>

@@ -1,4 +1,6 @@
-<?php if ( count($sections) > 0 ) { ?>
+<?php if ( count($sections) > 0 ) {
+	$sections = array_values($sections);
+	?>
 
 <div class="tabs-block">
 	<ul class="nav nav-tabs" id="rightTab">
@@ -8,7 +10,7 @@
 			?>
 		
 		<li class="<?=($key == array_shift(array_keys($sections)) ? 'active' : '')?>">
-			<a href="#<?=$section->getId().$object_id?>" tabindex="-1"><?=$section->getCaption()?></a>
+			<a href="#<?=$section->getId().$object_id?>" tabindex="-1" data-toggle="tab"><?=$section->getCaption()?></a>
 		</li>
 		
 		<?php } ?>

@@ -27,11 +27,10 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 	    foreach( $this->getObject()->getAttributes() as $attribute => $data )
 	    {
 	    	if ( in_array($attribute, $real_attributes) ) continue;
-	    	
+			if ( in_array($attribute, array('UID')) ) continue;
 	        if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
 	        
 	        $attributes[] = $attribute;
-	        
 	        $stub_attributes[] = "NULL as ".$attribute;
 	    }        
 	
@@ -54,11 +53,12 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 	    	}
 	    }
 
-	    return " (SELECT WikiPageId, VPD, RecordVersion, ".join(",",array_merge($real_attributes, $attributes)).
+	    return " (SELECT WikiPageId, UID, VPD, RecordVersion, ".join(",",array_merge($real_attributes, $attributes)).
 	    	   "	FROM WikiPage ".
 	    	   "   WHERE ReferenceName = ".$this->getObject()->getReferenceName()." AND IsTemplate = 0 ".
 	    	   "   UNION ".
-	    	   "  SELECT t.ObjectId, t.VPD, NULL, ".join(",",array_merge($select_attributes, $stub_attributes)).
+	    	   "  SELECT t.ObjectId, (SELECT p.UID FROM WikiPage p WHERE p.WikiPageId = t.ObjectId AND p.DocumentId = ".$this->document_it->getId()."), ".
+		       "		 t.VPD, NULL, ".join(",",array_merge($select_attributes, $stub_attributes)).
 	    	   "	FROM cms_SnapshotItem t ".
 	    	   "   WHERE t.Snapshot = ".$this->snapshot_it->getId().
 	    	   "     AND NOT EXISTS (SELECT 1 FROM WikiPage p ".
@@ -67,6 +67,5 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 	}
 	
 	private $snapshot_it;
-	
 	private $document_it;
 }

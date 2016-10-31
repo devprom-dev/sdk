@@ -29,7 +29,7 @@
 
  	function getLines()
 	{
-		global $_FILES, $model_factory, $project_it;
+		global $_FILES;
 
 		$xml2Array = new xml2Array();
 				
@@ -59,15 +59,12 @@
 								
 								foreach ( $row['children'] as $cell )
 								{
-									if ( $cell['attrs']['SS:INDEX'] > 0 )
-									{
-										$line[$cell['attrs']['SS:INDEX'] - 1] = 
-											$project_it->Utf8ToWin($cell['children'][0]['tagData']);
+									$data = $this->sanitizeData($this->getText($cell));
+									if ( $cell['attrs']['SS:INDEX'] > 0 ) {
+										$line[$cell['attrs']['SS:INDEX'] - 1] = $data;
 									}
-									else
-									{
-										array_push( $line, 
-											$project_it->Utf8ToWin($cell['children'][0]['tagData']) );
+									else {
+										array_push( $line, $data );
 									}
 								}
 
@@ -83,4 +80,17 @@
 
 		return $lines;
 	}
+
+	protected function getText( $data ) {
+	    if ( is_array($data['children']) ) {
+	        $texts = array();
+            foreach( $data['children'] as $children ) {
+                $texts[] = $this->getText($children);
+            }
+            return join('', $texts);
+        }
+        else {
+            return $data['tagData'];
+        }
+    }
  }

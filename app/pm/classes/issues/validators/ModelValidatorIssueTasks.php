@@ -6,6 +6,8 @@ class ModelValidatorIssueTasks extends ModelValidatorInstance
 {
 	public function validate( Metaobject $object, array & $parms )
 	{
+		$parms['Release'] = $parms['Iteration'];
+
 		if ( !$object->IsAttributeRequired('Tasks') ) return "";
 		
 		$keys = array_filter( array_keys($parms), function($key) use ($parms) {

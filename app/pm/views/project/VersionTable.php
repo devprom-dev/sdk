@@ -1,8 +1,6 @@
 <?php
-
-include "VersionList.php";
-
 include SERVER_ROOT_PATH."pm/classes/plan/CycleState.php";
+include "VersionList.php";
 
 class VersionTable extends PMPageTable
 {
@@ -14,12 +12,10 @@ class VersionTable extends PMPageTable
 	function getNewActions()
 	{
 		$actions = array();
-		
+		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
-		$method->setRedirectUrl('donothing');
-		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
-		{
+		if ( $methodology_it->HasPlanning() && $method->hasAccess() ) {
 			$actions[] = array(
 					'name' => translate('Итерация'),
 					'url' => $method->getJSCall() 
@@ -27,16 +23,21 @@ class VersionTable extends PMPageTable
 		}
 		
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Release'));
-		$method->setRedirectUrl('donothing');
-		
-		if ( $method->hasAccess() )
-		{
-			$actions[] = array( 
+		if ( $methodology_it->HasReleases() && $method->hasAccess() ) {
+			$actions[] = array(
 					'name' => translate('Релиз'),
 					'url' => $method->getJSCall() 
 			);
 		}
-		
+
+        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Milestone'));
+        if ( $method->hasAccess() ) {
+            $actions[] = array(
+                'name' => translate('Веха'),
+                'url' => $method->getJSCall()
+            );
+        }
+
     	return $actions; 
 	}
 	
@@ -100,6 +101,20 @@ class VersionTable extends PMPageTable
 	    
 	    return $filter;
 	}
-	
-	function IsNeedToDelete() { return false; }
-} 
+
+	function getExportActions() {
+        return array();
+    }
+
+    protected function getFamilyModules( $module )
+    {
+        switch( $module ) {
+            case 'project-plan-hierarchy':
+                return array (
+                    'ee/delivery'
+                );
+            default:
+                return parent::getFamilyModules($module);
+        }
+    }
+}

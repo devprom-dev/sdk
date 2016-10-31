@@ -1,0 +1,16 @@
+<?php
+include "RequestCommentRegistry.php";
+
+class RequestComment extends Comment
+{
+    function __construct() {
+        parent::__construct(new RequestCommentRegistry($this));
+        $this->setAttributeType('ObjectId', 'REF_RequestId');
+        $this->setAttributeGroups('ObjectId', array());
+        $this->setAttributeRequired('AuthorId', false);
+    }
+
+    function getDefaultAttributeValue($name) {
+        return $name == 'ObjectClass' ? 'Request' : parent::getDefaultAttributeValue($name);
+    }
+}

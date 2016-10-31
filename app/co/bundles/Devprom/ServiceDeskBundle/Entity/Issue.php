@@ -162,7 +162,7 @@ class Issue extends BaseEntity {
     public function getAttachments()
     {
         return $this->attachments->matching(
-        			Criteria::create()->where(Criteria::expr()->eq("ObjectClass", "request"))
+        			Criteria::create()->where(Criteria::expr()->in("ObjectClass", array("request","pm_ChangeRequest")))
 			)->toArray();
     }
 

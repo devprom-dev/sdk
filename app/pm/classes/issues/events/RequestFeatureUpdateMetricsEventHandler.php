@@ -1,7 +1,5 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
 
 class RequestFeatureUpdateMetricsEventHandler extends SystemTriggersBase
 {
@@ -17,15 +15,15 @@ class RequestFeatureUpdateMetricsEventHandler extends SystemTriggersBase
 		    				return $value > 0;
 		    		}
 	    	);
-
 	    if ( count($ids) < 1 ) return;
 
 	    $service = new StoreMetricsService();
-    	$service->storeFeatureMetrics(getFactory()->getObject('Feature')->getRegistry()->Query(
-    			array (
-    					new FilterInPredicate($ids),
-    					new FeatureMetricsPersister()
-    			)
-    		));
+    	$service->storeFeatureMetrics(
+			getFactory()->getObject('Feature')->getRegistry(),
+			array (
+				new FilterInPredicate($ids),
+				new FeatureMetricsPersister()
+			)
+		);
 	}
 }

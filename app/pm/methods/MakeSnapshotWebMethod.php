@@ -16,11 +16,14 @@ class MakeSnapshotWebMethod extends ExportWebMethod
  		return getFactory()->getObject('Snapshot')->getMakePage($anchor_it, $object_it, $list_id);
  	}
  	
- 	function getJSCall()
- 	{
+ 	function getJSCall($parms = array()) {
  		return parent::getJSCall( array( 
  				'class' => IteratorExportSnapshot,
  				'redirect' => $_SERVER['REQUEST_URI'] 
  		));
  	}
+
+	function hasAccess() {
+		return getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Snapshot'));
+	}
 }

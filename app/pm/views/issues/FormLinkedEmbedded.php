@@ -61,7 +61,9 @@ class FormLinkedEmbedded extends PMFormEmbedded
 		switch ( $attr )
 		{
 			case 'TargetRequest':
-				return new FieldAutoCompleteObject( getFactory()->getObject('RequestAsTarget') );
+				$field = new FieldAutoCompleteObject( getFactory()->getObject('Request') );
+				$field->setCrossProject();
+				return $field;
 
 			case 'LinkType':
 				$field = new FieldDictionary( $object );

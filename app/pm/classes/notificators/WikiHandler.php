@@ -107,7 +107,9 @@ class WikiHandler extends EmailNotificatorHandler
 				$editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
 				$editor->setObjectIt( $object_it );
 				$parser = $editor->getComparerParser();
-				return $parser->parse($object_it->getHtmlDecoded('Content'));
+				$text = $parser->parse($object_it->getHtmlDecoded('Content'));
+                $text = TextUtils::breakLongWords($text);
+                return $text;
 
 			default:
 				return parent::getValue( $object_it, $attr );

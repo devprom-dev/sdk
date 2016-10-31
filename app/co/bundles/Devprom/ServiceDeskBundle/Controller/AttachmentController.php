@@ -5,7 +5,7 @@ namespace Devprom\ServiceDeskBundle\Controller;
 use Devprom\ServiceDeskBundle\Entity\Issue;
 use Devprom\ServiceDeskBundle\Entity\IssueAttachment;
 use Devprom\ServiceDeskBundle\Form\Type\AttachmentFormType;
-use Devprom\ServiceDeskBundle\Service\AttachmentService;
+use Devprom\ServiceDeskBundle\Service\IssueAttachmentService;
 use Devprom\ServiceDeskBundle\Service\IssueService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,10 +25,10 @@ class AttachmentController extends Controller
 {
 
     /**
-     * @Route("/attachment/{attachmentId}", name="attachment_download", requirements={"attachmentId" = "\d+"})
+     * @Route("/issue/attachment/{attachmentId}", name="attachment_download", requirements={"attachmentId" = "\d+"})
      * @Method("GET")
      */
-    public function downloadAction($attachmentId)
+    public function downloadIssueAttachmentAction($attachmentId)
     {
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
 
@@ -36,15 +36,32 @@ class AttachmentController extends Controller
         $this->checkUserIsAuthorized($issue);
 
         $response = new BinaryFileResponse($attachment->getFilePath());
-        $filename = mb_convert_encoding($attachment->getOriginalFilename(), 'UTF-8', APP_ENCODING);
-        $response->headers->set('Content-Disposition', 'attachment; filename=' . rawurlencode($filename));
+        $response->headers->set(\EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
         $response->headers->set('Content-Type', $attachment->getContentType());
 
         return $response;
     }
 
     /**
-     * @Route("/attachment/{issueId}", name="attachment_upload")
+     * @Route("/comment/attachment/{attachmentId}", name="comment_attachment_download", requirements={"attachmentId" = "\d+"})
+     * @Method("GET")
+     */
+    public function downloadCommentIssueAttachmentAction($attachmentId)
+    {
+        $attachment = $this->container->get('comment_attachment_service')->getAttachmentById($attachmentId);
+
+        $issue = $attachment->getComment()->getIssue();
+        $this->checkUserIsAuthorized($issue);
+
+        $response = new BinaryFileResponse($attachment->getFilePath());
+        $response->headers->set(\EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
+        $response->headers->set('Content-Type', $attachment->getContentType());
+
+        return $response;
+    }
+
+    /**
+     * @Route("/issue/attachment/{issueId}", name="attachment_upload")
      * @Method("POST")
      * @Template()
      */
@@ -73,7 +90,7 @@ class AttachmentController extends Controller
     }
 
     /**
-     * @Route("/attachment/{issueId}/new", name="attachment", requirements={"issueId" = "\d+"})
+     * @Route("/issue/attachment/{issueId}/new", name="attachment", requirements={"issueId" = "\d+"})
      * @Method("GET")
      * @template("DevpromServiceDeskBundle:Attachment:upload.html.twig")
      */
@@ -91,7 +108,7 @@ class AttachmentController extends Controller
 
 
     /**
-     * @Route("/attachment/{attachmentId}/delete", name="attachment_delete")
+     * @Route("/issue/attachment/{attachmentId}/delete", name="attachment_delete")
      * @Method("GET") //todo: change to DELETE as it should be (would require ajax call)
      * @Template()
      */
@@ -124,10 +141,10 @@ class AttachmentController extends Controller
     }
 
     /**
-     * @return AttachmentService
+     * @return IssueAttachmentService
      */
     protected function getAttachmentService() {
-        return $this->container->get('attachment_service');
+        return $this->container->get('issue_attachment_service');
     }
 
     /**

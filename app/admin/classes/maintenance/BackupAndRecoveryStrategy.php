@@ -1,6 +1,5 @@
 <?php
-
-include SERVER_ROOT_PATH."ext/zip/createzipfile.php";
+include_once SERVER_ROOT_PATH."ext/zip/createzipfile.php";
 
 class BackupAndRecoveryStrategy
 {
@@ -467,9 +466,7 @@ class BackupAndRecoveryStrategy
                    {
                        if( is_dir( $source_path . $file ) )
                        {
-                       		$this->writeLog('Working in directory: '.$source_path . $file);
-                       	
-                       		$result = !is_dir($destination_path . $file) ? 
+                       		$result = !is_dir($destination_path . $file) ?
                        			mkdir($destination_path . $file) : true;
 
                        		if ( !$result )
