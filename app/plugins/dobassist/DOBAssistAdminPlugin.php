@@ -1,14 +1,15 @@
 <?php
-
 include_once "classes/ScriptIntercomBuilder.php";
+include_once "classes/SystemSettingsDOBMetadataBuilder.php";
 
 class DOBAssistAdminPlugin extends PluginAdminBase
 {
  	function getBuilders()
  	{
  	    return array (
- 	            new RenewSAASLicenseEventHandler(),
- 	    		new ScriptIntercomBuilder(getSession())
+ 	        new SystemSettingsDOBMetadataBuilder(),
+            new RenewSAASLicenseEventHandler(),
+            new ScriptIntercomBuilder(getSession())
  	    );
  	}
 

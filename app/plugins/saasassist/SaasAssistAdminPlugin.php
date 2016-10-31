@@ -1,14 +1,15 @@
 <?php
-
 include_once "classes/ScriptIntercomBuilder.php";
+include_once "classes/SystemSettingsSaaSMetadataBuilder.php";
 
 class SaasAssistAdminPlugin extends PluginAdminBase
 {
  	function getBuilders()
  	{
  	    return array (
- 	            new RenewSAASLicenseEventHandler(),
- 	    		new ScriptIntercomBuilder(getSession())
+ 	        new SystemSettingsSaaSMetadataBuilder(),
+            new RenewSAASLicenseEventHandler(),
+ 	    	new ScriptIntercomBuilder(getSession())
  	    );
  	}
 
