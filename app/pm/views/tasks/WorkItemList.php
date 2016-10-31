@@ -196,7 +196,7 @@ class WorkItemList extends PMPageList
             return 70;
 
 		if ( $attr == 'Spent' )
-			return 220;
+			return 190;
 		
 		if ( $attr == 'OrderNum' )
 			return '50';

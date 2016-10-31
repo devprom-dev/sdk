@@ -3,7 +3,7 @@
 include SERVER_ROOT_PATH.'cms/classes/model/ModelFactoryBase.php';
 include_once "ModelEntityOriginationService.php";
 include_once "ModelProjectOriginationService.php";
-include "classes.php";
+include SERVER_ROOT_PATH."core/classes/model/classes.php";
 
 class ModelFactory extends ModelFactoryBase
 {

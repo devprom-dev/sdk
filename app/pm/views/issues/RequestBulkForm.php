@@ -29,7 +29,7 @@ class RequestBulkForm extends BulkForm
  		{
  			case 'Tag':
  			case 'Project':
- 			case 'Iterations':
+ 			case 'Iteration':
  			case 'LinkType':
 			case 'Comment':
  				return 'custom';
@@ -46,9 +46,6 @@ class RequestBulkForm extends BulkForm
  			case 'Tag':
  				return translate('Тэг');
  				
- 			case 'Iterations':
- 				return translate('Итерация');
-
  			case 'LinkType':
  				return translate('Тип связи');
  				
@@ -73,9 +70,6 @@ class RequestBulkForm extends BulkForm
 	{
 	    switch ( $attr ) 
 	    {
-	        case 'Iterations':
-	            return true;
-	            
 	        default:
 	            return parent::IsAttributeModifiable( $attr );
 	    }
@@ -99,7 +93,7 @@ class RequestBulkForm extends BulkForm
 				$field->draw();
 				break;
 
- 			case 'Iterations':
+ 			case 'Iteration':
  			    $iteration = getFactory()->getObject('Iteration');
  			    $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
  			    $field = new FieldAutoCompleteObject( $iteration );

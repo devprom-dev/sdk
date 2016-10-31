@@ -11,4 +11,14 @@ class ProjectUserRegistry extends ObjectRegistrySQL
 				)
 		);
 	}
+
+	function getPersisters()
+	{
+		return array_merge(
+			array (
+				new UserParticipatesDetailsPersister()
+			),
+			parent::getPersisters()
+		);
+	}
 }

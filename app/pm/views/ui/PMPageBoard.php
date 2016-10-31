@@ -7,6 +7,24 @@ class PMPageBoard extends PageBoard
         parent::PageBoard( $object );
     }
 
+    function extendModel()
+    {
+        parent::extendModel();
+
+        $object = new MetaobjectStatable($this->getObject()->getEntityRefName());
+        $object->addFilter( new FilterVpdPredicate($this->getObject()->getVpds()) );
+        $object->disableVpd();
+
+        $count_aggregate = new AggregateBase( 'State' );
+        $object->addAggregate( $count_aggregate );
+
+        $it = $object->getAggregated();
+        while( !$it->end() ) {
+            $this->stateObjects[$it->get('State')] = $it->get($count_aggregate->getAggregateAlias());
+            $it->moveNext();
+        }
+    }
+
     function getReportUrl() {
         return $this->report_url;
     }
@@ -15,13 +33,25 @@ class PMPageBoard extends PageBoard
 	{
 		$skip = array_merge(
             $this->getObject()->getAttributesByGroup('trace'),
-            $this->getObject()->getAttributesByGroup('workflow')
+            array_diff(
+                $this->getObject()->getAttributesByGroup('workflow'),
+                array(
+                    'State'
+                )
+            )
         );
 		return array_diff(parent::getGroupFields(), $skip );
 	}
 
-    function getGroupNullable( $field_name ) {
-        return $field_name == 'Project' ? false : parent::getGroupNullable($field_name);
+    function getGroupNullable( $field_name )
+    {
+        switch( $field_name ) {
+            case 'Project':
+            case 'State':
+                return false;
+            default:
+                return parent::getGroupNullable($field_name);
+        }
     }
 
 	function getColumnFields()
@@ -49,6 +79,47 @@ class PMPageBoard extends PageBoard
  		return true;
 	}
 
+    function getBoardNames()
+    {
+        $lengths = array();
+
+        $state_it = $this->getBoardAttributeIterator();
+        while( !$state_it->end() )
+        {
+            $ref_name = $state_it->get('ReferenceName');
+            $title = $state_it->get('Caption');
+
+            $lengths[$ref_name] += max(0, $state_it->get('QueueLength'));
+
+            $objects = 0;
+            foreach( preg_split('/,/', $ref_name) as $stateRefName ) {
+                $objects += $this->stateObjects[$stateRefName];
+            }
+
+            if ( $lengths[$ref_name] > 0 )
+            {
+                $title .= ' '.
+                    str_replace('%2', $lengths[$ref_name],
+                        str_replace('%1', $objects,
+                            str_replace(' ', '&nbsp;', text(2223))));
+
+                if ( $lengths[$ref_name] < $objects ) {
+                    $title = '<span class="wip-o">'.$title.'</span>';
+                }
+            }
+            else {
+                $title .= ' '.
+                    str_replace('%1', $objects,
+                        str_replace(' ', '&nbsp;', text(2224)));
+            }
+            $names[$ref_name] = $title;
+
+            $state_it->moveNext();
+        }
+
+        return $names;
+    }
+
     function drawHeader( $board_value, $board_title )
     {
         if ( $this->report_up_url != '' && $this->parent_it->getId() != '' && !$this->report_link_drawn )
@@ -59,7 +130,7 @@ class PMPageBoard extends PageBoard
                 $this->report_up_url
             );
             $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
-            echo '<div class="board-header-up"><a href="'.$report_url.'" title="'.text(2099).'"><i class="icon icon-th"></i></a></div>';
+            echo '<div class="board-header-up"><a href="'.$report_url.'" title="'.text(2099).'"><i class="icon icon-th-large"></i></a></div>';
             echo '<div style="display:table-cell;">';
                 parent::drawHeader($board_value, $board_title);
             echo '</div>';
@@ -104,7 +175,9 @@ class PMPageBoard extends PageBoard
                 $values = $this->getFilterValues();
                 $groupFilter = in_array($values['target'],array('all','none','hide')) ? '' : $values['target'];
 
-                return getFactory()->getObject('Project')->getRegistry()->Query(
+                $registry = getFactory()->getObject('Project')->getRegistry();
+                $registry->setPersisters(array());
+                return $registry->Query(
                     array (
                         $groupFilter != ''
                             ? new FilterInPredicate(preg_split('/,/', $groupFilter))
@@ -122,6 +195,7 @@ class PMPageBoard extends PageBoard
         {
             case 'Project':
                 $ref_it = $object_it->getRef($group_field);
+                $this->buildCrossReports($ref_it);
 
                 $report_url = str_replace(
                     getSession()->getApplicationUrl(),
@@ -129,7 +203,7 @@ class PMPageBoard extends PageBoard
                     $this->report_down_url
                 );
                 $report_url .= (strpos($report_url, '?') === false ? '?' : '&').'fitmenu';
-                echo '<i class="icon icon-th"></i><a class="btn btn-link" href="'.$report_url.'">'.$ref_it->getDisplayName().'</a>';
+                echo '<i class="icon icon-th-large"></i><a class="btn btn-link" href="'.$report_url.'">'.$ref_it->getDisplayName().'</a>';
                 break;
 
             default:
@@ -151,7 +225,7 @@ class PMPageBoard extends PageBoard
 			$method = new ObjectModifyWebMethod($iterator);
 			if ( $method->hasAccess() ) {
 				$custom_actions[] = array (
-						'name' => translate('Изменить'),
+						'name' => translate('Редактировать'),
 						'url' => $method->getJSCall() 
 				);
 				$custom_actions[] = array();
@@ -172,7 +246,7 @@ class PMPageBoard extends PageBoard
             }
             if ( count($transition_actions) > 0 ) {
                 $custom_actions[] = array (
-                    'name' => translate('Переходы'),
+                    'name' => text(2221),
                     'items' => $transition_actions
                 );
                 $custom_actions[] = array();
@@ -195,7 +269,16 @@ class PMPageBoard extends PageBoard
 		return array_merge($custom_actions, $actions);
 	}
 
-    function getRenderParms()
+    function buildFilterActions( & $base_actions )
+    {
+        parent::buildFilterActions( $base_actions );
+        $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
+        $this->buildFilterColumnsGroup( $base_actions, 'trace' );
+        $this->buildFilterColumnsGroup( $base_actions, 'time' );
+        $this->buildFilterColumnsGroup( $base_actions, 'dates' );
+    }
+
+    protected function buildCrossReports( $object_it )
     {
         $reports_map = array (
             'issuesboard' => 'issues/board/issuesboardcrossproject',
@@ -209,9 +292,10 @@ class PMPageBoard extends PageBoard
         );
 
         $report_id = $this->getTable()->getReport();
-
         if ( $report_id != '' ) {
-            $report_it = getFactory()->getObject('PMReport')->getExact($report_id);
+            $report = getFactory()->getObject('PMReport');
+            $report->setVpdContext($object_it);
+            $report_it = $report->getExact($report_id);
             if (is_numeric($report_id)) {
                 $report_id = $report_it->get('Report') != '' ? $report_it->get('Report') : $report_it->get('Module');
             }
@@ -220,7 +304,9 @@ class PMPageBoard extends PageBoard
         if ( $report_id == '' ) {
             $report_id = $this->getTable()->getPage()->getModule();
             if ( $report_id != '' ) {
-                $report_it = getFactory()->getObject('Module')->getExact($report_id);
+                $module = getFactory()->getObject('Module');
+                $module->setVpdContext($object_it);
+                $report_it = $module->getExact($report_id);
             }
         }
 
@@ -252,21 +338,11 @@ class PMPageBoard extends PageBoard
                 $this->parent_it = $portfolio_it;
             }
         }
-
-        return parent::getRenderParms();
-    }
-
-    function buildFilterActions( & $base_actions )
-    {
-        parent::buildFilterActions( $base_actions );
-        $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
-        $this->buildFilterColumnsGroup( $base_actions, 'trace' );
-        $this->buildFilterColumnsGroup( $base_actions, 'time' );
-        $this->buildFilterColumnsGroup( $base_actions, 'dates' );
     }
 
     private $report_up_url = '';
     private $report_down_url = '';
     private $parent_it = null;
     private $report_link_drawn = false;
+    private $stateObjects = array();
 }

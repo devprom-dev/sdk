@@ -6,8 +6,7 @@ $columns_info = array();
 
 foreach( $columns as $key => $attr )
 {
-	if ( !$list->getColumnVisibility($attr) )
-	{
+	if ( !$list->getColumnVisibility($attr) || $group_field == $attr ) {
 		unset($columns[$key]); continue;
 	}
 	
@@ -26,7 +25,7 @@ if ( $show_header ) $columns_number++;
 
 ?>
 <? if ( $message != '' ) { ?>
-	<div class="alert">
+	<div class="alert alert-hint">
 		<?=$message?>
 	</div>
 <? } ?>
@@ -34,7 +33,7 @@ if ( $show_header ) $columns_number++;
 <a name="top<? echo $offset_name ?>"></a>
 
 <? if ( $toolbar ) { ?>
-			<div class="documentToolbar sticks-top" style="height:auto;overflow:hidden;">
+			<div class="documentToolbar sticks-top" style="overflow:hidden;">
 				<div class="sticks-top-body hidden-print" id="documentToolbar" style="z-index:2;"></div>
 			</div>
 <? } ?>
@@ -228,6 +227,10 @@ if ( $show_header ) $columns_number++;
 	
 	</tbody>
 	</table>
+	<?php
+	echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid, 'open' => $hint_open));
+
+	?>
 </div> <!-- end wrapper-scroll -->
 	
 <?php if ( !$tableonly && $autorefresh ) { ?>

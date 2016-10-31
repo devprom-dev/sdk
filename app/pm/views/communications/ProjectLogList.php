@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/methods/UndoWebMethod.php";
 
 class ProjectLogList extends PMPageList
 {
@@ -24,13 +23,14 @@ class ProjectLogList extends PMPageList
 	{
 		$sorts = parent::getSorts();
 		
-		foreach( $sorts as $key => $sort )
-		{
+		foreach( $sorts as $key => $sort ) {
 			if ( !$sort instanceof SortAttributeClause ) continue;
-			if ( $sort->getAttributeName() == 'ChangeDate' )
-			{
+			if ( in_array($this->getObject()->getAttributeType($sort->getAttributeName()), array('date','datetime')) ) {
 				$sorts[$key] = new SortChangeLogRecentClause();
 			}
+			if ( $sort->getAttributeName() == 'Content' ) {
+                $sorts[$key] = new SortChangeLogRecentClause();
+            }
 		}
 		
 		return $sorts;
@@ -69,8 +69,6 @@ class ProjectLogList extends PMPageList
 					$uid = new ObjectUID;
 					if ( strpos($object_it->get('Caption'), $uid->getObjectUid($anchor_it)) === false ) {
 						if ( $uid->hasUid( $anchor_it ) ) {
-							$uid->drawUidIcon( $anchor_it );
-							echo ' ';
 						}
 						else {
 							echo $anchor_it->object->getDisplayName().': ';

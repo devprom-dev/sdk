@@ -168,15 +168,11 @@ class TaskList extends PMPageList
 				break;
 				
 			case 'Spent':
-				
 			    $field = new FieldSpentTimeTask( $object_it );
-				
 				$field->setEditMode( false );
-				
+                $field->setShortMode();
 				$field->setReadonly( !getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, 'Fact') );
-				
 				$field->render( $this->getTable()->getView() );
-
 				break;
 				
 	        default:
@@ -275,10 +271,10 @@ class TaskList extends PMPageList
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				if ( count($workload) > 0 )
 				{
-						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
-								'user' => $object_it->getRef('Assignee')->getDisplayName(),
-								'data' => $workload[$object_it->get($group_field)]
-						));
+                    echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+                        'user' => $object_it->getRef('Assignee')->getDisplayName(),
+                        'data' => $workload[$object_it->get($group_field)]
+                    ));
 				}				
 				break;
 				
@@ -300,7 +296,7 @@ class TaskList extends PMPageList
 			return 80;
 		
 		if ( $attr == 'Spent' )
-			return 220;
+			return 190;
 		
 		if ( $attr == 'OrderNum' )
 			return '50';

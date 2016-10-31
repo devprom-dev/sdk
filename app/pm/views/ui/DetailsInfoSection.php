@@ -14,4 +14,14 @@ class DetailsInfoSection extends ButtonInfoSection
 	function getIcon() {
 		return 'icon-indent-right';
 	}
+
+	function isActive() {
+		return $this->active;
+	}
+
+	function setActive( $active = true ) {
+		$this->active = $active;
+	}
+
+	private $active = false;
 }

@@ -4,8 +4,6 @@ class ParticipantRolesPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 	    $project_it = getSession()->getProjectIt();
- 	    
  		$columns = array();
 
 		$columns[] =
@@ -19,8 +17,7 @@ class ParticipantRolesPersister extends ObjectSQLPersister
  		$columns[] = 
      		"( SELECT GROUP_CONCAT(CAST(r.ProjectRole AS CHAR))" .
      		"  	 FROM pm_ParticipantRole r " .
-     		" 	WHERE r.Participant = ".$this->getPK($alias).
- 		    "     AND r.Project = ".($project_it->getId() > 0 ? $project_it->getId(): ' r.Project ').") ProjectRole ";
+     		" 	WHERE r.Participant = ".$this->getPK($alias).") ProjectRole ";
  			
  		$columns[] = 
      		"( SELECT GROUP_CONCAT(pr.ReferenceName)" .

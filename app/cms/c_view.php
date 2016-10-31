@@ -150,12 +150,6 @@
  	function ViewTable( $object = null ) 
 	{
 		$this->object = is_object($object) ? $object : $this->getObject();
-
-		$list = $this->getList();
-		if ( is_object($list) )
-		{
-			$this->setList( $list );
-		}
 	}
 	
    	function __destruct()
@@ -168,23 +162,22 @@
 		return $this->object;
 	}
 	
-	function getList()
+	function getList( $mode = '' )
 	{
 		return new ListTable( $this->object );
 	}
 	
-	function & getListRef()
+	function getListRef()
 	{
 		return $this->list;
 	}
 
 	function setList( $list )
 	{
-		global $view_num;
-
 		$this->list = $list;
+		if ( !is_object($this->list) ) return;
 
-		$view_num += 1;
+		$view_num = 1;
 		$this->view_num = $view_num;
 
 		$this->list->setOffsetName('offset'.$this->view_num);
@@ -247,19 +240,18 @@
 		return array();
 	}
 	
-	function & getListIterator()
+	function getListIterator()
 	{
-	    $list = $this->getListRef();
-	    
-		if ( !is_object($list->getIteratorRef()) )
-		{
-			$list->retrieve();
-		}
-		
+		$list = $this->getList( $this->getMode() );
+		$this->setList($list);
+
+		if ( !is_object($list) ) return $this->getObject()->getEmptyIterator();
+
+		$list->retrieve();
 		return $list->getIteratorRef();
 	}
 	
-	function & getListIteratorRef()
+	function getListIteratorRef()
 	{
 	    $list = $this->getListRef();
 	    

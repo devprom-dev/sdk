@@ -6,24 +6,20 @@
 
 	<?php $list->renderThread( $view ); ?>
 	
-	<div id="comments-form<?=$control_uid?>" style="<?=($icon_size != 'small' ? "min-height: 48px;" : '').($comments_count > 0 ? "margin-top:20px;" : "")?>"">
+	<div id="comments-form<?=$control_uid?>" style="min-height: 48px;<?=($comments_count > 0 ? "margin-top:20px;" : "")?>">
 		<div class="comment">
 			
-			<?php if( $icon_size == 'small' ) { ?>
-			
-			<a tabindex="5" class="dashed <?=$new_link_class?>" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
-				<?=translate('добавить комментарий')?>
-			</a>
-			
-			<?php } else { ?>
-
-			<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="javascript: showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
+			<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
 			    <i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
 			</a>
-			
+
+			<? if ( $collapseable ) { ?>
+			<a tabindex="6" class="btn btn-small btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
+				<?=text(2231)?>
+			</a>
+			<? } ?>
+
 			<div class="clear-fix">&nbsp;</div>
-			
-			<?php } ?>
         </div>
 	</div>
 
@@ -37,19 +33,15 @@
 </div>
 
 <script type="text/javascript">
-	$(function() 
+	$(function()
 	{
-		var locstr = new String(window.location);
-		
+		var locstr = String(window.location);
 		if ( locstr.indexOf('#comment') > 0 )
 		{
 			var commentString = locstr.substring(locstr.indexOf('#comment'));
-
 			var parts = commentString.split('#');
-			
-			if ( parts.length > 0 )
-			{
-				$('#'+parts[1]).find('.comment-author').css( {'background':'#ffdfdf'} );
+			if ( parts.length > 0 ) {
+				$('#'+parts[1]).addClass('active');
 			}
 		}
 	});

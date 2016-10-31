@@ -73,28 +73,28 @@ class WikiHistoryTable extends ProjectLogTable
 				}
 		);
 	}
-	
+
+    function getNewActions() {
+        $version_url = $this->getWikiPageIt()->getPageVersions();
+        if ( $version_url == '' ) return array();
+        return array(
+            array (
+                'url' => $version_url,
+                'name' => text(2237)
+            )
+        );
+    }
+
 	function getActions()
 	{
 		return array();
 	}
-	
-	function drawScripts()
+
+	function getExportActions()
 	{
-		parent::drawScripts();
-		
-		?>
- 		<script type="text/javascript">
-			$(document).ready(function() 
-			{ 
-				$('.table td#content').each(function() {
-					markupDiff($(this));
-				});
-			});
-		</script>
-		<?php
+		return array();
 	}
-	
+
 	function getRenderParms( $parms )
 	{
 		$page_it = $this->getWikiPageIt();
@@ -104,7 +104,7 @@ class WikiHistoryTable extends ProjectLogTable
 				array (
 						'navigation_title' => $page_it->getDisplayName(),
 						'navigation_url' => $page_it->getViewUrl(),
-						'title' => translate('История изменений')
+						'title' => text(2238)
 				)
 		);
 	}

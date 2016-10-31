@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/classes/settings/Methodology.php";
 
 class SetupSupportProjectSettings extends Installable 
 {
@@ -21,7 +20,7 @@ class SetupSupportProjectSettings extends Installable
     	if ( preg_match('/supportProjectId:\s*([\d]+)/i', $settings_file, $result) )
     	{
     		if ( $result[1] != '' ) {
-		    	$project_it = getFactory()->getObject('Methodology')->getRegistry()->Query(
+		    	$project_it = getFactory()->getObject('pm_Methodology')->getRegistry()->Query(
 			    			array (
 			    					new FilterAttributePredicate('Project', array($result[1]))
 			    			)

@@ -1,7 +1,5 @@
 <?php
 
-include SERVER_ROOT_PATH."pm/classes/widgets/FunctionalArea.php";
-
 class PMReportCategoryRegistry extends ReportCategoryRegistry
 {
  	function createSQLIterator( $sql )

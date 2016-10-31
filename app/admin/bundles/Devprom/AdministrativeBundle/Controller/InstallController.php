@@ -20,7 +20,7 @@ class InstallController extends PageController
     		$response = $this->checkUserAuthorized($request);
     		if ( is_object($response) ) return $response;
     	}
-    	
+
     	include SERVER_ROOT_PATH.'admin/views/install/InstallPage.php';
     	return $this->responsePage(new \InstallPage);
     }

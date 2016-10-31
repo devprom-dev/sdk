@@ -112,7 +112,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 				}
 			}
 			
-			if ( count($request->getVpds()) > 1 || $project_it->IsPortfolio() )
+			if ( $project_it->IsProgram() )
 			{
 				$object->addReport(
 					array ( 'name' => 'issuesboardcrossproject',
@@ -355,41 +355,47 @@ class ReportsCommonBuilder extends ReportsBuilder
 		}
 
 		$task_chart_it = $module->getExact('tasks-board');
-        if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
-        {
-        	if ( !$project_it->IsPortfolio() )
-        	{
-				$object->addReport(
-					array ( 'name' => 'tasksboard',
-					        'description' => text(1393),
-					        'category' => FUNC_AREA_MANAGEMENT,
-					        'module' => $task_chart_it->getId() )
-				);
-        	}
-
-			if ( count($task->getVpds()) > 1 || $project_it->IsPortfolio() )
-			{
-				$object->addReport(
-					array ( 'name' => 'tasksboardcrossproject',
-							'title' => text(1844),
-					        'description' => text(1393),
-					        'category' => FUNC_AREA_MANAGEMENT,
-					        'module' => $task_chart_it->getId() )
-				);
-			}
-			elseif ( $methodology_it->HasPlanning() )
-			{
-				$object->addReport(
-					array ( 'name' => 'tasksplanningboard',
-					        'title' => text(1348),
-					        'description' => text(1410),
-							'query' => 'group=Assignee&iteration=all&taskstate=' . join(',', $non_terminal_states),
-					        'category' => FUNC_AREA_MANAGEMENT,
-					        'module' => $task_chart_it->getId() )
-				);
-			}
+        if ( $methodology_it->HasTasks() ) {
+            if ( getFactory()->getAccessPolicy()->can_read($task_chart_it) ) {
+                $object->addReport(
+                    array (
+                        'name' => 'tasksboard',
+                        'description' => text(1393),
+                        'category' => FUNC_AREA_MANAGEMENT,
+                        'module' => $task_chart_it->getId() )
+                );
+                $object->addReport(
+                    array (
+                        'name' => 'tasksboardforissues',
+                        'title' => text(2222),
+                        'query' => 'group=ChangeRequest',
+                        'category' => FUNC_AREA_MANAGEMENT,
+                        'module' => $task_chart_it->getId() )
+                );
+                if ( getSession()->getProjectIt()->IsProgram() ) {
+                    $object->addReport(
+                        array (
+                            'name' => 'tasksboardcrossproject',
+                            'title' => text(1844),
+                            'description' => text(1393),
+                            'category' => FUNC_AREA_MANAGEMENT,
+                            'module' => $task_chart_it->getId() )
+                    );
+                }
+                else if ( count($task->getVpds()) == 1 && $methodology_it->HasPlanning() ) {
+                    $object->addReport(
+                        array (
+                            'name' => 'tasksplanningboard',
+                            'title' => text(1348),
+                            'description' => text(1410),
+                            'query' => 'group=Assignee&iteration=all&taskstate=' . join(',', $non_terminal_states),
+                            'category' => FUNC_AREA_MANAGEMENT,
+                            'module' => $task_chart_it->getId() )
+                    );
+                }
+            }
         }
-        
+
  	    $task_chart_it = $module->getExact('tasks-trace');
         if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read($task_chart_it) )
         {
@@ -585,19 +591,6 @@ class ReportsCommonBuilder extends ReportsBuilder
 			);
 		}
 		
-		$module_it = $module->getExact('project-plan-milestone');
-		
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-		    $object->addReport(
-		            array ( 'name' => 'milestones',
-		                    'title' => text(908),
-		                    'description' => text(1418),
-		                    'category' => FUNC_AREA_MANAGEMENT,
-				            'module' => $module_it->getId() )
-		    );
-		}
-		
 		$module_it = $module->getExact('attachments');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
@@ -607,6 +600,19 @@ class ReportsCommonBuilder extends ReportsBuilder
 							'module' => $module_it->getId() )
 			);
 		}
+
+        $module_it = $module->getExact('project-reports');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) )
+        {
+            $object->addReport( array (
+                'name' => 'charts',
+                'title' => text(2229),
+                'query' => 'reporttype=chart',
+                'icon' => 'icon-signal',
+                'category' => FUNC_AREA_MANAGEMENT,
+                'module' => $module_it->getId()
+            ));
+        }
     }
     
     protected function getReopenTransitions( $object )

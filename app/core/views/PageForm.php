@@ -10,7 +10,6 @@ include_once SERVER_ROOT_PATH.'cms/views/FieldAutoCompleteObject.php';
 
 class PageForm extends MetaObjectForm
 {
-
     var $page;
 
     private $model_validator = null;
@@ -310,7 +309,7 @@ class PageForm extends MetaObjectForm
 			'icon' => 'icon-pencil'
 		);
 
-		if( getFactory()->getAccessPolicy()->can_modify($object_it) )
+		if( getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, 'State') )
 		{
 			$transition_actions = $this->getTransitionActions();
 			if ( count($transition_actions) > 6 && !$this->IsFormDisplayed() )
@@ -355,8 +354,25 @@ class PageForm extends MetaObjectForm
 			$actions = array_merge($actions, array(array()), $more_actions);
 		}
 
-		return $actions;
+		if ( $this->IsFormDisplayed() ) {
+            $export_actions = $this->getExportActions($object_it);
+            if ( count($export_actions) > 1 ) {
+                $actions[] = array();
+                $actions[] = array(
+                    'name' => translate('Экспорт'),
+                    'items' => $export_actions,
+                    'uid' => 'export'
+                );
+            }
+        }
+
+        return $actions;
 	}
+
+	function getExportActions( $object_it )
+    {
+        return array();
+    }
 
  	function getTransitionActions()
 	{
@@ -379,19 +395,17 @@ class PageForm extends MetaObjectForm
 				continue;
 			}
 
-			$skip_transition = false;
-			$this->transition_rules_it->moveTo('Transition', $transition_it->getId());
-			while ( $this->transition_rules_it->get('Transition') == $transition_it->getId() ) {
-				if ( !$this->transition_rules_it->check($object_it) ) {
-					$reason = $this->transition_rules_it->getNegativeReason();
-					if ( $reason != '' ) $this->transition_messages[] = $reason;
-					$skip_transition = true;
-					break;
-				}
-				$this->transition_rules_it->moveNext();
-			}
-
+			$skip_transition = !$transition_it->doable(
+			    $object_it,
+                $this->transition_rules_it->object->createCachedIterator(
+                    $this->transition_rules_it->getSubset('Transition', $transition_it->getId())
+                )
+            );
 			if ( $skip_transition ) {
+			    $reason = $transition_it->getNonDoableReason();
+                if ( $reason != '' ) {
+                    $this->transition_messages[] = $reason;
+                }
 				$transition_it->moveNext();
 				continue;
 			}
@@ -494,7 +508,7 @@ class PageForm extends MetaObjectForm
 					$info = $uid->getUidInfo($ref_it);
 					if ( $info['url'] != '' ) {
 						$attributes[$key]['description'] =
-							'<a class="dashed" href="'.$info['url'].'">'.text(2084).'</a> &nbsp; &nbsp; '.$attributes[$key]['description'];
+							'<a class="dashed" target="_blank" href="'.$info['url'].'">'.text(2084).'</a> &nbsp; &nbsp; '.$attributes[$key]['description'];
 					}
 				}
 			}
@@ -600,12 +614,15 @@ class PageForm extends MetaObjectForm
 			'button_save_title' => translate('Сохранить'),
 			'transition' => $this->getTransitionIt()->getId(),
 			'form_class_name' => strtolower(get_class($this)),
-			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off' ? $this->getHint() : '',
+			'bottom_hint' => $this->getHint(),
 			'bottom_hint_id' => $this->getHintId(),
-			'alert' => join('<br/>',$this->transition_messages),
+            'hint_open' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off',
+			'alert' => join('<br/>',array_unique($this->transition_messages)),
 			'uid' => $uid_number,
 			'uid_url' => $uid_url,
-			'source_parms' => $this->getSourceParms()
+			'source_parms' => $this->getSourceParms(),
+			'form_class' => 'delete-confirm',
+            'showtabs' => true
 		);
 	}
 	
@@ -663,10 +680,16 @@ class PageForm extends MetaObjectForm
 	{
 		//skip values user can't modify
 		$parms = $_REQUEST;
+        $object_it = $this->getObjectIt();
 
 		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
 			if ( !$this->IsAttributeEditable($attribute) ) {
-				unset($parms[$attribute]);
+			    if ( is_object($object_it) ) {
+                    $parms[$attribute] = $object_it->getHtmlDecoded($attribute);
+                }
+                else {
+                    unset($parms[$attribute]);
+                }
 			}
 		}
 
@@ -690,16 +713,16 @@ class PageForm extends MetaObjectForm
  	function getHint()
 	{
 		$resource = getFactory()->getObject('ContextResource');
-		
+
 		$resource_it = $resource->getExact(strtolower(get_class($this)));
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
-		
+
 		$resource_it = $resource->getExact(strtolower(get_class($this)).'-'.$this->getMode());
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
-		
+
 		return '';
 	}
-	
+
 	function drawScripts()
 	{
 	    foreach( $this->plugins as $plugin ) {
@@ -711,33 +734,48 @@ class PageForm extends MetaObjectForm
 	protected function getSourceParms()
 	{
 		$uid = new ObjectUid();
-		list($source_it, $text_attribute) = $this->getSourceIt();
+        $parms = array();
 
-		if ( $source_it->object->getAttributeType($text_attribute) == 'wysiwyg' ) {
-			$field = new FieldWYSIWYG(
-				$source_it->get('ContentEditor') != ''
-					? $source_it->get('ContentEditor')
-					: getSession()->getProjectIt()->get('WikiEditorClass')
-			);
-			$field->setValue($source_it->get($text_attribute));
-			$field->setObjectIt($source_it);
-			$text = $field->getText(true);
-		}
-		else {
-			$text = $source_it->getHtmlDecoded($text_attribute);
-		}
+        foreach( $this->getSourceIt() as $item ) {
+            $source_it = array_shift($item);
+            $text_attribute = array_shift($item);
 
-		return array (
-			'uid' => $uid->getUidWithCaption($source_it),
-			'text' => $text
-		);
+            if ( is_subclass_of($text_attribute, 'IteratorExport') ) {
+                ob_start();
+                $iteratorObject = new $text_attribute($source_it->copyAll());
+                $iteratorObject->export();
+                $text = '<div class="reset wysiwyg">'.ob_get_contents().'</div>';
+                ob_end_clean();
+            }
+            else {
+                if ( $source_it->object->getAttributeType($text_attribute) == 'wysiwyg' ) {
+                    $field = new FieldWYSIWYG(
+                        $source_it->get('ContentEditor') != ''
+                            ? $source_it->get('ContentEditor')
+                            : getSession()->getProjectIt()->get('WikiEditorClass')
+                    );
+                    $field->setValue($source_it->get($text_attribute));
+                    $field->setObjectIt($source_it);
+                    $text = $field->getText(true);
+                    if ( $text != '' ) {
+                        $text = '<br/>'.$text;
+                    }
+                }
+                else {
+                    $text = $source_it->getHtmlDecoded($text_attribute);
+                }
+            }
+
+            $parms[] = array (
+                'uid' => $uid->getUidWithCaption($source_it),
+                'text' => $text
+            );
+        }
+        return $parms;
 	}
 
 	protected function getSourceIt()
 	{
-		return array(
-			$this->getObject()->getEmptyIterator(),
-			'Unknown'
-		);
+		return array();
 	}
 }

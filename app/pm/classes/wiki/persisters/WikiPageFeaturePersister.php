@@ -28,4 +28,28 @@ class WikiPageFeaturePersister extends ObjectSQLPersister
 			" ) Feature "
 		);
  	}
+
+ 	function modify($object_id, $parms)
+    {
+        if ( $parms['Feature'] != '' ) {
+            $registry = getFactory()->getObject('pm_FunctionTrace')->getRegistry();
+            $trace_it = $registry->Query(
+                array (
+                    new FilterAttributePredicate('ObjectId', $object_id),
+                    new FilterAttributePredicate('ObjectClass', get_class($this->getObject()))
+                )
+            );
+            while( !$trace_it->end() ) {
+                $registry->Delete($trace_it);
+                $trace_it->moveNext();
+            }
+            $registry->Create(
+                array(
+                    'ObjectId' => $object_id,
+                    'ObjectClass' => get_class($this->getObject()),
+                    'Feature' => $parms['Feature']
+                )
+            );
+        }
+    }
 }

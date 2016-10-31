@@ -15,15 +15,17 @@ class TooltipService
     	$this->setObjectIt($object->getExact($object_id));
 	}
 	
-	public function setObjectIt( $object_it )
-	{ 
+	public function setObjectIt( $object_it ) {
 		$this->object_it = $object_it;
 	}
 	
-	public function getObjectIt()
-	{
+	public function getObjectIt() {
 		return $this->object_it;
 	}
+
+	public function getExtended() {
+        return $this->extended;
+    }
 			
     public function getData()
     {
@@ -77,10 +79,10 @@ class TooltipService
  	 		if ( !in_array($attribute, $tooltip_attributes) ) continue;
 
  	 		$data[] = array (
- 	 				'name' => $attribute,
- 	 				'title' => translate($object->getAttributeUserName($attribute)), 
- 	 				'type' => $type,
- 	 				'text' => $this->getAttributeValue( $object_it, $attribute, $type ) 
+                'name' => $attribute,
+                'title' => translate($object->getAttributeUserName($attribute)),
+                'type' => $type,
+                'text' => $this->getAttributeValue( $object_it, $attribute, $type )
  	 		); 
  	 	}
 
@@ -101,29 +103,44 @@ class TooltipService
 			    return $object_it->get($attribute) == 'Y' ? translate('Да') : translate('Нет');
 			    
  		    case 'text':
-			    $totext = new \Html2Text\Html2Text( $object_it->getHtmlDecoded($attribute) );
+			    $totext = new \Html2Text\Html2Text( $object_it->getHtmlDecoded($attribute), array('width'=>0) );
 			    return $object_it->getWordsOnlyValue($totext->getText(), 25);
 
  			case 'wysiwyg':
 			    return $object_it->getHtmlDecoded($attribute);
 
  			case 'date':
-			    return $object_it->getDateFormat($attribute);
+            case 'datetime':
+			    return $object_it->getDateFormatShort($attribute);
 			    
  			default:
 	 	 		if ( $object_it->object->IsReference($attribute) )
 		 		{	
-		 			$uid = new \ObjectUID;
-		 			
 					$ref_it = $object_it->getRef($attribute);
 					$titles = array();
-					
-					while( !$ref_it->end() )
-					{
-						$titles[] = $this->extended ? $uid->getUidWithCaption($ref_it) : $uid->getUidTitle($ref_it);
-						$ref_it->moveNext();
-					}
-					
+
+                    if ( $ref_it->object instanceof \Attachment ) {
+                        while( !$ref_it->end() )
+                        {
+                            if ( $ref_it->IsImage('File') ) {
+                                $titles[] = '<img class="wiki_page_image" src="'.$ref_it->getFileUrl().'">';
+                            }
+                            $ref_it->moveNext();
+                        }
+                        if ( count($titles) == 1 ) $titles[] = '';
+                    }
+                    else {
+                        $uid = new \ObjectUID;
+                        while( !$ref_it->end() )
+                        {
+                            $title = $this->extended ? $uid->getUidWithCaption($ref_it) : $uid->getUidTitle($ref_it);
+                            if ( $ref_it->object instanceof \MetaobjectStatable ) {
+                                $title .= ' ('.$ref_it->getStateIt()->getDisplayName().')';
+                            }
+                            $titles[] = $title;
+                            $ref_it->moveNext();
+                        }
+                    }
 		 			return (count($titles) > 1 ? '<br/>' : '').join('<br/>', $titles);
 		 		}
 		 		else

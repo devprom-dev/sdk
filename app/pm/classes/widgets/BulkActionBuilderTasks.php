@@ -15,5 +15,10 @@ class BulkActionBuilderTasks extends BulkActionBuilder
 					$attribute
 			);
  		}
- 	}
+
+        $method = new TaskConvertToIssueWebMethod();
+        if ( $method->hasAccess() ) {
+            $registry->addCustomAction($method->getCaption(), $method->getMethodName());
+        }
+    }
 }

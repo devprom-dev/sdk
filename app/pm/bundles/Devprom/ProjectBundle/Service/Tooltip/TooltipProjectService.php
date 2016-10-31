@@ -69,53 +69,64 @@ class TooltipProjectService extends TooltipService
  	 		);
  	 	}
  	 	
- 	 	if ( $object_it->object instanceof \Request )
- 	 	{
+ 	 	if ( $object_it->object instanceof \Request ) {
  	 		$this->buildRequestAttributes( $data, $object_it );
  	 	}
- 	 	
+
+        if ( $object_it->object instanceof \Comment ) {
+            $this->buildCommentAttributes( $data, $object_it );
+        }
+
  	 	return $data;
     }   
     
     protected function buildRequestAttributes( &$data, $object_it )
     {
-    	// Tasks attribute
-		$task = getFactory()->getObject('Task');
-		$this->extendModel($task);
-    	$task_it = $task->getRegistry()->Query(
-			array (
-				new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
-			)
-		);
-		
-		$states = $task_it->getStatesArray();
-		
-		foreach ( $states as $key => $state )
-		{
-			if ( !is_array($state) ) continue;
-			
-			switch ( $state['progress'] )
-			{
-				case '100%':
-					$states[$key]['class'] = 'label-success';
-					break;
-		
-				case '0%':
-					$states[$key]['class'] = 'label-important';
-					break;
-			}
-		}
-		
-		if ( count($states) > 0 )
-		{
-			$data[] = array (
-					'name' => 'Tasks',
-					'title' => translate('Задачи'),
-					'type' => 'tasks',
-					'text' => $states 
-			);
-		}
-		
+        if ( $this->getExtended() ) {
+            foreach( $data as $key => $field ) {
+                if ( in_array($field['name'], array('OpenTasks')) ) {
+                    unset($data[$key]);
+                }
+            }
+        }
+        else {
+            // Tasks attribute
+            $task = getFactory()->getObject('Task');
+            $this->extendModel($task);
+            $task_it = $task->getRegistry()->Query(
+                array (
+                    new \FilterAttributePredicate('ChangeRequest', $object_it->getId())
+                )
+            );
+
+            $states = $task_it->getStatesArray();
+
+            foreach ( $states as $key => $state )
+            {
+                if ( !is_array($state) ) continue;
+
+                switch ( $state['progress'] )
+                {
+                    case '100%':
+                        $states[$key]['class'] = 'label-success';
+                        break;
+
+                    case '0%':
+                        $states[$key]['class'] = 'label-important';
+                        break;
+                }
+            }
+            if ( count($states) > 0 ) {
+                $data[] = array (
+                    'name' => 'Tasks',
+                    'title' => translate('Задачи'),
+                    'type' => 'tasks',
+                    'text' => $states
+                );
+            }
+        }
+
+
 		// Linked requests attribute
 		foreach( $data as $key => $attribute )
 		{
@@ -134,7 +145,7 @@ class TooltipProjectService extends TooltipService
 			list($type_name, $object_id, $type_ref) = preg_split('/:/',$item);
 			
 			$info = $uid->getUIDInfo($object_it->object->getExact($object_id), true);
-			$types[$type_name][] = $info['uid'].' {'.$info['project'].'} '.$info['caption'].' ('.$info['state_name'].')'; 
+			$types[$type_name][] = '<a href="'.$info['url'].'">['.$info['project'].':'.$info['uid'].']</a> '.$info['caption'].' ('.$info['state_name'].')';
 		}
 		
 		foreach( $types as $type_name => $requests )
@@ -144,6 +155,18 @@ class TooltipProjectService extends TooltipService
 					'text' => join(', ', $requests)
 			);
 		}
+    }
+
+    protected function buildCommentAttributes( &$data, $object_it )
+    {
+        $uid = new \ObjectUID();
+        $anchor_it = $object_it->getAnchorIt();
+
+        $data[] = array (
+            'name' => 'ObjectId',
+            'title' => translate('Артефакт'),
+            'text' => $uid->getUidWithCaption($anchor_it)
+        );
     }
     
     private function buildLifecycle( $object_it )

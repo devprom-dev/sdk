@@ -54,7 +54,7 @@ class ModelEntityOriginationService
 		if ( !$object instanceof Metaobject ) return '';
 		
 		$class_name = get_class($object);
-		
+
 		if ( isset($this->data['self'][$class_name]) ) return $this->data['self'][$class_name];
 		
 		return $this->data['self'][$class_name] = $this->buildSelfOrigin($object);
@@ -93,6 +93,9 @@ class ModelEntityOriginationService
 		    case 'DateMonth':
 		    case 'DateWeekday':
 		    case 'DateYear':
+            case 'Module':
+            case 'Report':
+            case 'PMReport':
 		    	return '';
 		}
 		
@@ -108,7 +111,6 @@ class ModelEntityOriginationService
 			case 'pm_ProjectUse':
 			case 'pm_ProjectCreation':
 			case 'Priority':
-			case 'pm_Methodology':
 			case 'cms_Language':
 			case 'cms_User':
 			case 'cms_UserSettings':
@@ -129,6 +131,7 @@ class ModelEntityOriginationService
 			case 'cms_CheckQuestion':
 			case 'co_UserRole':
 			case 'pm_ProjectTemplate':
+            case 'pm_ProjectSettings':
 			case 'cms_BatchJob':
 			case 'cms_EmailNotification':
 			case 'cms_NotificationSubscription':

@@ -17,6 +17,10 @@ foreach ( $items as $item_key => $item )
             $setup_menu_item = $child; 
             unset($items[$item_key]['items'][$child_key]);
         }
+        if ( $child['uid'] == 'charts' ) {
+            $charts_menu_item = $child;
+            unset($items[$item_key]['items'][$child_key]);
+        }
 
         $items[$item_key]['count']++;
     }
@@ -29,7 +33,7 @@ foreach ( $items as $item_key => $item )
     <li class="submenu open <?=( !is_array($items[0]['items']) ? 'search' : '')?>" style="border-top:none;">
         <form class="form-search" action="<?=$search_url?>">
             <div class="input-append">
-              <input id="quick-search-<?=$area_id?>" name="quick" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional=""><button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
+              <input id="quick-search-<?=$area_id?>" name="search-keywords" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional=""><button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
             </div>
         </form>
     </li>
@@ -77,21 +81,31 @@ foreach ( $items as $item_key => $item )
 	</li>
 	<?php } ?>
 	<?php } ?>
-	
-	<?php if ( is_array($setup_menu_item) ) { ?>
+    <li class="setup" style="padding-top: 10px;"></li>
+	<?php if ( is_array($charts_menu_item) ) {  $collapse = true; ?>
+        <li class="setup <?=$charts_menu_item['state']?>">
+            <a href="<?=$charts_menu_item['url']?>" style="color:white;padding:10px 0 10px 10px;">
+                <span style="display:table-cell;"><i class="icon-signal icon-white" ></i></span>
+                <span style="display:table-cell;padding:0 15px 0 10px;"><?=$charts_menu_item['name']?></span>
+            </a>
+        </li>
+	<?php } ?>
+    <?php if ( is_array($setup_menu_item) ) { $collapse = true; ?>
         <li id="setup" class="setup <?=$setup_menu_item['state']?>">
-            <a href="<?=$setup_menu_item['url']?>" style="color:white;padding:20px 0 10px 10px;">
+            <a href="<?=$setup_menu_item['url']?>" style="color:white;padding:10px 0 10px 10px;">
                 <span style="display:table-cell;"><i class="icon-wrench icon-white" ></i></span>
                 <span style="display:table-cell;padding:0 15px 0 10px;"><?=$setup_menu_item['name']?></span>
             </a>
         </li>
-        <li class="setup">
-            <a onclick="switchMenuState('minimized');" style="color:white;padding:10px 0 20px 10px;">
-                <span style="display:table-cell;"><i class="icon-arrow-left icon-white" ></i></span>
-                <span style="display:table-cell;padding:0 15px 0 10px;"><?=text(2193)?></span>
-            </a>
-        </li>
-	<?php } ?>
+    <?php } ?>
+    <? if ( $collapse ) { ?>
+    <li class="setup">
+        <a onclick="switchMenuState('minimized');" style="color:white;padding:10px 0 10px 10px;">
+            <span style="display:table-cell;"><i class="icon-arrow-left icon-white" ></i></span>
+            <span style="display:table-cell;padding:0 15px 0 10px;"><?=text(2193)?></span>
+        </a>
+    </li>
+    <? } ?>
 </ul>
 
 <script type="text/javascript">
@@ -117,12 +131,4 @@ foreach ( $items as $item_key => $item )
         menu.addClass('open');
         adjustContainerHeight(menu.parent());
     });
-
-    function adjustContainerHeight(menu)
-    {
-    	if ( $('.content-internal').height() < menu.height() )
-    	{
-            $('.content-internal').css('min-height',menu.height());
-    	}
-    }
 </script>

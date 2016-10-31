@@ -68,11 +68,14 @@ class PMFormEmbedded extends FormEmbedded
         return '';
     }
 
-    function drawAddButton( $tabindex ) {
-        parent::drawAddButton( $tabindex );
+    function drawAddButton( $view, $tabindex )
+    {
+        parent::drawAddButton( $view, $tabindex );
 
         if( $this->getIteratorRef()->count() > 0 )
         {
+            $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank';
+
             $attribute = $this->getListItemsAttribute();
             if ( $attribute == '' ) {
                 $object = $this->getIteratorRef()->object;
@@ -88,10 +91,17 @@ class PMFormEmbedded extends FormEmbedded
                 $widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
                 if ( $widget_it->getId() != '' ) {
                     $url = $widget_it->getUrl(strtolower(get_class($object)).'='.join(',',$ids).'&clickedonform');
-                    echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$url.'" tabindex="-1">';
+                    echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="'.$target.'" href="'.$url.'" tabindex="-1">';
                         echo $this->getListItemsTitle();
                     echo '</a>';
                 }
+            }
+
+            if ( $object instanceof WikiPage ) {
+                $url = $object->getPageVersions().'page='.join(',',$ids);
+                echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="'.$target.'" href="'.$url.'" tabindex="-1">';
+                    echo text(2242);
+                echo '</a>';
             }
         }
     }

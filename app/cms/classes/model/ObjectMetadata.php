@@ -36,10 +36,23 @@ class ObjectMetadata
 	
     public function build()
     {
-    	foreach( getSession()->getBuilders('ObjectMetadataBuilder') as $builder )
-	    {
+    	foreach( $this->getBuilders() as $builder ) {
 	        $builder->build( $this ); 
 	    }
+    }
+
+    protected function getBuilders()
+    {
+        $builders = array (
+            new ObjectMetadataModelBuilder()
+        );
+
+        $session = getSession();
+        if ( is_object($session) ) {
+            $builders = array_merge( $builders, $session->getBuilders('ObjectMetadataBuilder') );
+        }
+
+        return $builders;
     }
 	
 	public function setObject( $object )
@@ -147,7 +160,17 @@ class ObjectMetadata
     {
     	return $this->attributes[$attribute]['required'];
     }
-    
+
+    public function setAttributeDefault($attribute, $defaultValue)
+    {
+        $this->attributes[$attribute]['default'] = $defaultValue;
+    }
+
+    public function getAttributeDefault($attribute)
+    {
+        return $this->attributes[$attribute]['default'];
+    }
+
     public function setAttributeDescription($attribute, $text)
     {
     	$this->attributes[$attribute]['description'] = $text;

@@ -65,7 +65,7 @@ var draggableOptions = {
 					}
 				}
 
-				newCard.show().fadeTo('fast', 1);
+				newCard.show().fadeTo('fast', 10);
 			});
 		},
 		initializeBoardItemCustom: function ( item, options ) {},
@@ -106,6 +106,10 @@ var draggableOptions = {
 					url = controllerUrl+'methods.php?method=modifystatewebmethod';
 					dataObject.source = jQuery.trim(item.attr("more"));
 					dataObject.target = jQuery.trim(cell.attr("more"));
+					if ( this.groupAttribute != '' ) {
+						dataObject.attribute = this.groupAttribute;
+						dataObject.value = jQuery.trim(cell.attr("group"));
+					}
 				}
 				else {
 					url = controllerUrl+'methods.php?method=modifyattributewebmethod';
@@ -172,9 +176,12 @@ var draggableOptions = {
 		resizeCards: function () 
 		{
 			var width = this.getItemWidth();
-			$('.list_cell:not(.board-size-mic) '+this.itemCSSPath + ' div.bi-cap').width(width - 10);
-			$('.list_cell:not(.board-size-mic) '+this.itemCSSPath).width(width);
+			$('.list_cell:not(.board-size-mic) '+this.itemCSSPath).each(function() {
+				$(this).width(width);
+				$(this).find('div.bi-cap, div.ca-field').width(width - 10);
+			});
 			$('.list_cell.board-size-mic '+this.itemCSSPath).css('width', 'auto');
+			$('.board-size-mic .list_cell '+this.itemCSSPath).css('width', 'auto');
 		},
 		sliderTitle: ''
 	};
@@ -191,7 +198,7 @@ function board( options )
 	$('<div id="board-slider"></div>').insertAfter('.bulk-filter-actions');
 	$('#board-slider').slider({
 	      value: defaultBoardSize,
-	      min: 0,
+	      min: -1,
 	      max: 4,
 	      step: 1,
 	      slide: function( event, ui ) {
@@ -199,51 +206,56 @@ function board( options )
 	      }
 	}).attr('title', options.sliderTitle);
 
-	$('a.collapse-cards').click(function() {
-		var cell = $('.list_cell[more="'+$(this).attr('more')+'"][group="'+$(this).attr('group')+'"]');
-		if ( cell.length > 0 ) {
-			var cookieId = $(this).parents('.board-table').attr('id') + "[size/"
-				+ $(this).attr('more').trim() + "/" + $(this).attr('group').trim() + "]";
-			if ( cell.hasClass('board-size-mic') ) {
-				cell.removeClass('board-size-mic');
-				cookies.set(cookieId, null);
+	$('body')
+		.on('click.dropdown.data-api', function(e) {
+			var items = $(e.target).closest('a.collapse-cards');
+			if ( items.length ) {
+				var item = items.first();
+				var cell = $('.list_cell[more="'+item.attr('more')+'"][group="'+item.attr('group')+'"]');
+				if ( cell.length > 0 ) {
+					var cookieId = item.parents('.board-table').attr('id') + "[size/"
+						+ item.attr('more').trim() + "/" + item.attr('group').trim() + "]";
+					if ( cell.hasClass('board-size-mic') ) {
+						cell.removeClass('board-size-mic');
+						cookies.set(cookieId, null);
+					}
+					else {
+						cell.addClass('board-size-mic');
+						cookies.set(cookieId, "board-size-mic");
+					}
+					options.resizeCards();
+				}
 			}
-			else {
-				cell.addClass('board-size-mic');
-				cookies.set(cookieId, "board-size-mic");
+			var items = $(e.target).closest('a[id=collapse-cards]');
+			if ( items.length ) {
+				var item = items.first();
+				var state = item.attr('alt');
+				var reset = item.parents('th').hasClass('board-size-mic');
+				$('.list_cell[more=" '+state+'"]').each(function() {
+					reset ? $(this).removeClass('board-size-mic') : $(this).addClass('board-size-mic');
+				});
+				var cookieId = item.parents('.board-table').attr('id') + "[column/" + state.trim() + "]";
+				if ( reset ) {
+					item.parents('th').removeClass('board-size-mic');
+					cookies.set(cookieId, null);
+				}
+				else {
+					item.parents('th').addClass('board-size-mic');
+					cookies.set(cookieId, "board-size-mic");
+				}
+				var title = item.text();
+				item.text(item.attr('class'));
+				item.attr('class',title);
+				options.resizeCards();
+				var regCells = $('.list_header:not(.board-size-mic)');
+				$('.list_header:not(.board-size-mic)').attr('width',(100 / regCells.length) + '%');
+				$('.list_header.board-size-mic').attr('width','auto');
 			}
-			options.resizeCards();
-		}
-	});
-	$('a[id=collapse-cards]').click(function() {
-		var state = $(this).attr('alt');
-		var reset = $(this).parents('th').hasClass('board-size-mic');
-		$('.list_cell[more=" '+state+'"]').each(function() {
-			if ( reset ) {
-				$(this).removeClass('board-size-mic');
-			}
-			else {
-				$(this).addClass('board-size-mic');
+			if ( $(e.target).is(options.cellCSSPath) ) {
+				$('.board_item_body input[type=checkbox]').removeAttr('checked');
+				toggleBulkActions();
 			}
 		});
-		var cookieId = $(this).parents('.board-table').attr('id') + "[column/" + state.trim() + "]";
-		if ( reset ) {
-			$(this).parents('th').removeClass('board-size-mic');
-			cookies.set(cookieId, null);
-		}
-		else {
-			$(this).parents('th').addClass('board-size-mic');
-			cookies.set(cookieId, "board-size-mic");
-		}
-		var title = $(this).text();
-		$(this).text($(this).attr('class'));
-		$(this).attr('class',title);
-		options.resizeCards();
-		var regCells = $('.list_header:not(.board-size-mic)');
-		$('.list_header:not(.board-size-mic)').attr('width',(100 / regCells.length) + '%');
-		$('.list_header.board-size-mic').attr('width','auto');
-		$('.dropdown .dropdown-toggle').dropdown('toggle');
-	});
 
 	setTimeout( function () { redrawBoardChanges(options); }, 500 );
 }
@@ -292,6 +304,7 @@ function boardMake( options )
 				modifyBoardItem( $(this), options, options.afterItemModified );
 			});
 			$(this).click( function(event) {
+				if ( $(event.target).closest('.dropdown-toggle').length > 0 ) return;
 				if(event.ctrlKey || event.metaKey) {
 					$(this).find('input[type=checkbox]').each(function() {
 						$(this).is(':checked') ? $(this).removeAttr('checked') : $(this).attr('checked', 'checked');
@@ -307,11 +320,6 @@ function boardMake( options )
 			});
 			$(this).addClass("board-item-actions-armed");
 	});
-	$(options.cellCSSPath).click(function(e) {
-		if (!$(e.target).is(options.cellCSSPath)) return;
-		$('.board_item_body input[type=checkbox]').removeAttr('checked');
-		toggleBulkActions();
-	})
 }
 
 function processBoardActions( methods, item, options )
@@ -391,8 +399,8 @@ function processActionResult( result, item, options )
 						
 						$('#modal-form').dialog({
 							width: (typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
-								? $(window).width() - 300
-								: $(window).width() * 3/5),
+								? $(window).width() * 0.9
+								: Math.min(950,$(window).width() * 0.9)),
 							modal: true,
 							open: function()
 							{
@@ -400,6 +408,7 @@ function processActionResult( result, item, options )
 							},
 							create: function() 
 							{
+								workflowBuildDialog($(this),{});
 						        $(this).css("maxHeight", $(window).height() - 200);        
 						    },
 							beforeClose: function(event, ui) 
@@ -516,6 +525,7 @@ function createBoardItem( query_string, options, data, callback )
 
 	url += '&'+options.className+'action=show&'+query_string+
 		'&form-mode=quick&entity='+options.className+'&'+options.className+'Id=';
+	url += '&screenWidth='+$(window).width();
 	 
 	filterLocation.showActivity();
 	
@@ -650,7 +660,7 @@ function redrawBoardItem( item, options )
 		success: 
 			function(result) 
 			{
-				updateBoardHeaders($(result));
+				updateBoardHeaders($(result),options);
 
 				var items = [];
 				
@@ -676,15 +686,22 @@ function redrawBoardChanges( options )
 {
 	if ( options.className == '' ) return;
 
-	var url = filterLocation.locationTableOnly();
-	
-	url += options.resetParms + '&class='+options.className+'&wait=true';
-	
 	try {
+		if ( !devpromOpts.windowActive ) {
+			setTimeout( function() {
+				redrawBoardChanges(options);
+			}, 3000);
+			return;
+		}
+
 		if ( options.waitRequest ) {
 			options.waitRequest.abort();
 			options.waitRequest = null;
 		}
+
+		var url = filterLocation.locationTableOnly();
+		url += options.resetParms + '&class='+options.className+'&wait=true';
+
 		options.waitRequest = $.ajax({
 			type: "GET",
 			url: url,
@@ -693,7 +710,7 @@ function redrawBoardChanges( options )
 			dataType: "html",
 			success: function(result) 
 			{
-				updateBoardHeaders($(result));
+				updateBoardHeaders($(result),options);
 
 				var items = [];
 				var itemSelectors = [];
@@ -755,7 +772,7 @@ function redrawBoardChanges( options )
 	}
 }
 
-function updateBoardHeaders( result )
+function updateBoardHeaders( result, options )
 {
 	result.find('.board-table th').each( function(index, value) {
 		$('.board-table th:eq('+index+')').html($(this).html());
@@ -777,11 +794,11 @@ function selectCards( column )
 
 function setBoardSize( options, value )
 {
-	var sizes = ['xs','s','m','l','xl'];
+	var sizes = ['mic','xs','s','m','l','xl'];
 	$.each(sizes, function(i,v) {
 	  $('.board-table').removeClass('board-size-'+v);
 	});
-	$('.board-table').addClass('board-size-'+sizes[value]);
+	$('.board-table').addClass('board-size-'+sizes[value+1]);
 	options.resizeCards();
 	cookies.set('board-slider-pos', value);	
 }

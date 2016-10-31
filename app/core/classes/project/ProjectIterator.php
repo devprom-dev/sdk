@@ -1,9 +1,25 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class ProjectIterator extends OrderedIterator
 {
-    var $methodology_it_cache;
-    
+    protected $methodology_it_cache = null;
+    protected $parent_it = null;
+
+    public function __sleep()
+    {
+        return array_merge( parent::__sleep(),
+            array ('methodology_it_cache', 'parent_it')
+        );
+    }
+
+    public function __wakeup()
+    {
+        parent::__wakeup();
+        $this->setObject( new Project );
+    }
+
 	function IsTender()
 	{
 		return $this->get('IsTender') == 'Y';
@@ -18,36 +34,30 @@ class ProjectIterator extends OrderedIterator
 	{
 		return $this->get('IsTender') == 'Y';
 	}
-	
+
 	function getParentIt()
+    {
+        if (is_object($this->parent_it)) return $this->parent_it;
+        return $this->parent_it = $this->buildParentIt();
+    }
+
+	function buildParentIt()
 	{
-	    global $model_factory;
-	    
-		if ( $this->IsPortfolio() )
-	    {
+		if ( $this->IsPortfolio() ) {
 	        return $this->object->createCachedIterator(array());
 	    }
 	    
 	    $project_it = $this->getRef('LinkedProject');
-	    
-	    while ( !$project_it->end() )
-	    {
-	        if ( $project_it->IsProgram() )
-	        {
-	            return $project_it;
-	        }
-	        
+        while ( !$project_it->end() ) {
+	        if ( $project_it->IsProgram() ) return $project_it;
 	        $project_it->moveNext();
 	    }
 	    
-	    $portfolio_it = $model_factory->getObject('Portfolio')->getAll();
-	    
+	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
 	    while ( !$portfolio_it->end() )
 	    {
 	        $project_ids = preg_split('/,/',$portfolio_it->get('LinkedProject'));
-	        
 	        if ( in_array($this->getId(), $project_ids) ) return $portfolio_it;
-	        
 	        $portfolio_it->moveNext();
 	    }
 	    
@@ -210,38 +220,7 @@ class ProjectIterator extends OrderedIterator
  	{
  		return getFactory()->getObject('co_Rating')->getVotedIt($this);
  	}
- 	
- 	function getDownloadedIt()
- 	{
- 		$user = getFactory()->getObject('cms_User');
 
- 		$sql = " SELECT u.*" .
- 			   "   FROM cms_User u " .
- 			   "  WHERE u.cms_UserId " .
- 			   "		IN (SELECT ac.SystemUser FROM pm_Artefact a, pm_DownloadAction da, pm_DownloadActor ac " .
- 			   "    		 WHERE ac.DownloadAction = da.pm_DownloadActionId" .
- 			   "    		   AND da.ObjectId = a.pm_ArtefactId" .
- 			   "    		   AND da.EntityRefName = 'pm_Artefact'" .
- 			   "    		   AND a.Project = ".$this->getId().") ";
- 			   
- 		return $user->createSQLIterator($sql);
- 	}
-
- 	function getPlannedVersionIt()
- 	{
- 		$version_it = $this->getRef('Version');
- 		
- 		$sql = 
- 			" SELECT r.*" .
- 			"   FROM pm_Version r, pm_Project p " .
- 			"  WHERE r.Project = ".$this->getId().
- 			"    AND p.pm_ProjectId = r.Project ".
- 			"    AND r.Caption >= '".$version_it->get('Caption')."'" .
- 			"  ORDER BY r.Caption ASC";
- 			
- 		return getFactory()->getObject('pm_Version')->createSQLIterator($sql);
- 	}
- 	
  	function getBlogId()
  	{
  		return $this->get('Blog');
@@ -254,19 +233,23 @@ class ProjectIterator extends OrderedIterator
 
  	function getMethodologyIt()
  	{
- 		global $model_factory;
- 		
  		if ( isset($this->methodology_it_cache[$this->getId()]) ) return $this->methodology_it_cache[$this->getId()];
-
-		$methodology = $model_factory->getObject('pm_Methodology');
-
- 		if ( $this->getId() < 1 ) return $methodology->getEmptyIterator(); 
-		
-		$this->methodology_it_cache[$this->getId()] = $methodology->getByRef('Project', $this->getId())->copy();
-		
-		return $this->methodology_it_cache[$this->getId()];
+		return $this->methodology_it_cache[$this->getId()] = $this->buildMethodologyIt();
  	}
- 	
+
+ 	function buildMethodologyIt()
+    {
+        $methodology = getFactory()->getObject('Methodology');
+        if ( $this->getId() < 1 ) return $methodology->getEmptyIterator();
+        return $methodology->getRegistry()->Query(
+            array( new FilterAttributePredicate('Project', $this->getId()) )
+        );
+    }
+
+    function setMethodologyIt( $object_it ) {
+        $this->methodology_it_cache[$this->getId()] = $object_it;
+    }
+
  	function invalidateCache()
  	{
  		$this->methodology_it_cache = array();

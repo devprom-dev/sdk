@@ -83,6 +83,12 @@ div.board-item-fact a
     overflow:hidden;
 	cursor: pointer;
 }
+.ca-field {
+	clear:both;
+	word-wrap:normal;
+	overflow:hidden;
+	cursor: pointer;
+}
 
 .item-footer .btn-group
 {
@@ -194,16 +200,16 @@ div.board-item-fact a
 	font-size: 10px;
 }
 
-.board-size-s .board_item_attributes > div:not(.title-on-card) {
+.board-size-s .board_item_attributes .ca-field > div:not(.title-on-card) {
 	display: none;
 }
-.board-size-s .board_item_attributes > div.bi-cap {
+.board-size-s .board_item_attributes div.bi-cap {
     padding: 0;
     height: 2.1em;
 	font-size: 0.87em;
     line-height: 12px;
     margin-bottom: 4px;
-	display: block;
+	display: block !important;
 }
 .board-size-s .bi-cap + div {
 	display: none;
@@ -221,7 +227,7 @@ div.board-item-fact a
     display:none;
 }
 
-.board-size-xs .board_item_attributes > div:not(.title-on-card) {
+.board-size-xs .board_item_attributes .ca-field > div:not(.title-on-card) {
 	display: none;
 }
 .board-size-xs .item-footer {
@@ -363,4 +369,8 @@ tr.row-cards:last-child td.board-column {
 .cell-add-btn .planning-details {
 	padding-left: 4px;
 	margin-right: 8px;
+}
+
+th .module-link {
+	margin-top: 4px;
 }

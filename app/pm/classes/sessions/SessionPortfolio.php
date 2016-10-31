@@ -8,8 +8,6 @@ include SERVER_ROOT_PATH."pm/views/common/PageSettingPortfolioBuilder.php";
 
 class SessionPortfolio extends PMSession
 {
-    var $area_set;
-    
  	public function buildAccessPolicy( $cache_service )
  	{
  		return new AccessPolicyPortfolio( $cache_service, $this );
@@ -50,12 +48,9 @@ class SessionPortfolio extends PMSession
     
     protected function buildProjectData( & $project_it )
     {
-        global $model_factory;
-        
         $result = array();
-        
+
         $result['project'] = $project_it;
-        
         $result['linked'] = $project_it->getRef('LinkedProject');
         
         return $result;
@@ -84,13 +79,15 @@ class SessionPortfolio extends PMSession
         return $result;
  	}
 
- 	public function & buildOriginationService( $cache_service )
- 	{
+ 	public function buildOriginationService( $cache_service ) {
  		return new ModelPortfolioOriginationService($this, $cache_service);
  	}
  	
- 	function getLanguageUid() 
- 	{
+ 	function getLanguageUid() {
  	    return $this->getUserIt()->get('Language') == 2 ? 'EN' : 'RU';
  	}
+
+    function getProjectObject() {
+        return new Portfolio();
+    }
 }

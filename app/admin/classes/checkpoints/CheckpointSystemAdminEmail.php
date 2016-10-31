@@ -22,4 +22,9 @@ class CheckpointSystemAdminEmail extends CheckpointEntryDynamic
 	{
 		return '/admin/mailer/';
 	}
+
+    function getWarning()
+    {
+        return text(2252);
+    }
 }

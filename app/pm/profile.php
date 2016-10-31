@@ -5,6 +5,8 @@
  include('views/project/ProfilePage.php');
  include('views/watchers/WatchingsPage.php');
 
+ $part_it = getSession()->getParticipantIt();
+
  if ( !is_object($part_it) )
  {
  	exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));

@@ -115,8 +115,12 @@ class FunctionList extends PMPageList
 		unset($fields['ParentFeature']);
 		return $fields;
 	}
-	
-	function drawGroup($group_field, $object_it)
+
+    function getGroupDefault() {
+        return '';
+    }
+
+    function drawGroup($group_field, $object_it)
 	{
 		switch ( $group_field )
 		{
@@ -243,7 +247,6 @@ class FunctionList extends PMPageList
  		{
  			case 'Progress':
  				return 60;
- 				
  			case 'Estimation':
  			    return 80;
 
@@ -259,9 +262,7 @@ class FunctionList extends PMPageList
  				{
  					case 'Importance':
  						return 90;
- 						
  					default:
- 						if ( in_array($attr, $this->trace_attributes) ) return '8%';
  						return parent::getColumnWidth( $attr );
  				}
  		}

@@ -3,7 +3,8 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
-include_once SERVER_ROOT_PATH."pm/classes/sessions/PMSession.php";
+include_once SERVER_ROOT_PATH."pm/classes/sessions/SessionBuilderProject.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
 
 class SoapService
 {
@@ -45,30 +46,35 @@ class SoapService
 	    $_REQUEST['token'] = $token;
 
 		$session = new SOAPSession();
-		
+
 		$user_it = $session->getUserIt();
-		
-		if ( $user_it->getId() < 1 )
-		{
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(224))));
+		if ( $user_it->getId() < 1 ) {
+			$server->fault('', $this->logError(text(224)));
 			return;
 		}
-		
+
 		$project_id = $session->getProject();
 	    if ( $project_id < 1 ) return;
 
 		$builders = $session->getBuilders();
 
-		$project_it = getFactory()->getObject('Project')->getExact($project_id);
+		$project_it = getFactory()->getObject('ProjectAccessible')->getRegistry()->Query(
+		    array ( new FilterInPredicate($project_id) )
+        );
+        if ( $project_it->count() < 1 ) {
+            $parts = getFactory()->getObject('Participant')->getRegistry()->Count(
+                array ( new FilterAttributePredicate('Project', $project_id) )
+            );
+            if ( $parts > 0 ) {
+                $server->fault('', $this->logError(text(224)));
+                return;
+            }
+        }
+
 		$session = new PMSession( $project_it, $session->getAuthenticationFactory() );
 
 		foreach( $builders as $builder ) {
 			$session->addBuilder($builder);
-		}
-
-		if ( !getFactory()->getAccessPolicy()->can_read($session->getProjectIt()) ) {
-			$server->fault('', $this->logError(IteratorBase::wintoutf8(text(224))));
-			return;
 		}
 	}
 
@@ -373,7 +379,7 @@ class SoapService
 		}
 
 		if ( $object instanceof Project ) {
-			$object->addFilter( new ProjectAccessiblePredicate() );
+			$object->addFilter( new ProjectAccessibleVpdPredicate() );
 		}
 
 		$object->setLimit(100);
@@ -439,7 +445,7 @@ class SoapService
 			unset($values['Id']);
 			unset($values['ClassName']);
 			unset($values['Url']);
-				
+
 			$it = $object->getByRefArray( $values );
 
 			while ( !$it->end() )
@@ -675,10 +681,9 @@ class SoapService
 				}
 					
 			default:
-				$value = html_entity_decode(IteratorBase::wintoutf8($object_it->get_native($attr)), ENT_COMPAT | ENT_HTML401, 'utf-8');
-				
-				if ( $object_it->object->IsReference($attr) )
-				{
+                $value = TextUtils::getXmlString($object_it->getHtmlDecoded($attr));
+
+				if ( $object_it->object->IsReference($attr) ) {
 					if ( $value == '' ) $value = "0";
 				}
 				
@@ -740,7 +745,7 @@ class SoapService
 				}
 
 			case 'xsd:string':
-				return IteratorBase::utf8towin($value);
+				return $value;
 
 			case 'xsd:base64binary':
 				return $value;
@@ -881,8 +886,12 @@ class SoapService
 		}
 
 		$rawPost = EnvironmentSettings::getRawPostData();
+
+        $rawPost = preg_replace('/&#(\d+);/', "", $rawPost ); #decimal notation
+        $rawPost = preg_replace('/&#x([a-f0-9]+);/i', "", $rawPost); #hex notation
+
 		$this->logInfo("REQUEST: ".$rawPost);
-		
+
 		ob_start();
 		$server->service($rawPost);
 		

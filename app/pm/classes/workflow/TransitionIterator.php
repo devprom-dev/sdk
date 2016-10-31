@@ -15,59 +15,58 @@ class TransitionIterator extends OrderedIterator
  		if ( !defined('PERMISSIONS_ENABLED') ) return true;
  			
  		$role_it = getFactory()->getObject('pm_TransitionRole')->getByRef('Transition', $this->getId());
- 		if ( $role_it->count() < 1 )
- 		{
+ 		if ( $role_it->count() < 1 ) {
  			return $this->checkDefaultAccess();
  		}
  		
  		$role = getFactory()->getObject('pm_ProjectRole');
- 		$role_it = $role_it->count() > 0 ? $role->getExact($role_it->fieldToArray('ProjectRole')) : $role->getEmptyIterator();
- 		
- 		$roles = getSession()->getParticipantIt()->getBaseRoles();
- 		while ( !$role_it->end() )
- 		{
- 			foreach( $roles as $role_ref => $data )
- 			{
- 				if ( $role_ref == $role_it->get('ReferenceName') )
- 				{
- 					return $this->checkDefaultAccess();
- 				}
- 			}
- 			
- 			$role_it->moveNext();
- 		}
+        $roles = getSession()->getParticipantIt()->getBaseRoles();
+ 		$role_it = $role_it->count() > 0
+            ? $role->getExact($role_it->fieldToArray('ProjectRole'))
+            : $role->getEmptyIterator();
+
+        $foundRoles = array_keys($roles);
+        $requiredRoles = $role_it->fieldToArray('ReferenceName');
+
+        if ( $this->get('ProjectRolesLogic') == 'all' ) {
+            if ( count(array_intersect($requiredRoles, $foundRoles)) == count($requiredRoles) ) {
+                return $this->checkDefaultAccess();
+            }
+        }
+        else {
+            if ( count(array_intersect($requiredRoles, $foundRoles)) > 0 ) {
+                return $this->checkDefaultAccess();
+            }
+        }
 
  		return false;
  	}
  	
- 	function doable( $object_it )
+ 	function doable( $object_it, $rules_it = null )
  	{
  		$this->nondoablereason = '';
- 		
- 		$predicate_it = getFactory()->getObject('pm_TransitionPredicate')->getRegistry()->Query(
- 				array (
- 						new FilterAttributePredicate('Transition', $this->getId())
- 				)
- 		);
- 		
- 		$rule = getFactory()->getObject('StateBusinessRule');
- 		
- 		while ( !$predicate_it->end() )
- 		{
-	 		$rule_it = $predicate_it->getRef('Predicate', $rule);
-	 			
-	 		if ( $rule_it->getId() != '' && !$rule_it->check( $object_it ) ) 
-	 		{
-	 			$this->nondoablereason = $rule_it->getNegativeReason();
-	 			if ( $this->nondoablereason == '' ) $this->nondoablereason = $rule_it->getDisplayName(); 
-	 			
-	 			return false;
-	 		}
-	 		
- 			$predicate_it->moveNext();
+        $checkResult = array();
+
+        if ( !is_object($rules_it) ) {
+            $rules_it = WorkflowScheme::Instance()->getStatePredicateIt($object_it->object);
+            $rules_it = $rules_it->object->createCachedIterator($rules_it->getSubset('Transition', $this->getId()));
+        }
+
+ 		while ( !$rules_it->end() ) {
+            $result = $rules_it->check( $object_it );
+            $checkResult[] = $result ? 1 : 0;
+            if ( !$result ) {
+                $reason = $rules_it->getNegativeReason();
+                if ( $reason != '' ) {
+                    $this->nondoablereason .= $rules_it->getNegativeReason().PHP_EOL;
+                }
+            }
+            $rules_it->moveNext();
  		}
- 		
- 		return true;
+
+ 		return $this->get('PredicatesLogic') == 'any'
+            ? array_sum($checkResult) > 0
+            : array_sum($checkResult) == count($checkResult);
  	}
  	
  	function getNonDoableReason()

@@ -25,7 +25,7 @@ class TaskTable extends PMPageTable
 	
 	function buildRelatedDataCache()
 	{
-		$this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+		$this->estimation_strategy = new EstimationHoursStrategy();
 		$this->uidService = new ObjectUID();
 
 		$this->cacheTraces('IssueTraces');
@@ -39,8 +39,7 @@ class TaskTable extends PMPageTable
 	{
 		$predicates = parent::getPredicates($filters);
 
-		if ( $this->getTable()->getReportBase() != 'tasksboardcrossproject' )
-		{
+		if ( !$this->getTable()->hasCrossProjectFilter() ) {
 			$predicates[] = new FilterBaseVpdPredicate();
 		}
 		
@@ -85,6 +84,7 @@ class TaskTable extends PMPageTable
 	
 	function hasCrossProjectFilter()
 	{
+        if ( getSession()->getProjectIt()->IsPortfolio() ) return true;
 		if ( $this->getReportBase() == 'tasksboardcrossproject' ) return true;
 		if ( $_REQUEST['view'] == 'board' ) return false;
 
@@ -171,7 +171,8 @@ class TaskTable extends PMPageTable
 
 	protected function buildTypeFilter()
 	{
-		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_TaskType'), translate('Тип'), 'tasktype');
+	    $taskType = getFactory()->getObject('pm_TaskType');
+		$type_method = new FilterObjectMethod( $taskType, translate('Тип'), 'tasktype');
 		$type_method->setIdFieldName( 'ReferenceName' );
 		return $type_method;
 	}
@@ -240,7 +241,8 @@ class TaskTable extends PMPageTable
 			new FilterSubmittedAfterPredicate( $values['submittedon'] ),
 			new FilterSubmittedBeforePredicate( $values['submittedbefore'] ),
 			new FilterAttributePredicate( 'ChangeRequest', $_REQUEST['issue'] ),
-			new TaskFeaturePredicate($_REQUEST['function'])
+			new TaskFeaturePredicate($_REQUEST['function']),
+            new TaskIssueStatePredicate($_REQUEST['issueState'])
 		);		
 
 		$predicates[] = new FilterModifiedAfterPredicate($values['modifiedafter']);
@@ -259,20 +261,9 @@ class TaskTable extends PMPageTable
 		$actions = array();
 		$module = getFactory()->getObject('Module');
 
-		$method = new ExcelExportWebMethod();
-		$url = $method->url( translate('Задачи') );
-
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $url ) );
-		$actions[] = array();
-
 		$method = new BoardExportWebMethod();
 		array_push($actions, array( 'name' => $method->getCaption(),
 			'url' => $method->url( 'IteratorExportTaskBoard' ) ) );
-
-		$method = new HtmlExportWebMethod();
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->url() ) );
 
 		$module_it = $module->getExact('attachments');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
@@ -355,7 +346,7 @@ class TaskTable extends PMPageTable
 		$object->setRegistry(new ObjectRegistrySQL($object));
 		$object->addFilter( new FilterVpdPredicate() );
 		$object->addFilter( new FilterInPredicate($iterator->idsToArray()) );
-		
+
 		// cache aggregates on workload and spent time
 		$planned_aggregate = new AggregateBase( 'Assignee', 'Planned', 'SUM' );
 		$object->addAggregate( $planned_aggregate );
@@ -387,73 +378,6 @@ class TaskTable extends PMPageTable
 			
 			$task_it->moveNext();
 		}
-
-		$project_it = getSession()->getProjectIt();
-		$iteration_registry = getFactory()->getObject('Iteration')->getRegistry();
-		$part_registry = getFactory()->getObject('Participant')->getRegistry();
-		
-		foreach( $this->workload as $user_id => $data )
-		{
-			$iteration_it = $iteration_registry->Query(
-					array (
-							new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
-							new IterationUserHasTasksPredicate($user_id),
-							new FilterVpdPredicate(),
-							new EntityProjectPersister(),
-							new SortAttributeClause('Project'),
-							new SortAttributeClause('StartDate')
-					)
-			);
-
-			$data = array();
-			$this->workload[$user_id]['Iterations'] = array(); 
-			
-			if ( $user_id == '' ) continue;
-			
-			while( !$iteration_it->end() )
-			{
-				$self_it = $iteration_it->getRef('Project');
-				if ( defined('PERMISSIONS_ENABLED') ) {
-					$part_it = $part_registry->Query(
-						array (
-							new FilterAttributePredicate('SystemUser', $user_id),
-							new FilterAttributePredicate('Project', $self_it->getId()),
-						)
-					);
-				}
-				else {
-					$part_it = $part_registry->getObject()->createCachedIterator(
-						array (
-							array (
-								'Capacity' => 8
-							)
-						)
-					);
-				}
-
-				$data['leftwork'] = $iteration_it->getLeftWorkParticipant( $user_id );
-				if ( $data['leftwork'] < 1 ) {
-					$iteration_it->moveNext();
-					continue;
-				}
-
-				$project_prefix = ($self_it->getId() != $project_it->getId() ? '{'.$self_it->get('CodeName').'} ' : '');
-
-				$data['title'] = $project_prefix.translate('Итерация').': '.$iteration_it->getDisplayName();
-				$data['number'] = $iteration_it->get('ShortCaption');
-				$data['capacity'] = $iteration_it->getLeftCapacity() * $part_it->get('Capacity');
-				
-				$method = new ObjectModifyWebMethod($iteration_it);
-				if ( $method->hasAccess() )
-				{
-					$method->setRedirectUrl('donothing');
-					$data['url'] = $method->getJSCall(); 
-				}
-
-				$this->workload[$user_id]['Iterations'][] = $data;
-				$iteration_it->moveNext();
-			}
-		}
 	}
 
 	function getFiltersName()
@@ -466,13 +390,12 @@ class TaskTable extends PMPageTable
 		switch ( $group_field )
 		{
 			case 'Release':
-			case 'PlannedRelease':
 				$iteration_it = $this->getListRef()->getGroupIt();
 				$iteration_it->moveToId($object_it->get($group_field));
 
 				if ( $iteration_it->getId() > 0 ) {
 					$estimation = $iteration_it->getTotalWorkload();
-					list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getEstimatedBurndownMetrics();
+					list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getRealBurndownMetrics();
 
 					echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
 					echo sprintf(
@@ -561,4 +484,45 @@ class TaskTable extends PMPageTable
 	function getDefaultRowsOnPage() {
 		return 60;
 	}
+
+    function getDetails()
+    {
+        $values = $this->getFilterValues();
+        $userFilter = $this->getFilterUsers($values['taskassignee'], $values);
+
+        $details = parent::getDetails();
+        return array_merge(
+            array_slice($details, 0, 1),
+            array (
+                'workload' => array (
+                    'image' => 'icon-user',
+                    'title' => text(716),
+                    'url' => getSession()->getApplicationUrl().'details/workload?tableonly=true&users='.$userFilter
+                ),
+            ),
+            array_slice($details, 1)
+        );
+    }
+
+    function getDetailsParms() {
+        return array (
+            'active' => 'props'
+        );
+    }
+
+    protected function getFamilyModules( $module )
+    {
+        switch( $module ) {
+            case 'tasks-list':
+                return array (
+                    'tasks-board'
+                );
+            case 'tasks-board':
+                return array (
+                    'tasks-list'
+                );
+            default:
+                return parent::getFamilyModules($module);
+        }
+    }
 }

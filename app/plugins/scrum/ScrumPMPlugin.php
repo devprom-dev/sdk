@@ -79,7 +79,9 @@ class ScrumPMPlugin extends PluginPMBase
 		if ( !is_object($this->method_toepic) )
 		{
 			if ( is_null($this->scrum_vpds) ) {
-				$this->scrum_vpds = getFactory()->getObject('Project')->getRegistry()->Query(
+                $registry = getFactory()->getObject('Project')->getRegistry();
+                $registry->setPersisters(array());
+                $this->scrum_vpds = $registry->Query(
 						array(new ProjectScrumPredicate())
 					)->fieldToArray('VPD');
 			}

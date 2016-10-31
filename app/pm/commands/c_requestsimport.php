@@ -220,14 +220,18 @@
 							$result[$i]['VPD'] = $object->getExact($result[$i][$field])->get('VPD');
 						}
 					}
-				}				
+				}
 
-				$request_id = $this->request->add_parms( $result[$i] );
+				$parms = $result[$i];
+                $mapper = new ModelDataTypeMapper();
+                $mapper->map( $this->request, $parms );
+
+				$request_id = $this->request->add_parms( $parms );
 				if ( $request_id > 0 )
 				{
 					$imported++;
 					
-					$this->createDependencies($request_id, $result[$i]);
+					$this->createDependencies($request_id, $parms);
 				}
 			}
 		}

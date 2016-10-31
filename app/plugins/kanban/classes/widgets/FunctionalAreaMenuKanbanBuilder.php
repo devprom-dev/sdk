@@ -21,18 +21,19 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
 
 	protected function buildPortfolioMenu( & $set )
 	{
-		$ids = getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId');
-		$project_it = getFactory()->getObject('Project')->getRegistry()->Query(
+        $registry = getFactory()->getObject('Project')->getRegistry();
+        $registry->setPersisters(array());
+		$project_it = $registry->Query(
 				array (
 						new ProjectUseKanbanPredicate(),
-						new FilterInPredicate($ids)
+						new ProjectLinkedSelfPredicate()
 				)
 		);
 		if ( $project_it->count() < 2 ) return;
 
 		$menus = $set->getAreaMenus( FUNC_AREA_FAVORITES );
 
-		if ( $project_it->count() == count($ids) ) {
+		if ( $project_it->count() == getSession()->getLinkedIt()->count() ) {
 			$item = $this->report->getExact('kanbanboard')->buildMenuItem();
 			$item['order'] = 7;
 			$menus['quick']['items']['issuesboard'] = $item;

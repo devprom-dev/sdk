@@ -12,14 +12,14 @@ foreach( $portfolios as $portfolio_id => $item ) {
     <li>
         <div class="container-fluid">
           <div class="row-fluid">
-            <div class="span6">
-                <table class="table">
+            <div class="span12">
+                <table class="table <?($has_portfolio_programs ? "two-columns" : "")?>">
                     <thead>
                         <tr>
                             <? if ( $has_portfolio_programs ) { ?>
-                            <th><?=(translate('Портфели').(count($programs) > 0 ? ' / '.translate('Программы') : ''))?></th>
+                            <th><?=(text('portfolios.name').(count($programs) > 0 ? ' / '.translate('Программы') : ''))?></th>
                             <? } ?>
-                            <th><?=translate('Проекты')?></th>
+                            <th><?=text('projects.name')?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,20 +68,17 @@ foreach( $portfolios as $portfolio_id => $item ) {
                         <tr>
                             <? if ( !$has_portfolio_programs ) { ?>
                             <td>
-                                <?php foreach ( $company_actions as $action ) { ?>
+                                <?php foreach ( $admin_actions as $action ) { ?>
                                     <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>
-                                <? if ( count($company_actions) > 0 ) { echo '<br/>'; } ?>
-                                <?php foreach ( $admin_actions as $action ) { ?>
-                                    <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
-                                    <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                <?php foreach ( $company_actions as $action ) { ?>
+                                    <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>
                             </td>
                             <? } else { ?>
                                 <td>
                                     <?php foreach ( $admin_actions as $action ) { ?>
-                                        <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
-                                        <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                        <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                     <?php } ?>
                                 </td>
                                 <td>
@@ -93,6 +90,43 @@ foreach( $portfolios as $portfolio_id => $item ) {
                         </tr>
                    </tbody>
                 </table>
+
+                <? if ( count($settings_actions) > 0 ) { ?>
+                <?
+                    if ( $has_portfolio_programs ) {
+                        $offset = round(count($settings_actions)/2);
+                        $columns = array(
+                            array_slice($settings_actions, 0, $offset),
+                            array_slice($settings_actions, $offset)
+                        );
+                    }
+                    else {
+                        $columns = array($settings_actions);
+                    }
+                ?>
+                <table class="table <?($has_portfolio_programs ? "two-columns" : "")?>">
+                    <thead>
+                        <tr>
+                            <th><?=translate('Настройки')?></th>
+                            <? if ( $has_portfolio_programs ) { ?>
+                                <th></th>
+                            <? } ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                        <? foreach( $columns as $column_actions ) { ?>
+                            <td>
+                                <?php foreach ( $column_actions as $action ) { ?>
+                                    <? $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'; ?>
+                                    <i class="<?=$action['icon']?>"></i> <a target="<?=$target?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                <?php } ?>
+                            </td>
+                        <? } ?>
+                        </tr>
+                    </tbody>
+                </table>
+                <? } ?>
             </div>
           </div>
         </div>

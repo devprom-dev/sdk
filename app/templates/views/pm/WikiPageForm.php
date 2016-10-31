@@ -13,7 +13,7 @@ if ( count($sections) > 0 )
 
 <?php if ( $show_section_number && $attributes['SectionNumber']['value'] != '' ) { ?>
 
-<h4 class="title-cell bs" style="width:1%;">
+<h4 class="title-cell bs" style="padding-left:0;">
 	<div class="sec-num">
     	<?=$attributes['SectionNumber']['value']?>
 	</div>
@@ -21,7 +21,7 @@ if ( count($sections) > 0 )
 
 <?php } ?>
 
-<h4 class="title-cell bs">
+<h4 class="title-cell bs" style="width:auto;padding-left:0;">
     <? $attributes['Caption']['field']->draw(); ?>
 </h4>
 
@@ -29,28 +29,48 @@ if ( count($sections) > 0 )
 
 <?php if ( $revision['id'] != '' ) { ?>
 
-<div class="title-cell" style="width:1%;">
+<div class="title-cell">
 	<span class="label label-inverse">
 		<?=translate('Изменение').': '.$revision['id']?>
 	</span>
 </div>
-<div class="title-cell" style="width:1%;"></div>
 
+<?php } ?>
+
+<?php if ( is_object($attributes['Tags']['field']) && $form->getObjectIt()->get('Tags') != '' ) { ?>
+	<div class="title-cell" style="white-space: nowrap;">
+		<?
+		$attributes['Tags']['field']->setReadonly(true);
+		$attributes['Tags']['field']->render($view);
+		?>
+	</div>
 <?php } ?>
 
 <?php if ( $persisted && $uid_icon != '' ) { ?>
-
-<div class="title-cell" style="width:1%;"></div>
-<div class="title-cell" style="width:1%;white-space:nowrap;">
-	<? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
-</div>
-
+	<div class="title-cell" style="white-space:nowrap;">
+		<? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
+	</div>
 <?php } ?>
 
-<?php if ( $persisted && $baseline == '' && is_a($form->getObjectIt(), 'StatableIterator') && $attributes['State']['value'] != '' ) { ?> 
+	<?php if ( $persisted && count($actions['create']['items']) > 0 ) { ?>
+		<div class="title-cell hidden-print">
+			<div class="btn-group operation last">
+				<a tabindex="-1" class="btn btn-mini btn-success dropdown-toggle actions-button" data-toggle="dropdown" href="#">
+					<i class="icon-plus icon-white"></i>
+				</a>
+				<?php
+				echo $view->render('core/PopupMenu.php', array (
+					'items' => $actions['create']['items']
+				));
+				?>
+			</div>
+		</div>
+	<?php } // persisted ?>
 
-<div class="title-cell" style="width:1%;"></div>
-<div class="title-cell hidden-print" style="width:1%;">
+
+	<?php if ( $persisted && $baseline == '' && is_a($form->getObjectIt(), 'StatableIterator') && $attributes['State']['value'] != '' ) { ?>
+
+<div class="title-cell hidden-print">
 <?php
 	echo $view->render('pm/StateColumn.php', array (
 				'color' => $form->getObjectIt()->get('StateColor'),
@@ -64,8 +84,7 @@ if ( count($sections) > 0 )
 
 <? if ( count($compare_actions) > 0 ) { ?>
 
-	<div class="title-cell" style="width:1%;"></div>
-	<div class="title-cell hidden-print" style="width:1%;">
+	<div class="title-cell hidden-print">
     <div class="btn-group operation last">
       <a tabindex="-1" class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
     	<i class="icon-broken"></i>
@@ -84,13 +103,11 @@ if ( count($sections) > 0 )
 
 <?php if ( $persisted ) { ?>
 
-<div class="title-cell" style="width:1%;"></div>
-
-<div class="title-cell hidden-print" style="width:1%;">
+<div class="title-cell hidden-print">
     <div class="btn-group operation last">
       <a tabindex="-1" class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
-    	<i class="icon-asterisk icon-gray"></i>
-    	<span class="caret"></span>
+		<i class="icon-asterisk icon-gray"></i>
+		<span class="caret"></span>
       </a>
       <?php
     	echo $view->render('core/PopupMenu.php', array (
@@ -116,7 +133,7 @@ if ( count($sections) > 0 )
 <?php if ( $persisted && is_object($comments_section) ) { ?>
 <div class="document-page-bottom hidden-print">
 	<div style="display:table;width:100%;height:23px;">
-		<div style="display:table-cell;">
+		<div class="comments-cell" style="display:table-cell;">
 			<span class="<?=($comments_count < 1 ? 'document-item-bottom-hidden': '')?>">
 				<i class="icon-comment"></i>
 				<a class="document-page-comments-link dashed" style="margin-top:3px;">
@@ -129,7 +146,7 @@ if ( count($sections) > 0 )
 				<? foreach( $structureActions as $action ) { ?>
 					<span class="document-structure-action">
 						<i class="<?=$action['icon']?>"></i>
-						<a class="dashed" onclick="<?=$action['url']?>"><?=$action['name']?></a>
+						<a class="dashed" id="<?=$action['uid']?>" onclick="<?=$action['url']?>"><?=$action['name']?></a>
 					</span>
 				<? } ?>
 			</span>

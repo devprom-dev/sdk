@@ -15,26 +15,12 @@ function drawMore( $object_it, $attr_name, $max_words = 20, $addition = '' )
 
  	$object_id = $object_it->getId();
  	$object_uid = md5($object_class.$object_id.$attr_name.rand(1, 1000)); 
-	$max_width = 300;
-	$converter = '';
 	$attribute_type = $object_it->object->getAttributeType($attr_name);
 
 	if( $max_words > 0 )
 	{
-	    if ( $attribute_type == 'wysiwyg' ) {
-            // special case for wysiwyg attribute
-            $attr_value = preg_replace('/^<p>(.+)<\/p>$/i', "\\1", str_replace(chr(10), '', $object_it->getHtmlDecoded($attr_name)));
-        }
-        else {		
-            $attr_value = str_replace(chr(10), '', $object_it->get($attr_name));
-        }
-
-        $entity_name = $object_it->object->getClassName();
-		
-		$totext = new \Html2Text\Html2Text( addslashes($attr_value) );
+		$totext = new \Html2Text\Html2Text( addslashes($object_it->getHtmlDecoded($attr_name)), array('width'=>0) );
 		$attr_value = $totext->getText();
-
-		$converter = 'html2text';
 		$result_value = str_replace( '...', '', $object_it->getWordsOnlyValue($attr_value, $max_words) );
 	}
 	else

@@ -1,31 +1,33 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class PortfolioRegistry extends ObjectRegistrySQL
 {
     protected $portfolios = array();
-    
     protected $callbacks = array();
-    
+
+    function __sleep() {
+        return array('portfolios');
+    }
+
     function addPortfolio( $attributes, $match_callback )
     {
-        foreach ( $this->getObject()->getAttributes() as $key => $value )
-        {
+        foreach ( $this->getObject()->getAttributes() as $key => $value ) {
             $base_attributes[$key] = '';
         };
         
         $attributes['IsTender'] = 'F'; // portfolio
-        
-        $attributes['VPD'] = ModelProjectOriginationService::getOrigin($attributes['pm_ProjectId']); 
+        $attributes['VPD'] = ModelProjectOriginationService::getOrigin($attributes['pm_ProjectId']);
         
         $this->callbacks[$attributes['CodeName']] = $match_callback;
-                        
         $this->portfolios[] = array_merge($base_attributes, $attributes);
     }
     
     function createSQLIterator( $sql )
     {
         $this->portfolios = array();
-        
+
         foreach( getSession()->getBuilders('PortfolioBuilder') as $builder ) {
             $builder->build($this);
         }

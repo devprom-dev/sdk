@@ -16,7 +16,6 @@ class WikiHistorySettingBuilder extends PageSettingBuilder
         $setting = new PageListSetting('WikiHistoryList');
         $setting->setGroup( 'ChangeDate' );
         $columns = array('UserAvatar', 'Content', 'RecordModified');
-        if ( $this->page_it->get('ParentPage') < 1 ) $columns[] = 'Caption';
         $setting->setVisibleColumns( $columns );
         $settings->add( $setting );
         

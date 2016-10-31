@@ -7,15 +7,8 @@ class ProjectLogDetailsTable extends PMPageTable
 		return new ProjectLogDetailsList( $this->getObject() );
 	}
 	
-	function getSortDefault( $sort_parm = 'sort' )
-	{
-		if ( $sort_parm == 'sort' ) {
-			return 'ChangeDate.D';
-		}
-		if ( $sort_parm == 'sort2' ) {
-			return 'RecordModified.D';
-		}
-		return parent::getSortDefault( $sort_parm );
+	function getSortAttributeClause() {
+        return new SortChangeLogRecentClause();
 	}
 
 	function getDefaultRowsOnPage() {

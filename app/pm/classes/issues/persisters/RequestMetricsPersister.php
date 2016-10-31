@@ -19,6 +19,11 @@ class RequestMetricsPersister extends ObjectSQLPersister
          $columns[] =
          	 "  IFNULL( t.FinishDate, ". 
          	 "  	IFNULL( (SELECT so.RecordCreated FROM pm_StateObject so WHERE so.pm_StateObjectId = t.StateObject AND so.State IN (".join(',',$terminalIds).")), ".
+             "          IFNULL( (SELECT MIN(ms.MilestoneDate) FROM pm_ChangeRequestTrace tr, pm_Milestone ms ".
+             "		  		      WHERE tr.ChangeRequest = t.pm_ChangeRequestId ".
+             "					    AND tr.ObjectId = ms.pm_MilestoneId ".
+             "		 			    AND IFNULL(ms.Passed, 'N') = 'N' ".
+             "					    AND tr.ObjectClass = '".getFactory()->getObject('RequestTraceMilestone')->getObjectClass()."'),".
          	 "				IFNULL( ".
          	 "					(SELECT MAX(r.DeliveryDate) ".
          	 "				   	   FROM pm_ChangeRequestLink l, pm_ChangeRequestLinkType lt, pm_ChangeRequest r ".
@@ -28,13 +33,17 @@ class RequestMetricsPersister extends ObjectSQLPersister
          	 "						AND lt.ReferenceName = 'implemented' ), ".
          	 "					IFNULL( ".
          	 "						(SELECT MAX(i.FinishDate) FROM pm_Release i, pm_Task s WHERE i.pm_ReleaseId = s.Release AND s.ChangeRequest = t.pm_ChangeRequestId), ".
-         	 "						IFNULL( ".
-			 " 							(SELECT v.FinishDate FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
-             "							(SELECT FROM_DAYS(m.MetricValue) FROM pm_ProjectMetric m WHERE m.VPD = t.VPD AND m.Metric = 'EstimatedFinishDate' LIMIT 1) ".
-         	 "						) ".
+             "					    IFNULL( ".
+             "						    (SELECT MAX(i.FinishDate) FROM pm_Release i WHERE i.pm_ReleaseId = t.Iteration), ".
+         	 "						    IFNULL( ".
+			 " 							    (SELECT v.FinishDate FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
+             "							    (SELECT FROM_DAYS(m.MetricValue) FROM pm_ProjectMetric m WHERE m.VPD = t.VPD AND m.Metric = 'EstimatedFinishDate' LIMIT 1) ".
+         	 "						    ) ".
+             "						) ".
              "					) ".
          	 "				) ".
              " 	 		)  ".
+             " 	 	)  ".
              "	) MetricDeliveryDate ";
 
 		 $columns[] =

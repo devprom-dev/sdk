@@ -20,7 +20,7 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttributeGroup('Author', 'nonbulk');
 		$metadata->addAttributeGroup('Content', 'nonbulk');
 		$metadata->setAttributeOrderNum('PageType', 12);
-		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', translate('Документ'), false);
+		$metadata->addAttribute('DocumentId', 'REF_'.get_class($object).'Id', $object->getDocumentName(), false);
 		$metadata->addAttributeGroup('UID', 'alternative-key');
 
 		foreach( array('DocumentId','ParentPage') as $attribute ) {

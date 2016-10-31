@@ -1,12 +1,11 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
+
 include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
 abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 {
 	abstract protected function checkEntity( $object_it );
-	
 	abstract protected function & getObjectReferences( & $object_it );
 
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
@@ -36,73 +35,68 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	
 	protected function moveEntity( & $object_it, & $target_it, & $references )
 	{
- 	    global $model_factory, $session;
- 	    
- 	    $xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?><entities>';
- 	    
- 	    foreach( $references as $object )
- 	    {
- 	       $xml .= $object->serialize2Xml();
- 	    }
- 	    
- 	    $xml .= '</entities>';
-
- 	    $this->updateChangeLog( $object_it, $target_it );
- 	    
- 	    // preserve issue key to be created with the same Id
- 	    $context = new CloneContext();
- 	    
- 	    $ids_map = array();
- 	    
- 	    foreach( $object_it->idsToArray() as $object_id )
- 	    {
- 	    	$ids_map[$object_it->object->getEntityRefName()][$object_id] = $object_id; 
- 	    }
- 	    
- 	    // remove source object 
- 	    $this->deleteObsolete($object_it);
- 	    
- 	    $project_it = getSession()->getProjectIt();
- 
- 	    // duplicate serialized data in the target project
- 	    $session = new PMSession( $target_it, getSession()->getAuthenticationFactory() );
- 	    
- 	    // bind data to existing objects if any
- 	    $context->setUseExistingReferences( true );
-		$context->setResetState(false);
- 	    $context->setResetDates(false);
- 	    $context->setIdsMap($ids_map);
- 	    
- 	 	foreach( $references as $object )
- 	    {
- 	    	$object = getFactory()->getObject(get_class($object));
+ 	 	foreach( $references as $object ) {
 			$object->removeNotificator('ChangeLogNotificator');
-
-     	    CloneLogic::Run( $context, $object, $object->createXMLIterator($xml), $target_it);
+			$this->setProject($object->getAll(), $target_it);
  	    }
- 	    
- 	    // restore the current session
- 	    $session = new PMSession( $project_it, getSession()->getAuthenticationFactory() );
+		$this->updateChangeLog( $object_it, $target_it );
 	}
 
-	protected function deleteObsolete( & $object_it )
+	protected function setProject( $object_it, $target_it )
 	{
-		$object_it->delete();
+		$state = new StateBase();
 
-		$watcher = getFactory()->getObject2('pm_Watcher', $object_it);
-		$watcher_it = $watcher->getAll();
-		
-		while( !$watcher_it->end() )
-		{
-			$watcher_it->object->delete($watcher_it->getId());
-			$watcher_it->moveNext();
+		while( !$object_it->end() ) {
+			$parms = array (
+				'Project' => $target_it->getId(),
+				'VPD' => $target_it->get('VPD')
+			);
+			foreach( array_keys($object_it->object->getAttributes()) as $attribute ) {
+				if ( $object_it->get($attribute) == '' ) continue;
+				if ( $object_it->object->IsReference($attribute) ) {
+					$ref = $object_it->object->getAttributeObject($attribute);
+					$keys = $ref->getAttributesByGroup('alternative-key');
+					if ( count($keys) > 0 ) {
+						$queryParms = array();
+						if ( $ref->getVpdValue() != '' ) {
+							$queryParms[] = new FilterVpdPredicate($target_it->get('VPD'));
+						}
+						foreach( $keys as $key ) {
+							$queryParms[] = new FilterAttributePredicate( $key,
+								' '.$ref->getExact($object_it->get($attribute))->get($key)
+							);
+						}
+						$ref_it = $ref->getRegistry()->Query($queryParms);
+						$parms[$attribute] = $ref_it->getId();
+					}
+				}
+			}
+			if ( $object_it->object instanceof MetaobjectStatable) {
+				$state_it = $state->getRegistry()->Query(
+					array(
+						new StateClassPredicate($object_it->object->getStatableClassName()),
+						new FilterAttributePredicate('ReferenceName', $object_it->get('State')),
+						new FilterVpdPredicate($target_it->get('VPD'))
+					)
+				);
+				if ( $state_it->getId() == '' ) {
+					$state_it = $state->getRegistry()->Query(
+						array(
+							new StateClassPredicate($object_it->object->getStatableClassName()),
+							new FilterVpdPredicate($target_it->get('VPD')),
+							new SortOrderedClause()
+						)
+					);
+					$parms['State'] = $state_it->get('ReferenceName');
+				}
+			}
+			$object_it->object->modify_parms( $object_it->getId(), $parms );
+			$object_it->moveNext();
 		}
 	}
-	
+
 	protected function updateChangeLog( $object_it, $target_it )
 	{
-	    global $model_factory;
-
 	    $project_it = getSession()->getProjectIt();
 	    
 		// store message the issue has been moved

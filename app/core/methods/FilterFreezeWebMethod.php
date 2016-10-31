@@ -46,9 +46,10 @@ class FilterFreezeWebMethod extends WebMethod
 		return text(1285);
 	}
 	
-	function url( $element_selector, $persisted, $redirect = "donothing" )
+	function url( $element_selector, $persisted, $redirect = "donothing", $subject = '' )
 	{
 		$this->redirect = $redirect;
+        if ( $subject == '' ) $subject = $this->subject;
 		
 		return parent::getJSCall( 
 			array( 'filter' => $this->filter,
@@ -56,10 +57,21 @@ class FilterFreezeWebMethod extends WebMethod
 				   'values' => $persisted
 						? 'function() { return filterLocation.getEmptyValuesString(); }'
 						: 'function() { return $(\''.$element_selector.'\').hasClass(\'checked\') ? filterLocation.getValuesString() : filterLocation.getEmptyValuesString(); }',
-				   'subject' => $this->subject )
+				   'subject' => $subject )
 			);
 	}
-	
+
+    function urlCommon( $redirect = "donothing" )
+    {
+        $this->redirect = $redirect;
+        return parent::getJSCall(
+            array( 'filter' => $this->filter,
+                'items' => 'function() { return filterLocation.getParametersString(); }',
+                'values' => 'function() { return filterLocation.getValuesString(); }',
+                'subject' => -1 )
+        );
+    }
+
 	function getRedirectUrl()
 	{
 		return $this->redirect;
@@ -114,7 +126,7 @@ class FilterFreezeWebMethod extends WebMethod
 
 			$settings = getSession()->getUserSettings();
 			if ( !is_object($settings) ) return '';
-			
+
 			$value = $settings->getSettingsValue($this->filters_name);
 			if ( in_array($value, array('','-')) ) {
 				$value = $settings->getSettingsValue($this->filters_name, -1); 
@@ -124,7 +136,7 @@ class FilterFreezeWebMethod extends WebMethod
 			
 			$filters = preg_split( '/;/', $value );
 			if ( count($filters) == 1 ) $filters = preg_split( '/,/', $value );
-			
+
 			foreach ( $filters as $value ) {
 				list($f_name, $f_value) = preg_split('/=/', $value);
 				$this->filter_values[$f_name] = $f_value;

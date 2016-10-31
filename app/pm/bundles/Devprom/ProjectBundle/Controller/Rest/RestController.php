@@ -173,7 +173,12 @@ abstract class RestController extends FOSRestController implements ClassResource
 
 	protected function getFilterResolver(Request $request) {
 		return array(
-			new ModifiedAfterFilterResolver($request->get('updatedAfter'))
+			new ModifiedAfterFilterResolver(
+				$request->get('updatedAfter'),
+				$request->get('updatedBefore'),
+				$request->get('createdAfter'),
+				$request->get('createdBefore')
+			)
 		);
 	}
 }

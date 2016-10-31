@@ -6,6 +6,7 @@ include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.
 include "persisters/WikiTagsPersister.php";
 include "persisters/WikiPageAttachmentsPersister.php";
 include "persisters/WikiPageWorkflowPersister.php";
+include "persisters/WikiPageFeaturePersister.php";
 
 class WikiPageModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -14,13 +15,14 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
     	if ( !$object instanceof WikiPage ) return;
     	
         $object->addAttribute('Workflow', 'TEXT', text(2044), false);
+        $object->addAttributeGroup('Workflow', 'workflow');
         $object->addPersister( new WikiPageWorkflowPersister(array('Workflow')) );
 
 		$object->addAttribute('Attachments', 'REF_WikiPageFileId', translate('Приложения'), false, false, '', 50);
 		$object->addPersister( new WikiPageAttachmentsPersister(array('Attachments')) );
 		
 		$object->addAttribute('Tags', 'REF_TagId', translate('Тэги'), false );
-		$object->addPersister( new WikiTagsPersister(array('Tags')) );
+		$object->addPersister( new WikiTagsPersister() );
 		
 		$object->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), false);
 		$object->addPersister( new WatchersPersister(array('Watchers')) );
@@ -34,6 +36,7 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 			$object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), true, false);
 			$object->addPersister( new WikiPageFeaturePersister(array('Feature')) );
 			$object->addAttributeGroup('Feature', 'trace');
+            $object->addAttributeGroup('Feature', 'bulk');
 		}
 
 		foreach( array('Tags', 'Attachments', 'Watchers', 'Author') as $attribute ) {

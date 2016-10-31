@@ -200,7 +200,7 @@ class HtmlMailBox extends MailBox
         $this->body .= "Content-Transfer-Encoding: base64\r\n\r\n";
 
 		// process texted part
-        $html2text = new \Html2Text\Html2Text($body);
+        $html2text = new \Html2Text\Html2Text($body, array('width'=>0));
 		$texted = $html2text->getText();
 		
 		$texted = preg_replace('/\s{2,}/', PHP_EOL, $texted);

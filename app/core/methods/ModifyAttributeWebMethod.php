@@ -69,7 +69,7 @@ class ModifyAttributeWebMethod extends WebMethod
  		 
  		$method_url = $this->method_url.$project_code.'/methods.php?method='.get_class($this);
  		
- 		$this->method_script = "javascript: runMethod('".$method_url."', {%data%}, ".$this->callback.", '".$this->getWarning()."');";
+ 		$this->method_script = "javascript: runMethod('".$method_url."', %data%, ".$this->callback.", '".$this->getWarning()."');";
  	}
  	
  	function getRedirectUrl()
@@ -102,7 +102,7 @@ class ModifyAttributeWebMethod extends WebMethod
 			array_push( $data, "'".$key."' : '".$value."'" );	
 		}
 		
-		return preg_replace('/%data%/', join(',', $data), $this->method_script);
+		return preg_replace('/%data%/', preg_replace('/"/', "'", JsonWrapper::encode($parms)), $this->method_script);
  	}
  	
  	function execute_request()
@@ -126,49 +126,32 @@ class ModifyAttributeWebMethod extends WebMethod
 		}
 		$object_it = $object->getExact($_REQUEST['object']);
 
-		if ( $object_it->getId() == '' )
-		{
-			echo '{"message":"object is undefined"}';
+		if ( $object_it->getId() == '' ) {
+			echo '{"message":"denied","description":"object is undefined"}';
 			return;
 		}
-			
- 	 	if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, $_REQUEST['attribute']) )
-		{
-			echo '{"message":"lack of permissions"}';
+ 	 	if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, $_REQUEST['attribute']) ) {
+			echo '{"message":"denied","description":"'.text(1062).'"}';
 			return;
 		}
-		
-		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) )
-		{
-			echo '{"message":"lack of permissions"}';
+		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) {
+			echo '{"message":"denied","description":"'.text(1062).'"}';
 			return;
 		}
 		
 		if ( $_REQUEST['value'] != '' && $object->IsReference($_REQUEST['attribute']) )
 		{
 	 		$attr_object = $object->getAttributeObject($_REQUEST['attribute']);
-
 	 		$attr_object_it = $attr_object->getExact(preg_split('/,/', $_REQUEST['value']));
-
-			if ( $attr_object_it->count() < 1 )
-			{
-				echo '{"message":"denied"}';
+			if ( $attr_object_it->count() < 1 ) {
+				echo '{"message":"denied","description":"object is undefined"}';
 				return;
 			}
 		}
 		
 		$user_parms = $_REQUEST['parms'];
-		
-		if ( is_array($user_parms) )
-		{
-			foreach( $user_parms as $key => $value )
-			{
-				$user_parms[$key] = IteratorBase::utf8towin($value);
-			}
-		}
-		
 		$parms = array (
-			$_REQUEST['attribute'] => IteratorBase::utf8towin($_REQUEST['value'])
+			$_REQUEST['attribute'] => $_REQUEST['value']
 		);
 
 		if ( !array_key_exists('OrderNum', $parms) )
@@ -217,16 +200,17 @@ class ModifyAttributeWebMethod extends WebMethod
 		}
 		
 		$parms = is_array($user_parms) ? array_merge($user_parms, $parms) : $parms;
-		
-		// check if there are changes
-		$has_changes = false;
-		
+
+        $mapper = new ModelDataTypeMapper();
+        $mapper->map( $object, $parms );
+
+        // check if there are changes
+        $has_changes = false;
 		foreach( $parms as $key => $value )
 		{
 			if ( $object_it->get_native($key) == $value ) continue;
-			
+
 			$has_changes = true;
-				
 			break;
 		}
 		

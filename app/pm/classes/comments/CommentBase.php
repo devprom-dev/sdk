@@ -157,11 +157,11 @@ class CommentBase extends Metaobject
 	
  	function getAccessFilter()
  	{
- 		global $model_factory, $part_it;
+ 		global $model_factory;
  		
 		$rights = $model_factory->getObject('pm_AccessRight');
 		
-		$names_it = $rights->getEntitiesForParticipant($part_it->getId());
+		$names_it = $rights->getEntitiesForParticipant(getSession()->getParticipantIt()->getId());
 			
 		$noaccess = array();
 		

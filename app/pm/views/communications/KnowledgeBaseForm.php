@@ -31,26 +31,6 @@ class KnowledgeBaseForm extends PMWikiForm
 		return array();
 	}
 	
-	function getActions( $page_it = null )
-	{
-		if ( !is_object($page_it) ) $page_it = $this->getObjectIt();
-		if ( !is_object($page_it) ) return array();
-		
-		$actions = parent::getActions( $page_it );
-
-		$export_actions = $this->getExportActions( $page_it );
-		if ( count($export_actions) > 0 )
-		{
-    		array_push($actions, array( '' ) );
-    		$actions[] = array(
-    		    'name' => translate('Экспорт'),
-    			'items' => $export_actions
-    		);
-		}
-		
-		return $actions;
-	}
-	
 	function drawCaption()
 	{
 		$object_it = $this->getObjectIt();

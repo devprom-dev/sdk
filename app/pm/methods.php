@@ -7,6 +7,7 @@ include_once SERVER_ROOT_PATH.'core/methods/DeleteEmbeddedWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/BoardExportWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/HtmlExportWebMethod.php';
+include_once SERVER_ROOT_PATH.'core/methods/XmlExportWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/FilterFreezeWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 include_once SERVER_ROOT_PATH."core/methods/DeleteObjectWebMethod.php";
@@ -22,6 +23,7 @@ include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php"
 include_once SERVER_ROOT_PATH."core/methods/GetAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/GetWholeTextWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/SettingsWebMethod.php";
+
 
 include_once SERVER_ROOT_PATH.'core/c_more.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
@@ -61,6 +63,10 @@ include_once "methods/StateExFilterWebMethod.php";
 include_once "methods/FilterStateTransitionMethod.php";
 include_once "methods/FilterStateMethod.php";
 include_once "methods/UndoWebMethod.php";
+include_once "methods/SetTagsRequestWebMethod.php";
+include_once "methods/SetTagsWikiWebMethod.php";
+include_once "methods/WikiExportBaseWebMethod.php";
+include_once "methods/TaskConvertToIssueWebMethod.php";
 
 if ( !class_exists($_REQUEST['method'], false) ) throw new Exception('There is no such method');
 
@@ -71,6 +77,8 @@ if ( !is_a($method, 'WebMethod') ) throw new Exception('Unknown method class: '.
 
 try
 {
+    FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+
     $method->exportHeaders();
     $method->execute_request();
 }

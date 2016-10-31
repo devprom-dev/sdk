@@ -33,7 +33,6 @@ class TaskModifyProjectTrigger extends EntityModifyProjectTrigger
 		$comment = getFactory()->getObject('Comment');
 		$comment->addFilter( new CommentObjectFilter($object_it) );
 		
- 	    $references[] = $type;
  	    $references[] = $task;
 		$references[] = $trace;
 		$references[] = $attachment;

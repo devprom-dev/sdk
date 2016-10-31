@@ -2,8 +2,6 @@
 
 namespace Devprom\ServiceDeskBundle\Tests\Security;
 
-include_once(SERVER_ROOT_PATH . '/core/classes/PluginsFactory.php');
-
 use Devprom\ServiceDeskBundle\Security\LicenseChecker;
 use PHPUnit_Framework_TestCase;
 use PluginBase;

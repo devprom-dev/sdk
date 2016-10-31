@@ -23,7 +23,6 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
  		// plan items
 		$items = array();
 		$items[] = $report->getExact('projectplan')->buildMenuItem();
-		$items[] = $module->getExact('project-plan-milestone')->buildMenuItem();
 		$items[] = $report->getExact('tasksplanningboard')->buildMenuItem();
 		$items[] = $report->getExact('currenttasks')->buildMenuItem();
 		$items[] = $module->getExact('tasks-board')->buildMenuItem();
@@ -58,14 +57,18 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 
 		$items[] = $report->getExact('features-chart')->buildMenuItem();
 		$items[] = $report->getExact('activitiesreport')->buildMenuItem();
-		$items['all'] = $module->getExact('project-reports')->buildMenuItem(FUNC_AREA_MANAGEMENT);
+		$items['all'] = $module->getExact('project-reports')->buildMenuItem('pmreportcategory='.$this->getAreaUid());
 		
 		$menus['reports'] = array (
-            'name' => translate('Графики и отчеты'),
+            'name' => text(2230),
             'uid' => 'reports',
             'items' => $items
  	    );
  	    
 		$set->setAreaMenus( FUNC_AREA_MANAGEMENT, $menus );
+    }
+
+    protected function getAreaUid() {
+        return FUNC_AREA_MANAGEMENT;
     }
 }

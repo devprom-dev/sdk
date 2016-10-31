@@ -14,6 +14,6 @@ class FieldTaskInverseTrace extends FieldTaskTrace
  	
  	function getForm( & $trace )
 	{
-		return new TaskTraceInverseFormEmbedded( $trace, 'ObjectId' );
+		return new TaskTraceInverseFormEmbedded( $trace, 'ObjectId', $this->getName() );
 	}
 }

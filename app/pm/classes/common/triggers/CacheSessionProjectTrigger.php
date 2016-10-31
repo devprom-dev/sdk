@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
-
 class CacheSessionProjectTrigger extends SystemTriggersBase
 {
 	private $invalidate = false;
@@ -22,6 +20,9 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 			case 'pm_IssueType':
 			case 'pm_TaskType':
 			case 'WikiPageType':
+            case 'cms_Resource':
+            case 'pm_WorkspaceMenu':
+            case 'pm_WorkspaceMenuItem':
 				$this->invalidateCache();
 			    break;
 
@@ -46,10 +47,6 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 				WorkflowScheme::Instance()->invalidate();
 				break;
 
-			case 'cms_Resource':
-				$this->invalidateCache();
- 			    break;
-			    
 			case 'pm_CustomReport':
 				getFactory()->getObject('PMReport')->resetCache();
 				$this->invalidateCache();
@@ -57,7 +54,7 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 			    
 			case 'pm_ProjectLink':
 			    // reset cached values for linked project
-			    $project_it = getSession()->getProjectIt()->getRef('LinkedProject');
+			    $project_it = getSession()->getLinkedIt();
 			    while( !$project_it->end() ) {
 			        $session->truncateForProject($project_it);
 			        $project_it->moveNext();
@@ -87,11 +84,17 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 				$session->truncateForProject( $object_it );
 				$this->invalidateCache();
          		break;
+
+            default:
+                if ( $object_it->object instanceof RequestTemplate ) {
+                    $this->invalidateCache();
+                }
 		}
 	}
 	
 	public function invalidateCache()
 	{
+	    SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 		getFactory()->getAccessPolicy()->invalidateCache();
 		getFactory()->getEntityOriginationService()->invalidateCache();

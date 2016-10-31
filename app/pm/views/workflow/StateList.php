@@ -5,16 +5,13 @@ class StateList extends PMPageList
     function getColumns()
     {
         $this->object->addAttribute('Transitions', '', translate('Переходы'), true);
+        $this->object->setAttributeVisible('IsTerminal', false);
 
         return parent::getColumns();
     }
 
     function drawCell( $object_it, $attr )
     {
-        global $model_factory;
-
-        $session = getSession();
-        
         $view = $this->getRenderView();
 
         switch ( $attr )

@@ -53,6 +53,7 @@ class RequestTable extends PMPageTable
 	
 	function hasCrossProjectFilter()
 	{
+	    if ( getSession()->getProjectIt()->IsPortfolio() ) return true;
 		if ( $this->getReportBase() == 'issuesboardcrossproject' ) return true;
 		if ( $_REQUEST['view'] == 'board' ) return false;
 
@@ -61,12 +62,7 @@ class RequestTable extends PMPageTable
 	
 	function getActions()
 	{
-		global $model_factory;
-		
 		$actions = array();
-		
-		$list = $this->getListRef();
-		$it = $list->getIteratorRef();
 		
 		$method = new ReleaseNotesRequestWebMethod();
 		if ( $method->hasAccess() )
@@ -75,18 +71,9 @@ class RequestTable extends PMPageTable
 				'url' => $method->url() ) );
 		}
 		
-		$method = new ExcelExportWebMethod();
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->url( $this->getShortCaption() ) ) );
-		$actions[] = array();
-		
 		$method = new BoardExportWebMethod();
 		array_push($actions, array( 'name' => $method->getCaption(),
 			'url' => $method->url( 'IteratorExportIssueBoard' ) ) );
-
-		$method = new HtmlExportWebMethod();
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->url() ) );
 
 		$module = getFactory()->getObject('Module');
 
@@ -124,12 +111,12 @@ class RequestTable extends PMPageTable
 			$append_actions = $this->getNewCardActions(getSession()->getProjectIt());
 		}
 
-		if ( in_array($group, array('Function', 'PlannedRelease', 'Iterations')) )
+		if ( in_array($group, array('Function', 'PlannedRelease', 'Iteration')) )
 		{
 			$method = new ObjectCreateNewWebMethod(
 					$group == 'Function' && getSession()->getProjectIt()->getMethodologyIt()->HasFeatures()
 						? getFactory()->getObject('Feature')
-						: ($group == 'Iterations'
+						: ($group == 'Iteration'
 								? getFactory()->getObject('Iteration')
 								: getFactory()->getObject('Release'))
 			);
@@ -149,7 +136,7 @@ class RequestTable extends PMPageTable
 		
 		return $append_actions;
 	}
-	
+
 	function getNewCardActions( $project_it )
 	{
 		$append_actions = array();
@@ -341,12 +328,11 @@ class RequestTable extends PMPageTable
 		if ( is_object($filter) ) $filters[] = $filter;
 		$filters[] = $this->buildUserRoleFilter();
 
+		$filter = $this->buildFilterEstimation();
+		if ( is_object($filter) ) $filters[] = $filter;
+
 		array_push( $filters, $this->buildFilterSubmittedVersion() );
 
-		$strategy = $methodology_it->getEstimationStrategy();
-		$filter = $strategy->getEstimationFilter();
-		if ( is_object($filter) ) array_push( $filters, $filter );
-		
 	    $filter = $this->buildSnapshotFilter();
 	    if ( is_object($filter) ) $filters[] = $filter;
 	    
@@ -362,8 +348,8 @@ class RequestTable extends PMPageTable
  		$predicates = array();
  		
 		$predicates[] = new StatePredicate( $values['state'] );
-		$predicates[] = new FilterAttributePredicate( 'Priority', $values['priority']);
-		$predicates[] = new IssueOwnerUserPredicate($this->getFilterUsers($values['owner'],$values));
+		$predicates[] = new FilterAttributePredicate('Priority', $values['priority']);
+		$predicates[] = new FilterAttributePredicate('Owner',$values['owner']);
 		$predicates[] = new FilterAttributePredicate('Type', $values['type']);
 		$predicates[] = new FilterSubmittedAfterPredicate($values['submittedon']);
 		$predicates[] = new FilterSubmittedBeforePredicate($values['submittedbefore']);
@@ -383,24 +369,28 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestIterationFilter($_REQUEST['iterations']);
 
 		$trace = $model_factory->getObject('pm_ChangeRequestTrace');
-
 		array_push($predicates, new RequestTracePredicate( $_REQUEST['trace'] ) );
 
 		$predicates[] = new FilterModifiedAfterPredicate($values['modifiedafter']);
 		$predicates[] = new FilterModifiedBeforePredicate($values['modifiedbefore']);
-		
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		
-		$predicate = $strategy->getEstimationPredicate( $values['estimation'] );
-		
-		if ( is_object($predicate) ) array_push( $predicates, $predicate );
+		$predicates[] = new RequestEstimationFilter($values['estimation']);
 		
 		return array_merge($predicates, parent::getFilterPredicates());
 	}	
-	
+
+	protected function buildFilterEstimation()
+	{
+		$scale = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getFilterScale();
+		if ( count($scale) < 1 ) return;
+		return new ViewRequestEstimationWebMethod($scale);
+	}
+
 	protected function buildFilterState()
 	{
-		if ( $this->getListRef() instanceof RequestBoard ) {
+        if ( $this->getListRef() instanceof RequestBoardPlanning ) {
+            return new StateExFilterWebMethod(WorkflowScheme::Instance()->getStateIt($this->getObject()));
+        }
+		elseif ( $this->getListRef() instanceof RequestBoard ) {
 			return new StateExFilterWebMethod($this->getListRef()->getBoardAttributeIterator());
 		}
 		else
@@ -445,7 +435,7 @@ class RequestTable extends PMPageTable
 		$filter = new FilterObjectMethod($priority);
 		$filter->setHasNone(false);
 
-		if ( $this->getReportBase() == 'issuesboardcrossproject' ) {
+		if ( $this->hasCrossProjectFilter() ) {
 			$registry = $priority->getRegistry();
 			$registry->setLimit(3);
 			$values = $registry->getAll()->idsToArray();
@@ -497,7 +487,7 @@ class RequestTable extends PMPageTable
 
 				if ( $release_it->getId() > 0 ) {
 					$estimation = $release_it->getTotalWorkload();
-					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
+					list( $capacity, $maximum, $actual_velocity ) = $release_it->getRealBurndownMetrics();
 					echo sprintf(
 						getSession()->getProjectIt()->IsPortfolio() ? text(2076) : text(2053),
 						$release_it->getDateFormatShort('StartDate'),
@@ -509,15 +499,15 @@ class RequestTable extends PMPageTable
 				}
 				break;
 
-			case 'Iterations':
+			case 'Iteration':
 				echo ' &nbsp; &nbsp; &nbsp; &nbsp; ';
 
 				$release_it = $this->getListRef()->getGroupIt();
 				$release_it->moveToId($object_it->get($group_field));
 
 				if ( $release_it->getId() > 0 ) {
-					$estimation = $release_it->getEstimation();
-					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimatedBurndownMetrics();
+					$estimation = $release_it->getLeftEstimation();
+					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimationRealBurndownMetrics();
 					echo sprintf(
 							getSession()->getProjectIt()->IsPortfolio() ? text(2076) : text(2053),
 							$release_it->getDateFormatShort('StartDate'),
@@ -578,7 +568,39 @@ class RequestTable extends PMPageTable
 		}
 	}
 
-	function getRenderParms( $parms )
+    function getDetails()
+    {
+        $values = $this->getFilterValues();
+        $userFilter = $this->getFilterUsers($values['owner'], $values);
+
+        $details = parent::getDetails();
+        return array_merge(
+            array_slice($details, 0, 1),
+            array (
+                'workload' => array (
+                    'image' => 'icon-user',
+                    'title' => text(716),
+                    'url' => getSession()->getApplicationUrl().'details/workload?tableonly=true&users='.$userFilter
+                ),
+            ),
+            array_slice($details, 1)
+        );
+    }
+
+    function getDetailsParms() {
+        if ( in_array($this->getReportBase(), array('iterationplanningboard','releaseplanningboard')) ) {
+            return array (
+                'active' => 'props'
+            );
+        }
+        else {
+            return array (
+                'active' => $_REQUEST['view'] == 'board' ? 'workload' : 'props'
+            );
+        }
+    }
+
+    function getRenderParms( $parms )
 	{
 		$parms = parent::getRenderParms($parms);
 
@@ -593,6 +615,28 @@ class RequestTable extends PMPageTable
 
 		return $parms;
 	}
+
+    protected function getFamilyModules( $module )
+    {
+        switch( $module ) {
+            case 'kanban/requests':
+                return array (
+                    'issues-board'
+                );
+            case 'issues-backlog':
+                return array (
+                    'issues-board',
+                    'kanban/requests'
+                );
+            case 'issues-board':
+                return array (
+                    'issues-backlog',
+                    'kanban/requests'
+                );
+            default:
+                return parent::getFamilyModules($module);
+        }
+    }
 
 	function getDefaultRowsOnPage() {
 		return 60;

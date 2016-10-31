@@ -32,6 +32,7 @@ class FlotChartDataSource
 			}
 		}
 
+        $it->moveFirst();
 		while ( !$it->end() )
 		{
 			$attribute = $aggs[0]->getAttribute();

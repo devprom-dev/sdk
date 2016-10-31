@@ -21,13 +21,11 @@ class SDKSetup extends Installable
 		getCheckpointFactory()->getCheckpoint('CheckpointSystem')->executeDynamicOnly();
 		
 		getSession()->close();
-		
-		getSession()->open(getFactory()->getObject('User')->getExact($user_id));
+        getSession()->setAuthenticationFactory(null);
+        getSession()->open(getFactory()->getObject('User')->getExact($user_id));
 
 		$installation_factory = InstallationFactory::getFactory();
-		    
 		$clear_cache_action = new ClearCache();
-		    
 		$clear_cache_action->install();
 		
 		return true;

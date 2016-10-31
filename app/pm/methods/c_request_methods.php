@@ -398,40 +398,41 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestEstimationWebMethod extends ViewRequestWebMethod
  {
- 	function getCaption()
- 	{
+	 private $scale = array();
+
+	 function __construct( $scale = array() ) {
+		 $this->scale = $scale;
+		 parent::__construct();
+	 }
+
+	 function getCaption() {
  		return translate('Трудоемкость');
- 	}
+ 	 }
 
- 	function getValues()
- 	{
- 		global $model_factory;
- 		
-  		$values = array (
- 			'all' => $this->getCaption().':',
- 			'simple' => translate('Простые').' (0..3)',
- 			'normal' => translate('Средние').' (4..13)',
- 			'hard' => translate('Сложные').' (> 13)',
- 			'undefined' => translate('Неоцененные'),
- 			);
- 		
- 		return $values;
-	}
+ 	 function getValues()
+ 	 {
+		$values = array (
+ 			'all' => translate('Все'),
+		);
+		$values = array_merge($values, $this->scale);
+		$values['none'] = translate('Неоцененные');
+		return $values;
+	 }
 	
-	function getStyle()
-	{
+	 function getStyle()
+	 {
 		return 'width:125px;';
-	}
+	 }
 
- 	function getValueParm()
- 	{
+ 	 function getValueParm()
+ 	 {
  		return 'estimation';
- 	}
+ 	 }
 
- 	function getType()
- 	{
+ 	 function getType()
+ 	 {
  		return 'singlevalue';
- 	}
+ 	 }
  }
 
  //////////////////////////////////////////////////////////////////////////////////////
@@ -578,81 +579,3 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		return getSession()->getProjectIt()->getMethodologyIt()->HasTasks();
 	}
  }
-  
- ///////////////////////////////////////////////////////////////////////////////////////
- class ModifyRequestWebMethod extends RequestWebMethod
- {
- 	var $request_it;
- 	
- 	function ModifyRequestWebMethod( $request_it = null )
- 	{
- 		$this->request_it = $request_it;
- 		
- 		parent::RequestWebMethod();
- 	}
- 	
-	function getCaption() {
-		return translate('Изменить атрибут');
-	}
-
- 	function execute_request()
- 	{
- 		if ( is_object($this->request_it) ) {
- 			$_REQUEST['ChangeRequest'] = join(',', $this->request_it->idsToArray()); 
- 		}
- 		if ( $_REQUEST['ids'] != '' ) {
- 			$_REQUEST['ChangeRequest'] = join(',', preg_split('/-/', $_REQUEST['ids']));
- 		}
-
-	 	if ( $_REQUEST['ChangeRequest'] == '' ) throw new Exception('Requests required'); 
-
- 		$this->execute(
- 				$_REQUEST['ChangeRequest'], 
- 				$_REQUEST['attr'], 
- 				IteratorBase::utf8towin($_REQUEST['value']), 
- 				$_REQUEST['notify']
-		);
- 	}
- 	
- 	function execute( $object_id, $attribute, $value, $notify )
- 	{
- 		$request = getFactory()->getObject('pm_ChangeRequest');
- 		$request->removeNotificator( 'EmailNotificator' );
-
-		$request_it = $request->getExact( preg_split('/,/', $object_id) );
- 		if ( $request_it->count() < 1 ) return;
-
-		if ( array_key_exists('Tag', $_REQUEST) )
-		{
-			$request_tag = getFactory()->getObject('pm_RequestTag');
- 			$request_tag->removeNotificator( 'EmailNotificator' );
-			
- 			while ( !$request_it->end() )
- 			{
- 				$parms = array (
- 						'Request' => $request_it->getId(),
-    					'Tag' => $value
- 				);
- 				$mapper = new ModelDataTypeMapper();
-				$mapper->map( $request_tag, $parms );
- 				
-    	 		$request_tag_it = $request_tag->getByAK( $request_it->getId(), $parms['Tag'] );
-    			if ( $request_tag_it->count() < 1 )
-    			{
-    				$request_tag->add_parms($parms);
-    			}
-    			
-    			$request_it->moveNext();
- 			}
-		}
-		else if ( array_key_exists('RemoveTag', $_REQUEST) )
-		{
-			$request_tag = getFactory()->getObject('pm_RequestTag');
-			while ( !$request_it->end() )
-			{
-			    $request_tag->removeTags( $request_it->getId() );
-			    $request_it->moveNext();
-			}
-		}
- 	}
-}

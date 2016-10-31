@@ -7,7 +7,7 @@ $project_it = $session->getProjectIt();
 ?>
 
 <div class="btn-toolbar title-toolbar">
-    <div class="btn-group">
+    <div class="btn-group navbar-company">
         <a id="navbar-company-name" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
             <i class="icon-th-list icon-white"></i>&nbsp;
             <?=$company_name?>
@@ -20,8 +20,6 @@ $project_it = $session->getProjectIt();
         ?>
     </div>
     <div class="btn-group">
-        <a class="btn btn-link btn-navbar">
-        </a>
     </div>
     <?php $subprojects_count = count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]); ?>
     <?php if( is_array($project_navigation_parms) ) { ?>
@@ -58,8 +56,6 @@ $project_it = $session->getProjectIt();
             </div>
 
             <div class="btn-group">
-                <a class="btn btn-link btn-navbar">
-                </a>
             </div>
 
             <div class="btn-group">
@@ -98,17 +94,4 @@ $project_it = $session->getProjectIt();
     <?php } ?>
 
 </div> <!-- end btn-toolbar -->
-
-
-<script type="text/javascript">
-    devpromOpts.project = '<?=$project_it->get('CodeName')?>';
-
-    if ( $.browser.msie && document.documentMode < 8 )
-    {
-        translate( 1352, function( text )
-        {
-            $('<div class="alert alert-error" style="text-align:center;">'+text+'</div>').insertBefore('.container-fluid:eq(0)');
-        });
-    }
-</script>
 

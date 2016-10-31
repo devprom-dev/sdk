@@ -81,4 +81,9 @@ class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
     {
         return text(1382);
     }
+
+    function getWarning()
+    {
+        return text(2253);
+    }
 }

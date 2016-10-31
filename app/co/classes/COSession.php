@@ -1,32 +1,17 @@
 <?php
- 
 include_once SERVER_ROOT_PATH.'core/c_session.php';
 include_once 'COAccessPolicy.php';
 include_once 'COSystemTriggers.php';
 include_once "ResourceBuilderCoLanguageFile.php";
 include_once "ProjectWelcomeStylesheetBuilder.php";
 
-
-///////////////////////////////////////////////////////////////////////
 class COSession extends SessionBase
 {
- 	public function configure()
- 	{
- 		// register business and aspects triggers 
- 		getFactory()->getEventsManager()->registerNotificator( new COSystemTriggers );
- 		
-        parent::configure();
-        
-        getLanguage();
- 	}
- 	
- 	function getSite()
- 	{
+ 	function getSite() {
  	    return 'co';
  	}
 
- 	function getApplicationUrl()
- 	{
+ 	function getApplicationUrl() {
  	    return '/co/';
  	}
  	
@@ -38,7 +23,8 @@ class COSession extends SessionBase
  	    		),
  	    		parent::createBuilders(),
  	    		array (
- 	    			new ProjectWelcomeStylesheetBuilder(getSession())		
+ 	    			new ProjectWelcomeStylesheetBuilder(getSession()),
+                    new COSystemTriggers()
  	    		)
  	    );
  	}

@@ -47,7 +47,7 @@ class AuthenticationHttpBasicFactory extends AuthenticationFactory
  		
  		if ( $user_it->get('Password') != $user->getHashedPassword($_SERVER['PHP_AUTH_PW']) ) return parent::authorize();
  		
- 		$this->setUser( $user_it->getId() );
+ 		$this->setUser( $user_it );
  		
 		return $user_it;
  	}

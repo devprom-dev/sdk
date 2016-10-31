@@ -9,11 +9,15 @@ class BulkActionBuilderWorkflow extends BulkActionBuilder
  		$object = $registry->getObject()->getObject();
  		if ( !$object instanceof MetaobjectStatable ) return;
  		if ( $object->getStateClassName() == '' ) return;
- 	 	if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
+ 	 	if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, 'State') ) return;
 
 		$transition_it = WorkflowScheme::Instance()->getTransitionIt($object);
 		while ( !$transition_it->end() )
 		{
+		    if ( !$transition_it->appliable() ) {
+                $transition_it->moveNext();
+                continue;
+            }
 			$registry->addWorkflowAction(
 					$transition_it->get('SourceStateReferenceName'),
 					$transition_it->getDisplayName(),

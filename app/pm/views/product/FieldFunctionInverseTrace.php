@@ -16,6 +16,6 @@ class FieldFunctionInverseTrace extends FieldFunctionTrace
  	
  	function getForm( & $trace )
 	{
-		return new FunctionTraceInverseFormEmbedded( $trace, 'ObjectId' );
+		return new FunctionTraceInverseFormEmbedded( $trace, 'ObjectId', $this->getName() );
 	}
 }

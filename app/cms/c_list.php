@@ -8,6 +8,7 @@
 	var $itemactions = array();
 	var $it_reorder;
 	var $action;
+	 private $offset = null;
 	
 	function ListForm( $object )
 	{
@@ -663,12 +664,16 @@
 	
 	function getOffset()
 	{
-		global $_REQUEST;
+		if ( is_numeric($this->offset) ) return $this->offset;
 
 		$offset = $_REQUEST[$this->offset_name];
 		if($offset == '') $offset = 0;
 
-		return $offset;
+		$this->offset = $offset;
+		$this->offset = $this->offset <= $this->getIteratorRef()->count()
+			&& $this->offset >= $this->getMaxOnPage() ? $this->offset : 0;
+
+		return $this->offset;
 	}
 
 	 function setOffset( $offset ) {
@@ -683,12 +688,8 @@
 	//---------------------------------------------------------------------------------------------------------
 	function retrieve()
 	{
-		$this->offset = $this->getOffset();
-		
+		$this->setupColumns();
 		$this->it = $this->getIterator();
-		
-		$this->offset = $this->offset <= $this->it->count()
-			&& $this->offset >= $this->getMaxOnPage() ? $this->offset : 0;
 	}
 	
 	function getMaxOnPage()
@@ -740,16 +741,16 @@
 		if ( count($this->delete_checks) < 1 )
 		{
 			$it = $this->getIteratorRef();
-			$it->moveToPos( $this->offset );
+			$it->moveToPos( $this->getOffset() );
 			
-			for( $i = 0; $i < min($it->count() - $this->offset, $this->getMaxOnPage()); $i++)
+			for( $i = 0; $i < min($it->count() - $this->getOffset(), $this->getMaxOnPage()); $i++)
 			{
     			$this->delete_checks[$it->getId()] = getFactory()->getAccessPolicy()->can_delete($it);
     			
 				$it->moveNext();
 			}
 		
-			$it->moveToPos( $this->offset );
+			$it->moveToPos( $this->getOffset() );
 		}
 		
 		$has_any = count($this->delete_checks) < 1 ? true : false;
@@ -863,7 +864,7 @@
 		
 		// общее число страниц
         $pages = $this->getPages();
-        $offset_page = max(1, $this->offset / $this->getMaxOnPage() - 3);
+        $offset_page = max(1, $this->getOffset() / $this->getMaxOnPage() - 3);
 
 		echo '<div class="pull-left hover-holder">';
         echo '<div class="pull-left pagination">';
@@ -916,7 +917,7 @@
 		$pageurl = $pagename.(strpos($pagename, '?') !== false ? '&' : '?').
 			$this->offset_name.'='.($i * $this->getMaxOnPage());
 			
-    	$current = $i * $this->getMaxOnPage() == $this->offset;
+    	$current = $i * $this->getMaxOnPage() == $this->getOffset();
     	
     	//$class_name = $current ? "btn btn-small btn-info" : "btn btn-small";
 		//echo '<button class="'.$class_name.'" onclick="javascript: window.location=\''.$pageurl.'\';">'.round($i+1).'</button>';
@@ -1094,7 +1095,7 @@
 		}
 		
 		$it = $this->it;
-		$it->moveToPos( $this->offset );
+		$it->moveToPos( $this->getOffset() );
 		
 		$table_row_id = $this->table_id.'_row_'; 
 		$table_col_id = $this->table_id.'_col_'; 
@@ -1196,7 +1197,7 @@
 				$group_field_prev_value = '{83C23330-E68F-4852-83D7-6BE4E49FF985}';
 				$row_num = 0;
 
-				for( $i = 0; $i < min($it->count() - $this->offset, $this->getMaxOnPage()); $i++)
+				for( $i = 0; $i < min($it->count() - $this->getOffset(), $this->getMaxOnPage()); $i++)
 				{
 					if ( !$this->IsNeedToDisplayRow($it) )
 					{
@@ -1241,13 +1242,13 @@
 						$group_field_prev_value = $group_field_value;
 					}
 					?>
-					<tr id="<? echo $table_row_id.($this->offset + $i + 1) ?>" style="background:<? echo $this->getRowBackgroundColor( $it ); ?>;">
+					<tr id="<? echo $table_row_id.($this->getOffset() + $i + 1) ?>" style="background:<? echo $this->getRowBackgroundColor( $it ); ?>;">
 					<?
 						if ( $this->IsNeedToDisplayNumber() ) 
 						{
 							$color = $this->getRowColor( $it, null );
 						?>
-						<td class=list_cell style="color:<? echo $color ?>;width:10pt;"><? $this->drawNumberColumn( $this->offset + $i + 1 ); ?></td>
+						<td class=list_cell style="color:<? echo $color ?>;width:10pt;"><? $this->drawNumberColumn( $this->getOffset() + $i + 1 ); ?></td>
 						<?
 						}
 						

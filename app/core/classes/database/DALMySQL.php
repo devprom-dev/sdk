@@ -26,8 +26,7 @@ class DALMySQL extends DAL
     
     public function Reconnect()
     {
-    	if ( !@mysql_ping($this->connection) )
-    	{
+    	if ( !@mysql_ping($this->connection) ) {
 	    	$this->Connect( $this->connectionInfo );
     	}
     }
@@ -39,21 +38,35 @@ class DALMySQL extends DAL
 
     public function QueryAllRows( $sql )
     {
-        return array();
+        if ( is_resource($sql) ) return mysql_fetch_all($sql, MYSQLI_BOTH);
+        return mysql_fetch_all($this->Query($sql), MYSQLI_BOTH);
     }
 
     public function QueryAssocArray($sql)
     {
-        return mysql_fetch_assoc($this->Query($sql));
+        if ( is_resource($sql) ) {
+            $result = mysql_fetch_assoc($sql);
+        }
+        else {
+            $result = mysql_fetch_assoc($this->Query($sql));
+        }
+        return is_null($result) ? array() : $result;
     }
 
     public function QueryArray($sql)
     {
-        return mysql_fetch_array($this->Query($sql));
+        if ( is_resource($sql) ) {
+            $result = mysql_fetch_array($sql);
+        }
+        else {
+            $result = mysql_fetch_array($this->Query($sql));
+        }
+        return is_null($result) ? array() : $result;
     }
 
     public function Query( $sql )
     {
+        if ( is_null($sql) || !is_string($sql) ) return @mysql_query("SELECT 0", $this->connection);
         $this->info( $sql );
         
         $resultSet = @mysql_query($sql, $this->connection);

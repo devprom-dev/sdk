@@ -115,10 +115,18 @@ class Form
 			// get url from which the form had been called
 			$this->redirect_url = $this->getRedirectUrl();
 			if ( !getFactory()->getAccessPolicy()->can_create($this->getObject()) ) return;
-			
-		    $this->persist();
 
-			$this->redirectOnAdded($this->object_it, $this->redirect_url);
+			try {
+		    	$this->persist();
+				$this->redirectOnAdded($this->object_it, $this->redirect_url);
+			}
+			catch( \Exception $e ) {
+				$this->setRequiredAttributesWarning();
+				$this->warning_message = $e->getMessage();
+				$this->edit('');
+				$this->redirect_url = $this->getRedirectUrl();
+				$this->action = 'show';
+			}
 			return;
 	    }
 	    
@@ -126,9 +134,7 @@ class Form
 	    {
 			// get url from which the form had been called
 			$this->redirect_url = $this->getRedirectUrl();
-	
 		    $this->redirectOnCancel($object_it, $this->redirect_url);
-		    
 		    return;
 	    }
 	    
@@ -168,20 +174,22 @@ class Form
 			//	
 			case 'modify':
 
-				if ( !$this->editable() ) return;
-
 				$this->redirect_url = $this->getRedirectUrl();
 
-				if ( !$this->persist() )
-				{
-					$this->required_attributes_warning = true;
-					$this->warning_message = text(1106);
-					
-					$this->edit($object_it);
+				try {
+					if ( !$this->persist() ) {
+						$this->required_attributes_warning = true;
+						$this->warning_message = text(1106);
+						$this->edit($object_it);
+					}
+					else {
+						$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+					}
 				}
-				else
-				{
-					$this->redirectOnModified($this->object_it, $this->getRedirectUrl());
+				catch( \Exception $e ) {
+					$this->setRequiredAttributesWarning();
+					$this->warning_message = $e->getMessage();
+					$this->edit($object_it);
 				}
 
 				break;
@@ -349,11 +357,6 @@ class Form
 		$this->object_it = $object_it;
 	}
 	
-	function getDeleteMessage()
-	{
-		return text(636);
-	}
-	
 	function IsViewMode()
 	{
 		return $this->action == 'view';
@@ -425,7 +428,12 @@ class Form
 		}
 		else {
             if( $_REQUEST['formonly'] != '' ) {
-                echo json_encode(array('Id' => $object_it->getId()));
+                echo json_encode(
+                    array(
+                        'Id' => $object_it->getId(),
+                        'Url' => $object_it->getViewUrl()
+                    )
+                );
                 exit();
             }
 		}
@@ -563,7 +571,8 @@ class Form
  	
 	function IsAttributeEditable( $attr_name )
 	{
-		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attr_name);
+		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attr_name)
+			&& $this->getObject()->getAttributeEditable($attr_name);
 	}
 	
 	function IsAttributeVisible( $attr_name ) 
@@ -1036,7 +1045,7 @@ class Form
         else {
         	$field->setId($this->object->getEntityRefName().$name);
         }
-      	$field->setReadOnly( !$this->checkAccess() || !$this->IsAttributeEditable($name) );
+      	$field->setReadOnly( !$this->IsAttributeEditable($name) );
     	$field->setEditMode( $this->getEditMode() );
     	$field->setName($name);
 

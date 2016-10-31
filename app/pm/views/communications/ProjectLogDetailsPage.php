@@ -24,7 +24,7 @@ class ProjectLogDetailsPage extends PMPage
 				array (
 						new FilterModifiedAfterPredicate($from_date),
 						new FilterVpdPredicate(),
-						new SortRecentClause()
+						new SortChangeLogRecentClause()
 				)
 			 )->idsToArray();
  	}

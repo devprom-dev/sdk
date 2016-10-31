@@ -63,7 +63,7 @@ class KanbanPmPlugin extends PluginPMBase
 			new FunctionalAreaMenuKanbanBuilder(),
 
 			// model extenders
-			new StateKanbanMetadataBuilder( getSession() ),
+			new StateKanbanMetadataBuilder(),
 			new MethodologyKanbanMetadataBuilder(),
 			new RequestKanbanMetadataBuilder(),
 
@@ -99,7 +99,9 @@ class KanbanPmPlugin extends PluginPMBase
 	protected function getIssueActions( $object_it )
 	{
 		if ( is_null($this->kanban_vpds) ) {
-			$this->kanban_vpds = getFactory()->getObject('Project')->getRegistry()->Query(
+		    $registry = getFactory()->getObject('Project')->getRegistry();
+            $registry->setPersisters(array());
+			$this->kanban_vpds = $registry->Query(
 					array(new ProjectUseKanbanPredicate())
 				)->fieldToArray('VPD');
 		}

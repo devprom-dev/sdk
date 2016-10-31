@@ -15,7 +15,7 @@ class ViewSpentTimeWebMethod extends FilterWebMethod
  		
   		$values = array (
  			'participants' => translate('Участники'),
- 			'projects' => translate('Проекты'),
+ 			'projects' => text('projects.name'),
   		    'issues' => translate('Пожелания'),
  			'tasks' => translate('Задачи')
  			);

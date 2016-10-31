@@ -6,7 +6,6 @@ use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 class ServiceDeskAppKernel extends Kernel
 {

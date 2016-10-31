@@ -8,6 +8,9 @@ class BulkActionRegistry extends ObjectRegistrySQL
 				'name' => $title,
 				'url' => 'Attribute'.$attribute
 		);
+		usort($this->actions['modify'], function( $left, $right ) {
+			return $left['name'] > $right['name'];
+		});
 	}
 	
 	function addCustomAction( $title, $method )

@@ -2,7 +2,6 @@
 
 namespace Devprom\ProjectBundle\Service\Navigation;
 
-include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalArea.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaCommonBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaMyProjectsBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaPortfolioBuilder.php";
@@ -83,7 +82,7 @@ class WorkspaceService
 				'Caption' => \IteratorBase::utf8towin($data['title']),
 				'Icon' => $data['icon']
 		);
-		
+
 		if ( $workspace_it->getId() > 0 )
 		{
 			$workspace->modify_parms($workspace_it->getId(), $parms); 
@@ -110,7 +109,7 @@ class WorkspaceService
 					'Workspace' => $workspace_it->getId(),
 					'Caption' => \IteratorBase::utf8towin($node['title'])
 			);
-			
+
 			if ( $menu_it->getId() > 0 )
 			{
 				$menu->modify_parms($menu_it->getId(), $parms); 
@@ -215,7 +214,7 @@ class WorkspaceService
 					$workspace['menuNodes'][$node_key]['nodes'][] = array (
 							'report' => $report
 					);
-					
+
 					$this->storeWorkspace($workspace);
 				}
 			}

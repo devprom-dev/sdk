@@ -26,4 +26,11 @@ class BugController extends RestController
     			null
 		);
     }
+
+    protected function getPostData(Request $request)
+    {
+        $data = $request->request->all();
+        if ( trim($data['Caption']) == '' ) return array();
+        return $data;
+    }
 }

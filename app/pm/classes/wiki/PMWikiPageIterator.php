@@ -20,4 +20,10 @@ class PMWikiPageIterator extends WikiPageIterator
 		
 		return $this->object->getPageHistory().'object='.$class_name.'&'.$class_name.'='.$this->getId();
 	}
+
+    function getPageVersions() {
+        $url = $this->object->getPageVersions();
+        if ( $url == '' ) return $url;
+        return $url.'page='.$this->getId();
+    }
 }

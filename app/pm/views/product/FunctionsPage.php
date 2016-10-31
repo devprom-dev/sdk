@@ -24,6 +24,9 @@ class FunctionsPage extends PMPage
 	            $this->addInfoSection( new PageSectionComments($object_it) );
  		    }
  		}
+ 		else {
+            $this->addInfoSection(new DetailsInfoSection());
+        }
  	}
  	
  	function getObject()

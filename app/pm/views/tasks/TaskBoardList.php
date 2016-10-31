@@ -131,7 +131,7 @@ class TaskBoardList extends PMPageBoard
 	
  	function buildBoardAttributeIterator()
  	{
-		if ( $this->getTable()->getReportBase() == 'tasksboardcrossproject' ) {
+		if ( $this->getTable()->hasCrossProjectFilter() ) {
 			if ( $this->hasCommonStates() ) {
 		 		return getFactory()->getObject('TaskState')->getRegistry()->Query(
 		 				array (
@@ -477,9 +477,14 @@ class TaskBoardList extends PMPageBoard
 				break;
 
 			case 'Assignee':
-				echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
-						'user' => $object_it->getRef('Assignee')->getDisplayName()
+				$workload = $this->getTable()->getAssigneeUserWorkloadData();
+				if ( count($workload) > 0 )
+				{
+					echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+						'user' => $object_it->getRef('Assignee')->getDisplayName(),
+						'data' => $workload[$object_it->get($group_field)]
 					));
+				}
 				break;
 
 			default:
@@ -488,7 +493,13 @@ class TaskBoardList extends PMPageBoard
 
 		$this->getTable()->drawGroup($group_field, $object_it);
 	}
-		
+
+	function getGroupEntityName( $groupField, $object_it, $referenceIt )
+	{
+		if ( $referenceIt->object instanceof Request ) return "";
+		return parent::getGroupEntityName($groupField, $object_it, $referenceIt);
+	}
+
 	function getGroupBackground2( $object_it, $attr_it ) 
 	{
  		switch ( $this->getGroup() )
@@ -522,17 +533,18 @@ class TaskBoardList extends PMPageBoard
 	function getCardColor( $object_it )
 	{ 	
 		$values = $this->getFilterValues();
-		
 		switch ( $values['color'] )
 		{
-		    case 'state':
-		    	return $object_it->get('StateColor');
-		    	
-		    case 'priority':
-		    	return $object_it->getRef('Priority')->get('RelatedColor');
-		    	
-		    case 'type':
-		    	return $object_it->getRef('TaskType')->get('RelatedColor');
+			case 'state':
+				return strpos($object_it->get('StateColor'),'#') === false
+					? $object_it->get('PriorityColor')
+					: $object_it->get('StateColor');
+			case 'priority':
+				return $object_it->get('PriorityColor');
+			case 'type':
+				return strpos($object_it->get('TypeColor'),'#') === false
+					? $object_it->get('PriorityColor')
+					: $object_it->get('TypeColor');
 		}
 	}
 

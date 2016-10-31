@@ -1,7 +1,5 @@
 <?php
 
-include_once "SystemTriggersBase.php";
-
 class CacheResetTrigger extends SystemTriggersBase
 {
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 

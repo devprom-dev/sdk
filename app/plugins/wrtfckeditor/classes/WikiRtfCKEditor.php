@@ -101,22 +101,6 @@ class WikiRtfCKEditor extends WikiEditorBase
  		return "addImagesAutomatically";
  	}
  	
- 	public function getExportActions( $object_it )
- 	{
- 		$actions = array();
- 		
- 		if ( $object_it->object instanceof ProjectPage ) return $actions;
- 		
-		$method = new WysiwygExportWordWebMethod();
-		
-		$actions[] = array( 
-			'name' => $method->getCaption(), 
-			'url' => $method->getJSCall(array()) 
-		);
- 		
-		return $actions;
- 	}
- 	
  	function draw( $content, $b_editable = false )
  	{
  		$lang = strtolower(getSession()->getLanguageUid());

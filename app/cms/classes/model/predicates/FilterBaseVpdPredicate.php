@@ -9,7 +9,7 @@ class FilterBaseVpdPredicate extends FilterPredicate
   	function getPredicate( $filter = '' )
  	{
  		$vpd = $this->getObject()->getVpdValue();
- 		
+
  		if ( $vpd != '' ) {
  		    return " AND ".$this->getAlias().".VPD = '".$vpd."'";
  		}

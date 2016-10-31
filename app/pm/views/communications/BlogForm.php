@@ -80,8 +80,6 @@ class BlogForm extends PMPageForm
 
     function getFieldValue( $field )
     {
-        global $part_it;
-
         $object_it = $this->getObjectIt();
 
         switch ( $field )
@@ -89,7 +87,7 @@ class BlogForm extends PMPageForm
             case 'AuthorId':
                 if ( !is_object($object_it) || is_object($object_it) && $object_it->get('Author') == '' )
                 {
-                    return $part_it->getId();
+                    return getSession()->getParticipantIt()->getId();
                 }
                 break;
 

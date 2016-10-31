@@ -19,5 +19,6 @@ class MaintenanceJSBuilder extends ScriptBuilder
  		$file_name = tempnam(sys_get_temp_dir(), 'maintenance');
     	file_put_contents($file_name, $content);
     	$object->addScriptFile($file_name);
+        unlink($file_name);
     }
 }

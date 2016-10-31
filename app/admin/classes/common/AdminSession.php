@@ -13,7 +13,6 @@ class AdminSession extends SessionBase
 	function __construct()
 	{
 		parent::__construct();
-		
 		getLanguage();
 	}
 

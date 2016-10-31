@@ -1,48 +1,77 @@
 <?php
-
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 {
-	private $affected = null;
-	private $classes_list = array();
+	private $affected_queue = array();
+	private $skipped_entities = array();
 	private $skipClasses = array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable','MetaobjectStatable');
 	
 	public function __construct()
 	{
-		$this->affected = getFactory()->getObject('AffectedObjects');
+		$this->skipped_entities = array (
+			'co_JobRun',
+			'pm_ProjectUse',
+			'ObjectChangeLog',
+			'ObjectChangeLogAttribute',
+			'EmailQueue',
+			'EmailQueueAddress',
+			'cms_EntityCluster',
+			'pm_StateObject',
+			'pm_Project'
+		);
+        $this->finalize();
 	}
-	
-	public function __destruct()
+
+	public function __sleep() {
+        return array('skipped_entities', 'skipClasses');
+    }
+
+    public function __wakeup() {
+        $this->finalize();
+    }
+
+    protected function finalize()
+    {
+        $self = $this;
+        register_shutdown_function(function() use ($self) {
+            $self->terminate();
+        });
+    }
+
+    public function terminate()
 	{
-		foreach( array_unique($this->classes_list) as $class_name )
-		{
-	        $lock = new LockFileSystem( $class_name );
-	        $lock->Release();
-		}	
+		$date = SystemDateTime::date();
+		if ( count($this->affected_queue) < 1 ) return;
+
+		foreach( $this->affected_queue as $item ) {
+			DAL::Instance()->Query(
+				"INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, ObjectClass, ObjectId, VPD) 
+					VALUES ('".$date."', '".$date."', '".$item['ObjectClass']."', ".$item['ObjectId'].", '".$item['VPD']."') "
+			);
+		}
+
+		foreach( $this->affected_queue as $item ) {
+			$lock = new LockFileSystem($item['ObjectClass']);
+			$lock->Release();
+		}
+		$lock = new LockFileSystem('ChangeLogAggregated');
+		$lock->Release();
+
+		// drop old records (purge the queue)
+		DAL::Instance()->Query(
+			"DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
+			strftime('%Y-%m-%d %H:%M:%S', strtotime('-40 seconds', strtotime(SystemDateTime::date())))
+			."' "
+		);
 	}
 	
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 		if ( $object_it->object instanceof AffectedObjects ) return; // avoid infinite recursion
-		
-		// skip unnesessary events
 		if ( $object_it->object instanceof CoScheduledJob ) return;
-		
-		$skipped_entities = array (
-				'co_JobRun', 
-				'pm_ProjectUse', 
-				'ObjectChangeLog', 
-				'ObjectChangeLogAttribute', 
-				'EmailQueue', 
-				'EmailQueueAddress',
-				'cms_EntityCluster',
-				'pm_StateObject',
-				'pm_Project'
-		);
-		
-		if ( in_array($object_it->object->getEntityRefName(), $skipped_entities) ) return;
+		if ( in_array($object_it->object->getEntityRefName(), $this->skipped_entities) ) return; // skip unnesessary events
 		
 		// put itself in the queue
 		$class_name = get_class($object_it->object);
@@ -87,16 +116,6 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	    foreach( $this->getCustomReferences($kind, $object_it) as $class_name => $ref_it ) {
 			$this->storeAffectedRows($class_name, $ref_it);
 	    }
-
-	    // drop old records (purge the queue)
-		DAL::Instance()->Query(
-		 		"DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
-		 				strftime('%Y-%m-%d %H:%M:%S', strtotime('-40 seconds', strtotime(SystemDateTime::date())))
-         				."' "
-        );
-	    
-		// notify listeners data has been refreshed
-	    $this->classes_list[] = 'ChangeLogAggregated';
 	}
 	
 	function storeAffectedRows( $class_name, $object_it )
@@ -106,25 +125,15 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			if ( !is_numeric($object_it->getId()) ) {
 				$object_it->moveNext();
 				continue;
-			}				
-
-			$this->affected->setNotificationEnabled(false);
-			$this->affected->setVpdContext($object_it);
-			
-			$this->affected->add_parms(
-					array (
-							'ObjectClass' => $class_name,
-							'ObjectId' => $object_it->getId(),
-							'VPD' => $object_it->get('VPD')
-					)
+			}
+			$this->affected_queue[] = array (
+				'ObjectClass' => $class_name,
+				'ObjectId' => $object_it->getId(),
+				'VPD' => $object_it->get('VPD')
 			);
-			
 			$object_it->moveNext();
 		}
-		
 		$object_it->moveFirst();
-
-		$this->classes_list[] = $class_name;
 	}
 	
 	function getDescendants( $class_name )

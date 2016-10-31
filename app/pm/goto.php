@@ -33,7 +33,7 @@
  
  $object_url = $object_uid->getObjectUrl($uid);
 
-foreach(array('baseline', 'case') as $parm ) {
+foreach(array('baseline', 'case', 'revision') as $parm ) {
     if ( is_numeric($_REQUEST[$parm]) && $_REQUEST[$parm] > 0 ) {
         $object_url .= strpos($object_url, '?') > 0 ? '&'.$parm.'='.$_REQUEST[$parm] : '?'.$parm.'='.$_REQUEST[$parm];
     }

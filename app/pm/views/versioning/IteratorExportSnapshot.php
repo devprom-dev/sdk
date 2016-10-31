@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."core/classes/export/IteratorExport.php";
 
 class IteratorExportSnapshot extends IteratorExport
 {

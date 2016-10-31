@@ -15,7 +15,6 @@ include 'CheckpointExtentionLoaded.php';
 include 'CheckpointHasAdmininstrator.php';
 include 'CheckpointPhpVersion.php';
 include 'CheckpointNoCrashedTables.php';
-include 'CheckpointTablesOptimized.php';
 include "CheckpointUpdatesAvailable.php";
 include "CheckpointTablesPartitioned.php";
 include "CheckpointMySQLVariables.php";
@@ -38,7 +37,6 @@ class CheckpointRegistryBuilderSystem extends CheckpointRegistryBuilder
 			new CheckpointDirectoryWritable(),
 			new CheckpointMySQLVariables(),
 			new CheckpointNoCrashedTables(),
-			new CheckpointTablesOptimized(),
 		    new CheckpointTablesPartitioned(),
 			new CheckpointBackups(),
 			new CheckpointSupportPayed(),

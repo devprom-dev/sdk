@@ -5,7 +5,14 @@ class TaskIterator extends StatableIterator
  	function getDisplayName()
  	{
  		$type_name = $this->getType();
- 		return $type_name != "" ? $type_name.': '.$this->get('Caption') : parent::getDisplayName();
+ 		$title = $type_name != ""
+            ? $type_name.': '.$this->get('Caption')
+            : parent::getDisplayName();
+
+        if ( $this->get('TaskAssigneePhotoTitle') != '' ) {
+            $title .= ' ['.$this->get('TaskAssigneePhotoTitle').']';
+        }
+        return $title;
     }
 
 	function getDisplayNameNative()

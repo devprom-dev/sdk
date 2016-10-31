@@ -10,7 +10,7 @@ CKEDITOR.editorConfig = function( config ) {
 	// For the complete reference:
 	// http://docs.ckeditor.com/#!/api/CKEDITOR.config
 
-	config.extraPlugins = 'plantuml,lineutils,linkex,sharedspace';
+	config.extraPlugins = 'plantuml,lineutils,linkex,sharedspace,embed,autoembed,tableresize';
 	config.allowedContent = true;
 	config.disableNativeSpellChecker = false;
 	config.entities = false;
@@ -20,16 +20,15 @@ CKEDITOR.editorConfig = function( config ) {
 	config.plantUMLServer = devpromOpts.plantUMLServer != '' ? devpromOpts.plantUMLServer : 'http://www.plantuml.com';
 	config.toolbar_FullToolbar =
 	[
-		{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo', '-', 'TextColor','BGColor' ] },
+		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','-','Subscript','Superscript','-', 'TextColor','BGColor','-','RemoveFormat' ] },
+		{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','Blockquote' ] },
+		{ name: 'insert', items : [ 'Image','Table','Link','HorizontalRule','Smiley','Embed','SpecialChar', 'Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
 		{ name: 'editing', items : [ 'Scayt' ] },
-		{ name: 'insert', items : [ 'Image','Table','Link','HorizontalRule','Smiley','SpecialChar', 'Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
 		{ name: 'tools', items : [ 'Maximize', 'ShowBlocks' ] },
 		{ name: 'forms', items : [ 'Checkbox' ] },
 		{ name: 'document', items : [ 'Source' ] },
 		{ name: 'styles', items : [ 'Styles','Format','Font','FontSize' ] },
-		'/',
-		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','-','Subscript','Superscript','-','RemoveFormat' ] },
-		{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','Blockquote' ] }
 	];
 
 	config.toolbar_MiniToolbar =
@@ -37,7 +36,7 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'clipboard', items : ['Paste','PasteText' ] },
 		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','RemoveFormat' ] },
 		{ name: 'paragraph', items : [ 'Outdent','Indent','NumberedList','BulletedList','Blockquote' ] },
-		{ name: 'insert', items : [ 'Image','Table','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'insert', items : [ 'Image','Table','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
 		{ name: 'colors', items : [ 'TextColor','BGColor' ] },
 		{ name: 'tools', items : [ 'Maximize' ] }
 	];

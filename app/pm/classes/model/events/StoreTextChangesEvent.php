@@ -65,10 +65,10 @@ class StoreTextChangesEvent extends ObjectFactoryNotificator
         $editor->setObjectIt($object_it);
         $parser = $editor->getComparerParser();
 
-        $html2text = new \Html2Text\Html2Text($parser->parse($was_text));
+        $html2text = new \Html2Text\Html2Text($parser->parse($was_text), array('width'=>0));
         $was_text = preg_replace('/[\r\n]+/', PHP_EOL, $html2text->getText());
 
-        $html2text = new \Html2Text\Html2Text($parser->parse($now_text));
+        $html2text = new \Html2Text\Html2Text($parser->parse($now_text), array('width'=>0));
         $now_text = preg_replace('/[\r\n]+/', PHP_EOL, $html2text->getText());
 
 		$diff = new FineDiff(

@@ -6,23 +6,13 @@ class AdminAccessPolicy extends COAccessPolicy
 {
 	function getEntityAccess( $action_kind, &$object )
 	{
-		if( is_object($object) )
-		{
-			$ref_name = $object->getClassName();
-		}
-		else
-		{
-			return true;
-		}
+		if( !is_object($object) ) return true;
 
 		$plugins = getFactory()->getPluginsManager();
 		
 		$array = is_object($plugins) ? $plugins->getPluginsForSection('admin') : array();
-		
-		foreach ( $array as $plugin )
-		{
+		foreach ( $array as $plugin ) {
 			$result = $plugin->getEntityAccess( $action_kind, getSession()->getUserIt(), $object);
-			
 			if ( is_bool($result) ) return $result;
 		}
 

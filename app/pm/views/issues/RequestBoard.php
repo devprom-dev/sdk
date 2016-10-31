@@ -20,10 +20,13 @@ class RequestBoard extends PMPageBoard
  	private $types_array = array();
  	private $task_uid_service = null;
  	private $estimation_actions = array();
+	private $estimation_scale = array();
  	private $estimation_title = '';
  	private $method_spend_time = null;
 	private $uidVisible = true;
 	private $task = null;
+	private $taskBoardStates = array();
+	private $taskBoardModuleIt = null;
  	
  	function __construct( $object )
  	{
@@ -123,19 +126,19 @@ class RequestBoard extends PMPageBoard
 					'method' => $method 
 				);
 			}
-			$this->priorities_array[$priority_it->getId()] = $priority_it->copy();
 			$priority_it->moveNext();
 		}
 		
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		foreach( $strategy->getScale() as $item )
+		$scale = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getScale();
+		$this->estimation_scale = array_flip($scale);
+		foreach( $scale as $label => $item )
 		{
 			$method = new ModifyAttributeWebMethod($object_it, 'Estimation', $item);
 			if ( $method->hasAccess() )
 			{
 				$method->setCallback( "donothing" );
 				$this->estimation_actions[] = array( 
-					    'name' => ' '.$item,
+					    'name' => $label,
 						'method' => $method 
 				);
 			}
@@ -150,11 +153,30 @@ class RequestBoard extends PMPageBoard
 		
 		$this->spent_time_title = $this->getObject()->getAttributeUserName('Fact');
  		$this->estimation_title = $this->getObject()->getAttributeUserName('Estimation');
+
+		$info = $this->getTable()->getPage()->getPageWidgetNearestUrl();
+		$this->tags_url = $info['widget']->getUrl('tag=%');
+
+		$states = WorkflowScheme::Instance()->getStates($this->getObject());
+		foreach( $states as $stateFullKey => $state ) {
+			$this->attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($this->getObject(), $stateFullKey);
+			while( !$this->attribute_it->end() ) {
+				if ( $this->attribute_it->get('ReferenceName') == 'Tasks' ) {
+					$this->taskBoardStates[] = $state;
+				}
+				$this->attribute_it->moveNext();
+			}
+		}
+
+		$module_it = getFactory()->getObject('PMReport')->getExact('tasksboardforissues');
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+			$this->taskBoardModuleIt = $module_it;
+		}
  	}
  	
  	function buildBoardAttributeIterator()
  	{
-		if ( $this->getTable()->getReportBase() == 'issuesboardcrossproject' ) {
+		if ( $this->getTable()->hasCrossProjectFilter() ) {
 			if ( $this->hasCommonStates() ) {
 		 		return getFactory()->getObject('IssueState')->getRegistry()->Query(
 		 				array (
@@ -180,7 +202,7 @@ class RequestBoard extends PMPageBoard
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->HasReleases() ) return 'PlannedRelease';
-		if ( $methodology_it->HasPlanning() ) return 'Iterations';
+		if ( $methodology_it->HasPlanning() ) return 'Iteration';
 		if ( $methodology_it->HasFeatures() ) return 'Function';
 		
 		return '';
@@ -213,7 +235,14 @@ class RequestBoard extends PMPageBoard
 
 	function getGroupNullable( $field_name )
 	{
-		return $field_name == 'TypeBase' ? false : parent::getGroupNullable( $field_name );
+		switch( $field_name ) {
+			case 'DueDays':
+			case 'DueWeeks':
+			case 'TypeBase':
+				return false;
+			default:
+				return parent::getGroupNullable( $field_name );
+		}
 	}
 
 	function getGroupFilterValue()
@@ -377,7 +406,19 @@ class RequestBoard extends PMPageBoard
  				return parent::getGroupBackground($object_it, $attr_it);
  		}
 	}
-	
+
+	function drawHeader( $board_value, $board_title )
+	{
+		parent::drawHeader($board_value, $board_title);
+
+		if ( is_object($this->taskBoardModuleIt) && count(array_intersect(preg_split('/,/',$board_value), $this->taskBoardStates)) > 0 ) {
+			echo '<div class="module-link">';
+				echo '<i class="icon-th"></i> ';
+				echo '<a href="'.$this->taskBoardModuleIt->getUrl('issueState='.$board_value).'">'.mb_strtolower(translate('Доска задач')).'</a>';
+			echo '</div>';
+		}
+	}
+
  	function drawGroup($group_field, $object_it)
 	{
 		switch ( $group_field )
@@ -527,15 +568,17 @@ class RequestBoard extends PMPageBoard
 						}
 						if ( $this->visible_column['Attachment'] && $object_it->get('Attachment') != '' )
 						{
-							echo '<div class="btn-group" style="display:inline-block;">';
+							echo '<div style="display:inline-block;">';
 								parent::drawRefCell($this->getFilteredReferenceIt('Attachment', $object_it->get('Attachment')), $object_it, 'Attachment' );
 							echo '</div>';
 						}
 						if ( $this->visible_column['Tags'] && $object_it->get('TagNames') != '' )
 						{
                             $html = array();
-                            foreach( preg_split('/,/', $object_it->get('TagNames')) as $name ) {
-                                $html[] = '<div class="btn-group" style="display:inline-block;"><span class="label label-info">'.$name.'</span></div>';
+							$tagIds = preg_split('/,/', $object_it->get('Tags'));
+                            foreach( preg_split('/,/', $object_it->get('TagNames')) as $key => $name ) {
+								$name = '<a href="'.preg_replace('/%/', $tagIds[$key], $this->tags_url).'">'.$name.'</a>';
+                                $html[] = '<div class="btn-group label-tag" style="display:inline-block;"><span class="label label-info">'.$name.'</span></div>';
                             }
                            	echo join(' ',$html);
 				        }
@@ -555,11 +598,13 @@ class RequestBoard extends PMPageBoard
 								$method->setObjectIt($object_it);
 								$actions[$key]['url'] = $method->getJSCall();
 							}
-							
+
+							$estimationValue = $this->estimation_scale[$object_it->get('Estimation')];
+							if ( $estimationValue == '' ) $estimationValue = $object_it->get('Estimation');
 							echo '<div style="display: inline-block;">';
 								echo $this->getTable()->getView()->render('pm/EstimationIcon.php', array (
 									'title' => $this->estimation_title,
-									'data' => $object_it->get('Estimation') != '' ? $object_it->get('Estimation') : '0',
+									'data' => $estimationValue != '' ? $estimationValue : '0',
 									'items' => $actions,
 									'random' => $object_it->getId()
 								));
@@ -661,14 +706,12 @@ class RequestBoard extends PMPageBoard
 	{
 		$actions = parent::getActions( $object_it );
 
-		if ( !$this->uidVisible ) {
-			array_unshift($actions,
-				array (
-					'name' => translate('Открыть'),
-					'url' => getSession()->getApplicationUrl($object_it).'I-'.$object_it->getId()
-				)
-			);
-		}
+		array_unshift($actions,
+			array (
+				'name' => translate('Открыть'),
+				'url' => getSession()->getApplicationUrl($object_it).'I-'.$object_it->getId()
+			)
+		);
 
 		$priority_actions = $this->priority_actions;
 		foreach( $priority_actions as $key => $action )
@@ -687,7 +730,7 @@ class RequestBoard extends PMPageBoard
 		if ( count($priority_actions) > 0 )
 		{
 			$pos = array_search(array('uid'=>'middle'), $actions);
-			
+
 			$actions = array_merge(
 					array_slice($actions, 0, $pos),
 					array(
@@ -698,7 +741,7 @@ class RequestBoard extends PMPageBoard
 							)
 					),
 					array_slice($actions, $pos)
-			); 
+			);
 		}
 
 		if ( is_object($this->method_comment) )
@@ -771,22 +814,15 @@ class RequestBoard extends PMPageBoard
 		switch ( $values['color'] )
 		{
 		    case 'state':
-		    	return $object_it->get('StateColor');
-		    	
+		    	return strpos($object_it->get('StateColor'),'#') === false
+							? $object_it->get('PriorityColor')
+							: $object_it->get('StateColor');
 		    case 'priority':
-		    	return is_object($this->priorities_array[$object_it->get('Priority')]) 
-		    			? $this->priorities_array[$object_it->get('Priority')]->get('RelatedColor')
-		    			: '';
-		    	
+				return $object_it->get('PriorityColor');
 		    case 'type':
-				if ( $object_it->get('Type') == '' ) {
-					return is_object($this->priorities_array[$object_it->get('Priority')])
-						? $this->priorities_array[$object_it->get('Priority')]->get('RelatedColor')
-						: '';
-				}
-				else {
-					return $object_it->getRef('Type')->get('RelatedColor');
-				}
+		    	return strpos($object_it->get('TypeColor'),'#') === false
+							? $object_it->get('PriorityColor')
+							: $object_it->get('TypeColor');
 		}
 	}
 	

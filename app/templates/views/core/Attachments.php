@@ -13,6 +13,7 @@
 <?php 
 
 $actions = array();
+$id = md5(uniqid(time().$random,true));
 
 foreach( $files as $file )
 {
@@ -27,10 +28,11 @@ foreach( $files as $file )
 
 <?php if ( count($actions) > 0 ) { ?>
 <div class="btn-group">
-	<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+	<a class="dropdown-toggle" data-toggle="dropdown" href="#" data-placement="right" data-target="#attachments<?=$id?>">
 		<img src="/images/image.png">
 	</a>
-	
+</div>
+<div class="btn-group dropdown-fixed" id="attachments<?=$id?>">
 	<? echo $this->render('core/PopupMenu.php', array ( 'items' => $actions )); ?>
 </div>
 

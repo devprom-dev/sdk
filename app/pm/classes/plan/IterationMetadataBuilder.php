@@ -10,7 +10,7 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Release' ) return;
-
+		$metadata->addAttributeGroup('ReleaseNumber', 'alternative-key');
     	$metadata->addPersister( new CapacityPersister() );
     	
     	$metadata->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false);

@@ -46,7 +46,7 @@ class SettingsController extends PageController
     	    	throw \Exception('Corresponding action wasn\'t found');
     	}
     	
-    	return new RedirectResponse(getSession()->getApplicationUrl().'profile');
+    	return new RedirectResponse(getSession()->getApplicationUrl());
     }
     
     protected function getService( $action )

@@ -15,9 +15,7 @@ class VersionTable extends PMPageTable
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
-		if ( $methodology_it->HasPlanning() && $method->hasAccess() )
-		{
-			$method->setRedirectUrl('donothing');
+		if ( $methodology_it->HasPlanning() && $method->hasAccess() ) {
 			$actions[] = array(
 					'name' => translate('Итерация'),
 					'url' => $method->getJSCall() 
@@ -25,15 +23,21 @@ class VersionTable extends PMPageTable
 		}
 		
 		$method = new ObjectCreateNewWebMethod(getFactory()->getObject('Release'));
-		if ( $methodology_it->HasReleases() && $method->hasAccess() )
-		{
-			$method->setRedirectUrl('donothing');
+		if ( $methodology_it->HasReleases() && $method->hasAccess() ) {
 			$actions[] = array(
 					'name' => translate('Релиз'),
 					'url' => $method->getJSCall() 
 			);
 		}
-		
+
+        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Milestone'));
+        if ( $method->hasAccess() ) {
+            $actions[] = array(
+                'name' => translate('Веха'),
+                'url' => $method->getJSCall()
+            );
+        }
+
     	return $actions; 
 	}
 	
@@ -97,4 +101,20 @@ class VersionTable extends PMPageTable
 	    
 	    return $filter;
 	}
+
+	function getExportActions() {
+        return array();
+    }
+
+    protected function getFamilyModules( $module )
+    {
+        switch( $module ) {
+            case 'project-plan-hierarchy':
+                return array (
+                    'ee/delivery'
+                );
+            default:
+                return parent::getFamilyModules($module);
+        }
+    }
 }

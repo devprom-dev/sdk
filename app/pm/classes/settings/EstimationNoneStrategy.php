@@ -72,8 +72,7 @@ class EstimationNoneStrategy extends EstimationStrategy
 		return str_replace("%1", $value, text(1118));
 	}
 	
-	function hasEstimationValue()
-	{
+	function hasEstimationValue() {
 		return false;
 	}
 }

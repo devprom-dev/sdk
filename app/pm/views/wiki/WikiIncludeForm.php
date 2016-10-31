@@ -28,7 +28,7 @@ class WikiIncludeForm extends PMPageForm
  		{
  			$object->setAttributeVisible('ParentPage', true);
  			$object->setAttributeRequired('ParentPage', true);
- 			$object->setAttributeCaption('ParentPage', text('testing58'));
+ 			$object->setAttributeCaption('ParentPage', $this->getObject()->getDocumentName());
  			$object->setAttributeDescription('ParentPage', text('testing60'));
  		}
     }
@@ -52,7 +52,7 @@ class WikiIncludeForm extends PMPageForm
 		switch ( $name )
 		{		
 			case 'ParentPage':
-				return new FieldHierarchySelectorAppendable( $this->getObject()->getAttributeObject($name) );
+				return new FieldHierarchySelectorAppendable( $this->getObject()->getAttributeObject('DocumentId') );
 				
 			case 'PageToInclude':
 				$treeObject = $this->getObject()->getAttributeObject($name);

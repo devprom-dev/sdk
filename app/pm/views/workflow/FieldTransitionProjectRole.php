@@ -33,7 +33,7 @@ class FieldTransitionProjectRole extends FieldForm
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 	 		$form = new FormTransitionProjectRoleEmbedded( $anchor, 'Transition' );
 	 		$form->setReadonly( $this->readOnly() );
-	 			
+            $form->setTransitionIt($this->object_it);
 	 		$form->draw( $view );
  		echo '</div>';
  	}

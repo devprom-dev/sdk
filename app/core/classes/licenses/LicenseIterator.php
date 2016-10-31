@@ -64,7 +64,7 @@ class LicenseIterator extends OrderedIterator
 
 	function checkV1()
 	{
-		return is_numeric($this->get('LicenseValue'));
+		return is_numeric($this->get('LicenseValue')) || $this->get('LicenseValue') == '';
 	}
 
 	function getScheme()

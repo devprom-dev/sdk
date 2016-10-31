@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include SERVER_ROOT_PATH."core/classes/auth/AuthenticationFactorySet.php";
 include SERVER_ROOT_PATH."core/classes/widgets/ModuleBuilder.php";
@@ -17,27 +19,34 @@ include SERVER_ROOT_PATH."core/classes/model/events/UserCreatedEvent.php";
 
 class SessionBase
 {
- 	var $user_it, $factory, $cache_engine, $factories;
- 	var $active_tab;
- 	var $builders;
- 	var $language;
- 	var $auth_factory_it;
+    protected $id = '';
+ 	protected $user_it;
+    protected $factory;
+    protected $cache_engine;
+    protected $factories;
+    protected $active_tab;
+    protected $builders;
+    protected $language = null;
+    protected $auth_factory_it;
+    protected $builders_cache = array();
+    protected $accessibleVpds = array();
  	
- 	private $builders_cache = array();
- 	
- 	function SessionBase( $factory = null, $builders = null, $language = null, $cache_service = null )
+ 	function __construct( $factory = null, $builders = null, $language = null, $cache_service = null )
  	{
  		global $session;
  		
  		$session = $this;
+        register_shutdown_function(function() use ($session) {
+            $session->terminate();
+        });
 
  		$this->builders = array_merge(
  				is_array($builders) ? $builders : array(),
  				array (
-		 	            new ObjectMetadataModelBuilder(),
-		 	            new ResourceBuilderLanguageFiles(),
-		 	            new ResourceBuilderPluginsLanguageFiles(),
- 						new ProjectMetadataBuilder()
+                    new ResourceBuilderLanguageFiles(),
+                    new ResourceBuilderPluginsLanguageFiles(),
+                    new ProjectMetadataBuilder(),
+                    new LicenseRegistryBuilderCommon()
  				),
 				getFactory()->getPluginsManager()->getCommonBuilders()
  		);
@@ -48,10 +57,48 @@ class SessionBase
  		$this->language = $language;
  		
  		$this->configure();
-
-		$_SERVER['ENTRY_URL'] = defined('PERMISSIONS_ENABLED') ? '/pm/my' : '/pm/all';
  	}
- 	
+
+ 	function __sleep() {
+        return array (
+            'id', 'user_it', 'factory', 'cache_engine', 'factories', 'active_tab',
+            'builders', 'auth_factory_it', 'builders_cache', 'accessibleVpds'
+        );
+    }
+
+    function __wakeup() {
+        global $session;
+        $session = $this;
+        $this->buildFactories();
+    }
+
+    function setId( $id ) {
+        $this->id = $id;
+    }
+
+    function getId() {
+        return $this->id;
+    }
+
+    public function terminate()
+	{
+		$this->builders = array();
+	}
+
+	protected function buildFactories()
+    {
+        getFactory()->resetCache();
+        $notificators = $this->getBuilders( 'ObjectFactoryNotificator' );
+        if ( is_array($notificators) ) {
+            $manager = getFactory()->getEventsManager();
+            foreach( $notificators as $notificator ) {
+                $manager->registerNotificator( $notificator );
+            }
+        }
+        $this->getLanguage();
+        $_SERVER['ENTRY_URL'] = defined('PERMISSIONS_ENABLED') ? '/pm/my' : '/pm/all';
+    }
+
  	public function configure()
  	{
  		getFactory()->getEntityOriginationService()->setLanguage($this->getLanguageUid());
@@ -62,14 +109,7 @@ class SessionBase
 			$this->builders = array_merge($this->builders, getFactory()->getPluginsManager()->getSectionBuilders($this->getSite()));
 		}
 
- 		$notificators = $this->getBuilders( 'ObjectFactoryNotificator' );
- 		if ( is_array($notificators) ) {
-			$manager = getFactory()->getEventsManager();
- 		    foreach( $notificators as $notificator ) {
-				$manager->registerNotificator( $notificator );
-     		}
- 		}
- 		
+        $this->buildFactories();
  		$this->builders_cache = array();
  	}
  	
@@ -98,14 +138,11 @@ class SessionBase
  	function getLanguage() 
  	{
  		if ( is_object($this->language) ) return $this->language;
- 		
     	$this->language = $this->getLanguageUid() == 'EN' ? new LanguageEnglish() : new Language();
-         
         $this->language->Initialize();
-		
-		return $this->language; 
+		return $this->language;
  	}
- 	
+
  	function resetLanguage()
  	{
  		unset($this->language);
@@ -132,8 +169,8 @@ class SessionBase
  		if ( !is_object($factory) ) {
  		    $auth_factories = new AuthenticationFactorySet($this);
  		    $factory = $auth_factories->getDefaultFactory();
+            $this->setAuthenticationFactory($factory);
  		}
-
 		$this->setUserIt($user_it);
 
  		$session_hash = $factory->logon( 
@@ -174,8 +211,16 @@ class SessionBase
 		$this->user_it = $user_it;
 		$factory = $this->getAuthenticationFactory();
 		if ( is_object($factory) ) {
-			$factory->setUser( $user_it->getId() );
+			$factory->setUser( $this->user_it );
 		}
+		if ( $this->user_it->getId() > 0 ) {
+            $project = new Project;
+            $this->accessibleVpds = $project->getRegistry()->Query(
+                    array (
+                        new ProjectAccessiblePredicate($this->user_it)
+                    )
+                )->fieldToArray('VPD');
+        }
 	}
 
  	function getUserIt()
@@ -184,14 +229,18 @@ class SessionBase
  	    if ( is_object($this->factory) )
  	    {
 			if ( is_object($this->factory->getUser()) ) {
-				return $this->user_it = $this->factory->getUser();
+			    $this->setUserIt($this->factory->getUser());
+				return $this->user_it;
 			}
 			else if ( $this->factory->ready() ) {
 				$this->user_it = $this->factory->authorize();
-				if ( $this->user_it->count() > 0 ) return $this->user_it;
+				if ( $this->user_it->count() > 0 ) {
+                    $this->setUserIt($this->user_it);
+                    return $this->user_it;
+                }
 			}
  	    }
- 	    
+
  		$auth_factories = new AuthenticationFactorySet($this);
  		foreach( $auth_factories->getFactories() as $factory )
  		{
@@ -218,7 +267,7 @@ class SessionBase
      		// check blocked user unable to access the system
  			$this->user_it->setRowset( array() );
  		}
- 		
+        $this->setUserIt($this->user_it);
  		return $this->user_it;
  	}
  	
@@ -237,14 +286,17 @@ class SessionBase
  	    return $project->createCachedIterator( array() );
  	}
 
+ 	function getAccessibleVpds() {
+ 	    return $this->accessibleVpds;
+    }
+
  	function close()
  	{
  		$factory = $this->getAuthenticationFactory();
 
  		if ( !is_object($factory) ) return;
 
- 		$factory->setUser( $this->getUserIt()->getId() );
- 		
+ 		$factory->setUser($this->getUserIt());
  		$factory->logoff();
  	}
  	
@@ -304,7 +356,6 @@ class SessionBase
  	function createBuilders()
  	{
  	    return array (
- 	    		new LicenseRegistryBuilderCommon(),
                 new ModulePluginsBuilder($this->getSite()),
  	    		
  	    		// triggers
@@ -322,17 +373,16 @@ class SessionBase
  	function getBuilders( $interface_name = '' )
  	{
  	    if ( $interface_name == '' ) return $this->builders;
- 	    
- 	    if ( isset($this->builders_cache[$interface_name]) ) return $this->builders_cache[$interface_name];
+ 	    if ( count($this->builders_cache[$interface_name]) > 0 ) return $this->builders_cache[$interface_name];
  	    
  	    $this->builders_cache[$interface_name] = array();
  	    
  	    foreach( $this->builders as $builder ) {
-            if ( $builder instanceof $interface_name ) {
+            if ( is_a($builder, $interface_name) ) {
 				$this->builders_cache[$interface_name][get_class($builder)] = $builder;
 			}
  	    }
- 	    
+
  	    return $this->builders_cache[$interface_name];
  	}
 
@@ -362,19 +412,12 @@ class SessionBase
  	
  	public function getSite()
  	{
- 		return '';
+ 		return 'co';
  	}
 }
   
-
-///////////////////////////////////////////////////////////////////////
-function & getSession() 
+function getSession()
 {
  	global $session;
- 	
- 	if ( !is_object($session) ) {
- 		$session = new SessionBase; 
- 	}
- 	
  	return $session;
 }

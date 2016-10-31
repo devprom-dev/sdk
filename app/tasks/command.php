@@ -2,8 +2,7 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
-include_once '../common.php';
-include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
+include '../common.php';
 include 'commands/TaskCommand.php';
 
 use Devprom\Component\HttpKernel\MainApplicationKernel;

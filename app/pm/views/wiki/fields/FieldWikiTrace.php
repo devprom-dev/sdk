@@ -41,9 +41,8 @@ class FieldWikiTrace extends FieldForm
 		echo '</div>';
 	}
 	
-	function getForm( & $trace )
-	{
-		return new WikiTraceFormEmbedded( $trace, 'SourcePage' );
+	function getForm( & $trace ) {
+		return new WikiTraceFormEmbedded( $trace, 'SourcePage', $this->getName() );
 	}
 	
 	function render( $view )
@@ -53,23 +52,19 @@ class FieldWikiTrace extends FieldForm
 	
 	function drawBody( $view = null )
 	{
-		global $model_factory;
-		
 		$this->setFilters( $this->getTrace() );
 		
 		$form = $this->getForm( $this->getTrace() );
- 		
  		$form->setTraceObject( $this->trace_object );
  			
 		$object_it = $this->getObjectIt();
-		
- 		if ( is_object($object_it) )
- 		{
- 			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
+		if ( is_object($object_it) ) {
+ 			if ( !$this->getEditMode() ) {
+ 			    $form->setObjectIt( $object_it );
+            }
  		}
 
  		$form->setReadonly( $this->readOnly() );
- 			
  		$form->setTabIndex( $this->getTabIndex() );
  			
  		echo '<div>';

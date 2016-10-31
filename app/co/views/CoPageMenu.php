@@ -14,7 +14,7 @@
 		$pages['main'] = array( 
 		    'uid' => 'main',
 			'items' => array(
-				array( 'url' => '/profile', 'name' => translate('Профиль') )   
+				array( 'url' => '/profile', 'name' => translate('Профиль'), 'uid' => 'profile' )
 			) 
 		);
 

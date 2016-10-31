@@ -3,18 +3,30 @@
 class IteratorExport extends IteratorBase
 {
  	var $iterator, $caption, $fields;
- 	
+ 	private $uidService = null;
  	private $table;
- 	
+    private $options = array();
+
  	function IteratorExport ( $iterator )
  	{
  		parent::IteratorBase( $iterator->object );
- 		
+
+        $this->uidService = new ObjectUID();
  		$this->iterator = $iterator;
  		$this->fields = array();
+
+        FeatureTouch::Instance()->touch(strtolower(get_class($this)));
  	}
- 	
- 	function setName( $caption )
+
+    function setOptions( $options ) {
+        $this->options = $options;
+    }
+
+    function getOptions() {
+        return $this->options;
+    }
+
+    function setName( $caption )
  	{
  		$this->caption = $caption;
  	}
@@ -53,14 +65,13 @@ class IteratorExport extends IteratorBase
  		}
  		
  		$result = array();
- 		$uid = new ObjectUID;
- 		
- 		if ( $uid->hasUidObject($this->object) )
- 		{
+
+ 		if ( $this->uidService->hasUidObject($this->object) ) {
  			$result['UID'] = translate('UID');
  		}
 
  		$attrs = $this->object->getAttributes();
+
  		$fields = array_keys($attrs);
  		
  		for( $i = 0; $i < count($fields); $i++ )
@@ -81,15 +92,19 @@ class IteratorExport extends IteratorBase
  	 */
  	function get( $fieldName )
  	{
- 		global $model_factory;
- 		
+ 	    if ( $this->iterator->get('VPD') != '' ) {
+            $this->iterator->object->setVpdContext($this->iterator->get('VPD'));
+        }
+
  		switch ( $fieldName )
  		{
  			case 'State':
-				
  			    $state_it = $this->iterator->getStateIt();
-				
  			    return $state_it->getDisplayName();
+
+            case 'StateDuration':
+            case 'LeadTime':
+                return getSession()->getLanguage()->getDurationWording($this->iterator->get( $fieldName ));
 
 			default:
 
@@ -98,11 +113,17 @@ class IteratorExport extends IteratorBase
 					$entity_it = $this->iterator->getRef($fieldName);
 					
 					$names = array();
-					
-					while( !$entity_it->end() ) 
-					{ 
-						$names[] = $entity_it->getDisplayName(); 
-						$entity_it->moveNext(); 
+					while( !$entity_it->end() ) {
+					    if ( $this->uidService->hasUid($entity_it) ) {
+                            $info = $this->uidService->getUidInfo($entity_it, true);
+                            $title = $info['uid'].' '.$info['caption'];
+                            if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
+                            $names[] = $title;
+                        }
+                        else {
+                            $names[] = $entity_it->getDisplayName();
+                        }
+						$entity_it->moveNext();
 					}
 					
 					return $names;
@@ -189,4 +210,11 @@ class IteratorExport extends IteratorBase
  	function export()
  	{
  	}
+
+    protected function decode( $text )
+    {
+        $value = html_entity_decode($text, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
+        $totext = new \Html2Text\Html2Text( addslashes($value), array('width'=>0) );
+        return $totext->getText();
+    }
 }

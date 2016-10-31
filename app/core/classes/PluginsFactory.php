@@ -1,11 +1,8 @@
 <?php
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 include 'PluginBase.php';
-@include SERVER_ROOT_PATH."plugins/plugins.php";
-@include SERVER_ROOT_PATH."plugins/_methods.php";
 
 class PluginsFactory
 {
@@ -23,40 +20,59 @@ class PluginsFactory
 		global $plugins;
 
 		if ( is_object(static::$singleInstance) ) return static::$singleInstance;
+        static::$singleInstance = new static();
+        $plugins = static::$singleInstance;
+        static::$singleInstance->persisted = true;
 
-		$data = @file_get_contents(self::getFileName());
+        if ( function_exists('opcache_invalidate') ) {
+            opcache_invalidate(SERVER_ROOT_PATH."plugins/plugins.php", true);
+        }
+        @include SERVER_ROOT_PATH."plugins/plugins.php";
+
+        $data = @file_get_contents(self::getFileName());
 		if ( $data != '' ) {
 			static::$singleInstance = @unserialize($data);
+            if ( static::$singleInstance instanceof stdClass ) {
+                static::$singleInstance = new static();
+                static::$singleInstance->buildPlugins();
+            }
+            else if ( is_object(static::$singleInstance) ) {
+                foreach (static::$singleInstance->namespaces as $namespace) {
+                    if ($namespace instanceof __PHP_Incomplete_Class) {
+                        static::$singleInstance = new static();
+                        static::$singleInstance->buildPlugins();
+                        break;
+                    }
+                }
+            }
 		}
-		if ( is_object(static::$singleInstance) ) {
-			foreach (static::$singleInstance->namespaces as $namespace) {
-				if ($namespace instanceof __PHP_Incomplete_Class) {
-					static::$singleInstance = null;
-					break;
-				}
-			}
-		}
-		if ( !is_object(static::$singleInstance) ) {
-			static::$singleInstance = new static();
-		}
+		else {
+            static::$singleInstance->buildPlugins();
+        }
 
+        if ( function_exists('opcache_invalidate') ) {
+            opcache_invalidate(static::getMethodsFileName(), true);
+        }
+		if ( !file_exists(static::getMethodsFileName()) ) {
+            static::$singleInstance->buildMethods();
+        }
+        include static::getMethodsFileName();
+
+        static::$singleInstance->persisted = false;
 		$plugins = static::$singleInstance;
 		return static::$singleInstance;
 	}
 
-	protected function __construct() {
- 		$this->buildPlugins();
- 	}
-
 	function __destruct()
 	{
-		if ( !$this->persisted ) {
-			$this->persisted = true;
-			foreach( $this->namespaces as $plugin ) {
-				$plugin->checkLicense();
-			}
-			@file_put_contents(self::getFileName(), serialize($this));
-		}
+		if ( $this->persisted ) return;
+        $this->persisted = true;
+
+        foreach( $this->namespaces as $plugin ) {
+            $plugin->checkLicense();
+        }
+        @mkdir(dirname(self::getFileName()), 0777, true);
+        @file_put_contents(self::getFileName(), serialize($this));
 	}
 
 	public function __sleep() {
@@ -85,7 +101,6 @@ class PluginsFactory
 		}
 		
 		$this->plugins = $plugins;
-		$this->buildMethods();
 		$this->buildClasses();
 
 		$cacheLock->Release();
@@ -537,17 +552,14 @@ class PluginsFactory
 	
 	public function enablePlugin( $plugin_name, $enabled = true )
 	{
-		if ( $enabled )
-		{
+		if ( $enabled ) {
 			unlink(SERVER_ROOT_PATH.'plugins/blocked/'.$plugin_name);
 		}
-		else 
-		{
+		else  {
 			if ( !file_exists(SERVER_ROOT_PATH.'plugins/blocked') ) mkdir(SERVER_ROOT_PATH.'plugins/blocked');
-			
 			file_put_contents(SERVER_ROOT_PATH.'plugins/blocked/'.$plugin_name, '');
 		}
-		
+
 		$this->buildPluginsList();
 	}
 	
@@ -598,11 +610,9 @@ class PluginsFactory
 		    	closedir($handle);
 			}
  		}
-		file_put_contents(SERVER_ROOT_PATH."plugins/_methods.php", $data);
 
-		// reset opcache after list of plugins have been changed
-		if ( function_exists('opcache_reset') ) opcache_reset();
-		@include SERVER_ROOT_PATH."plugins/_methods.php";
+        @mkdir(dirname(self::getMethodsFileName()), 0777, true);
+        file_put_contents(self::getMethodsFileName(), $data);
  	}
 
  	function _getPluginClass4Section ( $section )
@@ -625,16 +635,19 @@ class PluginsFactory
 
 	public function invalidate()
 	{
-		// reset opcache after list of plugins have been changed
-		if ( function_exists('opcache_reset') ) opcache_reset();
+        unlink(self::getFileName());
+        unlink(self::getMethodsFileName());
 
-		unlink(self::getFileName());
-		unlink(SERVER_ROOT_PATH."plugins/_methods.php");
+        $this->persisted = true;
 	}
 
 	protected static function getFileName() {
-		return SERVER_ROOT_PATH."plugins/_factory.php";
+		return CACHE_PATH."/appcache/global/pluginsFactory.php";
 	}
+
+	protected static function getMethodsFileName() {
+        return CACHE_PATH."/appcache/global/pluginsMethods.php";
+    }
 }
 
 function plugins_factory_index_sort( $left, $right )

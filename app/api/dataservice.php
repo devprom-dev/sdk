@@ -23,5 +23,4 @@ $server->configureWSDL($webservice, $namespace, $url, $soap->getStyle());
 $server->wsdl->schemaTargetNamespace = $url;
 
 $model = new DataModel();
-
 $soap->dataService( $model->getAll()->fieldToArray('Caption'), $namespace, $server );

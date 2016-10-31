@@ -119,8 +119,6 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 {
 	/* IE7: reset rtl list margin. (#7334) */
 	*margin-right: 0px;
-	margin: 1.12em;
-	margin-left: 40px;
 }
 
 .wysiwyg h1,
@@ -131,6 +129,29 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 .wysiwyg h6
 {
     line-height: 1.2em;
+}
+.wysiwyg h1 {
+	font-size: 32px;
+	margin: .67em 0;
+}
+.wysiwyg h2 {
+	font-size: 24px;
+	margin: .75em 0;
+}
+.wysiwyg h3 {
+	font-size: 18.72px;
+	font-weight: bold;
+	margin: .83em 0;
+}
+.wysiwyg h4 {
+	font-size: 16px;
+	margin: 1.12em 0;
+}
+.wysiwyg h5 {
+	font-size: 13.28px;
+}
+.wysiwyg h6 {
+	font-size: 10.72px;
 }
 
 .wysiwyg hr
@@ -177,6 +198,15 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	position: fixed !important;
 }
 
+.documentToolbar {
+	background-image: url('/images/toolbar.png');
+	min-height: 43px;
+}
+
 .documentToolbar .cke_shared {
 	border-bottom: none;
+}
+
+.documentToolbar + div .table-document th {
+	border-top: none;
 }

@@ -28,7 +28,7 @@ class TrackHistory extends TaskCommand
 		else
 		{
 			$ids = getFactory()->getObject('pm_Project')->getRegistry()->Query(
-						array( new FilterAttributePredicate('IsClosed', 'N') )
+						array( new FilterHasNoAttributePredicate('IsClosed', 'Y') )
 				)->idsToArray();
 			
 			$chunks = array_chunk($ids, $step);

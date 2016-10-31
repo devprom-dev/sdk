@@ -7,7 +7,6 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 		$content = parent::parse($content);
 
         $content = preg_replace_callback('/<img\s+alt="([^"]+)"[^>]+>/i', array($this, 'parseUMLImage'), $content);
-		$content = preg_replace('/<img[^>]+>/i', str_pad(' '.translate('Изображение').' ', 120, '-', STR_PAD_BOTH), $content);
 		$content = preg_replace('/@(\w*)/u', '', $content);
 		$content = preg_replace('/(&nbsp;|\xC2\xA0)/i', '&nbsp;', $content);
 		$content = preg_replace_callback(REGEX_MATH_TEX, array($this, 'parseMathTex'), $content);
@@ -23,7 +22,6 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 		$uml_code = urldecode($json['t']);
 		if ( $uml_code == '' ) return $match[0];
 
-		$uml_separator = str_pad(' UML ', 120, '-', STR_PAD_BOTH);
 		return
 			'<pre><code language="html">'.
 				join('',

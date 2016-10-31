@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
-
 class WikiPageNewVersionTrigger extends SystemTriggersBase
 {
     function add( $object_it )

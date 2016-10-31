@@ -46,24 +46,34 @@ class UserPicSpritesGenerator extends CssSpritesGenerator
 				$this->sprites_usual_size, 
 				SERVER_ROOT_PATH."images/userpic-grey.png"
 		);
+
+		foreach( $files as $file ) {
+            if ( strpos($file, SERVER_FILES_PATH) !== false ) continue;
+            if ( strpos($file, SERVER_ROOT_PATH) !== false ) continue;
+            unlink($file);
+		}
 	}
 
 	protected function getPhotoFilePath( $user_it )
 	{
 		if( $user_it->getFileName('Photo') != '' ) return $user_it->getFilePath('Photo');
 
+        $filePath = tempnam(sys_get_temp_dir(), 'sprite_');
+        if ( !file_exists($filePath) ) return SERVER_ROOT_PATH.'images/userpic-grey.png';
+
 		if ( count($this->colors) < 1 ) {
 			$this->colors = ColorPalette::getColors();
 		}
 		$background = $user_it->getId() % count($this->colors);
 
-		$title = trim(join('', array_map(
-			function($value) {
-				return mb_substr(mb_strtoupper($value),0,1);
-			},
-			array_slice(explode(' ', $user_it->getDisplayName()),0,2)
-		)));
-		$filePath = tempnam(sys_get_temp_dir(), 'sprite_');
+		$title = trim(join('',
+            array_map(
+                function($value) {
+                    return mb_substr(mb_strtoupper($value),0,1);
+                },
+			    array_slice(explode(' ', $user_it->getDisplayName()),0,2)
+		    )
+        ));
 
 		$letterAvatar = new LetterAvatar;
 		$letterAvatar

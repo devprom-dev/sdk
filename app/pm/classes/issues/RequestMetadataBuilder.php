@@ -1,7 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
-
+include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 include_once "persisters/RequestTagsPersister.php";
 include_once "persisters/RequestTasksPersister.php";
 include_once "persisters/RequestDetailsPersister.php";
@@ -41,7 +41,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 			$metadata->addAttributeGroup('Deadlines', 'deadlines');
 		}
 
-		$metadata->addAttribute( 'Links', 'REF_pm_ChangeRequestId', 'Связанные пожелания', true);
+		$metadata->addAttribute( 'Links', 'REF_pm_ChangeRequestId', text(764), true);
 		$metadata->addAttributeGroup('Links', 'trace');
         $metadata->addPersister( new IssueLinkedIssuesPersister(array('Links')) );
 
@@ -67,9 +67,9 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		}
 
 		if ( $methodology_it->HasPlanning() ) {
-			$metadata->addAttribute('Iterations', 'REF_IterationId', translate('Итерация'), true, false, '', 76);
-			$metadata->addPersister(new RequestIterationsPersister(array('Iterations')));
-			$metadata->addAttributeGroup('Iterations', 'bulk');
+			$metadata->setAttributeVisible('Iteration', 'true');
+			$metadata->addPersister(new RequestIterationsPersister());
+			$metadata->addAttributeGroup('Iteration', 'bulk');
 		}
 
 		$metadata->setAttributeVisible('Project', false);
@@ -109,19 +109,20 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		}
 		
 		$permission_attributes = array(
-				'Author', 
-				'ClosedInVersion', 
-				'Fact', 
-				'Caption', 
-				'Description', 
-				'Owner', 
-				'Priority', 
-				'Function', 
-				'OrderNum',
-				'Type',
-				'PlannedRelease',
-				'Estimation');
-		
+			'Author',
+			'ClosedInVersion',
+			'Fact',
+			'Caption',
+			'Description',
+			'Owner',
+			'Priority',
+			'Function',
+			'OrderNum',
+			'Type',
+			'PlannedRelease',
+			'Iteration',
+			'Estimation'
+		);
     	foreach ( $permission_attributes as $attribute )
 		{
 		    $metadata->addAttributeGroup($attribute, 'permissions');
@@ -135,7 +136,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeDescription('DeliveryDate', text(2113));
 		$metadata->setAttributeDescription('StartDate', text(1839));
 		$metadata->setAttributeDescription('FinishDate', text(1840));
-		foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iterations', 'DeliveryDate') as $attribute ) {
+		foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iteration', 'DeliveryDate') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'deadlines');
 		}
 		$index = 190;
@@ -172,7 +173,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		}
 		
     	if ( $methodology_it->getId() > 0 && !$methodology_it->HasFeatures() ) {
-		    $metadata->removeAttribute( 'Function' );
+            $metadata->addAttributeGroup('Function', 'system');
 		}
 		
 	 	if ( $methodology_it->getId() > 0 && !$methodology_it->HasReleases() ) {

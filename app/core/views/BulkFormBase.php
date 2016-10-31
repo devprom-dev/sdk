@@ -292,6 +292,15 @@ class BulkFormBase extends AjaxForm
 	{
 		return !preg_match('/Attribute(.+)/mi', $this->getAttributeValue('operation'), $match);		
 	}
+
+	function getMethod() {
+		preg_match('/Method:(.+)/mi', $_REQUEST['operation'], $attributes);
+		return array_shift(preg_split('/:/', $attributes[1]));
+	}
+
+	function getHintId() {
+		return $this->getMethod();
+	}
 	
 	private $form = null;
 	private $visibleAttributes = array();

@@ -4,7 +4,7 @@ class CheckpointPhpVersion extends CheckpointEntryStatic
 {
     function getRequiredValue()
     {
-        return '5.3.0';
+        return '5.5.0';
     }
 
     function getValue()

@@ -68,26 +68,9 @@ class ProjectTable extends PageTable
 		);
 	}
 	
-	function getBulkActions()
-	{
-		return array();
-	}
-	
 	function getDeleteActions()
 	{
-	    $actions = array();
-	    
-	    $method = new ProjectDeleteWebMethod();
-	    
-	    if ( $method->HasAccess() )
-	    {
-	        array_push( $actions, array (
-    	        'url' => $method->url( $this->getObject() ),
-    	        'name' => $method->getCaption()
-	        ));
-	    }
-	     
-	    return $actions;
+	    return array();
 	}
 	
  	function getDefaultRowsOnPage()

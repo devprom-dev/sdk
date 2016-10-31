@@ -4,18 +4,21 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 	    global $model_factory;
- 	    
  	    $project_it = getSession()->getProjectIt();
  	    
  		$columns = array();
 
- 		$columns[] =  
- 			"( SELECT SUM(r.Capacity) " .
-			"  	 FROM pm_ParticipantRole r, pm_Participant n " .
-			" 	WHERE r.Participant = n.pm_ParticipantId ".
-			"     AND n.Project = ".$project_it->getId().
- 		    "     AND n.SystemUser = ".$this->getPK($alias)." ) Capacity ";
+		if ( defined('PERMISSIONS_ENABLED') ) {
+			$columns[] =
+				"( SELECT SUM(r.Capacity) " .
+				"  	 FROM pm_ParticipantRole r, pm_Participant n " .
+				" 	WHERE r.Participant = n.pm_ParticipantId " .
+				"     AND n.Project = " . $project_it->getId() .
+				"     AND n.SystemUser = " . $this->getPK($alias) . " ) Capacity ";
+		}
+		else {
+			$columns[] = " (SELECT 8) Capacity ";
+		}
  		
  		$columns[] = 
      		"( SELECT GROUP_CONCAT(CAST(r.pm_ParticipantRoleId AS CHAR))" .

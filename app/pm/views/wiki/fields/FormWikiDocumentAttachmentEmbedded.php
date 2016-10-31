@@ -5,7 +5,7 @@ include_once "FormWikiAttachmentEmbedded.php";
 
 class FormWikiDocumentAttachmentEmbedded extends FormWikiAttachmentEmbedded
 {
- 	function drawAddButton( $tabindex )
+ 	function drawAddButton( $view, $tabindex )
  	{
 		if ( $this->getIteratorRef()->count() < 1 ) return;
 

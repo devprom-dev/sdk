@@ -8,16 +8,13 @@ include "predicates/TaskTraceTaskPredicate.php";
 
 class TaskTraceBase extends Metaobject
 {
- 	function __construct() 
+ 	function __construct( ObjectRegistry $registry = null )
  	{
- 		parent::Metaobject('pm_TaskTrace');
+ 		parent::Metaobject('pm_TaskTrace', $registry);
  		
  		$object_class = $this->getObjectClass();
- 		
- 		if ( $object_class != '' )
- 		{
+ 		if ( $object_class != '' ) {
      		$this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');
-     		
      		$this->setAttributeRequired('ObjectId', true);
  		}
  	}

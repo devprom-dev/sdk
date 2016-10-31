@@ -27,7 +27,7 @@ class NetworkService
 
         $this->uidService = new \ObjectUID();
         $this->allowedClasses = array (
-            'Requirement', 'TestScenario', 'HelpPage', 'WikiPage', 'Request', 'Task', 'TestExecution', 'SubversionRevision', 'Question', 'Feature'
+            'Requirement', 'TestScenario', 'HelpPage', 'WikiPage', 'Request', 'Task', 'TestExecution', 'Commit', 'Question', 'Feature'
         );
     }
 

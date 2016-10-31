@@ -1,8 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/settings/EstimationStrategy.php";
-
-include_once "FieldStoryPoints.php";
 
 class EstimationPowerOfTwoStrategy extends EstimationStrategy
 {
@@ -39,15 +36,14 @@ class EstimationPowerOfTwoStrategy extends EstimationStrategy
 	{
 		return true;
 	}
-	
-	function getEstimationFilter()
+
+	function getFilterScale()
 	{
-		return new ViewRequestEstimationWebMethod();
-	}
-	
-	function getEstimationPredicate( $value )
-	{
-		return new RequestEstimationFilter( $value );
+		return array(
+			'0:4' => translate('Простые'),
+			'8:32' => translate('Средние'),
+			' 64' => translate('Сложные')
+		);
 	}
 	
 	function getScale()
@@ -64,21 +60,5 @@ class EstimationPowerOfTwoStrategy extends EstimationStrategy
  			' 128' => 128,
  			' 256' => 256
 		);
-	}
-	
-	function getEstimationFormField( $form )
-	{
-		return new FieldStoryPoints( $form->getObject(), array (
- 			array( 'value' => ' 0', 'caption' => '0' ),
-		    array( 'value' => ' 1', 'caption' => '1' ),
- 			array( 'value' => ' 2', 'caption' => '2' ),
- 			array( 'value' => ' 4', 'caption' => '4' ),
- 			array( 'value' => ' 8', 'caption' => '8' ),
- 			array( 'value' => ' 16', 'caption' => '16' ),
- 			array( 'value' => ' 32', 'caption' => '32' ),
- 			array( 'value' => ' 64', 'caption' => '64' ),
- 			array( 'value' => ' 128', 'caption' => '128' ),
- 			array( 'value' => ' 256', 'caption' => '256' )
-		));
 	}
 }

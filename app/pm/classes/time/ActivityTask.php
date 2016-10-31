@@ -4,10 +4,9 @@ include_once SERVER_ROOT_PATH."pm/classes/time/Activity.php";
 
 class ActivityTask extends Activity
 {
- 	function __construct() 
+ 	function __construct(ObjectRegistry $registry = null)
  	{
- 		parent::__construct();
-
+ 		parent::__construct($registry);
  		$this->addAttribute('LeftWork', 'INTEGER', translate('Осталось, ч.'), true);
  	}
  	

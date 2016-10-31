@@ -8,9 +8,9 @@ include "predicates/ActivityReportMonthPredicate.php";
 
 class Activity extends Metaobject
 {
- 	function Activity() 
+ 	function __construct( ObjectRegistry $registry = null )
  	{
- 		parent::__construct('pm_Activity');
+ 		parent::__construct('pm_Activity', $registry);
 		$this->defaultsort = 'RecordCreated ASC';
 
 		$this->setAttributeCaption('Capacity', translate('Затрачено'));
@@ -62,12 +62,6 @@ class Activity extends Metaobject
 		return parent::add_parms( $parms );
 	}
 
-	function modify_parms( $activity_id, $parms )
-	{
-		// there is no way to update activity
-		return 1;
-	}
-	
 	function delete( $id, $record_version = ''  )
 	{
 	    global $model_factory;

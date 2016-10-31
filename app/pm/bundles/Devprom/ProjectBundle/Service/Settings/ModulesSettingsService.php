@@ -21,6 +21,7 @@ class ModulesSettingsService implements SettingsService
 			}
 		}
 
+		\SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 	}
 
@@ -45,17 +46,7 @@ class ModulesSettingsService implements SettingsService
 					}
 					break;
 				case 'pm_CustomReport':
-					$it = $object_it->object->getRegistry()->Query(
-						array (
-							new \CustomReportCommonPredicate(),
-							new \FilterBaseVpdPredicate()
-						)
-					);
-					while( !$it->end() ) {
-						$object_it->object->delete($it->getId());
-						$it->moveNext();
-					}
-					break;
+					continue;
 			}
 
 			\CloneLogic::Run(
@@ -66,6 +57,7 @@ class ModulesSettingsService implements SettingsService
 			);
 		}
 
+        \SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 	}
 
@@ -105,6 +97,7 @@ class ModulesSettingsService implements SettingsService
 			);
 		}
 
+        \SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 	}
 

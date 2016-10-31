@@ -81,30 +81,31 @@ class TasktBoardPlanning extends TaskBoardList
 
         if ( $this->getGroup() == 'Assignee' ) {
             $iteration_it = $this->getBoardAttributeIterator();
-            $user_it = getFactory()->getObject('ProjectUser')->getRegistry()->Query(
+            $user_it = getFactory()->getObject('Participant')->getRegistry()->Query(
                 array (
-                    new FilterInPredicate($this->getGroupIt()->idsToArray())
+                    new FilterVpdPredicate(),
+                    new FilterAttributePredicate('SystemUser',$this->getGroupIt()->idsToArray())
                 )
             );
 
             while( !$user_it->end() )
             {
                 $data = array();
-                $this->workload[$user_it->getId()]['Iterations'] = array();
+                $this->workload[$user_it->get('SystemUser')]['Iterations'] = array();
                 if ( $user_it->getId() == '' ) continue;
 
                 while( !$iteration_it->end() )
                 {
-                    $data['leftwork'] = $data['leftwork'] = $iteration_it->getLeftWorkParticipant( $user_it->getId() );
+                    $data['leftwork'] = $data['leftwork'] = $iteration_it->getLeftWorkParticipant( $user_it->get('SystemUser') );
                     if ( $data['leftwork'] < 1 ) {
                         $iteration_it->moveNext();
                         continue;
                     }
 
-                    $data['capacity'] = $iteration_it->getLeftCapacity() * (defined('PERMISSIONS_ENABLED') ? $user_it->get('Capacity') : 8);
+                    $data['capacity'] = $iteration_it->getLeftCapacity() * $user_it->get('Capacity');
                     $data['title'] = $this->strategy->getDimensionText($data['capacity']);
 
-                    $this->workload[$user_it->getId()]['Iterations'][$iteration_it->getId()] = $data;
+                    $this->workload[$user_it->get('SystemUser')]['Iterations'][$iteration_it->getId()] = $data;
                     $iteration_it->moveNext();
                 }
                 $iteration_it->moveFirst();
@@ -160,9 +161,9 @@ class TasktBoardPlanning extends TaskBoardList
         if ( $board_value > 0 ) {
             $object_it = $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value);
             if ( $object_it->getId() > 0 ) {
-                $strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+                $strategy = new EstimationHoursStrategy();
                 $estimation = $object_it->getTotalWorkload();
-                list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
+                list( $capacity, $maximum, $actual_velocity ) = $object_it->getRealBurndownMetrics();
                 echo '<div class="board-header-details">';
                     echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
                         ." / "

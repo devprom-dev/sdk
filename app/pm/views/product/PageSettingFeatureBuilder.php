@@ -20,10 +20,6 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
                 $feature->getAttributesByGroup('system')
             )
         );
-        $feature_levels = getFactory()->getObject('FeatureType')->getRegistry()->Count(
-        	array ( new FilterVpdPredicate() )
-        );
-        $setting->setGroup( $feature_levels > 0 ? 'none' : 'Importance' );
         $settings->add( $setting );
 
         $setting = new PageTableSetting('FunctionTable');

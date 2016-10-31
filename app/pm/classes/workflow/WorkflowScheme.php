@@ -135,16 +135,14 @@ class WorkflowScheme
  	{
 		$this->cacheObjects();
 
-		$ids = array(getSession()->getProjectIt()->getId());
-		if ( getSession()->getProjectIt()->get('LinkedProject') != '' ) {
-			$ids = array_merge( $ids, preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject')));
-		}
-		$vpds = getFactory()->getObject('Project')->getRegistry()->Query(
-			array(
-				new FilterInPredicate($ids)
-			)
-		)->fieldToArray('VPD');
-
+        $vpds = array(
+            getSession()->getProjectIt()->get('VPD')
+        );
+        if ( getSession() instanceof PMSession ) {
+            $vpds = array_merge(
+                $vpds, getSession()->getLinkedIt()->fieldToArray('VPD')
+            );
+        }
 		$state_it = getFactory()->getObject('StateBase')->getRegistry()->Query(
 			array (
 				new FilterVpdPredicate(join(',',$vpds)),

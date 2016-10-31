@@ -70,7 +70,7 @@ class WorkflowService
 
 	    if ( $transition_it->getId() == '' )
 	    {
-			$this->logger->error('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
+			$this->logger->info('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
 			return false;
 	    }
 	    

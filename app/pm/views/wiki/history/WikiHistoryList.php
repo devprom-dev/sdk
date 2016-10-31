@@ -1,7 +1,6 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
-include_once SERVER_ROOT_PATH."ext/htmldiff/html_diff.php";
+include_once SERVER_ROOT_PATH . "pm/views/wiki/diff/WikiHtmlDiff.php";
 
 class WikiHistoryList extends ProjectLogList
 {
@@ -13,37 +12,30 @@ class WikiHistoryList extends ProjectLogList
  	
 	function retrieve()
 	{
-		global $model_factory;
-		
 		parent::retrieve();
 	
-		$it = $this->getIteratorRef();
-		
-		$filter_values = $this->getFilterValues();
-		
 		$object_it = $this->getTable()->getObjectIt();
-		
 		if ( $object_it->getId() < 1 ) return;
 		
-		$this->can_revert = true; 
-		
+		$this->can_revert = true;
+		$this->documentMode = $object_it->get('ParentPage') < 1;
 		$this->editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
 		$this->parser = $this->editor->getComparerParser();
 
+		$filterValues = $this->getFilterValues();
 		$this->change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('WikiPage', $object_it->idsToArray()),
-						new SortAttributeClause('WikiPage'),
-						new SortAttributeClause('RecordCreated')
-				)
+			array (
+				new FilterAttributePredicate('WikiPage', $object_it->idsToArray()),
+				new FilterModifiedBeforePredicate($filterValues['finish']),
+				new FilterModifiedAfterPredicate($_REQUEST['start']),
+				new SortAttributeClause('WikiPage'),
+				new SortAttributeClause('RecordCreated')
+			)
 		);
-		
+
 		$object_it->moveFirst();
-		
-		while( !$object_it->end() )
-		{
+		while( !$object_it->end() ) {
 			$this->curr_content[$object_it->getId()] = $object_it->getHtmlDecoded('Content');
-			
 			$object_it->moveNext();
 		}
 	}
@@ -61,20 +53,6 @@ class WikiHistoryList extends ProjectLogList
 		return $sorts;
 	}
 	
-  	function setupColumns()
- 	{
-        parent::setupColumns();
-        
-        $object_it = $this->getTable()->getWikiPageIt();
-
-        if ( $object_it->getId() > 0 && $object_it->get('ParentPage') == '' )
-        {
-        	$this->getObject()->setAttributeVisible('Caption', true);
-        }
-        
-        $this->getObject()->setAttributeCaption('Caption', $object_it->object->getDisplayName());
- 	}
- 	
 	function getColumnFields()
 	{
 		$fields = parent::getColumnFields();
@@ -112,28 +90,25 @@ class WikiHistoryList extends ProjectLogList
  	
 	function drawCell( $object_it, $attr ) 
 	{
-		global $model_factory, $session;
-
-		switch ( $attr ) 
+		switch ( $attr )
 		{
 			case 'Content':
-				
-				if ( strpos($object_it->get('Content'), '[url=') === false )
-				{
+				if ( $this->documentMode ) {
+					parent::drawCell( $object_it, 'Caption' );
+					echo '<p/><br/>';
+				}
+
+				if ( strpos($object_it->get('Content'), '[url=') === false ) {
 					parent::drawCell( $object_it, $attr );	
-					
 					break;
 				}
 				
-				if ( !is_object($this->change_it) )
-				{
+				if ( !is_object($this->change_it) ) {
 					parent::drawCell( $object_it, $attr );	
-					
 					break;
 				}
 				
 				$change_it = $this->getChangeIt( $object_it );
-
 				if ( $change_it->getId() > 0 )
 				{
 					$page_id = $object_it->get('ObjectId');
@@ -141,28 +116,21 @@ class WikiHistoryList extends ProjectLogList
 					$this->prev_content[$page_id] = $change_it->getHtmlDecoded('Content');
 					
 					$diff = $this->getPagesDiff( $this->prev_content[$page_id], $this->curr_content[$page_id] );
-		            
-		            if ( $diff == '' )
-		            {
-						echo ($this->prev_content[$page_id] != $this->curr_content[$page_id] ? text(1508) : translate('Нет изменений'));
+		            if ( $diff == '' ) {
+						echo translate('Нет изменений');
 		            }
-		            else
-		            {
+		            else {
 		            	echo $diff;
 		            }
-		            
 					$this->curr_content[$page_id] = $this->prev_content[$page_id];
 				}
-				else
-				{
+				else {
 					parent::drawCell( $object_it, $attr );	
 				}
-				
 				break;
 				
 			default:
-
-				parent::drawCell( $object_it, $attr );			
+				parent::drawCell( $object_it, $attr );
 		}
 	}
 
@@ -170,19 +138,17 @@ class WikiHistoryList extends ProjectLogList
 	
 	function getActions( $object_it ) 
 	{
-		$actions = parent::getItemActions('', $object_it);
-		
+		$actions = array();
 		if ( !is_object($this->change_it) ) return $actions;
 
 		$change_it = $this->getChangeIt( $object_it );
-		
 		if ( $change_it->getId() < 1 ) return $actions;
 		
 		$page_it = $object_it->getObjectIt();
 		
 		$actions[] = array( 
 			'name' => text(1847),
-			'url' => $page_it->getViewUrl().'&revision='.$change_it->getId()
+			'url' => "javascript:window.location='".$page_it->getViewUrl()."&revision=".$change_it->getId()."';"
 		);
 		
 		$method = new RevertWikiWebMethod();
@@ -201,15 +167,11 @@ class WikiHistoryList extends ProjectLogList
 	function getPagesDiff( $prev_content, $curr_content )
 	{
 		$html = '<div class="reset wysiwyg">';
-
-		$diff = html_diff($this->parser->parse($prev_content), $this->parser->parse($curr_content));
-		if ( strpos($diff, "diff-html-") !== false ) {
-			$html .= $diff;
-		}
-		else {
-			$html .= $this->editor->getPageParser()->parse($curr_content);
-		}
-
+		$diffBuilder = new WikiHtmlDiff(
+			$this->parser->parse($prev_content),
+			$this->parser->parse($curr_content)
+		);
+        $html .= $diffBuilder->build();
 		$html .= '</div>';
 		return $html;
 	}

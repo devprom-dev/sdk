@@ -1,6 +1,6 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
+
 include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
  
@@ -13,12 +13,13 @@ class AdminSystemTriggers extends SystemTriggersBase
 		switch( $object_it->object->getEntityRefName() )
 		{
 			case 'cms_User':
+                $generator = new UserPicSpritesGenerator();
+                $generator->storeSprites();
+
 				if ( $kind == 'modify' ) {
 					$session->drop();
 				}
 				else {
-					$generator = new UserPicSpritesGenerator();
-					$generator->storeSprites();
 					$session->truncate('usr');
 				}
 				
@@ -35,11 +36,12 @@ class AdminSystemTriggers extends SystemTriggersBase
 			case 'cms_PluginModule':
 			case 'cms_License':
 			case 'cms_Update':
-				$session->drop();
+            case 'pm_Project':
+                $this->invalidateCache();
 				break;
 			    
 			case 'cms_SystemSettings':
-				$session->drop();
+				$this->invalidateCache();
 				$this->executeCheckpoints();
 				break;
 		}
@@ -51,5 +53,12 @@ class AdminSystemTriggers extends SystemTriggersBase
 		$checkpoint = $checkpoint_factory->getCheckpoint( 'CheckpointSystem' );
 	    $checkpoint->checkOnly( array('CheckpointHasAdmininstrator', 'CheckpointSystemAdminEmail') );
 	}
+
+	function invalidateCache()
+    {
+        SessionBuilder::Instance()->invalidate();
+        $session = getSession();
+        $session->drop();
+    }
 }
  

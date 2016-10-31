@@ -43,8 +43,11 @@ class TaskPlanningPage extends PMPage
 					$this->addInfoSection( new NetworkSection($object_it) );
 					$this->addInfoSection( new PageSectionComments($object_it) );
 					$this->addInfoSection( new StatableLifecycleSection( $object_it ) );
+                    if ($object_it->object->getAttributeType('Spent') != '' && $_REQUEST['formonly'] == '') {
+                        $this->addInfoSection(new PageSectionSpentTime($object_it));
+                    }
 					$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
-				}
+                }
 			}
  		}
  		else if ( $_REQUEST['mode'] != 'bulk' ) {
@@ -92,20 +95,10 @@ class TaskPlanningPage extends PMPage
 		switch ( $method->getValue() )
 		{
    		    case 'chart':
-         		        
-		        if ( $_REQUEST['report'] == '' )
-		        {
-					if ( $_REQUEST['pmreportcategory'] == '' ) $_REQUEST['pmreportcategory'] = 'tasks';
-	
-					return new ReportTable(getFactory()->getObject('PMReport'));
-				}
-				else
-				{
-					return $this->getTableDefault();
-				}
+				return $this->getTableDefault();
 
     		default:
-					return $this->getTableDefault();
+				return $this->getTableDefault();
  		}
  	}
 
@@ -143,29 +136,7 @@ class TaskPlanningPage extends PMPage
 		return array('tasksboard');
 	}
 
-	function getDetails()
-	{
-		$values = $this->getTableRef()->getFilterValues();
-		$userFilter = $this->getTableRef()->getFilterUsers($values['taskassignee'], $values);
-
-		$details = parent::getDetails();
-		return array_merge(
-			array_slice($details, 0, 1),
-			array (
-				'workload' => array (
-					'image' => 'icon-user',
-					'title' => text(716),
-					'url' => getSession()->getApplicationUrl().'details/workload?tableonly=true&users='.$userFilter
-				),
-			),
-			array_slice($details, 1)
-		);
-	}
-
-	function getDetailsParms() {
-		return array (
-			'visible' => $this->getReportBase() != 'mytasks',
-			'active' => 'props'
-		);
+	function isDetailsActive() {
+		return $this->getReportBase() != 'mytasks';
 	}
 }

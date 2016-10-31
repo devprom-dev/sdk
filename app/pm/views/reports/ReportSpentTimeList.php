@@ -351,7 +351,8 @@ class ReportSpentTimeList extends PMStaticPageList
 				if ( count($actions) > 0 ) {
 					echo $this->getTable()->getView()->render('core/SpentTimeMenu.php', array (
 						'title' => $hours,
-						'items' => $actions
+						'items' => $actions,
+						'id' => $object_it->getId().$attr
 					));
 				}
 				else {

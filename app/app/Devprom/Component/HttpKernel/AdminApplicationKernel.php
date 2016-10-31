@@ -1,12 +1,14 @@
 <?php
 
 namespace Devprom\Component\HttpKernel;
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Devprom\AdministrativeBundle\AdministrativeBundle;
+include_once SERVER_ROOT_PATH."admin/classes/model/ModelFactoryAdmin.php";
+include_once SERVER_ROOT_PATH."admin/classes/common/AdminAccessPolicy.php";
+include_once SERVER_ROOT_PATH."admin/classes/common/SessionBuilderAdmin.php";
 
 class AdminApplicationKernel extends Kernel
 {
@@ -52,5 +54,20 @@ class AdminApplicationKernel extends Kernel
         catch( \Exception $e ) {
             error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
         }
+    }
+
+    function boot()
+    {
+        global $plugins, $session, $model_factory;
+
+        parent::boot();
+
+        $plugins = \PluginsFactory::Instance();
+        $caching = new \CacheEngineFS();
+        $caching ->setDefaultPath('admin');
+        $model_factory = new \ModelFactoryAdmin(
+            \PluginsFactory::Instance(), $caching, new \AdminAccessPolicy($caching)
+        );
+        $session = \SessionBuilderAdmin::Instance()->openSession(array(), $caching);
     }
 }

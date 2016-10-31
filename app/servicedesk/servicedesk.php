@@ -7,7 +7,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include('../common.php');
-include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
 $model_factory = new ModelFactoryExtended(PluginsFactory::Instance());
 

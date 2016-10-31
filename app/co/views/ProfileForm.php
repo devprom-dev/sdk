@@ -5,7 +5,7 @@ class ProfileForm extends AjaxForm
 	function getModifyCaption()
  	{
  	    $object_it = $this->getObjectIt();
- 	    
+
 		$user_pic_html = $this->getView()->render('core/UserPicture.php', array (
 				'id' => $object_it->getId(), 
 				'class' => 'user-pic',
@@ -109,9 +109,6 @@ class ProfileForm extends AjaxForm
  				
  			case 'Phone':
  				return ' ';
- 					
-			case 'Photo':
-			    return text(47);
  		}
  	}
  	

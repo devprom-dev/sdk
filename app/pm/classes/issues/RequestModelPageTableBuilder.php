@@ -10,6 +10,7 @@ include_once "persisters/RequestPhotosPersister.php";
 include_once "persisters/RequestEstimatesPersister.php";
 include_once "persisters/RequestDueDatesPersister.php";
 include_once "persisters/RequestFeaturePersister.php";
+include_once "persisters/RequestColorsPersister.php";
 
 class RequestModelPageTableBuilder extends ObjectModelBuilder 
 {
@@ -53,5 +54,6 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
 		if ( class_exists('UserGroup') ) {
 			$object->addAttribute('UserGroup', 'REF_UserGroupId', text('user.group.name'), false);
 		}
+		$object->addPersister( new RequestColorsPersister() );
 	}
 }

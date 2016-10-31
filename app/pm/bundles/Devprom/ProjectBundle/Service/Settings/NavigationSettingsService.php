@@ -27,6 +27,7 @@ class NavigationSettingsService implements SettingsService
 			}
 		}
 
+        \SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 	}
 
@@ -71,7 +72,8 @@ class NavigationSettingsService implements SettingsService
 			$iterator = $data_it->object->createXMLIterator($xml);
 			\CloneLogic::Run( $context, $data_it->object, $iterator, getSession()->getProjectIt() ); 
 		}
-		getSession()->truncate();
+        \SessionBuilder::Instance()->invalidate();
+        getSession()->truncate();
 	}
 	
 	public function makeDefault()
@@ -100,7 +102,8 @@ class NavigationSettingsService implements SettingsService
 			}
 			\CloneLogic::Run( $context, $data_it->object, $data_it, getSession()->getProjectIt() ); 
 		}
-		getSession()->truncate();
+        \SessionBuilder::Instance()->invalidate();
+        getSession()->truncate();
 	}
 
 	protected function getIterators()

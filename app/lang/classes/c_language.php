@@ -4,7 +4,6 @@ include "DateFormatBase.php";
 include "DateFormatEuropean.php";
 include "DateFormatAmerican.php";
 include "DateFormatRussian.php";
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
  ////////////////////////////////////////////////////////////////////////////////// 
  class Language  
@@ -29,11 +28,13 @@ include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 		}
  	}
  	
- 	function Initialize( $resource = null )
+ 	function Initialize()
  	{
  	    global $text_data;
- 	    if ( !is_object($resource) ) $resource = getFactory()->getObject('cms_Resource');
- 	    
+
+        $resource = getFactory()->getObject('cms_Resource');
+        $resource->setLanguageUid( $this->getLanguage() );
+
  	    $cache_path = $this->getCacheFilePath($resource);
  	    if ( file_exists($cache_path) ) {
  	    	$text_data = include($cache_path);

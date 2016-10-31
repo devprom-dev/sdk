@@ -9,7 +9,6 @@ include "WikiPageRegistryContent.php";
 include "WikiPageRegistryVersion.php";
 include "WikiPageRegistryBaseline.php";
 include "WikiPageRegistryComparison.php";
-include "predicates/WikiContentFilter.php";
 include "predicates/WikiSectionFilter.php";
 include "predicates/WikiNonRootFilter.php";
 include "predicates/WikiRootFilter.php";
@@ -82,6 +81,10 @@ class WikiPage extends MetaobjectStatable
 	{
 		return 'Wiki';
 	}
+
+	function getDocumentName() {
+        return $this->getDisplayName();
+    }
 	
 	function getPageNameViewMode( $objectid ) 
 	{
@@ -182,19 +185,17 @@ class WikiPage extends MetaobjectStatable
 		$result = parent::modify_parms( $object_it, $parms );
 
 		$now_it = $this->getExact( $id );
-		
 		$now_content = $now_it->getHtmlDecoded('Content');
 
-		// make new version of the page
-		if ( $was_content != $now_content && $parms['Revert'] == '' ) $now_it->Version( $was_content );
+		if ( $was_content != $now_content && $parms['Revert'] == '' ) {
+		    $now_it->Version( $was_content ); // make new version of the page
+        }
 		
-		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') )
-		{
+		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') ) {
 			$documentId = $this->updateParentPath($now_it);
 		}
 
-		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') || $object_it->get('OrderNum') != $now_it->get('OrderNum') )
-		{
+		if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') || $object_it->get('OrderNum') != $now_it->get('OrderNum') ) {
 			if ( $documentId == '' ) {
 				$documentId = $now_it->get('DocumentId');
 			}

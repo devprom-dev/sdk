@@ -7,7 +7,7 @@ class ProjectAccessibleRegistry extends ObjectRegistrySQL
 		return array_merge(
 				parent::getFilters(),
 				array (
-						new ProjectAccessiblePredicate()
+						new ProjectAccessibleVpdPredicate()
 				)
 		);
 	}

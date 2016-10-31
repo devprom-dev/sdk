@@ -9,9 +9,18 @@ class UndoLog
         return static::$singleInstance;
     }
 
+    public function valid( $object_it )
+    {
+        if ( !is_object($object_it->object) ) return false;
+        switch( $object_it->object->getEntityRefName() ) {
+            case 'ObjectChangeLog':
+                return false;
+        }
+        return strtolower(get_class($object_it->object)) != 'metaobject';
+    }
+
     public function put( $object_it )
     {
-        if ( $object_it->object->getEntityRefName() == 'ObjectChangeLog' ) return;
         $class_name = strtolower(get_class($object_it->object));
         if ( $class_name == 'metaobject' ) {
             $class_name = $object_it->object->getClassName();

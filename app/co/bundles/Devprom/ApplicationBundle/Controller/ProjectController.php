@@ -17,7 +17,7 @@ class ProjectController extends PageController
         $response = $this->checkUserAuthorized($request);
         
         if ( is_object($response) ) return $response;
-        
+
     	return $this->responsePage( new \CreateProjectPage() );
     }
     

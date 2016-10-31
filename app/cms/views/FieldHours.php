@@ -21,8 +21,10 @@ class FieldHours extends Field
 			echo '<input name="'.$this->getName().'" type="hidden" value="'.$this->getValue().'">';
 		}
 		else {
-			echo '<input class="pull-left input-medium" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" tabindex="'.$this->getTabIndex().'" '.($this->getRequired() ? 'required' : '').' default="'.$this->getDefault().'">';
-			echo '<div class="pull-left" style="margin-top:4px;margin-left:6px;">'.text(2126).'</div>';
+		    echo '<span class="pull-left" style="min-width:210px;">';
+                echo '<input class="pull-left input-small" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.$this->getValue().'" tabindex="'.$this->getTabIndex().'" '.($this->getRequired() ? 'required' : '').' default="'.$this->getDefault().'">';
+                echo '<div class="pull-left" style="margin-top:4px;margin-left:6px;">'.text(2126).'</div>';
+            echo '</span>';
 		}
 	}
 }

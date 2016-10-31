@@ -106,6 +106,30 @@ function initializeDocument( page_id, options )
 	}
 	
 	makeupUI($('#tablePlaceholder .table-inner:first'));
+
+	$('#toggle-structure-panel').button().off('click').on('click', function (e) {
+		var button = $(this);
+		e.stopImmediatePropagation();
+		if (!button.hasClass('active')) {
+			button.addClass('active');
+		} else {
+			button.removeClass('active');
+		}
+		toggleDocumentStructure(page_id);
+	});
+
+	$("body").on("contextmenu", "#tablePlaceholder .table-inner tr[object-id]", function(e) {
+		$('.dropdown-fixed.open, .btn-group.open').removeClass('open');
+		var item = $(this).find('td#operations .dropdown-fixed');
+		if ( item.length > 0 ) {
+			item.last().addClass('open').removeClass('last')
+				.css({
+					left: e.pageX,
+					top: e.pageY
+				});
+			return false;
+		}
+	});
 }
 
 function buildBottomWaypoint(options)
@@ -457,12 +481,17 @@ function reorderSections()
 
 function refreshListItems()
 {
-	var items = $('#tablePlaceholder .table-inner:first').find('tr[object-id]:not(.row-empty)');
+	if ( !devpromOpts.windowActive ) {
+		setTimeout( function() { refreshListItems(); }, 3000);
+		return;
+	}
 
 	if ( localOptions.waitRequest ) {
 		localOptions.waitRequest.abort();
 		localOptions.waitRequest = null;
 	}
+
+	var items = $('#tablePlaceholder .table-inner:first').find('tr[object-id]:not(.row-empty)');
 
 	localOptions.waitRequest = $.ajax({
 		type: "GET",
@@ -626,6 +655,7 @@ function gotoRandomPage( page_id, load_pages, use_cache )
                 }).get().slice(0, localOptions.scrollable ? localOptions.cachedPages : 0).concat(nextIds);
 
     ids.unshift(page_id);
+	selectPageInTree(page_id);
 	openPage( ids, true, $('#tablePlaceholder .table-inner:first tr[object-id="'+ids[0]+'"]'), function(pageId) {
         restoreCache(pageId, function() {
 			setRowFocus(pageId);
@@ -665,7 +695,7 @@ function scrollToPage( page_id )
 
     pos = item.offset().top;
 	if ( $('.documentToolbar').length > 0 ) {
-		pos -= $('.documentToolbar').height();
+		pos -= $('.documentToolbar').height() + 9;
 	}
 	if ( pos > $(document).scrollTop() && pos < ($(window).height() - 80) ) return;
 	$('body, html').animate({ scrollTop: pos }, 50);
@@ -674,10 +704,12 @@ function scrollToPage( page_id )
 
 function showCreatedPage( pageId )
 {
-	loadContentTree( function() {
-		gotoRandomPage(pageId, 4, false);
-		selectPageInTree(pageId);
-	});
+	if ( typeof loadContentTree != 'undefined' ) {
+		loadContentTree( function() {
+			gotoRandomPage(pageId, 4, false);
+			selectPageInTree(pageId);
+		});
+	}
 }
 
 function makeupUI( container )
@@ -698,7 +730,8 @@ function makeupUI( container )
 	}
 
 	container.find("tr:not(.info)").each( function(i, e) {
-		$(e).dblclick( function() {
+		$(e).dblclick( function(evt) {
+			if ( $(evt.target).closest('td[uid="checkbox"],td#operations,div.wysiwyg').length > 0 ) return;
 			var ref = $(this).find('td[id=operations] a:not([data-toggle]):first');
 			if (ref.is('[onclick]')) {
 				ref.click();
@@ -714,6 +747,7 @@ function makeupUI( container )
 	});
 	
 	container.find("tr:not(.info) td:not(#content)").dblclick( function(e) {
+		if ( $(this).find('.wysiwyg').length > 0 ) return;
 		if (window.getSelection)
 	        window.getSelection().removeAllRanges();
 	    else if (document.selection)
@@ -722,13 +756,15 @@ function makeupUI( container )
 	
 	container.find("td#content").hover(
 			function() {
-				$(this).find('.document-item-bottom-hidden').show();
-				
+				if ( $(this).find('.document-page-bottom .editor-area').length < 1 ) {
+					$(this).find('.document-item-bottom-hidden').show();
+				}
 				if ( $(this).parent().is(':not(.row-empty)')) {
 					selectPageInTree($(this).parent().attr('object-id'));
 				}
 			},
 			function() {
+				if ( $(this).find('[contenteditable]:focus').length > 0 ) return;
 				$(this).find('.document-item-bottom-hidden').hide();
 			}
 		);
@@ -744,16 +780,12 @@ function makeupUI( container )
 		});
 
 	container.find('.document-page-comments-link').click( function(event) {
-		$(this).parents('.document-page-bottom').find('.comments-section').each(function(value) {
-			$(this).toggle();
-			cookies.set(
-					'comments-state-'+$(this).parents('tr[object-id]').attr('object-id'),
-					$(this).is(':visible') ? 'open' : 'closed'
-			);
-			if ( $(this).find('.comment-line').length < 1 ) {
-				$(this).find('.btn-success').click();
-			}
-		});
+		toggleDocumentPageComments($(this));
+	});
+	container.find("tr[object-id]").each( function(i,e) {
+		if ( cookies.get('comments-state-'+$(this).attr('object-id')) == 'open' && $(this).find('.comment-line').length > 0 ) {
+			toggleDocumentPageComments($(this).find('.comments-section'));
+		}
 	});
 
 	var locstr = String(window.location);
@@ -761,16 +793,12 @@ function makeupUI( container )
 	{
 		var commentString = locstr.substring(locstr.indexOf('#comment'));
 		var parts = commentString.split('#');
-		if ( parts.length > 0 ) {
-			container.find('#'+parts[1]).parents('.comments-section').show();
+		var section = container.find('#'+parts[1]).parents('.comments-section');
+		if ( parts.length > 0 && !section.is(':visible') ) {
+			toggleDocumentPageComments(section);
 		}
 	}
-	container.find("tr[object-id]").each( function(i,e) {
-		if ( cookies.get('comments-state-'+$(this).attr('object-id')) == 'open' && $(this).find('.comment-line').length > 0 ) {
-			$(this).find('.comments-section').show();
-		}
-	});
-	
+
 	toggleBulkActions();
 }
 
@@ -784,4 +812,31 @@ function setRowFocus( page_id ) {
 	contentElement.focus();
 	var editor = CKEDITOR.instances[contentElement.attr("id")];
 	if ( editor ) editor.focus();
+}
+
+function toggleDocumentStructure( documentId )
+{
+	cookies.set('toggle-structure-panel-' + documentId, !$('div.wiki-page-tree').is(':visible'));
+	window.location.reload();
+}
+
+function toggleDocumentTreePlacement( placement ) {
+	cookies.set('document-tree-placement', placement);
+	window.location.reload();
+}
+
+function toggleDocumentPageComments(container) {
+	var bottom = container.parents('.document-page-bottom');
+	bottom.find('.comments-section').each(function(value) {
+		$(this).toggle();
+		cookies.set(
+			'comments-state-'+$(this).parents('tr[object-id]').attr('object-id'),
+			$(this).is(':visible') ? 'open' : 'closed'
+		);
+		if ( $(this).is(':visible') && $(this).find('.comment-line').length < 1 ) {
+			$(this).find('.btn-success').click();
+		}
+	});
+	bottom.find('.document-item-bottom-hidden').hide();
+	bottom.find('.comments-cell').toggle();
 }

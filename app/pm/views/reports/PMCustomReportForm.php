@@ -26,22 +26,6 @@ class PMCustomReportForm extends PMPageForm
  		}
 	}
 
-	function createFieldObject( $attr_name ) 
-	{
-		switch ( $attr_name )
-		{
-			case 'ReportBase':
-				
-				$report = getFactory()->getObject('PMReport');
-				$report->setSystemOnly();
-				
-				return new FieldDictionary( $report );
-
-			default:
-				return parent::createFieldObject( $attr_name );
-		}
-	}
-	
 	function getFieldValue( $attr )
 	{
 		switch ( $attr )

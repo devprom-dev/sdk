@@ -12,8 +12,8 @@ class DeadlineSwimlaneRegistry extends ObjectRegistrySQL
  						array('entityId' => 4, 'Caption' => text(1894)),
  						array('entityId' => 5, 'Caption' => text(1895)),
  						array('entityId' => 6, 'Caption' => text(1896)),
- 						array('entityId' => 7, 'Caption' => text(1897))
- 				) 
+ 						array('entityId' => 7, 'Caption' => text(2245))
+ 				)
  		);
  	}
 }

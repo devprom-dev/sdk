@@ -39,7 +39,8 @@ class ProfilePage extends PMPage
  	function getForm() 
  	{
 		$object = getFactory()->getObject('pm_Participant');
-		$objectIt = getSession()->getParticipantIt();
+		$objectIt = $object->getExact(getSession()->getParticipantIt()->getId());
+
 		if ( getSession()->getProjectIt()->IsPortfolio() ) {
 			$objectIt = $object->createCachedIterator(array(
 				array (

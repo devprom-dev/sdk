@@ -42,14 +42,14 @@ class UserSettings extends MetaobjectCacheable
  		}
 
 		$this->cache->moveTo('Settings', $settings_name);
-		
+
 		if ( $this->cache->getId() != '' )
 		{
 			$parms['Value'] = $value;
-			
+
 			$this->modify_parms($this->cache->getId(), $parms);
 		}
-		else 
+		else
 		{
 			$parms['User'] = $user_id;
 			$parms['Settings'] = $settings_name;
@@ -57,7 +57,7 @@ class UserSettings extends MetaobjectCacheable
 			
 			$this->add_parms($parms);
 		}
-		
+
 		$this->cache = null;
  	}
 }

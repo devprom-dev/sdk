@@ -18,6 +18,7 @@
     <testsuites>
         <testsuite name="devprom">
             <directory>php</directory>
+            <directory>../pm/bundles/Devprom/ProjectBundle/Tests</directory>
         </testsuite>
         <testsuite name="servicedesk">
             <directory>../co/bundles/Devprom/ServiceDeskBundle/Tests</directory>

@@ -6,6 +6,7 @@ class ScriptService
 {
 	public function getJSPaths()
 	{
+	    if ( getSession()->getApplicationUrl() == '/' ) return array();
 		return array_merge(
 				array_filter( 
 						getFactory()->getObject('Script')->getRegistry()->Query()->fieldToArray('ReferenceName'),

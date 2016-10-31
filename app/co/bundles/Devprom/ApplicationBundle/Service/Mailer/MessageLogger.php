@@ -2,7 +2,7 @@
 namespace Devprom\ApplicationBundle\Service\Mailer;
 
 use DateTime;
-use ImapMailbox;
+use PhpImap\Mailbox as ImapMailbox;
 use Swift_Events_SendEvent;
 use Swift_Events_SendListener;
 
@@ -22,7 +22,7 @@ class MessageLogger implements Swift_Events_SendListener
                 date(DateTime::RFC822, $message->getDate()),
                 join(",", array_keys($message->getTo())),
                 join(",", array_keys($message->getFrom())),
-                ImapMailbox::decodeMimeStr($message->getSubject(), APP_ENCODING)
+                $message->getSubject()
             )
         );
     }

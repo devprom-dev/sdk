@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
-
 class ClearCache extends Installable
 {
 	private $cachePath = '';

@@ -1,5 +1,6 @@
 <?php
-
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 include_once "CacheEngine.php";
 
 class CacheEngineFS extends CacheEngine
@@ -14,8 +15,15 @@ class CacheEngineFS extends CacheEngine
 		
 		$this->cache_in_memory = array();
 	}
-	
-	function checkDirectories()
+
+	function __sleep()
+    {
+        return array_merge(parent::__sleep(), array (
+            'cache_dir'
+        ));
+    }
+
+    function checkDirectories()
 	{
 		$this->cache_dir = CACHE_PATH.'/appcache/';
 		
@@ -72,7 +80,7 @@ class CacheEngineFS extends CacheEngine
 	function truncate( $category = '' )
 	{
 		if ( $category == '' ) $category = $this->getDefaultPath();
-		
+
 		$this->rrmdir( $this->getFilePath('', $category) ); 
 	}
 	

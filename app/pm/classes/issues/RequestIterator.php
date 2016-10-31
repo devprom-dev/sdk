@@ -6,14 +6,14 @@ class RequestIterator extends StatableIterator
  	
 	function getDisplayName()
 	{
-	 	if ( $this->get('TypeName') != '' ) 
-	 	{
-	 		return $this->get('TypeName').': '.parent::getDisplayName();
+	    $result = parent::getDisplayName();
+	 	if ( $this->get('TypeName') != '' ) {
+            $result = $this->get('TypeName').': '.$result;
 	 	}
-	 	else
-	 	{
-		 	return $this->object->getDisplayName().': '.parent::getDisplayName();
+	 	else if ( $this->getId() != '' ) {
+            $result = $this->object->getDisplayName().': '.$result;
 	 	}
+	 	return $result;
 	}
 
  	function IsNew() 
@@ -37,22 +37,6 @@ class RequestIterator extends StatableIterator
 
  	function IsImplemented()
  	{
- 		return false;
- 	}
- 	
- 	function IsBlocked()
- 	{
- 		$blocked_it = $this->getBlockedIt();
- 		while ( !$blocked_it->end() )
- 		{
-			if ( $blocked_it->get('IsTerminal') == 'N' )
- 			{
- 				return true;
- 			}
- 			
- 			$blocked_it->moveNext();
- 		}
- 		
  		return false;
  	}
  	
@@ -92,19 +76,10 @@ class RequestIterator extends StatableIterator
 			return $stage_it->getObjectIt();
 		}
 
-		if ( $this->object->hasAttribute('Iterations') && $this->get('Iterations') != '' ) return $this->getRef('Iterations');
-
+		if ( $this->object->hasAttribute('Iteration') && $this->get('Iteration') != '' ) return $this->getRef('Iteration');
 		if ( $this->object->hasAttribute('PlannedRelease') && $this->get('PlannedRelease') != '' ) return $this->getRef('PlannedRelease');
 	}
 		
-	function getBlockedIt()
-	{
-		$it = $this->object->cacheBlocks()->copyAll();
-		$it->setStop( 'StopWord', $this->getId().',blocked' );
-		
-		return $it;
-	}
-
 	function getImplementationIds()
 	{
 		$result = array();
@@ -118,17 +93,6 @@ class RequestIterator extends StatableIterator
 		return $result;
 	}
 
-	function getDate( $date_field )
-	{
-		if ( !is_object($this->object->dates_it) )
-		{
-			$this->object->cacheDates();
-		}
-
-		$this->object->dates_it->moveTo( 'pm_ChangeRequestId', $this->getId() );
-		return $this->object->dates_it->getDateFormat( $date_field );
-	}
-	
 	function isSubmittedIn( $version )
 	{
 		global $project_it;

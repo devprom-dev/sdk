@@ -150,4 +150,13 @@ class BulkForm extends BulkFormBase
 				parent::drawCustomAttribute( $attribute, $value, $tab_index );
 		}
 	}
+
+	function getHint()
+	{
+		switch( $this->getMethod() ) {
+			case 'BulkDeleteWebMethod':
+				return preg_replace('/%1/', getFactory()->getObject('PMReport')->getExact('project-log')->getUrl(), text(2210));
+		}
+		return parent::getHint();
+	}
 }

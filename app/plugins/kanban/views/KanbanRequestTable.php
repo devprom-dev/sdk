@@ -39,21 +39,17 @@ class KanbanRequestTable extends RequestTable
 
     protected function buildProjectVpds()
     {
-        $ids = getSession()->getProjectIt()->IsPortfolio() || getSession()->getProjectIt()->IsProgram()
-            ? getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('pm_ProjectId')
-            : array();
-
-        if ( !getSession()->getProjectIt()->IsPortfolio() ) {
-            $ids[] = getSession()->getProjectIt()->getId();
+        $registry = getFactory()->getObject('Project')->getRegistry();
+        $registry->setPersisters(array());
+        $filters = array(new ProjectUseKanbanPredicate());
+        $project_it = getSession()->getProjectIt();
+        if ( $project_it->IsPortfolio() || $project_it->IsProgram() ) {
+            $filters[] = new ProjectLinkedSelfPredicate();
         }
-
-        $project_it = getFactory()->getObject('Project')->getRegistry()->Query(
-            array (
-                new ProjectUseKanbanPredicate(),
-                new FilterInPredicate($ids)
-            )
-        );
-        $vpds = $project_it->fieldToArray('VPD');
+        else {
+            $filters[] = new FilterInPredicate($project_it->getId());
+        }
+        $vpds = $registry->Query($filters)->fieldToArray('VPD');
         return count($vpds) > 0 ? $vpds : array(getSession()->getProjectIt()->get('VPD'));
     }
 

@@ -86,4 +86,9 @@ class CheckpointMySQLVariables extends CheckpointEntryDynamic
         return strpos($_SERVER['OS'], 'Windows') !== false
             || $_SERVER['WINDIR'] != ''  || $_SERVER['windir'] != '';
     }
+
+    function getWarning()
+    {
+        return text(2256);
+    }
 }

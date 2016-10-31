@@ -1,5 +1,5 @@
 <?php
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
+
 include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
  
 class COSystemTriggers extends SystemTriggersBase
@@ -11,15 +11,19 @@ class COSystemTriggers extends SystemTriggersBase
 			case 'cms_User':
 				$generator = new UserPicSpritesGenerator();
 				$generator->storeSprites();
-				// reset cached values
-				getSession()->drop();
+                $this->invalidate();
 				break;
 
 			case 'co_ProjectGroup':
 			case 'co_ProjectGroupLink':
-				getSession()->drop();
+                $this->invalidate();
 				break;
-
 		}
 	}
+
+	protected function invalidate()
+    {
+        \SessionBuilder::Instance()->invalidate();
+        getSession()->drop();
+    }
 }

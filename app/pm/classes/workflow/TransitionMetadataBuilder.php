@@ -22,5 +22,13 @@ class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder
 			'REF_TransitionResetFieldId', translate('Очищаемые поля'), true);
 
 		$metadata->addPersister(new TransitionDetailsPersister());
+
+        foreach( array('Description','OrderNum') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'additional');
+            $metadata->setAttributeRequired($attribute, false);
+        }
+
+        $metadata->setAttributeRequired('IsReasonRequired', true);
+        $metadata->setAttributeDefault('IsReasonRequired', TransitionReasonTypeRegistry::None);
     }
 }

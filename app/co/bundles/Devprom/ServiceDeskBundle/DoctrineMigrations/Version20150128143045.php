@@ -18,12 +18,12 @@ class Version20150128143045 extends AbstractMigration
         catch(Exception $e) {
         }
         try {
-            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordCreated DATETIME DEFAULT NOW()');
         }
         catch(Exception $e) {
         }
         try {
-            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordModified TIMESTAMP DEFAULT NOW()');
+            $this->addSql('ALTER TABLE cms_ExternalUser ADD RecordModified DATETIME DEFAULT NOW()');
         }
         catch(Exception $e) {
         }

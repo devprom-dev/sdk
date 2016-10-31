@@ -26,15 +26,15 @@ class ObjectUID
 			'pm_TestCaseExecution' => 'E',
  			'pm_Artefact' => 'A',
  			'TestScenario' => 'S',
+            'TestScenarioOnly' => 'S',
+            'TestPlan' => 'S',
  			'TestingTemplate' => 'S',
  		    'pm_Project' => 'P',
- 			'pm_Poll' => 'U',
  			'pm_Question' => 'Q',
  			'BlogPost' => 'B',
  			'pm_Milestone' => 'M',
  			'pm_Function' => 'F',
  			'Comment' => 'O',
- 			'pm_TestPlan' => 'L',
  			'pm_Meeting' => 'G',
  			'pm_SubversionRevision' => 'C',
 			'pm_ReviewRequest' => 'V'
@@ -101,7 +101,7 @@ class ObjectUID
  				return $class_name;
  			}
  		}
- 		
+
  		return $class_name;
  	}
  	
@@ -349,27 +349,27 @@ class ObjectUID
 			$info['url'] .= strpos($info['url'], '?') > 0 ? '&case='.$object_it->getId() : '?case='.$object_it->getId();
 		}
 
-        $html = '<a class="with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
+        $html = '<a class="uid with-tooltip" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$info['tooltip-url'].'" href="'.$info['url'].'">'.$text.'</a>';
         
         if ( $object_it->object instanceof TestExecution || $object_it->object instanceof TestCaseExecution )
         {
         	$class = $object_it->get('ResultReferenceName') == 'failed'
  				? 'label-important' 
  				: ($object_it->get('ResultReferenceName') == 'succeeded' ? 'label-success' : 'label-warning');
-        	$html = '<span class="label '.$class.'">'.$html.'</span>';
+        	$html = '<span class="label label-uid '.$class.'">'.$html.'</span>';
         }
 
 		if ( $object_it->object instanceof ReviewRequest )
 		{
 			$class = $object_it->get('State') == 'submitted'
 				? 'label-success' : ($object_it->get('State') == 'discarded' ? 'label-inverse' : '');
-			$html = '<span class="label '.$class.'">'.$html.'</span>';
+			$html = '<span class="label label-uid '.$class.'">'.$html.'</span>';
 		}
 		if ( $object_it->object instanceof SubversionRevision && $object_it->get('ReviewState') != '' )
 		{
 			$class = $object_it->get('ReviewState') == 'submitted'
 				? 'label-success' : ($object_it->get('ReviewState') == 'discarded' ? 'label-inverse' : '');
-			$html = '<span class="label '.$class.'">'.$html.'</span>';
+			$html = '<span class="label label-uid '.$class.'">'.$html.'</span>';
 		}
 
         return $html;
@@ -390,8 +390,9 @@ class ObjectUID
 		if ( !is_object($object_it) ) return '';
 		if ( $object_it->getId() == '' ) return '';
  		$text = $this->getUidIcon( $object_it );
- 		$text .= ' '.$object_it->getWordsOnlyValue(html_entity_decode($object_it->getDisplayName()), $words);
- 		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')'; 
-		return $text;
+ 		$text .= $object_it->getWordsOnlyValue(html_entity_decode($object_it->getDisplayName()), $words);
+ 		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')';
+        if ( $object_it->get('ClosedInVersion') != '' ) $text .= ' {'.$object_it->get('ClosedInVersion').'}';
+        return $text;
  	}
 }

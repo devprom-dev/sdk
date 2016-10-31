@@ -25,7 +25,17 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['Icon'] = 'icon-eye-open';
         
         $modules[] = $item;
-        
+
+        $item = array();
+
+        $item['cms_PluginModuleId'] = 'metrics';
+        $item['Caption'] = translate('Метрики');
+        $item['AccessEntityReferenceName'] = 'pm_ProjectMetric';
+        $item['Url'] = 'metrics';
+        $item['Icon'] = 'icon-signal';
+
+        $modules[] = $item;
+
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-spenttime';
@@ -88,16 +98,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
 
         $item = array();
         
-        $item['cms_PluginModuleId'] = 'project-plan-milestone';
-        $item['Caption'] = translate('Вехи');
-        $item['AccessEntityReferenceName'] = 'pm_Milestone';
-        $item['Url'] = 'plan/milestone';
-        $item['Icon'] = 'icon-calendar';
-        
-        $modules[] = $item;
-        
-        $item = array();
-        
         $item['cms_PluginModuleId'] = 'issues-backlog';
         $item['Caption'] = translate('Бэклог');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
@@ -109,7 +109,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-board';
-        $item['Caption'] = text(1340);
+        $item['Caption'] = getSession()->getProjectIt()->IsPortfolio() ? text(1843) : text(1340);
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/board';
         $item['Icon'] = 'icon-th-large';
@@ -122,7 +122,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['Caption'] = translate('Трассировка пожеланий');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/trace';
-        $item['Icon'] = 'icon-tasks';
+        $item['Icon'] = 'icon-random';
 
         $modules[] = $item;
 
@@ -151,7 +151,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
 	        $item = array();
 	        
 	        $item['cms_PluginModuleId'] = 'tasks-board';
-	        $item['Caption'] = translate('Доска задач');
+	        $item['Caption'] = getSession()->getProjectIt()->IsPortfolio() ? text(1844) : translate('Доска задач');
 	        $item['AccessEntityReferenceName'] = 'pm_Task';
 	        $item['Url'] = 'tasks/board';
             $item['Icon'] = 'icon-th';
@@ -164,7 +164,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
 	        $item['Caption'] = translate('Трассировка задач');
 	        $item['AccessEntityReferenceName'] = 'pm_Task';
 	        $item['Url'] = 'tasks/trace';
-            $item['Icon'] = 'icon-tasks';
+            $item['Icon'] = 'icon-random';
 	        
 	        $modules[] = $item;
 	        

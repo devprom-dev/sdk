@@ -10,6 +10,7 @@ include "predicates/ProjectRolePredicate.php";
 include "predicates/ProjectStatePredicate.php";
 include "predicates/ProjectUserLeadPredicate.php";
 include "predicates/ProjectVpdPredicate.php";
+include "predicates/ProjectAccessiblePredicate.php";
 include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";
 include "persisters/ProjectLinkedPersister.php";
@@ -25,6 +26,9 @@ class Project extends Metaobject
  	function __construct( ObjectRegistrySQL $registry = null ) 
  	{
 		parent::__construct('pm_Project', $registry);
+        $this->setAttributeType( 'CodeName', 'VARCHAR' );
+        $this->addAttribute( 'LinkedProject', 'REF_pm_ProjectId', translate('Связанные проекты'), false );
+        $this->addPersister( new ProjectLinkedPersister() );
 		$this->setSortDefault(
 			array (
 				new SortImportanceClause('Importance'),

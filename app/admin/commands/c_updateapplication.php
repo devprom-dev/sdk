@@ -22,8 +22,9 @@ class UpdateApplication extends MaintenanceCommand
 	    
 	    // clear old cache
 	    InstallationFactory::getFactory();
-	    $clear_cache_action = new ClearCache();
-	    $clear_cache_action->install();
+        foreach( array(new ClearCache(), new CacheParameters()) as $command ) {
+            $command->install();
+        }
 
 		// rebuild cached list of plugins
 		getFactory()->getPluginsManager()->buildPluginsList();
@@ -32,9 +33,7 @@ class UpdateApplication extends MaintenanceCommand
 	    $strategy->release();
 
 	    DAL::Instance()->Reconnect();
-	    
-	    $_SERVER['APP_VERSION'] = getFactory()->getObject('cms_Update')->getLatest()->getDisplayName();
-	    
+
 		$this->replyRedirect( '?action=updatesystem&parms='.SanitizeUrl::parseUrl($_REQUEST['parms']) );
 	}
 	

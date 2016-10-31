@@ -2,7 +2,6 @@
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectUIDPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestDueDatesPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestTracePersister.php";
-include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestFactPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskDatesPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskTracePersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskFactPersister.php";
@@ -36,8 +35,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
             new ObjectUIDPersister(),
             new RequestDueDatesPersister(),
             new StateDurationPersister(),
-            new RequestTracePersister(),
-            new RequestFactPersister()
+            new RequestTracePersister()
         );
     }
 
@@ -57,6 +55,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
             $persister->setObject($request);
             $issue_columns = array_merge($issue_columns, $persister->getSelectColumns('t'));
         }
+        $issue_columns[] = 't.Fact';
 
 		$sql = "
 			SELECT t.pm_TaskId,

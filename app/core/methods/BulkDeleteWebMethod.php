@@ -43,6 +43,17 @@ class BulkDeleteWebMethod extends WebMethod
 		
 		$object_it = $object->getExact($ids); 
 
+        if ( $object instanceof Project ) {
+            echo JsonWrapper::encode(
+                array (
+                    'state' => 'redirect',
+                    'message' => '',
+                    'object' => '/admin/backups.php?action=backupdatabase&parms=project,'. join('-',$object_it->idsToArray())
+                )
+            );
+            exit();
+        }
+
 		while ( !$object_it->end() )
 		{
 		    if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception(text(1927));
@@ -51,5 +62,10 @@ class BulkDeleteWebMethod extends WebMethod
 			
 			$object_it->moveNext();
 		}
- 	}
+
+		if ( class_exists('UndoWebMethod') ) {
+			$method = new UndoWebMethod(ChangeLog::getTransaction());
+			$method->setCookie();
+		}
+	}
 }

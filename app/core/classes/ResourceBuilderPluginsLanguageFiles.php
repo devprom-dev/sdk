@@ -6,14 +6,8 @@ class ResourceBuilderPluginsLanguageFiles extends ResourceBuilder
 {
     public function build( ResourceRegistry $object )
     {
-        global $plugins;
-
-        if ( !is_object($plugins) ) return;
-        
-        $text_array = $plugins->initializeResources(getSession()->getLanguageUid());
-
-       	foreach ( $text_array as $key => $value )
-		{
+        $text_array = \PluginsFactory::Instance()->initializeResources($object->getObject()->getLanguageUid());
+       	foreach ( $text_array as $key => $value ) {
 		    $object->addText($key, $value);
 		}
     }

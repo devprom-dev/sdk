@@ -5,65 +5,23 @@ use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 class ReportList extends PMPageList
 {
 	private $first_area_it = null;
-	
+
 	private $favorite_reports = array();
 	
     function getIterator()
     {
-        $object = $this->getObject();
-        
-        $predicates = $this->getPredicates( $this->getFilterValues() );
-        		
- 	    $report_category_filter_values = array();
- 	    
- 	 	foreach( $predicates as $key => $filter )
- 		{
- 			if ( is_a( $filter, 'PMReportCategoryPredicate') && $filter->getValue() != '' )
- 			{
- 				$report_category_filter_values = preg_split('/,/', $filter->getValue());
- 			}
- 		}
- 		
- 		$it = $object->getAll();
-        
- 		$rowset = $it->getRowset();
-		
- 		if ( count($report_category_filter_values) > 0 && !in_array('all', $report_category_filter_values) )
- 		{
- 		    foreach( $rowset as $row => $report )
- 		    {
- 		     	if ( in_array('none', $report_category_filter_values) && $report['Category'] != '' ) 
- 				{
- 					unset($rowset[$row]); continue;
- 				} 
-				if ( !in_array($report['Category'], $report_category_filter_values) )
-				{
-					unset($rowset[$row]); continue;
-				}
- 		    }
- 		}
+        $it = $this->getObject()->getRegistry()->Query(
+            $this->getPredicates( $this->getFilterValues() )
+        );
 
- 		if ( $object->getSystemOnly() )
-		{
-	 		foreach( $rowset as $row => $report )
-			{
-				if ( $report['IsCustomized'] == 'Y' ) unset($rowset[$row]);
- 			}
-		}
-		else if ( $object->getUsersOnly() )
-		{
-		    foreach( $rowset as $row => $report )
-		    {
-		        if ( $report['IsCustomized'] != 'Y' ) unset($rowset[$row]);
-		    }
-		}
+        $service = new WorkspaceService();
+        $this->favorite_reports = $service->getItemOnFavoritesWorkspace($it->fieldToArray('cms_ReportId'));
 
-		$it = $object->createCachedIterator( array_values($rowset) );
-		
-		$service = new WorkspaceService();
-		$this->favorite_reports = $service->getItemOnFavoritesWorkspace($it->fieldToArray('cms_ReportId'));
+        return $it;
+    }
 
-		return $it;
+    function getForm( $object_it ) {
+        return null;
     }
     
 	function IsNeedToDisplay( $attr ) 
@@ -122,7 +80,7 @@ class ReportList extends PMPageList
 		}
 	}
 	
-	function getItemActions( $column_name, $object_it ) 
+	function getItemActions( $column_name, $object_it )
 	{
 		$actions = array();
 
@@ -134,7 +92,6 @@ class ReportList extends PMPageList
 		if ( count($filtered) < 1 )
 		{
 			$info = $object_it->buildMenuItem();
-			
 		    $actions[] = array(
 			    'name' => text(1327),
 			    'url' => "javascript:addToFavorites('".$object_it->getId()."','".urlencode($info['url'])."');" 
@@ -146,25 +103,19 @@ class ReportList extends PMPageList
 			$custom_it = getFactory()->getObject('pm_CustomReport')->getExact( $object_it->getId() );
 
 			$method = new ObjectModifyWebMethod($custom_it);
-			
-			if ( $method->hasAccess() )
-			{
+			if ( $method->hasAccess() ) {
 			    if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-			    
 				$actions[] = array(
-				    'url' => $method->getJSCall(), 
+				    'url' => $method->getJSCall(),
 				    'name' => translate('Изменить')
 				);
 			}
-			
+
 			$method = new DeleteObjectWebMethod( $custom_it );
-			
-			if ( $method->hasAccess() )
-			{
+			if ( $method->hasAccess() ) {
 			    if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-			    
 				$actions[] = array(
-				    'url' => $method->getJSCall(), 
+				    'url' => $method->getJSCall(),
 				    'name' => $method->getCaption()
 				);
 			}
@@ -175,8 +126,6 @@ class ReportList extends PMPageList
 
 	function drawCell( $object_it, $attr ) 
 	{
-		global $project_it;
-		
 		switch ( $attr )
 		{
 			case 'Caption':
@@ -196,7 +145,7 @@ class ReportList extends PMPageList
     				echo '<a href="'.$url.'" style="font-weight:bold;padding-left:12px;">'.$object_it->getDisplayName().'</a>';
     			echo '</div>';
     			
-			    echo '<div style="padding-top:8px">';
+			    echo '<div class="help-block" style="padding-top:12px">';
 			        echo $object_it->get('Description');
     			echo '</div>';
 			    break;

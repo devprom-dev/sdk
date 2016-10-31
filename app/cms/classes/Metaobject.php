@@ -30,7 +30,7 @@ class Metaobject extends StoredObjectDB
 	
  	function Metaobject( $entity_refname, ObjectRegistrySQL $registry = null, $metadata_cache_category = '' )
 	{
-	    global $entity_cache;
+	    global $entity_cache, $session;
 	    
 		parent::__construct( $registry );
 		
@@ -70,10 +70,11 @@ class Metaobject extends StoredObjectDB
 			}
 		}
 
-	   	foreach( getSession()->getBuilders('ObjectModelBuilder') as $builder )
-	    {
-	        $builder->build( $this ); 
-	    }
+		if ( is_object($session) ) {
+            foreach( $session->getBuilders('ObjectModelBuilder') as $builder ) {
+                $builder->build( $this );
+            }
+        }
 	}
 	
 	function getEntity()
@@ -376,9 +377,7 @@ class Metaobject extends StoredObjectDB
 
 		$self_it = $deleted_it;
 
-		if ( strtolower(get_class($deleted_it->object)) != 'metaobject' ) {
-			UndoLog::Instance()->put($deleted_it);
-		}
+		if ( UndoLog::Instance()->valid($deleted_it) ) UndoLog::Instance()->put($deleted_it);
 
 		// get items references to the current one
 		$references = getFactory()->getModelReferenceRegistry()->getBackwardReferences($this);

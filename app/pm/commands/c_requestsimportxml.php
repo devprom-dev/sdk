@@ -59,13 +59,11 @@
 								
 								foreach ( $row['children'] as $cell )
 								{
-									$data = $this->sanitizeData($cell['children'][0]['tagData']);
-									if ( $cell['attrs']['SS:INDEX'] > 0 )
-									{
+									$data = $this->sanitizeData($this->getText($cell));
+									if ( $cell['attrs']['SS:INDEX'] > 0 ) {
 										$line[$cell['attrs']['SS:INDEX'] - 1] = $data;
 									}
-									else
-									{
+									else {
 										array_push( $line, $data );
 									}
 								}
@@ -82,4 +80,17 @@
 
 		return $lines;
 	}
+
+	protected function getText( $data ) {
+	    if ( is_array($data['children']) ) {
+	        $texts = array();
+            foreach( $data['children'] as $children ) {
+                $texts[] = $this->getText($children);
+            }
+            return join('', $texts);
+        }
+        else {
+            return $data['tagData'];
+        }
+    }
  }

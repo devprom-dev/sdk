@@ -7,14 +7,12 @@ include_once "FormTaskEmbedded.php";
 
 class FieldTask extends Field
 {
- 	var $request_it, $iteration_it;
+ 	private $request_it;
  	
- 	function FieldTask( $request_it, $iteration_it )
+ 	function __construct( $request_it )
  	{
  		$this->request_it = $request_it;
- 		$this->iteration_it = $iteration_it;
- 		
- 		parent::Field();
+ 		parent::__construct();
  	}
  	
  	function getValidator()

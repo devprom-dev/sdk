@@ -11,8 +11,13 @@ class WikiPageRevisionPersister extends ObjectSQLPersister
 		$this->revision = $revision instanceof IteratorBase ? $revision->getId() : $revision;
 		parent::__construct();
 	}
-	
- 	function getSelectColumns( $alias )
+
+	function getAttributes()
+	{
+		return array('Content');
+	}
+
+	function getSelectColumns( $alias )
  	{
  		$columns = array();
  		

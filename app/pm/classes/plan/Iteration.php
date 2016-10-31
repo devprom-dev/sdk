@@ -16,6 +16,7 @@ class Iteration extends Metaobject
 		
 		$this->setSortDefault( array( 
 		        new SortReleaseIterationClause(),
+				new SortAttributeClause('StartDate'),
 		        new SortAttributeClause('ReleaseNumber')
 		));
 	}
@@ -137,8 +138,6 @@ class Iteration extends Metaobject
 	
 	function modify_parms( $object_id, $parms ) 
 	{
-		global $model_factory;
-
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
 		$result = parent::modify_parms( $object_id, $parms );

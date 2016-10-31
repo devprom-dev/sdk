@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."pm/classes/widgets/FunctionalAreaMenuSet.php";
 
 class ProjectSettingsTable extends PMPageTable
 {
@@ -47,7 +48,7 @@ class ProjectSettingsTable extends PMPageTable
 				$description =  $resource_it->getId() != ''
 					? $resource_it->getHtmlDecoded('Caption') :  $widget_it->getHtmlDecoded('Description');
 
-				$totext = new \Html2Text\Html2Text($description);
+				$totext = new \Html2Text\Html2Text(strip_tags($description), array('width'=>0));
 				$description = $totext->getText();
 				if ( mb_strlen($description) > 140 ) $description = mb_substr($description, 0, 140).'...';
 

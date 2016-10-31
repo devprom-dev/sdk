@@ -28,6 +28,16 @@ class UndoWebMethod extends WebMethod
 		);
  	}
  	
+	function setCookie() {
+		$this->setRedirectUrl('donothing');
+		setcookie(
+			'last-action-message',
+			preg_replace('/%1/', $this->getJSCall(), text(2211)),
+			null,
+			'/'
+		);
+	}
+	
  	function execute_request()
  	{
 		if ( $_REQUEST['transaction'] != '' ) {
@@ -67,7 +77,7 @@ class UndoWebMethod extends WebMethod
 		if ( strtolower($tag_name) != 'entity' ) return false;
 
 		$class_name = getFactory()->getClass($entity['attrs']['CLASS']);
-		if ( !class_exists($class_name, false) ) return false;
+		if ( !class_exists($class_name, false) ) return true;
 
 		$object = getFactory()->getObject($class_name);
 		$registry = new ObjectRegistrySQL($object);

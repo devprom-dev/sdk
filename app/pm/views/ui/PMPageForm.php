@@ -6,8 +6,8 @@ include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator
 include "FieldWidgetUrl.php";
 include "FieldUID.php";
 include "FieldListOfReferences.php";
+include "JSONViewerField.php";
 
-///////////////////////////////////////////////////////////////////////////////
 class PMPageForm extends PageForm
 {
     private $customtypes = array();
@@ -22,6 +22,12 @@ class PMPageForm extends PageForm
     function getId()
     {
     	return parent::getId().$this->getTransitionIt()->getId();
+    }
+
+    function setObjectIt( $object_it )
+    {
+        $this->state_it = null;
+        parent::setObjectIt($object_it);
     }
     
     protected function extendModel()
@@ -239,11 +245,14 @@ class PMPageForm extends PageForm
     	}
     	
     	$object_it = $this->getObjectIt();
-    	if ( is_object($object_it) ) return $this->state_it = $object_it->getStateIt();
-
-    	return $this->state_it = getFactory()->getObject('StateBase')->getEmptyIterator();
+    	if ( is_object($object_it) ) {
+    	    return $this->state_it = $object_it->getStateIt();
+        }
+        else {
+            return $this->state_it = \WorkflowScheme::Instance()->getStateIt($this->getObject());
+        }
     }
-    
+
  	function IsAttributeRequired( $attr )
  	{
  		if ( array_key_exists( $attr, $this->customkinds ) )
@@ -293,6 +302,12 @@ class PMPageForm extends PageForm
 
                 if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg')
                 {
+                    if ( is_object($this->getObjectIt()) && !$this->getEditMode() ) {
+                        if ( json_decode(JSONViewerField::stripTags($this->getObjectIt()->get($attr))) ) {
+                            return new JSONViewerField();
+                        }
+                    }
+
                     $field = new FieldWYSIWYG();
 
                     $object_it = $this->getObjectIt();
@@ -339,15 +354,22 @@ class PMPageForm extends PageForm
         
         return parent::process();
     }
-	
+
+    function getShortAttributes() {
+        return array();
+    }
+
     function getRenderParms()
     {
         $this->extendModel();
-    	
+
  		$object_it = $this->getObjectIt();
 
         return array_merge(parent::getRenderParms(), array(
-            'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable() ? $object_it->getStateName() : ""
+            'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable() ? $object_it->getStateName() : "",
+            'form_class' => '',
+            'showtabs' => $this->getTransitionIt()->getId() == '',
+            'shortAttributes' => $this->getShortAttributes()
         ));
     }
     
@@ -404,6 +426,14 @@ class PMPageForm extends PageForm
         return array_keys(array_filter($this->customtypes, function($value) {
             return $value == 'computed';
         }));
+    }
+
+    function redirectOnDelete($object_it, $redirect_url = '')
+    {
+        $method = new UndoWebMethod(ChangeLog::getTransaction());
+        $method->setCookie();
+
+        parent::redirectOnDelete($object_it, $redirect_url);
     }
 
     private $state_it = null;

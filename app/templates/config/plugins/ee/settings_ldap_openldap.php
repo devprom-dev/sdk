@@ -19,7 +19,5 @@ define('LDAP_ATTR_DN', 'dn' );
 define('LDAP_ATTR_CN', 'cn' ); 
 define('LDAP_ATTR_MEMBEROF', '' ); 
 define('LDAP_TREEQUERY', ''); 
-define('LDAP_CLASS_OP', 'organizationalPerson,person' ); 
-define('LDAP_CLASS_OU', 'organizationalUnit,groupOfUniqueNames,group' ); 
+define('LDAP_CLASS_OU', 'organizationalUnit,groupOfUniqueNames,group' );
 
-?>

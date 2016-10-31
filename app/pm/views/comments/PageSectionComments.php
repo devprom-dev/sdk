@@ -9,7 +9,8 @@ class PageSectionComments extends InfoSection
  	private $baseline = '';
 	private $title = '';
 	private $id = '';
- 	
+    private $options = array();
+
  	function __construct( $object_it, $baseline = '' )
  	{
 		parent::__construct();
@@ -37,6 +38,10 @@ class PageSectionComments extends InfoSection
 		return $this->id;
 	}
 
+	function setOptions( $options ) {
+	    $this->options = $options;
+    }
+
  	function getObjectIt()
  	{
  		return $this->object_it;
@@ -57,6 +62,12 @@ class PageSectionComments extends InfoSection
  	function render( $view, $parms = array() )
  	{
 		$comment_list = new CommentList( $this->object_it, $this->baseline );
+        if ( array_key_exists('collapsable', $this->options) ) {
+            $comment_list->setCollabseable($this->options['collapsable']);
+        }
+        if ( array_key_exists('autorefresh', $this->options) ) {
+            $comment_list->setAutoRefresh($this->options['autorefresh']);
+        }
 		$comment_list->render( $view, $parms );
 	}
 }  

@@ -6,10 +6,10 @@ class BaselineRegistry extends ObjectRegistrySQL
 	{
 		$snapshot = getFactory()->getObject('cms_Snapshot');
 		return " (
-		 	SELECT t.CaptionType pm_VersionId, t.CaptionType Caption, t.VPD, 0 OrderNum
+		 	SELECT t.CaptionType pm_VersionId, t.CaptionType Caption, t.VPD, 0 OrderNum, t.Version, t.Release
 		 	  FROM ".getFactory()->getObject('Stage')->getRegistry()->getQueryClause()." t
 		 	 UNION
-		 	SELECT t.Caption, t.Caption, t.VPD, 0
+		 	SELECT t.Caption, t.Caption, t.VPD, 10, NULL, NULL
 		 	  FROM cms_Snapshot t
 		 	 WHERE t.Type = 'branch' ".$snapshot->getVpdPredicate('t')."
 		) ";

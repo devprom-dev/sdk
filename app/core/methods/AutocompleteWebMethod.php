@@ -1,6 +1,6 @@
 <?php
-
 include_once "WebMethod.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
 
 class AutocompleteWebMethod extends WebMethod
 {
@@ -96,7 +96,7 @@ class AutocompleteWebMethod extends WebMethod
 
 		if ( $object->getVpdValue() != '' ) {
 			$queryParms = array(
-				in_array('cross', $attributes) ? new ProjectAccessiblePredicate() : new FilterVpdPredicate()
+				in_array('cross', $attributes) ? new \ProjectAccessibleVpdPredicate() : new FilterVpdPredicate()
 			);
 		}
  		if ( is_a($object, 'MetaobjectStatable') ) {

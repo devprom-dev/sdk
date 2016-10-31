@@ -54,13 +54,8 @@ class PMWikiTable extends PMPageTable
 		{
 			case 'chart':
 		 		return new PMWikiChart( $this->getObject(), $iterator );
-
-			case 'files':
-		 		return new FilesWikiPagesList( $this->getObject() );
-		 		
 			case 'templates':
 				return new WikiTemplateList( $this->getObject() );
-				 
 		 	default:
 		 		return new PMWikiList( $this->getObject() );
 		}
@@ -102,8 +97,6 @@ class PMWikiTable extends PMPageTable
 		$parent_filter->setValueParm( 'parentpage' );
 		$filters[] = $parent_filter;
 
-		$filters[] = new ViewWikiContentWebMethod();
-			
 		$type_it = $this->object->getTypeIt();
 		if ( is_object($type_it) ) {
 			$filter = $this->buildTypeFilter($type_it);
@@ -139,13 +132,12 @@ class PMWikiTable extends PMPageTable
 			new WikiAuthorFilter( $values['author'] ),
 			new WikiRootTransitiveFilter( $values['parentpage'] ),
 			new WikiTagFilter( $values['tag'] ),
-			new WikiContentFilter( $values['content'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
 		    new WikiDocumentUIDFilter( $values['document'] ),
 			new FilterModifiedAfterPredicate($values['modifiedafter']),
-			new FilterSearchAttributesPredicate($values['search'], array('t.Caption','t.Content'))
+			new FilterSearchAttributesPredicate($values['search'], array('Caption','Content'))
 		);
-		
+
 		if ( $this->Statable($this->getObject()) ) {
 		    $predicates[] = new TransitionObjectPredicate($this->getObject(), $values['transition']);
 		}
@@ -179,39 +171,32 @@ class PMWikiTable extends PMPageTable
 	
 	function getExportActions()
 	{
-	    $page_it = $this->getObject()->getEmptyIterator();
-	    
-	    $actions = $this->getForm()->getExportActions( $page_it );
+	    $actions = $this->getForm()->getExportActions( $this->getExportPageIt() );
 
 		$method = new ExcelExportWebMethod();
-		
-		$actions[] = array( 
-			'name' => $method->getCaption().' ('.translate('Текст').')',
+		$actions[] = array(
+			'uid' => 'export-excel-text',
+			'name' => 'Excel ('.translate('Текст').')',
 			'url' => $method->url( $this->getCaption(), 'WikiIteratorExportExcelText' )
 		);
-		
-		$actions[] = array( 
-			'name' => $method->getCaption().' ('.translate('HTML').')',
+		$actions[] = array(
+			'uid' => 'export-excel-html',
+			'name' => 'Excel ('.translate('HTML').')',
 			'url' => $method->url( $this->getCaption(), 'WikiIteratorExportExcelHtml' )
 		);
 		
 		return $actions;
 	}
+
+	function getExportPageIt()
+    {
+	    return $this->getObject()->getEmptyIterator();
+    }
 	
 	function getActions()
 	{
 		$actions = array();
 		
-		$export_actions = $this->getExportActions();
-		if ( count($export_actions) > 0 )
-		{
-			$actions[] = array( 
-			        'name' => translate('Экспорт'),
-					'items' => $export_actions,
-			        'uid' => 'export'
-			);
-		}
-
 		$module_it = getFactory()->getObject('Module')->getExact('attachments');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
@@ -283,4 +268,14 @@ class PMWikiTable extends PMPageTable
 		$fields[] = 'SectionNumber';
 		return $fields;
 	}
+
+    function getDetails()
+    {
+        foreach( $this->getPage()->getInfoSections() as $section ) {
+            if ( $section instanceof DetailsInfoSection ) {
+                return parent::getDetails();
+            }
+        }
+        return array();
+    }
 }

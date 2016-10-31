@@ -15,20 +15,5 @@ class RequestOwnerPersister extends ObjectSQLPersister
 			  ) UserGroup "
 		);
  	}
-
-	function modify( $object_id, $parms )
-	{
-		if ( array_key_exists('Owner', $parms) && $this->getObject()->getAttributeType('OpenTasks') != '' ) {
-			$task_it = $this->getObject()->getExact($object_id)->getRef('OpenTasks');
-			while ( !$task_it->end() )
-			{
-				$task_it->object->modify_parms(
-					$task_it->getId(),
-					array('Assignee' => $parms['Owner'])
-				);
-				$task_it->moveNext();
-			}
-		}
-	}
 }
 

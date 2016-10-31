@@ -48,7 +48,7 @@ class User extends Metaobject
 	
 	function getPage() 
 	{
-		return getSession()->getApplicationUrl().'users.php?';
+		return '/admin/users.php?';
 	}
 	
  	function getDefaultAttributeValue( $name )

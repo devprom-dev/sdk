@@ -295,11 +295,6 @@ abstract class WikiEditorBase
  	{
  	}
  	
- 	public function getExportActions( $object_it )
- 	{
- 		return array();
- 	}
- 	
  	abstract function draw( $content, $b_editable = false );
 }
  

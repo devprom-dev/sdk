@@ -2,7 +2,7 @@
 
 include_once SERVER_ROOT_PATH."tests/php/pm/DevpromDummyTestCase.php";
 include_once SERVER_ROOT_PATH."plugins/sourcecontrol/classes/notificators/RevisionCommentActionsTrigger.php";
-include_once SERVER_ROOT_PATH."plugins/sourcecontrol/classes/SubversionRevision.php";
+include_once SERVER_ROOT_PATH."plugins/sourcecontrol/classes/Commit.php";
 
 class RevisionCommentActionsTest extends DevpromDummyTestCase
 {
@@ -40,7 +40,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     function testNegativeCase1()
     {
         $this->handler->expects($this->never())->method('bindObjects');
-    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,
@@ -63,7 +63,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
 			    })
         );
         
-    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,
@@ -72,7 +72,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     			)
         	), TRIGGER_ACTION_ADD);
     	
-    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,
@@ -81,7 +81,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     			)
         	), TRIGGER_ACTION_ADD);
 
-    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,
@@ -90,7 +90,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     			)
         ), TRIGGER_ACTION_ADD);
 
-    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,
@@ -113,7 +113,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
 			    })
         );
         
-    	$this->handler->process((new SubversionRevision)->createCachedIterator(
+    	$this->handler->process((new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,
@@ -127,7 +127,7 @@ class RevisionCommentActionsTest extends DevpromDummyTestCase
     
     function testWorkflowActions()
     {
-    	$commit_it = (new SubversionRevision)->createCachedIterator(
+    	$commit_it = (new Commit)->createCachedIterator(
     			array (
 	        		array (
 	        				'pm_SubversionRevisionId' => 1,

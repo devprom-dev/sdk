@@ -16,6 +16,28 @@ class ProcessEmailQueue extends TaskCommand
 		getFactory()->setAccessPolicy( new \AccessPolicy() );
 		$mailer = $kernel->getContainer()->get('mailer');
 
+        $supportEmails = array();
+        // skip recipients who are support mailboxes to avoid notification cycles
+        $mailbox_it = getFactory()->getObject('co_RemoteMailbox')->getRegistry()->Query();
+        $supportEmails = array_merge( $supportEmails,
+            array_filter($mailbox_it->fieldToArray('EmailAddress'),
+                function($email) {
+                    return $email != '';
+                }
+            )
+        );
+        $supportEmails = array_merge( $supportEmails,
+            array_filter($mailbox_it->fieldToArray('SenderAddress'),
+                function($email) {
+                    return $email != '';
+                }
+            )
+        );
+        $settings_it = getFactory()->getObject('SystemSettings')->getAll();
+        if ( $settings_it->get('AdminEmail') != '' ) {
+            $supportEmails[] = $settings_it->get('AdminEmail');
+        }
+
 		$user = getFactory()->getObject('cms_User');
 		$queue = getFactory()->getObject('EmailQueue');
 		$address = getFactory()->getObject('EmailQueueAddress');
@@ -51,6 +73,7 @@ class ProcessEmailQueue extends TaskCommand
 
 				try {
 					if ( $from_email == $to_email ) throw new \Exception("skip sending to itself ".$from_email);
+                    if ( in_array($to_email, $supportEmails) ) throw new \Exception("skip support addresses ".$to_email);
 
 					$mailer->send(
 						DevpromSwiftMessage::newInstance()

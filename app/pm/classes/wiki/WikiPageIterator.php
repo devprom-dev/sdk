@@ -10,7 +10,9 @@ class WikiPageIterator extends StatableIterator
  		switch ( $attr )
  		{
  			case 'Content':
- 				if ( parent::get_native('ContentPresents') != 'Y' ) return parent::get_native( $attr );
+				$native = parent::get_native( $attr );
+ 				if ( parent::get_native('ContentPresents') != 'Y' ) return $native;
+				if ( $native != '' ) return $native;
 
  				if ( !isset($this->content_storage[$this->getId()]) ) $this->cacheContentAndStyle();
 		        return $this->content_storage[$this->getId()];
@@ -107,6 +109,10 @@ class WikiPageIterator extends StatableIterator
 				return $value > 0;
 		});
 	}
+
+	function getLevel() {
+        return count(preg_split('/,/', $this->get('ParentPath'))) - 3;
+    }
 	
 	/*
 	 * returns root iterator for the given leaf
@@ -161,18 +167,6 @@ class WikiPageIterator extends StatableIterator
 		return $registry->Query( array(
 				 new FilterInPredicate($this->getParentsArray())
 		));
-	}
-	
-	function getDisplayName()
-	{
-		$title = $this->get('Caption');
-
-		if ( $this->get('DocumentVersion') != '' )
-		{
-			$title .= " [".$this->get('DocumentVersion')."]";
-		}
-		
-		return $title; 
 	}
 	
 	function getRevertUrl()

@@ -12,7 +12,7 @@ class FilterInPredicate extends FilterPredicate
  		if ( count($ids) > 0 )
  		{
 	 		array_walk($ids, function( &$value, $key ) {
-	 			$value = is_numeric($value) ? $value : '"'.$value.'"';
+	 			$value = is_integer($value) ? intval($value) : '"'.$value.'"';
 	 		});
    		    return " AND t.".$this->getObject()->getEntityRefName()."Id IN (".join(',',$ids).") ";
  		}

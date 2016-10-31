@@ -3,6 +3,8 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include "ObjectRegistrySQL.php";
+include "ObjectRegistryArray.php";
+include "ObjectRegistryMemory.php";
 include "predicates/FilterPredicate.php";
 include "predicates/FilterAdditionalObjectsPredicate.php";
 include "predicates/FilterAttributePredicate.php";
@@ -284,7 +286,7 @@ class StoredObjectDB extends Object
 				$sql .= ' ORDER BY '.$sort;
 			}
 			
-			return $this->createSQLIterator($sql);
+			return $this->createSQLIterator($sql.' LIMIT 1');
 		}
 		else
 		{
@@ -1283,6 +1285,8 @@ class StoredObjectDB extends Object
 				
 			case 'float':
 			case 'integer':
+                $value = str_replace(',', '.', $value);
+                if ( $value != '' && !is_numeric($value) ) $value = 0;
 				return htmlspecialchars($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 		}
 		

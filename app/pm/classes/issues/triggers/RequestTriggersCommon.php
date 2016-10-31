@@ -2,7 +2,7 @@
 
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 
-include_once SERVER_ROOT_PATH.'core/classes/model/events/SystemTriggersBase.php';
+
 
 class RequestTriggersCommon extends SystemTriggersBase
 {

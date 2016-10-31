@@ -362,7 +362,23 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 		return 1;
 	}
-	
+
+    public function Create( array $data )
+    {
+        return $this->Query(
+            array (
+                new FilterInPredicate(
+                    $this->getObject()->add_parms($data)
+                )
+            )
+        );
+    }
+
+    public function Delete( OrderedIterator $object_it )
+    {
+        $this->getObject()->delete($object_it->getId());
+    }
+
 	protected function checkSelectOnly( $sql )
 	{
 	}

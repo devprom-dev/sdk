@@ -10,17 +10,20 @@ include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
+include_once SERVER_ROOT_PATH."pm/methods/TaskConvertToIssueWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/WorkflowTransitionTaskModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/validators/ModelValidatorTaskDeadlines.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskInverseTrace.php";
 include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
+include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
 
 class TaskForm extends PMPageForm
 {
  	private $request_it = null;
  	private $method_spend_time = null;
+    private $convertMethod = null;
 
 	function __construct( $object )
 	{
@@ -41,7 +44,6 @@ class TaskForm extends PMPageForm
 		{
 			$this->getObject()->addAttribute('IssueState', 'TEXT', text(2128),
 				true, false, '', $this->getObject()->getAttributeOrderNum('ChangeRequest')+1);
-			$this->getObject()->addAttributeGroup('IssueState', 'source-issue');
 			$this->getObject()->setAttributeVisible('IssueAttachment', true);
 
 			if ( $this->getObjectIt()->get('IssueDescription') != '' ) {
@@ -50,7 +52,13 @@ class TaskForm extends PMPageForm
 			if ( $this->getObjectIt()->get('IssueTraces') != '' ) {
 				$this->getObject()->setAttributeVisible('IssueTraces', true);
 			}
+            if ( $this->getObjectIt()->get('IssueVersion') != '' ) {
+                $this->getObject()->setAttributeVisible('IssueVersion', true);
+            }
 		}
+		else if ( $_REQUEST['ChangeRequest'] != '' ) {
+            $this->getObject()->setAttributeVisible('ChangeRequest', false);
+        }
 
 		parent::extendModel();
 
@@ -76,6 +84,30 @@ class TaskForm extends PMPageForm
 			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
  			$this->method_spend_time = $method;
  		}
+
+        $method = new WikiExportBaseWebMethod();
+        $methodPageIt = $this->getObject()->createCachedIterator(
+            array (
+                array ('pm_ChangeRequestId' => '%id%')
+            )
+        );
+        $converter = new WikiConverter( $this->getObject() );
+        $converter_it = $converter->getAll();
+        while( !$converter_it->end() ) {
+            $this->exportMethods[] = array(
+                'name' => $converter_it->get('Caption'),
+                'url' => $method->url($methodPageIt, $converter_it->get('EngineClassName'))
+            );
+            $converter_it->moveNext();
+        }
+
+        $method = new TaskConvertToIssueWebMethod();
+        if ( $this->IsFormDisplayed() && $method->hasAccess() ) {
+            $this->convertMethod = array (
+                'name' => $method->getCaption(),
+                'url' => $method->url('%1')
+            );
+        }
 	}
 
  	function IsAttributeVisible( $attr_name )
@@ -104,6 +136,7 @@ class TaskForm extends PMPageForm
 		switch ( $attr_name )
 		{
 			case 'IssueDescription':
+            case 'IssueVersion':
 				return false;
 			default:
 				if ( $this->getObject()->getAttributeType($attr_name) == 'wysiwyg' && !$this->getEditMode() ) {
@@ -164,7 +197,9 @@ class TaskForm extends PMPageForm
 					$model_factory->getObject('TaskTraceSourceCode') );
 
 			case 'Fact':
-				return new FieldSpentTimeTask( $this->object_it );
+				$field = new FieldSpentTimeTask( $this->object_it );
+                $field->setShortMode();
+                return $field;
 
 			case 'Watchers':
 			    return new FieldWatchers( is_object($this->object_it) ? $this->object_it : $this->object );
@@ -219,8 +254,8 @@ class TaskForm extends PMPageForm
 					: $this->object->getEmtpyIterator();
 				return new FieldIssueState($req_it);
 
-			case 'Planned':
 			case 'LeftWork':
+            case 'Planned':
 				return new FieldHours();
 
 			default:
@@ -311,6 +346,9 @@ class TaskForm extends PMPageForm
 		switch( $attr )
 		{
 			case 'Assignee':
+                $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+                if ( !$methodology_it->IsParticipantsTakesTasks() ) return '';
+
 				$type_id = $this->getFieldValue('TaskType');
 				return $type_id > 0
 					? TaskDefaultsService::getAssignee($type_id) : parent::getDefaultValue( $attr );
@@ -327,7 +365,14 @@ class TaskForm extends PMPageForm
 		$object_it = $this->getObjectIt();
 		if ( !is_object($object_it) ) return $actions;
 
-		if ( $this->IsFormDisplayed() ) {
+        if ( is_array($this->convertMethod) ) {
+            $action = $this->convertMethod;
+            $action['url'] = preg_replace('/%1/', $object_it->getId(), $action['url']);
+            array_unshift($actions, array());
+            array_unshift($actions, $action);
+        }
+
+        if ( $this->IsFormDisplayed() ) {
 			$method = new WatchWebMethod($object_it);
 			if ($method->hasAccess()) {
 				array_unshift($actions, array());
@@ -376,12 +421,29 @@ class TaskForm extends PMPageForm
 
 	function getSourceIt()
 	{
+        $result = array();
 		if ( $_REQUEST['ChangeRequest'] != '' ) {
-			return array (
+            $result[] = array (
 				getFactory()->getObject('Request')->getExact($_REQUEST['ChangeRequest']),
 				'Description'
 			);
 		}
-		return parent::getSourceIt();
+		return array_merge(parent::getSourceIt(),$result);
 	}
+
+    function getExportActions( $object_it )
+    {
+        $actions = array();
+
+        foreach( $this->exportMethods as $action ) {
+            $action['url'] = preg_replace('/%id%/', $object_it->getId(), $action['url']);
+            $actions[] = $action;
+        }
+
+        return $actions;
+    }
+
+    function getShortAttributes() {
+        return array('TaskType', 'Priority', 'Planned', 'Release', 'Assignee', 'OrderNum', 'Owner', 'Tags');
+    }
 }

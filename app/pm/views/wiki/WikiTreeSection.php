@@ -107,8 +107,6 @@ class WikiTreeSection extends InfoSection
             'url' => $url,
             'data' => $treeData,
             'root_id' => is_object($root_it) ? $root_it->getId() : 0,
-	        'hint_name' => 'hint-wikitree',
-	        'hint_display' => $model_factory->getObject('UserSettings')->getSettingsValue('hint-wikitree') != 'off',
             'object_class' => get_class($object_it->object),
             'base_app_url' => getSession()->getApplicationUrl()
 	    ));
@@ -116,6 +114,6 @@ class WikiTreeSection extends InfoSection
 	
  	function getCaption()
  	{
- 		return translate('Разделы');
+ 		return text(2204);
  	}
 }

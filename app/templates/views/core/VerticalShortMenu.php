@@ -98,10 +98,4 @@ foreach ( $items as $item_key => $item )
                 });
             });
     });
-    function adjustContainerHeight(menu)
-    {
-        if ( $('.content-internal').height() < menu.height() ) {
-            $('.content-internal').css('min-height',menu.height());
-        }
-    }
 </script>

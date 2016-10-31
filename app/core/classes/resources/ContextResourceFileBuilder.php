@@ -25,7 +25,7 @@ class ContextResourceFileBuilder extends ContextResourceBuilder
 						'/\%module:([^\%]+)\%/i',
 						function( $matches ) use ($module_object) {
 								$module_it = $module_object->getExact($matches[1]);
-								return '<a href="'.$module_it->get('Url').'">'.$module_it->getDisplayName().'</a>';
+								return '<a target="_blank" href="'.$module_it->get('Url').'">'.$module_it->getDisplayName().'</a>';
 						},
 						IteratorBase::utf8towin($text)
 				);	

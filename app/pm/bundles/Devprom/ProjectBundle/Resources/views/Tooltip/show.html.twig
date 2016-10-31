@@ -20,7 +20,7 @@
     	{% endfor %}
     {% else %}
     	{% if attribute.type == 'text' or attribute.type == 'wysiwyg' or attribute.name == 'Caption' %}
-			 <div class="tt-field-data">{{ attribute.text | raw }}</div>
+			 <div class="tt-field-data wysiwyg">{{ attribute.text | raw }}</div>
     	{% else %}
     		{{ attribute.text | raw }}
     	{% endif %}

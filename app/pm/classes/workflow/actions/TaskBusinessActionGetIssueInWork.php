@@ -25,7 +25,7 @@ class TaskBusinessActionGetIssueInWork extends BusinessActionWorkflow
 
 		$state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
 			array(
-				new FilterAttributePredicate('IsTerminal', 'N'),
+				new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
 				new FilterVpdPredicate($request_it->get('VPD'))
 			)
 		);

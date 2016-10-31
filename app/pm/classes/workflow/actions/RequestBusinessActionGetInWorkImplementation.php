@@ -28,7 +28,7 @@ class RequestBusinessActionGetInWorkImplementation extends BusinessActionWorkflo
  	        
  	        $state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
  	        		array( 
- 	        				new FilterAttributePredicate('IsTerminal', 'N'),
+ 	        				new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
  	        				new FilterVpdPredicate($duplicate_it->get('VPD'))
  	        		)
  	        );

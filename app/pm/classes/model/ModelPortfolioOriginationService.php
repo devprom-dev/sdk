@@ -4,6 +4,14 @@ include_once SERVER_ROOT_PATH."core/classes/model/ModelProjectOriginationService
 
 class ModelPortfolioOriginationService extends ModelProjectOriginationService
 {
+    protected function buildSelfOrigin( $object )
+    {
+        $value = ModelEntityOriginationService::buildSelfOrigin( $object );
+        if ( $value != DUMMY_PROJECT_VPD ) return $value;
+
+        return $this->getSession()->getProjectIt()->get('VPD');
+    }
+
 	public function buildAvailableOrigins( $object )
 	{
 	 	switch ( $object->getClassName() )
@@ -19,6 +27,8 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
 
  	        case 'pm_CustomReport':
  	        case 'pm_UserSetting':
+            case 'pm_WorkspaceMenu':
+            case 'pm_WorkspaceMenuItem':
  	        case 'cms_PluginModule':
  	            return array( $this->getSession()->getProjectIt()->get('VPD') );
 

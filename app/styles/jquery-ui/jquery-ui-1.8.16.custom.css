@@ -957,21 +957,6 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   font-weight: bold;
   color: gray;
 }
-
-.ui-datepicker-today a:hover{
-  background-color: #808080;
-  color: #ffffff;
-
-}
-.ui-datepicker-today a{
-  background-color: #BFBFBF;
-  cursor: pointer;
-  padding: 0 4px;
-  margin-bottom:0px;
-
-}
-
-
 .ui-datepicker td a{
   margin-bottom:0px;
   border:0px;
@@ -990,13 +975,24 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   filter:none;
 }
 
+.ui-datepicker td.ui-datepicker-today a:hover{
+  background-color: #808080;
+  color: #ffffff;
+
+}
+.ui-datepicker td.ui-datepicker-today a{
+  background-color: #faa732;
+  color: white;
+  cursor: pointer;
+  margin-bottom:0px;
+}
 
 .ui-datepicker td .ui-state-active{
   background:#BFBFBF;
   margin-bottom:0px;
   font-size:normal;
   text-shadow: 0px;
-  color:white;  
+  color:white;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   border-radius: 4px;
@@ -1009,6 +1005,10 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   -moz-border-radius: 4px;
   border-radius: 4px;
 }
+
+
+
+
 
 
 /*

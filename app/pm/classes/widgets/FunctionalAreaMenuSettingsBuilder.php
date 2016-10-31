@@ -10,40 +10,32 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
     {
     	$menus = parent::build($set);
     	
- 	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 	     
- 	    $part_it = getSession()->getParticipantIt();
- 	    
 		$module = getFactory()->getObject('Module');
 		
 		$items = array();
 
         $module_it = $module->getExact('profile');
-		if ( getFactory()->getAccessPolicy()->can_read($module_part_it) )
-		{
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
     		$items[] = $module_it->buildMenuItem();
 		}
 		
 		$module_it = $module->getExact('methodology');
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
     		$items[] = $module_it->buildMenuItem();
 		}
 	    
     	$module_it = $module->getExact('project-settings');
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
+		if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
 			$items[] = $module_it->buildMenuItem();
 		}
 
 		$module_it = $module->getExact('dicts-pmcustomattribute');
-    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
+    	if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
     		$items[] = $module_it->buildMenuItem();
 		}
 		
 	    $menus['quick']['items'] = array_merge($items, $menus['quick']['items']);
- 	    
+
  	    $items = array();
  	    
 	    $object_it = getFactory()->getObject('Workflow')->getAll();
@@ -62,7 +54,20 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
             'uid' => 'workflow',
             'items' => $items
  	    );
- 	    
+
+        $items = array();
+
+        $module_it = $module->getExact('kbtemplates');
+        if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
+            $items[] = $module_it->buildMenuItem();
+        }
+
+        $menus['templates'] = array (
+            'name' => translate('Шаблоны'),
+            'uid' => 'templates',
+            'items' => $items
+        );
+
  	    $items = array();
  	    
 	    $object_it = getFactory()->getObject('Dictionary')->getAll();
@@ -92,13 +97,6 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
  	    
  	    $items = array();
 
-        $module_it = $module->getExact('kbtemplates');
-
-    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-    		$items[] = $module_it->buildMenuItem();
-		}
-	    
         $module_it = $module->getExact('tags');
 
     	if ( getFactory()->getAccessPolicy()->can_read($module_it) )

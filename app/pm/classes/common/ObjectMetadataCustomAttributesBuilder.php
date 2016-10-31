@@ -25,9 +25,11 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		
 		$attributes = array();
 		$firstTabAttributes = array();
+        $uidOverriden = false;
     	while( !$attr_it->end() )
 		{
 			if ( $attr_it->get('ReferenceName') == 'UID' ) {
+                $uidOverriden = true;
 				$attr_it->moveNext();
 				continue;
 			}
@@ -70,7 +72,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		    unset($attributes['Description']);
 		}
 		
-		if ( count($attributes) < 1 ) return;
+		if ( count($attributes) < 1 && !$uidOverriden ) return;
 		
 		foreach( $attributes as $key => $attribute )
 		{

@@ -271,13 +271,13 @@ class WikiParser
 	
 	function parse_text_substr( $width ) 
 	{
-		$html2text = new \Html2Text\Html2Text( $this->parse() );
+		$html2text = new \Html2Text\Html2Text( $this->parse(), array('width'=>0) );
 		return substr($html2text->getText(), 0, $width).'...';
 	}
 
 	function parse_text( $width ) 
 	{
-		$html2text = new \Html2Text\Html2Text( $this->parse() );
+		$html2text = new \Html2Text\Html2Text( $this->parse(), array('width'=>0) );
 		return $html2text->getText();
 	}
 

@@ -10,30 +10,24 @@ class CommentList
 {
  	var $object_it, $object, $control_uid, $attachment_it, $comments;
  	private $uid_service = null;
+    private $collapseable = false;
+    private $autorefresh = true;
  	
  	private $baseline = '';
  	
  	function CommentList( $object_it, $baseline = '' ) 
  	{
- 		global $model_factory;
- 		
  		$this->object_it = $object_it;
- 		
  		$this->baseline = $baseline;
+ 		$this->object = getFactory()->getObject('Comment');
  		
- 		$this->object = $model_factory->getObject('Comment');
- 		
- 		if ( $this->baseline != '' )
- 		{
- 			$snapshot = $model_factory->getObject('Snapshot');
- 			
+ 		if ( $this->baseline != '' ) {
+ 			$snapshot = getFactory()->getObject('Snapshot');
  			$this->object->addFilter( new SnapshotBeforeDatePredicate($this->baseline) );
  		}
  		
  		$this->object->addAttribute( 'Attachment', 'REF_pm_AttachmentId', '', false );
  		
- 		$this->url = getSession()->getApplicationUrl($this->object_it).'?export=commentsthread&object='.$this->object_it->getId().'&objectclass='.get_class($this->object_it->object);
-
 		$this->object->addPersister(new AttachmentsPersister());
 		$this->comment_it = $this->object->getAllRootsForObject($this->object_it, array(new AttachmentsPersister()));
 
@@ -41,6 +35,7 @@ class CommentList
 		
 		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId());
 		$this->uid_service = new ObjectUID();
+        $this->autorefresh = array_key_exists('dorefresh', $_REQUEST) ? $_REQUEST['dorefresh'] == 1 : true;
  	}
  	
  	function setControlUID( $uid )
@@ -48,11 +43,30 @@ class CommentList
  		$this->control_uid = $uid;
  	}
 
- 	function getComments()
- 	{
+ 	function setCollabseable( $value = true ) {
+ 	    $this->collapseable = $value;
+    }
+
+    function setAutoRefresh( $value = true ) {
+        $this->autorefresh = $value;
+    }
+
+ 	function getComments() {
  		return $this->comments;
  	}
- 	
+
+ 	function getUrl() {
+        return getSession()->getApplicationUrl($this->object_it).
+            '?'.http_build_query(
+                    array (
+                        'export' => 'commentsthread',
+                        'object' => $this->object_it->getId(),
+                        'objectclass' => get_class($this->object_it->object),
+                        'dorefresh' => $this->autorefresh
+                    )
+                );
+    }
+
  	function drawComment( $comment_it )
  	{
 		$field = new FieldWYSIWYG();
@@ -123,7 +137,8 @@ class CommentList
 			'list' => $this,
 			'form' => $form,
 			'control_uid' => $this->control_uid,
-			'url' => $this->url,
+			'url' => $this->getUrl(),
+            'collapseable' => $this->collapseable,
 			'form_ready' => $_REQUEST['formonly'] == 'true' && $_REQUEST['entity'] == 'Comment',
 			'comments_count' => $this->comment_it->count()
 		);
@@ -184,7 +199,7 @@ class CommentList
 		return array(
 			'list' => $this,
 			'control_uid' => $this->control_uid,
-			'url' => $this->url,
+			'url' => $this->getUrl(),
 			'comments' => $comments,
 			'readonly' => false
 		);

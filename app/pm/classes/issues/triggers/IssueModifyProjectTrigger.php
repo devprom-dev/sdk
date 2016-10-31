@@ -21,12 +21,6 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
  	    $references = array();
  	    $ids = $object_it->idsToArray();
         
- 	    $type = getFactory()->getObject('pm_IssueType');
- 	    $type->addFilter( new FilterInPredicate($object_it->fieldToArray('Type')) );
- 	    
- 	    $priority = getFactory()->getObject('Priority');
- 	    $priority->addFilter( new FilterInPredicate($object_it->fieldToArray('Priority')) );
- 	    
  	    $request = getFactory()->getObject('pm_ChangeRequest');
 		$persisters = $request->getPersisters();
 		foreach( $persisters as $key => $persister ) {
@@ -58,8 +52,6 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
 		$comment->addFilter( new CommentObjectFilter($object_it) );
 		$comment->addSort( new SortOrderedClause() );
 		
- 	    $references[] = $type;
- 	    $references[] = $priority; 
  	    $references[] = $request;
 		$references[] = $trace;
  	    $references[] = $link;

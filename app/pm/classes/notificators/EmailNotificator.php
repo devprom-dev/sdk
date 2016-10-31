@@ -9,33 +9,38 @@ include "CommentHandler.php";
 include "ChangeRequestHandler.php";
 include "QuestionHandler.php";
 include "BlogPostHandler.php";
-include "WikiHandler.php";
 include "TaskHandler.php";
 include "DigestHandler.php";
 
 class EmailNotificator extends ObjectFactoryNotificator
 {
- 	var $handlers, $common_handler, $notification_reason;
+ 	private $handlers;
+    private $common_handler;
+    private $notification_reason;
 	
-	function __construct() 
-	{
+	function __construct() {
 		parent::__construct();
-		
-		$this->common_handler = new EmailNotificatorHandler;
-		
-		$this->handlers = array(
-			'Comment' => new CommentHandler(),
-			'pm_ChangeRequest' => new ChangeRequestHandler(),
-			'pm_Question' => new QuestionHandler(),
-			'BlogPost' => new BlogPostHandler(),
-			'WikiPage' => new WikiHandler(),
-			'pm_Task' => new TaskHandler(),
-			'ObjectChangeLog' => new DigestHandler()
-		);
-		
-		$this->notification_reason = array();
+        $this->buildHandlers();
 	}
- 	
+
+	function __wakeup() {
+        $this->buildHandlers();
+    }
+
+    protected function buildHandlers()
+    {
+        $this->common_handler = new EmailNotificatorHandler;
+        $this->handlers = array(
+            'Comment' => new CommentHandler(),
+            'pm_ChangeRequest' => new ChangeRequestHandler(),
+            'pm_Question' => new QuestionHandler(),
+            'BlogPost' => new BlogPostHandler(),
+            'pm_Task' => new TaskHandler(),
+            'ObjectChangeLog' => new DigestHandler()
+        );
+        $this->notification_reason = array();
+    }
+
 	function add( $object_it ) 
 	{
 		$this->process( 'add', $object_it, $object_it->object->getEmptyIterator() );
@@ -74,22 +79,6 @@ class EmailNotificator extends ObjectFactoryNotificator
 
 		$self_emails = array();
 
-		// skip recipients who are support mailboxes to avoid notification cycles
-		$mailbox_it = getFactory()->getObject('co_RemoteMailbox')->getRegistry()->Query();
-		$self_emails = array_merge( $self_emails,
-			array_filter($mailbox_it->fieldToArray('EmailAddress'),
-				function($email) {
-					return $email != '';
-				}
-			)
-		);
-		$self_emails = array_merge( $self_emails,
-			array_filter($mailbox_it->fieldToArray('SenderAddress'),
-				function($email) {
-					return $email != '';
-				}
-			)
-		);
 		// skip current user
 		$this->addRecipient(getSession()->getUserIt(), $self_emails);
 
@@ -128,8 +117,6 @@ class EmailNotificator extends ObjectFactoryNotificator
 	
 	protected function process( $action, $object_it, $prev_object_it ) 
 	{
-		global $model_factory, $_REQUEST;
-
 		if ( !is_object($object_it->object->entity) ) return;
 
 		switch ( $object_it->object->entity->get('ReferenceName') )
@@ -239,17 +226,17 @@ class EmailNotificator extends ObjectFactoryNotificator
 		});
 		
 		// include participants who wants to receive all notifications
-		$participant = getFactory()->getObject('Participant');
-		$participant->addFilter( new ParticipantActivePredicate() );
-		$it = $participant->getAll();
-		
+        $participant = getFactory()->getObject('Participant');
+		$it = $participant->getRegistry()->Query(
+            new ParticipantActivePredicate(),
+            new FilterVpdPredicate()
+        );
 		while ( !$it->end() ) {
 			if ( $notification->getType( $it ) != 'all' ) {
 			    $it->moveNext();
 			    continue;
 			}
 			$participants[] = $it->getId();
-			
 			$it->moveNext();
 		}
 
@@ -407,7 +394,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 
 	protected function getSubject( $object_it, $prev_object_it, $action, $recipient )
 	{
-		return $this->getHandler($object_it)->getSubject( $subject, $object_it, $prev_object_it, $action, $recipient );
+		return $this->getHandler($object_it)->getSubject( "", $object_it, $prev_object_it, $action, $recipient );
 	}
 
  	protected function quoteEmail( $email )

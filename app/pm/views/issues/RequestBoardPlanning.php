@@ -6,7 +6,7 @@ class RequestBoardPlanning extends RequestBoard
     {
         switch( $this->getTable()->getReportBase() ) {
             case 'iterationplanningboard':
-                return 'Iterations';
+                return 'Iteration';
             default:
                 return 'PlannedRelease';
         }
@@ -120,7 +120,7 @@ class RequestBoardPlanning extends RequestBoard
                         continue;
                     }
 
-                    list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getEstimatedBurndownMetrics();
+                    list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getRealBurndownMetrics();
                     $data['capacity'] = round(($capacity / $user_it->count())* $actual_velocity, 0);
                     $data['title'] = $this->strategy->getDimensionText($data['capacity']);
 
@@ -181,8 +181,14 @@ class RequestBoardPlanning extends RequestBoard
             $object_it = $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value);
             if ( $object_it->getId() > 0 ) {
                 $strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-                $estimation = $object_it->getTotalWorkload();
-                list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
+                if ( $object_it->object instanceof Iteration ) {
+                    $estimation = $object_it->getLeftEstimation();
+                    list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimationRealBurndownMetrics();
+                }
+                else {
+                    $estimation = $object_it->getTotalWorkload();
+                    list( $capacity, $maximum, $actual_velocity ) = $object_it->getRealBurndownMetrics();
+                }
                 echo '<div class="board-header-details">';
                     echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
                         ." / "

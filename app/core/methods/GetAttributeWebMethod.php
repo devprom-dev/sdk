@@ -19,7 +19,7 @@ class GetAttributeWebMethod extends WebMethod
     
             if ( $_REQUEST['converter'] == 'html2text' )
     	 	{
-    	 		$totext = new \Html2Text\Html2Text( $result );
+    	 		$totext = new \Html2Text\Html2Text( $result, array('width'=>0) );
     	 		$result = $totext->getText();
     	 	}
     		

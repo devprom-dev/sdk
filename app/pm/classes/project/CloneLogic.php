@@ -63,24 +63,7 @@ class CloneLogic
 					
 					break;
 
-				case 'pm_Version':
-					
-				    $parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
-					
-					if ( count($parms) > 0 )
-					{
-						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
-					}
-					else
-					{
-						$ref_it = $object->getFirst();
-						
-						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $ref_it->getId();  
-					}
-					
-					break;
-					
-				// special case of template importing				
+				// special case of template importing
 				case 'pm_TaskType':
 				case 'WikiPageType':
 				case 'pm_IssueType':
@@ -92,7 +75,7 @@ class CloneLogic
 					{
 						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
 					}
-					elseif ( !$context->getUseExistingReferences() )
+					else
 					{
 						$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
 						
@@ -101,11 +84,7 @@ class CloneLogic
     						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
     					}
 					}
-					else
-					{
-						unset($ids_map[$object->getEntityRefName()][$iterator->getId()]);
-					}
-
+					
 					break;
 
 				// special case of template importing				
@@ -283,12 +262,9 @@ class CloneLogic
    			    switch( $reference->getEntityRefName() )
    			    {
    			        case 'pm_Participant':
-    			            
-						if ( $context->getUseExistingReferences() )
-						{
+						if ( $context->getUseExistingReferences() ) {
 	   			        	$ref_it = $it->getRef($attr);
-	    			            
-	   			            $parms[$attr] = 
+	   			            $parms[$attr] =
 	   			            	$reference->getRegistry()->Query(
 	    			            	array( 
 	    			            		new FilterAttributePredicate('SystemUser', $ref_it->get('SystemUser')),
@@ -296,30 +272,21 @@ class CloneLogic
 	    			            	)
 	    			            )->getId();
 						}
-						else
-						{
+						else {
 	   			            $parms[$attr] = getSession()->getParticipantIt()->getId();
 						}
-
    			            break;
 
    			        case 'cms_User':
-    			            
-						if ( !$context->getUseExistingReferences() )
-						{
+						if ( !$context->getUseExistingReferences() ) {
 	   			            $parms[$attr] = getSession()->getUserIt()->getId();
 						}
-
    			            break;
-   			            
-   			        default:
 
-						if ( $context->getUseExistingReferences() )
-						{
+   			        default:
+						if ( $context->getUseExistingReferences() ) {
 							$parms[$attr] = $reference->getExact($it->get($attr))->getId();
-							
-	   			    		if ( $parms[$attr] == '' )
-							{
+	   			    		if ( $parms[$attr] == '' ) {
 							    // use default attribute value if there is no referenced object
 							    $parms[$attr] = $it->object->getDefaultAttributeValue( $attr );
 							}
@@ -365,7 +332,7 @@ class CloneLogic
 				{
 					$parms['StartDate'] = date('Y-m-j', strtotime('1 day', strtotime($release_it->get('FinishDate'))));
 				}
-				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('2 month', strtotime( $parms['StartDate'])))); 
+				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('1 month', strtotime( $parms['StartDate']))));
 
 				break;
 
@@ -387,8 +354,6 @@ class CloneLogic
 				}
 
 				$parms['FinishDate'] = '';
-				$parms['InitialVelocity'] = '0';
-
 				break;
 
 			case 'projectrole':
@@ -422,7 +387,11 @@ class CloneLogic
 		
 		switch ( $it->object->getEntityRefName() )
 		{
-			case 'pm_AccessRight':
+		    case 'pm_Test':
+                $parms['Manually'] = 'Y';
+		        break;
+
+            case 'pm_AccessRight':
 				if ( $it->get('ReferenceType') == 'PMReport' )
 				{
 					$parms['ReferenceName'] = $ids_map['pm_CustomReport'][$it->get('ReferenceName')];
@@ -430,10 +399,10 @@ class CloneLogic
 				break;
 				
 			case 'WikiPage':
+                if ( !$context->getUseExistingReferences() ) {
+                    $parms['UID'] = '';
+                }
 
-				// rebuild hard links to images
-				$project_it = getSession()->getProjectIt();
-				
 				$parms['DocumentVersion'] = '';
 				if ( $parms['ParentPage'] == '' ) {
 					$parms['ParentPath'] = '';
@@ -448,7 +417,6 @@ class CloneLogic
 					$parms['ReferenceName'] = getFactory()->getObject('WikiPage')
 							->getByRef('ReferenceName', $parms['ReferenceName'])->getId();
 				}
-
 				break;
 			
 			case 'pm_Workspace':
@@ -544,6 +512,10 @@ class CloneLogic
 					$parms['Assignee'] = '';
 					$parms['Owner'] = '';
 				}
+                break;
+
+            case 'pm_Milestone':
+                $parms['MilestoneDate'] = date('Y-m-j', strtotime('7 day', strtotime(SystemDateTime::date())));
                 break;
 		}
 
@@ -743,10 +715,13 @@ class CloneLogic
 				}
 			}
 		}
-		
-		$methodology_it = $project_it->getMethodologyIt(); 		
-		$methodology_it->object->modify_parms($methodology_it->getId(), $parms);
-		getSession()->getProjectIt()->invalidateCache();
+
+		$methodology_it = $project_it->getMethodologyIt();
+        $methodology_it->object->modify_parms($methodology_it->getId(), $parms);
+
+		getSession()->getProjectIt()->setMethodologyIt(
+            $methodology_it->object->getExact($methodology_it->getId())
+        );
  	}
 
 	static function duplicate( $iterator, $parms ) 
@@ -770,6 +745,7 @@ class CloneLogic
 				$values[$attribute] = $iterator->getHtmlDecoded($attribute);
 			}
 		}
+
 		return $iterator->object->add_parms( $values );
 	}
 	

@@ -19,6 +19,11 @@ class CheckpointEntryBase
         return '';
     }
 
+    function getWarning()
+    {
+        return $this->getTitle().': '.translate('нет');
+    }
+
     function getUrl()
     {
         return '/admin/checks.php';

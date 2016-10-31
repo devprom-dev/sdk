@@ -19,7 +19,12 @@ abstract class DAL
         static::$singleInstance = new static();
         return static::$singleInstance;
     }
-    
+
+    public static function Destroy()
+    {
+        static::$singleInstance = null;
+    }
+
     private function __construct() {}
     protected static $singleInstance = null;
 }

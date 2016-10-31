@@ -53,7 +53,7 @@ CREATE TABLE `attribute` (
   KEY `ReferenceName` (`ReferenceName`(30),`entityId`),
   KEY `entityId` (`entityId`),
   KEY `I$attribute$Type` (`AttributeType`)
-) ENGINE=MyISAM AUTO_INCREMENT=1698 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=1714 DEFAULT CHARSET=utf8;
 
 
 LOCK TABLES `attribute` WRITE;
@@ -102,7 +102,7 @@ INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeTy
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (43,'Файл','Attachment','FILE','',NULL,'Y',12,50,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (44,'Составитель','Submitter','REF_pm_ParticipantId','','Y','Y',12,40,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (45,'Название','ReleaseNumber','VARCHAR','','Y','Y',14,10,NULL,NULL,NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (46,'Описание','Description','RICHTEXT','',NULL,'Y',14,20,NULL,NULL,NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (46,'Описание','Description','WYSIWYG','',NULL,'Y',14,300,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (47,'Проект','Project','REF_pm_ProjectId','','Y','Y',14,30,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (48,'Дата начала','StartDate','DATETIME','','Y','Y',14,40,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (49,'Дата окончания','FinishDate','DATETIME','','Y','Y',14,50,NULL,NULL,NULL,0);
@@ -116,8 +116,8 @@ INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeTy
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (61,'Автор','Author','REF_pm_ParticipantId','','Y','Y',9,60,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (62,'Платформа','Platform','LARGETEXT','',NULL,'N',5,40,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (63,'Инструментарий','Tools','LARGETEXT','','N','N',5,160,NULL,'2010-06-06 18:05:23',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1688,'text(2157)','ShowMainTab','CHAR','N','N','N',353,65,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1687,'Транзакция','Transaction','VARCHAR','N','N','N',30,70,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1688,'text(2157)','ShowMainTab','CHAR','N','N','N',353,65,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1687,'Транзакция','Transaction','VARCHAR','N','N','N',30,70,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (66,'Дата начала','StartDate','DATE','','Y','Y',5,80,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (67,'Дата окончания','FinishDate','DATE','',NULL,'Y',5,90,NULL,NULL,NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1540,'UID','UID','TEXT',NULL,'N','N',363,10,'2015-03-03 16:38:09','2015-03-03 16:38:09',NULL,0);
@@ -220,7 +220,7 @@ INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeTy
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (179,'Имя пожертвовашего','Caption','VARCHAR','',NULL,'Y',38,10,'2006-02-02 22:00:31','2006-02-02 22:00:31','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (180,'Величина взноса (WMZ)','WMZVolume','TEXT','',NULL,'Y',38,20,'2006-02-02 22:00:59','2006-02-02 22:00:59','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (181,'Номер','Caption','VARCHAR','','Y','Y',39,10,'2006-02-09 22:22:43','2006-02-09 22:22:43','',0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (182,'Описание','Description','LARGETEXT','',NULL,'Y',39,20,'2006-02-09 22:23:58','2006-02-09 22:23:58','',0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (182,'Описание','Description','WYSIWYG','',NULL,'Y',39,300,'2006-02-09 22:23:58','2006-02-09 22:23:58','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1309,'База знаний','KnowledgeBase','INTEGER','0','Y','N',316,30,'2010-10-01 17:16:24','2010-10-01 17:16:24','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (184,'Проект','Project','REF_pm_ProjectId','','Y',NULL,39,40,'2006-02-09 22:26:49','2006-02-09 22:26:49','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (185,'Релиз','Version','REF_pm_VersionId',NULL,'Y','N',14,60,'2006-02-09 23:17:04','2010-06-06 18:05:32','',0);
@@ -786,7 +786,7 @@ INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeTy
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1315,'Категория','ReferenceName','VARCHAR',NULL,'N','Y',20,30,'2010-10-01 17:16:25','2010-10-01 17:16:25','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1316,'Роль в проекте','ProjectRole','REF_pm_ProjectRoleId',NULL,'Y','Y',20,40,'2010-10-01 17:16:25','2010-10-01 17:16:25','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1317,'Базовый тип','ParentTaskType','REF_pm_TaskTypeId',NULL,'Y','Y',20,50,'2010-10-01 17:16:25','2010-10-01 17:16:25','',0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1648,'Тип задачи','TaskType','REF_pm_TaskTypeId',NULL,'Y','N',377,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1648,'Тип задачи','TaskType','REF_pm_TaskTypeId',NULL,'Y','N',377,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1319,'Класс','ObjectClass','TEXT',NULL,'Y','Y',317,10,'2010-10-01 17:16:25','2010-10-01 17:16:25','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1320,'Объект','ObjectId','INTEGER',NULL,'Y','Y',317,20,'2010-10-01 17:16:26','2010-10-01 17:16:26','',0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1321,'Роль в проекте','ProjectRole','REF_pm_ProjectRoleId',NULL,'Y','Y',317,30,'2010-10-01 17:16:26','2010-10-01 17:16:26','',0);
@@ -1060,81 +1060,97 @@ INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeTy
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1617,'Компания','Company','REF_CompanyId',NULL,'N','Y',373,10,'2015-03-03 16:38:13','2015-03-03 16:38:13',NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1618,'Проект','Project','REF_pm_ProjectId',NULL,'Y','Y',373,20,'2015-03-03 16:38:13','2015-03-03 16:38:13',NULL,0);
 INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1619,'Оплачено до','PayedTill','DATE',NULL,'Y','Y',110,20,'2015-03-03 16:38:13','2015-03-03 16:38:13',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1620,'Важность','Importance','INTEGER',NULL,'N','Y',5,35,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1621,'text(2006)','IsIncidentsUsed','CHAR',NULL,'N','N',36,90,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1622,'text(2007)','ServerAddress','VARCHAR',NULL,'N','Y',77,15,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1623,'Условия','Conditions','TEXT',NULL,'N','N',374,10,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1624,'Действия','Actions','TEXT',NULL,'N','N',374,20,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1625,'Название','Caption','VARCHAR',NULL,'Y','Y',374,5,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1626,'Класс','ClassName','VARCHAR',NULL,'N','N',374,40,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1627,'Ссылочное имя','ReferenceName','VARCHAR',NULL,'N','N',374,50,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1628,'Описание','Description','LARGETEXT',NULL,'N','Y',372,100,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1629,'Тип связи','LinkType','INTEGER',NULL,'Y','Y',316,10,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1630,'Репозиторий','Repository','REF_pm_SubversionId',NULL,'Y','N',375,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1631,'Коммит','Revision','REF_pm_SubversionRevisionId',NULL,'Y','N',375,20,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1632,'Автор','Author','VARCHAR',NULL,'Y','N',375,30,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1633,'Файл','FilePath','VARCHAR',NULL,'Y','N',375,40,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1634,'Добавлено','Inserted','INTEGER',NULL,'Y','N',375,60,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1635,'Удалено','Deleted','INTEGER',NULL,'Y','N',375,70,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1636,'Изменено','Modified','INTEGER',NULL,'Y','N',375,80,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1637,'Класс объекта','ObjectClass','VARCHAR',NULL,'Y','N',376,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1638,'Ид объекта','ObjectId','INTEGER',NULL,'Y','N',376,20,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1639,'Автор','Author','REF_cms_UserId',NULL,'Y','N',376,30,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1640,'Добавлено','Inserted','INTEGER',NULL,'Y','N',376,60,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1641,'Удалено','Deleted','INTEGER',NULL,'Y','N',376,70,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1642,'Изменено','Modified','INTEGER',NULL,'Y','N',376,80,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1643,'text(2073)','AskChangePassword','CHAR','N','N','N',63,65,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1644,'Затрачено','Fact','FLOAT',NULL,'N','N',22,200,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1645,'Задачи с затратами','FactTasks','TEXT',NULL,'N','N',22,210,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1646,'Функции','Features','INTEGER',NULL,'Y','N',316,26,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1647,'Ссылка на комментарий','CommentObject','REF_CommentId','','N','N',337,26,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1649,'Состояние','State','VARCHAR',NULL,'Y','Y',377,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1650,'Состояние','State','VARCHAR','inprogress','N','Y',49,40,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1651,'Начать','PlannedStartDate','DATE',NULL,'N','N',15,100,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1652,'Завершить к','PlannedFinishDate','DATE',NULL,'N','N',15,110,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1653,'Внешний автор','Customer','INTEGER',NULL,'N','N',22,200,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1654,'Проект','Project','REF_pm_ProjectId',NULL,'Y','N',378,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1655,'Метрика','Metric','VARCHAR',NULL,'Y','N',378,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1656,'Значение метрики','MetricValue','FLOAT',NULL,'N','N',378,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1657,'Бейзлайн','Baseline','REF_cms_SnapshotId',NULL,'N','N',331,100,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1658,'Бейзлайн','SourceBaseline','REF_cms_SnapshotId',NULL,'N','N',343,100,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1659,'Всего обработано','ProcessedTotal','INTEGER','0','N','N',313,100,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1660,'Осталось обработать','LeftToProcess','INTEGER','0','N','N',313,110,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1661,'Состояние','StatusText','TEXT',NULL,'N','N',313,120,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1662,'Лог','RecentLog','TEXT',NULL,'N','N',313,130,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1663,'Параметр','Parameter','VARCHAR',NULL,'N','N',361,80,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1664,'Приложение','Caption','VARCHAR',NULL,'Y','Y',379,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1665,'HTTP заголовки','HttpHeaders','TEXT',NULL,'N','Y',379,20,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1666,'Настройки мэппинга','MappingSettings','TEXT',NULL,'N','Y',379,30,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1667,'Активна','IsActive','CHAR','Y','N','Y',379,40,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1668,'Статус','StatusText','TEXT','','N','N',379,50,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1669,'Журнал выполнения','Log','TEXT','','N','Y',379,60,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1670,'Очередь','ItemsQueue','TEXT','','N','N',379,70,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1671,'Тип интеграции','Type','VARCHAR','read','Y','Y',379,15,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1672,'URL','URL','VARCHAR','','Y','Y',379,12,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1673,'Имя пользователя','HttpUserName','VARCHAR','','N','Y',379,17,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1674,'Пароль','HttpUserPassword','PASSWORD','','N','Y',379,18,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1675,'Класс','ObjectClass','VARCHAR',NULL,'Y','Y',380,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1676,'Объект','ObjectId','INTEGER',NULL,'Y','Y',380,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1677,'URL','URL','VARCHAR',NULL,'Y','Y',380,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1678,'Проект','ProjectKey','VARCHAR','','N','Y',379,13,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1679,'Пожелание','Issue','REF_pm_ChangeRequestId','','N','N',82,13,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1680,'Название','Caption','VARCHAR',NULL,'Y','Y',381,10,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1681,'Содержание','Content','TEXT',NULL,'N','N',381,20,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1682,'Тип','ReferenceName','INTEGER',NULL,'N','N',381,20,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1683,'Зависимости','Dependency','TEXT',NULL,'N','N',9,200,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1684,'Лог','Log','TEXT',NULL,'N','N',112,200,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1685,'text(2152)','SendConfirmation','CHAR','Y','N','N',313,47,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1686,'Только чтение','IsReadonly','CHAR','N','N','N',63,70,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1689,'Версия','Version','VARCHAR',NULL,'N','N',75,65,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1690,'Включает','Includes','INTEGER',NULL,'N','N',9,200,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1691,'UID','UID','VARCHAR',NULL,'N','N',9,1,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1692,'Название','Caption','VARCHAR',NULL,'Y','Y',382,10,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1693,'Описание','Description','WYSIWYG',NULL,'N','Y',382,20,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1694,'Статус','State','VARCHAR',NULL,'Y','Y',382,30,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1695,'Коммит','Commit','REF_pm_SubversionRevisionId',NULL,'Y','Y',382,40,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1696,'Автор','Author','REF_cms_UserId',NULL,'Y','N',382,50,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
-INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1697,'ИД коммита','CommitId','VARCHAR',NULL,'N','N',113,110,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1620,'Важность','Importance','INTEGER',NULL,'N','Y',5,35,'2016-10-24 13:56:52','2016-10-24 13:56:52',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1621,'text(2006)','IsIncidentsUsed','CHAR',NULL,'N','N',36,90,'2016-10-24 13:56:52','2016-10-24 13:56:52',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1622,'text(2007)','ServerAddress','VARCHAR',NULL,'N','Y',77,15,'2016-10-24 13:56:52','2016-10-24 13:56:52',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1623,'Условия','Conditions','TEXT',NULL,'N','N',374,10,'2016-10-24 13:56:52','2016-10-24 13:56:52',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1624,'Действия','Actions','TEXT',NULL,'N','N',374,20,'2016-10-24 13:56:52','2016-10-24 13:56:52',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1625,'Название','Caption','VARCHAR',NULL,'Y','Y',374,5,'2016-10-24 13:56:52','2016-10-24 13:56:52',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1626,'Класс','ClassName','VARCHAR',NULL,'N','N',374,40,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1627,'Ссылочное имя','ReferenceName','VARCHAR',NULL,'N','N',374,50,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1628,'Описание','Description','LARGETEXT',NULL,'N','Y',372,100,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1629,'Тип связи','LinkType','INTEGER',NULL,'Y','Y',316,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1630,'Репозиторий','Repository','REF_pm_SubversionId',NULL,'Y','N',375,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1631,'Коммит','Revision','REF_pm_SubversionRevisionId',NULL,'Y','N',375,20,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1632,'Автор','Author','VARCHAR',NULL,'Y','N',375,30,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1633,'Файл','FilePath','VARCHAR',NULL,'Y','N',375,40,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1634,'Добавлено','Inserted','INTEGER',NULL,'Y','N',375,60,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1635,'Удалено','Deleted','INTEGER',NULL,'Y','N',375,70,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1636,'Изменено','Modified','INTEGER',NULL,'Y','N',375,80,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1637,'Класс объекта','ObjectClass','VARCHAR',NULL,'Y','N',376,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1638,'Ид объекта','ObjectId','INTEGER',NULL,'Y','N',376,20,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1639,'Автор','Author','REF_cms_UserId',NULL,'Y','N',376,30,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1640,'Добавлено','Inserted','INTEGER',NULL,'Y','N',376,60,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1641,'Удалено','Deleted','INTEGER',NULL,'Y','N',376,70,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1642,'Изменено','Modified','INTEGER',NULL,'Y','N',376,80,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1643,'text(2073)','AskChangePassword','CHAR','N','N','N',63,65,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1644,'Затрачено','Fact','FLOAT',NULL,'N','N',22,200,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1645,'Задачи с затратами','FactTasks','TEXT',NULL,'N','N',22,210,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1646,'Функции','Features','INTEGER',NULL,'Y','N',316,26,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1647,'Ссылка на комментарий','CommentObject','REF_CommentId','','N','N',337,26,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1649,'Состояние','State','VARCHAR',NULL,'Y','Y',377,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1650,'Состояние','State','VARCHAR','inprogress','N','Y',49,40,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1651,'Начать','PlannedStartDate','DATE',NULL,'N','N',15,100,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1652,'Завершить к','PlannedFinishDate','DATE',NULL,'N','N',15,110,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1653,'Внешний автор','Customer','INTEGER',NULL,'N','N',22,200,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1654,'Проект','Project','REF_pm_ProjectId',NULL,'Y','N',378,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1655,'Метрика','Metric','VARCHAR',NULL,'Y','N',378,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1656,'Значение метрики','MetricValue','FLOAT',NULL,'N','N',378,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1657,'Бейзлайн','Baseline','REF_cms_SnapshotId',NULL,'N','N',331,100,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1658,'Бейзлайн','SourceBaseline','REF_cms_SnapshotId',NULL,'N','N',343,100,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1659,'Всего обработано','ProcessedTotal','INTEGER','0','N','N',313,100,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1660,'Осталось обработать','LeftToProcess','INTEGER','0','N','N',313,110,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1661,'Состояние','StatusText','TEXT',NULL,'N','N',313,120,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1662,'Лог','RecentLog','TEXT',NULL,'N','N',313,130,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1663,'Параметр','Parameter','VARCHAR',NULL,'N','N',361,80,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1664,'Приложение','Caption','VARCHAR',NULL,'Y','Y',379,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1665,'HTTP заголовки','HttpHeaders','TEXT',NULL,'N','Y',379,20,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1666,'Настройки мэппинга','MappingSettings','TEXT',NULL,'N','Y',379,30,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1667,'Активна','IsActive','CHAR','Y','N','Y',379,40,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1668,'Статус','StatusText','TEXT','','N','N',379,50,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1669,'Журнал выполнения','Log','TEXT','','N','Y',379,60,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1670,'Очередь','ItemsQueue','TEXT','','N','N',379,70,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1671,'Тип интеграции','Type','VARCHAR','read','Y','Y',379,15,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1672,'URL','URL','VARCHAR','','Y','Y',379,12,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1673,'Имя пользователя','HttpUserName','VARCHAR','','N','Y',379,17,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1674,'Пароль','HttpUserPassword','PASSWORD','','N','Y',379,18,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1675,'Класс','ObjectClass','VARCHAR',NULL,'Y','Y',380,10,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1676,'Объект','ObjectId','INTEGER',NULL,'Y','Y',380,10,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1677,'URL','URL','VARCHAR',NULL,'Y','Y',380,10,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1678,'Проект','ProjectKey','VARCHAR','','N','Y',379,13,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1679,'Пожелание','Issue','REF_pm_ChangeRequestId','','N','N',82,13,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1680,'Название','Caption','VARCHAR',NULL,'Y','Y',381,10,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1681,'Содержание','Content','TEXT',NULL,'N','N',381,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1682,'Тип','ReferenceName','INTEGER',NULL,'N','N',381,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1683,'Зависимости','Dependency','TEXT',NULL,'N','N',9,200,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1684,'Лог','Log','TEXT',NULL,'N','N',112,200,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1685,'text(2152)','SendConfirmation','CHAR','Y','N','N',313,47,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1686,'Только чтение','IsReadonly','CHAR','N','N','N',63,70,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1689,'Версия','Version','VARCHAR',NULL,'N','N',75,65,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1690,'Включает','Includes','INTEGER',NULL,'N','N',9,200,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1691,'UID','UID','VARCHAR',NULL,'N','N',9,1,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1692,'Название','Caption','VARCHAR',NULL,'Y','Y',382,10,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1693,'Описание','Description','WYSIWYG',NULL,'N','Y',382,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1694,'Статус','State','VARCHAR',NULL,'Y','Y',382,30,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1695,'Коммит','Commit','REF_pm_SubversionRevisionId',NULL,'Y','Y',382,40,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1696,'Автор','Author','REF_cms_UserId',NULL,'Y','N',382,50,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1697,'ИД коммита','CommitId','VARCHAR',NULL,'N','N',113,110,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1698,'Итерация','Iteration','REF_pm_ReleaseId',NULL,'N','N',22,155,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1699,'Estimation','Estimation','INTEGER',NULL,'N','N',97,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1700,'PlannedEstimation','PlannedEstimation','INTEGER',NULL,'N','N',97,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1701,'Длительность, сек.','Duration','FLOAT',NULL,'N','Y',74,110,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1702,'Длительность, сек.','Duration','FLOAT',NULL,'N','Y',75,110,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1703,'Название','Caption','VARCHAR',NULL,'Y','Y',383,10,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1704,'Описание','Description','TEXT',NULL,'N','Y',383,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1705,'Содержание','Content','TEXT',NULL,'N','N',383,30,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1706,'Номер','SortField','TEXT',NULL,'N','N',49,300,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1707,'Логика предусловий','PredicatesLogic','VARCHAR','all','N','N',336,100,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1708,'Логика ролей','ProjectRolesLogic','VARCHAR','any','N','N',336,110,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1709,'Ревизия','Revision','REF_WikiPageChangeId',NULL,'N','N',331,110,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1710,'Только чтение','IsReadonly','CHAR','N','N','Y',366,80,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1711,'Название','Caption','VARCHAR',NULL,'Y','Y',384,10,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1712,'Файл','File','FILE',NULL,'N','Y',384,20,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
+INSERT INTO `attribute` (`attributeId`, `Caption`, `ReferenceName`, `AttributeType`, `DefaultValue`, `IsRequired`, `IsVisible`, `entityId`, `OrderNum`, `RecordCreated`, `RecordModified`, `VPD`, `RecordVersion`) VALUES (1713,'Параметры','Options','VARCHAR',NULL,'N','Y',384,30,'2016-10-24 13:56:54','2016-10-24 13:56:54',NULL,0);
 UNLOCK TABLES;
 
 
@@ -1997,9 +2013,7 @@ CREATE TABLE `cms_update` (
 
 
 LOCK TABLES `cms_update` WRITE;
-INSERT INTO `cms_update` (`cms_UpdateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `LogFileName`, `RecordVersion`) VALUES (15,NULL,NULL,NULL,NULL,'3.0',NULL,NULL,NULL,0);
-INSERT INTO `cms_update` (`cms_UpdateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `LogFileName`, `RecordVersion`) VALUES (16,'2015-03-03 16:38:13','2015-03-03 16:38:13',NULL,NULL,'',NULL,NULL,NULL,0);
-INSERT INTO `cms_update` (`cms_UpdateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `LogFileName`, `RecordVersion`) VALUES (17,'2016-06-28 20:08:00','2016-06-28 20:08:00',NULL,NULL,'3.5.35.9454',NULL,NULL,NULL,0);
+INSERT INTO `cms_update` (`cms_UpdateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `LogFileName`, `RecordVersion`) VALUES (17,'2016-10-24 13:56:55','2016-10-24 13:56:55',NULL,NULL,'3.5.41.10011',NULL,NULL,NULL,0);
 UNLOCK TABLES;
 
 
@@ -2617,8 +2631,8 @@ INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModi
 INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (11,NULL,NULL,NULL,100,'text(993)','trackhistory','*/5','*','*','*','Y','',0);
 INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (12,NULL,NULL,NULL,500,'text(1130)','processcheckpoints','*/10','*','*','*','Y',NULL,0);
 INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (14,NULL,NULL,NULL,95,'text(1227)','processdigest','*','*','*','*','Y',NULL,0);
-INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (15,'2016-06-28 20:07:58','2016-06-28 20:07:58',NULL,30,'text(incidents7)','incidents/processincidents','*','*','*','*','Y',NULL,0);
-INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (16,'2016-06-28 20:07:59','2016-06-28 20:07:59',NULL,100,'text(integration1)','integration/integrationtask','*','*','*','*','Y',NULL,0);
+INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (15,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,30,'text(incidents7)','incidents/processincidents','*','*','*','*','Y',NULL,0);
+INSERT INTO `co_scheduledjob` (`co_ScheduledJobId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `ClassName`, `Minutes`, `Hours`, `Days`, `WeekDays`, `IsActive`, `Parameters`, `RecordVersion`) VALUES (16,'2016-10-24 13:56:53','2016-10-24 13:56:53',NULL,100,'text(integration1)','integration/integrationtask','*','*','*','*','Y',NULL,0);
 UNLOCK TABLES;
 
 
@@ -3070,7 +3084,7 @@ CREATE TABLE `entity` (
   UNIQUE KEY `XPKentity` (`entityId`),
   KEY `entity_vpd_idx` (`VPD`),
   KEY `ReferenceName` (`ReferenceName`(30))
-) ENGINE=MyISAM AUTO_INCREMENT=383 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=385 DEFAULT CHARSET=utf8;
 
 
 LOCK TABLES `entity` WRITE;
@@ -3299,6 +3313,8 @@ INSERT INTO `entity` (`entityId`, `Caption`, `ReferenceName`, `packageId`, `IsOr
 INSERT INTO `entity` (`entityId`, `Caption`, `ReferenceName`, `packageId`, `IsOrdered`, `OrderNum`, `RecordCreated`, `RecordModified`, `IsDictionary`, `VPD`, `RecordVersion`) VALUES (380,'Связь','pm_IntegrationLink',7,'N',10,NULL,NULL,'N',NULL,0);
 INSERT INTO `entity` (`entityId`, `Caption`, `ReferenceName`, `packageId`, `IsOrdered`, `OrderNum`, `RecordCreated`, `RecordModified`, `IsDictionary`, `VPD`, `RecordVersion`) VALUES (381,'Шаблон документа','pm_DocumentTemplate',7,'N',10,NULL,NULL,'N',NULL,0);
 INSERT INTO `entity` (`entityId`, `Caption`, `ReferenceName`, `packageId`, `IsOrdered`, `OrderNum`, `RecordCreated`, `RecordModified`, `IsDictionary`, `VPD`, `RecordVersion`) VALUES (382,'Ревью','pm_ReviewRequest',7,'N',10,NULL,NULL,'N',NULL,0);
+INSERT INTO `entity` (`entityId`, `Caption`, `ReferenceName`, `packageId`, `IsOrdered`, `OrderNum`, `RecordCreated`, `RecordModified`, `IsDictionary`, `VPD`, `RecordVersion`) VALUES (383,'Настройки проекта','pm_ProjectSettings',7,'N',10,NULL,NULL,'Y',NULL,0);
+INSERT INTO `entity` (`entityId`, `Caption`, `ReferenceName`, `packageId`, `IsOrdered`, `OrderNum`, `RecordCreated`, `RecordModified`, `IsDictionary`, `VPD`, `RecordVersion`) VALUES (384,'Шаблон выгрузки','pm_ExportTemplate',7,'N',10,NULL,NULL,'Y',NULL,0);
 UNLOCK TABLES;
 
 
@@ -3808,6 +3824,7 @@ CREATE TABLE `pm_build` (
   `RecordVersion` int(11) DEFAULT '0',
   `BuildRevision` int(11) DEFAULT NULL,
   `State` varchar(128) DEFAULT NULL,
+  `SortField` varchar(1024) DEFAULT NULL,
   PRIMARY KEY (`pm_BuildId`),
   KEY `Release` (`Release`,`VPD`),
   KEY `I$pm_Build$Revision` (`BuildRevision`),
@@ -3905,6 +3922,7 @@ CREATE TABLE `pm_changerequest` (
   `FactTasks` text,
   `Customer` int(11) DEFAULT NULL,
   `SupportChannel` varchar(128) DEFAULT NULL,
+  `Iteration` int(11) DEFAULT NULL,
   PRIMARY KEY (`pm_ChangeRequestId`),
   UNIQUE KEY `XPKpm_ChangeRequest` (`pm_ChangeRequestId`),
   KEY `pm_ChangeRequest_vpd_idx` (`VPD`),
@@ -3920,6 +3938,7 @@ CREATE TABLE `pm_changerequest` (
   KEY `I$pm_ChangeRequest$FeatureState` (`Function`,`State`),
   KEY `I$pm_ChangeRequest$FeatureProjectState` (`Function`,`Project`,`State`),
   KEY `I$pm_ChangeRequest$Customer` (`Customer`),
+  KEY `I$pm_ChangeRequest$Iteration` (`Iteration`),
   FULLTEXT KEY `I$42` (`Caption`,`Description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3987,6 +4006,7 @@ CREATE TABLE `pm_changerequesttrace` (
   `RecordVersion` int(11) DEFAULT '0',
   `Type` varchar(128) DEFAULT NULL,
   `Baseline` int(11) DEFAULT NULL,
+  `Revision` int(11) DEFAULT NULL,
   PRIMARY KEY (`pm_ChangeRequestTraceId`),
   KEY `I$ChangeRequestTrace$Request` (`ChangeRequest`),
   KEY `I$ChangeRequestTrace$Object` (`ObjectId`,`ObjectClass`)
@@ -4253,6 +4273,27 @@ CREATE TABLE `pm_environment` (
 
 
 LOCK TABLES `pm_environment` WRITE;
+UNLOCK TABLES;
+
+
+DROP TABLE IF EXISTS `pm_exporttemplate`;
+CREATE TABLE `pm_exporttemplate` (
+  `pm_ExportTemplateId` int(11) NOT NULL AUTO_INCREMENT,
+  `VPD` varchar(32) DEFAULT NULL,
+  `OrderNum` int(11) DEFAULT NULL,
+  `RecordCreated` datetime DEFAULT NULL,
+  `RecordModified` datetime DEFAULT NULL,
+  `RecordVersion` int(11) DEFAULT '0',
+  `Caption` varchar(2048) DEFAULT NULL,
+  `FileMime` varchar(2048) DEFAULT NULL,
+  `FilePath` varchar(2048) DEFAULT NULL,
+  `FileExt` varchar(2048) DEFAULT NULL,
+  `Options` varchar(2048) DEFAULT NULL,
+  PRIMARY KEY (`pm_ExportTemplateId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+LOCK TABLES `pm_exporttemplate` WRITE;
 UNLOCK TABLES;
 
 
@@ -4947,7 +4988,8 @@ CREATE TABLE `pm_project` (
   UNIQUE KEY `XPKpm_Project` (`pm_ProjectId`),
   KEY `pm_Project_vpd_idx` (`VPD`),
   KEY `i$1` (`CodeName`),
-  KEY `I$pm_Project$VPD` (`VPD`)
+  KEY `I$pm_Project$VPD` (`VPD`),
+  FULLTEXT KEY `Caption` (`Caption`,`Description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 
@@ -5068,6 +5110,25 @@ INSERT INTO `pm_projectrole` (`pm_ProjectRoleId`, `OrderNum`, `Caption`, `Record
 UNLOCK TABLES;
 
 
+DROP TABLE IF EXISTS `pm_projectsettings`;
+CREATE TABLE `pm_projectsettings` (
+  `pm_ProjectSettingsId` int(11) NOT NULL AUTO_INCREMENT,
+  `VPD` varchar(32) DEFAULT NULL,
+  `OrderNum` int(11) DEFAULT NULL,
+  `RecordCreated` datetime DEFAULT NULL,
+  `RecordModified` datetime DEFAULT NULL,
+  `RecordVersion` int(11) DEFAULT '0',
+  `Caption` varchar(2048) DEFAULT NULL,
+  `Description` varchar(2048) DEFAULT NULL,
+  `Content` mediumtext,
+  PRIMARY KEY (`pm_ProjectSettingsId`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+LOCK TABLES `pm_projectsettings` WRITE;
+UNLOCK TABLES;
+
+
 DROP TABLE IF EXISTS `pm_projectstage`;
 CREATE TABLE `pm_projectstage` (
   `pm_ProjectStageId` int(11) NOT NULL AUTO_INCREMENT,
@@ -5120,7 +5181,7 @@ CREATE TABLE `pm_projecttemplate` (
   `ProductEdition` mediumtext,
   `Kind` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`pm_ProjectTemplateId`)
-) ENGINE=MyISAM AUTO_INCREMENT=54 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=55 DEFAULT CHARSET=utf8;
 
 
 LOCK TABLES `pm_projecttemplate` WRITE;
@@ -5129,17 +5190,16 @@ INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `Reco
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (37,'2010-08-17 09:02:17','2010-08-17 09:02:17',NULL,60,'text(co11)','text(co12)','ticket_en.xml','N',2,0,'ee','case');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (38,'2010-08-17 09:03:09','2010-08-17 09:03:09',NULL,45,'text(co11)','text(co12)','ticket_ru.xml','N',1,0,'ee','case');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (39,'2010-08-17 09:03:09','2010-08-17 09:03:09',NULL,190,'text(co3)','text(co4)','openup_en.xml','N',2,0,'ee','methodology');
-INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (50,NULL,NULL,NULL,40,'text(co17)','text(co18)','testing_ru.xml',NULL,1,0,'ee','case');
-INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (51,NULL,NULL,NULL,50,'text(co19)','text(co20)','docs_ru.xml',NULL,1,0,'ee','case');
-INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (52,NULL,NULL,NULL,55,'text(co21)','text(co22)','tracker_ru.xml',NULL,1,0,'team','methodology');
+INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (50,NULL,NULL,NULL,40,'text(co21)','text(co18)','tracker_ru.xml',NULL,1,0,'ee','case');
+INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (51,NULL,NULL,NULL,50,'text(co1)','text(co2)','tasks_ru.xml',NULL,1,0,'ee','case');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (41,NULL,NULL,NULL,20,'text(co7)','text(co8)','scrum_ru.xml','N',1,0,'team','methodology');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (53,NULL,NULL,NULL,70,'text(co50)','text(co51)','incidents_en.xml',NULL,2,0,'ee','case');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (42,NULL,NULL,NULL,20,'text(co7)','text(co8)','scrum_en.xml',NULL,2,0,'team','methodology');
-INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (44,NULL,NULL,NULL,10,'text(co9)','text(co10)','kanban_ru.xml',NULL,1,0,'team','methodology');
-INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (45,NULL,NULL,NULL,60,'text(co1)','text(co2)','tasks_ru.xml',NULL,1,0,'team','methodology');
+INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (44,NULL,NULL,NULL,25,'text(co9)','text(co10)','kanban_ru.xml',NULL,1,0,'team','methodology');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (46,NULL,NULL,NULL,200,'text(co3)','text(co4)','openup_ru.xml',NULL,1,0,'ee','methodology');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (49,NULL,NULL,NULL,30,'text(co15)','text(co16)','reqs_ru.xml',NULL,1,0,'ee','case');
 INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (47,NULL,NULL,NULL,10,'text(co9)','text(co10)','kanban_en.xml',NULL,2,0,'team','methodology');
+INSERT INTO `pm_projecttemplate` (`pm_ProjectTemplateId`, `RecordCreated`, `RecordModified`, `VPD`, `OrderNum`, `Caption`, `Description`, `FileName`, `IsDefault`, `Language`, `RecordVersion`, `ProductEdition`, `Kind`) VALUES (54,NULL,NULL,NULL,10,'Scrumban','text(co54)','scrumban_ru.xml',NULL,1,0,'team','methodology');
 UNLOCK TABLES;
 
 
@@ -5269,8 +5329,11 @@ CREATE TABLE `pm_releasemetrics` (
   `PlannedWorkload` float DEFAULT NULL,
   `RecordVersion` int(11) DEFAULT '0',
   `TaskType` int(11) DEFAULT NULL,
+  `Estimation` int(11) DEFAULT NULL,
+  `PlannedEstimation` int(11) DEFAULT NULL,
   PRIMARY KEY (`pm_ReleaseMetricsId`),
-  KEY `i$21` (`Release`,`SnapshotDays`)
+  KEY `i$21` (`Release`,`SnapshotDays`),
+  KEY `I$pm_ReleaseMetrics$Days` (`SnapshotDays`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 
@@ -5465,6 +5528,7 @@ CREATE TABLE `pm_stateattribute` (
   `Entity` varchar(128) DEFAULT NULL,
   `IsVisible` char(1) DEFAULT NULL,
   `IsRequired` char(1) DEFAULT NULL,
+  `IsReadonly` char(1) DEFAULT 'N',
   PRIMARY KEY (`pm_StateAttributeId`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -5757,6 +5821,7 @@ CREATE TABLE `pm_test` (
   `Version` varchar(255) DEFAULT NULL,
   `Result` int(11) DEFAULT NULL,
   `RecordVersion` int(11) DEFAULT '0',
+  `Duration` float DEFAULT NULL,
   PRIMARY KEY (`pm_TestId`),
   KEY `I$pm_Test$Environment` (`Environment`),
   KEY `I$pm_Test$Version` (`Version`),
@@ -5784,6 +5849,7 @@ CREATE TABLE `pm_testcaseexecution` (
   `RecordVersion` int(11) DEFAULT '0',
   `Content` longtext,
   `Version` varchar(128) DEFAULT NULL,
+  `Duration` float DEFAULT NULL,
   PRIMARY KEY (`pm_TestCaseExecutionId`),
   KEY `I$pm_TestCaseExecution$Test` (`Test`),
   KEY `I$pm_TestCaseExecution$RecordModified` (`RecordModified`),
@@ -5897,6 +5963,8 @@ CREATE TABLE `pm_transition` (
   `TargetState` int(11) DEFAULT NULL,
   `IsReasonRequired` char(1) DEFAULT NULL,
   `RecordVersion` int(11) DEFAULT '0',
+  `PredicatesLogic` varchar(32) DEFAULT NULL,
+  `ProjectRolesLogic` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`pm_TransitionId`),
   KEY `I$pm_Transition$VPD` (`VPD`),
   KEY `I$pm_Transition$Source` (`SourceState`)
@@ -6240,7 +6308,6 @@ INSERT INTO `priority` (`PriorityId`, `RecordCreated`, `RecordModified`, `OrderN
 INSERT INTO `priority` (`PriorityId`, `RecordCreated`, `RecordModified`, `OrderNum`, `Caption`, `VPD`, `RecordVersion`, `RelatedColor`) VALUES (2,'2005-12-24 11:56:23','2005-12-24 23:18:57',20,'Высокий',NULL,0,'#D5BB28');
 INSERT INTO `priority` (`PriorityId`, `RecordCreated`, `RecordModified`, `OrderNum`, `Caption`, `VPD`, `RecordVersion`, `RelatedColor`) VALUES (3,'2005-12-24 11:56:38','2005-12-24 23:19:02',30,'Обычный',NULL,0,'#6969A5');
 INSERT INTO `priority` (`PriorityId`, `RecordCreated`, `RecordModified`, `OrderNum`, `Caption`, `VPD`, `RecordVersion`, `RelatedColor`) VALUES (4,'2005-12-24 11:56:48','2005-12-24 23:19:08',40,'Низкий',NULL,0,'#6969A5');
-INSERT INTO `priority` (`PriorityId`, `RecordCreated`, `RecordModified`, `OrderNum`, `Caption`, `VPD`, `RecordVersion`, `RelatedColor`) VALUES (5,'2005-12-24 11:57:18','2005-12-24 23:19:13',50,'В свободное время',NULL,0,'#6969A5');
 UNLOCK TABLES;
 
 

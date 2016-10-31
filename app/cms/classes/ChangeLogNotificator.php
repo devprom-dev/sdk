@@ -131,11 +131,12 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$log_attribute = getFactory()->getObject('ObjectChangeLogAttribute');
 		foreach( $this->modified_attributes as $attribute )
 		{
+		    if ( in_array($attribute, array('RecordModified','RecordCreated')) ) continue;
 			$log_attribute->add_parms(
-					array (
-							'ObjectChangeLogId' => $id,
-							'Attributes' => $attribute
-					)
+                array (
+                    'ObjectChangeLogId' => $id,
+                    'Attributes' => $attribute
+                )
 			);
 		}
 	}

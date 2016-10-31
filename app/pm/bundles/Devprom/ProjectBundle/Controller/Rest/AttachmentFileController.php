@@ -26,9 +26,12 @@ class AttachmentFileController extends AttachmentController
 	
 	function getFilterResolver(Request $request)
 	{
-		return array (
-			new AttachmentFilterResolver(
-				$this->getClassName($request), $request->get('object')
+		return array_merge(
+			RestController::getFilterResolver($request),
+			array (
+				new AttachmentFilterResolver(
+					$this->getClassName($request), $request->get('object')
+				)
 			)
 		);
 	}

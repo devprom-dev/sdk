@@ -35,13 +35,15 @@ class TogglePluginWebMethod extends WebMethod
 	function execute( $file_name )
 	{
 		$globalLock = new \GlobalLock();
-
 		$installation_factory = InstallationFactory::getFactory();
 
-		PluginsFactory::Instance()->enablePlugin($file_name, !PluginsFactory::Instance()->pluginEnabled($file_name));
+        // clear old cache
+        $clear_cache_action = new ClearCache();
+        $clear_cache_action->install();
 
-		// clear old cache
-		$clear_cache_action = new ClearCache();
-	    $clear_cache_action->install();
+		PluginsFactory::Instance()->enablePlugin(
+		    $file_name, !PluginsFactory::Instance()->pluginEnabled($file_name)
+        );
+        $globalLock->release();
 	}
 }

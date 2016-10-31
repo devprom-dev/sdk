@@ -1,5 +1,6 @@
 <?php
 
+include SERVER_ROOT_PATH.'core/classes/analytics/FeatureTouch.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/License.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/LicenseState.php';
 include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php';
@@ -39,7 +40,7 @@ include SERVER_ROOT_PATH.'core/classes/project/ProjectCache.php';
 include SERVER_ROOT_PATH.'core/classes/project/ProjectState.php';
 include SERVER_ROOT_PATH.'core/classes/locale/LanguageEntity.php'; 
 include SERVER_ROOT_PATH.'core/classes/project/ProjectUse.php'; 
-include SERVER_ROOT_PATH.'core/classes/project/ProjectTemplate.php'; 
+include SERVER_ROOT_PATH.'core/classes/project/ProjectTemplate.php';
 include SERVER_ROOT_PATH.'core/classes/project/ProjectImportance.php';
 include SERVER_ROOT_PATH.'cms/classes/AttributeGroup.php';
 include SERVER_ROOT_PATH.'core/classes/history/AffectedObjects.php';

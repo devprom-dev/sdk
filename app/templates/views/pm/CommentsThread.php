@@ -1,9 +1,9 @@
 <?php foreach( $comments as $comment ) { ?>
 
-<div style="padding:0 0 0 <?=($level * 68)?>px;">
+<div style="padding:0 0 0 <?=($level * 59)?>px;">
 	<a name="comment<?=$comment['id']?>"></a>
 	
-	<div id="comment<?=$comment['id']?>">
+	<div id="comment<?=$comment['id']?>" class="comment-line-holder">
         <table class="comment-line">
             <tr>
     	        <td width="1%" style="padding-left:0;padding-right:0;vertical-align:top;">
@@ -41,7 +41,9 @@
                     		<a name="comment_id_<?=$comment['id']?>"></a>
                     		<div id="commentsreply<?=$comment['id']?>">
                     			<div class="comment">
-                    				<input class="btn btn-small" type="button" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['id']?>'), '', '<?=$comment['id']?>');" value="<?=translate('Ответить')?>">
+                    				<a class="btn btn-small btn-link" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['id']?>'), '', '<?=$comment['id']?>');" style="padding-left:0;">
+										<?=translate('Ответить')?>
+									</a>
                     			 </div>
                     		</div>
                     	</div>

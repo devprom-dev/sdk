@@ -97,9 +97,13 @@ abstract class EstimationStrategy
 	{
 		return array();
 	}
-	
-	function getEstimationFormField( $form )
+
+	function getFilterScale()
 	{
-		return null;
+		return array();
+	}
+
+	function hasDiscreteValues() {
+		return true;
 	}
 }

@@ -10,7 +10,6 @@ use Devprom\ServiceDeskBundle\Entity\User;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Translation\Translator;
 
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 include_once SERVER_ROOT_PATH.'admin/classes/common/AdminSession.php';
 

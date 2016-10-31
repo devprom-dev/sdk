@@ -74,7 +74,7 @@ class ReleaseIterator extends OrderedIterator
 		return array( $duration, $capacity, $velocity ); 
 	}
 	
-	function getEstimatedBurndownMetrics()
+	function getRealBurndownMetrics()
 	{
 		list( $in_duration, $in_capacity, $in_velocity ) = $this->getInitialBurndownMetrics();
 			
@@ -131,7 +131,7 @@ class ReleaseIterator extends OrderedIterator
 			$format = getSession()->getLanguage()->getDateFormat();
 		}
 
-		list( $duration, $est_capacity, $est_velocity ) = $this->getEstimatedBurndownMetrics();
+		list( $duration, $est_capacity, $est_velocity ) = $this->getRealBurndownMetrics();
 		
 		if ( $duration == '' )
 		{
@@ -351,7 +351,7 @@ class ReleaseIterator extends OrderedIterator
 				   'SnapshotDays' => $it->get("BeginDays")) 
 			);
 
-		list( $duration, $workload, $velocity ) = $this->getEstimatedBurndownMetrics();
+		list( $duration, $workload, $velocity ) = $this->getRealBurndownMetrics();
 		
 		$workload = $this->getTotalWorkload();
 		$plannedworkload = max($this->getPlannedTotalWorkload(), $duration * $velocity);
@@ -648,6 +648,7 @@ class ReleaseIterator extends OrderedIterator
 	function getLeftWorkParticipant( $userId )
 	{
 		if ( $userId < 1 ) return 0;
+		if ( $this->getId() < 1 ) return 0;
 
 		$sql = "SELECT SUM(IFNULL(t.LeftWork, 0)) leftwork ".
 			"  FROM pm_Task t, pm_ChangeRequest r ".

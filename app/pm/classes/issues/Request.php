@@ -3,10 +3,8 @@
 include "RequestIterator.php";
 
 include_once "persisters/IssueLinkedIssuesPersister.php";
-include_once "persisters/RequestPlanningPersister.php";
 include_once "persisters/RequestMilestonesPersister.php";
 include_once "persisters/RequestIterationsPersister.php";
-include_once "predicates/IssueOwnerUserPredicate.php";
 include_once "predicates/RequestIterationFilter.php";
 include_once "predicates/RequestAuthorFilter.php";
 include_once "predicates/RequestSubmittedFilter.php";
@@ -26,7 +24,6 @@ include_once "predicates/RequestFeatureFilter.php";
 include_once "predicates/RequestFinishAfterPredicate.php";
 include_once "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
-include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 
 class Request extends MetaobjectStatable 
 {
@@ -115,69 +112,6 @@ class Request extends MetaobjectStatable
 		return $this->createSQLIterator($sql);
 	}
 	
-	function getRequestsAggByTrace( $class_name )
-	{
-		$sql = " SELECT t.ObjectId, " .
-			   "		SUM(t.Critical) Critical," .
-			   "		SUM(t.Important) Important," .
-			   "	    SUM(t.Other) Other, " .
-			   "		SUM(CASE t.IssueType WHEN 'bug' THEN 1 ELSE 0 END) Bugs," .
-			   "	    SUM(CASE t.IssueType WHEN 'bug' THEN 0 ELSE 1 END) Issues " .
-			   "   FROM (SELECT e.ObjectId," .
-			   "				(CASE t.Priority WHEN 1 THEN 1 ELSE 0 END) Critical," .
-			   "				(CASE t.Priority WHEN 2 THEN 1 ELSE 0 END) Important, " .
-			   "			    (CASE t.Priority WHEN 1 THEN 0 WHEN 2 THEN 0 ELSE 1 END) Other, " .
-			   "				(SELECT it.ReferenceName FROM pm_IssueType it WHERE it.pm_IssueTypeId = t.Type) IssueType" .
-			   "           FROM pm_ChangeRequest t," .
-			   "			    pm_ChangeRequestTrace e " .
-			   "          WHERE t.pm_ChangeRequestId = e.ChangeRequest" .
-			   "			AND e.ObjectClass = '".$class_name."' ".
-			   			  	    $this->getVpdPredicate().$this->getFilterPredicate().
-			   "		 ) t" .
-			   " GROUP BY t.ObjectId ";
-		   
-		return $this->createSQLIterator($sql);
-	}
-	
-	function getProductBacklog( $limit = 0 )
-	{
-		$sort = $this->getSortClause();
-		
-		$sql = " SELECT (SELECT st.IsTerminal FROM pm_State st " .
-			   "		  WHERE st.ObjectClass = 'request'" .
-			   "		    AND st.VPD = t.VPD" .
-			   "			AND st.ReferenceName = t.State )," .
-			   "		(SELECT st.OrderNum FROM pm_State st " .
-			   "		  WHERE st.ObjectClass = 'request'" .
-			   "		    AND st.VPD = t.VPD" .
-			   "			AND st.ReferenceName = t.State ), " .
-			   "		t.Tags, ".$this->getRegistry()->getSelectClause('t').
-			   "   FROM (SELECT t.*," .
-			   "		  	    (SELECT GROUP_CONCAT(tg.Caption) " .
-			   "		   		   FROM pm_RequestTag wt, Tag tg " .
-			   "  		  		  WHERE wt.Request = t.pm_ChangeRequestId ".
-			   "				    AND tg.TagId = wt.Tag ) Tags" .
-			   "		   FROM pm_ChangeRequest t ".
-			   "  		  WHERE 1 = 1 ".$this->getVpdPredicate().$this->getFilterPredicate().
-			   "        ) t, Priority pr " .
-			   "  WHERE t.Priority = pr.PriorityId ".
-			   " ORDER BY ".($sort != '' ? $sort.", " : '')." t.pm_ChangeRequestId".
-			   ($limit > 0 ? " LIMIT ".$limit : "");
-
-		return $this->createSQLIterator($sql);
-	}
-
-	function getFeaturesBacklog()
-	{
-		$sql = " SELECT t.* " .
-			   "   FROM pm_ChangeRequest t " .
-			   "  WHERE 1 = 1 ".
-			   $this->getFilterPredicate().$this->getVpdPredicate().
-			   "  ORDER BY t.Function ASC ";
-
-		return $this->createSQLIterator($sql);
-	}
-
 	function IsDeletedCascade( $object )
 	{
 		return false;
@@ -251,13 +185,10 @@ class Request extends MetaobjectStatable
 	
 	function modify_parms( $object_id, $parms )
 	{
-		global $model_factory;
-
-		if ( $parms['Estimation'] != '' )
-		{
+		if ( $parms['Estimation'] != '' ) {
 			$parms['EstimationLeft'] = $parms['Estimation'];
 		}
-		
+
 		$req_it = $this->getExact($object_id);
 		
 		switch ( $parms['State'] )
@@ -323,106 +254,5 @@ class Request extends MetaobjectStatable
 		
 		return parent::delete( $id );
 	}
-	
-	function cacheDates()
-	{
-		$sql = " CREATE TEMPORARY TABLE tmp_RequestDate (" .
-			   "	pm_ChangeRequestId INTEGER, CompleteDate DATE ) ";
-
-		$this->createSQLIterator( $sql );
-
-		$sql = " INSERT INTO tmp_RequestDate (pm_ChangeRequestId, CompleteDate) " .
-		       " SELECT t.pm_ChangeRequestId, " .
-			   "		IFNULL((SELECT m.MetricValueDate " .
-			   " 		   FROM pm_VersionMetric m" .
-			   "	      WHERE m.Version = r.pm_VersionId" .
-			   "			AND m.Metric = 'EstimatedFinish'), r.FinishDate)" .
-			   "   FROM pm_ChangeRequest t, pm_Version r" .
-			   "  WHERE t.PlannedRelease = r.pm_VersionId";
-
-		$this->createSQLIterator( $sql );
-		
-		$sql = " SELECT t.* FROM tmp_RequestDate t ";
-		
-		$this->dates_it = $this->createSQLIterator($sql);
-		$this->dates_it->buildPositionHash( array('pm_ChangeRequestId') );
-	}
-
- 	function cacheBlocks()
-	{
-		global $model_factory;
-		
-		if ( is_object($this->blocks_it) )
-		{
-			return $this->blocks_it;
-		}
-		
-		$sql = " SELECT CONCAT(r.RequestId, ',', r.ReferenceName) StopWord, " .
-			   "	 	r.*, IFNULL(st.IsTerminal, 'N') IsTerminal " .
-			   "   FROM (SELECT l.TargetRequest RequestId, r.*, " .
-			   "				CASE t.ReferenceName ". 
-			   "					WHEN 'blocks' THEN 'blocked' WHEN 'blocked' THEN 'blocks' ".
-			   "				ELSE t.ReferenceName END ReferenceName " .
-			   "		   FROM pm_ChangeRequest r," .
-			   "				pm_ChangeRequestLink l," .
-			   "				pm_ChangeRequestLinkType t" .
-			   "		  WHERE l.LinkType = t.pm_ChangeRequestLinkTypeId " .
-			   "    		AND r.pm_ChangeRequestId = l.SourceRequest" .
-			   "		  UNION " .
-			   "		 SELECT l.SourceRequest RequestId, r.*, t.ReferenceName" .
-			   "		   FROM pm_ChangeRequest r," .
-			   "				pm_ChangeRequestLink l," .
-			   "				pm_ChangeRequestLinkType t" .
-			   "		  WHERE l.LinkType = t.pm_ChangeRequestLinkTypeId " .
-			   "    		AND r.pm_ChangeRequestId = l.TargetRequest" .
-			   "		) r, " .
-			   "		pm_State st " .
-			   "  WHERE st.ObjectClass = 'request'" .
-			   "	AND st.ReferenceName = r.State " .
-			   "    AND st.VPD = r.VPD ".
-			   "  ORDER BY 1 ASC ";
-
-		$this->blocks_it = $this->createSQLIterator($sql);
-		$this->blocks_it->buildPositionHash( array('StopWord') );
-		
-		return $this->blocks_it;
-	}	
-
-  	function cacheLinks()
-	{
-		global $model_factory;
-		
-		if ( is_object($this->links_it) )
-		{
-			return $this->links_it;
-		}
-		
-		$sql = " SELECT r.RequestId, CONCAT(r.RequestId, ',', r.ReferenceName) StopWord, " .
-			   "	 	r.*, st.Caption StateName, IFNULL(st.IsTerminal, 'N') IsTerminal " .
-			   "   FROM (SELECT l.SourceRequest RequestId, r.*, t.ReferenceName " .
-			   "		   FROM pm_ChangeRequest r," .
-			   "				pm_ChangeRequestLink l," .
-			   "				pm_ChangeRequestLinkType t" .
-			   "		  WHERE l.LinkType = t.pm_ChangeRequestLinkTypeId " .
-			   "    		AND r.pm_ChangeRequestId = l.TargetRequest" .
-			   "		  UNION " .
-			   "		 SELECT l.TargetRequest RequestId, r.*, t.ReferenceName" .
-			   "		   FROM pm_ChangeRequest r," .
-			   "				pm_ChangeRequestLink l," .
-			   "				pm_ChangeRequestLinkType t" .
-			   "		  WHERE l.LinkType = t.pm_ChangeRequestLinkTypeId " .
-			   "    		AND r.pm_ChangeRequestId = l.SourceRequest" .
-			   "		) r, " .
-			   "		pm_State st " .
-			   "  WHERE st.ObjectClass = 'request'" .
-			   "	AND st.ReferenceName = r.State " .
-			   "    AND st.VPD = r.VPD ".
-			   "  ORDER BY 1 ASC, 2 ASC ";
-
-		$this->links_it = $this->createSQLIterator($sql);
-		$this->links_it->buildPositionHash( array('StopWord') );
-		
-		return $this->links_it;
-	}	
 }
  

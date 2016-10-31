@@ -36,7 +36,7 @@ class FieldIssueTrace extends FieldForm
  	
  	function getForm( & $trace )
 	{
-		return new ObjectTraceFormEmbedded( $trace, 'ChangeRequest' );
+		return new ObjectTraceFormEmbedded( $trace, 'ChangeRequest', $this->getName() );
 	}
 	
  	function render( $view )

@@ -4,16 +4,35 @@ namespace Devprom\ProjectBundle\Service\Model\FilterResolver;
 
 class ModifiedAfterFilterResolver
 {
-	public function __construct( $filter = '' ) {
-		$this->filter = $filter;
+	public function __construct( $modifiedFrom = '', $modifiedTo = '', $createdFrom = '', $createdTo = '' )
+	{
+		$this->modifiedFrom = $modifiedFrom;
+		$this->modifiedTo = $modifiedTo;
+		$this->createdFrom = $createdFrom;
+		$this->createdTo = $createdTo;
 	}
 
-	public function resolve() {
+	public function resolve()
+	{
 		\EnvironmentSettings::setClientTimeZone('UTC');
-		return array(
-			new \FilterModifiedAfterPredicate($this->filter)
-		);
+		$filters = array();
+		if ( $this->modifiedFrom != '' ) {
+			$filters[] = new \FilterModifiedAfterPredicate($this->modifiedFrom);
+		}
+		if ( $this->modifiedTo != '' ) {
+			$filters[] = new \FilterModifiedBeforePredicate($this->modifiedTo);
+		}
+		if ( $this->createdFrom != '' ) {
+			$filters[] = new \FilterSubmittedAfterPredicate($this->createdFrom);
+		}
+		if ( $this->createdTo != '' ) {
+			$filters[] = new \FilterSubmittedBeforePredicate($this->createdTo);
+		}
+		return $filters;
 	}
 
-	private $filter = '';
+	private $modifiedFrom = '';
+	private $modifiedTo = '';
+	private $createdFrom = '';
+	private $createdTo = '';
 }

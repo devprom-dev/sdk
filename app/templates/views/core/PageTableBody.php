@@ -1,5 +1,14 @@
-<? $detailsId = 'toggle-detailspanel-'.$widget_id; ?>
-<? $detailsVisible = $_COOKIE[$detailsId] != '' ? $_COOKIE[$detailsId] == 'true' : ($_COOKIE[$detailsId] = $details_parms['visible']); ?>
+<?
+$detailsId = 'toggle-detailspanel-'.$widget_id;
+$detailsVisible = false;
+if ( is_array($sections) ) {
+	foreach( $sections as $section ) {
+		if ( $section instanceof DetailsInfoSection ) {
+			$detailsVisible = $_COOKIE[$detailsId] != '' ? $_COOKIE[$detailsId] == 'true' : $section->isActive();
+		}
+	}
+}
+?>
 
 <? if ( !$tableonly ) { ?>
 
@@ -130,52 +139,49 @@
 <?php } ?>
 </div>
 
-<?php foreach( $additional_actions as $action ) { ?>
-	<?php if ( count(array_filter($action['items'], function($item){return $item['name'] != '';})) < 4 ) { ?>
-		<?php foreach( $action['items'] as $key => $item ) { ?>
-			<?php if ( $item['name'] == '' ) continue; ?>
+<?php } // !PageChart ?>
+
+<?php if ( !$tableonly ) { ?>
+	<?php foreach( $additional_actions as $action ) { ?>
+		<?php if ( count(array_filter($action['items'], function($item){return $item['name'] != '';})) < 4 ) { ?>
+			<?php foreach( $action['items'] as $key => $item ) { ?>
+				<?php if ( $item['name'] == '' ) continue; ?>
+				<div class="btn-group pull-left">
+					<a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn append-btn btn-small <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
+						<i class="icon-plus icon-white"></i> <?=$item['name']?>
+					</a>
+				</div>
+			<?php } ?>
+		<?php } else { ?>
 			<div class="btn-group pull-left">
-				<a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn append-btn btn-small <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
-			   		<i class="icon-plus icon-white"></i> <?=$item['name']?>
-			   	</a>
+				<a class="btn dropdown-toggle btn-small <?=($action['class'] == '' ? 'btn-success' : $action['class'])?>" href="#" data-toggle="dropdown">
+					<?=$action['name']?>
+					<span class="caret"></span>
+				</a>
+				<? echo $view->render('core/PopupMenu.php', array ('items' => $action['items'])); ?>
 			</div>
 		<?php } ?>
-	<?php } else { ?>
-		<div class="btn-group pull-left">
-			<a class="btn dropdown-toggle btn-small <?=($action['class'] == '' ? 'btn-success' : $action['class'])?>" href="#" data-toggle="dropdown">
-		   		<?=$action['name']?>
-		   		<span class="caret"></span>
-		   	</a>
-		   	<? echo $view->render('core/PopupMenu.php', array ('items' => $action['items'])); ?>
-		</div>
-   	<?php } ?>
-<?php } ?>
+	<?php } ?>
 
-<?php
-
-      echo $view->render('core/PageSectionButtons.php', array (
-        'sections' => $sections,
-	    'object_class' => $object_class,
-	    'object_id' => $object_id,
-        'iterator' => $list->getIteratorRef(),
+	<?php echo $view->render('core/PageSectionButtons.php', array (
+		'sections' => $sections,
+		'object_class' => $object_class,
+		'object_id' => $object_id,
+		'iterator' => $list->getIteratorRef(),
 		'table_id' => $widget_id
-    )); 
+	));
+	?>
 
-?>
-
-<?php if ( count($actions) > 0 ) { ?>
-
-<div class="btn-group last pull-left">
-  	<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
-   		<?=translate('Действия')?>
-   		<span class="caret"></span>
-   	</a>
-   	<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
-</div>
-
+	<?php if ( count($actions) > 0 ) { ?>
+		<div class="btn-group last pull-left">
+			<a class="btn dropdown-toggle btn-small btn-inverse" href="#" data-toggle="dropdown">
+				<?=translate('Действия')?>
+				<span class="caret"></span>
+			</a>
+			<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
+		</div>
+	<?php } ?>
 <?php } ?>
-
-<?php } // !PageChart ?>
 
 </div> <!-- end actions -->
 
@@ -188,7 +194,12 @@
 
 <?php if ( $filter_actions[0]['name'] != '' && $filter_modified ) { ?>
 
-<div class="hidden-print alert alert-filter alert-warning"><?=$save_settings_alert?></div>
+<div class="hidden-print alert alert-filter alert-warning">
+	<button type="button" class="close" data-dismiss="alert">
+		<span style="font-size:12px;vertical-align:top"><?=translate('закрыть')?></span> &times;
+	</button>
+	<?=$save_settings_alert?>
+</div>
 
 <?php } ?>
 
@@ -208,7 +219,15 @@
 						'widget_id' => $widget_id
     				)) 
     		: $table->draw( $view );
-     ?>
+
+		$is_need_navigator = $table->IsNeedNavigator() && is_object($list) && $list->moreThanOnePage();
+		if ( is_object($list) && $is_need_navigator ) $list->drawNavigator(false); else $table->drawFooter();
+
+		echo '<div class="clearfix"></div>';
+		echo '<div class="hint-holder">';
+			echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid, 'open' => $hint_open));
+		echo '</div>';
+	?>
 	</div>
 	<? if ( !is_a($list, 'PageChart') && !$tableonly && count($details) > 0 ) { ?>
 		<div class="table-details" style="height:100%;display:<?=($detailsVisible ? 'table-cell' : 'none')?>">
@@ -229,8 +248,6 @@
 </div>
 
 <?php
-$is_need_navigator = $table->IsNeedNavigator() && is_object($list) && $list->moreThanOnePage();
-if ( is_object($list) && $is_need_navigator ) $list->drawNavigator(false); else $table->drawFooter();
 
 if ( !$tableonly ) {
 	$table->drawScripts();

@@ -40,6 +40,7 @@ class FieldTransitionPredicate extends FieldForm
  			
  			$form->setEntity(getFactory()->getObject($this->state_it->get('ObjectClass'))); 
 	 		$form->setReadonly( $this->readOnly() );
+            $form->setTransitionIt($this->object_it);
 	 			
 	 		$form->draw( $view );
  		echo '</div>';

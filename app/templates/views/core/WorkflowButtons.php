@@ -1,11 +1,20 @@
+<div>
+    <?=$title?>
+</div>
 <div class="filter-actions">
-<?php foreach( $actions as $item ) { ?>
-    <? if ( strpos($item['uid'], 'workflow-') === false ) continue; ?>
     <div class="btn-group pull-left">
-        <a id="<?=$item['uid']?>" class="btn btn-small btn-warning" href="<?=$item['url']?>">
-            <?=$item['name']?>
+        <a class="btn dropdown-toggle btn-small btn-warning" href="#" data-toggle="dropdown">
+            <i class="icon-hand-right icon-white"></i> <?=translate("Состояние")?>
+            <span class="caret"></span>
+        </a>
+        <? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
+    </div>
+    <? if ( count($relatedActions) > 0 ) { $item = array_shift($relatedActions); ?>
+    <div class="btn-group pull-left">
+        <a id="<?=$item['uid']?>" class="btn btn-small" href="<?=$item['url']?>">
+            <i class="icon-plus"></i> <?=$item['name']?>
         </a>
     </div>
-<?php } ?>
+    <? } ?>
 </div>
 <div class="clearfix"></div>

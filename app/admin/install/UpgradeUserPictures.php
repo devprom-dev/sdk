@@ -12,7 +12,6 @@ class UpgradeUserPictures extends Installable
     function install()
     {
 		$generator = new UserPicSpritesGenerator();
-		
 		$generator->storeSprites();
         
         return true;

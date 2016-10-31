@@ -33,6 +33,7 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
 				'CustomTag' => '3',
 				'RequestTag' => '3',
 				'WikiTag' => '3',
+                'WikiPageFile' => '3',
 				'Tag' => '3'
     		);
     

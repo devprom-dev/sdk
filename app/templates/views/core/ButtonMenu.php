@@ -1,12 +1,7 @@
-<div class="btn-group">
-
-     <button type="submit" class="btn btn-primary" onclick="<?=$url?>" >
-         &nbsp; <?=$title?> &nbsp;
-     </button>
-      
-     <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-         <span class="caret"></span>
-     </button>
-
-    <?php echo $view->render('core/PopupMenu.php', array ( 'items' => $items) ); ?>
+<div class="btn-group pull-left last">
+    <a class="btn btn-small dropdown-toggle btn-info" uid="<?=$uid?>" href="#" data-toggle="dropdown">
+        <?=$title?>
+        <span class="caret"></span>
+    </a>
+    <? echo $view->render('core/PopupMenu.php', array ('items' => $items, 'uid' => $uid)); ?>
 </div>

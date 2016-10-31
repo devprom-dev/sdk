@@ -17,6 +17,9 @@ class ProcessBackup extends TaskCommand
 		// trial license should be revalidated every day
 		$this->resetLicenseCache();
 
+        // remove old undo log files
+        $this->shrinkUndoLog();
+
 		$job = $model_factory->getObject('co_ScheduledJob');
 		$job_it = $job->getExact($_REQUEST['job']);
 		
@@ -49,20 +52,19 @@ class ProcessBackup extends TaskCommand
 				$remove--;
 			}
 		}
-		
+
 		$backup->backup_database();
 		$backup->backup_htdocs();
 
 		$backup->zip();
 		$backup->backup_files();
-		
+
 		$backup_cls = $model_factory->getObject('cms_Backup');
 		$backup_cls->add_parms( array (
 			'Caption' => text(1173),
 			'BackupFileName' => $backup->getBackupFileName()
 		));
 
-		$this->shrinkUndoLog();
 		$this->logFinish();
 	}
 	
@@ -75,7 +77,9 @@ class ProcessBackup extends TaskCommand
 		$log = $this->getLogger();
 
 		$interval = strtotime("-7 days");
-		$undoPath = trim(UndoLog::Instance()->getDirectory(),'\/').'/*';
+		$undoPath = rtrim(UndoLog::Instance()->getDirectory(),'\/').'/*';
+        if ( is_object($log) ) $log->info('Shrink undo log at ' . $undoPath . ' for '.$interval);
+
 		foreach ( glob($undoPath) as $file ) {
 			if (filemtime($file) <= $interval ) {
 				if ( is_object($log) ) $log->info('Delete expired undo file: ' . $file);

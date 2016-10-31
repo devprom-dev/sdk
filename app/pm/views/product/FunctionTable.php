@@ -16,25 +16,6 @@ class FunctionTable extends PMPageTable
 		}
 	}
 
-	function getActions()
-	{
-		$actions = array();
-		
-		$method = new ExcelExportWebMethod();
-		$actions[] = array( 
-				'name' => $method->getCaption(),
-				'url' => $method->url( $this->getCaption(), 'IteratorExportExcel')
-		);
-		
-		$method = new HtmlExportWebMethod();
-		$actions[] = array( 
-				'name' => $method->getCaption(),
-				'url' => $method->url( 'IteratorExportHtml' )
-		);
-		
-		return $actions;
-	}
-
 	function getNewActions()
 	{
 		$type_it = getFactory()->getObject('FeatureType')->getAll();

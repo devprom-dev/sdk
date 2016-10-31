@@ -11,6 +11,7 @@ class TaskIssueArtefactsPersister extends ObjectSQLPersister
 			"      AND l.ObjectClass NOT IN ('Task') ) IssueTraces ",
 
 			" ( SELECT r.Description FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueDescription ",
+            " ( SELECT r.ClosedInVersion FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueVersion ",
 
 			" (SELECT GROUP_CONCAT(CAST(a.pm_AttachmentId AS CHAR)) ".
 			"    FROM pm_Attachment a ".

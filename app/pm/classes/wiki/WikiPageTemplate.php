@@ -19,7 +19,11 @@ class WikiPageTemplate extends Metaobject
  	{
  	    return new WikiPageTemplateIterator($this);
  	}
- 	
+
+    function getDocumentName() {
+        return '';
+    }
+
  	function getPageName()
  	{
 		return parent::getPageName();

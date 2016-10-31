@@ -1,4 +1,5 @@
 <?php
+include "PlanChart.php";
 
 class VersionList extends PMPageList
 {
@@ -52,22 +53,13 @@ class VersionList extends PMPageList
 
 	function drawCell( $source_it, $attr )
 	{
-		global $model_factory;
-
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
 		$object_it = $this->getIt( $source_it );
-		
 		if ( $object_it->getId() == '' ) return;
 		
-		$report = $model_factory->getObject('PMReport');
-
 		switch ( $attr )
 		{
-			case 'Burndown':
-				$this->drawBurndown( $object_it );
-				break;
-
             case 'Artefacts':
                 $objects = preg_split('/,/', $source_it->get($attr));
                 $uids = array();
@@ -88,7 +80,7 @@ class VersionList extends PMPageList
                     $uids[] = $this->getUidService()->getUidIconGlobal($ref_it, false);
 					$this->getUidService()->setBaseline('');
                 }
-                echo join(', ',$uids);
+                echo join(' ',$uids);
                 return;
 		}
 		
@@ -151,40 +143,36 @@ class VersionList extends PMPageList
 				case 'pm_Version':
 					if ( $attr == 'Deadlines' )
 					{
-						$start_date = $object_it->getStartDate();
-						$finish_date = $object_it->getFinishDate();
+						$start_date = $object_it->get('StartDate');
+						$finish_date = $object_it->get('FinishDate');
 						
 						if ( $methodology_it->HasStatistics() )
 						{
-							$estimated_start = $object_it->getDateFormat('EstimatedStartDate');
-							$estimated_finish = $object_it->getDateFormat('EstimatedFinishDate');
-							
-							if ( $start_date != '' || $finish_date != '' )
-							{
-								echo translate('По плану').':<br/>';
-								echo $start_date.'&nbsp;-&nbsp;'.$finish_date.'<br/><br/>';
-							}
+							$estimated_start = $object_it->get('EstimatedStartDate');
+							$estimated_finish = $object_it->get('EstimatedFinishDate');
 							
 							if ( $start_date != $estimated_start || $finish_date != $estimated_finish )
 							{
-								echo translate('Фактические').':<br/>';
-								echo $estimated_start.'&nbsp;-&nbsp;'.$estimated_finish;
-		
+                                echo translate('По плану').':<br/>';
+                                $this->drawDates($start_date,$finish_date);
+
+								echo '<br/>'.translate('Фактические').':<br/>';
+                                $this->drawDates($estimated_start,$estimated_finish);
+
 								$offset = $object_it->getFinishOffsetDays();
 								if ( $offset > 0 )
 								{
 									echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
 								}	
 							}
+							else {
+                                $this->drawDates($start_date,$finish_date);
+                            }
 						}
 						else if ( $start_date != '' || $finish_date != '' )
 						{
-							echo $start_date.'&nbsp;-&nbsp;'.$finish_date.'<br/><br/>';
+                            $this->drawDates($start_date,$finish_date);
 						}
-					}
-					else if ( $attr == 'Indexes' ) 
-					{
-						$this->drawIndex( $object_it );
 					}
 					elseif( $attr == 'EstimatedStartDate' || $attr == 'EstimatedFinishDate' )
 					{ 
@@ -205,27 +193,17 @@ class VersionList extends PMPageList
 						if ( $offset > 0 )
 						{
 							echo translate('По плану').':<br/>';
-							echo $object_it->getDateFormat('StartDate');
-							echo '&nbsp;-&nbsp;';
-							echo $object_it->getDateFormat('FinishDate');
-	
+                            $this->drawDates($object_it->get('StartDate'),$object_it->get('FinishDate')).'<br/>';
+
 							echo '<br/><br/>'.translate('Фактические').':<br/>';
-							echo $object_it->getDateFormat('EstimatedStartDate');
-							echo '&nbsp;-&nbsp;';
-							echo $object_it->getDateFormat('EstimatedFinishDate');
-	
+                            $this->drawDates($object_it->get('EstimatedStartDate'),$object_it->get('EstimatedFinishDate'));
+
 							echo '<br/><span style="color:red;">'.translate('Отклонение от графика').': '.$offset.' '.translate('дн.').'</span>';
 						}
 						else
 						{
-							echo $object_it->getDateFormat('StartDate');
-							echo '&nbsp;-&nbsp;';
-							echo $object_it->getDateFormat('FinishDate');
+                            $this->drawDates($object_it->get('StartDate'),$object_it->get('FinishDate'));
 						}
-					}
-					elseif ( $attr == 'Indexes' ) 
-					{
-						$this->drawIndex( $object_it );
 					}
 					elseif( $attr == 'EstimatedStartDate' || $attr == 'EstimatedFinishDate' )
 					{ 
@@ -239,7 +217,14 @@ class VersionList extends PMPageList
 			}
 		}
 	}
-	
+
+	protected function drawDates( $start, $finish )
+    {
+        echo getSession()->getLanguage()->getDateFormattedShort($start);
+        echo '&nbsp;:&nbsp;';
+        echo getSession()->getLanguage()->getDateFormattedShort($finish);
+    }
+
 	function drawBurndown( $object_it )
 	{
 		global $model_factory;
@@ -296,68 +281,6 @@ class VersionList extends PMPageList
 		}		
 	}
 
-	function drawIndex( $object_it )
-	{
-		global $model_factory;
-		
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
-		switch ( $object_it->object->getClassName() )
-		{
-			case 'pm_Version':
-				if ( !$methodology_it->HasVelocity() ) break;
-				
-				$velocity = round($object_it->getVelocity(), 1);
-				$estimation = $object_it->getTotalWorkload();
-				$strategy = $methodology_it->getEstimationStrategy();
-
-				echo '<div class="line">';
-					echo str_replace('%1', $velocity, $strategy->getVelocityText($object_it->object));
-				echo '</div>';
-
-				list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
-
-				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedIssues') > 0;
-				
-				echo '<div class="line">';
-					echo text(1020).': '.$strategy->getDimensionText(round($maximum, 1));
-				echo '</div>';
-				echo '<div class="line" style="'.($show_limit && $maximum > 0 && $estimation > $maximum ? 'color:red;' : '').'">';
-					echo text(1021).': '.$strategy->getDimensionText(round($estimation));
-				echo '</div>';
-				
-				break;
-				
-			case 'pm_Release':
-				$strategy = $methodology_it->getEstimationStrategy();
-				$velocity = round($object_it->getVelocity(), 0);
-				
-				echo '<div class="line">';
-					echo str_replace('%1', $velocity, $strategy->getVelocityText($object_it->object));
-				echo '</div>';
-				
-				list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimatedBurndownMetrics();
-				
-				$estimation = $object_it->getEstimation();
-				
-				if ( $estimation == '' ) 
-				{
-					$estimation = 0; 
-				}
-
-				$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedTasks') > 0;
-				
-				echo '<div class="line">';
-					echo text(1020).': '.$strategy->getDimensionText(round($maximum, 1));
-				echo '</div>';
-				echo '<div class="line" style="'.($show_limit && $estimation > $maximum ? 'color:red;' : '').'">';
-					echo text(1021).': '.$strategy->getDimensionText(round($estimation,0));
-				echo '</div>';
-				
-				break;
-		}
-	}
-	
 	function getReferencesListWidget( $object )
 	{
 		if ( $object instanceof Task ) {
@@ -526,9 +449,21 @@ class VersionList extends PMPageList
 		
 		return $fields;
 	}
-	
-	function _getGroupFields()
-	{
-		return array();
-	}
+
+	function getGroupDefault()
+    {
+        return '';
+    }
+
+    function render($view, $parms)
+    {
+        echo '<div class="hie-chart">';
+            $planChart = new PlanChart();
+            $planChart->setTable($this->getTable());
+            $planChart->retrieve();
+            $planChart->render($view, $parms);
+        echo '</div>';
+
+        parent::render($view, $parms);
+    }
 }

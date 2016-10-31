@@ -121,6 +121,7 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
  		$items = array (
 	 		getFactory()->getObject('pm_State'),
 	 		getFactory()->getObject('pm_Transition'),
+            getFactory()->getObject('ProjectRole'),
 	 		getFactory()->getObject('pm_TransitionRole'),
 	 		getFactory()->getObject('pm_TransitionAttribute'),
 	 		getFactory()->getObject('pm_TransitionPredicate'),

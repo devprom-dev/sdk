@@ -136,8 +136,7 @@ class FieldWYSIWYG extends Field
 			$content = preg_replace_callback(REGEX_SHRINK, array($this, 'shrinkLongUrl'), $content);
 			$content = TextUtils::breakLongWords($content);
 		}
-		
-		return $content;
+		return TextUtils::getValidHtml($content);
 	}
 	
 	function drawReadonly()

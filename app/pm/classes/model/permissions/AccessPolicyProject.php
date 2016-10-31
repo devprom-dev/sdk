@@ -190,7 +190,7 @@ class AccessPolicyProject extends AccessPolicyBase
  			{
 				if ( $role_id == ROLE_READONLY ) continue;
 
-				$access = $this->access_it->getAttributeAccess( $role_id, $object, $attribute_refname );
+                $access = $this->access_it->getAttributeAccess( $role_id, $object, $attribute_refname );
 				$access_map[$role_id] = $access > -1
 						? (($access == 1 && $action_kind == ACCESS_READ || $access == 2) ? 1 : 0)
 						: null;
@@ -218,6 +218,15 @@ class AccessPolicyProject extends AccessPolicyBase
  			if ( is_bool($access) ) return $access;
  		}
 
+        foreach( $this->getRoles() as $role_id ) {
+            if ( $role_id == ROLE_READONLY && $object instanceof WikiPage ) {
+                switch( $attribute_refname ) {
+                    case 'State':
+                    case 'TransitionComment':
+                        return $action_kind == ACCESS_READ || $action_kind == ACCESS_MODIFY;
+                }
+            }
+        }
 		return $this->getEntityAccess($action_kind, $object);
  	}
  	

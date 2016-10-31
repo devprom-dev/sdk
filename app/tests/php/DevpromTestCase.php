@@ -73,8 +73,6 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
         $resource_mock->expects($this->any())->method('getAll')->will( $this->returnValue($resource_mock->getEmptyIterator()) );
         
         $language = new Language();
-        $language->Initialize($resource_mock);
-        
         $session = new SessionBase($auth_factory, null, $language);
     }
     

@@ -65,4 +65,8 @@ class UpdateTable extends StaticPageTable
 
 		return $actions;
 	}
+
+	function getDefaultRowsOnPage() {
+        return 5;
+    }
 }

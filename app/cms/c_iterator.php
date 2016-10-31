@@ -29,8 +29,9 @@ class IteratorBase
 	
 	public function __sleep()
 	{
-		unset($this->object);
-		
+        if ( !is_array($this->rs) ) {
+            $this->setRowset( $this->getRowset() );
+        }
 		return array('rs', 'id_field');
 	}
 	
@@ -52,7 +53,7 @@ class IteratorBase
 	    $this->fetch();
 	}
 	
-	public function setObject( & $object )
+	public function setObject( $object )
 	{
 		$this->object = $object;
 	}
@@ -65,7 +66,7 @@ class IteratorBase
 	{
 		$this->pos = 0;
 		
-		if ( $this->count() > 0 && is_object($this->rs) ) {
+		if ( $this->count() > 0 && !is_array($this->rs) ) {
 			DAL::Instance()->Seek($this->rs, $this->pos);
 		}
 		
@@ -83,7 +84,7 @@ class IteratorBase
 	{
 		$this->pos = $pos;
 		
-		if ( is_object($this->rs) )
+		if ( !is_array($this->rs) )
 		{
 			if ( $this->count() > 0 ) {
 				DAL::Instance()->Seek($this->rs, $pos);
@@ -221,7 +222,7 @@ class IteratorBase
 	}
 
 	function getHtmlDecoded( $attribute ) {
-		return trim(html_entity_decode( $this->get_native($attribute), ENT_QUOTES | ENT_HTML401, APP_ENCODING ));
+		return \TextUtils::decodeHtml($this->get_native($attribute));
 	}
 
 	function setData( $data )
@@ -281,7 +282,7 @@ class IteratorBase
 		$this->rs = $rs;
 		$this->count = 0;
 		
-		if ( is_object($this->rs) ) {
+		if ( !is_array($this->rs) ) {
 		    $this->count = DAL::Instance()->RowsNum($this->rs);
 		}
 		else if( is_array($rs) ) {
@@ -321,7 +322,7 @@ class IteratorBase
 	
 	function fetch() 
 	{
-		if ( is_object($this->rs) ) {
+		if ( !is_array($this->rs) ) {
 			$this->data = DAL::Instance()->QueryArray($this->rs);
 			if ( is_bool($this->data) ) return false;
 			$this->data = array_map('stripslashes', $this->data);

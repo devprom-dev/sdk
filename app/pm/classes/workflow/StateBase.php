@@ -19,18 +19,6 @@ class StateBase extends Metaobject
  	{
  		parent::__construct('pm_State', new StateBaseRegistry($this));
  		$this->defaultsort = " OrderNum ASC ";
-
-		$this->setAttributeDescription('IsTerminal', text(2106));
- 		$this->setAttributeDescription('RelatedColor', text(1835));
- 		$this->setAttributeType('ReferenceName', 'varchar');
- 		
- 		$this->addAttributeGroup('ReferenceName', 'system');
- 		$this->addAttributeGroup('ObjectClass', 'system');
-
-		foreach( array('Description','OrderNum','ReferenceName') as $attribute ) {
-			$this->addAttributeGroup($attribute, 'additional');
-			$this->setAttributeRequired($attribute, false);
-		}
  	}
  	
  	function createIterator() 

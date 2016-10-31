@@ -7,5 +7,3 @@ include SERVER_ROOT_PATH.'admin/classes/BlackList.php';
 include SERVER_ROOT_PATH.'admin/classes/AdminChangeLog.php';
 include SERVER_ROOT_PATH.'admin/classes/templates/SystemTemplate.php';
 include SERVER_ROOT_PATH.'admin/classes/checkpoints/CheckpointSystem.php';
-include SERVER_ROOT_PATH.'pm/classes/issues/RequestLinkType.php';
-include SERVER_ROOT_PATH.'pm/classes/product/Importance.php';

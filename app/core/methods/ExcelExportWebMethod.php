@@ -6,7 +6,7 @@ class ExcelExportWebMethod extends ExportWebMethod
 {
  	function getCaption()
  	{
- 		return translate('Экспорт в Excel');
+ 		return text(2201);
  	}
  	
  	function url( $caption = '', $class = 'IteratorExportExcel', $parms = array() )

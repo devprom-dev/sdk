@@ -4,6 +4,7 @@ class SearchRules
 {
     static function getSearchItems( $text )
     {
+        $text = TextUtils::getAlphaNumericString($text);
         $stem = new Stem\LinguaStemRu();
         return array_map(
             function ($word) use ($stem) {

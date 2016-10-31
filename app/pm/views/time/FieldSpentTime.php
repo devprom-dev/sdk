@@ -86,5 +86,9 @@ class FieldSpentTime extends FieldForm
  		$form->setReadonly( $this->readOnly() );
  			
  		$form->draw( $view );
+
+        if ( is_object($object_it) ) {
+            echo '<input type="hidden" name="Fact" value="'.$object_it->get('Fact').'">';
+        }
 	}
 }

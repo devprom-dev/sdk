@@ -15,8 +15,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  	{
   		return array (
  			'all' => $this->getCaption().': '.translate('все'),
- 			'user' => translate('Пользовательские'),
- 			'system' => translate('Системные')
+ 			'Y' => translate('Пользовательские'),
+ 			'N' => translate('Системные')
  			);
 	}
 	

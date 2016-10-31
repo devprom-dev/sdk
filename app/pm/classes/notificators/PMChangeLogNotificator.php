@@ -228,14 +228,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 					
 				break;
 
-			case 'pm_TestPlanItem':
-				$plan_it = $object_it->getRef('TestPlan');
-				
-				parent::process( $plan_it, 'modified', 
-					$object_it->getDisplayName().' ('.$caption.')', $visibility + 1, $author_email );
-					
-				break;
-
 			case 'cms_Snapshot':
 				if ( $object_it instanceof SnapshotIterator )
 				{
@@ -366,7 +358,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			        case 'added':
 					    $page_it = $object_it->getRef('WikiPage');
 						$history_url = $page_it->getHistoryUrl();
-					    $content = '[url='.$history_url.' text='.translate('История изменений').']';
+					    $content = '[url='.$history_url.' text='.text(2238).']';
 					    
 					    parent::process( $page_it, 'modified', $content, $visibility, $author_email,
 								array('ObjectUrl' => $history_url.'&version='.$object_it->getId()) );
@@ -409,8 +401,6 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 	
 	function isAttributeVisible( $attribute_name, $object_it, $action )
 	{
-		global $project_it, $_REQUEST;
-		
 		switch ( $object_it->object->getClassName() )
 		{
 			case 'pm_Participant':
@@ -476,6 +466,9 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						return true;
 				}
 				break;
+
+            case 'pm_Build':
+                return parent::isAttributeVisible( $attribute_name, $object_it, $action );
 		}
 
 		switch ( $attribute_name )

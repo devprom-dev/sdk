@@ -18,7 +18,7 @@ class FieldIssueInverseTrace extends FieldIssueTrace
  	
  	function getForm( & $trace )
 	{
-		$form = new RequestTraceInverseFormEmbedded( $trace, 'ObjectId' );
+		$form = new RequestTraceInverseFormEmbedded( $trace, 'ObjectId', $this->getName() );
 		$form->showDeliveryDate( $this->show_delivery_date );
 		return $form;
 	}

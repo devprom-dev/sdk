@@ -6,7 +6,6 @@ use Devprom\Component\HttpKernel\Bundle\DevpromBundle;
 use Devprom\ApplicationBundle\Service\Mailer\MailerLogger;
 use Swift_Plugins_LoggerPlugin;
 
-include_once SERVER_ROOT_PATH."co/classes/COSession.php";
 include_once SERVER_ROOT_PATH.'core/methods/WebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/ProcessEmbeddedWebMethod.php';
 include_once SERVER_ROOT_PATH.'core/methods/DeleteEmbeddedWebMethod.php';
@@ -15,21 +14,6 @@ include_once SERVER_ROOT_PATH.'/core/c_command.php';
 
 class ApplicationBundle extends DevpromBundle
 {
-	protected function buildSession()
-	{
-		$session = new \COSession(null, null, null, $this->getCacheService());
-
- 		getFactory()->setAccessPolicy(null);
- 		
- 		$cache_service = getCacheService();
- 		$cache_service->setDefaultPath('usr-'.$session->getUserIt()->getId());
- 		
- 		// define access policy
- 		getFactory()->setAccessPolicy( new \CoAccessPolicy($cache_service) );
-		
-		return $session;
-	}
-	
 	public function boot()
     {
     	parent::boot();
@@ -45,7 +29,8 @@ class ApplicationBundle extends DevpromBundle
         if ( !class_exists($_REQUEST['method'], false) ) return false;
         
     	$method = new $_REQUEST['method'];
-		$method->exportHeaders();
+        FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+        $method->exportHeaders();
         $method->execute_request();
         
         return true;

@@ -1,5 +1,6 @@
 <?php
 $index = 0;
+$recent = 0;
 ?>
 <div class="short-menu-popover">
     <? foreach( $areas as $key => $area ) { ?>
@@ -16,8 +17,12 @@ $index = 0;
                 <? } ?>
             <? } ?>
         </div>
-        <? if ( ++$index % 3 == 0 ) { ?>
+        <? $recent++; ?>
+        <? if ( ++$index % 4 == 0 ) { $recent = 0; ?>
             <br/>
         <? } ?>
+    <? } ?>
+    <? for( $i = 0; $index > 4 && $i < 4 - $recent; $i++ ) { ?>
+        <div class="short-menu-area">&nbsp;</div>
     <? } ?>
 </div>

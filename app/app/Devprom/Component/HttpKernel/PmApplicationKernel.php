@@ -5,7 +5,6 @@
  * @author Vasiliy Pedak truvazia@gmail.com
  */
 namespace Devprom\Component\HttpKernel;
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,7 +68,6 @@ class PmApplicationKernel extends Kernel
     
     function initializeContainer()
     {
-        $lock = new \CacheLock();
         try {
             parent::initializeContainer();
         }

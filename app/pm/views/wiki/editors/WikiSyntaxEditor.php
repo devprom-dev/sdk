@@ -271,18 +271,4 @@ class WikiSyntaxEditor extends WikiEditorBase
  		echo '<tr><td class="wiki_sub" height=15 valign=middle>'.translate('Дополнительно').'</td></tr>';
  		echo '<tr><td style="padding-top:6px;"><a href="http://devprom.ru/docs#2474">'.text(1165).'</a></td></tr>';
  	}
- 	
- 	public function getExportActions( $object_it )
- 	{
- 		$actions = array();
- 		
-		$method = new WikiExportRtfWebMethod();
-		
-		$actions[] = array( 
-			'name' => $method->getCaption(), 
-			'url' => $method->url( $object_it )
-		);
- 		
-		return $actions;
- 	}
 }

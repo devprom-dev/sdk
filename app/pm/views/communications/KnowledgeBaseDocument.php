@@ -64,35 +64,37 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		return array('tag', 'search');
 	}
 	
-	function getTraceActions()
-	{
-		$actions = parent::getTraceActions();
-		
-	    $actions[] = array( 
-            'name' => text(1372),
-		    'url' => getSession()->getApplicationUrl().'knowledgebase/tree?view=list'
-        );
-	    
-		$actions[] = array( 
-            'name' => text(1373),
-		    'url' => getSession()->getApplicationUrl().'knowledgebase/tree?view=files'
-        );
-		
-		return $actions;
-	}
-	
 	function getActions()
 	{
-		$actions = parent::getActions();
+        $actions = array();
 
-		if ( !getSession()->getProjectIt()->IsPortfolio() ) {
-			$actions[] = array();
-			$actions[] = array(
-				'name' => translate('Импортировать'),
-				'url' => '?view=import&mode=xml&object=projectpage'
-			);
-		}
+        $actions[] = array(
+            'name' => text(1372),
+            'url' => getSession()->getApplicationUrl().'knowledgebase/tree?view=list'
+        );
+        $actions[] = array(
+            'name' => text(1373),
+            'url' => getFactory()->getObject('Module')->getExact('attachments')->getUrl('class=ProjectPage')
+        );
+        $actions[] = array();
+
+		$actions = array_merge($actions, parent::getActions());
+
+        $method = new ObjectCreateNewWebMethod($this->getObject());
+        if ( $method->hasAccess() )
+        {
+            $method->setRedirectUrl("''");
+            $actions['import'] = array(
+                'name' => translate('Импортировать'),
+                'url' => $method->getJSCall(array('view' => 'importdoc'), $this->getObject()->getDocumentName())
+            );
+            $actions[] = array();
+        }
 
 		return $actions;
 	}
+
+    function getDocumentsModuleIt() {
+        return getFactory()->getObject('Module')->getEmptyIterator();
+    }
 }

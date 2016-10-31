@@ -24,7 +24,7 @@ class ScriptsController extends Controller
     {
     	$response = new Response();
     	if ( $this->checkNotModified('js', $response) ) return $response; 
-    	
+
     	$service = new ScriptService();
     	$response->setContent($service->getCSSBody());
     	$response->headers->set('Content-Type', 'text/css');

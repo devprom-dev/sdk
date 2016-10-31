@@ -193,45 +193,34 @@ class CustomAttributeFinalForm extends PMPageForm
 		switch( $attr_name )
 		{
 			case 'EntityReferenceName':
-				
 				$field->setReadonly(true);
-
 				$field->setText( $this->getObject()->getEntityDisplayName(
-						$this->getFieldValue('EntityReferenceName'), $this->getFieldValue('ObjectKind')) 
+					$this->getFieldValue('EntityReferenceName'), $this->getFieldValue('ObjectKind'))
 				); 
-				
 				break;
 				
 			case 'AttributeType':
-				
 				$field->setReadonly(true);
-				
 				$type = new CustomAttributeType();
-		
 				$type_it = $type->getExact($this->getFieldValue('AttributeType'));
-
-				if ( $type_it->get('ReferenceName') == 'reference' )
-				{
+				if ( $type_it->get('ReferenceName') == 'reference' ) {
 					$field->setText(
-							$type_it->getDisplayName().': '.
-									getFactory()->getObject($this->getFieldValue('AttributeTypeClassName'))->getDisplayName()
+                        $type_it->getDisplayName().': '.
+                            getFactory()->getObject($this->getFieldValue('AttributeTypeClassName'))->getDisplayName()
 					);
 				}
-				
+				else {
+                    $field->setText($type_it->getDisplayName());
+                }
 				break;
 				
 			case 'OrderNum':
-				
 				$object_it = $this->getObjectIt();
-				
-				if ( !is_object($object_it) )
-				{
+				if ( !is_object($object_it) ) {
 					$ref = $model_factory->getObject( $this->getFieldValue('EntityReferenceName') );
-					
 					$field->setValue( $ref->getLatestOrderNum() + 10 );
 				}
-				
-				break;				
+				break;
 		}
 		
 		return $field;

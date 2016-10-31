@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
 
 class RunJobs extends Command
@@ -102,9 +101,8 @@ class RunJobs extends Command
 				*/
 
 				$model_factory = new ModelFactoryExtended($plugins);
-				
-				$session = new COSession();
-				
+				SessionBuilderCommon::Instance()->openSession();
+
 				$_REQUEST['job'] = $job_it->getId();
 				 
  				$command = '';

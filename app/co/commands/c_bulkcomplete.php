@@ -2,7 +2,6 @@
  
 include_once SERVER_ROOT_PATH."cms/c_form_embedded.php";
 include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 
  ////////////////////////////////////////////////////////////////////////////////////////////////////
  class BulkComplete extends CommandForm
@@ -12,26 +11,21 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
  	function getObjectIt()
  	{
  		if ( is_object($this->object_it) ) return $this->object_it;
- 		
-		$object = getFactory()->getObject( $_REQUEST['object'] );
-		
-		if ( !is_a($object, 'Metaobject') ) $this->replyError( text(1061) );
-		
-		$this->object_it = $object->getExact( preg_split('/-/', trim($_REQUEST['ids'], '-')) );
-		
-		return $this->object_it;
+		return $this->object_it = $this->buildObject();
  	}
+
+ 	function buildObject() {
+        $object = getFactory()->getObject( $_REQUEST['object'] );
+        if ( !is_a($object, 'Metaobject') ) $this->replyError( text(1061) );
+        return $object->getExact( preg_split('/-/', trim($_REQUEST['ids'], '-')) );
+    }
  	
  	function validate()
  	{
- 	    global $model_factory;
- 	    
 		$this->checkRequired( array('ids', 'object', 'operation') );
 		
 		$object_it = $this->getObjectIt();
 
-		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) $this->replyError( text(1062) );
-				
 		$data = $this->getOperationData( $object_it );
 		
 		if ( $data['operation'] == '' ) throw new Exception('Unknown operation type on bulk update'); 
@@ -62,7 +56,7 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 			$attribute = array_shift($attributes);
 		    
 		    $data['attributes'] = array (
-				$attribute => IteratorBase::utf8towin($_REQUEST[$attribute])
+				$attribute => $_REQUEST[$attribute]
 		    );
 		}
 
@@ -85,9 +79,8 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 			
 			$transition_it = getFactory()->getObject('Transition')->getExact( trim($data['parameter']) );
 			
-			if ( $transition_it->get('IsReasonRequired') == 'Y' )
-			{
-				$data['attributes']['TransitionComment'] = IteratorBase::utf8towin($_REQUEST['TransitionComment']);
+			if ( $transition_it->get('IsReasonRequired') != TransitionReasonTypeRegistry::None ) {
+				$data['attributes']['TransitionComment'] = $_REQUEST['TransitionComment'];
    			}
 		}
 		
@@ -115,7 +108,9 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 		switch ( $data['operation'] )
 		{
 		    case 'Attribute':
-		        $key = array();
+                if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) $this->replyError( text(1062) );
+
+                $key = array();
 				$attribute = array_pop(array_keys($data['attributes']));
 
 				if ( $attribute == 'Project' && $object_it->object instanceof WikiPage ) {
@@ -129,6 +124,8 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
     			{
     				try {
 	    		        $this->processEmbeddedForms( $object_it, $key );
+                        $mapper = new ModelDataTypeMapper();
+                        $mapper->map( $object_it->object, $data['attributes'] );
 	    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']);
 						$processedIds[] = $object_it->getId();
     				}
@@ -166,7 +163,6 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 		        
 		    case 'Transition':
 		    	$transition_it = getFactory()->getObject('Transition')->getExact($data['parameter']);
-		    	$target_state = $transition_it->getRef('TargetState')->get('ReferenceName');
 
 		    	$key = array();
 				while ( !$object_it->end() )
@@ -176,6 +172,9 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
     					
 	    				ob_start();
 	    				$method = new TransitionStateMethod($transition_it, $object_it);
+                        if ( !$method->hasAccess() ) {
+                            throw new \Exception($method->getReasonHasNoAccess());
+                        }
 	    				$method->execute( 
 								$transition_it->getId(), 
 								$object_it->getId(), 
@@ -228,16 +227,22 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 
     			try {
 	    			$method = new $class_name( $object_it );
-	    				
-	   				// as standalone the method may to echo some text 
-	   				ob_start();
-	    				
-	   				$method->execute_request();
-	   				if ( strpos($method->getRedirectUrl(), '/') !== false )
-	   				{
-	   					$_REQUEST['redirect'] = $method->getRedirectUrl();
-	   				}
-	   				ob_end_clean();
+                    if ( !$method->hasAccess() ) throw new Exception(text(1062));
+                    FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+
+					if ( $method instanceof BulkDeleteWebMethod ) {
+						$method->execute_request();
+					}
+					else {
+						// as standalone the method may to echo some text
+						ob_start();
+
+						$method->execute_request();
+						if ( strpos($method->getRedirectUrl(), '/') !== false ) {
+							$_REQUEST['redirect'] = $method->getRedirectUrl();
+						}
+						ob_end_clean();
+					}
     			}
 				catch( Exception $e ) {
    					$except_items[] = array (
@@ -281,11 +286,11 @@ include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
 		
 		if ( $_REQUEST['redirect'] != '' )
 		{
-			$this->replyRedirect( $_REQUEST['redirect'], text(2130) );
+			$this->replyRedirect( $_REQUEST['redirect'] );
 		}
 		else
 		{
-			$this->replySuccess( text(2130) );
+			$this->replySuccess();
 		}
 	}
 	

@@ -46,7 +46,16 @@ class PageTable extends ViewTable
  	{
  	    $this->getListRef()->setIterator(null);
  	}
- 	
+
+	function getListIterator()
+	{
+		$it = parent::getListIterator();
+		if ( $this->getMode() == 'chart' ) {
+			return $this->getListRef()->buildDataIterator();
+		}
+		return $it;
+	}
+
  	function setPage( & $page )
  	{
  	    $this->page = $page;
@@ -119,7 +128,7 @@ class PageTable extends ViewTable
  	
 	function buildFilters()
 	{
-	    if ( count($this->filters) > 0 ) return;
+	    if ( count($this->filters) > 0 ) return $this->filters;
 	
 	    $this->filters = $this->getFilters();
 	
@@ -131,6 +140,8 @@ class PageTable extends ViewTable
 	    {
 	        $plugin->interceptMethodTableGetFilters( $this, $this->filters );
 	    }
+
+	    return $this->filters;
 	}
  	
 	function getFilterValues()
@@ -205,7 +216,7 @@ class PageTable extends ViewTable
 		$values['color'] = $this->getDefaultColorScheme();
 		$values['infosections'] = join(',', $this->getSectionsDefault());
 
-		foreach( $this->getFilters() as $filter ) {
+		foreach( $this->filters as $filter ) {
 			if ( $filter instanceof FilterWebMethod && $filter->getDefaultValue() != '' ) {
 				$values[$filter->getValueParm()] = $filter->getDefaultValue();
 			}
@@ -297,7 +308,11 @@ class PageTable extends ViewTable
 	{
 		return array();
 	}
-	
+
+	function getExportActions()
+	{
+	}
+
 	function getDeleteActions()
 	{
 		if( !$this->IsNeedToDelete() ) return array();
@@ -346,10 +361,9 @@ class PageTable extends ViewTable
 		$actions = array();
 		
 		$list = $this->getListRef();
-		
 		if ( !is_object($list) ) return $actions;
-		
-		$object = $this->getObject();
+
+		$list->setupColumns();
 
 		// filters
 		$filters = array();
@@ -639,14 +653,6 @@ class PageTable extends ViewTable
 	
 	function drawFooter()
 	{
-		$list = $this->getListRef();
-		
-		if ( !is_object($list) ) return;
-		
-		if ( is_a($list, 'PageChart') || is_a($list, 'PageBoard') )
-		{
-			return;
-		}
 	}
 	
 	function getDescription()
@@ -656,36 +662,15 @@ class PageTable extends ViewTable
 	
 	function getRenderParms( $parms )
 	{
-		$view_filter = $this->getViewFilter();
-	
-		if ( is_object($view_filter) )
-		{
-			$view_filter->setFilter( $this->getFiltersName() );
-		}
-
-		if ( $_REQUEST['view'] != '' )
-		{
-			$list = $this->getList( $_REQUEST['view'] );
-            $this->setList( $list );
-		}
-    
-	    $list = $this->getListRef();
-
-        if ( is_object($list) )
-        {
-            $list->setupColumns();
-            
-            $list->retrieve();
-        }
+		$this->getListIterator();
 
 		$parms = array_merge($parms, array(
 			'table' => $this,
 			'title' => $parms['navigation_title'] == $parms['title'] ? '' : $parms['title'],
-            'list' => $list
+            'list' => $this->getListRef()
 		));
 
-		if ( $this->getPage()->showFullPage() )
-		{
+		if ( $this->getPage()->showFullPage() ) {
 			$parms = array_merge($parms, $this->getFullPageRenderParms($parms));
 		}
 		
@@ -867,7 +852,20 @@ class PageTable extends ViewTable
 	    }
 	    
 	    $actions = $this->getActions();
-	    
+
+		$export_actions = $this->getExportActions();
+		if ( count($export_actions) > 1 ) {
+			$actions[] = array();
+			$actions[] = array(
+				'name' => translate('Экспорт'),
+				'items' => $export_actions,
+				'uid' => 'export'
+			);
+		}
+		if ( count($export_actions) == 1 ) {
+			$actions = array_merge($actions, $export_actions);
+		}
+
 		$plugins = getFactory()->getPluginsManager();
 	    
 		$plugins_interceptors = is_object($plugins) 
@@ -888,7 +886,7 @@ class PageTable extends ViewTable
 	    }
 
 	    if ( is_array($parms['sections']) ) {
-	        $values = $this->getFilterValues();
+	        $values = $filter_values;
     	    $sectionnames = preg_split('/,/', $values['infosections']);
     		foreach ( $parms['sections'] as $key => $section ) {
     			if ( !in_array($key, $sectionnames) ) unset($parms['sections'][$key]);
@@ -907,11 +905,8 @@ class PageTable extends ViewTable
 
 	function buildSaveSettingsAlert()
 	{
-		$personal_script = "javascript: $('li[uid=personal-persist]>a').addClass('checked'); window.location = $('li[uid=personal-persist]>a[href]').length > 0 ? $('li[uid=personal-persist]>a').attr('href') : $('li[uid=personal-persist]>a').attr('onkeydown')";
-
-		return str_replace('%2', getFactory()->getObject('Module')->getExact('profile')->get('Url'), 
-							str_replace('%1', $personal_script, text(1318))
-				); 
+		$personal_script = "javascript:saveReportSettings();";
+		return str_replace('%1', $personal_script, text(1318));
 	}
 	
 	function getTemplate()
@@ -924,9 +919,14 @@ class PageTable extends ViewTable
 		$parms = $this->getRenderParms($parms);
 
 		$this->view = $view;
-		
+
+		$this->touch();
 		echo $view->render( $this->getTemplate(), $parms );
 
 		$this->view = null;
+	}
+
+	function touch() {
+		FeatureTouch::Instance()->touch($this->getPage()->getModule());
 	}
 }

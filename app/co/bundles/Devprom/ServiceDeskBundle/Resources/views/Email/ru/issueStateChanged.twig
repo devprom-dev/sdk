@@ -1,14 +1,13 @@
 <p>Здрaвcтвуйте!</p>
-<p>Ваша заявка "<a href="{{ issueLink }}">{{ issue.caption }}</a>" изменила состояние:</p>
+<p>Заявка "<a href="{{ issueLink }}">{{ issue.caption }}</a>" изменила состояние:</p>
 {{ changes | unescapeHtml | raw }}
+{% if version != '' %}
+    <p><b>Выполнено в версии:</b>{{ version | unescapeHtml }}</p>
+{% endif %}
 <br/>
 {% if comment != '' %}
     <p><b>Комментарий:</b></p>
     <blockquote>{{ comment | unescapeHtml | raw  }}</blockquote>
     <br/>
 {% endif %}
-{% if version != '' %}
-    <p><b>Выполнено в версии:</b>{{ version | unescapeHtml }}</p>
-{% endif %}
 <hr>
-<p>Вы можете просмотреть детали заявки и оставить свои комментарии по ссылке: <a href="{{ issueLink }}">{{ issueLink }}</a></p>

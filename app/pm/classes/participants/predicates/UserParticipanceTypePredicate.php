@@ -24,7 +24,7 @@ class UserParticipanceTypePredicate extends FilterPredicate
  	    
  	    if ( in_array('linked', $filter) )
  	    {
-     	    $vpds = array_merge( $vpds, getSession()->getProjectIt()->getRef('LinkedProject')->fieldToArray('VPD') );
+     	    $vpds = array_merge( $vpds, getSession()->getLinkedIt()->fieldToArray('VPD') );
  	    } 
  	    
  	    if ( count($vpds) < 1 ) return " AND 1 = 2 ";

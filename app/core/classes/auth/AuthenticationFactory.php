@@ -13,8 +13,16 @@ class AuthenticationFactory
  	{
  	    return false;
  	}
- 	
- 	// to use authentication password is required to be stored in the database  
+
+ 	function __sleep() {
+        return array();
+    }
+
+    function __wakeup() {
+        $this->setUser(null);
+    }
+
+    // to use authentication password is required to be stored in the database
  	function credentialsRequired()
  	{
  	    return true;
@@ -53,7 +61,7 @@ class AuthenticationFactory
  	
  	function getToken()
  	{
- 		return md5($this->getUser().EnvironmentSettings::getServerSalt());
+ 		return md5($this->getUser()->getId().EnvironmentSettings::getServerSalt());
  	}
 
  	function setUser( $user )

@@ -9,9 +9,9 @@ class Watcher extends Metaobject
 {
  	var $object_it, $size;
  	
- 	function Watcher( $object_it = null ) 
+ 	function Watcher( $object_it = null, ObjectRegistry $registry = null )
  	{
- 		parent::Metaobject('pm_Watcher', new WatcherRegistry($this));
+ 		parent::Metaobject('pm_Watcher', is_object($registry) ? $registry : new WatcherRegistry($this));
  		
  		$this->setAttributeType('SystemUser', 'REF_ProjectUserId');
         $this->addAttributeGroup('SystemUser', 'skip-mapper');

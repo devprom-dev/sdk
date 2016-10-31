@@ -8,7 +8,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
     padding: 6px 10px;
 }
 
-body
+body.cke_editable
 {
 	/* Text color */
 	color: #333;
@@ -22,12 +22,16 @@ body
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-p
+.cke_contents_ltr p
 {
 	font-size: 100%;
 	font-weight: normal;
 	margin: 0;
 	padding: 0;
+}
+.cke_contents_ltr table {
+	border-collapse: collapse;
+	width: 100%;
 }
 
 blockquote

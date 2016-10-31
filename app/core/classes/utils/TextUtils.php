@@ -8,13 +8,13 @@ class TextUtils
                 return mb_strlen($line) > $maxLength && strpos($line, 'src="') === false && strpos($line, 'href="') === false
                     ? join('<', array_map(
                         function($line) use ($maxLength) {
-                            return TextUtils::mb_wordwrap($line, $maxLength, " ", true);
+                            return TextUtils::mb_wordwrap($line, $maxLength, "<wbr/>", true);
                         },
                         preg_split('/</u', $line)
                       ))
                     : $line;
             },
-            preg_split('/\s+/u', $content)
+            preg_split('/\040+/u', $content)
         ));
     }
 
@@ -69,5 +69,64 @@ class TextUtils
 
     public static function stripAnyTags( $text ) {
         return strip_tags(self::removeHtmlEntities($text));
+    }
+
+    public static function getValidHtml( $body )
+    {
+        $text = preg_replace('/charset\s*=\s*[^"]+/i', 'charset=utf-8', $body);
+        if ( mb_stripos($text, '<body>') === false ) {
+            $text = '<body>'.$text.'</body>';
+        }
+        if ( mb_stripos($text, 'charset') === false ) {
+            $text = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.$text;
+        }
+
+        $was_state = libxml_use_internal_errors(true);
+        $doc = new \DOMDocument("1.0", APP_ENCODING);
+        if ( $doc->loadHTML($text) ) {
+            $bodyElement = $doc->getElementsByTagName('body');
+            if ( $bodyElement->length > 0 ) {
+                $text = $doc->saveHTML($bodyElement->item(0));
+                $body = preg_replace(
+                    array(
+                        '/<\/?body>/',
+                        '/<style>/',
+                        '/<\/style>/'
+                    ),
+                    array (
+                        '',
+                        '<styleSkipped>',
+                        '</styleSkipped>'
+                    ), $text);
+            }
+        }
+        libxml_clear_errors();
+        libxml_use_internal_errors($was_state);
+
+        return $body;
+    }
+
+    public function EscapeShellArgument( $text ) {
+        return preg_replace('/`/','\\`',trim(escapeshellarg($text),'"\''));
+    }
+
+    public function getXmlString( $text ) {
+        return htmlentities(
+            preg_replace("/[^\\x{0009}\\x{000A}\\x{000D}\\x{0020}-\\x{D7FF}\\x{E000}-\\x{FFFD}]/u", "",
+                mb_convert_encoding(
+                    $text, APP_ENCODING, APP_ENCODING
+                ) // remove non-utf characters
+            ), // remove non-xml characters
+            ENT_XML1, APP_ENCODING, false
+        ); // escape allowed UTF-characters
+    }
+
+    public function decodeHtml( $text ) {
+        return trim(html_entity_decode( $text, ENT_QUOTES | ENT_HTML401, APP_ENCODING ));
+    }
+
+    public function getAlphaNumericString( $text ) {
+        $text = preg_replace( "/[^\p{L}|\p{N}\-]+/u", " ", $text );
+        return preg_replace( "/[\p{Z}]{2,}/u", " ", $text );
     }
 }

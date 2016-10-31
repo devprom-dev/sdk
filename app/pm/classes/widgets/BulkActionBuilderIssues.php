@@ -9,8 +9,8 @@ class BulkActionBuilderIssues extends BulkActionBuilder
  		$object = $registry->getObject()->getObject();
  	 	if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
  		
- 		$registry->addCustomAction(text(861), 'Method:ModifyRequestWebMethod:Tag');
- 		$registry->addCustomAction(text(862), 'Method:ModifyRequestWebMethod:RemoveTag');
+ 		$registry->addCustomAction(text(861), 'Method:SetTagsRequestWebMethod:Tag');
+ 		$registry->addCustomAction(text(862), 'Method:SetTagsRequestWebMethod:RemoveTag');
  		
 		$method = new DuplicateIssuesWebMethod();
 		if ( $method->hasAccess() ) $registry->addCustomAction(text(867), $method->getMethodName());

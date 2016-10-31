@@ -4,7 +4,7 @@ class CommentBaseIterator extends OrderedIterator
 {
  	function getPlainText( $attr )
  	{
-		$totext = new \Html2Text\Html2Text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, APP_ENCODING) );
+		$totext = new \Html2Text\Html2Text( html_entity_decode($this->get_native($attr), ENT_QUOTES | ENT_HTML401, APP_ENCODING), array('width'=>0) );
 		return $totext->getText();
  	}
  	

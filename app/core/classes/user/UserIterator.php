@@ -2,7 +2,13 @@
 
 class UserIterator extends OrderedIterator
 {
- 	function get( $attribute )
+    function __wakeup()
+    {
+        parent::__wakeup();
+        $this->setObject( new User );
+    }
+
+    function get( $attribute )
  	{
  		switch ( $attribute )
  		{
@@ -135,28 +141,6 @@ class UserIterator extends OrderedIterator
 	 	}
 	}
 	
-	function deleteRole( $role_id )
-	{
-	 	$role_it = getFactory()->getObject('co_UserRole')->getByRefArray(
-	 		array( 'SystemUser' => $this->getId(),
-	 			   'CommunityRole' => $role_id ) );
-	 	
-	 	if ( getFactory()->getAccessPolicy()->can_delete($role_it) ) return;
-	 	
- 		$role->delete($role_it->getId());   
-
-	 	switch ( $role_id )
-	 	{
-	 		case 2:
-				$participance_it = getFactory()->getObject('co_ProjectParticipant')->getByRefArray(
-			 		array( 'SystemUser' => $this->getId() )
-			 	);
-	 			
-	 			$participance->delete( $participance_it->getId() );
-	 			break;
-	 	}
-	}
-
 	function getProjectParticipanceRoleIt()
 	{
 		$participance = $this->object->

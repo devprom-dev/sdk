@@ -4,7 +4,6 @@ include ('../common.php');
 include ('nusoap/lib/nusoap.php');
 include ('classes/SoapService.php');
 include ('classes/SOAPSession.php');
-include_once SERVER_ROOT_PATH."core/classes/PluginsFactory.php";
 
 $cache_service = getCacheService();
 $model_factory = new ModelFactoryProject(

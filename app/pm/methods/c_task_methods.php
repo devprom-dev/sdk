@@ -13,45 +13,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	}
  }
 
- ///////////////////////////////////////////////////////////////////////////////////////
- class MoveTaskWebMethod extends TaskWebMethod
- {
- 	var $release_it;
- 	
- 	function MoveTaskWebMethod( $release_it = null )
- 	{
- 		$this->release_it = $release_it;
- 		
- 		parent::TaskWebMethod();
- 	}
- 	
-	function getCaption() 
-	{
-		return translate('Перенести в итерацию').' '.
-			$this->release_it->getDisplayName();
-	}
-
- 	function execute_request()
- 	{
- 		global $_REQUEST;
-	 	if($_REQUEST['Task'] != '' && $_REQUEST['Release'] != '') {
-	 		$this->execute($_REQUEST['Task'], $_REQUEST['Release']);
-	 	}
- 	}
- 	
- 	function execute( $task_id, $release_id )
- 	{
- 		$task = getFactory()->getObject('pm_Task');
- 		$task_it = $task->getExact($task_id);
- 		
- 		if ( getFactory()->getAccessPolicy()->can_modify($task_it) )
- 		{
- 			$task->modify_parms($task_it->getId(), array( 'Release' => $release_id ));
- 		}
- 	}
- }
- 
- 
  //////////////////////////////////////////////////////////////////////////////////////
  class ViewTaskWebMethod extends FilterWebMethod
  {

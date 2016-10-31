@@ -59,11 +59,12 @@
  {
  	$metrics_type = " AND t.TaskType IS NULL ";
  }
- 
+
+ $methodology_it = $release_it->getRef('Project')->getMethodologyIt();
  $release_it->storeMetricsSnapshot();
  
  $sql = "SELECT TO_DAYS(r.FinishDate) - TO_DAYS(r.StartDate) + 1 Duration," .
- 		"       t.Workload, t.PlannedWorkload, t.SnapshotDays, " .
+ 		"       t.Workload, t.PlannedWorkload, t.SnapshotDays, t.PlannedEstimation, t.Estimation, " .
  		"       TO_DAYS(r.StartDate) StartDays, " .
  		"	    TO_DAYS(NOW()) - TO_DAYS(r.StartDate) OffsetDays, " .
  	    "		r.StartDate, ".
@@ -78,12 +79,25 @@
  $metrics_it = $metrics->createSQLIterator($sql);
  
  $duration = min($metrics_it->get('Duration') > 0 ? $metrics_it->get('Duration') : $release_it->getCapacity(), 365);
- 
- $capacity = $metrics_it->get('PlannedWorkload') > 0 
- 	? $metrics_it->get('PlannedWorkload') : $release_it->getPlannedTotalWorkload();
- 	
- $workload = $metrics_it->get('Workload') > 0 
- 	? $metrics_it->get('Workload') : $release_it->getTotalWorkload(); 
+
+if ( $methodology_it->RequestEstimationUsed() ) {
+	$capacity = $metrics_it->get('PlannedEstimation') > 0
+		? $metrics_it->get('PlannedEstimation') : $release_it->getEstimation();
+
+	$workload = $metrics_it->get('Estimation') > 0
+		? $metrics_it->get('Estimation') : $release_it->getLeftEstimation();
+	$plannedField = 'PlannedEstimation';
+	$workloadField = 'Estimation';
+}
+else {
+	$capacity = $metrics_it->get('PlannedWorkload') > 0
+		? $metrics_it->get('PlannedWorkload') : $release_it->getPlannedTotalWorkload();
+
+	$workload = $metrics_it->get('Workload') > 0
+		? $metrics_it->get('Workload') : $release_it->getTotalWorkload();
+	$plannedField = 'PlannedWorkload';
+	$workloadField = 'Workload';
+}
 
  $chartOffset = max(0, $metrics_it->get('SnapshotDays') - $metrics_it->get('StartDays'));
  $start_date = date(strftime($metrics_it->get('StartDate')));
@@ -131,7 +145,9 @@
  $y4_values = array();
  
  $sql = " SELECT t.SnapshotDays, MAX(t.Workload) Workload, " .
- 		"		 MAX(t.PlannedWorkload) PlannedWorkload " .
+ 		"		 MAX(t.PlannedWorkload) PlannedWorkload, " .
+	 	"		 MAX(t.PlannedEstimation) PlannedEstimation, " .
+	 	"		 MAX(t.Estimation) Estimation " .
  		"   FROM pm_ReleaseMetrics t " .
  		"  WHERE t.Release = " .$release_it->getId().
  		$metrics_type.
@@ -156,8 +172,8 @@
 	 
 	 while ( !$days_it->end() )
 	 {
-		array_push($y2_values, $days_it->get('Workload'));
-		array_push($y4_values, $days_it->get('PlannedWorkload'));
+		array_push($y2_values, $days_it->get($workloadField));
+		array_push($y4_values, $days_it->get($plannedField));
 	
 		array_push($x2_values, $k + $days);
 	
@@ -192,7 +208,7 @@
 		
 	 	while( $approx_workload > 0 && $dg < 365 )
 		{
-		 	$approx_workload = max($days_it->get('Workload') 
+		 	$approx_workload = max($days_it->get($workloadField)
 		 		- $dg * $degradation, 0);
 		 	
 			if ( $approx_workload < 0 ) break;

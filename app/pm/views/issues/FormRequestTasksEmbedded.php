@@ -8,12 +8,17 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 	
 	private $terminal_states = array();
 	private $hidden_tasks = 0;
+    private $releaseId = '';
 	
  	protected function extendModel()
  	{
  		$this->terminal_states = $this->getObject()->getTerminalStates();
  	}
-	
+
+ 	function setRelease( $value ) {
+ 	    $this->releaseId = $value;
+    }
+
 	function IsAttributeVisible( $attribute )
  	{
  		switch ( $attribute )
@@ -44,16 +49,33 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
  		}
  		return parent::getItemVisibility( $object_it );
  	}
- 	
+
+    function getFieldValue( $attr )
+    {
+        $value = parent::getFieldValue( $attr );
+        switch( $attr ) {
+            case 'Release':
+                if ( $value != '' ) return $value;
+                return getFactory()->getObject('IterationActual')->getRegistry()->Query(
+                        array (
+                            new FilterAttributePredicate('Version', $this->releaseId),
+                            new FilterVpdPredicate()
+                        )
+                    )->getId();
+            default:
+                return $value;
+        }
+    }
+
  	function createField( $attr )
  	{
  	    switch ( $attr )
  	    {
  	        case 'Release':
- 	            $object = getFactory()->getObject('Iteration');
- 	            $object->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
+ 	            $object = getFactory()->getObject('IterationActual');
+                $object->addFilter( new FilterAttributePredicate('Version', $this->releaseId) );
 				return new FieldDictionary( $object );
- 	             	
+
  	        default:
  	            return parent::createField( $attr );
  	    }
@@ -67,25 +89,30 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 	function getTaskActions( $object_it )
 	{
 		$actions = array();
-		
+
+        if ( $_REQUEST['formonly'] != '' ) {
+            $actions[] = array (
+                'name' => translate('Открыть'),
+                'url' => $object_it->getViewUrl(),
+                'target' => defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'
+            );
+            $actions[] = array();
+            return $actions;
+        }
+
 		$todo = ($_REQUEST['formonly'] != '' ? 'donothing' : 'function() { window.location.reload(); }');
-		$url = ($_REQUEST['formonly'] != '' ? 'click' : 'url');
-		
+
 		$method = new ObjectModifyWebMethod($object_it);
-		
 		$method->setRedirectUrl($todo);
-		
 		$actions[] = array (
 				'name' => translate('Изменить'),
 				'url' => $method->getJSCall()
 		);
 		
 		$state_it = $object_it->getStateIt();
-		
 		$transition_it = $state_it->getTransitionIt();
 
 		$need_separator = true;
-		
 		while ( !$transition_it->end() )
 		{
 			$method = new TransitionStateMethod( $transition_it, $object_it );
@@ -102,7 +129,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 				$method->setRedirectUrl($todo);
 				
 				$actions[] = array( 
-					$url => $method->getJSCall(), 
+					'url' => $method->getJSCall(),
 					'name' => $method->getCaption()
 				);
 			}

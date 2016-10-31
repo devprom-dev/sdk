@@ -50,9 +50,6 @@ class MethodologyForm extends PMPageForm
     {
         switch ( $name )
         {
-            case 'IsPlanningUsed':
-                return text(63);
-            
             case 'IsFixedRelease':
 
                 $estimation = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();

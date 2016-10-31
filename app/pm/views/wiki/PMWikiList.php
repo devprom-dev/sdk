@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageDocumentGroupPersister.php";
 
 class PMWikiList extends PMPageList
 {
@@ -8,6 +9,7 @@ class PMWikiList extends PMPageList
  	
 	function retrieve()
 	{
+	    $this->getObject()->addPersister( new WikiPageDocumentGroupPersister() );
 		if ( $this->displayContent ) {
 			$this->getObject()->setRegistry( new WikiPageRegistryContent($this->getObject()) );
 		}
@@ -39,7 +41,12 @@ class PMWikiList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-				$title = $object_it->getDisplayName();
+                if ( $this->displayContent ) {
+                    $title = $object_it->getHtmlDecoded('CaptionLong');
+                }
+                else {
+                    $title = $object_it->getDisplayName();
+                }
 				if ( $object_it->get('BrokenTraces') != "" ) {
 					$title = $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php',
 						array (
@@ -49,20 +56,20 @@ class PMWikiList extends PMPageList
 					).$title;
 				}
 				if ( $this->displayContent ) {
-					echo '<h5 class="title-cell bs">'.$title.'</h5>';
+					echo '<h5 class="bs">'.$title.'</h5>';
 				}
 				else {
 					echo $title;
 				}
-
 				if ( $this->displayContent && trim($object_it->get('Content')," \r\n") != '' ) {
 					$field = new FieldWYSIWYG($object_it->get('ContentEditor'));
 					$field->setValue($object_it->get('Content'));
 					$field->setObjectIt($object_it);
 					$field->setSearchText($this->searchText);
-					echo $field->getText(true);
+                    echo '<div class="reset wysiwyg">';
+					    echo $field->getText(true);
+                    echo '</div>';
 				}
-
 				break;
 				
 			case 'Workflow':
@@ -105,24 +112,8 @@ class PMWikiList extends PMPageList
 	{
 		switch ( $entity_it->object->getClassName() )
 		{
-			case 'WikiPage':
-				echo '<span class="tracing-ref">';
-					if ( $entity_it->get('BrokenTraces') != "" ) {
-						echo $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php', 
-							array (
-								'id' => $entity_it->getId(),
-								'url' => getSession()->getApplicationUrl($entity_it)
-							)
-						);
-					}
-					parent::drawRefCell( $entity_it, $object_it, $attr );
-				echo '</span>';
-				break;
-				
 		    case 'WikiPageFile':
-		        
 		        $files = array();
-		        
 		        while( !$entity_it->end() )
 		        {
 		            $files[] = array (
@@ -135,7 +126,10 @@ class PMWikiList extends PMPageList
 		            $entity_it->moveNext();
 		        }
 
-		        echo $this->getTable()->getView()->render('core/Attachments.php', array( 'files' => $files ));
+		        echo $this->getTable()->getView()->render('core/Attachments.php', array(
+		            'files' => $files,
+                    'random' => $entity_it->getId()
+                ));
 		        
 		        break;
 				
@@ -157,7 +151,7 @@ class PMWikiList extends PMPageList
 			parent::getGroupFields(),
 			$this->getObject()->getAttributesByGroup('source-attribute'),
 		    array (
-				'Watchers', 'Attachments', 'ParentPage'
+				'Watchers', 'Attachments'
 			)
 		);
 
@@ -208,6 +202,8 @@ class PMWikiList extends PMPageList
 
 	function getRenderParms()
 	{
+        $parms = parent::getRenderParms();
+
 		$values = $this->getFilterValues();
 
 		if ( in_array($values['search'], array('','all','none')) ) {
@@ -216,7 +212,6 @@ class PMWikiList extends PMPageList
 		$this->searchText = $values['search'];
 		$this->displayContent = !in_array($this->searchText, array('','all','hide')) || parent::getColumnVisibility('Content');
 
-		$parms = parent::getRenderParms();
 		return array_merge( $parms,
 			array (
 				'table_class_name' => $this->displayContent ? 'table wishes-table' : $parms['table_class_name']

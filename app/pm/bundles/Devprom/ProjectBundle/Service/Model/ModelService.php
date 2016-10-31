@@ -6,16 +6,18 @@ include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.ph
 
 class ModelService
 {
-	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array() )
+	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array(), $uidService = null )
 	{
 		$this->validator_service = $validator_serivce;
 		$this->mapping_service = $mapping_service;
 		$this->filter_resolver = $filter_resolver;
+        $this->uidService = is_object($uidService) ? $uidService : new \ObjectUID();
 	}
 	
 	public function set( $entity, $data, $id = '' )
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
+        if ( count($data) < 1 ) return array();
 
 		foreach( $data as $key => $value )
 		{
@@ -230,17 +232,43 @@ class ModelService
 		return $object_it->object->modify_parms($object_it->getId(), $data);
 	}
 
-	protected function getData( $object_it, $recursive = false )
+	protected function getData( $object_it, $recursive = false, $level = 0, &$references = array() )
 	{
 		$dataset = $object_it->getData();
-		if ( !$recursive ) return $dataset;
+
+        if ( $this->uidService->hasUid($object_it) ) {
+            $info = $this->uidService->getUIDInfo($object_it);
+            $dataset['URL'] = $info['url'];
+            $dataset['UID'] = $info['uid'];
+        }
+
+        if ( !$recursive || $level > 3 ) return $dataset;
+        $references[] = get_class($object_it->object).$object_it->getId();
 
 		foreach( $object_it->object->getAttributes() as $attribute => $info ) {
 			if ( !$object_it->object->IsReference($attribute) ) continue;
 			if ( $object_it->get($attribute) == '' ) continue;
 			$ref_it = $object_it->getRef($attribute);
-			$dataset[$attribute] = $ref_it->count() > 1 ? $ref_it->getRowset() : $ref_it->getData();
+            if ( $recursive ) {
+                $recursiveData = array();
+                while( !$ref_it->end() ) {
+                    if ( in_array(get_class($ref_it->object).$ref_it->getId(), $references) ) {
+                        $ref_it->moveNext();
+                        continue;
+                    }
+                    $recursiveData[] = $this->getData($ref_it, true, $level + 1, $references);
+                    $ref_it->moveNext();
+                }
+                if ( count($recursiveData) == 1 ) {
+                    $recursiveData = array_shift($recursiveData);
+                }
+                $dataset[$attribute] = $recursiveData;
+            }
+            else {
+                $dataset[$attribute] = $ref_it->count() > 1 ? $ref_it->getRowset() : $ref_it->getData();
+            }
 		}
+
 		return $dataset;
 	}
 
@@ -295,10 +323,10 @@ class ModelService
 					$result[$attribute] = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 					if ( in_array($type, array('wysiwyg')) ) {
 						if ( $output == 'html' ) {
-							$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), '', $result[$attribute]));
+							$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), ' ', $result[$attribute]));
 						}
 						else {
-							$html2text = new \Html2Text\Html2Text($result[$attribute]);
+							$html2text = new \Html2Text\Html2Text($result[$attribute], array('width'=>0));
 							$result[$attribute] = $html2text->getText();
 						}
 					}
@@ -330,6 +358,13 @@ class ModelService
 		foreach( $this->skipFields as $field ) {
 			unset($result[$field]);
 		}
+
+		if ( array_key_exists('UID', $data) ) {
+		    $result['UID'] = $data['UID'];
+        }
+        if ( array_key_exists('URL', $data) ) {
+            $result['URL'] = $data['URL'];
+        }
 
 		return $result;
 	}

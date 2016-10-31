@@ -169,4 +169,9 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
 
         return $val;
     }
+
+    function getWarning()
+    {
+        return text(2255);
+    }
 }

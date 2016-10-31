@@ -85,8 +85,13 @@ class StateForm extends PMPageForm
 				return new FieldStateAttribute(is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject());
 				
 			case 'Transitions':
-				return new FieldStateTransitions(is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject()); 
-				
+				return new FieldStateTransitions(is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject());
+
+            case 'IsTerminal':
+                $field = new FieldDictionary( new StateCommon() );
+                $field->setNullOption(false);
+                return $field;
+
 			default:
 				return parent::createFieldObject( $attr_name );
 		}

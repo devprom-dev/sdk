@@ -25,6 +25,8 @@ class UpdateSystem extends MaintenanceCommand
 		// rebuild cached list of plugins
 		PluginsFactory::Instance()->buildPluginsList();
 
+        if ( function_exists('opcache_reset') ) opcache_reset();
+
 		$this->replyRedirect( '?' );
 	}
 }

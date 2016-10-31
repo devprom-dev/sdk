@@ -6,7 +6,6 @@ use Devprom\ProjectBundle\Service\Project\ApplyTemplateService;
 use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
-include_once SERVER_ROOT_PATH.'core/classes/system/CacheLock.php';
 include "ActivateUserSettings.php";
 
 class CreateProjectService
@@ -65,7 +64,7 @@ class CreateProjectService
 		getFactory()->getEventsManager()->removeNotificator( new \ChangesWaitLockReleaseTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \CacheSessionProjectTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \CacheResetTrigger() );
-		
+
 		// check the use who creates a project is defined
 		$user_it = getFactory()->getObject('User')->getExact($this->user_id);
 		if ( $user_it->count() < 1 ) return -1;
@@ -144,6 +143,7 @@ class CreateProjectService
 		$auth_factory->setUser( $user_it );
 		
 		$session = new \PMSession($project_it, $auth_factory);
+        getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
 
 		// включаем VPD
 		getFactory()->enableVpd(true);
@@ -326,21 +326,21 @@ class CreateProjectService
 		getFactory()->getEventsManager()->removeNotificator( new \CacheResetTrigger() );
 		getFactory()->getEventsManager()->removeNotificator( new \PMChangeLogNotificator() );
 		getFactory()->getEventsManager()->removeNotificator( new \EmailNotificator() );
-		
-		$meth_cls = getFactory()->getObject('pm_Methodology');
-		
-		$parms = array();
-		$parms['Project'] = $project_it->getId();
 
-		$methodology_it = $meth_cls->getExact( 
-			$meth_cls->add_parms($parms) ); 
+        getFactory()->getObject('pm_Methodology')->add_parms(
+            array(
+                'Project' => $project_it->getId(),
+                'IsReleasesUsed' => 'Y',
+                'IsPlanningUsed' => 'Y'
+            )
+        );
 
 		$service = new ApplyTemplateService();
 		$service->setResetState(false);
 		
 		// apply default template
 		$service->apply(
-				$template_it, 
+				$template_it->getXml(),
 				$project_it, 
 				array(), // import all data available in the template
 				$this->skip_demo_data ? array('ProjectArtefacts') : array()
@@ -349,7 +349,7 @@ class CreateProjectService
  	
  	public function invalidateCache()
  	{
-		$lock = new \CacheLock();
+        $lock = new \CacheLock();
 
  		getFactory()->getObject('ProjectCache')->resetCache();
 	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
@@ -357,6 +357,9 @@ class CreateProjectService
 	        getSession()->truncateForProject( $portfolio_it );
 	        $portfolio_it->moveNext();
 	    }
+        $lock->Release();
+
+        \SessionBuilder::Instance()->invalidate();
  	}
 
 	public function invalidateServiceDeskCache()

@@ -3,11 +3,13 @@
 <?php foreach( $sections as $section ) { ?> 
 
 <?php if ( $section instanceof ButtonInfoSection ) { ?>
-<div class="btn-group pull-left">
-	<a id="<?=$section->getId()?>" class="btn dropdown-toggle btn-small btn-info <?=($_COOKIE[$section->getId().'-'.$table_id] == 'true' ? 'active' : '')?>" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
-   		<i class="<?=$section->getIcon()?> icon-white"></i>
-	</a>
-</div>
+	<div class="btn-group pull-left">
+		<? $btnState = $_COOKIE[$section->getId().'-'.$table_id]; ?>
+		<? $btnState = $btnState == '' ? $section->IsActive() : $btnState == 'true'; ?>
+		<a id="<?=$section->getId()?>" class="btn dropdown-toggle btn-small btn-info <?=($btnState ? 'active' : '')?>" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
+			<i class="<?=$section->getIcon()?> icon-white"></i>
+		</a>
+	</div>
 <?php continue; } ?>
 
 <div class="btn-group pull-left last">

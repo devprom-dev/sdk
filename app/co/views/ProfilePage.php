@@ -11,11 +11,14 @@ class ProfilePage extends CoPage
 			
  	function getTable()
  	{
-		return new ProfileForm( getSession()->getUserIt() );
+		return new ProfileForm(
+		    getFactory()->getObject('User')->getExact(
+		        getSession()->getUserIt()->getId()
+            )
+        );
  	}
  	
- 	function getTitle()
- 	{
+ 	function getTitle() {
  		return translate('Профиль');
  	}
 }

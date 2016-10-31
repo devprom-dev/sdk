@@ -162,7 +162,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			removePlugins : 'elementspath',
 			resize_enabled : false,
 			language: devpromOpts.language == '' ? 'en' : devpromOpts.language,
-			contentsCss: ['/pm/'+project+'/scripts/css?v='+appVersion],
+			contentsCss: ['/pm/'+project+'/scripts/css/?v='+appVersion],
 			startupFocus: $(element).is(':focus')
 		});
 		if ( editor == null ) {
@@ -209,7 +209,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	else
 	{
 		var editor = CKEDITOR.inline( element, {
-			removePlugins: toolbar == '' ? 'toolbar' : '',
+			removePlugins: toolbar == '' ? 'embed,embedbase,notificationaggregator,notification,toolbar' : '',
 			toolbar: toolbar,
 			enterMode: toolbar == '' ? CKEDITOR.ENTER_BR : CKEDITOR.ENTER_P,
 			allowedContent: toolbar != '',

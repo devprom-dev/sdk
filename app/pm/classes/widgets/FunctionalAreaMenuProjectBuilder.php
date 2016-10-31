@@ -6,19 +6,30 @@ class FunctionalAreaMenuProjectBuilder extends FunctionalAreaMenuBuilder
 {
     public function build( FunctionalAreaMenuRegistry & $set )
     {
-    	$menus = array();
-    	
-    	$item = getFactory()->getObject('PMReport')->getExact('navigation-settings')->buildMenuItem();
-    	
-   		$menus['quick'] = array( 
-	   		   'name' => '', 
-	   		   'items' => 
-   					array(
-	   		   			'navigation-settings' => $item
-   					),
-	   		   'uid' => 'quick' 
+        $report = getFactory()->getObject('PMReport');
+        $item = $report->getExact('navigation-settings')->buildMenuItem();
+        $item['order'] = 9998;
+
+        $items = array (
+            'navigation-settings' => $item
+        );
+
+        $uid = $this->getAreaUid();
+        if ( $uid != '' ) {
+            $items['charts'] = $report->getExact('charts')->buildMenuItem('pmreportcategory='.$uid);
+            $items['charts']['order'] = 9999;
+        }
+
+        $menus = array();
+   		$menus['quick'] = array(
+           'name' => '',
+           'items' => $items,
+           'uid' => 'quick'
    		);
-    	
 		return $menus;
+    }
+
+    protected function getAreaUid() {
+        return '';
     }
 }

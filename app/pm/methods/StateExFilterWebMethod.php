@@ -53,7 +53,7 @@ class StateExFilterWebMethod extends FilterWebMethod
 	{
 		$this->non_terminal_it = $this->iterator->object->createCachedIterator(
 					array_values(array_filter($this->iterator->getRowset(), function($row) {
-							return $row['IsTerminal'] == 'N';
+							return $row['IsTerminal'] != 'Y';
 					}))
 			);
 			

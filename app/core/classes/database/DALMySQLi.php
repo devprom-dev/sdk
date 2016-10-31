@@ -63,8 +63,9 @@ class DALMySQLi extends DAL
 
     public function Query( $sql )
     {
+        if ( is_null($sql) || !is_string($sql) ) return @mysqli_query($this->connection, "SELECT 0");
         $this->info( $sql );
-        
+
         $resultSet = @mysqli_query($this->connection, $sql);
         if ( $resultSet === false ) {
         	$this->Reconnect();

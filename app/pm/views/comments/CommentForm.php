@@ -88,14 +88,7 @@ class CommentForm extends PMForm
 
 	function getButtonText()
 	{
-		if ( $this->getAction() == CO_ACTION_MODIFY )
-		{
-			return translate('Сохранить');
-		}
-		else
-		{
-			return translate('Отправить');
-		}
+        return translate('Сохранить');
 	}
 
 	function getWidth()

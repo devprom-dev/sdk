@@ -12,19 +12,18 @@ include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 include "PMWikiTable.php";
 include "PMWikiDocument.php";
 include "WikiTreeSection.php";
+include "DocumentStructureSection.php";
 include "WikiDocumentSettingBuilder.php";
 include "WikiPageSettingBuilder.php";
 include "history/WikiHistoryTable.php";
+include "history/WikiVersionTable.php";
 include "templates/WikiTemplateTable.php";
 include "templates/WikiTemplateSettingBuilder.php";
 include 'parsers/WikiIteratorExportExcelText.php';
 include 'parsers/WikiIteratorExportExcelHtml.php';
-include 'parsers/WikiIteratorExportHtml.php';
-include 'parsers/WikiIteratorExportPdf.php';
-include 'parsers/WikiIteratorExportRtf.php';
-include 'parsers/WikiIteratorExportCHM.php';
 include "import/ImportWikiPageFromExcelSection.php";
 include "import/ImportExcelForm.php";
+include "import/ImportDocumentForm.php";
 include "WikiIncludeForm.php";
 include "templates/DocumentTemplateTable.php";
 include "templates/DocumentTemplateForm.php";
@@ -33,25 +32,30 @@ class PMWikiUserPage extends PMPage
 {
  	function PMWikiUserPage()
  	{
-		getSession()->addBuilder( new WikiDocumentSettingBuilder($this->getObject()) );
-		getSession()->addBuilder( new WikiPageSettingBuilder() );
-
  		parent::PMPage();
- 		
+
+        getSession()->addBuilder( new WikiDocumentSettingBuilder($this->getObject()) );
+        getSession()->addBuilder( new WikiPageSettingBuilder() );
+
 	    $table = $this->getTableRef();
  		    
 	    if ( $table instanceof PMWikiDocument && $table->getDocumentIt()->getId() > 0 )
 	    {
-			$this->addInfoSection( new WikiTreeSection(
-	            		$table->getObjectIt()->getId() > 0 
-		            			? $table->getObjectIt() 
-		            			: $table->getDocumentIt(),
-	            		$_REQUEST['baseline']
-			));
+			if ( $_COOKIE['toggle-structure-panel-' . $table->getDocumentIt()->getId()] != 'false' ) {
+				$this->addInfoSection( new WikiTreeSection(
+					$table->getObjectIt()->getId() > 0
+						? $table->getObjectIt()
+						: $table->getDocumentIt(),
+					$_REQUEST['baseline']
+				));
+			}
 	    }
 		else {
 			if ( $_REQUEST['view'] == 'templates' ) {
 			}
+            elseif( $_REQUEST['view'] == 'importdoc' )
+            {
+            }
 			elseif( $_REQUEST['view'] == 'import' )
 			{
 				$this->addInfoSection( new ImportWikiPageFromExcelSection($this->getObject()));
@@ -128,6 +132,9 @@ class PMWikiUserPage extends PMPage
  			case 'history':
  				return new WikiHistoryTable();
 
+            case 'compare':
+                return new WikiVersionTable($this->getObject());
+
  			case 'docs':
 	 	        if ( $_REQUEST['document'] < 1 ) return $this->getTableBase();
  				
@@ -142,18 +149,23 @@ class PMWikiUserPage extends PMPage
  	
  	function needDisplayForm()
  	{
- 		return $_REQUEST['view'] == 'import' ? true : parent::needDisplayForm();
+ 		return in_array($_REQUEST['view'], array('import','importdoc')) ? true : parent::needDisplayForm();
  	}
  	
  	function getForm() 
  	{
-		if ( $_REQUEST['view'] == 'doctemplates' ) return new DocumentTemplateForm(new DocumentTemplate($this->getObject()));
- 		if ( $_REQUEST['view'] == 'import' ) return new ImportExcelForm($this->getObject());
- 		if ( $_REQUEST['Include'] != '' ) return new WikiIncludeForm($this->getObject());
- 		
+ 	    switch( $_REQUEST['view'] ) {
+            case 'doctemplates':
+                return new DocumentTemplateForm(new DocumentTemplate($this->getObject()));
+            case 'import':
+                return new ImportExcelForm($this->getObject());
+            case 'importdoc':
+                return new ImportDocumentForm($this->getObject());
+            default:
+                if ( $_REQUEST['Include'] != '' ) return new WikiIncludeForm($this->getObject());
+        }
  		return parent::getForm();
  	}
- 	
 
  	function export()
  	{
@@ -169,6 +181,10 @@ class PMWikiUserPage extends PMPage
  				parent::export();
  		}
  	}
+
+ 	function exportForm( $object_it ) {
+ 	    Page::export();
+    }
 
 	function getExportPersisters() {
 		return array (
@@ -356,13 +372,24 @@ class PMWikiUserPage extends PMPage
 	   	return parent::getHint();
  	}
 
-	function getDetails()
-	{
-		foreach( $this->getInfoSections() as $section ) {
-			if ( $section instanceof DetailsInfoSection ) {
-				return parent::getDetails();
-			}
-		}
-		return array();
-	}
+    function buildExportIterator( $object, $ids )
+    {
+        return $object->getRegistry()->Query(
+            array_merge(
+                array(
+                    new WikiRootTransitiveFilter($ids),
+                    new SortDocumentClause()
+                )
+            )
+        );
+    }
+
+    function buildCommentList( $object_it, $control_uid )
+    {
+        $list = parent::buildCommentList($object_it, $control_uid);
+        if ( $_REQUEST['document'] != '' ) {
+            $list->setAutoRefresh(false);
+        }
+        return $list;
+    }
 }

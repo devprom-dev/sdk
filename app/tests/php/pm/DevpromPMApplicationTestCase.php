@@ -1,10 +1,7 @@
 <?php
 
-include_once SERVER_ROOT_PATH."core/classes/user/User.php";
-include_once SERVER_ROOT_PATH."pm/classes/participants/Participant.php";
 include_once SERVER_ROOT_PATH."core/classes/project/Project.php";
 include_once SERVER_ROOT_PATH."core/classes/project/ProjectImportance.php";
-include_once SERVER_ROOT_PATH."pm/classes/settings/Methodology.php";
 include_once SERVER_ROOT_PATH."pm/classes/sessions/PMSession.php";
 
 abstract class DevpromPMApplicationTestCase extends DevpromTestCase

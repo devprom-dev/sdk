@@ -2,54 +2,67 @@ _entry:
     path:  /
     defaults: { _controller: ApplicationBundle:Entry:index }
 
-logoff:
-    path:  /logoff
-    defaults: { _controller: ApplicationBundle:Security:logoff }
+login:
+    path:  /login
+    defaults: { _controller: WelcomeBundle:Security:login }
+    methods:  GET
 
-news:
-    path:  /news/{key}
-    defaults: { _controller: ApplicationBundle:Atom:news}
+login_process_auth:
+    path:  /auth
+    defaults: { _controller: WelcomeBundle:Security:auth }
 
 sprites:
     path:  /sprite/{filename}
     defaults: { _controller: CommonBundle:Sprite:show }
 
-login:
-    path:  /login
-    defaults: { _controller: ApplicationBundle:Security:login }
-    methods:  GET
-
-login_process_auth:
-    path:  /auth
-    defaults: { _controller: ApplicationBundle:Security:loginProcess }
-
-login_process_success:
-    path:  /logged
-    defaults: { _controller: ApplicationBundle:Security:loginCheck }
-
 recovery:
     path:  /recovery
-    defaults: { _controller: ApplicationBundle:Security:restore }
+    defaults: { _controller: WelcomeBundle:Security:restore }
     methods:  GET
 
 recovery_process:
     path:  /recovery
-    defaults: { _controller: ApplicationBundle:Security:restoreProcess }
+    defaults: { _controller: WelcomeBundle:Security:restoreProcess }
     methods:  POST
-    
+
 join:
     path:  /join-project
-    defaults: { _controller: ApplicationBundle:Security:join }
+    defaults: { _controller: WelcomeBundle:Security:join }
 
 reset:
     path:  /reset
-    defaults: { _controller: ApplicationBundle:Security:reset }
+    defaults: { _controller: WelcomeBundle:Security:reset }
     methods:  GET
 
 reset_process:
     path:  /reset
-    defaults: { _controller: ApplicationBundle:Security:resetProcess }
+    defaults: { _controller: WelcomeBundle:Security:resetProcess }
     methods:  POST
+
+error_404:
+    path:  /404
+    defaults: { _controller: WelcomeBundle:Error:error }
+
+error_500:
+    path:  /500
+    defaults: { _controller: WelcomeBundle:Error:error }
+
+error_503:
+    path:  /503
+    defaults: { _controller: WelcomeBundle:Error:error }
+
+logoff:
+    path:  /logoff
+    defaults: { _controller: ApplicationBundle:Security:logoff }
+
+login_process_success:
+    path:  /logged
+    defaults: { _controller: WelcomeBundle:Security:authForm }
+
+
+news:
+    path:  /news/{key}
+    defaults: { _controller: ApplicationBundle:Atom:news}
 
 profile:
     path:  /profile
@@ -80,25 +93,9 @@ menu_config:
     defaults: { _controller: ApplicationBundle:Menu:config }
     methods:  GET
 
-error_404:
-    path:  /404
-    defaults: { _controller: ApplicationBundle:Error:error }
-
-error_500:
-    path:  /500
-    defaults: { _controller: ApplicationBundle:Error:error }
-
 error_500_zip:
     path:  /500.zip
     defaults: { _controller: ApplicationBundle:Error:errorZip }
-
-error_310:
-    path:  /310
-    defaults: { _controller: ApplicationBundle:Error:error } 
-
-error_503:
-    path:  /503
-    defaults: { _controller: ApplicationBundle:Error:error }
 
 _app_tooltip:
     path:  /tooltip/{classname}/{objects}
@@ -116,10 +113,18 @@ _file:
     path:  /{module}/{namespace}/{page}/{file}
     defaults: { _controller: CommonBundle:Page:module }
 
-_admin_scripts:
+_co_scripts:
+    path:  /scripts/javascript/
+    defaults: { _controller: CommonBundle:Scripts:js }
+
+_scripts:
     path:  /co/scripts/javascript/
     defaults: { _controller: CommonBundle:Scripts:js }
 
-_admin_css:
+_css:
+    path:  /scripts/css/
+    defaults: { _controller: CommonBundle:Scripts:css }
+
+_co_css:
     path:  /co/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }

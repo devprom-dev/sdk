@@ -7,7 +7,15 @@ include "FieldTransitionResetField.php";
 
 class TransitionForm extends PMPageForm
 {
- 	function getFieldDescription( $attr )
+	function extendModel() {
+		parent::extendModel();
+		$this->getObject()->setAttributeType('IsReasonRequired', 'REF_TransitionReasonTypeId');
+		$this->getObject()->setAttributeCaption('IsReasonRequired', '');
+		$this->getObject()->setAttributeVisible('PredicatesLogic', true);
+		$this->getObject()->setAttributeVisible('ProjectRolesLogic', true);
+	}
+
+	function getFieldDescription( $attr )
  	{
  		switch( $attr )
  		{
@@ -49,6 +57,10 @@ class TransitionForm extends PMPageForm
 		
 		switch( $attr_name )
 		{
+			case 'PredicatesLogic':
+			case 'ProjectRolesLogic':
+				return null;
+
 			case 'TargetState': 
 				$state->addFilter( new StateClassPredicate($state_it->get('ObjectClass')) );
 				$state->addFilter( new FilterBaseVpdPredicate() );
@@ -76,16 +88,19 @@ class TransitionForm extends PMPageForm
 				
 			case 'ResetFields':
 				$field = new FieldTransitionResetField( $this->object_it );
-				
 				$field->setStateIt( $state_it );
-				
 				return $field;
-				
+
+			case 'IsReasonRequired':
+				$field = new FieldDictionary( new TransitionReasonType() );
+				$field->setNullOption(false);
+				return $field;
+
 			default:
 				return parent::createFieldObject( $attr_name );
 		}
 	}
-	
+
 	function drawScripts()
 	{
 		parent::drawScripts();

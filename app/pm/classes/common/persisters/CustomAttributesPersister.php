@@ -59,13 +59,12 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
 	function map( &$parms )
 	{
-		$attributes = $this->getAttributesInfo();
-		foreach( $attributes as $id => $attr ) {
+		foreach( $this->getAttributesInfo() as $id => $attr ) {
 			if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
-				if ( $attr['name'] == 'UID' ) continue;
-				if ( $parms['RecordCreated'] != '' || !in_array($parms[$attr['name']], array('')) ) {
-					$parms[$attr['name']] = $this->computeFormula($parms, $attr['default']);
-				}
+                $idAttribute = $this->getObject()->getIdAttribute();
+			    if ( mb_strpos($attr['default'], 'ИД') === false || $parms[$idAttribute] != '' ) {
+                    $parms[$attr['name']] = $this->computeFormula($parms, $attr['default']);
+                }
 			}
 		}
 	}
@@ -75,14 +74,15 @@ class CustomAttributesPersister extends ObjectSQLPersister
 		$this->set($object_id, $parms);
 
 		foreach( $this->getAttributesInfo() as $attr_id => $attr ) {
-			if ( $attr['name'] == 'UID' && in_array($parms[$attr['name']], array('',$attr['default'])) )
-			{
-				$idAttribute = $this->getObject()->getIdAttribute();
-				$parms[$idAttribute] = $object_id;
-				$uid = DAL::Instance()->Escape(addslashes($this->computeFormula($parms, $attr['default'])));
-				$sql = "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$uid."' WHERE w.".$idAttribute." IN (".join(",", array($object_id)).")";
-				DAL::Instance()->Query( $sql );
-			}
+            if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
+                if ( mb_strpos($attr['default'], 'ИД') !== false ) {
+                    $idAttribute = $this->getObject()->getIdAttribute();
+                    $parms[$idAttribute] = $object_id;
+                    $uid = DAL::Instance()->Escape(addslashes($this->computeFormula($parms, $attr['default'])));
+                    $sql = "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$uid."' WHERE w.".$idAttribute." IN (".join(",", array($object_id)).")";
+                    DAL::Instance()->Query( $sql );
+                }
+            }
 		}
  	}
 
@@ -202,6 +202,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		foreach( $attribute_data as $ref_name => $attr )
  		{
 			if ( !preg_match("/^[a-zA-Z][a-zA-Z0-9\_]+$/i", $attr['name']) ) continue;
+            if ( $attr['name'] == 'UID' ) continue;
 
 			$type_it = $this->getTypeIt($attr);
 			$value_column = $type_it->getValueColumn();

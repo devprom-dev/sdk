@@ -62,7 +62,7 @@ class DuplicateWebMethod extends WebMethod
 	function getJSCall( $parms = array() )
 	{
 		$id = $this->object_it->getId() != '' ? $this->object_it->getId() : '0';
- 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&Project=".$parms['Project']."', ".$id.", ".$this->getRedirectUrl().")";
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&".http_build_query($parms)."', ".$id.", ".$this->getRedirectUrl().")";
 	}
 	
 	function getReferences()

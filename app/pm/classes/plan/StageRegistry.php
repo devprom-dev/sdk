@@ -74,9 +74,10 @@ class StageRegistry extends ObjectRegistrySQL
 		   "        r.IsActual, ".
 		   "        r.StartDate, ".
 		   "        r.FinishDate, " .
-		   "        (SELECT GROUP_CONCAT(CAST(s.pm_ChangeRequestId AS CHAR)) FROM pm_ChangeRequest s, pm_Task k " .
-		   "	      WHERE k.ChangeRequest = s.pm_ChangeRequestId " .
-		   "            AND k.Release = r.pm_ReleaseId ) Issues, ".
+		   "       CONCAT_WS(',',
+                        (SELECT GROUP_CONCAT(CAST(a.ChangeRequest AS CHAR)) FROM pm_Task a WHERE a.Release = r.pm_ReleaseId),
+                        (SELECT GROUP_CONCAT(CAST(a.pm_ChangeRequestId AS CHAR)) FROM pm_ChangeRequest a WHERE a.Iteration = r.pm_ReleaseId)
+                      ) Issues, ".
 		   "         0 UncompletedIssues, ".
 		   "        (SELECT GROUP_CONCAT(CAST(s.pm_TaskId AS CHAR)) FROM pm_Task s " .
 		   "	      WHERE r.pm_ReleaseId = s.Release ) Tasks, ".

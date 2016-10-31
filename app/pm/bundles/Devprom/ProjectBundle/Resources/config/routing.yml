@@ -92,7 +92,7 @@ api_readonly:
 
 api_writeonly:
     path:  /pm/{project}/api/key-writeonly
-    defaults: { _controller: ProjectBundle:ApiKey:writeonly }
+    defaults: { _controller: ProjectBundle:Apikey:writeonly }
 
 pages:
     type:     rest

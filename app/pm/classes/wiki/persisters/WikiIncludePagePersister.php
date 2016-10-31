@@ -26,17 +26,6 @@ class WikiIncludePagePersister extends ObjectSQLPersister
 			)
 		);
 
-		$type_it = $object->getTypeIt();
-		if ( is_object($type_it) ) {
-			while( !$type_it->end() ) {
-				if ( $type_it->get('ReferenceName') == 'section' ) {
-					$sectionTypeId = $type_it->getId();
-					break;
-				}
-				$type_it->moveNext();
-			}
-		}
-
 		$ids = $include_it->idsToArray();
 		$last_id = array_pop($ids);
 		$order_num = $parms['OrderNum'] != '' ? $parms['OrderNum'] : 10;
@@ -59,8 +48,7 @@ class WikiIncludePagePersister extends ObjectSQLPersister
 						'ParentPage' => $maps[$include_it->get('ParentPage')] != ''
 							? $maps[$include_it->get('ParentPage')]
 							: $parms['ParentPage'],
-						'OrderNum' => $order_num,
-						'PageType' => $sectionTypeId
+						'OrderNum' => $order_num
 					)
 				);
 				$maps[$include_it->getId()] = $id;
@@ -76,7 +64,6 @@ class WikiIncludePagePersister extends ObjectSQLPersister
 		$parms['Content'] = "{{".$uid->getObjectUid($include_it)."}}";
 		$parms['IsTemplate'] = 0;
 		$parms['OrderNum'] = $order_num;
-		$parms['PageType'] = $sectionTypeId;
 		$parms['ParentPage'] = $maps[$include_it->get('ParentPage')] != ''
 									? $maps[$include_it->get('ParentPage')]
 									: $parms['ParentPage'];

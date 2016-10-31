@@ -53,46 +53,73 @@ class StoreMetricsService
  	{
         getFactory()->resetCachedIterator($project_it->object);
 
- 		if ( !$project_it->getMethodologyIt()->HasReleases() )
+        $methodology_it = $project_it->getMethodologyIt();
+        $finishDate = '';
+
+        if ( $methodology_it->HasReleases() ) {
+            $version_it = getFactory()->getObject('Release')->getRegistry()->Query(
+                array (
+                    new \FilterAttributePredicate('Project', $project_it->getId()),
+                    new \ReleaseTimelinePredicate('not-passed')
+                )
+            );
+            while ( !$version_it->end() ) {
+                $version_it->storeMetrics();
+                $version_it->moveNext();
+            }
+            $velocity = $project_it->getVelocityDevider();
+
+        }
+        else if ( $methodology_it->HasPlanning() ) {
+            $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+                array (
+                    new \FilterAttributePredicate('Project', $project_it->getId()),
+                    new \IterationTimelinePredicate(\IterationTimelinePredicate::NOTPASSED)
+                )
+            );
+            while ( !$iteration_it->end() ) {
+                $iteration_it->storeMetrics();
+                $iteration_it->moveNext();
+            }
+            $velocity = $project_it->getVelocityDevider();
+        }
+        else {
+            $issue = getFactory()->getObject('Request');
+            $requestsCount = $issue->getRegistry()->Count(
+                array (
+                    new \FilterVpdPredicate($project_it->get('VPD')),
+                    new \StatePredicate('terminal'),
+                    new \FilterModifiedAfterPredicate(
+                        strftime('%Y-%m-%d', strtotime('-1 week', strtotime(date('Y-m-d'))))
+                    )
+                )
+            );
+            $leftRequests = $issue->getRegistry()->Count(
+                array (
+                    new \FilterVpdPredicate($project_it->get('VPD')),
+                    new \StatePredicate('notterminal')
+                )
+            );
+            $velocity = $requestsCount / 7;
+            $leftDays = $leftRequests * $velocity;
+            $finishDate = strftime('%Y-%m-%d', strtotime(round($leftDays,0).' days', strtotime(date('Y-m-d'))));
+        }
+
+ 		if ( $finishDate == '' )
  		{
- 			$request = getFactory()->getObject('Request');
- 			$request->addFilter( new \StatePredicate('terminal') );
- 			
- 			$aggregate = new \AggregateBase( 'Project', 'LifecycleDuration', 'SUM' );
-			$request->addAggregate($aggregate);
-			
-			$avg_lead_time = $request->getAggregated()->get($aggregate->getAggregateAlias());
-			$velocity = $avg_lead_time <= 0 ? 0 : (1 / ($avg_lead_time / 24));
- 		}
- 		else
- 		{
-			$version_it = getFactory()->getObject('Release')->getRegistry()->Query(
-					array (
-							new \FilterAttributePredicate('Project', $project_it->getId()),
-							new \ReleaseTimelinePredicate('not-passed')
-					)
-			);
-	
-			while ( !$version_it->end() )
-			{
-				$version_it->storeMetrics();
-				$version_it->moveNext();
-			}
-			
-			$velocity = $project_it->getVelocityDevider();
+            $stage = getFactory()->getObject('Stage');
+            $stage_aggregate = new \AggregateBase( 'Project', 'EstimatedFinishDate', 'MAX' );
+            $stage->addAggregate($stage_aggregate);
+            $finishDate = $stage->getAggregated()->get($stage_aggregate->getAggregateAlias());
  		}
 
- 		$stage = getFactory()->getObject('Stage');
- 		$stage_aggregate = new \AggregateBase( 'Project', 'EstimatedFinishDate', 'MAX' );
-		$stage->addAggregate($stage_aggregate);
- 		
 		$project_it->object->setNotificationEnabled(false);
  		$project_it->object->modify_parms($project_it->getId(), 
-				array (
-						'Rating' => $velocity,
-						'FinishDate' => $stage->getAggregated()->get($stage_aggregate->getAggregateAlias()),
-						'RecordModified' => $project_it->get('RecordModified')
-				)
+            array (
+                'Rating' => $velocity,
+                'FinishDate' => $finishDate,
+                'RecordModified' => $project_it->get('RecordModified')
+            )
 		);
 
         $metrics_registry = getFactory()->getObject('ProjectMetric')->getRegistry();

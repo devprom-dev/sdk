@@ -21,44 +21,40 @@ class CssSpritesGenerator
 		foreach( $image_files as $index => $file )
 		{
 			if ( !file_exists($file) ) continue;
-			
-			$im2 = @imagecreatefrompng($file);
-			
-			if ( $im2 === false )
-			{
+
+			$finfo = new \finfo(FILEINFO_MIME_TYPE);
+			$mime = $finfo->file($file);
+			$im2 = false;
+
+			if ( stripos($mime, 'png') !== false ) {
+				$im2 = @imagecreatefrompng($file);
+			}
+			if ( stripos($mime, 'jpeg') !== false || stripos($mime, 'jpg') !== false ) {
 				$im2 = @imagecreatefromjpeg($file);
 			}
-			
-			if ( $im2 === false )
-			{
+			if ( stripos($mime, 'gif') !== false ) {
 				$im2 = @imagecreatefromgif($file);
 			}
-
-			if ( $im2 === false )
-			{
+			if ( stripos($mime, 'bmp') !== false ) {
 				$im2 = @imagecreatefromwbmp($file);
 			}
 			
-			if ( $im2 === false )
-			{
+			if ( $im2 === false ) {
 				$im2 = @imagecreatefrompng($default_file);
-				
 				list($width, $height, $type, $attr) = getimagesize($default_file);
 			}
-			else
-			{
+			else {
 				list($width, $height, $type, $attr) = getimagesize($file);
 			}
 			
 			$row = floor($index / $sprites_on_row);
-			
 			$column = $index - $row * $sprites_on_row - 1;
 
 			imagecopyresampled($im,$im2,($max_width*$column),($max_height*$row),0,0,$max_width,$max_height, $width, $height);
 		}
 
+		imagefilter($im,IMG_FILTER_BRIGHTNESS,35);
 		imagepng($im,$sprite_file_name);
-		
 		imagedestroy($im);
 	}
 }

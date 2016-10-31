@@ -122,8 +122,13 @@ include('c_iterator.php');
  	{
 		return $this->attributes[$name]['ordernum'];
 	}
-	
- 	function getAttributeDescription( $name ) 
+
+     function getAttributeEditable( $name )
+     {
+         return array_key_exists('editable', $this->attributes[$name]) ? $this->attributes[$name]['editable'] : true;
+     }
+
+ 	function getAttributeDescription( $name )
  	{
 		return preg_replace_callback (
 			'/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $this->attributes[$name]['description'] 
@@ -213,7 +218,14 @@ include('c_iterator.php');
 		
 	    $this->attributes[$ref_name]['required'] = $value;
 	}
-	
+
+     function setAttributeEditable( $ref_name, $value )
+     {
+         if ( !array_key_exists($ref_name, $this->attributes) ) return;
+
+         $this->attributes[$ref_name]['editable'] = $value;
+     }
+
 	function setAttributeGroups( $name, array $groups )
 	{
 	    if ( !array_key_exists($name, $this->attributes) ) return;

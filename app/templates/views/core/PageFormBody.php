@@ -22,11 +22,20 @@ $colspan_visible = array_filter( $attributes, function(&$value) use($colspan_att
 	return $value['visible'] && in_array($value['id'], $colspan_attributes);
 });
 
+$shortVisible = array();
+foreach( $attributes as $key => $attribute ) {
+	if ( !in_array($key, $shortAttributes) ) continue;
+	if ( !$attribute['visible'] ) continue;
+	$shortVisible[$key] = $attribute;
+	unset($attributes[$key]);
+}
+$shortVisible = array_chunk($shortVisible, ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 ? 4 : 2)), true);
+
 $visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
 	return $value['visible'] && !in_array($value['id'], $colspan_attributes);
 });
 
-$attributes_per_column = count($visible) > 12 ? max(9, ceil(count($visible) / 2)) : count($visible);
+$attributes_per_column = count($visible) > 12 && $formonly ? max(9, ceil(count($visible) / 2)) : count($visible);
 $chunked_attributes = array_chunk($visible, $attributes_per_column, true);
 
 $top = array();
@@ -82,8 +91,24 @@ foreach( $attributes as $key => $attribute ) {
 <?php } ?>
 
 <div class="control-set">
-
-<?php foreach( $chunked_attributes as $index => $attributes ) { ?>
+	<?php foreach( $shortVisible as $index => $attributes ) { ?>
+		<div class="control-column">
+			<?php foreach( $attributes as $key => $attribute ) { ?>
+				<div class="control-group row-fluid" id="fieldRow<?=$key?>">
+					<label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+					<div class="controls">
+						<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+						<?php if ( $attribute['description'] != '' ) { ?>
+							<span class="help-block"><?=$attribute['description']?></span>
+						<?php } ?>
+					</div>
+				</div>
+			<?php } ?>
+		</div>
+	<?php } ?>
+</div>
+<div class="control-set">
+	<?php foreach( $chunked_attributes as $index => $attributes ) { ?>
 
 	<?php $style = ($formonly ? "width: ".ceil(100/count($chunked_attributes))."%;padding-left: ".($index > 0 ? '20px;' : 0).";" : ""); ?>
 	

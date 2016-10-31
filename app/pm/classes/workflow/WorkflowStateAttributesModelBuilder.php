@@ -5,7 +5,6 @@ include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder 
 {
 	private $state_it = null;
-	
 	private $attributes = array();
 	
 	public function __construct( $state_it, $attributes = array() )
@@ -18,6 +17,7 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
     {
     	if ( ! $object instanceof MetaobjectStatable ) return;
  	    if ( $object->getStateClassName() == '' ) return;
+        $visibleAttributes = array();
  	    
  	    if ( count($this->attributes) > 0 )
  	    {
@@ -45,6 +45,7 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 				$object->setAttributeRequired(
 					$attribute_it->get('ReferenceName'), $attribute_it->get('IsRequired') == 'Y'
 				);
+                $visibleAttributes[] = $attribute_it->get('ReferenceName');
 			}
 			$attribute_it->moveNext();
 		}
@@ -60,7 +61,14 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 					$attribute_it->get('ReferenceName'), 
 					$attribute_it->get('IsVisible') == 'Y' || $attribute_it->get('IsRequired') == 'Y'
 				);
+            $object->setAttributeEditable(
+                $attribute_it->get('ReferenceName'), $attribute_it->get('IsReadonly') != 'Y'
+            );
+
 			$attribute_it->moveNext();
+            if ( $attribute_it->get('IsVisible') == 'Y' ) {
+                $visibleAttributes[] = $attribute_it->get('ReferenceName');
+            }
 		}
 		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false);
 	}

@@ -18,4 +18,4 @@ class DictionaryTable extends PMPageTable
 	{
 	    return array();
 	}
-} 
+}

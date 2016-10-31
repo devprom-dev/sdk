@@ -49,7 +49,8 @@ class InviteService
 					)
 			);
 		}
-		
+
+        \SessionBuilder::Instance()->invalidate();
 		getSession()->truncate();
 		
 		return true;

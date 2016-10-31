@@ -2,8 +2,8 @@
 <script type="text/javascript">
 	$(document).unbind('tabsactivated');
 </script>
-<?php if ( !is_array($sections) || $transition != '' || $action != 'show' ) $sections = array(); ?>
-<?php if ( $transition == '' ) $sections = array_merge($bottom_sections,$sections);?>
+<?php if ( !is_array($sections) || !$showtabs || $action != 'show' ) $sections = array(); ?>
+<?php if ( $showtabs ) $sections = array_merge($bottom_sections,$sections);?>
 <?php
 $secondary_attributes = array();
 $skip_attributes = array();
@@ -38,7 +38,7 @@ foreach( $sections as $key => $section ) {
       <li class="ui-tabs-close-button" style="float:right;"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></li>
     </ul>
     <?php } ?>
-	    <form class="form-horizontal" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>">
+	    <form class="form-horizontal <?=$form_class?>" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" autocomplete="off" class_name="<?=$form_class_name?>">
 	    	<fieldset>
 	    	  	<input id="<?=$action_mode?>" type="hidden" name="action_mode" value="form">
 	    	  	<input name="entity" value="<?=$entity?>" type="hidden">
@@ -47,29 +47,32 @@ foreach( $sections as $key => $section ) {
 	    		<input type="hidden" id="<?=$class_name?>Id" name="<?=$class_name.'Id'?>" value="<?=$object_id?>">
 	    		<input type="hidden" name="Transition" value="<?=$transition?>">
 				<div id="tab-main">
-					<div class="<?=($source_parms['uid'] != '' ? 'source-left' : '')?>">
+					<div class="<?=(count($source_parms) > 0 ? 'source-left' : '')?>">
 					<?php
 						echo $view->render( $form_body_template, array(
 							'warning' => $warning,
 							'alert' => $alert,
 							'attributes' => array_diff_key($attributes, array_flip($skip_attributes)),
+							'shortAttributes' => $shortAttributes,
 							'formonly' => $formonly,
 							'form' => $form,
 							'object_id' => $object_id
 						));
-						if ( $bottom_hint != '' ) echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id));
+						echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id, 'open' => $hint_open));
 					?>
 					</div>
-					<? if ( $source_parms['uid'] != '' ) { ?>
-					<div class="source-text">
-						<div>
-							<?=$source_parms['uid']?>
+					<? if ( count($source_parms) > 0 ) { ?>
+						<div class="source-text">
+							<? foreach( $source_parms as $parameter) { ?>
+								<div>
+									<?=$parameter['uid']?>
+								</div>
+								<div>
+									<?=$parameter['text']?>
+								</div>
+								<br/>
+							<? } ?>
 						</div>
-						<br/>
-						<div>
-							<?=$source_parms['text']?>
-						</div>
-					</div>
 					<? } ?>
 				</div>
 				<?php

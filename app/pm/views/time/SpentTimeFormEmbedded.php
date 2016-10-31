@@ -55,20 +55,15 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
 		switch ( $attr )
 		{
 			case 'ReportDate':
-			    
-				return getSession()->getLanguage()->getDateFormatted( date('Y-m-d') );
+				return "today";
 
 			case 'LeftWork':
-			    
 			    return $this->anchor_it->get($this->getLeftWorkAttribute());
 			    
 			default:
-				
-			    if ( $attr == $this->getAnchorField() )
-				{
+			    if ( $attr == $this->getAnchorField() ) {
 					return $this->anchor_it->getId();
 				}
-				
 				return parent::getFieldValue( $attr );
 		}
 	}
@@ -85,39 +80,23 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  		switch ( $attr )
  		{
  		    case 'LeftWork':
- 		        break;
+				echo '<div class="line">';
+					echo '<div class="line">';
+						echo translate($this->object->getAttributeUserName('LeftWork'));
+					echo '</div>';
+					echo '<input type="text" class="spent-time input-block-level" id="'.$this->getFieldName('LeftWork').'" name="'.$this->getFieldName('LeftWork').'" default="'.$this->getFieldValue('LeftWork').'" tabindex="'.($tabindex+1).'">';
+				echo '</div>';
+		        break;
  		        
  			case 'Capacity':
- 				if ( $this->object->getAttributeType('LeftWork') == '' )
- 				{
- 					return parent::drawField( $attr, $type, $value, $tabindex );
- 				}
- 				
- 				echo '<div class="row-fluid">';
-    				echo '<div class="'.($this->IsAttributeVisible('LeftWork') ? 'span6' : '').'">';
-    	 				echo '<div class="line">';
-    						echo translate($this->object->getAttributeUserName('Capacity')).text(2191);
-    					echo '</div>';
-    					$script = "javascript: updateLeftWork($('#".$field_name."'), $('#".$this->getFieldName('LeftWork')."'));";
-    
-    					echo '<input type="text" class="spent-time input-block-level" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
-    				echo '</div>';
-				
-    				if ( $this->IsAttributeVisible('LeftWork') )
-    				{
-    					echo '<div class="span6">';
-    						echo '<div class="line">';
-    							echo translate($this->object->getAttributeUserName('LeftWork'));
-    						echo '</div>';
-    
-    						echo '<input type="text" class="spent-time input-block-level" id="'.$this->getFieldName('LeftWork').'" name="'.$this->getFieldName('LeftWork').'" default="'.$this->getFieldValue('LeftWork').'" tabindex="'.($tabindex+1).'">';
-    					echo '</div>';
-    				}
-    			echo '</div>';
-				
-				echo '<div style="clear:both;"></div>';
-				
-				break;				
+				echo '<div class="line">';
+					echo '<div class="line">';
+						echo translate($this->object->getAttributeUserName('Capacity')).text(2191);
+					echo '</div>';
+					$script = "javascript: updateLeftWork($('#".$field_name."'), $('#".$this->getFieldName('LeftWork')."'));";
+					echo '<input type="text" class="spent-time input-block-level" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
+				echo '</div>';
+				break;
  				
 			default:
  				return parent::drawField( $attr, $type, $value, $tabindex );

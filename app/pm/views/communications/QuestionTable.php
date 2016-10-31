@@ -40,28 +40,4 @@ class QuestionTable extends PMPageTable
 
 		return parent::getSortDefault($sort_parm);
 	}
-	
-	function getActions()
-	{
-		global $project_it, $plugins;
-		
-		$actions = parent::getActions();
-		
-		if ( $actions[count($actions) - 1]['name'] != '' )
-		{
-			array_push( $actions, array() );
-		}
-
-		$method = new ExcelExportWebMethod();
-
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->url( $this->getCaption(), 'IteratorExportExcel') ) );
-		
-		$method = new HtmlExportWebMethod();
-
-		array_push($actions, array( 'name' => $method->getCaption(),
-			'url' => $method->url( 'IteratorExportHtml' ) ) );
-
-		return $actions;
-	}	
 }

@@ -127,17 +127,20 @@ class CommentHandler extends EmailNotificatorHandler
  	function _getThreadText( $comment_it, $editor )
  	{
  		$data = array();
- 		$parser = $editor->getPageParser();
+ 		$parser = $editor->getHtmlParser();
 		$uid = new ObjectUID();
 
  		do 
  		{
 			$info = $uid->getUidInfo($comment_it);
+            $text = $parser->parse( $comment_it->getHtmlDecoded('Caption') );
+            $text = TextUtils::breakLongWords($text);
+
  			$data[] = array (
 				'id' => $comment_it->getId(),
 				'author' => $comment_it->get('AuthorName'),
 				'date' => $comment_it->getDateTimeFormat('RecordCreated'),
-				'text' => $parser->parse( $comment_it->getHtmlDecoded('Caption') ),
+				'text' => $text,
 				'url' => $info['url']
  			);
 			

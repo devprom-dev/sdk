@@ -105,6 +105,7 @@ class FilterObjectMethod extends FilterWebMethod
 		{
 			$registry = $this->object->getRegistryDefault();
 			$registry->setPersisters(array());
+            $registry->setSorts(array());
 	 		$this->it = $registry->getAll();
 		}
 

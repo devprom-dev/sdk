@@ -212,17 +212,34 @@ class IteratorExportExcel extends IteratorExport
  			
  		return $result;
  	}
- 	
+
+    function getFields()
+    {
+        $fields = parent::getFields();
+
+        foreach( array('StateDuration','LeadTime') as $field ) {
+            if ( array_key_exists($field, $fields) ) {
+                $fields[$field] .= ', '.translate('ч.');
+            }
+        }
+
+        return $fields;
+    }
+
  	function getValue( $key, $iterator )
  	{
  		$type = $iterator->object->getAttributeType( $key );
 
-		if ( $key == 'UID' )
-		{
-			$uid = new ObjectUID;
-			
-			return array( $uid->getObjectUid( $iterator->getCurrentIt() ), "String" );
-		}
+        switch( $key )
+        {
+            case 'UID':
+                $uid = new ObjectUID;
+                return array( $uid->getObjectUid( $iterator->getCurrentIt() ), "String" );
+
+            case 'StateDuration':
+            case 'LeadTime':
+                return array($iterator->get($key), 'Number');
+        }
 
  		if ( !$iterator->object->IsReference( $key ) )
  		{
@@ -245,26 +262,30 @@ class IteratorExportExcel extends IteratorExport
  		{
  		    $value = $this->get($key);
  		    
- 		    if ( is_array($value) ) $value = join(chr(10), $value);
+ 		    if ( is_array($value) ) {
+ 		        $self = $this;
+ 		        $value = join(chr(10), array_map(
+ 		            function($value) use($self) {
+ 		                return $self->decode($value);
+                    }, $value)
+                );
+            }
+            else {
+                $value = $this->decode($value);
+            }
  		    
-		 	$value = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
-		 	
- 			if ( is_numeric($value) )
- 			{
+ 			if ( is_numeric($value) ) {
 		 		$type = "Number";
  			}
- 			else
- 			{
- 			    $totext = new \Html2Text\Html2Text( addslashes($value) );
-		 		$value = '<![CDATA['.$totext->getText().']]>';
-		 		
+ 			else {
+		 		$value = '<![CDATA['.addslashes(TextUtils::getXmlString($value)).']]>';
 		 		$type = "String";
  			}
  		}
  		
  		return array( $value, $type );
  	}
- 	
+
  	function convert ( $attributes )
  	{
 		$tags = array_keys($attributes);

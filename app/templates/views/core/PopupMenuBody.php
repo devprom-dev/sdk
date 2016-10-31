@@ -91,7 +91,7 @@ if ( count($items) < 1 ) return;
 		    
     		    <?php if ( $class == '' ) { ?>
     			
-    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" alt="<?=$action['alt']?>" target="<?=$action['target']?>" href="<?=$action['url']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" alt="<?=$action['alt']?>" <?=($action['target'] != '' ? 'target="'.$action['target'].'"' : '')?> <?=($action['url'] != '' ? 'href="'.$action['url'].'"' : '')?> title="<?=$action['title']?>"><?=$action['name']?></a>
     		    
     		    <?php } else { ?>
     			

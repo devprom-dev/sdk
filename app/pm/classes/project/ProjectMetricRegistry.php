@@ -39,9 +39,10 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
             )
         );
         $rowId = $row_it->getId() != '' ? $row_it->getId() : 'NULL';
+        if ( $value == '' ) $value = 0;
         DAL::Instance()->Query("
             REPLACE INTO pm_ProjectMetric (pm_ProjectMetricId, Project, VPD, Metric, MetricValue, RecordModified, RecordCreated)
-              VALUES (".$rowId.", ".getSession()->getProjectIt()->getId().", '".getSession()->getProjectIt()->get('VPD')."', '".$metric."', '".$value."', NOW(), NOW())
+              VALUES (".$rowId.", ".getSession()->getProjectIt()->getId().", '".getSession()->getProjectIt()->get('VPD')."', '".$metric."', ".$value.", NOW(), NOW())
         ");
     }
 }

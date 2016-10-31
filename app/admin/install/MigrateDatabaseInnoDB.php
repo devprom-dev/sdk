@@ -4,6 +4,8 @@ class MigrateDatabaseInnoDB extends Installable
 {
 	function skip()
 	{
+	    if ( !$this->checkWindows() ) return true;
+
 		$version = $this->getMySQLVersion();
 		$this->info('MySQL version is ' . $version);
 		if ( TextUtils::versionToString($version) < TextUtils::versionToString('5.6') ) return true;

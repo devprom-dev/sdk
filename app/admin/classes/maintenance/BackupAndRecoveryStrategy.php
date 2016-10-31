@@ -1,6 +1,5 @@
 <?php
-
-include SERVER_ROOT_PATH."ext/zip/createzipfile.php";
+include_once SERVER_ROOT_PATH."ext/zip/createzipfile.php";
 
 class BackupAndRecoveryStrategy
 {

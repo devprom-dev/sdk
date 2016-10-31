@@ -36,7 +36,7 @@ class StateDurationPersister extends ObjectSQLPersister
 			"    AND so.ObjectClass = '".$this->getObject()->getStatableClassName()."' ".
 			"    AND tr.pm_TransitionId = so.Transition ".
 			"    AND st.pm_StateId = tr.SourceState ".
-			"    AND st.IsTerminal = 'N' ) LeadTime " );
+			"    AND st.IsTerminal <> 'Y' ) LeadTime " );
 
  		return $columns;
  	}

@@ -1,5 +1,5 @@
 <?php
-include_once "FieldAttachments.php";
+include_once SERVER_ROOT_PATH . "cms/views/Field.php";
 
 class FieldWYSIWYGTempFile extends Field
 {

@@ -229,7 +229,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	
 	function drawField( $attr, $type, $value, $tabindex )
 	{
-	    echo '<div id="'.$this->getRowId($attr).'" style="padding-bottom:8px;">';
+	    echo '<div id="'.$this->getRowId($attr).'" style="padding-top:3px;">';
 	    
 	    if ( $type != 'char' )
 	    {
@@ -250,7 +250,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 			$field->setName( $field_name );
 			$field->setId( $field_name );
 			$field->setValue( $value );
-			$field->setDefault( $this->object->getDefaultAttributeValue($attr) );
+			$field->setDefault( $value != '' ? $value : $this->object->getDefaultAttributeValue($attr) );
 			$field->setTabIndex( $tabindex );
 
 			$field->draw();
@@ -476,7 +476,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 		{
 				echo '<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
 				echo '<input type="hidden" id="embeddedActive'.$this->form_id.'" name="embeddedActive'.$this->form_id.'" value="'.($this->getFieldValue('FormActive') == 'N' ? 'N' : 'Y').'">';
-				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" name="'.$this->getFormField().'" value="1">';
+				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" value="1">';
 				echo '<input type="hidden" id="'.$this->form_id.'Id" name="'.$prefix.'Id'.$this->form_id.'" value="'.(is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : "").'">';
 				
 	 		echo '<div style="clear:both"></div>';
@@ -534,7 +534,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
     							if ( is_object($view) && $this->getShowMenu() && !$this->readonly && $delete_value == 0 && count($actions) > 0 )
     							{
     								echo $view->render('core/EmbeddedRowTitleMenu.php', array (
-    								    'title' => $display_name.'&nbsp;',
+    								    'title' => $display_name,
     								    'items' => $actions,
     									'position' => 'last'
     								));
@@ -603,13 +603,14 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 
 					echo '</div>';
 
-					echo '<input type="hidden" name="'.$this->getFormField().'" id="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
+					echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
+                    echo '<div class="end-of-list"></div>';
 				echo '</div>';
 			echo '</div>';
 
 			if ( !$this->readonly && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
 			{
-				$this->drawAddButton( $this->tabindex );
+				$this->drawAddButton( $view, $this->tabindex );
 			}
 	 		echo '</div>';
 		}
@@ -630,7 +631,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  		return $this->button_text;
  	}
  	
- 	function drawAddButton( $tabindex )
+ 	function drawAddButton( $view, $tabindex )
  	{
  		echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" onclick="javascript: appendEmbeddedItem('.
 			$this->getFormId().');" onkeyup="javascript: if (event.keyCode == 13) { $(this).trigger(\'click\'); }">'.$this->getAddButtonText().'</a>';

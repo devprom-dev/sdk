@@ -1,6 +1,4 @@
 <?php
-
-include "app/autoload.php";
 include "core/classes/system/EnvironmentSettings.php";
 include "core/classes/utils/SettingsFile.php";
 include "core/classes/utils/TextUtils.php";
@@ -16,19 +14,26 @@ include "core/classes/history/UndoLog.php";
 include "cms/classes/Metaobject.php";
 include "cms/classes/MetaobjectCacheable.php";
 include "core/classes/DeploymentState.php";
-include "core/classes/exceptions/ExceptionHandler.php";
-include "core/classes/exceptions/ExceptionHandlerListenerLogger.php";
-include "core/classes/exceptions/ExceptionHandlerListenerDevprom.php";
-include "core/classes/exceptions/ExceptionHandlerListenerRaven.php";
 include "lang/classes/c_language.php";
 include "cms/c_download.php";
 include "core/c_configuration.php";
 include "core/c_uid.php";
 include "core/c_metrics.php";
 include "core/classes/c_json.php";
-include "core/c_session.php";
 include "core/classes/system/MetricsServer.php";
 include "core/classes/system/MetricsClient.php";
-include "ext/log4php/Logger.php";
+include "core/classes/model/events/SystemTriggersBase.php";
 include "core/classes/model/ModelFactory.php";
 include "core/classes/model/ModelFactoryExtended.php";
+include "core/classes/system/LockFileSystem.php";
+include "core/classes/system/CacheLock.php";
+include "core/classes/SessionBuilder.php";
+include "core/c_session.php";
+
+include "app/autoload.php";
+include "ext/log4php/Logger.php";
+include "core/classes/exceptions/ExceptionHandler.php";
+include "core/classes/exceptions/ExceptionHandlerListenerLogger.php";
+include "core/classes/exceptions/ExceptionHandlerListenerDevprom.php";
+include "core/classes/exceptions/ExceptionHandlerListenerRaven.php";
+include "core/classes/PluginsFactory.php";

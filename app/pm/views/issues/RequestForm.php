@@ -13,6 +13,7 @@ include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueTrace.php";
 include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueFeatureLevel.php";
+include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
 
 include "FieldIssueTypeDictionary.php";
 include "FieldTasksRequest.php";
@@ -21,11 +22,13 @@ include "FieldRequestState.php";
 include "FieldRequestTagTrace.php";
 include "FieldIssueDeadlines.php";
 include "FieldAuthor.php";
+include "FieldEstimationDictionary.php";
 
 class RequestForm extends PMPageForm
 {
 	private $template_it;
 	private $method_create_task = null;
+	private $method_implement = null;
 	private $method_duplicate = null;
 	private $method_move = null;
 	private $method_watch = null;
@@ -50,6 +53,9 @@ class RequestForm extends PMPageForm
 		
 		$this->getObject()->setAttributeVisible('State', !$this->getEditMode());
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
+
+        $this->getObject()->setAttributeType('SubmittedVersion', 'REF_VersionId');
+        $this->getObject()->setAttributeType('ClosedInVersion', 'REF_VersionId');
     	
     	if ( getFactory()->getObject('RequestType')->getAll()->count() < 1 || $_REQUEST['Type'] != '' ) {
     		$this->getObject()->setAttributeVisible('Type', false);
@@ -189,7 +195,23 @@ class RequestForm extends PMPageForm
 			$this->linkTypes[$type_it->get('ReferenceName')] = $type_it->getId();
 			$type_it->moveNext();
 		}
-	}
+
+        $method = new WikiExportBaseWebMethod();
+        $methodPageIt = $this->getObject()->createCachedIterator(
+            array (
+                array ('pm_ChangeRequestId' => '%id%')
+            )
+        );
+        $converter = new WikiConverter( $this->getObject() );
+        $converter_it = $converter->getAll();
+        while( !$converter_it->end() ) {
+            $this->exportMethods[] = array(
+                'name' => $converter_it->get('Caption'),
+                'url' => $method->url($methodPageIt, $converter_it->get('EngineClassName'))
+            );
+            $converter_it->moveNext();
+        }
+    }
 	
 	function getTransitionAttributes()
 	{
@@ -242,18 +264,17 @@ class RequestForm extends PMPageForm
 
 			case 'Fact':
 				$field = new FieldSpentTimeRequest( $this->object_it );
-				if ( !$this->getEditMode() ) $field->setShortMode();
+				$field->setShortMode();
 				return $field;
 				
 			case 'Estimation':
 				if ( $this->getEditMode() )
 				{
-					$field = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getEstimationFormField( $this );
-					if ( !is_object($field) ) {
-						return parent::createFieldObject( $name );
+					if ( getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->hasDiscreteValues() ) {
+						return new FieldEstimationDictionary($this->getObject());
 					}
 					else {
-						return $field;
+						return parent::createFieldObject( $name );
 					}
 				}
 				else if (is_object($this->object_it) && $this->object_it->getId() > 0) {
@@ -262,7 +283,9 @@ class RequestForm extends PMPageForm
 				break;
 				
 			case 'Tasks':
-				return new FieldTasksRequest( $this->object_it );
+				$field = new FieldTasksRequest( $this->object_it );
+                $field->setRelease($this->getFieldValue('PlannedRelease'));
+                return $field;
 
 			case 'Deadlines':
 				return new FieldIssueDeadlines( $this->object_it );
@@ -327,15 +350,15 @@ class RequestForm extends PMPageForm
 			}
 			return new FieldAutoCompleteObject( $release );
 		}
-		elseif($name == 'Iterations')
+		elseif($name == 'Iteration')
 		{
 			if ( $this->getTransitionIt()->getId() > 0 ) {
-				$release = getFactory()->getObject('IterationActual');
+				$iteration = getFactory()->getObject('IterationActual');
 			}
 			else {
-				$release = getFactory()->getObject('IterationRecent');
+                $iteration = getFactory()->getObject('IterationRecent');
 			}
-			return new FieldAutoCompleteObject( $release );
+			return new FieldAutoCompleteObject( $iteration );
 		}
 		elseif($name == 'Type')
 		{
@@ -366,10 +389,6 @@ class RequestForm extends PMPageForm
 	
     function createField( $name )
     {
-    	global $_REQUEST;
-    	
-		$object_it = $this->getObjectIt();
-		
 		$field = parent::createField( $name );
 		
    		switch ( $name )
@@ -432,8 +451,8 @@ class RequestForm extends PMPageForm
    		    case 'PlannedRelease':
    		    	if ( $value == '' && $this->IsAttributeRequired($attr) )
 				{
-					if ( $_REQUEST['Iterations'] != '' ) {
-						$release_id = getFactory()->getObject('Iteration')->getExact(preg_split('/,/',$_REQUEST['Iterations']))->get('Version');
+					if ( $_REQUEST['Iteration'] != '' ) {
+						$release_id = getFactory()->getObject('Iteration')->getExact(preg_split('/,/',$_REQUEST['Iteration']))->get('Version');
 						if ( $release_id != '' ) return $release_id;
 					}
 	   		    	return getFactory()->getObject('Release')->getRegistry()->Query(
@@ -647,18 +666,16 @@ class RequestForm extends PMPageForm
 			$actions[] = array(
 				'name' => text(2025),
 				'url' => $method->getJSCall(
-					array('Request' => $object_it->getId(), 'Project' => $object_it->get('Project'))
+					array('IssueLinked' => $object_it->getId())
 				)
 			);
-		}
-
-		if ( $this->IsFormDisplayed() && is_object($this->method_duplicate) )
-		{
-			$actions[] = array(
-				'name' => text(1519),
-				'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url),
-				'uid' => 'as-template'
-			);
+			if ( is_object($this->method_duplicate) ) {
+				$actions[] = array(
+					'name' => text(1519),
+					'url' => preg_replace('/%object-id%/', $object_it->getId(), $this->new_template_url),
+					'uid' => 'as-template'
+				);
+			}
 		}
 
 		return $actions;
@@ -693,59 +710,53 @@ class RequestForm extends PMPageForm
 		
 		$url = getFactory()->getObject('PMReport')->getExact('allissues')->get('Url');
     											
-		$references = array ('Function', 'Author', 'Priority');
+		$references = array (
+		    'function' => 'Function',
+            'author' => 'Author',
+            'priority' => 'Priority',
+            'subversion' => 'SubmittedVersion',
+            'version' => 'ClosedInVersion',
+            'environment' => 'Environment',
+            'release' => 'PlannedRelease',
+            'iteration' => 'Iteration',
+            'owner' => 'Owner'
+        );
 		
 	    $attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->getObject() );
-        
         while( !$attr_it->end() )
         {
-            if ( in_array($attr_it->getRef('AttributeType')->get('ReferenceName'), array('dictionary','reference')) )
-            {
-            	$references[] = $attr_it->get('ReferenceName'); 
+            if ( in_array($attr_it->getRef('AttributeType')->get('ReferenceName'), array('dictionary','reference')) ) {
+            	$references[strtolower($attr_it->get('ReferenceName'))] = $attr_it->get('ReferenceName');
             } 
-
             $attr_it->moveNext();
         }
 		
-		foreach( $references as $reference )
+		foreach( $references as $parm => $reference )
 		{
-	   		$refs_actions[$reference] = array(
-	   				'name' => text(1828),
-					'url' => $url.'&'.strtolower($reference).'='.urlencode($object_it->get($reference))
+            if ( $object_it->object->getAttributeType($reference) == '' ) continue;
+            if ( $object_it->object->IsReference($reference) && $object_it->get($reference) != '' ) {
+                $ref_it = $object_it->getRef($reference);
+                if ( !$ref_it->object instanceof Priority && !$ref_it->object instanceof User && !$ref_it->object instanceof IssueAuthor ) {
+                    $method = new ObjectModifyWebMethod($ref_it);
+                    $refs_actions[$reference][] = array (
+                        'name' => translate('Открыть'),
+                        'url' => $method->getJSCall()
+                    );
+                    $refs_actions[$reference][] = array();
+                }
+            }
+	   		$refs_actions[$reference][] = array(
+                'name' => text(1828),
+                'url' => $url.'&'.$parm.'='.urlencode($object_it->get($reference))
 	   		);
 		}
 
-		if ( $object_it->object->getAttributeType('Owner') != '' )
-		{
-	   		$refs_actions['Owner'] = array(
-	   				'name' => text(1828),
-					'url' => $url.'&owner='.$object_it->get('Owner')
-	   		);
+		if ( $object_it->object->getAttributeType('Type') != '' ) {
+			$refs_actions['Type'][] = array(
+				'name' => text(1828),
+				'url' => $url . '&type=' . $object_it->getRef('Type')->get('ReferenceName')
+			);
 		}
-		$refs_actions['Type'] = array(
-   				'name' => text(1828),
-				'url' => $url.'&type='.$object_it->getRef('Type')->get('ReferenceName')
-   		);
-   		$refs_actions['SubmittedVersion'] = array(
-   				'name' => text(1828),
-				'url' => $url.'&subversion='.$object_it->get('SubmittedVersion')
-   		);
-   		$refs_actions['ClosedInVersion'] = array(
-   				'name' => text(1828),
-				'url' => $url.'&version='.$object_it->get('ClosedInVersion')
-   		);
-   		$refs_actions['Environment'] = array(
-   				'name' => text(1828),
-				'url' => $url.'&environment='.$object_it->get('Environment')
-   		);
-		$refs_actions['PlannedRelease'] = array(
-				'name' => text(1828),
-				'url' => $url.'&release='.$object_it->get('PlannedRelease')
-		);
-		$refs_actions['Iterations'] = array(
-				'name' => text(1828),
-				'url' => $url.'&iteration='.$object_it->get('Iterations')
-		);
 
    		return $refs_actions;
 	}	
@@ -765,6 +776,7 @@ class RequestForm extends PMPageForm
 
 	function getSourceIt()
 	{
+	    $result = array();
 		if ( $_REQUEST['Requirement'] != '' )
 		{
 			$req = getFactory()->getObject('Requirement');
@@ -773,9 +785,9 @@ class RequestForm extends PMPageForm
 					new SnapshotItemValuePersister($_REQUEST['Baseline'])
 				);
 			}
-			return array($req->getExact($_REQUEST['Requirement']), 'Content');
+            $result[] = array($req->getExact($_REQUEST['Requirement']), 'WikiIteratorExportHtml');
 		}
-		return parent::getSourceIt();
+		return array_merge(parent::getSourceIt(), $result);
 	}
 
 	function getCaption()
@@ -787,4 +799,37 @@ class RequestForm extends PMPageForm
 			return parent::getCaption();
 		}
 	}
+
+    function getExportActions( $object_it )
+    {
+        $actions = array();
+
+        foreach( $this->exportMethods as $action ) {
+            $action['url'] = preg_replace('/%id%/', $object_it->getId(), $action['url']);
+            $actions[] = $action;
+        }
+
+        return $actions;
+    }
+
+    function getShortAttributes()
+    {
+        return array('Type', 'Priority', 'Estimation', 'Iteration', 'PlannedRelease', 'OrderNum', 'Owner', 'Tags', 'Severity');
+    }
+
+    function getHint()
+    {
+        $hint = parent::getHint();
+
+        $method = new ObjectModifyWebMethod($this->getStateIt());
+        if ( $method->hasAccess() ) {
+            $url = $method->getJSCall();
+        }
+        else {
+            $url = getFactory()->getObject('Module')->getExact('workflow-issuestate')->getUrl();
+        }
+        $hint = preg_replace('/%form:state-url%/', $url, $hint);
+
+        return $hint;
+    }
 }

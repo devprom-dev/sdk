@@ -20,6 +20,7 @@ class DeleteObjectWebMethod extends WebMethod
 	
 	function getWarning()
 	{
+		if ( class_exists('UndoWebMethod') && UndoLog::Instance()->valid($this->object_it) ) return "";
 		return text(636);
 	}
 	
@@ -50,5 +51,10 @@ class DeleteObjectWebMethod extends WebMethod
 		if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception('You have no permissions to delete object');
 
 		if ( $object_it->delete() < 1 ) throw new Exception('The object wasn\'t deleted');
+
+		if ( class_exists('UndoWebMethod') ) {
+			$method = new UndoWebMethod(ChangeLog::getTransaction());
+			$method->setCookie();
+		}
 	}
 } 

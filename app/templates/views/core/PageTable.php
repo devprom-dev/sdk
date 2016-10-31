@@ -30,6 +30,9 @@ echo $view->render('core/PageTableBody.php', array (
 	'details' => $details,
 	'details_parms' => $details_parms,
 	'widget_id' => $widget_id,
-	'placeholderClass' => 'placeholder-fixed'
+	'placeholderClass' => 'placeholder-fixed',
+    'hint' => $hint,
+    'hint_open' => $hint_open,
+    'page_uid' => $page_uid
 ));
 

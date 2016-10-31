@@ -1,7 +1,5 @@
 <?php
 
-include_once SERVER_ROOT_PATH.'core/classes/system/LockFileSystem.php';
-
 class GlobalLock
 {
 	private $background_lock = null;

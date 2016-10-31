@@ -5,5 +5,6 @@ var messages = {
 	"form-close": "Close",
 	"form-delete": "Delete",
 	"form-cancel": "Cancel",
-	"form-submit-open": "Save and open"
+	"form-submit-open": "Save and open",
+	"form-delete-msg": "Are you sure you want to delete? There is no way to undo the change."
 };

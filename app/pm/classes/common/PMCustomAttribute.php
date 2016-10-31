@@ -121,12 +121,13 @@ class PMCustomAttribute extends MetaobjectCacheable
  				if ( $object_it->get($parms['ReferenceName']) == '' ) {
  					$object_it->moveNext(); continue;
  				}
-				$value->add_parms( array (
-					'CustomAttribute' => $result,
-					'ObjectId' => $object_it->getId(),
-					$type_it->getValueColumn() => $object_it->getHtmlDecoded($parms['ReferenceName'])
-				));
-				
+ 				if ( $parms['ReferenceName'] != 'UID' ) {
+                    $value->add_parms( array (
+                        'CustomAttribute' => $result,
+                        'ObjectId' => $object_it->getId(),
+                        $type_it->getValueColumn() => $object_it->getHtmlDecoded($parms['ReferenceName'])
+                    ));
+                }
 				$object_it->moveNext();
  			}
 
@@ -144,8 +145,7 @@ class PMCustomAttribute extends MetaobjectCacheable
 
 		$result = parent::modify_parms($id, $parms);
 
-		if ( $was_parms['DefaultValue'] != $parms['DefaultValue'] )
-		{
+		if ( $was_parms['DefaultValue'] != $parms['DefaultValue'] ) {
 			$type_it = getFactory()->getObject('CustomAttributeType')->getExact($parms['AttributeType']);
 			if ( $type_it->get('ReferenceName') == 'computed' ) {
 				$this->rebuildComputedAttributes($id, $parms);

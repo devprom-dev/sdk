@@ -12,8 +12,7 @@ $linked_attrs = array(
 	'Requirement', 
 	'Question',
 	'Links',
-	'LinksAttachment',
-	'TestFound'
+	'LinksAttachment'
 );
 
 $fields_dont_skip_if_empty = array (
@@ -46,8 +45,9 @@ $important_attributes = array(
     'PlannedRelease',
 	'ClosedInVersion',
 	'SubmittedVersion',
-	'Iterations',
-	'Owner'
+	'Iteration',
+	'Owner',
+	'TestFound'
 );
 
 $columns = array();
@@ -94,12 +94,18 @@ if ( is_array($attributes['Tasks']) ) {
 $section_class['Tasks'] = 'hidden-desktop';
 $section_class['Trace'] = 'hidden-desktop';
 
+$wordyAttributes = array();
 foreach( $attributes as $name => $attribute ) 
 {
 	if ( !in_array($name, $linked_attrs) && $name != 'Attachment' ) continue;
 	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
-	
-	$columns[$recent_column][$name] = $attribute;
+
+	if ( count(preg_split('/,/',$attribute['value'])) > 6 ) {
+		$wordyAttributes[$name] =  $attribute;
+	}
+	else {
+		$columns[$recent_column][$name] = $attribute;
+	}
 }
 
 // other attributes
@@ -110,7 +116,8 @@ foreach( $attributes as $name => $attribute )
 {
 	if ( !in_array($name, $linked_attrs) ) continue;
 	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
-	
+	if ( array_key_exists($name, $wordyAttributes) ) continue;
+
 	$trace_attributes[] = $attribute;
 }
 
@@ -175,61 +182,113 @@ foreach( $attributes as $name => $attribute )
 	</div>
 	<div id="collapseOne" class="accordion-body" tabindex="-1">
 		<div class="row" style="display:table;width:100%;">
-			<?php foreach( $columns as $column_index => $column ) { ?>
-		    <div class="properties-column-<?=count($columns).$column_index?>">
-				<table class="properties-table">
-				<?php foreach( $column as $ref_name => $attribute ) { ?>
-					<tr name="<?=$ref_name?>">
-						<th title="<?=htmlentities(strip_tags($attribute['description']))?>">
-							<?=$attribute['name']?>:
-						</th>
-						<td>
-							<?
-								if ( is_array($refs_actions[$ref_name]) )
-								{
-									echo $this->render('core/EmbeddedRowTitleMenu.php', array (
-											'title' => IteratorBase::getHtmlValue($attribute['text']),
-											'items' => array( $refs_actions[$ref_name] )
-									));
-								}
-								else
-								{
-									echo $view->render('pm/PageFormAttribute.php', $attribute);
-								}
-							?>
-						</td>
-					</tr>	
-				<?php } ?>
-				</table>
+			<div class="properties-cell-1">
+				<div style="width:100%;display:table;">
+					<?php $column = $columns[0]; ?>
+					<div class="properties-column-30">
+						<table class="properties-table">
+						<?php foreach( $column as $ref_name => $attribute ) { ?>
+							<tr name="<?=$ref_name?>">
+								<th title="<?=htmlentities(strip_tags($attribute['description']))?>">
+									<?=$attribute['name']?>:
+								</th>
+								<td>
+									<?
+									if ( is_array($refs_actions[$ref_name]) ) {
+										echo $this->render('core/EmbeddedRowTitleMenu.php', array (
+												'title' => IteratorBase::getHtmlValue($attribute['text']),
+												'items' => $refs_actions[$ref_name]
+										));
+									}
+									else {
+										echo $view->render('pm/PageFormAttribute.php', $attribute);
+									}
+									?>
+								</td>
+							</tr>
+						<?php } ?>
+						</table>
+					</div>
+					<?php $column = $columns[1]; ?>
+					<div class="properties-column-31">
+						<table class="properties-table">
+							<?php foreach( $column as $ref_name => $attribute ) { ?>
+								<tr name="<?=$ref_name?>">
+									<th title="<?=htmlentities(strip_tags($attribute['description']))?>">
+										<?=$attribute['name']?>:
+									</th>
+									<td>
+										<?
+										if ( is_array($refs_actions[$ref_name]) ) {
+											echo $this->render('core/EmbeddedRowTitleMenu.php', array (
+												'title' => IteratorBase::getHtmlValue($attribute['text']),
+												'items' => $refs_actions[$ref_name]
+											));
+										}
+										else {
+											echo $view->render('pm/PageFormAttribute.php', $attribute);
+										}
+										?>
+									</td>
+								</tr>
+							<?php } ?>
+						</table>
+					</div>
+				</div>
+
+				<!--  -->
+				<div class="accordion-heading">
+					<a class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
+						<span class="caret"></span>
+						<?=$attributes['Description']['name']?>
+					</a>
+				</div>
+				<div id="collapseTwo" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'':'in')?> collapse">
+					<?
+					if ( is_a($attributes['Description']['field'], 'Field') )
+					{
+						$attributes['Description']['field']->draw($this);
+					}
+					else
+					{
+						echo '<p>'.$attributes['Description']['text'].'</p>';
+					}
+					?>
+					<br/>
+				</div>
+
 			</div>
-			<?php if ( $column_index < count($columns) - 1 ) { ?>
-		    <div class="properties-column">&nbsp;</div>
-			<?php } ?>
-			<?php } ?>
+			<div class="properties-cell-2">
+				<div class="properties-column">&nbsp;</div>
+				<?php $column = $columns[2]; ?>
+				<div class="properties-column-32">
+					<table class="properties-table">
+						<?php foreach( $column as $ref_name => $attribute ) { ?>
+							<tr name="<?=$ref_name?>">
+								<th title="<?=htmlentities(strip_tags($attribute['description']))?>">
+									<?=$attribute['name']?>:
+								</th>
+								<td>
+									<?
+									if ( is_array($refs_actions[$ref_name]) ) {
+										echo $this->render('core/EmbeddedRowTitleMenu.php', array (
+											'title' => IteratorBase::getHtmlValue($attribute['text']),
+											'items' => $refs_actions[$ref_name]
+										));
+									}
+									else {
+										echo $view->render('pm/PageFormAttribute.php', $attribute);
+									}
+									?>
+								</td>
+							</tr>
+						<?php } ?>
+					</table>
+				</div>
+			</div>
 		</div>
 	</div>
 	
-	<!--  -->
-	<div class="accordion-heading">
-	  <a class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
-		<span class="caret"></span>
-		<?=$attributes['Description']['name']?>
-	  </a>
-	</div>
-	<div id="collapseTwo" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'':'in')?> collapse">
-		<? 
-		if ( is_a($attributes['Description']['field'], 'Field') )
-		{
-		    $attributes['Description']['field']->draw($this);
-		}
-		else
-		{ 
-		    echo '<p>'.$attributes['Description']['text'].'</p>';
-		}
-		?>
-		<br/>
-	</div>
-
 	<?php if ( $attributes['Tasks']['visible'] ) { ?>
 
 	<div class="accordion-heading <?=$section_class['Tasks']?>">
@@ -245,7 +304,21 @@ foreach( $attributes as $name => $attribute )
 	</div>
 	
 	<?php } ?>
-	
+
+	<?php foreach( $wordyAttributes as $name => $attribute ) { ?>
+		<div class="accordion-heading">
+			<a class="to-drop-btn" data-toggle="collapse" href="#collapse<?=$name?>" tabindex="-1">
+				<span class="caret"></span>
+				<?=$attribute['name']?>
+			</a>
+		</div>
+		<div id="collapse<?=$name?>" class="accordion-body">
+			<? echo $view->render('pm/PageFormAttribute.php', $attribute); ?>
+			<br/>
+		</div>
+	<?php }	?>
+
+
 	<?php if ( $attributes['Attachment']['visible'] ) { ?>
 	
 	<div class="accordion-heading <?=$section_class['Trace']?>">
@@ -260,7 +333,7 @@ foreach( $attributes as $name => $attribute )
 	</div>
 	
 	<?php } ?>
-	
+
 	<?php if ( count($trace_attributes) > 0 ) { ?>
 	<div class="accordion-heading <?=$section_class['Trace']?>">
 	  <a class="to-drop-btn collapsed" data-toggle="collapse" href="#collapseFive" tabindex="-1">

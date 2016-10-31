@@ -11,4 +11,8 @@ class ProjectTemplateIterator extends OrderedIterator
             return preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, parent::get($attribute));
         }
     }
+
+    function getXml() {
+        return file_get_contents($this->object->getTemplatePath($this->get('FileName')));
+    }
 }

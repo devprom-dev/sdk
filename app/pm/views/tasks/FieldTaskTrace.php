@@ -40,33 +40,26 @@ class FieldTaskTrace extends FieldForm
  	
  	function getForm( & $trace )
 	{
-		return new ObjectTraceFormEmbedded( $trace, 'Task' );
+		return new ObjectTraceFormEmbedded( $trace, 'Task', $this->getName() );
 	}
 	
 	function drawBody( $view = null )
 	{
-		global $model_factory;
-
 		$this->setFilters( $this->trace );
 		
  		$form = $this->getForm($this->trace);
- 		
  		$form->setTraceFieldName( $this->getName() );
- 		
- 		$form->setTraceObject( $model_factory->getObject(
- 			$this->trace->getObjectClass()) );
+ 		$form->setTraceObject( getFactory()->getObject($this->trace->getObjectClass()) );
  			
 		$object_it = $this->getObjectIt();
-		
- 		if ( is_object($object_it) )
- 		{
- 			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
+ 		if ( is_object($object_it) ) {
+ 			if ( !$this->getEditMode() ) {
+ 			    $form->setObjectIt( $object_it );
+            }
  		}
  		
  		$form->setReadonly( $this->readOnly() );
- 			
  		$form->setTabIndex( $this->getTabIndex() );
- 			
 		$form->draw( $view );
 	}
 }

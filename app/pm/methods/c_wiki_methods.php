@@ -87,9 +87,10 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  	function getValues()
  	{
   		return array (
- 			'all' => translate('Все'), 
- 			'actual' => translate('Синхронизированы'),
- 			'nonactual' => translate('Рассинхронизированы')
+ 			'all' => text(2248),
+ 			'actual' => text(2249),
+ 			'nonactual' => text(2250),
+            'empty' => text(2251)
  			);
 	}
 
@@ -391,41 +392,6 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
- class ViewWikiContentWebMethod extends PMWikiFilterWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Содержание');
- 	}
-
- 	function getValues()
- 	{
-  		$values = array (
- 			'all' => translate('Любое'),
-  			'nonempty' => translate('Есть содержимое'),
-  			'empty' => translate('Нет содержимого')
- 			);
- 		
- 		return $values;
-	}
-	
-	function getStyle()
-	{
-		return 'width:130px;';
-	}
-
- 	function getValueParm()
- 	{
- 		return 'content';
- 	}
- 	
- 	function getType()
- 	{
- 		return 'singlevalue';
- 	}
- }
- 
- ///////////////////////////////////////////////////////////////////////////////////////
  class ViewWikiArchivedWebMethod extends PMWikiFilterWebMethod
  {
  	function getCaption()
@@ -536,5 +502,3 @@ include_once SERVER_ROOT_PATH."core/methods/FilterDateWebMethod.php";
  		return 'singlevalue';
  	}
  } 
-  
-?>

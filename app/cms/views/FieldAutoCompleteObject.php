@@ -127,10 +127,9 @@ class FieldAutoCompleteObject extends Field
 
  	    if ( $this->search_enabled )
  	    {
-	 	    $ids = array_filter(preg_split('/[,-]/',$value), function($id) {
+	 	    $ids = array_filter(preg_split('/,/',$value), function($id) {
 	 	    			return is_numeric($id);
 	 	    		});
-
 	 	    if ( count($ids) > 0 ) {
 	 	    	return $registry->Query(
 					array (
@@ -142,6 +141,7 @@ class FieldAutoCompleteObject extends Field
 				$object_it = $this->getObject()->getExact($value);
 				if ( $object_it->getId() != '' ) return $object_it;
 
+                $registry->setLimit(1);
 		 	    return $registry->Query(
 					array (
 						new FilterAttributePredicate('Caption', $value)

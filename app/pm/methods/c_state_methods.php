@@ -75,19 +75,21 @@ class TransitionStateMethod extends WebMethod
 
  	function hasAccess()
  	{
- 		if ( !$this->object_it->IsTransitable() )
- 		{
+ 		if ( !$this->object_it->IsTransitable() ) {
  			return false;
  		}
  		
- 		if ( !$this->transition_it->doable( $this->object_it ))
- 		{
+ 		if ( !$this->transition_it->doable( $this->object_it )) {
  			$this->reason_has_no_access = $this->transition_it->getNonDoableReason();
- 			 
  			return false;
  		}
- 		
- 		return getFactory()->getAccessPolicy()->can_modify($this->object_it) && $this->transition_it->appliable();
+
+ 		if ( !$this->transition_it->appliable() ) {
+            $this->reason_has_no_access = text(2227);
+            return false;
+        }
+
+ 		return getFactory()->getAccessPolicy()->can_modify_attribute($this->object_it->object, 'State');
  	}
  	
  	function getReasonHasNoAccess()
@@ -171,18 +173,16 @@ class TransitionStateMethod extends WebMethod
  		getSession()->addBuilder( new WorkflowModelBuilder() );
  		
  		$object = getFactory()->getObject($class);
-		
-		$object_it = $object->getExact( $object_id ); 		
-
-		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) return;
+		$object_it = $object->getExact( $object_id );
+        $this->setObjectIt($object_it);
 
 		$transition = getFactory()->getObject('Transition');
-		
 		$transition->setVpdContext( $object_it );
-		
 		$transition_it = $transition->getExact($transition_id);
-		
-		if ( $object->getAttributeType('State') == '' ) return;
+        $this->setTransitionIt($transition_it);
+
+        if ( !$this->hasAccess() ) return;
+        if ( $object->getAttributeType('State') == '' ) return;
 		
 		$state_it = $transition_it->getRef('TargetState');
 
@@ -280,7 +280,7 @@ class TransitionStateMethod extends WebMethod
 		getFactory()->resetCache();
 		$object_it = getFactory()->getObject($class_name)->getExact($parms['object']);
 
-		if ( !getFactory()->getAccessPolicy()->can_modify($object_it) )
+		if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, 'State') )
 		{
 			$result = array (
 				"message" => "denied",
@@ -364,12 +364,12 @@ class TransitionStateMethod extends WebMethod
 			$model_builder->build( $object );
 			
 			$attributes = array();
-			
+
 			foreach( $object->getAttributes() as $attribute => $data )
 			{
 				if ( !$object->IsAttributeVisible($attribute) ) continue;
 				if ( $parms[$attribute] != '' ) continue;
-				if ( $parms['attribute'] == $attribute && $object_it->get($attribute) == $parms['value'] ) continue;
+				if ( $parms['attribute'] == $attribute && $object_it->get($attribute) == $parms['value'] && $parms['value'] != '' ) continue;
 				
 				$attributes[] = $attribute;
 			}
@@ -395,7 +395,7 @@ class TransitionStateMethod extends WebMethod
 					)
 				);
 
-				if ( $object instanceof Request && in_array('Tasks', $attributes, true) ) {
+				if ( $object instanceof Request && in_array('Tasks', $attributes, true) && !in_array('TransitionComment', $attributes) ) {
 					$url = getSession()->getApplicationUrl($object_it).'issues/board?mode=group&ChangeRequest='.$object_it->getId().$url;
 				}
 				else {

@@ -199,11 +199,11 @@ class PageBoard extends PageList
 		$actions = $this->getModifyActions( $object_it );
 		
 		$form = $this->getTable()->getPage()->getFormRef();
-	    
+
 	    if ( !$form instanceof PageForm ) return array();
-	    
-	    $form->show($object_it->copy());
-	    
+
+	    $form->show($object_it);
+
 	    $transition_actions = $form->getTransitionActions();
 	    if ( count($transition_actions) < 1 ) return $actions;
 
@@ -240,10 +240,7 @@ class PageBoard extends PageList
 			'uid' => 'create'
 		);
 
-		$plugins = getFactory()->getPluginsManager();
-		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($form->getSite()) : array();
-
-		foreach( $plugins_interceptors as $plugin ) {
+		foreach( $this->plugins as $plugin ) {
 			$plugin->interceptMethodFormGetActions( $form, $actions );
 		}
 
@@ -261,7 +258,6 @@ class PageBoard extends PageList
 		$actions[] = array();
 		$actions[] = array (
 			'name' => $_COOKIE[$this->getId()]['column/'.trim($board_value)] == '' ? text(2149) : text(2150),
-			'url' => '#',
 			'alt' => $board_value,
 			'uid' => "collapse-cards",
 			'class' => $_COOKIE[$this->getId()]['column/'.trim($board_value)] == '' ? text(2150) : text(2149)
@@ -328,10 +324,11 @@ class PageBoard extends PageList
 			return;
 		}
 
-		echo '<div id="context-menu-'.$board_value.'" title="'.htmlentities($this->column_descriptions[$board_value]).'">';
+		echo '<div id="context-menu-'.$board_value.'">';
 			echo $this->view->render('core/TextMenu.php', array (
 				'title' => $board_title,
-				'items' => $actions
+				'items' => $actions,
+				'hint' => htmlentities($this->column_descriptions[$board_value])
 			));
 		echo '</div>';
 	}
@@ -379,26 +376,17 @@ class PageBoard extends PageList
 	{
 		if ( $object_it->get($attr) == '' ) return;
 
-		switch ( $object_it->object->getAttributeObject($attr)->getEntityRefName() )
+		switch ( $ref_it->object->getEntityRefName() )
 		{
 		    case 'pm_Attachment':
-				
 		    	parent::drawRefCell( $ref_it, $object_it, $attr );
-		    	
 		    	break;
 
 		    default:
-
-		    	echo '<div style="padding:0 0 0 0;">';
-		
-				if ( !$this->getUidService()->hasUID($ref_it) )
-				{
+				if ( !$this->getUidService()->hasUID($ref_it) ) {
 					echo translate($object_it->object->getAttributeUserName( $attr )).': ';
 				}
-	
 				parent::drawRefCell($ref_it , $object_it, $attr);
-				
-				echo '</div>';
 		}
 	}
 
@@ -406,7 +394,7 @@ class PageBoard extends PageList
 	{
 		$parms = array($this->getBoardAttribute() => $boardValue);
 		if ($groupValue != '') $parms[$this->getGroup()] = $groupValue;
-		echo '<a href="#" more="'.$boardValue.'" group="'.$groupValue.'" class="btn btn-mini collapse-cards pull-left" title="'.text(2146).'"><i class="icon-resize-small"></i></a>';
+		echo '<a more="'.$boardValue.'" group="'.$groupValue.'" class="btn btn-mini collapse-cards pull-left" title="'.text(2146).'"><i class="icon-resize-small"></i></a>';
 		if ( is_array($this->new_action) ) {
 			$url = preg_replace_callback('/({[^}]*})/', function ($matches) use ($parms) {
 				return str_replace('"', "'",
@@ -790,7 +778,7 @@ class PageBoard extends PageList
 							if ( $spinner != '' ) echo '<div class="board_item_spinner" style="'.$spinner.'">&nbsp;</div>';
 							echo '<div class="board_item_attributes">';
 							echo '<div class="item_attrs" style="display:none;" modified="'.$column_it->get_native('RecordModified').'"></div>';
-
+							echo '<div class="ca-field">';
 							for( $j = 0; $j < count($attr_index); $j++)
 							{
 								$attr = $attrs[$attr_index[$j]];
@@ -804,7 +792,7 @@ class PageBoard extends PageList
 									$this->drawCell( $column_it, $attr );
 								}
 							}
-
+							echo '</div>';
 							echo '</div>';
 
                         $this->drawItemMenu($column_it);

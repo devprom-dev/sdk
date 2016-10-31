@@ -7,7 +7,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 		return false; 		
 	}
 	
-	function drawAddButton( $tabindex )
+	function drawAddButton( $view, $tabindex )
 	{ 
 		$object_it =& $this->getIteratorRef();
 		
@@ -34,6 +34,13 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 			echo '</div><br/>';
 		}		
 	
-		parent::drawAddButton( $tabindex );
+		parent::drawAddButton( $view, $tabindex );
+
+        if ( count($lines) > 0 && $_REQUEST['formonly'] == '' ) {
+            $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank';
+            echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="'.$target.'" href="javascript:uiShowSpentTime();" tabindex="-1">';
+                echo translate('подробнее');
+            echo '</a>';
+        }
 	}
 }

@@ -83,7 +83,7 @@ class WorkloadDetailsList extends PMDetailsList
 		$capacity = array();
 		$worker_it = getFactory()->getObject('ProjectUser')->getAll();
 		while( !$worker_it->end() ) {
-			$capacity[$worker_it->getId()] = defined('PERMISSIONS_ENABLED') ? $worker_it->get('Capacity') : 8;
+			$capacity[$worker_it->getId()] = $worker_it->get('Capacity');
 			$worker_it->moveNext();
 		}
 
@@ -211,7 +211,7 @@ class WorkloadDetailsList extends PMDetailsList
 
 				$data['title'] = $iteration_it->getHtmlDecoded('Caption');
 
-				list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getEstimatedBurndownMetrics();
+				list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getRealBurndownMetrics();
 				$data['capacity'] = ($capacity / count($this->workload)) * $actual_velocity;
 
 				$method = new ObjectModifyWebMethod($iteration_it);

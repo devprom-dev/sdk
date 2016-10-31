@@ -2,7 +2,13 @@
 
 class ParticipantIterator extends OrderedIterator
 {
-	function get( $attr_name ) 
+    function __wakeup()
+    {
+        parent::__wakeup();
+        $this->setObject( new Participant );
+    }
+
+    function get( $attr_name )
 	{
 		global $model_factory;		
 				

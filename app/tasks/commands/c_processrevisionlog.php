@@ -6,8 +6,9 @@ class ProcessRevisionLog extends TaskCommand
 {
  	function execute()
 	{
+		if ( !class_exists('Subversion', false) ) return;
+
 		$this->logStart();
-		$this->setupLogger();
 
 		$ids = $this->getChunk(); 
 
@@ -79,28 +80,12 @@ class ProcessRevisionLog extends TaskCommand
 
 			$object = getFactory()->getObject('pm_Subversion');
 			
-			if ( !$object instanceof Subversion )
-			{
+			if ( !$object instanceof Subversion ) {
 				$scm_it->moveNext(); continue;
 			}
-			
-			$it = $object->getExact($scm_it->getId());
 
-			ob_start();
-			$connector = $it->getConnector();
-			$it->refresh();
-
-			$log_content = ob_get_contents();
-			ob_end_clean();
-
-			$this->logInfo($log_content);
-
-			$scm_it->object->modify_parms(
-				$scm_it->getId(),
-				array (
-					'Log' => $log_content
-				)
-			);
+			$method = new CodeRefreshRepoWebMethod($object->getExact($scm_it->getId()));
+            $method->execute_request();
 
 			$scm_it->moveNext();
 		}
@@ -111,22 +96,4 @@ class ProcessRevisionLog extends TaskCommand
  		$log = $this->getLogger();
  		if( is_object($log) ) $log->info( $message );
  	}
-
-	protected function setupLogger()
-	{
-		$layout = new LoggerLayoutPattern();
-		$layout->setConversionPattern("\n%d %m");
-		$layout->activateOptions();
-
-		$appEcho = new LoggerAppenderEcho('bar');
-		$appEcho->setLayout($layout);
-		$appEcho->setHtmlLineBreaks(false);
-		$appEcho->setThreshold('debug');
-		$appEcho->activateOptions();
-
-		Logger::getLogger('SCM')->addAppender($appEcho);
-		Logger::getLogger('SCM')->setLevel('debug');
-		Logger::getLogger('Commands')->addAppender($appEcho);
-		Logger::getLogger('Commands')->setLevel('debug');
-	}
 }

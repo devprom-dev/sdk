@@ -45,13 +45,20 @@ class ReportSpentTimeTable extends PMPageTable
 	function getActions()
 	{
 		$actions = array();
-
 		$values = $this->getFilterValues();
-		$method = new ExcelExportWebMethod();
 
+		$method = new ExcelExportWebMethod();
 		$actions[] = array(
-			'name' => $method->getCaption(),
+			'name' => text(2203),
 			'url' => $method->url(translate('Затраченное время'), 'ActivitiesExcelIterator', $values)
+		);
+
+        unset($values['month']);
+        unset($values['year']);
+		$method = new ExcelExportWebMethod();
+		$actions[] = array (
+			'url' => $method->url('', 'ActivityPivotIteratorExportExcel', $values),
+			'name' => text('ee208')
 		);
 
 		return $actions;
@@ -60,7 +67,11 @@ class ReportSpentTimeTable extends PMPageTable
 	function getNewActions() {
 		return array();
 	}
-	
+
+	function getExportActions() {
+		return array();
+	}
+
 	function getDeleteActions() {
 		return array();
 	}

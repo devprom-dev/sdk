@@ -4,11 +4,11 @@ include "DocumentTemplateRegistry.php";
 
 class DocumentTemplate extends Metaobject
 {
- 	function __construct( $object = null ) {
+ 	function __construct( $reference = null ) {
 		$registry = new DocumentTemplateRegistry($this);
-		if ( is_object($object) ) {
-			$this->object = $object;
-			$registry->setReferenceName($object->getReferenceName());
+		if ( is_object($reference) ) {
+			$this->reference = $reference;
+			$registry->setReferenceName($reference->getReferenceName());
 		}
 		parent::__construct('pm_DocumentTemplate', $registry);
 	}
@@ -19,10 +19,10 @@ class DocumentTemplate extends Metaobject
 
 	function add_parms( $parms ) {
 		if ( $parms['ReferenceName'] == '' ) {
-			$parms['ReferenceName'] = $this->object->getReferenceName();
+			$parms['ReferenceName'] = $this->reference->getReferenceName();
 		}
 		return parent::add_parms( $parms );
 	}
 
-	private $object = null;
+	private $reference = null;
 }

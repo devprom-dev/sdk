@@ -14,4 +14,8 @@ class FullScreenSection extends ButtonInfoSection
 	function getIcon() {
 		return 'icon-fullscreen';
 	}
+
+	function IsActive() {
+		return false;
+	}
 }

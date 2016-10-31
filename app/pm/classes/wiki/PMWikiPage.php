@@ -36,7 +36,10 @@ class PMWikiPage extends WikiPage
 	function getPageHistory()
 	{
 	}
-	
+
+    function getPageVersions() {
+    }
+
 	function getAttributeObject( $attr )
 	{
 		switch ( $attr )

@@ -61,7 +61,7 @@ class WatchingsList extends PMPageList
 		
 		array_push($actions, array( 
 		    'url' => $session->getApplicationUrl().'project/log?object='.$anchor_it->object->getClassName().'&'.$class.'='.$anchor_it->getId(), 
-		    'name' => translate('История изменений') 
+		    'name' => text(2238)
 		));
 
 		return $actions;

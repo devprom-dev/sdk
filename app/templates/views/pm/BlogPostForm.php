@@ -1,18 +1,15 @@
 <div style="display:table;width:100%;">
 
-	<h4 class="title-cell bs">
+	<h4 class="title-cell bs" style="width:auto;padding-left:0;">
 	    <? $attributes['Caption']['field']->draw(); ?>
 	</h4>
 
-	<div class="title-cell" style="width:2%;"></div>
-	
-	<div class="title-cell" style="width:1%;"><?=$uid_icon?></div>
-	<div class="title-cell" style="width:1%;"></div>
-	
-	<div class="title-cell" style="width:1%;">
+	<div class="title-cell"><?=$uid_icon?></div>
+
+	<div class="title-cell">
 		<?php if ( count($actions) > 0 ) { ?>
 		<div class="btn-group operation last">
-			<a class="btn btn-small dropdown-toggle" href="#" data-toggle="dropdown">
+			<a class="btn btn-mini dropdown-toggle" href="#" data-toggle="dropdown">
 				<i class="icon-asterisk icon-gray"></i>
 				<span class="caret"></span>
 			</a>

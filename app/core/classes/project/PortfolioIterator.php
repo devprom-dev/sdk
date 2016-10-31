@@ -1,13 +1,18 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class PortfolioIterator extends ProjectIterator
 {
-    protected $methodology_it;
-    
     protected $callback_array = array();
-    
-    public function setCallbacks( $callbacks )
+
+    public function __wakeup()
     {
+        IteratorBase::__wakeup();
+        $this->setObject( new Portfolio );
+    }
+
+    public function setCallbacks( $callbacks ) {
     	$this->callback_array = $callbacks; 
     }
     
@@ -20,15 +25,10 @@ class PortfolioIterator extends ProjectIterator
         return call_user_func($callback, $this);
     }
     
-    function getMethodologyIt()
+    function buildMethodologyIt()
  	{
- 	    global $model_factory;
-
- 	    if ( is_object($this->methodology_it) ) return $this->methodology_it;
- 	    
- 	    $methodology = $model_factory->getObject('pm_Methodology');
-        
-        $this->methodology_it = $methodology->createCachedIterator( array( array (
+ 	    $methodology = getFactory()->getObject('Methodology');
+        $methodology_it = $methodology->createCachedIterator( array( array (
             'pm_MethodologyId' => 9999999,
             'Project' => $this->getId(),
             'IsReportsOnActivities' => 'N',
@@ -39,28 +39,25 @@ class PortfolioIterator extends ProjectIterator
         )));
         
         $attributes = $methodology->getAttributes();
+        $data = $methodology_it->getRowset();
         
-        $data = $this->methodology_it->getRowset();
-        
-        $methodology_it = $methodology->getByRefArray( array( 
-                'Project' => $this->getRef('RelatedProject')
-        ));  
-        
-        while ( !$methodology_it->end() )
+        $it = $methodology->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('Project', $this->getRef('RelatedProject')->idsToArray())
+            )
+        );
+        while ( !$it->end() )
         {
-            foreach ( $attributes as $key => $value )
-            {
+            foreach ( $attributes as $key => $value ) {
             	if ( $key == 'IsRequestOrderUsed' ) continue;
                 if ( $key == 'RequestEstimationRequired' ) continue;
-                if ( $methodology_it->get($key) == 'Y' ) $data[0][$key] = $methodology_it->get($key);
+                if ( $it->get($key) == 'Y' ) $data[0][$key] = $it->get($key);
             }
-            
-            $methodology_it->moveNext();
+            $it->moveNext();
         }
 
-        $this->methodology_it->setRowset( $data );
- 	    
- 		return $this->methodology_it;
+        $methodology_it->setRowset( $data );
+ 		return $methodology_it;
  	}
  	
  	function getId()

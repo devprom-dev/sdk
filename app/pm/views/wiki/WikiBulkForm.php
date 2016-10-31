@@ -28,10 +28,12 @@ class WikiBulkForm extends BulkForm
  	{
  		switch ( $attr )
  		{
+            case 'Tag':
  			case 'Version':
  			case 'Snapshot':
  			case 'ParentPage':
  		    case 'Project':
+            case 'Feature':
  		    	return 'custom';
 
  			case 'CopyOption':
@@ -49,6 +51,9 @@ class WikiBulkForm extends BulkForm
  	{
  		switch ( $attr )
  		{
+            case 'Tag':
+                return translate('Тэг');
+
  			case 'CopyOption':
  				return text(1726);
  			
@@ -89,7 +94,7 @@ class WikiBulkForm extends BulkForm
 		    	return parent::getAttributeValue( $attribute );
 		}
 	}
- 	
+
  	function drawCustomAttribute( $attribute, $value, $tab_index )
  	{
  		global $model_factory;
@@ -160,6 +165,32 @@ class WikiBulkForm extends BulkForm
 				
 				break;
 
+            case 'Feature':
+                $field = new FieldHierarchySelector(getFactory()->getObject('Feature'));
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->draw();
+                $field->drawScripts();
+
+                break;
+
+            case 'Tag':
+                $field = new FieldAutoCompleteObject( getFactory()->getObject('Tag') );
+                $field->SetId($attribute);
+                $field->SetName('value');
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->setAppendable();
+
+                if ( $this->showAttributeCaption() ) {
+                    echo $this->getName($attribute);
+                }
+                $field->draw();
+                break;
+
+
 			default:
  				parent::drawCustomAttribute( $attribute, $value, $tab_index );
  		}
@@ -181,6 +212,9 @@ class WikiBulkForm extends BulkForm
 			case 'CopyOption':
 			case 'Description':
 				return true;
+
+            case 'RemoveTag':
+                return false;
 
 			default:
 				return parent::IsAttributeVisible( $attribute );

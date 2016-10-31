@@ -58,10 +58,11 @@ class RequestFormDuplicate extends RequestForm
 
 	function getSourceIt()
 	{
-		if ( $_REQUEST['Request'] != '' ) {
-			return array($this->source_it, 'Description');
+        $result = array();
+	    if ( $_REQUEST['Request'] != '' ) {
+            $result[] = array($this->source_it, 'Description');
 		}
-		return parent::getSourceIt();
+		return array_merge(parent::getSourceIt(), $result);
 	}
 
 	function process()

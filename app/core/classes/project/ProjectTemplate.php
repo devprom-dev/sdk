@@ -51,8 +51,6 @@ class ProjectTemplate extends Metaobject
 	
  	function dropTemplate( $file_name, $exported )
  	{
- 	    global $model_factory;
- 	    
  		$file = fopen ( $this->getTemplatePath($file_name), 'w+' );
  		
 	 	fwrite( $file, '<?xml version="1.0" encoding="utf-8"?>' );

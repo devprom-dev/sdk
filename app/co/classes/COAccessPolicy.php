@@ -5,8 +5,7 @@ class CoAccessPolicy extends AccessPolicy
 	private $group_it = null;
  	private $subject_key = '';
  	private $group_access_it = null;
- 	private $license_it = null;
-	
+
 	public function getGroupIt()
  	{
  		if ( is_object($this->group_it) ) {
@@ -69,7 +68,7 @@ class CoAccessPolicy extends AccessPolicy
 			switch( $ref_name ) {
 				case 'pm_Project':
 				case 'co_ProjectGroup':
-					return getSession()->getUserIt()->getId() != '' && getSession()->getUserIt()->get('IsReadonly') == 'N';
+					return getSession()->getUserIt()->getId() == '' || getSession()->getUserIt()->get('IsReadonly') == 'N';
 			}
 		}
 		
