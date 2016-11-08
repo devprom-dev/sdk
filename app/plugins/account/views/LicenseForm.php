@@ -235,7 +235,7 @@ class LicenseForm extends AjaxForm
         		break;
         		
         	case 'UserTitle':
-        		echo str_replace('%1', getSession()->getUserIt()->getDisplayName(), text('account17'));
+        		echo str_replace('%1', IteratorBase::wintoutf8(getSession()->getUserIt()->getDisplayName()), text('account17'));
         		break;
         		
         	case 'UserForm':
