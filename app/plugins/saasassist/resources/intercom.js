@@ -9,6 +9,7 @@
     "active_projects": %projects%,
     "active_users": %users%,
     "host_name": "%host%",
+     "template_now": "%template_now%",
     "templates": "%templates%",
     "user_role": "%user_role%"
 };

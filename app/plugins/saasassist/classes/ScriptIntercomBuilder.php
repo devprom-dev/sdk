@@ -31,7 +31,8 @@ class ScriptIntercomBuilder extends ScriptBuilder
     	
     	$content = preg_replace('/%projects%/', $project_it->count(), $content);
     	$content = preg_replace('/%templates%/', join(',',$project_it->fieldToArray('Tools')), $content);
-    	
+        $content = preg_replace('/%template_now%/', join(',',$this->session->getProjectIt()->get('Tools')), $content);
+
     	if ( $user_it->get('IsAdmin') == 'Y' )
     	{
     		$content = preg_replace('/%user_role%/', 'admin', $content);

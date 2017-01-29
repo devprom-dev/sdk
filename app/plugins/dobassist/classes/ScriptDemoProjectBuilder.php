@@ -13,7 +13,8 @@ class ScriptDemoProjectBuilder extends ScriptBuilder
 	
     public function build( ScriptRegistry & $object )
     {
-    	if ( getSession()->getUserIt()->getId() > 1 ) return; // skip non-first users
+        $language = getSession()->getUserIt()->get('Language') == 1 ? 'ru' : 'en';
+        $object->addScriptFile(SERVER_ROOT_PATH."plugins/dobassist/resources/$language/locale.js");
     	$object->addScriptFile(SERVER_ROOT_PATH."plugins/dobassist/resources/productdemo.js");
     }
 }
