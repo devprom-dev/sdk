@@ -42,6 +42,23 @@ class ProcessOrder extends CommandForm
     function validate()
  	{
 		$this->checkRequired( array('OrderInfo') );
+
+        $orderInfo = JsonWrapper::decode(urldecode($_REQUEST['OrderInfo']));
+        $checkSum = $orderInfo['Checksum'];
+        $checksumInfo = array (
+            'LicenseType' => $orderInfo['LicenseType'],
+            'LicenseValue' => $orderInfo['LicenseValue'],
+            'InstallationUID' => $orderInfo['InstallationUID'],
+            'LicenseOptions' => $orderInfo['LicenseOptions'],
+            'LicenseUsers' => $orderInfo['LicenseUsers']
+        );
+        $validCheckSum = md5(var_export($checksumInfo,true).INSTALLATION_UID);
+        if ( $checkSum != $validCheckSum ) {
+            Logger::getLogger('Commands')->error('ORDER FAILED: '.var_export($_REQUEST, true));
+            Logger::getLogger('Commands')->error('Invalid checksum '.$checkSum.', sould be '.$validCheckSum);
+            $this->replyRedirect('/module/accountclient/failed?ErrorCode=9');
+        }
+
 		return true;
  	}
 

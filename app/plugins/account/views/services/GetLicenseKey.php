@@ -306,6 +306,14 @@ class GetLicenseKey extends CommandForm
         if ( $product['Users'] > 0 ) {
             $order_info['LicenseUsers'] = $product['Users'];
         }
+        $checksumInfo = array (
+            'LicenseType' => $order_info['LicenseType'],
+            'LicenseValue' => $order_info['LicenseValue'],
+            'InstallationUID' => $order_info['InstallationUID'],
+            'LicenseOptions' => $order_info['LicenseOptions'],
+            'LicenseUsers' => $order_info['LicenseUsers']
+        );
+        $order_info['Checksum'] = md5(var_export($checksumInfo,true).INSTALLATION_UID);
 
 		$this->replyRedirect(
             $this->getStore()->getPaymentFormUrl(
