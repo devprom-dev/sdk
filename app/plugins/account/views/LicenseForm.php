@@ -282,9 +282,34 @@ class LicenseForm extends AjaxForm
             new AccountProductSupport()
 		);
 
+        $license_value = json_decode(urldecode($_REQUEST['WasLicenseValue']), true);
+        $licence_type = $_REQUEST['LicenseType'];
+        $usersLimit = $license_value['users'];
+
 		foreach( $products as $product )
 		{
-			$iterator = $product->getExact($_REQUEST['LicenseType']);
+            if ( $usersLimit > 0 ) {
+                $iterator = $product->getByRefArray(
+                    array(
+                        'LicenseType' => $licence_type,
+                        'UsersLimit' => $usersLimit
+                    )
+                );
+                if ( $iterator->getId() == '' ) {
+                    $iterator = $product->getByRefArray(
+                        array(
+                            'LicenseType' => $licence_type
+                        )
+                    );
+                }
+            }
+            else {
+                $iterator = $product->getByRefArray(
+                    array(
+                        'LicenseType' => $licence_type
+                    )
+                );
+            }
 			if ( $iterator->getId() != '' ) return $iterator;
 		}
 

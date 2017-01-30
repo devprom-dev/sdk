@@ -6,7 +6,8 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
     {
         return $this->createIterator( array (
             array (
-                'entityId' => 'LicenseSAASALM',
+                'entityId' => 'LicenseSAASALM-5',
+                'LicenseType' => 'LicenseSAASALM',
                 'Caption' => text('account45'),
                 'CaptionText' => '',
                 'RequiredFields' => array('AggreementForm','Aggreement'),
@@ -51,7 +52,8 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
                 )
             ),
         		array ( 
-                    'entityId' => 'LicenseSAASALM',
+                    'entityId' => 'LicenseSAASALM-10',
+                    'LicenseType' => 'LicenseSAASALM',
                     'Caption' => text('account10'),
                     'CaptionText' => '',
                     'RequiredFields' => array('AggreementForm','Aggreement'),
@@ -97,6 +99,7 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
         		),
 				array (
                     'entityId' => 'LicenseSAASALM20',
+                    'LicenseType' => 'LicenseSAASALM20',
                     'Caption' => text('account42'),
                     'CaptionText' => '',
                     'RequiredFields' => array('AggreementForm','Aggreement'),
@@ -142,6 +145,7 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
 				),
         		array (
                     'entityId' => 'LicenseSAASALMMiddle',
+                    'LicenseType' => 'LicenseSAASALMMiddle',
                     'Caption' => text('account11'),
                     'CaptionText' => '',
                     'RequiredFields' => array('AggreementForm','Aggreement'),

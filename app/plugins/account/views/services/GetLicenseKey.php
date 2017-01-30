@@ -39,8 +39,8 @@ class GetLicenseKey extends CommandForm
 				if ( $user_it->get('Password') == $user_it->object->getHashedPassword($_REQUEST['ExistPassword']) )
 				{
 					$this->updateCustomer( $user_it,
-							$_REQUEST['InstallationUID'], 
-							$_REQUEST['LicenseType']
+                        $_REQUEST['InstallationUID'],
+                        $product_it->get('LicenseType')
 					);
 					break;
 				}
@@ -69,7 +69,7 @@ class GetLicenseKey extends CommandForm
 		if ( $product_it->get('PaymentRequired') && $_REQUEST['LicenseKey'] == '' )
 		{
 			if ( $_REQUEST['LicenseValue'] == '' ) $_REQUEST['LicenseValue'] = $product_it->get('ValueDefault');
-			$this->redirectToStore( $user_it->get('Email') );
+			$this->redirectToStore( $user_it->get('Email'), $product_it );
 		}
 		
 		$license_data = array();
@@ -275,21 +275,21 @@ class GetLicenseKey extends CommandForm
  		return md5($uid.$users._SALT.date('#221Y#332m-@j'));
 	}
 	
-	function redirectToStore( $email )
+	function redirectToStore( $email, $product_it )
 	{
-		$product = $this->getProductParameters($_REQUEST['LicenseType']);
-
         $url_parts = parse_url(urldecode($_REQUEST['Redirect']));
         $failUrl = $url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/failed';
         $successUrl = $url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].'/module/accountclient/process';
 
-    	$amount = round($_REQUEST['LicenseValue'] * $product['Price'], 0).".00";
-        $orderId = abs(crc32($_REQUEST['InstallationUID'].date('Y-m-d H:s:i')));
-
         $license_value = json_decode(urldecode($_REQUEST['WasLicenseValue']), true);
         if ( is_null($license_value) ) $license_value = $_REQUEST['WasLicenseValue'];
+
+        $product = $this->getProductParameters($product_it->getId());
+
+        $amount = round($_REQUEST['LicenseValue'] * $product['Price'], 0).".00";
+        $orderId = abs(crc32($_REQUEST['InstallationUID'].date('Y-m-d H:s:i')));
 		$order_info = array (
-            'LicenseType' => $_REQUEST['LicenseType'],
+            'LicenseType' => $product_it->get('LicenseType'),
             'LicenseValue' => $_REQUEST['LicenseValue'],
             'WasLicenseKey' => urlencode(urlencode($_REQUEST['WasLicenseKey'])),
             'WasLicenseValue' => $license_value,
@@ -319,9 +319,9 @@ class GetLicenseKey extends CommandForm
         );
 	}
 
-	function getProductParameters( $licence_type )
+	function getProductParameters( $productId )
 	{
-        $product_it = $this->getProduct($licence_type);
+        $product_it = $this->getProduct($productId);
 
 		if ( in_array(getSession()->getUserIt()->get('Language'), array('',1)) ) {
             $parms['Currency'] = 'RUB';
@@ -340,7 +340,7 @@ class GetLicenseKey extends CommandForm
         $selected_options = array();
 		if ( is_array($product_it->get('Options')) ) {
 			foreach( $product_it->get('Options') as $option ) {
-				if ( $option['Required'] || array_key_exists($licence_type.'Option_'.$option['OptionId'], $_REQUEST) || $_REQUEST['LicenseScheme'] == '' ) {
+				if ( $option['Required'] || array_key_exists($product_it->getId().'Option_'.$option['OptionId'], $_REQUEST) || $_REQUEST['LicenseScheme'] == '' ) {
 					$parms['Price'] += intval($option[$price_field]);
                     $selected_options[] = $option['OptionId'];
 				}
@@ -353,7 +353,7 @@ class GetLicenseKey extends CommandForm
 		return $parms;
 	}
 
-	protected function getProduct($licence_type)
+	protected function getProduct($productId)
 	{
 		$products = array (
 			new AccountProduct(),
@@ -364,7 +364,7 @@ class GetLicenseKey extends CommandForm
 
 		foreach( $products as $product )
 		{
-			$iterator = $product->getExact($licence_type);
+            $iterator = $product->getExact($productId);
 			if ( $iterator->getId() != '' ) return $iterator;
 		}
 
