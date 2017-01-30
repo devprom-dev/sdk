@@ -14,7 +14,8 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
                     'ValueDefault' => 3,
                     'PriceRUB' => 12000,
                     'PriceUSD' => 10,
-                    'PaymentRequired' => true
+                    'PaymentRequired' => true,
+                    'UsersLimit' => 10
         		),
         		array ( 
                     'entityId' => 'LicenseDevOpsBoardUnlimited',

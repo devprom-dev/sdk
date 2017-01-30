@@ -303,6 +303,9 @@ class GetLicenseKey extends CommandForm
             'Email'=> $email,
             'Language' => getSession()->getUserIt()->get('Language')
 		);
+        if ( $product['Users'] > 0 ) {
+            $order_info['LicenseUsers'] = $product['Users'];
+        }
 
 		$this->replyRedirect(
             $this->getStore()->getPaymentFormUrl(
@@ -318,6 +321,8 @@ class GetLicenseKey extends CommandForm
 
 	function getProductParameters( $licence_type )
 	{
+        $product_it = $this->getProduct($licence_type);
+
 		if ( in_array(getSession()->getUserIt()->get('Language'), array('',1)) ) {
             $parms['Currency'] = 'RUB';
 			$price_field = 'PriceRUB';
@@ -326,8 +331,12 @@ class GetLicenseKey extends CommandForm
             $parms['Currency'] = 'USD';
 			$price_field = 'PriceUSD';
 		}
-		$product_it = $this->getProduct($licence_type);
-		$parms['Price'] = intval($product_it->get($price_field));
+        $parms['Price'] = intval($product_it->get($price_field));
+
+        if ( $product_it->get('UsersLimit') > 0 ) {
+            $parms['Users'] = $product_it->get('UsersLimit');
+        }
+
         $selected_options = array();
 		if ( is_array($product_it->get('Options')) ) {
 			foreach( $product_it->get('Options') as $option ) {

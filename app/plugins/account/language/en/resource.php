@@ -36,5 +36,6 @@ $plugin_text_array = array
     37 => 'Bug tracker, Scrum and Kanban',
     42 => '20 users',
     43 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a> when buy more than 5 monthes.',
-    44 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a>.'
+    44 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a>.',
+    45 => '5 users'
 );

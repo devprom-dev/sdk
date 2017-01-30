@@ -37,13 +37,15 @@ class ProcessOrder2 extends ProcessOrder
 				$date->add(new DateInterval('P'.$left_days.'D'));
 			}
 		}
-		return json_encode(
-			array (
-				'timestamp' => $date->format('Y-m-d'),
-				'days' => $days,
-				'options' => $order_info['LicenseOptions']
-			)
-		);
+		$value = array (
+            'timestamp' => $date->format('Y-m-d'),
+            'days' => $days,
+            'options' => $order_info['LicenseOptions']
+        );
+        if ( $order_info['LicenseUsers'] > 0 ) {
+            $value['users'] = $order_info['LicenseUsers'];
+        }
+		return json_encode($value);
 	}
 
 	protected function getKey()
