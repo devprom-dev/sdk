@@ -1,56 +1,5 @@
 <?php
-
-include_once "ProcessOrder.php";
-
-class ProcessOrder2 extends ProcessOrder
-{
-    public function getLicenseKey( $uid, $value )
-	{
-		openssl_sign($value.$uid, $signature, $this->getKey(), OPENSSL_ALGO_SHA512);
-		return base64_encode($signature);
-	}
-
-    public function getLicenseValue( $order_info )
-	{
-		date_default_timezone_set('UTC');
-
-		$days = $order_info['LicenseValue'];
-		$date = new DateTime();
-		$date->add(new DateInterval('P'.$days.'D'));
-
-		$was_parms = $order_info['WasLicenseValue'];
-		Logger::getLogger('Commands')->info('WASKEY: '.var_export($was_parms, true));
-
-		$license_verified = openssl_verify(
-				json_encode($was_parms) . $order_info['InstallationUID'],
-				base64_decode(trim($order_info['WasLicenseKey'])),
-				file_get_contents(SERVER_ROOT_PATH . 'templates/config/license.pub'),
-				OPENSSL_ALGO_SHA512) == 1;
-
-		if ( $license_verified && is_array($was_parms) && $was_parms['timestamp'] != '' )
-		{
-			$dt1 = new DateTime($was_parms['timestamp']);
-			$dt2 = new DateTime();
-			$left_days = $dt1->diff($dt2)->days;
-			if ( $left_days > 0 ) {
-				$days += $left_days;
-				$date->add(new DateInterval('P'.$left_days.'D'));
-			}
-		}
-		$value = array (
-            'timestamp' => $date->format('Y-m-d'),
-            'days' => $days,
-            'options' => $order_info['LicenseOptions']
-        );
-        if ( $order_info['LicenseUsers'] > 0 ) {
-            $value['users'] = $order_info['LicenseUsers'];
-        }
-		return json_encode($value);
-	}
-
-	protected function getKey()
-	{
-		$key = '-----BEGIN RSA PRIVATE KEY-----
+$key = '-----BEGIN RSA PRIVATE KEY-----
 Proc-Type: 4,ENCRYPTED
 DEK-Info: DES-EDE3-CBC,1B7930333EA65EA7
 
@@ -80,6 +29,4 @@ i6eD3jQ9s9dVsBoFT2k4Q5mb8Lmt46D88Bm37t3QkD7xILPjTjYdix9ZnZFWfRZy
 5dseylFPCADI2E0OSuRVXrVp3s2eNOTESreGTUHODxWpTbP8psudi/Hc/wuV0zyU
 Z4/3qtUVC4aVOe+dxVTF1png3yWzqFFxG8zKEEzGJcZ7pSY71UZsoQ==
 -----END RSA PRIVATE KEY-----';
-		return openssl_pkey_get_private($key,'vt;leyfhjlysq');
-	}
-}
+return openssl_pkey_get_private($key,'vt;leyfhjlysq');

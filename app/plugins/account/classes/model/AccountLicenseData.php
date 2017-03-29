@@ -9,29 +9,39 @@ class AccountLicenseData extends Metaobject
     
     function getAll()
     {
-        $licenses = array();
-        
-        $other_it = parent::getByRefArray( array (
+        return $this->parseResult(
+            parent::getByRefArray( array (
                 'ICQ' => "NOT NULL"
-        ));
-        
+            ))
+        );
+    }
+
+    function findByUID( $uid ) {
+        return $this->parseResult(
+            $this->getRegistry()->Query(
+                array(
+                    new FilterInstallationUIDPredicate(trim($uid))
+                )
+            )
+        );
+    }
+
+    protected function parseResult( $other_it )
+    {
+        $licenses = array();
         while ( !$other_it->end() )
         {
             $license_data = json_decode( $other_it->getHtmlDecoded('ICQ'), true );
-        
-            $license_data = !is_null($license_data) 
+
+            $license_data = !is_null($license_data)
                 ? (is_array($license_data) ? $license_data : array()) : array();
-        
-            foreach( $license_data as $license )
-            {
+
+            foreach( $license_data as $license ) {
                 $license['cms_UserId'] = $other_it->getId();
-                
                 $licenses[] = $license;
             }
-            	
             $other_it->moveNext();
         }
-        
         return $this->createCachedIterator($licenses);
     }
     

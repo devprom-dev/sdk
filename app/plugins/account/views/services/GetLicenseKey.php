@@ -4,6 +4,7 @@ include_once SERVER_ROOT_PATH."core/c_command.php";
 include_once SERVER_ROOT_PATH."cms/c_mail.php";
 include_once "PayonlineStore.php";
 include_once "YandexStore.php";
+include_once "UserPasswordHashService.php";
 
 class GetLicenseKey extends CommandForm
 {
@@ -25,7 +26,17 @@ class GetLicenseKey extends CommandForm
 			$this->checkRequired(array('LicenseValue'));
 			if ( intval($_REQUEST['LicenseValue']) < 1 ) $this->replyError( text('account19') );
 		}
-		
+
+		if ( getSession()->getUserIt()->getId() != '' ) {
+		    $user_it = getSession()->getUserIt();
+		    if ( $user_it->get('Caption') == '' || $user_it->get('Email') == '' ) {
+                $this->replyError( text('account51') );
+            }
+            if ( !filter_var($user_it->get('Email'), FILTER_VALIDATE_EMAIL) ) {
+                $this->replyError( text('account51') );
+            }
+        }
+
  		if ( $_REQUEST['Email'] != '' && $_REQUEST['ExistPassword'] != '' )
 		{
 			$user_it = getFactory()->getObject('User')->getRegistry()->Query(
@@ -74,10 +85,8 @@ class GetLicenseKey extends CommandForm
 		
 		$license_data = array();
 		
-		$license = $model_factory->getObject('LicenseData');
-		
-		$license_it = $license->getAll();
-		
+		$license = getFactory()->getObject('AccountLicenseData');
+		$license_it = $license->findByUID($_REQUEST['InstallationUID']);
 		while ( !$license_it->end() )
 		{
 		    $check_alt_key = $license_it->get('uid') == $_REQUEST['InstallationUID'] 
@@ -86,11 +95,9 @@ class GetLicenseKey extends CommandForm
 			if ( $check_alt_key )
 			{
 				$license_data = $license_it->getData();
-				
 				break;
 			}
 
-			
 			$license_it->moveNext();
 		}
 		
@@ -127,7 +134,9 @@ class GetLicenseKey extends CommandForm
 			   		break;
 	
 				case 'LicenseTrial':
-					$license_data['key'] = $this->getTrialLicense($_REQUEST['InstallationUID'], $_REQUEST['LicenseValue']);
+				    list( $licenseKey, $licenseValue ) = $this->getTrialLicense($_REQUEST['InstallationUID']);
+					$license_data['key'] = $licenseKey;
+                    $license_data['value'] = $licenseValue;
 					break;
 					
 				default:
@@ -136,7 +145,6 @@ class GetLicenseKey extends CommandForm
 			
 			$license_data['uid'] = $_REQUEST['InstallationUID'];
 			$license_data['type'] = $_REQUEST['LicenseType'];
-			$license_data['value'] = $_REQUEST['LicenseValue'];
 		}
 		else
 		{
@@ -175,69 +183,39 @@ class GetLicenseKey extends CommandForm
 		    $mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 		    	
 		    $mail->send();
-		    
-		    $url = '?LicenseType='.$_REQUEST['LicenseType']
-		        .'&InstallationUID='.$_REQUEST['InstallationUID']
-		        .'&key=show';
-		    
-		    $url .= '&Redirect='.$_REQUEST['Redirect'];
-		    
-			$this->replyRedirect( $url );
+
+		    if ( $_REQUEST['UserName'] != '' && $_REQUEST['Email'] != '' ) {
+                $query_parms = array (
+                    'InstallationUID' => $license_data['uid'],
+                    'LicenseType' => $license_data['type'],
+                    'LicenseValue' => $license_data['value'],
+                    'LicenseKey' => $license_data['key']
+                );
+
+                $service = new \UserPasswordHashService();
+                $query_parms['UName'] = $user_it->get('Caption');
+                $query_parms['UEmail'] = $user_it->get('Email');
+                $query_parms['ULogin'] = $user_it->get('Login');
+                $query_parms['UPassword'] = $service->getInstancePassword($user_it);
+                $query_parms['token1'] = $_REQUEST['token1'];
+                $query_parms['token2'] = $_REQUEST['token2'];
+
+                $url_parts = parse_url(urldecode($_REQUEST['Redirect']));
+
+                exit(header('Location: '.
+                    $url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].
+                    '/module/accountclient/process?'.http_build_query($query_parms)
+                ));
+            }
+            else {
+                $url = '?LicenseType='.$_REQUEST['LicenseType']
+                    .'&InstallationUID='.$_REQUEST['InstallationUID']
+                    .'&key=show';
+
+                $url .= '&Redirect='.$_REQUEST['Redirect'];
+                $this->replyRedirect( $url );
+            }
 		}
-	}
-	
-	function exportToCRM( $user_it, $license_data )
-	{
-		$url_parts = parse_url(urldecode($_REQUEST['Redirect']));
-		
-		$owner = 'evgeny.savitsky@devprom.ru';
-		
-		$parts = preg_split('/\n/', $user_it->getHtmlDecoded('Description'));
-
-		$organization = IteratorBase::wintoutf8(trim($parts[0]).', '.$url_parts['host'].', '.$license_data['uid']);
-
-		$data = array (
-				'item_type' => 'org',
-				'name' => $organization,
-				'owner' => $owner,
-				'visible_to' => '0'
-		);
-
-		$body = wordwrap(JsonWrapper::encode($data), 70, " ");
-		
-		Logger::getLogger('Commands')->info($body);
-
-		$headers = '';
-		
-		$headers .= "From:".$owner;
-		
-		mail('12.141209@dropbox.pipedrive.com', 'organization', $body, $headers);
-		
-		$data = array (
-				'item_type' => 'deal',
-				'title' => $license_data['type'].': '.IteratorBase::wintoutf8($user_it->getHtmlDecoded('Description')),
-				'organization' => $organization,
-				'value' => $license_data['value'] * 9000,
-				'currency' => 'RUB',
-				'owner' => $owner,
-				'visible_to' => '0',
-				'person' => array (
-						'name' => IteratorBase::wintoutf8($user_it->getDisplayName()),
-						'email' => IteratorBase::wintoutf8($user_it->get('Email')),
-						'organization' => $organization,
-						'phone' => IteratorBase::wintoutf8($user_it->get('Phone'))
-				)		
-		);
-
-		$body = wordwrap(JsonWrapper::encode($data), 70, " ");
-		
-		Logger::getLogger('Commands')->info($body);
-
-		$headers = '';
-		
-		$headers .= "From:".$owner;
-		
-		mail('12.141209@dropbox.pipedrive.com', 'deal', $body, $headers);
 	}
 	
 	function modify()
@@ -268,11 +246,17 @@ class GetLicenseKey extends CommandForm
  		return md5($uid.SALT_);
 	}
 	
-	function getTrialLicense( $uid, $users )
+	function getTrialLicense( $uid )
 	{
- 		define ('_SALT', 'b49ca47b46846c581f3c34d9c0ac85d2');
-
- 		return md5($uid.$users._SALT.date('#221Y#332m-@j'));
+	    $command = new ProcessOrder2();
+	    $value = $command->getLicenseValue(
+            array(
+                'InstallationUID' => $uid,
+                'LicenseValue' => 30
+            )
+        );
+        $key = $command->getLicenseKey($uid, $value);
+ 		return array($key, $value);
 	}
 	
 	function redirectToStore( $email, $product_it )
@@ -367,7 +351,8 @@ class GetLicenseKey extends CommandForm
 			new AccountProduct(),
 			new AccountProductSaas(),
 			new AccountProductDevOps(),
-			new AccountProductSupport()
+			new AccountProductSupport(),
+            new AccountProductScrumBoard()
 		);
 
 		foreach( $products as $product )

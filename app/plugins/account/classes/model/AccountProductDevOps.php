@@ -1,5 +1,4 @@
 <?php
-
 include "AccountProductDevOpsRegistry.php";
 
 class AccountProductDevOps extends MetaobjectCacheable

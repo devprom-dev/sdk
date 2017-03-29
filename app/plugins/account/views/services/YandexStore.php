@@ -1,6 +1,6 @@
 <?php
 define('SHOP_ID', 71283);
-define('SCENE_ID', 540656);
+define('SCENE_ID', 66484);
 define('SHOP_PASSWORD', 'G3jEs+EsTat8ethat8!');
 
 class YandexStore
@@ -14,7 +14,7 @@ class YandexStore
     public function getPaymentFormUrl( $orderId, $amount, $email, $options, $failUrl = '', $successUrl = '' )
     {
         if ( $this->language == 'ru' ) {
-            $url = "https://demomoney.yandex.ru/eshop.xml?";
+            $url = "https://money.yandex.ru/eshop.xml?";
         }
         else {
             $url = "https://money.yandex.ru/eshop.xml?";

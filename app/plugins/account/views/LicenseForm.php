@@ -187,6 +187,9 @@ class LicenseForm extends AjaxForm
 				echo '<input type="hidden" name="WasLicenseValue" value="'.htmlspecialchars($_REQUEST['WasLicenseValue']).'">';
 				echo '<input type="hidden" name="Redirect" value="'.htmlspecialchars($_REQUEST['Redirect']).'">';
 				echo '<input type="hidden" name="Email" value="'.htmlspecialchars($_REQUEST['Email']).'">';
+                echo '<input type="hidden" name="UserName" value="'.htmlspecialchars($_REQUEST['UserName']).'">';
+                echo '<input type="hidden" name="token1" value="'.htmlspecialchars($_REQUEST['token1']).'">';
+                echo '<input type="hidden" name="token2" value="'.htmlspecialchars($_REQUEST['token2']).'">';
                 echo '<input type="hidden" name="LicenseScheme" value="'.htmlspecialchars($_REQUEST['LicenseScheme']).'">';
                 echo '</td>';
                 if ( is_array($this->getProduct()->get('Options')) ) {
@@ -199,16 +202,27 @@ class LicenseForm extends AjaxForm
                         echo '<div class="options-area" id="Options'.$product_it->getId().'" style="display: '.($this->getProduct()->getId() == $product_it->getId() ? 'block':'none').'">';
                         $options = $product_it->get('Options');
                         foreach ($options as $option_id => $option) {
-                            ?>
-                            <label class="checkbox" style="padding-left:">
-                                <input type="checkbox" class="checkbox" name="<?=$product_it->getId()?>Option_<?= $option['OptionId'] ?>"
-                                       checked <?=($option['Required'] === true ? 'disabled' : '')?> >
-                                <?=$option['Caption']?>
-                                <? if ( $option[$price_field] > 0 ) { ?>
-                                <?=str_replace('%1', $option[$price_field], text('account36')) ?>
-                                <? } ?>
-                            </label>
-                            <?php
+                            if ( $option['Required'] === true ) {
+                                ?>
+                                <label class="checkbox" style="padding-left:">
+                                    <?=$option['Caption']?>
+                                    <? if ( $option[$price_field] > 0 ) { ?>
+                                        <?=str_replace('%1', $option[$price_field], text('account36')) ?>
+                                    <? } ?>
+                                </label>
+                                <?php
+                            }
+                            else {
+                                ?>
+                                <label class="checkbox" style="padding-left:">
+                                    <input type="checkbox" class="checkbox" name="<?=$product_it->getId()?>Option_<?= $option['OptionId'] ?>" checked >
+                                    <?=$option['Caption']?>
+                                    <? if ( $option[$price_field] > 0 ) { ?>
+                                        <?=str_replace('%1', $option[$price_field], text('account36')) ?>
+                                    <? } ?>
+                                </label>
+                                <?php
+                            }
                         }
                         $product_it->moveNext();
                         echo '</div>';
@@ -222,6 +236,8 @@ class LicenseForm extends AjaxForm
                     </script>
                     <?
                     echo '</td>';
+                }
+                else if ( $this->getProduct()->get('ValueName') == '' ) {
                 }
                 echo '</tr></table>';
                 echo '<hr/>';
@@ -279,7 +295,8 @@ class LicenseForm extends AjaxForm
 			new AccountProduct(),
 			new AccountProductSaas(),
 			new AccountProductDevOps(),
-            new AccountProductSupport()
+            new AccountProductSupport(),
+            new AccountProductScrumBoard()
 		);
 
         $license_value = json_decode(urldecode($_REQUEST['WasLicenseValue']), true);

@@ -9,7 +9,7 @@ include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php"
 class InitializeInstance extends Page
 {
 	private $trial_length = '14';
-	private $language = 2;
+	private $language = 1;
 
 	public function __construct()
 	{
@@ -23,7 +23,7 @@ class InitializeInstance extends Page
 
  	function render() 
  	{
-		$this->language = $_REQUEST['l'] == 'ru' ? 1 : 2;
+		$this->language = $_REQUEST['l'] == 'en' ? 2 : 1;
 
 		$this->setupLoggers();
 

@@ -7,6 +7,7 @@ class AccountProductSupportRegistry extends ObjectRegistrySQL
         return $this->createIterator( array (
 			array (
 				'entityId' => 'LicenseTeamSupported',
+                'LicenseType' => 'LicenseTeamSupported',
 				'Caption' => text('account38'),
 				'CaptionText' => ' за 2190 руб.',
 				'AggreementText' => text('account41'),
@@ -17,6 +18,7 @@ class AccountProductSupportRegistry extends ObjectRegistrySQL
 			),
 			array (
 				'entityId' => 'LicenseTeamSupportedCompany',
+                'LicenseType' => 'LicenseTeamSupportedCompany',
 				'Caption' => text('account39'),
 				'CaptionText' => ' за 58400 руб.',
 				'AggreementText' => text('account41'),
@@ -27,6 +29,7 @@ class AccountProductSupportRegistry extends ObjectRegistrySQL
 			),
 			array (
 				'entityId' => 'LicenseTeamSupportedUnlimited',
+                'LicenseType' => 'LicenseTeamSupportedUnlimited',
 				'Caption' => text('account40'),
 				'CaptionText' => ' за 97090 руб.',
 				'AggreementText' => text('account41'),

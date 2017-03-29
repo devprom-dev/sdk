@@ -152,14 +152,14 @@ class ProcessOrder extends CommandForm
 		exit(header('Location: '.$url_parts['scheme'].'://'.$url_parts['host'].':'.$url_parts['port'].$url));
 	}
 	
-	protected function getLicenseKey( $uid, $value )
+	public function getLicenseKey( $uid, $value )
 	{
 		date_default_timezone_set('UTC');
 		$today_date = strtotime('-0 day', strtotime(date('Y-m-j')));
 		return md5($uid.$value.SAASSALT.date('#2fee3ffY#3fe2a32m-@3@j', $today_date));
 	}
 
-	protected function getLicenseValue( $order_info )
+    public function getLicenseValue( $order_info )
 	{
 		$uid = $order_info['InstallationUID'];
 		$was_license_value = $order_info['WasLicenseValue'];

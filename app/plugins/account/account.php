@@ -5,6 +5,7 @@ define ('ACCOUNT_HOST', 'https://devprom.ru');
 include "classes/model/AccountProduct.php";
 include "classes/model/AccountProductSaas.php";
 include "classes/model/AccountProductDevOps.php";
+include "classes/model/AccountProductScrumBoard.php";
 include "classes/model/AccountProductSupport.php";
 include "classes/model/AccountLicenseData.php";
 include "classes/model/ServicePayed.php";

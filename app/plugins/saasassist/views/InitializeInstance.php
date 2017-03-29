@@ -1,7 +1,5 @@
 <?php
 
-use Devprom\ApplicationBundle\Service\CreateProjectService;
-
 include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
@@ -60,23 +58,26 @@ class InitializeInstance extends Page
 
 		file_put_contents(dirname(SERVER_ROOT_PATH).'/initialize.log', $log);
 		
-		if ( $_REQUEST['template'] != '' )
-		{
-			$project_it = $this->setupDemoProject($_REQUEST['template']);
-		}
-
 		$clear_cache_action = new ClearCache();
 		$clear_cache_action->install();
         PluginsFactory::Instance()->invalidate();
 
-		if ( is_object($project_it) && $project_it->getId() > 0 )
-		{
-			exit(header('Location: /pm/'.$project_it->get('CodeName')));
-		}
-		else
-		{
-			exit(header('Location: /projects/welcome'));
-		}
+        if ( $_REQUEST['template'] == '' )
+        {
+            exit(header('Location: /projects/welcome'));
+        }
+        else {
+            $template = getFactory()->getObject('pm_ProjectTemplate');
+            $template->setRegistry( new ObjectRegistrySQL() );
+            $template_it = $template->getRegistry()->Query(
+                array (
+                    new FilterAttributePredicate('FileName', $_REQUEST['template'])
+                )
+            );
+
+            getFactory()->getCacheService()->invalidate();
+            exit(header('Location: /module/saasassist/projects?template='.$template_it->get('FileName')));
+        }
 	}
  	
  	protected function createUser( $name, $login, $email )
@@ -268,44 +269,5 @@ class InitializeInstance extends Page
 					)
 			);
 		}
-	}
-	
-	protected function setupDemoProject( $template_file_name )
-	{
-		$template = getFactory()->getObject('pm_ProjectTemplate');
-		$template->setRegistry( new ObjectRegistrySQL() );
-		
-		$template_it = $template->getRegistry()->Query(
- 					array (
- 							new FilterAttributePredicate('FileName', $template_file_name)
- 					)
- 			);
-		
-		if ( $template_it->getId() < 1 )
-		{
-			return getFactory()->getObject('Project')->getEmptyIterator();
-		}
-		
-		$parms = array();
-		
-		$parms['CodeName'] = 'project1';
-		$parms['Caption'] = $template_it->getHtmlDecoded('Caption');
-		$parms['Template'] = $template_it->getId();  
-		$parms['User'] = getSession()->getUserIt()->getId();
-		$parms['DemoData'] = true;
-
-		$service = new CreateProjectService();
-		$project_it = $service->execute($parms);
-		$project_it->modify(
-				array(
-						'Platform' => 'demo'
-				)
-		);
-		$service->invalidateCache();
-		if ( $project_it->getMethodologyIt()->get('IsSupportUsed') == 'Y') {
-			$service->invalidateServiceDeskCache();
-		}
-
-		return $project_it;
 	}
 }

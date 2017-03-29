@@ -37,5 +37,10 @@ $plugin_text_array = array
     42 => '20 users',
     43 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a> when buy more than 5 monthes.',
     44 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a>.',
-    45 => '5 users'
+    45 => '5 users',
+    47 => 'User name',
+    48 => 'Email',
+    49 => 'Phone',
+    50 => 'Company name',
+    51 => 'Please specify user name and email'
 );

@@ -21,6 +21,11 @@ class SaasAssistCoPlugin extends PluginCoBase
                         'includes' => array( 'saasassist/views/InitializeInstance.php' ),
                         'classname' => 'InitializeInstance'
                 ),
+            'projects' =>
+                array(
+                    'includes' => array( 'saasassist/views/SetupProjects.php' ),
+                    'classname' => 'SetupProjects'
+                ),
             'create' =>
                 array(
                         'includes' => array( 'saasassist/views/CreateInstance.php' ),
