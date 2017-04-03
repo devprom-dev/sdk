@@ -229,7 +229,6 @@ class InitializeInstance extends Page
 
                 case 'processcheckpoints':
                     $modify_hours = '*';
-                    $isActive = 'N';
                     break;
             }
 			

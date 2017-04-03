@@ -9,7 +9,8 @@ class LicenseForm extends AjaxForm
     
     function getFormUrl()
     {
-    	return ACCOUNT_HOST.'/module/account/command?name='.$this->getCommandClass();
+        $url_parts = parse_url(urldecode($_REQUEST['Redirect']));
+    	return $url_parts['scheme'].'://devprom.ru/module/account/command?name='.$this->getCommandClass();
     }
 
     function getAttributes()

@@ -1,7 +1,4 @@
 <?php
-
-define ('ACCOUNT_HOST', 'https://devprom.ru');
-
 include "classes/model/AccountProduct.php";
 include "classes/model/AccountProductSaas.php";
 include "classes/model/AccountProductDevOps.php";
