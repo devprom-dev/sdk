@@ -1,7 +1,7 @@
 <?php
 
 define( 'SAAS_DOMAIN', 'myalm.ru' );
-define( 'SAAS_SENDER', 'noreply@projectscloud.ru' );
+define( 'SAAS_SENDER', 'noreply@myalm.ru' );
 
 include "classes/licenses/LicenseRegistryBuilderSaaS.php";
 include "classes/licenses/events/RenewSAASLicenseEventHandler.php";

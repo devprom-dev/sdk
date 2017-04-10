@@ -305,23 +305,6 @@ class InitializeInstance extends Page
 						)
 			);
 
-
-		$portfolio = getFactory()->getObject('co_ProjectGroup');
-		$group_id = $portfolio->add_parms(
-			array (
-				'Caption' => $this->language == 2 ? 'Brand New Product' : 'Новый продукт'
-			)
-		);
-		$portfolioLink = getFactory()->getObject('co_ProjectGroupLink');
-		foreach( array($support_it->getId(), $program_it->getId(), $incidents_it->getId()) as $project_id ) {
-			$portfolioLink->add_parms(
-				array (
-					'ProjectGroup' => $group_id,
-					'Project' => $project_id
-				)
-			);
-		}
-
 		$service->invalidateCache();
 		$service->invalidateServiceDeskCache();
 

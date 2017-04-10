@@ -91,7 +91,7 @@ toursQueue.unshift(new Tour({
 	    path: '/pm/incidentsA/module/support/autoactions?area=favs'
 	  },
 	  {
-		path: '/pm/project-portfolio-1',
+		path: '/pm/all',
 		orphan: true,
 		onShow: function(tour) {
 			setTimeout(function(){tour.end();},1000);
