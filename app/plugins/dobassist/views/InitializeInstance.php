@@ -57,7 +57,7 @@ class InitializeInstance extends Page
 		$clear_cache_action->install();
         PluginsFactory::Instance()->invalidate();
 
-		exit(header('Location: /pm/project-portfolio-1/issues/board/issuesboardcrossproject'));
+		exit(header('Location: /pm/all/issues/board?area=favs'));
 	}
  	
  	protected function createUser( $name, $login, $email )
@@ -78,23 +78,34 @@ class InitializeInstance extends Page
         $generator = new UserPicSpritesGenerator();
         $generator->storeSprites();
  	}
- 	
- 	protected function createLicense()
- 	{
- 		$key_file = $this->getKeyFile();
- 		if ( file_exists($key_file) ) include $key_file;
- 		
- 		getFactory()->getObject('LicenseInstalled')->getAll()->modify(
- 				array (
- 						'LicenseType' => 'LicenseDevOpsBoard',
- 						'LicenseValue' => $this->trial_length,
- 						'LicenseKey' => $key_value
- 				)
- 		);
-		file_put_contents(SERVER_ROOT_PATH.'/conf/license.dat', serialize(array('leftdays' => $this->trial_length)));
 
- 		return $key_value;
- 	}
+    protected function createLicense()
+    {
+        date_default_timezone_set('UTC');
+        $date = new DateTime();
+        $date->add(new DateInterval('P14D'));
+
+        $license_value = json_encode(array (
+            'timestamp' =>  $date->format('Y-m-d'),
+            'days' => $this->trial_length,
+            'users' => 10,
+            'options' => 'core,dev,qa,support'
+        ));
+
+        openssl_sign($license_value.INSTALLATION_UID, $signature, include($this->getKeyFile()), OPENSSL_ALGO_SHA512);
+        $key_value = base64_encode($signature);
+
+        getFactory()->getObject('LicenseInstalled')->getAll()->modify(
+            array (
+                'LicenseType' => 'LicenseDevOpsBoard',
+                'LicenseValue' => $license_value,
+                'LicenseKey' => $key_value
+            )
+        );
+        file_put_contents(SERVER_ROOT_PATH.'/conf/license.dat', serialize(array('leftdays' => $this->trial_length)));
+
+        return $key_value;
+    }
  	
  	protected function updateSystemSettings()
  	{
