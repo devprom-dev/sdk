@@ -9,8 +9,8 @@ git fetch upstream
 git checkout master
 git merge -s recursive -X theirs upstream/master
 sudo cp /projects/sdk/deploy/codenvy/000-default.conf /etc/apache2/sites-available/
-sudo cp /projects/sdk/deploy/codenvy/php-devprom.ini /etc/php5/apache2/conf.d/
-sudo cp /projects/sdk/deploy/codenvy/php-devprom.ini /etc/php5/cli/conf.d/
+sudo cp /projects/sdk/deploy/codenvy/php-devprom.ini /etc/php/7.0/apache2/conf.d/
+sudo cp /projects/sdk/deploy/codenvy/php-devprom.ini /etc/php/7.0/cli/conf.d/
 sudo cp /projects/sdk/deploy/codenvy/mysql-devprom.cnf /etc/mysql/conf.d/
 sudo cp /projects/sdk/deploy/codenvy/cron-devprom /etc/cron.d/
 sudo service mysql restart
