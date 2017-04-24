@@ -19,7 +19,6 @@ $plugin_text_array = array
     8 => 'Information to access your DevOpsBoard instance will be sent to your email.',
     9 => 'Enter a name for your site: http://&lt;site name&gt;.%1, please use latin letters and numbers.',
     10 => 'Team (up to 5 users)',
-    11 => 'The number of users is limited to 5 users, customers and incidents number are unlimited, all features are enabled, branding is also enabled',
     12 => 'The number of days of use',
     13 => 'License key',
     14 => 'Days left',

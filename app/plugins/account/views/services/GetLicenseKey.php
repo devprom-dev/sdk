@@ -316,14 +316,17 @@ class GetLicenseKey extends CommandForm
         $product_it = $this->getProduct($productId);
 
 		if ( in_array(getSession()->getUserIt()->get('Language'), array('',1)) ) {
-            $parms['Currency'] = 'RUB';
-			$price_field = 'PriceRUB';
 		}
 		else {
             $parms['Currency'] = 'USD';
 			$price_field = 'PriceUSD';
+            $cross_rate = 60;
 		}
-        $parms['Price'] = intval($product_it->get($price_field));
+
+        $parms['Currency'] = 'RUB';
+        $price_field = 'PriceRUB';
+        $cross_rate = 1;
+        $parms['Price'] = intval($product_it->get($price_field)) * $cross_rate;
 
         if ( $product_it->get('UsersLimit') > 0 ) {
             $parms['Users'] = $product_it->get('UsersLimit');
@@ -333,7 +336,7 @@ class GetLicenseKey extends CommandForm
 		if ( is_array($product_it->get('Options')) ) {
 			foreach( $product_it->get('Options') as $option ) {
 				if ( $option['Required'] || array_key_exists($product_it->getId().'Option_'.$option['OptionId'], $_REQUEST) || $_REQUEST['LicenseScheme'] == '' ) {
-					$parms['Price'] += intval($option[$price_field]);
+					$parms['Price'] += intval($option[$price_field]) * $cross_rate;
                     $selected_options[] = $option['OptionId'];
 				}
                 if ( $option[$price_field] == '' ) {

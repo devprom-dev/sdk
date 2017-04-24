@@ -9,7 +9,6 @@ class LicenseDevOpsBoardUnlimited extends LicenseDevOpsBoard
 	{
 		parent::__construct();
  		$this->setAttributeCaption( 'Caption', 'text(dobassist47)' );
- 		$this->setAttributeDescription( 'Caption', 'text(dobassist48)' );
 	}
 	
 	function createIterator()

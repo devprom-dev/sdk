@@ -9,7 +9,7 @@ class LicenseDevOpsBoard extends LicenseSAASBase
 	{
 		parent::__construct();
 
- 		$this->addAttribute( 'Caption', 'VARCHAR', 'text(dobassist10)', true, false, 'text(dobassist11)', 0 );
+ 		$this->addAttribute( 'Caption', 'VARCHAR', 'text(dobassist10)', true, false, '', 0 );
  		$this->addAttribute( 'LicenseValue', 'INTEGER', "text(dobassist12)", true, true );
  		$this->addAttribute( 'LicenseKey', 'VARCHAR', "text(dobassist13)", true, true );
  		$this->addAttribute( 'LeftDays', 'VARCHAR', 'text(dobassist14)', true, false, 'text(dobassist15)' );

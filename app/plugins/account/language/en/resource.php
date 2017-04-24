@@ -6,7 +6,7 @@ $plugin_text_array = array
     2 => 'Application installation idendifier (IID)',
     3 => 'Choose the product',
     4 => 'Specify duration of use in monthes',
-    6 => 'I accept the <a target="_blank" href="http://devopsboard.com/terms.html">service agreement</a>',
+    6 => 'I accept the <a target="_blank" href="http://devprom.ru/download/%D0%9B%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B4%D0%BE%D0%B3%D0%BE%D0%B2%D0%BE%D1%80-SaaS">service agreement</a>',
     10 => '10 users',
     11 => '30 users',
     12 => '100 users',
@@ -22,10 +22,10 @@ $plugin_text_array = array
     23 => 'If you forgot your password just <a href="javascript:window.parent.resetPassword();">reset it</a>',
     24 => 'New password has been generated and sent to your email %1',
     25 => 'Password recovery',
-    26 => 'DevOps Board <b>Team</b> (up to 5 users only)',
+    26 => 'DevOpsBoard Startup (up to 3 users)',
     27 => 'Renewing of license',
     28 => 'Specififed kind of licensing is not supported',
-    29 => 'DevOps Board <b>Unlimited</b>',
+    29 => 'DevOpsBoard Unlimited',
     30 => 'HelpDesk',
     31 => 'Requirements management',
     32 => 'Testing management',
@@ -42,5 +42,8 @@ $plugin_text_array = array
     48 => 'Email',
     49 => 'Phone',
     50 => 'Company name',
-    51 => 'Please specify user name and email'
+    51 => 'Please specify user name and email',
+    52 => 'DevOpsBoard Team (up to 10 users)',
+    53 => ' $%1 per month',
+    54 => 'I accept the <a target="_blank" href="http://devopsboard.com/en/terms">service agreement</a>'
 );

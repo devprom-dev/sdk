@@ -23,7 +23,7 @@ class InitializeInstance extends Page
 
  	function render() 
  	{
-		$this->language = $_REQUEST['l'] == 'en' ? 2 : 1;
+		$this->language = $_REQUEST['l'] == 'ru' ? 1 : 2;
 
 		$this->setupLoggers();
 
@@ -64,7 +64,7 @@ class InitializeInstance extends Page
  	{
  		$user = getFactory()->getObject('User');
  		$user->setNotificationEnabled(false);
- 		return $user->add_parms(
+ 		$user_id = $user->add_parms(
  				array (
  						'Caption' => $name,
  						'Login' => $login,
@@ -77,6 +77,7 @@ class InitializeInstance extends Page
 
         $generator = new UserPicSpritesGenerator();
         $generator->storeSprites();
+        return $user_id;
  	}
 
     protected function createLicense()

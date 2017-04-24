@@ -26,28 +26,26 @@ var tc = underi18n.MessageFactory(resource);
 toursQueue.unshift(new Tour({
 	steps: [
 	  {
-	    element: "table.board-table th:eq(0) span.title",
 	    title: 'Task board',
 	    content: tc('taskboard-intro'),
-	    placement: 'right',
+		orphan: true,
 	  },
 	  {
 	    element: "table.board-table tr.info:eq(0) td",
-	    title: 'Support swimlane',
-	    content: tc('taskboard-support'),
-	    placement: 'bottom',
-	  },
-	  {
-	    element: "table.board-table tr.info:eq(1) td",
 	    title: 'Incidents swimlane',
 	    content: tc('taskboard-incidents'),
 	    placement: 'bottom'
 	  },
+        {
+            element: "table.board-table tr.info:eq(1) td",
+            title: 'Support swimlane',
+            content: tc('taskboard-support'),
+            placement: 'bottom',
+        },
 	  {
-	    element: "table.board-table th:eq(0) span.title",
 	    title: 'Development Kanban board',
 	    content: tc('kanban-backlog'),
-	    placement: 'right',
+		  orphan: true,
 	    path: '/pm/dev/module/kanban/requests/kanbanboard?report=kanbanboard&basemodule=kanban/requests&&area=favs'
 	  },
 	  {
@@ -57,11 +55,10 @@ toursQueue.unshift(new Tour({
 		path: '/pm/dev/module/kanban/avgleadtime/avgleadtime?report=avgleadtime&basemodule=kanban/avgleadtime&&area=favs'
 	  },
 	  {
-	    element: "a#navbar-project",
 	    title: 'Support activity',
 	    content: tc('support-intro'),
-	    placement: 'bottom',
-	    path: '/pm/supportA/issues/board/issuesboard?report=issuesboard&basemodule=issues-board&&area=favs'
+          orphan: true,
+	    path: '/pm/supportA/issues/list/3?report=3&basemodule=issues-backlog&area=favs'
 	  },
 	  {
 	    element: "a#helpdesk-url",
@@ -70,25 +67,25 @@ toursQueue.unshift(new Tour({
 	    placement: 'bottom'
 	  },
 	  {
-	    element: "table.table-inner tr:eq(1)",
 	    title: 'Support mailboxes',
 	    content: tc('support-mailboxes'),
-	    placement: 'bottom',
-	    path: '/pm/supportA/module/support/mailboxes?area=stg'
+          orphan: true,
+	    path: '/pm/supportA/module/support/mailboxes?area=stg',
+          onShow: function (tour) {
+	  			eval($('a#new-coremotemailbox').attr('href'));
+		  }
 	  },
+        {
+            title: 'Setup auto actions',
+            content: tc('incidents-autoactions'),
+            orphan: true,
+            path: '/pm/supportA/module/support/autoactions?area=favs'
+        },
 	  {
-	    element: "a#navbar-project",
 	    title: 'Analyze incidents',
 	    content: tc('incidents-intro'),
-	    placement: 'bottom',
-	    path: '/pm/incidentsA/project/dicts/Environment?area=favs'
-	  },
-	  {
-	    element: "table.table-inner tr:eq(1)",
-	    title: 'Setup auto actions',
-	    content: tc('incidents-autoactions'),
-	    placement: 'bottom',
-	    path: '/pm/incidentsA/module/support/autoactions?area=favs'
+          orphan: true,
+	    path: '/pm/incidentsA/issues/list/7?report=7&basemodule=issues-backlog&area=favs'
 	  },
 	  {
 		path: '/pm/all',
