@@ -252,15 +252,15 @@ class InitializeInstance extends Page
     {
         if ( $this->language == 2 ) {
             $allowed_templates = array (
-                'scrum_en.xml',
-                'kanban_en.xml',
-                'scrumban_en.xml'
+                'kanban_en.xml' => '',
+                'scrum_en.xml' => '',
+                'scrumban_en.xml' => ''
             );
         }
         else {
             $allowed_templates = array (
-                'scrum_ru.xml' => 'Часто демонстрируйте результат при помощи Scrum. Используйте простые метрики для управления командой.',
                 'kanban_ru.xml' => 'Визуализируйте производственный процесс при помощи Kanban. Улучшайте ваш процесс, чтобы снизить время цикла.',
+                'scrum_ru.xml' => 'Часто демонстрируйте результат при помощи Scrum. Используйте простые метрики для управления командой.',
                 'scrumban_ru.xml' => 'Справляйтесь с незапланированной работой при помощи Scrumban. Комбинируйте Scrum и Kanban для достижения лучшего результата.'
             );
         }
@@ -269,6 +269,7 @@ class InitializeInstance extends Page
         $template->setRegistry( new ObjectRegistrySQL() );
 
         $template_it = $template->getRegistry()->Query();
+        $templateIndex = 10;
         while( !$template_it->end() )
         {
             if ( array_key_exists($template_it->get('FileName'), $allowed_templates) ) {
@@ -276,9 +277,11 @@ class InitializeInstance extends Page
                     $template_it->object->modify_parms(
                         $template_it->getId(),
                         array (
-                            'Description' => $allowed_templates[$template_it->get('FileName')]
+                            'Description' => $allowed_templates[$template_it->get('FileName')],
+                            'OrderNum' => $templateIndex
                         )
                     );
+                    $templateIndex += 10;
                 }
                 $template_it->moveNext();
                 continue;
@@ -287,5 +290,8 @@ class InitializeInstance extends Page
             $template_it->delete();
             $template_it->moveNext();
         }
+
+        copy( SERVER_ROOT_PATH . "plugins/sbassist/resources/js/scrum-tour.js", SERVER_ROOT_PATH . "plugins/scrum/resources/js/tour.js" );
+        copy( SERVER_ROOT_PATH . "plugins/sbassist/resources/js/kanban-tour.js", SERVER_ROOT_PATH . "plugins/kanban/resources/js/tour.js" );
     }
 }
