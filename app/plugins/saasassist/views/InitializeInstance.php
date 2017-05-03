@@ -6,7 +6,7 @@ include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php"
 
 class InitializeInstance extends Page
 {
-	private $trial_length = 14;
+	private $trial_length = 30;
 
 	public function __construct()
 	{
@@ -117,7 +117,7 @@ class InitializeInstance extends Page
  	{
 		date_default_timezone_set('UTC');
 		$date = new DateTime();
-		$date->add(new DateInterval('P14D'));
+		$date->add(new DateInterval('P'.$this->trial_length.'D'));
 
 		$license_value = json_encode(array (
 			'timestamp' =>  $date->format('Y-m-d'),

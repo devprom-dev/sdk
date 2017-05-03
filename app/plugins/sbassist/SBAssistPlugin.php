@@ -4,11 +4,13 @@ define('SAAS_SCHEME', 'http');
 define('SAAS_PORT', 80);
 define('SAAS_SENDER', 'noreply@devopsboard.com');
 
+include "classes/ScriptCrispBuilder.php";
 include "classes/licenses/LicenseRegistryBuilderSaaS.php";
 include "classes/licenses/events/RenewSAASLicenseEventHandler.php";
 include "classes/CheckpointRegistryBuilderSaaS.php";
 include "SBAssistCoPlugin.php";
 include "SBAssistAdminPlugin.php";
+include "SBAssistPMPlugin.php";
 
 // define common plugin attributes
 class SBAssistPlugin extends PluginBase
@@ -45,7 +47,7 @@ class SBAssistPlugin extends PluginBase
  	function getSectionPlugins()
  	{
  		return array(
-            new SBAssistCoPlugin(), new SBAssistAdminPlugin()
+            new SBAssistCoPlugin(), new SBAssistAdminPlugin(), new SBAssistPMPlugin()
  		);
  	}
  	

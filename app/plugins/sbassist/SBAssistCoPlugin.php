@@ -5,7 +5,8 @@ class SBAssistCoPlugin extends PluginCoBase
  	function getBuilders()
  	{
  	    return array (
- 	    		new RenewSAASLicenseEventHandler()
+            new RenewSAASLicenseEventHandler(),
+            new ScriptCrispBuilder(getSession())
  	    );
  	}
  	

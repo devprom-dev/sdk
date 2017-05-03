@@ -5,7 +5,7 @@ include_once SERVER_ROOT_PATH.'admin/classes/CheckpointEntryDynamic.php';
 class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 {
 	private $days_left_to_warning = 7;
-	private $trial_period_length = 14;
+	private $trial_period_length = 30;
 	
 	function execute()
 	{
@@ -131,7 +131,7 @@ class LicenseSAASExpirationCheckpoint extends CheckpointEntryDynamic
 	    
 	    $body = preg_replace('/_url_/', EnvironmentSettings::getServerUrl().'/admin/license/', $body);
 
-	    $days_due_terminate = max(14 + $left_days, 0);
+	    $days_due_terminate = max($this->trial_period_length + $left_days, 0);
 	    
 	    switch( $days_due_terminate )
 	    {

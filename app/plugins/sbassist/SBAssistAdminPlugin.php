@@ -7,7 +7,8 @@ class SBAssistAdminPlugin extends PluginAdminBase
  	{
  	    return array (
  	        new SystemSettingsDOBMetadataBuilder(),
-            new RenewSAASLicenseEventHandler()
+            new RenewSAASLicenseEventHandler(),
+            new ScriptCrispBuilder(getSession())
  	    );
  	}
 
