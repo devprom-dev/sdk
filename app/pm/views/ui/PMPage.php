@@ -16,7 +16,6 @@ include 'PMFormEmbedded.php';
 include 'PMPageForm.php';
 include 'PMPageTable.php';
 include 'PageSectionLifecycle.php';
-include "PageSectionSpentTime.php";
 include "FieldHierarchySelectorAppendable.php";
 include 'FieldCustomDictionary.php';
 include 'FieldWYSIWYG.php';
@@ -230,13 +229,12 @@ class PMPage extends Page
 		parent::render( $view );
 	}
 	
-	function getRedirect()
+	function getRedirect( $renderParms )
 	{
-        $state = new DeploymentState();
-        if ( !$state->IsReadyToBeUsed() ) return '/install';
-        if ( $state->IsMaintained() ) return '/503';
+        if ( !DeploymentState::Instance()->IsReadyToBeUsed() ) return '/install';
+        if ( DeploymentState::IsMaintained() ) return '/503';
 
-	    $navigation_parms = $this->getNavigationParms();
+	    $navigation_parms = $renderParms['navigation_parms'];
  		$areas = $navigation_parms['areas'];
 
  		if ( $_REQUEST['tab'] != '' )
@@ -274,7 +272,14 @@ class PMPage extends Page
 
  		if ( $use_entry_point )
  		{
- 		    // if no tab is specified then use default entry
+            // mark last visited project
+            $projectId = getSession()->getProjectIt()->getId();
+            $userId = getSession()->getUserIt()->getId();
+            if ( $projectId > 0 && $userId > 0 ) {
+                DAL::Instance()->Query("UPDATE pm_Participant SET RecordModified = NOW() WHERE SystemUser = ".$userId." AND Project = ".$projectId);
+            }
+
+            // if no tab is specified then use default entry
 	        foreach( $areas as $area )
  		    {
  		    	if ( !is_array($area['menus']) ) continue;
@@ -313,7 +318,7 @@ class PMPage extends Page
 			}
 		}
 
-		return parent::getRedirect();
+		return parent::getRedirect($renderParms);
 	}
 
 	protected function checkWidgetExists( $item ) {
@@ -428,7 +433,13 @@ class PMPage extends Page
  	{
  	    if ( !parent::hasAccess() ) return false;
 
- 	    if ( $this->needDisplayForm() ) return true;
+ 	    if ( $this->needDisplayForm() ) {
+            $object_it = $this->getObjectIt();
+            if ( is_object($object_it) && $object_it->get('Project') != '' ) {
+                return $object_it->get('Project') == getSession()->getProjectIt()->getId();
+            }
+            return true;
+        }
 
  	    // report based permissions to display the page
         $report_uid = $this->getReport();
@@ -445,23 +456,21 @@ class PMPage extends Page
     
  	function exportCommentsThread()
  	{
-		if ( $_REQUEST['object'] < 1 || $_REQUEST['objectclass'] == '' ) return;
+		$className = getFactory()->getClass($_REQUEST['objectclass']);
+        if ( !class_exists($className) ) return;
 
-	 	$object = getFactory()->getObject($_REQUEST['objectclass']);
-	 	$object_it = $object->getExact($_REQUEST['object']);
-	 	
-	 	if ( !getFactory()->getAccessPolicy()->can_read($object_it) ) return;
+	 	$object_it = getFactory()->getObject($className)->getExact($_REQUEST['object']);
+	 	if ( $object_it->getId() == '' || !getFactory()->getAccessPolicy()->can_read($object_it) ) return;
 
 		header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past
 		header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modified
 		header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 		header("Pragma: no-cache"); // HTTP/1.0
 		header('Content-type: text/html; charset='.APP_ENCODING);
-	 	
-		$control_uid = md5($object->getClassName().$object_it->getId());
-		
-		if ( $_REQUEST['form'] != '' )
-		{
+
+        $comment_list = $this->buildCommentList($object_it);
+
+		if ( $_REQUEST['form'] != '' ) {
 			$comment = getFactory()->getObject('Comment');
 			$comment->setVpdContext( $object_it );
 			
@@ -469,14 +478,14 @@ class PMPage extends Page
 		        ? $comment->getExact( $_REQUEST['comment'] )
 		        : $comment->getEmptyIterator();
 
-            $form = $this->buildCommentForm( $comment_it, $control_uid );
+            $form = $this->buildCommentForm( $comment_it, $comment_list->getControlUID() );
 
 			$parms['prevcomment'] = $_REQUEST['prevcomment'];
 			
 			$form->render( $this->getRenderView(), $parms );
 		}
 		else {
-			$this->buildCommentList($object_it, $control_uid)->render( $this->getRenderView(), array() );
+            $comment_list->render( $this->getRenderView(), array() );
 		}
  	}
 
@@ -492,11 +501,8 @@ class PMPage extends Page
         return $form;
     }
 
-    function buildCommentList( $object_it, $control_uid )
-    {
-        $comment_list = new CommentList( $object_it );
-        $comment_list->setControlUID( $control_uid );
-        return $comment_list;
+    function buildCommentList( $object_it ) {
+        return new CommentList( $object_it );
     }
 
  	function getHint()
@@ -540,6 +546,8 @@ class PMPage extends Page
 	function parseHint( $text )
 	{
 		$text = preg_replace('/\%project\%/i', getSession()->getProjectIt()->get('CodeName'), $text);
+        $text = preg_replace('/&lt;auth-key&gt;/i', \AuthenticationAPIKeyFactory::getAuthKey(getSession()->getUserIt()), $text);
+        $text = preg_replace('/%project-key%/i', getSession()->getProjectIt()->getPublicKey(), $text);
 		return $text;
 	}
 
@@ -704,6 +712,7 @@ class PMPage extends Page
 
         foreach( $traceAttributes as $attribute ) {
             if ( $object_it->get($attribute) == '' ) continue;
+            if ( !$object_it->object->IsReference($attribute) ) continue;
 
             $html .= '<h4>'.$object_it->object->getAttributeUserName($attribute).'</h4>';
             $trace_it = $object_it->getRef($attribute);

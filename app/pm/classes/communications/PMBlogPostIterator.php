@@ -4,16 +4,12 @@ class PMBlogPostIterator extends BlogPostIterator
 {
     function getDisplayName()
     {
-        global $project_it;
+        $codename = $this->get('ProjectCodeName');
+        $project_it = getSession()->getProjectIt();
 
-        $uid = new ObjectUID;
-        $codename = $uid->getProject( $this );
-
-        if ( !is_object($project_it) || $project_it->get('CodeName') != $codename )
-        {
+        if ( !is_object($project_it) || $project_it->get('CodeName') != $codename ) {
             $prefix = '{'.$codename.'} ';
         }
-
         return $prefix.parent::getDisplayName();
     }
 }

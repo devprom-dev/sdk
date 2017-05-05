@@ -14,7 +14,6 @@ class Comment extends CommentBase
  		$this->addAttributeGroup('ObjectId', 'system');
  		$this->addAttributeGroup('PrevComment', 'system');
 		$this->setAttributeType('Caption', 'wysiwyg');
-		$this->setAttributeDescription('Caption', text(2104));
  		$this->addPersister( new CommentAuthorPersister() );
  	}
  	
@@ -31,27 +30,5 @@ class Comment extends CommentBase
  	function IsDeletedCascade( $object )
 	{
 	    return false;
-	}
-	
-	function delete( $id, $record_version = ''  )
-	{
-		global $model_factory;
-		
-		$object_it = $this->getExact( $id );
-		
-		// delete attachments
-		$attachment = $model_factory->getObject('pm_Attachment');
-		$attachment->removeNotificator( 'EmailNotificator' );
-		
-		$attachment->addFilter( new AttachmentObjectPredicate($object_it) );
-		$attachment_it = $attachment->getAll();
-		
-		while ( !$attachment_it->end() )
-		{
-			$attachment->delete( $attachment_it->getId() );
-			$attachment_it->moveNext();
-		}
-		
-		return parent::delete( $id );
 	}
 }

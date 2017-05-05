@@ -7,6 +7,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
  	{
  	    $searchString = "";
         $searchEntities = array();
+        $searchPredicates = array();
 
         foreach( $this->getFilters() as $filter ) {
             if ( $filter instanceof FilterAttributePredicate ) {
@@ -23,6 +24,9 @@ class SearchResultRegistry extends ObjectRegistrySQL
                         );
                 }
             }
+            if ( $filter instanceof StateCommonPredicate ) {
+                $searchPredicates[] = $filter;
+            }
         }
         if ( $searchString == "" ) return $this->getObject()->getEmptyIterator();
         $searchString = TextUtils::getAlphaNumericString($searchString);
@@ -31,13 +35,13 @@ class SearchResultRegistry extends ObjectRegistrySQL
         $report = getFactory()->getObject('PMReport');
         $searchable = getFactory()->getObject('SearchableObjectSet');
         $searchable_it = $searchable->getAll();
-        $search_items = SearchRules::getSearchItems($searchString);
+        $search_items = SearchRules::getSearchItems($searchString, getSession()->getLanguageUid());
 
         $data = array();
         $lists = array();
         $results = array_merge(
             $this->searchByUid($searchString),
-            $this->searchByAttributes($searchString, $searchEntities)
+            $this->searchByAttributes($searchString, $searchEntities, $searchPredicates)
         );
 
         foreach( $results as $item ) {
@@ -75,10 +79,14 @@ class SearchResultRegistry extends ObjectRegistrySQL
                     );
                     $textsFound[] = translate($object_it->object->getAttributeUserName($attribute)) . ': ' . $text;
                 }
+
                 $data[$entityId][] = array (
                     'ReferenceName' => $object_it->object->getDisplayName(),
                     'entityUrl' => $lists[$entityId],
-                    'UID' => $uid->getUidIcon($object_it),
+                    'UID' =>
+                        $object_it->object instanceof Widget
+                            ? '<a href="'.$object_it->get('url').'">'.translate('Открыть').'</a>'
+                            : $uid->getUidIcon($object_it),
                     'Caption' => $object_it->getDisplayName(),
                     'Content' => $textsFound,
                     'Url' => $object_it->getViewUrl()
@@ -93,7 +101,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
         return $this->createIterator($rows);
  	}
 
-    protected function searchByAttributes( $search, $paramters )
+    protected function searchByAttributes( $search, $paramters, $predicates )
     {
         $results = array();
 
@@ -120,6 +128,22 @@ class SearchResultRegistry extends ObjectRegistrySQL
             }
             $registry = $object->getRegistry();
 
+            if ( $object instanceof CacheableSet ) {
+                $object_it = $registry->Query(
+                    array(
+                        new FilterSearchAttributesPredicate($search, array('Caption','ReferenceName'))
+                    )
+                );
+                if ( $object_it->count() > 0 ) {
+                    $results[$searchable_it->getId()] = array(
+                        'object' => $object_it->copyAll(),
+                        'attributes' => array('Caption','ReferenceName')
+                    );
+                }
+                $searchable_it->moveNext();
+                continue;
+            }
+
             if ( is_numeric($search) ) {
                 $object_it = $registry->Query(
                     array_merge(
@@ -142,6 +166,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 $object_it = $registry->Query(
                     array_merge(
                         $parms,
+                        $predicates,
                         array(
                             new FilterSearchAttributesPredicate($search, $searchable_it->get('attributes')),
                             new FilterVpdPredicate(),
@@ -158,6 +183,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 $object_it = $registry->Query(
                     array_merge(
                         $parms,
+                        $predicates,
                         array(
                             new CustomAttributeSearchPredicate($search, $searchable_it->get('attributes')),
                             new FilterVpdPredicate(),
@@ -207,7 +233,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 if ( $object_it->count() > 0 ) {
                     $results[$searchable_it->getId()] = array(
                         'object' => $object->createCachedIterator($object_it->getRowset()),
-                        'attributes' => array('UID')
+                        'attributes' => array('UID', 'Caption')
                     );
                 }
             }
@@ -222,7 +248,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
         return array(
             array (
                 'object' => $object_it,
-                'attributes' => array('UID')
+                'attributes' => array('UID', 'Caption')
             )
         );
     }

@@ -167,7 +167,7 @@
 	}
 
 	//---------------------------------------------------------------------------------------------------------
-	function drawHeader( $it ) 
+	function drawHeader( $it, $title )
 	{
 	?>
         <table width=100% cellpadding=0 cellspacing=0>
@@ -177,7 +177,7 @@
 				</td>
         		<td align=right valign=top>
 				<?
-					if($it->count() > 0) {
+					if($this->getItemsCount($it) > 0) {
 					?>
 					Страницы: 
 					<?
@@ -394,6 +394,10 @@
     	$it->moveToPos( $offset );
 		
 		return $it;
+	}
+
+	function getItemsCount( $it ) {
+		return $it->count();
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
@@ -642,6 +646,10 @@
 	    return $this->object->getAll();
 	}
 
+	 function getItemsCount( $it ) {
+		 return $it->count();
+	 }
+
 	function setIterator( & $iterator )
 	{
 	    $this->it = $iterator;
@@ -670,7 +678,7 @@
 		if($offset == '') $offset = 0;
 
 		$this->offset = $offset;
-		$this->offset = $this->offset <= $this->getIteratorRef()->count()
+		$this->offset = $this->offset <= $this->getItemsCount($this->getIteratorRef())
 			&& $this->offset >= $this->getMaxOnPage() ? $this->offset : 0;
 
 		return $this->offset;
@@ -734,29 +742,19 @@
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToDelete()
 	{
-		global $model_factory;
-		
 		if ( !getFactory()->getAccessPolicy()->can_delete($this->object) ) return false;
-		
 		if ( count($this->delete_checks) < 1 )
 		{
 			$it = $this->getIteratorRef();
-			$it->moveToPos( $this->getOffset() );
-			
-			for( $i = 0; $i < min($it->count() - $this->getOffset(), $this->getMaxOnPage()); $i++)
-			{
+			while( !$it->end() ) {
     			$this->delete_checks[$it->getId()] = getFactory()->getAccessPolicy()->can_delete($it);
-    			
 				$it->moveNext();
 			}
-		
-			$it->moveToPos( $this->getOffset() );
+			$it->moveFirst();
 		}
 		
 		$has_any = count($this->delete_checks) < 1 ? true : false;
-		 
 		foreach( $this->delete_checks as $check ) $has_any |= $check;
-		
 		return $has_any;
 	}
 	
@@ -792,7 +790,7 @@
 	function HasRows()
 	{
 		if ( !isset($this->it) ) return false;
-		return $this->it->count();
+		return $this->getItemsCount($this->it);
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
@@ -802,7 +800,7 @@
 	}
 
 	//---------------------------------------------------------------------------------------------------------
-	function drawHeader( $attr )
+	function drawHeader( $attr, $title )
 	{
 		echo_lang($this->getColumnName($attr));
 	}
@@ -840,20 +838,21 @@
 	{
 	}
 
-	function drawNumberColumn( $index )
+	function drawNumberColumn( $object_it, $index )
 	{
 		echo $index;
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function moreThanOnePage() {
-		return $this->it->count() / $this->getMaxOnPage() > 1;
+	function moreThanOnePage()
+	{
+		return $this->getItemsCount($this->it) / $this->getMaxOnPage() > 1;
 	}
 
 	//---------------------------------------------------------------------------------------------------------
 	function getPages()
 	{
-        return $this->it->count() / $this->getMaxOnPage();
+        return $this->getItemsCount($this->it) / $this->getMaxOnPage();
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
@@ -906,7 +905,7 @@
         echo '<div class="pull-left pagination pagination-total">';
 			$script = "javascript: filterLocation.setup('rows=all',0);";
 			echo '<a onclick="'.$script.'" class="dashed dashed-hidden">' .text(2159).'</a> ';
-	        echo preg_replace('/%1/', $this->getIteratorRef()->count(), text(1884));
+	        echo preg_replace('/%1/', $this->getItemsCount($this->getIteratorRef()), text(1884));
 		echo '</div>';
 		echo '</div>';
 	}

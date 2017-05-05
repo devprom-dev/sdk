@@ -53,6 +53,7 @@ class ProjectSettingsTable extends PMPageTable
 				if ( mb_strlen($description) > 140 ) $description = mb_substr($description, 0, 140).'...';
 
 				$items[] = array (
+                    'uid' => $widget_it->getId(),
 					'name' => $widget_it->getDisplayName(),
 					'url' => $widget_it->getUrl(),
 					'description' => $description

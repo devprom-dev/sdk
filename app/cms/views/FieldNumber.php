@@ -16,7 +16,7 @@ class FieldNumber extends Field
 	{
 		if ( $this->readOnly() )
 		{
-		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:150px;">';
+		    echo '<span id="'.$this->getId().'" class="input-block-level well well-text" style="width:150px;min-width: 150px;">';
 		        echo $this->getValue();
 		    echo '</span>';
 			

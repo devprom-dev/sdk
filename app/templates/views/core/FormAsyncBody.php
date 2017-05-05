@@ -15,7 +15,7 @@
 </script>
 <?php } ?>
 
-<form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off">
+<form id="<?=$form_id?>" action="<?=$form_processor_url?>" method="post" enctype="application/x-www-form-urlencoded" autocomplete="off" module="<?=$module?>">
 	<fieldset>
 		<?php if ( !$formonly && $form_title != '' ) { ?>
 
@@ -69,43 +69,47 @@
 		<input type="hidden" name="object_id" value="<?=$object_id?>">
 		<input type="hidden" name="redirect" value="<?=$redirect_url?>">
 		<input type="hidden" name="form_url" value="<?=$form_url?>">
-		
-		<?php foreach( $attributes as $key => $attribute ) { ?>
-		
-			<?php if ( !$attribute['visible'] ) { ?>
-			
-      			<input type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>">
-			
-			<?php continue; } ?>
-			
-		    <?php if ( $attribute['type'] == 'char' ) { ?>
 
-			<label class="checkbox">
-      			<input type="checkbox" tabindex="<?=$attribute['index']?>" id="<?=$attribute['id']?>" name="<?=$attribute['id']?>" <?=($attribute['value'] == 'Y' ? 'checked' : '')?> > <?=$attribute['caption']?>
-    		</label>
+        <?php foreach( $columns as $columnKey => $attributes ) { ?>
+            <div class="form-col-<?=$columnKey?> pull-left">
+            <?php foreach( $attributes as $key => $attribute ) { ?>
 
-			<?php } else if ( $attribute['type'] == 'custom' ) { ?>
+                <?php if ( !$attribute['visible'] ) { ?>
 
-			<? echo $form->drawCustomAttribute($key, $attribute['value'], $attribute['index']); ?>
-			
-    		<?php } else { ?>
+                    <input type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>">
 
-			<? if ( $attribute['caption'] != '' ) { ?>
-			<label><?=$attribute['caption']?></label>
-			<? } ?>
+                <?php continue; } ?>
 
-			<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+                <?php if ( $attribute['type'] == 'char' ) { ?>
 
-			<?php } ?>
+                <label class="checkbox">
+                    <input type="checkbox" tabindex="<?=$attribute['index']?>" id="<?=$attribute['id']?>" name="<?=$attribute['id']?>" <?=($attribute['value'] == 'Y' ? 'checked' : '')?> > <?=$attribute['caption']?>
+                </label>
 
-			<?php if ( $attribute['description'] != '' ) { ?>
-			
-			<span class="help-block"><?=$attribute['description']?></span>
-			<?=$fields_separator?>
+                <?php } else if ( $attribute['type'] == 'custom' ) { ?>
 
-			<?php } ?>
+                <? echo $form->drawCustomAttribute($key, $attribute['value'], $attribute['index'], $view); ?>
 
-		<?php } ?>
+                <?php } else { ?>
+
+                <? if ( $attribute['caption'] != '' ) { ?>
+                <label><?=$attribute['caption']?></label>
+                <? } ?>
+
+                <? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+
+                <?php } ?>
+
+                <?php if ( $attribute['description'] != '' ) { ?>
+
+                <span class="help-block"><?=$attribute['description']?></span>
+                <?=$fields_separator?>
+
+                <?php } ?>
+
+            <?php } ?>
+            </div>
+        <?php } ?>
 
 		<?php
 			echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id, 'open' => $hint_open));

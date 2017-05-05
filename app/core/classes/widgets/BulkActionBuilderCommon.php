@@ -38,10 +38,6 @@ class BulkActionBuilderCommon extends BulkActionBuilder
 				if ( in_array($object->getAttributeType($key), $system_types) ) continue;
 				if ( !$object->IsAttributeStored($key) ) continue;
 			}
-			if ( $key == 'Project' ) {
-				$registry->addModifyAction( translate($object->getAttributeUserName($key)), $key.':OpenList' );
-				continue;
-			}
 			$registry->addModifyAction( translate($object->getAttributeUserName($key)), $key );
 		}
  	}

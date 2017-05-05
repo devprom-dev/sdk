@@ -115,14 +115,8 @@ class TaskBoardList extends PMPageBoard
 		{
 			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ChangeRequest' )
 			{
-				if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
-				{
-					array_unshift($sorts, new TaskRequestOrderSortClause());
-				}
-				else
-				{
-					array_unshift($sorts, new TaskRequestPrioritySortClause());
-				}
+                array_unshift($sorts, new TaskRequestOrderSortClause());
+				array_unshift($sorts, new TaskRequestPrioritySortClause());
 			}
 		}
 		
@@ -134,10 +128,10 @@ class TaskBoardList extends PMPageBoard
 		if ( $this->getTable()->hasCrossProjectFilter() ) {
 			if ( $this->hasCommonStates() ) {
 		 		return getFactory()->getObject('TaskState')->getRegistry()->Query(
-		 				array (
-		 						new FilterVpdPredicate(array_shift($this->getObject()->getVpds())),
-		 						new SortAttributeClause('OrderNum')
-		 				)
+                    array (
+                        new FilterVpdPredicate(array_shift($this->getProjectIt()->fieldToArray('VPD'))),
+                        new SortAttributeClause('OrderNum')
+                    )
 		 		);
 			}
 			else {
@@ -182,10 +176,6 @@ class TaskBoardList extends PMPageBoard
 			}
 		}
 		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
-		{
-			array_push( $cols, 'OrderNum');
-		}
 		return $cols;
 	}
 
@@ -198,11 +188,20 @@ class TaskBoardList extends PMPageBoard
 	
 	function getGroupDefault()
 	{
-		if ( $this->getTable()->hasCrossProjectFilter() ) return 'Project';
-		
+        if ( $this->getProjectIt()->count() > 1 ) return 'Project';
 		return 'Assignee';
 	}
- 		
+
+	function getGroupNullable( $field_name )
+	{
+		switch( $field_name ) {
+			case 'DueWeeks':
+				return false;
+			default:
+				return parent::getGroupNullable( $field_name );
+		}
+	}
+
 	function getGroupFields() 
 	{
 		$fields = parent::getGroupFields();
@@ -212,7 +211,6 @@ class TaskBoardList extends PMPageBoard
 			if ( in_array($field, $fields) ) unset($fields[array_search($field, $fields)]);
 		}
 		
-		$fields[] = 'DueDays';
 		$fields[] = 'Planned';
 		
 		return $fields;
@@ -230,7 +228,9 @@ class TaskBoardList extends PMPageBoard
 		$values = array_filter($this->getFilterValues(), function($value) {
 			return !in_array($value, array('all','hide'));
 		});
-		$group = $this->getGroup();
+        $this->getTable()->parseFilterValues($values);
+
+        $group = $this->getGroup();
 		if ( !$this->getObject()->IsReference($group) ) return '';
 
 		switch($this->getObject()->getAttributeObject($group)->getEntityRefName())
@@ -245,9 +245,9 @@ class TaskBoardList extends PMPageBoard
 		return '';
 	}
 
-	function getGroupIt()
+	function buildGroupIt()
 	{
-		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupIt();
+		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::buildGroupIt();
 
 		$groupOrder = $this->getGroupOrder();
 		$vpd_filter = new FilterVpdPredicate();
@@ -260,13 +260,13 @@ class TaskBoardList extends PMPageBoard
 				$ids = array_merge(
 					$object->getRegistry()->Query(
 						array (
-							new ReleaseTimelinePredicate('not-passed'),
 							$vpd_filter,
 							$groupFilter != ''
-								? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
+								? new FilterInPredicate(preg_split('/,/', $groupFilter))
+                                : new ReleaseTimelinePredicate('not-passed')
 						)
 					)->idsToArray(),
-					parent::getGroupIt()->idsToArray()
+					parent::buildGroupIt()->idsToArray()
 				);
 				return $object->getRegistry()->Query(
 					array(
@@ -279,14 +279,14 @@ class TaskBoardList extends PMPageBoard
 				$ids = array_merge(
 						$object->getRegistry()->Query(
 								array (
-									new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
 									new SortAttributeClause('StartDate'),
 									$vpd_filter,
 									$groupFilter != ''
-										? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
+										? new FilterInPredicate(preg_split('/,/', $groupFilter))
+                                        : new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED)
 								)
 							)->idsToArray(),
-						parent::getGroupIt()->idsToArray()
+						parent::buildGroupIt()->idsToArray()
 				);
 				return $object->getRegistry()->Query(
 					array(
@@ -298,7 +298,7 @@ class TaskBoardList extends PMPageBoard
 				return getFactory()->getObject('User')->getRegistry()->Query(
 						array (
 								new UserWorkerPredicate(),
-								new SortAttributeClause('Caption'),
+								new UserTitleSortClause(),
 								$groupFilter != ''
 										? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
@@ -311,15 +311,10 @@ class TaskBoardList extends PMPageBoard
 						)
 				);
 			default:
-				return parent::getGroupIt();
+				return parent::buildGroupIt();
 		}
 	}
 	
- 	function getBoardAttribute()
- 	{
- 		return 'State';
- 	}
- 	
 	function IsNeedToDisplay( $attr )
 	{
 		switch( $attr ) 
@@ -359,6 +354,13 @@ class TaskBoardList extends PMPageBoard
 			case 'RecentComment':
 			case 'Progress':
 			case 'Planned':
+				break;
+
+			case 'CaptionNative':
+				if ( $object_it->get('TaskTypeDisplayName') != '' ) {
+					echo $object_it->get('TaskTypeDisplayName').': ';
+				}
+				parent::drawCell($object_it, $attr);
 				break;
 
 			case 'IssueTraces':
@@ -407,6 +409,14 @@ class TaskBoardList extends PMPageBoard
 										'image' => 'userpics-mini',
 										'title' => $object_it->get('OwnerPhotoTitle')
 								));
+							echo '</div>';
+						}
+						if ( $object_it->get('PlannedFinishDate') != '' && $object_it->get('DueWeeks') < 4 )
+						{
+							echo ' <div class="btn-group">';
+								echo '<span class="label '.($object_it->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'">';
+									echo $object_it->getDateFormatShort('PlannedFinishDate');
+								echo '</span>';
 							echo '</div>';
 						}
 						if ( $this->visible_column['Attachment'] )

@@ -28,7 +28,8 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  			$values[$it->getId()] = $it->getDisplayName();
  			$it->moveNext();
  		}
- 		
+
+        $values['external'] = text(2331);
  		$values['notme'] = text(1077);
  		
  		return $values;

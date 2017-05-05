@@ -11,13 +11,15 @@ class IssueFormType extends AbstractType
 {
     private $vpds = array();
     private $allowAttachment;
-    private $showProducts = true;
+    private $em = null;
+    private $user = null;
 
-    function __construct($vpds, $allowAttachment = false, $showProducts = true)
+    function __construct($em, $vpds, $user, $allowAttachment = false)
     {
+        $this->em = $em;
         $this->vpds = $vpds;
+        $this->user = $user;
         $this->allowAttachment = $allowAttachment;
-        $this->showProducts = $showProducts;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -25,23 +27,47 @@ class IssueFormType extends AbstractType
 		$vpds = $this->vpds;
 
     	$builder
-            ->add('caption', 'text')
-            ->add('description', 'textarea')
-            ->add('issueType', 'entity', array(
-                'class' => 'Devprom\ServiceDeskBundle\Entity\IssueType',
-                'choice_label' => 'name',
-                'query_builder' => function(EntityRepository $er) use ($vpds) {
-                    $qb = $er->createQueryBuilder('it');
-                    return $qb->where($qb->expr()->eq('it.vpd', '\''.array_pop($vpds).'\''));
-                },
-                'empty_value' => 'issue_type_name',
-                'required' => false     
-            ))
-            ->add('severity');
-            
-		if ( count($this->vpds) > 1 )
+            ->add('caption', 'text', array('label' => 'issue_caption'))
+            ->add('description', 'textarea', array('label' => 'issue_description'))
+            ->add('severity', 'entity', array(
+                'class' => 'Devprom\ServiceDeskBundle\Entity\Priority',
+                'label' => 'issue_severity'
+            ));
+
+        $result = $this->em->getRepository('DevpromServiceDeskBundle:IssueType')->findBy(array(
+            "vpd" => $vpds
+        ));
+        if ( count($result) > 0 ) {
+            $builder
+                ->add('issueType', 'entity', array(
+                    'label' => 'issue_issueType',
+                    'class' => 'Devprom\ServiceDeskBundle\Entity\IssueType',
+                    'choice_label' => 'name',
+                    'query_builder' => function(EntityRepository $er) use ($vpds) {
+                        $qb = $er->createQueryBuilder('it');
+                        return $qb->where($qb->expr()->in('it.vpd', $vpds));
+                    },
+                    'data' => array_shift($result),
+                    'required' => false
+                ));
+        }
+
+        $productResult = array();
+        if ( $this->user->getCompany() ) {
+            foreach( $this->user->getCompany()->getProducts() as $productCompany ) {
+                $productResult[] = $productCompany->getProduct();
+            }
+        }
+        if ( count($productResult) < 1 ) {
+            $productResult = $this->em->getRepository('DevpromServiceDeskBundle:Product')->findBy(array(
+                "vpd" => $vpds
+            ));
+        }
+
+		if ( count($productResult) < 1 && count($this->vpds) > 1 )
 		{
 			$builder->add('project', 'entity', array(
+                'label' => 'issue_project',
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Project',
                 'choice_label' => 'name',
                 'query_builder' => function(EntityRepository $er) use ($vpds) {
@@ -52,19 +78,18 @@ class IssueFormType extends AbstractType
 		}
 		else
 		{
-			$vpd = array_pop($vpds);
-			
 			$builder->add('project', 'entity_hidden', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Project'
             ));
 
-            if ( $this->showProducts ) {
+            if ( count($productResult) > 0 ) {
                 $builder->add('product', 'entity', array(
+                    'label' => 'issue_product',
                     'class' => 'Devprom\ServiceDeskBundle\Entity\Product',
                     'choice_label' => 'name',
-                    'query_builder' => function(EntityRepository $er) use ($vpd) {
-                        $qb = $er->createQueryBuilder('p');
-                        return $qb->where($qb->expr()->eq('p.vpd', '\''.$vpd.'\''));
+                    'query_builder' => function(EntityRepository $er) use ($productResult) {
+                        return $er->createQueryBuilder('p')->where('p IN (:products)')
+                            ->setParameter('products', $productResult)->orderBy('p.name', 'ASC');
                     },
                     'required' => false
                 ));
@@ -73,6 +98,7 @@ class IssueFormType extends AbstractType
             
         if ($this->allowAttachment) {
             $builder->add("newAttachment", new AttachmentFormType(), array(
+                'label' => 'issue_newAttachment',
                 'required' => false
             ));
         }

@@ -7,27 +7,32 @@ include SERVER_ROOT_PATH."core/classes/model/classes.php";
 
 class ModelFactory extends ModelFactoryBase
 {
- 	var $classes = array();
+    private $classes = array();
 	private $plugins = null;
-	var $logger;
+	private $logger;
  	
  	private $origination_service = null;
  	
- 	function __construct($pluginsManager , $cache_engine = null, $access_policy = null, $events_manager = null, $origination_service = null )
+ 	function __construct($pluginsManager, $cache_engine, $cache_key = 'global', $access_policy = null, $events_manager = null, $origination_service = null )
  	{
-		global $plugins;
+        global $model_factory;
+        $model_factory = $this;
 
- 	    parent::__construct($cache_engine, $access_policy, $events_manager);
+ 	    parent::__construct($cache_engine, $cache_key, $access_policy, $events_manager);
 
-		$plugins = $pluginsManager;
 		$this->plugins = $pluginsManager;
 		$this->classes = $this->buildClasses();
- 	    
- 	    $this->origination_service = is_object($origination_service) 
- 	    		? $origination_service : new ModelEntityOriginationService($this->getCacheService());
+ 	    $this->origination_service = is_object($origination_service)
+ 	    		? $origination_service : new ModelEntityOriginationService($this->getCacheService(), $cache_key);
+
+ 	    if ( is_object($pluginsManager) ) $pluginsManager->checkLicenses();
  	}
 
-	public function getPluginsManager() {
+ 	function __sleep() {
+        return array();
+    }
+
+    public function getPluginsManager() {
 		return $this->plugins;
 	}
 
@@ -40,7 +45,12 @@ class ModelFactory extends ModelFactoryBase
  	{
  		$this->origination_service = $service;
  	}
- 	
+
+    public function setCacheKey( $key ) {
+        parent::setCacheKey($key);
+        $this->origination_service->setCacheKey($key);
+    }
+
 	protected function buildClasses()
 	{
 		return array(
@@ -62,6 +72,7 @@ class ModelFactory extends ModelFactoryBase
 			'cms_resource' => array( 'Resource' ),
 			'pm_calendarinterval' => array( 'Calendar' ),
 			'pm_customattribute'  => array('PMCustomAttribute'),
+            'pm_attributevalue'  => array('PMCustomAttributeValue'),
 			'cms_tempfile' => array( 'TempFile' )
 		);
 	}
@@ -154,7 +165,7 @@ class ModelFactory extends ModelFactoryBase
     	global $model_factory;
     
     	if ( !is_object($model_factory) ) {
-    		$model_factory = new ModelFactory(PluginsFactory::Instance());
+    		$model_factory = new ModelFactory(PluginsFactory::Instance(), getCacheService());
     	}
     	return $model_factory;
 	}

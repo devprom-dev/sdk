@@ -1,5 +1,13 @@
 <p>Здрaвcтвуйте!</p>
 <p>К заявке "<a href="{{ issueLink }}">{{ issue.caption }}</a>" оставлен комментарий:</p>
-<blockquote>{{ comment | unescapeHtml | raw }}</blockquote>
+<blockquote>{{ comment.text | unescapeHtml | raw }}</blockquote>
 <br/>
+{% if comment.attachments %}
+    <p>Приложения:</p>
+    {% for attachment in comment.attachments %}
+        <p>
+            <a href="{{ url('comment_attachment_download', { 'attachmentId' : attachment.id }) }}">{{ attachment.originalFilename }}</a>
+        </p>
+    {% endfor %}
+{% endif %}
 <hr>

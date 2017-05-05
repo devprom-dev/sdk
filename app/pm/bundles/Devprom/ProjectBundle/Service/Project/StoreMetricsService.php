@@ -7,9 +7,9 @@ include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestMetricsPersis
 
 class StoreMetricsService
 {
- 	function execute( $project_it )
+ 	function execute( $project_it, $force = false )
  	{
- 		$this->storeProjectMetrics($project_it);
+ 		$this->storeProjectMetrics($project_it, $force);
 
 		$registry = getFactory()->getObject('Request')->getRegistry();
  		$this->storeIssueMetrics(
@@ -49,58 +49,65 @@ class StoreMetricsService
 		);
  	}
  	
- 	function storeProjectMetrics( $project_it )
+ 	function storeProjectMetrics( $project_it, $force )
  	{
         getFactory()->resetCachedIterator($project_it->object);
+
+        $version_it = getFactory()->getObject('Release')->getRegistry()->Query(
+            array (
+                new \FilterAttributePredicate('Project', $project_it->getId()),
+                $force
+                    ? new \FilterDummyPredicate()
+                    : new \ReleaseTimelinePredicate('not-passed')
+            )
+        );
+        while ( !$version_it->end() ) {
+            $version_it->storeMetrics();
+            $version_it->moveNext();
+        }
+        $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
+            array (
+                new \FilterAttributePredicate('Project', $project_it->getId()),
+                new \FilterHasNoAttributePredicate('Version'),
+                $force
+                    ? new \FilterDummyPredicate()
+                    : new \IterationTimelinePredicate(\IterationTimelinePredicate::NOTPASSED)
+            )
+        );
+        while ( !$iteration_it->end() ) {
+            $iteration_it->storeMetrics();
+            $iteration_it->moveNext();
+        }
 
         $methodology_it = $project_it->getMethodologyIt();
         $finishDate = '';
 
-        if ( $methodology_it->HasReleases() ) {
-            $version_it = getFactory()->getObject('Release')->getRegistry()->Query(
-                array (
-                    new \FilterAttributePredicate('Project', $project_it->getId()),
-                    new \ReleaseTimelinePredicate('not-passed')
-                )
-            );
-            while ( !$version_it->end() ) {
-                $version_it->storeMetrics();
-                $version_it->moveNext();
-            }
-            $velocity = $project_it->getVelocityDevider();
-
-        }
-        else if ( $methodology_it->HasPlanning() ) {
-            $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
-                array (
-                    new \FilterAttributePredicate('Project', $project_it->getId()),
-                    new \IterationTimelinePredicate(\IterationTimelinePredicate::NOTPASSED)
-                )
-            );
-            while ( !$iteration_it->end() ) {
-                $iteration_it->storeMetrics();
-                $iteration_it->moveNext();
-            }
+        if ( $methodology_it->HasReleases() || $methodology_it->HasPlanning() ) {
             $velocity = $project_it->getVelocityDevider();
         }
         else {
             $issue = getFactory()->getObject('Request');
-            $requestsCount = $issue->getRegistry()->Count(
+
+            $registry = $issue->getRegistry();
+            $registry->setLimit(10);
+            $solvedIt = $registry->Query(
                 array (
                     new \FilterVpdPredicate($project_it->get('VPD')),
-                    new \StatePredicate('terminal'),
-                    new \FilterModifiedAfterPredicate(
-                        strftime('%Y-%m-%d', strtotime('-1 week', strtotime(date('Y-m-d'))))
-                    )
+                    new \StatePredicate('terminal')
                 )
             );
+
+            $aggregateFunc = new \AggregateBase( 'VPD', 'LifecycleDuration', 'AVG' );
+            $issue->addFilter( new \FilterInPredicate($solvedIt->idsToArray()) );
+            $issue->addAggregate($aggregateFunc);
+            $velocity = $issue->getAggregated('t')->get($aggregateFunc->getAggregateAlias());
+
             $leftRequests = $issue->getRegistry()->Count(
                 array (
                     new \FilterVpdPredicate($project_it->get('VPD')),
                     new \StatePredicate('notterminal')
                 )
             );
-            $velocity = $requestsCount / 7;
             $leftDays = $leftRequests * $velocity;
             $finishDate = strftime('%Y-%m-%d', strtotime(round($leftDays,0).' days', strtotime(date('Y-m-d'))));
         }
@@ -162,6 +169,7 @@ class StoreMetricsService
 			$parms = array();
  			if ( $issue_it->get('MetricDeliveryDate') != $issue_it->get('DeliveryDate') ) {
                 $parms['DeliveryDate'] = $issue_it->get('MetricDeliveryDate');
+                $parms['DeliveryDateMethod'] = $issue_it->get('MetricDeliveryDateMethod');
             }
 
             list($total, $tasks) = preg_split('/:/', $issue_it->get('MetricSpentHoursData'));

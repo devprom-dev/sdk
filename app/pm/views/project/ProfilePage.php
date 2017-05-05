@@ -10,7 +10,7 @@ class ProfilePage extends PMPage
  	{
  		$this->policy = getFactory()->getAccessPolicy();
  		
- 		getFactory()->setAccessPolicy( new AccessPolicy(new CacheEngine()) );
+ 		getFactory()->setAccessPolicy( new AccessPolicy(CacheEngineVar::Instance(), getSession()->getCacheKey()) );
 
  		parent::__construct();
 
@@ -29,7 +29,7 @@ class ProfilePage extends PMPage
  	
 	function draw()
 	{
- 		getFactory()->setAccessPolicy( new AccessPolicy(new CacheEngine()) );
+ 		getFactory()->setAccessPolicy( new AccessPolicy(CacheEngineVar::Instance(),getSession()->getCacheKey()) );
 		 		
  		parent::draw();
 
@@ -39,18 +39,8 @@ class ProfilePage extends PMPage
  	function getForm() 
  	{
 		$object = getFactory()->getObject('pm_Participant');
-		$objectIt = $object->getExact(getSession()->getParticipantIt()->getId());
-
-		if ( getSession()->getProjectIt()->IsPortfolio() ) {
-			$objectIt = $object->createCachedIterator(array(
-				array (
-					'pm_ParticipantId' => PHP_INT_MAX
-				)
-			));
-		}
-
 		$form = new ProfileForm($object);
-		$form->edit($objectIt);
+		$form->edit(getSession()->getParticipantIt());
 		return $form;
  	}
 }

@@ -9,9 +9,9 @@ class ActivityRequest extends Activity
  	function __construct( ObjectRegistry $registry = null )
  	{
  		parent::__construct($registry);
- 		
+
 		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		if ( $strategy->hasEstimationValue() ) {
+		if ( $strategy instanceof EstimationHoursStrategy ) {
 			$this->addAttribute('LeftWork', 'INTEGER', $strategy->getDimensionText(text(1161)), true, false, '', 25);
 		}
  	}
@@ -46,20 +46,37 @@ class ActivityRequest extends Activity
 	 		$task->setVpdContext( $request_it );
 	 		$task->removeNotificator( 'EmailNotificator' );
 
+            $registry = getFactory()->getObject('TaskType')->getRegistry();
+            $default_task_type = $registry->Query(
+                    array (
+                        new FilterBaseVpdPredicate(),
+                        new TaskTypeStateRelatedPredicate($request_it->get('State'))
+                    )
+                )->getId();
+            if ( $default_task_type == '' ) {
+                $default_task_type = $registry->Query(
+                    array (
+                        new FilterBaseVpdPredicate(),
+                        new FilterAttributePredicate('IsDefault', 'Y')
+                    )
+                )->getId();
+            }
+            if ( $default_task_type == '' ) {
+                $default_task_type = $registry->Query(
+                    array (
+                        new FilterBaseVpdPredicate(),
+                        new FilterAttributePredicate('ReferenceName', 'development')
+                    )
+                )->getId();
+            }
+
 	 		$task_id = $task->add_parms(
 	 			array (
 	 				'Assignee' => $user_id,
 	 				'Planned' => $request_it->get('Estimation') > 0 ? $request_it->get('Estimation') : $fact,
 	 				'LeftWork' => $request_it->get('EstimationLeft'),
 	 				'Fact' => $fact,
-					'TaskType' => $task_type != ''
-									? $task_type
-									: getFactory()->getObject('TaskType')->getRegistry()->Query(
-											array (
-												new FilterBaseVpdPredicate(),
-												new TaskTypeStateRelatedPredicate($request_it->get('State'))
-											)
-										)->getId(),
+					'TaskType' => $task_type != '' ? $task_type : $default_task_type,
 	 				'ChangeRequest' => $request_it->getId(),
 					'State' => array_pop($task->getTerminalStates())
 	 			) );

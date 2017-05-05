@@ -83,7 +83,7 @@ class PasswordForm extends AjaxForm
 		return "co/FormAsyncNoHeader.php";
 	}
 	
-	function drawAttribute( $attribute )
+	function drawAttribute( $attribute, $view )
 	{
 	    global $_REQUEST, $key;
 	    
@@ -105,7 +105,7 @@ class PasswordForm extends AjaxForm
 	            
 	        default:
 	            
-	            parent::drawAttribute( $attribute );
+	            parent::drawAttribute( $attribute, $view );
 	    }
 	}
 }

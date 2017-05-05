@@ -19,7 +19,10 @@ class StageTimelinePredicate extends FilterPredicate
 			case 'not-passed':
  			    return " AND '".SystemDateTime::date('Y-m-d')."' <= DATE(GREATEST(IFNULL(t.EstimatedFinishDate, NOW()), IFNULL(t.FinishDate, NOW()))) " .
 			   		   " OR (t.UncompletedIssues + t.UncompletedTasks) > 0 ";
- 			    
+
+            case 'overdue':
+                return " AND t.EstimatedFinishDate > t.FinishDate ";
+
  			default:
 				return " AND 1 = 2 ";
  		}

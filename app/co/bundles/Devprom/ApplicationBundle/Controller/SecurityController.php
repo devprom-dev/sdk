@@ -11,9 +11,9 @@ class SecurityController extends PageController
     {
         \SessionBuilder::Instance()->close();
 
-        $redirect = $request->request->get('redirect') == ''
+        $redirect = $request->get('redirect') == ''
             ? $request->getSession()->get('redirect')
-            : $request->request->get('redirect');
+            : $request->get('redirect');
 
         if ( $redirect != '' ) {
             return new RedirectResponse('/login?redirect='.\SanitizeUrl::parseUrl($redirect));

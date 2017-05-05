@@ -4,6 +4,7 @@ include "FieldTransitionProjectRole.php";
 include "FieldTransitionAttribute.php";
 include "FieldTransitionPredicate.php";
 include "FieldTransitionResetField.php";
+include "FieldTransitionAction.php";
 
 class TransitionForm extends PMPageForm
 {
@@ -64,9 +65,7 @@ class TransitionForm extends PMPageForm
 			case 'TargetState': 
 				$state->addFilter( new StateClassPredicate($state_it->get('ObjectClass')) );
 				$state->addFilter( new FilterBaseVpdPredicate() );
-				
 				$state->addSort( new SortOrderedClause() );
-				
 				return new FieldDictionary( $state );
 				
 			case 'ProjectRoles':
@@ -74,16 +73,12 @@ class TransitionForm extends PMPageForm
 
 			case 'Attributes':
 				$field = new FieldTransitionAttribute($this->object_it);
-
 				$field->setStateIt( $state_it );
-				
 				return $field;
 				
 			case 'Predicates':
 				$field = new FieldTransitionPredicate($this->object_it);
-				
 				$field->setStateIt( $state_it );
-				
 				return $field;
 				
 			case 'ResetFields':
@@ -95,6 +90,11 @@ class TransitionForm extends PMPageForm
 				$field = new FieldDictionary( new TransitionReasonType() );
 				$field->setNullOption(false);
 				return $field;
+
+            case 'Actions':
+                $field = new FieldTransitionAction($this->getObjectIt());
+                $field->setObject( getFactory()->getObject($state_it->get('ObjectClass')) );
+                return $field;
 
 			default:
 				return parent::createFieldObject( $attr_name );

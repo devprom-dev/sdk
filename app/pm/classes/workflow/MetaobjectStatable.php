@@ -2,6 +2,7 @@
 
 include "StatableIterator.php";
 include "predicates/StatePredicate.php";
+include "predicates/StateNotInPredicate.php";
 
 class MetaobjectStatable extends Metaobject 
 {
@@ -10,11 +11,6 @@ class MetaobjectStatable extends Metaobject
  	function __construct( $class, ObjectRegistrySQL $registry = null, $metadata_cache = '' )
  	{
  	    parent::__construct($class, $registry, $metadata_cache);
- 	    
-		$this->addAttribute('StateObject', 'INTEGER', '', false, true);
-    	foreach ( array( 'LifecycleDuration', 'StateObject' ) as $attribute ) {
-    		$this->addAttributeGroup($attribute, 'system');
-    	}
  	}
  
  	function getStatableClassName()
@@ -40,8 +36,21 @@ class MetaobjectStatable extends Metaobject
  		}
  	}
  	
- 	function getStates() {
-		return WorkflowScheme::Instance()->getStates($this);
+ 	function getStates( $vpd = '' )
+    {
+        if ( $vpd != '' ) {
+            $stateBase = new StateBase();
+            return $stateBase->getRegistry()->Query(
+                array(
+                    new StateClassPredicate($this->getStatableClassName()),
+                    new FilterVpdPredicate($vpd),
+                    new SortOrderedClause()
+                )
+            )->fieldToArray('ReferenceName');
+        }
+        else {
+            return WorkflowScheme::Instance()->getStates($this);
+        }
  	}
  	
  	function getTerminalStates() {
@@ -81,31 +90,24 @@ class MetaobjectStatable extends Metaobject
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
-	function getLifecycleDuration()
-	{
-		$aggregage = new AggregateBase( 'VPD', 'LifecycleDuration', 'AVG' );
-		
-		$this->addAggregate( $aggregage );
-		$it = $this->getAggregated();
-		
-		return round($it->get( $aggregage->getAggregateAlias() ), 0);
-	}
-	
-	//----------------------------------------------------------------------------------------------------------
 	function add_parms( $parms )
 	{
-		$states = $this->getStates();
-
-		if ( count($states) > 0 ) {
+		if ( count($this->getStates()) > 0 ) {
 			// workflow is defined
-			$parms['State'] = $this->reMapState($states, $parms['State']);
+            if ( $parms['Project'] != '' ) {
+                $prject_it = getFactory()->getObject('Project')->getExact($parms['Project']);
+            }
+            else {
+                $prject_it = getSession()->getProjectIt();
+            }
+			$parms['State'] = $this->reMapState($prject_it->get('VPD'), $parms['State']);
 		}
-
 		return parent::add_parms( $parms );
 	}
 
-	protected function reMapState( $states, $state )
+	protected function reMapState( $vpd, $state )
 	{
+        $states = $this->getStates($vpd);
 		if ( $state == '' ) {
 			$state = array_shift($states);
 		}
@@ -119,7 +121,7 @@ class MetaobjectStatable extends Metaobject
 				}
 			}
 		}
-		if ( $state == '' ) {
+        if ( $state == '' ) {
 			throw new Exception('Unable assing empty state to the object');
 		}
 		return $state;
@@ -142,9 +144,13 @@ class MetaobjectStatable extends Metaobject
 				$this->moveToState($object_it, $parms);
 			}
 		}
-		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] ) {
-			$parms['State'] = $this->reMapState($this->getStates(), $parms['State']);
-			if ( $object_it->get('State') != $parms['State'] ) {
+		else if ( array_key_exists('State', $parms) && $object_it->get('State') != $parms['State'] )
+		{
+            $wasState = $parms['State'];
+			$parms['State'] = $this->reMapState(
+			    $parms['VPD'] != '' ? $parms['VPD'] : $object_it->get('VPD'), $parms['State']
+            );
+			if ( $wasState != '' && $object_it->get('State') != $parms['State'] ) {
 				$this->moveToState($object_it, $parms);
 			}
 		}
@@ -200,8 +206,6 @@ class MetaobjectStatable extends Metaobject
 				new FilterInPredicate($object_it->getId())
 			)
 		);
-		$parms['PersistStateDuration'] = true;
-		$parms['StateDurationRecent'] = $self_it->get('StateDurationRecent');
 
 		$comment_id = '';
 		if ( $parms['TransitionComment'] != '' )
@@ -217,32 +221,55 @@ class MetaobjectStatable extends Metaobject
 				)
 			);
 		}
-		$parms['StateObject'] = getFactory()->getObject('pm_StateObject')->add_parms( 
-				array ( 
-						'ObjectId' => $object_it->getId(),
-						'ObjectClass' => $this->getStatableClassName(),
-						'State' => $state_it->getId(),
-						'Transition' => $parms['Transition'],
-						'CommentObject' => $comment_id,
-						'Author' => getSession()->getUserIt()->getId(),
-						'VPD' => $object_it->get('VPD')
-				)
-		);
-		
-		// calculates duration of the lifecycle time of the object
-		//			
-		$sql = " SELECT ((SELECT MAX(UNIX_TIMESTAMP(so.RecordCreated)) " .
-			   "		   FROM pm_StateObject so, pm_State s " .
-			   "		  WHERE so.ObjectId = " .$object_it->getId().
-			   "			AND so.State = s.pm_StateId " .
-			   "			AND s.ObjectClass = '".$this->getStatableClassName()."'" .
-			   "			AND s.IsTerminal = 'Y'" .
-			   "			AND s.VPD = '".$object_it->get('VPD')."') " .
-			   "		- UNIX_TIMESTAMP('".$object_it->get_native('RecordCreated')."')) / 3600 CycleTime ";
-		$it = $this->createSQLIterator( $sql );
-		
-		$parms['LifecycleDuration'] = round($it->get('CycleTime'), 0);
-		
+
+        $objectstate = getFactory()->getObject('pm_StateObject');
+        $stateobject_it = $objectstate->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('ObjectId', $object_it->getId()),
+                new FilterAttributePredicate('ObjectClass', $this->getStatableClassName()),
+                new SortRecentClause()
+            )
+        );
+        if ( $stateobject_it->getId() != '' ) {
+            $objectstate->modify_parms(
+                $stateobject_it->getId(),
+                array( 'Duration' => $self_it->get('StateDurationRecent') )
+            );
+        }
+
+        $sql =
+            "SELECT 
+                (IFNULL(
+                    (SELECT UNIX_TIMESTAMP(MIN(so.RecordCreated))
+                       FROM pm_StateObject so
+                      WHERE so.ObjectId = ".$object_it->getId()."
+                        AND so.ObjectClass = '".$this->getStatableClassName()."'), UNIX_TIMESTAMP(NOW())
+                 ) - UNIX_TIMESTAMP('".$object_it->get('RecordCreated')."')) / 3600 ResponseTime ";
+        $parms['LifecycleDuration'] = $this->createSQLIterator($sql)->get('ResponseTime');
+
+        $sql =
+            " SELECT IFNULL(SUM(so.Duration),0) LifecycleDuration ".
+            "   FROM pm_StateObject so, pm_State st, pm_Transition tr ".
+            "  WHERE so.ObjectId = ".$object_it->getId().
+            "    AND so.ObjectClass = '".$this->getStatableClassName()."' ".
+            "    AND tr.pm_TransitionId = so.Transition ".
+            "    AND st.pm_StateId = tr.SourceState ".
+            "    AND st.IsTerminal <> 'Y' ";
+
+		$parms['LifecycleDuration'] += $this->createSQLIterator($sql)->get('LifecycleDuration');
+
+        $parms['StateObject'] = $objectstate->add_parms(
+            array (
+                'ObjectId' => $object_it->getId(),
+                'ObjectClass' => $this->getStatableClassName(),
+                'State' => $state_it->getId(),
+                'Transition' => $parms['Transition'],
+                'CommentObject' => $comment_id,
+                'Author' => getSession()->getUserIt()->getId(),
+                'VPD' => $object_it->get('VPD')
+            )
+        );
+
 		return $state_it;
 	}
 }

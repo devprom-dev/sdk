@@ -7,8 +7,4 @@ use Devprom\ProjectBundle\Service\Model\FilterResolver\IterationFilterResolver;
 
 class ReleaseController extends RestController
 {
-	function getEntity(Request $request)
-	{
-		return 'Release';
-	}
 }

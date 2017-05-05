@@ -11,6 +11,11 @@ class FieldCheck extends Field
 		parent::Field();
 	}
 
+	function setCheckName( $checkText )
+	{
+		$this->checkName = $checkText;
+	}
+
 	function readOnly()
 	{
 	    return !$this->getEditMode() || parent::readOnly();

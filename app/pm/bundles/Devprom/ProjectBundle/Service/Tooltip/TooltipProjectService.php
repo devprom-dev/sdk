@@ -8,15 +8,18 @@ include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDetailsPersis
 include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDurationPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/IssueLinkedIssuesPersister.php";
+include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 
 class TooltipProjectService extends TooltipService
 {
 	private $baseline;
+	private $editor;
 	
 	public function __construct( $class_name, $object_id, $extended, $baseline )
 	{
     	$this->baseline = $baseline;
-		
+        $this->editor = \WikiEditorBuilder::build();
+
     	parent::__construct($class_name, $object_id, $extended);
 	}
 	
@@ -130,10 +133,12 @@ class TooltipProjectService extends TooltipService
 		// Linked requests attribute
 		foreach( $data as $key => $attribute )
 		{
-			if ( $attribute['name'] == 'Links' )
-			{
+			if ( $attribute['name'] == 'Links' ) {
 				unset($data[$key]);
 			}
+            if ( $attribute['name'] == 'DueWeeks' && $object_it->get('DeliveryDate') == '' ) {
+                unset($data[$key]);
+            }
 		}
 		
 		$uid = new \ObjectUID();
@@ -213,5 +218,19 @@ class TooltipProjectService extends TooltipService
  	 			'author' => $comment_it->getHtmlDecoded('AuthorName'),
  	 			'text' => $this->getAttributeValue($comment_it, 'Caption', 'text') 
  	 	);
+    }
+
+    protected function getAttributeValue( $object_it, $attribute, $type )
+    {
+        switch ( $type ) {
+            case 'wysiwyg':
+                $parser = $this->editor->getHtmlParser();
+		        $parser->displayHints(true);
+		        $parser->setObjectIt($object_it);
+                return \TextUtils::getValidHtml($parser->parse($object_it->getHtmlDecoded($attribute)));
+
+            default:
+                return parent::getAttributeValue($object_it, $attribute, $type);
+        }
     }
 }

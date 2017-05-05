@@ -23,15 +23,6 @@ class IterationForm extends PMPageForm
 			$this->getObject()->setAttributeDescription('FinishDate', $text);
 		}
 
-		$stages_num = getFactory()->getObject('pm_ProjectStage')->getRegistry()->Count(
-				array (
-					new FilterVpdPredicate()
-				)
-		);
-		if ( $stages_num < 1 ) {
-			$this->getObject()->setAttributeVisible('ProjectStage', false);
-		}
-
 		if ( is_object($this->getObjectIt()) ) {
 			foreach( array('Issues', 'Tasks') as $attribute ) {
 				$this->getObject()->setAttributeVisible($attribute, true);
@@ -39,6 +30,11 @@ class IterationForm extends PMPageForm
 		}
 
 		parent::extendModel();
+
+		if ( is_object($this->getObjectIt()) && !$this->getObjectIt()->IsFuture() && $methodology_it->IsAgile() ) {
+			$this->getObject()->addAttribute('ActualVelocity', 'INTEGER', text(2322), true, false, '', 100);
+			$this->getObject()->setAttributeEditable('ActualVelocity', false);
+		}
 	}
 
 	function buildModelValidator()
@@ -58,7 +54,6 @@ class IterationForm extends PMPageForm
  		switch ( $attr_name )
  		{
  			case 'OrderNum':
- 			case 'Project':
  			case 'IsCurrent':
  			case 'IsDraft':
  				return false;
@@ -66,7 +61,19 @@ class IterationForm extends PMPageForm
 				return parent::IsAttributeVisible( $attr_name );
  		}
 	}
-	
+
+	function getFieldValue( $attribute )
+	{
+		switch($attribute) {
+			case 'ActualVelocity':
+                $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+                $strategy = $methodology_it->getEstimationStrategy();
+                return $strategy->getReleaseVelocityText($this->getObjectIt());
+			default:
+				return parent::getFieldValue($attribute);
+		}
+	}
+
 	function getDefaultValue( $attribute )
 	{
 		$value = parent::getDefaultValue( $attribute );
@@ -132,9 +139,28 @@ class IterationForm extends PMPageForm
 		switch ( $name )
 		{
 			case 'InitialVelocity':
+				$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+				$dimension = str_replace('%1', $strategy->getDimensionText(''), array_pop(preg_split('/:/',$strategy->getVelocityText($this->getObject()))));
+
+				$title = str_replace( '%1', $dimension, text(2125));
 				list($average, $velocity) = $this->getObject()->getVelocitySuggested();
-				return str_replace( '%2', round($velocity, 1),
-							str_replace( '%1', round($average, 1), text(2125)));
+				if ( $average > 0 ) {
+					$title .= '<br/>'.str_replace( '%2', round($velocity, 1),
+							str_replace( '%1', round($average, 1), text(2296)));
+				}
+				return $title;
+
+			case 'FinishDate':
+				$object_it = $this->getObjectIt();
+				if ( is_object($object_it) ) {
+					$offset = $object_it->getFinishOffsetDays();
+					if ( $offset > 0 ) {
+						return str_replace('%1', $object_it->getDateFormat('EstimatedFinishDate'),
+									str_replace('%2', $offset,
+										$object_it->IsFinished() ? text(2293) : text(2302)));
+					}
+				}
+				return parent::getFieldDescription( $name );
 
 			default:
 				return parent::getFieldDescription( $name );
@@ -162,8 +188,15 @@ class IterationForm extends PMPageForm
 			case 'Issues':
 			case 'Tasks':
 				if ( !is_object($this->getObjectIt()) ) return null;
-				return new FieldListOfReferences( $this->getObjectIt()->getRef($attr) );
-
+				if ( $this->getObjectIt()->get($attr) == '' ) return null;
+				return new FieldListOfReferences(
+					$this->getObject()->getAttributeObject($attr)->getRegistry()->Query(
+						array (
+							new FilterInPredicate($this->getObjectIt()->get($attr)),
+							new SortAttributeClause('State')
+						)
+					)
+				);
 			default:
 				return parent::createFieldObject($attr);
 		}

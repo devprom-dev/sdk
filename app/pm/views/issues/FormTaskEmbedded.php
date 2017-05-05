@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTypeDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
  
@@ -7,37 +7,55 @@ class FormTaskEmbedded extends PMFormEmbedded
 {
  	var $tasks_added;
  	
- 	function FormTaskEmbedded($object = null, $anchor_field = null, $form_field = '')
+ 	function __construct($object = null, $anchor_field = null, $form_field = '')
  	{
- 	    global $model_factory;
+ 	    if ( !is_object($object) ) $object = getFactory()->getObject('pm_Task');
  	    
- 	    if ( !is_object($object) ) $object = $model_factory->getObject('pm_Task');
- 	    
- 	    parent::__construct($object, $anchor_field, $form_field);
- 	    
- 	    $object = $this->getObject();
- 	    
- 	    $attributes = $object->getAttributes();
- 	    
- 	    foreach( array_keys($attributes) as $attribute )
- 	    {
- 	        if ( $object->IsAttributeRequired($attribute) && $object->getAttributeOrigin($attribute) == 'custom' ) continue;
- 	        
- 	        $object->setAttributeVisible( $attribute, false ); 
- 	    }
- 	    
- 	    $object->setAttributeVisible( 'Caption', true );
- 	    $object->setAttributeVisible( 'TaskType', true );
- 	 	$object->setAttributeVisible( 'Planned', true );
- 	 	$object->setAttributeVisible( 'Comments', true );
-		$object->setAttributeVisible( 'Assignee', true );
+        parent::__construct($object, $anchor_field, $form_field);
  	}
- 	
- 	function process( $object_it )
+
+    public function extendModel()
+    {
+        parent::extendModel();
+
+        $object = $this->getObject();
+
+        $builder = new TaskModelExtendedBuilder();
+        $builder->build($object);
+
+        $visibleAttributes = array (
+            'Caption', 'Planned', 'Assignee'
+        );
+        if ( $object->IsAttributeVisible('TaskType') ) {
+            $visibleAttributes[] = 'TaskType';
+        }
+
+        foreach( array_keys($object->getAttributes()) as $attribute ) {
+            $groups = $object->getAttributeGroups($attribute);
+            if ( $object->IsAttributeRequired($attribute) ) {
+                if ( $object->IsAttributeVisible($attribute) && $this->getFieldValue($attribute) == '' ) {
+                    $visibleAttributes[] = $attribute;
+                }
+                continue;
+            }
+            if ( $object->getAttributeOrigin($attribute) == 'custom' && !in_array('additional', $groups) ) continue;
+            $object->setAttributeVisible( $attribute, false );
+            $object->setAttributeRequired( $attribute, false );
+        }
+
+        $model_builder = new WorkflowStateAttributesModelBuilder(
+            \WorkflowScheme::Instance()->getStateIt($object), $visibleAttributes
+        );
+        $model_builder->build($object);
+
+        $object->setAttributeRequired( 'OrderNum', true );
+    }
+
+    function process( $object_it, $index, $process_record_callback = null )
  	{
  		$this->tasks_added = array();
  		
- 		parent::process( $object_it );	
+ 		parent::process($object_it, $index, $process_record_callback);
 
  		if ( $_REQUEST['dependencies'] != '' )
  		{
@@ -64,30 +82,8 @@ class FormTaskEmbedded extends PMFormEmbedded
  		array_push( $this->tasks_added, $object_it->getId() );
  	}
  	
- 	function IsAttributeVisible( $attribute )
- 	{
- 		switch ( $attribute )
- 		{
- 			default:
- 				return parent::IsAttributeVisible( $attribute );
- 		}
- 	}
- 	
- 	function IsAttributeRequired( $attribute )
- 	{
- 	 	switch ( $attribute )
- 		{
- 			case 'Release':
-				return true;
- 			default:
- 				return parent::IsAttributeRequired( $attribute );
- 		}
- 	}
- 	
   	function getDiscriminator()
  	{
- 		global $model_factory, $_REQUEST;
-
  		$field = $this->getDiscriminatorField();
  		
  		$object_it = $this->getObjectIt();
@@ -121,12 +117,26 @@ class FormTaskEmbedded extends PMFormEmbedded
  		{
  			case 'Release':
  				return '';
- 				
+            case 'Priority':
+                $object_it = $this->getObjectIt();
+                if ( is_object($object_it) && $object_it->getId() > 0 ) {
+                    return $object_it->get('Priority');
+                }
+                return parent::getFieldValue( $attr );
  			default:
  				return parent::getFieldValue( $attr );
  		}
  	}
- 	
+
+    function IsAttributeObject( $attr ) {
+        switch ($attr) {
+            case 'Planned':
+                return true;
+            default:
+                return parent::IsAttributeObject( $attr );
+        }
+    }
+
 	function createField( $attr )
 	{
 		switch ( $attr )
@@ -143,7 +153,10 @@ class FormTaskEmbedded extends PMFormEmbedded
 
 				return new FieldParticipantDictionary( $object );
 
-			default:
+            case 'Planned':
+                return new FieldHours();
+
+            default:
 				return parent::createField( $attr );			
 		}
 	}

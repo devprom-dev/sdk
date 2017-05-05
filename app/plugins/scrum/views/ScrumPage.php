@@ -1,27 +1,30 @@
 <?php
-
 include "ScrumForm.php";
 include "ScrumTable.php";
 
 class ScrumPage extends PMPage
 {
- 	function __construct()
- 	{
- 		parent::__construct();
- 	}
+    function __construct()
+    {
+        parent::__construct();
 
-	function getObject()
-	{
+        if ( $this->needDisplayForm() )	{
+            $object_it = $this->getObjectIt();
+            if ( is_object($object_it) && $object_it->count() > 0 ) {
+                $this->addInfoSection( new PageSectionComments($object_it) );
+            }
+        }
+    }
+
+    function getObject() {
  		return getFactory()->getObject('pm_Scrum');
 	}
 	
- 	function getTable() 
- 	{
- 		return new ScrumTable( $this->getObject() );
+ 	function getTable() {
+ 		return new ScrumTable( new Scrum(new ScrumGrouppedRegistry()) );
  	}
  	
- 	function getForm() 
- 	{
+ 	function getForm() {
  		return new ScrumForm( $this->getObject() );
  	}
 }

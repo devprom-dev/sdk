@@ -4,6 +4,7 @@
 /dev/apache/htdocs/cache
 /dev/apache/logs/*.log
 /dev/apache/logs/*.pid
+/dev/files/*
 /app/.project
 /app/.buildpath
 /app/.settings

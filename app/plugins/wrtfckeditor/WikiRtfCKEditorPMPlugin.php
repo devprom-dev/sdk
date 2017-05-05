@@ -36,13 +36,20 @@ class WikiRtfCKEditorPMPlugin extends PluginPMBase
         if ( !$this->checkEnabled() ) return array();
         	
         return array (
-                'exportmsword' => 
-        			array(
-	                    'includes' => array( 'wrtfckeditor/views/WysiwygExportWordPage.php' ),
-	                    'classname' => 'WysiwygExportWordPage',
-	                    'title' => text('wrtfckeditor2'),
-	                    'AccessEntityReferenceName' => 'pm_Project'
-	                )
+            'searchartifacts' =>
+                array (
+                    'includes' => array( 'wrtfckeditor/views/SearchArtifactsPage.php' ),
+                    'classname' => 'SearchArtifactsPage',
+                    'title' => text('wrtfckeditor7'),
+                    'AccessEntityReferenceName' => 'pm_ChangeRequest'
+                ),
+            'searchtexttemplate' =>
+                array (
+                    'includes' => array( 'wrtfckeditor/views/SearchTextTemplatePage.php' ),
+                    'classname' => 'SearchTextTemplatePage',
+                    'title' => text('wrtfckeditor8'),
+                    'AccessEntityReferenceName' => 'pm_ChangeRequest'
+                )
         );
     }
  	

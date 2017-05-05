@@ -7,10 +7,11 @@ class ChangeLogParticipantFilter extends FilterPredicate
  		switch ( $filter )
  		{
  			case 'none':
+            case 'external':
  				return " AND t.SystemUser IS NULL ";
  			
  			case 'notme':
- 				return " AND t.SystemUser <> ".getSession()->getUserIt()->getId();
+ 				return " AND IFNULL(t.SystemUser, 0) <> ".getSession()->getUserIt()->getId();
  				
  			default:
 		 		$ids = array_filter(preg_split('/,/',$filter), function($value) {

@@ -14,12 +14,13 @@ class PageSettingCommonBuilder extends PageSettingBuilder
     protected function buildTaskRelatedUI( PageSettingSet & $settings )
     {
         // tasks list
+        $integrationsCount = getFactory()->getObject('Integration')->getRecordCount();
         
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
         
         $setting = new PageListSetting('TaskList');
         
-        $setting->setGroup( 'none' );
+        $setting->setGroup( 'Release' );
         
         $visible_attributes = array('UID', 'Caption', 'State', 'Assignee', 'TaskType', 'ChangeRequest');
 	    $visible_attributes[] = 'Priority';
@@ -29,31 +30,37 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $settings->add( $setting );
 
         // mytasks report
-        
-        $setting = new ReportSetting('mytasks');
-        $setting->setVisibleColumns(
-        		array_merge(
-        				array (
-        						'Spent',
-        						'IssueTraces',
-                                'Description',
-                                'RecentComment',
-                                'DueDate'
-        				),
-        				array_filter( $visible_attributes, function($value)
-        				{
-        						return !in_array($value, array('Assignee', 'ChangeRequest'));
-        				})
-        		)
+        $visible = array_merge(
+            array (
+                'Spent',
+                'IssueTraces',
+                'RecentComment',
+                'DueDate'
+            ),
+            array_filter( $visible_attributes, function($value) {
+                return !in_array($value, array('Assignee','ChangeRequest','TaskType'));
+            })
         );
-        $settings->add( $setting );
+
+        foreach( array('mytasks', 'assignedtasks', 'newtasks', 'issuesmine', 'watchedtasks') as $reportName ) {
+            $setting = new ReportSetting($reportName);
+            if ( $reportName == 'mytasks' ) {
+                $setting->setVisibleColumns(array_merge(
+                    $visible,
+                    array(
+                        'Description'
+                    )
+                ));
+            }
+            else {
+                $setting->setVisibleColumns($visible);
+            }
+            $settings->add( $setting );
+        }
 
         // currenttasks report
-        
         $setting = new ReportSetting('currenttasks');
-        
         $setting->setGroup('ChangeRequest');
-
         $setting->setVisibleColumns(
    				array_filter( $visible_attributes, function($value)
    				{
@@ -70,10 +77,15 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $setting->setGroup('ChangeRequest');
 
         $setting->setVisibleColumns(
+            array_merge(
    				array_filter( $visible_attributes, function($value)
    				{
    						return !in_array($value, array('ChangeRequest')); 
-   				})
+   				}),
+                array(
+                    'Planned', 'Fact'
+                )
+            )
         );
         
         $settings->add( $setting );
@@ -85,15 +97,24 @@ class PageSettingCommonBuilder extends PageSettingBuilder
                     'UID',
                     'Caption',
                     'State',
-                    'ChangeRequest'
+                    'Fact'
  	    		),
                 array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
-                    return $object->IsAttributeVisible($value);
+                    return $object->IsAttributeVisible($value) && !in_array($value, array('Watchers'));
                 })
 		);
 
         $setting = new ReportSetting('tasks-trace');
-        $setting->setVisibleColumns($visible);
+        $setting->setVisibleColumns(
+            array_merge( $visible,
+                $integrationsCount > 0
+                    ? array (
+                        'IntegrationLink'
+                    )
+                    : array()
+            )
+        );
+        $setting->setGroup('ChangeRequest');
         $settings->add( $setting );
         
         // tasks table
@@ -103,28 +124,9 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $setting->setVisibleColumns($columns);
         $settings->add( $setting );
 
-        
-        
-        
         $setting = new PageTableSetting('TaskTable');
-        
         $setting->setFilters( array('release', 'iteration', 'taskstate', 'tasktype', 'taskassignee', 'target') );
-
-       	if ( $methodology_it->get('IsRequestOrderUsed') == 'Y' )
-		{
-		    $setting->setSorts( array('OrderNum') );
-		}
-		else
-		{
-		    $setting->setSorts( array('Priority') );
-		}
-        
-        $settings->add( $setting );
-    
-        // issuesboardcrossproject
-        $setting = new ReportSetting('tasksboardcrossproject');
-        $setting->setGroup( 'Assignee' );
-        $setting->setFilters( array('taskstate', 'iteration', 'tasktype', 'target','usergroup') );
+	    $setting->setSorts( array('Priority','OrderNum') );
         $settings->add( $setting );
     }
 

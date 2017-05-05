@@ -67,7 +67,7 @@
  		"       t.Workload, t.PlannedWorkload, t.SnapshotDays, t.PlannedEstimation, t.Estimation, " .
  		"       TO_DAYS(r.StartDate) StartDays, " .
  		"	    TO_DAYS(NOW()) - TO_DAYS(r.StartDate) OffsetDays, " .
- 	    "		r.StartDate, ".
+ 	    "		DATE(r.StartDate) StartDate, ".
  	    "       GREATEST(TO_DAYS(NOW()) - TO_DAYS(r.FinishDate) - 1, 0) AdditionalDays ".
  		"  FROM pm_Release r " .
  		"		INNER JOIN pm_ReleaseMetrics t " .
@@ -78,7 +78,7 @@
 
  $metrics_it = $metrics->createSQLIterator($sql);
  
- $duration = min($metrics_it->get('Duration') > 0 ? $metrics_it->get('Duration') : $release_it->getCapacity(), 365);
+ $duration = min($metrics_it->get('Duration') > 0 ? $metrics_it->get('Duration') : $release_it->getDuration(), 365);
 
 if ( $methodology_it->RequestEstimationUsed() ) {
 	$capacity = $metrics_it->get('PlannedEstimation') > 0

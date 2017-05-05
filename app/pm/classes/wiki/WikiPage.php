@@ -15,10 +15,11 @@ include "predicates/WikiRootFilter.php";
 include "predicates/WikiNonRootEmptyFilter.php";
 include "predicates/WikiTagFilter.php";
 include "predicates/WikiRootTransitiveFilter.php";
-include "predicates/WikiAuthorFilter.php";
 include "predicates/WikiTypePlusChildren.php";
+include "predicates/WikiTraceBrokenPredicate.php";
+include "predicates/WikiOriginalFilter.php";
+include "predicates/WikiDocumentWaitFilter.php";
 include "persisters/WikiPageRevisionPersister.php";
-include 'persisters/DocumentVersionPersister.php';
 include 'persisters/WikiPageTracesRevisionsPersister.php';
 include "persisters/WikiPageHistoryPersister.php";
 include 'predicates/WikiSameBranchFilter.php';
@@ -39,32 +40,6 @@ class WikiPage extends MetaobjectStatable
 		parent::__construct('WikiPage', is_object($registry) ? $registry : new WikiPageRegistry($this));
 		
  	 	$this->setSortDefault( array( new SortOrderedClause() ));
-
-		$this->addAttribute('DocumentVersion', 'VARCHAR', translate('Бейзлайн'), false, false, '', 40);
-
-		$this->addPersister( new DocumentVersionPersister() );
-		
-		foreach ( array('Caption', 'DocumentVersion') as $attribute )
-		{
-			$this->addAttributeGroup($attribute, 'tooltip');
-		}
-		
-		$system_fields = array (
-				'ReferenceName', 
-				'IsTemplate', 
-				'IsDraft', 
-				'ContentEditor', 
-				'UserField1', 
-				'UserField2',
-				'UserField3',
-				'ParentPath',
-				'SectionNumber'
-		);
-		
-		foreach( $system_fields as $attribute )
-		{
-			$this->addAttributeGroup($attribute, 'system');
-		}
 	}
 	
 	function createIterator() 
@@ -85,6 +60,10 @@ class WikiPage extends MetaobjectStatable
 	function getDocumentName() {
         return $this->getDisplayName();
     }
+
+    function getSectionName() {
+        return $this->getDisplayName();
+    }
 	
 	function getPageNameViewMode( $objectid ) 
 	{
@@ -98,23 +77,26 @@ class WikiPage extends MetaobjectStatable
 		switch( $name )
 		{
 		    case 'ReferenceName':
-		        
 		        return $this->getReferenceName();
 		        
 			case 'Project':
-
 			    return getSession()->getProjectIt()->getId();
 
 			case 'Author':
-				
-			    if ( !is_a(getSession(), 'PMSession') ) return;
-			    
-			    return getSession()->getParticipantIt()->getId();
+			    return getSession()->getUserIt()->getId();
 			    
 			case 'IsTemplate': return 0;
-			    
+
+            case 'PageType':
+                return $this->getAttributeObject($name)->getRegistry()->Query(
+                    array (
+                        new FilterBaseVpdPredicate(),
+                        new FilterAttributePredicate('PageReferenceName', $this->getReferenceName()),
+                        new FilterAttributePredicate('IsDefault', 'Y')
+                    )
+                )->getId();
+
 			default:
-			    
 			    return parent::getDefaultAttributeValue($name);
 	    }
 	}
@@ -181,6 +163,7 @@ class WikiPage extends MetaobjectStatable
 		if ( $object_it->get('ContentEditor') == '' ) $parms['ContentEditor'] = $editor; 
 		
 		$was_content = $object_it->getHtmlDecoded('Content');
+		$wasObjectIt = $object_it->copy();
 
 		$result = parent::modify_parms( $object_it, $parms );
 
@@ -199,6 +182,9 @@ class WikiPage extends MetaobjectStatable
 			if ( $documentId == '' ) {
 				$documentId = $now_it->get('DocumentId');
 			}
+			if ( $object_it->get('ParentPage') != $now_it->get('ParentPage') ) {
+                $this->updateSortIndexAndSections($wasObjectIt, $documentId);
+            }
 			$this->updateSortIndexAndSections($now_it, $documentId);
 		}
 		
@@ -274,8 +260,8 @@ class WikiPage extends MetaobjectStatable
 
         $className = get_class($object_it->object);
 
-        $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass) ".
-            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . $className . "' ".
+        $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass, DocumentId) ".
+            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . $className . "', w.DocumentId ".
             "     FROM WikiPage w WHERE w.DocumentId = ".$documentId." AND w.ParentPath LIKE '%,".$parent_id.",%' AND ParentPage <> ".$parent_id;
         DAL::Instance()->Query( $sql );
 	}
@@ -301,7 +287,7 @@ class WikiPage extends MetaobjectStatable
 				new SortDocumentClause()
 			)
 		);
-		foreach( $object_it->fieldToArray('ParentPage') as $parentId )
+		foreach( array_unique($object_it->fieldToArray('ParentPage')) as $parentId )
 		{
 			if ( $parentId < 1 ) continue;
 			DAL::Instance()->Query( "SET @r=0 " );
@@ -313,7 +299,7 @@ class WikiPage extends MetaobjectStatable
 					   			   	  (SELECT IF(t2.SectionNumber IS NULL, '', CONCAT(t2.SectionNumber,'.')) FROM WikiPage t2 WHERE t2.WikiPageId = t1.ParentPage),
 					   			   	  (@r:= (@r+1))
 					   			    ) SectionNumber
-					   		  FROM WikiPage t1 WHERE t1.ParentPage = ".$parentId." ORDER BY t1.OrderNum
+					   		  FROM WikiPage t1 WHERE t1.ParentPage = ".$parentId." ORDER BY t1.SortIndex
 					   		) t2 ON t2.WikiPageId = t.WikiPageId
 				   SET t.SectionNumber = t2.SectionNumber
 				 WHERE t.ParentPage = ".$parentId." 
@@ -344,8 +330,8 @@ class WikiPage extends MetaobjectStatable
         $sql = "UPDATE WikiPage w SET w.OrderNum = @r:= (@r+10), w.RecordModified = NOW() WHERE w.WikiPageId IN (".join(",", $ids).") ORDER BY w.OrderNum ASC";
         DAL::Instance()->Query( $sql );
 
-        $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass) ".
-            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . get_class($this) . "' ".
+        $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass, DocumentId) ".
+            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . get_class($this) . "', w.DocumentId ".
             "     FROM WikiPage w WHERE w.WikiPageId IN (".join(",", $ids).") ";
         DAL::Instance()->Query( $sql );
 	}

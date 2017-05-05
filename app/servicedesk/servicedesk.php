@@ -11,7 +11,6 @@ include('../common.php');
 $model_factory = new ModelFactoryExtended(PluginsFactory::Instance());
 
 // --------------------
-
 $kernel = new ServiceDeskAppKernel('prod', false);
 $kernel->loadClassCache('sd-classes', '.php.cache');
 $request = Request::createFromGlobals();

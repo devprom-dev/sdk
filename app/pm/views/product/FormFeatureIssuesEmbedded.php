@@ -2,32 +2,32 @@
 
 class FormFeatureIssuesEmbedded extends PMFormEmbedded
 {
-	const MAX_VISIBLE_TASKS = 5;
+	const MAX_VISIBLE_TASKS = 20;
 	
 	private $terminal_states = array();
 	private $hidden_tasks = 0;
 	
- 	protected function extendModel()
+ 	public function extendModel()
  	{
  		$this->terminal_states = $this->getObject()->getTerminalStates();
 
+ 		$visible = array(
+            'Caption', 'Description'
+        );
 		$object = $this->getObject();
 		foreach( array_keys($object->getAttributes()) as $attribute )
 		{
 			if ( $object->IsAttributeRequired($attribute) ) continue;
+			if ( in_array($attribute, $visible) ) continue;
 			$object->setAttributeVisible( $attribute, false );
 		}
-		$object->setAttributeVisible( 'Caption', true );
 		$object->setAttributeVisible( 'OrderNum', false );
  	}
 	
  	function getItemDisplayName( $object_it )
  	{
  		$uid = new ObjectUID;
-		$text = $uid->getUidIcon( $object_it );
-		$text .= ' '.$object_it->getWordsOnlyValue($object_it->getDisplayName(), 15);
-		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')';
- 		return $text;
+ 		return $uid->getUidWithCaption( $object_it );
  	}
  	
  	function getItemVisibility( $object_it )
@@ -50,9 +50,58 @@ class FormFeatureIssuesEmbedded extends PMFormEmbedded
 
 	function getListItemsTitle() {
 		if ( $this->hidden_tasks > 0 ) {
-			return text(1014).' '.str_replace('%1', $this->hidden_tasks, text(1935));
+			return str_replace('%1', $this->hidden_tasks, text(2028));
 		} else {
 			return parent::getListItemsTitle();
 		}
 	}
+
+	function getActions($object_it, $item)
+    {
+        $actions = array();
+
+        $method = new ObjectModifyWebMethod($object_it);
+        if ( $method->hasAccess() ) {
+            $actions[] = array(
+                'name' => translate('Редактировать'),
+                'url' => $method->getJSCall()
+            );
+            $actions[] = array();
+        }
+
+        $method = new ModifyAttributeWebMethod($object_it, 'Function');
+        if ( $method->hasAccess() ) {
+            $actions[] = array(
+                'name' => translate('Отвязать'),
+                'url' => $method->getJSCall()
+            );
+            $actions[] = array();
+        }
+
+        return array_merge(
+            $actions,
+            parent::getActions($object_it, $item)
+        );
+    }
+
+    function drawAddButton( $view, $tabindex )
+    {
+        parent::drawAddButton( $view, $tabindex );
+
+        $objectIt = $this->getObjectIt();
+        if ( is_object($objectIt) ) {
+            $method = new ObjectModifyWebMethod($objectIt);
+            if ( $method->hasAccess() ) {
+                $url = $method->getJSCall(
+                    array(
+                        'object_id' => $objectIt->getId() .'&BindIssue=true',
+                        'can_delete' => 'false'
+                    )
+                );
+                echo '<a class="dashed embedded-add-button" style="margin-left:20px;" href="'.$url.'" tabindex="-1">';
+                    echo translate('связать');
+                echo '</a>';
+            }
+        }
+    }
 }

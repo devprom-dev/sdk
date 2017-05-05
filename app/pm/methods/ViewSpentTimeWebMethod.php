@@ -11,14 +11,15 @@ class ViewSpentTimeWebMethod extends FilterWebMethod
  	
  	function getValues()
  	{
- 		global $model_factory;
- 		
   		$values = array (
  			'participants' => translate('Участники'),
  			'projects' => text('projects.name'),
-  		    'issues' => translate('Пожелания'),
  			'tasks' => translate('Задачи')
- 			);
+		);
+
+        if ( getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('pm_ChangeRequest')) ) {
+            $values['issues'] = translate('Пожелания');
+        }
 
  		return $values;
 	}
@@ -27,7 +28,11 @@ class ViewSpentTimeWebMethod extends FilterWebMethod
 	{
 	    $value = parent::getValue();
 
-	    if ( $value == '' ) return 'issues';
+	    if ( $value == '' ) {
+            $values = $this->getValues();
+            if ( array_key_exists('issues', $values) ) return 'issues';
+            return 'tasks';
+        }
 	    
 	    return $value;
 	}

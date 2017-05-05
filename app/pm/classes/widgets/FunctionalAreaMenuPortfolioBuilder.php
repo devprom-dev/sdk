@@ -16,9 +16,6 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
 		$items['issuesboard'] = $item;
 		$items[] = $this->report->getExact('discussions')->buildMenuItem();
         $items['knowledgebase'] = $this->module->getExact('project-knowledgebase')->buildMenuItem();
-        $item = $this->report->getExact('project-blog')->buildMenuItem();
-		$item['name'] = text(2000);
-		$items[] = $item;
 		$menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
 
 		// plan items

@@ -11,19 +11,17 @@ class AssetPathTwigExtension extends \Twig_Extension
     public function getFunctions()
     {
         return array(
-            'emailBody' => new \Twig_Function_Method($this, 'emailBody'),
+            new \Twig_SimpleFunction('emailBody', function($fileName, $language) {
+                $fileName = basename($fileName);
+                if ( strlen($language) != 2 ) $language = 'en';
+
+                $path = \SystemTemplate::getPath().$language.'/'.$fileName;
+                if ( !file_exists($path) ) {
+                    $path = "Email/".$language."/".$fileName;
+                }
+                return $path;
+            }),
         );
-    }
-
-    public function emailBody( $fileName, $language ) {
-        $fileName = basename($fileName);
-        if ( strlen($language) != 2 ) $language = 'en';
-
-        $path = \SystemTemplate::getPath().$language.'/'.$fileName;
-        if ( !file_exists($path) ) {
-            $path = "Email/".$language."/".$fileName;
-        }
-        return $path;
     }
 
     public function getName() {

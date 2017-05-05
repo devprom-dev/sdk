@@ -34,6 +34,7 @@ return array(
     'registration.back' => 'Back to the originating page.',
     'registration.cancel' => 'Cancel',
     'registration.submit' => 'Register',
+    'registration.title' => 'Please fill the simple form',
     'registration.email.subject' => 'Welcome %username%!',
     'registration.email.message' => '
             Hello %username%!
@@ -53,11 +54,12 @@ return array(
     'resetting.request.cancel' => 'Cancel',
     'resetting.reset.submit' => 'Change password',
     'resetting.reset.cancel' => 'Cancel',
+    'resetting.reset.title' => 'Reset your password',
 
 # Global strings
     'layout.logout' => 'Logout',
     'layout.login' => 'Login',
-    'layout.register' => 'Register',
+    'layout.register' => 'Sign Up',
     'layout.logged_in_as' => 'Logged in as %username%',
 
 # Form field labels

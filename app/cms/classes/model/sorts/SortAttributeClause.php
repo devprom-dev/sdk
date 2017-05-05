@@ -3,14 +3,29 @@
 class SortAttributeClause extends SortClauseBase
 {
  	var $attr;
+    private $valueInsteadOfNull;
+    private $textInsteadOfNull;
+    private $nullOnTop;
  	
  	function SortAttributeClause( $attribute )
  	{
  		$this->attr = $attribute;
- 		
+        $this->setNullOnTop();
  		parent::SortClauseBase();
  	}
- 	
+
+ 	function setNullOnTop( $nullOnTop = true ) {
+ 	    $this->nullOnTop = $nullOnTop;
+ 	    if ( $nullOnTop ) {
+            $this->textInsteadOfNull = '!';
+            $this->valueInsteadOfNull = '0';
+        }
+        else {
+            $this->textInsteadOfNull = 'я';
+            $this->valueInsteadOfNull = '9999';
+        }
+    }
+
  	function getAttributeName()
  	{
  	 	$parts = preg_split('/\./', $this->attr);
@@ -55,15 +70,14 @@ class SortAttributeClause extends SortClauseBase
  	
  	function clause()
  	{
- 		$object = $this->getObject();
- 		
-		$sort_type = $this->getSortType(); 
-		
-		$attr = $this->getAttributeName();
-		if ( !$object->hasAttribute($attr) ) {
-			$attr = $object->getIdAttribute();
-		}
+        $object = $this->getObject();
+        $attr = $this->getAttributeName();
 
+        if ( !$object->hasAttribute($attr) ) {
+            throw new Exception('There is no attribute '.$attr.' of '.get_class($object).' entity');
+        }
+
+		$sort_type = $this->getSortType();
 		$sql_attr = $this->getColumn();
  		
 		switch ( $attr )
@@ -71,10 +85,16 @@ class SortAttributeClause extends SortClauseBase
 			case 'State':
 				if ( method_exists( $object, 'getStatableClassName' ) )
 				{
-					return " (SELECT MIN(s.OrderNum) FROM pm_State s " .
-						   "   WHERE s.ObjectClass = '".$object->getStatableClassName()."' " .
-						   "	 AND s.VPD = ".$this->getAlias().".VPD".
-						   "     AND s.ReferenceName = ".$sql_attr.") ".$sort_type;
+                    $items = \WorkflowScheme::Instance()->getNonTerminalStates($object);
+                    $items[] = array_shift($items);
+                    $items = array_merge(
+                        $items, \WorkflowScheme::Instance()->getTerminalStates($object)
+                    );
+                    $index = 0;
+                    $query = array_map(function($value) use(&$index) {
+                        return " WHEN '".$value."' THEN ".($index++)." ";
+                    }, $items);
+                    return " CASE ".$sql_attr." ".join('', $query)." END ";
 				}
 				
 			default:
@@ -85,8 +105,15 @@ class SortAttributeClause extends SortClauseBase
 					if ( $ref instanceof Metaobject && $ref->getEntity()->get('IsDictionary') == 'Y' )
 					{
 						$alt_sort_column = $ref->getAttributeType('Caption') != "" ? 'Caption' : $ref->getIdAttribute();
-						return " (SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
+						return " IFNULL((SELECT IFNULL(s.OrderNum, s.".$alt_sort_column.") FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr."), ".$this->valueInsteadOfNull.") ".$sort_type." ";
 					}
+
+					if ( $ref instanceof User ) {
+                        $userId = getSession()->getUserIt()->getId();
+                        if ( $userId > 0 ) {
+                            return " (SELECT IF(s.".$ref->getIdAttribute()." = ".$userId.", '1', IFNULL(s.Caption, '".$this->textInsteadOfNull."')) FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type." ";
+                        }
+                    }
 
 					$sorts = $ref->getSortDefault();
 					if ( count($sorts) > 0 && $ref->getEntityRefName() != $object->getEntityRefName() )
@@ -107,6 +134,7 @@ class SortAttributeClause extends SortClauseBase
 						$sort_clauses = array();
 						foreach( $sorts as $sort ) {
 							if ( !$sort instanceof SortAttributeClause ) continue;
+                            $sort->setNullOnTop($this->nullOnTop);
 							$clause = $sort->clause();
 							if ( strpos($clause, 'SELECT') === false ) {
 								$sort->setAlias('s');
@@ -126,11 +154,11 @@ class SortAttributeClause extends SortClauseBase
 				}
 
 	 			if ( in_array($object->getAttributeType($attr), array('integer','float')) ) {
-	 				$sql_attr = " IFNULL(".$sql_attr.", 0) ";
+	 				$sql_attr = " IFNULL(".$sql_attr.", ".$this->valueInsteadOfNull.") ";
 	 			}
 
 			 	if ( in_array($object->getAttributeType($attr), array('varchar','text','largetext')) ) { 
-	 				$sql_attr = " IFNULL(".$sql_attr.", '!') ";
+	 				$sql_attr = " IFNULL(".$sql_attr.", '".$this->textInsteadOfNull."') ";
 	 			}
 
 				return $sql_attr." ".$sort_type." ";

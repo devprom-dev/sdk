@@ -1,0 +1,211 @@
+[{
+  "Request": {
+    "add": {
+      "text": "Ребят, тут новое пожелание",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%Description",
+          "fields": [
+            {
+              "title": "Приоритет",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "footer": "Добавлено %Author.Caption",
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    },
+    "update": {
+      "filter": "contains(Changed, 'Owner')",
+      "text": "Вам задачка",
+      "channel": "%Owner.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%Description",
+          "fields": [
+            {
+              "title": "Приоритет",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "footer": "Добавлено %Author.Caption",
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "RequestComment": {
+    "add": {
+      "text": "К пожеланию был добавлен комментарий",
+      "channel": "%ObjectId.Owner.Email %ObjectId.Author.Email %ObjectId.Watchers.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "pretext": "%Caption",
+          "title": "%ObjectId.UID %ObjectId.Caption",
+          "title_link": "%ObjectId.URL",
+          "text": "%ObjectId.Description",
+          "footer": "Добавлено %AuthorId.Caption",
+          "color": "%ObjectId.Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "Task": {
+    "add": {
+      "text": "Вам задачка",
+      "channel": "%Assignee.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%ChangeRequest.Description",
+          "fields": [
+            {
+              "title": "Приоритет",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    },
+    "update": {
+      "filter": "contains(Changed, 'Assignee')",
+      "text": "Вам задачка",
+      "channel": "%Assignee.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%ChangeRequest.Description",
+          "fields": [
+            {
+              "title": "Приоритет",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "TaskComment": {
+    "add": {
+      "text": "К задаче добавлен комментарий",
+      "channel": "%ObjectId.Assignee.Email %ObjectId.Watchers.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "pretext": "%Caption",
+          "title": "%ObjectId.UID %ObjectId.Caption",
+          "title_link": "%ObjectId.URL",
+          "text": "%ObjectId.ChangeRequest.Description",
+          "footer": "",
+          "color": "%ObjectId.Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "Build": {
+    "update": {
+      "text": "Статус сборки *%Caption* изменился на *%State*",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "text": "%Description",
+          "fields": [
+            {
+              "title": "Приложение",
+              "value": "%Application",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "TestExecution": {
+    "add": {
+      "text": "Результат тестирования",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "text": "%Result.Caption",
+          "title": "%UID %TestScenario.Caption",
+          "title_link": "%URL",
+          "fields": [
+            {
+              "title": "Версия",
+              "value": "%Version.Caption",
+              "short": true
+            },
+            {
+              "title": "Окружение",
+              "value": "%Environment.Caption",
+              "short": true
+            },
+            {
+              "title": "Длительность",
+              "value": "%Duration сек.",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  }
+}]

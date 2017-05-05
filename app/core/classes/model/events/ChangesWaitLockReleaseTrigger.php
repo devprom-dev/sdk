@@ -7,9 +7,15 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	private $affected_queue = array();
 	private $skipped_entities = array();
 	private $skipClasses = array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable','MetaobjectStatable');
+    static $declaredClasses = array();
+    static $parentClasses = array();
+    static $childrenClasses = array();
 	
 	public function __construct()
 	{
+        if ( count(self::$declaredClasses) < 1 ) {
+            self::$declaredClasses = get_declared_classes();
+        }
 		$this->skipped_entities = array (
 			'co_JobRun',
 			'pm_ProjectUse',
@@ -19,7 +25,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			'EmailQueueAddress',
 			'cms_EntityCluster',
 			'pm_StateObject',
-			'pm_Project'
+            'cms_SnapshotItem',
+            'cms_SnapshotItemValue'
 		);
         $this->finalize();
 	}
@@ -40,15 +47,27 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
         });
     }
 
+    protected function getClassParents( $className ) {
+        if ( !is_array(self::$parentClasses[$className]) ) {
+            self::$parentClasses[$className] = class_parents($className);
+        }
+        return self::$parentClasses[$className];
+    }
+
     public function terminate()
 	{
-		$date = SystemDateTime::date();
+        if ( !\DeploymentState::IsInstalled() ) return;
+
+        // drop old records (purge the queue)
+        DAL::Instance()->Query(
+            "DELETE FROM co_AffectedObjects WHERE UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(RecordModified) > 40 "
+        );
 		if ( count($this->affected_queue) < 1 ) return;
 
 		foreach( $this->affected_queue as $item ) {
 			DAL::Instance()->Query(
-				"INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, ObjectClass, ObjectId, VPD) 
-					VALUES ('".$date."', '".$date."', '".$item['ObjectClass']."', ".$item['ObjectId'].", '".$item['VPD']."') "
+				"INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, ObjectClass, ObjectId, VPD, DocumentId) 
+					VALUES (NOW(), NOW(), '".$item['ObjectClass']."', ".$item['ObjectId'].", '".$item['VPD']."', ".($item['DocumentId'] == '' ? 'NULL' : $item['DocumentId']).") "
 			);
 		}
 
@@ -58,13 +77,6 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		}
 		$lock = new LockFileSystem('ChangeLogAggregated');
 		$lock->Release();
-
-		// drop old records (purge the queue)
-		DAL::Instance()->Query(
-			"DELETE FROM co_AffectedObjects WHERE RecordModified <= '".
-			strftime('%Y-%m-%d %H:%M:%S', strtotime('-40 seconds', strtotime(SystemDateTime::date())))
-			."' "
-		);
 	}
 	
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
@@ -82,7 +94,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			foreach( $this->getDescendants($class_name) as $class ) {
 				$this->storeAffectedRows($class, $object_it);
 			}
-			foreach( class_parents($class_name) as $class ) {
+			foreach( $this->getClassParents($class_name) as $class ) {
 				if ( in_array($class, $this->skipClasses) ) break;
 				$this->storeAffectedRows($class, $object_it);
 			}
@@ -106,7 +118,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			foreach( $this->getDescendants($class_name) as $class ) {
 				$this->storeAffectedRows($class, $ref_it);
 			}
-    		foreach( class_parents($class_name) as $class ) {
+    		foreach( $this->getClassParents($class_name) as $class ) {
 				if ( in_array($class, $this->skipClasses) ) break;
 				$this->storeAffectedRows($class, $ref_it);
 			}
@@ -129,7 +141,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			$this->affected_queue[] = array (
 				'ObjectClass' => $class_name,
 				'ObjectId' => $object_it->getId(),
-				'VPD' => $object_it->get('VPD')
+				'VPD' => $object_it->get('VPD'),
+                'DocumentId' => $object_it->object->getEntityRefName() == 'WikiPage' ? $object_it->get('DocumentId') : ''
 			);
 			$object_it->moveNext();
 		}
@@ -140,8 +153,11 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 	{
 		if ( $class_name == 'Metaobject' ) return array();
 		if ( $class_name == 'Object' ) return array();
-		
- 		return array_filter( get_declared_classes(), function($value) use($class_name) {
+
+        if ( is_array(self::$childrenClasses[$class_name]) ) {
+            return self::$childrenClasses[$class_name];
+        }
+ 		return self::$childrenClasses[$class_name] = array_filter( self::$declaredClasses, function($value) use($class_name) {
  			return is_subclass_of($value, $class_name);
  		});
 	}
@@ -238,8 +254,11 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		{
 	    	$ref_it = $object_it->getAnchorIt();
 	    	if ( $ref_it->getId() != '' ) {
-		    	return array( 
-		    		get_class($ref_it->object) => $ref_it
+		    	return array_merge(
+		    	    array(
+		    		    get_class($ref_it->object) => $ref_it
+                    ),
+                    $this->getCustomReferences($kind, $ref_it)
 		    	);
 	    	}
 		}

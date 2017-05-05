@@ -75,4 +75,11 @@ class PmApplicationKernel extends Kernel
             error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
         }
     }
+
+    public function boot()
+    {
+        $lock = new \CacheLock();
+        parent::boot();
+        $lock->Release();
+    }
 }

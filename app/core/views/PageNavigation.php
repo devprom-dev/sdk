@@ -141,7 +141,8 @@ class PageNavigation
                 {
                     $programs[$program_it->get('CodeName')] = array (
                         'name' => $program_it->getDisplayName(),
-                        'url' => '/pm/'.$program_it->get('CodeName')
+                        'url' => '/pm/'.$program_it->get('CodeName'),
+                        'uid' => 'program-portfolio'
                     );
                 }
 
@@ -154,8 +155,7 @@ class PageNavigation
         $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
         while ( !$portfolio_it->end() )
         {
-            if ( !getFactory()->getAccessPolicy()->can_read($portfolio_it) )
-            {
+            if ( !getFactory()->getAccessPolicy()->can_read($portfolio_it) ) {
                 $portfolio_it->moveNext(); continue;
             }
 
@@ -173,7 +173,7 @@ class PageNavigation
                     : getFactory()->getObject('Project')->getEmptyIterator();
 
                 while ( !$linked_it->end() ) {
-                    if ( $portfolio_it->getId() == $linked_it->getId() || array_key_exists($linked_it->get('CodeName'), $programs) ) {
+                    if ( $portfolio_it->getId() == $linked_it->getId() ) {
                         $linked_it->moveNext();
                         continue;
                     }
@@ -189,7 +189,8 @@ class PageNavigation
             {
                 $portfolios[$portfolio_it->get('CodeName')] = array (
                     'name' => $portfolio_it->getDisplayName(),
-                    'url' => '/pm/'.$portfolio_it->get('CodeName')
+                    'url' => '/pm/'.$portfolio_it->get('CodeName'),
+                    'uid' => 'program-portfolio'
                 );
             }
 
@@ -263,9 +264,17 @@ class PageNavigation
             }
         }
 
-        if ( array_key_exists('all', $portfolios) && count($projects['all']) < 1 ) {
+        if ( !defined('PERMISSIONS_ENABLED') && array_key_exists('all', $portfolios) && count($projects['all']) < 1 ) {
             if ( count($programs) + count($realPortfolios) == 1 ) {
                 unset($portfolios['all']);
+            }
+        }
+
+        if ( array_key_exists('my', $portfolios) ) {
+            $allPrtfolio = $portfolios['all'];
+            if ( is_array($allPrtfolio) ) {
+                unset($portfolios['all']);
+                array_unshift($portfolios, $allPrtfolio);
             }
         }
 

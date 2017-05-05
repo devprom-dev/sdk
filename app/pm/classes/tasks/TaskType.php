@@ -4,7 +4,6 @@ include "TaskTypeIterator.php";
 include "predicates/TaskTypeBaseIterationRelatedPredicate.php";
 include "predicates/TaskTypeFixBugPredicate.php";
 include "predicates/TaskTypeNonBugFixPredicate.php";
-include "predicates/TaskTypeStageRelatedPredicate.php";
 include "predicates/TaskTypeBaseCategoryPredicate.php";
 include "predicates/TaskTypeStateRelatedPredicate.php";
 

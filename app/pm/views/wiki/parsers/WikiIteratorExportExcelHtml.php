@@ -7,13 +7,16 @@ class WikiIteratorExportExcelHtml extends IteratorExportExcel
  	function setFields( $fields )
  	{
  	    $object = $this->getIterator()->object;
- 	    
+
+        if ( !array_key_exists('SectionNumber', $fields) ) {
+            $fields = array_merge($fields, array(
+                'ParentPage' => translate($object->getAttributeUserName('ParentPage'))
+            ));
+        }
+
  		parent::setFields( array_merge( $fields, array(
- 		        'Content' => translate($object->getAttributeUserName('Content')),
- 				'Caption' => translate($object->getAttributeUserName('Caption')),
- 				'ParentPage' => translate($object->getAttributeUserName('ParentPage')),
- 		        'ContentEditor' => translate($object->getAttributeUserName('ContentEditor'))
- 	    ))); 
+            'Caption' => translate($object->getAttributeUserName('Caption'))
+ 	    )));
  	}
 
     function get( $key )
@@ -36,7 +39,7 @@ class WikiIteratorExportExcelHtml extends IteratorExportExcel
                     '/<img\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceImageCallback'),
                     $content
                 );
-                return array('<![CDATA['.$content.']]>', 'String');
+                return array($content, PHPExcel_Cell_DataType::TYPE_STRING);
 
             default:
                 return parent::getValue( $key, $iterator );

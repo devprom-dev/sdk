@@ -30,7 +30,13 @@ class Company extends BaseEntity {
      * @var ArrayCollection
      */
     private $projects;
-    
+
+    /**
+     * @ORM\OneToMany(targetEntity="CompanyProduct", mappedBy="company", fetch="EAGER", cascade={"all"})
+     * @var ArrayCollection
+     */
+    private $products;
+
     /**
      * @param int $id
      */
@@ -77,5 +83,21 @@ class Company extends BaseEntity {
     public function getProjects()
     {
         return $this->projects->toArray();
+    }
+
+    /**
+     * @param ArrayCollection $products
+     */
+    public function setProducts($products)
+    {
+        $this->products = $products;
+    }
+
+    /**
+     * @return array
+     */
+    public function getProducts()
+    {
+        return $this->products->toArray();
     }
 }

@@ -12,6 +12,7 @@ class InfoController extends BaseController
     public function indexAction()
     {
     	if ( is_object($response = $this->checkAccess()) ) return $response;
+    	if ( defined('SERVER_INFO_HIDDEN') && SERVER_INFO_HIDDEN ) return new RedirectResponse('/admin');
     	
     	ob_start();
 		

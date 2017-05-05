@@ -101,6 +101,10 @@ _app_tooltip:
     path:  /tooltip/{classname}/{objects}
     defaults: { _controller: ApplicationBundle:Tooltip:show }
 
+_widgets_shortcuts:
+    path:  /widget/shortcut/{language}
+    defaults: { _controller: ApplicationBundle:Widget:shortcut }
+
 _namespace:
     path:  /{module}/{namespace}
     defaults: { _controller: CommonBundle:Page:module }

@@ -9,11 +9,6 @@ use Devprom\ProjectBundle\Service\Model\ModelServiceRequirement;
 
 class RequirementController extends RestController
 {
-	function getEntity(Request $request)
-	{
-		return 'Requirement';
-	}
-
 	function getFilterResolver(Request $request)
 	{
 		return array_merge(
@@ -34,7 +29,9 @@ class RequirementController extends RestController
 				)
 			),
 			new \ModelDataTypeMapper(),
-			$this->getFilterResolver($request)
+			$this->getFilterResolver($request),
+            null,
+            $request->get('version') != 'v1'
 		);
 	}
 }

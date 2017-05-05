@@ -3,6 +3,7 @@
 namespace Devprom\AdministrativeBundle\Controller;
 
 use Devprom\AdministrativeBundle\Controller\BaseController;
+use Devprom\CommonBundle\Doctrine\DBAL\Listener\PostConnectListener;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,6 +11,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 include_once SERVER_ROOT_PATH . 'admin/install/Installable.php';
 include_once SERVER_ROOT_PATH . 'admin/install/ClearCache.php';
+include_once SERVER_ROOT_PATH . 'tasks/commands/TaskCommand.php';
+include_once SERVER_ROOT_PATH . "tasks/commands/c_processemailqueue.php";
 
 class MailerController extends BaseController
 {
@@ -55,14 +58,22 @@ class MailerController extends BaseController
 			$mail->setBody(text(1524));
 			$mail->send();
 
+			file_get_contents(\EnvironmentSettings::getServerUrl().'/tasks/command.php?class=runjobs&job=4');
+
 			$text = '<br/><br/>'.text(1526);
+            $logUrl = '';
+
 			$log_it = getFactory()->getObject('SystemLog')->getAll();
 			while( !$log_it->end() ) {
-				if ( strpos($log_it->get('Caption'), 'mail') !== false ) {
-					$text = preg_replace('/\%1/', $log_it->getViewUrl(), $text);
+				if ( substr($log_it->get('Caption'), 0, 4) == 'mail' ) {
+				    // search for recent log
+				    $logUrl = $log_it->getViewUrl();
 				}
 				$log_it->moveNext();
 			}
+			if ( $logUrl != '' ) {
+                $text = preg_replace('/\%1/', $logUrl, $text);
+            }
 
 			return $this->replySuccess(text(1706).$text);
     	}

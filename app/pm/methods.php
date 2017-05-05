@@ -23,19 +23,15 @@ include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php"
 include_once SERVER_ROOT_PATH."core/methods/GetAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/GetWholeTextWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/SettingsWebMethod.php";
-
+include_once SERVER_ROOT_PATH."core/methods/CloneWikiPageWebMethod.php";
 
 include_once SERVER_ROOT_PATH.'core/c_more.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 
 include_once('methods/c_state_methods.php');
-include_once('methods/c_wiki_selector_methods.php');
-include_once('methods/c_build_methods.php');
-include_once('methods/c_milestone_methods.php');
 include_once('methods/c_priority_methods.php');
 include_once('methods/c_project_methods.php');
 include_once('methods/c_request_methods.php');
-include_once('methods/c_tag_methods.php');
 include_once('methods/c_task_methods.php');
 include_once('methods/c_watcher_methods.php');
 include_once('methods/c_date_methods.php');
@@ -43,7 +39,6 @@ include_once('methods/c_stage_methods.php');
 include_once('methods/c_function_methods.php');
 include_once('methods/c_user_methods.php');
 include_once('methods/c_wiki_methods.php');
-include_once('methods/c_wiki_methods_base.php');
 include_once('methods/c_report_methods.php');
 include_once('methods/c_common_methods.php');
 include_once('methods/CommentDeleteWebMethod.php');
@@ -77,7 +72,7 @@ if ( !is_a($method, 'WebMethod') ) throw new Exception('Unknown method class: '.
 
 try
 {
-    FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+    \FeatureTouch::Instance()->touch(strtolower(get_class($method)));
 
     $method->exportHeaders();
     $method->execute_request();

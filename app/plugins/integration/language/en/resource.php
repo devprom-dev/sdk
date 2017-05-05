@@ -1,0 +1,31 @@
+<?php
+
+$plugin_text_array = array 
+(
+ 	1 => 'Integration with 3rd party tools',
+	2 => 'Read from application',
+	3 => 'Write into application',
+	4 => 'Synchronize data between both applications',
+	5 => 'Integrations',
+	6 => 'Mapping',
+	7 => 'Execute',
+	8 => 'External link',
+	9 => 'If it is required please enter user name and password to login into application using Basic Authentication scheme',
+	10 => 'When required specify additional HTTP headers will be used in each query to the application, e.g. cookies or application key',
+	11 => 'Enter application web address and port if required, e.g. https://example.atlassian.net',
+	12 => 'Due to get or upload data for specific project of the application, just enter it\'s key (unique identifier)',
+	13 => 'There is wrong JSON in mapping settings field (%1)',
+	14 => 'Application',
+	15 => 'view the log',
+    16 => 'API Token',
+    17 => 'Channel',
+    18 => 'In the main menu of Slack append <a target="_blank" href="https://slack.com/apps/build/custom-integration">custom integration</a>, choose Bots and enter API Token given.',
+    19 => 'Enter the channel name will be used to publish messages.',
+    20 => 'Here\'s more info',
+    21 => 'Bot\'s username',
+    22 => 'Enter the user name will be used to send messages on behalf',
+    23 => 'External artifacts',
+    24 => 'Data import from tracker',
+    25 => 'Unable to import data from the tracker, please check connection parameters',
+    26 => 'Data (first %1 records) were imported successfully. Futher data will be imported and updated periodically. You can specify integation settings in the project settings area.'
+);

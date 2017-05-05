@@ -3,15 +3,14 @@
 class ModelEntityOriginationService
 {
 	private $cache_service = null;
-	private $language = '';
+    private $cache_key = '';
 	private $data = array();
 	
-	public function __construct( $cache_service = null, $language = 'RU' )
+	public function __construct( $cache_service = null, $cache_key = 'global' )
 	{
+        $this->cache_key = $cache_key;
 		$this->setCacheService($cache_service);
-		
-		$this->language = $language;
-		$this->data = $this->getCacheService()->get($this->getCacheName());
+		$this->data = $this->getCacheService()->get($this->getCacheName(), $this->cache_key);
 	}
 
 	public function __destruct()
@@ -28,25 +27,17 @@ class ModelEntityOriginationService
 	{
 		$this->cache_service = $service;
 	}
+
+	public function setCacheKey( $key ) {
+        $this->cache_key = $key;
+    }
 	
-	public function getCacheService()
-	{
+	public function getCacheService() {
 		return $this->cache_service;
 	}
 	
-	public function setLanguage( $language )
-	{
-		$this->language = $language;
-	}
-	
-	public function getLanguage()
-	{
-		return $this->language;
-	}
-	
-	public function getCacheCategory( $object )
-	{
-		return 'global-'.$this->language;
+	public function getCacheCategory( $object ) {
+		return $this->cache_key;
 	}
 	
 	public function getSelfOrigin( $object )
@@ -111,6 +102,7 @@ class ModelEntityOriginationService
 			case 'pm_ProjectUse':
 			case 'pm_ProjectCreation':
 			case 'Priority':
+            case 'pm_Severity':
 			case 'cms_Language':
 			case 'cms_User':
 			case 'cms_UserSettings':
@@ -159,7 +151,7 @@ class ModelEntityOriginationService
 
  	private function persistCache()
  	{
- 		$this->getCacheService()->set($this->getCacheName(), $this->data);
+ 		$this->getCacheService()->set($this->getCacheName(), $this->data, $this->cache_key);
  	}
  	
  	private function getCacheName()

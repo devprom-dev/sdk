@@ -17,10 +17,12 @@ class PMCustomAttribute extends MetaobjectCacheable
  		
  		$this->setAttributeType('AttributeType', 'REF_CustomAttributeTypeId');
  		
- 		foreach( array('ValueRange', 'IsVisible', 'IsRequired', 'IsUnique', 'ObjectKind', 'AttributeTypeClassName', 'Capacity') as $field )
-		{
+ 		foreach( array('ValueRange', 'IsVisible', 'IsRequired', 'IsUnique', 'ObjectKind', 'AttributeTypeClassName', 'Capacity') as $field ) {
 			$this->addAttributeGroup($field, 'system');
 		}
+        foreach( array('AttributeType', 'EntityReferenceName','OrderNum') as $field ) {
+            $this->addAttributeGroup($field, 'additional');
+        }
  	}
  	
  	function getDisplayName()
@@ -36,15 +38,12 @@ class PMCustomAttribute extends MetaobjectCacheable
  	function getEntityDisplayName( $ref_name, $kind )
  	{
  		$class_name = getFactory()->getClass($ref_name);
- 		
- 		if ( $class_name == '' ) return '';
+ 		if ( !class_exists($class_name) ) return '';
  		
 		$ref = getFactory()->getObject($class_name);
-		
 		if ( !is_object($ref) ) return '';
 		
- 		if ( $kind == '' )
- 		{
+ 		if ( $kind == '' ) {
 			return $ref->getDisplayName();
  		}
  		else
@@ -145,7 +144,7 @@ class PMCustomAttribute extends MetaobjectCacheable
 
 		$result = parent::modify_parms($id, $parms);
 
-		if ( $was_parms['DefaultValue'] != $parms['DefaultValue'] ) {
+		if ( $parms['ReferenceName'] == 'UID' && $was_parms['DefaultValue'] != $parms['DefaultValue'] ) {
 			$type_it = getFactory()->getObject('CustomAttributeType')->getExact($parms['AttributeType']);
 			if ( $type_it->get('ReferenceName') == 'computed' ) {
 				$this->rebuildComputedAttributes($id, $parms);

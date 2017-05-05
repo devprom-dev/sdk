@@ -17,6 +17,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
     {
         $object = $metadata->getObject();
 
+        if ( $object->getEntityRefName() == 'pm_Project' ) return;
         if ( !in_array(strtolower(get_class($object)), $this->classes) ) return;
         
         $attr = getFactory()->getObject('pm_CustomAttribute');
@@ -46,8 +47,13 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 			if ( $type_it->get('ReferenceName') == 'dictionary' ) {
 				$url = getSession()->getApplicationUrl($attr_it).'project/dicts/PMCustomAttribute'.$attr_it->getEditUrl();
 				$description .= ' '.str_replace('%1', $url, text(2183));
+                $groups[] = 'dictionary';
 			}
-			
+
+            if ( $attr_it->get('ReferenceName') != 'UID' && $type_it->get('ReferenceName') == 'computed' ) {
+                $groups[] = 'computed';
+            }
+
 			$attributes[$attr_it->get('ReferenceName')] = array(
 				'dbtype' => $db_type,
 				'caption' => translate($attr_it->get('Caption')),

@@ -25,7 +25,7 @@ foreach ( $items as $item_key => $item )
 <ul class="menu vertical-menu-short" id="menu_<?=$area_id?>">
     <?php
         foreach ( $items as $item_key => $item ) {
-            if ( $item['name'] == '' && count($item['items']) > 0 ) {
+            if ( $item['name'] == '' && count($item['items']) > 0 || count($item['items']) == 1 ) {
                 foreach( $item['items'] as $child_key => $child )
                 {
                     if ( $child['name'] == '' ) continue;
@@ -75,27 +75,3 @@ foreach ( $items as $item_key => $item )
         }
     ?>
 </ul>
-<script type="text/javascript">
-    $(document).ready(function() {
-        $('#quick-search').popover({
-            placement: 'bottom',
-            container: 'body',
-            html: true,
-            trigger: 'focus'
-        });
-        $('.vertical-menu-short a.btn[module]').tooltip({
-            placement: 'right'
-        });
-        $('.vertical-menu-short a.btn:not([module])').popover({
-            placement: 'right',
-            container: 'body',
-            html: true
-        });
-        $('body, .content-internal')
-            .on('click.dropdown.data-api', function(e) {
-                $('.vertical-menu-short a.btn:not([module])').each(function() {
-                    if ( !$(this).is($(e.target).closest('a')) ) $(this).popover('hide');
-                });
-            });
-    });
-</script>

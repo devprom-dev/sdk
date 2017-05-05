@@ -34,6 +34,7 @@ return array(
     'registration.back' => 'Вернуться на предыдущую страницу.',
     'registration.cancel' => 'Отмена',
     'registration.submit' => 'Регистрация',
+    'registration.title' => 'Для регистрации заполните эту простую форму',
 
 # Password resetting
     'resetting.title' => 'Пожалуйста, введите Ваш email, и мы вышлем Вам ссылку для создания нового пароля',
@@ -45,11 +46,12 @@ return array(
     'resetting.request.cancel' => 'Отмена',
     'resetting.reset.submit' => 'Изменить пароль',
     'resetting.reset.cancel' => 'Отмена',
+    'resetting.reset.title' => 'Измените ваш пароль',
 
 # Global strings
     'layout.logout' => 'Выход',
     'layout.login' => 'Вход',
-    'layout.register' => 'Зарегистрироваться',
+    'layout.register' => 'Зарегистрируйтесь',
     'layout.logged_in_as' => 'Вы вошли как %username%',
 
 # Form field labels

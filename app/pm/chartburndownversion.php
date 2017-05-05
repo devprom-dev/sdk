@@ -177,7 +177,7 @@
 	 	$days++;
 	 }
 
-	 if ( !$release_it->IsCompleted() )
+	 if ( $release_it->get('UncompletedItems') > 0 )
 	 {
 		 for($i = 0; $i < $metrics_it->get('AdditionalDays'); $i++, $days++) 
 		 {

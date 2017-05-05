@@ -6,7 +6,6 @@ use Devprom\ProjectBundle\Service\Project\ApplyTemplateService;
 use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
-include "ActivateUserSettings.php";
 
 class CreateProjectService
 {
@@ -256,6 +255,7 @@ class CreateProjectService
 				$plan_it = $model_factory->getObject('TestScenario')->getRegistry()->Query(
 					array(
 						new \FilterVpdPredicate(),
+                        new \FilterAttributeNullPredicate('PageType'),
 						new \WikiRootFilter()
 					)
 				);
@@ -271,6 +271,7 @@ class CreateProjectService
 				$scenario_it = $plan_it->object->getRegistry()->Query(
 					array(
 						new \FilterVpdPredicate(),
+                        new \FilterAttributeNullPredicate('PageType'),
 						new \WikiNonRootFilter()
 					)
 				);
@@ -349,17 +350,9 @@ class CreateProjectService
  	
  	public function invalidateCache()
  	{
-        $lock = new \CacheLock();
-
- 		getFactory()->getObject('ProjectCache')->resetCache();
-	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-	    while( !$portfolio_it->end() ) {
-	        getSession()->truncateForProject( $portfolio_it );
-	        $portfolio_it->moveNext();
-	    }
-        $lock->Release();
-
-        \SessionBuilder::Instance()->invalidate();
+        foreach( array('sessions', 'projects') as $path ) {
+            getFactory()->getCacheService()->truncate($path);
+        }
  	}
 
 	public function invalidateServiceDeskCache()

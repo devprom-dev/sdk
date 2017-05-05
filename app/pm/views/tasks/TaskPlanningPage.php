@@ -11,15 +11,11 @@ include "TaskForm.php";
 include "TaskBulkForm.php";
 include "TaskTable.php";
 include "WorkItemTable.php";
-include "import/ImportTasksFromExcelSection.php";
-
 
 class TaskPlanningPage extends PMPage
 {
  	function TaskPlanningPage()
  	{
- 		global $_REQUEST, $model_factory;
-
  		getSession()->addBuilder( new TaskViewModelCommonBuilder() );
  		getSession()->addBuilder( new BulkActionBuilderTasks() );
  		
@@ -29,26 +25,17 @@ class TaskPlanningPage extends PMPage
  		
  		if ( $this->needDisplayForm() )
  		{
-			if ($_REQUEST['view'] == 'import') {
-				$this->addInfoSection(new ImportTasksFromExcelSection($this->getObject()));
-			}
-			else {
-				$this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
-				$this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
-				$this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
+            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
+            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
+            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
 
-				$object_it = $this->getObjectIt();
-				if ( is_object($object_it) && $object_it->count() > 0 )
-				{
-					$this->addInfoSection( new NetworkSection($object_it) );
-					$this->addInfoSection( new PageSectionComments($object_it) );
-					$this->addInfoSection( new StatableLifecycleSection( $object_it ) );
-                    if ($object_it->object->getAttributeType('Spent') != '' && $_REQUEST['formonly'] == '') {
-                        $this->addInfoSection(new PageSectionSpentTime($object_it));
-                    }
-					$this->addInfoSection( new PMLastChangesSection ( $object_it ) );
-                }
-			}
+            $object_it = $this->getObjectIt();
+            if ( is_object($object_it) && $object_it->count() > 0 )
+            {
+                $this->addInfoSection( new PageSectionComments($object_it) );
+                $this->addInfoSection( new StatableLifecycleSection( $object_it ) );
+                $this->addInfoSection( new PMLastChangesSection ( $object_it ) );
+            }
  		}
  		else if ( $_REQUEST['mode'] != 'bulk' ) {
  		    if ( $_REQUEST['view'] == 'board' ) {
@@ -60,7 +47,7 @@ class TaskPlanningPage extends PMPage
  	
  	function getObject()
  	{
-		if ( $this->getSessionReportName() == 'mytasks' ) {
+		if ( in_array($this->getSessionReportName(), $this->getWorkItemReports()) ) {
 			$object = getFactory()->getObject('WorkItem');
 		} else {
 			$object = getFactory()->getObject('Task');
@@ -78,7 +65,7 @@ class TaskPlanningPage extends PMPage
  	
  	function getTableDefault()
  	{
-		if ( $this->getSessionReportName() == 'mytasks' ) {
+		if ( in_array($this->getSessionReportName(), $this->getWorkItemReports()) ) {
 			return new WorkItemTable($this->getObject());
 		}
 		else {
@@ -139,4 +126,9 @@ class TaskPlanningPage extends PMPage
 	function isDetailsActive() {
 		return $this->getReportBase() != 'mytasks';
 	}
+
+	function getWorkItemReports()
+    {
+        return array('mytasks', 'assignedtasks', 'newtasks', 'issuesmine', 'watchedtasks');
+    }
 }

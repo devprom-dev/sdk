@@ -1,12 +1,17 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleActiveVpdPredicate.php";
 
 class ProjectLinkedRegistry extends ObjectRegistrySQL
 {
 	public function getFilters()
 	{
 		$projects = array_filter(
-			preg_split('/,/', getSession()->getProjectIt()->get('LinkedProject')),
+			preg_split('/,/',
+                join(',', array (
+                    getSession()->getProjectIt()->get('LinkedProject'),
+                    getSession()->getProjectIt()->get('PortfolioProject')
+                ))
+            ),
 			function ($value) { return $value != ''; }
 		);
 		$link_it = getFactory()->getObject('ProjectLink')->getRegistry()->Query(
@@ -23,7 +28,7 @@ class ProjectLinkedRegistry extends ObjectRegistrySQL
 			parent::getFilters(),
 			array (
 				new FilterInPredicate($ids),
-				new ProjectAccessibleVpdPredicate()
+				new ProjectAccessibleActiveVpdPredicate()
 			)
 		);
 	}

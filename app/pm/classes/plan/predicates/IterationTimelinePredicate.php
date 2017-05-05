@@ -11,8 +11,8 @@ class IterationTimelinePredicate extends FilterPredicate
  		switch ( $filter )
  		{
  			case self::PAST:
-				
-				$states = getFactory()->getObject('pm_Task')->getNonTerminalStates();
+				$taskStates = getFactory()->getObject('pm_Task')->getNonTerminalStates();
+                $issueStates = getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates();
 
 				return " AND EXISTS (SELECT 1 " .
 					   "			   FROM pm_IterationMetric me " .
@@ -21,11 +21,14 @@ class IterationTimelinePredicate extends FilterPredicate
 					   "			    AND '".SystemDateTime::date('Y-m-d')."' > DATE(GREATEST(me.MetricValueDate, t.FinishDate)))" .
 			   		   " AND NOT EXISTS ( SELECT 1 FROM pm_Task s " .
 			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
-			   		   "				     AND s.State IN ('".join("','",$states)."'))";
-				
+			   		   "				     AND s.State IN ('".join("','",$taskStates)."'))".
+                       " AND NOT EXISTS ( SELECT 1 FROM pm_ChangeRequest s " .
+                       "			       WHERE s.Iteration = t.pm_ReleaseId" .
+                       "				     AND s.State IN ('".join("','",$issueStates)."'))";
+
  			case self::CURRENT:
-				
- 			    $states = getFactory()->getObject('pm_Task')->getTerminalStates();
+ 			    $taskStates = getFactory()->getObject('pm_Task')->getTerminalStates();
+                $issueStates = getFactory()->getObject('pm_ChangeRequest')->getTerminalStates();
 
 				return " AND (EXISTS (SELECT 1 " .
 					   "			   FROM pm_IterationMetric ms, pm_IterationMetric me " .
@@ -37,17 +40,26 @@ class IterationTimelinePredicate extends FilterPredicate
 					   "							  AND DATE(GREATEST(me.MetricValueDate, t.FinishDate)) )" .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_Task s " .
 			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
-			   		   "				     AND s.State NOT IN ('".join("','",$states)."')))";
+			   		   "				     AND s.State NOT IN ('".join("','",$taskStates)."'))".
+                       "      OR EXISTS ( SELECT 1 FROM pm_ChangeRequest s " .
+                       "			       WHERE s.Iteration = t.pm_ReleaseId" .
+                       "				     AND s.State NOT IN ('".join("','",$issueStates)."')) )";
 
  			case self::NOTPASSED:
+                $taskStates = getFactory()->getObject('pm_Task')->getTerminalStates();
+                $issueStates = getFactory()->getObject('pm_ChangeRequest')->getTerminalStates();
+
 				return " AND (EXISTS (SELECT 1 " .
 					   "			   FROM pm_IterationMetric me " .
 					   "			  WHERE me.Iteration = t.pm_ReleaseId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
 					   "			    AND '".SystemDateTime::date('Y-m-d')."' <= DATE(GREATEST(me.MetricValueDate, t.FinishDate)))" .
-			   		   "      OR EXISTS ( SELECT 1 FROM pm_Task s " .
-			   		   "			       WHERE s.Release = t.pm_ReleaseId" .
-			   		   "				     AND s.State NOT IN ('".join("','",getFactory()->getObject('pm_Task')->getTerminalStates())."')))";
+                       "      OR EXISTS ( SELECT 1 FROM pm_Task s " .
+                       "			       WHERE s.Release = t.pm_ReleaseId" .
+                       "				     AND s.State NOT IN ('".join("','",$taskStates)."'))".
+                       "      OR EXISTS ( SELECT 1 FROM pm_ChangeRequest s " .
+                       "			       WHERE s.Iteration = t.pm_ReleaseId" .
+                       "				     AND s.State NOT IN ('".join("','",$issueStates)."')) )";
 				
 		    default:
 				return " AND 1 = 2 ";

@@ -48,7 +48,7 @@ class SecurityController extends PageController
         }
 
         $request->getSession()->set('redirect', $redirect);
-    	return $this->responsePage( new \LoginPage() );
+    	return $this->responsePage( new \LoginPage($request->getSession()) );
     }
 
     // used for native authentication only

@@ -4,6 +4,8 @@ include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelB
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator.php";
 include "FieldWidgetUrl.php";
+include "FieldState.php";
+include "FieldComputed.php";
 include "FieldUID.php";
 include "FieldListOfReferences.php";
 include "JSONViewerField.php";
@@ -13,6 +15,7 @@ class PMPageForm extends PageForm
     private $customtypes = array();
     private $customkinds = array();
     private $customdefault = array();
+    private $templateFields = array();
 
     function PMPageForm($object)
     {
@@ -32,6 +35,9 @@ class PMPageForm extends PageForm
     
     protected function extendModel()
     {
+        $entities = TextTemplateEntityRegistry::getEntities();
+        $this->templateFields = preg_split('/,/',$entities[get_class($this->getObject())]);
+
         if ( in_array($this->getMode(), array('new','add')) && getSession()->getProjectIt()->IsPortfolio() ) {
             $this->getObject()->setAttributeRequired('Project', true);
             $this->getObject()->setAttributeVisible('Project', true);
@@ -41,17 +47,20 @@ class PMPageForm extends PageForm
 
         // extend model depends on workflow settings (eg, required attributes)
         $transition_it = $this->getTransitionIt();
-
-        if ( $transition_it->getId() > 0 )
+        if ( is_object($this->getObjectIt()) && $transition_it->getId() > 0 )
         {
         	$model_builder = new WorkflowTransitionAttributesModelBuilder(
-        			$transition_it, $this->getTransitionAttributes()
+       			$transition_it,
+                $this->getTransitionAttributes(),
+                array_merge(
+                    $this->getObjectIt()->getData(),
+                    $_REQUEST
+                )
     		);
         }
         else
         {
-            if ( !is_object($this->getObjectIt()) )
-            {
+            if ( !is_object($this->getObjectIt()) ) {
                 $this->getObject()->setAttributeVisible('IntegrationLink', false);
 
                 $state_it = $this->getStateIt();
@@ -61,7 +70,6 @@ class PMPageForm extends PageForm
                 $model_builder = new WorkflowStateAttributesModelBuilder(
                     $state_it, array()
                 );
-
                 foreach( $this->customtypes as $attribute => $type ) {
                     if ( $type == 'computed' ) {
                         $this->getObject()->setAttributeVisible($attribute, false);
@@ -137,7 +145,7 @@ class PMPageForm extends PageForm
         }
 
     	if ( !parent::persist() ) return false;
-    	
+
     	$object_it = $this->getObjectIt();
 
     	$invoke_workflow = is_object($object_it) 
@@ -146,8 +154,10 @@ class PMPageForm extends PageForm
 	    if ( $invoke_workflow )
 	    {
 	    	getFactory()->getEventsManager()
-	    			->executeEventsAfterBusinessTransaction(
-	    					$object_it->object->getExact($object_it->getId()), 'WorklfowMovementEventHandler');
+                ->executeEventsAfterBusinessTransaction(
+                    $object_it->object->getExact($object_it->getId()),
+                    'WorklfowMovementEventHandler'
+                );
 	    }
 	    
 	    return true;
@@ -253,6 +263,23 @@ class PMPageForm extends PageForm
         }
     }
 
+    function IsAttributeVisible( $attr )
+    {
+        switch( $attr )
+        {
+            case 'State':
+                return !is_object($this->getObjectIt());
+
+            default:
+                if ( $this->getObject()->IsReference($attr) ) {
+                    if ( !getFactory()->getAccessPolicy()->can_read($this->getObject()->getAttributeObject($attr)) ) {
+                        return false;
+                    }
+                }
+                return parent::IsAttributeVisible( $attr );
+        }
+    }
+
  	function IsAttributeRequired( $attr )
  	{
  		if ( array_key_exists( $attr, $this->customkinds ) )
@@ -274,7 +301,23 @@ class PMPageForm extends PageForm
             }
         }
 
+        if ( $value == '' && in_array($field, $this->templateFields) && $this->getObject()->IsAttributeVisible($field) ) {
+            $template_it = $this->getTextTemplateIt();
+            if ( $template_it->getId() != '' ) {
+                return $template_it->getHtmlDecoded('Content');
+            }
+        }
         return $value;
+    }
+
+    function getTextTemplateIt() {
+        return getFactory()->getObject('TextTemplate')->getRegistry()->Query(
+            array (
+                new FilterVpdPredicate(),
+                new TextTemplateEntityPredicate(get_class($this->getObject())),
+                new FilterAttributePredicate('IsDefault', 'Y')
+            )
+        );
     }
 
     function createFieldObject($attr)
@@ -282,7 +325,7 @@ class PMPageForm extends PageForm
         switch ($attr) 
         {
             case 'UID':
-                return new FieldUID($this->getObjectIt());
+                return new FieldUID($this);
 
             case 'Project':
                 if ( getSession()->getProjectIt()->IsPortfolio() ) {
@@ -292,12 +335,17 @@ class PMPageForm extends PageForm
                     return parent::createFieldObject($attr);
                 }
 
+            case 'State':
+                if ( $this->getObject() instanceof MetaobjectStatable ) {
+                    return new FieldState(getFactory()->getObject($this->getObject()->getStateClassName()));
+                }
+                else {
+                    return parent::createFieldObject($attr);
+                }
+
             default:
-                foreach ($this->customtypes as $refname => $type) 
-                {
-                    if ($attr == $refname && $type == 'dictionary') {
-                        return new FieldCustomDictionary($this->getObject(), $refname);
-                    }
+                if ( in_array('dictionary', $this->getObject()->getAttributeGroups($attr)) ) {
+                    return new FieldCustomDictionary($this->getObject(), $attr);
                 }
 
                 if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg')
@@ -323,6 +371,10 @@ class PMPageForm extends PageForm
                     }
                     return $field;
                 }
+
+                if ( in_array('hours', $this->getObject()->getAttributeGroups($attr)) ) {
+                    return new FieldHours();
+                }
     
                 return parent::createFieldObject($attr);
         }
@@ -335,12 +387,27 @@ class PMPageForm extends PageForm
             case 'IntegrationLink':
                 $field->setReadOnly(true);
                 break;
+            case 'TransitionComment':
+                $field->setObjectIt(getFactory()->getObject('Comment')->getEmptyIterator());
+                break;
         }
 
         if ( $this->customtypes[$name] == 'computed' ) {
             $field->setReadOnly(true);
         }
         return $field;
+    }
+
+    function getFieldDescription($field_name)
+    {
+        $description = parent::getFieldDescription($field_name);
+        switch( $field_name ) {
+            default:
+                if ( $description == '' && $this->getEditMode() && $this->getObject()->getAttributeType($field_name) == 'wysiwyg' ) {
+                    $description = str_replace('%1', getFactory()->getObject('Module')->getExact('dicts-texttemplate')->getUrl(), text(606));
+                }
+                return $description;
+        }
     }
 
     function getTransitionAttributes()
@@ -355,21 +422,43 @@ class PMPageForm extends PageForm
         return parent::process();
     }
 
-    function getShortAttributes() {
-        return array();
+    function getShortAttributes()
+    {
+        return array_intersect(
+            array_keys($this->getObject()->getAttributes()),
+            array('State')
+        );
     }
 
     function getRenderParms()
     {
         $this->extendModel();
+        $uid = new ObjectUID;
 
  		$object_it = $this->getObjectIt();
+        $nextIt = $this->getNextObjectIt();
+        if ( $nextIt->getId() != '' ) {
+            $nextInfo = $uid->getUIDInfo($nextIt);
+            $nextUrl = $nextInfo['url'];
+            $nextTitle = $nextInfo['uid'] . ' ';
+
+            $caption = $nextIt->getDisplayName();
+            $items = explode(' ', $caption);
+            if ( count($items) > 7 ) {
+                $nextTitle .= join(' ', array_slice($items, 0, 7)) . '...';
+            }
+            else {
+                $nextTitle .= $caption;
+            }
+        }
 
         return array_merge(parent::getRenderParms(), array(
             'state_name' => is_object($object_it) && is_a($object_it, 'StatableIterator') && $object_it->IsTransitable() ? $object_it->getStateName() : "",
             'form_class' => '',
             'showtabs' => $this->getTransitionIt()->getId() == '',
-            'shortAttributes' => $this->getShortAttributes()
+            'shortAttributes' => $this->getShortAttributes(),
+            'nextUrl' => $nextUrl,
+            'nextTitle' => $nextTitle
         ));
     }
     
@@ -400,24 +489,38 @@ class PMPageForm extends PageForm
 
  	function getHint()
 	{
+        $hint = parent::getHint();
 		if ( $this->getTransitionIt()->getId() != '' )
 		{
 			$method = new ObjectModifyWebMethod($this->getTransitionIt());
 			$method->setObjectUrl(
 					getSession()->getApplicationUrl().'project/workflow/'.$this->getObject()->getStateClassName().$this->getTransitionIt()->getEditUrl()
 				);
-			$method_state = new ObjectModifyWebMethod($this->getTransitionIt()->getRef('TargetState'));
-			return $this->parseHint(
-                str_replace('%1', $method->getJsCall(),
-						str_replace('%2', $method_state->getJsCall(), text(2020)))
+			$method_state = new ObjectModifyWebMethod(
+			    $this->getTransitionIt()->getRef('TargetState', $this->getStateIt()->object)
             );
+            $hint = str_replace('%1', $method->getJsCall(), str_replace('%2', $method_state->getJsCall(), text(2020)));
 		}
-		return $this->parseHint(parent::getHint());
+		return $this->parseHint($hint);
 	}
 
     function parseHint( $text )
     {
         $text = preg_replace('/\%project\%/i', getSession()->getProjectIt()->get('CodeName'), $text);
+        $text = preg_replace('/&lt;auth-key&gt;/i', \AuthenticationAPIKeyFactory::getAuthKey(getSession()->getUserIt()), $text);
+
+        if ( $this->getObject() instanceof MetaobjectStatable ) {
+            $method = new ObjectModifyWebMethod($this->getStateIt());
+            if ( $method->hasAccess() ) {
+                $url = $method->getJSCall();
+            }
+            else {
+                $url = getFactory()->getObject('Module')->
+                            getExact('workflow-'.strtolower($this->getObject()->getStateClassName()))->getUrl();
+            }
+            $text = preg_replace('/%form:state-url%/', $url, $text);
+            }
+
         return $text;
     }
 
@@ -434,6 +537,57 @@ class PMPageForm extends PageForm
         $method->setCookie();
 
         parent::redirectOnDelete($object_it, $redirect_url);
+    }
+
+    protected function getNeighbourAttributes()
+    {
+        return array();
+    }
+
+    protected function getNeighbourIt( $objectIt )
+    {
+        $attributes = $this->getNeighbourAttributes();
+        if ( count($attributes) < 1 ) return $this->getObject()->getEmptyIterator();
+
+        $filters = array(
+            new FilterVpdPredicate()
+        );
+        $sorts = array();
+        foreach( $attributes as $attribute ) {
+            if ( !$this->getObject()->hasAttribute($attribute) ) continue;
+            $clause = new SortAttributeClause($attribute);
+            $clause->setNullOnTop(false);
+            $sorts[] = $clause;
+            $filters[] = new FilterAttributePredicate($attribute, $objectIt->get($attribute));
+        }
+        $sorts[] = new SortOrderedClause();
+
+        $registry = $this->getObject()->getRegistry();
+        $registry->setLimit(1);
+        $registry->setPersisters(array(
+            new EntityProjectPersister()
+        ));
+
+        $resultIt = $registry->Query(
+            array_merge($filters, $sorts, array(
+                new FilterNextSiblingsPredicate($objectIt)
+            ))
+        );
+        if ( $resultIt->getId() != '' ) return $resultIt;
+
+        return $registry->Query(
+            array_merge($sorts, array(
+                new FilterVpdPredicate(),
+                new FilterNextSiblingsPredicate($objectIt)
+            ))
+        );
+    }
+
+    protected function getNextObjectIt()
+    {
+        $objectIt = $this->getObjectIt();
+        if ( !is_object($objectIt) ) return $this->getObject()->getEmptyIterator();
+        return $this->getNeighbourIt($objectIt);
     }
 
     private $state_it = null;

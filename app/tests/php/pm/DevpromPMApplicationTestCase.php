@@ -7,12 +7,11 @@ include_once SERVER_ROOT_PATH."pm/classes/sessions/PMSession.php";
 abstract class DevpromPMApplicationTestCase extends DevpromTestCase
 {
     protected $project_mock;
-    
     protected $participant_mock;
     
     function setUp()
     {
-        global $model_factory, $session;
+        global $session;
 
         parent::setUp();
 
@@ -94,7 +93,7 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
     {
     	return array (
 			array( 'ObjectMetadataBuilder', $this->getMetadataBuilders() ),
-			array( 'ObjectModelBuilder', array() ),
+			array( 'ObjectModelBuilder', $this->getModelBuilders() ),
     		array( 'EstimationStrategyBuilder', array() )
         );
     }
@@ -104,6 +103,10 @@ abstract class DevpromPMApplicationTestCase extends DevpromTestCase
         return array(
             new ObjectMetadataModelBuilder()
         );
+    }
+
+    function getModelBuilders() {
+        return array();
     }
 
     abstract public function getMethodologyIt();

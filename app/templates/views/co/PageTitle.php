@@ -1,3 +1,6 @@
+<?php
+$project_navigation_parms['projectSortData'] = $projectSortData;
+?>
 <div class="btn-toolbar title-toolbar">
 	<div class="btn-group navbar-company">
     	<a id="navbar-company-name" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">

@@ -36,7 +36,7 @@ class IssueController extends Controller
     	$vpds = $this->getProjectVpds();
         
     	$issue = new Issue();
-        $form = $this->createForm(new IssueFormType($vpds, true), $issue);
+        $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $vpds, $this->getUser(), true), $issue);
         $form->bind($request);
 
         if ($form->isValid()) {
@@ -62,14 +62,29 @@ class IssueController extends Controller
      * @Method("GET")
      * @Template()
      */
-    public function newAction()
+    public function newAction( Request $request )
     {
     	if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
     	
         $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
-        $products = $this->getIssueService()->getProductsAvailable($this->getProjectVpds());
+        $vpds = $this->getProjectVpds();
+        if ( $request->get('project') != '' ) {
+            $vpds = array_intersect($vpds, array($request->get('project')));
+        }
+        $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $vpds, $this->getUser(), true), $issue);
 
-        $form = $this->createForm(new IssueFormType($this->getProjectVpds(), true, $products), $issue);
+        if ( count($vpds) > 1 ) {
+            try {
+                $numberOfProjects = count($form->get('product')->getConfig()->getOption('choice_list')->getValues());
+                $maxProducts = $this->container->getParameter('max_products_in_combo');
+                if ( $maxProducts != '' && $numberOfProjects > $maxProducts ) {
+                    return $this->redirect($this->generateUrl('select_product'));
+                }
+            }
+            catch( \Exception $e ) {
+            }
+        }
+
         return array(
             'issue' => $issue,
             'form' => $form->createView(),
@@ -129,8 +144,7 @@ class IssueController extends Controller
         $descr = TextUtil::unescapeHtml($descr);
         $issue->setDescription($descr);
 
-        $products = $this->getIssueService()->getProductsAvailable($this->getProjectVpds());
-        $editForm = $this->createForm(new IssueFormType($this->getProjectVpds(), false, count($products) > 0), $issue);
+        $editForm = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser(), false), $issue);
 
         return array(
             'issue' => $issue,
@@ -157,7 +171,7 @@ class IssueController extends Controller
 
         $this->checkUserIsAuthorized($issue);
 
-        $editForm = $this->createForm(new IssueFormType($this->getProjectVpds()), $issue);
+        $editForm = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser()), $issue);
         $editForm->bind($request);
 
         if ($editForm->isValid()) {
@@ -207,7 +221,7 @@ class IssueController extends Controller
     /**
      * Lists all Issue entities.
      *
-     * @Route("/{filter}/{sortColumn}/{sortDirection}", name="issue_list", requirements={"filter" = "my|company"}, defaults={"filter" = "my", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
+     * @Route("/issues/{filter}/{sortColumn}/{sortDirection}", name="issue_list", requirements={"filter" = "my|company"}, defaults={"filter" = "my", "sortColumn" = "issue.createdAt", "sortDirection" = "desc"})
      * @Method("GET")
      * @Template()
      */
@@ -234,6 +248,32 @@ class IssueController extends Controller
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
         	'issuesFilter' => $filter
+        );
+    }
+
+    /**
+     * Displays list of Products.
+     *
+     * @Route("/products", name="select_product")
+     * @Method("GET")
+     * @Template()
+     */
+    public function productAction()
+    {
+        if ( !is_object($this->getUser()) ) throw $this->createNotFoundException('Authorization is required.');
+
+        $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
+        $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser(), true), $issue);
+
+        $products = $this->get('doctrine.orm.entity_manager')->getRepository('DevpromServiceDeskBundle:Product')
+            ->findById($form->get('product')->getConfig()->getOption('choice_list')->getValues());
+        foreach($products as $product_ref) {
+            $vpds[] = $product_ref->getVpd();
+        }
+        $projects = $this->get('doctrine.orm.entity_manager')->getRepository('DevpromServiceDeskBundle:Project')
+            ->findBy(array('vpd' => $vpds));
+        return array(
+            'projects' => $projects
         );
     }
 
@@ -284,8 +324,10 @@ class IssueController extends Controller
      */
     protected function checkUserIsAuthorized(Issue $issue)
     {
+        if (!is_object($this->getUser())) throw new HttpException(403);
+        if (!is_object($issue->getCustomer())) throw new HttpException(403);
+
         if ($issue->getCustomer()->getEmail() == $this->getUser()->getEmail()) return;
-        
         $service = $this->container->get('user_service');
         if ( $service->isCollegues($issue->getCustomer()->getEmail(), $this->getUser()->getEmail()) ) return;
         

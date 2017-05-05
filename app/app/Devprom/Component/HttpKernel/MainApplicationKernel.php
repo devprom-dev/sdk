@@ -52,7 +52,6 @@ class MainApplicationKernel extends Kernel
 
     function initializeContainer()
     {
-        $lock = new \CacheLock();
         try {
             parent::initializeContainer();
         }
@@ -63,26 +62,20 @@ class MainApplicationKernel extends Kernel
 
     public function boot()
     {
-        global $plugins, $session, $model_factory;
+        global $session, $model_factory;
+        $lock = new \CacheLock();
 
-        $plugins = \PluginsFactory::Instance();
-        $caching = new \CacheEngineFS();
+        $caching = \CacheEngineFS::Instance();
         $model_factory = new \ModelFactoryExtended(
-            \PluginsFactory::Instance(), $caching, new \AccessPolicy($caching)
+            \PluginsFactory::Instance(), $caching, 'global', new \AccessPolicy($caching)
         );
         $session = $this->buildSession($caching);
 
         parent::boot();
+        $lock->Release();
     }
 
-    protected function buildSession($caching)
-    {
-        $session = \SessionBuilderCommon::Instance()->openSession(array(), $caching);
-        getFactory()->setAccessPolicy(null);
-
-        $caching->setDefaultPath('usr-'.$session->getUserIt()->getId());
-        getFactory()->setAccessPolicy( new \CoAccessPolicy($caching) );
-
-        return $session;
+    protected function buildSession($caching) {
+        return \SessionBuilderCommon::Instance()->openSession(array(), $caching);
     }
 }

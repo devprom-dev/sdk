@@ -5,31 +5,32 @@ include "FieldFormButtons.php";
 
 class ProfileForm extends PMPageForm
 {
-	function buildRelatedDataCache()
-	{
-		parent::buildRelatedDataCache();
-		
-		$object = $this->getObject();
-		
-		foreach( $object->getAttributes() as $attribute => $data ) {
-			$object->setAttributeVisible($attribute, false);
-			$object->setAttributeRequired($attribute, false);
-		}
+    function extendModel()
+    {
+        parent::extendModel();
 
-		if ( getSession()->getProjectIt()->IsPortfolio() ) {
-			$object->addAttribute('ModuleSettings', '', text(1906), true, false, text(2187));
-			$object->addAttribute('MenuSettings', '', text(1907), true, false, '<br/>'.text(2188));
-		}
-		else {
-			$object->setAttributeVisible('Notification', true);
-			$object->setAttributeCaption('Notification', text(1912));
-			$object->setAttributeDescription('Notification', text(1913));
-			$object->addAttribute('Buttons', '', '', true, false, '');
-			$object->addAttribute('ModuleSettings', '', text(1906), true, false, text(1910));
-			$object->addAttribute('MenuSettings', '', text(1907), true, false, '<br/>'.text(1911));
-		}
-	}
-	
+        $object = $this->getObject();
+
+        foreach( $object->getAttributes() as $attribute => $data ) {
+            $object->setAttributeVisible($attribute, false);
+            $object->setAttributeRequired($attribute, false);
+        }
+
+        $object->addAttribute('ApiKey', 'VARCHAR', text(2285), true, false, text(2286), 400);
+        $object->setAttributeEditable('ApiKey', false);
+
+        if ( getSession()->getProjectIt()->IsPortfolio() ) {
+            $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(2187));
+        }
+        else {
+            $object->setAttributeVisible('Notification', true);
+            $object->setAttributeCaption('Notification', text(1912));
+            $object->setAttributeDescription('Notification', text(1913));
+            $object->addAttribute('Buttons', '', '', true, false, '');
+            $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(1910));
+        }
+    }
+
  	function getPageTitle()
  	{
  	    return text(1292);
@@ -52,11 +53,6 @@ class ProfileForm extends PMPageForm
 		return true;
 	}
 	
- 	function IsAttributeEditable( $attr ) 
- 	{
- 		return true;
- 	}
- 	
  	function checkAccess()
  	{
  		return true;
@@ -74,8 +70,28 @@ class ProfileForm extends PMPageForm
  				return parent::IsAttributeVisible( $attr );
  		}
 	}
-	
-	function getActions()
+
+    function IsAttributeEditable( $attr )
+    {
+        switch( $attr ) {
+            case 'Notification':
+                return true;
+            default:
+                return parent::IsAttributeEditable( $attr );
+        }
+    }
+
+	function getFieldValue($field)
+    {
+        switch( $field ) {
+            case 'ApiKey':
+                return \AuthenticationAPIKeyFactory::getAuthKey($this->getObjectIt()->getRef('SystemUser'));
+            default:
+                return parent::getFieldValue($field);
+        }
+    }
+
+    function getActions()
 	{
 	    return array();
 	}
@@ -89,9 +105,6 @@ class ProfileForm extends PMPageForm
 			
 			case 'ModuleSettings':
 		    	return new FieldRestMySettings(getSession()->getApplicationUrl().'settings/modules');
-
-		    case 'MenuSettings':
-		    	return new FieldRestMySettings(getSession()->getApplicationUrl().'settings/menu');
 
 		    case 'Notification':
 		    	return new FieldDictionary(getFactory()->getObject('Notification'));

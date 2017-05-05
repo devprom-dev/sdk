@@ -107,7 +107,7 @@ class ReleaseDatesFrame
 					$maximum = $this->release_it->getVelocity();
 					if ( !$methodology_it->HasFixedRelease() ) 
 					{
-						$maximum *= $iteration_it->getLeftCapacity();
+						$maximum *= $iteration_it->getLeftDuration();
 					}
 
 					$estimation = $iteration_it->getEstimation();
@@ -151,7 +151,7 @@ class ReleaseDatesFrame
 			$maximum = $this->release_it->getVelocity();
 			if ( !$methodology_it->HasFixedRelease() ) 
 			{
-				$maximum *= $this->release_it->getLeftCapacity();
+				$maximum *= $this->release_it->getLeftDuration();
 			}
 
 			$estimation = $this->release_it->getTotalWorkload();

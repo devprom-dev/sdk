@@ -3,8 +3,17 @@
 class SpentTimeForm extends PMPageForm
 {
 	private $anchor_it;
-	
-	public function setAnchorIt( $anchor_it )
+
+	function extendModel()
+    {
+        parent::extendModel();
+
+        if ( is_object($this->getObjectIt()) ) {
+            $this->getObject()->setAttributeVisible('Participant', true);
+        }
+    }
+
+    public function setAnchorIt( $anchor_it )
 	{
 		$this->anchor_it = $anchor_it;
 	}
@@ -40,23 +49,22 @@ class SpentTimeForm extends PMPageForm
 	
 	function getFieldValue( $attr )
 	{
+	    $value = parent::getFieldValue( $attr );
+	    if ( $value != '' ) return $value;
+
 	    switch ( $attr )
 	    {
 	        case 'ChangeRequest':
 	        case 'Task':
-
 	        	return $this->anchor_it->getId();
 	            
 			case 'ReportDate':
-				
 				return getSession()->getLanguage()->getDateFormatted( date('Y-m-d') );
 
 			case 'LeftWork':
-			    
 				return $this->anchor_it->get($this->getLeftFieldName());
 	        	
 	        default:
-	            
 	        	return parent::getFieldValue( $attr );
 	    }
 	}

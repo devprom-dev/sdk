@@ -12,13 +12,30 @@ class RequestBoardPlanning extends RequestBoard
         }
     }
 
+    function getBoardAttributeFilter()
+    {
+        switch( $this->getTable()->getReportBase() ) {
+            case 'iterationplanningboard':
+                return 'iteration';
+            default:
+                return 'release';
+        }
+    }
+
     function buildBoardAttributeIterator()
     {
+        $values = array_filter($this->getFilterValues(), function($value) {
+            return !in_array($value, array('all','hide'));
+        });
+        $this->getTable()->parseFilterValues($values);
+
         $object = $this->getObject()->getAttributeObject($this->getBoardAttribute());
         if ( $object instanceof Release ) {
             $it = $object->getRegistry()->Query(
                 array(
-                    new ReleaseTimelinePredicate('not-passed'),
+                    $values['release'] != ''
+                        ? new FilterInPredicate(preg_split('/,/', $values['release']))
+                        : new ReleaseTimelinePredicate('not-passed'),
                     new FilterVpdPredicate(),
                     new SortAttributeClause('StartDate.A')
                 )
@@ -27,7 +44,9 @@ class RequestBoardPlanning extends RequestBoard
         else {
             $it = $object->getRegistry()->Query(
                 array(
-                    new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+                    $values['iteration'] != ''
+                        ? new FilterInPredicate(preg_split('/,/', $values['iteration']))
+                        : new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
                     new FilterVpdPredicate(),
                     new SortAttributeClause('StartDate.A')
                 )
@@ -70,6 +89,9 @@ class RequestBoardPlanning extends RequestBoard
         while ( !$attribute_it->end() )
         {
             $title = $name.': '.$attribute_it->get('Caption');
+            if ( $attribute_it->getId() > 0 && $attribute_it->get('VPD') != getSession()->getProjectIt()->get('VPD') ) {
+                $title = '{'.$attribute_it->get('ProjectCodeName').'} '.$title;
+            }
             $names[$attribute_it->getId()] = $title;
             $attribute_it->moveNext();
         }
@@ -179,27 +201,26 @@ class RequestBoardPlanning extends RequestBoard
         echo '</div>';
         if ( $board_value > 0 ) {
             $object_it = $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value);
-            if ( $object_it->getId() > 0 ) {
-                $strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-                if ( $object_it->object instanceof Iteration ) {
-                    $estimation = $object_it->getLeftEstimation();
-                    list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimationRealBurndownMetrics();
-                }
-                else {
-                    $estimation = $object_it->getTotalWorkload();
-                    list( $capacity, $maximum, $actual_velocity ) = $object_it->getRealBurndownMetrics();
-                }
+            if ( $object_it->getId() > 0 )
+            {
+                $methodology_it = $object_it->getRef('Project')->getMethodologyIt();
+
                 echo '<div class="board-header-details">';
                     echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
                         ." / "
                         .getSession()->getLanguage()->getDateFormattedShort($object_it->get('FinishDate'));
                     echo '<br/>';
-                    echo sprintf(
-                        text(2189),
-                        $strategy->getDimensionText(round($maximum, 1)),
-                        $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
-                        $strategy->getDimensionText(round($estimation, 1))
-                    );
+                    if ( $methodology_it->IsAgile() )
+                    {
+                        $strategy = $methodology_it->getEstimationStrategy();
+                        list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
+                        echo sprintf(
+                            text(2189),
+                            $maximum > 0 ? $strategy->getDimensionText(round($maximum, 1)) : '0',
+                            $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+                            $estimation > 0 ? $strategy->getDimensionText(round($estimation, 1)) : '0'
+                        );
+                    }
                 echo '</div>';
             }
         }

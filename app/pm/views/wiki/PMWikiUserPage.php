@@ -1,30 +1,28 @@
 <?php
 
-include SERVER_ROOT_PATH."pm/methods/c_wiki_methods_base.php";
 include SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_wiki_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_stage_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_task_methods.php";
+include_once SERVER_ROOT_PATH."pm/methods/CloneWikiPageWebMethod.php";
 include SERVER_ROOT_PATH."pm/methods/WikiRemoveStyleWebMethod.php";
-include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 
 include "PMWikiTable.php";
 include "PMWikiDocument.php";
-include "WikiTreeSection.php";
+include "WikiTreeSectionNew.php";
 include "DocumentStructureSection.php";
 include "WikiDocumentSettingBuilder.php";
 include "WikiPageSettingBuilder.php";
 include "history/WikiHistoryTable.php";
 include "history/WikiVersionTable.php";
-include "templates/WikiTemplateTable.php";
-include "templates/WikiTemplateSettingBuilder.php";
 include 'parsers/WikiIteratorExportExcelText.php';
 include 'parsers/WikiIteratorExportExcelHtml.php';
-include "import/ImportWikiPageFromExcelSection.php";
 include "import/ImportExcelForm.php";
 include "import/ImportDocumentForm.php";
 include "WikiIncludeForm.php";
+include "WikiChangeForm.php";
 include "templates/DocumentTemplateTable.php";
 include "templates/DocumentTemplateForm.php";
 
@@ -42,7 +40,7 @@ class PMWikiUserPage extends PMPage
 	    if ( $table instanceof PMWikiDocument && $table->getDocumentIt()->getId() > 0 )
 	    {
 			if ( $_COOKIE['toggle-structure-panel-' . $table->getDocumentIt()->getId()] != 'false' ) {
-				$this->addInfoSection( new WikiTreeSection(
+				$this->addInfoSection( new WikiTreeSectionNew(
 					$table->getObjectIt()->getId() > 0
 						? $table->getObjectIt()
 						: $table->getDocumentIt(),
@@ -51,15 +49,9 @@ class PMWikiUserPage extends PMPage
 			}
 	    }
 		else {
-			if ( $_REQUEST['view'] == 'templates' ) {
-			}
-            elseif( $_REQUEST['view'] == 'importdoc' )
+			if( $_REQUEST['view'] == 'importdoc' )
             {
             }
-			elseif( $_REQUEST['view'] == 'import' )
-			{
-				$this->addInfoSection( new ImportWikiPageFromExcelSection($this->getObject()));
-			}
 			elseif ( $this->needDisplayForm() )
 			{
 				if (  $this->getFormRef() instanceof PMWikiForm ) {
@@ -75,10 +67,12 @@ class PMWikiUserPage extends PMPage
 					);
 					$object_it = $this->getObjectIt();
 					if (is_object($object_it) && $object_it->getId() > 0) {
-						$this->addInfoSection(new NetworkSection($object_it));
 						$this->addInfoSection(new PageSectionComments($object_it));
-						$this->addInfoSection(new StatableLifecycleSection($object_it));
+                        if ( $object_it->object->getStateClassName() != '' ) {
+                            $this->addInfoSection(new StatableLifecycleSection($object_it));
+                        }
 						$this->addInfoSection(new PMLastChangesSection ($object_it));
+                        $this->addInfoSection(new NetworkSection($object_it));
 					}
 				}
 			}
@@ -103,11 +97,6 @@ class PMWikiUserPage extends PMPage
  		return null;
  	}
  	
- 	function getTemplateObject()
- 	{
- 		return null;
- 	}
- 	
  	function getTableBase()
  	{
  		return new PMWikiTable($this->getObject(), $this->getStateObject(), $this->getForm());
@@ -125,12 +114,8 @@ class PMWikiUserPage extends PMPage
 			case 'doctemplates':
 				return new DocumentTemplateTable(new DocumentTemplate($this->getObject()));
 
- 			case 'templates':
- 				getSession()->addBuilder( new WikiTemplateSettingBuilder() );
- 				return new WikiTemplateTable($this->getTemplateObject(), $this->getForm());
- 			
  			case 'history':
- 				return new WikiHistoryTable();
+ 				return new WikiHistoryTable($this->getObject());
 
             case 'compare':
                 return new WikiVersionTable($this->getObject());
@@ -162,6 +147,7 @@ class PMWikiUserPage extends PMPage
             case 'importdoc':
                 return new ImportDocumentForm($this->getObject());
             default:
+                if ( $_REQUEST['revision'] != '' ) return new WikiChangeForm($this->getObject());
                 if ( $_REQUEST['Include'] != '' ) return new WikiIncludeForm($this->getObject());
         }
  		return parent::getForm();
@@ -188,7 +174,8 @@ class PMWikiUserPage extends PMPage
 
 	function getExportPersisters() {
 		return array (
-			new WikiPageDetailsPersister()
+			new WikiPageDetailsPersister(),
+            new EntityProjectPersister()
 		);
 	}
  	
@@ -197,13 +184,17 @@ class PMWikiUserPage extends PMPage
 		$object = $this->getObject();
 		$object->setPersisters($this->getExportPersisters());
 
-		$object_it = $_REQUEST['root'] > 0 ? $object->getExact($_REQUEST['root']) : $object->getEmptyIterator();
-		if ( $object_it->get('ParentPage') == '' )
-		{
-			$_REQUEST['root'] = '';
-			$root_it = $object->getRootIt();
-	 		if ( is_object($root_it) && $root_it->getId() > 0 ) $object_it = $root_it;
-		}
+        $rootIds = array_filter(
+            preg_split('/[,-]/',$_REQUEST['root']),
+            function($value) {
+                return $value > 0;
+            }
+        );
+        $treeMode = $_REQUEST['tree-mode'] != 'plain';
+
+        $object_it = count($rootIds) > 0
+            ? $object->getExact($rootIds)
+            : $object->getEmptyIterator();
 
 		$open_path = array();
  		if ( $_REQUEST['open'] > 0 ) {
@@ -240,39 +231,47 @@ class PMWikiUserPage extends PMPage
  		{
  			$registry = $object->getRegistry();
  		}
- 		
- 		while( !$object_it->end() )
- 		{
-	 		$children_it = $registry->Query( 
-	 				array_merge( 
-	 						array(
-					 				new FilterAttributePredicate('DocumentId', $object_it->getId()),
-					 				new SortDocumentClause()
-	 						), 
-	 						$this->getPredicates() 
-	 				)
-	 		);
 
-	 		while ( !$children_it->end() )
-	 		{
-	 			if ( $children_it->get('DocumentId') < 1 ) 
-	 			{
-	 				// not existed page (eg. there is no page in the snapshot) 
-	 				$children_it->moveNext();
-	 				
-	 				continue;
-	 			}
-	 			
-	 			$json[] = $this->exportWikiNodeJson($children_it, $open_path, count($children_it->getParentsArray()) );
-	 			
-	 			$children_it->moveNext();
-	 		}
- 			
- 			$object_it->moveNext();
- 		}
- 		
- 		$json = $this->buildTree($json, '');
- 		
+ 		if ( $treeMode ) {
+            while( !$object_it->end() ) {
+                $children_it = $registry->Query(
+                    array_merge(
+                        array(
+                            new FilterAttributePredicate('DocumentId', $object_it->getId()),
+                            new SortDocumentClause()
+                        ),
+                        $this->getPredicates()
+                    )
+                );
+                while ( !$children_it->end() ) {
+                    if ( $children_it->get('DocumentId') < 1 ) {
+                        // not existed page (eg. there is no page in the snapshot)
+                        $children_it->moveNext();
+                        continue;
+                    }
+                    $json[] = $this->exportWikiNodeNew($children_it, $open_path, count($children_it->getParentsArray()) );
+                    $children_it->moveNext();
+                }
+                $object_it->moveNext();
+            }
+            $json = $this->buildTree($json, '');
+        }
+        else {
+            $children_it = $registry->Query(
+                array_merge(
+                    array(
+                        new FilterInPredicate($object_it->idsToArray()),
+                        new SortDocumentClause()
+                    ),
+                    $this->getPredicates()
+                )
+            );
+            while ( !$children_it->end() ) {
+                $json[] = $this->exportWikiNodeNew($children_it, array(), 1);
+                $children_it->moveNext();
+            }
+        }
+
  		echo JsonWrapper::encode($json);
  	}
  	
@@ -282,7 +281,7 @@ class PMWikiUserPage extends PMPage
 
        foreach ($elements as $key => $element) {
            if ($element['parent'] == $parentId) {
-               $children = $this->buildTree($elements, $element['id']);
+               $children = $this->buildTree($elements, $element['key']);
                if (count($children)>0) {
                    $element['children'] = $children;
                }
@@ -292,63 +291,42 @@ class PMWikiUserPage extends PMPage
        
        return $branch;
     }
- 	 	
- 	function exportWikiNodeJson( $object_it, $open_path, $level )
- 	{
-		$class_name = $object_it->getId() == array_pop($open_path) ? 'label' : '';
- 		
-		// display version (revision) number for the root only
-		$caption = $object_it->get('ParentPage') == '' ? $object_it->getDisplayName() : $object_it->getHtmlDecoded('Caption');
-		
- 		if ( $object_it->get('TotalCount') > 0 )
-		{
-			if ( $object_it->get('ContentPresents') == 'Y' )
-			{
-				$image = 'folder_page';
-			}
-			else
-			{
-				$image = 'folder';
-			}
-		}
-		else
-		{
-			$image = 'wiki_document';
-		}
-		
- 		$title = '<div class="treeview-label '.$image.'" object-id="'.$object_it->getId().'">';
 
- 		$title .= $this->getExportItemMenu( $caption, $object_it, $class_name );
- 		
- 		$title .= '</div>';
- 			
- 		return array (
- 				'text' => $title,
- 				'expanded' => in_array($object_it->getId(), $open_path) || $level < 2,
- 				'classes' => "folder ".$image,
- 				'id' => $object_it->getId(),
- 				'children' => array(),
- 				'hasChildren' => false,
- 				'parent' => $object_it->get('ParentPage')
- 		);
- 	}
- 	
- 	function getExportItemMenu( $title, $object_it, $class_name )
- 	{
- 		$form = $this->getFormRef();
+    function exportWikiNodeNew( $object_it, $open_path, $level )
+    {
+        // display version (revision) number for the root only
+        $caption = $object_it->get('ParentPage') == '' ? $object_it->getDisplayName() : $object_it->getTreeDisplayName();
 
- 		$actions = $form->getTreeMenu($object_it);
- 		
- 		$view = $this->getRenderView();
- 		
- 		return $view->render('pm/WikiTreeMenu.php', array (
-            'url' => $object_it->getViewUrl(),
-            'title' => $title, 
-            'items' => $actions,
-            'class' => $class_name,
- 		    'page_id' => $object_it->getId()
-        ));
- 	}
+        if ( $object_it->get('TotalCount') > 0 )
+        {
+            if ( $object_it->get('ContentPresents') == 'Y' )
+            {
+                $image = 'folder_page';
+            }
+            else
+            {
+                $image = 'folder';
+            }
+        }
+        else
+        {
+            $image = 'wiki_document';
+        }
+
+        return array (
+            'title' => $caption,
+            'active' => $object_it->getId() == array_pop($open_path),
+            'folder' => $object_it->get('TotalCount') > 0,
+            'key' => $object_it->getId(),
+            'expanded' => in_array($object_it->getId(), $open_path) || $level < 2,
+            'extraClasses' => $image,
+            'children' => array(),
+            'parent' => $object_it->get('ParentPage'),
+            'data' => array(
+                'project' => $object_it->get('ProjectCodeName')
+            )
+        );
+    }
 
 	function getPageUid()
 	{
@@ -374,22 +352,40 @@ class PMWikiUserPage extends PMPage
 
     function buildExportIterator( $object, $ids )
     {
+        if ( !$object instanceof WikiPage ) {
+            return parent::buildExportIterator($object, $ids);
+        }
+        $exportOptions = preg_split('/-/', $_REQUEST['options']);
         return $object->getRegistry()->Query(
             array_merge(
                 array(
-                    new WikiRootTransitiveFilter($ids),
+                    $_REQUEST['options'] == '' || in_array('children', $exportOptions)
+                        ? new WikiRootTransitiveFilter($ids)
+                        : new FilterInPredicate($ids),
                     new SortDocumentClause()
                 )
             )
         );
     }
 
-    function buildCommentList( $object_it, $control_uid )
+    function buildCommentList( $object_it )
     {
-        $list = parent::buildCommentList($object_it, $control_uid);
+        $list = parent::buildCommentList($object_it );
         if ( $_REQUEST['document'] != '' ) {
             $list->setAutoRefresh(false);
         }
         return $list;
+    }
+
+    function getWaitFilters( $classes )
+    {
+        $filters = parent::getWaitFilters($classes);
+
+        $table = $this->getTableRef();
+        if ( $table instanceof PMWikiDocument && $table->getDocumentIt()->getId() > 0 ) {
+            $filters[] = new WikiDocumentWaitFilter($table->getDocumentIt()->getId());
+        }
+
+        return $filters;
     }
 }

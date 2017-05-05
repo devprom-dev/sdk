@@ -6,8 +6,6 @@ class DictionaryRegistry extends ObjectRegistrySQL
 	
  	function addEntity( & $object, $caption = '' )
  	{
- 	    if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
-
  		$this->entities[] = array (
  			'entityId' => get_class($object),
  			'Caption' => $caption != '' ? $caption : $object->getDisplayName(),
@@ -22,8 +20,7 @@ class DictionaryRegistry extends ObjectRegistrySQL
  	
  	function createSQLIterator( $sql )
  	{
- 		foreach( getSession()->getBuilders('DictionaryBuilder') as $builder )
- 		{
+ 		foreach( getSession()->getBuilders('DictionaryBuilder') as $builder ) {
  			$builder->build( $this );
  		}
  		

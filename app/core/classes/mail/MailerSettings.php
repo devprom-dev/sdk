@@ -13,6 +13,7 @@ class MailerSettings extends Metaobject
 		}
 		 
 		$this->addAttribute('MailServer', 'VARCHAR', text(1701), true, false );
+        $this->setAttributeDefault('MailServer', '127.0.0.1');
 		$this->addAttribute('MailServerPort', 'INTEGER', text(1704), true, false, ' ' );
 		$this->addAttribute('Pop3Server', 'VARCHAR', text(2109), true, false );
         $this->addAttribute('Pop3ServerType', 'REF_co_MailboxProviderId', text(2225), true, false );

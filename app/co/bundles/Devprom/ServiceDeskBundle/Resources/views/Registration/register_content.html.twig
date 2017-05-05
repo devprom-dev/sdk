@@ -1,12 +1,22 @@
-<section class="widget">
-    <div class="body">
-        <form role="form" action="{{ path('fos_user_registration_register') }}" {{ form_enctype(form) }} method="POST" class="form-horizontal">
-            <legend>{{ 'registration.title'|trans }}</legend>
-            {{ form_widget(form) }}
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">{{ 'registration.submit'|trans({}, 'FOSUserBundle') }}</button>
-                <a class="btn btn-default" href="{{ path('fos_user_security_login') }}">{{ 'registration.cancel'|trans({}, 'FOSUserBundle') }}</a>
+<section class="card-section">
+    <div class="container">
+        <div class="col-lg-8 col-lg-offset-2">
+            <div class="card text-center">
+                <header class="text-center">
+                    <div class="section-subtitle">{{ 'registration.title'|trans({}, 'FOSUserBundle') }}</div>
+                </header>
+                <div class="body">
+                    <form role="form" action="{{ path('fos_user_registration_register') }}" {{ form_enctype(form) }} method="POST" class="form-horizontal">
+                        {% if invalid_username is defined %}
+                            <div class="alert alert-warning">{{ 'resetting.request.invalid_username'|trans({'%username%': invalid_username}, 'FOSUserBundle') }}</div>
+                        {% endif %}
+                        {{ form_widget(form) }}
+                        <div class="row">
+                            <input type="submit" class="btn btn-success" value="{{ 'registration.submit'|trans({}, 'FOSUserBundle') }}">
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </section>

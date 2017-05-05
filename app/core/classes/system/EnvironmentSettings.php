@@ -108,31 +108,30 @@ class EnvironmentSettings
     
     static public function getServerUrl()
     {
-        $url = static::getServerSchema().'://'.static::getServerName();
-        
-        $port = static::getServerPort();
-        
-        return $port != 80 ? $url.':'.$port : $url; 
+        $schema = static::getServerSchema();
+        return self::appendPort($schema, $schema.'://'.static::getServerName());
     }
 
     static public function getServerUrlByIpAddress()
     {
-        $url = static::getServerSchema().'://'.gethostbyname(static::getServerName());
-        
-        $port = static::getServerPort();
-
-        return $port != 80 ? $url.':'.$port : $url; 
+        $schema = static::getServerSchema();
+        return self::appendPort($schema, $schema.'://'.gethostbyname(static::getServerName()));
     }
 
     static public function getServerUrlLocalhost()
     {
-        $url = static::getServerSchema().'://127.0.0.1';
-        
-        $port = static::getServerPort();
-        
-        return $port != 80 ? $url.':'.$port : $url;
+        $schema = static::getServerSchema();
+        return self::appendPort($schema, $schema.'://127.0.0.1');
     }
-    
+
+    static protected function appendPort( $schema, $url )
+    {
+        $port = static::getServerPort();
+        if ( $schema == 'https' && $port == 443 ) return $url;
+        if ( $schema == 'http' && $port == 80 ) return $url;
+        return $url.':'.$port;
+    }
+
     static public function getUTCOffset()
     {
     	return defined('DEFAULT_UTC_OFFSET') ? DEFAULT_UTC_OFFSET : '+00';

@@ -16,14 +16,16 @@ class BugController extends RestController
     protected function getModelService(Request $request)
     {
     	return new ModelServiceBugReporting(
-    			new \ModelValidator(
-						array (
-								new \ModelValidatorObligatory(),
-								new \ModelValidatorTypes()
-    					)
-				), 
-    			new \ModelDataTypeMapper(),
-    			null
+            new \ModelValidator(
+                    array (
+                            new \ModelValidatorObligatory(),
+                            new \ModelValidatorTypes()
+                    )
+            ),
+            new \ModelDataTypeMapper(),
+            null,
+            null,
+            $request->get('version') != 'v1'
 		);
     }
 

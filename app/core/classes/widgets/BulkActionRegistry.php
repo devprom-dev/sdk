@@ -13,11 +13,12 @@ class BulkActionRegistry extends ObjectRegistrySQL
 		});
 	}
 	
-	function addCustomAction( $title, $method )
+	function addCustomAction( $title, $method, $uid = '' )
 	{
 		$this->actions['action'][] = array (
 			'name' => $title,
-			'url' => $method
+			'url' => $method,
+            'uid' => $uid
 		);
 	}
 
@@ -60,6 +61,7 @@ class BulkActionRegistry extends ObjectRegistrySQL
 	 					'entityId' => $action['url'],
 	 					'Caption' => $action['name'],
 	 					'ReferenceName' => $action['state'],
+                        'OrderNum' => $action['uid'],
 	 					'package' => $key
 	 			);
  			}

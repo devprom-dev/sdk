@@ -1,0 +1,63 @@
+{% extends '::content_info.html.twig' %}
+{% import "DevpromServiceDeskBundle:Common:macros.html.twig" as macro %}
+
+{% block title %}
+    {{ 'kb.title'|trans }}
+{% endblock %}
+
+{% block header_image %}
+    <div class="video-container">
+        <div class="filter"></div>
+        <video autoplay loop class="fillWidth">
+            <source src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/videos/1/MP4/Working-Space.mp4') }}" type="video/mp4" />Your browser does not support the video tag. I suggest you upgrade your browser.
+            <source src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/videos/1/WEBM/Working-Space.webm') }}" type="video/webm" />Your browser does not support the video tag. I suggest you upgrade your browser.
+        </video>
+        <div class="poster hidden">
+            <img src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/videos/1/snapshots/Working-Space.jpg') }}" alt="">
+        </div>
+    </div>
+{% endblock %}
+
+{% block content_header %}
+    <div class="masthead">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <form action="{{ path('docs_search') }}" method="get">
+                        <input type="text" name="q" class="search-field" placeholder="{{ 'kb.search'|trans }}" value="{{ query }}"/>
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content -%}
+    <section class="content-wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    {% if articles %}
+                        {% for article in articles %}
+                            <article class="post">
+                                <h1>{{ article.name|unescapeHtml }}</h1>
+                                <p>{% autoescape false %}{{ article.content|unescapeHtml }}{% endautoescape %}</p>
+                            </article>
+                            <br/>
+                        {% endfor %}
+                    {% else %}
+                    {% endif %}
+                    <div class="sidebar">
+                        <div class="widget widget-support-forum">
+                            <span class="icon icon-forum"></span>
+                            <h4>{{ 'kb.missed_info'|trans }}</h4>
+                            <p>{{ 'kb.write_query'|trans }}</p>
+                            <a href="{{ url('issue_new') }}" class="btn btn-success">{{ 'issue.add'|trans }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,3 +1,14 @@
+<?php
+
+$custom_tiles = array_filter($tiles, function($value) {
+	return $value['kind'] == 'process';
+});
+$builtin_tiles = array_filter($tiles, function($value) {
+	return $value['kind'] != 'process';
+})
+
+?>
+
 <?php $view->extend('core/PageBody.php'); ?>
 
 <?php $view['slots']->start('_header'); ?>
@@ -54,21 +65,17 @@
 				<div class="pull-left">
 					<h4 class="bs"><?=text('co23')?></h4>
 				</div>
-				<div class="pull-right">
-					<form role="form">
-						<div class="checkbox">
-							<label> <?=text('co25')?> <input type="checkbox">
-							</label>
-						</div>
-					</form>
-				</div>
+
+                <?php if ( $custom_template_url != '' ) { ?>
 				<div class="pull-right">
 					<a href="/admin/templates.php"><?=text('co53')?></a>
 				</div>
+                <?php } ?>
+
 				<? if ( count($languages) > 1 ) { ?>
 				<div class="pull-right language-buttons">
 					<? foreach( $languages as $language ) { ?>
-					<a href="?language=<?=$language['cms_LanguageId']?>" class="btn btn-small <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=$language['Caption']?></a>
+					<a href="?language=<?=$language['cms_LanguageId']?>" class="btn btn-small <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=translate($language['Caption'])?></a>
 					<? } ?>
 				</div>
 				<? } ?>
@@ -76,16 +83,17 @@
 
 		<div class="create-project-info">
 			<p>
-				<i class="icon-info"></i> <?=text('co24')?>
+				<i class="icon-info"></i> <?=text('co52')?>
 			</p>
 		</div>
 
+		<?php if ( count($custom_tiles) > 0 ) { ?>
 		<ul class="template-list first">
-			<?php foreach ( $tiles as $tile ) { ?>
+			<?php foreach ( $custom_tiles as $tile ) { ?>
 				<?php if ( $tile['kind'] == 'methodology' ) continue; ?>
-				
+
 				<li class="template-list-item">
-					<div class="template <?=($tile['kind'] == 'case' ? 'green' : '')?> <?=(!$tile['active'] ? 'locked' : '')?>">
+					<div class="template green <?=(!$tile['active'] ? 'locked' : '')?>">
 						<?php if ( !$tile['active'] ) { ?>
 							<i class="icon-lock"></i>
 						<?php } else if ( $tile['url'] != '' ) { ?>
@@ -96,25 +104,18 @@
 							<?=$tile['description']?>
 						</p>
 						<?php if ( $tile['active'] ) { ?>
-						<a href="/projects/new?Template=<?=$tile['id']?>" class="template-action"><?=text('co30')?></a>
+							<a href="/projects/new?Template=<?=$tile['id']?>" class="template-action"><?=text('co30')?></a>
 						<?php } else { ?>
-						<a href="<?=$tile['url']?>" target="_blank" class="template-action"><?=text('co29')?></a>
+							<a href="<?=$tile['url']?>" target="_blank" class="template-action"><?=text('co29')?></a>
 						<?php } ?>
 					</div>
 				</li>
 			<?php } ?>
 		</ul>
-
-		<div class="create-project-info">
-			<p>
-				<i class="icon-info"></i> <?=text('co52')?>
-			</p>
-		</div>
+		<?php } ?>
 
 		<ul class="template-list">
-			<?php foreach ( $tiles as $tile ) { ?>
-				<?php if ( $tile['kind'] != 'methodology' ) continue; ?>
-				
+			<?php foreach ( $builtin_tiles  as $tile ) { ?>
 				<li class="template-list-item">
 					<div class="template <?=(!$tile['active'] ? 'locked' : 'orange')?>">
 						<?php if ( !$tile['active'] ) { ?>
@@ -148,24 +149,23 @@
 		</ul>
 
 		<?php if ( count($solutions) > 0 ) { ?>
-		<div class="accordion-wr">
-			<h4 class="bs"><?=text('co31')?></h4>
-			<div class="accordion">
-				<?php foreach( $solutions as $solution ) { ?>
-					<div class="accordion-item">
-						<h6 class="accordion-title">
-							<span><?=$solution['name']?></span>
-						</h6>
-						<div class="accordion-cont">
-							<div class="accordion-dscr">
-								<p><?=$solution['description']?></p>
-								<p>
-									<a href="<?=$solution['url']?>" target="_blank"><?=text('co34')?></a>
-								</p>
-							</div>
-						</div>
-					</div>
-				<?php } ?>
+			<div class="create-project-info">
+				<p>
+					<i class="icon-info"></i> <?=text('co31')?>
+				</p>
 			</div>
-		</div>
+			<ul class="template-list">
+			<?php foreach ( $solutions  as $solution ) { ?>
+				<li class="template-list-item">
+					<div class="template">
+						<a target="_blank" href="<?=$solution['url']?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+						<h6 class="bs"><?=$solution['name']?></h6>
+						<p>
+							<?=$solution['description']?>
+						</p>
+						<a href="<?=$solution['url']?>" target="_blank" class="template-action"><?=text('co28')?></a>
+					</div>
+				</li>
+			<?php } ?>
+			</ul>
 		<?php } ?>

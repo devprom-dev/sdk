@@ -3,19 +3,16 @@
 class SpentTimeFormEmbedded extends PMFormEmbedded
 {
  	var $anchor_it;
- 	
- 	function setAnchorIt( $anchor_it )
- 	{
+
+ 	function setAnchorIt( $anchor_it ) {
  		$this->anchor_it = $anchor_it;
  	}
- 	
-	function getLeftWorkAttribute()
-	{
+
+	function getLeftWorkAttribute() {
 	    return $this->left_work_attribute;
 	}
 	
-	function setLeftWorkAttribute( $attribute )
-	{
+	function setLeftWorkAttribute( $attribute ) {
 	    $this->left_work_attribute = $attribute;
 	}
 	
@@ -68,8 +65,7 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
 		}
 	}
  	
-	function getSaveCallback()
-	{
+	function getSaveCallback() {
 		return 'updateLeftWorkAttribute';
 	}
 	
@@ -102,4 +98,23 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  				return parent::drawField( $attr, $type, $value, $tabindex );
  		}
  	}
+
+    function getActions( $object_it, $item )
+    {
+        $actions = array();
+
+        $method = new ObjectModifyWebMethod($object_it);
+        if ( $method->hasAccess() ) {
+            $actions[] = array(
+                'click' => $method->getJSCall(),
+                'name' => $method->getCaption()
+            );
+            $actions[] = array();
+        }
+
+        return array_merge(
+            $actions,
+            parent::getActions($object_it, $item)
+        );
+    }
 }

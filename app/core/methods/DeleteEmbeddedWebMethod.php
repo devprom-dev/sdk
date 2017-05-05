@@ -1,5 +1,4 @@
 <?php
-
 include_once "WebMethod.php";
 
 class DeleteEmbeddedWebMethod extends WebMethod
@@ -27,7 +26,11 @@ class DeleteEmbeddedWebMethod extends WebMethod
 	 		if ( $object_it->delete() < 1 ) {
 				throw new Exception('Object wasn\'t deleted');
 			}
- 		}
+            if ( class_exists('UndoWebMethod') ) {
+                $method = new UndoWebMethod(ChangeLog::getTransaction());
+                $method->setCookie();
+            }
+        }
 	 	
 	 	echo $_REQUEST['callback'].'{"result":"ok"}';
  	}

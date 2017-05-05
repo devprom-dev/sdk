@@ -1,12 +1,11 @@
 <?php
-
 include "classes/widgets/FunctionalAreaMenuScrumBuilder.php";
 include "views/EstimationStrategyScrumBuilder.php";
 include "classes/VelocityReportsBuilder.php";
 include "classes/events/ScrumReportedEvent.php";
-include "classes/notificators/ScrumChangeNotificator.php";
 include "classes/predicates/ProjectScrumPredicate.php";
 include "classes/widgets/ScrumTourScriptBuilder.php";
+include "classes/ChangeLogEntitiesScrumBuilder.php";
 
 class ScrumPMPlugin extends PluginPMBase
 {
@@ -22,7 +21,9 @@ class ScrumPMPlugin extends PluginPMBase
 
     function getModules()
     {
-		$modules = array (
+        if ( !getSession()->getProjectIt()->getMethodologyIt()->IsAgile() ) return array();
+
+        $modules = array (
 			'velocitychart' => array(
 				'includes' => array( 'scrum/views/VelocityPage.php' ),
 				'classname' => 'VelocityPage',
@@ -50,12 +51,12 @@ class ScrumPMPlugin extends PluginPMBase
     function getBuilders()
     {
         return array (
-                new FunctionalAreaMenuScrumBuilder(),
-                new VelocityReportsBuilder(),
-                new EstimationStrategyScrumBuilder(),
-                new ScrumChangeNotificator(),
-                new ScrumReportedEvent(),
-				new ScrumTourScriptBuilder(getSession())
+            new FunctionalAreaMenuScrumBuilder(),
+            new VelocityReportsBuilder(),
+            new EstimationStrategyScrumBuilder(),
+            new ScrumReportedEvent(),
+            new ChangeLogEntitiesScrumBuilder(),
+            new ScrumTourScriptBuilder(getSession())
         );
     }
 

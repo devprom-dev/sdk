@@ -14,7 +14,7 @@ class RequestTraceBaseIterator extends OrderedIterator
 
  		if ( $uid->hasUid($object_it) )
  		{
- 			return $uid->getUidWithCaption($object_it);
+ 			return $uid->getUidWithCaption($object_it, 50);
  		}
  		else
  		{
@@ -25,7 +25,7 @@ class RequestTraceBaseIterator extends OrderedIterator
  	function getTraceDisplayName()
  	{
  		$object_it = $this->getObjectIt();
- 		
+
  		$uid = new ObjectUID;
  		if ( $uid->hasUid($object_it) )
  		{

@@ -425,6 +425,10 @@ class IteratorBase
 		return $caption;
 	}
 
+    function getDisplayNameExt( $prefix = '' ) {
+        return $prefix . $this->getDisplayName();
+    }
+
 	function getDisplayNameHtmlDecoded() 
 	{
 		$caption = $this->get("Caption");
@@ -736,7 +740,7 @@ class IteratorBase
  		return $s;
  	}   
 
- 	function serialize2Xml()
+ 	function serialize2Xml( $skipTypes = array() )
  	{
  		$this->moveFirst();
 		$xml = '';
@@ -748,11 +752,13 @@ class IteratorBase
 			
 			for( $i = 0; $i < count($keys); $i++ )
 			{
-				$value = $this->getHtmlDecoded($keys[$i]);
+                if ( !$this->object->IsAttributeStored($keys[$i]) ) continue;
 
+				$value = $this->getHtmlDecoded($keys[$i]);
 				$encoding = '';
 				
 				$type = $this->object->getAttributeType($keys[$i]);
+                if ( in_array($type, $skipTypes) ) continue;
 				
 				switch ( $type )
 				{
@@ -935,7 +941,7 @@ class IteratorBase
  			substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
  	}
  	
- 	return $match[1].'<a href="'.trim($match[2], "\.\,\;\:").'">'.$display_name.'</a>'.$display_tag;
+ 	return $match[1].'<a target="_blank" href="'.trim($match[2], "\.\,\;\:").'">'.$display_name.'</a>'.$display_tag;
  }
  
  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -971,7 +977,7 @@ class IteratorBase
      
      $text = $match[2] != '' ? $match[2] : $match[1];
        
-     return '<a href="'.$match[1].'">'.$text.'</a>';
+     return '<a target="_blank" href="'.$match[1].'">'.$text.'</a>';
  }
  
  /////////////////////////////////////////////////////////////////////////////////////////////////////////////

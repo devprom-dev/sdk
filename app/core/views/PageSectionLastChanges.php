@@ -31,7 +31,8 @@ class LastChangesSection extends InfoSection
 			array (
 				new ChangeLogItemDateFilter($this->object),
 				new FilterBaseVpdPredicate(),
-				new SortReverseKeyClause()
+				new SortReverseKeyClause(),
+                new FilterAttributePredicate('ChangeKind', 'added,modified,deleted')
 			)
 		);
  	}
@@ -62,7 +63,7 @@ class LastChangesSection extends InfoSection
 		
 		$it = $this->getIterator();
 
-		for($i = 0; $i < min($it->count(), $this->items); $i++) 
+		for($i = 0; $i < min($it->count(), $this->items); $i++)
 		{
 			if ( $it->get('Content') == '' && $it->get('ChangeKind') == 'modified' ) {
 				$it->moveNext();
@@ -73,19 +74,31 @@ class LastChangesSection extends InfoSection
 				continue;
 			}
 
+			$content = $it->getHtmlDecoded('Content');
+            $anchor_it = $it->getObjectIt();
+            if ( strpos($content, '[url') !== false && $anchor_it->object instanceof WikiPage ) {
+                $content = str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$it->getDateTimeFormat('RecordModified'), text(2319));
+            }
+
 			$rows[] = array(
 				'author' => $it->getHtmlDecoded('AuthorName'),
 			 	'datetime' => $it->getDateTimeFormat('RecordModified'),
-			    'caption' => $it->getHtmlDecoded('Content'),
+			    'caption' => $content,
 				'icon' => $it->get('ChangeKind') == 'added' ? 'icon-plus-sign' : 'icon-pencil'
 			); 
 			
 			$it->moveNext();
 		}
-		
+
+		$className = strtolower(get_class($this->object->object));
 		return array_merge( parent::getRenderParms(), array (
 			'section' => $this,
-			'rows' => $rows
+			'rows' => $rows,
+            'moreUrl' => count($rows) >= 5
+                ? getFactory()->getObject('PMReport')->getExact('project-log')->getUrl(
+                        'entities='.$className.'&'.$className.'='.$this->object->getId().'&start='.$this->object->getDateFormat('RecordCreated')
+                    )
+                : ''
 		));
 	}
 }

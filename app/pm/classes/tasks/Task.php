@@ -21,6 +21,11 @@ class Task extends MetaobjectStatable
  	function __construct( $registry = null ) 
  	{
 		parent::__construct('pm_Task', $registry, getSession()->getCacheKey());
+		$this->setSortDefault(
+		    array(
+		        new SortOrderedClause()
+            )
+        );
  	}
 	
 	function getPage() 
@@ -39,10 +44,7 @@ class Task extends MetaobjectStatable
 	
  	function getOrderStep()
 	{
-	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-	    
-	    return is_object($methodology_it) && $methodology_it->get('IsRequestOrderUsed') == 'Y'
-	        ? 1 : parent::getOrderStep();
+	    return 1;
 	}
 	
 	function IsDeletedCascade( $object )
@@ -79,7 +81,17 @@ class Task extends MetaobjectStatable
 		return $map;
 	}
 
-	function add_parms( $parms )
+	function getDefaultAttributeValue($attr)
+    {
+        switch( $attr ) {
+            case 'Author':
+                return getSession()->getUserIt()->getId();
+            default:
+                return parent::getDefaultAttributeValue($attr);
+        }
+    }
+
+    function add_parms( $parms )
 	{
 		global $model_factory;
 		

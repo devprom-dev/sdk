@@ -10,35 +10,46 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 	function drawAddButton( $view, $tabindex )
 	{ 
 		$object_it =& $this->getIteratorRef();
+		$moduleIt = getFactory()->getObject('Module')->getExact('worklog');
 		
 		$items = array();
+		$ids = array();
+
 		$object_it->moveFirst();
 		while( !$object_it->end() )
 		{
-			$items[$object_it->getRef('Participant')->getDisplayName()] += $object_it->get('Capacity');
+		    $key = $object_it->getRef('Participant')->getDisplayName();
+			$items[$key] += $object_it->get('Capacity');
+            $ids[$key][] = $object_it->getId();
 			$object_it->moveNext();
 		}
 		
 		$lines = array();
-		foreach( $items as $key => $item )
-		{
-			$lines[] = $key.'&nbsp;('.getSession()->getLanguage()->getHoursWording($item).')';
+		foreach( $items as $key => $item ) {
+            $lines[] = $view->render('core/EmbeddedRowTitleMenu.php', array (
+                'title' => $key.'&nbsp;('.getSession()->getLanguage()->getHoursWording($item).')',
+                'items' => array(
+                    array(
+                        'uid' => 'activity-edit',
+                        'url' => $moduleIt->getUrl('activitytask='.join('-',$ids[$key])),
+                        'name' => translate('Редактировать')
+                    )
+                )
+            ));
 		}
 		
 		if ( count($lines) > 0 )
 		{
 			echo '<div class="btn-group" style="vertical-align:top;" title="'.text(1874).'">';
-				echo '<div class="btn dropdown-toggle transparent-btn spent-short" data-toggle="dropdown" href="#" style="display:table;width:auto;" onclick="uiShowSpentTime();">';
-					echo '<span class="title" style="display:table-cell;">'.join('<br/>', $lines).'</span>';
-				echo '</div>';
+    			echo join('<br/>', $lines);
 			echo '</div><br/>';
 		}		
 	
 		parent::drawAddButton( $view, $tabindex );
 
-        if ( count($lines) > 0 && $_REQUEST['formonly'] == '' ) {
-            $target = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank';
-            echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="'.$target.'" href="javascript:uiShowSpentTime();" tabindex="-1">';
+        if ( count($lines) > 0 ) {
+            $url = $moduleIt->getUrl('activitytask='.join('-',$object_it->idsToArray()));
+            echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$url.'" tabindex="-1">';
                 echo translate('подробнее');
             echo '</a>';
         }

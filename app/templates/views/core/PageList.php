@@ -62,14 +62,18 @@ if ( $show_header ) $columns_number++;
 				<?php } ?>
 			</th>
 
-				<?php
+			<?php
+			$numericFields = array();
 			foreach( $columns as $attr ) 
 			{
 				$width = $columns_info[$attr]['width'];
 				$title = str_replace('"', "'", $it->object->getAttributeDescription($attr));
-				
-				$header_attrs = $list->getHeaderAttributes( $attr );
 
+				if ( in_array($it->object->getAttributeType($attr), array('integer', 'float')) && !in_array($attr, array('UID','OrderNum')) ) {
+					$numericFields[] = $attr;
+				}
+
+				$header_attrs = $list->getHeaderAttributes( $attr );
 				echo '<th width="'.$width.'" uid="'.strtolower($attr).'" title="'.$title.'">';
 				if ( $header_attrs['script'] != '#' ) {
 					echo '<a class="mode-sort" href="'.$header_attrs['script'].'" style="display:table-cell;">';
@@ -84,6 +88,10 @@ if ( $show_header ) $columns_number++;
 				}
 				echo '</th>';
 			}
+			$numericFields = array_diff(
+				$numericFields,
+				$object->getAttributesByGroup('skip-total')
+			);
 
 			if ( $list->IsNeedToDisplayOperations() )
 			{
@@ -117,7 +125,12 @@ if ( $show_header ) $columns_number++;
 			{
 				if ( $group_field != '' )
 				{
-					$group_field_value = $it->get($group_field);
+					if ( in_array($it->object->getAttributeType($group_field), array('date','datetime')) ) {
+						$group_field_value = array_shift(preg_split('/\s+/',$it->get($group_field)));
+					}
+					else {
+						$group_field_value = $it->get($group_field);
+					}
 
 					if( $group_field_value != $group_field_prev_value ) 
 					{
@@ -138,11 +151,11 @@ if ( $show_header ) $columns_number++;
 				
 				?>
 				
-				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=ObjectUID::getProject($it)?>" group-id="<?=$group_field_value?>" modified="<?=$it->get('AffectedDate')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
+				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=$it->get('ProjectCodeName')?>" group-id="<?=$group_field_value?>" modified="<?=$it->get('AffectedDate')?>" modifier="<?=$it->get('Modifier')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
 				
 					<? if ( $display_numbers ) { ?>
 					<td name="row-num">
-						<? $list->drawNumberColumn( $offset + $i + 1 ); ?>
+						<? $list->drawNumberColumn( $it, $offset + $i + 1 ); ?>
 					</td>
 					<? } ?>
 
@@ -219,6 +232,28 @@ if ( $show_header ) $columns_number++;
 			$it->moveNext();
 		}
 	?>
+			<?php
+			if ( count($numericFields) > 0 && $list->getItemsCount($it) > 1 ) {
+				$totalIt = $list->getTotalIt($numericFields);
+				if ( $totalIt->count() > 0 ) {
+					echo '<tr class="total">';
+					if ( $display_numbers ) echo '<td class="total-empty"></td>';
+					if ( $need_to_select ) echo '<td class="total-empty"></td>';
+					foreach( $columns as $field ) {
+						if ( in_array($field, $numericFields) ) {
+							echo '<td style="text-align:'.$list->getColumnAlignment( $field ).'">';
+							$list->drawTotal( $totalIt, $field );
+							echo '</td>';
+						}
+						else {
+							echo '<td class="total-empty"></td>';
+						}
+					}
+					if ( $display_operations )  echo '<td class="total-empty"></td>';
+					echo '</tr>';
+				}
+			}
+			?>
 	</tbody>
 	</table>
 	</div>
@@ -244,7 +279,8 @@ if ( $show_header ) $columns_number++;
 			reorder: <?=var_export($reorder, true)?>,
 			visiblePages: <?=($visible_pages < 1 ? 999 : $visible_pages)?>,
 			pageOpen: <?=(is_numeric($offset) ? $offset : 0)?>,
-			totalPages: <?=max($pages,1)?>
+			totalPages: <?=max($pages,1)?>,
+			modifier: '<?=getSession()->getUserIt()->getId()?>'
 		};
 
 		initializeDocument(<?=($object_id != '' ? $object_id : "''")?>, options);

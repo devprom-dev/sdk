@@ -47,6 +47,7 @@ switch ( $type )
             'styles/newlook/board.css,'.
             'styles/wysiwyg/codes.css,'.
             'styles/newlook/sidebar.css,'.
+            'styles/newlook/ui.fancytree.css,'.
             'styles/jquery/perfect-scrollbar.min.css';
         break;
 
@@ -67,6 +68,7 @@ switch ( $type )
                     'jquery/jquery.treeview.js,'.
                     'jquery/jquery.treeview.edit.js,'.
                     'jquery/jquery.treeview.async.js,'.
+                    'keyboard/mousetrap.min.js,'.
                     'fancybox/jquery.fancybox-1.0.0.js,'.
                     'excanvas/excanvas.compiled.js,'.
                     'flot/jquery.flot.min.js,'.
@@ -75,6 +77,7 @@ switch ( $type )
                     'flot/jquery.flot.stack.min.js,'.
                     'flot/jquery.flot.crosshair.min.js,'.
                     'flot/jquery.flot.threshold.min.js,'.
+                    'flot/jquery.flot.tickrotor.js,'.
                     'jquery/jquery.cookies.2.2.0.min.js,' .
                     'modernizr/modernizr.js,' .
                     'jquery/jquery.base64.min.js,'.
@@ -86,7 +89,8 @@ switch ( $type )
                     'pm/locale/'.$language.'/resources.js,'.
                     'pm/common.js,'.
                     'pm/board.js,'.
-                    'pm/document.js';
+                    'pm/document.js,'.
+                    'pm/shortcuts.js';
                 break;
             case '2': // TODO: remove for next update
                 $files =
@@ -114,6 +118,9 @@ switch ( $type )
             'bootstrap/bootstrap-contextmenu.js,'.
             'jquery-ui/jquery-ui-1.8.23.custom.min.js,'.
             'jquery-ui/jquery.ui.touch-punch.min.js,'.
+            'fancytree/jquery.fancytree.js,' .
+            'fancytree/jquery.fancytree.dnd.js,' .
+            'fancytree/jquery.fancytree.persist.js,' .
             'jquery/perfect-scrollbar.jquery.min.js,'.
             'jquery/jquery.peekabar.js,';
 

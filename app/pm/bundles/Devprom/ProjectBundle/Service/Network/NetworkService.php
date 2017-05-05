@@ -130,6 +130,8 @@ class NetworkService
             if ( !$object_it->object->IsReference($attribute) ) continue;
 
             $attributeObject = $this->extendModel($object_it->object->getAttributeObject($attribute));
+            if ( !getFactory()->getAccessPolicy()->can_read($attributeObject) ) continue;
+
             $ids = array_filter(preg_split('/,/',$object_it->get($attribute)), function($id) {
                 return $id != '';
             });

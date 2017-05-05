@@ -44,16 +44,6 @@ class LeadAndCycleTimeChart extends PMPageChart
 				);
 			}
 		}
-
-		$this->setDemo();
-		$this->widget->setDemo($this->getDemo());
-		$this->widget->setColors(
-				array(
-					"rgb(192,192,192)",
-					"rgb(96,96,96)"
-				)
-		);
-
 		return $data;
 	}
 

@@ -40,15 +40,6 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     protected function buildQuickItems( &$items )
     {
     	$report = getFactory()->getObject('PMReport');
-    	
-    	if ( getSession()->getProjectIt()->IsProgram() )
-    	{
-			 $item = $report->getExact('issuesboardcrossproject')->buildMenuItem();
-			 $item['name'] = text(1929);
-			 $item['order'] = 1;
-			 $items[] = $item;
-    	}
-    	
     	$custom_it = getFactory()->getObject('pm_CustomReport')->getMyRegistry()->Query(
 					array (
 							new SortOrderedClause()

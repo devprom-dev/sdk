@@ -9,12 +9,11 @@ class ViewCustomDictionaryWebMethod extends FilterWebMethod
  	{
  		$this->object = $object;
  		$this->attribute = $attribute;
- 		
+        $this->setDefaultValue('all');
  		parent::__construct();
  	}
  	
- 	function getCaption()
- 	{
+ 	function getCaption() {
  		return $this->object->getAttributeUserName( $this->attribute );
  	}
 
@@ -44,18 +43,6 @@ class ViewCustomDictionaryWebMethod extends FilterWebMethod
 
   		return $values;
 	}
-	
- 	function getValue()
- 	{
- 		$value = parent::getValue();
- 		
- 		if ( $value == '' )
- 		{
- 			return 'all'; 
- 		}
- 		
- 		return $value;
- 	}
 	
  	function getStyle()
 	{

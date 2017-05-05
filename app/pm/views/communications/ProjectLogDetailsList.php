@@ -33,6 +33,11 @@ class ProjectLogDetailsList extends PMDetailsList
 				echo '<div>';
 					$anchor_it = $object_it->getObjectIt();
 					if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
+
+                        if ( $this->getUidService()->hasUid($anchor_it) ) {
+                            $this->getUidService()->drawUidIcon($anchor_it);
+                        }
+
 						drawMore($object_it, 'Content', 20);
 						if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
 							echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
@@ -64,4 +69,18 @@ class ProjectLogDetailsList extends PMDetailsList
 			echo '</li>';
 		echo '</ul>';
 	}
+
+	function render($view, $parms)
+    {
+        parent::render($view, $parms);
+
+        $report_it = getFactory()->getObject('PMReport')->getExact(
+            $_REQUEST['action'] != 'commented' ? 'project-log' : 'discussions'
+        );
+        if ( $report_it->getId() != '' ) {
+            echo '<div class="details-more">';
+                echo '<a href="'.$report_it->getUrl().'">'.text(2323).'</a>';
+            echo '</div>';
+        }
+    }
 }

@@ -236,4 +236,8 @@ class ObjectMetadata
 				? substr($this->attributes[$attribute]['type'], 4, strlen($this->attributes[$attribute]['type']) - 6)
 				: '';
 	}
+
+    function IsReference( $attr ) {
+        return strpos($this->getAttributeType($attr), 'REF_') !== false;
+    }
 }

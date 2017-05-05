@@ -25,7 +25,6 @@ class ApplyTemplateService
  		
  		$context->setResetState($this->reset_state);
  		
- 		$state_objects = array();
         $this->processXml($xml);
 
  		$objects = count($sections) > 0
@@ -69,11 +68,15 @@ class ApplyTemplateService
 				case 'pm_Predicate':
 				case 'pm_StateAction':
 				case 'pm_StateAttribute':
+                case 'pm_TaskTypeState':
 				case 'pm_AccessRight':
 				case 'pm_Workspace':
-					
+                    $object->deleteAll();
+                    break;
+
+                case 'pm_State':
+                    getFactory()->getObject('pm_StateObject')->deleteAll();
 					$object->deleteAll();
-						
 					break;
 					
 				case 'pm_CustomReport':
@@ -115,38 +118,47 @@ class ApplyTemplateService
 					}
 					
 					break;
-					
-				case 'pm_State':
-					$state_objects[] = $object;
-					break;
 			}
 
 			\CloneLogic::Run( $context, $object, $iterator, $project_it ); 
 		} 
 
-		// remove unnecessary data
-		foreach( $state_objects as $state )
-		{
-			$state_it = $state->getRegistry()->Query(
-					array (
-							new \FilterBaseVpdPredicate(),
-							new \StateHasNoTransitionsPredicate(),
-							new \StateHasNoObjectsPredicate()
-					)
-			);
-			
-			while( !$state_it->end() )
-			{
-				$state_it->delete();
-				$state_it->moveNext();
-			}
-		}
-		
-		$metrics_service = new StoreMetricsService();
-		$metrics_service->execute($project_it);
+		foreach( get_declared_classes() as $className ) {
+            if ( is_subclass_of($className, 'MetaobjectStatable') )
+            {
+                $object = getFactory()->getObject($className);
+                if ( $object->getStateClassName() == '' ) continue;
 
-        \SessionBuilder::Instance()->invalidate();
- 		getSession()->truncate();
+                $stateObject = getFactory()->getObject($object->getStateClassName());
+                if ( !is_object($stateObject) ) continue;
+
+                $states = $stateObject->getAll()->fieldToArray('ReferenceName');
+                $firstState = array_shift(array_values($states));
+
+                $registry = $object->getRegistry();
+                $registry->setPersisters(array());
+
+                $object_it = $registry->Query(
+                    array (
+                        new \FilterBaseVpdPredicate(),
+                        new \FilterHasNoAttributePredicate('State', $states)
+                    )
+                );
+                if ( $object_it->count() > 0 ) {
+                    \DAL::Instance()->Query(
+                        "UPDATE ".$object->getEntityRefName()." SET State = '".$firstState."' WHERE ".$object->getIdAttribute()." IN (".join(',',$object_it->idsToArray()).")"
+                    );
+                }
+            }
+        }
+
+		$metrics_service = new StoreMetricsService();
+		$metrics_service->execute($project_it, true);
+
+        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->truncate(
+ 		    array_shift(preg_split('/\//',getSession()->getCacheKey()))
+        );
  	}
  	
  	static protected function getSectionObjects( $sections, $except_sections = array() )

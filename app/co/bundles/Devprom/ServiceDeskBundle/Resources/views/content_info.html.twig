@@ -1,0 +1,13 @@
+{% extends 'content_base.html.twig' %}
+
+{% block header_class %} hero {% endblock %}
+
+{% block content_header %}
+    <div class="masthead single-masthead">
+        <div class="container">
+            <div class="row">
+                {% block content_header_bar %}{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

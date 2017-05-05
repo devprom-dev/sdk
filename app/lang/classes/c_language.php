@@ -31,17 +31,16 @@ include "DateFormatRussian.php";
  	function Initialize()
  	{
  	    global $text_data;
+        if ( $this->getLanguage() == '' ) return;
 
         $resource = getFactory()->getObject('cms_Resource');
         $resource->setLanguageUid( $this->getLanguage() );
 
  	    $cache_path = $this->getCacheFilePath($resource);
- 	    if ( file_exists($cache_path) ) {
- 	    	$text_data = include($cache_path);
- 	    	return;
+ 	    if ( !file_exists($cache_path) ) {
+            $this->buildCache($resource, $cache_path);
  	    }
 
-		$this->buildCache($resource, $cache_path);
 		$text_data = include($cache_path);
 		return;
  	}
@@ -53,19 +52,19 @@ include "DateFormatRussian.php";
  		$records = array();
  	    $resource_it = $resource->getAll();
  	    $data = $resource_it->getRowset();
- 	    foreach( $data as $key => $value )
- 	    {
+ 	    foreach( $data as $key => $value ) {
  	    	$records[] = "'".$value['ResourceKey']."' => '".preg_replace("/'/", "\\'", $value['ResourceValue'])."'"; 
  	    }
  	    @mkdir(dirname($cache_path), 0777, true);
  	    file_put_contents($cache_path, '<?php return array('.join(',',$records).');');
+
+        $lock->Release();
  	}
  	
- 	protected function getCacheFilePath($resource)
- 	{
- 		return CACHE_PATH.'/appcache/'.
- 				getFactory()->getEntityOriginationService()->getCacheCategory($resource).
- 					'/texts.php';
+ 	protected function getCacheFilePath( $resource ) {
+        return CACHE_PATH.'/appcache/'.
+            getFactory()->getEntityOriginationService()->getCacheCategory($resource).
+                '/texts.php';
  	}
  	
  	function getLanguageId() 

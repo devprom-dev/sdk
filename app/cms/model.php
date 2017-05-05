@@ -131,7 +131,7 @@ function makeCache( $entity )
 	$dictionaries = array();
 	$i = 0;
 	
-	$model_reference = new ModelReferenceRegistry(new CacheEngine());
+	$model_reference = new ModelReferenceRegistry(CacheEngineVar::Instance());
 	
 	while ( !$it->end() )
 	{

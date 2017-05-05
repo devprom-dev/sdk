@@ -4,15 +4,11 @@ class ChangeLogRegistry extends ObjectRegistrySQL
 {
 	function getFilters()
 	{
-		$restricted_classes = getFactory()->getAccessPolicy()->getRestrictedClasses();
-		
-		if ( count($restricted_classes) < 1 ) return parent::getFilters();
-		
 		return array_merge(
-				parent::getFilters(),
-				array (
-						new FilterHasNoAttributePredicate('ClassName', $restricted_classes)
-				)
+            parent::getFilters(),
+            array (
+                new ChangeLogAccessFilter()
+            )
 		);
 	}
 	
@@ -53,8 +49,13 @@ class ChangeLogRegistry extends ObjectRegistrySQL
  		        
  		        array_walk($query_classes, function(&$value, $key) 
  		        {
- 		            $value = strtolower(get_class(getFactory()->getObject($value)));
- 		        }); 
+                    if ( class_exists(getFactory()->getClass($value)) ) {
+                        $value = strtolower(get_class(getFactory()->getObject($value)));
+                    }
+                    else {
+                        $value = '';
+                    }
+ 		        });
  		    }
  		    else if ( $predicate instanceof ChangeLogItemFilter or $predicate instanceof ChangeLogItemDateFilter )
  		    {

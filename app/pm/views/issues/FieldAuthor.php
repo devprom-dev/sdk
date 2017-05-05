@@ -1,5 +1,4 @@
 <?php
-
 include SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueAuthor.php";
 
 class FieldAuthor extends FieldAutoCompleteObject

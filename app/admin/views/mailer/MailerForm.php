@@ -35,7 +35,7 @@ class MailerForm extends AdminForm
 		}
 	}
 
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		switch ( $attribute )
 		{
@@ -51,7 +51,7 @@ class MailerForm extends AdminForm
 				break;
 
 			default:
-				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
 }

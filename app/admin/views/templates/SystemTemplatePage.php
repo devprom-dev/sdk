@@ -1,5 +1,4 @@
 <?php
-
 include 'SystemTemplateTable.php';
 include 'SystemTemplateForm.php';
 
@@ -7,7 +6,7 @@ class SystemTemplatePage extends AdminPage
 {
 	function getObject()
 	{
-		return getFactory()->getObject('SystemTemplate');
+		return new \SystemTemplate();
 	}
 	
     function getTable()

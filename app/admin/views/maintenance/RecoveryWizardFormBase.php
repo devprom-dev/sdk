@@ -26,7 +26,7 @@ class RecoveryWizardFormBase extends AdminForm
 		return true; 	
 	}
 	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 	    $steps = $this->getSteps();
 	    

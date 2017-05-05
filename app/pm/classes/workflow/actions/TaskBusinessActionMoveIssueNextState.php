@@ -12,7 +12,7 @@ class TaskBusinessActionMoveIssueNextState extends BusinessActionWorkflow
 	
 	function apply( $object_it )
  	{
-		if ( $object_it->get('ChangeRequest') == '' ) return true;
+		if ( $object_it->get('IssueState') == '' ) return true;
 
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
@@ -21,7 +21,7 @@ class TaskBusinessActionMoveIssueNextState extends BusinessActionWorkflow
 		if ( $request_it->get('OpenTasks') != '' ) return true;
 
 		$state_it = workflowScheme::Instance()->getStateIt($request_it->object);
-		$state_it->moveTo('ReferenceName', $request_it->get('State'));
+		$state_it->moveTo('ReferenceName', $object_it->get('IssueState'));
 		$state_it->moveNext();
 		if ( $state_it->get('ReferenceName') == '' ) return true;
 

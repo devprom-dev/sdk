@@ -7,16 +7,8 @@ class IssueOrderNumTrigger extends SystemTriggersBase
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 	    if ( $object_it->object->getEntityRefName() != 'pm_ChangeRequest' ) return;
-	    
 	    if ( !in_array($kind, array(TRIGGER_ACTION_ADD, TRIGGER_ACTION_MODIFY)) ) return;
 
-		$wasData = $this->getWasData();
-	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-
-		$to_process_ordernum = $methodology_it->get('IsRequestOrderUsed') == 'Y'
-			&& $wasData['OrderNum'] != $object_it->get('OrderNum');
-		if ( !$to_process_ordernum ) return;
-		
 		$this->processOrderNum($object_it);
 	}
 	

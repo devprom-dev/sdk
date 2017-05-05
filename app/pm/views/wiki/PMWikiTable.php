@@ -54,16 +54,14 @@ class PMWikiTable extends PMPageTable
 		{
 			case 'chart':
 		 		return new PMWikiChart( $this->getObject(), $iterator );
-			case 'templates':
-				return new WikiTemplateList( $this->getObject() );
 		 	default:
 		 		return new PMWikiList( $this->getObject() );
 		}
 	}
 	
-	function getFiltersName()
+	function buildFiltersName()
 	{
-        return md5($_REQUEST['view'].parent::getFiltersName());
+        return md5($_REQUEST['view'].parent::buildFiltersName());
 	}
 
 	function getCommonFilters()
@@ -73,13 +71,22 @@ class PMWikiTable extends PMPageTable
 		if ( $this->getObject()->IsStatable() ) {
 			$filters[] = new FilterStateMethod($this->getObject());
 		}
-		$filters[] = new ViewWikiTagWebMethod($this->getObject());
+		$filters[] = $this->buildTagsFilter();
 		$filters[] = new FilterObjectMethod(
 			getFactory()->getObject('User'), translate($this->getObject()->getAttributeUserName('Author')), 'author'
 		);
 
 		return $filters;
 	}
+
+	function buildTagsFilter()
+    {
+        $tag = getFactory()->getObject('WikiTag');
+        $tag->addFilter( new WikiTagReferenceFilter($this->getObject()->getReferenceName()) );
+ 	    $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
+        $filter->setIdFieldName('Tag');
+        return $filter;
+    }
 	
 	function getFilters()
 	{
@@ -129,7 +136,7 @@ class PMWikiTable extends PMPageTable
 			new FilterAttributePredicate( 'PageType', $values['type'] ),
 			new WikiTypePlusChildren($values['typepluschildren']),
 			new PMWikiLinkedStateFilter( $values['linkstate'] ),
-			new WikiAuthorFilter( $values['author'] ),
+			new FilterAttributePredicate( 'Author', $values['author'] ),
 			new WikiRootTransitiveFilter( $values['parentpage'] ),
 			new WikiTagFilter( $values['tag'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
@@ -268,14 +275,4 @@ class PMWikiTable extends PMPageTable
 		$fields[] = 'SectionNumber';
 		return $fields;
 	}
-
-    function getDetails()
-    {
-        foreach( $this->getPage()->getInfoSections() as $section ) {
-            if ( $section instanceof DetailsInfoSection ) {
-                return parent::getDetails();
-            }
-        }
-        return array();
-    }
 }

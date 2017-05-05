@@ -1,36 +1,33 @@
 <?php
-
 include_once "SpentTimeForm.php";
+include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
+include "SpentTimeTable.php";
 
 class SpentTimePage extends PMPage
 {
-	function getObject() 
-	{
-		global $model_factory;
+    function getObject() {
+        return getFactory()->getObject('ActivityTask');
+    }
 
-		if ( $_REQUEST['class'] == '' || $_REQUEST['object'] == '' ) throw new Exception('Unknown object is given');
-		
-		$class_name = $model_factory->getClass($_REQUEST['class']);
-		
-		if ( !class_exists($class_name, false) ) throw new Exception('Class is undefined: '.$class_name);
-		
-		$target = $model_factory->getObject($class_name);
-		
+    function getTable() {
+        return new SpentTimeTable($this->getObject());
+    }
+
+    function getFormObject()
+	{
+		$class_name = in_array(strtolower($_REQUEST['class']), array('request', 'pm_changerequest')) ? 'Request' : 'Task';
+		$target = getFactory()->getObject($class_name);
 		$this->anchor_it = $target->getExact($_REQUEST['object']);
-		
-		if ( $this->anchor_it->getId() < 1 ) throw new Exception('There is no given object id: '.$_REQUEST['object']);
-		
-		$object = $model_factory->getObject( is_a($target, 'Request') ? 'ActivityRequest' : 'ActivityTask' );
-		
-		return $object;
+
+		return getFactory()->getObject(
+		    is_a($target, 'Request') ? 'ActivityRequest' : 'ActivityTask'
+        );
 	}
 
  	function getForm() 
  	{
- 		$form = new SpentTimeForm( $this->getObject() );
- 		
+ 		$form = new SpentTimeForm( $this->getFormObject() );
  		$form->setAnchorIt($this->anchor_it);
- 		
  		return $form;
  	}
  	

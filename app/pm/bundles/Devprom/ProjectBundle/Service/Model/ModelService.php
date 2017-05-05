@@ -6,12 +6,17 @@ include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.ph
 
 class ModelService
 {
-	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array(), $uidService = null )
+    private $selfUrl = '';
+    private $recursive = false;
+
+	public function __construct( $validator_serivce, $mapping_service, $filter_resolver = array(), $uidService = null, $recursive = false )
 	{
 		$this->validator_service = $validator_serivce;
 		$this->mapping_service = $mapping_service;
 		$this->filter_resolver = $filter_resolver;
         $this->uidService = is_object($uidService) ? $uidService : new \ObjectUID();
+        $this->recursive = $recursive;
+        $this->selfUrl = \EnvironmentSettings::getServerUrl().getSession()->getApplicationUrl().'api/latest/';
 	}
 	
 	public function set( $entity, $data, $id = '' )
@@ -65,7 +70,14 @@ class ModelService
 		$object_it = $id != ''
 				? $object->getRegistry()->Query(array(new \FilterInPredicate($id)))
 				: (count($key_filters) > 0
-						? $object->getRegistry()->Query($key_filters)
+						? $object->getRegistry()->Query(
+						    array_merge(
+						        $key_filters,
+                                array(
+                                    new \FilterBaseVpdPredicate()
+                                )
+                            )
+                          )
 						: $object->getEmptyIterator());
 
 		if ( $object_it->getId() < 1 )
@@ -77,7 +89,7 @@ class ModelService
 			$result = $this->create($object, $data);
 			if ( $result < 1 ) throw new \Exception('Unable create new record of '.get_class($object));
 			
-			return $this->get($entity, $result);
+			return $this->get($entity, $result, "text", $this->recursive);
 		}
 		else
 		{
@@ -87,11 +99,11 @@ class ModelService
 			if ( $this->modify($object_it, $data) < 1 ) {
 				throw new \Exception('Unable update the record ('.$object_it->getId().') of '.get_class($object));
 			}
-			return $this->get($entity, $object_it->getId());
+			return $this->get($entity, $object_it->getId(), "text", $this->recursive);
 		}
 	}
 	
-	public function get( $entity, $id = '', $output = 'text', $recursive = false )
+	public function get( $entity, $id = '', $output = 'text' )
 	{
         $ids = array_filter(preg_split('/,/', $id), function($value) {
                 return $value != '';
@@ -104,10 +116,10 @@ class ModelService
 		if ( $object_it->getId() < 1 ) {
 			throw new \Exception('There is no record ('.$id.') of '.get_class($object));
 		}
-		return $this->sanitizeData($object_it->object, $this->getData($object_it, $recursive), $output);
+		return $this->sanitizeData($object_it->object, $this->getData($object_it, $this->recursive), $output);
 	}
 	
-	public function find( $entity, $limit = '', $offset = '', $recursive = false)
+	public function find( $entity, $limit = '', $offset = '' )
 	{
 		$object = is_object($entity) ? $entity : $this->getObject($entity);
 		
@@ -125,7 +137,7 @@ class ModelService
 
 		$object_it = $registry->Query($query);
 		while( !$object_it->end() ) {
-			$result[] = $this->sanitizeData($object, $this->getData($object_it, $recursive));
+			$result[] = $this->sanitizeData($object, $this->getData($object_it, $this->recursive));
 			$object_it->moveNext();
 		}
 
@@ -169,7 +181,12 @@ class ModelService
 						$value = $object_it->getRef($attribute)->getDisplayName();
 					}
 					else {
-						$value = $object_it->getHtmlDecoded($attribute);
+					    if ( $attribute == 'State' ) {
+                            $value = $object_it->getStateIt()->getDisplayName();
+                        }
+                        else {
+                            $value = $object_it->getHtmlDecoded($attribute);
+                        }
 					}
 					$xml .= '<'.$attribute.'><![CDATA['.implode(explode(']]>', mb_strtolower($value)), ']]]]><![CDATA[>').']]></'.$attribute.'>';
 				}
@@ -242,14 +259,32 @@ class ModelService
             $dataset['UID'] = $info['uid'];
         }
 
-        if ( !$recursive || $level > 3 ) return $dataset;
+        if ( !$recursive ) return $dataset;
         $references[] = get_class($object_it->object).$object_it->getId();
 
-		foreach( $object_it->object->getAttributes() as $attribute => $info ) {
+		foreach( $object_it->object->getAttributes() as $attribute => $info )
+		{
 			if ( !$object_it->object->IsReference($attribute) ) continue;
-			if ( $object_it->get($attribute) == '' ) continue;
+
+            if ( $level > 0 ) {
+                $dataset[$attribute] = array();
+                continue;
+            }
+			if ( $object_it->get($attribute) == '' ) {
+                $dataset[$attribute] = array(
+                    $object_it->object->getAttributeObject($attribute)->getIdAttribute() => ''
+                );
+                if ( substr($attribute, -1, 1) == 's' ) {
+                    $dataset[$attribute] = array( 0 => $dataset[$attribute] );
+                }
+                continue;
+            };
+
 			$ref_it = $object_it->getRef($attribute);
-            if ( $recursive ) {
+            if ( in_array(get_class($ref_it->object), $this->skipRecursion) ) continue;
+
+            if ( $recursive )
+            {
                 $recursiveData = array();
                 while( !$ref_it->end() ) {
                     if ( in_array(get_class($ref_it->object).$ref_it->getId(), $references) ) {
@@ -365,6 +400,9 @@ class ModelService
         if ( array_key_exists('URL', $data) ) {
             $result['URL'] = $data['URL'];
         }
+        if ( array_key_exists('Id', $result) ) {
+            $result['self'] = $this->getSelfUrl($object, $result['Id']);
+        }
 
 		return $result;
 	}
@@ -413,8 +451,121 @@ class ModelService
 		$this->skipFields = $fieldsArray;
 	}
 
+	protected function getSelfUrl( $object, $id )
+    {
+        $className = strtolower(get_class($object));
+
+        if ( !in_array($className, $this->selfControllers) ) {
+            $url = $this->selfUrl . $className . '/items';
+            if ( $id != '' ) $url .= '/' . $id;
+            return $url;
+        }
+
+        switch( $className ) {
+            case 'request':
+                $className = 'issue';
+                break;
+        }
+
+        $plural = array(
+            '/^(ox)$/i' => '$1en',
+            '/(matr|vert|ind)ix|ex$/i' => '$1ices',
+            '/(x|ch|ss|sh)$/i' => '$1es',
+            '/([^aeiouy]|qu)ies$/i' => '$1y',
+            '/([^aeiouy]|qu)y$/i' => '$1ie',
+            '/(?:([^f])fe|([lr])f)$/i' => '$1$2ves',
+            '/sis$/i' => 'ses',
+            '/([ti])um$/i' => '$1a',
+            '/(buffal|tomat)o$/i' => '$1oes',
+            '/(bu)s$/i' => '$1ses',
+            '/(alias|status)/i'=> '$1es',
+            '/(octop|vir)us$/i'=> '$1i',
+            '/(ax|test)is$/i'=> '$1es',
+            '/$/'=> 's');
+        $className = preg_replace( array_keys($plural), array_values($plural), $className );
+
+        $url = $this->selfUrl . $className;
+        if ( $id != '' ) $url .= '/' . $id;
+        return $url;
+    }
+
+    static function computeFormula( $objectIt, $formula )
+    {
+        $result = array();
+        $referenceIt = null;
+
+        $text = preg_replace_callback('/\{([^\}]+)\}/',
+            function($match) use ($objectIt, &$referenceIt, &$result)
+            {
+                $object = $objectIt->object;
+                list($path,$default) = preg_split('/,/', $match[1]);
+
+                $attributes = preg_split('/\./', $path);
+                foreach( $attributes as $attributeIndex => $caption ) {
+                    if ( strcasecmp($caption,'ИД') == 0 ) {
+                        $refName = $object->getIdAttribute();
+                    }
+                    else {
+                        $refName = $object->getAttributeByCaption($caption);
+                    }
+                    if ( $object->IsReference($refName) ) {
+                        $referenceIt = $objectIt->getRef($refName);
+                        return '{'.join('.',array_slice($attributes, $attributeIndex+1)).'}';
+                    }
+                    else {
+                        if ( $refName == $object->getIdAttribute() ) {
+                            $id = $objectIt->get($refName);
+                            if ( $id == '' ) return "{".$caption."}";
+                            return str_pad($id, 6, '0', STR_PAD_LEFT);
+                        }
+                        else {
+                            switch( $object->getAttributeType($refName) ) {
+                                case 'integer':
+                                case 'float':
+                                    $value = floatval($objectIt->get($refName));
+                                    break;
+                                default:
+                                    $value = $objectIt->get($refName);
+                            }
+                            $returnValue = $value != '' ? $value : $default;
+                            $result[] = $returnValue;
+                            return $returnValue;
+                        }
+                    }
+                }
+                return $match[0];
+            },
+            $formula
+        );
+        if ( is_object($referenceIt) ) {
+            while( !$referenceIt->end() ) {
+                $result = array_merge( $result,
+                    strpos($text, '{}') === false
+                        ? self::computeFormula($referenceIt, $text)
+                        : array($referenceIt->copy())
+                );
+                $referenceIt->moveNext();
+            }
+        }
+        elseif ( count($result) < 1 ) {
+            $result[] = $text;
+        }
+
+        if ( is_float(array_shift(array_values($result))) ) {
+            return array(
+                array_sum($result)
+            );
+        }
+
+        return array_filter($result, function($value) {
+            return $value != '';
+        });
+    }
+
 	private $validator_service = null;
 	private $mapping_service = null;
 	private $filter_resolver = null;
 	private $skipFields = array('VPD','Project','RecordVersion');
+    private $skipRecursion = array('LanguageEntity', 'DeadlineSwimlane');
+    private $selfControllers = array('task','wikipagefile','iteration','release','requirement','request','comment','build','attachment');
 }

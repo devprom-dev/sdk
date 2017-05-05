@@ -2,34 +2,20 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
-class CacheEngine
+abstract class CacheEngine
 {
-	private $default_path = '';
-	
+    protected static $singleInstance = null;
 	private $readonly = false;
-			
-	public function __construct( $path = 'global' )
-	{
-		$this->setDefaultPath($path);
-	}
 
-    function __sleep()
-    {
-        return array (
-            'default_path'
-        );
+    static function Instance() {
+        if ( is_object(static::$singleInstance) ) return static::$singleInstance;
+        return static::$singleInstance = new static();
     }
 
-	public function setDefaultPath( $path )
-	{
-		$this->default_path = $path;
-	}
-	
-	public function getDefaultPath()
-	{
-		return $this->default_path;
-	}
-	
+    function __sleep() {
+        return array ();
+    }
+
 	public function setReadonly( $flag = true )
 	{
 		$this->readonly = $flag;
@@ -39,25 +25,16 @@ class CacheEngine
 	{
 		return $this->readonly;
 	}
-	
-	function get( $key, $path = '' )
-	{
-	}
-	
-	function set( $key, $value, $path = '' )
-	{
-	}
-	
-	function reset( $key, $path = '' )
-	{
+
+	function reset( $key, $path = '' ) {
 		$this->set($key, '', $path);
 	}
-	
-	function truncate( $path )
-	{
-	}
-	
-	function drop()
-	{
-	}
+
+    abstract function get( $key, $path = '' );
+    abstract function set( $key, $value, $path = '' );
+    abstract function truncate( $path );
+    abstract function invalidate();
+
+    protected function __construct() {
+    }
 }

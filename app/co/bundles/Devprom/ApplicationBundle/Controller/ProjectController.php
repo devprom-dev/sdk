@@ -39,21 +39,23 @@ class ProjectController extends PageController
         if ( $parms['Caption'] == '' ) $parms['Caption'] = $prj_cls->getDefaultAttributeValue('Caption');
 		
         // validate values
-        foreach( $parms as $key => $value )
-        {
+        foreach( $parms as $key => $value ) {
         	if ( $value == '' ) return $this->replyError(text(200));
         }
-        
+
+        $parms['DemoData'] = $request->request->get('DemoData');
+        $parms['Tracker'] = $request->request->get('Tracker');
+
         $validator = new \ModelValidator(
-        		array (
-        				new \ModelValidatorProjectCodeName(),
-        				new \ModelValidatorUnique(array('CodeName'))
-        		)
+            array (
+                new \ModelValidatorProjectCodeName(),
+                new \ModelValidatorUnique(array('CodeName')),
+                new \ModelValidatorProjectIntegration()
+            )
 		);
         
         $message = $validator->validate($prj_cls, $parms);
-        
-		if ( $message != "" ) return $this->replyError($message);
+        if ( $message != "" ) return $this->replyError($message);
 
 		// check access policy
 		if ( !getFactory()->getAccessPolicy()->can_create($prj_cls) )
@@ -81,18 +83,38 @@ class ProjectController extends PageController
 		    return $this->replyError( $strategy->getResultDescription($project_it) );
 		}
 
+        $invite_service = new \Devprom\CommonBundle\Service\Project\InviteService($this, getSession());
 		if ( $request->request->get('Participants') != '' )	{
 			if ( defined('PERMISSIONS_ENABLED') ) {
-				$invite_service = new \Devprom\CommonBundle\Service\Project\InviteService($this, getSession());
 				$invite_service->inviteByEmails($request->request->get('Participants'));
 			}
 		}
+
+		$userIt = getFactory()->getObject('User')->getAll();
+		while( !$userIt->end() ) {
+		    if ( $request->request->get('_user_'.$userIt->getId()) == 'on' ) {
+                $invite_service->addParticipant($project_it, $userIt);
+            }
+            $userIt->moveNext();
+        }
 
 		$strategy->invalidateCache();
 		if ( $project_it->getMethodologyIt()->get('IsSupportUsed') == 'Y' ) {
 			$strategy->invalidateServiceDeskCache();
 		}
-		return $this->replySuccess($strategy->getResultDescription(0), $project_it->get('CodeName').'/');
+
+		if ( $request->request->get('Tracker') != '' ) {
+            return $this->replyRedirect(
+                sprintf('/module/integration/fill?project=%s&tracker=%s',
+                    $project_it->get('CodeName'),
+                    $request->request->get('Tracker')
+                ),
+                $strategy->getResultDescription(0)
+            );
+        }
+        else {
+            return $this->replySuccess($strategy->getResultDescription(0), $project_it->get('CodeName').'/');
+        }
     }
     
     public function welcomeAction(Request $request)

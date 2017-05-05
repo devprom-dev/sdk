@@ -10,19 +10,19 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
-	    if ( $kind != TRIGGER_ACTION_MODIFY ) return;
+        if ( $kind != TRIGGER_ACTION_MODIFY ) return;
 	    if ( !$this->checkEntity($object_it) ) return;
-	    
+
 	    $references = $this->getObjectReferences($object_it);
 	    if ( !is_array($references) ) return;
-	    
+
 	    if ( !array_key_exists('Project', $content) )
 	    {
 		    $data = $this->getRecordData();
-		    
+
 		    if ( !array_key_exists('Project', $data) ) return;
 		    if ( $data['Project'] == $object_it->get('Project') ) return;
-		    
+
 		    $project_it = getFactory()->getObject('Project')->getExact($data['Project']);
 	    }
 	    else
@@ -51,8 +51,31 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 				'Project' => $target_it->getId(),
 				'VPD' => $target_it->get('VPD')
 			);
-			foreach( array_keys($object_it->object->getAttributes()) as $attribute ) {
-				if ( $object_it->get($attribute) == '' ) continue;
+			foreach( array_keys($object_it->object->getAttributes()) as $attribute )
+			{
+                if ( $object_it->get($attribute) == '' ) continue;
+			    if ( in_array($attribute, array('ParentPage','DocumentId')) ) {
+			        $ref_it = $object_it->object->getRegistry()->Query(
+			            array (
+			                new FilterInPredicate($object_it->get($attribute)),
+                            new FilterVpdPredicate($target_it->get('VPD'))
+                        )
+                    );
+			        if ( $ref_it->getId() == '' ) {
+			            if ( $object_it->object instanceof ProjectPage ) {
+                            $parms[$attribute] = $object_it->object->getRegistry()->Query(
+                                array (
+                                    new WikiRootFilter(),
+                                    new FilterVpdPredicate($target_it->get('VPD'))
+                                )
+                            )->getId();
+                        }
+                        else {
+                            $parms[$attribute] = '';
+                        }
+                    }
+			        continue;
+                }
 				if ( $object_it->object->IsReference($attribute) ) {
 					$ref = $object_it->object->getAttributeObject($attribute);
 					$keys = $ref->getAttributesByGroup('alternative-key');
@@ -79,16 +102,8 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 						new FilterVpdPredicate($target_it->get('VPD'))
 					)
 				);
-				if ( $state_it->getId() == '' ) {
-					$state_it = $state->getRegistry()->Query(
-						array(
-							new StateClassPredicate($object_it->object->getStatableClassName()),
-							new FilterVpdPredicate($target_it->get('VPD')),
-							new SortOrderedClause()
-						)
-					);
-					$parms['State'] = $state_it->get('ReferenceName');
-				}
+                // reset state if there is no such state in the target project
+				if ( $state_it->getId() == '' ) $parms['State'] = '';
 			}
 			$object_it->object->modify_parms( $object_it->getId(), $parms );
 			$object_it->moveNext();

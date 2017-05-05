@@ -29,18 +29,8 @@ foreach ( $items as $item_key => $item )
 ?>
 
 <ul class="menu vertical-menu" id="menu_<?=$area_id?>" style="display:<?=($area_id == $active_area_uid ? 'block': 'none')?>;">
-    <?php if ( $search_url != '' ) { ?>
-    <li class="submenu open <?=( !is_array($items[0]['items']) ? 'search' : '')?>" style="border-top:none;">
-        <form class="form-search" action="<?=$search_url?>">
-            <div class="input-append">
-              <input id="quick-search-<?=$area_id?>" name="search-keywords" type="text" class="search-query" placeholder="<?=text(1922)?>" object="Widget" searchattrs="Caption,ReferenceName" additional=""><button type="submit" class="btn medium-blue"><i class="icon-search"></i></button>
-            </div>
-        </form>
-    </li>
-    <?php } else { ?>
-        <div style="margin-top: 11px;""></div>
-    <? } ?>
-    
+    <div style="margin-top: 11px;""></div>
+
     <?php foreach ( $items as $item_key => $item ) { ?>
     
     <?php if ( $item['name'] == '' && count($item['items']) > 0 ) { ?>

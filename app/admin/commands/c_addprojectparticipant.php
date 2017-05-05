@@ -11,12 +11,16 @@ class AddProjectParticipant extends CommandForm
 	function create()
 	{
 		$project_it = getFactory()->getObject('pm_Project')->getExact($_REQUEST['Project']);
-		if ( $project_it->count() < 1 ) {
+		if ( $project_it->getId() == '' ) {
 			$this->replyError( text(200) );
 		}
 
-		$baserole_it = getFactory()->getObject('ProjectRole')->getExact( $_REQUEST['ProjectRole'] );
-		if ( $baserole_it->count() < 1 ) {
+		$baserole_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
+		    array (
+		        new FilterInPredicate($_REQUEST['ProjectRole'])
+            )
+        );
+		if ( $baserole_it->getId() == '' ) {
 			$this->replyError( text(200) );
 		}
 
@@ -62,6 +66,9 @@ class AddProjectParticipant extends CommandForm
 		else {
 			$this->replyError( text(627) );
 		}
+
+        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->truncate('projects/'.$project_it->get('VPD'));
 
 		$this->replyRedirect( '/admin/users.php', text(665) );
 	}

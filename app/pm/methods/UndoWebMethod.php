@@ -5,17 +5,22 @@ require_once SERVER_ROOT_PATH.'ext/xml/xml2Array.php';
 class UndoWebMethod extends WebMethod
 {
 	private $transaction = '';
+    private $projectCode = '';
 
- 	function __construct( $transaction = '' ) {
+ 	function __construct( $transaction = '', $projectCode = '' ) {
 		$this->transaction = $transaction;
+        $this->projectCode = $projectCode;
  		parent::__construct();
-		//$this->setRedirectUrl('donothing');
  	}
  	
  	function hasAccess() {
  		return file_exists(UndoLog::Instance()->getPath($this->transaction));
  	}
- 	
+
+    function getModule() {
+        return getSession()->getApplicationUrl($this->projectCode).'methods.php';
+    }
+
  	function getCaption() {
  		return text(2160);
  	}
@@ -60,16 +65,30 @@ class UndoWebMethod extends WebMethod
 
 		\Logger::getLogger('System')->info('Transaction '.$this->transaction.' has been undone');
 
-		$log = new Metaobject('ObjectChangeLog');
-		$log_it = $log->getRegistry()->Query(
+		$log_it = getFactory()->getObject('ChangeLog')->getRegistry()->Query(
 			array (
 				new FilterAttributePredicate('Transaction', $this->transaction)
 			)
 		);
+        $redirect_url = '';
+
+        $log = new Metaobject('ObjectChangeLog');
 		while( !$log_it->end() ) {
+            $object_it = $log_it->getObjectIt();
+            if ( $object_it->getId() != '' && $redirect_url == '' ) {
+                $redirect_url = $object_it->getViewUrl();
+            }
 			$log->delete($log_it->getId());
 			$log_it->moveNext();
 		}
+
+		if ( $redirect_url != '' ) {
+            echo json_encode(
+                array (
+                    'url' => $redirect_url
+                )
+            );
+        }
  	}
 
 	function processEntity( $tag_name, $entity )
@@ -166,9 +185,16 @@ class UndoWebMethod extends WebMethod
 
 	protected function tagClosed($parser, $name) {
 		$node = $this->nodeData[count($this->nodeData)-1];
-		if ( $this->processEntity($name, $node) ) {
-			$this->accumulateData = false;
-		}
+        try {
+            if ( $this->processEntity($name, $node) ) {
+                $this->accumulateData = false;
+            }
+        }
+        catch (Exception $e) {
+            \Logger::getLogger('System')->error(
+                $e->getMessage().$e->getTraceAsString()
+            );
+        }
 		if ( $this->accumulateData ) {
 			$this->nodeData[count($this->nodeData)-2]['children'][] = $node;
 			array_pop($this->nodeData);

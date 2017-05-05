@@ -29,10 +29,10 @@ var lastActionBar = null;
  		this.parms[values[0]] = values[1];
  		
  		// do nothing if there were no changes in a filter
- 		var urlIsChanged = this.location.replace(new RegExp("#", "g"), "") 
- 			== window.location.toString().replace(new RegExp("#", "g"), "");
+ 		var urlIsChanged =
+			this.location.split(/#/).shift() != window.location.toString().split(/#/).shift();
  		
- 		if ( value == '' && urlIsChanged ) return;
+ 		if ( value == '' && !urlIsChanged ) return;
 
 		// cancel of data refresh
  		this.cancel();
@@ -46,7 +46,7 @@ var lastActionBar = null;
 		this.showActivity();
 
 		if ( typeof timeout == 'undefined' ) timeout = 1500;
-		
+
 		var location = this.location.indexOf('&filterlocation') < 0 ? this.location+"&filterlocation" : this.location; 
 		
  		this.timeout = window.setTimeout(
@@ -368,13 +368,13 @@ function checkRows( group )
 	$('#'+group+' tbody tr th input[type=checkbox]').is(':checked')
 		? $('#'+group+' tbody tr td input[type=checkbox]').attr('checked', 'checked')
 	    : $('#'+group+' tbody tr td input[type=checkbox]').removeAttr('checked');
-	toggleBulkActions();
+	toggleBulkActions(null,1);
 }
 
 function checkRowsTrue( group )
 {
 	$('#'+group+' tr td .checkbox').attr('checked',true);
-	toggleBulkActions();
+	toggleBulkActions(null,2);
 }
 
 function bulkDelete( class_name, method, url )
@@ -411,7 +411,9 @@ function bulkDelete( class_name, method, url )
 function processBulk(title, url, id, callback)
 {
 	var ids = [];
-	if ( typeof id != 'undefined' && id > 0 ) ids.push(id);
+	if ( typeof id != 'undefined' && id != '' ) {
+		ids = id.toString().split(/[,-]/);
+	}
 	$('.checkbox').each(function() {
 		if ( this.checked ) {
 			ids.push(parseInt(this.name.toString().replace('to_delete_',''), 10));
@@ -422,8 +424,9 @@ function processBulk(title, url, id, callback)
 	openAjaxForm(title, url.replace('%ids%',ids.join('-'))+'&bulkmode=complete&ids='+ids.join('-'), callback);
 }
 
-function toggleBulkActions()
+function toggleBulkActions( event, minItems )
 {
+	if ( typeof minItems == 'undefined' ) minItems = 2;
 	showSelectedCards();
 	var ids = [];
 	var states = [];
@@ -441,22 +444,25 @@ function toggleBulkActions()
 	});
 	$('.bulk-filter-actions div[object-state]').hide();
 	if ( states.length == 1 ) $('.bulk-filter-actions div[object-state="'+states.pop()+'"]').show();
-	if ( ids.length > 0 ) {
-		$(document).trigger("trackerItemSelected", ids[0]);
+	if ( ids.length >= minItems || event && (event.ctrlKey || event.metaKey) && ids.length >= 1 ) {
 		$('.bulk-filter-actions').show();
+		$('.plus-action,.info-action,.ui-slider').hide();
 	}
 	else {
 		$('.bulk-filter-actions').hide();
+		$('.plus-action,.info-action,.ui-slider').show();
 	}
 }
 
-function runMethod( method, data, url, warning, async )
+function runMethod( method, data, url, warning, async, before )
 {
 	if ( warning != '' && !confirm(warning) ) return;
 	if ( method.substr(0, 4) != '/pm/' && devpromOpts.project != '' ) method = '/pm/'+devpromOpts.project+'/'+method;
 	if ( typeof async == 'undefined' ) async = true;
 
 	filterLocation.showActivity();
+
+	if ( typeof before == 'function' ) before();
 
 	var ids = '';
 	
@@ -492,31 +498,20 @@ function runMethod( method, data, url, warning, async )
 				{
 					result = '{"message":""}';
 				}
-				
-				if ( typeof url == 'function' )
-				{
+
+				if ( typeof url == 'function' ) {
 					url( result );
 				}
-				else if ( typeof url == 'string' && url == 'donothing' )
-				{
+				else if ( typeof url == 'string' && url == 'donothing' ) {
 					donothing( result );
 				}
-				else
+				else if ( typeof url == 'string' )
 				{
 					try {
-						var resultObject = jQuery.parseJSON(result);
-						if ( typeof resultObject.url != 'undefined' )
-						{
+						resultObject = jQuery.parseJSON(result);
+						result = "";
+						if ( resultObject && typeof resultObject.url == 'string' ) {
 							result = resultObject.url;
-						}
-						else
-						{
-							result = "";
-						}
-						
-						if ( typeof resultObject.message != 'undefined' && resultObject.message != "ok" )
-						{
-							alert(resultObject.message);
 						}
 					}
 					catch( e ) {
@@ -525,17 +520,11 @@ function runMethod( method, data, url, warning, async )
 							return;
 						}
 					}
-
-					if ( typeof url != 'undefined' )
-					{
-						if ( url+result == '' )
-						{
-							window.location.reload(true);
-						}
-						else
-						{
-							window.location = url+result;
-						}
+					if ( url+result == '' ) {
+						window.location.reload(true);
+					}
+					else {
+						window.location = url+result;
 					}
 				}
 			},
@@ -774,7 +763,7 @@ function closeEmbeddedForm( form_id )
 {
 	$('#embeddedForm'+form_id).hide();
 	$('#embeddedList'+form_id).show();
-    $('#embeddedList'+form_id).parent().find('a.embedded-add-button').show();
+    $('#embeddedList'+form_id).parent().find('a.embedded-add-button').show().focus();
 
 	jQuery.each($('input'), function() {
 		if ( $(this).attr('type') == 'submit' || $(this).attr('type') == 'button' ) {
@@ -1079,11 +1068,9 @@ function taskboxShow()
 
 function setupAutocomplete( $e )
 {
-	//if ( $e.next().val() != '' ) $e.autocomplete( "search", $e.next().val() );
-	
-	$e.focus(function() 
-	{
+	$e.focus(function() {
 		if ($(this).autocomplete("widget").is(":visible")) return;
+		if ( $(this).is('[auto-expand=false]') ) return;
 
 		if ( $(this).next('input').val() == '' ) {
 			// if there is no default value then open the list
@@ -1138,10 +1125,21 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 					}
 				});
 			},
-			select: function(event, ui) 
-			{
+			focus: function() {
+				return this.getAttribute("multiple") != "true"; // prevent value inserted on focus
+			},
+			select: function(event, ui)  {
 				if ( typeof event.keyCode != 'undefined' && event.keyCode == 9 ) return false; // skip selection by TAB key
 
+				if ( ui.item && this.getAttribute("multiple") == "true" ) {
+					var terms = this.value.split( /[,;:]\s*/ );
+					terms.pop();
+					terms.push( ui.item.value );
+					this.value = terms.join( ", " );
+					ui.item.value = ui.item.id = this.value;
+				}
+
+                $(this).attr('default', ui.item.value);
 				jqe_field = $(this).next('input');
 				jqe_field.val(ui.item ? ui.item.id : "");
 				
@@ -1161,7 +1159,7 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 				if ( ui.item ) {
 					if ( ui.item == 'commit' ) {
 						if ( $(this).val() == '' ) {
-							jqe_field.val(jqe_field.attr("default")).trigger('change');
+							jqe_field.val('').trigger('change');
 						}
 					}
 					else {
@@ -1202,11 +1200,12 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, addition
 	
 	registerFormValidator( jqe_field.parents('form').attr('id'), function(form)
 	{
-		var choosen = form.find('#'+jqe_text_id).val();
-		jqe_field = form.find('#'+jqe_text_id).next('input');
-		
+		var txtField = form.find('#'+jqe_text_id);
+		jqe_field = txtField.next('input');
 		if ( jqe_field.is("[searchattrs]") && jqe_field.attr("searchattrs").indexOf('itself') > 0 ) {
-			if ( isNaN(choosen) && (jqe_field.val() == "" || isNaN(jqe_field.val()))) {
+            var defaultText = txtField.attr('default');
+            var choosen = txtField.val();
+			if ( isNaN(choosen) && choosen != defaultText ) {
 				jqe_field.val(choosen);
 			}
 		}
@@ -1290,31 +1289,34 @@ function quickSearchAutoComplete( field )
 
 function focusField( form )
 {
-	jQuery.each($('#'+form+' input, #'+form+' textarea, #'+form+' select'), function() 
-	{
+	var items = typeof form == 'object'
+		? form.find('input,textarea,select')
+		: $('#'+form+' input, #'+form+' textarea, #'+form+' select');
+
+	jQuery.each(items, function() {
 		if ( $(this).is('input[type="button"]') ) return true;
-		
 		if ( $(this).is('input[type="hidden"]') ) return true;
-		
 		if ( $(this).is('[readonly]') ) return true;
-
-		if ( $(this).is('[auto-expand=false]') ) return true;
-
 		if ( $(this).is('[default]') && $(this).attr("default") != '' ) return true;
-		
-		if ( $(this).is('.wysiwyg') )
-		{
+		if ( $(this).is('.wysiwyg') ) {
 			var element = $(this);
             if ( CKEDITOR.instances[element.attr('id')] ) {
-                setTimeout( function() { CKEDITOR.instances[element.attr('id')].focus(); }, 510 );
+                setTimeout( function() {
+					try {
+						CKEDITOR.instances[element.attr('id')].focus();
+					}
+					catch(e) {}
+                }, 510 );
             }
 			return false;
 		}
-
 		var element = $(this);
-		
-		setTimeout( function() { element.focus(); }, 110 );
-		
+		setTimeout( function() {
+				try {
+					element.focus();
+				}
+				catch(e) {}
+			}, 110 );
 		return false;
 	});
 }
@@ -1335,6 +1337,10 @@ function resetUnloadHandlers(id)
 
 function beforeUnload(id)
 {
+    if ( typeof CKEDITOR != 'undefined' && CKEDITOR.currentInstance != null ) {
+        $('#tablePlaceholder [aria-describedby="'+CKEDITOR.currentInstance.id+'"]').blur();
+        (new CKEDITOR.focusManager(CKEDITOR.currentInstance)).blur();
+    }
 	var handlers = getFormHandlers(id).unloaders;
 	for ( var i = 0; i < handlers.length; i++ )
 	{
@@ -1466,8 +1472,9 @@ function initializeApp()
 		$.datepicker.regional[devpromOpts.datepickerLanguage],
 		{
 			numberOfMonths: 2,
-			dateFormat: devpromOpts.dateformat
-		}
+			dateFormat: devpromOpts.dateformat,
+            constrainInput: false
+        }
 	);
 	$.ajaxSetup({
 		cache: true
@@ -1501,11 +1508,305 @@ function initializeApp()
 
 	cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
 	cookies.set('devprom-client-tz', jstz.determine().name());
+
+	$('body').on('click', function(e) {
+		if ( $(e.target).is('span[comment-id]') ) {
+			navigateToComment($(e.target).attr('comment-id'));
+		}
+	});
+}
+
+function makeUpApp()
+{
+	var jqe = $(document);
+	completeUIExt(jqe);
+
+	jqe.find('.dropdown-item-search input')
+		.on('click', function(e) {
+			e.stopImmediatePropagation();
+			return false;
+		})
+		.on('keyup', function(e) {
+			var items = $(this).parents('ul.dropdown-menu').find('li:not([uid=none]):not([uid=all]):not([uid=search]):not(.divider):not(:has(a.checked))');
+			if ( $(this).val() == "" ) {
+				var visibleItems = items.slice(0, 15);
+			}
+			else {
+				var text = $(this).val();
+				var visibleItems = items.filter(function(i, el) {
+					return $(el).text().match(new RegExp(text, "ig"));
+				});
+			}
+			items.hide();
+			visibleItems.show();
+		})
+		.trigger('keyup');
+
+	jqe.find('.project-search input')
+		.on('click', function(e) {
+			e.stopImmediatePropagation();
+			return false;
+		})
+		.on('keyup', function(e) {
+			var items = $(this).parents('table').find('tr:eq(1) .p-link');
+			items.removeClass('p-found').hide();
+			if ( $(this).val() == "" ) {
+				var visibleItems = items.slice(0, 20);
+			}
+			else {
+				var text = $(this).val();
+				var visibleItems = items.filter(function(i, el) {
+					return $(el).text().match(new RegExp(text, "ig")) && !$(el).hasClass('p-recent');
+				});
+				visibleItems.addClass('p-found');
+			}
+			visibleItems.show();
+			$('#project-list-all').show();
+		})
+		.trigger('keyup');
+
+	jqe.find('#project-list-all').click(function(){
+		$('tr:eq(1) .p-link').show();
+		$(this).hide();
+		$('.project-search input').val('');
+	});
+
+	jqe.find('body')
+		.on('click.dropdown.data-api', function(e) {
+			filterLocation.setup('', 1);
+			$('.tooltip').hide();
+			$('.popover.with-popover').toggleClass('in').remove();
+			$('.popover.with-tooltip').toggleClass('in').remove();
+			$('.popover.in-focus').toggleClass('in').remove();
+			if ( $(e.target).is('.title>a, .title>a>strike') ) {
+				e.stopPropagation();
+			}
+			$('.dropdown-fixed').removeClass('open');
+			$('td#operations .dropdown-fixed').addClass('last').removeClass('open');
+			var target = $(e.target).parents('.dropdown-toggle').andSelf().attr('data-target');
+			if ( typeof target != 'undefined' ) {
+				target = $(target);
+				if ( target.is('.dropdown-fixed') ) {
+					target.css(dropdownMenuPosition(e, target));
+				}
+			}
+		});
+
+	jqe.find('#rightTab a:first').tab('show');
+	jqe.find('#rightTab a').click(function (e) {
+		e.preventDefault();
+		$(this).tab('show');
+	});
+
+	// Toggle fullscreen button:
+	jqe.find('#toggle-fullscreen').button().off('click').on('click', function (e)
+	{
+		var button = $(this), root = document.documentElement;
+
+		e.stopImmediatePropagation();
+
+		if (!button.hasClass('active')) {
+			$('.content-internal').addClass('modal-fullscreen').css('width', '');
+			if (root.webkitRequestFullScreen) {
+				root.webkitRequestFullScreen(
+					window.Element.ALLOW_KEYBOARD_INPUT
+				);
+			} else if (root.mozRequestFullScreen) {
+				root.mozRequestFullScreen();
+			}
+			button.addClass('active');
+		} else {
+			button.removeClass('active');
+			$('.content-internal').removeClass('modal-fullscreen');
+			(document.webkitCancelFullScreen ||
+			document.mozCancelFullScreen ||
+			$.noop).apply(document);
+		}
+
+		window.setTimeout( function() {
+			if ( typeof boardItemOptions != 'undefined' ) boardItemOptions.resizeCards();
+		}, 350);
+
+	});
+	jqe.find('#toggle-detailspanel').button().off('click').on('click', function (e) {
+		var button = $(this);
+		e.stopImmediatePropagation();
+
+		if (!button.hasClass('active')) {
+			button.addClass('active');
+		} else {
+			button.removeClass('active');
+		}
+		toggleMasterDetails();
+	});
+	jqe.find('.table-details').each(function() {
+        if ( cookies.get('toggle-detailspanel-' + $('.table-master table[uid]').attr('uid')) == false ) return;
+        if ( $(window).width() < 1200 ) return;
+		if ( $(this).attr('default') != 'none' ) {
+            $('div.table-details').toggle();
+		}
+	})
+    setMasterDetails();
+
+	jqe.find('.search-query').each( function() {
+		quickSearchAutoComplete($(this));
+	});
+
+	jqe.find('.ui-dialog-content')
+		.css({
+			'height':'auto',
+			'overflow':'inherit',
+			'display':'table-cell',
+			'width':function() { return $(this).parent().width()-20; }
+		})
+		.resize( function() {
+			$(this).parent()
+				.css({"height":'auto'});
+		})
+		.parent()
+		.css({'overflow':'inherit'});
+
+	jqe.find('input[type="checkbox"][name*="to_delete"]').change(function(e){
+		toggleBulkActions(e);
+	});
+
+	jqe.scroll( function(event)
+	{
+		var scrollPos = $(this).scrollTop();
+		var contentStyle = 0;
+		$('.sticks-top').each(function() {
+			if ( !$(this).is(':visible') ) return true;
+			var treePos = $(this).position().top;
+			var body = $(this).parent().find('.sticks-top-body');
+			if ( scrollPos >= treePos ) {
+				if ( body.css('position') != 'fixed' ) {
+					body.attr('wasPosition', body.css('position'));
+					body.css({
+						position: 'fixed',
+						top: 0,
+						width: $(this).width(),
+						'overflow-y': 'auto',
+						'overflow-x': 'hidden',
+						height: $(this).attr("heightStyle") == "window" ? $(window).height() : 'auto'
+					});
+					body.addClass('sticked');
+					body.find('.cke_panel').hide();
+					contentStyle = 1;
+				}
+			}
+			else if ( body.css('position') == 'fixed' ) {
+				body.css({
+					position: body.attr('wasPosition'),
+					top: 'auto',
+					'overflow-y': 'hidden',
+					'overflow-x': 'hidden',
+					height: 'auto'
+				});
+				body.find('.cke_panel').hide();
+				body.removeClass('sticked');
+				contentStyle = 2;
+			}
+		});
+		if ( contentStyle == 1 ) {
+			$('.content-internal').css('min-height', $(window).height() * 1.1);
+			$('footer').hide();
+			$('.content-internal').addClass('content-internal-fullpage');
+			$('body').addClass('fullpage');
+		}
+		if ( contentStyle == 2 ) {
+			$('footer').show();
+			$('.content-internal').removeClass('content-internal-fullpage');
+			$('body').removeClass('fullpage');
+		}
+		if ( contentStyle > 0 ) {
+			var container = $('.ps-container');
+			if ( container.length > 0 ) {
+				container.perfectScrollbar('update');
+			}
+		}
+	});
+
+	setInterval(function() {
+		var txt = cookies.get('last-action-message');
+		if ( txt && txt != "" ) {
+			if ( !lastActionBar ) {
+				lastActionBar = new $.peekABar({
+					cssClass: 'alert alert-success',
+					backgroundColor: '#dff0d8',
+					animation: {
+						type: 'fade',
+						duration: 450
+					},
+					delay: 8000,
+					html: txt.replace(/\+/g, ' '),
+					autohide: true,
+					closeOnClick: true,
+					onHide: function() {
+						cookies.set('last-action-message', '');
+						lastActionBar = null;
+					}
+				});
+			}
+			if ( !$('.peek-a-bar').is(':visible') ) {
+				var width = Math.max($(window).width() * 1 / 3, 600);
+				$('.peek-a-bar').css({
+					width: width,
+					left: ($(window).width() - width) / 2
+				});
+				lastActionBar.show();
+			}
+		}
+	}, 1000);
+
+	if ( $.browser.msie && document.documentMode < 8 ) {
+		translate( 1352, function( text ) {
+			$('<div class="alert alert-error" style="text-align:center;">'+text+'</div>').insertBefore('.container-fluid:eq(0)');
+		});
+	}
+
+	$('.nav > li.dropdown > a').click( function() {
+		$('.nav > li.dropdown').removeClass('active');
+		$(this).parent('li').addClass('active');
+		$('.vertical-menu').hide();
+
+		var menu = $('#menu_'+$(this).parent('li').attr('area'));
+		menu.show();
+		adjustContainerHeight(menu);
+	});
+
+    $('#quick-search').popover({
+        placement: 'bottom',
+        container: 'body',
+        html: true,
+        trigger: 'focus'
+    });
+    $('.vertical-menu-short a.btn[module]').tooltip({
+        placement: 'right'
+    });
+    $('.vertical-menu-short a.btn:not([module])').popover({
+        placement: 'right',
+        container: 'body',
+        html: true
+    });
+    $('body, .content-internal')
+        .on('click.dropdown.data-api', function(e) {
+            $('.vertical-menu-short a.btn:not([module])').each(function() {
+                if ( !$(this).is($(e.target).closest('a')) ) $(this).popover('hide');
+            });
+        });
+
+    $(document).on("trackerItemSelected", function(e, id, ctrlKey) {
+        if ( !ctrlKey ) return;
+    	var checkBox = $('tbody tr[object-id='+id+'] td input[type=checkbox]');
+        checkBox.is(':checked')
+            ? checkBox.removeAttr('checked')
+            : checkBox.attr('checked', 'checked');
+        toggleBulkActions(e, 1);
+    });
 }
 
 function completeUIExt( jqe )
 {
-
 	// twitter bootstrap adoption
 	jqe.find('.dropdown-menu').on('click', function(e)
 	{
@@ -1537,51 +1838,8 @@ function completeUIExt( jqe )
         }
 	});
 
-	jqe.find('.dropdown-item-search input')
-		.on('click', function(e) {
-			e.stopImmediatePropagation();
-			return false;
-		})
-		.on('keyup', function(e) {
-			var items = $(this).parents('ul.dropdown-menu').find('li:not([uid=none]):not([uid=all]):not([uid=search]):not(.divider):not(:has(a.checked))');
-			if ( $(this).val() == "" ) {
-				var visibleItems = items.slice(0, 15);
-			}
-			else {
-				var text = $(this).val();
-				var visibleItems = items.filter(function(i, el) {
-					return $(el).text().match(new RegExp(text, "ig"));
-				});
-			}
-			items.hide();
-			visibleItems.show();
-		})
-		.trigger('keyup');
-	
-	jqe.find('body')
-		.on('click.dropdown.data-api', function(e) {
-			filterLocation.setup('', 1);
-			$('.tooltip').hide();
-			$('.popover.with-popover').toggleClass('in').remove();
-			$('.popover.with-tooltip').toggleClass('in').remove();
-			$('.popover.in-focus').toggleClass('in').remove();
-			if ( $(e.target).is('.title>a, .title>a>strike') ) {
-				e.stopPropagation();
-			}
-			$('td#operations .dropdown-fixed').addClass('last');
-			var target = $(e.target).parents('.dropdown-toggle').andSelf().attr('data-target');
-			if ( typeof target != 'undefined' ) {
-				target = $(target);
-				if ( target.is('.dropdown-fixed') ) {
-					target.css(dropdownMenuPosition(e, target));
-				}
-			}
-		});
-
 	jqe.find( ".datepicker" ).datepicker(devpromOpts.datepickerOptions);
-
 	jqe.find("a.image_attach").fancybox({ 'hideOnContentClick': true });
-
 	jqe.find("img.wiki_page_image").each( function() {
 		if ( $.browser.msie ) {
 				this.setAttribute('href', $(this).attr('src') + '&.png'); 
@@ -1589,8 +1847,7 @@ function completeUIExt( jqe )
 				this.href = $(this).attr('src') + '&.png'; 
 		}
 	});
-	
-	jqe.find("img.wiki_page_image").fancybox({  
+	jqe.find("img.wiki_page_image").fancybox({
 		hideOnContentClick: true
 	});
 	
@@ -1612,13 +1869,6 @@ function completeUIExt( jqe )
 		if ( $(this).val() == $(this).attr('placeholder') ) $(this).addClass('ac_welcome');
 	});
 	
-	jqe.find('#rightTab a:first').tab('show');
-
-	jqe.find('#rightTab a').click(function (e) {
-	  e.preventDefault();
-	  $(this).tab('show');
-	});
-
 	jqe.find('.with-popover').popover({
 		placement: 'bottom',
 		html: true
@@ -1646,47 +1896,6 @@ function completeUIExt( jqe )
 			e.stopPropagation();
 		});
 	
-	// Toggle fullscreen button:
-	jqe.find('#toggle-fullscreen').button().off('click').on('click', function (e) 
-    {
-        var button = $(this), root = document.documentElement;
-        
-        e.stopImmediatePropagation();
-
-        if (!button.hasClass('active')) {
-            $('.content-internal').addClass('modal-fullscreen').css('width', '');
-            if (root.webkitRequestFullScreen) {
-                root.webkitRequestFullScreen(
-                    window.Element.ALLOW_KEYBOARD_INPUT
-                );
-            } else if (root.mozRequestFullScreen) {
-                root.mozRequestFullScreen();
-            }
-            button.addClass('active');
-        } else {
-        	button.removeClass('active');
-            $('.content-internal').removeClass('modal-fullscreen');
-            (document.webkitCancelFullScreen ||
-                document.mozCancelFullScreen ||
-                $.noop).apply(document);
-        }
-        
-        window.setTimeout( function() {
-			if ( typeof boardItemOptions != 'undefined' ) boardItemOptions.resizeCards();
-        }, 350);
-        
-    });
-	jqe.find('#toggle-detailspanel').button().off('click').on('click', function (e) {
-		var button = $(this);
-		e.stopImmediatePropagation();
-
-		if (!button.hasClass('active')) {
-			button.addClass('active');
-		} else {
-			button.removeClass('active');
-		}
-		toggleMasterDetails();
-	});
 
     if ( !$.browser.msie )
     {
@@ -1738,27 +1947,6 @@ function completeUIExt( jqe )
 		);
 	});
 	
-	jqe.find('.search-query').each( function() {
-		quickSearchAutoComplete($(this));
-	});
-
-	jqe.find('.ui-dialog-content')
-		.css({
-			'height':'auto',
-			'overflow':'inherit',
-			'display':'table-cell',
-			'width':function() { return $(this).parent().width()-20; }
-		})
-		.resize( function() {
-			$(this).parent()
-				.css({"height":'auto'});
-		})
-		.parent()
-			.css({'overflow':'inherit'});
-	
-	jqe.find('input[type="checkbox"][name*="to_delete"]').change(function(){
-		toggleBulkActions();
-	});
 
 	if ( typeof ZeroClipboard != 'undefined' ) {
 		ZeroClipboard.config({ cacheBust: false });
@@ -1784,67 +1972,6 @@ function completeUIExt( jqe )
 		}
 	}
 
-	if ( jqe.find('body').length > 0 ) {
-		jqe.scroll( function(event)
-		{
-			var scrollPos = $(this).scrollTop();
-			var contentStyle = 0;
-			$('.sticks-top').each(function() {
-				if ( !$(this).is(':visible') ) return false;
-				var treePos = $(this).position().top;
-				var body = $(this).parent().find('.sticks-top-body');
-				if ( scrollPos >= treePos ) {
-					if ( body.css('position') != 'fixed' ) {
-						body.attr('wasPosition', body.css('position'));
-						if ( body.height() > 200 ) {
-							body.attr('wasHeight', body.height());
-						}
-						body.css({
-							position: 'fixed',
-							top: 0,
-							width: $(this).width(),
-							'overflow-y': 'auto',
-							'overflow-x': 'hidden',
-							height: $(this).attr("heightStyle") == "window" ? $(window).height() : 'auto'
-						});
-						if ( body.is('.ps-container') ) {
-							body.perfectScrollbar('update');
-						}
-						body.addClass('sticked');
-						body.find('.cke_panel').hide();
-						contentStyle = 1;
-					}
-				}
-				else if ( body.css('position') == 'fixed' ) {
-					body.css({
-						position: body.attr('wasPosition'),
-						height: body.attr('wasHeight'),
-						top: 'auto',
-						'overflow-y': 'hidden',
-						'overflow-x': 'hidden'
-					});
-					if ( body.is('.ps-container') ) {
-						body.perfectScrollbar('update');
-					}
-					body.find('.cke_panel').hide();
-					body.removeClass('sticked');
-					contentStyle = 2;
-				}
-			});
-			if ( contentStyle == 1 ) {
-				$('.content-internal').css('min-height', $(window).height() * 1.1);
-				$('footer').hide();
-				$('.content-internal').addClass('content-internal-fullpage');
-				$('body').addClass('fullpage');
-			}
-			if ( contentStyle == 2 ) {
-				$('footer').show();
-				$('.content-internal').removeClass('content-internal-fullpage');
-				$('body').removeClass('fullpage');
-			}
-		});
-	}
-
 	jqe.find('[data-toggle="popover"]').popover({
 		trigger: 'hover'
 	});
@@ -1853,54 +1980,6 @@ function completeUIExt( jqe )
 	});
 
     completeChartsUI(jqe);
-
-	setInterval(function() {
-		var txt = cookies.get('last-action-message');
-		if ( txt && txt != "" ) {
-			if ( !lastActionBar ) {
-				lastActionBar = new $.peekABar({
-					cssClass: 'alert alert-success',
-					backgroundColor: '#dff0d8',
-					animation: {
-						type: 'fade',
-						duration: 450
-					},
-					delay: 8000,
-					html: txt.replace(/\+/g, ' '),
-					autohide: true,
-					closeOnClick: true,
-					onHide: function() {
-						cookies.set('last-action-message', '');
-						lastActionBar = null;
-					}
-				});
-			}
-			if ( !$('.peek-a-bar').is(':visible') ) {
-				var width = Math.max($(window).width() * 1 / 3, 600);
-				$('.peek-a-bar').css({
-					width: width,
-					left: ($(window).width() - width) / 2
-				});
-				lastActionBar.show();
-			}
-		}
-	}, 1000);
-
-	if ( $.browser.msie && document.documentMode < 8 ) {
-		translate( 1352, function( text ) {
-			$('<div class="alert alert-error" style="text-align:center;">'+text+'</div>').insertBefore('.container-fluid:eq(0)');
-		});
-	}
-
-	$('.nav > li.dropdown > a').click( function() {
-		$('.nav > li.dropdown').removeClass('active');
-		$(this).parent('li').addClass('active');
-		$('.vertical-menu').hide();
-
-		var menu = $('#menu_'+$(this).parent('li').attr('area'));
-		menu.show();
-		adjustContainerHeight(menu);
-	});
 }
 
 function markupDiff( el )
@@ -2180,6 +2259,7 @@ function makeAsyncForm( formId, url, message, options )
 	 			if ( (new RegExp('Internal Server Error')).exec( response ) != null ) {
 	 				window.location = '/500';
  				}
+                $('.btn[type=submit]').attr('disabled', false);
 	 			$('#result'+formId).removeClass('alert alert-success alert-error').addClass('alert alert-error').html(response);
 	 			return;
 			}
@@ -2367,7 +2447,7 @@ function workflowMoveObject(project, object_id, object_class, entity_ref, from_s
 function workflowRunMethod(method, callback)
 {
 	filterLocation.showActivity();
-	beforeUnload();
+    beforeUnload();
 
 	runMethod( method.url, method.data, function ( result )
 	{
@@ -2385,9 +2465,8 @@ function workflowRunMethod(method, callback)
 				break;
 				
 			case 'denied':
-				
-				$('#modal-form').parent().detach();
-				
+                workflowCloseDialog($('#modal-form'));
+
 				$('body').append( '<div id="modal-form" title="'+method.transitionTitle+'">'+
 						resultObject.description+'</div>' );
 
@@ -2414,8 +2493,7 @@ function workflowRunMethod(method, callback)
 					success: 
 						function(result) 
 						{
-							$('#modal-form').parent().detach();
-							
+                            workflowCloseDialog($('#modal-form'));
 							$('body').append( '<div id="modal-form" style="display:none;">'+
 								result+'</div>' );
 							
@@ -2438,9 +2516,12 @@ function workflowRunMethod(method, callback)
 								{
                                     return workflowHandleBeforeClose(event, ui);
 								},
+								dragStart: function(event, ui) {
+                                    workflowDragDialog(event, ui);
+								},
 								buttons: [
 									{
-										tabindex: 10,
+										tabindex: 1,
 										text: text('form-submit'),
 										id: method.entityName+'SubmitBtn',
 									 	click: function() {
@@ -2497,7 +2578,7 @@ function workflowRunMethod(method, callback)
 										}
 									},
 									{
-										tabindex: 11,
+										tabindex: 2,
 										text: text('form-close'),
                                         id: method.entityName+'CancelBtn',
 										click: function()
@@ -2545,13 +2626,15 @@ function workflowMakeupDialog()
     if ( !$.browser.msie ) {
 		originalFormState = $('#'+formId).formSerialize();
     }
-
 	focusField('modal-form form[id]');
 }
 
 function workflowBuildDialog( dlg, options )
 {
 	if ( $('#modal-form .tabs>ul>li').length > 0 ) {
+		if ( typeof options.form_title != 'undefined' ) {
+			$('#modal-form a[href="#tab-main"]').text(options.form_title);
+		}
 		$('.ui-dialog .tabs').tabs({
 			create: function(e, ui) {
 				$(this).parent().find('.ui-icon-closethick').click(function() {
@@ -2568,6 +2651,11 @@ function workflowBuildDialog( dlg, options )
 		dlg.attr('style', 'display:none');
 		if ( typeof options.tab != 'undefined' ) {
 			$('.ui-dialog .tabs').tabs( "option", "selected", options.tab );
+			setTimeout(function() {
+				$('.ui-tabs-panel:not(.ui-tabs-hide) [tabindex]:visible').filter(function() {
+					return $(this).attr("tabindex") > 0;
+				}).first().blur().focus();
+			}, 500);
 		}
 	}
 	dlg.dialog( "option", "draggable", true );
@@ -2587,6 +2675,7 @@ function workflowCompleteData( data )
 function workflowCloseDialog( dialog )
 {
 	filterLocation.hideActivity();
+    $('ul.ui-autocomplete').hide();
 
 	$('#modal-form form[id]').each(function() {
 		resetUnloadHandlers($(this).attr('id'));
@@ -2597,6 +2686,11 @@ function workflowCloseDialog( dialog )
 	formDestroy($('#modal-form form').attr('id'));
 	$('#modal-form').parent().detach();
 	$('.ui-widget-overlay').remove();
+}
+
+function workflowDragDialog( event, ui )
+{
+    $('ul.ui-autocomplete').hide();
 }
 
 function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_title, data, callback )
@@ -2643,7 +2737,6 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 				}
 				
 				$('body').append('<div id="modal-form" style="display:none;" title="'+form_title+'"></div>');
-
 				$(result).prependTo($('#modal-form'));
 				
 				$('#modal-form form[id]').attr('action', form_url);
@@ -2677,17 +2770,19 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 					},
 					create: function() 
 					{
-						workflowBuildDialog($(this),{});
+						workflowBuildDialog($(this),{form_title: form_title});
 				    },
-					beforeClose: function(event, ui) 
-					{
+					beforeClose: function(event, ui) {
                         return workflowHandleBeforeClose(event, ui);
 					},
+                    dragStart: function(event, ui) {
+                        workflowDragDialog(event, ui);
+                    },
 					buttons:
 						absoluteUrl == ""
 							? [
 								{
-									tabindex: 10,
+									tabindex: 1,
 									text: devpromOpts.saveButtonName,
 									id: entity_ref+'SubmitBtn',
 									click: function () {
@@ -2695,7 +2790,7 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 									}
 								},
 								{
-									tabindex: 12,
+									tabindex: 2,
 									text: text('form-close'),
 									id: entity_ref+'CancelBtn',
 									click: function()
@@ -2706,7 +2801,7 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 							]
 							: [
 								{
-									tabindex: 10,
+									tabindex: 1,
 									text: devpromOpts.saveButtonName,
 									id: entity_ref+'SubmitBtn',
 									click: function () {
@@ -2714,7 +2809,7 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 									}
 								},
 								{
-									tabindex: 11,
+									tabindex: 2,
 									text: text('form-submit-open'),
 									id: entity_ref+'SubmitOpenBtn',
 									click: function () {
@@ -2729,7 +2824,7 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 									}
 								},
 								{
-									tabindex: 12,
+									tabindex: 3,
 									text: text('form-close'),
 									id: entity_ref+'CancelBtn',
 									click: function()
@@ -2868,13 +2963,15 @@ function workflowModify( options, callback )
 					{
 						workflowBuildDialog($(this), options);
 				    },
-					beforeClose: function(event, ui) 
-					{
+					beforeClose: function(event, ui) {
                         return workflowHandleBeforeClose(event, ui);
 					},
+                    dragStart: function(event, ui) {
+                        workflowDragDialog(event, ui);
+                    },
 					buttons: [
 						{
-							tabindex: 10,
+							tabindex: 1,
 							text: text('form-submit'),
 							disabled: options.can_modify == 'false',
 							id: options.entity_ref+'SubmitBtn',
@@ -2924,7 +3021,7 @@ function workflowModify( options, callback )
 							}
 						},
 						{
-							tabindex: 11,
+							tabindex: 2,
 							text: text('form-close'),
 							id: options.entity_ref+'CancelBtn',
 							click: function()
@@ -2933,7 +3030,7 @@ function workflowModify( options, callback )
 							}
 						},
 						{
-							tabindex: 12,
+							tabindex: 3,
 							text: text('form-delete'),
 							id: options.entity_ref+'DeleteBtn',
 							disabled: options.can_delete == 'false',
@@ -2961,67 +3058,7 @@ function workflowModify( options, callback )
 	});
 }
 
-function workflowTable( form_url, title )
-{
-	if ( form_url.indexOf('?') < 0 ) 
-	{
-		form_url += '?tableonly=true';
-	}
-	else 
-	{
-		form_url += '&tableonly=true';
-	}
-
-	if ( typeof setupEditorGlobal == 'undefined' ) form_url += "&global-scripts=true"; 
-	 
-	filterLocation.showActivity();
-	
-	$.ajax({
-		type: "GET",
-		url: form_url,
-		dataType: "html",
-		async: true,
-		cache: false,
-		success: 
-			function(result) 
-			{
-				var scripts = [];
-				
-				$('#modal-form').parent().detach();
-				
-				$('body').append('<div id="modal-form" style="display:none;" title="'+title+'"></div>');
-
-				$(result).prependTo($('#modal-form'));
-				
-				$('#modal-form').dialog({
-					width: Math.max($(window).width() - 60, 750),
-					height: $(window).height() - 60,
-					modal: true,
-					open: function()
-					{
-						completeUIExt($(this));
-					},
-					beforeClose: function(event, ui) 
-					{
-						formDestroy($('#modal-form form').attr('id'));
-						
-						filterLocation.hideActivity();
-					},
-					buttons: [
-						{
-							text: "Ok",
-						 	click: function() 
-						 	{
-						 		$(this).dialog('close');
-							}
-						}
-					]
-				});
-			}
-	});
-}
-
-function workflowGetField( options, callback ) 
+function workflowGetField( options, callback )
 {
 	if ( options.form_url.indexOf('?') < 0 ) 
 	{
@@ -3059,6 +3096,106 @@ function openAjaxForm(title, url, callback)
 	filterLocation.showActivity();
 	beforeUnload();
 
+	var formButtons = [{
+		tabindex: 1,
+		text: text('form-complete'),
+		id: 'SubmitBtn',
+		click: function()
+		{
+			var dialogVar = $(this);
+
+			$('#modal-form').parent().find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
+			var form = $('#modal-form').contents().find('form');
+			form.ajaxSubmit({
+				dataType: 'html',
+				beforeSerialize: function($form, options)
+				{
+					if (!validateForm(form)) {
+						$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+						return false;
+					}
+					return true;
+				},
+				success: function(response)
+				{
+					try	{
+						var data = jQuery.parseJSON(response);
+					}
+					catch( e ) {
+						if ( (new RegExp('Internal Server Error')).exec( response ) != null ) {
+							window.location = '/500';
+						}
+						$('#modal-form').contents().find('#result')
+							.removeClass('alert-success alert-error').addClass('alert alert-error').html(response);
+						return;
+					}
+
+					$('#modal-form').contents().find('#result').removeClass('alert alert-success alert-error').html('');
+
+					var state = data.state;
+					var message = data.message;
+
+					if ( message != '' ) {
+						$('#modal-form').contents().find('#result')
+							.removeClass('alert-success alert-error')
+							.addClass('alert alert-'+(state == 'error' ? 'error' : 'success'))
+							.html(message);
+					}
+
+					if ( state == 'error' ) {
+						$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+					} else {
+						$('#modal-form').parent().find('.ui-button[id="CancelBtn"]').attr('disabled', false).removeClass("ui-state-disabled");
+						setTimeout(function() {
+							workflowCloseDialog(dialogVar);
+							if ( state == 'redirect' ) {
+								window.location = data.object;
+							} else {
+								if ( typeof callback != 'undefined' ) callback();
+							}
+						}, message != "" ? 1500 : 1);
+					}
+
+					$('#modal-form').contents().find('input[name="action"]').val(1);
+				},
+				complete: function(xhr) {
+				},
+				error: function( xhr )
+				{
+					$('#modal-form').parent()
+						.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
+				},
+				statusCode:
+				{
+					500: function(xhr) {
+						window.location = '/500';
+					}
+				}
+			});
+		}
+	}];
+
+	if ( url.search(/bulkdelete/i) == -1 ) {
+		formButtons.push({
+			tabindex: 2,
+			text: text('form-complete-open'),
+			id: 'SubmitOpenBtn',
+			click: function() {
+				$('#modal-form').contents().find('form').append('<input type="hidden" name="OpenList" value="Y">');
+				var buttons = $(this).dialog('option', 'buttons');
+				buttons[0].click();
+			}
+		});
+	}
+	formButtons.push({
+		tabindex: 3,
+		text: text('form-close'),
+		id: 'CancelBtn',
+		click: function() {
+			$(this).dialog('close');
+		}
+	});
+
 	$.ajax({
 		type: "GET",
 		url: url+'&formonly=true&screenWidth='+$(window).width(),
@@ -3081,7 +3218,7 @@ function openAjaxForm(title, url, callback)
 				$(result).prependTo($('#modal-form'));
 				
 				$('#modal-form').dialog({
-					width: 750,
+					width: 790,
 					modal: true,
 					resizable: true,
 					open: function() {
@@ -3090,94 +3227,10 @@ function openAjaxForm(title, url, callback)
                     beforeClose: function(event, ui) {
                         return workflowHandleBeforeClose(event, ui);
                     },
-					buttons: [
-						{
-							tabindex: 10,
-							text: text('form-complete'),
-							id: 'SubmitBtn',
-						 	click: function() 
-						 	{
-								var dialogVar = $(this);
-						 		
-								$('#modal-form').parent().find('.ui-button').attr('disabled', true).addClass("ui-state-disabled");
-								var form = $('#modal-form').contents().find('form');
-								form.ajaxSubmit({
-									dataType: 'html',
-									beforeSerialize: function($form, options) 
-									{ 
-										if (!validateForm(form)) {
-											$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-											return false;
-										}
-										return true;
-									},
-									success: function(response) 
-									{
-										try	{
-											var data = jQuery.parseJSON(response);
-										}
-										catch( e ) {
-								 			if ( (new RegExp('Internal Server Error')).exec( response ) != null ) {
-								 				window.location = '/500';
-							 				}
-								 			$('#modal-form').contents().find('#result')
-												.removeClass('alert-success alert-error').addClass('alert alert-error').html(response);
-								 			return;
-										}
-										
-										$('#modal-form').contents().find('#result').removeClass('alert alert-success alert-error').html('');
-										
-										var state = data.state;
-										var message = data.message;
-										
-										if ( message != '' ) {
-											$('#modal-form').contents().find('#result')
-												.removeClass('alert-success alert-error')
-												.addClass('alert alert-'+(state == 'error' ? 'error' : 'success'))
-												.html(message);
-										}
-										
-										if ( state == 'error' ) {
-											$('#modal-form').parent().find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-										} else {
-											$('#modal-form').parent().find('.ui-button[id="CancelBtn"]').attr('disabled', false).removeClass("ui-state-disabled");
-											setTimeout(function() {
-												workflowCloseDialog(dialogVar);
-												if ( state == 'redirect' ) {
-													window.location = data.object;													
-												} else {
-													if ( typeof callback != 'undefined' ) callback();
-												}
-											}, message != "" ? 1500 : 1);
-										}
-										
-										$('#modal-form').contents().find('input[name="action"]').val(1);
-									},
-									complete: function(xhr) {
-									},
-									error: function( xhr )
-									{
-										$('#modal-form').parent()
-											.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
-									},
-									statusCode:
-									{
-									  500: function(xhr) {
-									    	  window.location = '/500';
-									       }
-									}
-								});
-							}
-						},
-						{
-							tabindex: 11,
-							text: text('form-close'),
-							id: 'CancelBtn',
-							click: function() {
-								$(this).dialog('close');
-							}
-						}
-					]
+                    dragStart: function(event, ui) {
+                        workflowDragDialog(event, ui);
+                    },
+					buttons: formButtons
 				});
 			}
 	});
@@ -3199,21 +3252,6 @@ function disableScrolling( element )
 function enableScrolling( element, handler )
 {
 	element.unbind('scroll, mousewheel', handler);
-}
-
-function wikiChangeTemplate(class_name, editor_name, $callback)
-{
-	if ( $('#WikiPageTemplate').val() == '' ) return;
-	
-	runMethod( 'methods.php?method=GetWikiContentWebMethod',
-		{ 
-			'object':$('#WikiPageTemplate').val(),
-			'class':class_name,
-			'encoding':'native',
-			'editor':editor_name
-		},
-		$callback, 
-		'');
 }
 
 function updateLeftWorkAttribute( form_id, data, row_number )
@@ -3273,14 +3311,6 @@ function addToFavorites( widget_uid, widget_url, widget_type )
 				window.location = widget_url;
 			}
 	});	
-}
-
-function uiShowSpentTime()
-{
-	var section = $('a[href*=pagesectionspenttime]');
-	if ( section.length < 1 ) return;
-	section.click();
-	window.scrollTo(section.offset().left, section.offset().top);
 }
 
 function reloadPage()
@@ -3432,7 +3462,9 @@ function bindTabHandler( tabname, handler )
 			handler();
 		}
 	});
-
+	if ( $('li.active > a[data-toggle="tab"][href*="'+tabname+'"]').length > 0 ) {
+		handler();
+	}
 }
 
 function showTraces(attribute) {
@@ -3445,15 +3477,22 @@ function openURLItems(url) {
 
 function toggleMasterDetails() {
 	$('div.table-details').toggle();
+	$('#documentToolbar').css('width', '');
 
 	cookies.set('toggle-detailspanel-' + $('.table-master table[uid]').attr('uid'), $('div.table-details').is(':visible'));
-	if ( $('div.table-details').is(':visible') ) {
-		$('div.table-master').addClass('details-visible');
-		detailsRefresh('');
-	}
-	else {
-		$('div.table-master').removeClass('details-visible');
-	}
+    setMasterDetails();
+}
+
+function setMasterDetails() {
+    if ( $('div.table-details').is(':visible') ) {
+        $('div.table-master').addClass('details-visible');
+        $('#toggle-detailspanel').addClass('active');
+        detailsRefresh('');
+    }
+    else {
+        $('div.table-master').removeClass('details-visible');
+        $('#toggle-detailspanel').removeClass('active');
+    }
 }
 
 var detailsOptions = {
@@ -3473,11 +3512,18 @@ function detailsInitialize( el, url, visible, doRefresh )
 	if ( visible ) {
 		detailsRefresh('');
 	}
+    setInterval( function() {
+    	if ( !detailsOptions.el ) return;
+    	if ( !detailsOptions.el.is(':visible') ) return;
+    	detailsRefresh('&wait=true');
+    }, 60000);
 }
 
 function detailsRefresh( parms )
 {
-	if ( detailsOptions.waitRequest ) {
+    if ( !devpromOpts.windowActive ) return;
+
+    if ( detailsOptions.waitRequest ) {
 		detailsOptions.waitRequest.abort();
 		detailsOptions.waitRequest = null;
 	}
@@ -3498,25 +3544,13 @@ function detailsRefresh( parms )
 			}
 		},
 		complete: function(xhr, textStatus) {
-			if ( textStatus == "abort" || xhr.responseText == "" || $.inArray(xhr.status, [302,301,500,404]) != -1 ) {
-				detailsOptions.el.html('<div class="document-empty"></div>');
-				return;
-			}
+			var nativeResponse = xhr.getResponseHeader('X-Devprom-UI') == 'tableonly';
 			if ( !detailsOptions.refresh ) return;
-
-			setTimeout( function() {
-				detailsRefresh('&wait=true');
-			}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 100 : 180000);
-		},
-		error: function (xhr, ajaxOptions, thrownError) {
-			if ( detailsOptions.el ) {
-				detailsOptions.el.html('<div class="document-empty"></div>');
+			if ( nativeResponse && xhr.responseText.indexOf('div') > -1 ) {
+                setTimeout( function() {
+                    detailsRefresh('&wait=true');
+                }, 300);
 			}
-			if ( !detailsOptions.refresh ) return;
-
-			setTimeout( function() {
-				detailsRefresh('&wait=true');
-			}, 180000);
 		}
 	});
 }
@@ -3552,13 +3586,6 @@ function adjustContainerHeight(menu) {
 	}
 }
 
-function saveReportSettings() {
-	$('li[uid=personal-persist]>a').addClass('checked');
-	window.location = $('li[uid=personal-persist]>a[href]').length > 0
-		? $('li[uid=personal-persist]>a').attr('href')
-		: $('li[uid=personal-persist]>a').attr('onkeydown');
-}
-
 function getDialogWidth() {
 	var scale = $('#modal-form').find('#tab-main .control-column').length < 3 ? 3/5 : 4/5;
 	if ( $('#modal-form').find('.source-text').length > 0 ) scale = 5/6;
@@ -3587,4 +3614,55 @@ var pageVisibility = (function(){
 function enterKeyUp(e) {
 	e.which = e.which || e.keyCode;
 	return e.which == 13;
+}
+
+function navigateToComment( id )
+{
+	var section = $('#comment'+id).parents('.comments-section');
+	if ( !section.is(':visible') ) {
+		toggleDocumentPageComments(section, false);
+	}
+	$('.comment-line-holder').removeClass('active');
+	$('#comment'+id).addClass('active');
+
+	var locstr = String(window.location);
+	var parts = locstr.split('#');
+	window.location = parts[0] + '#comment' + id;
+}
+
+function sortByModified( path, direction ) {
+	var container = $(path).last();
+	if ( direction > 0 ) {
+		container.children('[modified]').sort(function(a,b) {
+			return $(a).attr('modified') > $(b).attr('modified');
+		}).appendTo(container);
+	}
+	else {
+		container.children('[modified]').sort(function(a,b) {
+			return $(a).attr('modified') < $(b).attr('modified');
+		}).appendTo(container);
+	}
+}
+
+function sortComments( sort )
+{
+	if ( sort != "-1") sort = "1";
+	cookies.setOptions({expiresAt:new Date(new Date().getFullYear() + 1, 1, 1)});
+	cookies.set('sort-comments', sort);
+	sortByModified('.comments-thread', sort);
+	if ( sort == "-1" ) {
+		$('.sort-btn-desc').hide();
+		$('.sort-btn-asc').show();
+	}
+	else {
+		$('.sort-btn-desc').show();
+		$('.sort-btn-asc').hide();
+	}
+}
+
+function clickAddCommentOnForm() {
+    $('.comment>a[type=button]').click();
+    setTimeout(function() {
+        window.scrollTo(0,document.body.scrollHeight);
+    }, 600);
 }

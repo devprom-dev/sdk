@@ -3,14 +3,13 @@
 include "ProjectTemplateIterator.php";
 include "sorts/SortProjectTemplateLanguageClause.php";
 include "predicates/ProjectTemplateExceptEditionPredicate.php";
-include "predicates/ProjectTemplateLicensedPackagesPredicate.php";
-include "ProjectTemplateRegistryTeam.php";
+include "ProjectTemplateRegistryAll.php";
 
 class ProjectTemplate extends Metaobject
 {
  	function __construct() 
  	{
- 		parent::__construct('pm_ProjectTemplate', new ProjectTemplateRegistryTeam($this) );
+ 		parent::__construct('pm_ProjectTemplate', new ProjectTemplateRegistryAll($this) );
 
  		$this->setAttributeDefault( 'ProductEdition', 'custom' );
  		

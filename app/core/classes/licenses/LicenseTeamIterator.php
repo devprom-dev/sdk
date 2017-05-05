@@ -18,11 +18,6 @@ class LicenseTeamIterator extends LicenseIterator
 		return 'Devprom.AgileTeam';
 	}
 
-	function getSupportIncluded()
-	{
-		return false;
-	}
-
 	function getLeftDays()
 	{
 		return max(CheckpointSupportPayed::getPayedDays(), 0);

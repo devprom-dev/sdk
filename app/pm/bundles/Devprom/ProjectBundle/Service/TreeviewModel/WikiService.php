@@ -3,7 +3,7 @@
 namespace Devprom\ProjectBundle\Service\TreeviewModel;
 
 include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleActiveVpdPredicate.php";
 
 class WikiService
 {
@@ -24,7 +24,7 @@ class WikiService
     			)
     		: array (
     				new \WikiRootFilter(),
-					$crossProject ? new \ProjectAccessibleVpdPredicate() : new \FilterVpdPredicate()
+					$crossProject ? new \ProjectAccessibleActiveVpdPredicate() : new \FilterVpdPredicate()
     			);
     		
     	$this->setObjectIt(

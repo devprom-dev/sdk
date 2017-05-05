@@ -7,6 +7,9 @@
 		<?php
 		foreach ( $sections as $key => $section )
 		{
+			if ( $placement != "" ) {
+				$section->setPlacement($placement);
+			}
 			?>
 		
 		<li class="<?=($key == array_shift(array_keys($sections)) ? 'active' : '')?>">

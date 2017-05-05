@@ -6,7 +6,8 @@ include 'WrtfCKEditorWikiParser.php';
 include 'WrtfCKEditorPageParser.php';
 include 'WrtfCKEditorHtmlParser.php';
 include "WrtfCKEditorComparerParser.php";
- 
+include "WrtfCKEditorSupportParser.php";
+
 class WikiRtfCKEditor extends WikiEditorBase
 {
 	function __construct()
@@ -103,8 +104,12 @@ class WikiRtfCKEditor extends WikiEditorBase
  	
  	function draw( $content, $b_editable = false )
  	{
- 		$lang = strtolower(getSession()->getLanguageUid());
- 		
+		if ( is_object($this->getObjectIt()) && $this->getObjectIt()->getId() != '' ) {
+			$projectCodeName = $this->getObjectIt()->get('ProjectCodeName');
+		} else {
+			$projectCodeName = getSession()->getProjectIt()->get('CodeName');
+		}
+
 		$field = $this->getFieldName();
 
 		$id = $this->getFieldId();
@@ -159,7 +164,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php if ( !($this->getMode() & WIKI_MODE_INLINE) ) { ?>
 			
-			<textarea class="input-block-level wysiwyg <?=$this->getCssClassName()?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" rows="<?=($rows)?>" objectId="<?=$object_id?>" name="<?php echo $field; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
+			<textarea class="input-block-level wysiwyg <?=$this->getCssClassName()?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" rows="<?=($rows)?>" objectId="<?=$object_id?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" name="<?php echo $field; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></textarea>
 			
 			<?php } else { ?>
 			
@@ -176,7 +181,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php } elseif ( $this->getMode() & WIKI_MODE_INPLACE_INPUT ) { ?>
 			
-			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" objectClass="<?=get_class($object_it->object)?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></div>
+			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></div>
 			
 			<?php } else { ?>
 
@@ -188,7 +193,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php if ( $content == '' ) $style = 'min-height:'.$height.'px;'; ?>
 			
-			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="<?=$style?>" objectClass="<?=get_class($object_it->object)?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> > <? echo $content; ?></div>
+			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="<?=$style?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> > <? echo $content; ?></div>
 			
 			<?php } ?>
 

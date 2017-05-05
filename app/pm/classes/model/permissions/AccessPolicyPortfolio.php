@@ -21,9 +21,11 @@ class AccessPolicyPortfolio extends AccessPolicyBase
 			case 'co_ProjectGroup':
 			case 'pm_ChangeRequest':
 			case 'pm_ChangeRequestTrace':
+            case 'pm_Task':
 			case 'pm_Question':
 			case 'pm_Function':
 			case 'pm_Attachment':
+            case 'WikiPageFile':
 			case 'Tag':
 			case 'pm_RequestTag':
 			case 'WikiTag':

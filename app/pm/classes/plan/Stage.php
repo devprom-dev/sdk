@@ -10,6 +10,8 @@ class Stage extends Metaobject
  	{
  	    parent::__construct('pm_Version', new StageRegistry($this));
 
+        $this->addAttribute('VersionNumber', 'VARCHAR', '', false);
+        $this->setAttributeGroups('VersionNumber', array('system'));
  	    $this->setSortDefault( array (
  	            new SortAttributeClause('VersionNumber')
  	    ));

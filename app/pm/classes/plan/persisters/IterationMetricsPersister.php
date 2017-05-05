@@ -49,6 +49,15 @@ class IterationMetricsPersister extends ObjectSQLPersister
 			"    AND m.TaskType IS NULL ".
 			"  ORDER BY m.SnapshotDays ASC LIMIT 1) PlannedEstimation ";
 
- 		return $columns;
+        $columns[] =
+            "((SELECT COUNT(1) FROM pm_Task s 
+	           WHERE s.Release = " .$objectPK."	 
+	             AND s.State IN ('".join("','",getFactory()->getObject('pm_Task')->getNonTerminalStates())."')) +
+	          (SELECT COUNT(1) FROM pm_ChangeRequest s 
+	           WHERE s.Iteration = " .$objectPK."	 
+	             AND s.State IN ('".join("','",getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates())."'))) UncompletedItems ";
+
+
+        return $columns;
  	}
 }

@@ -58,7 +58,7 @@ class DevpromParametersLoader {
         DALMySQLi::Instance()->Connect(new MySQLConnectionInfo(DB_HOST, DB_NAME, DB_USER, DB_PASS));
         $sql = "SELECT p.pm_ProjectId, p.VPD
                   FROM pm_Project p
-        		 WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) ";
+        		 WHERE EXISTS (SELECT 1 FROM pm_Methodology m WHERE m.IsSupportUsed = 'Y' AND m.Project = p.pm_ProjectId) AND IFNULL(p.IsClosed,'N') = 'N' ";
         $r2 = DAL::Instance()->Query($sql);
         $result = array();
         $ids = array();

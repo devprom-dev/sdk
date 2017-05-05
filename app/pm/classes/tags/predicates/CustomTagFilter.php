@@ -16,8 +16,8 @@ class CustomTagFilter extends FilterPredicate
  		
  		$class = strtolower(get_class($this->object));
  		$idfield = $this->object->getClassName().'Id';
- 		
-		if ( trim($filter) == '0' )
+
+		if ( trim($filter) == 'none' )
 		{
 			$predicate = " AND NOT EXISTS (SELECT 1 FROM pm_CustomTag rt " .
 						 "   		    	WHERE rt.ObjectId = t." .$idfield.

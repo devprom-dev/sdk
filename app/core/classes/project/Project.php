@@ -15,9 +15,11 @@ include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";
 include "persisters/ProjectLinkedPersister.php";
 include "validators/ModelValidatorProjectCodeName.php";
+include "validators/ModelValidatorProjectIntegration.php";
 include "sorts/SortProjectImportanceClause.php";
 include "sorts/SortImportanceClause.php";
 include "sorts/SortProjectSelfFirstClause.php";
+include "sorts/SortProjectCaptionClause.php";
 
 class Project extends Metaobject 
 {

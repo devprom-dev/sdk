@@ -38,3 +38,7 @@ devprom_service_desk_issue:
     resource: "@DevpromServiceDeskBundle/Controller/IssueController.php"
     type: annotation
 
+devprom_service_desk_docs:
+    resource: "@DevpromServiceDeskBundle/Controller/KnowledgeController.php"
+    type: annotation
+

@@ -10,8 +10,11 @@ if ( $attributes['UID']['visible'] ) {
 	$colspan_attributes[] = $attributes['UID']['id'];
 }
 
-if ( $form->getObject() instanceof Request ) {
+if ( array_key_exists('Description', $attributes) && count($shortAttributes) > 0 ) {
 	$colspan_attributes[] = $attributes['Description']['id'];
+}
+if ( array_key_exists('Conditions', $attributes) && count($shortAttributes) > 0 ) {
+	$colspan_attributes[] = $attributes['Conditions']['id'];
 }
 
 $invisible = array_filter( $attributes, function(&$value) {
@@ -63,14 +66,15 @@ foreach( $attributes as $key => $attribute ) {
 
 <div class="control-set title-set">
 	<? foreach($top as $key => $attribute ) { ?>
-	<div class="control-column">
-		<div class="control-group row-fluid" id="fieldRow<?=$key?>">
-			<label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
-			<div class="controls">
-				<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+		<? if ( !$attribute['visible'] ) continue; ?>
+		<div class="control-column">
+			<div class="control-group row-fluid" id="fieldRow<?=$key?>">
+				<label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+				<div class="controls">
+					<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
+				</div>
 			</div>
 		</div>
-	</div>
 	<? } ?>
 </div>
 
@@ -132,7 +136,7 @@ foreach( $attributes as $key => $attribute ) {
 		<?php } else if ( is_object($attribute['field']) || $attribute['html'] != '' ) { ?>
 		    
 			  <div class="control-group row-fluid" id="fieldRow<?=$key?>">
-			    <label class="control-label" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
+			    <label class="control-label <?=(count(explode(' ', $attribute['name']))>1?'label-long':'')?>" for="<?=$attribute['id']?>"><?=$attribute['name']?></label>
 			    <div class="controls">
 					<? echo $view->render('core/PageFormAttribute.php', $attribute); ?>
 			      

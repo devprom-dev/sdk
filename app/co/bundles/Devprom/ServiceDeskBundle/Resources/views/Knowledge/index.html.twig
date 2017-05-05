@@ -1,0 +1,82 @@
+{% extends 'content_base.html.twig' %}
+{% import "DevpromServiceDeskBundle:Common:macros.html.twig" as macro %}
+
+{% block title %}
+    {{ 'kb.title'|trans }}
+{% endblock %}
+
+{% block header_image %}
+    <div class="video-container">
+        <div class="filter"></div>
+        <video autoplay loop class="fillWidth">
+            <source src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/videos/1/MP4/Working-Space.mp4') }}" type="video/mp4" />Your browser does not support the video tag. I suggest you upgrade your browser.
+            <source src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/videos/1/WEBM/Working-Space.webm') }}" type="video/webm" />Your browser does not support the video tag. I suggest you upgrade your browser.
+        </video>
+        <div class="poster hidden">
+            <img src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/videos/1/snapshots/Working-Space.jpg') }}" alt="">
+        </div>
+    </div>
+{% endblock %}
+
+{% block content_header %}
+    <div class="masthead">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <form action="{{ path('docs_search') }}" method="get">
+                        <input type="text" name="q" class="search-field" placeholder="{{ 'kb.search'|trans }}"/>
+                        <button type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content -%}
+    <section class="topics">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    {% for root in roots %}
+                        <header>
+                            <h2><span class="icon-pages"></span>{{ root.name }}</h2>
+                            <p>{% autoescape false %}{{ root.content|unescapeHtml }}{% endautoescape %}</p>
+                        </header>
+                        {% for theme in themes if theme.parent == root %}
+                            {% if loop.index0 > 0 and loop.index0 % 3 == 0 %}
+                                <div class="clearfix"></div>
+                            {% endif %}
+                            <div class="col-sm-4">
+                                <div class="topics-list">
+                                    <h3>
+                                        <a name="{{ theme.id }}">
+                                            <span class="badge">{{ loop.index0 + 1 }} </span>
+                                            {{ theme.name }}
+                                        </a>
+                                    </h3>
+                                    <ul>
+                                        {% for article in articles if article.parent == theme %}
+                                            <li><a href="{{ path('docs_article', { 'article': article.name|unescapeHtml }) }}"> {{ article.name|unescapeHtml }} </a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <div class="clearfix"></div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="sidebar">
+                    <div class="widget widget-support-forum">
+                        <span class="icon icon-forum"></span>
+                        <h4>{{ 'kb.missed_info'|trans }} {{ 'kb.write_query'|trans }}</h4>
+                        <br/>
+                        <a href="{{ url('issue_new') }}" class="btn btn-success">{{ 'issue.add'|trans }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

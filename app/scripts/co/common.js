@@ -72,7 +72,7 @@ function getComments()
 				$('#comment0').html('');
 				$('#combody'+objectid).html(result);
 				
- 				var locstr = new String(decodeURI(window.location));
+ 				var locstr = String(decodeURI(window.location));
 				if ( locstr.indexOf('#comment') > 0 )
 				{
 					window.scrollTo( 0, $('#combody'+objectid).position().top );
@@ -616,11 +616,6 @@ function countLineBreaks(textarea)
 	}
 	return nRowCnt;
 } 
-
-function adjustRows (textarea) 
-{
-	textarea.rows = countLineBreaks(textarea) + 1;
-}		
 
 function choosebutton( id )
 {

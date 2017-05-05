@@ -4,9 +4,9 @@ class QuestionIterator extends StatableIterator
 {
  	function get( $att )
  	{
- 		if ( $att == 'Caption' )
- 		{
- 			return $this->getWordsOnly('Content', 10);
+ 		if ( $att == 'Caption' ) {
+            $html2text = new \Html2Text\Html2Text(parent::getHtmlDecoded('Content'), array('width'=>0));
+ 			return $this->getWordsOnlyValue(preg_replace('/[r\n]+/', ' ', $html2text->getText()), 10);
  		}
  		
  		return parent::get( $att );

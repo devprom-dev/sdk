@@ -1,0 +1,62 @@
+[{
+  "Release": {
+    "url": "/versions/{id}.json",
+    "link": "/versions/{id}",
+    "Caption": "version.name",
+    "Description": "version.description",
+    "StartDate": "version.due_date",
+    "FinishDate": "version.due_date"
+  },
+  "Request": {
+    "url": "/issues/{id}.json?include=journals,attachments&",
+    "link": "/issues/{id}",
+    "Caption": "issue.subject",
+    "Description": "issue.description",
+    "Type": {
+      "ReferenceName": "issue.tracker.name",
+      "mapping": [{"bug":"Bug"},{"bug":"Ошибка"},{"enhancement":"Feature"},{"enhancement":"Новая функциональность"},{"":"*"}]
+    },
+    "Priority": {
+      "Caption": "issue.priority.name",
+      "mapping": [{"Обычный":"Normal"},{"Низкий":"Low"},{"Высокий":"Urgent"},{"Критичный":"Immediate"},{"":"*"}]
+    },
+    "Estimation": "issue.estimated_hours",
+    "Author": {"Caption":"issue.author.name"},
+    "Owner": {"Caption":"issue.assigned_to.name"},
+    "State": {
+      ".": "issue.status.name",
+      "mapping": [{"submitted":"New"},{"resolved":"Done"},{"submitted":"*"}]
+    },
+    "attachments": {
+      "reference":"issue.attachments",
+      "type":"RequestAttachment",
+      "readonly": "true"
+    }
+  },
+  "RequestAttachment": {
+    "url": "/attachments/{id}.json",
+    "url-append": "/attachments/{id}",
+    "link": "/attachments/{id}",
+    "ObjectId": "{parentId}",
+    "FileMime": "attachment.content_type",
+    "FileExt": "attachment.filename",
+    "File": "attachment.content_url"
+  },
+  "RequestComment": {
+    "AuthorId": {"Caption":"user.name"},
+    "ObjectId": "{parentId}",
+    "Caption": "notes"
+  },
+  "ActivityRequest": {
+    "url": "/time_entries/{id}.json",
+    "link": "/time_entries/{id}",
+    "Participant": {"Caption":"time_entry.user.name"},
+    "Task": {
+      "reference": "time_entry.issue",
+      "type": "Request"
+    },
+    "Description": "time_entry.comments",
+    "Capacity": "time_entry.hours",
+    "ReportDate": "time_entry.spent_on"
+  }
+}]

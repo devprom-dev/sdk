@@ -4,12 +4,10 @@ include_once "SelectDateRefreshWebMethod.php";
 
 class FilterDateWebMethod extends SelectDateRefreshWebMethod
 {
- 	var $method_name;
- 	private $default_value = '';
- 	
- 	function FilterDateWebMethod ( $table_name = '' )
+ 	function FilterDateWebMethod ( $title = '', $parm = '' )
  	{
- 		$this->method_name = md5($table_name.$this->getMethodName());
+ 		$this->setCaption($title);
+        $this->setValueParm($parm);
  		parent::__construct();
  	}
 

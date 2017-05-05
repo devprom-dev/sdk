@@ -16,7 +16,17 @@ class Activity extends Metaobject
 		$this->setAttributeCaption('Capacity', translate('Затрачено'));
 		$this->setAttributeOrderNum('Capacity', 3);
 		$this->setAttributeDescription('Capacity', text(2116));
- 	}
+
+		foreach( array('Caption', 'Iteration') as $attribute ) {
+		    $this->addAttributeGroup($attribute, 'system');
+        }
+        foreach( array('Issue', 'Task') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'trace');
+        }
+        foreach( array_keys($this->getAttributes()) as $attribute ) {
+            $this->addAttributeGroup($attribute, 'nonbulk');
+        }
+    }
  	
  	function createIterator() 
  	{
@@ -27,8 +37,13 @@ class Activity extends Metaobject
  	{
  		return translate('Списание времени');
  	}
- 	
-	function getByTask( $task_it )
+
+ 	function getPage()
+    {
+        return getSession()->getApplicationUrl($this).'worklog?';
+    }
+
+    function getByTask( $task_it )
 	{
 		return $this->getByRefArray( 
 			array( 'Task' => $task_it->end() ? -1 : $task_it->getId() ) );

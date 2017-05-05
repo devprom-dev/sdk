@@ -39,14 +39,12 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  ///////////////////////////////////////////////////////////////////////////////////////
  class ReportModifyWebMethod extends WebMethod
  {
- 	var $report_it, $redirect_url;
+ 	var $report_it;
  	
  	function ReportModifyWebMethod( $report_it = null )
  	{
  		$this->report_it = $report_it;
- 		
- 		$this->redirect_url = "donothing";
- 		
+ 		$this->setRedirectUrl("donothing");
  		parent::WebMethod();
  	}
  	
@@ -63,17 +61,9 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
 			);
 	}
 
-	function getRedirectUrl()
-	{
-		return $this->redirect_url;
-	}
-
  	function execute_request()
  	{
- 		global $_REQUEST;
-	 	
-	 	if ( $_REQUEST['report'] != '' )
-	 	{
+	 	if ( $_REQUEST['report'] != '' ) {
 	 		$this->execute($_REQUEST['report'], $_REQUEST['items'], $_REQUEST['values']);
 	 	}
  	}
@@ -105,5 +95,3 @@ include_once SERVER_ROOT_PATH."core/methods/FilterWebMethod.php";
  		return getFactory()->getAccessPolicy()->can_modify($this->report_it);
  	}
  } 
- 
-?>

@@ -2,33 +2,35 @@
 
 class ChangeLogAccessFilter extends FilterPredicate
 {
-    function __construct()
-    {
+    static $skipClasses = null;
+
+    function __construct() {
         parent::__construct('-');
     }
     
  	function _predicate( $filter )
  	{
- 	    global $model_factory;
- 	    
- 	 	$logged_it = $model_factory->getObject('ChangeLogEntitySet')->getAll();
- 		
-		$noaccess = array();
-
-		while ( !$logged_it->end() )
-		{
-			$object = $model_factory->getObject($logged_it->get('ClassName'));
-
-			$class_name = strtolower(get_class($logged_it->object));
-			
-			if ( $class_name != 'changelogentityset' && !getFactory()->getAccessPolicy()->can_read($object) ) $noaccess[] = $class_name;
-			
-			$logged_it->moveNext();
-		}
-		
-		if ( count($noaccess) > 0 )
-		{
-			return " AND t.ClassName NOT IN ('".join($noaccess, "','")."') ";
+ 	    $noaccess = self::getClassesSkipped();
+		if ( count($noaccess) > 0 ) {
+			return " AND t.ClassName NOT IN ('".join($noaccess, "','")."') AND t.AccessClassName NOT IN ('".join($noaccess, "','")."') ";
 		}
  	}
+
+ 	static function getClassesSkipped()
+    {
+        if ( is_array(self::$skipClasses) ) return self::$skipClasses;
+
+        $logged_it = getFactory()->getObject('ChangeLogEntitySet')->getAll();
+        while ( !$logged_it->end() )
+        {
+            $object = getFactory()->getObject($logged_it->get('ClassName'));
+
+            if ( !getFactory()->getAccessPolicy()->can_read($object) ) {
+                self::$skipClasses[] = strtolower(get_class($object));
+            }
+
+            $logged_it->moveNext();
+        }
+        return self::$skipClasses;
+    }
 }

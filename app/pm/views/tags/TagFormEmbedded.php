@@ -17,9 +17,14 @@ class TagFormEmbedded extends PMFormEmbedded
  	function getActions( $object_it, $item )
  	{
  	    $actions = array();
- 	    
+
+        $actions[] = array (
+            'name' => text(2449),
+            'url' => $object_it->getViewUrl()
+        );
+        $actions[] = array();
  	    $actions[] = array (
- 	        'name' => translate('Показать все'),
+ 	        'name' => text(2448),
  	        'url' => $object_it->object->getPage()
  	    );
  	    $actions[] = array();
@@ -36,19 +41,15 @@ class TagFormEmbedded extends PMFormEmbedded
  		switch ( $attr )
  		{
  			case 'Tag':
-				
  			    $object = $this->getAttributeObject( $attr );
 
 				$field = new FieldAutoCompleteObject( $object );
-				
 				$field->setTitle( $object->getDisplayName() );
-
-				$field->setAppendable(); 
-				
+				$field->setAppendable();
+                $field->setMultiple();
 				return $field;
 				
  			default:
- 			    
  				return parent::createField( $attr );
  		}
  	}

@@ -1,6 +1,7 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/methods/c_date_methods.php";
+include_once SERVER_ROOT_PATH . "pm/classes/communications/predicates/ChangeLogStateFilter.php";
 
 include "ProjectLogList.php";
 
@@ -25,9 +26,12 @@ class ProjectLogTable extends PMPageTable
 	
 	function buildObjectIt()
 	{
-		if ( in_array($_REQUEST['object'], array('','all','none')) ) return $this->getObject()->getEmptyIterator();
+        $values = $this->getFilterValues();
+        if ( $values['entities'] == '' ) $values['entities'] = $_REQUEST['entities'];
+
+		if ( in_array($values['entities'], array('','all','none')) ) return $this->getObject()->getEmptyIterator();
 		 
-	    $classes = preg_split('/,/', $_REQUEST['object']);
+	    $classes = preg_split('/,/', $values['entities']);
 		if ( count($classes) != 1 ) return $this->getObject()->getEmptyIterator();
 		
 		$class_name = getFactory()->getClass($classes[0]);
@@ -45,14 +49,12 @@ class ProjectLogTable extends PMPageTable
 	
 	function getObjectIt()
 	{
-		if ( is_object($this->object_it) ) return $this->object_it;
+		if ( is_object($this->object_it) ) return $this->object_it->copy();
 		return $this->object_it = $this->buildObjectIt();
 	}
 	
 	function getFilters()
 	{
-		global $_REQUEST, $model_factory;
-		
 		$filters = array(
 			$this->buildStartFilter(),
 			new ViewFinishDateWebMethod(),
@@ -63,19 +65,21 @@ class ProjectLogTable extends PMPageTable
  		$filters[] = $this->buildEntityFilter();
  		$filters[] = $this->buildActionsFilter();
 		
-		if ( !in_array($_REQUEST['object'], array('','all','none')) )
-		{
-		    $classes = preg_split('/,/', $_REQUEST['object']);
+		if ( !in_array($_REQUEST['entities'], array('','all','none')) ) {
+		    $classes = preg_split('/,/', $_REQUEST['entities']);
 		    
-		    if ( count($classes) == 1 )
-		    {
-		    	$class_name = $model_factory->getClass($classes[0]);
-		    	
-		    	if ( class_exists($class_name) ) $filters[] = new FilterAutoCompleteWebMethod($model_factory->getObject($class_name));
+		    if ( count($classes) == 1 ) {
+		    	$class_name = getFactory()->getClass($classes[0]);
+		    	if ( class_exists($class_name) ) $filters[] = new FilterAutoCompleteWebMethod(getFactory()->getObject($class_name));
 		    }
 		}
+
+		$filters[] = $this->buildStateFilter();
 		
-		return $filters;
+		return array_merge(
+		    parent::getFilters(),
+            $filters
+        );
 	}
 	
 	function buildStartFilter()
@@ -89,7 +93,7 @@ class ProjectLogTable extends PMPageTable
 	
 	function buildEntityFilter()
 	{
-		$entity_filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogEntitySet'), '', 'object' );
+		$entity_filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogEntitySet'), '', 'entities' );
 		$entity_filter->setHasNone( false );
 		$entity_filter->setIdFieldName( 'ClassName' );
 		
@@ -104,21 +108,25 @@ class ProjectLogTable extends PMPageTable
 		
 		return $filter;
 	}
-	
+
+    function buildStateFilter()
+    {
+        $filter = new FilterObjectMethod( getFactory()->getObject('StateCommon'), translate('Состояние'), 'state' );
+        $filter->setHasNone(false);
+        return $filter;
+    }
+
 	function getFilterPredicates()
 	{
 		$values = $this->getFilterValues();
-
-		if ( in_array($_REQUEST['start'], array('','all','hide')) ) {
-			$_REQUEST['start'] = getSession()->getLanguage()->getPhpDate(strtotime('-1 weeks', strtotime(date('Y-m-j'))));
-		}
 
 		$filters = array(
 			new ChangeLogActionFilter( $values['action'] ),
 			new ChangeLogParticipantFilter( $values['participant'] ),
 			new ChangeLogStartFilter( $_REQUEST['start'] ),
 			new ChangeLogFinishFilter( $values['finish'] ),
-			new ChangeLogVisibilityFilter()
+			new ChangeLogVisibilityFilter(),
+            new ChangeLogStateFilter( $values['state'] )
 		);
 		
 		$object_it = $this->getObjectIt();
@@ -133,14 +141,17 @@ class ProjectLogTable extends PMPageTable
 			}
 			$filters[] = new ChangeLogItemFilter($object_it);
 		}
-		else if ( !in_array($_REQUEST['object'], array('','all','none')) )
+		else if ( !in_array($values['entities'], array('','all','none')) )
 		{
-		    $classes = preg_split('/,/', $_REQUEST['object']);
+		    $classes = preg_split('/,/', $values['entities']);
 	    	$class_name = getFactory()->getClass($classes[0]);
 	    	if ( class_exists($class_name) ) $filters[] = new ChangeLogObjectFilter( $class_name );
 		}
  		
-		return $filters;
+		return array_merge(
+		    parent::getFilterPredicates(),
+            $filters
+        );
 	}
 	
 	function getNewActions()

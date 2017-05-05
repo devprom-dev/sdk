@@ -17,25 +17,12 @@ class ChooseLicenseType extends CommandForm
 
 	function create()
 	{
-		$url =  'https://devprom.ru/license?LicenseType='.urlencode($_REQUEST['LicenseType']);
-		
-		$url .= '&InstallationUID='.INSTALLATION_UID;
-		
-		$url .= '&CID='.PASS_KEY;
-		
-		$url .= '&Redirect='.urlencode($_REQUEST['Redirect']);
-		
-		$this->replyRedirect( $url );
-	}
-	
-	function delete()
-	{
-		$url =  '?LicenseType='.urlencode($_REQUEST['LicenseType']);
-		
-		$url .= '&InstallationUID='.INSTALLATION_UID;
-		
-		$url .= '&LicenseKey=';
-		
-		$this->replyRedirect( $url );
+        $url =  '?LicenseType='.urlencode($_REQUEST['LicenseType']);
+
+        $url .= '&InstallationUID='.INSTALLATION_UID;
+
+        $url .= '&LicenseKey=';
+
+        $this->replyRedirect( $url );
 	}
 }

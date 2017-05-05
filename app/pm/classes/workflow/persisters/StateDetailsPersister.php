@@ -18,7 +18,11 @@ class StateDetailsPersister extends ObjectSQLPersister
  		array_push( $columns, 
  			"( SELECT s.IsTerminal FROM pm_State s ".
  			"   WHERE s.ReferenceName = ".$alias.".State AND s.VPD = ".$alias.".VPD AND s.ObjectClass = '".$className."') StateTerminal " );
- 		
+
+        array_push( $columns,
+            "( SELECT s.ArtifactsType FROM pm_State s ".
+            "   WHERE s.ReferenceName = ".$alias.".State AND s.VPD = ".$alias.".VPD AND s.ObjectClass = '".$className."') StateArtifactsType " );
+
  		return $columns;
  	}
 }

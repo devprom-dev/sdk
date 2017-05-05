@@ -1,21 +1,18 @@
 <?php
-
-include ('ProjectTable.php');
+include 'ProjectTable.php';
+include "ProjectForm.php";
 
 class ProjectsPage extends AdminPage
 {
-	function getObject()
-	{
+	function getObject() {
 		return getFactory()->getObject('pm_Project');
 	}
 	
-	function getTable()
-	{
+	function getTable() {
 		return new ProjectTable($this->getObject());
 	}
 
-	function getForm()
-	{
-		return null;
+	function getForm() {
+		return new ProjectForm($this->getObject());
 	}
 }

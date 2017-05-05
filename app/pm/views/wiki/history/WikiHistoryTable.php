@@ -7,30 +7,25 @@ include "WikiHistoryList.php";
 
 class WikiHistoryTable extends ProjectLogTable
 {
-	private $page_it;
+    private $pageObject = null;
 	
-	public function __construct()
+	public function __construct( $object )
 	{
+        $this->pageObject = $object;
 		parent::__construct(getFactory()->getObject('ChangeLog'));
- 		getSession()->addBuilder( new WikiHistorySettingBuilder($this->getWikiPageIt()) );
-	}
-	
-	function getWikiPageIt()
-	{
-		if ( !is_object($this->page_it) ) $this->getObjectIt();
-		return $this->page_it;
+        getSession()->addBuilder( new WikiHistorySettingBuilder($this->getObjectIt()) );
 	}
 	
 	function buildObjectIt()
 	{
-		$object_it = parent::buildObjectIt();
-		
-		$this->page_it = $object_it->copy(); 
-		
-		if ( $object_it->get('ParentPage') == '' )
-		{
-			$object_it = getFactory()->getObject(get_class($object_it->object))->getRegistry()->Query(
-						array (new WikiRootTransitiveFilter($object_it->getId()))
+		$object_it = $this->pageObject->getExact($_REQUEST[strtolower(get_class($this->pageObject))]);
+
+		if ( $object_it->getId() > 0 && $object_it->get('ParentPage') == '' ) {
+			$object_it = getFactory()->getObject(get_class($object_it->object))
+                ->getRegistry()->Query(
+				    array (
+				        new WikiRootTransitiveFilter($object_it->getId())
+                    )
 				);
 		}
 		return $object_it;
@@ -60,22 +55,34 @@ class WikiHistoryTable extends ProjectLogTable
 				$filters
 		);
 	}
-	
+
+    function buildStartFilter()
+    {
+        $filter = new ViewStartDateWebMethod();
+        $filter->setDefault('');
+        return $filter;
+    }
+
 	function getFilterPredicates()
 	{
-		$object_it = $this->getWikiPageIt();
+		$object_it = $this->getObjectIt();
 		if ( $object_it->get('ParentPage') == '' ) return parent::getFilterPredicates();
 
-		return array_filter(
+		return array_merge(
+		    array_filter(
 				parent::getFilterPredicates(),
 				function($predicate) {
 					return !$predicate instanceof ChangeLogVisibilityFilter;
 				}
-		);
+		    ),
+            array(
+                new FilterAttributeNotNullPredicate('Content')
+            )
+        );
 	}
 
     function getNewActions() {
-        $version_url = $this->getWikiPageIt()->getPageVersions();
+        $version_url = $this->getObjectIt()->getPageVersions();
         if ( $version_url == '' ) return array();
         return array(
             array (
@@ -97,15 +104,15 @@ class WikiHistoryTable extends ProjectLogTable
 
 	function getRenderParms( $parms )
 	{
-		$page_it = $this->getWikiPageIt();
-
-		return array_merge(
-				parent::getRenderParms( $parms ),
-				array (
-						'navigation_title' => $page_it->getDisplayName(),
-						'navigation_url' => $page_it->getViewUrl(),
-						'title' => text(2238)
-				)
-		);
+		$page_it = $this->getObjectIt();
+		$parms = array_merge(
+		    $parms,
+            array (
+                'navigation_title' => $page_it->getDisplayName(),
+                'navigation_url' => $page_it->getViewUrl(),
+                'title' => text(2238)
+            )
+        );
+		return parent::getRenderParms( $parms );
 	}
 } 

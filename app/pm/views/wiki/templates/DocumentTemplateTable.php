@@ -14,4 +14,8 @@ class DocumentTemplateTable extends PMPageTable
 	function getNewActions() {
 		return array();
 	}
+
+	function getExportActions() {
+        return array();
+    }
 }

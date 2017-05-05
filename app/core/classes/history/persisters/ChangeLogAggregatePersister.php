@@ -10,7 +10,8 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
 			" t.EntityRefName ",
 			" t.ObjectId ",
 			" t.Transaction ",
-			" t.ChangeKind "
+			" t.ChangeKind ",
+            " t.VPD "
 		);
  		
  		array_push( $columns,

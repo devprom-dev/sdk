@@ -43,7 +43,7 @@ class ImportXmlForm extends PMForm
  		switch ( $attribute )
  		{
  			case 'Excel':
- 				return text(377);
+ 				return str_replace('%1', $this->getExcelUrl(), text(50));
  		}
  	}
 
@@ -77,18 +77,16 @@ class ImportXmlForm extends PMForm
 		}
 	}
 	
-	function drawCustomAttribute( $attr )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
-		global $_REQUEST;
-		
-		switch ( $attr )
+		switch ( $attribute )
 		{
 			case 'object':
 				echo '<input type="hidden" name="object" value="'.htmlentities($_REQUEST['object']).'">';
 				break;
 				
 			default:
-				parent::drawCustomAttribute( $attr );
+				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
 	
@@ -113,4 +111,29 @@ class ImportXmlForm extends PMForm
 			parent::draw();
 		echo '</div>';
 	}
+
+    function getExcelUrl()
+    {
+        $object = !is_object($this->object)
+            ? getFactory()->getObject($_REQUEST['class']) : $this->object;
+
+        if ( !is_object($object) ) return '';
+
+        switch( $object->getClassName() )
+        {
+            case 'WikiPage':
+                $iterator = 'WikiIteratorExportExcelText';
+                break;
+
+            case 'pm_ChangeRequest':
+                $iterator = 'IteratorExportExcel';
+                break;
+
+            default:
+                $iterator = 'IteratorExportExcel';
+                break;
+        }
+
+        return '?export=html&prepare-import&class='.$iterator.'&entity=&objects=0&show=all&caption='.IteratorBase::wintoutf8(translate($object->getDisplayName()));
+    }
 }

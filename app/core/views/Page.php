@@ -5,11 +5,11 @@ use Symfony\Component\Templating\PhpEngine;
  use Symfony\Component\Templating\Loader\FilesystemLoader;
  use Symfony\Component\Templating\Helper\SlotsHelper;
  use Devprom\CommonBundle\Service\Widget\ScriptService;
- 
+
+include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportExcel.php';
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportHtml.php';
 include_once SERVER_ROOT_PATH.'core/classes/export/IteratorExportXml.php';
-include_once SERVER_ROOT_PATH.'core/classes/system/Coloring.php';
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 include SERVER_ROOT_PATH.'core/methods/ObjectModifyWebMethod.php';
 
@@ -52,7 +52,7 @@ class Page
 
 		if ( is_a($this->form, 'MetaobjectForm') && $this->form->getAction() != '' ) {
 			if ( $this->needDisplayForm() ) {
-                FeatureTouch::Instance()->touch(strtolower(get_class($this->form)));
+                \FeatureTouch::Instance()->touch(strtolower(get_class($this->form)));
 				$this->form->process();
 			}
 		}
@@ -221,9 +221,8 @@ class Page
  	
  	function exportIterator()
  	{
- 		global $model_factory;
-
  		$table = $this->getTableRef();
+        $table->getRenderParms(array());
  		
 		if ( $_REQUEST['class'] == '' ) {
 		    throw new Exception('Required parameter is missed: "class" should be given');
@@ -232,7 +231,8 @@ class Page
 		if( !class_exists($_REQUEST['class']) || !is_subclass_of($_REQUEST['class'], 'IteratorExport') ) {
 			throw new Exception('Given iterator "'.$_REQUEST['class'].'" cant be instantiated');
 		}
- 		
+
+        $_REQUEST['rows'] = 'all';
 		if ( $_REQUEST['objects'] == '' )
  		{
             $it = $table->getListIterator();
@@ -241,7 +241,7 @@ class Page
  		else
  		{
  			$object = $_REQUEST['entity'] == '' 
- 					? $table->getObject() : $model_factory->getObject($_REQUEST['entity']);
+ 					? $table->getObject() : getFactory()->getObject($_REQUEST['entity']);
 
  			if ( is_object($table) && is_a($table, 'PageTable') )
  			{
@@ -271,11 +271,34 @@ class Page
                 if ( $object instanceof MetaobjectStatable ) {
                     $columns[] = 'State';
                 }
-    				
+
+                if ( array_key_exists('prepare-import', $_REQUEST) ) {
+                    $skip_fields = array_merge(
+                        $object->getAttributesByGroup('trace'),
+                        $object->getAttributesByGroup('system'),
+                        $object->getAttributesByGroup('dates'),
+                        $object->getAttributesByGroup('time'),
+                        array(
+                            'Project',
+                            'UID',
+                            'RecordCreated',
+                            'RecordModified'
+                        )
+                    );
+                    foreach( array_keys($object->getAttributes()) as $attribute ) {
+                        if ( $object->IsAttributeStored($attribute) ) continue;
+                        $skip_fields[] = $attribute;
+                    }
+                }
+                else {
+                    $skip_fields = array();
+                }
+
     			foreach( $columns as $column )
     			{
-    				if ( $column != 'State' && !$list->getColumnVisibility($column) && $_REQUEST['show'] != 'all' ) continue;
+    				if ( $column != 'Content' && !$list->getColumnVisibility($column) && $_REQUEST['show'] != 'all' ) continue;
 					if ( trim($column) == '' ) continue;
+					if ( in_array($column, $skip_fields) ) continue;
     
     				if( $column == 'UID' )
     				{
@@ -291,9 +314,9 @@ class Page
 		}
 
 		$eit = new $_REQUEST['class']( $it );
-        $eit->setOptions( preg_split('/-/', $_REQUEST['options']) );
+        $eit->setOptions(preg_split('/-/', $_REQUEST['options']));
 		$eit->setTable($table);
-		$eit->setFields( $fields );
+		$eit->setFields($fields);
 		$eit->setName($_REQUEST['caption']);
 		$eit->export();
 			
@@ -399,7 +422,28 @@ class Page
                 getFactory()->getCacheService()->set($cacheId, $navigation, 'sessions');
             }
         }
-        return $this->navigation_parms = $navigation->getParms();
+
+        $projectSortData = array();
+        $data_it = getFactory()->getObject('pm_Participant')->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
+                new SortRecentModifiedClause(),
+                new SortProjectCaptionClause(),
+                new EntityProjectPersister()
+            )
+        );
+        while( !$data_it->end() ) {
+            $projectSortData[] = $data_it->get('ProjectCodeName');
+            $data_it->moveNext();
+        }
+
+        return $this->navigation_parms =
+            array_merge(
+                $navigation->getParms(),
+                array (
+                    'projectSortData' => array_flip($projectSortData)
+                )
+            );
     }
 
  	function getRenderParms()
@@ -411,9 +455,9 @@ class Page
 
 		if ( is_array($infos) )	{
 			foreach ( $infos as $section ) {
+			    if ( !$section->hasAccess() ) continue;
 				if ( $section instanceof PageSectionAttributes ) {
 					if ( $_REQUEST['formonly'] == '' ) continue;
-					if ( count($section->getAttributes()) < 1 ) continue;
 				}
 				$sections[$section->getId()] = $section;
 			}
@@ -423,10 +467,7 @@ class Page
 		$last_sections = array();
         foreach( $sections as $key => $section ) { 
             if ( $_REQUEST['formonly'] == '' && $section->getPlacement() == 'bottom' ) {
-				if ( $section instanceof NetworkSection ) {
-					$last_sections[] = $section;
-				}
-				else if ( $section instanceof PageSectionComments ) {
+				if ( $section instanceof PageSectionComments ) {
 					$bottom_sections = array_merge($bottom_sections, array($section->getId() => $section));
 				}
 				else {
@@ -446,7 +487,7 @@ class Page
  			'current_version' => $_SERVER['APP_VERSION'],
  			'object_class' => get_class($this->getObject()),
  			'object_id' => is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : '',
-            'license_name' => getFactory()->getObject('LicenseState')->getAll()->getDisplayName(),
+            'license_name' => $_SERVER['LICENSE'],
             'language_code' => strtolower(getSession()->getLanguageUid()),
  		    'datelanguage' => getLanguage()->getLocaleFormatter()->getDatepickerLanguage(),
             'dateformat' => getLanguage()->getDatepickerFormat(),
@@ -465,7 +506,6 @@ class Page
  	{
         // get active functional area
         $navigation_parms = $this->getNavigationParms();
-        
         $areas = $navigation_parms['areas'];
 
         foreach( $areas as $key => $area )
@@ -568,7 +608,7 @@ class Page
 		);
  	}
  	
- 	function getRedirect()
+ 	function getRedirect( $renderParms )
  	{
  		return '';
  	}
@@ -590,48 +630,41 @@ class Page
 			header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 			header("Pragma: no-cache"); // HTTP/1.0
 			header('Content-type: text/html; charset='.APP_ENCODING);
-			
+            header('X-Devprom-UI: tableonly');
+
 			// wait for changes of objects
 		    if ( $_REQUEST['wait'] != '' ) 
 		    {
-				$object = $this->getObject();
+                $object = $this->getObject();
                 if ( !is_object($object) ) return;
 
 		        $classes = $this->getWatchedObjects();
-				$entityFilters = array (
-					new FilterAttributePredicate('ObjectClass', $classes),
-					new FilterVpdPredicate($object->getVpds()),
-					new SortRecentClause()
-				);
-				$ids = array_filter(preg_split('/[\-,]/', $_REQUEST[strtolower(get_class($object))]), function( $value ) {
-					return is_numeric($value) && $value >= 0;
-				});
-				if ( count($ids) > 0 ) {
-					$entityFilters[] = new FilterAttributePredicate('ObjectId', $ids);
-				}
+				$entityFilters = $this->getWaitFilters($classes);
 
 				$filters = array_merge(
 					$entityFilters,
 					array (
-						new FilterModifiedAfterPredicate(
-							SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-1 seconds', strtotime(SystemDateTime::date()))))
-						)
+						new FilterModifiedSinceSecondsPredicate(5)
 					)
 				);
 
 		        // wait for entity-level lock has been released or new modifications has appeared
 				$waitSeconds = defined('PAGE_WAIT_SECONDS') ? PAGE_WAIT_SECONDS : 60;
-				$affected = getFactory()->getObject('AffectedObjects');
+
+                $affected = getFactory()->getObject('AffectedObjects');
 		        $lock = new LockFileSystem(array_shift(array_values($classes)));
+
 		        $lock->LockAndWait($waitSeconds, function() use ($affected, $filters)
 		        {
 		        	 getFactory()->resetCachedIterator($affected);
         	         return $affected->getRegistry()->Count($filters) > 0;
 		        });
-		        
-		        getFactory()->resetCache();
-		        
-		        $ids = $this->getRecentChangedObjectIds($entityFilters);
+
+		        if ( connection_aborted() ) exit();
+                time_nanosleep(0, 500000000);
+
+                getFactory()->resetCachedIterator($affected);
+		        $ids = $this->getRecentChangedObjectIds($filters);
 		        if ( count($ids) < 1 ) $ids[] = 0;
 		        
 		        $_REQUEST['object'] = $_REQUEST[strtolower(get_class($object))] = join(',', $ids); 
@@ -640,11 +673,11 @@ class Page
 		    $render_parms['tableonly'] = true;
 		    $render_parms['changed_ids'] = $ids;
 
+            getFactory()->resetCache();
  			$this->table->render($view, $render_parms);
 
-			// long living session shouldn't modify cache
+ 			// long living session shouldn't modify cache
 			getFactory()->getCacheService()->setReadonly();
-
 			exit();
 		}
 
@@ -668,16 +701,16 @@ class Page
 
 			die();
 		}
-		
-		$redirect_url = $this->getRedirect();
+
+        $render_parms = array_merge( $render_parms, $this->getFullPageRenderParms() );
+
+		$redirect_url = $this->getRedirect($render_parms);
 		if ( $redirect_url != '' ) {
 			if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
 				setcookie($_REQUEST['tour'].'Skip', "1", mktime(0, 0, 0, 1, 1, date('Y') + 1), '/');
 			}
 			exit(header('Location: '.$redirect_url));
 		}
-
-		$render_parms = array_merge( $render_parms, $this->getFullPageRenderParms() );
 
  	 	if ( !$this->hasAccess() ) {
 			if ( $_REQUEST['tour'] != '' && preg_match('/[a-zA-Z0-9]+/i', $_REQUEST['tour']) ) {
@@ -765,18 +798,27 @@ class Page
 		);
 	}
 
+	function getWaitFilters( $classes )
+    {
+        $entityFilters = array (
+            new FilterAttributePredicate('ObjectClass', $classes),
+            new FilterVpdPredicate($this->getObject()->getVpds()),
+            new SortRecentClause()
+        );
+
+        $ids = array_filter(preg_split('/[\-,]/', $_REQUEST[strtolower(get_class($this->getObject()))]), function( $value ) {
+            return is_numeric($value) && $value >= 0;
+        });
+
+        if ( count($ids) > 0 ) {
+            $entityFilters[] = new FilterAttributePredicate('ObjectId', $ids);
+        }
+        return $entityFilters;
+    }
+
  	function getRecentChangedObjectIds( $filters )
  	{
-         return getFactory()->getObject('AffectedObjects')->getRegistry()->Query(
-			array_merge(
-				$filters,
-				array (
-					new FilterModifiedAfterPredicate(
-						SystemDateTime::convertToClientTime(strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 seconds', strtotime(SystemDateTime::date()))))
-					)
-				)
-			)
-		 )->fieldToArray('ObjectId');
+         return getFactory()->getObject('AffectedObjects')->getRegistry()->Query($filters)->fieldToArray('ObjectId');
  	}
  	
  	function getHint()

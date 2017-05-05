@@ -13,13 +13,16 @@ class PMUserSettingsExportRegistry extends ObjectRegistrySQL
 		);
 	}
 	
-	function getSorts()
-	{
-		return array_merge(
-				parent::getSorts(),
-				array (
-						new SortAttributeClause('Participant.D')
-				)
-		);
-	}
+	function getQueryClause()
+    {
+        return " 
+            (SELECT * 
+               FROM ".parent::getQueryClause()."
+              WHERE (Participant, Setting, VPD) IN (
+                        SELECT MAX(t2.Participant) Participant, t2.Setting, t2.VPD
+                          FROM ".parent::getQueryClause()." t2
+                          GROUP BY t2.Setting, t2.VPD
+                    )
+             ) ";
+    }
 }

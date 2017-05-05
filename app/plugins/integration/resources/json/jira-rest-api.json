@@ -1,0 +1,137 @@
+[{
+  "Release": {
+    "url": "/rest/api/latest/version",
+    "link": "/projects/{project}/versions/{id}",
+    "Caption": "name",
+    "Description": "description",
+    "StartDate": "startDate",
+    "FinishDate": "releaseDate"
+  },
+  "Request": {
+    "url": "/rest/api/latest/issue",
+    "link": "/browse/{id}",
+    "Caption": "fields.summary",
+    "Description": "fields.description",
+    "Type": {
+      "ReferenceName": "fields.issuetype.name",
+      "mapping": [{"bug":"Bug"},{"bug":"Ошибка"},{"":"Story"},{"enhancement":"Feature"},{"enhancement":"Новая функциональность"},{"":"*"}]
+    },
+    "Priority": {"Id":"fields.priority.id"},
+    "Author": {"Email":"fields.reporter.emailAddress"},
+    "Owner": {"Email":"fields.assignee.emailAddress"},
+    "State": {
+      ".": "fields.status.name",
+      "mapping": [{"submitted":"Backlog"},{"submitted":"To Do"},{"development":"Selected for Development"},{"development":"В работе"},{"development":"In Progress"},{"resolved":"Done"},{"resolved":"Готово"},{"submitted":"*"}],
+      "readonly": "true"
+    },
+    "SubmittedVersion": "fields.versions:first.name",
+    "PlannedRelease": {
+      "Caption": "fields.fixVersions:first.name"
+    },
+    "comments": {
+      "reference":"fields.comment.comments",
+      "type":"RequestComment",
+      "readonly": "true"
+    },
+    "worklog": {
+      "reference":"fields.worklog.worklogs",
+      "type":"ActivityRequest",
+      "readonly": "true"
+    },
+    "attachments": {
+      "reference":"fields.attachment",
+      "type":"RequestAttachment",
+      "readonly": "true"
+    },
+    "links": {
+      "reference":"fields.issuelinks",
+      "type":"RequestLink",
+      "readonly": "true"
+    }
+  },
+  "RequestComment": {
+    "url": "/rest/api/latest/issue/{parent}/comment",
+    "link": "/browse/{parentId}?focusedCommentId={id}&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-{id}",
+    "AuthorId": {"Email":"author.emailAddress","Caption":"author.displayName"},
+    "ObjectId": "{parentId}",
+    "Caption": "body"
+  },
+  "RequestAttachment": {
+    "url": "/rest/api/latest/attachment",
+    "url-append": "/rest/api/latest/issue/{parent}/attachments",
+    "link": "/attachments/{id}",
+    "ObjectId": "{parentId}",
+    "FileMime": "mimeType",
+    "FileExt": "filename",
+    "File": "content"
+  },
+  "ActivityRequest": {
+    "url": "/rest/api/latest/issue/{parent}/worklog",
+    "link": "/rest/api/latest/issue/{parent}/worklog/{id}",
+    "Participant": {"Email":"author.emailAddress"},
+    "Task": "{parentId}",
+    "Description": "comment",
+    "Capacity": "timeSpentSeconds",
+    "ReportDate": "started"
+  },
+  "RequestLink": {
+    "url": "/rest/api/latest/issueLink",
+    "link": "/rest/api/latest/issueLink/{id}",
+    "SourceRequest": "{parentId}",
+    "TargetRequest": {
+      "reference": "outwardIssue",
+      "type": "Request"
+    },
+    "LinkType": {
+      "ReferenceName": "type.name",
+      "mapping": [{"blocks":"Blocks"}]
+    }
+  },
+  "Task": {
+    "url": "/rest/api/latest/issue",
+    "link": "/browse/{id}",
+    "Caption": "fields.summary",
+    "Description": "fields.description",
+    "Priority": {"Id":"fields.priority.id"},
+    "Assignee": {"Email":"fields.assignee.emailAddress"},
+    "ChangeRequest": {
+      "reference": "fields.parent",
+      "type": "Request"
+    },
+    "TaskType": {
+      "ReferenceName": "fields.issuetype.name",
+      "mapping": [{"":"Task"}]
+    },
+    "State": {
+      ".": "fields.status.name",
+      "mapping": [{"submitted":"Backlog"},{"analysis":"Selected for Development"},{"development":"In Progress"},{"resolved":"Done"},{"submitted":"*"}],
+      "readonly": "true"
+    },
+    "comments": {
+      "reference":"fields.comment.comments",
+      "type":"TaskComment",
+      "readonly": "true"
+    },
+    "worklog": {
+      "reference":"fields.worklog.worklogs",
+      "type":"ActivityTask",
+      "readonly": "true"
+    }
+  },
+  "ActivityTask": {
+    "url": "/rest/api/latest/issue/{parent}/worklog",
+    "link": "/rest/api/latest/issue/{parent}/worklog/{id}",
+    "Participant": {"Email":"author.emailAddress"},
+    "Task": "{parentId}",
+    "Description": "comment",
+    "Capacity": "timeSpentSeconds",
+    "ReportDate": "started"
+  },
+  "TaskComment": {
+    "url": "/rest/api/latest/issue/{parent}/comment",
+    "link": "/browse/{parentId}?focusedCommentId={id}&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-{id}",
+    "AuthorId": {"Email":"author.emailAddress","Caption":"author.displayName"},
+    "ObjectId": "{parentId}",
+    "Caption": "body"
+  }
+}]

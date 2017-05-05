@@ -1,13 +1,17 @@
 <?php
-
 include "persisters/WikiPageChangePersister.php";
+include "WikiPageChangeRegistry.php";
 
 class WikiPageChange extends Metaobject
 {
 	function __construct()
 	{
-		parent::__construct('WikiPageChange');
-		
+		parent::__construct('WikiPageChange', new WikiPageChangeRegistry($this));
 		$this->addPersister( new WikiPageChangePersister() );
 	}
+
+    function getReferenceName()
+    {
+        return '';
+    }
 }

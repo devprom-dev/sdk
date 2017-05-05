@@ -7,4 +7,34 @@ class VelocityTable extends PMPageTable
 	{
 		return new VelocityChart( $this->getObject() );
 	}
+
+	function getExportActions()
+    {
+        return array();
+    }
+
+    function getNewActions()
+    {
+        return array();
+    }
+
+    function getFilterPredicates()
+    {
+        if ( $this->getObject() instanceof Iteration ) {
+            return array_merge(
+                parent::getFilterPredicates(),
+                array (
+                    new IterationTimelinePredicate(IterationTimelinePredicate::PAST)
+                )
+            );
+        }
+        else {
+            return array_merge(
+                parent::getFilterPredicates(),
+                array (
+                    new ReleaseTimelinePredicate('past')
+                )
+            );
+        }
+    }
 } 

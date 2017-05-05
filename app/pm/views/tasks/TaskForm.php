@@ -3,7 +3,6 @@
 use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
 
 include "FieldIssueTraces.php";
-include "FieldIssueState.php";
 include_once "FieldTaskTypeDictionary.php";
 include_once SERVER_ROOT_PATH.'pm/views/time/FieldSpentTimeTask.php';
 include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
@@ -21,7 +20,6 @@ include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
 
 class TaskForm extends PMPageForm
 {
- 	private $request_it = null;
  	private $method_spend_time = null;
     private $convertMethod = null;
 
@@ -42,8 +40,6 @@ class TaskForm extends PMPageForm
 
 		if ( $this->getObject()->getAttributeType('ChangeRequest') != '' && is_object($this->getObjectIt()) && $this->getObjectIt()->get('ChangeRequest') != '' )
 		{
-			$this->getObject()->addAttribute('IssueState', 'TEXT', text(2128),
-				true, false, '', $this->getObject()->getAttributeOrderNum('ChangeRequest')+1);
 			$this->getObject()->setAttributeVisible('IssueAttachment', true);
 
 			if ( $this->getObjectIt()->get('IssueDescription') != '' ) {
@@ -59,6 +55,7 @@ class TaskForm extends PMPageForm
 		else if ( $_REQUEST['ChangeRequest'] != '' ) {
             $this->getObject()->setAttributeVisible('ChangeRequest', false);
         }
+        $this->getObject()->setAttributeVisible('ProjectPage', true);
 
 		parent::extendModel();
 
@@ -205,10 +202,8 @@ class TaskForm extends PMPageForm
 			    return new FieldWatchers( is_object($this->object_it) ? $this->object_it : $this->object );
 
 			case 'TaskType':
-				$tasktype = $model_factory->getObject('TaskType');
-
+				$tasktype = getFactory()->getObject('TaskType');
 				$tasktype->addFilter( new FilterBaseVpdPredicate() );
-
 				return new FieldTaskTypeDictionary( $tasktype );
 
 			case 'Assignee':
@@ -218,20 +213,13 @@ class TaskForm extends PMPageForm
 				return new FieldParticipantDictionary( $object );
 
 			case 'Release':
-
-				if ( !is_object($this->getObjectIt()) )
-				{
-					// filter not-passed only when creating a new task
-					$iteration = $model_factory->getObject('Iteration');
-
-					$iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED) );
-
-					return new FieldDictionary( $iteration );
-				}
-				else
-				{
-					return parent::createFieldObject( $name );
-				}
+                if ( !is_object($this->getObjectIt()) ) {
+                    $iteration = getFactory()->getObject('IterationActual');
+                }
+                else {
+                    $iteration = getFactory()->getObject('IterationRecent');
+                }
+                return new FieldAutoCompleteObject( $iteration );
 
 			case 'ResultArtefact':
 				return new FieldDictionary( $model_factory->getObject('pm_Artefact') );
@@ -248,15 +236,26 @@ class TaskForm extends PMPageForm
 			case 'IssueTraces':
 				return new FieldIssueTraces(is_object($this->object_it) ? $this->object_it->get($name) : '');
 
-			case 'IssueState':
-				$req_it = is_object($this->object_it) && $this->object_it->get('ChangeRequest') != ''
-					? $this->object_it->getRef('ChangeRequest')
-					: $this->object->getEmtpyIterator();
-				return new FieldIssueState($req_it);
-
 			case 'LeftWork':
             case 'Planned':
 				return new FieldHours();
+
+            case 'Caption':
+                if ( !$this->getEditMode() ) {
+                    $field = new FieldWYSIWYG();
+                    $field->setObjectIt( $this->getObjectIt() );
+                    $field->getEditor()->setMode( WIKI_MODE_INPLACE_INPUT );
+                }
+                else {
+                    $field = parent::createFieldObject($name);
+                }
+                return $field;
+
+            case 'ProjectPage':
+                if ( is_object($this->getObjectIt()) && $this->getObjectIt()->get($name) != '' ) {
+                    return new FieldListOfReferences( $this->getObjectIt()->getRef($name) );
+                }
+                return null;
 
 			default:
 				return parent::createFieldObject( $name );
@@ -400,7 +399,8 @@ class TaskForm extends PMPageForm
 			$actions[] = array();
 			$actions[] = array (
 				'name' => $this->method_spend_time->getCaption(),
-				'url' => $this->method_spend_time->getJSCall()
+				'url' => $this->method_spend_time->getJSCall(),
+                'uid' => 'spend-time'
 			);
 		}
 
@@ -444,6 +444,28 @@ class TaskForm extends PMPageForm
     }
 
     function getShortAttributes() {
-        return array('TaskType', 'Priority', 'Planned', 'Release', 'Assignee', 'OrderNum', 'Owner', 'Tags');
+        return array_merge(
+            parent::getShortAttributes(),
+            array('TaskType', 'Priority', 'Planned', 'Release', 'Assignee', 'OrderNum', 'Owner', 'Tags')
+        );
+    }
+
+    function getFieldDescription( $attr )
+    {
+        switch( $attr ) {
+            case 'Release':
+                if ( $this->getEditMode() ) {
+                    $report_it = getFactory()->getObject('PMReport')->getExact('projectplan');
+                    return str_replace('%1', $report_it->getUrl(),
+                        str_replace('%2', $report_it->getDisplayName(),
+                            text(2263)));
+                }
+            default:
+                return parent::getFieldDescription($attr);
+        }
+    }
+
+    protected function getNeighbourAttributes() {
+        return array('Assignee', 'Release', 'Priority');
     }
 }

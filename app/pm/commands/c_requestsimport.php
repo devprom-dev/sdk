@@ -1,28 +1,35 @@
 <?php
+include_once SERVER_ROOT_PATH . 'core/classes/model/validation/ModelValidator.php';
+include_once SERVER_ROOT_PATH . "pm/classes/issues/validators/ModelValidatorIssueAuthor.php";
 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
- class RequestsImportBase extends CommandForm
- {
+class RequestsImportBase extends CommandForm
+{
+     private $fileName = '';
+
  	function getObject()
  	{
  	}
+
+ 	function setFileName( $fileName ) {
+        $this->fileName = $fileName;
+    }
+
+    function getFileName() {
+        return $this->fileName;
+    }
  	
  	function getLines()
  	{
 		$lines = preg_split('/'.Chr(10).'/', $this->sanitizeData($_REQUEST['Excel']));
-		
 		for ( $i = 0; $i < count($lines); $i++ )
 		{
-			if ( $lines[$i] == '' )
-			{
+			if ( $lines[$i] == '' ) {
 				unset($lines[$i]);
 			}
-			else
-			{
+			else {
 				$lines[$i] = preg_split('/'.Chr(9).'/', $lines[$i]);
 			}
 		}
-		
 		return $lines;
  	}
 
@@ -38,8 +45,16 @@
  		return array_merge(
 				array_diff(
 					array_keys($object->getAttributes()),
-					$object->getAttributesByGroup('system'),
-					$object->getAttributesByGroup('trace')
+                    array_diff(
+                        $object->getAttributesByGroup('system'),
+                        array (
+                            'SectionNumber'
+                        )
+                    ),
+					$object->getAttributesByGroup('trace'),
+                    array(
+                        'OrderNum'
+                    )
 				),
 				array (
 					'ContentEditor'
@@ -61,6 +76,7 @@
  	function parse()
 	{
 		$lines = $this->getLines();
+        $fileName = $this->getFileName();
 
 		$fields = array();
 		$object = $this->getObject();
@@ -73,10 +89,11 @@
 		);
 		$captions = array_flip($captions);
 
-		for ( $i = 0; $i < count($lines[0]); $i++ ) {
-			$titleHash = md5(trim($lines[0][$i]));
+        $titles = array_shift($lines);
+		foreach( $titles as $cellName => $title ) {
+			$titleHash = md5(trim($title));
 			if ( $captions[$titleHash] != '' ) {
-				$fields = array_merge($fields, array( $captions[$titleHash] => $i) );
+				$fields = array_merge($fields, array( $captions[$titleHash] => $cellName) );
 			}
 		}
 
@@ -87,70 +104,102 @@
 		$field_names = array_keys($fields);
 		$result = array();
 				
-		for ( $i = 1; $i < count($lines); $i++ )
+		foreach( $lines as $cellName => $line )
 		{
 			$parms = array();
 
 			for ( $j = 0; $j < count($field_names); $j++ )
 			{
-				$value = $lines[$i][$fields[$field_names[$j]]];
+                $fieldName = $field_names[$j];
+                $cellName = $fields[$fieldName];
+				$value = $line[$cellName];
 				
-				if ( $object->IsReference($field_names[$j]) )
+				if ( $object->IsReference($fieldName) )
 				{
-					switch ( $field_names[$j] )
+					switch ( $fieldName )
 					{
 						default:
 							$id = '';
 							
-							if ( !array_key_exists($field_names[$j], $refs) )
+							if ( !array_key_exists($fieldName, $refs) )
 							{
-								$ref = $object->getAttributeObject($field_names[$j]);
-								$refs[$field_names[$j]] = $ref->getAll();
+								$ref = $object->getAttributeObject($fieldName);
+								$refs[$fieldName] = $ref->getAll();
 							}
 							
-							if ( $field_names[$j] == 'ParentPage' )
+							if ( $fieldName == 'ParentPage' )
 							{
 								$new_value_row = array_filter( $result, function($result_value) use ($value) {
 										return $result_value['Caption'] == trim($value); 
 								});
-								
-								if ( count($new_value_row) > 0 ) $id = 'Undefined:'.trim($value); 
+								if ( count($new_value_row) > 0 ) $id = 'Undefined:'.$this->getAltKey(array_shift($new_value_row));
 							}
-							
+
 							if ( $id == '' )
 							{
 								$id = $this->getId(
-										$refs[$field_names[$j]], 
+										$refs[$fieldName],
 										trim($value), 
 										'Undefined:'.trim($value)
 								);
 							}
 								
-							$parms = array_merge($parms, array( $field_names[$j] => $id ) );
+							$parms = array_merge($parms, array( $fieldName => $id ) );
 					}
 				}
 				else
 				{
-				    switch ( $field_names[$j] )
+				    switch ( $fieldName )
 				    {
 				        case 'State':
 				            $state_it->moveTo('Caption', trim($value));
-
 				            $value = $state_it->get('ReferenceName');
-				            
 				            break;
-				    }
 
-					$parms = array_merge($parms,
-						array( $field_names[$j] => $value ) );
+                        case 'SectionNumber':
+                            $parentNumber = join('.',array_slice(preg_split('/\./', trim($value)), 0, -1));
+                            $new_value_row = array_filter( $result, function($result_value) use ($parentNumber, $fieldName) {
+                                return $result_value[$fieldName] == $parentNumber;
+                            });
+                            if ( count($new_value_row) > 0 ) {
+                                $parentPageValue = 'Undefined:'.$this->getAltKey(array_shift($new_value_row));
+                            }
+                            else {
+                                if ( $parentNumber == '' ) {
+                                    // search for root
+                                    $new_value_row = array_filter( $lines, function($result_value) use ($cellName) {
+                                        return $result_value[$cellName] == '';
+                                    });
+                                    if ( count($new_value_row) < 1 ) {
+                                        $data = array_map(function() { return ''; }, array_flip($field_names));
+                                        $data['Caption'] = trim($fileName);
+                                        $data['ParentPage'] = '';
+                                        $data['Id'] = $this->getAltKey($data);
+                                        array_unshift($result, $data);
+                                    }
+                                    else {
+                                        $parentRow = array_shift($new_value_row);
+                                        $fileName = $parentRow[$fields['Caption']];
+                                    }
+                                }
+                                $parentPageValue = 'Undefined:'.$this->getAltKey(array('Caption'=>trim($fileName)));
+                            }
+                            $parms = array_merge($parms, array( 'ParentPage' => $parentPageValue ) );
+                            break;
+				    }
+					$parms = array_merge($parms, array( $fieldName => $value ) );
 				}
 			}
-			
+            $parms = array_merge($parms, array( 'Id' => $this->getAltKey($parms)  ) );
+
 			array_push($result, $parms);
 		}
-
 		return $result;
 	}
+
+	function getAltKey( $parms ) {
+        return md5($parms['SectionNumber'].$parms['ParentPage'].$parms['Caption']);
+    }
 
 	function getId( $object_it, $value, $default )
 	{
@@ -198,6 +247,7 @@
 		}
 
 		$result = $this->parse();
+        $undefined = array();
 		$imported = 0;
 		
 		for ( $i = 0; $i < count($result); $i++ )
@@ -212,8 +262,22 @@
 						$object = $this->request->getAttributeObject($field);
 						getFactory()->resetCachedIterator( $object );
 
-						if ( preg_match('/Undefined:(.+)/', $value, $match) ) {
-							$result[$i][$field] = $this->getId($object->getAll(), trim($match[1]), 'NULL');
+						if ( preg_match('/Undefined:(.+)/', $value, $match) )
+						{
+                            $parentId = trim($match[1]);
+                            if ( array_key_exists($parentId, $undefined) ) {
+                                $id = $undefined[$parentId];
+                            }
+                            else {
+                                $parentRow = array_shift(
+                                    array_filter($result, function($item) use($parentId) {
+                                        return $item['Id'] == $parentId;
+                                    })
+                                );
+                                $id = $this->getId($object->getAll(), $parentRow, '');
+                                if ( $id == '' && in_array($field, array('Author')) ) $id = $parentId;
+                            }
+							$result[$i][$field] = $id;
 						}
 
 						if ( $result[$i][$field] > 0 && $object instanceof Project ) {
@@ -225,12 +289,15 @@
 				$parms = $result[$i];
                 $mapper = new ModelDataTypeMapper();
                 $mapper->map( $this->request, $parms );
+                $validator = new ModelValidator();
+                $validator->addValidator(new ModelValidatorIssueAuthor());
+                $validator->validate($this->request, $parms);
 
 				$request_id = $this->request->add_parms( $parms );
 				if ( $request_id > 0 )
 				{
 					$imported++;
-					
+                    $undefined[$result[$i]['Id']] = $request_id;
 					$this->createDependencies($request_id, $parms);
 				}
 			}
@@ -245,8 +312,6 @@
 
  	function preview()
 	{
-		global $_REQUEST, $model_factory, $project_it;
-
 		// parse source content
 		$result = $this->parse();
 		$object = $this->getObject();
@@ -290,23 +355,35 @@
 				if ( $object->IsReference($fields[$j]) )
 				{
 					$ref = $object->getAttributeObject($fields[$j]);
-					
-					$value = array_pop(preg_split('/:/', $result[$i][$fields[$j]]));
-					$default_value = $object->getDefaultAttributeValue($fields[$j]);
-					
-					if ( $value == '' ) $value = $default_value;
 
-					$ref_it = is_numeric($value)
-							? $ref->getExact( $value )
-							: ($ref->getAttributeType('Caption') != ''
-									? $ref->getByRef('Caption', $value)
-									: $ref->getEmptyIterator());
+                    $parts = preg_split('/:/', $result[$i][$fields[$j]]);
+                    if ( $parts[0] == 'Undefined' ) {
+                        $parentId = array_pop($parts);
+                        $foundRow = array_shift(
+                            array_filter($result, function($item) use($parentId) {
+                                return $item['Id'] == $parentId;
+                            })
+                        );
+                        $value = is_array($foundRow) ? $foundRow['Caption'] : $parentId;
+                    }
+                    else {
+                        $value = $result[$i][$fields[$j]];
+                        $default_value = $object->getDefaultAttributeValue($fields[$j]);
 
-					if ( $ref_it->getId() < 1 ) $ref_it = $ref->getExact( $default_value );
+                        if ( $value == '' ) $value = $default_value;
 
-					$value = $ref_it->getId() > 0
-							? $ref_it->getDisplayName() 
-							: '';
+                        $ref_it = is_numeric($value)
+                            ? $ref->getExact( $value )
+                            : ($ref->getAttributeType('Caption') != ''
+                                ? $ref->getByRef('Caption', $value)
+                                : $ref->getEmptyIterator());
+
+                        if ( $ref_it->getId() < 1 ) $ref_it = $ref->getExact( $default_value );
+
+                        $value = $ref_it->getId() > 0
+                            ? $ref_it->getDisplayName()
+                            : '';
+                    }
 				}
 				else
 				{

@@ -25,7 +25,7 @@ class RequestFormDuplicate extends RequestForm
 
 		if ( $_REQUEST['Project'] == '' ) {
 			$object->setAttributeVisible('Project', true);
-			$object->setAttributeType('Project', 'REF_ProjectAccessibleId');
+			$object->setAttributeType('Project', 'REF_ProjectAccessibleActiveId');
 			$object->setAttributeOrderNum('Project', 2);
 		}
 	}

@@ -22,7 +22,7 @@
  {
  	exit(header('Location: /404'));
  }
- 
+
  $attrs = array_keys($object->getAttributes());
 
  foreach ( $attrs as $attr )
@@ -31,7 +31,7 @@
 
 	if ( strtolower($type) == 'file' || strtolower($type) == 'image' )
 	{
-		 $it = $object->getExact( $_REQUEST['id'] );
+		 $it = $object->getExact( array_shift(preg_split('/\./',$_REQUEST['id'])) );
 		 $file_name = SERVER_FILES_PATH.$object->getClassName().'/'.basename($it->getFilePath( $attr ));
 		
 		 if ( file_exists($file_name) )

@@ -1,9 +1,10 @@
 <?php
 
 $session = getSession();
-
+if ( is_array($project_navigation_parms) ) {
+    $project_navigation_parms['projectSortData'] = $projectSortData;
+}
 $project_it = $session->getProjectIt();
-
 ?>
 
 <div class="btn-toolbar title-toolbar">
@@ -50,7 +51,7 @@ $project_it = $session->getProjectIt();
         <? } else { ?>
 
             <div class="btn-group">
-                <a class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_portfolio']?>">
+                <a id="navbar-portfolio" class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_portfolio']?>">
                     <?=$project_navigation_parms['current_portfolio_title']?>
                 </a>
             </div>

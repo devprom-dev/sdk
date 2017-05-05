@@ -14,28 +14,28 @@ class RequestBusinessActionMoveImplementedNextState extends BusinessActionWorkfl
  	{
 		$request_it = $object_it->object->getRegistry()->Query(
 			array (
-				new RequestImplementationFilter($object_it->getId())
+				new RequestImplementationFilter($object_it->getId()),
+                new FilterNotInPredicate($object_it->getId())
 			)
 		);
 		while( !$request_it->end() )
 		{
-			$state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
-				array(
-					new FilterVpdPredicate($request_it->get('VPD')),
-					new SortOrderedClause()
-				)
-			);
-			$state_it->moveTo('ReferenceName', $request_it->get('State'));
-			$state_it->moveNext();
-			if ( $state_it->get('ReferenceName') == '' ) {
-				$request_it->moveNext();
-				continue;
-			}
+            $state_it = $request_it->getStateIt();
+            if ( $state_it->get('IsTerminal') == 'Y' ) {
+                $request_it->moveNext();
+                continue;
+            }
+
+            $transition_it = $state_it->getTransitionIt();
+            if ( !$transition_it->appliable() || !$transition_it->doable($request_it) ) {
+                $request_it->moveNext();
+                continue;
+            }
 
 			$service = new WorkflowService($request_it->object);
 			$service->moveToState(
-					$request_it->copy(),
-					$state_it->get('ReferenceName')
+                $request_it->copy(),
+                $transition_it->getRef('TargetState')->get('ReferenceName')
 			);
 
 			$request_it->moveNext();

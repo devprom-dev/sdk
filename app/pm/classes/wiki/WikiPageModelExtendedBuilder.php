@@ -13,10 +13,12 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
     public function build( Metaobject $object )
     {
     	if ( !$object instanceof WikiPage ) return;
-    	
-        $object->addAttribute('Workflow', 'TEXT', text(2044), false);
-        $object->addAttributeGroup('Workflow', 'workflow');
-        $object->addPersister( new WikiPageWorkflowPersister(array('Workflow')) );
+
+        if ( $object->getStateClassName() != '' ) {
+            $object->addAttribute('Workflow', 'TEXT', text(2044), false);
+            $object->addAttributeGroup('Workflow', 'workflow');
+            $object->addPersister(new WikiPageWorkflowPersister(array('Workflow')));
+        }
 
 		$object->addAttribute('Attachments', 'REF_WikiPageFileId', translate('Приложения'), false, false, '', 50);
 		$object->addPersister( new WikiPageAttachmentsPersister(array('Attachments')) );
@@ -30,19 +32,22 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
 		$object->addPersister( new CommentRecentPersister(array('RecentComment')) );
 
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		if( $methodology_it->HasFeatures() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Feature')) )
-		{
-			$object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), true, false);
-			$object->addPersister( new WikiPageFeaturePersister(array('Feature')) );
-			$object->addAttributeGroup('Feature', 'trace');
-            $object->addAttributeGroup('Feature', 'bulk');
-		}
+        if ( !$object instanceof ProjectPage ) {
+            $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+            if( $methodology_it->HasFeatures() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Feature')) )
+            {
+                $object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), true, false);
+                $object->addPersister( new WikiPageFeaturePersister(array('Feature')) );
+                $object->addAttributeGroup('Feature', 'trace');
+                $object->addAttributeGroup('Feature', 'bulk');
+            }
+        }
 
-		foreach( array('Tags', 'Attachments', 'Watchers', 'Author') as $attribute ) {
+		foreach( array('Tags', 'Attachments', 'Watchers', 'Author',) as $attribute ) {
 			$object->addAttributeGroup($attribute, 'additional');
 			$object->setAttributeRequired($attribute, false);
 		}
+        $object->addAttributeGroup('State', 'additional');
 		$object->setAttributeOrderNum('Author', 400);
     }
 }

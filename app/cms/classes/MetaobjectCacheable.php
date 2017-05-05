@@ -30,14 +30,11 @@ class MetaobjectCacheable extends Metaobject
 		$getters = array ( GETTER_ALL, GETTER_LATEST, GETTER_FIRST, GETTER_COUNT ); 
 		        
 		$class_name = get_class($this);
-		
-		do 
+		do
 		{
-		    foreach( $getters as $getter )
-		    {
-    		    getFactory()->getCacheService()->set($this->getCacheKey($getter, $class_name), '', $this->getCacheCategory());
+		    foreach( $getters as $getter ) {
+    		    getFactory()->getCacheService()->reset($this->getCacheKey($getter, $class_name), $this->getCacheCategory());
 		    }
-		    
 		    $class_name = get_parent_class($class_name);
 		} 
 		while( $class_name !== false && strtolower($class_name) != 'metaobject');

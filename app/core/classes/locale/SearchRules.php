@@ -1,10 +1,16 @@
 <?php
+include "app-stopwords-russian.php";
+include "app-stopwords-english.php";
 
 class SearchRules
 {
-    static function getSearchItems( $text )
+    static function getSearchItems( $text, $locale = 'en' )
     {
         $text = TextUtils::getAlphaNumericString($text);
+        $stopwords = strtolower($locale) == 'en'
+            ? APP_StopWords_English::stopwords()
+            : APP_StopWords_Russian::stopwords();
+
         $stem = new Stem\LinguaStemRu();
         return array_map(
             function ($word) use ($stem) {
@@ -14,8 +20,8 @@ class SearchRules
             },
             array_filter(
                 preg_split('/\s+/', $text),
-                function ($value) {
-                    return trim($value) != '';
+                function ($value) use ($stopwords) {
+                    return $value != '' && !in_array($value, $stopwords);
                 }
             )
         );

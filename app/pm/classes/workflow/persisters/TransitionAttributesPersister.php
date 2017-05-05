@@ -2,7 +2,11 @@
 
 class TransitionAttributesPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes() {
+        return array('LastTransition');
+    }
+
+    function getSelectColumns( $alias )
  	{
  		$columns = array();
  		
@@ -14,4 +18,8 @@ class TransitionAttributesPersister extends ObjectSQLPersister
 
  		return $columns;
  	}
+
+    function IsPersisterImportant() {
+        return true;
+    }
 }

@@ -1,12 +1,11 @@
 <?php
-
-include(SERVER_ROOT_PATH.'admin/install/InstallationFactory.php');
+include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 
 class InstallComplete extends CommandForm
 {
 	function validate()
 	{
-		return getFactory()->getObject('DeploymentState')->IsInstalled();
+		return \DeploymentState::IsInstalled();
 	}
 
 	function create()

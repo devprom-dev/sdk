@@ -19,6 +19,9 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
             $page_it = $object_it->getRef('WikiPage');
             $this->applyRules($page_it, array('Content'));
         }
+        if ( $object_it->object instanceof Request ) {
+            $this->applyRules($object_it, $object_it->getData());
+        }
     }
 
 	function delete( $object_it ) {;}
@@ -33,6 +36,8 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
                 new FilterAttributePredicate('State', $state_it->getId()),
             )
         );
+        $object_it->object->removeNotificator(get_class($this));
+
         $action = getFactory()->getObject('StateBusinessAction');
         while ( !$action_it->end() )
         {

@@ -1,15 +1,23 @@
 <?php
 
 include_once 'CommentList.php';
+include_once "FieldCheckNotifications.php";
 
 class CommentsFormMinimal extends PMPageForm
 {
 	private $anchor_it;
+	private $private = false;
 
 	function extendModel()
 	{
 		parent::extendModel();
 		$this->getObject()->addAttribute('Attachment', 'VARCHAR', '', true, false);
+        $this->getObject()->addAttribute('Notification', 'VARCHAR', '', true, false);
+
+        $objectIt = $this->getObjectIt();
+        if ( is_object($objectIt) && $objectIt->getId() != '' ) {
+            $this->private = $objectIt->get('IsPrivate') == 'Y';
+        }
 	}
 
 	public function setAnchorIt( $anchor_it )
@@ -19,7 +27,9 @@ class CommentsFormMinimal extends PMPageForm
 	
 	function IsAttributeVisible( $attr_name )
 	{
-		return in_array($attr_name, array('Caption','Attachment'));
+	    $attributes = array('Caption','Attachment');
+	    if ( !$this->private ) $attributes[] = 'Notification';
+		return in_array($attr_name, $attributes);
 	}
 	
 	function getFieldValue( $attr )
@@ -62,6 +72,11 @@ class CommentsFormMinimal extends PMPageForm
 				$field->setAddButtonText(text(2081));
 				return $field;
 
+            case 'Notification':
+                $field = new FieldCheckNotifications();
+                $field->setAnchor($this->anchor_it);
+                return $field;
+
 		    default:
 		    	return parent::createFieldObject( $attribute );
 		}
@@ -76,8 +91,22 @@ class CommentsFormMinimal extends PMPageForm
 				)
 		);
 	}
-	
-	function getThreadParms( $comment_it )
+
+	function validateInputValues($id, $action)
+    {
+        if ( $this->private || $_REQUEST['Notification'] == '' ) {
+            $this->getObject()->removeNotificator('ServicedeskCommentEmailNotificator');
+        }
+
+        $notificationSpecified = array_key_exists('Notification', $_REQUEST) || array_key_exists('NotificationOnForm', $_REQUEST);
+        if ( $notificationSpecified && in_array($_REQUEST['Notification'], array('N','')) ) {
+            $_REQUEST['IsPrivate'] = 'Y';
+        }
+
+        return parent::validateInputValues($id, $action);
+    }
+
+    function getThreadParms( $comment_it )
 	{
 		$field = new FieldWYSIWYG();
 		

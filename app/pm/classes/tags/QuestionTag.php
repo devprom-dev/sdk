@@ -7,7 +7,6 @@ class QuestionTag extends CustomTag
     function __construct()
     {
         parent::__construct();
-        
         $this->setAttributeType('ObjectId', 'REF_QuestionId');
     }
     

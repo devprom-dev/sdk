@@ -30,10 +30,14 @@ class PageChart extends StaticPageList
 
 	function getIterator()
 	{
-	    $iterator = parent::getIterator();
 		$minSizeValuable = 1;
 
 		$object = $this->getObject();
+
+        $predicates = $this->getPredicates( $this->getFilterValues() );
+        foreach( $predicates as $predicate ) {
+            $object->addFilter($predicate);
+        }
 
 		$aggs = $this->getAggregates();
 		foreach ( $aggs as $agg ) {
@@ -82,9 +86,9 @@ class PageChart extends StaticPageList
                 }
             }
 		}
-		
+
 		// sort data according states ordering
-		if ( $this->getGroup() == 'State' || $aggby == 'State' )
+		if ( $object instanceof MetaobjectStatable && ($this->getGroup() == 'State' || $aggby == 'State') )
 		{
 			$this->state_sort_index = array();
 		    $state_it = WorkflowScheme::Instance()->getStateIt($object);
@@ -112,7 +116,13 @@ class PageChart extends StaticPageList
 			}
 		}
 
-		return $object->createCachedIterator( count($data) < $minSizeValuable ? $this->getDemoData($aggs) : $data );
+		if ( count($data) < $minSizeValuable ) {
+            $this->setDemo(true);
+            return $object->createCachedIterator($this->getDemoData($aggs));
+        }
+        else {
+            return $object->createCachedIterator($data);
+        }
 	}
 
 	protected function IsAttributeInQuery( $attribute )
@@ -331,13 +341,18 @@ class PageChart extends StaticPageList
 	
 	function getAggByFields()
 	{
-		$fields = parent::getColumnFields();
+		$fields = array_merge(
+		    parent::getColumnFields(),
+            array(
+                'State'
+            )
+        );
 		
 		$skip_attributes = array_merge(
 				$this->getSystemAttributes(),
 				$this->getObject()->getAttributesByGroup('trace')
 		);
-		
+
 		foreach( $fields as $key => $field )
 		{
 			if ( in_array($field, $skip_attributes) ) {
@@ -546,19 +561,18 @@ class PageChart extends StaticPageList
 
         if ( $this->getObject()->IsReference($color_attribute) ) {
             $ref = $this->getObject()->getAttributeObject($color_attribute);
+            $colors = $ref->getAll()->fieldToArray('RelatedColor');
+            if ( !$this->getObject()->IsAttributeRequired($color_attribute) ) {
+                array_unshift($colors, 'rgb(192,192,192)');
+            }
             if ( $ref->getAttributeType('RelatedColor') != '' ) {
-                $widget->setColors($ref->getAll()->fieldToArray('RelatedColor'));
+                $widget->setColors($colors);
             }
         }
-
-		if ( $this->getDemo() ) {
-			$widget->setColors(
-					array(
-							'rgb(128,128,128)'
-					)
-			);
-		}
-
+        if ( $color_attribute == 'State' ) {
+            $state_it = \WorkflowScheme::Instance()->getStateIt($this->getObject());
+            $widget->setColors($state_it->fieldToArray('RelatedColor'));
+        }
 		return $widget;
 	}
 	
@@ -631,18 +645,26 @@ class PageChart extends StaticPageList
 	
 	function draw( $view )
 	{
-	    $widget = $this->getChartWidget();
-	    if ( !is_object($widget) ) throw new Exception("Chart widget is undefined");
-
 	    $aggs = $this->getAggregates();
-	    
 	    $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
 
+        $widget = $this->getChartWidget();
+        if ( !is_object($widget) ) throw new Exception("Chart widget is undefined");
+
 	    $widget->setData( $data );
+        if ( $this->getDemo() ) {
+            $widget->setColors(
+                array(
+                    'rgb(128,128,128)'
+                )
+            );
+        }
 
     	$chart_id = "chart".uniqid();
+        $chartClass = $widget instanceof FlotChartPieWidget ? "" : "plot-wide";
+        $chartStyle = $widget->getStyle() != "" ? $widget->getStyle() : $this->getStyle();
 	    
-        echo '<div id="'.$chart_id.'" class="plot plot-wide" style="'.$this->getStyle().'"></div>';
+        echo '<div id="'.$chart_id.'" class="plot '.$chartClass.'" style="'.$chartStyle.'"></div>';
         $widget->setLegend( $this->getLegendVisible() );
         $widget->draw($chart_id);
 		
@@ -657,7 +679,7 @@ class PageChart extends StaticPageList
 		{
 		    if ( is_a($widget, 'FlotChartPieWidget') )
 		    {
-				echo '<div style="float:right;width:31%">';
+				echo '<div style="float:left;width:31%">';
 					$this->drawLegend( $data, $aggs );
 				echo '</div>';
 		    }

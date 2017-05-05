@@ -13,7 +13,11 @@ class FieldWikiInverseTrace extends FieldWikiTrace
 			new FilterAttributePredicate( 'TargetPage',  
 				is_object($object_it) ? $object_it->getId() : 0 ) );
  	}
- 	
+
+    function getValidator() {
+        return new ModelValidatorEmbeddedForm($this->getName(), 'SourcePage');
+    }
+
 	function getForm( & $trace ) {
 		return new WikiTraceInverseFormEmbedded( $trace, 'TargetPage', $this->getName() );
 	}

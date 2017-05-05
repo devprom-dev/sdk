@@ -1,5 +1,7 @@
+<?php
+$project_navigation_parms['projectSortData'] = $projectSortData;
+?>
 <div class="btn-toolbar title-toolbar">
-
     <?php if ( $company_name != '' ) { ?>
     <div class="btn-group navbar-company">
     	<a id="navbar-company-name" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
@@ -7,11 +9,9 @@
     		<?=$company_name?>
     		<span class="caret"></span>
     	</a>
-
     	<?php echo $view->render('core/PageTitleCompany.php', $project_navigation_parms); ?>
 	</div>
 	<?php } ?>
-	
 	<div class="btn-group">
     	<a id="navbar-administration" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
 		    <?=translate('Администрирование')?> 

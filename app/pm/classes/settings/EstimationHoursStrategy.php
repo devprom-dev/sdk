@@ -41,7 +41,7 @@ class EstimationHoursStrategy extends EstimationStrategy
 	function getScale()
 	{
 		$values = array (
-			'0', 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50
+			'0', 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 25, 40
 		);
 		$scale = array();
 		foreach( $values as $value ) {

@@ -12,6 +12,7 @@ class AccessRight extends Metaobject
  	{
  		parent::Metaobject('pm_AccessRight');
 
+ 		$this->addAttribute('RecordKey', 'VARCHAR', '', false);
  		$this->addPersister( new AccessRightKeyPersister() );
  	}
  	

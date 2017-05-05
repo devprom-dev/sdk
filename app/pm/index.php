@@ -59,8 +59,7 @@
  elseif ( $mode == 'tags')
  {
  	include('views/tags/TagPage.php');
- 	include('methods/c_tag_methods.php');
- 	
+
  	$page = new TagPage;
 
 	$page->render();

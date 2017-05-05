@@ -48,6 +48,7 @@ class RequestListener implements EventSubscriberInterface
     protected function setRequestAndSessionLocale(GetResponseEvent $event)
     {
         $request = $event->getRequest();
+        if ( !is_object($request->getSession()) ) return;
         $lang = $this->getUserLanguage();
         if ($lang) {
             $request->getSession()->set("_locale", $lang);

@@ -3,7 +3,7 @@
 <?php foreach( $sections as $section ) { ?> 
 
 <?php if ( $section instanceof ButtonInfoSection ) { ?>
-	<div class="btn-group pull-left">
+	<div class="btn-group pull-left info-action">
 		<? $btnState = $_COOKIE[$section->getId().'-'.$table_id]; ?>
 		<? $btnState = $btnState == '' ? $section->IsActive() : $btnState == 'true'; ?>
 		<a id="<?=$section->getId()?>" class="btn dropdown-toggle btn-small btn-info <?=($btnState ? 'active' : '')?>" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
@@ -12,7 +12,7 @@
 	</div>
 <?php continue; } ?>
 
-<div class="btn-group pull-left last">
+<div class="btn-group pull-left info-action last">
 	<a class="btn dropdown-toggle btn-small btn-info" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
     	<i class="<?=$section->getIcon()?> icon-white"></i>
     	<span class="caret"></span>
@@ -33,44 +33,3 @@
 
 <?php } ?>
 
-
-<script type="text/javascript">
-	$(function() {
-		<?php foreach ( $sections as $key => $section ) { ?>
-			<?php if ( $section instanceof ButtonInfoSection ) continue; ?>
-			<?php 
-				$parms = $section->getParameters();
-		
-				if ( !array_key_exists('class', $parms) ) $parms['class'] = $object_class;
-				if ( !array_key_exists('id', $parms) ) $parms['id'] = join(',',$iterator->idsToArray());
-			?>
-			
-			$.ajax({
-				url: '?export=section',
-				type: 'GET',
-				dataType: 'html',
-				async: true,
-				data: { 
-					<?php foreach ( $parms as $parm_key => $parm_value ) { ?>
-					'<?=$parm_key?>' : '<?=$parm_value?>',
-					<?php } ?>
-					'section': '<?=get_class($section)?>'
-				},
-				error: function( xhr ) { 
-					reportAjaxError( xhr ); 
-				},
-				success: function( result ) {
-		 			if ( (new RegExp('Internal Server Error')).exec( result ) != null )
-	 				{
-		 				window.location = '/500';
-	 				}
-					 
-					$('#<?=$section->getId()?>').html(result);
-	
-					completeChartsUI($('#<?=$section->getId()?>'));
-				}
-			});				
-		
-		<?php } ?>
-	});
-</script>

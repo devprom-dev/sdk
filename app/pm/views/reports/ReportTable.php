@@ -95,6 +95,10 @@ class ReportTable extends PMPageTable
 		);
 	}
 
+	function getRowsOnPage() {
+        return 9999;
+    }
+
     function drawScripts()
 	{
 	    parent::drawScripts();

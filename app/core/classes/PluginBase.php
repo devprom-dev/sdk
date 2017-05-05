@@ -10,10 +10,9 @@ include ('PluginAdminSectionBase.php');
 
 class PluginBase
 {
-	protected $license;
+	protected $license = '';
 
-    function __construct()
-    {
+    function __construct() {
     }
     
  	function getNamespace()
@@ -64,23 +63,20 @@ class PluginBase
 	{
 	}
 
- 	function IsLicensed()
- 	{
-		return true; 		
- 	}
- 	
  	function IsUpdatedWithCore()
  	{
  		return true;
  	}
 
 	function checkLicense() {
-		if ( $this->license == '' ) {
-			$license_it = getFactory()->getObject('LicenseState')->getAll();
-			$this->license = $this->buildLicense($license_it) ? 'Y' : 'N';
-		}
+        if ( $this->license == '' ) $this->setLicense();
 		return $this->license == 'Y';
 	}
+
+	function setLicense() {
+        $license_it = getFactory()->getObject('LicenseState')->getAll();
+        $this->license = $this->buildLicense($license_it) ? 'Y' : 'N';
+    }
 
 	function buildLicense( $license_it ) {
 		return true;

@@ -13,14 +13,13 @@ class WikiBulkForm extends BulkForm
 	function getIt()
 	{
 		$iterator = parent::getIt();
-
-		if ( $this->getObject() instanceof WikiPageTemplate ) return $iterator;
 		if ( strpos($_REQUEST['operation'], 'BulkDeleteWebMethod') === false ) return $iterator;
 
 		return $this->object->getRegistry()->Query(
-				array (
-						new WikiRootTransitiveFilter($iterator->idsToArray())
-				)
+            array (
+                new WikiRootTransitiveFilter($iterator->idsToArray()),
+                new SortDocumentClause()
+            )
 		);
 	}
 	
@@ -95,7 +94,7 @@ class WikiBulkForm extends BulkForm
 		}
 	}
 
- 	function drawCustomAttribute( $attribute, $value, $tab_index )
+ 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
  	{
  		global $model_factory;
  		
@@ -135,7 +134,7 @@ class WikiBulkForm extends BulkForm
 				break;
 				
  			case 'Project':
- 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
+ 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessibleActive'));
  				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
@@ -192,7 +191,7 @@ class WikiBulkForm extends BulkForm
 
 
 			default:
- 				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+ 				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
  		}
  	}
 

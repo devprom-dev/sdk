@@ -54,20 +54,14 @@ class LockFileSystem extends Lock
     
     public function Wait( $timeout, $callable = null )
     {
-    	$skip = 0;
-
+        $skip = self::$waitings;
         while( $this->Locked($timeout) && !connection_aborted() )
         {
-            if ( self::$is_windows ) {
-                sleep(1);
-            } else {
-                usleep(200000);
-            }
+            time_nanosleep(0, 500000000);
 
-        	if ( $skip > self::$waitings )
+        	if ( $skip >= self::$waitings )
         	{
-        		// check client connection is active (using connection_aborted func.)
-	        	echo(" ");
+                echo " ";
 	        	ob_flush();
 	        	flush();
 

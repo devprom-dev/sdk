@@ -2,6 +2,7 @@
 include "core/classes/system/EnvironmentSettings.php";
 include "core/classes/utils/SettingsFile.php";
 include "core/classes/utils/TextUtils.php";
+include "core/classes/utils/ColorUtils.php";
 include "core/classes/system/FileSystem.php";
 include "core/classes/schedule/SystemDateTime.php";
 include "core/classes/system/SanitizeUrl.php";

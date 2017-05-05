@@ -51,6 +51,7 @@ class PMFormEmbedded extends FormEmbedded
 
                     $editor = $field->getEditor();
                     $editor->setMode( WIKI_MODE_MINIMAL | WIKI_MODE_INLINE );
+                    $editor->setMinRows(5);
                     $field->setHasBorder(true);
 
                     return $field;

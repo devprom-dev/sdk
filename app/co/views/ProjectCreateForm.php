@@ -17,7 +17,7 @@ class CreateProjectForm extends AjaxForm
  	
  	function getAddCaption()
  	{
- 		return translate('Создание нового проекта');
+ 		return text('projects.create.title');
  	}
 
  	function getCommandClass()
@@ -36,7 +36,14 @@ class CreateProjectForm extends AjaxForm
  	
 	function getAttributes()
 	{
-		return array ( 'Caption', 'CodeName', 'Template', 'Participants', 'DemoData', 'System' );
+		$attributes = array ( 'Caption', 'CodeName', 'Template', 'Participants', 'DemoData', 'System' );
+        if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
+            $usersCount = getFactory()->getObject('User')->getRegistry()->Count();
+            if ( $usersCount > 1 ) {
+                $attributes[] = 'Users';
+            }
+        }
+		return $attributes;
 	}
 	
 	function getAttributeType( $attribute )
@@ -45,14 +52,14 @@ class CreateProjectForm extends AjaxForm
 		{
 			case 'CodeName':
 			case 'Caption':
-			case 'Participants':
-				return 'text'; 	
-				
-			case 'DemoData':
-				return 'char';
+                return 'text';
+            case 'Participants':
+				return 'largetext';
 
 			case 'Template':
 			case 'System':
+            case 'DemoData':
+            case 'Users':
 				return 'custom';
 		}
 	}
@@ -67,7 +74,7 @@ class CreateProjectForm extends AjaxForm
 		    	return getFactory()->getObject('pm_ProjectTemplate')->getExact($template)->getDisplayName();
 		    	
 		    case 'CodeName':
-		    	return "";
+		    	return defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? md5(microtime(true)) : "";
 
 		    case 'Template':
 		    	return $_REQUEST['Template'];
@@ -103,19 +110,12 @@ class CreateProjectForm extends AjaxForm
 		{
 			case 'CodeName':
 				return translate('Кодовое название проекта');
-
 			case 'Caption':
 				return translate('Название проекта');
-
 			case 'Template':
 				return translate('Шаблон начальных настроек проекта');
-
 			case 'Participants':
-				return translate('Пригласить участников');
-
-			case 'DemoData':
-				return text(1869);
-				
+				return text(2001);
 			default:
 				return parent::getName( $attribute );
 				
@@ -128,19 +128,16 @@ class CreateProjectForm extends AjaxForm
  		{
 			case 'CodeName':
 				return str_replace('%1', _getServerUrl(), text(479));
-
 			case 'Caption':
 				return text(480);
-
 			case 'Template':
 				return text(741);
-
 			case 'Participants':
 				return text(1865);
  		}
  	}
 
-	 function drawCustomAttribute( $attribute, $value, $tab_index )
+	 function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	 {
 		 switch ( $attribute )
 		 {
@@ -162,8 +159,55 @@ class CreateProjectForm extends AjaxForm
 				 }
 				 break;
 
+             case 'DemoData':
+                 if ( class_exists(getFactory()->getClass('IntegrationTracker')) ) {
+                     $trackerField = new FieldDictionary(new IntegrationTracker());
+                     $trackerField->SetId('Tracker');
+                     $trackerField->SetName('Tracker');
+                     $trackerField->setStyle('margin-left:20px;width:200px;');
+                 }
+                 echo $view->render(SERVER_ROOT_PATH . 'co/views/templates/ProjectDataSelector.tpl.php', array(
+                     'value' => $this->getAttributeValue($attribute),
+                     'trackerField' => $trackerField
+                 ));
+                 break;
+
+             case 'Users':
+                 $usersData = array();
+                 $userIt = getFactory()->getObject('UserActive')->getAll();
+                 while( !$userIt->end() ) {
+                     if ( $userIt->getId() == getSession()->getUserIt()->getId() ) {
+                         $userIt->moveNext();
+                         continue;
+                     }
+                     $usersData[] = array(
+                         'id' => $userIt->getId(),
+                         'name' => $userIt->getDisplayName()
+                     );
+                     $userIt->moveNext();
+                 }
+                 echo $view->render(SERVER_ROOT_PATH . 'co/views/templates/ProjectUsersSelector.tpl.php', array(
+                     'rows' => $usersData
+                 ));
+                 break;
+
 			 default:
-				 parent::drawCustomAttribute( $attribute, $value, $tab_index );
+				 parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		 }
 	 }
+
+	 function buildColumns($attributes)
+     {
+         $leftColumn = $attributes;
+         $rightColumn = array();
+
+         foreach( array('Participants', 'Users') as $attribute ) {
+             $rightColumn[$attribute] = $attributes[$attribute];
+             unset($leftColumn[$attribute]);
+         }
+
+         return array(
+             $leftColumn, $rightColumn
+         );
+     }
 }

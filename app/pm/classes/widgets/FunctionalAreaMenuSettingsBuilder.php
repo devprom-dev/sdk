@@ -43,23 +43,32 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
 	    while ( !$object_it->end() ) 
 	    {
 	    	$module_it = $module->getExact('workflow-'.strtolower($object_it->getId()));
-	    	
     	 	$items[$object_it->getId()] = $module_it->buildMenuItem();
-    	 	
     	 	$object_it->moveNext();
 	    }
+        $items[] = $module->getExact('autoactions')->buildMenuItem();
 
- 	    $menus['workflow'] = array (
+        $menus['workflow'] = array (
  	        'name' => translate('Состояния'),
             'uid' => 'workflow',
             'items' => $items
  	    );
 
-        $items = array();
+        $template_classes = array(
+            'TextTemplate', 'RequestTemplate', 'ExportTemplate'
+        );
+        $object_it = getFactory()->getObject('Dictionary')->getAll();
 
-        $module_it = $module->getExact('kbtemplates');
-        if ( getFactory()->getAccessPolicy()->can_read($module_it) ) {
-            $items[] = $module_it->buildMenuItem();
+        $items = array('');
+
+        while ( !$object_it->end() )
+        {
+            if ( !in_array($object_it->getId(), $template_classes) ) {
+                $object_it->moveNext();
+                continue;
+            }
+            $items[$object_it->getId()] = $module->getExact('dicts-'.strtolower($object_it->getId()))->buildMenuItem();
+            $object_it->moveNext();
         }
 
         $menus['templates'] = array (
@@ -69,23 +78,21 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
         );
 
  	    $items = array();
- 	    
-	    $object_it = getFactory()->getObject('Dictionary')->getAll();
-	    
-	    while ( !$object_it->end() ) 
+
+        $object_it->moveFirst();
+	    while ( !$object_it->end() )
 	    {
-	    	$module_uid = 'dicts-'.strtolower($object_it->getId());
-	    	
-	    	if ( in_array($module_uid, array('dicts-pmcustomattribute')) )
-	    	{
+            if ( in_array($object_it->getId(), $template_classes) ) {
+                $object_it->moveNext();
+                continue;
+            }
+            $module_uid = 'dicts-'.strtolower($object_it->getId());
+	    	if ( in_array($module_uid, array('dicts-pmcustomattribute')) ) {
 	    		$object_it->moveNext();
 	    		continue;
 	    	}
-	    	
 	    	$module_it = $module->getExact($module_uid);
-	    	
     	 	$items[$object_it->getId()] = $module_it->buildMenuItem();
-    	 	
     	 	$object_it->moveNext();
 	    }
 
@@ -98,20 +105,6 @@ class FunctionalAreaMenuSettingsBuilder extends FunctionalAreaMenuProjectBuilder
  	    $items = array();
 
         $module_it = $module->getExact('tags');
-
-    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-    		$items[] = $module_it->buildMenuItem();
-		}
-		
-        $module_it = $module->getExact('snapshots');
-
-    	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-    		$items[] = $module_it->buildMenuItem();
-		}
-	 	
-        $module_it = $module->getExact('versions');
 
     	if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{

@@ -2,17 +2,15 @@
 
 class PMPageBoard extends PageBoard
 {
-    function PMPageBoard( $object )
-    {
-        parent::PageBoard( $object );
-    }
-
     function extendModel()
     {
         parent::extendModel();
 
+        $this->projectIt = $this->buildProjectIt();
+        if ( !is_object($this->projectIt) ) $this->projectIt = getSession()->getProjectIt();
+
         $object = new MetaobjectStatable($this->getObject()->getEntityRefName());
-        $object->addFilter( new FilterVpdPredicate($this->getObject()->getVpds()) );
+        $object->addFilter( new FilterVpdPredicate($this->projectIt->fieldToArray('VPD')) );
         $object->disableVpd();
 
         $count_aggregate = new AggregateBase( 'State' );
@@ -62,20 +60,21 @@ class PMPageBoard extends PageBoard
 	function hasCommonStates()
 	{
         $values = array();
+        $vpds = $this->projectIt->fieldToArray('VPD');
 
  		$value_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
- 		while( !$value_it->end() )
- 		{
- 			$values[$value_it->get('VPD')][] = $value_it->get('Caption');
+ 		while( !$value_it->end() ) {
+ 		    if ( in_array($value_it->get('VPD'), $vpds) ) {
+                $values[$value_it->get('VPD')][] = $value_it->get('ReferenceName');
+            }
  			$value_it->moveNext();
  		}
 
  		$example = array_shift($values);
- 		foreach( $values as $attributes )
- 		{
+ 		foreach( $values as $attributes ) {
  			if ( count(array_diff($example, $attributes)) > 0 || count(array_diff($attributes, $example)) > 0 ) return false;
  		}
- 		
+
  		return true;
 	}
 
@@ -158,7 +157,22 @@ class PMPageBoard extends PageBoard
 		}
 	}
 
-    function getGroupIt()
+    function buildGroupIt()
+    {
+        switch($this->getGroup())
+        {
+            case 'Project':
+                return $this->projectIt;
+            default:
+                return parent::buildGroupIt();
+        }
+    }
+
+    function getProjectIt() {
+        return $this->projectIt;
+    }
+
+    function buildProjectIt()
     {
         foreach( $this->getTable()->getFilterPredicates() as $filter ) {
             if ( $filter instanceof FilterVpdPredicate ) {
@@ -169,24 +183,18 @@ class PMPageBoard extends PageBoard
             $vpd_filter = new FilterVpdPredicate(join(',',$this->getObject()->getVpds()));
         }
 
-        switch($this->getGroup())
-        {
-            case 'Project':
-                $values = $this->getFilterValues();
-                $groupFilter = in_array($values['target'],array('all','none','hide')) ? '' : $values['target'];
+        $values = $this->getFilterValues();
+        $groupFilter = in_array($values['target'],array('all','none','hide')) ? '' : $values['target'];
 
-                $registry = getFactory()->getObject('Project')->getRegistry();
-                $registry->setPersisters(array());
-                return $registry->Query(
-                    array (
-                        $groupFilter != ''
-                            ? new FilterInPredicate(preg_split('/,/', $groupFilter))
-                            : $vpd_filter
-                    )
-                );
-            default:
-                return parent::getGroupIt();
-        }
+        $registry = getFactory()->getObject('Project')->getRegistry();
+        $registry->setPersisters(array());
+        return $registry->Query(
+            array (
+                $groupFilter != ''
+                    ? new FilterInPredicate(preg_split('/,/', $groupFilter))
+                    : $vpd_filter
+            )
+        );
     }
 
     function drawGroup($group_field, $object_it)
@@ -216,17 +224,31 @@ class PMPageBoard extends PageBoard
 		$actions = parent::getHeaderActions($board_value);
 
 		$custom_actions = array();
-		
+        $delete_actions = array();
+
 		$iterator = $this->getBoardAttributeIterator();
 		$iterator->moveTo('ReferenceName', $board_value);
 
-		if ( $iterator->getId() != '' && !getSession()->getProjectIt()->IsPortfolio() )
+		if ( $iterator->getId() != '' && $this->getProjectIt()->count() == 1 )
 		{
 			$method = new ObjectModifyWebMethod($iterator);
 			if ( $method->hasAccess() ) {
 				$custom_actions[] = array (
 						'name' => translate('Редактировать'),
 						'url' => $method->getJSCall() 
+				);
+				$custom_actions[] = array();
+			}
+
+			$method = new ObjectCreateNewWebMethod($iterator->object);
+			if ( $method->hasAccess() ) {
+				$custom_actions[] = array (
+						'name' => text(2011),
+						'url' => $method->getJSCall(array('OrderNum' => $iterator->get('OrderNum') + 2)) 
+				);
+				$custom_actions[] = array (
+						'name' => text(2012),
+						'url' => $method->getJSCall(array('OrderNum' => max(1,$iterator->get('OrderNum') - 2))) 
 				);
 				$custom_actions[] = array();
 			}
@@ -252,21 +274,17 @@ class PMPageBoard extends PageBoard
                 $custom_actions[] = array();
             }
 
-			$method = new ObjectCreateNewWebMethod($iterator->object);
-			if ( $method->hasAccess() ) {
-				$custom_actions[] = array (
-						'name' => text(2011),
-						'url' => $method->getJSCall(array('OrderNum' => $iterator->get('OrderNum') + 2)) 
-				);
-				$custom_actions[] = array (
-						'name' => text(2012),
-						'url' => $method->getJSCall(array('OrderNum' => max(1,$iterator->get('OrderNum') - 2))) 
-				);
-				$custom_actions[] = array();
-			}
-		}
+            $method = new DeleteObjectWebMethod($iterator);
+            if ( $method->hasAccess() ) {
+                $delete_actions[] = array();
+                $delete_actions[] = array (
+                    'name' => $method->getCaption(),
+                    'url' => $method->getJSCall()
+                );
+            }
+        }
 		
-		return array_merge($custom_actions, $actions);
+		return array_merge($custom_actions, $actions, $delete_actions);
 	}
 
     function buildFilterActions( & $base_actions )
@@ -276,16 +294,12 @@ class PMPageBoard extends PageBoard
         $this->buildFilterColumnsGroup( $base_actions, 'trace' );
         $this->buildFilterColumnsGroup( $base_actions, 'time' );
         $this->buildFilterColumnsGroup( $base_actions, 'dates' );
+        $this->buildFilterColumnsGroup( $base_actions, 'sla' );
     }
 
     protected function buildCrossReports( $object_it )
     {
-        $reports_map = array (
-            'issuesboard' => 'issues/board/issuesboardcrossproject',
-            'issues-board' => 'issues/board/issuesboardcrossproject',
-            'tasksboard' => 'tasks/board/tasksboardcrossproject',
-            'tasks-board' => 'tasks/board/tasksboardcrossproject'
-        );
+        $reports_map = array ();
         $rev_reports_map = array (
             'issuesboardcrossproject' => 'issues/board/issuesboard',
             'tasksboardcrossproject' => 'tasks/board/tasksboard'
@@ -345,4 +359,5 @@ class PMPageBoard extends PageBoard
     private $parent_it = null;
     private $report_link_drawn = false;
     private $stateObjects = array();
+    private $projectIt = null;
 }

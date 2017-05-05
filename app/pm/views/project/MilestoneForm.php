@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/issues/FieldIssueInverseTrace.php';
 
 class MilestoneForm extends PMPageForm
@@ -9,36 +8,22 @@ class MilestoneForm extends PMPageForm
  		switch($attr_name) 
  		{
  			case 'OrderNum':
+            case 'RecentComment':
  				return false;
  		}
 		return parent::IsAttributeVisible( $attr_name );
 	}
 
-	function getActions()
-	{
-		$actions = parent::getActions();
-		
-		$object_it = $this->getObjectIt();
-		
-		if ( !is_object($object_it) ) return;
-		
-		$method = $object_it->get('Passed') == 'Y'
-			? new SetCurrentWebMethod : new SetPassedWebMethod;  
-		
-		if( $method->hasAccess() )
-		{
-			if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-			
-		    if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-		    
-			array_push($actions, array( 
-				'name' => $method->getCaption(),
-				'url' => $method->getJSCall(array('Milestone' => $object_it->getId())) ) );
-		}
-		
-		return $actions;
-	}
-	
+    function IsAttributeEditable( $attr_name )
+    {
+        switch($attr_name)
+        {
+            case 'Description':
+                return $this->getEditMode();
+        }
+        return parent::IsAttributeEditable( $attr_name );
+    }
+
 	function createFieldObject( $name )
 	{
 		switch ( $name )

@@ -13,7 +13,7 @@
                         <tr>
                             <td>
                                 <?php foreach ( $project_actions as $action ) { ?>
-                                <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                <i class="<?=$action['icon']?>"></i> <a uid="<?=$action['uid']?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>
                             </td>
                         </tr>

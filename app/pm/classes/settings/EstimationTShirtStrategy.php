@@ -10,7 +10,7 @@ class EstimationTShirtStrategy extends EstimationStrategy
 
 	function getDimensionText( $value )
 	{
-		if ( $value == '' ) return $value;
+		if ( $value == '' ) return text(2299);
 		if ( !is_numeric($value) ) return str_replace("%1", $value, text(2207));
 		$label = '';
 		$xSizes = floor($value / 8);
@@ -50,4 +50,15 @@ class EstimationTShirtStrategy extends EstimationStrategy
  			' S' => 1
 		);
 	}
+
+    function getVelocityText($object)
+    {
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodology_it->HasFixedRelease() ) {
+            return text(2292);
+        }
+        else {
+            return text(2291);
+        }
+    }
 }

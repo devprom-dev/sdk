@@ -7,9 +7,9 @@ class StateMetaRegistry extends ObjectRegistrySQL
 		$aggregated_state = $this->getObject()->getAggregatedStateObject();
 		
 		$ref_names = array(
-            'final' => array(),
             'initial' => array(),
-            'progress' => array()
+            'progress' => array(),
+            'final' => array(),
 		);
         $queueLengths = array(
             'final' => 0,
@@ -20,11 +20,19 @@ class StateMetaRegistry extends ObjectRegistrySQL
 		if ( !is_array($aggregated_state) ) $aggregated_state = array($aggregated_state);
 
 		foreach( $aggregated_state as $state_object ) {
-            $refnames = array_unique($state_object->getAll()->fieldToArray('ReferenceName'));
-            if ( count($refnames) > 0 ) {
-                $ref_names['initial'][] = array_shift($refnames);
+            $state_it = $state_object->getRegistry()->Query(
+                array (
+                    new FilterVpdPredicate(),
+                    new SortOrderedClause()
+                )
+            );
+            while (!$state_it->end()) {
+                if ( !isset($ref_names['initial'][$state_it->get('VPD')]) ) {
+                    $ref_names['initial'][$state_it->get('VPD')] = $state_it->get('ReferenceName');
+                }
+                $state_it->moveNext();
             }
-            $state_it = $state_object->getAll();
+            $state_it->moveFirst();
 			while (!$state_it->end()) {
 			    if ( in_array($state_it->get('ReferenceName'), $ref_names['initial']) ) {
                     $queueLengths['initial'] += $state_it->get('QueueLength');

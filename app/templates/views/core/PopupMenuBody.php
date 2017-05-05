@@ -47,29 +47,36 @@ if ( count($items) < 1 ) return;
 	if ( is_array($action['items']) )
 	{
 		$first_item = array_pop(array_values($action['items']));
-		if ( $first_item['name'] != '' ) {
-			?>
-			<li class="dropdown-submenu">
-				<a href="#"><?= $action['name'] ?></a>
-				<?php echo $view->render('core/PopupMenuBody.php', array('items' => $action['items'])); ?>
-			</li>
-
-			<?php
-		}
-		else {
+		if ( $first_item['name'] == '' ) {
 			$action['name'] = ''; // mark empty sub-menu as separator
 		}
+		else {
+			if ( count($action['items']) > 1 ) {
+				?>
+				<li class="dropdown-submenu">
+					<a href="#"><?= $action['name'] ?></a>
+                        <?php echo $view->render('core/PopupMenuBody.php', array('items' => $action['items'], 'uid' => $action['uid'])); ?>
+				</li>
+				<?php
+				$last_action = $action;
+				continue;
+			}
+			else {
+				$action = array_shift($action['items']);
+			}
+		}
 	}
-	else if ( $action['uid'] == 'search' ) {
+
+	if ( $action['uid'] == 'search' ) {
 	?>
 		<li uid="search" class="dropdown-item-search">
 			<input class="" type="text" placeholder="<?=text(2186)?>">
 		</li>
 		<li class="divider"></li>
 	<?php
+		continue;
 	}
-	else
-	{
+
 		?>
 		<?php  if ( $action['url'] == '' && $action['click'] == '' && $action['name'] == '' ) { ?>
 			<? if ( $last_action['name'] != '') { ?>
@@ -104,7 +111,6 @@ if ( count($items) < 1 ) return;
 		</li>
 		
 		<?php } ?>
-	<?php } ?>
 <?php
 
 $last_action = $action;

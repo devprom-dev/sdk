@@ -1,19 +1,15 @@
 <li class="dropdown">
-    <a href="#" title="Account" id="account"
-       class="dropdown-toggle"
-       data-toggle="dropdown">
-        <i class="icon icon-{{ app.request.locale }}-flag"></i>
+    <a href="#" title="Account" id="account" class="dropdown-toggle" data-toggle="dropdown">
+        {{ app.request.locale|upper }}
     </a>
     <ul id="account-menu" class="dropdown-menu account" role="menu">
         <li role="presentation">
             <a href="{{ path('set_lang', {'lang' : 'en'}) }}" class="link">
-                <i class="icon icon-en-flag"></i>
                 English
             </a>
         </li>
         <li role="presentation">
             <a href="{{ path('set_lang', {'lang' : 'ru'}) }}" class="link">
-                <i class="icon icon-ru-flag"></i>
                 Русский
             </a>
         </li>

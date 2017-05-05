@@ -65,15 +65,24 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
 		foreach( $attributes as $att_name => $attribute ) 
 		{
-			$was_value = $prev_object_it->getHtmlDecoded($att_name);
-			$now_value = $object_it->getHtmlDecoded($att_name);
+            if ( $object_it->object->getAttributeType($att_name) == 'date' ) {
+                $was_value = getSession()->getLanguage()->getDateFormattedShort($prev_object_it->get($att_name));
+                $now_value = getSession()->getLanguage()->getDateFormattedShort($object_it->get($att_name));
+            }
+            elseif ( $object_it->object->getAttributeType($att_name) == 'datetime' ) {
+                $was_value = getSession()->getLanguage()->getDateTimeFormatted($prev_object_it->get($att_name));
+                $now_value = getSession()->getLanguage()->getDateTimeFormatted($object_it->get($att_name));
+            }
+            else {
+                $was_value = $prev_object_it->getHtmlDecoded($att_name);
+                $now_value = $object_it->getHtmlDecoded($att_name);
 
-			if ( $object_it->object->getAttributeType($att_name) == 'wysiwyg' )
-			{
-				$was_value = preg_replace('/\r|\n/', '', $was_value); 
-				$now_value = preg_replace('/\r|\n/', '', $now_value); 
-			}
-			
+                if ( $object_it->object->getAttributeType($att_name) == 'wysiwyg' ) {
+                    $was_value = preg_replace('/\r|\n/', '', $was_value);
+                    $now_value = preg_replace('/\r|\n/', '', $now_value);
+                }
+            }
+
 			if( $was_value == $now_value ) continue;
 			
 			$modified_attributes[] = $att_name;
@@ -104,6 +113,8 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 	{
 		if( !$this->is_active($object_it) ) return;
 
+        $userId = getSession()->getUserIt()->getId();
+
 		$change_log = getFactory()->getObject('ObjectChangeLog');
 		$change_log->setVpdContext( $object_it );
 
@@ -121,10 +132,11 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$parms['EntityRefName'] = $object_it->object->getEntityRefName();
 		$parms['EntityName'] = translate($object_it->object->getDisplayName());
 		$parms['ChangeKind'] = $kind;
-		$parms['Author'] = $author_email != '' ? $author_email : (getSession()->getUserIt()->getId() < 1 ? getSession()->getUserIt()->getHtmlDecoded('Caption') : '');
+		$parms['Author'] = $author_email != '' ? $author_email : ($userId < 1 ? getSession()->getUserIt()->getHtmlDecoded('Caption') : '');
 		$parms['Content'] = $content;
 		$parms['VisibilityLevel'] = $visibility;
-		$parms['SystemUser'] = getSession()->getUserIt()->getId();
+		$parms['SystemUser'] = $userId;
+		if ( $parms['AccessClassName'] == '' ) $parms['AccessClassName'] = $parms['ClassName'];
 
 		$id = $change_log->add_parms($parms);
 		

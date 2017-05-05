@@ -5,8 +5,20 @@ class ReportSpentTimeList extends PMStaticPageList
  	var $days_map, $activities_map, $comments_map;
  	var $user_it, $request_it, $task_it;
  	private $group = '';
- 	
- 	function getIterator() 
+    private $userReportUrl = '';
+
+    function buildMethods()
+    {
+        parent::buildMethods();
+
+        $values = $this->getFilterValues();
+        $report_it = getFactory()->getObject('PMReport')->getExact('tasksplanbyfact');
+        if ( $report_it->getId() != '' ) {
+            $this->userReportUrl = $report_it->getUrl('taskassignee=%1&modifiedafter='.$values['start']);
+        }
+    }
+
+    function getIterator()
  	{
 		$object = $this->getObject();
 
@@ -40,7 +52,7 @@ class ReportSpentTimeList extends PMStaticPageList
         }
 
         $it = $object->getAll();
-		$this->days_map = $it->getDaysMap();
+        $this->days_map = $it->getDaysMap();
 
 		$this->setupColumns();
 	
@@ -88,40 +100,17 @@ class ReportSpentTimeList extends PMStaticPageList
 	
 	function getColumns()
 	{
-	    global $model_factory;
-	    
-		if ( count($this->days_map) > 12 )
-		{
-		    for ( $i = 0; $i < count($this->days_map); $i++ )
-    		{
-    			$this->object->addAttribute('Day'.$this->days_map[$i], '', $this->days_map[$i], true);
-    		}
-		}
-		elseif ( count($this->days_map) == 12 ) 
-		{
-    		$date = $model_factory->getObject('DateMonth');
-		    
-			$date_it = $date->getAll();
-			
-			while( !$date_it->end() )
-			{
-    			$this->object->addAttribute(
-                    'Day'.$this->days_map[$date_it->getId()-1], '', $date_it->getDisplayName(), true
-    			);
-    			
-			    $date_it->moveNext();
-			}
-		}
-		else
-		{
-		    for ( $i = 0; $i < count($this->days_map); $i++ )
-    		{
-    			$this->object->addAttribute('Day'.$this->days_map[$i], '', $this->days_map[$i], true);
-    		}
-		}
+        foreach( $this->days_map as $dayId => $dayName ) {
+            $this->object->addAttribute('Day'.$dayId, '', $dayName, true);
+        }
 
 		$this->object->setAttributeCaption('Caption', $this->getRowsObject()->getDisplayName());
 		$this->object->addAttribute('Total', '', translate('Итого'), true);
+
+		$rowsObject = $this->getRowsObject();
+		if ( $rowsObject instanceof Task ) {
+            $this->object->addAttribute('Planned', 'INTEGER', $rowsObject->getAttributeUserName('Planned'), true);
+        }
 
 		return parent::getColumns();
 	}
@@ -193,6 +182,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		{
 			case 'Caption':
 			case 'Total':
+            case 'Planned':
 				return true;
 				
 			default:
@@ -207,11 +197,11 @@ class ReportSpentTimeList extends PMStaticPageList
 
 	function getColumnWidth( $attr ) 
 	{
-		if( $attr == 'Caption' ) 
+		if( $attr == 'Caption' )
 		{
-			return 200;
+			return '';
 		}
-		elseif( $attr == 'Total' ) 
+		elseif( $attr == 'Total' || $attr == 'Planned' )
 		{
 			return 40;
 		}
@@ -267,27 +257,15 @@ class ReportSpentTimeList extends PMStaticPageList
 		}	    
 	}
 	
-	function drawMonth( $column )
-	{
-	    parent::drawHeader( $column );
-	}
-	
-	function drawHeader( $column )
+	function drawHeader( $column, $title )
 	{
 		if ( strpos($column, 'Day') !== false )
 		{
-		    if ( count($this->days_map) > 12 )
-		    {
-		        $this->drawDay( $column );
-		    }
-		    else
-		    {
-		        $this->drawMonth( $column );
-		    }
+	        $this->drawDay( $column );
 		}
 		else
 		{
-			parent::drawHeader( $column );
+			parent::drawHeader( $column, $title );
 		}
 	}
 
@@ -313,6 +291,12 @@ class ReportSpentTimeList extends PMStaticPageList
 					$this->report_group_it->moveToId($object_it->get('ItemId'));
 					echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">'; 
 						echo $this->report_group_it->getDisplayName();
+
+                        if ( $this->userReportUrl != '' && $this->report_group_it->object instanceof User ) {
+                            echo ' &nbsp; <a target="_blank" href="'.str_replace('%1', $this->report_group_it->getId(), $this->userReportUrl).'" style="font-weight:normal;">';
+                                echo text(2274);
+                            echo '</a>';
+                        }
     				echo '</div>';
 			}
 			else {
@@ -320,22 +304,31 @@ class ReportSpentTimeList extends PMStaticPageList
 					if ( $this->row_it->getId() != '' )
 					{
     					$uid = new ObjectUID;
-    					echo '<div style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">';
+    					echo '<div class="hover-holder" style="padding-left:'.($this->getOffsetLevel($object_it->get('Item')) * 12).'px;">';
     						$uid->drawUidInCaption($this->row_it);
+
+                            if ( $this->userReportUrl != '' && $this->row_it->object instanceof User ) {
+                                echo ' &nbsp; <a class="dashed dashed-hidden" target="_blank" href="'.str_replace('%1', $this->row_it->getId(), $this->userReportUrl).'">';
+                                    echo text(2274);
+                                echo '</a>';
+                            }
     					echo '</div>';
 					}
 			}
 		}
 		elseif ( $attr == 'Total' )	{
 			if ( $object_it->get('Total') > 0 ) {
-				echo $object_it->get('Total');
+				echo getSession()->getLanguage()->getHoursWording(round($object_it->get('Total'), 1));
 			}
 			else {
 				echo '<span style="color:silver;">0</span>';
 			}
 		}
+        elseif ( $attr == 'Planned' )	{
+            echo getSession()->getLanguage()->getHoursWording($this->row_it->get('Planned'));
+        }
 		else {
-			$hours = $object_it->get($attr);
+			$hours = round($object_it->get($attr), 1);
 			if ( $hours > 0 ) {
 				$comment_attr = preg_replace('/Day(\d+)/', 'Comment\\1', $attr);
 				$actions = array();
@@ -350,13 +343,13 @@ class ReportSpentTimeList extends PMStaticPageList
 				}
 				if ( count($actions) > 0 ) {
 					echo $this->getTable()->getView()->render('core/SpentTimeMenu.php', array (
-						'title' => $hours,
+						'title' => getSession()->getLanguage()->getHoursWording($hours),
 						'items' => $actions,
 						'id' => $object_it->getId().$attr
 					));
 				}
 				else {
-					echo $hours;
+					echo getSession()->getLanguage()->getHoursWording($hours);
 				}
 			}
 			else {

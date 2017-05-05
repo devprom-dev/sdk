@@ -1,6 +1,4 @@
 <?php
-
-if ( !class_exists('FilterTagWebMethod', false) ) include(SERVER_ROOT_PATH.'pm/methods/c_tag_methods.php');
 include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/FilterStateMethod.php";
 include "QuestionList.php";
@@ -14,18 +12,24 @@ class QuestionTable extends PMPageTable
 
 	function getFilters()
 	{
-		global $model_factory;
-		
 		$filters = array(
 			new FilterStateMethod( $this->getObject() ),
 			new FilterStateTransitionMethod( $this->getObject() ),
-			new FilterTagWebMethod( $model_factory->getObject('QuestionTag') ),
+			$this->buildTagsFilter(),
 			new FilterUserAuthorWebMethod()
 		);
 		
 		return array_merge( $filters, parent::getFilters() );
 	}
-	
+
+    protected function buildTagsFilter()
+    {
+        $tag = getFactory()->getObject('QuestionTag');
+        $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
+        $filter->setIdFieldName('Tag');
+        return $filter;
+    }
+
 	function getFiltersDefault()
 	{
 		return array('author', 'state', 'tag');

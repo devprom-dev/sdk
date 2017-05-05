@@ -2,41 +2,19 @@
 
 class QuestionList extends PMPageList
 {
-    var $comment_it;
-    
     function getPredicates( $values )
 	{
 		$predicates = array(
 			new QuestionAuthorFilter( $values['author'] ),
 			new StatePredicate( $values['state'] ),
 			new TransitionObjectPredicate( $this->getObject(), $values['transition'] ),
-			new CustomTagFilter( $this->getObject(), $values['tag'] ),
-			new FilterAttributePredicate( 'Owner', $values['participant'] )
+			new CustomTagFilter( $this->getObject(), $values['tag'] )
 		);
 		
 		return array_merge(parent::getPredicates( $values ), $predicates);
 	}
 	
-	function retrieve()
-	{
-	    global $model_factory;
-	    
-	    $iterator = parent::retrieve();
-	    
-	    $comment = $model_factory->getObject('Comment');
-	    
-	    $comment->addFilter( new CommentObjectFilter($iterator) );
-	    
-	    $comment->addSort( new SortRecentClause() );
-	    
-	    $this->comment_it = $comment->getAll();
-	    
-	    $this->comment_it->buildPositionHash( array('ObjectId') );
-	    
-	    return $iterator;
-	}
-	
-	function IsNeedToDisplay( $attr ) 
+	function IsNeedToDisplay( $attr )
 	{
 		switch( $attr ) 
 		{
@@ -52,20 +30,8 @@ class QuestionList extends PMPageList
 		}
 	}
 
-  	function IsNeedToSelect()
+	function drawCell( $object_it, $attr )
 	{
-		return true;
-	}
-	
-	function IsNeedToSelectRow( $object_it )
-	{
-		return true;
-	}
-	
-	function drawCell( $object_it, $attr ) 
-	{
-		global $model_factory;
-		
 		switch ( $attr )
 		{
 			case 'Content':

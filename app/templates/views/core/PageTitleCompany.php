@@ -6,6 +6,26 @@ foreach( $programs as $program_id => $item ) {
 foreach( $portfolios as $portfolio_id => $item ) {
     unset($projects[$portfolio_id][$portfolio_id]);
 }
+$projectsData = array();
+
+foreach( $projects as $groupId => $containedProjects ) {
+    foreach( $containedProjects as $projectId => $project ) {
+        $data = array (
+            'groupId' => $groupId,
+            'projectId' => $projectId,
+            'project' => $project
+        );
+        $projectsData[$projectId] = $data;
+    }
+}
+
+$searchMode = !defined('SKIP_PRODUCT_TOUR') && count($projectsData) > 17;
+if ( $searchMode ) {
+    usort( $projectsData, function($left, $right) use($projectSortData) {
+        return $projectSortData[$left['projectId']] > $projectSortData[$right['projectId']];
+    });
+    $recent = array_slice($projectsData, 0, 4);
+}
 ?>
 
 <ul class="dropdown-menu">
@@ -16,53 +36,91 @@ foreach( $portfolios as $portfolio_id => $item ) {
                 <table class="table <?($has_portfolio_programs ? "two-columns" : "")?>">
                     <thead>
                         <tr>
-                            <? if ( $has_portfolio_programs ) { ?>
-                            <th><?=(text('portfolios.name').(count($programs) > 0 ? ' / '.translate('Программы') : ''))?></th>
-                            <? } ?>
-                            <th><?=text('projects.name')?></th>
+                            <th colspan="<?=($has_portfolio_programs ? 2 : 1)?>" style="padding-right: 0;">
+                                <span class="pull-left" style="margin-top: 3px;">
+                                    <?=text('projects.name')?>
+                                </span>
+                                <? if ( $searchMode ) { ?>
+                                <span class="pull-right project-search">
+                                    <input class="" type="text" placeholder="<?=text(2304)?>">
+                                </span>
+                                <? } ?>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <? if ( $has_portfolio_programs ) { ?>
-                            <td>
-                                <?php if ( count($programs) > 0 ) { ?>
-                                    <?php foreach( $programs as $program_id => $item ) { ?>
-                                        <a href="<?=$item['url']?>"><?=$item['name']?></a>
-                                        <?php if ( count($projects[$program_id]) > 0 ) { echo str_repeat('<br/>', count($projects[$program_id])); } ?>
-                                        <?php if ( count($projects[$program_id]) < 1 ) { ?> <br/> <?php } ?>
-                                        <br/>
-                                    <?php } ?>
-                                <?php } ?>
-                                    
-                                <?php foreach( $portfolios as $portfolio_id => $item ) { ?>
-                                    <a href="<?=$item['url']?>"><?=$item['name']?></a><br/>
-                                    <?php if ( count($projects[$portfolio_id]) > 0 ) { echo str_repeat('<br/>', count($projects[$portfolio_id])); } ?>
-                                    <?php if ( count($projects[$portfolio_id]) < 1 ) { ?> <br/> <?php } ?>
-                                <?php } ?>
-                            </td>
-                            <? } ?>
-                            <td>
+                            <td colspan="<?=($has_portfolio_programs ? 2 : 1)?>" style="padding-top: 16px; padding-bottom: 16px;">
+                                <?php
+                                if ( $searchMode ) {
+                                    foreach ($recent as $info) {
+                                        $groupId = $info['groupId'];
+                                        $project = $info['project'];
+                                        if (is_array($programs[$groupId])) {
+                                            $item = $programs[$groupId];
+                                        }
+                                        if (is_array($portfolios[$groupId])) {
+                                            $item = $portfolios[$groupId];
+                                        }
+                                        echo '<div class="p-link p-recent">';
+                                            echo '<a href="'.$project['url'].'">'.$project['name'].'</a>';
+                                        echo '</div>';
+                                    }
+                                    echo '<div class="p-link">';
+                                        echo '<div style="text-align:center;color:silver;">&bull; &nbsp; &bull; &nbsp; &bull;</div>';
+                                    echo '</div>';
+                                }
+                                ?>
+
                                 <?php if ( count($programs) > 0 ) { ?>
                                     <?php foreach( $programs as $program_id => $program ) { ?>
+                                        <div class="p-link p-node">
+                                            <i class="icon-briefcase"></i>
+                                            <a href="<?=$program['url']?>"><?=$program['name']?></a>
+                                        </div>
+
                                         <?php if ( !is_array($projects[$program_id]) ) continue; ?>
                                         <?php foreach( $projects[$program_id] as $project_id => $project ) { ?>
-                                            <a href="<?=$project['url']?>"><?=$project['name']?></a><br/>
+                                            <div class="p-link <?=($has_portfolio_programs ? "p-sub" : "")?>">
+                                                <a href="<?=$project['url']?>"><?=$project['name']?></a>
+                                            </div>
                                         <?php } ?>
-                                        <br/>
+                                        <div class="p-link">
+                                            <br/>
+                                        </div>
                                     <?php } ?>
                                 <?php } ?>
-                                
+
                                 <?php foreach( $portfolios as $portfolio_id => $program ) { ?>
+                                    <div class="p-link p-node">
+                                        <i class="icon-briefcase"></i>
+                                        <a href="<?=$program['url']?>"><?=$program['name']?></a>
+                                    </div>
+
                                     <?php if ( !is_array($projects[$portfolio_id]) ) continue; ?>
                                     <?php foreach( $projects[$portfolio_id] as $project_id => $project ) { ?>
-                                        <a href="<?=$project['url']?>"><?=$project['name']?></a><br/>
+                                        <div class="p-link <?=($has_portfolio_programs ? "p-sub" : "")?>">
+                                            <a href="<?=$project['url']?>"><?=$project['name']?></a>
+                                        </div>
                                     <?php } ?>
-                                    <br/>
+                                    <div class="p-link">
+                                        <br/>
+                                    </div>
                                 <?php } ?>
+
                                 <?php if (is_array($projects['']) ) foreach( $projects[''] as $project_id => $project ) { ?>
-                                    <a href="<?=$project['url']?>"><?=$project['name']?></a><br/>
-                                <?php } ?>
+                                    <div class="p-link <?=($has_portfolio_programs ? "p-sub" : "")?>">
+                                        <a href="<?=$project['url']?>"><?=$project['name']?></a><br/>
+                                    </div>
+                                <?php }
+
+                                if ( $searchMode ) {
+                                    echo '<div style="padding:9px 0 9px 0;">';
+                                        echo '<a id="project-list-all" class="dashed embedded-add-button" href="#">'.text(2307).'</a>';
+                                    echo '</div>';
+                                }
+
+                                ?>
                             </td>
                         </tr>
                         <tr>
@@ -76,7 +134,7 @@ foreach( $portfolios as $portfolio_id => $item ) {
                                 <?php } ?>
                             </td>
                             <? } else { ?>
-                                <td>
+                                <td width="50%">
                                     <?php foreach ( $admin_actions as $action ) { ?>
                                         <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                     <?php } ?>

@@ -12,7 +12,7 @@ $recent = 0;
                 <? foreach( $menu['items'] as $item ) { ?>
                     <? if ( $item['uid'] == 'navigation-settings' ) continue; ?>
                     <? if ( $item['name'] == '' ) continue; ?>
-                    <a href="<?=$item['url']?>"><?=$item['name']?></a>
+                    <a uid="vms-<?=$item['uid']?>" module="vms-<?=$item['module']?>" href="<?=$item['url']?>"><?=$item['name']?></a>
                     <br/>
                 <? } ?>
             <? } ?>

@@ -10,8 +10,9 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 	private $hidden_tasks = 0;
     private $releaseId = '';
 	
- 	protected function extendModel()
+ 	public function extendModel()
  	{
+        parent::extendModel();
  		$this->terminal_states = $this->getObject()->getTerminalStates();
  	}
 
@@ -19,24 +20,11 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
  	    $this->releaseId = $value;
     }
 
-	function IsAttributeVisible( $attribute )
- 	{
- 		switch ( $attribute )
- 		{
- 			case 'Release':
- 				return true;
-
- 			default:
- 				return parent::IsAttributeVisible( $attribute ); 
- 		}
- 	}
- 	
  	function getItemDisplayName( $object_it )
  	{
  		$uid = new ObjectUID;
 		$text = $uid->getUidIcon( $object_it );
-		$text .= ' '.$object_it->getWordsOnlyValue($object_it->getDisplayNameNative(), 15);
-		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')';
+		$text .= ' '.$object_it->getDisplayNameNative();
  		return $text;
  	}
  	
@@ -62,8 +50,24 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
                             new FilterVpdPredicate()
                         )
                     )->getId();
+            case 'Priority':
+                if ( $value != '' ) return $value;
+                $object_it = $this->getObjectIt();
+                if ( is_object($object_it) && $object_it->getId() > 0 ) {
+                    return $object_it->get('Priority');
+                }
+                return parent::getFieldValue( $attr );
             default:
                 return $value;
+        }
+    }
+
+    function IsAttributeObject( $attr ) {
+        switch ($attr) {
+            case 'Planned':
+                return true;
+            default:
+                return parent::IsAttributeObject( $attr );
         }
     }
 
@@ -76,7 +80,10 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
                 $object->addFilter( new FilterAttributePredicate('Version', $this->releaseId) );
 				return new FieldDictionary( $object );
 
- 	        default:
+            case 'Planned':
+                return new FieldHours();
+
+            default:
  	            return parent::createField( $attr );
  	    }
  	} 
@@ -144,7 +151,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 
 	function getListItemsTitle() {
 		if ( $this->hidden_tasks > 0 ) {
-			return text(1014).' '.str_replace('%1', $this->hidden_tasks, text(1935));
+			return str_replace('%1', $this->hidden_tasks, text(2028));
 		} else {
 			return parent::getListItemsTitle();
 		}

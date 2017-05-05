@@ -11,8 +11,6 @@ class ChangeLogEntityRegistry extends ObjectRegistrySQL
     
     function createSQLIterator( $sql )
  	{
- 	    global $model_factory;
- 	    
  	 	foreach( getSession()->getBuilders('ChangeLogEntitiesBuilder') as $builder )
  	    {
  	        $builder->build( $this );
@@ -22,17 +20,20 @@ class ChangeLogEntityRegistry extends ObjectRegistrySQL
  	    
  	    foreach( $this->names as $class_name )
  	    {
- 	        $object = $model_factory->getObject($class_name);
- 	        
+ 	        if ( $class_name == '' ) continue;
+            $class_name = getFactory()->getClass($class_name);
+ 	        if ( !class_exists($class_name) ) continue;
+
+ 	        $object = getFactory()->getObject($class_name);
  	        $data[] = array(
- 	                'entityId' => $class_name,
- 	                'ReferenceName' => $class_name,
- 	                'ClassName' => strtolower(get_class($object)) == 'metaobject' 
- 	                    ? strtolower($object->getEntityRefName()) : strtolower(get_class($object)),
- 	                'Caption' => translate($object->getDisplayName())
+                'entityId' => $class_name,
+                'ReferenceName' => $class_name,
+                'ClassName' => strtolower(get_class($object)) == 'metaobject'
+                    ? strtolower($object->getEntityRefName()) : strtolower(get_class($object)),
+                'Caption' => translate($object->getDisplayName())
  	        );
  	    }
- 	    
+
  	    usort( $data, function($left, $right) {
  	        return strcmp(translate($left['Caption']), translate($right['Caption']));
  	    });

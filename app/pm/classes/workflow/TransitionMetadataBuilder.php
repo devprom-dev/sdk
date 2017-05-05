@@ -10,7 +10,7 @@ class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( !$metadata->getObject() instanceof Transition ) return;
 
 		$metadata->addAttribute('Attributes', 
-			'REF_TransitionAttributeId', translate('Обязательные поля'), true);
+			'REF_TransitionAttributeId', text(1800), true);
 
 		$metadata->addAttribute('ProjectRoles', 
 			'REF_TransitionRoleId', translate('Проектные роли'), false);
@@ -18,12 +18,14 @@ class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttribute('Predicates', 
 			'REF_TransitionPredicateId', translate('Предусловия'), true);
 
-		$metadata->addAttribute('ResetFields', 
+        $metadata->addAttribute('Actions', 'REF_TransitionActionId', translate('Системные действия'), true);
+
+		$metadata->addAttribute('ResetFields',
 			'REF_TransitionResetFieldId', translate('Очищаемые поля'), true);
 
 		$metadata->addPersister(new TransitionDetailsPersister());
 
-        foreach( array('Description','OrderNum') as $attribute ) {
+        foreach( array('Description','OrderNum','ResetFields') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'additional');
             $metadata->setAttributeRequired($attribute, false);
         }

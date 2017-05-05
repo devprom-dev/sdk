@@ -5,18 +5,19 @@ class WikiIteratorExportExcelText extends IteratorExportExcel
 {
  	function setFields( $fields )
  	{
- 		if ( $this->getIterator()->count() < 1 )
- 		{
+ 		if ( $this->getIterator()->count() < 1 ) {
  			parent::setFields( $fields ); return;
  		}
  		
  	    $object = $this->getIterator()->object;
+        if ( !array_key_exists('SectionNumber', $fields) ) {
+            $fields = array_merge($fields, array(
+                'ParentPage' => translate($object->getAttributeUserName('ParentPage'))
+            ));
+        }
  	    
  		parent::setFields( array_merge( $fields, array(
- 				'ParentPage' => translate($object->getAttributeUserName('ParentPage')),
- 				'Caption' => translate($object->getAttributeUserName('Caption')),
- 				'Content' => translate($object->getAttributeUserName('Content')),
- 				'ContentEditor' => translate($object->getAttributeUserName('ContentEditor'))
+            'Caption' => translate($object->getAttributeUserName('Caption'))
  	    ))); 
  	}
 }

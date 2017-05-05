@@ -18,7 +18,11 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
     	if ( ! $object instanceof MetaobjectStatable ) return;
  	    if ( $object->getStateClassName() == '' ) return;
         $visibleAttributes = array();
- 	    
+
+        foreach( $object->getAttributes() as $attribute => $data ) {
+            $object->setAttributeEditable($attribute, true);
+        }
+
  	    if ( count($this->attributes) > 0 )
  	    {
      	    foreach( $object->getAttributes() as $attribute => $data )
@@ -47,6 +51,11 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
 				);
                 $visibleAttributes[] = $attribute_it->get('ReferenceName');
 			}
+            if ( $attribute_it->get('IsMainTab') == 'Y' ) {
+                $groups = $object->getAttributeGroups($attribute_it->get('ReferenceName'));
+                $groups = array_diff($groups, array('additional','deadlines','trace'));
+                $object->setAttributeGroups($attribute_it->get('ReferenceName'),$groups);
+            }
 			$attribute_it->moveNext();
 		}
 
@@ -70,6 +79,8 @@ class WorkflowStateAttributesModelBuilder extends ObjectModelBuilder
                 $visibleAttributes[] = $attribute_it->get('ReferenceName');
             }
 		}
-		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false);
+		$object->addAttribute('TransitionComment', 'WYSIWYG', text(1197), false, false,
+            str_replace('%1', getFactory()->getObject('Module')->getExact('dicts-texttemplate')->getUrl(), text(606))
+        );
 	}
 }

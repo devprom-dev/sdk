@@ -12,6 +12,8 @@ class CustomAttributeTypeIterator extends OrderedIterator
  			case 'string':
 			case 'computed':
  				return 'varchar';
+            case 'integer':
+                return 'float';
  			default:
  				return $type;
  		}

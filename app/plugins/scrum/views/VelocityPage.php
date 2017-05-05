@@ -19,6 +19,7 @@ class VelocityPage extends PMPage
 	        getSession()->addBuilder( new ReleaseModelVelocityBuilder() );
 	        $object = getFactory()->getObject('Release');
 	    }
+        $object->addAttribute('Velocity', 'INTEGER', translate('Скорость'), true);
  		return $object;
 	}
 	

@@ -46,7 +46,7 @@ class SessionPortfolio extends PMSession
  	    return $builders;
  	}
     
-    protected function buildProjectData( & $project_it )
+    protected function buildProjectData( $project_it )
     {
         $result = array();
 
@@ -79,8 +79,8 @@ class SessionPortfolio extends PMSession
         return $result;
  	}
 
- 	public function buildOriginationService( $cache_service ) {
- 		return new ModelPortfolioOriginationService($this, $cache_service);
+ 	public function buildOriginationService( $cache_service, $cache_key ) {
+ 		return new ModelPortfolioOriginationService($this, $cache_service, $cache_key);
  	}
  	
  	function getLanguageUid() {

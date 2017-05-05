@@ -3,6 +3,7 @@
 use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
 
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueTasks.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once "FormTaskEmbedded.php";
 
 class FieldTask extends Field
@@ -22,27 +23,37 @@ class FieldTask extends Field
  	
  	function draw( $view = null )
  	{
- 		global $model_factory, $_REQUEST;
- 		
  		$taskboxes = 0;
  		
  		$transition = $_REQUEST['Transition'];
- 		
- 		$task = $model_factory->getObject( 'pm_Task' );
+
+        $task = getFactory()->getObject( 'pm_Task' );
+        $builder = new TaskModelExtendedBuilder();
+        $builder->build($task);
+
+        $filledTypes = array();
 
 		$task_it = $this->request_it->getRef('OpenTasks');
 		if ( $task_it->count() > 0 ) {
 			$this->drawOpen( $task_it, $taskboxes );
+            $filledTypes = array_merge($filledTypes, $task_it->fieldToArray('TaskType'));
 		}
-		$this->drawByTypes( $task, $taskboxes );
+
+        $this->drawByTypes( $task, $taskboxes, $filledTypes );
 
 		$parms = array (
-				'Priority' => $this->request_it->get('Priority'),
-				'FormActive' => 'N'
+            'Priority' => $this->request_it->get('Priority'),
+            'FormActive' => 'Y'
 		);
-		
-		for ( $i = $taskboxes; $i < 8; $i++ )
-		{
+		if ( $taskboxes < 1 ) {
+            $this->drawForm( $task, $taskboxes, '', $parms );
+        }
+
+        $parms = array (
+            'Priority' => $this->request_it->get('Priority'),
+            'FormActive' => 'N'
+        );
+		for ( $i = $taskboxes; $i < 8; $i++ ) {
 			$this->drawForm( $task, $taskboxes, 'display:none;', $parms );
 			$taskboxes++;
 		}
@@ -89,7 +100,7 @@ class FieldTask extends Field
  		}
  	}
  	
- 	function drawByTypes( $task, & $taskboxes )
+ 	function drawByTypes( $task, & $taskboxes, $skipTypes )
  	{
 		$target_it = getFactory()->getObject('Transition')->getExact($_REQUEST['Transition'])->getRef('TargetState');
 
@@ -100,15 +111,15 @@ class FieldTask extends Field
  		);
 
 		$tasktype_it = getFactory()->getObject('pm_TaskType')->getRegistry()->Query($filters);
-		
+
  		$parms = array (
- 				'Priority' => $this->request_it->get('Priority')
+ 			'Priority' => $this->request_it->get('Priority'),
+            'ChangeRequest' => $this->request_it->getId()
  		);
 
  		while ( !$tasktype_it->end() )
  		{
- 			if ( $tasktype_it->get('ReferenceName') == 'support' )
- 			{
+ 			if ( in_array($tasktype_it->getId(), $skipTypes) || $tasktype_it->get('ReferenceName') == 'support' ) {
  				$tasktype_it->moveNext();
  				continue;
  			}
@@ -119,7 +130,6 @@ class FieldTask extends Field
 			$this->drawForm( $task, $taskboxes, 'display:block;', $parms );
 
 			$taskboxes++;
-			
 	 		$tasktype_it->moveNext();
  		}
  	}

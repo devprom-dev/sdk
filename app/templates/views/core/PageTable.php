@@ -25,7 +25,6 @@ echo $view->render('core/PageTableBody.php', array (
     'navigation_title' => $navigation_title,
 	'title' => $title,
     'changed_ids' => $changed_ids,
-	'save_settings_alert' => $save_settings_alert,
 	'module_url' => $module_url,
 	'details' => $details,
 	'details_parms' => $details_parms,
@@ -33,6 +32,8 @@ echo $view->render('core/PageTableBody.php', array (
 	'placeholderClass' => 'placeholder-fixed',
     'hint' => $hint,
     'hint_open' => $hint_open,
-    'page_uid' => $page_uid
+    'page_uid' => $page_uid,
+    'list_slider' => $list_slider,
+    'sliderClass' => $sliderClass
 ));
 

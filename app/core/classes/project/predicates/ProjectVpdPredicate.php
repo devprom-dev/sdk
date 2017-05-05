@@ -9,6 +9,6 @@ class ProjectVpdPredicate extends FilterPredicate
  		});
  		if ( count($ids) < 1 ) return ' AND 1 = 1 ';
 
- 		return " AND ".$this->getAlias().".VPD IN (SELECT i.VPD FROM pm_Project i WHERE i.pm_ProjectId IN (".join(',',$ids)."))";
+ 		return " AND ".$this->getAlias().".VPD IN ('".join("','", getFactory()->getObject('Project')->getExact($ids)->fieldToArray('VPD'))."')";
  	}
 }

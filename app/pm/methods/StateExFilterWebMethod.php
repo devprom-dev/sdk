@@ -7,11 +7,11 @@ class StateExFilterWebMethod extends FilterWebMethod
  	private $non_terminal_it = null;
  	private $terminal_it = null;
  	
- 	function __construct( $iterator = null, $parm = 'state' )
+ 	function __construct( $iterator = null, $parm = 'state', $default = '' )
  	{
  		parent::__construct();
- 		
- 		$this->iterator = $iterator;
+
+        $this->iterator = $iterator;
  		$this->setValueParm($parm);
  		
  		$data = $this->iterator->getRowset();
@@ -21,12 +21,13 @@ class StateExFilterWebMethod extends FilterWebMethod
  		$this->iterator = $this->iterator->object->createCachedIterator($data);
  		
  		$this->buildTerminals();
- 		$this->setDefaultValue(join(',',$this->non_terminal_it->fieldToArray('ReferenceName')));
- 	}
- 	
- 	function getCaption()
- 	{
- 		return translate('Статус');
+        if ( $default == '' ) {
+            $this->setDefaultValue(join(',',$this->non_terminal_it->fieldToArray('ReferenceName')));
+        }
+        else {
+            $this->setDefaultValue($default);
+        }
+        $this->setCaption(translate('Состояние'));
  	}
  	
  	function getValues()

@@ -11,8 +11,7 @@ class WikiPageIterator extends StatableIterator
  		{
  			case 'Content':
 				$native = parent::get_native( $attr );
- 				if ( parent::get_native('ContentPresents') != 'Y' ) return $native;
-				if ( $native != '' ) return $native;
+ 				if ( $native != '' || array_key_exists('Content', $this->getData()) ) return $native;
 
  				if ( !isset($this->content_storage[$this->getId()]) ) $this->cacheContentAndStyle();
 		        return $this->content_storage[$this->getId()];
@@ -41,7 +40,19 @@ class WikiPageIterator extends StatableIterator
  		}
  	}
 
- 	private function cacheContentAndStyle()
+ 	function getDisplayNameExt( $prefix = '' )
+    {
+        if ( $this->get('DocumentName') != '' && $this->get('ParentPage') != '' ) {
+            $prefix = $this->getHtmlDecoded('DocumentName') . ' / ' . $prefix;
+        }
+        return parent::getDisplayNameExt($prefix);
+    }
+
+    function getTreeDisplayName() {
+        return $this->getHtmlDecoded('Caption');
+    }
+
+    private function cacheContentAndStyle()
  	{
  		if ( $this->getId() < 1 ) return;
 
@@ -213,7 +224,7 @@ class WikiPageIterator extends StatableIterator
 		$change->add_parms( array(
 		    'WikiPage' => $this->getId(),
 		    'Content' => $was_content,
-		    'Author' => getSession()->getParticipantIt()->getId()
+		    'Author' => getSession()->getUserIt()->getId()
 		));
 	}
 	

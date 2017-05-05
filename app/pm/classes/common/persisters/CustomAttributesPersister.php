@@ -2,6 +2,7 @@
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
+use Devprom\ProjectBundle\Service\Model\ModelService;
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectSQLPasswordPersister.php";
 include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
 
@@ -60,6 +61,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 	function map( &$parms )
 	{
 		foreach( $this->getAttributesInfo() as $id => $attr ) {
+		    if ( $attr['name'] != 'UID' ) continue;
 			if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
                 $idAttribute = $this->getObject()->getIdAttribute();
 			    if ( mb_strpos($attr['default'], 'ИД') === false || $parms[$idAttribute] != '' ) {
@@ -243,39 +245,12 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
 	protected function computeFormula( $data, $formula )
 	{
-		$object_it = $this->getObject()->createCachedIterator(array($data));
-		return preg_replace_callback('/\{([^\}]+)\}/',
-			function($match) use ($object_it)
-			{
-				$object = $object_it->object;
-				list($path,$default) = preg_split('/,/', $match[1]);
-				$attributes = preg_split('/\./', $path);
-				foreach( $attributes as $caption ) {
-					if ( strcasecmp($caption,'ИД') == 0 ) {
-						$refName = $object->getIdAttribute();
-					}
-					else {
-						$refName = $object->getAttributeByCaption($caption);
-					}
-					if ( $object->IsReference($refName) ) {
-						$object_it = $object_it->getRef($refName);
-						$object = $object_it->object;
-					}
-					else {
-						if ( $refName == $object->getIdAttribute() ) {
-							$id = $object_it->get($refName);
-							if ( $id == '' ) return "{".$caption."}";
-							return str_pad($id, 6, '0', STR_PAD_LEFT);
-						}
-						else {
-							return $object_it->get($refName) != '' ? $object_it->get($refName) : $default;
-						}
-					}
-				}
-				return $match[0];
-			},
-			$formula
-		);
+        return array_shift(
+            ModelService::computeFormula(
+                $this->getObject()->createCachedIterator(array($data)),
+                $formula
+            )
+        );
 	}
 
 	protected function getTypeIt( $attribute )

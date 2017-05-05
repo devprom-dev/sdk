@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 
 include "DictionaryItemForm.php";
 include "ProjectRoleForm.php";
@@ -8,6 +9,8 @@ include "CustomAttributeFinalForm.php";
 include "DictionaryItemsTable.php";
 include "DictionaryTable.php";
 include "TestExecutionResultForm.php";
+include "TextTemplateForm.php";
+include "TextTemplateTable.php";
 
 include SERVER_ROOT_PATH."pm/views/workflow/TransitionForm.php";
 include SERVER_ROOT_PATH."pm/views/workflow/StateForm.php";
@@ -17,24 +20,28 @@ include SERVER_ROOT_PATH."pm/views/wiki/RequirementTypeForm.php";
 
 class DictionaryPage extends PMPage
 {
+    private $object = null;
+
  	function __construct()
  	{
- 		global $_REQUEST, $model_factory;
- 		
- 		if ( $_REQUEST['entity'] != '' )
- 		{
- 			$object = $model_factory->getObject($_REQUEST['entity']);
- 			$_REQUEST['dict'] = $_REQUEST['entity']; 
+ 		if ( $_REQUEST['entity'] != '' ) {
+			$_REQUEST['dict'] = $_REQUEST['entity'];
  		}
  		
  		parent::__construct();
  		
- 		if ( $this->needDisplayForm() ) $this->buildFormSections( $this->getObjectIt() );
+ 		if ( $this->needDisplayForm() ) {
+            $this->buildFormSections( $this->getObjectIt() );
+        }
+        else {
+            $this->buildTableSections();
+        }
  	}
  	
  	function getObject()
  	{
- 		return $this->getDictionary();
+        if ( is_object($this->object) ) return $this->object;
+ 		return $this->object = $this->getDictionary();
  	}
  	
  	function getDictionary()
@@ -65,20 +72,21 @@ class DictionaryPage extends PMPage
  	
  	function getTable() 
  	{
- 	    if ( $_REQUEST['dict'] == '' )
- 	    {
+ 	    if ( $_REQUEST['dict'] == '' ) {
             return new DictionaryTable(getFactory()->getObject('Dictionary'));
  	    }
  	    
- 		$object = $this->getDictionary();
- 		
+ 		$object = $this->getObject();
 		if ( is_object($object) )
 		{
 			switch ( $object->getClassName() )
 			{
 				case 'pm_State':
 				    return new StateTable( $object );
-					    	
+
+                case 'pm_TextTemplate':
+                    return new TextTemplateTable( $object );
+
 				default:
 					if ( is_a($object, 'ObjectTemplate') )
 					{
@@ -94,9 +102,7 @@ class DictionaryPage extends PMPage
  	
  	function getForm()
  	{
- 		global $model_factory, $_REQUEST;
-
-		$object = $this->getDictionary();
+		$object = $this->getObject();
 		
 		if ( !is_object($object) ) return null;
 		
@@ -119,6 +125,9 @@ class DictionaryPage extends PMPage
 
 			case 'pm_TestExecutionResult':
 				return new TestExecutionResultForm ( $object );
+
+            case 'pm_TextTemplate':
+                return new TextTemplateForm($object);
 				
 		    case 'pm_CustomAttribute':
 		    	
@@ -145,7 +154,7 @@ class DictionaryPage extends PMPage
  	
  	function render( $view = null )
  	{
- 		if ( $_REQUEST['wait'] != '' && $this->getDictionary() instanceof CustomResource )
+ 		if ( $_REQUEST['wait'] != '' && $this->getObject() instanceof CustomResource )
  		{
  			die();
  		}
@@ -156,15 +165,30 @@ class DictionaryPage extends PMPage
  	function buildFormSections( $object_it )
  	{
 		$this->addInfoSection(
-				new PageSectionAttributes(
-						$this->getFormRef()->getObject(), 'additional', translate('Дополнительно')
-				)
+            new PageSectionAttributes(
+                $this->getFormRef()->getObject(), 'additional', translate('Дополнительно')
+            )
 		);
-
  		if ( !is_object($object_it) ) return;
 
  		if ( $object_it->object->getAttributeType('RecentComment') != '' ) {
  			$this->addInfoSection( new PageSectionComments($object_it) );
  		}
  	}
+
+ 	function buildTableSections()
+    {
+    }
+
+    function getHint()
+    {
+        $hint = parent::getHint();
+
+        $object = $this->getObject();
+        if ( $object instanceof StateBase ) {
+            $hint = '<div class="workflow-image-holder">'.WorkflowService::getImage($object).'</div><hr/>'.$hint;
+        }
+
+        return $hint;
+    }
 }

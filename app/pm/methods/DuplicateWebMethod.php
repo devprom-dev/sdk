@@ -7,8 +7,6 @@ class DuplicateWebMethod extends WebMethod
 	private $object_it = null;
 	private $result_it = null;
 	
-	private $context = null;
-
 	function __construct( $object_it = null )
 	{
 		$this->setObjectIt( is_object($object_it) 
@@ -72,6 +70,7 @@ class DuplicateWebMethod extends WebMethod
 
 	function getObject()
 	{
+	    if ( is_object($this->object_it) ) return $this->object_it->object;
 		$class = getFactory()->getClass($_REQUEST['class']);
 		if ( !class_exists($class) ) return null;
 		return getFactory()->getObject($class);
@@ -84,64 +83,69 @@ class DuplicateWebMethod extends WebMethod
 	
  	function execute_request()
  	{
- 		if ( $this->object_it->getId() == '' )
- 		{
- 			$this->setObjectIt(
- 					$_REQUEST['objects'] != '' 
- 						? $this->getObject()->getExact(preg_split('/-/', $_REQUEST['objects']))
- 						: $this->getObject()->getEmptyIterator()
- 			);
- 		}
- 		
-		$project = getFactory()->getObject('Project');
-		
-		$target_it = $_REQUEST['Project'] > 0 ? $project->getExact( $_REQUEST['Project'] ) : $project->getEmptyIterator();
-		
-		if ( $target_it->getId() < 1 ) $target_it = getSession()->getProjectIt();
-	    
-	    $context = $this->duplicate( $target_it );
-	    
-	    $object_it = $this->getObjectIt();
-
-    	$map = $context->getIdsMap();
-    	
-    	$duplicates = array();
-    	
-    	$ref_name = $object_it->object->getEntityRefName();
-    	
-    	foreach( $object_it->idsToArray() as $id )
-    	{
-    		$duplicates[] = $map[$ref_name][$id]; 
-    	}
-    	
-    	$duplicate_it = $object_it->object->getExact($duplicates);
-	    
-	    getFactory()->getEventsManager()->
-	    		executeEventsAfterBusinessTransaction($duplicate_it->copyAll(), 'WorklfowMovementEventHandler');
-
-		$duplicate_it->moveFirst();
-		$this->setResult($duplicate_it);
-
-		if ( $_REQUEST['OpenList'] != '' && $duplicate_it->count() > 0 ) {
-			if ( $duplicate_it->count() == 1 ) {
-				$this->setRedirectUrl($duplicate_it->getViewUrl());
-			}
-			else {
-				$this->setRedirectUrl(
-					getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
-						'request='.join(',',$duplicate_it->idsToArray())
-					)
-				);
-			}
-		}
-		elseif( $duplicate_it->count() == 1 ) {
-			$this->setRedirectUrl($duplicate_it->getViewUrl());
-		}
+        $this->execute( $_REQUEST );
  	}
- 	
- 	function duplicate( $project_it )
+
+ 	function execute( $parms )
+    {
+        if ( $this->object_it->getId() == '' )
+        {
+            $this->setObjectIt(
+                $parms['objects'] != ''
+                    ? $this->getObject()->getExact(preg_split('/-/', $parms['objects']))
+                    : $this->getObject()->getEmptyIterator()
+            );
+        }
+
+        $project = getFactory()->getObject('Project');
+
+        $target_it = $parms['Project'] > 0 ? $project->getExact( $parms['Project'] ) : $project->getEmptyIterator();
+
+        if ( $target_it->getId() < 1 ) $target_it = getSession()->getProjectIt();
+
+        $context = $this->duplicate( $target_it, $parms );
+
+        $object_it = $this->getObjectIt();
+
+        $map = $context->getIdsMap();
+
+        $duplicates = array();
+
+        $ref_name = $object_it->object->getEntityRefName();
+
+        foreach( $object_it->idsToArray() as $id )
+        {
+            $duplicates[] = $map[$ref_name][$id];
+        }
+
+        $duplicate_it = $object_it->object->getExact($duplicates);
+
+        getFactory()->getEventsManager()->
+        executeEventsAfterBusinessTransaction($duplicate_it->copyAll(), 'WorklfowMovementEventHandler');
+
+        $duplicate_it->moveFirst();
+        $this->setResult($duplicate_it);
+
+        if ( $parms['OpenList'] != '' && $duplicate_it->count() > 0 ) {
+            if ( $duplicate_it->count() == 1 ) {
+                $this->setRedirectUrl($duplicate_it->getViewUrl());
+            }
+            else {
+                $this->setRedirectUrl(
+                    getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
+                        'request='.join(',',$duplicate_it->idsToArray())
+                    )
+                );
+            }
+        }
+        elseif( $duplicate_it->count() == 1 ) {
+            $this->setRedirectUrl($duplicate_it->getViewUrl());
+        }
+    }
+
+ 	function duplicate( $project_it, $parms )
  	{
- 	    global $model_factory, $session;
+ 	    global $session;
  	    
  	    // prepare list of objects to be serilalized
  	    $references = $this->getReferences();

@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo apt-get update
-sudo apt-get -y -q install anacron
+sudo apt-get -y -q install anacron php-imap php-mysql php-mysqli php-gd php-common php-curl php-imap php-json php-ldap php-imagick php-xml php-zip php-mbstring
 cd /projects/sdk/
 git config --global user.email "test@example.com"                                                                                                                                                 
 git config --global user.name "developer"
@@ -27,12 +27,13 @@ mkdir /projects/sdk/update
 mkdir /projects/sdk/logs
 sudo composer self-update
 cd /projects/sdk/app/ext
-composer install
+sudo composer install
 cd /projects/sdk/lib
-composer install
+sudo composer install
 sudo chown -R www-data:www-data /projects/sdk
 sudo chmod -R 777 /projects/sdk
 sudo rm -r /projects/sdk/app/cache
 sudo rm -r /projects/sdk/app/conf/logger.xml
-sudo service apache2 restart
+sudo service mysql restart
 sudo service cron restart
+sudo service apache2 restart && sudo tail -f /var/log/apache2/access.log -f /var/log/apache2/error.log

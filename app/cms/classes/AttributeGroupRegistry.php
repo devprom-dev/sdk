@@ -27,7 +27,9 @@ class AttributeGroupRegistry extends ObjectRegistrySQL
 		$this->add('time', translate('Трудозатраты'));
 		
 		$this->add('dates', translate('Даты'));
-		
+
+        $this->add('sla', 'SLA');
+
 		return $this->createIterator($this->data);
 	}
 }

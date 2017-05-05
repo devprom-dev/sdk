@@ -48,10 +48,11 @@ class FieldIssueEstimation extends Field
 	protected function buildActions()
 	{
 		$actions = array();
+        $empty_it = getFactory()->getObject('Request')->getEmptyIterator();
 
 		foreach( $this->scale as $label => $value )
 		{
-			$method = new ModifyAttributeWebMethod(getFactory()->getObject('Request')->getEmptyIterator(), 'Estimation', $value);
+			$method = new ModifyAttributeWebMethod($empty_it, 'Estimation', $value);
 			if ( $method->hasAccess() ) {
 				if ( !$this->reload ) {
 					$method->setCallback( "donothing" );

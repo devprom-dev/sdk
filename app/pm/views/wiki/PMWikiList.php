@@ -1,12 +1,15 @@
 <?php
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageDocumentGroupPersister.php";
+include_once SERVER_ROOT_PATH . "pm/views/ui/WorkflowProgressFrame.php";
+include "fields/FieldWikiEstimation.php";
 
 class PMWikiList extends PMPageList
 {
  	var $version_it, $form, $form_render_parms;
 	private $displayContent = false;
 	private $searchText = '';
- 	
+    private $workflowFrame = null;
+
 	function retrieve()
 	{
 	    $this->getObject()->addPersister( new WikiPageDocumentGroupPersister() );
@@ -23,11 +26,7 @@ class PMWikiList extends PMPageList
 	
 	function Statable( $object = null )
 	{
-		if ( is_object($object) )
-		{
-			return $object->IsStatable();
-		}
-		
+		if ( is_object($object) ) return $object->IsStatable();
 		return false;
 	}
 
@@ -35,7 +34,11 @@ class PMWikiList extends PMPageList
 	{
 		return true;
 	}
-	
+
+	function getTitle( $object_it ) {
+	    return $object_it->getDisplayName();
+    }
+
 	function drawCell( $object_it, $attr ) 
 	{
 		switch ( $attr )
@@ -45,7 +48,7 @@ class PMWikiList extends PMPageList
                     $title = $object_it->getHtmlDecoded('CaptionLong');
                 }
                 else {
-                    $title = $object_it->getDisplayName();
+                    $title = $this->getTitle($object_it);
                 }
 				if ( $object_it->get('BrokenTraces') != "" ) {
 					$title = $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php',
@@ -55,12 +58,16 @@ class PMWikiList extends PMPageList
 						)
 					).$title;
 				}
-				if ( $this->displayContent ) {
+				if ( $this->displayContent && $object_it->get('Content') != '' ) {
 					echo '<h5 class="bs">'.$title.'</h5>';
 				}
 				else {
 					echo $title;
 				}
+                if ( $this->checkColumnHidden('Tags') && $object_it->get('Tags') != '' ) {
+                    echo ' ';
+                    $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
+                }
 				if ( $this->displayContent && trim($object_it->get('Content')," \r\n") != '' ) {
 					$field = new FieldWYSIWYG($object_it->get('ContentEditor'));
 					$field->setValue($object_it->get('Content'));
@@ -71,6 +78,21 @@ class PMWikiList extends PMPageList
                     echo '</div>';
 				}
 				break;
+
+            case 'Estimation':
+                if ( $object_it->get('TotalCount') > 0 ) {
+                    echo getSession()->getLanguage()->getDurationWording($object_it->get('EstimationCumulative'), 8);
+                }
+                else {
+                    if ( is_object($this->estimation_field) && $object_it->get('TotalCount') < 1 ) {
+                        $this->estimation_field->setObjectIt($object_it);
+                        $this->estimation_field->draw($this->getTable()->getView());
+                    }
+                    else {
+                        parent::drawCell($object_it, $attr);
+                    }
+                }
+                break;
 				
 			case 'Workflow':
                 if ( $object_it->get($attr) != '' ) {
@@ -90,6 +112,30 @@ class PMWikiList extends PMPageList
                     echo join('', $lines);
                 }
 				break;
+
+            case 'State':
+                echo '<table class="state-rich"><tr>';
+                echo '<td style="vertical-align: top;">';
+                    parent::drawCell($object_it, $attr);
+                echo '</td>';
+                    if ( $object_it->get('ParentPage') == '' && $object_it->get('TotalCount') > 0 ) {
+                        echo '<td>';
+                        $object = getFactory()->getObject(get_class($this->getObject()));
+                        $object->addFilter( new FilterAttributePredicate('DocumentId',$object_it->getId()) );
+                        $aggregateFunc = new AggregateBase( 'State', 'WikiPageId', 'COUNT' );
+                        $object->addAggregate($aggregateFunc);
+                        $agg_it = $object->getAggregated('t', array(new SortAttributeClause('State')));
+                        if ( $agg_it->count() > 1 ) {
+                            $this->workflowFrame->draw(
+                                $agg_it,
+                                $aggregateFunc,
+                                '&type=all&document='.$object_it->getId()
+                            );
+                        }
+                        echo '</td>';
+                    }
+                echo '</tr></table>';
+                break;
 
 			case 'Dependency':
 				$uids = array();
@@ -154,11 +200,15 @@ class PMWikiList extends PMPageList
 				'Watchers', 'Attachments'
 			)
 		);
-
-		return $fields;
+		return array_merge(
+		    $fields,
+            array (
+                'RecordModified'
+            )
+        );
 	}
-	
-	function IsNeedToSelectRow( $object_it ) {
+
+    function IsNeedToSelectRow( $object_it ) {
         return true;
 	}
 
@@ -202,6 +252,10 @@ class PMWikiList extends PMPageList
 
 	function getRenderParms()
 	{
+        $this->workflowFrame = new WorkflowProgressFrame(
+            $this->getObject(), str_replace('/docs', '/list', $this->getObject()->getPage())
+        );
+
         $parms = parent::getRenderParms();
 
 		$values = $this->getFilterValues();
@@ -211,6 +265,10 @@ class PMWikiList extends PMPageList
 		}
 		$this->searchText = $values['search'];
 		$this->displayContent = !in_array($this->searchText, array('','all','hide')) || parent::getColumnVisibility('Content');
+
+        if ( parent::getColumnVisibility('Estimation') ) {
+            $this->estimation_field = new FieldWikiEstimation($this->getObject());
+        }
 
 		return array_merge( $parms,
 			array (

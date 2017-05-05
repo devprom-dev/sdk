@@ -11,17 +11,33 @@ class ModulesSettingsService implements SettingsService
  		// disable any model events handler
 		getFactory()->setEventsManager( new \ModelEventsManager() );
 
-		foreach( $this->getIterators() as $object_it ) {
-			while(!$object_it->end()) {
-				// remove personal settings of the current user
-				if ( $object_it->get('Participant') == getSession()->getParticipantIt()->getId() ) {
-					$object_it->object->delete($object_it->getId());
-				}
-				$object_it->moveNext();
-			}
+		foreach( $this->getIterators() as $object_it )
+		{
+            switch ( $object_it->object->getEntityRefName() ) {
+                case 'pm_Workspace':
+                    $system_it = $object_it->object->getRegistry()->Query(
+                        array (
+                            new \FilterAttributePredicate('SystemUser', array(getSession()->getUserIt()->getId(), 'none')),
+                            new \FilterBaseVpdPredicate(),
+                        )
+                    );
+                    while( !$system_it->end() ) {
+                        $system_it->delete();
+                        $system_it->moveNext();
+                    }
+                    break;
+                default:
+                    while(!$object_it->end()) {
+                        // remove personal settings of the current user
+                        if ( $object_it->get('Participant') == getSession()->getParticipantIt()->getId() ) {
+                            $object_it->object->delete($object_it->getId());
+                        }
+                        $object_it->moveNext();
+                    }
+            }
 		}
 
-		\SessionBuilder::Instance()->invalidate();
+        getFactory()->getCacheService()->truncate('sessions');
 		getSession()->truncate();
 	}
 
@@ -45,9 +61,32 @@ class ModulesSettingsService implements SettingsService
 						$object_it->moveNext();
 					}
 					break;
-				case 'pm_CustomReport':
-					continue;
-			}
+                case 'pm_Workspace':
+                    $system_it = $object_it->object->getRegistry()->Query(
+                        array (
+                            new \FilterAttributePredicate('SystemUser', array(getSession()->getUserIt()->getId(), 'none')),
+                            new \FilterBaseVpdPredicate(),
+                        )
+                    );
+                    while( !$system_it->end() )
+                    {
+                        $system_it->delete();
+                        $system_it->moveNext();
+                    }
+                    break;
+                case 'pm_CustomReport':
+                    $it = $object_it->object->getRegistry()->Query(
+                        array (
+                            new \CustomReportCommonPredicate(),
+                            new \FilterBaseVpdPredicate()
+                        )
+                    );
+                    while( !$it->end() ) {
+                        $object_it->object->delete($it->getId());
+                        $it->moveNext();
+                    }
+                    break;
+            }
 
 			\CloneLogic::Run(
 				$context,
@@ -57,7 +96,7 @@ class ModulesSettingsService implements SettingsService
 			);
 		}
 
-        \SessionBuilder::Instance()->invalidate();
+        getFactory()->getCacheService()->truncate('sessions');
 		getSession()->truncate();
 	}
 
@@ -72,21 +111,28 @@ class ModulesSettingsService implements SettingsService
 			switch ( $object_it->object->getEntityRefName() )
 			{
 				case 'pm_UserSetting':
-					// remove personal settings of the current user
-					while(!$object_it->end()) {
-						if ( $object_it->get('Participant') == getSession()->getParticipantIt()->getId() ) {
-							$object_it->object->delete($object_it->getId());
-						}
-						$object_it->moveNext();
-					}
-
 					// filter only personal settings to be copied as defaults
 					$object_it = $object_it->object->createCachedIterator(
-						array_filter($object_it->getRowset(), function($row) {
-							return $row['Participant'] == getSession()->getParticipantIt()->getId();
-						})
+					    array_values(
+                            array_filter($object_it->getRowset(), function($row) {
+                                return $row['Participant'] == getSession()->getParticipantIt()->getId();
+                            })
+                        )
 					);
 					break;
+                case 'pm_Workspace':
+                    $system_it = $object_it->object->getRegistry()->Query(
+                        array (
+                            new \FilterAttributePredicate('SystemUser', 'none'),
+                            new \FilterBaseVpdPredicate(),
+                        )
+                    );
+                    while( !$system_it->end() )
+                    {
+                        $system_it->delete();
+                        $system_it->moveNext();
+                    }
+                    break;
 			}
 
 			\CloneLogic::Run(
@@ -97,7 +143,19 @@ class ModulesSettingsService implements SettingsService
 			);
 		}
 
-        \SessionBuilder::Instance()->invalidate();
+        // remove personal settings of the current user, global settings will be used instead
+        $object_it = getFactory()->getObject('pm_UserSetting')->getRegistry()->Query(
+            array(
+                new \FilterAttributePredicate('Participant', getSession()->getParticipantIt()->getId()),
+                new \FilterVpdPredicate()
+            )
+        );
+        while(!$object_it->end()) {
+            $object_it->object->delete($object_it->getId());
+            $object_it->moveNext();
+        }
+
+        getFactory()->getCacheService()->truncate('sessions');
 		getSession()->truncate();
 	}
 
@@ -111,6 +169,30 @@ class ModulesSettingsService implements SettingsService
 				new \FilterVpdPredicate()
 			)
 		);
+
+        $workspace = getFactory()->getObject('Workspace');
+        $workspace_it = $workspace->getRegistry()->getDefault();
+
+        $iterators[] = $workspace->getRegistry()->Query(
+            array (
+                new \FilterInPredicate($workspace_it->idsToArray())
+            )
+        );
+
+        $menu_it = getFactory()->getObject('pm_WorkspaceMenu')->getRegistry()->Query(
+            array (
+                new \FilterAttributePredicate('Workspace', $workspace_it->idsToArray()),
+                new \SortOrderedClause()
+            )
+        );
+        $iterators[] = $menu_it;
+
+        $iterators[] = getFactory()->getObject('pm_WorkspaceMenuItem')->getRegistry()->Query(
+            array (
+                new \FilterAttributePredicate('WorkspaceMenu', $menu_it->idsToArray()),
+                new \SortOrderedClause()
+            )
+        );
 
 		$settings = new \PMUserSettings();
  		$settings->setRegistry( new \PMUserSettingsExportRegistry() );

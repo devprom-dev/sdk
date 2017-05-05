@@ -79,6 +79,21 @@ class WorkItemTable extends TaskTable
         return new WorkItemStatePredicate( $value );
     }
 
+    function buildAssigneeFilter()
+    {
+        if ( $this->getReport() == 'mytasks' ) return null;
+        return parent::buildAssigneeFilter();
+    }
+
+    function buildAssigneePredicate( $values ) {
+        if ( $this->getReport() == 'mytasks' ) {
+            return new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId());
+        }
+        else {
+            return parent::buildAssigneePredicate($values);
+        }
+    }
+
     function getDefaultRowsOnPage() {
         return 20;
     }

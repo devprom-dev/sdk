@@ -1,8 +1,5 @@
 <?php
 
-include (dirname(__FILE__).'/../methods/c_project_methods.php');
-
-//////////////////////////////////////////////////////////////////////////////////////////////
 class ProjectList extends PageList
 {
 	function setupColumns()
@@ -36,33 +33,17 @@ class ProjectList extends PageList
 
 	function getItemActions( $column_name, $object_it )
 	{
-		global $_SERVER;
-
 		$actions = parent::getItemActions( $column_name, $object_it );
 
 		$method = new ModifyAttributeWebMethod($object_it, 'IsClosed', $object_it->get('IsClosed') == 'Y' ? 'N' : 'Y');
-		
-		if ( $method->HasAccess() )
-		{
-			$method->setRedirectUrl('donothing');
+		if ( $method->HasAccess() ) {
+            $method->setRedirectUrl('donothing');
 
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-		    
 		    $actions[] = array(
     		    'url' => $method->getJSCall(),
 		    	'name' => $object_it->get('IsClosed') == 'Y' ? text(1320) : text(1319)
 		    );
-		}
-		
-		$method = new ProjectDeleteWebMethod($object_it);
-		
-		if ( $method->HasAccess() )
-		{
-			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-		    
-			$actions[] = array( 
-			    'url' => $method->getRedirectUrl(), 'name' => $method->getCaption() 
-			);
 		}
 
 		return $actions;

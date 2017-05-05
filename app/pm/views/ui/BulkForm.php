@@ -94,7 +94,7 @@ class BulkForm extends BulkFormBase
 	    return parent::IsAttributeModifiable( $attr );
 	}
 
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		switch ( $attribute ) 
 		{
@@ -147,7 +147,7 @@ class BulkForm extends BulkFormBase
 					return;
 				}
 
-				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
 
@@ -156,6 +156,12 @@ class BulkForm extends BulkFormBase
 		switch( $this->getMethod() ) {
 			case 'BulkDeleteWebMethod':
 				return preg_replace('/%1/', getFactory()->getObject('PMReport')->getExact('project-log')->getUrl(), text(2210));
+            default:
+                $methodName = strtolower($this->getMethod());
+                if ( $methodName != '' ) {
+                    $resource_it = getFactory()->getObject('ContextResource')->getExact($methodName);
+                    if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+                }
 		}
 		return parent::getHint();
 	}

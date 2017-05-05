@@ -98,14 +98,14 @@ class Release extends Metaobject
 			$average += $release_it->getVelocity();
 			$release_it->moveNext();
 		}
-		$average = $average / $release_it->count();
+		$average = $release_it->count() > 0 ? $average / $release_it->count() : 0;
 
 		return array($average, $velocity);
 	}
 
 	function getPage()
 	{
-		return getSession()->getApplicationUrl().'plan/hierarchy?';
+		return getSession()->getApplicationUrl($this).'plan/hierarchy?';
 	}
 
 	function cacheDeps()

@@ -8,10 +8,15 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 		$uids = array();
 		$matches = array();
 
+        if ( !array_key_exists('Content', $parms) ) return;
+
 		preg_match_all(REGEX_INCLUDE_PAGE, $parms['Content'], $matches);
 		$uids = array_merge($uids, $matches[1]);
 		if ( count($uids) > 0 ) {
-			$parms['Includes'] = array_pop(preg_split('/-/', array_shift($uids)));
+            $first = array_shift($uids);
+            if ( '{{'.$first.'}}' == trim($parms['Content']) ) {
+                $parms['Includes'] = array_pop(preg_split('/-/', $first));
+            }
 		}
 
 		preg_match_all(REGEX_UID, $parms['Content'], $matches);
@@ -26,14 +31,20 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 			$parms['Content']
 		);
 
-		$uids = array_unique(array_map(function($value) {
-			return trim($value, '[]{};,.()-');
-		}, $uids));
-
+		$uids = array_unique(
+		    array_filter(
+		        array_map(function($value) {
+			        return trim($value, '[]{};,.()-');
+		        }, $uids),
+            function($value) {
+                return $value != '';
+            })
+        );
 
 		$uidService = new ObjectUID();
 		$objects = array();
 		foreach( $uids as $uid ) {
+		    if ( !$uidService->isValidUid($uid) ) continue;
 			$objects[] = $uidService->getClassNameByUid($uid).':'.array_pop(preg_split('/-/', $uid));
 		}
 
@@ -51,22 +62,32 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 				new WikiPageUsedByPersister()
 			)
 		);
-		if ( $object_it->get('UsedBy') == '' ) return;
+        $usedIds = array_filter(
+            preg_split('/,/', $object_it->get('UsedBy')),
+            function($value) {
+                return $value != '';
+            }
+        );
+		if ( count($usedIds) < 1 ) return;
 
 		$this->wikiTrace = getFactory()->getObject('WikiPageTrace');
 		$this->issueTrace = getFactory()->getObject('RequestTraceBase');
 
 		$usedby_it = $registry->Query (
-			new FilterInPredicate($object_it->get('UsedBy'))
+			new FilterInPredicate($usedIds)
 		);
+
 		while( !$usedby_it->end() ) {
 			if ( preg_match(REGEX_INCLUDE_PAGE, $usedby_it->getHtmlDecoded('Content'), $matches) && $matches[1] != '' ) {
-				$usedby_it->object->modify_parms($usedby_it->getId(),
-					array (
-						'Content' => $object_it->getHtmlDecoded('Content')
-					)
-				);
-				$this->copyTraces($object_it, $usedby_it->getId());
+                $refId = array_pop(preg_split('/-/', $matches[1]));
+                if ( $refId == $object_it->getId() ) {
+                    $usedby_it->object->modify_parms($usedby_it->getId(),
+                        array (
+                            'Content' => $object_it->getHtmlDecoded('Content')
+                        )
+                    );
+                    $this->copyTraces($object_it, $usedby_it->getId());
+                }
 			}
 			$usedby_it->moveNext();
 		}

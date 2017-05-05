@@ -10,8 +10,6 @@ class WysiwygEmbedImagesPersister extends ObjectSQLPersister
     function map( & $parms )
 	{
         $this->file = getFactory()->getObject('cms_TempFile');
-        $this->file->addPersister(new EntityProjectPersister() );
-
         foreach( $this->getFields() as $field ) {
             if ( $parms[$field] == '' ) continue;
             $parms[$field] = preg_replace_callback('/\s+src="([^"]*)"/i', array($this, 'embedImages'), $parms[$field]);

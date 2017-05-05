@@ -2,12 +2,25 @@
 
 class FeatureIterator extends OrderedIterator
 {
-	function getDisplayName()
-	{
+	function getDisplayName() {
 		return $this->get('CaptionAndType') != '' ? $this->get('CaptionAndType') : parent::getDisplayName();
 	}
-	
-	function getParentsArray()
+
+	function getDisplayNameExt($prefix = '')
+    {
+        $title = '';
+        if ( $this->get('ImportanceName') != '' ) {
+            if ( strpos($this->get('ImportanceColor'),'#') !== false ) {
+                $title = '<span class="label label-uid" style="background:'.$this->get('ImportanceColor').';'.ColorUtils::getTextStyle($this->get('ImportanceColor')).'">'.$this->get('ImportanceName').'</span> ';
+            }
+            else {
+                $title = '<span class="label label-warning">'.$this->get('ImportanceName').'</span> ';
+            }
+        }
+        return $title.parent::getDisplayNameExt($prefix);
+    }
+
+    function getParentsArray()
 	{
 		return array_filter(preg_split('/,/',$this->get('ParentPath')), function($value) {
 					return is_numeric($value);

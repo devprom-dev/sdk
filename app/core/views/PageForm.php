@@ -43,7 +43,13 @@ class PageForm extends MetaObjectForm
  	{
  		$this->page = null;
  	}
- 	
+
+    function setObjectIt( $object_it )
+    {
+        $this->transition_it = null;
+        parent::setObjectIt($object_it);
+    }
+
  	function buildModelValidator()
  	{
  		$validator = new ModelValidator();
@@ -61,7 +67,8 @@ class PageForm extends MetaObjectForm
 				$type_validation_attrs[] = $attribute;
 				continue;
 			}
-			
+
+            $field->setName($attribute);
 			$field_validator = $field->getValidator();
 			
 			if ( $field_validator instanceof ModelValidatorType )
@@ -270,6 +277,10 @@ class PageForm extends MetaObjectForm
     		return is_object($object->entity) && $object->entity->get('IsDictionary') == 'Y'
     			? new FieldDictionary( $object ) : new FieldAutoCompleteObject( $object );
     	}
+
+    	if ( in_array('hours', $this->getObject()->getAttributeGroups($name)) ) {
+            return new FieldHours();
+        }
 		
 		return parent::createFieldObject( $name );
 	}
@@ -344,6 +355,9 @@ class PageForm extends MetaObjectForm
 			$plugin_actions = array_merge($plugin_actions, $plugin->getObjectActions( $object_it ));
 		}
 		if ( count($plugin_actions) > 0 ) {
+            foreach( $plugin_actions as $key => $action ) {
+                $plugin_actions[$key]['url'] = str_replace('donothing', 'function(){window.location.reload();}', $action['url']);
+            }
 			$more_actions = array_merge( $more_actions, array(array()), $plugin_actions );
 		}
 
@@ -458,7 +472,9 @@ class PageForm extends MetaObjectForm
 				if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
 				
 			    $actions[] = array(
-				    'name' => $method->getCaption(), 'url' => $method->getJSCall() 
+				    'name' => $method->getCaption(),
+                    'url' => $method->getJSCall(),
+                    'uid' => 'row-delete'
 			    );
 			}
 		}
@@ -480,13 +496,15 @@ class PageForm extends MetaObjectForm
 
 		$attributes = array();
 		$scripts = '';
-		$index = 1;
-		
+
 		foreach( $this->object->getAttributesSorted() as $key => $attribute )
 		{
 		    $visible = $this->IsAttributeVisible($key);
 
 		    if ( !$visible && !$this->object->IsAttributeStored($key) && $this->object->getAttributeOrigin($key) != ORIGIN_CUSTOM ) continue;
+		    if ( $this->object->IsReference($key) ) {
+		        if ( !getFactory()->getAccessPolicy()->can_read($this->object->getAttributeObject($key)) ) continue;
+            }
 
 			$attributes[$key] = array (
 				'visible' => $visible,
@@ -532,7 +550,6 @@ class PageForm extends MetaObjectForm
 
 			if ( !$visible ) continue;
 		    			
-			$field->setTabIndex( $index++ );
 		    $field->setRequired( $attributes[$key]['required'] );
 		    
  			ob_start();
@@ -594,7 +611,7 @@ class PageForm extends MetaObjectForm
 		return array(
 			'form' => $this,
 			'caption' => $this->getCaption(),
-			'warning' => $this->hasAlert() ? translate('Внимание!').' '.$this->getWarningMessage() : '',
+			'warning' => $this->hasAlert() ? translate('Внимание!').' '.$this->getWarningMessage() : $this->getWarningMessage(),
 			'form_processor_url' => $this->getFormPage(),
 			'form_id' => $this->getId(),
 			'action_mode' => $this->object->getEntityRefName().'action_mode',
@@ -633,7 +650,7 @@ class PageForm extends MetaObjectForm
 	
 	function getBodyTemplate()
 	{
-	    return "core/PageFormBody.php";
+	    return $_REQUEST['formonly'] ? "core/PageFormBody.php" : "core/PageFormView.php";
 	}
 	
 	function getPageTitle()
@@ -735,6 +752,8 @@ class PageForm extends MetaObjectForm
 	{
 		$uid = new ObjectUid();
         $parms = array();
+
+        if ( $this->getTransitionIt()->getId() != '' ) return $parms;
 
         foreach( $this->getSourceIt() as $item ) {
             $source_it = array_shift($item);

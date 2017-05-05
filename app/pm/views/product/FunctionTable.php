@@ -1,7 +1,5 @@
 <?php
-
 include "FunctionList.php";
-include "FunctionChartList.php";
 
 class FunctionTable extends PMPageTable
 {
@@ -9,8 +7,6 @@ class FunctionTable extends PMPageTable
 	{
 		switch ( $mode )
 		{
-			case 'chart':
-				return new FunctionChartList( $this->getObject() );
 			default:
 				return new FunctionList( $this->getObject() );
 		}
@@ -25,10 +21,9 @@ class FunctionTable extends PMPageTable
 		$actions = array();
 		
 		$method = new ObjectCreateNewWebMethod($this->getObject());
-		$method->setRedirectUrl('donothing');
-		
 		if ( !$method->hasAccess() ) return $actions;
-		
+
+        $method->setRedirectUrl('donothing');
 		while( !$type_it->end() )
 		{
 			$uid = 'append-feature-'.$type_it->get('ReferenceName');
@@ -51,7 +46,7 @@ class FunctionTable extends PMPageTable
 		$filters = array(
 			new FunctionFilterStateWebMethod(),
 			$this->buildFilterType(),
-			new FilterTagWebMethod( getFactory()->getObject('FeatureTag') ),
+			$this->buildTagsFilter(),
 			new FilterObjectMethod( getFactory()->getObject('Importance'), '', 'importance'),
 			new FunctionFilterStageWebMethod(),
 			new FilterObjectMethod($this->getObject(), text(2094), 'parent')
@@ -59,11 +54,6 @@ class FunctionTable extends PMPageTable
 
 		$view = new FunctionFilterViewWebMethod();
 		$view->setFilter( $this->getFiltersName() );
-		
-		if ( $view->getValue() == 'chart' )
-		{
-			array_push($filters, new ViewDateYearWebMethod() );
-		}
 		
 		return array_merge( $filters, parent::getFilters() );
 	}
@@ -95,4 +85,12 @@ class FunctionTable extends PMPageTable
 		$type_method->setIdFieldName( 'ReferenceName' );
 		return $type_method;
 	}
+
+    protected function buildTagsFilter()
+    {
+        $tag = getFactory()->getObject('FeatureTag');
+        $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
+        $filter->setIdFieldName('Tag');
+        return $filter;
+    }
 }

@@ -108,7 +108,29 @@ class Snapshot extends Metaobject
 				throw new Exception('Only one snapshot of "branch" type is allowed');
 			}
 		}
-		
-		return parent::add_parms($parms);
+
+        $snapshotId = parent::add_parms($parms);
+
+        if ( $snapshotId > 0 && $parms['Type'] == 'branch' ) {
+            DAL::Instance()->Query(
+                "UPDATE WikiPage SET DocumentVersion = (SELECT s.Caption FROM cms_Snapshot s WHERE s.cms_SnapshotId = ".$snapshotId.") WHERE DocumentId = ".$parms['ObjectId']
+            );
+        }
+
+        return $snapshotId;
 	}
+
+	function modify_parms($id, $parms)
+    {
+        $snapshotIt = $this->getExact($id);
+        $result = parent::modify_parms($id, $parms);
+
+        if ( $snapshotIt->get('Type') == 'branch' ) {
+            DAL::Instance()->Query(
+                "UPDATE WikiPage SET DocumentVersion = (SELECT s.Caption FROM cms_Snapshot s WHERE s.cms_SnapshotId = ".$id.") WHERE DocumentId = ".$snapshotIt->get('ObjectId')
+            );
+        }
+
+        return $result;
+    }
 }

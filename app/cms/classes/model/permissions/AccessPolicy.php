@@ -8,16 +8,15 @@ define('ACCESS_DELETE', 'delete');
 class AccessPolicy
 {
  	private $reason;
- 	
  	private $cache_service = null;
- 	
+    private $cache_key = '';
  	private $data = array();
  	
- 	function __construct( $cache_service = null )
+ 	function __construct( $cache_service = null, $cache_key = 'global' )
  	{
+        $this->cache_key = $cache_key;
  		$this->setCacheService( is_object($cache_service) ? $cache_service : getFactory()->getCacheService() );
-	
- 		$this->data = $this->getCacheService()->get('access-policy-'.get_class($this));
+ 		$this->data = $this->getCacheService()->get('access-policy-'.get_class($this), $this->cache_key);
  	}
 
  	function __destruct()
@@ -25,16 +24,22 @@ class AccessPolicy
 		$this->persistCache(); 		
  	}
  	
- 	public function getCacheService()
- 	{
+ 	public function getCacheService() {
  		return $this->cache_service;
  	}
  	
- 	public function setCacheService( $service )
- 	{
+ 	public function setCacheService( $service ) {
  		$this->cache_service = $service;
  	}
- 	
+
+    public function setCacheKey( $key ) {
+        $this->cache_key = $key;
+    }
+
+    public function getCacheKey() {
+        return $this->cache_key;
+    }
+
  	public function invalidateCache()
  	{
  		$this->data = array();
@@ -162,11 +167,11 @@ class AccessPolicy
 			
 			if ( isset($this->data[$key]) ) return $this->data[$key];
 		}
-		
+
 		$b_has_entity_access = $this->getEntityAccess($action, $object);
 		
 		$this->data[$key] = $b_has_entity_access;
-		
+
 		if ( $b_has_entity_access && is_object($object_it) ) 
 		{
 			$this->data[$key] = $this->getObjectAccess($action, $object_it);
@@ -175,11 +180,6 @@ class AccessPolicy
 		return $this->data[$key];
 	}
 	
-	public function getRestrictedClasses()
-	{
-		return array();
-	}
-
 	/* */
  	public function getObjectAccess( $action_kind, &$object_it )
  	{
@@ -203,6 +203,6 @@ class AccessPolicy
  	
  	private function persistCache()
  	{
- 		$this->getCacheService()->set('access-policy-'.get_class($this), $this->data);
+ 		$this->getCacheService()->set('access-policy-'.get_class($this), $this->data, $this->cache_key);
  	}
 }

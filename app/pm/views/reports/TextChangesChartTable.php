@@ -21,10 +21,8 @@ class TextChangesChartTable extends PMPageTable
         $filters = array (
         		$this->buildAuthorFilter(),
         );
-        if ( count($this->getListRef()->getIds()) < 1 ) {
-            $filters[] = new ViewStartDateWebMethod(translate('Начало'));
-            $filters[] = new ViewFinishDateWebMethod();
-        }
+        $filters[] = new ViewStartDateWebMethod(translate('Начало'));
+        $filters[] = new ViewFinishDateWebMethod();
         return $filters;
     }
     
@@ -51,5 +49,10 @@ class TextChangesChartTable extends PMPageTable
     function getNewActions()
     {
     	return array();
+    }
+
+    function getExportActions()
+    {
+        return array();
     }
 }

@@ -33,7 +33,7 @@ class PortfolioIterator extends ProjectIterator
             'Project' => $this->getId(),
             'IsReportsOnActivities' => 'N',
             'IsPlanningUsed' => 'N',
-        	'IsSupportUsed' => 'Y',
+        	'IsSupportUsed' => 'N',
         	'IsKnowledgeUsed' => 'Y',
             'RequestEstimationRequired' => 'estimationnonestrategy'
         )));
@@ -46,10 +46,10 @@ class PortfolioIterator extends ProjectIterator
                 new FilterAttributePredicate('Project', $this->getRef('RelatedProject')->idsToArray())
             )
         );
+        $attributeKeys = array_merge(array_keys($attributes), array_keys($data[0]));
         while ( !$it->end() )
         {
-            foreach ( $attributes as $key => $value ) {
-            	if ( $key == 'IsRequestOrderUsed' ) continue;
+            foreach ( $attributeKeys as $key ) {
                 if ( $key == 'RequestEstimationRequired' ) continue;
                 if ( $it->get($key) == 'Y' ) $data[0][$key] = $it->get($key);
             }

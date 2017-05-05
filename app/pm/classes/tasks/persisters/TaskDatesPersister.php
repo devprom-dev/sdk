@@ -2,7 +2,11 @@
 
 class TaskDatesPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes() {
+        return array('DueWeeks');
+    }
+
+    function getSelectColumns( $alias )
  	{
  		 $columns = array();
 
@@ -15,7 +19,7 @@ class TaskDatesPersister extends ObjectSQLPersister
 			"			) DueDate ";
 
          $columns[] =
-         	 "  GREATEST(0, TO_DAYS(IFNULL( t.FinishDate, ". 
+         	 "  IFNULL(LEAST(5, GREATEST(-1, YEARWEEK(IFNULL( t.FinishDate, ".
          	 "  		IFNULL( t.PlannedFinishDate, ".
          	 "				IFNULL( ".
          	 "						(SELECT i.FinishDate FROM pm_Release i WHERE i.pm_ReleaseId = t.Release), ".
@@ -23,20 +27,18 @@ class TaskDatesPersister extends ObjectSQLPersister
              "				) ".
          	 "			) ".
              "  	)  ".
-             "	) - TO_DAYS(NOW())) DueDays ";
-
-         $columns[] =
-         	 "  LEAST(5, GREATEST(-1, YEARWEEK(IFNULL( t.FinishDate, ". 
-         	 "  		IFNULL( t.PlannedFinishDate, ".
-         	 "				IFNULL( ".
-         	 "						(SELECT i.FinishDate FROM pm_Release i WHERE i.pm_ReleaseId = t.Release), ".
-             "						NULL ".
-             "				) ".
-         	 "			) ".
-             "  	)  ".
-             "	) - YEARWEEK(NOW()))) + 2 DueWeeks ";
+             "	) - YEARWEEK(IFNULL(t.FinishDate,NOW())))) + 2, 7) DueWeeks ";
  		
  		return $columns;
  	}
-}
 
+ 	function map( &$parms )
+    {
+        if ( !array_key_exists('DueWeeks', $parms) ) return;
+
+        $value_it = getFactory()->getObject('DeadlineSwimlane')->getExact($parms['DueWeeks']);
+        if ( $value_it->getId() == '' ) return;
+
+        $parms['PlannedFinishDate'] = $value_it->get('ReferenceName');
+    }
+}

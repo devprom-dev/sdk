@@ -1,7 +1,6 @@
 <?php
 
 include "MilestoneIterator.php";
-include "MilestoneExtendedRegistry.php";
 include "predicates/MilestoneActualPredicate.php";
 include "predicates/MilestoneYearPredicate.php";
 

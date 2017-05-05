@@ -31,7 +31,9 @@ class WorkItem extends MetaobjectStatable
             'Release',
             'PlannedRelease',
             'TraceTask',
-            'Attachment'
+            'Attachment',
+            'Tags',
+            'Assignee'
         );
 
         foreach( $this->getAttributes() as $attribute => $data ) {
@@ -39,8 +41,11 @@ class WorkItem extends MetaobjectStatable
             $this->addAttributeGroup($attribute, 'system');
         }
 
-        $this->addAttribute('DueDate', 'DATE', translate('Сроки'), true, false);
+        $this->addAttribute('DueDate', 'DATE', text(2264), true, false, '', 25);
         $this->setAttributeOrderNum('TraceTask', 290);
+        foreach( array('DueDate') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'dates');
+        }
     }
 
     function getVpds() {

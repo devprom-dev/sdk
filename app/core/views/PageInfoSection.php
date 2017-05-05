@@ -155,4 +155,8 @@
 				array_merge($parms, $this->getRenderParms())
 		);
 	}
+
+	function hasAccess() {
+ 	    return true;
+    }
  }

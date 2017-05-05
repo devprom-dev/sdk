@@ -32,7 +32,8 @@ class RequestModelWorkflowBuilder extends ObjectModelBuilder
     	}
 
 		$object->addPersister( new RequestStateDurationPersister() );
-    	
+        $object->addPersister( new StateDurationPersister() );
+
     	$object->setAttributeOrderNum('Fact', 9999);
     }
 }

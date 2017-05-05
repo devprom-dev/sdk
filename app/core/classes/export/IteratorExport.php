@@ -15,7 +15,7 @@ class IteratorExport extends IteratorBase
  		$this->iterator = $iterator;
  		$this->fields = array();
 
-        FeatureTouch::Instance()->touch(strtolower(get_class($this)));
+        \FeatureTouch::Instance()->touch(strtolower(get_class($this)));
  	}
 
     function setOptions( $options ) {

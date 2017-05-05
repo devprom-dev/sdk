@@ -31,7 +31,7 @@ class FieldWYSIWYG extends Field
  	}
 
 	function setSearchText($text) {
-		$this->search_text = SearchRules::getSearchItems($text);
+		$this->search_text = SearchRules::getSearchItems($text, getSession()->getLanguageUid());
 	}
 
  	function showAttachments( $visible )
@@ -148,7 +148,8 @@ class FieldWYSIWYG extends Field
 	
 	function draw( $view = null )
 	{
-		if ( $this->readOnly() || !$this->getEditMode() && preg_match(REGEX_INCLUDE_PAGE, $this->getValue()) )
+	    $value = $this->getValue();
+		if ( $this->readOnly() || !$this->getEditMode() && (preg_match(REGEX_INCLUDE_PAGE, $value) || preg_match(REGEX_INCLUDE_REVISION, $value)) )
 		{
 			$this->drawReadonly();
 			

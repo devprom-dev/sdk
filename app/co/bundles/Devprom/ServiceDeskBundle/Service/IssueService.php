@@ -60,6 +60,7 @@ class IssueService {
             $authorEmail,
             array(
             		'state.orderNum' => 'asc',
+                    'state.name' => 'asc',
             		$sortColumn => $sortDirection
         	)
         );
@@ -72,6 +73,7 @@ class IssueService {
             $authorEmail,
             array(
             		'state.orderNum' => 'asc',
+                    'state.name' => 'asc',
             		$sortColumn => $sortDirection
         	)
         );
@@ -108,8 +110,23 @@ class IssueService {
     protected function createIssue(Issue $issue, User $author)
     {
         // persist issue
-        $projectId = $issue->getProject()->getId();
-       	$vpd = $this->getProjectVPD($projectId);
+        $product = $issue->getProduct();
+        if ( is_object($product) ) {
+            $vpd = $product->getVpd();
+            $project = array_shift(
+                $this->em->getRepository('DevpromServiceDeskBundle:Project')->findBy(
+                    array(
+                        'vpd' => $product->getVpd()
+                    )
+                )
+            );
+            $issue->setProject($project);
+            $projectId = $project->getId();
+        }
+        else {
+            $projectId = $issue->getProject()->getId();
+            $vpd = $this->getProjectVPD($projectId);
+        }
 	    $issue->setVpd($vpd);
         $issue->setState($this->getFirstIssueStateForProject($projectId));
         $issue->setPriority($issue->getSeverity());
@@ -169,10 +186,5 @@ class IssueService {
 
         $this->em->persist($watcher);
         $this->em->flush();
-    }
-
-    public function getProductsAvailable( $vpd )
-    {
-        return $this->em->getRepository('DevpromServiceDeskBundle:Product')->findBy(array("vpd" => array_pop($vpd)), null, 1);
     }
 }

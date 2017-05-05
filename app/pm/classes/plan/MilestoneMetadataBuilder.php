@@ -12,6 +12,8 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Milestone' ) return;
 
         $metadata->setAttributeOrderNum('Caption', 1);
+        $metadata->setAttributeType('Description', 'WYSIWYG');
+        $metadata->setAttributeVisible('CompleteResult', false);
 
     	$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('Пожелания'), true );
 	    $metadata->addPersister( new MilestoneRequestPersister() );
@@ -19,11 +21,20 @@ class MilestoneMetadataBuilder extends ObjectMetadataEntityBuilder
 	    $metadata->addAttribute('Overdue', 'INTEGER', translate('Смещение'), false );
 	    $metadata->addPersister( new MilestoneDatesPersister() );
 	    
-	    $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false );
+	    $metadata->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), true );
 	    $metadata->addPersister( new CommentRecentPersister() );
 
         foreach( array('TraceRequests','RecentComment','MilestoneDate','Description') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'tooltip');
+        }
+
+        foreach( array('ReasonToChangeDate','Passed') as $attribute ) {
+            $metadata->setAttributeVisible($attribute, false);
+            $metadata->addAttributeGroup($attribute, 'system');
+        }
+
+        foreach ( array('MilestoneDate','Caption','Description') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'permissions');
         }
     }
 }

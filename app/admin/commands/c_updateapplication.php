@@ -1,8 +1,8 @@
 <?php
 
 include_once "MaintenanceCommand.php";
-include SERVER_ROOT_PATH.'admin/classes/StrategyUpdate.php';
-include SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
+include_once SERVER_ROOT_PATH.'admin/classes/StrategyUpdate.php';
+include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 
 class UpdateApplication extends MaintenanceCommand
 {
@@ -19,7 +19,9 @@ class UpdateApplication extends MaintenanceCommand
 	    $this->updateDatabase($strategy);
 	    
 		$strategy->getUpdate()->update_clean();
-	    
+
+        if ( function_exists('opcache_reset') ) opcache_reset();
+
 	    // clear old cache
 	    InstallationFactory::getFactory();
         foreach( array(new ClearCache(), new CacheParameters()) as $command ) {
@@ -28,6 +30,8 @@ class UpdateApplication extends MaintenanceCommand
 
 		// rebuild cached list of plugins
 		getFactory()->getPluginsManager()->buildPluginsList();
+
+        if ( function_exists('opcache_reset') ) opcache_reset();
 
 	    // go to the next step
 	    $strategy->release();
@@ -73,7 +77,6 @@ class UpdateApplication extends MaintenanceCommand
 	    {
     	    $parms = array();
     
-    	    $parms['Description'] = $description;
     	    $parms['FileName'] = $update_file_name;
     	    $parms['LogFileName'] = $update_file_name.'.log';
     	    

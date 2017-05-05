@@ -6,16 +6,10 @@ class PageSettingWorkflowAnalysisBuilder extends PageSettingBuilder
 {
     public function build( PageSettingSet & $settings )
     {
-        $setting = new ReportSetting('workflowanalysis');
-        
-        $setting->setSorts( array('State', 'RecordCreated') );
-
+        $setting = new PageListSetting('ReportWorkflowAnalysisList');
         $setting->setGroup( '_none' );
-        
-        $setting->setFilters( array('submittedon', 'submittedbefore', 'state', 'timescale', 'target') );
-        
+
         $state_columns = array();
-        
         $state_it = WorkflowScheme::Instance()->getStateIt(getFactory()->getObject('Request'));
     	while( !$state_it->end() )
     	{
@@ -27,13 +21,14 @@ class PageSettingWorkflowAnalysisBuilder extends PageSettingBuilder
     		$state_columns[] = 'State_'.$state_it->getDbSafeReferenceName();
     		$state_it->moveNext();
     	}
-        
         $setting->setVisibleColumns( array_merge(
-        		array('UID', 'Caption', 'RecordCreated', 'State', 'Fact'), $state_columns        		 
+        		array('UID', 'Caption', 'RecordCreated', 'State', 'Fact', 'LeadTime'), $state_columns
         ));
-        
-        $setting->setSections( array('none') );
-        
+        $settings->add( $setting );
+
+        $setting = new PageTableSetting('ReportWorkflowAnalysisTable');
+        $setting->setFilters( array('submittedon', 'submittedbefore', 'state', 'target') );
+        $setting->setSorts( array('State', 'RecordCreated') );
         $settings->add( $setting );
     }
 }

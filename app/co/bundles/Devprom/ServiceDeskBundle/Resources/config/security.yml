@@ -31,6 +31,8 @@ security:
             pattern: ^/
             form_login:
                 provider: fos_userbundle
+                always_use_default_target_path: true
+                default_target_path: /issues
             logout:       true
             anonymous:    true
             http_basic:   false
@@ -47,5 +49,6 @@ security:
         - { path: ^/register, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/settings, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/, roles: ROLE_USER }
+        - { path: ^/issue, roles: ROLE_USER }
+        - { path: ^/, role: IS_AUTHENTICATED_ANONYMOUSLY }
 

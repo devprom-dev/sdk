@@ -26,9 +26,6 @@ class BulkFormBase extends AjaxForm
 			case 'operation':
 				return translate('Действие');
 
-			case 'OpenList':
-				return count($this->getIds()) < 2 ? text(2198) : text(2199);
-
 			default:
 				return parent::getName( $attribute );
 		}
@@ -44,9 +41,6 @@ class BulkFormBase extends AjaxForm
 			case 'operation':
 				return 'custom';
 
-			case 'OpenList':
-				return 'char';
-
 			default:
 				if ( is_object($this->getForm()) ) return 'custom';
 				return parent::getAttributeType( $attribute );
@@ -58,7 +52,7 @@ class BulkFormBase extends AjaxForm
 		switch ( $attribute )
 		{
 			case 'ids':
-				return htmlentities($_REQUEST['ids']); 	
+				return join(',',$this->getIt()->idsToArray());
 
 			case 'operation':
 				return htmlentities($_REQUEST['operation']);
@@ -76,7 +70,9 @@ class BulkFormBase extends AjaxForm
  			case 'ids': return '';
  			
  			default:
- 				return parent::getDescription( $attr ).' ';
+ 			    $text = parent::getDescription( $attr );
+                if ( $this->getAttributeType($attr) == 'char' ) return $text;
+ 				return $text.' ';
  		}
  	}
 	
@@ -86,6 +82,7 @@ class BulkFormBase extends AjaxForm
 			$this->form = $this->buildForm();
 			if ( is_object($this->form) ) {
 				$this->form->setObjectIt($this->getIt());
+                $this->form->getRenderParms();
 			}
 		}
 		return $this->form;
@@ -184,7 +181,7 @@ class BulkFormBase extends AjaxForm
 	    return $this->getObject()->IsAttributeStored( $attr ) || $this->getObject()->getAttributeOrigin( $attr ) == ORIGIN_CUSTOM;
 	}
 
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		switch ( $attribute ) 
 		{
@@ -201,6 +198,8 @@ class BulkFormBase extends AjaxForm
 				if ( is_object($form) )
 				{
 					$field = $form->createFieldObject($attribute);
+                    if ( !is_object($field) ) return;
+
 					$field->SetId($attribute);
 					$field->SetName($attribute);
 					$field->SetValue($value);
@@ -222,7 +221,7 @@ class BulkFormBase extends AjaxForm
 					}
 				}
 				else {
-					parent::drawCustomAttribute( $attribute, $value, $tab_index );
+					parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 				}
 		}
 	}
@@ -252,7 +251,8 @@ class BulkFormBase extends AjaxForm
 		$object = $this->getObject();
 
 		$it = $this->getIt();
-	
+
+        echo '<br/>';
 		echo '<label><b>'.text(1303).'</b></label>';
 		
 		echo '<input type="hidden" name="ids" value="'.$value.'">';
@@ -283,11 +283,6 @@ class BulkFormBase extends AjaxForm
 		echo '<input type="hidden" name="operation" value="'.$value.'">';
 	}
 
-	function getRenderParms()
-	{
-		return parent::getRenderParms();
-	}
-	
 	protected function showAttributeCaption()
 	{
 		return !preg_match('/Attribute(.+)/mi', $this->getAttributeValue('operation'), $match);		

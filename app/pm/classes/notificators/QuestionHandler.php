@@ -15,11 +15,6 @@ class QuestionHandler extends EmailNotificatorHandler
 				break;
 		}
 
-		if ( $object_it->get('Owner') != '' )
-		{
-		    array_push($result, $object_it->get('Owner'));
-		}
-		
 		return $result;
 	}	
  	
@@ -33,13 +28,16 @@ class QuestionHandler extends EmailNotificatorHandler
 				break;
 				
 			default:
-				if ( $object_it->get('Author') > 0 )
-				{
+				if ( $object_it->get('Author') > 0 ) {
 					array_push( $result, $object_it->get('Author') );
 				}
 				break;
 		}
-		
+
+        if ( $object_it->get('Owner') != '' ) {
+            array_push($result, $object_it->get('Owner'));
+        }
+
 		return $result;
 	}	
 }  

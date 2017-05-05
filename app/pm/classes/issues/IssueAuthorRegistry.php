@@ -6,7 +6,7 @@ class IssueAuthorRegistry extends ObjectRegistrySQL
 {
 	private $data = array();
 	
-	function merge( $data )
+	function Merge( array $data, array $alternativeKey = array() )
 	{
 		$this->data = array_merge($this->data, $data);
 	}

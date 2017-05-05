@@ -10,8 +10,16 @@ class PlanChart extends PMPageChart
 
     function getIterator()
 	{
+        $predicates = array();
+
+        $values = $this->getFilterValues();
+        if ( $values['state'] == 'overdue' ) {
+            $predicates = $this->getTable()->getFilterPredicates();
+        }
+
 		return $this->getObject()->getRegistry()->Query(
 				array_merge(
+                    $predicates,
 					array (
                         new SortAttributeClause('Project'),
                         new SortAttributeClause('FinishDate'),

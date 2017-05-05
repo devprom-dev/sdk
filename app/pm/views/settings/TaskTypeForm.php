@@ -1,5 +1,4 @@
 <?php
-include "FieldTaskTypeStages.php";
 include "FieldTaskTypeStates.php";
 
 class TaskTypeForm extends PMPageForm
@@ -7,9 +6,7 @@ class TaskTypeForm extends PMPageForm
  	function buildModelValidator()
  	{
  		$validator = parent::buildModelValidator();
- 		
  		$validator->addValidator( new ModelValidatorUnique(array('ReferenceName')) );
- 		
  		return $validator;
  	}
 	
@@ -36,25 +33,11 @@ class TaskTypeForm extends PMPageForm
 			case 'ParentTaskType': 
 				return new FieldDictionary( getFactory()->getObject('TaskTypeBase') );
 
-			case 'Stages':
-				return new FieldTaskTypeStages($this->object_it);
-
 			case 'States':
 				return new FieldTaskTypeStates($this->object_it);
 
 			default:
 				return parent::createFieldObject( $attr_name );
 		}
-	}
-
-	function getFieldDescription( $attr_name )
-	{
-		switch ( $attr_name )
-		{
-			case 'Stages':
-				return text(750);
-		}
-		
-		return parent::getFieldDescription( $attr_name ); 
 	}
 }

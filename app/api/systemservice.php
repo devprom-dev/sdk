@@ -72,7 +72,7 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
  	{
  		array_push( $results, 
  		 	array( 'Namespace' => $plugin->getNamespace(), 
- 		 		   'Licensed' => $plugin->IsLicensed() ? "Y" : "N" )
+ 		 		   'Licensed' => $plugin->checkLicense() ? 'Y' : 'N' )
  		 	);
  	}
  	return $results;

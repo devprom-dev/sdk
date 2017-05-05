@@ -49,7 +49,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		$filters = array();
 		
 		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
-		$filters[] = new ViewWikiTagWebMethod( $this->getObject() );
+		$filters[] = $this->buildTagsFilter();
 		$filters[] = new FilterObjectMethod(
 				$this->getObject()->getAttributeObject('Author'), 
 				translate($this->getObject()->getAttributeUserName( 'Author' )) 
@@ -69,10 +69,6 @@ class KnowledgeBaseDocument extends PMWikiDocument
         $actions = array();
 
         $actions[] = array(
-            'name' => text(1372),
-            'url' => getSession()->getApplicationUrl().'knowledgebase/tree?view=list'
-        );
-        $actions[] = array(
             'name' => text(1373),
             'url' => getFactory()->getObject('Module')->getExact('attachments')->getUrl('class=ProjectPage')
         );
@@ -86,7 +82,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
             $method->setRedirectUrl("''");
             $actions['import'] = array(
                 'name' => translate('Импортировать'),
-                'url' => $method->getJSCall(array('view' => 'importdoc'), $this->getObject()->getDocumentName())
+                'url' => $method->getJSCall(array('view' => 'importdoc'), translate('Импорт'))
             );
             $actions[] = array();
         }
@@ -96,5 +92,9 @@ class KnowledgeBaseDocument extends PMWikiDocument
 
     function getDocumentsModuleIt() {
         return getFactory()->getObject('Module')->getEmptyIterator();
+    }
+
+    function getListViewWidgetIt() {
+        return getFactory()->getObject('PMReport')->getExact('knowledgebaselist');
     }
 }

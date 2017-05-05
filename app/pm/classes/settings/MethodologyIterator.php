@@ -100,7 +100,7 @@ class MethodologyIterator extends OrderedIterator
 
 	function HasVelocity()
 	{
-		return $this->HasPlanning() || $this->HasReleases();
+		return $this->IsAgile() && ($this->HasPlanning() || $this->HasReleases());
 	}
 	
 	function getEstimationStrategy()
@@ -131,6 +131,10 @@ class MethodologyIterator extends OrderedIterator
 	
 	function TaskEstimationUsed()
 	{
-		return $this->get('TaskEstimationUsed') == 'Y';
+		return $this->HasTasks() && $this->get('TaskEstimationUsed') == 'Y';
 	}
+
+	function IsAgile() {
+        return $this->get('MetricsType') == 'A';
+    }
 }

@@ -78,7 +78,7 @@ class CustomAttributeEntityForm extends PMForm
 		return false;
 	}
 	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		switch ( $attribute ) 
 		{
@@ -113,7 +113,7 @@ class CustomAttributeEntityForm extends PMForm
 				break;
 				
 			default:
-				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
 	

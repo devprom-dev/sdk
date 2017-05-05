@@ -9,18 +9,36 @@ services:
         arguments:
             em: "@doctrine.orm.entity_manager"
             translator: "@translator"
+
     servicedesk_twig_unescapehtml:
         class: Devprom\ServiceDeskBundle\Twig\UnescapeHtmlTwigExtention
         tags:
             - { name: twig.extension }
+
     servicedesk_twig_issuetype:
         class: Devprom\ServiceDeskBundle\Twig\IssueTypeTwigExtention
         tags:
             - { name: twig.extension }
+
+    servicedesk_twig_localedate:
+        class: Devprom\ServiceDeskBundle\Twig\LocaleDateTwigExtention
+        arguments:
+            container: "@service_container"
+        tags:
+            - { name: twig.extension }
+
     servicedesk_twig_assetpath:
         class: Devprom\ServiceDeskBundle\Twig\AssetPathTwigExtension
         tags:
             - { name: twig.extension }
+
+    servicedesk_twig_wysiwyg:
+        class: Devprom\ServiceDeskBundle\Twig\WysiwygTwigExtention
+        arguments:
+            container: "@service_container"
+        tags:
+            - { name: twig.extension }
+
     servicedesk_twig_settings:
         class: Devprom\ServiceDeskBundle\Twig\SettingsTwigExtension
         arguments:
@@ -28,6 +46,7 @@ services:
             router: "@router"
         tags:
             - { name: twig.extension }
+
     kernel.listener.your_listener_name:
             class: Devprom\ServiceDeskBundle\EventListener\ServiceDeskExceptionListener
             tags:
@@ -57,7 +76,6 @@ services:
             tags:
                 - { name: kernel.event_listener, event: kernel.view, method: onKernelController }
 
-
     model_factory:
         class: ModelFactory
 
@@ -67,16 +85,24 @@ services:
             em: "@doctrine.orm.entity_manager"
             userManager: "@fos_user.user_manager"
             mailer: "@servicedesk_mailer"
+
     issue_service:
         class: Devprom\ServiceDeskBundle\Service\IssueService
         arguments:
             em: "@doctrine.orm.entity_manager"
             objectChangeLogger: "@object_change_logger"
             mailer: "@servicedesk_mailer"
+
     issue_attachment_service:
         class: Devprom\ServiceDeskBundle\Service\IssueAttachmentService
         arguments:
             em: "@doctrine.orm.entity_manager"
+
+    knowledge_service:
+        class: Devprom\ServiceDeskBundle\Service\KnowledgeService
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+
     comment_attachment_service:
         class: Devprom\ServiceDeskBundle\Service\CommentAttachmentService
         arguments:
@@ -90,8 +116,10 @@ services:
             settings_filter: "@settings_filter"
             settingsFilePath: "@@DevpromServiceDeskBundle/Resources/config/settings.yml"
             acceptedSettings: %accepted_settings%
+
     settings_storage:
         class: Devprom\ServiceDeskBundle\Service\YamlSettingsStorage
+
     settings_filter:
         class: Devprom\ServiceDeskBundle\Service\SettingsFilter
         arguments:
@@ -121,6 +149,7 @@ services:
         arguments: [%fos_user.model.user.class%]
         tags:
             - { name: form.type, alias: servicedesk_registration_form }
+
     servicedesk_type_entity_hidden:
         class: Devprom\ServiceDeskBundle\Form\Type\EntityHiddenType
         arguments: ["@doctrine.orm.entity_manager"]

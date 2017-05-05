@@ -12,6 +12,7 @@ class AdminChangeLogNotificator extends ChangeLogNotificator
             'pm_ProjectRole',
             'pm_TaskType',
             'Priority',
+            'pm_Severity',
             'co_ScheduledJob',
             'co_RemoteMailbox',
             'pm_Project',

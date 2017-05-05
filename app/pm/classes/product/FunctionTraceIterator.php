@@ -15,7 +15,7 @@ class FunctionTraceIterator extends OrderedIterator
  		
  		if ( $uid->hasUid($object_it) )
  		{
- 			return $uid->getUidWithCaption($object_it);
+ 			return $uid->getUidWithCaption($object_it, 50);
  		}
  		else
  		{

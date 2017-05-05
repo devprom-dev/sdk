@@ -12,7 +12,7 @@ class InstallController extends PageController
 {
     public function indexAction(Request $request)
     {
-    	if ( getFactory()->getObject('DeploymentState')->IsReadyToBeUsed() ) {
+    	if ( \DeploymentState::Instance()->IsReadyToBeUsed() ) {
     		return new RedirectResponse('/admin/users.php');
     	}
 

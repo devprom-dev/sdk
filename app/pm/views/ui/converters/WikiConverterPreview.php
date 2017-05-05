@@ -7,6 +7,7 @@ class WikiConverterPreview
  	var $parser, $wiki_it, $b_draw_contents, $b_draw_section_num = true;
 	private $root_it;
 	private $options = array();
+	private $compareTo = null;
 
 	function setOptions( $options ) {
 		$this->options = $options;
@@ -23,7 +24,14 @@ class WikiConverterPreview
 		$editor = WikiEditorBuilder::build($wiki_it->get('ContentEditor'));
 		$editor->setObjectIt($wiki_it);
 
- 		$this->parser = $editor->getHtmlParser();
+		foreach( $this->options as $option ) {
+			if ( preg_match('/baseline,(.+)/', $option, $matches) ) {
+				$this->compareTo = $this->buildCompareTo($matches[1], $wiki_it);
+				if ( $this->compareTo->getId() == '' ) $this->compareTo = null;
+			}
+		}
+
+ 		$this->parser = is_object($this->compareTo) ? $editor->getComparerParser() : $editor->getHtmlParser();
 		$this->parser->setRequiredExternalAccess();
  		$this->parser->setObjectIt($wiki_it);
 
@@ -35,7 +43,22 @@ class WikiConverterPreview
  		});
 		$this->wiki_it = $wiki_it;
  	}
-	
+
+ 	function buildCompareTo( $value, $wiki_it )
+	{
+		if( preg_match('/document:(\d+)/', $value, $matches) )
+		{
+			$registry = new WikiPageRegistryContent($wiki_it->object);
+			return $registry->Query(array(new FilterInPredicate($matches[1])));
+		}
+		else if ( $value > 0 )
+		{
+			$snapshot = new WikiPageComparableSnapshot($wiki_it->getRef('DocumentId'));
+			return $snapshot->getExact($value);
+		}
+		return $wiki_it->object->getEmptyIterator();
+	}
+
 	function getFileUrl( $file_it )
 	{
 		return _getServerUrl().$file_it->getFileUrl();
@@ -111,9 +134,34 @@ class WikiConverterPreview
 		</div>
 		<?
 		}
+
+		$docLevels = array();
+		while( !$this->wiki_it->end() ) {
+			$docLevels[$this->wiki_it->get('DocumentId')][] = $this->wiki_it->getLevel();
+			$this->wiki_it->moveNext();
+		}
+		$rootLevels = array_map(
+			function(&$value) {
+				return min($value);
+			},
+			$docLevels
+		);
+		$rootSiblings = array_map(
+			function(&$value) {
+				$minValue = min($value);
+				return count(array_filter($value, function($filter) use ($minValue) {
+					return $filter == $minValue;
+				}));
+			},
+			$docLevels
+		);
+
+		$this->wiki_it->moveFirst();
 		while ( !$this->wiki_it->end() )
 		{
-			$this->drawChildren($this->wiki_it->copy(), $this->wiki_it->getLevel());
+			// get page level and shift it when single document is exported
+			$level = $this->wiki_it->getLevel() - (count($rootLevels) > 1 || $rootSiblings[$this->wiki_it->get('DocumentId')] > 1 ? 0 : 1) - $rootLevels[$this->wiki_it->get('DocumentId')];
+			$this->drawChildren($this->wiki_it->copy(), $level);
 			$this->wiki_it->moveNext();
 		}
 	}
@@ -144,14 +192,33 @@ class WikiConverterPreview
 	function drawChildren( $wiki_it, $level )
 	{
 		$headerIndex = min($level + 1, 6);
+		if ( $level >= 0 ) {
 		?>
 		<div class=section>
 			<h<?=$headerIndex?> id="<?=$wiki_it->getId()?>"><? echo $this->getItemTitle($wiki_it); ?></h<?=$headerIndex?>>
 		</div>
+		<? } ?>
 		<div class=text>
 		<?
-            $this->parser->setObjectIt($wiki_it);
-			$content = $this->parser->parse( $wiki_it->getHtmlDecoded('Content') );
+			if ( is_object($this->compareTo) )
+			{
+				$registry = new WikiPageRegistryComparison($wiki_it->object);
+				$registry->setPageIt($wiki_it);
+				$registry->setBaselineIt($this->compareTo);
+				$compare_to_page_it = $registry->Query();
+
+				$diffBuilder = new WikiHtmlDiff(
+					$compare_to_page_it->getId() > 0
+						? $this->parser->parse($compare_to_page_it->getHtmlDecoded('Content'))
+						: "",
+					$this->parser->parse($wiki_it->getHtmlDecoded('Content'))
+				);
+				$content = $diffBuilder->build();
+			}
+			else {
+				$this->parser->setObjectIt($wiki_it);
+				$content = $this->parser->parse( $wiki_it->getHtmlDecoded('Content') );
+			}
 			$content = preg_replace_callback( '/<img\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceExternalImageCallback'), $content);
 			echo $content;
 		?>

@@ -38,7 +38,7 @@ class CusomizableObjectModelTest extends DevpromDummyTestCase
         ));
     }
     
-    function testRequestIsClosedByModification()
+    function testCustomizableObjectSet()
     {
         global $model_factory;
         
