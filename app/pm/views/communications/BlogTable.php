@@ -3,7 +3,6 @@
 use Devprom\ApplicationBundle\Service\Atom\BlogService; 
 
 include 'BlogForm.php';
-include SERVER_ROOT_PATH."pm/methods/c_tag_methods.php";
 
 class BlogTable extends PMPageTable
 {
@@ -50,11 +49,19 @@ class BlogTable extends PMPageTable
     function getFilters()
     {
     	return array (
-    			new FilterTagWebMethod( getFactory()->getObject('BlogPostTag') ),
-    			$this->buildDatesFilter()
+            $this->buildTagsFilter(),
+            $this->buildDatesFilter()
     	);
     }
-    
+
+    protected function buildTagsFilter()
+    {
+        $tag = getFactory()->getObject('BlogPostTag');
+        $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
+        $filter->setIdFieldName('Tag');
+        return $filter;
+    }
+
 	function getFilterPredicates()
 	{
 	    $values = $this->getFilterValues();

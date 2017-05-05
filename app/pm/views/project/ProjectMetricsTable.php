@@ -11,10 +11,8 @@ class ProjectMetricsTable extends PMPageTable
 
     function getFilters()
     {
-        if ( count($this->getListRef()->getIds()) < 1 ) {
-            $filters[] = new ViewStartDateWebMethod(translate('Начало'));
-            $filters[] = new ViewFinishDateWebMethod();
-        }
+        $filters[] = new ViewStartDateWebMethod(translate('Начало'));
+        $filters[] = new ViewFinishDateWebMethod();
         return $filters;
     }
 

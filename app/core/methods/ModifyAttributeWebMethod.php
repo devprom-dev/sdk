@@ -62,9 +62,8 @@ class ModifyAttributeWebMethod extends WebMethod
  	
  	private function buildMethodScript()
  	{
- 		if ( getSession()->getSite() == 'pm' )
- 		{ 
- 			$project_code = is_object($this->object_it) ? $this->uid_service->getProject($this->object_it) : $this->project;
+ 		if ( getSession()->getSite() == 'pm' ) {
+ 			$project_code = is_object($this->object_it) ? $this->object_it->get('ProjectCodeName') : $this->project;
  		}
  		 
  		$method_url = $this->method_url.$project_code.'/methods.php?method='.get_class($this);

@@ -6,10 +6,7 @@ class InstallSystem extends CommandForm
 	{
 		global $_SERVER, $_REQUEST, $model_factory;
 
-		$state = $model_factory->getObject('DeploymentState');
-		
-		if ( $state->IsInstalled() )
-		{
+		if ( \DeploymentState::IsInstalled() ) {
 			$this->replyError( text(1362) );
 		}
 		
@@ -173,14 +170,16 @@ class InstallSystem extends CommandForm
 						' --password='.$password.' -e "source '.$sql_script.'"';
 				}
 			}
-				
-			$result = trim(preg_replace('/^Warning:.+$/mi', '', shell_exec( $mysql_command )), chr(10).chr(13));
-			
-			if ( $result != '' )
-			{
-				$this->replyError( text(1515).': '.$result.
-					' - '.$mysql_command );
-			}
+
+			$result = shell_exec( $mysql_command );
+			$result = trim(preg_replace('/^Warning:.+$/mi', '', $result), chr(10).chr(13));
+
+			if ( strpos($result, 'can be insecure') === false ) {
+                if ( $result != '' ) {
+                    $this->replyError( text(1515).': '.$result.
+                        ' - '.$mysql_command );
+                }
+            }
 
 			try {
                 $this->connect($hostname, $username, $password, $dbname);

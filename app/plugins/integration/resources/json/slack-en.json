@@ -1,0 +1,211 @@
+[{
+  "Request": {
+    "add": {
+      "text": "Hey, look at *new issue*",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%Description",
+          "fields": [
+            {
+              "title": "Priority",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "footer": "Submitted by %Author.Caption",
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    },
+    "update": {
+      "filter": "contains(Changed, 'Owner')",
+      "text": "Here is the task for your",
+      "channel": "%Owner.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%Description",
+          "fields": [
+            {
+              "title": "Priority",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "footer": "Submitted by %Author.Caption",
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "RequestComment": {
+    "add": {
+      "text": "The issue has been commented",
+      "channel": "%ObjectId.Owner.Email %ObjectId.Author.Email %ObjectId.Watchers.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "pretext": "%Caption",
+          "title": "%ObjectId.UID %ObjectId.Caption",
+          "title_link": "%ObjectId.URL",
+          "text": "%ObjectId.Description",
+          "footer": "Submitted by %AuthorId.Caption",
+          "color": "%ObjectId.Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "Task": {
+    "add": {
+      "text": "Here is a task for you",
+      "channel": "%Assignee.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%ChangeRequest.Description",
+          "fields": [
+            {
+              "title": "Priority",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    },
+    "update": {
+      "filter": "contains(Changed, 'Assignee')",
+      "text": "Here is a task for you",
+      "channel": "%Assignee.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "title": "%UID %Caption",
+          "title_link": "%URL",
+          "text": "%ChangeRequest.Description",
+          "fields": [
+            {
+              "title": "Priority",
+              "value": "%Priority.Caption",
+              "short": true
+            }
+          ],
+          "color": "%Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "TaskComment": {
+    "add": {
+      "text": "Task has been commented",
+      "channel": "%ObjectId.Assignee.Email %ObjectId.Watchers.Email",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "pretext": "%Caption",
+          "title": "%ObjectId.UID %ObjectId.Caption",
+          "title_link": "%ObjectId.URL",
+          "text": "%ObjectId.ChangeRequest.Description",
+          "footer": "",
+          "color": "%ObjectId.Type.RelatedColor",
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "Build": {
+    "update": {
+      "text": "State of the build %Caption has changed to *%State*",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "text": "%Description",
+          "fields": [
+            {
+              "title": "Application",
+              "value": "%Application",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  },
+  "TestExecution": {
+    "add": {
+      "text": "Testing results",
+      "mrkdwn": true,
+      "attachments": [
+        {
+          "text": "%Result.Caption",
+          "title": "%UID %TestScenario.Caption",
+          "title_link": "%URL",
+          "fields": [
+            {
+              "title": "Version",
+              "value": "%Version.Caption",
+              "short": true
+            },
+            {
+              "title": "Environment",
+              "value": "%Environment.Caption",
+              "short": true
+            },
+            {
+              "title": "Duration",
+              "value": "%Duration seconds",
+              "short": true
+            }
+          ],
+          "mrkdwn_in": [
+            "text",
+            "pretext",
+            "footer"
+          ]
+        }
+      ]
+    }
+  }
+}]

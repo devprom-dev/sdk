@@ -36,6 +36,11 @@ class ReleaseForm extends PMPageForm
 		}
 
 		parent::extendModel();
+
+		if ( is_object($this->getObjectIt()) && !$this->getObjectIt()->IsFuture() && $methodology_it->IsAgile() ) {
+			$this->getObject()->addAttribute('ActualVelocity', 'INTEGER', text(2322), true, false, '', 100);
+			$this->getObject()->setAttributeEditable('ActualVelocity', false);
+		}
 	}
 
 	function buildModelValidator()
@@ -111,34 +116,32 @@ class ReleaseForm extends PMPageForm
 	{
 		switch( $attribute )
 		{
+			case 'ActualVelocity':
+                $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+                $strategy = $methodology_it->getEstimationStrategy();
+				return $strategy->getReleaseVelocityText($this->getObjectIt());
+
 		    case 'Caption':
-		    	
 		    	$value = parent::getFieldValue( $attribute );
-		    	
 		    	if ( $value != '' || is_object($this->getObjectIt()) ) return $value;
 		    	
 		    	$release_it = $this->getObject()->getRegistry()->Query(
-		    			array (
-		    					new FilterBaseVpdPredicate(),
-		    					new SortAttributeClause('StartDate.D')
-		    			)
+					array (
+						new FilterBaseVpdPredicate(),
+						new SortAttributeClause('StartDate.D')
+					)
 		    	);
 		    	
 		    	if ( $release_it->get('Caption') == '' ) return '1';
 		    	
 		    	$parts = preg_split('/\./', $release_it->get('Caption'));
-
-		    	if ( is_numeric($parts[count($parts)-1]) )
-		    	{
+		    	if ( is_numeric($parts[count($parts)-1]) ) {
 		    		$parts[count($parts)-1] += 1;
-		    		
 		    		return join('.', $parts);
 		    	}
-		    	else
-		    	{
+		    	else {
 		    		return "";
 		    	}
-		    	
 		    default:
 		    	return parent::getFieldValue( $attribute );
 		}
@@ -149,21 +152,43 @@ class ReleaseForm extends PMPageForm
 		switch ( $name )
 		{
 			case 'InitialVelocity':
-				if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() )
+				$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+				$strategy = $methodology_it->getEstimationStrategy();
+				$dimension = str_replace('%1', $strategy->getDimensionText(''), array_pop(preg_split('/:/',$strategy->getVelocityText($this->getObject()))));
+
+				if ( $methodology_it->HasPlanning() )
 				{
 					list($average, $velocity) = getFactory()->getObject('Iteration')->getVelocitySuggested();
 					list($releaseAverage, $velocity) = $this->getObject()->getVelocitySuggested();
-					$title = str_replace( '%2', round($velocity, 1),
-						str_replace( '%1', round($average, 1), text(1028)));
+					$title = str_replace( '%1', $dimension, text(1028));
+					if ( $average > 0 ) {
+						$title .= '<br/>'.str_replace( '%2', round($velocity, 1),
+								str_replace( '%1', round($average, 1), text(2295)));
+					}
 				}
 				else
 				{
 					list($average, $velocity) = $this->getObject()->getVelocitySuggested();
-					$title = str_replace( '%2', round($velocity, 1),
-						str_replace( '%1', round($average, 1), text(1029)));
+					$title = str_replace( '%1', $dimension, text(1029));
+					if ( $average > 0 ) {
+						$title .= '<br/>'.str_replace( '%2', round($velocity, 1),
+							str_replace( '%1', round($average, 1), text(2294)));
+					}
 				}
 				return $title;
-				
+
+			case 'FinishDate':
+				$object_it = $this->getObjectIt();
+				if ( is_object($object_it) ) {
+					$offset = $object_it->getFinishOffsetDays();
+					if ( $offset > 0 ) {
+						return str_replace('%1', $object_it->getDateFormat('EstimatedFinishDate'),
+							str_replace('%2', $offset,
+								$object_it->IsFinished() ? text(2293) : text(2302) ));
+					}
+				}
+				return parent::getFieldDescription( $name );
+
 			default:
 				return parent::getFieldDescription( $name );
 		}

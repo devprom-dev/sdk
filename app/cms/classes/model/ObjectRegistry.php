@@ -53,11 +53,9 @@ abstract class ObjectRegistry
 	
 	abstract public function Store( OrderedIterator $object_it, array $data );
 
-    public function Create( array $data )
-    {
-    }
+    public function Create( array $data ) {}
 
-    public function Delete( OrderedIterator $object_it )
-    {
-    }
+    public function Delete( OrderedIterator $object_it ) {}
+
+    public function Merge( array $data, array $alternativeKey = array() ) {}
 }

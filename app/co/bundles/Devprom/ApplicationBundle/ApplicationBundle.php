@@ -29,7 +29,7 @@ class ApplicationBundle extends DevpromBundle
         if ( !class_exists($_REQUEST['method'], false) ) return false;
         
     	$method = new $_REQUEST['method'];
-        FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+        \FeatureTouch::Instance()->touch(strtolower(get_class($method)));
         $method->exportHeaders();
         $method->execute_request();
         

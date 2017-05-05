@@ -67,7 +67,7 @@ class VersionTable extends PMPageTable
 	{
 		if ( $sort_parm == 'sort' )
 		{
-			return 'VersionNumber';
+			return 'ActualStartDate';
 		}
 		
 		return 'none';
@@ -97,7 +97,7 @@ class VersionTable extends PMPageTable
 	    $filter->setType( 'singlevalue' );
 	    $filter->setIdFieldName( 'ReferenceName' );
 	    
-	    $filter->setDefaultValue( 'not-passed' );
+	    $filter->setDefaultValue('not-passed');
 	    
 	    return $filter;
 	}
@@ -111,10 +111,29 @@ class VersionTable extends PMPageTable
         switch( $module ) {
             case 'project-plan-hierarchy':
                 return array (
-                    'ee/delivery'
+                    'ee/delivery',
+                    'milestones',
+                    'tasksplanningboard',
+                    'iterationplanningboard',
+                    'assignedtasks'
                 );
             default:
                 return parent::getFamilyModules($module);
         }
+    }
+
+    function getReferencesListWidget( $object )
+    {
+        if ( $object instanceof Task ) {
+            if ( is_object($this->tasks_widget) ) return $this->tasks_widget;
+            $report = getFactory()->getObject('PMReport');
+            return $this->tasks_widget = $report->getExact('tasks-trace');
+        }
+        if ( $object instanceof Request ) {
+            if ( is_object($this->issues_widget) ) return $this->issues_widget;
+            $report = getFactory()->getObject('PMReport');
+            return $this->issues_widget = $report->getExact('issues-trace');
+        }
+        return parent::getReferencesListWidget( $object );
     }
 }

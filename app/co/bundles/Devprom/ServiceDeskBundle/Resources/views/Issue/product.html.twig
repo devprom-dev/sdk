@@ -1,0 +1,27 @@
+{% extends 'layout.html.twig' %}
+
+{% block title %}
+    {% trans %} product.title {% endtrans %}
+{% endblock %}
+
+{% block content -%}
+    <section class="card-section">
+        <div class="container">
+            <div class="col-lg-8 col-lg-offset-2">
+                <div class="card">
+                    <div class="body products-body">
+                        {% for project in projects %}
+                            <header>
+                                <h2>
+                                    <span class="icon-pages hidden-xs"></span>
+                                    <a class="product-selector" href="{{ url('issue_new', {'project': project.vpd}) }}">{{ project.name }}</a>
+                                </h2>
+                                <p>{{ project.description }}</p>
+                            </header>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -3,7 +3,6 @@
 include "RequestIterator.php";
 
 include_once "persisters/IssueLinkedIssuesPersister.php";
-include_once "persisters/RequestMilestonesPersister.php";
 include_once "persisters/RequestIterationsPersister.php";
 include_once "predicates/RequestIterationFilter.php";
 include_once "predicates/RequestAuthorFilter.php";
@@ -24,6 +23,7 @@ include_once "predicates/RequestFeatureFilter.php";
 include_once "predicates/RequestFinishAfterPredicate.php";
 include_once "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
+include_once "sorts/IssueFunctionSortClause.php";
 
 class Request extends MetaobjectStatable 
 {
@@ -119,33 +119,16 @@ class Request extends MetaobjectStatable
 
 	function getOrderStep()
 	{
-	    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-	    
-	    return is_object($methodology_it) && $methodology_it->get('IsRequestOrderUsed') == 'Y' ? 1 : parent::getOrderStep();
+	    return 1;
 	}
 	
 	function getDefaultAttributeValue( $attr_name )
 	{
-		global $_REQUEST, $model_factory;
-		
-		$project_it = getSession()->getProjectIt();
-		
-		if( $attr_name == 'Project' && is_object($project_it) )
+		if( $attr_name == 'Project' )
 		{
-			return $project_it->getId();
+			return getSession()->getProjectIt()->getId();
 		}
 			
-		if( $attr_name == 'PlannedRelease' && is_object($project_it) )
-		{
-			if ( $_REQUEST['Release'] > 0 )
-			{
-				$iteration = $model_factory->getObject('Iteration');
-				$iteration_it = $iteration->getExact($_REQUEST['Release']);
-				
-				return $iteration_it->get('Version');
-			}
-		}
-
 		return parent::getDefaultAttributeValue( $attr_name );
 	}
 	
@@ -194,29 +177,23 @@ class Request extends MetaobjectStatable
 		switch ( $parms['State'] )
 		{
 			case 'resolved':
-				if ( $parms['ClosedInVersion'] == '' )
+				if ( $parms['ClosedInVersion'] == '' && $req_it->get('ClosedInVersion') == '' )
 				{
 					$stage_it = $req_it->getStageIt();
-					
-					if ( is_object($stage_it) )
-					{
+					if ( is_object($stage_it) ) {
 						$parms['ClosedInVersion'] = $stage_it->getDisplayName();
 					}
+
+                    if ( $parms['ClosedInVersion'] == '' && $this->hasAttribute('PlannedRelease') ) {
+                        $release_it = $req_it->getRef('PlannedRelease');
+                        $parms['ClosedInVersion'] = $release_it->getDisplayName();
+                    }
 				}
 
-				if ( $parms['ClosedInVersion'] == '' && $this->hasAttribute('PlannedRelease') )
-				{
-					$release_it = $req_it->getRef('PlannedRelease');
-					
-					$parms['ClosedInVersion'] = $release_it->getDisplayName();
-				}
-				
 				$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-				
 				if ( $methodology_it->getEstimationStrategy() instanceof EstimationHoursStrategy && $methodology_it->HasTasks() )
 				{
-					if ( $req_it->get('Estimation') == '' )
-					{
+					if ( $req_it->get('Estimation') == '' ) {
 						$parms['Estimation'] = $req_it->getPlannedDuration(); 					
  					}
 				}
@@ -232,27 +209,18 @@ class Request extends MetaobjectStatable
 
 		return parent::modify_parms( $object_id, $parms );
 	}
-	
+
 	function delete( $id, $record_version = ''  )
 	{
-		global $model_factory;
-		
 		$object_it = $this->getExact($id);
-		
-		// delete attachments
-		$attachment = $model_factory->getObject('pm_Attachment');
-		$attachment->removeNotificator( 'EmailNotificator' );
-		
-		$attachment->addFilter( new AttachmentObjectPredicate($object_it) );
-		$attachment_it = $attachment->getAll();
-		
-		while ( !$attachment_it->end() )
-		{
-			$attachment->delete( $attachment_it->getId() );
-			$attachment_it->moveNext();
-		}
-		
-		return parent::delete( $id );
+
+		$result = parent::delete( $id );
+
+        if ( $object_it->getId() > 0 ) {
+            DAL::Instance()->Query(" DELETE FROM pm_ChangeRequestTrace WHERE ChangeRequest = ".$object_it->getId());
+        }
+
+        return $result;
 	}
 }
  

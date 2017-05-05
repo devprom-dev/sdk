@@ -22,7 +22,6 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	        case 'co_ProjectGroup':
             case 'cms_User':
  	        case 'pm_CustomAttribute':
-			case 'cms_Resource':
                 return array( '-' );
 
  	        case 'pm_CustomReport':
@@ -34,7 +33,16 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
 
             case 'pm_State':
                 return $this->getSession()->getLinkedIt()->fieldToArray('VPD');
- 	            
+
+            case 'cms_Resource':
+                $linkedIt = $this->getSession()->getLinkedIt();
+                if ( count($linkedIt->fieldToArray('Tools')) > 1 ) {
+                    return array('-');
+                }
+                else {
+                    return array($linkedIt->get('VPD'));
+                }
+
  	        default:
  
  	            if ( $object instanceof SharedObjectSet ) return array('-');

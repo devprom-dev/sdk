@@ -32,7 +32,6 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_version' => array( 'Release'),
 			'pm_watcher' => array( 'Watcher' ),
 			'pm_objectaccess' => array( 'AccessObject' ),
-			'pm_tasktypestage' => array( 'TaskTypeStage' ),
 			'pm_issuetype' => array('RequestType'),
 			'pm_changerequesttrace' => array('RequestTraceBase'),
 			'pm_tasktrace' => array('TaskTraceBase'),
@@ -51,7 +50,6 @@ class ModelFactoryProject extends ModelFactoryExtended
 		    'pm_workspacemenu' => array( 'WorkspaceMenu' ),
 		    'pm_workspacemenuitem' => array( 'WorkspaceMenuItem' ),
 		    'pm_projectuse' => array( 'ProjectUse' ),
-			'pm_projectstage' => array( 'ProjectStage' ),
 			'pm_featuretype' => array( 'FeatureType' ),
 			'pm_stateattribute' => array( 'StateAttribute' )
 		));

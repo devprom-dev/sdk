@@ -44,15 +44,13 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
         }
  
 		$object->addPersister( new TaskPhotoPersister() );
-		
-		$object->addAttribute('DueDays', 'INTEGER', text(1890), false);
-		$object->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1898), false);
-		$object->addPersister( new TaskDatesPersister(array('DueDays','DueWeeks')) );
-		
-		$object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Релиз'), false);
-		$object->addPersister( new TaskReleasePersister(array('PlannedRelease')) );
 
-		foreach ( array('StartDate','FinishDate','DueDays','DueWeeks','PlannedStartDate','PlannedFinishDate','RecordCreated','RecordModified') as $attribute ) {
+        if ( $methodology_it->HasReleases() ) {
+            $object->addAttribute('PlannedRelease', 'REF_ReleaseId', translate('Релиз'), false);
+            $object->addPersister( new TaskReleasePersister(array('PlannedRelease')) );
+        }
+
+        foreach ( array('StartDate','FinishDate','DueWeeks','PlannedStartDate','PlannedFinishDate','RecordCreated','RecordModified') as $attribute ) {
 			$object->addAttributeGroup($attribute, 'dates');
 		}
 
@@ -60,5 +58,33 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 			$object->addAttributeGroup($attribute, 'time');
 		}
 		$object->addPersister( new TaskColorsPersister() );
+
+        $object->setAttributeVisible('Priority', true);
+        $object->setAttributeRequired('Assignee', !$methodology_it->IsParticipantsTakesTasks());
+
+        $typesCount = getFactory()->getObject('TaskType')->getRegistry()->Count(
+            array( new FilterBaseVpdPredicate() )
+        );
+        if ( $typesCount < 1 ) {
+            $object->setAttributeRequired('TaskType', false);
+            $object->setAttributeVisible('TaskType', false);
+            $object->setAttributeRequired('Caption', true);
+        }
+
+        $this->removeAttributes( $object, $methodology_it );
+    }
+
+    private function removeAttributes( $object, $methodology_it )
+    {
+        if ( !$methodology_it->HasPlanning() ) {
+            $object->removeAttribute( 'Release' );
+        }
+        if ( !$methodology_it->TaskEstimationUsed() ) {
+            $object->removeAttribute( 'Planned' );
+            $object->removeAttribute( 'LeftWork' );
+        }
+        if ( !$methodology_it->IsTimeTracking() ) {
+            $object->removeAttribute( 'Fact' );
+        }
     }
 }

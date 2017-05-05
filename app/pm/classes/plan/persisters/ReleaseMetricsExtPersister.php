@@ -4,8 +4,6 @@ class ReleaseMetricsExtPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 	    global $model_factory;
- 	    
  		$columns = array();
 
  		$columns[] =  
@@ -20,14 +18,10 @@ class ReleaseMetricsExtPersister extends ObjectSQLPersister
 			"  WHERE m.Version = " .$this->getPK($alias).
 			"	 AND m.Metric = 'Estimation' LIMIT 1) Estimation ";
 
-		$issue = $model_factory->getObject('pm_ChangeRequest');
-		
-		$states = $issue->getNonTerminalStates();
- 		
- 		$columns[] =  
+ 		$columns[] =
 	       " (SELECT COUNT(1) FROM pm_ChangeRequest s " .
 	       "   WHERE s.PlannedRelease = " .$this->getPK($alias).
-	       "	 AND s.State IN ('".join("','",$states)."')) UncompletedItems ";
+	       "	 AND s.State IN ('".join("','",getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates())."')) UncompletedItems ";
  		
  		return $columns;
  	}

@@ -4,6 +4,8 @@ include_once SERVER_ROOT_PATH."pm/methods/c_date_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/MakeSnapshotWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/StateExFilterWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/FilterStateTransitionMethod.php";
+include_once SERVER_ROOT_PATH."pm/views/plan/FilterReleaseMethod.php";
+include_once SERVER_ROOT_PATH."pm/views/plan/FilterIterationMethod.php";
 
 include "RequestList.php";
 include "RequestChart.php";
@@ -54,9 +56,7 @@ class RequestTable extends PMPageTable
 	function hasCrossProjectFilter()
 	{
 	    if ( getSession()->getProjectIt()->IsPortfolio() ) return true;
-		if ( $this->getReportBase() == 'issuesboardcrossproject' ) return true;
-		if ( $_REQUEST['view'] == 'board' ) return false;
-
+        if ( $this->getReportBase() == 'releaseplanningboard' ) return true;
 		return parent::hasCrossProjectFilter();
 	}
 	
@@ -88,17 +88,33 @@ class RequestTable extends PMPageTable
 			);
 		}
 
+		$importActions = array();
 		$module_it = $module->getExact('issues-import');
 	    if ( getFactory()->getAccessPolicy()->can_read($module_it) && !getSession()->getProjectIt()->IsPortfolio() )
 	    {
-        	if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
 	        $item = $module_it->buildMenuItem('?view=import&mode=xml&object=request');
-		    $actions[] = array(
-                'name' => translate('Импортировать'),
-				'url' => $item['url']
+            $importActions[] = array(
+                'name' => text(2280),
+				'url' => $item['url'],
+                'uid' => 'import-excel'
             );
 	    }
-	    
+        $method = new ObjectCreateNewWebMethod($this->getObject());
+        if ( $method->hasAccess() )
+        {
+            $method->setRedirectUrl("donothing");
+            $importActions['import-doc'] = array(
+                'name' => text(2281),
+                'url' => $method->getJSCall(array('view' => 'importdoc'), text(2281)),
+                'uid' => 'import-doc'
+            );
+        }
+
+        if ( count($importActions) > 0 ) {
+            if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
+            $actions = array_merge($actions, $importActions);
+        }
+
 		return array_merge($actions, parent::getActions());
 	}
 
@@ -122,10 +138,10 @@ class RequestTable extends PMPageTable
 			);
 			if ( $method->hasAccess() )
 			{
-				$append_actions[] = array();
-				$append_actions[] = array ( 
+				$append_actions[] = array (
+				    'uid' => 'new-'.strtolower($group),
 					'name' => $method->getObject()->getDisplayName(), 
-	                   'url' => $method->getJSCall(
+                    'url' => $method->getJSCall(
 								array (
 	                   					'area' => $this->getPage()->getArea()
 	                   			)
@@ -142,11 +158,9 @@ class RequestTable extends PMPageTable
 		$append_actions = array();
 		$filter_values = $this->getFilterValues();
 		
-		$object = $this->getObject();
-		$object->setVpdContext($project_it);
-		
-		$method = new ObjectCreateNewWebMethod($object);
+		$method = new ObjectCreateNewWebMethod($this->getObject());
 		$method->setRedirectUrl('donothing');
+        $method->setVpd($project_it->get('VPD'));
 		
 		$parms = array (
 				'area' => $this->getPage()->getArea()
@@ -217,12 +231,8 @@ class RequestTable extends PMPageTable
  	function getSortFields()
 	{
 		$cols = parent::getSortFields();
+		array_push( $cols, 'OrderNum');
 
-		if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
-		{
-			array_push( $cols, 'OrderNum');
-		}
-		
 		unset($cols[array_search('Watchers', $cols)]);
 		unset($cols[array_search('Attachment', $cols)]);
 		unset($cols[array_search('Links', $cols)]);
@@ -234,13 +244,14 @@ class RequestTable extends PMPageTable
     function getSortAttributeClause( $field )
 	{
 	    $parts = preg_split('/\./', $field);
-
-	    if ( $parts[0] == 'Owner' )
-	    {
-	        return new IssueOwnerSortClause();
-	    }
-	    
-		return parent::getSortAttributeClause( $field );
+        switch($parts[0]) {
+            case 'Owner':
+                return new IssueOwnerSortClause();
+            case 'Function':
+                return new IssueFunctionSortClause();
+            default:
+                return parent::getSortAttributeClause( $field );
+        }
 	}
 	
  	function getFilterActions()
@@ -295,7 +306,7 @@ class RequestTable extends PMPageTable
 			new ViewModifiedBeforeDateWebMethod(),
 			new ViewModifiedAfterDateWebMethod(),
 			$this->buildFilterOwner(),
-			new ViewRequestTagWebMethod(),
+			$this->buildTagsFilter(),
 			$this->buildFilterAuthor(),
 			new ViewRequestTaskTypeWebMethod(),
 			new ViewRequestTaskStateWebMethod()
@@ -314,14 +325,14 @@ class RequestTable extends PMPageTable
 			$filters[] = $this->buildFilterFunction();
 		}
 		
-		if ( $methodology_it->HasReleases() )
-		{
-			$releases = new FilterObjectMethod( getFactory()->getObject('ReleaseActual'), translate('Релизы'), 'release');
-			$filters = array_merge( array_slice($filters, 0, 1), array( $releases ), array_slice($filters, 1) );
+		if ( $methodology_it->HasReleases() ) {
+			$filters = array_merge(
+			    array_slice($filters, 0, 1), array( new FilterReleaseMethod() ), array_slice($filters, 1)
+            );
 		}
 		
 		if ( $methodology_it->HasPlanning() ) {
-			$filters[] = new FilterObjectMethod( getFactory()->getObject('IterationActual'), translate('Итерации'), 'iteration');
+			$filters[] = new FilterIterationMethod();
 		}
 
 		$filter = $this->buildUserGroupFilter();
@@ -344,7 +355,8 @@ class RequestTable extends PMPageTable
  		global $_REQUEST, $model_factory;
 
  		$values = $this->getFilterValues();
- 		
+        $this->parseFilterValues($values);
+
  		$predicates = array();
  		
 		$predicates[] = new StatePredicate( $values['state'] );
@@ -365,8 +377,8 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestTaskTypePredicate( $values['tasktype'] );
 		$predicates[] = new RequestTaskStatePredicate( $values['taskstate'] );
 		$predicates[] = new RequestVersionFilter($values['version']);
-		$predicates[] = new RequestIterationFilter($values['iteration']);
-		$predicates[] = new RequestIterationFilter($_REQUEST['iterations']);
+		$predicates[] = new FilterAttributePredicate('Iteration',$values['iteration']);
+		$predicates[] = new FilterAttributePredicate('Iteration',$_REQUEST['iterations']);
 
 		$trace = $model_factory->getObject('pm_ChangeRequestTrace');
 		array_push($predicates, new RequestTracePredicate( $_REQUEST['trace'] ) );
@@ -376,7 +388,15 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestEstimationFilter($values['estimation']);
 		
 		return array_merge($predicates, parent::getFilterPredicates());
-	}	
+	}
+
+    function buildTagsFilter()
+    {
+        $tag = getFactory()->getObject('RequestTag');
+        $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
+        $filter->setIdFieldName('Tag');
+        return $filter;
+    }
 
 	protected function buildFilterEstimation()
 	{
@@ -390,8 +410,18 @@ class RequestTable extends PMPageTable
         if ( $this->getListRef() instanceof RequestBoardPlanning ) {
             return new StateExFilterWebMethod(WorkflowScheme::Instance()->getStateIt($this->getObject()));
         }
-		elseif ( $this->getListRef() instanceof RequestBoard ) {
-			return new StateExFilterWebMethod($this->getListRef()->getBoardAttributeIterator());
+
+        $resolvedAmount = $this->getObject()->getRegistry()->Count(
+            array (
+                new FilterVpdPredicate(),
+                new StatePredicate('terminal')
+            )
+        );
+		if ( $this->getListRef() instanceof RequestBoard ) {
+			return new StateExFilterWebMethod(
+			    $this->getListRef()->getBoardAttributeIterator(),
+                'state',
+                $resolvedAmount < 30 ? "all" : "");
 		}
 		else
 		{
@@ -403,7 +433,7 @@ class RequestTable extends PMPageTable
 			else {
 				$state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
 			}
-			return new StateExFilterWebMethod($state_it);
+			return new StateExFilterWebMethod($state_it, 'state', $resolvedAmount < 30 ? "all" : "");
 		}
 	}
 	
@@ -434,14 +464,6 @@ class RequestTable extends PMPageTable
 		$priority = getFactory()->getObject('Priority');
 		$filter = new FilterObjectMethod($priority);
 		$filter->setHasNone(false);
-
-		if ( $this->hasCrossProjectFilter() ) {
-			$registry = $priority->getRegistry();
-			$registry->setLimit(3);
-			$values = $registry->getAll()->idsToArray();
-			$filter->setDefaultValue(join(',',$values));
-		}
-		
 		return $filter;
 	}
 
@@ -486,15 +508,14 @@ class RequestTable extends PMPageTable
 				$release_it->moveToId($object_it->get($group_field));
 
 				if ( $release_it->getId() > 0 ) {
-					$estimation = $release_it->getTotalWorkload();
-					list( $capacity, $maximum, $actual_velocity ) = $release_it->getRealBurndownMetrics();
+					list( $capacity, $maximum, $actual_velocity, $estimation ) = $release_it->getRealBurndownMetrics();
 					echo sprintf(
-						getSession()->getProjectIt()->IsPortfolio() ? text(2076) : text(2053),
+						getSession()->getProjectIt()->IsPortfolio() || !getSession()->getProjectIt()->getMethodologyIt()->IsAgile() ? text(2076) : text(2053),
 						$release_it->getDateFormatShort('StartDate'),
 						$release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
-						$this->estimation_strategy->getDimensionText(round($maximum, 1)),
+                        $maximum > 0 ? $this->estimation_strategy->getDimensionText(round($maximum, 1)) : '0',
 						$estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
-						$this->estimation_strategy->getDimensionText(round($estimation, 1))
+                        $estimation > 0 ? $this->estimation_strategy->getDimensionText(round($estimation, 1)) : '0'
 					);
 				}
 				break;
@@ -506,15 +527,14 @@ class RequestTable extends PMPageTable
 				$release_it->moveToId($object_it->get($group_field));
 
 				if ( $release_it->getId() > 0 ) {
-					$estimation = $release_it->getLeftEstimation();
-					list( $capacity, $maximum, $actual_velocity ) = $release_it->getEstimationRealBurndownMetrics();
+					list( $capacity, $maximum, $actual_velocity, $estimation ) = $release_it->getRealBurndownMetrics();
 					echo sprintf(
-							getSession()->getProjectIt()->IsPortfolio() ? text(2076) : text(2053),
-							$release_it->getDateFormatShort('StartDate'),
-							$release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
-							$this->estimation_strategy->getDimensionText(round($maximum, 1)),
-							$estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
-							$this->estimation_strategy->getDimensionText(round($estimation, 1))
+                        getSession()->getProjectIt()->IsPortfolio() || !getSession()->getProjectIt()->getMethodologyIt()->IsAgile() ? text(2076) : text(2053),
+                        $release_it->getDateFormatShort('StartDate'),
+                        $release_it->get('FinishDate') == '' ? '?' : $release_it->getDateFormatShort('FinishDate'),
+                        $maximum > 0 ? $this->estimation_strategy->getDimensionText(round($maximum, 1)) : '0',
+                        $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+                        $estimation > 0 ? $this->estimation_strategy->getDimensionText(round($estimation, 1)) : '0'
 					);
 				}
 				break;
@@ -618,20 +638,40 @@ class RequestTable extends PMPageTable
 
     protected function getFamilyModules( $module )
     {
+        $taskReports = array('mytasks', 'assignedtasks', 'newtasks', 'issuesmine', 'watchedtasks', 'project-plan-hierarchy');
         switch( $module ) {
             case 'kanban/requests':
-                return array (
-                    'issues-board'
+                return array_merge(
+                        array (
+                        'issues-board',
+                        'issues-backlog',
+                        'issues-trace'
+                    ),
+                    $taskReports
                 );
             case 'issues-backlog':
-                return array (
-                    'issues-board',
-                    'kanban/requests'
+                return array_merge(
+                    array (
+                        'issues-board',
+                        'kanban/requests',
+                        'issues-trace'
+                    ),
+                    $taskReports
                 );
             case 'issues-board':
+                return array_merge(
+                    array (
+                        'issues-backlog',
+                        'kanban/requests',
+                        'issues-trace'
+                    ),
+                    $taskReports
+                );
+            case 'issues-trace':
                 return array (
                     'issues-backlog',
-                    'kanban/requests'
+                    'kanban/requests',
+                    'issues-board'
                 );
             default:
                 return parent::getFamilyModules($module);

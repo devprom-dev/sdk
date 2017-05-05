@@ -1,57 +1,59 @@
-{% extends "FOSUserBundle::layout_with_description.html.twig" %}
+{% extends "layout.html.twig" %}
+
+{% block title %}
+    {{ 'login.title'|trans }}
+{% endblock %}
 
 {% block fos_user_content %}
-    <section class="widget login-widget">
-        <header class="text-align-center">
-            <h4>{{ 'login.title'|trans }}</h4>
-        </header>
-        <div class="body">
-            <form role="form" action="{{ path("fos_user_security_check") }}" method="post" id="login-form">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}" />
-                <fieldset>
-                    <div class="form-group no-margin">
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-addon">
-                                <i class="eicon-user"></i>
-                            </span>
-                            <input id="username" type="email" name="_username" class="form-control input-lg"
-                                   placeholder="{{ 'security.login.username.prompt'|trans({}, 'FOSUserBundle') }}"
-                                   value="{{ last_username }}" required="required">
-                        </div>
+    <section class="card-section">
+        <div class="container">
+            <div class="col-lg-8 col-lg-offset-2">
+                <div class="card text-center">
+                    <header class="text-center">
+                        <div class="section-subtitle">{{ 'login.details'|trans }}</div>
+                    </header>
+                    <div class="icon">
+                        <img src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/images/icon-login.png') }}" alt="">
                     </div>
+                    <div class="body">
+                        <form role="form" action="{{ path("fos_user_security_check") }}" method="post" id="login-form">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}" />
+                            <fieldset>
 
-                    <div class="form-group">
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-addon">
-                                <i class="icon-lock"></i>
-                            </span>
-                            <input id="password" type="password" name="_password" class="form-control input-lg"
-                                   placeholder="{{ 'security.login.password.prompt'|trans({}, 'FOSUserBundle') }}" required="required">
-                        </div>
-                    </div>
-
-                        <div class="controls form-group">
-                            <label for="remember_me">
-                                <input type="checkbox" id="remember_me" name="_remember_me" value="on"/>
-                                {{ 'security.login.remember_me'|trans({}, 'FOSUserBundle') }}
-                            </label>
-                        </div>
-                </fieldset>
-                {% if error %}
-                    <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'FOSUserBundle') }}</div>
-                {% endif %}
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-block btn-lg btn-primary">
-                        <small>{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}</small>
-                    </button>
-                    <a class="btn btn-block btn-lg btn-success" id="_register" name="_register" href="{{ path('fos_user_registration_register') }}">
-                        {{ 'layout.register'|trans({}, 'FOSUserBundle') }}
-                    </a>
-                    <div class="forgot">
-                        <a class="forgot" href="{{  path("fos_user_resetting_request") }}">{{ 'security.login.password.recover'|trans({}, 'FOSUserBundle') }}</a>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input id="username" type="text" name="_username" class="search-field form-control input-lg"
+                                               placeholder="{{ 'security.login.username.prompt'|trans({}, 'FOSUserBundle') }}"
+                                               value="{{ last_username }}" required="required">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input id="password" type="password" name="_password" class="search-field form-control input-lg"
+                                               placeholder="{{ 'security.login.password.prompt'|trans({}, 'FOSUserBundle') }}" required="required">
+                                    </div>
+                                </div>
+                                {% if error %}
+                                    <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'FOSUserBundle') }}</div>
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <input type="submit" class="btn btn-success btn-block" value="{{ 'security.login.submit'|trans({}, 'FOSUserBundle') }}">
+                                        <p class="forget-pass">
+                                            <a class="forgot" href="{{  path("fos_user_resetting_request") }}">{{ 'security.login.password.recover'|trans({}, 'FOSUserBundle') }}</a>
+                                        </p>
+                                        {% if registration_enabled %}
+                                            <p class="forget-pass">
+                                                <a class="forgot" id="_register" name="_register" href="{{ path('fos_user_registration_register') }}">
+                                                    {{ 'layout.register'|trans({}, 'FOSUserBundle') }}
+                                                </a>
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </form>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
     </section>
 {% endblock fos_user_content %}

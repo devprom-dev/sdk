@@ -43,11 +43,8 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 	$items = array( 
 	 		$project,
 	 		$projectrole,
- 			getFactory()->getObject('pm_ProjectStage'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
-			getFactory()->getObject('TaskTypeStage'),
-			getFactory()->getObject('TaskTypeState'),
 	 		$methodology
 	 	);
 
@@ -103,10 +100,10 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
     private function buildTemplates( & $registry )
     {
  		$registry->addSection(
- 				getFactory()->getObject('KnowledgeBaseTemplate'), 'Templates', array(), true, text(733)
+            getFactory()->getObject('TextTemplate'), 'Templates', array(), true, text(733)
    		);
     }
-    
+
     private function buildPermissions( & $registry )
     {
 	 	$items = array (
@@ -127,8 +124,9 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 		getFactory()->getObject('pm_TransitionPredicate'),
 	 		getFactory()->getObject('pm_TransitionResetField'),
 	 		getFactory()->getObject('pm_StateAction'),
-	 		getFactory()->getObject('pm_StateAttribute')
- 		);
+	 		getFactory()->getObject('pm_StateAttribute'),
+            getFactory()->getObject('TaskTypeState')
+        );
 
  		$registry->addSection($registry, 'Workflow', $items, true, text(894));
     }

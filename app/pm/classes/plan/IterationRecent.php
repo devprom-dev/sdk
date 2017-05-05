@@ -1,4 +1,5 @@
 <?php
+include_once "IterationDatesIterator.php";
 include "IterationRecentRegistry.php";
 
 class IterationRecent extends Metaobject
@@ -6,4 +7,8 @@ class IterationRecent extends Metaobject
  	function __construct() {
 		parent::__construct( 'pm_Release', new IterationRecentRegistry($this) );
 	}
+
+    function createIterator() {
+        return new IterationDatesIterator($this);
+    }
 }

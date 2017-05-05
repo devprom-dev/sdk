@@ -6,6 +6,14 @@ _project_settings:
     path: /pm/{project}/settings
     defaults: { _controller: ProjectBundle:Settings:project }
 
+_project_worklog:
+    path: /pm/{project}/worklog
+    defaults: { _controller: ProjectBundle:Time:worklog }
+
+_project_autoactions:
+    path: /pm/{project}/autoactions
+    defaults: { _controller: ProjectBundle:Workflow:autoaction }
+
 settings:
     path: /pm/{project}/settings/{area}/{action}
     defaults: { _controller: ProjectBundle:Settings:index }
@@ -112,54 +120,59 @@ functional_areas:
 rest_iteration:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\IterationController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_release:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\ReleaseController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_build:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\BuildController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_requirement:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\RequirementController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_issue:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\IssueController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_change:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\ChangeController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_task:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\TaskController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_bug:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\BugController
-    prefix:   /pm/{project}/api/v1
+    prefix:   /pm/{project}/api/{version}
 
 rest_hour:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\HourController
-    prefix:   /pm/{project}/api/v1/{class}/{object}
+    prefix:   /pm/{project}/api/{version}/{class}/{object}
 
 rest_attachment:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\AttachmentController
-    prefix:   /pm/{project}/api/v1/{class}/{object}
+    prefix:   /pm/{project}/api/{version}/{class}/{object}
 
 rest_comment:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\CommentController
-    prefix:   /pm/{project}/api/v1/{class}/{object}
+    prefix:   /pm/{project}/api/{version}/{class}/{object}
+
+rest_item:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\ItemController
+    prefix:   /pm/{project}/api/{version}/{class}

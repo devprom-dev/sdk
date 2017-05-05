@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include "FormRequestTasksEmbedded.php";
 
 class FieldTasksRequest extends FieldForm
@@ -24,6 +24,8 @@ class FieldTasksRequest extends FieldForm
  	function draw( $view = null )
  	{
  		$task = getFactory()->getObject('pm_Task');
+        $builder = new TaskModelExtendedBuilder();
+        $builder->build($task);
  		$task->disableVpd();
  		
  		$task->addFilter( new FilterAttributePredicate( 'ChangeRequest', 		 

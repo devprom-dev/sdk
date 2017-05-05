@@ -7,13 +7,6 @@ class WikiPageMove extends CommandForm
  {
     function validate()
     {
-     // proceeds with validation
-     $this->checkRequest( array('ObjectClass', 'ParentPage', 'PrevSiblingPage') );
-
-     if (!is_numeric($_REQUEST['ParentPage']) || !is_numeric($_REQUEST['PrevSiblingPage'])) {
-        $this->replyError( text(1731) );
-     }
-
      // check authorization was successfull
      return getSession()->getUserIt()->getId() > 0;
     }
@@ -31,44 +24,65 @@ class WikiPageMove extends CommandForm
 
     function modify( $object_id )
      {
-         global $_REQUEST, $model_factory;
-
-
-         /** @var WikiPage $object */
          try {
-             $object = $model_factory->getObject($_REQUEST['ObjectClass']);
-
-             $prev_sibling_id = intval($_REQUEST['PrevSiblingPage']);
-
-             $orderNum = $this->getOrderNum($object, $prev_sibling_id);
+             $object = getFactory()->getObject('WikiPage');
 
              $object_it = $object->getExact($object_id);
-
              if ($object_it->count() < 1) {
-                 throw new Exception("No wiki page found for id: $prev_sibling_id");
+                 throw new Exception("No wiki page found for id: $object_id");
              }
 
-             $object->modify_parms($object_id, array('ParentPage' => $_REQUEST['ParentPage'], 'OrderNum' => $orderNum));
+             $orderNum = $this->getOrderNum($object, $_REQUEST);
 
-             $this->replySuccess(text(1729), $object_id);
-         } catch (Exception $e) {
+             $object->modify_parms(
+                 $object_it->getId(),
+                 array(
+                     'ParentPage' => $_REQUEST['ParentPage'],
+                     'OrderNum' => $orderNum
+                 )
+             );
+
+             $itemIt = $object->getRegistry()->Query(
+                 array(
+                     new FilterAttributePredicate('DocumentId', $object_it->get('DocumentId')),
+                     new SortDocumentClause()
+                 )
+             );
+             $resultSet = array();
+             while( !$itemIt->end() ) {
+                 $resultSet[] = array (
+                     'id' => $itemIt->getId(),
+                     'si' => $itemIt->get('SortIndex'),
+                     'sn' => $itemIt->get('SectionNumber')
+                 );
+                 $itemIt->moveNext();
+             }
+
+             echo JsonWrapper::encode($resultSet);
+         }
+         catch (Exception $e) {
              $this->replyError( text(1728) );
          }
      }
 
-    protected function getOrderNum($object, $prev_sibling_id)
+    protected function getOrderNum($object, $parms)
     {
-        if ($prev_sibling_id > 0) {
+        if ($parms['before'] > 0) {
             /** @var WikiPageIterator $prev_sibling */
-            $prev_sibling = $object->getExact($prev_sibling_id);
+            $prev_sibling = $object->getExact($parms['before']);
             if ($prev_sibling->count() < 1) {
-                throw new Exception("No wiki page found for id: $prev_sibling_id");
+                return 1;
             }
-
+            return $prev_sibling->get('OrderNum') - 1;
+        }
+        if ($parms['after'] > 0) {
+            /** @var WikiPageIterator $prev_sibling */
+            $prev_sibling = $object->getExact($parms['after']);
+            if ($prev_sibling->count() < 1) {
+                return 1;
+            }
             return $prev_sibling->get('OrderNum') + 1;
         }
         return 1;
     }
 }
-
-?>

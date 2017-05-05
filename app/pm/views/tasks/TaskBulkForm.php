@@ -47,7 +47,7 @@ class TaskBulkForm extends BulkForm
  		}
  	}
  	
- 	function drawCustomAttribute( $attribute, $value, $tab_index )
+ 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
  	{
  		switch ( $attribute )
  		{
@@ -65,7 +65,7 @@ class TaskBulkForm extends BulkForm
 				break;
 				
  			case 'Project':
- 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
+ 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessibleActive'));
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
@@ -79,7 +79,7 @@ class TaskBulkForm extends BulkForm
 				break;
 				
 			default:
- 				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+ 				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
  		}
  	}
 }

@@ -10,24 +10,22 @@ class TaskBusinessActionAssignParticipant extends BusinessActionWorkflow
 	
 	function apply( $object_it )
  	{
- 	    if ( $object_it->get('Assignee') != '' ) return true;
- 	    
- 	    $object_it->object->modify_parms($object_it->getId(), 
- 	    		array(
- 	            	'Assignee' => getSession()->getUserIt()->getId() 
- 	    		)
- 	    	);
- 	     		
+        $data = $this->getData();
+        if ( $data['Assignee'] > 0 ) return true;
+
+ 	    $object_it->object->modify_parms($object_it->getId(),
+            array(
+                'Assignee' => getSession()->getUserIt()->getId()
+            )
+    	);
  		return true;
  	}
 
- 	function getObject()
- 	{
+ 	function getObject() {
  		return getFactory()->getObject('pm_Task');
  	}
  	
- 	function getDisplayName()
- 	{
+ 	function getDisplayName() {
  		return text(1376);
  	}
 }

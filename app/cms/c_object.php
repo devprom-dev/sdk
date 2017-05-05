@@ -466,7 +466,7 @@ include('c_iterator.php');
 	function getCheckSum( $name, $it ) {}
 	function getSizeKb( $name, $it ) {}
 	function getSizeMb( $name, $it ) {}
- 	function storeFile( $name, $it ) {}
+ 	function storeFile( $name, $it, $parms ) {}
 	function removeFile( $name, $it ) {}
  	function copyFile( $name, $source_it, $dest_it ) {}
 	function getFilePath( $name, $it ) {}
@@ -514,27 +514,20 @@ include('c_iterator.php');
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
- 	function storeFile( $name, $it ) 
+ 	function storeFile( $name, $it, $parms )
 	{
-		global $_FILES, $_REQUEST, $model_factory;
-
-		if( $_REQUEST[$name.'ToDelete'] == 'Y') {
-			$this->removeFile( $name, $it );
-		}
-		elseif(is_uploaded_file($_FILES[$name]['tmp_name']) || file_exists($_FILES[$name]['tmp_name']) ) 
+		if ( is_uploaded_file($_FILES[$name]['tmp_name']) || file_exists($_FILES[$name]['tmp_name']) )
 		{
-			if ( $_FILES[$name]['name'] == '' )
-			{
+			if ( $_FILES[$name]['name'] == '' ) {
 				$file_name = 'unnamed';
 			}
 			else
 			{
 				$file_name = $_FILES[$name]['name'];
-				
 				$file_name = preg_replace('/\[/', '(', $file_name);
 				$file_name = preg_replace('/\]/', ')', $file_name);
 			}
-			
+
 			// каждый файл размещается в подкаталоге с именем класса
 			$filepath = $this->createFilePath($name, $it);
 
@@ -548,11 +541,19 @@ include('c_iterator.php');
 				"' WHERE ".$this->object->getClassName()."Id = ".$it->getId();
 
     		$r2 = DAL::Instance()->Query($sql);
-
 			getFactory()->resetCachedIterator($it->object);
 
 			unlink($_FILES[$name]['tmp_name']);
 		}
+		else if ( $parms['FileExt'] != '' ) {
+            DAL::Instance()->Query(
+                "UPDATE ".$this->object->getClassName()." SET  
+                ".$name."Path = '".DAL::Instance()->Escape(addslashes($parms['FilePath']))."',
+                ".$name."Mime = '".DAL::Instance()->Escape(addslashes($parms['FileMime']))."',
+				".$name."Ext = '".DAL::Instance()->Escape(addslashes($parms['FileExt'])).
+                "' WHERE ".$this->object->getClassName()."Id = ".$it->getId()
+            );
+        }
 	}
 	
 	//----------------------------------------------------------------------------------------------------------

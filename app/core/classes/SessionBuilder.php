@@ -6,6 +6,7 @@ use Symfony\Component\HttpFoundation\Session\Storage\Handler\NullSessionHandler;
 class SessionBuilder
 {
     const CACHE_KEY = 'sessions';
+    const max_requests = 30;
     protected static $singleInstance = null;
     protected static $nativeSession = null;
 
@@ -27,6 +28,15 @@ class SessionBuilder
     public function openSession( array $parms = array(), $cacheService = null )
     {
         global $session;
+
+        if ( is_dir($this->dirName) ) {
+            try {
+                if ( iterator_count(new FilesystemIterator($this->dirName, FilesystemIterator::SKIP_DOTS)) > $this->maxRequestsPerSession ) {
+                    exit(header('Location: /503'));
+                }
+            }
+            catch( \Exception $e ) {}
+        }
 
         $nativeSessionId = md5(get_class($this).serialize($parms).self::$nativeSession->getId());
         if ( self::$nativeSession->getId() != "" ) {
@@ -55,6 +65,8 @@ class SessionBuilder
             $session->close();
             $this->invalidate($session->getId());
         }
+        setcookie('devprom', '', 0, '/', $_SERVER['HTTP_HOST'] );
+        setcookie('devprom', '', 0, '/' );
         $session = null;
     }
 
@@ -67,10 +79,25 @@ class SessionBuilder
         }
     }
 
-    protected function __construct() {
+    protected function __construct()
+    {
+        $this->maxRequestsPerSession = defined('MAX_REQUESTS_PER_SESSION') ? MAX_REQUESTS_PER_SESSION : self::max_requests;
+        $this->dirName = SERVER_FILES_PATH . 'sessions/' . static::$nativeSession->getId();
+        $this->fileName = tempnam($this->dirName, 'session');
+
+        @mkdir($this->dirName, 0777, true);
+        file_put_contents($this->fileName, '');
+    }
+
+    function __destruct() {
+        if ( file_exists($this->fileName) ) unlink($this->fileName);
     }
 
     protected function buildSession( array $parms, $cacheService = null ) {
         return new SessionBase();
     }
+
+    private $maxRequestsPerSession;
+    private $fileName = '';
+    private $dirName = '';
 }

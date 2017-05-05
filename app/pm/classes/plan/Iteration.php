@@ -107,7 +107,7 @@ class Iteration extends Metaobject
 			$average += $iteration_it->getVelocity();
 			$iteration_it->moveNext();
 		}
-		$average = $average / $iteration_it->count();
+		$average = $iteration_it->count() > 0 ? $average / $iteration_it->count() : 0;
 
 		return array($average, $velocity);
 	}

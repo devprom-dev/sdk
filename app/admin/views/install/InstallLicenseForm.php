@@ -58,8 +58,6 @@ class InstallLicenseForm extends AdminForm
 	
 	function getAttributeValue( $attribute )
 	{
-		global $_REQUEST;
-		
 		switch ( $attribute )
 		{
 			case 'LicenseValue';
@@ -107,7 +105,7 @@ class InstallLicenseForm extends AdminForm
 		return translate('Установить');
 	}
 	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		switch ( $attribute )
 		{
@@ -121,7 +119,7 @@ class InstallLicenseForm extends AdminForm
 		    	break;
 		    	
 		    default:
-		    	parent::drawCustomAttribute( $attribute, $value, $tab_index );
+		    	parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
 }

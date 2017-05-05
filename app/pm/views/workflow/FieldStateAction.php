@@ -1,6 +1,5 @@
 <?php
-
-include "FormStateActionEmbedded.php";
+include_once "FormStateActionEmbedded.php";
 
 class FieldStateAction extends FieldForm
 {

@@ -56,7 +56,7 @@ class FilterFreezeWebMethod extends WebMethod
 				   'items' => 'function() { return filterLocation.getParametersString(); }',
 				   'values' => $persisted
 						? 'function() { return filterLocation.getEmptyValuesString(); }'
-						: 'function() { return $(\''.$element_selector.'\').hasClass(\'checked\') ? filterLocation.getValuesString() : filterLocation.getEmptyValuesString(); }',
+						: 'function() { return ($(\''.$element_selector.'\').is(\':not(:visible)\') || $(\''.$element_selector.'\').hasClass(\'checked\')) ? filterLocation.getValuesString() : filterLocation.getEmptyValuesString(); }',
 				   'subject' => $subject )
 			);
 	}

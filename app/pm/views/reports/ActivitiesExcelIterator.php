@@ -84,68 +84,42 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		}
  	}
  	
- 	function getFormula( $row, $cell )
+ 	function getFormula( $row, $columnIndex, $cellName )
  	{
  		$fields = $this->getFields();
  	
- 		if ( $cell == count($fields) - 1 )
+ 		if ( $columnIndex == count($fields) - 1 )
  		{
- 			return "SUM(RC[-".(count($fields) - 2)."]:RC[-1])";
+ 			return "=SUM(B".$row.":".PHPExcel_Cell::stringFromColumnIndex($columnIndex-1).$row.")";
  		}
- 		else if ( $cell > 0 )
+ 		else if ( $columnIndex > 0 )
  		{
  			$iterator = $this->getIterator();
  			if ( $iterator->get('Group') > 0 )
  			{
-	 			return "SUM(R[1]C:R[".($iterator->get('Total'))."]C)";
+                $groupField = $_REQUEST['group'];
+                $groupValue = $iterator->get('ItemId');
+
+                $items = array_filter($this->row_it->getRowset(), function($value) use($groupField, $groupValue) {
+                   return $value[$groupField] == $groupValue;
+                });
+
+	 			return "=SUM(".$cellName.($row+1).":".$cellName.($row + count($items)).")";
  			}
  		}
  	}
 
  	function getFields()
  	{
- 	    global $model_factory;
- 	    
  		$iterator = $this->getIterator();
  		
- 		$days_map = $iterator->getDaysMap();
- 		
- 		if ( count($days_map) > 12 )
- 		{
-     		$fields = array ( 'ItemId' => $iterator->object->getAttributeUserName('Caption') );
-     			
-     		for ( $i = 0; $i < count($days_map); $i++ )
-     		{
-     			$fields['Day'.($i+1)] = $days_map[$i];
-     		}
- 		}
- 		elseif ( count($days_map) == 12 )
- 		{
-     		$fields = array ( 'ItemId' => text(1298) );
-     			
-     		$date = $model_factory->getObject('DateMonth');
-     		
-     		$date_it = $date->getAll();
-     		
-     		while( !$date_it->end() )
-     		{
-     			$fields['Day'.($date_it->getId() - 1)] = $date_it->getDisplayName();
-     			
-     		    $date_it->moveNext();
-     		}
- 		}
- 		else
- 		{
-     		$fields = array ( 'ItemId' => text(1299) );
-     			
-     		for ( $i = 0; $i < count($days_map); $i++ )
-     		{
-     			$fields['Day'.($i+1)] = $days_map[$i];
-     		}
- 		}
- 		
-		$fields = array_merge($fields, 
-			array( 'Total' => translate('Итого')) );
+        $fields = array ( 'ItemId' => $iterator->object->getAttributeUserName('Caption') );
+
+        foreach( $iterator->getDaysMap() as $dayId => $dayName ) {
+            $fields['Day'.$dayId] = $dayName;
+        }
+
+		$fields = array_merge($fields, array( 'Total' => translate('Итого')) );
 
  		return $fields;
  	}
@@ -155,13 +129,15 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		switch ( $field )
  		{
  			case 'ItemId':
- 				return $this->getIterator()->get('Group') < 1 ? 250 : 150;
+ 				return $this->getIterator()->get('Group') < 1 ? 60 : 30;
 
  			case 'Total':
- 				return 60;
+ 				return 15;
 
  			default:
- 				return 20;
+ 			    preg_match('/Day(\d+)/', $field, $match);
+ 			    $map = $this->getIterator()->getDaysMap();
+ 				return is_numeric($map[$match[1]]) ? 5 : 10;
  		}
 	}
 

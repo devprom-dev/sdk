@@ -23,7 +23,7 @@ class InviteService
 	{
 		if ( !is_array($emails) ) {
 			$emails = array_filter(
-					preg_split('/[,\s;]/', $emails), 
+					preg_split('/[,\s;\r\n]/', $emails),
 					function($value) {
 							return $value != '' && filter_var(trim($value), FILTER_VALIDATE_EMAIL) !== false;
 					}
@@ -115,7 +115,7 @@ class InviteService
 		return $participant_it;
 	}
 	
-	protected function addParticipant( $project_it, $user_it )
+	public function addParticipant( $project_it, $user_it )
 	{
 		$it = getFactory()->getObject('Participant')->getRegistry()->Query(
 				array(

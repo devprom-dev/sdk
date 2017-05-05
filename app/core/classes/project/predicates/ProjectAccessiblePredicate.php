@@ -16,6 +16,10 @@ class ProjectAccessiblePredicate extends FilterPredicate
 		$user_id = $this->user_it->getId();
 		if ( $user_id == '' ) $user_id = 0;
 
+		$accessPolicy = new CoAccessPolicy(getFactory()->getCacheService(), 'apps/'.$this->user_it->getId());
+        $allProjectsModuleIt = getFactory()->getObject('Module')->getExact('ee/allprojects');
+        if ( $accessPolicy->can_read($allProjectsModuleIt) ) return " AND 1 = 1 ";
+
         return  " AND t.pm_ProjectId IN ( ".
                 "		SELECT r.Project ".
                 "       FROM pm_Participant r ".

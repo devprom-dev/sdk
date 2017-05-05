@@ -15,7 +15,17 @@ class TaskIterator extends StatableIterator
         return $title;
     }
 
-	function getDisplayNameNative()
+    function getDisplayNameExt($prefix = '')
+    {
+        if ( $this->get('PlannedFinishDate') != '' && $this->get('DueWeeks') < 4 ) {
+            $prefix .= '<span class="label '.($this->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'" title="'.$this->object->getAttributeUserName('PlannedFinishDate').'">';
+            $prefix .= $this->getDateFormatShort('PlannedFinishDate');
+            $prefix .= '</span> ';
+        }
+        return parent::getDisplayNameExt($prefix);
+    }
+
+    function getDisplayNameNative()
 	{
 		$title = '';
 		$type_name = $this->getType();
@@ -24,10 +34,10 @@ class TaskIterator extends StatableIterator
 			if ( $this->get('CaptionNative') != '' ) {
 				$title .= ': '.$this->get('CaptionNative');
 			}
-			return $title;
+			return $this->getStateTag().$title;
 		}
 		else {
-			return $this->get('CaptionNative');
+			return $this->getStateTag().$this->get('CaptionNative');
 		}
 	}
 

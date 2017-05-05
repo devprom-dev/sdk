@@ -4,6 +4,9 @@ parameters:
 
     locale: en
     secret: a5f77b39610bc536efa946c97e32b2dc227518a0
+    registration_enabled: true
+    max_products_in_combo: 6
+    use_knowledgebase: true
 
     accepted_settings: [ 'supportProjectId', 'appUrl' ]
 

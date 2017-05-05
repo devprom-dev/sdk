@@ -36,7 +36,7 @@ class CacheEngineVar extends CacheEngine
 		unset($pm_session_cache[$path]);
 	}
 	
-	function drop()
+	function invalidate()
 	{
 		unset($pm_session_cache);
 	}

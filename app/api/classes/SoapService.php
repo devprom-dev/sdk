@@ -4,10 +4,13 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include_once SERVER_ROOT_PATH."pm/classes/sessions/SessionBuilderProject.php";
-include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleActiveVpdPredicate.php";
 
 class SoapService
 {
+    private $methodsDelimiter = '.';
+    private $attributes = array();
+
 	function SoapService()
 	{
 	}
@@ -379,7 +382,7 @@ class SoapService
 		}
 
 		if ( $object instanceof Project ) {
-			$object->addFilter( new ProjectAccessibleVpdPredicate() );
+			$object->addFilter( new ProjectAccessibleActiveVpdPredicate() );
 		}
 
 		$object->setLimit(100);
@@ -461,6 +464,8 @@ class SoapService
 	//
 	function getAttributes( $object )
 	{
+        if ( is_array($this->attributes[get_class($object)]) ) return $this->attributes[get_class($object)];
+
 		$attrs = array();
 		$attributes = array_keys($object->getAttributes());
 		$system_attributes = $object->getAttributesByGroup('system');
@@ -469,6 +474,7 @@ class SoapService
 		{
 			if ( in_array($attributes[$i], $system_attributes) && !in_array($attributes[$i], array('DaysInWeek','WikiEditorClass','ContentEditor','UserField3','ReferenceName')) ) continue;
 			if ( $object->getAttributeDbType($attributes[$i]) == '' ) continue;
+            if ( in_array($attributes[$i], array('ArtifactsType')) ) continue;
 			if ( $object->IsReference($attributes[$i]) )
 			{
 				switch ( $attributes[$i] )
@@ -534,37 +540,17 @@ class SoapService
 			'name' => 'Url', 
 			'type' => 'xsd:string' );
 			
-		return $attrs;
+		return $this->attributes[get_class($object)] = $attrs;
 	}
 
 	//
 	function serializeToSoap( $object_it )
 	{
-		$attributes = array_keys($object_it->object->getAttributes());
+		$attributes = array_keys($this->getAttributes($object_it->object));
 		$data = array();
-
-		$data['Id'] = $object_it->getId();
-		$data['ClassName'] = get_class($object_it->object);
-		
-		$data['RecordVersion'] = $object_it->get('RecordVersion') == '' 
-			? '0' : $object_it->get('RecordVersion');
-		
-		$uid = new ObjectUID;
-		
-		if ( $uid->HasUid( $object_it ) )
-		{
-			$info = $uid->getUIDInfo($object_it);
-			
-			$data['Url'] = $info['url'];
-		}
 
 		for ( $i = 0 ; $i < count($attributes) ; $i++ )
 		{
-			if ( $object_it->object->getAttributeDbType($attributes[$i]) == '' )
-			{
-				continue;
-			}
-
 			if ( $object_it->object->IsReference($attributes[$i]) )
 			{
 				$items = preg_split('/,/', $object_it->get($attributes[$i]));
@@ -584,7 +570,21 @@ class SoapService
 			}
 		}
 
-		return $data;
+        $data['Id'] = $object_it->getId();
+        $data['ClassName'] = get_class($object_it->object);
+        $data['RecordVersion'] = $object_it->get('RecordVersion') == ''
+            ? '0' : $object_it->get('RecordVersion');
+
+        $uid = new ObjectUID;
+        if ( $uid->HasUid( $object_it ) ) {
+            $info = $uid->getUIDInfo($object_it);
+            $data['Url'] = $info['url'];
+        }
+        else {
+            $data['Url'] = '';
+        }
+
+        return $data;
 	}
 
 	function systemValueToSoap( $object_it, $attr )
@@ -776,14 +776,13 @@ class SoapService
 					'sequence',
 					'',
 					array(
-							'x' => array (
-									'minOccurs' => 0,
-									'maxOccurs' => 'unbounded',
-									'type' => $namespace.':'.$class
-							)
+                        'item' => array (
+                            'minOccurs' => 0,
+                            'maxOccurs' => 'unbounded',
+                            'type' => $namespace.':'.$class
+                        )
 					),
-					array(),
-					$namespace.':'.$class.'Array'
+					$namespace.':'.$class
 			);
 		}
 		else {
@@ -809,7 +808,7 @@ class SoapService
 		{
 		    $this->exportEntity( $class, $namespace, $server );
 
-			$server->register($class.'.RemoteLoad',
+			$server->register($class.$this->methodsDelimiter.'RemoteLoad',
 			array(
 					'token' => 'xsd:string', 
 					'id' => 'xsd:int'
@@ -818,7 +817,7 @@ class SoapService
 					$namespace, $namespace.'#Load'.$class, $soap->getStyle(), $soap->getUse(), 'Load object data using the given ID'
 					);
 
-					$server->register($class.'.RemoteAdd',
+					$server->register($class.$this->methodsDelimiter.'RemoteAdd',
 					array(
 					'token' => 'xsd:string', 
 					'parms' => $namespace.':'.$class
@@ -827,7 +826,7 @@ class SoapService
 					$namespace, $namespace.'#Add'.$class, $soap->getStyle(), $soap->getUse(), 'Appends new object with the given parms'
 					);
 						
-					$server->register($class.'.RemoteAddBatch',
+					$server->register($class.$this->methodsDelimiter.'RemoteAddBatch',
 					array(
 					'token' => 'xsd:string', 
 					'parms' => $namespace.':'.$class.'Array'
@@ -836,7 +835,7 @@ class SoapService
 					$namespace, $namespace.'#AddBatch'.$class, $soap->getStyle(), $soap->getUse(), 'Appends array of given objects'
 					);
 
-					$server->register($class.'.RemoteStore',
+					$server->register($class.$this->methodsDelimiter.'RemoteStore',
 					array('token' => 'xsd:string',
 					  'id' => 'xsd:int',
 					  'parms' => $namespace.':'.$class ),
@@ -844,14 +843,14 @@ class SoapService
 					$namespace, $namespace.'#Store'.$class, $soap->getStyle(), $soap->getUse(), 'Stores modified object with the given id and parms'
 					);
 
-					$server->register($class.'.RemoteStoreBatch',
+					$server->register($class.$this->methodsDelimiter.'RemoteStoreBatch',
 					array('token' => 'xsd:string',
 					  'parms' => $namespace.':'.$class.'Array' ),
 					array(),
 					$namespace, $namespace.'#StoreBatch'.$class, $soap->getStyle(), $soap->getUse(), 'Stores array of objects'
 					);
 
-					$server->register($class.'.RemoteDelete',
+					$server->register($class.$this->methodsDelimiter.'RemoteDelete',
 					array(
 					'token' => 'xsd:string', 
 					'id' => 'xsd:int' 
@@ -860,7 +859,7 @@ class SoapService
 					$namespace, $namespace.'#Delete'.$class, $soap->getStyle(), $soap->getUse(), 'Stores modified object with the given id and parms'
 					);
 
-					$server->register($class.'.RemoteDeleteBatch',
+					$server->register($class.$this->methodsDelimiter.'RemoteDeleteBatch',
 					array(
 					'token' => 'xsd:string', 
 					'parms' => $namespace.':'.$class.'Array'
@@ -869,7 +868,7 @@ class SoapService
 					$namespace, $namespace.'#DeleteBatch'.$class, $soap->getStyle(), $soap->getUse(), 'Removes array of objects'
 					);
 
-					$server->register($class.'.RemoteGetAll',
+					$server->register($class.$this->methodsDelimiter.'RemoteGetAll',
 					array(
 					'token' => 'xsd:string'
 					),
@@ -877,7 +876,7 @@ class SoapService
 					$namespace, $namespace.'#GetAll'.$class, $soap->getStyle(), $soap->getUse(), 'Returns all records of the given type'
 					);
 						
-					$server->register($class.'.RemoteFind',
+					$server->register($class.$this->methodsDelimiter.'RemoteFind',
 					array('token' => 'xsd:string',
 					  'parms' => $namespace.':'.$class),
 					array('return' => $namespace.':'.$class.'Array'),
@@ -909,4 +908,9 @@ class SoapService
 	function getUse() {
 		return $_REQUEST['use'] == 'encoded' ? 'encoded' : 'literal';
 	}
+
+	function setMethodDelimiter( $value ) {
+        $this->methodsDelimiter = $value;
+    }
+
 }

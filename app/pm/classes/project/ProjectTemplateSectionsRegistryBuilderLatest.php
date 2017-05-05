@@ -23,15 +23,13 @@ class ProjectTemplateSectionsRegistryBuilderLatest extends ProjectTemplateSectio
  			getFactory()->getObject('Activity'),
  			getFactory()->getObject('PMEntityCluster'),
  			getFactory()->getObject('Comment'),
- 			getFactory()->getObject('WikiPageChange'),
  			getFactory()->getObject('Snapshot'),
  			getFactory()->getObject('SnapshotItem'),
  			getFactory()->getObject('SnapshotItemValue'),
- 			getFactory()->getObject('ChangeLogTemplate')
+ 			getFactory()->getObject('ChangeLogTemplate'),
+            getFactory()->getObject('pm_AttributeValue')
  		);
-
-    	foreach( $items as $object )
-		{
+    	foreach( $items as $object ) {
 			$registry->addSectionItem('ProjectArtefacts', $object);
 		}
     }

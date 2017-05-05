@@ -18,12 +18,13 @@ class WikiDocumentSettingBuilder extends PageSettingBuilder
         $setting->setGroup( 'none' );
         $columns = array('Content');
         $columns[] = 'SectionNumber';
+        $columns[] = 'Tags';
         $setting->setVisibleColumns(
             array_merge(
                 $columns,
                 array_diff(
                     array_filter($object->getAttributesByGroup('trace'), function($value) use($object) {
-                        return !in_array($value, array('Dependency','UsedBy','Tasks','Feature'));
+                        return !in_array($value, array('Dependency','UsedBy','Feature'));
                     }),
                     $object->getAttributesByGroup('source-attribute')
                 )
@@ -33,7 +34,6 @@ class WikiDocumentSettingBuilder extends PageSettingBuilder
         
         $setting = new PageTableSetting('PMWikiDocument');
 	    $setting->setSorts( array('none') );
-	    $setting->setFilters( array('state', 'linkstate', 'baseline') );
 	    $settings->add( $setting );
     }
 }

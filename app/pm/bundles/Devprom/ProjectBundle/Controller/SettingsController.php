@@ -5,7 +5,6 @@ use Devprom\CommonBundle\Controller\PageController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Devprom\ProjectBundle\Service\Settings\ModulesSettingsService;
-use Devprom\ProjectBundle\Service\Settings\NavigationSettingsService;
 
 include_once SERVER_ROOT_PATH . "pm/views/ui/Common.php";
 include_once SERVER_ROOT_PATH . "pm/views/settings/ProjectSettingsPage.php";
@@ -49,16 +48,8 @@ class SettingsController extends PageController
     	return new RedirectResponse(getSession()->getApplicationUrl());
     }
     
-    protected function getService( $action )
-    {
-    	switch($action)
-    	{
-    	    case 'modules':
-    	    	return new ModulesSettingsService();
-    	    
-    	    case 'menu':
-    	    	return new NavigationSettingsService();
-    	}
+    protected function getService() {
+        return new ModulesSettingsService();
     }
 
 	public function projectAction(Request $request) {

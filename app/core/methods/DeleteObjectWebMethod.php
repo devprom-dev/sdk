@@ -38,15 +38,15 @@ class DeleteObjectWebMethod extends WebMethod
 	
 	function execute_request()
 	{
-		if ( $_REQUEST['object'] == '' ) return;
+		if ( $_REQUEST['object'] == '' ) throw new Exception('Object should be specified');
 		
 		$class = getFactory()->getClass($_REQUEST['class']);
 		
-		if ( !class_exists($class) ) return;
+		if ( !class_exists($class) ) throw new Exception('Class name given doesn\'t exist');
 		
 		$object_it = getFactory()->getObject($class)->getExact( $_REQUEST['object'] );
 		
-		if ( $object_it->getId() == '' ) return;
+		if ( $object_it->getId() == '' ) throw new Exception('Object given was not found');
 		
 		if ( !getFactory()->getAccessPolicy()->can_delete($object_it) ) throw new Exception('You have no permissions to delete object');
 

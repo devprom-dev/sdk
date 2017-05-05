@@ -11,10 +11,8 @@ class CustomAttributeFinalForm extends PMPageForm
 			$_REQUEST['EntityReferenceName'] = $parts[0];
 			$_REQUEST['ObjectKind'] = $parts[1];
 		}
-		
+
 		parent::__construct( $object );
-		
-		$object->setAttributeVisible( 'OrderNum', true );
 	}
 
 	protected function getAttributeType()
@@ -32,6 +30,11 @@ class CustomAttributeFinalForm extends PMPageForm
 		$object->setAttributeVisible('ShowMainTab', true);
 
 		parent::extendModel();
+
+        foreach( $object->getAttributesByGroup('additional') as $field ) {
+            $object->setAttributeRequired($field, false);
+        }
+        $object->setAttributeVisible( 'OrderNum', true );
 
 		$type = $this->getAttributeType();
 		if ( $type == 'computed' ) {

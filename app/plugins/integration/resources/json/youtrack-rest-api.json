@@ -1,0 +1,48 @@
+[{
+  "Request": {
+    "url": "/rest/issue/{id}",
+    "link": "/issue/{id}",
+    "Caption": "field.summary.value",
+    "Description": "field.description.value",
+    "Priority": {
+      "Caption": "field.Priority.value:first",
+      "mapping": [{"Обычный":"Normal"},{"Низкий":"Minor"},{"Высокий":"Major"},{"Критичный":"Critical"},{"":"*"}]
+    },
+    "Author": {"Login":"field.reporterName.value"},
+    "Owner": {"Login":"field.Assignee.value"},
+    "RecordCreated": "created",
+    "State": {
+      ".": "field.State.value:first",
+      "mapping": [{"submitted":"Backlog"},{"resolved":"Done"},{"resolved":"Fixed"},{"submitted":"*"}]
+    },
+    "comments": {
+      "reference":"comment",
+      "type":"RequestComment",
+      "readonly": "true"
+    }
+  },
+  "RequestAttachment": {
+    "url": "/rest/issue/{parent}/attachment/{id}",
+    "url-append": "/rest/issue/{parent}/attachment",
+    "ObjectId": "{parentId}",
+    "FileExt": "name",
+    "File": "url"
+  },
+  "RequestComment": {
+    "url": "/rest/issue/{parent}/comment/{id}",
+    "url-append": "/rest/issue/{parent}/comment",
+    "AuthorId": {"Login":"author"},
+    "ObjectId": "{parentId}",
+    "Caption": "text",
+    "RecordCreated": "created",
+    "RecordModified": "updated"
+  },
+  "ActivityRequest": {
+    "url": "/rest/issue/{parent}/timetracking/workitem/{id}",
+    "Participant": {"Login":"author.login"},
+    "Task": "{parentId}",
+    "Description": "description",
+    "Capacity": "duration",
+    "ReportDate": "date"
+  }
+}]

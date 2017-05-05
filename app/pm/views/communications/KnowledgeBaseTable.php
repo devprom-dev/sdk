@@ -15,13 +15,23 @@ class KnowledgeBaseTable extends PMWikiTable
 		
 		$filters = array(
 			new ViewWikiModifiedAfterDateWebMethod(),
-			new ViewWikiTagWebMethod( $object )
+			$this->buildTagsFilter()
 			);
 			
 		return $filters;
 	}
-	
-	function getList( $mode = '' )
+
+	function getFilterPredicates()
+    {
+        return array_merge(
+            parent::getFilterPredicates(),
+            array(
+                new FilterAttributeNotNullPredicate('ParentPage')
+            )
+        );
+    }
+
+    function getList( $mode = '' )
 	{
 		switch ( $mode )
 		{

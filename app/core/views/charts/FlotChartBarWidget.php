@@ -63,7 +63,7 @@ class FlotChartBarWidget extends FlotChartWidget
     public function draw( $chart_id )
     {
         list( $ticks, $data ) = $this->getValues();
-
+        $scaleDivider = count($ticks) > 0 ? count($ticks) : 1;
 		?>
 		<script type="text/javascript">
 		$(function () {
@@ -75,8 +75,8 @@ class FlotChartBarWidget extends FlotChartWidget
 				series: {
 					stack: true,
 					bars: { 
-						show: true,	
-						barWidth: 0.6
+						show: true,
+						barWidth: 0.3
 					},
 					points: {
 						show: true
@@ -87,8 +87,10 @@ class FlotChartBarWidget extends FlotChartWidget
 				},
 				xaxis: {
 					ticks: ticks,
-					autoscaleMargin: 0.4,
-					alignTicksWithAxis: 0.2
+					autoscaleMargin: <?=(10/($scaleDivider*$scaleDivider))?>,
+                    rotateTicks: 135,
+                    reserveSpace: true,
+                    labelWidth: 15
 				},
 				grid: {
 					hoverable: true,

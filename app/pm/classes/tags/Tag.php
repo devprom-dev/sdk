@@ -6,13 +6,14 @@ include "persisters/TagBlogPostPersister.php";
 include "persisters/TagFeaturePersister.php";
 include "persisters/TagQuestionPersister.php";
 include "persisters/TagRequestPersister.php";
+include "persisters/TagParentPersister.php";
+include "sorts/TagCaptionSortClause.php";
 
 class Tag extends Metaobject
 {
  	function Tag() 
  	{
  		parent::Metaobject('Tag');
- 		
  		$this->defaultsort = 'Caption ASC';
  	}
  	

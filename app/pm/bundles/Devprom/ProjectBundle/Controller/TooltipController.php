@@ -37,8 +37,10 @@ class TooltipController extends Controller
 				strpos($request->getQueryString(), 'extended') !== false,
             	$request->get('baseline')
 		);
- 	
-    	return $this->render( 'ProjectBundle:Tooltip:show.html.twig', $service->getData() );
+
+        $response = $this->render( 'ProjectBundle:Tooltip:show.html.twig', $service->getData() );
+        $response->headers->set('X-Devprom-UI', 'tableonly');
+    	return $response;
     }
 
     public function explainAction(Request $request)

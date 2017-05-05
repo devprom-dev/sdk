@@ -1,29 +1,30 @@
-{% extends '::content.html.twig' %}
+{% extends 'layout.html.twig' %}
 
 {% block title %}
     {% trans %} attachment.new.title {% endtrans %}
 {% endblock %}
 
 {% block content -%}
-    <div class="col-md-6 col-md-offset-3">
-        <h2 class="page-title">{{ 'attachment.new.title'|trans }}</h2>
-        <section class="widget">
-            <header>
-                <h4>
-                    <a class="uid" href="{{ path('issue_show', { 'id': issue.id }) }}" title="{{ issue.caption }}">[I-{{ issue.id }}] {{ issue.caption|unescapeHtml }}</a>
-                </h4>
-            </header>
-            <div class="body">
-                <form role="form" class="form-horizontal" id="attachment" action="{{ path('attachment_upload', { 'issueId' : issue.id }) }}" method="post" {{ form_enctype(form) }}>
+    <section class="card-section">
+        <div class="container">
+            <div class="col-lg-8 col-lg-offset-2">
+                <div class="card text-center">
+                    <div class="body">
+                        <form role="form" class="form-horizontal" id="attachment" action="{{ path('attachment_upload', { 'issueId' : issue.id }) }}" method="post" {{ form_enctype(form) }}>
 
-                    {{ form_widget(form) }}
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">{{ 'attachment.upload'|trans }}</button>
-                        <a class="btn btn-default" href="{{ path('issue_show', { 'id': issue.id }) }}">{{ 'attachment.cancel'|trans }}</a>
+                            <div class="row">
+                                {{ form_widget(form) }}
+                            </div>
+                            <div class="row">
+                                <p class="forget-pass">
+                                    <button type="submit" class="btn btn-primary">{{ 'attachment.upload'|trans }}</button>
+                                </p>
+                            </div>
+                        </form>
                     </div>
-                </form>
-        </section>
-    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 {% endblock %}
 

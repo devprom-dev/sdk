@@ -314,7 +314,7 @@ class AjaxForm
  	/*
 	 * draws attribute according to its type
 	 */
-	function drawAttribute( $attribute )
+	function drawAttribute( $attribute, $view )
 	{
 		global $tab_index;
 		
@@ -455,12 +455,12 @@ class AjaxForm
 					break;
 
 				default:
-					$this->drawCustomAttribute( $attribute, $value, $tab_index );
+					$this->drawCustomAttribute( $attribute, $value, $tab_index, $view );
 			}
 		}
 	}	
 	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 	    $type = $this->getAttributeType( $attribute );
 	
@@ -503,7 +503,7 @@ class AjaxForm
 	    return getSession()->getApplicationUrl().'command.php?class='.$this->getCommandClass();
 	}
 	
-	function getRenderParms()
+	function getRenderParms( $view )
 	{
 		$object_it = $this->getObjectIt();
 		
@@ -524,7 +524,7 @@ class AjaxForm
 			);
 
             ob_start();
-            $this->drawAttribute( $attribute );
+            $this->drawAttribute( $attribute, $view );
              
             $attributes[$attribute]['html'] = ob_get_contents();
             ob_end_clean();
@@ -553,7 +553,7 @@ class AjaxForm
 			'width' => $this->getWidth(),
 			'button_text' => $this->getButtonText(),
 			'b_has_preview' => $this->IsPreviewEnabled(),
-			'attributes' => $attributes,
+            'columns' => $this->buildColumns($attributes),
             'buttons_template' => 'core/FormAsyncButtons.php',
             'buttons_parms' => array( 'actions' => $actions ),
             'form_id' => $this->form_id,
@@ -562,8 +562,10 @@ class AjaxForm
             'actions' => $actions,
             'form_title' => $this->getCaption(),
 			'fields_separator' => '<br/>',
-			'bottom_hint' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off' ? $this->getHint() : '',
+			'bottom_hint' => $this->getHint(),
 			'bottom_hint_id' => $this->getHintId(),
+			'hint_open' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off',
+            'module' => strtolower(get_class($this))
 		);
 	}
 	
@@ -577,7 +579,7 @@ class AjaxForm
 	    $this->view = $view;
 
 		echo $view->render( $this->getTemplate(), array_merge($parms, array( 
-                'parms' => $this->getRenderParms()
+                'parms' => $this->getRenderParms($view)
         ))); 
 
 		unset($this->view);
@@ -590,6 +592,11 @@ class AjaxForm
 	
 	    return $actions;
 	}
+
+	function buildColumns( $attributes )
+    {
+        return array( $attributes );
+    }
 
 	function getHintId()
 	{

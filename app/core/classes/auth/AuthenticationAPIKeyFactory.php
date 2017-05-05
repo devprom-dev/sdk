@@ -13,7 +13,7 @@ class AuthenticationAPIKeyFactory extends AuthenticationFactory
  	{
 		if ( !function_exists('apache_request_headers') ) return false;
 		$headers = $this->getHeaders();
- 	    return $headers[self::KEY_NAME] != '' && preg_match('/\/api\/v[\d]+\//i', $_SERVER['REQUEST_URI']);
+ 	    return $headers[self::KEY_NAME] != '';
  	}
  	
  	function tokenRequired() {

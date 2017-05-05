@@ -96,10 +96,17 @@ class PMPageNavigation extends PageNavigation
 
     function getHelpActions()
     {
+        $language = strtolower(getSession()->getLanguageUid());
         $community_url = defined('HELP_COMMUNITY_URL') ? HELP_COMMUNITY_URL : 'http://club.devprom.ru';
         $docs_url = defined('HELP_DOCS_URL') ? HELP_DOCS_URL : 'http://devprom.ru/docs';
         return array_merge(
             array(
+                array (
+                    'name' => text(2277),
+                    'uid' => 'shortcuts-help',
+                    'click' => "javascript: workflowModify({'form_url':'/widget/shortcut/".$language."','class_name':'','entity_ref':'','object_id':'','form_title':'".text(2277)."','can_delete':'false','can_modify':'false','delete_reason':null}, donothing);",
+                ),
+                array(),
                 array (
                     'name' => text('guide.tour'),
                     'click' => 'javascript:reStartTour();',
@@ -304,6 +311,7 @@ class PMPageNavigation extends PageNavigation
 
         $portfolio_actions[] = array (
             'icon' => 'icon-wrench',
+            'uid' => 'project-settings',
             'url' => getSession()->getApplicationUrl().'settings',
             'name' => text(2174)
         );
@@ -324,6 +332,7 @@ class PMPageNavigation extends PageNavigation
 
         $project_actions[] = array (
             'icon' => 'icon-wrench',
+            'uid' => 'project-settings',
             'url' => getSession()->getApplicationUrl().'settings',
             'name' => text(2173)
         );

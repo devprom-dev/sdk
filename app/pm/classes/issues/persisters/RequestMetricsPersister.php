@@ -16,6 +16,40 @@ class RequestMetricsPersister extends ObjectSQLPersister
 		 }
 		 if ( count($terminalIds) < 1 ) $terminalIds = array(0);
 
+         $defaultDeliveryDate = "(SELECT FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()) + m.Rating * 3600) FROM pm_Project m WHERE m.VPD = t.VPD)";
+         $defaultDeliveryDateMethod = "1";
+
+         if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() || getSession()->getProjectIt()->getMethodologyIt()->HasReleases() ) {
+             $defaultDeliveryDate =
+                 "IFNULL( ".
+                 "   (SELECT MAX(i.FinishDate) FROM pm_Release i, pm_Task s WHERE i.pm_ReleaseId = s.Release AND s.ChangeRequest = t.pm_ChangeRequestId), ".
+                 "      IFNULL( ".
+                 "          (SELECT MAX(i.FinishDate) FROM pm_Release i WHERE i.pm_ReleaseId = t.Iteration), ".
+                 "              IFNULL( ".
+                 " 				    (SELECT v.FinishDate FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
+                 "					     ".$defaultDeliveryDate.
+                 "				) ".
+                 "		)".
+                 ")";
+             $defaultDeliveryDateMethod =
+                 "IFNULL( ".
+                 "   (SELECT MAX(2) FROM pm_Release i, pm_Task s WHERE i.pm_ReleaseId = s.Release AND s.ChangeRequest = t.pm_ChangeRequestId), ".
+                 "      IFNULL( ".
+                 "          (SELECT MAX(2) FROM pm_Release i WHERE i.pm_ReleaseId = t.Iteration), ".
+                 "              IFNULL( ".
+                 " 				    (SELECT MAX(2) FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
+                 "					     ".$defaultDeliveryDateMethod.
+                 "				) ".
+                 "		)".
+                 ")";
+         }
+         else if ( $this->getObject()->getAttributeType('LeadTimeSLA') != '' ) {
+             $defaultDeliveryDate =
+                 " IFNULL( FROM_UNIXTIME(UNIX_TIMESTAMP(t.RecordCreated) + t.Estimation * 3600), ".$defaultDeliveryDate." )";
+             $defaultDeliveryDateMethod =
+                 " IF( t.Estimation IS NOT NULL, 3, ".$defaultDeliveryDate." )";
+         }
+
          $columns[] =
          	 "  IFNULL( t.FinishDate, ". 
          	 "  	IFNULL( (SELECT so.RecordCreated FROM pm_StateObject so WHERE so.pm_StateObjectId = t.StateObject AND so.State IN (".join(',',$terminalIds).")), ".
@@ -23,6 +57,7 @@ class RequestMetricsPersister extends ObjectSQLPersister
              "		  		      WHERE tr.ChangeRequest = t.pm_ChangeRequestId ".
              "					    AND tr.ObjectId = ms.pm_MilestoneId ".
              "		 			    AND IFNULL(ms.Passed, 'N') = 'N' ".
+             "                      AND ms.MilestoneDate >= CURDATE() ".
              "					    AND tr.ObjectClass = '".getFactory()->getObject('RequestTraceMilestone')->getObjectClass()."'),".
          	 "				IFNULL( ".
          	 "					(SELECT MAX(r.DeliveryDate) ".
@@ -30,21 +65,34 @@ class RequestMetricsPersister extends ObjectSQLPersister
          	 "				  	  WHERE l.SourceRequest = t.pm_ChangeRequestId ".
          	 "				    	AND l.TargetRequest = r.pm_ChangeRequestId ".
        		 "						AND l.LinkType = lt.pm_ChangeRequestLinkTypeId ".
-         	 "						AND lt.ReferenceName = 'implemented' ), ".
-         	 "					IFNULL( ".
-         	 "						(SELECT MAX(i.FinishDate) FROM pm_Release i, pm_Task s WHERE i.pm_ReleaseId = s.Release AND s.ChangeRequest = t.pm_ChangeRequestId), ".
-             "					    IFNULL( ".
-             "						    (SELECT MAX(i.FinishDate) FROM pm_Release i WHERE i.pm_ReleaseId = t.Iteration), ".
-         	 "						    IFNULL( ".
-			 " 							    (SELECT v.FinishDate FROM pm_Version v WHERE v.pm_VersionId = t.PlannedRelease), ".
-             "							    (SELECT FROM_DAYS(m.MetricValue) FROM pm_ProjectMetric m WHERE m.VPD = t.VPD AND m.Metric = 'EstimatedFinishDate' LIMIT 1) ".
-         	 "						    ) ".
-             "						) ".
-             "					) ".
+             "                      AND r.FinishDate IS NULL ".
+         	 "						AND lt.ReferenceName IN ('implemented','blocked') ), ".
+         	 "					".$defaultDeliveryDate.
          	 "				) ".
              " 	 		)  ".
              " 	 	)  ".
              "	) MetricDeliveryDate ";
+
+         $columns[] =
+             "  IF( t.FinishDate IS NOT NULL, 4, ".
+             "          IFNULL( (SELECT MAX(5) FROM pm_ChangeRequestTrace tr, pm_Milestone ms ".
+             "		  		      WHERE tr.ChangeRequest = t.pm_ChangeRequestId ".
+             "					    AND tr.ObjectId = ms.pm_MilestoneId ".
+             "		 			    AND IFNULL(ms.Passed, 'N') = 'N' ".
+             "                      AND ms.MilestoneDate >= CURDATE() ".
+             "					    AND tr.ObjectClass = '".getFactory()->getObject('RequestTraceMilestone')->getObjectClass()."'),".
+             "				IFNULL( ".
+             "					(SELECT MAX(6) ".
+             "				   	   FROM pm_ChangeRequestLink l, pm_ChangeRequestLinkType lt, pm_ChangeRequest r ".
+             "				  	  WHERE l.SourceRequest = t.pm_ChangeRequestId ".
+             "				    	AND l.TargetRequest = r.pm_ChangeRequestId ".
+             "						AND l.LinkType = lt.pm_ChangeRequestLinkTypeId ".
+             "                      AND r.FinishDate IS NULL ".
+             "						AND lt.ReferenceName IN ('implemented','blocked') ), ".
+             "					".$defaultDeliveryDateMethod.
+             "				) ".
+             " 	 		)  ".
+             "	) MetricDeliveryDateMethod ";
 
 		 $columns[] =
 			 "  (SELECT CONCAT_WS(':',IFNULL(SUM(a.Capacity),0),GROUP_CONCAT(DISTINCT CAST(a.Task AS CHAR)))

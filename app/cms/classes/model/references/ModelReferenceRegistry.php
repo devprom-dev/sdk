@@ -5,20 +5,19 @@ define(MODEL_REFERENCES_CACHE_KEY, 'model-references');
 class ModelReferenceRegistry extends ObjectRegistrySQL
 {
 	private $reference_forward = array();
-	
 	private $reference_backward = array();
-	
 	private $cache_service = null;
+    private $cache_key = '';
 	
-	public function __construct( $cache_service )
+	public function __construct( $cache_service, $cache_key = 'global' )
 	{
 		$this->cache_service = $cache_service;
+        $this->cache_key = $cache_key;
 		
 		list($this->reference_forward, $this->reference_backward) = 
-				$this->cache_service->get(MODEL_REFERENCES_CACHE_KEY);
+				$this->cache_service->get(MODEL_REFERENCES_CACHE_KEY, $this->cache_key);
 		
-		if ( !$this->reference_forward )
-		{
+		if ( !$this->reference_forward ) {
 			$this->buildStaticReferences();
 		}		 
 	}
@@ -26,13 +25,18 @@ class ModelReferenceRegistry extends ObjectRegistrySQL
 	function __destruct()
 	{
 		$this->cache_service->set(MODEL_REFERENCES_CACHE_KEY, 
-				array (
-						$this->reference_forward,
-						$this->reference_backward
-				)
+            array (
+                $this->reference_forward,
+                $this->reference_backward
+            ),
+            $this->cache_key
 		);
 	}
-	
+
+    public function setCacheKey( $key ) {
+        $this->cache_key = $key;
+    }
+
 	function addObjectReferences( & $object )
 	{
 		if ( !$object instanceof Metaobject ) return;

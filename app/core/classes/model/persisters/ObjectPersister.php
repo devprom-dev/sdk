@@ -32,6 +32,10 @@ class ObjectPersister
 		return $this->attributes;
 	}
 
+	function IsPersisterImportant() {
+        return false;
+    }
+
 	function map( & $parms )
 	{
 	}

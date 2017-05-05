@@ -12,6 +12,8 @@ include "actions/RequestBusinessActionGetInWorkDuplicates.php";
 include "actions/RequestBusinessActionResolveImplemented.php";
 include "actions/RequestBusinessActionGetInWorkImplementation.php";
 include "actions/RequestBusinessActionMoveImplementedNextState.php";
+include "actions/BusinessActionIssueAutoActionShift.php";
+include "actions/BusinessActionIssueAutoActionWorkflow.php";
 
 class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
 {
@@ -22,8 +24,6 @@ class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
     
     public function build( StateBusinessActionRegistry & $set )
     {
-        $request = getFactory()->getObject('Request');
-    	
 		$set->registerRule( new RequestBusinessActionResolveTasks() );
 		$set->registerRule( new RequestBusinessActionResetTasks() );
    		$set->registerRule( new RequestBusinessActionAssignParticipant() );
@@ -34,5 +34,21 @@ class StateBusinessActionBuilderRequest extends StateBusinessActionBuilder
  		$set->registerRule( new RequestBusinessActionResolveDuplicates() );
  		$set->registerRule( new RequestBusinessActionGetInWorkDuplicates() );
 		$set->registerRule( new RequestBusinessActionMoveImplementedNextState() );
+
+        $eventTypes = array(
+            AutoActionEventRegistry::CreateAndModify,
+            AutoActionEventRegistry::ModifyOnly,
+            AutoActionEventRegistry::CreateOnly
+        );
+
+        $it = getFactory()->getObject('IssueAutoAction')->getAll();
+        while( !$it->end() ) {
+            $set->registerRule(
+                in_array($it->get('EventType'), $eventTypes)
+                    ? new BusinessActionIssueAutoActionShift($it->copy())
+                    : new BusinessActionIssueAutoActionWorkflow($it->copy())
+            );
+            $it->moveNext();
+        }
     }
 }

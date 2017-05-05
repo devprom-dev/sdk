@@ -54,8 +54,10 @@ class RequestKanbanModelTest extends DevpromKanbanTestCase
         
         $model_factory->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
                 array (
-                        array ( 'Request', null, $entity ),
-                        array ( 'Task', null, $task )
+                    array ( 'Request', null, $entity ),
+                    array ( 'Task', null, $task ),
+                    array ( 'Release', null, $task ),
+                    array ( 'TaskType', null, $task )
                 ) 
         ));
     }

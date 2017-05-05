@@ -14,7 +14,35 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
 	    
 	    return false;
 	}
-	
+
+    function process( $object_it, $kind, $content = array(), $visibility = 1)
+    {
+        if ( $kind != TRIGGER_ACTION_MODIFY ) return;
+        if ( !$this->checkEntity($object_it) ) return;
+
+        $references = $this->getObjectReferences($object_it);
+        if ( !is_array($references) ) return;
+
+        if ( getSession()->getProjectIt()->IsPortfolio() ) {
+            if ( array_key_exists('PlannedRelease', $content) )
+            {
+                $release_it = getFactory()->getObject('Release')->getExact($content['PlannedRelease']);
+                if ( $release_it->get('VPD') != '' && $release_it->get('VPD') != $object_it->get('VPD') ) {
+                    return $this->moveEntity( $object_it, $release_it->getRef('Project'), $references );
+                }
+            }
+            if ( array_key_exists('Iteration', $content) )
+            {
+                $release_it = getFactory()->getObject('Iteration')->getExact($content['Iteration']);
+                if ( $release_it->get('VPD') != '' && $release_it->get('VPD') != $object_it->get('VPD') ) {
+                    return $this->moveEntity( $object_it, $release_it->getRef('Project'), $references );
+                }
+            }
+        }
+
+        parent::process($object_it, $kind, $content, $visibility);
+    }
+
 	protected function & getObjectReferences( & $object_it )
 	{
  	    // prepare list of objects to be serilalized

@@ -1,13 +1,21 @@
 <?php
 
 include_once "FieldCommentAttachments.php";
+include_once "FieldCheckNotifications.php";
  
 class CommentForm extends PMForm
 {
  	var $control_uid;
  	var $anchor_it;
- 	
- 	function setControlUID( $uid )
+ 	private $prevCommentIt = null;
+
+ 	function __construct($object)
+    {
+        parent::__construct($object);
+        $this->prevCommentIt = $object->getExact($_REQUEST['prevcomment']);
+    }
+
+    function setControlUID( $uid )
  	{
  		$this->control_uid = $uid;
  	}
@@ -24,8 +32,7 @@ class CommentForm extends PMForm
  	
  	function setAnchorIt( $object_it )
  	{
- 		$this->control_uid = md5($object_it->object->getClassName().$object_it->getId());
- 		
+ 		$this->control_uid = md5($object_it->object->getClassName().$object_it->getId().$_REQUEST['formonly']);
  		$this->anchor_it = $object_it;
  	}
  	
@@ -49,14 +56,14 @@ class CommentForm extends PMForm
  		$anchor_it = $this->getAnchorIt();
  		
  		$parms = '&ObjectId='.$anchor_it->getId().
- 			'&ObjectClass='.get_class($anchor_it->object).'&PrevComment='.SanitizeUrl::parseUrl($_REQUEST['prevcomment']);
+ 			'&ObjectClass='.get_class($anchor_it->object).'&PrevComment='.$this->prevCommentIt->getId();
  		
  		return 'managecomment'.$parms;
  	}
 
 	function getAttributes()
 	{
-		return array('Caption', 'Attachments'); 	
+		return array('Caption', 'Attachments', 'Notification');
 	}
 	
 	function getName( $attribute )
@@ -80,7 +87,8 @@ class CommentForm extends PMForm
 			case 'Caption':
 			case 'Attachments':
 				return true;
-
+            case 'Notification':
+                return $this->prevCommentIt->get('IsPrivate') != 'Y';
 			default:
 				return false; 	
 		}
@@ -112,16 +120,28 @@ class CommentForm extends PMForm
 		{
 			case 'Caption':
 				return 'wysiwyg'; 	
-
 			case 'Attachments':
+            case 'Notification':
 				return 'files'; 	
-				
 			default:
 				return parent::getAttributeType( $attribute );
 		}
 	}
-	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+
+	function getAttributeValue($attribute)
+    {
+        switch( $attribute ) {
+            case 'Notification':
+                if ( $this->prevCommentIt->get('IsPrivate') != 'Y' ) {
+                    return parent::getAttributeValue($attribute);
+                }
+                return 'N';
+            default:
+                return parent::getAttributeValue($attribute);
+        }
+    }
+
+    function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
  		$object_it = $this->getObjectIt();
  		
@@ -151,32 +171,47 @@ class CommentForm extends PMForm
 			
 			case 'Attachments':
 				$field = new FieldCommentAttachments( is_object($object_it) ? $object_it : $this->object );
-
 				$field->setTabIndex($tab_index);
 				$field->setName($attribute);
 				$field->setReadonly(false);
 				$field->setAddButtonText(text(2081));
-
-				echo '<div class="uneditable-input" style="width:35%;height:auto;overflow:inherit;">';
-					$field->draw($this->getView());
-				echo '</div>';
-
+    			$field->draw($this->getView());
 				break;
 
-			default:
-				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+            case 'Notification':
+                $field = new FieldCheckNotifications();
+                $field->setAnchor($this->getAnchorIt());
+                $field->setTabIndex($tab_index);
+                $field->setName($attribute);
+                $field->draw($this->getView());
+                break;
+
+            default:
+				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
-	
-	function getTemplate()
+
+	function getDescription($attribute)
+    {
+        $description = parent::getDescription($attribute);
+        switch( $attribute ) {
+            default:
+                if ( $description == '' && $this->getObject()->getAttributeType($attribute) == 'wysiwyg' ) {
+                    $description = str_replace('%1', getFactory()->getObject('Module')->getExact('dicts-texttemplate')->getUrl(), text(606));
+                }
+                return $description;
+        }
+    }
+
+    function getTemplate()
 	{
 		return "pm/CommentsForm.php";
 	}
 
-	function getRenderParms()
+	function getRenderParms( $view )
 	{
 		return array_merge(
-			parent::getRenderParms(),
+			parent::getRenderParms($view),
 			array (
 				'fields_separator' => ''
 			)

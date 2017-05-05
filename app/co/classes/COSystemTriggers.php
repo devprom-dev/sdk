@@ -11,19 +11,18 @@ class COSystemTriggers extends SystemTriggersBase
 			case 'cms_User':
 				$generator = new UserPicSpritesGenerator();
 				$generator->storeSprites();
-                $this->invalidate();
-				break;
+                if ( array_key_exists('Language', $content) ) {
+                    getFactory()->getCacheService()->invalidate();
+                }
+                getFactory()->getCacheService()->truncate('sessions');
+                break;
 
 			case 'co_ProjectGroup':
 			case 'co_ProjectGroupLink':
-                $this->invalidate();
+                foreach( array('projects', 'sessions') as $path ) {
+                    getFactory()->getCacheService()->truncate($path);
+                }
 				break;
 		}
 	}
-
-	protected function invalidate()
-    {
-        \SessionBuilder::Instance()->invalidate();
-        getSession()->drop();
-    }
 }

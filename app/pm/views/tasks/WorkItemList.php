@@ -66,7 +66,7 @@ class WorkItemList extends PMPageList
     function getGroupFields()
     {
         return array_values(array_intersect(
-            array('Release', 'Priority', 'Assignee', 'Project', 'State', 'TaskType', 'PlannedRelease', 'DueDays', 'DueWeeks'),
+            array('Release', 'Priority', 'Assignee', 'Project', 'State', 'TaskType', 'PlannedRelease', 'DueWeeks'),
             parent::getGroupFields()
         ));
     }
@@ -87,15 +87,6 @@ class WorkItemList extends PMPageList
 
 	    switch( $attr )
 	    {
-			case 'TaskType':
-                if ( $object_it->get('TypeName') != '' ) {
-                    echo $object_it->get('TypeName');
-                }
-                else {
-                    echo $it->object->getDisplayName();
-                }
-				break;
-	    	
 			case 'Spent':
                 if ( $object_it->get('ObjectClass') == 'Request' ) {
                     $field = new FieldSpentTimeRequest( $it );
@@ -125,7 +116,18 @@ class WorkItemList extends PMPageList
 
 		switch($attr)
 		{
-			case 'IssueTraces':
+            case 'Caption':
+                if ( $object_it->get('TypeName') != '' ) {
+                    $typeName = $object_it->get('TypeName');
+                }
+                else {
+                    $typeName = $it->object->getDisplayName();
+                }
+                if ( $typeName != '' ) echo $typeName.': ';
+                parent::drawCell($object_it, $attr);
+                break;
+
+            case 'IssueTraces':
 				$objects = preg_split('/,/', $object_it->get($attr));
 				$uids = array();
 				
@@ -141,13 +143,24 @@ class WorkItemList extends PMPageList
 					$ref_it->moveToId($id);
 					if ( $ref_it->getId() == '' ) continue;
 
-					$uids[] = $uid->getUidIcon($ref_it);
+					$uids[] = $uid->getUidIconGlobal($ref_it, false);
 				}
 				echo join(' ',$uids);
 				break;
 
             case 'RecentComment':
                 parent::drawCell( $it, $attr );
+                break;
+
+            case 'DueDate':
+                $deadline_alert = $object_it->get('DueWeeks') < 4 && $object_it->get('DueDate') != '';
+                if ( $deadline_alert ) {
+                    echo '<span class="date-label label '.($object_it->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'">';
+                    parent::drawCell($object_it, $attr);
+                    echo '</span>';
+                } else {
+                    parent::drawCell($object_it, $attr);
+                }
                 break;
 
 			default:
@@ -161,17 +174,6 @@ class WorkItemList extends PMPageList
 
 		switch ( $group_field )
 		{
-			case 'Assignee':
-				$workload = $this->getTable()->getAssigneeUserWorkloadData();
-				if ( count($workload) > 0 )
-				{
-						echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
-								'user' => $it->getRef('Assignee')->getDisplayName(),
-								'data' => $workload[$it->get($group_field)]
-						));
-				}				
-				break;
-				
 			default:
 				parent::drawGroup($group_field, $object_it);
 		}

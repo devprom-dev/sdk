@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="/cache/?v={{ version }}&asset=1&type=css"/>
+    <script src="/cache/?v={{ version }}&asset=1&l={{ language }}" type="text/javascript" charset="UTF-8"></script>
+    <script src="/scripts/vis/handlebars-v2.0.0.js?v={{ version }}" type="text/javascript" charset="UTF-8"></script>
+    <script id="context-template" type="text/x-handlebars-template">
+        {% verbatim %}
+        {{#each contexts}}
+            <div class="span4">
+                <h4>{{title}}</h4>
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                    {{#each keys}}
+                        <tr>
+                            <td>{{title}}</td>
+                            <td>{{{drawKeys path}}}</td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        {{/each}}
+        {% endverbatim %}
+    </script>
+    <script>
+        $(document).ready(function() {
+            Handlebars.registerHelper('drawKeys', function(title) {
+                var texts = [];
+                var ascii = /^[ -~]+$/;
+                var items = Array.isArray(title) ? title : [title];
+                $.each(items, function(index, value) {
+                    if ( !ascii.test( value ) ) return false;
+                    if ( value.indexOf('option') >= 0 ) return false;
+                    if ( value.indexOf('command') >= 0 ) return false;
+                    value = value.replace(/enter/, '&crarr;');
+                    value = value.replace(/up/, '&#8593;');
+                    value = value.replace(/down/, '&#8595;');
+                    value = value.replace(/right/, '&#8594;');
+                    value = value.replace(/left/, '&#8592;');
+                    var t = $.unique($.map(value.split(/[\s+]/), function(val, i) {
+                        return val == '' ? '+' : val;
+                    }));
+                    texts.push('<span style="white-space: nowrap;"><span class="badge badge-info">'+t.join('</span> <span class="badge badge-info">')+"</span></span>");
+                });
+                return texts.join(' ' + text('or') + ' ');
+            });
+            var template = Handlebars.compile($('#context-template').html());
+            $('#shortcuts-div').html(template({
+                contexts : shortcutContexts
+            }));
+        })
+    </script>
+</head>
+<body style="background: none;">
+    <div class="container-fluid source-text">
+        <div id="shortcuts-div" class="row-fluid" style="min-height: 650px;">
+            &nbsp;
+        </div>
+    </div>
+</body>
+</html>

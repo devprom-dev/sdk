@@ -11,11 +11,29 @@ class COSession extends SessionBase
  	    return 'co';
  	}
 
- 	function getApplicationUrl() {
+ 	function getCacheKey() {
+        return 'apps/'.$this->getUserIt()->getId();
+    }
+
+    function getApplicationUrl() {
  	    return '/co/';
  	}
- 	
- 	function createBuilders()
+
+ 	function buildFactories()
+    {
+        global $model_factory;
+
+        $model_factory = new \ModelFactoryExtended(
+            \PluginsFactory::Instance(),
+            getFactory()->getCacheService(),
+            $this->getCacheKey(),
+            new \CoAccessPolicy(getFactory()->getCacheService(), $this->getCacheKey())
+        );
+
+        parent::buildFactories();
+    }
+
+    function createBuilders()
  	{
  	    return array_merge(
  	    		array (

@@ -13,10 +13,14 @@ class CustomTag extends Tag
  	function __construct() 
  	{
  		$this->object = $this->getObject();
- 		
  		parent::Metaobject('pm_CustomTag');
- 		
  		$this->addPersister( new CustomTagDetailsPersister() );
+        $this->addPersister( new TagParentPersister() );
+        $this->setSortDefault(
+            array(
+                new TagCaptionSortClause()
+            )
+        );
  	}
 
 	function createIterator() 

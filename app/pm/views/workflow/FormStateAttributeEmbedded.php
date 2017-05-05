@@ -1,6 +1,6 @@
 <?php
 
-include_once "FieldStateAttributeDictionary.php";
+include_once "FieldAttributeDictionary.php";
 
 class FormStateAttributeEmbedded extends PMFormEmbedded
 {
@@ -12,6 +12,7 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
  			case 'IsVisible':
  			case 'IsRequired':
             case 'IsReadonly':
+            case 'IsMainTab':
  				return true;
 
  			default:
@@ -36,7 +37,7 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
 		switch( $attr_name )
 		{
 			case 'ReferenceName':
-				return new FieldStateAttributeDictionary( 
+				return new FieldAttributeDictionary(
 						getFactory()->getObject( 
 								$this->getObject()->getAttributeObject('State')->getObjectClass() 
 						)

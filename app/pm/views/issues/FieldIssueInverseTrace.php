@@ -22,6 +22,10 @@ class FieldIssueInverseTrace extends FieldIssueTrace
 		$form->showDeliveryDate( $this->show_delivery_date );
 		return $form;
 	}
-	
+
+    function getValidator() {
+        return new ModelValidatorEmbeddedForm($this->getName(), 'ObjectId');
+    }
+
 	private $show_delivery_date = false;
 }

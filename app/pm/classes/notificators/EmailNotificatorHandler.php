@@ -63,7 +63,7 @@ class EmailNotificatorHandler
 			
 	        $class_name = get_class($policy);
 	        
-	        $policy = new $class_name(getFactory()->getCacheService());
+	        $policy = new $class_name(getFactory()->getCacheService(), getSession());
 	        
 	        $policy->setRoles($roles);
 		}

@@ -19,7 +19,6 @@ class FieldIssueTraces extends Field
 		foreach( $objects as $object_info )
 		{
 			list($class, $id) = preg_split('/:/',$object_info);
-			if ( in_array($class, array('','TestCaseExecution')) ) continue;
 			$ref_it = getFactory()->getObject($class)->getExact($id);
 			$uids[$class.$id] = $uid->getUidWithCaption($ref_it);
 		}

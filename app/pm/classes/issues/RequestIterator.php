@@ -10,13 +10,24 @@ class RequestIterator extends StatableIterator
 	 	if ( $this->get('TypeName') != '' ) {
             $result = $this->get('TypeName').': '.$result;
 	 	}
-	 	else if ( $this->getId() != '' ) {
-            $result = $this->object->getDisplayName().': '.$result;
-	 	}
 	 	return $result;
 	}
 
- 	function IsNew() 
+	function getDisplayNameExt( $prefix = '' )
+    {
+        if ( $this->get('Deadlines') != '' && $this->get('DueWeeks') < 4 ) {
+            $prefix .= '<span class="label '.($this->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'" title="'.$this->object->getAttributeUserName('DeliveryDate').'">';
+            $prefix .= $this->getDateFormatShort('DeliveryDate');
+            $prefix .= '</span> ';
+        }
+        $title = parent::getDisplayNameExt($prefix);
+        if ( $this->get('ClosedInVersion') != '' ) {
+            $title = ' <span class="badge badge-uid badge-info">'.$this->get('ClosedInVersion').'</span> ' . $title;
+        }
+        return $title;
+    }
+
+    function IsNew()
  	{
  		return $this->get_native('State') == 'submitted';
  	}

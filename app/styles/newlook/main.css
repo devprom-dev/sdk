@@ -340,6 +340,7 @@ a.dashed:hover {
 .accordion-body {
 	padding-left:8px;
 	padding-right:8px;
+	outline: none;
 }
 
 .actions {
@@ -682,20 +683,35 @@ ul.changes-section li {
 	margin-right: 0;
 }
 .comment-line .comment-text {
-	padding: 4px 12px;
+	padding: 4px 4px 12px 4px;
 }
 .comment-line .wysiwyg {
 	padding: 0;
 }
-.comment-line-holder.active {
-	background: rgb(255, 250, 177);
+.comment-line-holder {
+	margin-bottom: 3px;
+}
+.comment-line-holder.active td:nth-child(2) {
+	background: #faf300;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	-ms-border-radius: 5px;
 	-o-border-radius: 5px;
 	border-radius: 5px;
-	padding-left: 6px;
-	margin-left: -6px;
+}
+.comment-line .transparent-btn {
+	padding: 0px 4px 12px 4px;
+}
+.comment-line .user-avatar {
+	margin: 0;
+}
+.comment-thread-container.private {
+	padding: 8px 35px 8px 14px;
+	margin-bottom: 20px;
+	background-color: #f4f4f4;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
 }
 
 a[onclick]:not([href])
@@ -761,21 +777,67 @@ input.spent-time
 	display: table-cell;
 	vertical-align: top;
 }
-
 .wiki-page-tree.left {
-	max-width: 260px;
-	min-width: 260px;
 	padding-right: 8px;
 }
+.wiki-page-tree.right {
+	padding-left: 8px;
+}
+
+@media(min-width: 1024px) {
+	.wiki-page-tree.left {
+		max-width: 260px;
+		min-width: 260px;
+	}
+	.wiki-page-tree.right {
+		max-width: 260px;
+		min-width: 260px;
+	}
+}
+@media(min-width: 1279px) {
+	.wiki-page-tree.left {
+		max-width: 330px;
+		min-width: 330px;
+	}
+	.wiki-page-tree.right {
+		max-width: 330px;
+		min-width: 330px;
+	}
+}
+@media(min-width: 1359px) {
+	.wiki-page-tree.left {
+		max-width: 350px;
+		min-width: 350px;
+	}
+	.wiki-page-tree.right {
+		max-width: 350px;
+		min-width: 350px;
+	}
+}
+@media(min-width: 1440px) {
+	.wiki-page-tree.left {
+		max-width: 380px;
+		min-width: 380px;
+	}
+	.wiki-page-tree.right {
+		max-width: 400px;
+		min-width: 400px;
+	}
+}
+@media(min-width: 1600px) {
+	.wiki-page-tree.left {
+		max-width: 410px;
+		min-width: 410px;
+	}
+	.wiki-page-tree.right {
+		max-width: 470px;
+		min-width: 470px;
+	}
+}
+
 .wiki-page-tree.left .tab-content,
 .wiki-page-tree.left .treeview-container.sticked {
 	border-right: 1px solid #ddd;
-}
-
-.wiki-page-tree.right {
-	max-width: 320px;
-	min-width: 320px;
-	padding-left: 8px;
 }
 
 .wiki-page-tree a.docs-url {
@@ -792,7 +854,7 @@ input.spent-time
 .wiki-page-tree:hover a.tree-placement {
 	display: block;
 }
-.wiki-page-tree .wikitreesection {
+.wiki-page-tree .wikitreesectionnew {
 	padding-top: 10px;
 }
 .wiki-page-tree .clear-fix {
@@ -817,6 +879,9 @@ input.spent-time
 .title-cell .sec-num {
 	padding-right: 16px;
 	margin-top: 4px;
+}
+.title-cell .sec-num.readonly {
+	margin-top: 0;
 }
 .title-cell .wysiwyg-input:not([contenteditable]) {
 	margin-top: 4px;
@@ -910,9 +975,8 @@ div.readonly
 
 img.trace-state
 {
-	padding-right: 4px;
-	margin-top: -2px;
-	margin-bottom: 2px;
+	padding-right: 2px;
+	margin-bottom: 3px;
 }
 
 a.image_attach img,
@@ -962,19 +1026,13 @@ a.file_attach img
 	width: 100%;
 }
 
-.list-left-cell
-{
-    display: table-cell;	
-    vertical-align: top;
-    width: 10px;
-    height: 64px;
-}
-
 .board-table td.board-group
 {
 	height: 30px;
 	vertical-align: middle;
 	padding-left:10px;
+	white-space: nowrap;
+	overflow-x: hidden;
 }
 
 #modal-form .control-set,
@@ -1072,7 +1130,28 @@ td.board-group:hover .btn-group:not(.row-group) {
     visibility:visible;
 }
 
+.more-actions {
+	margin-bottom: -2px;
+}
+
+th .more-actions .btn-cell {
+	display: table-cell;
+	vertical-align: top;
+}
+tr.info td .more-actions,
+th .more-actions .dropdown-toggle {
+	visibility:hidden;
+}
+
+tr.info td:hover .more-actions,
+th:hover .more-actions .dropdown-toggle {
+	visibility:visible;
+}
+
 .row-group .btn {
+	padding: 0;
+}
+.row-group-btn .btn {
 	padding: 0;
 }
 
@@ -1292,6 +1371,7 @@ div#tablePlaceholder .table-details {
 }
 .page-details .tt-field-data {
 	max-width: 300px;
+	max-height: inherit;
 }
 
 
@@ -1442,8 +1522,12 @@ img[alt] {
 a.uid {
 	margin-right: 6px;
 }
-span.label-uid {
+td a.uid strike {
+	opacity: 0.4;
+}
+span.label.label-uid {
 	margin-right: 6px;
+	top: 0;
 }
 span.label-uid>a.uid {
 	margin-right: 0;
@@ -1462,9 +1546,7 @@ tr#no-elements-row td {
 
 a.hint-open-link {
 	color: #878787;
-	padding-left: 4px;
-	padding-top: 0px;
-	padding-bottom: 0px;
+	padding: 0 0 0 4px;
 }
 div.table-master div.hint-container {
 	padding-left: 5px;
@@ -1475,6 +1557,9 @@ form.form-horizontal div.hint-container {
 div.accordion-body div.hint-container {
 	float:left;
 }
+.hint-container {
+	float:right;
+}
 div.hint-container i {
 	opacity: 0.5;
 }
@@ -1483,17 +1568,13 @@ div.details-visible div.hint-holder {
 	padding-right: 15px;
 }
 
-div.alert-error.form_warning {
-	margin: 0px 19px 0px 15px;
-}
-
 .find-in-tree button.btn-success {
 	margin-bottom: -6px;
 }
 
 .profile-avatar {
 	padding: 15px 15px;
-	margin-right: 8px;
+	margin-right: 12px;
 	width: 0px;
 	height: 0px;
 	-webkit-border-radius: 3px;
@@ -1520,4 +1601,161 @@ img.wiki_page_image
 {
 	border:none;
 	cursor: pointer;
+}
+
+span[comment-id] {
+	cursor: pointer;
+	margin-bottom: 5px;
+	display: inline-block;
+	padding: 2px 4px;
+	font-size: 11.844px;
+	line-height: 14px;
+	white-space: nowrap;
+	vertical-align: baseline;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background-color: #faf300;
+}
+
+table.table td[name=row-num] {
+	padding: 0;
+	line-height: 22px;
+}
+
+div.lst-num-grp {
+	display: table;
+}
+div.lst-num-grp .lst-grp {
+	display: table-cell;
+}
+div.lst-num-grp .lst-grp .label {
+	width: 8px;
+	padding-bottom: 1px;
+}
+div.lst-num-grp .lst-num {
+	display: table-cell;
+	padding: 8px;
+}
+span.label-importance {
+	cursor: pointer;
+}
+
+table[uid=activitiesreport] th[uid=caption] {
+	min-width: 290px;
+}
+table[uid=activitiesreport] th[uid*=day] {
+	min-width: 20px;
+	white-space: nowrap;
+}
+
+tr.total {
+	background-color: #e6e6e6;
+}
+tr.total td {
+	padding: 2px 8px;
+	white-space: nowrap;
+}
+
+.state-rich {
+}
+.state-rich td:nth-child(2) {
+	min-width: 110px;
+}
+.state-rich .progress {
+	height: 19px;
+}
+
+.recent-comments .user-mini {
+	float:left;
+	margin-bottom: 2px;
+}
+.recent-comments .wysiwyg p:first-child {
+	float:left;
+}
+.recent-comments .wysiwyg p:nth-child(2) {
+	clear:both;
+}
+
+span.project-search input {
+	width: 270px;
+	padding: 2px 4px;
+}
+
+.wysiwyg table th {
+	border-top: inherit;
+}
+
+.p-link {
+	line-height: 23px;
+}
+.p-link.p-sub {
+	margin-left: 41px;
+}
+.p-link.p-node i {
+	opacity: 0.6;
+	margin-right: 3px;
+}
+
+h4.page-form-view {
+	margin-top: 0;
+}
+.list-slider-1 .ref-name {
+	display: none;
+}
+.list-slider-2 .ref-name {
+	display: inline;
+}
+.details-more {
+	margin-left: 8px;
+}
+
+.form-col-0 {
+	width: 100%;
+}
+form[module='createprojectform'] .form-col-0 {
+	width: 50%;
+	padding-right: 35px;
+	border-right: 1px solid #e5e5e5;
+}
+form[module='createprojectform'] .form-col-1 {
+	width: 35%;
+	padding-left: 15px;
+}
+form[module='createprojectform'] textarea[name='Participants'] {
+	height: 69px;
+}
+form[module='createprojectform'] table.users-table .user-mini {
+	margin-bottom: -4px;
+}
+form[module='createprojectform'] table.users-table input {
+	margin-top: 3px;
+}
+form[module='createprojectform'] table.users-table label {
+	margin-bottom: 0;
+}
+div.users-container {
+	margin-top: 8px;
+	max-height: 320px;
+	overflow: hidden;
+	overflow-y: scroll;
+}
+input.users-search {
+	width: 100%;
+	margin-top: 6px;
+}
+
+a.text-link {
+	color: black;
+}
+
+
+.breadcrumb li.next-item a {
+	padding-left: 2px;
+}
+.breadcrumb li.clip {
+	margin-right: 42px;
+}
+.uid-state {
+	padding-top: 2px;
 }

@@ -366,7 +366,7 @@ class WorkspaceService
 				
 				$item_it->moveNext();
 			}
-			
+
 			$data['menus'][] = array (
 					'uid' => $menu_it->get('UID'),
 					'name' => translate($menu_it->get('Caption')),

@@ -1,10 +1,9 @@
 <?
-$detailsId = 'toggle-detailspanel-'.$widget_id;
 $detailsVisible = false;
 if ( is_array($sections) ) {
 	foreach( $sections as $section ) {
 		if ( $section instanceof DetailsInfoSection ) {
-			$detailsVisible = $_COOKIE[$detailsId] != '' ? $_COOKIE[$detailsId] == 'true' : $section->isActive();
+			$detailsVisible = $section->isActive();
 		}
 	}
 }
@@ -85,75 +84,79 @@ if ( is_array($sections) ) {
 			</a>
 		</div>
 			<? } ?>
-		<div class="filter-reset-cnt btn-group pull-left" style="min-width: 32px;">
+		<div class="filter-reset-cnt btn-group pull-left info-action" style="min-width: 32px;">
 			<a class="filter-reset-btn btn btn-small" onclick="filterLocation.resetFilter();" title="<?=text(2088)?>">
 				<i class="icon-trash"></i>
 			</a>
 		</div>
+		<div class="btn-group pull-left" style="margin-right:24px;">&nbsp;</div>
 	<?php
 	}
 }
+if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
+	<div class="bulk-filter-actions pull-left">
+		<?php foreach( $bulk_actions['workflow'] as $stateRefName => $workflow_actions ) { ?>
+			<div class="btn-group pull-left" object-state="<?=$stateRefName?>">
+				<a class="btn dropdown-toggle btn-small btn-warning" href="#" data-toggle="dropdown">
+					<i class="icon-hand-right icon-white"></i>
+					<?=translate("Состояние")?>
+					<span class="caret"></span>
+				</a>
+				<? echo $view->render('core/PopupMenu.php', array ('items' => $workflow_actions)); ?>
+			</div>
+		<?php } ?>
+		<?php if( count($bulk_actions['modify']) > 0 ) { ?>
+			<div id="bulk-modify-actions" class="btn-group pull-left">
+				<a class="btn dropdown-toggle btn-small" href="#" data-toggle="dropdown" title="<?=translate('Изменить')?>">
+					<i class="icon-pencil"></i>
+					<span class="caret"></span>
+				</a>
+				<? echo $view->render('core/PopupMenu.php', array ('items' => $bulk_actions['modify'])); ?>
+			</div>
+		<?php } ?>
+		<?php if( count($bulk_actions['action']) > 0 ) { ?>
+			<div id="bulk-actions" class="btn-group pull-left">
+				<a class="btn dropdown-toggle btn-small" href="#" data-toggle="dropdown" >
+					<?=translate('Ещё...')?>
+					<span class="caret"></span>
+				</a>
+				<? echo $view->render('core/PopupMenu.php', array ('items' => $bulk_actions['action'])); ?>
+			</div>
+		<?php } ?>
+		<?php foreach( $bulk_actions['delete'] as $item ) { ?>
+			<div class="btn-group pull-left">
+				<a id="<?=$item['uid']?>" class="btn btn-small btn-danger" href="<?=$item['url']?>">
+					<?=$item['name']?>
+				</a>
+			</div>
+		<?php } ?>
+	</div>
+	<?php
+}
 ?>
-
 </div> <!-- end filter -->
 
 <div class="hidden-print filter-actions">
-
-<?php if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
-
-<div class="bulk-filter-actions pull-left" style="<?=(count($additional_actions) > 0 ? 'padding-right:4px;' : '')?>">&nbsp;
-<?php foreach( $bulk_actions['workflow'] as $stateRefName => $workflow_actions ) { ?>
-	<div class="btn-group pull-left" object-state="<?=$stateRefName?>">
-		<a class="btn dropdown-toggle btn-small btn-warning" href="#" data-toggle="dropdown">
-			<i class="icon-hand-right icon-white"></i>
-			<?=translate("Состояние")?>
-			<span class="caret"></span>
-		</a>
-		<? echo $view->render('core/PopupMenu.php', array ('items' => $workflow_actions)); ?>
-	</div>
-<?php } ?>
-<?php if( count($bulk_actions['modify']) > 0 ) { ?>
-	<div id="bulk-modify-actions" class="btn-group pull-left">
-		<a class="btn dropdown-toggle btn-small" href="#" data-toggle="dropdown" title="<?=translate('Изменить')?>">
-	   		<i class="icon-pencil"></i>
-	   		<span class="caret"></span>
-	   	</a>
-	   	<? echo $view->render('core/PopupMenu.php', array ('items' => $bulk_actions['modify'])); ?>
-	</div>
-<?php } ?>
-	<?php if( count($bulk_actions['action']) > 0 ) { ?>
-		<div id="bulk-actions" class="btn-group pull-left">
-			<a class="btn dropdown-toggle btn-small" href="#" data-toggle="dropdown" >
-				<?=translate('Ещё...')?>
-				<span class="caret"></span>
-			</a>
-			<? echo $view->render('core/PopupMenu.php', array ('items' => $bulk_actions['action'])); ?>
-		</div>
-	<?php } ?>
-<?php foreach( $bulk_actions['delete'] as $item ) { ?>
-	<div class="btn-group pull-left">
-		<a id="<?=$item['uid']?>" class="btn btn-small btn-danger" href="<?=$item['url']?>">
-	   		<?=$item['name']?>
-	   	</a>
-	</div>
-<?php } ?>
-</div>
-
-<?php } // !PageChart ?>
+	<? if ( $list instanceof PageBoard ) { ?>
+	<span id="board-slider"></span>
+	<? } else if ( $list_slider ) { ?>
+        <span id="list-slider"></span>
+    <? } ?>
 
 <?php if ( !$tableonly ) { ?>
 	<?php foreach( $additional_actions as $action ) { ?>
-		<?php if ( count(array_filter($action['items'], function($item){return $item['name'] != '';})) < 4 ) { ?>
+        <?php $buttonsNumber = count(array_filter($action['items'], function($item){return $item['name'] != '';})); ?>
+		<?php if ( $buttonsNumber < 5 ) { ?>
 			<?php foreach( $action['items'] as $key => $item ) { ?>
 				<?php if ( $item['name'] == '' ) continue; ?>
-				<div class="btn-group pull-left">
+				<div class="btn-group pull-left plus-action">
 					<a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn append-btn btn-small <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
-						<i class="icon-plus icon-white"></i> <?=$item['name']?>
+						<i class="icon-plus icon-white"></i> <?=($buttonsNumber > 2 ? TextUtils::getWords($item['name']) : $item['name'])?>
 					</a>
 				</div>
 			<?php } ?>
 		<?php } else { ?>
-			<div class="btn-group pull-left">
+			<div class="btn-group pull-left plus-action">
 				<a class="btn dropdown-toggle btn-small <?=($action['class'] == '' ? 'btn-success' : $action['class'])?>" href="#" data-toggle="dropdown">
 					<?=$action['name']?>
 					<span class="caret"></span>
@@ -198,17 +201,27 @@ if ( is_array($sections) ) {
 	<button type="button" class="close" data-dismiss="alert">
 		<span style="font-size:12px;vertical-align:top"><?=translate('закрыть')?></span> &times;
 	</button>
-	<?=$save_settings_alert?>
+	<?php
+        $items = $filter_actions['view-settings']['items'];
+        $persistItem = array_shift($items);
+
+        $html = $view->render('core/RowGroupMenu.php', array (
+            'title' => '<a href="'.$persistItem['url'].'">'.$persistItem['name'].'</a> ',
+            'items' => $items,
+            'id' => 'settings-persist-alert'
+        ));
+        echo str_replace('%1', $html, text(1318));
+    ?>
 </div>
 
 <?php } ?>
 
-<div id="tablePlaceholder" class="<?=$placeholderClass?>">
+<div id="tablePlaceholder" class="<?=$placeholderClass?> <?=$sliderClass?>">
 	<?php if ( is_array($changed_ids) ) foreach ( $changed_ids as $id ) { ?>
 		<div class="object-changed" object-id="<?=$id?>"></div>
 	<?php } ?>
 
-	<div class="table-master <?=($detailsVisible ? 'details-visible' : '')?>">
+	<div class="table-master">
     <?php
 		$view->addGlobal('widget_id', $widget_id);
      	is_object($list)
@@ -216,21 +229,21 @@ if ( is_array($sections) ) {
     					'object_id' => $object_id,
     					'object_class' => $object_class,
 						'title' => $title,
-						'widget_id' => $widget_id
+						'widget_id' => $widget_id,
+						'tableonly' => $tableonly
     				)) 
     		: $table->draw( $view );
 
 		$is_need_navigator = $table->IsNeedNavigator() && is_object($list) && $list->moreThanOnePage();
 		if ( is_object($list) && $is_need_navigator ) $list->drawNavigator(false); else $table->drawFooter();
 
-		echo '<div class="clearfix"></div>';
 		echo '<div class="hint-holder">';
 			echo $view->render('core/Hint.php', array('title' => $hint, 'name' => $page_uid, 'open' => $hint_open));
 		echo '</div>';
 	?>
 	</div>
 	<? if ( !is_a($list, 'PageChart') && !$tableonly && count($details) > 0 ) { ?>
-		<div class="table-details" style="height:100%;display:<?=($detailsVisible ? 'table-cell' : 'none')?>">
+		<div class="table-details" default="<?=($detailsVisible ? 'table-cell' : 'none')?>" style="height:100%;display:none;">
 			<?php
 				$list->getIteratorRef()->moveFirst();
 				echo $view->render('core/PageTableDetails.php', array (

@@ -40,8 +40,6 @@ class FunctionForm extends PMPageForm
 		    while( !$type_it->end() )
 		    {
 		        $method = new ObjectCreateNewWebMethod($this->getObject());
-		        $method->setRedirectUrl('donothing');
-		        
 		        $this->create_subfunc_actions[$type_it->get('OrderNum')] = array(
 			            'name' => $type_it->getDisplayName(),
 			        	'method' => $method,
@@ -51,10 +49,16 @@ class FunctionForm extends PMPageForm
 		        
 		        $type_it->moveNext();
 		    }
+		    if ( $type_it->count() < 1 ) {
+                $method = new ObjectCreateNewWebMethod($this->getObject());
+                $this->create_subfunc_actions[] = array(
+                    'name' => text(2272),
+                    'method' => $method
+                );
+            }
  		}
 
  		$request = getFactory()->getObject('Request');
- 		
  	 	if ( getFactory()->getAccessPolicy()->can_create($request) )
  		{
  			$type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
@@ -101,7 +105,7 @@ class FunctionForm extends PMPageForm
  		$new_actions = array();
  		
  		$able_create_issues = $object_it->get('Type') == ''
- 				|| $object_it->getRef('Type')->get('HasIssues') == 'Y';
+ 				|| $this->getObject()->getAttributeType('Type') != '' && $object_it->getRef('Type')->get('HasIssues') == 'Y';
  		
  		if ( $able_create_issues )
  		{
@@ -114,7 +118,10 @@ class FunctionForm extends PMPageForm
 		            'url' => $method->getJSCall( array(
 				            		'Function' => $object_it->getId(),
 				            		'Type' => $data['type']
-		            		))
+		            		)),
+                    'view' => 'button',
+                    'button-class' => 'btn-success new-at-form',
+                    'icon' => 'icon-plus'
 		        );
 	 		}
  		}
@@ -225,6 +232,17 @@ class FunctionForm extends PMPageForm
 			case 'ParentFeature':
 				return new FieldHierarchySelector($this->getObject());
 
+            case 'Caption':
+                if ( !$this->getEditMode() ) {
+                    $field = new FieldWYSIWYG();
+                    $field->setObjectIt( $this->getObjectIt() );
+                    $field->getEditor()->setMode( WIKI_MODE_INPLACE_INPUT );
+                }
+                else {
+                    $field = parent::createFieldObject($name);
+                }
+                return $field;
+
 			default:
 				return parent::createFieldObject( $name );
 		}
@@ -250,4 +268,11 @@ class FunctionForm extends PMPageForm
 		
 		return parent::process();
 	}
+
+    function getShortAttributes() {
+        return array_merge(
+            parent::getShortAttributes(),
+            array('Importance', 'Tags')
+        );
+    }
 }

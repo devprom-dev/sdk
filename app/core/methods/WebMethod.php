@@ -5,10 +5,10 @@ class WebMethod
  	var $frames, $title, $module;
  	
  	private $redirect_url = '';
- 	
  	private $freeze_method = null;
- 	
  	private $filter_name = '';
+    private $async = false;
+    private $beforeCallback = 'donothing';
  	
  	function WebMethod() 
  	{
@@ -56,7 +56,15 @@ class WebMethod
 	{
 		$this->title = $title;
 	}
-	
+
+	function setAsync( $value ) {
+        $this->async = $value;
+    }
+
+    function setBeforeCallback( $value ) {
+        $this->beforeCallback = $value;
+    }
+
  	function getPreCaption() {
  		// returns the text is displayed before caption is
  		return '';
@@ -201,12 +209,12 @@ class WebMethod
 		if ( !preg_match('/function\s*\(/', $redirect) ) $redirect = "'".$redirect."'";
 		
 		return "javascript: runMethod('".$this->getModule().'?method='.get_class($this).
-			"', {".join(',', $data)."}, ".$redirect.", '".$this->getWarning()."');";
+			"', {".join(',', $data)."}, ".$redirect.", '".$this->getWarning()."', ".($this->async?'true':'false').", ".$this->beforeCallback.");";
 	}
  	
  	function getLink( $parms_array ) 
  	{
- 		global $script_number, $scripts_array, $skip_scripts;
+ 		global $script_number;
  		$url = $this->getUrl( $parms_array );
  		
  		$script_number += 1;

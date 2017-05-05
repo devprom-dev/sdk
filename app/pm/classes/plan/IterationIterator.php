@@ -1,4 +1,6 @@
 <?php
+include_once "EstimationProxy.php";
+include_once "PlanMetricsLock.php";
 
 class IterationIterator extends OrderedIterator
 {
@@ -44,12 +46,12 @@ class IterationIterator extends OrderedIterator
 			array('Release' => $this->getId() ) ) < 1;
 	}
 	
-	function getCapacity() 
+	function getDuration()
 	{
 	    return $this->get('Capacity');
 	}
 
-	function getCurrentCapacity() 
+	function getSpentDuration()
 	{
 	    return $this->get('ActualDurationInWorkingDays');
 	}
@@ -59,16 +61,14 @@ class IterationIterator extends OrderedIterator
 	    return $this->get('PlannedCapacity');
 	}
 	
-	function getLeftCapacity() 
+	function getLeftDuration()
 	{
 	    return $this->get('LeftCapacityInWorkingDays');
 	}
 
 	function getTotalWorkload( $predicates = array() ) 
 	{
-		global $model_factory;
-		
-		$task = $model_factory->getObject('pm_Task');
+		$task = getFactory()->getObject('pm_Task');
 		$task->setVpdContext($this);
 
 		$task->addFilter( new FilterAttributePredicate('Release', $this->getId()) );
@@ -76,9 +76,7 @@ class IterationIterator extends OrderedIterator
 		
 		foreach( $predicates as $predicate ) $task->addFilter( $predicate );
 		
-		$project_it = $this->getRef('Project');
-		$methodology_it = $project_it->getMethodologyIt();
-		 
+		$methodology_it = $this->getRef('Project')->getMethodologyIt();
 		if ( $methodology_it->TaskEstimationUsed() )
 		{
 			$sum_aggregate = new AggregateBase( 'Release', 'LeftWork', 'SUM' );
@@ -187,7 +185,7 @@ class IterationIterator extends OrderedIterator
 		$request->addFilter( new RequestIterationFilter($this->getId()) );
 				
 		return array_shift(
-			getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
+            $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
 		);
 	}
 
@@ -199,7 +197,7 @@ class IterationIterator extends OrderedIterator
 		$request->addFilter( new StatePredicate('terminal') );
 		
 		return array_shift(
-			getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
+            $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
 		);
 	}
 
@@ -210,7 +208,7 @@ class IterationIterator extends OrderedIterator
 		$request->addFilter( new StatePredicate('notresolved') );
 
 		return array_shift(
-			getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
+			$this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
 		);
 	}
 
@@ -218,82 +216,54 @@ class IterationIterator extends OrderedIterator
 	{
 		$methodology_it = $this->getRef('Project')->getMethodologyIt();
 
-		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getCapacity();
+		$duration = $this->getPlannedCapacity();
 		$capacity = $this->get('PlannedWorkload') > 0 ? $this->get('PlannedWorkload') : $this->getPlannedTotalWorkload();
+        $velocity = $this->get('InitialVelocity');
 
-		$velocity = 0;
-		$part_it = getFactory()->getObject('Participant')->getRegistry()->Query(
-			array (
-				new \ParticipantWorkerPredicate(),
-				new \FilterAttributePredicate('Project', $this->get('Project'))
-			)
-		);
-		while( !$part_it->end() ) {
-			$velocity += $part_it->get('Capacity');
-			$part_it->moveNext();
-		}
-		$velocity = $velocity * $duration;
+        if ( $methodology_it->HasFixedRelease() && $duration > 0 ) {
+            $velocity = $velocity / $duration;
+        }
 
-		if ( $methodology_it->HasFixedRelease() && $duration > 0 ) {
-			$velocity = $velocity / $duration;
-		}
-		else {
-			$velocity = $this->getVelocity();
-		}
 		return array( $duration, $capacity, $velocity );
 	}
 
-	function getEstimationInitialBurndownMetrics()
+	protected function getEstimationInitialBurndownMetrics()
 	{
 		$methodology_it = $this->getRef('Project')->getMethodologyIt();
 
-		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getCapacity();
+		$duration = $this->get('PlannedCapacity') > 0 ? round($this->get('PlannedCapacity'), 0) : $this->getDuration();
 		$capacity = $this->get('PlannedEstimation') > 0 ? $this->get('PlannedEstimation') : $this->getEstimation();
+        $velocity = $this->get('InitialVelocity');
 
 		if ( $methodology_it->HasFixedRelease() && $duration > 0 ) {
-			$velocity = $this->getVelocity() / $duration;
-		}
-		else {
-			$velocity = $this->getVelocity();
+			$velocity = $velocity / $duration;
 		}
 		return array( $duration, $capacity, $velocity );
 	}
 
 	function getRealBurndownMetrics()
 	{
-		list( $in_duration, $in_capacity, $in_velocity ) = $this->getInitialBurndownMetrics();
+        if ( $this->getRef('Project')->getMethodologyIt()->RequestEstimationUsed() ) {
+            return $this->getEstimationRealBurndownMetrics();
+        }
+        else {
+            $duration = $this->getLeftDuration();
+            // get initial velocity
+            list( $in_duration, $in_capacity, $velocity ) = $this->getInitialBurndownMetrics();
+            $capacity = $velocity > 0 ? ceil($duration * $velocity) : 0;
 
-		$duration = $this->getLeftCapacity();
-		$capacity = $in_velocity > 0 ? ceil($duration * $in_velocity) : 0;
-				
-		return array( $duration, $capacity, $in_velocity );
+            return array( $duration, $capacity, $velocity, $this->getTotalWorkload() );
+        }
 	}
 
-	function getEstimationRealBurndownMetrics()
+	protected function getEstimationRealBurndownMetrics()
 	{
-		list( $in_duration, $in_capacity, $in_velocity ) = $this->getEstimationInitialBurndownMetrics();
+		$duration = $this->getLeftDuration();
+        // get initial velocity
+        list( $in_duration, $in_capacity, $velocity ) = $this->getEstimationInitialBurndownMetrics();
+		$capacity = $velocity > 0 ? ceil($duration * $velocity) : 0;
 
-		$duration = $this->getLeftCapacity();
-		$capacity = $in_velocity > 0 ? ceil($duration * $in_velocity) : 0;
-
-		return array( $duration, $capacity, $in_velocity );
-	}
-
-	function getPlannedWorkSpeedByTasks()
-	{
-		$sql = 'SELECT ROUND(SUM(r.Capacity)) Capacity '.
-			   '  FROM pm_Participant p, pm_ParticipantRole r  '.
-			   ' WHERE r.Project = '.$this->get('Project').
-			   '   AND r.Participant = p.pm_ParticipantId '.
-			   "   AND p.IsActive = 'Y' ".
-			   "   AND EXISTS (SELECT 1 FROM pm_Task t, pm_TaskType tp" .
-			   "				WHERE r.ProjectRole = tp.ProjectRole " .
-			   "				  AND tp.pm_TaskTypeId = t.TaskType" .
-			   "			      AND t.Release = ".$this->getId().") ";
-			   
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->get('Capacity');
+		return array( $duration, $capacity, $velocity, $this->getLeftEstimation() );
 	}
 
 	function getLeftWorkParticipant( $userId )
@@ -311,58 +281,6 @@ class IterationIterator extends OrderedIterator
 		return $it->get('leftwork');
 	}
 	
-	function getParticipantInvolvement( $user_id, $stage )
-	{
-		global $model_factory;
-		
-		$task = $model_factory->getObject('pm_Task');
-		
-		$task->setVpdContext($this);
-		
-		$types = array();
-		
-		switch ( $stage )
-		{
-			case 'development':
-				$types[] = 'support';
-				$types[] = 'development';
-				break;
-				
-			case 'testing':
-				$types[] = 'testing';
-				break;
-				
-			default:
-				return 0;
-		}
-		
-		$task->addFilter( new FilterAttributePredicate('TaskType', join(',', $types)) );
-		
-		$sql = 
-			" SELECT SUM(t.Planned) TotalWorkload" .
-			"   FROM pm_Task t" .
-			"  WHERE t.Release = ".$this->getId().$task->getFilterPredicate('t');
-			
-		$it_total = $this->object->createSQLIterator($sql);
-		
-		$sql = 
-			" SELECT SUM(t.Planned) ParticipantWorkload" .
-			"   FROM pm_Task t" .
-			"  WHERE t.Release = ".$this->getId().$task->getFilterPredicate('t').
-			"    AND t.Assignee = ".$user_id;
-
-		$it_part = $this->object->createSQLIterator($sql);
-
-		if ( $it_total->get('TotalWorkload') > 0 )
-		{
-			return round($it_part->get('ParticipantWorkload') / $it_total->get('TotalWorkload') * 100, 0);
-		}
-		else
-		{
-			return 0;
-		}
-	}
-		
 	function getPrevSiblingRelease()
 	{	
 		$sql = 'SELECT * FROM pm_Release t ' .
@@ -409,8 +327,6 @@ class IterationIterator extends OrderedIterator
 
 	function storeMetricsSnapshot()
 	{
-		global $model_factory;
-
 		$sql = " SELECT GREATEST(LEAST(TO_DAYS(NOW()), TO_DAYS(r.FinishDate)), TO_DAYS(r.StartDate)) TodayDays, " .
 			   "        FinishDate " .
 			   "   FROM pm_Release r " .
@@ -497,17 +413,18 @@ class IterationIterator extends OrderedIterator
 	
 	function storeMetrics()
 	{
-		$release_it = $this->getRef('Version');
+        $lock = new PlanMetricsLock();
+        $release_it = $this->getRef('Version');
 
 		$estimation = $this->getCompletedEstimation();
 
 		// calculate velocity		
-		if ( getSession()->getProjectIt()->getMethodologyIt()->HasFixedRelease() ) {
+		if ( $this->getRef('Project')->getMethodologyIt()->HasFixedRelease() ) {
 			$velocity = round($estimation, 1);
 		}
 		else {
-		    $capacity = $this->getCurrentCapacity();
-			$velocity = $capacity > 0 ? round($estimation / $this->getCurrentCapacity(), 1) : 0;
+		    $capacity = $this->getSpentDuration();
+			$velocity = $capacity > 0 ? round($estimation / $this->getSpentDuration(), 1) : 0;
 		}
 
 		if ( $velocity <= 0 ) {
@@ -522,7 +439,7 @@ class IterationIterator extends OrderedIterator
 		);
 		$date_metrics = array (
 			'EstimatedStart' => $this->_getEstimatedStart(false),
-			'EstimatedFinish' => $this->_getEstimatedFinish(false)
+			'EstimatedFinish' => EstimationProxy::getEstimatedFinish($this, false)
 		);
 		 
 		if ( $this->IsCurrent() )
@@ -534,30 +451,22 @@ class IterationIterator extends OrderedIterator
 		
 		$metric = getFactory()->getObject('pm_IterationMetric');
 		$metric->setNotificationEnabled(false);
-		
-		DAL::Instance()->Query("LOCK TABLES pm_IterationMetric WRITE, pm_IterationMetric t WRITE");
 
-		$sql = " DELETE FROM pm_IterationMetric WHERE Iteration = ".$this->getId();
-		
-		DAL::Instance()->Query($sql);			
+        DAL::Instance()->Query("DELETE FROM pm_IterationMetric WHERE Iteration = ".$this->getId());
 
-		foreach ( $metrics as $key => $value )
-		{
-			$metric->add_parms(
-				array( 'Iteration' => $this->getId(),
-					   'Metric' => $key,
-					   'MetricValue' => $value ) );
-		}
-		
-		foreach ( $date_metrics as $key => $value )
-		{
-			$metric->add_parms(
-				array( 'Iteration' => $this->getId(),
-					   'Metric' => $key,
-					   'MetricValueDate' => $value ) );
-		}
-		
-		DAL::Instance()->Query("UNLOCK TABLES");
+        foreach ( $metrics as $key => $value ) {
+            $metric->add_parms(
+                array( 'Iteration' => $this->getId(),
+                       'Metric' => $key,
+                       'MetricValue' => $value ) );
+        }
+
+        foreach ( $date_metrics as $key => $value ) {
+            $metric->add_parms(
+                array( 'Iteration' => $this->getId(),
+                       'Metric' => $key,
+                       'MetricValueDate' => $value ) );
+        }
 
 		$part_it = getFactory()->getObject('User')->getRegistry()->Query(
 			array (
@@ -565,7 +474,7 @@ class IterationIterator extends OrderedIterator
 				new UserParticipatesDetailsPersister()
 			)
 		);
-		$release_capacity = $this->getCurrentCapacity();
+		$release_capacity = $this->getSpentDuration();
 		
 		$metrics = array();
 		while ( !$part_it->end() )
@@ -582,19 +491,11 @@ class IterationIterator extends OrderedIterator
 				$efficiency = 0;
 			}
 			
-			$development_involvement = 
-				$this->getParticipantInvolvement($part_it->getId(), 'development');
-				
-			$testing_involvement = 
-				$this->getParticipantInvolvement($part_it->getId(), 'testing');
-				
 			$metrics[$part_it->getId()] = array (
 				'RequiredCapacity' => $required_capacity,
 				'SpentHours' => $spent_hours,
 				'Efficiency' => $efficiency,
-				'Velocity' => $release_capacity > 0 ? $spent_hours / $release_capacity : 0,
-				'DevelopmentInvolvement' => $development_involvement,
-				'TestingInvolvement' => $testing_involvement
+				'Velocity' => $release_capacity > 0 ? $spent_hours / $release_capacity : 0
 				);
 			
 			$part_it->moveNext();
@@ -602,26 +503,22 @@ class IterationIterator extends OrderedIterator
 
 		$metric = getFactory()->getObject('pm_ParticipantMetrics');
 		$metric->setNotificationEnabled(false);
-		
-		DAL::Instance()->Query("LOCK TABLES pm_ParticipantMetrics WRITE, pm_ParticipantMetrics t WRITE");
 
-		$sql = " DELETE FROM pm_ParticipantMetrics WHERE Iteration = ".$this->getId();
-		
-		DAL::Instance()->Query($sql);			
-		
-		foreach ( $metrics as $participant_id => $values )
-		{
-			foreach ( $values as $key => $value )
-			{
-				$metric->add_parms(
-					array('Iteration' => $this->getId(),
-						  'Participant' => $participant_id,
-						  'Metric' => $key,
-						  'MetricValue' => $value) );
-			}
-		}
-		
-		DAL::Instance()->Query("UNLOCK TABLES");
+        $sql = " DELETE FROM pm_ParticipantMetrics WHERE Iteration = " . $this->getId();
+
+        DAL::Instance()->Query($sql);
+
+        foreach ($metrics as $participant_id => $values) {
+            foreach ($values as $key => $value) {
+                $metric->add_parms(
+                    array('Iteration' => $this->getId(),
+                        'Participant' => $participant_id,
+                        'Metric' => $key,
+                        'MetricValue' => $value));
+            }
+        }
+
+        $lock->Release();
 	}
 	
 	function getMetricsDate()
@@ -704,60 +601,25 @@ class IterationIterator extends OrderedIterator
 	{
 		return $this->getDateFormat('FinishDate');
 	}
-	
-	function _getEstimatedFinish( $formatted = true, $format = '')
-	{
-		global $project_it;
-		
-		if ( $format == '' )
-		{
-			$format = getSession()->getLanguage()->getDateFormat();
-		}
 
-		list( $left_days, $est_capacity, $est_velocity ) = $this->getRealBurndownMetrics();
-		
-		if ( $left_days > 0 )
-		{
-			$sql = " SELECT FROM_DAYS(TO_DAYS(GREATEST(NOW(), r.StartDate)) + ".$left_days." - 1) dt".
-				   "   FROM pm_Release r " .
-				   "  WHERE r.pm_ReleaseId = ".$this->getId();
-
-			$it = $this->object->createSQLIterator($sql);
-			
-			if ( $formatted )
-			{
-				return getSession()->getLanguage()->getDateUserFormatted( $it->get('dt'), $format);
-			}
-			else
-			{
-				return $it->get('dt');
-			}
-		}
-		else
-		{
-			if ( $formatted )
-			{
-				return $this->getDateFormatUser( 'FinishDate', $format);
-			}
-			else
-			{
-				return $this->get_native('FinishDate');
-			}
-		}
-	}
+	function getWorkItemsMaxDateQuery() {
+        return " GREATEST(
+                    (SELECT IFNULL(MAX(r.FinishDate), '".$this->get_native('FinishDate')."') 
+                        FROM pm_ChangeRequest r WHERE r.Iteration = ".$this->getId()."),
+                    (SELECT IFNULL(MAX(r.FinishDate), '".$this->get_native('FinishDate')."') 
+                        FROM pm_Task r WHERE r.Release = ".$this->getId().")
+                  ) ";
+    }
 
 	function _getEstimatedStart( $formatted = true, $format = '')
 	{
-		if ( $format == '' )
-		{
-			$format = getSession()->getLanguage()->getDateFormat();
-		}
+		if ( $format == '' ) $format = getSession()->getLanguage()->getDateFormat();
 
 		$prev_it = $this->getPrevSiblingRelease();
 
 		if ( $prev_it->count() > 0 )
 		{
-			$prev_start = $prev_it->_getEstimatedFinish( false );
+			$prev_start = EstimationProxy::getEstimatedFinish($this, false);
 			
 			$sql = " SELECT GREATEST(TO_DAYS('".$prev_start."') - TO_DAYS('".
 						$this->get_native('StartDate')."'), 0) days, '".$prev_start."' prevStart ";
@@ -789,19 +651,11 @@ class IterationIterator extends OrderedIterator
 
 	function getFinishOffsetDays()
 	{
-		list( $left_days, $est_capacity, $est_velocity ) = $this->getRealBurndownMetrics();
+        $est_finish = $this->get('EstimatedFinishDate');
 
-		$left_minutes = $left_days * 24 * 60 - 1;
-		if ( $left_minutes > 0 )
-		{
-			$sql = " SELECT GREATEST(TO_DAYS(DATE_ADD(DATE(GREATEST(NOW(),r.StartDate)), INTERVAL ".$left_minutes." MINUTE)) - TO_DAYS(r.FinishDate), 0) days".
-				   "   FROM pm_Release r " .
-				   "  WHERE r.pm_ReleaseId = ".$this->getId();
-
-			$it = $this->object->createSQLIterator($sql);
-			$left_days = $it->get('days');
-		}
-
-		return $left_days;
+        $it = $this->object->createSQLIterator(
+            " SELECT TO_DAYS('".$est_finish."') - TO_DAYS('".$this->get_native('FinishDate')."') diff  "
+        );
+        return $it->get('diff');
 	}
 }

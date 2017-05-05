@@ -144,6 +144,7 @@ class FunctionList extends PMPageList
 				}
 				echo '<div style="padding-left:'.$offset.'px;">';
 					parent::drawCell($object_it, 'Caption');
+                    parent::drawCell($object_it, 'DescriptionWithInCaption');
 				echo '</div>';
 				break;
 
@@ -156,6 +157,11 @@ class FunctionList extends PMPageList
 		    	}
 		    	echo '<div style="padding-left:'.$offset.'px;">';
    		    		echo $object_it->get($this->visible_columns['Type'] ? 'Caption' : 'CaptionAndType');
+                    if ( $this->checkColumnHidden('Tags') && $object_it->get('Tags') != '' ) {
+                        echo ' ';
+                        $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
+                    }
+                    parent::drawCell($object_it, 'DescriptionWithInCaption');
    		    	echo '</div>';
     		    break;
 		    	

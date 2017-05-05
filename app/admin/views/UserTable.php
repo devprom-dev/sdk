@@ -74,4 +74,18 @@ class UserTable extends PageTable
 		
 		return $actions;
 	}
+
+    function getExportActions()
+    {
+        $actions = array();
+
+        $method = new ExcelExportWebMethod();
+        $actions[] = array(
+            'uid' => 'export-excel',
+            'name' => $method->getCaption(),
+            'url' => $method->url( $this->getCaption() )
+        );
+
+        return $actions;
+    }
 }

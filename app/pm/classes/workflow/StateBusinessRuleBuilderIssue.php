@@ -34,5 +34,10 @@ class StateBusinessRuleBuilderIssue extends StateBusinessRuleBuilder
  			$set->registerRule( new IssueExactTypeRule($type_it) );
  			$type_it->moveNext();
  		}
+/*        $set->registerRule( new IssueExactTypeRuleObsolete() );
+        while( !$type_it->end() ) {
+            $set->registerRule( new IssueExactTypeRuleObsolete($type_it) );
+            $type_it->moveNext();
+        }*/
     }
 }

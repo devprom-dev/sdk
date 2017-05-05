@@ -21,14 +21,23 @@ class WikiPageRegistryBaseline extends ObjectRegistrySQL
 	        if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
 	        
 	        $attributes[] = "t.".$attribute;
-	    }        
+	    }
 
-	    return " (SELECT t.WikiPageId, t.VPD, t.RecordVersion, t.DocumentId, t.SortIndex, t.Caption, t.Content, ".join(",",$attributes).
+        $sqlPredicate = '';
+        foreach( $this->getFilters() as $filter )
+        {
+            if ( $filter instanceof FilterInPredicate ) {
+                $filter->setAlias('t');
+                $filter->setObject( $this->getObject() );
+                $sqlPredicate .= $filter->getPredicate();
+            }
+        }
+
+	    return " (SELECT t.WikiPageId, t.VPD, t.RecordVersion, t.DocumentId, t.DocumentVersion, t.SortIndex, t.Caption, t.Content, ".join(",",$attributes).
 	    	   "	FROM WikiPage t ".
-	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().
-		       "	 AND t.ReferenceName = ".$this->getObject()->getReferenceName()." AND t.IsTemplate = 0 ".
+	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().$sqlPredicate.
 	    	   "   UNION ".
-	    	   "  SELECT t.WikiPageId, t.VPD, NULL, ".$this->document_it->getId().", t.SortIndex, NULL, NULL, ".join(",",$attributes).
+	    	   "  SELECT t.WikiPageId, t.VPD, NULL, ".$this->document_it->getId().", t.DocumentVersion, t.SortIndex, NULL, NULL, ".join(",",$attributes).
 	    	   "	FROM WikiPage t ".
 	    	   "   WHERE t.DocumentId = ".$this->baseline_it->getId().
 	    	   "     AND NOT EXISTS (SELECT 1 FROM WikiPage p ".

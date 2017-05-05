@@ -31,16 +31,11 @@ class FormTransitionPredicateEmbedded extends PMFormEmbedded
  	
 	function createField( $attr_name ) 
 	{
-		global $model_factory;
-		
 		switch( $attr_name )
 		{
 			case 'Predicate':
-				
-				$object = $model_factory->getObject('StateBusinessRule');
-				
+				$object = getFactory()->getObject('StateBusinessRule');
 				$object->addFilter( new StateBusinessEntityFilter($this->entity) );
-				
 				return new FieldDictionary( $object	);
 
 			default:

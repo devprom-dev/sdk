@@ -23,7 +23,7 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 
 	function getMethodName()
 	{
-		return parent::getMethodName().':LinkType:OpenList';
+		return parent::getMethodName().':LinkType';
 	}
 
 	function getObject()
@@ -51,9 +51,9 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 		return $references;
 	}
 	
- 	function duplicate( $project_it )
+ 	function duplicate( $project_it, $parms )
  	{
-		$context = parent::duplicate( $project_it );
+		$context = parent::duplicate( $project_it, $parms );
  	 	$this->linkIssues($context->getIdsMap());
  	    return $context;
  	}

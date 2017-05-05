@@ -1,6 +1,5 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
-include "persisters/TaskTypeStagePersister.php";
 include "persisters/TaskTypeStatePersister.php";
 
 class TaskTypeMetadataBuilder extends ObjectMetadataEntityBuilder 

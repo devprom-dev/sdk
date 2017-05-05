@@ -9,7 +9,7 @@ class FieldSpentTime extends FieldForm
 {
  	var $object_it;
  	var $short_form = false;
- 	
+
  	function FieldSpentTime( $object_it )
  	{
  		$this->object_it = $object_it;
@@ -39,7 +39,7 @@ class FieldSpentTime extends FieldForm
  	{
  		return 'Task';
  	}
- 	
+
  	function getLeftWorkAttribute()
  	{
  	    return '';
@@ -47,14 +47,7 @@ class FieldSpentTime extends FieldForm
  	
 	function & getForm( & $activity )
 	{
-		if ( $this->short_form )
-		{
-			return new SpentTimeFormEmbeddedShort( $activity, $this->getAnchorField(), $this->getName() );
-		}
-		else
-		{
-			return new SpentTimeFormEmbedded( $activity, $this->getAnchorField(), $this->getName() );
-		}
+        return new SpentTimeFormEmbeddedShort( $activity, $this->getAnchorField(), $this->getName() );
 	}
 	
 	function render( $view )
@@ -73,18 +66,14 @@ class FieldSpentTime extends FieldForm
  		$activity->setVpdContext($object_it);
 		
  		$form = $this->getForm( $activity );
- 		
  		$form->setLeftWorkAttribute( $this->getLeftWorkAttribute() );
 		
- 		if ( is_object($object_it) )
- 		{
+ 		if ( is_object($object_it) ) {
  			$form->setAnchorIt($object_it);
- 			 
  			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
  		}
 
  		$form->setReadonly( $this->readOnly() );
- 			
  		$form->draw( $view );
 
         if ( is_object($object_it) ) {

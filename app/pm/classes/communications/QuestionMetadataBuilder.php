@@ -7,7 +7,8 @@ class QuestionMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Question' ) return;
 
-		$metadata->addAttribute('Owner', 'REF_pm_ParticipantId', translate('Ответственный'), true, true);
+        $metadata->setAttributeType('Content', 'WYSIWYG');
+		$metadata->addAttribute('Owner', 'REF_UserId', translate('Ответственный'), true, true);
 		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true);
 		$metadata->addAttribute('TraceRequests', 'REF_pm_ChangeRequestId', translate('Пожелания'), true);
    	}

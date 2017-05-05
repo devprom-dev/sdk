@@ -109,18 +109,17 @@ class TransitionStateMethod extends WebMethod
 	function getJSCall( $parms_array = array() )
 	{
 		$parms = array (
-				ObjectUid::getProject($this->object_it),
-				$this->object_it->getId(),
-				get_class($this->object_it->object),
-				$this->object_it->object->getEntityRefName(),
-				$this->source_ref_name != ''
-						? $this->source_ref_name : $this->transition_it->get('SourceStateReferenceName'),
-				$this->target_ref_name != '' 
-						? $this->target_ref_name : $this->transition_it->get('TargetStateReferenceName'),
-				$this->transition_it->getId(), 
-				$this->transition_it->getDisplayName()
+            $this->object_it->get('ProjectCodeName'),
+            $this->object_it->getId(),
+            get_class($this->object_it->object),
+            $this->object_it->object->getEntityRefName(),
+            $this->source_ref_name != ''
+                    ? $this->source_ref_name : $this->transition_it->get('SourceStateReferenceName'),
+            $this->target_ref_name != ''
+                    ? $this->target_ref_name : $this->transition_it->get('TargetStateReferenceName'),
+            $this->transition_it->getId(),
+            $this->transition_it->getDisplayName()
 		);
-		
 		return "javascript: workflowMoveObject('".join("','", $parms)."', ".$this->getRedirectUrl().", ".str_replace('"',"'",json_encode($parms_array, JSON_HEX_APOS)).")";
 	}
 	
@@ -168,7 +167,7 @@ class TransitionStateMethod extends WebMethod
 		}
  	}
 
- 	function execute( $transition_id, $object_id, $class, $required = array() )
+ 	function execute( $transition_id, $object_id, $class, $required = array(), $doEvents = true )
  	{
  		getSession()->addBuilder( new WorkflowModelBuilder() );
  		
@@ -190,16 +189,20 @@ class TransitionStateMethod extends WebMethod
 		$required['Transition'] = $transition_it->getId();
 		foreach( $required as $key => $value ) {
 			if ( $required[$key] == '' ) unset($required[$key]);
+            if ( $key == 'attribute' ) $required[$required[$key]] = $required['value'];
 		}
 
 		$object_it->object->modify_parms($object_it->getId(), $required);
 
-	    getFactory()->getEventsManager()->
-	    		executeEventsAfterBusinessTransaction(
-	    				$object_it->object->getExact($object_it->getId()),
-	    				'WorklfowMovementEventHandler'
- 				);
- 	}
+        if ( $doEvents ) {
+            getFactory()->getEventsManager()->
+                executeEventsAfterBusinessTransaction(
+                    $object_it->object->getExact($object_it->getId()),
+                    'WorklfowMovementEventHandler',
+                    $required
+                );
+        }
+    }
  }
  
  
@@ -247,35 +250,31 @@ class TransitionStateMethod extends WebMethod
 			return;
 		}
 
-		if ( $parms['attribute'] != '' ) {
-			try {
-				if ( $parms['attribute'] == 'Project' ) {
-					$session = new PMSession(
-						getFactory()->getObject('Project')->getByRef('VPD', $object_it->get('VPD')),
-						getSession()->getAuthenticationFactory()
-					);
-				}
+        try {
+            if ( $parms['attribute'] == 'Project' ) {
+                $session = new PMSession(
+                    getFactory()->getObject('Project')->getByRef('VPD', $object_it->get('VPD')),
+                    getSession()->getAuthenticationFactory()
+                );
 
-				ob_start();
-				$method = new ModifyAttributeWebMethod();
-				$method->execute_request($parms);
-				ob_end_clean();
+                ob_start();
+                $method = new ModifyAttributeWebMethod();
+                $method->execute_request($parms);
+                ob_end_clean();
 
-				if ( $parms['attribute'] == 'Project' ) {
-					$session = new PMSession(
-						getFactory()->getObject('Project')->getExact($parms['value']),
-						getSession()->getAuthenticationFactory()
-					);
-				}
-			}
-			catch( Exception $e ) {
-				echo JsonWrapper::encode(array (
-					"message" => "denied",
-					"description" => $e->getMessage()
-				));
-				return;
-			}
-		}
+                $session = new PMSession(
+                    getFactory()->getObject('Project')->getExact($parms['value']),
+                    getSession()->getAuthenticationFactory()
+                );
+            }
+        }
+        catch( Exception $e ) {
+            echo JsonWrapper::encode(array (
+                "message" => "denied",
+                "description" => $e->getMessage()
+            ));
+            return;
+        }
 
 		getFactory()->resetCache();
 		$object_it = getFactory()->getObject($class_name)->getExact($parms['object']);
@@ -360,25 +359,37 @@ class TransitionStateMethod extends WebMethod
 			}
 
 			// extend model to get visible|required attributes
-			$model_builder = new WorkflowTransitionAttributesModelBuilder( $transition_it );
+			$model_builder = new WorkflowTransitionAttributesModelBuilder(
+			    $transition_it,
+                array(),
+                array_merge(
+                    $object_it->getData(),
+                    $parms,
+                    array (
+                        $parms['attribute'] => $parms['value']
+                    )
+                )
+            );
 			$model_builder->build( $object );
-			
-			$attributes = array();
 
+			$attributes = array();
 			foreach( $object->getAttributes() as $attribute => $data )
 			{
 				if ( !$object->IsAttributeVisible($attribute) ) continue;
 				if ( $parms[$attribute] != '' ) continue;
-				if ( $parms['attribute'] == $attribute && $object_it->get($attribute) == $parms['value'] && $parms['value'] != '' ) continue;
-				
+				if ( !in_array($attribute, array('Tasks','Fact')) && $object_it->get($attribute) != '' ) continue;
+
 				$attributes[] = $attribute;
 			}
-	
+
+			if ( $target_it->get('TaskTypes') != '' ) $attributes[] = 'Tasks';
+
 			if ( count($attributes) > 0 )
 			{
 				$required = array();
 				foreach( $object->getAttributes() as $attribute => $info ) {
 					if ( $parms[$attribute] != '' ) $required[$attribute] = $parms[$attribute];
+                    if ( $parms['attribute'] != '' ) $required[$parms['attribute']] = $parms['value'];
 				}
 
 				$url = '&'.http_build_query(
@@ -417,7 +428,7 @@ class TransitionStateMethod extends WebMethod
 				$method->execute( 
 					$transition_it->getId(), $object_it->getId(), get_class($object_it->object), $parms
 				);
-				
+
 				echo '{"message":"ok"}';
 				return;
 			}

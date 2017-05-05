@@ -9,7 +9,7 @@ use Symfony\Component\Templating\TemplateNameParser;
 use Symfony\Component\Config\FileLocator;
 
 include_once SERVER_ROOT_PATH."admin/classes/templates/SystemTemplate.php";
-		
+
 class RenderService
 {
 	private $templating = null;

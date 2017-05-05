@@ -12,8 +12,7 @@ if ( !DeploymentState::IsInstalled() ) {
 }
 
 $model_factory = new ModelFactoryExtended(PluginsFactory::Instance());
-$state = $model_factory->getObject('DeploymentState');
-if ( !$state->IsActivated() ) {
+if ( !\DeploymentState::Instance()->IsActivated() ) {
 	die();
 }
 

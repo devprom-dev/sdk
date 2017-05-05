@@ -2,10 +2,9 @@
 
 namespace Devprom\ServiceDeskBundle\Mailer;
 use Devprom\ServiceDeskBundle\Entity\Issue;
+use Devprom\ServiceDeskBundle\Entity\IssueComment;
 use FOS\UserBundle\Mailer\TwigSwiftMailer;
 use FOS\UserBundle\Model\UserInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-
 
 /**
  * @author Kosta Korenkov <7r0ggy@gmail.com>
@@ -46,7 +45,7 @@ class Mailer extends TwigSwiftMailer {
         $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
     }
 
-    public function sendIssueCommentedMessage(Issue $issue, $comment, $toEmail, $language = 'ru') {
+    public function sendIssueCommentedMessage(Issue $issue, IssueComment $comment, $toEmail, $language = 'ru') {
         $template = 'DevpromServiceDeskBundle:Email:issue_commented.html.twig';
         $context = array(
             'issue' => $issue,

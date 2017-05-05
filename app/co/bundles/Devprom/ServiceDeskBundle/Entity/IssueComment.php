@@ -66,6 +66,12 @@ class IssueComment extends BaseEntity
      */
     private $attachments;
 
+    /**
+     * @ORM\Column(type="string", name="IsPrivate")
+     * @var string
+     */
+    private $isprivate = 'N';
+
     function __construct()
     {
         $this->attachments = new ArrayCollection();
@@ -181,6 +187,22 @@ class IssueComment extends BaseEntity
     public function getExternalEmail()
     {
         return $this->externalEmail;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setIsPrivate($value)
+    {
+        $this->isprivate = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIsPrivate()
+    {
+        return $this->isprivate;
     }
 
     public function getAuthor() {

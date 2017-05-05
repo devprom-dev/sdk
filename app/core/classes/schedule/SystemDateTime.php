@@ -17,6 +17,11 @@ class SystemDateTime
 		
 		try
 		{
+            if ( strpos($date, '00:00:00') > 0 ) {
+                $time = new DateTime($date);
+                return $time->format($format);
+            }
+
 			// convert from server's time to UTC+0
 			$time = new DateTime($date." ".$utc_offset." hours", new DateTimeZone("UTC"));
 			
@@ -43,9 +48,14 @@ class SystemDateTime
 	static public function convertToServerTime( $date, $format = 'Y-m-d H:i:s' )
 	{
 		if ( $date == '' ) return $date;
-		
+
 		try
 		{
+            if ( strpos($date, '00:00:00') > 0 ) {
+                $time = new DateTime($date);
+                return $time->format($format);
+            }
+
 			// convert from client's time to UTC+0
 			$time = new DateTime($date, EnvironmentSettings::getClientTimeZone());
 			

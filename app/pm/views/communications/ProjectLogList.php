@@ -41,12 +41,10 @@ class ProjectLogList extends PMPageList
 		switch( $attr ) 
 		{
 			case 'SystemUser':
-				if ( $object_it->get($attr) == '' )
-				{
-					parent::drawRefCell( $this->getFilteredReferenceIt('Author', $object_it->get('Author')), $object_it, 'Author' );
+				if ( $object_it->get($attr) == '' ) {
+                    parent::drawCell( $object_it, 'AuthorName' );
 				}
-				else
-				{
+				else {
 					parent::drawRefCell( $entity_it, $object_it, $attr );
 				}
 				break;
@@ -60,34 +58,6 @@ class ProjectLogList extends PMPageList
 	{
 		switch( $attr )
 		{
-			case 'Caption':
-				echo '<i class="'.$object_it->getIcon().' hidden-print" style="margin-right: 10px;"></i>';
-
-				$anchor_it = $object_it->getObjectIt();
-				if ( $anchor_it->getId() != '' )
-				{
-					$uid = new ObjectUID;
-					if ( strpos($object_it->get('Caption'), $uid->getObjectUid($anchor_it)) === false ) {
-						if ( $uid->hasUid( $anchor_it ) ) {
-						}
-						else {
-							echo $anchor_it->object->getDisplayName().': ';
-						}
-					}
-				}
-				else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
-                    echo text(1360) . ': ';
-                }
-				else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
-				}
-				else {
-				    echo $anchor_it->object->getDisplayName().': ';
-				}
-
-				drawMore($object_it, 'Caption', 20);
-
-				break;
-				
 		    case 'UserAvatar':
 		        
     	    	echo $this->getTable()->getView()->render('core/UserPicture.php', array (
@@ -100,12 +70,38 @@ class ProjectLogList extends PMPageList
 				
 		    case 'Content':
 
-			    drawMore($object_it, 'Content', 20);
-				
-			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) 
-			    {
-			    	$anchor_it = $object_it->getObjectIt();
-			    
+                echo '<i class="'.$object_it->getIcon().' hidden-print" style="margin-right: 10px;"></i>';
+
+                $anchor_it = $object_it->getObjectIt();
+                if ( $anchor_it->getId() != '' )
+                {
+                    $uid = new ObjectUID;
+                    if ( strpos($object_it->get('Caption'), $uid->getObjectUid($anchor_it)) === false ) {
+                        if ( $uid->hasUid( $anchor_it ) ) {
+                        }
+                        else {
+                            echo $anchor_it->object->getDisplayName().': ';
+                        }
+                    }
+                }
+                else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
+                    echo text(1360) . ': ';
+                }
+                else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
+                }
+                else {
+                    echo $anchor_it->object->getDisplayName().': ';
+                }
+
+                parent::drawCell( $object_it, 'Caption' );
+
+                if ( strpos($object_it->get('Content'), '[url') !== false && $anchor_it->object instanceof WikiPage) {
+                    echo '<br/>'.str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319));
+                }
+                else if ( $object_it->get('Content') != '' ) {
+                    echo '<br/>'.$object_it->getHtmlDecoded('Content');
+                }
+			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
 				    echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
 							'object_it' => $anchor_it,
 							'redirect' => 'donothing'
@@ -173,7 +169,7 @@ class ProjectLogList extends PMPageList
 	{
 		$actions = array();
 
-		$method = new UndoWebMethod($object_it->get('Transaction'));
+		$method = new UndoWebMethod($object_it->get('Transaction'), $object_it->get('ProjectCodeName'));
 		if ( $method->hasAccess() ) {
 			$actions[] = array (
 				'name' => $method->getCaption(),

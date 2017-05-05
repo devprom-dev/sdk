@@ -36,7 +36,7 @@ class PMForm extends AjaxForm
 		return parent::getAttributeType( $attribute );
 	}
 	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 		if ( $this->customtypes[$attribute] == 'dictionary' )
 		{
@@ -54,6 +54,6 @@ class PMForm extends AjaxForm
 			return;
 		}
 		
-		parent::drawCustomAttribute( $attribute, $value, $tab_index );
+		parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 	}
 }

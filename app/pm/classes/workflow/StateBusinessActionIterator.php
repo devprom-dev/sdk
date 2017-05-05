@@ -2,9 +2,10 @@
 
 class StateBusinessActionIterator extends OrderedIterator
 {
-	function apply( & $object_it ) {
+	function apply( $object_it, $data ) {
 		$rule = $this->getRule();
 	    if ( !is_object($rule) ) return true;
+        $rule->setData( $data );
 		return $rule->apply( $object_it );
 	}
 

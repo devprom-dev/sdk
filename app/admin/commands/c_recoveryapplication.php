@@ -1,8 +1,8 @@
 <?php
 
 include_once "MaintenanceCommand.php";
-include SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
-include SERVER_ROOT_PATH.'admin/classes/maintenance/BackupAndRecoveryOnWindows.php';
+include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
+include_once SERVER_ROOT_PATH.'admin/classes/maintenance/BackupAndRecoveryOnWindows.php';
 
 class RecoveryApplication extends MaintenanceCommand
 {
@@ -23,13 +23,9 @@ class RecoveryApplication extends MaintenanceCommand
 	    
 	    if ( $result != '' ) $this->replyError( str_replace('%1', $result, text(1051)) );
 	    
-	    getSession()->drop();
-	    
 	    // clear old cache
-	    $installation_factory = InstallationFactory::getFactory();
-	    
+	    InstallationFactory::getFactory();
 	    $clear_cache_action = new ClearCache();
-	    
 	    $clear_cache_action->install();
 	    
 	    // reset opcache after application files have been restored

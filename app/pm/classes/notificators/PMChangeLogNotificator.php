@@ -13,7 +13,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 
 		$check = in_array( $object_it->object->getEntityRefName(), $this->entity_set->fieldToArray('ReferenceName') )
 		    || in_array( strtolower(get_class($object_it->object)), $this->entity_set->fieldToArray('ClassName') );
-			
+
 		return $check ? true : parent::is_active( $object_it );
 	}
 
@@ -76,8 +76,14 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						if ( $object_it->getDisplayName() != $request_it->getDisplayName() ) {
 							$task_caption = ': '.$object_it->getDisplayName();
 						}
-						parent::process( $request_it, 'modified',
-							$uid->getObjectUid($object_it).' '.$task_caption.' ('.$caption.')', $visibility, $author_email );
+						parent::process(
+						    $request_it, 'modified',
+							$uid->getObjectUid($object_it).' '.$task_caption.' ('.$caption.')',
+                            $visibility, $author_email,
+                            array(
+                                'AccessClassName' => 'task'
+                            )
+                        );
 					}
 				}
 				
@@ -97,9 +103,15 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 						
 						$this->setModifiedAttributes(array('Attachments'));
 						
-						parent::process( $anchor_it, 'modified', 
+						parent::process(
+						    $anchor_it, 'modified',
 							$object_it->object->getDisplayName().': '.$object_it->getFileName('File').
-								' ('.$caption.')', $visibility, $author_email );
+								' ('.$caption.')',
+                            $visibility, $author_email,
+                            array(
+                                'AccessClassName' => 'attachment'
+                            )
+                        );
 				}
 					
 				break;
@@ -154,7 +166,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			case 'pm_ChangeRequestTrace':
 				$request_it = $object_it->getRef('ChangeRequest');
 				$related_it = $object_it->getObjectIt();
-				
+
 				if ( $kind != 'modified' && $request_it->getId() > 0 && $related_it->getId() > 0 )
 				{
 					parent::process( $request_it, 'modified', 
@@ -221,11 +233,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				break;
 
 			case 'pm_Question':
-				$content = str_replace( '%2', $object_it->getHtmlDecoded('Content'),
-					str_replace('%1', '['.$uid->getObjectUid( $object_it ).']', text(1057) ) );
-
-				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, $content, $visibility, $author_email );
-					
+				parent::process( $object_it, $kind == 'added' ? 'commented' : $kind, $object_it->getHtmlDecoded('Content'), $visibility, $author_email );
 				break;
 
 			case 'cms_Snapshot':
@@ -258,13 +266,15 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 					);
 
                     $text = '';
-
 					$transition_it = $object_it->getRef('Transition');
 					if ( $transition_it->count() > 0 ) {
-						$text .= $transition_it->getDisplayName().' &rarr; ';
+						$text .= $transition_it->getDisplayName();
 					}
 
-                    $text .= $object_it->getRef('State')->getDisplayName();
+					$stateName = $object_it->getRef('State')->getDisplayName();
+					if ( $text != $stateName ) {
+                        $text .= ' &rarr; '.$stateName;
+                    }
                     if ( $object_it->get('Comment') != '' ) {
                         $text .= ": ".$object_it->getHtmlDecoded('Comment');
                     }
@@ -294,21 +304,21 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				switch ( $kind )
 				{
 					case 'added':
-						$content = str_replace( '%2', $object_it->getPlainText('Caption'), 
-							str_replace('%1', '['.$uid->getObjectUid( $object_it ).']', text(1057) ) );
+						$content = str_replace( '%2', $object_it->getHtmlDecoded('Caption'),
+							str_replace('%1', '', text(1057) ) );
 						 
 						parent::process( $object_it->getAnchorIt(), 'commented', $content, $visibility + 1, $object_it->get('ExternalEmail') );
 						break;
 						
 					case 'modified':
-						$content = str_replace( '%2', $object_it->getPlainText('Caption'), 
-							str_replace('%1', '['.$uid->getObjectUid( $object_it ).']', text(1200) ) );
+						$content = str_replace( '%2', $object_it->getHtmlDecoded('Caption'),
+							str_replace('%1', '', text(1200) ) );
 						 
 						parent::process( $object_it->getAnchorIt(), 'comment_modified', $content, $visibility + 1, $object_it->get('ExternalEmail') );
 						break;
 						
 					case 'deleted':
-						$content = str_replace( '%2', $object_it->getPlainText('Caption'), str_replace('%1', '', text(1199) ) );
+						$content = str_replace( '%2', $object_it->getHtmlDecoded('Caption'), str_replace('%1', '', text(1199) ) );
 						parent::process( $object_it->getAnchorIt(), 'comment_deleted', $content, $visibility + 1, $object_it->get('ExternalEmail') );
 						break;
 				}
@@ -346,8 +356,14 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 
 					$this->setModifiedAttributes(array('Fact'));
 
-					parent::process( $anchor_it, 'modified',
-						$object_it->getDisplayNameShort().' ('.$caption.')', $visibility, $author_email );
+					parent::process(
+					    $anchor_it, 'modified',
+						$object_it->getDisplayNameShort().' ('.$caption.')',
+                        $visibility, $author_email,
+                        array(
+                            'AccessClassName' => 'activity'
+                        )
+                    );
 				}
 			    break;
 			    

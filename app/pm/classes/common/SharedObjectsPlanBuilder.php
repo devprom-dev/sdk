@@ -17,11 +17,13 @@ class SharedObjectsPlanBuilder extends SharedObjectsBuilder
     public function build( SharedObjectRegistry & $set )
     {
 		$entities = array (
-    			'Milestone',
-		        'Version',
-     	        'Release',
-     	        'Iteration',
-				'Stage'
+            'Milestone',
+            'Version',
+            'Release',
+            'ReleaseRecent',
+            'Iteration',
+            'IterationRecent',
+            'Stage'
 		);
 		
  		foreach( $entities as $key )

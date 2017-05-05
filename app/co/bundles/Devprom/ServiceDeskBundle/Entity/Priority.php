@@ -8,14 +8,14 @@ use Doctrine\ORM\Mapping as ORM;
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  *
  * @ORM\Entity
- * @ORM\Table(name="Priority")
+ * @ORM\Table(name="pm_Severity")
  */
 class Priority extends BaseEntity
 {
 
     /**
      * @ORM\Id
-     * @ORM\Column(type="integer", name="PriorityId")
+     * @ORM\Column(type="integer", name="pm_SeverityId")
      * @var integer
      */
     private $id;

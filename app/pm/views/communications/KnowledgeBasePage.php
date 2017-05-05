@@ -12,9 +12,14 @@ class KnowledgeBasePage extends PMWikiUserPage
 {
  	function __construct()
  	{
+        if ( $_REQUEST['report'] != '' ) {
+            $report_it = getFactory()->getObject('PMReport')->getExact($_REQUEST['report']);
+            $report = is_numeric($report_it->getId()) ? $report_it->get('Report') : $report_it->getId();
+        }
+
  		$b_show_root = !$this->needDisplayForm()
  			&& $_REQUEST['mode'] == '' && $_REQUEST['view'] == 'tree'
- 			&& $_REQUEST['export'] == '';
+ 			&& $_REQUEST['export'] == '' && $report != 'knowledgebaselist';
  		
  		if ( $b_show_root )
  		{
@@ -49,39 +54,19 @@ class KnowledgeBasePage extends PMWikiUserPage
 		return $object;
 	}
 	
-	function getTemplateObject()
-	{
-		return getFactory()->getObject('KnowledgeBaseTemplate');
-	}
-
-	function getBulkForm()
-	{
-		return new WikiBulkForm(
-			$_REQUEST['view'] != 'templates'
-				? $this->getObject()
-				: $this->getTemplateObject()
-		);
+	function getBulkForm() {
+		return new WikiBulkForm($this->getObject());
 	}
 	
-	function getFormBase()
- 	{
-	    switch ( $_REQUEST['view'] )
-	    {
-	        case 'templates':
-	        	return new KnowledgeBaseForm( $this->getTemplateObject(), $this->getTemplateObject() );
-	        	
-	        default;
-	        	return new KnowledgeBaseForm( $this->getObject(), $this->getTemplateObject() );
-	    }
+	function getFormBase() {
+       	return new KnowledgeBaseForm($this->getObject());
  	}
  	
- 	function getDocumentTableBase( & $object )
- 	{
+ 	function getDocumentTableBase( & $object ) {
  		return new KnowledgeBaseDocument($object, $this->getStateObject(), $this->getForm());
  	}
  	
- 	function getTableBase() 
- 	{
+ 	function getTableBase() {
         return new KnowledgeBaseTable( $this->getObject(), $this->getStateObject(), $this->getForm() );
  	}
 

@@ -16,11 +16,10 @@ class BlogPostTag extends Tag
         parent::Metaobject('BlogPostTag');
         
         $this->addPersister( new BlogPostTagDetailsPersister() );
-        
-        if ( !is_object($this->object) )
-        {
+        if ( !is_object($this->object) ) {
             $this->object = $model_factory->getObject('BlogPost');
         }
+        $this->addPersister( new TagParentPersister() );
     }
 
 	function createIterator() 

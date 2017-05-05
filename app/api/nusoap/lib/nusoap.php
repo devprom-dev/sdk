@@ -3926,6 +3926,8 @@ class nusoap_server extends nusoap_base {
 			$delim = '..';
 		} else if (strpos($this->methodname, '.') > 0) {
 			$delim = '.';
+		} else if (strpos($this->methodname, '_') > 0) {
+			$delim = '_';
 		} else {
 			$delim = '';
 		}
@@ -5249,7 +5251,7 @@ class wsdl extends nusoap_base {
 		}
 
 		$b = '
-		<html><head><title>NuSOAP: '.$this->serviceName.'</title>
+		<html><head><title>NuSOAP: '.$this->serviceName. '</title>
 		<style type="text/css">
 		    body    { font-family: arial; color: #000000; background-color: #ffffff; margin: 0px 0px 0px 0px; }
 		    p       { font-family: arial; color: #000000; margin-top: 0px; margin-bottom: 12px; }
@@ -5279,25 +5281,25 @@ class wsdl extends nusoap_base {
 		<!--
 		// POP-UP CAPTIONS...
 		function lib_bwcheck(){ //Browsercheck (needed)
-		    this.ver=navigator.appVersion
-		    this.agent=navigator.userAgent
-		    this.dom=document.getElementById?1:0
-		    this.opera5=this.agent.indexOf("Opera 5")>-1
+		    this.ver=navigator.appVersion;
+		    this.agent=navigator.userAgent;
+		    this.dom=document.getElementById?1:0;
+		    this.opera5=this.agent.indexOf("Opera 5")>-1;
 		    this.ie5=(this.ver.indexOf("MSIE 5")>-1 && this.dom && !this.opera5)?1:0;
 		    this.ie6=(this.ver.indexOf("MSIE 6")>-1 && this.dom && !this.opera5)?1:0;
 		    this.ie4=(document.all && !this.dom && !this.opera5)?1:0;
-		    this.ie=this.ie4||this.ie5||this.ie6
-		    this.mac=this.agent.indexOf("Mac")>-1
+		    this.ie=this.ie4||this.ie5||this.ie6;
+		    this.mac=this.agent.indexOf("Mac")>-1;
 		    this.ns6=(this.dom && parseInt(this.ver) >= 5) ?1:0;
 		    this.ns4=(document.layers && !this.dom)?1:0;
-		    this.bw=(this.ie6 || this.ie5 || this.ie4 || this.ns4 || this.ns6 || this.opera5)
+		    this.bw=(this.ie6 || this.ie5 || this.ie4 || this.ns4 || this.ns6 || this.opera5);
 		    return this
 		}
-		var bw = new lib_bwcheck()
+		var bw = new lib_bwcheck();
 		//Makes crossbrowser object.
 		function makeObj(obj){
 		    this.evnt=bw.dom? document.getElementById(obj):bw.ie4?document.all[obj]:bw.ns4?document.layers[obj]:0;
-		    if(!this.evnt) return false
+		    if(!this.evnt) return false;
 		    this.css=bw.dom||bw.ie4?this.evnt.style:bw.ns4?this.evnt:0;
 		    this.wref=bw.dom||bw.ie4?this.evnt:bw.ns4?this.css.document:0;
 		    this.writeIt=b_writeIt;
@@ -5325,7 +5327,7 @@ class wsdl extends nusoap_base {
 		<body>
 		<div class=content>
 			<br><br>
-			<div class=title>'.$this->serviceName.'</div>
+			<div class=title>' .$this->serviceName.'</div>
 			<div class=nav>
 				<p>View the <a href="'.$PHP_SELF.'?wsdl">WSDL</a> for the service.
 				Click on an operation name to view it&apos;s details.</p>
@@ -7805,7 +7807,7 @@ class nusoap_client extends nusoap_base  {
 				}
 				$opData['namespace'] = !isset($opData['namespace']) ? 'http://testuri.com' : $opData['namespace'];
 				$evalStr .= "// $paramCommentStr
-	function " . str_replace('.', '__', $operation) . "($paramStr) {
+	function " . preg_replace('/[\._]/', '__', $operation) . "($paramStr) {
 		\$params = array($paramArrayStr);
 		return \$this->call('$operation', \$params, '".$opData['namespace']."', '".(isset($opData['soapAction']) ? $opData['soapAction'] : '')."');
 	}

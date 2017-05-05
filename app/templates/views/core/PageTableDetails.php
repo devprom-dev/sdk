@@ -32,7 +32,8 @@ if ( $active == '' ) {
             var url = $(this).attr('url').replace(/%id%/, $.isNumeric($(this).attr('default')) ? $(this).attr('default') : '0');
             detailsInitialize($('.details-body'),url,true,$(this).attr('did') != 'props');
         });
-        $(document).on("trackerItemSelected", function(e, id) {
+        $(document).on("trackerItemSelected", function(e, id, ctrlKey) {
+            if ( ctrlKey ) return;
             var btn = $('.page-details a.active[did="props"]');
             if( btn.length > 0 ) {
                 var url = btn.attr('url').replace(/%id%/, $.isNumeric(id) ? id : '0');

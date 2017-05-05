@@ -38,4 +38,8 @@ class PMLastChangesSection extends LastChangesSection
             array_merge($parms, $this->getBodyRenderParms())
         );
     }
+
+    function hasAccess() {
+        return getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Module')->getExact('project-log'));
+    }
 }

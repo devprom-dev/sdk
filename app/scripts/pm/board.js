@@ -8,9 +8,8 @@ var draggableOptions = {
 		cursor: "move",
 		redrawBoardItemCustom: function ( item, result )
 		{
-			item.each(function() {
+            item.each(function() {
 				var objectid = $(this).attr('object');
-
 				var newCard = $(result).find('.board_item[object="'+objectid+'"]');
 				var oldCard = $('.board_item[object="'+objectid+'"]');
 
@@ -146,7 +145,8 @@ var draggableOptions = {
 		redrawItemUrl: '',
 		stack: ".board_item",
 		appendTo: "parent",
-		itemWidth: 999,
+    	cancel: '.label,a,li',
+    	itemWidth: 999,
 		recentlyChangedTime: '',
 		drag: function( event, ui ) {
 			if ( event.ctrlKey || event.metaKey ) return false;
@@ -157,7 +157,7 @@ var draggableOptions = {
 			if ( $('div[id*="context-menu"]>ul:visible').length > 0 ) return;
 			$('.popover.in-focus').toggleClass('in').remove();
 			$('.board_item_body input[type=checkbox]').removeAttr('checked');
-			toggleBulkActions();
+			toggleBulkActions(event);
 			$(this).fadeTo('fast', 0.2);
 		},
 		stop: function ( event, ui ) {
@@ -176,7 +176,12 @@ var draggableOptions = {
 		resizeCards: function () 
 		{
 			var width = this.getItemWidth();
-			$('.list_cell:not(.board-size-mic) '+this.itemCSSPath).each(function() {
+			$('.board-table:not(.board-size-xl) .list_cell '+this.itemCSSPath).each(function() {
+				$(this).width(width);
+				$(this).find('div.bi-cap, div.ca-field').width(width - 10);
+			});
+			var width = $('.board-column').width() - 8;
+			$('.board-size-xl .list_cell '+this.itemCSSPath).each(function() {
 				$(this).width(width);
 				$(this).find('div.bi-cap, div.ca-field').width(width - 10);
 			});
@@ -190,12 +195,11 @@ function board( options )
 {
 	var defaultBoardSize = (cookies.get('board-slider-pos') != null 
 			? cookies.get('board-slider-pos')
-			: ($(window).width() <= 1024 ? 1 : 2));
+			: ($(window).width() <= 1024 ? 2 : 3));
 	setBoardSize(options,defaultBoardSize);
 	
 	boardMake( options );
 
-	$('<div id="board-slider"></div>').insertAfter('.bulk-filter-actions');
 	$('#board-slider').slider({
 	      value: defaultBoardSize,
 	      min: -1,
@@ -251,19 +255,38 @@ function board( options )
 				$('.list_header:not(.board-size-mic)').attr('width',(100 / regCells.length) + '%');
 				$('.list_header.board-size-mic').attr('width','auto');
 			}
+			var items = $(e.target).closest('a.group-collapse-cards');
+			if ( items.length ) {
+				var item = items.first();
+				var cell = $('.list_cell[group="'+item.attr('group')+'"]');
+				if ( cell.length > 0 ) {
+					var cookieId = item.parents('.board-table').attr('id') + "[size/row/"
+						+ item.attr('group').trim() + "]";
+					if ( cell.hasClass('board-size-mic') ) {
+						cell.removeClass('board-size-mic');
+						cookies.set(cookieId, null);
+					}
+					else {
+						cell.addClass('board-size-mic');
+						cookies.set(cookieId, "board-size-mic");
+					}
+					options.resizeCards();
+				}
+			}
 			if ( $(e.target).is(options.cellCSSPath) ) {
 				$('.board_item_body input[type=checkbox]').removeAttr('checked');
-				toggleBulkActions();
+				toggleBulkActions(e);
 			}
 		});
 
 	setTimeout( function () { redrawBoardChanges(options); }, 500 );
+    setInterval( function () { redrawBoardChanges(options); }, 60000 );
 }
 
 function boardMake( options )
 {
 	options.resizeCards();
-	$(options.itemCSSPath).draggable(options).css('position', '');
+	$(options.itemCSSPath).draggable(options);
 
 	$(options.cellCSSPath).droppable({
 		hoverClass: options.hoverClass,
@@ -271,8 +294,8 @@ function boardMake( options )
 		drop: function( event, ui ) 
 		{
 			var item = ui.draggable;
-			ui.helper.hide();
-			
+            ui.helper.hide();
+
 			var cell = $(this).is('.board-column') ? $(this).children('.list_cell') : $(this);
 			var methods = options.getMethodAttributes( item, cell );
 			
@@ -282,7 +305,6 @@ function boardMake( options )
 					createBoardItem( item.attr("createItemURIParms"), options, method.data, function( objectid, options ) {
 						item.attr('object', objectid);
 						item.attr('lifecycle', 'created');
-		
 						redrawBoardItem( objectid, options );
 						item.attr('object', "");
 					});
@@ -290,6 +312,7 @@ function boardMake( options )
 			}
 			else
 			{
+                $(item).prependTo($(event.target)).fadeTo('fast', 0.9);
 				processBoardActions(methods,item,options);
 			}
 		}
@@ -316,10 +339,20 @@ function boardMake( options )
 						$(this).attr('checked', 'checked');
 					});
 				}
-				toggleBulkActions();
+				toggleBulkActions(event);
 			});
 			$(this).addClass("board-item-actions-armed");
 	});
+	$('.board-column').hover(
+		function() {
+			var index = $(this).index();
+			$(this).parents('tr').next().find('td:eq('+index+').cell-add-btn a').show();
+		},
+		function() {
+			var index = $(this).index();
+			$(this).parents('tr').next().find('td:eq('+index+').cell-add-btn a').attr('style','');
+		}
+	);
 }
 
 function processBoardActions( methods, item, options )
@@ -333,7 +366,8 @@ function processBoardActions( methods, item, options )
 				processActionResult(result, item, options);
 				processBoardActions(methods, item, options);
 			},
-			''
+			'',
+			true
 	);
 }
 
@@ -416,6 +450,9 @@ function processActionResult( result, item, options )
 								redrawBoardItem( item, options );
 								return workflowHandleBeforeClose(event, ui);
 							},
+                            dragStart: function(event, ui) {
+                                workflowDragDialog(event, ui);
+                            },
 							buttons: [
 								{
 									text: text('form-submit'),
@@ -503,7 +540,7 @@ function modifyBoardItem( item, options, callback )
 		class_name: options.className,
 		entity_ref: options.className,
 		object_id: objectid,
-		form_title: item.attr("uid") ? item.attr("uid") : options.classUserName
+		form_title: options.classUserName
 	}, "donothing");
 }
 
@@ -566,10 +603,12 @@ function createBoardItem( query_string, options, data, callback )
 					{
 				        $(this).css("maxHeight", $(window).height() - 200);      
 				    },
-					beforeClose: function(event, ui) 
-					{
+					beforeClose: function(event, ui) {
 						return workflowHandleBeforeClose(event, ui);
 					},
+                    dragStart: function(event, ui) {
+                        workflowDragDialog(event, ui);
+                    },
 					buttons: [
 						{
 							text: text('form-submit'),
@@ -687,12 +726,7 @@ function redrawBoardChanges( options )
 	if ( options.className == '' ) return;
 
 	try {
-		if ( !devpromOpts.windowActive ) {
-			setTimeout( function() {
-				redrawBoardChanges(options);
-			}, 3000);
-			return;
-		}
+		if ( !devpromOpts.windowActive ) return;
 
 		if ( options.waitRequest ) {
 			options.waitRequest.abort();
@@ -750,20 +784,14 @@ function redrawBoardChanges( options )
 			},
 		    complete: function(xhr, textStatus)
 		    {
-		    	if ( textStatus == "abort" ) return;
-		    	if ( xhr.responseText == "" ) return;
-		    	if ( $.inArray(xhr.status, [302,301,500,404]) != -1 ) return;
-		    	
-	    		setTimeout( function() {
-	    			redrawBoardChanges(options);
-	    		}, $.inArray(textStatus, ["error","timeout","parsererror"]) < 0 ? 500 : 180000);
-		    },
-		    error: function (xhr, ajaxOptions, thrownError) {
-				setTimeout( function() {
-					redrawBoardChanges(options);
-				}, 180000);
+                var nativeResponse = xhr.getResponseHeader('X-Devprom-UI') == 'tableonly';
+                if ( nativeResponse && xhr.responseText.indexOf('div') > -1 ) {
+                    setTimeout( function() {
+                        redrawBoardChanges(options);
+                    }, 300);
+				}
 		    }
-		});		
+		});
 	}
 	catch(e) {
 		setTimeout( function() {
@@ -777,10 +805,10 @@ function updateBoardHeaders( result, options )
 	result.find('.board-table th').each( function(index, value) {
 		$('.board-table th:eq('+index+')').html($(this).html());
 	});
-	result.find('.board-table tr.info').each( function(index, value) {
+	result.find('.board-table tr.info[group-id]').each( function(index, value) {
 		$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
 	});
-	result.find('.board-table tr.row-basement').each( function(index, value) {
+	result.find('.board-table tr.row-basement[group-id]').each( function(index, value) {
 		$('.board-table tr.row-basement[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
 	});
 }

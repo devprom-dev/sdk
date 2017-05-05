@@ -18,7 +18,7 @@ class WikiHistoryList extends ProjectLogList
 		if ( $object_it->getId() < 1 ) return;
 		
 		$this->can_revert = true;
-		$this->documentMode = $object_it->get('ParentPage') < 1;
+		$this->documentMode = $object_it->get('TotalCount') > 0;
 		$this->editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
 		$this->parser = $this->editor->getComparerParser();
 
@@ -93,26 +93,23 @@ class WikiHistoryList extends ProjectLogList
 		switch ( $attr )
 		{
 			case 'Content':
-				if ( $this->documentMode ) {
-					parent::drawCell( $object_it, 'Caption' );
-					echo '<p/><br/>';
-				}
-
-				if ( strpos($object_it->get('Content'), '[url=') === false ) {
-					parent::drawCell( $object_it, $attr );	
-					break;
-				}
-				
-				if ( !is_object($this->change_it) ) {
-					parent::drawCell( $object_it, $attr );	
+				if ( strpos($object_it->get('Content'), '[url=') === false || !is_object($this->change_it) ) {
+                    if ( $this->documentMode ) {
+                        parent::drawCell( $object_it, $attr );
+                    }
+                    else {
+                        PMPageList::drawCell( $object_it, $attr );
+                    }
 					break;
 				}
 				
 				$change_it = $this->getChangeIt( $object_it );
 				if ( $change_it->getId() > 0 )
 				{
-					$page_id = $object_it->get('ObjectId');
+                    parent::drawCell( $object_it, 'Caption' );
+                    echo '<p/><br/>';
 
+					$page_id = $object_it->get('ObjectId');
 					$this->prev_content[$page_id] = $change_it->getHtmlDecoded('Content');
 					
 					$diff = $this->getPagesDiff( $this->prev_content[$page_id], $this->curr_content[$page_id] );
@@ -125,7 +122,7 @@ class WikiHistoryList extends ProjectLogList
 					$this->curr_content[$page_id] = $this->prev_content[$page_id];
 				}
 				else {
-					parent::drawCell( $object_it, $attr );	
+                    parent::drawCell( $object_it, 'Caption' );
 				}
 				break;
 				
@@ -145,10 +142,12 @@ class WikiHistoryList extends ProjectLogList
 		if ( $change_it->getId() < 1 ) return $actions;
 		
 		$page_it = $object_it->getObjectIt();
-		
+
+		$method = new ObjectModifyWebMethod($page_it);
+        $method->setObjectUrl($method->getObjectUrl() . '&revision=' . $change_it->getId());
 		$actions[] = array( 
 			'name' => text(1847),
-			'url' => "javascript:window.location='".$page_it->getViewUrl()."&revision=".$change_it->getId()."';"
+			'url' => $method->getJSCall()
 		);
 		
 		$method = new RevertWikiWebMethod();

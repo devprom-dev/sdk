@@ -13,6 +13,8 @@ class RequestList extends PMPageList
 	private $visible_columns = array();
 	private $priority_method = null;
 	private $type_it = null;
+    private $strategy = null;
+    private $velocity = 0;
 	
 	function RequestList( $object ) 
 	{
@@ -24,7 +26,8 @@ class RequestList extends PMPageList
 	function buildRelatedDataCache()
 	{
 		$this->priority_frame = new PriorityFrame();
-		
+        $this->non_terminal_states = $this->getObject()->getNonTerminalStates();
+
 		// cache priority method
 		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
 				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority');
@@ -35,14 +38,9 @@ class RequestList extends PMPageList
 		}
 
 		$this->estimation_field = new FieldIssueEstimation();
-
 		$this->type_it = getFactory()->getObject('RequestType')->getAll();
-	}
-	
-	function setupColumns()
-	{
-		parent::setupColumns();
-		$this->object->setAttributeVisible( 'Deadlines', false );
+        $this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
+        $this->velocity = getSession()->getProjectIt()->getVelocityDevider();
 	}
 	
  	function IsNeedToSelect()
@@ -62,7 +60,7 @@ class RequestList extends PMPageList
 
 	function getGroupFields() 
 	{
-		$fields = array_merge( parent::getGroupFields(), array( 'Tags', 'DeadlinesDate', 'DueDays') );
+		$fields = array_merge( parent::getGroupFields(), array( 'Tags') );
 		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion' ) );
 	}
 
@@ -73,8 +71,20 @@ class RequestList extends PMPageList
 		if ( $group == 'Type' ) return 'TypeBase';
 		return $group;
 	}
-	
-	function getRowBackgroundColor( $object_it ) 
+
+    function getGroupQuery()
+    {
+        if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupQuery();
+
+        $groupOrder = $this->getGroupOrder();
+        switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
+        {
+            default:
+                return parent::getGroupQuery();
+        }
+    }
+
+	function getRowBackgroundColor( $object_it )
 	{
 		return 'white';
 	}
@@ -137,9 +147,11 @@ class RequestList extends PMPageList
 				$items = array();
                 while ( !$entity_it->end() )
                 {
-					$items[] = translate($types_ids[$entity_it->getId()]).
-									': '.$this->getUidService()->getUidIconGlobal($entity_it, true);
-				
+                    $text = $this->getUidService()->getUidIconGlobal($entity_it, true);
+                    if ( !$this instanceof PageBoard ) {
+                        $text .= '<span class="ref-name">'.$entity_it->getDisplayNameExt().'<br/></span>';
+                    }
+					$items[] = translate($types_ids[$entity_it->getId()]).': '.$text;
 					$entity_it->moveNext();
 				}
                 		
@@ -178,22 +190,55 @@ class RequestList extends PMPageList
 						echo $this->type_it->getDisplayName().': ';
 					}
     		    }
-				echo $object_it->getHtml('Caption');
+                parent::drawCell($object_it, $attr);
 			break;
 			
 			case 'Estimation':
-				echo '<div style="margin-left:22px;">';
-					$this->estimation_field->setObjectIt($object_it);
-					$this->estimation_field->draw($this->getTable()->getView());
-				echo '</div>';
+                if ( in_array('hours', $this->getObject()->getAttributeGroups($attr)) ) {
+                    parent::drawCell($object_it, $attr);
+                }
+                else {
+                    echo '<div style="margin-left:22px;">';
+                    $this->estimation_field->setObjectIt($object_it);
+                    $this->estimation_field->draw($this->getTable()->getView());
+                    echo '</div>';
+                }
     			break;
-    			
+
+            case 'DeliveryDate':
+                $deadline_alert =
+                    in_array($object_it->get('State'), $this->non_terminal_states)
+                    && $object_it->get('DueWeeks') < 4 && $object_it->get('DeliveryDate') != '';
+
+                if ( $deadline_alert ) {
+                    echo '<span class="date-label label '.($object_it->get('DueWeeks') < 3 ? 'label-important' : 'label-warning').'">';
+                    parent::drawCell($object_it, $attr);
+                    echo '</span>';
+                } else {
+                    parent::drawCell($object_it, $attr);
+                }
+                break;
+
 			default:
 			    parent::drawCell( $object_it, $attr );
 		}
 	}
 
-	function getColumnWidth( $attr ) 
+	function drawTotal($object_it, $attr)
+    {
+        switch( $attr ) {
+            case 'Estimation':
+                echo $this->strategy->getDimensionText($object_it->get($attr));
+                if ( $this->velocity > 0 ) {
+                    echo ' ('.str_replace('%1',round($object_it->get($attr) / $this->velocity, 1),text(2283)).')';
+                }
+                break;
+            default:
+                parent::drawTotal($object_it, $attr);
+        }
+    }
+
+    function getColumnWidth( $attr )
 	{
 		if ( $attr == 'Author' )
 			return 80;
@@ -294,8 +339,6 @@ class RequestList extends PMPageList
 			}
 		}
 		
-		unset( $cols['Deadlines'] );
-
 		return $cols;
 	}
 	

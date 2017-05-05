@@ -14,7 +14,7 @@ class InviteService
 	{
 		if ( !is_array($emails) ) {
 			$emails = array_filter(
-					preg_split('/[,\s;]/', $emails), 
+					preg_split('/[,\s;\r\n]/', $emails),
 					function($value) {
 							return $value != '' && filter_var(trim($value), FILTER_VALIDATE_EMAIL) !== false;
 					}
@@ -50,9 +50,8 @@ class InviteService
 			);
 		}
 
-        \SessionBuilder::Instance()->invalidate();
-		getSession()->truncate();
-		
+        getFactory()->getCacheService()->truncate('sessions');
+
 		return true;
 	}
 	

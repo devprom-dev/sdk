@@ -15,33 +15,26 @@ class ModelFactoryBase
 		$objects_cache;
  	
  	private $cache_service = null;
- 	
  	private $access_policy = null;
- 	
  	private $events_manager = null;
- 	
  	private $references = null;
- 	
  	private $metadata_registry = null;
+    private $cache_key = '';
 
- 	function __construct( $cache_service = null, $access_policy = null, $events_manager = null ) 
+ 	function __construct( $cache_service, $cache_key = 'global', $access_policy = null, $events_manager = null )
  	{
- 		$this->setCacheService(
- 				is_object($cache_service) ? $cache_service : new CacheEngine()
- 		);
- 		
+        $this->cache_key = $cache_key;
+
+ 		$this->setCacheService($cache_service);
  		$this->setAccessPolicy(
- 				is_object($access_policy) ? $access_policy : new AccessPolicy($this->getCacheService())
+ 			is_object($access_policy) ? $access_policy : new AccessPolicy($this->getCacheService(), $cache_key)
  		);
- 		
  		$this->setEventsManager(
- 				is_object($events_manager) ? $events_manager : new ModelEventsManager()
+ 			is_object($events_manager) ? $events_manager : new ModelEventsManager()
  		);
  		 
- 		$this->references = new ModelReferenceRegistry($this->getCacheService());
- 		
+ 		$this->references = new ModelReferenceRegistry($this->getCacheService(), $cache_key);
  		$this->metadata_registry = new ObjectMetadataRegistry();
- 		
 		$this->vpd_enabled = true;
 		$this->sql_log_enabled = false;
 		$this->entities = array();
@@ -59,6 +52,12 @@ class ModelFactoryBase
 	{
 		return $this->cache_service;
 	}
+
+	public function setCacheKey( $key ) {
+        $this->cache_key = $key;
+        $this->references->setCacheKey($this->cache_key);
+        $this->getAccessPolicy()->setCacheKey($this->cache_key);
+    }
 	
 	public function getAccessPolicy()
 	{

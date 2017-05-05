@@ -21,7 +21,7 @@ class LicenseCheckerTest extends PHPUnit_Framework_TestCase {
      */
     public function shouldFailIfALMPluginDoesntExist() 
     {
-        $plugin = $this->getMock("Devprom\ServiceDeskBundle\Tests\Security\TestEEPlugin", array("getNamespace"), array($isLicensed));
+        $plugin = $this->getMock("Devprom\ServiceDeskBundle\Tests\Security\TestEEPlugin", array("getNamespace"), array(true));
         
         $plugin->expects($this->any())->method("getNamespace")->will($this->returnValue("ha-ha"));
     	
@@ -41,7 +41,7 @@ class LicenseCheckerTest extends PHPUnit_Framework_TestCase {
     {
         $plugin = $this->getMock("Devprom\ServiceDeskBundle\Tests\Security\TestEEPlugin", array("getNamespace"), array(true));
         
-        $plugin->expects($this->any())->method("getNamespace")->will($this->returnValue("EE"));
+        $plugin->expects($this->any())->method("getNamespace")->will($this->returnValue("SUPPORT"));
     	
         $factory = $this->getMock("\PluginsFactory", array("getNamespaces"), array(), '', false);
 
@@ -59,7 +59,7 @@ class LicenseCheckerTest extends PHPUnit_Framework_TestCase {
     {
     	$plugin = $this->getMock("Devprom\ServiceDeskBundle\Tests\Security\TestEEPlugin", array("getNamespace"), array(true));
         
-    	$plugin->expects($this->any())->method("getNamespace")->will($this->returnValue("ee"));
+    	$plugin->expects($this->any())->method("getNamespace")->will($this->returnValue("support"));
 
         $factory = $this->getMock("\PluginsFactory", array("getNamespaces"), array(), '', false);
 
@@ -115,7 +115,7 @@ class TestEEPlugin extends PluginBase {
         return 'EE';
     }
 
-    function IsLicensed()
+    function checkLicense()
     {
         return $this->isLicensed;
     }

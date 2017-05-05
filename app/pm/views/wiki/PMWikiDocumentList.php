@@ -28,11 +28,12 @@ class PMWikiDocumentList extends PMWikiList
     {
         parent::extendModel();
         $this->getObject()->addAttribute('Attributes', 'TEXT', translate('Атрибуты'), true);
+        $this->pageForm = $this->getTable()->getForm();
     }
 
-    protected function setPersisters( $object, $sorts )
+    protected function getPersisters( $object, $sorts )
     {
-        parent::setPersisters($object, $sorts);
+        $persisters = parent::getPersisters($object, $sorts);
 
         $snapshot_it = $this->getTable()->getCompareToSnapshot();
 
@@ -68,16 +69,17 @@ class PMWikiDocumentList extends PMWikiList
         {
             $this->revision_it = getFactory()->getObject('WikiPageChange')->getExact($_REQUEST['revision']);
             if ( $this->revision_it->getId() > 0 ) {
-                $object->addPersister( new WikiPageRevisionPersister($this->revision_it) );
+                $persisters[] = new WikiPageRevisionPersister($this->revision_it);
             }
         }
 
         foreach( $this->trace_source_attribute as $attribute ) {
             if ( $this->getColumnVisibility($attribute) ) {
-                $object->addPersister( new WikiPageTracesRevisionsPersister() );
+                $persisters[] = new WikiPageTracesRevisionsPersister();
                 break;
             }
         }
+        return $persisters;
     }
 
  	function getGroupFields()
@@ -215,8 +217,6 @@ class PMWikiDocumentList extends PMWikiList
 	
 	function drawSourcePage( $entity_it, $object_it, $attr, $revisions )
 	{
-		$registry = new ObjectRegistrySQL($entity_it->object);
-
 		$baselines = array();
 		$baselines_data = $object_it->get($attr.'Baselines');
 		if ( $baselines_data != '' ) {
@@ -246,20 +246,23 @@ class PMWikiDocumentList extends PMWikiList
 				continue;
 			}
 
-			$source_it = $registry->Query(
-				array (
-					new FilterInPredicate($entity_it->getId()),
-					new DocumentVersionPersister()
-				)
-			);
-			if ( $baselines[$source_it->getId()] != '' ) {
+            $registry = new ObjectRegistrySQL($entity_it->object);
+			if ( $baselines[$entity_it->getId()] != '' ) {
 				$source_it = $registry->Query(
 					array (
-						new FilterInPredicate($source_it->getId()),
+						new FilterInPredicate($entity_it->getId()),
 						new DocumentVersionPersister(),
-						new SnapshotItemValuePersister($baselines[$source_it->getId()])
+						new SnapshotItemValuePersister($baselines[$entity_it->getId()])
 					)
 				);
+			}
+			else {
+                $source_it = $registry->Query(
+                    array (
+                        new FilterInPredicate($entity_it->getId()),
+                        new DocumentVersionPersister()
+                    )
+                );
 			}
 
             $compare_to = $source_it;
@@ -308,7 +311,7 @@ class PMWikiDocumentList extends PMWikiList
 	function drawPageContent( $object_it )
 	{
 		$filter_values = $this->getFilterValues();
-		$form = $this->getTable()->getForm();
+		$form = $this->pageForm;
 
 		$form->setFormIndex( $object_it->getId() );
 		$form->show( $object_it );
@@ -327,8 +330,13 @@ class PMWikiDocumentList extends PMWikiList
 			$registry->setBaselineIt($compareto_it);
 			$form->setCompareTo($registry->Query());
 		}
-        		
-		if ( $filter_values['viewmode'] != 'view' )
+
+		$viewMode = $filter_values['viewmode'];
+        if ( $viewMode == '' ) {
+            $viewMode = $_REQUEST['viewmode'];
+        }
+
+		if ( $viewMode != 'view' )
 		{
 		    $section = new PageSectionComments($object_it, $this->getTable()->getRevisionIt()->getId());
             $section->setOptions(
@@ -340,7 +348,7 @@ class PMWikiDocumentList extends PMWikiList
             $form_render_parms['sections'] = array( $section );
 		}
 
-		$form_render_parms['modifiable'] =
+		$form_render_parms['modifiable'] = $viewMode != 'view' &&
 			$this->itemsEditable && getFactory()->getAccessPolicy()->can_modify($object_it);
 
 		$revision = $object_it->get('RevisionId');
@@ -387,25 +395,41 @@ class PMWikiDocumentList extends PMWikiList
 		foreach( $traces as $key => $attribute ) {
 			$items .= $object_it->get($attribute);
 		}
-		if ( $items == '' ) return;
 
-		echo '<div class="well well-small well-traces hover-holder hidden-print">';
+		echo '<div class="well well-small well-traces hover-holder hidden-print '.($items == '' ? 'hidden' : '').'">';
 			echo '<ul class="inline">';
 				echo '<li><i class="icon-random"></i></li>';
 				foreach( $traces as $attribute ) {
 					if ( $object_it->get($attribute) == '' ) continue;
-					if ( $object_it->object->IsReference($attribute) ) {
+                    if ( $attribute == 'Dependency' ) {
+                        $items = preg_split('/,/', $object_it->get($attribute));
+                        $objects = array();
+                        foreach( $items as $item ) {
+                            list($className, $objectId) = preg_split('/:/', $item);
+                            $objects[$className][] = $objectId;
+                        }
+                        echo '<li>';
+                        echo translate($this->getObject()->getAttributeUserName($attribute)).': ';
+                        foreach( $objects as $className => $ids ) {
+                            $object = getFactory()->getObject($className);
+                            if ( !is_object($object) ) continue;
+                            parent::drawRefCell($object->getExact($ids), $object_it, $attribute);
+                            echo '&nbsp; ';
+                        }
+                        echo '</li>';
+                    }
+                    else if ( $object_it->object->IsReference($attribute) ) {
 						$ref_it = $this->getFilteredReferenceIt($attribute, $object_it->get($attribute));
 						if ( $ref_it->count() < 1 ) continue;
 
 						echo '<li>';
-						echo $this->getObject()->getAttributeUserName($attribute).': ';
+						echo translate($this->getObject()->getAttributeUserName($attribute)).': ';
 						parent::drawRefCell($ref_it, $object_it, $attribute);
 						echo '</li>';
 					}
 					else {
 						echo '<li>';
-						echo $this->getObject()->getAttributeUserName($attribute).': ';
+						echo translate($this->getObject()->getAttributeUserName($attribute)).': ';
 						parent::drawCell($object_it, $attribute);
 						echo '</li>';
 					}
@@ -414,7 +438,7 @@ class PMWikiDocumentList extends PMWikiList
 				if ( $method->hasAccess() ) {
 					$method->setRedirectUrl('donothing');
 					echo '<li>';
-						echo '<a class="dashed dashed-hidden" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.translate('изменить').'</a>';
+						echo '<a id="doc-page-trace" class="dashed dashed-hidden" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.translate('изменить').'</a>';
 					echo '</li>';
 				}
 		echo '</ul>';
@@ -483,12 +507,8 @@ class PMWikiDocumentList extends PMWikiList
 	
 	function getAttributesVisible()
 	{
-		$trace = $this->getObject()->getAttributesByGroup('trace');
 		foreach( $this->getObject()->getAttributes() as $key => $attribute ) {
-			if ( in_array($key, array("Content","SectionNumber")) ) continue;
-			if ( in_array($key, $this->trace_source_attribute) ) continue;
-			if ( in_array($key, $trace) ) continue;
-			if ( $this->getColumnVisibility($key) ) return true;
+			if ( $this->getColumnVisibility($key) && in_array($key, $this->attributeFields) ) return true;
 		}
 		return false;
 	}
@@ -498,7 +518,7 @@ class PMWikiDocumentList extends PMWikiList
 		switch ( $attr )
 		{
 		    case 'Content':
-		    	if ( $_REQUEST['tableonly'] != '' || $this->getTable()->dataFilterApplied() ) {
+		    	if ( $_REQUEST['tableonly'] != '' ) {
 					return array (
 						'script' => '#',
 						'name' => $this->displayContentHeader ? translate('Документ') : ''
@@ -558,54 +578,45 @@ class PMWikiDocumentList extends PMWikiList
  	{
         $parent_parms = parent::getRenderParms();
 
+        $visibleColumns = array_merge(array('Content','Attributes'), $this->trace_source_attribute);
+        $this->attributeFields =
+            array_diff(
+                array_filter($parent_parms['columns'], function($value) use ($visibleColumns) {
+                    return !in_array($value, $visibleColumns);
+                }),
+                $this->trace_source_attribute,
+                $this->trace_attributes,
+                array(
+                    'SectionNumber',
+                    'Tags'
+                )
+            );
+
         $this->data_filter_used = $this->getTable()->dataFilterApplied();
         $this->attributesVisible = $this->getAttributesVisible();
 
 		$filter_values = $this->getFilterValues();
 		$this->itemsEditable =
 			$filter_values['viewmode'] != 'view'
-			&& $filter_values['search'] == ''
+			&& in_array($filter_values['search'], array('','all','hide'))
 			&& $this->getTable()->getRevisionIt()->getId() < 1
 			&& $this->getTable()->getCompareToSnapshot()->getId() < 1
             && getFactory()->getAccessPolicy()->can_modify($this->getObject());
 
-        if ( $_REQUEST['doc-visible-ids'] != '' )
-        {
-            list($first, $last) = preg_split('/,/', $_REQUEST['doc-visible-ids']);
 
-            $object = getFactory()->getObject(get_class($this->getObject()));
-            $object->resetPersisters();
-
-            $ids = $object->getRegistry()->Query(
-                array (
-                    new FilterAttributePredicate('DocumentId', $this->getTable()->getDocumentIt()->getId()),
-                    new SortDocumentClause()
-                )
-            )->idsToArray();
-
-            $first_pos = array_search($first, $ids);
-            if ( $first_pos === false ) {
-                $this->visible_ids = array(0);
-            }
-            else {
-                $this->visible_ids = array_slice($ids, $first_pos, array_search($last, $ids) - $first_pos + 1);
-            }
+        if ( $_REQUEST[strtolower(get_class($this->getObject()))] != '' ) {
+            $this->visible_ids = preg_split('/\,/', $_REQUEST[strtolower(get_class($this->getObject()))]);
         }
         else {
-            if ( $_REQUEST['object'] != '' || $this->data_filter_used ) {
-                $this->visible_ids = array();
-            }
-            else {
-                $pageId = $this->getTable()->getObjectIt()->getId();
-                if ( $pageId == '' ) $pageId = $this->getIteratorRef()->getId();
+            $pageId = $this->getTable()->getObjectIt()->getId();
+            if ( $pageId == '' ) $pageId = $this->getIteratorRef()->getId();
 
-                $ids = $this->getIteratorRef()->idsToArray();
-                $this->visible_ids = array_slice(
-                    $ids,
-                    max(0, array_search($pageId, $ids)),
-                    $this->getTable()->getPreviewPagesNumber()
-                );
-            }
+            $ids = $this->getIteratorRef()->idsToArray();
+            $this->visible_ids = array_slice(
+                $ids,
+                max(0, array_search($pageId, $ids)),
+                $this->getTable()->getPreviewPagesNumber()
+            );
         }
 
 		$attributes = array_merge(
@@ -620,19 +631,6 @@ class PMWikiDocumentList extends PMWikiList
 				break;
 			}
 		}
-
-        $visibleColumns = array_merge(array('Content','Attributes'), $this->trace_source_attribute);
-        $this->attributeFields =
-            array_diff(
-                array_filter($parent_parms['columns'], function($value) use ($visibleColumns) {
-                    return !in_array($value, $visibleColumns);
-                }),
-                $this->trace_source_attribute,
-                $this->trace_attributes,
-                array(
-                    'SectionNumber'
-                )
-            );
 
 		return array_merge( $parent_parms, array (
 		    'table_class_name' => 'table-document',

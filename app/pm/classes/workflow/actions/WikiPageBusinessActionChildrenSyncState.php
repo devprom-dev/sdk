@@ -13,10 +13,11 @@ class WikiPageBusinessActionChildrenSyncState extends BusinessActionWorkflow
 	function apply( $object_it )
  	{
 		$page_it = $object_it->object->getRegistry()->Query(
-				array (
-						new WikiRootTransitiveFilter($object_it->getId()),
-						new WikiNonRootFilter()
-				)
+            array (
+                new WikiRootTransitiveFilter($object_it->getId()),
+                new FilterNotInPredicate($object_it->getId()),
+                new WikiNonRootFilter()
+            )
 		);
 		
 		$service = new WorkflowService($object_it->object);

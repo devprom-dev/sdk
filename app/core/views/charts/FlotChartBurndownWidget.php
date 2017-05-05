@@ -57,7 +57,9 @@ class FlotChartBurndownWidget extends FlotChartWidget
 			success: function( data )
 			{
 				if ( data == null ) data = [];
-				$.plot($("#<?=$chart_id?>"), data,
+				var container = $("#<?=$chart_id?>");
+				if ( container.length < 1 ) return;
+				$.plot(container, data,
 					{
 						colors: ["rgb(225,63,63)", "rgb(247,239,59)", "rgb(63,225,63)", "rgb(63,63,225)"],
 						series: {

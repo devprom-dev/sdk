@@ -14,5 +14,10 @@ class BulkActionBuilderIssues extends BulkActionBuilder
  		
 		$method = new DuplicateIssuesWebMethod();
 		if ( $method->hasAccess() ) $registry->addCustomAction(text(867), $method->getMethodName());
+
+		$reportIt = getFactory()->getObject('PMReport')->getExact('workflowanalysis');
+        $registry->addActionUrl($reportIt->getDisplayName(),
+            "javascript: openURLItems('".$reportIt->getUrl('request=%ids%')."');"
+        );
  	}
 }

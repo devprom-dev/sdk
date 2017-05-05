@@ -8,9 +8,25 @@ class ReleaseMetadataBuilder extends ObjectMetadataEntityBuilder
     public function build( ObjectMetadata $metadata )
     {
     	if ( ! $metadata->getObject() instanceof Release ) return;
+
         $metadata->addAttributeGroup('Caption', 'alternative-key');
     	$metadata->addAttribute( 'PlannedCapacity', 'FLOAT', text(1421), false );
         $metadata->addAttribute( 'LeftCapacityInWorkingDays', 'FLOAT', text(1422), false );
  	    $metadata->addPersister( new CapacityPersister() );
+        $metadata->setAttributeType('StartDate', 'DATE');
+        $metadata->setAttributeType('FinishDate', 'DATE');
+
+        foreach ( array('StartDate','FinishDate','Caption','Description') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'permissions');
+        }
+
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( !$methodology_it->IsAgile() ) {
+            foreach ( array('InitialVelocity') as $attribute ) {
+                $metadata->addAttributeGroup($attribute, 'system');
+            }
+            $metadata->setAttributeVisible('InitialVelocity', false);
+            $metadata->setAttributeRequired('InitialVelocity', false);
+        }
     }
 }

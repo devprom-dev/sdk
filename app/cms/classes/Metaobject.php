@@ -445,6 +445,22 @@ class Metaobject extends StoredObjectDB
 		}
 	}
 
+    function formatValueForDB( $name, $value )
+    {
+        if ( $this->IsReference($name) && $value > 0 ) {
+            $ref = $this->getAttributeObject($name);
+            if ( $ref->getEntityRefName() != 'entity' ) {
+                $ref_it = $ref->getRegistry()->Query(
+                    array(
+                        new FilterInPredicate($value)
+                    )
+                );
+                if ( is_object($ref_it) && $ref_it->getId() == '' ) return 'NULL';
+            }
+        }
+        return parent::formatValueForDB( $name, $value );
+    }
+
 	public function __sleep()
 	{
 		throw new Exception('Unable serialize Metaobject');

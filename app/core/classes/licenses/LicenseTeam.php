@@ -10,10 +10,8 @@ class LicenseTeam extends LicenseInstalled
 		parent::__construct();
 
  		$this->addAttribute( 'Caption', 'VARCHAR', 'text(1270)', true, false, 'text(1273)', 0 );
-
- 		$this->setAttributeVisible( 'LicenseKey', true ); 
-
- 		$this->setAttributeVisible( 'LicenseValue', false ); 
+        $this->addAttribute( 'LicenseValue', 'VARCHAR', text(2066), true, true );
+        $this->addAttribute( 'LicenseKey', 'VARCHAR', translate("Ключ лицензии"), true, true );
 	}
 	
 	function createIterator()

@@ -9,22 +9,15 @@ include "classes/widgets/KanbanTourScriptBuilder.php";
 
 class KanbanPmPlugin extends PluginPMBase
 {
-    private $enabled;
-    
- 	function checkEnabled()
- 	{
- 	    if ( isset($this->enabled) ) return $this->enabled;
- 	     
- 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 		
- 		if ( is_object($methodology_it) )
- 		{
- 			return ($this->enabled = $methodology_it->get('IsKanbanUsed') == 'Y');
- 		}
- 		
- 		return false;
- 	}
- 	
+    function checkSpecialFeatures()
+    {
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( is_object($methodology_it) ) {
+            return $methodology_it->get('IsKanbanUsed') == 'Y';
+        }
+        return false;
+    }
+
  	function getModules()
  	{
 		$modules = array (
@@ -40,7 +33,7 @@ class KanbanPmPlugin extends PluginPMBase
  					)
  			);
 
-		if ( !$this->checkEnabled() ) return $modules;
+		if ( !$this->checkSpecialFeatures() ) return $modules;
 
 		$modules['requests'] =
  				array(
@@ -58,17 +51,23 @@ class KanbanPmPlugin extends PluginPMBase
 
  	function getBuilders()
  	{
-		return array (
-			new ReportsKanbanBuilder( getSession() ),
-			new FunctionalAreaMenuKanbanBuilder(),
+        $builders = array(
+            new RequestKanbanMetadataBuilder()
+        );
 
-			// model extenders
-			new StateKanbanMetadataBuilder(),
-			new MethodologyKanbanMetadataBuilder(),
-			new RequestKanbanMetadataBuilder(),
+        if ( !$this->checkSpecialFeatures() ) return $builders;
 
-			// widgets
-			new KanbanTourScriptBuilder(getSession())
+		return array_merge(
+            $builders,
+            array (
+                new ReportsKanbanBuilder( getSession() ),
+                new FunctionalAreaMenuKanbanBuilder(),
+                // model extenders
+                new StateKanbanMetadataBuilder(),
+                new MethodologyKanbanMetadataBuilder(),
+                // widgets
+                new KanbanTourScriptBuilder(getSession())
+            )
  	    );
  	}
  	
@@ -76,7 +75,7 @@ class KanbanPmPlugin extends PluginPMBase
  	{
  	 	if ( is_a($list, 'VersionList') )
  	    {
-     	    if ( !$this->checkEnabled() ) return;
+     	    if ( !$this->checkSpecialFeatures() ) return;
 
      	    $object = $list->getObject();
      	    
@@ -98,14 +97,6 @@ class KanbanPmPlugin extends PluginPMBase
 
 	protected function getIssueActions( $object_it )
 	{
-		if ( is_null($this->kanban_vpds) ) {
-		    $registry = getFactory()->getObject('Project')->getRegistry();
-            $registry->setPersisters(array());
-			$this->kanban_vpds = $registry->Query(
-					array(new ProjectUseKanbanPredicate())
-				)->fieldToArray('VPD');
-		}
-		if ( !in_array($object_it->get('VPD'), $this->kanban_vpds) ) return array();
 		if ( $object_it->object->getAttributeType('BlockReason') == '' ) return array();
 
 		if ( !is_object($this->method_block) ) {
@@ -137,5 +128,4 @@ class KanbanPmPlugin extends PluginPMBase
 
 	private $method_block = null;
 	private $method_unblock = null;
-	private $kanban_vpds = null;
 }

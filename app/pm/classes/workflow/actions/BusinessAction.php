@@ -21,4 +21,14 @@ class BusinessAction
  	{
  		return false;
  	}
+
+ 	function getData() {
+        return $this->data;
+    }
+
+    function setData( $data ) {
+        $this->data = $data;
+    }
+
+ 	private $data = array();
 }

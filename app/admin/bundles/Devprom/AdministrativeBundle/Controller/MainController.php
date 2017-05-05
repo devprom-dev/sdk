@@ -15,12 +15,9 @@ class MainController extends BaseController
     	// check if an update is installing then skip controlling of deployment state
     	if ( preg_match('/blacklist|users|backup|update|command|accountclient|plugin/i', $request->getBaseUrl()) ) return;
 
-    	$state = getFactory()->getObject('DeploymentState');
-    	
-    	if ( !$state->IsReadyToBeUsed() )
+    	if ( !\DeploymentState::Instance()->IsReadyToBeUsed() )
     	{
             $this->get('router')->getGenerator()->getContext()->setBaseUrl('');
-    	    
     		return new RedirectResponse($this->generateUrl('_admin_install'));
     	}
     	

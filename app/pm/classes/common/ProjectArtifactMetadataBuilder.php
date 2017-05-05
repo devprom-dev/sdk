@@ -3,18 +3,18 @@ include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersist
 
 class ProjectArtifactMetadataBuilder extends ObjectMetadataBuilder
 {
-	private $artifacts = array(
-		'pm_Task', 'pm_ChangeRequest', 'WikiPage', 'Comment', 'pm_Question', 'pm_Test',
-		'pm_Artefact', 'pm_Attachment', 'WikiPageFile', 'BlogPost', 'BlogPostFile',
-		'pm_Milestone', 'pm_Function', 'pm_Meeting', 'pm_SubversionRevision',
-		'sm_Aim', 'sm_Person', 'sm_Action', 'sm_Activity',
-		'pm_State', 'pm_Transition', 'pm_Activity', 'pm_Release', 'pm_Version',
-		'cms_Snapshot'
-	);
+    private $skipEntities = array (
+        'pm_Workspace', 'pm_WorkspaceMenu', 'pm_WorkspaceMenuItem', 'pm_StateObject', 'pm_Watcher', 'cms_Resource',
+        'pm_Methodology', 'pm_ProjectRole', 'pm_ParticipantRole', 'pm_AccessRight', 'co_AccessRight', 'pm_ObjectAccess',
+        'pm_CustomAttribute', 'pm_IssueType', 'pm_TaskType', 'WikiPageType', 'pm_StateAttribute', 'pm_StateAction', 'pm_Transition',
+        'pm_TransitionAttribute', 'pm_TransitionAction', 'pm_TransitionPredicate', 'entity',
+        'pm_TransitionRole', 'pm_FeatureType', 'pm_UserSettings', 'pm_CustomReport', 'pm_ProjectLink'
+    );
 
     public function build( ObjectMetadata $metadata )
     {
-		if ( !in_array($metadata->getObject()->getEntityRefName(),$this->artifacts) ) return;
+        if ( in_array($metadata->getObject()->getEntityRefName(), $this->skipEntities) ) return;
+        if ( getFactory()->getEntityOriginationService()->getSelfOrigin($metadata->getObject()) == '' ) return;
 
 		if ( $metadata->getAttributeType('Project') == '' ) {
 			$metadata->addAttribute('Project', 'REF_pm_ProjectId', translate('Проект'), false);

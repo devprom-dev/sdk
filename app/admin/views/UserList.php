@@ -57,8 +57,6 @@ class UserList extends PageList
 	    }
 	}
 
-	function IsNeedToDelete( ) { return false; }
-
 	function getGroupDefault()
 	{
 		return '';

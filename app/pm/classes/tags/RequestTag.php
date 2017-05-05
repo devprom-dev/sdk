@@ -1,9 +1,6 @@
 <?php
-
 if ( !class_exists('Tag', false) ) include "Tag.php";
 include "RequestTagIterator.php";
-
-include "predicates/TagRequestFilter.php";
 include "persisters/RequestTagCaptionPersister.php";
 
 class RequestTag extends Tag
@@ -13,10 +10,14 @@ class RequestTag extends Tag
  		parent::Metaobject('pm_RequestTag');
 
 		$this->addAttribute('Caption', 'TEXT', translate('Название'), false);
-		
 		$this->addAttribute('ItemCount', 'INTEGER', translate('Количество'), false);
-
 		$this->addPersister( new RequestTagCaptionPersister() );
+        $this->addPersister( new TagParentPersister() );
+        $this->setSortDefault(
+            array(
+                new TagCaptionSortClause()
+            )
+        );
  	}
 
  	function getPageNameObject( $object_id = '' ) {

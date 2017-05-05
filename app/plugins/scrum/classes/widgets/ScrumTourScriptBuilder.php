@@ -15,7 +15,7 @@ class ScrumTourScriptBuilder extends ScriptBuilder
         if ( defined('SKIP_PRODUCT_TOUR') ) return;
 
         $project_it = $this->session->getProjectIt();
-        if ( $project_it->get('Tools') != 'scrum_ru.xml' ) return;
+        if ( !in_array($project_it->get('Tools'), array('scrum_ru.xml','scrumban_ru.xml')) ) return;
         if ( $project_it->getMethodologyIt()->get('UseScrums') != 'Y' ) return;
 
         $requirements = false;
@@ -39,7 +39,11 @@ class ScrumTourScriptBuilder extends ScriptBuilder
                 preg_replace('/mode_reqs/i', $requirements ? 'true' : 'false',
                     preg_replace('/mode_qa/i', $testing ? 'true' : 'false',
                         preg_replace('/mode_code/i',  $code ? 'true' : 'false',
-                            file_get_contents(SERVER_ROOT_PATH."plugins/scrum/resources/js/tour.js")
+                            file_get_contents(
+                                $project_it->get('Tools') == 'scrum_ru.xml'
+                                    ? SERVER_ROOT_PATH."plugins/scrum/resources/js/tour.js"
+                                    : SERVER_ROOT_PATH."plugins/scrum/resources/js/scrumban-tour.js"
+                            )
                         )
                     )
                 )

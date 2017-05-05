@@ -31,6 +31,9 @@ class AttachmentController extends Controller
     public function downloadIssueAttachmentAction($attachmentId)
     {
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
+        if ( !is_object($attachment) ) {
+            $this->redirect($this->generateUrl('issue_list', array()));
+        }
 
         $issue = $attachment->getIssue();
         $this->checkUserIsAuthorized($issue);
@@ -115,6 +118,9 @@ class AttachmentController extends Controller
     public function deleteAction($attachmentId) {
 
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
+        if ( !is_object($attachment) ) {
+            $this->redirect($this->generateUrl('issue_list', array()));
+        }
 
         $issue = $attachment->getIssue();
         $this->checkUserIsAuthorized($issue);

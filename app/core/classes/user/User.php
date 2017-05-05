@@ -11,6 +11,7 @@ include "predicates/UserSystemRolePredicate.php";
 include "predicates/UserAccessPredicate.php";
 include "persisters/UserDetailsPersister.php";
 include "persisters/UserReadonlyPersister.php";
+include "sorts/UserTitleSortClause.php";
 
 class User extends Metaobject
 {
@@ -19,7 +20,7 @@ class User extends Metaobject
 		parent::Metaobject('cms_User', $registry);
 		$this->setSortDefault( new SortAttributeClause('Caption') );
 		$this->addPersister( new UserReadonlyPersister() );
-		
+
 		$system_attributes = array ('IsAdmin', 'IsShared', 'Rating', 'IsActivated', 'SessionHash', 'ICQ', 'Skype', 'LDAPUID', 'AskChangePassword', 'IsReadonly');
 		foreach( $system_attributes as $attribute ) {
     		$this->addAttributeGroup($attribute, 'system');
@@ -228,66 +229,9 @@ class User extends Metaobject
 		return $result;
 	}
 
-	/*
-	 * returns latest visits of system users on the given project,
-	 * also it calculates count of visits 
-	 */
-	function getLastVisitsOnProject( $project_id )
-	{
-		$sql = 
-			" SELECT u.*, MAX(p.RecordModified) LastVisit, " .
-			"        COUNT(p.pm_ProjectUseId) VisitsAmount " .
-			"   FROM cms_User u" .
-			"		 INNER JOIN pm_ProjectUse p ON p.Participant = u.cms_UserId " .
-			"  WHERE p.Project = " .$project_id.
-			"  GROUP BY u.cms_UserId " .
-			"  ORDER BY LastVisit DESC ";
-			
-		return $this->createSQLIterator($sql);
-	}
-	
-	function getActiveIt( $days )
-	{
-		$sql = "select p.*, max(u.RecordModified) LastAccessed " .
-			   "  from cms_User p inner join pm_ProjectUse u on u.Participant = p.cms_UserId" .
-			   " where to_days(now()) - to_days(u.RecordModified) < ".$days.
-			   " group by p.cms_UserId " .
-			   " order by LastAccessed DESC ";
-
-		return $this->createSqlIterator($sql);
-	}
-	
-	function getCloseProjectIt( $user_it )
-	{
-		$users = $user_it->idsToArray();
-		
-		if ( count($users) < 1 )
-		{
-			return null;
-		}
-		
-		$sql = "select DISTINCT p.* " .
-			   "  from pm_Project p INNER JOIN pm_Participant a on a.Project = p.pm_ProjectId" .
-			   " where a.SystemUser IN (".join(',', $users).")".
-			   "   and IFNULL(p.IsClosed, 'N') = 'Y' ".
-			   " order by p.RecordModified DESC ";
-
-		return getFactory()->getObject('pm_Project')->createSqlIterator($sql);
-	}
-
 	function getHashedPassword( $password )
 	{
 		return md5(strtolower($password).PASS_KEY);
-	}
-	
-	function getAnonymousIt()
-	{
-		return $this->getByRef('Login', 'anonymous');
-	}
-
-	function getAdministratorIt()
-	{
-		return $this->getByRef('IsAdmin', 'Y');
 	}
 	
 	function DeletesCascade( $object )

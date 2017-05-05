@@ -89,7 +89,10 @@ class WorkflowService
 		else {
 			$object_it = $object_it->object->getExact($object_it->getId());
 			if ( $fire_event ) {
-				getFactory()->getEventsManager()->executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
+				getFactory()->getEventsManager()
+                    ->executeEventsAfterBusinessTransaction(
+                        $object_it, 'WorklfowMovementEventHandler', $parms
+                    );
 			}
 		}
 
@@ -98,6 +101,44 @@ class WorkflowService
 		}
         return true;
 	}
+
+	static function getImage( $stateObject )
+    {
+        $uml = "@startuml".PHP_EOL.PHP_EOL;
+
+        $state_it = $stateObject->getRegistry()->Query(
+            array(
+                new \FilterBaseVpdPredicate()
+            )
+        );
+        while( !$state_it->end() ) {
+            $uml .= "state " . '"' . $state_it->getDisplayName() . '" as ' . $state_it->get('ReferenceName') . PHP_EOL;
+            $state_it->moveNext();
+        }
+
+        $state_it->moveFirst();
+        $uml .= "[*] -down-> " . $state_it->get('ReferenceName') . PHP_EOL;
+
+        while( !$state_it->end() ) {
+            $sourceStateIt = $state_it;
+            $transitionIt = $state_it->getTransitionIt();
+            while( !$transitionIt->end() ) {
+                $targetIt = $transitionIt->getRef('TargetState');
+                $uml .= $sourceStateIt->get('ReferenceName') . " -down-> " . $targetIt->get('ReferenceName') . " : " . $transitionIt->getDisplayName() . PHP_EOL;
+                $transitionIt->moveNext();
+            }
+            if ( $state_it->get('IsTerminal') == 'Y' ) {
+                $uml .= $state_it->get('ReferenceName') . " -down-> [*]" . PHP_EOL;
+            }
+            $state_it->moveNext();
+        }
+        $uml .= "@enduml";
+
+        $url = trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ");
+        $url .= '/plantuml/img/'.encode64(gzdeflate($uml, 9));
+
+        return '<img class="workflow-image" src="'.$url.'">';
+    }
 	
 	private $object = null;
 	private $state_object = null;

@@ -1,5 +1,5 @@
 <?php
-
+include_once SERVER_ROOT_PATH."pm/methods/OpenBrokenTraceWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/wiki/fields/FieldWikiPageTrace.php";
 
 class ObjectTraceFormEmbedded extends PMFormEmbedded
@@ -147,13 +147,33 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
 		}
 		if ( $object_it->get('Revision') != '' ) {
             $url .= strpos($url, '?') >= 0 ? '&' : '?';
-            $url .= 'revision='.$object_it->get('Revision');
             if ( $object_it->get('Baseline') == '' ) {
                 $changeIt = $object_it->getRef('Revision');
                 $url .= '&bydate='.$changeIt->getDateFormat('RecordCreated');
             }
         }
-		$actions[] = array();
+
+        if ( $anchor_it->object instanceof WikiPage )
+        {
+            $actions[] = array();
+            if ( $anchor_it->get('BrokenTraces') != "" ) {
+                $method = new OpenBrokenTraceWebMethod();
+                $actions[] = array(
+                    'name' => text(1933),
+                    'target' => "_blank",
+                    'url' => $method->getJSCall(array('object' => $anchor_it->getId()))
+                );
+            }
+            else {
+                $actions[] = array(
+                    'url' => $anchor_it->getHistoryUrl(),
+                    'target' => "_blank",
+                    'name' => text(1933)
+                );
+            }
+        }
+
+        $actions[] = array();
  	    $actions[] = array (
 			'name' => $anchor_it->object instanceof WikiPage ? text(2163) : translate('Открыть'),
 			'url' => $url,
@@ -161,18 +181,6 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
             'target' => defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? '' : '_blank'
 		);
 		$actions[] = array();
-
-        if ( $anchor_it->object instanceof WikiPage ) {
-            $versions_url = $anchor_it->getPageVersions();
-            if ( $versions_url != '' ) {
-                $actions[] = array(
-                    'url' => $versions_url,
-                    'target' => "_blank",
-                    'name' => text(2235)
-                );
-                $actions[] = array();
-            }
-        }
 
  	    return array_merge($actions, parent::getActions( $object_it, $item ));
  	}
@@ -201,5 +209,16 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
             }
             $uid->drawUidInCaption($object_it);
         }
+    }
+
+    function getFieldDescription($attr)
+    {
+        $value = parent::getFieldDescription($attr);
+        if ( $this->trace_object instanceof Milestone ) {
+            if ( $attr == 'ObjectId' ) {
+                $value = str_replace('%1', getFactory()->getObject('Module')->getExact('project-plan-hierarchy')->getUrl(), text(2275));
+            }
+        }
+        return $value;
     }
 }

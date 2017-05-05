@@ -5,7 +5,7 @@ class WikiPageNewVersionTrigger extends SystemTriggersBase
     function add( $object_it )
     { 
         if ( !is_a($object_it->object, 'WikiPage') ) return;
-            
+
         $record_data = $this->getRecordData();
         
         if ( $record_data['DocumentVersion'] == '' ) return;

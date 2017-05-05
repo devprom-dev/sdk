@@ -3,6 +3,7 @@
 include_once SERVER_ROOT_PATH."pm/classes/product/FeatureModelExtendedBuilder.php";
 
 include "FunctionForm.php";
+include "FunctionSearchIssueForm.php";
 include "FunctionTable.php";
 include "PageSettingFeatureBuilder.php";
 
@@ -15,14 +16,17 @@ class FunctionsPage extends PMPage
  		
  		if ( $this->needDisplayForm() )
  		{
-			$this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'hierarchy', translate('Декомпозиция')));
-			$this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'trace', translate('Трассировки')));
+ 		    if ( $this->getFormRef() instanceof FunctionForm ) {
+                $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'hierarchy', translate('Декомпозиция')));
+                $this->addInfoSection(new PageSectionAttributes($this->getFormRef()->getObject(), 'trace', translate('Трассировки')));
 
- 		    $object_it = $this->getObjectIt();
- 		    if( is_object($object_it) && $object_it->getId() > 0 ) {
-				$this->addInfoSection( new NetworkSection($object_it) );
-	            $this->addInfoSection( new PageSectionComments($object_it) );
- 		    }
+                $object_it = $this->getObjectIt();
+                if( is_object($object_it) && $object_it->getId() > 0 ) {
+                    $this->addInfoSection( new PageSectionComments($object_it) );
+                    $this->addInfoSection( new PMLastChangesSection ( $object_it ) );
+                    $this->addInfoSection( new NetworkSection($object_it) );
+                }
+            }
  		}
  		else {
             $this->addInfoSection(new DetailsInfoSection());
@@ -46,6 +50,11 @@ class FunctionsPage extends PMPage
  	
  	function getForm() 
  	{
-		return new FunctionForm( $this->getObject() );
+ 	    if ( $_REQUEST['BindIssue'] != '' ) {
+            return new FunctionSearchIssueForm( $this->getObject() );
+        }
+        else {
+            return new FunctionForm( $this->getObject() );
+        }
  	}
 }

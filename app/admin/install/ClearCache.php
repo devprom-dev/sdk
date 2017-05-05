@@ -33,54 +33,10 @@ class ClearCache extends Installable
 	// makes install actions
 	function install()
 	{
-		$lock = new CacheLock(120);
+		$lock = new CacheLock();
+        FileSystem::rmdirr($this->cachePath);
+        $lock->Release();
 
-		if ( method_exists($this, 'info') ) {
-			$this->info( 'Clear directory: '.$this->cachePath );
-		}
-		for( $i = 0; $i < 5; $i++ ) {
-			$this->info( 'Retry: '.$i );
-			$result = $this->full_delete( rtrim($this->cachePath,'/').'/' );
-			if ( !$result && method_exists($this, 'info') ) {
-				$this->info( 'Unable to clear cache directory: '.$this->cachePath );
-			}
-		}
-		
 		return true;
 	}
-	
-	function full_delete( $dir, $except = array() )
-	{
-       	if ( !is_dir($dir) )
-       	{
-       		if ( method_exists($this, 'info') ) $this->info( 'Is not a directory: '.$dir );
-       		return false;
-       	}
-       
-        if ( !($dh = opendir($dir)) ) 
-        {
-       		if ( method_exists($this, 'info') ) $this->info( 'Unable open directory: '.$dir );
-       		return false;
-        }
-        
-		while (($file = readdir($dh)) !== false ) 
-		{
-           	if( $file != "." && $file != ".." && !in_array($file, $except) )
-			{
-				if( is_dir( $dir . $file ) )
-				{
-					$this->full_delete( $dir . $file . "/" );
-				}
-				else
-				{
-					@unlink( $dir . $file );
-				}
-			}
-		}
-			
-		closedir( $dh );
-		@rmdir( $dir );
-		
-		return true;
-	} 	
 }

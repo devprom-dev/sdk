@@ -19,17 +19,20 @@ abstract class BusinessTransactionAfterEventHandler
 		return true;
 	}
 	
-	public function process()
+	public function process( $data )
 	{
+        $this->data = $data;
 		$object_it = $this->getObjectIt();
 		
-		while( !$object_it->end() )
-		{
+		while( !$object_it->end() ) {
 			$this->handle( $object_it->copy() );
-			
 			$object_it->moveNext();
 		}
 	}
+
+	protected function getData() {
+        return $this->data;
+    }
 	
 	public function __destruct()
 	{
@@ -38,4 +41,5 @@ abstract class BusinessTransactionAfterEventHandler
 	}
 	
 	private $object_it;
+    private $data = array();
 }

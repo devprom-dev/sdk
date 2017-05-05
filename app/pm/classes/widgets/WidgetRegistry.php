@@ -17,7 +17,8 @@ class WidgetRegistry extends ObjectRegistrySQL
 			$data[$module_it->getDisplayName()] = array (
 				'entityId' => $module_it->getId(),
 				'Caption' => $module_it->getDisplayName(),
-				'ReferenceName' => $resource_it->getId() != '' ? $resource_it->getHtmlDecoded('Caption') : $module_it->getHtmlDecoded('Description')
+				'ReferenceName' => $resource_it->getId() != '' ? $resource_it->getHtmlDecoded('Caption') : $module_it->getHtmlDecoded('Description'),
+                'url' => $module_it->getUrl()
 			);
 			$module_it->moveNext();
 		}
@@ -38,16 +39,17 @@ class WidgetRegistry extends ObjectRegistrySQL
 			}
  			
  			$data[$report_it->getDisplayName()] = array (
- 					'entityId' => $report_it->getId(),
- 					'Caption' => $report_it->getDisplayName(),
- 					'ReferenceName' => $description
+                'entityId' => $report_it->getId(),
+                'Caption' => $report_it->getDisplayName(),
+                'ReferenceName' => $description,
+                'url' => $report_it->getUrl()
  			);
  			$report_it->moveNext();
  		}
 
 		foreach( $this->getFilters() as $filter ) {
 			if ( $filter instanceof FilterSearchAttributesPredicate ) {
-				$words = SearchRules::getSearchItems($filter->getValue());
+				$words = SearchRules::getSearchItems($filter->getValue(), getSession()->getLanguageUid());
 				$data = array_filter($data, function($value) use ($words) {
 					$title = $value['Caption'].$value['Description'];
 					return array_sum(

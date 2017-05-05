@@ -40,7 +40,7 @@ var kanbanSteps = [
         title: kanbanTourTitle
     },
     {
-        element: "table.board-table tr:eq(5) td.board-column:eq(2)",
+        element: "table.board-table tr:eq(2) td.board-column:eq(2)",
         content: tc('kanban-taskboard'),
         placement: 'right',
         path: '/pm/%project%/module/kanban/requests/kanbanboard?tour='+kanbanTourId,
@@ -72,7 +72,7 @@ var kanbanSteps = [
 if ( mode_reqs ) {
     kanbanSteps.push(
         {
-            element: "table.table-inner tr:eq(1) td:eq(3)",
+            element: "table.table-inner tr:eq(1)",
             content: tc('kanban-modelling'),
             placement: 'bottom',
             path: '/pm/%project%/module/requirements/docs?area=reqs&tour='+kanbanTourId,
@@ -83,7 +83,7 @@ if ( mode_reqs ) {
 if ( mode_qa ) {
     kanbanSteps.push(
         {
-            element: "table.table-inner tr:eq(2) td:eq(3)",
+            element: "table.table-inner tr:eq(1)",
             content: tc('kanban-testing'),
             placement: 'bottom',
             path: '/pm/%project%/module/testing/results/testsofreleasereport?report=testsofreleasereport&basemodule=testing/results&&area=qa&tour='+kanbanTourId,
@@ -94,7 +94,7 @@ if ( mode_qa ) {
 if ( mode_code ) {
     kanbanSteps.push(
         {
-            element: "table.table-inner tr:eq(1) td:eq(3)",
+            element: "table.table-inner tr:eq(1)",
             content: tc('kanban-code'),
             placement: 'bottom',
             path: '/pm/%project%/module/sourcecontrol/revision?area=dev&tour='+kanbanTourId,

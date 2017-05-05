@@ -7,21 +7,17 @@ class FieldDateTime extends Field
          return !$this->getEditMode() || parent::readOnly();
     }
     
-	function getText()
-	{
-		return getSession()->getLanguage()->getDateFormatted($this->getValue());
-	}
-    
 	function setValue( $value )
 	{
-		if ( preg_match('/([0-9]+\-)+/', $value) > 0 )
-		{
-			$value = getSession()->getLanguage()->getDateFormatted($value);
-		}		
-		
-		parent::setValue( $value );
+		parent::setValue(
+            str_replace('00:00', '',
+                getSession()->getLanguage()->getDateTimeFormatted(
+                    SystemDateTime::convertToServerTime($value)
+                )
+            )
+        );
 	}
-	
+
     function draw( $view = null )
 	{
 		if ( $this->readOnly() )

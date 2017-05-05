@@ -32,11 +32,7 @@ class PluginsFactory
         $data = @file_get_contents(self::getFileName());
 		if ( $data != '' ) {
 			static::$singleInstance = @unserialize($data);
-            if ( static::$singleInstance instanceof stdClass ) {
-                static::$singleInstance = new static();
-                static::$singleInstance->buildPlugins();
-            }
-            else if ( is_object(static::$singleInstance) ) {
+            if ( is_object(static::$singleInstance) ) {
                 foreach (static::$singleInstance->namespaces as $namespace) {
                     if ($namespace instanceof __PHP_Incomplete_Class) {
                         static::$singleInstance = new static();
@@ -45,8 +41,13 @@ class PluginsFactory
                     }
                 }
             }
+            else {
+                static::$singleInstance = new static();
+                static::$singleInstance->buildPlugins();
+            }
 		}
 		else {
+            static::$singleInstance->persisted = false;
             static::$singleInstance->buildPlugins();
         }
 
@@ -58,7 +59,6 @@ class PluginsFactory
         }
         include static::getMethodsFileName();
 
-        static::$singleInstance->persisted = false;
 		$plugins = static::$singleInstance;
 		return static::$singleInstance;
 	}
@@ -68,15 +68,12 @@ class PluginsFactory
 		if ( $this->persisted ) return;
         $this->persisted = true;
 
-        foreach( $this->namespaces as $plugin ) {
-            $plugin->checkLicense();
-        }
         @mkdir(dirname(self::getFileName()), 0777, true);
         @file_put_contents(self::getFileName(), serialize($this));
 	}
 
 	public function __sleep() {
-		return array('namespaces', 'plugins', 'resources', 'plugins_by_sections', 'classes', 'authFactories', 'persisted');
+		return array('namespaces', 'plugins', 'resources', 'classes', 'authFactories', 'persisted');
 	}
 
 	public function __wakeup() {
@@ -84,8 +81,6 @@ class PluginsFactory
 
  	protected function buildPlugins()
  	{
-		$cacheLock = new \CacheLock();
-
  		$classes = array_filter( get_declared_classes(), function($value) {
  			return is_subclass_of($value, 'PluginBase');
  		});
@@ -102,8 +97,6 @@ class PluginsFactory
 		
 		$this->plugins = $plugins;
 		$this->buildClasses();
-
-		$cacheLock->Release();
  	}
  	
  	protected function registerPlugin( $plugin )
@@ -122,6 +115,12 @@ class PluginsFactory
 		$lang_file = SERVER_ROOT_PATH.'plugins/'.$namespace.'/language/%lang%/resource.php';
 		$this->resources[$namespace] = $lang_file;
  	}
+
+ 	function checkLicenses() {
+        foreach( $this->namespaces as $plugin ) {
+            $plugin->setLicense();
+        }
+    }
 
 	function initializeResources( $language )
 	{
@@ -170,20 +169,16 @@ class PluginsFactory
 		if ( isset($this->plugins_by_sections[$section]) ) return $this->plugins_by_sections[$section];
 		
 		$plugins = array();
-		
- 		foreach ( $this->plugins as $namespace )
- 		{
-	 		foreach ( $namespace as $plugin )
-	 		{
-				if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) ) 	
-				{
+		$baseClass = $this->_getPluginClass4Section($section);
+
+ 		foreach ( $this->plugins as $namespace ) {
+	 		foreach ( $namespace as $plugin ) {
+				if ( is_subclass_of($plugin, $baseClass) ) {
 	 		    	if ( !$plugin->checkEnabled() ) continue;
-					
-					array_push( $plugins, $plugin );
+					$plugins[] = $plugin;
 	 			}
 	 		}
  		}
- 		
  		return $this->plugins_by_sections[$section] = $plugins;
 	}
 	
@@ -591,6 +586,8 @@ class PluginsFactory
 	
  	protected function buildMethods()
  	{
+        $lock = new \CacheLock();
+
  		$namespaces = array();
  		foreach ( $this->plugins as $namespace ) {
 	 		foreach ( $namespace as $plugin ) {
@@ -613,6 +610,8 @@ class PluginsFactory
 
         @mkdir(dirname(self::getMethodsFileName()), 0777, true);
         file_put_contents(self::getMethodsFileName(), $data);
+
+        $lock->Release();
  	}
 
  	function _getPluginClass4Section ( $section )

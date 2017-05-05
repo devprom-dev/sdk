@@ -1,7 +1,4 @@
 <?php
-
-include SERVER_ROOT_PATH.'pm/methods/c_milestone_methods.php';
-
 include "MilestoneForm.php";
 include "MilestoneTable.php";
 
@@ -20,6 +17,7 @@ class MilestonePage extends PMPage
 				if ( $_REQUEST['Transition'] == '' )
 				{
  				    $this->addInfoSection( new PageSectionComments($object_it) );
+                    $this->addInfoSection( new PMLastChangesSection($object_it) );
 				}
  			}
  		}
@@ -27,7 +25,7 @@ class MilestonePage extends PMPage
  	
  	function getObject()
  	{
- 		return new Milestone( new MilestoneExtendedRegistry() );
+ 		return new Milestone();
  	}
  	
  	function getTable() 
@@ -39,4 +37,9 @@ class MilestonePage extends PMPage
  	{
  		return new MilestoneForm( $this->getObject() );
  	}
+
+    function getPageWidgets()
+    {
+        return array('project-plan-hierarchy');
+    }
 }

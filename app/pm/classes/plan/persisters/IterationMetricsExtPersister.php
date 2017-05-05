@@ -4,8 +4,6 @@ class IterationMetricsExtPersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 	    global $model_factory;
- 	    
  		$columns = array();
  		
   		$objectPK = $this->getPK($alias);
@@ -33,15 +31,6 @@ class IterationMetricsExtPersister extends ObjectSQLPersister
 			"   FROM pm_IterationMetric m" .
 			"  WHERE m.Iteration = " .$objectPK.
 			"	 AND m.Metric = 'RequestEstimationError' LIMIT 1) RequestEstimationError ";
- 		
-		$task = $model_factory->getObject('pm_Task');
-		
-		$states = $task->getNonTerminalStates();
- 		
- 		$columns[] =  
-	       " (SELECT COUNT(1) FROM pm_Task s " .
-	       "   WHERE s.Release = " .$this->getPK($alias).
-	       "	 AND s.State IN ('".join("','",$states)."')) UncompletedItems ";
  		
  		return $columns;
  	}

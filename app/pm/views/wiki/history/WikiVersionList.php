@@ -30,7 +30,8 @@ class WikiVersionList extends PMStaticPageList
             $this->curr_content[$documentId] = $this->exportHtml($page_it->object->getRegistry()->Query(
                 array (
                     new WikiRootTransitiveFilter($page_it->idsToArray()),
-                    new FilterAttributePredicate('DocumentId', $documentId)
+                    new FilterAttributePredicate('DocumentId', $documentId),
+                    new SortDocumentClause()
                 )
             ));
             $this->lastBaseline[$documentId] = text(2244);
@@ -96,7 +97,8 @@ class WikiVersionList extends PMStaticPageList
                 new WikiRootTransitiveFilter($this->getTable()->getPageIt()->idsToArray()),
                 new FilterAttributePredicate('DocumentId', $snapshot_it->get('ObjectId')),
                 new SnapshotItemValuePersister($snapshot_it->getId()),
-                new DocumentVersionPersister()
+                new DocumentVersionPersister(),
+                new SortDocumentClause()
             )
         ));
     }

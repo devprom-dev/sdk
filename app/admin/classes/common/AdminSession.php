@@ -1,5 +1,7 @@
 <?php
 
+include SERVER_ROOT_PATH."admin/classes/model/ModelFactoryAdmin.php";
+include SERVER_ROOT_PATH."admin/classes/common/AdminAccessPolicy.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminChangeLogNotificator.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminSystemTriggers.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/ProcessFirstUserEvent.php";
@@ -23,14 +25,28 @@ class AdminSession extends SessionBase
 	
 	function getCacheKey()
  	{
- 		return 'admin';	
+ 		return 'admin-'.$this->getLanguageUid();
  	}
  	
  	function getApplicationUrl()
  	{
  	    return '/admin/';
  	}
- 	
+
+    function buildFactories()
+    {
+        global $model_factory;
+
+        $model_factory = new \ModelFactoryAdmin(
+            \PluginsFactory::Instance(),
+            getFactory()->getCacheService(),
+            $this->getCacheKey(),
+            new \AdminAccessPolicy(getFactory()->getCacheService(), $this->getCacheKey())
+        );
+
+        parent::buildFactories();
+    }
+
  	function createBuilders()
  	{
  	    return array_merge(

@@ -21,14 +21,14 @@ class WorkflowScheme
 		static::$singleInstance = null;
 	}
 
-	public function getStateIt( $object, $state = '' ) {
+	public function getStateIt( $object ) {
 		$data = $this->getStatesCache($object);
 		if ( !is_array($data['states']) ) {
 			return $this->getStateObject($object)->getEmptyIterator();
 		}
 		else {
 			return $this->getStateObject($object)->createCachedIterator(
-				$state == '' ? array_values($data['states']) : array($data['states'][$state])
+                array_values($data['states'])
 			);
 		}
 	}
@@ -289,7 +289,7 @@ class WorkflowScheme
 	}
 
 	protected static function getFileName() {
-		return CACHE_PATH.'/appcache/pm-' . getSession()->getProjectIt()->get('VPD') . "/workflow";
+		return CACHE_PATH.'/appcache/projects/' . getSession()->getProjectIt()->get('VPD') . "/workflow";
 	}
 
 	private $transition = null;

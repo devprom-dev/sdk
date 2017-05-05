@@ -70,4 +70,10 @@ class RequestTraceBase extends Metaobject
  				return parent::getDefaultAttributeValue( $attr ); 
  		}
 	}
+
+    function IsDeletedCascade( $object )
+    {
+        if ( is_a($object, 'WikiPageChange') )return false;
+        return parent::IsDeletedCascade($object);
+    }
 }

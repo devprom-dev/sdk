@@ -13,9 +13,11 @@ include SERVER_ROOT_PATH."core/classes/model/events/AccessPolicyModelEventsHandl
 include SERVER_ROOT_PATH."core/classes/model/events/ChangesWaitLockReleaseTrigger.php";
 include SERVER_ROOT_PATH."core/classes/versioning/triggers/SnapshotDeleteCascadeTrigger.php";
 include SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilderCommon.php";
+include SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include SERVER_ROOT_PATH."core/classes/project/ProjectMetadataBuilder.php";
 include SERVER_ROOT_PATH."core/classes/resources/ContextResourceFileBuilder.php";
 include SERVER_ROOT_PATH."core/classes/model/events/UserCreatedEvent.php";
+include SERVER_ROOT_PATH."core/classes/system/SystemSettingsMetadataBuilder.php";
 
 class SessionBase
 {
@@ -26,6 +28,7 @@ class SessionBase
     protected $factories;
     protected $active_tab;
     protected $builders;
+    protected $language_uid = '';
     protected $language = null;
     protected $auth_factory_it;
     protected $builders_cache = array();
@@ -43,6 +46,7 @@ class SessionBase
  		$this->builders = array_merge(
  				is_array($builders) ? $builders : array(),
  				array (
+ 				    new SystemSettingsMetadataBuilder(),
                     new ResourceBuilderLanguageFiles(),
                     new ResourceBuilderPluginsLanguageFiles(),
                     new ProjectMetadataBuilder(),
@@ -62,7 +66,7 @@ class SessionBase
  	function __sleep() {
         return array (
             'id', 'user_it', 'factory', 'cache_engine', 'factories', 'active_tab',
-            'builders', 'auth_factory_it', 'builders_cache', 'accessibleVpds'
+            'builders', 'auth_factory_it', 'builders_cache', 'accessibleVpds', 'language_uid'
         );
     }
 
@@ -87,7 +91,9 @@ class SessionBase
 
 	protected function buildFactories()
     {
+        getFactory()->getEntityOriginationService()->setCacheKey($this->getCacheKey());
         getFactory()->resetCache();
+
         $notificators = $this->getBuilders( 'ObjectFactoryNotificator' );
         if ( is_array($notificators) ) {
             $manager = getFactory()->getEventsManager();
@@ -101,9 +107,6 @@ class SessionBase
 
  	public function configure()
  	{
- 		getFactory()->getEntityOriginationService()->setLanguage($this->getLanguageUid());
- 		$this->getCacheEngine()->setDefaultPath($this->getCacheKey());
-
  		$this->builders = array_merge($this->builders, $this->createBuilders());
 		if ( $this->getSite() != '' ) {
 			$this->builders = array_merge($this->builders, getFactory()->getPluginsManager()->getSectionBuilders($this->getSite()));
@@ -125,13 +128,14 @@ class SessionBase
  	
  	function getLanguageUid()
  	{
+        if ( $this->language_uid != '' ) return $this->language_uid;
  		$user_it = $this->getUserIt();
  		if ( is_object($user_it) && $user_it->getId() > 0 ) {
-            return $user_it->get('Language') == 2 ? 'EN' : 'RU'; 		    
+            return $this->language_uid = $user_it->get('Language') == 2 ? 'EN' : 'RU';
  		}
  		else {
     	 	$system = new Metaobject('cms_SystemSettings');
-    		return $system->getAll()->get('Language') == 2 ? 'EN' : 'RU';
+            return $this->language_uid = $system->getAll()->get('Language') == 2 ? 'EN' : 'RU';
  		}
  	}
  	
@@ -193,7 +197,7 @@ class SessionBase
 		if ( $prev_logon_it->count() > 0 ) 
 		{
 			$parms['PrevLoginDate'] = $prev_logon_it->get('RecordModified');
-			 
+
 			$stored_session->getRegistry()->Store($prev_logon_it, $parms);
 		}
 		else 
@@ -329,13 +333,7 @@ class SessionBase
  	function truncate( $category = '' )
  	{
  		$category = $category == '' ? $this->getCacheKey() : $category;
- 		
  		return $this->cache_engine->truncate( $category );
- 	}
- 	
- 	function drop()
- 	{
- 		return $this->cache_engine->drop();
  	}
  	
  	function getApplicationUrl()
@@ -356,17 +354,18 @@ class SessionBase
  	function createBuilders()
  	{
  	    return array (
-                new ModulePluginsBuilder($this->getSite()),
- 	    		
- 	    		// triggers
- 	    		new AccessPolicyModelEventsHandler(),
- 	    		new CacheResetTrigger(),
- 	    		new SnapshotDeleteCascadeTrigger(),
- 	    		new ChangesWaitLockReleaseTrigger(),
- 	    		new UserCreatedEvent(),
- 	    		
- 	    		new ContextResourceFileBuilder($this),
- 	    		new BulkActionBuilderCommon()
+            new ModulePluginsBuilder($this->getSite()),
+            new PortfolioAllBuilder(),
+
+            // triggers
+            new AccessPolicyModelEventsHandler(),
+            new CacheResetTrigger(),
+            new SnapshotDeleteCascadeTrigger(),
+            new ChangesWaitLockReleaseTrigger(),
+            new UserCreatedEvent(),
+
+            new ContextResourceFileBuilder($this),
+            new BulkActionBuilderCommon()
         );
  	}
  	

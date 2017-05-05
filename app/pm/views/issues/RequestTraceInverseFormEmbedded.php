@@ -29,8 +29,18 @@ class RequestTraceInverseFormEmbedded extends ObjectTraceFormEmbedded
  		switch ( $attr )
  		{
  			case 'ChangeRequest':
-				$object = $this->getAttributeObject( $attr );
-
+                $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+                if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
+                    if ( $this->getTraceType() == REQUEST_TRACE_PRODUCT ) {
+                        $object = getFactory()->getObject('Increment');
+                    }
+                    else {
+                        $object = getFactory()->getObject('Issue');
+                    }
+                }
+                else {
+                    $object = $this->getObject()->getAttributeObject($attr);
+                }
 				$field = new FieldAutoCompleteObject( $object );
 				$field->setTitle( $object->getDisplayName() );
 				$field->setCrossProject();

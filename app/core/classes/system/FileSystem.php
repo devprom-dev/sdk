@@ -5,28 +5,20 @@ class FileSystem
 	static public function rmdirr($dir)
 	{
 		if (!is_dir($dir)) return;
-		
-        if ($dh = opendir($dir)) 
-        {
-            while (($file = readdir($dh)) !== false ) 
-            {
-                if( $file != "." && $file != ".." )
-                {
-                    if( is_dir( $dir . $file ) )
-                    {
-                        FileSystem::rmdirr( $dir . $file . "/" );
-                    }
-                    else
-                    {
-                        @unlink( $dir . $file );
-                    }
-                }
-            }
-            
-            closedir($dh);
-            @rmdir( $dir );
-       }
+        $newDir = dirname($dir) . '/' . basename($dir) . '-' . md5($dir.uniqid($dir));
+		rename($dir, $newDir);
+        self::_rmdir($newDir);
 	}
+
+	static protected function _rmdir($dir) {
+        foreach(glob($dir . '/*') as $file) {
+            if(is_dir($file))
+                self::_rmdir($file);
+            else
+                @unlink($file);
+        }
+        @rmdir($dir);
+    }
 
 	static public function translateError( $error ) {
         switch( $error )

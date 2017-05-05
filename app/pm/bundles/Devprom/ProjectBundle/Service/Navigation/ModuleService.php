@@ -49,7 +49,7 @@ class ModuleService
 			
 			$data[$report_it->get('Category')]['nodes'][] = array (
 					'id' => $report_it->getId(),
-					'title' => \IteratorBase::wintoutf8($report_it->getDisplayName()),
+					'title' => $report_it->getDisplayName(),
 					'type' => 'report',
 					'desc' => $report_it->get('Description') != '' ? $report_it->get('Description') : '',
 					'reportUrl' => $info['url'] != '' ? $info['url'] : '#'
@@ -79,7 +79,7 @@ class ModuleService
 			
 			$data[$module_it->get('Area')]['nodes'][] = array (
 					'id' => $module_it->getId(),
-					'title' => \IteratorBase::wintoutf8($module_it->getDisplayName()),
+					'title' => $module_it->getDisplayName(),
 					'type' => 'module',
 					'desc' => $module_it->get('Description') != '' ? $module_it->get('Description') : '',
 					'reportUrl' => $module_it->get('Url') != '' ? $module_it->get('Url') : '#'
@@ -87,7 +87,7 @@ class ModuleService
 			
 			$module_it->moveNext();
 		}
-		
+
 		foreach( $data as $key => $area )
 		{
 			usort( $data[$key]['nodes'], function($left, $right) {

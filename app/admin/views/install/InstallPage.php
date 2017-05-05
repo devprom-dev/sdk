@@ -13,8 +13,7 @@ class InstallPage extends AdminPage
 	{
 		parent::AdminPage();
 			
-		$state = getFactory()->getObject('DeploymentState');
-		if ( !$state->IsInstalled() ) {
+		if ( !\DeploymentState::IsInstalled() ) {
 			$this->addInfoSection(new DocumentationInfo);
 			$this->addInfoSection(new InstallationInfo);
 		}
@@ -22,24 +21,22 @@ class InstallPage extends AdminPage
 
 	function getTable()
 	{
-		$state = getFactory()->getObject('DeploymentState');
-		
-		if ( !$state->IsInstalled() )
+		if ( !\DeploymentState::IsInstalled() )
 		{
             return new InstallForm( getFactory()->getObject('cms_SystemSettings') );
 		}
 		
-		if ( !$state->IsScriptsCompleted() )
+		if ( !\DeploymentState::IsScriptsCompleted() )
 		{
 		    return new InstallFormComplete(getFactory()->getObject('cms_SystemSettings'));
 		}
 
-		if ( !$state->IsActivated() && $_REQUEST['LicenseType'] == '' )
+		if ( !\DeploymentState::Instance()->IsActivated() && $_REQUEST['LicenseType'] == '' )
 		{
 			return new InstallLicenseTypeForm( getFactory()->getObject('cms_SystemSettings') );
 		}
 
-		if ( !$state->IsLicensed() )
+		if ( !\DeploymentState::Instance()->IsLicensed() )
 		{
 			if ( $_REQUEST['LicenseType'] == '' )
 			{

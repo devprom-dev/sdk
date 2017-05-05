@@ -95,7 +95,6 @@ class WorkloadDetailsList extends PMDetailsList
 						new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
 						new IterationUserHasTasksPredicate($user_id),
 						new FilterVpdPredicate(),
-						new EntityProjectPersister(),
 						new SortAttributeClause('Project'),
 						new SortAttributeClause('StartDate')
 					)
@@ -127,7 +126,7 @@ class WorkloadDetailsList extends PMDetailsList
 				}
 
 				$data['title'] = $iteration_it->getHtmlDecoded($methodology_it->HasPlanning() ? 'ShortCaption' : 'Caption');
-				$data['capacity'] = $iteration_it->getLeftCapacity() * $capacity[$user_id];
+				$data['capacity'] = $iteration_it->getLeftDuration() * $capacity[$user_id];
 
 				$method = new ObjectModifyWebMethod($iteration_it);
 				if ( $method->hasAccess() ) {
@@ -194,7 +193,7 @@ class WorkloadDetailsList extends PMDetailsList
 			$data = array();
 			$this->workload[$user_id]['Iterations'] = array();
 
-			if ( $user_id == '' ) continue;
+			if ( $user_id == '' || !$methodology_it->IsAgile() ) continue;
 
 			while( !$iteration_it->end() )
 			{

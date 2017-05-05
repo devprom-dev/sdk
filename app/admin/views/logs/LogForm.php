@@ -32,7 +32,7 @@ class LogForm extends AdminForm
 		return $this->getFileTail( SERVER_LOGS_PATH.'/'.$this->getObjectIt()->get('Caption') ); 
 	}
 	
-	function drawCustomAttribute( $attribute, $value, $index )
+	function drawCustomAttribute( $attribute, $value, $index, $view )
 	{
 		echo '<textarea rows=40 style="width:100%;overflow:scroll;">'.$value.'</textarea>';
 	}
@@ -65,9 +65,9 @@ class LogForm extends AdminForm
 		return $line;
 	}
 	
-	function getRenderParms()
+	function getRenderParms($view)
 	{
-		return array_merge( parent::getRenderParms($parms), 
+		return array_merge( parent::getRenderParms($view),
 				array (
 						'buttons_template' => ''
 				)

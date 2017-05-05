@@ -12,7 +12,7 @@ class CommentList
  	private $uid_service = null;
     private $collapseable = false;
     private $autorefresh = true;
- 	
+ 	private $sortOrder = 'asc';
  	private $baseline = '';
  	
  	function CommentList( $object_it, $baseline = '' ) 
@@ -25,23 +25,34 @@ class CommentList
  			$snapshot = getFactory()->getObject('Snapshot');
  			$this->object->addFilter( new SnapshotBeforeDatePredicate($this->baseline) );
  		}
- 		
  		$this->object->addAttribute( 'Attachment', 'REF_pm_AttachmentId', '', false );
- 		
 		$this->object->addPersister(new AttachmentsPersister());
-		$this->comment_it = $this->object->getAllRootsForObject($this->object_it, array(new AttachmentsPersister()));
+
+        $this->sortOrder = $_COOKIE['sort-comments'] == "-1" && !$this->object_it->object instanceof WikiPage
+            ? 'desc' : 'asc';
+
+        $queryParms = array(
+            new AttachmentsPersister()
+        );
+        if ( $this->sortOrder == 'desc' ) {
+            $queryParms[] = new SortRecentModifiedClause();
+        }
+		$this->comment_it = $this->object->getAllRootsForObject($this->object_it, $queryParms);
 
 		$this->comments = 0;
-		
-		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId());
+
+		$this->control_uid = md5($this->object_it->object->getClassName().$this->object_it->getId().$_REQUEST['formonly']);
 		$this->uid_service = new ObjectUID();
         $this->autorefresh = array_key_exists('dorefresh', $_REQUEST) ? $_REQUEST['dorefresh'] == 1 : true;
  	}
  	
- 	function setControlUID( $uid )
- 	{
+ 	function setControlUID( $uid ) {
  		$this->control_uid = $uid;
  	}
+
+ 	function getControlUID() {
+        return $this->control_uid;
+    }
 
  	function setCollabseable( $value = true ) {
  	    $this->collapseable = $value;
@@ -62,7 +73,8 @@ class CommentList
                         'export' => 'commentsthread',
                         'object' => $this->object_it->getId(),
                         'objectclass' => get_class($this->object_it->object),
-                        'dorefresh' => $this->autorefresh
+                        'dorefresh' => $this->autorefresh,
+                        'formonly' => $_REQUEST['formonly']
                     )
                 );
     }
@@ -140,7 +152,9 @@ class CommentList
 			'url' => $this->getUrl(),
             'collapseable' => $this->collapseable,
 			'form_ready' => $_REQUEST['formonly'] == 'true' && $_REQUEST['entity'] == 'Comment',
-			'comments_count' => $this->comment_it->count()
+			'comments_count' => $this->comment_it->count(),
+            'sort' => $this->sortOrder,
+            'object_it' => $this->object_it
 		);
 	}
 	
@@ -152,10 +166,7 @@ class CommentList
 	
  	function getThreadRenderParms( $comment_it )
 	{
-		global $model_factory;
-
 		$comments = array();
-		
  		do {
 	   		ob_start();
 	   		
@@ -181,6 +192,7 @@ class CommentList
 	        	        
  			$comments[] = array (
  				'id' => $comment_it->getId(),
+                'uid' => md5($this->control_uid.$comment_it->getId()),
  				'author' => $comment_it->get('AuthorName'),
  			    'author_id' => $comment_it->get('AuthorId'),
 				'photo_id' => $comment_it->get('AuthorPhotoId'),
@@ -189,7 +201,9 @@ class CommentList
  				'html' => $text,
  				'thread_it' => $comment_it->getThreadIt(),
  			    'files' => $files,
- 				'uid_info' => $_REQUEST['formonly'] != '' ? '' : $this->uid_service->getUidInfo($comment_it)
+ 				'uid_info' => $_REQUEST['formonly'] != '' ? '' : $this->uid_service->getUidInfo($comment_it),
+                'modified' => strtotime($comment_it->get('RecordCreated')),
+                'private' => $comment_it->get('IsPrivate') == 'Y'
  			);
  			
  			$comment_it->moveNext();

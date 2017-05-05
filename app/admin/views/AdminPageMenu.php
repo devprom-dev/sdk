@@ -11,7 +11,7 @@ class AdminPageMenu extends PageMenu
 	{
 		$pages = array();
 
-		array_push($pages, array( 
+		array_push($pages, array(
 			'items' => array (
 				array ( 'name' => translate('Активности'), 'url' => '/admin/activity.php', 'uid' => 'acitivty' ),
 			    array ( 'name' => translate('Обновления'), 'url' => '/admin/updates.php', 'uid' => 'updates' ),
@@ -61,8 +61,6 @@ class AdminPageMenu extends PageMenu
 	
 	function getDictionaries()
 	{
-		global $model_factory;
-		
 		$entity = new Metaobject('entity');
 		
 		$it = $entity->getByRefArray( array ( 
@@ -70,7 +68,8 @@ class AdminPageMenu extends PageMenu
 			'ReferenceName' => array(
 				'pm_ProjectRole', 
 				'pm_TaskType', 
-				'Priority', 
+				'Priority',
+                'pm_Severity',
 				'pm_Importance',
 				'pm_ChangeRequestLinkType',
 				'pm_TestExecutionResult'

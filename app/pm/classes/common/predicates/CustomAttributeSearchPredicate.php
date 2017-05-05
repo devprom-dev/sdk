@@ -13,7 +13,7 @@ class CustomAttributeSearchPredicate extends FilterPredicate
  	function _predicate( $filter )
  	{
 		$clauses = array();
-		foreach( SearchRules::getSearchItems($filter) as $word ) {
+		foreach( SearchRules::getSearchItems($filter, getSession()->getLanguageUid()) as $word ) {
 			$clauses[] = " av.StringValue LIKE '%".$word."%' OR av.TextValue LIKE '%".$word."%' ";
 		}
  		return " AND EXISTS (SELECT 1 FROM pm_CustomAttribute at, pm_AttributeValue av

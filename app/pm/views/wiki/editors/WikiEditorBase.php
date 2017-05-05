@@ -37,7 +37,6 @@ abstract class WikiEditorBase
 	 			$this->object = $object;
 	 		}
  		}
-		$this->setDescription(text(606));
 		$this->setToolbar(self::ToolbarMini);
  	}
  	

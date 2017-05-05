@@ -25,7 +25,7 @@ class UndoLog
         if ( $class_name == 'metaobject' ) {
             $class_name = $object_it->object->getClassName();
         }
-        $this->queue[$class_name][] = $object_it->copy()->serialize2Xml();
+        $this->queue[$class_name][] = $object_it->copy()->serialize2Xml(array('file','image'));
     }
 
     public function getPath( $transaction ) {

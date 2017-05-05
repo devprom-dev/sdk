@@ -13,10 +13,14 @@ class WikiTag extends Tag
  		parent::Metaobject('WikiTag');
 
 		$this->addAttribute('Caption', 'TEXT', translate('Название'), false);
-		
 		$this->addAttribute('ItemCount', 'INTEGER', translate('Количество'), false);
-
 		$this->addPersister( new WikiTagCaptionPersister() );
+        $this->addPersister( new TagParentPersister() );
+        $this->setSortDefault(
+            array(
+                new TagCaptionSortClause()
+            )
+        );
  	}
  	
 	function createIterator() 

@@ -11,21 +11,9 @@
 {% block form_widget_simple %}
     {% spaceless %}
         {% set type = type|default('text') %}
-        {% if type == 'file' %}
-            <div>
-                <span class="btn btn-sm btn-default fileinput-button">
-                    <i class="icon-plus"></i>&nbsp;
-                    <span>{{ 'attachment_file'|trans }}</span>
-                    <input type="{{ type }}" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
-                </span>
-                <span class="fileinput-name"></span>
-            </div>
-        {% else %}
-            <input type="{{ type }}" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
-        {% endif %}
+        <input type="{{ type }}" {{ block('widget_attributes') }} {% if value is not empty %}value="{{ value }}" {% endif %}/>
     {% endspaceless %}
 {% endblock form_widget_simple %}
-
 
 {% block form_label %}
     {% spaceless %}
@@ -47,16 +35,12 @@
 {% block form_row %}
     {% spaceless %}
         <div class="control-group">
-            {% set label %}
-                {{ form_label(form, null, {'label_attr': {'class': 'control-label'}}) }}
-            {% endset %}
-            {{ label }}
             {% if label|trim() == "" %}
-                {{ form_widget(form, {'attr': {'class': 'form-control'}}) }}
+                {{ form_widget(form, {'attr': {'class': 'search-field'}}) }}
             {% else %}
                 <div class="controls form-group">
-                    <div class="col-md-10">
-                        {{ form_widget(form, {'attr': {'class': 'form-control'}}) }}
+                    <div class="col-md-12">
+                        {{ form_widget(form, {'attr': {'class': 'search-field', 'placeholder': label, 'title': label}}) }}
                     </div>
                 </div>
             {% endif %}
@@ -77,39 +61,4 @@
     {% endspaceless %}
 {% endblock form_errors %}
 
-{% block choice_widget_collapsed %}
-    {% spaceless %}
-        {% set attr = attr|merge({'class': 'fancy-select select-block-level'}) %}
-
-        <select data-placeholder="" data-width="off" data-minimum-results-for-search="10" {{ block('widget_attributes') }}{% if multiple %} multiple="multiple"{% endif %}>
-            {% if empty_value is not none %}
-                <option value=""{% if required and value is empty %} selected="selected"{% endif %}>{{ empty_value|trans({}, translation_domain) }}</option>
-            {% endif %}
-            {% if preferred_choices|length > 0 %}
-                {% set options = preferred_choices %}
-                {{ block('choice_widget_options') }}
-                {% if choices|length > 0 and separator is not none %}
-                    <option disabled="disabled">{{ separator }}</option>
-                {% endif %}
-            {% endif %}
-            {% set options = choices %}
-            {{ block('choice_widget_options') }}
-        </select>
-    {% endspaceless %}
-{% endblock choice_widget_collapsed %}
-
-{% block choice_widget_options %}
-    {% spaceless %}
-        {% for group_label, choice in options %}
-            {% if choice is iterable %}
-                <optgroup label="{{ group_label|trans({}, translation_domain) }}">
-                    {% set options = choice %}
-                    {{ block('choice_widget_options') }}
-                </optgroup>
-            {% else %}
-                <option value="{{ choice.value }}"{% if choice is selectedchoice(value) %} selected="selected"{% endif %}>{{ choice.label|trans({}, translation_domain)|unescapeHtml }}</option>
-            {% endif %}
-        {% endfor %}
-    {% endspaceless %}
-{% endblock choice_widget_options %}
 

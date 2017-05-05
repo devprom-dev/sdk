@@ -47,8 +47,16 @@ abstract class FlotChartWidget
 	}
 
 	function getColors() {
-		return $this->colors;
+		return array_filter( $this->colors,
+            function($value) {
+                return strpos($value, '#') !== false || strpos($value, 'rgb') !== false;
+            }
+        );
 	}
+
+	function getStyle() {
+        return "";
+    }
 
  	abstract public function draw( $chart_id );
 }

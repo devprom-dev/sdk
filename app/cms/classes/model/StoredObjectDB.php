@@ -13,6 +13,7 @@ include "predicates/FilterClusterPredicate.php";
 include "predicates/FilterInPredicate.php";
 include "predicates/FilterNotInPredicate.php";
 include "predicates/FilterModifiedAfterPredicate.php";
+include "predicates/FilterModifiedSinceSecondsPredicate.php";
 include "predicates/FilterModifiedBeforePredicate.php";
 include "predicates/FilterNextSiblingsPredicate.php";
 include "predicates/FilterPrevSiblingsPredicate.php";
@@ -24,7 +25,11 @@ include "predicates/FilterVpdPredicate.php";
 include "predicates/FilterHasNoAttributePredicate.php";
 include "predicates/FilterSearchAttributesPredicate.php";
 include "predicates/FilterTextExactPredicate.php";
-
+include "predicates/FilterDateAfterPredicate.php";
+include "predicates/FilterDateBeforePredicate.php";
+include "predicates/FilterAttributeNullPredicate.php";
+include "predicates/FilterAttributeNotNullPredicate.php";
+include "predicates/FilterDummyPredicate.php";
 include "sorts/SortClauseBase.php";
 include "sorts/SortCaptionClause.php";
 include "sorts/SortOrderedClause.php";
@@ -33,6 +38,7 @@ include "sorts/SortKeyClause.php";
 include "sorts/SortReverseKeyClause.php";
 include "sorts/SortRevOrderedClause.php";
 include "sorts/SortVPDClause.php";
+include "sorts/SortRecentModifiedClause.php";
 
 class StoredObjectDB extends Object
 {
@@ -254,6 +260,7 @@ class StoredObjectDB extends Object
 	//----------------------------------------------------------------------------------------------------------
 	function getExact( $objectid ) 
 	{
+	    if ( $objectid == '' ) $objectid = -1;
 		if ( !is_numeric($objectid) && !is_array($objectid) && $this->IsAttributeStored('Caption') )
 		{
 			$objectid .= ' ';
@@ -739,7 +746,7 @@ class StoredObjectDB extends Object
 
 		$predicate = $this->getFilterPredicate();
 		if ( strpos($predicate, 'VPD') === false ) {
-			$vpdFilter = $this->isVpdEnabled() && $this->getVpdValue() != '' ? " AND t.VPD = '".$this->getVpdValue()."' " : "";
+			$vpdFilter = $this->isVpdEnabled() && $this->getVpdValue() != '' ? " AND t.VPD IN ('".join("','",$this->getVpds())."') " : "";
 		}
 
 		$sql = " SELECT ".join($outer_columns, ',').", ".join($agg_columns, ',').
@@ -1062,11 +1069,11 @@ class StoredObjectDB extends Object
 			
 			// загружаем изображения
 			for($i=0; $i < count($imageattributes); $i++) {
-				$this->fs_image->storeFile( $imageattributes[$i], $new_object_it );
+				$this->fs_image->storeFile( $imageattributes[$i], $new_object_it, $parms );
 			}
 			// загружаем файлы
 			for($i=0; $i < count($fileattributes); $i++) {
-				$this->fs_file->storeFile( $fileattributes[$i], $new_object_it );
+				$this->fs_file->storeFile( $fileattributes[$i], $new_object_it, $parms );
 			}
 		}
 
@@ -1151,15 +1158,6 @@ class StoredObjectDB extends Object
 
 		$affected_rows = DAL::Instance()->GetAffectedRows();
 		if ( $affected_rows < 1 ) return $affected_rows;
-
-		if ( count($image_attributes) > 0 || count($file_attributes) > 0 ) {
-			foreach( $image_attributes as $attribute ) {
-				$this->fs_image->removeFile( $attribute, $object_it );
-			}
-			foreach( $file_attributes as $attribute ) {
-				$this->fs_file->removeFile( $attribute, $object_it );
-			}
-		}
 
 		foreach ( $this->persisters as $persister ) {
 			$persister->afterDelete( $object_it );

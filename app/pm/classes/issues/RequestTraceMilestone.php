@@ -10,9 +10,9 @@ class RequestTraceMilestone extends RequestTraceBase
  		parent::__construct();
  		
  		$this->setAttributeCaption('ObjectId', translate('Веха'));
+        $this->setAttributeDescription('ObjectId', text(2275));
  		
  		$this->addAttribute('Deadline', 'DATE', text(1170), true);
-
  		$this->addAttribute('DeadlineCaption', 'VARCHAR', text(1171), true);
  	}
  	

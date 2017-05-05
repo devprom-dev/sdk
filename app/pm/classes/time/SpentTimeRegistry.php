@@ -4,14 +4,22 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 {
  	function createSQLIterator( $sql ) 
  	{
-		$this->report_year = $this->getObject()->getReportYear();
-		if ( !is_numeric($this->report_year) ) $this->report_year = date('Y');
+        $startDate = $finishDate = "CURDATE()";
+        $mapping = new ModelDataTypeMappingDate();
 
-		$this->report_month = $this->getObject()->getReportMonth();
-		if ( !is_numeric($this->report_month) ) $this->report_month = date('m');
+        foreach( $this->getFilters() as $filter ) {
+            if ( $filter instanceof FilterSubmittedAfterPredicate ) {
+                $value = $mapping->map($filter->getValue());
+                if ( $value != '' ) $startDate = "DATE('".$value."')";
+                $filter->setValue('');
+            }
+            if ( $filter instanceof FilterSubmittedBeforePredicate ) {
+                $value = $mapping->map($filter->getValue());
+                $finishDate = $value != '' ? "DATE('".$value."')" : 'LAST_DAY(NOW())';
+                $filter->setValue('');
+            }
+        }
 
-		$this->view = $this->getObject()->getView();
- 		
 		$group_field = $this->getObject()->getGroup();
 		if ( $this->getObject()->IsReference($group_field) && $this->getObject()->getAttributeObject($group_field) instanceof User ) {
 			$userField = $group_field;
@@ -19,12 +27,14 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		else {
 			$userField = 'SystemUser';
 		}
- 		$group_function = $this->report_month > 0 
- 				? "DAYOFMONTH(%1)" 
- 				: ($this->report_year > 0 ? "MONTH(%1)" : "YEAR(%1)");
- 		
-		$this->buildDaysMap($group_function);
-		
+
+ 		$group_function = "TO_DAYS(%1)";
+        $group = preg_replace(
+            '/%1/',
+            "CONVERT_TZ(t2.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')",
+            $group_function
+        );
+
  		switch( $this->getObject()->getView() )
 		{
 			case 'issues':
@@ -46,21 +56,14 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		}
 		$registry = $row_object->getRegistry();
 
-		$group = preg_replace(
-				'/%1/', 
-				"CONVERT_TZ(t2.ReportDate, '".EnvironmentSettings::getUTCOffset().":00', '".EnvironmentSettings::getClientTimeZoneUTC()."')", 
-				$group_function
-		);
-		
 		$sql = " SELECT ".$registry->getSelectClause('t').",".
 			   "        ".$group." Day, ".
 		       "		t2.* " .
 			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, a.Description, " .
 			   "				a.VPD, a.Participant ".$userField.", ".($userField != 'SystemUser' ? "a.Participant SystemUser," : "").
 			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project" .
-			   "		   FROM pm_Activity a, pm_Task t, pm_CalendarInterval i ".
-			   "  	      WHERE a.Task = t.pm_TaskId AND DATE(a.ReportDate) = i.StartDateOnly ".
-			   "			AND i.Kind = 'day' AND i.IntervalYear = ".$this->report_year." AND i.IntervalMonth = ".$this->report_month.
+			   "		   FROM pm_Activity a, pm_Task t ".
+			   "  	      WHERE a.Task = t.pm_TaskId AND DATE(a.ReportDate) BETWEEN ".$startDate." AND ".$finishDate." ".
                $this->getObject()->getVpdPredicate('t').
 			   "        ) t2, ".
 			   "		".$registry->getQueryClause()." t " .
@@ -70,7 +73,6 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		$activity_it = parent::createSQLIterator($sql);
 
 		$rows = array();
-		$comments = array();
 		$groups = array();
 
 		while( !$activity_it->end() )
@@ -118,27 +120,27 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 			}
 		}
 
-		$it = $this->createIterator($data);
-        $it->setDaysMap($this->days_map);
-		
-		return $it; 
+        $it = $this->createIterator($data);
+        $it->setDaysMap($this->buildDaysMap($startDate, $finishDate));
+		return $it;
  	}
 
-	protected function buildDaysMap($group_function)
+	protected function buildDaysMap($startDate, $finishDate)
 	{
-		$this->days_map = array();
+		$map = array();
 
-		$last_date = $this->report_year > 0 
-		    ? $this->report_year.'-'.( $this->report_month > 0 ? $this->report_month.'-01' : '12-01' ) 
-		    : SystemDateTime::date();
-		      		 
-		$sql = "SELECT ".preg_replace('/%1/', "LAST_DAY('".$last_date."')", $group_function)." LastDay";
-
-		$last_day_it = parent::createSQLIterator($sql);
-
-		for ( $i = ($this->report_year > 0 ? 1 : date('Y') - 5); $i <= $last_day_it->get('LastDay'); $i++ )
-		{
-			$this->days_map[] = $i;
-		}
+        $it = parent::createSQLIterator(
+            " SELECT TO_DAYS(t.StartDateOnly) DayId, DAYOFMONTH(t.StartDateOnly) DayName, t.StartDateOnly 
+                FROM pm_CalendarInterval t WHERE t.Kind = 'day' AND t.StartDateOnly BETWEEN ".$startDate." AND ".$finishDate."
+               ORDER BY t.StartDateOnly ASC "
+        );
+        while( !$it->end() ) {
+            $map[$it->get('DayId')] =
+                $it->get('DayName') == 1 || count($map) < 1 || count($map) == $it->count() - 1
+                    ? getSession()->getLanguage()->getDateFormattedShort($it->get('StartDateOnly'))
+                    : $it->get('DayName');
+            $it->moveNext();
+        }
+        return $map;
 	}
 }

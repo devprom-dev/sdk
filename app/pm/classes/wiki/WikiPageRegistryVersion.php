@@ -28,7 +28,7 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 	    {
 	    	if ( in_array($attribute, $real_attributes) ) continue;
 			if ( in_array($attribute, array('UID')) ) continue;
-	        if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
+	        if ( $attribute != 'DocumentVersion' && !$this->getObject()->IsAttributeStored($attribute) ) continue;
 	        
 	        $attributes[] = $attribute;
 	        $stub_attributes[] = "NULL as ".$attribute;
@@ -53,9 +53,25 @@ class WikiPageRegistryVersion extends ObjectRegistrySQL
 	    	}
 	    }
 
-	    return " (SELECT WikiPageId, UID, VPD, RecordVersion, ".join(",",array_merge($real_attributes, $attributes)).
-	    	   "	FROM WikiPage ".
-	    	   "   WHERE ReferenceName = ".$this->getObject()->getReferenceName()." AND IsTemplate = 0 ".
+        $sqlPredicate = '';
+        foreach( $this->getFilters() as $filter )
+        {
+            if ( $filter instanceof FilterInPredicate ) {
+                $filter->setAlias('t');
+                $filter->setObject( $this->getObject() );
+                $sqlPredicate .= $filter->getPredicate();
+            }
+        }
+	    $sqlAttributes = array_map(
+	        function($value) {
+                return "t.".$value;
+            },
+            array_merge($real_attributes, $attributes)
+        );
+
+	    return " (SELECT t.WikiPageId, t.UID, t.VPD, t.RecordVersion, ".join(",",$sqlAttributes).
+	    	   "	FROM WikiPage t ".
+	    	   "   WHERE t.DocumentId = ".$this->document_it->getId().$sqlPredicate.
 	    	   "   UNION ".
 	    	   "  SELECT t.ObjectId, (SELECT p.UID FROM WikiPage p WHERE p.WikiPageId = t.ObjectId AND p.DocumentId = ".$this->document_it->getId()."), ".
 		       "		 t.VPD, NULL, ".join(",",array_merge($select_attributes, $stub_attributes)).

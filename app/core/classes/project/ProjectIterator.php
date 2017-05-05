@@ -397,9 +397,9 @@ class ProjectIterator extends OrderedIterator
 		return md5(INSTALLATION_UID.$this->get('CodeName').date('%Y-%m-%d-%H').$this->getId().INSTALLATION_UID);
 	}
 	
-	function getFeedbackAuthKey()
+	function getPublicKey()
 	{
-		return md5(INSTALLATION_UID.$this->get('CodeName').INSTALLATION_UID);
+		return md5(INSTALLATION_UID.$this->getId().'{project-key-salt}');
 	}
 
 	function getRating()

@@ -7,15 +7,15 @@
     
 		    <div class="span12">
 			<div class="row-fluid" style="min-height: 45px;">
-			    <div class="span10">
+			    <div class="span8">
 					<section id="functional-group-selector">
 					</section><!-- end #functional-group-selector -->
 				</div>
-				<div class="span2">
+				<div class="span4">
 					<a id="close-btn" class="pull-right btn btn-inverse" href="<?=$close_url?>"><?=translate('Закрыть')?></a>
 					<?php if ( $share_url != '' ) { ?>
 						<span class="pull-right span1"></span>
-						<a id="close-btn" class="pull-left btn btn-danger" href="<?=$share_url?>"><?=text(1909)?></a>
+						<a id="close-btn" class="pull-right btn btn-danger" href="<?=$share_url?>"><?=text(1909)?></a>
 					<?php } ?>
 				</div>
 			</div>

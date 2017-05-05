@@ -1,6 +1,6 @@
 <?php
 include_once "WebMethod.php";
-include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleActiveVpdPredicate.php";
 
 class AutocompleteWebMethod extends WebMethod
 {
@@ -96,7 +96,7 @@ class AutocompleteWebMethod extends WebMethod
 
 		if ( $object->getVpdValue() != '' ) {
 			$queryParms = array(
-				in_array('cross', $attributes) ? new \ProjectAccessibleVpdPredicate() : new FilterVpdPredicate()
+				in_array('cross', $attributes) ? new \ProjectAccessibleActiveVpdPredicate() : new FilterVpdPredicate()
 			);
 		}
  		if ( is_a($object, 'MetaobjectStatable') ) {
@@ -110,7 +110,15 @@ class AutocompleteWebMethod extends WebMethod
  		
  		$key = 'term';
      	
-     	$_REQUEST[$key] = trim($_REQUEST[$key]);
+     	$_REQUEST[$key] = trim(array_pop(
+     	    array_filter(
+     	        preg_split('/[,;:]/', $_REQUEST[$key]),
+                function($value) {
+     	            return $value != "";
+                }
+            )
+        ));
+
  		if ( $_REQUEST[$key] == '' )
  		{
  		    $record_count = $registry->Count($queryParms);
@@ -120,7 +128,10 @@ class AutocompleteWebMethod extends WebMethod
  		else
  		{
 			if ( $object_uid->isValidUid($_REQUEST[$key]) ) {
-				$_REQUEST[$key] = $object_uid->getObjectIt($_REQUEST[$key])->getId();
+                $object_it = $object_uid->getObjectIt($_REQUEST[$key]);
+                if ( $object_it->getId() != '' ) {
+                    $_REQUEST[$key] = $object_it->getId();
+                }
 			}
 			if ( is_numeric($_REQUEST[$key]) ) {
 				$result_it = $registry->Query(
@@ -136,16 +147,22 @@ class AutocompleteWebMethod extends WebMethod
 				$queryParms[] = new FilterSearchAttributesPredicate(
 					$_REQUEST[$key],
 					array_unique(
-						array_intersect(
-							array_keys($object->getAttributes()),
-							array_merge(
-								$attributes,
-								preg_split('/,/', $_REQUEST['additional']),
-								array (
-									'Caption'
-								)
-							)
-						)
+					    array_merge(
+                            array_intersect(
+                                array_keys($object->getAttributes()),
+                                array_merge(
+                                    $attributes,
+                                    preg_split('/,/', $_REQUEST['additional']),
+                                    array (
+                                        'Caption'
+                                    )
+                                )
+    						),
+                            array(
+                                $object->getIdAttribute(),
+                                'UID'
+                            )
+                        )
 					)
 				);
 				$result_it = $registry->Query($queryParms);

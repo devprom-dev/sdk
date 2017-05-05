@@ -33,10 +33,9 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  		}
 
  		$this->button_text = translate('добавить');
- 		$this->extendModel();
  	}
  	
- 	protected function extendModel()
+ 	public function extendModel()
  	{
  	}
  	
@@ -127,12 +126,9 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 		$names = array_keys($this->object->getAttributesSorted());
 		$visible = array();
 
-		for ( $i = 0; $i < count($names); $i++ )
-		{
-			//if ( $this->IsAttributeVisible( $names[$i] ) )
-			{
-				array_push($visible, $names[$i]);
-			}
+		for ( $i = 0; $i < count($names); $i++ ) {
+			if ( !$this->object->IsAttributeVisible($names[$i]) && !$this->object->IsAttributeStored($names[$i]) ) continue;
+            $visible[] = $names[$i];
 		}
 		
 		return $visible;
@@ -170,13 +166,9 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	function getFieldValue( $attr )
 	{
 		$value = $_REQUEST[$this->getFieldName( $attr )];
+        if ( $value != '' ) return $value;
 
-		if ( $value == '' )
-		{
-			$value = $this->object->getDefaultAttributeValue($attr);
-		}
-
-		return $value;
+		return $this->object->getDefaultAttributeValue($attr);
 	}
 	
 	function createField( $attr )
@@ -301,6 +293,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 
 					if ( $field instanceof FieldWYSIWYG and $field->hasBorder() ) {
 						echo '<div class="well well-wysiwyg">';
+                            $field->setRows(2);
 							$field->draw();
 						echo '</div>';
 					}
@@ -318,6 +311,9 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 				echo $description;
 			echo '</div>';
 		}
+		else {
+            echo '<div class="line"></div>';
+        }
 		echo '</div>';
 		
 		echo '</div>';
@@ -325,8 +321,9 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	
  	function draw( $view = null )
  	{
- 		global $_REQUEST, $model_factory, $tabindex;
- 		
+ 		global $tabindex;
+
+        $this->extendModel();
 		$prefix = $this->getPrefix();
 		$names = $this->getAttributes();
 		$html = '';
@@ -416,10 +413,10 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 			echo '</script>';
 		}
 
-		$project = getFactory()->getObject('ProjectCache')
-						->getByRef('VPD', is_object($this->getObjectIt()) ? $this->getObjectIt()->get('VPD') : $this->getObject()->getVpdValue() )
-								->get('CodeName');
-			
+		$project = is_object($this->getObjectIt())
+            ? $this->getObjectIt()->get('ProjectCodeName')
+            : getSession()->getProjectIt()->get('CodeName');
+
 		$anchor_credentials = '<input type="hidden" name="embedded'.$this->form_id.'" value="'.strtolower(get_class($this->object)).'">'.
 			 '<input type="hidden" name="embeddedFields'.$this->form_id.'" value="'.join(',', $names).'">'.
 			 '<input type="hidden" name="embeddedPrefix'.$this->form_id.'" value="'.$prefix.'">'.
@@ -633,202 +630,161 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	
  	function drawAddButton( $view, $tabindex )
  	{
- 		echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" onclick="javascript: appendEmbeddedItem('.
-			$this->getFormId().');" onkeyup="javascript: if (event.keyCode == 13) { $(this).trigger(\'click\'); }">'.$this->getAddButtonText().'</a>';
+ 		echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" href="javascript: appendEmbeddedItem('.
+			$this->getFormId().');">'.$this->getAddButtonText().'</a>';
  	}
  	
- 	function process( $object_it, $process_record_callback = null )
+ 	function process( $object_it, $e, $process_record_callback = null )
  	{
-		global $_REQUEST, $model_factory, $_FILES;
+		global $model_factory;
 
-		$object = $object_it->object;
-		
 		$_REQUEST['RecordVersion'] = '';
 		
- 	 	$indexes = array();
- 		 
-        foreach( array_keys($_REQUEST) as $key )
+        $embedded = $this->object;
+        $embedded->setVpdContext( $object_it );
+
+        $fields = preg_split('/,/', $_REQUEST['embeddedFields'.$e]);
+        $anchor_field = $_REQUEST['embeddedAnchor'.$e];
+        $active_form = $_REQUEST['embeddedActive'.$e] != 'N';
+        $prefix = $_REQUEST['embeddedPrefix'.$e];
+
+        if ( !$active_form || $object_it->getId() < 1 ) return;
+
+        foreach( $_REQUEST as $key => $value )
         {
-            if( preg_match('/embedded([\d]+)/', $key, $matches) )
+            if( !preg_match('/'.$prefix.'Delete([\d]+)/', $key, $matches) || $value != '1' ) continue;
+
+            $id_field = $prefix.'Id'.$matches[1];
+
+            $delete_it = $embedded->getExact($_REQUEST[$id_field]);
+
+            if ( $delete_it->getId() != '' && getFactory()->getAccessPolicy()->can_delete($delete_it) )
             {
-                $indexes[] = $matches[1];
+                $delete_it->delete();
             }
+
+            unset($_REQUEST[$id_field]);
         }
 
-        foreach( $indexes as $e )
+        foreach( $_REQUEST as $key => $value )
         {
-            if ( $_REQUEST['embedded'.$e] == '' ) continue;
-			
-			// store embedded forms
-			$embedded = $model_factory->getObject($_REQUEST['embedded'.$e]);
-			
-			$this->object = $embedded;
-			
-			$embedded->setVpdContext( $object_it );
-							
-			$fields = preg_split('/,/', $_REQUEST['embeddedFields'.$e]);
-			$anchor_field = $_REQUEST['embeddedAnchor'.$e];  
-			$active_form = $_REQUEST['embeddedActive'.$e] != 'N';  
-			$prefix = $_REQUEST['embeddedPrefix'.$e];
+            if( !preg_match('/'.$prefix.'Id([\d]+)/', $key, $matches) ) continue;
 
-			if ( !$active_form || $object_it->getId() < 1 ) continue;
+            $i = $matches[1];
 
-        	foreach( $_REQUEST as $key => $value )
-	        {
-	            if( !preg_match('/'.$prefix.'Delete([\d]+)/', $key, $matches) || $value != '1' ) continue;
-	            
-	            $id_field = $prefix.'Id'.$matches[1];
+            $field_id = $prefix.'Id'.$i;
 
-	            $delete_it = $embedded->getExact($_REQUEST[$id_field]);
+            $parms = array();
 
-			    if ( $delete_it->getId() != '' && getFactory()->getAccessPolicy()->can_delete($delete_it) )
-			    {
-				    $delete_it->delete();
-			    }
-				    
-			    unset($_REQUEST[$id_field]);
-	        }
+            foreach ( $fields as $field )
+            {
+                $field_name = $prefix.$field.$i;
 
-		    foreach( $_REQUEST as $key => $value )
-	        {
-	        	if( preg_match('/'.$prefix.'Id([\d]+)/', $key, $matches) )
-	            {
-	            	$i = $matches[1];
-	            	
-	            	$field_id = $prefix.'Id'.$i;
-	            	
-					$parms = array();
-					
-					foreach ( $fields as $field )
-					{
-						$field_name = $prefix.$field.$i;
-						
-						if ( $_REQUEST[$field_name] == '' ) continue;
-	
-						if ( $embedded->getAttributeType($field) == 'file' )
-						{
-							$tmp_file = $model_factory->getObject('cms_TempFile');
-							$tmp_field_name = $prefix.$field.'Tmp'.$i;
-	
-							$file_it = $tmp_file->getByRef('Caption', $_REQUEST[$tmp_field_name]);
-							
-							if ( $file_it->count() > 0 )
-							{						
-								$_FILES[$field]['tmp_name'] = $file_it->getFilePath('File');
-								$_FILES[$field]['name'] = $file_it->get('FileName');
-								$_FILES[$field]['type'] = $file_it->get('MimeType');
-								
-								$parms[$field] = 'file'; 
-							}
-							else
-							{
-							}
-						}
-						else
-						{
-							$parms[$field] = $_REQUEST[$field_name];
-						}
-					}
+                if ( $_REQUEST[$field_name] == '' ) continue;
+                if ( $embedded->getAttributeType($field) == 'file' )
+                {
+                    $tmp_file = $model_factory->getObject('cms_TempFile');
+                    $tmp_field_name = $prefix.$field.'Tmp'.$i;
 
-					$mapper = new ModelDataTypeMapper();
-					$mapper->map( $embedded, $parms );
-					
-					if ( $_REQUEST[$field_id] > 0 )
-					{
-						$embedded_it = $embedded->getExact($_REQUEST[$field_id]);
-						
-						if ( $embedded_it->getId() < 1 ) continue;
-						if ( !getFactory()->getAccessPolicy()->can_modify($embedded_it) ) continue; 
-						
-					    if ( is_callable($process_record_callback, true, $how_to_call) )
-					    {
-					        if ( $process_record_callback( $embedded, $field_id, $anchor_field, $prefix, $i ) ) continue;
-					    }
-					    
-						if ( count($parms) > 0 )
-						{
-							$parms[$anchor_field] = $object_it->getId();
-							
-							// check for required fields
-							$keys = array_keys($embedded->getAttributesSorted());
-							
-							foreach ( $keys as $key ) 
-							{
-								$check_tobe_required = 
-										$this->isAttributeRequired( $key )
-										&& $embedded->getAttributeType( $key ) != 'file';
-									
-								if ( $check_tobe_required && $parms[$key] == '' ) 
-								{
-									$parms[$key] = $embedded->getDefaultAttributeValue( $key );
-									
-									if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
-								}
-							}
-				
-							$embedded->modify_parms($_REQUEST[$field_id], $parms);  
+                    $file_it = $tmp_file->getByRef('Caption', $_REQUEST[$tmp_field_name]);
 
-							$item_it = $embedded->getExact($_REQUEST[$field_id]);
-							
-							$this->processAdded( $item_it );
-						}
-					}
-					else if ( count($parms) > 0 && getFactory()->getAccessPolicy()->can_create($embedded) )
-					{
-						if ( $parms[$anchor_field] == '' ) {
-							$parms[$anchor_field] = $object_it->getId();
-						}
+                    if ( $file_it->count() > 0 )
+                    {
+                        $_FILES[$field]['tmp_name'] = $file_it->getFilePath('File');
+                        $_FILES[$field]['name'] = $file_it->get('FileName');
+                        $_FILES[$field]['type'] = $file_it->get('MimeType');
 
-						// check for required fields
-						$keys = array_keys($embedded->getAttributesSorted());
-                        $was_errors = false;
+                        $parms[$field] = 'file';
+                    }
+                    else
+                    {
+                    }
+                }
+                else
+                {
+                    $parms[$field] = $_REQUEST[$field_name];
+                }
+            }
 
-						foreach ( $keys as $key ) 
-						{
-							if ( $embedded->getAttributeType( $key ) == 'file' && $parms[$key] != 'file' ) {
-                                $this->logError('File wasn\'t uploaded for the "'.get_class($embedded).'" entity');
-                                $was_errors = true;
-                                break;
-							}
-							
-							$check_tobe_required = $this->isAttributeRequired( $key );
-							if ( $check_tobe_required && $parms[$key] == '' )
-							{
-								$parms[$key] = $embedded->getDefaultAttributeValue( $key );
-								
-								if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
-								if ( $parms[$key] == '' ) {
-                                    $this->logError('Attribute "'.$key.'" of the "'.get_class($embedded).'" entity is required but empty');
-                                    $was_errors = true;
-                                    break;
-								}
-							}
-						}
-                        if ( !$was_errors ) {
-                            $this->processAdded( $embedded->getExact( $embedded->add_parms( $parms ) ) );
-                        } else {
-                            $this->logError('Embedded item skipped because of errors found');
+            $mapper = new ModelDataTypeMapper();
+            $mapper->map( $embedded, $parms );
+
+            if ( $_REQUEST[$field_id] > 0 )
+            {
+                $embedded_it = $embedded->getExact($_REQUEST[$field_id]);
+
+                if ( $embedded_it->getId() < 1 ) continue;
+                if ( !getFactory()->getAccessPolicy()->can_modify($embedded_it) ) continue;
+
+                if ( is_callable($process_record_callback, true, $how_to_call) )
+                {
+                    if ( $process_record_callback( $embedded, $field_id, $anchor_field, $prefix, $i ) ) continue;
+                }
+
+                if ( count($parms) > 0 )
+                {
+                    $parms[$anchor_field] = $object_it->getId();
+
+                    // check for required fields
+                    $keys = array_keys($embedded->getAttributesSorted());
+
+                    foreach ( $keys as $key )
+                    {
+                        $check_tobe_required =
+                                $embedded->IsAttributeRequired( $key )
+                                && $embedded->getAttributeType( $key ) != 'file';
+
+                        if ( $check_tobe_required && $parms[$key] == '' ) {
+                            $parms[$key] = $embedded->getDefaultAttributeValue( $key );
+                            if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
                         }
-					}
-					
-					$_FILES = array();
-	            }
-	        }
-		}
+                    }
 
-		// remove obsolete temporary files
-		$file_registry = getFactory()->getObject('cms_TempFile')->getRegistry();
-		
-		$file_registry->setPersisters( array(new ObjectRecordAgePersister()) );
-		
-		$file_it = $file_registry->getAll();
-		
-		while( !$file_it->end() )
-		{
-			if ( $file_it->get('AgeDays') > 0 ) $file_it->delete();
-			
-			$file_it->moveNext();
-		}
+                    $embedded->modify_parms($_REQUEST[$field_id], $parms);
+
+                    $item_it = $embedded->getExact($_REQUEST[$field_id]);
+
+                    $this->processAdded( $item_it );
+                }
+            }
+            else if ( count($parms) > 0 && getFactory()->getAccessPolicy()->can_create($embedded) )
+            {
+                if ( $parms[$anchor_field] == '' ) {
+                    $parms[$anchor_field] = $object_it->getId();
+                }
+
+                // check for required fields
+                $keys = array_keys($embedded->getAttributesSorted());
+                $was_errors = false;
+
+                foreach ( $keys as $key )
+                {
+                    if ( $embedded->getAttributeType( $key ) == 'file' && $parms[$key] != 'file' ) {
+                        $this->logError('File wasn\'t uploaded for the "'.get_class($embedded).'" entity');
+                        $was_errors = true;
+                        break;
+                    }
+
+                    $check_tobe_required = $embedded->IsAttributeRequired( $key );
+                    if ( $check_tobe_required && $parms[$key] == '' )
+                    {
+                        $parms[$key] = $embedded->getDefaultAttributeValue( $key );
+
+                        if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
+                        if ( $parms[$key] == '' ) {
+                            $this->logError('Attribute "'.$key.'" of the "'.get_class($embedded).'" entity is required but empty');
+                            $was_errors = true;
+                            break;
+                        }
+                    }
+                }
+                if ( !$was_errors ) {
+                    $this->processAdded( $embedded->getExact( $embedded->add_parms( $parms ) ) );
+                } else {
+                    $this->logError('Embedded item skipped because of errors found');
+                }
+            }
+        }
 	}
 
 	protected function logError( $message )

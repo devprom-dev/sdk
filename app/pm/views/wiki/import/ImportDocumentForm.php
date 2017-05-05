@@ -14,7 +14,17 @@ class ImportDocumentForm extends PMPageForm
 			$this->getObject()->setAttributeVisible($attribute, false);
 		}
 
-		$this->getObject()->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2218));
+		if ( $_REQUEST['ParentPage'] != '' ) {
+            $this->getObject()->setAttributeVisible('ParentPage', true);
+        }
+		$this->getObject()->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2218), 1);
+        $this->getObject()->addAttribute('Format', 'VARCHAR', '', false, false);
+
+        $typeObject = $this->getObject()->getAttributeObject('PageType');
+        $typeIt = $typeObject->getAll();
+        if ( $typeIt->count() > 0 ) {
+            $this->getObject()->setAttributeVisible('PageType', true);
+        }
     }
     
 	function createFieldObject( $name )
@@ -37,6 +47,23 @@ class ImportDocumentForm extends PMPageForm
 				throw new Exception(\FileSystem::translateError($_FILES['DocumentFile']['error']));
 			}
 
+			if ( $_REQUEST['ParentPage'] != '' ) {
+                $parent_it = $this->getObject()->getExact($_REQUEST['ParentPage']);
+            }
+            else {
+                $parent_it = $this->getObject()->getEmptyIterator();
+            }
+
+            $options = array (
+                'PageType' => $_REQUEST['PageType']
+            );
+			if ( $_REQUEST['Format'] == 'list' ) {
+                $builder = new WikiImporterListBuilder($this->getObject());
+            }
+            else {
+                $builder = new WikiImporterContentBuilder($this->getObject());
+
+            }
 			$importer = new WikiImporter($this->getObject());
             $importer_it = $importer->getAll();
 
@@ -44,7 +71,8 @@ class ImportDocumentForm extends PMPageForm
                 $engineClass = $importer_it->get('EngineClassName');
                 if ( class_exists($engineClass) ) {
                     $engine = new $engineClass;
-                    if ( $engine->import($this->getObject(), $fileName, file_get_contents($filePath)) ) {
+                    $engine->setOptions($options);
+                    if ( $engine->import($builder, $fileName, file_get_contents($filePath), $parent_it) ) {
                         $this->redirectOnAdded($engine->getDocumentIt());
                     }
                 }

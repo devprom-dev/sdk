@@ -27,7 +27,7 @@ class IssueExactTypeRule extends BusinessRulePredicate
 	}
 
  	function getId() {
- 		return abs(crc32(strtolower(get_class($this)).$this->type_ref));
+ 		return md5(strtolower(get_class($this)).$this->type_ref);
  	}
  	
  	function getObject() {

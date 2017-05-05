@@ -1,10 +1,8 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/classes/common/persisters/EntityProjectPersister.php";
- 
 define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
-define( 'REGEX_INCLUDE_PAGE', '/\{\{([^\}]+)\}\}/si' );
-define( 'REGEX_UPDATE_UID', '/<a\s*class="uid"\s*(href="([^"]+)"\s*|[^=>]+="[^"]*"\s*)+>/i' );
+define( 'REGEX_INCLUDE_PAGE', '/\{\{([A-Z]{1}-[0-9]+)\}\}/si' );
+define( 'REGEX_INCLUDE_REVISION', '/\{\{([A-Z]{1}-[0-9]+):([\d-]+)\}\}/si' );
+define( 'REGEX_UPDATE_UID', '/<a\s+(href="([^"]+)"\s*|[^=>]+="[^"]+"\s*)+>(.+)<\/a>/i' );
 
 class WikiParser
 {
@@ -18,6 +16,8 @@ class WikiParser
 	private $href_resolver_func = null;
 	private $title_resolver_func = null;
 	private $display_hints = false;
+    private $maxIncludePageDepth = 4;
+    private $includePageDepth = 0;
  	
 	function __construct( $wiki_it ) 
 	{
@@ -51,6 +51,7 @@ class WikiParser
 
 		$result = html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 
+        $result = preg_replace_callback('/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im', array($this, 'parseUrl'), $result );
 		$result = preg_replace_callback('/\r?\n?\[code\]\r?\n?(.*?)\r?\n?\[\/code\]/si', preg_code_callback_store, $result);
 		$result = preg_replace_callback('/\[uml\](.*?)\[\/uml\]/si', preg_uml_callback_store, $result);
 		
@@ -512,7 +513,7 @@ class WikiParser
      	{
 			// remap references inside baseline
 			$registry = $object_it->object->getRegistry();
-			$registry->setPersisters(array());
+			$registry->setPersisters(array(new EntityProjectPersister()));
 
 			$parms[] = new FilterAttributePredicate('UID', $object_it->get('UID'));
 			$result_it = $registry->Query($parms);
@@ -521,7 +522,8 @@ class WikiParser
      	elseif ( $object_it->object->IsAttributeStored('UID') )
      	{
 			$registry = $object_it->object->getRegistry();
-			$registry->setPersisters(array());
+			$registry->setPersisters(array(new EntityProjectPersister()));
+
 			$parms[] = new FilterAttributePredicate('UID', $uid);
 			$result_it = $registry->Query($parms);
 			if ( $result_it->getId() > 0 ) $object_it = $result_it;
@@ -573,35 +575,47 @@ class WikiParser
     {
     	$url_parts = parse_url($match[2]);
     	$uid = basename($url_parts['path']);
+
     	$uid_info = $this->getUidInfo($uid);
     	if ( count($uid_info) < 1 ) return $match[0];
-
-    	return '<a class="uid" href="'.$uid_info['url'].'">';
+        return strpos($match[3], $uid) !== false ? $uid : $match[0];
     }
     
 	function parseIncludePageCallback( $match )
     {
-		$matches = array();
-
-		if ( preg_match('/([A-Z]{1}-[0-9]+)/mi', $match[1], $matches) ) {
-			$info = $this->getUidInfo(trim($matches[1], '[]'));
-	 		$object_it = $info['object_it'];
-		}
-	 	if ( !is_object($object_it) || $object_it->getId() < 1 ) {
-	 		return str_replace('%1', $match[1], text(1166));
-	 	}
-
-		$count = 0;
-		$content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded('Content'), -1, $count);
-		if ( $count > 0 || !$this->display_hints ) return $content;
-
-		if ( $content != '' ) {
-			$uid = new ObjectUID();
-			$content .= '<div class="wiki-page-help">'.str_replace('%1', $uid->getUidIcon($object_it), text(2114)).'</div>';
-		}
-		return $content;
+        $this->includePageDepth++;
+        if ( $this->includePageDepth < $this->maxIncludePageDepth ) {
+            $result = $this->parseIncludePageCallbackInt($match);
+        }
+        else {
+            $result = $match[0];
+        }
+        $this->includePageDepth--;
+		return $result;
     }
-    
+
+    function parseIncludePageCallbackInt( $match )
+    {
+        $matches = array();
+
+        if ( preg_match('/([A-Z]{1}-[0-9]+)/mi', $match[1], $matches) ) {
+            $info = $this->getUidInfo(trim($matches[1], '[]'));
+            $object_it = $info['object_it'];
+        }
+        if ( !is_object($object_it) || $object_it->getId() < 1 ) {
+            return str_replace('%1', $match[1], text(1166));
+        }
+
+        $count = 0;
+        $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded('Content'), -1, $count);
+
+        if ( $count > 0 || !$this->display_hints ) return $content;
+        if ( $content != '' ) {
+            $content .= '<div class="wiki-page-help">'.str_replace('%1', '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>', text(2114)).'</div>';
+        }
+        return $content;
+    }
+
     function replaceImageCallback( $match )
     {
      	global $image_num;
@@ -701,7 +715,6 @@ class WikiParser
 			if ( !class_exists(getFactory()->getClass($file_class)) ) return $match[0];
 
 			$object = getFactory()->getObject($file_class);
-			$object->addPersister(new EntityProjectPersister() );
 			$file_it = $object->getExact($file_id);
 			if ( $file_it->getId() == '' ) return $match[0];
 
@@ -744,6 +757,12 @@ class WikiParser
 
 		return $match[0];
 	}
+
+	function parseUrl( $match ) {
+        $display_name = trim($match[2], "\.\,\;\:");
+        $display_tag = str_replace($display_name, "", $match[2]);
+        return $match[1].'<a target="_blank" href="'.trim($match[2], "\.\,\;\:").'">'.$display_name.'</a>'.$display_tag;
+    }
  }
  
  function preg_font_callback ( $match )

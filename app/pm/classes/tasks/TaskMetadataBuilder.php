@@ -5,6 +5,8 @@ include_once "persisters/TaskTracePersister.php";
 include_once "persisters/TaskDetailsPersister.php";
 include_once "persisters/TaskAssigneePersister.php";
 include_once "persisters/TaskTypePersister.php";
+include_once "persisters/TaskUsedByPersister.php";
+include "persisters/TaskTagsPersister.php";
 
 class TaskMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
@@ -12,13 +14,8 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Task' ) return;
 
-    	$metadata->addPersister( new TaskDetailsPersister() );
-    	
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
-		$metadata->addAttribute('Fact', 'FLOAT', 
-			translate('Затрачено'), is_object($methodology_it) && $methodology_it->IsTimeTracking(), true, '', 14 );
-
+		$metadata->addAttribute('Fact', 'FLOAT', translate('Затрачено'), true, true, '', 14 );
 		$metadata->setAttributeType('Caption', 'VARCHAR');
 		$metadata->setAttributeOrderNum('Priority', 11);
 		$metadata->setAttributeOrderNum('Assignee', 12);
@@ -26,11 +23,10 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeRequired('Planned', false);
 		$metadata->setAttributeOrderNum('LeftWork', 14);
 		$metadata->setAttributeVisible('LeftWork', false);
+        $metadata->setAttributeRequired('OrderNum', true);
+		$metadata->addPersister( new TaskFactPersister(array('Fact')) );
 
-		if ( $methodology_it->IsTimeTracking() ) {
-			$metadata->addPersister( new TaskFactPersister(array('Fact')) );
-		}
-
+        $metadata->setAttributeRequired('Assignee', false);
 		$metadata->addAttribute('TypeBase', 'REF_TaskTypeUnifiedId', translate('Тип'), false);
 		$metadata->addAttributeGroup('TypeBase', 'system');
 		$metadata->addPersister(new TaskTypePersister(array('TaskType')));
@@ -38,27 +34,29 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttribute('TraceTask', 'REF_TaskId', text(874), true, false, '', 80);
 		$metadata->addAttribute('TraceInversedTask', 'REF_TaskId', text(1921), true, false, '', 81);
 		$metadata->addPersister( new TaskTracePersister(array('TraceTask','TraceInversedTask')) );
-		
-		$metadata->setAttributeVisible('OrderNum', $methodology_it->get('IsRequestOrderUsed') == 'Y');
-		$metadata->setAttributeVisible('Priority', $methodology_it->get('IsRequestOrderUsed') != 'Y');
-		$metadata->setAttributeRequired('Assignee', !$methodology_it->IsParticipantsTakesTasks());
+
+        $metadata->addAttribute('ProjectPage', 'REF_ProjectPageId', translate('База знаний'), false);
+        $metadata->addAttributeGroup('ProjectPage', 'trace');
+        $metadata->addPersister( new TaskUsedByPersister() );
 
 		$metadata->addAttribute('Attachment', 'REF_pm_AttachmentId', translate('Приложения'), true, false, '', 75);
 		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
 		
 		$metadata->setAttributeOrderNum( 'PlannedStartDate', 18 );
 		$metadata->setAttributeOrderNum( 'PlannedFinishDate', 19 );
-
 		$metadata->addPersister( new TaskAssigneePersister() );
 
-    	foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask') as $attribute ) {
+        $metadata->addAttribute('DueWeeks', 'REF_DeadlineSwimlaneId', text(1898), false);
+        $metadata->addPersister( new TaskDatesPersister() );
+
+        foreach ( array('Assignee', 'Release', 'Caption', 'ChangeRequest', 'Priority', 'Planned', 'Fact', 'OrderNum', 'TaskType', 'TraceTask','PlannedFinishDate','Project') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'permissions');
 			$metadata->addAttributeGroup($attribute, 'tooltip');
 		}
-        foreach ( array('Result') as $attribute ) {
+        foreach ( array('Result','Author') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
-		foreach ( array('PlannedStartDate','PlannedFinishDate','StartDate','FinishDate') as $attribute ) {
+		foreach ( array('Release','PlannedStartDate','PlannedFinishDate','StartDate','FinishDate') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'deadlines');
 		}
 		foreach ( array('TraceTask','TraceInversedTask','Watchers') as $attribute ) {
@@ -68,29 +66,13 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 			$metadata->addAttributeGroup($attribute, 'nonbulk');
 		}
 
-		$this->removeAttributes( $metadata, $methodology_it );
+        $metadata->addPersister( new TaskDetailsPersister() );
+		$this->removeAttributes( $metadata );
     }
     
-    private function removeAttributes( & $metadata, & $methodology_it )
+    private function removeAttributes( $metadata )
     {
 	    $metadata->removeAttribute( 'Controller' );
-	    
 	    $metadata->removeAttribute( 'Comments' );
-
-        if ( $methodology_it->getId() > 0 && !$methodology_it->HasPlanning() )
-        {
-            $metadata->removeAttribute( 'Release' );
-        }
-        
-		if ( $methodology_it->getId() > 0 && !$methodology_it->TaskEstimationUsed() ) 
-		{
-		    $metadata->removeAttribute( 'Planned' );
-		    $metadata->removeAttribute( 'LeftWork' );
-		}
-
-		if ( $methodology_it->getId() > 0 && !$methodology_it->IsTimeTracking() ) 
-		{
-		    $metadata->removeAttribute( 'Fact' );
-		}
     }
 }

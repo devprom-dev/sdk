@@ -17,7 +17,7 @@
  }
 
  include('common.php');
- include('../core/c_command.php');
+ include_once ('../core/c_command.php');
 
  if ( file_exists(dirname(__FILE__).'/commands/c_'.$class.'.php') )
  { 

@@ -34,7 +34,9 @@ class SharedObjectsCommonBuilder extends SharedObjectsBuilder
 				'RequestTag' => '3',
 				'WikiTag' => '3',
                 'WikiPageFile' => '3',
-				'Tag' => '3'
+				'Tag' => '3',
+                'pm_Integration' => '3',
+                'pm_TextTemplate' => '3'
     		);
     
 		foreach( $entities as $key => $category )

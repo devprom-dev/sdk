@@ -1,6 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH.'core/classes/system/GlobalLock.php';
-include SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
+include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 
 class TogglePluginWebMethod extends WebMethod
 {

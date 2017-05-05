@@ -12,9 +12,11 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Release' ) return;
 		$metadata->addAttributeGroup('ReleaseNumber', 'alternative-key');
     	$metadata->addPersister( new CapacityPersister() );
-    	
-    	$metadata->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false);
-		$metadata->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Оценка окончания'), false, false);
+
+        $metadata->setAttributeType('StartDate', 'DATE');
+        $metadata->setAttributeType('FinishDate', 'DATE');
+    	$metadata->addAttribute('EstimatedStartDate', 'DATE', translate('Оценка начала'), false, false);
+		$metadata->addAttribute('EstimatedFinishDate', 'DATE', translate('Оценка окончания'), false, false);
 		$metadata->addPersister( new IterationMetricsPersister() );
  		
     	$metadata->addAttribute( 'Caption', 'TEXT', translate('Итерация'), false );
@@ -23,8 +25,6 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
 		$metadata->setAttributeRequired('FinishDate', !$methodology_it->HasFixedRelease());
-		$metadata->setAttributeVisible('InitialVelocity', true);
-    	$metadata->setAttributeRequired('InitialVelocity', false);
 
 		if ( !$methodology_it->HasReleases() ) {
 			$metadata->setAttributeVisible('Version', false);
@@ -34,5 +34,21 @@ class IterationMetadataBuilder extends ObjectMetadataEntityBuilder
 			$metadata->setAttributeVisible('Version', true);
 			$metadata->setAttributeRequired('Version', true);
 		}
+        $metadata->setAttributeVisible('Project', false);
+
+        foreach ( array('StartDate','FinishDate','Caption','Description') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'permissions');
+        }
+        if ( !$methodology_it->IsAgile() ) {
+            foreach ( array('InitialVelocity') as $attribute ) {
+                $metadata->addAttributeGroup($attribute, 'system');
+            }
+            $metadata->setAttributeVisible('InitialVelocity', false);
+            $metadata->setAttributeRequired('InitialVelocity', false);
+        }
+        else {
+            $metadata->setAttributeVisible('InitialVelocity', true);
+            $metadata->setAttributeRequired('InitialVelocity', false);
+        }
     }
 }

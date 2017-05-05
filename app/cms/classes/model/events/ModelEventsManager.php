@@ -1,9 +1,12 @@
 <?php
+// PHPLOCKITOPT NOOBFUSCATE
+// PHPLOCKITOPT NOENCODE
 
 class ModelEventsManager
 {
  	private $notificators = array();
- 	
+ 	private $delay = false;
+ 	private $delayedNotifications = array();
  	private $cascade = false;
 	
  	public function setCascade( $cascade = true )
@@ -15,6 +18,10 @@ class ModelEventsManager
  	{
  		return $this->cascade;
  	}
+
+ 	public function delayNotifications( $value = true ) {
+ 	    $this->delay = $value;
+    }
  	
 	function registerNotificator( &$notificator_object ) 
 	{
@@ -70,10 +77,17 @@ class ModelEventsManager
 		foreach( $this->getNotificators() as $notificator )
 		{
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
-			
-			$notificator->setRecordData( $data );
 
-			$notificator->add( $object_it );
+			if ( $this->delay ) {
+			    $this->delayedNotifications[] = function() use ($notificator, $data, $object_it) {
+                    $notificator->setRecordData( $data );
+                    $notificator->add( $object_it );
+                };
+            }
+            else {
+                $notificator->setRecordData( $data );
+                $notificator->add( $object_it );
+            }
 		}
 	}
 
@@ -82,10 +96,11 @@ class ModelEventsManager
 		foreach( $this->getNotificators() as $notificator )
  	    {
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
-			
+
 			$notificator->setRecordData( $data );
- 	    		
-			$notificator->modify( $prev_object_it, $object_it );
+            $object_it->object->removeNotificator(get_class($notificator));
+
+            $notificator->modify( $prev_object_it, $object_it );
 		}
 	}
 
@@ -94,22 +109,28 @@ class ModelEventsManager
 		foreach( $this->getNotificators() as $notificator ) 
 		{
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
-
 			$notificator->delete( $object_it );
 		}
 	}
 	
-	public function executeEventsAfterBusinessTransaction( $object_it, $interface_name )
+	public function executeEventsAfterBusinessTransaction( $object_it, $interface_name, $data = array() )
 	{
 		foreach( getSession()->getBuilders($interface_name) as $handler )
 		{
 			$handler->setObjectIt($object_it->object->getExact($object_it->getId()));
 			
 			if ( !$handler->readyToHandle() ) continue;
-			
-			$handler->process();
+
+			$handler->process( $data );
 		}
 		
 		$object_it->moveFirst();
 	}
+
+	public function releaseNotifications()
+    {
+        foreach( $this->delayedNotifications as $functor ) {
+            $functor();
+        }
+    }
 }

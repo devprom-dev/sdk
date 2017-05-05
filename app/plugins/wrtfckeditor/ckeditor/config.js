@@ -10,7 +10,7 @@ CKEDITOR.editorConfig = function( config ) {
 	// For the complete reference:
 	// http://docs.ckeditor.com/#!/api/CKEDITOR.config
 
-	config.extraPlugins = 'plantuml,lineutils,linkex,sharedspace,embed,autoembed,tableresize';
+    config.extraPlugins = 'linkex,plantuml,sharedspace,iframedialog,texttemplates,searchartifacts,productivity';
 	config.allowedContent = true;
 	config.disableNativeSpellChecker = false;
 	config.entities = false;
@@ -22,7 +22,7 @@ CKEDITOR.editorConfig = function( config ) {
 	[
 		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','-','Subscript','Superscript','-', 'TextColor','BGColor','-','RemoveFormat' ] },
 		{ name: 'paragraph', items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','Blockquote' ] },
-		{ name: 'insert', items : [ 'Image','Table','Link','HorizontalRule','Smiley','Embed','SpecialChar', 'Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'insert', items : [ 'Image','searchArtifact','Table','Link','HorizontalRule','Smiley','Embed','SpecialChar', 'Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
 		{ name: 'clipboard', items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
 		{ name: 'editing', items : [ 'Scayt' ] },
 		{ name: 'tools', items : [ 'Maximize', 'ShowBlocks' ] },
@@ -36,7 +36,7 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'clipboard', items : ['Paste','PasteText' ] },
 		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','RemoveFormat' ] },
 		{ name: 'paragraph', items : [ 'Outdent','Indent','NumberedList','BulletedList','Blockquote' ] },
-		{ name: 'insert', items : [ 'Image','Table','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
+		{ name: 'insert', items : [ 'Image','searchArtifact','Table','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
 		{ name: 'colors', items : [ 'TextColor','BGColor' ] },
 		{ name: 'tools', items : [ 'Maximize' ] }
 	];

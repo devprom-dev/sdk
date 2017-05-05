@@ -7,7 +7,6 @@ include_once "ModelDataTypeMappingBoolean.php";
 include_once "ModelDataTypeMappingInteger.php";
 include_once "ModelDataTypeMappingFloat.php";
 include_once "ModelDataTypeMappingReference.php";
-include_once "ModelDataTypeMappingTag.php";
 include_once "ModelDataTypeMappingString.php";
 include_once "ModelDataTypeMappingPassword.php";
 include_once "ModelDataTypeMappingFile.php";
@@ -19,7 +18,6 @@ class ModelDataTypeMapper
 	public function __construct()
 	{
 		$this->mappers = array (
-				new ModelDataTypeMappingTag(),
 				new ModelDataTypeMappingDate(),
 				new ModelDataTypeMappingDateTime(),
 				new ModelDataTypeMappingBoolean(),

@@ -9,7 +9,7 @@ if ( count($sections) > 0 )
 
 ?>
 
-<div style="display:table;width:100%;">
+<div class="page-title" style="display:table;width:100%;">
 
 <?php if ( $show_section_number && $attributes['SectionNumber']['value'] != '' ) { ?>
 
@@ -37,8 +37,8 @@ if ( count($sections) > 0 )
 
 <?php } ?>
 
-<?php if ( is_object($attributes['Tags']['field']) && $form->getObjectIt()->get('Tags') != '' ) { ?>
-	<div class="title-cell" style="white-space: nowrap;">
+<?php if ( $attributes['Tags']['visible'] && is_object($attributes['Tags']['field']) && $form->getObjectIt()->get('Tags') != '' ) { ?>
+	<div class="title-cell">
 		<?
 		$attributes['Tags']['field']->setReadonly(true);
 		$attributes['Tags']['field']->render($view);
@@ -50,6 +50,27 @@ if ( count($sections) > 0 )
 	<div class="title-cell" style="white-space:nowrap;">
 		<? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
 	</div>
+<?php } ?>
+
+	<?php if ( $importanceColor != '' ) { ?>
+		<div class="title-cell" style="white-space:nowrap;">
+			<span class="label label-importance" title="<?=$importanceText?>" style="background-color: <?=$importanceColor?>;">&nbsp; &nbsp;</span>
+		</div>
+	<?php } ?>
+
+
+	<?php if ( $persisted && $baseline == '' && is_a($form->getObjectIt(), 'StatableIterator') && $attributes['State']['value'] != '' ) { ?>
+
+<div class="title-cell hidden-print">
+<?php
+	echo $view->render('pm/StateColumn.php', array (
+				'color' => $form->getObjectIt()->get('StateColor'),
+				'name' => $form->getObjectIt()->get('StateName'),
+				'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
+		)); 
+?>
+</div>
+
 <?php } ?>
 
 	<?php if ( $persisted && count($actions['create']['items']) > 0 ) { ?>
@@ -68,21 +89,8 @@ if ( count($sections) > 0 )
 	<?php } // persisted ?>
 
 
-	<?php if ( $persisted && $baseline == '' && is_a($form->getObjectIt(), 'StatableIterator') && $attributes['State']['value'] != '' ) { ?>
 
-<div class="title-cell hidden-print">
-<?php
-	echo $view->render('pm/StateColumn.php', array (
-				'color' => $form->getObjectIt()->get('StateColor'),
-				'name' => $form->getObjectIt()->get('StateName'),
-				'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
-		)); 
-?>
-</div>
-
-<?php } ?>
-
-<? if ( count($compare_actions) > 0 ) { ?>
+	<? if ( count($compare_actions) > 0 ) { ?>
 
 	<div class="title-cell hidden-print">
     <div class="btn-group operation last">
@@ -122,6 +130,7 @@ if ( count($sections) > 0 )
 </div>
 
 <input type="hidden" name="ParentPage" value="<?=$attributes['ParentPage']['value']?>">
+<input type="hidden" name="treeTitle" value="<?=htmlentities($form->getObjectIt()->getTreeDisplayName())?>">
 
 <div class="page-attachments">
 <? if ( is_object($attachments) ) { echo $attachments->render($this); } ?>

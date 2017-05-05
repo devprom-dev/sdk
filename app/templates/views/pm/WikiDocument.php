@@ -6,10 +6,16 @@ if ( !$tableonly )
     $view['slots']->output('_content');
 }
 
+$bodySections = array(new DetailsInfoSection());
+if ( $_COOKIE['toggle-structure-panel-' . $table->getDocumentIt()->getId()] == 'false' ) {
+    array_unshift($bodySections, new DocumentStructureSection());
+}
+$placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'right';
+
 ?>
-<div class="wiki-page">
+<div class="wiki-page <?=$placementClass?>">
     <?php
-        if ( !$tableonly && count($sections) > 0 && $_COOKIE['document-tree-placement'] != 'right' ) {
+        if ( !$tableonly && count($sections) > 0 && $placementClass != 'right' ) {
             echo $view->render('pm/WikiDocumentTree.php', array(
                 'sections' => $sections,
                 'object_class' => $object_class,
@@ -27,6 +33,7 @@ if ( !$tableonly )
     ?>
     <div class="wiki-page-document">
         <?php
+
             echo $view->render('core/PageTableBody.php', array (
                 'table' => $table,
                 'caption' => $caption,
@@ -42,13 +49,15 @@ if ( !$tableonly )
                 'changed_ids' => $changed_ids,
                 'object_id' => $object_id,
                 'object_class' => $object_class,
-                'save_settings_alert' => $save_settings_alert,
+                'details' => $details,
+                'details_parms' => $details_parms,
                 'widget_id' => $widget_id,
-                'sections' => array(new FullScreenSection(), new DocumentStructureSection()),
+                'sections' => $bodySections,
                 'placeholderClass' => '',
                 'hint' => $hint,
                 'hint_open' => $hint_open,
-                'page_uid' => $page_uid
+                'page_uid' => $page_uid,
+                'sliderClass' => 'list-slider-1'
             ));
             if ( $hint_open )
             {
@@ -58,7 +67,7 @@ if ( !$tableonly )
         ?>
     </div>
     <?php
-        if ( !$tableonly && count($sections) > 0 && $_COOKIE['document-tree-placement'] == 'right' ) {
+        if ( !$tableonly && count($sections) > 0 && $placementClass == 'right' ) {
             echo $view->render('pm/WikiDocumentTree.php', array(
                 'sections' => $sections,
                 'object_class' => $object_class,

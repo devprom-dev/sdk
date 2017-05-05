@@ -10,5 +10,12 @@ var ckeditor_resources =
 	'uml-settings': 'Basic Settings',
 	'uml-text': 'Enter here PlantUML diagram description, more details about notation and more examples you can find on http://plantuml.com',
 	'uml-message-notempty': "PlantUML source cannot be empty",
-	'uml-preview-area': "UML preview area"
+	'uml-preview-area': "UML preview area",
+	'search-artifact': 'Insert link to artifact',
+	'search-artifact-short': 'Link to artifact (Ctrl+Alt+L)',
+	'search-artifact-dlg': 'Search for artifact',
+	'new-comment': 'Add comment',
+	'comment-title': 'Comment',
+	'text-template-search': 'Insert template',
+	'text-template-dlg': 'Search for text template',
 };

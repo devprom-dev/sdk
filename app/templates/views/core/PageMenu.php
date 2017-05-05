@@ -20,20 +20,19 @@
 		</div>	<!-- end btn-group -->
 	<?php } ?>
 
-
+	<? if ( count($areas) > 1 || array_shift(array_keys($areas)) == 'favs' ) { ?>
 	<div class="btn-group"></div>
-	<? if ( count($areas) > 0 ) { ?>
-		<div class="btn-group last">
-			<form class="form-search" action="<?=$search_url?>">
-				<div class="input-append">
-					<? $content = htmlentities($view->render('core/PageMenuShort.php',array('areas' => $areas))); ?>
-					<input id="quick-search" name="search-keywords" type="text" class="search-query" placeholder="<?=text(2195)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="" data-content="<?=$content?>">
-					<button type="submit" class="btn medium-blue">
-						<i class="icon-search"></i>
-					</button>
-				</div>
-			</form>
-		</div>
+	<div class="btn-group last">
+		<form class="form-search" action="<?=$search_url?>">
+			<div class="input-append">
+				<? $content = htmlentities($view->render('core/PageMenuShort.php',array('areas' => $areas))); ?>
+				<input id="quick-search" name="search-keywords" type="text" class="search-query" placeholder="<?=text(2195)?>" object="Widget" searchattrs="Caption,ReferenceName" additional="" data-content="<?=$content?>">
+				<button type="submit" class="btn medium-blue">
+					<i class="icon-search"></i>
+				</button>
+			</div>
+		</form>
+	</div>
 	<? } ?>
 
 

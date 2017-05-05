@@ -2,4 +2,12 @@
 <p>There is new comment to request "<a href="{{ issueLink }}">{{ issue.caption }}</a>":</p>
 <blockquote>{{ comment | unescapeHtml | raw }}</blockquote>
 <br/>
+{% if comment.attachments %}
+    <p>Attachments:</p>
+    {% for attachment in comment.attachments %}
+        <p>
+            <a href="{{ url('comment_attachment_download', { 'attachmentId' : attachment.id }) }}">{{ attachment.originalFilename }}</a>
+        </p>
+    {% endfor %}
+{% endif %}
 <hr>

@@ -23,6 +23,9 @@ class RunJobs extends Command
 		$jobs_to_run = array();
 		$jobs_locks = array();
 
+		// see SessionBuilder for more details
+		\FileSystem::rmdirr( SERVER_FILES_PATH . 'sessions' );
+
 		// recover table
 		$this->repairTables();
         
@@ -168,17 +171,19 @@ class RunJobs extends Command
 					// remove old results
 					while ( true )
 					{
-						$cnt = $jobrun->getByRefArrayCount( 
-							array( 'ScheduledJob' => $job_it->getId() ) );
+						$cnt = $jobrun->getRegistry()->Count(
+						    array(
+						        new FilterAttributePredicate('ScheduledJob', $job_it->getId())
+                            )
+                        );
+						if ( $cnt < 21 ) break;
 
-						if ( $cnt < 21 )
-						{
-							break;
-						}
-
-						$run_it = $jobrun->getByRefArrayEarliest( 
-							array( 'ScheduledJob' => $job_it->getId() ) );
-						
+						$run_it = $jobrun->getRegistry()->Query(
+						    array(
+                                new FilterAttributePredicate('ScheduledJob', $job_it->getId()),
+                                new SortAttributeClause('RecordCreated')
+                            )
+                        );
 						if ( $run_it->delete() < 1 ) break;
 					}
 				}

@@ -1,0 +1,22 @@
+[{
+  "ReviewRequest": {
+    "url": "/api/review-requests/",
+    "link": "/r/{id}",
+    "Caption": "review_request.summary",
+    "Description": "review_request.description",
+    "Repository": {
+      "Caption": "review_request.links.repository.title"
+    },
+    "Commit": {
+      "CommitId": "review_request.commit_id"
+    },
+    "Author": {
+      "Caption": "review_request.submitter.title",
+      "readonly": "true"
+    },
+    "State": {
+      ".": "review_request.status",
+      "mapping": [{"discarded":"discarded"}, {"pending":"pending"}, {"submitted":"submitted"}]
+    }
+  }
+}]

@@ -16,7 +16,7 @@ class TaskPlanFactChart extends PMPageChart
 	function getChartWidget()
 	{
 		$widget = new TaskPlanFactChartWidget();
-		$widget->setIterator( $this->getObject()->getAll() );
+		$widget->setIterator( PageList::getIterator() );
 		return $widget;
 	}
 	

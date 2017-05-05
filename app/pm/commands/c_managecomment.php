@@ -1,6 +1,5 @@
 <?php
-
-include_once SERVER_ROOT_PATH."cms/c_form_embedded.php";
+include_once SERVER_ROOT_PATH."cms/c_form.php";
 
 class ManageComment extends CommandForm
 {
@@ -15,33 +14,36 @@ class ManageComment extends CommandForm
 		if ( $object_it->getId() < 1 ) $this->replyError( text(1062) );
 		
 		$comment = getFactory()->getObject('Comment');
-
- 		if ( $_REQUEST['PrevComment'] > 0 )
- 		{
- 			$comment_it = $comment->getExact($_REQUEST['PrevComment']);
-
- 			$last_comment_id = $comment_it->getId();
- 		}
- 		else
- 		{
- 			$last_comment_id = '';
- 		}
+        $prevCommentIt = $comment->getExact($_REQUEST['PrevComment']);
 
 		$comment_text = $object_it->utf8towin($_REQUEST['Caption']);
  		$comment->setVpdContext( $object_it );
- 		
- 		$comment_id = $comment->add_parms( 
- 			array('AuthorId' => getSession()->getUserIt()->getId(),
- 				  'ObjectId' => $object_it->getId(),
- 				  'ObjectClass' => get_class($object_it->object),
- 				  'PrevComment' => $last_comment_id,
- 				  'Caption' => $comment_text)
- 			);
+
+ 		$notificationSpecified = array_key_exists('Notification', $_REQUEST) || array_key_exists('NotificationOnForm', $_REQUEST);
+ 		$isPrivate = $prevCommentIt->get('IsPrivate') != 'Y'
+            ? ($notificationSpecified && in_array($_REQUEST['Notification'], array('N','')) ? 'Y' : 'N')
+            : 'Y';
+
+        if ( $isPrivate == 'Y' ) {
+            $comment->removeNotificator('ServicedeskCommentEmailNotificator');
+        }
+
+        getFactory()->getEventsManager()->delayNotifications();
+
+ 		$comment_id = $comment->add_parms( array(
+            'AuthorId' => getSession()->getUserIt()->getId(),
+            'ObjectId' => $object_it->getId(),
+            'ObjectClass' => get_class($object_it->object),
+            'PrevComment' => $prevCommentIt->getId(),
+            'Caption' => $comment_text,
+            'IsPrivate' => $isPrivate
+        ));
 
  		$comment_it = $comment->getExact($comment_id);
- 		
 		$this->processEmbedded( $comment_it );
- 			
+
+        getFactory()->getEventsManager()->releaseNotifications();
+
 		$comment_id > 0 
 			? $this->replySuccess( text(1178) ) 
 				: $this->replyError( text(1062) );
@@ -72,8 +74,8 @@ class ManageComment extends CommandForm
 	
 	function processEmbedded( $comment_it )
 	{
-		$embedded = new FormEmbedded();
-		$embedded->process( $comment_it );
+		$form = new Form($comment_it->object);
+        $form->processEmbeddedForms( $comment_it );
 	}
 }
  

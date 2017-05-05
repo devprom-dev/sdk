@@ -9,6 +9,6 @@ class FilterNextSiblingsPredicate extends FilterPredicate
  		if ( $filter->getId() < 1 ) return " AND 1 = 2 ";
  		
  		return " AND t.OrderNum >= ".($filter->get('OrderNum') > 0 ? $filter->get('OrderNum') : "0").
- 			   " AND t.".$object->getClassName()."Id <> ".$filter->getId();
+ 			   " AND t.".$object->getClassName()."Id > ".$filter->getId();
  	}
 }

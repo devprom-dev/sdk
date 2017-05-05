@@ -24,6 +24,12 @@ class Project {
     private $name;
 
     /**
+     * @ORM\Column(type="string", name="Description")
+     * @var string
+     */
+    private $description;
+
+    /**
      * @ORM\Column(type="string", name="CodeName")
      * @var string
      */
@@ -81,6 +87,22 @@ class Project {
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setDescription($value)
+    {
+        $this->description = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
     }
 
     /**

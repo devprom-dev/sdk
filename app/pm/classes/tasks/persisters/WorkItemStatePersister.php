@@ -8,15 +8,15 @@ class WorkItemStatePersister extends ObjectSQLPersister
 
  		array_push( $columns,
  			"( SELECT s.Caption FROM pm_State s ".
- 			"   WHERE s.ReferenceName = ".$alias.".State AND s.VPD = ".$alias.".VPD AND s.ObjectClass = t.ObjectClass) StateName " );
+ 			"   WHERE s.VPD = ".$alias.".VPD AND s.ObjectClass = t.ObjectClass AND s.ReferenceName = ".$alias.".State ) StateName " );
 
  		array_push( $columns, 
  			"( SELECT s.RelatedColor FROM pm_State s ".
- 			"   WHERE s.ReferenceName = ".$alias.".State AND s.VPD = ".$alias.".VPD AND s.ObjectClass = t.ObjectClass) StateColor " );
+ 			"   WHERE s.VPD = ".$alias.".VPD AND s.ObjectClass = t.ObjectClass AND s.ReferenceName = ".$alias.".State ) StateColor " );
  		
  		array_push( $columns, 
  			"( SELECT s.IsTerminal FROM pm_State s ".
- 			"   WHERE s.ReferenceName = ".$alias.".State AND s.VPD = ".$alias.".VPD AND s.ObjectClass = t.ObjectClass) StateTerminal " );
+ 			"   WHERE s.VPD = ".$alias.".VPD AND s.ObjectClass = t.ObjectClass AND s.ReferenceName = ".$alias.".State ) StateTerminal " );
  		
  		return $columns;
  	}

@@ -50,7 +50,7 @@ class InstallLicenseTypeForm extends AjaxForm
 		}
 		
 		echo '<label class="radio">';
-		    echo '<input type="radio" name="LicenseType" value="'.$attribute.'" '.($checked ? 'checked' : '').' >';
+		    echo '<input type="radio" name="LicenseType" value="'.$attribute.'" '.($checked ? 'checked' : '').' getlicense="'.AccountSiteJSBuilder::getScriptToBuy($attribute).'">';
 		        echo '<h4 class="bs">'.$title.'</h4>';
 		echo '</label>';
 		
@@ -104,29 +104,27 @@ class InstallLicenseTypeForm extends AjaxForm
     {
 		return array (
 				array (
-						'url' => "javascript: $('#action".$this->getId()."').val(1);",
+						'url' => "javascript: eval($('input[type=radio]:checked').attr('getlicense'))",
 						'name' => translate('Получить ключ'),
 						'class' => 'btn-primary',
-						'type' => 'submit'
 				),
 				array (
-						'url' => "javascript: $('#action".$this->getId()."').val(3);",
+						'url' => "javascript: $('#action".$this->getId()."').val(1);",
 						'name' => translate('Ввести ключ'),
 						'type' => 'submit'
 				)
 		);    	
     }
 	
-	function getRenderParms()
+	function getRenderParms($view)
 	{
 		$license_it = getFactory()->getObject('LicenseState')->getAll();
 
-		if ( $license_it->get('LicenseKey') != '' && $license_it->get('IsValid') != 'Y' )
-		{
+		if ( $license_it->get('LicenseKey') != '' && $license_it->get('IsValid') != 'Y' ) {
 		    $message = str_replace('%2', '/admin/license/', str_replace('%1', $license_it->restrictionMessage(), text(1428)));
 		}
 	    
-	    return array_merge( parent::getRenderParms(), array (
+	    return array_merge( parent::getRenderParms($view), array (
 	        'warning' => $message        
 	    ));
 	}

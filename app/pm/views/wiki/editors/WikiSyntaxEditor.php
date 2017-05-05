@@ -108,12 +108,6 @@ class WikiSyntaxEditor extends WikiEditorBase
 				return nRowCnt;
 			} 
 
-			function adjustRows () 
-			{
-				var area = document.getElementById('<? echo $this->getFieldId(); ?>');
-				area.rows = countLineBreaks() + 1;
-			}
-
 			<?php  if ( $this->getMode() & WIKI_MODE_MINIMAL ) { ?>
 			mySettings = {
 			    resizeHandle: false,
@@ -209,10 +203,6 @@ class WikiSyntaxEditor extends WikiEditorBase
 		      	});
 		      	makeClickableFiles();
 		   });
-
-		   <?php  if ( !($this->getMode() & WIKI_MODE_MINIMAL) ) { ?>
-		   window.setInterval('adjustRows()', 500, 'javascript');
-		   <?php } ?>
 		</script>
 		<?
 		
@@ -254,7 +244,7 @@ class WikiSyntaxEditor extends WikiEditorBase
 	{
 		ob_start();
 		
-		echo str_replace('%1', '<a href="http://devprom.ru/docs#2474">'.text(1165).'</a>', text(1264));
+		echo str_replace('%1', '<a href="http://devprom.ru/docs/%D0%AF%D0%B7%D1%8B%D0%BA-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%82%D0%BA%D0%B8">'.text(1165).'</a>', text(1264));
 		echo parent::getDescription();
 		
 		$result = ob_get_contents();
@@ -269,6 +259,6 @@ class WikiSyntaxEditor extends WikiEditorBase
  		parent::drawHelpSection();
  		
  		echo '<tr><td class="wiki_sub" height=15 valign=middle>'.translate('Дополнительно').'</td></tr>';
- 		echo '<tr><td style="padding-top:6px;"><a href="http://devprom.ru/docs#2474">'.text(1165).'</a></td></tr>';
+ 		echo '<tr><td style="padding-top:6px;"><a href="http://devprom.ru/docs/%D0%AF%D0%B7%D1%8B%D0%BA-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%82%D0%BA%D0%B8">'.text(1165).'</a></td></tr>';
  	}
 }

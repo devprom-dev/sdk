@@ -16,7 +16,7 @@ $view['slots']->stop();
 			<? foreach( $section['items'] as $key => $item ) { ?>
 			<span class="span3 settings-box" style="margin-left:0;">
 				<ul class="nav nav-pills nav-stacked">
-					<li><a href="<?=$item['url']?>"><strong><?=$item['name']?></strong></a><p><?=$item['description']?></p></li>
+					<li><a uid="<?=$item['uid']?>" href="<?=$item['url']?>"><strong><?=$item['name']?></strong></a><p><?=$item['description']?></p></li>
 				</ul>
 			</span>
 			<? } ?>

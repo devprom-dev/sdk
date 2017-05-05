@@ -1,5 +1,6 @@
 <?php
 include "ProjectLogDetailsList.php";
+include_once SERVER_ROOT_PATH . "pm/classes/communications/predicates/ChangeLogDocumentFilter.php";
 
 class ProjectLogDetailsTable extends PMPageTable
 {
@@ -17,10 +18,17 @@ class ProjectLogDetailsTable extends PMPageTable
 
 	function getFilterPredicates()
 	{
-		return array(
-			new ChangeLogActionFilter( $_REQUEST['action'] ),
-			new ChangeLogStartFilter( getSession()->getLanguage()->getPhpDate(strtotime('-1 week', strtotime(date('Y-m-j')))) ),
-			new ChangeLogVisibilityFilter()
-		);
+        $filters = array(
+            new ChangeLogActionFilter( $_REQUEST['action'] ),
+            new ChangeLogVisibilityFilter()
+        );
+        if ( $_REQUEST['document'] > 0 ) {
+            $filters[] = new ChangeLogDocumentFilter($_REQUEST['document']);
+            $filters[] = new ChangeLogStartFilter( getSession()->getLanguage()->getPhpDate(strtotime('-1 month', strtotime(date('Y-m-j')))) );
+        }
+        else {
+            $filters[] = new ChangeLogStartFilter( getSession()->getLanguage()->getPhpDate(strtotime('-1 week', strtotime(date('Y-m-j')))) );
+        }
+        return $filters;
 	}
 }

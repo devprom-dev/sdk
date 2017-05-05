@@ -9,8 +9,9 @@ class FormTransitionAttributeEmbedded extends PMFormEmbedded
  		switch ( $attribute )
  		{
  			case 'ReferenceName':
+            case 'IsVisible':
+            case 'IsRequired':
  				return true;
-
  			default:
  				return false;
  		}
@@ -22,7 +23,6 @@ class FormTransitionAttributeEmbedded extends PMFormEmbedded
  		{
  			case 'ReferenceName':
  				return true;
- 				
  			default:
  				return parent::IsAttributeObject( $attr_name );
  		}
@@ -30,15 +30,12 @@ class FormTransitionAttributeEmbedded extends PMFormEmbedded
  	
  	function createField( $attr_name ) 
 	{
-		global $model_factory;
-		
 		switch( $attr_name )
 		{
 			case 'ReferenceName':
-				$class = $this->object->getDefaultAttributeValue( 'Entity' );
-				
-				return new FieldAttributeDictionary( $model_factory->getObject( $class ) );
-
+				return new FieldAttributeDictionary( getFactory()->getObject(
+                    $this->object->getDefaultAttributeValue( 'Entity' )
+                ));
 			default:
 				return parent::createFieldObject( $attr_name );
 		}

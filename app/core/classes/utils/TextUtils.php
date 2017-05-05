@@ -1,4 +1,6 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 class TextUtils
 {
@@ -68,18 +70,44 @@ class TextUtils
     }
 
     public static function stripAnyTags( $text ) {
-        return strip_tags(self::removeHtmlEntities($text));
+        return preg_replace('/(?:<|&lt;)\/?([a-zA-Z]+) *[^<\/]*?(?:>|&gt;)/', '', self::removeHtmlEntities($text));
+    }
+
+    public static function getCleansedHtml( $body )
+    {
+        $body = preg_replace(
+            array(
+                '/<link/',
+                '/<\/link>/',
+                '/<script/',
+                '/<\/script>/',
+                '/<style/',
+                '/<\/style>/',
+                '/<base\s+/',
+            ),
+            array (
+                '<!--<link-skip',
+                '</link-skip>-->',
+                '<!--<script-skip',
+                '</script-skip>-->',
+                '<!--<style-skip',
+                '</style-skip>-->',
+                '<skip-base '
+            ), $body);
+        return $body;
     }
 
     public static function getValidHtml( $body )
     {
-        $text = preg_replace('/charset\s*=\s*[^"]+/i', 'charset=utf-8', $body);
+        $text = preg_replace('/<meta\s+[^>]+>/i', '', $body);
         if ( mb_stripos($text, '<body>') === false ) {
             $text = '<body>'.$text.'</body>';
         }
-        if ( mb_stripos($text, 'charset') === false ) {
-            $text = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.$text;
+        else {
+            $text = mb_substr($text, mb_stripos($text, '<body>'));
+            $text = mb_substr($text, 0, mb_stripos($text, '</body>') + 7);
         }
+        $text = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.$text;
 
         $was_state = libxml_use_internal_errors(true);
         $doc = new \DOMDocument("1.0", APP_ENCODING);
@@ -89,16 +117,24 @@ class TextUtils
                 $text = $doc->saveHTML($bodyElement->item(0));
                 $body = preg_replace(
                     array(
-                        '/<\/?body>/',
-                        '/<style>/',
-                        '/<\/style>/'
+                        '/<tr>[\s\r\n]*<\/tr>/',
+                        '/<tr>[\s\r\n]*<table/',
+                        '/<\/table>[\s\r\n]*<\/tr>/',
+                        '/<\/?body>/'
                     ),
                     array (
-                        '',
-                        '<styleSkipped>',
-                        '</styleSkipped>'
+                        '<tr><td></td></tr>',
+                        '<tr><td><table',
+                        '</table></td></tr>',
+                        ''
                     ), $text);
             }
+            else {
+                $body = htmlentities($text);
+            }
+        }
+        else {
+            $body = htmlentities($text);
         }
         libxml_clear_errors();
         libxml_use_internal_errors($was_state);
@@ -126,7 +162,13 @@ class TextUtils
     }
 
     public function getAlphaNumericString( $text ) {
-        $text = preg_replace( "/[^\p{L}|\p{N}\-]+/u", " ", $text );
+        $text = preg_replace( "/[^\p{L}|\p{N}\+\-\.,:;_\{\}]+/u", " ", $text );
         return preg_replace( "/[\p{Z}]{2,}/u", " ", $text );
+    }
+
+    public static function getWords( $text, $wordsCount = 1 ) {
+        $items = preg_split('/\s+/', $text);
+        $result = join(' ', array_slice($items, 0, $wordsCount));
+        return $result != $text ? $result . '...' : $result;
     }
 }

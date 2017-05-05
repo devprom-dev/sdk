@@ -19,7 +19,10 @@ class DevpromSwiftMessage extends Swift_Message
 
     public function toByteStream(Swift_InputByteStream $is)
     {
-        $is->write($this->getHeaders()->toString());
+        $headers = $this->getHeaders();
+        $headers->addTextHeader('X-Auto-Response-Suppress', 'OOF');
+
+        $is->write($headers->toString());
         $is->commit();
 
         $is->write($this->message);

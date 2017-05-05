@@ -1,5 +1,4 @@
 <?php
-
 include "PMCustomReportIterator.php";
 include "predicates/CustomReportMyPredicate.php";
 include "predicates/CustomReportCommonPredicate.php";
@@ -52,13 +51,19 @@ class PMCustomReport extends Metaobject
 
 	function getDefaultAttributeValue( $name )
 	{
-		switch ( $name )
-		{
+		switch ( $name ) {
 			case 'Author':
 				return getSession()->getUserIt()->getId();
-
 			default:
 				return parent::getDefaultAttributeValue($name);
 		}
 	}
+
+	function add_parms($parms)
+    {
+        if ( $parms['UID'] == '' ) {
+            $parms['UID'] = md5(uniqid());
+        }
+        return parent::add_parms($parms);
+    }
 }

@@ -31,4 +31,15 @@ class WikiHtmlDiff extends HtmlDiff
         if ( $resultImage == "" ) return $resultImage;
         return HtmlImageConverter::encodeBase64Image($resultImage);
     }
+
+    public function build()
+    {
+        try {
+            return parent::build();
+        }
+        catch(\Exception $e) {
+            \Logger::getLogger('System')->error($e->getMessage().$e->getTraceAsString());
+            return "";
+        }
+    }
 }

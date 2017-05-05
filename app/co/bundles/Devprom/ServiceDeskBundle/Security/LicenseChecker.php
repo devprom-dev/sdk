@@ -21,10 +21,9 @@ class LicenseChecker
     public function isValid()
     {
         $almPluginList = array_filter($this->pluginList, function (PluginBase $plugin) {
-            return strtolower($plugin->getNamespace()) == 'ee';
+            return strtolower($plugin->getNamespace()) == 'support';
         });
-
-        return !empty($almPluginList) && array_shift($almPluginList)->IsLicensed();
+        return !empty($almPluginList) && array_shift($almPluginList)->checkLicense();
     }
 
 }

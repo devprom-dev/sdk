@@ -1,6 +1,6 @@
 <?php
 
-
+include_once SERVER_ROOT_PATH.'admin/install/InstallationFactory.php';
 include_once SERVER_ROOT_PATH."core/classes/sprites/UserPicSpritesGenerator.php";
 include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
  
@@ -16,32 +16,36 @@ class AdminSystemTriggers extends SystemTriggersBase
                 $generator = new UserPicSpritesGenerator();
                 $generator->storeSprites();
 
-				if ( $kind == 'modify' ) {
-					$session->drop();
-				}
-				else {
-					$session->truncate('usr');
-				}
-				
+                $this->invalidateCache(array('projects','apps','sessions'));
 				$this->executeCheckpoints();
 				break;
 				
 			case 'cms_BlackList':
-				$session->truncate('usr');
-				break;
-				
-			case 'co_AccessRight':
-			case 'co_UserGroupLink':
+            case 'co_AccessRight':
+            case 'co_UserGroupLink':
+                $this->invalidateCache(array('projects','apps','sessions'));
+                break;
+
 			case 'co_ProjectGroupLink':
 			case 'cms_PluginModule':
-			case 'cms_License':
 			case 'cms_Update':
-            case 'pm_Project':
-                $this->invalidateCache();
+                $this->invalidateGlobalCache();
 				break;
-			    
+
+            case 'cms_License':
+                $this->invalidateGlobalCache();
+                InstallationFactory::getFactory();
+                foreach( array(new CacheParameters()) as $command ) {
+                    $command->install();
+                }
+                break;
+
+            case 'pm_Project':
+                $this->invalidateCache(array('projects','sessions'));
+                break;
+
 			case 'cms_SystemSettings':
-				$this->invalidateCache();
+				$this->invalidateGlobalCache();
 				$this->executeCheckpoints();
 				break;
 		}
@@ -54,11 +58,13 @@ class AdminSystemTriggers extends SystemTriggersBase
 	    $checkpoint->checkOnly( array('CheckpointHasAdmininstrator', 'CheckpointSystemAdminEmail') );
 	}
 
-	function invalidateCache()
-    {
-        SessionBuilder::Instance()->invalidate();
-        $session = getSession();
-        $session->drop();
+	function invalidateCache( array $paths ) {
+        foreach( $paths as $path ) {
+            getFactory()->getCacheService()->truncate($path);
+        }
+    }
+	function invalidateGlobalCache() {
+        getFactory()->getCacheService()->invalidate();
     }
 }
  

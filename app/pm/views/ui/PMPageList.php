@@ -1,20 +1,34 @@
 <?php
 
+use Devprom\ProjectBundle\Service\Model\ModelService;
 include_once SERVER_ROOT_PATH."pm/methods/c_state_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/ReorderWebMethod.php";
 
 class PMPageList extends PageList
 {
 	private $order_method = null;
-	private $reference_widgets = array();
 	private $tags_url = '';
+    private $visibleColumnsCache = array();
 	
     function PMPageList( $object )
     {
         parent::PageList($object);
     }
 
-	function buildMethods()
+    function extendModel()
+    {
+        parent::extendModel();
+
+        $object = $this->getObject();
+        foreach( array_keys($object->getAttributes()) as $attr ) {
+            if ( !$object->IsReference($attr) ) continue;
+            if ( !getFactory()->getAccessPolicy()->can_read($this->getObject()->getAttributeObject($attr)) ) {
+                $object->removeAttribute($attr);
+            }
+        }
+    }
+
+    function buildMethods()
 	{
 		// reorder method
 		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
@@ -25,33 +39,20 @@ class PMPageList extends PageList
 			$this->order_method = new ReorderWebMethod($this->getObject()->getEmptyIterator());
 			$this->order_method->setInput();
 		}
-
-		$report = getFactory()->getObject('PMReport');
-		$report_it = $report->getAll();
-		$module = getFactory()->getObject('Module');
-		$module_it = $module->getAll();
-
-		$it = getFactory()->getObject('ObjectsListWidget')->getAll();
-		while( !$it->end() )
-		{
-			switch( $it->get('ReferenceName') ) {
-				case 'PMReport':
-					$widget_it = $report_it->moveToId($it->getId());
-					break;
-				case 'Module':
-					$widget_it = $module_it->moveToId($it->getId());
-					break;
-				default:
-					$it->moveNext();
-					continue;
-			}
-			$this->reference_widgets[$it->get('Caption')] = $widget_it->getUrl();
-			$it->moveNext();
-		}
-
 		$this->tags_url = 'javascript:filterLocation.setup(\'tag=%\',1)';
 	}
-    
+
+	function checkColumnHidden( $attr ) {
+        return array_key_exists($attr, $this->visibleColumnsCache) && !$this->visibleColumnsCache[$attr];
+    }
+
+    function getColumnVisibility($attr) {
+        if ( $attr == 'Description' && array_key_exists($attr, $this->visibleColumnsCache) ) {
+            return false;
+        }
+        return parent::getColumnVisibility($attr);
+    }
+
     function retrieve()
     {
    		$values = $this->getFilterValues();
@@ -63,13 +64,45 @@ class PMPageList extends PageList
 		
     	return parent::retrieve();
     }
-    
+
+    function getHeaderAttributes( $attribute )
+    {
+        switch( $attribute ) {
+            case 'Caption':
+                $parms = parent::getHeaderAttributes($attribute);
+                if ( $this->visibleColumnsCache['Description'] ) {
+                    $parms['name'] = str_replace('%1', $parms['name'], text(2305));
+                }
+                return $parms;
+            default:
+                return parent::getHeaderAttributes($attribute);
+        }
+    }
+
 	function drawCell( $object_it, $attr )
     {
-    	global $model_factory;
-    	
         switch ( $attr )
         {
+            case 'Caption':
+                parent::drawCell($object_it, $attr);
+                if ( $this->checkColumnHidden('Tags') && $object_it->get('Tags') != '' ) {
+                    echo ' ';
+                    $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
+                }
+                $this->drawCell($object_it, 'DescriptionWithInCaption');
+                break;
+
+            case 'DescriptionWithInCaption':
+                if ( $this->visibleColumnsCache['Description'] && trim($object_it->get('Description')," \r\n") != '' ) {
+                    $field = new FieldWYSIWYG();
+                    $field->setValue($object_it->get('Description'));
+                    $field->setObjectIt($object_it);
+                    echo '<div class="reset wysiwyg" style="margin-top: 4px;">';
+                    echo $field->getText(true);
+                    echo '</div>';
+                }
+                break;
+
             case 'State':
             	echo $this->getTable()->getView()->render('pm/StateColumn.php', array (
 									'color' => $object_it->get('StateColor'),
@@ -101,18 +134,22 @@ class PMPageList extends PageList
 							'class' => 'user-mini'
 						));
 					}
-					echo '<span>';
-					parent::drawCell( $object_it, $attr );
+					echo '<span class="reset wysiwyg" style="margin-top: 4px;">';
+                        $field = new FieldWYSIWYG();
+                        $field->setValue($object_it->get($attr));
+                        $field->setObjectIt($object_it);
+                        echo $field->getText(true);
 					echo '</span>';
+                    echo '<div class="clearfix"></div>';
 					echo '</div>';
 				}
 				else {
 					$text = translate('Добавить');
 				}
 				echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
-						'object_it' => $object_it,
-						'redirect' => 'donothing',
-						'text' => $text
+                    'object_it' => $object_it,
+                    'redirect' => 'donothing',
+                    'text' => $text
 				));
 				break;
 
@@ -120,13 +157,41 @@ class PMPageList extends PageList
 				echo getSession()->getLanguage()->getDurationWording($object_it->get($attr), 8);
 				break;
 
-			case 'StateDuration':
-			case 'LeadTime':
-				echo getSession()->getLanguage()->getDurationWording($object_it->get($attr));
-				break;
-
             default:
-                parent::drawCell( $object_it, $attr );
+                if ( in_array('computed', $this->object->getAttributeGroups($attr)) ) {
+                    $lines = array();
+                    $result = ModelService::computeFormula($object_it, $this->object->getDefaultAttributeValue($attr));
+                    foreach( $result as $computedItem ) {
+                        if ( is_object($computedItem) ) {
+                            parent::drawRefCell($computedItem, $object_it, $attr);
+                        }
+                        else {
+                            $lines[] = $computedItem;
+                        }
+                    }
+                    if ( count($lines) > 0 ) {
+                        echo join('<br/>', $lines);
+                    }
+                    break;
+                }
+
+                switch ( $this->object->getAttributeType($attr) ) {
+                    case 'text':
+                        echo $object_it->getHtmlValue($object_it->getHtmlDecoded($attr));
+                        break;
+                    case 'wysiwyg':
+                        if ( $object_it->get($attr) != '' ) {
+                            $field = new FieldWYSIWYG();
+                            $field->setValue($object_it->get($attr));
+                            $field->setObjectIt($object_it);
+                            echo '<div class="reset wysiwyg">';
+                                echo $field->getText(true);
+                            echo '</div>';
+                        }
+                        break;
+                    default:
+                        parent::drawCell( $object_it, $attr );
+                }
         }
     }
 
@@ -154,20 +219,36 @@ class PMPageList extends PageList
                 switch( $entity_it->object->getEntityRefName() )
                 {
                     case 'WikiPage':
-                        echo '<span class="tracing-ref">';
-                        while( !$entity_it->end() ) {
-                            $row_it = $entity_it->copy();
-                            if ( $row_it->get('BrokenTraces') != "" ) {
-                                echo $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php',
-                                    array (
-                                        'id' => $row_it->getId(),
-                                        'url' => getSession()->getApplicationUrl($row_it)
-                                    )
-                                );
-                            }
-                            parent::drawRefCell( $row_it, $object_it, $attr );
-                            $entity_it->moveNext();
+                        $ids = $entity_it->idsToArray();
+                        $widget_it = $this->getTable()->getReferencesListWidget($entity_it->object);
+                        if ( $widget_it->getId() != '' && count($ids) > 1 )
+                        {
+                            $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.join(',',$ids));
+                            $text = count($ids) > 10
+                                        ? str_replace('%1', count($ids) - 10, text(2028))
+                                        : text(2034);
+                            $entity_it = $entity_it->object->createCachedIterator(
+                                array_slice($entity_it->getRowset(),0,10)
+                            );
                         }
+                        $items = $this->getRefNames($entity_it, $object_it, $attr);
+                        foreach( $items as $objectId => $value ) {
+                            $entity_it->moveToId($objectId);
+                            if ( $entity_it->get('BrokenTraces') != "" ) {
+                                $items[$objectId] = $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php',
+                                        array (
+                                            'id' => $entity_it->getId(),
+                                            'url' => getSession()->getApplicationUrl($entity_it)
+                                        )
+                                    ).$value;
+                            }
+                        }
+
+                        echo '<span class="tracing-ref" entity="'.get_class($entity_it->object).'">';
+                            echo join(' ',$items);
+                            if ( $url != '' ) {
+                                echo ' <a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
+                            }
                         echo '</span>';
                         break;
                     default:
@@ -194,14 +275,6 @@ class PMPageList extends PageList
 		}
 	}
 
-	function getReferencesListWidget( $object )
-	{
-		foreach( $this->reference_widgets as $key => $widget ) {
-			if ( is_a($object, $widget) ) return $widget;
-		}
-		return $this->reference_widgets[get_class($object)];
-	}
-    
 	function getColumnFields()
 	{
 		return array_merge(parent::getColumnFields(), $this->getObject()->getAttributesByGroup('workflow'));
@@ -235,6 +308,16 @@ class PMPageList extends PageList
  	
 	function getRenderParms()
 	{
+        $cache = array('Tags');
+        if ( $this->getObject()->getAttributeType('Caption') != '' && parent::getColumnVisibility('Caption') ) {
+            $cache[] = 'Description';
+        }
+
+        foreach( $cache as $column ) {
+            if ( $this->getObject()->getAttributeType($column) == '' ) continue;
+            $this->visibleColumnsCache[$column] = parent::getColumnVisibility($column);
+        }
+
 		$this->buildMethods();
 		return parent::getRenderParms();
 	}
@@ -246,5 +329,6 @@ class PMPageList extends PageList
 		$this->buildFilterColumnsGroup( $base_actions, 'trace' );
 		$this->buildFilterColumnsGroup( $base_actions, 'time' );
 		$this->buildFilterColumnsGroup( $base_actions, 'dates' );
+        $this->buildFilterColumnsGroup( $base_actions, 'sla' );
 	}
 }

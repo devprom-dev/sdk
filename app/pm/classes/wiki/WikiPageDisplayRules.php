@@ -4,19 +4,17 @@ class WikiPageDisplayRules
 {
 	static public function getTraceDisplayName( $object_it, $page_it )
 	{
-		if ( $object_it->object->IsReference('Type') && $object_it->get('Type') != '' ) {
-	 		$title = $object_it->getRef('Type')->getDisplayName().": ";
-		}
-		else {
-			$title = "";
-		}
+        $title = '';
 
-		$baseline = $object_it->get($object_it->object->getBaselineReference());
-        if ( $object_it->get('Revision') != '' ) {
-            $baseline .= '&revision='.$object_it->get('Revision');
+        if ( $page_it->get('BrokenTraces') != '' ) {
+            $title .= '<img class="trace-state" id="trace-state-'.$page_it->getId().'" src="/images/exclamation.png" title="'.text(770).'"> ';
         }
 
-	 	$uid = new ObjectUID($baseline);
+		if ( $object_it->object->IsReference('Type') && $object_it->get('Type') != '' ) {
+	 		$title .= $object_it->getRef('Type')->getDisplayName().": ";
+		}
+
+	 	$uid = new ObjectUID($object_it->get($object_it->object->getBaselineReference()));
 	 	$title .= $uid->getUidIcon( $page_it ).' ';
 	 	
 	 	$caption = $page_it->getDisplayName();

@@ -4,6 +4,7 @@ include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateTransitionsPe
 include "FieldStateAction.php";
 include "FieldStateAttribute.php";
 include "FieldStateTransitions.php";
+include "FieldStateTaskTypes.php";
 
 class StateForm extends PMPageForm
 {
@@ -11,32 +12,35 @@ class StateForm extends PMPageForm
 	{
 		parent::extendModel();
 
-		$this->getObject()->addAttribute('Transitions', 'INTEGER', text(2016), true, false, 
-				str_replace('%1', $this->getObject()->getPage(), text(2013)), 25);
-		$this->getObject()->addPersister( new StateTransitionsPersister() );		
+		$object = $this->getObject();
 
-		$this->getObject()->setAttributeOrderNum('ReferenceName', 998);
-		$this->getObject()->setAttributeVisible('ReferenceName', $this->getMode() != 'new');
-		$this->getObject()->setAttributeRequired('ReferenceName', false);
+        $object->addAttribute('Transitions', 'INTEGER', text(2016), true, false,
+				str_replace('%1', $this->getObject()->getPage(), text(2013)), 25);
+		$object->addPersister( new StateTransitionsPersister() );
+
+		$object->setAttributeOrderNum('ReferenceName', 998);
+		$object->setAttributeVisible('ReferenceName', $this->getMode() != 'new');
+		$object->setAttributeRequired('ReferenceName', false);
 		
-		$this->getObject()->setAttributeType('Description', 'TEXT');
-		$this->getObject()->setAttributeOrderNum('Description', 999);
+		$object->setAttributeType('Description', 'TEXT');
+		$object->setAttributeOrderNum('Description', 999);
 		
-		$this->getObject()->setAttributeOrderNum('OrderNum', 997);
+		$object->setAttributeOrderNum('OrderNum', 997);
+
+        if ( $object instanceof IssueState ) {
+            $object->addAttribute('TaskTypes', 'REF_TaskTypeId', translate('Задачи'), true, false, text(2273), 40);
+            $object->setAttributeVisible('ArtifactsType', true);
+            $object->addAttributeGroup('ArtifactsType', 'additional');
+        }
 	}
 	
  	function validateInputValues( $id, $action )
  	{
- 		global $_REQUEST;
- 		
  		$object = $this->getObject();
- 		
  		$object->addFilter( new FilterBaseVPDPredicate() );
  		
  		$object_it = $object->getByRef('ReferenceName', $_REQUEST['ReferenceName']);
- 		
- 		if ( $object_it->count() > 0 && $object_it->getId() != $id )
- 		{
+ 		if ( $object_it->count() > 0 && $object_it->getId() != $id ) {
  			return text(1121);
  		}
  		
@@ -60,8 +64,7 @@ class StateForm extends PMPageForm
  		switch( $attr )
  		{
  			case 'Actions':
- 				return text(1167);
- 				
+ 				return preg_replace('/%1/', getFactory()->getObject('Module')->getExact('autoactions')->getUrl(), text(1167));
  			default:
  				return parent::getFieldDescription( $attr );
  		}
@@ -87,10 +90,16 @@ class StateForm extends PMPageForm
 			case 'Transitions':
 				return new FieldStateTransitions(is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject());
 
+            case 'TaskTypes':
+                return new FieldStateTaskTypes($this->getObjectIt());
+
             case 'IsTerminal':
                 $field = new FieldDictionary( new StateCommon() );
                 $field->setNullOption(false);
                 return $field;
+
+            case 'ArtifactsType':
+                return new FieldDictionary( new StateArtifactsType() );
 
 			default:
 				return parent::createFieldObject( $attr_name );

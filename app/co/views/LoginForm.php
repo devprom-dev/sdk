@@ -1,8 +1,16 @@
 <?php
- 
+use \Symfony\Component\HttpFoundation\Session\SessionInterface;
+
 class LoginForm extends AjaxForm
 {
-	function getWidth()
+    private $session = null;
+
+    function __construct( $object, SessionInterface $session ) {
+        $this->session = $session;
+        parent::__construct($object);
+    }
+
+    function getWidth()
 	{
 		return '40%';
 	}
@@ -18,4 +26,14 @@ class LoginForm extends AjaxForm
             array ( 'name' => text(1330), 'url' => "/recovery" )
         );
 	}
+
+	function getRenderParms($view)
+    {
+        return array_merge(
+            parent::getRenderParms($view),
+            array (
+                'redirect_url' => $this->session->get('redirect')
+            )
+        );
+    }
 }

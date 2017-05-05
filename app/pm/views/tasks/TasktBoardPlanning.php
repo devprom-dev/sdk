@@ -6,12 +6,23 @@ class TasktBoardPlanning extends TaskBoardList
         return 'Release';
     }
 
+    function getBoardAttributeFilter() {
+        return 'iteration';
+    }
+
     function buildBoardAttributeIterator()
     {
+        $values = array_filter($this->getFilterValues(), function($value) {
+            return !in_array($value, array('all','hide'));
+        });
+        $this->getTable()->parseFilterValues($values);
+
         $object = $this->getObject()->getAttributeObject($this->getBoardAttribute());
         $it = $object->getRegistry()->Query(
             array(
-                new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
+                $values['iteration'] != ''
+                    ? new FilterInPredicate(preg_split('/,/', $values['iteration']))
+                    : new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
                 new FilterVpdPredicate(),
                 new SortAttributeClause('StartDate.A')
             )
@@ -102,7 +113,7 @@ class TasktBoardPlanning extends TaskBoardList
                         continue;
                     }
 
-                    $data['capacity'] = $iteration_it->getLeftCapacity() * $user_it->get('Capacity');
+                    $data['capacity'] = $iteration_it->getLeftDuration() * $user_it->get('Capacity');
                     $data['title'] = $this->strategy->getDimensionText($data['capacity']);
 
                     $this->workload[$user_it->get('SystemUser')]['Iterations'][$iteration_it->getId()] = $data;
@@ -161,20 +172,21 @@ class TasktBoardPlanning extends TaskBoardList
         if ( $board_value > 0 ) {
             $object_it = $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value);
             if ( $object_it->getId() > 0 ) {
-                $strategy = new EstimationHoursStrategy();
-                $estimation = $object_it->getTotalWorkload();
-                list( $capacity, $maximum, $actual_velocity ) = $object_it->getRealBurndownMetrics();
                 echo '<div class="board-header-details">';
                     echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
                         ." / "
                         .getSession()->getLanguage()->getDateFormattedShort($object_it->get('FinishDate'));
                     echo '<br/>';
-                    echo sprintf(
-                        text(2189),
-                        $strategy->getDimensionText(round($maximum, 1)),
-                        $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
-                        $strategy->getDimensionText(round($estimation, 1))
-                    );
+                    if ( getSession()->getProjectIt()->getMethodologyIt()->IsAgile() ) {
+                        $strategy = new EstimationHoursStrategy();
+                        list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
+                        echo sprintf(
+                            text(2189),
+                            $maximum > 0 ? $strategy->getDimensionText(round($maximum, 1)) : '0',
+                            $estimation > $maximum ? 'label label-important' : ($maximum > 0 && $estimation < $maximum ? 'label label-success': ''),
+                            $estimation > 0 ? $strategy->getDimensionText(round($estimation, 1)) : '0'
+                        );
+                    }
                 echo '</div>';
             }
         }

@@ -8,6 +8,7 @@ include "IterationForm.php";
 include "VersionTable.php";
 include "ReleaseBurndownSection.php";
 include "IterationBurndownSection.php";
+include "VersionPageSettingBuilder.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/plan/IterationModelMetricsBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/plan/ReleaseModelMetricsBuilder.php";
@@ -23,6 +24,7 @@ class VersionPage extends PMPage
         getSession()->addBuilder( new StageModelBuilder() );
 		getSession()->addBuilder( new ReleaseModelArtefactsBuilder() );
 		getSession()->addBuilder( new IterationModelArtefactsBuilder() );
+        getSession()->addBuilder( new VersionPageSettingBuilder() );
 
 		parent::__construct();
 
@@ -30,14 +32,19 @@ class VersionPage extends PMPage
 			$object_it = $this->getObjectIt();
 			if ( is_object($object_it) && $object_it->getId() > 0 )
 			{
-				if ( $object_it->object instanceof Release ) {
-					$this->addInfoSection( new ReleaseBurndownSection($object_it) );
-				}
-				if ( $object_it->object instanceof Iteration ) {
-					$this->addInfoSection( new IterationBurndownSection($object_it) );
-				}
+                $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+                if ( $methodology_it->IsAgile() ) {
+                    if ( $object_it->object instanceof Release ) {
+                        $this->addInfoSection( new ReleaseBurndownSection($object_it) );
+                    }
+                    if ( $object_it->object instanceof Iteration ) {
+                        $this->addInfoSection( new IterationBurndownSection($object_it) );
+                    }
+                }
 				$this->addInfoSection( new PageSectionAttributes($this->getFormRef()->getObject(),'tab-issues',translate('Пожелания')) );
 				$this->addInfoSection( new PageSectionAttributes($this->getFormRef()->getObject(),'tab-tasks',translate('Задачи')) );
+                $this->addInfoSection( new PageSectionComments($object_it) );
+                $this->addInfoSection( new PMLastChangesSection($object_it) );
 			}
 		}
  	}

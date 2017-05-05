@@ -73,16 +73,7 @@ class TaskList extends PMPageList
 		return $cols;
 	}
 	
-	function getGroupFields() 
-	{
-		$fields = parent::getGroupFields();
-
-		$fields[] = 'DueDays';
-		
-		return $fields;
-	}
-
-	function getGroup() 
+	function getGroup()
 	{
 		$group = parent::getGroup();
 		if ( $group == 'AssigneeUser' ) return 'Assignee'; 
@@ -97,14 +88,8 @@ class TaskList extends PMPageList
 		{
 			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ChangeRequest' )
 			{
-				if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequestOrderUsed') == 'Y' )
-				{
-					array_unshift($sorts, new TaskRequestOrderSortClause());
-				}
-				else
-				{
-					array_unshift($sorts, new TaskRequestPrioritySortClause());
-				}
+                array_unshift($sorts, new TaskRequestOrderSortClause());
+                array_unshift($sorts, new TaskRequestPrioritySortClause());
 			}
 		}
 		

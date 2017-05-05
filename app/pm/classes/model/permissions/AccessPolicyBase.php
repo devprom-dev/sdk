@@ -17,8 +17,7 @@ abstract class AccessPolicyBase extends COAccessPolicy
     function __construct( $cache_service = null, PMSession $session = null )
     {
         $this->session = is_object($session) ? $session : getSession();
-        
-        parent::__construct($cache_service);
+        parent::__construct($cache_service, $this->session->getCacheKey());
     }
     
  	public function getRoles()
@@ -93,27 +92,13 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		$array = is_object(getFactory()->getPluginsManager())
 			? getFactory()->getPluginsManager()->getPluginsForSection('pm') : array();
 			
-		foreach ( $array as $plugin )
-		{
-			foreach( $this->getRoles() as $role_id )
-			{
-				$ref_name = $this->getRoleReferenceName($role_id);
-				 
-				$access = $plugin->getObjectAccess( $action_kind, $ref_name, $object_it );
-					 
+		foreach ( $array as $plugin ) {
+			foreach( $this->getRoles() as $role_id ) {
+				$access = $plugin->getObjectAccess( $action_kind, $this->getRoleReferenceName($role_id), $object_it );
 				if ( is_bool($access) ) return $access;
 			}
 		}
 		
-		$ref_name = $object_it->object->getClassName(); 
-		
- 		switch ( $ref_name )
-		{
-			case 'pm_Activity':
-			    if ( $action_kind != ACCESS_DELETE ) return true;
-			    return $object_it->get('Participant') == getSession()->getUserIt()->getId();
-		} 				
-
 		return parent::getObjectAccess( $action_kind, $object_it );
 	}
 	

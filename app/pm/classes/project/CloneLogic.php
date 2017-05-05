@@ -42,27 +42,6 @@ class CloneLogic
 					
 				    break;
 					
-				// special case of template importing				
-				case 'pm_State':
-					
-				    $id = CloneLogic::applyToState( $context, $attrs, $iterator, $project_it );
-					
-					if ( $id > 0 )
-					{
-						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
-					}
-					else
-					{
-						$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
-						
-						if ( count($parms) > 0 )
-						{
-							$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
-						}
-					}
-					
-					break;
-
 				// special case of template importing
 				case 'pm_TaskType':
 				case 'WikiPageType':
@@ -332,7 +311,11 @@ class CloneLogic
 				{
 					$parms['StartDate'] = date('Y-m-j', strtotime('1 day', strtotime($release_it->get('FinishDate'))));
 				}
-				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime('1 month', strtotime( $parms['StartDate']))));
+
+                $dt1 = new \DateTime($it->get('StartDate'));
+                $dt2 = new \DateTime($it->get('FinishDate'));
+                $interval = $dt2->diff($dt1);
+				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime($interval->days.' day', strtotime( $parms['StartDate']))));
 
 				break;
 
@@ -392,18 +375,16 @@ class CloneLogic
 		        break;
 
             case 'pm_AccessRight':
-				if ( $it->get('ReferenceType') == 'PMReport' )
-				{
+				if ( $it->get('ReferenceType') == 'PMReport' ) {
 					$parms['ReferenceName'] = $ids_map['pm_CustomReport'][$it->get('ReferenceName')];
 				}
 				break;
 				
 			case 'WikiPage':
-                if ( !$context->getUseExistingReferences() ) {
+                if ( !$context->getUseExistingReferences() || $context->getResetUids() ) {
                     $parms['UID'] = '';
                 }
 
-				$parms['DocumentVersion'] = '';
 				if ( $parms['ParentPage'] == '' ) {
 					$parms['ParentPath'] = '';
 					$parms['SectionNumber'] = '';
@@ -418,20 +399,20 @@ class CloneLogic
 							->getByRef('ReferenceName', $parms['ReferenceName'])->getId();
 				}
 				break;
-			
+
+            case 'WikiPageType':
+                if ( $it->get('IsImplementing') == '' ) $parms['IsImplementing'] = 'Y';
+                if ( $it->get('IsTesting') == '' ) $parms['IsTesting'] = 'Y';
+                break;
+
 			case 'pm_Workspace':
-				
 				$parms['SystemUser'] = '';
-				
 				break;
 				
 			case 'pm_WorkspaceMenuItem':
-				
-				if ( is_numeric($it->get('ReportUID')) )
-				{
+				if ( is_numeric($it->get('ReportUID')) ) {
 					$parms['ReportUID'] = $ids_map['pm_CustomReport'][$it->get('ReportUID')];
 				}
-				
 				break;
 				
 			case 'pm_UserSetting':
@@ -491,38 +472,119 @@ class CloneLogic
 			case 'pm_Attachment':
 			case 'Comment':
 			case 'cms_Snapshot':
-				
 				$class_name = getFactory()->getClass($it->get('ObjectClass'));
-				
 				if ( !class_exists($class_name) ) return array();
 
 				$anchor_id = $ids_map[getFactory()->getObject($class_name)->getEntityRefName()][$it->get('ObjectId')];
-				
 				if ( $anchor_id == '' ) return array();
 				
 				$parms['ObjectId'] = $anchor_id;
 
+                $versions = getFactory()->getObject('cms_Snapshot')->getRegistry()->Count(
+                    array (
+                        new FilterAttributePredicate('ObjectClass', $class_name),
+                        new FilterAttributePredicate('ObjectId', $anchor_id),
+                        new FilterAttributeNullPredicate('Type')
+                    )
+                );
+                $parms['RecordCreated'] = $parms['RecordModified'] =
+                    date('Y-m-j', strtotime('-'.(abs(3-$versions)*2).' week', strtotime(SystemDateTime::date())));
 				break;
 
             case 'pm_ChangeRequest':
             case 'pm_Task':
                 $parms['StartDate'] = '';
-                if ( $it->get('FinishDate') != '' ) $parms['FinishDate'] = SystemDateTime::date();
+
+                $terminalStates = WorkflowScheme::Instance()->getTerminalStates($it->object);
+                if ( $it->get('FinishDate') != '' && in_array($it->get('State'),$terminalStates) ) {
+                    $parms['FinishDate'] = SystemDateTime::date();
+                }
+                else {
+                    $parms['FinishDate'] = '';
+                }
 				if ( $context->getResetAssignments() ) {
 					$parms['Assignee'] = '';
 					$parms['Owner'] = '';
 				}
                 break;
 
+            case 'pm_ChangeRequestTrace':
+                $request = getFactory()->getObject('Request');
+                $requestId = $ids_map[$request->getEntityRefName()][$it->get('ChangeRequest')];
+                $requestIt = $request->getExact($requestId);
+                $description = $requestIt->getHtmlDecoded('Description');
+
+                $result = preg_replace_callback(REGEX_INCLUDE_REVISION,
+                    function($match) use($ids_map) {
+                        $revisions = preg_split('/-/', $match[2]);
+                        foreach($revisions as $key => $revision ) {
+                            $revisions[$key] = $ids_map['WikiPageChange'][$revision];
+                        }
+                        $parts = preg_split('/-/', $match[1]);
+                        $parts[1] = $ids_map['WikiPage'][$parts[1]];
+                        return '{{'.join('-',$parts).':'.join('-', $revisions).'}}';
+                    },
+                    $description
+                );
+                if ( $description != $result ) {
+                    $requestIt->object->setNotificationEnabled(false);
+                    $requestIt->object->getRegistry()->Store($requestIt,
+                        array(
+                            'Description' => $result
+                        )
+                    );
+                }
+                break;
+
             case 'pm_Milestone':
                 $parms['MilestoneDate'] = date('Y-m-j', strtotime('7 day', strtotime(SystemDateTime::date())));
                 break;
-		}
 
-		if ( $it->object instanceof MetaobjectStatable && $context->getResetState() ) {
-			$parms['State'] = '';
-			$parms['StateObject'] = '';
-			$parms['LifecycleDuration'] = '';
+            case 'pm_TransitionAttribute':
+                if ( $it->get('IsVisible') == '' ) {
+                    $parms['IsVisible'] = 'Y';
+                }
+                if ( $it->get('IsRequired') == '' ) {
+                    $parms['IsRequired'] = 'Y';
+                }
+                break;
+
+            case 'pm_AttributeValue':
+                $attributeId = $ids_map['pm_CustomAttribute'][$it->get('CustomAttribute')];
+                $attribute_it = getFactory()->getObject('pm_CustomAttribute')->getExact($attributeId);
+                if ( $attribute_it->getId() == '' ) break;
+
+                $refName = getFactory()->getClass($attribute_it->get('EntityReferenceName'));
+                if ( !class_exists($refName) ) break;
+
+                $entityRefName = getFactory()->getObject($refName)->getEntityRefName();
+                $object_id = $ids_map[$entityRefName][$it->get('ObjectId')];
+                if ( $object_id != '' ) {
+                    $parms['ObjectId'] = $object_id;
+                }
+
+                $wasValueIt = $it->object->getRegistry()->Query(
+                    array(
+                        new FilterVpdPredicate(),
+                        new FilterAttributePredicate('CustomAttribute', $parms['CustomAttribute']),
+                        new FilterAttributePredicate('ObjectId', $parms['ObjectId']),
+                    )
+                );
+                if ( $wasValueIt->count() > 0 ) {
+                    while( !$wasValueIt->end() ) {
+                        $wasValueIt->object->delete($wasValueIt->getId());
+                        $wasValueIt->moveNext();
+                    }
+                }
+                break;
+        }
+
+		if ( $it->object instanceof MetaobjectStatable ) {
+            if ( $context->getResetState() ) {
+                $parms['State'] = '';
+                $parms['StateObject'] = '';
+                $parms['LifecycleDuration'] = '';
+            }
 		}
 
 		return $parms;
@@ -581,37 +643,6 @@ class CloneLogic
 		$project_it->object->modify_parms($project_it->getId(), $parms);
 		$project_it->invalidateCache();
 		getSession()->setProjectIt($project_it);
- 	}
-
- 	static function applyToState( & $context, & $attrs, & $it, & $project_it )
- 	{
- 		global $model_factory;
-
- 		$object_it = $it->object->getByRefArray(
- 			array ( 'ObjectClass' => $it->get_native('ObjectClass'),
- 					'ReferenceName' => $it->get_native('ReferenceName') )
- 			);
- 		
- 		if ( $object_it->count() < 1 )
- 		{
- 			return 0;
- 		}
- 		
-		$parms = array();
-		
-		$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $it, $project_it );
-
-		foreach ( $attrs as $attr )
-		{
-			if ( $parms[$attr] == '' )
-			{
-				$parms[$attr] = $it->get_native($attr);
-			}
-		}
-
-		$it->object->modify_parms($object_it->getId(), $parms);
-		
-		return $object_it->getId();
  	}
 
  	static function applyToLegacy( & $context, $check_attribute, & $attrs, & $it, & $project_it )
@@ -715,6 +746,8 @@ class CloneLogic
 				}
 			}
 		}
+
+		if ( $parms['MetricsType'] == '' ) $parms['MetricsType'] = 'A';
 
 		$methodology_it = $project_it->getMethodologyIt();
         $methodology_it->object->modify_parms($methodology_it->getId(), $parms);

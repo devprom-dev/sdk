@@ -128,30 +128,18 @@ class SnapshotForm extends PMForm
 		}
 	}
 
-  	function drawCustomAttribute( $attribute, $value, $tab_index )
- 	{
-		switch ( $attribute )
-		{
-			default:
-				parent::drawCustomAttribute( $attribute, $value, $tab_index );
-		}
- 	}
-	
- 	function drawAttribute( $attribute )
+ 	function drawAttribute( $attribute, $view )
 	{
 		switch ( $attribute )
 		{
 			case 'items':
-				
 				echo '<input type="hidden" name="items" value="'.$this->getAttributeValue($attribute).'">';
 				echo '<input type="hidden" name="versionedclass" value="'.$this->getAttributeValue('class').'">';
 				echo '<input type="hidden" name="ListName" value="'.$this->getAttributeValue('ListName').'">';
-				
 				break;
 
 			default:
-				
-				parent::drawAttribute( $attribute );
+				parent::drawAttribute( $attribute, $view );
 		}
 	}
 	

@@ -17,9 +17,7 @@ class MainController extends Controller
     	// check other entry points
     	if ( preg_match('/login/i', $request->getPathInfo()) && getFactory()->getObject('User')->getRegistry()->Count() > 0 ) return;
     	
-    	$state = getFactory()->getObject('DeploymentState');
-    	
-    	if ( !$state->IsReadyToBeUsed() )
+    	if ( !\DeploymentState::Instance()->IsReadyToBeUsed() )
     	{
     		$this->get('router')->getGenerator()->getContext()->setBaseUrl('');
     		
@@ -37,7 +35,7 @@ class MainController extends Controller
     		}
     	}
     	
-        if ( $state->IsMaintained() )
+        if ( \DeploymentState::IsMaintained() )
     	{
     		$this->get('router')->getGenerator()->getContext()->setBaseUrl('');
     		return new RedirectResponse('/503');

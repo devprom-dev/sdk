@@ -5,13 +5,15 @@ include "predicates/WikiFileReferenceFilter.php";
 
 class WikiPageFile extends Metaobject
 {
- 	function WikiPageFile() 
+ 	function __construct()
  	{
-		parent::Metaobject('WikiPageFile');
+		parent::__construct('WikiPageFile');
+        $this->addAttribute('ContentExt', 'VARCHAR', '', false, true);
+        $this->addAttribute('ContentPath', 'VARCHAR', '', false, true);
+        $this->addAttribute('ContentMime', 'VARCHAR', '', false, true);
 	}
 
- 	function createIterator() 
- 	{
+ 	function createIterator() {
  		return new WikiFileIterator( $this );
  	}
 

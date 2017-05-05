@@ -2,6 +2,7 @@
 
 include_once SERVER_ROOT_PATH."pm/classes/settings/MethodologyPlanningMode.php";
 include "EstimationStrategyDictionary.php";
+include "MetricsTypeDictionary.php";
         
 class MethodologyForm extends PMPageForm
 {
@@ -39,6 +40,7 @@ class MethodologyForm extends PMPageForm
             case 'IsTasksDepend':
             case 'IsResponsibleForIssue':
             case 'IsVersionsUsed':
+            case 'IsRequestOrderUsed':
                 return false;
 
             default:
@@ -91,6 +93,9 @@ class MethodologyForm extends PMPageForm
         {
             case 'RequestEstimationRequired':
             	return new EstimationStrategyDictionary();
+
+            case 'MetricsType':
+                return new MetricsTypeDictionary();
 
             case 'IsReleasesUsed':
             	$field = new FieldDictionary( new MethodologyPlanningMode() );

@@ -1,8 +1,7 @@
 <?php
 
 namespace Devprom\ProjectBundle\Service\Tooltip;
-
-include SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php";
 
 class BrokenTraceExplainService
 {

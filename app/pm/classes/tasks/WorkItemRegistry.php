@@ -26,6 +26,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
             new TaskDatesPersister(),
             new StateDurationPersister(),
             new TaskTracePersister(),
+            new TaskTagsPersister(),
             new TaskFactPersister()
         );
     }
@@ -35,6 +36,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
             new ObjectUIDPersister(),
             new RequestDueDatesPersister(),
             new StateDurationPersister(),
+            new RequestTagsPersister(),
             new RequestTracePersister()
         );
     }
@@ -78,6 +80,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.LeftWork,
 				   t.Planned,
 				   t.Release,
+				   t.Author,
 				   (SELECT r.Version FROM pm_Release r WHERE r.pm_ReleaseId = t.Release) PlannedRelease,
 				   t.VPD,
 				   (SELECT GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) FROM pm_Activity a WHERE a.Task = t.pm_TaskId) Spent,
@@ -109,6 +112,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.EstimationLeft,
 				   t.Estimation,
 				   (SELECT MIN(r.pm_ReleaseId) FROM pm_Release r WHERE r.Version = t.PlannedRelease),
+				   t.Author,
 				   t.PlannedRelease,
 				   t.VPD,
 				   (SELECT GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) FROM pm_Activity a, pm_Task s WHERE a.Task = s.pm_TaskId AND s.ChangeRequest = t.pm_ChangeRequestId) Spent,

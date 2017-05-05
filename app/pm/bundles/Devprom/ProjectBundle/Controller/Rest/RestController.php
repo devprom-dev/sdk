@@ -13,7 +13,9 @@ include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.ph
 
 abstract class RestController extends FOSRestController implements ClassResourceInterface
 {
-    abstract protected function getEntity(Request $request);
+    protected function getEntity(Request $request) {
+        return $this->getClassName($request);
+    }
 
 	public function cgetAction(Request $request)
 	{
@@ -28,8 +30,7 @@ abstract class RestController extends FOSRestController implements ClassResource
 			        		$this->getModelService($request)->find(
 								$this->getEntity($request),
 								$request->get('limit'),
-								$request->get('offset'),
-								$request->query->has('extended')
+								$request->get('offset')
 							), 200
 					));
 		}
@@ -53,8 +54,7 @@ abstract class RestController extends FOSRestController implements ClassResource
 			        		$this->getModelService($request)->get(
 								$this->getEntity($request),
 								$id,
-								'text',
-								$request->query->has('extended')
+								'text'
 							), 200
 					));
 		}
@@ -145,30 +145,53 @@ abstract class RestController extends FOSRestController implements ClassResource
     protected function getModelService(Request $request)
     {
     	return new ModelService(
-    			new \ModelValidator(
-						array (
-								new \ModelValidatorObligatory(),
-								new \ModelValidatorTypes()
-    					)
-				), 
-    			new \ModelDataTypeMapper(), 
-    			$this->getFilterResolver($request)
+            new \ModelValidator(
+                    array (
+                            new \ModelValidatorObligatory(),
+                            new \ModelValidatorTypes()
+                    )
+            ),
+            new \ModelDataTypeMapper(),
+            $this->getFilterResolver($request),
+            null,
+            $request->get('version') != 'v1'
 		);
     }
 
 	function getClassName(Request $request)
 	{
-		switch( $request->get('class') )
-		{
+        $className = $request->get('class');
+        if ( $className == '' ) {
+            $className = str_replace('delete_', '',
+                str_replace('put_', '',
+                    str_replace('post_', '',
+                        str_replace('get_', '',
+                            $request->get('_route')))));
+        }
+
+        switch( $className ) {
 			case 'issues':
-				return 'Request';
-			case 'tasks':
-				return 'Task';
-			case 'requirements':
-				return 'Requirement';
-			default:
-				return 'dummy';
+            case 'issue':
+                $className = 'requests';
 		}
+
+        $singular = array (
+            '/^(ox)en/i' => '$1',
+            '/(alias|status)es$/i' => '$1',
+            '/([octop|vir])i$/i' => '$1us',
+            '/(cris|ax|test)es$/i' => '$1is',
+            '/(shoe)s$/i' => '$1',
+            '/(o)es$/i' => '$1',
+            '/(bus)es$/i' => '$1',
+            '/([m|l])ice$/i' => '$1ouse',
+            '/(x|ch|ss|sh)es$/i' => '$1',
+            '/([^aeiouy]|qu)ies$/i' => '$1y',
+            '/([lr])ves$/i' => '$1f',
+            '/([ti])a$/i' => '$1um',
+            '/(n)ews$/i' => '$1ews',
+            '/s$/i' => '',
+        );
+        return preg_replace( array_keys($singular), array_values($singular), $className );
 	}
 
 	protected function getFilterResolver(Request $request) {

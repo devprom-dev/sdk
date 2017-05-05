@@ -34,5 +34,8 @@ class StateBaseModelBuilder extends ObjectModelBuilder
 		foreach( array('QueueLength','RelatedColor') as $attribute ) {
 			$object->addAttributeGroup($attribute, 'nonbulk');
 		}
+        foreach ( array( 'QueueLength' ) as $attribute ) {
+            $object->addAttributeGroup($attribute, 'skip-total');
+        }
     }
 }

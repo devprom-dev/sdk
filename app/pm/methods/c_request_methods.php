@@ -25,67 +25,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	}
  }
 
- ///////////////////////////////////////////////////////////////////////////////////////
- class RequestSelectWebMethod extends SelectWebMethod
- {
- 	function execute_request()
- 	{
- 		global $_REQUEST;
-	 	if($_REQUEST['ChangeRequest'] != '') {
-	 		$this->execute($_REQUEST['ChangeRequest'], $_REQUEST['value']);
-	 	}
- 	}
- 	
- 	function drawSelect( $request_id, $default_value )
- 	{
- 		parent::drawSelect( 
-			array( 'ChangeRequest' => $request_id ), 
-			$default_value );
- 	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
- class EstimateRequestWebMethod extends RequestSelectWebMethod
- {
-     var $scale;
-     
-     function __construct( $scale = array() )
-     {
-         $this->scale = $scale;
-         
-         parent::__construct();
-     }
-     
- 	function hasAccess()
- 	{
- 		return getFactory()->getAccessPolicy()->can_modify_attribute(getFactory()->getObject('pm_ChangeRequest'), 'Estimation');
- 	}
- 	
- 	function getValues()
- 	{
- 	    return $this->scale;
- 	}
- 	
- 	function execute ( $request_id, $value )
- 	{
- 		global $model_factory;
- 		$request = $model_factory->getObject('pm_ChangeRequest');
- 		
- 		$request_it = $request->getExact($request_id);
- 		if ( $request_it->count() )
- 		{
- 			$request->modify_parms($request_it->getId(),
- 				array('Estimation' => $value) );
- 		}
- 	}
- 	
- 	function getCaption()
- 	{
- 		return text(889);
- 	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
  class MoveToProjectWebMethod extends RequestWebMethod
  {
  	var $request_it;
@@ -112,7 +52,7 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
  	function getMethodName()
 	{
-		return 'AttributeProject:OpenList';
+		return 'AttributeProject';
 	}
 	
  	function getJSCall( $parms = array() )
@@ -157,56 +97,17 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
 	function getJSCall( $parms = array() )
 	{
-		return parent::getJSCall( array(
-			'ChangeRequest' => $this->request_it->getId()
-		));
+		return parent::getJSCall(
+		    array_merge( $parms,
+                array(
+			        'ChangeRequest' => $this->request_it->getId()
+		        )
+            )
+        );
 	}
  }
   
- ///////////////////////////////////////////////////////////////////////////////////////
- class RequestWikiTraceWebMethod extends RequestWebMethod
- {
- 	var $report_it;
- 	
- 	function RequestWikiTraceWebMethod( $module = '' )
- 	{
- 		$this->report_it = getFactory()->getObject('Module')->getExact( $module );
- 		parent::RequestWebMethod();
- 	}
- 	
-	function getCaption() 
-	{
-		return $this->report_it->getDisplayName();
-	}
-	
-	function hasAccess()
-	{
-		return $this->report_it->getId() != '';
-	}
-	
-	function getRedirectUrl()
-	{
-		return $this->report_it->getUrl();
-	}
-	
-	function getJSCall( $parms = array() )
-	{
-		return parent::getJSCall( 
-			array('report' => $this->report_it->getId() )
-			);
-	}
-	
- 	function execute_request()
- 	{
- 		$this->report_it = getFactory()->getObject('Module')->getExact( $_REQUEST['report'] );
- 		if ( $this->report_it->count() > 0 )
- 		{
- 			echo '&issues='.SanitizeUrl::parseUrl($_REQUEST['objects']);
- 		}
- 	}
- }
-  
- /////////////////////////////////////////////////////////////////////////// 
+  ///////////////////////////////////////////////////////////////////////////
  class ReleaseNotesRequestWebMethod extends ExportWebMethod
  {
  	function getCaption()
@@ -232,67 +133,6 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  }
 
  ///////////////////////////////////////////////////////////////////////////////////////
- class BindRequestWebMethod extends RequestWebMethod
- {
- 	var $request_it, $trace, $binded_it;
- 	
- 	function BindRequestWebMethod( $request_it = null, $binded_it = null, $trace = null )
- 	{
- 		$this->request_it = $request_it;
- 		$this->binded_it = $binded_it;
- 		$this->trace = $trace;
- 		
- 		parent::RequestWebMethod();
- 	}
- 	
-	function getUrl()
-	{
-		return parent::getUrl( 
-			array( 'trace' => get_class($this->trace),
-				   'binded' => $this->binded_it->getId() ) 
-			);
-	}
-	
-	function getRedirectUrl()
-	{
-		return $this->binded_it->getViewUrl();
-	}
-	
- 	function execute_request()
- 	{
- 		global $_REQUEST, $model_factory;
-
-		$trace = $model_factory->getObject($_REQUEST['trace']);
-
-		$object = $model_factory->getObject($trace->getObjectClass());
-		$object_it = $object->getExact($_REQUEST['binded']);
-
-		$request = $model_factory->getObject('pm_ChangeRequest');
-		$request_it = $request->getExact($_REQUEST['target_id']);
-
-		if ( $object_it->count() > 0 && $request_it->count() > 0 )
-		{
-			$cnt = $trace->getByRefArrayCount(
-				array( 'ChangeRequest' => $request_it->getId(),
-					   'ObjectId' => $object_it->getId() )
-				);
-			
-			if ( $cnt < 1 )
-			{
-				$trace->add_parms(
-					array('ChangeRequest' => $request_it->getId(),
-						  'ObjectId' => $object_it->getId(),
-						  'ObjectClass' => $trace->getObjectClass() ) );
-			}
-					  
-			exit(header('Location: '.$object_it->getViewUrl()));
-		}
- 	}
- } 
- 
- ///////////////////////////////////////////////////////////////////////////////////////
-  
- ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestWebMethod extends FilterWebMethod
  {
  }
@@ -300,100 +140,6 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  ///////////////////////////////////////////////////////////////////////////////////////
 
     
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewRequestTagWebMethod extends ViewRequestWebMethod
- {
- 	var $tag_it;
- 	
- 	function ViewRequestTagWebMethod()
- 	{
- 		$tag = getFactory()->getObject('Tag');
- 		$request_tag = getFactory()->getObject('pm_RequestTag');
- 		$tag->addFilter( new TagRequestFilter('related') );
- 		$this->tag_it = $tag->getAll();
- 		
- 		parent::WebMethod();
- 	}
- 	
- 	function getCaption()
- 	{
- 		return translate('Тэги');
- 	}
-
- 	function getValues()
- 	{
-  		$values = array (
- 			'all' => translate('Все'),
- 			);
-		$items = array();
-
- 		while ( !$this->tag_it->end() )
- 		{
- 			$items[$this->tag_it->get('Caption')][] = $this->tag_it->getId();
- 			$this->tag_it->moveNext();
- 		}
-
-		foreach( $items as $key => $ids ) {
-			$items[$key] = ' '.join('-',$ids);
-		}
-		$values = array_merge($values, array_flip($items));
-
- 		if ( !in_array($this->getValue(), array('', 'all')) )
- 		{
-	 		$tag_it = $this->tag_it->object->getExact($this->getValue());
-     		if ( $tag_it->count() > 0 )
-     		{
-    			$values[' '.$tag_it->get('TagId')] = $tag_it->get('Caption');
-     		}
- 		}
- 		             		        
-		$values[' 0'] = translate('Не заданы');
-
- 		return $values;
-	}
-	
-	function getStyle()
-	{
-		return 'width:190px;';
-	}
-
- 	function getValueParm()
- 	{
- 		return 'tag';
- 	}
- }
-
- ///////////////////////////////////////////////////////////////////////////////////////
- class ViewRequestFunctionWebMethod extends FilterAutoCompleteWebMethod
- {
- 	function ViewRequestFunctionWebMethod()
- 	{
- 		global $model_factory;
- 		
- 		parent::FilterAutoCompleteWebMethod( 
-			$model_factory->getObject('Feature'), $this->getCaption() );
- 	}
-
- 	function getCaption()
- 	{
- 		return translate('Функция');
- 	}
-
-	function getStyle()
-	{
-		return 'width:225px;';
-	}
-
- 	function getValueParm()
- 	{
- 		return 'function';
- 	}
-
- 	function hasAccess()
- 	{
- 		return getSession()->getProjectIt()->getMethodologyIt()->HasFeatures();
- 	}
- }
 
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestEstimationWebMethod extends ViewRequestWebMethod

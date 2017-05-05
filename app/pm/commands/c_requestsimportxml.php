@@ -1,96 +1,38 @@
 <?php
+include 'c_requestsimport.php';
 
- require_once (SERVER_ROOT_PATH.'ext/xml/xml2Array.php');
- include ('c_requestsimport.php');
- 
- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
- class RequestsImportXml extends RequestsImport
- { 
+class RequestsImportXml extends RequestsImport
+{
  	function validate()
  	{
-		global $_FILES, $_REQUEST, $model_factory;
-
 		$this->checkRequired( array('object') );
-		$this->request = $model_factory->getObject($_REQUEST['object']);
+		$this->request = getFactory()->getObject($_REQUEST['object']);
 
 		// proceeds with validation
-		if( !is_uploaded_file($_FILES['Excel']['tmp_name']) )
-		{ 
+		if( !is_uploaded_file($_FILES['Excel']['tmp_name']) ) {
 			$this->replyError( $this->getResultDescription( 1 ) );
 		}
+		$this->setFileName($_FILES['Excel']['name']);
 
 		return true;
  	}
  	
- 	function getObject()
- 	{
+ 	function getObject() {
  		return $this->request;
  	}
 
  	function getLines()
 	{
-		global $_FILES;
+        $filePath = $_FILES['Excel']['tmp_name'];
+        if ( !file_exists($filePath) ) return array();
 
-		$xml2Array = new xml2Array();
-				
-		$file_name = $_FILES['Excel']['tmp_name'];
-		$file = fopen($file_name, 'r');
-		
-		$items = $xml2Array->xmlParse( 
-			fread($file, filesize($file_name)) );
-
-		unlink($file_name);
-		
-		$lines = array();
-		
-		foreach ( $items['children'] as $children )
-		{
-			if ( $children['name'] == 'WORKSHEET' || $children['name'] == 'SS:WORKSHEET' )
-			{
-				foreach ( $children['children'] as $worksheet )
-				{
-					if ( $worksheet['name'] == 'TABLE' )
-					{
-						foreach ( $worksheet['children'] as $row )
-						{
-							if ( $row['name'] == 'ROW' )
-							{
-								$line = array();
-								
-								foreach ( $row['children'] as $cell )
-								{
-									$data = $this->sanitizeData($this->getText($cell));
-									if ( $cell['attrs']['SS:INDEX'] > 0 ) {
-										$line[$cell['attrs']['SS:INDEX'] - 1] = $data;
-									}
-									else {
-										array_push( $line, $data );
-									}
-								}
-
-								array_push( $lines, $line );								
-							}
-						}
-					}
-				}
-				
-				break;
-			}
-		}
-
-		return $lines;
+        try {
+            $objPHPExcel = PHPExcel_IOFactory::load($filePath);
+            return $objPHPExcel->getActiveSheet()->toArray(null,false,false,true);
+        }
+        catch( Exception $e ) {
+            $this->replyError( $e->getMessage() );
+            return array();
+        }
 	}
-
-	protected function getText( $data ) {
-	    if ( is_array($data['children']) ) {
-	        $texts = array();
-            foreach( $data['children'] as $children ) {
-                $texts[] = $this->getText($children);
-            }
-            return join('', $texts);
-        }
-        else {
-            return $data['tagData'];
-        }
-    }
- }
+}

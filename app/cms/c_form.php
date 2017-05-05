@@ -4,6 +4,7 @@ include ('c_form_embedded.php');
 
 include_once "views/Field.php";
 include "views/FieldCheck.php";
+include "views/FieldDate.php";
 include "views/FieldDateTime.php";
 include "views/FieldFile.php";
 include "views/FieldForm.php";
@@ -79,9 +80,8 @@ class Form
 		return in_array($this->getAction(), array('show', 'add', 'modify')); 
 	}
 	
-	function getEmbeddedForm()
-	{
-		return new FormEmbedded();
+	function getEmbeddedForm( $object ) {
+		return new FormEmbedded($object);
 	}
 	
 	function process()
@@ -226,6 +226,8 @@ class Form
 	
 	protected function persist()
 	{
+        getFactory()->getEventsManager()->delayNotifications();
+
 		switch( $this->getAction() )
 		{
 		    case 'add':
@@ -271,14 +273,42 @@ class Form
 		    	
 		    	break;
 		}
-		
+
+        getFactory()->getEventsManager()->releaseNotifications();
+
 		return true;
 	}
 	
-	function processEmbeddedForms( $object_it )
+	function processEmbeddedForms( $object_it, $callback = null )
 	{
-		$embedded = $this->getEmbeddedForm();
-		$embedded->process( $object_it );
+ 	 	$indexes = array();
+
+        foreach( array_keys($_REQUEST) as $key ) {
+            if( preg_match('/embedded([\d]+)/', $key, $matches) ) {
+                $indexes[] = $matches[1];
+            }
+        }
+
+        foreach( $indexes as $e )
+        {
+            $embededClass = getFactory()->getClass($_REQUEST['embedded'.$e]);
+            if ( $embededClass == '' ) continue;
+            if ( !class_exists($embededClass) ) continue;
+
+            $embedded = $this->getEmbeddedForm(getFactory()->getObject($embededClass));
+            $embedded->extendModel();
+            $embedded->process( $object_it, $e, $callback );
+        }
+
+		// remove obsolete temporary files
+		$file_registry = getFactory()->getObject('cms_TempFile')->getRegistry();
+		$file_registry->setPersisters( array(new ObjectRecordAgePersister()) );
+		$file_it = $file_registry->getAll();
+
+		while( !$file_it->end() ) {
+			if ( $file_it->get('AgeDays') > 0 ) $file_it->delete();
+			$file_it->moveNext();
+		}
 	}
 	
 	function validateInputValues( $id, $action )
@@ -345,6 +375,10 @@ class Form
 	function getObject()
 	{
 		return $this->object;
+	}
+
+	function setObject( $object ) {
+		$this->object = $object;
 	}
 	
 	function getObjectIt()
@@ -650,7 +684,7 @@ class Form
 		$object_it = $this->getObjectIt();
 		
 		$value = is_object($object_it) && $object_it->count() > 0 
-			? ( $_REQUEST[$field] != '' 
+			? ( array_key_exists($field, $_REQUEST)
 				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
 				: ($object_it->get_native( $field ) == '' && $this->getEditMode()  
 		  			? $this->getDefaultValue( $field ) 
@@ -905,8 +939,6 @@ class Form
 		
 		if( !is_object($field) ) return; 
 		
-		$field->setTabIndex( 100 + $index );
-		
 		$attribute_required = $this->IsAttributeRequired($name);
 		
 		$field->setRequired( $attribute_required );
@@ -948,7 +980,7 @@ class Form
 				echo '<div class="line"></div>';
 
 				$short_field = in_array($attribute_type, array('integer', 'float', 'date', 'datetime'), true)
-				    && (is_a($field, 'FieldNumber') || is_a($field, 'FieldDateTime'));
+				    && (is_a($field, 'FieldNumber') || is_a($field, 'FieldDateTime') || is_a($field, 'FieldDate'));
 				
 				$class_name = $short_field ? 'formvalueholder formvalue-short' : 'formvalueholder formvalue-long';
 				
@@ -1001,6 +1033,8 @@ class Form
         		$field = new FieldNumber;
         		break;
         	case 'date' :
+        		$field = new FieldDate;
+        		break;
         	case 'datetime' :
         		$field = new FieldDateTime;
         		break;
@@ -1039,7 +1073,7 @@ class Form
 
     	if( !is_object($field) ) return null;
 
-        if ( $field instanceof FieldDateTime ) {
+        if ( $field instanceof FieldDateTime || $field instanceof FieldDate ) {
         	$field->setId($this->object->getEntityRefName().$name.$this->getId());
         }
         else {
@@ -1049,7 +1083,7 @@ class Form
     	$field->setEditMode( $this->getEditMode() );
     	$field->setName($name);
 
-    	if ( $this->getEditMode() && $this->IsAttributeRequired($name) ) {
+    	if ( $this->getEditMode() ) {
     		$field->setDefault($this->getDefaultValue($name));
     	}
 

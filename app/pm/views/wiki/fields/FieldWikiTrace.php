@@ -44,8 +44,12 @@ class FieldWikiTrace extends FieldForm
 	function getForm( & $trace ) {
 		return new WikiTraceFormEmbedded( $trace, 'SourcePage', $this->getName() );
 	}
-	
-	function render( $view )
+
+	function getValidator() {
+        return new ModelValidatorEmbeddedForm($this->getName(), 'TargetPage');
+    }
+
+    function render( $view )
 	{
 	    $this->drawBody( $view );
 	}

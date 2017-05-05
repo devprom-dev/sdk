@@ -8,12 +8,14 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	line-height: 1.6em;
 	padding: 0 0 10px 0;
 	width: 100%;
+	outline: none;
 }
 
 .wysiwyg-text[contenteditable=true]
 {
     position: relative;
 	padding: 2px 0px 2px 1px;
+	overflow-x: hidden;
 }
 
 .wysiwyg-input[contenteditable=true]
@@ -92,13 +94,10 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	border-style: solid;
 	border-color: #ccc;
 	border-width: 0;
-}
-
-.wysiwyg  blockquote
-{
 	padding-left: 20px;
 	padding-right: 8px;
 	border-left-width: 5px;
+	margin: 0 0 7px 0;
 }
 
 .cke_contents_rtl blockquote
@@ -200,13 +199,21 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 .documentToolbar {
 	background-image: url('/images/toolbar.png');
-	min-height: 43px;
+	min-height: 40px;
 }
 
 .documentToolbar .cke_shared {
+	border: 1px solid #dddddd;
 	border-bottom: none;
+}
+.details-visible .documentToolbar .cke_shared {
+	border-right: none;
 }
 
 .documentToolbar + div .table-document th {
 	border-top: none;
+}
+
+.wiki-page.left .documentToolbar {
+	margin-left: -9px;
 }

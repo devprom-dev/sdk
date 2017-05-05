@@ -53,36 +53,35 @@ class QuestionForm extends PMPageForm
 
 	function createFieldObject( $name )
 	{
-		global $model_factory;
-		
 		switch ( $name )
 		{
 			case 'Author':
-				return new FieldDictionary( $model_factory->getObject('cms_User') );
-				
+				return new FieldAutoCompleteObject( getFactory()->getObject('cms_User') );
+            case 'Owner':
+                return new FieldAutoCompleteObject( getFactory()->getObject('ProjectUser') );
 			case 'TraceRequests':
 				return new FieldIssueInverseTrace( $this->getObjectIt(),
-					 $model_factory->getObject('RequestInversedTraceQuestion') );
-
+					 getFactory()->getObject('RequestInversedTraceQuestion') );
 			case 'Tags':
-			    
-			    return new FieldQuestionTagTrace( 
+			    return new FieldQuestionTagTrace(
 			        is_object($this->object_it) ? $this->object_it : null 
 			    );
-			
 			case 'Attachment':
 				return new FieldAttachments( is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->object );
-			    
-			case 'Content':
-				$field = new FieldLargeText();
-				$field->setRows(10);
-				return $field;
-				
 			default:
 				return parent::createFieldObject( $name );
 		}
 	}
-	
+
+	function IsAttributeEditable( $attr ) {
+        switch( $attr ) {
+            case 'Content':
+                return $this->getEditMode();
+            default:
+                return parent::IsAttributeEditable($attr);
+        }
+    }
+
 	function getActions()
 	{
 		$actions = parent::getActions();

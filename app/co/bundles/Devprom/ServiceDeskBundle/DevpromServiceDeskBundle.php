@@ -3,9 +3,7 @@
 namespace Devprom\ServiceDeskBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Translation\Translator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 include_once SERVER_ROOT_PATH."admin/classes/templates/SystemTemplate.php";
 
@@ -14,6 +12,13 @@ class DevpromServiceDeskBundle extends Bundle
     public function boot()
     {
         parent::boot();
+
+        if ( is_dir(\SystemTemplate::getPath().'ru') ) {
+            $this->container->get('twig.loader')->prependPath(\SystemTemplate::getPath() . 'ru');
+        }
+        if ( is_dir(\SystemTemplate::getPath().'en') ) {
+            $this->container->get('twig.loader')->prependPath(\SystemTemplate::getPath() . 'en');
+        }
 
         $this->setUpDevpromTranslations();
     }
@@ -55,13 +60,13 @@ class DevpromServiceDeskBundle extends Bundle
         		SERVER_ROOT_PATH . "plugins/dobassist/language/en/array.php" => 'client'
         );
         foreach( $en_strings as $string => $namespace) {
-        	if ( file_exists($string) ) $translator->addResource('php', $string, "en", $namespace); 
+        	if ( file_exists($string) ) $translator->addResource('php', $string, "en", $namespace);
         }
         $ru_strings = array (
         		SERVER_ROOT_PATH . "plugins/dobassist/language/ru/array.php" => 'client'
         );
         foreach( $ru_strings as $string => $namespace ) {
-        	if ( file_exists($string) ) $translator->addResource('php', $string, "ru", $namespace); 
+        	if ( file_exists($string) ) $translator->addResource('php', $string, "ru", $namespace);
         }
     }
 }

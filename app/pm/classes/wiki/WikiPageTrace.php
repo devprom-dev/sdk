@@ -35,7 +35,6 @@ class WikiPageTrace extends Metaobject
 	function IsDeletedCascade( $object )
 	{
 		if ( is_a($object, 'WikiPage') )return true;
-		
 		return false;
 	}
 	

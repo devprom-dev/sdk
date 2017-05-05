@@ -2,14 +2,9 @@
 
 class CacheLock extends LockFileSystem
 {
-	static $is_windows = null;
-
-	function __construct( $timeout = 10 )
+	function __construct( $timeout = 3 )
 	{
 		parent::__construct('cache-global-lock');
-		if ( is_null(self::$is_windows) ) {
-			self::$is_windows = EnvironmentSettings::getWindows();
-		}
 		$this->Wait($timeout);
 		$this->Lock();
 	}
@@ -21,11 +16,7 @@ class CacheLock extends LockFileSystem
     public function Wait( $timeout, $callable = null )
     {
         while( $this->Locked($timeout) ) {
-			if ( self::$is_windows ) {
-				sleep(1);
-			} else {
-				usleep(10000);
-			}
-		}
+            time_nanosleep(0, 500000000);
+        }
     }
 }

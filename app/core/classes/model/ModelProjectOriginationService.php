@@ -5,9 +5,8 @@ include_once SERVER_ROOT_PATH."core/classes/model/ModelEntityOriginationService.
 class ModelProjectOriginationService extends ModelEntityOriginationService
 {
 	private $session = null;
-	
 	private $shared = null;
-	
+    private $sharedSettings = array();
 	private $linked_settings_it = null;
 	
 	public function __construct( $session, $cache_service = null )
@@ -32,19 +31,36 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 		$origin = $this->getSelfOrigin($object);
 		
 		return in_array($origin,array('',DUMMY_PROJECT_VPD)) 
-					? parent::getCacheCategory($object) : 'pm-'.$origin;
+					? parent::getCacheCategory($object) : 'projects/'.$origin;
 	}
 	
 	protected function getSharedSet()
 	{
-		if ( !is_object($this->shared) )
-		{
+		if ( !is_object($this->shared) ) {
 			$this->shared = getFactory()->getObject('SharedObjectSet');
 		}
-		
 		return $this->shared;
 	}
-	
+
+    protected function getSharedSettings()
+    {
+        if ( count($this->sharedSettings) > 0 ) return $this->sharedSettings;
+
+        $shared = $this->getSharedSet();
+        $shared_it = $shared->getAll();
+        while( !$shared_it->end() ) {
+            if ( $shared_it->get('Category') == '3' ) {
+                $check_field = 'Common';
+            }
+            else {
+                $check_field = $shared_it->get('Category');
+            }
+            $this->sharedSettings[$shared_it->getId()] = $check_field;
+            $shared_it->moveNext();
+        }
+        return $this->sharedSettings;
+    }
+
 	protected function getSettingsIt()
 	{
 		if ( is_object($this->linked_settings_it) ) {
@@ -65,7 +81,11 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
     protected function getProjectIt()
     {
         if ( is_object($this->project_it) ) return $this->project_it;
-        return $this->project_it = getFactory()->getObject('Project')->getExact($this->getSettingsIt()->fieldToArray('Project'));
+        return $this->project_it = getFactory()->getObject('Project')->getRegistry()->Query(
+            array(
+                new ProjectLinkedSelfPredicate()
+            )
+        );
     }
 	
 	protected function buildSelfOrigin( $object )
@@ -91,67 +111,38 @@ class ModelProjectOriginationService extends ModelEntityOriginationService
 		$settings_it = $this->getSettingsIt();
 		if ( $settings_it->getId() < 1 ) return $vpds;
 
-		if ( !is_object($this->shared) ) {
-			$this->shared = getFactory()->getObject('SharedObjectSet');
-		}
-		
-		$shareable_it = $this->getSharedSet()->getExact(strtolower(get_class($object)));
-		if ( $shareable_it->getId() == '' ) return $vpds;
-		
-		if ( $shareable_it->get('Category') == '3' ) {
-			$check_field = 'Common';
-		}
-		else {
-			$check_field = $shareable_it->get('Category');
-		}
-		
-		$direction = SHARED_DIRECTION_FWD;
-		switch ( $direction )
-		{
-			case SHARED_DIRECTION_FWD:
-				$source_values = array('1', '3');
-				$target_values = array('2', '3');
-				break;
+        $sharedSettings = $this->getSharedSettings();
+        $check_field = $sharedSettings[strtolower(get_class($object))];
 
-			case SHARED_DIRECTION_BWD:
-				$source_values = array('2', '3');
-				$target_values = array('1', '3');
-				break;
-		}
-		
+		$valuesToCheck = array (
+		    'Project' => array (
+		        'source' => array('1', '3'),
+                'target' => array('2', '3')
+            )
+        );
+
 		$linked_it = $this->getProjectIt();
+        if ( $linked_it->getId() == '' ) return $vpds;
 
 		$settings_it->moveFirst();
-		while ( !$settings_it->end() )
-		{
-		    $linked_it->moveToId( $settings_it->get('Project') );
+		while ( !$settings_it->end() ) {
+            foreach( $valuesToCheck as $fieldProject => $toCheck ) {
+                $linked_it->moveToId( $settings_it->get($fieldProject) );
+                if ( $linked_it->getId() != '' && $linked_it->getId() == $settings_it->get($fieldProject) ) {
+                    if ( $this->getSharedSet()->sharedInProject( $object, $linked_it ) ) {
+                        $shared_in_forward = in_array($settings_it->get($check_field), $toCheck['source'])
+                            && $settings_it->get('Direction') == 'source';
+                        if ( $shared_in_forward ) $vpds[] = $linked_it->get('VPD');
 
-		    if ( $linked_it->getId() != $settings_it->get('Project') ) {
-		        $settings_it->moveNext();
-		        continue;
-		    }
-		    if ( !$this->getSharedSet()->sharedInProject( $object, $linked_it ) ) {
-		        $settings_it->moveNext();
-		        continue;
-		    }
+                        $shared_in_backward = in_array($settings_it->get($check_field), $toCheck['target'])
+                            && $settings_it->get('Direction') == 'target';
+                        if ( $shared_in_backward ) $vpds[] = $linked_it->get('VPD');
+                    }
+                }
+            }
+            $settings_it->moveNext();
+        }
 
-		    $shared_in_forward = in_array($settings_it->get($check_field), $source_values)
-		        && $settings_it->get('Direction') == 'source';
-		    
-		    if ( $shared_in_forward ) {
-			    $vpds[] = $settings_it->get('VPD');
-		    }
-
-		    $shared_in_backward = in_array($settings_it->get($check_field), $target_values) 
-		        && $settings_it->get('Direction') == 'target';
-		     
-			if ( $shared_in_backward ) {
-    	        $vpds[] = $settings_it->get('VPD');
-		    }
-			
-			$settings_it->moveNext();
-		}
-
-		return array_unique($vpds);		
+		return array_unique($vpds);
 	}		
 }

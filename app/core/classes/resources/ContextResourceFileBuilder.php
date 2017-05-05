@@ -33,7 +33,8 @@ class ContextResourceFileBuilder extends ContextResourceBuilder
     		$text = preg_replace('/\%host\%/i', EnvironmentSettings::getServerUrl(),$text);
 			$text = preg_replace('/\%schema\%/i', EnvironmentSettings::getServerSchema(),$text);
 			$text = preg_replace('/\%servername\%/i', EnvironmentSettings::getServerName(),$text);
-    		
+            $text = preg_replace('/\%server-url\%/i', EnvironmentSettings::getServerUrl(),$text);
+
     		$object->addText($module, $text);
     	}
     }

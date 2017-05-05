@@ -22,12 +22,22 @@ class LoginUserService
 			array( 'LCASE(Login)' => trim(strtolower($login)),
 				   'Password' => $password_hash ) 
 			);
-		
+        if ( $this->user_it->count() < 1 ) {
+            $this->user_it = $cls_user->getByRefArray( array(
+                    'LCASE(Email)' => trim(strtolower($login)),
+                    'Password' => $password_hash
+                ));
+        }
 		if ( $this->user_it->count() < 1 )
 		{
 		    $this->user_it = $cls_user->getByRefArray(
 				array( 'LCASE(Login)' => strtolower(trim($login)) ) 
 				);
+            if ( $this->user_it->count() < 1 ) {
+                $this->user_it = $cls_user->getByRefArray(
+                    array( 'LCASE(Email)' => strtolower(trim($login)) )
+                );
+            }
 
 			if ( $this->user_it->count() > 0 )
 			{
@@ -39,12 +49,17 @@ class LoginUserService
 				// check if this is an attack on password
 				$retry = new \Metaobject('cms_LoginRetry');
 				$retry_it = $retry->getByRef('SystemUser', $this->user_it->getId());
-				
+
+				$maxRetries = MAX_PASSWORD_RETRIES;
+				if ( $this->user_it->get('IsAdmin') == 'Y' ) {
+                    $maxRetries = $maxRetries * 5;
+                }
+
 				if ( $retry_it->count() > 0 )
 				{
-					if ( $retry_it->get('RetryAmount') < MAX_PASSWORD_RETRIES + 1 )
+					if ( $retry_it->get('RetryAmount') < $maxRetries + 1 )
 					{
-						if ( $retry_it->get('RetryAmount') >= MAX_PASSWORD_RETRIES )
+						if ( $retry_it->get('RetryAmount') >= $maxRetries )
 						{
 							// add ip address into black list
 							$list = new \Metaobject('cms_BlackList');
@@ -72,18 +87,7 @@ class LoginUserService
 					$retry->add_parms( array('SystemUser' => $this->user_it->getId()) );
 				}
 			}
-			else {
-				$user_it = $cls_user->getByRefArray(
-					array(
-						'LCASE(Email)' => strtolower(trim($login)),
-						'Password' => $password_hash
-					)
-				);
-				if ( $user_it->count() > 0 ) {
-					return 6;
-				}
-			}
-				
+
 			return 2;
 		}
 		else
@@ -144,9 +148,6 @@ class LoginUserService
 
             case 5:
                 return text(2048);
-
-			case 6:
-				return text(2156);
 
 			default:
 				return $result;

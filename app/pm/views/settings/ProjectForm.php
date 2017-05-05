@@ -4,7 +4,22 @@ include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorsDictionary.php";
 
 class ProjectForm extends PMPageForm
 {
- 	function buildModelValidator()
+    function extendModel()
+    {
+        parent::extendModel();
+
+        $object = $this->getObject();
+        $object->setAttributeCaption('Rating', translate('Скорость'));
+        $object->setAttributeEditable('Rating', false);
+        $object->setAttributeVisible('Rating', true);
+        $object->setAttributeOrderNum('Rating', 300);
+        $object->setAttributeDescription('Rating', text(2284));
+
+        $object->addAttribute('ProjectKey', 'VARCHAR', text(2287), true, false, text(2288), 310);
+        $object->setAttributeEditable('ProjectKey', false);
+    }
+
+    function buildModelValidator()
  	{
  		$validator = parent::buildModelValidator();
  		
@@ -40,6 +55,16 @@ class ProjectForm extends PMPageForm
 
             default:
                 return parent::getFieldDescription( $name );
+        }
+    }
+
+    function getFieldValue($field)
+    {
+        switch( $field ) {
+            case 'ProjectKey':
+                return $this->getObjectIt()->getPublicKey();
+            default:
+                return parent::getFieldValue($field);
         }
     }
 

@@ -40,7 +40,15 @@ class StateBase extends Metaobject
  				
  			case 'ReferenceName':
  				return uniqid('State_');
- 				
+
+            case 'IsTerminal':
+                $firstState = $this->getRegistry()->Count(
+                    array(
+                        new FilterAttributePredicate('IsTerminal', 'N')
+                    )
+                );
+                return $firstState > 0 ? 'I' : 'N';
+
  			default:
  				return parent::getDefaultAttributeValue( $attr ); 
  		}
@@ -160,4 +168,23 @@ class StateBase extends Metaobject
 
 		return $result;
 	}
+
+	function delete($object_id, $record_version = '')
+    {
+        $wasStateIt = $this->getExact($object_id);
+
+        $result = parent::delete($object_id, $record_version);
+
+        $class = getFactory()->getClass($this->getObjectClass());
+        if ( class_exists($class, false) )
+        {
+            $states = $this->getAll()->fieldToArray('ReferenceName');
+            $firstState = array_shift($states);
+
+            $sql = " UPDATE ".getFactory()->getObject($class)->getEntityRefName()." SET State = '".$firstState."' WHERE State = '".$wasStateIt->get('ReferenceName')."' AND VPD = '".$wasStateIt->get('VPD')."' ";
+            DAL::Instance()->Query($sql);
+        }
+
+        return $result;
+    }
 }

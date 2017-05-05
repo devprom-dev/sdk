@@ -17,7 +17,8 @@ class RequestBulkForm extends BulkForm
 		$attributes = parent::getActionAttributes();
 
 		if ( in_array('BlockReason', $attributes) ) {
-			$attributes[] = 'TransitionComment';
+			$attributes[] = 'CreateLinked';
+            $attributes[] = 'TransitionComment';
 		}
 
 		return $attributes;
@@ -32,6 +33,7 @@ class RequestBulkForm extends BulkForm
  			case 'Iteration':
  			case 'LinkType':
 			case 'Comment':
+            case 'CreateLinked':
  				return 'custom';
  				
  			default:
@@ -61,6 +63,8 @@ class RequestBulkForm extends BulkForm
 		    case 'RemoveTag':
 			case 'Tasks':
 		    	return false;
+            case 'CreateLinked':
+                return true;
 		    default:
 		    	return parent::IsAttributeVisible( $attribute );
 		}
@@ -70,17 +74,19 @@ class RequestBulkForm extends BulkForm
 	{
 	    switch ( $attr ) 
 	    {
+            case 'CreateLinked':
+                return true;
 	        default:
 	            return parent::IsAttributeModifiable( $attr );
 	    }
 	}
 
- 	function drawCustomAttribute( $attribute, $value, $tab_index )
+ 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
  	{
  		switch ( $attribute )
  		{
  			case 'Project':
- 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessible'));
+ 				$field = new FieldAutoCompleteObject(getFactory()->getObject('ProjectAccessibleActive'));
 				$field->SetId($attribute);
 				$field->SetName($attribute);
 				$field->SetValue($value);
@@ -155,8 +161,24 @@ class RequestBulkForm extends BulkForm
 				$field->draw();
 				break;
 
+            case 'CreateLinked':
+                $method = new ObjectCreateNewWebMethod($this->getObject());
+                $method->setRedirectUrl('donothing');
+                $url = $method->getJSCall(
+                    array(
+                        'IssueLinked' => array_shift($this->getIds()),
+                        'LinkType' => getFactory()->getObject('RequestLinkType')->getByRef('ReferenceName', 'blocks')->getId()
+                    )
+                );
+                echo '<div class="btn-group">';
+                    echo '<a class="btn btn-small btn-success" href="'.$url.'">';
+                        echo '<i class="icon-plus icon-white"></i> '.$this->getObject()->getDisplayName();
+                    echo '</a>';
+                echo '</div>';
+                break;
+
 			default:
- 				parent::drawCustomAttribute( $attribute, $value, $tab_index );
+ 				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
  		}
  	}
 }

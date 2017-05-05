@@ -30,26 +30,40 @@ abstract class WikiConverterPanDoc extends IteratorExport
         file_put_contents($this->htmlPath, ob_get_contents());
         ob_end_clean();
 
-        $templateParm = "";
+        $templatePath = $this->getDefaultTemplatePath();
         foreach($options as $option) {
             if ( strpos($option, 'template=') !== false ) {
                 $templateId = array_pop(explode('=', $option));
-                $templateParm = getFactory()->getObject('ExportTemplate')
+                $templatePath = getFactory()->getObject('ExportTemplate')
                     ->getExact($templateId)->getFilePath('File');
-                if ( !file_exists($templateParm) ) $templateParm = "";
             }
         }
-        if ( $templateParm != "" ) {
-            $templateParm = $this->getTemplateParms($templateParm);
+        if ( $templatePath != "" && file_exists($templatePath) ) {
+            $templateParm = $this->getTemplateParms($templatePath);
+        }
+        else {
+            $templateParm = "";
         }
 
-        $command = 'pandoc --dpi=196 --from=html '.$templateParm.' '.$this->getToParms().' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$this->outputPath.'" "'.$this->htmlPath.'" 2>&1';
+        $pandocVersion = $this->getVersion();
+        Logger::getLogger('Commands')->info('pandoc version is '.$pandocVersion);
+
+        $requiredParms = '--from=html';
+        if (version_compare($pandocVersion, '1.16.0') >= 0) {
+            $requiredParms .= ' --dpi=196';
+        }
+
+        $command = 'pandoc '.$requiredParms.' '.$templateParm.' '.$this->getToParms().' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$this->outputPath.'" "'.$this->htmlPath.'" 2>&1';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
 
         $result = shell_exec($command);
         if ( $result != "" ) {
             Logger::getLogger('Commands')->error(get_class($this).': '.$result);
             throw new Exception($result);
+        }
+
+        if ( $templateParm != '' ) {
+            $this->postProcessByTemplate($templatePath, $this->outputPath);
         }
 
         $this->getIterator()->moveFirst();
@@ -65,6 +79,25 @@ abstract class WikiConverterPanDoc extends IteratorExport
 
         echo file_get_contents($this->outputPath);
 	}
+
+	protected function getVersion() {
+        $command = 'pandoc -v 2>&1';
+        Logger::getLogger('Commands')->info(get_class($this).': '.$command);
+        return array_pop(
+            preg_split('/\s+/',
+                array_shift(
+                    preg_split('/[\r\n]/', shell_exec($command))
+                )
+            )
+        );
+    }
+
+	protected function getDefaultTemplatePath() {
+        return '';
+    }
+
+    protected function postProcessByTemplate( $templatePath, $documentPath ) {
+    }
 
     abstract protected function getToParms();
     abstract protected function getExtension();

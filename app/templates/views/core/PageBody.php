@@ -9,7 +9,7 @@
 			echo $view->render('core/PageMenu.php', array_merge($navigation_parms, array(
 				'checkpoint_alerts' => $checkpoint_alerts,
 				'checkpoint_url' => $checkpoint_url,
-				'areas' => $bodyExpanded ? $navigation_parms['areas'] : array(),
+				'areas' => $navigation_parms['areas'],
 				'search_url' => $search_url
 			)));
 		?>

@@ -18,9 +18,7 @@ class ObjectUID
  			'pm_ChangeRequest' => 'I',
  			'pm_Task' => 'T',
  			'Requirement' => 'R',
- 			'RequirementTemplate' => 'R',
  		    'ProjectPage' => 'K',
- 		    'KnowledgeBaseTemplate' => 'K',
  		    'HelpPage' => 'D',
  			'pm_Test' => 'E',
 			'pm_TestCaseExecution' => 'E',
@@ -28,7 +26,6 @@ class ObjectUID
  			'TestScenario' => 'S',
             'TestScenarioOnly' => 'S',
             'TestPlan' => 'S',
- 			'TestingTemplate' => 'S',
  		    'pm_Project' => 'P',
  			'pm_Question' => 'Q',
  			'BlogPost' => 'B',
@@ -75,18 +72,6 @@ class ObjectUID
  		if ( !is_object($object_it->object) ) return '';
  		
  		$class_name = $object_it->object->getEntityRefName();
- 		
- 	 	if( is_a($object_it->object, 'WikiPageTemplate') ) 
- 		{
- 			$type_it = getFactory()->getObject('WikiType')->getExact($object_it->get('ReferenceName'));
- 			
- 			switch($type_it->get('ReferenceName')) 
- 			{
- 				case 'Requirements': return 'RequirementTemplate';
- 				case 'KnowledgeBase': return 'KnowledgeBaseTemplate';
- 				case 'TestScenario': return 'TestingTemplate';
- 			}
- 		}
  		
  		if ( $class_name == 'WikiPage' )
  		{
@@ -141,34 +126,14 @@ class ObjectUID
 		return $this->map[$className].'-'.$id;
 	}
 
-	function getProject( $object_it )
-	{
-		global $project_cache_it;
-
-		if ( $object_it->get('ProjectCodeName') != '' ) return $object_it->get('ProjectCodeName');
-
-		if ( !is_object($project_cache_it) ) {
-			$project_cache_it = getFactory()->getObject('ProjectCache')->getAll();
-			$project_cache_it->buildPositionHash(array('VPD'));
-		}
-
-		$project_cache_it->moveTo('VPD', $object_it->get('VPD'));
-		return $project_cache_it->get('CodeName');
-	}
- 	
- 	function getGotoUrl( $object_it ) 
+ 	function getGotoUrl( $object_it )
  	{
  		switch( $object_it->object->getEntityRefName() )
  		{
  			case 'pm_Project':
- 			    
- 			    $session = getSession();
- 			    
-			    return '/pm/'.$object_it->get('CodeName').'/?tab='.$session->getActiveTab();
- 				
+			    return '/pm/'.$object_it->get('CodeName').'/?tab='.getSession()->getActiveTab();
  			default:
- 			    
- 				return '/pm/'.$this->getProject( $object_it ).'/'.$this->getObjectUid($object_it);
+ 				return '/pm/'.$object_it->get('ProjectCodeName').'/'.$this->getObjectUid($object_it);
  		}
  	}
  	
@@ -214,7 +179,9 @@ class ObjectUID
  		$object = getFactory()->getObject($class);
 		$registry = $object->getRegistry();
 		if ( $object instanceof WikiPage ) {
-			$registry->setPersisters(array());
+			$registry->setPersisters(array(
+			    new EntityProjectPersister()
+            ));
 		}
 
 		return $object_id > 0
@@ -226,9 +193,9 @@ class ObjectUID
 			: $object->getEmptyIterator();
  	}
 
- 	function getUidIcon( $object_it )
+ 	function getUidIcon( $object_it, $need_project = true )
  	{
- 		return $this->getUidIconGlobal( $object_it );
+ 		return $this->getUidIconGlobal( $object_it, $need_project );
  	}
 
  	function getUIDInfo( $object_it, $caption = false )
@@ -239,13 +206,12 @@ class ObjectUID
 		
 	    $uid = $this->getObjectUid($object_it);
 
-		$self_project_name = $this->getProject( $object_it );
-
-		$url = $this->server_url.$self_project_name;
-
-		if ( !$object_it->object instanceof Project )
-		{
-			$url .= '/'.$uid;
+		$self_project_name = $object_it->get('ProjectCodeName');
+		if ( $object_it->object instanceof Project ) {
+            $url = $this->server_url.$uid;
+        }
+        else {
+            $url = $this->server_url.$self_project_name.'/'.$uid;
 		}
 
 		$result = array(
@@ -276,8 +242,7 @@ class ObjectUID
     
  		    if ( is_object($project_it) && $project_it->get('VPD') != '' && $object_it->get('VPD') != '' && $project_it->get('VPD') != $object_it->get('VPD') )
  		    {
- 		        $code_name = $this->getProject( $object_it );
-
+ 		        $code_name = $object_it->get('ProjectCodeName');
  		        if ( $code_name != '' ) $result .= '{'.$code_name.'} ';
  		    }
  		    
@@ -323,7 +288,7 @@ class ObjectUID
 				$need_project = false;
 				break;
 			default:
-			    $title = str_replace('"', "'", html_entity_decode($object_it->getDisplayName(), ENT_COMPAT | ENT_HTML401, APP_ENCODING));
+			    $title = str_replace('"', "'", html_entity_decode($object_it->getDisplayNameExt(), ENT_COMPAT | ENT_HTML401, APP_ENCODING));
 				break;
 		}
 		
@@ -331,12 +296,11 @@ class ObjectUID
 		
 		$text = $info['uid'];
 		
-		if ( $info['completed'] ) $text = '<strike>'.$text.'</strike>';
-
 		if ( $need_project && $info['alien'] ) $text = $info['project'].":".$text;
 
 		$text = '['.$text.']';
-		
+
+        if ( $info['completed'] ) $text = '<strike>'.$text.'</strike>';
 
         if ( $this->getBaseline() != '' )
         {
@@ -385,14 +349,19 @@ class ObjectUID
 		echo $this->getUidWithCaption($object_it, $words);
  	}
 
- 	function getUidWithCaption( $object_it, $words = 15, $baseline = '' ) 
+ 	function getUidWithCaption( $object_it, $words = 15, $baseline = '', $need_project = true )
  	{
 		if ( !is_object($object_it) ) return '';
 		if ( $object_it->getId() == '' ) return '';
- 		$text = $this->getUidIcon( $object_it );
- 		$text .= $object_it->getWordsOnlyValue(html_entity_decode($object_it->getDisplayName()), $words);
- 		if ( $object_it->get('StateName') != '' ) $text .= ' ('.$object_it->get('StateName').')';
-        if ( $object_it->get('ClosedInVersion') != '' ) $text .= ' {'.$object_it->get('ClosedInVersion').'}';
+ 		$text = $this->getUidIcon( $object_it, $need_project );
+ 		$caption = html_entity_decode($object_it->getDisplayNameExt());
+ 		$items = explode(' ', $caption);
+ 		if ( count($items) > $words ) {
+ 		    $text .= join(' ', array_slice($items, 0, $words)) . '...';
+        }
+        else {
+ 		    $text .= $caption;
+        }
         return $text;
  	}
 }

@@ -1,4 +1,5 @@
 <?php
+include "persisters/IssueStateDetailsPersister.php";
 
 class StateBaseRegistry extends ObjectRegistrySQL
 {
@@ -11,4 +12,13 @@ class StateBaseRegistry extends ObjectRegistrySQL
 				)
 		);
 	}
+
+	function getPersisters()
+    {
+        $items = parent::getPersisters();
+        if ( $this->getObject() instanceof IssueState ) {
+            $items[] = new IssueStateDetailsPersister();
+        }
+        return $items;
+    }
 }

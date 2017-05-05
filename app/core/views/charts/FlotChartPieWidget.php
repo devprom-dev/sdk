@@ -18,6 +18,8 @@ class FlotChartPieWidget extends FlotChartWidget
     
     public function draw( $chart_id )
     {
+        $colors = array_slice($this->getColors(), 0, count($this->getValues()));
+
 		?>
 		<script type="text/javascript">
 		$(function () 
@@ -26,24 +28,27 @@ class FlotChartPieWidget extends FlotChartWidget
 			
 			$.plot($("#<?=$chart_id?>"), data, 
 			{
+				width: 120,
 				series: {
 					pie: { 
 						show: true,
 						label: {
 							show: true
 						},
-						innerRadius: 0.3
+						innerRadius: 0.5
 					}
 				},
 				legend: {
 					show: false
 				},
 				radius: 1
-				<? if ( count($this->getColors()) > 0 ) { ?> ,colors: ['<?=join("','",$this->getColors())?>'] <? } ?>
+				<? if ( count($colors) > 0 ) { ?> ,colors: ['<?=join("','",$colors)?>'] <? } ?>
 			});
 		});
 		</script>
 		<?
-        
     }
+	function getStyle() {
+		return "height:460px;width:460px;float:left;";
+	}
 }

@@ -36,8 +36,6 @@ class DataModelRegistryBuilderCommon implements IDataModelRegistryBuilder
             'User',
             'WikiPage',
             'WikiPageFile',
-            'ProjectStage',
-            'TaskTypeStage',
             'Snapshot',
             'StateBase',
             'Watcher',

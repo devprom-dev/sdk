@@ -6,8 +6,6 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Devprom\AdministrativeBundle\AdministrativeBundle;
-include_once SERVER_ROOT_PATH."admin/classes/model/ModelFactoryAdmin.php";
-include_once SERVER_ROOT_PATH."admin/classes/common/AdminAccessPolicy.php";
 include_once SERVER_ROOT_PATH."admin/classes/common/SessionBuilderAdmin.php";
 
 class AdminApplicationKernel extends Kernel
@@ -47,7 +45,6 @@ class AdminApplicationKernel extends Kernel
 
     function initializeContainer()
     {
-    	$lock = new \CacheLock();
         try {
             parent::initializeContainer();
         }
@@ -58,16 +55,18 @@ class AdminApplicationKernel extends Kernel
 
     function boot()
     {
-        global $plugins, $session, $model_factory;
+        global $session, $model_factory;
+        $lock = new \CacheLock();
+
+        $model_factory = new \ModelFactoryExtended(
+            \PluginsFactory::Instance(),
+            \CacheEngineFS::Instance(),
+            'global',
+            new \AccessPolicy(\CacheEngineFS::Instance())
+        );
+        $session = \SessionBuilderAdmin::Instance()->openSession(array(), \CacheEngineFS::Instance());
 
         parent::boot();
-
-        $plugins = \PluginsFactory::Instance();
-        $caching = new \CacheEngineFS();
-        $caching ->setDefaultPath('admin');
-        $model_factory = new \ModelFactoryAdmin(
-            \PluginsFactory::Instance(), $caching, new \AdminAccessPolicy($caching)
-        );
-        $session = \SessionBuilderAdmin::Instance()->openSession(array(), $caching);
+        $lock->Release();
     }
 }

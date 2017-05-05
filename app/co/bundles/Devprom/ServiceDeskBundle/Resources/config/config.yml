@@ -20,6 +20,7 @@ framework:
     default_locale: %systemLanguage%
     trusted_proxies: ~
     session:
+            cookie_lifetime: 0
             save_path: ~
 
 assetic:
@@ -47,6 +48,9 @@ doctrine:
         auto_mapping: true
 
 twig:
+    globals:
+        registration_enabled: '%registration_enabled%'
+        use_knowledgebase: '%use_knowledgebase%'
     form_themes:
         - DevpromServiceDeskBundle:Form:fields.html.twig
 

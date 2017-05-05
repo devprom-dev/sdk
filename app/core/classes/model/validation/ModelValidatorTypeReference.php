@@ -11,8 +11,9 @@ class ModelValidatorTypeReference extends ModelValidatorType
 	
 	public function validate( & $value )
 	{
-		$ids = array_filter(preg_split('/,/', $value), function( $value ) 
-		{
+        $value = trim($value);
+
+		$ids = array_filter(preg_split('/,/', $value), function( $value ) {
 			return trim($value) != '';
 		});
 

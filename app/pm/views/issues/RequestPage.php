@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderIssues.php";
@@ -20,25 +19,15 @@ include "IssueCompoundSection.php";
 include "RequestIteratorExportBlog.php";
 include "IteratorExportIssueBoard.php"; 
 include "PageSettingIssuesBuilder.php";
-include "import/ImportIssueFromExcelSection.php";
+include "RequestImportDocumentForm.php";
 
 class RequestPage extends PMPage
 {
-	var $release_it;
-
 	function __construct()
 	{
-		global $_REQUEST, $model_factory;
-
 		getSession()->addBuilder(new PageSettingIssuesBuilder());
 		getSession()->addBuilder(new RequestViewModelCommonBuilder());
 		getSession()->addBuilder(new BulkActionBuilderIssues());
-
-		if ($_REQUEST['release'] > 0) {
-			$release = $model_factory->getObject('Release');
-
-			$this->release_it = $release->getExact($_REQUEST['release']);
-		}
 
 		parent::__construct();
 
@@ -53,12 +42,12 @@ class RequestPage extends PMPage
             }
             else {
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'deadlines', translate('Сроки')));
+                $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'sla', 'SLA'));
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
 
                 $object_it = $this->getObjectIt();
                 if (is_object($object_it) && $object_it->getId() > 0) {
-                    $this->addInfoSection(new NetworkSection($object_it));
                     $this->addInfoSection(new PageSectionComments($object_it));
 
                     $ids = $object_it->getImplementationIds();
@@ -75,35 +64,16 @@ class RequestPage extends PMPage
                         }
                     }
 
-                    if ($object_it->object->getAttributeType('Spent') != '' && $_REQUEST['formonly'] == '') {
-                        $this->addInfoSection(new PageSectionSpentTime($object_it));
-                    }
+
                     $this->addInfoSection(new StatableLifecycleSection($object_it));
                     $this->addInfoSection(new PMLastChangesSection ($object_it));
+                    $this->addInfoSection(new NetworkSection($object_it));
                 }
             }
 		}
 		elseif ($_REQUEST['mode'] == '') {
 			if ($_REQUEST['view'] == 'board') $this->addInfoSection(new FullScreenSection());
 			$this->addInfoSection(new DetailsInfoSection());
-
-			$table = $this->getTableRef();
-
-			if (is_object($table)) {
-				$filter = new FilterObjectMethod(
-						$model_factory->getObject('Release'), '', 'release');
-				$filter->setFilter($table->getFiltersName());
-
-				$value = $filter->getValue();
-				if (is_numeric($value) && $value > 0) {
-					$release = $model_factory->getObject('Release');
-					$this->release_it = $release->getExact($value);
-				}
-			}
-		}
-
-		if ($_REQUEST['view'] == 'import') {
-			$this->addInfoSection(new ImportIssueFromExcelSection($this->getObject()));
 		}
 	}
 
@@ -124,11 +94,6 @@ class RequestPage extends PMPage
 		}
 
 		return $object;
-	}
-
-	function getReleaseIt()
-	{
-		return $this->release_it;
 	}
 
 	function getTable()
@@ -166,13 +131,16 @@ class RequestPage extends PMPage
 				$form->edit($_REQUEST['ChangeRequest']);
 				return $form;
 		}
-		if ($_REQUEST['view'] == 'import') {
+		if ( $_REQUEST['view'] == 'import' ) {
 			return new ImportXmlForm($this->getObject());
 		}
-        if ($_REQUEST['IssueLinked'] != '' ) {
+		if ( $_REQUEST['view'] == 'importdoc') {
+            return new RequestImportDocumentForm($this->getObject());
+        }
+        if ( $_REQUEST['IssueLinked'] != '' ) {
             return new RequestFormLinked($this->getObject());
         }
-		if ($_REQUEST['LinkType'] != '') {
+		if ( $_REQUEST['LinkType'] != '' ) {
 			return new RequestFormDuplicate($this->getObject());
 		}
 
@@ -185,9 +153,5 @@ class RequestPage extends PMPage
 	function getPageWidgets()
 	{
 		return array('kanbanboard', 'issuesboard', 'issues-backlog');
-	}
-
-	function isDetailsActive() {
-		return !in_array($this->getReportBase(), array('issuesboardcrossproject'));
 	}
 }

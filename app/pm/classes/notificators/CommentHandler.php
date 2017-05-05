@@ -29,46 +29,7 @@ class CommentHandler extends EmailNotificatorHandler
 		return true;
 	}
 
-	function getParticipants( $object_it, $prev_object_it, $action ) 
-	{
-		$project_it = getSession()->getProjectIt();
-		$result = array();
-		
-		if ( $action != 'add' ) return $result;
-
-		$anchor_it = $object_it->getAnchorIt();
-		if ( $anchor_it->getId() == '' ) return $result;
-
-		switch( $anchor_it->object->getClassName() )
-		{
-			case 'pm_ChangeRequest':
-				$implementor_it = $anchor_it->getImplementors();
-				while( !$implementor_it->end() )
-				{
-					$result[] = $implementor_it->getId();
-					$implementor_it->moveNext();
-				}
-				$result = array_merge( $result, $project_it->getLeadIt()->idsToArray() );
-				break;
-				
-			case 'pm_Task':
-				$result = array_merge( $result, $project_it->getLeadIt()->idsToArray() );
-				break;
-				
-			case 'WikiPage':
-			    $author_it = $anchor_it->getRef('Author');
-				$result[] = $author_it->getId(); 
-				break;
-				
-			case 'BlogPost':
-			    array_push($result, $anchor_it->get('AuthorId'));
-			    break;
-		}
-
-		return $result;
-	}	
-	
-	function getUsers( $object_it, $prev_object_it, $action ) 
+	function getUsers( $object_it, $prev_object_it, $action )
 	{
 		$result = array();
 		if ( $action != 'add' ) return $result;
@@ -79,14 +40,26 @@ class CommentHandler extends EmailNotificatorHandler
 		switch( $anchor_it->object->getClassName() )
 		{
 			case 'pm_ChangeRequest':
+			    $taskAssignee = getFactory()->getObject('Task')->getRegistry()->Query(
+			        array(
+			            new FilterAttributePredicate('ChangeRequest', $anchor_it->getId())
+                    )
+                )->fieldToArray('Assignee');
+			    $result = array_merge($result, $taskAssignee);
+
 			case 'pm_Question':
-				if ( $anchor_it->get('Author') > 0 ) $result[] = $anchor_it->get('Author');
-				if ( $anchor_it->object->getAttributeType('Owner') != '' && $anchor_it->get('Owner') != '' ) $result[] = $anchor_it->get('Owner');
+				if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
+				if ( $anchor_it->get('Owner') != '' ) $result[] = $anchor_it->get('Owner');
 				break;
 				
 			case 'pm_Task':
 				if ( $anchor_it->get('Assignee') != '' ) $result[] = $anchor_it->get('Assignee');
+                if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
 				break;
+
+            case 'WikiPage':
+                if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
+                break;
 		}
 		return array_merge(
 				$result, $object_it->getRollupIt()->fieldToArray('AuthorId')

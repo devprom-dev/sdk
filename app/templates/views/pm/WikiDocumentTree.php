@@ -7,6 +7,7 @@
                 </li>
             <?php } ?>
             <a class="docs-url" onclick="window.location='<?=$docs_url?>';"><?=$docs_title?></a>
+            <a class="tree-placement" onclick="toggleDocumentStructure('<?=$object_id?>')" title="<?=text(2204)?>"><i class="icon-remove"></i></a>
             <a class="tree-placement" onclick="<?=$placement_script?>" title="<?=$placement_text?>"><i class="<?=$placement_icon?>"></i></a>
         </ul>
         <div class="tab-content right-side-tab">

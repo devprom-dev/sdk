@@ -15,7 +15,7 @@ class MailerSettingsPersister extends ObjectSQLPersister
 		'MailServerType'
 	);
 	private $defaults = array (
-		'MailServer' => '',
+		'MailServer' => '127.0.0.1',
 		'MailServerPort' => '25',
 		'Pop3Server' => '',
 		'Pop3ServerPort' => '143',

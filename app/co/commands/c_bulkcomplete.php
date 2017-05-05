@@ -1,11 +1,9 @@
 <?php
- 
-include_once SERVER_ROOT_PATH."cms/c_form_embedded.php";
+include_once SERVER_ROOT_PATH."cms/c_form.php";
 include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 
- ////////////////////////////////////////////////////////////////////////////////////////////////////
- class BulkComplete extends CommandForm
- {
+class BulkComplete extends CommandForm
+{
  	private $object_it = null;
  	
  	function getObjectIt()
@@ -63,22 +61,22 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 		if ( preg_match('/Transition(.+)/mi', $_REQUEST['operation'], $ids) )
 		{
 		    $data['operation'] = 'Transition';
-		    
 		    $data['parameter'] = $ids[1];
-		    
 		    $data['attributes'] = array();
-		    
-		    $object = $model_factory->getObject( $_REQUEST['object'] );
+
+            $transition_it = getFactory()->getObject('Transition')->getExact( trim($data['parameter']) );
+            $object = getFactory()->getObject( $_REQUEST['object'] );
+
+            $model_builder = new WorkflowTransitionAttributesModelBuilder($transition_it);
+            $model_builder->build($object);
 		    
 		    foreach( $_REQUEST as $key => $value )
 			{
 			    if ( $object->getAttributeType($key) == '' ) continue;
-			    
-			    $data['attributes'][$key] = IteratorBase::utf8towin($value);
+                if ( $value == '' && !$object->IsAttributeRequired($key) ) continue;
+			    $data['attributes'][$key] = $value;
 			}
-			
-			$transition_it = getFactory()->getObject('Transition')->getExact( trim($data['parameter']) );
-			
+
 			if ( $transition_it->get('IsReasonRequired') != TransitionReasonTypeRegistry::None ) {
 				$data['attributes']['TransitionComment'] = $_REQUEST['TransitionComment'];
    			}
@@ -115,7 +113,10 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 
 				if ( $attribute == 'Project' && $object_it->object instanceof WikiPage ) {
 					$object_it = $object_it->object->getRegistry()->Query(
-						array ( new WikiRootTransitiveFilter($object_it->idsToArray()) )
+						array (
+						    new WikiRootTransitiveFilter($object_it->idsToArray()),
+                            new SortDocumentClause()
+                        )
 					);
 				}
 
@@ -123,10 +124,11 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 				while ( !$object_it->end() )
     			{
     				try {
+    				    $object = getFactory()->getObject(get_class($object_it->object));
 	    		        $this->processEmbeddedForms( $object_it, $key );
                         $mapper = new ModelDataTypeMapper();
-                        $mapper->map( $object_it->object, $data['attributes'] );
-	    			    $object_it->object->modify_parms($object_it->getId(), $data['attributes']);
+                        $mapper->map( $object, $data['attributes'] );
+                        $object->modify_parms($object_it->getId(), $data['attributes']);
 						$processedIds[] = $object_it->getId();
     				}
     				catch( Exception $e ) {
@@ -176,10 +178,11 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
                             throw new \Exception($method->getReasonHasNoAccess());
                         }
 	    				$method->execute( 
-								$transition_it->getId(), 
-								$object_it->getId(), 
-								get_class($object_it->object), 
-								$data['attributes']
+                            $transition_it->getId(),
+                            $object_it->getId(),
+                            get_class($object_it->object),
+                            $data['attributes'],
+                            false
 						);
 	    				ob_end_clean();
     				}
@@ -228,7 +231,7 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
     			try {
 	    			$method = new $class_name( $object_it );
                     if ( !$method->hasAccess() ) throw new Exception(text(1062));
-                    FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+                    \FeatureTouch::Instance()->touch(strtolower(get_class($method)));
 
 					if ( $method instanceof BulkDeleteWebMethod ) {
 						$method->execute_request();
@@ -296,19 +299,16 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
 	
 	function processEmbeddedForms( $object_it, & $key )
 	{
-	    $embedded = new FormEmbedded();
-	    
-        $embedded->process( $object_it, function( $object, $field_id, $anchor_field, $prefix, $id ) use ($object_it, &$key) 
+        $form = new Form($object_it->object);
+        $form->processEmbeddedForms($object_it, function( $object, $field_id, $anchor_field, $prefix, $id ) use ($object_it, &$key)
         {
-            global $model_factory;
-            
-            // this is used for massive deletion/modification of the binds 
+            // this is used for massive deletion/modification of the binds
             if ( $_REQUEST[$field_id] != '' )
             {
                 if ( count($key) < 1 )
                 {
                     $embedded_it = $object->getExact($_REQUEST[$field_id]);
-                    
+
                     // get alternative key of the binded object
                     $key = $embedded_it->getAlternativeKey();
                 }
@@ -316,12 +316,12 @@ include_once SERVER_ROOT_PATH.'core/methods/BulkDeleteWebMethod.php';
                 {
                     // update anchor field in the alternative key;
                     $key[$anchor_field] = $object_it->getId();
-    
+
                     // get binded object for the given object_it
-                    $ref_embedded = $model_factory->getObject(get_class($object));
-                             
+                    $ref_embedded = getFactory()->getObject(get_class($object));
+
                     $embedded_it = $ref_embedded->getByRefArray( $key );
-    
+
                     // reset key field of the binded object to the new one
                     $_REQUEST[$field_id] = $embedded_it->getId();
                 }

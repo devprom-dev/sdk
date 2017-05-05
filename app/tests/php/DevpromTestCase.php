@@ -31,7 +31,7 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
         $ref->setValue(null, $this->plugins_mock);
 
 		// prepare session
-		$this->access_policy = $this->getMock('AccessPolicy', array('check_access'), array(new CacheEngine));
+		$this->access_policy = $this->getMock('AccessPolicy', array('check_access'), array(CacheEngineVar::Instance()));
         $this->access_policy->expects($this->any())->method('check_access')->will( $this->returnValue(true) );
 
         $this->events_manager = $this->getMock('ModelEventsManager', array('getNotificators', 'notificationEnabled'));
@@ -47,7 +47,8 @@ class DevpromTestCase extends PHPUnit_Framework_TestCase
         		),
         		array (
                     $this->plugins_mock,
-        			new CacheEngine(),
+        			CacheEngineVar::Instance(),
+                    '',
         			$this->access_policy,
         			$this->events_manager
         		)

@@ -106,4 +106,8 @@ abstract class EstimationStrategy
 	function hasDiscreteValues() {
 		return true;
 	}
+
+	public function getReleaseVelocityText( $object_it ) {
+        return $object_it->getVelocity() > 0 ? $this->getDimensionText(round($object_it->getVelocity(), 0)) : '0';
+    }
 }

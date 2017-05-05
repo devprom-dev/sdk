@@ -20,6 +20,9 @@ class ProcessBackup extends TaskCommand
         // remove old undo log files
         $this->shrinkUndoLog();
 
+        // remove old test results
+        $this->shrinkTests();
+
 		$job = $model_factory->getObject('co_ScheduledJob');
 		$job_it = $job->getExact($_REQUEST['job']);
 		
@@ -41,13 +44,12 @@ class ProcessBackup extends TaskCommand
 				if ( $file_it->get('name') == '' ) break;
 				
 				unlink(SERVER_BACKUP_PATH.$file_it->get('name'));
-				
-				$backup->full_delete(
-					SERVER_BACKUP_PATH.basename($file_it->get('name'), '.zip').'/');
-				
-				if ( is_object($log) ) 
-					$log->info( str_replace('%1', $file_it->get('name'), text(1230)) );
-					
+                FileSystem::rmdirr(SERVER_BACKUP_PATH.basename($file_it->get('name'), '.zip'));
+
+				if ( is_object($log) ) {
+                    $log->info( str_replace('%1', $file_it->get('name'), text(1230)) );
+                }
+
 				$file_it->moveNext();
 				$remove--;
 			}
@@ -87,4 +89,20 @@ class ProcessBackup extends TaskCommand
 			}
 		}
 	}
+
+	function shrinkTests()
+    {
+        $lastDate = date("Y-m-d", strtotime("-1 month"));
+
+        DAL::Instance()->Query("
+          DELETE FROM pm_TestCaseExecution WHERE RecordCreated < '".$lastDate."'
+             AND NOT EXISTS (SELECT 1 FROM pm_ChangeRequestTrace t 
+                              WHERE t.ObjectId = pm_TestCaseExecutionId
+                                AND t.ObjectClass = 'TestCaseExecution')
+        ");
+        DAL::Instance()->Query("
+          DELETE FROM pm_Test WHERE RecordCreated < '".$lastDate."'
+             AND NOT EXISTS (SELECT 1 FROM pm_TestCaseExecution e WHERE e.Test = pm_TestId)
+        ");
+    }
 }

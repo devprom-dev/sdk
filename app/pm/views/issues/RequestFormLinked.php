@@ -43,8 +43,8 @@ class RequestFormLinked extends RequestForm
         if ( $this->getAction() == 'add' ) {
             getFactory()->getObject('pm_ChangeRequestLink')->add_parms(
                 array(
-                    'SourceRequest' => $this->source_it->getId(),
-                    'TargetRequest' => $this->getObjectIt()->getId(),
+                    'SourceRequest' => $this->getObjectIt()->getId(),
+                    'TargetRequest' => $this->source_it->getId(),
                     'LinkType' => $_REQUEST['LinkType']
                 )
             );

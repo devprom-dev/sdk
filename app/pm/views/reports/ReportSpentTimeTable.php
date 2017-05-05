@@ -5,36 +5,44 @@ include_once SERVER_ROOT_PATH."pm/methods/ViewSpentTimeUserWebMethod.php";
 
 class ReportSpentTimeTable extends PMPageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new ReportSpentTimeList( $this->getObject() );
 	}
 
 	function getFilters()
 	{
-		return array_merge( parent::getFilters(), 
-				array(
-					new ViewSpentTimeWebMethod(),
-					new ViewDateYearWebMethod(),
-					new ViewDateMonthWebMethod(),
-					new ViewSpentTimeUserWebMethod()			
-				)
+		return array_merge(
+		    parent::getFilters(),
+            array(
+                new ViewSpentTimeWebMethod(),
+                $this->buildStartFilter(),
+                new ViewFinishDateWebMethod(),
+                new ViewSpentTimeUserWebMethod()
+            )
 		);
 	}
 
-	function getFilterPredicates()
+	function getFiltersDefault() {
+        return array('view', 'start', 'finish');
+    }
+
+    function getFilterPredicates()
 	{
 		$values = $this->getFilterValues();
+        $this->getObject()->setView( $values['view'] );
 		
- 		$this->getObject()->setView( $values['view'] );
- 		$this->getObject()->setReportYear( $values['year'] );
- 		$this->getObject()->setReportMonth( $values['month'] ); 
- 		
- 		$predicates = array();
+ 		$predicates = array(
+ 		    new FilterSubmittedAfterPredicate($values['start']),
+            new FilterSubmittedBeforePredicate($values['finish'])
+        );
  		if ( !in_array($values['participant'], array('','all','none')) ) {
 			$predicates[] = new FilterAttributePredicate('SystemUser', preg_split('/,/', $values['participant']));
  		}
- 		return array_merge( parent::getFilterPredicates(), $predicates );
+
+ 		return array_merge(
+ 		    parent::getFilterPredicates(),
+            $predicates
+        );
 	}
 	
 	function getSortFields()
@@ -75,4 +83,23 @@ class ReportSpentTimeTable extends PMPageTable
 	function getDeleteActions() {
 		return array();
 	}
+
+	function buildStartFilter() {
+        $filter = new ViewStartDateWebMethod();
+        $filter->setDefault(getSession()->getLanguage()->getPhpDate(strtotime('-3 weeks', strtotime(date('Y-m-j')))));
+        return $filter;
+    }
+
+    protected function getFamilyModules( $module )
+    {
+        switch( $module ) {
+            case 'project-spenttime':
+                return array (
+                    'tasksplanbyfact',
+                    'worklog'
+                );
+            default:
+                return parent::getFamilyModules($module);
+        }
+    }
 }

@@ -10,7 +10,8 @@ class ObjectRegistrySQL extends ObjectRegistry
 	protected $filters = array();
 	protected $groups = array();
 	protected $sorts = array();
-	protected $limit = '4096';
+	protected $limit = '';
+    protected $offset = 0;
 	protected $default_sort = '';
 
 	public function __construct( $object = null, array $persisters = null, array $filters = null, array $sorts = null, array $groups = null )
@@ -77,6 +78,14 @@ class ObjectRegistrySQL extends ObjectRegistry
 	{
 		return $this->limit;
 	}
+
+	public function setOffset( $value ) {
+        $this->offset = $value;
+    }
+
+    public function getOffset() {
+        return $this->offset;
+    }
 	
 	public function setDefaultSort( $sort_clause )
 	{
@@ -129,6 +138,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		if ( $sort != '' ) $sql .= ' ORDER BY '.$sort;
 
 		$sql .= $this->getLimitClause();
+        $sql .= $this->getOffsetClause();
 
 		return $this->createSQLIterator($sql);
 	}
@@ -265,9 +275,14 @@ class ObjectRegistrySQL extends ObjectRegistry
 	public function getLimitClause()
 	{
 		if ( !is_numeric( $this->getLimit() ) ) return;
-		
 		if ( $this->getLimit() > 0 ) return ' LIMIT '.$this->getLimit();
 	}
+
+	public function getOffsetClause()
+    {
+        if ( !is_numeric( $this->getOffset() ) ) return;
+        if ( $this->getOffset() > 0 ) return ' OFFSET '.$this->getOffset();
+    }
 	
 	public function Store( OrderedIterator $object_it, array $data )
 	{
@@ -324,7 +339,8 @@ class ObjectRegistrySQL extends ObjectRegistry
 		if ( $data['VPD'] != '' ) $sql .= "`VPD` = '".DAL::Instance()->Escape(addslashes($data['VPD']))."',";
 		
 		$model_factory->info( JsonWrapper::encode($data) );
-				
+        $affected_rows = 0;
+
 		if ( $sql != '' )
 		{
 			if ( $data['WasRecordVersion'] != '' )
@@ -372,6 +388,18 @@ class ObjectRegistrySQL extends ObjectRegistry
                 )
             )
         );
+    }
+
+    public function Merge( array $data, array $alternativeKey = array() )
+    {
+        $parms = array();
+        if ( count($alternativeKey) < 1 ) $alternativeKey = array_keys($data);
+        foreach( $alternativeKey as $attribute ) {
+            $parms[] = new FilterAttributePredicate($attribute, $data[$attribute]);
+        }
+        $object_it = $this->Query($parms);
+        if ( $object_it->getId() != '' ) return $object_it;
+        return $this->Create($data);
     }
 
     public function Delete( OrderedIterator $object_it )

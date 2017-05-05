@@ -1,6 +1,5 @@
 <?php
 
-////////////////////////////////////////////////////////////////////////////
 class PageMenu
 {
  	var $pages, $current;
@@ -12,35 +11,15 @@ class PageMenu
  	
  	function makePages()
  	{
- 		global $_REQUEST, $_SERVER, $session;
- 		
  		$plugins = getFactory()->getPluginsManager();
  		
  		$section = $this->getSection();
 
- 		$data = $session->get('menu-pages');
- 		
- 		if ( !is_array($data) )
- 		{
-	 		$pages = $this->getPages();
-	 		
-	 		if ( count($pages) > 0 )
-	 		{
-    		    $tabs = is_object($plugins) ? $plugins->getHeaderTabs( $section ) : array();
-    		    
-     			$data = array (
-     				'pages' => $pages,
-     				'tabs' => $tabs
-     			);
-     			
-     			$session->set('menu-pages', $data);
-	 		}
- 		}
- 		else
- 		{
- 			$pages = $data['pages'];
- 			$tabs = $data['tabs'];
- 		}
+        $pages = $this->getPages();
+
+        if ( count($pages) > 0 ) {
+            $tabs = is_object($plugins) ? $plugins->getHeaderTabs( $section ) : array();
+        }
 
 	    foreach ( $tabs as $tab )
 	    {
@@ -257,5 +236,3 @@ class PageMenu
  	{
  	}
 }
- 
-?>

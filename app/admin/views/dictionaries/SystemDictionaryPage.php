@@ -55,6 +55,7 @@ class SystemDictionaryPage extends AdminPage
 				break;
 
 			case 'Priority':
+            case 'pm_Severity':
 			case 'pm_Importance':
 			case 'pm_IssueType':
 			case 'pm_ChangeRequestLinkType':

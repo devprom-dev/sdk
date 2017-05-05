@@ -4,20 +4,42 @@ include_once "FieldEstimationDictionary.php";
 
 class RequestPlanningForm extends RequestForm
 {
-	function getEmbeddedForm() {
-		return new FormTaskEmbedded();	
-	}
-	
+    function extendModel()
+    {
+        parent::extendModel();
+
+        $transition_it = $this->getTransitionIt();
+        if ( $transition_it->getId() != '' ) {
+            if ( $transition_it->getRef('TargetState', new IssueState())->get('TaskTypes') != '' ) {
+                $this->getObject()->addAttribute('Tasks', 'REF_pm_TaskId', translate('Задачи'), true);
+            }
+        }
+    }
+
+    function processEmbeddedForms($object_it, $callback = null )
+    {
+        $_REQUEST['Release'] = $object_it->get('Iteration');
+        parent::processEmbeddedForms($object_it, $callback);
+    }
+
  	function IsNeedButtonDelete() {
 		return false;
 	}
 
 	function getTransitionAttributes()
 	{
-		return array_merge(
-		    array('Caption', 'Priority', 'Estimation', 'Description'),
+        $attributes = array_merge(
             $this->getObject()->getAttributesByGroup('additional'),
             $this->getObject()->getAttributesByGroup('trace')
+        );
+        foreach( $attributes as $key => $attribute ) {
+            if ( !$this->getObject()->IsAttributeVisible($attribute) ) {
+                unset($attributes[$key]);
+            }
+        }
+		return array_merge(
+		    array('Caption', 'Priority', 'Estimation', 'Description'),
+            array_values($attributes)
         );
 	}
 	

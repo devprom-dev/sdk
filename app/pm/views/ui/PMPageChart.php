@@ -35,13 +35,18 @@ class PMPageChart extends PageChart
 		$x_value = time();
 		$x_delta = 70000;
 
-		$data = array();
-		$state_it = getFactory()->getObject($this->getObject()->getStateClassName())->getRegistry()->Query(
-				array (
-						new FilterBaseVpdPredicate(),
-						new SortRevOrderedClause()
-				)
+        $stateObject = $this->getObject() instanceof MetaobjectStatable
+            ? getFactory()->getObject($this->getObject()->getStateClassName())
+            : getFactory()->getObject('StateBase');
+
+		$state_it = $stateObject->getRegistry()->Query(
+            array (
+                new FilterBaseVpdPredicate(),
+                new SortRevOrderedClause()
+            )
 		);
+
+        $data = array();
 		for( $i = 0; $i < 20; $i++ ) {
 			$state_it->moveFirst();
 			$max_items = ($i + 1) * 2 + rand($i, $i + 5);

@@ -2,18 +2,6 @@
 
 class DictionaryItemsList extends PMPageList
 {
-	function getColumns()
-	{
-		switch ( $this->object->getClassName() )
-		{
-			case 'pm_ProjectStage':
-				$this->object->addAttribute('TaskTypes', '', text(1107), true);
-				break;
-		}		
-		
-		return parent::getColumns();
-	}
-
 	function IsNeedToDisplayLinks( ) { return false; }
 	
 	function IsNeedToDisplay( $attr ) 
@@ -58,21 +46,6 @@ class DictionaryItemsList extends PMPageList
 		
 		switch ( $attr )
 		{
-			case 'TaskTypes':
-				$task_type = $model_factory->getObject('TaskType');
-				$task_type->addFilter( new TaskTypeStageRelatedPredicate($object_it->getId()) );
-				
-				$it = $task_type->getAll();
-				while ( !$it->end() )
-				{
-					echo '<div class="line">';
-						echo $it->getDisplayName();
-					echo '</div>';
-					
-					$it->moveNext();
-				}
-				break;
-			
 			case 'Transitions':
 				$transition_it = $object_it->getTransitionIt();
 				

@@ -255,8 +255,7 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
 					'Environment' => is_object($env_it) ? $env_it->getId() : ''
 			)
 	));
-\Logger::getLogger('Commands')->error(var_export($test_it->getData(),true));
-	return $soap->serializeToSoap( $test_it ); 
+	return $soap->serializeToSoap( $test_it );
  }
 
  //////////////////////////////////////////////////////////////////////////////////////

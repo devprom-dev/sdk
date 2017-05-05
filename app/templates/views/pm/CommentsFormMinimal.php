@@ -13,3 +13,8 @@ if ( $attributes['Caption']['description'] != '' ) {
     echo '<span class="help-block" style="margin-bottom:10px;">'.$attributes['Caption']['description'].'</span>';
 }
 echo $view->render('core/PageFormAttribute.php', $attributes['Attachment']);
+echo '<br/>';
+
+if ( $attributes['Notification']['visible'] ) {
+    echo $view->render('core/PageFormAttribute.php', $attributes['Notification']);
+}

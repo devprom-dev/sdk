@@ -76,18 +76,7 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
 
 	 	$user = getFactory()->getObject('cms_User');
 		$cookies = is_array($_COOKIE['devprom']) ? array_values($_COOKIE['devprom']) : array('*');
-		
-		foreach( $cookies as $cookie )
-		{
-	 		$data = getSession()->get('session-'.$cookie, 'usr');
-	 		if ( is_array($data) )
-	 		{
-	 		    $user_it = $user->createCachedIterator( $data );
-	 		    $this->setUser( $user_it );
-	 			return $user_it;
-	 		}
-		}
-		
+
 		$user->addPersister( new UserDetailsPersister() );
 		$user->addFilter( new UserSessionPredicate($cookies) );
 
@@ -95,11 +84,6 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  		if ( $user_it->count() < 1 ) return parent::authorize();
  		
  		$this->setUser( $user_it );
- 		foreach( $cookies as $cookie )
-		{
- 			getSession()->set('session-'.$cookie, $user_it->getRowset(), 'usr');
-		}
- 		
 		return $user_it;
  	}
  	

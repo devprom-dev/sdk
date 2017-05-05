@@ -2,34 +2,48 @@
 
 <div id="commentsthread<?=$control_uid?>" url="<?=$url?>">
 
-	<?php if (!$form_ready ) { ?>
+	<div style="display:table-cell;padding-right:30px;" class="comments-thread">
+		<?php if (!$form_ready ) { ?>
 
-	<?php $list->renderThread( $view ); ?>
-	
-	<div id="comments-form<?=$control_uid?>" style="min-height: 48px;<?=($comments_count > 0 ? "margin-top:20px;" : "")?>">
-		<div class="comment">
-			
-			<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
-			    <i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
-			</a>
+		<?php if ( $sort == "asc" ) $list->renderThread( $view ); ?>
 
-			<? if ( $collapseable ) { ?>
-			<a tabindex="6" class="btn btn-small btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
-				<?=text(2231)?>
-			</a>
-			<? } ?>
+		<div id="comments-form<?=$control_uid?>" style="min-height: 48px;" modified="<?=time()?>">
+			<div class="comment">
 
-			<div class="clear-fix">&nbsp;</div>
-        </div>
+				<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
+					<i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
+				</a>
+
+				<? if ( $collapseable ) { ?>
+				<a tabindex="6" class="btn btn-small btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
+					<?=text(2231)?>
+				</a>
+				<? } ?>
+
+				<div class="clear-fix">&nbsp;</div>
+			</div>
+		</div>
+
+		<?php if ( $sort == "desc" ) $list->renderThread( $view ); ?>
+
+		<?php } else { ?>
+
+			<?php echo $form->render($view, array_merge($form->getRenderParms())); ?>
+			<?php $list->renderThread( $view ); ?>
+
+		<?php } ?>
 	</div>
 
-	<?php } else { ?>
-	
-		<?php echo $form->render($view, array_merge($form->getRenderParms())); ?>
-		<?php $list->renderThread( $view ); ?>
-		
-	<?php } ?>
-	
+	<? if ( $comments_count > 0 ) { if ( !$object_it->object instanceof WikiPage ) { ?>
+	<div style="display:table-cell;vertical-align: top;width:15%;">
+		<div class="sort-btn-desc" style="display:<?=($sort=='asc'?'block':'none')?>;">
+			<a class="dashed" href="javascript:sortComments('-1')"><?=text(2320)?></a>
+		</div>
+		<div class="sort-btn-asc" style="display:<?=($sort=='desc'?'block':'none')?>;">
+			<a class="dashed" href="javascript:sortComments('1')"><?=text(2321)?></a>
+		</div>
+	</div>
+	<? }} ?>
 </div>
 
 <script type="text/javascript">
@@ -80,9 +94,14 @@
 			success: function( result ) 
 			{
 				placeholder.html(result);
-
 				setTimeout(function() {
-					$('.comments-section #Caption*').focus();
+					try {
+						var captionElement = placeholder.contents().find('[id*=Caption]');
+						var editor = CKEDITOR.instances[captionElement.attr("id")];
+						if ( editor ) editor.focus();
+						placeholder.contents().find('body').focus();
+					}
+					catch(e) {}
 				}, 300);
 			}
 		});				

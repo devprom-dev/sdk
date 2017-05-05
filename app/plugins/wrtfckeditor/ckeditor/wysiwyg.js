@@ -116,13 +116,15 @@ function setupEditor( editor )
             }
         }
 		originalEvent = event.data.domEvent.$;
-		if ((originalEvent.keyCode == 10 || originalEvent.keyCode == 13) && originalEvent.ctrlKey) {
-		}
+		if ( this.editable().$.ownerDocument != window.document ) Mousetrap.handleKeyEvent(originalEvent);
     });
 }
 
 function setupEditorGlobal( filesTitle )
 {
+	var width = $('.documentToolbar').width();
+	$('.documentToolbar').css('min-height', width > 1410 ? '40px' : '76px');
+
 	CKEDITOR.on('dialogDefinition', function( ev ) 
 	{
 		  var dialogName = ev.data.name;
@@ -198,7 +200,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 
             var editableElement = $(e.editor.editable().$);
             editableElement.on( 'paste', pasteImage);
-			makeupEditor(editableElement, 'body', project, $('#cke_'+editor_id+' .cke_wysiwyg_frame').offset());
+			makeupEditor(e.editor, editableElement, 'body', project, $('#cke_'+editor_id+' .cke_wysiwyg_frame').offset());
 
 			if ( !$.browser.msie ) {
 				e.editor.updateElement();
@@ -221,15 +223,15 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			return;
 		}
 
-		editor.purgeTimeoutValue = 180000;
-		editor.persist = function()
+		editor.purgeTimeoutValue = 6000;
+		editor.persist = function( async )
 		{
 			var element = $('#' + this.name ); 
 			var editorInstance = this;
 				
 			if ( typeof $(element).attr('objectClass') == 'undefined' ) {
 				$('#'+$(element).attr('id')+'Value').val( editorInstance.getData() );
-			}
+		}
 			else if ( editorInstance.checkDirty() )
 			{
 				runMethod(modify_url, {
@@ -247,23 +249,27 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 					if ( typeof resultJson.modified != 'undefined' ) {
 						$(element).parents('[modified]').attr('modified', resultJson.modified);
 					}
-				}, '', false);
+				}, '', async);
 			}
 		};
 		
-		editor.on('blur', function(e) 
-		{
+		editor.on('blur', function(e) {
 			if ( typeof e.editor.purgeTimeout == 'number' ) {
 				clearTimeout(e.editor.purgeTimeout);
 			}
-			e.editor.purgeTimeout = setTimeout(function() { e.editor.persist(); }, e.editor.purgeTimeoutValue);
+			e.editor.purgeTimeout = setTimeout(function() { e.editor.persist(true); }, e.editor.purgeTimeoutValue);
+		});
+		editor.on('focus', function(e) {
+			if ( typeof e.editor.purgeTimeout == 'number' ) {
+				clearTimeout(e.editor.purgeTimeout);
+			}
 		});
 
 		editor.on('instanceReady', function(e) 
 		{
 	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function()
 	      	{
-		      	e.editor.persist();
+		      	e.editor.persist(false);
 		      	return true;
 	      	});
 	    			
@@ -272,7 +278,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 		      	registerFormValidator($(element).parents('form').attr('id'), function() 
       			{ 
 		      		e.editor.custom.updateForm();
-					e.editor.persist();
+					e.editor.persist(true);
 		      		return true;
 			    });
 		      	
@@ -294,13 +300,13 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
             });
 			
 			$(e.editor.editable().$).on( 'paste', pasteImage);
-			makeupEditor($(e.editor.editable().$), 'body', project);
+			makeupEditor(e.editor, $(e.editor.editable().$), 'body', project);
 		});
 
 		editor.on('destroy', function(e) 
 		{
 			e.editor.purgeTimeoutValue = 0;
-			e.editor.persist();
+			e.editor.persist(false);
 		});
 
 		editor.on('panelShow', function(e)
@@ -373,56 +379,90 @@ function pasteTemplate( field, content )
 	}
 }
 
-function makeupEditor( e, container, project, offset )
+function makeupEditor( editor, e, container, project, offset )
 {
-	e.textcomplete([{ // html
-		mentions: mentions,
-		match: /\B@([^\s]*)\s?$/,
-		search: function (term, callback) {
-            if ( mentions.length < 1 ) {
-                $.getJSON('/pm/'+project+'/mentions', function(data) {
-                    mentions = data;
-                    callback($.map(mentions, function (mention) {
-                        return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
-                    }));
-                });
-            }
-            else {
-                callback($.map(mentions, function (mention) {
-                    return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
-                }));
-            }
-		},
-		index: 1,
-		replace: function (selectedMention) {
-            var selected = $.map(mentions, function (mention) {
-                return mention.Caption == selectedMention ? mention.Id : null;
-            });
-			return '@' + selected.shift() + '&nbsp; @ ';
-		},
-        template: function (value) {
-            var selected = $.map(mentions, function (mention) {
-                return mention.Caption == value ? mention : null;
-            });
-            if ( selected[0].PhotoColumn < 0 && selected[0].PhotoRow < 0 ) {
-                return '<i class="icon-briefcase"></i>' + value;
-            }
-            else {
-                return '<div class="user-mini-mention" style="background: url(/images/userpics-mini.png) no-repeat -'+(parseInt(selected[0].PhotoColumn) * 18)+'px -'+(parseInt(selected[0].PhotoRow) * 18)+'px;"></div>' + value;
+	var templates = [];
+	var templatesUrl = '/pm/'+editor.element.getAttribute('project')+'/module/wrtfckeditor/searchtexttemplate?export=list&objectclass='
+		+ editor.element.getAttribute('objectclass');
+
+    editor.dataProcessor.htmlFilter.addRules( {
+        elements: {
+            a: function( element ) {
+                element.attributes.target = '_blank';
             }
         }
-	}], {
-		zIndex: 9000,
-        appendTo: container,
-        maxCount: 60,
-        topOffset: offset ? offset.top : 0,
-        leftOffset: offset ? offset.left : 0,
-		onKeydown: function (e, commands) {
-			if (e.ctrlKey && e.keyCode === 74) { // CTRL-J
-				return commands.KEY_ENTER;
+    });
+
+	e.textcomplete([
+		{ // mentions
+			mentions: mentions,
+			match: /\B@([^\s]*)\s?$/,
+			search: function (term, callback) {
+				if ( mentions.length < 1 ) {
+					$.getJSON('/pm/'+project+'/mentions', function(data) {
+						mentions = data;
+						callback($.map(mentions, function (mention) {
+							return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
+						}));
+					});
+				}
+				else {
+					callback($.map(mentions, function (mention) {
+						return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
+					}));
+				}
+			},
+			index: 1,
+			replace: function (selectedMention) {
+				var selected = $.map(mentions, function (mention) {
+					return mention.Caption == selectedMention ? mention.Id : null;
+				});
+				return '@' + selected.shift();
+			},
+			template: function (value) {
+				var selected = $.map(mentions, function (mention) {
+					return mention.Caption == value ? mention : null;
+				});
+				if ( selected[0].PhotoColumn < 0 && selected[0].PhotoRow < 0 ) {
+					return '<i class="icon-briefcase"></i>' + value;
+				}
+				else {
+					return '<div class="user-mini-mention" style="background: url(/images/userpics-mini.png) no-repeat -'+(parseInt(selected[0].PhotoColumn) * 18)+'px -'+(parseInt(selected[0].PhotoRow) * 18)+'px;"></div>' + value;
+				}
+			}
+		},
+		{ // templates
+			mentions: templates,
+			match: /\B#([^\s]*)\s?$/,
+			search: function (term, callback) {
+				$.getJSON(templatesUrl, function(data) {
+					templates = data;
+					callback($.map(data, function (template) {
+						return template.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? template.Id : null;
+					}));
+				});
+			},
+			index: 1,
+			replace: function (templateId) {
+				var selected = $.map(templates, function (template) {
+					return template.Id == templateId ? template.Caption : null;
+				});
+				return selected.shift();
+			}
+		}],
+		{
+			zIndex: 9000,
+			appendTo: container,
+			maxCount: 60,
+			topOffset: offset ? offset.top : 0,
+			leftOffset: offset ? offset.left : 0,
+			onKeydown: function (e, commands) {
+				if (e.ctrlKey && e.keyCode === 74) { // CTRL-J
+					return commands.KEY_ENTER;
+				}
 			}
 		}
-	});
+	);
 }
 
 $(document).ready( function()

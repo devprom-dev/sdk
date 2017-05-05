@@ -1,4 +1,7 @@
-<?php echo $scripts; ?>
+<?php
+if ( $iframe ) { $view->extend('core/Page.php'); }
+echo $scripts;
+?>
 <script type="text/javascript">
 	$(document).unbind('tabsactivated');
 </script>
@@ -20,6 +23,7 @@ foreach( $sections as $key => $section ) {
 		$secondary_sections[$key] = $section;
 	}
 }
+
 ?>
 <div class="tabs">
 	<?php if ( count($sections) > 0 ) { ?>

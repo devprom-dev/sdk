@@ -86,9 +86,9 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 		return parent::getIdsMap( $object );
 	}
 
- 	function duplicate( $project_it )
+ 	function duplicate( $project_it, $parms )
  	{
- 		if ( strtolower($_REQUEST['CopyOption']) == "" )
+ 		if ( strtolower($parms['CopyOption']) == "" )
  		{
 	 		$map = array();
 			$versionMap = array();
@@ -99,20 +99,19 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  			while( !$object_it->end() )
  			{
 	 			$branch_it = $branch->getRegistry()->Query(
-	 					array (
-	 							new FilterAttributePredicate('ObjectId', $object_it->getId()),
-	 							new FilterAttributePredicate('ObjectClass', get_class($this->getObject())),
-	 							new FilterAttributePredicate('Type', 'branch')
-	 					)
+                    array (
+                        new FilterAttributePredicate('ObjectId', $object_it->getId()),
+                        new FilterAttributePredicate('ObjectClass', get_class($this->getObject())),
+                        new FilterAttributePredicate('Type', 'branch')
+                    )
 	 			);
-	 			
 	 			if ( $branch_it->getId() > 0 )
 	 			{
 	 				$branch->modify_parms($branch_it->getId(),
-	 						array(
-								'Caption' => IteratorBase::utf8towin($_REQUEST['Version']),
-								'Description' => IteratorBase::utf8towin($_REQUEST['Description'])
-	 						)
+                        array(
+                            'Caption' => $parms['Version'],
+                            'Description' => $parms['Description']
+                        )
 	 				);
 	 			}
 	 			else
@@ -125,27 +124,27 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  			}
 
 			if ( count($map) > 0 ) {
-				$this->storeBranch( $map, $this->getObject() );
+				$this->storeBranch( $map, $this->getObject(), $parms );
 			}
 
-			$this->storeVersion( $versionMap, $this->getObject() );
+			$this->storeVersion( $versionMap, $this->getObject(), $parms, true );
 
  			return new CloneContext();
  		}
  		else
  		{
 	 		// make the copy
-			$context = parent::duplicate( $project_it );
+			$context = parent::duplicate( $project_it, $parms );
 	
 			$map = $context->getIdsMap();
 			
 			// for documents only
 			if ( $this->getObjectIt()->get('ParentPage') == '' ) {
 				// make the snapshot means it is a branch
-				$this->storeBranch( $map, $this->getObject() );
+				$this->storeBranch( $map, $this->getObject(), $parms );
 			}
 
-			$this->storeVersion( $map, $this->getObject() );
+			$this->storeVersion( $map, $this->getObject(), $parms );
 			
 			// make traces on source requirements
 			$this->storeTraces( $map, $this->getObject() );
@@ -176,50 +175,66 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  	    }
  	}
  	
- 	function storeBranch( & $map, & $object )
+ 	function storeBranch( & $map, & $object, $parms )
  	{
  	 	$snapshot = getFactory()->getObject('Snapshot');
 
 		foreach( $this->getObjectIt()->idsToArray() as $object_id )
 		{
-			if ( $map[$object->getEntityRefName()][$object_id] == '' ) continue;
+            $documentId = $map[$object->getEntityRefName()][$object_id];
+			if ( $documentId == '' ) continue;
+
 			$snapshot->add_parms( array (
-					'Caption' => IteratorBase::utf8towin($_REQUEST['Version']),
-					'Description' => IteratorBase::utf8towin($_REQUEST['Description']),
-					'ListName' => 'branch',
-					'ObjectId' => $map[$object->getEntityRefName()][$object_id],
-					'ObjectClass' => get_class($object),
-					'SystemUser' => getSession()->getUserIt()->getId(),
-					'Type' => 'branch'
+                'Caption' => $parms['Version'],
+                'Description' => $parms['Description'],
+                'ListName' => 'branch',
+                'ObjectId' => $documentId,
+                'ObjectClass' => get_class($object),
+                'SystemUser' => getSession()->getUserIt()->getId(),
+                'Type' => 'branch'
 			));
 		}
  	}
 
-	function storeVersion( & $map, & $object )
+	function storeVersion( & $map, & $object, $parms, $previousName = false )
 	{
 		$snapshot = getFactory()->getObject('Snapshot');
 		$versioned = new VersionedObject();
 		$versioned_it = $versioned->getExact(get_class($object));
 
-		foreach( $this->getObjectIt()->idsToArray() as $object_id )
-		{
-			if ( $map[$object->getEntityRefName()][$object_id] == '' ) continue;
+        $object_it = $this->getObjectIt();
+        $object_it->moveFirst();
+
+        while( !$object_it->end() )
+        {
+            $object_id = $object_it->getId();
+
+			if ( $map[$object->getEntityRefName()][$object_id] == '' ) {
+                $object_it->moveNext();
+                continue;
+            }
 			$object_id = $map[$object->getEntityRefName()][$object_id];
+
+            $title = $previousName ? $object_it->get('DocumentVersion') : $parms['Version'];
+            if ( $title == '' ) $title = text(2306);
 
 			$branch_it = $snapshot->getRegistry()->Query(
 				array (
 					new FilterAttributePredicate('ObjectId', $object_id),
 					new FilterAttributePredicate('ObjectClass', get_class($object)),
-					new FilterAttributePredicate('Caption', $_REQUEST['Version']),
+					new FilterAttributePredicate('Caption', $title),
 					new FilterAttributePredicate('ListName', get_class($object).':'.$object_id)
 				)
 			);
-			if ( $branch_it->getId() != '' ) continue;
+			if ( $branch_it->getId() != '' ) {
+                $object_it->moveNext();
+                continue;
+            }
 
 			$snapshot->freeze(
 				$snapshot->add_parms( array (
-					'Caption' => $_REQUEST['Version'],
-					'Description' => $_REQUEST['Description'],
+					'Caption' => $title,
+					'Description' => $parms['Description'],
 					'ListName' => get_class($object).':'.$object_id,
 					'ObjectId' => $object_id,
 					'ObjectClass' => get_class($object),
@@ -229,8 +244,10 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 				array($object_id),
 				$versioned_it->get('Attributes')
 			);
-		}
-	}
+
+            $object_it->moveNext();
+        }
+    }
 
 	function hasAccess() {
 		return getFactory()->getAccessPolicy()->can_create($this->getObject());

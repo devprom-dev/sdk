@@ -45,7 +45,7 @@ class ReleaseTimelinePredicate extends FilterPredicate
 					   "			   FROM pm_VersionMetric me " .
 					   "			  WHERE me.Version = t.pm_VersionId ".
 					   "                AND me.Metric = 'EstimatedFinish' " .
-					   "			    AND '".SystemDateTime::date()."' <= GREATEST(IFNULL(me.MetricValueDate, NOW()), IFNULL(t.FinishDate, NOW())) )" .
+					   "			    AND '".SystemDateTime::date()."' <= GREATEST(me.MetricValueDate, t.FinishDate) )" .
 			   		   "      OR EXISTS ( SELECT 1 FROM pm_ChangeRequest r " .
 			   		   "			       WHERE r.PlannedRelease = t.pm_VersionId" .
 			   		   "				     AND r.State NOT IN ('".join("','",$states)."')))";

@@ -8,8 +8,7 @@ class SystemSettingsForm extends PageForm
 
 		$object = $model_factory->getObject('cms_SystemSettings');
 		
-		$object->addAttribute( 'Parameters', 'TEXT', text(1078), true );
-		
+
 		$object->resetCache();
 
 		parent::__construct( $object );
@@ -31,18 +30,11 @@ class SystemSettingsForm extends PageForm
 	
 	function IsAttributeVisible( $attr_name )
 	{
-		global $plugins;
-			
 		switch ( $attr_name )
 		{
 			case 'OrderNum':
 			case 'AdminEmail':
 				return false;
-					
-			case 'ServerName':
-			case 'Parameters':
-				return true;
-					
 			default:
 				return parent::IsAttributeVisible( $attr_name );
 		}

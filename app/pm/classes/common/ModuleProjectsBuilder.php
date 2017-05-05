@@ -6,15 +6,15 @@ class ModuleProjectsBuilder extends ModuleBuilder
 {
     public function build( ModuleRegistry & $object )
     {
-    	$this->buildProjectManagement($object);
-    	
-    	$this->buildSettings($object);
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
+    	$this->buildProjectManagement($object, $methodology_it);
+    	$this->buildSettings($object, $methodology_it);
     }
     
-    public function buildProjectManagement( ModuleRegistry & $object )
+    public function buildProjectManagement( ModuleRegistry & $object, $methodology_it )
     {
     	$modules = array();
-    	$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
         $item = array();
         
@@ -37,15 +37,21 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $modules[] = $item;
 
         $item = array();
-        
         $item['cms_PluginModuleId'] = 'project-spenttime';
         $item['Caption'] = translate('Затраченное время');
         $item['AccessEntityReferenceName'] = 'pm_Activity';
         $item['Url'] = 'participants/spenttime';
         $item['Icon'] = 'icon-time';
-        
         $modules[] = $item;
-        
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'worklog';
+        $item['Caption'] = text(2334);
+        $item['AccessEntityReferenceName'] = 'pm_Activity';
+        $item['Url'] = 'worklog';
+        $item['Icon'] = 'icon-time';
+        $modules[] = $item;
+
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-question';
@@ -57,53 +63,53 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $modules[] = $item;
         
         $item = array();
-        
         $item['cms_PluginModuleId'] = 'project-blog';
         $item['Caption'] = translate('Блог');
         $item['AccessEntityReferenceName'] = 'BlogPost';
         $item['Url'] = 'project/blog';
         $item['Icon'] = 'icon-pencil';
+        $modules[] = $item;
 
-        $modules[] = $item;
-        
+        if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' ) {
+            $item = array();
+            $item['cms_PluginModuleId'] = 'project-knowledgebase';
+            $item['Caption'] = translate('База знаний');
+            $item['AccessEntityReferenceName'] = 'ProjectPage';
+            $item['Url'] = 'knowledgebase/tree';
+            $item['Icon'] = 'icon-book';
+            $modules[] = $item;
+        }
+
         $item = array();
-        
-        $item['cms_PluginModuleId'] = 'project-knowledgebase';
-        $item['Caption'] = translate('База знаний');
-        $item['AccessEntityReferenceName'] = 'ProjectPage';
-        $item['Url'] = 'knowledgebase/tree';
-        $item['Icon'] = 'icon-book';
-        
-        $modules[] = $item;
-        
-        $item = array();
-        
         $item['cms_PluginModuleId'] = 'project-reports';
         $item['Caption'] = text(2069);
         $item['Description'] = text(1824);
         $item['AccessEntityReferenceName'] = 'cms_Report';
         $item['Url'] = 'project/reports';
-
         $modules[] = $item;
         
         $item = array();
-        
         $item['cms_PluginModuleId'] = 'project-plan-hierarchy';
         $item['Caption'] = text(1721);
         $item['AccessEntityReferenceName'] = 'pm_Project';
         $item['Url'] = 'plan/hierarchy';
         $item['Icon'] = 'icon-calendar';
-
         $modules[] = $item;
 
         $item = array();
-        
+        $item['cms_PluginModuleId'] = 'milestones';
+        $item['Caption'] = translate('Вехи');
+        $item['AccessEntityReferenceName'] = 'pm_Milestone';
+        $item['Url'] = 'plan/milestone';
+        $item['Icon'] = 'icon-calendar';
+        $modules[] = $item;
+
+        $item = array();
         $item['cms_PluginModuleId'] = 'issues-backlog';
         $item['Caption'] = translate('Бэклог');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/list';
         $item['Icon'] = 'icon-align-justify';
-
         $modules[] = $item;
         
         $item = array();
@@ -188,32 +194,28 @@ class ModuleProjectsBuilder extends ModuleBuilder
 
             $modules[] = $item;
         }
-        
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'features-list';
-        $item['Caption'] = translate('Функции');
-        $item['AccessEntityReferenceName'] = 'pm_Function';
-        $item['Url'] = 'features/list';
-        $item['Icon'] = 'icon-picture';
-        
-        $modules[] = $item;
-        
-        foreach( $modules as $module )
-        {
+
+        if ( $methodology_it->HasFeatures() ) {
+            $item = array();
+            $item['cms_PluginModuleId'] = 'features-list';
+            $item['Caption'] = translate('Функции');
+            $item['AccessEntityReferenceName'] = 'pm_Function';
+            $item['Url'] = 'features/list';
+            $item['Icon'] = 'icon-picture';
+            $modules[] = $item;
+        }
+
+        foreach( $modules as $module ) {
         	$module['Area'] = FUNC_AREA_MANAGEMENT;
-        	
             $object->addModule( $module );
         }
         
         $item = array();
-        
         $item['cms_PluginModuleId'] = 'issues-import';
         $item['Caption'] = translate('Импорт');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['AccessType'] = ACCESS_CREATE;
         $item['Url'] = 'issues/board';
-        
         $object->addModule( $item );
 
         $item = array();
@@ -222,11 +224,10 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['AccessEntityReferenceName'] = 'Attachment';
         $item['Url'] = 'attachments';
         $item['Icon'] = 'icon-file';
-
         $object->addModule( $item );
     }
     
-    function buildSettings( ModuleRegistry $object )
+    function buildSettings( ModuleRegistry $object, $methodology_it )
     {
         $modules = array();
         
@@ -304,17 +305,15 @@ class ModuleProjectsBuilder extends ModuleBuilder
 	    	    	 	
     	 	$object_it->moveNext();
 	    }
-	    
+
         $item = array();
-        
-        $item['cms_PluginModuleId'] = 'kbtemplates';
-        $item['Caption'] = text(1343);
-        $item['Description'] = text(1820);
-        $item['AccessEntityReferenceName'] = 'KnowledgeBaseTemplate';
-        $item['Url'] = 'knowledgebase/templates';
-        
+        $item['cms_PluginModuleId'] = 'autoactions';
+        $item['Caption'] = text(2433);
+        $item['AccessEntityReferenceName'] = 'AutoAction';
+        $item['Url'] = 'autoactions';
+        $item['Icon'] = 'icon-barcode';
         $modules[] = $item;
-	    
+
         $item = array();
         
         $item['cms_PluginModuleId'] = 'tags';

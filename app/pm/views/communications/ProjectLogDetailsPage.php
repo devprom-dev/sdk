@@ -17,12 +17,9 @@ class ProjectLogDetailsPage extends PMPage
 
 	function getRecentChangedObjectIds( $filters )
 	{
- 		 $from_date = SystemDateTime::convertToClientTime(
-			 strftime('%Y-%m-%d %H:%M:%S', strtotime('-5 minutes', strtotime(SystemDateTime::date())))
-		 );
          return $this->getObject()->getRegistry()->Query(
 				array (
-						new FilterModifiedAfterPredicate($from_date),
+                    new FilterModifiedSinceSecondsPredicate(5 * 60),
 						new FilterVpdPredicate(),
 						new SortChangeLogRecentClause()
 				)

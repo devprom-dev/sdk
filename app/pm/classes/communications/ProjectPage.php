@@ -57,8 +57,13 @@ class ProjectPage extends PMWikiPage
 	{
 		return getSession()->getApplicationUrl($this).'knowledgebase/tree?view=history&';
 	}
-	
-	function add_parms( $parms )
+
+	function getSectionName()
+    {
+        return text(2279);
+    }
+
+    function add_parms( $parms )
 	{
 		if ( $parms['ParentPage'] < 1 )
 		{

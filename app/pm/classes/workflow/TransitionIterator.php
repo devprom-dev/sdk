@@ -47,6 +47,7 @@ class TransitionIterator extends OrderedIterator
  		$this->nondoablereason = '';
         $checkResult = array();
 
+        if ( $object_it->get('LastTransition') == $this->getId()) return false;
         if ( !is_object($rules_it) ) {
             $rules_it = WorkflowScheme::Instance()->getStatePredicateIt($object_it->object);
             $rules_it = $rules_it->object->createCachedIterator($rules_it->getSubset('Transition', $this->getId()));

@@ -12,6 +12,6 @@ class DocumentStructureSection extends ButtonInfoSection
  	}
 
 	function getIcon() {
-		return 'icon-indent-right';
+		return 'icon-align-left';
 	}
 }

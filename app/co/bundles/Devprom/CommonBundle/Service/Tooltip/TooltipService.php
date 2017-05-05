@@ -56,8 +56,17 @@ class TooltipService
 				),
 				array (
 					'OrderNum', 'RecordCreated', 'RecordModified', 'UID'
-				)
+				),
+                $object->getAttributesByGroup('skip-tooltip')
 			);
+            if ( $object_it->get('VPD') == getSession()->getProjectIt()->get('VPD') ) {
+                $tooltip_attributes = array_diff(
+                    $tooltip_attributes,
+                    array (
+                        'Project'
+                    )
+                );
+            }
 		}
 		else {
 			$tooltip_attributes = array_merge(
@@ -75,10 +84,13 @@ class TooltipService
 
  	 		$type = $object->getAttributeType($attribute);
  	 		if ( $type == '' ) continue;
-
  	 		if ( !in_array($attribute, $tooltip_attributes) ) continue;
 
- 	 		$data[] = array (
+            if ( $object->IsReference($attribute) ) {
+                if ( !getFactory()->getAccessPolicy()->can_read($object->getAttributeObject($attribute)) ) continue;
+            }
+
+            $data[] = array (
                 'name' => $attribute,
                 'title' => translate($object->getAttributeUserName($attribute)),
                 'type' => $type,
@@ -112,7 +124,15 @@ class TooltipService
  			case 'date':
             case 'datetime':
 			    return $object_it->getDateFormatShort($attribute);
-			    
+
+            case 'float':
+                if ( in_array('hours', $object_it->object->getAttributeGroups($attribute)) ) {
+                    return getSession()->getLanguage()->getDurationWording($object_it->get($attribute), 24);
+                }
+                else {
+                    return number_format(floatval($object_it->get($attribute)), 2, ',', ' ');
+                }
+
  			default:
 	 	 		if ( $object_it->object->IsReference($attribute) )
 		 		{	
@@ -131,13 +151,8 @@ class TooltipService
                     }
                     else {
                         $uid = new \ObjectUID;
-                        while( !$ref_it->end() )
-                        {
-                            $title = $this->extended ? $uid->getUidWithCaption($ref_it) : $uid->getUidTitle($ref_it);
-                            if ( $ref_it->object instanceof \MetaobjectStatable ) {
-                                $title .= ' ('.$ref_it->getStateIt()->getDisplayName().')';
-                            }
-                            $titles[] = $title;
+                        while( !$ref_it->end() ) {
+                            $titles[] = $uid->getUidWithCaption($ref_it);
                             $ref_it->moveNext();
                         }
                     }

@@ -7,5 +7,7 @@ class RequestAPIModelBuilder extends ObjectModelBuilder
     {
     	if ( ! $object instanceof Request ) return;
     	$object->removeAttribute('Iteration');
+        $object->setAttributeType('StartDate', 'DATE');
+        $object->setAttributeType('DeliveryDate', 'DATE');
    	}
 }

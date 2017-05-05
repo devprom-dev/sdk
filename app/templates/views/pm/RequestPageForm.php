@@ -12,19 +12,15 @@ $linked_attrs = array(
 	'Requirement', 
 	'Question',
 	'Links',
-	'LinksAttachment'
+	'LinksAttachment',
+    'ProjectPage'
 );
 
 $fields_dont_skip_if_empty = array (
 	'Watchers',
-	'Deadlines',
 	'Fact',
 	'Tags',
 	'Estimation'
-);
-
-$fields_dont_skip_if_hidden = array (
-	'State'
 );
 
 $fields_to_be_skiped = array (
@@ -38,8 +34,7 @@ $important_attributes = array(
 	'Priority', 
 	'Author',
     'ExternalAuthor',
-	'Function', 
-	'Estimation', 
+	'Estimation',
 	'Deadlines',
 	'OrderNum',
     'PlannedRelease',
@@ -59,7 +54,7 @@ foreach( $attributes as $name => $attribute )
 {
 	if ( !in_array($name, $important_attributes) && !$attribute['custom'] ) continue;
 
-	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
+	if ( !$attribute['visible'] ) continue;
 
 	if ( $attribute['value'] == '' && !in_array($name, $fields_dont_skip_if_empty) ) continue;
 
@@ -74,8 +69,9 @@ foreach( $attributes as $name => $attribute )
 	if ( in_array($name, array_keys($columns[0])) ) continue;
 	if ( in_array($name, $linked_attrs) ) continue;
 	if ( in_array($name, $fields_to_be_skiped) ) continue;
-	
-	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
+    if ( is_null($attribute['field']) ) continue;
+
+	if ( !$attribute['visible'] ) continue;
 	if ( in_array($name, array('Attachment', 'Tasks', 'Caption', 'Description')) ) continue;
 
 	if ( $attribute['value'] == '' && !in_array($name, $fields_dont_skip_if_empty) ) continue;
@@ -98,7 +94,9 @@ $wordyAttributes = array();
 foreach( $attributes as $name => $attribute ) 
 {
 	if ( !in_array($name, $linked_attrs) && $name != 'Attachment' ) continue;
-	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
+    if ( is_null($attribute['field']) ) continue;
+	if ( !$attribute['visible'] ) continue;
+    if ( is_null($attribute['field']) ) continue;
 
 	if ( count(preg_split('/,/',$attribute['value'])) > 6 ) {
 		$wordyAttributes[$name] =  $attribute;
@@ -115,7 +113,7 @@ $trace_attributes = array();
 foreach( $attributes as $name => $attribute ) 
 {
 	if ( !in_array($name, $linked_attrs) ) continue;
-	if ( !$attribute['visible'] && !in_array($name, $fields_dont_skip_if_hidden) ) continue;
+	if ( !$attribute['visible'] ) continue;
 	if ( array_key_exists($name, $wordyAttributes) ) continue;
 
 	$trace_attributes[] = $attribute;
@@ -126,7 +124,10 @@ foreach( $attributes as $name => $attribute )
 <div class="actions">
 	<?php
 	if ( count($actions) > 0 && $action != 'show' ) {
-		echo $view->render('core/PageFormButtons.php', array('actions' => $actions));
+		echo $view->render('core/PageFormButtons.php', array(
+		    'actions' => $actions,
+            'sections' => $bottom_sections
+        ));
 	}
 	?>
 </div> <!-- end actions -->
@@ -141,6 +142,19 @@ foreach( $attributes as $name => $attribute )
 			echo '<li>'.$caption.'<span class="divider">/</span></li>';
 		}
 		echo '<li>'.$view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)).'</li>';
+
+        if ( $state_name != '' ) {
+            echo '<li class="clip" style="margin-left:8px;">'.$view->render('pm/StateColumn.php', array (
+                    'color' => $form->getObjectIt()->get('StateColor'),
+                    'name' => $form->getObjectIt()->get('StateName'),
+                    'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
+                    'id' => 'state-label'
+                )).'</li>';
+        }
+
+		if ( $nextUrl != '' ) {
+            echo '<li class="hidden-phone next-item">&#10140; <a class="btn btn-link" title="'.text(2333).'" href="'.$nextUrl.'">'.$nextTitle.'</a></li>';
+        }
 	}
 	else {
 		echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a></li>';
@@ -195,10 +209,17 @@ foreach( $attributes as $name => $attribute )
 								<td>
 									<?
 									if ( is_array($refs_actions[$ref_name]) ) {
+										$title = IteratorBase::getHtmlValue($attribute['text']);
+										if ( $ref_name == 'BlockReason' ) {
+											echo '<div class="alert alert-blocked">';
+										}
 										echo $this->render('core/EmbeddedRowTitleMenu.php', array (
-												'title' => IteratorBase::getHtmlValue($attribute['text']),
+												'title' => $title,
 												'items' => $refs_actions[$ref_name]
 										));
+										if ( $ref_name == 'BlockReason' ) {
+											echo '</div>';
+										}
 									}
 									else {
 										echo $view->render('pm/PageFormAttribute.php', $attribute);
@@ -371,7 +392,8 @@ foreach( $attributes as $name => $attribute )
         	echo $view->render('core/PageSections.php', array(
         		'sections' => array_merge($bottom_sections, $sections),
         		'object_class' => $object_class,
-        		'object_id' => $object_id 
+        		'object_id' => $object_id,
+				'placement' => 'bottom'
         	));
         ?>
 	</div>

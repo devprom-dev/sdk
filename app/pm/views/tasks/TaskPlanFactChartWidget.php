@@ -35,7 +35,7 @@ class TaskPlanFactChartWidget extends FlotChartBarWidget
 			}
 
 		    $x_values[] = 'T-'.$this->iterator->getId().' '.IteratorBase::wintoutf8($this->iterator->get('Caption'));
-            $labels[] = array($index, $index + 1);
+            $labels[] = array($index, '');
 		    $urls[] = $this->iterator->getViewUrl();
 
 		    $this->iterator->moveNext();

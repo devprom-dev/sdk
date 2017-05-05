@@ -1,36 +1,23 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/comments/persisters/CommentRecentPersister.php";
 include "PlanChart.php";
 
 class VersionList extends PMPageList
 {
  	var $release_it, $iteration_it;
-	private $issues_widget = '';
-	private $tasks_widget = '';
 
-	function __construct( $object )
-	{
-		parent::__construct($object);
-
-		$report = getFactory()->getObject('PMReport');
-
-		$report_it = $report->getExact('issues-trace');
-		if ( getFactory()->getAccessPolicy()->can_read($report_it) ) {
-			$menu = $report_it->buildMenuItem();
-			$this->issues_widget = $menu['url'];
-		}
-		$report_it = $report->getExact('tasks-trace');
-		if ( getFactory()->getAccessPolicy()->can_read($report_it) ) {
-			$menu = $report_it->buildMenuItem();
-			$this->tasks_widget = $menu['url'];
-		}
-	}
-
-	function getIt( $object_it )
+    function getIt( $object_it )
 	{
 		if ( $object_it->get('Release') > 0 )
 		{
 			if ( !is_object($this->iteration_it) ) {
-				$this->iteration_it = getFactory()->getObject('pm_Release')->getAll();
+				$this->iteration_it = getFactory()->getObject('pm_Release')->getRegistry()->Query(
+				    array(
+				        new FilterVpdPredicate(),
+                        new CommentRecentPersister()
+                    )
+                );
+
 			}
 			$this->iteration_it->moveToId($object_it->get('Release'));
 			return $this->iteration_it->getCurrentIt();
@@ -39,7 +26,12 @@ class VersionList extends PMPageList
 		if ( $object_it->get('Version') > 0 )
 		{
 			if ( !is_object($this->release_it) ) {
-				$this->release_it = getFactory()->getObject('pm_Version')->getAll();
+				$this->release_it = getFactory()->getObject('pm_Version')->getRegistry()->Query(
+                    array(
+                        new FilterVpdPredicate(),
+                        new CommentRecentPersister()
+                    )
+                );
 			}
 			$this->release_it->moveToId($object_it->get('Version'));
 			return $this->release_it->getCurrentIt();
@@ -57,7 +49,7 @@ class VersionList extends PMPageList
 		
 		$object_it = $this->getIt( $source_it );
 		if ( $object_it->getId() == '' ) return;
-		
+
 		switch ( $attr )
 		{
             case 'Artefacts':
@@ -77,10 +69,16 @@ class VersionList extends PMPageList
                     if ( $class == '' ) continue;
                     $ref_it = getFactory()->getObject($class)->getExact($id);
 					if ( $type != 'branch' ) $this->getUidService()->setBaseline($baseline);
-                    $uids[] = $this->getUidService()->getUidIconGlobal($ref_it, false);
+					$text = $this->getUidService()->getUidIconGlobal($ref_it, false);
+                    $text .= '<span class="ref-name">'.$ref_it->getDisplayNameExt().'<br/></span>';
+                    $uids[] = $text;
 					$this->getUidService()->setBaseline('');
                 }
                 echo join(' ',$uids);
+                return;
+
+            case 'RecentComment':
+                parent::drawCell($object_it, $attr);
                 return;
 		}
 		
@@ -109,18 +107,9 @@ class VersionList extends PMPageList
 		}
 		elseif ( $attr == 'Description' )
 		{
-			if ( $object_it->get('ProjectStage') > 0 )
-			{
-				$stage_it = $object_it->getRef('ProjectStage');
-			}
-
 			if ( $object_it->get('Description') != '' )
 			{
 				drawMore( $object_it, 'Description', 30 );
-			}
-			elseif ( is_object($stage_it) && $stage_it->get('Description') != '' )
-			{
-				drawMore( $stage_it, 'Description', 10 );
 			}
 		}
 		elseif ( $attr == 'VersionNumber' )
@@ -189,7 +178,6 @@ class VersionList extends PMPageList
 					if ( $attr == 'Deadlines' )
 					{
 						$offset = $object_it->getFinishOffsetDays();
-
 						if ( $offset > 0 )
 						{
 							echo translate('По плану').':<br/>';
@@ -281,22 +269,12 @@ class VersionList extends PMPageList
 		}		
 	}
 
-	function getReferencesListWidget( $object )
-	{
-		if ( $object instanceof Task ) {
-			return $this->tasks_widget;
-		}
-		if ( $object instanceof Request ) {
-			return $this->issues_widget;
-		}
-		return parent::getReferencesListWidget( $object );
-	}
-
 	function getItemActions( $column_name, $object_it )
 	{
 		global $model_factory;
 		
 		$it = $this->getIt( $object_it );
+        $methodology_it = $it->getRef('Project')->getMethodologyIt();
 
 		$actions = parent::getItemActions( $column_name, $it );
 
@@ -305,20 +283,14 @@ class VersionList extends PMPageList
 		{
 			case 'pm_Version':
 				
-				$method = new ObjectCreateNewWebMethod($iteration);
-				
-				$method->setRedirectUrl('donothing');
-				
-				if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
-				{
-					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
-					$actions[] = array(
-					    'url' => $method->getJSCall( array('Version' => $it->getId()) ), 
-						'name' => translate('Создать итерацию')
-					);
-
-					$need_separator = true;
-				}
+				$new_actions = $this->getNewRelatedActions($it, $methodology_it);
+                if ( count($new_actions) > 0 ) {
+                    $actions[] = array();
+                    $actions[] = array (
+                        'name' => translate('Создать'),
+                        'items' => $new_actions
+                    );
+                }
 
 				$method = new ResetBurndownWebMethod();
 				
@@ -350,6 +322,15 @@ class VersionList extends PMPageList
 
 			case 'pm_Release':
 
+                $new_actions = $this->getNewRelatedActions($it, $methodology_it);
+                if ( count($new_actions) > 0 ) {
+                    $actions[] = array();
+                    $actions[] = array (
+                        'name' => translate('Создать'),
+                        'items' => $new_actions
+                    );
+                }
+
 				$method = new ResetBurndownWebMethod();
 				
 				if ( getFactory()->getAccessPolicy()->can_modify($it) && $method->hasAccess() )
@@ -360,16 +341,20 @@ class VersionList extends PMPageList
 					    'name' => $method->getCaption() 
 					));
 				}
-				
-			    $task_list_it = $model_factory->getObject('Module')->getExact('tasks-list');
-			    
-	            if ( getFactory()->getAccessPolicy()->can_read($task_list_it) )
-	            {
+
+                if ( $methodology_it->HasTasks() ) {
+                    $task_list_it = getFactory()->getObject('Module')->getExact('tasks-list');
+                    $states = getFactory()->getObject('Task')->getNonTerminalStates();
+                }
+                else {
+                    $task_list_it = getFactory()->getObject('Module')->getExact('issues-backlog');
+                    $states = getFactory()->getObject('Request')->getNonTerminalStates();
+                }
+
+	            if ( getFactory()->getAccessPolicy()->can_read($task_list_it) ) {
 					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 	                
-				    $states = $model_factory->getObject('Task')->getNonTerminalStates();
 				    $info = $task_list_it->buildMenuItem('?iteration='.$it->getId().'&group=State&state='.join(',',$states));
-
 	                $actions[] = array(
 	                    'url' => $info['url'],
 	                    'name' => translate('Бэклог итерации')
@@ -381,7 +366,49 @@ class VersionList extends PMPageList
 
 		return $actions;
 	}
-		
+
+	function getNewRelatedActions( $object_it, $methodology_it )
+    {
+        $actions = array();
+        if ( $object_it->object instanceof Release ) {
+            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Iteration'));
+            if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() && $method->hasAccess() )
+            {
+                $method->setRedirectUrl('donothing');
+                $actions[] = array(
+                    'url' => $method->getJSCall( array('Version' => $object_it->getId()) ),
+                    'name' => $method->getCaption()
+                );
+            }
+            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
+            if ( $method->hasAccess() ) {
+                $actions[] = array (
+                    'name' => $method->getCaption(),
+                    'url' => $method->getJSCall(array('PlannedRelease' => $object_it->getId()))
+                );
+            }
+        }
+        if ( $object_it->object instanceof Iteration ) {
+            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
+            if ( $method->hasAccess() ) {
+                $actions[] = array (
+                    'name' => $method->getCaption(),
+                    'url' => $method->getJSCall(array('Iteration' => $object_it->getId()))
+                );
+            }
+            if ( $methodology_it->HasTasks() ) {
+                $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Task'));
+                if ( $method->hasAccess() ) {
+                    $actions[] = array (
+                        'name' => $method->getCaption(),
+                        'url' => $method->getJSCall(array('Release' => $object_it->getId()))
+                    );
+                }
+            }
+        }
+        return $actions;
+    }
+
 	function getActions( $object_it )
 	{
 		$actions = $this->getItemActions('', $object_it);
@@ -432,22 +459,13 @@ class VersionList extends PMPageList
 	
 	function getColumnFields()
 	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
-		$fields = parent::getColumnFields();
-		
-	    $fields = array_diff( $fields, array (
-			'StartDate', 'FinishDate', 'IsActual', 
-			'RecordCreated', 'RecordModified', 
-			'InitialEstimationError', 'InitialBugsInWorkload'
+	    return array_diff(
+	        parent::getColumnFields(),
+            array (
+                'StartDate', 'FinishDate', 'IsActual',
+                'RecordCreated', 'RecordModified',
+                'InitialEstimationError', 'InitialBugsInWorkload'
 		));
-		
-		if ( $methodology_it->HasPlanning() )
-		{
-			array_push( $fields, 'Burnup' );
-		}
-		
-		return $fields;
 	}
 
 	function getGroupDefault()
@@ -464,6 +482,9 @@ class VersionList extends PMPageList
             $planChart->render($view, $parms);
         echo '</div>';
 
-        parent::render($view, $parms);
+        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodologyIt->HasPlanning() || $methodologyIt->HasReleases() ) {
+            parent::render($view, $parms);
+        }
     }
 }

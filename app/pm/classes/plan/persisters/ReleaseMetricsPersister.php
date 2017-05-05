@@ -36,7 +36,18 @@ class ReleaseMetricsPersister extends ObjectSQLPersister
 			"   FROM pm_VersionMetric m" .
 			"  WHERE m.Version = " .$objectPK.
 			"	 AND m.Metric = 'Velocity' LIMIT 1) Velocity " );
- 		
+
+        $columns[] =
+            "(SELECT m.PlannedWorkload " .
+            "   FROM pm_VersionBurndown m " .
+            "  WHERE m.Version = ".$objectPK.
+            "  ORDER BY m.SnapshotDays ASC LIMIT 1) PlannedWorkload ";
+
+        $columns[] =
+            " (SELECT COUNT(1) FROM pm_ChangeRequest s " .
+            "   WHERE s.PlannedRelease = " .$objectPK.
+            "	 AND s.State IN ('".join("','",getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates())."')) UncompletedItems ";
+
  		return $columns;
  	}
 }

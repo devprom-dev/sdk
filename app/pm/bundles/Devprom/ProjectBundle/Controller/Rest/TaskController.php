@@ -9,11 +9,6 @@ use Devprom\ProjectBundle\Service\Model\FilterResolver\ExecutorFilterResolver;
 
 class TaskController extends RestController
 {
-	function getEntity(Request $request)
-	{
-		return 'Task';
-	}
-
 	function getFilterResolver(Request $request)
 	{
 		return array_merge(

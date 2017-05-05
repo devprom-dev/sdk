@@ -9,6 +9,7 @@ class CloneContext
     private $reset_state_value = true;
     private $reset_dates = true;
     private $resetAssignments = false;
+    private $resetUids = false;
     
     function getIdsMap()
     {
@@ -76,5 +77,13 @@ class CloneContext
 
     function getResetAssignments() {
         return $this->resetAssignments;
+    }
+
+    function setResetUids( $flag = true ) {
+        $this->resetUids = $flag;
+    }
+
+    function getResetUids() {
+        return $this->resetUids;
     }
 }

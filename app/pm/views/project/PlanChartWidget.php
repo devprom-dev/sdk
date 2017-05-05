@@ -15,12 +15,15 @@ class PlanChartWidget extends FlotChartWidget
     {
     	$start = strftime('%Y-%m-%d', strtotime('-7 day', strtotime(SystemDateTime::date('Y-m-d'))));
     	$finish = strftime('%Y-%m-%d', strtotime('+1 month', strtotime(SystemDateTime::date('Y-m-d'))));
+		$report = getFactory()->getObject('PMReport');
+		$releaseBurndownIt = $report->getExact('releaseburndown');
+		$iterationBurndownIt = $report->getExact('iterationburndown');
     	
     	?>
 		<link rel="stylesheet" href="/scripts/vis/vis.min.css?v=<?=$_SERVER['APP_VERSION']?>" />
-		<script src="/plugins/ee/resources/js/moment-with-locales.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
+		<script src="/scripts/vis/moment-with-locales.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
 		<script src="/scripts/vis/vis.min.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
-		<script src="/plugins/ee/resources/js/handlebars-v2.0.0.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
+		<script src="/scripts/vis/handlebars-v2.0.0.js?v=<?=$_SERVER['APP_VERSION']?>" type="text/javascript" charset="UTF-8"></script>
 	   	<script id="uid-template" type="text/x-handlebars-template">
 			<a class="with-tooltip" placement="bottom" info="/pm/{{project}}/tooltip/{{objectclass}}/{{objectid}}" href="/pm/{{project}}/{{letter}}-{{objectid}}">[{{letter}}-{{objectid}}]</a>
 			{{content}} 
@@ -28,31 +31,59 @@ class PlanChartWidget extends FlotChartWidget
 	   	<script id="base-template" type="text/x-handlebars-template">
 			{{title}}
   		</script>
+
 		<script id="release-template" type="text/x-handlebars-template">
-			<div style="display:table-cell;vertical-align:top;">
+			<div style="display:table-cell;vertical-align:top;line-height: 1.7;">
 				{{title}} <br/>
-				{{{velocity}}} <br/>
-				<?=text(1020)?>: {{{maximum}}} <br/>
-				<div style="{{estimationStyle}}"><?=text(1021)?>: {{{estimation}}}</div>
+				{{#if velocity}}
+					{{{velocity}}} <br/>
+					<?=text(1020)?>: {{{maximum}}} <br/>
+					<div style="{{estimationStyle}}"><?=text(1021)?>: {{{estimation}}}</div>
+				{{/if}}
 			</div>
+			{{#if velocity}}
 			<div style="display:table-cell;vertical-align:top;padding-left: 12px;">
 				<?php
-				$url = getFactory()->getObject('PMReport')->getExact('releaseburndown')->getUrl().'&release={{objectid}}';
+				$url = $releaseBurndownIt->getUrl().'&release={{objectid}}';
 				$releaseBurndownId = 'chart'.md5($url);
 				echo '<div id="'.$releaseBurndownId.'{{objectid}}" class="plot" url="'.$url.'" style="height:90px;width:210px;"></div>';
 				?>
 			</div>
+			{{/if}}
 		</script>
+
+		<script id="iteration-template-long" type="text/x-handlebars-template">
+			<div style="display:table-cell;vertical-align:top;line-height: 1.7;">
+				{{title}} <br/>
+				{{#if velocity}}
+					{{{velocity}}}  <br/>
+					<?=text(1020)?>: {{{maximum}}} <br/>
+					<div style="{{estimationStyle}}"><?=text(1021)?>: {{{estimation}}}</div>
+				{{/if}}
+			</div>
+			{{#if velocity}}
+			<div style="display:table-cell;vertical-align:top;padding-left: 12px;">
+				<?php
+				$url = $iterationBurndownIt->getUrl().'&release={{objectid}}';
+				$iterationLongBurndownId = 'chart'.md5($url);
+				echo '<div id="'.$iterationLongBurndownId.'{{objectid}}" class="plot" url="'.$url.'" style="height:90px;width:210px;"></div>';
+				?>
+			</div>
+			{{/if}}
+		</script>
+
 		<script id="iteration-template" type="text/x-handlebars-template">
 			{{title}}
+			{{#if velocity}}
 			<?php
-				$url = getFactory()->getObject('PMReport')->getExact('iterationburndown')->getUrl().'&release={{objectid}}';
+				$url = $iterationBurndownIt->getUrl().'&release={{objectid}}';
 				$iterationBurndownId = 'chart'.md5($url);
 				echo '<div id="'.$iterationBurndownId.'{{objectid}}" class="plot" url="'.$url.'" style="height:90px;width:210px;"></div>';
 			?>
 			{{{velocity}}} <br/>
 			<?=text(1020)?>: {{{maximum}}} <br/>
 			<div style="{{estimationStyle}}"><?=text(1021)?>: {{{estimation}}}</div>
+			{{/if}}
 		</script>
 		<?php
 		$items = $this->getItems();
@@ -62,6 +93,7 @@ class PlanChartWidget extends FlotChartWidget
 				$flot = new FlotChartBurndownWidget();
 				$flot->setUrl( getSession()->getApplicationUrl().'chartburndown.php?release_id='.$item['objectid'].'&json=1' );
 				$flot->draw($iterationBurndownId.$item['objectid']);
+				$flot->draw($iterationLongBurndownId.$item['objectid']);
 			}
 			if ( $item['objectclass'] == 'Release' ) {
 				$flot = new FlotChartBurndownWidget();
@@ -75,6 +107,7 @@ class PlanChartWidget extends FlotChartWidget
 				'uid-template': Handlebars.compile(document.getElementById('uid-template').innerHTML),
 				'base-template': Handlebars.compile(document.getElementById('base-template').innerHTML),
 				'iteration-template': Handlebars.compile(document.getElementById('iteration-template').innerHTML),
+				'iteration-template-long': Handlebars.compile(document.getElementById('iteration-template-long').innerHTML),
 				'release-template': Handlebars.compile(document.getElementById('release-template').innerHTML)
     		};
     		var dataSet = new vis.DataSet(<?=JsonWrapper::encode($items)?>);
@@ -89,7 +122,12 @@ class PlanChartWidget extends FlotChartWidget
 					 remove: false,
 					 updateTime: true
 				 },
-				 groupOrder: 'content',
+				margin: {
+					item: {
+						horizontal: 0
+					}
+				},
+				groupOrder: 'content',
 				 locales: {
 					    // create a new locale (text strings should be replaced with localized strings)
 					    ru: {
@@ -161,8 +199,6 @@ class PlanChartWidget extends FlotChartWidget
     
     protected function getItems()
     {
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-
         $project_ids = $this->iterator->fieldToArray('Project');
     	if ( count($project_ids) > 0 ) {
 			$registry = getFactory()->getObject('Project')->getRegistry();
@@ -194,6 +230,19 @@ class PlanChartWidget extends FlotChartWidget
 				new FilterInPredicate($this->iterator->idsToArray())
 			)
 		);
+		$issues = array_filter(
+			preg_split('/,/',join(',',$milestone_it->fieldToArray('TraceRequests'))),
+			function( $value ) {
+				return $value > 0;
+			}
+		);
+		if ( count($issues) < 1 ) $issues = array(0);
+		$request_it = getFactory()->getObject('Request')->getRegistry()->Query(
+			array(
+				new StatePredicate('notresolved'),
+				new FilterInPredicate($issues)
+			)
+		);
 
     	$items = array();
     	while( !$this->iterator->end() )
@@ -203,8 +252,6 @@ class PlanChartWidget extends FlotChartWidget
 				'content' => $this->iterator->getHtmlDecoded('Caption'),
 				'start' => date('Y-m-d H:i:s', strtotime('+9 hours', strtotime($this->iterator->getDateFormatUser('StartDate', '%Y-%m-%d')))),
 				'startText' => getSession()->getLanguage()->getDateFormattedShort($this->iterator->get('StartDate')),
-				'end' => date('Y-m-d H:i:s', strtotime('+20 hours', strtotime($this->iterator->getDateFormatUser('FinishDate', '%Y-%m-%d')))),
-				'endText' => getSession()->getLanguage()->getDateFormattedShort($this->iterator->get('FinishDate')),
 				'group' => $this->iterator->get('Project'),
 				'objectid' => $this->iterator->getId(),
 				'objectclass' => $this->iterator->get('ObjectClass'),
@@ -215,6 +262,9 @@ class PlanChartWidget extends FlotChartWidget
 			switch( $this->iterator->get('ObjectClass') ) 
 			{
 			    case 'Release':
+					$release_it->moveToId($this->iterator->getId());
+					$methodology_it = $release_it->getRef('Project')->getMethodologyIt();
+
 					$item['title'] = translate('Релиз').' '.$item['content'];
 					$item['className'] = 'hie-release';
 
@@ -224,13 +274,22 @@ class PlanChartWidget extends FlotChartWidget
 					}
 					else {
 						$item['template'] = 'release-template';
+						if ( $release_it->IsFinished() ) {
+							$item['className'] .= ' stage-finished';
+						}
+						else {
+							if ( $release_it->getFinishOffsetDays() > 0 ) {
+								$item['className'] .= ' deadline-offset';
+							}
+						}
 					}
 
-					$release_it->moveToId($this->iterator->getId());
+					$item['end'] = date('Y-m-d H:i:s', strtotime('+20 hours', strtotime($release_it->getDateFormatUser('EstimatedFinishDate', '%Y-%m-%d'))));
+					$item['endText'] = getSession()->getLanguage()->getDateFormattedShort($release_it->get('EstimatedFinishDate'));
 
 					if ( $methodology_it->HasVelocity() ) {
 						$item = array_merge( $item,
-							$this->getReleaseMetrics($release_it)
+							$this->getReleaseMetrics($release_it, $methodology_it)
 						);
 					}
 
@@ -248,8 +307,14 @@ class PlanChartWidget extends FlotChartWidget
 			    	break;
 			    
 			    case 'Iteration':
+					$iteration_it->moveToId($this->iterator->getId());
+					$methodology_it = $iteration_it->getRef('Project')->getMethodologyIt();
+
 					$item['title'] = translate('Итерация').' '.$item['content'];
-					$item['template'] = 'iteration-template';
+					$item['template'] = $iteration_it->get('PlannedCapacity') > 5 || $iteration_it->IsFinished()
+											? 'iteration-template-long' : 'iteration-template';
+					$item['end'] = date('Y-m-d H:i:s', strtotime('+20 hours', strtotime($iteration_it->getDateFormatUser('EstimatedFinishDate', '%Y-%m-%d'))));
+					$item['endText'] = getSession()->getLanguage()->getDateFormattedShort($iteration_it->get('EstimatedFinishDate'));
 
 					if ( $methodology_it->HasReleases() ) {
 						$item['className'] = 'hie-iteration-overlapped';
@@ -257,11 +322,20 @@ class PlanChartWidget extends FlotChartWidget
 					else {
 						$item['className'] = 'hie-iteration';
 					}
+					if ( $iteration_it->IsFinished() ) {
+						$item['className'] .= ' stage-finished';
+					}
+					else {
+						if ( $iteration_it->getFinishOffsetDays() > 0 ) {
+							$item['className'] .= ' deadline-offset';
+						}
+					}
 
-					$iteration_it->moveToId($this->iterator->getId());
-					$item = array_merge( $item,
-						$this->getIterationMetrics($iteration_it)
-					);
+					if ( $methodology_it->IsAgile() ) {
+						$item = array_merge( $item,
+							$this->getIterationMetrics($iteration_it, $methodology_it)
+						);
+					}
 
 					$method = new ObjectModifyWebMethod($iteration_it);
 					$item['url'] = $method->getJSCall();
@@ -279,9 +353,14 @@ class PlanChartWidget extends FlotChartWidget
 					break;
 			    	
 			    case 'Milestone':
-			    	$item['className'] = join(' ', 
+					$milestone_it->moveToId($this->iterator->getId());
+					$openIssues = count(array_intersect(
+						$request_it->idsToArray(),
+						preg_split('/,/', $milestone_it->get('TraceRequests'))
+					)) > 0;
+			    	$item['className'] = join(' ',
 			    		array(
-			    			'hie-milestone',
+							$milestone_it->get('Overdue') > 0 && !$openIssues  ? 'issues complete' : 'hie-milestone',
 			    			strlen($item['content']) > 20 ? 'overflow' : ''
 			    		)
 			    	);
@@ -289,7 +368,6 @@ class PlanChartWidget extends FlotChartWidget
 			    	$item['start'] = $this->iterator->get('FinishDate');
 			    	$item['template'] = 'uid-template';
 
-					$milestone_it->moveToId($this->iterator->getId());
 					$method = new ObjectModifyWebMethod($milestone_it);
 					$item['url'] = $method->getJSCall();
 
@@ -308,44 +386,37 @@ class PlanChartWidget extends FlotChartWidget
     	return $items;
     }
 
-    protected function getIterationMetrics( $object_it )
+    protected function getIterationMetrics( $object_it, $methodology_it )
 	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		$strategy = $methodology_it->getEstimationStrategy();
 
-		if ( $methodology_it->RequestEstimationUsed() ) {
-			list( $capacity, $maximum, $actual_velocity ) = $object_it->getEstimationRealBurndownMetrics();
-			$estimation = $object_it->getLeftEstimation();
-		}
-		else {
-			list( $capacity, $maximum, $actual_velocity ) = $object_it->getRealBurndownMetrics();
-			$estimation = $object_it->getTotalWorkload();
-		}
+		list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
 		if ( $estimation == '' ) $estimation = 0;
 
 		$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedTasks') > 0;
-
 		return array (
-			'velocity' => str_replace('%1', round($object_it->getVelocity(), 0), $strategy->getVelocityText($object_it->object)),
-			'maximum' => $strategy->getDimensionText(round($maximum, 1)),
-			'estimation' => $strategy->getDimensionText(round($estimation,0)),
+			'velocity' => str_replace('%1',
+                            $strategy->getReleaseVelocityText($object_it),
+                                $strategy->getVelocityText($object_it->object)),
+			'maximum' => $maximum > 0 ? $strategy->getDimensionText(round($maximum, 1)) : '0',
+			'estimation' => $estimation > 0 ? $strategy->getDimensionText(round($estimation,0)) : '0',
 			'estimationStyle' => ($show_limit && $estimation > $maximum ? 'color:red;' : '')
 		);
 	}
 
-	protected function getReleaseMetrics( $object_it )
+	protected function getReleaseMetrics( $object_it, $methodology_it )
 	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		$strategy = $methodology_it->getEstimationStrategy();
 
-		$estimation = $object_it->getTotalWorkload();
-		list( $capacity, $maximum, $actual_velocity ) = $object_it->getRealBurndownMetrics();
+		list( $capacity, $maximum, $actual_velocity, $estimation ) = $object_it->getRealBurndownMetrics();
 		$show_limit = SystemDateTime::date() <= $object_it->get('EstimatedFinishDate') || $object_it->get('UncompletedIssues') > 0;
 
 		return array (
-			'velocity' => str_replace('%1', round($object_it->getVelocity(), 1), $strategy->getVelocityText($object_it->object)),
-			'maximum' => $strategy->getDimensionText(round($maximum, 1)),
-			'estimation' => $strategy->getDimensionText(round($estimation)),
+			'velocity' => str_replace('%1',
+                            $strategy->getReleaseVelocityText($object_it),
+                                $strategy->getVelocityText($object_it->object)),
+			'maximum' => $maximum > 0 ? $strategy->getDimensionText(round($maximum, 1)) : '0',
+			'estimation' => $estimation > 0 ? $strategy->getDimensionText(round($estimation)) : '0',
 			'estimationStyle' => ($show_limit && $maximum > 0 && $estimation > $maximum ? 'color:red;' : '')
 		);
 	}

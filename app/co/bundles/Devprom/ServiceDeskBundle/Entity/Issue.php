@@ -41,6 +41,12 @@ class Issue extends BaseEntity {
     private $description;
 
     /**
+     * @ORM\Column(type="datetime", name="DeliveryDate")
+     * @var DateTime
+     */
+    private $deliveryDate;
+
+    /**
      * @ORM\OneToOne(targetEntity="IssueType")
      * @ORM\JoinColumn(name="Type", referencedColumnName="pm_IssueTypeId")
      * @var IssueType
@@ -114,14 +120,14 @@ class Issue extends BaseEntity {
 
     /**
      * @ORM\OneToOne(targetEntity="Priority")
-     * @ORM\JoinColumn(name="Priority", referencedColumnName="PriorityId")
+     * @ORM\JoinColumn(name="Priority", referencedColumnName="pm_SeverityId")
      * @var Priority
      */
     private $priority;
 
     /**
      * @ORM\OneToOne(targetEntity="Priority")
-     * @ORM\JoinColumn(name="Severity", referencedColumnName="PriorityId")
+     * @ORM\JoinColumn(name="Severity", referencedColumnName="pm_SeverityId")
      * @Assert\NotBlank
      * @var Severity
      */
@@ -260,6 +266,22 @@ class Issue extends BaseEntity {
     public function getDescription()
     {
         return $this->description;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getDeliveryDate()
+    {
+        return $this->deliveryDate;
+    }
+
+    /**
+     * @param \DateTime $deliveryDate
+     */
+    public function setDeliveryDate($deliveryDate)
+    {
+        $this->deliveryDate = $deliveryDate;
     }
 
     /**

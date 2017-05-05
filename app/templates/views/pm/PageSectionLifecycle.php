@@ -1,24 +1,87 @@
-<ul class="changes-section">
-<?php foreach( $rows as $row ) { ?>
-	<li>
-		<div class="title">
-			<i class="<?=$row['icon']?>"></i>
-			<?php if ( $row['author'] != '' ) { ?>
-				<b><?=$row['author']?></b>: 
-			<?php } ?>
-			<?=$row['datetime']?>
-			<? if ( $row['duration'] >= 0 ) { ?>
-			(<?=str_replace('%1', $row['duration'], text(2100))?>)
-			<? } ?>
-		</div>
+<?php
 
-		<?=($row['transition'] != '' ? $row['transition'] . ' &rarr; ' : '')?>
-		<?=$row['state']?>
-		<br/>
+$uml = "@startuml".PHP_EOL.PHP_EOL;
+$uml .= "skinparam state {".PHP_EOL.
+  			"BackgroundColor<<Complete>> Yellow".PHP_EOL.
+			"BackgroundColor<<Last>> Orange".PHP_EOL.
+		"}".PHP_EOL;
 
-		<?php if ( $row['comment'] != '' ) { ?>
-			<div class="alert alert-info"><?=$row['comment']?></div>
-		<?php } ?>
-	</li>
-<?php } ?>
-</ul>
+$rows = array_reverse($rows);
+
+$timeTable = array();
+$totalSpent = array();
+foreach( $rows as $row ) {
+	$key = $row['date'].', '.$row['author'];
+	if ( $row['transition'] != '' ) {
+		$key .= ', '.$row['transition'];
+	}
+	$html2text = new \Html2Text\Html2Text($row['comment'], array('width'=>0));
+	$commentText = $html2text->getText();
+	if ( $commentText != '' ) {
+		$key .= '<br/> '.$commentText;
+	}
+	$timeTable[$key][$row['state-ref']] += $row['duration-value'];
+	$totalSpent[$row['state-ref']] += $row['duration-value'];
+}
+
+$lastIndex = array_pop(array_keys($rows));
+foreach( $rows as $index => $row ) {
+	$uml .= "state " . '"' . $row['state'] . '" as ' . $row['state-ref'] . " <<".($index == $lastIndex ? "Last" : "Complete").">>" . PHP_EOL;
+	if ( $row['duration'] != '' && $row['duration'] != '0' ) {
+		$uml .= $row['state-ref'] .  ' : ' . $row['duration'] . PHP_EOL;
+	}
+}
+
+if ( $placement == 'bottom' ) {
+	$notePlacement = "bottom";
+	$arrowPlacement = "-right->";
+}
+else {
+	$notePlacement = "right";
+	$arrowPlacement = "-down->";
+}
+
+$row = array_shift($rows);
+$prevState = $row['state-ref'];
+
+foreach( $rows as $row ) {
+	$uml .= $prevState . " ".$arrowPlacement." " . $row['state-ref'];
+	$uml .= PHP_EOL;
+	$prevState = $row['state-ref'];
+}
+$uml .= "@enduml";
+
+$url = trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ");
+$url .= '/plantuml/img/'.encode64(gzdeflate($uml, 9));
+
+echo '<a class="image_attach" href="'.$url.'"><img class="workflow-image" src="'.$url.'"></a>';
+
+echo '<br/>';
+if ( $lastComment != '' ) {
+	echo '<br/>';
+	echo '<div class="alert alert-blocked">'.$lastComment.'</div>';
+}
+echo '<br/>';
+echo '<table class="table">';
+echo '<tr>';
+echo '<td>'.text(2270).'</td>'.
+$stateIt->moveFirst();
+while( !$stateIt->end() ) {
+	echo '<td>'.$stateIt->getDisplayName().' ('.getSession()->getLanguage()->getDurationWording($totalSpent[$stateIt->get('ReferenceName')]).')</td>';
+	$stateIt->moveNext();
+}
+echo '</tr>';
+$width = max(1,round(100 / ($stateIt->count() + 2), 0));
+foreach( $timeTable as $author => $durations ) {
+	echo '<tr>';
+		echo '<td>'.$author.'</td>'.
+		$stateIt->moveFirst();
+		while( !$stateIt->end() ) {
+			echo '<td width="'.$width.'%">'.getSession()->getLanguage()->getDurationWording($durations[$stateIt->get('ReferenceName')]).'</td>';
+			$stateIt->moveNext();
+		}
+	echo '</tr>';
+}
+echo '</table>';
+echo str_replace('%1', $lifecycle, text(2301));
+?>

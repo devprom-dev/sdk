@@ -28,11 +28,22 @@ class PMUserSettings extends MetaobjectCacheable
  		$parms = array();
  		
  		if ( $user_id == 0 ) $user_id = getSession()->getParticipantIt()->getId(); 
- 		
-	 	$value_it = $this->getByRefArray( array (
-	 	        'Participant' => $user_id,
-	 	        'Setting' => $settings_name
-	 	));
+ 		if ( $user_id < 0 ) {
+            $value_it = $this->getByRefArray( array (
+                'Setting' => $settings_name
+            ));
+            while( !$value_it->end() ) {
+                $this->delete($value_it->getId());
+                $value_it->moveNext();
+            }
+            $value_it = $this->getEmptyIterator();
+        }
+        else {
+            $value_it = $this->getByRefArray( array (
+                'Participant' => $user_id,
+                'Setting' => $settings_name
+            ));
+        }
 
 		if ( $value_it->getId() != '' )
 		{

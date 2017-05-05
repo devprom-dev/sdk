@@ -31,7 +31,7 @@ class InstallFormComplete extends AdminForm
 		return true; 	
 	}
 	
-	function drawCustomAttribute( $attribute, $value, $tab_index )
+	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
 	{
 	    echo '<div class="progress progress-striped active">';
           echo '<div class="bar" style="width:50%;"></div>';

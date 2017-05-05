@@ -2,6 +2,7 @@
 
 include "ui/BulkFormAdmin.php";
 include "AdminPageNavigation.php";
+include SERVER_ROOT_PATH.'core/methods/ExcelExportWebMethod.php';
 
 class AdminPage extends Page
 {

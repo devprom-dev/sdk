@@ -15,17 +15,19 @@ class AccessPolicyProject extends AccessPolicyBase
  		$role_manager, $role_user, $role_guest, $role_linkedguest,
  		$linked_vpds, $role_it, $check_type, $role_reference_names;
  	private $project_it = null;
+ 	private $allProjectsModuleIt = null;
 
  	function buildRoles()
  	{
  		$project_roles = getSession()->getRoles();
  		$this->project_it = getSession()->getProjectIt();
+ 		$this->allProjectsModuleIt = getFactory()->getObject('Module')->getExact('ee/allprojects');
  		
  		$user_it = getSession()->getUserIt();
  		
  		if ( is_object($this->access_it) ) return;
  		
- 		$permissions = $this->getCacheService()->get('permissions');
+ 		$permissions = $this->getCacheService()->get('permissions', $this->getCacheKey());
  		if ( is_array($permissions) )
  		{
  			$this->base_role_map = $permissions['roles_map'];
@@ -154,7 +156,7 @@ class AccessPolicyProject extends AccessPolicyBase
 	 	$permissions['access_iterator'] = $this->access_it->getRowset();
 	 	$permissions['object_access_iterator'] = $this->object_access_it->getRowset();
 
- 		$this->getCacheService()->set('permissions', $permissions);
+ 		$this->getCacheService()->set('permissions', $permissions, $this->getCacheKey());
  		
  		return $roles;
  	}
@@ -173,7 +175,7 @@ class AccessPolicyProject extends AccessPolicyBase
 			case ROLE_READONLY:
 				if ( getSession()->getParticipantIt()->getId() != GUEST_UID) return true;
  			case ROLE_GUEST:
- 				return parent::getObjectAccess(ACCESS_READ, getFactory()->getObject('Module')->getExact('ee/allprojects'));
+ 				return parent::getObjectAccess(ACCESS_READ, $this->allProjectsModuleIt);
  				
  			case ROLE_LINKEDGUEST:
  				return count(getFactory()->getEntityOriginationService()->getAvailableOrigins($object, SHARED_DIRECTION_BWD )) > 1;
@@ -227,7 +229,7 @@ class AccessPolicyProject extends AccessPolicyBase
                 }
             }
         }
-		return $this->getEntityAccess($action_kind, $object);
+		return true;
  	}
  	
  	function getEntityAccess( $action_kind, &$object ) 
@@ -237,7 +239,7 @@ class AccessPolicyProject extends AccessPolicyBase
  			$access_map = array();
  			
  			foreach( $this->getRoles() as $role_id ) {
-				if ( $role_id == ROLE_READONLY ) continue;
+                if ( $role_id == ROLE_READONLY ) continue;
 
 				$access = $this->access_it->getClassAccess( $role_id, get_class($object) );
 				$access_map[$role_id] = $access > -1
@@ -326,6 +328,12 @@ class AccessPolicyProject extends AccessPolicyBase
 				}
 
 			case ROLE_READONLY:
+                switch ( $ref_name ) {
+                    case 'pm_Task':
+                    case 'pm_Test':
+                    case 'pm_TestCaseExecution':
+                        return true;
+                }
 			case ROLE_GUEST:
 				switch ( $ref_name )
 				{
@@ -335,17 +343,15 @@ class AccessPolicyProject extends AccessPolicyBase
 
 					case 'pm_Build':
 					case 'pm_Environment':
-					case 'pm_Test':
-					case 'pm_TestCaseExecution':
 					case 'pm_Subversion':
 					case 'pm_SubversionRevision':
 					case 'pm_Version':
 					case 'pm_Release':
-					case 'pm_Task':
 					case 'pm_State':
 					case 'pm_Transition':
 					case 'pm_TransitionAttribute':
-					case 'WikiPageTemplate':
+					case 'pm_TextTemplate':
+                    case 'pm_Milestone':
 					case 'WikiPage':
 						return $action_kind == ACCESS_READ;
 						
@@ -368,6 +374,7 @@ class AccessPolicyProject extends AccessPolicyBase
 						return true;
 
 					case 'pm_Milestone':
+                    case 'pm_Activity':
 						return $action_kind == ACCESS_CREATE || $action_kind == ACCESS_READ;
 
 					case 'pm_ProjectUse':
@@ -423,10 +430,12 @@ class AccessPolicyProject extends AccessPolicyBase
 			default:
 				switch ( $ref_name )
 				{
+                    case 'pm_Activity':
+                        return true;
+
 					case 'pm_Version':
 					case 'pm_Release':
 					case 'pm_Methodology':
-					case 'pm_ProjectStage':
 					case 'pm_ProjectRole':
 					case 'pm_ParticipantRole':
 					case 'pm_State':
@@ -465,7 +474,7 @@ class AccessPolicyProject extends AccessPolicyBase
 
 		// role bases access rights
 		foreach( $roles as $role_id ) {
-			if ( in_array(ROLE_READONLY, $roles) && $role_id != ROLE_READONLY ) continue;
+			if ( $role_id == ROLE_READONLY ) continue;
 
 			$access = $this->getObjectAccessRole($action_kind, $object_it, $role_id);
 			$access_map[$role_id] = is_bool($access) ? ($access ? 1 : 0) : null;
@@ -476,15 +485,6 @@ class AccessPolicyProject extends AccessPolicyBase
 		
  	 	switch ( $object_it->object->getClassName() )
 		{
-			case 'pm_State':
-				if ( $action_kind == ACCESS_DELETE ) {
-					if ( $object_it instanceof StateBaseIterator && $object_it->getObjectsCount() > 0 ) {
-						$this->setReason( text(927) );
-						return false;
-					}
-				}
-				break;
-	
 			case 'WikiPageType':
 				if ( $action_kind == ACCESS_DELETE )
 				{
@@ -545,7 +545,6 @@ class AccessPolicyProject extends AccessPolicyBase
 			switch ( $ref_name )
 			{
 				case 'cms_PluginModule':
-
 					$access = $this->access_it->getModuleAccess( $role_id, $object_it );
 
 					if ( $access > -1 )
@@ -617,7 +616,7 @@ class AccessPolicyProject extends AccessPolicyBase
 
 		// role bases access rights
 		foreach( $roles as $role_id ) {
-			if ( in_array(ROLE_READONLY, $roles) && $role_id != ROLE_READONLY ) continue;
+            if ( in_array(ROLE_READONLY, $roles) && $role_id != ROLE_READONLY ) continue;
 
 			$access = $this->getDefaultObjectAccessRole($action_kind, $object_it, $role_id);
 			$access_map[$role_id] = is_bool($access) ? ($access ? 1 : 0) : null;
@@ -695,8 +694,10 @@ class AccessPolicyProject extends AccessPolicyBase
 						return $object_it->getTasksCount() < 1; 
 					}
 				}
-				
-				break;
+
+                if ( $ref_name == 'pm_Activity' ) return true;
+
+                break;
 
 			case ROLE_READONLY:
 				switch ( $ref_name ) {
@@ -755,7 +756,9 @@ class AccessPolicyProject extends AccessPolicyBase
 						
 					case 'cms_Snapshot':
 						return $object_it->get('SystemUser') == $user_it->getId() || $action_kind == ACCESS_READ;
-						
+
+                    case 'pm_Activity':
+                        return $object_it->get('Participant') == $user_it->getId() || $action_kind == ACCESS_READ;
 
 					case 'pm_CustomReport':
 						// common reports can be modified or deleted by lead only
@@ -787,37 +790,5 @@ class AccessPolicyProject extends AccessPolicyBase
 	    $roles = array_flip( $this->base_role_map );
 	    
 	    return $roles[$base_role_id];
-	}
-	
-	public function getRestrictedClasses() 
-	{
-		$roles = $this->getRoles();
-
-		$classes = array();
-		
-		$this->access_it->moveFirst();
-		
-		while( !$this->access_it->end() )
-		{
-			if ( $this->access_it->get('ReferenceType') != 'Y' )
-			{ 
-				$this->access_it->moveNext();
-				continue;
-			}
-			
-			$found_permission = false;
-			
-			foreach( $roles as $role_id )
-			{
-				$classes[$this->access_it->get('ReferenceName')][$role_id] = 
-						$this->access_it->get('ProjectRole') == $role_id ? $this->access_it->get('AccessType') != 'none' : true;
-			}
-			
-			$this->access_it->moveNext();		
-		}
-
-		return array_keys(array_filter( $classes, function($value) {
-				return array_sum($value) < 1;
-		}));
 	}
 }

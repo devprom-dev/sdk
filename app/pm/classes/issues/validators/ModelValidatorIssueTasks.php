@@ -9,7 +9,7 @@ class ModelValidatorIssueTasks extends ModelValidatorInstance
 		$parms['Release'] = $parms['Iteration'];
 
 		if ( !$object->IsAttributeRequired('Tasks') ) return "";
-		
+
 		$keys = array_filter( array_keys($parms), function($key) use ($parms) {
 				return preg_match('/embeddedActive\d+/', $key) && $parms[$key] == 'Y';
 		});
