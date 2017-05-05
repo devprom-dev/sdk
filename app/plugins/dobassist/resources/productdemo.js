@@ -79,7 +79,7 @@ toursQueue.unshift(new Tour({
             title: 'Setup auto actions',
             content: tc('incidents-autoactions'),
             orphan: true,
-            path: '/pm/supportA/module/support/autoactions?area=favs'
+            path: '/pm/supportA/autoactions?area=favs'
         },
 	  {
 	    title: 'Analyze incidents',
@@ -88,11 +88,9 @@ toursQueue.unshift(new Tour({
 	    path: '/pm/incidentsA/issues/list/7?report=7&basemodule=issues-backlog&area=favs'
 	  },
 	  {
-		path: '/pm/all',
-		orphan: true,
-		onShow: function(tour) {
-			setTimeout(function(){tour.end();},1000);
-		}
+		path: '/pm/all/issues/board',
+		  duration: 1,
+		orphan: true
 	  }
 	],
 	name: "devOpsBoardTour",

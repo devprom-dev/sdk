@@ -106,7 +106,9 @@ class GetLicenseKey extends CommandForm
 			switch ( $_REQUEST['LicenseType'] )
 			{
 				case 'LicenseTeam':
-					$license_data['key'] = $this->getTeamLicense($_REQUEST['InstallationUID']);
+                    list( $licenseKey, $licenseValue ) = $this->getTeamLicense($_REQUEST['InstallationUID']);
+                    $license_data['key'] = $licenseKey;
+                    $license_data['value'] = $licenseValue;
 					break;
 	
 				case 'LicenseEnterprise':
@@ -241,9 +243,15 @@ class GetLicenseKey extends CommandForm
 	
 	function getTeamLicense( $uid )
 	{
- 		define ('SALT_', '682FEE73-1B33-4266-9192-474F5D59405D');
-
- 		return md5($uid.SALT_);
+        $command = new ProcessOrder2();
+        $value = $command->getLicenseValue(
+            array(
+                'InstallationUID' => $uid,
+                'LicenseOptions' => "core"
+            )
+        );
+        $key = $command->getLicenseKey($uid, $value);
+        return array($key, $value);
 	}
 	
 	function getTrialLicense( $uid )

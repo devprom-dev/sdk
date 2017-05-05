@@ -12,36 +12,38 @@ class ProcessOrder2 extends ProcessOrder
 
     public function getLicenseValue( $order_info )
 	{
-		date_default_timezone_set('UTC');
-
-		$days = $order_info['LicenseValue'];
-		$date = new DateTime();
-		$date->add(new DateInterval('P'.$days.'D'));
-
-		$was_parms = $order_info['WasLicenseValue'];
-		Logger::getLogger('Commands')->info('WASKEY: '.var_export($was_parms, true));
-
-		$license_verified = openssl_verify(
-				json_encode($was_parms) . $order_info['InstallationUID'],
-				base64_decode(trim($order_info['WasLicenseKey'])),
-				file_get_contents(SERVER_ROOT_PATH . 'templates/config/license.pub'),
-				OPENSSL_ALGO_SHA512) == 1;
-
-		if ( $license_verified && is_array($was_parms) && $was_parms['timestamp'] != '' )
-		{
-			$dt1 = new DateTime($was_parms['timestamp']);
-			$dt2 = new DateTime();
-			$left_days = $dt1->diff($dt2)->days;
-			if ( $left_days > 0 ) {
-				$days += $left_days;
-				$date->add(new DateInterval('P'.$left_days.'D'));
-			}
-		}
-		$value = array (
-            'timestamp' => $date->format('Y-m-d'),
-            'days' => $days,
+        $value = array (
             'options' => $order_info['LicenseOptions']
         );
+
+		$days = $order_info['LicenseValue'];
+		if ( $days != '' ) {
+            date_default_timezone_set('UTC');
+            $date = new DateTime();
+            $date->add(new DateInterval('P'.$days.'D'));
+
+            $was_parms = $order_info['WasLicenseValue'];
+            Logger::getLogger('Commands')->info('WASKEY: '.var_export($was_parms, true));
+
+            $license_verified = openssl_verify(
+                    json_encode($was_parms) . $order_info['InstallationUID'],
+                    base64_decode(trim($order_info['WasLicenseKey'])),
+                    file_get_contents(SERVER_ROOT_PATH . 'templates/config/license.pub'),
+                    OPENSSL_ALGO_SHA512) == 1;
+
+            if ( $license_verified && is_array($was_parms) && $was_parms['timestamp'] != '' )
+            {
+                $dt1 = new DateTime($was_parms['timestamp']);
+                $dt2 = new DateTime();
+                $left_days = $dt1->diff($dt2)->days;
+                if ( $left_days > 0 ) {
+                    $days += $left_days;
+                    $date->add(new DateInterval('P'.$left_days.'D'));
+                }
+            }
+            $value['timestamp'] = $date->format('Y-m-d');
+            $value['days'] = $days;
+        }
         if ( $order_info['LicenseUsers'] > 0 ) {
             $value['users'] = $order_info['LicenseUsers'];
         }
