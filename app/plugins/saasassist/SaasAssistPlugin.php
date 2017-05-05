@@ -3,7 +3,7 @@
 define( 'SAAS_DOMAIN', 'myalm.ru' );
 define( 'SAAS_SENDER', 'noreply@myalm.ru' );
 
-include "classes/licenses/LicenseRegistryBuilderSaaS.php";
+include_once "classes/licenses/LicenseRegistryBuilderSaaS.php";
 include "classes/licenses/events/RenewSAASLicenseEventHandler.php";
 include "classes/CheckpointRegistryBuilderSaaS.php";
 include "SaasAssistCoPlugin.php";

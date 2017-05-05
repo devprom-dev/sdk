@@ -5,7 +5,7 @@ define( 'SAAS_SCHEME', 'https' );
 define( 'SAAS_SENDER', 'noreply@devopsboard.com' );
 define( 'SAAS_ROOT', '/home/devopsboard/' );
 
-include "classes/licenses/LicenseRegistryBuilderSaaS.php";
+include_once "classes/licenses/LicenseRegistryBuilderSaaS.php";
 include "classes/licenses/events/RenewSAASLicenseEventHandler.php";
 include "classes/CheckpointRegistryBuilderSaaS.php";
 include "DOBAssistCoPlugin.php";

@@ -1,7 +1,7 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
 
-class ActivityMetadataBuilderExTiming extends ObjectMetadataEntityBuilder
+class ActivityMetadataBuilderEx2Timing extends ObjectMetadataEntityBuilder
 {
     public function build( ObjectMetadata $metadata )
     {
