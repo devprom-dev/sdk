@@ -69,4 +69,4 @@ define('UPDATES_URL', 'http://devprom.ru/news/tag/%D0%9E%D0%B1%D0%BD%D0%BE%D0%B2
 define('HELP_COMMUNITY_URL','http://club.devprom.ru');
 define('HELP_DOCS_URL','http://devprom.ru/docs');
 define('HELP_SUPPORT_URL','http://support.devprom.ru/issue/new');
-define('MENU_STATE_DEFAULT','normal');
+define('MENU_STATE_DEFAULT','minimized');
