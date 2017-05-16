@@ -33,7 +33,7 @@ $plugin_text_array = array
     34 => ' starting at $%1 per month',
     35 => 'Choose required options',
     36 => '(+ %1 RUB month)',
-    37 => 'Bug tracker, Scrum and Kanban',
+    37 => 'Team tasks management',
     42 => '20 users',
     43 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a> when buy more than 5 monthes.',
     44 => 'You pay by <b>credit card</b> or <a href="mailto:info@devprom.ru">via invoice</a>.',
@@ -45,5 +45,10 @@ $plugin_text_array = array
     51 => 'Please specify user name and email',
     52 => 'DevOpsBoard Team (up to 10 users)',
     53 => ' $%1 per month',
-    54 => 'I accept the <a target="_blank" href="http://devopsboard.com/en/terms">service agreement</a>'
+    54 => 'I accept the <a target="_blank" href="http://devopsboard.com/en/terms">service agreement</a>',
+    55 => 'Team tasks management',
+    56 => 'Tasks management across a company',
+    57 => 'Project management at company level',
+    58 => 'Code development integration'
+
 );

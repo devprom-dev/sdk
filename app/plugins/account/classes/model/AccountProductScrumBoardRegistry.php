@@ -17,7 +17,16 @@ class AccountProductScrumBoardRegistry extends ObjectRegistrySQL
                     'PriceRUB' => 300,
                     'PriceUSD' => 5,
                     'PaymentRequired' => true,
-                    'UsersLimit' => 5
+                    'UsersLimit' => 5,
+                    'Options' => array (
+                        array (
+                            'OptionId' => 'core',
+                            'Caption' => text('account55'),
+                            'PriceRUB' => 0,
+                            'PriceUSD' => 0,
+                            'Required' => true
+                        )
+                    )
         		),
         		array ( 
                     'entityId' => 'LicenseScrumBoard-100',
@@ -30,7 +39,16 @@ class AccountProductScrumBoardRegistry extends ObjectRegistrySQL
                     'ValueDefault' => 6,
                     'PriceRUB' => 3600,
                     'PriceUSD' => 60,
-                    'PaymentRequired' => true
+                    'PaymentRequired' => true,
+                    'Options' => array (
+                        array (
+                            'OptionId' => 'core',
+                            'Caption' => text('account56'),
+                            'PriceRUB' => 0,
+                            'PriceUSD' => 0,
+                            'Required' => true
+                        )
+                    )
         		)
         ));
     }

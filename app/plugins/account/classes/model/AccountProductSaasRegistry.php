@@ -19,11 +19,23 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
                 'UsersLimit' => 5,
                 'Options' => array (
                     array (
-                        'OptionId' => 'agile',
+                        'OptionId' => 'core',
                         'Caption' => text('account37'),
-                        'PriceRUB' => 900,
-                        'PriceUSD' => 900,
+                        'PriceRUB' => 300,
+                        'PriceUSD' => 300,
                         'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'ee',
+                        'Caption' => text('account57'),
+                        'PriceRUB' => 300,
+                        'PriceUSD' => 300
+                    ),
+                    array (
+                        'OptionId' => 'dev',
+                        'Caption' => text('account58'),
+                        'PriceRUB' => 300,
+                        'PriceUSD' => 300
                     ),
                     array (
                         'OptionId' => 'support',
@@ -65,11 +77,23 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
                     'UsersLimit' => 10,
                     'Options' => array (
                         array (
-                            'OptionId' => 'agile',
+                            'OptionId' => 'core',
                             'Caption' => text('account37'),
-                            'PriceRUB' => 1800,
-                            'PriceUSD' => 1800,
+                            'PriceRUB' => 600,
+                            'PriceUSD' => 600,
                             'Required' => true
+                        ),
+                        array (
+                            'OptionId' => 'ee',
+                            'Caption' => text('account57'),
+                            'PriceRUB' => 600,
+                            'PriceUSD' => 600
+                        ),
+                        array (
+                            'OptionId' => 'dev',
+                            'Caption' => text('account58'),
+                            'PriceRUB' => 600,
+                            'PriceUSD' => 600
                         ),
                         array (
                             'OptionId' => 'support',
@@ -110,37 +134,49 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
                     'PaymentRequired' => true,
                     'UsersLimit' => 20,
                     'Options' => array (
-                            array (
-                                'OptionId' => 'agile',
-                                'Caption' => text('account37'),
-                                'PriceRUB' => 5400,
-                                'PriceUSD' => 5400,
-                                'Required' => true
-                            ),
-                            array (
-                                    'OptionId' => 'support',
-                                    'Caption' => text('account30'),
-                                    'PriceRUB' => 1200,
-                                    'PriceUSD' => 1200
-                            ),
-                            array (
-                                    'OptionId' => 'reqs',
-                                    'Caption' => text('account31'),
-                                    'PriceRUB' => 4500,
-                                    'PriceUSD' => 4500
-                            ),
-                            array (
-                                    'OptionId' => 'qa',
-                                    'Caption' => text('account32'),
-                                    'PriceRUB' => 3600,
-                                    'PriceUSD' => 3600
-                            ),
-                            array (
-                                    'OptionId' => 'docs',
-                                    'Caption' => text('account33'),
-                                    'PriceRUB' => 3000,
-                                    'PriceUSD' => 3000
-                            )
+                        array (
+                            'OptionId' => 'core',
+                            'Caption' => text('account37'),
+                            'PriceRUB' => 1800,
+                            'PriceUSD' => 1800,
+                            'Required' => true
+                        ),
+                        array (
+                            'OptionId' => 'ee',
+                            'Caption' => text('account57'),
+                            'PriceRUB' => 1800,
+                            'PriceUSD' => 1800
+                        ),
+                        array (
+                            'OptionId' => 'dev',
+                            'Caption' => text('account58'),
+                            'PriceRUB' => 1800,
+                            'PriceUSD' => 1800
+                        ),
+                        array (
+                                'OptionId' => 'support',
+                                'Caption' => text('account30'),
+                                'PriceRUB' => 1200,
+                                'PriceUSD' => 1200
+                        ),
+                        array (
+                                'OptionId' => 'reqs',
+                                'Caption' => text('account31'),
+                                'PriceRUB' => 4500,
+                                'PriceUSD' => 4500
+                        ),
+                        array (
+                                'OptionId' => 'qa',
+                                'Caption' => text('account32'),
+                                'PriceRUB' => 3600,
+                                'PriceUSD' => 3600
+                        ),
+                        array (
+                                'OptionId' => 'docs',
+                                'Caption' => text('account33'),
+                                'PriceRUB' => 3000,
+                                'PriceUSD' => 3000
+                        )
                     )
 				),
         		array (
@@ -157,11 +193,23 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
                     'UsersLimit' => 30,
                     'Options' => array (
                         array (
-                            'OptionId' => 'agile',
+                            'OptionId' => 'core',
                             'Caption' => text('account37'),
-                            'PriceRUB' => 7200,
-                            'PriceUSD' => 7200,
+                            'PriceRUB' => 2400,
+                            'PriceUSD' => 2400,
                             'Required' => true
+                        ),
+                        array (
+                            'OptionId' => 'ee',
+                            'Caption' => text('account57'),
+                            'PriceRUB' => 2400,
+                            'PriceUSD' => 2400
+                        ),
+                        array (
+                            'OptionId' => 'dev',
+                            'Caption' => text('account58'),
+                            'PriceRUB' => 2400,
+                            'PriceUSD' => 2400
                         ),
                         array (
                             'OptionId' => 'support',

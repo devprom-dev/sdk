@@ -19,20 +19,21 @@ class ProcessOrder extends CommandForm
     function execute()
     {
         $this->logStart();
-        switch( $this->getAction() ) {
+        switch( strtolower($this->getAction()) ) {
             case CO_ACTION_CREATE:
-            case 'paymentAviso':
+            case 'paymentaviso':
+            case 'paymentsuccess':
                 if ( $this->validate() ) $this->create();
                 if ( $this->validate() ) $this->install();
                 break;
 
             case CO_ACTION_MODIFY:
-            case 'checkOrder':
+            case 'checkorder':
                 if ( $this->validate() ) $this->modify( $_REQUEST['object_id'] );
                 break;
 
             case CO_ACTION_DELETE:
-            case 'cancelOrder':
+            case 'cancelorder':
                 if ( $this->validate() ) $this->delete( $_REQUEST['object_id'] );
                 break;
         }

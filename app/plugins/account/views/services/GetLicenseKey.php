@@ -352,7 +352,7 @@ class GetLicenseKey extends CommandForm
                 }
 			}
 		}
-        $parms['Options'] = join(',', $selected_options);
+        $parms['Options'] = join(',', array_unique($selected_options));
 		return $parms;
 	}
 

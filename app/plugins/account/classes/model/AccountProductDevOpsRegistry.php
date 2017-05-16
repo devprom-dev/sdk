@@ -17,7 +17,27 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
                 'PriceRUB' => 300,
                 'PriceUSD' => 5,
                 'PaymentRequired' => true,
-                'UsersLimit' => 3
+                'UsersLimit' => 3,
+                'Options' => array (
+                    array (
+                        'OptionId' => 'support',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'dev',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'core',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    )
+                )
             ),
             array (
                 'entityId' => 'LicenseDevOpsBoard-10',
@@ -31,7 +51,27 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
                 'PriceRUB' => 3600,
                 'PriceUSD' => 49,
                 'PaymentRequired' => true,
-                'UsersLimit' => 10
+                'UsersLimit' => 10,
+                'Options' => array (
+                    array (
+                        'OptionId' => 'support',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'dev',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'core',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    )
+                )
             ),
             array (
                 'entityId' => 'LicenseDevOpsBoardUnlimited',
@@ -44,7 +84,27 @@ class AccountProductDevOpsRegistry extends ObjectRegistrySQL
                 'ValueDefault' => 6,
                 'PriceRUB' => 20990,
                 'PriceUSD' => 350,
-                'PaymentRequired' => true
+                'PaymentRequired' => true,
+                'Options' => array (
+                    array (
+                        'OptionId' => 'support',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'dev',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'core',
+                        'PriceRUB' => 0,
+                        'PriceUSD' => 0,
+                        'Required' => true
+                    )
+                )
             )
         ));
     }

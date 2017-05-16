@@ -193,7 +193,13 @@ class LicenseForm extends AjaxForm
                 echo '<input type="hidden" name="token2" value="'.htmlspecialchars($_REQUEST['token2']).'">';
                 echo '<input type="hidden" name="LicenseScheme" value="'.htmlspecialchars($_REQUEST['LicenseScheme']).'">';
                 echo '</td>';
-                if ( is_array($this->getProduct()->get('Options')) ) {
+                $options = array_filter(
+                    is_array($this->getProduct()->get('Options')) ? $this->getProduct()->get('Options') : array(),
+                    function($value) {
+                        return !$value['Required'];
+                    }
+                );
+                if ( count($options) > 0 ) {
                     echo '<td valign="top" width="70%">';
                     echo '<b>' . text('account35') . '</b>';
                     echo '<div/><br/>';

@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
+include "persisters/ActivityEx2TimingPersister.php";
 
 class ActivityMetadataBuilderEx2Timing extends ObjectMetadataEntityBuilder
 {
@@ -9,6 +10,7 @@ class ActivityMetadataBuilderEx2Timing extends ObjectMetadataEntityBuilder
 
         $metadata->addAttribute('TaskType', 'REF_TaskTypeId', translate('Тип задачи'), true, false, '', 15);
         $metadata->setAttributeRequired('TaskType', true);
+        $metadata->addPersister(new ActivityEx2TimingPersister());
 
         $tasktype = new Metaobject('pm_TaskType');
         $type_it = $tasktype->getRegistry()->Query(
