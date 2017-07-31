@@ -139,6 +139,14 @@ class GetLicenseKey extends CommandForm
 				    list( $licenseKey, $licenseValue ) = $this->getTrialLicense($_REQUEST['InstallationUID']);
 					$license_data['key'] = $licenseKey;
                     $license_data['value'] = $licenseValue;
+
+                    $data = json_decode($licenseValue, true);
+                    $this->proposeLead(
+                        $_REQUEST['InstallationUID'],
+                        urldecode($_REQUEST['Redirect']),
+                        $user_it->get('Email'),
+                        $data['timestamp']
+                    );
 					break;
 					
 				default:
@@ -444,4 +452,46 @@ class GetLicenseKey extends CommandForm
 
 		exit();
 	}
+
+    function proposeLead($uid, $server, $email, $timestamp)
+    {
+        $json = json_encode([
+            'Caption' => $email,
+            'Description' =>
+                'IID: ' . $uid . '<br/>' .
+                'Location: ' . $server . '<br/>'
+        ]);
+
+        $ch = curl_init('http://hq.devprom.ru/pm/sales/api/latest/issues');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Devprom-Auth-Key: 49191a9f577317588fdaf37304ec1191']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+
+        $result = curl_exec($ch);
+        curl_close($ch);
+
+        $issue = json_decode($result, true);
+        var_export($issue);
+
+        $json = json_encode([
+            'Caption' => 'Спросить про результаты ознакомления',
+            'ChangeRequest' => $issue['Id'],
+            'PlannedFinishDate' => $timestamp
+        ]);
+
+        $ch = curl_init('http://hq.devprom.ru/pm/sales/api/latest/tasks');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Devprom-Auth-Key: 49191a9f577317588fdaf37304ec1191']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+
+        $result = curl_exec($ch);
+        curl_close($ch);
+        var_export($result);
+    }
 }

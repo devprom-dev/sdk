@@ -27,17 +27,20 @@ class ProcessOrder2 extends ProcessOrder
 
             $license_verified = openssl_verify(
                     json_encode($was_parms) . $order_info['InstallationUID'],
-                    base64_decode(trim($order_info['WasLicenseKey'])),
+                    base64_decode(trim(urldecode($order_info['WasLicenseKey']))),
                     file_get_contents(SERVER_ROOT_PATH . 'templates/config/license.pub'),
                     OPENSSL_ALGO_SHA512) == 1;
+            Logger::getLogger('Commands')->info('License verified: '.var_export($license_verified, true));
 
             if ( $license_verified && is_array($was_parms) && $was_parms['timestamp'] != '' )
             {
                 $dt1 = new DateTime($was_parms['timestamp']);
                 $dt2 = new DateTime();
-                $left_days = $dt1->diff($dt2)->days;
+                $interval = $dt2->diff($dt1);
+                $left_days = ($interval->invert ? -1 : 1) * $interval->days;
+                Logger::getLogger('Commands')->info('LeftDays: '.var_export($left_days, true));
                 if ( $left_days > 0 ) {
-                    $days += $left_days;
+                    $days += $left_days + 1;
                     $date->add(new DateInterval('P'.$left_days.'D'));
                 }
             }
