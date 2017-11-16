@@ -43,9 +43,8 @@ class ScriptIntercomBuilder extends ScriptBuilder
     	}
     	
     	$file_name = tempnam(sys_get_temp_dir(), 'intercom');
-    	
     	file_put_contents($file_name, $content);
-    	
     	$object->addScriptFile($file_name);
+    	unlink($file_name);
     }
 }

@@ -43,7 +43,7 @@ class LicenseSAASBaseIterator extends LicenseIterator
 
     protected function getLimitDefault()
     {
-        return 5;
+        return 10;
     }
 
     function allowCreate( & $object )

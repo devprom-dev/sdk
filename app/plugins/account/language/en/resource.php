@@ -7,7 +7,7 @@ $plugin_text_array = array
     3 => 'Choose the product',
     4 => 'Specify duration of use in monthes',
     6 => 'I accept the <a target="_blank" href="http://devprom.ru/download/%D0%9B%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9-%D0%B4%D0%BE%D0%B3%D0%BE%D0%B2%D0%BE%D1%80-SaaS">service agreement</a>',
-    10 => '10 users',
+    10 => '%1 users',
     11 => '30 users',
     12 => '100 users',
     13 => 'Payment will be processed by <a target="_blank" href="http://www.payonline.ru/en/whoweare/">PayOnline processing service</a>',

@@ -251,6 +251,11 @@ class InitializeInstance extends Page
     protected function setupProjectTemplates()
     {
         if ( $this->language == 2 ) {
+            $titles = array (
+                'kanban_en.xml' => '',
+                'scrum_en.xml' => '',
+                'scrumban_en.xml' => ''
+            );
             $allowed_templates = array (
                 'kanban_en.xml' => '',
                 'scrum_en.xml' => '',
@@ -258,6 +263,11 @@ class InitializeInstance extends Page
             );
         }
         else {
+            $titles = array (
+                'kanban_en.xml' => 'Канбан',
+                'scrum_en.xml' => 'Скрам',
+                'scrumban_en.xml' => 'Скрамбан'
+            );
             $allowed_templates = array (
                 'kanban_ru.xml' => 'Визуализируйте производственный процесс при помощи Kanban. Улучшайте ваш процесс, чтобы снизить время цикла.',
                 'scrum_ru.xml' => 'Часто демонстрируйте результат при помощи Scrum. Используйте простые метрики для управления командой.',
@@ -277,6 +287,9 @@ class InitializeInstance extends Page
                     $template_it->object->modify_parms(
                         $template_it->getId(),
                         array (
+                            'Caption' => $titles[$template_it->get('FileName')] != ''
+                                            ? $titles[$template_it->get('FileName')]
+                                            : $template_it->get('Caption'),
                             'Description' => $allowed_templates[$template_it->get('FileName')],
                             'OrderNum' => $templateIndex
                         )

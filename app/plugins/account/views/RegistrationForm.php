@@ -94,6 +94,8 @@ class RegistrationForm extends AjaxForm
 				echo '<input type="hidden" name="Redirect" value="'.htmlspecialchars($_REQUEST['Redirect']).'">';
                 echo '<input type="hidden" name="LicenseScheme" value="'.htmlspecialchars($_REQUEST['LicenseScheme']).'">';
                 echo '<input type="hidden" name="LicenseType" value="'.htmlspecialchars($_REQUEST['LicenseType']).'">';
+                echo '<input type="hidden" name="token1" value="'.htmlspecialchars($_REQUEST['token1']).'">';
+                echo '<input type="hidden" name="token2" value="'.htmlspecialchars($_REQUEST['token2']).'">';
                 break;
         	default:
         		return parent::drawCustomAttribute( $attribute, $value, $tab_index );

@@ -63,65 +63,123 @@ class AccountProductSaasRegistry extends ObjectRegistrySQL
                     )
                 )
             ),
-        		array ( 
-                    'entityId' => 'LicenseSAASALM-10',
-                    'LicenseType' => 'LicenseSAASALM',
-                    'Caption' => text('account10'),
-                    'CaptionText' => '',
-                    'RequiredFields' => array('AggreementForm','Aggreement'),
-                    'ValueName' => text('account4'),
-                    'ValueDefault' => 3,
-                    'PaymentRequired' => true,
-                    'PriceRUB' => 0,
-                    'PriceUSD' => 0,
-                    'UsersLimit' => 10,
-                    'Options' => array (
-                        array (
-                            'OptionId' => 'core',
-                            'Caption' => text('account37'),
-                            'PriceRUB' => 600,
-                            'PriceUSD' => 600,
-                            'Required' => true
-                        ),
-                        array (
-                            'OptionId' => 'ee',
-                            'Caption' => text('account57'),
-                            'PriceRUB' => 600,
-                            'PriceUSD' => 600
-                        ),
-                        array (
-                            'OptionId' => 'dev',
-                            'Caption' => text('account58'),
-                            'PriceRUB' => 600,
-                            'PriceUSD' => 600
-                        ),
-                        array (
-                            'OptionId' => 'support',
-                            'Caption' => text('account30'),
-                            'PriceRUB' => 1200,
-                            'PriceUSD' => 1200
-                        ),
-                        array (
-                            'OptionId' => 'reqs',
-                            'Caption' => text('account31'),
-                            'PriceRUB' => 1500,
-                            'PriceUSD' => 1500
-                        ),
-                        array (
-                            'OptionId' => 'qa',
-                            'Caption' => text('account32'),
-                            'PriceRUB' => 1200,
-                            'PriceUSD' => 1200
-                        ),
-                        array (
-                            'OptionId' => 'docs',
-                            'Caption' => text('account33'),
-                            'PriceRUB' => 1000,
-                            'PriceUSD' => 1000
-                        )
+            array (
+                'entityId' => 'LicenseSAASALM-10',
+                'LicenseType' => 'LicenseSAASALM',
+                'Caption' => str_replace('%1', 10, text('account10')),
+                'CaptionText' => '',
+                'RequiredFields' => array('AggreementForm','Aggreement'),
+                'ValueName' => text('account4'),
+                'ValueDefault' => 3,
+                'PaymentRequired' => true,
+                'PriceRUB' => 0,
+                'PriceUSD' => 0,
+                'UsersLimit' => 10,
+                'Options' => array (
+                    array (
+                        'OptionId' => 'core',
+                        'Caption' => text('account37'),
+                        'PriceRUB' => 600,
+                        'PriceUSD' => 600,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'ee',
+                        'Caption' => text('account57'),
+                        'PriceRUB' => 600,
+                        'PriceUSD' => 600
+                    ),
+                    array (
+                        'OptionId' => 'dev',
+                        'Caption' => text('account58'),
+                        'PriceRUB' => 600,
+                        'PriceUSD' => 600
+                    ),
+                    array (
+                        'OptionId' => 'support',
+                        'Caption' => text('account30'),
+                        'PriceRUB' => 1200,
+                        'PriceUSD' => 1200
+                    ),
+                    array (
+                        'OptionId' => 'reqs',
+                        'Caption' => text('account31'),
+                        'PriceRUB' => 1500,
+                        'PriceUSD' => 1500
+                    ),
+                    array (
+                        'OptionId' => 'qa',
+                        'Caption' => text('account32'),
+                        'PriceRUB' => 1200,
+                        'PriceUSD' => 1200
+                    ),
+                    array (
+                        'OptionId' => 'docs',
+                        'Caption' => text('account33'),
+                        'PriceRUB' => 1000,
+                        'PriceUSD' => 1000
                     )
-        		),
-				array (
+                )
+            ),
+            array (
+                'entityId' => 'LicenseSAASALM-15',
+                'LicenseType' => 'LicenseSAASALM',
+                'Caption' => str_replace('%1', 15, text('account10')),
+                'CaptionText' => '',
+                'RequiredFields' => array('AggreementForm','Aggreement'),
+                'ValueName' => text('account4'),
+                'ValueDefault' => 3,
+                'PaymentRequired' => true,
+                'PriceRUB' => 0,
+                'PriceUSD' => 0,
+                'UsersLimit' => 15,
+                'Options' => array (
+                    array (
+                        'OptionId' => 'core',
+                        'Caption' => text('account37'),
+                        'PriceRUB' => 900,
+                        'PriceUSD' => 900,
+                        'Required' => true
+                    ),
+                    array (
+                        'OptionId' => 'ee',
+                        'Caption' => text('account57'),
+                        'PriceRUB' => 900,
+                        'PriceUSD' => 900
+                    ),
+                    array (
+                        'OptionId' => 'dev',
+                        'Caption' => text('account58'),
+                        'PriceRUB' => 900,
+                        'PriceUSD' => 900
+                    ),
+                    array (
+                        'OptionId' => 'support',
+                        'Caption' => text('account30'),
+                        'PriceRUB' => 1200,
+                        'PriceUSD' => 1200
+                    ),
+                    array (
+                        'OptionId' => 'reqs',
+                        'Caption' => text('account31'),
+                        'PriceRUB' => 2250,
+                        'PriceUSD' => 2250
+                    ),
+                    array (
+                        'OptionId' => 'qa',
+                        'Caption' => text('account32'),
+                        'PriceRUB' => 1800,
+                        'PriceUSD' => 1800
+                    ),
+                    array (
+                        'OptionId' => 'docs',
+                        'Caption' => text('account33'),
+                        'PriceRUB' => 1500,
+                        'PriceUSD' => 1500
+                    )
+                )
+            ),
+            array (
                     'entityId' => 'LicenseSAASALM20',
                     'LicenseType' => 'LicenseSAASALM20',
                     'Caption' => text('account42'),
