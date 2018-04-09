@@ -8,16 +8,16 @@ class KnowledgeBaseAccessPredicate extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
- 		$project_roles = getSession()->getParticipantIt()->getRoles();
- 		if( count($project_roles) < 1 ) return " AND 1 = 1 ";
-
 		return  " AND NOT EXISTS (" .
 				"	   SELECT a.VPD, a.ObjectId " .
-				"		 FROM pm_ObjectAccess a " .
+				"		 FROM pm_ObjectAccess a, pm_ParticipantRole pr, pm_Participant p " .
 				"	    WHERE INSTR(t.ParentPath, CONCAT(',',a.ObjectId,',')) > 0 " .
 				"		  AND a.AccessType = 'none'" .
 				"		  AND a.ObjectClass = 'projectpage' " .
-				"		  AND a.ProjectRole IN (".join(",", array_values($project_roles)).")" .
+				"		  AND a.ProjectRole = pr.ProjectRole " .
+                "		  AND pr.Participant = p.pm_ParticipantId " .
+                "		  AND p.SystemUser = " . getSession()->getUserIt()->getId().
+                "		  AND a.VPD = p.VPD " .
 				"         AND a.VPD IN ('".join("','",$this->getObject()->getVpds())."')" .
 				" 	  )" .
 				" AND NOT EXISTS (" .

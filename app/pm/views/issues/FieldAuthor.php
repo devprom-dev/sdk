@@ -1,5 +1,4 @@
 <?php
-include SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueAuthor.php";
 
 class FieldAuthor extends FieldAutoCompleteObject
 {
@@ -8,10 +7,5 @@ class FieldAuthor extends FieldAutoCompleteObject
 		parent::__construct(getFactory()->getObject('IssueAuthor'));
 		$this->setAppendable();
 		$this->setSearchEnabled(false);
-	}
-	
-	function getValidator()
-	{
-		return new ModelValidatorIssueAuthor();
 	}
 }

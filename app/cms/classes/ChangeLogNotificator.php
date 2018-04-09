@@ -65,6 +65,8 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 
 		foreach( $attributes as $att_name => $attribute ) 
 		{
+		    if ( !$object_it->defined($att_name) || !$prev_object_it->defined($att_name) ) continue;
+
             if ( $object_it->object->getAttributeType($att_name) == 'date' ) {
                 $was_value = getSession()->getLanguage()->getDateFormattedShort($prev_object_it->get($att_name));
                 $now_value = getSession()->getLanguage()->getDateFormattedShort($object_it->get($att_name));
@@ -94,7 +96,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 				$now_ref = $object_it->getRef($att_name);
 
 				$content .= translate($object_it->object->getAttributeUserName($att_name))
-								.': '.$now_ref->getDisplayName().Chr(10).Chr(13);
+								.': '.$now_ref->getDisplayName().'<br/>';
 			} 
 			else 
 			{
@@ -102,7 +104,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 				if ( $now_value == 'N' ) $now_value = translate('Нет'); 
 
 				$content .= translate($object_it->object->getAttributeUserName($att_name))
-								.': '.$now_value.Chr(10).Chr(13);
+								.': '.$now_value.'<br/>';
 			}
         }
 
@@ -141,6 +143,7 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		$id = $change_log->add_parms($parms);
 		
 		$log_attribute = getFactory()->getObject('ObjectChangeLogAttribute');
+        $log_attribute->setNotificationEnabled(false);
 		foreach( $this->modified_attributes as $attribute )
 		{
 		    if ( in_array($attribute, array('RecordModified','RecordCreated')) ) continue;

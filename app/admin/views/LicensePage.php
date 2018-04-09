@@ -75,7 +75,7 @@ class LicensePage extends AdminPage
             )
         ));
 
-        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->invalidate('sessions');
         getSession()->close();
         getSession()->open($user_it);
 

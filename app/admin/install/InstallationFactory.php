@@ -8,7 +8,6 @@ include_once 'ClearCache.php';
 include_once 'CopyConfigurationFiles.php';
 include_once 'SetupCalendar.php';
 include_once 'SetupMySQLIni.php';
-include_once 'SetupObjectStateAttribute.php';
 include_once 'SetupPhpIni.php';
 include_once 'UpgradeCustomerUIDLocation.php';
 include_once 'UpgradeMySQL.php';
@@ -56,7 +55,6 @@ class InstallationFactory
 	        new CopyConfigurationFiles(),
 	        new SetupCalendar(),
 	        new SetupMySQLIni(),
-	        new SetupObjectStateAttribute(),
 	        new SetupPhpIni(),
         	new SetupPhpOpCache(),
 	        new UpgradeCustomerUIDLocation(),

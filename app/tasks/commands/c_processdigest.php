@@ -59,11 +59,13 @@ class ProcessDigest extends TaskCommand
 			$log_items = $parameters['limit'] > 0 ? $parameters['limit'] : 0;
 			$step = $parameters['step'] > 0 ? $parameters['step'] : 100;
 			
-			$notification = $model_factory->getObject('Notification');
-			
 			// get participants to be notified
-			$recipient_it = $notification->getParticipantIt( $notification_type );
-
+            $recipient_it = getFactory()->getObject('Participant')->getRegistry()->Query(
+                array(
+                    new ParticipantActivePredicate(),
+                    new FilterAttributePredicate('NotificationEmailType', $notification_type)
+                )
+            );
 			switch ( $notification_type )
 			{
 				case 'every10minutes':

@@ -28,6 +28,15 @@ class FilterStateMethod extends FilterWebMethod
             $state_it->moveNext();
         }
 
+        if ( $state_it->object->getPage() != '?' ) {
+            $values = array_merge(
+                $values,
+                array (
+                    '_options' => array( 'uid' => 'options', 'href' => $state_it->object->getPage() )
+                )
+            );
+        }
+
         return $values;
     }
 

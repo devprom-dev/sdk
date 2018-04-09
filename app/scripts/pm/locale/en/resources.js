@@ -50,5 +50,10 @@ var messages = {
 	"sc-key-edt-up": "Go to previous section",
 	"sc-key-edt-down": "Go to next section",
 	"sc-key-edt-mod": "Modify attributes",
-	"sc-key-edt-workflow": "Next state"
+	"sc-key-edt-workflow": "Next state",
+    'datepicker.clear.btn': "Clear",
+    'datepicker.prevweek.btn': "-1 week",
+    'datepicker.prevmonth.btn': "-1 month",
+    'datepicker.prev3.btn': "-3 days",
+    'datepicker.nextmonth.btn': "+1 week"
 };

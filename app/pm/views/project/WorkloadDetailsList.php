@@ -8,7 +8,7 @@ class WorkloadDetailsList extends PMDetailsList
 	function setupColumns()
 	{
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		if ( $methodology_it->HasTasks() ) {
+		if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Task')) ) {
 			$this->strategy = $methodology_it->TaskEstimationUsed() ? new EstimationHoursStrategy() : new EstimationNoneStrategy();
 			$this->buildTasksWorkload($methodology_it);
 			if ( $this->strategy instanceof EstimationNoneStrategy ) {
@@ -33,9 +33,20 @@ class WorkloadDetailsList extends PMDetailsList
 			'user_id' => $object_it->getId(),
 			'user_name' => $object_it->getDisplayName(),
 			'data' => $this->workload[$object_it->getId()],
-			'measure' => trim($this->strategy->getDimensionText(''))
+			'measure' => $this->strategy
 		));
 	}
+
+    function drawCellShort( $object_it, $attr )
+    {
+        echo $this->getTable()->getView()->render('pm/UserWorkloadDetails.php', array (
+            'user_id' => $object_it->getId(),
+            'user_name' => $object_it->getDisplayName(),
+            'data' => $this->workload[$object_it->getId()],
+            'measure' => $this->strategy,
+            'skipPhoto' => 'true'
+        ));
+    }
 
 	protected function buildTasksWorkload( $methodology_it )
 	{
@@ -158,24 +169,14 @@ class WorkloadDetailsList extends PMDetailsList
 			$this->strategy->getEstimationAggregate()
 		);
 		$object->addAggregate( $planned_aggregate );
-		$left_aggregate = new AggregateBase(
-			'Owner',
-			$this->strategy->getEstimationAggregate() == 'COUNT' ? 'Owner' : 'EstimationLeft',
-			$this->strategy->getEstimationAggregate()
-		);
-		$object->addAggregate( $left_aggregate );
 
 		$task_it = $object->getAggregated();
 		while( !$task_it->end() ) {
 			$value = $task_it->get($planned_aggregate->getAggregateAlias());
 			if ( $value == '' ) $value = 0;
 			$this->workload[$task_it->get('Owner')]['Planned'] += $value;
-
-			$value = $task_it->get($left_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$task_it->get('Owner')]['LeftWork'] += $value;
-
-			$task_it->moveNext();
+            $this->workload[$task_it->get('Owner')]['LeftWork'] += $value;
+            $task_it->moveNext();
 		}
 
 		$iteration_registry = getFactory()->getObject('Release')->getRegistry();

@@ -12,12 +12,16 @@ class ModelDataTypeMappingDate extends ModelDataTypeMapping
 	public function map( $value )
 	{
 		if ( $value == '' ) return '';
-		if ( strpos($value, '0000-00-00') !== false ) return '';
-		if ( strtolower($value) == 'now()' ) return $value;
 
-		$db_date = getLanguage()->getDbDate(trim($value, "'"));
-		if ( $db_date == '' ) return '';
+        $language = getLanguage();
+        $value = SystemDateTime::parseRelativeDateTime($value, $language);
 
-		return $db_date;
+        if ( strpos($value, '0000-00-00') !== false ) return '';
+        if ( strtolower($value) == 'now()' ) return $value;
+
+        $value = $language->getDbDate(trim($value, "'"));
+        if ( $value == '' ) return '';
+
+		return $value;
 	}
 }

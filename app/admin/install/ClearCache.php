@@ -6,7 +6,7 @@ class ClearCache extends Installable
 
 	public function __construct() {
 		parent::__construct();
-		$this->setCachePath(defined('CACHE_PATH') ? CACHE_PATH : SERVER_ROOT_PATH.'cache/');
+		$this->setCachePath(defined('CACHE_PATH') ? CACHE_PATH : SERVER_ROOT_PATH.'cache');
 	}
 
 	public function setCachePath( $path ) {
@@ -34,9 +34,27 @@ class ClearCache extends Installable
 	function install()
 	{
 		$lock = new CacheLock();
-        FileSystem::rmdirr($this->cachePath);
-        $lock->Release();
+        $lock->Lock();
 
+        FileSystem::rmdirr($this->cachePath);
+
+        $cmd = $this->getPhpExecutable() . ' "' . SERVER_ROOT_PATH . 'servicedesk/console" cache:warmup --env=prod 2>&1';
+        $this->info('Warmup the symfony2 cache: ' . $cmd);
+        exec($cmd, $output, $retCode);
+        $this->info('Result: ' . $retCode . ', Output: ' . var_export($output, true));
+
+        if ( function_exists('opcache_reset') ) opcache_reset();
+
+        $lock->Release();
 		return true;
 	}
+
+    public function getPhpExecutable()
+    {
+        if ($this->checkWindows()) {
+            return '"'.SERVER_ROOT . '/php/php"';
+        } else {
+            return 'php';
+        }
+    }
 }

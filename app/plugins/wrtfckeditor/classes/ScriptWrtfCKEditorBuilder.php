@@ -18,7 +18,7 @@ class ScriptWrtfCKEditorBuilder extends ScriptBuilder
         $object->addScriptFile(SERVER_ROOT_PATH."/plugins/wrtfckeditor/resources/js/locals/".$language."/resource.js");
         $object->addScriptText("
             $.extend(ckeditor_resources, {
-                'new-issue': '".translate('Создать пожелание')."',
+                'new-issue': '".text('wrtfckeditor10')."',
                 'new-task': '".translate('Создать задачу')."',
                 'issue-title': '".translate('Пожелание')."',
                 'task-title': '".translate('Задача')."'

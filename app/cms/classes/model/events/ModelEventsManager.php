@@ -79,9 +79,10 @@ class ModelEventsManager
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
 
 			if ( $this->delay ) {
-			    $this->delayedNotifications[] = function() use ($notificator, $data, $object_it) {
+			    $delayedObjectIt = $object_it->copy();
+			    $this->delayedNotifications[] = function() use ($notificator, $data, $delayedObjectIt) {
                     $notificator->setRecordData( $data );
-                    $notificator->add( $object_it );
+                    $notificator->add( $delayedObjectIt );
                 };
             }
             else {
@@ -98,8 +99,6 @@ class ModelEventsManager
 			if ( !$this->notificationEnabled($object_it, $notificator) ) continue;
 
 			$notificator->setRecordData( $data );
-            $object_it->object->removeNotificator(get_class($notificator));
-
             $notificator->modify( $prev_object_it, $object_it );
 		}
 	}
@@ -115,20 +114,19 @@ class ModelEventsManager
 	
 	public function executeEventsAfterBusinessTransaction( $object_it, $interface_name, $data = array() )
 	{
-		foreach( getSession()->getBuilders($interface_name) as $handler )
-		{
-			$handler->setObjectIt($object_it->object->getExact($object_it->getId()));
-			
-			if ( !$handler->readyToHandle() ) continue;
-
-			$handler->process( $data );
-		}
-		
-		$object_it->moveFirst();
+        while( !$object_it->end() ) {
+            foreach( getSession()->getBuilders($interface_name) as $handler ) {
+                $handler->setObjectIt($object_it->copy());
+                if ( !$handler->readyToHandle() ) continue;
+                $handler->process( $data );
+            }
+            $object_it->moveNext();
+        }
 	}
 
 	public function releaseNotifications()
     {
+        $this->delayNotifications(false);
         foreach( $this->delayedNotifications as $functor ) {
             $functor();
         }

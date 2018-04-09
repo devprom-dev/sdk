@@ -67,25 +67,20 @@ class EmailNotificator extends ObjectFactoryNotificator
 					? $this->handlers[$object_it->object->getClassName()] : $this->common_handler; 
  	}
 	
-	public function sendMail( $action, $object_it, $prev_object_it ) 
+	public function sendMail( $action, $object_it, $prev_object_it, $usersToNotify )
 	{
 		$queues = array();
 		
-		$from = $this->getSender($object_it, $action);
-		if( $from == '' ) {
-			$this->info('Sender is undefined');
-			return $queues;
-		}
-
 		$self_emails = array();
 
 		// skip current user
 		$this->addRecipient(getSession()->getUserIt(), $self_emails);
 
 		$recipients = array_diff(
-				array_unique($this->getRecipientArray($object_it, $prev_object_it, $action)),
-				$self_emails
+            array_unique($this->getRecipientArray($object_it, $prev_object_it, $action, $usersToNotify)),
+            $self_emails
 		);
+
 		if( count($recipients) < 1 ) {
 			$this->info('There are no recipients');
 			return $queues;
@@ -104,7 +99,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 			if ( count($parms['fields']) < 1 ) continue;
 
 			$mail = new HtmlMailBox();
-			$mail->setFrom($from);
+			$mail->setFromUser(getSession()->getUserIt());
 			$mail->appendAddress( $this->getAddress($recipient) );
 			$mail->setSubject( $this->getSubject( $object_it, $prev_object_it, $action, $recipient ) );
 	   		$mail->setBody($render_service->getContent($parms['template'], $parms));
@@ -114,15 +109,80 @@ class EmailNotificator extends ObjectFactoryNotificator
 		
 		return $queues;
 	}
-	
+
+	protected function notifyUsersOnChanges( $action, $object_it, $prev_object_it, $usersToNotify )
+    {
+        $handler = $this->getHandler( $object_it );
+
+        $participants = array_filter(
+            $handler->getParticipants( $object_it, $prev_object_it, $action ), function($id) {
+                return is_numeric($id) && $id > 0;
+            }
+        );
+
+        // include participants who wants to receive all notifications
+        $participant = getFactory()->getObject('Participant');
+        $participants =
+            array_merge(
+                $participants,
+                $participant->getRegistry()->Query(
+                    array(
+                        new ParticipantActivePredicate(),
+                        new FilterVpdPredicate(),
+                        new FilterHasNoAttributePredicate('NotificationTrackingType', 'system')
+                    )
+                )->idsToArray()
+            );
+
+        $self = getSession()->getUserIt()->getId();
+        $users =
+            array_merge(
+                $usersToNotify,
+                $participant->getRegistry()->Query(
+                    array(
+                        new FilterInPredicate($participants)
+                    )
+                )->fieldToArray('SystemUser')
+            );
+
+        $users = array_filter(
+            array_merge(
+                $users, $handler->getUsers( $object_it, $prev_object_it, $action )
+            ),
+            function( $id ) use ($self) {
+                return is_numeric($id) && $id > 0 && $id != $self;
+            }
+        );
+        if ( count($users) < 1 ) return;
+
+        if ( $object_it->object instanceof Comment ) {
+            $object_it = $object_it->getAnchorIt();
+            $action = 'commented';
+        }
+
+        $notification = getFactory()->getObject('ObjectChangeNotification');
+        $notification->setNotificationEnabled(false);
+        $registry = $notification->getRegistry();
+
+        foreach( $users as $userId ) {
+            $registry->Create(
+                array(
+                    'ObjectId' => $object_it->getId(),
+                    'ObjectClass' => get_class($object_it->object),
+                    'SystemUser' => $userId,
+                    'Action' => $action
+                )
+            );
+        }
+    }
+
 	protected function process( $action, $object_it, $prev_object_it ) 
 	{
 		if ( !is_object($object_it->object->entity) ) return;
 
+		$doNotification = false;
 		switch ( $object_it->object->entity->get('ReferenceName') )
 		{ 
-			case 'pm_Participant' :
-			case 'pm_Project' :
 			case 'pm_Meeting':
 			case 'pm_MeetingParticipant' :
 			case 'pm_ChangeRequest' :
@@ -130,32 +190,28 @@ class EmailNotificator extends ObjectFactoryNotificator
 			case 'Comment' :
 			case 'pm_Question':
 			case 'BlogPost':
-				$this->sendMail($action, $object_it, $prev_object_it);
+                $doNotification = true;
 				break;
 
 			case 'pm_Task':
-				if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
-				{
-					$this->sendMail($action, $object_it, $prev_object_it);
+				if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) {
+                    $doNotification = true;
 				}
 				break;
 				
 			case 'WikiPage' :
 				$type_it = getFactory()->getObject('WikiType')->getExact($object_it->get('ReferenceName'));
-				
 				switch ( $type_it->get('ReferenceName') )
 				{
 					case 'Requirements':
-						if ( $action == 'modify' )
-						{
-							$this->sendMail($action, $object_it, $prev_object_it);
+						if ( $action == 'modify' ) {
+                            $doNotification = true;
 						}
 						break;
 
 					default:
-						if ( $action != 'delete' )
-						{
-							$this->sendMail($action, $object_it, $prev_object_it);
+						if ( $action != 'delete' ) {
+                            $doNotification = true;
 						}
 				}
 				break;
@@ -163,6 +219,19 @@ class EmailNotificator extends ObjectFactoryNotificator
 			default:
 				return;
 		}
+
+		if ( $doNotification ) {
+		    $usersToNotify = array_merge(
+		        $this->getMentions($object_it),
+                $this->getWatchers($object_it)
+            );
+
+            if ( in_array($action, array('add', 'modify')) ) {
+                $this->notifyUsersOnChanges($action, $object_it, $prev_object_it, $usersToNotify);
+            }
+
+            $this->sendMail($action, $object_it, $prev_object_it, $usersToNotify);
+        }
 	}
 		
 	protected function getAddress( $recipient )
@@ -210,37 +279,39 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 	}
 
-	protected function getRecipientArray( $object_it, $prev_object_it, $action ) 
+	protected function getRecipientArray( $object_it, $prev_object_it, $action, $usersToNotify )
 	{
 		$project_it = getSession()->getProjectIt();
-		$notification = getFactory()->getObject('Notification');
-		
+
 		$handler = $this->getHandler( $object_it );
 
 		$participants = array_filter($handler->getParticipants( $object_it, $prev_object_it, $action ), function($id) {
 			return is_numeric($id) && $id > 0;
 		});
 
-		$users = array_filter($handler->getUsers( $object_it, $prev_object_it, $action ), function( $id ) {
-			return is_numeric($id) && $id > 0;
-		});
-		
 		// include participants who wants to receive all notifications
         $participant = getFactory()->getObject('Participant');
-		$it = $participant->getRegistry()->Query(
-            new ParticipantActivePredicate(),
-            new FilterVpdPredicate()
-        );
-		while ( !$it->end() ) {
-			if ( $notification->getType( $it ) != 'all' ) {
-			    $it->moveNext();
-			    continue;
-			}
-			$participants[] = $it->getId();
-			$it->moveNext();
-		}
+        $participants =
+            array_merge(
+                $participants,
+                $participant->getRegistry()->Query(
+                        array(
+                            new ParticipantActivePredicate(),
+                            new FilterVpdPredicate(),
+                            new FilterHasNoAttributePredicate('NotificationTrackingType', 'system')
+                        )
+                    )->idsToArray()
+            );
 
-		// make email addresses
+        $users =
+            array_merge(
+                array_filter($handler->getUsers( $object_it, $prev_object_it, $action ), function( $id ) {
+                    return is_numeric($id) && $id > 0;
+                }),
+                $usersToNotify
+            );
+
+        // make email addresses
 		$emails = array();
 
 		// process users
@@ -261,7 +332,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 		{
 			// check if user is a prticipant
 			$it = $project_it->getParticipantForUserIt( $systemuser_it );
-			if ( $it->count() < 1 ) {
+			if ( $it->count() < 1 && $systemuser_it->get('NotificationEmailType') != '' ) {
 				$this->addRecipient($systemuser_it, $emails);
 			}
 			else {
@@ -286,21 +357,26 @@ class EmailNotificator extends ObjectFactoryNotificator
 		while( !$participant_it->end() )
 		{
 			// exclude those who don't want to receive direct notifications
-			if ( !$handler->IsParticipantNotified($participant_it) )
-			{
+			if ( !$handler->IsParticipantNotified($participant_it) ) {
 				$this->info($participant_it->getDisplayName().' skipped as non notified');
 				$participant_it->moveNext();
 				continue;
 			}
 			
-			// exlude those who have no access to view object
-			if ( !$handler->participantHasAccess($participant_it, $object_it) )
-			{
+			// exclude those who have no access to view object
+			if ( !$handler->participantHasAccess($participant_it, $object_it) ) {
 				$this->info($participant_it->getDisplayName().' skipped as access restricted');
 				$participant_it->moveNext();
 				continue;
 			}
-			
+
+            // exclude those who have no access to view object
+            if ( method_exists($object_it, 'getAnchorIt') && !$handler->participantHasAccess($participant_it, $object_it->getAnchorIt()) ) {
+                $this->info($participant_it->getDisplayName().' skipped as access restricted');
+                $participant_it->moveNext();
+                continue;
+            }
+
 			$caption = $this->addRecipient($participant_it, $emails);
 			
 			// remember the reason addressee will receive the notification
@@ -311,19 +387,13 @@ class EmailNotificator extends ObjectFactoryNotificator
 			
 			$participant_it->moveNext();
 		}
-		
-		// process watchers on the object
-		$emails = array_merge($emails, $this->addWatchers($object_it));
-
-		// process mentions on the content
-		$emails = array_merge($emails, $this->addMentions($object_it));
 
 		return $emails;
 	}
 
-	protected function addWatchers( $object_it )
+	protected function getWatchers( $object_it )
 	{
-		$emails = array();
+		$users = array();
 
 		$watcher_it = getFactory()->getObject2('pm_Watcher',
 			is_a($object_it->object, 'Comment') ? $object_it->getAnchorIt() : $object_it)->getAll();
@@ -335,20 +405,15 @@ class EmailNotificator extends ObjectFactoryNotificator
 				$watcher_it->moveNext();
 				continue;
 			}
-
-			$systemuser_it = $watcher_it->getRef('SystemUser');
-			$address = $this->addRecipient($systemuser_it, $emails);
-			$this->notification_reason[$address] = text(1066);
-
+            $users[] = $watcher_it->get('SystemUser');
 			$watcher_it->moveNext();
 		}
 
-		return $emails;
+		return $users;
 	}
 
-	protected function addMentions( $object_it )
+	protected function getMentions( $object_it )
 	{
-		$emails = array();
 		$matches = array();
 
 		// get any available text
@@ -356,7 +421,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 		$texts .= $object_it->getHtmlDecoded('Content');
 		$texts .= $object_it->getHtmlDecoded('Description');
 
-		if ( !preg_match_all('/@(\w*)/u', $texts, $matches) ) return $emails;
+		if ( !preg_match_all('/@(\w*)/u', $texts, $matches) ) return array();
 		array_shift($matches);
 		$matches = array_shift($matches);
 
@@ -378,18 +443,8 @@ class EmailNotificator extends ObjectFactoryNotificator
 					return $value != '' && trim($value) != $user_id;
 				}
 		);
-		if ( count($user_ids) < 1 ) return $emails;
 
-		// convert users into emails
-		$user_it = getFactory()->getObject('User')->getExact($user_ids);
-		while ( !$user_it->end() )
-		{
-			$address = $this->addRecipient($user_it, $emails);
-			$this->notification_reason[$address] = text(2103);
-			$user_it->moveNext();
-		}
-
-		return $emails;
+		return $user_ids;
 	}
 
 	protected function getSubject( $object_it, $prev_object_it, $action, $recipient )

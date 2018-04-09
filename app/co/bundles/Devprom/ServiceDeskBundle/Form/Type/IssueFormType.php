@@ -30,22 +30,31 @@ class IssueFormType extends AbstractType
             ->add('caption', 'text', array('label' => 'issue_caption'))
             ->add('description', 'textarea', array('label' => 'issue_description'))
             ->add('severity', 'entity', array(
-                'class' => 'Devprom\ServiceDeskBundle\Entity\Priority',
+                'class' => 'Devprom\ServiceDeskBundle\Entity\Severity',
                 'label' => 'issue_severity'
             ));
 
         $result = $this->em->getRepository('DevpromServiceDeskBundle:IssueType')->findBy(array(
-            "vpd" => $vpds
+            "vpd" => $vpds,
+            "visible" => 'Y'
         ));
+
         if ( count($result) > 0 ) {
             $builder
                 ->add('issueType', 'entity', array(
                     'label' => 'issue_issueType',
                     'class' => 'Devprom\ServiceDeskBundle\Entity\IssueType',
                     'choice_label' => 'name',
-                    'query_builder' => function(EntityRepository $er) use ($vpds) {
+                    'query_builder' => function(EntityRepository $er) use ($result) {
                         $qb = $er->createQueryBuilder('it');
-                        return $qb->where($qb->expr()->in('it.vpd', $vpds));
+                        return $qb->where(
+                            $qb->expr()->in('it.id', array_map(
+                                function($row) {
+                                    return $row->getId();
+                                },
+                                $result
+                            ))
+                        );
                     },
                     'data' => array_shift($result),
                     'required' => false

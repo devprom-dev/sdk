@@ -191,6 +191,7 @@ class UndoWebMethod extends WebMethod
             }
         }
         catch (Exception $e) {
+            $this->accumulateData = false;
             \Logger::getLogger('System')->error(
                 $e->getMessage().$e->getTraceAsString()
             );

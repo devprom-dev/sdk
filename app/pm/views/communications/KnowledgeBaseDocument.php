@@ -22,7 +22,8 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	
 	function getPreviewPagesNumber()
 	{
-		return 1;
+	    $values = $this->getFilterValues();
+		return $values['viewmode'] == 'view' || $_REQUEST['search'] != '' ? 0 : 1;
 	}
 
 	function getSectionName() {
@@ -50,6 +51,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 		
 		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
 		$filters[] = $this->buildTagsFilter();
+		$filters[] = $this->buildViewModeFilter();
 		$filters[] = new FilterObjectMethod(
 				$this->getObject()->getAttributeObject('Author'), 
 				translate($this->getObject()->getAttributeUserName( 'Author' )) 
@@ -91,7 +93,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	}
 
     function getDocumentsModuleIt() {
-        return getFactory()->getObject('Module')->getEmptyIterator();
+        return $this->getListViewWidgetIt();
     }
 
     function getListViewWidgetIt() {

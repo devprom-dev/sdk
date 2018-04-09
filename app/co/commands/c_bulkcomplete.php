@@ -41,13 +41,11 @@ class BulkComplete extends CommandForm
  	
  	function getOperationData( $object_it )
  	{
- 	    global $model_factory;
- 	    
  	    $data = array();
  	    
  	    $attributes = array();
  	    
-		if ( preg_match('/Attribute(.+)/mi', $_REQUEST['operation'], $attributes) )
+		if ( preg_match('/^Attribute(.+)$/mi', $_REQUEST['operation'], $attributes) )
 		{
 		    $data['operation'] = 'Attribute';
 			$attributes = preg_split('/:/', $attributes[1]);
@@ -58,7 +56,7 @@ class BulkComplete extends CommandForm
 		    );
 		}
 
-		if ( preg_match('/Transition(.+)/mi', $_REQUEST['operation'], $ids) )
+		if ( preg_match('/^Transition(.+)$/mi', $_REQUEST['operation'], $ids) )
 		{
 		    $data['operation'] = 'Transition';
 		    $data['parameter'] = $ids[1];
@@ -82,7 +80,7 @@ class BulkComplete extends CommandForm
    			}
 		}
 		
-		if ( preg_match('/Method:(.+)/mi', $_REQUEST['operation'], $attributes) )
+		if ( preg_match('/^Method:(.+)$/mi', $_REQUEST['operation'], $attributes) )
 		{ 
 		    $data['operation'] = 'Method';
 		    
@@ -94,7 +92,7 @@ class BulkComplete extends CommandForm
  	
  	function create()
 	{
-		global $_REQUEST, $_SERVER, $model_factory;
+		global $_REQUEST, $_SERVER;
 		
 		$except_items = array();
 
@@ -108,13 +106,11 @@ class BulkComplete extends CommandForm
 		    case 'Attribute':
                 if ( !getFactory()->getAccessPolicy()->can_modify($object_it) ) $this->replyError( text(1062) );
 
-                $key = array();
 				$attribute = array_pop(array_keys($data['attributes']));
-
 				if ( $attribute == 'Project' && $object_it->object instanceof WikiPage ) {
 					$object_it = $object_it->object->getRegistry()->Query(
 						array (
-						    new WikiRootTransitiveFilter($object_it->idsToArray()),
+						    new ParentTransitiveFilter($object_it->idsToArray()),
                             new SortDocumentClause()
                         )
 					);
@@ -125,6 +121,7 @@ class BulkComplete extends CommandForm
     			{
     				try {
     				    $object = getFactory()->getObject(get_class($object_it->object));
+                        $key = array();
 	    		        $this->processEmbeddedForms( $object_it, $key );
                         $mapper = new ModelDataTypeMapper();
                         $mapper->map( $object, $data['attributes'] );
@@ -165,11 +162,12 @@ class BulkComplete extends CommandForm
 		        
 		    case 'Transition':
 		    	$transition_it = getFactory()->getObject('Transition')->getExact($data['parameter']);
+                $data['attributes']['IsPrivate'] = $_REQUEST['IsPrivate'];
 
-		    	$key = array();
 				while ( !$object_it->end() )
     			{
     				try {
+                        $key = array();
     					$this->processEmbeddedForms( $object_it, $key );
     					
 	    				ob_start();
@@ -194,16 +192,6 @@ class BulkComplete extends CommandForm
     				}
     				$object_it->moveNext();
     			}
-    			
-			    getFactory()->getEventsManager()->
-			    		executeEventsAfterBusinessTransaction(
-			    				$object_it->object->getRegistry()->Query(
-			    						array (
-			    								new FilterInPredicate($object_it->idsToArray())
-			    						)
-			    				), 'WorklfowMovementEventHandler'
-    					);
-		        
 			    break;
 			    
 		    case 'Method':
@@ -255,7 +243,16 @@ class BulkComplete extends CommandForm
     			}
     			break;
 		}
-		
+
+        getFactory()->getEventsManager()->
+            executeEventsAfterBusinessTransaction(
+                $object_it->object->getRegistry()->Query(
+                    array (
+                        new FilterInPredicate($object_it->idsToArray())
+                    )
+                ), 'WorklfowMovementEventHandler'
+            );
+
 		if ( false && count($except_items) == $object_it->count() )
 		{
 			$reasons = array();

@@ -53,7 +53,7 @@ class ProjectRemove extends Command
 
     	$object_it->delete();
 
-        getFactory()->getCacheService()->truncate('sessions');
-        getFactory()->getCacheService()->truncate('projects');
+        getFactory()->getCacheService()->invalidate('sessions');
+        getFactory()->getCacheService()->invalidate('projects');
 	}
 }

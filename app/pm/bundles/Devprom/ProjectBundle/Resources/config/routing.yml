@@ -10,6 +10,10 @@ _project_worklog:
     path: /pm/{project}/worklog
     defaults: { _controller: ProjectBundle:Time:worklog }
 
+_project_worklog_report:
+    path: /pm/{project}/worklog/{report}
+    defaults: { _controller: ProjectBundle:Time:worklog }
+
 _project_autoactions:
     path: /pm/{project}/autoactions
     defaults: { _controller: ProjectBundle:Workflow:autoaction }
@@ -21,6 +25,10 @@ settings:
 _broken_trace_explain:
     path:  /pm/{project}/tooltip/explain/{object}
     defaults: { _controller: ProjectBundle:Tooltip:explain }
+
+_tooltip_empy:
+    path:  /pm/{project}/tooltip/{classname}/
+    defaults: { _controller: ProjectBundle:Tooltip:empty }
 
 _tooltip:
     path:  /pm/{project}/tooltip/{classname}/{objects}
@@ -41,6 +49,14 @@ _network:
 _export:
     path:  /pm/{project}/export
     defaults: { _controller: ProjectBundle:Project:export }
+
+_whatsnew:
+    path:  /pm/{project}/whatsnew
+    defaults: { _controller: ProjectBundle:Project:whatsnew }
+
+_whatsnew_report:
+    path:  /pm/{project}/whatsnew/{report}
+    defaults: { _controller: ProjectBundle:Project:whatsnew }
 
 _scripts:
     path:  /pm/{project}/scripts/javascript/
@@ -116,6 +132,10 @@ functional_areas:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\FunctionalareasController
     prefix:   /pm/{project}/menu/rest
+
+_widget_share_report:
+    path:  /pm/{project}/widget/share
+    defaults: { _controller: ProjectBundle:Widget:share }
 
 rest_iteration:
     type:     rest

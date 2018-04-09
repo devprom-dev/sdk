@@ -68,10 +68,18 @@ abstract class EstimationStrategy
 		return '';
 	}
 
-	function getVelocityText( $object )
-	{
-		return '';
-	}
+    function getVelocityText()
+    {
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodology_it->HasFixedRelease() )
+        {
+            return text(1115);
+        }
+        else
+        {
+            return text(1117);
+        }
+    }
 	
 	function getDimensionText( $text )
 	{
@@ -107,7 +115,14 @@ abstract class EstimationStrategy
 		return true;
 	}
 
-	public function getReleaseVelocityText( $object_it ) {
-        return $object_it->getVelocity() > 0 ? $this->getDimensionText(round($object_it->getVelocity(), 0)) : '0';
+	public function getReleaseVelocityText( $object_it )
+    {
+        return $object_it->getVelocity() > 0
+            ? str_replace('%1', $this->getDimensionText(round($object_it->getVelocity(), 0)), array_pop(preg_split('/:/',$this->getVelocityText())))
+            : '0';
+    }
+
+    public function convertToNumeric( $value ) {
+	    return $value;
     }
 }

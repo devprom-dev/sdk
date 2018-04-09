@@ -48,6 +48,7 @@ include "DateFormatRussian.php";
  	protected function buildCache($resource, $cache_path)
  	{
 		$lock = new CacheLock();
+        $lock->Lock();
 
  		$records = array();
  	    $resource_it = $resource->getAll();
@@ -139,11 +140,21 @@ include "DateFormatRussian.php";
  		return $this->dateformat->getPhpDate($time); 
  	}
 
+     function getPhpDateTime( $time )
+     {
+         return $this->dateformat->getPhpDateTime($time);
+     }
+
  	function getDbDate( $text )
  	{
-		$time = strtotime($text);
-		if ( $time === false ) return $this->dateformat->getDbDate($text);
- 		return strftime("%Y-%m-%d", $time);
+ 	    if ( $text == '' ) return $text;
+        $dbdate = $this->dateformat->getDbDate($text);
+        if ( $dbdate == '' ) {
+            $time = strtotime($text);
+            if ( $time === false ) return '';
+            return strftime("%Y-%m-%d", $time);
+        }
+        return $dbdate;
  	}
  	
  	function getDaysWording( $days ) 
@@ -206,12 +217,12 @@ include "DateFormatRussian.php";
 	{
 		list( $monthes, $days, $hours, $minutes ) = $this->convertHours($givenHours, $hoursInDay);
 		$result = '';
-		if ( $monthes > 0 ) {
-			$result .= $monthes.'мес ';
-		}
-		if ( $days > 0 ) {
-			$result .= $days.'д ';
-		}
+        if ( $monthes > 0 ) {
+            $result .= $monthes.'мес ';
+        }
+        if ( $days > 0 ) {
+            $result .= $days.'д ';
+        }
 		if ( $hours > 0 ) {
 			$result .= $hours.'ч ';
 		}

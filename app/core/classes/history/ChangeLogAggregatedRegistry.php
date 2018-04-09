@@ -23,7 +23,6 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 			new GroupAttributeClause('ClassName'),
 			new GroupAttributeClause('EntityRefName'),
 			new GroupAttributeClause('VPD'),
-			new GroupAttributeClause('ChangeKind'),
 			new GroupAttributeClause('Transaction')
 		);
 	}
@@ -31,6 +30,20 @@ class ChangeLogAggregatedRegistry extends ChangeLogRegistry
 	public function getSelectClause( $alias, $select_all = true ) {
 		return parent::getSelectClause($alias, false);
 	}
+
+    public function Count( $parms = array() )
+    {
+        $this->setParameters( $parms );
+
+        $sql = 'SELECT '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
+
+        $group = $this->getGroupClause('t');
+        if ( $group != '' ) $sql .= ' GROUP BY '.$group;
+
+        return $this->createSQLIterator(
+                'SELECT COUNT(1) cnt FROM ('.$sql.') t '
+            )->get('cnt');
+    }
 
 	public function getLimit() {
 		return 256;

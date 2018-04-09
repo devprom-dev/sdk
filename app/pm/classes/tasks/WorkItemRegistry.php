@@ -2,50 +2,75 @@
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectUIDPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestDueDatesPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestTracePersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/RequestColorsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskDatesPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskTracePersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskFactPersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskColorsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include "persisters/WorkItemStatePersister.php";
 include "persisters/WorkItemCommentPersister.php";
 
 class WorkItemRegistry extends ObjectRegistrySQL
 {
+    private $descriptionIncluded = true;
+    private $tracesIncluded = true;
+
     function getPersisters() {
-        return array(
+        $result = array(
             new EntityProjectPersister(),
-            new WorkItemStatePersister(),
-            new WorkItemCommentPersister(),
-            new AttachmentsPersister()
+            new WorkItemStatePersister()
         );
+        if ( $this->tracesIncluded ) {
+            $result[] = new WorkItemCommentPersister();
+            $result[] = new AttachmentsPersister();
+        }
+        return $result;
     }
 
     function getTaskPersisters() {
-        return array (
+        $result = array (
             new ObjectUIDPersister(),
             new TaskDatesPersister(),
-            new StateDurationPersister(),
-            new TaskTracePersister(),
             new TaskTagsPersister(),
-            new TaskFactPersister()
+            new TaskFactPersister(),
+            new TaskColorsPersister()
         );
+        if ( $this->tracesIncluded ) {
+            $result[] = new TaskTracePersister();
+        }
+        return $result;
     }
 
     function getIssuePersisters() {
-        return array (
+        $result = array (
             new ObjectUIDPersister(),
             new RequestDueDatesPersister(),
-            new StateDurationPersister(),
             new RequestTagsPersister(),
-            new RequestTracePersister()
+            new RequestColorsPersister()
         );
+        if ( $this->tracesIncluded ) {
+            $result[] = new RequestTracePersister();
+        }
+        return $result;
+    }
+
+    public function setDescriptionIncluded( $flag = true ) {
+        $this->descriptionIncluded = $flag;
+    }
+
+    public function setTracesIncluded( $flag = true ) {
+        $this->tracesIncluded = $flag;
     }
 
  	function getQueryClause()
  	{
  	    $request = getFactory()->getObject('Request');
 		$task = getFactory()->getObject('Task');
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		if ( !$this->getObject()->isVpdEnabled() ) {
+            $task->disableVpd();
+            $request->disableVpd();
+        }
 
         $task_columns = array(" '' Dummy ");
         foreach( $this->getTaskPersisters() as $persister ) {
@@ -63,10 +88,13 @@ class WorkItemRegistry extends ObjectRegistrySQL
 			SELECT t.pm_TaskId,
 				   'Task' ObjectClass,
 				   t.Priority,
-				   t.Caption,
-				   (SELECT r.Description FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) Description,
+				   CONCAT(
+				      IFNULL((SELECT CONCAT(p.Caption, ': ') FROM pm_TaskType p WHERE p.pm_TaskTypeId = t.TaskType), ''),
+				      IFNULL(t.Caption, (SELECT r.Caption FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest))
+				      ) Caption,
+				   ".($this->descriptionIncluded ? "(SELECT r.Description FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) Description ": "'' Description").",
 				   t.State,
-				   (SELECT s.pm_StateId FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'task' AND s.ReferenceName = t.State) StateMeta,
+				   (SELECT s.IsTerminal FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'task' AND s.ReferenceName = t.State) IsTerminal,
 				   t.StateObject,
 				   t.TaskType,
 				   (SELECT p.Caption FROM pm_TaskType p WHERE p.pm_TaskTypeId = t.TaskType) TypeName,
@@ -84,21 +112,24 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   (SELECT r.Version FROM pm_Release r WHERE r.pm_ReleaseId = t.Release) PlannedRelease,
 				   t.VPD,
 				   (SELECT GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) FROM pm_Activity a WHERE a.Task = t.pm_TaskId) Spent,
+				   ".($this->tracesIncluded ? ("
 				   (SELECT GROUP_CONCAT(DISTINCT CONCAT_WS(':',l.ObjectClass,CAST(l.ObjectId AS CHAR),l.Baseline))
                       FROM pm_ChangeRequestTrace l
                      WHERE l.ChangeRequest = t.ChangeRequest
-                       AND l.ObjectClass NOT IN ('Task')) IssueTraces,
+                       AND l.ObjectClass NOT IN ('Task')) IssueTraces") : "'' IssueTraces").",
 				   ".join(',',$task_columns)."
 			  FROM pm_Task t
-			 WHERE 1 = 1 ".$task->getVpdPredicate('t').$this->getInnerFilterPredicate($task,$this->getTaskFilters()).($methodology_it->HasTasks() ? '' : ' AND 1 = 2 ')."
+			 WHERE 1 = 1 ".$task->getVpdPredicate('t').$this->getInnerFilterPredicate($task,$this->getTaskFilters())."
+			   AND t.VPD IN (SELECT m.VPD FROM pm_Methodology m, pm_Project p 
+			                  WHERE m.IsTasks = 'Y' AND m.Project = p.pm_ProjectId AND IFNULL(p.IsClosed,'N') = 'N')
 			 UNION
 			SELECT t.pm_ChangeRequestId,
 				   'Request' as ObjectClass,
 				   t.Priority,
 				   t.Caption,
-				   t.Description,
+				   ".($this->descriptionIncluded ? "t.Description ": "'' Description").",
 				   t.State,
-				   (SELECT s.pm_StateId FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'request' AND s.ReferenceName = t.State) StateMeta,
+				   (SELECT s.IsTerminal FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'request' AND s.ReferenceName = t.State) IsTerminal,
 				   t.StateObject,
 				   1000000 + IFNULL(t.Type, 0),
 				   (SELECT p.Caption FROM pm_IssueType p WHERE p.pm_IssueTypeId = t.Type) TypeName,
@@ -116,13 +147,15 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.PlannedRelease,
 				   t.VPD,
 				   (SELECT GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) FROM pm_Activity a, pm_Task s WHERE a.Task = s.pm_TaskId AND s.ChangeRequest = t.pm_ChangeRequestId) Spent,
+				   ".($this->tracesIncluded ? ("
 				   (SELECT GROUP_CONCAT(DISTINCT CONCAT_WS(':',l.ObjectClass,CAST(l.ObjectId AS CHAR),l.Baseline))
                       FROM pm_ChangeRequestTrace l
                      WHERE l.ChangeRequest = t.pm_ChangeRequestId
-                       AND l.ObjectClass NOT IN ('Task', 'Milestone')) IssueTraces,
+                       AND l.ObjectClass NOT IN ('Task', 'Milestone')) IssueTraces"):"'' IssueTraces").",
 				   ".join(',',$issue_columns)."
 			  FROM pm_ChangeRequest t
 			 WHERE 1 = 1 ".$request->getVpdPredicate('t').$this->getInnerFilterPredicate($request,$this->getIssueFilters())."
+			   AND t.VPD IN (SELECT p.VPD FROM pm_Project p WHERE IFNULL(p.IsClosed,'N') = 'N')
 		";
 
  	    return "(".$sql.")";

@@ -18,6 +18,7 @@ class ProjectArtifactMetadataBuilder extends ObjectMetadataBuilder
 
 		if ( $metadata->getAttributeType('Project') == '' ) {
 			$metadata->addAttribute('Project', 'REF_pm_ProjectId', translate('Проект'), false);
+            $metadata->setAttributeEditable('Project', false);
 		}
 		$metadata->addPersister( new EntityProjectPersister );
     }

@@ -66,7 +66,7 @@ class FillProject extends CommandForm
             $appender = $this->setupLogger();
 
             ob_start();
-            $service = new IntegrationService($objectIt);
+            $service = new IntegrationService($objectIt, \Logger::getLogger('Commands'));
             $service->setItemsToProcess($this->limit);
             $service->process();
 

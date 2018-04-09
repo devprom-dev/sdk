@@ -4,7 +4,6 @@ include "ChangeLogIterator.php";
 include "ChangeLogRegistry.php";
 include "ChangeLogGranularityRegistry.php";
 include "ChangeLogRegistryProjectTemplate.php";
-include "persisters/ChangeLogDetailsPersister.php";
 include "predicates/ChangeLogActionFilter.php";
 include "predicates/ChangeLogExceptParticipantFilter.php";
 include "predicates/ChangeLogExceptUserFilter.php";
@@ -28,7 +27,6 @@ class ChangeLog extends Metaobject
  		$this->setAttributeType( 'Author', 'REF_pm_ParticipantId' );
  		$this->setAttributeType( 'Content', 'WYSIWYG' );
  		
- 		$this->addPersister( new ChangeLogDetailsPersister() );
  		$this->setSortDefault( array(
  		    new SortAttributeClause('RecordCreated.D')
  		));

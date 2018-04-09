@@ -101,7 +101,11 @@ class PageNavigation
 
         if ( getFactory()->getObject('User')->getAttributeType('GroupId') != '' )
         {
-            $program_it = getFactory()->getObject('Program')->getAll();
+            $program_it = getFactory()->getObject('Program')->getRegistry()->Query(
+                array(
+                    new ProjectAccessiblePredicate(getSession()->getUserIt())
+                )
+            );
 
             while ( !$program_it->end() )
             {
@@ -112,8 +116,7 @@ class PageNavigation
                     new SortAttributeClause('Caption')
                 );
 
-                if ( $program_it->get('IsParticipant') < 1 )
-                {
+                if ( $program_it->get('IsParticipant') < 1 ) {
                     $query_parms[] = new ProjectParticipatePredicate();
                 }
 
@@ -197,25 +200,16 @@ class PageNavigation
             $portfolio_it->moveNext();
         }
 
-        if ( !defined('PERMISSIONS_ENABLED') ) {
-            $linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-                array(
-                    new ProjectStatePredicate('active'),
-                    new SortAttributeClause('Importance'),
-                    new SortAttributeClause('Caption')
-                )
-            );
+        $query = array(
+            new ProjectStatePredicate('active'),
+            new SortAttributeClause('Importance'),
+            new SortAttributeClause('Caption')
+        );
+        if ( defined('PERMISSIONS_ENABLED') ) {
+            $query[] = new ProjectParticipatePredicate();
         }
-        else {
-            $linked_it = getFactory()->getObject('Project')->getRegistry()->Query(
-                array (
-                    new ProjectParticipatePredicate(),
-                    new ProjectStatePredicate('active'),
-                    new SortAttributeClause('Importance'),
-                    new SortAttributeClause('Caption')
-                )
-            );
-        }
+        $linked_it = getFactory()->getObject('Project')->getRegistry()->Query($query);
+
         while ( !$linked_it->end() )
         {
             $projects[''][$linked_it->get('CodeName')] = array (
@@ -264,7 +258,7 @@ class PageNavigation
             }
         }
 
-        if ( !defined('PERMISSIONS_ENABLED') && array_key_exists('all', $portfolios) && count($projects['all']) < 1 ) {
+        if ( array_key_exists('all', $portfolios) && count($projects['all']) < 1 ) {
             if ( count($programs) + count($realPortfolios) == 1 ) {
                 unset($portfolios['all']);
             }
@@ -274,7 +268,7 @@ class PageNavigation
             $allPrtfolio = $portfolios['all'];
             if ( is_array($allPrtfolio) ) {
                 unset($portfolios['all']);
-                array_unshift($portfolios, $allPrtfolio);
+                $portfolios[] = $allPrtfolio;
             }
         }
 
@@ -291,10 +285,9 @@ class PageNavigation
 
     function getInviteUserUrl()
     {
-        if ( !defined('INVITE_USERS_ANYBODY') || INVITE_USERS_ANYBODY !== false )
-        {
+        if ( !defined('INVITE_USERS_ANYBODY') || INVITE_USERS_ANYBODY !== false ) {
             $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Invitation'));
-            return $method->getJSCall(array(), text(2001));
+            if ( $method->hasAccess() ) return $method->getJSCall(array(), text(2001));
         }
         return '';
     }
@@ -356,6 +349,7 @@ class PageNavigation
                 );
                 $actions[] = array (
                     'icon' => 'icon-briefcase',
+                    'uid' => 'project-settings',
                     'url' => $method->getJSCall(),
                     'name' => translate('Настройки')
                 );

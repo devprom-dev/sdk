@@ -80,6 +80,19 @@
 					container.perfectScrollbar('update');
 				}
 			},
+            createNode: function(event, data) {
+                $(data.node.span)
+                    .hover(
+                        function(){
+                            $(this).find('span.fancytree-title').css(
+                                'top', $(this).position().top + $('#wikitree ul').offset().top - $(document).scrollTop()
+                            );
+                        },
+                        function() {
+                            $(this).find('span.fancytree-title').css('top','auto');
+                        }
+                    );
+            },
 			dnd: {
 				autoExpandMS: 400,
 				focusOnClick: true,
@@ -189,4 +202,32 @@
 		if ( !node ) return;
 		node.remove();
 	}
+	function toggleTreeNodes( id ) {
+	    var tree = $("#wikitree");
+        tree.fancytree("getTree").visit(function(node){
+            if ( node.parent.key == 'root_1' ) return;
+            node.setExpanded( !tree.hasClass('custom-extended') );
+        });
+        setTimeout(function(){$('#rightTab li:eq(0)').addClass('active');},100);
+        tree.hasClass('custom-extended') ? tree.removeClass('custom-extended') : tree.addClass('custom-extended');
+    }
+    function extendTreeArea( id ) {
+        var tree = $(".wiki-page-tree");
+        if ( tree.hasClass('custom-width') ) {
+            tree.css({
+                'width': '',
+                'max-width': ''
+            });
+            tree.removeClass('custom-width');
+        }
+        else {
+            tree.css({
+                'width': '50%',
+                'max-width': '50%'
+            });
+            $('#documentToolbar').width('auto');
+            tree.addClass('custom-width');
+        }
+        setTimeout(function(){$('#rightTab li:eq(0)').addClass('active');},100);
+    }
 </script>

@@ -70,7 +70,9 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  							return $this->row_it->getDisplayName();
  						}
  						else {
-	 						$html = new \Html2Text\Html2Text($uid->getUidWithCaption($this->row_it), array('do_links' => 'none'));
+ 						    $html = $uid->getUidWithCaption($this->row_it);
+                            $html = preg_replace('/<i[^<]+<\/i>/i', '', $html);
+	 						$html = new \Html2Text\Html2Text($html, array('do_links' => 'none'));
 	 						return $html->getText();
  						}
  				}

@@ -17,6 +17,10 @@ class ColorUtils
                 max($background_rgb[2] / 3,0)
             );
         }
-        return "text-shadow:none;color:#".str_pad(dechex($text_rgb[0]),2,"0").str_pad(dechex($text_rgb[1]),2,"0").str_pad(dechex($text_rgb[2]),2,"0").";";
+        return "text-shadow:none;color:".self::rgb2hex($text_rgb).";";
+    }
+
+    public static function rgb2hex( array $text_rgb ) {
+        return '#'.str_pad(dechex($text_rgb[0]),2,"0").str_pad(dechex($text_rgb[1]),2,"0").str_pad(dechex($text_rgb[2]),2,"0");
     }
 }

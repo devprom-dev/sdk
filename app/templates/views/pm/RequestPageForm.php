@@ -24,7 +24,8 @@ $fields_dont_skip_if_empty = array (
 );
 
 $fields_to_be_skiped = array (
-	'FinishDate'
+	'FinishDate',
+    'State'
 );
 
 // attributes to be displayed in first column
@@ -53,6 +54,7 @@ $recent_column = 0;
 foreach( $attributes as $name => $attribute ) 
 {
 	if ( !in_array($name, $important_attributes) && !$attribute['custom'] ) continue;
+    if ( in_array($name, $fields_to_be_skiped) ) continue;
 
 	if ( !$attribute['visible'] ) continue;
 
@@ -121,7 +123,7 @@ foreach( $attributes as $name => $attribute )
 
 ?>
 
-<div class="actions">
+<div class="actions hidden-print">
 	<?php
 	if ( count($actions) > 0 && $action != 'show' ) {
 		echo $view->render('core/PageFormButtons.php', array(
@@ -132,10 +134,13 @@ foreach( $attributes as $name => $attribute )
 	?>
 </div> <!-- end actions -->
 
-<ul class="breadcrumb">
+<ul class="breadcrumb hidden-print">
 <?php
 	if ( $uid != '' ) {
 		if ( $navigation_url != '' ) {
+            if ( $parent_widget_url != '' ) {
+                echo '<li><a href="'.$parent_widget_url.'">'.$parent_widget_title.'</a><span class="divider">/</span></li>';
+            }
 			echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
 		}
 		else if ( $caption != '' ) {
@@ -195,7 +200,7 @@ foreach( $attributes as $name => $attribute )
 	  </a>
 	</div>
 	<div id="collapseOne" class="accordion-body" tabindex="-1">
-		<div class="row" style="display:table;width:100%;">
+		<div class="row">
 			<div class="properties-cell-1">
 				<div style="width:100%;display:table;">
 					<?php $column = $columns[0]; ?>
@@ -258,6 +263,7 @@ foreach( $attributes as $name => $attribute )
 				</div>
 
 				<!--  -->
+                <? if ( is_array($attributes['Description']) ) { ?>
 				<div class="accordion-heading">
 					<a class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
 						<span class="caret"></span>
@@ -277,6 +283,7 @@ foreach( $attributes as $name => $attribute )
 					?>
 					<br/>
 				</div>
+                <? } ?>
 
 			</div>
 			<div class="properties-cell-2">
@@ -387,7 +394,7 @@ foreach( $attributes as $name => $attribute )
 		<?=($comments_count > 0 ? ' ('.$comments_count.')' : '')?>
 	  </a>
 	</div>
-	<div id="collapseComments" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseComments']=='0'?'':'in')?> collapse">
+	<div id="collapseComments" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseComments']=='0'?'':'in')?> collapse" style="overflow: inherit;">
         <?php 
         	echo $view->render('core/PageSections.php', array(
         		'sections' => array_merge($bottom_sections, $sections),

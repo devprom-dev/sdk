@@ -159,24 +159,24 @@ class PageTable extends ViewTable
 		$filter_keys = array();
         $persistent_filter = $this->getPersistentFilter();
 
-		if ( $this->getFilterIds() == '' ) {
-			// apply persisted filters settings
-			foreach ( $this->filters as $filter )
-			{
-				$filter_name = $filter->getValueParm();
-				$filter_keys[] = $filter_name;
-				$filter->setFreezeMethod($persistent_filter);
-				$filter->setFilter($this->getFiltersName());
-				$value = $filter->getPersistedValue();
-				if ( !is_null($value) && $value != '' ) {
-					$this->filter_values[$filter_name] = $value;
-					continue;
-				}
-				$default_value = $filter->getValue();
-				if ( $default_value == '' || array_key_exists($filter_name,$this->filter_values) ) continue;
-				$this->filter_values[$filter_name] = $default_value;
-			}
-		}
+        // apply persisted filters settings
+        foreach ( $this->filters as $filter )
+        {
+            $filter_name = $filter->getValueParm();
+            $filter_keys[] = $filter_name;
+            $filter->setFilter($this->getFiltersName());
+            if ( $this->getFilterIds() == '' ) {
+                $filter->setFreezeMethod($persistent_filter);
+                $value = $filter->getPersistedValue();
+                if ( !is_null($value) && $value != '' ) {
+                    $this->filter_values[$filter_name] = $value;
+                    continue;
+                }
+            }
+            $default_value = $filter->getValue();
+            if ( $this->getFilterIds() != '' || $default_value == '' || array_key_exists($filter_name,$this->filter_values) ) continue;
+            $this->filter_values[$filter_name] = $default_value;
+        }
 
         if ( is_object($persistent_filter) ) {
             // backward compatiibility to old settings
@@ -194,12 +194,6 @@ class PageTable extends ViewTable
                 $this->filter_values[$parm] = $filter_value;
             }
         }
-        foreach( $this->filter_values as $key => $value ) {
-            if ( $value == 'user-id' ) {
-                $this->filter_values[$key] = getSession()->getUserIt()->getId();
-            }
-        }
-
 		$this->filter_defaults = $this->filter_values;
 
 		// apply web-session based filters settings
@@ -226,13 +220,14 @@ class PageTable extends ViewTable
 		$values['color'] = $this->getDefaultColorScheme();
 		$values['infosections'] = join(',', $this->getSectionsDefault());
 
-		if ( $this->getFilterIds() == '') {
-			foreach( $this->filters as $filter ) {
-				if ( $filter instanceof FilterWebMethod && $filter->getDefaultValue() != '' ) {
-					$values[$filter->getValueParm()] = $filter->getDefaultValue();
-				}
-			}
-		}
+        foreach( $this->filters as $filter ) {
+            if ( ! $filter instanceof FilterWebMethod ) continue;
+            $defaultValue = $filter->getDefaultValue();
+            if ( $defaultValue != '' ) {
+                if ( $this->getFilterIds() != '' && $defaultValue != 'all' ) continue;
+                $values[$filter->getValueParm()] = $defaultValue;
+            }
+        }
 
 		return $values;
 	}
@@ -420,7 +415,7 @@ class PageTable extends ViewTable
 		$filter = $this->getPersistentFilter();
 		if ( is_object($filter) )
 		{
-		    $persisted = $filter->compareStored($this->filter_values);
+		    $persisted = $this->IsFilterPersisted() && $filter->getQueryString() != '';
 			$parms = array (
 				'url' => $filter->url(
 					"li[uid=personal-persist]>a",
@@ -739,6 +734,11 @@ class PageTable extends ViewTable
 	        {
     	        foreach( $filter->getValues() as $key => $value )
     	        {
+                    if ( in_array($key, array('search','_options')) ) {
+                        $actions[] = $value;
+                        continue;
+                    }
+
     	            $script = "javascript: filterLocation.setup('".$filter->getName()."=".urlencode(trim($key))."', 1); ";
     	            
     	            $checked_item = in_array(trim($key), preg_split('/,/', $filter_value));
@@ -781,13 +781,11 @@ class PageTable extends ViewTable
     	            	break; 
     	            }
     	        }
-    	        
+
 	            foreach( $filter_options as $key => $value )
     	        {
-					if ( $key == 'search' ) {
-						$actions[] = array(
-							'uid' => $key
-						);
+					if ( in_array($key, array('search','_options')) ) {
+						$actions[] = $value;
 						continue;
 					}
 
@@ -913,7 +911,7 @@ class PageTable extends ViewTable
 		return "core/PageTable.php";
 	}
 
-	function getReferencesListWidget( $object ) {
+	function getReferencesListWidget( $parm, $referenceName ) {
 		return getFactory()->getObject('Module')->getEmptyIterator();
 	}
 

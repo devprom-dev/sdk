@@ -11,8 +11,9 @@ include "channels/IntegrationYouTrackChannel.php";
 
 class IntegrationService
 {
-    public function __construct( $object_it )
+    public function __construct( $object_it, $logger )
     {
+        $this->logger = $logger;
         $this->object_it = $object_it;
         $this->mapping = array_pop(
             json_decode($this->object_it->getHtmlDecoded('MappingSettings'), true)
@@ -255,15 +256,31 @@ class IntegrationService
         $queue = json_decode($this->object_it->getHtmlDecoded('ItemsQueue'), true);
         if ( count($queue['items']) > 0 ) return $queue;
 
-        if ( in_array($this->object_it->get('Type'), array('write','readwrite')) ) {
-            $queue['items'] = $this->self_channel->getItems($queue['self_timestamp'], $limit);
+        if ( in_array($this->object_it->get('Type'), array('write','readwrite')) )
+        {
+            list( $items, $timestamp ) = $this->self_channel->getItems($queue['self_timestamp'], $limit);
+            if ( $timestamp instanceof \DateTime ) {
+                $timestamp = $timestamp->format('Y-m-d H:i:s');
+            }
+            else {
+                $timestamp = $this->self_channel->getTimestamp();
+            }
+            $queue['items'] = $items;
             $queue['channel'] = 'self';
-            $queue['self_timestamp'] = $this->self_channel->getTimestamp();
+            $queue['self_timestamp'] = $timestamp;
         }
-        if ( count($queue['items']) < 1 && in_array($this->object_it->get('Type'), array('read','readwrite')) ) {
-            $queue['items'] = $this->remote_channel->getItems($queue['remote_timestamp'], $limit);
+        if ( count($queue['items']) < 1 && in_array($this->object_it->get('Type'), array('read','readwrite')) )
+        {
+            list( $items, $timestamp ) = $this->remote_channel->getItems($queue['remote_timestamp'], $limit);
+            if ( $timestamp instanceof \DateTime ) {
+                $timestamp = $timestamp->format('Y-m-d H:i:s');
+            }
+            else {
+                $timestamp = $this->remote_channel->getTimestamp();
+            }
+            $queue['items'] = $items;
             $queue['channel'] = 'remote';
-            $queue['remote_timestamp'] = $this->remote_channel->getTimestamp();
+            $queue['remote_timestamp'] = $timestamp;
         }
         return $queue;
     }
@@ -339,7 +356,7 @@ class IntegrationService
     }
 
     protected function getLogger() {
-        return Logger::getLogger('Commands');
+        return $this->logger;
     }
 
     private $object_it = null;
@@ -350,5 +367,6 @@ class IntegrationService
     private $shortLinks = array();
     private $shortBackLinks = array();
     private $mapping = array();
-    private $itemsToProcess = 30;
+    private $itemsToProcess = 60;
+    private $logger = null;
 }

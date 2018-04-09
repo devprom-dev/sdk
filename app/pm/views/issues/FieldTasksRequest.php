@@ -38,8 +38,14 @@ class FieldTasksRequest extends FieldForm
  		echo '<div id="'.$this->getId().'" class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 
  		    $form = new FormRequestTasksEmbedded( $task, 'ChangeRequest' );
+
             $form->setRelease($this->releaseId);
-	 		
+            if ( $_REQUEST['Iteration'] > 0 ) {
+                $_REQUEST['Release'] = $_REQUEST['Iteration'];
+            }
+            if ( is_object($this->object_it) && $this->object_it->get('Iteration') > 0 ) {
+                $_REQUEST['Release'] = $this->object_it->get('Iteration');
+            }
  		    if ( is_object($this->object_it) && !$this->getEditMode() ) $form->setObjectIt($this->object_it);
  		    
  		    $form->setReadonly( $this->readOnly() );
@@ -48,4 +54,4 @@ class FieldTasksRequest extends FieldForm
  		    $form->draw( $view );
  		echo '</div>';
  	}
-} 
+}

@@ -11,16 +11,24 @@ class AdminPageMenu extends PageMenu
 	{
 		$pages = array();
 
-		array_push($pages, array(
-			'items' => array (
-				array ( 'name' => translate('Активности'), 'url' => '/admin/activity.php', 'uid' => 'acitivty' ),
-			    array ( 'name' => translate('Обновления'), 'url' => '/admin/updates.php', 'uid' => 'updates' ),
-				array( 'url' => '/admin/jobs.php', 'name' => text(2024), 'uid' => 'jobs' ),
-			    array ( 'name' => translate('Резервные копии'), 'url' => '/admin/backups.php', 'uid' => 'backups' ),
-				array ( 'name' => translate('Логи'), 'url' => '/admin/log/', 'uid' => 'logs' )
-			)  
-		));
-		
+		$items = array (
+            array ( 'name' => translate('Активности'), 'url' => '/admin/activity.php', 'uid' => 'acitivty' ),
+        );
+		if ( ! \EnvironmentSettings::getAutoUpdate() ) {
+            $items[] = array ( 'name' => translate('Обновления'), 'url' => '/admin/updates.php', 'uid' => 'updates' );
+        }
+        $items = array_merge(
+            $items,
+            array(
+                array( 'url' => '/admin/jobs.php', 'name' => text(2024), 'uid' => 'jobs' ),
+                array ( 'name' => translate('Резервные копии'), 'url' => '/admin/backups.php', 'uid' => 'backups' ),
+                array ( 'name' => translate('Логи'), 'url' => '/admin/log/', 'uid' => 'logs' )
+            )
+        );
+        $pages[] = array(
+            'items' => $items
+		);
+
 		array_push($pages, array(
 			'uid' => 'users',
 			'url' => '/admin/users.php', 'name' => translate('Пользователи'),

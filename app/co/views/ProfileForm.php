@@ -40,8 +40,12 @@ class ProfileForm extends AjaxForm
 			case 'Language':
 			case 'Phone':
 			case 'Photo':
+            case 'NotificationEmailType':
 				return true;
-				
+
+            case 'NotificationTrackingType':
+                return defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED;
+
 			case 'Login':
 				return $this->IsAttributeModifable($attribute);
 			
@@ -79,7 +83,11 @@ class ProfileForm extends AjaxForm
 	    {
 	        case 'Photo':
 	            return 'file';
-	            
+
+            case 'NotificationTrackingType':
+            case 'NotificationEmailType':
+                return 'custom';
+
 	        default:
 	            return parent::getAttributeType( $attribute );
 	    }
@@ -91,23 +99,21 @@ class ProfileForm extends AjaxForm
  		{
  			case 'Caption':
  				return text(269);
-
  			case 'Email':
  				return text(270);
-
  			case 'Login':
  				return text(271);
-
  			case 'Language':
  				return text(272);
-
  			case 'Skills':
  				return text(273);
-
  			case 'Tools':
  				return text(274);
- 				
- 			case 'Phone':
+            case 'NotificationEmailType':
+                return text(2469);
+            case 'NotificationTrackingType':
+                return text(2468);
+            case 'Phone':
  				return ' ';
  		}
  	}
@@ -134,5 +140,33 @@ class ProfileForm extends AjaxForm
  	    
  	    return $actions;
  	}
-}
+
+    function drawCustomAttribute( $attribute, $value, $tab_index, $view )
+    {
+        switch ( $attribute )
+        {
+            case 'NotificationTrackingType':
+                $field = new FieldDictionary(getFactory()->getObject('NotificationTrackingType'));
+                $field->setTabIndex($tab_index);
+                $field->setName($attribute);
+                $field->setValue($value);
+                $field->setNullOption(false);
+                echo $this->getName($attribute);
+                $field->draw($view);
+                break;
+
+            case 'NotificationEmailType':
+                $field = new FieldDictionary(getFactory()->getObject('Notification'));
+                $field->setTabIndex($tab_index);
+                $field->setName($attribute);
+                $field->setValue($value);
+                $field->setNullTitle(text(2451));
+                echo $this->getName($attribute);
+                $field->draw($view);
+                break;
+
+            default:
+                parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
+        }
+    }}
  

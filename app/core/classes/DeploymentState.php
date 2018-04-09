@@ -48,16 +48,12 @@ class DeploymentState
 
 	protected function build()
     {
-        $lock = new \CacheLock();
-
         $license_it = getFactory()->getObject('LicenseState')->getAll();
         $this->activated = $license_it->get('LicenseType') != '';
         $this->licensed = self::IsScriptsCompleted() && $license_it->get('IsValid') == 'Y';
 
         @mkdir(dirname(self::getFileName()), 0777, true);
         @file_put_contents(self::getFileName(), serialize($this));
-
-        $lock->Release();
     }
 
 	protected function getFileName() {

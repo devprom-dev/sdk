@@ -11,11 +11,13 @@ class TaskBusinessActionAssignParticipant extends BusinessActionWorkflow
 	function apply( $object_it )
  	{
         $data = $this->getData();
-        if ( $data['Assignee'] > 0 ) return true;
+        $userId = getSession()->getUserIt()->getId();
+
+        if ( $data['Assignee'] > 0 || $data['Assignee'] == $userId ) return true;
 
  	    $object_it->object->modify_parms($object_it->getId(),
             array(
-                'Assignee' => getSession()->getUserIt()->getId()
+                'Assignee' => $userId
             )
     	);
  		return true;

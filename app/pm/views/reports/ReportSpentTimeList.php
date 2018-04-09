@@ -23,7 +23,7 @@ class ReportSpentTimeList extends PMStaticPageList
 		$object = $this->getObject();
 
 		$predicates = array();
-		
+
 		$plugins = getFactory()->getPluginsManager();
  		$plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
 		foreach( $plugins_interceptors as $plugin ) {
@@ -335,7 +335,7 @@ class ReportSpentTimeList extends PMStaticPageList
 				if ( is_array($object_it->get($comment_attr)) ) {
 					foreach ($object_it->get($comment_attr) as $task) {
 						if ($task['Text'] == '') continue;
-						$actions[] = array(
+						$actions[$task['Task']] = array(
 							'url' => $this->getUidService()->getObjectUrl('T-' . $task['Task']),
 							'name' => 'T-' . $task['Task'] . ' ' . substr($task['Text'], 0, 120)
 						);
@@ -343,13 +343,13 @@ class ReportSpentTimeList extends PMStaticPageList
 				}
 				if ( count($actions) > 0 ) {
 					echo $this->getTable()->getView()->render('core/SpentTimeMenu.php', array (
-						'title' => getSession()->getLanguage()->getHoursWording($hours),
+						'title' => $hours,
 						'items' => $actions,
 						'id' => $object_it->getId().$attr
 					));
 				}
 				else {
-					echo getSession()->getLanguage()->getHoursWording($hours);
+					echo $hours;
 				}
 			}
 			else {

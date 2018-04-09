@@ -97,7 +97,7 @@ class UserFilterRoleWebMethod extends FilterWebMethod
 {
 	function getCaption()
 	{
-		return translate('Роль');
+		return translate('Категория');
 	}
 
 	function getValues()

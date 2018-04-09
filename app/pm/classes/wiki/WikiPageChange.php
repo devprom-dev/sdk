@@ -1,5 +1,6 @@
 <?php
 include "persisters/WikiPageChangePersister.php";
+include "predicates/WikiPageChangeYounger.php";
 include "WikiPageChangeRegistry.php";
 
 class WikiPageChange extends Metaobject

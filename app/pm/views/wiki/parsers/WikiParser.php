@@ -1,8 +1,8 @@
 <?php
-define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)\]?/mi' );
-define( 'REGEX_INCLUDE_PAGE', '/\{\{([A-Z]{1}-[0-9]+)\}\}/si' );
-define( 'REGEX_INCLUDE_REVISION', '/\{\{([A-Z]{1}-[0-9]+):([\d-]+)\}\}/si' );
-define( 'REGEX_UPDATE_UID', '/<a\s+(href="([^"]+)"\s*|[^=>]+="[^"]+"\s*)+>(.+)<\/a>/i' );
+define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)([\]<\s\r\n\.,;:\!\?]+|$)/mi' );
+define( 'REGEX_INCLUDE_PAGE', '/\{\{([^}]+)\}\}/si' );
+define( 'REGEX_INCLUDE_REVISION', '/\{\{([^}]+):([\d-]+)\}\}/si' );
+define( 'REGEX_UPDATE_UID', '/(http|https):\/\/[^\/]+\/pm\/[^\/]+\/[A-Z]{1}-[0-9]+/i' );
 
 class WikiParser
 {
@@ -506,28 +506,9 @@ class WikiParser
 				$parms[] = new WikiPageBranchFilter($documentVersion);
 			}
 		}
+
 	    $uid_resolver = new ObjectUID;
      	$object_it = $uid_resolver->getObjectIt($uid);
-
-     	if ( $object_it->get('UID') != '' )
-     	{
-			// remap references inside baseline
-			$registry = $object_it->object->getRegistry();
-			$registry->setPersisters(array(new EntityProjectPersister()));
-
-			$parms[] = new FilterAttributePredicate('UID', $object_it->get('UID'));
-			$result_it = $registry->Query($parms);
-			if ( $result_it->getId() > 0 ) $object_it = $result_it;
-     	}
-     	elseif ( $object_it->object->IsAttributeStored('UID') )
-     	{
-			$registry = $object_it->object->getRegistry();
-			$registry->setPersisters(array(new EntityProjectPersister()));
-
-			$parms[] = new FilterAttributePredicate('UID', $uid);
-			$result_it = $registry->Query($parms);
-			if ( $result_it->getId() > 0 ) $object_it = $result_it;
-     	}
 
 		if ( $object_it->getId() > 0 ) {
 			$info = $uid_resolver->getUidInfo($object_it,true);
@@ -573,12 +554,18 @@ class WikiParser
 
     function parseUpdateUidCallback ( $match )
     {
-    	$url_parts = parse_url($match[2]);
+    	$url_parts = parse_url($match[0]);
     	$uid = basename($url_parts['path']);
 
     	$uid_info = $this->getUidInfo($uid);
     	if ( count($uid_info) < 1 ) return $match[0];
-        return strpos($match[3], $uid) !== false ? $uid : $match[0];
+
+        if ( is_object($uid_info['object_it']) ) {
+            $object_it = $uid_info['object_it'];
+            $url = $this->getPageUrl($object_it);
+            if ( $url != '' ) $uid_info['url'] = $url;
+        }
+        return $uid_info['url'];
     }
     
 	function parseIncludePageCallback( $match )
@@ -598,16 +585,42 @@ class WikiParser
     {
         $matches = array();
 
-        if ( preg_match('/([A-Z]{1}-[0-9]+)/mi', $match[1], $matches) ) {
-            $info = $this->getUidInfo(trim($matches[1], '[]'));
-            $object_it = $info['object_it'];
-        }
+        $info = $this->getUidInfo(trim($match[1], '[]'));
+        $object_it = $info['object_it'];
+
         if ( !is_object($object_it) || $object_it->getId() < 1 ) {
-            return str_replace('%1', $match[1], text(1166));
+            return $match[0];
+        }
+        if ( $object_it->object instanceof WikiPage ) {
+            $contentAttribute = 'Content';
+        }
+        else if ( $object_it->object instanceof Request ) {
+            $contentAttribute = 'Description';
+        }
+        else {
+            return $match[0];
         }
 
         $count = 0;
-        $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded('Content'), -1, $count);
+        $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded($contentAttribute), -1, $count);
+
+        if ( $object_it->object instanceof WikiPage ) {
+            $registry = $object_it->object->getRegistry();
+            $registry->setPersisters(array());
+            $pageIt = $registry->Query(
+                array(
+                    new ParentTransitiveFilter($object_it->getId()),
+                    new FilterNotInPredicate($object_it->getId()),
+                    new SortDocumentClause()
+                )
+            );
+            while (!$pageIt->end()) {
+                $itemCount = 0;
+                $content .= '<h4>' . $pageIt->get('Caption') . '</h4>';
+                $content .= preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $pageIt->getHtmlDecoded($contentAttribute), -1, $itemCount);
+                $pageIt->moveNext();
+            }
+        }
 
         if ( $count > 0 || !$this->display_hints ) return $content;
         if ( $content != '' ) {
@@ -724,7 +737,7 @@ class WikiParser
 				foreach( $object->getAttributes() as $attribute => $data ) {
 					if ( in_array($object->getAttributeType($attribute), array('file','image')) ) {
 						$path = $file_it->getFilePath($attribute);
-						return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
+						return ' src="data:'.$finfo->file($path).';base64,'.\TextUtils::encodeImage($path).'"';
 					}
 				}
 				return $match[0];
@@ -737,7 +750,7 @@ class WikiParser
 			}
 		}
 
-		if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
+        if ( preg_match('/\/plantuml\/img\//', $match[1], $result) )
 		{
 			$url_components = parse_url($match[1]);
 			$server_components = defined('PLANTUML_SERVER_URL') ? parse_url(PLANTUML_SERVER_URL) : parse_url('http://plantuml.com');
@@ -747,7 +760,7 @@ class WikiParser
 			$url_components['port'] = $server_components['port'] != '' ? ':'.$server_components['port'] : '';
 
 			return ' src="'.$url_components['scheme'].'://'.
-			$url_components['host'].$url_components['port'].$url_components['path'].'?t='.time().'"';
+			    $url_components['host'].$url_components['port'].$url_components['path'].'?t='.time().'"';
 		}
 
 		// empty url

@@ -73,23 +73,20 @@ class PMCustomAttribute extends MetaobjectCacheable
  	function getByEntity( $object )
  	{
  		$settings = array (
-				new FilterAttributePredicate('EntityReferenceName', strtolower(get_class($object))),
+            new FilterAttributePredicate('EntityReferenceName', strtolower(get_class($object))),
+            new FilterVpdPredicate()
 		);
- 		
- 		if ( count($object->getVpds()) > 0 )
- 		{
- 			$settings[] = new FilterBaseVpdPredicate();
- 		}
- 	 
  		return $this->getRegistry()->Query($settings);
  	}
  	
  	function getByAttribute( $object, $attribue )
  	{
- 	    return $this->getByRefArray( array (
- 	            'LCASE(EntityReferenceName)' => strtolower(get_class($object)),
- 	            'LCASE(ReferenceName)' => strtolower($attribue)
- 	    ));
+        $settings = array (
+            new FilterAttributePredicate('EntityReferenceName', strtolower(get_class($object))),
+            new FilterAttributePredicate('ReferenceName', $attribue),
+            new FilterVpdPredicate()
+        );
+        return $this->getRegistry()->Query($settings);
  	}
 
  	function add_parms( $parms )

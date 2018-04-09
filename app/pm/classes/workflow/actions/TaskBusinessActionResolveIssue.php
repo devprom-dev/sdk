@@ -17,12 +17,16 @@ class TaskBusinessActionResolveIssue extends BusinessActionWorkflow
 		if ( $object_it->get('ChangeRequest') == '' ) return true;
 		if ( !getSession()->getProjectIt()->getMethodologyIt()->HasTasks() ) return true;
 
+        $request_it = $object_it->getRef('ChangeRequest');
+        if ( $request_it->IsFinished() ) return true;
+
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
-
 		getSession()->addBuilder( new RequestModelExtendedBuilder() );
-		
+
 		$request_it = $object_it->getRef('ChangeRequest');
+        if ( $request_it->object->getAttributeType('OpenTasks') == '' ) return true;
+
 		if ( !$request_it->getRef('OpenTasks')->end() ) return true; // if there are no open tasks then resolve an issue
 
 		$service = new WorkflowService($request_it->object);

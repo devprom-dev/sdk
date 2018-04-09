@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageDocumentGroupPersister.php";
+include_once SERVER_ROOT_PATH . "pm/classes/wiki/persisters/WikiPageUsedByPersister.php";
 include_once SERVER_ROOT_PATH . "pm/views/ui/WorkflowProgressFrame.php";
 include "fields/FieldWikiEstimation.php";
 
@@ -18,7 +19,19 @@ class PMWikiList extends PMPageList
 		}
 		parent::retrieve();
 	}
-	
+
+    protected function getPersisters( $object, $sorts )
+    {
+        $persisters = array();
+        if ( $this->IsAttributeInQuery('UsedBy') ) {
+            $persisters[] = new WikiPageUsedByPersister();
+        }
+        return array_merge(
+            parent::getPersisters($object, $sorts),
+            $persisters
+        );
+    }
+
 	function & getStateObject()
 	{
 	    return $this->getTable()->getStateObject();
@@ -68,20 +81,33 @@ class PMWikiList extends PMPageList
                     echo ' ';
                     $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
                 }
-				if ( $this->displayContent && trim($object_it->get('Content')," \r\n") != '' ) {
-					$field = new FieldWYSIWYG($object_it->get('ContentEditor'));
-					$field->setValue($object_it->get('Content'));
-					$field->setObjectIt($object_it);
-					$field->setSearchText($this->searchText);
-                    echo '<div class="reset wysiwyg">';
-					    echo $field->getText(true);
-                    echo '</div>';
+				if ( $this->displayContent ) {
+                    $filterValues = $this->getFilterValues();
+                    if ( $filterValues['compareto'] != '' ) {
+                        $compareIt = $this->getObject()->getRegistry()->Query(
+                            array(
+                                new FilterAttributePredicate('UID', $object_it->get('UID')),
+                                new WikiPageBranchFilter($filterValues['compareto'])
+                            )
+                        );
+                        echo '<div class="reset wysiwyg">';
+                        $field = new FieldCompareToContent($object_it->copy(),$compareIt);
+                        $field->draw();
+                        echo '</div>';
+                    }
+                    else if ( trim($object_it->get('Content')," \r\n") != '' ) {
+                        $field = new FieldWYSIWYG($object_it->get('ContentEditor'));
+                        $field->setValue($object_it->get('Content'));
+                        $field->setObjectIt($object_it);
+                        $field->setSearchText($this->searchText);
+                        $field->drawReadonly();
+                    }
 				}
 				break;
 
             case 'Estimation':
                 if ( $object_it->get('TotalCount') > 0 ) {
-                    echo getSession()->getLanguage()->getDurationWording($object_it->get('EstimationCumulative'), 8);
+                    echo getSession()->getLanguage()->getHoursWording($object_it->get('EstimationCumulative'));
                 }
                 else {
                     if ( is_object($this->estimation_field) && $object_it->get('TotalCount') < 1 ) {
@@ -121,7 +147,7 @@ class PMWikiList extends PMPageList
                     if ( $object_it->get('ParentPage') == '' && $object_it->get('TotalCount') > 0 ) {
                         echo '<td>';
                         $object = getFactory()->getObject(get_class($this->getObject()));
-                        $object->addFilter( new FilterAttributePredicate('DocumentId',$object_it->getId()) );
+                        $object->addFilter( new WikiDocumentWaitFilter($object_it->getId()) );
                         $aggregateFunc = new AggregateBase( 'State', 'WikiPageId', 'COUNT' );
                         $object->addAggregate($aggregateFunc);
                         $agg_it = $object->getAggregated('t', array(new SortAttributeClause('State')));
@@ -236,7 +262,6 @@ class PMWikiList extends PMPageList
  	{
  	    switch ( $column )
  	    {
- 	        case 'State':
  	        case 'SectionNumber':
  	        	return '1%';
  	            

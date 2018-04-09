@@ -5,10 +5,8 @@ class ChangeLogObjectFilter extends FilterPredicate
  	function _predicate( $filter )
  	{
  		$values = array();
- 		foreach( preg_split('/,/', $filter) as $key => $class )
- 		{
+ 		foreach( preg_split('/,/', $filter) as $key => $class ) {
  			$class = getFactory()->getClass($class);
-
  			if ( !class_exists($class, false) ) {
 				$values[] = $class;
 			} else {

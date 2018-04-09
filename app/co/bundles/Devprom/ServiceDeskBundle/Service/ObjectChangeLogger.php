@@ -123,25 +123,6 @@ class ObjectChangeLogger
         return $unitOfWork->getEntityChangeSet($issue);
     }
 
-    protected function buildAdminSession()
-    {
-    	if ( is_object($this->admin_session) ) return;
-    	$system_it = getFactory()->getObject('SystemSettings')->getAll();
-    	
-		return $this->admin_session = new \AdminSession(
-				new \AuthenticationFactory(
-						getFactory()->getObject('User')->createCachedIterator(
-								array (
-										array (
-												'Caption' => $system_it->getDisplayName(),
-												'Email' => $system_it->get('AdminEmail')
-										)
-								)
-							)						
-        		)
-			);
-    }
-    
     protected function buildProjectSession($issue, User $user)
     {
 		return $this->project_session = new \PMSession(
@@ -161,7 +142,6 @@ class ObjectChangeLogger
     
     protected function notifyCustomerCreated(User $user)
     {
-    	$this->buildAdminSession();
 		getFactory()->getEventsManager()->notify_object_add(
 				getFactory()->getObject('Customer')->getExact($user->getId()), array()
 			);

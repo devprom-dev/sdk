@@ -2,13 +2,18 @@
 
 class FilterNoVpdPredicate extends FilterPredicate
 {
- 	function FilterNoVpdPredicate()
+ 	function __construct( $filter = 'base' )
  	{
- 		parent::FilterPredicate('base');
+ 		parent::__construct($filter);
  	}
  	
- 	function getPredicate( $filter = '' )
+ 	function _predicate( $filter = '' )
  	{
- 		return " AND t.VPD IS NULL ";
+ 	    if ( $filter == 'base' ) {
+            return " AND t.VPD IS NULL ";
+        }
+        else {
+            return " AND t.VPD NOT IN ('".$filter."') ";
+        }
  	}
 }

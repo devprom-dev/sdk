@@ -38,4 +38,9 @@ class Version extends Metaobject
 	{
 		return array();
 	}
+
+	function getPage()
+    {
+        return getSession()->getApplicationUrl($this).'module/operations/builds?';
+    }
 }

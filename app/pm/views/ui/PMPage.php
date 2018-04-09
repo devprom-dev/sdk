@@ -10,6 +10,7 @@ include SERVER_ROOT_PATH.'core/methods/XmlExportWebMethod.php';
 include_once SERVER_ROOT_PATH."pm/methods/UndoWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/methods/c_report_methods.php';
 include_once SERVER_ROOT_PATH.'pm/methods/WikiExportBaseWebMethod.php';
+include_once SERVER_ROOT_PATH."pm/methods/OpenWorkItemWebMethod.php";
 
 
 include 'PMFormEmbedded.php';
@@ -135,7 +136,13 @@ class PMPage extends Page
 			}
 		}
 
-		return $parms;
+		return array_merge(
+		    $parms,
+            array(
+                'context_template' => 'pm/PageContext.php',
+                'context' => $this->getContext(),
+            )
+        );
  	}
 
     protected function buildNavigationParms() {
@@ -191,6 +198,12 @@ class PMPage extends Page
             $parms['navigation_title'] = $info['name'];
         }
 
+        $parentIt = getSession()->getProjectIt()->getParentIt();
+        if ( $parms['navigation_url'] != '' && $parentIt->getId() != '' ) {
+            $parms['parent_widget_url'] = preg_replace('/\/pm\/[^\/]+\//i', '/pm/'.$parentIt->get('CodeName').'/', $parms['navigation_url']);
+            $parms['parent_widget_title'] = $parentIt->getDisplayName();
+        }
+
 		return array_merge( $parms, 
 			array (
 				'caption_template' => 'pm/PageTitle.php',
@@ -198,6 +211,7 @@ class PMPage extends Page
 				'project_template' => getSession()->getProjectIt()->get('Tools'),
 				'has_horizontal_menu' => getSession()->getProjectIt()->IsPortfolio() ? false : $parms['has_horizontal_menu'],
 				'report' => $this->getReportBase(),
+                'uid' => $this->getReportBase(),
 				'widget_id' => $this->getReport() != '' ? $this->getReport() : $this->getModule(),
 				'bodyExpanded' => $bodyExpanded,
 				'search_url' => getSession()->getApplicationUrl().'search.php'
@@ -351,7 +365,7 @@ class PMPage extends Page
  				return $this->exportCommentsThread();
 
 			case 'traces':
-				$object_it = $this->getObject()->getExact(preg_split('/[,-]/',$_REQUEST['ids']));
+				$object_it = $this->getObject()->getExact(TextUtils::parseIds($_REQUEST['ids']));
 				if ( $object_it->getId() == '' ) return;
 
 				$reference = $this->getObject()->getAttributeObject($_REQUEST['attribute']);
@@ -648,7 +662,7 @@ class PMPage extends Page
                 array(
                     'WikiPageId' => 1,
                     'Caption' => $object_it->getDisplayName(),
-                    'Content' => $this->buildExportContent($object_it, true),
+                    'Content' => htmlentities($this->buildExportContent($object_it, true)),
                     'ContentEditor' => getSession()->getProjectIt()->get('WikiEditorClass')
                 )
             )
@@ -724,5 +738,72 @@ class PMPage extends Page
         }
 
         return $html;
+    }
+
+    function getContext()
+    {
+        $actions = array();
+        $title = text(2472);
+
+        $registry = getFactory()->getObject('WorkItem')->getRegistry();
+        $registry->setDescriptionIncluded(false);
+        $registry->setTracesIncluded(false);
+        $registry->getObject()->disableVpd();
+
+        $registry->setLimit(1);
+        $openIt = $registry->Query(
+            array(
+                new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId()),
+                new FilterAttributePredicate('IsTerminal', array('I')),
+                new StateObjectSortClause()
+            )
+        );
+
+        if ( $openIt->getId() != '' ) {
+            $title = $openIt->getDisplayNameExt();
+            $actions[] = array(
+                'name' => translate('Открыть'),
+                'url' => getFactory()->getObject($openIt->get('ObjectClass'))->getExact($openIt->getId())->getViewUrl()
+            );
+            $actions[] = array();
+        }
+
+        $sortDueDate = new SortAttributeClause('DueDate');
+        $sortDueDate->setNullOnTop(false);
+
+        $registry->setLimit(10);
+        $taskIt = $registry->Query(
+            array(
+                new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId()),
+                new FilterAttributePredicate('IsTerminal', array('N','I')),
+                $sortDueDate,
+                new SortAttributeClause('State.D'),
+                new SortAttributeClause('Priority')
+            )
+        );
+
+        while( !$taskIt->end() ) {
+            if ( $taskIt->get('Caption') != '' && $taskIt->get('UID') != $openIt->get('UID') ) {
+                $method = new OpenWorkItemWebMethod($taskIt);
+                $taskName = $taskIt->getDisplayNameExt();
+                $actions[] = array (
+                    'name' => $taskName,
+                    'url' => $method->getJSCall(array( 'object' => $taskIt->getId(), 'class' => $taskIt->get('ObjectClass') ))
+                );
+            }
+            $taskIt->moveNext();
+        }
+
+        $actions[] = array();
+        $actions[] = array(
+            'name' => text(2473),
+            'url' => defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED
+                ? '/pm/my/tasks/list/mytasks'
+                : '/pm/all/tasks/list/mytasks'
+        );
+        return array(
+            'title' => $title,
+            'actions' => $actions
+        );
     }
 }

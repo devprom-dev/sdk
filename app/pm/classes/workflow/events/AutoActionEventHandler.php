@@ -27,12 +27,11 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
 
  	function modify( $prev_object_it, $object_it ) 
 	{
-		if ( $object_it->object instanceof AutoAction ) {
-            if ( !in_array($object_it->get('EventType'), $this->eventTypes) ) return;
-            $this->applyAutoAction($object_it);
-        }
         if ( $object_it->object instanceof Request ) {
-		    $this->applyAutoActionsOnModification($object_it);
+		    $this->applyAutoActionsOnModification(
+                $object_it->object->getExact($object_it->getId()),
+                array_diff_assoc($object_it->getData(), $prev_object_it->getData())
+            );
         }
 	}
 
@@ -68,7 +67,7 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
         $actionIt = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(
                 new FilterAttributePredicate('EventType', AutoActionEventRegistry::NewComment),
-                new FilterBaseVpdPredicate()
+                new FilterVpdPredicate($object_it->get('VPD'))
             )
         );
         while( !$actionIt->end() ) {
@@ -78,17 +77,22 @@ class AutoActionEventHandler extends ObjectFactoryNotificator
         }
     }
 
-    function applyAutoActionsOnModification( $object_it )
+    function applyAutoActionsOnModification( $object_it, $attributes )
     {
         $actionIt = getFactory()->getObject('IssueAutoAction')->getRegistry()->Query(
             array(
-                new FilterAttributePredicate('EventType', AutoActionEventRegistry::ModifyOnly),
-                new FilterBaseVpdPredicate()
+                new FilterAttributePredicate('EventType',
+                    array(
+                        AutoActionEventRegistry::ModifyOnly,
+                        AutoActionEventRegistry::CreateAndModify
+                    )
+                ),
+                new FilterVpdPredicate($object_it->get('VPD'))
             )
         );
         while( !$actionIt->end() ) {
-            $action = new BusinessActionIssueAutoActionWorkflow($actionIt);
-            $action->apply($object_it);
+            $action = new BusinessActionIssueAutoActionShift($actionIt);
+            $action->applyContent($object_it, $attributes);
             $actionIt->moveNext();
         }
     }

@@ -20,14 +20,16 @@ class FieldUID extends FieldShortText
 		    echo '<span class="pull-left">';
 			    echo $view->render('core/Clipboard.php', array ('url' => $info['url'], 'uid' => $info['uid']));
             echo '</span>';
-            echo '<span class="pull-right uid-state">';
-                echo $view->render('pm/StateColumn.php', array (
-                    'color' => $this->object_it->get('StateColor'),
-                    'name' => $this->object_it->get('StateName'),
-                    'terminal' => $this->object_it->get('StateTerminal') == 'Y',
-                    'actions' => $this->form->getTransitionActions()
-                ));
-            echo '</span>';
+            if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->object_it->object, 'State') ) {
+                echo '<span class="pull-right uid-state">';
+                    echo $view->render('pm/StateColumn.php', array (
+                        'color' => $this->object_it->get('StateColor'),
+                        'name' => $this->object_it->get('StateName'),
+                        'terminal' => $this->object_it->get('StateTerminal') == 'Y',
+                        'actions' => $this->form->getTransitionActions()
+                    ));
+                echo '</span>';
+            }
         echo '</div>';
 	}
 }

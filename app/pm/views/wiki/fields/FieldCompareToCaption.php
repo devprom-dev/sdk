@@ -15,6 +15,7 @@ class FieldCompareToCaption extends FieldStatic
 	{
 		$editor = WikiEditorBuilder::build($this->page_it->get('ContentEditor'));
 		$parser = $editor->getHtmlParser();
+        $parser->setObjectIt($this->page_it);
 
 		$diffBuilder = new WikiHtmlDiff(
 			$this->compare_to_page_it->getId() > 0

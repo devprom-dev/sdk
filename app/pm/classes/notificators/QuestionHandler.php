@@ -11,7 +11,7 @@ class QuestionHandler extends EmailNotificatorHandler
 		switch( $action )
 		{
 			case 'add':
-				$result = getSession()->getProjectIt()->getLeadIt()->idsToArray();
+				$result = $this->getProject($object_it)->getLeadIt()->idsToArray();
 				break;
 		}
 

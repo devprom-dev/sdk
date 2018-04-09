@@ -39,7 +39,9 @@ class DataModelRegistryBuilderCommon implements IDataModelRegistryBuilder
             'Snapshot',
             'StateBase',
             'Watcher',
-            'Customer'
+            'Customer',
+            'PMCustomAttribute',
+            'PMCustomAttributeValue'
 		));
 	}
 }

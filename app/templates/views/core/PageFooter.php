@@ -3,7 +3,6 @@
 		<li><? echo '<a tabindex="-1" target="_blank" href="http://devprom.ru">'.$license_name.'</a> '.$current_version; ?>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 		<li><a tabindex="-1" target="_blank" href="http://support.devprom.ru/issue/new"><?=translate('Сообщить о проблеме')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 		<li><a tabindex="-1" target="_blank" href="http://devprom.ru/docs"><?=translate('Документация')?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
-		<li><a tabindex="-1" target="_blank" href="http://club.devprom.ru"><?=text(1880)?></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;</li>
 		<li><a tabindex="-1" target="_blank" href="http://devprom.ru/news"><?=translate('Новости')?></a></li>
 	</ul>
 	<?php 

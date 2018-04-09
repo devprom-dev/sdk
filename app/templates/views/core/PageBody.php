@@ -1,19 +1,22 @@
 <?php $view->extend('core/Page.php'); ?>
 
-<div class="row-fluid hidden-print">
-	<div class="pull-left">
+<div class="row-fluid hidden-print page-title">
+	<div class="page-title-col">
 		<?php echo $view->render($caption_template, $navigation_parms); ?>
 	</div>
-	<div class="pull-right">
-		<?php 
-			echo $view->render('core/PageMenu.php', array_merge($navigation_parms, array(
-				'checkpoint_alerts' => $checkpoint_alerts,
-				'checkpoint_url' => $checkpoint_url,
-				'areas' => $navigation_parms['areas'],
-				'search_url' => $search_url
-			)));
-		?>
-	</div> 
+    <div class="page-title-col" style="vertical-align: top;">
+        <?php if ( $context_template != '' ) echo $view->render($context_template, $context); ?>
+    </div>
+	<div class="page-title-col text-right">
+        <?php
+            echo $view->render('core/PageMenu.php', array_merge($navigation_parms, array(
+                'checkpoint_alerts' => $checkpoint_alerts,
+                'checkpoint_url' => $checkpoint_url,
+                'areas' => $navigation_parms['areas'],
+                'search_url' => $search_url
+            )));
+        ?>
+	</div>
 </div> <!-- end row -->
 
 <?php if ( !$bodyExpanded && $has_horizontal_menu ) { // functional areas, horizontal menu ?>
@@ -87,7 +90,7 @@
 		<?php } ?>
 		
         <div id="page-content" class="container-fluid" style="padding:0">
-            <section class="content content-internal <?=($bodyExpanded ? 'content-expanded' : '')?> <?=$section_class?>" style="<?=$style?>" module="<?=$module?>" report="<?=$report?>">
+            <section class="content content-internal <?=($bodyExpanded ? 'content-expanded' : '')?> <?=$section_class?>" style="<?=$style?>" uid="<?=$uid?>" module="<?=$module?>" report="<?=$report?>">
                 <div class="row-fluid">
                		<?php $view['slots']->output('_content') ?>
                	</div> <!-- end row-fluid -->

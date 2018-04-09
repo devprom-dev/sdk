@@ -36,7 +36,7 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
             $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
             if( $methodology_it->HasFeatures() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Feature')) )
             {
-                $object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), true, false);
+                $object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функция'), true, false);
                 $object->addPersister( new WikiPageFeaturePersister(array('Feature')) );
                 $object->addAttributeGroup('Feature', 'trace');
                 $object->addAttributeGroup('Feature', 'bulk');

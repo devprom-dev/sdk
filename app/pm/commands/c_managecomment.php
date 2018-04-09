@@ -1,5 +1,6 @@
 <?php
-include_once SERVER_ROOT_PATH."cms/c_form.php";
+include_once SERVER_ROOT_PATH . "cms/c_form.php";
+include_once SERVER_ROOT_PATH . "pm/classes/model/validators/ModelNotificationValidator.php";
 
 class ManageComment extends CommandForm
 {
@@ -14,18 +15,16 @@ class ManageComment extends CommandForm
 		if ( $object_it->getId() < 1 ) $this->replyError( text(1062) );
 		
 		$comment = getFactory()->getObject('Comment');
-        $prevCommentIt = $comment->getExact($_REQUEST['PrevComment']);
 
 		$comment_text = $object_it->utf8towin($_REQUEST['Caption']);
  		$comment->setVpdContext( $object_it );
 
- 		$notificationSpecified = array_key_exists('Notification', $_REQUEST) || array_key_exists('NotificationOnForm', $_REQUEST);
- 		$isPrivate = $prevCommentIt->get('IsPrivate') != 'Y'
-            ? ($notificationSpecified && in_array($_REQUEST['Notification'], array('N','')) ? 'Y' : 'N')
-            : 'Y';
+ 		$validator = new ModelNotificationValidator();
+        $validator->validate($comment, $_REQUEST);
 
-        if ( $isPrivate == 'Y' ) {
-            $comment->removeNotificator('ServicedeskCommentEmailNotificator');
+        $prevCommentIt = $comment->getExact($_REQUEST['PrevComment']);
+        if ( $prevCommentIt->get('IsPrivate') == 'Y' ) {
+            $_REQUEST['IsPrivate'] = 'Y';
         }
 
         getFactory()->getEventsManager()->delayNotifications();
@@ -36,7 +35,7 @@ class ManageComment extends CommandForm
             'ObjectClass' => get_class($object_it->object),
             'PrevComment' => $prevCommentIt->getId(),
             'Caption' => $comment_text,
-            'IsPrivate' => $isPrivate
+            'IsPrivate' => $_REQUEST['IsPrivate']
         ));
 
  		$comment_it = $comment->getExact($comment_id);

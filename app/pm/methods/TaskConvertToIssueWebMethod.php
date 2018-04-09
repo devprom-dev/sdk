@@ -46,7 +46,7 @@ class TaskConvertToIssueWebMethod extends WebMethod
 		if ( $_REQUEST['Task'] == '' ) throw new Exception('Unknown task given');
 		if ( !$this->hasAccess() ) throw new Exception('There is no access to complete the operation');
 
-        $task_it = getFactory()->getObject('Task')->getExact(preg_split('/[-,]/', $_REQUEST['Task']));
+        $task_it = getFactory()->getObject('Task')->getExact(TextUtils::parseIds($_REQUEST['Task']));
         if ( $task_it->getId() == '' ) throw new Exception('Unknown task given');
 
         $service = new TaskConvertToIssueService(getFactory());

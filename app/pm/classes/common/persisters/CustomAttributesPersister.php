@@ -29,7 +29,8 @@ class CustomAttributesPersister extends ObjectSQLPersister
 			    'id' => $attr_it->getId(),
  				'name' => $attr_it->get('ReferenceName'),
  				'type' => $attr_it->getRef('AttributeType')->getData(),
-				'default' => $attr_it->getHtmlDecoded('DefaultValue')
+				'default' => $attr_it->getHtmlDecoded('DefaultValue'),
+                'VPD' => $attr_it->get('VPD'),
  			);
  			$attr_it->moveNext();
  		}
@@ -61,11 +62,12 @@ class CustomAttributesPersister extends ObjectSQLPersister
 	function map( &$parms )
 	{
 		foreach( $this->getAttributesInfo() as $id => $attr ) {
-		    if ( $attr['name'] != 'UID' ) continue;
+		    if ( $attr['name'] != 'UID' || $parms[$attr['name']] == '' ) continue;
 			if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
                 $idAttribute = $this->getObject()->getIdAttribute();
 			    if ( mb_strpos($attr['default'], 'ИД') === false || $parms[$idAttribute] != '' ) {
-                    $parms[$attr['name']] = $this->computeFormula($parms, $attr['default']);
+			        $computed = $this->computeFormula($parms, $attr['default']);
+			        if ( $computed != '' ) $parms[$attr['name']] = $computed;
                 }
 			}
 		}
@@ -77,10 +79,10 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
 		foreach( $this->getAttributesInfo() as $attr_id => $attr ) {
             if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
-                if ( mb_strpos($attr['default'], 'ИД') !== false ) {
-                    $idAttribute = $this->getObject()->getIdAttribute();
-                    $parms[$idAttribute] = $object_id;
-                    $uid = DAL::Instance()->Escape(addslashes($this->computeFormula($parms, $attr['default'])));
+                $idAttribute = $this->getObject()->getIdAttribute();
+                $parms[$idAttribute] = $object_id;
+                $uid = $this->computeFormula($parms, $parms[$attr['name']]);
+                if ( $uid != '' && $attr['name'] == 'UID' ) {
                     $sql = "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$uid."' WHERE w.".$idAttribute." IN (".join(",", array($object_id)).")";
                     DAL::Instance()->Query( $sql );
                 }
@@ -107,15 +109,17 @@ class CustomAttributesPersister extends ObjectSQLPersister
 				new SortAttributeClause('CustomAttribute')
 			)
  		);
- 		
- 		foreach( $attributes as $attr_id => $attr )
- 		{
+
+ 		foreach( $attributes as $attr_id => $attr ) {
+ 		    if ( $parms['VPD'] != '' && $parms['VPD'] != $attr['VPD'] ) continue;
+
  			$value_it->moveTo('CustomAttribute', $attr['id']);
  			if ( $value_it->getId() == '' ) {
  				// append
  				$value_parms = array(
  					'CustomAttribute' => $attr['id'],
- 					'ObjectId' => $object_id
+ 					'ObjectId' => $object_id,
+                    'VPD' => $attr['VPD']
  				);
  				
  				$this->setValueParms( $attr, $parms, $value_parms );
@@ -124,7 +128,6 @@ class CustomAttributesPersister extends ObjectSQLPersister
  			else {
  				// update
  				$value_column = $this->getTypeIt($attr)->getValueColumn();
-	 			
 	 			$value_parms = array(
 	 				$value_column => $value_it->getHtmlDecoded( $value_column )
 	 			);
@@ -245,10 +248,16 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
 	protected function computeFormula( $data, $formula )
 	{
-        return array_shift(
-            ModelService::computeFormula(
-                $this->getObject()->createCachedIterator(array($data)),
-                $formula
+        return trim(
+            DAL::Instance()->Escape(
+                addslashes(
+                    array_shift(
+                        ModelService::computeFormula(
+                            $this->getObject()->createCachedIterator(array($data)),
+                            $formula
+                        )
+                    )
+                )
             )
         );
 	}

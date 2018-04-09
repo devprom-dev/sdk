@@ -23,7 +23,12 @@
                         </li>
                         {% endif %}
                         <li>
-                            <a id="home-link" href="{{ path('issue_list') }}"><i class="icon-home"></i> <span class="name">{{ 'index.title'|trans }}</span></a>
+                            <a id="home-link" href="{{ path('issue_list') }}"><i class="icon-home"></i>
+                                <span class="name">{{ 'index.title'|trans }}</span>
+                                {% if is_granted('IS_AUTHENTICATED_FULLY') and app.user.notifications | length > 0 %}
+                                    <span class="numberCircle" title="{{ 'index.notifications'|trans }}"><span>{{ app.user.notifications | length }}</span></span>
+                                {% endif %}
+                            </a>
                         </li>
                         {% if app.user.company.seecompanyissues == "Y" %}
                             <li>

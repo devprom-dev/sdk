@@ -13,20 +13,6 @@ class EstimationFibonacciStrategy extends EstimationStrategy
 		return text('scrum11');
 	}
 	
-	function getVelocityText($object)
-	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
-		if ( (!$methodology_it->HasPlanning() || $object instanceof Iteration) && $methodology_it->HasFixedRelease() )
-		{
-			return text('scrum13');
-		}
-		else
-		{
-			return text('scrum12');
-		}
-	}
-	
 	function getDimensionText( $value )
 	{
 		return str_replace("%1", $value, text('scrum14'));

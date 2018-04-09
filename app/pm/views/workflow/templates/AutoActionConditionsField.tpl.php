@@ -1,4 +1,5 @@
 <?php
+global $tabindex;
 
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
@@ -62,7 +63,7 @@ if ( count($conditions['items']) < count($default_conditions) )
 			?>
 			</div>
 			<div style="display:table-cell;width:55%;vertical-align:top;">
-				<input class="input-block-level" type="text" value="<?=IteratorBase::utf8towin(urldecode($condition['Value']))?>" name="Value<?=$key?>">
+				<input class="input-block-level" tabindex="<?=($tabindex++)?>" type="text" value="<?=IteratorBase::utf8towin(urldecode($condition['Value']))?>" name="Value<?=$key?>">
 			</div>
 		</div>
 	<?php } ?>

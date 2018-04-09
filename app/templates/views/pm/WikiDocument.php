@@ -7,9 +7,6 @@ if ( !$tableonly )
 }
 
 $bodySections = array(new DetailsInfoSection());
-if ( $_COOKIE['toggle-structure-panel-' . $table->getDocumentIt()->getId()] == 'false' ) {
-    array_unshift($bodySections, new DocumentStructureSection());
-}
 $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'right';
 
 ?>
@@ -24,6 +21,7 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'document_hint' => $document_hint,
                 'docs_url' => $docs_url,
                 'docs_title' => $docs_title,
+                'documentId' => $widget_id,
                 'placement_text' => text(2209),
                 'placement_icon' => 'icon-arrow-right',
                 'placement_script' => "javascript: toggleDocumentTreePlacement('right')",
@@ -57,7 +55,8 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'hint' => $hint,
                 'hint_open' => $hint_open,
                 'page_uid' => $page_uid,
-                'sliderClass' => 'list-slider-1'
+                'sliderClass' => 'list-slider-1',
+                'filterMoreActions' => $filterMoreActions
             ));
             if ( $hint_open )
             {
@@ -76,6 +75,7 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'document_hint' => $document_hint,
                 'docs_url' => $docs_url,
                 'docs_title' => $docs_title,
+                'documentId' => $widget_id,
                 'placement_text' => text(2208),
                 'placement_icon' => 'icon-arrow-left',
                 'placement_script' => "javascript: toggleDocumentTreePlacement('left')",

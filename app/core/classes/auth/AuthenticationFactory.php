@@ -54,10 +54,35 @@ class AuthenticationFactory
         return false;
  	}
  	
- 	function logon( $remember = false )
+ 	function logon( $remember = false, $session_hash = '' )
  	{
- 		return false;
- 	}
+        // get the recent user's visit
+        $stored_session = getFactory()->getObject('pm_ProjectUse');
+        $stored_session->defaultsort = 'RecordModified DESC';
+
+        $prev_logon_it = $stored_session->getByRefArray(
+            array( 'Participant' => $this->getUser()->getId(),
+                'SessionHash' => $session_hash ), 1 );
+
+        // store the user has accessed into the system
+        // if there was access in the past just modify it
+        $parms = array(
+            'Timezone' => EnvironmentSettings::getClientTimeZone()->getName()
+        );
+
+        if ( $prev_logon_it->count() > 0 )
+        {
+            $parms['PrevLoginDate'] = $prev_logon_it->get('RecordModified');
+            $stored_session->getRegistry()->Store($prev_logon_it, $parms);
+        }
+        else
+        {
+            // store new access record
+            $parms['Participant'] = $this->getUser()->getId();
+            $parms['SessionHash'] = $session_hash;
+            $stored_session->add_parms($parms);
+        }
+    }
  	
  	function getToken()
  	{

@@ -2,7 +2,7 @@
 define('HTML_IMPORT_ANCHOR', '/href="#([^"]+)"/i');
 
 include_once SERVER_ROOT_PATH . "pm/views/wiki/parsers/WikiParser.php";
-include "WikiImporterContentBuilder.php";
+include_once "WikiImporterContentBuilder.php";
 include "WikiImporterListBuilder.php";
 
 abstract class WikiImporterEngine
@@ -26,10 +26,11 @@ abstract class WikiImporterEngine
     {
         \FeatureTouch::Instance()->touch('import-wikipage-raw');
 
-        $info = pathinfo($documentTitle);
-        $documentTitle = $info['filename'];
+        $parts = preg_split('/\./', $documentTitle);
+        $documentExt = array_pop($parts);
+        $documentTitle = join('.', $parts);
 
-        $this->filePath = $this->filePath.'.'.$info['extension'];
+        $this->filePath = $this->filePath.'.'.$documentExt;
         file_put_contents($this->filePath, $rawData);
 
         $html = $this->getHtml($this->filePath);
@@ -45,7 +46,7 @@ abstract class WikiImporterEngine
         }
         else {
             $this->document_it = $builder->buildDocument(
-                $documentTitle, $documentContent, $parent_it->getId()
+                $documentTitle, $documentContent, $this->options, $parent_it->getId()
             );
         }
 
@@ -60,10 +61,13 @@ abstract class WikiImporterEngine
 
             list($title, $content) = preg_split('/<\/h[1-6]>/i', $section);
 
-            $totext = new \Html2Text\Html2Text(trim($title), array('width'=>0));
-            $title = preg_replace('/[\r\n]+/', ' ', $totext->getText());
+            $title = preg_replace('/[\r\n]+/i', ' ', $title);
+            $title = preg_replace('/^([\d]+\.)+/i', '', $title);
+            $totext = new \Html2Text\Html2Text(htmlspecialchars($title), array('width'=>0));
+            $title = html_entity_decode($totext->getText());
+            $title = trim(str_replace('&nbsp;', ' ', $title));
 
-            $content = trim(trim($content), PHP_EOL);
+            $this->parseContent($content);
             if ( $title == '' && $content == '' ) continue;
 
             $page_it = $builder->buildPage(
@@ -74,47 +78,37 @@ abstract class WikiImporterEngine
             $levels[$selfLevel] = $page_it->getId();
         }
 
-        $pageIt = $this->document_it->object->getRegistry()->Query(
-            array(
-                new FilterAttributePredicate('DocumentId', $this->document_it->getId()),
-                new SortDocumentClause()
-            )
-        );
-        while( !$pageIt->end() ) {
-            $this->parsePage($pageIt);
-            $pageIt->moveNext();
-        }
+        $builder->parsePages($this->document_it);
 
         return true;
     }
 
-    protected function parsePage( $pageIt )
+    function parseContent( &$content )
     {
-        $content = $pageIt->getHtmlDecoded('Content');
-        $result = preg_replace_callback(HTML_IMPORT_ANCHOR, array($this, 'parsePageAnchors'), $content);
+        $content = trim(trim($content), PHP_EOL);
 
-        if ( $result != $content ) {
-            $pageIt->object->getRegistry()->Store( $pageIt,
-                array(
-                    'Content' => $result
-                )
-            );
+        // setup colspan for html tables (pandoc 1.19 doesn't support colspans)
+        $tableParts = preg_split('/<table\s*/i', $content);
+        foreach( $tableParts as $key => $tableContent ) {
+            if ( $key == 0 ) continue;
+            $tableColumnsSize = 0;
+            $rowParts = preg_split('/<tr\s*/i', $tableContent);
+            foreach( $rowParts as $rowKey => $rowContent ) {
+                if ( $rowKey == 0 ) continue;
+                $foundColumns = preg_split('/<(td|th)\s*/i', $rowContent);
+                $foundColumnsSize = count($foundColumns);
+                if ( $tableColumnsSize < 1 ) {
+                    $tableColumnsSize = $foundColumnsSize;
+                }
+                elseif ( $foundColumnsSize < $tableColumnsSize ) {
+                    $rowTail = array_pop($foundColumns);
+                    $rowParts[$rowKey] = join('<td ', $foundColumns);
+                    $rowParts[$rowKey] .= '<td colspan="'.($tableColumnsSize - $foundColumnsSize + 1).'" '.$rowTail;
+                }
+            }
+            $tableParts[$key] = join('<tr ', $rowParts);
         }
-    }
-
-    function parsePageAnchors( $match )
-    {
-        $refIt = $this->document_it->object->getRegistry()->Query(
-            array(
-                new FilterAttributePredicate('DocumentId', $this->document_it->getId()),
-                new FilterSearchAttributesPredicate(urldecode(preg_replace('/[_-]/', ' ', $match[1])), array('Caption'))
-            )
-        );
-        if ( $refIt->getId() == '' ) return $match[0];
-
-        $uid = new ObjectUID();
-        $info = $uid->getUIDInfo($refIt);
-        return 'href="'.$info['url'].'"';
+        $content = join('<table ', $tableParts);
     }
 
     function getDocumentIt() {

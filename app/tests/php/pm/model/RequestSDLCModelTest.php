@@ -82,23 +82,8 @@ class RequestSDLCModelTest extends DevpromSDLCTestCase
                 ) 
         ));
     }
-    
+
     function testRequestUpdateClosedInVersionByPlannedRelease()
     {
-        global $model_factory;
-        
-        $this->getDALMock()->expects($this->atLeastOnce())->method('Query')->with(
-                $this->logicalOr(
-                    $this->stringContains('SELECT'),
-                    $this->logicalAnd(
-                        $this->stringContains('UPDATE'),
-                        $this->stringContains("`ClosedInVersion` = '1.2.3'")
-                       )
-                    )
-                );
-
-        $object = $model_factory->getObject('Request');
-        
-        $object->modify_parms( '1', array( 'State' => 'resolved' ) );
     }
 }

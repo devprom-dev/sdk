@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."pm/methods/c_date_methods.php";
 include SERVER_ROOT_PATH."pm/classes/plan/CycleState.php";
 include "VersionList.php";
 
@@ -75,34 +76,58 @@ class VersionTable extends PMPageTable
 	
 	function getFilters()
 	{
-		return array_merge(parent::getFilters(), array (
-			$this->getCycleStateFilter()
-		));
+		return array_merge(
+		    parent::getFilters(),
+            array (
+                $this->buildStartFilter(),
+			    $this->buildFinishFilter(),
+			    $this->getCycleStateFilter()
+		    )
+        );
 	}
 	
 	function getFilterPredicates()
 	{
 	    $values = $this->getFilterValues();
-	    
-	    return array_merge( parent::getFilterPredicates(), array (
+	    return array_merge(
+	        parent::getFilterPredicates(),
+            array (
+                new FilterDateAfterPredicate('EstimatedFinishDate', $values['start']),
+                new FilterDateBeforePredicate('EstimatedFinishDate', $values['finish']),
 	            new StageTimelinePredicate($values['state'])
-	    ));
+	        )
+        );
 	}
 	
 	function getCycleStateFilter()
 	{
 	    $filter = new FilterObjectMethod( new CycleState(), '', 'state' );
-	    
 	    $filter->setHasNone(false);
 	    $filter->setType( 'singlevalue' );
 	    $filter->setIdFieldName( 'ReferenceName' );
-	    
-	    $filter->setDefaultValue('not-passed');
-	    
 	    return $filter;
 	}
 
-	function getExportActions() {
+    function buildStartFilter()
+    {
+        if( array_key_exists('start',$_REQUEST) and in_array($_REQUEST['start'],array('','hide')) ) {
+            unset($_REQUEST['start']);
+        }
+        $filter = new ViewStartDateWebMethod();
+        $filter ->setDefault(getSession()->getLanguage()->getPhpDate(strtotime('-7 day', strtotime(date('Y-m-j')))));
+        return $filter;
+    }
+
+    function buildFinishFilter()
+    {
+        if( array_key_exists('finish',$_REQUEST) and in_array($_REQUEST['finish'],array('','hide')) ) {
+            unset($_REQUEST['finish']);
+        }
+        $filter = new ViewFinishDateWebMethod();
+        return $filter;
+    }
+
+    function getExportActions() {
         return array();
     }
 
@@ -111,7 +136,6 @@ class VersionTable extends PMPageTable
         switch( $module ) {
             case 'project-plan-hierarchy':
                 return array (
-                    'ee/delivery',
                     'milestones',
                     'tasksplanningboard',
                     'iterationplanningboard',
@@ -122,8 +146,20 @@ class VersionTable extends PMPageTable
         }
     }
 
-    function getReferencesListWidget( $object )
+    protected function getChartModules( $module )
     {
+        return array (
+            'ee/delivery',
+            'resman/resourceload',
+            'projectburnup',
+            'iterationburndown',
+            'scrum/velocitychart'
+        );
+    }
+
+    function getReferencesListWidget( $parm, $referenceName )
+    {
+        $object = $parm instanceof OrderedIterator ? $parm->object : $parm;
         if ( $object instanceof Task ) {
             if ( is_object($this->tasks_widget) ) return $this->tasks_widget;
             $report = getFactory()->getObject('PMReport');
@@ -134,6 +170,6 @@ class VersionTable extends PMPageTable
             $report = getFactory()->getObject('PMReport');
             return $this->issues_widget = $report->getExact('issues-trace');
         }
-        return parent::getReferencesListWidget( $object );
+        return parent::getReferencesListWidget( $parm, $referenceName );
     }
 }

@@ -9,6 +9,7 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
     	$menus = parent::build($set);
  	    
 		$report = getFactory()->getObject('PMReport');
+        $module = getFactory()->getObject('Module');
 
 		$items = array();
 
@@ -28,7 +29,7 @@ class FunctionalAreaMenuFavoritesBuilder extends FunctionalAreaMenuProjectBuilde
 		$menus['quick']['items'][] = $report->getExact('discussions')->buildMenuItem();
 		$menus['quick']['items'] = array_merge($menus['quick']['items'],
 				array (
-						'project-log' => $report->getExact('project-log')->buildMenuItem()
+						'whatsnew' => $module->getExact('whatsnew')->buildMenuItem()
 				)
 		);
 		

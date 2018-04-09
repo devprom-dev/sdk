@@ -3,13 +3,15 @@ include_once SERVER_ROOT_PATH."admin/classes/checkpoints/CheckpointSupportPayed.
 
 class UpdateList extends PageList
 {
+    const RecentUpdateId = 999999990;
+
 	function IsNeedToDisplayNumber( ) { return false; }
 	function IsNeedToSelect( ) { return false; }
 	
  	function getIterator() 
 	{
 	    $it = parent::getIterator();
-	    
+
 	    $data = file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE);
 	    if ( $data == '' ) return $it;
 
@@ -17,12 +19,12 @@ class UpdateList extends PageList
 	    if ( count($data) < 1 ) return $it;
 
 	    $rowset = $it->getRowset();
-	    foreach( $data as $update_info )
+	    foreach( $data as $index => $update_info )
 	    {
 			if ( $update_info['description'] != '' ) $update_info['description'] = '<br/>'.$update_info['description'];
 
 	        array_unshift($rowset, array(
-	            'cms_UpdateId' => 0,
+	            'cms_UpdateId' => self::RecentUpdateId + $index,
 	            'Caption' => $update_info['version'],
 	            'Description' =>
 					(defined('UPDATES_URL')
@@ -76,7 +78,7 @@ class UpdateList extends PageList
 		$module_it = getFactory()->getObject('Module')->getExact('update-upload');
 		if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return $actions;
 
-	    if ( $object_it->getId() == '0' ) {
+	    if ( $object_it->getId() >= self::RecentUpdateId ) {
 	        $actions = array(
                 array( 'name' => translate('Установить'), 'url' => 'javascript: window.location=\'?action=download&parms='.$object_it->get('Caption').'\'' ),
 	        );

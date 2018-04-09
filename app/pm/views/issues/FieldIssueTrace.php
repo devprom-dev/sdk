@@ -29,8 +29,10 @@ class FieldIssueTrace extends FieldForm
 	
  	function getFilters()
  	{
-		return array ( 
-			new FilterAttributePredicate( 'ChangeRequest', is_object($this->object_it) ? $this->object_it->getId() : 0 )
+		return array (
+            is_object($this->object_it)
+                ? new FilterAttributePredicate( 'ChangeRequest', $this->object_it->getId())
+                : new FilterEmptyPredicate()
 		);
  	}
  	

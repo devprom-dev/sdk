@@ -12,7 +12,6 @@ include_once SERVER_ROOT_PATH."pm/classes/wiki/WikiPageModelExtendedBuilder.php"
 include "PMWikiTable.php";
 include "PMWikiDocument.php";
 include "WikiTreeSectionNew.php";
-include "DocumentStructureSection.php";
 include "WikiDocumentSettingBuilder.php";
 include "WikiPageSettingBuilder.php";
 include "history/WikiHistoryTable.php";
@@ -39,14 +38,12 @@ class PMWikiUserPage extends PMPage
  		    
 	    if ( $table instanceof PMWikiDocument && $table->getDocumentIt()->getId() > 0 )
 	    {
-			if ( $_COOKIE['toggle-structure-panel-' . $table->getDocumentIt()->getId()] != 'false' ) {
-				$this->addInfoSection( new WikiTreeSectionNew(
-					$table->getObjectIt()->getId() > 0
-						? $table->getObjectIt()
-						: $table->getDocumentIt(),
-					$_REQUEST['baseline']
-				));
-			}
+            $this->addInfoSection( new WikiTreeSectionNew(
+                $table->getObjectIt()->getId() > 0
+                    ? $table->getObjectIt()
+                    : $table->getDocumentIt(),
+                $_REQUEST['baseline']
+            ));
 	    }
 		else {
 			if( $_REQUEST['view'] == 'importdoc' )
@@ -182,14 +179,8 @@ class PMWikiUserPage extends PMPage
     function exportWikiTree()
  	{
 		$object = $this->getObject();
-		$object->setPersisters($this->getExportPersisters());
 
-        $rootIds = array_filter(
-            preg_split('/[,-]/',$_REQUEST['root']),
-            function($value) {
-                return $value > 0;
-            }
-        );
+        $rootIds = TextUtils::parseIds($_REQUEST['root']);
         $treeMode = $_REQUEST['tree-mode'] != 'plain';
 
         $object_it = count($rootIds) > 0
@@ -214,22 +205,21 @@ class PMWikiUserPage extends PMPage
 
  		if ( $snapshot_it->getId() > 0 )
  		{
- 			$registry = new WikiPageRegistryVersion();
- 			
- 			$registry->setObject($object);
+ 			$registry = new WikiPageRegistryVersion($object);
 			$registry->setDocumentIt($object_it);
 			$registry->setSnapshotIt($snapshot_it);
- 			
- 			$registry->setPersisters( array (
- 					new SnapshotItemValuePersister($snapshot_it->getId()),
- 					new WikiPageDetailsPersister()
- 			));
- 			
+            $registry->setPersisters(
+                array_merge(
+                    $registry->getPersisters(),
+                    $this->getExportPersisters()
+                    )
+                );
  			$this->getFormRef()->setReadonly();
  		}
  		else
  		{
- 			$registry = $object->getRegistry();
+ 			$registry = new WikiPageRegistry($object);
+            $registry->setPersisters($this->getExportPersisters());
  		}
 
  		if ( $treeMode ) {
@@ -237,7 +227,7 @@ class PMWikiUserPage extends PMPage
                 $children_it = $registry->Query(
                     array_merge(
                         array(
-                            new FilterAttributePredicate('DocumentId', $object_it->getId()),
+                            new WikiDocumentWaitFilter($object_it->getId()),
                             new SortDocumentClause()
                         ),
                         $this->getPredicates()
@@ -350,17 +340,37 @@ class PMWikiUserPage extends PMPage
 	   	return parent::getHint();
  	}
 
-    function buildExportIterator( $object, $ids )
+    function buildExportIterator( $object, $ids, $iteratorClassName )
     {
         if ( !$object instanceof WikiPage ) {
-            return parent::buildExportIterator($object, $ids);
+            return parent::buildExportIterator($object, $ids, $iteratorClassName);
         }
+
+        $registry = $object->getRegistry();
+        $version_it = getFactory()->getObject('Snapshot')->getExact($_REQUEST['baseline']);
+
+        if ( $version_it->getId() != '' ) {
+            $documentIt = $registry->getObject()->getExact(
+                array_unique(
+                    $registry->Query(
+                        array(
+                            new FilterInPredicate($ids),
+                            new FilterVpdPredicate()
+                        )
+                    )->fieldToArray('DocumentId')
+                )
+            );
+            $registry = new WikiPageRegistryVersion($registry->getObject());
+            $registry->setDocumentIt($documentIt);
+            $registry->setSnapshotIt($version_it);
+        }
+
         $exportOptions = preg_split('/-/', $_REQUEST['options']);
-        return $object->getRegistry()->Query(
+        return $registry->Query(
             array_merge(
                 array(
                     $_REQUEST['options'] == '' || in_array('children', $exportOptions)
-                        ? new WikiRootTransitiveFilter($ids)
+                        ? new ParentTransitiveFilter($ids)
                         : new FilterInPredicate($ids),
                     new SortDocumentClause()
                 )
@@ -387,5 +397,25 @@ class PMWikiUserPage extends PMPage
         }
 
         return $filters;
+    }
+
+    function getDemoDataIt( $object )
+    {
+        return $object->createCachedIterator(
+            array(
+                array(
+                    'Caption' => translate('Раздел'),
+                    'Content' => text(2500),
+                    'OrderNum' => '1',
+                    'Author' => getSession()->getUserIt()->getId()
+                ),
+                array(
+                    'Caption' => translate('Подраздел'),
+                    'Content' => text(2500),
+                    'OrderNum' => '1.1',
+                    'Author' => getSession()->getUserIt()->getId()
+                )
+            )
+        );
     }
 }

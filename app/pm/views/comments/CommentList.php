@@ -102,7 +102,7 @@ class CommentList
 			);
 			$actions[] = array ();
 			$actions[] = array (
-				'name' => translate('Изменить'),
+				'name' => $method->getCaption(),
 				'url' => $method->getJSCall()
 			);
 		}
@@ -166,6 +166,7 @@ class CommentList
 	
  	function getThreadRenderParms( $comment_it )
 	{
+	    $readonly = !getFactory()->getAccessPolicy()->can_modify($comment_it->object);
 		$comments = array();
  		do {
 	   		ob_start();
@@ -197,7 +198,7 @@ class CommentList
  			    'author_id' => $comment_it->get('AuthorId'),
 				'photo_id' => $comment_it->get('AuthorPhotoId'),
  				'created' => $comment_it->getDateFormatShort('RecordCreated').', '.$comment_it->getTimeFormat('RecordCreated'),
- 				'actions' => $this->getActions( $comment_it ),
+ 				'actions' => $readonly ? array() : $this->getActions( $comment_it ),
  				'html' => $text,
  				'thread_it' => $comment_it->getThreadIt(),
  			    'files' => $files,
@@ -215,7 +216,7 @@ class CommentList
 			'control_uid' => $this->control_uid,
 			'url' => $this->getUrl(),
 			'comments' => $comments,
-			'readonly' => false
+			'readonly' => $readonly
 		);
 	}
 	

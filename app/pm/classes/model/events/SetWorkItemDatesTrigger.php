@@ -13,77 +13,65 @@ class SetWorkItemDatesTrigger extends SystemTriggersBase
 	    $this->processStartDate( $object_it, $content );
 
 	    if ( array_key_exists('State', $content) ) {
-	    		$this->processFinishDate($object_it);
-	    }
-	    
-	    if ( $object_it->object instanceof Request )
-	    {
-		    $service = new StoreMetricsService();
-		    $request = new Request();
-
-	    	$service->storeIssueMetrics(
-				$request->getRegistry(),
-				array (
-					new FilterInPredicate(array($object_it->getId())),
-					new RequestMetricsPersister()
-				)
-			);
+            $this->processFinishDate($object_it);
 	    }
 	}
 	
 	function processFinishDate( $object_it )
 	{
 		$value = in_array($object_it->get('State'), $object_it->object->getTerminalStates()) ? 'NOW()' : "NULL";
-
 	    $table_name = $object_it->object->getEntityRefName();
-	    
-	    $sql = " UPDATE ".$table_name." SET FinishDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId();
 
-	    DAL::Instance()->Query($sql);
+	    if ( $value == 'NULL' ) {
+            DAL::Instance()->Query(
+                " UPDATE ".$table_name." SET FinishDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId()
+            );
+        }
+        else {
+            DAL::Instance()->Query(
+                " UPDATE ".$table_name." SET FinishDate = ".$value." WHERE FinishDate IS NULL AND ".$table_name."Id = ".$object_it->getId()
+            );
+        }
+        DAL::Instance()->Query(
+            " UPDATE ".$table_name." SET StartDate = FinishDate WHERE StartDate IS NULL AND FinishDate IS NOT NULL AND ".$table_name."Id = ".$object_it->getId()
+        );
 	}
 
 	function processStartDate( $object_it, $content )
 	{
 	    $table_name = $object_it->object->getEntityRefName();
+        $value = '';
 
-		switch( $table_name )
-		{
-		    case 'pm_Task':
-		    	
-		    	if ( $content['Release'] > 0 )
-		    	{
-		    		$value = " (SELECT GREATEST(r.StartDate, '".$object_it->get('RecordCreated')."') ".
-		    				 "	  FROM pm_Release r WHERE r.pm_ReleaseId = pm_Task.Release) ";
-		    	}
-		    	
-		    	break;
-		    	
-		    case 'pm_ChangeRequest':
-
-				if ( $content['PlannedRelease'] > 0 )
-		    	{
-		    		$value = " (SELECT GREATEST(r.StartDate, '".$object_it->get('RecordCreated')."') ".
-		    				 "	  FROM pm_Version r WHERE r.pm_VersionId = pm_ChangeRequest.PlannedRelease) ";
-		    	}
-		    	
-		    	break;
-		}
-		
 		// when the state is changed
-		if ( $value == '' && array_key_exists('State', $content) )
+		if ( array_key_exists('State', $content) )
 		{
-			$states = $object_it->object->getNonTerminalStates();
+		    $stateIt = \WorkflowScheme::Instance()->getStateIt($object_it->object);
+            while( !$stateIt->end() ) {
+                if ( $object_it->get('State') == $stateIt->get('ReferenceName') ) {
+                    if ( $stateIt->get('IsTerminal') == 'N' ) {
+                        // submitted
+                        $value = "NULL";
+                        break;
+                    }
+                    if ( $stateIt->get('IsTerminal') == 'I' ) {
+                        // in queue
+                        $value = "NOW()";
+                        break;
+                    }
+                }
+                $stateIt->moveNext();
+            }
+		}
 
-			// submitted
-			if ( $object_it->get('State') == array_shift($states) ) $value = "NULL";
-			
-			// in queue
-			if ( $value == '' && $object_it->get('State') == array_shift($states) ) $value = "NOW()";
-		}
-		
-		if ( $value != '' )
-		{
-		    DAL::Instance()->Query("UPDATE ".$table_name." SET StartDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId());
-		}
+        if ( $value == 'NULL' ) {
+            DAL::Instance()->Query(
+                " UPDATE ".$table_name." SET StartDate = ".$value." WHERE ".$table_name."Id = ".$object_it->getId()
+            );
+        }
+        else if ( $value != '' ) {
+            DAL::Instance()->Query(
+                " UPDATE ".$table_name." SET StartDate = ".$value." WHERE StartDate IS NULL AND ".$table_name."Id = ".$object_it->getId()
+            );
+        }
 	}
 }

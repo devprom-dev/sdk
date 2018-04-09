@@ -9,7 +9,16 @@ class StateDurationPersister extends ObjectSQLPersister
 	function getSelectColumns( $alias )
  	{
  		$columns = array();
-		$terminal_states = ','.join(',',$this->getObject()->getTerminalStates()).',';
+
+        $terminal_states = array();
+        $stateIt = \WorkflowScheme::Instance()->getStateIt($this->getObject());
+        while( !$stateIt->end() ) {
+            if ( $stateIt->get('IsTerminal') == 'Y' || $stateIt->get('ExcludeLeadTime') == 'Y' ) {
+                $terminal_states[] = $stateIt->get('ReferenceName');
+            }
+            $stateIt->moveNext();
+        }
+		$terminal_states = ','.join(',',$terminal_states).',';
 
  		array_push( $columns,
  			"( SELECT UNIX_TIMESTAMP(NOW()) / 3600 - ".
@@ -44,8 +53,8 @@ class StateDurationPersister extends ObjectSQLPersister
                 "  WHERE so.ObjectId = ".$this->getPK($alias).
                 "    AND so.ObjectClass = '".$this->getObject()->getStatableClassName()."' ".
                 "    AND tr.pm_TransitionId = so.Transition ".
-                "    AND st.pm_StateId = tr.SourceState ".
-                "    AND st.IsTerminal <> 'Y' ) LeadTime " );
+                "    AND st.pm_StateId = tr.TargetState ".
+                "    AND st.IsTerminal <> 'Y' AND st.ExcludeLeadTime = 'N' ) LeadTime " );
         }
 
  		return $columns;

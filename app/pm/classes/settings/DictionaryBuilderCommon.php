@@ -17,6 +17,7 @@ class DictionaryBuilderCommon extends DictionaryBuilder
  		$registry->addEntity( getFactory()->getObject('pm_IssueType') );
  		$registry->addEntity( getFactory()->getObject('RequestTemplate') );
         $registry->addEntity( getFactory()->getObject('TextTemplate') );
+        $registry->addEntity( getFactory()->getObject('ExportTemplate') );
 
  	 	if ( $methodology_it->HasFeatures() ) {
  	 		$registry->addEntity( getFactory()->getObject('FeatureType'), text(1914) );

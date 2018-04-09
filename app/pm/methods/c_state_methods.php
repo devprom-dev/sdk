@@ -292,43 +292,42 @@ class TransitionStateMethod extends WebMethod
 		$state_object = getFactory()->getObject($object->getStateClassName());
 		
 	    $source_it = $state_object->getRegistry()->Query(
-    			array (
-    					new \FilterAttributePredicate('ReferenceName', $object_it->get('State')),
-    					new \FilterVpdPredicate($object_it->get('VPD')),
-    					new \SortOrderedClause()
-    			)
+            array (
+                new \FilterAttributePredicate('ReferenceName', $object_it->get('State')),
+                new \FilterVpdPredicate($object_it->get('VPD')),
+                new \SortOrderedClause()
+            )
     	);
 		
-		if ( $source_it->getId() < 1 ) 
-		{
+		if ( $source_it->getId() < 1 ) {
 		    $source_it = $state_object->getRegistry()->Query(
-	    			array (
-	    					new \FilterVpdPredicate($object_it->get('VPD')),
-	    					new \SortOrderedClause()
-	    			)
+                array (
+                    new \FilterVpdPredicate($object_it->get('VPD')),
+                    new \SortOrderedClause()
+                )
 	    	);
 		}
 
 		$target_it = $state_object->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('ReferenceName', preg_split('/,/', trim($parms['target']))),
-						new FilterBaseVpdPredicate(),
-						new SortOrderedClause()
-				)
+            array (
+                new FilterAttributePredicate('ReferenceName', preg_split('/,/', trim($parms['target']))),
+                new FilterBaseVpdPredicate(),
+                new SortOrderedClause()
+            )
 		);
 
 		$transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
-				$parms['transition'] > 0
-				? array (
-						new FilterInPredicate($parms['transition'])
-				  )
-				: array (
-						new FilterAttributePredicate('SourceState', $source_it->getId()),
-						new FilterAttributePredicate('TargetState', $target_it->getId()),
-						new TransitionStateClassPredicate($object->getStatableClassName()),
-						new FilterBaseVpdPredicate(),
-						new SortOrderedClause()
-				  )
+            $parms['transition'] > 0
+            ? array (
+                new FilterInPredicate($parms['transition'])
+              )
+            : array (
+                new FilterAttributePredicate('SourceState', $source_it->getId()),
+                new FilterAttributePredicate('TargetState', $target_it->getId()),
+                new TransitionStateClassPredicate($object->getStatableClassName()),
+                new FilterBaseVpdPredicate(),
+                new SortOrderedClause()
+              )
 		);
 
  		if ( $transition_it->count() < 1 )
@@ -381,8 +380,6 @@ class TransitionStateMethod extends WebMethod
 
 				$attributes[] = $attribute;
 			}
-
-			if ( $target_it->get('TaskTypes') != '' ) $attributes[] = 'Tasks';
 
 			if ( count($attributes) > 0 )
 			{

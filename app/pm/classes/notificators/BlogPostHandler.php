@@ -8,7 +8,7 @@ class BlogPostHandler extends EmailNotificatorHandler
 	function getParticipants( $object_it, $prev_object_it, $action ) 
 	{
 		if ( $action != 'add' ) return array();
-		return getSession()->getProjectIt()->getParticipantIt()->idsToArray();
+		return $this->getProject($object_it)->getParticipantIt()->idsToArray();
 	}
 
 	function getUsers( $object_it, $prev_object_it, $action )

@@ -96,12 +96,6 @@ class CoPageNavigation extends PageNavigation
         return array_merge(
             array(
                 array (
-                    'name' => text('guide.club'),
-                    'url' => 'http://club.devprom.ru',
-                    'target' => '_blank'
-                ),
-                array(),
-                array (
                     'name' => text('guide.userdocs'),
                     'url' => $docs_url,
                     'target' => '_blank'

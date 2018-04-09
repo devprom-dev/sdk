@@ -4,7 +4,7 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include_once SERVER_ROOT_PATH."pm/classes/sessions/SessionBuilderProject.php";
-include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleActiveVpdPredicate.php";
+include_once SERVER_ROOT_PATH."pm/classes/project/predicates/ProjectAccessibleVpdPredicate.php";
 
 class SoapService
 {
@@ -166,6 +166,11 @@ class SoapService
 
 		$it = $object->getExact($id);
 
+        getFactory()->getEventsManager()
+            ->executeEventsAfterBusinessTransaction(
+                $it->copy(), 'WorklfowMovementEventHandler'
+            );
+
 		$result = $this->serializeToSoap( $it );
 
 		return $result;
@@ -189,6 +194,7 @@ class SoapService
 		}
 
 		$result = array();
+		$ids = array();
 
 		foreach( $parms as $object_parms )
 		{
@@ -204,11 +210,16 @@ class SoapService
 			$id = $object->add_parms($object_parms);
 			$it = $object->getExact($id);
 
-			array_push( $result,
-			$this->serializeToSoap( $it ) );
+			array_push( $result, $this->serializeToSoap( $it ) );
+            $ids[] = $id;
 		}
 
-		return $result;
+        getFactory()->getEventsManager()
+            ->executeEventsAfterBusinessTransaction(
+                $object->getExact($ids), 'WorklfowMovementEventHandler'
+            );
+
+        return $result;
 	}
 
 	// Stores object data using the given ID
@@ -250,11 +261,17 @@ class SoapService
 		
 		$this->setDefaultValues( $object, $attrs, $parms );
 
-		$id = $object->modify_parms($id, $parms);
-		
-		if ( $id < 1 ) $server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
+		$result = $object->modify_parms($id, $parms);
+		if ( $result < 1 ) {
+		    $server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
+        }
 
-		return $id;
+        getFactory()->getEventsManager()
+            ->executeEventsAfterBusinessTransaction(
+                $object->getExact($id), 'WorklfowMovementEventHandler', $parms
+            );
+
+        return $id;
 	}
 
 	// Stores array of objects
@@ -266,6 +283,7 @@ class SoapService
 
 		$object = $model_factory->getObject($classname);
 		$attrs = $this->getAttributes( $object );
+		$ids = array();
 
 		foreach( $parms as $object_parms )
 		{
@@ -296,13 +314,18 @@ class SoapService
 			$this->storeFiles( $object, $object_parms );
 			$this->setDefaultValues( $object, $attrs, $object_parms );
 				
-			$id = $object->modify_parms($it->getId(), $object_parms);
-
-			if ( $id < 1 ) {
+			$result = $object->modify_parms($it->getId(), $object_parms);
+			if ( $result < 1 ) {
 				$server->fault('', $this->logError(IteratorBase::wintoutf8(str_replace('%1', $it->getDisplayName(), text(1216)))));
 			}
+            $ids[] = $it->getId();
 		}
-	}
+
+        getFactory()->getEventsManager()
+            ->executeEventsAfterBusinessTransaction(
+                $object->getExact($ids), 'WorklfowMovementEventHandler'
+            );
+    }
 
 	// Deletes an object using the given ID
 	function delete( $token, $classname, $id )
@@ -382,7 +405,7 @@ class SoapService
 		}
 
 		if ( $object instanceof Project ) {
-			$object->addFilter( new ProjectAccessibleActiveVpdPredicate() );
+			$object->addFilter( new ProjectAccessibleVpdPredicate() );
 		}
 
 		$object->setLimit(100);
@@ -735,7 +758,7 @@ class SoapService
 					
 			case 'xsd:int':
 			case 'xsd:float':
-			    if ( $value < 1 )
+			    if ( $value <= 0 )
 				{
 					return "";
 				}

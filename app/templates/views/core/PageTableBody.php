@@ -1,8 +1,10 @@
 <?
 $detailsVisible = false;
+$detailsUsed = false;
 if ( is_array($sections) ) {
 	foreach( $sections as $section ) {
 		if ( $section instanceof DetailsInfoSection ) {
+            $detailsUsed = true;
 			$detailsVisible = $section->isActive();
 		}
 	}
@@ -16,7 +18,7 @@ if ( is_array($sections) ) {
 
 <?php if ( $title != '' ) { ?>
 
-<ul class="breadcrumb">
+<ul class="breadcrumb hidden-print">
     <?php if ( $navigation_title != '' && $navigation_title != $title ) { ?>
 	<li>
 	    <a href="<?=$navigation_url?>"><?=$navigation_title?></a>
@@ -34,65 +36,55 @@ if ( is_array($sections) ) {
 
 	$filter_actions = $table->getFilterActions();
 	if ( count($filter_actions) > 0 || count($filter_items) > 0 ) {
-		if ( count($filter_actions) > 0 ) { ?>
+        if (count($filter_actions) > 0) { ?>
 
-<div class="btn-group pull-left" style="margin-right:5px;display:table;">
-  <a id="filter-settings" class="btn dropdown-toggle btn-small" data-toggle="dropdown" href="#">
-	<i class="icon-cog icon-gray"></i>
-	<?php if ( $filter_actions[0]['name'] != '' ) { ?>
-	<span class="caret"></span>
-	<?php } ?>
-  </a>
-  <?php
-  
-	echo $view->render('core/PopupMenu.php', array (
-		'items' => $filter_actions
-	));
-  ?>
-</div>
+            <div class="btn-group pull-left" style="margin-right:5px;display:table;">
+                <a id="filter-settings" class="btn dropdown-toggle btn-small" data-toggle="dropdown" href="#">
+                    <i class="icon-cog icon-gray"></i>
+                    <?php if ($filter_actions[0]['name'] != '') { ?>
+                        <span class="caret"></span>
+                    <?php } ?>
+                </a>
+                <?php
 
-<?php 
+                echo $view->render('core/PopupMenu.php', array(
+                    'items' => $filter_actions
+                ));
+                ?>
+            </div>
 
-		}
+            <?php
 
-	foreach( $filter_items as $filter )
-	{
-		if ( $filter['html'] != '' )
-		{
-			echo '<div class="btn-group pull-left">'.$filter['html'].'</div>';
-		}
-		else
-		{
-		?>
-		<div class="btn-group pull-left">
-			<a class="btn btn-small dropdown-toggle <?=(in_array($filter['value'],array('','all')) ? '' : 'btn-info')?>" uid="<?=$filter['name']?>" href="#" data-toggle="dropdown">
-				<?=$filter['title']?>
-				<span class="caret"></span>
-			</a>
-			<? echo $view->render('core/PopupMenu.php', array ('items' => $filter['actions'], 'uid' => $filter['name'])); ?>
-		</div>
-		<?php
-		}
-	}
+        }
 
-	if ( count($filter_items) > 0 ) {
-	?>
-			<? if ( $module_url != '' ) { ?>
-		<div class="filter-reset-cnt btn-group pull-left">
-			<a class="btn btn-small clipboard" data-clipboard-text="<?=$module_url?>" data-message="<?=text(2107)?>" tabindex="-1">
-				<i class="icon-share"></i>
-			</a>
-		</div>
-			<? } ?>
-		<div class="filter-reset-cnt btn-group pull-left info-action" style="min-width: 32px;">
-			<a class="filter-reset-btn btn btn-small" onclick="filterLocation.resetFilter();" title="<?=text(2088)?>">
-				<i class="icon-trash"></i>
-			</a>
-		</div>
-		<div class="btn-group pull-left" style="margin-right:24px;">&nbsp;</div>
-	<?php
-	}
-}
+        foreach ($filter_items as $filter) {
+            if ($filter['html'] != '') {
+                echo '<div class="btn-group pull-left">' . $filter['html'] . '</div>';
+            } else {
+                ?>
+                <div class="btn-group pull-left">
+                    <a class="btn btn-small dropdown-toggle <?= (in_array($filter['value'], array('', 'all')) ? '' : 'btn-info') ?>"
+                       uid="<?= $filter['name'] ?>" href="#" data-toggle="dropdown">
+                        <?= $filter['title'] ?>
+                        <span class="caret"></span>
+                    </a>
+                    <? echo $view->render('core/PopupMenu.php', array('items' => $filter['actions'], 'uid' => $filter['name'])); ?>
+                </div>
+                <?php
+            }
+        }
+
+        if (count($filter_items) > 0 && count($filterMoreActions) > 0) { ?>
+            <div class="btn-group pull-left">
+                <a class="btn btn-cell dropdown-toggle transparent-btn btn-filter-more" uid="filter-more-actions" href="#" data-toggle="dropdown">
+                    <span class="label">...</span>
+                </a>
+                <? echo $view->render('core/PopupMenu.php', array('items' => $filterMoreActions, 'uid' => 'filter-more-actions')); ?>
+            </div>
+        <?php
+        }
+    }
+
 if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
 	<div class="bulk-filter-actions pull-left">
 		<?php foreach( $bulk_actions['workflow'] as $stateRefName => $workflow_actions ) { ?>
@@ -242,13 +234,13 @@ if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') ) { ?>
 		echo '</div>';
 	?>
 	</div>
-	<? if ( !is_a($list, 'PageChart') && !$tableonly && count($details) > 0 ) { ?>
+	<? if ( $detailsUsed && !is_a($list, 'PageChart') && !$tableonly && count($details) > 0 ) { ?>
 		<div class="table-details" default="<?=($detailsVisible ? 'table-cell' : 'none')?>" style="height:100%;display:none;">
 			<?php
 				$list->getIteratorRef()->moveFirst();
 				echo $view->render('core/PageTableDetails.php', array (
 					'details' => $details,
-					'details_id' => $detailsId,
+					'details_id' => $widget_id,
 					'visible' => $detailsVisible,
 					'details_parms' => $details_parms,
 					'default_id' => $list->getIteratorRef()->getId()

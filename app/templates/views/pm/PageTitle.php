@@ -50,14 +50,13 @@ $project_it = $session->getProjectIt();
 
         <? } else { ?>
 
-            <div class="btn-group">
-                <a id="navbar-portfolio" class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_portfolio']?>">
-                    <?=$project_navigation_parms['current_portfolio_title']?>
-                </a>
-            </div>
-
-            <div class="btn-group">
-            </div>
+            <? if ( !in_array($project_navigation_parms['current_portfolio'], array('all','my')) ) { ?>
+                <div class="btn-group">
+                    <a id="navbar-portfolio" class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_portfolio']?>">
+                        <?=$project_navigation_parms['current_portfolio_title']?>
+                    </a>
+                </div>
+            <?php } ?>
 
             <div class="btn-group">
                 <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
@@ -70,15 +69,7 @@ $project_it = $session->getProjectIt();
 
     <?php } ?>
 
-    <?php if ( $project_it->IsPortfolio() && in_array($project_it->get('LinkedProject'), array('','0')) && getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) ) { ?>
-
-        <a id="navbar-create-project" class="btn btn-warning" href="/projects/new">
-            <i class="icon-plus icon-white"></i> <?=text('project.new')?>
-        </a>
-
-    <?php } ?>
-
-    <?php if ( is_array($quickMenu) ) { ?>
+    <?php if ( is_array($quickMenu) && count($quickMenu['items']) > 0 ) { ?>
     <div class="btn-group quick-btn">
         <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-small <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$quickMenu['description']?>">
             <i class="<?=$quickMenu['icon']?>"></i>

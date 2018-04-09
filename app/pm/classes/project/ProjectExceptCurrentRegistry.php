@@ -7,7 +7,8 @@ class ProjectExceptCurrentRegistry extends ObjectRegistrySQL
 		return array_merge(
 				parent::getFilters(),
 				array (
-						new FilterNotInPredicate(getSession()->getProjectIt()->getId())
+				    new ProjectAccessibleActiveVpdPredicate(),
+                    new FilterNotInPredicate(getSession()->getProjectIt()->getId())
 				)
 		);
 	}

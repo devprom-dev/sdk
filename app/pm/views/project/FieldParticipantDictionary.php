@@ -2,18 +2,23 @@
 
 class FieldParticipantDictionary extends FieldDictionary
 {
-	function getGroups()
+    private $iterationId = '';
+
+    function __construct( $iterationId = '' ) {
+        parent::__construct(getFactory()->getObject('ProjectUser'));
+        $this->iterationId = $iterationId;
+    }
+
+    function getGroups()
 	{
 		$groups = array();
 		
 		$role_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
-				array (
-						new FilterBaseVpdPredicate()
-				)
+            array (
+                new FilterBaseVpdPredicate()
+            )
 		);
-		
-		while( !$role_it->end() )
-		{
+		while( !$role_it->end() ) {
 			$groups[$role_it->getId()] = array (
 					'label' => $role_it->getDisplayName()
 			);
@@ -25,16 +30,10 @@ class FieldParticipantDictionary extends FieldDictionary
 	
  	function getOptions()
 	{
- 		$part_it = $this->getObject()->getRegistry()->Query(
- 				array (
- 						new UserWorkerPredicate(),
- 						new UserParticipatesDetailsPersister()
- 				)
-		);
- 		
+ 		$part_it = $this->getObject()->getAll();
  		return defined('PERMISSIONS_ENABLED')
- 			? $this->getRoleBasedOptions($part_it)
- 			: $this->getSimpleOptions($part_it);
+                    ? $this->getRoleBasedOptions($part_it)
+                    : $this->getSimpleOptions($part_it);
 	}
 	
 	protected function getSimpleOptions($part_it)
@@ -44,7 +43,7 @@ class FieldParticipantDictionary extends FieldDictionary
  		{
 		    $options[] = array (
 		        'value' => $part_it->getId(),
-                'caption' => $part_it->getDisplayName()
+                'caption' => $part_it->getDisplayNameExt($this->iterationId)
             );
  			$part_it->moveNext();
  		}
@@ -56,10 +55,13 @@ class FieldParticipantDictionary extends FieldDictionary
  		$groups = array();
 	 	while ( !$part_it->end() ) 
  		{
-		    $groups[$part_it->get('ProjectRole')][] = array (
-		        'value' => $part_it->getId(),
-                'caption' => $part_it->getDisplayName()
-            );
+ 		    $roles = preg_split('/,/', $part_it->get('ProjectRole'));
+ 		    foreach( $roles as $roleId ) {
+                $groups[$roleId][] = array (
+                    'value' => $part_it->getId(),
+                    'caption' => $part_it->getDisplayNameExt($this->iterationId)
+                );
+            }
  			$part_it->moveNext();
  		}
  		

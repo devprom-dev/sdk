@@ -1,13 +1,12 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator.php";
+include_once SERVER_ROOT_PATH."pm/views/comments/FieldCheckNotifications.php";
 include "FieldWidgetUrl.php";
 include "FieldState.php";
 include "FieldComputed.php";
 include "FieldUID.php";
-include "FieldListOfReferences.php";
 include "JSONViewerField.php";
 
 class PMPageForm extends PageForm
@@ -16,6 +15,7 @@ class PMPageForm extends PageForm
     private $customkinds = array();
     private $customdefault = array();
     private $templateFields = array();
+    private $allowChooseProject = false;
 
     function PMPageForm($object)
     {
@@ -38,12 +38,38 @@ class PMPageForm extends PageForm
         $entities = TextTemplateEntityRegistry::getEntities();
         $this->templateFields = preg_split('/,/',$entities[get_class($this->getObject())]);
 
-        if ( in_array($this->getMode(), array('new','add')) && getSession()->getProjectIt()->IsPortfolio() ) {
+        $this->allowChooseProject =
+            getSession()->getProjectIt()->IsPortfolio()
+            || getSession()->getProjectIt()->IsProgram();
+
+        if ( in_array($this->getMode(), array('new','add')) && $this->allowChooseProject ) {
+            if ( $this->getObject()->getAttributeEditable('Project') ) {
+                $this->getObject()->setAttributeVisible('Project', true);
+            }
+            else {
+                $this->getObject()->addAttribute('Project', 'REF_ProjectActiveId', translate('Проект'), true, false);
+            }
             $this->getObject()->setAttributeRequired('Project', true);
-            $this->getObject()->setAttributeVisible('Project', true);
+        }
+
+        if ( !is_object($this->getObjectIt()) && $this->getObject() instanceof MetaobjectStatable) {
+            $this->getObject()->setAttributeVisible('State', true);
         }
 
         $this->buildCustomAttributes();
+
+        if ( is_object($this->getObjectIt()) ) {
+            $uid = new ObjectUID();
+            if ( $_REQUEST['formonly'] != '' && $uid->hasUid($this->getObjectIt()) ) {
+                if ( $this->getObject()->IsAttributeStored('UID') ) {
+                    $this->getObject()->setAttributeVisible('UID', true);
+                    $this->getObject()->setAttributeOrderNum('UID', 100);
+                }
+                else {
+                    $this->getObject()->addAttribute('UID', 'VARCHAR', 'UID', true, false);
+                }
+            }
+        }
 
         // extend model depends on workflow settings (eg, required attributes)
         $transition_it = $this->getTransitionIt();
@@ -95,19 +121,6 @@ class PMPageForm extends PageForm
         }
 
         $model_builder->build( $this->getObject() );
-
-        if ( is_object($this->getObjectIt()) ) {
-            $uid = new ObjectUID();
-            if ( $_REQUEST['formonly'] != '' && $uid->hasUid($this->getObjectIt()) ) {
-                if ( $this->getObject()->IsAttributeStored('UID') ) {
-                    $this->getObject()->setAttributeVisible('UID', true);
-                    $this->getObject()->setAttributeOrderNum('UID', 100);
-                }
-                else {
-                    $this->getObject()->addAttribute('UID', 'VARCHAR', 'UID', true, false);
-                }
-            }
-        }
     }
     
 	protected function buildCustomAttributes()
@@ -267,9 +280,6 @@ class PMPageForm extends PageForm
     {
         switch( $attr )
         {
-            case 'State':
-                return !is_object($this->getObjectIt());
-
             default:
                 if ( $this->getObject()->IsReference($attr) ) {
                     if ( !getFactory()->getAccessPolicy()->can_read($this->getObject()->getAttributeObject($attr)) ) {
@@ -295,18 +305,24 @@ class PMPageForm extends PageForm
     {
         $value = parent::getDefaultValue( $field );
 
-        if ( array_key_exists( $field, $this->customdefault ) && $this->getEditMode() ) {
-            if ( $this->getDiscriminator() == $this->customkinds[$field] ) {
-                $value = $this->customdefault[$field];
-            }
+        switch( $field ) {
+            case 'Project':
+                if ( $value == '' ) return getSession()->getProjectIt()->getId();
+                break;
+            default:
+                if ( array_key_exists( $field, $this->customdefault ) && $this->getEditMode() ) {
+                    if ( $this->getDiscriminator() == $this->customkinds[$field] ) {
+                        $value = $this->customdefault[$field];
+                    }
+                }
+                if ( $value == '' && in_array($field, $this->templateFields) && $this->getObject()->IsAttributeVisible($field) ) {
+                    $template_it = $this->getTextTemplateIt();
+                    if ( $template_it->getId() != '' ) {
+                        return $template_it->getHtmlDecoded('Content');
+                    }
+                }
         }
 
-        if ( $value == '' && in_array($field, $this->templateFields) && $this->getObject()->IsAttributeVisible($field) ) {
-            $template_it = $this->getTextTemplateIt();
-            if ( $template_it->getId() != '' ) {
-                return $template_it->getHtmlDecoded('Content');
-            }
-        }
         return $value;
     }
 
@@ -325,15 +341,18 @@ class PMPageForm extends PageForm
         switch ($attr) 
         {
             case 'UID':
-                return new FieldUID($this);
-
-            case 'Project':
-                if ( getSession()->getProjectIt()->IsPortfolio() ) {
-                    return new FieldAutoCompleteObject(getFactory()->getObject('ProjectLinked'));
+                if ( is_object($this->getObjectIt()) ) {
+                    return new FieldUID($this);
                 }
                 else {
                     return parent::createFieldObject($attr);
                 }
+
+            case 'Project':
+                if ( $this->allowChooseProject ) {
+                    return new FieldAutoCompleteObject(getFactory()->getObject('ProjectLinked'));
+                }
+                return parent::createFieldObject($attr);
 
             case 'State':
                 if ( $this->getObject() instanceof MetaobjectStatable ) {
@@ -343,9 +362,20 @@ class PMPageForm extends PageForm
                     return parent::createFieldObject($attr);
                 }
 
+            case 'TransitionNotification':
+                $field = new FieldCheckNotifications();
+                if ( is_object($this->getObjectIt()) ) {
+                    $field->setAnchor($this->getObjectIt());
+                }
+                return $field;
+
             default:
                 if ( in_array('dictionary', $this->getObject()->getAttributeGroups($attr)) ) {
                     return new FieldCustomDictionary($this->getObject(), $attr);
+                }
+
+                if ( in_array('computed', $this->getObject()->getAttributeGroups($attr)) ) {
+                    return new FieldComputed($this->getObjectIt(), $attr);
                 }
 
                 if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg')
@@ -372,10 +402,6 @@ class PMPageForm extends PageForm
                     return $field;
                 }
 
-                if ( in_array('hours', $this->getObject()->getAttributeGroups($attr)) ) {
-                    return new FieldHours();
-                }
-    
                 return parent::createFieldObject($attr);
         }
     }
@@ -426,7 +452,7 @@ class PMPageForm extends PageForm
     {
         return array_intersect(
             array_keys($this->getObject()->getAttributes()),
-            array('State')
+            array('State', 'Project')
         );
     }
 
@@ -570,7 +596,8 @@ class PMPageForm extends PageForm
 
         $resultIt = $registry->Query(
             array_merge($filters, $sorts, array(
-                new FilterNextSiblingsPredicate($objectIt)
+                new FilterNextSiblingsPredicate($objectIt),
+                new FilterNextKeyPredicate($objectIt)
             ))
         );
         if ( $resultIt->getId() != '' ) return $resultIt;
@@ -578,7 +605,8 @@ class PMPageForm extends PageForm
         return $registry->Query(
             array_merge($sorts, array(
                 new FilterVpdPredicate(),
-                new FilterNextSiblingsPredicate($objectIt)
+                new FilterNextSiblingsPredicate($objectIt),
+                new FilterNextKeyPredicate($objectIt)
             ))
         );
     }
@@ -588,6 +616,20 @@ class PMPageForm extends PageForm
         $objectIt = $this->getObjectIt();
         if ( !is_object($objectIt) ) return $this->getObject()->getEmptyIterator();
         return $this->getNeighbourIt($objectIt);
+    }
+
+    function render( $view, $parms )
+    {
+        $object_it = $this->getObjectIt();
+        if ( is_object($object_it) && $object_it->getId() != "" && getSession()->getUserIt()->getId() != "" ) {
+            DAL::Instance()->Query(
+                " DELETE FROM ObjectChangeNotification 
+                   WHERE ObjectId = ".$object_it->getId()." 
+                     AND ObjectClass = '".get_class($object_it->object)."' 
+                     AND SystemUser = ".getSession()->getUserIt()->getId()
+            );
+        }
+        parent::render( $view, $parms );
     }
 
     private $state_it = null;

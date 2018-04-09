@@ -23,7 +23,7 @@ class LastChangesSection extends InfoSection
  	{
  		if ( !is_a($this->object, 'OrderedIterator') ) throw new Exception('Iterator is required');
  		
- 		$registry = getFactory()->getObject('ObjectChangeLog')->getRegistry();
+ 		$registry = getFactory()->getObject('ChangeLogAggregated')->getRegistry();
 
  		$registry->setLimit($this->items + 1);
  		
@@ -66,10 +66,6 @@ class LastChangesSection extends InfoSection
 		for($i = 0; $i < min($it->count(), $this->items); $i++)
 		{
 			if ( $it->get('Content') == '' && $it->get('ChangeKind') == 'modified' ) {
-				$it->moveNext();
-				continue;
-			}
-			if ( $it->get('ChangeKind') == 'modified' && strpos($it->get('Content'), ';rarr;') !== false ) {
 				$it->moveNext();
 				continue;
 			}

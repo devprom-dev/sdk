@@ -6,6 +6,8 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Devprom\AdministrativeBundle\AdministrativeBundle;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+
 include_once SERVER_ROOT_PATH."admin/classes/common/SessionBuilderAdmin.php";
 
 class AdminApplicationKernel extends Kernel
@@ -56,7 +58,6 @@ class AdminApplicationKernel extends Kernel
     function boot()
     {
         global $session, $model_factory;
-        $lock = new \CacheLock();
 
         $model_factory = new \ModelFactoryExtended(
             \PluginsFactory::Instance(),
@@ -67,6 +68,11 @@ class AdminApplicationKernel extends Kernel
         $session = \SessionBuilderAdmin::Instance()->openSession(array(), \CacheEngineFS::Instance());
 
         parent::boot();
-        $lock->Release();
+    }
+
+    public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
+    {
+        $lock = new \CacheLock();
+        return parent::handle($request, $type, $catch);
     }
 }

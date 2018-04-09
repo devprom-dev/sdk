@@ -349,8 +349,8 @@ class AjaxForm
 
 		if ( !$this->IsAttributeModifable($attribute) )
 		{
-			echo '<input type="hidden" id="'.$attribute.'" name="'.$attribute.'" value="'.$value.'">';
-		    echo '<input class="input-block-level" type="text" value="'.$displayValue.'" readonly>';
+			echo '<input type="hidden" id="'.htmlentities($attribute).'" name="'.htmlentities($attribute).'" value="'.htmlentities($value).'">';
+		    echo '<span class="input-block-level well well-text" style="word-break: break-all;padding: 4px 6px;margin-bottom: 10px;">'.$displayValue.'</span>';
 		}
 		else
 		{

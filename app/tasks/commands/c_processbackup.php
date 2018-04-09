@@ -23,6 +23,9 @@ class ProcessBackup extends TaskCommand
         // remove old test results
         $this->shrinkTests();
 
+        // remove old notifications of objects changes
+        $this->shrinkChangeNotifications();
+
 		$job = $model_factory->getObject('co_ScheduledJob');
 		$job_it = $job->getExact($_REQUEST['job']);
 		
@@ -104,5 +107,11 @@ class ProcessBackup extends TaskCommand
           DELETE FROM pm_Test WHERE RecordCreated < '".$lastDate."'
              AND NOT EXISTS (SELECT 1 FROM pm_TestCaseExecution e WHERE e.Test = pm_TestId)
         ");
+    }
+
+    function shrinkChangeNotifications()
+    {
+        $lastDate = date("Y-m-d", strtotime("-1 month"));
+        DAL::Instance()->Query(" DELETE FROM ObjectChangeNotification WHERE RecordCreated < '".$lastDate."' ");
     }
 }

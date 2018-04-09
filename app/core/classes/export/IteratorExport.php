@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
 
 class IteratorExport extends IteratorBase
 {
@@ -99,8 +100,13 @@ class IteratorExport extends IteratorBase
  		switch ( $fieldName )
  		{
  			case 'State':
- 			    $state_it = $this->iterator->getStateIt();
- 			    return $state_it->getDisplayName();
+ 			    if ( $this->iterator instanceof StatableIterator ) {
+                    $state_it = $this->iterator->getStateIt();
+                    return $state_it->getDisplayName();
+                }
+                else {
+                    return $this->iterator->get($fieldName);
+                }
 
             case 'StateDuration':
             case 'LeadTime':
@@ -141,6 +147,26 @@ class IteratorExport extends IteratorBase
 							return $this->iterator->getDateTimeFormat($fieldName);
 						
 						default:
+                            if ( in_array('computed', $this->iterator->object->getAttributeGroups($fieldName)) ) {
+                                $result = ModelService::computeFormula(
+                                    $this->iterator,
+                                    $this->iterator->object->getDefaultAttributeValue($fieldName)
+                                );
+
+                                $lines = array();
+                                foreach ($result as $computedItem) {
+                                    if (!is_object($computedItem)) {
+                                        $lines[] = $computedItem;
+                                    } else {
+                                        $lines[] = $this->uidService->getUidWithCaption(
+                                            $computedItem, 15, '',
+                                            $computedItem->get('VPD') != getSession()->getProjectIt()->get('VPD')
+                                        );
+                                    }
+                                }
+                                return join(', ', $lines);
+                            }
+
 		 					return $this->iterator->get( $fieldName );
 					}
 				}

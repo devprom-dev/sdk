@@ -24,31 +24,7 @@ class BusinessActionIssueAutoActionWorkflow extends BusinessActionWorkflow
  	
 	function apply( $object_it )
  	{
- 		if ( !$this->checkConditions($object_it) ) return false;
-
-        $parms = array();
- 		foreach($this->action_it->object->getActionAttributes() as $attribute)
- 		{
- 			if ( $this->action_it->get($attribute) == '' ) continue;
- 			$parms[$attribute] = $this->action_it->getHtmlDecoded($attribute);
- 			if ( $attribute == 'State' ) {
-                $parms['TransitionComment'] = $this->action_it->getDisplayName();
-            }
- 		}
-
- 		if ( count($parms) < 1 ) return true;
-
- 		$object_it->object->setNotificationEnabled(true);
- 		$object_it->object->modify_parms( $object_it->getId(), $parms );
- 		
- 		return true;
- 	}
-
- 	protected function checkConditions( $object_it )
- 	{
- 		return ModelService::queryXPath(
- 					$object_it->copyAll(),
- 					$this->action_it->getConditionXPath()
- 			)->count() > 0;
+ 		if ( !$this->checkConditions($this->action_it, $object_it) ) return false;
+ 		return $this->process($this->action_it, $object_it);
  	}
 }

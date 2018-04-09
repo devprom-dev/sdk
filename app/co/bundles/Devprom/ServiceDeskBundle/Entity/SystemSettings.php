@@ -32,6 +32,12 @@ class SystemSettings {
     private $adminEmail;
 
     /**
+     * @ORM\Column(type="string", name="Language")
+     * @var string
+     */
+    private $language;
+
+    /**
      * @param string $adminEmail
      */
     public function setAdminEmail($adminEmail)
@@ -45,6 +51,22 @@ class SystemSettings {
     public function getAdminEmail()
     {
         return $this->adminEmail;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setLanguage($value)
+    {
+        $this->language = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLanguage()
+    {
+        return $this->language;
     }
 
     /**

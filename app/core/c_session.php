@@ -33,15 +33,14 @@ class SessionBase
     protected $auth_factory_it;
     protected $builders_cache = array();
     protected $accessibleVpds = array();
+    protected $terminateCallbacks = array();
  	
  	function __construct( $factory = null, $builders = null, $language = null, $cache_service = null )
  	{
  		global $session;
  		
  		$session = $this;
-        register_shutdown_function(function() use ($session) {
-            $session->terminate();
-        });
+        $this->finalize();
 
  		$this->builders = array_merge(
  				is_array($builders) ? $builders : array(),
@@ -63,6 +62,10 @@ class SessionBase
  		$this->configure();
  	}
 
+ 	public function finalize() {
+        register_shutdown_function(array($this, 'terminate'));
+    }
+
  	function __sleep() {
         return array (
             'id', 'user_it', 'factory', 'cache_engine', 'factories', 'active_tab',
@@ -73,6 +76,7 @@ class SessionBase
     function __wakeup() {
         global $session;
         $session = $this;
+        $this->finalize();
         $this->buildFactories();
     }
 
@@ -84,8 +88,18 @@ class SessionBase
         return $this->id;
     }
 
+    public function addCallbackDelayed( $parms, $callback ) {
+ 	    $key = md5(serialize($parms));
+ 	    $this->terminateCallbacks[$key] = function() use ($parms, $callback) {
+            call_user_func( $callback, $parms );
+        };
+    }
+
     public function terminate()
 	{
+	    foreach( $this->terminateCallbacks as $callback ) {
+	        call_user_func( $callback );
+        }
 		$this->builders = array();
 	}
 
@@ -176,38 +190,7 @@ class SessionBase
             $this->setAuthenticationFactory($factory);
  		}
 		$this->setUserIt($user_it);
-
- 		$session_hash = $factory->logon( 
- 			in_array('remember', array_keys($_REQUEST)) );
- 		
- 		// get the recent user's visit
-		$stored_session = getFactory()->getObject('pm_ProjectUse');
-	    $stored_session->defaultsort = 'RecordModified DESC';
-
-		$prev_logon_it = $stored_session->getByRefArray(
-			array( 'Participant' => $user_it->getId(),
-				   'SessionHash' => $session_hash ), 1 );
-
-		// store the user has accessed into the system
-		// if there was access in the past just modify it
-		$parms = array(
-				'Timezone' => EnvironmentSettings::getClientTimeZone()->getName()
-		);
-		
-		if ( $prev_logon_it->count() > 0 ) 
-		{
-			$parms['PrevLoginDate'] = $prev_logon_it->get('RecordModified');
-
-			$stored_session->getRegistry()->Store($prev_logon_it, $parms);
-		}
-		else 
-		{
-		 	// store new access record
-			$parms['Participant'] = $user_it->getId();
-			$parms['SessionHash'] = $session_hash;
-			
-		 	$stored_session->add_parms($parms);
-		} 	
+        $factory->logon( in_array('remember', array_keys($_REQUEST)) );
  	}
 
 	function setUserIt( $user_it )
@@ -333,7 +316,7 @@ class SessionBase
  	function truncate( $category = '' )
  	{
  		$category = $category == '' ? $this->getCacheKey() : $category;
- 		return $this->cache_engine->truncate( $category );
+ 		return $this->cache_engine->invalidate( $category );
  	}
  	
  	function getApplicationUrl()

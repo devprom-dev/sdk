@@ -193,5 +193,15 @@ class ReleaseForm extends PMPageForm
 				return parent::getFieldDescription( $name );
 		}
 	}
-} 
+
+    function getShortAttributes()
+    {
+        return array_merge(
+            parent::getShortAttributes(),
+            array(
+                'StartDate', 'FinishDate'
+            )
+        );
+    }
+}
  

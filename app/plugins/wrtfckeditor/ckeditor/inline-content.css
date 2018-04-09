@@ -9,18 +9,19 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	padding: 0 0 10px 0;
 	width: 100%;
 	outline: none;
+	overflow-x: auto;
+	overflow-y: hidden;
 }
 
 .wysiwyg-text[contenteditable=true]
 {
-    position: relative;
 	padding: 2px 0px 2px 1px;
-	overflow-x: hidden;
 }
 
 .wysiwyg-input[contenteditable=true]
 {
     padding: 2px 0px 2px 1px;
+	overflow: hidden;
 }
 
 .wysiwyg-field[contenteditable=true]
@@ -57,13 +58,13 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 {
 	line-height: 1.6em !important;
 	margin: 0;
-	
+
 	font-family: inherit;
 	font-weight: normal;
 	font-size: inherit;
 }
 
-.wysiwyg blockquote, 
+.wysiwyg blockquote,
 .wysiwyg q {
 	quotes: none;
 }

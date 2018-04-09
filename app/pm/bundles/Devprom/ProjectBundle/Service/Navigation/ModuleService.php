@@ -55,14 +55,14 @@ class ModuleService
 					'reportUrl' => $info['url'] != '' ? $info['url'] : '#'
 			);
 			
-			if ( $report_it->get('Module') != '' ) $skip_modules[] = $report_it->get('Module');
+			if ( $report_it->get('Module') != '' ) $skip_modules[] = $report_it->getDisplayName();
 			
 			$report_it->moveNext();
 		}
 
 		while( !$module_it->end() )
 		{
-			if ( in_array($module_it->getId(), $skip_modules) )
+			if ( in_array($module_it->getDisplayName(), $skip_modules) )
 			{
 				$module_it->moveNext(); continue;
 			}

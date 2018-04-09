@@ -1,6 +1,5 @@
 <?php
 include_once SERVER_ROOT_PATH."plugins/kanban/classes/predicates/ProjectUseKanbanPredicate.php";
-include "KanbanRequestBoard.php";
 
 class KanbanRequestTable extends RequestTable
 {
@@ -16,10 +15,6 @@ class KanbanRequestTable extends RequestTable
         return $this->vpds;
     }
 
-    function getList( $mode = '' ) {
-		return new KanbanRequestBoard( $this->getObject() );
- 	}
- 	
  	function getFiltersDefault() {
  	    return array('type','priority');
  	}

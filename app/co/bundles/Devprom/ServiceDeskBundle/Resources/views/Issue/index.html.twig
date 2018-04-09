@@ -73,6 +73,17 @@
                                             <a href="{{ path('issue_show', { 'id': issue.id }) }}">
                                                 {{ issue.caption|unescapeHtml }}
                                             </a>
+                                            {% set notifications = [] %}
+                                            {% for notification in issue.notifications %}
+                                                {% for myNotification in app.user.notifications %}
+                                                    {% if myNotification.id == notification.id %}
+                                                        {% set notifications = notifications|merge([myNotification]) %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                            {% if notifications|length > 0 %}
+                                                <span class="numberCircle" title="{{ 'index.notifications'|trans }}"><span>{{ notifications|length }}</span></span>
+                                            {% endif %}
                                         </td>
                                         <td class="centered" data-title="{{ 'issue_severity'|trans|slice(0,7) }}.">
                                             {{ issue.severity.name|trans }}

@@ -10,7 +10,7 @@ class FlotChartLineWidget extends FlotChartWidget
 		$index = 0;
 		
 		$inner_row = array();
-		
+
 		foreach ( $this->getData() as $item_key => $item )
 		{
 			foreach ( $item['data'] as $data_key => $data )

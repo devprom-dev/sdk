@@ -5,6 +5,7 @@ include_once "MaintenanceCommand.php";
 class UpdateDownload extends MaintenanceCommand
 {
     var $data, $update_info;
+    private $updateName = '';
     
 	function validate()
 	{
@@ -46,8 +47,7 @@ class UpdateDownload extends MaintenanceCommand
         
 		$fp = fopen($file_path, 'w+');
 
-        $curl = curl_init();
-        
+        $curl = CurlBuilder::getCurl();
         curl_setopt($curl, CURLOPT_URL, $this->update_info['download_url'].'&iid='.INSTALLATION_UID);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($curl, CURLOPT_TIMEOUT, 1200);
@@ -77,7 +77,12 @@ class UpdateDownload extends MaintenanceCommand
 		if ( is_object($logger) ) $logger->info('Update has been downloaded');
 		
 		$pathinfo = pathinfo($file_path);
+		$this->updateName = $pathinfo['basename'];
 		
 		$this->replyRedirect( '?action=check&parms='.$pathinfo['basename'] );
 	}
+
+	function getUpdateName() {
+	    return $this->updateName;
+    }
 }

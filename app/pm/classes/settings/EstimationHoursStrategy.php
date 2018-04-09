@@ -14,20 +14,6 @@ class EstimationHoursStrategy extends EstimationStrategy
 		return text(1104);
 	}
 	
-	function getVelocityText($object)
-	{
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-		
-		if ( (!$methodology_it->HasPlanning() || $object instanceof Iteration) && $methodology_it->HasFixedRelease() )
-		{
-			return text(1115);
-		}
-		else
-		{
-			return text(1105);
-		}
-	}
-	
 	function getDimensionText( $value )
 	{
 		return str_replace("%1", $value, text(1120));

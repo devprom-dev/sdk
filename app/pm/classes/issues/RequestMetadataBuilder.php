@@ -7,7 +7,6 @@ include_once "persisters/RequestTasksPersister.php";
 include_once "persisters/RequestDetailsPersister.php";
 include_once "persisters/RequestOwnerPersister.php";
 include_once "persisters/RequestMilestonesPersister.php";
-include_once "persisters/IssueUsedByPersister.php";
 include "persisters/RequestTypePersister.php";
 
 class RequestMetadataBuilder extends ObjectMetadataEntityBuilder 
@@ -23,7 +22,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttributeGroup('Customer', 'system');
     	$metadata->setAttributeType('Author', 'REF_IssueAuthorId');
 		$metadata->setAttributeRequired('Author', false);
-    	$metadata->addPersister( new RequestDetailsPersister(array('Author')) );
+    	$metadata->addPersister( new RequestDetailsPersister() );
     	
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->IsTimeTracking() )
@@ -40,10 +39,6 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addAttributeGroup('Links', 'trace');
         $metadata->addPersister( new IssueLinkedIssuesPersister(array('Links')) );
 
-        $metadata->addAttribute( 'ProjectPage', 'REF_ProjectPageId', translate('База знаний'), false);
-        $metadata->addAttributeGroup('ProjectPage', 'trace');
-        $metadata->addPersister( new IssueUsedByPersister() );
-
 	    $metadata->addAttribute('Question', 'REF_QuestionId', text(2037), false);
 		$metadata->addAttributeGroup('Question', 'trace');
 
@@ -55,12 +50,14 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 			$metadata->addAttribute( 'Tasks', 'REF_pm_TaskId', translate('Задачи'), true, false, text(2010), 200);
 		}
 
-		$metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', text(2117), false, false, '', 210);
-		$metadata->addAttributeGroup('OpenTasks', 'skip-network');
-		$metadata->addPersister( new RequestTasksPersister(array('OpenTasks')) );
-		if ( !$methodology_it->HasTasks() ) {
-			$metadata->addAttributeGroup('OpenTasks', 'system');
-		}
+		if ( $methodology_it->HasTasks() ) {
+            $metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', text(2117), false, false, '', 210);
+            $metadata->addAttributeGroup('OpenTasks', 'skip-network');
+            $metadata->addPersister( new RequestTasksPersister(array('OpenTasks')) );
+            if ( !$methodology_it->HasTasks() ) {
+                $metadata->addAttributeGroup('OpenTasks', 'system');
+            }
+        }
 
 		if ( $methodology_it->HasPlanning() ) {
 			$metadata->setAttributeVisible('Iteration', 'true');
@@ -80,57 +77,24 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeType( 'Function', 'REF_FeatureId' );
 
 		$strategy = $methodology_it->getEstimationStrategy();
-		
-		if ( $strategy->hasEstimationValue() )
-		{
+		if ( $strategy->hasEstimationValue() ) {
 			$title = translate($metadata->getAttributeCaption('Estimation'));
-			
-			if ( strpos($title, ',') === false )
-			{
+			if ( strpos($title, ',') === false ) {
 				$metadata->setAttributeCaption( 
 					'Estimation', $strategy->getDimensionText($title.',') 
 				);
 			}
-				
-			$title = translate($metadata->getAttributeCaption('EstimationLeft'));
-			
-			if ( strpos($title, ',') === false )
-			{
-				$metadata->setAttributeCaption( 
-					'EstimationLeft', $strategy->getDimensionText($title.',') 
-				);
-			}
-		}
-		
-		$permission_attributes = array(
-			'Author',
-			'ClosedInVersion',
-			'Fact',
-			'Caption',
-			'Description',
-			'Owner',
-			'Priority',
-			'Function',
-			'OrderNum',
-			'Type',
-			'PlannedRelease',
-			'Iteration',
-			'Estimation'
-		);
-    	foreach ( $permission_attributes as $attribute )
-		{
-		    $metadata->addAttributeGroup($attribute, 'permissions');
 		}
 
-		$metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
-		$metadata->addAttributeGroup('Watchers', 'additional');
+        $metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
+        $metadata->addAttributeGroup('Watchers', 'additional');
 
 		$metadata->addAttributeGroup('DeliveryDate', 'non-form');
         $metadata->setAttributeCaption('DeliveryDate', text(2289));
 		$metadata->setAttributeDescription('DeliveryDate', text(2113));
 		$metadata->setAttributeDescription('StartDate', text(1839));
 		$metadata->setAttributeDescription('FinishDate', text(1840));
-		foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iteration', 'DeliveryDate') as $attribute ) {
+		foreach ( array('StartDate','FinishDate', 'PlannedRelease', 'Iteration', 'DeliveryDate', 'DueWeeks') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'deadlines');
 		}
 		$index = 190;
@@ -148,23 +112,49 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeOrderNum('ClosedInVersion', $index+10);
 		$metadata->setAttributeOrderNum('Author', $index+20);
 
-		foreach( array('Function','ClosedInVersion','Author','Fact') as $attribute ) {
+		foreach( array('Type','Function','ClosedInVersion','Author','Fact','OrderNum') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'additional');
 		}
 		foreach ( array('Caption','Description','Priority','Tags','Type','Project','ClosedInVersion','Owner','Links','Attachments','Author','Function') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'tooltip');
 		}
-		foreach ( array('Environment','Caption','Description','Estimation','EstimationLeft','Attachment') as $attribute ) {
+        foreach ( array('DueWeeks') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'skip-tooltip');
+        }
+		foreach ( array('Environment','Caption','Description','Estimation','Attachment') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'nonbulk');
 		}
 
-        $dates_attributes = array( 'Estimation', 'EstimationLeft', 'Fact', 'Spent' );
+        $dates_attributes = array( 'EstimationLeft', 'Fact', 'Spent' );
         foreach ( $dates_attributes as $attribute ) {
-            $metadata->addAttributeGroup($attribute, 'time');
+            $metadata->addAttributeGroup($attribute, 'workload');
+            $metadata->addAttributeGroup($attribute, 'hours');
+        }
+        $metadata->addAttributeGroup('Estimation', 'workload');
+
+        foreach( array('DeliveryDateMethod', 'EstimationLeft', 'SupportChannelEmail') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'system');
         }
 
-        foreach( array('DeliveryDateMethod') as $attribute ) {
-            $metadata->addAttributeGroup($attribute, 'system');
+        $permission_attributes = array(
+            'Author',
+            'ClosedInVersion',
+            'Fact',
+            'Caption',
+            'Description',
+            'Owner',
+            'Priority',
+            'Function',
+            'OrderNum',
+            'Type',
+            'PlannedRelease',
+            'Iteration',
+            'Estimation',
+            'Project',
+            'Watchers'
+        );
+        foreach ( $permission_attributes as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'permissions');
         }
     }
 }

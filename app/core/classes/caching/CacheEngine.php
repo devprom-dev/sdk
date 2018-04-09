@@ -32,8 +32,7 @@ abstract class CacheEngine
 
     abstract function get( $key, $path = '' );
     abstract function set( $key, $value, $path = '' );
-    abstract function truncate( $path );
-    abstract function invalidate();
+    abstract function invalidate( $path = '' );
 
     protected function __construct() {
     }

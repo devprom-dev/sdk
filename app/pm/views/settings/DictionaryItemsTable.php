@@ -34,6 +34,14 @@ class DictionaryItemsTable extends PMPageTable
 			    
 				return array ( $filter ); 
 
+            case 'pm_Environment':
+                return array_merge(
+                    parent::getFilters(),
+                    array(
+                        new FilterTextWebMethod(text(2484), 'search')
+                    )
+                );
+
 			default:
 				return parent::getFilters();
 		}
@@ -76,7 +84,12 @@ class DictionaryItemsTable extends PMPageTable
 				));
 
 			case 'pm_Environment':
-				return parent::getFilterPredicates();
+				return array_merge(
+				    parent::getFilterPredicates(),
+                    array(
+                        new FilterSearchAttributesPredicate($values['search'], array('Caption','Description','ServerAddress'))
+                    )
+                );
 		}		
 		
 		return array_merge( 

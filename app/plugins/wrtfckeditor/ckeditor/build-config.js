@@ -57,7 +57,6 @@ var CKBUILDER_CONFIG = {
 		'basicstyles' : 1,
 		'blockquote' : 1,
 		'button' : 1,
-		'clipboard' : 1,
 		'codesnippet' : 1,
 		'colorbutton' : 1,
 		'colordialog' : 1,
@@ -107,6 +106,8 @@ var CKBUILDER_CONFIG = {
 		'tableresize' : 1,
 		'tabletools' : 1,
 		'toolbar' : 1,
+        'notification' : 1,
+        'clipboard' : 1,
 		'uicolor' : 1,
 		'undo' : 1,
 		'wysiwygarea' : 1

@@ -33,23 +33,22 @@ var kanbanSteps = [
         title: kanbanTourTitle
     },
     {
-        element: "table.board-table tr:eq(0) th:eq(2) .btn-group",
+        element: "table.board-table tr:eq(0) th:eq(3)",
         content: tc('kanban-backlog'),
         placement: 'bottom',
         path: '/pm/%project%/module/kanban/requests/kanbanboard?tour='+kanbanTourId,
         title: kanbanTourTitle
     },
     {
-        element: "table.board-table tr:eq(2) td.board-column:eq(2)",
+        element: "table.board-table tr.row-cards:eq(0) td.board-column:eq(2)",
         content: tc('kanban-taskboard'),
         placement: 'right',
         path: '/pm/%project%/module/kanban/requests/kanbanboard?tour='+kanbanTourId,
         title: kanbanTourTitle
     },
     {
-        element: ".table-header a[uid='type']",
+        orphan: true,
         content: tc('kanban-leadtime'),
-        placement: 'right',
         path: '/pm/%project%/module/kanban/avgleadtime/avgleadtime?report=avgleadtime&tour='+kanbanTourId,
         title: kanbanTourTitle
     },

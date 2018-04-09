@@ -91,4 +91,8 @@ class CheckpointMySQLVariables extends CheckpointEntryDynamic
     {
         return text(2256);
     }
+
+    function enabled() {
+        return DeploymentState::IsInstalled() && parent::enabled();
+    }
 }

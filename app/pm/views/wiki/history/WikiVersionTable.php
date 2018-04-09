@@ -19,14 +19,12 @@ class WikiVersionTable extends PMPageTable
 	
 	function buildPageIt()
 	{
-	    $ids = array_filter(preg_split('/[,-]/', $_REQUEST['page']), function( $value ) {
-            return $value != 'all' && is_numeric($value) && $value >= 0;
-        });
+	    $ids = TextUtils::parseIds($_REQUEST['page']);
         if ( count($ids) < 1 ) return $this->pageObject->getEmptyIterator();
 
         return $this->pageObject->getRegistry()->Query(
             array (
-                new WikiRootTransitiveFilter($ids)
+                new ParentTransitiveFilter($ids)
             )
         );
 	}

@@ -19,13 +19,10 @@ class AuthenticationHttpBasicFactory extends AuthenticationFactory
  	    return true;
  	}
  	
- 	function logon( $remember = false )
+ 	function logon( $remember = false, $session_hash = '' )
  	{
 	    header('WWW-Authenticate: Basic realm="Devprom"');
-	    
         exit(header('HTTP/1.0 401 Unauthorized'));
-        
-        return parent::authorize();
  	}
  	
     function authorize()

@@ -21,7 +21,6 @@ class RequestFormDuplicate extends RequestForm
 		
 		$object = $this->getObject();
 		$object->addAttribute('LinkType', 'REF_RequestLinkTypeId', translate('Тип связи'), true, false, '', 1);
-		$object->setAttributeVisible('Author', false);
 
 		if ( $_REQUEST['Project'] == '' ) {
 			$object->setAttributeVisible('Project', true);
@@ -46,10 +45,16 @@ class RequestFormDuplicate extends RequestForm
 			case 'SubmittedVersion':
 			case 'Owner':
 			case 'Customer':
+            case 'OrderNum':
+            case 'State':
 				return parent::getFieldValue( $attribute );
 
 			case 'Author':
 				return getSession()->getUserIt()->getId();
+
+            case 'Description':
+                $uid = new ObjectUID();
+                return '{{'.$uid->getObjectUid($this->source_it).'}}';
 
 			default:
 				return $this->source_it->get($attribute);
@@ -65,7 +70,17 @@ class RequestFormDuplicate extends RequestForm
 		return array_merge(parent::getSourceIt(), $result);
 	}
 
-	function process()
+	function IsAttributeEditable($attribute)
+    {
+        switch( $attribute ) {
+            case 'Project':
+                return true;
+            default:
+                return parent::IsAttributeEditable($attribute);
+        }
+    }
+
+    function process()
 	{
 		if ( $this->getAction() != 'add' ) return parent::process();
 		if ( $this->source_it->getId() == '' ) return parent::process();

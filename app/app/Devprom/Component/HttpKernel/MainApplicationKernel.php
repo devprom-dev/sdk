@@ -4,6 +4,9 @@ namespace Devprom\Component\HttpKernel;
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+
 include_once SERVER_ROOT_PATH."co/classes/SessionBuilderCommon.php";
 
 class MainApplicationKernel extends Kernel
@@ -63,7 +66,6 @@ class MainApplicationKernel extends Kernel
     public function boot()
     {
         global $session, $model_factory;
-        $lock = new \CacheLock();
 
         $caching = \CacheEngineFS::Instance();
         $model_factory = new \ModelFactoryExtended(
@@ -72,10 +74,15 @@ class MainApplicationKernel extends Kernel
         $session = $this->buildSession($caching);
 
         parent::boot();
-        $lock->Release();
     }
 
     protected function buildSession($caching) {
         return \SessionBuilderCommon::Instance()->openSession(array(), $caching);
+    }
+
+    public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
+    {
+        $lock = new \CacheLock();
+        return parent::handle($request, $type, $catch);
     }
 }

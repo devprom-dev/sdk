@@ -75,7 +75,7 @@ $builtin_tiles = array_filter($tiles, function($value) {
 				<? if ( count($languages) > 1 ) { ?>
 				<div class="pull-right language-buttons">
 					<? foreach( $languages as $language ) { ?>
-					<a href="?language=<?=$language['cms_LanguageId']?>" class="btn btn-small <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=translate($language['Caption'])?></a>
+					<a href="?language=<?=htmlentities($language['cms_LanguageId'])?>" class="btn btn-small <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=translate($language['Caption'])?></a>
 					<? } ?>
 				</div>
 				<? } ?>
@@ -97,16 +97,16 @@ $builtin_tiles = array_filter($tiles, function($value) {
 						<?php if ( !$tile['active'] ) { ?>
 							<i class="icon-lock"></i>
 						<?php } else if ( $tile['url'] != '' ) { ?>
-							<a target="_blank" href="<?=$tile['url']?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+							<a target="_blank" href="<?=htmlentities($tile['url'])?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
 						<?php } ?>
 						<h6 class="bs"><?=$tile['name']?></h6>
 						<p>
 							<?=$tile['description']?>
 						</p>
 						<?php if ( $tile['active'] ) { ?>
-							<a href="/projects/new?Template=<?=$tile['id']?>" class="template-action"><?=text('co30')?></a>
+							<a href="/projects/new?Template=<?=htmlentities($tile['id'])?>" class="template-action"><?=text('co30')?></a>
 						<?php } else { ?>
-							<a href="<?=$tile['url']?>" target="_blank" class="template-action"><?=text('co29')?></a>
+							<a href="<?=htmlentities($tile['url'])?>" target="_blank" class="template-action"><?=text('co29')?></a>
 						<?php } ?>
 					</div>
 				</li>
@@ -121,16 +121,16 @@ $builtin_tiles = array_filter($tiles, function($value) {
 						<?php if ( !$tile['active'] ) { ?>
 							<i class="icon-lock"></i>
 						<?php } else if ( $tile['url'] != '' ) { ?>
-							<a target="_blank" href="<?=$tile['url']?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+							<a target="_blank" href="<?=htmlentities($tile['url'])?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
 						<?php } ?>
 						<h6 class="bs"><?=$tile['name']?></h6>
 						<p>
 							<?=$tile['description']?>
 						</p>
 						<?php if ( $tile['active'] ) { ?>
-						<a href="/projects/new?Template=<?=$tile['id']?>" class="template-action"><?=text('co30')?></a>
+						<a href="/projects/new?Template=<?=htmlentities($tile['id'])?>" class="template-action"><?=text('co30')?></a>
 						<?php } else { ?>
-						<a href="<?=$tile['url']?>" target="_blank" class="template-action"><?=text('co29')?></a>
+						<a href="<?=htmlentities($tile['url'])?>" target="_blank" class="template-action"><?=text('co29')?></a>
 						<?php } ?>
 					</div>
 				</li>
@@ -158,12 +158,12 @@ $builtin_tiles = array_filter($tiles, function($value) {
 			<?php foreach ( $solutions  as $solution ) { ?>
 				<li class="template-list-item">
 					<div class="template">
-						<a target="_blank" href="<?=$solution['url']?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+						<a target="_blank" href="<?=htmlentities($solution['url'])?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
 						<h6 class="bs"><?=$solution['name']?></h6>
 						<p>
 							<?=$solution['description']?>
 						</p>
-						<a href="<?=$solution['url']?>" target="_blank" class="template-action"><?=text('co28')?></a>
+						<a href="<?=htmlentities($solution['url'])?>" target="_blank" class="template-action"><?=text('co28')?></a>
 					</div>
 				</li>
 			<?php } ?>

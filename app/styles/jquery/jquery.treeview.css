@@ -64,10 +64,8 @@ div.treeview {
 
 .treeview-label
 {
-	float: left;
 	padding-left: 20px;
 }
-
 .treeview-label .title
 {
 	white-space: normal;
@@ -109,6 +107,10 @@ div.treeview {
 	margin: 0;
 	line-height: 18px;
 	white-space: nowrap;
+}
+
+.filetree > li.treeview.collapsable {
+    padding-bottom: 16px;
 }
 
 .filetree span.folder, .filetree span.file 

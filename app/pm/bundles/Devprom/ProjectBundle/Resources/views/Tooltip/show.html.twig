@@ -9,7 +9,19 @@
 	<br/>
 {% endif %}
 
+{% set group = 0 %}
 {% for attribute_name, attribute in attributes if type.uid != "" and attribute_name != "Caption" or type.uid == "" %}
+	{% if group != attribute.group %}
+		<div class="accordion-wrap" style="margin-top: 18px;">
+			<div class="accordion-heading">
+				<a class="to-drop-btn" href="#" tabindex="-1">
+					<span class="caret"></span>
+					{{ groups[attribute.group] }}
+				</a>
+			</div>
+		</div>
+	{% endif %}
+
 	<b>{{ attribute.title | raw }}</b>:
 	
 	{% if attribute.type == 'tasks'  %}
@@ -18,6 +30,8 @@
     			{{ state.name }}
     		</span>
     	{% endfor %}
+    {% elseif attribute.type == 'state'  %}
+        {{ attribute.state }}
     {% else %}
     	{% if attribute.type == 'text' or attribute.type == 'wysiwyg' or attribute.name == 'Caption' %}
 			 <div class="tt-field-data wysiwyg">{{ attribute.text | raw }}</div>
@@ -25,7 +39,7 @@
     		{{ attribute.text | raw }}
     	{% endif %}
     {% endif %}
-	
+    {% set group = attribute.group %}
 	<br/>
 {% endfor %}
 
@@ -36,17 +50,3 @@
 	{{ comments.data.text | raw }}
 	<br/>
 {% endif %}
-
-{% if lifecycle.data.state != "" %}
-<br/>
-<b>{{ lifecycle.name }}</b>:
-<br/>
-{{ lifecycle.data.state }}
-<br/>
-{% if lifecycle.data.name != "" %}
-	<img src="/images/bullet_go.png" style="margin:0 0 -3px -2px;">{{ lifecycle.data.name }}
-	<br/>
-	{{ lifecycle.data.text | raw }}
-{% endif %}
-{% endif %}
-</div>

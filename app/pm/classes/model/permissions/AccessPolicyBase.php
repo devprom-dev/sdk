@@ -125,6 +125,9 @@ abstract class AccessPolicyBase extends COAccessPolicy
          			return $this->getObjectAccess(ACCESS_READ, $module_it);
 		    	}
 		    	break;
+
+            case 'pm_Activity':
+                return $object_it->get('Participant') == $this->session->getUserIt()->getId() || $action_kind == ACCESS_READ;
 		} 		
 		
 		return parent::getDefaultObjectAccess( $action_kind, $object_it );

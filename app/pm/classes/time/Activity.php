@@ -79,8 +79,6 @@ class Activity extends Metaobject
 
 	function delete( $id, $record_version = ''  )
 	{
-	    global $model_factory;
-	    
 	    $activity_it = $this->getExact($id);
 	    
 	    $result = parent::delete( $id );
@@ -91,7 +89,7 @@ class Activity extends Metaobject
 		    
 			$sum_aggregate = new AggregateBase( 'Task', 'Capacity', 'SUM' );
 		
-			$activity = $model_factory->getObject('Activity');
+			$activity = getFactory()->getObject('Activity');
 			
 			$activity->setVpdContext($activity_it);
 			
@@ -103,9 +101,16 @@ class Activity extends Metaobject
 		
 		    $left_work = max(0, $task_it->get('Planned') - $it->get($sum_aggregate->getAggregateAlias()) );
 
-		    $task_it->object->modify_parms($task_it->getId(), array( 'LeftWork' => $left_work ));
+		    if ( $task_it->get('LeftWork') != $left_work ) {
+                $task_it->object->modify_parms($task_it->getId(), array( 'LeftWork' => $left_work ));
+            }
 		}
 	    
 	    return $result;
 	}
+
+	function IsDeletedCascade($object)
+    {
+        return $object instanceof Task;
+    }
 }

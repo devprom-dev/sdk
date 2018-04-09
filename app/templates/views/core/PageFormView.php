@@ -41,7 +41,11 @@ foreach( $attributes as $key => $attribute ) {
 	$shortVisible[$key] = $attribute;
 	unset($attributes[$key]);
 }
-$shortVisible = array_chunk($shortVisible, ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 ? 4 : 2)), true);
+$shortVisible = array_chunk(
+    $shortVisible,
+    ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 && count($source_parms) < 1 ? 4 : 2)),
+    true
+);
 
 $visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
 	return $value['visible'] && !in_array($value['id'], $colspan_attributes);

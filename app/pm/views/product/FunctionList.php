@@ -21,32 +21,16 @@ class FunctionList extends PMPageList
  	
 	function retrieve()
 	{
-		$this->group_defined = !in_array($this->getGroup(), array('','none'));
+		$this->group_defined =
+            !in_array($this->getGroup(), array('','none'))
+            || count($this->getIds()) > 0;
 		
 		parent::retrieve();
-
-		$rowset = $this->getIteratorRef()->getRowset();
-		$roots = array_filter($rowset, function($row) {
-			return $row['ParentFeature'] == '';
-		});
-		if ( count($roots) < 1 ) {
-			$roots = $rowset;
-		}
-
-		$dataset = array();
-		$index = 1;
-		foreach($roots as $key => $row ) {
-			$row['SortIndex'] = str_pad($index++,10,"0",STR_PAD_LEFT);
-			$dataset[] = $row;
-			self::buildChildRows($row, $rowset, $dataset);
-		}
-		$this->setIterator($this->getObject()->createCachedIterator($dataset));
 
 		// cache requests per feature
 		$filters = $this->getFilterValues();
 		
 		$request = getFactory()->getObject('pm_ChangeRequest');
-		
 		$request->addFilter( new RequestStagePredicate($filters['stage']) );
 		$request->addFilter( new StatePredicate('notresolved') );
 		
@@ -55,37 +39,10 @@ class FunctionList extends PMPageList
 		$this->request_agg_it->buildPositionHash( array('Function') );
 	}
 
-	protected static function buildChildRows( $parent_row, &$rowset, &$data )
-	{
-		$roots = array_filter($rowset, function($row) use ($parent_row) {
-			return $row['ParentFeature'] == $parent_row['pm_FunctionId'];
-		});
-		$index = 1;
-		foreach($roots as $key => $row) {
-			$row['SortIndex'] = $parent_row['SortIndex'].','.str_pad($index++,10,"0",STR_PAD_LEFT);
-			$data[] = $row;
-			self::buildChildRows($row, $rowset, $data);
-		}
-	}
-
-	function getIds()
-	{
-		return array();
-	}
-
 	function getSorts()
 	{
 		$sorts = parent::getSorts();
-		
-		$values = $this->getFilterValues();
-		
-		if ( $values['view'] == 'chart' ) {
-			array_push( $sorts, new SortFeatureStartClause() );
-		}
-		else {
-			array_push( $sorts, new SortAttributeClause('Caption') );
-		}
-		
+		array_unshift($sorts, new SortFeatureHierarchyClause());
 		return $sorts;
 	}
 
@@ -159,7 +116,7 @@ class FunctionList extends PMPageList
    		    		echo $object_it->get($this->visible_columns['Type'] ? 'Caption' : 'CaptionAndType');
                     if ( $this->checkColumnHidden('Tags') && $object_it->get('Tags') != '' ) {
                         echo ' ';
-                        $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
+                        //$this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
                     }
                     parent::drawCell($object_it, 'DescriptionWithInCaption');
    		    	echo '</div>';

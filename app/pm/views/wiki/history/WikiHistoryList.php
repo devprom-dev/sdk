@@ -21,6 +21,7 @@ class WikiHistoryList extends ProjectLogList
 		$this->documentMode = $object_it->get('TotalCount') > 0;
 		$this->editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
 		$this->parser = $this->editor->getComparerParser();
+        $this->parser->setObjectIt($object_it);
 
 		$filterValues = $this->getFilterValues();
 		$this->change_it = getFactory()->getObject('WikiPageChange')->getRegistry()->Query(
@@ -111,7 +112,7 @@ class WikiHistoryList extends ProjectLogList
 
 					$page_id = $object_it->get('ObjectId');
 					$this->prev_content[$page_id] = $change_it->getHtmlDecoded('Content');
-					
+
 					$diff = $this->getPagesDiff( $this->prev_content[$page_id], $this->curr_content[$page_id] );
 		            if ( $diff == '' ) {
 						echo translate('Нет изменений');

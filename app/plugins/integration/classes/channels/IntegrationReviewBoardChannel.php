@@ -26,7 +26,10 @@ class IntegrationReviewBoardChannel extends IntegrationRestAPIChannel
                 'id' => $item[$this->getKeyField()]
             );
         }
-        return $latest;
+        return array(
+            $latest,
+            ''
+        );
     }
 
     protected function buildPostFields( $post ) {

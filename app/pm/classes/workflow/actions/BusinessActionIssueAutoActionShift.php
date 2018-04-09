@@ -1,67 +1,60 @@
 <?php
-
-use Devprom\ProjectBundle\Service\Model\ModelService;
 include_once SERVER_ROOT_PATH."pm/classes/workflow/actions/BusinessActionShift.php";
 
 class BusinessActionIssueAutoActionShift extends BusinessActionShift
 {
 	private $action_it = null;
 	
-	function __construct( $action_it )
-	{
+	function __construct( $action_it ) {
 		$this->action_it = $action_it;
 	}
 	
- 	function getId()
- 	{
+ 	function getId() {
  		return $this->action_it->get('ReferenceName');
  	}
 
- 	function getDisplayName()
- 	{
+ 	function getDisplayName() {
  		return text(2434).': '.$this->action_it->getDisplayName();
  	}
  	
- 	function getObject()
- 	{
+ 	function getObject() {
  		return getFactory()->getObject('Request');
  	}
  	
-	function applyContent( $object_it, $attibutes )
+	function applyContent( $object_it, $attributes )
  	{
+ 	    $actionAttributes = array_flip($this->action_it->getConditionAttributes());
+
+ 	    $watchForChanges =
+            in_array(
+                $this->action_it->get('EventType'),
+                array(AutoActionEventRegistry::ModifyOnly,AutoActionEventRegistry::CreateAndModify)
+            );
+ 	    if ( $watchForChanges && count(array_intersect_key($actionAttributes, $attributes)) < 1 ) return false;
+
         $object_it = $object_it->object->createCachedIterator(
             array(
-                array_merge(
-                    $object_it->getData(),
-                    $attibutes
-                )
+                $watchForChanges
+                    ? array_merge(
+                            array(
+                                $object_it->object->getIdAttribute() => $object_it->getId(),
+                                'VPD' => $object_it->get('VPD')
+                            ),
+                            array_intersect_key(
+                                array_merge(
+                                    $object_it->getData(),
+                                    $attributes
+                                ),
+                                $actionAttributes
+                            )
+                        ) // react on changes only
+                    : array_merge(
+                            $object_it->getData(),
+                            $attributes
+                        ) // react on entity data
             )
         );
- 		if ( !$this->checkConditions($object_it) ) return false;
-
-        $parms = array();
- 		foreach($this->action_it->object->getActionAttributes() as $attribute)
- 		{
- 			if ( $this->action_it->get($attribute) == '' ) continue;
- 			$parms[$attribute] = $this->action_it->getHtmlDecoded($attribute);
-            if ( $attribute == 'State' ) {
-                $parms['TransitionComment'] = $this->action_it->getDisplayName();
-            }
- 		}
-
- 		if ( count($parms) < 1 ) return true;
-
- 		$object_it->object->setNotificationEnabled(true);
- 		$object_it->object->modify_parms( $object_it->getId(), $parms );
- 		
- 		return true;
- 	}
-
- 	protected function checkConditions( $object_it )
- 	{
- 		return ModelService::queryXPath(
- 					$object_it->copyAll(),
- 					$this->action_it->getConditionXPath()
- 			)->count() > 0;
+ 		if ( !$this->checkConditions($this->action_it, $object_it) ) return false;
+ 		return $this->process($this->action_it, $object_it);
  	}
 }

@@ -17,13 +17,20 @@ class ModuleProjectsBuilder extends ModuleBuilder
     	$modules = array();
 
         $item = array();
-        
         $item['cms_PluginModuleId'] = 'project-log';
         $item['Caption'] = translate('Активности');
         $item['AccessEntityReferenceName'] = 'ObjectChangeLog';
         $item['Url'] = 'project/log';
         $item['Icon'] = 'icon-eye-open';
-        
+        $modules[] = $item;
+
+        $item = array();
+        $item['cms_PluginModuleId'] = 'whatsnew';
+        $item['Caption'] = text(2458);
+        $item['AccessEntityReferenceName'] = 'ObjectChangeLog';
+        $item['Url'] = 'whatsnew';
+        $item['Icon'] = 'icon-bell';
+        $item['Description'] = text(2459);
         $modules[] = $item;
 
         $item = array();

@@ -1,8 +1,8 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/views/BulkFormBase.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
+include_once SERVER_ROOT_PATH."pm/views/comments/FieldCheckNotifications.php";
 
 class BulkForm extends BulkFormBase
 {
@@ -34,6 +34,7 @@ class BulkForm extends BulkFormBase
 				return 'wysiwyg';
 
 			case 'Watchers':
+            case 'TransitionNotification':
 				return 'custom';
 				
 			default:
@@ -110,7 +111,16 @@ class BulkForm extends BulkFormBase
 				    $field->draw();
 				echo '</span>';
 				break;
-				
+
+            case 'TransitionNotification':
+                $field = new FieldCheckNotifications();
+                $field->setAnchor( $this->getIt() );
+                $field->SetId($attribute);
+                $field->SetName($attribute);
+                $field->SetTabIndex($tab_index);
+                $field->draw();
+                break;
+
 			default:
 				if ( $this->getObject()->IsReference($attribute) )
 				{

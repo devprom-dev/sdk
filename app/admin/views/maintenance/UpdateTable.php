@@ -44,17 +44,11 @@ class UpdateTable extends StaticPageTable
 		$module_it = $module->getExact('file-upload');
 		if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) return $actions;
 
-		$data = file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE);
-		if ( $data != '' ) {
-			$data = CheckpointUpdatesAvailable::getNewUpdatesOnly(JsonWrapper::decode($data));
-			if ( count($data) > 0 ) {
-				$actions[] = array (
-					'name' => translate('Скачать обновление'),
-					'url' => 'javascript: downloadUpdate()',
-					'uid' => 'download'
-				);
-			}
-		}
+        $actions[] = array (
+            'name' => translate('Скачать обновление'),
+            'url' => 'javascript: downloadUpdate()',
+            'uid' => 'download'
+        );
 
 		$actions[] = array();
 		$actions[] = array (

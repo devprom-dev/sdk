@@ -120,13 +120,13 @@ class Issue extends BaseEntity {
 
     /**
      * @ORM\OneToOne(targetEntity="Priority")
-     * @ORM\JoinColumn(name="Priority", referencedColumnName="pm_SeverityId")
+     * @ORM\JoinColumn(name="Priority", referencedColumnName="PriorityId")
      * @var Priority
      */
     private $priority;
 
     /**
-     * @ORM\OneToOne(targetEntity="Priority")
+     * @ORM\OneToOne(targetEntity="Severity")
      * @ORM\JoinColumn(name="Severity", referencedColumnName="pm_SeverityId")
      * @Assert\NotBlank
      * @var Severity
@@ -138,7 +138,20 @@ class Issue extends BaseEntity {
      * @var string
      */
     private $resolvedVersion;
-    
+
+    /**
+     * @ORM\Column(type="string", name="SupportChannelEmail")
+     * @var string
+     */
+    private $channelEmail;
+
+    /**
+     * @ORM\OneToMany(targetEntity="IssueChangeNotification", mappedBy="issue", fetch="EAGER", cascade={"all"})
+     * @var ArrayCollection
+     */
+    private $notifications;
+
+
     function __construct()
     {
         $this->comments = new ArrayCollection();
@@ -444,6 +457,44 @@ class Issue extends BaseEntity {
     {
         return $this->resolvedVersion;
     }
-    
 
+    /**
+     * @param string $text
+     */
+    public function setChannelEmail($text)
+    {
+        $this->channelEmail = $text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getChannelEmail()
+    {
+        return $this->channelEmail;
+    }
+
+    /**
+     * @param ArrayCollection $attachments
+     */
+    public function setNotifications($value) {
+        $this->notifications = $value;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNotifications( $customer = null )
+    {
+        return $this->notifications->matching(
+            Criteria::create()->where(
+                Criteria::expr()->andX(
+                    Criteria::expr()->eq('className', 'Request'),
+                    is_object($customer)
+                        ? Criteria::expr()->eq('customer', $customer)
+                        : Criteria::expr()->neq('customer', null)
+                )
+            )
+        )->toArray();
+    }
 }

@@ -5,10 +5,6 @@ class WikiPageStylePersister extends ObjectSQLPersister
 {
 	function map( &$parms )
 	{
-		if ( $parms['Caption'] != '' ) {
-			$parms['Caption'] = TextUtils::stripAnyTags($parms['Caption']);
-		}
-
 		if ( $parms['UserField3'] == '' || $parms['Content'] == '' ) return;
 
 		$was_state = libxml_use_internal_errors(true);

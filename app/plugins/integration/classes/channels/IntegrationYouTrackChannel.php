@@ -29,6 +29,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
         $releases = array();
         $issues = array();
         $hours = array();
+        $nextTimestamp = '';
 
         try {
             $result = $this->jsonGet('/rest/issue/byproject/'.$this->getObjectIt()->get('ProjectKey'), $jql);
@@ -71,13 +72,18 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
                 }
                 catch( \Exception $e ) {
                 }
+
+                if ( $issue['field']['updated']['value'] > $nextTimestamp ) $nextTimestamp = $issue['field']['updated']['value'];
             }
         }
         catch( \Exception $e ) {
         }
 
-        return array_merge(
-            $releases, $issues, $hours
+        return array(
+            array_merge(
+                $releases, $issues, $hours
+            ),
+            $nextTimestamp != '' ? new \DateTime(date('Y-m-d h:i:s', round(floatval($nextTimestamp) / 1000, 0))) : ''
         );
     }
 
@@ -186,7 +192,7 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
     {
         if ( $this->getObjectIt()->get('HttpUserName') == '' ) return parent::buildCurl();
 
-        $loginCurl = curl_init();
+        $loginCurl = CurlBuilder::getCurl();
         $loginParms = array(
             'login' => $this->getObjectIt()->get('HttpUserName'),
             'password' => $this->getObjectIt()->get('HttpUserPassword')
@@ -198,8 +204,9 @@ class IntegrationYouTrackChannel extends IntegrationRestAPIChannel
         curl_setopt($loginCurl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($loginCurl, CURLOPT_COOKIEJAR, $this->cookiesFile);
         curl_setopt($loginCurl, CURLOPT_POSTFIELDS, http_build_query($loginParms));
-        curl_setopt($loginCurl, CURLOPT_URL, trim($this->getObjectIt()->get('URL'),'\\/').'/rest/user/login');
+        curl_setopt($loginCurl, CURLOPT_URL, rtrim($this->getObjectIt()->get('URL'),'\\/').'/rest/user/login');
         curl_setopt($loginCurl, CURLOPT_POST, true);
+        curl_setopt($loginCurl, CURLOPT_TIMEOUT, 30);
 
         $result = curl_exec($loginCurl);
         if ( $result === false ) {

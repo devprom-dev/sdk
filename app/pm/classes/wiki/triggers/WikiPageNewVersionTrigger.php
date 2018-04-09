@@ -19,17 +19,15 @@ class WikiPageNewVersionTrigger extends SystemTriggersBase
 	
 	function createNewVersion( $object_it, $caption )
 	{
-	    global $model_factory;
-
-		$model_factory->getObject('Snapshot')->add_parms( 
-				array (
-					'Caption' => $caption,
-					'ListName' => 'branch',
-					'ObjectId' => $object_it->getId(),
-					'ObjectClass' => get_class($object_it->object),
-					'SystemUser' => getSession()->getUserIt()->getId(),
-					'Type' => 'branch'
-				)
+		getFactory()->getObject('Snapshot')->add_parms(
+            array (
+                'Caption' => $caption,
+                'ListName' => 'branch',
+                'ObjectId' => $object_it->getId(),
+                'ObjectClass' => get_class($object_it->object),
+                'SystemUser' => getSession()->getUserIt()->getId(),
+                'Type' => 'branch'
+            )
 		);
 	}
 }

@@ -5,6 +5,7 @@ return array(
     'logout.link' => 'Logout',
 
     'index.title' => 'My requests',
+    'index.notifications' => 'There are changes or comments you have not seen yet',
     'product.title' => 'Choose a category',
 	'index.company_title' => 'Company requests',
     'index.no.issues' => 'You have no requests so far',

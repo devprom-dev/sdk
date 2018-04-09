@@ -47,11 +47,11 @@ class MailboxScannerTest extends DevpromTestCase {
         $this->requestMock->expects($this->any())->method('add_parms')->will($this->returnValue(1));
         $this->requestMock->expects($this->any())->method('getExact')->will(
         		$this->returnValue(
-						$this->requestMock->createCachedIterator(array(
-	   						array( 
-	   								'Caption' => "Existing request",
-	  								'pm_ChangeRequestId' => '1'
-	   						)))        		
+                    $this->requestMock->createCachedIterator(array(
+                        array(
+                                'Caption' => "Existing request",
+                                'pm_ChangeRequestId' => '1'
+                        )))
         		));
         $this->requestMock->expects($this->any())->method('createSQLIterator')->will(
         		$this->returnValue(
@@ -75,7 +75,9 @@ class MailboxScannerTest extends DevpromTestCase {
                 array ( 'pm_Project', null, $this->project ),
                 array ( 'Project', null, $this->project ),
                 array ( 'cms_User', null, $this->user ),
-                array ( 'User', null, $this->user )
+                array ( 'User', null, $this->user ),
+                array ( 'Severity', null, $this->user ),
+                array ( 'Priority', null, $this->user )
             )
         ));
                 
@@ -181,7 +183,7 @@ class MailboxScannerTest extends DevpromTestCase {
         $msg->fromName = "test";
         $msg->fromAddress = "test@test";
 
-        $mail_message = new MailboxMessage($msg, $project_it);
+        $mail_message = new MailboxMessage($msg, null);
         return $mail_message;
     }
 

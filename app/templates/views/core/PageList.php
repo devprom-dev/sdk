@@ -21,7 +21,7 @@ foreach( $columns as $key => $attr )
 $columns_number = count($columns_info);
 $display_operations = $list->IsNeedToDisplayOperations();
 if ( $show_header && $display_numbers ) $columns_number++;
-if ( $show_header ) $columns_number++;
+if ( $show_header && $need_to_select ) $columns_number++;
 
 ?>
 <? if ( $message != '' ) { ?>
@@ -33,7 +33,7 @@ if ( $show_header ) $columns_number++;
 <a name="top<? echo $offset_name ?>"></a>
 
 <? if ( $toolbar ) { ?>
-			<div class="documentToolbar sticks-top" style="overflow:hidden;">
+			<div class="hidden-print documentToolbar sticks-top" style="overflow:hidden;">
 				<div class="sticks-top-body hidden-print" id="documentToolbar" style="z-index:2;"></div>
 			</div>
 <? } ?>
@@ -74,14 +74,14 @@ if ( $show_header ) $columns_number++;
 				}
 
 				$header_attrs = $list->getHeaderAttributes( $attr );
-				echo '<th width="'.$width.'" uid="'.strtolower($attr).'" title="'.$title.'">';
+				echo '<th width="'.$width.'" uid="'.strtolower($attr).'" title="'.$title.'" class="'.$header_attrs['class'].'">';
 				if ( $header_attrs['script'] != '#' ) {
 					echo '<a class="mode-sort" href="'.$header_attrs['script'].'" style="display:table-cell;">';
 						echo $header_attrs['name'];
+                        if ( $header_attrs['sort'] != '' ) {
+                            echo $header_attrs['sort'] == 'up' ? '&#x25B2;' : '&#x25BC;';
+                        }
 					echo '</a>';
-					if ( $header_attrs['class'] != '' ) {
-						echo '<div class="header-caret '.$header_attrs['class'].'"><span class="caret" style="margin-top:8px;"></span></div>';
-					}
 				}
 				else {
 					echo $header_attrs['name'];
@@ -201,11 +201,13 @@ if ( $show_header ) $columns_number++;
 						if ( count($actions) == 1 )
 						{
 							$action = array_shift($actions);
-							?>
-							<div class="btn-group operation last">
-								<a id="<?=$action['uid']?>" class="btn btn-info btn-mini dropdown-toggle actions-button" href="#" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
-							</div>
-							<?
+							if ( $action['url'] != '' || $action['click'] != '' ) {
+                                ?>
+                                <div class="btn-group operation last">
+                                    <a id="<?=$action['uid']?>" class="btn btn-info btn-mini dropdown-toggle actions-button" href="#" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
+                                </div>
+                                <?
+                            }
 						} else if ( count($actions) > 0 )
 						{
 						?>
@@ -233,7 +235,7 @@ if ( $show_header ) $columns_number++;
 		}
 	?>
 			<?php
-			if ( count($numericFields) > 0 && $list->getItemsCount($it) > 1 ) {
+			if ( count($numericFields) > 0 && $list->getItemsCount($it) > 0 ) {
 				$totalIt = $list->getTotalIt($numericFields);
 				if ( $totalIt->count() > 0 ) {
 					echo '<tr class="total">';

@@ -12,6 +12,7 @@ include "predicates/StateHasNoTransitionsPredicate.php";
 include "predicates/StateHasNoObjectsPredicate.php";
 include "predicates/StateTransitionTargetPredicate.php";
 include "StateBaseModelBuilder.php";
+include "persisters/StateQueueLengthPersister.php";
 
 class StateBase extends Metaobject
 {

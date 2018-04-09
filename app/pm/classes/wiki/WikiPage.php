@@ -1,20 +1,18 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/workflow/MetaobjectStatable.php";
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiType.php';
-
 include "WikiPageIterator.php";
 include "WikiPageRegistry.php";
 include "WikiPageRegistryContent.php";
 include "WikiPageRegistryVersion.php";
 include "WikiPageRegistryBaseline.php";
 include "WikiPageRegistryComparison.php";
+include "WikiPageRegistryVersionStructure.php";
 include "predicates/WikiSectionFilter.php";
 include "predicates/WikiNonRootFilter.php";
 include "predicates/WikiRootFilter.php";
 include "predicates/WikiNonRootEmptyFilter.php";
 include "predicates/WikiTagFilter.php";
-include "predicates/WikiRootTransitiveFilter.php";
 include "predicates/WikiTypePlusChildren.php";
 include "predicates/WikiTraceBrokenPredicate.php";
 include "predicates/WikiOriginalFilter.php";
@@ -25,6 +23,8 @@ include "persisters/WikiPageHistoryPersister.php";
 include 'predicates/WikiSameBranchFilter.php';
 include 'predicates/WikiDocumentSearchPredicate.php';
 include "predicates/WikiDocumentUIDFilter.php";
+include "predicates/WikiPageFeaturePredicate.php";
+include "predicates/WikiPageCompareContentFilter.php";
 include "WikiPageDeleteStrategyMove.php";
 include_once "sorts/SortParentPathClause.php";
 include_once "sorts/SortDocumentClause.php";
@@ -283,7 +283,7 @@ class WikiPage extends MetaobjectStatable
 
 		$object_it = $registry->Query(
 			array (
-				new WikiRootTransitiveFilter($object_it->get('ParentPage') ? $object_it->get('ParentPage') : $object_it->getId()),
+				new ParentTransitiveFilter($object_it->get('ParentPage') ? $object_it->get('ParentPage') : $object_it->getId()),
 				new SortDocumentClause()
 			)
 		);
@@ -317,17 +317,16 @@ class WikiPage extends MetaobjectStatable
         $seq_it = $registry->Query(
 			array (
 				new WikiSameBranchFilter($object_it),
-				new FilterNextSiblingsPredicate($object_it),
 				new SortOrderedClause()
 			)
 		);
         if ( $seq_it->count() < 1 ) return;
 		$ids = $seq_it->idsToArray();
 
-        $sql = "SET @r=".$object_it->get('OrderNum');
+        $sql = "SET @r = 10";
         DAL::Instance()->Query( $sql );
 
-        $sql = "UPDATE WikiPage w SET w.OrderNum = @r:= (@r+10), w.RecordModified = NOW() WHERE w.WikiPageId IN (".join(",", $ids).") ORDER BY w.OrderNum ASC";
+        $sql = "UPDATE WikiPage w SET w.OrderNum = @r:= (@r+10) WHERE w.WikiPageId IN (".join(",", $ids).") ORDER BY w.OrderNum ASC";
         DAL::Instance()->Query( $sql );
 
         $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass, DocumentId) ".

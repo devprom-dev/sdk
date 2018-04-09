@@ -10,6 +10,7 @@ include_once "ModelDataTypeMappingReference.php";
 include_once "ModelDataTypeMappingString.php";
 include_once "ModelDataTypeMappingPassword.php";
 include_once "ModelDataTypeMappingFile.php";
+include_once "ModelDataTypeMappingPositives.php";
 
 class ModelDataTypeMapper
 {
@@ -18,15 +19,15 @@ class ModelDataTypeMapper
 	public function __construct()
 	{
 		$this->mappers = array (
-				new ModelDataTypeMappingDate(),
-				new ModelDataTypeMappingDateTime(),
-				new ModelDataTypeMappingBoolean(),
-				new ModelDataTypeMappingInteger(),
-				new ModelDataTypeMappingFloat(),
-				new ModelDataTypeMappingReference(),
-				new ModelDataTypeMappingString(),
-				new ModelDataTypeMappingPassword(),
-				new ModelDataTypeMappingFile()
+            new ModelDataTypeMappingDate(),
+            new ModelDataTypeMappingDateTime(),
+            new ModelDataTypeMappingBoolean(),
+            new ModelDataTypeMappingInteger(),
+            new ModelDataTypeMappingFloat(),
+            new ModelDataTypeMappingReference(),
+            new ModelDataTypeMappingString(),
+            new ModelDataTypeMappingPassword(),
+            new ModelDataTypeMappingFile()
 		);
 	}
 	
@@ -47,6 +48,9 @@ class ModelDataTypeMapper
 				$values[$attribute] = $mapped_value;
 			}
 		}
+
+        $mapper = new ModelDataTypeMappingPositives();
+        $mapper->mapInstance($values);
 	}
 	
 	public function getMapper( $type )

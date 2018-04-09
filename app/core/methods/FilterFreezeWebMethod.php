@@ -7,7 +7,8 @@ class FilterFreezeWebMethod extends WebMethod
  	var $method_name, $filters_name, $filter, $subject;
  	
  	private $filter_values = null;
- 	
+ 	private $extendToCommon = true;
+
  	function FilterFreezeWebMethod()
  	{
 		$this->subject = 0; // current session user
@@ -35,7 +36,11 @@ class FilterFreezeWebMethod extends WebMethod
 	{
 		$this->subject = $subject;
 	}
-	
+
+	function extendToCommon( $value = true ) {
+ 	    $this->extendToCommon = $value;
+    }
+
 	function Initialize()
 	{ 	
  		$this->filters_name = md5($this->filter);
@@ -111,11 +116,11 @@ class FilterFreezeWebMethod extends WebMethod
 		$filters = preg_split('/;/',
 			getSession()->getUserSettings()->getSettingsValue($this->filters_name, $this->subject));
 		
-		if ( count($filters) == 1 )
+		if ( count($filters) == 1 && $this->extendToCommon )
 			$filters = preg_split('/,/',
 				getSession()->getUserSettings()->getSettingsValue($this->filters_name, $this->subject));
 
-		return join($filters, '&');
+		return trim(join($filters, '&'),' -&,');
 	}
 	
 	function getValue( $filter )
@@ -128,8 +133,8 @@ class FilterFreezeWebMethod extends WebMethod
 			if ( !is_object($settings) ) return '';
 
 			$value = $settings->getSettingsValue($this->filters_name);
-			if ( in_array($value, array('','-')) ) {
-				$value = $settings->getSettingsValue($this->filters_name, -1); 
+			if ( in_array($value, array('','-')) && $this->extendToCommon ) {
+				$value = $settings->getSettingsValue($this->filters_name, -1);
 			}
 			
 			if ( $value == '' ) return '';

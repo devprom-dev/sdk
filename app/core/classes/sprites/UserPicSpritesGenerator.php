@@ -15,8 +15,8 @@ class UserPicSpritesGenerator extends CssSpritesGenerator
 	{
 		$files = array();
 		
-		$user_it = getFactory()->getObject('cms_User')->getRegistry()->Query(
-				array( new SortOrderedClause() )
+		$user_it = getFactory()->getObject('cms_User')->getRegistryBase()->Query(
+            array( new SortOrderedClause() )
 		);
 		while( !$user_it->end() ) {
 			$files[$user_it->getId()] = $this->getPhotoFilePath($user_it);
@@ -79,7 +79,7 @@ class UserPicSpritesGenerator extends CssSpritesGenerator
 		$letterAvatar
 			->setBackgroundColors(array($this->colors[$background]))
 			->setFontRatio(0.6)
-			->setFontFile(SERVER_ROOT_PATH."ext/mpdf50/ttfonts/DejaVuSansCondensed.ttf")
+			->setFontFile(SERVER_ROOT_PATH."ext/fonts/DejaVuSansCondensed.ttf")
 			->generate(array($title), 120)
 			->saveAsPng($filePath);
 

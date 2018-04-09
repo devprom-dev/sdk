@@ -21,7 +21,7 @@ class FilterVpdPredicate extends FilterPredicate
  		
  		$alias = $this->getAlias();
  		if ( $alias != '' ) $alias .= ".";
-    	
+
     	return " AND ".$alias."VPD IN ('".join($filter, "','")."') ";
  	}
 }

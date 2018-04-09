@@ -9,6 +9,7 @@ class PMUserSettings extends MetaobjectCacheable
  	function __construct( PMSession $session = null ) 
  	{
  		parent::__construct('pm_UserSetting');
+ 		$this->setAttributeType('Participant', 'INTEGER');
  	}
  	
  	function getSettingsValue( $settings_name, $user_id = 0 )
@@ -55,7 +56,7 @@ class PMUserSettings extends MetaobjectCacheable
 			$parms['Participant'] = $user_id;
 			$parms['Setting'] = $settings_name;
 			$parms['Value'] = $value;
-			
+
 			$this->add_parms($parms);
 		}
  	}

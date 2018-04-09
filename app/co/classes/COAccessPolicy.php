@@ -13,11 +13,18 @@ class CoAccessPolicy extends AccessPolicy
  			return $this->group_it;
  		}
 
- 		$user_it = getFactory()->getObject('User')->getRegistry()->Query(
- 				array (
- 						new FilterInPredicate(getSession()->getUserIt()->getId())
- 				)
- 		);
+        $user = getFactory()->getObject('User');
+ 		if ( getSession()->getUserIt()->getId() != '' ) {
+            $user_it = $user->getRegistryBase()->Query(
+                array (
+                    new FilterInPredicate(getSession()->getUserIt()->getId())
+                )
+            );
+        }
+        else {
+            $user_it = $user->getEmptyIterator();
+        }
+
  	 	if ( $user_it->object->getAttributeType('GroupId') == '' ) {
  	    	return $this->group_it = getFactory()->getObject('co_UserGroup')->getEmptyIterator();
  	    }

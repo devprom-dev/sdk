@@ -33,6 +33,10 @@ class SettingsController extends PageController
     	    	$service->reset();
     	    	break;
 
+            case 'resetforall':
+                $service->resetForAll();
+                break;
+
 			case 'resettodefault':
 				$service->resetToDefault();
 				break;

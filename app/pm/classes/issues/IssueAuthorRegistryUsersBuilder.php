@@ -6,6 +6,19 @@ class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
 {
     function build( IssueAuthorRegistry & $registry )
     {
-    	$registry->merge(getFactory()->getObject('UserActive')->getRegistry()->Query()->getRowset());
+        if ( !getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant')) ) {
+            $rowset = getSession()->getUserIt()->getRowset();
+            foreach( $rowset as $row => $data ) {
+                $rowset[$row]['CustomerClass'] = 'User';
+            }
+            $registry->merge($rowset);
+            return;
+        }
+
+        $rowset = getFactory()->getObject('UserActive')->getRegistry()->Query()->getRowset();
+        foreach( $rowset as $row => $data ) {
+            $rowset[$row]['CustomerClass'] = 'User';
+        }
+    	$registry->merge($rowset);
     }
 }

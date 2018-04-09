@@ -5,6 +5,7 @@ return array(
     'logout.link' => 'Выйти',
 
     'index.title' => 'Мои заявки',
+    'index.notifications' => 'Есть непросмотренные изменения или комментарии',
     'product.title' => 'Выберите категорию',
 	'index.company_title' => 'Заявки компании',
     'index.no.issues' => 'У вас пока нет ни одной заявки',

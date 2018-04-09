@@ -7,6 +7,6 @@ class AccessRightTypeNonePredicate extends FilterPredicate
 	}
 
 	function _predicate( $filter ) {
- 		return " AND t.AccessType IN ('none','view') ";
+ 		return " AND t.AccessType IN ('none') ";
  	}
 }

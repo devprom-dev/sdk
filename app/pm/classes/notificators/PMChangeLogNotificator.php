@@ -413,6 +413,15 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				if ( $kind != 'modified' || $content != '' ) parent::process( $object_it, $kind, $content, $visibility, $author_email );
 				break;
 		}
+
+		$data = $this->getRecordData();
+		if ( $data['AutoActionUserName'] != '' ) {
+            parent::process(
+                $object_it, 'modified',
+                str_replace('%1', $data['AutoActionUserName'], text(2457)),
+                $visibility + 1, $author_email
+            );
+        }
 	}
 	
 	function isAttributeVisible( $attribute_name, $object_it, $action )

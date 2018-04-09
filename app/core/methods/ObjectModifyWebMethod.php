@@ -19,8 +19,13 @@ class ObjectModifyWebMethod extends WebMethod
 		
 		$this->setRedirectUrl( 'function() { window.location.reload(); }' );
 	}
-	
-	public function & getObject()
+
+	function getCaption()
+    {
+        return $this->hasAccess() ? translate('Изменить') : translate('Открыть');
+    }
+
+    public function & getObject()
 	{
 		return $this->object_it->object;
 	}
@@ -37,13 +42,16 @@ class ObjectModifyWebMethod extends WebMethod
 	
 	function getJSCall( $parms = array() )
 	{
+	    if ( strpos($this->getObjectUrl(), 'action=') === false ) {
+            return "javascript: window.location = '".$this->getObjectUrl()."';";
+        }
 		$method_parms = array_merge(
 			array (
 				'form_url' => $this->getObjectUrl(),
 				'class_name' => get_class($this->getObject()),
 				'entity_ref' => $this->getObject()->getEntityRefName(),
 				'object_id' => $this->object_it->getId(),
-				'form_title' => $this->getObject()->getDisplayName(),
+				'form_title' => $this->object_it->getObjectDisplayName(),
 				'can_delete' => var_export(getFactory()->getAccessPolicy()->can_delete($this->object_it), true),
 				'can_modify' => var_export(getFactory()->getAccessPolicy()->can_modify($this->object_it), true),
 				'delete_reason' => getFactory()->getAccessPolicy()->getReason()

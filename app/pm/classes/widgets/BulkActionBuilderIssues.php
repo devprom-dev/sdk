@@ -1,12 +1,23 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/widgets/BulkActionBuilder.php";
+include_once SERVER_ROOT_PATH."pm/methods/CreateIssueBasedOnWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/BindIssuesWebMethod.php";
 
 class BulkActionBuilderIssues extends BulkActionBuilder
 {
  	function build( BulkActionRegistry $registry )
  	{
  		$object = $registry->getObject()->getObject();
+
+        $method = new CreateIssueBasedOnWebMethod($object);
+        if ( $method->hasAccess() ) {
+            $registry->addActionUrl($method->getCaption(), $method->url(array('getCheckedRows')));
+        }
+        $method = new BindIssuesWebMethod();
+        if ( $method->hasAccess() ) {
+            $registry->addCustomAction($method->getCaption(), $method->getMethodName());
+        }
+
  	 	if ( !getFactory()->getAccessPolicy()->can_modify($object) ) return;
  		
  		$registry->addCustomAction(text(861), 'Method:SetTagsRequestWebMethod:Tag');

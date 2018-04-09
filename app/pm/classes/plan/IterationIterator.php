@@ -1,6 +1,5 @@
 <?php
 include_once "EstimationProxy.php";
-include_once "PlanMetricsLock.php";
 
 class IterationIterator extends OrderedIterator
 {
@@ -19,14 +18,12 @@ class IterationIterator extends OrderedIterator
 	
 	function IsCurrent()
 	{
-		global $model_factory;
-		
-		$task = $model_factory->getObject('pm_Task');
-		
-		$task->addFilter( new StatePredicate('notresolved') );
-		$task->addFilter( new FilterAttributePredicate('Release', $this->getId()) );
-
-		return $task->getRecordCount() > 0;
+	    return $this->object->getRegistry()->Count(
+	        array(
+	            new IterationTimelinePredicate(IterationTimelinePredicate::CURRENT),
+                new FilterInPredicate($this->getId())
+            )
+        ) > 0;
 	}
 
 	function IsFuture()
@@ -193,9 +190,7 @@ class IterationIterator extends OrderedIterator
 	{
 		$request = getFactory()->getObject('pm_ChangeRequest');
 		$request->addFilter( new RequestIterationFilter($this->getId()) );
-		$request->addFilter( new RequestVersionFilter($this->getDisplayName()) );
 		$request->addFilter( new StatePredicate('terminal') );
-		
 		return array_shift(
             $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getEstimation( $request )
 		);
@@ -413,7 +408,6 @@ class IterationIterator extends OrderedIterator
 	
 	function storeMetrics()
 	{
-        $lock = new PlanMetricsLock();
         $release_it = $this->getRef('Version');
 
 		$estimation = $this->getCompletedEstimation();
@@ -424,7 +418,7 @@ class IterationIterator extends OrderedIterator
 		}
 		else {
 		    $capacity = $this->getSpentDuration();
-			$velocity = $capacity > 0 ? round($estimation / $this->getSpentDuration(), 1) : 0;
+			$velocity = $capacity > 0 ? round($estimation / $capacity, 1) : 0;
 		}
 
 		if ( $velocity <= 0 ) {
@@ -467,58 +461,6 @@ class IterationIterator extends OrderedIterator
                        'Metric' => $key,
                        'MetricValueDate' => $value ) );
         }
-
-		$part_it = getFactory()->getObject('User')->getRegistry()->Query(
-			array (
-				new UserWorkerPredicate(),
-				new UserParticipatesDetailsPersister()
-			)
-		);
-		$release_capacity = $this->getSpentDuration();
-		
-		$metrics = array();
-		while ( !$part_it->end() )
-		{
-			$required_capacity = $part_it->get('Capacity') * $release_capacity;
-			$spent_hours = $this->getSpentHoursByParticipant( $part_it->getId() );
-
-			if ( $required_capacity > 0 )
-			{
-				$efficiency = ($spent_hours / $required_capacity) * 100;
-			}
-			else
-			{
-				$efficiency = 0;
-			}
-			
-			$metrics[$part_it->getId()] = array (
-				'RequiredCapacity' => $required_capacity,
-				'SpentHours' => $spent_hours,
-				'Efficiency' => $efficiency,
-				'Velocity' => $release_capacity > 0 ? $spent_hours / $release_capacity : 0
-				);
-			
-			$part_it->moveNext();
-		}
-
-		$metric = getFactory()->getObject('pm_ParticipantMetrics');
-		$metric->setNotificationEnabled(false);
-
-        $sql = " DELETE FROM pm_ParticipantMetrics WHERE Iteration = " . $this->getId();
-
-        DAL::Instance()->Query($sql);
-
-        foreach ($metrics as $participant_id => $values) {
-            foreach ($values as $key => $value) {
-                $metric->add_parms(
-                    array('Iteration' => $this->getId(),
-                        'Participant' => $participant_id,
-                        'Metric' => $key,
-                        'MetricValue' => $value));
-            }
-        }
-
-        $lock->Release();
 	}
 	
 	function getMetricsDate()

@@ -8,17 +8,12 @@ class CycleStateRegistry extends ObjectRegistrySQL
             array (
                 'entityId' => 1,
                 'ReferenceName' => 'not-passed',
-                'Caption' => translate('Текущие и будущие')
-            ),
-            array (
-                'entityId' => 2,
-                'ReferenceName' => 'current',
-                'Caption' => translate('Текущие')
+                'Caption' => text(2327)
             ),
             array (
                 'entityId' => 3,
                 'ReferenceName' => 'past',
-                'Caption' => translate('Предыдущие')
+                'Caption' => text(2503)
             ),
             array (
                 'entityId' => 4,

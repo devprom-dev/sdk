@@ -43,7 +43,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
         $value = parent::getFieldValue( $attr );
         switch( $attr ) {
             case 'Release':
-                if ( $value != '' ) return $value;
+                if ( $value != '' || $this->releaseId == '' ) return $value;
                 return getFactory()->getObject('IterationActual')->getRegistry()->Query(
                         array (
                             new FilterAttributePredicate('Version', $this->releaseId),
@@ -112,7 +112,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 		$method = new ObjectModifyWebMethod($object_it);
 		$method->setRedirectUrl($todo);
 		$actions[] = array (
-				'name' => translate('Изменить'),
+				'name' => $method->getCaption(),
 				'url' => $method->getJSCall()
 		);
 		
@@ -156,4 +156,18 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
 			return parent::getListItemsTitle();
 		}
 	}
+
+    function drawAddButton( $view, $tabindex )
+    {
+        parent::drawAddButton( $view, $tabindex );
+
+        if( $this->getIteratorRef()->count() > 0 ) {
+            $boardIt = getFactory()->getObject('Module')->getExact('tasks-board');
+            if ( $boardIt->getId() != '' ) {
+                echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$boardIt->getUrl().'" tabindex="-1">';
+                echo mb_strtolower($boardIt->getDisplayName());
+                echo '</a>';
+            }
+        }
+    }
 }

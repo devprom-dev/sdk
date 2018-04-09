@@ -10,6 +10,7 @@ include "predicates/ProjectRolePredicate.php";
 include "predicates/ProjectStatePredicate.php";
 include "predicates/ProjectUserLeadPredicate.php";
 include "predicates/ProjectVpdPredicate.php";
+include "predicates/ProjectNoGroupsPredicate.php";
 include "predicates/ProjectAccessiblePredicate.php";
 include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";

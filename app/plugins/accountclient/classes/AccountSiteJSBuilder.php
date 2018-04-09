@@ -42,7 +42,8 @@ class AccountSiteJSBuilder extends ScriptBuilder
                 'Language' => getSession()->getUserIt()->get('Language'),
                 "Redirect" => urlencode(EnvironmentSettings::getServerUrl().$_SERVER['REQUEST_URI']),
                 "token1" => $authToken,
-                "token2" => $_COOKIE['devprom'][$authToken]
+                "token2" => $_COOKIE['devprom'][$authToken],
+                'appVersion' => $_SERVER['APP_VERSION']
             )
 		);
 

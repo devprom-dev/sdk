@@ -42,14 +42,17 @@ class WikiPageIterator extends StatableIterator
 
  	function getDisplayNameExt( $prefix = '' )
     {
+        if ( $this->get('DocumentVersion') != '' ) {
+            $prefix .= '['.$this->get('DocumentVersion').'] ';
+        }
         if ( $this->get('DocumentName') != '' && $this->get('ParentPage') != '' ) {
-            $prefix = $this->getHtmlDecoded('DocumentName') . ' / ' . $prefix;
+            $prefix .= $this->getHtmlDecoded('DocumentName') . ' / ' ;
         }
         return parent::getDisplayNameExt($prefix);
     }
 
     function getTreeDisplayName() {
-        return $this->getHtmlDecoded('Caption');
+        return $this->get('Caption');
     }
 
     private function cacheContentAndStyle()
@@ -70,7 +73,7 @@ class WikiPageIterator extends StatableIterator
 	{
 		return $this->object->getRegistry()->Query(
 				array (
-						new WikiRootTransitiveFilter($this->getId()),
+						new ParentTransitiveFilter($this->getId()),
 						new FilterNotInPredicate(array($this->getId()))
 				)
 		);
@@ -100,7 +103,7 @@ class WikiPageIterator extends StatableIterator
 	{
 		return $this->object->getRegistry()->Query(
 				array (
-						new WikiRootTransitiveFilter($this->getId())
+						new ParentTransitiveFilter($this->getId())
 				)
 		)->idsToArray();
 	}

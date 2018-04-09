@@ -13,9 +13,9 @@ class FilterIterationMethod extends FilterObjectMethod
         $values = parent::getValues();
         return array_merge(
             array_slice($values, 0, 1),
-            array (
-                'notpassed' => text(2327)
-            ),
+            $this->getHasAll()
+                ? array ('notpassed' => text(2327))
+                : array(),
             array_slice($values, 1)
         );
     }

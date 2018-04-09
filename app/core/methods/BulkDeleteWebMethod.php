@@ -4,10 +4,13 @@ include_once "WebMethod.php";
 
 class BulkDeleteWebMethod extends WebMethod
 {
-	function __construct()
-	{
+    private $object = null;
+
+	function __construct( $object = null ) {
 		parent::__construct();
-		
+		if ( $object instanceof Metaobject ) {
+            $this->object = $object;
+        }
 		$this->setRedirectUrl('donothing');
 	}
 	
@@ -29,19 +32,16 @@ class BulkDeleteWebMethod extends WebMethod
 	
  	function execute_request()
  	{
- 		global $_REQUEST, $model_factory;
-
 		if ( $_REQUEST['class'] == '' || $_REQUEST['objects'] == '' ) throw new Exception('Required parameters missed');
 		
-		$class = $model_factory->getClass($_REQUEST['class']);
+		$class = getFactory()->getClass($_REQUEST['class']);
 		
 		if ( !class_exists($class) ) throw new Exception('Unknown class name given: '.$class); 
 		
-		$object = $model_factory->getObject($class);
+		$object = getFactory()->getObject($class);
 		
-		$ids = preg_split('/[,-]/', trim($_REQUEST['objects'], '-'));
-		
-		$object_it = $object->getExact($ids); 
+		$ids = TextUtils::parseIds(trim($_REQUEST['objects'], '-'));
+		$object_it = $object->getExact($ids);
 
         if ( $object instanceof Project ) {
             echo JsonWrapper::encode(
@@ -68,4 +68,10 @@ class BulkDeleteWebMethod extends WebMethod
 			$method->setCookie();
 		}
 	}
+
+	function hasAccess()
+    {
+        if ( !is_object($this->object) ) return parent::hasAccess();
+        return getFactory()->getAccessPolicy()->can_delete($this->object);
+    }
 }

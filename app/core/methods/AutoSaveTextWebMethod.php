@@ -46,7 +46,7 @@ class AutoSaveTextWebMethod extends WebMethod
 		}
 
 		$title = $this->getTitle();
-		
+
 		if ( !$this->hasAccess() )
 		{
 	 		echo '<div>';
@@ -58,30 +58,13 @@ class AutoSaveTextWebMethod extends WebMethod
  			switch ( $this->type )
  			{
  				case 'input':
- 					echo '<input type="text" class="input-block-level" style="text-align:right;" title="'.$title.'" id="autosave'.$script_number.'" value="'.$default_value.'">';
+ 					echo '<input type="text" class="autosave-input input-block-level" data-href="'.$this->getModule().'?method='.get_class($this).'" data-save="'.htmlentities(json_encode($parms)).'" style="text-align:right;" title="'.$title.'" value="'.$default_value.'">';
  					break;
  					
  				case 'textarea':
- 					echo '<textarea class="input-block-level" title="'.$title.'" id="autosave'.$script_number.'" rows='.$this->rows.' >'.$default_value.'</textarea>';
+ 					echo '<textarea class="autosave-input input-block-level" title="'.$title.'" data-href="'.$this->getModule().'?method='.get_class($this).'" data-save="'.htmlentities(json_encode($parms)).'" rows='.$this->rows.' >'.$default_value.'</textarea>';
  					break;
  			}
 		}
- 		
-		$keys = array_keys($parms);
-		$data = array();
-		
-		foreach ( $keys as $key )
-		{
-			array_push( $data, "'".$key."' : '".$parms[$key]."'" );	
-		}
-
- 		?>
- 		<script language="javascript">
-			$('#autosave<? echo $script_number ?>').change( function() {
-				runMethod('<? echo $this->getModule().'?method='.get_class($this) ?>', 
-					{<? echo join(',', $data) ?>,value: $(this).val()}, 'donothing', '' );
-			});
- 		</script>
-		<?
  	}
 }

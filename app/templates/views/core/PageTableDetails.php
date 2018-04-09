@@ -1,6 +1,6 @@
 <?php
 $active = $_COOKIE[$details_id.'-active'];
-if ( $active == '' ) {
+if ( !array_key_exists($active, $details) ) {
     $active = $details_parms['active'];
     if ( $active == '' ) {
         $active = array_shift(array_keys($details));
@@ -29,7 +29,9 @@ if ( $active == '' ) {
             $(this).addClass('btn-info').addClass('active');
             $(this).find('i').addClass('icon-white');
             cookies.set('<?=$details_id.'-active'?>', $(this).attr('did'));
-            var url = $(this).attr('url').replace(/%id%/, $.isNumeric($(this).attr('default')) ? $(this).attr('default') : '0');
+            var url = $(this).attr('url');
+            if ( url == '' ) return;
+            var url = url.replace(/%id%/, $.isNumeric($(this).attr('default')) ? $(this).attr('default') : '0');
             detailsInitialize($('.details-body'),url,true,$(this).attr('did') != 'props');
         });
         $(document).on("trackerItemSelected", function(e, id, ctrlKey) {

@@ -75,6 +75,9 @@ class UpdateUpload extends MaintenanceCommand
 	
 	function checkUpdateIsValid()
 	{
+        $log = $this->getLogger();
+        if ( is_object($log) ) $log->info("checkUpdateIsValid");
+
 	    $required_dirs = count(scandir(SERVER_UPDATE_PATH.'htdocs')) > 2
 	        && count(scandir(SERVER_UPDATE_PATH.'devprom')) > 2;
 	    	
@@ -87,7 +90,10 @@ class UpdateUpload extends MaintenanceCommand
 	function checkPlugins()
 	{
 	    global $plugins;
-	    
+
+        $log = $this->getLogger();
+        if ( is_object($log) ) $log->info("checkPlugins");
+
 	    if ( !file_exists(SERVER_UPDATE_PATH.'htdocs/common.php') ) return;
 	    
         // check plugins to be updated with core are in the core update
@@ -109,6 +115,9 @@ class UpdateUpload extends MaintenanceCommand
 	
 	function checkPoints()
 	{
+        $log = $this->getLogger();
+        if ( is_object($log) ) $log->info("checkPoints");
+
 	    // check all required checkpoints are passed
 			$checkpointFactory = new CheckpointFactory(SERVER_UPDATE_PATH.'htdocs/');
 
@@ -134,61 +143,41 @@ class UpdateUpload extends MaintenanceCommand
 	
 	function checkRequiredVersion( $update )
 	{
-		global $model_factory;
-		
+        $log = $this->getLogger();
+        if ( is_object($log) ) $log->info("checkRequiredVersion");
+
+        $update_it = getFactory()->getObject('cms_Update')->getLatest();
+        $current_version = $update_it->getDisplayName();
+
 		$update_version = '';
-	    
 	    $update->update_getinfo( $update_version );
 	    
 	    if ( $update_version != '' )
 	    {
-	        $update_it = $model_factory->getObject('cms_Update')->getLatest();
-	        	
-	        $current_version = $update_it->getDisplayName();
-	    
-	        $parts1 = preg_split('/\./', $update_version);
-	        $parts2 = preg_split('/\./', $current_version);
-	        	
-	        $pad = max(count($parts1), count($parts2));
-	        	
-	        $version_parts = array_reverse(array_pad($parts1, $pad, 0));
-	        $installed_parts = array_reverse(array_pad($parts2, $pad, 0));
-	    
-	        $update_number = 0;
-	        foreach( $version_parts as $key => $part ) $update_number += pow(100, $key) * $part;
-	    
-	        $installed_number = 0;
-	        foreach( $installed_parts as $key => $part ) $installed_number += pow(100, $key) * $part;
-	    
-	        $previous_version = $update_number <= $installed_number;
-	    
-	        if ( $previous_version )
-	        {
-	            $this->replyError(str_replace('%1', $update_version, str_replace('%2', $current_version, text(404))));
-	        }
+	        if ( version_compare($update_version, $current_version) < 0 ) {
+                $this->replyError(str_replace('%1', $update_version, str_replace('%2', $current_version, text(404))));
+            }
 	    }
 	    	
-	    $update_version = '';
+	    $required_version = '';
+	    $update->update_getrequired( $required_version );
 	    
-	    $update->update_getrequired( $update_version );
-	    
-	    if ( $update_version != "" )
+	    if ( $required_version != "" )
 	    {
-	        $versions_array = preg_split('/,/', trim($update_version, " \r\n"));
-	    
-	        $update_it = $model_factory->getObject('cms_Update')->getByRefArray( array(
-	        		'Caption' => $versions_array 
-	        ));
-	    
-	        if ( $update_it->count() < 1 )
-	        { 
-	            $this->replyError(str_replace('%1', join($versions_array, "; "), text(1050)));
-	        }
+	        $versions_array = preg_split('/,/', trim($required_version, " \r\n"));
+            $required_version = array_shift($versions_array);
+
+            if ( version_compare($required_version, $current_version) > 0 ) {
+                $this->replyError(str_replace('%1', join($versions_array, "; "), text(1050)));
+            }
 	    }
 	}
 
 	protected function checkPHPVersion()
     {
+        $log = $this->getLogger();
+        if ( is_object($log) ) $log->info("checkPHPVersion");
+
         $file_path = SERVER_UPDATE_PATH.'devprom/php.txt';
         if ( !file_exists($file_path) ) return;
         $requiredVersion = file_get_contents($file_path);

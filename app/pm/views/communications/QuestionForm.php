@@ -82,9 +82,9 @@ class QuestionForm extends PMPageForm
         }
     }
 
-	function getActions()
+	function getNewRelatedActions()
 	{
-		$actions = parent::getActions();
+		$actions = parent::getNewRelatedActions();
 		
 		$object_it = $this->getObjectIt();
 		if ( is_object($object_it) )
@@ -92,7 +92,7 @@ class QuestionForm extends PMPageForm
 			if ( is_object($this->create_issue_method) ) {
 				if ( $actions[count($actions) - 1]['name'] != '' ) $actions[] = array();
 				$actions[] = array( 
-					'name' => text(747), 
+					'name' => $this->create_issue_method->getCaption(),
 					'url' => $this->create_issue_method->getJSCall(array('Question' => $object_it->getId())) 
 				);
 			}

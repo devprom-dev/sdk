@@ -1,18 +1,9 @@
 <?php
 
-include_once SERVER_ROOT_PATH."pm/classes/tasks/persisters/TaskPlanFactPersister.php";
 include "TaskPlanFactChartWidget.php";
 
 class TaskPlanFactChart extends PMPageChart
 {
- 	function __construct( $object )
- 	{
-		$object->addAttribute('PlanFact', 'FLOAT', '', true, false);
-		$object->addPersister( new TaskPlanFactPersister() );
-
-		parent::__construct( $object );
- 	}
-
 	function getChartWidget()
 	{
 		$widget = new TaskPlanFactChartWidget();
@@ -39,4 +30,24 @@ class TaskPlanFactChart extends PMPageChart
 	{
 		return array();
 	}
+
+    function getGroup() {
+	    return 'FinishDate';
+    }
+
+    function getAggregateBy() {
+	    return 'PlanFact';
+    }
+
+    function getGroupFunction() {
+	    return 'AVG';
+    }
+
+    function getLegendVisible() {
+        return false;
+    }
+
+    function getTableVisible() {
+	    return false;
+    }
 }

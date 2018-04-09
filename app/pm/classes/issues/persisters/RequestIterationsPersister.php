@@ -29,7 +29,6 @@ class RequestIterationsPersister extends ObjectSQLPersister
     protected function updateRelatedTasks( $object_id, $parms )
     {
         $object_it = $this->getObject()->getExact($object_id);
-        if ( $object_it->get('Iteration') == $parms['Iteration'] ) return;
 
         $iteration_ids = array_filter(preg_split('/,/', $parms['Iteration']), function($value) {
             return is_numeric($value) && $value > 0;
@@ -39,7 +38,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
         $task = getFactory()->getObject('Task');
         $task->removeNotificator( 'EmailNotificator' );
 
-        if( $this->getObject()->getAttributeType('OpenTasks') != '' ) {
+        if( $object_it->object->getAttributeType('OpenTasks') != '' ) {
             $task_it = $object_it->getRef('OpenTasks');
         }
         else {
@@ -49,6 +48,7 @@ class RequestIterationsPersister extends ObjectSQLPersister
                 )
             );
         }
+
         while ( !$task_it->end() )
         {
             $task_it->object->modify_parms(

@@ -26,16 +26,22 @@ class ProcessEmailQueue extends TaskCommand
                 }
             )
         );
-        $supportEmails = array_merge( $supportEmails,
-            array_filter($mailbox_it->fieldToArray('SenderAddress'),
-                function($email) {
-                    return $email != '';
+        foreach( $mailbox_it->fieldToArray('SenderAddress') as $senderAddress ) {
+            foreach( preg_split('/,/', $senderAddress) as $senderAddressItem ) {
+                if ( $senderAddressItem != '' ) {
+                    $supportEmails[] = $senderAddressItem;
                 }
-            )
-        );
+            }
+        }
+
         $settings_it = getFactory()->getObject('SystemSettings')->getAll();
         if ( $settings_it->get('AdminEmail') != '' ) {
             $supportEmails[] = $settings_it->get('AdminEmail');
+            $account_email = $settings_it->get('AdminEmail');
+        }
+        else {
+            $mailerSettingsIt = getFactory()->getObject('MailerSettings')->getAll();
+            $account_email = $mailerSettingsIt->get('MailServerUser');
         }
 
 		$user = getFactory()->getObject('cms_User');
@@ -72,21 +78,44 @@ class ProcessEmailQueue extends TaskCommand
 				list($to_email, $to_name) = HtmlMailBox::parseAddressString($to_address);
 
 				try {
-					if ( $from_email == $to_email ) throw new \Exception("skip sending to itself ".$from_email);
-                    if ( in_array($to_email, $supportEmails) ) throw new \Exception("skip support addresses ".$to_email);
+					if ( $from_email == $to_email ) throw new \Exception("do not send itself ".$from_email);
+                    if ( in_array($to_email, $supportEmails) ) throw new \Exception("do not send to support addresses ".$to_email);
 
+                    $senderEmail = $from_email;
+                    if ( $account_email != '' && !HtmlMailBox::compareDomains($senderEmail, $account_email) ) {
+                        $senderEmail = $account_email;
+                    }
 					$mailer->send(
 						DevpromSwiftMessage::newInstance()
 							->setContentType(HtmlMailBox::getContentType())
-							->setFrom($from_email, $from_name != '' ? $from_name : null)
-							->setSender($from_email, $from_name != '' ? $from_name : null)
+                            ->setFrom($senderEmail, $from_name != '' ? $from_name : null)
+							->setSender($senderEmail, $from_name != '' ? $from_name : null)
+                            ->setReplyTo($from_email, $from_name != '' ? $from_name : null)
 							->setTo($to_email, $to_name != '' ? $to_name : null)
 							->setSubject($queue_it->getHtmlDecoded('Caption'))
 							->setBodyNative($body)
 					);
 				}
+                catch (\Swift_SwiftException $e) {
+                    $this->getLogger()->info("Unable send email from ".$senderEmail.", retry using account email");
+                    try {
+                        $mailer->send(
+                            DevpromSwiftMessage::newInstance()
+                                ->setContentType(HtmlMailBox::getContentType())
+                                ->setFrom($account_email, $from_name != '' ? $from_name : null)
+                                ->setSender($account_email, $from_name != '' ? $from_name : null)
+                                ->setReplyTo($from_email, $from_name != '' ? $from_name : null)
+                                ->setTo($to_email, $to_name != '' ? $to_name : null)
+                                ->setSubject($queue_it->getHtmlDecoded('Caption'))
+                                ->setBodyNative($body)
+                        );
+                    }
+                    catch (\Exception $e) {
+                        $this->getLogger()->error("Unable send email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
+                    }
+                }
 				catch (\Exception $e) {
-					$this->getLogger()->error("Unable send email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
+                    $this->getLogger()->error("Skip sending email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());
 				}
 
 				$address_it->moveNext();

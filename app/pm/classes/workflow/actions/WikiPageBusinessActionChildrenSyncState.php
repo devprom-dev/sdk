@@ -14,7 +14,7 @@ class WikiPageBusinessActionChildrenSyncState extends BusinessActionWorkflow
  	{
 		$page_it = $object_it->object->getRegistry()->Query(
             array (
-                new WikiRootTransitiveFilter($object_it->getId()),
+                new ParentTransitiveFilter($object_it->getId()),
                 new FilterNotInPredicate($object_it->getId()),
                 new WikiNonRootFilter()
             )
@@ -23,6 +23,10 @@ class WikiPageBusinessActionChildrenSyncState extends BusinessActionWorkflow
 		$service = new WorkflowService($object_it->object);
 		while( !$page_it->end() )
 		{
+		    if ( $page_it->get('State') == $object_it->get('State') ) {
+                $page_it->moveNext();
+                continue;
+            }
 			try {
 				$service->moveToState(
 						$page_it, $object_it->get('State'), '', array(), false

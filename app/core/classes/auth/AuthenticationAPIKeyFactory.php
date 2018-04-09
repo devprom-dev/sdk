@@ -31,22 +31,23 @@ class AuthenticationAPIKeyFactory extends AuthenticationFactory
 
 		while ( !$user_it->end() )
 		{
-			if ( $this->getReadOnlyAuthKey($user_it) == $headers[self::KEY_NAME] )
+		    $localIt = $user_it->copy();
+			if ( $this->getReadOnlyAuthKey($localIt) == $headers[self::KEY_NAME] )
 			{
 				$this->readonly = true;
-				$this->setUser( $user_it );
-				return $user_it;
+				$this->setUser( $localIt );
+				return $localIt;
 			}
-			if ( $this->getWriteOnlyAuthKey($user_it) == $headers[self::KEY_NAME] )
+			if ( $this->getWriteOnlyAuthKey($localIt) == $headers[self::KEY_NAME] )
 			{
 				$this->writeonly = true;
-				$this->setUser( $user_it );
-				return $user_it;
+				$this->setUser( $localIt );
+				return $localIt;
 			}
-			if ( $this->getAuthKey($user_it) == $headers[self::KEY_NAME] )
+			if ( $this->getAuthKey($localIt) == $headers[self::KEY_NAME] )
 			{
-				$this->setUser( $user_it );
-				return $user_it;
+				$this->setUser( $localIt );
+				return $localIt;
 			}
 			$user_it->moveNext();
 		}

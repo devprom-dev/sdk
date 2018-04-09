@@ -67,51 +67,55 @@ class ApplyTemplateService
 				case 'pm_TaskTypeStage':
 				case 'pm_Predicate':
 				case 'pm_StateAction':
+                case 'pm_AutoAction':
 				case 'pm_StateAttribute':
                 case 'pm_TaskTypeState':
 				case 'pm_AccessRight':
 				case 'pm_Workspace':
+                case 'pm_TextTemplate':
                     $object->deleteAll();
                     break;
 
                 case 'pm_State':
-                    getFactory()->getObject('pm_StateObject')->deleteAll();
-					$object->deleteAll();
-					break;
-					
-				case 'pm_CustomReport':
+                    $newStates = array();
+                    while( !$iterator->end() ) {
+                        $newStates[] = $iterator->get('ObjectClass').':'.$iterator->get('ReferenceName');
+                        $iterator->moveNext();
+                    }
+                    $iterator->moveFirst();
 
-					if ( $iterator->count() > 0 )
-					{
-						// remove common (glogal) reports
-						$report_it = $object->getByRefArray(
-								array (
-										'Author' => -1
-								)
-						);
-						
-						while( !$report_it->end() )
-						{
-							$report_it->delete();
-							$report_it->moveNext();
-						}
-					}
-					
+                    $oldStates = array();
+                    $oldIt = $object->getAll();
+                    while( !$oldIt->end() ) {
+                        $oldStates[] = $oldIt->get('ObjectClass').':'.$oldIt->get('ReferenceName');
+                        $oldIt->moveNext();
+                    }
+
+                    $removeStates = array_diff($oldStates, $newStates);
+                    if ( count($removeStates) > 0 ) {
+                        foreach( $removeStates as $removeState ) {
+                            list($objectClass, $referenceName) = preg_split('/:/', $removeState);
+                            $stateIt = $object->getRegistry()->Query(
+                                array(
+                                    new \FilterVpdPredicate(),
+                                    new \FilterAttributePredicate('ReferenceName', $referenceName),
+                                    new \FilterAttributePredicate('ObjectClass', $objectClass)
+                                )
+                            );
+                            $stateIt->delete();
+                        }
+                    }
 					break;
 
 				case 'pm_UserSetting':
-
-					if ( $iterator->count() > 0 )
-					{
+					if ( $iterator->count() > 0 ) {
 						// remove common (glogal) settings for reports/modules
 						$it = $object->getByRefArray(
-								array (
-										'Participant' => -1
-								)
+                            array (
+                                'Participant' => -1
+                            )
 						);
-						
-						while( !$it->end() )
-						{
+						while( !$it->end() ) {
 							$it->delete();
 							$it->moveNext();
 						}
@@ -123,40 +127,45 @@ class ApplyTemplateService
 			\CloneLogic::Run( $context, $object, $iterator, $project_it ); 
 		} 
 
-		foreach( get_declared_classes() as $className ) {
-            if ( is_subclass_of($className, 'MetaobjectStatable') )
-            {
-                $object = getFactory()->getObject($className);
-                if ( $object->getStateClassName() == '' ) continue;
+		$stateableEntities = array(
+		    'Request',
+            'Task',
+            'Requirement',
+            'TestScenario',
+            'HelpPage',
+            'Question'
+        );
+		foreach( $stateableEntities as $className ) {
+            if ( !class_exists(getFactory()->getClass($className)) ) continue;
 
-                $stateObject = getFactory()->getObject($object->getStateClassName());
-                if ( !is_object($stateObject) ) continue;
+            $object = getFactory()->getObject($className);
+            $stateObject = getFactory()->getObject($object->getStateClassName());
+            if ( !is_object($stateObject) ) continue;
 
-                $states = $stateObject->getAll()->fieldToArray('ReferenceName');
-                $firstState = array_shift(array_values($states));
+            $states = $stateObject->getAll()->fieldToArray('ReferenceName');
+            $firstState = array_shift(array_values($states));
 
-                $registry = $object->getRegistry();
-                $registry->setPersisters(array());
+            $registry = $object->getRegistry();
+            $registry->setPersisters(array());
 
-                $object_it = $registry->Query(
-                    array (
-                        new \FilterBaseVpdPredicate(),
-                        new \FilterHasNoAttributePredicate('State', $states)
-                    )
+            $object_it = $registry->Query(
+                array (
+                    new \FilterBaseVpdPredicate(),
+                    new \FilterHasNoAttributePredicate('State', $states)
+                )
+            );
+            if ( $object_it->count() > 0 ) {
+                \DAL::Instance()->Query(
+                    "UPDATE ".$object->getEntityRefName()." SET State = '".$firstState."' WHERE ".$object->getIdAttribute()." IN (".join(',',$object_it->idsToArray()).")"
                 );
-                if ( $object_it->count() > 0 ) {
-                    \DAL::Instance()->Query(
-                        "UPDATE ".$object->getEntityRefName()." SET State = '".$firstState."' WHERE ".$object->getIdAttribute()." IN (".join(',',$object_it->idsToArray()).")"
-                    );
-                }
             }
         }
 
 		$metrics_service = new StoreMetricsService();
 		$metrics_service->execute($project_it, true);
 
-        getFactory()->getCacheService()->truncate('sessions');
-        getFactory()->getCacheService()->truncate(
+        getFactory()->getCacheService()->invalidate('sessions');
+        getFactory()->getCacheService()->invalidate(
  		    array_shift(preg_split('/\//',getSession()->getCacheKey()))
         );
  	}

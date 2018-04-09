@@ -2,47 +2,55 @@
 
 class AutoActionIterator extends OrderedIterator
 {
-	function getConditionXPath()
+	function getConditionXPath( $translate = false )
 	{
 		$conditions = JsonWrapper::decode($this->getHtmlDecoded('Conditions'));
 		if ( !is_array( $conditions['items']) ) return "1=2";
-		
+
+		if ( $translate ) {
+		    $subject = getFactory()->getObject($this->object->getSubjectClassName());
+        }
+
 		$items = array();
 		foreach( $conditions['items'] as $condition )
 		{
 			$value = addslashes(mb_strtolower($condition['Value']));
+			$attributeName = is_object($subject)
+                ? $subject->getAttributeUserName($condition['Condition'])
+                : $condition['Condition'];
+
 			switch($condition['Operator'])
 			{
 			    case 'is':
-			  		$items[] = $condition['Condition'].'="'.$value.'"';
+			  		$items[] = $attributeName.'="'.$value.'"';
 			  		break;
 
 			    case 'isnot':
-			  		$items[] = $condition['Condition'].'!="'.$value.'"';
+			  		$items[] = $attributeName.'!="'.$value.'"';
 			  		break;
 
 			    case 'contains':
-			  		$items[] = 'contains('.$condition['Condition'].',"'.$value.'")';
+			  		$items[] = 'contains('.$attributeName.',"'.$value.'")';
 			  		break;
 
 			    case 'notcontains':
-			  		$items[] = 'not(contains('.$condition['Condition'].',"'.$value.'"))';
+			  		$items[] = 'not(contains('.$attributeName.',"'.$value.'"))';
 			  		break;
 
 			    case 'unknown':
-			  		$items[] = $condition['Condition'].'=""';
+			  		$items[] = $attributeName.'=""';
 			  		break;
 
 			    case 'any':
-			  		$items[] = $condition['Condition'].'!=""';
+			  		$items[] = $attributeName.'!=""';
 			  		break;
 
 				case 'less':
-					$items[] = $condition['Condition'].'<"'.$value.'"';
+					$items[] = $attributeName.'<"'.$value.'"';
 					break;
 
 				case 'greater':
-					$items[] = $condition['Condition'].'>"'.$value.'"';
+					$items[] = $attributeName.'>"'.$value.'"';
 					break;
 			}
 		}
@@ -52,4 +60,16 @@ class AutoActionIterator extends OrderedIterator
 				$items
 			);	
 	}
+
+    function getConditionAttributes()
+    {
+        $conditions = JsonWrapper::decode($this->getHtmlDecoded('Conditions'));
+        if ( !is_array( $conditions['items']) ) return array();
+
+        $items = array();
+        foreach( $conditions['items'] as $condition ) {
+            $items[] = $condition['Condition'];
+        }
+        return $items;
+    }
 }

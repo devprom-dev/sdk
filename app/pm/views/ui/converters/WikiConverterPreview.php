@@ -38,9 +38,19 @@ class WikiConverterPreview
  		$this->parser->setHrefResolver(function($wiki_it) {
  			return '#'.$wiki_it->getId();
  		});
- 		$this->parser->setReferenceTitleResolver(function($info) {
- 			return $info['caption'];
- 		});
+ 		$this->parser->setReferenceTitleResolver(
+ 		        in_array('uid', $this->options)
+                    ? function($info) {
+                            $result = $info['caption'];
+                            if ( $info['uid'] != '' ) {
+                                $result = "[" . $info['uid'] . "] " . $result;
+                            }
+                            return $result;
+                      }
+                    : function($info) {
+                        return $info['caption'];
+                      }
+        );
 		$this->wiki_it = $wiki_it;
  	}
 

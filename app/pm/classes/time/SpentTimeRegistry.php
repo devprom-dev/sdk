@@ -54,12 +54,18 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 				$row_object = getFactory()->getObject('Task');
 				break;
 		}
+
+		if ( !getFactory()->getAccessPolicy()->can_read($row_object) ) {
+            $row_field = 'Project';
+            $row_object = getFactory()->getObject('Project');
+        }
 		$registry = $row_object->getRegistry();
 
 		$sql = " SELECT ".$registry->getSelectClause('t').",".
 			   "        ".$group." Day, ".
 		       "		t2.* " .
-			   "   FROM (SELECT t.ChangeRequest, a.Task, a.Capacity, a.ReportDate, a.Description, " .
+			   "   FROM (SELECT t.ChangeRequest, (SELECT r.Caption FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) RequestCaption, ".
+               "                t.Caption TaskCaption, a.Task, a.Capacity, a.ReportDate, a.Description, " .
 			   "				a.VPD, a.Participant ".$userField.", ".($userField != 'SystemUser' ? "a.Participant SystemUser," : "").
 			   " 				(SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project" .
 			   "		   FROM pm_Activity a, pm_Task t ".
@@ -82,10 +88,13 @@ class SpentTimeRegistry extends ObjectRegistrySQL
             $rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Comment'.$activity_it->get('Day')][] =
                 array (
                     'Task' => $activity_it->get('Task'),
-                    'Text' => $activity_it->get('Description')
+                    'Text' => $activity_it->get('Description') != ''
+                                ? $activity_it->getHtmlDecoded('Description')
+                                : ($activity_it->get('TaskCaption') != ''
+                                        ? $activity_it->getHtmlDecoded('TaskCaption')
+                                        : $activity_it->getHtmlDecoded('RequestCaption'))
                 );
-			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')]
-					+= $activity_it->get('Capacity');
+			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')] += $activity_it->get('Capacity');
 			$activity_it->moveNext();
 		}
 

@@ -17,7 +17,7 @@ class PMWikiSourceFilter extends FilterPredicate
  				
 		 		$object_it = getFactory()->getObject('WikiPage')->getRegistry()->Query(
 		 				array( 
-		 						count($ids) > 1 ? new FilterInPredicate($ids) : new WikiRootTransitiveFilter($ids[0])
+		 						count($ids) > 1 ? new FilterInPredicate($ids) : new ParentTransitiveFilter($ids[0])
 		 				)
 				);
 		 		

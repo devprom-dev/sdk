@@ -96,14 +96,14 @@ class BulkFormBase extends AjaxForm
 	{
 		$attributes = array();
 
-		$match = preg_match('/Attribute(.+)/mi', $_REQUEST['operation'], $attributes);
+		$match = preg_match('/^Attribute(.+)$/mi', $_REQUEST['operation'], $attributes);
 		if ( $match ) {
 			$attributes = preg_split('/:/', $attributes[1]);
 			$this->object->setAttributeVisible(array_shift(array_values($attributes)), true);
 			return $attributes;
 		}
 		
-		$match = preg_match('/Method:(.+)/mi', $_REQUEST['operation'], $attributes);
+		$match = preg_match('/^Method:(.+)$/mi', $_REQUEST['operation'], $attributes);
 		if ( $match )
 		{
 			$parms = preg_split('/:/', $attributes[1]);

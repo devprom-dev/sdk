@@ -1,6 +1,7 @@
 [{
   "Release": {
     "url": "/versions/{id}.json",
+    "url-append": "/versions.json",
     "link": "/versions/{id}",
     "Caption": "version.name",
     "Description": "version.description",
@@ -8,7 +9,8 @@
     "FinishDate": "version.due_date"
   },
   "Request": {
-    "url": "/issues/{id}.json?include=journals,attachments&",
+    "url": "/issues/{id}.json",
+    "url-append": "/issues.json",
     "link": "/issues/{id}",
     "Caption": "issue.subject",
     "Description": "issue.description",
@@ -23,6 +25,9 @@
     "Estimation": "issue.estimated_hours",
     "Author": {"Caption":"issue.author.name"},
     "Owner": {"Caption":"issue.assigned_to.name"},
+    "PlannedRelease": {
+      "Caption": "issue.fixed_version.name"
+    },
     "State": {
       ".": "issue.status.name",
       "mapping": [{"submitted":"New"},{"resolved":"Done"},{"submitted":"*"}]
@@ -31,11 +36,16 @@
       "reference":"issue.attachments",
       "type":"RequestAttachment",
       "readonly": "true"
+    },
+    "comments": {
+      "reference":"issue.journals",
+      "type":"RequestComment",
+      "readonly": "true"
     }
   },
   "RequestAttachment": {
     "url": "/attachments/{id}.json",
-    "url-append": "/attachments/{id}",
+    "url-append": "/attachments.json",
     "link": "/attachments/{id}",
     "ObjectId": "{parentId}",
     "FileMime": "attachment.content_type",
@@ -43,6 +53,7 @@
     "File": "attachment.content_url"
   },
   "RequestComment": {
+    "url": "/issues/{id}.json?include=journals&",
     "AuthorId": {"Caption":"user.name"},
     "ObjectId": "{parentId}",
     "Caption": "notes"

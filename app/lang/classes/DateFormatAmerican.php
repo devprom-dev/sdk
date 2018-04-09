@@ -41,6 +41,11 @@ class DateFormatAmerican extends DateFormatBase
  		return SystemDateTime::convertToClientTime(date('Y-m-d H:i:s', $time), 'm/j/Y'); 
  	}
 
+    function getPhpDateTime( $time )
+    {
+        return date('m/j/Y H:i:s', $time);
+    }
+
  	function getDbDate( $text )
  	{
 		list($month, $day, $year) = explode('/', $text);

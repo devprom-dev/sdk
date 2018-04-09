@@ -16,15 +16,15 @@ class FormStateTaskTypeEmbedded extends PMFormEmbedded
         return $object_it->getBackwardDisplayName();
     }
 
-    function getFieldValue2( $attr )
+    function getAttributeObject( $attr )
     {
-        if ( !is_object($this->getObjectIt()) ) return parent::getFieldValue($attr);
-        switch( $attr ) {
-            case $this->getAnchorField():
-                return $this->getObjectIt()->get($this->getAnchorField());
-            default:
-                return parent::getFieldValue($attr);
+        $object = parent::getAttributeObject( $attr );
+        switch ( $attr ) {
+            case 'TaskType':
+                $object->addFilter( new FilterBaseVpdPredicate() );
+                break;
         }
+        return $object;
     }
 
     function createField( $attr )

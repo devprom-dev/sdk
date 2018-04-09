@@ -232,12 +232,13 @@ abstract class IntegrationChannel
 
     protected function buildCurl()
     {
-        $curl = curl_init();
+        $curl = CurlBuilder::getCurl();
 
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 60);
         curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
         curl_setopt($curl, CURLOPT_HTTPHEADER,
             array_merge(
@@ -389,8 +390,7 @@ abstract class IntegrationChannel
     {
         $mapping = $this->getMapping();
         $result = array();
-//\Logger::getLogger('System')->error(var_export($parentItem,true));
-//\Logger::getLogger('System')->error(var_export($queueItem,true));
+
         // append references into the items queue
         foreach( $mapping[$queueItem['class']] as $attribute => $column )
         {
@@ -424,7 +424,6 @@ abstract class IntegrationChannel
                 );
             }
         }
-//\Logger::getLogger('System')->error(var_export($result,true));
         return $result;
     }
 

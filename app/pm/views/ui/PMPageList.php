@@ -53,18 +53,6 @@ class PMPageList extends PageList
         return parent::getColumnVisibility($attr);
     }
 
-    function retrieve()
-    {
-   		$values = $this->getFilterValues();
-		
-		if ( !in_array($values['baseline'], array('', 'all', 'none')) )
-		{
-		    $this->getObject()->addPersister( new SnapshotItemValuePersister($values['baseline']) );
-		}
-		
-    	return parent::retrieve();
-    }
-
     function getHeaderAttributes( $attribute )
     {
         switch( $attribute ) {
@@ -89,7 +77,9 @@ class PMPageList extends PageList
                     echo ' ';
                     $this->drawRefCell($this->getFilteredReferenceIt('Tags', $object_it->get('Tags')), $object_it, 'Tags');
                 }
-                $this->drawCell($object_it, 'DescriptionWithInCaption');
+                echo '<div style="margin-top: 4px">';
+                    $this->drawCell($object_it, 'DescriptionWithInCaption');
+                echo '</div>';
                 break;
 
             case 'DescriptionWithInCaption':
@@ -97,18 +87,16 @@ class PMPageList extends PageList
                     $field = new FieldWYSIWYG();
                     $field->setValue($object_it->get('Description'));
                     $field->setObjectIt($object_it);
-                    echo '<div class="reset wysiwyg" style="margin-top: 4px;">';
-                    echo $field->getText(true);
-                    echo '</div>';
+                    $field->drawReadonly();
                 }
                 break;
 
             case 'State':
             	echo $this->getTable()->getView()->render('pm/StateColumn.php', array (
-									'color' => $object_it->get('StateColor'),
-									'name' => $object_it->get('StateName'),
-									'terminal' => $object_it->get('StateTerminal') == 'Y'
-							));
+                    'color' => $object_it->get('StateColor'),
+                    'name' => $object_it->get('StateName'),
+                    'terminal' => $object_it->get('StateTerminal') == 'Y'
+                ));
                 break;
     
 			case 'OrderNum':
@@ -138,7 +126,7 @@ class PMPageList extends PageList
                         $field = new FieldWYSIWYG();
                         $field->setValue($object_it->get($attr));
                         $field->setObjectIt($object_it);
-                        echo $field->getText(true);
+                        $field->drawReadonly();
 					echo '</span>';
                     echo '<div class="clearfix"></div>';
 					echo '</div>';
@@ -153,17 +141,18 @@ class PMPageList extends PageList
 				));
 				break;
 
-			case 'Fact':
-				echo getSession()->getLanguage()->getDurationWording($object_it->get($attr), 8);
-				break;
-
             default:
                 if ( in_array('computed', $this->object->getAttributeGroups($attr)) ) {
                     $lines = array();
+                    $times = 0;
                     $result = ModelService::computeFormula($object_it, $this->object->getDefaultAttributeValue($attr));
                     foreach( $result as $computedItem ) {
                         if ( is_object($computedItem) ) {
+                            if ( $times > 0 ) {
+                                echo '<br/>';
+                            }
                             parent::drawRefCell($computedItem, $object_it, $attr);
+                            $times++;
                         }
                         else {
                             $lines[] = $computedItem;
@@ -184,9 +173,7 @@ class PMPageList extends PageList
                             $field = new FieldWYSIWYG();
                             $field->setValue($object_it->get($attr));
                             $field->setObjectIt($object_it);
-                            echo '<div class="reset wysiwyg">';
-                                echo $field->getText(true);
-                            echo '</div>';
+                            $field->drawReadonly();
                         }
                         break;
                     default:
@@ -220,7 +207,7 @@ class PMPageList extends PageList
                 {
                     case 'WikiPage':
                         $ids = $entity_it->idsToArray();
-                        $widget_it = $this->getTable()->getReferencesListWidget($entity_it->object);
+                        $widget_it = $this->getTable()->getReferencesListWidget($entity_it, $attr);
                         if ( $widget_it->getId() != '' && count($ids) > 1 )
                         {
                             $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.join(',',$ids));
@@ -327,8 +314,16 @@ class PMPageList extends PageList
 		parent::buildFilterActions( $base_actions );
 		$this->buildFilterColumnsGroup( $base_actions, 'workflow' );
 		$this->buildFilterColumnsGroup( $base_actions, 'trace' );
-		$this->buildFilterColumnsGroup( $base_actions, 'time' );
+		$this->buildFilterColumnsGroup( $base_actions, 'workload' );
 		$this->buildFilterColumnsGroup( $base_actions, 'dates' );
         $this->buildFilterColumnsGroup( $base_actions, 'sla' );
 	}
+
+    protected function getRefNames($entity_it, $object_it, $attr )
+    {
+        if ( $entity_it instanceof VersionIterator ) {
+            return parent::getRefNames($entity_it->getObjectIt(), $object_it, $attr );
+        }
+        return parent::getRefNames($entity_it, $object_it, $attr );
+    }
 }

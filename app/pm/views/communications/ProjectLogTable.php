@@ -18,13 +18,18 @@ class ProjectLogTable extends PMPageTable
 	{
 		if ( $sort_parm == 'sort' )
 		{
-			return 'ChangeDate.D';
+			return 'RecordModified.D';
 		}
 		
 		return parent::getSortDefault( $sort_parm );
 	}
-	
-	function buildObjectIt()
+
+	function getSortFields()
+    {
+        return array('RecordModified', 'SystemUser', 'Project', 'SystemUser');
+    }
+
+    function buildObjectIt()
 	{
         $values = $this->getFilterValues();
         if ( $values['entities'] == '' ) $values['entities'] = $_REQUEST['entities'];
@@ -96,7 +101,7 @@ class ProjectLogTable extends PMPageTable
 		$entity_filter = new FilterObjectMethod( getFactory()->getObject('ChangeLogEntitySet'), '', 'entities' );
 		$entity_filter->setHasNone( false );
 		$entity_filter->setIdFieldName( 'ClassName' );
-		
+        $entity_filter->setType('singlevalue');
 		return $entity_filter;
 	}
 	
@@ -135,7 +140,7 @@ class ProjectLogTable extends PMPageTable
 			if ( $object_it->count() == 1 && $object_it->object instanceof WikiPage ) {
 				$object_it = $object_it->object->getRegistry()->Query(
 					array(
-						new WikiRootTransitiveFilter($object_it->getId())
+						new ParentTransitiveFilter($object_it->getId())
 					)
 				);
 			}
@@ -192,4 +197,9 @@ class ProjectLogTable extends PMPageTable
 	}
 	
 	function IsNeedToDelete() { return false; }
+
+    protected function getFamilyModules( $module )
+    {
+        return array('whatsnew');
+    }
 }

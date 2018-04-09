@@ -108,14 +108,11 @@ class PMCustomReportForm extends PMPageForm
 
 	function redirectOnAdded( $object_it, $redirect_url = '' ) 
 	{
-        $report = getFactory()->getObject('PMReport');
-        $report->resetCache();
-	    $report_it = $report->getExact($object_it->getId());
-	    $item = $report_it->buildMenuItem();
+	    $moduleIt = getFactory()->getObject('Module')->getExact($object_it->get('Module'));
         echo json_encode(
             array(
                 'Id' => $object_it->getId(),
-                'Url' => $item['url']
+                'Url' => $moduleIt->getUrl('') . '/' . $object_it->getId()
             )
         );
         exit();

@@ -233,16 +233,17 @@ class Page
 		}
 
         $_REQUEST['rows'] = 'all';
-		if ( $_REQUEST['objects'] == '' )
- 		{
+        $object = $_REQUEST['entity'] == ''
+            ? $table->getObject() : getFactory()->getObject($_REQUEST['entity']);
+
+		if ( $_REQUEST['objects'] == '' ) {
             $it = $table->getListIterator();
 			$it->moveFirst();
  		}
- 		else
- 		{
- 			$object = $_REQUEST['entity'] == '' 
- 					? $table->getObject() : getFactory()->getObject($_REQUEST['entity']);
-
+        elseif ( $_REQUEST['objects'] == '0' ) {
+            $it = $this->getDemoDataIt($object);
+        }
+ 		else {
  			if ( is_object($table) && is_a($table, 'PageTable') )
  			{
                 $table->getListIterator();
@@ -253,7 +254,11 @@ class Page
                     $object->addSort( $sort );
                 }
  			}
-			$it = $this->buildExportIterator( $object, preg_split('/-/', trim($_REQUEST['objects'], '-')) );
+			$it = $this->buildExportIterator(
+			    $object,
+                preg_split('/-/', trim($_REQUEST['objects'], '-')),
+                $_REQUEST['class']
+            );
  		}
 
 		if ( !is_object($it) ) return false;
@@ -277,7 +282,8 @@ class Page
                         $object->getAttributesByGroup('trace'),
                         $object->getAttributesByGroup('system'),
                         $object->getAttributesByGroup('dates'),
-                        $object->getAttributesByGroup('time'),
+                        $object->getAttributesByGroup('astronomic-time'),
+                        $object->getAttributesByGroup('working-time'),
                         array(
                             'Project',
                             'UID',
@@ -323,7 +329,7 @@ class Page
 		return true;
  	}
 
- 	function buildExportIterator( $object, $ids )
+ 	function buildExportIterator( $object, $ids, $iteratorClassName )
     {
         $ids = array_filter($ids, function($value) {
             return $value != '';
@@ -478,8 +484,10 @@ class Page
         }
 		$bottom_sections = array_merge($bottom_sections, $last_sections);
 
-        $active_url = str_replace(getSession()->getApplicationUrl(), '', array_shift(preg_split('/\?/', $this->getPageUrl())));
-        $tab_url = getSession()->getApplicationUrl().$active_url;
+        if ( $_REQUEST['formonly'] == '' ) {
+            $active_url = str_replace(getSession()->getApplicationUrl(), '', array_shift(preg_split('/\?/', $this->getPageUrl())));
+            $tab_url = getSession()->getApplicationUrl().$active_url;
+        }
         $module_it = getFactory()->getObject('Module')->getByRef('Url', $tab_url);
         $this->setModule($module_it->getId());
 
@@ -496,7 +504,8 @@ class Page
  		    'display_form' => $this->needDisplayForm(),
  			'sections' => $sections,
         	'bottom_sections' => $bottom_sections,
-            'module' => $this->getModule()
+            'module' => $this->getModule(),
+            'uid' => $this->getModule()
         );
  		
  		return $this->render_parms;
@@ -806,10 +815,7 @@ class Page
             new SortRecentClause()
         );
 
-        $ids = array_filter(preg_split('/[\-,]/', $_REQUEST[strtolower(get_class($this->getObject()))]), function( $value ) {
-            return is_numeric($value) && $value >= 0;
-        });
-
+        $ids = TextUtils::parseIds($_REQUEST[strtolower(get_class($this->getObject()))]);
         if ( count($ids) > 0 ) {
             $entityFilters[] = new FilterAttributePredicate('ObjectId', $ids);
         }
@@ -830,4 +836,8 @@ class Page
 
 		return '';
 	}
+
+	function getDemoDataIt( $object ) {
+        return $object->getEmptyIterator();
+    }
 }

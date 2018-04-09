@@ -14,7 +14,7 @@
     "Description": "fields.description",
     "Type": {
       "ReferenceName": "fields.issuetype.name",
-      "mapping": [{"bug":"Bug"},{"bug":"Ошибка"},{"":"Story"},{"enhancement":"Feature"},{"enhancement":"Новая функциональность"},{"":"*"}]
+      "mapping": [{"bug":"Bug"},{"bug":"Ошибка"},{"":"Story"},{"enhancement":"Feature"},{"enhancement":"Improvement"},{"enhancement":"New Feature"},{"enhancement":"Новая функциональность"},{"":"Task"},{"":"*"}]
     },
     "Priority": {"Id":"fields.priority.id"},
     "Author": {"Email":"fields.reporter.emailAddress"},

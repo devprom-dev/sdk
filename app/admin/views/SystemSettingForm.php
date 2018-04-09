@@ -4,13 +4,8 @@ class SystemSettingsForm extends PageForm
 {
 	function __construct()
 	{
-		global $model_factory;
-
-		$object = $model_factory->getObject('cms_SystemSettings');
-		
-
+		$object = getFactory()->getObject('cms_SystemSettings');
 		$object->resetCache();
-
 		parent::__construct( $object );
 	}
 

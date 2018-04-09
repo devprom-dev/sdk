@@ -24,7 +24,7 @@ class WikiChangeForm extends PMPageForm
     {
         switch( $field ) {
             case 'Content':
-                return $this->changeIt->getHtmlDecoded('Content');
+                return $this->changeIt->get('Content');
             default:
                 return parent::getFieldValue($field);
         }

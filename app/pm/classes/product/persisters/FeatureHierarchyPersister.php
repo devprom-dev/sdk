@@ -6,7 +6,8 @@ class FeatureHierarchyPersister extends ObjectSQLPersister
  	{
  		return array( 
  			" (SELECT COUNT(1) FROM pm_Function t2 WHERE t2.ParentFeature = ".$this->getPK($alias).") ChildrenCount ",
- 			" (SELECT tp.ChildrenLevels FROM pm_FeatureType tp WHERE tp.pm_FeatureTypeId = t.Type) ChildrenLevels " 
+            " (SELECT GROUP_CONCAT(CAST(t2.pm_FunctionId AS CHAR)) FROM pm_Function t2 WHERE t2.ParentFeature = ".$this->getPK($alias)." ORDER BY t2.SortIndex) Children ",
+ 			" (SELECT tp.ChildrenLevels FROM pm_FeatureType tp WHERE tp.pm_FeatureTypeId = t.Type) ChildrenLevels "
  		);
  	}
 

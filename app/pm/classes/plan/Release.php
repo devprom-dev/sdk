@@ -4,7 +4,6 @@ include "ReleaseIterator.php";
 include "ReleaseRegistry.php";
 include "predicates/ReleaseTimelinePredicate.php";
 include "predicates/ReleaseUserHasTasksPredicate.php";
-include "persisters/ReleaseMetricsPersister.php";
 include "sorts/SortReleaseEstimatedStartClause.php";
 
 class Release extends Metaobject
@@ -14,11 +13,6 @@ class Release extends Metaobject
 		parent::__construct('pm_Version', is_object($registry) ? $registry : new ReleaseRegistry($this));
 
 		$this->setSortDefault( array( new SortAttributeClause('StartDate'), new SortAttributeClause('Caption')) );
-		 
-		$this->addAttribute('EstimatedStartDate', 'DATETIME', translate('Оценка начала'), false, false);
-		$this->addAttribute('EstimatedFinishDate', 'DATETIME', translate('Оценка окончания'), false, false);
-
-		$this->addPersister( new ReleaseMetricsPersister() );
 	}
 
 	function createIterator() 
@@ -28,36 +22,35 @@ class Release extends Metaobject
 
 	function getDefaultAttributeValue( $name ) 
 	{
-		global $model_factory, $_REQUEST, $project_it;
-
 		switch ( $name )
 		{
 			case 'Project':
-				
 			    return getSession()->getProjectIt()->getId();
 				
 			case 'StartDate':
-				
-			    $release = $model_factory->getObject('Release');
-				
+			    $release = getFactory()->getObject('Release');
 				$release->addFilter( new ReleaseTimelinePredicate('not-passed') );
 				$release->addSort( new SortAttributeClause('StartDate.D') );
 				
 				$release_it = $release->getAll();
-				
-				if ( $release_it->count() < 1 )
-				{
+				if ( $release_it->count() < 1 ) {
 					return date( 'Y-m-j' );
 				}
-				else
-				{
+				else {
 					return  $release_it->get('EstimatedFinishDate') != '' 
 					            ? date( 'Y-m-j', strtotime('1 day', strtotime($release_it->get('EstimatedFinishDate')))) : 
 					                $release_it->get('FinishDate') != '' 
 					                    ? date( 'Y-m-j', strtotime('1 day', strtotime($release_it->get('FinishDate')))) : date( 'Y-m-j' );
 				}
 
-			case 'InitialVelocity':
+            case 'FinishDate':
+                return date( 'Y-m-j',
+                    strtotime('-1 day',
+                        strtotime('12 week', strtotime( $this->getDefaultAttributeValue('StartDate') ) )
+                    )
+                );
+
+            case 'InitialVelocity':
 				return 0;
 		}
 

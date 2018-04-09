@@ -1,6 +1,7 @@
 <?php
 include_once SERVER_ROOT_PATH."pm/views/time/FieldSpentTimeRequest.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/RequestForm.php";
+include_once SERVER_ROOT_PATH."pm/views/tasks/TaskForm.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 
 class WorkItemList extends PMPageList
@@ -9,6 +10,7 @@ class WorkItemList extends PMPageList
     private $task = null;
     private $request = null;
     private $request_form = null;
+    private $task_form = null;
 
 	function buildRelatedDataCache()
 	{
@@ -16,6 +18,7 @@ class WorkItemList extends PMPageList
         $this->task->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
         $this->task->addAttribute('Description', 'WYSIWYG', translate('Описание'), true, false, '', 15);
 		$this->task->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
+        $this->task_form = new TaskForm($this->task);
 
         $this->request = getFactory()->getObject('Request');
         $this->request->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
@@ -50,6 +53,9 @@ class WorkItemList extends PMPageList
     {
         if ( $object_it->object instanceof Request ) {
             return $this->request_form;
+        }
+        elseif ( $object_it->object instanceof Task ) {
+            return $this->task_form;
         }
         else {
             return parent::getForm($object_it);
@@ -116,17 +122,6 @@ class WorkItemList extends PMPageList
 
 		switch($attr)
 		{
-            case 'Caption':
-                if ( $object_it->get('TypeName') != '' ) {
-                    $typeName = $object_it->get('TypeName');
-                }
-                else {
-                    $typeName = $it->object->getDisplayName();
-                }
-                if ( $typeName != '' ) echo $typeName.': ';
-                parent::drawCell($object_it, $attr);
-                break;
-
             case 'IssueTraces':
 				$objects = preg_split('/,/', $object_it->get($attr));
 				$uids = array();

@@ -34,8 +34,11 @@ class FieldTaskTrace extends FieldForm
 	
  	function setFilters( & $trace )
  	{
-		$trace->addFilter( 
-			new TaskTraceTaskPredicate( is_object($this->object_it) ? $this->object_it->getId() : 0 ) );
+		$trace->addFilter(
+            is_object($this->object_it)
+                ? new TaskTraceTaskPredicate($this->object_it->getId())
+                : new FilterEmptyPredicate()
+        );
  	}
  	
  	function getForm( & $trace )

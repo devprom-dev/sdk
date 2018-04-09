@@ -90,9 +90,10 @@ class DuplicateWebMethod extends WebMethod
     {
         if ( $this->object_it->getId() == '' )
         {
+            $ids = \TextUtils::parseIds($parms['objects']);
             $this->setObjectIt(
-                $parms['objects'] != ''
-                    ? $this->getObject()->getExact(preg_split('/-/', $parms['objects']))
+                count($ids) > 0
+                    ? $this->getObject()->getExact($ids)
                     : $this->getObject()->getEmptyIterator()
             );
         }
@@ -113,33 +114,34 @@ class DuplicateWebMethod extends WebMethod
 
         $ref_name = $object_it->object->getEntityRefName();
 
-        foreach( $object_it->idsToArray() as $id )
-        {
+        foreach( $object_it->idsToArray() as $id ) {
             $duplicates[] = $map[$ref_name][$id];
         }
 
-        $duplicate_it = $object_it->object->getExact($duplicates);
+        if ( count($duplicates) > 0 ) {
+            $duplicate_it = $object_it->object->getExact($duplicates);
 
-        getFactory()->getEventsManager()->
-        executeEventsAfterBusinessTransaction($duplicate_it->copyAll(), 'WorklfowMovementEventHandler');
+            getFactory()->getEventsManager()->
+                executeEventsAfterBusinessTransaction($duplicate_it->copyAll(), 'WorklfowMovementEventHandler');
 
-        $duplicate_it->moveFirst();
-        $this->setResult($duplicate_it);
+            $duplicate_it->moveFirst();
+            $this->setResult($duplicate_it);
 
-        if ( $parms['OpenList'] != '' && $duplicate_it->count() > 0 ) {
-            if ( $duplicate_it->count() == 1 ) {
+            if ( $parms['OpenList'] != '' && $duplicate_it->count() > 0 ) {
+                if ( $duplicate_it->count() == 1 ) {
+                    $this->setRedirectUrl($duplicate_it->getViewUrl());
+                }
+                else {
+                    $this->setRedirectUrl(
+                        getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
+                            'request='.join(',',$duplicate_it->idsToArray())
+                        )
+                    );
+                }
+            }
+            elseif( $duplicate_it->count() == 1 ) {
                 $this->setRedirectUrl($duplicate_it->getViewUrl());
             }
-            else {
-                $this->setRedirectUrl(
-                    getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
-                        'request='.join(',',$duplicate_it->idsToArray())
-                    )
-                );
-            }
-        }
-        elseif( $duplicate_it->count() == 1 ) {
-            $this->setRedirectUrl($duplicate_it->getViewUrl());
         }
     }
 
@@ -149,7 +151,7 @@ class DuplicateWebMethod extends WebMethod
  	    
  	    // prepare list of objects to be serilalized
  	    $references = $this->getReferences();
- 	    
+
  	    $xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?><entities>';
  	    
  	    $ids_map = array();

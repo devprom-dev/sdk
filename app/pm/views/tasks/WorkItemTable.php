@@ -71,8 +71,13 @@ class WorkItemTable extends TaskTable
         return $type_method;
     }
 
-    protected function buildStateFilter() {
-        return new StateExFilterWebMethod(getFactory()->getObject('WorkItemState')->getAll(), 'taskstate');
+    protected function buildFilterState()
+    {
+        $filter = new FilterObjectMethod(getFactory()->getObject('WorkItemState')->getAll(), translate('Состояние'), 'state');
+        $filter->setDefaultValue('initial,progress');
+        $filter->setHasNone(false);
+        $filter->setIdFieldName('ReferenceName');
+        return $filter;
     }
 
     function buildStatePredicate( $value ) {
@@ -92,6 +97,10 @@ class WorkItemTable extends TaskTable
         else {
             return parent::buildAssigneePredicate($values);
         }
+    }
+
+    function buildDeadlinePredicate( $values ) {
+        return new FilterDateBeforePredicate('DueDate', $values['plannedfinish']);
     }
 
     function getDefaultRowsOnPage() {

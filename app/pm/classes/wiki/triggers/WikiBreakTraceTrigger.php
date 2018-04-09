@@ -13,6 +13,7 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	function breakParentTraces( $object_it )
 	{
 		if ( $object_it->get('ParentPage') < 1 ) return;
+		$data = $this->getRecordData();
 		
 	    $trace_it = getFactory()->getObject('WikiPageTrace')->getRegistry()->Query( 
 	    		array (
@@ -23,9 +24,15 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    
 	    while ( !$trace_it->end() )
 	    {
+	        if ( $data['ReintegratedTraceId'] ==  $trace_it->getId() ) {
+                $trace_it->moveNext();
+                continue;
+            }
+
 	    	$trace_it->object->modify_parms( $trace_it->getId(), array(
-	    			'IsActual' => 'N',
-	    			'UnsyncReasonType' => 'structure-append'
+                'IsActual' => 'N',
+                'RecordModified' => $trace_it->get('RecordModified'),
+                'UnsyncReasonType' => 'structure-append'
 	    	));
 	    	
 	    	$trace_it->moveNext();

@@ -1,10 +1,17 @@
 <?php
 include "SpentTimeList.php";
+include "SpentTimeChart.php";
 
 class SpentTimeTable extends PMPageTable
 {
-	function getList() {
-		return new SpentTimeList($this->getObject());
+	function getList($mode = '')
+    {
+        switch ( $this->getReportBase() ) {
+            case 'activitieschart':
+                return new SpentTimeChart($this->getObject());
+            default:
+                return new SpentTimeList($this->getObject());
+        }
 	}
 
 	function getNewActions() {
@@ -14,19 +21,11 @@ class SpentTimeTable extends PMPageTable
  	function getFilterPredicates()
  	{
  	    $values = $this->getFilterValues();
-
- 	    $predicates = array(
+ 	    return array(
             new FilterDateAfterPredicate('ReportDate', $values['start']),
-            new FilterDateBeforePredicate('ReportDate', $values['finish'])
+            new FilterDateBeforePredicate('ReportDate', $values['finish']),
+            new FilterAttributePredicate('Participant', $values['projectuser'])
         );
- 	    if ( getSession()->getParticipantIt()->IsLead() ) {
-            $predicates[] = new FilterAttributePredicate('Participant', $values['projectuser']);
-        }
-        else {
-            $predicates[] = new FilterAttributePredicate('Participant', getSession()->getUserIt()->getId());
-        }
-
- 	    return $predicates;
  	}
 
  	function getFilters()

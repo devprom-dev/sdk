@@ -1,10 +1,10 @@
 <?php
 
 $language = getLanguage();
-
 $last_month = $language->getPhpDate( strtotime('-1 month', strtotime(date('Y-m-j'))) );
-
 $last_week = $language->getPhpDate( strtotime('-1 week', strtotime(date('Y-m-j'))) );
+$hasSearchOption = false;
+$optionsUrl = '';
 
 foreach( $items as $key => $action )
 {
@@ -39,7 +39,7 @@ if ( count($items) < 1 ) return;
 
 ?>
 
-<ul class="dropdown-menu" role="menu" uid="<?=$uid?>">
+<ul class="dropdown-menu text-left" role="menu" uid="<?=$uid?>">
 
 <?php foreach ( $items as $action ) { ?> 
 
@@ -68,14 +68,20 @@ if ( count($items) < 1 ) return;
 	}
 
 	if ( $action['uid'] == 'search' ) {
-	?>
+        $hasSearchOption = true;
+	    ?>
 		<li uid="search" class="dropdown-item-search">
 			<input class="" type="text" placeholder="<?=text(2186)?>">
 		</li>
 		<li class="divider"></li>
-	<?php
+	    <?php
 		continue;
 	}
+
+    if ( $action['uid'] == 'options' ) {
+        $optionsUrl = $action['href'];
+        continue;
+    }
 
 		?>
 		<?php  if ( $action['url'] == '' && $action['click'] == '' && $action['name'] == '' ) { ?>
@@ -114,6 +120,23 @@ if ( count($items) < 1 ) return;
 <?php
 
 $last_action = $action;
-} ?>
+}
+
+if ( $hasSearchOption ) {
+    ?>
+    <li uid="show-all" class="dropdown-item-all">
+        <a title="<?=text(2307)?>">&bull; &bull; &bull;</a>
+    </li>
+    <?php
+}
+
+if ( $optionsUrl != '' ) {
+    ?>
+    <li uid="options" class="dropdown-item-options">
+        <a target="_blank" href="<?=$optionsUrl?>"><?=text(2491)?></a>
+    </li>
+    <?php
+}
+?>
 
 </ul>

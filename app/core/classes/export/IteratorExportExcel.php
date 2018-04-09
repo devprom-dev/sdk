@@ -39,95 +39,6 @@ class IteratorExportExcel extends IteratorExport
  		return '';
  	}
 
- 	function workbook()
- 	{
- 		$result = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.
-			'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">';
- 		
- 		$result .= $this->properties();
- 		
- 		$result .= $this->styles();
- 		
- 		$result .= $this->worksheet();
-
- 		$result .= '</Workbook>';
- 		
- 		return $result;
- 	}
- 	
- 	function properties()
- 	{
- 		$user_it = getSession()->getUserIt();
- 		
- 		$result = '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">';
-
-		if ( is_object($user_it) )
-		{
-			$attributes = array (
-				'Author' => $user_it->getDisplayName(),
-				'LastAuthor' => $user_it->getDisplayName(),
-				'Created' => ''
-				);
-	
-			$result .= $this->convert($attributes);
-			}
-		
-  		$result .= '</DocumentProperties>';
-  		
-  		return $result;
- 	}
- 	
- 	function styles()
- 	{
- 		$result = '<Styles><Style ss:ID="Default" ss:Name="Normal">';
- 		
-		$result .= '<Alignment ss:Vertical="Top" ss:WrapText="1"/>' .
-				'<Borders/>' .
-				'<Font ss:FontName="Arial"/>' .
-				'<Interior/>' .
-				'<NumberFormat/>' .
-				'<Protection/>' .
-				'</Style>';
- 		
- 		$result .= '<Style ss:ID="s21">'.
-  			'<Font ss:FontName="Arial Cyr" ss:Color="#FFFFFF"/>'.
-  			'<Interior ss:Color="#000000" ss:Pattern="Solid" />'. 
-  			'</Style>';
-
- 		$result .= '<Style ss:ID="s22">'.
-  			'<Font ss:FontName="Arial Cyr" ss:Bold="1" />'.
-  			'<Interior ss:Color="#C0C0C0" ss:Pattern="Solid" />'. 
-  			'</Style>';
-  			
- 		$result .= '<Style ss:ID="s23">'.
-  			'<Alignment ss:Vertical="Top" ss:WrapText="1"/>'. 
-  			'</Style>';
-
-        switch( getSession()->getLanguageUid() )
-        {
-            case 'RU':
-                $result .= '<Style ss:ID="s24">'.
-                    '<NumberFormat ss:Format="dd\.mm\.yyyy\ hh\:mm"/>'.
-                    '</Style>';
-                $result .= '<Style ss:ID="s25">'.
-                    '<NumberFormat ss:Format="dd\.mm\.yyyy"/>'.
-                    '</Style>';
-                break;
-            case 'EN':
-                $result .= '<Style ss:ID="s24">'.
-                    '<NumberFormat ss:Format="yyyy\-mm\-dd\ hh\:mm"/>'.
-                    '</Style>';
-                $result .= '<Style ss:ID="s25">'.
-                    '<NumberFormat ss:Format="yyyy\-mm\-dd"/>'.
-                    '</Style>';
-                break;
-        }
-
- 		$result .= '</Styles>';
- 		
- 		return $result;
- 	}
- 	 
  	protected function sanitizeWorkSheetName( $name ) {
  		return htmlspecialchars(preg_replace('/[\/\\\*\?\[\]]+/', '', mb_substr($name, 0, 31)));
  	}
@@ -244,6 +155,7 @@ class IteratorExportExcel extends IteratorExport
 
  	function getValue( $key, $iterator )
  	{
+ 	    if ( !$iterator->object instanceof Metaobject ) return "";
  		$type = $iterator->object->getAttributeType( $key );
 
         switch( $key )
@@ -324,6 +236,6 @@ class IteratorExportExcel extends IteratorExport
 		header('Content-Type: application/vnd.ms-excel');
 		header(EnvironmentSettings::getDownloadHeader($this->getName().'.xls'));
 		
-		echo $this->workbook();
+		echo $this->worksheet();
  	}
 }

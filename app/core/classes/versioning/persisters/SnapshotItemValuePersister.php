@@ -40,8 +40,6 @@ class SnapshotItemValuePersister extends ObjectSQLPersister
                 "     AND itm.ObjectClass = '".$versioned_it->getId()."') ".$attribute." ";
         }
 
-        $columns[] = " '".$this->snapshot_it->get_native('RecordCreated')."' History ";
-
         return $columns;
     }
 }

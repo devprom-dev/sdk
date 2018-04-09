@@ -27,6 +27,8 @@ class FieldAutoCompleteObject extends Field
  		{
  			$this->attributes = array( 'Caption' );
  		}
+
+ 		$this->additional_attributes = $this->object->getAttributesByGroup('search-attributes');
  		
  		parent::__construct();
  	}
@@ -205,8 +207,9 @@ class FieldAutoCompleteObject extends Field
 		else
 		{
 			$text = $this->getTitle() != '' ? $this->getTitle() : text(868);
+			$displayValue = html_entity_decode($object_it->getDisplayName());
 			echo '<div class="autocomplete">';
-			 	echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" default="'.$object_it->getDisplayName().'" value="'.$object_it->getDisplayName().'" '.($this->getRequired() ? 'required' : '').' multiple="'.var_export($this->multiple, true).'">';
+			 	echo '<input type="text" class="autocomplete-text input-block-level" id="'.$this->getName().'Text" auto-expand="'.($this->auto_expand?'true':'false').'" tabindex="'.$this->getTabIndex().'" style="'.$this->getStyle().'" placeholder="'.text(1338).'" default="'.$displayValue.'" value="'.$displayValue.'" '.($this->getRequired() ? 'required' : '').' multiple="'.var_export($this->multiple, true).'">';
 			 	echo '<input class="fieldautocompleteobject" type="hidden" name="'.$this->getName().'" id="'.$this->getId().'" default="'.$this->getDefault().'" value="'.$object_it->getId().'" object="'.get_class($object).'" caption="'.$text.'" searchattrs="'.join(',', $this->getAttributes()).'" additional="'.join(',', $this->getAdditionalAttributes()).'" '.($this->getRequired() ? 'required' : '').' ondblclick="javascript: '.$this->getOnSelectCallback().';" project="'.$project.'">';
 			echo '</div>';
 		}

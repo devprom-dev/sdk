@@ -6,11 +6,11 @@ class ModelDataTypeMappingString extends ModelDataTypeMapping
 {
 	public function applicable( $type_name )
 	{
-		return in_array($type_name, array('varchar','text','largetext','wysiwyg'));
+		return in_array($type_name, array('varchar','text','largetext'));
 	}
 	
 	public function map( $value )
 	{
-		return trim($value, " \r\n");
+		return trim(html_entity_decode($value), " \r\n");
 	}
 }

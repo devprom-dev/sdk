@@ -6,7 +6,14 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 {
 	private $affected_queue = array();
 	private $skipped_entities = array();
-	private $skipClasses = array('Metaobject','Object','StoredObjectDB','MetaobjectCacheable','MetaobjectStatable');
+	private $skipClasses = array(
+	    'Metaobject',
+        'Object',
+        'StoredObjectDB',
+        'MetaobjectCacheable',
+        'MetaobjectStatable',
+        'PMCustomAttribute'
+    );
     static $declaredClasses = array();
     static $parentClasses = array();
     static $childrenClasses = array();
@@ -26,7 +33,9 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			'cms_EntityCluster',
 			'pm_StateObject',
             'cms_SnapshotItem',
-            'cms_SnapshotItemValue'
+            'cms_SnapshotItemValue',
+            'Priority',
+            'TaskType'
 		);
         $this->finalize();
 	}
@@ -39,12 +48,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
         $this->finalize();
     }
 
-    protected function finalize()
-    {
-        $self = $this;
-        register_shutdown_function(function() use ($self) {
-            $self->terminate();
-        });
+    protected function finalize() {
+        register_shutdown_function(array($this, 'terminate'));
     }
 
     protected function getClassParents( $className ) {

@@ -4,6 +4,8 @@ include dirname(__FILE__).'/../common.php';
 include SERVER_ROOT_PATH.'co/classes/SessionBuilderCommon.php';
 include SERVER_ROOT_PATH.'pm/classes/sessions/SessionBuilderProject.php';
 
+$lock = new CacheLock();
+
 // allow OPTIONS to be requested from any domain (CORS support)
 if ( $_SERVER['REQUEST_METHOD'] == 'OPTIONS' )
 {
@@ -33,11 +35,15 @@ $project_it = $session->getProjectIt();
 
 if ( !is_object($project_it) || $project_it->getId() < 1 ) {
 	if ( in_array($_REQUEST['project'], array('all','my')) ) {
-		$redirect = '/profile';
+		$redirect = '/projects/welcome';
 	} else {
 		$redirect = '/404?redirect='.urlencode($_SERVER['REQUEST_URI']);
 	}
 }
+if ( $redirect == '' && !$project_it->IsPortfolio() && !getFactory()->getAccessPolicy()->can_read($project_it) ) {
+    $redirect = '/404?redirect='.urlencode($_SERVER['REQUEST_URI']);
+}
+
 if ( $redirect != '' ) {
 	EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: '.$redirect));
 }

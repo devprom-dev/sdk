@@ -9,7 +9,6 @@ class ViewCustomDictionaryWebMethod extends FilterWebMethod
  	{
  		$this->object = $object;
  		$this->attribute = $attribute;
-        $this->setDefaultValue('all');
  		parent::__construct();
  	}
  	

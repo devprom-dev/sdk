@@ -143,22 +143,30 @@ class MailBox
 			$display = '';
 		}
 		$email = array_shift(preg_split('/>/', $email));
-		return array($email, $display);
+		return array(trim($email), trim($display));
 	}
 
 	function addressUpdateEmail( $address, $email ) 
 	{
 		return preg_replace('/\<([^>])+>/', '<'.$email.'>', $address); 
 	}
+
+	static function compareDomains( $emailLeft, $emailRight )
+    {
+	    $partsLeft = preg_split('/@/', str_replace('>', '', trim($emailLeft)));
+        $partsRight = preg_split('/@/', str_replace('>', '', trim($emailRight)));
+        return trim(mb_strtolower($partsLeft[1])) == trim(mb_strtolower($partsRight[1]));
+    }
  }
  
 class HtmlMailBox extends MailBox
 {
+    const mixed = '24ceef2d-b708-47f7';
     const boundary = '5446b4677d9475446b481adbb3';
     const boundary_related = 'e61f23g3cba093338679c352faf8';
  	
 	static function getContentType() {
-		return "multipart/related; boundary=".self::boundary_related;
+		return "multipart/mixed; boundary=".self::mixed;
 	}
 	
 	static function encode( $text ) {
@@ -193,35 +201,44 @@ class HtmlMailBox extends MailBox
 				return 'alt="'.text(2074).' '.($images_count).'" src="cid:'.$image_id.'"';
 			}, $body);
 
-        $this->body .= "--".self::boundary_related."\r\n";
-        $this->body .= "Content-Type: multipart/alternative; boundary=".self::boundary."\r\n\r\n";
+        $this->body .= "--".self::mixed."\r\n";
+        $this->body .= "Content-Type: multipart/alternative; boundary=".self::boundary."\r\n";
+        $this->body .= "\r\n";
+        $this->body .= "This is multi-part message in MIME format.\r\n";
+
         $this->body .= "--".self::boundary."\r\n";
         $this->body .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        $this->body .= "Content-Transfer-Encoding: base64\r\n\r\n";
+        $this->body .= "Content-Transfer-Encoding: base64\r\n";
+        $this->body .= "\r\n";
 
 		// process texted part
         $html2text = new \Html2Text\Html2Text($body, array('width'=>0));
 		$texted = $html2text->getText();
-		
 		$texted = preg_replace('/\s{2,}/', PHP_EOL, $texted);
 		$texted = preg_replace('/[\r\n]{2,}/', PHP_EOL.PHP_EOL, $texted);
-		
 		$this->body .= base64_encode($texted)."\r\n";
 
+        $this->body .= "--".self::boundary."\r\n";
+        $this->body .= "Content-Type: multipart/related; boundary=".self::boundary_related."\r\n";
+        $this->body .= "\r\n";
+
 		// process html part
-        $this->body .= "--" . self::boundary . "\r\n";
+        $this->body .= "--" . self::boundary_related . "\r\n";
         $this->body .= "Content-Type: text/html; charset=UTF-8\r\n";
-        $this->body .= "Content-Transfer-Encoding: base64\r\n\r\n";
+        $this->body .= "Content-Transfer-Encoding: base64\r\n";
+        $this->body .= "\r\n";
 		$this->body .= base64_encode($this->applyStyles(
 		    '<html>'.PHP_EOL.
 		    '<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head>'.PHP_EOL.
 		    '<body>'.preg_replace('/[\r\n]+/', '', $body).'</body>'.PHP_EOL.
 		    '</html>'
 		));
-		$this->body .= "\r\n--" . self::boundary . "--\r\n";
+        $this->body .= "\r\n";
 
         $this->body .= $images_body;
-        $this->body .= "--".self::boundary_related."--";
+        $this->body .= "--" . self::boundary_related . "--\r\n";
+		$this->body .= "--" . self::boundary . "--\r\n";
+        $this->body .= "--" . self::mixed . "--\r\n";
 
         $this->body = wordwrap($this->body, 76, PHP_EOL, true);
     }

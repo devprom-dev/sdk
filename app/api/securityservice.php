@@ -58,7 +58,7 @@
 			);
 			$soap->logInfo($url);
 
-			$curl = curl_init();
+			$curl = CurlBuilder::getCurl();
 			curl_setopt($curl, CURLOPT_URL, $url);
 			curl_setopt($curl, CURLOPT_POST, true);
 			curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));

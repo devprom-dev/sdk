@@ -69,7 +69,7 @@ class UserIterator extends OrderedIterator
  	
  	function IsAdministrator()
  	{
- 		return $this->get('IsAdministrator') == 'Y';
+ 		return $this->get('IsAdministrator') == 'Y' || $this->get('IsAdmin') == 'Y';
  	}
  	
  	function IsReal()
@@ -85,22 +85,6 @@ class UserIterator extends OrderedIterator
  		return md5(RESET_KEY.$this->getId().$this->get_native('Login'));
  	}
  	
-	/*
-	 * returns personal velocity for the participant 
-	 */
-	function getVelocity()
-	{
- 		$sql = 	" SELECT IFNULL(MAX(m.MetricValue), 0) Velocity " .
-		 		"   FROM pm_ParticipantMetrics m, pm_Participant p " .
-		 		"  WHERE m.Participant = p.pm_ParticipantId" .
-		 		"    AND m.Metric = 'Velocity' " .
-		 		"    AND p.SystemUser = ".$this->getId();
- 		
- 		$it = $this->object->createSQLIterator($sql);
- 		
- 		return round($it->get('Velocity'));
-	}
-
  	function getRating()
  	{
  		return $this->get('Rating');

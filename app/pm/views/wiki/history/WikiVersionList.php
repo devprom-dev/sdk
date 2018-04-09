@@ -29,7 +29,7 @@ class WikiVersionList extends PMStaticPageList
         foreach( $page_it->fieldToArray('DocumentId') as $documentId ) {
             $this->curr_content[$documentId] = $this->exportHtml($page_it->object->getRegistry()->Query(
                 array (
-                    new WikiRootTransitiveFilter($page_it->idsToArray()),
+                    new ParentTransitiveFilter($page_it->idsToArray()),
                     new FilterAttributePredicate('DocumentId', $documentId),
                     new SortDocumentClause()
                 )
@@ -81,6 +81,7 @@ class WikiVersionList extends PMStaticPageList
 		{
 			case 'ObjectId':
 			    $versionText = $this->getVersionText($object_it);
+			    $this->parser->setObjectIt($object_it->copy());
 		        echo $this->getPagesDiff($versionText, $this->curr_content[$object_it->get('ObjectId')]);
                 $this->curr_content[$object_it->get('ObjectId')] = $versionText;
 				break;
@@ -94,7 +95,7 @@ class WikiVersionList extends PMStaticPageList
         $registry = new ObjectRegistrySQL($this->getTable()->getPageIt()->object);
         return $this->exportHtml($registry->Query(
             array (
-                new WikiRootTransitiveFilter($this->getTable()->getPageIt()->idsToArray()),
+                new ParentTransitiveFilter($this->getTable()->getPageIt()->idsToArray()),
                 new FilterAttributePredicate('DocumentId', $snapshot_it->get('ObjectId')),
                 new SnapshotItemValuePersister($snapshot_it->getId()),
                 new DocumentVersionPersister(),

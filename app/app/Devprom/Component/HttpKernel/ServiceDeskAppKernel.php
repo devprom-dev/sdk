@@ -6,6 +6,8 @@ use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class ServiceDeskAppKernel extends Kernel
 {
@@ -110,12 +112,5 @@ class ServiceDeskAppKernel extends Kernel
         catch( \Exception $e ) {
             error_log($e->getMessage().PHP_EOL.$e->getTraceAsString());
         }
-    }
-
-    public function boot()
-    {
-        $lock = new \CacheLock();
-        parent::boot();
-        $lock->Release();
     }
 }

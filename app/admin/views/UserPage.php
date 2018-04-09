@@ -42,20 +42,19 @@ class UserPage extends AdminPage
 
 	function getForm()
 	{
-		global $_REQUEST;
-
-		if ( $_REQUEST['cms_UserId'] != '' )
-		{
-			$user_it = $this->getObject()->getExact($_REQUEST['cms_UserId']);
+		if ( $_REQUEST['cms_UserId'] != '' ) {
+			$user_it = $this->getObject()->getRegistryBase()->Query(
+			    array(
+			        new FilterInPredicate($_REQUEST['cms_UserId'])
+                )
+            );
 		}
 		
-		if ( is_object($user_it) && $_REQUEST['mode'] == 'role' )
-		{
+		if ( is_object($user_it) && $_REQUEST['mode'] == 'role' ) {
 			return new UserParticipanceForm( $user_it );
 		}
 		
-		if ( is_object($user_it) && $_REQUEST['mode'] == 'participant' )
-		{
+		if ( is_object($user_it) && $_REQUEST['mode'] == 'participant' ) {
 			return new UserParticipancePreForm( $user_it );
 		}
 

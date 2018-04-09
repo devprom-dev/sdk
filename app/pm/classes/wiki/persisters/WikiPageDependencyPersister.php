@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."pm/classes/wiki/persisters/WikiPageUsedByPersister.php";
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiParser.php";
 
 class WikiPageDependencyPersister extends ObjectSQLPersister
@@ -24,7 +25,7 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 
 		preg_replace_callback(REGEX_UPDATE_UID,
 			function($match) use (&$uids) {
-				$url_parts = parse_url($match[2]);
+				$url_parts = parse_url($match[0]);
 				$uids[] = basename($url_parts['path']);
 				return '';
 			},

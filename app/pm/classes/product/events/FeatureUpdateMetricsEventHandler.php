@@ -11,7 +11,6 @@ class FeatureUpdateMetricsEventHandler extends SystemTriggersBase
 	    if ( !$object_it->object instanceof Feature ) return;
 	    
 	    $was_data = $this->getWasData();
-
 	    $ids = array_filter(
 		    		array_merge(
 		    				preg_split('/,/',$object_it->get('ParentPath')), 
@@ -21,14 +20,21 @@ class FeatureUpdateMetricsEventHandler extends SystemTriggersBase
 		    		}
 	    	);
 	    if ( count($ids) < 1 ) return;
-	    
-	    $service = new StoreMetricsService();
-    	$service->storeFeatureMetrics(
-			$object_it->object->getRegistry(),
-			array (
-				new FilterInPredicate($ids),
-				new FeatureMetricsPersister()
-			)
-		);
+
+        getSession()->addCallbackDelayed(
+            array(
+                'FeatureMetrics' => $object_it->getId()
+            ),
+            function() use ( $ids ) {
+                $service = new StoreMetricsService();
+                $service->storeFeatureMetrics(
+                    getFactory()->getObject('Feature')->getRegistry(),
+                    array (
+                        new FilterInPredicate($ids),
+                        new FeatureMetricsPersister()
+                    )
+                );
+            }
+        );
 	}
 }

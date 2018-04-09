@@ -8,6 +8,7 @@ use Devprom\ServiceDeskBundle\Form\Type\AttachmentFormType;
 use Devprom\ServiceDeskBundle\Service\IssueAttachmentService;
 use Devprom\ServiceDeskBundle\Service\IssueService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
@@ -36,7 +37,9 @@ class AttachmentController extends Controller
         }
 
         $issue = $attachment->getIssue();
-        $this->checkUserIsAuthorized($issue);
+        if ( !$this->checkUserIsAuthorized($issue) ) {
+            return new RedirectResponse($this->container->get('router')->generate('fos_user_security_login', array(), true));
+        }
 
         $response = new BinaryFileResponse($attachment->getFilePath());
         $response->headers->set(\EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
@@ -54,7 +57,9 @@ class AttachmentController extends Controller
         $attachment = $this->container->get('comment_attachment_service')->getAttachmentById($attachmentId);
 
         $issue = $attachment->getComment()->getIssue();
-        $this->checkUserIsAuthorized($issue);
+        if ( !$this->checkUserIsAuthorized($issue) ) {
+            return new RedirectResponse($this->container->get('router')->generate('fos_user_security_login', array(), true));
+        }
 
         $response = new BinaryFileResponse($attachment->getFilePath());
         $response->headers->set(\EnvironmentSettings::getDownloadHeader($attachment->getOriginalFilename()));
@@ -77,7 +82,9 @@ class AttachmentController extends Controller
 
         $issue = $this->getIssueService()->getIssueById($issueId);
 
-        $this->checkUserIsAuthorized($issue);
+        if ( !$this->checkUserIsAuthorized($issue) ) {
+            return new RedirectResponse($this->container->get('router')->generate('fos_user_security_login', array(), true));
+        }
 
         if ($form->isValid()) {
 
@@ -123,7 +130,9 @@ class AttachmentController extends Controller
         }
 
         $issue = $attachment->getIssue();
-        $this->checkUserIsAuthorized($issue);
+        if ( !$this->checkUserIsAuthorized($issue) ) {
+            return new RedirectResponse($this->container->get('router')->generate('fos_user_security_login', array(), true));
+        }
 
         $this->getAttachmentService()->delete($attachment);
 
@@ -137,11 +146,16 @@ class AttachmentController extends Controller
      */
     protected function checkUserIsAuthorized(Issue $issue)
     {
+        if ( !is_object($this->getUser()) ) return false;
+        if ( !is_object($issue->getCustomer()) ) {
+            throw new HttpException(403);
+        }
+
     	$issue = $this->getIssueService()->getIssueById($issue->getId());
-        if ($issue->getCustomer()->getEmail() == $this->getUser()->getEmail()) return;
-        
+        if ($issue->getCustomer()->getEmail() == $this->getUser()->getEmail()) return true;
+
         $service = $this->container->get('user_service');
-        if ( $service->isCollegues($issue->getCustomer()->getEmail(), $this->getUser()->getEmail()) ) return;
+        if ( $service->isCollegues($issue->getCustomer()->getEmail(), $this->getUser()->getEmail()) ) return true;
 
         throw new HttpException(403);
     }

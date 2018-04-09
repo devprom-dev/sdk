@@ -1,8 +1,8 @@
 <?php
-include_once SERVER_ROOT_PATH."core/classes/export/IteratorExport.php";
+include_once SERVER_ROOT_PATH."core/classes/export/WikiIteratorExport.php";
 include_once "WikiConverterPreview.php";
 
-class WikiIteratorExportHtml extends IteratorExport
+class WikiIteratorExportHtml extends WikiIteratorExport
 {
 	function export()
 	{

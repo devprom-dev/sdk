@@ -52,6 +52,7 @@ class IntegrationDevpromChannel extends IntegrationChannel
         $activity = getFactory()->getObject('Activity');
 
         $items = array();
+        $lastTimestamp = '';
         while( !$log_it->end() )
         {
             $class = getFactory()->getClass($log_it->get('ClassName'));
@@ -176,10 +177,11 @@ class IntegrationDevpromChannel extends IntegrationChannel
                 }
             }
 
+            $lastTimestamp = $log_it->get('RecordCreated');
             $log_it->moveNext();
         }
 
-        return $items;
+        return array($items, $lastTimestamp);
     }
 
     public function readItem($mapping, $class, $id, $parms = array())

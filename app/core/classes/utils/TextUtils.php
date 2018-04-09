@@ -75,26 +75,53 @@ class TextUtils
 
     public static function getCleansedHtml( $body )
     {
+        $body = self::_getCleansedHtml(
+            self::_getCleansedHtml(
+                $body,
+                array(
+                    '/<!--/', '/-->/',
+                )
+            ),
+            array(
+                '/<link[^>]*>/i',
+                '/<\/link>/i',
+                '/<script[^>]*>/i',
+                '/<\/script>/i',
+                '/<style[^>]*>/i',
+                '/<\/style>/i',
+                '/<base[^>]*>/i',
+                '/<\/base>/i'
+            )
+        );
+
         $body = preg_replace(
             array(
-                '/<link/',
-                '/<\/link>/',
-                '/<script/',
-                '/<\/script>/',
-                '/<style/',
-                '/<\/style>/',
-                '/<base\s+/',
+                '/<o:[A-Za-z]>/',
+                '/<\/o:[A-Za-z]>/'
             ),
             array (
-                '<!--<link-skip',
-                '</link-skip>-->',
-                '<!--<script-skip',
-                '</script-skip>-->',
-                '<!--<style-skip',
-                '</style-skip>-->',
-                '<skip-base '
+                '',
+                ''
             ), $body);
+
         return $body;
+    }
+
+    protected function _getCleansedHtml( $body, array $tags )
+    {
+        $replaceTags = array();
+        foreach( array_keys($tags) as $index ) {
+            $replaceTags[] = $index % 2 == 0 ? '[skip-style]' : '[/skip-style]';
+        }
+        $body = preg_replace( $tags, $replaceTags, $body);
+
+        $lines = preg_split('/\[skip\-style\]/i', $body);
+        $cleansedBody = array_shift($lines);
+        foreach( $lines as $line ) {
+            $parts = preg_split('/\[\/skip\-style\]/i', $line);
+            $cleansedBody .= array_pop($parts);
+        }
+        return $cleansedBody;
     }
 
     public static function getValidHtml( $body )
@@ -104,8 +131,9 @@ class TextUtils
             $text = '<body>'.$text.'</body>';
         }
         else {
-            $text = mb_substr($text, mb_stripos($text, '<body>'));
-            $text = mb_substr($text, 0, mb_stripos($text, '</body>') + 7);
+            $text = array_pop(preg_split('/<body>/i', $text));
+            $text = array_shift(preg_split('/<\/body>/i', $text));
+            $text = '<body>'.$text.'</body>';
         }
         $text = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.$text;
 
@@ -117,10 +145,10 @@ class TextUtils
                 $text = $doc->saveHTML($bodyElement->item(0));
                 $body = preg_replace(
                     array(
-                        '/<tr>[\s\r\n]*<\/tr>/',
-                        '/<tr>[\s\r\n]*<table/',
-                        '/<\/table>[\s\r\n]*<\/tr>/',
-                        '/<\/?body>/'
+                        '/<tr>[\s\r\n]*<\/tr>/i',
+                        '/<tr>[\s\r\n]*<table/i',
+                        '/<\/table>[\s\r\n]*<\/tr>/i',
+                        '/<\/?body>/i'
                     ),
                     array (
                         '<tr><td></td></tr>',
@@ -158,7 +186,7 @@ class TextUtils
     }
 
     public function decodeHtml( $text ) {
-        return trim(html_entity_decode( $text, ENT_QUOTES | ENT_HTML401, APP_ENCODING ));
+        return html_entity_decode( $text, ENT_QUOTES | ENT_HTML401, APP_ENCODING );
     }
 
     public function getAlphaNumericString( $text ) {
@@ -166,9 +194,72 @@ class TextUtils
         return preg_replace( "/[\p{Z}]{2,}/u", " ", $text );
     }
 
+    public function getFileSafeString( $text ) {
+        return preg_replace('/\s+/', '_', self::getAlphaNumericString($text));
+    }
+
     public static function getWords( $text, $wordsCount = 1 ) {
         $items = preg_split('/\s+/', $text);
         $result = join(' ', array_slice($items, 0, $wordsCount));
         return $result != $text ? $result . '...' : $result;
+    }
+
+    public static function encodeImage( $filePath )
+    {
+        if ( file_exists(realpath($filePath)) ) {
+            $maxImageWidth = 1024;
+            if ( filesize($filePath) > 1048576 && class_exists('Imagick') ) {
+                try {
+                    $imagick = new Imagick(realpath($filePath));
+                    $geometry = $imagick->getImageGeometry();
+                    if ( $geometry['width'] > $maxImageWidth ) {
+                        $imagick->scaleImage($maxImageWidth, 0, false);
+                    }
+                    return base64_encode($imagick->getImageBlob());
+                }
+                catch( Exception $e ) {
+                    return base64_encode(file_get_contents($filePath));
+                }
+            }
+            else {
+                return base64_encode(file_get_contents($filePath));
+            }
+        }
+        else {
+            $curl = CurlBuilder::getCurl();
+            curl_setopt($curl, CURLOPT_URL, $filePath);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($curl, CURLOPT_HEADER, 0);
+            curl_setopt($curl, CURLOPT_, 0);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($curl, CURLOPT_HTTPGET, true);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            $result = curl_exec($curl);
+            curl_close($curl);
+            return base64_encode($result);
+        }
+    }
+
+    public static function parseIds( $text ) {
+        return array_unique(
+            array_filter(
+                preg_split('/[,-]/', $text ),
+                function($value) {
+                    return is_numeric($value) && $value >= 0;
+                }
+            )
+        );
+    }
+
+    public static function pathToUnixStyle($path) {
+        return str_replace("\\", "/", realpath($path));
+    }
+
+    public static function getRandomPassword() {
+        $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        $password = substr(str_shuffle($chars), 0, 12);
+        return $password;
     }
 }

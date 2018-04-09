@@ -24,7 +24,7 @@ class SetupLicenseController extends Page
         return parent::authorizationRequired();
     }
 
- 	function render()
+ 	function render( $view = null )
  	{
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: *');
@@ -40,10 +40,13 @@ class SetupLicenseController extends Page
  		);
 
         getCheckpointFactory()->getCheckpoint('CheckpointSystem')->executeDynamicOnly();
+
+        getFactory()->getCacheService()->setReadonly();
         getFactory()->getCacheService()->invalidate();
 
         $this->persistAdminUser();
- 		parent::render();
+
+        parent::render();
  	}
  	
  	function getForm() {
@@ -63,5 +66,10 @@ class SetupLicenseController extends Page
                 )
             )
         );
+    }
+
+    function __destruct()
+    {
+        if ( function_exists('opcache_reset') ) opcache_reset();
     }
 }

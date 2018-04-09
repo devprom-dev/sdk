@@ -7,9 +7,26 @@ class WikiImporterEnginePanDoc extends WikiImporterEngine
     {
         $outputPath = str_replace("\\", "/", realpath(tempnam(SERVER_FILES_PATH, "pandocoutput")));
 
-        $command = 'pandoc --to=html --data-dir="'.SERVER_FILES_PATH.'" --extract-media="'.trim(SERVER_FILES_PATH,'\\/').'" -o "'.$outputPath.'" "'.$filePath.'" 2>&1';
+        $pandocVersion = $this->getVersion();
+        Logger::getLogger('Commands')->info('pandoc version is '.$pandocVersion);
+
+        $requiredParms = '--to=html';
+        if ( defined('PANDOC_RTS') && PANDOC_RTS != '' ) {
+            $requiredParms .= ' '.PANDOC_RTS;
+        }
+        else {
+            // define stack size
+            $requiredParms .= ' +RTS -K128m -RTS';
+        }
+
+        if (version_compare($pandocVersion, '1.14.0') >= 0) {
+            $requiredParms .= ' --extract-media="'.rtrim(SERVER_FILES_PATH,'\\/').'" ';
+        }
+
+        $command = 'pandoc '.$requiredParms.' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$outputPath.'" "'.$filePath.'" 2>&1';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
 
+        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
         $result = shell_exec($command);
 
         $lines = explode(PHP_EOL, $result);
@@ -33,5 +50,20 @@ class WikiImporterEnginePanDoc extends WikiImporterEngine
         FileSystem::rmdirr(SERVER_FILES_PATH.'media');
 
         return $content;
+    }
+
+    protected function getVersion() {
+        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
+        $command = 'pandoc -v 2>&1';
+        Logger::getLogger('Commands')->info(get_class($this).': '.$command);
+        $result = shell_exec($command);
+        Logger::getLogger('Commands')->info($result);
+        return array_pop(
+            preg_split('/\s+/',
+                array_shift(
+                    preg_split('/[\r\n]+/', $result)
+                )
+            )
+        );
     }
 }

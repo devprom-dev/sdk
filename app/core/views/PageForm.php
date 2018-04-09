@@ -3,10 +3,10 @@
 include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH."core/classes/model/validation/ModelValidatorEmbeddedForm.php";
 include_once SERVER_ROOT_PATH.'core/classes/model/mappers/ModelDataTypeMapper.php';
-
 include SERVER_ROOT_PATH.'cms/c_metaobject_view.php';
 include_once SERVER_ROOT_PATH.'cms/views/FieldDictionary.php';
 include_once SERVER_ROOT_PATH.'cms/views/FieldAutoCompleteObject.php';
+include "FieldListOfReferences.php";
 
 class PageForm extends MetaObjectForm
 {
@@ -59,10 +59,13 @@ class PageForm extends MetaObjectForm
 		// build specific field validators
 		foreach( $this->getObject()->getAttributes() as $attribute => $data )
 		{
+		    if ( $attribute == 'TransitionComment' ) {
+                $validator->addValidator(new ModelValidatorObligatory(array('TransitionComment')));
+                continue;
+            }
+
 			$field = $this->createFieldObject($attribute);
-			
-			if ( is_null($field) )
-			{
+			if ( is_null($field) ) {
 				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
 				$type_validation_attrs[] = $attribute;
 				continue;
@@ -71,22 +74,18 @@ class PageForm extends MetaObjectForm
             $field->setName($attribute);
 			$field_validator = $field->getValidator();
 			
-			if ( $field_validator instanceof ModelValidatorType )
-			{ 
+			if ( $field_validator instanceof ModelValidatorType ) {
 				if ( !$this->getObject()->IsAttributeStored($attribute) ) continue;
-				
 				$type_validation_attrs[] = $attribute;
 			}
-			else
-			{
+			else {
 				$validator->addValidator($field_validator);
 			}
 		}
 
-		// basic (type based) validation used for hidden fields and simple types (int, string, etc.) 
-		if ( count($type_validation_attrs) > 0 )
-		{
-			$validator->addValidator(new ModelValidatorObligatory($type_validation_attrs));
+		// basic (type based) validation used for hidden fields and simple types (int, string, etc.)
+		if ( count($type_validation_attrs) > 0 ) {
+            $validator->addValidator(new ModelValidatorObligatory($type_validation_attrs));
 			$validator->addValidator(new ModelValidatorTypes($type_validation_attrs));
 		}
 
@@ -105,6 +104,7 @@ class PageForm extends MetaObjectForm
  	function buildRelatedDataCache()
  	{
  		if ( !$this->getObject() instanceof MetaobjectStatable ) return;
+ 		if ( !getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'State') ) return;
 
  		$state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
 		$transition_it = WorkflowScheme::Instance()->getTransitionIt($this->getObject());
@@ -281,7 +281,14 @@ class PageForm extends MetaObjectForm
     	if ( in_array('hours', $this->getObject()->getAttributeGroups($name)) ) {
             return new FieldHours();
         }
-		
+
+        if ( in_array('astronomic-time', $this->getObject()->getAttributeGroups($name)) ) {
+            return new FieldHours(FieldHours::HOURS_CALENDAR);
+        }
+
+        if ( in_array('working-time', $this->getObject()->getAttributeGroups($name)) ) {
+            return new FieldHours(FieldHours::HOURS_WORKING);
+        }
 		return parent::createFieldObject( $name );
 	}
 	
@@ -295,30 +302,40 @@ class PageForm extends MetaObjectForm
 		$_REQUEST[$this->getObject()->getEntityRefName().'action'] = $this->action;
 	}
 
-	function getActions()
+	function IsAttributeEditable($attr_name)
+    {
+        if ( $this->getObject()->getAttributeType($attr_name) == 'wysiwyg' ) {
+            if ( !$this->getEditMode() && defined('WYSIWYG_EDITABLE') ) {
+                return WYSIWYG_EDITABLE && parent::IsAttributeEditable($attr_name);
+            }
+        }
+        return parent::IsAttributeEditable($attr_name);
+    }
+
+    function getActions()
 	{
-		$actions = array();
+		$actions = array(
+            'modify' => array()
+        );
 
 		$object_it = $this->getObjectIt();
 
-		$actions['modify'] = array();
-
 		$method = new ObjectModifyWebMethod($object_it);
-		if ( $this->IsFormDisplayed() ) {
-			$method->setRedirectUrl('function(){window.location.reload();}');
-		}
-		else {
-			$method->setRedirectUrl('donothing');
-		}
-		$actions['modify'] = array(
-			'name' => $method->hasAccess() ? translate('Изменить') : translate('Открыть'),
-			'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
-			'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
-			'uid' => 'modify',
-			'view' => 'button',
-			'button-class' => 'btn-info',
-			'icon' => 'icon-pencil'
-		);
+        if ( $this->IsFormDisplayed() ) {
+            $method->setRedirectUrl('function(){window.location.reload();}');
+        }
+        else {
+            $method->setRedirectUrl('donothing');
+        }
+        $actions['modify'] = array(
+            'name' => $method->getCaption(),
+            'url' => $this->IsFormDisplayed() ? $method->getJSCall() : '#',
+            'click' => $this->IsFormDisplayed() ? '' : $method->getJSCall(),
+            'uid' => 'modify',
+            'view' => 'button',
+            'button-class' => 'btn-info',
+            'icon' => 'icon-pencil'
+        );
 
 		if( getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, 'State') )
 		{
@@ -704,8 +721,14 @@ class PageForm extends MetaObjectForm
 			    if ( is_object($object_it) ) {
                     $parms[$attribute] = $object_it->getHtmlDecoded($attribute);
                 }
-                else {
-                    unset($parms[$attribute]);
+                elseif ( $parms[$attribute] != '' ) {
+			        $default = $this->getObject()->getDefaultAttributeValue($attribute);
+			        if ( $default != '' ) {
+                        $parms[$attribute] = $default;
+                    }
+                    else {
+			            unset($parms[$attribute]);
+                    }
                 }
 			}
 		}
@@ -753,8 +776,6 @@ class PageForm extends MetaObjectForm
 		$uid = new ObjectUid();
         $parms = array();
 
-        if ( $this->getTransitionIt()->getId() != '' ) return $parms;
-
         foreach( $this->getSourceIt() as $item ) {
             $source_it = array_shift($item);
             $text_attribute = array_shift($item);
@@ -767,28 +788,26 @@ class PageForm extends MetaObjectForm
                 ob_end_clean();
             }
             else {
-                if ( $source_it->object->getAttributeType($text_attribute) == 'wysiwyg' ) {
-                    $field = new FieldWYSIWYG(
-                        $source_it->get('ContentEditor') != ''
-                            ? $source_it->get('ContentEditor')
-                            : getSession()->getProjectIt()->get('WikiEditorClass')
-                    );
-                    $field->setValue($source_it->get($text_attribute));
-                    $field->setObjectIt($source_it);
-                    $text = $field->getText(true);
-                    if ( $text != '' ) {
-                        $text = '<br/>'.$text;
-                    }
-                }
-                else {
-                    $text = $source_it->getHtmlDecoded($text_attribute);
+                $field = new FieldWYSIWYG(
+                    $source_it->get('ContentEditor') != ''
+                        ? $source_it->get('ContentEditor')
+                        : getSession()->getProjectIt()->get('WikiEditorClass')
+                );
+                $field->setValue($source_it->get($text_attribute));
+                $field->setObjectIt($source_it);
+                $field->setReadOnly(true);
+                $text = $field->getText();
+                if ( $text != '' ) {
+                    $text = '<br/>'.$text;
                 }
             }
 
-            $parms[] = array (
-                'uid' => $uid->getUidWithCaption($source_it),
-                'text' => $text
-            );
+            if ( $source_it->getId() != '' ) {
+                $parms[] = array (
+                    'uid' => $uid->getUidWithCaption($source_it),
+                    'text' => '<div class="reset wysiwyg">'.$text.'</div>'
+                );
+            }
         }
         return $parms;
 	}

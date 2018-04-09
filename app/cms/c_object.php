@@ -142,13 +142,17 @@ include('c_iterator.php');
 	
 	function getAttributesByGroup( $group )
 	{
-		$attributes = array_filter( $this->attributes, function($value) use ($group) 
-		{
+		$attributes = array_filter( $this->attributes, function($value) use ($group) {
 			return is_array($value['groups']) && in_array($group, $value['groups']);
 		});
 		
 		return array_keys($attributes);
 	}
+
+	function resetAttributeGroup( $attribute, $group ) {
+        $this->attributes[$attribute]['groups'] =
+            array_diff($this->attributes[$attribute]['groups'], array($group));
+    }
 
 	 function getAttributesByOrigin( $origin ) {
 		 $attributes = array_filter( $this->attributes, function($value) use ($origin) {
@@ -533,9 +537,15 @@ include('c_iterator.php');
 
 			// копируем файл в подкаталог
 			copy( $_FILES[$name]['tmp_name'], $filepath);
-			
+
+            $fileSizeAddition = '';
+			if ( $this->object->getAttributeType('FileSize') != '' ) {
+			    $fileSizeAddition = "FileSize = ".max(0, filesize($filepath)).",";
+            }
+
     		$sql = "UPDATE ".$this->object->getClassName()." SET ".$name."Path = '".
-    			DAL::Instance()->Escape(addslashes($filepath))."', 
+    			DAL::Instance()->Escape(addslashes($filepath))."',
+    			".$fileSizeAddition." 
     			".$name."Mime = '".DAL::Instance()->Escape(addslashes($_FILES[$name]['type']))."',
 				".$name."Ext = '".DAL::Instance()->Escape(addslashes($file_name)).
 				"' WHERE ".$this->object->getClassName()."Id = ".$it->getId();

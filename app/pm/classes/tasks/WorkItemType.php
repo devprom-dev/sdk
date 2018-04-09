@@ -11,4 +11,12 @@ class WorkItemType extends Metaobject
     function getVpds() {
         return array();
     }
+
+    function IsDeletedCascade($object) {
+        return false;
+    }
+
+    function IsUpdatedCascade($object) {
+        return false;
+    }
 }

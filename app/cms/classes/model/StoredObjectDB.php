@@ -16,6 +16,7 @@ include "predicates/FilterModifiedAfterPredicate.php";
 include "predicates/FilterModifiedSinceSecondsPredicate.php";
 include "predicates/FilterModifiedBeforePredicate.php";
 include "predicates/FilterNextSiblingsPredicate.php";
+include "predicates/FilterNextKeyPredicate.php";
 include "predicates/FilterPrevSiblingsPredicate.php";
 include "predicates/FilterNoVpdPredicate.php";
 include "predicates/FilterSubmittedAfterPredicate.php";
@@ -30,6 +31,8 @@ include "predicates/FilterDateBeforePredicate.php";
 include "predicates/FilterAttributeNullPredicate.php";
 include "predicates/FilterAttributeNotNullPredicate.php";
 include "predicates/FilterDummyPredicate.php";
+include "predicates/FilterEmptyPredicate.php";
+include "predicates/ParentTransitiveFilter.php";
 include "sorts/SortClauseBase.php";
 include "sorts/SortCaptionClause.php";
 include "sorts/SortOrderedClause.php";
@@ -295,14 +298,29 @@ class StoredObjectDB extends Object
 			
 			return $this->createSQLIterator($sql.' LIMIT 1');
 		}
-		else
+		elseif ( is_array($objectid) )
 		{
-			return $this->getRegistry()->Query(
-					array(
-							new FilterInPredicate($objectid)
-					)
-			);
+            $objectid = array_filter($objectid, function($value) {
+                return $value > 0;
+            });
+            if ( count($objectid) > 0 ) {
+                return $this->getRegistry()->Query(
+                    array(
+                        new FilterInPredicate($objectid)
+                    )
+                );
+            }
+            else {
+                return $this->getEmptyIterator();
+            }
 		}
+		else {
+            return $this->getRegistry()->Query(
+                array(
+                    new FilterInPredicate($objectid)
+                )
+            );
+        }
 	}
 
 	public function setRegistry( $registry )
@@ -324,7 +342,22 @@ class StoredObjectDB extends Object
 		$registry->setPersisters( $this->persisters );
 		return $registry;
 	}
-	
+
+    public function getRegistryBase()
+    {
+        if ( !is_object($this->registry) ) return $this->registry;
+
+        $registry = clone $this->registry;
+        $registry->setObject($this);
+        $registry->setFilters(array());
+        $registry->setGroups(array());
+        $registry->setSorts(array());
+        $registry->setPersisters(array_filter($this->persisters, function($persister) {
+            return $persister->IsPersisterImportant();
+        }));
+        return $registry;
+    }
+
 	// to be removed
 	public function getRegistryDefault()
 	{
@@ -1343,7 +1376,7 @@ class StoredObjectDB extends Object
 
 	function addFilter( $filter )
 	{
-		if ( !$filter->isDefined() ) return;
+		if ( !$filter->defined($filter->getValue()) ) return;
 		
 		$filters = $this->registry->getFilters();
 		
@@ -1383,14 +1416,14 @@ class StoredObjectDB extends Object
 	    $this->default_sorts = $clause;
 	    
 	    $sorts = array();
-	    
 	    foreach ( $clause as $key => $item )
 	    {
 	        $clause[$key]->setObject( $this );
-	    
 	        $clause[$key]->setAlias( 't' );
-	        
-	        $sorts[] = $clause[$key]->clause();
+
+	        $clauseSql = trim($clause[$key]->clause());
+	        if ( $clauseSql == '' ) continue;
+	        $sorts[] = $clauseSql;
 	    }
 	    
 	    $this->defaultsort = join(',', $sorts);

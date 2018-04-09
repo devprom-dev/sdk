@@ -33,16 +33,13 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
    	  	$project = getFactory()->getObject('pm_Project');
 	 	$project->addFilter( new ProjectCurrentPredicate() );
 
-	 	$projectrole = getFactory()->getObject('ProjectRole');
-	 	$projectrole->addFilter( new ProjectRoleInheritedFilter() );
-	 	
 	 	// methodology settings
 		$methodology = getFactory()->getObject('pm_Methodology');
 		$methodology->addFilter( new FilterAttributePredicate('Project', $this->session->getProjectIt()->getId() ) );
 	 	
 	 	$items = array( 
 	 		$project,
-	 		$projectrole,
+            getFactory()->getObject('ProjectRoleInherited'),
 	 		getFactory()->getObject('pm_IssueType'),
 	 		getFactory()->getObject('TaskType'),
 	 		$methodology
@@ -125,9 +122,9 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
 	 		getFactory()->getObject('pm_TransitionResetField'),
 	 		getFactory()->getObject('pm_StateAction'),
 	 		getFactory()->getObject('pm_StateAttribute'),
-            getFactory()->getObject('TaskTypeState')
+            getFactory()->getObject('TaskTypeState'),
+            getFactory()->getObject('IssueAutoAction')
         );
-
  		$registry->addSection($registry, 'Workflow', $items, true, text(894));
     }
 

@@ -60,7 +60,7 @@ class RequestModelTest extends DevpromDummyTestCase
 
     function testFinishDateEmpty()
     {
-        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
     	
@@ -86,9 +86,7 @@ class RequestModelTest extends DevpromDummyTestCase
     
     function testFinishDateUnchanged()
     {
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
-                $this->logicalNot($this->stringContains("FinishDate = "))
-        );
+        $this->getDALMock()->expects($this->never())->method('Query');
     	
         $trigger = new SetWorkItemDatesTrigger();
 
@@ -113,9 +111,6 @@ class RequestModelTest extends DevpromDummyTestCase
     function testFinishDateReset()
     {
         $this->getDALMock()->expects($this->at(0))->method('Query')->with(
-            $this->stringContains("StartDate = NULL")
-        );
-        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
 

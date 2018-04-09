@@ -73,7 +73,18 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 			" 	        WHERE t.SystemUser = ".$this->getPK($alias).
 			"			  AND t.Project IN (".$linked_ids.") ) > 0, 2, 3) ".
  		    ") ParticipanceType ";
- 		
+
+ 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
+ 		{
+            $taskTerminals = \WorkflowScheme::Instance()->getNonTerminalStates(getFactory()->getObject('Task'));
+            if ( count($taskTerminals) < 1 ) $taskTerminals = array('-');
+            $columns[] =
+                "( SELECT SUM(t.LeftWork) " .
+                "  	 FROM pm_Task t " .
+                " 	WHERE t.State IN ('".join("','", $taskTerminals)."') ".
+                "     AND t.Assignee = ".$this->getPK($alias).") LeftWork ";
+        }
+
  		return $columns;
  	}
 }

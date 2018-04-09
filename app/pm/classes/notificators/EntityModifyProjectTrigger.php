@@ -37,6 +37,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	{
  	 	foreach( $references as $object ) {
 			$object->removeNotificator('ChangeLogNotificator');
+            $object->removeNotificator('EmailNotificator');
 			$this->setProject($object->getAll(), $target_it);
  	    }
 		$this->updateChangeLog( $object_it, $target_it );
@@ -45,6 +46,10 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	protected function setProject( $object_it, $target_it )
 	{
 		$state = new StateBase();
+		$storedObject = getFactory()->getObject(get_class($object_it->object));
+
+		$methodology = getFactory()->getObject('Methodology');
+		$targetEstimationValue = $methodology->getByRef('VPD', $target_it->get('VPD'))->get('RequestEstimationRequired');
 
 		while( !$object_it->end() ) {
 			$parms = array (
@@ -76,14 +81,23 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
                     }
 			        continue;
                 }
+                if ( in_array($attribute, array('Estimation','EstimationLeft')) ) {
+                    $estimationValue = $methodology->getByRef('VPD', $object_it->get('VPD'))->get('RequestEstimationRequired');
+			        if ( $estimationValue != $targetEstimationValue ) {
+                        $parms[$attribute] = 'NULL';
+                    }
+                }
 				if ( $object_it->object->IsReference($attribute) ) {
 					$ref = $object_it->object->getAttributeObject($attribute);
+                    if ( $ref->getVpdValue() == '' ) {
+                        $parms[$attribute] = $object_it->get($attribute);
+                        continue;
+                    }
 					$keys = $ref->getAttributesByGroup('alternative-key');
 					if ( count($keys) > 0 ) {
-						$queryParms = array();
-						if ( $ref->getVpdValue() != '' ) {
-							$queryParms[] = new FilterVpdPredicate($target_it->get('VPD'));
-						}
+						$queryParms = array(
+                            new FilterVpdPredicate($target_it->get('VPD'))
+                        );
 						foreach( $keys as $key ) {
 							$queryParms[] = new FilterAttributePredicate( $key,
 								' '.$ref->getExact($object_it->get($attribute))->get($key)
@@ -105,7 +119,15 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
                 // reset state if there is no such state in the target project
 				if ( $state_it->getId() == '' ) $parms['State'] = '';
 			}
-			$object_it->object->modify_parms( $object_it->getId(), $parms );
+
+            $object_it->object->modify_parms( $object_it->getId(), $parms );
+
+            $storedObject->removeNotificator('AbstractServicedeskEmailNotificator');
+            getFactory()->getEventsManager()->notify_object_add(
+                $storedObject->getExact($object_it->getId()),
+                $parms
+            );
+
 			$object_it->moveNext();
 		}
 	}
@@ -142,7 +164,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 		);
 		DAL::Instance()->Query(" UPDATE ObjectChangeLog SET VPD = '".$target_it->get('VPD')."' WHERE ObjectChangeLogId IN (".join(',',$change_it->idsToArray()).")");
 
-		$change_parms['ChangeKind'] = 'added';
+		$change_parms['ChangeKind'] = 'modified';
 		$change_parms['VPD'] = $target_it->get('VPD');
 		$change->add_parms( $change_parms );
 	}

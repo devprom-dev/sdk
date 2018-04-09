@@ -13,7 +13,6 @@ class RequestBusinessActionResetTasks extends BusinessActionWorkflow
  		if ( $object_it->object->getAttributeType('OpenTasks') == '' ) return;
  		
 		$task_it = $object_it->getRef('OpenTasks');
-		
 		$task_it->object->removeNotificator( 'EmailNotificator' );
 		
 		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )

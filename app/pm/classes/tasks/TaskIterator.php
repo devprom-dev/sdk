@@ -41,6 +41,10 @@ class TaskIterator extends StatableIterator
 		}
 	}
 
+    function getObjectDisplayName() {
+        return $this->get('TaskType') != '' ? $this->getType() : parent::getObjectDisplayName();
+    }
+
  	function getType()
  	{
  		if ( $this->get('TaskTypeDisplayName') != '' ) return $this->get('TaskTypeDisplayName');

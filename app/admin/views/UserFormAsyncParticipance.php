@@ -18,19 +18,12 @@ class UserParticipanceForm extends UserParticipancePreForm
 
 	function getAttributeClass( $attribute )
 	{
-		global $model_factory;
-
 		switch ( $attribute )
 		{
 			case 'ProjectRole':
-				$object = $model_factory->getObject('ProjectRole');
-
+				$object = getFactory()->getObject('ProjectRoleInherited');
 				$object->setVpdContext( ModelProjectOriginationService::getOrigin($_REQUEST['project']) );
-				
-				$object->addFilter( new ProjectRoleInheritedFilter() );
-				
 				return $object;
-
 			default:
 				return parent::getAttributeClass( $attribute );
 		}

@@ -23,6 +23,16 @@ class CommentRecentPersister extends ObjectSQLPersister
  			"   WHERE so.ObjectId = ".$this->getPK($alias).
  			"     AND so.ObjectClass = '".get_class($this->getObject())."' ) CommentsCount ";
 
+ 		$userIt = getSession()->getUserIt();
+ 		if ( $userIt->getId() != '' ) {
+            $columns[] =
+                "( SELECT IFNULL(MAX(so.RecordCreated),'') FROM ObjectChangeNotification so ".
+                "   WHERE so.ObjectId = ".$this->getPK($alias).
+                "     AND so.ObjectClass = '".get_class($this->getObject())."' ".
+                "     AND so.SystemUser = ".$userIt->getId().
+                "     AND so.Action = 'commented' LIMIT 1 ) NewComments ";
+        }
+
  		return $columns;
  	}
 }

@@ -10,8 +10,13 @@ class AttachmentsList extends PMPageList
                 echo $object_it->getFileLink();
                 break;
 
-            case 'Size':
-                echo $object_it->getFileSizeKb('Content');
+            case 'FileSize':
+                if ( $object_it->get('FileSize') > 0 ) {
+                    echo round($object_it->get('FileSize') / 1024, 1);
+                }
+                else {
+                    echo $object_it->getFileSizeKb('Content');
+                }
                 echo ' KB';
                 break;
 

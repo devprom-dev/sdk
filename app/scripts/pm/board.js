@@ -1,6 +1,7 @@
 var draggableOptions = {
 		itemCSSPath: ".board_item",
-		cellCSSPath: ".list_cell,.board_item_separator",
+		cellCSSPath: ".list_cell,.board_item",
+		sliderName: "",
 		hoverClass: "list_cell_hover",
 		revert: "invalid",
 		revertDuration: 100,
@@ -46,9 +47,15 @@ var draggableOptions = {
 					if ( cell.attr('sort') == 'OrderNum' )
 					{
 						oldCard.remove();
-						
-						newCard.appendTo(cell);
-					} 
+
+                        var appendCard = cell.find('.append-card');
+                        if ( appendCard.length > 0 ) {
+                            newCard.insertBefore(appendCard);
+                        }
+                        else {
+                            newCard.appendTo(cell);
+                        }
+					}
 					else
 					{
 						if ( oldCard.length > 0 && new_more == old_more && new_group == old_group )
@@ -58,8 +65,7 @@ var draggableOptions = {
 						else
 						{
 							oldCard.remove();
-							
-							newCard.prependTo(cell);
+                            newCard.prependTo(cell);
 						}
 					}
 				}
@@ -86,7 +92,7 @@ var draggableOptions = {
 
 				if ( parseInt(item.attr("order")) != tobe_seq ) {
 					dataObject.attribute = 'OrderNum';
-					dataObject.value = tobe_seq;
+					dataObject.value = Math.max(0, parseInt(tobe_seq) - 1);
 					url = controllerUrl+'methods.php?method=modifyattributewebmethod';
 				}
 			}
@@ -185,16 +191,17 @@ var draggableOptions = {
 				$(this).width(width);
 				$(this).find('div.bi-cap, div.ca-field').width(width - 10);
 			});
-			$('.list_cell.board-size-mic '+this.itemCSSPath).css('width', 'auto');
-			$('.board-size-mic .list_cell '+this.itemCSSPath).css('width', 'auto');
+			$('.list_cell.board-size-mic '+this.itemCSSPath).css('width', '20px');
+			$('.board-size-mic .list_cell '+this.itemCSSPath).css('width', '20px');
 		},
 		sliderTitle: ''
 	};
 
 function board( options ) 
 {
-	var defaultBoardSize = (cookies.get('board-slider-pos') != null 
-			? cookies.get('board-slider-pos')
+	options.sliderName = 'board-slider-pos['+$('section[uid]').attr('uid')+'/'+devpromOpts.project+']';
+	var defaultBoardSize = (cookies.get(options.sliderName) != null
+			? cookies.get(options.sliderName)
 			: ($(window).width() <= 1024 ? 2 : 3));
 	setBoardSize(options,defaultBoardSize);
 	
@@ -239,12 +246,15 @@ function board( options )
 					reset ? $(this).removeClass('board-size-mic') : $(this).addClass('board-size-mic');
 				});
 				var cookieId = item.parents('.board-table').attr('id') + "[column/" + state.trim() + "]";
+				var index = item.parents('th').attr('value');
+                var thel = item.parents('table').find('th[value="'+index+'"]');
 				if ( reset ) {
-					item.parents('th').removeClass('board-size-mic');
+                    thel.removeClass('board-size-mic');
 					cookies.set(cookieId, null);
 				}
 				else {
-					item.parents('th').addClass('board-size-mic');
+                    thel.addClass('board-size-mic');
+                    thel.attr('width', '1%');
 					cookies.set(cookieId, "board-size-mic");
 				}
 				var title = item.text();
@@ -253,7 +263,7 @@ function board( options )
 				options.resizeCards();
 				var regCells = $('.list_header:not(.board-size-mic)');
 				$('.list_header:not(.board-size-mic)').attr('width',(100 / regCells.length) + '%');
-				$('.list_header.board-size-mic').attr('width','auto');
+				$('.list_header.board-size-mic').attr('width','');
 			}
 			var items = $(e.target).closest('a.group-collapse-cards');
 			if ( items.length ) {
@@ -281,14 +291,18 @@ function board( options )
 
 	setTimeout( function () { redrawBoardChanges(options); }, 500 );
     setInterval( function () { redrawBoardChanges(options); }, 60000 );
+    $(document).on('windowActivated', function() {
+        redrawBoardChanges(options);
+	});
+    $('.table-master').attachDragger();
 }
 
 function boardMake( options )
 {
 	options.resizeCards();
-	$(options.itemCSSPath).draggable(options);
+	$(options.itemCSSPath).not('.board-item-actions-armed').draggable(options);
 
-	$(options.cellCSSPath).droppable({
+	$(options.cellCSSPath).not('.board-item-actions-armed').droppable({
 		hoverClass: options.hoverClass,
 		accept: options.droppableAcceptFunction,
 		drop: function( event, ui ) 
@@ -312,13 +326,18 @@ function boardMake( options )
 			}
 			else
 			{
-                $(item).prependTo($(event.target)).fadeTo('fast', 0.9);
+				if ( $(event.target).is('.board_item') && !$(event.target).is($(item)) ) {
+                    $(item).insertBefore($(event.target)).fadeTo('fast', 0.9);
+				}
+				else {
+                    $(item).prependTo($(event.target)).fadeTo('fast', 0.9);
+				}
 				processBoardActions(methods,item,options);
 			}
 		}
 	});
 	
-	$(".board_item_separator").droppable( "option", "tolerance", "touch" );
+	$(".board_item").droppable( "option", "tolerance", "touch" );
 
 	$(options.itemCSSPath).not('.board-item-actions-armed').each( function() {
 			$(this).dblclick( function(event) {
@@ -339,7 +358,12 @@ function boardMake( options )
 						$(this).attr('checked', 'checked');
 					});
 				}
-				toggleBulkActions(event);
+                var id = $(this).attr('object');
+                if ( id != '' ) {
+                    $(document).trigger("trackerItemSelected", [id, event.ctrlKey || event.metaKey]);
+                }
+
+                toggleBulkActions(event);
 			});
 			$(this).addClass("board-item-actions-armed");
 	});
@@ -374,9 +398,15 @@ function processBoardActions( methods, item, options )
 function processActionResult( result, item, options ) 
 {
 	filterLocation.showActivity();
-	resultObject = jQuery.parseJSON(result);
-	if ( !resultObject ) {
-		resultObject = {message:''};
+	var resultObject = {};
+	try {
+        resultObject = jQuery.parseJSON(result);
+        if ( !resultObject ) {
+            resultObject = {message:''};
+        }
+	}
+	catch(e) {
+        resultObject = {message:''};
 	}
 
 	switch ( resultObject.message )
@@ -434,7 +464,7 @@ function processActionResult( result, item, options )
 						$('#modal-form').dialog({
 							width: (typeof resultObject.url == 'undefined' || resultObject.url.match(/issues\/board\?mode\=group/)
 								? $(window).width() * 0.9
-								: Math.min(950,$(window).width() * 0.9)),
+								: getDialogWidth()),
 							modal: true,
 							open: function()
 							{
@@ -744,12 +774,14 @@ function redrawBoardChanges( options )
 			dataType: "html",
 			success: function(result) 
 			{
-				updateBoardHeaders($(result),options);
+				var jResult = $('<div>'+result+'</div>');
+				updateBoardHeaders(jResult,options);
+				updateUI(jResult);
 
 				var items = [];
 				var itemSelectors = [];
-				
-				$(result).find(options.itemCSSPath).each( function(index, value) 
+
+                jResult.find(options.itemCSSPath).each( function(index, value)
 				{
 					itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object')+'"]';
 					var item = $(itemSelector);
@@ -761,14 +793,14 @@ function redrawBoardChanges( options )
 					}
 				});
 
-				$(result).find(".object-changed[object-id]").each( function(index, value) {
+                jResult.find(".object-changed[object-id]").each( function(index, value) {
 					itemSelector = options.itemCSSPath+'[object="'+$(this).attr('object-id')+'"]';
-					if ( $(result).find(itemSelector).length < 1 ) {
+					if ( jResult.find(itemSelector).length < 1 ) {
 						$(itemSelector).remove();
 					}
 					else {
 						if ( $(itemSelector).length < 1 ) {
-							items.push($(result).find(itemSelector));
+							items.push(jResult.find(itemSelector));
 							itemSelectors.push(itemSelector);
 						}
 					}
@@ -828,5 +860,38 @@ function setBoardSize( options, value )
 	});
 	$('.board-table').addClass('board-size-'+sizes[value+1]);
 	options.resizeCards();
-	cookies.set('board-slider-pos', value);	
+	cookies.set(options.sliderName, value);
+}
+
+//
+// Allows user to click and drag to scroll horizontally
+// Common usage:
+//     $("table").attachDragger();
+// --------------------------------------------------------------------------
+$.fn.attachDragger = function(){
+    console.log("attachDragger");
+    var attachment = false, lastPosition, position, difference;
+    $( $(this).selector )
+		.on("mousedown mouseup mousemove mouseleave",function(e){
+			if ( ! $(e.target).is('td') ) return;
+			if( e.type == "mousedown" ) {
+				attachment = true, lastPosition = [e.clientX, e.clientY];
+			}
+			if( e.type == "mouseup" || e.type == "mouseleave" ) {
+				attachment = false;
+			}
+			if( e.type == "mousemove" && attachment == true ){
+				position = [e.clientX, e.clientY];
+				difference = [ (position[0]-lastPosition[0]), (position[1]-lastPosition[1]) ];
+				$(this).scrollLeft( $(this).scrollLeft() - difference[0] );
+				$(this).scrollTop( $(this).scrollTop() - difference[1] );
+				lastPosition = [e.clientX, e.clientY];
+			}
+		})
+		.scroll(function(e) {
+            $(this).find('.sticks-top-body').css('left',$(this).position().left - $(this).scrollLeft());
+		});
+    $(window).on("mouseup", function(){
+        attachment = false;
+    });
 }

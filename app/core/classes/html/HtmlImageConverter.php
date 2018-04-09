@@ -37,10 +37,19 @@ class HtmlImageConverter
         }
         if ( $file_attribute == '' ) return $match[0];
 
-        $image = file_get_contents($file_it->getFilePath($file_attribute));
+        $path = $file_it->getFilePath($file_attribute);
+        $image = file_get_contents($path);
         if ( $image === false ) return $match[0];
 
-        $src = 'data:image;base64,'.base64_encode($image);
+        if ( strpos($image, '</svg>') > 0 ) {
+            $mime = 'image/svg+xml';
+        }
+        else {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($path);
+        }
+
+        $src = 'data:'.$mime.';base64,'.\TextUtils::encodeImage($path);
         $match[0] = preg_replace('/src="[^"]+"/i', 'src="'.$src.'"', $match[0]);
 
         return $match[0];
@@ -60,7 +69,7 @@ class HtmlImageConverter
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->buffer($image);
 
-        $src = 'data:'.$mime.';base64,'.base64_encode($image);
+        $src = 'data:'.$mime.';base64,'.\TextUtils::encodeImage($url);
         $match[0] = preg_replace('/src="[^"]+"/i', 'src="'.$src.'"', $match[0]);
 
         return $match[0];

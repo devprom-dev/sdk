@@ -4,9 +4,13 @@ class CheckpointNoCrashedTables extends CheckpointEntryDynamic
 {
     function execute()
     {
-        global $model_factory;
+        $result = DAL::Instance()->QueryArray("show create table pm_Project");
+        if ( strpos(strtolower($result[1]), "engine=innodb") !== false ) {
+            $this->setValue( '1' );
+            return;
+        }
 
-        $system = $model_factory->getObject('cms_SystemSettings');
+        $system = getFactory()->getObject('cms_SystemSettings');
         $system_it = $system->createSQLIterator( "show table status" );
 
         $tables = array_filter( $system_it->fieldToArray('Name'), function($value) {

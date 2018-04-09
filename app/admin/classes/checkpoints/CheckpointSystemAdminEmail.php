@@ -27,4 +27,8 @@ class CheckpointSystemAdminEmail extends CheckpointEntryDynamic
     {
         return text(2252);
     }
+
+    function enabled() {
+        return DeploymentState::IsInstalled() && parent::enabled();
+    }
 }

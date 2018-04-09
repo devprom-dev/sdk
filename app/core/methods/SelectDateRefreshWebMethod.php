@@ -23,17 +23,24 @@ class SelectDateRefreshWebMethod extends WebMethod
  		
 		$container = 'select_'.$this->id.'Container';
 		$call_var = 'select_'.$this->id.'Var';
-		
+
+		if ( in_array($value, array('','all','hide'))) {
+            $value = '';
+        }
 		if ( preg_match('/([0-9]+\-)+/', $value) > 0 )
 		{
 			$value = getSession()->getLanguage()->getDateFormatted($value);
 		}
 
-		echo ' <input type="text" class="btn-small input-small datepicker" title="'.$this->getCaption().'" style="'.$this->getStyle().'" id="select_'.$this->id.'" value="'.$value.'" placeholder="'.$this->getCaption().'" onchange="javascript: selectRefreshMethod(\''.$url.'\', \''.$this->id.'\', \''.$this->getValueParm().'\')">';
+		echo ' <input type="text" class="btn-small input-small datepicker-filter" title="'.$this->getCaption().'" style="'.$this->getStyle().'" id="select_'.$this->id.'" value="'.$value.'" placeholder="'.$this->getCaption().'" valueparm="'.$this->getValueParm().'">';
  	}
  	
  	function getStyle()
  	{
  		return 'margin-left:1pt;padding-left:1pt;margin-top:2pt;';
  	}
+
+ 	function getValue() {
+        return SystemDateTime::parseRelativeDateTime(parent::getValue(), getLanguage());
+    }
 }

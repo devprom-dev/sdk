@@ -4,6 +4,7 @@ include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.ph
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderIssues.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelCommonBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/TransitionCommentPersister.php";
 
 include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
@@ -16,8 +17,7 @@ include "RequestTable.php";
 include "RequestBulkForm.php";
 include "RequestPlanningForm.php";
 include "IssueCompoundSection.php";
-include "RequestIteratorExportBlog.php";
-include "IteratorExportIssueBoard.php"; 
+include "IteratorExportIssueBoard.php";
 include "PageSettingIssuesBuilder.php";
 include "RequestImportDocumentForm.php";
 
@@ -28,6 +28,7 @@ class RequestPage extends PMPage
 		getSession()->addBuilder(new PageSettingIssuesBuilder());
 		getSession()->addBuilder(new RequestViewModelCommonBuilder());
 		getSession()->addBuilder(new BulkActionBuilderIssues());
+        getSession()->addBuilder(new TaskModelExtendedBuilder());
 
 		parent::__construct();
 
@@ -57,7 +58,7 @@ class RequestPage extends PMPage
                         );
                         while (!$it->end()) {
                             $section = new PageSectionComments($it->copy());
-                            $section->setCaption($section->getCaption() . ' I-' . $it->getId());
+                            $section->setCaption($section->getCaption() . ' {'.$it->get('ProjectCodeName').'} I-' . $it->getId());
                             $section->setId($section->getId() . $it->getId());
                             $this->addInfoSection($section);
                             $it->moveNext();
@@ -154,4 +155,25 @@ class RequestPage extends PMPage
 	{
 		return array('kanbanboard', 'issuesboard', 'issues-backlog');
 	}
+
+    function buildExportIterator( $object, $ids, $iteratorClassName )
+    {
+        $iterator = parent::buildExportIterator($object, $ids, $iteratorClassName);
+        if ( is_subclass_of($iteratorClassName, 'WikiIteratorExport') ) {
+            $data = array();
+            while( !$iterator->end() ) {
+                $data[] = array(
+                    'WikiPageId' => $iterator->getId(),
+                    'Caption' => $iterator->getDisplayName(),
+                    'Content' => $iterator->get('Description'),
+                    'ContentEditor' => getSession()->getProjectIt()->get('WikiEditorClass'),
+                    'UID' => 'I-'.$iterator->getId()
+                );
+                $iterator->moveNext();
+            }
+            $_REQUEST['options'] = 'UseUID';
+            return getFactory()->getObject('WikiPage')->createCachedIterator($data);
+        }
+        return $iterator;
+    }
 }

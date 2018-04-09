@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 
 class StageModelBuilder extends ObjectModelBuilder 
@@ -10,12 +9,23 @@ class StageModelBuilder extends ObjectModelBuilder
     	
     	$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
-		$object->addAttribute('Stage', 'TEXT', translate('Стадия проекта'), true, true, '', 10);
-		$object->addAttribute('Deadlines', 'TEXT', translate('Сроки'), true, false, '', 20);
-		$object->addAttribute('EstimatedStartDate', 'DATE', translate('Оценка начала'), false, false, '', 30);
-		$object->addAttribute('EstimatedFinishDate', 'DATE', translate('Оценка окончания'), false, false, '', 40);
-		$object->addAttribute('ActualStartDate', 'DATE', translate('Начало по плану'), false, true, '', 50);
-		$object->addAttribute('ActualFinishDate', 'DATE', translate('Окончание по плану'), false, true, '', 60);
+		$object->addAttribute('Stage', 'TEXT', translate('Стадия проекта'), true, false, '', 10);
+
+		$release = getFactory()->getObject('Release');
+        $iteration = getFactory()->getObject('Iteration');
+        $hasDeadlines =
+            getFactory()->getAccessPolicy()->can_read_attribute($release, 'StartDate')
+            && getFactory()->getAccessPolicy()->can_read_attribute($release, 'FinishDate')
+            && getFactory()->getAccessPolicy()->can_read_attribute($iteration, 'StartDate')
+            && getFactory()->getAccessPolicy()->can_read_attribute($iteration, 'FinishDate');
+
+        if ( $hasDeadlines ) {
+            $object->addAttribute('Deadlines', 'DATE', translate('Сроки'), true, false, '', 20);
+            $object->addAttribute('EstimatedStartDate', 'DATE', translate('Оценка начала'), false, false, '', 30);
+            $object->addAttribute('EstimatedFinishDate', 'DATE', translate('Оценка окончания'), false, false, '', 40);
+            $object->addAttribute('ActualStartDate', 'DATE', translate('Начало по плану'), false, true, '', 50);
+            $object->addAttribute('ActualFinishDate', 'DATE', translate('Окончание по плану'), false, true, '', 60);
+        }
 
         if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
             $object->addAttribute('Increments', 'REF_pm_ChangeRequestId', translate('Реализация'), true, false, '', 95);
@@ -24,7 +34,7 @@ class StageModelBuilder extends ObjectModelBuilder
             $object->addAttribute('Issues', 'REF_pm_ChangeRequestId', translate('Пожелания'), true, false, '', 90);
         }
 
-		if ( $methodology_it->HasPlanning() && $methodology_it->HasTasks() ) {
+		if ( $methodology_it->HasTasks() ) {
 			$object->addAttribute('Tasks', 'REF_pm_TaskId', translate('Задачи'), true, false, '', 100);
 		}
 
@@ -39,5 +49,6 @@ class StageModelBuilder extends ObjectModelBuilder
         }
 
         $object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), true);
+        $object->removeAttribute('InitialVelocity');
     }
 }

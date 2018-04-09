@@ -50,7 +50,7 @@ class InviteService
 			);
 		}
 
-        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->invalidate('sessions');
 
 		return true;
 	}

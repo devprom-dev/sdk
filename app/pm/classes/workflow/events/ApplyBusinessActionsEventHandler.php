@@ -23,6 +23,7 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
         $action_it = getFactory()->getObject('TransitionAction')->getRegistry()->Query(
             array (
                 new FilterAttributePredicate('Transition', $transition_it->getId()),
+                new FilterVpdPredicate($object_it->get('VPD'))
             )
         );
         $this->applyActions($action_it, $object_it);
@@ -33,6 +34,7 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
         $action_it = getFactory()->getObject('StateAction')->getRegistry()->Query(
             array (
                 new FilterAttributePredicate('State', $state_it->getId()),
+                new FilterVpdPredicate($object_it->get('VPD'))
             )
         );
         $this->applyActions($action_it, $object_it, 'BusinessActionWorkflow');

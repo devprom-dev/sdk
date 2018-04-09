@@ -11,11 +11,16 @@ CKEDITOR.editorConfig = function( config ) {
 	// http://docs.ckeditor.com/#!/api/CKEDITOR.config
 
     config.extraPlugins = 'linkex,plantuml,sharedspace,iframedialog,texttemplates,searchartifacts,productivity';
+    config.removePlugins = 'autoembed';
+    config.embed_provider = '//ckeditor.iframe.ly/api/oembed?url={url}&callback={callback}';
+    config.autoEmbed_widget = 'customEmbed';
 	config.allowedContent = true;
 	config.disableNativeSpellChecker = false;
 	config.entities = false;
+    config.autoGrow_maxHeight = $(window).height() * 0.5;
+    config.autoGrow_onStartup = true;
 	config.mathJaxLib = devpromOpts.mathJaxLib != ''
-		? devpromOpts.mathJaxLib : window.location.protocol + "//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML";
+		? devpromOpts.mathJaxLib : window.location.protocol + "//cdnjs.cloudflare.com/ajax/libs/mathjax/2.2.0/MathJax.js?config=TeX-AMS_HTML";
 	
 	config.plantUMLServer = devpromOpts.plantUMLServer != '' ? devpromOpts.plantUMLServer : 'http://www.plantuml.com';
 	config.toolbar_FullToolbar =
@@ -34,11 +39,10 @@ CKEDITOR.editorConfig = function( config ) {
 	config.toolbar_MiniToolbar =
 	[
 		{ name: 'clipboard', items : ['Paste','PasteText' ] },
-		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','RemoveFormat' ] },
+		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','Strike','RemoveFormat','TextColor','BGColor' ] },
 		{ name: 'paragraph', items : [ 'Outdent','Indent','NumberedList','BulletedList','Blockquote' ] },
 		{ name: 'insert', items : [ 'Image','searchArtifact','Table','Embed','Link','Plantuml', 'Mathjax', 'EqnEditor','CodeSnippet' ] },
-		{ name: 'colors', items : [ 'TextColor','BGColor' ] },
-		{ name: 'tools', items : [ 'Maximize' ] }
+		{ name: 'tools', items : [ 'Maximize','Source' ] }
 	];
 
 	config.removeDialogTabs = 'image:advanced;link:advanced';

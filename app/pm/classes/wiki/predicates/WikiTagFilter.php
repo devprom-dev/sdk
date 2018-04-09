@@ -4,9 +4,7 @@ class WikiTagFilter extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		$ids = array_filter(preg_split('/[,-]/', $filter), function($value) {
- 			return $value >= 0; 
- 		});
+ 		$ids = TextUtils::parseIds($filter);
  		
 		if ( count($ids) < 1 || in_array('none', $ids) )
 		{
@@ -16,6 +14,7 @@ class WikiTagFilter extends FilterPredicate
 		else
 		{
 			$tag_it = getFactory()->getObject('Tag')->getExact($ids);
+			if ( $tag_it->count() < 1 ) return " AND 1 = 1 ";
 			
 			if ( in_array('0', $ids) )
 			{

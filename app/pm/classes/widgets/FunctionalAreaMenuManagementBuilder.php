@@ -16,7 +16,7 @@ class FunctionalAreaMenuManagementBuilder extends FunctionalAreaMenuCommonBuilde
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		
 		$menus['quick']['items'][] = $module->getExact('project-knowledgebase')->buildMenuItem();
-		$menus['quick']['items'][] = $report->getExact('project-log')->buildMenuItem();
+		$menus['quick']['items'][] = $module->getExact('project-log')->buildMenuItem();
 		$menus['quick']['items'][] = $module->getExact('project-blog')->buildMenuItem();
 	 	$menus['quick']['items'][] = $module->getExact('project-question')->buildMenuItem();
         

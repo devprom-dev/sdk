@@ -85,7 +85,7 @@ if ( $_REQUEST['use'] == '' ) $_REQUEST['use'] = 'encoded';
 	$wiki_it = getFactory()->getObject('WikiPage')->getRegistry()->Query( 
 			array_merge( 
 					array(
-		 				new WikiRootTransitiveFilter($wiki_id),
+		 				new ParentTransitiveFilter($wiki_id),
 						new SortDocumentClause()
 					) 
 			)

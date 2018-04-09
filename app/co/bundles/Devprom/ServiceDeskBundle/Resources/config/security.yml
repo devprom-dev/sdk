@@ -29,6 +29,8 @@ security:
     firewalls:
         main:
             pattern: ^/
+            simple_preauth:
+                authenticator: apikey_authenticator
             form_login:
                 provider: fos_userbundle
                 always_use_default_target_path: true

@@ -110,17 +110,21 @@ class KanbanPmPlugin extends PluginPMBase
 
 		if ( $object_it->get('BlockReason') == '' ) {
 			$this->method_block->setObjectIt($object_it);
-			$actions[] = array (
-				'name' => $this->method_block->getCaption(),
-				'url' => $this->method_block->getJSCall()
-			);
+			if ( $this->method_block->hasAccess() ) {
+                $actions[] = array (
+                    'name' => $this->method_block->getCaption(),
+                    'url' => $this->method_block->getJSCall()
+                );
+            }
 		}
 		else {
-			$this->method_unblock->setObjectIt($object_it);
-			$actions[] = array (
-				'name' => $this->method_unblock->getCaption(),
-				'url' => $this->method_unblock->getJSCall()
-			);
+            if ( $this->method_unblock->hasAccess() ) {
+                $this->method_unblock->setObjectIt($object_it);
+                $actions[] = array(
+                    'name' => $this->method_unblock->getCaption(),
+                    'url' => $this->method_unblock->getJSCall()
+                );
+            }
 		}
 
 		return $actions;

@@ -1,16 +1,12 @@
 <?php
-
 include "RequestIterator.php";
-
 include_once "persisters/IssueLinkedIssuesPersister.php";
 include_once "persisters/RequestIterationsPersister.php";
 include_once "predicates/RequestIterationFilter.php";
 include_once "predicates/RequestAuthorFilter.php";
-include_once "predicates/RequestSubmittedFilter.php";
 include_once "predicates/RequestEstimationFilter.php";
 include_once "predicates/RequestTagFilter.php";
-include_once "predicates/RequestVersionFilter.php";
-include_once "predicates/RequestTestResultPredicate.php";        
+include_once "predicates/RequestTestResultPredicate.php";
 include_once "predicates/RequestStagePredicate.php";
 include_once "predicates/RequestTaskTypePredicate.php";
 include_once "predicates/RequestTaskStatePredicate.php";
@@ -22,8 +18,10 @@ include_once "predicates/RequestDependencyFilter.php";
 include_once "predicates/RequestFeatureFilter.php";
 include_once "predicates/RequestFinishAfterPredicate.php";
 include_once "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
+include_once "predicates/RequestDependsFilter.php";
 include_once "sorts/IssueOwnerSortClause.php";
 include_once "sorts/IssueFunctionSortClause.php";
+include_once "sorts/IssueUnifiedTypeSortClause.php";
 
 class Request extends MetaobjectStatable 
 {
@@ -177,19 +175,6 @@ class Request extends MetaobjectStatable
 		switch ( $parms['State'] )
 		{
 			case 'resolved':
-				if ( $parms['ClosedInVersion'] == '' && $req_it->get('ClosedInVersion') == '' )
-				{
-					$stage_it = $req_it->getStageIt();
-					if ( is_object($stage_it) ) {
-						$parms['ClosedInVersion'] = $stage_it->getDisplayName();
-					}
-
-                    if ( $parms['ClosedInVersion'] == '' && $this->hasAttribute('PlannedRelease') ) {
-                        $release_it = $req_it->getRef('PlannedRelease');
-                        $parms['ClosedInVersion'] = $release_it->getDisplayName();
-                    }
-				}
-
 				$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 				if ( $methodology_it->getEstimationStrategy() instanceof EstimationHoursStrategy && $methodology_it->HasTasks() )
 				{
@@ -200,8 +185,7 @@ class Request extends MetaobjectStatable
 				break;
 				
 			default:
-				if ( in_array($parms['State'], $this->getTerminalStates()) )
-				{
+				if ( in_array($parms['State'], $this->getTerminalStates()) ) {
 					$parms['EstimationLeft'] = 0;
 				}
 				break;

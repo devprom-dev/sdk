@@ -3,8 +3,10 @@
 if ( !$tableonly )
 {
     $view->extend('core/PageBody.php'); 
-    
     $view['slots']->output('_content');
+}
+else {
+    if ( $context_template != '' ) echo $view->render($context_template, $context);
 }
 
 echo $view->render('core/PageTableBody.php', array (
@@ -25,7 +27,7 @@ echo $view->render('core/PageTableBody.php', array (
     'navigation_title' => $navigation_title,
 	'title' => $title,
     'changed_ids' => $changed_ids,
-	'module_url' => $module_url,
+	'filterMoreActions' => $filterMoreActions,
 	'details' => $details,
 	'details_parms' => $details_parms,
 	'widget_id' => $widget_id,

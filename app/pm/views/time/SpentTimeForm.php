@@ -35,18 +35,6 @@ class SpentTimeForm extends PMPageForm
 		}
 	}
 	
-	function IsAttributeRequired( $attr_name )
-	{
-		switch ( $attr_name ) 
-		{
-		    case 'ChangeRequest':
-		    	return true;
-
-		    default:
-		    	return parent::IsAttributeRequired( $attr_name );
-		}
-	}
-	
 	function getFieldValue( $attr )
 	{
 	    $value = parent::getFieldValue( $attr );
@@ -54,7 +42,7 @@ class SpentTimeForm extends PMPageForm
 
 	    switch ( $attr )
 	    {
-	        case 'ChangeRequest':
+	        case 'Issue':
 	        case 'Task':
 	        	return $this->anchor_it->getId();
 	            

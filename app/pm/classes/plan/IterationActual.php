@@ -11,4 +11,9 @@ class IterationActual extends Metaobject
 	function createIterator() {
         return new IterationDatesIterator($this);
     }
+
+    function getPage()
+    {
+        return getSession()->getApplicationUrl($this).'plan/hierarchy?';
+    }
 }

@@ -27,4 +27,8 @@ class CheckpointHasAdmininstrator extends CheckpointEntryDynamic
     {
         return text(2257);
     }
+
+    function enabled() {
+        return DeploymentState::IsInstalled() && parent::enabled();
+    }
 }

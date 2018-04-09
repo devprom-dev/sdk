@@ -24,6 +24,8 @@ include_once SERVER_ROOT_PATH."core/methods/GetAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/GetWholeTextWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/SettingsWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/CloneWikiPageWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/OpenWorkItemWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/BindIssuesWebMethod.php";
 
 include_once SERVER_ROOT_PATH.'core/c_more.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
@@ -46,7 +48,6 @@ include_once('methods/CommentDeleteNextWebMethod.php');
 include_once('methods/ViewSpentTimeWebMethod.php');
 include_once "methods/WikiRemoveStyleWebMethod.php";
 include_once "methods/MakeSnapshotWebMethod.php";
-include_once "methods/ViewSpentTimeUserWebMethod.php";
 include_once "methods/ActuateWikiLinkWebMethod.php";
 include_once "methods/SyncWikiLinkWebMethod.php";
 include_once "methods/CompareDocumentsWebMethod.php";
@@ -62,6 +63,10 @@ include_once "methods/SetTagsRequestWebMethod.php";
 include_once "methods/SetTagsWikiWebMethod.php";
 include_once "methods/WikiExportBaseWebMethod.php";
 include_once "methods/TaskConvertToIssueWebMethod.php";
+include_once "methods/MarkChangesAsReadWebMethod.php";
+include_once "methods/CreateIssueBasedOnWebMethod.php";
+include_once "methods/ReintegrateWikiPageWebMethod.php";
+include_once "methods/ReintegrateWikiTraceWebMethod.php";
 
 if ( !class_exists($_REQUEST['method'], false) ) throw new Exception('There is no such method');
 
@@ -81,4 +86,6 @@ catch( Exception $e )
 {
     $logger = \Logger::getLogger('System');
     if ( is_object($logger) ) $logger->error($e->getMessage());
+
+
 }

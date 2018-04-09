@@ -9,6 +9,8 @@ class RunJobs extends Command
 	{
 		global $model_factory, $plugins, $_REQUEST, $_SERVER;
 
+        $this->timeWaitedForPrevInstance = defined('BACKGROUND_JOB_WAITTIME') ? BACKGROUND_JOB_WAITTIME : 300;
+
 		$maintainLock = new LockFileSystem(MAINTENANCE_LOCK_NAME);
 		if ( $maintainLock->Locked($this->timeWaitedForPrevInstance) ) {
 			if ( is_object($this->getLogger()) ) {
@@ -23,15 +25,14 @@ class RunJobs extends Command
 		$jobs_to_run = array();
 		$jobs_locks = array();
 
-		// see SessionBuilder for more details
-		\FileSystem::rmdirr( SERVER_FILES_PATH . 'sessions' );
+        // see SessionBuilder for more details
+        \FileSystem::rmdirr( SERVER_FILES_PATH . 'sessions' );
 
 		// recover table
 		$this->repairTables();
         
-		$job = $model_factory->getObject('co_ScheduledJob');
-		
-		$jobrun = $model_factory->getObject('co_JobRun');
+		$job = getFactory()->getObject('co_ScheduledJob');
+		$jobrun = getFactory()->getObject('co_JobRun');
 
 		// select jobs to be executed
 		if ( $_REQUEST['job'] > 0 )
@@ -140,7 +141,7 @@ class RunJobs extends Command
 					try
 					{
 						// pass concrete chunk to be processed
-						if ( $_REQUEST['chunk'] != '' ) $command->setChunk(preg_split('/,/',$_REQUEST['chunk']));
+						if ( $_REQUEST['chunk'] != '' ) $command->setChunk(TextUtils::parseIds($_REQUEST['chunk']));
 						
 						ob_start();
 						$command->execute();

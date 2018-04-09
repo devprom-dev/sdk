@@ -10,7 +10,7 @@ class FormTaskEmbedded extends PMFormEmbedded
  	function __construct($object = null, $anchor_field = null, $form_field = '')
  	{
  	    if ( !is_object($object) ) $object = getFactory()->getObject('pm_Task');
- 	    
+
         parent::__construct($object, $anchor_field, $form_field);
  	}
 
@@ -115,8 +115,6 @@ class FormTaskEmbedded extends PMFormEmbedded
  	{
  		switch( $attr )
  		{
- 			case 'Release':
- 				return '';
             case 'Priority':
                 $object_it = $this->getObjectIt();
                 if ( is_object($object_it) && $object_it->getId() > 0 ) {
@@ -151,7 +149,7 @@ class FormTaskEmbedded extends PMFormEmbedded
 				$object = $this->getAttributeObject( $attr );
 				$object->addFilter( new UserWorkerPredicate() );
 
-				return new FieldParticipantDictionary( $object );
+				return new FieldParticipantDictionary( $this->getFieldValue('Release') );
 
             case 'Planned':
                 return new FieldHours();
@@ -160,4 +158,9 @@ class FormTaskEmbedded extends PMFormEmbedded
 				return parent::createField( $attr );			
 		}
 	}
+
+    function getListUrlParms($object, $ids) {
+ 	    if ( !is_object($this->getObjectIt()) ) return '';
+        return 'issue='.$this->getObjectIt()->getId().'&clickedonform';
+    }
 }

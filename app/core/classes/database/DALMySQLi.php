@@ -15,7 +15,10 @@ class DALMySQLi extends DAL
 		$this->Close();
         $this->connection = @mysqli_connect($info->getHost(), $info->getUser(), $info->getPassword(), $info->getDbName());
         if ( $this->connection === false ) {
-        	throw new Exception(mysqli_connect_error());
+        	throw new Exception(
+        	    mysqli_connect_error() . PHP_EOL .
+                var_export(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true)
+            );
         }
         @mysqli_query($this->connection, "SET time_zone = '".EnvironmentSettings::getUTCOffset().":00'");
         @mysqli_query($this->connection, "SET NAMES '".APP_CHARSET."' COLLATE '".APP_CHARSET."_general_ci'");
@@ -71,7 +74,12 @@ class DALMySQLi extends DAL
         	$this->Reconnect();
         	
         	$resultSet = @mysqli_query($this->connection, $sql);
-        	if ( $resultSet === false ) throw new Exception(mysqli_error($this->connection).': '.$sql);
+        	if ( $resultSet === false ) {
+        	    throw new Exception(
+        	        mysqli_error($this->connection) .': ' . $sql . PHP_EOL .
+                    var_export(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), true)
+                );
+            }
         }
 
         return $resultSet;

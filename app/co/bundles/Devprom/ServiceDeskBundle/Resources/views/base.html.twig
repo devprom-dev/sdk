@@ -4,24 +4,25 @@
         <title>{{ 'app.title'|trans({'%clientName%' : client_name }) }} - {% block title %}{% endblock %}</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/css') }}" />
-        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/bootstrap.min.css') }}" />
-        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/font-awesome.min.css') }}" />
-        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/main.css') }}" />
-        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/servicedesk.css') }}" />
+        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/css?v=' ~ app_version) }}" />
+        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/bootstrap.min.css?v=' ~ app_version) }}" />
+        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/font-awesome.min.css?v=' ~ app_version) }}" />
+        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/main.css?v=' ~ app_version) }}" />
+        <link rel="stylesheet" href="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/css/servicedesk.css?v=' ~ app_version) }}" />
         {% block stylesheets %}{% endblock %}
     </head>
     <body class="{% block body_class %}{% endblock %}">
+
         {% block body %}{% endblock %}
 
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.min.js') }}"></script>
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jstz-1.0.4.min.js') }}"></script>
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.cookies.2.2.0.min.js') }}"></script>
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/bootstrap.min.js') }}"></script>
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/select2.js') }}"></script>
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.icheck.js') }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.min.js?v=' ~ app_version) }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jstz-1.0.4.min.js?v=' ~ app_version) }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.cookies.2.2.0.min.js?v=' ~ app_version) }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/bootstrap.min.js?v=' ~ app_version) }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/select2.js?v=' ~ app_version) }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/jquery.icheck.js?v=' ~ app_version) }}"></script>
         {% block javascripts %}{% endblock %}
-        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/app.js') }}"></script>
+        <script src="{{ absolute_url('/co/bundles/Devprom/ServiceDeskBundle/public/js/app.js?v=' ~ app_version) }}"></script>
 
         <script type="text/javascript">
             $(document).ready( function() {

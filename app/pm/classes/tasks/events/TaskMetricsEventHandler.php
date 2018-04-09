@@ -1,9 +1,8 @@
 <?php
-use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
 
 class TaskMetricsEventHandler extends SystemTriggersBase
 {
-	function process( $object_it, $kind, $content = array(), $visibility = 1) 
+	function process( $object_it, $kind, $content = array(), $visibility = 1)
 	{
         if ( !$object_it->object instanceof Task ) return;
         $this->updatePlanMetrics($object_it);
@@ -12,7 +11,15 @@ class TaskMetricsEventHandler extends SystemTriggersBase
     protected function updatePlanMetrics( $object_it )
     {
         if ( $object_it->get('Release') != '' && $object_it->object->getAttributeType('Release') != '' ) {
-            $object_it->getRef('Release')->storeMetrics();
+            $iterationIt = $object_it->getRef('Release');
+            getSession()->addCallbackDelayed(
+                array(
+                    'IterationMetrics' => $iterationIt->getId()
+                ),
+                function() use ( $iterationIt ) {
+                    $iterationIt->storeMetrics();
+                }
+            );
         }
     }
 }

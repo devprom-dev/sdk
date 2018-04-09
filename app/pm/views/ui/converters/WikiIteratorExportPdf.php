@@ -1,35 +1,20 @@
 <?php
-include_once SERVER_ROOT_PATH."core/classes/export/IteratorExport.php";
+include_once SERVER_ROOT_PATH."core/classes/export/WikiIteratorExport.php";
+include 'WikiConverterMPdf.php';
 
-class WikiIteratorExportPdf extends IteratorExport
+class WikiIteratorExportPdf extends WikiIteratorExport
 {
 	function export()
 	{
- 		global $_REQUEST, $model_factory;
+        $converter = new WikiConverterMPdf();
+    	$converter->setTitle( $this->getName() );
 
-		if ( function_exists('mb_strlen') )
-		{
- 			include 'WikiConverterMPdf.php';
- 			
-			$converter = new WikiConverterMPdf();
-			
- 			$converter->setTitle( $this->getName() );
-		}
-		else
-		{
-			include 'WikiConverterPDF.php';
-			
-		 	$converter = new WikiConverterPdf();
-		}
- 		 		
  		$iterator = $this->getIterator();
 
- 		if ( $iterator->object->getClassName() == 'WikiPageChange' )
-		{
+ 		if ( $iterator->object->getClassName() == 'WikiPageChange' ) {
 		 	$converter->setRevision( $iterator );
 		}
-		else
-		{
+		else {
 		 	$converter->setObjectIt( $iterator );
 		}
 

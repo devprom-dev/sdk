@@ -73,8 +73,9 @@ class PMWikiTable extends PMPageTable
 		}
 		$filters[] = $this->buildTagsFilter();
 		$filters[] = new FilterObjectMethod(
-			getFactory()->getObject('User'), translate($this->getObject()->getAttributeUserName('Author')), 'author'
+			getFactory()->getObject('ProjectUser'), translate($this->getObject()->getAttributeUserName('Author')), 'author'
 		);
+        $filters[] = $this->buildFunctionFilter();
 
 		return $filters;
 	}
@@ -118,6 +119,7 @@ class PMWikiTable extends PMPageTable
 		if ( $this->getObject()->IsStatable() ) {
 			$filters[] = new FilterStateTransitionMethod($this->getObject());
 		}
+        $filters[] = $this->buildCompareBaselineFilter();
 
 		return array_merge(
 			$this->getCommonFilters(),
@@ -131,16 +133,16 @@ class PMWikiTable extends PMPageTable
 		$values = $this->getFilterValues();
 
 		$predicates = array (
+		    new WikiPageFeaturePredicate($values['feature']),
 			new PMWikiStageFilter( $values['version'] ),
 			new StatePredicate( $values['state'] ),
 			new FilterAttributePredicate( 'PageType', $values['type'] ),
 			new WikiTypePlusChildren($values['typepluschildren']),
 			new PMWikiLinkedStateFilter( $values['linkstate'] ),
 			new FilterAttributePredicate( 'Author', $values['author'] ),
-			new WikiRootTransitiveFilter( $values['parentpage'] ),
+			new ParentTransitiveFilter( $values['parentpage'] ),
 			new WikiTagFilter( $values['tag'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
-		    new WikiDocumentUIDFilter( $values['document'] ),
 			new FilterModifiedAfterPredicate($values['modifiedafter']),
 			new FilterSearchAttributesPredicate($values['search'], array('Caption','Content'))
 		);
@@ -158,7 +160,12 @@ class PMWikiTable extends PMPageTable
 
 		return array_merge(parent::getFilterPredicates(), $predicates);
 	}
-	
+
+	function getNewPageTitle()
+    {
+        return $this->object->getDisplayName();
+    }
+
 	function getNewActions()
 	{
 		$actions = array();
@@ -168,7 +175,7 @@ class PMWikiTable extends PMPageTable
 		$method->setRedirectUrl('donothing');
 
 		$actions['create'] = array( 
-	        'name' => $this->object->getDisplayName(),
+	        'name' => $this->getNewPageTitle(),
 			'url' => $method->getJSCall(),
 			'uid' => 'create' 
 		);
@@ -244,9 +251,15 @@ class PMWikiTable extends PMPageTable
 
 	function buildFilterDocument()
 	{
-		$document = getFactory()->getObject(get_class($this->getObject()));
-		$document->addFilter( new WikiRootFilter() );
-		$document_filter = new FilterObjectMethod( $document, translate('Документ'), 'document' );
+		$document_filter = new FilterObjectMethod(
+		    getFactory()->getObject('WikiDocument')->getRegistry()->Query(
+		        array(
+		            new FilterAttributePredicate('ReferenceName', $this->getObject()->getReferenceName()),
+                    new FilterVpdPredicate()
+                )
+            ),
+            translate('Документ'), 'document'
+        );
 		$document_filter->setType( 'singlevalue' );
 		$document_filter->setUseUid( true );
 		$document_filter->setHasNone( false );
@@ -269,7 +282,21 @@ class PMWikiTable extends PMPageTable
 		return $filter;
 	}
 
-	function getSortFields()
+    function buildFunctionFilter() {
+ 	    $filter = new FilterObjectMethod(getFactory()->getObject('Feature'));
+        $filter->setHasNone(false);
+        return $filter;
+    }
+
+    function buildCompareBaselineFilter() {
+        $filter = new FilterObjectMethod(getFactory()->getObject('Baseline'), text(1566), 'compareto');
+        $filter->setHasNone(false);
+        $filter->setIdFieldName('Caption');
+        $filter->setType( 'singlevalue' );
+        return $filter;
+    }
+
+    function getSortFields()
 	{
 		$fields = parent::getSortFields();
 		$fields[] = 'SectionNumber';

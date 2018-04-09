@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/model/validators/ModelNotificationValidator.php";
 
 class FieldCheckNotifications extends FieldCheck
 {
@@ -23,9 +24,14 @@ class FieldCheckNotifications extends FieldCheck
 
         if ( count($this->emails) > 0 )
         {
-            echo '<div class="alert alert-hint alert-comment">';
+            echo '<div class="alert alert-danger alert-comment">';
                 parent::draw($view);
             echo '</div>';
         }
  	}
+
+ 	function getValidator()
+    {
+        return new ModelNotificationValidator();
+    }
 }

@@ -8,7 +8,15 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  		$this->anchor_it = $anchor_it;
  	}
 
-	function getLeftWorkAttribute() {
+ 	function getAnchorIt() {
+ 	    return $this->anchor_it;
+    }
+
+    function getAnchorField() {
+        return 'Task';
+    }
+
+    function getLeftWorkAttribute() {
 	    return $this->left_work_attribute;
 	}
 	

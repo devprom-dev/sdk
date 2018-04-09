@@ -355,7 +355,7 @@ a.dashed:hover {
 	right:0;
 }
 
-.alert p, .alert div {
+.alert p, .alert div, .alert pre {
 	margin-bottom:0.8em;
 	margin-left:40px;
 	color: #404040;
@@ -412,6 +412,13 @@ a.dashed:hover {
 
 .wishes-table th {
 	color:#000;
+}
+.wishes-table th[uid='uid'] {
+	white-space: nowrap;
+}
+.wishes-table th.right * {
+	float:right;
+	text-align: left;
 }
 
 .mode-sort {
@@ -682,8 +689,30 @@ ul.changes-section li {
 	margin-left: 0;
 	margin-right: 0;
 }
-.comment-line .comment-text {
-	padding: 4px 4px 12px 4px;
+@media screen {
+	.comment-line .comment-text {
+		padding: 4px 4px 12px 4px;
+	}
+	.comment-line .comment-author {
+		padding-left: 4px;
+	}
+	.comment-text .btn-link-hidden {
+		display:none;
+	}
+	.comment-text:hover .btn-link-hidden {
+		display:inline;
+	}
+}
+@media print {
+	.comment-line .comment-text {
+		padding: 4px 4px 4px 0px;
+	}
+	*.diffins {
+		text-decoration: underline;
+	}
+	*.diffdel {
+		text-decoration: line-through;
+	}
 }
 .comment-line .wysiwyg {
 	padding: 0;
@@ -763,7 +792,7 @@ input.spent-time
 	padding-top: 4px;
 }
 .wiki-page-document .table-header {
-	margin-bottom: 7px;
+	margin-bottom: 5px;
 }
 
 .wiki-page-document-divider
@@ -793,6 +822,9 @@ input.spent-time
 		max-width: 260px;
 		min-width: 260px;
 	}
+	.wiki-page-tree a.tree-placement {
+		margin-right: 5px;
+	}
 }
 @media(min-width: 1279px) {
 	.wiki-page-tree.left {
@@ -802,6 +834,9 @@ input.spent-time
 	.wiki-page-tree.right {
 		max-width: 330px;
 		min-width: 330px;
+	}
+	.wiki-page-tree a.tree-placement {
+		margin-right: 6px;
 	}
 }
 @media(min-width: 1359px) {
@@ -813,6 +848,9 @@ input.spent-time
 		max-width: 350px;
 		min-width: 350px;
 	}
+	.wiki-page-tree a.tree-placement {
+		margin-right: 7px;
+	}
 }
 @media(min-width: 1440px) {
 	.wiki-page-tree.left {
@@ -823,6 +861,9 @@ input.spent-time
 		max-width: 400px;
 		min-width: 400px;
 	}
+	.wiki-page-tree a.tree-placement {
+		margin-right: 10px;
+	}
 }
 @media(min-width: 1600px) {
 	.wiki-page-tree.left {
@@ -832,6 +873,9 @@ input.spent-time
 	.wiki-page-tree.right {
 		max-width: 470px;
 		min-width: 470px;
+	}
+	.wiki-page-tree a.tree-placement {
+		margin-right: 12px;
 	}
 }
 
@@ -848,7 +892,6 @@ input.spent-time
 .wiki-page-tree a.tree-placement {
 	line-height:34px;
 	float:right;
-	margin-right: 10px;
 	display: none;
 }
 .wiki-page-tree:hover a.tree-placement {
@@ -878,13 +921,22 @@ input.spent-time
 
 .title-cell .sec-num {
 	padding-right: 16px;
-	margin-top: 4px;
 }
-.title-cell .sec-num.readonly {
-	margin-top: 0;
+@media screen {
+	.title-cell .sec-num {
+		margin-top: 4px;
+	}
+	.title-cell .sec-num.readonly {
+		margin-top: 0;
+	}
+	.title-cell .wysiwyg-input:not([contenteditable]) {
+		margin-top: 4px;
+	}
 }
-.title-cell .wysiwyg-input:not([contenteditable]) {
-	margin-top: 4px;
+@media print {
+	.table-document .header-row {
+		display: none;
+	}
 }
 
 table.table-document
@@ -990,9 +1042,24 @@ a.file_attach img
 	display: none;
 }
 
-.wiki-page-document .comments-section
-{
-	margin-top: -22px;
+.comments-cell {
+	display: table-cell;
+}
+@media screen {
+	.comments-section.closed {
+		display: none;
+	}
+	.comments-cell.open {
+		display: none;
+	}
+	.wiki-page-document .comments-section {
+		margin-top: -22px;
+	}
+}
+@media print {
+	.comments-cell {
+		display: none;
+	}
 }
 
 .document-item-bottom-hidden
@@ -1437,6 +1504,15 @@ img[alt] {
 .sticks-top-body {
 	overflow-x: hidden;
 }
+.sticks-body-hidden th {
+	background-color: white;
+	border-top: none;
+}
+
+.sticks-body-hidden {
+	display: none;
+	z-index: 2;
+}
 
 .short-menu-popover {
 	max-width: 790px;
@@ -1574,7 +1650,7 @@ div.details-visible div.hint-holder {
 
 .profile-avatar {
 	padding: 15px 15px;
-	margin-right: 12px;
+	margin-right: 6px;
 	width: 0px;
 	height: 0px;
 	-webkit-border-radius: 3px;
@@ -1605,12 +1681,8 @@ img.wiki_page_image
 
 span[comment-id] {
 	cursor: pointer;
-	margin-bottom: 5px;
 	display: inline-block;
-	padding: 2px 4px;
-	font-size: 11.844px;
-	line-height: 14px;
-	white-space: nowrap;
+	padding: 1px 1px;
 	vertical-align: baseline;
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
@@ -1678,7 +1750,6 @@ tr.total td {
 }
 
 span.project-search input {
-	width: 270px;
 	padding: 2px 4px;
 }
 
@@ -1695,6 +1766,14 @@ span.project-search input {
 .p-link.p-node i {
 	opacity: 0.6;
 	margin-right: 3px;
+}
+.p-left-recent {
+	display: table-cell;
+	min-width: 270px;
+}
+.p-right-recent {
+	display: table-cell;
+	padding-left: 20px;
 }
 
 h4.page-form-view {
@@ -1758,4 +1837,122 @@ a.text-link {
 }
 .uid-state {
 	padding-top: 2px;
+}
+
+.page-title {
+	display:table;
+}
+.page-title .page-title-col {
+	display:table-cell;
+}
+.context-left {
+	display: table-cell;
+	width: 0;
+	height: 0;
+	border-top: 30px solid #777777;
+	border-left: 15px solid transparent;
+	vertical-align: top;
+}
+.context-right {
+	display: table-cell;
+	width: 0;
+	height: 0;
+	border-top: 30px solid #777777;
+	border-right: 15px solid transparent;
+	vertical-align: top;
+}
+.context-middle {
+	display: table-cell;
+	height: 28px;
+	line-height: 28px;
+	background-color: #777777;
+	color:white;
+	min-width: 60px;
+	padding-left: 6px;
+	padding-right: 6px;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: top;
+}
+.context-container {
+	display: table;
+	width: 100%;
+}
+.context-container .btn {
+	color: white;
+	text-shadow: inherit;
+	background: none;
+	border: none;
+	-moz-box-shadow: none;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+@media(max-width: 1024px) {
+	.context-container {
+		display: none;
+	}
+}
+
+.source-text .wysiwyg h1 {
+	font-size: 20px;
+}
+
+#fieldRowStartDate {
+	max-width: 280px;
+}
+
+.tab-pane.statablelifecyclesection {
+	overflow-x: auto;
+}
+
+
+table[uid=testschecklistreport] th[uid^=version_] {
+    width: 1%;
+}
+table[uid=testschecklistreport] th[uid^=version_] p {
+	writing-mode: vertical-lr;
+}
+
+.pri-cir {
+	margin-left: -12px;
+	margin-right: 4px;
+}
+
+.grabbable {
+	cursor: move; /* fallback if grab cursor is unsupported */
+	cursor: grab;
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+
+/* (Optional) Apply a "closed-hand" cursor during drag operation. */
+.grabbable:active {
+	cursor: grabbing;
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
+}
+
+i.issue {
+    width: 16px;
+    height: 16px;
+	display: inline-block;
+	line-height: 20px;
+	vertical-align: middle;
+	margin-top: -1px;
+}
+i.issue.bug {
+	background-image: url(/images/bug.png);
+}
+i.issue.enhancement {
+	background-image: url(/images/layout_add.png);
+}
+
+span.label-state {
+	white-space: normal;
+}
+
+.title-cell span.label-state {
+	white-space: nowrap;
 }

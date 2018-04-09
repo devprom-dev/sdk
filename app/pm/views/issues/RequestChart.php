@@ -50,12 +50,9 @@ class RequestChart extends PMPageChart
 	
 	function getChartWidget()
 	{
-		global $_REQUEST, $project_it, $model_factory;
-
-		$release = $model_factory->getObject('Release');
+		$release = getFactory()->getObject('Release');
 		
 		$values = $this->getFilterValues();
-		
 		if ( in_array($values['release'], array('', 'all', 'hide')) )
 		{
 			$release->addFilter( new ReleaseTimelinePredicate('current') );
@@ -74,31 +71,32 @@ class RequestChart extends PMPageChart
 				$flot = new FlotChartBurndownWidget();
 				$flot->setLegend( false );
 				$flot->showPoints( false );
-
 				$flot->setUrl(getSession()->getApplicationUrl().
 					'chartburndownversion.php?version='.$release_it->getId().'&json=1');
 				return $flot;
 				
-			case 'releaseburnup':
-				$flot = new FlotChartBurnupWidget();
-				$flot->setLegend( false );
-				$flot->showPoints( false );
-
-				$flot->setUrl( getSession()->getApplicationUrl().
-					'chartburnup.php?release='.$release_it->getId() );
-				
-                return $flot;
-                
 			case 'projectburnup':
 				$flot = new FlotChartBurnupWidget();
 				$flot->setLegend( false );
 				$flot->showPoints( false );
-
-				$flot->setUrl( getSession()->getApplicationUrl().'chartburnupproject.php' );
+				$flot->setUrl( getSession()->getApplicationUrl().'chartburnup.php' );
 				return $flot;
 				
 			default:
 				return parent::getChartWidget();
 		}
 	}
+
+	function getDemo()
+    {
+        switch ( $this->getTable()->getReportBase() )
+        {
+            case 'releaseburndown':
+            case 'projectburnup':
+                return false;
+
+            default:
+                return parent::getDemo();
+        }
+    }
 }

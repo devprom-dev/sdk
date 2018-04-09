@@ -2,6 +2,7 @@
 include_once SERVER_ROOT_PATH . "pm/classes/wiki/converters/WikiImporterBuilder.php";
 include "converters/WikiImporterEnginePanDoc.php";
 include "converters/WikiImporterEngineExcel.php";
+include "converters/WikiImporterEngineMhtml.php";
 include "converters/WikiImporterEnginePdf.php";
 
 class WikiImporterBuilderPanDoc extends WikiImporterBuilder
@@ -23,6 +24,7 @@ class WikiImporterBuilderPanDoc extends WikiImporterBuilder
 
     public function build( WikiImporterRegistry $registry, Metaobject $page )
     {
+        $registry->add('WikiImporterEngineMhtml');
         $registry->add('WikiImporterEngineExcel');
         $registry->add('WikiImporterEnginePdf');
         if ( !$this->checkPandocInstalled() ) return;

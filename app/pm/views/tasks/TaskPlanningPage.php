@@ -3,6 +3,8 @@
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelCommonBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderTasks.php";
 include_once SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';
 include_once SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
@@ -18,15 +20,16 @@ class TaskPlanningPage extends PMPage
  	{
  		getSession()->addBuilder( new TaskViewModelCommonBuilder() );
  		getSession()->addBuilder( new BulkActionBuilderTasks() );
- 		
+        getSession()->addBuilder( new RequestModelExtendedBuilder() );
+        getSession()->addBuilder( new RequestModelPageTableBuilder() );
+
  		parent::PMPage();
- 		
- 		if ( $_REQUEST['view'] == 'chart' ) return;
  		
  		if ( $this->needDisplayForm() )
  		{
             $this->addInfoSection( new PageSectionAttributes($this->getObject(),'deadlines',translate('Сроки')) );
             $this->addInfoSection( new PageSectionAttributes($this->getObject(),'source-issue',translate('Пожелание')) );
+            $this->addInfoSection( new PageSectionAttributes($this->getObject(),'additional',translate('Дополнительно')) );
             $this->addInfoSection( new PageSectionAttributes($this->getObject(),'trace',translate('Трассировки')) );
 
             $object_it = $this->getObjectIt();
@@ -129,6 +132,13 @@ class TaskPlanningPage extends PMPage
 
 	function getWorkItemReports()
     {
-        return array('mytasks', 'assignedtasks', 'newtasks', 'issuesmine', 'watchedtasks');
+        return array(
+            'mytasks',
+            'nearesttasks',
+            'assignedtasks',
+            'newtasks',
+            'issuesmine',
+            'watchedtasks'
+        );
     }
 }

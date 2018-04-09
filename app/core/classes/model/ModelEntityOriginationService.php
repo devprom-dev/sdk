@@ -137,6 +137,7 @@ class ModelEntityOriginationService
 			case 'co_MailTransport':
 			case 'cms_ExternalUser':
 			case 'ObjectChangeLogAttribute':
+            case 'ObjectChangeNotification':
 				return '';
 				
 			default:

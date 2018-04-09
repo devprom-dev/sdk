@@ -22,17 +22,25 @@ class WikiService
     		? array (
     				new \FilterAttributePredicate('ParentPage', $root)
     			)
-    		: array (
-    				new \WikiRootFilter(),
-					$crossProject ? new \ProjectAccessibleActiveVpdPredicate() : new \FilterVpdPredicate()
-    			);
-    		
+    		: ( $crossProject ?
+                    array(
+                        new \WikiRootFilter(),
+                        new \ProjectAccessibleActiveVpdPredicate(),
+                        new \FilterNoVpdPredicate(getSession()->getProjectIt()->get('VPD'))
+                    ) :
+                    array(
+                        new \WikiRootFilter(),
+                        new \FilterVpdPredicate()
+                    )
+            );
+
     	$this->setObjectIt(
 			$this->object->getRegistry()->Query(
 				array_merge(
 					array (
 						new \SortProjectSelfFirstClause(),
-						new \SortDocumentClause()
+                        new \SortAttributeClause('Project'),
+						new \SortDocumentClause(),
 					),
 					$predicates
 				)
@@ -78,16 +86,15 @@ class WikiService
 
     		$item = array();
 
-    		$title = $object_it->get('ParentPage') == '' ? $object_it->getDisplayName() : $object_it->get('Caption');
+    		$title = $object_it->getTreeDisplayName('Caption');
 
     		$uid_info = $uid->getUidInfo($object_it);
-    		$uid_text = '['.$uid_info['uid'].']';
-    		if ( $this->root < 1 && $uid_info['alien'] ) $uid_text .= ' {'.$uid_info['project'].'}';
+    		if ( $this->root < 1 && $uid_info['alien'] ) $title = '{'.$uid_info['project'].'} ' . $title;
     		
  			$item['text'] = 
  	 			'<div class="treeview-label '.$image.'">'.
- 	 			'<a class="treeview-title wiki_tree_node item" href="javascript:" object="'.$object_it->getId().'">'.
- 				$uid_text.' '.$title.
+ 	 			'<a class="treeview-title wiki_tree_node item" href="javascript:" object="'.$object_it->getId().'"> '.
+ 				$title.
  				'</a>'.
  				'</div>';
 

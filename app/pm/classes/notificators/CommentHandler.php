@@ -20,16 +20,28 @@ class CommentHandler extends EmailNotificatorHandler
 
 	function IsParticipantNotified( $participant_it )
 	{
-		$notification_type = getFactory()->getObject('Notification')->getType( $participant_it );
-		return $notification_type != '';
+		return $participant_it->get('NotificationEmailType') != '';
 	}
 
-	function participantHasAccess( $participant_it, $object_it )
-	{
-		return true;
-	}
+	function getParticipants($object_it, $prev_object_it, $action)
+    {
+        $result = array();
 
-	function getUsers( $object_it, $prev_object_it, $action )
+        $anchor_it = $object_it->getAnchorIt();
+        if ( $anchor_it->getId() == '' ) return $result;
+
+        switch( $anchor_it->object->getClassName() )
+        {
+            case 'pm_ChangeRequest':
+            case 'pm_Task':
+            case 'pm_Question':
+                return $this->getProject($object_it)->getLeadIt()->idsToArray();
+        }
+
+        return $result;
+    }
+
+    function getUsers( $object_it, $prev_object_it, $action )
 	{
 		$result = array();
 		if ( $action != 'add' ) return $result;
@@ -101,6 +113,7 @@ class CommentHandler extends EmailNotificatorHandler
  	{
  		$data = array();
  		$parser = $editor->getHtmlParser();
+        $parser->setObjectIt($comment_it);
 		$uid = new ObjectUID();
 
  		do 

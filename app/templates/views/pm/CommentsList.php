@@ -7,12 +7,14 @@
 
 		<?php if ( $sort == "asc" ) $list->renderThread( $view ); ?>
 
-		<div id="comments-form<?=$control_uid?>" style="min-height: 48px;" modified="<?=time()?>">
+		<div class="hidden-print" id="comments-form<?=$control_uid?>" style="min-height: 48px;" modified="<?=time()?>">
 			<div class="comment">
 
+                <? if ( $form->IsAttributeModifable('Caption') ) { ?>
 				<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
 					<i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
 				</a>
+                <? } ?>
 
 				<? if ( $collapseable ) { ?>
 				<a tabindex="6" class="btn btn-small btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
@@ -94,6 +96,7 @@
 			success: function( result ) 
 			{
 				placeholder.html(result);
+				makeupUI(placeholder);
 				setTimeout(function() {
 					try {
 						var captionElement = placeholder.contents().find('[id*=Caption]');

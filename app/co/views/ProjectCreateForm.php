@@ -109,9 +109,9 @@ class CreateProjectForm extends AjaxForm
 		switch ( $attribute )
 		{
 			case 'CodeName':
-				return translate('Кодовое название проекта');
+				return translate('Кодовое название');
 			case 'Caption':
-				return translate('Название проекта');
+				return translate('Название');
 			case 'Template':
 				return translate('Шаблон начальных настроек проекта');
 			case 'Participants':
@@ -134,6 +134,8 @@ class CreateProjectForm extends AjaxForm
 				return text(741);
 			case 'Participants':
 				return text(1865);
+            case 'Users':
+                return text(2501);
  		}
  	}
 
@@ -157,6 +159,9 @@ class CreateProjectForm extends AjaxForm
 				 if ( is_numeric($_REQUEST['portfolio']) ) {
 					 echo '<input type="hidden" name="portfolio" value="'.$_REQUEST['portfolio'].'">';
 				 }
+                 if ( is_numeric($_REQUEST['program']) ) {
+                     echo '<input type="hidden" name="program" value="'.$_REQUEST['program'].'">';
+                 }
 				 break;
 
              case 'DemoData':

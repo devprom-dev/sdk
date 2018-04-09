@@ -13,14 +13,23 @@ class WikiBulkForm extends BulkForm
 	function getIt()
 	{
 		$iterator = parent::getIt();
-		if ( strpos($_REQUEST['operation'], 'BulkDeleteWebMethod') === false ) return $iterator;
 
-		return $this->object->getRegistry()->Query(
-            array (
-                new WikiRootTransitiveFilter($iterator->idsToArray()),
-                new SortDocumentClause()
-            )
-		);
+		if ( strpos($_REQUEST['operation'], 'BulkDeleteWebMethod') === false ) {
+            return $this->object->getRegistry()->Query(
+                array (
+                    new FilterInPredicate($iterator->idsToArray()),
+                    new SortDocumentClause()
+                )
+            );
+        }
+        else {
+            return $this->object->getRegistry()->Query(
+                array (
+                    new ParentTransitiveFilter($iterator->idsToArray()),
+                    new SortDocumentClause()
+                )
+            );
+        }
 	}
 	
  	function getAttributeType( $attr )
@@ -34,14 +43,18 @@ class WikiBulkForm extends BulkForm
  		    case 'Project':
             case 'Feature':
  		    	return 'custom';
-
  			case 'CopyOption':
+            case 'UseNumbering':
+            case 'UsePaging':
+            case 'ExportChildren':
  				return 'char';
- 		    	
  			case 'Description':
  				return 'largetext';
- 				
- 			default:
+            case 'File':
+                return 'file';
+            case 'ExportTemplate':
+                return 'object';
+            default:
  				return parent::getAttributeType( $attr );
  		}
  	}
@@ -52,16 +65,20 @@ class WikiBulkForm extends BulkForm
  		{
             case 'Tag':
                 return translate('Тэг');
-
  			case 'CopyOption':
  				return text(1726);
- 			
  			case 'Project':
  				return translate('Проект');
- 				
  			case 'Description':
  				return translate('Описание');
- 				
+            case 'UseNumbering':
+                return text(2523);
+            case 'UsePaging':
+                return text(2524);
+            case 'File':
+                return text(2525);
+            case 'ExportChildren':
+                return text(2526);
  			default:
  				return parent::getName( $attr );
  		}
@@ -76,8 +93,17 @@ class WikiBulkForm extends BulkForm
 
  			case 'Description':
  				return ' ';
- 				
- 			default:
+
+            case 'ExportTemplate':
+                $module_it = getFactory()->getObject('Module')->getExact('dicts-exporttemplate');
+                return preg_replace('/%2/',$module_it->getDisplayName(),
+                        preg_replace('/%1/',$module_it->getUrl(),text(2527))
+                    ).'<hr/>';
+
+            case 'File':
+                return text(2528);
+
+            default:
  				return parent::getDescription( $attr );
  		}
  	}
@@ -88,13 +114,37 @@ class WikiBulkForm extends BulkForm
 		{
 		    case 'CopyOption': 
 		    	return 'N';
-		    	
-		    default:
+
+            case 'UseNumbering':
+            case 'UsePaging':
+                return 'Y';
+
+            case 'ExportChildren':
+                $pageIt = $this->getIt();
+                if ( $pageIt->count() == 1 ) return 'Y';
+                while( !$pageIt->end() ) {
+                    if ( $pageIt->get('ParentPage') != '' ) return 'N';
+                    $pageIt->moveNext();
+                }
+                return 'Y';
+
+            default:
 		    	return parent::getAttributeValue( $attribute );
 		}
 	}
 
- 	function drawCustomAttribute( $attribute, $value, $tab_index, $view )
+    function getAttributeClass($attribute)
+    {
+        switch( $attribute ) {
+            case 'ExportTemplate':
+                return getFactory()->getObject('ExportTemplate');
+            default:
+                return parent::getAttributeClass($attribute);
+        }
+    }
+
+
+    function drawCustomAttribute( $attribute, $value, $tab_index, $view )
  	{
  		global $model_factory;
  		
@@ -201,6 +251,7 @@ class WikiBulkForm extends BulkForm
 		{
 			case 'Snapshot':
 				if ( $this->getIt()->count() > 1 ) return false;
+				if ( !is_object($this->getSnapshotObject()) ) return false;
  				return $this->getSnapshotObject()->getRegistry()->Query(
  						array ( new FilterAttributePredicate('ObjectId', $this->getIt()->getId()) )
  					)->count() > 0;
@@ -213,6 +264,17 @@ class WikiBulkForm extends BulkForm
 				return true;
 
             case 'RemoveTag':
+                return false;
+
+            case 'ExportTemplate':
+                return getFactory()->getObject('ExportTemplate')->getRecordCount() > 0;
+
+            case 'ExportChildren':
+                $pageIt = $this->getIt();
+                while( !$pageIt->end() ) {
+                    if ( $pageIt->get('ParentPage') != '' ) return true;
+                    $pageIt->moveNext();
+                }
                 return false;
 
 			default:

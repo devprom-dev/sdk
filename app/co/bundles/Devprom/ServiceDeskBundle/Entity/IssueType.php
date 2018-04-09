@@ -36,6 +36,12 @@ class IssueType {
     private $vpd;
 
     /**
+     * @ORM\Column(type="string", name="Option1")
+     * @var string
+     */
+    private $visible;
+
+    /**
      * @param int $id
      */
     public function setId($id)
@@ -104,5 +110,19 @@ class IssueType {
         return $this->getName();
     }
 
+    /**
+     * @param string $value
+     */
+    public function setVisible($value)
+    {
+        $this->visible = $value;
+    }
 
+    /**
+     * @return string
+     */
+    public function getVisible()
+    {
+        return $this->visible;
+    }
 }

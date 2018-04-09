@@ -19,7 +19,9 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
     	
  		$metadata->addPersister( new FeatureTitlePersister() );
  		$metadata->addPersister( new FeatureHierarchyPersister() );
- 		
+
+        $metadata->addAttribute('Children', 'REF_FeatureId', text(2437), false);
+
  		$metadata->addAttribute( 'Tags', 'REF_TagId', translate('Тэги'), false, false, '', 280 );
  		$tag = getFactory()->getObject('CustomTag');
  		$metadata->addPersister( new FeatureTagPersister() );
@@ -34,7 +36,7 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
     	foreach ( array('Workload', 'Estimation', 'EstimationLeft') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'system');
 		}
-		foreach ( array('Type', 'ParentFeature') as $attribute ) {
+		foreach ( array('Type', 'ParentFeature', 'Children') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'hierarchy');
 		}
     }

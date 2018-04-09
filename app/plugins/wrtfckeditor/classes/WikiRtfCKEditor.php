@@ -168,12 +168,12 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php } else { ?>
 			
-			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=htmlentities($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING)?>">
+			<input type="hidden" id="<?php echo $id; ?>Value" name="<?php echo $field; ?>" value="<?=$content?>">
 
 			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="min-height:<?=$height?>px;" contenteditable="true" objectId="<?=$object_id?>" tabindex="<?php echo $this->getTabIndex(); ?>" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
 			    <? 
 				        // decode is required because of edit mode is displayed like html (div)
-			        echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); 
+			        echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 			    ?>
 			</div>
 			
@@ -181,19 +181,23 @@ class WikiRtfCKEditor extends WikiEditorBase
 			
 			<?php } elseif ( $this->getMode() & WIKI_MODE_INPLACE_INPUT ) { ?>
 			
-			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> ><? echo $content; ?></div>
+			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
+                <? echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); ?>
+            </div>
 			
 			<?php } else { ?>
 
 			<?php if ( $content == '' ) { ?>
 			
-		    <div class="wysiwyg-welcome" for-id="<?=$id?>"><?=text(1280)?></div>
+		    <div class="wysiwyg-welcome hidden-print" for-id="<?=$id?>"><?=text(1280)?></div>
 			
 			<?php } ?>
 			
 			<?php if ( $content == '' ) $style = 'min-height:'.$height.'px;'; ?>
 			
-			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="<?=$style?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> > <? echo $content; ?></div>
+			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="<?=$style?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
+                <? echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); ?>
+            </div>
 			
 			<?php } ?>
 

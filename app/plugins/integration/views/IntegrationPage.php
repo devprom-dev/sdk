@@ -39,7 +39,8 @@ class IntegrationPage extends PMPage
             $link_it = getFactory()->getObject('IntegrationLink')->getExact(preg_split('/,/', $_REQUEST['integrationlink']));
             if ( $link_it->count() > 0 ) {
                 $service = new IntegrationService(
-                    getFactory()->getObject('Integration')->getExact($link_it->fieldToArray('Integration'))
+                    getFactory()->getObject('Integration')->getExact($link_it->fieldToArray('Integration')),
+                    \Logger::getLogger('Commands')
                 );
                 $channel = $service->getRemoteChannel();
                 $url = $channel->getSearchUrl($link_it->fieldToArray('ExternalId'));

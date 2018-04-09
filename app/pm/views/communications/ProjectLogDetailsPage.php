@@ -25,4 +25,14 @@ class ProjectLogDetailsPage extends PMPage
 				)
 			 )->idsToArray();
  	}
+
+ 	function getRenderParms()
+    {
+        return array_merge(
+            parent::getRenderParms(),
+            array(
+                'context_template' => ''
+            )
+        );
+    }
 }

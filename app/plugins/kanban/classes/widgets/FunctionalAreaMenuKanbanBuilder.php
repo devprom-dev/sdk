@@ -33,16 +33,6 @@ class FunctionalAreaMenuKanbanBuilder extends FunctionalAreaMenuBuilder
 
 		$menus = $set->getAreaMenus( FUNC_AREA_FAVORITES );
 
-		if ( $project_it->count() == getSession()->getLinkedIt()->count() ) {
-			$item = $this->report->getExact('kanbanboard')->buildMenuItem();
-			$item['order'] = 7;
-			$menus['quick']['items']['issuesboard'] = $item;
-		}
-		else {
-			$item = $this->report->getExact('kanbanboard')->buildMenuItem();
-			$item['order'] = 7;
-			$menus['quick']['items']['kanbanboard'] = $item;
-		}
 		if ( count($menus['reports']['items']) > 0 ) {
 			$menus['reports']['items'][] = $this->report->getExact('avgleadtime')->buildMenuItem();
 		}

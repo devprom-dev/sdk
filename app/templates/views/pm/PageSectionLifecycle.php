@@ -11,7 +11,7 @@ $rows = array_reverse($rows);
 $timeTable = array();
 $totalSpent = array();
 foreach( $rows as $row ) {
-	$key = $row['date'].', '.$row['author'];
+	$key = $row['datetime'] .'#'. $row['date'].', '.$row['author'];
 	if ( $row['transition'] != '' ) {
 		$key .= ', '.$row['transition'];
 	}
@@ -26,7 +26,7 @@ foreach( $rows as $row ) {
 
 $lastIndex = array_pop(array_keys($rows));
 foreach( $rows as $index => $row ) {
-	$uml .= "state " . '"' . $row['state'] . '" as ' . $row['state-ref'] . " <<".($index == $lastIndex ? "Last" : "Complete").">>" . PHP_EOL;
+	$uml .= "state " . '"' . str_replace(' ', '\n', $row['state']) . '" as ' . $row['state-ref'] . " <<".($index == $lastIndex ? "Last" : "Complete").">>" . PHP_EOL;
 	if ( $row['duration'] != '' && $row['duration'] != '0' ) {
 		$uml .= $row['state-ref'] .  ' : ' . $row['duration'] . PHP_EOL;
 	}
@@ -43,9 +43,23 @@ else {
 
 $row = array_shift($rows);
 $prevState = $row['state-ref'];
+$arrowsMap = array(
+    "-right->" => "-left->",
+    "-left->" => "-right->"
+);
+$statesPassed = array();
 
 foreach( $rows as $row ) {
-	$uml .= $prevState . " ".$arrowPlacement." " . $row['state-ref'];
+    $statesPassed[$prevState] = '';
+    $statesChainLength = count($statesPassed);
+    if ( $statesChainLength % 6 === 0 || array_key_exists($row['state-ref'], $statesPassed) ) {
+        $arrowPlacement = $arrowsMap[$arrowPlacement];
+    }
+    $arrow = $arrowPlacement;
+    if ( $statesChainLength % 6 === 0 ) {
+        $arrow = '-down->';
+    }
+	$uml .= $prevState . " ".$arrow." " . $row['state-ref'];
 	$uml .= PHP_EOL;
 	$prevState = $row['state-ref'];
 }
@@ -54,7 +68,7 @@ $uml .= "@enduml";
 $url = trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plantuml.com', "/ ");
 $url .= '/plantuml/img/'.encode64(gzdeflate($uml, 9));
 
-echo '<a class="image_attach" href="'.$url.'"><img class="workflow-image" src="'.$url.'"></a>';
+echo '<img class="workflow-image" src="'.$url.'">';
 
 echo '<br/>';
 if ( $lastComment != '' ) {
@@ -74,7 +88,7 @@ echo '</tr>';
 $width = max(1,round(100 / ($stateIt->count() + 2), 0));
 foreach( $timeTable as $author => $durations ) {
 	echo '<tr>';
-		echo '<td>'.$author.'</td>'.
+		echo '<td>'.array_pop(preg_split('/#/', $author)).'</td>'.
 		$stateIt->moveFirst();
 		while( !$stateIt->end() ) {
 			echo '<td width="'.$width.'%">'.getSession()->getLanguage()->getDurationWording($durations[$stateIt->get('ReferenceName')]).'</td>';
@@ -84,4 +98,3 @@ foreach( $timeTable as $author => $durations ) {
 }
 echo '</table>';
 echo str_replace('%1', $lifecycle, text(2301));
-?>

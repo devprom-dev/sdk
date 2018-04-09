@@ -1,5 +1,4 @@
 <?php
-
 include_once "FilterWebMethod.php";
 
 class FilterObjectMethod extends FilterWebMethod
@@ -74,6 +73,11 @@ class FilterObjectMethod extends FilterWebMethod
  	{
  	    $this->has_all = $has_all;
  	}
+
+ 	function getHasAll()
+    {
+        return $this->has_all;
+    }
  	
  	function setHasNone( $has_none )
  	{
@@ -98,7 +102,9 @@ class FilterObjectMethod extends FilterWebMethod
 	function getValues()
 	{
 		$values = array();
-		
+
+		if ( !getFactory()->getAccessPolicy()->can_read($this->object) ) return $values;
+
 		$uid = new ObjectUID;
 		
 		if ( !is_object($this->it) )
@@ -117,6 +123,9 @@ class FilterObjectMethod extends FilterWebMethod
 		while ( !$this->it->end() )
 		{
 			$display_name = $this->use_uid ? $uid->getUidTitle($this->it) : ' '.$this->it->getDisplayName();
+			if ( strlen($display_name) > 80 ) {
+                $display_name = TextUtils::getWords($display_name, 8);
+            }
 			$item_value = $this->it->get($this->idfieldname);
 
 			if ( $item_value == '' ) 
@@ -150,6 +159,9 @@ class FilterObjectMethod extends FilterWebMethod
 				$value = trim($value);
 		});
 
+		if ( $this->object instanceof User ) {
+            $values = array_merge( array ( 'user-id' => text(2480) ), $values );
+        }
 		if ( $this->has_none ) {
 			$values = array_merge( array ( 'none' => $this->none_title ), $values );
 		}
@@ -159,6 +171,14 @@ class FilterObjectMethod extends FilterWebMethod
 		if ( $itemsCount > $this->rowsVisibilityLimit ) {
 			$values = array_merge( array ( 'search' => array( 'uid' => 'search') ), $values );
 		}
+        if ( $this->object->getPage() != '?' ) {
+            $values = array_merge(
+                $values,
+                array (
+                    '_options' => array( 'uid' => 'options', 'href' => $this->object->getPage() )
+                )
+            );
+        }
 
  		if ( $selected_value_found || count(array_intersect($selected_values, array('', 'all', 'none'))) > 0 ) return $values;
  		

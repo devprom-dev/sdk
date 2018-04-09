@@ -47,6 +47,15 @@ class StateExFilterWebMethod extends FilterWebMethod
 		$state = join(',',$this->non_terminal_it->fieldToArray('ReferenceName'));
 		if ( count($values) > 1 && !array_key_exists($state, $values) ) $values[$state] = translate('Не завершено');
 
+        if ( $this->iterator->object->getPage() != '?' ) {
+            $values = array_merge(
+                $values,
+                array (
+                    '_options' => array( 'uid' => 'options', 'href' => $this->iterator->object->getPage() )
+                )
+            );
+        }
+
 		return $values;
 	}
 	

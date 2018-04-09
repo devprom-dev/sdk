@@ -32,10 +32,17 @@
  	function __construct ( $object_it = null )
  	{
  		parent::__construct();
-
  		$this->setObjectIt($object_it);
  	}
- 	
+
+ 	function getModule()
+    {
+        if ( is_object($this->object_it) ) {
+            return getSession()->getApplicationUrl($this->object_it).'methods.php';
+        }
+        return parent::getModule();
+    }
+
  	function setObjectIt( $object_it )
  	{
  		$this->object_it = $object_it;
@@ -58,7 +65,7 @@
 		return text(675);
 	}
 	
- 	function getJSCall($parms = array())
+function getJSCall($parms = array())
  	{
  		return parent::getJSCall(
  			array ( 'object' => $this->object_it->object->getClassName(),

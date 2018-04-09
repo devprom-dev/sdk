@@ -9,7 +9,13 @@ class TaskHandler extends EmailNotificatorHandler
 		$result = array();
 		
 		if ( $object_it->get('Assignee') > 0 ) $result[] = $object_it->get('Assignee');
-		
+
+        switch ( $action ) {
+            case 'modify':
+                if ( $object_it->get('Author') > 0 ) $result[] = $object_it->get('Author');
+                break;
+        }
+
 		return $result;
 	}
 }  

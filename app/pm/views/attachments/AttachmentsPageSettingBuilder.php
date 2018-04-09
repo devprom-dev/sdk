@@ -7,7 +7,7 @@ class AttachmentsPageSettingBuilder extends PageSettingBuilder
     function build( PageSettingSet & $settings )
     {
         $setting = new PageListSetting('AttachmentsList');
-        $setting->setVisibleColumns( array('File', 'Size', 'ObjectId', 'RecordCreated') );
+        $setting->setVisibleColumns( array('File', 'FileSize', 'ObjectId', 'RecordCreated') );
         $settings->add( $setting );
 
         $setting = new PageTableSetting('AttachmentsTable');
