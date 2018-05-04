@@ -264,9 +264,9 @@ class InitializeInstance extends Page
         }
         else {
             $titles = array (
-                'kanban_en.xml' => 'Канбан',
-                'scrum_en.xml' => 'Скрам',
-                'scrumban_en.xml' => 'Скрамбан'
+                'kanban_ru.xml' => 'Канбан',
+                'scrum_ru.xml' => 'Скрам',
+                'scrumban_ru.xml' => 'Скрамбан'
             );
             $allowed_templates = array (
                 'kanban_ru.xml' => 'Визуализируйте производственный процесс при помощи Kanban. Улучшайте ваш процесс, чтобы снизить время цикла.',

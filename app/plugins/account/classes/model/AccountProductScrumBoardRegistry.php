@@ -17,7 +17,7 @@ class AccountProductScrumBoardRegistry extends ObjectRegistrySQL
                     'PriceRUB' => 300,
                     'PriceUSD' => 5,
                     'PaymentRequired' => true,
-                    'UsersLimit' => 5,
+                    'UsersLimit' => 10,
                     'Options' => array (
                         array (
                             'OptionId' => 'core',

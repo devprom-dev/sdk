@@ -11,9 +11,6 @@ class LicenseRegistryBuilderSaaS extends LicenseRegistryBuilder
 	public function build( LicenseRegistry & $registry )
 	{
 		$registry->resetLicenses();
-		$registry->addLicense( getFactory()->getObject('LicenseSAASALMLarge') );
-		$registry->addLicense( getFactory()->getObject('LicenseSAASALMMiddle') );
-		$registry->addLicense( getFactory()->getObject('LicenseSAASALM20') );
 		$registry->addLicense( getFactory()->getObject('LicenseSAASALM') );
 	}
 }

@@ -122,7 +122,7 @@ class InitializeInstance extends Page
 		$license_value = json_encode(array (
 			'timestamp' =>  $date->format('Y-m-d'),
 			'days' => $this->trial_length,
-			'users' => 10
+			'users' => 30
 		));
 
 		openssl_sign($license_value.INSTALLATION_UID, $signature, include($this->getKeyFile()), OPENSSL_ALGO_SHA512);

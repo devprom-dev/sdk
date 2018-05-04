@@ -49,6 +49,7 @@ $plugin_text_array = array
     55 => 'Team tasks management',
     56 => 'Tasks management across a company',
     57 => 'Project management at company level',
-    58 => 'Code development integration'
+    58 => 'Code development integration',
+    59 => '5 users'
 
 );
