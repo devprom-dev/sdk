@@ -50,5 +50,10 @@ var messages = {
 	"sc-key-edt-up": "К предыдущему разделу",
 	"sc-key-edt-down": "К следующему разделу",
 	"sc-key-edt-mod": "Редактировать атрибуты",
-	"sc-key-edt-workflow": "Следующее состояние"
+	"sc-key-edt-workflow": "Следующее состояние",
+	'datepicker.clear.btn': "Очистить",
+    'datepicker.prevweek.btn': "-1 нед.",
+    'datepicker.prevmonth.btn': "-1 мес.",
+    'datepicker.prev3.btn': "-3 дня",
+    'datepicker.nextmonth.btn': "+1 нед.",
 };

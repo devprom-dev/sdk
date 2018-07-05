@@ -100,7 +100,11 @@ class PluginSectionBase
  	function interceptMethodTableGetActions( & $table, & $actions )
  	{
  	}
- 	
+
+    function interceptMethodFormExtendModel( & $form )
+    {
+    }
+
  	function interceptMethodFormCreateFieldObject( & $form, $attr )
  	{
  	}

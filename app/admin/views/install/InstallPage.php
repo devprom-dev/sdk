@@ -4,21 +4,9 @@ include 'InstallForm.php';
 include 'InstallFormComplete.php';
 include 'InstallLicenseForm.php';
 include 'InstallLicenseTypeForm.php';
-include 'InstallPageSectionInfo.php';
-include 'InstallPageSectionDocs.php';
 
 class InstallPage extends AdminPage
 {
-	function InstallPage()
-	{
-		parent::AdminPage();
-			
-		if ( !\DeploymentState::IsInstalled() ) {
-			$this->addInfoSection(new DocumentationInfo);
-			$this->addInfoSection(new InstallationInfo);
-		}
-	}
-
 	function getTable()
 	{
 		if ( !\DeploymentState::IsInstalled() )

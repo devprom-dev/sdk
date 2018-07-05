@@ -11,7 +11,7 @@ class SearchTable extends PMPageTable
 	{
 		return array(
             $this->buildTypeFilter(),
-            $this->buildStateFilter(),
+            $this->buildFilterState(),
 		    $this->buildSearchFilter()
 		);
 	}
@@ -28,7 +28,7 @@ class SearchTable extends PMPageTable
 		return $category;
 	}
 
-	function buildStateFilter() {
+	function buildFilterState() {
         $filter = new FilterObjectMethod( getFactory()->getObject('StateCommon'), translate('Состояние'), 'state' );
         $filter->setHasNone(false);
         return $filter;

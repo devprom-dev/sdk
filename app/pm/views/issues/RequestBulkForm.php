@@ -7,7 +7,9 @@ class RequestBulkForm extends BulkForm
  	function buildForm()
  	{
 		$object = $this->getObject();
+
 		$object->addAttribute('TransitionComment', 'WYSIWYG', translate('Комментарий'), false);
+        $object->addAttribute('SourceIssue', 'REF_RequestId', translate('Пожелание'), false);
 
  		return new RequestForm($object);
  	}
@@ -75,6 +77,7 @@ class RequestBulkForm extends BulkForm
 	    switch ( $attr ) 
 	    {
             case 'CreateLinked':
+            case 'SourceIssue':
                 return true;
 	        default:
 	            return parent::IsAttributeModifiable( $attr );

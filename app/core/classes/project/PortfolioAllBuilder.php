@@ -20,7 +20,7 @@ class PortfolioAllBuilder extends PortfolioBuilder
                                 new ProjectStatePredicate('active')
                             )
             			)->idsToArray();
-        if ( count($project_ids) < 2 ) return;
+        if ( count($project_ids) < 1 ) return;
 
         $object->addPortfolio( 
             array (

@@ -11,11 +11,8 @@ class BaseController extends PageController
 {
 	public function checkAccess()
 	{
-		if ( !getSession()->getUserIt()->IsAdministrator() )
-		{
-			return $this->redirect('/');
-		}
-		
+	    if ( !\DeploymentState::Instance()->IsReadyToBeUsed() ) return null;
+		if ( !getSession()->getUserIt()->IsAdministrator() ) return $this->redirect('/');
 		return null;
 	}
 }

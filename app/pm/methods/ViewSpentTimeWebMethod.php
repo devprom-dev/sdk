@@ -13,9 +13,12 @@ class ViewSpentTimeWebMethod extends FilterWebMethod
  	{
   		$values = array (
  			'participants' => translate('Участники'),
- 			'projects' => text('projects.name'),
- 			'tasks' => translate('Задачи')
+ 			'projects' => text('projects.name')
 		);
+
+        if ( getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Task')) ) {
+            $values['tasks'] = translate('Задачи');
+        }
 
         if ( getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('pm_ChangeRequest')) ) {
             $values['issues'] = translate('Пожелания');

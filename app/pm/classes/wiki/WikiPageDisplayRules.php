@@ -16,7 +16,12 @@ class WikiPageDisplayRules
 
 	 	$uid = new ObjectUID($object_it->get($object_it->object->getBaselineReference()));
 	 	$title .= $uid->getUidIcon( $page_it ).' ';
-	 	
+
+        $versionField = $page_it->getId() == $object_it->get('TargetPage') ? 'TargetDocumentVersion' : 'SourceDocumentVersion';
+        if ( $object_it->get($versionField) != '' ) {
+            $title .= '['.$object_it->get($versionField).'] ';
+        }
+
 	 	$caption = $page_it->getDisplayName();
 
 	 	$document_name_field = $page_it->getId() == $object_it->get('TargetPage') ? 'TargetDocumentName' : 'SourceDocumentName';
@@ -24,9 +29,6 @@ class WikiPageDisplayRules
 	 		$title .= $object_it->get($document_name_field).' / ';
 	 	}
 	 	$title .= $caption.' ('.$page_it->get('StateName').')';
-
-		if ( $object_it->get($object_it->object->getBaselineReference()) == '' ) return $title;
-		$title .= ' ['.$object_it->getRef($object_it->object->getBaselineReference())->getDisplayName().']';
 
 	 	return $title;
 	}

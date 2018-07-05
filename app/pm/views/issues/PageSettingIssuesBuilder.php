@@ -45,12 +45,18 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         $settings->add( $setting );
 
         // tasks-trace report
+        $setting = new PageListSetting('RequestTraceList');
+        $setting->setVisibleColumns( array('UID', 'Caption', 'Description', 'State', 'Priority') );
+        $settings->add( $setting );
+
         $object = getFactory()->getObject('Request');
         $setting = new ReportSetting('issues-trace');
  	    $visible = array_merge( 
             array(
                 'UID',
                 'Caption',
+                'Description',
+                'Estimation',
                 'State',
                 'Function',
                 'OpenTasks',
@@ -68,7 +74,7 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         // bugs
         $setting = new ReportSetting('bugs');
         $setting->setVisibleColumns(
-            array('UID', 'Caption', 'Author', 'RecordCreated', 'SubmittedVersion', 'ClosedInVersion', 'TestFound', 'TestExecution')
+            array('UID', 'Caption', 'Author', 'RecordCreated', 'Environment','SubmittedVersion', 'ClosedInVersion', 'TestFound', 'TestExecution')
         );
         $setting->setSorts(array('RecordCreated.D'));
         $settings->add( $setting );
@@ -87,6 +93,14 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         );
         $setting->setSorts(array('RecordCreated.D'));
         $setting->setGroup( $methodology_it->HasPlanning() ? 'Iteration' : 'PlannedRelease' );
+        $settings->add( $setting );
+
+        // readyissues
+        $setting = new ReportSetting('readyissues');
+        $setting->setVisibleColumns(
+            array('UID', 'Caption', 'Description', 'SourceCode', 'Fact', 'Requirement', 'Link')
+        );
+        $setting->setGroup('Type');
         $settings->add( $setting );
     }
 }

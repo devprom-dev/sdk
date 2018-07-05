@@ -75,18 +75,15 @@ var FilterableTreeNodeView = TreeNodeView.extend({
 	    
     reset: function(attribute, container)
     {
-		this.$el.find(container).html(this.model.get(attribute));
+		this.$el.find(container).first().html(this.model.get(attribute));
 		this.$el.removeClass(this.notMatchClass);
     },
 	    
     match: function(matches, container, source, filterValue)
     {
 		var match = new RegExp('(' + RegExp.escape(filterValue) +')','i');
-	
 		source = source.replace(match, this.matchTemplate({matchClass: this.matchClass, matchedText: matches[0]}));
-		
-		this.$el.find(container).html(source);
-		
+		this.$el.find(container).first().html(source);
 		this.onMatch(matches, source, filterValue);
     },
 	    

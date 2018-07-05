@@ -48,7 +48,7 @@ class FormWatcherEmbedded extends PMFormEmbedded
  		switch ( $attr )
  		{
  			case 'SystemUser':
- 				$field = new FieldAutoCompleteObject( $this->getAttributeObject( $attr) );
+ 				$field = new FieldAutoCompleteObject( getFactory()->getObject('IssueAuthor') );
  				$field->setTitle( translate($object->getAttributeUserName($attr)) );
 				$field->setAppendable();
  				return $field;

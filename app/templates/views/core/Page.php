@@ -20,7 +20,6 @@
 <? if ( TextUtils::versionToString($_SERVER['APP_VERSION']) < TextUtils::versionToString("3.5.39") ) { ?>
 	<script src="/cache-after?v=<?=$current_version?>&l=<?=$language_code?>&dpl=<?=$datelanguage?>" type="text/javascript" charset="UTF-8"></script>
 <? } ?>
-<script src="/scripts/zeroclipboard/ZeroClipboard.min.js?v=<?=$current_version?>" type="text/javascript" charset="UTF-8"></script>
 <?php if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS ) { ?>
 	<script src="/scripts/raven/raven.min.js?v=<?=$current_version?>" type="text/javascript" charset="UTF-8"></script>
 <?php }?>
@@ -93,7 +92,7 @@ else {
 		<?php $view['slots']->output('_header'); ?>
 	</head>
 	<body>
-	<div class="container-fluid wrapper-all <?= ($inside ? 'container-fluid-internal' : '') ?>">
+	<div class="container-fluid <?= ($inside ? 'container-fluid-internal' : '') ?>">
 		<?php
 		$view['slots']->output('_content');
 		echo $view->render('PageFooter.php', array(

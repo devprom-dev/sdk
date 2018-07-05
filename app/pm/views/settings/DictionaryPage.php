@@ -46,25 +46,18 @@ class DictionaryPage extends PMPage
  	
  	function getDictionary()
  	{
- 		global $_REQUEST, $model_factory;
- 		
 		getSession()->addBuilder( new StateBaseModelBuilder() );
  		
  		switch ( $_REQUEST['dict'] )
  		{
  			case 'pm_ProjectRole':
- 				$object = $model_factory->getObject($_REQUEST['dict']);
- 				$object->addFilter( new ProjectRoleInheritedFilter() );
-
- 				return $object;
+ 				return getFactory()->getObject('ProjectRoleInherited');
 
  			default:
- 				if ( $_REQUEST['dict'] == '' )
- 				{
- 					return $model_factory->getObject('pm_TaskType');
+ 				if ( $_REQUEST['dict'] == '' ) {
+ 					return getFactory()->getObject('pm_TaskType');
  				}
- 				else
- 				{
+ 				else {
  					return getFactory()->getObject($_REQUEST['dict']);
  				}
  		}

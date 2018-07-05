@@ -43,40 +43,45 @@ class CacheEngineFS extends CacheEngine
 	
 	function set( $key, $value, $category = '' )
 	{
-		if ( $this->getReadonly() ) return;
         if ( $category == '' ) throw new Exception('Cache path is required');
-		
+
+		if ( $this->getReadonly() ) return;
+        if ( !is_dir($this->cache_dir) ) return;
+
 		$dir_path = $this->getFilePath('', $category);
-		
 		if ( !file_exists($dir_path) ) @mkdir($dir_path, 0777, true);
 		
-		$this->cache_in_memory[$category][$key] = serialize($value);
-		
-		@file_put_contents($this->getFilePath($key, $category), $this->cache_in_memory[$category][$key]);
+		@file_put_contents(
+		    $this->getFilePath($key, $category),
+            $this->cache_in_memory[$category][$key] = serialize($value)
+        );
 	}
 	
 	function reset( $key, $category = '' )
 	{
         if ( $category == '' ) throw new Exception('Cache path is required');
-		
+
+        if ( $this->getReadonly() ) return;
+        if ( !is_dir($this->cache_dir) ) return;
+
 		unset($this->cache_in_memory[$category][$key]);
 		@unlink($this->getFilePath($key, $category));
 	}
 	
-	function truncate( $category = '' )
-	{
-		if ( $category == '' ) throw new Exception('Cache path is required');
-        $lock = new CacheLock();
-        \FileSystem::rmdirr( $this->getFilePath('', $category) );
-        $lock->Release();
-	}
-	
-	function invalidate()
+	function invalidate( $path = '' )
 	{
         $lock = new CacheLock();
-        \FileSystem::rmdirr( $this->cache_dir );
-		$this->checkDirectories();
-        $lock->Release();
+        $lock->Lock();
+
+        if ( $path == '' ) {
+            unset($this->cache_in_memory);
+            \FileSystem::rmdirr( $this->cache_dir );
+        }
+        else {
+            unset($this->cache_in_memory[$path]);
+            \FileSystem::rmdirr( $this->getFilePath('', $path) );
+        }
+        if ( function_exists('opcache_reset') ) opcache_reset();
 	}
 	
 	protected function getFilePath( $key, $category )

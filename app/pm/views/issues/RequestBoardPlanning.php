@@ -77,7 +77,14 @@ class RequestBoardPlanning extends RequestBoard
     }
 
     function getBoardStates() {
-        return array_merge(array(''), $this->getBoardAttributeIterator()->idsToArray());
+        return array_merge( array(''),
+            array_filter(
+                $this->getBoardAttributeIterator()->idsToArray(),
+                function( $value ) {
+                    return $value > 0;
+                }
+            )
+        );
     }
 
     function getBoardNames()
@@ -168,7 +175,7 @@ class RequestBoardPlanning extends RequestBoard
                 $actions = array_merge(
                     array (
                         array (
-                            'name' => translate('Изменить'),
+                            'name' => $method->getCaption(),
                             'url' => $method->getJSCall()
                         ),
                         array()
@@ -234,7 +241,7 @@ class RequestBoardPlanning extends RequestBoard
         if ( is_array($workloadData) ) {
             echo $this->getTable()->getView()->render('pm/UserWorkloadDetails.php', array (
                 'data' => array( 'Iterations' => array($workloadData) ),
-                'measure' => trim($this->strategy->getDimensionText(''))
+                'measure' => $this->strategy
             ));
         }
     }

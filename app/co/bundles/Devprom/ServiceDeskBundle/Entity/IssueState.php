@@ -38,6 +38,12 @@ class IssueState extends BaseEntity {
     private $objectClass;
 
     /**
+     * @ORM\Column(type="string", name="IsTerminal")
+     * @var string
+     */
+    private $terminal;
+
+    /**
      * @ORM\Column(type="integer", name="OrderNum")
      * @var integer
      */
@@ -125,11 +131,24 @@ class IssueState extends BaseEntity {
     }
 
 
+    /**
+     * @param string $name
+     */
+    public function setTerminal($value)
+    {
+        $this->terminal = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTerminal()
+    {
+        return $this->terminal;
+    }
 
     function __toString()
     {
         return $this->getName();
     }
-
-
 }

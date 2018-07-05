@@ -65,9 +65,13 @@ class ProjectController extends PageController
 		}
 
         $parms['DemoData'] = in_array(strtolower(trim($request->request->get('DemoData'))), array('y','on'));
+
 		if ( is_numeric($request->request->get('portfolio')) ) {
 			$parms['portfolio'] = $request->request->get('portfolio');
 		}
+        if ( is_numeric($request->request->get('program')) ) {
+            $parms['program'] = $request->request->get('program');
+        }
 
     	if ( $request->request->get('Participants') != '' ) {
 			if ( !defined('PERMISSIONS_ENABLED') ) {

@@ -30,7 +30,7 @@ class ModelValidatorTest extends DevpromTestCase
     	
     	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
 
-    	$data = array( 'RecordModified' => '' );
+    	$data = array( 'RecordModified' => "" );
     	
     	$this->assertEquals("", $validator->validate(new Snapshot(), $data)); 
     }

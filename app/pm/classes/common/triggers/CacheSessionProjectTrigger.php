@@ -9,7 +9,6 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
         // clean session data
 		switch( $object_it->object->getEntityRefName() )
 		{
-			case 'pm_CustomAttribute':
 			case 'pm_AccessRight':
 			case 'pm_ObjectAccess':
 			case 'pm_ParticipantRole':
@@ -34,6 +33,7 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
 			case 'pm_ProjectLink':
             case 'pm_Participant':
             case 'pm_Methodology':
+            case 'pm_CustomAttribute':
 				$this->invalidateProjectsCache();
 				break;
 
@@ -49,7 +49,7 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
         getFactory()->getAccessPolicy()->invalidateCache();
         getFactory()->getEntityOriginationService()->invalidateCache();
         getFactory()->getCacheService()->setReadonly();
-        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->invalidate('sessions');
         getSession()->truncate();
     }
 
@@ -58,8 +58,8 @@ class CacheSessionProjectTrigger extends SystemTriggersBase
         getFactory()->getAccessPolicy()->invalidateCache();
         getFactory()->getEntityOriginationService()->invalidateCache();
         getFactory()->getCacheService()->setReadonly();
-        getFactory()->getCacheService()->truncate('sessions');
-        getFactory()->getCacheService()->truncate('projects');
+        getFactory()->getCacheService()->invalidate('sessions');
+        getFactory()->getCacheService()->invalidate('projects');
 		$this->invalidate = true;
 	}
 

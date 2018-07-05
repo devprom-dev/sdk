@@ -157,12 +157,12 @@ class ProjectLogList extends PMPageList
 
 	function getGroupFields() 
 	{
-		return array('ChangeDate', 'SystemUser', 'EntityName', 'Project');
+		return array('ChangeDate', 'SystemUser', 'Project');
 	}
 	
 	function getColumnFields()
 	{
-		return array('Caption', 'UserAvatar', 'EntityName', 'Content', 'SystemUser', 'RecordModified', 'Project');
+		return array('Caption', 'UserAvatar', 'Content', 'SystemUser', 'RecordModified', 'Project');
 	}
 
 	function getItemActions($column_name, $object_it)

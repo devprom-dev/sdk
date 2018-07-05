@@ -11,6 +11,7 @@ class CreateProjectService
 {
 	private $skip_demo_data = false;
 	private $portfolioId = '';
+	private $programId = '';
 	
  	function execute( $parms )
  	{
@@ -18,8 +19,9 @@ class CreateProjectService
  		$this->code_name = $parms['CodeName'];
  		$this->caption = $parms['Caption'];
 		$this->portfolioId = $parms['portfolio'];
+		$this->programId = $parms['program'];
  		$this->skip_demo_data = !$parms['DemoData'];
- 		
+
  		$template = getFactory()->getObject('pm_ProjectTemplate');
  		
  		$template->setRegistry( new \ObjectRegistrySQL() );
@@ -40,6 +42,7 @@ class CreateProjectService
  		$this->access = '';
  		
  		$project_it = $this->createProject();
+ 		if ( ! $project_it instanceof \OrderedIterator ) return $project_it;
 
 		if ( $this->portfolioId > 0 && $project_it->getId() > 0 ) {
 			// join the project to the portfolio given
@@ -52,6 +55,26 @@ class CreateProjectService
 				);
 			}
 		}
+        if ( $this->programId > 0 && $project_it->getId() > 0 ) {
+            // make the project to be subproject of the program given
+            $className = getFactory()->getClass('ProjectLink');
+            if ( class_exists('ProjectLink') ) {
+                $object = getFactory()->getObject($className);
+
+                $parms = array();
+                parse_str(\ProjectLinkTypeSet::SUBPROJECT_QUERY_STRING, $parms);
+
+                $object->add_parms(
+                    array_merge(
+                        array (
+                            'Source' => $this->programId,
+                            'Target' => $project_it->getId()
+                        ),
+                        $parms
+                    )
+                );
+            }
+        }
 
 		return $project_it;
  	}
@@ -81,7 +104,7 @@ class CreateProjectService
 
 		$parms['CodeName'] = $this->code_name;
 		$parms['Caption'] = $this->caption;
-		$parms['StartDate'] = strftime('%d.%m.%Y');
+		$parms['StartDate'] = "NOW()";
 		$parms['DaysInWeek'] = 5;
 		
 		if ( is_numeric($this->language) )
@@ -115,7 +138,8 @@ class CreateProjectService
 
 		$parms = array();
 		$parms['VPD'] = \ModelProjectOriginationService::getOrigin($project_id);
-		
+        $parms['Tools'] = $this->methodology;
+
 		$prj_cls->modify_parms($project_id, $parms);
 		
 		$project_it = $prj_cls->getExact($project_id);
@@ -128,7 +152,7 @@ class CreateProjectService
 		$parms['IsActive'] = 'Y';
 		$parms['Project'] = $project_id;
 		$parms['VPD'] = \ModelProjectOriginationService::getOrigin($project_id);
-		
+
 		$id = $part_cls->add_parms($parms);
 
 		if( $id < 1 ) return -5; 
@@ -165,8 +189,7 @@ class CreateProjectService
 		$this->createByTemplate( $template_it, $project_it );
 
 		$parms = array(
-				'Blog' => $blog_id,
-				'Tools' => $this->methodology
+            'Blog' => $blog_id
 		);
 		
 		$prj_cls->modify_parms($project_it->getId(),$parms);
@@ -177,22 +200,29 @@ class CreateProjectService
 		$lead_it = $project_roles->getByRef( 'ReferenceName', 'lead' );
 		// check the template has been imported
 		if ( $project_roles->getRecordCount() < 1 ) return -11;
-		
+
+		$rolesRegistry = $project_roles->getRegistry();
 		// append additional (system) project roles
-		$role_id = $project_roles->add_parms(
+		$rolesRegistry->Merge(
 			array (
 				'Caption' => translate('Все пользователи'),
 				'ReferenceName' => 'guest',
 				'ProjectRoleBase' => '0'
-			)
+			),
+            array(
+                'ReferenceName'
+            )
 		);
 
-		$role_id = $project_roles->add_parms(
+        $rolesRegistry->Merge(
 			array (
 				'Caption' => translate('Участники связанных проектов'),
 				'ReferenceName' => 'linkedguest',
 				'ProjectRoleBase' => '0'
-			)
+			),
+            array(
+                'ReferenceName'
+            )
 		);
 
 		$role_cls = $model_factory->getObject('pm_ParticipantRole');
@@ -287,10 +317,6 @@ class CreateProjectService
 			}
 		}
 
-		// turn on email notifications
-		$notification = $model_factory->getObject('Notification');
-		$notification->store( $project_it->getDefaultNotificationType(), $part_it );
-
 		// add changed objects into the log
 		$change_log = new \Metaobject('ObjectChangeLog');
 		
@@ -346,12 +372,18 @@ class CreateProjectService
 				array(), // import all data available in the template
 				$this->skip_demo_data ? array('ProjectArtefacts') : array()
 		);
+
+        $project_it->object->modify_parms( $project_it->getId(),
+            array(
+                'Tools' => $template_it->get('FileName')
+            )
+        );
  	}
  	
  	public function invalidateCache()
  	{
         foreach( array('sessions', 'projects') as $path ) {
-            getFactory()->getCacheService()->truncate($path);
+            getFactory()->getCacheService()->invalidate($path);
         }
  	}
 

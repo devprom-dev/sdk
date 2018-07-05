@@ -1,5 +1,4 @@
 <?php
-include_once "PlanMetricsLock.php";
 
 class ReleaseIterator extends OrderedIterator
 {
@@ -148,9 +147,6 @@ class ReleaseIterator extends OrderedIterator
 	
 	function storeMetrics()
 	{
-		global $model_factory;
-        $lock = new PlanMetricsLock();
-
 		$project_it = getSession()->getProjectIt();
 		$methodology_it = $project_it->getMethodologyIt();
 		
@@ -158,14 +154,12 @@ class ReleaseIterator extends OrderedIterator
 		if ( $methodology_it->HasPlanning() )
 		{
 			$iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
-					array (
-							new FilterAttributePredicate('Version', $this->getId()),
-							new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED)
-					)
+                array (
+                    new FilterAttributePredicate('Version', $this->getId()),
+                    new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED)
+                )
 			);
-	
-			while ( !$iteration_it->end() )
-			{
+			while ( !$iteration_it->end() ) {
 				$iteration_it->storeMetrics();
 				$iteration_it->moveNext();
 			}
@@ -237,7 +231,7 @@ class ReleaseIterator extends OrderedIterator
 			'EstimatedFinish' => EstimationProxy::getEstimatedFinish($this, false)
 		);
 		
-		$metric = $model_factory->getObject('pm_VersionMetric');
+		$metric = getFactory()->getObject('pm_VersionMetric');
 		$metric->setNotificationEnabled(false);
 
         DAL::Instance()->Query("DELETE FROM pm_VersionMetric WHERE Version = " . $this->getId());
@@ -257,8 +251,6 @@ class ReleaseIterator extends OrderedIterator
                 'MetricValueDate' => $value
             ));
         }
-
-        $lock->Release();
 	}
 	
 	function getMetricsDate()
@@ -433,15 +425,12 @@ class ReleaseIterator extends OrderedIterator
 	
 	function IsCurrent()
 	{
-		if ( !$this->IsFuture() )
-		{
-			return false;
-		}
-
-		$sql = " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') diff ";
-		$it = $this->object->createSQLIterator( $sql );
-
-		return $it->get('diff') <= 0;
+        return $this->object->getRegistry()->Count(
+                array(
+                    new ReleaseTimelinePredicate('current'),
+                    new FilterInPredicate($this->getId())
+                )
+            ) > 0;
 	}
 	
 	function IsFuture()

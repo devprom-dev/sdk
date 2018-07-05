@@ -6,6 +6,9 @@ include_once "FieldTaskPlanned.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
 include_once SERVER_ROOT_PATH.'core/views/c_priority_view.php';
 include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
+include "TaskChart.php";
+include "TaskPlanFactChart.php";
+include "TaskChartBurndown.php";
 
 class TaskList extends PMPageList
 {
@@ -50,7 +53,7 @@ class TaskList extends PMPageList
 		$this->planned_field = new FieldTaskPlanned();
 		$this->getTable()->buildRelatedDataCache();
 	}
-	
+
  	function getColumns()
 	{
 		$attrs = $this->object->getAttributes();
@@ -58,7 +61,7 @@ class TaskList extends PMPageList
 		if ( array_key_exists( 'Planned', $attrs ) )
 		{
 			$this->object->addAttribute( 'Progress', '', translate('Прогресс'), false );
-			$this->object->addAttributeGroup('Progress', 'time');
+			$this->object->addAttributeGroup('Progress', 'workload');
 		}
 		
 		return parent::getColumns();
@@ -192,7 +195,7 @@ class TaskList extends PMPageList
 			case 'IssueTraces':
 				$this->getTable()->drawCell( $object_it, $attr );
 				break;
-				
+
 			default:
 				parent::drawCell( $object_it, $attr );
 		}
@@ -200,58 +203,8 @@ class TaskList extends PMPageList
  	
 	function drawGroup($group_field, $object_it)
 	{
-		global $row_num;
-
 		switch ( $group_field )
 		{
-			case 'ChangeRequest':
-				$row_num = 0;
-				
-				if( $object_it->get('ChangeRequest') != '' ) {
-					$this->request_it->moveToId( $object_it->get('ChangeRequest') );
-				}
-
-				echo '<div style="float:left">';
-				
-				if ( $object_it->get('ChangeRequest') != '' )
-				{
-					$object_uid = new ObjectUID;
-		
-					$priority_it = $this->request_it->getRef('Priority');
-					$title = $priority_it->getDisplayName();
-
-					$type_it = $this->request_it->getRef('Type');
-					
-						echo '<img title="'.translate('Приоритет').': '.$title.'" src="/images/'.
-							$this->priority_frame->getIcon($this->request_it->get('Priority')).'" style="padding-right:4px;">';
-						
-						echo '<img src="/images/'.IssueTypeFrame::getIcon($type_it).'" style="margin-top:0;">&nbsp;';
-		
-						$object_uid->drawUidInCaption( $this->request_it, 0 );
-				}
-				else 
-				{
-					echo text(756);
-				}
-				
-				echo ' &nbsp; </div>';
-				
-				echo '<div style="float:left;">';
-					
-					if ( $object_it->get('ChangeRequest') != '' && $this->request_it->object->getAttributeType('Tasks') != '' )
-					{
-					    $states = $this->request_it->getRef('Tasks')->getStatesArray();
-					
-						echo $this->getTable()->getView()->render('pm/TasksIcons.php', array (
-							'states' => $states,
-							'random' => $object_it->getId()
-						));
-					}
-					
-				echo '</div>';
-				
-				break;
-				
 			case 'Assignee':
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				if ( count($workload) > 0 )
@@ -297,14 +250,35 @@ class TaskList extends PMPageList
 		switch( $attr )
 		{
 			case 'Priority': return 'center';
-			case 'Fact': return 'right';
 			default: return parent::getColumnAlignment($attr);
 		}
 	}
+
 	function getRenderParms()
 	{
 		$this->buildRelatedDataCache();
 		
 		return parent::getRenderParms();
 	}
+
+
+    function render($view, $parms)
+    {
+        switch( $this->getTable()->getReportBase() ) {
+            case 'tasksplanbyfact':
+                $chart = new TaskPlanFactChart( $this->getObject() );
+                break;
+            case 'iterationburndown':
+                $chart = new TaskChartBurndown( $this->getObject() );
+                break;
+            default:
+        }
+        if ( is_object($chart) ) {
+            $chart->setTable($this->getTable());
+            $chart->retrieve();
+            $chart->render($view, $parms);
+        }
+
+        parent::render($view, $parms);
+    }
 }

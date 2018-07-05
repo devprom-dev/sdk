@@ -27,7 +27,6 @@ class IssueController extends Controller
      *
      * @Route("/issue", name="issue_create")
      * @Method("POST")
-     * @Template("DevpromServiceDeskBundle:Issue:new.html.twig")
      */
     public function createAction(Request $request)
     {
@@ -85,10 +84,10 @@ class IssueController extends Controller
             }
         }
 
-        return array(
+        return $this->render('Issue/new.html.twig', array(
             'issue' => $issue,
             'form' => $form->createView(),
-        );
+        ));
     }
 
     /**
@@ -108,8 +107,9 @@ class IssueController extends Controller
         }
 
         $this->checkUserIsAuthorized($issue);
-
         $commentForm = $this->getCommentForm(new IssueComment());
+
+        $this->getIssueService()->clearNotifications($issue, $this->getUser());
 
         return array(
             'issue' => $issue,
@@ -146,10 +146,12 @@ class IssueController extends Controller
 
         $editForm = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser(), false), $issue);
 
-        return array(
+        $this->getIssueService()->clearNotifications($issue, $this->getUser());
+
+        return $this->render('Issue/edit.html.twig', array(
             'issue' => $issue,
             'edit_form' => $editForm->createView(),
-        );
+        ));
     }
 
     /**
@@ -157,7 +159,6 @@ class IssueController extends Controller
      *
      * @Route("/issue/{id}", name="issue_update")
      * @Method("PUT")
-     * @Template("DevpromServiceDeskBundle:Issue:new.html.twig")
      */
     public function updateAction(Request $request, $id)
     {

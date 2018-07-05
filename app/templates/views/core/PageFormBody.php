@@ -6,11 +6,14 @@ $colspan_attributes = array();
 if ( $attributes['Caption']['visible'] ) {
 	$colspan_attributes[] = $attributes['Caption']['id'];
 }
+if ( $attributes['ReleaseNumber']['visible'] ) {
+    $colspan_attributes[] = $attributes['ReleaseNumber']['id'];
+}
 if ( $attributes['UID']['visible'] ) {
 	$colspan_attributes[] = $attributes['UID']['id'];
 }
 
-if ( array_key_exists('Description', $attributes) && count($shortAttributes) > 0 ) {
+if ( array_key_exists('Description', $attributes) && ($form->getObject() instanceof Request || $form->getObject() instanceof Task) ) {
 	$colspan_attributes[] = $attributes['Description']['id'];
 }
 if ( array_key_exists('Conditions', $attributes) && count($shortAttributes) > 0 ) {
@@ -32,7 +35,11 @@ foreach( $attributes as $key => $attribute ) {
 	$shortVisible[$key] = $attribute;
 	unset($attributes[$key]);
 }
-$shortVisible = array_chunk($shortVisible, ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 ? 4 : 2)), true);
+$shortVisible = array_chunk(
+        $shortVisible,
+        ceil(count($shortVisible) / ($_REQUEST['screenWidth'] >= 1400 && count($source_parms) < 1 ? 4 : 2)),
+        true
+);
 
 $visible = array_filter( $attributes, function(&$value) use($colspan_attributes) {
 	return $value['visible'] && !in_array($value['id'], $colspan_attributes);

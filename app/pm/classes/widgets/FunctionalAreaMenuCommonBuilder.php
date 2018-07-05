@@ -15,7 +15,7 @@ class FunctionalAreaMenuCommonBuilder extends FunctionalAreaMenuProjectBuilder
     	if ( $module_it->getId() != '' ) {
 			$items = array();
       	    $items['mytasks'] = $report->getExact('mytasks')->buildMenuItem();
-		 	$items['tasks-board'] = $module_it->buildMenuItem('?');
+		 	$items['tasks-board'] = $module_it->buildMenuItem();
 
     		$menus['tasks'] = array(
     		   'name' => translate('Задачи'), 

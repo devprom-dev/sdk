@@ -118,6 +118,20 @@ function setupEditor( editor )
 		originalEvent = event.data.domEvent.$;
 		if ( this.editable().$.ownerDocument != window.document ) Mousetrap.handleKeyEvent(originalEvent);
     });
+    editor.on( 'change', function( evt  ) {
+        var edt = $(this.editable().$);
+        if ( edt.attr('objectclass') == 'TestScenario' || edt.attr('objectclass') == 'TestCaseExecution' ) {
+        	var skip = false;
+            edt.find('table tr > td:nth-child(1)').each(function(index) {
+            	if ( index == 0 ) {
+                    skip = $(this).text() != "1";
+				}
+				if ( !skip ) {
+                    $(this).html(index + 1);
+				}
+            });
+		}
+    });
 }
 
 function setupEditorGlobal( filesTitle )
@@ -140,7 +154,7 @@ function setupEditorGlobal( filesTitle )
 			  setupDialogImage( filesTitle, dialogDefinition );
 	      }
 	});
-	
+
 	$('.wysiwyg-welcome').click(function() {
 		$('#' + $(this).attr('for-id')).focus();
 	});
@@ -180,6 +194,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
 	      	{
 		      	e.editor.updateElement();
+                e.editor.resetDirty();
 		      	return true;
 	      	});
 
@@ -187,10 +202,12 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	      	{ 
 	      		e.editor.custom.updateForm();
 		      	e.editor.updateElement();
+                e.editor.resetDirty();
 		      	return true; 
 	      	});
 	      	
 	      	registerFormDestructorHandler($(element).parents('form').attr('id'), function () {
+                e.editor.resetDirty();
 	      		e.editor.destroy();
 	      	});
 	      	
@@ -211,7 +228,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	else
 	{
 		var editor = CKEDITOR.inline( element, {
-			removePlugins: toolbar == '' ? 'embed,embedbase,notificationaggregator,notification,toolbar' : '',
+			removePlugins: toolbar == '' ? 'codesnippet,image2,mathjax,autoembed,widget,embed,embedbase,pastefromword,pastetext,autolink,clipboard,notificationaggregator,notification,toolbar' : '',
 			toolbar: toolbar,
 			enterMode: toolbar == '' ? CKEDITOR.ENTER_BR : CKEDITOR.ENTER_P,
 			allowedContent: toolbar != '',
@@ -231,7 +248,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 				
 			if ( typeof $(element).attr('objectClass') == 'undefined' ) {
 				$('#'+$(element).attr('id')+'Value').val( editorInstance.getData() );
-		}
+			}
 			else if ( editorInstance.checkDirty() )
 			{
 				runMethod(modify_url, {
@@ -288,6 +305,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			}
 
 			$(element).attr('title', '');
+            $(element).removeAttr('style');
 			
 			$(element).find('a[href]').click( function(e) 
 			{
@@ -347,18 +365,46 @@ function reportBrowserError(element)
 function pasteImage(e) {
 	try {
 	    var data = e.originalEvent.clipboardData.items[0].getAsFile();
-	    var elem = this;
+	    var elem = $(e.target);
 	    var fr = new FileReader;
 	    
 	    fr.onloadend = function() {
-	        var img = new Image;
-	        img.onload = function() {
-	        	$(img)
-	        		.attr("height",img.height)
-	        		.attr("width",img.width);
-	            $(elem).append(img);
-	        };
-	        img.src = fr.result;
+            var originalImage = new Image;
+            var uriData = '';
+            if ( fr.result.length > 1048576 ) {
+                originalImage.onload = function() {
+                    var maxWidth = 1024;
+                    var canvas = document.createElement('canvas')
+                    var ctx = canvas.getContext('2d');
+                    var scaledWidth = Math.min(maxWidth, originalImage.width);
+                    var scaledHeight = (scaledWidth / originalImage.width ) * originalImage.height;
+                    canvas.width = scaledWidth;
+                    canvas.height = scaledHeight;
+                    ctx.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight);
+
+                    var scaledImage = new Image;
+                    scaledImage.onload = function() {
+                        $(scaledImage)
+                            .attr("height",scaledImage.height)
+                            .attr("width",scaledImage.width);
+                        elem.canContainText()
+                            ? elem.append(scaledImage)
+                            : $(scaledImage).insertAfter(elem);
+                    };
+                    scaledImage.src = canvas.toDataURL();
+                };
+			}
+			else {
+                originalImage.onload = function() {
+                    $(originalImage)
+                        .attr("height",originalImage.height)
+                        .attr("width",originalImage.width);
+                    elem.canContainText()
+						? elem.append(originalImage)
+						: $(originalImage).insertAfter(elem);
+                };
+			}
+            originalImage.src = fr.result;
 	    };
 	    fr.readAsDataURL(data);
 	}
@@ -393,7 +439,15 @@ function makeupEditor( editor, e, container, project, offset )
         }
     });
 
-	e.textcomplete([
+    if ( e.attr('objectclass') == 'TestCaseExecution' ) {
+        e.find('table tr > th').each(function(index) {
+            if ( $(this).hasClass('readonly-on-run') ) {
+                e.find('table tr > td:nth-child('+(index+1)+')').attr('contenteditable', 'false');
+			}
+        });
+    }
+
+    e.textcomplete([
 		{ // mentions
 			mentions: mentions,
 			match: /\B@([^\s]*)\s?$/,
@@ -464,6 +518,13 @@ function makeupEditor( editor, e, container, project, offset )
 		}
 	);
 }
+(function ($) {
+    var cannotContainText = ['AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'KEYGEN', 'LINK', 'MENUITEM', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR', 'BASEFONT', 'BGSOUND', 'FRAME', 'ISINDEX'];
+    $.fn.canContainText = function() {
+        var tagName = $(this).prop('tagName').toUpperCase();
+        return ($.inArray(tagName, cannotContainText) == -1);
+    };
+}(jQuery));
 
 $(document).ready( function()
 {

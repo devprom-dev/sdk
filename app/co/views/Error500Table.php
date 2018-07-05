@@ -24,13 +24,12 @@ class Error500Table extends CoPageTable
      
 	function getTemplate()
     {
-   		if ( getSession()->getUserIt()->getId() > 0 )
-		{
+        if ( defined('SERVER_INFO_HIDDEN') && SERVER_INFO_HIDDEN ) {
+            return 'co/Error500TablePublic.php';
+        }
+   		if ( getSession()->getUserIt()->getId() > 0 ) {
 			return 'co/Error500Table.php';	     
 		}
-		else
-		{
-			return 'co/Error500TablePublic.php';	     
-		}
+		return 'co/Error500TablePublic.php';
     }
 }

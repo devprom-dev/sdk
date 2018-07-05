@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Exception;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Nelmio\CorsBundle;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class PmApplicationKernel extends Kernel
 {
@@ -76,10 +77,9 @@ class PmApplicationKernel extends Kernel
         }
     }
 
-    public function boot()
+    public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
         $lock = new \CacheLock();
-        parent::boot();
-        $lock->Release();
+        return parent::handle($request, $type, $catch);
     }
 }

@@ -20,11 +20,18 @@
                     <tbody>
                         <tr>
                             <td>
+                                <?php if ( is_array($projects[$current_portfolio]) ) { foreach( $projects[$current_portfolio] as $item ) { ?>
+                                    <a href="<?=$item['url']?>"><?=$item['name']?></a><br/>
+                                <?php }} ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <?php foreach ( $portfolio_actions as $action ) { ?>
-                                    <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                    <i class="<?=$action['icon']?>"></i> <a uid="<?=$action['uid']?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>
                                 <?php foreach ( $program_actions as $action ) { ?>
-                                    <i class="<?=$action['icon']?>"></i> <a href="<?=$action['url']?>"><?=$action['name']?></a><br/>
+                                    <i class="<?=$action['icon']?>"></i> <a uid="<?=$action['uid']?>" href="<?=$action['url']?>"><?=$action['name']?></a><br/>
                                 <?php } ?>
                             </td>
                         </tr>

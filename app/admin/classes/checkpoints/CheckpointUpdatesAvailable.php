@@ -9,6 +9,11 @@ class CheckpointUpdatesAvailable extends CheckpointEntryDynamic
 
     function execute()
     {
+        if ( \EnvironmentSettings::getAutoUpdate() ) {
+            $this->setValue(1);
+            return;
+        }
+
         $data = JsonWrapper::decode(
             @file_get_contents(DOCUMENT_ROOT.CheckpointSupportPayed::UPDATES_FILE)
         );

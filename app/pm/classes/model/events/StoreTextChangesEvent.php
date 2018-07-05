@@ -99,7 +99,9 @@ class StoreTextChangesEvent extends ObjectFactoryNotificator
 			}
 		}
 
-		getFactory()->getObject('pm_TextChanges')->add_parms(
+		$changes = getFactory()->getObject('pm_TextChanges');
+        $changes->setNotificationEnabled(false);
+        $changes->add_parms(
 			array (
 				'ObjectClass' => get_class($object_it->object),
 				'ObjectId' => $object_it->getId(),

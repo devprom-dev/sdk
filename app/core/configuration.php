@@ -55,3 +55,23 @@ else {
 		DALMySQL::Instance()->Connect(new MySQLConnectionInfo( DB_HOST, DB_NAME, DB_USER, DB_PASS ));
 	}
 }
+
+if ( EnvironmentSettings::getProxyServer() != '' ) {
+    $proxyParms = array(
+        'proxy' => 'tcp://'.EnvironmentSettings::getProxyServer(),
+        'request_fulluri' => true
+    );
+    if ( EnvironmentSettings::getProxyAuth() != '' ) {
+        $auth = base64_encode(EnvironmentSettings::getProxyAuth());
+        $proxyParms['header'] = array(
+            "Proxy-Authorization: Basic ".$auth,
+            "Authorization: Basic ".$auth,
+        );
+    }
+    stream_context_set_default(
+        array(
+            'http'=> $proxyParms,
+            'https'=> $proxyParms
+        )
+    );
+}

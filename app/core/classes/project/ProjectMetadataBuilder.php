@@ -24,6 +24,7 @@ class ProjectMetadataBuilder extends ObjectMetadataEntityBuilder
  		
 		foreach ( array('Caption', 'CodeName') as $attribute ) {
 		    $metadata->addAttributeGroup($attribute, 'tooltip');
+            $metadata->addAttributeGroup($attribute, 'search-attributes');
 		}
         foreach ( array('Importance', 'IsClosed') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'bulk');

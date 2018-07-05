@@ -2,6 +2,7 @@
 
 define( 'ORIGIN_CUSTOM', 'custom' );
 include "persisters/CustomAttributesPersister.php";
+include "sorts/CustomAttributeSortClause.php";
 
 class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder 
 {
@@ -31,6 +32,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		{
 			if ( $attr_it->get('ReferenceName') == 'UID' ) {
                 $uidOverriden = true;
+                $metadata->setAttributeDefault('UID', $attr_it->getHtmlDecoded('DefaultValue'));
 				$attr_it->moveNext();
 				continue;
 			}
@@ -50,7 +52,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
                 $groups[] = 'dictionary';
 			}
 
-            if ( $attr_it->get('ReferenceName') != 'UID' && $type_it->get('ReferenceName') == 'computed' ) {
+            if ( $type_it->get('ReferenceName') == 'computed' ) {
                 $groups[] = 'computed';
             }
 

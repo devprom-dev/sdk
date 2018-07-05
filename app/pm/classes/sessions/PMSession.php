@@ -58,7 +58,7 @@ include SERVER_ROOT_PATH."pm/classes/issues/triggers/IssueModifyProjectTrigger.p
 include SERVER_ROOT_PATH."pm/classes/issues/events/ResetTasksEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/issues/events/RequestMetricsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/plan/events/MilestoneMetricsEventHandler.php";
-
+include SERVER_ROOT_PATH."pm/classes/plan/events/PlanItemsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/time/events/TimeSpentEvent.php";
 
 include SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
@@ -90,10 +90,10 @@ include SERVER_ROOT_PATH."pm/classes/communications/events/ProjectPageModifyProj
 include_once SERVER_ROOT_PATH."pm/classes/notificators/EmailNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/notificators/PMChangeLogNotificator.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/SetWorkItemDatesTrigger.php";
-include_once SERVER_ROOT_PATH."pm/classes/model/events/SetPlanItemDatesTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearCommentsEvent.php";
+include_once SERVER_ROOT_PATH."pm/classes/model/events/ClearChangeNotificationsEvent.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/events/StoreTextChangesEvent.php";
-include_once SERVER_ROOT_PATH."pm/classes/model/events/BusinessActionModifiedEvent.php";
+include_once SERVER_ROOT_PATH."pm/classes/workflow/events/BusinessActionModifiedEvent.php";
 
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiPageNewVersionTrigger.php";
 include_once SERVER_ROOT_PATH."pm/classes/wiki/triggers/WikiBreakTraceTrigger.php";
@@ -163,7 +163,7 @@ class PMSession extends SessionBase
 
 		$this->addBuilder(new ProjectTemplateSectionsRegistryBuilderLatest($this));
 	}
- 	
+
  	public function buildAccessPolicy( $cache_service )
  	{
  		return new AccessPolicyProject( $cache_service, $this );
@@ -199,7 +199,6 @@ class PMSession extends SessionBase
  	                    new IssueOrderNumTrigger(),
  	                    new TaskOrderNumTrigger(),
  	                    new SetWorkItemDatesTrigger(),
- 	            		new SetPlanItemDatesTrigger(),
  	                    new DeleteCommentsTrigger(),
  	                    new IssueModifyProjectTrigger(),
  	            		new TaskModifyProjectTrigger(),
@@ -219,6 +218,7 @@ class PMSession extends SessionBase
  	            		new TransitionMetadataBuilder(),
 						new QuestionMetadataBuilder(),
 						new ProjectArtifactMetadataBuilder(),
+ 	            		new IssueAutoActionMetadataBuilder(),
  	            		
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
@@ -237,7 +237,8 @@ class PMSession extends SessionBase
 						new RemoveObsoleteAttachmentsEventHandler(),
                         new MilestoneMetricsEventHandler(),
                         new ProjectPageModifyProjectTrigger(),
-                        new AutoActionEventHandler()
+                        new AutoActionEventHandler(),
+                        new PlanItemsEventHandler()
                 ),
  	            parent::createBuilders(),
  	            array (
@@ -253,12 +254,11 @@ class PMSession extends SessionBase
 
  	            		// model
  	            		new ResetFieldsEventHandler(),
- 	            		new ApplyBusinessActionsEventHandler(),
  	            		new ResetTasksEventHandler(),
  	            		new ClearCommentsEvent(),
+                        new ClearChangeNotificationsEvent(),
                         new StoreTextChangesEvent($this),
 						new TimeSpentEvent(),
-                        new BusinessActionModifiedEvent(),
 						new ProjectMetricsModelBuilderDates(),
                         new AttachmentEntityRemoveEvent(),
 
@@ -266,7 +266,10 @@ class PMSession extends SessionBase
                         new EmailNotificator(),
 
 						// latest to override custom builders
-					    new ObjectMetadataPermissionsBuilder()
+					    new ObjectMetadataPermissionsBuilder(),
+
+                        new ApplyBusinessActionsEventHandler(),
+                        new BusinessActionModifiedEvent()
 				)
  	    );
  	}
@@ -322,14 +325,14 @@ class PMSession extends SessionBase
  		}
 
  		$part_it = $part->getRegistry()->Query(
- 				array(
- 						new FilterAttributePredicate('SystemUser', $user_it->getId()),
- 						new FilterAttributePredicate('Project', $this->project_it->getId())
- 				)
+            array(
+                new FilterAttributePredicate('SystemUser', $user_it->getId()),
+                new FilterAttributePredicate('Project', $this->project_it->getId()),
+                new FilterVpdPredicate($this->project_it->get('VPD'))
+            )
  		);
 
- 		if ( $part_it->getId() > 0 )
-		{
+ 		if ( $part_it->getId() > 0 ) {
 			$project_roles = $part_it->getBaseRoles();
 		}
 		elseif ( !defined('PERMISSIONS_ENABLED') )
@@ -349,7 +352,8 @@ class PMSession extends SessionBase
                         'Project' => $this->project_it->getId(),
                         'IsActive' => 'Y',
                         'VPD' => $this->project_it->get('VPD'),
-                        'Notification' => $this->project_it->getDefaultNotificationType(),
+                        'NotificationTrackingType' => 'system',
+                        'NotificationEmailType' => 'direct',
                         'ProjectRole' => join(',',$role_it->idsToArray()),
                         'ProjectRoleReferenceName' => join(',',$role_it->fieldToArray('ReferenceName')),
                     )

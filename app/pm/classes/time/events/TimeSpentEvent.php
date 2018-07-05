@@ -1,7 +1,5 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
-
 
 class TimeSpentEvent extends SystemTriggersBase
 {
@@ -13,16 +11,24 @@ class TimeSpentEvent extends SystemTriggersBase
 			array ( new FilterInPredicate($object_it->get('Task')) )
 		);
 		if ( $task_it->get('ChangeRequest') != '' ) {
-			$service = new StoreMetricsService();
-			$request = new Request();
+		    $requestId = $task_it->get('ChangeRequest');
+            getSession()->addCallbackDelayed(
+                array(
+                    'RequestMetrics' => $requestId
+                ),
+                function() use ( $requestId ) {
+                    $service = new StoreMetricsService();
+                    $request = new Request();
 
-			$service->storeIssueMetrics(
-				$request->getRegistry(),
-				array (
-					new FilterInPredicate(array($task_it->get('ChangeRequest'))),
-					new RequestMetricsPersister()
-				)
-			);
+                    $service->storeIssueMetrics(
+                        $request->getRegistry(),
+                        array (
+                            new FilterInPredicate(array($requestId)),
+                            new RequestMetricsPersister()
+                        )
+                    );
+                }
+            );
 		}
 	}
 }

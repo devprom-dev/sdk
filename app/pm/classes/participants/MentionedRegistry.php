@@ -21,16 +21,18 @@ class MentionedRegistry extends ObjectRegistrySQL
 				   AND EXISTS (SELECT 1 FROM pm_ParticipantRole r WHERE r.ProjectRole = t.pm_ProjectRoleId)
 				   ".getFactory()->getObject('ProjectRole')->getVpdPredicate('t');
 
-			$sql .= " UNION
-				SELECT REPLACE(u.Caption,' ',''),
-					   u.Caption,
-					   u.OrderNum + 1000000,
-					   u.cms_UserId,
-					   t.VPD,
-					   FLOOR(u.cms_UserId / 1820) PhotoRow,
-					   u.cms_UserId - FLOOR(u.cms_UserId / 1820) * 1820 - 1 PhotoColumn
-				  FROM pm_Participant t, cms_User u
-				 WHERE t.SystemUser = u.cms_UserId ".getFactory()->getObject('pm_Participant')->getVpdPredicate('t');
+            if ( getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant')) ) {
+                $sql .= " UNION
+                        SELECT REPLACE(u.Caption,' ',''),
+                               u.Caption,
+                               u.OrderNum + 1000000,
+                               u.cms_UserId,
+                               t.VPD,
+                               FLOOR(u.cms_UserId / 1820) PhotoRow,
+                               u.cms_UserId - FLOOR(u.cms_UserId / 1820) * 1820 - 1 PhotoColumn
+                          FROM pm_Participant t, cms_User u
+                         WHERE t.SystemUser = u.cms_UserId " . getFactory()->getObject('pm_Participant')->getVpdPredicate('t');
+            }
 		}
 		else {
 			$vpd = getFactory()->getObject('ProjectRole')->getVpdValue();

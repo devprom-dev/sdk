@@ -21,11 +21,14 @@ class InvitationController extends PageController
     public function formProcessAction(Request $request)
     {
     	$emails = preg_split('/,/', $request->request->get('Addressee'));
-    	
     	if ( count($emails) < 1 ) return;
 
     	$service = new InviteService($this, getSession());
-    	
-    	return new Response($service->inviteByEmails($emails));
+    	return new Response(
+    	    $service->inviteByEmails(
+    	        $emails,
+                $request->request->get('ProjectRole')
+            )
+        );
     }
 }

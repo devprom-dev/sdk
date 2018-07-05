@@ -16,7 +16,11 @@
  } 
  else if ( $_REQUEST['class'] != '' ) 
  {
- 	$object = $model_factory->getObject($_REQUEST['class']);
+     $className = getFactory()->getClass($_REQUEST['class']);
+     if ( !class_exists($className) ) {
+         exit(header('Location: /404'));
+     }
+     $object = getFactory()->getObject($className);
  }
  else
  {

@@ -58,7 +58,7 @@ class TaskModelTest extends DevpromDummyTestCase
 
     function testFinishDateEmpty()
     {
-        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
     	
@@ -109,9 +109,6 @@ class TaskModelTest extends DevpromDummyTestCase
     function testFinishDateReset()
     {
         $this->getDALMock()->expects($this->at(0))->method('Query')->with(
-            $this->stringContains("StartDate = NULL")
-        );
-        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("FinishDate = NULL")
         );
 

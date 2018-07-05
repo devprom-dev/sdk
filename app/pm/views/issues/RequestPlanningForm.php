@@ -14,6 +14,11 @@ class RequestPlanningForm extends RequestForm
                 $this->getObject()->addAttribute('Tasks', 'REF_pm_TaskId', translate('Задачи'), true);
             }
         }
+
+        $defaultIteration = $this->getDefaultValue('Iteration');
+        if ( $defaultIteration == '' ) {
+            $this->getObject()->setAttributeVisible('Iteration', false);
+        }
     }
 
     function processEmbeddedForms($object_it, $callback = null )
@@ -38,11 +43,15 @@ class RequestPlanningForm extends RequestForm
             }
         }
 		return array_merge(
-		    array('Caption', 'Priority', 'Estimation', 'Description'),
+		    array('Caption', 'UID', 'Priority', 'Estimation', 'Description'),
             array_values($attributes)
         );
 	}
-	
+
+    function showDescriptionOnRight() {
+        return false;
+    }
+
 	function createFieldObject( $attr_name )
 	{
 		$object_it = $this->getObjectIt();

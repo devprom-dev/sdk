@@ -197,6 +197,11 @@ class IteratorBase
 		return $this->data[$attribute];
 	}
 
+	function defined( $attribute )
+    {
+        return array_key_exists($attribute, $this->data );
+    }
+
 	function getHtml( $attribute )	
 	{
 		return $this->getHtmlValue( $this->get_native( $attribute ) );
@@ -416,6 +421,10 @@ class IteratorBase
 		return $result[0];
 	}
 
+	function getObjectDisplayName() {
+	    return $this->object->getDisplayName();
+    }
+
 	function getDisplayName() 
 	{
 		$caption = $this->get("Caption");
@@ -525,11 +534,7 @@ class IteratorBase
 		return $this->getDateTimeFormat( 'RecordCreated' );
 	}
 	
-	function getModified() {
-		return $this->data['RecordModified'];
-	}
-
-	function getDateFormat($attribute) 
+	function getDateFormat($attribute)
 	{
 		return getSession()->getLanguage()->getDateFormatted( $this->get_native($attribute) );
 	}
@@ -763,7 +768,7 @@ class IteratorBase
 				switch ( $type )
 				{
 					case 'wysiwyg':
-						$value = preg_replace_callback('/\s+src="([^"]*)"/i', array($this,'embedImages'), $value);
+                        $value = preg_replace_callback( '/<img\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceImageCallback'), $value);
 				    case 'text':
 				    case 'varchar':
 				    case 'password':
@@ -795,30 +800,7 @@ class IteratorBase
 		
 		return $xml;
  	}
-
-	function embedImages( $match )
-	{
-		$url = $match[1];
-
-		$found = array();
-		if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/', $url, $found) ) {
-			if ( !preg_match('/file\/([^\/]+)\/([\d]+).*/', $url, $found) ) return $match[0];
-			$file_class = $found[1];
-			$file_id = $found[2];
-		} else {
-			$file_class = $found[1];
-			$file_id = $found[3];
-		}
-		$file_it = getFactory()->getObject($file_class)->getExact($file_id);
-		if ( $file_it->getId() == '' ) return $match[0];
-
-		$finfo = new \finfo(FILEINFO_MIME_TYPE);
-		$path = $file_it->getFilePath(array_shift($file_it->object->getAttributesByType('file')));
-
-		return ' src="data:'.$finfo->file($path).';base64,'.base64_encode(file_get_contents($path)).'"';
-	}
-
-} 
+}
 
  // упорядоченный итератор
  class OrderedIterator extends IteratorBase

@@ -79,6 +79,15 @@ class CheckpointPHPSetting extends CheckpointEntryDynamic
     									return "disable_functions = ";
     							     }
     			),
+            array (
+                'items' => array ( 'open_basedir' ),
+                'check' => function( $setting, $value ) {
+                    return ini_get( 'open_basedir' ) == '';
+                },
+                'display' => function( $setting, $value ) {
+                    return "open_basedir = ";
+                }
+            ),
     			array (
     					'items' => $this->buildNoLessSettings(),
     					'check' => function( $setting, $value ) use ($me) {

@@ -36,7 +36,7 @@ class WikiRemoveStyleWebMethod extends WebMethod
  		$object_it = $this->getObjectIt();
  		
  		$object_it = $object_it->object->getRegistry()->Query( array (
- 				new WikiRootTransitiveFilter($object_it->getId())
+ 				new ParentTransitiveFilter($object_it->getId())
  		));
  		
  		while( !$object_it->end() )

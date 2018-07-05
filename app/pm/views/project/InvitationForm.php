@@ -2,7 +2,15 @@
 
 class InvitationForm extends PMPageForm
 {
-	function getRenderParms()
+    function extendModel()
+    {
+        parent::extendModel();
+        if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
+            $this->getObject()->setAttributeVisible('ProjectRole', true);
+        }
+    }
+
+    function getRenderParms()
 	{
 		$parms = parent::getRenderParms();
 		

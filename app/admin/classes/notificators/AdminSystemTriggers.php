@@ -60,7 +60,7 @@ class AdminSystemTriggers extends SystemTriggersBase
 
 	function invalidateCache( array $paths ) {
         foreach( $paths as $path ) {
-            getFactory()->getCacheService()->truncate($path);
+            getFactory()->getCacheService()->invalidate($path);
         }
     }
 	function invalidateGlobalCache() {

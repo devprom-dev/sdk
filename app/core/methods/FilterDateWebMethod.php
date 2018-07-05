@@ -50,15 +50,4 @@ class FilterDateWebMethod extends SelectDateRefreshWebMethod
  			$this->getValue()
  		);
  	}
-
- 	function execute_request()
- 	{
- 		if ( $_REQUEST['valueparm'] != '' ) {
- 			$this->setValueParm($_REQUEST['valueparm']);
- 		}
- 		if ( $_REQUEST['value'] == '' ) $_REQUEST['value'] = 'all';
- 		if ( $this->getValueParm() != '' ) {
- 			echo $this->getValueParm().'='.trim($_REQUEST['value']);
- 		}
- 	}
 }

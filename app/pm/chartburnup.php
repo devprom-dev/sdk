@@ -1,64 +1,45 @@
 <?php
- 
  include('common.php');
- 
  include "classes/plan/IterationModelMetricsBuilder.php";
  include "classes/plan/ReleaseModelMetricsBuilder.php";
  
  getSession()->addBuilder( new IterationModelMetricsBuilder() );
  getSession()->addBuilder( new ReleaseModelMetricsBuilder() );
  
- $release = $model_factory->getObject('Release');
-
- $release_it = $release->getExact($_REQUEST['release']);
- 
- $iteration = $model_factory->getObject('Iteration');
- 
+ $iteration = getFactory()->getObject('Iteration');
  $iteration->addFilter( new IterationTimelinePredicate(IterationTimelinePredicate::PAST) );
-
- $it = $iteration->getByRef( 'Version', $release_it->getId() );
+ $it = $iteration->getAll();
 
  // initial data
- $total = array( $release_it->get('Workload') );
- 
- $recent_velocity = array( $release_it->get('Velocity') );
+ $total_workload = getSession()->getProjectIt()->getTotalWorkload();
+ $recent_velocity = getSession()->getProjectIt()->getTeamVelocity();
 
  $resolved = array( 0 );
- 
+ $total = array(
+    $total_workload
+ );
+
  while ( !$it->end() )
  {
-	$total[] = $release_it->get('Workload');
-		
+	$total[] = $total_workload;
 	$resolved[] = $resolved[count($resolved)-1] + $it->get('IterationEstimation');
-	
-	$recent_velocity[] = $it->get('Velocity');
-	
+	$recent_velocity = $it->get('Velocity');
 	$it->moveNext();
  }
  
  // make a prognosis 
- $velocity = $release_it->get('Velocity');
- 
+ $velocity = $recent_velocity;
  $nonplanned = $total[count($total)-1] - $resolved[count($resolved)-1];
 
- if ( $velocity == 0 )
- {
- 	$velocity = $recent_velocity[count($recent_velocity)-1] <= 0
- 		? max($recent_velocity) : $recent_velocity[count($recent_velocity)-1]; 
- }
-
  $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
- 
- 	$iteration_duration = $methodology_it->getReleaseDuration() * $project_it->getDaysInWeek();
- 	
- 	if ( $velocity > 0 )
- 	{
- 		$left_iterations = ceil($nonplanned / $velocity / $iteration_duration);
- 	}
- 	else
- 	{
- 		$left_iterations = 1000;
- 	}
+ $iteration_duration = $methodology_it->getReleaseDuration() * $project_it->getDaysInWeek();
+
+ if ( $velocity > 0 ) {
+    $left_iterations = ceil($nonplanned / $velocity / $iteration_duration);
+ }
+ else {
+    $left_iterations = 1000;
+ }
 
  $prognosis = array();
  $index = count($total) - 1;
@@ -96,5 +77,3 @@
  }
 
  echo '['.join(',',$labels).']';
- 
-?>

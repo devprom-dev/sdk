@@ -107,7 +107,7 @@ class ReportList extends PMPageList
 			    if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 				$actions[] = array(
 				    'url' => $method->getJSCall(),
-				    'name' => translate('Изменить')
+				    'name' => $method->getCaption()
 				);
 			}
 

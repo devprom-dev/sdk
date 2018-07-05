@@ -17,7 +17,7 @@ class ModulesSettingsService implements SettingsService
                 case 'pm_Workspace':
                     $system_it = $object_it->object->getRegistry()->Query(
                         array (
-                            new \FilterAttributePredicate('SystemUser', array(getSession()->getUserIt()->getId(), 'none')),
+                            new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
                             new \FilterBaseVpdPredicate(),
                         )
                     );
@@ -37,9 +37,43 @@ class ModulesSettingsService implements SettingsService
             }
 		}
 
-        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->invalidate('sessions');
 		getSession()->truncate();
 	}
+
+    public function resetForAll()
+    {
+        // disable any model events handler
+        getFactory()->setEventsManager( new \ModelEventsManager() );
+
+        foreach( $this->getIterators() as $object_it )
+        {
+            switch ( $object_it->object->getEntityRefName() ) {
+                case 'pm_Workspace':
+                    $system_it = $object_it->object->getRegistry()->Query(
+                        array (
+                            new \FilterAttributeNotNullPredicate('SystemUser'),
+                            new \FilterBaseVpdPredicate(),
+                        )
+                    );
+                    while( !$system_it->end() ) {
+                        $system_it->delete();
+                        $system_it->moveNext();
+                    }
+                    break;
+                default:
+                    while(!$object_it->end()) {
+                        if ( $object_it->get('Participant') > 0 ) {
+                            $object_it->object->delete($object_it->getId());
+                        }
+                        $object_it->moveNext();
+                    }
+            }
+        }
+
+        getFactory()->getCacheService()->invalidate('sessions');
+        getSession()->truncate();
+    }
 
 	public function resetToDefault()
 	{
@@ -64,7 +98,7 @@ class ModulesSettingsService implements SettingsService
                 case 'pm_Workspace':
                     $system_it = $object_it->object->getRegistry()->Query(
                         array (
-                            new \FilterAttributePredicate('SystemUser', array(getSession()->getUserIt()->getId(), 'none')),
+                            new \FilterAttributeNullPredicate('SystemUser'),
                             new \FilterBaseVpdPredicate(),
                         )
                     );
@@ -96,7 +130,7 @@ class ModulesSettingsService implements SettingsService
 			);
 		}
 
-        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->invalidate('sessions');
 		getSession()->truncate();
 	}
 
@@ -155,7 +189,7 @@ class ModulesSettingsService implements SettingsService
             $object_it->moveNext();
         }
 
-        getFactory()->getCacheService()->truncate('sessions');
+        getFactory()->getCacheService()->invalidate('sessions');
 		getSession()->truncate();
 	}
 

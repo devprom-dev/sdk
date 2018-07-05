@@ -5,11 +5,16 @@ include "FormFeatureIssuesEmbedded.php";
 class FieldFeatureIssues extends FieldForm
 {
  	var $object_it;
+ 	private $issueIt = null;
  	
  	function __construct( $object_it ) {
  		$this->object_it = $object_it;
  	}
- 	
+
+ 	function setIssueIt( $value ) {
+ 	    $this->issueIt = $value;
+    }
+
  	function render( $view ) {
 	    $this->draw( $view );    
 	}
@@ -34,5 +39,13 @@ class FieldFeatureIssues extends FieldForm
 	 		
  		    $form->draw( $view );
  		echo '</div>';
+
+ 		if ( is_object($this->issueIt) && $this->issueIt->getId() > 0 ) {
+ 		    echo '<br/>';
+ 		    echo '<div>';
+                $uid = new ObjectUID();
+                $uid->drawUidInCaption($this->issueIt);
+            echo '</div>';
+        }
  	}
 } 

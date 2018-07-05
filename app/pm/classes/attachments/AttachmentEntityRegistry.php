@@ -14,7 +14,10 @@ class AttachmentEntityRegistry extends ObjectRegistrySQL
         }
         $type_it = getFactory()->getObject('WikiType')->getAll();
         while( !$type_it->end() ) {
-            if ( !class_exists($type_it->get('ClassName')) ) continue;
+            if ( !class_exists($type_it->get('ClassName')) ) {
+                $type_it->moveNext();
+                continue;
+            }
             $objects[] = array (
                 'entityId' => $type_it->get('ClassName'),
                 'Caption' => getFactory()->getObject($type_it->get('ClassName'))->getDisplayName()

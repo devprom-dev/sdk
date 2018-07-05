@@ -7,6 +7,7 @@ class FieldDictionary extends Field
  	var $object, $style, $displayhelp, $options, $null_option;
 	
  	private $translate_options = false;
+ 	private $null_title = '';
  	
 	function FieldDictionary( & $object ) 
 	{
@@ -32,6 +33,10 @@ class FieldDictionary extends Field
 	{
 	    $this->null_option = $enabled;
 	}
+
+	function setNullTitle( $value ) {
+	    $this->null_title = $value;
+    }
 	
 	function translateOptions( $translate = true )
 	{
@@ -74,12 +79,21 @@ class FieldDictionary extends Field
 	    
 	    foreach( $options as $option )
 	    {
-	        if ( $value == $option['value'] ) return $option['caption']; 
+	        if ( $value == $option['value'] ) return $option['caption'];
 	    }
-	    
+
+	    $valueIt = $this->object->getExact($this->getValue());
+	    if ( $valueIt->getId() == '' ) {
+	        $registry = new ObjectRegistrySQL($this->object);
+	        $valueIt = $registry->Query(
+                array(
+                    new FilterInPredicate($value)
+                )
+            );
+        }
+
 		$uid = new ObjectUID;
-		
-	    return $uid->getUidTitle($this->object->getExact($this->getValue()));
+	    return $uid->getUidTitle($valueIt);
 	}
 	
 	function getOptions()
@@ -138,7 +152,7 @@ class FieldDictionary extends Field
 		?>
 		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> default="<?=htmlentities($this->getDefault())?>">
 		<?php if ( $this->null_option ) { ?>
-			<option value="" referenceName=""></option>
+			<option value="" referenceName=""><?=$this->null_title?></option>
 			<?php } ?>
 			<?
 			$valueinlist = false;

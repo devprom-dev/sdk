@@ -8,7 +8,7 @@ class ContextResourceRegistry extends ObjectRegistrySQL
  	{
 		$this->records[$widget_uid] = array( 
             'cms_ResourceId' => $widget_uid,
-	        'Caption' => $text 
+	        'Caption' => stripslashes($text)
 		);
  	}
  	

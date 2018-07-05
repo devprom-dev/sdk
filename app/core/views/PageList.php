@@ -31,13 +31,8 @@ class PageList extends ListTable
  		$this->table = null;
  	}
  	
- 	function buildSystemAttributes()
- 	{
-	    $system_attributes = $this->getObject()->getAttributesByGroup('system');
-
-	    if ( in_array('State', $system_attributes) ) unset( $system_attributes[array_search('State', $system_attributes)] );
- 		
-	    return $system_attributes;
+ 	function buildSystemAttributes() {
+	    return $this->getObject()->getAttributesByGroup('system');
  	}
 
 	function extendModel()
@@ -91,6 +86,7 @@ class PageList extends ListTable
             $this->getPredicates( $filters ),
             $object->getFilters()
         );
+        $predicates[] = new FilterVpdPredicate();
 
         $plugins = getFactory()->getPluginsManager();
         $plugins_interceptors = is_object($plugins) ? $plugins->getPluginsForSection($this->getTable()->getSection()) : array();
@@ -98,34 +94,33 @@ class PageList extends ListTable
             $plugin->interceptMethodListGetPredicates( $this, $predicates, $filters );
         }
 
-        $ids = $this->getIds();
-        if ( count($ids) > 0 ) {
-            $predicates[] = new FilterInPredicate($ids);
-        }
-        $predicates[] = new FilterVpdPredicate();
-
+        $baseSorts = $this->getSorts();
         $sorts = array();
-        foreach( $this->getSorts() as $sort ) {
+        foreach( $baseSorts as $sort ) {
             if ( $sort instanceof SortAttributeClause ) {
                 $sorts[] = $sort->getAttributeName();
             }
         }
 
         $persisters = $this->getPersisters($object, $sorts);
-        $sorts = $this->getSorts();
+        $sorts = $baseSorts;
 
         $registry = $object->getRegistry();
         $registry->setPersisters(array());
         $registry->setSorts(array());
 
-        $this->itemsCount = $registry->Count($predicates);
+        $ids = $this->getIds();
+        if ( count($ids) > 0 ) {
+            $predicates[] = new FilterInPredicate($ids);
+        }
 
-        if ( $this->itemsCount > 0 ) {
+        $this->itemsCount = $this->buildItemsCount($registry, $predicates);
+        if ($this->itemsCount > 0) {
             $limit = $this->getMaxOnPage();
-            if ( is_numeric($limit) && $limit > 0 ) {
+            if (is_numeric($limit) && $limit > 0) {
                 $registry->setLimit($limit > 1 ? $limit : 99999);
                 $offset = $this->getOffset();
-                if ( is_numeric($offset) && $offset > 0 ) {
+                if (is_numeric($offset) && $offset > 0) {
                     $registry->setOffset($offset);
                 }
             }
@@ -136,6 +131,10 @@ class PageList extends ListTable
                 $predicates, $sorts, $persisters
             )
         );
+    }
+
+    function buildItemsCount($registry, $predicates) {
+        return $registry->Count($predicates);
     }
 
     function shiftNextPage( $iterator, $offset ) {
@@ -212,9 +211,7 @@ class PageList extends ListTable
 		if ( $ids == '' ) {
 			$ids = $_REQUEST[$this->getObject()->getIdAttribute()];
 		}
-        return array_filter(preg_split('/[,\-]/', $ids), function( $value ) {
-            return $value != 'all' && is_numeric($value) && $value >= 0;
-        });
+        return TextUtils::parseIds($ids);
     }
 
 	function getGroupFilterValue() {
@@ -265,22 +262,13 @@ class PageList extends ListTable
         return array();
     }
 
-	function getGroupOrder() {
-		$values = $this->getFilterValues();
-		$sort_settings = preg_split('/\./', $values['sort']);
-		if ( $sort_settings[0] == $this->getGroup() ) {
-			return $sort_settings[1] == "" ? "A" : $sort_settings[1];
-		}
-		return "A";
-	}
-
 	function getGroupActions( $ref_it ) {
 		$actions = array();
 		$method = new ObjectModifyWebMethod($ref_it);
 		if ( $method->hasAccess() ) {
 			$actions[] = array (
 			    'uid' => 'row-modify',
-				'name' => translate('Изменить'),
+				'name' => $method->getCaption(),
 				'url' => $method->getJSCall()
 			);
 		}
@@ -289,7 +277,7 @@ class PageList extends ListTable
 
 	function getReferenceIt( $attribute  )
 	{
-		if ( is_object($this->references_it[$attribute]) ) return $this->references_it[$attribute];
+		if ( is_object($this->references_it[$attribute]) ) return $this->references_it[$attribute]->copyAll();
 		 
 		$object = $this->getObject()->getAttributeObject($attribute);
 
@@ -318,7 +306,8 @@ class PageList extends ListTable
 				|| is_a($persister, 'TestExecutionResultPersister')
 				|| is_a($persister, 'TestCaseExecutionResultPersister')
 				|| is_a($persister, 'WikiPageDetailsPersister')
-                || is_a($persister, 'EntityProjectPersister');
+                || is_a($persister, 'EntityProjectPersister')
+                || $persister->IsPersisterImportant();
 		}));
 
 		return $this->references_it[$attribute] = $object->createCachedIterator(
@@ -333,7 +322,6 @@ class PageList extends ListTable
 	function getFilteredReferenceIt( $attr, $value )
 	{
 		$ref_it = $this->getReferenceIt($attr);
-
 		if ( $ref_it->count() < 1 ) return $ref_it;
 		 
 		$ref_key = $ref_it->getIdAttribute();
@@ -354,7 +342,10 @@ class PageList extends ListTable
 
 		$sort_parms = array( '_group', 'sort', 'sort2', 'sort3', 'sort4' );
 		$values = $this->getFilterValues();
-		$values['_group'] = $this->getGroup().".".$this->getGroupOrder();
+
+		$groupSort = $this->getGroupSort();
+		if ( $groupSort == '' ) $groupSort = 'A';
+		$values['_group'] = $this->getGroup().".".$groupSort;
 
 		foreach( $sort_parms as $sort_parm ) {
         	$sort_field = $values[$sort_parm];
@@ -389,11 +380,6 @@ class PageList extends ListTable
 		return is_object($this->getTable()) ? $this->getTable()->getFilterPredicates( $filters ) : array();
 	}
 	
- 	function getStateFilterName()
- 	{
- 		return 'state';
- 	}
- 	
 	function getFilterValues()
 	{
 		return $this->getTable()->getFilterValues();
@@ -513,7 +499,7 @@ class PageList extends ListTable
 		}
 	}
 	
-	function getColumnAlignment( $attr ) 
+	function getColumnAlignment( $attr )
 	{
 		switch( $attr )
 		{
@@ -521,7 +507,13 @@ class PageList extends ListTable
 				return 'left';
 			
 			default:
-				return parent::getColumnAlignment( $attr );
+			    switch( $this->getObject()->getAttributeType($attr) ) {
+                    case 'float':
+                    case 'integer':
+                        return 'right';
+                    default:
+                        return parent::getColumnAlignment( $attr );
+                }
 		}
 	}
 	
@@ -533,6 +525,7 @@ class PageList extends ListTable
 	function getHeaderAttributes( $attr )
 	{
 		$object = $this->getObject();
+		$className = $this->getColumnAlignment($attr);
 
 		$values = $this->getFilterValues();
 		
@@ -544,15 +537,11 @@ class PageList extends ListTable
 
 		if ( !in_array($object->getAttributeDbType($attr), array('', 'COLOR', 'IMAGE')) )
 		{
-            $classname = "";
-			if ( $sort == $attr )
-			{
-				$classname = $sort_type == 'D' ? "up" : "down";
-            }
             $sort_parm = $sort_type == 'D' ? $attr : $attr.'.D';
 
             return array (
-                'class' => $classname,
+                'class' => $className,
+                'sort' => $sort == $attr ? ($sort_type == 'D' ? "up" : "down") : '',
                 'script' => "javascript: filterLocation.setup('group=none',1);filterLocation.setup('sort=".$sort_parm."',1);",
                 'name' => $this->getColumnName($attr)
             );
@@ -561,14 +550,14 @@ class PageList extends ListTable
 		if ( $object->getAttributeDbType($attr) == 'COLOR' )
 		{
 			return array (
-				'class' => "",
+				'class' => $className,
 				'script' => "#",
 				'name' => '<i class="icon-tint"></i>'
 			); 
 		}
 		
 		return array (
-			'class' => "",
+			'class' => $className,
 			'script' => "#",
 			'name' => $this->getColumnName($attr)
 		); 
@@ -625,7 +614,7 @@ class PageList extends ListTable
 						foreach( preg_split('/,/', $object_it->get($group_field)) as $group_id ) {
 							$ref_it->moveToId($group_id);
                				$items[] = $this->uid_service->hasUid($ref_it)
-               						? $this->uid_service->getUidWithCaption($ref_it) 
+               						? $this->uid_service->getUidWithCaption($ref_it)
                						: $this->uid_service->getUidTitle($ref_it);
 						}
 
@@ -682,7 +671,12 @@ class PageList extends ListTable
 		switch ( $attr )
 		{
 			case 'State':
-				echo $object_it->getStateIt()->getDisplayName();
+			    if ( $this->getObject() instanceof MetaobjectStatable ) {
+                    echo $object_it->getStateIt()->getDisplayName();
+                }
+                else {
+			        parent::drawRefCell($entity_it, $object_it, $attr);
+                }
 				break;
 
 			default:
@@ -719,10 +713,10 @@ class PageList extends ListTable
 				        break;
 
 				    default:
-						$separator = $this->uid_service->hasUid($entity_it) ? ' ' : '<br/>';
+						$separator = $this->uid_service->hasUid($entity_it) ? ' ' : '<div/>';
                 		$ids = $entity_it->idsToArray();
 
-                		$widget_it = $this->getTable()->getReferencesListWidget($entity_it->object);
+                		$widget_it = $this->getTable()->getReferencesListWidget($entity_it, $attr);
                 		if ( $widget_it->getId() != '' && count($ids) > 1 )
                 		{
                             $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.join(',',$ids));
@@ -909,7 +903,13 @@ class PageList extends ListTable
 			        	if ( $object_it->get($attr) != '' )
 			        	{
                             if ( in_array('hours', $this->getObject()->getAttributeGroups($attr)) ) {
-                                echo getSession()->getLanguage()->getDurationWording($object_it->get($attr), 24);
+                                echo getSession()->getLanguage()->getHoursWording($object_it->get($attr));
+                            }
+                            elseif ( in_array('astronomic-time', $this->getObject()->getAttributeGroups($attr)) ) {
+                                echo getSession()->getLanguage()->getDurationWording($object_it->get($attr));
+                            }
+                            elseif ( in_array('working-time', $this->getObject()->getAttributeGroups($attr)) ) {
+                                echo getSession()->getLanguage()->getDurationWording($object_it->get($attr), 8);
                             }
                             else {
                                 echo number_format(floatval($object_it->get($attr)), 2, ',', ' ');
@@ -948,13 +948,6 @@ class PageList extends ListTable
 	{
 	    $actions = array();
 
-        if ( $this->getUidService()->hasUid($object_it) && !$object_it->object instanceof Project ) {
-            $actions[] = array (
-                'name' => translate('Открыть'),
-                'url' => $object_it->getViewUrl()
-            );
-        }
-
 	    $form = $this->getForm($object_it);
 	    
 	    if ( !$form instanceof PageForm )
@@ -978,9 +971,21 @@ class PageList extends ListTable
 	    };
 	    
 	    $form->show($object_it);
-	    
-	    return array_merge($actions, $form->getActions());
-	}
+        $actions = array_merge($actions, $form->getActions());
+
+        if ( $this->getUidService()->hasUid($object_it) && !$object_it->object instanceof Project ) {
+            if ( $actions['modify']['name'] != translate('Открыть') ) {
+                array_unshift($actions,
+                    array (
+                        'name' => translate('Открыть'),
+                        'url' => $object_it->getViewUrl()
+                    )
+                );
+            }
+        }
+
+        return $actions;
+    }
 	
 	function getActions( $object_it )
 	{
@@ -1015,6 +1020,7 @@ class PageList extends ListTable
 	{
 	    $values = $this->getFilterValues();
 		if ( $values['group'] != '' ) {
+            $values['group'] = array_shift(preg_split('/\./', $values['group']));
 			return $values['group'] != 'none'
 				? (in_array($values['group'], $this->getAllowedGroupFields()) ? $values['group'] : '')
 				: '';
@@ -1023,6 +1029,13 @@ class PageList extends ListTable
 			return parent::getGroup();
 		}
 	}
+
+	function getGroupSort()
+    {
+        $values = $this->getFilterValues();
+        $sort = array_pop(preg_split('/\./', $values['group']));
+        return in_array($sort, array('A','D')) ? $sort : '';
+    }
 	
 	function getGroupFields()
 	{
@@ -1079,7 +1092,8 @@ class PageList extends ListTable
 		$fields = array();
 		foreach ( $this->getColumnsRef() as $key )
 		{
-			if ( $key == 'OrderNum' || $key == 'Password' || $key == $group ) continue;
+			if ( $key == 'OrderNum' || $key == 'Password' ) continue;
+            if ( !$this instanceof PageBoard && $key == $group ) continue;
 			if ( $object->getAttributeType($key) == 'password' ) continue;
 			if ( $object->getAttributeUserName($key) == '' ) continue;
 
@@ -1169,11 +1183,24 @@ class PageList extends ListTable
 	        if ( count($group_actions) > 0 )
 	        {
 	            $script = "javascript: filterLocation.setup( 'group=none', 0 ); ";
+                $parts = preg_split('/\./', $used_group);
+                if ( $parts[1] == '' ) $parts[1] = $this->getGroupSort();
 	
 	            array_push( $group_actions,
     	            array (),
     	            array ( 'url' => $script, 'name' => translate('Без группировки'),
-            	            'checked' => $used_group == 'none', 'radio' => true )
+            	            'checked' => $used_group == 'none', 'radio' => true ),
+                    array (),
+                    array ( 'url' => "javascript: filterLocation.setup( 'group=".$used_group.".A' ); ",
+                        'name' => translate('По возрастанию'), 'checked' => $parts[1] == 'A' || $parts[1] == '',
+                        'uid' => $used_group.'-a',
+                        'radio-group' => 'direction',
+                        'radio' => true ),
+                    array ( 'url' => "javascript: filterLocation.setup( 'group=".$used_group.".D' ); ",
+                        'name' => translate('По убыванию'), 'checked' => $parts[1] == 'D',
+                        'uid' => $used_group.'-d',
+                        'radio-group' => 'direction',
+                        'radio' => true )
     	        );
     	
 	            array_push($actions, array (
@@ -1267,7 +1294,7 @@ class PageList extends ListTable
 	        if ( $_REQUEST['rows'] == '' ) $_REQUEST['rows'] = $this->getMaxOnPage();
 
 	        $rows_actions = array();
-	        $rows = array( 5, 20, 60, 100 );
+	        $rows = array( 5, 20, 60, 100, 300 );
 	        	
 	        foreach ( $rows as $value )
 	        {

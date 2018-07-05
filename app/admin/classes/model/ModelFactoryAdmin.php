@@ -1,6 +1,6 @@
 <?php
 
-include "classes.php";
+include SERVER_ROOT_PATH . "admin/classes/model/classes.php";
 
 class ModelFactoryAdmin extends ModelFactoryExtended
 {

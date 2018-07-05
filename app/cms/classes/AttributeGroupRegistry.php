@@ -24,7 +24,7 @@ class AttributeGroupRegistry extends ObjectRegistrySQL
 
     	$this->add('transition', translate('Для перехода'));
     	
-		$this->add('time', translate('Трудозатраты'));
+		$this->add('workload', translate('Трудозатраты'));
 		
 		$this->add('dates', translate('Даты'));
 

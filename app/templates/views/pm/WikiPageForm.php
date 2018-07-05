@@ -109,7 +109,7 @@ if ( count($sections) > 0 )
 
 <? } ?>
 
-<?php if ( $persisted ) { ?>
+<?php if ( $persisted && count($actions) ) { ?>
 
 <div class="title-cell hidden-print">
     <div class="btn-group operation last">
@@ -118,19 +118,18 @@ if ( count($sections) > 0 )
 		<span class="caret"></span>
       </a>
       <?php
-    	echo $view->render('core/PopupMenu.php', array (
-    		'items' => $actions
-    	));
+          echo $view->render('core/PopupMenu.php', array (
+              'items' => $actions
+          ));
       ?>
     </div>
 </div>
-
 <?php } // persisted ?>
 
 </div>
 
 <input type="hidden" name="ParentPage" value="<?=$attributes['ParentPage']['value']?>">
-<input type="hidden" name="treeTitle" value="<?=htmlentities($form->getObjectIt()->getTreeDisplayName())?>">
+<input type="hidden" name="treeTitle" value="<?=$form->getObjectIt()->getTreeDisplayName()?>">
 
 <div class="page-attachments">
 <? if ( is_object($attachments) ) { echo $attachments->render($this); } ?>
@@ -140,9 +139,9 @@ if ( count($sections) > 0 )
 <? if ( $persisted ) echo $traces_html; ?>
 
 <?php if ( $persisted && is_object($comments_section) ) { ?>
-<div class="document-page-bottom hidden-print">
-	<div style="display:table;width:100%;height:23px;">
-		<div class="comments-cell" style="display:table-cell;">
+<div class="document-page-bottom">
+	<div class="hidden-print" style="display:table;width:100%;height:23px;">
+		<div class="comments-cell">
 			<span class="<?=($comments_count < 1 ? 'document-item-bottom-hidden': '')?>">
 				<i class="icon-comment"></i>
 				<a class="document-page-comments-link dashed" style="margin-top:3px;">
@@ -161,7 +160,7 @@ if ( count($sections) > 0 )
 			</span>
 		</div>
 	</div>
-	<div class="comments-section" style="display:none;">
+	<div class="comments-section closed">
 		<?php $comments_section->render($this, array('new_link_class' => 'document-item-bottom-hidden')); ?>
 	</div>
 </div>

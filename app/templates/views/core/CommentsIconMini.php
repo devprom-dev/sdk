@@ -10,5 +10,11 @@ $method->setRedirectUrl($redirect != '' ? $redirect : 'function() {window.locati
 
 ?>
 <a title="<?=$method->getCaption()?>" onclick="<?=$method->getJSCall()?>">
-	<i class="icon-comment"></i>
+    <? if ( $object_it->get('NewComments') != '' ) { ?>
+        <span class="label label-info">
+    	    <i class="icon-white icon-comment"></i>
+        </span>
+    <? } else { ?>
+        <i class="icon-comment"></i>
+    <? } ?>
 </a>

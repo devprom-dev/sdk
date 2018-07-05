@@ -2,17 +2,12 @@
 
 class CacheLock extends LockFileSystem
 {
-	function __construct( $timeout = 3 )
+	function __construct( $timeout = 30 )
 	{
 		parent::__construct('cache-global-lock');
 		$this->Wait($timeout);
-		$this->Lock();
 	}
 	
-	function __destruct() {
-		$this->Release();
-	}
-
     public function Wait( $timeout, $callable = null )
     {
         while( $this->Locked($timeout) ) {

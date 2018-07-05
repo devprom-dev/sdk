@@ -47,6 +47,9 @@ class ImportDocumentForm extends PMPageForm
 				throw new Exception(\FileSystem::translateError($_FILES['DocumentFile']['error']));
 			}
 
+            $fileContent = file_get_contents($filePath);
+            if ( $fileContent == '' ) throw new Exception(text(2486));
+
 			if ( $_REQUEST['ParentPage'] != '' ) {
                 $parent_it = $this->getObject()->getExact($_REQUEST['ParentPage']);
             }
@@ -55,7 +58,8 @@ class ImportDocumentForm extends PMPageForm
             }
 
             $options = array (
-                'PageType' => $_REQUEST['PageType']
+                'PageType' => $_REQUEST['PageType'],
+                'State' => $_REQUEST['State']
             );
 			if ( $_REQUEST['Format'] == 'list' ) {
                 $builder = new WikiImporterListBuilder($this->getObject());
@@ -67,12 +71,13 @@ class ImportDocumentForm extends PMPageForm
 			$importer = new WikiImporter($this->getObject());
             $importer_it = $importer->getAll();
 
+
             while( !$importer_it->end() ) {
                 $engineClass = $importer_it->get('EngineClassName');
                 if ( class_exists($engineClass) ) {
                     $engine = new $engineClass;
                     $engine->setOptions($options);
-                    if ( $engine->import($builder, $fileName, file_get_contents($filePath), $parent_it) ) {
+                    if ( $engine->import($builder, $fileName, $fileContent, $parent_it) ) {
                         $this->redirectOnAdded($engine->getDocumentIt());
                     }
                 }

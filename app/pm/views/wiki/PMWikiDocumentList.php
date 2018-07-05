@@ -11,6 +11,7 @@ class PMWikiDocumentList extends PMWikiList
     private $data_filter_used = false;
 	private $displayContentHeader = false;
     private $attributesVisible = false;
+    private $workflowVisible = false;
     private $attributeFields = array();
 
     function __construct( $object )
@@ -29,22 +30,39 @@ class PMWikiDocumentList extends PMWikiList
         parent::extendModel();
         $this->getObject()->addAttribute('Attributes', 'TEXT', translate('Атрибуты'), true);
         $this->pageForm = $this->getTable()->getForm();
+
+        $values = $this->getFilterValues();
+        if ( $values['viewmode'] == 'recon' ) {
+            $this->workflowVisible = true;
+        }
     }
 
     protected function getPersisters( $object, $sorts )
     {
         $persisters = parent::getPersisters($object, $sorts);
 
+        $version_it = $this->getTable()->getRevisionIt();
+        if ( $version_it->getId() > 0 ) {
+            $registry = new WikiPageRegistryVersion();
+            $registry->setDocumentIt($this->getTable()->getDocumentIt());
+            $registry->setSnapshotIt($version_it);
+            $object->setRegistry($registry);
+        }
+
         $snapshot_it = $this->getTable()->getCompareToSnapshot();
 
-        if ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch','document')) ) {
+        if ( $snapshot_it->getId() != '' && $version_it->getId() > 0 ) {
+            $registry->setComparisonMode();
+        }
+        elseif ( $snapshot_it->getId() != '' && in_array($snapshot_it->get('Type'), array('branch','document')) ) {
             $registry = new WikiPageRegistryBaseline();
             $registry->setDocumentIt($this->getTable()->getDocumentIt());
             $registry->setBaselineIt($object->getExact($snapshot_it->get('ObjectId')));
             $object->setRegistry($registry);
         }
         elseif ( $snapshot_it->getId() != '' && $snapshot_it->object instanceof WikiPageComparableSnapshot ) {
-            $registry = new WikiPageRegistryVersion();
+            // previous structure should be used to show differences
+            $registry = new WikiPageRegistryVersionStructure();
             $registry->setDocumentIt($this->getTable()->getDocumentIt());
             $registry->setSnapshotIt($snapshot_it);
             $object->setRegistry($registry);
@@ -53,15 +71,6 @@ class PMWikiDocumentList extends PMWikiList
             $registry = new WikiPageRegistryBaseline();
             $registry->setDocumentIt($this->getTable()->getDocumentIt());
             $registry->setBaselineIt($snapshot_it);
-            $object->setRegistry($registry);
-        }
-
-        $version_it = $this->getTable()->getRevisionIt();
-        if ( $version_it->getId() > 0 )
-        {
-            $registry = new WikiPageRegistryVersion();
-            $registry->setDocumentIt($this->getTable()->getDocumentIt());
-            $registry->setSnapshotIt($version_it);
             $object->setRegistry($registry);
         }
 
@@ -94,6 +103,8 @@ class PMWikiDocumentList extends PMWikiList
                 return true;
             case 'Attributes':
                 return $this->attributesVisible;
+            case 'Workflow':
+                return $this->workflowVisible || parent::getColumnVisibility($attr);
             default:
                 return parent::getColumnVisibility($attr);
         }
@@ -209,7 +220,7 @@ class PMWikiDocumentList extends PMWikiList
  	            return '20%';
  	        default:
 				if ( in_array($column, $this->trace_source_attribute) ) {
-					return '45%';
+					return '50%';
 				}
  	            return parent::getColumnWidth( $column );
  	    }
@@ -252,7 +263,8 @@ class PMWikiDocumentList extends PMWikiList
 					array (
 						new FilterInPredicate($entity_it->getId()),
 						new DocumentVersionPersister(),
-						new SnapshotItemValuePersister($baselines[$entity_it->getId()])
+						new SnapshotItemValuePersister($baselines[$entity_it->getId()]),
+                        new EntityProjectPersister()
 					)
 				);
 			}
@@ -260,7 +272,8 @@ class PMWikiDocumentList extends PMWikiList
                 $source_it = $registry->Query(
                     array (
                         new FilterInPredicate($entity_it->getId()),
-                        new DocumentVersionPersister()
+                        new DocumentVersionPersister(),
+                        new EntityProjectPersister()
                     )
                 );
 			}
@@ -272,7 +285,8 @@ class PMWikiDocumentList extends PMWikiList
 					array (
 						new FilterInPredicate($entity_it->getId()),
 						new DocumentVersionPersister(),
-						new WikiPageRevisionPersister($revision[$entity_it->getId()])
+						new WikiPageRevisionPersister($revision[$entity_it->getId()]),
+                        new EntityProjectPersister()
 					)
 				);
 				break;
@@ -313,8 +327,9 @@ class PMWikiDocumentList extends PMWikiList
 		$filter_values = $this->getFilterValues();
 		$form = $this->pageForm;
 
+        $form->setObject( getFactory()->getObject(get_class($object_it->object)) );
 		$form->setFormIndex( $object_it->getId() );
-		$form->show( $object_it );
+		$form->show( $form->getObject()->createCachedIterator(array($object_it->getData())) );
 		$form->setPage( $this->getTable()->getPage() );
 
         if ( in_array($filter_values['search'], array('','all','none')) ) {
@@ -336,17 +351,14 @@ class PMWikiDocumentList extends PMWikiList
             $viewMode = $_REQUEST['viewmode'];
         }
 
-		if ( $viewMode != 'view' )
-		{
-		    $section = new PageSectionComments($object_it, $this->getTable()->getRevisionIt()->getId());
-            $section->setOptions(
-                array (
-                    'collapsable' => true,
-                    'autorefresh' => false
-                )
-            );
-            $form_render_parms['sections'] = array( $section );
-		}
+        $section = new PageSectionComments($object_it, $this->getTable()->getRevisionIt()->getId());
+        $section->setOptions(
+            array (
+                'collapsable' => true,
+                'autorefresh' => false
+            )
+        );
+        $form_render_parms['sections'] = array( $section );
 
 		$form_render_parms['modifiable'] = $viewMode != 'view' &&
 			$this->itemsEditable && getFactory()->getAccessPolicy()->can_modify($object_it);
@@ -438,7 +450,7 @@ class PMWikiDocumentList extends PMWikiList
 				if ( $method->hasAccess() ) {
 					$method->setRedirectUrl('donothing');
 					echo '<li>';
-						echo '<a id="doc-page-trace" class="dashed dashed-hidden" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.translate('изменить').'</a>';
+						echo '<a id="doc-page-trace" class="dashed dashed-hidden" onclick="'.$method->getJSCall(array('tab'=>2)).'">'.translate('трассировки').'</a>';
 					echo '</li>';
 				}
 		echo '</ul>';
@@ -465,46 +477,6 @@ class PMWikiDocumentList extends PMWikiList
 		}
 	}
 	
-	function getPagesWithDifferences( $compareto_it )
-	{
-		if ( $compareto_it->getId() == '' ) return array();
-
-		$iterator = $this->getObject()->createCachedIterator( $this->getIteratorRef()->getRowset() );
-		
-		$ids = array();
-		
-		while( !$iterator->end() )
-		{
-			$registry = new WikiPageRegistryComparison($this->getObject());
-	
-			$registry->setBaselineIt($compareto_it);
-
-			$registry->setPageIt($iterator);
-			
-			$page_it = $registry->Query();
-			
-	 		$result = IteratorBase::utf8towin(
-	 				html_diff(
-	 						IteratorBase::wintoutf8($page_it->getHtmlDecoded('Content')),
-	 						IteratorBase::wintoutf8($iterator->getHtmlDecoded('Content'))
-					)
-	 		);  
-			
-			$different = 
-					preg_match('/class="diff-html/i', $result) 
-					|| $page_it->getHtmlDecoded('Caption') != $iterator->getHtmlDecoded('Caption');
-			
-			if ( $different )
-			{
-				$ids[] = $iterator->getId();
-			}
-			
-			$iterator->moveNext();
-		}
-		
-		return $ids;
-	}
-	
 	function getAttributesVisible()
 	{
 		foreach( $this->getObject()->getAttributes() as $key => $attribute ) {
@@ -525,24 +497,27 @@ class PMWikiDocumentList extends PMWikiList
 					);
 				}
 		    	
-	    		$documents = $this->getPagesWithDifferences($this->getTable()->getCompareToSnapshot());
 		    	$compare_actions = $this->getTable()->getCompareToActions();
-		    	if ( count($documents) + count($compare_actions) > 0 )
+		    	if ( count($compare_actions) > 0 )
 		    	{
 					$parms = array (
-						'documents' => $documents,
 						'actions' => $compare_actions
 					);
 
-					$widget = $this->getTable()->getBaselinesListWidget();
-					if ( is_object($widget) ) {
-						$parms['baselines_widget'] = array (
-							'name' => text(2161),
-							'url' => $widget->getUrl()
-						);
-					}
+                    $widget = $this->getTable()->getBaselinesListWidget();
+                    if ( is_object($widget) ) {
+                        $parms['baselines_widget'] = array (
+                            'name' => text(2161),
+                            'url' => $widget->getUrl()
+                        );
+                    }
 
-
+					if ( $this->getTable()->getCompareToSnapshot()->getId() != '' ) {
+                        $parms['reset_comparison'] = array (
+                            'name' => text(1710),
+                            'url' => "javascript: window.location = updateLocation('compareto=', window.location.toString());"
+                        );
+                    }
 					return array (
 						'script' => '#',
 						'name' => $this->getTable()->getView()->render('pm/WikiDocumentHeader.php', $parms)

@@ -31,26 +31,25 @@ class Participant extends Metaobject
 		$this->addAttribute('ParticipantRole', 'REF_ParticipantRoleId', translate('Роль в проекте'), false, false, '', 100);
 		$this->addAttribute('ProjectRole', 'REF_ProjectRoleId', translate('Роль'), false, false, '', 101);
 		$this->setAttributeRequired('ProjectRole', true);
-		
 		$this->addPersister( new ParticipantRolesPersister() );
 		
 		$this->setAttributeCaption('Capacity', translate('Ежедневная загрузка, ч.'));
 		$this->setAttributeOrderNum('Capacity', 102);
 		$this->setAttributeRequired('Capacity', true);
-		$this->addAttribute('Notification', 'VARCHAR', 'text(964)', false, false, '', 103);
+		$this->setAttributeDescription('NotificationEmailType', text(1913));
 		$this->addPersister( new ParticipantDetailsPersister() );
-		
+
+        $this->setAttributeDefault('NotificationTrackingType', 'system');
+
 		$system_attributes = array (
-		        'Login',
-		        'Password',
-		        'OverrideUser',
-		        'Salary'
+            'Login',
+            'Password',
+            'OverrideUser',
+            'Salary'
 		);
-		
 		foreach( $system_attributes as $attribute )
 		{
 			$this->addAttributeGroup($attribute, 'system');
-		    
 		    $this->setAttributeVisible($attribute, false);
 		}
 	}
@@ -77,38 +76,9 @@ class Participant extends Metaobject
 			$parms['Skype'] = $user_it->get('Skype');
 		}
 
-		$part_id = parent::add_parms( $parms );
-	
-		$setting = getFactory()->getObject('pm_UserSetting');
-		$setting->add_parms(
-				array (
-						'Setting' => md5('emailnotification'),
-						'Value' => $parms['Notification'] == '' ? '' : 'email='.$parms['Notification'],
-						'Participant' => $part_id,
-						'VPD' => $parms['VPD'] 
-				)
-		);
-		
-		return $part_id;
+		return parent::add_parms( $parms );
 	}
 	
-	function modify_parms( $object_id, $parms, $b_notification = true ) 
-	{
-		global $model_factory;
-		
-		$result = parent::modify_parms( $object_id, $parms, $b_notification );
-		if ( $result < 1 ) return $result;
-
-		// change email notifications settings
-		$part = $model_factory->getObject('pm_Participant');
-		$part_it = $part->getExact( $object_id );
-
-		$notification = $model_factory->getObject('Notification');
-		$notification->store( $parms['Notification'], $part_it );
-		
-		return $result;
-	}
-
 	function DeletesCascade( $object )
 	{
 	    switch ( $object->getEntityRefName() )

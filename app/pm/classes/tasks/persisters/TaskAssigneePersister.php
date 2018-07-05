@@ -4,11 +4,9 @@ class TaskAssigneePersister extends ObjectSQLPersister
 {
  	function getSelectColumns( $alias )
  	{
- 		$columns = array();
- 		
- 		$columns[] = " t.Assignee AssigneeUser ";
- 		
- 		return $columns;
+ 		return array(
+ 		    "(SELECT MIN(l.UserGroup) FROM co_UserGroupLink l WHERE l.SystemUser = ".$alias.".Assignee) UserGroup"
+        );
  	}
 }
 

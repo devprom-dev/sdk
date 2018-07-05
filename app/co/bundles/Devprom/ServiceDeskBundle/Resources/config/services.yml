@@ -1,4 +1,10 @@
 services:
+    apikey_authenticator:
+        class:  Devprom\ServiceDeskBundle\Security\ApiKeyAuthenticator
+        arguments:
+            em: "@doctrine.orm.entity_manager"
+        public: false
+
     doctrine_dbal_connection_listener:
         class: Devprom\CommonBundle\Doctrine\DBAL\Listener\PostConnectListener
         tags:
@@ -85,6 +91,7 @@ services:
             em: "@doctrine.orm.entity_manager"
             userManager: "@fos_user.user_manager"
             mailer: "@servicedesk_mailer"
+            objectChangeLogger: "@object_change_logger"
 
     issue_service:
         class: Devprom\ServiceDeskBundle\Service\IssueService

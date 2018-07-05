@@ -1,4 +1,5 @@
 <?php
+use Devprom\CommonBundle\Service\Emails\RenderService;
 
 class EmailNotificatorHandler
 {
@@ -11,10 +12,20 @@ class EmailNotificatorHandler
 	
 	function getSubject( $subject, $object_it, $prev_object_it, $action, $recipient )
 	{
-		$project = $object_it->get('ProjectCodeName');
-		if ( $project == '' ) $project = getSession()->getProjectIt()->get('CodeName');
-		$uid = new ObjectUid;
-		return $object_it->object->getDisplayName().' {'.$project.'} ['.$uid->getObjectUid($object_it).']';
+        $render_service = new RenderService(
+            getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/EmailSubject"
+        );
+
+        $project = $object_it->get('ProjectCodeName');
+        if ( $project == '' ) $project = getSession()->getProjectIt()->get('CodeName');
+        $uid = new ObjectUid;
+
+        return $render_service->getContent('subject-changed.twig', array(
+            'entityName' => $object_it->object->getDisplayName(),
+            'codeName' => $project,
+            'uid' => $uid->getObjectUid($object_it),
+            'title' => $object_it->getDisplayName()
+        ));
 	}
 	
 	function getParticipants( $object_it, $prev_object_it, $action ) 
@@ -26,7 +37,18 @@ class EmailNotificatorHandler
 	{
 		return array();
 	}	
-	
+
+	function getProject( $object_it ) {
+	    if ( $object_it->get('VPD') == '' ) {
+	        getSession()->getProjectIt();
+        }
+        else {
+            return getFactory()->getObject('Project')->getByRef(
+                'VPD', $object_it->get('VPD')
+            );
+        }
+    }
+
 	function getRenderParms($action, $object_it, $prev_object_it)
 	{
 		$uid = new ObjectUID();
@@ -42,8 +64,7 @@ class EmailNotificatorHandler
 	
 	function IsParticipantNotified( $participant_it )
 	{
-		$notification_type = getFactory()->getObject('Notification')->getType( $participant_it );
-		return $notification_type == 'all' || $notification_type == 'system';
+		return $participant_it->get('NotificationEmailType') == 'direct';
 	}
 	
 	function participantHasAccess( $participant_it, $object_it )

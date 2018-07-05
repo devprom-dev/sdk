@@ -1,7 +1,8 @@
 <?php
-
+include_once SERVER_ROOT_PATH . "pm/classes/participants/ParticipantModelBuilder.php";
 include "FieldRestMySettings.php";
 include "FieldFormButtons.php";
+include "FieldListOfProjectRoles.php";
 
 class ProfileForm extends PMPageForm
 {
@@ -10,6 +11,8 @@ class ProfileForm extends PMPageForm
         parent::extendModel();
 
         $object = $this->getObject();
+        $builder = new ParticipantModelBuilder();
+        $builder->build($object);
 
         foreach( $object->getAttributes() as $attribute => $data ) {
             $object->setAttributeVisible($attribute, false);
@@ -23,10 +26,20 @@ class ProfileForm extends PMPageForm
             $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(2187));
         }
         else {
-            $object->setAttributeVisible('Notification', true);
-            $object->setAttributeCaption('Notification', text(1912));
-            $object->setAttributeDescription('Notification', text(1913));
-            $object->addAttribute('Buttons', '', '', true, false, '');
+            $object->setAttributeVisible('NotificationEmailType', true);
+            $object->setAttributeVisible('NotificationTrackingType', true);
+
+            if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED )
+            {
+                $moduleIt = getFactory()->getObject('Module')->getExact('permissions/participants');
+                $object->addAttribute('ProjectRoles', 'VARCHAR', text(2452), true, false,
+                    str_replace('%1', $moduleIt->getUrl(),
+                        str_replace('%2', $moduleIt->getDisplayName(), text(2453))
+                    )
+                );
+                $object->setAttributeEditable('ProjectRoles', false);
+            }
+            $object->addAttribute('Buttons', '', '', true, false, '', 300);
             $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(1910));
         }
     }
@@ -74,7 +87,8 @@ class ProfileForm extends PMPageForm
     function IsAttributeEditable( $attr )
     {
         switch( $attr ) {
-            case 'Notification':
+            case 'NotificationEmailType':
+            case 'NotificationTrackingType':
                 return true;
             default:
                 return parent::IsAttributeEditable( $attr );
@@ -106,14 +120,24 @@ class ProfileForm extends PMPageForm
 			case 'ModuleSettings':
 		    	return new FieldRestMySettings(getSession()->getApplicationUrl().'settings/modules');
 
-		    case 'Notification':
-		    	return new FieldDictionary(getFactory()->getObject('Notification'));
+		    case 'NotificationEmailType':
+		        $field = new FieldDictionary(getFactory()->getObject('Notification'));
+                $field->setNullTitle(text(2451));
+		    	return $field;
+
+            case 'NotificationTrackingType':
+                $field = new FieldDictionary(getFactory()->getObject('NotificationTrackingType'));
+                $field->setNullOption(false);
+                return $field;
+
+            case 'ProjectRoles':
+                return new FieldListOfProjectRoles(getSession()->getParticipantIt());
 		    	
 		    default:
 		    	return parent::createFieldObject( $name );
 		}
 	}
-	
+
 	function drawButtonsOriginal()
 	{
 		parent::drawButtons();

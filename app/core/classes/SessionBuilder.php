@@ -72,7 +72,7 @@ class SessionBuilder
 
     public function invalidate( $sessionId ) {
         if ( $sessionId == "" ) {
-            getFactory()->getCacheService()->truncate(self::CACHE_KEY);
+            getFactory()->getCacheService()->invalidate(self::CACHE_KEY);
         }
         else {
             getFactory()->getCacheService()->set($sessionId, null, self::CACHE_KEY);

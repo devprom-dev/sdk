@@ -28,12 +28,15 @@ class OpenBrokenTraceWebMethod extends WebMethod
 
 			if ( $trace_it->get('UnsyncReasonType') == 'text-changed' )
 			{
-				$url = $broken_it->getViewUrl().'&linkstate=nonactual';
+				$url = $broken_it->getViewUrl();
 				foreach( $broken->getAttributesByGroup('source-attribute') as $attribute ) {
 					if ( $broken->getAttributeClass($attribute) == get_class($broken) ) {
 						$url .= '&hide=all&show=Content-'.$attribute;
 					}
 				}
+				if ( $trace_it->get('SourceDocumentId') != '' ) {
+                    $url .= '&compareto=document:'.$trace_it->get('SourceDocumentId');
+                }
 			}
 			else {
 				$url = $broken_it->getViewUrl().'&compareto=document:'.$trace_it->get('SourceDocumentId');
@@ -51,7 +54,7 @@ class OpenBrokenTraceWebMethod extends WebMethod
 			$target = getFactory()->getObject($target_type_it->get('ClassName'));
 			$target_it = $target->getExact($trace_it->get('TargetPage'));
 
-			$url = $target_it->getViewUrl().'&linkstate=nonactual';
+			$url = $target_it->getViewUrl();
 
 			foreach( $target->getAttributesByGroup('source-attribute') as $attribute ) {
 				if ( $target->getAttributeClass($attribute) == $source_type_it->get('ClassName') ) {

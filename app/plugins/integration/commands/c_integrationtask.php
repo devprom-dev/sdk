@@ -10,12 +10,11 @@ class IntegrationTask extends TaskCommand
 		global $session;
 
 		$this->logStart();
-		$this->setupLogger();
-		
+
 		$system_it = getFactory()->getObject('SystemSettings')->getAll();
 
 		$parameters = $this->getData()->getParameters();
-		$itemsToProcess = $parameters['limit'] > 0 ? $parameters['limit'] : 30;
+		$itemsToProcess = $parameters['limit'] > 0 ? $parameters['limit'] : 60;
 
 		$integration_it = getFactory()->getObject('Integration')->getRegistry()->Query(
 			array (
@@ -51,21 +50,25 @@ class IntegrationTask extends TaskCommand
 			// reset all cached data/metadata
 			getFactory()->resetCache();
 			getFactory()->setAccessPolicy(new AccessPolicy(getFactory()->getCacheService()));
+            getFactory()->getEventsManager()->removeNotificator( new \EmailNotificator() );
 
-			ob_start();
+            $logFilePath = SERVER_LOGS_PATH . '/' . \TextUtils::getFileSafeString(
+			    'integration-' . $project_it->get('CodeName') . '-' . $integration_it->get('ProjectKey') . '.log'
+            );
+            $this->setupLogger($logFilePath);
 
-			$service = new IntegrationService($integration_it);
+			$service = new IntegrationService(
+			    $integration_it, \Logger::getLogger('Commands')
+            );
+
 			$service->setItemsToProcess($itemsToProcess);
 			$service->process();
-
-			$log_content = ob_get_contents();
-			ob_end_clean();
 
             $maxLogLength = 1 * 1024 * 1024;
 			$integration_it->object->modify_parms(
 				$integration_it->getId(),
 				array (
-					'Log' => substr($log_content, -$maxLogLength, $maxLogLength)
+					'Log' => file_get_contents($logFilePath, null, null, -$maxLogLength, $maxLogLength)
 				)
 			);
 			$integration_it->moveNext();
@@ -74,18 +77,21 @@ class IntegrationTask extends TaskCommand
 		$this->logFinish();
 	}
 
-	protected function setupLogger() {
+	protected function setupLogger( $filePath ) {
 		$layout = new LoggerLayoutPattern();
 		$layout->setConversionPattern("\n%d %l %n %m");
 		$layout->activateOptions();
 
-		$appEcho = new LoggerAppenderEcho('bar');
-		$appEcho->setLayout($layout);
-		$appEcho->setHtmlLineBreaks(false);
-		$appEcho->setThreshold('debug');
-		$appEcho->activateOptions();
+        $appFile = new LoggerAppenderFile('foo');
+        $appFile->setFile($filePath);
+        $appFile->setLayout($layout);
+        $appFile->setAppend(true);
+        $appFile->setThreshold('debug');
+        $appFile->activateOptions();
 
-		Logger::getLogger('Commands')->addAppender($appEcho);
-		Logger::getLogger('Commands')->setLevel('debug');
+        $logger = Logger::getLogger('Commands');
+        $logger->removeAllAppenders();
+        $logger->addAppender($appFile);
+        $logger->setLevel('debug');
 	}
 }

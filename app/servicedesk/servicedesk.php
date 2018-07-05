@@ -8,6 +8,8 @@ use Devprom\Component\HttpKernel\ServiceDeskAppKernel;
 
 include('../common.php');
 
+$lock = new \CacheLock();
+
 $model_factory = new ModelFactoryExtended(PluginsFactory::Instance());
 
 // --------------------

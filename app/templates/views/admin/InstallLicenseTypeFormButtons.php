@@ -1,7 +1,7 @@
 <?php 
 
 echo '<br/>'; 
-echo '<br/>'; 
+echo '<br/>';
 
 foreach( $buttons_parms['actions'] as $action )
 {

@@ -93,24 +93,19 @@ class Task extends MetaobjectStatable
 
     function add_parms( $parms )
 	{
-		global $model_factory;
-		
-		if ( $parms['LeftWork'] == '' )
-		{
+		if ( $parms['LeftWork'] == '' ) {
 			$parms['LeftWork'] = $parms['Planned'];
 		}
 		
-		if ( $parms['Release'] == '' ) $parms['Release'] = $this->getDefaultAttributeValue('Release');
+		if ( $parms['Release'] == '' ) {
+		    $parms['Release'] = $this->getDefaultAttributeValue('Release');
+        }
 		
-		if ( $parms['ChangeRequest'] > 0 )
-		{
-			$issue = $model_factory->getObject('pm_ChangeRequest');
-
-			$issue_it = $issue->getExact($parms['ChangeRequest']);
-			
+		if ( $parms['ChangeRequest'] > 0 ) {
+			$issue_it = getFactory()->getObject('pm_ChangeRequest')->getExact($parms['ChangeRequest']);
 			if ( $parms['Priority'] == '' ) $parms['Priority'] = $issue_it->get('Priority');
-			 
-			if ( $parms['OrderNum'] == '' ) $parms['OrderNum'] = $issue_it->get('OrderNum'); 
+			if ( $parms['OrderNum'] == '' ) $parms['OrderNum'] = $issue_it->get('OrderNum');
+			if ( $parms['Release'] == '' ) $parms['Release'] = $issue_it->get('Iteration');
 		}
 
 		return parent::add_parms( $parms );

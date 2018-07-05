@@ -40,7 +40,6 @@ switch ( $type )
             'styles/select/jquery_select.css,' .
             'styles/fancybox/fancy.css,'.
             'styles/newlook/main.css,'.
-            'styles/newlook/extended.css,'.
             'styles/newlook/medium-fonts.css,'.
             'styles/jquery/jquery.treeview.css,' .
             'scripts/color-picker/colorPicker.css,'.
@@ -48,6 +47,7 @@ switch ( $type )
             'styles/wysiwyg/codes.css,'.
             'styles/newlook/sidebar.css,'.
             'styles/newlook/ui.fancytree.css,'.
+            'styles/newlook/extended.css,'.
             'styles/jquery/perfect-scrollbar.min.css';
         break;
 
@@ -86,6 +86,7 @@ switch ( $type )
                     'color-picker/jquery.colorPicker.min.js,'.
                     'locale/underi18n.js,' .
                     'time/jstz-1.0.4.min.js,'.
+                    'clipboard/clipboard.min.js,'.
                     'pm/locale/'.$language.'/resources.js,'.
                     'pm/common.js,'.
                     'pm/board.js,'.

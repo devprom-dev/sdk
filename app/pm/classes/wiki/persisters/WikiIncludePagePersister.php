@@ -11,16 +11,14 @@ class WikiIncludePagePersister extends ObjectSQLPersister
 
 	public function map( & $parms )
 	{
-		$ids = array_filter(preg_split('/[,-]/',$parms['PageToInclude']), function($value) {
-			return $value > 0;
-		});
+		$ids = TextUtils::parseIds($parms['PageToInclude']);
 		if ( count($ids) < 1 ) return "";
 
 		$uid = new ObjectUID;
 		$object = $this->getObject();
 		$include_it = $object->getRegistry()->Query(
 			array (
-				new WikiRootTransitiveFilter($ids),
+				new ParentTransitiveFilter($ids),
 				new FilterVpdPredicate(),
 				new SortDocumentClause()
 			)

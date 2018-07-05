@@ -127,6 +127,10 @@ class ObjectRegistrySQL extends ObjectRegistry
 	
 	public function getAll()
 	{
+        foreach( $this->getFilters() as $predicate ) {
+            if ( $predicate instanceof FilterEmptyPredicate ) return $this->getObject()->getEmptyIterator();
+        }
+
 		$sql = 'SELECT '.$this->getSelectClause('t').' FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate();
 
 		$group = $this->getGroupClause('t');
@@ -146,13 +150,29 @@ class ObjectRegistrySQL extends ObjectRegistry
 	public function Count( $parms = array() )
 	{
 		$this->setParameters( $parms );
-		
+        foreach( $this->getFilters() as $predicate ) {
+            if ( $predicate instanceof FilterEmptyPredicate ) return 0;
+        }
 		return $this->createSQLIterator(
 				'SELECT COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()
 			)->get('cnt');
 	}
-	
-	public function createSQLIterator( $sql_query ) 
+
+    public function CountBy( $attribute, $parms = array() )
+    {
+        if ( !preg_match('/[A-Za-z0-1_]/', $attribute) ) {
+            return $this->getObject()->getEmptyIterator();
+        }
+        $this->setParameters( $parms );
+        foreach( $this->getFilters() as $predicate ) {
+            if ( $predicate instanceof FilterEmptyPredicate ) return 0;
+        }
+        return $this->createSQLIterator(
+            'SELECT t.'.$attribute.', COUNT(1) cnt FROM '.$this->getQueryClause().' t WHERE 1 = 1 '.$this->getFilterPredicate()." GROUP BY ".$attribute
+            );
+    }
+
+	public function createSQLIterator( $sql_query )
 	{
 		global $model_factory;
 		
@@ -291,6 +311,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$sql = "";
 		
 		$object = $this->getObject();
+        $data[$object->getIdAttribute()] = $object_it->getId();
 
 		foreach ( $this->persisters as $persister ) {
 			$persister->map( $data );

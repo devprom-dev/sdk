@@ -18,6 +18,8 @@ include "views/FieldText.php";
 include "views/FieldTextStatic.php";
 include "views/FieldColorPicker.php";
 include "views/FieldLargeText.php";
+include "views/FieldCopyClipboard.php";
+include "views/FieldEmail.php";
 
 class Form
 {
@@ -53,12 +55,16 @@ class Form
 		
 		$this->action = $action;
 
-		if ( $id > 0 )
-		{
-		    $this->setObjectIt($this->object->getExact($id));
+		if ( $id > 0 ) {
+		    $this->setObjectIt($this->getIterator($id));
 		}
 	}
-	
+
+	function getIterator( $objectId )
+	{
+        return $this->object->getExact($objectId);
+	}
+
 	function getAction()
 	{
 		return $this->action;
@@ -605,8 +611,8 @@ class Form
  	
 	function IsAttributeEditable( $attr_name )
 	{
-		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attr_name)
-			&& $this->getObject()->getAttributeEditable($attr_name);
+        if ( !$this->getObject()->getAttributeEditable($attr_name) ) return false;
+		return getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), $attr_name);
 	}
 	
 	function IsAttributeVisible( $attr_name ) 
@@ -614,7 +620,7 @@ class Form
 	    if ( $this->IsAttributeRequired( $attr_name ) && !$this->IsAttributeValueDefined( $attr_name, $this->getObjectIt() ) ) return true;
 	    
 	    if ( !is_object($this->getObjectIt()) && !$this->IsAttributeEditable($attr_name) ) return false;
-	    
+
 		return $this->object->IsAttributeVisible($attr_name);
 	}
 	

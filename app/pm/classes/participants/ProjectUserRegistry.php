@@ -4,11 +4,17 @@ class ProjectUserRegistry extends ObjectRegistrySQL
 {
 	function getFilters()
 	{
+	    $filters = parent::getFilters();
+	    $exactFilters = array_filter($filters, function($value) {
+	        return $value instanceof FilterInPredicate;
+        });
 		return array_merge(
-				parent::getFilters(),
-				array (
-						new UserWorkerPredicate()
-				)
+            $filters,
+            array (
+                count($exactFilters) > 0 || getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant'))
+                    ? new UserWorkerPredicate()
+                    : new FilterInPredicate(getSession()->getUserIt()->getId())
+            )
 		);
 	}
 

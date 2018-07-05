@@ -34,6 +34,10 @@ class TaskForm extends PMPageForm
     	$this->getObject()->setAttributeVisible('Fact', is_object($this->getObjectIt()));
 		$this->getObject()->addPersister( new WatchersPersister() );
 
+        if ( $this->getEditMode() ) {
+            $this->getObject()->setAttributeVisible('OrderNum', true);
+        }
+
 		foreach ( array('PlannedStartDate','PlannedFinishDate') as $attribute ) {
 			$this->getObject()->setAttributeVisible($attribute, true);
 		}
@@ -145,10 +149,9 @@ class TaskForm extends PMPageForm
 
 	function getTransitionAttributes()
 	{
-		$fields = array();
+		$fields = array('UID');
 
-		if ( $this->getFieldValue( 'Caption' ) )
-		{
+		if ( $this->getFieldValue( 'Caption' ) ) {
 		    $fields[] = 'Caption';
 		}
 
@@ -207,10 +210,7 @@ class TaskForm extends PMPageForm
 				return new FieldTaskTypeDictionary( $tasktype );
 
 			case 'Assignee':
-				$object = getFactory()->getObject('User');
-	    		$object->addFilter( new UserWorkerPredicate() );
-
-				return new FieldParticipantDictionary( $object );
+				return new FieldParticipantDictionary($this->getFieldValue('Release'));
 
 			case 'Release':
                 if ( !is_object($this->getObjectIt()) ) {
@@ -235,10 +235,6 @@ class TaskForm extends PMPageForm
 
 			case 'IssueTraces':
 				return new FieldIssueTraces(is_object($this->object_it) ? $this->object_it->get($name) : '');
-
-			case 'LeftWork':
-            case 'Planned':
-				return new FieldHours();
 
             case 'Caption':
                 if ( !$this->getEditMode() ) {
@@ -280,15 +276,6 @@ class TaskForm extends PMPageForm
 
     	switch ( $attr )
 		{
-			case 'Release':
-				if ( is_object($object_it) && $object_it->getId() > 0 ) return $field;
-
-				$value = $this->getObject()->getDefaultAttributeValue( $attr );
-				if ( $value != '' ) return $field;
-
-				$field->setValue( $field->getObject()->getFirst()->getId() );
-				return $field;
-
 			case 'ChangeRequest':
 				$field->setDefault($this->getDefaultValue($attr));
 				return $field;
@@ -328,14 +315,21 @@ class TaskForm extends PMPageForm
 
 		    case 'Caption':
 		    case 'Priority':
-
-		    	if ( $this->getMode() == 'new' && parent::getFieldValue('ChangeRequest') != '' )
-		    	{
+		    	if ( $this->getMode() == 'new' && parent::getFieldValue('ChangeRequest') != '' ) {
 		    		$request_it = getFactory()->getObject('Request')->getExact(parent::getFieldValue('ChangeRequest'));
 		    		return $request_it->getHtmlDecoded($attr);
 		    	}
-
 		    	break;
+
+            case 'Release':
+                $value = parent::getFieldValue( $attr );
+                if ( $value != '' ) return $value;
+
+                $request_id = parent::getFieldValue('ChangeRequest');
+                if ( $request_id > 0 ) {
+                    return getFactory()->getObject('Request')->getExact($request_id)->get('Iteration');
+                }
+                break;
 		}
 		return parent::getFieldValue( $attr );
 	}
@@ -446,7 +440,7 @@ class TaskForm extends PMPageForm
     function getShortAttributes() {
         return array_merge(
             parent::getShortAttributes(),
-            array('TaskType', 'Priority', 'Planned', 'Release', 'Assignee', 'OrderNum', 'Owner', 'Tags')
+            array('TaskType', 'Priority', 'Planned', 'Release', 'Assignee', 'Owner', 'Tags')
         );
     }
 

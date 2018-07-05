@@ -130,7 +130,8 @@ class IntegrationSlackChannel extends IntegrationChannel
             }
         }
         return array(
-            '' => ''
+            '' => '',
+            ''
         );
     }
 

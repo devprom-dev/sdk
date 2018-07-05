@@ -29,14 +29,7 @@ class CacheEngineVar extends CacheEngine
 		unset($pm_session_cache[$path][$key]);
 	}
 	
-	function truncate( $path )
-	{
-		global $pm_session_cache;
-
-		unset($pm_session_cache[$path]);
-	}
-	
-	function invalidate()
+	function invalidate( $path = '' )
 	{
 		unset($pm_session_cache);
 	}

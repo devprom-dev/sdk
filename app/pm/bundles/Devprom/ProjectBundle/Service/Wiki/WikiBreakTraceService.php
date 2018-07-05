@@ -24,6 +24,7 @@ class WikiBreakTraceService
         {
             $registry->Store( $trace_it, array(
                 'IsActual' => 'N',
+                'RecordModified' => $trace_it->get('RecordModified'),
                 'UnsyncReasonType' => 'text-changed'
             ));
             $trace_it->moveNext();

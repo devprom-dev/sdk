@@ -37,9 +37,10 @@ class StateBaseIterator extends OrderedIterator
 		if ( $this->getId() == '' ) return getFactory()->getObject('Transition')->getEmptyIterator();
 		
 		$it = getFactory()->getObject('Transition')->getRegistry()->Query(
-				array (
-						new FilterAttributePredicate('SourceState', $this->getId())
-				)
+            array (
+                new FilterAttributePredicate('SourceState', $this->getId()),
+                new SortOrderedClause()
+            )
 		);
 		$it->object->setStateAttributeType( $this->object );
 		

@@ -108,24 +108,23 @@ class AccessRightIterator extends OrderedIterator
 		}
  	}
 
- 	function getClassAccess( $role_id, &$class_name )
+ 	function getClassAccess( $role_id, $classes )
  	{
- 		$access = $this->getHashedAccess( $role_id, $class_name, 'Y' );
+ 	    foreach( $classes as $class_name ) {
+            $access = $this->getHashedAccess( $role_id, $class_name, 'Y' );
+            switch ( $access )
+            {
+                case 'modify':
+                    return 2;
 
-		switch ( $access )
-		{
-			case 'modify':
-				return 2;
-				
-			case 'view':
-				return 1;
-				
-			case 'none':
-				return 0;
+                case 'view':
+                    return 1;
 
-			default:
-				return -1;
-		}
+                case 'none':
+                    return 0;
+            }
+        }
+        return -1;
  	}
  	
  	function getHashedAccess( $role_id, $object, $type )

@@ -450,7 +450,7 @@ class Metaobject extends StoredObjectDB
         if ( $this->IsReference($name) && $value > 0 ) {
             $ref = $this->getAttributeObject($name);
             if ( $ref->getEntityRefName() != 'entity' ) {
-                $ref_it = $ref->getRegistry()->Query(
+                $ref_it = $ref->getRegistryBase()->Query(
                     array(
                         new FilterInPredicate($value)
                     )

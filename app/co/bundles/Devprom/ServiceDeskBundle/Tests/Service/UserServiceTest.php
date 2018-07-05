@@ -15,12 +15,18 @@ class UserServiceTest extends PHPUnit_Framework_TestCase {
     /** @var  UserService */
     private $service;
 
+    /** @var  changeLogService */
+    private $changeLogService;
+
     protected function setUp()
     {
         $this->mailer = $this->getMockBuilder("Devprom\ServiceDeskBundle\Mailer\Mailer")
             ->disableOriginalConstructor()
             ->getMock();
         $this->userManager = $this->getMockBuilder("FOS\UserBundle\Doctrine\UserManager")
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->changeLogService = $this->getMockBuilder("Devprom\ServiceDeskBundle\Service\ObjectChangeLogger")
             ->disableOriginalConstructor()
             ->getMock();
         $this->userManager->expects($this->any())
@@ -40,7 +46,7 @@ class UserServiceTest extends PHPUnit_Framework_TestCase {
         $this->entityManager = $this->getMockBuilder("Doctrine\ORM\EntityManager")
             ->disableOriginalConstructor()
             ->getMock();
-        $this->service = new \Devprom\ServiceDeskBundle\Service\UserService($this->entityManager, $this->userManager, $this->mailer);
+        $this->service = new \Devprom\ServiceDeskBundle\Service\UserService($this->entityManager, $this->userManager, $this->mailer, $this->changeLogService);
     }
 
 

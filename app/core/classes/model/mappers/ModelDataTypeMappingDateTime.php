@@ -18,7 +18,10 @@ class ModelDataTypeMappingDateTime extends ModelDataTypeMapping
 		
 		list($date_value, $time_value) = preg_split('/\s+/', $value);
 
-		$db_date = getLanguage()->getDbDate($date_value);
+        $language = getLanguage();
+        $date_value = SystemDateTime::parseRelativeDateTime($date_value, $language);
+
+		$db_date = $language->getDbDate($date_value);
 		if ( $db_date != '' ) return SystemDateTime::convertToServerTime($db_date." ".$time_value);
 		
 		return $date_value." ".$time_value;

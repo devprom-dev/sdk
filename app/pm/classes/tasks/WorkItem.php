@@ -11,7 +11,8 @@ class WorkItem extends MetaobjectStatable
 
         $this->setAttributeOrderNum('TaskType', 1);
         $this->setAttributeType('TaskType', 'REF_WorkItemTypeId');
-        $this->addAttribute('Description', 'WYSIWYG', translate('Описание'), true, false, '', 6);
+        $this->addAttribute('Description', 'WYSIWYG', translate('Описание'), false, false, '', 6);
+        $this->addAttribute('IsTerminal', 'VARCHAR', '', false, false, '', 0);
 
         $available = array (
             'Caption',
@@ -54,5 +55,13 @@ class WorkItem extends MetaobjectStatable
 
     function createIterator() {
         return new WorkItemIterator($this);
+    }
+
+    function IsDeletedCascade($object) {
+        return false;
+    }
+
+    function IsUpdatedCascade($object) {
+        return false;
     }
 }

@@ -14,7 +14,7 @@ class VelocityReportsBuilder extends ReportsBuilder
 					'title' => text('scrum9'),
 			        'description' => text('scrum17'),
 					'category' => FUNC_AREA_MANAGEMENT,
-				    'query' => 'group=Caption&aggby=Velocity&aggregator=AVG',
+				    'query' => 'group=Caption&aggby=VPD&aggregator=none',
 			        'type' => 'chart',
 			        'module' => $module_it->getId() )
 		);

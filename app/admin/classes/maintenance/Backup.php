@@ -15,18 +15,16 @@ class Backup extends MetaobjectCacheable
 	{
 		$it = $this->getExact( $id );
 			
-		if ( $it->getId() != '' )
-		{
+		if ( $it->getId() != '' ) {
 			unlink(SERVER_BACKUP_PATH.$it->get('Caption'));
-			
 			FileSystem::rmdirr(SERVER_BACKUP_PATH.basename($it->get('Caption'), '.zip'));
 		}
 		
 		$it = $this->getByRefArray( array(
-		    'Caption' => $it->get('Caption')
+		    'BackupFileName' => $it->get('Caption')
 		));
 		
-		return $it->count() > 0 ? parent::delete( $id ) : 0;
+		return $it->count() > 0 ? parent::delete( $id ) : 1;
 	}
 }
 

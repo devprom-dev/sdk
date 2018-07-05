@@ -6,9 +6,12 @@ class RequestFormLinked extends RequestForm
 
 	public function __construct( $object )
 	{
+	    $ids = TextUtils::parseIds($_REQUEST['IssueLinked']);
+	    if ( count($ids) < 1 ) $ids = array(0);
+
         $this->source_it = $object->getRegistry()->Query(
             array (
-                new FilterInPredicate($_REQUEST['IssueLinked'])
+                new FilterInPredicate($ids)
             )
         );
 		parent::__construct($object);
@@ -21,14 +24,13 @@ class RequestFormLinked extends RequestForm
         $object = $this->getObject();
         $object->addAttribute('LinkType', 'REF_RequestLinkTypeId', translate('Тип связи'), true, false, '', 1);
         $object->setAttributeRequired('LinkType', true);
-        $object->setAttributeVisible('Author', false);
         $object->addAttribute('IssueLinked', 'INTEGER', '', false, false);
 	}
 	
 	function getSourceIt()
 	{
         $result = array();
-	    if ( $_REQUEST['IssueLinked'] != '' ) {
+	    if ( $this->source_it->count() == 1 ) {
             $result[] = array($this->source_it, 'Description');
 		}
 		return array_merge(parent::getSourceIt(), $result);
@@ -37,17 +39,20 @@ class RequestFormLinked extends RequestForm
     function persist()
 	{
 		if ( $this->source_it->getId() == '' ) return parent::persist();
-
         $result = parent::persist();
 
         if ( $this->getAction() == 'add' ) {
-            getFactory()->getObject('pm_ChangeRequestLink')->add_parms(
-                array(
-                    'SourceRequest' => $this->getObjectIt()->getId(),
-                    'TargetRequest' => $this->source_it->getId(),
-                    'LinkType' => $_REQUEST['LinkType']
-                )
-            );
+            $link = getFactory()->getObject('pm_ChangeRequestLink');
+            while( !$this->source_it->end() ) {
+                $link->add_parms(
+                    array(
+                        'SourceRequest' => $this->getObjectIt()->getId(),
+                        'TargetRequest' => $this->source_it->getId(),
+                        'LinkType' => $_REQUEST['LinkType']
+                    )
+                );
+                $this->source_it->moveNext();
+            }
         }
 
         return $result;

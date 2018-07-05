@@ -55,7 +55,7 @@ var scrumSteps = [
         title: scrumTourTitle
     },
     {
-        element: "table.board-table tr:eq(5) td.board-column:eq(1)",
+        element: "table.board-table tr.row-cards:eq(1) td.board-column:eq(0)",
         content: tc('scrum-taskboard'),
         placement: 'right',
         path: '/pm/%project%/tasks/board/tasksboardforissues?report=tasksboardforissues&basemodule=tasks-board&area=favs&tour='+scrumTourId,

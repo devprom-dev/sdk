@@ -13,7 +13,7 @@ class AttachmentUnified extends Metaobject
 					new SortRecentClause()
 				)
 		);
-        $this->addAttribute('Size', 'VARCHAR', translate('Размер'), true);
+        $this->addAttribute('FileSize', 'INTEGER', translate('Размер'), true);
 		$this->setAttributeCaption('ObjectId', translate('Артефакт'));
 		$this->setAttributeVisible('ObjectId', true);
 		$this->setAttributeVisible('Description', false);

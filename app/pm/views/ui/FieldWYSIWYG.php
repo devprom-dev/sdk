@@ -103,56 +103,76 @@ class FieldWYSIWYG extends Field
 
 	function getValue()
 	{
-		$value = parent::getValue();
-		if ( count($this->search_text) > 0 ) {
-			$value = preg_replace(
-				array_map(
-					function($value) {
-						return '#'.$value.'#iu';
-					},
-					$this->search_text
-				),
-				'<span class="label label-found">\\0</span>',
-				$value
-			);
-		}
-		return $value;
+	    if ( !is_object($this->object_it) ) return parent::getValue();
+        $editor = $this->getEditor();
+        $parser = $editor->getPageParser();
+        $parser->setObjectIt( $this->object_it );
+
+        return htmlspecialchars(
+		    $parser->parse(
+                html_entity_decode(
+                    parent::getValue(),
+                    ENT_QUOTES | ENT_HTML401, APP_ENCODING)
+            ),
+            ENT_QUOTES | ENT_HTML401, APP_ENCODING
+        );
 	}
 
-	function getText( $readonly = false )
+	function getText()
 	{
-		$editor = $this->getEditor();
+        if ( !is_object($this->object_it) ) return parent::getText();
 
+		$editor = $this->getEditor();
 		if ( $editor->getMode() & WIKI_MODE_INPLACE_INPUT ) {
 			return parent::getText();
 		}
 		
-		$parser = $readonly ? $editor->getHtmlParser() : $editor->getPageParser();
+		$parser = $editor->getHtmlParser();
 		$parser->displayHints(true);
 		$parser->setObjectIt( $this->object_it );
 
-		$content = $parser->parse(html_entity_decode($this->getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING));
-		if ( $readonly ) {
-			$content = preg_replace_callback(REGEX_SHRINK, array($this, 'shrinkLongUrl'), $content);
-			$content = TextUtils::breakLongWords($content);
-		}
+		$content = $parser->parse(
+            html_entity_decode(
+                parent::getValue(), ENT_QUOTES | ENT_HTML401, APP_ENCODING
+            )
+        );
+
+        if ( count($this->search_text) > 0 ) {
+            $content = preg_replace(
+                array_map(
+                    function($value) {
+                        return '#'.$value.'#iu';
+                    },
+                    $this->search_text
+                ),
+                '<span class="label label-found">\\0</span>',
+                $content
+            );
+        }
+
+    	$content = preg_replace_callback(REGEX_SHRINK, array($this, 'shrinkLongUrl'), $content);
+		$content = TextUtils::breakLongWords($content);
+
 		return TextUtils::getValidHtml($content);
 	}
 	
 	function drawReadonly()
 	{
 		echo '<div id="'.$this->getId().'" class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" attributename="'.$this->getName().'" name="'.$this->getName().'">';
-		    echo $this->getText(true);
+		    echo $this->getText();
 		echo '</div>';
 	}
 	
 	function draw( $view = null )
 	{
-	    $value = $this->getValue();
-		if ( $this->readOnly() || !$this->getEditMode() && (preg_match(REGEX_INCLUDE_PAGE, $value) || preg_match(REGEX_INCLUDE_REVISION, $value)) )
-		{
+	    if ( $this->readOnly() ) {
+            $this->drawReadonly();
+            return;
+        }
+
+	    $value = parent::getValue();
+		if ( !$this->getEditMode() && (preg_match(REGEX_INCLUDE_PAGE, $value) || preg_match(REGEX_INCLUDE_REVISION, $value)) ) {
 			$this->drawReadonly();
-			
 			return;
 		}
 		
@@ -160,10 +180,8 @@ class FieldWYSIWYG extends Field
 		
 		if ( $this->show_attachments )
 		{
-			if ( !is_object($this->object_it) )
-			{
+			if ( !is_object($this->object_it) ) {
 				$object = $editor->getObject();
-				
 				$this->object_it = $object->getEmptyIterator();
 			}
 			
@@ -171,17 +189,14 @@ class FieldWYSIWYG extends Field
 				? $this->attachments_field : new FieldWYSIWYGFile( $this->object_it );
 
 			$field->setEditMode( $this->getEditMode() );
-			
 			$editor->setAttachmentsField( $field );
 		}
 		
 		$editor->setFieldId( $this->getId().abs(crc32(microtime())) );
-		
 		$editor->setFieldName( $this->getName() );
-		
 		$editor->setRequired( $this->getRequired() );
-		
-		$editor->draw( $this->getEditMode() ? $this->getValue() : $this->getText(), $this->getEditMode() );
+
+		$editor->draw( $this->getValue(), $this->getEditMode() );
 	}
 	
 	function drawScripts()

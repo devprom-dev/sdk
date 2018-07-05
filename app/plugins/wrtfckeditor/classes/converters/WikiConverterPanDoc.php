@@ -1,15 +1,15 @@
 <?php
-include_once SERVER_ROOT_PATH."core/classes/export/IteratorExport.php";
+include_once SERVER_ROOT_PATH."core/classes/export/WikiIteratorExport.php";
 include "WikiConverterPreviewExt.php";
 
-abstract class WikiConverterPanDoc extends IteratorExport
+abstract class WikiConverterPanDoc extends WikiIteratorExport
 {
     function __construct( $iterator )
     {
         parent::IteratorExport($iterator);
 
-        $this->htmlPath = str_replace("\\", "/", realpath(tempnam(SERVER_FILES_PATH, "pandochtml")));
-        $this->outputPath = str_replace("\\", "/", realpath(tempnam(SERVER_FILES_PATH, "pandocoutput")));
+        $this->htmlPath = \TextUtils::pathToUnixStyle(tempnam(SERVER_FILES_PATH, "pandochtml"));
+        $this->outputPath = \TextUtils::pathToUnixStyle(tempnam(SERVER_FILES_PATH, "pandocoutput"));
     }
 
     function __destruct()
@@ -27,15 +27,20 @@ abstract class WikiConverterPanDoc extends IteratorExport
         $converter->setOptions($options);
         $converter->setObjectIt($this->getIterator());
         $converter->parse();
-        file_put_contents($this->htmlPath, ob_get_contents());
+
+        $content = ob_get_contents();
+        $this->parseContent($content);
+
+        file_put_contents($this->htmlPath, $content);
         ob_end_clean();
 
         $templatePath = $this->getDefaultTemplatePath();
         foreach($options as $option) {
             if ( strpos($option, 'template=') !== false ) {
                 $templateId = array_pop(explode('=', $option));
-                $templatePath = getFactory()->getObject('ExportTemplate')
-                    ->getExact($templateId)->getFilePath('File');
+                $templatePath = \TextUtils::pathToUnixStyle(
+                    getFactory()->getObject('ExportTemplate')->getExact($templateId)->getFilePath('File')
+                );
             }
         }
         if ( $templatePath != "" && file_exists($templatePath) ) {
@@ -48,18 +53,34 @@ abstract class WikiConverterPanDoc extends IteratorExport
         $pandocVersion = $this->getVersion();
         Logger::getLogger('Commands')->info('pandoc version is '.$pandocVersion);
 
-        $requiredParms = '--from=html';
+        $requiredParms = '';
+        if ( defined('PANDOC_RTS') && PANDOC_RTS != '' ) {
+            $requiredParms .= ' '.PANDOC_RTS;
+        }
+        else {
+            // define stack size
+            $requiredParms .= ' +RTS -K512m -RTS';
+        }
+
+        $requiredParms .= ' --from=html';
         if (version_compare($pandocVersion, '1.16.0') >= 0) {
-            $requiredParms .= ' --dpi=196';
+            $requiredParms .= ' --dpi=300';
         }
 
         $command = 'pandoc '.$requiredParms.' '.$templateParm.' '.$this->getToParms().' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$this->outputPath.'" "'.$this->htmlPath.'" 2>&1';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
 
+        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
         $result = shell_exec($command);
+
         if ( $result != "" ) {
             Logger::getLogger('Commands')->error(get_class($this).': '.$result);
-            throw new Exception($result);
+            $lines = array_filter(
+                preg_split('/[\r\n]/', $result),
+                function($value) {
+                    return $value != '' && strpos($value, 'skipping.') === false;
+                });
+            if ( count($lines) > 0 ) throw new Exception($result);
         }
 
         if ( $templateParm != '' ) {
@@ -81,12 +102,15 @@ abstract class WikiConverterPanDoc extends IteratorExport
 	}
 
 	protected function getVersion() {
+        putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
         $command = 'pandoc -v 2>&1';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
+        $result = shell_exec($command);
+        Logger::getLogger('Commands')->info($result);
         return array_pop(
             preg_split('/\s+/',
                 array_shift(
-                    preg_split('/[\r\n]/', shell_exec($command))
+                    preg_split('/[\r\n]/', $result)
                 )
             )
         );
@@ -97,6 +121,27 @@ abstract class WikiConverterPanDoc extends IteratorExport
     }
 
     protected function postProcessByTemplate( $templatePath, $documentPath ) {
+    }
+
+    protected function parseContent( &$content )
+    {
+        $colspanParts = preg_split('/colspan="/i', $content);
+        foreach( $colspanParts as $key => $colspanContent ) {
+            if ( $key == 0 ) continue;
+            $matches = array();
+            if ( preg_match('/^(\d+)/', $colspanContent, $matches) ) {
+                if ( $matches[1] < 1 ) continue;
+                $tdContent = preg_split('/<\/td>/i', $colspanContent);
+                $colspanParts[$key] = join('</td>',
+                    array_merge(
+                        array(array_shift($tdContent)),
+                        array_fill(0, $matches[1] - 1, '<td>'),
+                        $tdContent
+                    )
+                );
+            }
+        }
+        $content = join('dummy="', $colspanParts);
     }
 
     abstract protected function getToParms();

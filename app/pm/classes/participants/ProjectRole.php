@@ -5,17 +5,14 @@ include "predicates/ProjectRoleInheritedFilter.php";
 
 class ProjectRole extends MetaobjectCacheable
 {
- 	function __construct() 
+ 	function __construct( $registry = null )
  	{
- 		parent::__construct('pm_ProjectRole');
+ 		parent::__construct('pm_ProjectRole', $registry);
  		
  		$this->setSortDefault( new SortAttributeClause('Caption') );
- 		
  		$this->setAttributeType('ProjectRoleBase', 'REF_ProjectRoleBaseId');
- 		
  		$this->setAttributeVisible('ProjectRoleBase', true);
  		$this->setAttributeVisible('ReferenceName', false);
-
  		$this->addAttributeGroup('ReferenceName', 'system');
  	}
 
@@ -76,4 +73,9 @@ class ProjectRole extends MetaobjectCacheable
 	{
 		return false;
 	}
+
+	function getPage()
+    {
+        return getSession()->getApplicationUrl($this).'project/dicts/pm_ProjectRole?';
+    }
 }

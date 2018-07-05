@@ -19,7 +19,7 @@ class InviteService
 		$this->email_template = 'CommonBundle:Emails/'.$lang.':invite.html.twig';
 	}
 	
-	public function inviteByEmails( $emails )
+	public function inviteByEmails( $emails, $projectRoleId = '' )
 	{
 		if ( !is_array($emails) ) {
 			$emails = array_filter(
@@ -44,18 +44,26 @@ class InviteService
 			
 			if ( $user_it->getId() > 0 )
 			{
-				$this->addParticipant($this->session->getProjectIt(), $user_it); 
+				$this->addParticipant(
+				    $this->session->getProjectIt(),
+                    $user_it,
+                    getFactory()->getObject('ProjectRole')->getRegistry()->Query(
+                        array(
+                            new \FilterInPredicate($projectRoleId == '' ? '-1' : $projectRoleId)
+                        )
+                    )
+                );
 			}
 			else
 			{
 				getFactory()->getObject('Invitation')->add_parms(
-						array (
-								'Project' => $this->session->getProjectIt()->getId(),
-								'Author' => $this->session->getUserIt()->getId(),
-								'Addressee' => $email 
-						)
+                    array (
+                        'Project' => $this->session->getProjectIt()->getId(),
+                        'Author' => $this->session->getUserIt()->getId(),
+                        'ProjectRole' => $projectRoleId,
+                        'Addressee' => $email
+                    )
 				);
-				
 				$this->sendEmail( $email );
 			}
 		}
@@ -97,25 +105,33 @@ class InviteService
 		$user->setNotificationEnabled(false);
 		
 		$user_it = $user->getExact(
-				$user->add_parms(
-						array (
-								'Caption' => $login,
-								'Login' => $login,
-								'Email' => $email,
-								'Password' => $login,
-								'Language' => getFactory()->getObject('cms_SystemSettings')->getAll()->get('Language')
-						)
-				)
+            $user->add_parms(
+                array (
+                    'Caption' => $login,
+                    'Login' => $login,
+                    'Email' => $email,
+                    'Password' => $login,
+                    'Language' => getFactory()->getObject('cms_SystemSettings')->getAll()->get('Language')
+                )
+            )
 		);
 		
-		$participant_it = $this->addParticipant($invite_it->getRef('Project'), $user_it);
+		$participant_it = $this->addParticipant(
+		    $invite_it->getRef('Project'),
+            $user_it,
+            getFactory()->getObject('ProjectRole')->getRegistry()->Query(
+                array(
+                    new \FilterInPredicate($invite_it->get('ProjectRole') == '' ? '-1' : $invite_it->get('ProjectRole') )
+                )
+            )
+        );
 		
 		$invite_it->delete();
 		
 		return $participant_it;
 	}
 	
-	public function addParticipant( $project_it, $user_it )
+	public function addParticipant( $project_it, $user_it, $role_it = null )
 	{
 		$it = getFactory()->getObject('Participant')->getRegistry()->Query(
 				array(
@@ -124,33 +140,43 @@ class InviteService
 				)
 		);
 		
-		if ( $it->getId() > 0 ) return;
+		if ( $it->getId() == '' ) {
+            $participant = getFactory()->getObject('Participant');
+            $participant_it = $participant->getExact(
+                $participant->add_parms(
+                    array (
+                        'SystemUser' => $user_it->getId(),
+                        'Project' => $project_it->getId(),
+                        'VPD' => $project_it->get('VPD'),
+                        'NotificationTrackingType' => $user_it->get('NotificationTrackingType'),
+                        'NotificationEmailType' => $user_it->get('NotificationEmailType')
+                    )
+                )
+            );
+        }
+        else {
+            $participant_it = $it;
+        }
 		
-		$participant = getFactory()->getObject('Participant');
-		$participant_it = $participant->getExact(
-				$participant->add_parms(
-					array (
-							'SystemUser' => $user_it->getId(),
-							'Project' => $project_it->getId(),
-							'VPD' => $project_it->get('VPD'),
-							'Notification' => $project_it->getDefaultNotificationType()
-					)
-			 	)
-		);
+
+		if ( !is_object($role_it) || $role_it->getId() == '' ) {
+            $role_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
+                array(
+                    new \FilterVpdPredicate($project_it->get('VPD')),
+                    new \FilterAttributePredicate('ReferenceName', array('lead','developer'))
+                )
+            );
+        }
 		
-		getFactory()->getObject('ParticipantRole')->add_parms(
-				array (
-						'Participant' => $participant_it->getId(),
-						'ProjectRole' => getFactory()->getObject('ProjectRole')->getRegistry()->Query(
-												array(
-														new \FilterVpdPredicate($project_it->get('VPD')),
-														new \FilterAttributePredicate('ReferenceName', array('lead','developer'))
-												)
-											)->getId(),
-						'Capacity' => '1',
-						'Project' => $project_it->getId(),
-						'VPD' => $project_it->get('VPD')
-				)
+		getFactory()->getObject('ParticipantRole')->getRegistry()->Merge(
+            array (
+                'Participant' => $participant_it->getId(),
+                'ProjectRole' => $role_it->getId(),
+                'Capacity' => '1',
+                'Project' => $project_it->getId(),
+                'VPD' => $project_it->get('VPD')
+            ),
+            array('Participant', 'ProjectRole')
 		);
 		
 		return $participant_it;
@@ -171,7 +197,7 @@ class InviteService
    		$mail->appendAddress($email);
    		$mail->setBody($content);
    		$mail->setSubject( text(1863) );
-   		$mail->setFrom($this->session->getUserIt()->get('Email'));
+   		$mail->setFromUser($this->session->getUserIt());
 
    		$mail->send();
 	}

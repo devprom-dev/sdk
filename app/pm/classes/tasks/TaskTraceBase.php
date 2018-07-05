@@ -17,6 +17,7 @@ class TaskTraceBase extends Metaobject
      		$this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');
      		$this->setAttributeRequired('ObjectId', true);
  		}
+        $this->setAttributeRequired('OrderNum', false);
  	}
  	
  	function createIterator() 

@@ -83,9 +83,8 @@ class FilterPredicate
  		if ( is_array($filter) )
  		{
  			$filter = array_filter($filter, function( $value ) {
-		    	return $value != '' && $value != 'all' && $value != 'hide';
+		    	return !in_array($value, array('','all','hide'));
 			});
- 			
  			return count($filter) > 0;
  		}
  		else if ( is_object($filter) )
@@ -96,11 +95,6 @@ class FilterPredicate
  		{
  			return $this->defined(preg_split('/,/', $filter));
  		}
- 	}
- 	
- 	function isDefined()
- 	{
- 		return $this->filter != '';
  	}
  	
  	function _predicate( $filter )

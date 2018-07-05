@@ -34,8 +34,7 @@ class PortfolioIterator extends ProjectIterator
             'IsReportsOnActivities' => 'N',
             'IsPlanningUsed' => 'N',
         	'IsSupportUsed' => 'N',
-        	'IsKnowledgeUsed' => 'Y',
-            'RequestEstimationRequired' => 'estimationnonestrategy'
+        	'IsKnowledgeUsed' => 'Y'
         )));
         
         $attributes = $methodology->getAttributes();
@@ -50,7 +49,15 @@ class PortfolioIterator extends ProjectIterator
         while ( !$it->end() )
         {
             foreach ( $attributeKeys as $key ) {
-                if ( $key == 'RequestEstimationRequired' ) continue;
+                if ( $key == 'RequestEstimationRequired' ) {
+                    if ( $data[0][$key] == '' ) {
+                        $data[0][$key] = $it->get($key);
+                    }
+                    else if ( $data[0][$key] != $it->get($key) ) {
+                        $data[0][$key] = 'estimationnonestrategy';
+                    }
+                    continue;
+                }
                 if ( $it->get($key) == 'Y' ) $data[0][$key] = $it->get($key);
             }
             $it->moveNext();

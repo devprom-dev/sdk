@@ -14,13 +14,13 @@ class COSystemTriggers extends SystemTriggersBase
                 if ( array_key_exists('Language', $content) ) {
                     getFactory()->getCacheService()->invalidate();
                 }
-                getFactory()->getCacheService()->truncate('sessions');
+                getFactory()->getCacheService()->invalidate('sessions');
                 break;
 
 			case 'co_ProjectGroup':
 			case 'co_ProjectGroupLink':
                 foreach( array('projects', 'sessions') as $path ) {
-                    getFactory()->getCacheService()->truncate($path);
+                    getFactory()->getCacheService()->invalidate($path);
                 }
 				break;
 		}

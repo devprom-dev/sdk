@@ -22,12 +22,9 @@ class StateBaseModelBuilder extends ObjectModelBuilder
         $object->setAttributeType('IsTerminal', 'REF_StateCommonId');
 
         $object->setAttributeType('ReferenceName', 'varchar');
-        $object->addAttributeGroup('ReferenceName', 'system');
         $object->setAttributeVisible('ReferenceName', false);
 
-        $object->addAttributeGroup('ObjectClass', 'system');
-
-        foreach( array('Description','OrderNum','ReferenceName') as $attribute ) {
+        foreach( array('Description','OrderNum','ReferenceName','ExcludeLeadTime','SkipEmailNotification') as $attribute ) {
             $object->addAttributeGroup($attribute, 'additional');
             $object->setAttributeRequired($attribute, false);
         }
@@ -36,6 +33,9 @@ class StateBaseModelBuilder extends ObjectModelBuilder
 		}
         foreach ( array( 'QueueLength' ) as $attribute ) {
             $object->addAttributeGroup($attribute, 'skip-total');
+        }
+        foreach( array('ObjectClass','ExcludeLeadTime','ReferenceName', 'SkipEmailNotification') as $attribute ) {
+            $object->addAttributeGroup($attribute, 'system');
         }
     }
 }

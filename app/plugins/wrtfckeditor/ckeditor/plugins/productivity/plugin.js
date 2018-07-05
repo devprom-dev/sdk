@@ -57,8 +57,16 @@ CKEDITOR.plugins.add( 'productivity',
 		editor.addCommand( 'productivityComment', {
 			exec: function(editor) {
 				var focusedEditor = editor;
-				var focusedSelection = focusedEditor.getSelection();
-				var text = focusedSelection.getSelectedText();
+                if ( focusedEditor.element.hasClass('wysiwyg-input') ) return;
+
+                var focusedSelection = focusedEditor.getSelection();
+				var ranges = focusedSelection.getRanges();
+                var text = ranges.length > 0
+                    ? (ranges[0].endContainer.type != CKEDITOR.NODE_TEXT
+						? ranges[0].endContainer.getHtml()
+						: focusedSelection.getSelectedText()
+					  )
+                    : "";
 
 				var data = {
 					Caption: text != "" ? '<blockquote>'+text+'</blockquote> <p></p>' : ""
@@ -71,15 +79,16 @@ CKEDITOR.plugins.add( 'productivity',
 				focusManager.blur();
 
 				workflowNewObject(baseUrl+'/comments/'+className+'/'+objectId+'','Comment','Comment','',cket('comment-title'), data, function(id) {
-					var text = focusedSelection.getSelectedText();
-					if ( text != "" && !focusedEditor.element.hasClass('wysiwyg-input') ) {
-						var element = CKEDITOR.dom.element.createFromHtml(
-							'<span comment-id="'+id+'">'+text+'</span>'
-						);
-						focusedEditor.insertElement(element);
-						focusedEditor.persist(true);
-						focusManager.blur();
+					if ( ranges.length > 0 && ranges[0].endContainer.type != CKEDITOR.NODE_TEXT ) {
+                        ranges[0].endContainer.setHtml('<span comment-id="'+id+'">'+text+'</span>');
 					}
+					else {
+                        focusedEditor.insertElement(CKEDITOR.dom.element.createFromHtml(
+                            '<span comment-id="'+id+'">'+text+'</span>'
+                        ));
+					}
+                    focusedEditor.persist(true);
+                    focusManager.blur();
 					toggleDocumentPageComments($(focusedEditor.element.$).closest('tr').find('.comments-section:hidden'), false);
 				});
 			}

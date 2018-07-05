@@ -6,8 +6,6 @@ class DictionaryItemsList extends PMPageList
 	
 	function IsNeedToDisplay( $attr ) 
 	{
-		global $model_factory;
-		
 		switch ( $this->object->getClassName() )
 		{
 			case 'pm_ProjectRole':
@@ -40,8 +38,6 @@ class DictionaryItemsList extends PMPageList
 
 	function drawCell( $object_it, $attr )
 	{
-		global $model_factory;
-		
 		$session = getSession();
 		
 		switch ( $attr )

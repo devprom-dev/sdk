@@ -24,8 +24,23 @@ class SystemSettingsPersister extends ObjectSQLPersister
 			$file_content = SettingsFile::setSettingValue(
 				'SERVER_PORT', $parms['ServerPort'], $file_content );
 		}
-		
-		if ( array_key_exists('EmailTransport', $parms) )
+
+        if ( array_key_exists('ProxyServer', $parms) ) {
+            $file_content = SettingsFile::setSettingValue(
+                'PROXY_SERVER', $parms['ProxyServer'], $file_content );
+        }
+
+        if ( array_key_exists('ProxyAuth', $parms) ) {
+            $file_content = SettingsFile::setSettingValue(
+                'PROXY_AUTH', $parms['ProxyAuth'], $file_content );
+        }
+
+        if ( array_key_exists('AutoUpdateOnForm', $parms) ) {
+            $file_content = SettingsFile::setSettingValue(
+                'AUTO_UPDATE', $parms['AutoUpdate'] == 'Y' ? 'Y' : 'N', $file_content );
+        }
+
+        if ( array_key_exists('EmailTransport', $parms) )
 		{ 
 			$file_content = SettingsFile::setSettingValue(
 				'EMAIL_TRANSPORT', $parms['EmailTransport'], $file_content );
@@ -58,6 +73,9 @@ class SystemSettingsPersister extends ObjectSQLPersister
  		
  		array_push( $columns, "'".EnvironmentSettings::getCustomServerName()."' ServerName " );
  		array_push( $columns, "'".EnvironmentSettings::getCustomServerPort()."' ServerPort " );
+        array_push( $columns, "'".EnvironmentSettings::getProxyServer()."' ProxyServer " );
+        array_push( $columns, "'".EnvironmentSettings::getProxyAuth()."' ProxyAuth " );
+        array_push( $columns, "'".(EnvironmentSettings::getAutoUpdate() ? 'Y' : 'N')."' AutoUpdate " );
 		array_push( $columns, "'".EnvironmentSettings::getUTCOffset()."' TimeZoneUTC " );
 		array_push( $columns, "'".EnvironmentSettings::getPasswordLength()."' PasswordLength " );
 

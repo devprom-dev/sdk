@@ -56,8 +56,6 @@ class FilterAttributePredicate extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
  		$object = $this->getObject();
 
  		if ( $object->getAttributeDbType($this->attr) == '' )
@@ -79,6 +77,9 @@ class FilterAttributePredicate extends FilterPredicate
  		$is_numeric_value = false;
  		foreach( $values as $key => $value )
  		{
+ 		    if ( $value == 'user-id' ) {
+ 		        $values[$key] = $value = getSession()->getUserIt()->getId();
+            }
  			if ( is_numeric($value) ) { $is_numeric_value = true; break; }
  		}
  			
@@ -100,36 +101,39 @@ class FilterAttributePredicate extends FilterPredicate
  		if ( $object->IsReference( $this->attr ) )
  		{
  			$ref = $object->getAttributeObject( $this->attr );
-			$registry = new ObjectRegistrySQL($ref);
- 			
- 			if ( $is_numeric_value || $ref->getAttributeDbType('ReferenceName') == '' )
- 			{
- 			    $values = array_filter($values, function( $val ) {
- 				    return is_numeric($val);
- 				});
- 			    
- 			    if ( count($values) > 0 )
- 			    {
- 			    	$ref_it = $registry->Query(
-						array (
-							new FilterInPredicate($values)
-						)
- 			    	);
- 			    }
- 			    else
- 			    {
- 			        $ref_it = $ref->getEmptyIterator();
- 			    }
- 			}
- 			else
- 			{
-		    	$ref_it = $registry->Query( array (
-					new FilterAttributePredicate('ReferenceName', $values),
-					new FilterVpdPredicate($object->getVpds())
-		    	));
- 			}
- 			
- 			$values = $ref_it->idsToArray(); 
+
+ 			if ( $ref instanceof CacheableSet ) {
+                foreach( $values as $key => $value ) {
+                    $values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
+                }
+            }
+            else {
+                $registry = $ref->getRegistry();
+                $registry->setPersisters(array());
+
+                if ( $is_numeric_value || $ref->getAttributeDbType('ReferenceName') == '' ) {
+                    $values = array_filter($values, function( $val ) {
+                        return is_numeric($val);
+                    });
+                    if ( count($values) > 0 ) {
+                        $ref_it = $registry->Query(
+                            array (
+                                new FilterInPredicate($values)
+                            )
+                        );
+                    }
+                    else {
+                        $ref_it = $ref->getEmptyIterator();
+                    }
+                }
+                else {
+                    $ref_it = $registry->Query( array (
+                        new FilterAttributePredicate('ReferenceName', $values),
+                        new FilterVpdPredicate($object->getVpds())
+                    ));
+                }
+                $values = $ref_it->idsToArray();
+            }
  		}
  		else
  		{
@@ -137,7 +141,7 @@ class FilterAttributePredicate extends FilterPredicate
  				$values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
  			}
  		}
- 		
+
  		if ( count($values) < 1 ) $values = array(0);
  		
  		$this->setIds($values);

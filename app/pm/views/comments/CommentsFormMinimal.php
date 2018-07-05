@@ -84,6 +84,15 @@ class CommentsFormMinimal extends PMPageForm
 
 	function getRenderParms()
 	{
+        if ( is_object($this->anchor_it) && $this->anchor_it->getId() != "" && getSession()->getUserIt()->getId() != "" ) {
+            DAL::Instance()->Query(
+                " DELETE FROM ObjectChangeNotification 
+                   WHERE ObjectId = ".$this->anchor_it->getId()." 
+                     AND ObjectClass = '".get_class($this->anchor_it->object)."' 
+                     AND SystemUser = ".getSession()->getUserIt()->getId()
+            );
+        }
+
 		return array_merge( 
 				parent::getRenderParms(), 
 				array(
@@ -91,20 +100,6 @@ class CommentsFormMinimal extends PMPageForm
 				)
 		);
 	}
-
-	function validateInputValues($id, $action)
-    {
-        if ( $this->private || $_REQUEST['Notification'] == '' ) {
-            $this->getObject()->removeNotificator('ServicedeskCommentEmailNotificator');
-        }
-
-        $notificationSpecified = array_key_exists('Notification', $_REQUEST) || array_key_exists('NotificationOnForm', $_REQUEST);
-        if ( $notificationSpecified && in_array($_REQUEST['Notification'], array('N','')) ) {
-            $_REQUEST['IsPrivate'] = 'Y';
-        }
-
-        return parent::validateInputValues($id, $action);
-    }
 
     function getThreadParms( $comment_it )
 	{

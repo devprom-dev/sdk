@@ -16,7 +16,9 @@ class ProjectLogPage extends PMPage
     
 	function getObject()
 	{
- 		return getFactory()->getObject('ChangeLogAggregated');
+        $object = getFactory()->getObject('ChangeLogAggregated');
+        $object->removeAttribute('EntityName');
+ 		return $object;
 	}
     
     function getTable() 

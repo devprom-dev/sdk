@@ -1,7 +1,5 @@
 <?php
-
 include "ActivitiesExcelIterator.php";
-include_once SERVER_ROOT_PATH."pm/methods/ViewSpentTimeUserWebMethod.php";
 
 class ReportSpentTimeTable extends PMPageTable
 {
@@ -17,7 +15,7 @@ class ReportSpentTimeTable extends PMPageTable
                 new ViewSpentTimeWebMethod(),
                 $this->buildStartFilter(),
                 new ViewFinishDateWebMethod(),
-                new ViewSpentTimeUserWebMethod()
+                $this->buildUserFilter()
             )
 		);
 	}
@@ -90,13 +88,18 @@ class ReportSpentTimeTable extends PMPageTable
         return $filter;
     }
 
+    function buildUserFilter() {
+	    return new FilterObjectMethod(getFactory()->getObject('User'), '', 'participant');
+    }
+
     protected function getFamilyModules( $module )
     {
         switch( $module ) {
             case 'project-spenttime':
                 return array (
                     'tasksplanbyfact',
-                    'worklog'
+                    'worklog',
+                    'activitieschart'
                 );
             default:
                 return parent::getFamilyModules($module);

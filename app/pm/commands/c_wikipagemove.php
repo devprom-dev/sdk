@@ -73,7 +73,7 @@ class WikiPageMove extends CommandForm
             if ($prev_sibling->count() < 1) {
                 return 1;
             }
-            return $prev_sibling->get('OrderNum') - 1;
+            return max(1, $prev_sibling->get('OrderNum') - 1);
         }
         if ($parms['after'] > 0) {
             /** @var WikiPageIterator $prev_sibling */

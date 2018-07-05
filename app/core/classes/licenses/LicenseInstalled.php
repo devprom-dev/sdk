@@ -11,7 +11,6 @@ class LicenseInstalled extends Metaobject
 		parent::__construct('cms_License', new LicenseInstalledRegistry($this));
 		
  		$this->addAttribute( 'InstallationUID', 'VARCHAR', translate('Идентификатор инсталляции'), true, false, '', 10 );
- 					
  		$this->addPersister( new LicenseBaseUIDPersister() );
 	}
 	

@@ -4,8 +4,6 @@ class RequestTagFilter extends FilterPredicate
 {
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
 		if ( in_array(trim($filter), array('0', 'none')) )
 		{
 			$predicate = " AND NOT EXISTS (SELECT 1 FROM pm_RequestTag rt " .
@@ -13,10 +11,8 @@ class RequestTagFilter extends FilterPredicate
 		}
 		else
 		{
-			$tag = $model_factory->getObject('Tag');
-			
-			$tag_it = $tag->getExact( preg_split('/[,-]/', $filter) );
-			
+			$tag = getFactory()->getObject('Tag');
+			$tag_it = $tag->getExact( TextUtils::parseIds($filter) );
 			if ( $tag_it->count() > 0 )
 			{
 				$predicate = " AND EXISTS (SELECT 1 FROM pm_RequestTag rt " .

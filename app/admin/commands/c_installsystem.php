@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 
 class InstallSystem extends CommandForm
 {
@@ -21,7 +22,7 @@ class InstallSystem extends CommandForm
 		{
 		    $this->replyError( str_replace('%1', join(', ',$functions), text(1297)) );
 		}
-		
+
 		// check required utilities are in place
 		if ( $_SERVER['WINDIR'] == '' )
 		{

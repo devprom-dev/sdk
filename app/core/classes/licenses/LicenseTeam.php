@@ -11,7 +11,7 @@ class LicenseTeam extends LicenseInstalled
 
  		$this->addAttribute( 'Caption', 'VARCHAR', 'text(1270)', true, false, 'text(1273)', 0 );
         $this->addAttribute( 'LicenseValue', 'VARCHAR', text(2066), true, true );
-        $this->addAttribute( 'LicenseKey', 'VARCHAR', translate("Ключ лицензии"), true, true );
+        $this->addAttribute( 'LicenseKey', 'LARGETEXT', translate("Ключ лицензии"), true, true );
 	}
 	
 	function createIterator()

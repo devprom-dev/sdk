@@ -28,4 +28,8 @@ class RequestTagsPersister extends ObjectSQLPersister
  			$tag->bindToObject( $object_id, $tag_id );
  		}
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }

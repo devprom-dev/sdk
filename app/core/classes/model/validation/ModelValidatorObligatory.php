@@ -13,13 +13,17 @@ class ModelValidatorObligatory extends ModelValidatorInstance
 	
 	public function validate( Metaobject $object, array & $parms )
 	{
-		$attributes = count($this->attributes) < 1 
-				? array_keys($object->getAttributesSorted()) : $this->attributes;
-		
+        $attributes = $this->attributes;
+	    if ( count($attributes) < 1 ) {
+            foreach( array_keys($object->getAttributesSorted()) as $attribute ) {
+                if (!$object->IsAttributeStored($attribute)) continue;
+                $attributes[] = $attribute;
+            }
+        }
+
 		foreach( $attributes as $attribute )
 		{
 			if ( !array_key_exists($attribute, $parms) ) continue;
-			if ( !$object->IsAttributeStored($attribute) ) continue;
 			if ( !$object->IsAttributeRequired($attribute) ) continue;
 			
 			switch ( $object->getAttributeType($attribute) )

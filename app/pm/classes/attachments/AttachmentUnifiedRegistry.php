@@ -20,6 +20,7 @@ class AttachmentUnifiedRegistry extends ObjectRegistrySQL
 				   t.FilePath,
 				   t.FileExt,
 				   t.Description,
+				   t.FileSize,
 				   t.ObjectId,
 				   t.ObjectClass,
 				   'pm_Attachment' as AttachmentClassName
@@ -43,6 +44,7 @@ class AttachmentUnifiedRegistry extends ObjectRegistrySQL
                            t.ContentPath,
                            t.ContentExt,
                            t.Description,
+                           t.FileSize,
                            t.WikiPage,
                            '".$type_it->get('ClassName')."',
                            'WikiPageFile'

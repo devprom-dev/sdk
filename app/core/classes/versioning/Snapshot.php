@@ -1,7 +1,6 @@
 <?php
 
 include "SnapshotIterator.php";
-include "predicates/SnapshotObjectPredicate.php";
 include "predicates/SnapshotBeforeDatePredicate.php";
 include "predicates/SnapshotsByObjectPredicate.php";
 include "persisters/SnapshotItemValuePersister.php";
@@ -38,7 +37,7 @@ class Snapshot extends Metaobject
 	 	if ( $anchor instanceof WikiPage && count($items) == 1 )
  		{
  			$anchor_it = $anchor->getRegistry()->Query( array (
- 					new WikiRootTransitiveFilter($items)
+ 					new ParentTransitiveFilter($items)
  			));
  		}
  		else

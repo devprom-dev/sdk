@@ -4,8 +4,8 @@ include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 
 include "UserParticipanceType.php";
 include "predicates/UserParticipanceTypePredicate.php";
-include "predicates/UserParticipanceRolePredicate.php";
 include "predicates/UserParticipanceWorkloadPredicate.php";
+include_once "predicates/UserParticipanceRolePredicate.php";
 include_once "predicates/UserParticipanceProjectPredicate.php";
 
 class UserParticipatesModelBuilder extends ObjectModelBuilder

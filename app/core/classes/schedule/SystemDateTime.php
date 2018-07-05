@@ -95,4 +95,25 @@ class SystemDateTime
 	{
 		return text(2115);
 	}
+
+	static public function parseRelativeDateTime( $value, $language )
+    {
+        $value = preg_replace(
+            '/last-month/',
+            $language->getPhpDate( strtotime('-1 month', strtotime(date('Y-m-j'))) ),
+            $value
+        );
+        $value = preg_replace(
+            '/last-week/',
+            $language->getPhpDate( strtotime('-1 week', strtotime(date('Y-m-j'))) ),
+            $value
+        );
+        $value = preg_replace(
+            '/next-week/',
+            $language->getPhpDate( strtotime('1 week', strtotime(date('Y-m-j'))) ),
+            $value
+        );
+
+        return $value;
+    }
 }

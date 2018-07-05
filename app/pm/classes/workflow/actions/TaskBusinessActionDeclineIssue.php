@@ -18,10 +18,11 @@ class TaskBusinessActionDeclineIssue extends BusinessActionWorkflow
 
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
-
  		getSession()->addBuilder( new RequestModelExtendedBuilder() );
  		
  		$request_it = $object_it->getRef('ChangeRequest');
+
+        if ( $request_it->object->getAttributeType('OpenTasks') == '' ) return true;
 		$task_it = $request_it->getRef('OpenTasks');
 		
 		// if there is failed task then decline issue

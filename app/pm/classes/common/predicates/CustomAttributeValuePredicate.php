@@ -17,13 +17,8 @@ class CustomAttributeValuePredicate extends FilterPredicate
  	{
  		$object = $this->getObject();
  		
- 		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($object);
- 	 	while ( !$attr_it->end() )
- 		{
- 			if ( $attr_it->get('ReferenceName') == $this->attribute ) break;
- 			$attr_it->moveNext();
- 		}
- 		if ( $attr_it->end() ) return " AND 1 = 2";
+ 		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getByAttribute($object, $this->attribute);
+ 		if ( $attr_it->count() < 1 ) return " AND 1 = 2";
  			
  		$mapper = new ModelDataTypeMapper();
  		$value_column = $attr_it->getRef('AttributeType')->getValueColumn();
@@ -33,7 +28,7 @@ class CustomAttributeValuePredicate extends FilterPredicate
 			return " AND NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
 			"			  	  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
 			"				    AND av.".$value_column." IS NOT NULL".
-			"			    	AND av.CustomAttribute = ".$attr_it->getId()." ) ";
+			"			    	AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ) ";
 		}
 
  		$values = array();
@@ -52,13 +47,13 @@ class CustomAttributeValuePredicate extends FilterPredicate
  		{
 	 		return " AND NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
 	 			   "			  	  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
-	 			   "			    	AND av.CustomAttribute = ".$attr_it->getId().
+	 			   "			    	AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
 	 			   "					AND av.".$value_column." IS NOT NULL ) ";
  		}
  				
  		return " AND EXISTS (SELECT 1 FROM pm_AttributeValue av ".
  			   "			  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
- 			   "			    AND av.CustomAttribute = ".$attr_it->getId().
+ 			   "			    AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
  			   "				AND av.".$value_column." IN (".join(",",$values).") ) ";
  	}
 }

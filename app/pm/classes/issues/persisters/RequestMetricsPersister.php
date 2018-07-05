@@ -16,8 +16,8 @@ class RequestMetricsPersister extends ObjectSQLPersister
 		 }
 		 if ( count($terminalIds) < 1 ) $terminalIds = array(0);
 
-         $defaultDeliveryDate = "(SELECT FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()) + m.Rating * 3600) FROM pm_Project m WHERE m.VPD = t.VPD)";
-         $defaultDeliveryDateMethod = "1";
+         $defaultDeliveryDate = " NULL ";
+         $defaultDeliveryDateMethod = " NULL ";
 
          if ( getSession()->getProjectIt()->getMethodologyIt()->HasPlanning() || getSession()->getProjectIt()->getMethodologyIt()->HasReleases() ) {
              $defaultDeliveryDate =
@@ -48,6 +48,10 @@ class RequestMetricsPersister extends ObjectSQLPersister
                  " IFNULL( FROM_UNIXTIME(UNIX_TIMESTAMP(t.RecordCreated) + t.Estimation * 3600), ".$defaultDeliveryDate." )";
              $defaultDeliveryDateMethod =
                  " IF( t.Estimation IS NOT NULL, 3, ".$defaultDeliveryDate." )";
+         }
+         else {
+             $defaultDeliveryDate = "(SELECT FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()) + m.Rating * 3600) FROM pm_Project m WHERE m.VPD = t.VPD)";
+             $defaultDeliveryDateMethod = "1";
          }
 
          $columns[] =
@@ -101,7 +105,7 @@ class RequestMetricsPersister extends ObjectSQLPersister
 			       AND s.pm_TaskId = a.Task) MetricSpentHoursData ";
 
          $columns[] =
-             "  (SELECT CONCAT_WS(':',IFNULL(SUM(r.Fact),0),GROUP_CONCAT(r.FactTasks))
+             "  (SELECT CONCAT_WS(':',IFNULL(SUM(r.Fact),0),GROUP_CONCAT(DISTINCT r.FactTasks))
 			      FROM pm_ChangeRequestLink l, pm_ChangeRequestLinkType lt, pm_ChangeRequest r
 				 WHERE t.pm_ChangeRequestId = l.SourceRequest
 				   AND l.TargetRequest = r.pm_ChangeRequestId

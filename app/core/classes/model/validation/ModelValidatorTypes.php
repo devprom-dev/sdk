@@ -7,6 +7,7 @@ include_once "ModelValidatorTypeBoolean.php";
 include_once "ModelValidatorTypeDate.php";
 include_once "ModelValidatorTypeNull.php";
 include_once "ModelValidatorTypeFile.php";
+include_once "ModelValidatorTypeEmail.php";
 include_once "ModelValidatorTypeReference.php";
 include_once "ModelValidatorTypePassword.php";
 
@@ -19,13 +20,14 @@ class ModelValidatorTypes extends ModelValidatorInstance
 		$this->attributes = $attributes;
 		
 		$this->type_validators = array (
-				new ModelValidatorTypeNumeric(),
-				new ModelValidatorTypeFloat(),
-				new ModelValidatorTypeBoolean(),
-				new ModelValidatorTypeDate(),
-				new ModelValidatorTypeReference(),
-				new ModelValidatorTypePassword(),
-				new ModelValidatorTypeFile()
+            new ModelValidatorTypeNumeric(),
+            new ModelValidatorTypeFloat(),
+            new ModelValidatorTypeBoolean(),
+            new ModelValidatorTypeDate(),
+            new ModelValidatorTypeReference(),
+            new ModelValidatorTypePassword(),
+            new ModelValidatorTypeFile(),
+            new ModelValidatorTypeEmail()
 		);
 	}
 	

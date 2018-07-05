@@ -90,14 +90,15 @@ class ActivityRequest extends Activity
  	
 	function add_parms( $parms )
 	{
+	    $issueId = $parms['Task'] > 0 ? $parms['Task'] : $parms['Issue'];
 		$request_it = getFactory()->getObject('pm_ChangeRequest')->getRegistry()->Query(
 				array (
 						new RequestTasksPersister(),
-						new FilterInPredicate($parms['Task'] > 0 ? $parms['Task'] : '-1')
+						new FilterInPredicate($issueId > 0 ? $issueId : '-1')
 				)
 		);
 		if ( $request_it->getId() < 1 ) throw new Exception('Request identifier should be passed');
-		$parms['Issue'] = $parms['Task'];
+		$parms['Issue'] = $parms['Task'] = $issueId;
 
 		$this->setVpdContext($request_it);
 		
@@ -109,11 +110,13 @@ class ActivityRequest extends Activity
 		$result = parent::add_parms( $parms );
 		if ( $result < 1 ) return $result;
 
-		$request_it->object->removeNotificator( 'EmailNotificator' );
-		$request_it->object->modify_parms($request_it->getId(), array(
-		        'EstimationLeft' => $parms['LeftWork'] 
-		));
-		
+		if ( $request_it->get('EstimationLeft' != $parms['LeftWork'] ) ) {
+            $request_it->object->removeNotificator( 'EmailNotificator' );
+            $request_it->object->modify_parms($request_it->getId(), array(
+                'EstimationLeft' => $parms['LeftWork']
+            ));
+        }
+
 		return $result;
 	}
 }

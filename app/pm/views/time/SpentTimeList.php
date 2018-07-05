@@ -11,13 +11,9 @@ class SpentTimeList extends PMPageList
             $object->removeAttribute($attribute);
         }
 
-        if ( getSession()->getParticipantIt()->IsLead() ) {
-            $object->setAttributeVisible('Participant', true);
-            $object->setAttributeVisible('Issue', true);
-        }
-        else {
-            $object->addAttributeGroup('Participant', 'system');
-        }
+        $object->setAttributeVisible('Participant', true);
+        $object->setAttributeVisible('Issue', true);
+        $object->setAttributeVisible('Task', true);
         $object->addAttributeGroup('Completed', 'system');
 
         $object->setAttributeOrderNum('Participant', 5);

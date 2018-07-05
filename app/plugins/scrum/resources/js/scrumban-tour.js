@@ -32,16 +32,16 @@ var scrumbanSteps = [
         title: scrumTourTitle
     },
     {
-        element: "table.table-inner tr:eq(2)",
+        element: "table.table-inner tr:last",
         content: tc('scrumban-backlog'),
         placement: 'bottom',
         path: '/pm/%project%/issues/list/productbacklog?report=productbacklog&basemodule=issues-backlog&&area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
     {
-        element: "table[uid=kanbanboard] th:eq(2)",
+        element: "table[uid=kanbanboard] tr.row-cards:eq(1) td:eq(2)",
         content: tc('scrumban-planning'),
-        placement: 'bottom',
+        placement: 'right',
         path: '/pm/%project%/module/kanban/requests/kanbanboard?report=kanbanboard&basemodule=kanban/requests&area=favs&tour='+scrumTourId,
         title: scrumTourTitle
     },
@@ -53,7 +53,7 @@ var scrumbanSteps = [
         title: scrumTourTitle
     },
     {
-        element: "table.board-table tr:eq(5) td.board-column:eq(0)",
+        element: "table.board-table tr.row-cards:eq(2) td.board-column:eq(0)",
         content: tc('scrumban-taskboard'),
         placement: 'right',
         path: '/pm/%project%/tasks/board/tasksboardforissues?report=tasksboardforissues&basemodule=tasks-board&area=favs&tour='+scrumTourId,

@@ -9,67 +9,87 @@ class SystemTemplateRegistry extends ObjectRegistrySQL
         $projectPath = SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/";
 
 		$language = strtolower(getSession()->getLanguageUid());
-        return $this->createIterator( array (
+        $data = array (
+            array (
+                'Caption' => text(2512),
+                'BackupDirName' => addslashes($projectPath."views/EmailSubject/".$language),
+                'BackupFileName' => addslashes("subject-changed.twig")
+            ),
 			array (
-				'cms_BackupId' => 1,
 				'Caption' => text(2021),
-				'BackupFileName' => addslashes($commonPath."views/Emails/".$language."/user-registration.twig"),
-				'AffectedDate' => microtime(true)
-			),
+				'BackupDirName' => addslashes($commonPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("user-registration.twig")
+            ),
+            array (
+                'Caption' => text(2521),
+                'BackupDirName' => addslashes($commonPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("restore.html.twig")
+            ),
 			array (
-				'cms_BackupId' => 4,
 				'Caption' => text(2054),
-				'BackupFileName' => addslashes($projectPath."views/Emails/".$language."/digest.twig"),
-				'AffectedDate' => microtime(true)
+				'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("digest.twig")
 			),
             array (
-                'cms_BackupId' => 5,
                 'Caption' => text(2055),
-                'BackupFileName' => addslashes($projectPath."views/Emails/".$language."/discussion.twig"),
-                'AffectedDate' => microtime(true)
+                'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("discussion.twig")
             ),
             array (
-                'cms_BackupId' => 6,
                 'Caption' => text(2056),
-                'BackupFileName' => addslashes($projectPath."views/Emails/".$language."/object-changed.twig"),
-                'AffectedDate' => microtime(true)
+                'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("object-changed.twig")
+            ),
+            array (
+                'Caption' => text(2612),
+                'BackupDirName' => addslashes($projectPath."views/Emails/".$language),
+                'BackupFileName' => addslashes("share-widget.twig")
+            ),
+            array (
+                'Caption' => text(2022),
+                'BackupDirName' => addslashes($serviceDeskPath."views"),
+                'BackupFileName' => addslashes("content_base.html.twig")
+            ),
+            array (
+                'Caption' => text(2516),
+                'BackupDirName' => addslashes($serviceDeskPath."views"),
+                'BackupFileName' => addslashes("Issue/new.html.twig")
+            ),
+            array (
+                'Caption' => text(2517),
+                'BackupDirName' => addslashes($serviceDeskPath."views"),
+                'BackupFileName' => addslashes("Issue/edit.html.twig")
             ),
 			array (
-				'cms_BackupId' => 7,
-				'Caption' => text(2022),
-				'BackupFileName' => addslashes($serviceDeskPath."views/content_base.html.twig"),
-				'AffectedDate' => microtime(true)
-			),
-			array (
-				'cms_BackupId' => 9,
 				'Caption' => text(2141),
-				'BackupFileName' => addslashes($serviceDeskPath."views/Email/".$language."/issueCreated.twig"),
-				'AffectedDate' => microtime(true)
+                'BackupDirName' => addslashes($serviceDeskPath."views/Email/".$language),
+				'BackupFileName' => addslashes("issueCreated.twig")
 			),
 			array (
-				'cms_BackupId' => 10,
 				'Caption' => text(2142),
-				'BackupFileName' => addslashes($serviceDeskPath."views/Email/".$language."/issueStateChanged.twig"),
-				'AffectedDate' => microtime(true)
+                'BackupDirName' => addslashes($serviceDeskPath."views/Email/".$language),
+				'BackupFileName' => addslashes("issueStateChanged.twig")
 			),
 			array (
-				'cms_BackupId' => 11,
 				'Caption' => text(2143),
-				'BackupFileName' => addslashes($serviceDeskPath."views/Email/".$language."/issueCommented.twig"),
-				'AffectedDate' => microtime(true)
+                'BackupDirName' => addslashes($serviceDeskPath."views/Email/".$language),
+				'BackupFileName' => addslashes("issueCommented.twig")
 			),
 			array (
-				'cms_BackupId' => 12,
 				'Caption' => text(2144),
-				'BackupFileName' => addslashes($serviceDeskPath."views/Email/".$language."/resetPassword.twig"),
-				'AffectedDate' => microtime(true)
+                'BackupDirName' => addslashes($serviceDeskPath."views/Email/".$language),
+				'BackupFileName' => addslashes("resetPassword.twig")
 			),
 			array (
-				'cms_BackupId' => 13,
 				'Caption' => text(2145),
-				'BackupFileName' => addslashes($serviceDeskPath."views/Email/".$language."/registration.twig"),
-				'AffectedDate' => microtime(true)
-			)
-        ));
+                'BackupDirName' => addslashes($serviceDeskPath."views/Email/".$language),
+				'BackupFileName' => addslashes("registration.twig")
+			),
+        );
+        foreach( $data as $key => $row ) {
+            $data[$key]['cms_BackupId'] = $key + 1;
+            $data[$key]['AffectedDate'] = microtime(true);
+        }
+        return $this->createIterator($data);
 	}
 }

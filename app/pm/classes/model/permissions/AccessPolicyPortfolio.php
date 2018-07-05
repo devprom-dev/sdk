@@ -33,8 +33,15 @@ class AccessPolicyPortfolio extends AccessPolicyBase
 			case 'pm_Release':
 			case 'pm_Milestone':
 			case 'pm_Version':
+            case 'pm_Build':
+            case 'pm_Environment':
 			case 'pm_Invitation':
 			case 'BlogPost':
+            case 'ObjectChangeLog':
+            case 'sm_Person':
+            case 'sm_Aim':
+            case 'sm_Activity':
+            case 'sm_Action':
  	            return true;
 
  	        case 'pm_Methodology':

@@ -2,6 +2,15 @@
 
 class FieldHours extends Field
 {
+    const HOURS_CALENDAR = 24;
+    const HOURS_WORKING = 8;
+
+    function __construct( $hoursMode = self::HOURS_CALENDAR )
+    {
+        parent::__construct();
+        $this->hoursMode = $hoursMode;
+    }
+
     function readOnly()
     {
          return !$this->getEditMode() || parent::readOnly();
@@ -11,7 +20,7 @@ class FieldHours extends Field
     {
         if ( parent::getValue() == '' ) return '';
         $value = parent::getValue();
-        return ($value < 0 ? '-' : '') . getSession()->getLanguage()->getDurationWording(abs($value), 24);
+        return ($value < 0 ? '-' : '') . getSession()->getLanguage()->getDurationWording(abs($value), $this->hoursMode);
     }
 
     function draw( $view = null )
@@ -24,10 +33,12 @@ class FieldHours extends Field
 		}
 		else {
 		    echo '<span class="pull-left" style="min-width:210px;">';
-                echo '<input class="pull-left input-small" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.trim($this->getValue(), 'ч').'" tabindex="'.$this->getTabIndex().'" '.($this->getRequired() ? 'required' : '').' default="'.$this->getDefault().'">';
+                echo '<input class="pull-left input-small" type="text" id="'.$this->getId().'" name="'.$this->getName().'" value="'.parent::getValue().'" tabindex="'.$this->getTabIndex().'" '.($this->getRequired() ? 'required' : '').' default="'.$this->getDefault().'">';
                 echo '<div class="pull-left" style="margin-top:4px;margin-left:6px;">'.text(2126).'</div>';
             echo '</span>';
             echo '<div class="clearfix"></div>';
 		}
 	}
+
+    private $hoursMode;
 }

@@ -22,6 +22,19 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
                     if ( $shift == 'first' ) {
                         $value = array_shift($value[$field]);
                     }
+                    elseif( is_numeric($shift) && $shift >= 0 ) {
+                        $value = $value[$field][intval($shift)];
+                    }
+                    elseif( $shift != '' ) {
+                        list($key, $keyValue) = preg_split('/=/', trim($shift, '()'));
+                        $value = array_shift(
+                            array_filter($value[$field],
+                                function($item) use($key, $keyValue) {
+                                    return $item[$key] == $keyValue;
+                                }
+                            )
+                        );
+                    }
                     else {
                         $value = $value[$field];
                     }
@@ -52,6 +65,10 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
                     }
                     else if ( $shift == 'intval' ) {
                         $value = array( $field => intval($value) );
+                    }
+                    else if( $shift != '' ) {
+                        list($key, $keyValue) = preg_split('/=/', trim($shift, '()'));
+                        $value = array( $field => array(array_merge(array( $key => $keyValue), $value)) );
                     }
                     else {
                         $value = array( $field => $value );

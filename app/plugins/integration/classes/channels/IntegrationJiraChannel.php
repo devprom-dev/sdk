@@ -9,7 +9,7 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         // build search query
         $jql = array();
         if ( $timestamp != '' ) {
-            $jql[] = 'updatedDate >= "-'. round((strtotime(SystemDateTime::date()) - strtotime($timestamp)) / 60, 0) .'m"';
+            $jql[] = 'updatedDate > "-'. round((strtotime(SystemDateTime::date()) - strtotime($timestamp)) / 60, 0) .'m"';
         }
         else {
             $jql[] = 'updatedDate >= "-60d"';
@@ -33,6 +33,7 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         $first = array();
         $second = array();
         $latest = array();
+        $nextTimestamp = '';
 
         $taskTypeMapping = array_map(
             function($mapRule) {
@@ -58,6 +59,7 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
             $latest = array_merge( $latest,
                 $this->getReferenceItems($issue, $item, $internalTimeStamp)
             );
+            if ( $issue['fields']['updated'] > $nextTimestamp ) $nextTimestamp = $issue['fields']['updated'];
         }
 
         $releases = array();
@@ -76,8 +78,11 @@ class IntegrationJiraChannel extends IntegrationRestAPIChannel
         }
 
         // aggregate items using dependency based order
-        return array_merge(
-            $releases, $first, $second, $latest
+        return array(
+            array_merge(
+                $releases, $first, $second, $latest
+            ),
+            $nextTimestamp != '' ? new \DateTime($nextTimestamp) : ''
         );
     }
 

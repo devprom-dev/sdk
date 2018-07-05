@@ -16,10 +16,9 @@ class WikiPageTrace extends Metaobject
  	function __construct() 
  	{
  		parent::__construct('WikiPageTrace', new WikiPageTraceRegistry());
-
  		$this->addPersister( new WikiPageTraceKeyPersister() );
- 		
  		$this->setAttributeType('UnsyncReasonType', 'REF_WikiPageTraceUnsyncReasonId');
+        $this->setAttributeRequired('OrderNum', false);
  	}
  	
  	function createIterator() 

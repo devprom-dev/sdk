@@ -13,7 +13,8 @@ class FunctionForm extends PMPageForm
 	private $create_issue_actions = array();
 	private $goto_issues_template = '';
 	private $request_it = null;
-	
+	private $assignRequestIt = null;
+
 	function __construct( $object )
 	{
 		parent::__construct( $object );
@@ -22,6 +23,10 @@ class FunctionForm extends PMPageForm
 		$this->request_it = $_REQUEST['Request'] > 0 
 			? getFactory()->getObject('Request')->getExact($_REQUEST['Request'])
 			: getFactory()->getObject('Request')->getEmptyIterator();
+
+        $this->assignRequestIt = $_REQUEST['IssueAssociated'] > 0
+            ? getFactory()->getObject('Request')->getExact($_REQUEST['IssueAssociated'])
+            : getFactory()->getObject('Request')->getEmptyIterator();
 	}
 	
 	function buildModelValidator()
@@ -31,8 +36,17 @@ class FunctionForm extends PMPageForm
 		$validator->addValidator( new ModelValidatorChildrenLevels() );
 		return $validator;
 	}
-	
-	function buildMethods()
+
+	function extendModel()
+    {
+        parent::extendModel();
+
+        if ( is_object($this->getObjectIt()) ) {
+            $this->getObject()->setAttributeVisible('Children', true);
+        }
+    }
+
+    function buildMethods()
  	{
  		if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) )
  		{
@@ -213,13 +227,11 @@ class FunctionForm extends PMPageForm
 	
 	function createFieldObject( $name )
 	{
-		global $model_factory;
-		
-		switch ( $name ) 
+		switch ( $name )
 		{
 			case 'Requirement':
 				return new FieldFunctionTrace( $this->object_it, 
-					$model_factory->getObject('FunctionTraceRequirement') );
+					getFactory()->getObject('FunctionTraceRequirement') );
 
 			case 'Tags':
 			    return new FieldFeatureTagTrace( 
@@ -227,12 +239,20 @@ class FunctionForm extends PMPageForm
 			    );
 
 			case 'Request':
-				return new FieldFeatureIssues(is_object($this->object_it) ? $this->object_it : null);
+				$field = new FieldFeatureIssues(is_object($this->object_it) ? $this->object_it : null);
+                $field->setIssueIt($this->assignRequestIt);
+                return $field;
 
 			case 'ParentFeature':
 				return new FieldHierarchySelector($this->getObject());
 
-            case 'Caption':
+            case 'Children':
+                if ( is_object($this->getObjectIt()) ) {
+                    return new FieldListOfReferences($this->getObjectIt()->getRef('Children'));
+                }
+                return null;
+
+             case 'Caption':
                 if ( !$this->getEditMode() ) {
                     $field = new FieldWYSIWYG();
                     $field->setObjectIt( $this->getObjectIt() );
@@ -258,15 +278,24 @@ class FunctionForm extends PMPageForm
 		return parent::IsAttributeEditable($attr);
 	}
 
-	function process()
+	function persist()
 	{
-		if ( $this->getAction() != 'add' ) return parent::process();
+        $result = parent::persist();
 
-		if ( $this->request_it->getId() > 0 ) {
-			$this->request_it->object->delete($this->request_it->getId());
-		}
-		
-		return parent::process();
+		if ( $this->getAction() == 'add' ) {
+            if ( $result && $this->request_it->getId() > 0 ) {
+                $this->request_it->object->delete($this->request_it->getId());
+            }
+            if ( $result && $this->assignRequestIt->getId() > 0 ) {
+                $this->assignRequestIt->object->getRegistry()->Store(
+                    $this->assignRequestIt, array(
+                        'Function' => $this->getObjectIt()->getId()
+                    )
+                );
+            }
+        }
+
+		return $result;
 	}
 
     function getShortAttributes() {

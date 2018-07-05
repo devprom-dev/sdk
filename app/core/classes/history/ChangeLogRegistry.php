@@ -1,7 +1,17 @@
 <?php
+include "persisters/ChangeLogDetailsPersister.php";
 
 class ChangeLogRegistry extends ObjectRegistrySQL
 {
+    public function getPersisters() {
+        return array_merge(
+            array (
+                new ChangeLogDetailsPersister()
+            ),
+            parent::getPersisters()
+        );
+    }
+
 	function getFilters()
 	{
 		return array_merge(

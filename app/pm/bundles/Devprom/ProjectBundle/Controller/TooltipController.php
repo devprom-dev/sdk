@@ -10,6 +10,7 @@ use Devprom\ProjectBundle\Service\Tooltip\TooltipProjectService;
 use Devprom\ProjectBundle\Service\Tooltip\BrokenTraceExplainService;
 use Devprom\ProjectBundle\Service\Tooltip\TooltipObjectListService;
 
+
 class TooltipController extends Controller
 {
     public function showAction(Request $request)
@@ -80,5 +81,10 @@ class TooltipController extends Controller
 		);
  	
     	return $this->render( 'ProjectBundle:Tooltip:list.html.twig', $service->getData());
+    }
+
+    public function emptyAction(Request $request)
+    {
+        return new Response();
     }
 }

@@ -34,7 +34,7 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
 		$object->addAttributeGroup('Features', 'trace');
 		$object->addPersister( new RequestFeaturePersister(array()) );
 
-		if ( class_exists('UserGroup') ) {
+		if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
 			$object->addAttribute('UserGroup', 'REF_UserGroupId', text('user.group.name'), false);
 		}
 		$object->addPersister( new RequestColorsPersister() );

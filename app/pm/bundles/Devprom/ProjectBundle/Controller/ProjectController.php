@@ -2,21 +2,28 @@
 
 namespace Devprom\ProjectBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Devprom\ProjectBundle\Service\Project\ExportService;
+use Devprom\CommonBundle\Controller\PageController;
+use Symfony\Component\HttpFoundation\Request;
 
-class ProjectController extends Controller
+include_once SERVER_ROOT_PATH . "pm/views/ui/Common.php";
+include_once SERVER_ROOT_PATH . "pm/views/communications/WhatsNewPage.php";
+
+class ProjectController extends PageController
 {
-    public function exportAction()
+    public function exportAction(Request $request)
     {
     	$project_it = getSession()->getProjectIt();
 
     	$service = new ExportService();
-
     	$service->execute($project_it);
     	
         return new RedirectResponse('/pm/'.$project_it->get('CodeName'));
+    }
+
+    public function whatsnewAction(Request $request)
+    {
+        return $this->responsePage( new \WhatsNewPage() );
     }
 }

@@ -30,16 +30,14 @@ class CloneWikiPageWebMethod extends DuplicateWebMethod
         if ( $_REQUEST['Snapshot'] != '' )
         {
             $version_it = getFactory()->getObject('Snapshot')->getExact($_REQUEST['Snapshot']);
-            $object->addPersister( new SnapshotItemValuePersister($version_it->getId()) );
 
             $registry = new WikiPageRegistryVersion();
             $registry->setSnapshotIt($version_it);
             $registry->setDocumentIt($this->getObjectIt());
-
             $object->setRegistry($registry);
         }
 
-        $object->addFilter( new WikiRootTransitiveFilter($this->getObjectIt()->idsToArray()) );
+        $object->addFilter( new ParentTransitiveFilter($this->getObjectIt()->idsToArray()) );
         $object->addSort( new SortDocumentClause() );
 
         return $object->getAll();

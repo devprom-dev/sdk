@@ -38,6 +38,11 @@ class FlotChartBurndownWidget extends FlotChartWidget
 			?>
 			<script type="text/javascript">
 				$(function () {
+				    if ( $("#<?=$chart_id?>").parents('.vis-item').length < 1 ) {
+                        $("#<?=$chart_id?>").css({
+                            width: $('.table-master').width(),
+                        });
+                    }
 					<? $this->drawChart($chart_id) ?>
 				});
 			</script>

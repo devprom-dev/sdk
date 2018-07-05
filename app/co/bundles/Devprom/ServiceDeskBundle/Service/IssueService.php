@@ -7,6 +7,7 @@ use Devprom\ServiceDeskBundle\Entity\IssueComment;
 use Devprom\ServiceDeskBundle\Entity\IssueState;
 use Devprom\ServiceDeskBundle\Entity\IssueStateComment;
 use Devprom\ServiceDeskBundle\Entity\Priority;
+use Devprom\ServiceDeskBundle\Entity\Severity;
 use Devprom\ServiceDeskBundle\Entity\User;
 use Devprom\ServiceDeskBundle\Entity\Watcher;
 use Devprom\ServiceDeskBundle\Mailer\Mailer;
@@ -59,7 +60,7 @@ class IssueService {
         return $issueRepository->findByAuthor(
             $authorEmail,
             array(
-            		'state.orderNum' => 'asc',
+            		'state.terminal' => 'asc',
                     'state.name' => 'asc',
             		$sortColumn => $sortDirection
         	)
@@ -72,7 +73,7 @@ class IssueService {
         return $issueRepository->findByCompany(
             $authorEmail,
             array(
-            		'state.orderNum' => 'asc',
+            		'state.terminal' => 'asc',
                     'state.name' => 'asc',
             		$sortColumn => $sortDirection
         	)
@@ -107,6 +108,18 @@ class IssueService {
         $this->objectChangeLogger->logCommentCreated($issueComment,$author);
     }
 
+    public function clearNotifications(Issue $issue, User $user)
+    {
+        if ( !is_object($user) ) return;
+
+        foreach( $issue->getNotifications($user) as $notification ) {
+            $this->em->remove($notification);
+        }
+        $issue->setNotifications(null);
+        $this->em->persist($issue);
+        $this->em->flush();
+    }
+
     protected function createIssue(Issue $issue, User $author)
     {
         // persist issue
@@ -129,7 +142,17 @@ class IssueService {
         }
 	    $issue->setVpd($vpd);
         $issue->setState($this->getFirstIssueStateForProject($projectId));
-        $issue->setPriority($issue->getSeverity());
+        $severity = $issue->getSeverity();
+        if ( is_object($severity) ) {
+            try {
+                $priority = $this->em->getRepository('Devprom\ServiceDeskBundle\Entity\Priority')->find($severity->getId());
+            }
+            catch( \Exception $e) {}
+        }
+        if ( !is_object($priority) ) {
+            $priority = $this->em->getRepository('Devprom\ServiceDeskBundle\Entity\Priority')->findOneBy([]);
+        }
+        $issue->setPriority($priority);
         $issue->setCustomer($author);
         $this->em->persist($issue);
         $this->em->flush();
@@ -156,7 +179,13 @@ class IssueService {
      */
     protected function getDefaultPriority()
     {
-        return $this->em->getReference("DevpromServiceDeskBundle:Priority", Issue::NORMAL_PRIORITY);
+        $result = $this->em->getRepository("DevpromServiceDeskBundle:Priority")->findBy(
+            array(
+                'id' => Issue::NORMAL_PRIORITY
+            )
+        );
+        if ( count($result) > 0 ) return array_pop($result);
+        $result = $this->em->getRepository("DevpromServiceDeskBundle:Priority")->findOneBy([]);
     }
 
     /**

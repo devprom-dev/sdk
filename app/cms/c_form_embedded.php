@@ -1,11 +1,14 @@
 <?php
+// PHPLOCKITOPT NOENCODE
+// PHPLOCKITOPT NOOBFUSCATE
 
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectRecordAgePersister.php";
 include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.php";
+include_once SERVER_ROOT_PATH.'cms/views/FieldDictionary.php';
+include_once SERVER_ROOT_PATH.'cms/views/FieldAutoCompleteObject.php';
 
- ///////////////////////////////////////////////////////////////////////////////
- class FormEmbedded
- {
+class FormEmbedded
+{
  	var $object, 
  		$form_id, 
  		$anchor_field, 
@@ -18,7 +21,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	
  	private $form_field = '';
  	
- 	function FormEmbedded( $object = null, $anchor_field = null, $form_field = '' )
+ 	function __construct( $object = null, $anchor_field = null, $form_field = '' )
  	{
  		$this->object = $object;
  		$this->setFormId(0);
@@ -37,10 +40,14 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  	
  	public function extendModel()
  	{
+        foreach( getFactory()->getPluginsManager()->getPluginsForSection(getSession()->getSite()) as $plugin ) {
+            $plugin->interceptMethodFormExtendModel($this);
+        }
  	}
  	
  	function IsAttributeVisible( $attribute )
  	{
+ 	    if ( $attribute == $this->anchor_field ) return false;
  		return $this->object->IsAttributeVisible($attribute);
  	}
 
@@ -165,7 +172,14 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	
 	function getFieldValue( $attr )
 	{
+	    if ( $attr == $this->anchor_field && is_object($this->getObjectIt()) ) {
+	        return $this->getObjectIt()->getId();
+        }
+
 		$value = $_REQUEST[$this->getFieldName( $attr )];
+        if ( $value != '' ) return $value;
+
+        $value = $_REQUEST[$attr];
         if ( $value != '' ) return $value;
 
 		return $this->object->getDefaultAttributeValue($attr);
@@ -175,8 +189,11 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
 	{
 		$object = $this->getAttributeObject( $attr );
 		
-		$field = new FieldDictionary( $object );
-		
+		$field =
+            is_object($object->entity) && $object->entity->get('IsDictionary') == 'Y'
+                ? new FieldDictionary( $object )
+                : new FieldAutoCompleteObject( $object );
+
 		return $field;
 	}
 	
@@ -324,7 +341,8 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
  		global $tabindex;
 
         $this->extendModel();
-		$prefix = $this->getPrefix();
+
+        $prefix = $this->getPrefix();
 		$names = $this->getAttributes();
 		$html = '';
 
@@ -769,8 +787,6 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
                     if ( $check_tobe_required && $parms[$key] == '' )
                     {
                         $parms[$key] = $embedded->getDefaultAttributeValue( $key );
-
-                        if ( $parms[$key] == '' ) $parms[$key] = $_REQUEST[$key];
                         if ( $parms[$key] == '' ) {
                             $this->logError('Attribute "'.$key.'" of the "'.get_class($embedded).'" entity is required but empty');
                             $was_errors = true;
@@ -778,6 +794,7 @@ include_once SERVER_ROOT_PATH."core/classes/model/mappers/ModelDataTypeMapper.ph
                         }
                     }
                 }
+
                 if ( !$was_errors ) {
                     $this->processAdded( $embedded->getExact( $embedded->add_parms( $parms ) ) );
                 } else {

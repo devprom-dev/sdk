@@ -5,6 +5,7 @@ class SortAttributeClause extends SortClauseBase
  	var $attr;
     private $valueInsteadOfNull;
     private $textInsteadOfNull;
+    private $dateInsteadOfNull;
     private $nullOnTop;
  	
  	function SortAttributeClause( $attribute )
@@ -19,10 +20,12 @@ class SortAttributeClause extends SortClauseBase
  	    if ( $nullOnTop ) {
             $this->textInsteadOfNull = '!';
             $this->valueInsteadOfNull = '0';
+            $this->dateInsteadOfNull = '0001-01-01';
         }
         else {
             $this->textInsteadOfNull = 'я';
             $this->valueInsteadOfNull = '9999';
+            $this->dateInsteadOfNull = '3001-01-01';
         }
     }
 
@@ -74,7 +77,7 @@ class SortAttributeClause extends SortClauseBase
         $attr = $this->getAttributeName();
 
         if ( !$object->hasAttribute($attr) ) {
-            throw new Exception('There is no attribute '.$attr.' of '.get_class($object).' entity');
+            return "";
         }
 
 		$sort_type = $this->getSortType();
@@ -83,20 +86,10 @@ class SortAttributeClause extends SortClauseBase
 		switch ( $attr )
 		{
 			case 'State':
-				if ( method_exists( $object, 'getStatableClassName' ) )
-				{
-                    $items = \WorkflowScheme::Instance()->getNonTerminalStates($object);
-                    $items[] = array_shift($items);
-                    $items = array_merge(
-                        $items, \WorkflowScheme::Instance()->getTerminalStates($object)
-                    );
-                    $index = 0;
-                    $query = array_map(function($value) use(&$index) {
-                        return " WHEN '".$value."' THEN ".($index++)." ";
-                    }, $items);
-                    return " CASE ".$sql_attr." ".join('', $query)." END ";
-				}
-				
+			    if ( $object instanceof MetaobjectStatable ) {
+                    return " IFNULL((SELECT s.OrderNum FROM pm_State s WHERE s.ReferenceName = ".$sql_attr." AND s.VPD = t.VPD AND s.ObjectClass = '".strtolower(get_class($object))."'), ".$this->valueInsteadOfNull.") ".$sort_type." ";
+                }
+
 			default:
 	 			if ( $object->IsReference($attr) )
 	 			{ 
@@ -135,7 +128,8 @@ class SortAttributeClause extends SortClauseBase
 						foreach( $sorts as $sort ) {
 							if ( !$sort instanceof SortAttributeClause ) continue;
                             $sort->setNullOnTop($this->nullOnTop);
-							$clause = $sort->clause();
+							$clause = trim($sort->clause());
+							if ( $clause == '' ) continue;
 							if ( strpos($clause, 'SELECT') === false ) {
 								$sort->setAlias('s');
 								$clause = preg_replace('/\s(ASC|DESC)\s/i', '', $sort->clause());
@@ -161,7 +155,11 @@ class SortAttributeClause extends SortClauseBase
 	 				$sql_attr = " IFNULL(".$sql_attr.", '".$this->textInsteadOfNull."') ";
 	 			}
 
-				return $sql_attr." ".$sort_type." ";
+                if ( in_array($object->getAttributeType($attr), array('date','datetime')) ) {
+                    $sql_attr = " IFNULL(".$sql_attr.", '".$this->dateInsteadOfNull."') ";
+                }
+
+                return $sql_attr." ".$sort_type." ";
 		}
  	}
 }

@@ -40,8 +40,8 @@ class ViewStartDateWebMethod extends FilterDateWebMethod
 
 	function getValue()
 	{
-		$value = $_REQUEST[$this->getValueParm()];
-		if ( in_array($value, array('','all')) ) return $this->getDefault();
+		$value = SystemDateTime::parseRelativeDateTime($_REQUEST[$this->getValueParm()], getLanguage());
+		if ( in_array($value, array('','hide')) ) return $this->getDefault();
 		return $value;
 	}
 }

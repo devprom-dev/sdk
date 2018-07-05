@@ -9,7 +9,7 @@ class WikiPageChangePersister extends ObjectSQLPersister
  		$columns[] = 
  			"(SELECT COUNT(1) FROM WikiPageChange c ".
  			"  WHERE c.WikiPage = t.WikiPage AND c.WikiPageChangeId > ".$this->getPK($alias).") RecentChangesCount ";
- 		
+
  		return $columns;
  	}
 }

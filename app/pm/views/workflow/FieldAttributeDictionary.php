@@ -5,6 +5,7 @@ class FieldAttributeDictionary extends FieldDictionary
 	function getOptions()
 	{
  		$object = $this->getObject();
+ 		if ( !is_object($object) ) return array();
  		
         $system_attributes = array_merge(
             $object->getAttributesByGroup('system'),
@@ -16,7 +17,7 @@ class FieldAttributeDictionary extends FieldDictionary
  		foreach ( $object->getAttributes() as $key => $attribute )
  		{
  			if ( $key == 'Project' || $key == 'RecordCreated' || $key == 'RecordModified' ) continue;
- 			if ( in_array($key, $system_attributes) ) continue;
+ 			if ( in_array($key, $system_attributes) && $key != 'State' ) continue;
  			
  			$title = translate($object->getAttributeUserName($key));
  			if ( $title == '' ) continue;

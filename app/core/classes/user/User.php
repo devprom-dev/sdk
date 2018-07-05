@@ -39,7 +39,9 @@ class User extends Metaobject
 		$this->setAttributeType( 'Phone', 'RICHTEXT' );
 		$this->setAttributeRequired( 'Language', false );
 		$this->setAttributeOrderNum('Photo', 1);
+
 		$this->addAttributeGroup('Email', 'alternative-key');
+        $this->addAttributeGroup('Login', 'alternative-key');
  	}
 
  	function createIterator() 
@@ -80,76 +82,31 @@ class User extends Metaobject
 	
  	function add_parms( $parms )
  	{
- 		global $factory, $model_factory, $_REQUEST;
-		
-		$settings = $model_factory->getObject('cms_SystemSettings');
- 		$settings_it = $settings->getAll();
-
-		$factory = $model_factory;
-
 		$_REQUEST['PasswordOriginal'] = $parms['Password'];
  		
- 		if ( array_key_exists('Password', $parms) )
- 		{
+ 		if ( array_key_exists('Password', $parms) ) {
  			$parms['Password'] = $this->getHashedPassword($parms['Password']);
  		}
 
- 	 	if ( array_key_exists('PasswordHash', $parms) )
- 		{
+ 	 	if ( array_key_exists('PasswordHash', $parms) ) {
  			$parms['Password'] = $parms['PasswordHash'];
  		}
  		
  		$parms['IsActivated'] = 'Y';
  		
  		$user_id = parent::add_parms( $parms );
- 		$user_it = $this->getExact( $user_id );
- 		
-		// create default user role in the community
-		$role = $factory->getObject('co_UserRole');
-
-	 	$role->add_parms(
-	 		array( 'SystemUser' => $user_id,
-	 			   'CommunityRole' => 1 ) );
-		
-		// subscribe new user to the global notification via email
-		//
- 		$notification = $factory->getObject('cms_EmailNotification');
- 		$notification_it = $notification->
- 			getByRef('CodeName', "GlobalNotification");
-
- 		$subscription = $factory->getObject('cms_NotificationSubscription');
-	 	
-	 	$subscription->add_parms(
-	 		array( 'Notification' => $notification_it->getId(),
-	 			   'Caption' => $_REQUEST['Email'],
-	 			   'IsActive' => "Y" ) );
-		
-		// subscribe new user to vacancies notification via email
-		//
- 		$notification_it = $notification->
- 			getByRef('CodeName', "VacancyNotification");
-
- 		$subscription = $factory->getObject('cms_NotificationSubscription');
-	 	
-	 	$subscription->add_parms(
-	 		array( 'Notification' => $notification_it->getId(),
-	 			   'Caption' => $_REQUEST['Email'],
-	 			   'IsActive' => "Y" ) );
 
 		// send author of invitation confirmation about the user's creation
-		//
- 		$invitation = $factory->getObject('pm_Invitation');
- 		$invitation_it = $invitation->getByRef('Addressee', $parms['Email']);
+ 		$invitation_it = getFactory()->getObject('pm_Invitation')->getByRef('Addressee', $parms['Email']);
 		
 		if ( $invitation_it->count() > 0 )
 		{
-			$body = str_replace('%1', $parms['Email'], text(239)).Chr(10);
-			
+            $settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
+
 	   		$mail = new HtmlMailBox;
-	   		
 	   		$author_it = $invitation_it->getRef('Author');
 	   		$mail->appendAddress($author_it->get('Email'));
-	   		$mail->setBody($body);
+	   		$mail->setBody(str_replace('%1', $parms['Email'], text(239)).Chr(10));
 	   		$mail->setSubject( text(238) );
 	   		$mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
 			$mail->send();
@@ -182,50 +139,20 @@ class User extends Metaobject
 		$result = parent::modify_parms( $object_id, $parms );
 		if ( $result < 1 ) return $result;
 		
-		$user_it = $this->getExact($object_id);
-		
-		// update subscriptions of the user
-		if ( $old_email != $user_it->get('Email') )
-		{
-	 		$subscription = getFactory()->getObject('cms_NotificationSubscription');
-	 		
-		 	$subscription_it = $subscription->getByRef('Caption', $old_email);
-		 	
-		 	while ( !$subscription_it->end() )
-		 	{
-			 	$subscription->modify_parms(
-			 		$subscription_it->getId(),
-			 		array( 'Caption' => $user_it->get('Email') ) );
-		 		
-		 		$subscription_it->moveNext();
-		 	}
-		}
-		
-		/*
-		// update participants attributes of the modified user 
-		// if participant didn't override user's attributes
-		$c_part = new Metaobject('pm_Participant');
-		
-		$c_part->setNotificationEnabled(false);
-		
-		$part_it = $c_part->getByRefArray(array('SystemUser' => $object_id));
-		
-		$attributes = array(
-			'Caption' => $user_it->get('Caption'),
-			'Email' => $user_it->get('Email'),
-			'HomePhone' => $user_it->get('Phone'),
-			'ICQNumber' => $user_it->get('ICQ'),
-			'Skype' => $user_it->get('Skype')
-			);
-		
-		for($i = 0; $i < $part_it->count(); $i++) 
-		{
-			$c_part->modify_parms($part_it->getId(), $attributes );
+		$participantsParms = array();
+		foreach( array('NotificationTrackingType', 'NotificationEmailType') as $attribute ) {
+            if ( array_key_exists($attribute,$parms) && $user_it->get($attribute) != $parms[$attribute] ) {
+                $participantsParms[$attribute] = $parms[$attribute];
+            }
+        }
+        foreach( $participantsParms as $key => $value ) {
+            DAL::Instance()->Query(
+                " UPDATE pm_Participant SET ".$key." = '".$value."' 
+                   WHERE SystemUser = " . $user_it->getId(). "
+                     AND ".$key." = '".$user_it->get($key)."' "
+            );
+        }
 
-			$part_it->moveNext();
-		}
-		*/
-		
 		return $result;
 	}
 

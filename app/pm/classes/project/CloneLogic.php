@@ -44,31 +44,39 @@ class CloneLogic
 					
 				// special case of template importing
 				case 'pm_TaskType':
+                case 'pm_FeatureType':
 				case 'WikiPageType':
 				case 'pm_IssueType':
 				case 'pm_TestExecutionResult':
 				case 'pm_CustomAttribute':
-					$id = CloneLogic::applyToLegacy( $context, 'ReferenceName', $attrs, $iterator, $project_it );
-
-					if ( $id > 0 )
-					{
+					$id = CloneLogic::applyToLegacy( $context, array('ReferenceName'), $attrs, $iterator, $project_it );
+					if ( $id > 0 ) {
 						$ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
 					}
-					else
-					{
+					else {
 						$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
-						
-    					if ( count($parms) > 0 )
-    					{
+    					if ( count($parms) > 0 ) {
     						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
     					}
 					}
-					
 					break;
+
+                case 'pm_State':
+                    $id = CloneLogic::applyToLegacy( $context, array('ReferenceName', 'ObjectClass'), $attrs, $iterator, $project_it );
+                    if ( $id > 0 ) {
+                        $ids_map[$object->getEntityRefName()][$iterator->getId()] = $id;
+                    }
+                    else {
+                        $parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
+                        if ( count($parms) > 0 ) {
+                            $ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
+                        }
+                    }
+                    break;
 
 				// special case of template importing				
 				case 'pm_ProjectRole':
-					$id = CloneLogic::applyToLegacy( $context, 'Caption', $attrs, $iterator, $project_it );
+					$id = CloneLogic::applyToLegacy( $context, array('Caption'), $attrs, $iterator, $project_it );
 					
 					if ( $id > 0 )
 					{
@@ -91,8 +99,7 @@ class CloneLogic
 					break;
 					
 				case 'pm_Participant':
-					
-					$id = CloneLogic::applyToLegacy( $context, 'SystemUser', $attrs, $iterator, $project_it );
+					$id = CloneLogic::applyToLegacy( $context, array('SystemUser'), $attrs, $iterator, $project_it );
 					
 					if ( $id > 0 )
 					{
@@ -296,26 +303,29 @@ class CloneLogic
 		switch ( strtolower(get_class($it->object)) )
 		{
 			case 'release':
-				$release_it = getFactory()->getObject('Release')->getRegistry()->Query(
-						array(
-								new SortAttributeClause('StartDate.D'),
-								new FilterBaseVpdPredicate()
-						)
-				);
-				
-				if ( $release_it->count() < 1 )
-				{
-					$parms['StartDate'] = SystemDateTime::date();
-				}
-				else
-				{
-					$parms['StartDate'] = date('Y-m-j', strtotime('1 day', strtotime($release_it->get('FinishDate'))));
-				}
+                if ( $project_it->get('Tools') == 'scrumban_ru.xml' ) {
+                    $parms['StartDate'] = SystemDateTime::date();
+                }
+                else {
+                    $release_it = getFactory()->getObject('Release')->getRegistry()->Query(
+                        array(
+                            new SortAttributeClause('StartDate.D'),
+                            new FilterBaseVpdPredicate()
+                        )
+                    );
+                    if ( $release_it->count() < 1 ) {
+                        $parms['StartDate'] = SystemDateTime::date();
+                    }
+                    else {
+                        $parms['StartDate'] = date('Y-m-j', strtotime('1 day', strtotime($release_it->get('FinishDate'))));
+                    }
+                }
 
                 $dt1 = new \DateTime($it->get('StartDate'));
                 $dt2 = new \DateTime($it->get('FinishDate'));
                 $interval = $dt2->diff($dt1);
 				$parms['FinishDate'] = date('Y-m-j', strtotime('-1 day', strtotime($interval->days.' day', strtotime( $parms['StartDate']))));
+
 
 				break;
 
@@ -429,14 +439,14 @@ class CloneLogic
 				if ( $setting_it->getId() == '' )
 				{
 					$parms['Participant'] = '-1';
-					$parms['Value'] = self::replaceUser($it->get('Value'));
+					$parms['Value'] = self::replaceUser($it->get('Value'), $context);
 				}
 				else
 				{
 					while( !$setting_it->end() ) {
 						$it->object->modify_parms( $setting_it->getId(),
 							array (
-								'Value' => self::replaceUser($it->get('Value'))
+								'Value' => self::replaceUser($it->get('Value'), $context)
 							)
 						);
 						$setting_it->moveNext();
@@ -540,6 +550,18 @@ class CloneLogic
                 $parms['MilestoneDate'] = date('Y-m-j', strtotime('7 day', strtotime(SystemDateTime::date())));
                 break;
 
+            case 'pm_State':
+                if ( $it->get('ObjectClass') == 'task' && $it->get('ReferenceName') == 'inprogress' ) {
+                    $parms['IsTerminal'] = 'I';
+                }
+                if ( $it->get('ObjectClass') == 'request' && in_array($it->get('ReferenceName'),array('planned','inprogress')) ) {
+                    $parms['IsTerminal'] = 'I';
+                }
+                if ( !in_array($project_it->get('Tools'),array('ticket_en.xml','ticket_ru.xml')) && in_array($it->get('IsTerminal'),array('I','N')) ) {
+                    $parms['SkipEmailNotification'] = 'Y';
+                }
+                break;
+
             case 'pm_TransitionAttribute':
                 if ( $it->get('IsVisible') == '' ) {
                     $parms['IsVisible'] = 'Y';
@@ -549,39 +571,80 @@ class CloneLogic
                 }
                 break;
 
+            case 'pm_IssueType':
+                if ( $it->get('Option1') == '' ) {
+                    $parms['Option1'] = 'Y';
+                }
+                break;
+
             case 'pm_AttributeValue':
                 $attributeId = $ids_map['pm_CustomAttribute'][$it->get('CustomAttribute')];
                 $attribute_it = getFactory()->getObject('pm_CustomAttribute')->getExact($attributeId);
-                if ( $attribute_it->getId() == '' ) break;
+                if ( $attribute_it->getId() == '' ) return array();
 
                 $refName = getFactory()->getClass($attribute_it->get('EntityReferenceName'));
-                if ( !class_exists($refName) ) break;
+                if ( !class_exists($refName) ) return array();
 
                 $entityRefName = getFactory()->getObject($refName)->getEntityRefName();
                 $object_id = $ids_map[$entityRefName][$it->get('ObjectId')];
                 if ( $object_id != '' ) {
-                    $parms['ObjectId'] = $object_id;
+                    $foundValues = $it->object->getRegistry()->Count(
+                        array(
+                            new FilterAttributePredicate('CustomAttribute', $attributeId),
+                            new FilterAttributePredicate('ObjectId', $object_id),
+                        )
+                    );
+                    if ( $foundValues > 0 ) return array();
+                }
+                $parms['ObjectId'] = $object_id;
+
+                break;
+
+            case 'pm_AutoAction':
+                $actions = JsonWrapper::decode($it->get('Actions'));
+                $parms['Actions'] = '';
+
+                $request = getFactory()->getObject('Request');
+                foreach( $actions as $key => $value ) {
+                    if ( !$request->IsReference($key) ) continue;
+                    $attributeObject = $request->getAttributeObject($key);
+                    $remappedValue = $ids_map[$attributeObject->getEntityRefName()][$value];
+                    if ( $remappedValue != '' ) {
+                        $actions[$key] = $remappedValue;
+                    }
                 }
 
-                $wasValueIt = $it->object->getRegistry()->Query(
-                    array(
-                        new FilterVpdPredicate(),
-                        new FilterAttributePredicate('CustomAttribute', $parms['CustomAttribute']),
-                        new FilterAttributePredicate('ObjectId', $parms['ObjectId']),
-                    )
-                );
-                if ( $wasValueIt->count() > 0 ) {
-                    while( !$wasValueIt->end() ) {
-                        $wasValueIt->object->delete($wasValueIt->getId());
-                        $wasValueIt->moveNext();
+                $task = getFactory()->getObject('Task');
+                foreach( $actions as $key => $value ) {
+                    $taskAttribute = array_pop(preg_split('/Task_/i', $key));
+                    if ( !$task->IsReference($taskAttribute) ) continue;
+                    $attributeObject = $task->getAttributeObject($taskAttribute);
+                    $remappedValue = $ids_map[$attributeObject->getEntityRefName()][$value];
+                    if ( $remappedValue != '' ) {
+                        $actions[$key] = $remappedValue;
                     }
+                }
+
+                $parms = array_merge($parms, $actions);
+                break;
+
+            case 'pm_StateObject':
+                $stateIt = $it->getRef('State');
+                if ( $stateIt->getId() == '' ) {
+                    $stateIt = getFactory()->getObject('pm_State')->getRegistry()->Query(
+                        array(
+                            new FilterVpdPredicate(),
+                            new FilterAttributePredicate('ObjectClass', $parms['ObjectClass']),
+                            new SortOrderedClause()
+                        )
+                    );
+                    $parms['State'] = $stateIt->getId();
                 }
                 break;
         }
 
 		if ( $it->object instanceof MetaobjectStatable ) {
             if ( $context->getResetState() ) {
-                $parms['State'] = '';
                 $parms['StateObject'] = '';
                 $parms['LifecycleDuration'] = '';
             }
@@ -605,6 +668,7 @@ class CloneLogic
 				case 'Blog':
 				case 'IsTender':
 				case 'IsClosed':
+                case 'Tools':
 				    break;
 				
 				default:
@@ -645,15 +709,17 @@ class CloneLogic
 		getSession()->setProjectIt($project_it);
  	}
 
- 	static function applyToLegacy( & $context, $check_attribute, & $attrs, & $it, & $project_it )
+ 	static function applyToLegacy( & $context, $attributes, & $attrs, & $it, & $project_it )
  	{
- 		$object_it = $it->object->getRegistry()->Query(
- 				array (
- 						new FilterAttributePredicate($check_attribute, $it->get_native($check_attribute)),
- 						new FilterBaseVpdPredicate()
- 				)
- 		);
- 		
+ 	    $query = array (
+            new FilterBaseVpdPredicate()
+        );
+ 		foreach( $attributes as $attribute ) {
+ 		    if ( $it->get_native($attribute) == '' ) continue;
+            $query[] = new FilterAttributePredicate($attribute, $it->get_native($attribute));
+        }
+        $object_it = $it->object->getRegistry()->Query($query);
+
  		if ( $object_it->getId() != '' && !$context->getUseExistingReferences() )
  		{
 			$parms = array();
@@ -670,29 +736,19 @@ class CloneLogic
 
 	static function applyToCustomReport( & $context, & $attrs, & $it, & $project_it )
 	{
-		$parms = array();
+        $parms = self::applyToObject( $context, $attrs, $parms, $it, $project_it );
+        $parms['Author'] = -1;
+        $parms['Url'] = self::replaceUser($it->getHtmlDecoded('Url'), $context);
 
-		// each participant should have his own mytasks/mysissues report
-		if ( in_array($it->get('ReportBase'), array('mytasks')) )
-		{
-			$parms = array();
-		}
-		else
-		{
-			$parms = self::applyToObject( $context, $attrs, $parms, $it, $project_it );
-			$parms['Author'] = -1;
-			$parms['Url'] = self::replaceUser($it->getHtmlDecoded('Url'));
-
-			$report_it = $it->object->getRegistry()->Query(
-				array(
-					new FilterInPredicate($it->getId()),
-					new FilterBaseVpdPredicate()
-				)
-			);
-			if ( $report_it->getId() != '' ) {
-				$parms[$it->object->getIdAttribute()] = $report_it->getId();
-			}
-		}
+        $report_it = $it->object->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('Caption', $it->getHtmlDecoded('Caption')),
+                new FilterBaseVpdPredicate()
+            )
+        );
+        if ( $report_it->getId() != '' ) {
+            $parms[$it->object->getIdAttribute()] = $report_it->getId();
+        }
 
         $has_id = $parms[$it->object->getIdAttribute()];
 		if ( $has_id > 0 ) {
@@ -812,10 +868,15 @@ class CloneLogic
 		return $object_it->getId();
  	}
  	
- 	static function replaceUser( $value )
+ 	static function replaceUser( $value, $context )
  	{
+        $ids_map = $context->getIdsMap();
  		$value = preg_replace('/taskassignee=[\d]+/i', 'taskassignee=user-id', $value);
 		$value = preg_replace('/owner=[\d]+/i', 'owner=user-id', $value);
+        $value = preg_replace_callback('/release=([\d]+)/i', function($match) use($ids_map) {
+            $releaseIt = getFactory()->getObject('Release')->getExact($ids_map['pm_Version'][$match[1]]);
+            return $releaseIt->getId() != '' ? 'release='.$releaseIt->getId() : 'release=all';
+        }, $value);
 		return $value;
  	}
 }

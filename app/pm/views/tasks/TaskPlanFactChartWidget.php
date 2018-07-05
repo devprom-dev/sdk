@@ -13,7 +13,7 @@ class TaskPlanFactChartWidget extends FlotChartBarWidget
     function getValues()
     {
     	$data = $this->getData();
-		
+
     	$positive_data = array();
 		$negative_data = array();
     	$x_values = array();

@@ -70,4 +70,8 @@ class PageSectionComments extends InfoSection
         }
 		$comment_list->render( $view, $parms );
 	}
-}  
+
+    function modifiable() {
+        return getFactory()->getAccessPolicy()->can_modify(getFactory()->getObject('Comment'));
+    }
+}

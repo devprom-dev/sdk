@@ -4,18 +4,8 @@ include_once "DuplicateWebMethod.php";
 
 class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 {
-	function getMethodName()
-	{
+	function getMethodName() {
 		return 'Method:'.get_class($this).':Version:CopyOption:Description:Snapshot:Project';
-	}
-	
-	protected function buildContext()
-	{
-		$context = parent::buildContext();
-
-		$context->setResetState( false );
-		
-		return $context;
 	}
 	
 	public function getParentIt()
@@ -43,16 +33,13 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  	    {
 			$version_it = getFactory()->getObject('Snapshot')->getExact($_REQUEST['Snapshot']);
  	    	 	    	
- 	    	$object->addPersister( new SnapshotItemValuePersister($version_it->getId()) );
-			
     		$registry = new WikiPageRegistryVersion();
-    			
     		$registry->setDocumentIt($this->getObjectIt());
     		$registry->setSnapshotIt($version_it);
 	    	$object->setRegistry($registry);
 		}
  	    
- 	    $object->addFilter( new WikiRootTransitiveFilter($this->getObjectIt()->idsToArray()) );
+ 	    $object->addFilter( new ParentTransitiveFilter($this->getObjectIt()->idsToArray()) );
  	    $object->addSort( new SortDocumentClause() );
  	    
  	    return $object->getAll();
@@ -95,6 +82,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 		
  			$object_it = $this->getObjectIt();
  			$branch = getFactory()->getObject('Snapshot');
+ 			$baselineIt = getFactory()->getObject('Baseline')->getExact($parms['Version']);
  			
  			while( !$object_it->end() )
  			{
@@ -109,8 +97,9 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 			{
 	 				$branch->modify_parms($branch_it->getId(),
                         array(
-                            'Caption' => $parms['Version'],
-                            'Description' => $parms['Description']
+                            'Caption' => $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $parms['Version'],
+                            'Description' => $parms['Description'],
+                            'Stage' => $baselineIt->getId()
                         )
 	 				);
 	 			}
@@ -144,8 +133,6 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 				$this->storeBranch( $map, $this->getObject(), $parms );
 			}
 
-			$this->storeVersion( $map, $this->getObject(), $parms );
-			
 			// make traces on source requirements
 			$this->storeTraces( $map, $this->getObject() );
 			
@@ -159,7 +146,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 
 		$object_it = $object->getRegistry()->Query( 
 				array (
-					new WikiRootTransitiveFilter($this->getObjectIt()->idsToArray())
+					new ParentTransitiveFilter($this->getObjectIt()->idsToArray())
 				)
 			);
 		
@@ -178,6 +165,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  	function storeBranch( & $map, & $object, $parms )
  	{
  	 	$snapshot = getFactory()->getObject('Snapshot');
+ 	 	$baselineIt = getFactory()->getObject('Baseline')->getExact($parms['Version']);
 
 		foreach( $this->getObjectIt()->idsToArray() as $object_id )
 		{
@@ -185,9 +173,10 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 			if ( $documentId == '' ) continue;
 
 			$snapshot->add_parms( array (
-                'Caption' => $parms['Version'],
+                'Caption' => $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $parms['Version'],
                 'Description' => $parms['Description'],
                 'ListName' => 'branch',
+                'Stage' => $baselineIt->getId(),
                 'ObjectId' => $documentId,
                 'ObjectClass' => get_class($object),
                 'SystemUser' => getSession()->getUserIt()->getId(),
@@ -215,6 +204,10 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
             }
 			$object_id = $map[$object->getEntityRefName()][$object_id];
 
+            $baselineIt = getFactory()->getObject('Baseline')->getExact(
+                $previousName ? $object_it->get('DocumentVersion') : $parms['Version']
+            );
+
             $title = $previousName ? $object_it->get('DocumentVersion') : $parms['Version'];
             if ( $title == '' ) $title = text(2306);
 
@@ -222,7 +215,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 				array (
 					new FilterAttributePredicate('ObjectId', $object_id),
 					new FilterAttributePredicate('ObjectClass', get_class($object)),
-					new FilterAttributePredicate('Caption', $title),
+					new FilterAttributePredicate('Caption', $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $title),
 					new FilterAttributePredicate('ListName', get_class($object).':'.$object_id)
 				)
 			);
@@ -236,6 +229,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 					'Caption' => $title,
 					'Description' => $parms['Description'],
 					'ListName' => get_class($object).':'.$object_id,
+                    'Stage' => $baselineIt->getId(),
 					'ObjectId' => $object_id,
 					'ObjectClass' => get_class($object),
 					'SystemUser' => getSession()->getUserIt()->getId()

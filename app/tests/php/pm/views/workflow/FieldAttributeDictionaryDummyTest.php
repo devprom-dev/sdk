@@ -15,7 +15,8 @@ class FieldAttributeDictionaryDummyTest extends DevpromDummyTestCase
         parent::setUp();
         getFactory()->expects($this->any())->method('createInstance')->will( $this->returnValueMap(
             array (
-                array ( 'TaskType', null, new \TaskType(new \ObjectRegistryMemory) )
+                array ( 'TaskType', null, new \TaskType(new \ObjectRegistryMemory) ),
+                array ( 'Request', null, new \Request(new \ObjectRegistryMemory) )
             )
         ));
     }

@@ -22,6 +22,10 @@ class DateFormatBase
  	{
  	}
 
+    function getPhpDateTime( $time )
+    {
+    }
+
  	function getDatepickerFormat()
  	{
  	}

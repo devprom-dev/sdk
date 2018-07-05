@@ -37,6 +37,7 @@ class BulkActionBuilderCommon extends BulkActionBuilder
 			if ( !in_array($key, $bulk_attributes) ) {
 				if ( in_array($object->getAttributeType($key), $system_types) ) continue;
 				if ( !$object->IsAttributeStored($key) ) continue;
+                if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object,$key) ) continue;
 			}
 			$registry->addModifyAction( translate($object->getAttributeUserName($key)), $key );
 		}

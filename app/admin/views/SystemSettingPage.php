@@ -8,9 +8,7 @@ class SettingsPage extends AdminPage
 
 	function SettingsPage()
 	{
-		global $model_factory;
-			
-		$settings = $model_factory->getObject('cms_SystemSettings');
+		$settings = getFactory()->getObject('cms_SystemSettings');
 		$this->settings_it = $settings->getAll();
 
 		parent::Page();

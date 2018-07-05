@@ -23,17 +23,17 @@ class Mailer extends TwigSwiftMailer {
     }
 
     public function sendIssueCreatedMessage(Issue $issue, $toEmail, $language = 'ru') {
-        $template = 'DevpromServiceDeskBundle:Email:issue_created.html.twig';
+        $template = 'Email/issue_created.html.twig';
         $context = array(
             'issue' => $issue,
             'language' => $language
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail);
     }
 
     public function sendIssueUpdatedMessage(Issue $issue, $comment, $changes, $toEmail, $language = 'ru', $version) {
-        $template = 'DevpromServiceDeskBundle:Email:issue_updated.html.twig';
+        $template = 'Email/issue_updated.html.twig';
         $context = array(
             'issue' => $issue,
             'changes' => $changes,
@@ -42,25 +42,33 @@ class Mailer extends TwigSwiftMailer {
             'version' => $version
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail);
     }
 
     public function sendIssueCommentedMessage(Issue $issue, IssueComment $comment, $toEmail, $language = 'ru') {
-        $template = 'DevpromServiceDeskBundle:Email:issue_commented.html.twig';
+        $template = 'Email/issue_commented.html.twig';
         $context = array(
             'issue' => $issue,
             'comment' => $comment,
             'language' => $language
         );
 
-        $this->sendMessage($template, $context, $this->getFromAddress($issue->getVpd()), $toEmail);
+        $this->sendMessage($template, $context, $this->getFromAddress($issue), $toEmail);
     }
 
     /**
      * @return array
      */
-    public function getFromAddress( $vpd = '' )
+    public function getFromAddress( Issue $issue = null )
     {
+        $vpd = '';
+        if ( $issue ) {
+            if ( $issue->getChannelEmail() != '' ) {
+                return html_entity_decode($issue->getChannelEmail());
+            }
+            $vpd = $issue->getVpd();
+        }
+
         $supportEmail = $this->parameters['from_email']['default']['address'];
 
         $emails = $this->getEntityManager()
@@ -80,7 +88,9 @@ class Mailer extends TwigSwiftMailer {
             }
         }
 
-        $supportEmail = $this->normalizeEmailAddress($supportEmail);
+        $supportEmail = $this->normalizeEmailAddress(
+            array_shift(preg_split('/,/', $supportEmail))
+        );
         return array(
             $supportEmail => $this->parameters['from_email']['default']['sender_name']
         );

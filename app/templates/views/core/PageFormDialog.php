@@ -60,7 +60,8 @@ foreach( $sections as $key => $section ) {
 							'shortAttributes' => $shortAttributes,
 							'formonly' => $formonly,
 							'form' => $form,
-							'object_id' => $object_id
+							'object_id' => $object_id,
+                            'source_parms' => $source_parms
 						));
 						echo $view->render('core/Hint.php', array('title' => $bottom_hint, 'name' => $bottom_hint_id, 'open' => $hint_open));
 					?>

@@ -16,10 +16,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         // tasks list
         $integrationsCount = getFactory()->getObject('Integration')->getRecordCount();
         
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-        
         $setting = new PageListSetting('TaskList');
-        
         $setting->setGroup( 'Release' );
         
         $visible_attributes = array('UID', 'Caption', 'State', 'Assignee', 'TaskType', 'ChangeRequest');
@@ -42,18 +39,16 @@ class PageSettingCommonBuilder extends PageSettingBuilder
             })
         );
 
-        foreach( array('mytasks', 'assignedtasks', 'newtasks', 'issuesmine', 'watchedtasks') as $reportName ) {
+        foreach( array('mytasks', 'nearesttasks', 'assignedtasks', 'newtasks', 'issuesmine', 'watchedtasks') as $reportName ) {
             $setting = new ReportSetting($reportName);
-            if ( $reportName == 'mytasks' ) {
-                $setting->setVisibleColumns(array_merge(
-                    $visible,
+            $setting->setVisibleColumns($visible);
+            if ( $reportName == 'nearesttasks' ) {
+                $setting->setSorts(
                     array(
-                        'Description'
+                        'DueDate',
+                        'Priority'
                     )
-                ));
-            }
-            else {
-                $setting->setVisibleColumns($visible);
+                );
             }
             $settings->add( $setting );
         }
@@ -67,15 +62,11 @@ class PageSettingCommonBuilder extends PageSettingBuilder
    						return !in_array($value, array('ChangeRequest')); 
    				})
         );
-        
         $settings->add( $setting );
         
         // resolvedtasks report
-        
         $setting = new ReportSetting('resolvedtasks');
-        
         $setting->setGroup('ChangeRequest');
-
         $setting->setVisibleColumns(
             array_merge(
    				array_filter( $visible_attributes, function($value)
@@ -87,9 +78,8 @@ class PageSettingCommonBuilder extends PageSettingBuilder
                 )
             )
         );
-        
         $settings->add( $setting );
-        
+
         // tasks-trace report
         $object = getFactory()->getObject('Task');
  	    $visible = array_merge( 
@@ -116,7 +106,35 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         );
         $setting->setGroup('ChangeRequest');
         $settings->add( $setting );
-        
+
+        $setting = new ReportSetting('iterationburndown');
+        $setting->setVisibleColumns(
+            array(
+                'UID', 'Caption', 'TaskType', 'Assignee', 'Priority', 'ChangeRequest', 'State', 'RecentComment', 'LeftWork'
+            )
+        );
+        $setting->setGroup('State.D');
+        $setting->setSorts(
+            array(
+                'OrderNum.A',
+                'Priority.A'
+            )
+        );
+        $setting->setFilters(
+            array(
+                'iteration', 'tasktype', 'assignee'
+            )
+        );
+        $settings->add( $setting );
+
+        $setting = new ReportSetting('tasksplanbyfact');
+        $setting->setVisibleColumns(
+            array(
+                'UID', 'Caption', 'TaskType', 'Assignee', 'Planned', 'Fact'
+            )
+        );
+        $settings->add( $setting );
+
         // tasks table
         
         $setting = new PageListSetting('TaskBoardList');
@@ -125,7 +143,7 @@ class PageSettingCommonBuilder extends PageSettingBuilder
         $settings->add( $setting );
 
         $setting = new PageTableSetting('TaskTable');
-        $setting->setFilters( array('release', 'iteration', 'taskstate', 'tasktype', 'taskassignee', 'target') );
+        $setting->setFilters( array('release', 'iteration', 'state', 'tasktype', 'taskassignee', 'target') );
 	    $setting->setSorts( array('Priority','OrderNum') );
         $settings->add( $setting );
     }

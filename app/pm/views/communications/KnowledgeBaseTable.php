@@ -44,4 +44,9 @@ class KnowledgeBaseTable extends PMWikiTable
 		 		return parent::getList( $mode );
 		}
 	}
+
+    function getNewPageTitle()
+    {
+        return translate('Статья');
+    }
 }

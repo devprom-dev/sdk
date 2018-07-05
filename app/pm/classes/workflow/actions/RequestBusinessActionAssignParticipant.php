@@ -12,8 +12,10 @@ class RequestBusinessActionAssignParticipant extends BusinessActionWorkflow
 	function apply( $object_it )
  	{
  		if ( $object_it->object->getAttributeType('Owner') == '' ) return;
-
  	    if ( $object_it->get('Owner') != '' ) return true;
+
+        $userId = getSession()->getUserIt()->getId();
+        if ( $object_it->get('Owner') == $userId ) return true;
  	    
  	    $object_it->object->modify_parms($object_it->getId(), 
  	    		array(

@@ -13,10 +13,9 @@ class ScrumPMPlugin extends PluginPMBase
     
  	function checkEnabled()
  	{
- 	    if ( isset($this->enabled) ) return $this->enabled;
- 	    if ( !is_a(getSession(), 'PMSession') ) return false;
- 		$this->enabled = getSession()->getProjectIt()->getMethodologyIt()->get('UseScrums') == 'Y';
- 		return $this->enabled;
+        if ( isset($this->enabled) ) return $this->enabled;
+        $this->enabled = $this->getBasePlugin()->checkEnabled();
+        return $this->enabled;
     }
 
     function getModules()
@@ -87,18 +86,28 @@ class ScrumPMPlugin extends PluginPMBase
 					)->fieldToArray('VPD');
 			}
 			$this->method_toepic = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
+            $this->method_intoepic = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
 		}
 
 		if ( !in_array($object_it->get('VPD'), $this->scrum_vpds) || $object_it->IsFinished() ) return array();
+		if ( !$this->method_toepic->hasAccess() ) return array();
+
 		$this->method_toepic->setVpd($object_it->get('VPD'));
+		$this->method_intoepic->setVpd($object_it->get('VPD'));
 		return array (
-				array (
-						'name' => text('scrum19'),
-						'url' => $this->method_toepic->getJSCall(array(
-										'Request' => $object_it->getId()
-									))
-				)
-			);
+            array (
+                'name' => text('scrum19'),
+                'url' => $this->method_toepic->getJSCall(array(
+                                'Request' => $object_it->getId()
+                            ))
+            ),
+            array (
+                'name' => text('scrum22'),
+                'url' => $this->method_intoepic->getJSCall(array(
+                    'IssueAssociated' => $object_it->getId()
+                ))
+            )
+        );
 	}
 
 	private $method_toepic = null;

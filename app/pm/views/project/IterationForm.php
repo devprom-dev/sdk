@@ -1,6 +1,6 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/plan/validators/ModelValidatorDatesCausality.php";
+include_once "FieldVelocity.php";
 
 class IterationForm extends PMPageForm
 {
@@ -35,6 +35,9 @@ class IterationForm extends PMPageForm
 			$this->getObject()->addAttribute('ActualVelocity', 'INTEGER', text(2322), true, false, '', 100);
 			$this->getObject()->setAttributeEditable('ActualVelocity', false);
 		}
+
+		$this->getObject()->setAttributeOrderNum('Project', 80);
+        $this->getObject()->setAttributeOrderNum('Version', 30);
 	}
 
 	function buildModelValidator()
@@ -104,7 +107,7 @@ class IterationForm extends PMPageForm
 		    		
 		    	$release = parent::getDefaultValue('Version');
 		    	if ( $release != '' ) {
-		    			$predicates[] = new FilterAttributePredicate('Version', $release);
+                    $predicates[] = new FilterAttributePredicate('Version', $release);
 		    	}
 		    	
 	 			$iteration = getFactory()->getObject('Iteration');
@@ -116,17 +119,21 @@ class IterationForm extends PMPageForm
 				$iteration->addAggregate($aggregate);
 				$last_date = $iteration->getAggregated()->get($aggregate->getAggregateAlias());
 				
-				if ( $last_date != '' ) return date('Y-m-j', strtotime('1 weekday', strtotime($last_date)));
+				if ( $last_date != '' ) {
+				    return max(SystemDateTime::date('Y-m-j'), date('Y-m-j', strtotime('1 weekday', strtotime($last_date))));
+                }
 				
 				$predicates = array (
-						new SortAttributeClause('StartDate.D'),
-						new FilterVpdPredicate()
+                    new SortAttributeClause('StartDate.D'),
+                    new FilterVpdPredicate()
 				);
 				if ( $release != '' ) {
 		    			$predicates[] = new FilterInPredicate($release);
 		    	}
 	 			$release_it = getFactory()->getObject('Release')->getRegistry()->Query($predicates);
-	 			if ( $release_it->getId() != '' ) return $release_it->get('StartDate');
+	 			if ( $release_it->getId() != '' ) {
+	 			    return max(SystemDateTime::date('Y-m-j'), $release_it->get('StartDate'));
+                }
 
 	 			return SystemDateTime::date('Y-m-j');
 		}
@@ -197,12 +204,26 @@ class IterationForm extends PMPageForm
 						)
 					)
 				);
+            case 'InitialVelocity':
+                return new FieldVelocity(getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy());
 			default:
 				return parent::createFieldObject($attr);
 		}
 	}
 
-	function drawScripts()
+	function getShortAttributes()
+    {
+        return array_merge(
+            array_filter(parent::getShortAttributes(), function( $value ) {
+                return $value != 'Project';
+            }),
+            array(
+                'StartDate', 'FinishDate'
+            )
+        );
+    }
+
+    function drawScripts()
 	{
 		parent::drawScripts();
 		

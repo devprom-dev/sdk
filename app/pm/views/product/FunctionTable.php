@@ -68,7 +68,7 @@ class FunctionTable extends PMPageTable
 			new CustomTagFilter( $this->getObject(), $filters['tag'] ),
 			new FilterAttributePredicate( 'Importance', $filters['importance'] ),
 			new FilterAttributePredicate( 'Type', $filters['type'] ),
-			new FeatureParentTransitiveFilter( $filters['parent'] )
+			new ParentTransitiveFilter( $filters['parent'] )
 		);
 		
 		return array_merge(parent::getFilterPredicates(), $predicates);

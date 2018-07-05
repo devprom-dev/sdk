@@ -75,8 +75,8 @@
 				'icon' => 'icon-pencil'
 			);
 			$lastDuration = (strtotime($state_it->get('RecordCreated')) - strtotime($this->getObjectIt()->get('RecordCreated'))) / (60 * 60);
-            if ( $comment != "" ) {
-                $lastComment = $comment;
+            if ( $lastComment == '' ) {
+                $lastComment = $comment . ' ';
             }
 
             $state_it->moveNext();
@@ -98,28 +98,30 @@
 		if ( $change_it->count() > 0 )
 		{
             $stateIt = WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object);
-            if ( count($rows) < 1 ) {
-                $stateIt->moveTo('ReferenceName', $this->getObjectIt()->get('State'));
+            if ( $stateIt->getId() != '' ) {
+                if ( count($rows) < 1 ) {
+                    $stateIt->moveTo('ReferenceName', $this->getObjectIt()->get('State'));
+                }
+                $rows[] = array(
+                    'state' => $stateIt->getDisplayName(),
+                    'state-ref' => $stateIt->get('ReferenceName'),
+                    'author' => $change_it->get('AuthorName'),
+                    'datetime' => $change_it->getDateTimeFormat('RecordModified'),
+                    'date' => $change_it->getDateFormatShort('RecordModified'),
+                    'duration' => getSession()->getLanguage()->getDurationWording($lastDuration),
+                    'duration-value' => $lastDuration,
+                    'icon' => 'icon-plus-sign'
+                );
             }
-			$rows[] = array(
-			    'state' => $stateIt->getDisplayName(),
-                'state-ref' => $stateIt->get('ReferenceName'),
-				'author' => $change_it->get('AuthorName'),
-			 	'datetime' => $change_it->getDateTimeFormat('RecordModified'),
-                'date' => $change_it->getDateFormatShort('RecordModified'),
-				'duration' => getSession()->getLanguage()->getDurationWording($lastDuration),
-                'duration-value' => $lastDuration,
-				'icon' => 'icon-plus-sign'
-			);
 		}
 
 		return array_merge( parent::getRenderParms(), array (
 			'section' => $this,
 			'rows' => $rows,
-            'lifecycle' => getSession()->getLanguage()->getDurationWording($this->getObjectIt()->get('LeadTime'), 24),
+            'lifecycle' => getSession()->getLanguage()->getDurationWording($this->getObjectIt()->get('LeadTime')),
             'stateIt' => WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object),
             'placement' => $this->getPlacement(),
-            'lastComment' => $lastComment
+            'lastComment' => trim($lastComment)
         ));
 	}
  	

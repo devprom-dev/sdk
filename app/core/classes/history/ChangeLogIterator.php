@@ -73,8 +73,9 @@ class ChangeLogIterator extends OrderedIterator
  	{
 		switch ($this->get('ChangeKind')) 
 		{
-			case 'added': 
-				$change_kind = 'icon-plus-sign'; 
+			case 'added':
+            case 'submitted':
+                $change_kind = 'icon-plus-sign';
 				break;
 				
 			case 'modified': 

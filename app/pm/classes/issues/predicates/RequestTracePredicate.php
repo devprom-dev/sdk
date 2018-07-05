@@ -18,7 +18,7 @@ class RequestTracePredicate extends FilterPredicate
 		{
 	 		$object_it = $object->getRegistry()->Query(
 	 				array (
-	 						new WikiRootTransitiveFilter($parts[1])
+	 						new ParentTransitiveFilter($parts[1])
 	 				)
 	 		);
 		}

@@ -88,4 +88,24 @@ class FormLinkedEmbedded extends PMFormEmbedded
 	
 	    return array_merge($actions, parent::getActions( $object_it, $item ));
 	}
+
+    function drawAddButton($view, $tabindex)
+    {
+        parent::drawAddButton($view, $tabindex);
+
+        $field = $this->getFormField();
+
+        $value = $_REQUEST[$field] != '' ? $_REQUEST[$field] : $_REQUEST['IssueLinked'];
+        if ( $value != '' ) {
+            $uid = new ObjectUID();
+            echo '<br/>';
+            echo '<br/>';
+            $object_it = getFactory()->getObject('Request')->getExact(TextUtils::parseIds($value));
+            while( !$object_it->end() ) {
+                $uid->drawUidInCaption($object_it);
+                echo '<br/>';
+                $object_it->moveNext();
+            }
+        }
+    }
 }

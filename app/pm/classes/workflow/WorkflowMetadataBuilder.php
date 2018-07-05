@@ -15,8 +15,11 @@ class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addAttribute('LeadTime', 'FLOAT', text(2067), false);
         $metadata->addPersister( new TransitionAttributesPersister() );
 
-        foreach ( array( 'LifecycleDuration', 'StateObject', 'StateDuration', 'LeadTime' ) as $attribute ) {
+        foreach ( array( 'LifecycleDuration', 'StateObject' ) as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'system');
+        }
+        foreach ( array( 'StateDuration', 'LeadTime' ) as $attribute ) {
+            $metadata->setAttributeEditable($attribute, false);
         }
         $attributes = array( 'State', 'LastTransition', 'StateDuration', 'LeadTime' );
         foreach ( $attributes as $attribute ) {
@@ -24,7 +27,10 @@ class WorkflowMetadataBuilder extends ObjectMetadataEntityBuilder
         }
         foreach ( array( 'StateDuration', 'LeadTime' ) as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'skip-total');
-            $metadata->addAttributeGroup($attribute, 'hours');
+            $metadata->addAttributeGroup($attribute, 'astronomic-time');
+        }
+        foreach ( array( 'StateDuration' ) as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'tooltip');
         }
     }
 }

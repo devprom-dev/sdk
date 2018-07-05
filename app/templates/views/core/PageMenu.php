@@ -16,12 +16,9 @@
 				<b><?=count($checkpoint_alerts)?></b>
 			</a>
 		</div>	<!-- end btn-group -->
-		<div class="btn-group last">
-		</div>	<!-- end btn-group -->
 	<?php } ?>
 
 	<? if ( count($areas) > 1 || array_shift(array_keys($areas)) == 'favs' ) { ?>
-	<div class="btn-group"></div>
 	<div class="btn-group last">
 		<form class="form-search" action="<?=$search_url?>">
 			<div class="input-append">

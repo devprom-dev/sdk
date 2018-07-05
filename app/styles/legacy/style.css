@@ -1256,13 +1256,6 @@ td.action_cell div.line
     padding-bottom: 10px;
 }
 
-div.board_item_separator
-{
-    border: none;
-    height: 10px;
-    margin:0 1px 0 1px;
-}
-
 div.board_item
 {
     display:none;

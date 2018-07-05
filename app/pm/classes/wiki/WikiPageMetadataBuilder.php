@@ -1,11 +1,11 @@
 <?php
 include_once SERVER_ROOT_PATH."cms/classes/ObjectMetadataEntityBuilder.php";
-include "persisters/WikiPageStylePersister.php";
-include "persisters/WikiPageDependencyPersister.php";
-include "persisters/WikiIncludePagePersister.php";
-include "persisters/WikiPageDetailsPersister.php";
-include 'persisters/DocumentVersionPersister.php';
-include "persisters/WikiPageModifierPersister.php";
+include_once "persisters/WikiPageStylePersister.php";
+include_once "persisters/WikiPageDependencyPersister.php";
+include_once "persisters/WikiIncludePagePersister.php";
+include_once "persisters/WikiPageDetailsPersister.php";
+include_once 'persisters/DocumentVersionPersister.php';
+include_once "persisters/WikiPageModifierPersister.php";
 
 class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder 
 {

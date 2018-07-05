@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH . "pm/classes/comments/persisters/CommentRecentPersister.php";
+include_once SERVER_ROOT_PATH . "pm/classes/plan/sorts/SortStageClause.php";
 include "PlanChart.php";
 
 class VersionList extends PMPageList
@@ -84,26 +85,12 @@ class VersionList extends PMPageList
 		
 		if ( $attr == 'Stage' || $attr == 'VersionNumber' )
 		{
-			switch ( $object_it->object->getClassName() )
-			{
-				case 'pm_Version':
-					$offset = '0px';
-					echo '<div style="padding-left:'.$offset.';">';
-						$caption = $object_it->getDisplayName();
-						if ( is_numeric($caption) ) $caption = translate('Релиз').' '.$caption;
-						echo $caption;
-					echo '</div>';
-					break;
-
-				case 'pm_Release':
-					$offset = '0px';
-					echo '<div style="padding-left:'.$offset.';">';
-						$caption = $object_it->getDisplayName();
-						if ( is_numeric($caption) ) $caption = translate('Итерация').' '.$caption;
-						echo $caption;
-					echo '</div>';
-					break;
-			}
+            $offset = '0px';
+            echo '<div style="padding-left:'.$offset.';">';
+                $caption = $source_it->getHtmlDecoded('Caption');
+                if ( is_numeric($caption) ) $caption =  $source_it->getHtmlDecoded('CaptionType');
+                echo trim($source_it->getHtmlDecoded('CaptionPrefix').' '.$caption);
+            echo '</div>';
 		}
 		elseif ( $attr == 'Description' )
 		{
@@ -213,72 +200,13 @@ class VersionList extends PMPageList
         echo getSession()->getLanguage()->getDateFormattedShort($finish);
     }
 
-	function drawBurndown( $object_it )
-	{
-		global $model_factory;
-		
-		switch ( $object_it->object->getClassName() )
-		{
-			case 'pm_Version':
-				if ( $object_it->IsFuture() ) return;
-				
-				echo '<div style="padding-right:8px;">';
-					
-    				$flot = new FlotChartBurndownWidget();
-					
-					$report_it = $model_factory->getObject('PMReport')->getExact('releaseburndown');
-				
-					$url = $report_it->getUrl().'&release='.$object_it->getId();
-				
-					$chart_id = 'chart'.md5($url);
-					
-					echo '<div id="'.$chart_id.'" class="plot" url="'.$url.'" style="height:90px;width:180px;"></div>';
-
-					$flot->setUrl( getSession()->getApplicationUrl().
-						'chartburndownversion.php?version='.$object_it->getId().'&json=1' );
-					
-					$flot->draw($chart_id);
-					
-				echo '</div>';
-				
-				break;
-				
-			case 'pm_Release':
-				if ( $object_it->IsFuture() ) return;
-				 
-				echo '<div style="padding-right:8px;">';
-				
-    				$flot = new FlotChartBurndownWidget();
-					
-					$report_it = $model_factory->getObject('PMReport')->getExact('iterationburndown');
-				
-					$url = $report_it->getUrl().'&release='.$object_it->getId();
-				
-					$chart_id = 'chart'.md5($url);
-					
-					echo '<div id="'.$chart_id.'" class="plot" url="'.$url.'" style="height:90px;width:180px;"></div>';
-
-					$flot->setUrl( getSession()->getApplicationUrl().
-						'chartburndown.php?release_id='.$object_it->getId().'&json=1' );
-					
-					$flot->draw($chart_id);
-				
-				echo '</div>';
-				
-				break;
-		}		
-	}
-
 	function getItemActions( $column_name, $object_it )
 	{
-		global $model_factory;
-		
 		$it = $this->getIt( $object_it );
         $methodology_it = $it->getRef('Project')->getMethodologyIt();
 
 		$actions = parent::getItemActions( $column_name, $it );
 
-		$iteration = $model_factory->getObject('pm_Release');
 		switch ( $it->object->getClassName() )
 		{
 			case 'pm_Version':
@@ -303,13 +231,13 @@ class VersionList extends PMPageList
 				    ));
 				}
 				
-	            $module_it = $model_factory->getObject('Module')->getExact('issues-backlog');
+	            $module_it = getFactory()->getObject('Module')->getExact('issues-backlog');
 	            
 	            if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 	            {
 					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 	                
-				    $states = $model_factory->getObject('Request')->getNonTerminalStates();
+				    $states = getFactory()->getObject('Request')->getNonTerminalStates();
 				    $info = $module_it->buildMenuItem('?release='.$it->getId().'&group=State&state='.join(',',$states));
 				    
 	                $actions[] = array( 
@@ -471,6 +399,16 @@ class VersionList extends PMPageList
 	function getGroupDefault()
     {
         return '';
+    }
+
+    function getSorts()
+    {
+        return array_merge(
+            parent::getSorts(),
+            array(
+                new SortStageClause()
+            )
+        );
     }
 
     function render($view, $parms)

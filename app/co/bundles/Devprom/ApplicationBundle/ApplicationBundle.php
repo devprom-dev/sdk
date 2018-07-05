@@ -46,20 +46,23 @@ class ApplicationBundle extends DevpromBundle
 		if ( preg_match('/^[a-zA-Z0-9]+$/im', $class) < 1 ) unset($class);
 		if ( !isset($class) ) return false;
 
-		$module = SERVER_ROOT_PATH.'tasks/commands/c_'.$class.'.php';
-		if ( !class_exists($class, false) && file_exists($module) ) include_once $module;
+		$moduleTasks = SERVER_ROOT_PATH.'tasks/commands/c_'.$class.'.php';
+        $moduleCommands = SERVER_ROOT_PATH.'co/commands/c_'.$class.'.php';
 
-		$module = SERVER_ROOT_PATH.'co/commands/c_'.$class.'.php';
-		if ( !class_exists($class, false) && file_exists($module) ) include_once $module;
+        if ( file_exists($moduleTasks) ) {
+            if ( !class_exists($class, false) ) include_once $moduleTasks;
+            $command = new $class;
+        }
+        elseif ( file_exists($moduleCommands) ) {
+            if ( !class_exists($class, false) ) include_once $moduleCommands;
+            $command = new $class;
+        }
+        else {
+            $command = \PluginsFactory::Instance()->getCommand( $_REQUEST['namespace'], 'co', $class );
+            if ( !is_object($command) ) return false;
+        }
 
-		if ( class_exists($class, false) ) {
-		 	$command = new $class;	
-		}
-		else {
-		 	$command = \PluginsFactory::Instance()->getCommand( $_REQUEST['namespace'], 'co', $class );
-		}
-
-		if ( is_object($command) ) $command->execute();
+		$command->execute();
 
 		if ( $page != '' ) {
 			exit(header('Location: '.$page));

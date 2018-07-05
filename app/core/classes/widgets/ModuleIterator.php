@@ -22,9 +22,11 @@ class ModuleIterator extends OrderedIterator
 		);
  	}
 
-	function getUrl( $query_string = '' )
+	function getUrl( $query_string = '', $projectIt = null )
 	{
 		$info = $this->buildMenuItem($query_string);
-		return $info['url'];
+		return is_object($projectIt)
+            ? preg_replace('/\/pm\/[^\/]+\//i', '/pm/'.$projectIt->get('CodeName').'/', $info['url'])
+            : $info['url'];
 	}
 }

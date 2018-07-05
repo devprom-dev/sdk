@@ -56,4 +56,18 @@ class FieldTaskTypeDictionary extends FieldDictionary
 		
 		return $options;
 	}
+
+	function getDefault()
+    {
+        $value = parent::getDefault();
+        if ( $value != '' ) return $value;
+
+        $type_it = getFactory()->getObject('TaskType')->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate(),
+                new FilterAttributePredicate('IsDefault', 'Y')
+            )
+        );
+        return $type_it->getId();
+    }
 }

@@ -37,7 +37,7 @@ foreach( $actions as $key => $action ) {
     }
     else {
         foreach( $buttonsForClass as $button ) { ?>
-            <a id="<?=$button['uid']?>" class="btn btn-small <?=$button['button-class']?>" href="<?=$button['url']?>" title="<?=$button['title']?>">
+            <a id="<?=$button['uid']?>" class="btn btn-small <?=$button['button-class']?>" href="<?=$button['url']?>" onclick="<?=$button['click']?>" title="<?=$button['title']?>">
                 <?php if ( $button['icon'] != '' ) { ?> <i class="icon-white <?=$button['icon']?>"></i><?php } ?>
                 <?=$button['name']?>
             </a>
@@ -50,7 +50,7 @@ foreach( $actions as $key => $action ) {
 
 <?php
 foreach( $sections as $section ) {
-    if ( $section instanceof PageSectionComments ) {
+    if ( $section instanceof PageSectionComments && $section->modifiable() ) {
         ?>
         <div class="btn-group">
             <a id="comment-shortcut" class="btn btn-small" href="javascript:clickAddCommentOnForm();">

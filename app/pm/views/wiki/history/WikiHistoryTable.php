@@ -24,7 +24,7 @@ class WikiHistoryTable extends ProjectLogTable
 			$object_it = getFactory()->getObject(get_class($object_it->object))
                 ->getRegistry()->Query(
 				    array (
-				        new WikiRootTransitiveFilter($object_it->getId())
+				        new ParentTransitiveFilter($object_it->getId())
                     )
 				);
 		}

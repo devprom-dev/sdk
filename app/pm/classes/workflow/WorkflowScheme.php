@@ -83,6 +83,9 @@ class WorkflowScheme
 				array_map(function($row) { return $row['ReferenceName']; }, $data['states'])
 			);
 		}
+		else {
+            $state = count($object->getVpds()) > 1 ? $object->getVpdValue().$state : $state;
+        }
 		return $this->stateAttribute->createCachedIterator(
 			is_array($data['stateattrs'][$state]) ? $data['stateattrs'][$state] : array()
 		);
@@ -109,8 +112,8 @@ class WorkflowScheme
 		}
 		else {
 			$result = array();
-			foreach( $data['transitions'] as $state => $transition ) {
-				if ( in_array($state, $states) ) $result[] = $transition;
+			foreach( $data['transitions'] as $state => $transitions ) {
+				if ( in_array($state, $states) ) $result = array_merge($result, $transitions);
 			}
 			return $this->transition->createCachedIterator($result);
 		}

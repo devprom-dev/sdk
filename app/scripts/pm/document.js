@@ -39,8 +39,11 @@ function initializeDocument( page_id, options )
 	setInterval( function() {
         refreshListItems();
 	}, 180000);
+    $(document).on('windowActivated', function() {
+        refreshListItems();
+    })
 
-	if ( localOptions.scrollable )
+    if ( localOptions.scrollable )
 	{
 		$(document)
 			.bind('DOMMouseScroll', function(e) {
@@ -117,18 +120,8 @@ function initializeDocument( page_id, options )
 	
 	makeupUI($('#tablePlaceholder .table-inner:first'));
 
-	$('#toggle-structure-panel').button().off('click').on('click', function (e) {
-		var button = $(this);
-		e.stopImmediatePropagation();
-		if (!button.hasClass('active')) {
-			button.addClass('active');
-		} else {
-			button.removeClass('active');
-		}
-		toggleDocumentStructure(page_id);
-	});
-
 	$("body").on("contextmenu", "#tablePlaceholder .table-inner tr[object-id]", function(e) {
+		if ( $(e.target).closest('a, .btn-group').length > 0 ) return;
 		$('.dropdown-fixed.open, .btn-group.open').removeClass('open');
 		var item = $(this).find('td#operations .dropdown-fixed');
 		if ( item.length > 0 ) {
@@ -152,6 +145,7 @@ function initializeDocument( page_id, options )
             setDocumentListSize(ui.value);
         }
     });
+    $('.table-master:visible').attachDragger();
 }
 
 function setDocumentListSize(size) {
@@ -550,8 +544,10 @@ function refreshListItems()
             var newItems = [];
 			var skip = [];
 			var comments_open = [];
-			var html = $(data);
+			var html = $('<div>'+data+'</div>');
 			var modifier = localOptions.modifier;
+
+            updateUI(html);
 
 			html.find(".object-changed[object-id]").each( function(index, value)
 			{
@@ -662,12 +658,17 @@ function checkDirtyEditor(element)
 {
 	if ( typeof CKEDITOR == 'undefined' ) return;
 	var isDirtyEditor = false;
-	element.find('td#content div.cke_editable').each( function()
+	$.each(CKEDITOR.instances, function(index, editor) {
+        if ( editor.checkDirty() ) isDirtyEditor = true;
+	})
+	/*
+	element.find('td#content .cke_editable').each( function()
 	{
 		var editor = CKEDITOR.instances[$(this).attr('id')];
 		if ( !editor ) return true;
 		if ( editor.checkDirty() ) isDirtyEditor = true;
 	});
+	*/
 	return isDirtyEditor;
 }
 
@@ -935,8 +936,9 @@ function updateHistory( pageTitle, pageId )
 
 function toggleDocumentStructure( documentId )
 {
-	cookies.set('toggle-structure-panel-' + documentId, !$('div.wiki-page-tree').is(':visible'));
-	window.location.reload();
+    $('div.wiki-page-tree').is(':visible')
+		? $('div.wiki-page-tree').hide()
+		: $('div.wiki-page-tree').show();
 }
 
 function toggleDocumentTreePlacement( placement ) {
@@ -947,7 +949,7 @@ function toggleDocumentTreePlacement( placement ) {
 function toggleDocumentPageComments(container, openForm) {
 	var bottom = container.parents('.document-page-bottom');
 	bottom.find('.comments-section').each(function(value) {
-		$(this).toggle();
+		$(this).toggleClass('closed');
 		cookies.set(
 			'comments-state-'+$(this).parents('tr[object-id]').attr('object-id'),
 			$(this).is(':visible') ? 'open' : 'closed'
@@ -956,5 +958,5 @@ function toggleDocumentPageComments(container, openForm) {
 			$(this).find('.btn-success').click();
 		}
 	});
-	bottom.find('.comments-cell').toggle();
+	bottom.find('.comments-cell').toggleClass('open');
 }

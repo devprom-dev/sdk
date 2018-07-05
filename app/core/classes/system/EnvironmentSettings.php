@@ -13,7 +13,22 @@ class EnvironmentSettings
     {
         return defined('SERVER_PORT') ? SERVER_PORT : ''; 
     }
-    
+
+    static public function getProxyServer()
+    {
+        return defined('PROXY_SERVER') ? PROXY_SERVER : '';
+    }
+
+    static public function getProxyAuth()
+    {
+        return defined('PROXY_AUTH') ? PROXY_AUTH : '';
+    }
+
+    static public function getAutoUpdate()
+    {
+        return defined('AUTO_UPDATE') ? AUTO_UPDATE == 'Y' : false;
+    }
+
     static public function getHttps()
     {
         return strtolower(getenv('HTTPS')) == 'on'; 
@@ -196,7 +211,7 @@ class EnvironmentSettings
 
     static public function getServerSalt()
     {
-    	return md5(INSTALLATION_UID.$_SERVER['SERVER_ADDR'].$_SERVER['PATH'].$_SERVER['SERVER_SOFTWARE']);
+    	return md5(INSTALLATION_UID . PID_HASH);
     }
     
     static public function ajaxRequest()

@@ -29,7 +29,6 @@ class WikiIncludeForm extends PMPageForm
  			$object->setAttributeVisible('ParentPage', true);
  			$object->setAttributeRequired('ParentPage', true);
  			$object->setAttributeCaption('ParentPage', $this->getObject()->getDocumentName());
- 			$object->setAttributeDescription('ParentPage', text('testing60'));
  		}
     }
 

@@ -60,8 +60,15 @@ class RequestList extends PMPageList
 
 	function getGroupFields() 
 	{
-		$fields = array_merge( parent::getGroupFields(), array( 'Tags') );
-		return array_merge( $fields, array( 'ClosedInVersion', 'SubmittedVersion' ) );
+		return array_merge(
+            parent::getGroupFields(),
+            array(
+                'Tags',
+                'ClosedInVersion',
+                'SubmittedVersion',
+                'Links'
+            )
+        );
 	}
 
 	function getGroup() 
@@ -71,18 +78,6 @@ class RequestList extends PMPageList
 		if ( $group == 'Type' ) return 'TypeBase';
 		return $group;
 	}
-
-    function getGroupQuery()
-    {
-        if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::getGroupQuery();
-
-        $groupOrder = $this->getGroupOrder();
-        switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
-        {
-            default:
-                return parent::getGroupQuery();
-        }
-    }
 
 	function getRowBackgroundColor( $object_it )
 	{
@@ -124,13 +119,9 @@ class RequestList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Spent':
-			    
 			    $field = new FieldSpentTimeRequest( $object_it );
-
 				$field->setEditMode( false );
-			    
 				$field->render( $this->getTable()->getView() );
-                
 			    break;
 
 			case 'Links':
@@ -149,29 +140,37 @@ class RequestList extends PMPageList
                 {
                     $text = $this->getUidService()->getUidIconGlobal($entity_it, true);
                     if ( !$this instanceof PageBoard ) {
-                        $text .= '<span class="ref-name">'.$entity_it->getDisplayNameExt().'<br/></span>';
+                        $text .= '<span class="ref-name">'.$entity_it->getDisplayNameExt().'</span>';
                     }
 					$items[] = translate($types_ids[$entity_it->getId()]).': '.$text;
 					$entity_it->moveNext();
 				}
                 		
-                echo join($items, ', ');
+                echo join($items, '<div/> ');
 				
 				break;
 				
 			case 'Priority':
-				
-				if ( is_object($this->priority_method) )
-				{
+				if ( is_object($this->priority_method) ) {
 					$this->priority_method->drawMethod( $object_it, 'Priority' );
 				}
-				else
-				{
+				else {
 					parent::drawRefCell( $entity_it, $object_it, $attr );
 				}
-				
 				break;
-				
+
+            case 'Author':
+                if ( $entity_it->get('CustomerId') > 0 ) {
+                    parent::drawRefCell(
+                        getFactory()->getObject($entity_it->get('CustomerClass'))->getExact($entity_it->get('CustomerId')),
+                        $object_it,
+                        $attr);
+                }
+                else {
+                    echo $entity_it->getDisplayName();
+                }
+                break;
+
 			default:
 				parent::drawRefCell( $entity_it, $object_it, $attr );
 		}
@@ -194,7 +193,7 @@ class RequestList extends PMPageList
 			break;
 			
 			case 'Estimation':
-                if ( in_array('hours', $this->getObject()->getAttributeGroups($attr)) ) {
+                if ( in_array('astronomic-time', $this->getObject()->getAttributeGroups($attr)) ) {
                     parent::drawCell($object_it, $attr);
                 }
                 else {

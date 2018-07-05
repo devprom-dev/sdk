@@ -48,33 +48,37 @@ class WikiConverterPanDocMSWord extends WikiConverterPanDoc
 
         $documentContent = file_get_contents($docExtractDir . '/word/document.xml');
 
-        preg_match('/<w:document\s*[^>]*>/i', $documentContent, $match);
-        $documentTags = $match[0];
-
-        $documentContent = array_pop(preg_split('/<w:body[^>]*>/i', $documentContent));
-        $documentContent = array_shift(preg_split('/<w:sectPr[^>]*>/i', $documentContent));
-
         $templateContent = file_get_contents($templateExtractDir . '/word/document.xml');
-        if ( strpos($templateContent, 'DEVPROM_DOCUMENT_BODY') !== false ) {
+        $templateContent = preg_replace('/w14:paraId="[^"]+"/i', '', $templateContent);
+        $templateContent = preg_replace('/w14:textId="[^"]+"/i', '', $templateContent);
+
+        if ( strpos($templateContent, 'DEVPROM_DOCUMENT_BODY') !== false )
+        {
+            list($documentHeader, $documentBody) = preg_split('/<w:body[^>]*>/i', $documentContent);
+            list($documentBody, $documentFooter) = preg_split('/<w:sectPr/i', $documentBody);
+
+            $templateContent = array_pop(preg_split('/<w:body[^>]*>/i', $templateContent));
+            $templateContent = array_shift(preg_split('/<w:sectPr[^>]*>/i', $templateContent));
+
             $templateContent = preg_replace(
                 '/DEVPROM_DOCUMENT_BODY\s*<\/w:t>\s*<\/w:r>/i',
-                '</w:t></w:r></w:p>'.$documentContent.'<w:p><w:r><w:t></w:t></w:r>',
+                '</w:t></w:r></w:p>'.$documentBody.'<w:p><w:r><w:t></w:t></w:r>',
                 $templateContent
             );
+
+            $documentContent = $documentHeader . '<w:body>' . $templateContent . '<w:sectPr' . $documentFooter;
         }
         else {
-            $templateContent = preg_replace(
-                '/<\/w:body>/i',
-                $documentContent.'</w:body>',
-                $templateContent
+            $templateContent = array_pop(preg_split('/<w:body[^>]*>/i', $templateContent));
+            $templateContent = array_shift(preg_split('/<w:sectPr[^>]*>/i', $templateContent));
+            $documentContent = preg_replace(
+                '/<w:body>/i',
+                '<w:body>'.$templateContent,
+                $documentContent
             );
         }
 
-        $templateContent = preg_replace(
-            '/<w:document\s*[^>]*>/i', $documentTags, $templateContent
-        );
-
-        file_put_contents($docExtractDir . '/word/document.xml', $templateContent);
+        file_put_contents($docExtractDir . '/word/document.xml', $documentContent);
 
         ZipSystem::zipAll($documentPath, $docExtractDir);
         FileSystem::rmdirr($templateExtractDir);

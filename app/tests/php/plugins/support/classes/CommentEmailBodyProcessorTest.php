@@ -174,4 +174,13 @@ class CommentEmailBodyProcessorTest extends \PHPUnit_Framework_TestCase {
         $result = $this->processor->process($content, true);
         $this->assertEquals($content, $result);
     }
+
+    /**
+     * @test
+     */
+    public function processComplexHtml() {
+        $content = "<HTML><BODY>test<br>test<br><br><blockquote style=\"border-left:1px solid #0857A6; margin:10px; padding:0 0 0 10px;\">Вторник, 22 августа 2017, 18:46 +03:00 от Devprom Software Support <support@devprom.ru>:<br></BODY></HTML>";
+        $result = $this->processor->process($content, true);
+        $this->assertEquals('test<br>test<br><br>', $result);
+    }
 }

@@ -1,5 +1,5 @@
 {% extends "DevpromServiceDeskBundle:Email:base_email.html.twig" %}
 
 {% block body %}
-    {% include emailBody("registration.twig",app.request.locale) %}
+    {% include emailBody("registration.twig",default_locale) %}
 {% endblock body %}

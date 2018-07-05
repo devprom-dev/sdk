@@ -51,16 +51,17 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
     
     protected function getSupportPayedDate()
     {
-        $curl = curl_init();
+        $curl = CurlBuilder::getCurl();
         curl_setopt($curl, CURLOPT_URL, self::URL.'&iid='.INSTALLATION_UID);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($curl, CURLOPT_HEADER, false);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($curl, CURLOPT_HTTPGET, true);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
 		curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
 
-		$result = curl_exec($curl);
+        $result = curl_exec($curl);
 		if ( $result === false ) {
 		    $this->debug( curl_error($curl) );
 		}
@@ -83,7 +84,7 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
             )
         );
 
-        $curl = curl_init();
+        $curl = CurlBuilder::getCurl();
         curl_setopt($curl, CURLOPT_URL,
             self::UPDATES_URL.'&version='.$_SERVER['APP_VERSION'].'&iid='.INSTALLATION_UID.'&license='.$license_it->get('LicenseType').'&users='.$users_count);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
@@ -91,6 +92,7 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($curl, CURLOPT_HTTPGET, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         curl_setopt($curl, CURLOPT_REFERER, EnvironmentSettings::getServerUrl());
 
         $result = curl_exec($curl);

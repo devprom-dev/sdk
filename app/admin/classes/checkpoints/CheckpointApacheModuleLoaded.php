@@ -19,7 +19,9 @@ class CheckpointApacheModuleLoaded extends CheckpointEntryDynamic
         if ( $this->checkWindows() ) {
             $this->setValue( '1' ); return;
         }
-
+        if ( !function_exists('apache_get_modules') ) {
+            $this->setValue( '1' ); return;
+        }
         $this->setValue( in_array(
                 $this->module, apache_get_modules() ) ? '1' : '0' );
     }

@@ -138,7 +138,7 @@ class TasktBoardPlanning extends TaskBoardList
                 $actions = array_merge(
                     array (
                         array (
-                            'name' => translate('Изменить'),
+                            'name' => $method->getCaption(),
                             'url' => $method->getJSCall()
                         ),
                         array()
@@ -200,7 +200,7 @@ class TasktBoardPlanning extends TaskBoardList
         if ( is_array($workloadData) ) {
             echo $this->getTable()->getView()->render('pm/UserWorkloadDetails.php', array (
                 'data' => array( 'Iterations' => array($workloadData) ),
-                'measure' => trim($this->strategy->getDimensionText(''))
+                'measure' => $this->strategy
             ));
         }
     }

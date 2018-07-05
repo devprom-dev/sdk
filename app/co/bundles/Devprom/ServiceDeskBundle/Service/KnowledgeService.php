@@ -3,16 +3,6 @@
 namespace Devprom\ServiceDeskBundle\Service;
 include_once SERVER_ROOT_PATH."ext/locale/LinguaStemRu.php";
 
-use Devprom\ServiceDeskBundle\Entity\Issue;
-use Devprom\ServiceDeskBundle\Entity\IssueComment;
-use Devprom\ServiceDeskBundle\Entity\IssueState;
-use Devprom\ServiceDeskBundle\Entity\IssueStateComment;
-use Devprom\ServiceDeskBundle\Entity\Priority;
-use Devprom\ServiceDeskBundle\Entity\User;
-use Devprom\ServiceDeskBundle\Entity\Watcher;
-use Devprom\ServiceDeskBundle\Mailer\Mailer;
-use Devprom\ServiceDeskBundle\Repository\IssueRepository;
-use Devprom\ServiceDeskBundle\Util\TextUtil;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 
@@ -25,19 +15,21 @@ class KnowledgeService
         $this->em = $em;
     }
 
-    function getThemes( $vpds ) {
+    function getThemes( $vpds )
+    {
+        $restricted = $this->restrictedArticles($vpds);
         $repository = $this->em->getRepository('DevpromServiceDeskBundle:KnowledgeBase');
-        return $repository->findBy(
-            array(
-                'parent' => $this->getRoots($vpds)
-            ),
-            array(
-                'sortIndex' => 'ASC'
-            )
-        );
+        return $repository->createQueryBuilder('t')
+            ->where('t.parent IN (:parents) AND t.id NOT IN (:restricted)')
+            ->setParameter('parents', $this->getRoots($vpds))
+            ->setParameter('restricted', $restricted)
+            ->orderBy('t.sortIndex')
+            ->getQuery()
+            ->getResult();
     }
 
-    function getArticles($vpds) {
+    function getArticles($vpds)
+    {
         $repository = $this->em->getRepository('DevpromServiceDeskBundle:KnowledgeBase');
         return $repository->findBy(
             array(
@@ -49,14 +41,18 @@ class KnowledgeService
         );
     }
 
-    function getRoots( $vpds ) {
+    function getRoots( $vpds )
+    {
+        $restricted = $this->restrictedArticles($vpds);
         $repository = $this->em->getRepository('DevpromServiceDeskBundle:KnowledgeBase');
         return $repository->createQueryBuilder('t')
             ->where('
                 t.vpd IN (:vpdarray) AND t.parent IS NULL AND t.referenceName = 1 
-                AND EXISTS (SELECT 1 FROM \Devprom\ServiceDeskBundle\Entity\KnowledgeBase c WHERE c.parent = t.id) 
-                ')
+                AND EXISTS (SELECT 1 FROM \Devprom\ServiceDeskBundle\Entity\KnowledgeBase c 
+                             WHERE c.parent = t.id AND c.id NOT IN (:restricted)) 
+            ')
             ->setParameter('vpdarray', $vpds)
+            ->setParameter('restricted', $restricted)
             ->getQuery()
             ->getResult();
     }
@@ -84,7 +80,12 @@ class KnowledgeService
                   FROM WikiPage t
                  WHERE t.ParentPage IN (:themes) 
                    AND t.ReferenceName = 1
-                   AND (MATCH (t.Content) AGAINST (:search IN BOOLEAN MODE) OR t.Caption REGEXP :regexp) 
+                   AND (MATCH (t.Content) AGAINST (:search IN BOOLEAN MODE) OR t.Caption REGEXP :regexp)
+                   AND NOT EXISTS (SELECT 1 FROM pm_ObjectAccess a, pm_ProjectRole r
+                                    WHERE INSTR(t.ParentPath, CONCAT(',',a.ObjectId,',')) > 0
+                                      AND a.ProjectRole = r.pm_ProjectRoleId
+                                      AND a.ObjectClass = 'projectpage' AND a.AccessType = 'none'
+                                      AND r.ReferenceName = 'guest')
             ";
 
         $items = $this->em->createNativeQuery($sql, $rsm)
@@ -102,5 +103,27 @@ class KnowledgeService
         }
 
         return $items;
+    }
+
+    function restrictedArticles( $vpds )
+    {
+        $rsm = new ResultSetMappingBuilder($this->em);
+        $rsm->addRootEntityFromClassMetadata('\Devprom\ServiceDeskBundle\Entity\KnowledgeBase', 'e');
+        $sql = "
+                SELECT " . $rsm->generateSelectClause(array('e' => 't')) . "
+                  FROM WikiPage t
+                 WHERE t.VPD IN (:vpds) 
+                   AND t.ReferenceName = 1
+                   AND EXISTS (SELECT 1 FROM pm_ObjectAccess a, pm_ProjectRole r
+                                WHERE INSTR(t.ParentPath, CONCAT(',',a.ObjectId,',')) > 0
+                                  AND a.ProjectRole = r.pm_ProjectRoleId
+                                  AND a.ObjectClass = 'projectpage' AND a.AccessType = 'none'
+                                  AND r.ReferenceName = 'guest')
+            ";
+        $result = $this->em->createNativeQuery($sql, $rsm)
+            ->setParameter('vpds', $vpds)
+            ->getResult();
+        if ( count($result) < 1 ) return array(0);
+        return $result;
     }
 }

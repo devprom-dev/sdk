@@ -17,4 +17,9 @@ class Priority extends MetaobjectCacheable
 	{
 		return new PriorityIterator($this);
 	}
+
+    function getPage()
+    {
+        return '/admin/dictionaries.php?dict=Priority';
+    }
 }

@@ -29,7 +29,17 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 			{
 				if ( $this->baseline_it->get('Type') != 'branch' ) {
 					// just version of the document
-					$persisters[] = new SnapshotItemValuePersister($this->baseline_it->getId());
+                    $documentId = $this->page_it->get('DocumentId');
+                    if ( $documentId == '' ) {
+                        $documentId = array_shift($this->page_it->getParentsArray());
+                    }
+                    $documentIt = $this->page_it->object->getExact($documentId);
+                    if ( $documentIt->getId() == '' ) {
+                        $documentIt = $this->page_it;
+                    }
+                    $registry = new WikiPageRegistryVersion($this->page_it->object);
+                    $registry->setDocumentIt($documentIt);
+                    $registry->setSnapshotIt($this->baseline_it);
 					$query_filters = array (
 						new FilterInPredicate($this->page_it->getId())
 					);
@@ -58,7 +68,9 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 		{
 			// baseline given
 			$query_filters = array(
-				new FilterAttributePredicate('UID', $this->page_it->get('UID')),
+                $this->page_it->get('UID') != ''
+                    ? new FilterAttributePredicate('UID', $this->page_it->get('UID'))
+                    : new FilterInPredicate($this->page_it->getId()),
 				new FilterAttributePredicate('DocumentId', $document_id)
 			);
 		}

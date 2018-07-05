@@ -7,7 +7,8 @@ class RequestType extends MetaobjectCacheable
  	function __construct() 
  	{
  		parent::__construct('pm_IssueType');
- 		
+
+ 		$this->addAttributeGroup('Option1', 'system');
  		$this->setAttributeDescription( 'RelatedColor', text(1852) );
  	}
  	

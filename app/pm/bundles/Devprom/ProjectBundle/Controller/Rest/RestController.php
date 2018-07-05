@@ -137,9 +137,8 @@ abstract class RestController extends FOSRestController implements ClassResource
 		}
     }
 
-    protected function getPostData(Request $request)
-    {
-    	return $request->request->all();
+    protected function getPostData(Request $request) {
+        return \JsonWrapper::decode($request->getContent());
     }
     
     protected function getModelService(Request $request)

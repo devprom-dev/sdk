@@ -10,22 +10,15 @@ class PlanChart extends PMPageChart
 
     function getIterator()
 	{
-        $predicates = array();
-
-        $values = $this->getFilterValues();
-        if ( $values['state'] == 'overdue' ) {
-            $predicates = $this->getTable()->getFilterPredicates();
-        }
-
 		return $this->getObject()->getRegistry()->Query(
-				array_merge(
-                    $predicates,
-					array (
-                        new SortAttributeClause('Project'),
-                        new SortAttributeClause('FinishDate'),
-                        new SortAttributeClause('SortIndex')
-					)
-				)
+            array_merge(
+                $this->getTable()->getFilterPredicates(),
+                array (
+                    new SortAttributeClause('Project'),
+                    new SortAttributeClause('FinishDate'),
+                    new SortAttributeClause('SortIndex')
+                )
+            )
 		);
 	}
 	
@@ -46,7 +39,16 @@ class PlanChart extends PMPageChart
 	
 	function getChartWidget()
 	{
-		return new PlanChartWidget($this->getIterator());
+	    $values = $this->getFilterValues();
+
+        $start = in_array($values['start'], array('','all','hide'))
+                    ? strftime('%Y-%m-%d', strtotime('-7 day', strtotime(SystemDateTime::date('Y-m-d'))))
+                    : getLanguage()->getDbDate($values['start']);
+        $finish = in_array($values['finish'], array('','all','hide'))
+                    ? strftime('%Y-%m-%d', strtotime('+1 month', strtotime(SystemDateTime::date('Y-m-d'))))
+                    : getLanguage()->getDbDate($values['finish']);
+
+		return new PlanChartWidget($this->getIterator(), $start, $finish);
 	}
 	
 	function getStyle()

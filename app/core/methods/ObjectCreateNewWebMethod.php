@@ -136,6 +136,6 @@ class ObjectCreateNewWebMethod extends WebMethod
 
     function hasAccess()
 	{
-		return getFactory()->getAccessPolicy()->can_create($this->object);
+		return getFactory()->getAccessPolicy()->can_modify($this->object);
 	}
 }

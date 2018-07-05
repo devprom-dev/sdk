@@ -8,6 +8,9 @@ class WikiImporterEnginePdf extends WikiImporterEngine
         $content = '';
 
         try {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            if ( strpos($finfo->file($filePath), 'pdf') === false ) return $content;
+
             // detects type of the file
             $image = new Imagick();
             if ( !$image->pingImage($filePath) ) {
@@ -28,11 +31,11 @@ class WikiImporterEnginePdf extends WikiImporterEngine
 
                 $outputPath = tempnam(sys_get_temp_dir(), "importer_engine");
                 $image->writeImage($outputPath);
-                $imageData = file_get_contents($outputPath);
+                $imageData = \TextUtils::encodeImage($outputPath);
                 unlink($outputPath);
 
                 if ( $imageData != "" ) {
-                    $content .= '<h1>'.translate('Страница').' '.($i + 1).'</h1><img src="data:image;base64,'.base64_encode($imageData).'">';
+                    $content .= '<h1>'.translate('Страница').' '.($i + 1).'</h1><img src="data:image;base64,'.$imageData.'">';
                 }
             }
         }

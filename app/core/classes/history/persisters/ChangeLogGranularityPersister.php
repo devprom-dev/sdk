@@ -30,13 +30,13 @@ class ChangeLogGranularityPersister extends ObjectSQLPersister
  			" MAX(t.Caption) Caption " );
         
         array_push( $columns, 
- 			" GROUP_CONCAT(DISTINCT t.Content ORDER BY t.RecordCreated DESC SEPARATOR '<br/>') Content " );
+ 			" GROUP_CONCAT(DISTINCT t.Content ORDER BY t.ObjectChangeLogId DESC SEPARATOR '<br/>') Content " );
         
         array_push( $columns, 
  			" GROUP_CONCAT(DISTINCT t.Attributes) Attributes " );
         
         array_push( $columns, 
- 			" GROUP_CONCAT(t.ObjectChangeLogId) ObjectChangeLogId " );
+ 			" MAX(t.ObjectChangeLogId) ObjectChangeLogId " );
         
  		return $columns;
  	}

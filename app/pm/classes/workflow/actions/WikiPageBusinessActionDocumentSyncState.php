@@ -18,7 +18,7 @@ class WikiPageBusinessActionDocumentSyncState extends BusinessActionWorkflow
 
 		$page_it = $object_it->object->getRegistry()->Query(
             array (
-                new WikiRootTransitiveFilter($object_it->get('DocumentId')),
+                new ParentTransitiveFilter($object_it->get('DocumentId')),
                 new WikiNonRootFilter()
             )
 		);

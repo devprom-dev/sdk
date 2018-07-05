@@ -8,18 +8,20 @@ class RequestImportDocumentForm extends PMPageForm
     {
     	parent::extendModel();
 
+    	$object = $this->getObject();
 		$visible = array();
 		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
+            $object->resetAttributeGroup($attribute, 'additional');
 			if ( in_array($attribute, $visible) ) continue;
-			$this->getObject()->setAttributeRequired($attribute, false);
-			$this->getObject()->setAttributeVisible($attribute, false);
+            $object->setAttributeRequired($attribute, false);
+            $object->setAttributeVisible($attribute, false);
 		}
-		$this->getObject()->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2282), 1);
+        $object->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2282), 1);
 
-        $typeObject = $this->getObject()->getAttributeObject('Type');
+        $typeObject = $object->getAttributeObject('Type');
         $typeIt = $typeObject->getAll();
         if ( $typeIt->count() > 0 ) {
-            $this->getObject()->setAttributeVisible('Type', true);
+            $object->setAttributeVisible('Type', true);
         }
     }
     
@@ -34,8 +36,12 @@ class RequestImportDocumentForm extends PMPageForm
 				throw new Exception(\FileSystem::translateError($_FILES['DocumentFile']['error']));
 			}
 
+            $fileContent = file_get_contents($filePath);
+            if ( $fileContent == '' ) throw new Exception(text(2486));
+
             $options = array (
-                'Type' => $_REQUEST['Type']
+                'Type' => $_REQUEST['Type'],
+                'State' => $_REQUEST['State']
             );
             $builder = new RequestImporterContentBuilder($this->getObject());
             $importer = new WikiImporter($this->getObject());
@@ -46,7 +52,7 @@ class RequestImportDocumentForm extends PMPageForm
                 if ( class_exists($engineClass) ) {
                     $engine = new $engineClass;
                     $engine->setOptions($options);
-                    if ( $engine->import($builder, $fileName, file_get_contents($filePath), $this->getObject()->getEmptyIterator()) ) {
+                    if ( $engine->import($builder, $fileName, $fileContent, $this->getObject()->getEmptyIterator()) ) {
                         $documentIt = $builder->getDocumentIt();
                         echo json_encode(
                             array(

@@ -41,8 +41,12 @@ class VersionPage extends PMPage
                         $this->addInfoSection( new IterationBurndownSection($object_it) );
                     }
                 }
-				$this->addInfoSection( new PageSectionAttributes($this->getFormRef()->getObject(),'tab-issues',translate('Пожелания')) );
-				$this->addInfoSection( new PageSectionAttributes($this->getFormRef()->getObject(),'tab-tasks',translate('Задачи')) );
+                $object = $this->getFormRef()->getObject();
+                $stage = $this->getObject();
+				$this->addInfoSection( new PageSectionAttributes($object, 'tab-issues',
+                    $stage->getAttributeType('Issues') != '' ? $stage->getAttributeUserName('Issues') : $stage->getAttributeUserName('Increments')
+                ));
+				$this->addInfoSection( new PageSectionAttributes($object,'tab-tasks',translate('Задачи')) );
                 $this->addInfoSection( new PageSectionComments($object_it) );
                 $this->addInfoSection( new PMLastChangesSection($object_it) );
 			}

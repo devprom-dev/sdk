@@ -3,6 +3,7 @@
 namespace Devprom\WelcomeBundle\Controller;
 use Devprom\CommonBundle\Controller\PageController;
 use Devprom\WelcomeBundle\Service\LoginUserService;
+use Devprom\WelcomeBundle\Service\RestorePasswordService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -150,25 +151,15 @@ class SecurityController extends PageController
     {
         if ( $request->request->get('email') == '' ) return $this->replyError(text(219));
 
-        $part_cls = getFactory()->getObject('cms_User');
-        $part_it = $part_cls->getByRef('LCASE(Email)', strtolower(trim($request->request->get('email'))));
-
-        if ( $part_it->getId() < 1) return $this->replyError(text(220));
-        if ( $part_it->get('Password') == '' ) return $this->replyError(text(2061));
-
-        // send email notification with the url to reset password
-        $settings_it = getFactory()->getObject('cms_SystemSettings')->getAll();
-
-        $body = str_replace( '%1', \EnvironmentSettings::getServerUrl().'/reset?key='.$part_it->getResetPasswordKey(), text(221));
-
-        $mail = new \HtmlMailbox;
-        $mail->appendAddress($part_it->get('Email'));
-        $mail->setBody($body);
-        $mail->setSubject( text(222) );
-        $mail->setFrom($settings_it->getHtmlDecoded('AdminEmail'));
-        $mail->send();
-
-        return $this->replySuccess(text(223));
+        $service = new RestorePasswordService(getFactory(), $this, getSession());
+        try {
+            return $this->replySuccess(
+                $service->execute(strtolower(trim($request->request->get('email'))))
+            );
+        }
+        catch( \Exception $e ) {
+            return $this->replyError($e->getMessage());
+        }
     }
     #endregion
 

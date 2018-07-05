@@ -29,7 +29,7 @@ class ScrumTourScriptBuilder extends ScriptBuilder
             if ( $plugin instanceof TestingPMPlugin && $plugin->checkEnabled() ) {
                 $testing = $project_it->getMethodologyIt()->get('IsTests') == 'Y';
             }
-            if ( $plugin instanceof SourceControlPMPlugin ) {
+            if ( $plugin instanceof SourceControlPMPlugin && $plugin->checkEnabled() ) {
                 $code = $project_it->getMethodologyIt()->get('IsSubversionUsed') == 'Y';
             }
         }

@@ -23,7 +23,8 @@ class SharedObjectsPlanBuilder extends SharedObjectsBuilder
             'ReleaseRecent',
             'Iteration',
             'IterationRecent',
-            'Stage'
+            'Stage',
+            'Baseline'
 		);
 		
  		foreach( $entities as $key )

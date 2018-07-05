@@ -13,7 +13,7 @@ abstract class DuplicateRequirementBasedWikiPageWebMethod extends DuplicateWikiP
  			// get hierarchy with the root of $object_id
 			$object_it = $object->getRegistry()->Query( 
 					array(
-						new WikiRootTransitiveFilter($object_id)
+						new ParentTransitiveFilter($object_id)
 					)
 			);
 	 		

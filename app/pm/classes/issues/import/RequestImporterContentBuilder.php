@@ -1,25 +1,21 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/wiki/converters/WikiImporterContentBuilder.php";
 
-class RequestImporterContentBuilder
+class RequestImporterContentBuilder extends WikiImporterContentBuilder
 {
-    private $object = null;
     private $ids = array();
 
-    public function __construct( $object ) {
-        $this->object = $object;
-    }
-
-    public function buildDocument($documentTitle, $documentContent, $parentId) {
-        return $this->object->getEmptyIterator();
+    public function buildDocument($documentTitle, $documentContent, $options, $parentId) {
+        return $this->getObject()->getEmptyIterator();
     }
 
     function getDocumentIt() {
-        return $this->object->getExact($this->ids);
+        return $this->getObject()->getExact($this->ids);
     }
 
     public function buildPage($title, $content, $options, $parentId)
     {
-        $objectId = $this->object->add_parms(
+        $objectId = $this->getObject()->add_parms(
             array_merge(
                 array (
                     'Caption' => $title,
@@ -29,6 +25,10 @@ class RequestImporterContentBuilder
             )
         );
         $this->ids[] = $objectId;
-        return $this->object->getExact($objectId);
+        return $this->getObject()->getExact($objectId);
+    }
+
+    public function parsePages($pageIt)
+    {
     }
 }

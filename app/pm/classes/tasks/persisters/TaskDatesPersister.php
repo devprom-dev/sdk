@@ -28,7 +28,7 @@ class TaskDatesPersister extends ObjectSQLPersister
          	 "			) ".
              "  	)  ".
              "	) - YEARWEEK(IFNULL(t.FinishDate,NOW())))) + 2, 7) DueWeeks ";
- 		
+
  		return $columns;
  	}
 

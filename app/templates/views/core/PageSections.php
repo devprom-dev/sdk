@@ -19,7 +19,7 @@
 		<?php } ?>
 	</ul>
 
-	<div class="tab-content right-side-tab">
+	<div class="tab-content right-side-tab" style="overflow: inherit;">
 		<?php
 		foreach ( $sections as $key => $section )
 		{

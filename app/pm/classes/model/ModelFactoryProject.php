@@ -1,6 +1,6 @@
 <?php
 
-include "classes.php";
+include SERVER_ROOT_PATH . "pm/classes/model/classes.php";
 
 class ModelFactoryProject extends ModelFactoryExtended
 {
@@ -38,6 +38,7 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_customtag' => array('CustomTag'),
 			'pm_importance' => array('Importance'),
 			'pm_state' => array('StateBase'),
+            'pm_stateobject' => array('StateObject'),
 			'pm_transition' => array('Transition'),
 			'pm_transitionrole' => array('TransitionRole'),
 			'pm_transitionpredicate' => array('TransitionPredicate'),

@@ -35,7 +35,9 @@ class SettingsTwigExtension extends \Twig_Extension
 
         return array(
             'client_name' => $settings->getClientName(),
+            'default_locale' => $settings->getLanguage() == 1 ? 'ru' : 'en',
             'site_url' => $this->router->generate('issue_list', array(), true),
+            'app_version' => md5($_SERVER['APP_VERSION']),
             'support_url' =>
                 defined('SUPPORT_PORTAL_URL')
                     ? preg_replace('/http[s]?:\/\/%1/',

@@ -23,7 +23,7 @@ class DownloadProductChangesInfo extends Installable
 
 	protected function downloadRss( $url )
 	{
-		$curl = curl_init();
+		$curl = CurlBuilder::getCurl();
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($curl, CURLOPT_HEADER, false);

@@ -137,7 +137,7 @@ class ObjectMetadata
 
 	public function hasAttributesOfType( $type ) {
 		return count(array_filter($this->attributes, function($attribute) use($type) {
-			return $attribute['type'] == $type;
+			return strtolower($attribute['type']) == strtolower($type);
 		}));
 	}
 
@@ -190,7 +190,17 @@ class ObjectMetadata
     {
     	return $this->attributes[$attribute]['ordernum'];
     }
-    
+
+    public function setAttributeEditable($attribute, $editable = true)
+    {
+        $this->attributes[$attribute]['editable'] = $editable;
+    }
+
+    public function getAttributeEditable($attribute)
+    {
+        return $this->attributes[$attribute]['editable'];
+    }
+
     public function getLatestOrderNum()
     {
     	$max = 10;

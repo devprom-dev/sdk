@@ -21,7 +21,6 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	        case 'co_UserGroup':
  	        case 'co_ProjectGroup':
             case 'cms_User':
- 	        case 'pm_CustomAttribute':
                 return array( '-' );
 
  	        case 'pm_CustomReport':
@@ -32,6 +31,7 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	            return array( $this->getSession()->getProjectIt()->get('VPD') );
 
             case 'pm_State':
+            case 'pm_CustomAttribute':
                 return $this->getSession()->getLinkedIt()->fieldToArray('VPD');
 
             case 'cms_Resource':

@@ -21,7 +21,7 @@ switch ( $class )
 			
 		if ( $b_text_only )
 		{
-			echo IteratorBase::getHtmlValue($text);
+			echo $text;
 		}
 		else
 		{

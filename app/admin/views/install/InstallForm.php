@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH.'admin/classes/CheckpointFactory.php';
 
 class InstallForm extends AjaxForm
 {
@@ -14,7 +15,7 @@ class InstallForm extends AjaxForm
 
 	function getAttributes()
 	{
-		return array('MySQLHost', 'Database', 'SkipCreation', 'SkipStructure', 'DatabaseUser', 'DatabasePass');
+		return array('Checkpoints', 'MySQLHost', 'Database', 'SkipCreation', 'SkipStructure', 'DatabaseUser', 'DatabasePass');
 	}
 
 	function getName( $attribute )
@@ -38,6 +39,9 @@ class InstallForm extends AjaxForm
 
 			case 'DatabasePass':
 				return text(685);
+
+            default:
+                return parent::getName($attribute);
 		}
 	}
 
@@ -50,6 +54,9 @@ class InstallForm extends AjaxForm
 
 			case 'SkipStructure':
 				return text(932);
+
+            default:
+                return parent::getDescription($attribute);
 		}
 	}
 
@@ -66,6 +73,9 @@ class InstallForm extends AjaxForm
 			case 'SkipCreation':
 			case 'SkipStructure':
 				return 'char';
+
+            case 'Checkpoints':
+                return 'custom';
 		}
 	}
 
@@ -77,7 +87,7 @@ class InstallForm extends AjaxForm
 		}
 		else if ( $attribute == 'DatabaseUser' )
 		{
-			return 'root';
+			return 'devprom';
 		}
 		else if ( $attribute == 'Database' )
 		{
@@ -123,4 +133,43 @@ class InstallForm extends AjaxForm
 	{
 		return '/admin/install';
 	}
+
+	function drawCustomAttribute($attribute, $value, $tab_index, $view)
+    {
+        switch( $attribute ) {
+            case 'Checkpoints':
+                $checkpoints = getCheckpointFactory()->getCheckpoint( 'CheckpointSystem' );
+                $checkpoints->executeDynamicOnly();
+                $checkpoints->check();
+
+                $fails = array();
+                $checkIt = getFactory()->getObject('SystemCheck')->getAll();
+                while( !$checkIt->end() ) {
+                    if ( $checkIt->getId() == 'c927e5f2e9f0ba7c76e3c1a8eb8ea819' ) {
+                        $checkIt->moveNext();
+                        continue;
+                    }
+                    if ( $checkIt->get('IsEnabled') == 'Y' ) {
+                        if ( $checkIt->get('CheckResult') == 'N' ) {
+                            $fails[$checkIt->getDisplayName()] = $checkIt->get('Description');
+                        }
+                    }
+                    $checkIt->moveNext();
+                }
+                if ( count($fails) > 0 ) {
+                    $text = text(2471).'<br/><br/>';
+                    foreach( $fails as $title => $description ) {
+                        $text .= $title . '<br/>' . $description . '<br/><br/>';
+                    }
+                    echo '<div class="alert alert-danger">'.$text.'</div>';
+                }
+                else {
+                    echo '<div class="alert alert-success">'.text(2470).'</div>';
+                }
+                break;
+
+            default:
+                parent::drawCustomAttribute($attribute, $value, $tab_index, $view);
+        }
+    }
 }

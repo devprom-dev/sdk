@@ -38,4 +38,8 @@ class CheckpointCronRunning extends CheckpointEntryStatic
     {
         return text(2259);
     }
+
+    function enabled() {
+        return DeploymentState::IsInstalled() && parent::enabled();
+    }
 }

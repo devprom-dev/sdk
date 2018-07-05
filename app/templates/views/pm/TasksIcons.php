@@ -38,7 +38,7 @@ foreach ( $states as $key => $state ) {
 		<?php } ?>
 	</div>
 	<?php if ( is_array($state['actions']) && count($state['actions']) > 0 ) { ?>
-		<div class="btn-group dropdown-fixed" id="tasksicons<?=$id?>">
+		<div class="btn-group board-tasks dropdown-fixed" id="tasksicons<?=$id?>">
 			<? echo $this->render('core/PopupMenu.php', array ( 'items' => $state['actions'] ));?>
 		</div>
 	<? } ?>

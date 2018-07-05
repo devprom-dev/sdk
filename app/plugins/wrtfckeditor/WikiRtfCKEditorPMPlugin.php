@@ -1,4 +1,7 @@
 <?php
+define( 'CODE_ISOLATE', '/<code([^>]*)>([\S\s]+)<\/code>/i' );
+define( 'CODE_RESTORE', '/<code([^>]*)>([0-9]+)<\/code>/i' );
+
 include "classes/notificators/WrtfCKEditorChangeNotificator.php";
 include "classes/WikiRtfCKEditor.php";
 include "classes/ScriptWrtfCKEditorBuilder.php";

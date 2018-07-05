@@ -6,7 +6,7 @@ class SearchRules
 {
     static function getSearchItems( $text, $locale = 'en' )
     {
-        $text = TextUtils::getAlphaNumericString($text);
+        $text = preg_replace('/\./', '\.', TextUtils::getAlphaNumericString($text));
         $stopwords = strtolower($locale) == 'en'
             ? APP_StopWords_English::stopwords()
             : APP_StopWords_Russian::stopwords();
@@ -21,7 +21,7 @@ class SearchRules
             array_filter(
                 preg_split('/\s+/', $text),
                 function ($value) use ($stopwords) {
-                    return $value != '' && !in_array($value, $stopwords);
+                    return !in_array($value, array('','+','-')) && !in_array($value, $stopwords);
                 }
             )
         );

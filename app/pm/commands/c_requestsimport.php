@@ -1,6 +1,5 @@
 <?php
 include_once SERVER_ROOT_PATH . 'core/classes/model/validation/ModelValidator.php';
-include_once SERVER_ROOT_PATH . "pm/classes/issues/validators/ModelValidatorIssueAuthor.php";
 
 class RequestsImportBase extends CommandForm
 {
@@ -187,6 +186,15 @@ class RequestsImportBase extends CommandForm
                             $parms = array_merge($parms, array( 'ParentPage' => $parentPageValue ) );
                             break;
 				    }
+				    switch( $object->getAttributeType($fieldName) )
+                    {
+                        case 'date':
+                        case 'datetime':
+                            if ( $value != '' && is_numeric($value) ) {
+                                $value = getLanguage()->getPhpDateTime(PHPExcel_Shared_Date::ExcelToPHP($value));
+                            }
+                            break;
+                    }
 					$parms = array_merge($parms, array( $fieldName => $value ) );
 				}
 			}
@@ -290,7 +298,6 @@ class RequestsImportBase extends CommandForm
                 $mapper = new ModelDataTypeMapper();
                 $mapper->map( $this->request, $parms );
                 $validator = new ModelValidator();
-                $validator->addValidator(new ModelValidatorIssueAuthor());
                 $validator->validate($this->request, $parms);
 
 				$request_id = $this->request->add_parms( $parms );

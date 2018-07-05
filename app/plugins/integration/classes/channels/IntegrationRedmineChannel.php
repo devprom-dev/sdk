@@ -1,4 +1,5 @@
 <?php
+use Netcarver\Textile\Parser;
 
 class IntegrationRedmineChannel extends IntegrationRestAPIChannel
 {
@@ -10,60 +11,125 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         $jql = array();
         if ( $timestamp != '' ) {
             $time = new DateTime($timestamp, new DateTimeZone("UTC"));
-            $jql['updated_on'] = urlencode('>=').$time->format(DateTime::ISO8601);
+            $time->modify("+1 second");
+            $jql['updated_on'] = '>='.array_shift(preg_split('/\+/', $time->format(DateTime::ATOM)));
         }
 
         $releases = array();
         $issues = array();
         $hours = array();
+        $nextTimestamp = '';
 
         try {
-            $result = $this->jsonGet('/projects/'.$this->getObjectIt()->get('ProjectKey').'/versions.json', $jql, false);
-            foreach( $result['versions'] as $version ) {
-                $releases[] = array (
-                    'class' => 'Release',
-                    'id' => $version[$this->getKeyField()]
-                );
+            $leftItems = $limit;
+            $offset = 0;
+            while( $leftItems > 0 && $offset < $limit  ) {
+                $jql['limit'] = $limit;
+                $jql['offset'] = $offset;
+                $result = $this->jsonGet('/projects/'.$this->getObjectIt()->get('ProjectKey').'/versions.json', $jql, false);
+                foreach( $result['versions'] as $version ) {
+                    if ( is_object($time) ) {
+                        if ( DateTime::createFromFormat(DateTime::ATOM, $version['updated_on']) < $time ) continue;
+                    }
+                    $releases[] = array (
+                        'class' => 'Release',
+                        'id' => $version[$this->getKeyField()]
+                    );
+                }
+                if ( $result['limit'] > 0 ) {
+                    $offset += $result['limit'];
+                    $leftItems = $result['total_count'] - $offset;
+                }
+                else {
+                    $leftItems = 0;
+                }
             }
         }
         catch( \Exception $e ) {
         }
 
         try {
-            $result = $this->jsonGet('/projects/'.$this->getObjectIt()->get('ProjectKey').'/issues.json', $jql);
-            foreach( $result['issues'] as $issue )
+            $issuesJql = $jql;
+            $issuesJql['sort'] = 'updated_on:desc';
+            $issuesJql['status_id'] = '*';
+            $result = $this->jsonGet(
+                '/projects/'.$this->getObjectIt()->get('ProjectKey').'/issues.json',
+                array_merge(
+                    $issuesJql,
+                    array(
+                        'limit' => 1
+                    )
+                )
+            );
+
+            $total = $result['total_count'];
+            $leftItems = min($total, $limit);
+            $offset = max(0, $total - $limit);
+
+            while( $leftItems > 0 && $offset >= 0 )
             {
-                $class = 'Request';
-                $id = $issue[$this->getKeyField()];
-                $item = $issues[$issue[$this->getKeyField()]] = array (
-                    'class' => $class,
-                    'id' => $id
-                );
+                $issuesJql['limit'] = $limit;
+                $issuesJql['offset'] = $offset;
+                $result = $this->jsonGet('/projects/'.$this->getObjectIt()->get('ProjectKey').'/issues.json', $issuesJql);
 
-                $issueDetails = $this->jsonGet('/issues/'.$id.'.json?include=journals,attachments', array());
-                $issues = array_merge( $issues,
-                    $this->getReferenceItems($issueDetails, $item, $timestamp)
-                );
+                foreach( $result['issues'] as $issue ) {
+                    if ( $nextTimestamp == '' ) $nextTimestamp = $issue['updated_on'];
+
+                    $class = 'Request';
+                    $id = $issue[$this->getKeyField()];
+                    $item = $issues[$issue[$this->getKeyField()]] = array (
+                        'class' => $class,
+                        'id' => $id
+                    );
+
+                    $issueDetails = $this->jsonGet('/issues/'.$id.'.json?include=journals,attachments', array());
+                    $issues = array_merge( $issues,
+                        $this->getReferenceItems($issueDetails, $item, $timestamp)
+                    );
+
+                }
+                if ( $result['limit'] > 0 ) {
+                    $leftItems -= min($result['total_count'], $result['limit']);
+                    $offset -= min($result['total_count'], $result['limit']);
+                }
+                else {
+                    $leftItems = 0;
+                }
             }
         }
         catch( \Exception $e ) {
         }
 
         try {
-            $result = $this->jsonGet('/projects/'.$this->getObjectIt()->get('ProjectKey').'/time_entries.json', $jql);
-            foreach( $result['time_entries'] as $item )
-            {
-                $hours[$item[$this->getKeyField()]] = array (
-                    'class' => 'ActivityRequest',
-                    'id' => $item[$this->getKeyField()]
-                );
+            $leftItems = $limit;
+            $offset = 0;
+            while( $leftItems > 0 && $offset < $limit ) {
+                $jql['limit'] = $limit;
+                $jql['offset'] = $offset;
+                $result = $this->jsonGet('/projects/' . $this->getObjectIt()->get('ProjectKey') . '/time_entries.json', $jql);
+                foreach ($result['time_entries'] as $item) {
+                    $hours[$item[$this->getKeyField()]] = array(
+                        'class' => 'ActivityRequest',
+                        'id' => $item[$this->getKeyField()]
+                    );
+                }
+                if ( $result['limit'] > 0 ) {
+                    $offset += $result['limit'];
+                    $leftItems = $result['total_count'] - $offset;
+                }
+                else {
+                    $leftItems = 0;
+                }
             }
         }
         catch( \Exception $e ) {
         }
 
-        return array_merge(
-            $releases, $issues, $hours
+        return array(
+            array_merge(
+                $releases, $issues, $hours
+            ),
+            $nextTimestamp != '' ? \DateTime::createFromFormat(\DateTime::ATOM, $nextTimestamp) : ''
         );
     }
 
@@ -85,6 +151,34 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         );
     }
 
+    public function readItem($mapping, $class, $id, $parms = array())
+    {
+        switch( $class ) {
+            case 'RequestComment':
+                $result = $this->jsonGet($this->buildIdUrl(rtrim($mapping['url'],'/'),$parms['{parent}']));
+                $comment = array_shift(
+                    array_filter($result['issue']['journals'], function($item) use($id) {
+                        return $item['id'] == $id && $item['notes'] != '';
+                    })
+                );
+                if ( count($comment) < 1 ) return array();
+                return $this->mapToInternal(
+                    array_merge($comment, $parms),
+                    $mapping,
+                    function($data, $attribute) {
+                        $attribute_path = preg_split('/\./',$attribute);
+                        $value = $data[array_shift($attribute_path)];
+                        foreach( $attribute_path as $field ) {
+                            $value = $value[$field];
+                        }
+                        return $value;
+                    }
+                );
+            default:
+                return parent::readItem($mapping, $class, $id, $parms);
+        }
+    }
+
     public function mapToInternal($source, $mapping, $getter)
     {
         $data = parent::mapToInternal($source, $mapping, $getter);
@@ -92,6 +186,12 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         foreach( $data as $attribute => $value ) {
             if ( $attribute == 'File' ) {
                 $data[$attribute] = $this->convertToFileAttribute($this->binaryGet($value));
+            }
+            if ( $attribute == 'Description' ) {
+                if ( class_exists(\Netcarver\Textile\Parser::class) ) {
+                    $parser = new \Netcarver\Textile\Parser();
+                    $data[$attribute] = $parser->parse($data[$attribute]);
+                }
             }
         }
 
@@ -101,6 +201,26 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
     public function mapFromInternal($source, $mapping, $setter)
     {
         $put = parent::mapFromInternal($source, $mapping, $setter);
+
+        foreach( $put['issue'] as $item => $value ) {
+            switch($item) {
+                case 'tracker':
+                    $typeMap = array_flip($this->issueTypeMap);
+                    $put['issue']['tracker_id'] = $typeMap[$value['name']];
+                    break;
+                case 'status':
+                    $statusMap = array_flip($this->issueStates);
+                    $put['issue']['status_id'] = $statusMap[$value['name']];
+                    break;
+                case 'assigned_to':
+                    $put['issue']['assigned_to_id'] = $value['id'];
+                    break;
+            }
+        }
+
+        $projectMap = array_flip($this->projects);
+        $put['issue']['project_id'] = $projectMap[$this->getObjectIt()->get('ProjectKey')];
+
         return $put;
     }
 
@@ -111,24 +231,35 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
 
     function buildDictionaries()
     {
-        foreach( $this->jsonGet(self::apiPath.'/trackers.json', array(), false) as $issueType ) {
+        $data = $this->jsonGet(self::apiPath.'/trackers.json', array(), false);
+        foreach( $data['trackers'] as $issueType ) {
             $this->issueTypeMap[$issueType['id']] = $issueType['name'];
         }
-        foreach( $this->jsonGet(self::apiPath.'/issue_statuses.json', array(), false) as $issueState ) {
+        $data = $this->jsonGet(self::apiPath.'/issue_statuses.json', array(), false);
+        foreach( $data['issue_statuses'] as $issueState ) {
             $this->issueStates[$issueState['id']] = $issueState['name'];
+        }
+        $data = $this->jsonGet(self::apiPath.'/projects.json', array(), false);
+        foreach( $data['projects'] as $project ) {
+            $this->projects[$project['id']] = $project['identifier'];
         }
     }
 
     protected function buildUsersMap()
     {
         $map = array();
-        $users = $this->jsonGet(
-            self::apiPath.'/users.json',
-            array(),
-            false
-        );
-        foreach( $users as $user ) {
-            $map[$user['name']] = $user[$this->getUserEmailAttribute()];
+        try {
+            $users = $this->jsonGet(
+                self::apiPath.'/users.json',
+                array(),
+                false
+            );
+            foreach( $users as $user ) {
+                $map[$user['name']] = $user[$this->getUserEmailAttribute()];
+            }
+        }
+        catch( \Exception $e ) {
+            $this->getLogger()->error($e->getMessage().$e->getTraceAsString());
         }
         return $map;
     }
@@ -153,5 +284,5 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
 
     private $issueTypeMap = array();
     private $issueStates = array();
-    private $taskIssueType = 0;
+    private $projects = array();
 }

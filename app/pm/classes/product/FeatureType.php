@@ -20,4 +20,9 @@ class FeatureType extends MetaobjectCacheable
 	{
 	    return 1;
 	}
+
+    function getPage()
+    {
+        return getSession()->getApplicationUrl($this).'project/dicts/FeatureType?';
+    }
 }

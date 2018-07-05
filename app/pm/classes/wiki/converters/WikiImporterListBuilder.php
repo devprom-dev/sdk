@@ -1,29 +1,26 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/wiki/converters/WikiImporterContentBuilder.php";
 
-class WikiImporterListBuilder
+class WikiImporterListBuilder extends WikiImporterContentBuilder
 {
-    private $object = null;
-
-    public function __construct( $object ) {
-        $this->object = $object;
-    }
-
-    public function buildDocument($documentTitle, $documentContent, $parentId)
+    public function buildDocument($documentTitle, $documentContent, $options, $parentId)
     {
-        if ( $documentContent != '' ) {
-            $this->object->add_parms(
-                array (
-                    'Caption' => $documentTitle,
-                    'Content' => $documentContent
-                )
-            );
+        $parms =  array (
+            'Caption' => $documentTitle,
+            'Content' => $documentContent
+        );
+        if ( $options['State'] != '' ) {
+            $parms['State'] = $options['State'];
         }
-        return $this->object->getEmptyIterator();
+        if ( $documentContent != '' ) {
+            $this->getObject()->add_parms($parms);
+        }
+        return $this->getObject()->getEmptyIterator();
     }
 
     public function buildPage($title, $content, $options, $parentId)
     {
-        return $this->object->getExact($this->object->add_parms(
+        return $this->getObject()->getExact($this->getObject()->add_parms(
             array_merge(
                 array (
                     'Caption' => $title,

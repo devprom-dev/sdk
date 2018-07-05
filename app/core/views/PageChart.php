@@ -4,6 +4,7 @@ include SERVER_ROOT_PATH."core/classes/FlotChartDataSource.php";
 include SERVER_ROOT_PATH."core/classes/schedule/DateYearWeekModelBuilder.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBarWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartLineWidget.php";
+include_once SERVER_ROOT_PATH."core/views/charts/FlotChartMultiLineWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartPieWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBurndownWidget.php";
 include_once SERVER_ROOT_PATH."core/views/charts/FlotChartBurnupWidget.php";
@@ -43,20 +44,24 @@ class PageChart extends StaticPageList
 		foreach ( $aggs as $agg ) {
 			$object->addAggregate( $agg );
 		}
-		
-		$aggby = $this->getAggregateBy();
+
 	    if ( $this->getGroup() == 'history' )
 		{
 			$values = $this->getFilterValues();
 		    $object->addFilter(new FilterClusterPredicate($values['modifiedafter']));
 		    $it = $object->getAggregatedHistory( $object->getFilters() );
 		}
-		else
+		elseif ( count($aggs) > 0 )
 		{
 			$it = $object->getAggregated('t');
 		}
+		else {
+            $it = $object->getEmptyIterator();
+        }
 
+        $aggby = $this->getAggregateBy();
 		$data = $it->getRowset();
+
 		if ( $this->getGroup() == 'history' )
 		{
 			$minSizeValuable = 2;
@@ -423,7 +428,7 @@ class PageChart extends StaticPageList
 	            );
 	
 	            array_push($actions, array (
-	            'name' => translate('Группировка'),
+	            'name' => text(2482),
 	            'items' => $group_actions )
 	            );
 	        }
@@ -458,7 +463,7 @@ class PageChart extends StaticPageList
 	
 	    if ( count($column_actions) > 0 )
 	    {
-	        array_push($actions, array ( 'name' => translate('Агрегация по'),
+	        array_push($actions, array ( 'name' => text(2483),
 	        'items' => $column_actions , 'title' => '' ) );
 	    }
 	
@@ -505,30 +510,37 @@ class PageChart extends StaticPageList
 	    if ( $filter_values['chartlegend'] == '' ) $filter_values['chartlegend'] = 'none';
 	    if ( $filter_values['chartdata'] == '' ) $filter_values['chartdata'] = 'none';
 	
-	    $column_actions = array();
-	
-	    $script = "javascript: filterLocation.setup( 'chartlegend=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
-	    array_push( $column_actions,
-	    array ( 'url' => $script, 'name' => translate('Отображать легенду'),
-	    'checked' => $filter_values['chartlegend'] != 'hide', 'multiselect' => true )
-	    );
-	
-	    $script = "javascript: filterLocation.setup( 'chartdata=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
-	    array_push( $column_actions,
-	    array ( 'url' => $script, 'name' => translate('Отображать таблицу'),
-	    'checked' => $filter_values['chartdata'] != 'hide', 'multiselect' => true )
-	    );
-	
-	    array_push($actions, array ( 'name' => translate('Опции'),
-	    'items' => $column_actions , 'title' => '' ) );
-	
+	    $column_actions = $this->getOptions($filter_values);
+	    if ( count($column_actions) > 0 ) {
+            array_push($actions, array ( 'name' => translate('Опции'),
+                'items' => $column_actions , 'title' => '' ) );
+        }
+
 	    $base_actions = array_merge(
 	            array_slice($base_actions, 0, 1),
 	            $actions,
 	            array_slice($base_actions, 1, count($base_actions) - 1)
 	    );
 	}
-	
+
+	function getOptions( $filter_values )
+    {
+        $column_actions = array();
+
+        $script = "javascript: filterLocation.setup( 'chartlegend=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
+        array_push( $column_actions,
+            array ( 'url' => $script, 'name' => translate('Отображать легенду'),
+                'checked' => $filter_values['chartlegend'] != 'hide', 'multiselect' => true )
+        );
+
+        $script = "javascript: filterLocation.setup( 'chartdata=' + ($(this).hasClass('checked') ? 'show' : 'hide'), 0 ); ";
+        array_push( $column_actions,
+            array ( 'url' => $script, 'name' => translate('Отображать таблицу'),
+                'checked' => $filter_values['chartdata'] != 'hide', 'multiselect' => true )
+        );
+        return $column_actions;
+    }
+
 	function getChartWidget()
 	{
 		$aggs = $this->getAggregates();
@@ -539,6 +551,7 @@ class PageChart extends StaticPageList
 			switch ( strtolower($aggs[0]->getAggregate()) )
 			{
 				case 'count':
+                case 'sum':
 				    $widget = new FlotChartPieWidget();
 					break;
 					
@@ -581,10 +594,15 @@ class PageChart extends StaticPageList
 		return 'height:420px;';
 	}
 
+	function buildData( $aggs ) {
+        return FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
+    }
+
 	function buildDataIterator()
     {
         $aggs = $this->getAggregates();
-        $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
+        $data = $this->buildData($aggs);
+
         $object = $this->getObject();
 
         $entity = new \Metaobject('entity');
@@ -646,7 +664,7 @@ class PageChart extends StaticPageList
 	function draw( $view )
 	{
 	    $aggs = $this->getAggregates();
-	    $data = FlotChartDataSource::getData($this->getIteratorRef(), $aggs);
+	    $data = $this->buildData($aggs);
 
         $widget = $this->getChartWidget();
         if ( !is_object($widget) ) throw new Exception("Chart widget is undefined");
@@ -737,13 +755,16 @@ class PageChart extends StaticPageList
         foreach (array_keys($dataIt->getData()) as $column ) {
             echo '<th>' . $column . '</th>';
         }
+        $actions = $this->getTable()->getExportActions();
         if ( $dataIt->count() > 0 ) {
-            echo '<th width="1%">';
-            echo $view->render('core/ButtonMenu.php', array(
-                'title' => translate('Экспорт'),
-                'items' => $this->getTable()->getExportActions()
-            ));
-            echo '</th>';
+            if ( count($actions) > 0 ) {
+                echo '<th width="1%">';
+                echo $view->render('core/ButtonMenu.php', array(
+                    'title' => translate('Экспорт'),
+                    'items' => $actions
+                ));
+                echo '</th>';
+            }
         }
         echo '</tr>';
         while( !$dataIt->end() ) {
@@ -751,7 +772,9 @@ class PageChart extends StaticPageList
             foreach ($dataIt->getData() as $column => $value) {
                 echo '<td>' . $value . '</td>';
             }
-            echo '<td></td>';
+            if ( count($actions) > 0 ) {
+                echo '<td></td>';
+            }
             echo '</tr>';
             $dataIt->moveNext();
         }

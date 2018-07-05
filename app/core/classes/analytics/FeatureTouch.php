@@ -23,6 +23,8 @@ class FeatureTouch
 
 	function __destruct()
 	{
+	    return;
+
         @mkdir(dirname(self::getFileName()), 0777, true);
         @file_put_contents(self::getFileName(), serialize($this));
 	}

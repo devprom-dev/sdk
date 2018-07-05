@@ -14,42 +14,25 @@ class AutoActionForm extends PMPageForm
     function extendModel()
 	{
 		parent::extendModel();
-		
-		$object = $this->getObject();
 
-		foreach( $object->getActionAttributes() as $attribute )
-		{
-			if ( $this->subject->getAttributeType($attribute) == '' ) continue;
-			$object->addAttribute(
-                $attribute,
-                $attribute == 'State'
-                    ? 'REF_' . $this->subject->getStateClassName() . 'Id'
-                    : $this->subject->getAttributeDbType($attribute),
-                $this->subject->getAttributeUserName($attribute),
-                true,
-                false
-			);
-            $groups = $this->subject->getAttributeGroups($attribute);
-            if ( is_array($groups) ) $object->setAttributeGroups($attribute, $groups);
-            $object->addAttributeGroup($attribute, 'actions');
-		}
-
+        $object = $this->getObject();
 		$object->setAttributeVisible('Actions', false);
-		$object->setAttributeType('Actions', 'AutoActions');
-		$object->setAttributeVisible('Conditions', true);
-	}
-	
-	function createFieldObject( $name ) 
+        $object->setAttributeType('Actions', 'AutoActions');
+    }
+
+	function createFieldObject( $name )
 	{
 		switch ( $name )
 		{
 		    case 'Conditions':
 		    	return new AutoActionConditionsField($this->getObject());
+            case 'Project':
+                return new FieldAutoCompleteObject(getFactory()->getObject('ProjectActive'));
             case 'EventType':
                 return new FieldDictionary($this->getObject()->getAttributeObject($name));
 			default:
                 if ( in_array('dictionary', $this->getObject()->getAttributeGroups($name)) ) {
-                    return new FieldCustomDictionary($this->getObject(), $name);
+                    return new FieldCustomDictionary(getFactory()->getObject('Request'), $name);
                 }
 				return parent::createFieldObject( $name );
 		}
@@ -69,5 +52,25 @@ class AutoActionForm extends PMPageForm
             parent::getShortAttributes(),
             $attributes
         );
+    }
+
+    function IsAttributeVisible( $attr )
+    {
+        switch ($attr) {
+            case 'State':
+                return true;
+            default:
+                return parent::IsAttributeVisible($attr);
+        }
+    }
+
+    function getDefaultValue( $field )
+    {
+        switch( $field ) {
+            case 'Project':
+                return;
+            default:
+                return parent::getDefaultValue( $field );
+        }
     }
 }

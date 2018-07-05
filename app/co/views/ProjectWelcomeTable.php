@@ -72,9 +72,13 @@ class ProjectWelcomeTable extends CoPageTable
     	while( !$total_it->end() )
     	{
 			$idQuery = $total_it->getId();
+
 			if ( is_numeric($_REQUEST['portfolio']) ) {
 				$idQuery .= '&portfolio='.$_REQUEST['portfolio'];
 			}
+            if ( is_numeric($_REQUEST['program']) ) {
+                $idQuery .= '&program='.$_REQUEST['program'];
+            }
 
 			$active = $active_it->moveToId($total_it->getId())->getId() > 0;
 			if ( $total_it->get('FileName') == 'reqs_ru.xml' ) {
@@ -103,7 +107,7 @@ class ProjectWelcomeTable extends CoPageTable
 			'reqs_ru.xml' => 'http://devprom.ru/features/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0-%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F-%D1%82%D1%80%D0%B5%D0%B1%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F%D0%BC%D0%B8-Devprom-Requirements?lookingforalmfeature',
 			'scrum_ru.xml' => 'http://devprom.ru/features/Scrum-для-поиска-и-разработки-новых-продуктов',
 			'tracker_ru.xml' => 'http://devprom.ru/features/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0-%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F-%D1%82%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5%D0%BC-Devprom-QA?lookingforalmfeature',
-			'sdlc_ru.xml' => 'http://devprom.ru/features/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0-%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F-%D0%B6%D0%B8%D0%B7%D0%BD%D0%B5%D0%BD%D0%BD%D1%8B%D0%BC-%D1%86%D0%B8%D0%BA%D0%BB%D0%BE%D0%BC-%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B8-%D0%9F%D0%9E-Devprom-ALM?lookingforalmfeature',
+			'sdlc_ru.xml' => 'http://devprom.ru/features/Координация-всех-активностей-по-компании?lookingforalmfeature',
 			'tasks_ru.xml' => 'http://devprom.ru/features/Организация-работы-отдела',
 			'kanban_ru.xml' => 'http://devprom.ru/features/Kanban-для-оптимизации-потока-задач',
             'scrumban_ru.xml' => 'http://devprom.ru/features/Scrumban-для-развития-продуктов'

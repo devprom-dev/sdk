@@ -1,6 +1,9 @@
 <?php
-
 namespace Devprom\CommonBundle\Service\Tooltip;
+
+define ('TOOLTIP_GROUP_TRACE', 4);
+define ('TOOLTIP_GROUP_WORKFLOW', 3);
+define ('TOOLTIP_GROUP_ADDITIONAL', 2);
 
 class TooltipService
 {
@@ -30,9 +33,20 @@ class TooltipService
     public function getData()
     {
 		if ( $this->object_it->getId() < 1 ) return array();
-    	return array (
-    			'attributes' => 
-    				$this->buildAttributes( $this->object_it )
+
+		$attributes = $this->buildAttributes( $this->object_it );
+        usort($attributes, function($left, $right) {
+            return $left['group'] > $right['group'];
+        });
+
+        return array (
+            'attributes' => $attributes,
+            'groups' => array(
+                1 => translate('Сроки'),
+                TOOLTIP_GROUP_ADDITIONAL => translate('Дополнительно'),
+                TOOLTIP_GROUP_WORKFLOW => translate('Жизненный цикл'),
+                TOOLTIP_GROUP_TRACE => translate('Трассировки')
+            )
     	);
     }
     
@@ -75,7 +89,14 @@ class TooltipService
 			);
 		}
 	    $system_attributes = $object->getAttributesByGroup('system');
- 		
+ 		$groupIndexes = array(
+ 		    '' => 0,
+            'deadlines' => 1,
+ 		    'additional' => TOOLTIP_GROUP_ADDITIONAL,
+            'workflow' => TOOLTIP_GROUP_WORKFLOW,
+            'trace' => TOOLTIP_GROUP_TRACE
+        );
+
  		foreach ( $object->getAttributes() as $attribute => $parms )
  	 	{
  	 		if ( $attribute == 'State' ) continue;
@@ -90,11 +111,18 @@ class TooltipService
                 if ( !getFactory()->getAccessPolicy()->can_read($object->getAttributeObject($attribute)) ) continue;
             }
 
+            $group = array_shift(
+                array_intersect(
+                    array_keys($groupIndexes), $object->getAttributeGroups($attribute)
+                )
+            );
+
             $data[] = array (
                 'name' => $attribute,
                 'title' => translate($object->getAttributeUserName($attribute)),
                 'type' => $type,
-                'text' => $this->getAttributeValue( $object_it, $attribute, $type )
+                'text' => $this->getAttributeValue( $object_it, $attribute, $type ),
+                'group' => $groupIndexes[$group]
  	 		); 
  	 	}
 
@@ -127,7 +155,13 @@ class TooltipService
 
             case 'float':
                 if ( in_array('hours', $object_it->object->getAttributeGroups($attribute)) ) {
+                    return getSession()->getLanguage()->getHoursWording($object_it->get($attribute));
+                }
+                elseif ( in_array('astronomic-time', $object_it->object->getAttributeGroups($attribute)) ) {
                     return getSession()->getLanguage()->getDurationWording($object_it->get($attribute), 24);
+                }
+                elseif ( in_array('working-time', $object_it->object->getAttributeGroups($attribute)) ) {
+                    return getSession()->getLanguage()->getDurationWording($object_it->get($attribute), 8);
                 }
                 else {
                     return number_format(floatval($object_it->get($attribute)), 2, ',', ' ');

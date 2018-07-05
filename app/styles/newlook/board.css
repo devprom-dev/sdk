@@ -1,29 +1,28 @@
 td.board-column {
-	padding-bottom: 10px;
-	padding-left: 6px;
-}
-td.board-column .list_cell {
-	padding-bottom: 10px;
+	padding: 1px 6px 10px 1px;
 }
 
-div.board_item_separator
+.list_cell_hover
 {
-    border: none;
-    height: 10px;
-    margin:0 -5px 0 -5px;
+	border-top:1px solid #e3e3e3;
+	border-bottom:1px solid #e3e3e3;
+	vertical-align:top;
+	background-color: #dfdfdf !important;
 }
 
 div.board_item
 {
     display:none;
     float:left;
+	margin-top: 5px;
+	margin-left: 5px;
 }
 
 div.board_item_body
 {
     vertical-align:top;
     background-color: #f0f0f6;
-    display: table;
+    display: table-cell;
     width: 100%;
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
@@ -44,7 +43,6 @@ div.board_item_body.selected .board_item_spinner {
 
 div.board_item_spinner
 {
-	width: 5px;
 	display: table-cell;
 	height: 100%;
 	vertical-align: top;
@@ -132,6 +130,9 @@ div.board-item-fact a
 	font-size: 7pt;
 	padding: 3px 7px 3px 7px;
 	line-height: 8px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 }
 
 .title-on-card .checkbox {
@@ -151,21 +152,29 @@ div.board-item-fact a
 .controls .board-tasks {
 	line-height: 14px;
 }
+.btn-group.board-tasks + .btn-group {
+	margin-right: 0;
+}
 
 .item-footer {
 	display:table;
 	width:100%;
 	height:21px;
+	line-height: 18px;
+}
+.item-footer .label {
+	padding-top: 1px;
+	padding-bottom: 1px;
 }
 
 .board-size-xl .board_item {
 	width: 96%;
+	font-size: 12px;
 }
 .board-size-xl .bi-cap {
 	padding:3px 0 0 0;
 	height:5.0em;
 	line-height: 15px;
-	font-size: 12px;
 	color: #303030;
 }
 .board-size-xl .title-on-card a.with-tooltip {
@@ -216,6 +225,9 @@ div.board-item-fact a
 .board-size-s .board_item_attributes .ca-field > div:not(.title-on-card) {
 	display: none;
 }
+.board-size-s .label {
+	display: none;
+}
 .board-size-s .board_item_attributes div.bi-cap {
     padding: 0;
     height: 2.1em;
@@ -242,11 +254,17 @@ div.board-item-fact a
 .board-size-xs .board_item_attributes .ca-field > div:not(.title-on-card) {
 	display: none;
 }
+.board-size-xs .label {
+	display: none;
+}
 .board-size-xs .item-footer {
     display: none;
 }
+.board-size-xs .title-on-card {
+	line-height: 16px;
+}
 .board-size-xs .title-on-card a.with-tooltip {
-    font-size: 0.87em;
+	font-size: 0.87em;
 }
 .board-size-xs .title-on-card img {
     display:none;
@@ -307,7 +325,11 @@ div.board-item-fact a
 	width: 20px;
 }
 .board-size-mic .board_item_spinner {
-	width: 20px;
+	padding-left: 2px;
+	width: 18px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 }
 .board-size-mic .board_item_attributes {
 	display: none;
@@ -336,10 +358,22 @@ td.board-column {
 td.cell-add-btn:hover a {
 	display: inline-block;
 }
+td.board-column:hover a.append-card {
+	opacity: 1;
+}
 td.cell-add-btn a.btn {
 	height: 18px;
 	width: 18px;
 	padding: 0 2px;
+}
+td.board-column a.append-card {
+	height: 18px;
+	width: 17px;
+	padding: 0 2px;
+	margin-top: 5px;
+	margin-left: 5px;
+	margin-right: 4px;
+	opacity: 0;
 }
 td.cell-add-btn {
 	border-top: none;
@@ -355,16 +389,21 @@ td.cell-add-btn a {
 	margin-left: 8px;
 	margin-right: 5px;
 }
-.cell-add-btn .append-card {
-	margin-right: 8px;
-}
 .cell-add-btn .planning-details {
-	padding-left: 4px;
 	margin-right: 8px;
 }
 
 tr.row-cards:last-child td.board-column {
 	border-bottom: 1px solid #dddddd;
+}
+tr.row-cards {
+	height: 1%;
+}
+tr.info {
+	height: 1px;
+}
+tr.row-cards:nth-last-child(2) {
+	height: auto;
 }
 tr.info:hover .group-collapse-cards {
 	display: block;
@@ -403,4 +442,14 @@ tr.info:hover .group-collapse-cards {
 th .module-link {
 	margin-top: 4px;
 	margin-right: 16px;
+}
+
+div.board_item.list_cell_hover {
+	background: none;
+	border: none;
+	opacity: 0.3 !important;
+}
+
+.board_item.ui-draggable:not(.sepa-item) {
+	display: table !important;
 }

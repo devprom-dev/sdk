@@ -18,6 +18,7 @@ class FieldCompareToContent extends FieldStatic
 	{
 		$editor = WikiEditorBuilder::build($this->page_it->get('ContentEditor'));
 		$parser = $editor->getComparerParser();
+        $parser->setObjectIt($this->page_it);
 
 		echo '<div class="reset wysiwyg">';
 	 		$diffBuilder = new WikiHtmlDiff(

@@ -1,11 +1,7 @@
 <?php
-
+use \Mpdf\Mpdf;
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
 
-include( SERVER_ROOT_PATH.'ext/mpdf50/mpdf.php' );
- 
-use \mpdf\mPDF;
- 
 class WikiConverterMPdf
 {
  	var $wiki_it, $parser, $pdf;
@@ -49,13 +45,12 @@ class WikiConverterMPdf
  	
  	function parse()
  	{
- 	    $this->uid = new ObjectUID();
+ 	    ini_set('pcre.backtrack_limit', 1073741824);
 
-		$this->pdf = new mPDF('ru', 'A4');
-		$this->pdf->WriteHTML(file_get_contents(SERVER_ROOT_PATH.'styles/newlook/main.css'), 1);
-		$this->pdf->WriteHTML(file_get_contents(SERVER_ROOT_PATH.'styles/newlook/extended.css'), 1);
-		$this->pdf->WriteHTML(file_get_contents(SERVER_ROOT_PATH.'styles/wysiwyg/msword.css'), 1);
-		$this->pdf->WriteHTML(' body {background:white;font-size:14px;line-height:160%;} td {font-size:14px;line-height:160%;} ', 1);
+ 	    $this->uid = new ObjectUID();
+		$this->pdf = new mPDF();
+        $this->pdf->SetAnchor2Bookmark(1);
+
         if ( in_array('paging', $this->options) ) {
             $this->pdf->setFooter('{PAGENO}');
         }
@@ -93,13 +88,23 @@ class WikiConverterMPdf
 		$parser->setHrefResolver(function($wiki_it) {
  			return '#'.$wiki_it->getHtmlDecoded('Caption');
  		});
- 		$parser->setReferenceTitleResolver(function($info) {
- 			return $info['caption'];
- 		});
+        $parser->setReferenceTitleResolver(
+            in_array('uid', $this->options)
+                ? function($info) {
+                $result = $info['caption'];
+                if ( $info['uid'] != '' ) {
+                    $result = "[" . $info['uid'] . "] " . $result;
+                }
+                return $result;
+            }
+                : function($info) {
+                return $info['caption'];
+            }
+        );
 
 		$content = $parser->parse( $content );
         $title = $parent_it->getHtmlDecoded('Caption');
-        $heading_level = max(min($level, 4), 1);
+        $heading_level = max(min($level, 4), 1) + 1;
 
         $this->transform(
             mb_convert_encoding(

@@ -25,7 +25,6 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
  	    
  	    foreach( $object->getAttributes() as $attribute => $data ) {
  	    	$object->setAttributeVisible($attribute, false);
-            $object->setAttributeEditable($attribute, true);
  	    }
 
  	    if ( $this->transition_it->getId() == '' ) return;
@@ -64,7 +63,8 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
  	    
  	    $attribute_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
             array(
-                new FilterAttributePredicate('Transition', $this->transition_it->getId())
+                new FilterAttributePredicate('Transition', $this->transition_it->getId()),
+                new FilterBaseVpdPredicate()
             )
  	    );
 
@@ -86,6 +86,9 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
             );
             if ( $this->transition_it->get('IsReasonRequired') == TransitionReasonTypeRegistry::Required ) {
                 $object->setAttributeRequired('TransitionComment', true);
+            }
+            if ( $this->transition_it->getRef('TargetState')->get('SkipEmailNotification') != 'Y' ) {
+                $object->addAttribute('TransitionNotification', 'CHAR', '', true, false);
             }
 		}
 		

@@ -25,8 +25,8 @@ class CustomTagFilter extends FilterPredicate
 		}
 		else
 		{
-			$tag = $model_factory->getObject('Tag');
-			$tag_it = $tag->getExact( preg_split('/[,-]/', $filter) );
+			$tag = getFactory()->getObject('Tag');
+			$tag_it = $tag->getExact( TextUtils::parseIds($filter) );
 			
 			if ( $tag_it->count() > 0 )
 			{

@@ -5,11 +5,10 @@ class RequestImplementationFilter extends FilterPredicate
  	function _predicate( $filter )
  	{
  		$type_it = getFactory()->getObject('RequestLinkType')->getRegistry()->Query(
- 				array (
- 						new FilterAttributePredicate('ReferenceName', array('duplicates','implemented'))
- 				)
+            array (
+                new FilterAttributePredicate('ReferenceName', array('implemented'))
+            )
  		);
- 		
  		if ( $type_it->getId() < 1 ) return " AND 1 = 2 ";
  		
  		return " AND EXISTS (SELECT 1 FROM pm_ChangeRequestLink l ".

@@ -122,6 +122,8 @@ class SearchResultRegistry extends ObjectRegistrySQL
             }
 
             $parms = array();
+            $sorts = array();
+
             if ($object instanceof WikiPage) {
                 $object->setRegistry(new WikiPageRegistryContent($object));
                 $parms[] = new DocumentVersionPersister();
@@ -144,15 +146,20 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 continue;
             }
 
+            if ( $object instanceof MetaobjectStatable ) {
+                $sorts[] = new SortAttributeClause('State');
+            }
+            $sorts[] = new SortRecentClause();
+
             if ( is_numeric($search) ) {
                 $object_it = $registry->Query(
                     array_merge(
                         $parms,
                         array(
                             new FilterInPredicate($search),
-                            new FilterVpdPredicate(),
-                            new SortRecentClause()
-                        )
+                            new FilterVpdPredicate()
+                        ),
+                        $sorts
                     )
                 );
                 if ( $object_it->getId() != '' ) {
@@ -169,9 +176,9 @@ class SearchResultRegistry extends ObjectRegistrySQL
                         $predicates,
                         array(
                             new FilterSearchAttributesPredicate($search, $searchable_it->get('attributes')),
-                            new FilterVpdPredicate(),
-                            new SortRecentClause()
-                        )
+                            new FilterVpdPredicate()
+                        ),
+                        $sorts
                     )
                 );
                 if ( $object_it->count() > 0 ) {
@@ -186,9 +193,9 @@ class SearchResultRegistry extends ObjectRegistrySQL
                         $predicates,
                         array(
                             new CustomAttributeSearchPredicate($search, $searchable_it->get('attributes')),
-                            new FilterVpdPredicate(),
-                            new SortRecentClause()
-                        )
+                            new FilterVpdPredicate()
+                        ),
+                        $sorts
                     )
                 );
                 if ( $object_it->count() > 0 ) {

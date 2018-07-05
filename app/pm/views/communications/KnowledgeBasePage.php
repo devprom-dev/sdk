@@ -7,6 +7,7 @@ include "KnowledgeBaseForm.php";
 include "KnowledgeBaseTable.php";
 include "KnowledgeBaseDocument.php";
 include "KnowledgeBaseDocumentSettingBuilder.php";
+include "KnowledgeBaseSettingBuilder.php";
 
 class KnowledgeBasePage extends PMWikiUserPage
 {
@@ -19,7 +20,7 @@ class KnowledgeBasePage extends PMWikiUserPage
 
  		$b_show_root = !$this->needDisplayForm()
  			&& $_REQUEST['mode'] == '' && $_REQUEST['view'] == 'tree'
- 			&& $_REQUEST['export'] == '' && $report != 'knowledgebaselist';
+ 			&& $_REQUEST['export'] == '' && !in_array($report, array('knowledgebaselist','latestarticles'));
  		
  		if ( $b_show_root )
  		{
@@ -28,7 +29,8 @@ class KnowledgeBasePage extends PMWikiUserPage
  		}
 
  		parent::__construct();
- 		
+
+        getSession()->addBuilder( new KnowledgeBaseSettingBuilder() );
  		getSession()->addBuilder( new KnowledgeBaseDocumentSettingBuilder() );
  	}
  	

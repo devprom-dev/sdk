@@ -2,6 +2,7 @@
 
 namespace Devprom\ServiceDeskBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use FOS\UserBundle\Model\User as BaseUser;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -37,7 +38,13 @@ class User extends BaseUser {
      * @var Company
      */
     protected $company;
-    
+
+    /**
+     * @ORM\OneToMany(targetEntity="ObjectChangeNotification", mappedBy="customer", fetch="EAGER", cascade={"all"})
+     * @var ArrayCollection
+     */
+    private $notifications;
+
     /**
      * @param int $id
      */
@@ -89,5 +96,21 @@ class User extends BaseUser {
     public function isCredentialsNonExpired()
     {
     	return true;
+    }
+
+    /**
+     * @param ObjectChangeNotification $value
+     */
+    public function setNotifications($value)
+    {
+        $this->notifications = $value;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getNotifications()
+    {
+        return $this->notifications;
     }
 }

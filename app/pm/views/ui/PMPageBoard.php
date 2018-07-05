@@ -1,7 +1,11 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
 
 class PMPageBoard extends PageBoard
 {
+    private $backgroundColors = array();
+    private $objectsPerState = array();
+
     function extendModel()
     {
         parent::extendModel();
@@ -21,6 +25,41 @@ class PMPageBoard extends PageBoard
             $this->stateObjects[$it->get('State')] = $it->get($count_aggregate->getAggregateAlias());
             $it->moveNext();
         }
+
+        $priorityIt = getFactory()->getObject('Priority')->getAll();
+        while( !$priorityIt->end() ) {
+            $color = $priorityIt->get('RelatedColor');
+            if ( $color != '' ) {
+                $alpha = 0.12;
+                $rgbData = array_map(
+                    function($value) use ($alpha) {
+                        return min(round($value * $alpha + 255 * (1 - $alpha), 0), 255);
+                    },
+                    hex2rgb($color)
+                );
+                $this->backgroundColors[$priorityIt->getId()] = ColorUtils::rgb2hex($rgbData);
+            }
+            $priorityIt->moveNext();
+        }
+        if ( $this->backgroundColors[1] == '' ) {
+            $this->backgroundColors[1] = '#ffe1ce';
+        }
+        if ( $this->backgroundColors[2] == '' ) {
+            $this->backgroundColors[2] = '#fcf4c7';
+        }
+    }
+
+    function buildItemsCount($registry, $predicates)
+    {
+        $predicates = array_filter($predicates, function($predicate) {
+            return ! $predicate instanceof FilterInPredicate;
+        });
+        $countByIt = $registry->CountBy('State', $predicates);
+        while( !$countByIt->end() ) {
+            $this->objectsPerState[$countByIt->get('State')] = $countByIt->get('cnt');
+            $countByIt->moveNext();
+        }
+        return parent::buildItemsCount($registry, $predicates);
     }
 
     function getReportUrl() {
@@ -60,7 +99,7 @@ class PMPageBoard extends PageBoard
 	function hasCommonStates()
 	{
         $values = array();
-        $vpds = $this->projectIt->fieldToArray('VPD');
+        $vpds = $this->getProjectIt()->fieldToArray('VPD');
 
  		$value_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
  		while( !$value_it->end() ) {
@@ -91,28 +130,33 @@ class PMPageBoard extends PageBoard
             $lengths[$ref_name] += max(0, $state_it->get('QueueLength'));
 
             $objects = 0;
+            $visibleObjects = 0;
             foreach( preg_split('/,/', $ref_name) as $stateRefName ) {
                 $objects += $this->stateObjects[$stateRefName];
+                $visibleObjects += $this->objectsPerState[$stateRefName];
             }
 
-            if ( $lengths[$ref_name] > 0 )
-            {
-                $title .= ' '.
-                    str_replace('%2', $lengths[$ref_name],
-                        str_replace('%1', $objects,
-                            str_replace(' ', '&nbsp;', text(2223))));
-
-                if ( $lengths[$ref_name] < $objects ) {
-                    $title = '<span class="wip-o">'.$title.'</span>';
-                }
+            if ( $objects != $visibleObjects ) {
+                $text = text(2223);
             }
             else {
-                $title .= ' '.
-                    str_replace('%1', $objects,
-                        str_replace(' ', '&nbsp;', text(2224)));
+                $text = text(2224);
             }
-            $names[$ref_name] = $title;
+            if ( $lengths[$ref_name] > 0 ) {
+                $text = str_replace('%2', text(2507), $text);
+            }
 
+            $title .= ' '.
+                str_replace('%3', $lengths[$ref_name],
+                    str_replace('%1', $visibleObjects,
+                        str_replace('%2', $objects,
+                            str_replace(' ', '&nbsp;', $text))));
+
+            if ( $lengths[$ref_name] > 0 && $lengths[$ref_name] < $objects ) {
+                $title = '<span class="wip-o">'.$title.'</span>';
+            }
+
+            $names[$ref_name] = $title;
             $state_it->moveNext();
         }
 
@@ -153,6 +197,27 @@ class PMPageBoard extends PageBoard
 				break;
 				
 			default:
+                if ( in_array('computed', $this->object->getAttributeGroups($attr)) ) {
+                    $lines = array();
+                    $times = 0;
+                    $result = ModelService::computeFormula($object_it, $this->object->getDefaultAttributeValue($attr));
+                    foreach( $result as $computedItem ) {
+                        if ( is_object($computedItem) ) {
+                            if ( $times > 0 ) {
+                                echo '<br/>';
+                            }
+                            $this->drawRefCell($computedItem, $object_it, $attr);
+                            $times++;
+                        }
+                        else {
+                            $lines[] = $computedItem;
+                        }
+                    }
+                    if ( count($lines) > 0 ) {
+                        echo join('<br/>', $lines);
+                    }
+                    break;
+                }
 				parent::drawCell( $object_it, $attr );
 		}
 	}
@@ -162,13 +227,14 @@ class PMPageBoard extends PageBoard
         switch($this->getGroup())
         {
             case 'Project':
-                return $this->projectIt;
+                return $this->getProjectIt();
             default:
                 return parent::buildGroupIt();
         }
     }
 
     function getProjectIt() {
+        $this->projectIt->moveFirst();
         return $this->projectIt;
     }
 
@@ -283,6 +349,27 @@ class PMPageBoard extends PageBoard
                 );
             }
         }
+
+        if ( $this->getProjectIt()->count() > 1 )
+        {
+            $items = array();
+            $widgetIt = $this->getTable()->getWidgetIt();
+
+            $projectIt = $this->getProjectIt();
+            while( !$projectIt->end() ) {
+                $items[] = array(
+                    'name' => $projectIt->getDisplayName(),
+                    'url' => $widgetIt->getUrl('', $projectIt)
+                );
+                $projectIt->moveNext();
+            }
+
+            $actions[] = array();
+            $actions[] = array(
+                'name' => text(2529),
+                'items' => $items
+            );
+        }
 		
 		return array_merge($custom_actions, $actions, $delete_actions);
 	}
@@ -292,7 +379,7 @@ class PMPageBoard extends PageBoard
         parent::buildFilterActions( $base_actions );
         $this->buildFilterColumnsGroup( $base_actions, 'workflow' );
         $this->buildFilterColumnsGroup( $base_actions, 'trace' );
-        $this->buildFilterColumnsGroup( $base_actions, 'time' );
+        $this->buildFilterColumnsGroup( $base_actions, 'workload' );
         $this->buildFilterColumnsGroup( $base_actions, 'dates' );
         $this->buildFilterColumnsGroup( $base_actions, 'sla' );
     }
@@ -352,6 +439,10 @@ class PMPageBoard extends PageBoard
                 $this->parent_it = $portfolio_it;
             }
         }
+    }
+
+    function getPriorityBackgroundColor( $priorityId ) {
+        return $this->backgroundColors[$priorityId];
     }
 
     private $report_up_url = '';

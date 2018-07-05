@@ -17,7 +17,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
 ?>
 
 <?php if (!$formonly) { ?>
-    <div class="actions">
+    <div class="actions hidden-print">
         <?php
         $form->drawButtons();
         if ( count($actions) > 0 && $action != 'show' ) {
@@ -29,10 +29,13 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
         ?>
     </div> <!-- end actions -->
 
-    <ul class="breadcrumb" style="margin-right: 0px;">
+    <ul class="breadcrumb hidden-print" style="margin-right: 0px;">
         <?php
         if ( $uid != '' ) {
             if ( $navigation_url != '' ) {
+                if ( $parent_widget_url != '' ) {
+                    echo '<li><a href="'.$parent_widget_url.'">'.$parent_widget_title.'</a><span class="divider">/</span></li>';
+                }
                 echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
             }
             else if ( $has_caption ) {
@@ -60,7 +63,7 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
 <?php } ?>
 
 
-<div class="<?=($formonly ? '' : ($draw_sections && count($sections) > 0 ? 'span8' : $no_sections_class))?>" style="margin-left:0;">
+<div class="<?=($formonly ? '' : ($draw_sections && count($sections) > 0 ? 'span8' : $no_sections_class))?>" style="margin-left:0;overflow:hidden;">
     <form class="form-horizontal <?=$form_class?>" id="<?=$form_id?>" method="post" action="<?=$form_processor_url?>" enctype="<?=($formonly ? "application/x-www-form-urlencoded" : "multipart/form-data")?>" class_name="<?=$form_class_name?>" autocomplete="off">
     	<fieldset>
     	  	<input id="<?=$action_mode?>" type="hidden" name="action_mode" value="form">

@@ -15,22 +15,21 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
         $content = preg_replace('/<figure/i', '<center><figure', $content);
         $content = preg_replace('/<\/figure>/i', '</figure></center>', $content);
 
+        $callbacks = array (
+            REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
+            REGEX_INCLUDE_REVISION => array($this, 'parseIncludeRevisionCallback'),
+            REGEX_MATH_TEX => array($this, 'parseMathTex'),
+            REGEX_IMAGE_NUMBERING => array($this, 'imageNumbering'),
+            REGEX_TABLE_NUMBERING => array($this, 'tableNumbering'),
+            '/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im' => array($this, 'parseUrl')
+        );
         if ( function_exists('preg_replace_callback_array') ) {
-            return preg_replace_callback_array(
-                array (
-                    REGEX_MATH_TEX => array($this, 'parseMathTex'),
-                    REGEX_IMAGE_NUMBERING => array($this, 'imageNumbering'),
-                    REGEX_TABLE_NUMBERING => array($this, 'tableNumbering'),
-                    '/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im' => array($this, 'parseUrl')
-                ),
-                $content
-            );
+            return preg_replace_callback_array($callbacks, $content);
         }
         else {
-            $content = preg_replace_callback(REGEX_MATH_TEX, array($this, 'parseMathTex'), $content);
-            $content = preg_replace_callback(REGEX_IMAGE_NUMBERING, array($this, 'imageNumbering'), $content);
-            $content = preg_replace_callback(REGEX_TABLE_NUMBERING, array($this, 'tableNumbering'), $content);
-            $content = preg_replace_callback('/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im', array($this, 'parseUrl'), $content);
+            foreach( $callbacks as $regexp => $callback ) {
+                $content = preg_replace_callback($regexp, $callback, $content);
+            }
             return $content;
         }
 	}
@@ -47,5 +46,47 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
             trim(preg_replace('/%1/', self::$tableNumber++,
                 preg_replace('/%2/', $match[3], text('doc.tables.numbering'))),'.').
                     '</caption>';
+    }
+
+    function parseIncludeRevisionCallback( $match )
+    {
+        $info = $this->getUidInfo(trim($match[1], '[]'));
+        $object_it = $info['object_it'];
+        $content = '';
+
+        if ( !is_object($object_it) || $object_it->getId() < 1 ) {
+            return str_replace('%1', $match[1], text(1166));
+        }
+
+        $revisions = preg_split('/-/', $match[2]);
+        $changeIt = getFactory()->getObject('WikiPageChange')->getExact($revisions[0]);
+
+        if ( $changeIt->getId() != '' ) {
+            if ( count($revisions) > 1 ) {
+                if ( $revisions[1] > 0 ) {
+                    $freshContent = $changeIt->object->getExact($revisions[1])->getHtmlDecoded('Content');
+                }
+                else {
+                    $freshContent = $object_it->getHtmlDecoded('Content');
+                }
+                $parser = new WrtfCKEditorComparerParser($this->getObjectIt());
+                $content .= '<div class="reset wysiwyg">';
+                $diffBuilder = new WikiHtmlDiff(
+                    $parser->parse($changeIt->getHtmlDecoded('Content')),
+                    $parser->parse($freshContent)
+                );
+                $content .= $diffBuilder->build();
+                $content .= '</div>';
+            }
+            else {
+                $content = $changeIt->getHtmlDecoded('Content');
+            }
+        }
+        else {
+            $content = $object_it->getHtmlDecoded('Content');
+        }
+
+        $content .= '<div class="wiki-page-help">'.sprintf(text(2332), '<a target="_blank" href="'.$info['url'].'">'.$info['uid'].'</a>').'</div>';
+        return $content;
     }
 }

@@ -53,7 +53,7 @@ class PMCustomReport extends Metaobject
 	{
 		switch ( $name ) {
 			case 'Author':
-				return getSession()->getUserIt()->getId();
+				return '-1';
 			default:
 				return parent::getDefaultAttributeValue($name);
 		}

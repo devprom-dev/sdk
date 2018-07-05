@@ -40,4 +40,63 @@ class KnowledgeBaseForm extends PMWikiForm
 		}
 		return parent::IsAttributeEditable($attr_name);
 	}
+
+	function getFieldValue($field)
+    {
+        switch( $field ) {
+            case 'Content':
+                if ( $_REQUEST['Request'] != '' ) {
+                    $value = $this->buildReleaseNotesContent($_REQUEST['Request']);
+                    if ( $value != '' ) return $value;
+                }
+                return parent::getFieldValue($field);
+            default:
+                return parent::getFieldValue($field);
+        }
+    }
+
+    function buildReleaseNotesContent( $ids )
+    {
+        $ids = TextUtils::parseIds($ids);
+        if ( count($ids) < 1 ) return '';
+
+        $request = getFactory()->getObject('Request');
+        $items = array(
+            '' => array(
+                'name' => $request->getDisplayName(),
+                'items' => array()
+            )
+        );
+        $typeIt = getFactory()->getObject('RequestType')->getAll();
+        while( !$typeIt->end() ) {
+            $items[$typeIt->getId()] = array(
+                'name' => $typeIt->getDisplayName(),
+                'items' => array()
+            );
+            $typeIt->moveNext();
+        }
+
+        $requestIt = $request->getRegistry()->Query(
+            array(
+                new FilterInPredicate($ids)
+            )
+        );
+        $uid = new ObjectUID();
+        while( !$requestIt->end() ) {
+            $items[$requestIt->get('Type')]['items'][] = $uid->getObjectUid($requestIt);
+            $requestIt->moveNext();
+        }
+
+        $html = '';
+        foreach( $items as $typeId => $type ) {
+            if ( $type['name'] != '' ) {
+                $html .= '<h4>'.$type['name'].'</h4>';
+            }
+            if ( count($type['items']) > 0 ) {
+                $html .= '<ul><li>'.join('</li><li>', $type['items']).'</li></ul>';
+            }
+        }
+        var_export($items);
+        return $html;
+    }
 }

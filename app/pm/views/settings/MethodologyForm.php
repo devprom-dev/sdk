@@ -58,8 +58,6 @@ class MethodologyForm extends PMPageForm
                 
                 return str_replace('%1', trim($estimation->getDimensionText('')), text(1423));
             
-            case 'IsResponsibleForFunctions':
-                return text(10);
             case 'UseScrums':
                 return text(14);
             case 'HasMilestones':

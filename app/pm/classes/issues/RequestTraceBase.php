@@ -17,6 +17,7 @@ class RequestTraceBase extends Metaobject
  		if ( $object_class != '' ) {
  		    $this->setAttributeType('ObjectId', 'REF_'.$object_class.'Id');
  		}
+ 		$this->setAttributeRequired('OrderNum', false);
  	}
  	
  	function createIterator() {

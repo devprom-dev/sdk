@@ -27,7 +27,7 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
  		return md5(SystemDateTime::date("d.m.Y. h:i:s").PASS_KEY.$this->getUser()->getId().INSTALLATION_UID);
  	}
  	
- 	function logon( $remember = false )
+ 	function logon( $remember = false, $session_hash = '' )
  	{
  		global $_SERVER, $_COOKIE;
  		
@@ -41,8 +41,8 @@ class AuthenticationCookiesFactory extends AuthenticationFactory
 
 		setcookie('devprom['.$cookie_session.']', $session_hash, 
 			$cookie_expires, '/' );
- 		
-		return $session_hash;
+
+        parent::logon($remember, $session_hash);
  	}
  	
  	function logoff()

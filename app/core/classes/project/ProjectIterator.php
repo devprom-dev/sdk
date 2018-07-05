@@ -10,13 +10,14 @@ class ProjectIterator extends OrderedIterator
     public function __sleep()
     {
         return array_merge( parent::__sleep(),
-            array ('methodology_it_cache', 'parent_it')
+            array ('parent_it')
         );
     }
 
     public function __wakeup()
     {
         parent::__wakeup();
+        $this->methodology_it_cache = null;
         $this->setObject( new Project );
     }
 
@@ -38,7 +39,7 @@ class ProjectIterator extends OrderedIterator
 	function getParentIt()
     {
         if (is_object($this->parent_it)) return $this->parent_it;
-        return $this->parent_it = $this->buildParentIt();
+        return $this->parent_it = $this->buildParentIt()->copy();
     }
 
 	function buildParentIt()
@@ -46,23 +47,33 @@ class ProjectIterator extends OrderedIterator
 		if ( $this->IsPortfolio() ) {
 	        return $this->object->createCachedIterator(array());
 	    }
-	    
-	    $project_it = $this->getRef('LinkedProject');
-        while ( !$project_it->end() ) {
-	        if ( $project_it->IsProgram() ) return $project_it;
-	        $project_it->moveNext();
-	    }
-	    
+
+	    if ( $this->get('LinkedProject') != '' ) {
+            $project_it = $this->object->getRegistry()->Query(
+                array(
+                    new FilterInPredicate($this->get('LinkedProject')),
+                    new ProjectAccessiblePredicate(getSession()->getUserIt())
+                )
+            );
+            while ( !$project_it->end() ) {
+                if ( $project_it->IsProgram() ) return $project_it;
+                $project_it->moveNext();
+            }
+        }
+
 	    $portfolio_it = getFactory()->getObject('Portfolio')->getAll();
-	    while ( !$portfolio_it->end() )
+        while ( !$portfolio_it->end() )
 	    {
-	        $project_ids = preg_split('/,/',$portfolio_it->get('LinkedProject'));
+	        if ( $portfolio_it->get('LinkedProject') == '' ) {
+                $portfolio_it->moveNext();
+                continue;
+            }
+	        $project_ids = \TextUtils::parseIds($portfolio_it->get('LinkedProject'));
 	        if ( in_array($this->getId(), $project_ids) ) return $portfolio_it;
 	        $portfolio_it->moveNext();
 	    }
-	    
+
 	    $portfolio_it->moveTo('CodeName', 'my');
-	    
 	    return $portfolio_it->getId() != '' ? $portfolio_it : $this->object->createCachedIterator(array());
 	}
 	
@@ -511,23 +522,6 @@ class ProjectIterator extends OrderedIterator
 		else
 		{
 			return $this->get('DaysInWeek');
-		}
-	}
-	
-	function getDefaultNotificationType()
-	{
-		switch( $this->get('Tools') )
-		{
-		    case 'ticket_ru.xml':
-		    case 'ticket_en.xml':
-		    	return 'system';
-		    	
-		    case 'incidents_ru.xml':
-		    case 'incidents_en.xml':
-		    	return '';
-		    	
-		    default:
-				return 'every1hour';    	
 		}
 	}
 }

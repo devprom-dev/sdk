@@ -15,6 +15,8 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
 		if ( $methodology_it->HasFeatures() ) $entities[] = 'Feature';
 		if ( $methodology_it->HasReleases() ) $entities[] = 'Release';
 		if ( $methodology_it->HasPlanning() ) $entities[] = 'Iteration';
+        if ( $methodology_it->HasReleases() || $methodology_it->HasPlanning() ) $entities[] = 'Milestone';
+
 		if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' ) $entities[] = 'ProjectPage';
 		
 		foreach( $entities as $entity_name ) {

@@ -62,7 +62,8 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 		
 	function hasAccess()
 	{
-		return getFactory()->getAccessPolicy()->can_modify($this->request_it->object);
+		return getFactory()->getAccessPolicy()->can_modify($this->request_it->object)
+            && getFactory()->getAccessPolicy()->can_modify_attribute($this->request_it->object, 'Project');
 	}
  }
  
@@ -107,31 +108,6 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 	}
  }
   
-  ///////////////////////////////////////////////////////////////////////////
- class ReleaseNotesRequestWebMethod extends ExportWebMethod
- {
- 	function getCaption()
- 	{
- 		return translate('Вставить в блог');
- 	}
- 	
- 	function getDiscription()
- 	{
- 		return text(758);
- 	}
- 	
- 	function url( $class = 'RequestIteratorExportBlog' )
- 	{
- 		return parent::getJSCall(
- 			array( 'class' => $class ) );
- 	}
- 	
- 	function hasAccess()
- 	{
- 		return getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('BlogPost'));
- 	}
- }
-
  ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestWebMethod extends FilterWebMethod
  {

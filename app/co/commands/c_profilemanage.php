@@ -36,15 +36,17 @@
 		$_REQUEST['Caption'] = $this->user_it->utf8towin($_REQUEST['Caption']);
 		
 		$this->user->modify_parms($this->user_it->getId(),
-			array( 'Caption' => $_REQUEST['Caption'],
-				   'Email' => $this->Utf8ToWin($_REQUEST['Email']),
-				   'Login' => $this->Utf8ToWin($_REQUEST['Login']),
-				   'ICQ' => $this->Utf8ToWin($_REQUEST['ICQ']),
-				   'Skype' => $this->Utf8ToWin($_REQUEST['Skype']),
-				   'Phone' => $this->Utf8ToWin($_REQUEST['Phone']),
-				   'Language' => $this->Utf8ToWin($_REQUEST['Language']),
-				   'Skills' => $this->Utf8ToWin($_REQUEST['Skills']),
-				   'Tools' => $this->Utf8ToWin($_REQUEST['Tools'])
+             array( 'Caption' => $_REQUEST['Caption'],
+				    'Email' => $_REQUEST['Email'],
+				    'Login' => $_REQUEST['Login'],
+				    'ICQ' => $_REQUEST['ICQ'],
+				    'Skype' => $_REQUEST['Skype'],
+				    'Phone' => $_REQUEST['Phone'],
+				    'Language' => $_REQUEST['Language'],
+				    'Skills' => $_REQUEST['Skills'],
+				    'Tools' => $_REQUEST['Tools'],
+                    'NotificationTrackingType' => $_REQUEST['NotificationTrackingType'],
+                    'NotificationEmailType' => $_REQUEST['NotificationEmailType']
 				 )
 			);
 

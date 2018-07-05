@@ -1,8 +1,8 @@
 <?php
-
 include "StatableIterator.php";
 include "predicates/StatePredicate.php";
 include "predicates/StateNotInPredicate.php";
+include "sorts/StateObjectSortClause.php";
 
 class MetaobjectStatable extends Metaobject 
 {
@@ -160,23 +160,19 @@ class MetaobjectStatable extends Metaobject
 	
 	function delete ( $id, $record_version = ''  )
 	{
-		global $model_factory, $_REQUEST;
-		
 		$result = parent::delete( $id );
 		
 		if ( $result > 0 && $this->getStatableClassName() != '' )
 		{
-			$history = $model_factory->getObject('pm_StateObject');
-			
-			$it = $history->getByRefArray( array (
-				'ObjectId' => $id,
-				'ObjectClass' => $this->getStatableClassName()
-			));
-		
+            $it = getFactory()->getObject('pm_StateObject')->getRegistry()->Query(
+                array (
+                    new FilterAttributePredicate('ObjectId', $id),
+                    new FilterAttributePredicate('ObjectClass', $this->getStatableClassName()),
+                    new SortRecentClause()
+                )
+            );
 			while ( !$it->end() )
 			{
-				$_REQUEST['RecordVersion'] = '';
-				
 				$it->delete();
 				$it->moveNext();
 			}
@@ -185,7 +181,7 @@ class MetaobjectStatable extends Metaobject
 		return $result;
 	}
 	
-	protected function moveToState( $object_it, & $parms )
+	public function moveToState( $object_it, & $parms )
 	{
 		if ( $this->getStateClassName() == '' ) {
 			return getFactory()->getObject('StateBase')->getEmptyIterator();
@@ -217,7 +213,8 @@ class MetaobjectStatable extends Metaobject
 					'ObjectId' => $object_it->getId(),
 					'ObjectClass' => get_class($this),
 					'AuthorId' => getSession()->getUserIt()->getId(),
-					'Caption' => $parms['TransitionComment']
+					'Caption' => $parms['TransitionComment'],
+                    'IsPrivate' => $parms['IsPrivate']
 				)
 			);
 		}
@@ -253,8 +250,9 @@ class MetaobjectStatable extends Metaobject
             "  WHERE so.ObjectId = ".$object_it->getId().
             "    AND so.ObjectClass = '".$this->getStatableClassName()."' ".
             "    AND tr.pm_TransitionId = so.Transition ".
-            "    AND st.pm_StateId = tr.SourceState ".
-            "    AND st.IsTerminal <> 'Y' ";
+            "    AND st.pm_StateId = tr.TargetState ".
+            "    AND st.IsTerminal <> 'Y' ".
+            "    AND st.ExcludeLeadTime = 'N' ";
 
 		$parms['LifecycleDuration'] += $this->createSQLIterator($sql)->get('LifecycleDuration');
 

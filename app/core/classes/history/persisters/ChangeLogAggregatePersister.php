@@ -10,7 +10,6 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
 			" t.EntityRefName ",
 			" t.ObjectId ",
 			" t.Transaction ",
-			" t.ChangeKind ",
             " t.VPD "
 		);
  		
@@ -19,18 +18,21 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
  		
  		array_push( $columns, 
  			" MAX(t.RecordModified) RecordModified " );
- 		
- 		array_push( $columns, 
+
+        array_push( $columns,
+            " MIN(t.ChangeKind) ChangeKind " );
+
+ 		array_push( $columns,
  			" MAX(t.RecordCreated) RecordCreated " );
 
         array_push( $columns,
  			" MIN(t.VisibilityLevel) VisibilityLevel " );
 
         array_push( $columns, 
- 			" GROUP_CONCAT(DISTINCT t.Content ORDER BY t.RecordCreated DESC SEPARATOR '<hr/>') Content " );
+ 			" CONCAT('<p>',GROUP_CONCAT(DISTINCT t.Content ORDER BY t.ObjectChangeLogId DESC SEPARATOR '</p><p>'),'</p>') Content " );
         
         array_push( $columns, 
- 			" GROUP_CONCAT(t.ObjectChangeLogId) ObjectChangeLogId " );
+ 			" MAX(t.ObjectChangeLogId) ObjectChangeLogId " );
 
 		$columns[] =
 			" UNIX_TIMESTAMP(MAX(t.RecordModified)) * 100000 + (SELECT IFNULL(MAX(co_AffectedObjectsId),0) ".

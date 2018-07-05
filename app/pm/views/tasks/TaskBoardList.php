@@ -23,11 +23,9 @@ class TaskBoardList extends PMPageBoard
  	
  	function __construct( $object ) 
 	{
-		$this->priority_frame = new PriorityFrame();
         $this->estimation_strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
 
 		parent::__construct( $object );
-		
 		$this->getObject()->addAttribute( 'Basement', '', '', false, false, '', 99999 );
 	}
 
@@ -51,8 +49,24 @@ class TaskBoardList extends PMPageBoard
 			$this->priorities_array[] = $priority_it->copy();
 			$priority_it->moveNext();
 		}
-		
-	 	$method = new CommentWebMethod($object_it);
+
+        // cache assignees
+        $user_it = getFactory()->getObject('ProjectUser')->getAll();
+        while( !$user_it->end() )
+        {
+            $method = new ModifyAttributeWebMethod($object_it, 'Assignee', $user_it->getId());
+            if ( $method->hasAccess() )
+            {
+                $method->setCallback( "donothing" );
+                $this->owner_actions[$user_it->getId()] = array(
+                    'name' => $user_it->getDisplayName(),
+                    'method' => $method
+                );
+            }
+            $user_it->moveNext();
+        }
+
+        $method = new CommentWebMethod($object_it);
  		if ( $method->hasAccess() )
  		{
  			$method->setRedirectUrl('donothing');
@@ -127,9 +141,11 @@ class TaskBoardList extends PMPageBoard
  	{
 		if ( $this->getTable()->hasCrossProjectFilter() ) {
 			if ( $this->hasCommonStates() ) {
+                $vpds = $this->getProjectIt()->fieldToArray('VPD');
 		 		return getFactory()->getObject('TaskState')->getRegistry()->Query(
                     array (
-                        new FilterVpdPredicate(array_shift($this->getProjectIt()->fieldToArray('VPD'))),
+                        new FilterVpdPredicate(array_shift(array_values($vpds))),
+                        new StateQueueLengthPersister(array(), $vpds),
                         new SortAttributeClause('OrderNum')
                     )
 		 		);
@@ -145,17 +161,11 @@ class TaskBoardList extends PMPageBoard
 		}
  	}
 	
- 	function getStateFilterName()
- 	{
- 		return 'taskstate';
- 	}
-	
  	function getColumns()
 	{
 		$attrs = $this->object->getAttributes();
 		
-		if ( array_key_exists( 'Planned', $attrs ) )
-		{
+		if ( array_key_exists( 'Planned', $attrs ) ) {
 			$this->object->addAttribute( 'Progress', '', translate('Прогресс'), false );
 		}
 		
@@ -164,14 +174,17 @@ class TaskBoardList extends PMPageBoard
 
 	function getColumnFields()
 	{
-		$cols = parent::getColumnFields();
+        $cols = array_merge(
+            parent::getColumnFields(),
+            array(
+                'OrderNum'
+            )
+        );
 		
 		foreach ( $cols as $key => $col )
 		{
 			if ( $col == 'Progress' ) continue;
-			
-			if ( $this->object->getAttributeDbType($col) == '' )
-			{
+			if ( $this->object->getAttributeDbType($col) == '' ) {
 				unset( $cols[$key] );
 			}
 		}
@@ -249,9 +262,15 @@ class TaskBoardList extends PMPageBoard
 	{
 		if ( !$this->getObject()->IsReference($this->getGroup()) ) return parent::buildGroupIt();
 
-		$groupOrder = $this->getGroupOrder();
-		$vpd_filter = new FilterVpdPredicate();
+		$groupOrder = $this->getGroupSort();
 		$groupFilter = $this->getGroupFilterValue();
+
+        foreach( $this->getTable()->getFilterPredicates() as $filter ) {
+            if ( $filter instanceof ProjectVpdPredicate && $filter->defined($filter->getValue()) ) {
+                $vpd_filter = $filter;
+            }
+        }
+        if ( !is_object($vpd_filter) ) $vpd_filter = new FilterVpdPredicate();
 
 		switch($this->getObject()->getAttributeObject($this->getGroup())->getEntityRefName())
 		{
@@ -295,12 +314,11 @@ class TaskBoardList extends PMPageBoard
 					)
 				);
 			case 'cms_User':
-				return getFactory()->getObject('User')->getRegistry()->Query(
+				return getFactory()->getObject('ProjectUser')->getRegistry()->Query(
 						array (
-								new UserWorkerPredicate(),
-								new UserTitleSortClause(),
-								$groupFilter != ''
-										? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
+                            new UserTitleSortClause(),
+                            $groupFilter != ''
+                                    ? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
 					);
 			case 'Priority':
@@ -309,8 +327,10 @@ class TaskBoardList extends PMPageBoard
 							$groupFilter != ''
 								? new FilterInPredicate(preg_split('/,/', $groupFilter)) : null
 						)
-				);
-			default:
+				    );
+            case 'pm_Project':
+                return PageList::buildGroupIt();
+            default:
 				return parent::buildGroupIt();
 		}
 	}
@@ -366,6 +386,14 @@ class TaskBoardList extends PMPageBoard
 			case 'IssueTraces':
 				$this->getTable()->drawCell( $object_it, $attr );
 				break;
+
+            case 'IssueState':
+                echo $this->getTable()->getView()->render('pm/StateColumn.php', array (
+                    'color' => $object_it->get('IssueStateColor'),
+                    'name' => $object_it->get('IssueStateName'),
+                    'terminal' => false
+                ));
+                break;
 
 			case 'UID':
 				echo '<div class="title-on-card">';
@@ -534,27 +562,16 @@ class TaskBoardList extends PMPageBoard
  		}
  	}
 	
-	function getItemStyle( $object_it )
-	{
-		return parent::getItemStyle($object_it).
-			';background:'.$this->priority_frame->getColor($object_it->get('Priority')).';';
-	}
-	
 	function getCardColor( $object_it )
 	{ 	
 		$values = $this->getFilterValues();
-		switch ( $values['color'] )
-		{
+		switch ( $values['color'] ) {
 			case 'state':
-				return strpos($object_it->get('StateColor'),'#') === false
-					? $object_it->get('PriorityColor')
-					: $object_it->get('StateColor');
+				return $object_it->get('StateColor');
 			case 'priority':
 				return $object_it->get('PriorityColor');
 			case 'type':
-				return strpos($object_it->get('TypeColor'),'#') === false
-					? $object_it->get('PriorityColor')
-					: $object_it->get('TypeColor');
+				return $object_it->get('TypeColor');
 		}
 	}
 
@@ -583,29 +600,49 @@ class TaskBoardList extends PMPageBoard
 		}
 		
 		$priority_actions = $this->priority_actions;
-		
-		foreach( $priority_actions as $key => $action )
-		{
+		foreach( $priority_actions as $key => $action ) {
 			if ( $object_it->get('Priority') == $key )
 			{
 				unset($priority_actions[$key]);
 				continue;
 			}
-			
 			$method = $priority_actions[$key]['method'];
 			$method->setObjectIt($object_it);
 			$priority_actions[$key]['url'] = $method->getJSCall();
 		}
-		
-		if ( count($priority_actions) > 0 )
-		{
+		if ( count($priority_actions) > 0 ) {
 			$actions[] = array();
 			$actions[] = array(
 					'name' => translate('Приоритет'),
 					'items' => $priority_actions
 			);
 		}
-		
+
+        $owner_actions = $this->owner_actions;
+        foreach( $owner_actions as $key => $action ) {
+            if ( $object_it->get('Assignee') == $key ) {
+                unset($owner_actions[$key]);
+                continue;
+            }
+            $method = $owner_actions[$key]['method'];
+            $method->setObjectIt($object_it);
+            $owner_actions[$key]['url'] = $method->getJSCall(array());
+        }
+        if ( count($owner_actions) > 1 ) {
+            $pos = array_search(array('uid'=>'middle'), $actions);
+            $actions = array_merge(
+                array_slice($actions, 0, $pos),
+                array(
+                    array(),
+                    array(
+                        'name' => $object_it->object->getAttributeUserName('Assignee'),
+                        'items' => $owner_actions
+                    )
+                ),
+                array_slice($actions, $pos)
+            );
+        }
+
 		return $actions;
 	}			
 	
@@ -648,4 +685,16 @@ class TaskBoardList extends PMPageBoard
 		
 		return $parms; 
 	}
+
+    function dontGroupFirstColumn( $group ) {
+        return in_array($group, array('Assignee'));
+    }
+
+    function getAppendCardTitle($boardValue, $groupValue) {
+        switch( $this->getGroup() ) {
+            case 'TaskType':
+                return $this->getObject()->getAttributeObject($this->getGroup())->getExact($groupValue)->getDisplayName();
+        }
+        return '';
+    }
 }

@@ -1,5 +1,4 @@
 <?php
-
 include_once "Lock.php";
 
 class LockFileSystem extends Lock
@@ -10,25 +9,23 @@ class LockFileSystem extends Lock
 	
     public function __construct ( $name )
     {
-        if ( self::$cache_dir == '' ) {
-    		$dir_name = sys_get_temp_dir().'/'.INSTALLATION_UID;
-    		if ( !is_dir($dir_name) ) mkdir($dir_name, 755, true);
-        	self::$cache_dir = $dir_name; 
-        }
+        self::$cache_dir = sys_get_temp_dir();
         if ( is_null(self::$is_windows) ) {
             self::$is_windows = EnvironmentSettings::getWindows();
             self::$waitings = self::$is_windows ? 3 : 15;
         }
-        $this->file_name = self::$cache_dir.'/'.preg_replace("/([^\w\s\d\-_~,;:\[\]\(\]]|[\.]{2,})/", '', $name).'.lock';
+        $this->file_name = rtrim(self::$cache_dir, '\\/').'/'.md5($name.INSTALLATION_UID).'.lock';
+    }
+
+    function __destruct() {
+        $this->Release();
+    }
+
+    public function Lock() {
+        @file_put_contents( $this->file_name, time() );
     }
     
-    public function Lock()
-    {
-        file_put_contents( $this->file_name, time() );
-    }
-    
-    public function Release()
-    {
+    public function Release() {
         @unlink($this->file_name);
     }
 

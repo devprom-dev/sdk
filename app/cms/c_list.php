@@ -716,8 +716,9 @@
 		switch ( $attr )
 		{
 			default:
-				if ( $this->object->getAttributeType($attr) == 'char' ) return false; 
-				return $this->object->IsAttributeVisible( $attr );
+				if ( $this->object->getAttributeType($attr) == 'char' ) return false;
+                if ( in_array('system', $this->object->getAttributeGroups($attr)) ) return false;
+                return $this->object->IsAttributeVisible( $attr );
 		}
 	}
 

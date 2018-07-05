@@ -26,11 +26,13 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 		
 		$url = getSession()->getApplicationUrl().'treemodel/';
 		$class = get_class($this->treeObject);
-		if ( $this->getCrossProject()) {
-			$class .= '?cross';
-		}
-		
-    	$script = "bindFindInTreeField('.find-in-tree > .btn[field-id=".$this->getId()."]', '".$url."'); return false;";
+
+		$count = $this->treeObject->getRegistry()->Count(
+		    array(
+		        new FilterVpdPredicate()
+            )
+        );
+    	$script = "bindFindInTreeField('.btn[field-id=".$this->getId()."]', '".$url."', '".($count < 40 ? 'expand': '')."'); return false;";
     	
     	echo '<div style="display:table;width:100%;">';
 	    	echo '<div style="display:table-cell;">';
@@ -47,7 +49,19 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 		echo '</div>';
 		echo '<span class="input-block-level well well-text find-in-tree-area" style="display:none;margin-top: 10px;" field-class="'.$class.'" field-id="'.$this->getId().'" field-name="'.$this->getName().'">';
 			echo '<ul class="filetree" style="width:100%;">'.text(1708).'</ul>';
-			echo '<div style="clear:both;"></div>';
+	    	echo '<div style="clear:both;"></div>';
+
+            if ( $this->getCrossProject()) {
+                $script = "bindFindInTreeField('.btn[field-id=more".$this->getId()."]', '".$url."', ''); return false;";
+                echo '<button type="button" tabindex="' . ($tabindex + 1) . '" field-id="more' . $this->getId() . '" class="btn btn-link btn-transparent" onclick="javascript: ' . $script . '" style="padding-left: 0;padding-top: 12px;">';
+                    echo text(2505);
+                echo '</button>';
+
+                echo '<span class="find-in-tree-area" style="display:none;margin-top: 10px;" field-class="' . $class . '?cross" field-id="more' . $this->getId() . '" field-name="' . $this->getName() . '">';
+                    echo '<ul class="filetree" style="width:100%;">' . text(1708) . '</ul>';
+                    echo '<div style="clear:both;"></div>';
+                echo '</span>';
+            }
 		echo '</span>';
     }
 }

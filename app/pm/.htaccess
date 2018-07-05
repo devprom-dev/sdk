@@ -4,9 +4,9 @@ RewriteEngine On
 RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
-RewriteRule ^([^/]+)/(autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/(whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
-RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&page=$4 [L,QSA]
+RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&report=$4 [L,QSA]
 RewriteRule ^_images/([^/]+)$ /images/$1 [L]
 RewriteRule ^images/([^/]+)$ /images/$1 [L]
 

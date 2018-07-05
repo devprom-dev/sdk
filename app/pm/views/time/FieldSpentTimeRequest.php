@@ -8,7 +8,12 @@ class FieldSpentTimeRequest extends FieldSpentTime
 	{
 	    return 'EstimationLeft';
 	}
- 	
+
+    function getAnchorField()
+    {
+        return 'Issue';
+    }
+
  	function getObjectIt()
  	{
  	    $object_it = parent::getObjectIt();

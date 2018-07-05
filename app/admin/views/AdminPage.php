@@ -18,7 +18,7 @@ class AdminPage extends Page
     function getRenderParms()
 	{
 		return array_merge( parent::getRenderParms(), array (
-			'caption_template' => 'admin/PageTitle.php',
+			'caption_template' => 'admin/PageTitle.php',a
 		));
 	}
 	
@@ -45,4 +45,10 @@ class AdminPage extends Page
  	{
  	    return '';
  	}
+
+ 	function hasAccess()
+    {
+        if ( \DeploymentState::Instance()->IsReadyToBeUsed() && !getSession()->getUserIt()->IsAdministrator() ) return false;
+        return parent::hasAccess();
+    }
 }

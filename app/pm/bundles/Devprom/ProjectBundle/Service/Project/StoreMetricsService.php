@@ -175,14 +175,17 @@ class StoreMetricsService
             list($total, $tasks) = preg_split('/:/', $issue_it->get('MetricSpentHoursData'));
             list($total_parent, $tasks_parent) = preg_split('/:/', $issue_it->get('MetricSpentHoursParentData'));
             $total += $total_parent;
-            $tasks = join(',', array($tasks, $tasks_parent));
             if ( $issue_it->get('Fact') != $total ) {
                 $parms['Fact'] = $total;
             }
+            $tasks = join(',',
+                array_filter(array_unique(array_merge($tasks, $tasks_parent)), function($value){
+                    return $value > 0;
+                })
+            );
             if ( $issue_it->get('FactTasks') != $tasks ) {
                 $parms['FactTasks'] = $tasks;
             }
-
             if ( count($parms) > 0 ) {
                 $parms['RecordModified'] = $issue_it->get('RecordModified');
 				$registry->Store( $issue_it, $parms );

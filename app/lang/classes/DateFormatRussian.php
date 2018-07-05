@@ -36,6 +36,11 @@ class DateFormatRussian extends DateFormatBase
  		return SystemDateTime::convertToClientTime(date('Y-m-d H:i:s', $time), 'j.m.Y');
  	}
 
+    function getPhpDateTime( $time )
+    {
+        return date('j.m.Y H:i:s', $time);
+    }
+
  	function getDateJSFormat()
  	{
  		return 'dd.MM.yyyy';

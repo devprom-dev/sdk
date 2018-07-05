@@ -8,7 +8,7 @@ class WikiIteratorExportExcelText extends IteratorExportExcel
  		if ( $this->getIterator()->count() < 1 ) {
  			parent::setFields( $fields ); return;
  		}
- 		
+
  	    $object = $this->getIterator()->object;
         if ( !array_key_exists('SectionNumber', $fields) ) {
             $fields = array_merge($fields, array(

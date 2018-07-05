@@ -561,6 +561,8 @@ class PluginsFactory
 	public function buildPluginsList()
 	{
 		$cacheLock = new \CacheLock();
+        $cacheLock->Lock();
+
 		$files = array();
 
 		if ( $handle = opendir(SERVER_ROOT_PATH.'plugins') ) {
@@ -587,6 +589,7 @@ class PluginsFactory
  	protected function buildMethods()
  	{
         $lock = new \CacheLock();
+        $lock->Lock();
 
  		$namespaces = array();
  		foreach ( $this->plugins as $namespace ) {

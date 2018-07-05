@@ -86,4 +86,8 @@ class SearchArtifactsForm extends PMPageForm
             )
         );
     }
+
+    function getShortAttributes() {
+        return array();
+    }
 }

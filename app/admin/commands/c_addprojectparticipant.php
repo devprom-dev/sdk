@@ -24,18 +24,20 @@ class AddProjectParticipant extends CommandForm
 			$this->replyError( text(200) );
 		}
 
+		$userIt = getFactory()->getObject('User')->getExact($_REQUEST['SystemUser']);
 		$participant = getFactory()->getObject('pm_Participant');
 		
 		$part_it = $participant->getByRefArray(array ( 
 			'Project' => $_REQUEST['Project'],
-			'SystemUser' => $_REQUEST['SystemUser'] 
+			'SystemUser' => $userIt->getId()
 		));
 		if ( $part_it->count() < 1 )
 		{
 			$id = $participant->add_parms( array ( 
 				'Project' => $_REQUEST['Project'],
-				'SystemUser' => $_REQUEST['SystemUser'],
-				'Notification' => $project_it->getDefaultNotificationType(),
+				'SystemUser' => $userIt->getId(),
+                'NotificationTrackingType' => $userIt->get('NotificationTrackingType'),
+                'NotificationEmailType' => $userIt->get('NotificationEmailType'),
                 'VPD' => $project_it->get('VPD')
 			));
 			$part_it = $participant->getExact($id);
@@ -67,8 +69,8 @@ class AddProjectParticipant extends CommandForm
 			$this->replyError( text(627) );
 		}
 
-        getFactory()->getCacheService()->truncate('sessions');
-        getFactory()->getCacheService()->truncate('projects/'.$project_it->get('VPD'));
+        getFactory()->getCacheService()->invalidate('sessions');
+        getFactory()->getCacheService()->invalidate('projects/'.$project_it->get('VPD'));
 
 		$this->replyRedirect( '/admin/users.php', text(665) );
 	}

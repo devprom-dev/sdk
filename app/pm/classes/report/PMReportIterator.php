@@ -36,40 +36,18 @@ class PMReportIterator extends OrderedIterator
         	    return $url.'?report='.$this->getId();
 		    
 			case 'Caption':
-
 			    $value = parent::get($attr);
 			    
-		        if ( $value == '' && $this->get_native('Module') != '' )
-        	    {
-        	        $module = $model_factory->getObject('Module');
-        	        
-        	        $module_it = $module->getExact( $this->get_native('Module') );
-        	        
-        	        return $module_it->getDisplayName();
+		        if ( $value == '' && $this->get_native('Module') != '' ) {
+        	        return getFactory()->getObject('Module')->getExact( $this->get_native('Module') )->getDisplayName();
         	    }
-        	    
         	    return preg_replace_callback('/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback, $value);
 			
             case 'QueryString':
-			    
-         	    $language = getLanguage();
-         	    
-                $last_month = $language->getPhpDate( strtotime('-1 month', strtotime(date('Y-m-j'))) );
-        
-                $last_week = $language->getPhpDate( strtotime('-1 week', strtotime(date('Y-m-j'))) );
-         	    
                 $value = parent::get('QueryString');
-                
-				$value = str_replace('user-id', getSession()->getUserIt()->getId(), $value);
-	            
-				$value = preg_replace('/last-month/', $last_month, $value);
-
-				$value = preg_replace('/last-week/', $last_week, $value);
-				
-                return $value;
+                return SystemDateTime::parseRelativeDateTime($value, getLanguage());
 			    
 			default:
-			    
 				return parent::get($attr);
 		}
 	}
@@ -129,10 +107,12 @@ class PMReportIterator extends OrderedIterator
 	    );
 	}
 	
-	function getUrl( $query_string = '' )
+	function getUrl( $query_string = '', $projectIt = null )
 	{
 	    $info = $this->buildMenuItem($query_string);
-	    return $info['url'];
+	    return is_object($projectIt)
+            ? preg_replace('/\/pm\/[^\/]+\//i', '/pm/'.$projectIt->get('CodeName').'/', $info['url'])
+            : $info['url'];
 	}
 	
 	function getViewUrl()

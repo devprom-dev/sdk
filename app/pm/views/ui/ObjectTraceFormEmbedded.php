@@ -99,7 +99,6 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  			    }
  			    else {
 					$field = new FieldAutoCompleteObject($object);
-					$field->setAdditionalAttributes($object->getAttributesByGroup('search'));
  			    }
 				$field->setTitle( $object->getDisplayName() );
 				return $field;

@@ -10,7 +10,8 @@ if ( count($actions) > 0 ) {
     echo $view->render('core/EmbeddedRowTitleMenu.php', array(
         'title' => $title.' <span class="label">...</span>',
         'items' => $actions,
-        'id' => $id
+        'id' => $id,
+        'group_class' => 'last'
     ));
 }
 else {

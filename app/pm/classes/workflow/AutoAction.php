@@ -12,12 +12,16 @@ class AutoAction extends Metaobject
  						new SortOrderedClause()
  				)
  		);
- 		$this->setAttributeVisible('OrderNum', false);
- 		$this->setAttributeVisible('Conditions', false);
-        $this->setAttributeType('EventType', 'REF_AutoActionEventId');
  	}
- 	
- 	function getSubjectClassName()
+
+ 	function getAttributeObject($attribute)
+    {
+        $object = parent::getAttributeObject($attribute);
+        $object->addFilter( new FilterBaseVpdPredicate() );
+        return $object;
+    }
+
+    function getSubjectClassName()
  	{
  		return '';
  	}
@@ -53,9 +57,13 @@ class AutoAction extends Metaobject
  		$parms['ClassName'] = strtolower($this->getSubjectClassName());
 
         if ( $parms['ReferenceName'] == '' ) {
-            $this->serializeActions($parms);
-            $this->serializeConditions($parms);
             $parms['ReferenceName'] = strtolower(uniqid(get_class($this)));
+        }
+        if ( $parms['Actions'] == '' ) {
+            $this->serializeActions($parms);
+        }
+        if ( $parms['Conditions'] == '' ) {
+            $this->serializeConditions($parms);
         }
 
  		$result = parent::add_parms( $parms );
@@ -127,10 +135,13 @@ class AutoAction extends Metaobject
  					'Value' => IteratorBase::wintoutf8($parms['Value'.$i])
  			);
  		}
- 		$conditions = array (
- 				'mode' => $parms['ConditionsMode'],
- 				'items' => $items 
- 		);
- 		$parms['Conditions'] = JsonWrapper::encode($conditions);
+ 		if ( count($items) < 1 ) return;
+
+ 		$parms['Conditions'] = JsonWrapper::encode(
+            array (
+                'mode' => $parms['ConditionsMode'],
+                'items' => $items
+            )
+        );
  	}
 }
