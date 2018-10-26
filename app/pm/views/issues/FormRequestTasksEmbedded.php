@@ -164,7 +164,7 @@ class FormRequestTasksEmbedded extends FormTaskEmbedded
         if( $this->getIteratorRef()->count() > 0 ) {
             $boardIt = getFactory()->getObject('Module')->getExact('tasks-board');
             if ( $boardIt->getId() != '' ) {
-                echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$boardIt->getUrl().'" tabindex="-1">';
+                echo '<a class="dashed embedded-add-button" target="_blank" href="'.$boardIt->getUrl().'" tabindex="-1">';
                 echo mb_strtolower($boardIt->getDisplayName());
                 echo '</a>';
             }

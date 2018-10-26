@@ -8,10 +8,16 @@ class ModelValidatorChildrenLevels extends ModelValidatorInstance
 	{
 		if ( $parms['ParentFeature'] == '' ) return "";
 		if ( $parms['Type'] == '' ) return "";
-		
+
+        $hasFeatureLevelRules = join('',getFactory()->getObject('FeatureType')->getRegistry()->Query(
+                array(
+                    new FilterBaseVpdPredicate()
+                )
+            )->fieldToArray('ChildrenLevels')) != '';
+
 		$feature_it = $object->getExact($parms['ParentFeature']);
 		$parent_system_name = $feature_it->getRef('Type')->get('ChildrenLevels');
-		if ( $parent_system_name == '' ) return "";
+		if ( $parent_system_name == '' && !$hasFeatureLevelRules ) return "";
 		
 		$type_it = getFactory()->getObject('FeatureType')->getExact($parms['Type']);
 		$self_system_name = strtolower(trim($type_it->get('ReferenceName')));

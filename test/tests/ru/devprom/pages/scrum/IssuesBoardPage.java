@@ -18,16 +18,16 @@ public class IssuesBoardPage extends ScrumPageBase {
 	@FindBy(id = "filter-settings")
 	protected WebElement asterixBtn;
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Добавить')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Добавить')]")
 	protected WebElement addBtn;
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
-	@FindBy(xpath = "//a[@id='append-issue']")
+	@FindBy(xpath = "//a[@id='new-issue']")
 	protected WebElement newIssueBtn;
 
-	@FindBy(xpath = "//a[@id='append-issue-technical-issue']")
+	@FindBy(xpath = "//a[@id='new-issue-technical-issue']")
 	protected WebElement newBugBtn;
 	
 	

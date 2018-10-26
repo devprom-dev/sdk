@@ -62,49 +62,63 @@ class WorkflowService
 	    $this->logger->info( "[WorkflowService] Target states are ".join(',',$target_it->idsToArray()) );
 	    
 	    $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
-	    		array (
-	    				new \FilterAttributePredicate('SourceState', $source_it->getId()),
-	    				new \FilterAttributePredicate('TargetState', $target_it->idsToArray())
-	    		)
+            array (
+                new \FilterAttributePredicate('SourceState', $source_it->getId()),
+                new \FilterAttributePredicate('TargetState', $target_it->idsToArray())
+            )
 	    );
 
-	    if ( $transition_it->getId() == '' )
-	    {
-			$this->logger->info('There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
+	    if ( $transition_it->getId() == '' ) {
+			$this->logger->info('[WorkflowService] There is no transition from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
 			return false;
 	    }
-	    
-		$result = $object_it->object->modify_parms($object_it->getId(),
-				array_merge( $parms, 
-						array( 
-					        'Transition' => $transition_it->getId(),
-							'TransitionComment' => $comment 
-						)
-				)
-		);
 
-		if ( $result < 1 ) {
-			$this->logger->error('Unable move object from "'.$source_it->getDisplayName().'" to "'.$target_it->getDisplayName().'"');
-		}
-		else {
-			$object_it = $object_it->object->getExact($object_it->getId());
-			if ( $fire_event ) {
-				getFactory()->getEventsManager()
-                    ->executeEventsAfterBusinessTransaction(
-                        $object_it, 'WorklfowMovementEventHandler', $parms
-                    );
-			}
-		}
+	    if ( !$transition_it->doable($object_it) ) {
+            $this->logger->info('[WorkflowService] Transition is blocked by "'.$transition_it->getNonDoableReason().'"');
+            return false;
+        }
+
+        $result = $this->moveByTransition( $object_it, $transition_it, $comment, $parms, $fire_event );
 
 		if ( is_object($wasProjectIt) && $wasProjectIt->getId() != '' ) {
 			$session = new \PMSession( $wasProjectIt, getSession()->getAuthenticationFactory() );
 		}
-        return true;
+
+        return $result;
 	}
+
+    public function moveByTransition( $object_it, $transition_it, $comment = '', $parms = array(), $fire_event = true )
+    {
+        if ( $object_it->getId() == '' ) throw new \Exception('Nothing to move');
+
+        $result = $object_it->object->modify_parms($object_it->getId(),
+            array_merge( $parms,
+                array(
+                    'Transition' => $transition_it->getId(),
+                    'TransitionComment' => $comment
+                )
+            )
+        );
+
+        if ( $result < 1 ) {
+            $this->logger->error('Unable move object using "'.$transition_it->getDisplayName().'"');
+        }
+        else {
+            $object_it = $object_it->object->getExact($object_it->getId());
+            if ( $fire_event ) {
+                getFactory()->getEventsManager()
+                    ->executeEventsAfterBusinessTransaction(
+                        $object_it, 'WorklfowMovementEventHandler', $parms
+                    );
+            }
+        }
+
+        return true;
+    }
 
 	static function getImage( $stateObject )
     {
-        $uml = "@startuml".PHP_EOL.PHP_EOL;
+        $uml = "@startuml".PHP_EOL."scale max 2048 width".PHP_EOL;
 
         $state_it = $stateObject->getRegistry()->Query(
             array(

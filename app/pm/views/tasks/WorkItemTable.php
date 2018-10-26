@@ -71,7 +71,7 @@ class WorkItemTable extends TaskTable
         return $type_method;
     }
 
-    protected function buildFilterState()
+    protected function buildFilterState( $filterValues = array() )
     {
         $filter = new FilterObjectMethod(getFactory()->getObject('WorkItemState')->getAll(), translate('Состояние'), 'state');
         $filter->setDefaultValue('initial,progress');

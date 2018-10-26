@@ -20,8 +20,9 @@ framework:
     default_locale: %systemLanguage%
     trusted_proxies: ~
     session:
-            cookie_lifetime: 0
-            save_path: ~
+        cookie_lifetime: 604800
+        gc_maxlifetime: 604800
+        save_path: ~
 
 assetic:
     bundles:        [ DevpromServiceDeskBundle, FOSUserBundle ]
@@ -30,6 +31,7 @@ assetic:
 # Doctrine Configuration
 doctrine:
     dbal:
+        server_version: 9.4
         driver:   %database_driver%
         host:     %DB_HOST%
         port:     %database_port%

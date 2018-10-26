@@ -3,9 +3,11 @@
 class FieldListOfReferences extends Field
 {
 	private $object_it = null;
+	private $widgets = array();
 
-	function __construct( $object_it ) {
+	function __construct( $object_it, $widgets = array() ) {
 		$this->object_it = $object_it;
+		$this->widgets = $widgets;
 	}
 
 	function getText()
@@ -32,18 +34,26 @@ class FieldListOfReferences extends Field
             $widget_it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($this->object_it->object));
             if ( $widget_it->getId() != '' ) {
                 $url = getFactory()->getObject($widget_it->get('ReferenceName'))->getExact($widget_it->getId())->getUrl(
-                    strtolower(get_class($this->object_it->object)).'='.join(',',$ids)
+                    strtolower(get_class($this->object_it->object)).'='.\TextUtils::buildIds($ids)
                 );
             }
         }
 
         $html = join('<br/>', $uids);
-        if ( $url != '' ) {
+
+        $html .= '<div>';
+        if ( $url != '' && count($uids) > 1 ) {
             $text = $this->object_it->count() > count($uids)
                 ? str_replace('%1', $this->object_it->count() - count($uids), text(2028))
                 : text(2034);
-            $html .= '<br/><a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
+            $html .= '<a class="dashed embedded-add-button" target="_blank" href="'.$url.'">'.$text.'</a>';
         }
+        foreach( $this->widgets as $widgetName => $widgetUrl ) {
+            if ( $widgetUrl == '' ) continue;
+            $html .= '<a class="dashed embedded-add-button" target="_blank" href="'.$widgetUrl.'">'.mb_strtolower($widgetName).'</a>';
+        }
+        $html .= '</div>';
+
         return $html;
     }
 

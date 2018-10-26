@@ -122,7 +122,7 @@ class AjaxForm
 	function getAttributes()
 	{
 		$result = array();
-		$attributes = $this->object->getAttributesSorted();
+		$attributes = $this->object->getAttributes();
 		
 		foreach( $attributes as $key => $attribute )
 		{
@@ -327,8 +327,7 @@ class AjaxForm
 		
 		if ( !$this->IsAttributeVisible($attribute) )
 		{
-			echo '<input type="hidden" id="'.$attribute.'" name="'.$attribute.'" value="'.$value.'">';
-			
+            echo '<input type="hidden" id="'.$attribute.'" name="'.$attribute.'" value="'.$value.'">';
 			return;
 		}
 
@@ -513,7 +512,9 @@ class AjaxForm
 		
 		foreach( $this->getAttributes() as $attribute )
 		{
-			$attributes[$attribute] = array (
+            if ( in_array('system', $this->getObject()->getAttributeGroups($attribute)) ) continue;
+
+            $attributes[$attribute] = array (
 				'type' => $this->getAttributeType( $attribute ),
 				'caption' => $this->getName( $attribute ),
 				'description' => $this->getDescription( $attribute ),
@@ -547,7 +548,7 @@ class AjaxForm
 			'form_style_class' => $this->getClass(),
 			'form_processor_url' => $this->getFormUrl(),
 			'form_action' => $this->getAction(),
-			'url' => $this->getRedirectUrl(),
+			'url' => SanitizeUrl::parseUrl($this->getRedirectUrl()),
 			'form' => $this,
 			'object_id' => is_object($object_it) ? $object_it->getId() : '',
 			'width' => $this->getWidth(),
@@ -565,7 +566,8 @@ class AjaxForm
 			'bottom_hint' => $this->getHint(),
 			'bottom_hint_id' => $this->getHintId(),
 			'hint_open' => getFactory()->getObject('UserSettings')->getSettingsValue($this->getHintId()) != 'off',
-            'module' => strtolower(get_class($this))
+            'module' => strtolower(get_class($this)),
+            'actions_on_top' => true
 		);
 	}
 	

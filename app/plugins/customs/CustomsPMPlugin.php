@@ -1,6 +1,6 @@
 <?php
-
 include_once "reports/ReportsCustomsBuilder.php";
+include "classes/ProductNetworkServiceModelBuilder.php";
 
 class CustomsPMPlugin extends PluginPMBase
 {
@@ -22,7 +22,8 @@ class CustomsPMPlugin extends PluginPMBase
     function getBuilders()
     {
         return array (
-        		new ReportsCustomsBuilder()
+        	new ReportsCustomsBuilder(),
+            new ProductNetworkServiceModelBuilder()
         );
     }
 }

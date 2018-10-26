@@ -3,7 +3,6 @@
 include_once "TaskProgressFrame.php";
 include_once "TaskBalanceFrame.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
-include_once SERVER_ROOT_PATH.'core/views/c_priority_view.php';
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
 
 class TaskBoardList extends PMPageBoard
@@ -97,8 +96,17 @@ class TaskBoardList extends PMPageBoard
 		}
 
 		$this->getTable()->buildRelatedDataCache();
+
+        $info = $this->getTable()->getPage()->getPageWidgetNearestUrl();
+        $this->tags_url = $info['widget']->getUrl('tag=%');
 	}
-	
+
+    function getGroupObject() {
+        $object = parent::getGroupObject();
+        $object->addAttributeGroup('Estimation', 'display-name');
+        return $object;
+    }
+
 	function retrieve()
 	{
 		global $model_factory;
@@ -119,22 +127,6 @@ class TaskBoardList extends PMPageBoard
 		$request = $model_factory->getObject('pm_ChangeRequest');
 		
 		$this->request_it = count($ids) > 0 ? $request->getExact($ids) : $request->getEmptyIterator();
-	}
-	
-	function getSorts()
-	{
-		$sorts = parent::getSorts();
-		
-		foreach( $sorts as $key => $sort )
-		{
-			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ChangeRequest' )
-			{
-                array_unshift($sorts, new TaskRequestOrderSortClause());
-				array_unshift($sorts, new TaskRequestPrioritySortClause());
-			}
-		}
-		
-		return $sorts;
 	}
 	
  	function buildBoardAttributeIterator()
@@ -335,27 +327,13 @@ class TaskBoardList extends PMPageBoard
 		}
 	}
 	
-	function IsNeedToDisplay( $attr )
-	{
-		switch( $attr ) 
-		{
-			case 'UID':
-			case 'Caption':
-			case 'Progress':
-			case 'Assignee':
-				return true;
-				
-			default: 
-				return false;
-		}
-	}
- 	
  	function drawRefCell( $ref_it, $object_it, $attr )
  	{
  		switch ( $attr )
  		{
  		    case 'Assignee':
  		    case 'Attachment':
+            case 'Tags':
  		        break;
  		        
  		    default:
@@ -388,7 +366,7 @@ class TaskBoardList extends PMPageBoard
 				break;
 
             case 'IssueState':
-                echo $this->getTable()->getView()->render('pm/StateColumn.php', array (
+                echo $this->getRenderView()->render('pm/StateColumn.php', array (
                     'color' => $object_it->get('IssueStateColor'),
                     'name' => $object_it->get('IssueStateName'),
                     'terminal' => false
@@ -431,7 +409,7 @@ class TaskBoardList extends PMPageBoard
 						if ( $object_it->get('OwnerPhotoId') != '' )
 						{
 							echo '<div class="btn-group">';
-								echo $this->getTable()->getView()->render('core/UserPicture.php', array (
+								echo $this->getRenderView()->render('core/UserPicture.php', array (
 										'id' => $object_it->get('OwnerPhotoId'),
 										'class' => 'user-mini',
 										'image' => 'userpics-mini',
@@ -447,6 +425,16 @@ class TaskBoardList extends PMPageBoard
 								echo '</span>';
 							echo '</div>';
 						}
+                        if ( $this->visible_column['Tags'] && $object_it->get('TagNames') != '' )
+                        {
+                            $html = array();
+                            $tagIds = preg_split('/,/', $object_it->get('Tags'));
+                            foreach( preg_split('/,/', $object_it->get('TagNames')) as $key => $name ) {
+                                $name = '<a href="'.preg_replace('/%/', $tagIds[$key], $this->tags_url).'">'.$name.'</a>';
+                                $html[] = '<div class="btn-group label-tag" style="display:inline-block;"><span class="label label-info">'.$name.'</span></div>';
+                            }
+                            echo join(' ',$html);
+                        }
 						if ( $this->visible_column['Attachment'] )
 						{
 							echo '<div class="btn-group" style="display:inline-block;">';
@@ -465,14 +453,12 @@ class TaskBoardList extends PMPageBoard
 								$actions[$key]['url'] = $method->getJSCall();
 							}
 
-							echo '<div style="display: inline-block;">';
-							echo $this->getTable()->getView()->render('pm/EstimationIcon.php', array (
+							echo $this->getRenderView()->render('pm/EstimationIcon.php', array (
 								'title' => $this->planned_title,
 								'data' => $object_it->get('Planned') != '' ? $object_it->get('Planned') : '0',
 								'items' => $actions,
 								'random' => $object_it->getId()
 							));
-							echo '</div>';
 						}
 						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 )
 						{
@@ -490,7 +476,7 @@ class TaskBoardList extends PMPageBoard
 						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
 						{
 							echo '<div style="margin-left:4px;display: inline-block;">';
-								echo $this->getTable()->getView()->render('core/CommentsIconMini.php', array (
+								echo $this->getRenderView()->render('core/CommentsIconMini.php', array (
 										'object_it' => $object_it,
 										'redirect' => 'donothing'
 								));
@@ -518,7 +504,7 @@ class TaskBoardList extends PMPageBoard
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				if ( count($workload) > 0 )
 				{
-					echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+					echo $this->getRenderView()->render('pm/UserWorkload.php', array (
 						'user' => $object_it->getRef('Assignee')->getDisplayName(),
 						'data' => $workload[$object_it->get($group_field)]
 					));
@@ -675,7 +661,7 @@ class TaskBoardList extends PMPageBoard
 		
 		$parms = parent::getRenderParms();
 		
-		foreach( array( 'Attachment', 'RecentComment', 'Fact', 'OrderNum', 'Planned') as $column )
+		foreach( array( 'Attachment', 'RecentComment', 'Fact', 'OrderNum', 'Planned', 'Tags') as $column )
 		{
 			if ( $this->getObject()->getAttributeType($column) == '' ) continue;
 			$this->visible_column[$column] = $this->getColumnVisibility($column);

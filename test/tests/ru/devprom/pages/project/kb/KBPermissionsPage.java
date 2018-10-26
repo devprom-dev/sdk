@@ -20,7 +20,7 @@ public class KBPermissionsPage extends SDLCPojectPageBase {
   
 	// use 'y' - to give access, 'n' - to deny access and 'd' or any other char for default settings 
 	public void changePermissions(String role, char access) {
-		String xpath = String.format("//table[@id='accessobjectlist1']/tbody/tr[child::td[@id='projectrole' and text()='%s']]", role);
+		String xpath = String.format("//table[@id='accessobjectlist1']/tbody/tr[child::td[@id='projectrole' and contains(.,'%s')]]", role);
 		WebElement row = driver.findElement(By.xpath(xpath));
 		Select select =  new Select (row.findElement(By.xpath(".//td[@id='accesstype']/select[contains(@id,'select_ObjectAccessWebMethod')]")));
 		switch (access) {

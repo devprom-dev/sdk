@@ -12,7 +12,7 @@ class IssueIsOwnerRule extends BusinessRulePredicate
  		return text(1145);
  	}
  	
- 	function check( $object_it ) {
+ 	function check( $object_it, $transitionIt ) {
  		return $object_it->get('Owner') == getSession()->getUserIt()->getId();
  	}
 }

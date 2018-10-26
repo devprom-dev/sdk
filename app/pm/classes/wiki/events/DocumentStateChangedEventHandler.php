@@ -13,8 +13,6 @@ class DocumentStateChangedEventHandler extends WorklfowMovementEventHandler
 	
 	function handle( $object_it )
 	{
-		getFactory()->getEventsManager()->removeNotificator($this);
-		
 		$action = new WikiPageBusinessActionChildrenSyncState();
 	    $action->apply( $object_it );
 	    

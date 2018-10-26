@@ -8,7 +8,7 @@ class HtmlImageConverter
 
         if ( preg_match( '/src="([^"]+)"/i', $attributes, $attrs ) ) $url = $attrs[1];
         if ( $url == '' ) return $match[0];
-        if ( !preg_match('/file\/([^\/]+)\/([^\/]+)\/([\d]+).*/i', $url, $result) ) return $match[0];
+        if ( !preg_match('/\/file\/([a-zA-Z_]+)\/([^\/]+)\/([\d]+).*/i', $url, $result) ) return $match[0];
 
         $file_class = $result[1];
         $file_project = $result[2];

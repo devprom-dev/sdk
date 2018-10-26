@@ -5,12 +5,18 @@ include "predicates/TransitionObjectPredicate.php";
 include "predicates/TransitionStateClassPredicate.php";
 include "predicates/TransitionWasPredicate.php";
 include "sorts/TransitionSourceStateSort.php";
+include "sorts/TransitionTargetStateSort.php";
 include "predicates/TransitionStateRelatedPredicate.php";
 
 class Transition extends Metaobject
 {
  	function __construct() {
  		parent::__construct('pm_Transition');
+ 		$this->setSortDefault(
+ 		    array(
+ 		        new TransitionTargetStateSort()
+            )
+        );
  	}
  	
  	function createIterator() {

@@ -19,9 +19,9 @@ class UserParticipanceTypePredicate extends FilterPredicate
  	    
  	    if ( in_array('participant', $filter) )
  	    {
- 	        $vpds = array_merge($vpds, array($participant->getVpdValue()));
+ 	        $vpds = array_merge($vpds, $participant->getVpds());
  	    }
- 	    
+
  	    if ( in_array('linked', $filter) )
  	    {
      	    $vpds = array_merge( $vpds, getSession()->getLinkedIt()->fieldToArray('VPD') );

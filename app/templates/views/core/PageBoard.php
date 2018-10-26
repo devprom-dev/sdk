@@ -1,2 +1,6 @@
-<?php $list->draw( $view );
+<?php
+
+
+$list->setFilterActions($filter_actions);
+$list->draw( $view );
 

@@ -53,7 +53,7 @@ public class SaveTemplatePage extends SDLCPojectPageBase {
 	}
 	
 	public boolean isSuccess(){
-		return !driver.findElements(By.xpath("//div[contains(@class,'alert-success') and text()='Шаблон успешно сохранен']")).isEmpty();
+		return !driver.findElements(By.xpath("//div[contains(@class,'alert-success')]")).isEmpty();
 	}
 	
 }

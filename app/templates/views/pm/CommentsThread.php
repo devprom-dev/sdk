@@ -39,12 +39,12 @@
                     		<div class="comments-reply" object-id="<?=$comment['id']?>" id="commentsreply<?=$comment['uid']?>">
                     			<div class="comment">
 									<?php if ( !$readonly ) { ?>
-										<a class="btn btn-small btn-link" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['uid']?>'), '', '<?=$comment['id']?>');" style="padding-left:0;">
+										<a class="btn btn-sm btn-link" onclick="showCommentForm('<?=$url?>',$('#commentsreply<?=$comment['uid']?>'), '', '<?=$comment['id']?>');" style="padding-left:0;">
 											<?=translate('Ответить')?>
 										</a>
 									<?php } ?>
 									<? if ( is_array($comment['uid_info']) ) { ?>
-										<a class="btn btn-small btn-link clipboard btn-link-hidden" data-clipboard-text="<?=$comment['uid_info']['url']?>" data-message="<?=text(2029)?>" tabindex="-1"><?=translate('Ссылка')?></a>
+										<a class="btn btn-sm btn-link clipboard btn-link-hidden" data-clipboard-text="<?=$comment['uid_info']['url']?>" data-message="<?=text(2029)?>" tabindex="-1"><?=translate('Ссылка')?></a>
 									<?php } ?>
                                     <? if ( count($comment['actions']) > 0 ) { ?>
                                     <div class="btn-link-hidden">

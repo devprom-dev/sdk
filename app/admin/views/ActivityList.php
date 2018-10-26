@@ -59,24 +59,14 @@ class ActivityList extends StaticPageList
 	
 	function drawCell( $object_it, $attr ) 
 	{
-		global $model_factory;
-
-		switch( $attr ) 
+		switch( $attr )
 		{
 			case 'Caption':
-				echo '<div style="padding:3px;">';
-					$change_kind = $this->getImage($object_it);
-					echo '<i class="'.$change_kind.'"></i> &nbsp; ';
-	
-					echo $object_it->get('EntityName').': ';
-					echo $object_it->getDisplayName();
-				echo '</div>';
-				break;
-				
-			case 'Content':
-				echo '<div style="padding:3px;">';
-					drawMore($object_it, 'Content', 20);
-				echo '</div>';
+                $change_kind = $this->getImage($object_it);
+                echo '<i class="'.$change_kind.'"></i> &nbsp; ';
+
+                echo $object_it->get('EntityName').': ';
+                echo $object_it->getDisplayName();
 				break;
 				
 			default:
@@ -118,4 +108,9 @@ class ActivityList extends StaticPageList
 	{
 		return array('Caption', 'EntityName', 'Content', 'SystemUser', 'RecordModified');
 	}
+
+	function getGroupDefault()
+    {
+        return 'none';
+    }
 }

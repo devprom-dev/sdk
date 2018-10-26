@@ -35,6 +35,11 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
                 'ReferenceName' => 'pm_Version',
                 'Caption' => getFactory()->getObject('pm_Version')->getDisplayName()
             ),
+            array (
+                'entityId' => 'pm_Activity',
+                'ReferenceName' => 'pm_Activity',
+                'Caption' => getFactory()->getObject('Activity')->getDisplayName()
+            ),
         ));
     }
 }

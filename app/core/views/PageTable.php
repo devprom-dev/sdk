@@ -51,7 +51,7 @@ class PageTable extends ViewTable
 	function getListIterator()
 	{
 		$it = parent::getListIterator();
-		if ( $this->getMode() == 'chart' ) {
+		if ( in_array($this->getMode(), array('chart','graph')) ) {
 			return $this->getListRef()->buildDataIterator();
 		}
 		return $it;
@@ -67,14 +67,9 @@ class PageTable extends ViewTable
  	    return $this->page;
  	}
  	
- 	function getView()
- 	{
- 	    return $this->view;
- 	}
-
 	function getMode()
 	{
-		return $_REQUEST['view'];
+		return $_REQUEST['view'] != '' ? $_REQUEST['view'] : $_REQUEST['module'];
 	}
 
   	function getSection()
@@ -202,6 +197,12 @@ class PageTable extends ViewTable
 			$this->filter_values[$parm] = $_REQUEST[$parm];
 		}
 
+        $this->filter_values = array_map(
+            function($value) {
+                return SystemDateTime::parseRelativeDateTime($value, getLanguage());
+            },
+            $this->filter_values
+        );
 		return $this->filter_values;
 	}
 
@@ -249,11 +250,26 @@ class PageTable extends ViewTable
 
 	function getFilterParms()
 	{
-		return array( 'rows', 'group', 'sort', 'sort2', 
-			'sort3', 'sort4', 'show', 'hide', 'aggby', 
-			'aggregator', 'infosections', 'hiddencolumns',
-			'chartlegend', 'chartdata', 'addobjects', 'color',
-			'groupfunc' );
+		return array(
+            'rows',
+            'group',
+            'sort',
+            'sort2',
+			'sort3',
+            'sort4',
+            'show',
+            'hide',
+            'aggby',
+			'aggregator',
+            'infosections',
+            'hiddencolumns',
+			'chartlegend',
+            'chartdata',
+            'addobjects',
+            'color',
+			'groupfunc',
+            'sortgroup'
+        );
 	}
 	
 	function IsFilterPersisted()
@@ -287,9 +303,6 @@ class PageTable extends ViewTable
 	
 	function IsNeedNavigator()
 	{
-		if ( $_REQUEST['rows'] == 'all' ) {
-			return false;
-		}
 		if ( $_REQUEST['tableonly'] != '' ) return false;
 
 		$list =& $this->getListRef();
@@ -367,8 +380,36 @@ class PageTable extends ViewTable
 
 		return $actions;
 	}
-	
- 	function getFilterActions()
+
+    function getFilterMoreActions()
+    {
+        $actions = array();
+
+        $filter = $this->getPersistentFilter();
+        if ( is_object($filter) )
+        {
+            $persisted = $this->IsFilterPersisted() && $filter->getQueryString() != '';
+            $parms = array (
+                'url' => $filter->url(
+                    "li[uid=personal-persist]>a",
+                    $persisted,
+                    "function() { $('.alert-filter').hide(); ".($persisted ? "filterLocation.restoreFilter();" : "")." }"
+                ),
+                'name' => $persisted ? text(2112) : $filter->getCaption(),
+                'title' => !$persisted ? $filter->getDescription() : '',
+                'uid' => 'personal-persist',
+                'persisted' => $persisted
+            );
+            if ( !$persisted ) {
+                $parms['multiselect'] = true;
+            }
+            $actions = array_merge($actions, array( 'personal-persist' => $parms ));
+        }
+
+        return $actions;
+    }
+
+    function getFilterActions()
 	{
 		$actions = array();
 		
@@ -398,48 +439,22 @@ class PageTable extends ViewTable
 		
 		foreach ( $filters as $caption => $filter )
 		{
-			array_push( $filter_actions, 
-				array ( 'url' => $filter['url'], 'name' => $caption, 
-						'checked' => $filter['checked'], 'multiselect' => true )
+            $filter_actions[] = array (
+                'url' => $filter['url'],
+                'name' => $caption,
+                'checked' => $filter['checked'],
+                'multiselect' => true
 			);
 		}
 		
 		if ( count($filter_actions) > 1 )
 		{
-			array_push($actions, array ( 'name' => translate('Фильтры'), 
-				'items' => $filter_actions , 'title' => '' ) );
-		}
-
-		$save_actions = array();
-
-		$filter = $this->getPersistentFilter();
-		if ( is_object($filter) )
-		{
-		    $persisted = $this->IsFilterPersisted() && $filter->getQueryString() != '';
-			$parms = array (
-				'url' => $filter->url(
-					"li[uid=personal-persist]>a",
-					$persisted,
-					"function() { $('.alert-filter').hide(); ".($persisted ? "filterLocation.restoreFilter();" : "")." }"
-				),
-				'name' => $persisted ? text(2112) : $filter->getCaption(),
-				'title' => !$persisted ? $filter->getDescription() : '',
-				'uid' => 'personal-persist',
-                'persisted' => $persisted
-			);
-			if ( !$persisted ) {
-				$parms['multiselect'] = true;
-			}
-			$save_actions = array( 'personal-persist' => $parms );
-		}
-
-		if ( count($save_actions) > 0 ) {
-			array_push($actions, array());
-			$actions['view-settings'] = array (
-				'name' => translate('Настройки'),
-				'items' => $save_actions,
-				'uid' => 'view-settings'
-			);
+            $actions['filters'] = array (
+                'name' => translate('Фильтры'),
+				'items' => $filter_actions,
+                'title' => '',
+                'uid' => 'filters'
+            );
 		}
 
 		$list->buildFilterActions( $actions );
@@ -557,10 +572,11 @@ class PageTable extends ViewTable
 	
 	function getRowsOnPage()
 	{
-	    return $_REQUEST['rows'] == 'all'
+	    $values = $this->getFilterValues();
+	    return $values['rows'] == 'all'
 				? 9999 : (
-					is_numeric($_REQUEST['rows'])
-							? $_REQUEST['rows']
+					is_numeric($values['rows'])
+							? $values['rows']
 							: $this->getDefaultRowsOnPage()
 				);
 	}
@@ -616,8 +632,16 @@ class PageTable extends ViewTable
 	
  	function getSortDefault( $sort_parm = 'sort' )
 	{
+	    foreach( $this->getObject()->getSortDefault() as $sort ) {
+	        if ( $sort instanceof SortOrderedClause ) {
+	            return 'OrderNum.A';
+            }
+            if ( $sort instanceof SortAttributeClause ) {
+                return $sort->getAttributeName();
+            }
+        }
+
 		$sort = array_shift($this->getSortFields());
-		
 		return $sort != '' ? $sort : 'none';
 	}
 	
@@ -655,13 +679,10 @@ class PageTable extends ViewTable
 		
 		?>
 		<script type="text/javascript">
-			filterLocation.visibleColumns = ['<? echo join(preg_split('/-/', trim($values['show'], '-')),"','") ?>'];
-			filterLocation.hiddenColumns = ['<? echo join(preg_split('/-/', trim($values['hide'], '-')),"','") ?>'];
-
+			filterLocation.visibleColumns = ['<? echo join(preg_split('/-/', trim(SanitizeUrl::parseScript($values['show']), '-')),"','") ?>'];
+			filterLocation.hiddenColumns = ['<? echo join(preg_split('/-/', trim(SanitizeUrl::parseScript($values['hide']), '-')),"','") ?>'];
 			<?php foreach( $values as $key => $value ) { ?>
-			
-			filterLocation.parms['<?=$key?>'] = '<?=$value?>';
-			
+			    filterLocation.parms['<?=$key?>'] = '<?=SanitizeUrl::parseScript($value)?>';
 			<?php } ?>
 		</script>
 		<?php				
@@ -683,7 +704,6 @@ class PageTable extends ViewTable
 
 		$parms = array_merge($parms, array(
 			'table' => $this,
-			'title' => $parms['navigation_title'] == $parms['title'] ? '' : $parms['title'],
             'list' => $this->getListRef()
 		));
 
@@ -693,7 +713,11 @@ class PageTable extends ViewTable
 		
 		return $parms;
 	}
-	
+
+	function renderFilter( &$filter, $filterValues )
+    {
+    }
+
 	function getFullPageRenderParms( $parms )
 	{
 	    $filter_values = $this->getFilterValues();
@@ -703,7 +727,8 @@ class PageTable extends ViewTable
 	    foreach ( $this->filters as $filter )
 	    {
 	        if ( !$filter->hasAccess() ) continue;
-	    
+	        $this->renderFilter($filter, $filter_values);
+
 	        $filter->setFilter( $this->getFiltersName() );
 	        if ( is_object($filter->getFreezeMethod()) ) $filter->getFreezeMethod()->setValues($filter_values);
 	    
@@ -856,8 +881,12 @@ class PageTable extends ViewTable
 	    }
 	    
 	    $actions = $this->getActions();
-
-		$export_actions = $this->getExportActions();
+	    if ( $this->getListRef() instanceof PageChart ) {
+            $export_actions = $this->getListRef()->getExportActions();
+        }
+        else {
+            $export_actions = $this->getExportActions();
+        }
 		if ( count($export_actions) > 1 ) {
 			$actions[] = array();
 			$actions[] = array(
@@ -901,8 +930,10 @@ class PageTable extends ViewTable
             'filter_items' => $filter_items,
             'filter_modified' => !$this->IsFilterPersisted(),
             'actions' => $actions,
+            'filterMoreActions' => $this->getFilterMoreActions(),
             'additional_actions' => $additional_actions,
-			'bulk_actions' => $this->getBulkActions()
+			'bulk_actions' => $this->getBulkActions(),
+            'sliderClass' => 'list-slider-2'
 		));
 	}
 
@@ -923,9 +954,11 @@ class PageTable extends ViewTable
 
 		$this->touch();
 		echo $view->render( $this->getTemplate(), $parms );
-
-		$this->view = null;
 	}
+
+	function getRenderView() {
+ 	    return $this->view;
+    }
 
 	function touch() {
 		\FeatureTouch::Instance()->touch($this->getPage()->getModule());

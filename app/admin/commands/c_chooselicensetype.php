@@ -25,4 +25,9 @@ class ChooseLicenseType extends CommandForm
 
         $this->replyRedirect( $url );
 	}
+
+    function delete( $object_id )
+    {
+        $this->create();
+    }
 }

@@ -4,8 +4,8 @@ include "DocumentVersionChartWidget.php";
 
 class DocumentVersionChart extends PMPageChart
 {
-    function getIterator() {
-        return PageList::getIterator();
+    function buildIterator() {
+        return PageList::buildIterator();
 	}
 	
 	function getAggregators() 

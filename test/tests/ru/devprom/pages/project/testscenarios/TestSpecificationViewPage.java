@@ -9,6 +9,7 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import ru.devprom.helpers.DataProviders;
 import ru.devprom.items.Project;
 import ru.devprom.items.TestScenario;
 import ru.devprom.pages.project.SDLCPojectPageBase;
@@ -20,10 +21,10 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
 	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(@class, 'actions-button')]")
 	protected WebElement asterixBtn;
 
-	@FindBy(xpath = "//a[@id='append-child-page']")
+	@FindBy(xpath = "//a[@id='append-child-page-scenario']")
 	protected WebElement addSectionBtn;
         
-        @FindBy(xpath = ".//*[@class='dashed' and contains(text(),'новый сценарий')]")
+    @FindBy(xpath = "//a[@id='new-scenario']")
 	protected WebElement insirtSectionBtn;
 	
 	@FindBy(xpath = "//a[@uid='compareto']")
@@ -47,7 +48,7 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
 	protected WebElement stateBtn;
          
          //пункт готово к тестированию меню Состояние
-         @FindBy(xpath = ".//*[contains(text(),'Готово к тестированию')]")
+         @FindBy(xpath = ".//*[contains(.,'Готово к тестированию')]")
 	protected WebElement readyForTestingItem;
          
          //пункт готово к тестированию меню кнопки со звездочкой
@@ -66,23 +67,25 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
 	
 	public TestSpecificationViewPage showBaseline(String version){
 		clickOnInvisibleElement(versionBtn);
-		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(text(),'Бейзлайн: "+version+"')]")));
+		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'Бейзлайн: "+version+"')]")));
 		return new TestSpecificationViewPage(driver);
 	}
 	
 	public TestSpecificationViewPage showVersion(String version){
 		clickOnInvisibleElement(versionBtn);
-		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(text(),'Версия: "+version+"')]")));
+		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'Версия: "+version+"')]")));
 		return new TestSpecificationViewPage(driver);
 	}
 
-	public TestSpecificationViewPage compareWithVersion(String version){
+	public TestSpecificationViewPage compareWithVersion(String version)
+	{
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.elementToBeClickable(compareWithBtn));
 		clickOnInvisibleElement(compareWithBtn);
-		WebElement compareRow = compareWithBtn.findElement(By.xpath("./following-sibling::ul//a[contains(text(),'"+version+"')]"));
+		WebElement compareRow = compareWithBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'"+version+"')]"));
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(compareRow));
 		compareRow.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@uid='compareto' and contains(text(),'"+version+"')]")));
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(
+				By.xpath("//a[@uid='compareto' and contains(.,'"+version.substring(0, Math.min(20, version.length()))+"')]")));
 		return new TestSpecificationViewPage(driver);
 	}
 	
@@ -137,14 +140,14 @@ public class TestSpecificationViewPage extends TestScenarioViewPage {
     public TestScenarioNewPage addSubSectionTo(String id) {
         WebElement element = driver.findElement(By.xpath("//tr[contains(@id,'pmwikidocumentlist1_row_') and @object-id='"+id+"']"));
         clickOnInvisibleElement(element);
-        clickOnInvisibleElement(element.findElement(By.xpath(".//*[@class='dashed' and contains(text(),'новый сценарий')]")));
+        clickOnInvisibleElement(element.findElement(By.xpath(".//*[@class='dashed' and contains(.,'новый сценарий')]")));
         return new TestScenarioNewPage(driver);
     }
     
     public TestScenarioNewPage addSubSectionTo() {
         WebElement element = driver.findElement(By.xpath("//tr[contains(@id,'pmwikidocumentlist1_row_2')]"));
         clickOnInvisibleElement(element);
-        clickOnInvisibleElement(element.findElement(By.xpath("//*[@class='dashed' and contains(text(),'новый сценарий')]")));
+        clickOnInvisibleElement(element.findElement(By.xpath("//*[@class='dashed' and contains(.,'новый сценарий')]")));
         return new TestScenarioNewPage(driver);
     }
 

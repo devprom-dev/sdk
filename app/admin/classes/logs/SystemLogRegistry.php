@@ -4,7 +4,7 @@ include_once SERVER_ROOT_PATH."cms/c_iterator_file.php";
 
 class SystemLogRegistry extends ObjectRegistrySQL
 {
-	public function getAll()
+	public function createSQLIterator( $sql_query )
 	{
 		$data = array();
 		

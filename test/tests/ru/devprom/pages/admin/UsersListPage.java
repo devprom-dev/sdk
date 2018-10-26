@@ -90,7 +90,7 @@ public class UsersListPage extends AdminPageBase {
 
 	public Boolean isUserExist(String usernameLong) {
 		try {
-			driver.findElement(By.xpath(".//a[contains(text(),'" + usernameLong
+			driver.findElement(By.xpath(".//a[contains(.,'" + usernameLong
 					+ "')]"));
 		} catch (NoSuchElementException e) {
 			return false;
@@ -114,7 +114,7 @@ public class UsersListPage extends AdminPageBase {
 		(new WebDriverWait(driver,waiting)).until(
 				ExpectedConditions.presenceOfElementLocated(By.xpath("//table[contains(@id,'blacklist')]")));
 		(new WebDriverWait(driver,waiting)).until(
-				ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='systemuser' and contains(text(),'"+userName+"')]")));
+				ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='systemuser' and contains(.,'"+userName+"')]")));
         return new BlocksPage(driver);
 	}
 	

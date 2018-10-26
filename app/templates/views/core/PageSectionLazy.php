@@ -4,6 +4,7 @@
     bindTabHandler('<?=$class?>', function () {
         $.get('<?=$url?>', {}, function(data) {
             $('#<?=$id?>').html(data);
+            completeUIExt($('#<?=$id?>'));
         });
     })
 </script>

@@ -65,6 +65,8 @@ class WorkItemRegistry extends ObjectRegistrySQL
 
  	function getQueryClause()
  	{
+ 	    $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+
  	    $request = getFactory()->getObject('Request');
 		$task = getFactory()->getObject('Task');
 		if ( !$this->getObject()->isVpdEnabled() ) {
@@ -94,7 +96,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				      ) Caption,
 				   ".($this->descriptionIncluded ? "(SELECT r.Description FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) Description ": "'' Description").",
 				   t.State,
-				   (SELECT s.IsTerminal FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'task' AND s.ReferenceName = t.State) IsTerminal,
 				   t.StateObject,
 				   t.TaskType,
 				   (SELECT p.Caption FROM pm_TaskType p WHERE p.pm_TaskTypeId = t.TaskType) TypeName,
@@ -109,11 +110,13 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.Planned,
 				   t.Release,
 				   t.Author,
-				   (SELECT r.Version FROM pm_Release r WHERE r.pm_ReleaseId = t.Release) PlannedRelease,
+				   IFNULL((SELECT r.Version FROM pm_Release r WHERE r.pm_ReleaseId = t.Release), (SELECT r.PlannedRelease FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest)) PlannedRelease,
 				   t.VPD,
+				   '' Type,
 				   (SELECT GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) FROM pm_Activity a WHERE a.Task = t.pm_TaskId) Spent,
 				   ".($this->tracesIncluded ? ("
-				   (SELECT GROUP_CONCAT(DISTINCT CONCAT_WS(':',l.ObjectClass,CAST(l.ObjectId AS CHAR),l.Baseline))
+				   (SELECT CONCAT(CONCAT_WS(':','request',t.ChangeRequest,''), 
+				                GROUP_CONCAT(DISTINCT CONCAT_WS(':',l.ObjectClass,CAST(l.ObjectId AS CHAR),l.Baseline)))
                       FROM pm_ChangeRequestTrace l
                      WHERE l.ChangeRequest = t.ChangeRequest
                        AND l.ObjectClass NOT IN ('Task')) IssueTraces") : "'' IssueTraces").",
@@ -123,13 +126,15 @@ class WorkItemRegistry extends ObjectRegistrySQL
 			   AND t.VPD IN (SELECT m.VPD FROM pm_Methodology m, pm_Project p 
 			                  WHERE m.IsTasks = 'Y' AND m.Project = p.pm_ProjectId AND IFNULL(p.IsClosed,'N') = 'N')
 			 UNION
-			SELECT t.pm_ChangeRequestId,
-				   'Request' as ObjectClass,
+			SELECT t.pm_ChangeRequestId, ".
+                   ($methodologyIt->get('IsRequirements') == \ReqManagementModeRegistry::RDD
+                        ? " IF(t.Type IS NULL, 'Issue', 'Increment') as ObjectClass "
+                        : " 'Request' as ObjectClass ").
+				   ",
 				   t.Priority,
 				   t.Caption,
 				   ".($this->descriptionIncluded ? "t.Description ": "'' Description").",
 				   t.State,
-				   (SELECT s.IsTerminal FROM pm_State s WHERE s.VPD = t.VPD AND s.ObjectClass = 'request' AND s.ReferenceName = t.State) IsTerminal,
 				   t.StateObject,
 				   1000000 + IFNULL(t.Type, 0),
 				   (SELECT p.Caption FROM pm_IssueType p WHERE p.pm_IssueTypeId = t.Type) TypeName,
@@ -138,14 +143,15 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.StartDate,
 				   t.FinishDate,
 				   t.Owner,
-				   NULL,
+				   t.pm_ChangeRequestId,
 				   t.OrderNum,
 				   t.EstimationLeft,
-				   t.Estimation,
-				   (SELECT MIN(r.pm_ReleaseId) FROM pm_Release r WHERE r.Version = t.PlannedRelease),
+				   IF((SELECT m.RequestEstimationRequired FROM pm_Methodology m WHERE m.VPD = t.VPD LIMIT 1) = 'estimationhoursstrategy', t.Estimation, 0),
+				   IFNULL(t.Iteration, (SELECT MIN(r.pm_ReleaseId) FROM pm_Release r WHERE r.Version = t.PlannedRelease)),
 				   t.Author,
 				   t.PlannedRelease,
 				   t.VPD,
+				   t.Type,
 				   (SELECT GROUP_CONCAT(CAST(a.pm_ActivityId AS CHAR)) FROM pm_Activity a, pm_Task s WHERE a.Task = s.pm_TaskId AND s.ChangeRequest = t.pm_ChangeRequestId) Spent,
 				   ".($this->tracesIncluded ? ("
 				   (SELECT GROUP_CONCAT(DISTINCT CONCAT_WS(':',l.ObjectClass,CAST(l.ObjectId AS CHAR),l.Baseline))

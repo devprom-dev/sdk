@@ -1,5 +1,6 @@
 <?php
 use Devprom\ProjectBundle\Service\Model\ModelService;
+use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 
 class BusinessAction
 {
@@ -39,10 +40,6 @@ class BusinessAction
         {
             if ( $action_it->get($attribute) == '' ) continue;
             $parms[$attribute] = $action_it->getHtmlDecoded($attribute);
-            if ( $attribute == 'State' ) {
-                $parms['TransitionComment'] = $action_it->getDisplayName();
-                $parms['IsPrivate'] = 'Y';
-            }
         }
 
         return $this->modify($action_it, $object_it, $parms);
@@ -53,7 +50,13 @@ class BusinessAction
         if ( count($parms) > 0 ) {
             $parms['AutoActionUserName'] = $action_it->getDisplayName();
 
-            $object_it->object->modify_parms( $object_it->getId(), $parms );
+            if ( $parms['State'] != '' ) {
+                $service = new WorkflowService($object_it->object);
+                $service->moveToState( $object_it->copy(), $parms['State'], '', $parms );
+            }
+            else {
+                $object_it->object->modify_parms( $object_it->getId(), $parms );
+            }
 
             $modifiedIt = $object_it->object->getRegistry()->Query(
                 array( new FilterInPredicate($object_it->getId()) )

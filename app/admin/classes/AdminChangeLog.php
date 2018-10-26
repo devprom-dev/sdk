@@ -8,13 +8,16 @@ class AdminChangeLog extends Metaobject
 	function __construct()
 	{
 		parent::__construct('ObjectChangeLog');
-		
- 		$this->addSort( new SortAttributeClause('RecordCreated.D') );
- 		$this->addSort( new SortAttributeClause('OrderNum.D') );
-		
-		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата изменения'), false, false );
-		
-		$this->addPersister( new AdminChangeLogPersister() );
+
+		$this->addAttribute( 'ChangeDate', 'DATE', translate('Дата'), false, false );
+        $this->addPersister( new AdminChangeLogPersister() );
+
+        $this->setSortDefault(
+            array(
+                new SortAttributeClause('RecordModified.D'),
+                new SortAttributeClause('OrderNum.D')
+            )
+        );
 	}
 
 	function resetFilters()

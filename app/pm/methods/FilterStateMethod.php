@@ -5,10 +5,11 @@ class FilterStateMethod extends FilterWebMethod
 {
     var $state_it, $object;
 
-    function __construct( $object = null )
+    function __construct( $object = null, $stateIt = null )
     {
         parent::__construct();
         $this->object = $object;
+        $this->state_it = $stateIt;
     }
 
     function getCaption() {
@@ -21,7 +22,10 @@ class FilterStateMethod extends FilterWebMethod
             'all' => translate('Любое'),
         );
 
-        $state_it = WorkflowScheme::Instance()->getStateIt($this->object);
+        $state_it = is_object($this->state_it)
+            ? $this->state_it
+            : WorkflowScheme::Instance()->getStateIt($this->object);
+
         while ( !$state_it->end() )
         {
             $values[$state_it->get('ReferenceName')] = $state_it->getDisplayName();

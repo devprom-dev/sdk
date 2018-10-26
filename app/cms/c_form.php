@@ -10,6 +10,7 @@ include "views/FieldFile.php";
 include "views/FieldForm.php";
 include "views/FieldNumber.php";
 include "views/FieldHours.php";
+include "views/FieldHoursPositiveNegative.php";
 include "views/FieldPassword.php";
 include "views/FieldPrice.php";
 include "views/FieldShortText.php";
@@ -305,16 +306,6 @@ class Form
             $embedded->extendModel();
             $embedded->process( $object_it, $e, $callback );
         }
-
-		// remove obsolete temporary files
-		$file_registry = getFactory()->getObject('cms_TempFile')->getRegistry();
-		$file_registry->setPersisters( array(new ObjectRecordAgePersister()) );
-		$file_it = $file_registry->getAll();
-
-		while( !$file_it->end() ) {
-			if ( $file_it->get('AgeDays') > 0 ) $file_it->delete();
-			$file_it->moveNext();
-		}
 	}
 	
 	function validateInputValues( $id, $action )
@@ -717,10 +708,10 @@ class Form
 	{
 		$object_it = $this->getObjectIt();
 
-		return is_object($object_it) && $object_it->count() > 0 
+		return is_object($object_it) && $object_it->count() > 0
 			? ( $_REQUEST[$field] != '' 
 				? htmlentities($_REQUEST[$field], ENT_QUOTES | ENT_HTML401, APP_ENCODING) 
-				: ($object_it->get_native( $field ) == ''  
+				: ($object_it->get_native( $field ) == '' && $this->IsAttributeRequired($field)
 		  			? $this->object->getDefaultAttributeValue( $field ) 
 		  			: $object_it->get_native( $field ) 
 		  		   ) 
@@ -769,7 +760,7 @@ class Form
 		  <input name="WasRecordVersion" value="<? echo $this->getFieldValue('RecordVersion'); ?>" type="hidden">
           <table class=formtable cellpadding=0 cellspacing=0 width=100%>
     		<?
-    			$names = array_keys($this->object->getAttributesSorted());
+    			$names = array_keys($this->object->getAttributes());
 				
     			for( $i = 0; $i < count($names); $i++) 
     			{

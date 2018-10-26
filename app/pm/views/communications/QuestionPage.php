@@ -45,4 +45,9 @@ class QuestionPage extends PMPage
  		
  		return parent::needDisplayForm();
  	}
+
+    function getPageWidgets()
+    {
+        return array('discussions');
+    }
 }

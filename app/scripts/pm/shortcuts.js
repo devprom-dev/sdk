@@ -36,7 +36,7 @@ var shortcutContexts = [
                 path: ['a q','ф й']
             }, {
                 title: text('sc-key-gt-set'),
-                handler: 'a[uid=project-settings]',
+                handler: 'a[uid=settings-4-project]',
                 path: ['g s','п ы']
             }, {
                 title: text('sc-key-gt-back'),
@@ -114,11 +114,11 @@ var shortcutContexts = [
                 title: text('sc-key-view-righttab'),
                 path: ['alt+right'],
                 handler: function(e) {
-                    var selected = $('.ui-tabs-selected');
+                    var selected = $('.ui-tabs-active');
                     if ( selected.length > 0 ) {
-                        var tag = selected.next().find('a[href]');
-                        if ( tag.length > 0 ) {
-                            shortcutObject.openTab(tag.attr('href').replace('#tab-', ''));
+                        var index = $('.ui-tabs-tab').index(selected.next());
+                        if ( index >= 0 ) {
+                            shortcutObject.openTab(index);
                         }
                         e.preventDefault();
                     }
@@ -127,11 +127,11 @@ var shortcutContexts = [
                 title: text('sc-key-view-lefttab'),
                 path: ['alt+left'],
                 handler: function(e) {
-                    var selected = $('.ui-tabs-selected');
+                    var selected = $('.ui-tabs-active');
                     if ( selected.length > 0 ) {
-                        var tag = selected.prev().find('a[href]');
-                        if ( tag.length > 0 ) {
-                            shortcutObject.openTab(tag.attr('href').replace('#tab-', ''));
+                        var index = $('.ui-tabs-tab').index(selected.prev());
+                        if ( index >= 0 ) {
+                            shortcutObject.openTab(index);
                         }
                         e.preventDefault();
                     }
@@ -310,8 +310,8 @@ shortcutObject = {
         var el = $($('#quick-search').attr('data-content')).find(uid);
         if ( el.length > 0 && typeof el.attr('href') == 'string' ) window.location = el.attr('href');
     },
-    openTab: function(tab) {
-        $('.ui-dialog .tabs').tabs( "option", "selected", tab );
+    openTab: function(index) {
+        $('.ui-dialog .tabs').tabs( "option", "active", index );
         setTimeout(function() {
             $('.ui-tabs-panel:not(.ui-tabs-hide) [tabindex]:visible').filter(function() {
                 return $(this).attr("tabindex") > 0;

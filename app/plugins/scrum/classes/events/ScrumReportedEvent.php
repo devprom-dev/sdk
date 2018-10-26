@@ -15,7 +15,7 @@ class ScrumReportedEvent extends SystemTriggersBase
    		$mail->setFromUser(getSession()->getUserIt());
 
 		$emails = defined('PERMISSIONS_ENABLED')
-			? getSession()->getProjectIt()->getParticipantIt()->fieldToArray('Email')
+			? getFactory()->getObject('Participant')->getAll()->fieldToArray('Email')
 			: getFactory()->getObject('UserActive')->getAll()->fieldToArray('Email');
 
    		foreach( $emails as $email )

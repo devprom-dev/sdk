@@ -80,7 +80,11 @@ class ModelEventsManager
 
 			if ( $this->delay ) {
 			    $delayedObjectIt = $object_it->copy();
-			    $this->delayedNotifications[] = function() use ($notificator, $data, $delayedObjectIt) {
+
+			    $notifcationKey = md5(get_class($notificator).get_class($delayedObjectIt).$delayedObjectIt->getId());
+			    if ( array_key_exists($notifcationKey, $this->delayedNotifications) ) continue;
+
+			    $this->delayedNotifications[$notifcationKey] = function() use ($notificator, $data, $delayedObjectIt) {
                     $notificator->setRecordData( $data );
                     $notificator->add( $delayedObjectIt );
                 };
@@ -116,6 +120,7 @@ class ModelEventsManager
 	{
         while( !$object_it->end() ) {
             foreach( getSession()->getBuilders($interface_name) as $handler ) {
+                if ( !$this->notificationEnabled($object_it, $handler) ) continue;
                 $handler->setObjectIt($object_it->copy());
                 if ( !$handler->readyToHandle() ) continue;
                 $handler->process( $data );
@@ -127,7 +132,7 @@ class ModelEventsManager
 	public function releaseNotifications()
     {
         $this->delayNotifications(false);
-        foreach( $this->delayedNotifications as $functor ) {
+        foreach( $this->delayedNotifications as $key => $functor ) {
             $functor();
         }
     }

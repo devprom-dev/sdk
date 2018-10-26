@@ -17,14 +17,19 @@ class StateList extends PMPageList
         switch ( $attr )
         {
             case 'Transitions':
-                $transition_it = $object_it->getTransitionIt();
+                $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
+                    array (
+                        new FilterAttributePredicate('SourceState', $object_it->getId()),
+                        new SortOrderedClause()
+                    )
+                );
 
                 while ( !$transition_it->end() )
                 {
                 	$actions = array();
-                	
+
                     $object_it->object->setVpdContext($object_it);
-                    
+
 			        $method = new ObjectModifyWebMethod($transition_it);
                     $method->setRedirectUrl('donothing');
                     $actions[] = array (
@@ -38,20 +43,46 @@ class StateList extends PMPageList
 						$method->setRedirectUrl('donothing');
 						$actions[] = array();
 					    $actions[] = array(
-						    'name' => $method->getCaption(), 
-					    	'url' => $method->getJSCall() 
+						    'name' => $method->getCaption(),
+					    	'url' => $method->getJSCall()
 					    );
 					}
-                    
+
                     echo $view->render('core/TextMenu.php', array (
 						'title' => $transition_it->getFullName(),
 						'items' => array_merge( array(), $actions ),
 						'random' => $transition_it->getId()
                     ));
 
-					if ( $transition_it->get('Actions') != '' ) {
-					    $actionIt = $transition_it->getRef('Actions');
-					    echo '<div class="well well-small" style="margin-left:13px;">';
+					$specificSettings = $transition_it->get('Actions').
+                        $transition_it->get('Predicates').
+                        $transition_it->get('ProjectRoles');
+
+					if ( $specificSettings != '' ) {
+                        echo '<div class="well well-small" style="margin-left:13px;">';
+                            $needSeparator = false;
+                            $roleIt = $transition_it->getRef('ProjectRoles');
+                            while( !$roleIt->end() ) {
+                                echo $roleIt->getDisplayName();
+                                echo '<br/>';
+                                $needSeparator = true;
+                                $roleIt->moveNext();
+                            }
+                            $predicateIt = $transition_it->getRef('Predicates');
+                            if ( $predicateIt->count() > 0 && $needSeparator ) {
+                                echo '<hr/>';
+                                $needSeparator = false;
+                            }
+                            while( !$predicateIt->end() ) {
+                                echo $predicateIt->getDisplayName();
+                                echo '<br/>';
+                                $needSeparator = true;
+                                $predicateIt->moveNext();
+                            }
+					        $actionIt = $transition_it->getRef('Actions');
+                            if ( $actionIt->count() > 0 && $needSeparator ) {
+                                echo '<hr/>';
+                            }
                             while( !$actionIt->end() ) {
                                 echo $actionIt->getDisplayName();
                                 echo '<br/>';
@@ -59,9 +90,9 @@ class StateList extends PMPageList
                             }
 					    echo '</div>';
                     }
-                    
+
                     echo '<div class="clear-fix"></div>';
-                    
+
                     $transition_it->moveNext();
                 }
 

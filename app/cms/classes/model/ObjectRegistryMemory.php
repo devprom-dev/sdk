@@ -19,7 +19,7 @@ class ObjectRegistryMemory extends ObjectRegistryArray
             $object_it->getData(),
             $data
         );
-        return 1;
+        return $this->getObject()->getEmptyIterator();
     }
 
     function Create(array $data)

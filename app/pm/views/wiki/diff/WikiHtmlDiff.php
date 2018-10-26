@@ -42,4 +42,8 @@ class WikiHtmlDiff extends HtmlDiff
             return "";
         }
     }
+
+    protected function purifyHtml($html) {
+        return $html;
+    }
 }

@@ -216,6 +216,7 @@ class EnvironmentSettings
     
     static public function ajaxRequest()
     {
+        if ( strpos($_REQUEST['QUERY_STRING'], '/tooltip/') !== false ) return true;
     	$headers = apache_request_headers();
     	return strtolower($headers['X-Requested-With']) == 'xmlhttprequest';
     }

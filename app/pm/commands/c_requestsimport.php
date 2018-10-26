@@ -194,6 +194,10 @@ class RequestsImportBase extends CommandForm
                                 $value = getLanguage()->getPhpDateTime(PHPExcel_Shared_Date::ExcelToPHP($value));
                             }
                             break;
+
+                        case 'wysiwyg':
+                            $value = htmlentities($value);
+                            break;
                     }
 					$parms = array_merge($parms, array( $fieldName => $value ) );
 				}
@@ -257,7 +261,7 @@ class RequestsImportBase extends CommandForm
 		$result = $this->parse();
         $undefined = array();
 		$imported = 0;
-		
+
 		for ( $i = 0; $i < count($result); $i++ )
 		{
 			if ( $result[$i]['Caption'] != '' )
@@ -270,22 +274,44 @@ class RequestsImportBase extends CommandForm
 						$object = $this->request->getAttributeObject($field);
 						getFactory()->resetCachedIterator( $object );
 
-						if ( preg_match('/Undefined:(.+)/', $value, $match) )
+						if ( preg_match('/^Undefined:(.+)$/si', $value, $match) )
 						{
-                            $parentId = trim($match[1]);
-                            if ( array_key_exists($parentId, $undefined) ) {
-                                $id = $undefined[$parentId];
+                            if ( $object instanceof $this->request ) {
+						        // hierarchy case
+                                $parentId = trim($match[1]);
+                                if ( array_key_exists($parentId, $undefined) ) {
+                                    $id = $undefined[$parentId];
+                                }
+                                else {
+                                    $parentRow = array_shift(
+                                        array_filter($result, function($item) use($parentId) {
+                                            return $item['Id'] == $parentId || $item['Caption'] == $parentId;
+                                        })
+                                    );
+                                    $id = $undefined[$parentRow['Id']];
+                                    if ( $id == '' ) $id = $this->getId($object->getAll(), $parentRow, '');
+                                    if ( $id == '' && in_array($field, array('Author')) ) $id = $parentId;
+                                }
+                                $result[$i][$field] = $id;
                             }
                             else {
-                                $parentRow = array_shift(
-                                    array_filter($result, function($item) use($parentId) {
-                                        return $item['Id'] == $parentId;
-                                    })
-                                );
-                                $id = $this->getId($object->getAll(), $parentRow, '');
-                                if ( $id == '' && in_array($field, array('Author')) ) $id = $parentId;
+						        // other references
+                                $self = $this;
+                                $objectIt = $object->getAll();
+                                $valueObject = $object instanceof Tag || $object instanceof Watcher || $object instanceof User;
+
+                                $result[$i][$field] = join(',', array_filter(
+                                    array_map(
+                                        function($value) use ($self, $objectIt, $valueObject) {
+                                            return $self->getId($objectIt, $value, $valueObject ? $value : '');
+                                        },
+                                        preg_split("/[\r\n,]+/mi", $match[1])
+                                    ),
+                                    function($value) {
+                                        return $value != '';
+                                    }
+                                ));
                             }
-							$result[$i][$field] = $id;
 						}
 
 						if ( $result[$i][$field] > 0 && $object instanceof Project ) {
@@ -371,7 +397,7 @@ class RequestsImportBase extends CommandForm
                                 return $item['Id'] == $parentId;
                             })
                         );
-                        $value = is_array($foundRow) ? $foundRow['Caption'] : $parentId;
+                        $value = is_array($foundRow) ? htmlentities($foundRow['Caption']) : $parentId;
                     }
                     else {
                         $value = $result[$i][$fields[$j]];
@@ -429,7 +455,7 @@ class RequestsImportBase extends CommandForm
 							if ( $value == '' ) {
 								$value = $object->getDefaultAttributeValue($fields[$j]);
 							}
-							$value = nl2br($value);
+							$value = nl2br(htmlentities($value));
 					}
 				}
 				

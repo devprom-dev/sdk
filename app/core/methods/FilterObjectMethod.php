@@ -50,7 +50,7 @@ class FilterObjectMethod extends FilterWebMethod
  		}
 
  		if ( $this->parmvalue == '' ) $this->parmvalue = $_REQUEST['object'];
- 		
+
  		$this->none_title = translate('<нет значения>');
 	}
  	
@@ -117,8 +117,10 @@ class FilterObjectMethod extends FilterWebMethod
 	 		$this->it = $registry->getAll();
 		}
 
-		$selected_values = preg_split('/,/', $this->getValue());
-		$selected_value_found = false;
+		$selected_values = preg_split('/,/',
+            preg_replace('/user-id/i', getSession()->getUserIt()->getId(), $this->getValue())
+        );
+        $selected_value_found = false;
 
 		while ( !$this->it->end() )
 		{
@@ -159,7 +161,7 @@ class FilterObjectMethod extends FilterWebMethod
 				$value = trim($value);
 		});
 
-		if ( $this->object instanceof User ) {
+		if ( $this->object->getEntityRefName() == 'cms_User' ) {
             $values = array_merge( array ( 'user-id' => text(2480) ), $values );
         }
 		if ( $this->has_none ) {
@@ -171,7 +173,7 @@ class FilterObjectMethod extends FilterWebMethod
 		if ( $itemsCount > $this->rowsVisibilityLimit ) {
 			$values = array_merge( array ( 'search' => array( 'uid' => 'search') ), $values );
 		}
-        if ( $this->object->getPage() != '?' ) {
+        if ( $this->object->getPage() != '?' && !getSession()->getProjectIt()->IsPortfolio() ) {
             $values = array_merge(
                 $values,
                 array (

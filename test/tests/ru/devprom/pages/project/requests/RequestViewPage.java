@@ -9,6 +9,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -29,13 +30,13 @@ import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 
 public class RequestViewPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
 
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='activityrequest']]")
+	@FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addSpentTimeBtn;
 
 	@FindBy(id = "state-label")
@@ -104,6 +105,9 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//ul//a[text()='Удалить']")
 	protected WebElement deleteBtn;
 
+	@FindBy(id = "pm_ChangeRequestSubmitBtn")
+	protected WebElement submitBtn;
+
 	@FindBy(id = "collapseTwo")
 	protected WebElement captionEdit;
 
@@ -156,7 +160,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		try {
 			String name = driver
 					.findElement(
-							By.xpath("//th[contains(text(),'Функция')]/following-sibling::td"))
+							By.xpath("//th[contains(.,'Функция')]/following-sibling::td"))
 					.getText().trim();
 			return name.split("\\]")[1].trim();
 		} catch (NoSuchElementException e) {
@@ -188,12 +192,12 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	public String readUserAttribute(String attributeName) {
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//table[@class='properties-table']/tbody/tr/th[contains(text(),'"
+						.xpath("//table[@class='properties-table']//th[contains(.,'"
 								+ attributeName + "')]/following-sibling::td")));
 
 		return driver
 				.findElement(
-						By.xpath("//table[@class='properties-table']/tbody/tr/th[contains(text(),'"
+						By.xpath("//table[@class='properties-table']//th[contains(.,'"
 								+ attributeName + "')]/following-sibling::td"))
 				.getText().trim();
 	}
@@ -231,12 +235,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		return new RequestViewPage(driver);
 	}
 
-	public RequestViewPage addCommentWithAttachment(String comment,
-			String attachmentPath) {
-
-		// turn off popup dialog
-		String codeIE = "$.browser.msie = true; document.documentMode = 8;";
-		((JavascriptExecutor) driver).executeScript(codeIE);
+	public RequestViewPage addCommentWithAttachment(String comment, String attachmentPath) {
 
 		if (!addComment.isDisplayed()) {
 			collapseComments.click();
@@ -253,17 +252,19 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		CKEditor we = new CKEditor(driver);
 		we.typeText(comment);
 
+		String codeIE = "$('input[type]').css('visibility','visible')";
+		((JavascriptExecutor) driver).executeScript(codeIE);
+		
 		driver.findElement(
-				By.xpath("//div[@id='collapseComments']//input[@value='attachment']/following-sibling::a[contains(@class,'embedded-add-button')]"))
-				.click();
-		driver.findElement(
-				By.xpath("//div[contains(@id,'pagesectioncomments')]//input[@type='file' and contains(@id,'File')]"))
-				.sendKeys(attachmentPath);
-		driver.findElement(
-				By.xpath("//div[contains(@id,'pagesectioncomments')]//input[contains(@id,'saveEmbedded')]"))
-				.click();
+				By.xpath("//div[@id='collapseComments']//*[contains(@class,'file-browse')]//input")).sendKeys(attachmentPath);
 
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		}
+		
 		saveBtn.click();
+		
 		return new RequestViewPage(driver);
 	}
 
@@ -287,9 +288,8 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	public boolean isPictureFromCommentOpens(String text) {
 		driver.findElement(
 				By.xpath("//div[contains(@class,'comment-text') and contains(.,'"+text+"')]//a[contains(@class,'_attach')]")).click();
-		boolean isOpens = driver.findElements(By.id("fancy_img")).size() > 0;
-		if (isOpens)
-			driver.findElement(By.id("fancy_img")).click();
+		boolean isOpens = driver.findElements(By.xpath("//img[@class='fancybox-image']")).size() > 0;
+		driver.navigate().back();
 		return isOpens;
 	}
 
@@ -338,7 +338,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		driver.findElement(By.id("pm_ChangeRequestSubmitBtn")).click();
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//span[@id='state-label' and contains(text(),'Выполнено')]")));
+						.xpath("//span[@id='state-label' and contains(.,'Выполнено')]")));
 		return new RequestViewPage(driver);
 	}
 
@@ -365,12 +365,10 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	   		autocompleteSelect(releaseNumber, true);
 		}
 
-   		driver.findElement(
-				By.xpath("//button[@type='button']/span[text()='Сохранить']/.."))
-				.click();
+		submitDialog(submitBtn);
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//span[@id='state-label' and contains(text(),'В релизе')]")));
+						.xpath("//span[@id='state-label' and contains(.,'В релизе')]")));
 		return new RequestViewPage(driver);
 
 	}
@@ -387,11 +385,10 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		clickOnInvisibleElement(backToJournalLink);
 		waitForDialog();
 		(new CKEditor(driver)).typeText(comment);
-		submitDialog(driver.findElement(
-				By.xpath("//button[@type='button']/span[text()='Сохранить']/..")));
+		submitDialog(submitBtn);
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//span[@id='state-label' and contains(text(),'Добавлено')]")));
+						.xpath("//span[@id='state-label' and contains(.,'Добавлено')]")));
 		return new RequestViewPage(driver);
 	}
 
@@ -417,7 +414,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	public String[] readTestResults() {
 		List<WebElement> testScenarios = driver
 				.findElements(By
-						.xpath("//div[@id='collapseOne']//input[@value='requesttracetestexecution']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title')]"));
+						.xpath("//span[@name='pm_ChangeRequestTestExecution']//div[contains(@class,'transparent-btn')]"));
 		String[] results = new String[testScenarios.size()];
 		for (int i = 0; i < results.length; i++) {
 			results[i] = testScenarios.get(i).getText();
@@ -427,18 +424,17 @@ public class RequestViewPage extends SDLCPojectPageBase {
 
 	public Requirement[] readRequirements() {
 		Requirement[] results;
-		String s;
 		String[] ss;
+		String s;
 		List<WebElement> requirementsList = driver
 				.findElements(By
 						.xpath("//div[@id='collapseOne']//input[@value='requesttracerequirement']/following-sibling::div[contains(@id,'embeddedItems')]//div[@class='embeddedRowTitle']"));
 		results = new Requirement[requirementsList.size()];
 		for (int i = 0; i < results.length; i++) {
-			s = requirementsList.get(i).findElement(By.className("title"))
-					.getText().substring(1);
-			ss = s.split("\\]");
-			results[i] = new Requirement(ss[1].trim().split("\\(")[0].trim());
-			results[i].setId(ss[0].trim());
+			s = requirementsList.get(i).findElement(By.className("title")).getText();
+			ss = s.split(" ");
+			results[i] = new Requirement(ss[ss.length - 1].trim());
+			results[i].setId(s.split("]")[0].replace('[', ' ').trim());
 		}
 		return results;
 	}
@@ -480,7 +476,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 				.executeScript("document.evaluate(\"//div[@id='collapseTwo']\", document, null, 9, null).singleNodeValue.removeAttribute('class')");
 
 		WebElement p = captionEdit.findElement(By
-				.xpath(".//*[contains(text(),'" + text + "')]"));
+				.xpath(".//*[contains(.,'" + text + "')]"));
 		String tag = p.getTagName();
 		while (!tag.equals("div")) {
 			tags.add(tag);
@@ -506,10 +502,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	}
 
 	public String readDescription() {
-		((JavascriptExecutor) driver)
-		.executeScript("document.evaluate(\"//div[@id='collapseTwo']\", document, null, 9, null).singleNodeValue.removeAttribute('class')");
-		return driver.findElement(
-				By.xpath("//div[contains(@id,'pm_ChangeRequestDescription')]")).getText().trim();
+		return driver.findElement(By.xpath("//div[contains(@id,'pm_ChangeRequestDescription')]")).getText().trim();
 	}
 
 	public List<Spent> readSpentRecords() 
@@ -524,23 +517,28 @@ public class RequestViewPage extends SDLCPojectPageBase {
 	public List<Commit> readCommitRecords() {
 		List<WebElement> captions = driver
 				.findElements(By
-						.xpath("//div[@id='collapseOne']//input[@value='requesttracesourcecode']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title')]"));
+						.xpath("//span[@name='pm_ChangeRequestSourceCode']//span[contains(@class,'title')]"));
 		List<Commit> commitArray = new ArrayList<Commit>();
 		for (int i = 0; i < captions.size(); i++) {
-			commitArray.add(new Commit(captions.get(i).getText()));
+			try {
+				commitArray.add(new Commit(captions.get(i).getText()));
+			}
+			catch(StringIndexOutOfBoundsException e) {
+			}
 		}
 		return commitArray;
 	}
 
-	public List<String> readAttachments() {
+	public List<String> readAttachments() 
+	{
 		List<String> result = new ArrayList<String>();
 		List<WebElement> captions = driver
 				.findElements(By
-						.xpath("//div[@id='collapseOne']//input[@value='attachment']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title')]/a"));
+						.xpath("//div[contains(@class,'attachment-items')]//a[contains(@class,'image_attach')]"));
 		for (int i = 0; i < captions.size(); i++) {
-			result.add(captions.get(i).getText().trim());
+			String title = captions.get(i).getText().trim();
+			if ( !title.equals("") ) result.add(title);
 		}
-
 		return result;
 	}
 

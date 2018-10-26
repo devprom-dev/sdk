@@ -15,7 +15,7 @@ import ru.devprom.pages.project.settings.ProjectMembersPage;
 
 public class ScrumPageBase extends ProjectPageBase implements IProjectBase
 {
-	@FindBy(xpath = "//li[@id='tab_stg']/a")
+	@FindBy(xpath = "//a[@uid='settings-4-project']")
 	protected WebElement settingsLink;
 
 	@FindBy(xpath = "//li[@id='tab_favs']/a")
@@ -23,12 +23,6 @@ public class ScrumPageBase extends ProjectPageBase implements IProjectBase
 
 	@FindBy(xpath = "//li[@id='tab_reqs']/a")
 	protected WebElement analysisLink;
-	
-	@FindBy(xpath = "//ul[@id='menu_reqs']//a[@id='menu-group-features']")	
-	protected WebElement productAnMenu;
-	
-	@FindBy(xpath = "//ul[@id='menu_reqs']//a[@id='menu-group-tasks']")	
-	protected WebElement tasksMenu;
 	
 	// Доска историй
 	@FindBy(xpath = "//ul[@id='menu_reqs']//a[@uid='issues-board']")
@@ -39,7 +33,7 @@ public class ScrumPageBase extends ProjectPageBase implements IProjectBase
 	protected WebElement tasksBoardItem;
 	
 	// Участники
-	@FindBy(xpath = "//ul[@id='menu_stg']//a[text()='Участники']")
+	@FindBy(xpath = ".//a[@uid='permissions-participants']")
 	protected WebElement participantsListItem;
         
         // Бэклог
@@ -85,9 +79,6 @@ public class ScrumPageBase extends ProjectPageBase implements IProjectBase
 	
 	public IssuesBoardPage gotoIssuesBoard() {
 		analysisLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(productAnMenu));
-		if (!issuesBoardItem.isDisplayed())
-			productAnMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(issuesBoardItem));
 		issuesBoardItem.click();
 		return new IssuesBoardPage(driver);

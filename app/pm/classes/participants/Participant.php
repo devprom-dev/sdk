@@ -39,7 +39,8 @@ class Participant extends Metaobject
 		$this->setAttributeDescription('NotificationEmailType', text(1913));
 		$this->addPersister( new ParticipantDetailsPersister() );
 
-        $this->setAttributeDefault('NotificationTrackingType', 'system');
+        $this->setAttributeDefault('NotificationTrackingType', 'personal');
+        $this->setAttributeDefault('NotificationEmailType', 'direct');
 
 		$system_attributes = array (
             'Login',
@@ -68,12 +69,12 @@ class Participant extends Metaobject
 		$user_it = getFactory()->getObject('cms_User')->getExact($parms['SystemUser']);
 		if($user_it->count() > 0) 
 		{
-			$parms['Caption'] = $user_it->get('Caption');
-			$parms['Login'] = $user_it->get('Login');
-			$parms['Email'] = $user_it->get('Email');
-			$parms['HomePhone'] = $user_it->get('Phone');
-			$parms['ICQNumber'] = $user_it->get('ICQ');
-			$parms['Skype'] = $user_it->get('Skype');
+			$parms['Caption'] = $user_it->getHtmlDecoded('Caption');
+			$parms['Login'] = $user_it->getHtmlDecoded('Login');
+			$parms['Email'] = $user_it->getHtmlDecoded('Email');
+			$parms['HomePhone'] = $user_it->getHtmlDecoded('Phone');
+			$parms['ICQNumber'] = $user_it->getHtmlDecoded('ICQ');
+			$parms['Skype'] = $user_it->getHtmlDecoded('Skype');
 		}
 
 		return parent::add_parms( $parms );

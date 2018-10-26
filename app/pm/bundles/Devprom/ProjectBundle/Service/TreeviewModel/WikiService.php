@@ -86,7 +86,9 @@ class WikiService
 
     		$item = array();
 
-    		$title = $object_it->getTreeDisplayName('Caption');
+    		$title = $object_it->get('ParentPage') == ''
+                ? $object_it->getDisplayNameExt()
+                : $object_it->getTreeDisplayName('Caption');
 
     		$uid_info = $uid->getUidInfo($object_it);
     		if ( $this->root < 1 && $uid_info['alien'] ) $title = '{'.$uid_info['project'].'} ' . $title;

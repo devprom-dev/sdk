@@ -2,11 +2,8 @@
 
 class TestExecutionResultForm extends PMPageForm
 {
-	function __construct() 
-	{
-		global $model_factory;
-		
-		parent::__construct( $model_factory->getObject('pm_TestExecutionResult') );
+	function __construct() {
+		parent::__construct( getFactory()->getObject('pm_TestExecutionResult') );
 	}
 
 	function createField( $attribute ) 
@@ -16,11 +13,8 @@ class TestExecutionResultForm extends PMPageForm
 	    switch ( $attribute )
 	    {
 	        case 'ReferenceName':
-	            
 	            $object_it = $this->getObjectIt();
-	            
-	            if ( is_object($object_it) )
-	            {
+	            if ( is_object($object_it) ) {
 	                $field->setReadonly( in_array($object_it->get($attribute), array('succeeded', 'failed')) );
 	            }
 	    }

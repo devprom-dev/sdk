@@ -72,4 +72,25 @@ class PMPageChart extends PageChart
 		}
 		return $data;
 	}
+
+    function getExportActions()
+    {
+        $actions = array();
+
+        $method = new ExcelExportWebMethod();
+        $actions[] = array(
+            'uid' => 'export-excel',
+            'name' => 'Excel',
+            'url' => $method->url( $this->getTable()->getCaption() )
+        );
+
+        $method = new XmlExportWebMethod();
+        $actions[] = array(
+            'uid' => 'export-xml',
+            'name' => $method->getCaption(),
+            'url' => $method->url()
+        );
+
+        return $actions;
+    }
 }

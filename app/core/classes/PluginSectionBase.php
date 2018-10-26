@@ -49,7 +49,12 @@ class PluginSectionBase
  	{
  	    return array();
  	}
- 	
+
+    function getBuildersLatest()
+    {
+        return array();
+    }
+
 	function getObjectUrl( $object_it )
 	{
 	}

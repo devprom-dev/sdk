@@ -38,10 +38,10 @@ class IssueService {
     }
 
     public function saveIssue(Issue $issue,  User $author) {
-        $issue->setCaption(TextUtil::escapeHtml($issue->getCaption()));
-        $issue->setDescription(TextUtil::escapeForDevpromWysiwygFields($issue->getDescription()));
+        $issue->setCaption(TextUtil::escapeHtml(addslashes($issue->getCaption())));
+        $issue->setDescription(TextUtil::escapeForDevpromWysiwygFields(addslashes($issue->getDescription())));
         if ($issue->getId()) {
-            $this->updateIssue($issue);
+            $this->updateIssue($issue, $author);
         } else {
             $this->createIssue($issue, $author);
         }
@@ -60,9 +60,10 @@ class IssueService {
         return $issueRepository->findByAuthor(
             $authorEmail,
             array(
-            		'state.terminal' => 'asc',
-                    'state.name' => 'asc',
-            		$sortColumn => $sortDirection
+                'state.terminalNum' => 'asc',
+                'state.orderNum' => 'asc',
+                'state.name' => 'asc',
+                $sortColumn => $sortDirection
         	)
         );
     }
@@ -73,9 +74,10 @@ class IssueService {
         return $issueRepository->findByCompany(
             $authorEmail,
             array(
-            		'state.terminal' => 'asc',
-                    'state.name' => 'asc',
-            		$sortColumn => $sortDirection
+                'state.terminalNum' => 'asc',
+                'state.orderNum' => 'asc',
+                'state.name' => 'asc',
+                $sortColumn => $sortDirection
         	)
         );
     }
@@ -93,8 +95,9 @@ class IssueService {
         return $issue;
     }
 
-    public function saveComment(IssueComment $issueComment, Issue $issue, User $author) {
-        $issueComment->setText(TextUtil::escapeForDevpromWysiwygFields($issueComment->getText()));
+    public function saveComment(IssueComment $issueComment, Issue $issue, User $author)
+    {
+        $issueComment->setText(TextUtil::escapeForDevpromWysiwygFields(addslashes($issueComment->getText())));
 
         $issueComment->setVpd($issue->getVpd());
         $issueComment->setObjectClass('Request');
@@ -102,9 +105,7 @@ class IssueService {
         $issueComment->setExternalEmail($author->getEmail());
         $issue->addComment($issueComment);
 
-        $this->em->persist($issue);
-        $this->em->flush();
-
+        $this->clearNotifications($issue, $author);
         $this->objectChangeLogger->logCommentCreated($issueComment,$author);
     }
 
@@ -159,11 +160,21 @@ class IssueService {
         $this->objectChangeLogger->logIssueCreated($issue,$author);
     }
 
-    protected function updateIssue(Issue $issue)
+    protected function updateIssue(Issue $issue, User $author)
     {
-        $this->objectChangeLogger->logIssueModified($issue);
+        $severity = $issue->getSeverity();
+        if ( is_object($severity) ) {
+            try {
+                $priority = $this->em->getRepository('Devprom\ServiceDeskBundle\Entity\Priority')->find($severity->getId());
+                $issue->setPriority($priority);
+            }
+            catch( \Exception $e) {}
+        }
+
+        list($changed, $stateIt) = $this->objectChangeLogger->logIssueModified($issue, $author);
         $this->em->persist($issue);
         $this->em->flush();
+        $this->objectChangeLogger->notifyIssueModified($issue, $author, $stateIt, $changed);
     }
 
     /**

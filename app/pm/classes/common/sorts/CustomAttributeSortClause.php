@@ -16,7 +16,6 @@ class CustomAttributeSortClause extends SortAttributeClause
         return
             "(SELECT cav.".$attr_it->getRef('AttributeType')->getValueColumn()." FROM pm_AttributeValue cav ".
             "  WHERE cav.ObjectId = ".$this->getAlias().".".$this->getObject()->getIdAttribute().
-            "    AND cav.VPD = ".$this->getAlias().".VPD ".
             "    AND cav.CustomAttribute = ".$attr_it->getId()." LIMIT 1) ".$this->getSortType();
  	}
 }

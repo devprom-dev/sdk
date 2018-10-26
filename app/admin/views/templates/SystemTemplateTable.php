@@ -4,18 +4,19 @@ include 'SystemTemplateList.php';
 
 class SystemTemplateTable extends StaticPageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new SystemTemplateList( $this->getObject() );
 	}
 
-	function getNewActions()
-	{
+	function getNewActions() {
 		return array();
 	}
 	
-	function getActions()
-	{
+	function getActions() {
 		return array();
 	}
+
+    function getCaption() {
+        return translate('Тексты');
+    }
 }

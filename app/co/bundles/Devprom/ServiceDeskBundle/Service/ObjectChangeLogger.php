@@ -53,7 +53,11 @@ class ObjectChangeLogger
      * This function should be called only on detached entity and only prior to persist.
      * Otherwise it won't detected changed fields properly
      */
-    public function logIssueModified(Issue $issue) {
+    public function logIssueModified(Issue $issue, User $user)
+    {
+        $this->buildProjectSession($issue, $user);
+        $stateIt = getFactory()->getObject('Request')->getExact($issue->getId());
+
         $ocl = $this->createBaseObjectChangeLog($issue);
         $ocl->setChangeKind('modified');
         $ocl->setVisibilityLevel(2);
@@ -61,14 +65,20 @@ class ObjectChangeLogger
         $changedFields = $this->getChangedFields($issue);
 
         $content = '';
+        $modified = array();
         foreach ($changedFields as $key => $value) {
             $content .= $this->translator->trans('issue_' . $key) . ": " . $value[1] . "\r\n";
+            $modified[$key] = '';
         }
 
         $ocl->setContent($content);
 
         $this->em->persist($ocl);
         $this->em->flush();
+
+        return array(
+            $modified, $stateIt
+        );
     }
 
     public function logExternalUserRegistered(User $user) {
@@ -125,19 +135,21 @@ class ObjectChangeLogger
 
     protected function buildProjectSession($issue, User $user)
     {
-		return $this->project_session = new \PMSession(
-				getFactory()->getObject('Project')->getExact($issue->getProject()->getId()), 
-				new \AuthenticationFactory(
-						getFactory()->getObject('User')->createCachedIterator(
-                            array (
-                                array (
-                                    'Caption' => $user->getUsername(),
-                                    'Email' => $user->getEmail()
-                                )
-                            )
+        $this->project_session = new \PMSession(
+            getFactory()->getObject('Project')->getExact($issue->getProject()->getId()),
+            new \AuthenticationFactory(
+                getFactory()->getObject('User')->createCachedIterator(
+                    array (
+                        array (
+                            'Caption' => $user->getUsername(),
+                            'Email' => $user->getEmail()
                         )
-        		)
-			);
+                    )
+                )
+            )
+        );
+        getFactory()->setAccessPolicy(new \AccessPolicy(getFactory()->getCacheService()));
+		return $this->project_session;
     }
     
     protected function notifyCustomerCreated(User $user)
@@ -155,6 +167,15 @@ class ObjectChangeLogger
 		getFactory()->getEventsManager()->notify_object_add($object_it, array());
 		getFactory()->getEventsManager()
 	    	->executeEventsAfterBusinessTransaction($object_it, 'WorklfowMovementEventHandler');
+    }
+
+    public function notifyIssueModified(Issue $issue, User $user, $stateIt, array $changed)
+    {
+        $this->buildProjectSession($issue, $user);
+        $request = getFactory()->getObject('Request');
+        getFactory()->resetCachedIterator($request);
+        $object_it = $request->getExact($issue->getId());
+        getFactory()->getEventsManager()->notify_object_modify($stateIt, $object_it, $changed);
     }
 
     protected function notifyCommentCreated(IssueComment $comment, User $user)

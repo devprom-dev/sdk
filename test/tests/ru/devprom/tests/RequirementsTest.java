@@ -8,6 +8,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.junit.Ignore;
+import org.openqa.selenium.By;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.xml.sax.SAXException;
@@ -26,6 +29,7 @@ import ru.devprom.pages.CKEditor;
 import ru.devprom.pages.FavoritesPage;
 import ru.devprom.pages.LoginPage;
 import ru.devprom.pages.PageBase;
+import ru.devprom.pages.ProjectNewPage;
 import ru.devprom.pages.admin.ActivitiesPage;
 import ru.devprom.pages.admin.UsersListPage;
 import ru.devprom.pages.project.ProjectCommonSettingsPage;
@@ -52,6 +56,7 @@ import ru.devprom.pages.project.requirements.TraceMatrixPage;
 import ru.devprom.pages.project.settings.NewTextTemplatePage;
 import ru.devprom.pages.project.settings.ProjectMembersPage;
 import ru.devprom.pages.project.settings.TextTemplatesPage;
+import ru.devprom.pages.requirement.RequirementBasePage;
 
 public class RequirementsTest extends ProjectTestBase {
 
@@ -548,8 +553,8 @@ public class RequirementsTest extends ProjectTestBase {
 				rvp = rp.clickToRequirement(testRequirement.getId());
 				rvp = rvp.showVersion(version1);
 				rvp = rvp.compareWithVersion(version2);
-				Assert.assertEquals(rvp.getRemovedText(), "плюс новый текст", "Удаленный текст не соответствует ожиданиям");
-				Assert.assertEquals(rvp.getAddedText(), "Требования", "Добавленный текст не соответствует ожиданиям");
+				Assert.assertEquals(rvp.getAddedText(), "плюс новый текст", "Удаленный текст не соответствует ожиданиям");
+				Assert.assertEquals(rvp.getRemovedText(), "Требования", "Добавленный текст не соответствует ожиданиям");
 	}
 		
 	
@@ -634,7 +639,6 @@ public class RequirementsTest extends ProjectTestBase {
 		
 		String baseline1 = "Бейзлайн один";
 		String index = DataProviders.getUniqueString();
-		ProductFunction pfunction = new ProductFunction("TestFunction" + index);
 		Request testRequest = new Request("TestCR-"+ index,
 				"some description for my test change request",
 				Request.getHighPriority(), Request.getRandomEstimation(),
@@ -646,14 +650,8 @@ public class RequirementsTest extends ProjectTestBase {
 				new Template(this.waterfallTemplateName));
 		SDLCPojectPageBase favspage = (SDLCPojectPageBase) page.gotoProject(webTest);
 		
-		//Create new Function
-		FunctionsPage fp = favspage.gotoFunctions();
-		FunctionNewPage nfp = fp.clickNewFunction();
-		fp = nfp.createNewFunction(pfunction);
-		FILELOG.debug("Created Function: " + pfunction.getId());
-		
 		//Create new Request
-		RequestsPage mip = fp.gotoRequests();
+		RequestsPage mip = favspage.gotoRequests();
 		RequestNewPage ncrp = mip.clickNewCR();
 		mip = ncrp.createNewCR(testRequest);
 		FILELOG.debug("Created Request: " + testRequest.getId());
@@ -663,7 +661,6 @@ public class RequirementsTest extends ProjectTestBase {
 		RequirementNewPage nrp = rp.createNewRequirement();
 		Requirement testRequirement = new Requirement("TestR"+DataProviders.getUniqueString(), "Тестовое содержание");
 		testRequirement.addTag("Test_tag_" + index);
-		testRequirement.addFunction(pfunction.getId());
 		testRequirement.addRequest(testRequest.getId());
 				
 		RequirementViewPage rvp = nrp.create(testRequirement);
@@ -685,12 +682,10 @@ public class RequirementsTest extends ProjectTestBase {
 		List<String> attachments = rpp.getAttachments();
 		List<String> tags = rpp.readTags();
 		List<String> requests = rpp.readLinkedRequests();
-		List<String> functions = rpp.readLinkedFunctions();
 		rpp.close();
 		Assert.assertTrue(attachments.contains(attachement), "Не найдена ссылка на прикрепленное изображение");
 		Assert.assertTrue(tags.containsAll(testRequirement.getTags()), "Не найдены теги исходного Требования");
 		Assert.assertFalse(requests.containsAll(testRequirement.getRequests()), "Найдена ссылка на Пожелание");
-		Assert.assertTrue(functions.containsAll(testRequirement.getFunctions()), "Не найдена ссылка на Функцию");
 	}
 	
 	/**This method creates Requirement and a child Requirement for it.
@@ -818,11 +813,18 @@ public class RequirementsTest extends ProjectTestBase {
 		Requirement firstR = new Requirement("TestR"+DataProviders.getUniqueString());
 		Requirement secondR = new Requirement("TestR"+DataProviders.getUniqueString());
 		
-		PageBase page = new PageBase(driver);
-		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
-				new Template(this.waterfallTemplateName));
-		SDLCPojectPageBase favspage = (SDLCPojectPageBase) page.gotoProject(webTest);
-		RequirementsPage rp = favspage.gotoRequirements();
+        PageBase basePage = new PageBase(driver);
+        basePage.clickLink();
+        ProjectNewPage newProjectPage = basePage.clickNewProject();
+        RequirementBasePage favspage = (RequirementBasePage) newProjectPage.createNew(
+				new Project(
+						"Требования" + DataProviders.getUniqueStringAlphaNum(), 
+						"requirement" + DataProviders.getUniqueStringAlphaNum(),
+						new Template(this.requirementTemplateName)
+					)
+				);
+
+        RequirementsPage rp = favspage.gotoReestrRequirements();
 		RequirementNewPage nrp = rp.createNewRequirement();
 	
 		RequirementViewPage rvp = nrp.createSimple(firstR);

@@ -20,7 +20,6 @@ class TaskChartBurndown extends TaskChart
 		}
 		
 		$flot = new FlotChartBurndownWidget();
-		$flot->setLegend( false );
 		$flot->showPoints( false );
 		$flot->setUrl( getSession()->getApplicationUrl().'chartburndown.php?release_id='.$iteration_it->getId().'&json=1' );
 
@@ -54,7 +53,7 @@ class TaskChartBurndown extends TaskChart
 
     function getLegendVisible()
     {
-        return false;
+        return true;
     }
 
     function getOptions($filter_values)

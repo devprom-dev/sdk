@@ -50,13 +50,14 @@ class IterationMetricsPersister extends ObjectSQLPersister
 			"  ORDER BY m.SnapshotDays ASC LIMIT 1) PlannedEstimation ";
 
         $columns[] =
-            "((SELECT COUNT(1) FROM pm_Task s 
+            "((SELECT COUNT(1) FROM pm_Task s, pm_Methodology m 
 	           WHERE s.Release = " .$objectPK."	 
-	             AND s.State IN ('".join("','",getFactory()->getObject('pm_Task')->getNonTerminalStates())."')) +
+	             AND m.VPD = ".$alias.".VPD
+	             AND m.IsTasks = 'Y'
+	             AND s.FinishDate IS NULL ) +
 	          (SELECT COUNT(1) FROM pm_ChangeRequest s 
 	           WHERE s.Iteration = " .$objectPK."	 
-	             AND s.State IN ('".join("','",getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates())."'))) UncompletedItems ";
-
+	             AND s.FinishDate IS NULL )) UncompletedItems ";
 
         return $columns;
  	}

@@ -11,7 +11,8 @@ class FormTransitionAttributeEmbedded extends PMFormEmbedded
  			case 'ReferenceName':
             case 'IsVisible':
             case 'IsRequired':
- 				return true;
+            case 'IsAskForValue':
+                return true;
  			default:
  				return false;
  		}

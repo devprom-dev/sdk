@@ -7,7 +7,7 @@ class IssueAutoActionMetadataBuilder extends ObjectMetadataEntityBuilder
     {
     	if ( !$metadata->getObject() instanceof IssueAutoAction ) return;
 
-        $metadata->setAttributeVisible('OrderNum', false);
+        $metadata->setAttributeVisible('OrderNum', true);
         $metadata->setAttributeVisible('Conditions', true);
         $metadata->setAttributeVisible('Actions', true);
         $metadata->setAttributeVisible('NewComment', true);

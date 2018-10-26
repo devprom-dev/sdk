@@ -13,10 +13,10 @@ import ru.devprom.pages.project.requests.RequestNewPage;
 
 public class SupportRequestsPage extends SupportPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
-	@FindBy(xpath = "//a[@id='append-issue']")
+	@FindBy(xpath = "//a[@id='new-issue']")
 	protected WebElement newRequestBtn;
 	
 	@FindBy(id = "pm_ChangeRequestCaption")
@@ -57,7 +57,7 @@ public class SupportRequestsPage extends SupportPageBase {
 		submitDialog(submitBtn);
 		//read ID
 		driver.navigate().to(driver.getCurrentUrl()+"&state=all");	
-    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(text(),'"+request.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
+    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+request.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
     	request.setId(uid.substring(1, uid.length()-1));
     	FILELOG.debug("Created Request: " + request.getId());
     	
@@ -80,7 +80,7 @@ public class SupportRequestsPage extends SupportPageBase {
 	public String readIDByName(String name) {
 		WebElement row = driver
 				.findElement(By
-						.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(text(),'"
+						.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(.,'"
 								+ name + "')]/.."));
 		String id = row.findElement(By.id("uid")).getText();
 		return id.substring(1, id.length() - 1);

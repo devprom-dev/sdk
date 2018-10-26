@@ -77,8 +77,8 @@ class FlotChartBurndownWidget extends FlotChartWidget
 							}
 						},
 						legend: {
-							show: false,
-							position: 'nw'
+							show: <?=($this->getShowLegend() ? 'true' : 'false')?>,
+							position: 'ne'
 						},
 						xaxis: { mode: 'time', tickDecimals: 0, color: 'rgb(192,192,192)', tickLength:0 },
 						yaxis: { tickDecimals: 0, color: 'rgb(192,192,192)', tickLength:0 },

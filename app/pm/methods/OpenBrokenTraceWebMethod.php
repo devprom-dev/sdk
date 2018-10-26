@@ -42,7 +42,7 @@ class OpenBrokenTraceWebMethod extends WebMethod
 				$url = $broken_it->getViewUrl().'&compareto=document:'.$trace_it->get('SourceDocumentId');
 			}
 
-			echo $url;
+			echo $url.'&applyChanges';
 		}
 		else
 		{
@@ -62,7 +62,7 @@ class OpenBrokenTraceWebMethod extends WebMethod
 				}
 			}
 			
-			echo $url;
+			echo $url.'&applyChanges';
 		}
 	}
 }

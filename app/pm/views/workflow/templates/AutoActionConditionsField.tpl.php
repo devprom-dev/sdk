@@ -4,22 +4,23 @@ global $tabindex;
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
 
+$conditionsRowsNum = defined('AUTOACTION_CONDITIONS_ROWSNUM') ? AUTOACTION_CONDITIONS_ROWSNUM : 5;
+
 $default_conditions = array (
-		array (
-				'Condition' => 'Description',
-				'Operator' => 'contains',
-				'Value' => ''
-		),
-		array (
-				'Condition' => '',
-				'Operator' => '',
-				'Value' => ''
-		),
-		array (
-				'Condition' => '',
-				'Operator' => '',
-				'Value' => ''
-		)
+    array (
+        'Condition' => 'Description',
+        'Operator' => 'contains',
+        'Value' => ''
+    )
+);
+$default_conditions = array_pad(
+    $default_conditions,
+    $conditionsRowsNum,
+    array (
+        'Condition' => '',
+        'Operator' => '',
+        'Value' => ''
+    )
 );
 
 if ( !is_array($conditions['items']) ) $conditions['items'] = array();
@@ -28,7 +29,7 @@ if ( count($conditions['items']) < count($default_conditions) )
 	$append_items = count($default_conditions) - count($conditions['items']); 
 	$conditions['items'] = array_merge(
 			$conditions['items'], 
-			array_slice($default_conditions, max(0,3 - $append_items), $append_items)
+			array_slice($default_conditions, max(0,count($default_conditions) - $append_items), $append_items)
 		);
 }
 

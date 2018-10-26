@@ -67,6 +67,11 @@ class LeadAndCycleTimeChart extends PMPageChart
 		return array();
 	}
 
+    function getOptions($filter_values)
+    {
+        return array();
+    }
+
 	function drawLegend( $data, & $aggs )
 	{
 	}

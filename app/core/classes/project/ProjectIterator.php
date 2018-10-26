@@ -21,19 +21,14 @@ class ProjectIterator extends OrderedIterator
         $this->setObject( new Project );
     }
 
-	function IsTender()
-	{
-		return $this->get('IsTender') == 'Y';
-	}
-
  	function IsPortfolio()
 	{
-		return $this->get('IsTender') == 'F';
+		return $this->get('IsTender') == 'F' && $this->get('LinkedProject') != '';
 	}
 
   	function IsProgram()
 	{
-		return $this->get('IsTender') == 'Y';
+		return $this->get('IsTender') == 'Y' && $this->get('LinkedProject') != '';
 	}
 
 	function getParentIt()
@@ -77,73 +72,11 @@ class ProjectIterator extends OrderedIterator
 	    return $portfolio_it->getId() != '' ? $portfolio_it : $this->object->createCachedIterator(array());
 	}
 	
-	function HasProductSite()
-	{
-		return $this->get('Tools') != '';
-	}
-
-	function getTenderIt()
-	{
-		global $model_factory;
-		
-		$part = $model_factory->getObject('co_TenderParticipant');
-		$part_it = $part->getByRef('Project', $this->getId());
-		
-		if ( $part_it->count() > 0 )
-		{
-			return $part_it->getRef('Tender');
-		}
-		else
-		{
-			return null;
-		}
-	}
-	
- 	function IsPublic() 
+ 	function IsPublic()
  	{
  		return $this->get('IsProjectInfo') == 'Y';
  	}
  	 
- 	function IsPublicBlog() {
- 		return $this->get('IsBlog') == 'Y';
- 	}
- 	
- 	function IsPublicParticipants() {
- 		return $this->get('IsParticipants') == 'Y';
- 	}
- 	
- 	function IsPublicReleases() {
- 		return $this->get('IsReleases') == 'Y';
- 	}
- 	
- 	function IsPublicChangeRequests() {
- 		return $this->get('IsChangeRequests') == 'Y';
- 	}
- 	
- 	function IsPublicDocumentation() {
- 		return $this->get('IsPublicDocumentation') == 'Y';
- 	}
-
- 	function IsPublicArtefacts() {
- 		return $this->get('IsPublicArtefacts') == 'Y';
- 	}
- 	
-	function IsUsedPolls()
-	{
-		return $this->get('IsPollUsed') != 'N';
-	}
-	
- 	function IsUserParticipate( $user_id ) 
- 	{
- 		$sql = " SELECT p.* " .
- 				"  FROM pm_Participant p " .
- 				" WHERE p.Project = ".$this->getId().
- 				"   AND p.SystemUser = ".$user_id.
- 				"   AND IFNULL(IsActive,'Y') = 'Y' ";
- 		
- 		return getFactory()->getObject('pm_Participant')->createSQLIterator($sql)->count() > 0;
- 	}
- 	
  	function IsActive()
  	{
  		return $this->get('IsClosed') != 'Y';
@@ -157,69 +90,6 @@ class ProjectIterator extends OrderedIterator
  	function IsInEnglish()
  	{
  		return $this->get('Language') == 2;
- 	}
-
- 	function getParticipantIt()
- 	{
- 		$part = getFactory()->getObject('pm_Participant');
- 		
- 		$part->defaultsort = 'Caption ASC';
-
- 		$it = $part->getByRef2('Project', $this->getId(),
- 			"IFNULL(IsActive,'Y')", "Y");
-
- 		return $it;
- 	}
- 	
- 	function getParticipantsCount()
- 	{
- 		global $model_factory;
- 		
- 		$part = $model_factory->getObject('pm_Participant');
-
- 		return $part->getByRefArrayCount(
-			array( 'Project' => $this->getId(),
- 				   "IFNULL(IsActive,'Y')" => "Y" ) );
- 	}
-
- 	function getParticipantForUserIt( $user_it )
- 	{
- 		$sql = " SELECT p.* " .
- 				"  FROM pm_Participant p " .
- 				" WHERE p.Project = ".$this->getId().
- 				"   AND p.SystemUser = ".$user_it->getId().
- 				"   AND IFNULL(IsActive,'Y') = 'Y' ";
- 		
- 		return getFactory()->getObject('pm_Participant')->createSQLIterator($sql);
- 	}
- 	
-
- 	function getSubscribersIt( $limit = 0 )
- 	{
- 		$sql = " SELECT u.* FROM co_ProjectSubscription s, cms_User u " .
- 			   "  WHERE s.Project = ".$this->getId().
- 			   "    AND s.SystemUser = u.cms_UserId ".
- 			   "  ORDER BY RAND() DESC, PhotoExt DESC " .
- 			   ($limit > 0 ? " LIMIT ".$limit : "");
- 			    
- 		return getFactory()->getObject('cms_User')->createSQLIterator($sql);
- 	}
-
- 	function getSubscribersCount()
- 	{
-		return getFactory()->getObject('co_ProjectSubscription')->getByRefArrayCount(
-			array( 'Project' => $this->getId() ) );
- 	}
-
- 	function IsSubscribed()
- 	{
- 		global $model_factory;
- 		
- 		$sub = $model_factory->getObject('co_ProjectSubscription');
-		
-		return $sub->getByRefArrayCount(
-			array ( 'Project' => $this->getId(),
-					'SystemUser' => getSession()->getUserIt()->getId() ) ) > 0;
  	}
 
  	function getLeadIt()

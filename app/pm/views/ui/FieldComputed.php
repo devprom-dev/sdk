@@ -46,7 +46,7 @@ class FieldComputed extends Field
 			$widget_it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', $className);
 			if ( $widget_it->getId() != '' ) {
 				$url = getFactory()->getObject($widget_it->get('ReferenceName'))->getExact($widget_it->getId())->getUrl(
-					strtolower($className).'='.join(',',$ids)
+					strtolower($className).'='.\TextUtils::buildIds($ids)
 				);
 			}
 		}

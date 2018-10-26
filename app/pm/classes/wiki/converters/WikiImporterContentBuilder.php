@@ -22,12 +22,12 @@ class WikiImporterContentBuilder
         if ( $options['State'] != '' ) {
             $parms['State'] = $options['State'];
         }
-        return $this->object->getExact($this->object->add_parms($parms));
+        return $this->object->getRegistryBase()->Create($parms);
     }
 
     public function buildPage($title, $content, $options, $parentId)
     {
-        return $this->object->getExact($this->object->add_parms(
+        return $this->object->getRegistryBase()->Create(
             array_merge(
                 array (
                     'Caption' => $title,
@@ -36,7 +36,7 @@ class WikiImporterContentBuilder
                 ),
                 $options
             )
-        ));
+        );
     }
 
     public function parsePages( $documentIt )

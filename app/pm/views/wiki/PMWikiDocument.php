@@ -39,8 +39,18 @@ class PMWikiDocument extends PMWikiTable
 	        return $this->getObject()->getEmptyIterator();
 	    }
 	}
-	
-	function getObjectIt()
+
+	function buildFilterState($filterValues = array())
+    {
+        $state_it = getFactory()->getObject($this->getObject()->getStateClassName())->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate($this->getDocumentIt()->get('VPD'))
+            )
+        );
+        return new FilterStateMethod($this->getObject(), $state_it);
+    }
+
+    function getObjectIt()
 	{
 	    if ( is_object($this->object_it) ) return $this->object_it->copy();
 	    
@@ -62,7 +72,9 @@ class PMWikiDocument extends PMWikiTable
 	function getPreviewPagesNumber()
 	{
         $values = $this->getFilterValues();
-		return $values['viewmode'] == 'view' || $_REQUEST['compareto'] != '' ? 0 : 10;
+		return $values['viewmode'] == 'view' || $_REQUEST['compareto'] != ''
+            ? 0
+            : (defined('DOC_CACHED_PAGES') ? DOC_CACHED_PAGES : 50);
 	}
 
 	function getDefaultRowsOnPage()
@@ -72,20 +84,14 @@ class PMWikiDocument extends PMWikiTable
 
 	function getRevisionIt()
 	{
-		global $model_factory;
-		
 	    if ( is_object($this->revision_it) ) return $this->revision_it;
-	    
-	    $baseline = $model_factory->getObject('Snapshot');
-	    
-	    $values = $this->getFilterValues();
 
- 		if ( in_array($values['baseline'], array('', 'none', 'all')) )
- 		{
+        $values = $this->getFilterValues();
+	    $baseline = getFactory()->getObject('Snapshot');
+ 		if ( in_array($values['baseline'], array('', 'none', 'all')) ) {
  			$this->revision_it = $baseline->getEmptyIterator();
  		}
- 		else
- 		{
+ 		else {
  			$this->revision_it = $baseline->getExact($values['baseline']);
  		}
  		
@@ -109,17 +115,6 @@ class PMWikiDocument extends PMWikiTable
         return $this->version_it = getFactory()->getObject('Baseline')->getByRef('Caption', $version);
     }
 
-    function getFilterValues()
-    {
-        return array_merge(
-            parent::getFilterValues(),
-            array(
-                'page' => $this->getDocumentIt()->getId(),
-                'document' => $this->getDocumentIt()->getId()
-            )
-        );
-    }
-
 	function buildFiltersName() {
         return parent::buildFiltersName().'-'.$this->getDocumentIt()->getId();
 	}
@@ -131,10 +126,16 @@ class PMWikiDocument extends PMWikiTable
     function getShareUrlParms() {
         return array_merge(
             array(
-                'viewmode' => 'view'
+                'viewmode' => 'recon',
+                'page' => $this->getDocumentIt()->getId(),
+                'document' => $this->getDocumentIt()->getId()
             ),
             parent::getShareUrlParms()
         );
+    }
+
+    function getSaveActions( $actions ) {
+        return $actions;
     }
 
     public function buildFilterValuesByDefault( & $filters )
@@ -210,8 +211,11 @@ class PMWikiDocument extends PMWikiTable
             )
         );
 	}
-	
-	
+
+    function buildCompareBaselineFilter()
+    {
+    }
+
 	function buildViewModeFilter()
 	{
 	    $mode_filter = new FilterObjectMethod( new DocumentMode(), '', 'viewmode' );
@@ -348,13 +352,13 @@ class PMWikiDocument extends PMWikiTable
 			$actions = array (
                 array (
                     'name' => $baseline_selected,
-                    'class' => $baseline_selected != translate('Версия') ? 'btn-info' : "btn",
+                    'class' => $baseline_selected != translate('Версия') ? 'btn-info' : "btn-light",
                     'items' => $baselines,
                     'uid' => 'baseline'
                 ),
                 array (
                     'name' => $title,
-                    'class' => $selected != '' ? 'btn-info' : "btn",
+                    'class' => $selected != '' ? 'btn-info' : "btn-light",
                     'items' => $actions,
                     'uid' => 'compareto'
                 )
@@ -363,7 +367,7 @@ class PMWikiDocument extends PMWikiTable
 			if ( $this->getCompareToSnapshot()->getId() != '' ) {
                 $actions[] = array(
                     'name' => $_REQUEST['comparemode'] == 'modified' ? text(2601) : text(2600),
-                    'class' => $_REQUEST['comparemode'] != '' ? 'btn-info' : "btn",
+                    'class' => $_REQUEST['comparemode'] != '' ? 'btn-info' : "btn-light",
                     'items' => array(
                         array(
                             'name' => translate('Все'),
@@ -386,6 +390,10 @@ class PMWikiDocument extends PMWikiTable
 
  	function getRenderParms( $parms )
  	{
+        if ( $_REQUEST['comparemode'] == '' ) {
+            $_REQUEST['comparemode'] = 'modified';
+        }
+
 		$parent_parms = parent::getRenderParms( $parms );
 
         foreach( $parent_parms['sections'] as $key => $section ) {
@@ -463,10 +471,11 @@ class PMWikiDocument extends PMWikiTable
                 'name' => text(2271),
                 'url' => $listWidgetIt->getUrl(
                     $this->dataFilterApplied()
-                        ? strtolower(get_class($this->getObject())).'='.join('-',$this->getListIteratorRef()->idsToArray())
+                        ? strtolower(get_class($this->getObject())).'='.\TextUtils::buildIds($this->getListIteratorRef()->idsToArray())
                         : 'group=none&type=all&document='.$this->getDocumentIt()->getId()
                 ),
-                'uid' => 'list-view'
+                'uid' => 'list-view',
+                'view' => 'button'
             );
         }
 
@@ -495,7 +504,7 @@ class PMWikiDocument extends PMWikiTable
 			$history_url .= '&start='.$this->getRevisionIt()->getDateTimeFormat('RecordCreated'); 
 		}
 		$actions[] = array(
-		        'name' => text(2238),
+		        'name' => text(824),
 				'url' => $history_url,
 		        'uid' => 'history'
 		);
@@ -525,10 +534,13 @@ class PMWikiDocument extends PMWikiTable
             'name' => translate('Просмотр'),
             'url' => $url.'&viewmode=view'
         );
-        $actions[] = array (
-            'name' => translate('Согласование'),
-            'url' => $url.'&viewmode=recon'
-        );
+
+		if ( $this->getObject()->getStateClassName() != '' ) {
+            $actions[] = array (
+                'name' => translate('Согласование'),
+                'url' => $url.'&viewmode=recon'
+            );
+        }
 
 		$method = new WikiRemoveStyleWebMethod($this->getDocumentIt());
 		
@@ -617,7 +629,7 @@ class PMWikiDocument extends PMWikiTable
 
     function getDetailsParms() {
         return array (
-            'active' => 'more'
+            'active' => 'discussions'
         );
     }
 
@@ -625,9 +637,12 @@ class PMWikiDocument extends PMWikiTable
     {
         $details = parent::getDetails();
         $documentIt = $this->getDocumentIt();
-        unset($details['props']);
         $details['discussions']['url'] .= '&document='.$documentIt->getId();
         $details['more']['url'] .= '&document='.$documentIt->getId();
         return $details;
+    }
+
+    protected function buildQuickReports(& $base_actions)
+    {
     }
 }

@@ -13,9 +13,12 @@ class ObjectUID
  	function __construct( $baseline_id = '', $object = null )
  	{
  		$this->setBaseline( $baseline_id );
- 		
+
+ 		// free letters B J L N U W X Y Z
  		$this->map = array(
- 			'pm_ChangeRequest' => 'I',
+ 			'Request' => 'I',
+            'Increment' => 'I',
+            'Issue' => 'U',
  			'pm_Task' => 'T',
  			'Requirement' => 'R',
  		    'ProjectPage' => 'K',
@@ -98,7 +101,7 @@ class ObjectUID
  	
  	function hasUid( $object_it ) 
  	{
- 		return ( $this->map[$this->getClassName($object_it)] != '' );
+ 		return ( $this->map[$this->getClassName($object_it)] != '' || $this->map[get_class($object_it->object)] != '' );
  	}
  	
  	function hasUidObject( $object ) 
@@ -118,7 +121,9 @@ class ObjectUID
 			case 'pm_TestCaseExecution':
 				return $this->getObjectUidInt($class_name, $object_it->get('Test'));
  			default:
- 				return $this->getObjectUidInt($class_name, $object_it->getId());
+ 				return $this->map[$class_name] != ''
+                    ? $this->getObjectUidInt($class_name, $object_it->getId())
+                    : $this->getObjectUidInt(get_class($object_it->object), $object_it->getId());
  		}
  	}
 
@@ -148,7 +153,9 @@ class ObjectUID
  		if ( $object_it->object->getEntityRefName() == 'Comment' )
  		{
  			$anchor_it = $object_it->getAnchorIt();
- 			$parts = preg_split('/#/', $anchor_it->getCommentsUrl());
+ 			$url = $anchor_it->getCommentsUrl();
+ 			if ( $url == '' ) return '';
+ 			$parts = preg_split('/#/', $url);
  			return $parts[0].'#comment'.$object_it->getId();
  		}
  		else
@@ -208,14 +215,18 @@ class ObjectUID
 
  	function getUIDInfo( $object_it, $caption = false )
  	{
- 	    if ( !$this->hasUid( $object_it ) ) return array();
+ 	    if ( !$this->hasUid( $object_it ) ) {
+ 	        return array(
+ 	            'caption' => $object_it->getDisplayName()
+            );
+        }
 
 		$this->setObject($object_it->object);
 		
 	    $uid = $this->getObjectUid($object_it);
 
 		$self_project_name = $object_it->get('ProjectCodeName');
-		if ( $object_it->object instanceof Project ) {
+		if ( $object_it->object->getEntityRefName() == 'pm_Project' ) {
             $url = $this->server_url.$uid;
         }
         else {
@@ -261,9 +272,12 @@ class ObjectUID
  		
  		$info = $this->getUIDInfo( $object_it, true );
  		
-        $text = '['.$info['uid'].'] ';
-		
- 		if ( $info['alien'] && $object_it->object->getEntityRefName() != 'pm_Project' ) $text .= ' {'.$info['project'].'} ';
+        if ( $object_it->object->getEntityRefName() != 'pm_Project' && $info['alien'] ) {
+            $text = '['.$info['project'].":".$info['uid'].'] ';
+        }
+        else {
+            $text = '['.$info['uid'].'] ';
+        }
 
  		$text .= $info['caption'];
  		
@@ -295,9 +309,9 @@ class ObjectUID
 			case 'pm_Project':
 				$need_project = false;
 				break;
-			default:
-			    $title = str_replace('"', "'", html_entity_decode($object_it->getDisplayNameExt(), ENT_COMPAT | ENT_HTML401, APP_ENCODING));
-				break;
+            case 'pm_ChangeRequest':
+                $object_it = $object_it->getSpecifiedIt();
+                break;
 		}
 		
 		$info = $this->getUIDInfo( $object_it );
@@ -325,9 +339,9 @@ class ObjectUID
         
         if ( $object_it->object instanceof TestExecution || $object_it->object instanceof TestCaseExecution )
         {
-        	$class = $object_it->get('ResultReferenceName') == 'failed'
+        	$class = strpos($object_it->get('ResultReferenceName'), 'failed') !== false
  				? 'label-important' 
- 				: ($object_it->get('ResultReferenceName') == 'succeeded' ? 'label-success' : 'label-warning');
+ 				: (strpos($object_it->get('ResultReferenceName'), 'hold') !== false ? 'label-warning' : 'label-success');
         	$html = '<span class="label label-uid '.$class.'">'.$html.'</span>';
         }
 
@@ -362,7 +376,7 @@ class ObjectUID
 		if ( !is_object($object_it) ) return '';
 		if ( $object_it->getId() == '' ) return '';
  		$text = $this->getUidIcon( $object_it, $need_project );
- 		$caption = html_entity_decode($object_it->getDisplayNameExt());
+ 		$caption = $object_it->getDisplayNameExt();
 	    $text .= $caption;
         return $text;
  	}

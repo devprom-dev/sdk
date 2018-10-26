@@ -28,7 +28,7 @@ public class RequestEditPage extends RequestNewPage {
 	@FindBy(id = "FunctionText")
 	protected WebElement functionsList;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttag']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestTags']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTag;
 
 	@FindBy(id = "AuthorText")
@@ -43,7 +43,7 @@ public class RequestEditPage extends RequestNewPage {
 	@FindBy(id = "ClosedInVersionText")
 	protected WebElement closedInVersionList;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='task']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestTasks']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTaskBtn;
 
 	@FindBy(xpath = "//form//input[@value='task']/following-sibling::div[contains(@id,'fieldRowTaskType')]//select")
@@ -52,40 +52,37 @@ public class RequestEditPage extends RequestNewPage {
 	@FindBy(xpath = "//form//input[@value='task']/following-sibling::div[contains(@id,'fieldRowAssignee')]//select")
 	protected WebElement taskExecutorSelect;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='attachment']]")
+	@FindBy(xpath = "//form//a[contains(@class,'file-browse')]")
 	protected WebElement addAttachmentBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requestlink']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestLinks']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addLinkedReqsBtn;
 
 	@FindBy(xpath = "//form//input[@value='requestlink']/following-sibling::div[contains(@id,'fieldRowLinkType')]//select[contains(@id,'LinkType')]")
 	protected WebElement linkedTypeSelect;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttracemilestone']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestDeadlines']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addDeadlineBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttracerequirement']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestRequirement']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addRequirementsBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='watcher']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestWatchers']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addWatcherBtn;
 	
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='activityrequest']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addSpentTimeBtn;
 
 	@FindBy(id = "pm_ChangeRequestDeleteBtn")
 	protected WebElement deleteBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttracetestscenario']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestTestScenario']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTestDocBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttracetestexecution']]")
-	protected WebElement addTestResultsBtn;
-
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttracehelppage']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestHelpPage']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addDocsBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requesttracesourcecode']]")
+	@FindBy(xpath = "//form//span[@name='pm_ChangeRequestSourceCode']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addSourceCodeBtn;
 
 	public RequestEditPage(WebDriver driver) {
@@ -205,25 +202,6 @@ public class RequestEditPage extends RequestNewPage {
 
 		} catch (NoSuchElementException e) {
 			FILELOG.error("Test documentation " + testdoc
-					+ " is not found in the system");
-		}
-	}
-
-	public void addTestResults(String testresults)
-	{
-		clickTraceTab();
-		addTestResultsBtn.click();
-		try {
-			driver.findElement(
-					By.xpath("//form//input[@value='requesttracetestexecution']/following-sibling::div[contains(@id,'fieldRowObjectId')]//input[contains(@id,'ObjectIdText')]"))
-					.sendKeys(testresults);
-			autocompleteSelect(testresults);
-			driver.findElement(
-					By.xpath("//form//input[@value='requesttracetestexecution']/following-sibling::div//input[contains(@id,'saveEmbedded')]"))
-					.click();
-
-		} catch (NoSuchElementException e) {
-			FILELOG.error("Test results " + testresults
 					+ " is not found in the system");
 		}
 	}
@@ -457,14 +435,15 @@ public class RequestEditPage extends RequestNewPage {
 	public void addAttachment(File attachment)
 	{
 		clickMainTab();
-		//turn off popup dialog
-		String codeIE = "$.browser.msie = true; document.documentMode = 8;";
+
+		String codeIE = "$('input[type]').css('visibility','visible')";
 		((JavascriptExecutor) driver).executeScript(codeIE);
-		addAttachmentBtn.click();
-		// make file input visible
-		((JavascriptExecutor) driver).executeScript("document.evaluate(\"//form//input[contains(@id,'_File') and @type='file']\", document, null, 9, null).singleNodeValue.removeAttribute('style')");
-		// fill file input
-		driver.findElement(By.xpath("//form//input[contains(@id,'_File') and @type='file']")).sendKeys(attachment.getAbsolutePath());
-		driver.findElement(By.xpath("//form//span[@id='pm_ChangeRequestAttachment']//input[@action='save']")).click();
+		
+		addAttachmentBtn.findElement(By.xpath(".//input")).sendKeys(attachment.getAbsolutePath());
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		}
 	}
 }

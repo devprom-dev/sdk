@@ -21,7 +21,7 @@ public class TestScenariosPage extends SDLCPojectPageBase {
     @FindBy(xpath = ".//*[@id='bulk-actions']/a")
 	protected WebElement moreBtn;
 
-    @FindBy(xpath = "//a[@id='create' and contains(.,'Тестовый сценарий')]")
+    @FindBy(xpath = "//a[@id='create-scenario']")
 	protected WebElement addNewTestScenarioBtn;
 	
 	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains (text(),'Действия')]")

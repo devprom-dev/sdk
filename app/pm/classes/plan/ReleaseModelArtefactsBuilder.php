@@ -8,10 +8,16 @@ class ReleaseModelArtefactsBuilder extends ObjectModelBuilder
     {
 		if ( !$object instanceof Release ) return;
 
-		$object->addAttribute('Issues', 'REF_pm_ChangeRequestId', translate('Пожелания'), false, false, '', 90);
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
+        if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD && class_exists('Increment') ) {
+            $object->addAttribute('Issues', 'REF_IncrementId', translate('Реализация'), false, false, '', 90);
+        }
+        else {
+            $object->addAttribute('Issues', 'REF_pm_ChangeRequestId', translate('Пожелания'), false, false, '', 90);
+        }
 		$object->addAttributeGroup('Issues', 'tab-issues');
 
-		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->HasPlanning() && $methodology_it->HasTasks() ) {
 			$object->addAttribute('Tasks', 'REF_pm_TaskId', translate('Задачи'), false, false, '', 100);
 			$object->addAttributeGroup('Tasks', 'tab-tasks');

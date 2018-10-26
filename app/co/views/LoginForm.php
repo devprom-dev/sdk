@@ -32,7 +32,7 @@ class LoginForm extends AjaxForm
         return array_merge(
             parent::getRenderParms($view),
             array (
-                'redirect_url' => $this->session->get('redirect')
+                'redirect_url' => SanitizeUrl::parseUrl($this->session->get('redirect'))
             )
         );
     }

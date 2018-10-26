@@ -126,7 +126,7 @@ foreach( $attributes as $key => $attribute ) {
 	<div class="control-column" style="<?=$style?>">
 	
 	<?php foreach( $attributes as $key => $attribute ) { ?>
-	
+
 		<?php if ( $attribute['type'] == 'char' ) { ?>
 	
 			  <div class="control-group" id="fieldRow<?=$key?>">
@@ -165,7 +165,7 @@ foreach( $attributes as $key => $attribute ) {
 
 <?php foreach( $invisible as $key => $attribute ) { ?>
 
-	<?php if ( !$attribute['visible'] ) { ?>
+	<?php if ( !$attribute['visible'] && $attribute['required'] ) { ?>
 		<input id="<?=$attribute['id']?>" type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>" referenceName="<?=$attribute['referenceName']?>">
 	<?php continue; } ?>
 	

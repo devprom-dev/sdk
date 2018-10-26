@@ -10,7 +10,7 @@ class ProjectRemove extends Command
 		
 		if( !getSession()->getUserIt()->IsAdministrator() ) return;
 
-		$ids = preg_split('/-/', $_REQUEST['project']);
+		$ids = \TextUtils::parseIds($_REQUEST['project']);
 		
 		foreach( $ids as $project_id )
 		{

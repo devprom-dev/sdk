@@ -48,9 +48,9 @@ class KanbanRequestTable extends RequestTable
         return count($vpds) > 0 ? $vpds : array(getSession()->getProjectIt()->get('VPD'));
     }
 
-	protected function buildFilterState()
+	protected function buildFilterState( $filterValues = array() )
 	{
-		$filter = parent::buildFilterState();
+		$filter = parent::buildFilterState($filterValues);
 		$filter->setDefaultValue('all');
 		return $filter;
 	}

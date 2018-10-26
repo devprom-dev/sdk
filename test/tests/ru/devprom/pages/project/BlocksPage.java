@@ -20,13 +20,13 @@ public class BlocksPage extends SDLCPojectPageBase {
 
 	
 	public boolean isUserInList(String username){
-		return !driver.findElements(By.xpath("//td[@id='systemuser' and contains(text(),'"+username + "')]")).isEmpty();
+		return !driver.findElements(By.xpath("//td[@id='systemuser' and contains(.,'"+username + "')]")).isEmpty();
 	}
 
 	
 	
 	public BlocksPage unblockUser(String userName) {
-		WebElement unBlockBtn = driver.findElement(By.xpath("//td[@id='systemuser' and contains(text(),'"+userName + "')]/following-sibling::td[@id='operations']//a[contains(.,'Разблокировать')]"));
+		WebElement unBlockBtn = driver.findElement(By.xpath("//td[@id='systemuser' and contains(.,'"+userName + "')]/following-sibling::td[@id='operations']//a[contains(.,'Разблокировать')]"));
         clickOnInvisibleElement(unBlockBtn);
 	    try {
 			Thread.sleep(2000);

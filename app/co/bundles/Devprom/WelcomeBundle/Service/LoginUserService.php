@@ -71,7 +71,20 @@ class LoginUserService
 									'BlockReason' => text(1512)
 									)
 								);
-								
+
+							$log = new \Metaobject("ObjectChangeLog");
+                            $log->add_parms(
+                                array(
+                                    'Caption' => $this->user_it->getDisplayName(),
+                                    'ObjectId' => $this->user_it->getId(),
+                                    'ClassName' => 'user',
+                                    'EntityRefName' => 'cms_User',
+                                    'EntityName' => $this->user_it->object->getDisplayName(),
+                                    'ChangeKind' => 'modified',
+                                    'Content' => translate('Учетная запись пользователя заблокирована'). ': ' . text(1512)
+                                )
+                            );
+
 							$this->sendRetryNotification( $this->user_it, $_SERVER['REMOTE_ADDR'] );
 						}
 						

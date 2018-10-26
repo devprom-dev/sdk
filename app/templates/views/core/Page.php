@@ -30,14 +30,12 @@
 	devpromOpts.datejsformat = '<?=$datejsformat?>';
 	devpromOpts.project = '<?=$project_code?>';
 	devpromOpts.mathJaxLib = '<?=(defined('MATH_JAX_LIB_SRC') ? MATH_JAX_LIB_SRC : "")?>';
+    devpromOpts.extraPlugins = '<?=(defined('CKEDITOR_EXTRAPLUGINS') && CKEDITOR_EXTRAPLUGINS != "" ? ",".CKEDITOR_EXTRAPLUGINS : "")?>';
 	devpromOpts.plantUMLServer = '<?=(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : "")?>';
-
-	<?php if ( !defined('METRICS_CLIENT') || METRICS_CLIENT ) { ?>
-	devpromOpts.url = window.location.protocol+"//devprom.ru/rx";
-	devpromOpts.iid = "<?=$public_iid?>";
-	devpromOpts.version = "<?=$current_version?>";
-	<?php } ?>
-
+    devpromOpts.iid = "<?=$public_iid?>";
+    devpromOpts.serviceUrl = "<?=(defined('SERVICE_URL') ? SERVICE_URL : 'devprom.ru')?>";
+    documentOptions.visiblePages = <?=(defined('DOC_VISIBLE_PAGES') ? DOC_VISIBLE_PAGES : "30")?>;
+    documentOptions.cachedPages = <?=(defined('DOC_CACHED_PAGES') ? DOC_CACHED_PAGES : "50")?>;
 	initializeApp();
 	<?php if ( !defined('UI_EXTENSION') || UI_EXTENSION ) { ?> makeUpApp(); <?php } ?>
 	<?php if ( !defined('SEND_BUG_REPORTS') || SEND_BUG_REPORTS ) { ?>
@@ -84,9 +82,11 @@ else {
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=<?= APP_ENCODING ?>">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<title><?= ($title == '' ? $navigation_title : $title) ?></title>
+		<title><?=TextUtils::stripAnyTags($title)?></title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
 
 		<?php $view['slots']->output('ext_before'); ?>
 		<?php $view['slots']->output('_header'); ?>
@@ -95,11 +95,6 @@ else {
 	<div class="container-fluid <?= ($inside ? 'container-fluid-internal' : '') ?>">
 		<?php
 		$view['slots']->output('_content');
-		echo $view->render('PageFooter.php', array(
-			'inside' => $inside,
-			'license_name' => $license_name,
-			'current_version' => $current_version
-		));
 		?>
 	</div>    <!-- end container -->
 

@@ -124,10 +124,8 @@ public class RequestTest extends ProjectTestBase {
 		driver.navigate().back();
 		Assert.assertEquals(printedRequests, requests);
 		for (int i = 0; i < requests.length; i++) {
-			Assert.assertEquals(printedRequests[i].getState(),
-					requests[i].getState());
-			Assert.assertEquals(printedRequests[i].getPriority(),
-					requests[i].getPriority());
+			Assert.assertEquals(printedRequests[i].getState(),requests[i].getState());
+			Assert.assertTrue(requests[i].getPriority().contains(printedRequests[i].getPriority()));
 		}
 	}
 
@@ -157,8 +155,7 @@ public class RequestTest extends ProjectTestBase {
 		driver.navigate().back();
 		Assert.assertEquals(printedRequests, requests);
 		for (int i = 0; i < requests.length; i++) {
-			Assert.assertEquals(printedRequests[i].getPriority(),
-					requests[i].getPriority());
+			Assert.assertTrue(requests[i].getPriority().contains(printedRequests[i].getPriority()));
 		}
 	}
 
@@ -188,8 +185,7 @@ public class RequestTest extends ProjectTestBase {
 		Assert.assertEquals(rExported, rExisted);
 		for (int i = 0; i < rExisted.length; i++) {
 			Assert.assertEquals(rExported[i].getState(), rExisted[i].getState());
-			Assert.assertEquals(rExported[i].getPriority(),
-					rExisted[i].getPriority());
+			Assert.assertTrue(rExisted[i].getPriority().contains(rExported[i].getPriority()));
 		}
 	}
 
@@ -304,8 +300,7 @@ public class RequestTest extends ProjectTestBase {
 		Assert.assertTrue(savedRequest.getState().contains(
 				testRequest.getState()));
 		
-		Assert.assertEquals(savedRequest.getPriority(),
-				testRequest.getPriority());
+		Assert.assertTrue(savedRequest.getPriority().contains(testRequest.getPriority()));
 		Assert.assertEquals(savedRequest.getPfunction(),
 				testRequest.getPfunction());
 		Assert.assertEquals(savedRequest.getEstimation(),
@@ -338,7 +333,7 @@ public class RequestTest extends ProjectTestBase {
 					ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'comment-text') and contains(.,'"+testComments[i]+"')]"))
 					);
 		}
-		File image = FileOperations.createPNG("Pic"+DataProviders.getUniqueString()+".png");
+		File image = FileOperations.createPNG("Pic"+DataProviders.getUniqueStringAlphaNum()+".png");
 		rvp = rvp.addCommentWithAttachment("Comment with a picture", image.getAbsolutePath());
 		(new WebDriverWait(driver,waiting)).until(
 				ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'comment-text') and contains(.,'"+image.getName()+"')]"))
@@ -590,9 +585,10 @@ public class RequestTest extends ProjectTestBase {
 		AttributeEntityNewPage naep = asp.addNewAttribute();
 		AttributeNewPage nap = naep.selectEntity("request:bug", "Строка текста");
 		nap.setDefaultStringValue(DataProviders.getUniqueString());
-		String p = DataProviders.getUniqueString();
-		nap.enterNewAttribute("MyTestAttr" + p, "mta" + p, "Description of "
-				+ p, true);
+		String p = DataProviders.getUniqueStringAlphaNum();
+		String name = "MyTestAttr" + DataProviders.getUniqueString();
+		nap.enterNewAttribute(name, "mta" + p, "Description of "
+				+ DataProviders.getUniqueString(), true);
 		asp = nap.createNewAttribute();
 		RequestsPage mip = asp.gotoRequests();
 		Request testRequest = new Request("TestCR-"
@@ -611,8 +607,7 @@ public class RequestTest extends ProjectTestBase {
 		nrp = mip.clickNewBug();
 		nrp.setUserStringAttribute("mta" + p, "Test value");
 		Assert.assertEquals(nrp.createWithError(testRequest2),
-				"Внимание! Значение поля " + "\"MyTestAttr" + p
-						+ "\" должно быть уникальным");
+				"Внимание! Значение поля " + "\"" + name + "\" должно быть уникальным");
 		// Check it successfully creates with another value
 		nrp.setUserStringAttribute("mta" + p, "New value");
 		mip = nrp.createNewCR(testRequest2);
@@ -668,7 +663,7 @@ public class RequestTest extends ProjectTestBase {
 		mip.showAll();
 		rvp = mip.clickToRequest(testRequest.getId());
 		String[] testResults = rvp.readTestResults();
-		Assert.assertEquals(testResults.length, 2);
+		Assert.assertEquals(testResults.length, 4);
 		Assert.assertTrue(testResults[0].contains(testScenario.getName()));
 		Assert.assertTrue(testResults[0].contains("Провален"));
 		Assert.assertTrue(testResults[1].contains(testScenario.getName()));
@@ -685,7 +680,7 @@ public class RequestTest extends ProjectTestBase {
 		
 		//Development Project
 		String p = DataProviders.getUniqueString();
-		Project devTest = new Project("DevTest"+p, "devtest"+p,new Template(this.waterfallTemplateName));
+		Project devTest = new Project("DevTest"+p, "devtest"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 		
 		//Default Test Project
 		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
@@ -730,7 +725,7 @@ public class RequestTest extends ProjectTestBase {
 		rvp = mip.clickToRequest(duplicated.getId());
 		
 		Assert.assertEquals(rvp.readName(), duplicated.getName(), "Incorrect duplicated Request name");
-		Assert.assertEquals(rvp.readPriority(), duplicated.getPriority(),"Incorrect duplicated Request priority");
+		Assert.assertTrue(rvp.readPriority().contains(duplicated.getPriority()), "Incorrect duplicated Request priority");
 		
 		//close duplicated request
 		RequestDonePage rdp = rvp.completeRequest();
@@ -757,7 +752,7 @@ public class RequestTest extends ProjectTestBase {
 		
 		//Development Project
 		String p = DataProviders.getUniqueString();
-		Project devTest = new Project("DevTest"+p, "devtest"+p,
+		Project devTest = new Project("DevTest"+p, "devtest"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName));
 		
 		//Default Test Project
@@ -804,7 +799,7 @@ public class RequestTest extends ProjectTestBase {
 		
 		//Check Request properties
 	    rvp = mip.clickToRequest(movedRequest.getId());
-		Assert.assertEquals(rvp.readPriority(), request.getPriority(), "Incorrect Request Priority");
+		Assert.assertTrue(rvp.readPriority().contains(request.getPriority()), "Incorrect Request Priority");
 		Assert.assertTrue(rvp.readAttachments().containsAll(request.getAttachments()), "Some of the attachments are missed");
 		Assert.assertTrue(request.getAttachments().containsAll(rvp.readAttachments()), "Redundant attachements detected");
 		mip.gotoProject(webTest);
@@ -904,10 +899,10 @@ public class RequestTest extends ProjectTestBase {
 		
 		//Development Project
 		String p = DataProviders.getUniqueString();
-		Project devTest = new Project("DevTest"+p, "devtest"+p,new Template(this.waterfallTemplateName));
+		Project devTest = new Project("DevTest"+p, "devtest"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 		
 		//Support Project
-		Project supportProject = new Project("SupportTest"+p, "support_test"+p,
+		Project supportProject = new Project("SupportTest"+p, "support_test"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.supportTemplateName));
 		
 		//Tasks
@@ -990,7 +985,7 @@ public class RequestTest extends ProjectTestBase {
     				new Template(this.waterfallTemplateName));
 		//"Duplicate to" Project
 		String p = DataProviders.getUniqueString();
-		Project duplTest = new Project("DuplTest"+p, "dupltest"+p,new Template(this.waterfallTemplateName));
+		Project duplTest = new Project("DuplTest"+p, "dupltest"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 		
 	    ProjectNewPage pnp = page.createNewProject();
 		pnp.createNew(duplTest);
@@ -1025,7 +1020,7 @@ public class RequestTest extends ProjectTestBase {
    
 		//"Duplicate to" Project
 		String p = DataProviders.getUniqueString();
-		Project moveTest = new Project("MoveTest"+p, "movetest"+p,new Template(this.waterfallTemplateName));
+		Project moveTest = new Project("MoveTest"+p, "movetest"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 		
 	    ProjectNewPage pnp = page.createNewProject();
 		pnp.createNew(moveTest);
@@ -1153,9 +1148,9 @@ public class RequestTest extends ProjectTestBase {
 	    }
 	    
 	    //Проверим поля
-	    Assert.assertEquals(r1.getPriority(), requestPriority1, "Не верное поле Приоритет для Пожелания 1");
-	    Assert.assertEquals(r2.getPriority(), requestPriority2, "Не верное поле Приоритет для Пожелания 2");
-	    Assert.assertEquals(r3.getPriority(), requestPriority3, "Не верное поле Приоритет для Пожелания 3");
+	    Assert.assertTrue(r1.getPriority().contains(requestPriority1), "Не верное поле Приоритет для Пожелания 1");
+	    Assert.assertTrue(r2.getPriority().contains(requestPriority2), "Не верное поле Приоритет для Пожелания 2");
+	    Assert.assertTrue(r3.getPriority().contains(requestPriority3), "Не верное поле Приоритет для Пожелания 3");
 	    Assert.assertEquals(r1.getType(), requestType1, "Не верное поле Тип для Пожелания 1");
 	    Assert.assertEquals(r2.getType(), requestType2, "Не верное поле Тип для Пожелания 2");
 	    Assert.assertEquals(r3.getType(), requestType3, "Не верное поле Тип для Пожелания 3");
@@ -1178,7 +1173,7 @@ public class RequestTest extends ProjectTestBase {
 	    				new Template(this.waterfallTemplateName));
 			//Test Project
 			String p = DataProviders.getUniqueString();
-			Project testProject = new Project("Project"+p, "project"+p,new Template(this.waterfallTemplateName));
+			Project testProject = new Project("Project"+p, "project"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 			
 		    ProjectNewPage pnp = new PageBase(driver).createNewProject();
 			pnp.createNew(testProject);

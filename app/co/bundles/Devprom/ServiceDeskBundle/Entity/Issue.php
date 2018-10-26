@@ -156,6 +156,7 @@ class Issue extends BaseEntity {
     {
         $this->comments = new ArrayCollection();
         $this->attachments = new ArrayCollection();
+        $this->notifications = new ArrayCollection();
     }
 
 
@@ -475,9 +476,10 @@ class Issue extends BaseEntity {
     }
 
     /**
-     * @param ArrayCollection $attachments
+     * @param ArrayCollection $notifications
      */
-    public function setNotifications($value) {
+    public function setNotifications($value)
+    {
         $this->notifications = $value;
     }
 

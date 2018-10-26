@@ -44,6 +44,10 @@ class PageForm extends MetaObjectForm
  		$this->page = null;
  	}
 
+    function buildForm()
+    {
+    }
+
     function setObjectIt( $object_it )
     {
         $this->transition_it = null;
@@ -278,6 +282,10 @@ class PageForm extends MetaObjectForm
     			? new FieldDictionary( $object ) : new FieldAutoCompleteObject( $object );
     	}
 
+        if ( in_array('positive-negative', $this->getObject()->getAttributeGroups($name)) ) {
+            return new FieldHoursPositiveNegative();
+        }
+
     	if ( in_array('hours', $this->getObject()->getAttributeGroups($name)) ) {
             return new FieldHours();
         }
@@ -343,9 +351,10 @@ class PageForm extends MetaObjectForm
 			if ( count($transition_actions) > 6 && !$this->IsFormDisplayed() )
 			{
 				$actions[] = array();
-				$actions[] = array (
+				$actions['workflow'] = array (
 					'name' => translate('Состояние'),
-					'items' => $transition_actions
+					'items' => $transition_actions,
+                    'uid' => 'workflow'
 				);
 			}
 			else if ( count($transition_actions) > 0 )
@@ -456,7 +465,7 @@ class PageForm extends MetaObjectForm
 					'title' => $method->getDescription(),
 					'uid' => 'workflow-'.$target_state,
 					'view' => 'button',
-					'button-class' => ''
+					'button-class' => 'btn-warning'
 			);
 			
 			$transition_it->moveNext();
@@ -514,7 +523,7 @@ class PageForm extends MetaObjectForm
 		$attributes = array();
 		$scripts = '';
 
-		foreach( $this->object->getAttributesSorted() as $key => $attribute )
+		foreach( $this->object->getAttributes() as $key => $attribute )
 		{
 		    $visible = $this->IsAttributeVisible($key);
 
@@ -527,7 +536,7 @@ class PageForm extends MetaObjectForm
 				'visible' => $visible,
 				'required' => $this->IsAttributeRequired($key),
 				'custom' => $this->object->getAttributeOrigin($key) == ORIGIN_CUSTOM,
-				'name' => translate($this->object->getAttributeUserName($key)),
+				'name' => $this->object->getAttributeUserName($key),
 				'description' => $this->getFieldDescription($key),
 				'type' => $this->object->getAttributeType($key),
 			    'value' => $this->getFieldValue($key)
@@ -550,8 +559,11 @@ class PageForm extends MetaObjectForm
 
 			if ( $field instanceof FieldWYSIWYG ) {
 			}
-			else {
-				$attributes[$key]['text'] = $field->getText();
+			else if ( $this->getObject()->IsReference($key) ) {
+                $attributes[$key]['text'] = $field->getText();
+            }
+            else {
+				$attributes[$key]['text'] = IteratorBase::getHtmlValue($field->getValue());
 			}
 
 			if ( !$visible && $this->getEditMode() && $field instanceof FieldDictionary ) {
@@ -760,6 +772,11 @@ class PageForm extends MetaObjectForm
 		$resource_it = $resource->getExact(strtolower(get_class($this)).'-'.$this->getMode());
 		if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
 
+		if ( $this->getObject() instanceof MetaobjectStatable and $this->getObject()->getStateClassName() != '' ) {
+            $resource_it = $resource->getExact('requestform');
+            if ( $resource_it->getId() != '' ) return $resource_it->get('Caption');
+        }
+
 		return '';
 	}
 
@@ -796,7 +813,7 @@ class PageForm extends MetaObjectForm
                 $field->setValue($source_it->get($text_attribute));
                 $field->setObjectIt($source_it);
                 $field->setReadOnly(true);
-                $text = $field->getText();
+                $text = '<div class="reset wysiwyg">'.$field->getText().'</div>';
                 if ( $text != '' ) {
                     $text = '<br/>'.$text;
                 }
@@ -805,7 +822,7 @@ class PageForm extends MetaObjectForm
             if ( $source_it->getId() != '' ) {
                 $parms[] = array (
                     'uid' => $uid->getUidWithCaption($source_it),
-                    'text' => '<div class="reset wysiwyg">'.$text.'</div>'
+                    'text' => $text
                 );
             }
         }

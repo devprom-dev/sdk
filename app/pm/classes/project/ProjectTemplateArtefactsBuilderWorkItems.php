@@ -5,8 +5,7 @@ class ProjectTemplateArtefactsBuilderWorkItems extends ProjectTemplateSectionsRe
 {
 	private $session = null;
 	
-	public function __construct( PMSession $session )
-	{
+	public function __construct( PMSession $session ) {
 		$this->session = $session;
 	}
 	

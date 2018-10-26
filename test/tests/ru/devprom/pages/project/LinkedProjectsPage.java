@@ -11,7 +11,7 @@ import ru.devprom.items.Project;
 public class LinkedProjectsPage extends SDLCPojectPageBase {
 
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
 	@FindBy(xpath = "//a[contains(.,'Включить в программу') and @href]")

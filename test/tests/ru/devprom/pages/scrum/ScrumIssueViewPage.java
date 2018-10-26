@@ -23,7 +23,7 @@ import ru.devprom.pages.project.requests.RequestViewPage;
  */
 public class ScrumIssueViewPage extends RequestViewPage
 {
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 
 	@FindBy(xpath = "//ul//a[text()='Преобразовать в эпик']")

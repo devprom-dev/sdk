@@ -1,4 +1,5 @@
 <?php
+include SERVER_ROOT_PATH . "core/classes/system/validators/ModelValidatorSystemSettingsTimezone.php";
 
 class SystemSettingsForm extends PageForm
 {
@@ -126,8 +127,16 @@ class SystemSettingsForm extends PageForm
 			return join($lines, "\r\n");
 	}
 	
-	function getCaption()
-	{
-	    
-	}
+    function getModelValidator()
+    {
+        $validator = parent::getModelValidator();
+        $validator->addValidator( new ModelValidatorSystemSettingsTimezone() );
+        return $validator;
+    }
+
+    function getPageTitle()
+    {
+        return translate('Приложение');
+    }
 }
+

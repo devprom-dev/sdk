@@ -92,7 +92,7 @@ class PMFormEmbedded extends FormEmbedded
                 $widget_it = getFactory()->getObject($it->get('ReferenceName'))->getExact($it->getId());
                 if ( $widget_it->getId() != '' ) {
                     $url = $widget_it->getUrl($this->getListUrlParms($object, $ids));
-                    echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="'.$target.'" href="'.$url.'" tabindex="-1">';
+                    echo '<a class="dashed embedded-add-button" target="'.$target.'" href="'.$url.'" tabindex="-1">';
                         echo $this->getListItemsTitle();
                     echo '</a>';
                 }
@@ -100,7 +100,7 @@ class PMFormEmbedded extends FormEmbedded
 
             if ( $object instanceof WikiPage ) {
                 $url = $object->getPageVersions().'page='.join(',',$ids);
-                echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="'.$target.'" href="'.$url.'" tabindex="-1">';
+                echo '<a class="dashed embedded-add-button" target="'.$target.'" href="'.$url.'" tabindex="-1">';
                     echo text(2242);
                 echo '</a>';
             }
@@ -108,6 +108,6 @@ class PMFormEmbedded extends FormEmbedded
     }
 
     function getListUrlParms($object, $ids) {
-        return strtolower(get_class($object)).'='.join(',',$ids).'&clickedonform';
+        return strtolower(get_class($object)).'='.\TextUtils::buildIds($ids).'&clickedonform';
     }
 }

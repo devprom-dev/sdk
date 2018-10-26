@@ -31,13 +31,22 @@ class IssueFormType extends AbstractType
             ->add('description', 'textarea', array('label' => 'issue_description'))
             ->add('severity', 'entity', array(
                 'class' => 'Devprom\ServiceDeskBundle\Entity\Severity',
-                'label' => 'issue_severity'
+                'label' => 'issue_severity',
+                'query_builder' => function(EntityRepository $er) {
+                    return $er->createQueryBuilder('t')
+                        ->orderBy('t.orderNum', 'asc');
+                },
             ));
 
-        $result = $this->em->getRepository('DevpromServiceDeskBundle:IssueType')->findBy(array(
-            "vpd" => $vpds,
-            "visible" => 'Y'
-        ));
+        $result = $this->em->getRepository('DevpromServiceDeskBundle:IssueType')->findBy(
+            array(
+                "vpd" => $vpds,
+                "visible" => 'Y'
+            ),
+            array(
+                'orderNum' => 'asc'
+            )
+        );
 
         if ( count($result) > 0 ) {
             $builder
@@ -54,7 +63,7 @@ class IssueFormType extends AbstractType
                                 },
                                 $result
                             ))
-                        );
+                        )->orderBy('it.orderNum', 'asc');
                     },
                     'data' => array_shift($result),
                     'required' => false

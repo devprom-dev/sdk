@@ -37,6 +37,7 @@ abstract class WikiImporterEngine
         if ( $html == '' ) return false;
 
         $html = preg_replace(REGEX_UID, '\\1<stop-parse>\\2</stop-parse>', $html);
+        self::stripHeaders($html);
 
         $sections = preg_split('/<h[1-6][^>]*>/i', $html);
         $documentContent = array_shift($sections);
@@ -45,6 +46,7 @@ abstract class WikiImporterEngine
             $this->document_it = $parent_it;
         }
         else {
+            $this->parseContent($documentContent);
             $this->document_it = $builder->buildDocument(
                 $documentTitle, $documentContent, $this->options, $parent_it->getId()
             );
@@ -63,8 +65,8 @@ abstract class WikiImporterEngine
 
             $title = preg_replace('/[\r\n]+/i', ' ', $title);
             $title = preg_replace('/^([\d]+\.)+/i', '', $title);
-            $totext = new \Html2Text\Html2Text(htmlspecialchars($title), array('width'=>0));
-            $title = html_entity_decode($totext->getText());
+            $totext = new \Html2Text\Html2Text($title, array('width'=>0));
+            $title = $totext->getText();
             $title = trim(str_replace('&nbsp;', ' ', $title));
 
             $this->parseContent($content);
@@ -108,7 +110,33 @@ abstract class WikiImporterEngine
             }
             $tableParts[$key] = join('<tr ', $rowParts);
         }
+
         $content = join('<table ', $tableParts);
+        $content = TextUtils::getValidHtml(TextUtils::getCleansedHtml($content));
+        $content = preg_replace_callback('/<img([^>]+)>/', function($match) {
+            return str_replace('style=', 'oldstyle=', $match[0]);
+        }, $content);
+        $content = preg_replace('/<hh([0-9])[^>]*>/', '<h\\1>', $content);
+        $content = preg_replace('/<\/hh([0-9])>/', '</h\\1>', $content);
+    }
+
+    static function stripHeaders( &$html )
+    {
+        $tagsRestricted = array(
+            'th', 'td', 'ul', 'ol'
+        );
+        foreach( $tagsRestricted as $tag ) {
+            $lines = preg_split('/<'.$tag.'[^>]*>/i', $html);
+            array_shift($lines);
+            foreach( $lines as $line ) {
+                $matches = array();
+                if ( preg_match_all('/<h[1-6][^>]*>(.+)<\/h[1-6]>/i', array_shift(preg_split('/<\/'.$tag.'>/i', $line)), $matches, PREG_SET_ORDER) > 0 ) {
+                    foreach( $matches as $match ) {
+                        $html = str_replace($match[0], '<p>'.$match[1].'</p>', $html);
+                    }
+                }
+            }
+        }
     }
 
     function getDocumentIt() {

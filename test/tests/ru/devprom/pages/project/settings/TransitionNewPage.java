@@ -45,7 +45,7 @@ public class TransitionNewPage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(nameEdit));
 		nameEdit.clear();
 		nameEdit.sendKeys(name);
-		String value = targetStateSelect.findElement(By.xpath("//option[contains(text(),'"+targetStateName+"')]")).getAttribute("value");
+		String value = targetStateSelect.findElement(By.xpath("//option[contains(.,'"+targetStateName+"')]")).getAttribute("value");
 		(new Select(targetStateSelect)).selectByValue(value);
 		submitDialog(submitBtn);
 	}

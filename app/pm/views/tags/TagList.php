@@ -24,10 +24,16 @@ class TagList extends PageList
 				if ( $object_it->get($attr) != '' )
 				{
 					$object = $object_it->object->getAttributeObject($attr);
-					
 					if ( is_object($object) )
 					{
-						echo '<a href="'.$object->getPage().'tag='.$object_it->getId().'">';
+                        $widget_it = $this->getTable()->getReferencesListWidget($object, $attr);
+                        if ( $widget_it->getId() != '' ) {
+                            $url = $widget_it->getUrl('tag='.$object_it->getId());
+                        }
+                        else {
+                            $url = $object->getPage().'tag='.$object_it->getId();
+                        }
+						echo '<a href="'.$url.'">';
 							echo count(preg_split('/,/', $object_it->get($attr))); 
 						echo '</a>';
 					}

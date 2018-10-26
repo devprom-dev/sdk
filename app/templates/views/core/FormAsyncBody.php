@@ -19,33 +19,34 @@
 	<fieldset>
 		<?php if ( !$formonly && $form_title != '' ) { ?>
 
-		<legend class="<?=(count($actions) > 0 ? 'span10' : 'span12')?>"> 
+		<legend class="span12">
 		    <?=$form_title?>
-		</legend>
-		
-		<?php if ( count($actions) > 1 ) { ?>
-			<div class="actions">
-				<div class="btn-group">
-					<a class="btn btn-small dropdown-toggle btn-inverse" href="#" data-toggle="dropdown">
-						<?=translate('Действия')?>
-						<span class="caret"></span>
-					</a>
-					<? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
-				</div>
-			</div> <!-- end actions -->
-		<?php } ?>
 
-		<?php if ( count($actions) == 1 ) { ?>
-			<?php $item = array_shift($actions); ?>
-			<div class="actions">
-				<div class="btn-group">
-					<a class="btn btn-small btn-inverse" href="<?=$item['url']?>">
-						<?=$item['name']?>
-					</a>
-				</div>
-			</div> <!-- end actions -->
-		<?php } ?>
-		
+            <?php if ( $actions_on_top ) { ?>
+            <div class="actions">
+                <div class="btn-group">
+                    <input type="submit" class="btn btn-primary" onclick="javascript: $('#action<?=$form_id?>').val(<?=$form_action?>);" value="<?=$button_text?>"/>
+
+                    <?php if ( count($actions) > 1 ) { ?>
+                        <a class="btn btn-sm dropdown-toggle btn-secondary" href="#" data-toggle="dropdown">
+                            <?=translate('Действия')?>
+                            <span class="caret"></span>
+                        </a>
+                        <? echo $view->render('core/PopupMenu.php', array ('items' => $actions)); ?>
+                    <?php } ?>
+
+                    <?php if ( count($actions) == 1 ) { ?>
+                        <?php $item = array_shift($actions); ?>
+                        <a class="btn btn-secondary" href="<?=$item['url']?>">
+                            <?=$item['name']?>
+                        </a>
+                    <?php } ?>
+                </div>
+            </div> <!-- end actions -->
+            <? } ?>
+		</legend>
+
+
 		<?php } ?>
 		
 		<div class="clearfix"></div>
@@ -133,5 +134,6 @@
     }
     
     ?>
+    <br/><br/>
     
 </form>

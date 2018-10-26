@@ -12,7 +12,7 @@ class FieldShortText extends Field
 		if ( $this->readOnly() )
 		{
 			echo '<div class="input-block-level well well-text">';
-				echo $this->getText();
+				echo IteratorBase::getHtmlValue($this->getValue());
 			echo '</div>';
 			echo '<input id="'.$this->getId().'" type="hidden" name="'.$this->getName().'" value="'.$this->getValue().'">';
 		}

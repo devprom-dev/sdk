@@ -4,7 +4,7 @@ include "FieldRestMySettings.php";
 include "FieldFormButtons.php";
 include "FieldListOfProjectRoles.php";
 
-class ProfileForm extends PMPageForm
+class ProfileForm extends SettingsFormBase
 {
     function extendModel()
     {
@@ -22,15 +22,22 @@ class ProfileForm extends PMPageForm
         $object->addAttribute('ApiKey', 'VARCHAR', text(2285), true, false, text(2286), 400);
         $object->setAttributeEditable('ApiKey', false);
 
+        $object->addAttribute('AppKey', 'VARCHAR', text(2544), true, false,
+            str_replace('%KEY%', $this->getFieldValue('AppKey'), text(2545)), 410);
+        $object->setAttributeEditable('AppKey', false);
+
         if ( getSession()->getProjectIt()->IsPortfolio() ) {
             $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(2187));
         }
         else {
-            $object->setAttributeVisible('NotificationEmailType', true);
-            $object->setAttributeVisible('NotificationTrackingType', true);
-
             if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED )
             {
+                if ( $this->getObjectIt()->getId() > 0 && $this->getObjectIt()->getId() != GUEST_UID ) {
+                    $object->setAttributeVisible('NotificationEmailType', true);
+                    $object->setAttributeVisible('NotificationTrackingType', true);
+                    $object->addAttribute('Buttons', '', '', true, false, '', 300);
+                }
+
                 $moduleIt = getFactory()->getObject('Module')->getExact('permissions/participants');
                 $object->addAttribute('ProjectRoles', 'VARCHAR', text(2452), true, false,
                     str_replace('%1', $moduleIt->getUrl(),
@@ -39,14 +46,13 @@ class ProfileForm extends PMPageForm
                 );
                 $object->setAttributeEditable('ProjectRoles', false);
             }
-            $object->addAttribute('Buttons', '', '', true, false, '', 300);
             $object->addAttribute('ModuleSettings', '', text(1906), true, false, text(1910));
         }
     }
 
  	function getPageTitle()
  	{
- 	    return text(1292);
+ 	    return text(2619);
 	}
 	
 	function getFormPage() {
@@ -100,6 +106,8 @@ class ProfileForm extends PMPageForm
         switch( $field ) {
             case 'ApiKey':
                 return \AuthenticationAPIKeyFactory::getAuthKey($this->getObjectIt()->getRef('SystemUser'));
+            case 'AppKey':
+                return \AuthenticationAppKeyFactory::getKey($this->getObjectIt()->getRef('SystemUser')->getId());
             default:
                 return parent::getFieldValue($field);
         }

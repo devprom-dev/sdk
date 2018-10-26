@@ -25,7 +25,7 @@ class UserList extends PageList
 	    switch( $attr )
 	    {
     	    case 'Photo':
-    	    	echo $this->getTable()->getView()->render('core/UserPicture.php', array (
+    	    	echo $this->getRenderView()->render('core/UserPicture.php', array (
 					'id' => $object_it->getId(), 
 					'class' => 
 					'participant-avatar', 
@@ -77,16 +77,6 @@ class UserList extends PageList
 	        default:
 	            return parent::getColumnWidth( $attr );
 	    }
-	}
-
-	function getColumnFields()
-	{
-		return array_merge(
-			parent::getColumnFields(),
-			array (
-				'IsReadonly'
-			)
-		);
 	}
 
 	function getRenderParms()

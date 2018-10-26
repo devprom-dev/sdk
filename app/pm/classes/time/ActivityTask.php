@@ -7,7 +7,8 @@ class ActivityTask extends Activity
  	function __construct(ObjectRegistry $registry = null)
  	{
  		parent::__construct($registry);
- 		$this->addAttribute('LeftWork', 'INTEGER', translate('Осталось, ч.'), true);
+ 		$this->addAttribute('LeftWork', 'INTEGER', translate('Осталось, ч.'), true, false, '', 15);
+        $this->setAttributeRequired('Task', true);
  	}
  	
 	function add_parms( $parms )

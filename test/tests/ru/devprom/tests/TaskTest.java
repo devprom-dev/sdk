@@ -280,7 +280,7 @@ public class TaskTest extends ProjectTestBase {
 	    TaskEditPage tep = tvp.editTask();
 	    tep.addPreviousTask("TestTask");
 	    tep.addTestDoc(testScenario.getName());
-	    tep.addTestResults(testResults);
+	    tep.addTestResults(testPlan.getName());
 	    tep.addDocs("TestDoc");
 	    tep.addWatcher(user);
 	    tep.addRequest("issue");
@@ -292,12 +292,12 @@ public class TaskTest extends ProjectTestBase {
 	    Assert.assertEquals(tvp.readType(), testTask.getType());
 	    Assert.assertEquals(tvp.readPriority(), testTask.getPriority());
 	    Assert.assertEquals(tvp.readOwner(), testTask.getExecutor());
-	    Assert.assertTrue(tvp.readRequest().contains("I"));
 	    Assert.assertTrue(tvp.readPreviousTasks().get(0).contains("TestTask"));
-	    //Assert.assertTrue(tvp.readRequirements().get(0).contains("R"));
 	    Assert.assertTrue(tvp.readTestDoc().get(0).contains(testScenario.getName()));
 	    Assert.assertTrue(tvp.readTestResults().get(0).contains(testResults));
+	    //Assert.assertTrue(tvp.readRequirements().get(0).contains("R"));
 	    Assert.assertTrue(tvp.readDocs().get(0).contains("TestDoc"));
+	    Assert.assertTrue(tvp.readRequest().contains("I"));
 	    Assert.assertTrue(tvp.readWatchers().get(0).contains(user));
 	}
 	
@@ -399,7 +399,7 @@ public class TaskTest extends ProjectTestBase {
 			
 			//New SDLC Project
 			String p = DataProviders.getUniqueString();
-			Project project = new Project("SDLCProject"+p, "sdlcproject"+p,new Template(this.waterfallTemplateName));
+			Project project = new Project("SDLCProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 			
 			//Create a Development Project
 			ProjectNewPage pnp = page.createNewProject();
@@ -441,10 +441,10 @@ public class TaskTest extends ProjectTestBase {
 		
 		String p = DataProviders.getUniqueString();
 			String comment = "Тест по сценарию S-2222";
-			String attachment = "Attachment" + p + ".png";
+			String attachment = "Attachment" + DataProviders.getUniqueStringAlphaNum() + ".png";
 			
 			//Создаем новый проект SDLC
-			Project sdlcTest = new Project("SDLCProject" +p, "sdlcproject" +p,
+			Project sdlcTest = new Project("SDLCProject" +p, "sdlcproject" +DataProviders.getUniqueStringAlphaNum(),
 					new Template(this.waterfallTemplateName));
 			PageBase page = new PageBase(driver);
 			ProjectNewPage pnp = page.createNewProject();
@@ -452,7 +452,7 @@ public class TaskTest extends ProjectTestBase {
 			FILELOG.debug("Created new project " + sdlcTest.getName());
 			
 			//Создаем новый проект scrum
-			Project scrumProject = new Project("Scrumproject"+p, "scrumproject"+p,new Template(this.scrumTemplateName));
+			Project scrumProject = new Project("Scrumproject"+p, "scrumproject"+DataProviders.getUniqueStringAlphaNum(),new Template(this.scrumTemplateName));
 			pnp = page.createNewProject();
 			pnp.createNew(scrumProject);
 			FILELOG.debug("Created new project " + scrumProject.getName());

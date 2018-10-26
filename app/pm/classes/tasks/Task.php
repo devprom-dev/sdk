@@ -11,8 +11,7 @@ include "predicates/TaskReleasePredicate.php";
 include "predicates/TaskFeaturePredicate.php";
 include "predicates/TaskIssueStatePredicate.php";
 include "sorts/TaskAssigneeSortClause.php";
-include "sorts/TaskRequestOrderSortClause.php";
-include "sorts/TaskRequestPrioritySortClause.php";
+include "TaskModelExtendedBuilder.php";
 
 class Task extends MetaobjectStatable 
 {
@@ -121,7 +120,14 @@ class Task extends MetaobjectStatable
 		if ( $parms['Planned'] != '' && $object_it->get('Planned') != $parms['Planned'] ) {
 			$parms['LeftWork'] = $parms['Planned'];
 		}
-		
+
+		if ( $parms['ChangeRequest'] > 0 ) {
+		    $requestIt = $this->getAttributeObject('ChangeRequest')->getExact($parms['ChangeRequest']);
+		    if ( $requestIt->getId() != '' ) {
+                $parms['Project'] = $requestIt->get('Project');
+            }
+        }
+
 		if ( $parms['Transition'] > 0 )
 		{
 			$target_state = getFactory()->getObject('Transition')->

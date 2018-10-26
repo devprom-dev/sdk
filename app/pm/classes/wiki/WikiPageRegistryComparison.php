@@ -69,7 +69,7 @@ class WikiPageRegistryComparison extends ObjectRegistrySQL
 			// baseline given
 			$query_filters = array(
                 $this->page_it->get('UID') != ''
-                    ? new FilterAttributePredicate('UID', $this->page_it->get('UID'))
+                    ? new FilterTextExactPredicate('UID', $this->page_it->get('UID'))
                     : new FilterInPredicate($this->page_it->getId()),
 				new FilterAttributePredicate('DocumentId', $document_id)
 			);

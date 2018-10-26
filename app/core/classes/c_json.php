@@ -30,6 +30,21 @@ class JsonWrapper
 	{
 		return @json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 	}
+
+	static function buildJSONTree( array &$elements, $parentId = '' )
+    {
+        $branch = array();
+        foreach ($elements as $key => $element) {
+            if ($element['parent'] == $parentId) {
+                $children = self::buildJSONTree($elements, $element['key']);
+                if (count($children)>0) {
+                    $element['children'] = $children;
+                }
+                $branch[] = $element;
+            }
+        }
+        return $branch;
+    }
 	
 }
 

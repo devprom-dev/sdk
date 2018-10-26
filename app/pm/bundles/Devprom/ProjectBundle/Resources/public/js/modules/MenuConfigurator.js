@@ -160,9 +160,7 @@ App.module("MenuConfigurator", function(MenuConfigurator, App, Backbone, Marione
 });
     
 App.on("start", function()
-{   
-	$('section.content.content-internal').blindOver().css('cursor', 'wait');
-	
+{
 	//Load available pages
         App.Pages.pagesCollection.fetch({ 
 	    reset: true,
@@ -188,10 +186,8 @@ App.on("start", function()
 		    		view.select();
 		    	};
 		    });
-		    
-		    $('section.content.content-internal').removeClass('blinded')
-			    .css('cursor', '')
-			    .find('div.blindover').remove();
+
+		    adjustContainerHeight();
 		}});
 	    }
         });

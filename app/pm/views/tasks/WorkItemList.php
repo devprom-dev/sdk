@@ -2,13 +2,13 @@
 include_once SERVER_ROOT_PATH."pm/views/time/FieldSpentTimeRequest.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/RequestForm.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/TaskForm.php";
-include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 
 class WorkItemList extends PMPageList
 {
 	private $priority_method = null;
     private $task = null;
     private $request = null;
+    private $issue = null;
     private $request_form = null;
     private $task_form = null;
 
@@ -25,13 +25,11 @@ class WorkItemList extends PMPageList
 		$this->request->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
         $this->request_form = new RequestForm($this->request);
 
-		// cache priority method
-		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
-				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority');
-		
-		if ( $has_access ) {
-			$this->priority_method = new ChangePriorityWebMethod(getFactory()->getObject('Priority')->getAll());
-		}
+        if ( class_exists('Issue') ) {
+            $this->issue = getFactory()->getObject('Issue');
+            $this->issue->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
+            $this->issue->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
+        }
 
         $this->getTable()->buildRelatedDataCache();
 		$this->getTable()->cacheTraces('IssueTraces');
@@ -42,8 +40,14 @@ class WorkItemList extends PMPageList
         $data = $object_it->getData();
         switch( $object_it->get('ObjectClass') ) {
             case 'Request':
+            case 'Increment':
                 $data[$this->request->getIdAttribute()] = $object_it->getId();
                 return $this->request->createCachedIterator(array($data));
+            case 'Issue':
+                if ( is_object($this->issue) ) {
+                    $data[$this->issue->getIdAttribute()] = $object_it->getId();
+                    return $this->issue->createCachedIterator(array($data));
+                }
             default:
                 return $this->task->createCachedIterator(array($data));
         }
@@ -51,7 +55,7 @@ class WorkItemList extends PMPageList
 
     function getForm( $object_it )
     {
-        if ( $object_it->object instanceof Request ) {
+        if ( $object_it->object->getEntityRefName() == 'pm_ChangeRequest' ) {
             return $this->request_form;
         }
         elseif ( $object_it->object instanceof Task ) {
@@ -94,16 +98,16 @@ class WorkItemList extends PMPageList
 	    switch( $attr )
 	    {
 			case 'Spent':
-                if ( $object_it->get('ObjectClass') == 'Request' ) {
-                    $field = new FieldSpentTimeRequest( $it );
+                if ( $object_it->get('ObjectClass') == 'Task' ) {
+                    $field = new FieldSpentTimeTask( $it );
                 }
                 else {
-                    $field = new FieldSpentTimeTask( $it );
+                    $field = new FieldSpentTimeRequest( $it );
                 }
                 $field->setShortMode();
 				$field->setEditMode( false );
 				$field->setReadonly( !getFactory()->getAccessPolicy()->can_modify_attribute($it->object, 'Fact') );
-				$field->render( $this->getTable()->getView() );
+				$field->render( $this->getRenderView() );
 				break;
 
             case 'Release':
@@ -123,24 +127,7 @@ class WorkItemList extends PMPageList
 		switch($attr)
 		{
             case 'IssueTraces':
-				$objects = preg_split('/,/', $object_it->get($attr));
-				$uids = array();
-				
-				foreach( $objects as $object_info )
-				{
-					list($class, $id, $baseline) = preg_split('/:/',$object_info);
-					if ( $class == '' ) continue;
-
-					$uid = $this->getUidService();
-					$uid->setBaseline($baseline);
-
-					$ref_it = $this->getTable()->getTraces($class);
-					$ref_it->moveToId($id);
-					if ( $ref_it->getId() == '' ) continue;
-
-					$uids[] = $uid->getUidIconGlobal($ref_it, false);
-				}
-				echo join(' ',$uids);
+                $this->getTable()->drawCell( $object_it, $attr );
 				break;
 
             case 'RecentComment':

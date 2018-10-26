@@ -42,6 +42,7 @@ security:
                 key:      servicedesk_registration_form
                 lifetime: 31536000
                 path:     /
+                always_remember_me: true
 
     access_control:
         - { path: ^/css, roles: IS_AUTHENTICATED_ANONYMOUSLY }

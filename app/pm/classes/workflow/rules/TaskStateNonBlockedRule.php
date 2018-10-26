@@ -12,7 +12,7 @@ class TaskStateNonBlockedRule extends BusinessRulePredicate
  		return text(1143);
  	}
  	
- 	function check( $object_it ) {
+ 	function check( $object_it, $transitionIt ) {
  		return !$object_it->IsBlocked();
  	}
  	

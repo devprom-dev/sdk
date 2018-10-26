@@ -22,8 +22,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	
 	function getPreviewPagesNumber()
 	{
-	    $values = $this->getFilterValues();
-		return $values['viewmode'] == 'view' || $_REQUEST['search'] != '' ? 0 : 1;
+		return $_REQUEST['search'] != '' ? 0 : 1;
 	}
 
 	function getSectionName() {
@@ -56,7 +55,7 @@ class KnowledgeBaseDocument extends PMWikiDocument
 				$this->getObject()->getAttributeObject('Author'), 
 				translate($this->getObject()->getAttributeUserName( 'Author' )) 
 			);
-		$filters[] = new FilterTextWebMethod( text(2087), 'search', 'width:380px;' );
+		$filters[] = new FilterTextWebMethod( text(2087), 'search');
 
 		return $filters;
 	}

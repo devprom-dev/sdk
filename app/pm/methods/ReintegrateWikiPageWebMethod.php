@@ -5,18 +5,20 @@ include_once SERVER_ROOT_PATH."core/methods/WebMethod.php";
 class ReintegrateWikiPageWebMethod extends WebMethod
 {
     private $pageIt = null;
+    private $parentIt = null;
 
-	function __construct( $pageIt = null )
+	function __construct( $pageIt = null, $parentIt = null )
 	{
 		parent::__construct();
 		$this->pageIt = $pageIt;
+		$this->parentIt = $parentIt;
 	}
 	
 	function getCaption()
 	{
 		return sprintf( text(2602),
-            $this->pageIt->get('DocumentVersion') != ''
-                ? $this->pageIt->get('DocumentVersion')
+            $this->parentIt->get('DocumentVersion') != ''
+                ? $this->parentIt->get('DocumentVersion')
                 : $this->pageIt->get('DocumentName')
         );
 	}
@@ -55,37 +57,8 @@ class ReintegrateWikiPageWebMethod extends WebMethod
  	    $parentIt = getFactory()->getObject($className)->getExact($ids);
         if ( $parentIt->getId() == '' ) throw new Exception('Parent is required');
 
-        $data = array_merge(
-            array_map( function($value) {
-                return \TextUtils::decodeHtml($value);
-            }, $this->pageIt->getData()),
-            array(
-                'StateObject' => '',
-                'ParentPage' => $parentIt->getId(),
-                'DocumentId' => $parentIt->get('DocumentId'),
-                'DocumentVersion' => $parentIt->get('DocumentVersion'),
-                'SortIndex' => '',
-                'ParentPath' => ''
-            )
-        );
-        unset($data['WikiPageId']);
-        $pageIt = $parentIt->object->getRegistry()->Create($data);
-
         $service = new WikiMergeService(getFactory());
+        $pageIt = $service->mergePage($this->pageIt, $parentIt, $_REQUEST['traceClass']);
         $service->mergeTraces($this->pageIt, $pageIt);
-
-        $traceClass = getFactory()->getClass($_REQUEST['traceClass']);
-        if ( class_exists($traceClass) ) {
-            getFactory()->getObject($traceClass)->getRegistry()->Merge(
-                array(
-                    'SourcePage' => $pageIt->getId(),
-                    'TargetPage' => $this->pageIt->getId(),
-                    'Type' => 'branch'
-                ),
-                array(
-                    'SourcePage', 'TargetPage'
-                )
-            );
-        }
 	}
 }

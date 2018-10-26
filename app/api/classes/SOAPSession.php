@@ -5,6 +5,7 @@ include "AuthenticationSOAPFactory.php";
 include "model/DataModelRegistryBuilderCommon.php";
 include "model/v1/TestExecutionAPIModelBuilder.php";
 include "model/v1/RequestAPIModelBuilder.php";
+include "model/v1/CommentAPIModelBuilder.php";
 include "versioning/ModelVersionAttributesBuilder.php";
 
 class SOAPSession extends SessionBase
@@ -46,7 +47,8 @@ class SOAPSession extends SessionBase
 				new ProjectArtifactMetadataBuilder(),
 				new TestExecutionAPIModelBuilder(),
                 new RequestMetadataBuilder(),
-				new RequestAPIModelBuilder()
+				new RequestAPIModelBuilder(),
+                new CommentAPIModelBuilder()
 			)
  	    );
  	}

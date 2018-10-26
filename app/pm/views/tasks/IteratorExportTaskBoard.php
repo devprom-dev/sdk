@@ -47,13 +47,13 @@ class IteratorExportTaskBoard extends IteratorExport
 			 					echo '</td></tr>';
 			 				}
 		 					echo '<tr><td class="field">';
-		 						echo join(',', $this->get('Priority'));
+		 						echo htmlentities(join(',', $this->get('Priority')));
 			 				echo '</td></tr>';
 		 					echo '<tr><td class="field">';
-		 						echo join(',', $this->get('Assignee'));
+		 						echo htmlentities(join(',', $this->get('Assignee')));
 			 				echo '</td></tr>';
 		 					echo '<tr><td class="uid" style="border-bottom:0">';
-		 						echo $this->get('Planned');
+		 						echo htmlentities($this->get('Planned'));
 			 				echo '</td></tr>';
 		 				echo '</table>';
 	 				echo '</td>';

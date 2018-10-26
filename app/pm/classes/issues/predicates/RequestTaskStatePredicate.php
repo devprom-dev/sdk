@@ -11,7 +11,7 @@ class RequestTaskStatePredicate extends FilterPredicate
  			case 'notresolved':
 		 		return " AND EXISTS (SELECT 1 FROM pm_Task e " .
 		 			   "			  WHERE e.ChangeRequest = t.pm_ChangeRequestId " .
-		 			   "				AND e.State NOT IN ('".join(\WorkflowScheme::Instance()->getTerminalStates($task), "','")."') ) ";
+		 			   "				AND e.FinishDate IS NULL ) ";
  				
  			default:
                 $states = array_intersect(

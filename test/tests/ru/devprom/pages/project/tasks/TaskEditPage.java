@@ -17,28 +17,28 @@ public class TaskEditPage extends TaskNewPage {
 	@FindBy(id = "pm_TaskSubmitBtn")
 	protected WebElement saveBtn;
 
-	@FindBy(xpath = "//div[@id='modal-form']//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='attachment']]")
+	@FindBy(xpath = "//div[@id='modal-form']//*[contains(@class,'file-browse')]")
 	protected WebElement addAttachmentBtn;
 	
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskTraceTask']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskTraceTask']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addPreviousTaskBtn;
 	
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskRequirement']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskRequirement']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addRequirementBtn;
 	 
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskTestScenario']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskTestScenario']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTestDocBtn;
 	
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskTestExecution']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskTestExecution']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTestResultsBtn;
 	
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskHelpPage']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskHelpPage']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addDocsBtn;
 	
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskWatchers']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskWatchers']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addWarchersBtn;
 	
-	@FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskAttachments']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskAttachments']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addAttachmentsBtn;
 	public TaskEditPage(WebDriver driver) {
 		super(driver);
@@ -152,14 +152,15 @@ public class TaskEditPage extends TaskNewPage {
 	public void addAttachment(File file)
 	{
 		clickMainTab();
-		//turn off popup dialog
-		String codeIE = "$.browser.msie = true; document.documentMode = 8;";
+
+		String codeIE = "$('input[type]').css('visibility','visible')";
 		((JavascriptExecutor) driver).executeScript(codeIE);
-		addAttachmentBtn.click();
-		// make file input visible
-		((JavascriptExecutor) driver).executeScript("document.evaluate(\"//div[@id='modal-form']//input[contains(@id,'_File') and @type='file']\", document, null, 9, null).singleNodeValue.removeAttribute('style')");
-		// fill file input
-		driver.findElement(By.xpath("//div[@id='modal-form']//input[contains(@id,'_File') and @type='file']")).sendKeys(file.getAbsolutePath());
-		driver.findElement(By.xpath("//div[@id='modal-form']//span[@id='pm_TaskAttachment']//input[@action='save']")).click();
+		
+		addAttachmentBtn.findElement(By.xpath(".//input")).sendKeys(file.getAbsolutePath());
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		}
 	}
 }

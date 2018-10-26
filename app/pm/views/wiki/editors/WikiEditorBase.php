@@ -9,7 +9,6 @@ abstract class WikiEditorBase
 {
  	var $object, $object_it;
  	var $field = 'Content';
- 	var $attachments_field;
  	var $mode = WIKI_MODE_NORMAL;
  	var $tabindex = 0;
 	var $index;
@@ -162,16 +161,6 @@ abstract class WikiEditorBase
   	function getRequired()
  	{
  	    return $this->required;
- 	}
- 	
- 	function setAttachmentsField( $field )
- 	{
- 		$this->attachments_field = $field;
- 	}
- 	
- 	function getAttachmentsField()
- 	{
- 		return $this->attachments_field;
  	}
  	
   	function getAttachmentsCallback()

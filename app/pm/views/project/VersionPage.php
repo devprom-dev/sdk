@@ -47,6 +47,7 @@ class VersionPage extends PMPage
                     $stage->getAttributeType('Issues') != '' ? $stage->getAttributeUserName('Issues') : $stage->getAttributeUserName('Increments')
                 ));
 				$this->addInfoSection( new PageSectionAttributes($object,'tab-tasks',translate('Задачи')) );
+                $this->addInfoSection( new PageSectionAttributes($object,'artefacts',translate('Документация')) );
                 $this->addInfoSection( new PageSectionComments($object_it) );
                 $this->addInfoSection( new PMLastChangesSection($object_it) );
 			}

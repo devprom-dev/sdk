@@ -13,7 +13,7 @@ import ru.devprom.pages.project.requirements.RequirementEditPage;
 
 public class TestScenarioViewPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
 	@FindBy(xpath = "//a[text()='Завершить']")
@@ -65,7 +65,7 @@ public class TestScenarioViewPage extends SDLCPojectPageBase {
 	}
 	
 	public boolean isChildScenarioPresent(String name) {
-		return !driver.findElements(By.xpath("//td[@id='content']//div[contains(text(),'"+name+"')]")).isEmpty();
+		return !driver.findElements(By.xpath("//td[@id='content']//div[contains(.,'"+name+"')]")).isEmpty();
 	}
 
     public void addContent(String newContent) {

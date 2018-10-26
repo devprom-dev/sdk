@@ -4,11 +4,20 @@ class UserParticipanceTypeRegistry extends ObjectRegistrySQL
 {
     function createSQLIterator( $sql )
     {
+        $project_it = getSession()->getProjectIt();
+
         $data = array (
-            array ( 'entityId' => 1, 'ReferenceName' => 'participant', 'Caption' => translate('Участники проекта') )
+            array (
+                'entityId' => 1,
+                'ReferenceName' => 'participant',
+                'Caption' => $project_it->IsPortfolio()
+                                ? text(2533)
+                                : ($project_it->IsProgram()
+                                    ? text(2534)
+                                    : translate('Участники проекта') )
+            )
         );
 
-        $project_it = getSession()->getProjectIt();
         if ( $project_it->IsProgram() ) {
             $data[] = array ( 'entityId' => 2, 'ReferenceName' => 'linked', 'Caption' => text('permissions7') );
         }

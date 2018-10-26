@@ -58,9 +58,11 @@ class ProcessEmailQueue extends TaskCommand
 
 		while ( !$queue_it->end() )
 		{
-			$body = $queue_it->getHtmlDecoded('Description');
-			$from_address = $queue_it->getHtmlDecoded('FromAddress');
+		    $bodyData = unserialize($queue_it->getHtmlDecoded('Description'));
+			$body = $bodyData['native'];
+			$bodyText = $bodyData['text'];
 
+			$from_address = $queue_it->getHtmlDecoded('FromAddress');
 			$address_it = $address->getByRef('EmailQueue', $queue_it->getId());
 			while ( !$address_it->end() )
 			{
@@ -77,6 +79,26 @@ class ProcessEmailQueue extends TaskCommand
 				list($from_email, $from_name) = HtmlMailBox::parseAddressString($from_address);
 				list($to_email, $to_name) = HtmlMailBox::parseAddressString($to_address);
 
+				$messageToBeSent = DevpromSwiftMessage::newInstance()
+                    ->setContentType(HtmlMailBox::getContentType())
+                    ->setTo($to_email, $to_name != '' ? $to_name : null)
+                    ->setSubject($queue_it->getHtmlDecoded('Caption'))
+                    ->setReplyTo($from_email, $from_name != '' ? $from_name : null);
+
+				$attachments = unserialize($queue_it->getHtmlDecoded('Attachments'));
+				if ( is_array($attachments) && count($attachments) > 0 ) {
+                    $messageToBeSent->setBody($bodyText, 'text/html');
+                    foreach( $attachments as $attachment ) {
+                        $messageToBeSent->attach(
+                            Swift_Attachment::fromPath($attachment['path'])->setFilename($attachment['title'])
+                        );
+                    }
+                }
+                else {
+                    $messageToBeSent->setBodyNative($body);
+                }
+                $messageToBeSent->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'OOF');
+
 				try {
 					if ( $from_email == $to_email ) throw new \Exception("do not send itself ".$from_email);
                     if ( in_array($to_email, $supportEmails) ) throw new \Exception("do not send to support addresses ".$to_email);
@@ -85,30 +107,19 @@ class ProcessEmailQueue extends TaskCommand
                     if ( $account_email != '' && !HtmlMailBox::compareDomains($senderEmail, $account_email) ) {
                         $senderEmail = $account_email;
                     }
-					$mailer->send(
-						DevpromSwiftMessage::newInstance()
-							->setContentType(HtmlMailBox::getContentType())
-                            ->setFrom($senderEmail, $from_name != '' ? $from_name : null)
-							->setSender($senderEmail, $from_name != '' ? $from_name : null)
-                            ->setReplyTo($from_email, $from_name != '' ? $from_name : null)
-							->setTo($to_email, $to_name != '' ? $to_name : null)
-							->setSubject($queue_it->getHtmlDecoded('Caption'))
-							->setBodyNative($body)
-					);
+
+                    $messageToBeSent->setFrom($senderEmail, $from_name != '' ? $from_name : null)
+                        ->setSender($senderEmail, $from_name != '' ? $from_name : null);
+
+					$mailer->send($messageToBeSent);
 				}
                 catch (\Swift_SwiftException $e) {
                     $this->getLogger()->info("Unable send email from ".$senderEmail.", retry using account email");
                     try {
-                        $mailer->send(
-                            DevpromSwiftMessage::newInstance()
-                                ->setContentType(HtmlMailBox::getContentType())
-                                ->setFrom($account_email, $from_name != '' ? $from_name : null)
-                                ->setSender($account_email, $from_name != '' ? $from_name : null)
-                                ->setReplyTo($from_email, $from_name != '' ? $from_name : null)
-                                ->setTo($to_email, $to_name != '' ? $to_name : null)
-                                ->setSubject($queue_it->getHtmlDecoded('Caption'))
-                                ->setBodyNative($body)
-                        );
+                        $messageToBeSent->setFrom($account_email, $from_name != '' ? $from_name : null)
+                            ->setSender($account_email, $from_name != '' ? $from_name : null);
+
+                        $mailer->send($messageToBeSent);
                     }
                     catch (\Exception $e) {
                         $this->getLogger()->error("Unable send email: ".$e->getMessage().PHP_EOL.$e->getTraceAsString());

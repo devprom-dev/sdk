@@ -1,8 +1,5 @@
 <?php
 
-use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
-
-
 class SetWorkItemDatesTrigger extends SystemTriggersBase
 {
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 

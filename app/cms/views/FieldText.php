@@ -50,7 +50,7 @@ class FieldText extends Field
 			
 			if ( $this->rows == 1 )
 			{
-				echo '<input id="'.$this->getId().'" name="'.$this->getName().'" class="input-block-level" type="text" tabindex="'.$this->getTabIndex().'" placeholder="'.htmlentities($this->getDefault()).'" value="'.htmlentities($this->getValue()).'" '.($this->getRequired() ? 'required' : '').' autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">';
+				echo '<input id="'.$this->getId().'" name="'.$this->getName().'" class="input-block-level" type="text" tabindex="'.$this->getTabIndex().'" placeholder="'.htmlentities($this->getDefault()).'" value="'.htmlentities($this->getValue()).'" '.($this->getRequired() ? 'required' : '').' autocomplete="nope" autocorrect="off" autocapitalize="off" spellcheck="false">';
 			}
 			else
 			{

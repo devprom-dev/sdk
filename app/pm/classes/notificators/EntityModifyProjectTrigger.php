@@ -30,20 +30,28 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	    	$project_it = $object_it->getRef('Project');
 	    }
 
-	    $this->moveEntity( $object_it, $project_it, $references );
+	    $this->moveEntity( $object_it, $project_it, $references, $this->getRecordData() );
 	}
 	
-	protected function moveEntity( & $object_it, & $target_it, & $references )
+	protected function moveEntity( & $object_it, & $target_it, & $references, $content )
 	{
+	    global $session;
+
+        $wasProjectIt = getSession()->getProjectIt();
+        $session = new PMSession($target_it);
+
  	 	foreach( $references as $object ) {
 			$object->removeNotificator('ChangeLogNotificator');
             $object->removeNotificator('EmailNotificator');
-			$this->setProject($object->getAll(), $target_it);
+            $object->disableVpd();
+			$this->setProject($object->getAll(), $target_it, $content);
  	    }
-		$this->updateChangeLog( $object_it, $target_it );
+		$this->updateChangeLog( $object_it, $wasProjectIt, $target_it );
+
+        $session = new PMSession($wasProjectIt);
 	}
 
-	protected function setProject( $object_it, $target_it )
+	protected function setProject( $object_it, $target_it, $content )
 	{
 		$state = new StateBase();
 		$storedObject = getFactory()->getObject(get_class($object_it->object));
@@ -59,7 +67,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 			foreach( array_keys($object_it->object->getAttributes()) as $attribute )
 			{
                 if ( $object_it->get($attribute) == '' ) continue;
-			    if ( in_array($attribute, array('ParentPage','DocumentId')) ) {
+			    if ( in_array($attribute, array('ParentPage','DocumentId')) && $object_it->get($attribute) != '' ) {
 			        $ref_it = $object_it->object->getRegistry()->Query(
 			            array (
 			                new FilterInPredicate($object_it->get($attribute)),
@@ -98,10 +106,13 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 						$queryParms = array(
                             new FilterVpdPredicate($target_it->get('VPD'))
                         );
+                        $refIt = $ref->getRegistry()->Query(
+                            array(
+                                new FilterInPredicate($object_it->get($attribute))
+                            )
+                        );
 						foreach( $keys as $key ) {
-							$queryParms[] = new FilterAttributePredicate( $key,
-								' '.$ref->getExact($object_it->get($attribute))->get($key)
-							);
+							$queryParms[] = new FilterAttributePredicate($key, $refIt->get($key));
 						}
 						$ref_it = $ref->getRegistry()->Query($queryParms);
 						$parms[$attribute] = $ref_it->getId();
@@ -117,27 +128,25 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 					)
 				);
                 // reset state if there is no such state in the target project
-				if ( $state_it->getId() == '' ) $parms['State'] = '';
+				if ( $state_it->getId() == '' || !array_key_exists('State', $content) ) $parms['State'] = '';
 			}
 
             $object_it->object->modify_parms( $object_it->getId(), $parms );
 
             $storedObject->removeNotificator('AbstractServicedeskEmailNotificator');
-            getFactory()->getEventsManager()->notify_object_add(
-                $storedObject->getExact($object_it->getId()),
-                $parms
-            );
+            $storedIt = $storedObject->getExact($object_it->getId());
+            getFactory()->getEventsManager()->notify_object_add($storedIt, $parms);
+            getFactory()->getEventsManager()
+                ->executeEventsAfterBusinessTransaction($storedIt, 'WorklfowMovementEventHandler', $parms);
 
 			$object_it->moveNext();
 		}
 	}
 
-	protected function updateChangeLog( $object_it, $target_it )
+	protected function updateChangeLog( $object_it, $source_it, $target_it )
 	{
-	    $project_it = getSession()->getProjectIt();
-	    
 		// store message the issue has been moved
-		$message = str_replace( '%1', $project_it->getDisplayName(), 
+		$message = str_replace( '%1', $source_it->getDisplayName(),
 			str_replace('%2', $target_it->getDisplayName(), text(1122)) );  
 		
 		$change_parms = array(

@@ -43,7 +43,9 @@ class FieldParticipantDictionary extends FieldDictionary
  		{
 		    $options[] = array (
 		        'value' => $part_it->getId(),
-                'caption' => $part_it->getDisplayNameExt($this->iterationId)
+                'caption' => $this->getEditMode()
+                                ? $part_it->getDisplayNameExt($this->iterationId)
+                                : $part_it->getDisplayName()
             );
  			$part_it->moveNext();
  		}
@@ -59,7 +61,9 @@ class FieldParticipantDictionary extends FieldDictionary
  		    foreach( $roles as $roleId ) {
                 $groups[$roleId][] = array (
                     'value' => $part_it->getId(),
-                    'caption' => $part_it->getDisplayNameExt($this->iterationId)
+                    'caption' => $this->getEditMode()
+                                    ? $part_it->getDisplayNameExt($this->iterationId)
+                                    : $part_it->getDisplayName()
                 );
             }
  			$part_it->moveNext();

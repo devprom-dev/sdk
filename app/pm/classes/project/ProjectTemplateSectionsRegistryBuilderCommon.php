@@ -113,17 +113,17 @@ class ProjectTemplateSectionsRegistryBuilderCommon extends ProjectTemplateSectio
    private function buildWorkflow( & $registry )
    {
  		$items = array (
+            getFactory()->getObject('IssueAutoAction'),
 	 		getFactory()->getObject('pm_State'),
 	 		getFactory()->getObject('pm_Transition'),
-            getFactory()->getObject('ProjectRole'),
 	 		getFactory()->getObject('pm_TransitionRole'),
 	 		getFactory()->getObject('pm_TransitionAttribute'),
 	 		getFactory()->getObject('pm_TransitionPredicate'),
 	 		getFactory()->getObject('pm_TransitionResetField'),
+            getFactory()->getObject('pm_TransitionAction'),
 	 		getFactory()->getObject('pm_StateAction'),
 	 		getFactory()->getObject('pm_StateAttribute'),
-            getFactory()->getObject('TaskTypeState'),
-            getFactory()->getObject('IssueAutoAction')
+            getFactory()->getObject('TaskTypeState')
         );
  		$registry->addSection($registry, 'Workflow', $items, true, text(894));
     }

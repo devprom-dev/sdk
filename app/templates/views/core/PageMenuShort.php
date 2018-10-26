@@ -8,7 +8,7 @@ $recent = 0;
         <div class="short-menu-area">
             <p><?=$area['name']?></p>
             <? foreach( $area['menus'] as $menu ) { ?>
-                <? if ( $menu['name'] != '' && !in_array($menu['uid'],array('plan','settings')) ) continue; ?>
+                <? if ( $menu['name'] != '' && !in_array($menu['uid'],array('plan')) ) continue; ?>
                 <? foreach( $menu['items'] as $item ) { ?>
                     <? if ( $item['uid'] == 'navigation-settings' ) continue; ?>
                     <? if ( $item['name'] == '' ) continue; ?>

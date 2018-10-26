@@ -149,7 +149,7 @@ class WikiTraceFormEmbedded extends PMFormEmbedded
 		
 		$actions[] = array(
 			'click' => "javascript: window.location = '".$history_url."';", 
-			'name' => text(2238)
+			'name' => text(824)
 		);
 
         $versions_url = $page_it->getPageVersions();

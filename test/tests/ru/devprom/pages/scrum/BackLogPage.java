@@ -17,7 +17,7 @@ import ru.devprom.pages.project.functions.FunctionNewPage;
  */
 public class BackLogPage extends ScrumPageBase{
     
-    @FindBy(xpath = "//*[@id='append-issue']")
+    @FindBy(xpath = "//*[@id='new-issue']")
 	protected WebElement addUserStoryBtn;
     
     public BackLogPage(WebDriver driver) {
@@ -30,7 +30,7 @@ public class BackLogPage extends ScrumPageBase{
     }
 
     public String getIDByName(String name) {
-        String ids = driver.findElement(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(text(),'"+
+        String ids = driver.findElement(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(.,'"+
                 name+"')]/preceding-sibling::td[@id='uid']/a")).getAttribute("href");
         ids = ids.substring(ids.lastIndexOf("/")+1);
         FILELOG.debug("ID = " + ids);
@@ -41,7 +41,7 @@ public class BackLogPage extends ScrumPageBase{
         String clearID = id.substring(2);
         WebElement row = driver.findElement(By.xpath("//tr[@object-id='"+clearID+"']"));
         clickOnInvisibleElement(row.findElement(By.xpath(".//*[@id='operations']/div/a")));
-        row.findElement(By.xpath(".//a[contains(text(),'Преобразовать в эпик')]")).click();
+        row.findElement(By.xpath(".//a[contains(.,'Преобразовать в эпик')]")).click();
         return new FunctionNewPage(driver);
     }
 }

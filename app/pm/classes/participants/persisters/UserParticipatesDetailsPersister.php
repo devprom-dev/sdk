@@ -8,19 +8,7 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
  	    
  		$columns = array();
 
-		if ( defined('PERMISSIONS_ENABLED') ) {
-			$columns[] =
-				"( SELECT SUM(r.Capacity) " .
-				"  	 FROM pm_ParticipantRole r, pm_Participant n " .
-				" 	WHERE r.Participant = n.pm_ParticipantId " .
-				"     AND n.Project = " . $project_it->getId() .
-				"     AND n.SystemUser = " . $this->getPK($alias) . " ) Capacity ";
-		}
-		else {
-			$columns[] = " (SELECT 8) Capacity ";
-		}
- 		
- 		$columns[] = 
+ 		$columns[] =
      		"( SELECT GROUP_CONCAT(CAST(r.pm_ParticipantRoleId AS CHAR))" .
      		"  	 FROM pm_ParticipantRole r, pm_Participant n " .
 			" 	WHERE r.Participant = n.pm_ParticipantId ".
@@ -34,13 +22,7 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 			" 	WHERE t.Project = ".$project_it->getId().
 			"     AND t.SystemUser = ".$this->getPK($alias).") Participant ";
  		
- 		$columns[] = 
-     		"( SELECT IFNULL(GROUP_CONCAT(t.IsActive),'N') " .
-     		"  	 FROM pm_Participant t " .
-			" 	WHERE t.Project = ".$project_it->getId().
-			"     AND t.SystemUser = ".$this->getPK($alias).") IsActive ";
- 		
- 		$columns[] = 
+ 		$columns[] =
      		"( SELECT GROUP_CONCAT(CAST(r.ProjectRole AS CHAR))" .
      		"  	 FROM pm_ParticipantRole r, pm_Participant t " .
 			" 	WHERE r.Participant = t.pm_ParticipantId ".
@@ -55,8 +37,26 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 	 				)
  				)
  		);
- 		
- 		$columns[] = 
+
+        if ( defined('PERMISSIONS_ENABLED') ) {
+            $columns[] =
+                "( SELECT SUM(r.Capacity) " .
+                "  	 FROM pm_ParticipantRole r, pm_Participant n " .
+                " 	WHERE r.Participant = n.pm_ParticipantId " .
+                "     AND n.Project IN (" . $linked_ids . ") ".
+                "     AND n.SystemUser = " . $this->getPK($alias) . " ) Capacity ";
+        }
+        else {
+            $columns[] = " (SELECT 8) Capacity ";
+        }
+
+        $columns[] =
+            "( SELECT MAX(IFNULL(t.IsActive,'N')) " .
+            "  	 FROM pm_Participant t " .
+            " 	WHERE t.Project IN (" . $linked_ids . ") ".
+            "     AND t.SystemUser = ".$this->getPK($alias).") IsActive ";
+
+        $columns[] =
      		"( SELECT GROUP_CONCAT(CAST(t.Project AS CHAR))" .
      		"  	 FROM pm_ParticipantRole r, pm_Participant t " .
 			" 	WHERE r.Participant = t.pm_ParticipantId ".
@@ -76,12 +76,10 @@ class UserParticipatesDetailsPersister extends ObjectSQLPersister
 
  		if ( getSession()->getProjectIt()->getMethodologyIt()->HasTasks() )
  		{
-            $taskTerminals = \WorkflowScheme::Instance()->getNonTerminalStates(getFactory()->getObject('Task'));
-            if ( count($taskTerminals) < 1 ) $taskTerminals = array('-');
             $columns[] =
                 "( SELECT SUM(t.LeftWork) " .
                 "  	 FROM pm_Task t " .
-                " 	WHERE t.State IN ('".join("','", $taskTerminals)."') ".
+                " 	WHERE t.FinishDate IS NULL ".
                 "     AND t.Assignee = ".$this->getPK($alias).") LeftWork ";
         }
 

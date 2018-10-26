@@ -12,8 +12,9 @@ include_once SERVER_ROOT_PATH."pm/views/project/ProjectMetricsPage.php";
 
 class MetricsController extends PageController
 {
-    public function pageAction()
+    public function pageAction( Request $request )
     {
+        $_REQUEST['report'] = $request->get('report');
     	return $this->responsePage( new \ProjectMetricsPage() );
     }
 }

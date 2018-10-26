@@ -21,7 +21,15 @@ class PageListSetting
     {
         return $this->group;
     }
-    
+
+    function setGroupSort( $value ) {
+        $this->groupSort = $value;
+    }
+
+    function getGroupSort() {
+        return $this->groupSort;
+    }
+
     function setSections( $sections_array )
     {
         $this->sections = join(',',$sections_array);
@@ -43,12 +51,9 @@ class PageListSetting
     }
 
     protected $columns_array = array();
-    
     protected $class_name = '';
-    
     protected $group = '';
-    
+    protected $groupSort = '';
     protected $sections = array();
-    
     protected $filters = array();
 }

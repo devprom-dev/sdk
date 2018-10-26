@@ -16,15 +16,8 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
 
         // issues table
         $setting = new PageTableSetting('RequestTable');
-        $setting->setFilters( array('release', 'state', 'priority', 'target') );
+        $setting->setFilters( array('release', 'state', 'priority', 'target', 'type', 'function') );
 		$setting->setSorts( array('Priority','OrderNum') );
-        $settings->add( $setting );
-
-        // newissues report
-        $setting = new ReportSetting('newissues');
-        $setting->setSorts( array('RecordCreated.D') );
-        $setting->setFilters( array('state', 'type', 'priority', 'submittedon') );
-        $setting->setVisibleColumns( array('UID', 'Caption', 'Priority', 'RecordCreated') );
         $settings->add( $setting );
 
         // productbacklog report
@@ -40,7 +33,12 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         
         // board
         $setting = new PageListSetting('RequestBoard');
-        $columns = array('UID','Caption','OpenTasks','RecentComment','Fact','Estimation','Attachment','Links','Tags');
+        $columns = array('UID','Caption','Description','OpenTasks','RecentComment','Fact','Estimation','Attachment','Links','Tags');
+
+        if ( !$methodology_it->RequestEstimationUsed() ) {
+            $columns[] = 'TasksPlanned';
+        }
+
         $setting->setVisibleColumns($columns);
         $settings->add( $setting );
 
@@ -79,17 +77,9 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         $setting->setSorts(array('RecordCreated.D'));
         $settings->add( $setting );
 
-        // resolvedissues
-        $setting = new ReportSetting('resolvedissues');
-        $setting->setVisibleColumns(
-            array('UID', 'Caption', 'ClosedInVersion', 'Tasks', 'TestExecution', 'PlannedRelease', 'Priority', 'Estimation', 'Fact')
-        );
-        $setting->setSorts(array('RecordCreated.D'));
-        $settings->add( $setting );
-
         $setting = new ReportSetting('issuesestimation');
         $setting->setVisibleColumns(
-            array('UID', 'Caption', 'Estimation', 'Tasks', 'Fact', 'Priority')
+            array('UID', 'Caption', 'Estimation', 'Tasks', 'Fact', 'Priority', 'TasksPlanned')
         );
         $setting->setSorts(array('RecordCreated.D'));
         $setting->setGroup( $methodology_it->HasPlanning() ? 'Iteration' : 'PlannedRelease' );
@@ -98,8 +88,9 @@ class PageSettingIssuesBuilder extends PageSettingBuilder
         // readyissues
         $setting = new ReportSetting('readyissues');
         $setting->setVisibleColumns(
-            array('UID', 'Caption', 'Description', 'SourceCode', 'Fact', 'Requirement', 'Link')
+            array('UID', 'Caption', 'Description', 'SourceCode', 'Fact', 'Requirement', 'Link', 'FinishDate')
         );
+        $setting->setSorts(array('FinishDate.D','ClosedInVersion.D'));
         $setting->setGroup('Type');
         $settings->add( $setting );
     }

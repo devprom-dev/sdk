@@ -55,7 +55,7 @@ public class ReleasesIterationsPage extends SDLCPojectPageBase {
 		//filterBtn.click();
 		((JavascriptExecutor) driver).executeScript(code);
 		//filterBtn.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'filter')]/div/a[not(contains(@class,'btn-info')) and contains(text(),'Состояние')]")));
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[contains(@class,'filter')]/div/a[not(contains(@class,'btn-info')) and contains(.,'Состояние')]")));
 		
 		/*try {
 			Thread.sleep(3000);
@@ -118,10 +118,10 @@ public class ReleasesIterationsPage extends SDLCPojectPageBase {
 	/**Method deletes all releases and iterations excepts for '0'. All the rest of operations shouldn't be in use.*/
 	public ReleasesIterationsPage deleteAllIterations(){
 		  showAll();
-		 if (driver.findElements(By.xpath("//td[@id='stage']/div[contains(text(),'Итерация')]")).isEmpty()){
+		 if (driver.findElements(By.xpath("//td[@id='stage']/div[contains(.,'Итерация')]")).isEmpty()){
 			  return new ReleasesIterationsPage(driver);
 		 }
-		WebElement releaseEditBtn = driver.findElement(By.xpath("//td[@id='stage']/div[contains(text(),'Итерация')]/../following-sibling::td//a[text()='Изменить']"));
+		WebElement releaseEditBtn = driver.findElement(By.xpath("//td[@id='stage']/div[contains(.,'Итерация')]/../following-sibling::td//a[text()='Изменить']"));
 		clickOnInvisibleElement(releaseEditBtn);
 		submitDelete(driver.findElement(By.id("pm_ReleaseDeleteBtn")));
 		deleteAllIterations();
@@ -152,6 +152,6 @@ public class ReleasesIterationsPage extends SDLCPojectPageBase {
 	}
 	
 	public boolean isTaskPresent(String taskId){
-		return (!driver.findElements(By.xpath("//a[text()='["+taskId+"]']")).isEmpty() ||  !driver.findElements(By.xpath("//a/strike[contains(text(),'"	+ taskId + "')]")).isEmpty());
+		return (!driver.findElements(By.xpath("//a[text()='["+taskId+"]']")).isEmpty() ||  !driver.findElements(By.xpath("//a/strike[contains(.,'"	+ taskId + "')]")).isEmpty());
 	}
 }

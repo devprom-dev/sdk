@@ -74,7 +74,7 @@ public class WorkflowTest extends ProjectTestBase{
 	public void conditionsToTransit(){
 		String p = DataProviders.getUniqueString();
 		String userRequestTypeName = "UserRequestType"+p;
-  	   Project sdlcProject= new Project("sdlcProject"+p, "sdlcproject"+p,
+  	   Project sdlcProject= new Project("sdlcProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),
 					new Template(this.waterfallTemplateName));
   	   Request request = new Request("Доработка"+p, "", Request.getHighPriority(), 10.0, "Доработка");
 	   Request bug = new Request("Ошибка"+p, "", Request.getHighPriority(), 10.0, "Ошибка");

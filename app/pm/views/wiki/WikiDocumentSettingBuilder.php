@@ -16,9 +16,7 @@ class WikiDocumentSettingBuilder extends PageSettingBuilder
 
         $setting = new PageListSetting('PMWikiDocumentList');
         $setting->setGroup( 'none' );
-        $columns = array('Content');
-        $columns[] = 'SectionNumber';
-        $columns[] = 'Tags';
+        $columns = array('Content', 'SectionNumber', 'Tags', 'PageType');
         $setting->setVisibleColumns(
             array_merge(
                 $columns,

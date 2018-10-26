@@ -1,10 +1,8 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderIssues.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestViewModelCommonBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/TransitionCommentPersister.php";
 
 include SERVER_ROOT_PATH."pm/views/reports/ReportTable.php";
@@ -34,7 +32,7 @@ class RequestPage extends PMPage
 
 		if ($_REQUEST['view'] == 'chart') return;
 
-		if ($this->needDisplayForm()) {
+		if ( $this->needDisplayForm() && is_object($this->getFormRef()) ) {
 			$form = $this->getFormRef();
             if ( $_REQUEST['mode'] == 'group' ) {
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
@@ -81,7 +79,6 @@ class RequestPage extends PMPage
 	function getObject()
 	{
 		$object = getFactory()->getObject('Request');
-
 		foreach (getSession()->getBuilders('RequestViewModelBuilder') as $builder) {
 			$builder->build($object);
 		}

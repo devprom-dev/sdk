@@ -69,6 +69,7 @@ class AccessPolicy
 
 	function can_read_attribute( &$object, $attribute_refname, $reference_class = '' ) 
 	{
+        if ( !is_object($object) ) return true;
 		return $this->check_access_attribute( ACCESS_READ, $object, $attribute_refname, $reference_class );
 	}
 	
@@ -79,12 +80,12 @@ class AccessPolicy
 	
 	function can_read( &$target ) 
 	{
+        if ( !defined('PERMISSIONS_ENABLED') ) return true;
 		if ( !is_object($target) ) return true;
 		
 		if ( $target instanceof IteratorBase )
 		{
 			if ( $target->getId() == '' ) return false;
-			
 			return $this->check_access( ACCESS_READ, $target->object, $target );
 		}
 		else

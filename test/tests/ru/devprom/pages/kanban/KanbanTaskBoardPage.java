@@ -24,7 +24,7 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
 	protected WebElement newTaskBtn;
         
         //фильтер Статус
-        @FindBy(xpath = "//a[contains(text(),'Статус: Не завершено')]")//"//div[@class='filter hidden-print']/div[2]/a")//"//a[contains(text(),'Статус')]")
+        @FindBy(xpath = "//a[contains(.,'Статус: Не завершено')]")//"//div[@class='filter hidden-print']/div[2]/a")//"//a[contains(.,'Статус')]")
 	protected WebElement statusFilterBtn;
         
          //добавить затраченное время на форма перехода
@@ -32,23 +32,23 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
 	protected WebElement addTimeBtn;        
         
         //добавить затраченное время на форма перехода для требования
-        @FindBy(xpath = "//span[@id='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
+        @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTimeReqBtn;  
         
         //поле добавления времени на форме перехода для требования
-        @FindBy(xpath = "//span[@id='pm_ChangeRequestFact']//input[contains(@name,'_Capacity')]")
+        @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//input[contains(@name,'_Capacity')]")
 	protected WebElement addTimeReqField;  
         
         //поле добавления времени на форме перехода
-        @FindBy(xpath = "//span[@id='pm_TaskFact']//input[contains(@name,'_Capacity')]")
+        @FindBy(xpath = "//span[@name='pm_TaskFact']//input[contains(@name,'_Capacity')]")
 	protected WebElement addTimeField;   
         
         //кнопка добавить время после ввода на форме  перехода
-        @FindBy(xpath="//span[@id='pm_TaskFact']//input[contains(@id,'saveEmbedded')]")
+        @FindBy(xpath="//span[@name='pm_TaskFact']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAddedTime;
         
         //кнопка добавить время после ввода на форме  перехода
-        @FindBy(xpath="//span[@id='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
+        @FindBy(xpath="//span[@name='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAddedTimeReq;
         
         //кнопка сохранить время после ввода на форме  перехода
@@ -88,7 +88,7 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
         {
         (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(statusFilterBtn));
         statusFilterBtn.click();
-        WebElement menuItem = driver.findElement(By.xpath("(//a[contains(text(),'" + statusType + "')])[2]"));
+        WebElement menuItem = driver.findElement(By.xpath("(//a[contains(.,'" + statusType + "')])[2]"));
         (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(menuItem));
         menuItem.click();
         Thread.sleep(3000);
@@ -108,7 +108,7 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
 		} catch (InterruptedException e) {
 		}
         String taskNumber = taskID.substring(2);
-        WebElement onElement = driver.findElement(By.xpath("//a[contains(text(),'[" +taskID+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//a[contains(.,'[" +taskID+ "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
@@ -125,7 +125,7 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
     public KanbanSubTaskEditPage doubleClickOnTask(String taskName) {
         try
         {
-        WebElement onElement = driver.findElement(By.xpath("//div[contains(text(),'"+taskName+"')]"));
+        WebElement onElement = driver.findElement(By.xpath("//div[contains(.,'"+taskName+"')]"));
          Actions action = new Actions(driver);
          action.doubleClick(onElement).build().perform();
          Thread.sleep(3000);
@@ -169,7 +169,7 @@ public class KanbanTaskBoardPage extends KanbanPageBase {
     public String getIDTaskByName(String taskName) {
         FILELOG.debug("getIDTaskByName started");
         String IDtask;
-        WebElement element = driver.findElement(By.xpath("//div[contains(text(),'"+taskName+"')]/preceding-sibling::*/div/a"));
+        WebElement element = driver.findElement(By.xpath("//div[contains(.,'"+taskName+"')]/preceding-sibling::*/div/a"));
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(element));
         String uid = element.getText();
         IDtask = uid.substring(1, uid.length()-1);

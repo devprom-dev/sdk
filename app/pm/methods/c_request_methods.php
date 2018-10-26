@@ -269,19 +269,14 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
 
  	function getValues()
  	{
- 		global $model_factory;
- 		
- 		$values = array( 
+ 		$values = array(
 			'all' => translate('Все'),
 		);
  		
-		$state = $model_factory->getObject('TaskState');
-		
-		$state_it = $state->getAll();
+		$state_it = getFactory()->getObject('TaskState')->getAll();
 		while ( !$state_it->end() )
 		{
-			if ( $state_it->get('ReferenceName') == 'resolved' )
-			{
+			if ( $state_it->get('IsTerminal') == 'Y' ) {
 				$values['notresolved'] = translate('Не выполнено');
 			}
 			$values[$state_it->get('ReferenceName')] = $state_it->getDisplayName();

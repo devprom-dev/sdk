@@ -14,7 +14,7 @@ class RequestModelPageTableBuilder extends ObjectModelBuilder
 {
     public function build( Metaobject $object )
     {
-    	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
+        if ( !$object instanceof Request) return;
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
 		$object->addPersister( new RequestPhotosPersister() );

@@ -8,10 +8,13 @@ class ImportDocumentForm extends PMPageForm
     	parent::extendModel();
 
 		$visible = array();
+        $system = $this->getObject()->getAttributesByGroup('system');
+
 		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
 			if ( in_array($attribute, $visible) ) continue;
+            if ( in_array($attribute, $system) ) continue;
+            $this->getObject()->setAttributeVisible($attribute, false);
 			$this->getObject()->setAttributeRequired($attribute, false);
-			$this->getObject()->setAttributeVisible($attribute, false);
 		}
 
 		if ( $_REQUEST['ParentPage'] != '' ) {
@@ -61,14 +64,15 @@ class ImportDocumentForm extends PMPageForm
                 'PageType' => $_REQUEST['PageType'],
                 'State' => $_REQUEST['State']
             );
+			$importObject = getFactory()->getObject(get_class($this->getObject()));
 			if ( $_REQUEST['Format'] == 'list' ) {
-                $builder = new WikiImporterListBuilder($this->getObject());
+                $builder = new WikiImporterListBuilder($importObject);
             }
             else {
-                $builder = new WikiImporterContentBuilder($this->getObject());
+                $builder = new WikiImporterContentBuilder($importObject);
 
             }
-			$importer = new WikiImporter($this->getObject());
+			$importer = new WikiImporter($importObject);
             $importer_it = $importer->getAll();
 
 

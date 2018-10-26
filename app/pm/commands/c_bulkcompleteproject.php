@@ -3,6 +3,8 @@ include_once SERVER_ROOT_PATH."co/commands/c_bulkcomplete.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/SetTagsRequestWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/SetTagsWikiWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/SetTagsTaskWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/SetWatchersWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_state_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/DuplicateIssuesWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/CloneWikiPageWebMethod.php";

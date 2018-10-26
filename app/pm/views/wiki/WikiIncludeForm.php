@@ -12,8 +12,10 @@ class WikiIncludeForm extends PMPageForm
  		parent::extendModel();
  		
  		$object = $this->getObject();
+        $system = $object->getAttributesByGroup('system');
  		foreach( $object->getAttributes() as $attribute => $data )
  		{
+            if ( in_array($attribute, $system) ) continue;
  			$object->setAttributeVisible($attribute, false);
  			$object->setAttributeRequired($attribute, false);
  		}

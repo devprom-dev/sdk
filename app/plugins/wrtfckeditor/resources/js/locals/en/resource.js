@@ -18,4 +18,7 @@ var ckeditor_resources =
 	'comment-title': 'Comment',
 	'text-template-search': 'Insert template',
 	'text-template-dlg': 'Search for text template',
+    'embedhtml-dialog': 'Embed HTML',
+    'embedhtml-text': 'Paste HTML text here:',
+	'imagemulti-button': 'Insert images'
 };

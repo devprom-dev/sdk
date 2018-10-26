@@ -12,7 +12,7 @@ class AdminPageMenu extends PageMenu
 		$pages = array();
 
 		$items = array (
-            array ( 'name' => translate('Активности'), 'url' => '/admin/activity.php', 'uid' => 'acitivty' ),
+            array ( 'name' => text(2624), 'url' => '/admin/activity.php', 'uid' => 'acitivty' ),
         );
 		if ( ! \EnvironmentSettings::getAutoUpdate() ) {
             $items[] = array ( 'name' => translate('Обновления'), 'url' => '/admin/updates.php', 'uid' => 'updates' );
@@ -44,7 +44,7 @@ class AdminPageMenu extends PageMenu
 			'items' => array(
 				array( 'url' => '/admin/projects.php', 'name' => translate('Список'), 'title' => translate('Список проектов'), 'uid' => 'projects' ),
 				array(),
-				array( 'url' => '/admin/templates.php', 'name' => translate('Шаблоны'), 'uid' => 'templates' )
+				array( 'url' => '/admin/templates.php', 'name' => translate('Процессы'), 'uid' => 'templates' )
 			)
 		));
 

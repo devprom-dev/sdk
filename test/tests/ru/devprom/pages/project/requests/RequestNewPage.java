@@ -51,7 +51,7 @@ public class RequestNewPage extends SDLCPojectPageBase {
 		submitDialog(submitBtn);
 		//read ID
 		driver.navigate().to(driver.getCurrentUrl()+"&state=all");	
-    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(text(),'"+request.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
+    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+request.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
     	request.setId(uid.substring(1, uid.length()-1));
     	FILELOG.debug("Created Request: " + request.getId());
 		return new RequestsPage(driver);
@@ -69,7 +69,7 @@ public class RequestNewPage extends SDLCPojectPageBase {
 		submitDialog(submitBtn);
 		//read ID
 		driver.navigate().to(driver.getCurrentUrl()+"&state=all");
-		String xpath = "//td[@id='caption' and contains(text(),'"+request.getName()+"')]/preceding-sibling::td[@id='uid']"; 
+		String xpath = "//td[@id='caption' and contains(.,'"+request.getName()+"')]/preceding-sibling::td[@id='uid']"; 
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath(xpath)));
     	String uid = driver.findElement(By.xpath(xpath)).getText();
     	request.setId(uid.substring(1, uid.length()-1));

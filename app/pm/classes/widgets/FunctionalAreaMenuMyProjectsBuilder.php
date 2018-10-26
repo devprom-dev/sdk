@@ -6,6 +6,13 @@ class FunctionalAreaMenuMyProjectsBuilder extends FunctionalAreaMenuFavoritesBui
     {
     	$menus = parent::build($set);
 
+        $module = getFactory()->getObject('Module');
+
+        $items = array();
+        $item = $module->getExact('projects')->buildMenuItem();
+        $items['projects'] = $item;
+        $menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
+
         $registry = getFactory()->getObject('Project')->getRegistry();
         $registry->setPersisters(array());
     	if ( $registry->Count() < 1 && !defined('SKIP_WELCOME_PAGE') )

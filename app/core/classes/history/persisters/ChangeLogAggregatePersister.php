@@ -10,13 +10,12 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
 			" t.EntityRefName ",
 			" t.ObjectId ",
 			" t.Transaction ",
-            " t.VPD "
+            " t.VPD ",
+            " t.SystemUser ",
+            " t.UserName "
 		);
  		
  		array_push( $columns,
- 		    " IFNULL( t.SystemUser, (SELECT p.SystemUser from pm_Participant p WHERE p.pm_ParticipantId = t.Author) ) SystemUser " );
- 		
- 		array_push( $columns, 
  			" MAX(t.RecordModified) RecordModified " );
 
         array_push( $columns,

@@ -5,7 +5,7 @@ RewriteEngine On
 RewriteRule ^install$ /install/ [R=301,L]
 RewriteRule ^install/$ /app/pageadmin.php [L,QSA]
 
-RewriteRule ^favicon.*$ /images/favicon.ico [L,QSA]
+RewriteRule ^favicon(.*)$ /images/favicon$1 [L,QSA]
 RewriteRule ^projects$ / [R=301,L]
 
 RewriteRule ^app/servicedesk\.php(/(.*)|$) /servicedesk/$2 [R=301,L]

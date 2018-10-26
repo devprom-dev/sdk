@@ -24,7 +24,7 @@ public class PluginsTest extends AdminTestBase
 	{
 		PageBase page = new PageBase(driver);
 		String p = DataProviders.getUniqueString();
-		testProject = new Project("PluginsTest"+p, "pluginstest"+p,
+		testProject = new Project("PluginsTest"+p, "pluginstest"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName)); 
 		ProjectNewPage pnp = page.createNewProject();
 		pnp.createNew(testProject);
@@ -36,15 +36,13 @@ public class PluginsTest extends AdminTestBase
 	{
 		PageBase page = new PageBase(driver);
 		SDLCPojectPageBase project = (SDLCPojectPageBase) page.gotoProject(testProject);
-		project.gotoStoryMapping();
-		Assert.assertTrue(project.isElementPresent(By.xpath("//a[@uid='storymapping-storyboard']")));
+		Assert.assertTrue(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 		
 		PluginsPage pp = project.goToAdminTools().gotoPlugins();
-		pp = pp.disablePlugin("storymapping.php");
+		pp = pp.disablePlugin("operations.php");
 		
 		project = (SDLCPojectPageBase) pp.gotoProject(testProject);
-		project.gotoTraceMatrix();
-		Assert.assertFalse(project.isElementPresent(By.xpath("//a[@uid='storymapping-storyboard']")));
+		Assert.assertFalse(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 	}
 	
 	/** The test enables plugin "support.php" and checks if "Адреса поддержки" link got back */
@@ -53,14 +51,12 @@ public class PluginsTest extends AdminTestBase
 	{
 		PageBase page = new PageBase(driver);
 		SDLCPojectPageBase project = (SDLCPojectPageBase) page.gotoProject(testProject);
-		project.gotoTraceMatrix();
-		Assert.assertFalse(project.isElementPresent(By.xpath("//a[@uid='storymapping-storyboard']")));
+		Assert.assertFalse(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 		
 		PluginsPage pp = project.goToAdminTools().gotoPlugins();
-		pp = pp.enablePlugin("storymapping.php");
+		pp = pp.enablePlugin("operations.php");
 		
 		project = (SDLCPojectPageBase) pp.gotoProject(testProject);
-		project.gotoStoryMapping();
-		Assert.assertTrue(project.isElementPresent(By.xpath("//a[@uid='storymapping-storyboard']")));
+		Assert.assertTrue(project.isElementPresent(By.xpath("//a[@uid='operations-builds']")));
 	}
 }

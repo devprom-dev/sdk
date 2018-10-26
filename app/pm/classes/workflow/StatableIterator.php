@@ -4,7 +4,7 @@ class StatableIterator extends OrderedIterator
 {
     function getDisplayNameExt( $prefix = '' )
     {
-        return $this->getStateTag().parent::getDisplayNameExt($prefix);
+        return parent::getDisplayNameExt($this->getStateTag() . $prefix );
     }
 
     function getStateTag() {

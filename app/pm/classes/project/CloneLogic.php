@@ -159,6 +159,21 @@ class CloneLogic
 					break;
 
 				default:
+                    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+
+                    if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
+                        if ( $object instanceof Request ) {
+                            $iterator->moveNext();
+                            continue;
+                        }
+                    }
+                    else {
+                        if ( $object instanceof Issue || $object instanceof Increment ) {
+                            $iterator->moveNext();
+                            continue;
+                        }
+                    }
+
 				    if ( count($object->getVpds()) < 1 ) {
 				        // just copy the reference to global object
 				        $ids_map[$object->getEntityRefName()][$iterator->getId()] = $iterator->getId();
@@ -178,7 +193,6 @@ class CloneLogic
 		}
 
 		// restore broken references skiped first time because of absent dependencies
-		
 		$broken = $context->getBrokenReferences();
 		
 		foreach( $broken as $class_name => $broken_reference )
@@ -384,6 +398,22 @@ class CloneLogic
                 $parms['Manually'] = 'Y';
 		        break;
 
+            case 'pm_TestExecutionResult':
+                if ( $parms['RelatedColor'] == '' ) {
+                    switch($it->get('ReferenceName')) {
+                        case 'succeeded':
+                            $parms['RelatedColor'] = '#5eb95e';
+                            break;
+                        case 'failed':
+                            $parms['RelatedColor'] = '#dd514c';
+                            break;
+                        case 'blocked':
+                            $parms['RelatedColor'] = '#999999';
+                            break;
+                    }
+                }
+                break;
+
             case 'pm_AccessRight':
 				if ( $it->get('ReferenceType') == 'PMReport' ) {
 					$parms['ReferenceName'] = $ids_map['pm_CustomReport'][$it->get('ReferenceName')];
@@ -391,7 +421,7 @@ class CloneLogic
 				break;
 				
 			case 'WikiPage':
-                if ( !$context->getUseExistingReferences() || $context->getResetUids() ) {
+                if ( $context->getResetUids() ) {
                     $parms['UID'] = '';
                 }
 
@@ -412,7 +442,14 @@ class CloneLogic
 
             case 'WikiPageType':
                 if ( $it->get('IsImplementing') == '' ) $parms['IsImplementing'] = 'Y';
-                if ( $it->get('IsTesting') == '' ) $parms['IsTesting'] = 'Y';
+                if ( $it->get('PageReferenceName') == 3 && $it->get('ReferenceName') == 'section' ) {
+                    $parms['IsTesting'] = 'N';
+                }
+                else {
+                    if ( $it->get('IsTesting') == '' ) {
+                        $parms['IsTesting'] = 'Y';
+                    }
+                }
                 break;
 
 			case 'pm_Workspace':
@@ -499,11 +536,19 @@ class CloneLogic
                 );
                 $parms['RecordCreated'] = $parms['RecordModified'] =
                     date('Y-m-j', strtotime('-'.(abs(3-$versions)*2).' week', strtotime(SystemDateTime::date())));
+
+                if ( $it->get('Stage') != '' ) {
+                    $releaseId = $ids_map['pm_Version'][intval(substr($it->get('Stage'), 0, 8))];
+                    $iterationId = $ids_map['pm_Release'][intval(substr($it->get('Stage'), 8))];
+                    $parms['Stage'] = str_pad($releaseId, 8, '0', STR_PAD_LEFT).
+                        str_pad($iterationId, 8, '0', STR_PAD_LEFT);
+                }
 				break;
 
             case 'pm_ChangeRequest':
             case 'pm_Task':
                 $parms['StartDate'] = '';
+                $parms['DueWeeks'] = '';
 
                 $terminalStates = WorkflowScheme::Instance()->getTerminalStates($it->object);
                 if ( $it->get('FinishDate') != '' && in_array($it->get('State'),$terminalStates) ) {
@@ -601,7 +646,7 @@ class CloneLogic
                 break;
 
             case 'pm_AutoAction':
-                $actions = JsonWrapper::decode($it->get('Actions'));
+                $actions = JsonWrapper::decode($it->getHtmlDecoded('Actions'));
                 $parms['Actions'] = '';
 
                 $request = getFactory()->getObject('Request');
@@ -625,7 +670,7 @@ class CloneLogic
                     }
                 }
 
-                $parms = array_merge($parms, $actions);
+                $parms['Actions'] = JsonWrapper::encode($actions);
                 break;
 
             case 'pm_StateObject':
@@ -742,7 +787,7 @@ class CloneLogic
 
         $report_it = $it->object->getRegistry()->Query(
             array(
-                new FilterAttributePredicate('Caption', $it->getHtmlDecoded('Caption')),
+                new FilterTextExactPredicate('Caption', $it->getHtmlDecoded('Caption')),
                 new FilterBaseVpdPredicate()
             )
         );
@@ -879,4 +924,43 @@ class CloneLogic
         }, $value);
 		return $value;
  	}
+
+ 	static function postProcess( $context )
+    {
+        $idsMap = $context->getIdsMap();
+        $uid = new ObjectUID;
+
+        foreach( $idsMap as $className => $idMap )
+        {
+            $object = getFactory()->getObject($className);
+            $wysiwygAttributes = $object->getAttributesByType('wysiwyg');
+            if ( count($wysiwygAttributes) > 0 )
+            {
+                foreach( $idMap as $wasId => $newId ) {
+                    $data = $object->getExact($newId)->getData();
+                    $dataToUpdate = array();
+                    $updateData = false;
+
+                    foreach( $wysiwygAttributes as $attribute ) {
+                        $dataToUpdate[$attribute] = preg_replace_callback(
+                            REGEX_INCLUDE_PAGE,
+                            function($match) use ($idsMap, $uid, &$updateData) {
+                                $objectIt = $uid->getObjectIt($match[1]);
+                                list($classLeter, $includedId) = explode('-', $match[1]);
+                                $includedId = $idsMap[$objectIt->object->getEntityRefName()][$includedId];
+                                if ( $includedId != '' ) {
+                                    $updateData = true;
+                                    return '{{'.$classLeter.'-'.$includedId.'}}';
+                                }
+                                return $match[0];
+                            },
+                            html_entity_decode($data[$attribute])
+                        );
+                    }
+
+                    if ( $updateData ) $object->modify_parms($newId, $dataToUpdate);
+                }
+            }
+        }
+    }
 }

@@ -8,9 +8,11 @@ class FlotChartPieWidget extends FlotChartWidget
     {
         $rows = array();
         
-		foreach ( $this->getData() as $key => $item )
-		{
-			$rows[] = "{ label: '".$key."', data: ".$item['data']." }";
+		foreach ( $this->getData() as $key => $item ) {
+			$rows[] = array(
+                'label' => $key,
+                'data' => $item['data']
+            );
 		}
 		
 		return $rows;
@@ -18,13 +20,17 @@ class FlotChartPieWidget extends FlotChartWidget
     
     public function draw( $chart_id )
     {
-        $colors = array_slice($this->getColors(), 0, count($this->getValues()));
+        $availableColors = $this->getColors();
+        $values = $this->getValues();
+        foreach( $values as $value ) {
+            $colors[] = $availableColors[$value['label']];
+        }
 
 		?>
 		<script type="text/javascript">
 		$(function () 
 		{
-			var data = [<?=join($this->getValues(), ',')?>];
+			var data = <?=JsonWrapper::encode($values)?>;
 			
 			$.plot($("#<?=$chart_id?>"), data, 
 			{

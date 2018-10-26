@@ -21,8 +21,21 @@ class BusinessActionIssueAutoActionShift extends BusinessActionShift
  		return getFactory()->getObject('Request');
  	}
  	
-	function applyContent( $object_it, $attributes )
+	function applyContent( $object_it, $attributes, $action = '' )
  	{
+        $checkEventType =
+            $action == TRIGGER_ACTION_ADD && in_array(
+                $this->action_it->get('EventType'),
+                array(AutoActionEventRegistry::CreateOnly,AutoActionEventRegistry::CreateAndModify)
+            ) ||
+            $action == TRIGGER_ACTION_MODIFY && in_array(
+                $this->action_it->get('EventType'),
+                array(AutoActionEventRegistry::ModifyOnly,AutoActionEventRegistry::CreateAndModify)
+            ) ||
+            $action == '';
+
+ 	    if ( !$checkEventType ) return;
+
  	    $actionAttributes = array_flip($this->action_it->getConditionAttributes());
 
  	    $watchForChanges =

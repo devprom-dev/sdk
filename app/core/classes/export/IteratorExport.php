@@ -27,6 +27,10 @@ class IteratorExport extends IteratorBase
         return $this->options;
     }
 
+    function getUidService() {
+ 	    return $this->uidService;
+    }
+
     function setName( $caption )
  	{
  		$this->caption = $caption;
@@ -113,25 +117,17 @@ class IteratorExport extends IteratorBase
                 return getSession()->getLanguage()->getDurationWording($this->iterator->get( $fieldName ));
 
 			default:
-
-			    if( $this->iterator->object->IsReference($fieldName) ) 
+			    if( $this->iterator->object->IsReference($fieldName) )
 				{
 					$entity_it = $this->iterator->getRef($fieldName);
-					
 					$names = array();
 					while( !$entity_it->end() ) {
-					    if ( $this->uidService->hasUid($entity_it) ) {
-                            $info = $this->uidService->getUidInfo($entity_it, true);
-                            $title = $info['uid'].' '.$info['caption'];
-                            if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
-                            $names[] = $title;
-                        }
-                        else {
-                            $names[] = $entity_it->getDisplayName();
-                        }
+                        $info = $this->uidService->getUidInfo($entity_it, true);
+                        $title = ($info['uid'] != '' ? '['.$info['uid'].'] ' : '') . html_entity_decode($info['caption']);
+                        if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
+                        $names[] = $title;
 						$entity_it->moveNext();
 					}
-					
 					return $names;
 				}
 				else
@@ -145,6 +141,11 @@ class IteratorExport extends IteratorBase
 							
 						case 'datetime':
 							return $this->iterator->getDateTimeFormat($fieldName);
+
+                        case 'wysiwyg':
+                            return html_entity_decode(
+                                TextUtils::stripAnyTags($this->iterator->getHtmlDecoded( $fieldName ))
+                            );
 						
 						default:
                             if ( in_array('computed', $this->iterator->object->getAttributeGroups($fieldName)) ) {
@@ -158,16 +159,15 @@ class IteratorExport extends IteratorBase
                                     if (!is_object($computedItem)) {
                                         $lines[] = $computedItem;
                                     } else {
-                                        $lines[] = $this->uidService->getUidWithCaption(
+                                        $lines[] = TextUtils::stripAnyTags($this->uidService->getUidWithCaption(
                                             $computedItem, 15, '',
                                             $computedItem->get('VPD') != getSession()->getProjectIt()->get('VPD')
-                                        );
+                                        ));
                                     }
                                 }
                                 return join(', ', $lines);
                             }
-
-		 					return $this->iterator->get( $fieldName );
+		 					return $this->iterator->getHtmlDecoded( $fieldName );
 					}
 				}
  		}
@@ -236,11 +236,4 @@ class IteratorExport extends IteratorBase
  	function export()
  	{
  	}
-
-    protected function decode( $text )
-    {
-        $value = html_entity_decode($text, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
-        $totext = new \Html2Text\Html2Text( addslashes($value), array('width'=>0) );
-        return $totext->getText();
-    }
 }

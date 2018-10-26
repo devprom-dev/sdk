@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."pm/classes/plan/validators/ModelValidatorDatesCausality.php";
+include_once SERVER_ROOT_PATH.'pm/views/tasks/FieldIssueTraces.php';
 include_once "FieldVelocity.php";
 
 class IterationForm extends PMPageForm
@@ -24,7 +25,7 @@ class IterationForm extends PMPageForm
 		}
 
 		if ( is_object($this->getObjectIt()) ) {
-			foreach( array('Issues', 'Tasks') as $attribute ) {
+			foreach( array('Issues', 'Tasks', 'Artefacts') as $attribute ) {
 				$this->getObject()->setAttributeVisible($attribute, true);
 			}
 		}
@@ -192,17 +193,40 @@ class IterationForm extends PMPageForm
 	{
 		switch ( $attr )
 		{
+            case 'Artefacts':
+                return new FieldIssueTraces(is_object($this->object_it) ? $this->object_it->get($attr) : '');
+
 			case 'Issues':
+                if ( !is_object($this->getObjectIt()) ) return null;
+                if ( $this->getObjectIt()->get($attr) == '' ) return null;
+                $boardIt = getFactory()->getObject('Module')->getExact('issues-board');
+                return new FieldListOfReferences(
+                    $this->getObject()->getAttributeObject($attr)->getRegistry()->Query(
+                        array (
+                            new FilterInPredicate($this->getObjectIt()->get($attr)),
+                            new SortAttributeClause('State')
+                        )
+                    ),
+                    array(
+                        $boardIt->getDisplayName() => $boardIt->getUrl('iteration='.$this->getObjectIt()->getId())
+                    )
+                );
 			case 'Tasks':
 				if ( !is_object($this->getObjectIt()) ) return null;
 				if ( $this->getObjectIt()->get($attr) == '' ) return null;
+                $boardIt = getFactory()->getObject('Module')->getExact('tasks-board');
+                $effortsIt = getFactory()->getObject('PMReport')->getExact('tasksefforts');
 				return new FieldListOfReferences(
 					$this->getObject()->getAttributeObject($attr)->getRegistry()->Query(
 						array (
 							new FilterInPredicate($this->getObjectIt()->get($attr)),
 							new SortAttributeClause('State')
 						)
-					)
+					),
+                    array(
+                        $boardIt->getDisplayName() => $boardIt->getUrl('iteration='.$this->getObjectIt()->getId()),
+                        $effortsIt->getDisplayName() => $effortsIt->getUrl('iteration='.$this->getObjectIt()->getId())
+                    )
 				);
             case 'InitialVelocity':
                 return new FieldVelocity(getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy());

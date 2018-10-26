@@ -11,22 +11,27 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
  	    $menus = parent::build($set);
  	    
 		$items = array();
+        $item = $this->module->getExact('projects')->buildMenuItem();
+        $item['order'] = 5;
+        $items['projects'] = $item;
+
+        $planItem = $this->report->getExact('projectplan')->buildMenuItem();
+        $planItem['order'] = 6;
+        $items['plan'] = $planItem;
+
 		$item = $this->module->getExact('issues-board')->buildMenuItem();
-		$item['order'] = 5;
+		$item['order'] = 7;
 		$items['issuesboard'] = $item;
+
 		$items[] = $this->report->getExact('discussions')->buildMenuItem();
         $items['knowledgebase'] = $this->module->getExact('project-knowledgebase')->buildMenuItem();
         $items['whatsnew'] = $this->module->getExact('whatsnew')->buildMenuItem();
+        $items['project-log'] = $this->report->getExact('project-log')->buildMenuItem();
+
 		$menus['quick']['items'] = array_merge($menus['quick']['items'], $items);
 
 		// plan items
 		$this->buildPlansFolder($menus);
-
-		// documents items
-		$this->buildDocumentsFolder( $menus );
-
-		// reports items
-		$this->buildReportsFolder( $menus );
 
 		$set->setAreaMenus( FUNC_AREA_FAVORITES, $menus );
     }
@@ -43,26 +48,14 @@ class FunctionalAreaMenuPortfolioBuilder extends FunctionalAreaMenuProjectBuilde
     protected function buildPlansFolder( &$menus )
     {
     	$menus['resources'] = array (
- 	        'name' => translate('Планы'),
+ 	        'name' => translate('Дополнительно'),
             'uid' => 'resources',
             'items' => array(
-                $this->report->getExact('projectplan')->buildMenuItem(),
-                $this->module->getExact('tasks-board')->buildMenuItem()
-			)
+                $this->module->getExact('tasks-board')->buildMenuItem(),
+                'activitiesreport' => $this->report->getExact('activitiesreport')->buildMenuItem('group=SystemUser'),
+            )
  	    );
     }
-
-	protected function buildReportsFolder( &$menus )
-	{
-		$menus['reports'] = array (
-				'name' => translate('Отчеты'),
-				'uid' => 'reports',
-				'items' => array(
-						'activitiesreport' => $this->report->getExact('activitiesreport')->buildMenuItem('group=SystemUser'),
-						'project-log' => $this->report->getExact('project-log')->buildMenuItem()
-				)
-		);
-	}
 
 	private $report = null;
 }

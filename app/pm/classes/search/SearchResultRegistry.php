@@ -29,7 +29,6 @@ class SearchResultRegistry extends ObjectRegistrySQL
             }
         }
         if ( $searchString == "" ) return $this->getObject()->getEmptyIterator();
-        $searchString = TextUtils::getAlphaNumericString($searchString);
 
         $uid = new ObjectUID;
         $report = getFactory()->getObject('PMReport');
@@ -52,7 +51,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
             if ( $lists[$entityId] == '' ) {
                 $searchable_it->moveToId($entityId);
                 $report_it = $report->getExact($searchable_it->get('Report'));
-                $lists[$entityId] = $report_it->getUrl(strtolower($entityId).'='.join(',',$object_it->idsToArray()));
+                $lists[$entityId] = $report_it->getUrl(strtolower($entityId).'='.\TextUtils::buildIds($object_it->idsToArray()));
             }
 
             while( !$object_it->end() )
@@ -60,17 +59,17 @@ class SearchResultRegistry extends ObjectRegistrySQL
                 $textsFound = array();
                 foreach ( $attributes as $attribute )
                 {
-                    $value = $object_it->getHtmlDecoded($attribute);
-                    if ( $value == "" ) continue;
+                    $value = $object_it->object->getAttributeType($attribute) == 'wysiwyg'
+                        ? $object_it->getHtmlDecoded($attribute)
+                        : $object_it->get($attribute);
 
-                    $text = new \Html2Text\Html2Text( $value, array('width'=>0) );
-                    $text = str_replace(chr(10), ' ', $text->getText());
-                    $text = str_replace(chr(13), ' ', $text);
+                    if ( $value == "" ) continue;
+                    $text = $value;
 
                     $text = preg_replace(
                         array_map(
                             function($value) {
-                                return '#'.$value.'#iu';
+                                return '#'.preg_quote($value).'#iu';
                             },
                             $search_items
                         ),
@@ -86,7 +85,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
                     'UID' =>
                         $object_it->object instanceof Widget
                             ? '<a href="'.$object_it->get('url').'">'.translate('Открыть').'</a>'
-                            : $uid->getUidIcon($object_it),
+                            : $uid->getUidWithCaption($object_it),
                     'Caption' => $object_it->getDisplayName(),
                     'Content' => $textsFound,
                     'Url' => $object_it->getViewUrl()
@@ -123,6 +122,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
 
             $parms = array();
             $sorts = array();
+            $search = html_entity_decode($search);
 
             if ($object instanceof WikiPage) {
                 $object->setRegistry(new WikiPageRegistryContent($object));
@@ -227,12 +227,11 @@ class SearchResultRegistry extends ObjectRegistrySQL
         while( !$searchable_it->end() ) {
             $object = getFactory()->getObject($searchable_it->get('ReferenceName'));
             if ( $object instanceof WikiPage ) {
-                $registry = $object->getRegistry();
-                $registry->setPersisters(array());
+                $registry = $object->getRegistryBase();
                 $object_it = $registry->Query(
                     array(
                         new DocumentVersionPersister(),
-                        new FilterAttributePredicate('UID', $uid),
+                        new FilterTextExactPredicate('UID', $uid),
                         new FilterVpdPredicate(),
                         new SortRecentClause()
                     )

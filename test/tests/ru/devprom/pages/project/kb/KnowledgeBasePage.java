@@ -16,7 +16,7 @@ import ru.devprom.pages.project.requirements.RequirementNewPage;
 
 public class KnowledgeBasePage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
 	@FindBy(xpath = "//a[@id='append-child-page']")
@@ -65,7 +65,7 @@ public class KnowledgeBasePage extends SDLCPojectPageBase {
 	public List<String> getStyleTagsForText(String requirementId, String text){
 		List<String> tags = new ArrayList<String>();
 		
-		WebElement p = driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent"+requirementId+"') and contains(@class,'wysiwyg')]//*[contains(text(),'"+text+"')]"));
+		WebElement p = driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent"+requirementId+"') and contains(@class,'wysiwyg')]//*[contains(.,'"+text+"')]"));
 		String tag = p.getTagName();
 		while (!tag.equals("p")) {
 			 tags.add(tag);

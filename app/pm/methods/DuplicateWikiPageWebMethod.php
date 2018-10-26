@@ -4,6 +4,8 @@ include_once "DuplicateWebMethod.php";
 
 class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 {
+    private $baselineIt = null;
+
 	function getMethodName() {
 		return 'Method:'.get_class($this).':Version:CopyOption:Description:Snapshot:Project';
 	}
@@ -25,7 +27,24 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 		$this->parent_it = $parent_it;
 	}
 
-	public function getSourceIt()
+	function getTargetIt($parms)
+    {
+        $it = getFactory()->getObject('Baseline')->getAll();
+        $this->baselineIt = $it->object->getEmptyIterator();
+        while( !$it->end() ) {
+            if ( $it->getId() == $parms['Version'] ) {
+                $this->baselineIt = $it->copy();
+                break;
+            }
+            $it->moveNext();
+        }
+
+        if ( $this->baselineIt->getId() == '' ) return parent::getTargetIt($parms);
+
+        return getFactory()->getObject('Project')->getByRef('VPD', $this->baselineIt->get('VPD'));
+    }
+
+    public function getSourceIt()
 	{
 	 	$object = $this->getObject();
  	    
@@ -82,8 +101,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 		
  			$object_it = $this->getObjectIt();
  			$branch = getFactory()->getObject('Snapshot');
- 			$baselineIt = getFactory()->getObject('Baseline')->getExact($parms['Version']);
- 			
+
  			while( !$object_it->end() )
  			{
 	 			$branch_it = $branch->getRegistry()->Query(
@@ -97,9 +115,9 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	 			{
 	 				$branch->modify_parms($branch_it->getId(),
                         array(
-                            'Caption' => $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $parms['Version'],
+                            'Caption' => $this->baselineIt->getId() != '' ? $this->baselineIt->getDisplayName() : $parms['Version'],
                             'Description' => $parms['Description'],
-                            'Stage' => $baselineIt->getId()
+                            'Stage' => $this->baselineIt->getId()
                         )
 	 				);
 	 			}
@@ -160,12 +178,35 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
     			'Type' => 'branch'
     		));
  	    }
+
+ 	    if ( is_object($this->baselineIt) && $this->baselineIt->getId() != '' )
+        {
+            $trace = getFactory()->getObject('RequestTraceRequirement');
+            $trace->setNotificationEnabled(false);
+
+            foreach( $this->getObjectIt()->idsToArray() as $sourceId )
+            {
+                $documentId = $map[$object->getEntityRefName()][$sourceId];
+                $matches = array();
+
+                if ( preg_match('/I-(\d+)/i', $this->baselineIt->getId(), $matches) )
+                {
+                    $trace->getRegistry()->Merge(
+                        array(
+                            'ObjectId' => $documentId,
+                            'ObjectClass' => $trace->getObjectClass(),
+                            'ChangeRequest' => $matches[1],
+                            'Type' => REQUEST_TRACE_REQUEST,
+                        )
+                    );
+                }
+            }
+        }
  	}
  	
  	function storeBranch( & $map, & $object, $parms )
  	{
  	 	$snapshot = getFactory()->getObject('Snapshot');
- 	 	$baselineIt = getFactory()->getObject('Baseline')->getExact($parms['Version']);
 
 		foreach( $this->getObjectIt()->idsToArray() as $object_id )
 		{
@@ -173,10 +214,10 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 			if ( $documentId == '' ) continue;
 
 			$snapshot->add_parms( array (
-                'Caption' => $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $parms['Version'],
+                'Caption' => $this->baselineIt->getId() != '' ? html_entity_decode($this->baselineIt->getDisplayName()) : $parms['Version'],
                 'Description' => $parms['Description'],
                 'ListName' => 'branch',
-                'Stage' => $baselineIt->getId(),
+                'Stage' => $this->baselineIt->getId(),
                 'ObjectId' => $documentId,
                 'ObjectClass' => get_class($object),
                 'SystemUser' => getSession()->getUserIt()->getId(),
@@ -204,19 +245,20 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
             }
 			$object_id = $map[$object->getEntityRefName()][$object_id];
 
-            $baselineIt = getFactory()->getObject('Baseline')->getExact(
-                $previousName ? $object_it->get('DocumentVersion') : $parms['Version']
-            );
+			$baselineIt = $previousName
+                    ? getFactory()->getObject('Baseline')->getExact($object_it->get('DocumentVersion'))
+                    : $this->baselineIt;
 
-            $title = $previousName ? $object_it->get('DocumentVersion') : $parms['Version'];
+            $title = $previousName ? $object_it->getHtmlDecoded('DocumentVersion') : $parms['Version'];
             if ( $title == '' ) $title = text(2306);
+            $caption = $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $title;
 
 			$branch_it = $snapshot->getRegistry()->Query(
 				array (
 					new FilterAttributePredicate('ObjectId', $object_id),
 					new FilterAttributePredicate('ObjectClass', get_class($object)),
-					new FilterAttributePredicate('Caption', $baselineIt->getId() != '' ? $baselineIt->getDisplayName() : $title),
-					new FilterAttributePredicate('ListName', get_class($object).':'.$object_id)
+					new FilterTextExactPredicate('Caption', $caption),
+					new FilterTextExactPredicate('ListName', get_class($object).':'.$object_id)
 				)
 			);
 			if ( $branch_it->getId() != '' ) {
@@ -226,7 +268,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 
 			$snapshot->freeze(
 				$snapshot->add_parms( array (
-					'Caption' => $title,
+					'Caption' => $caption,
 					'Description' => $parms['Description'],
 					'ListName' => get_class($object).':'.$object_id,
                     'Stage' => $baselineIt->getId(),

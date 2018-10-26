@@ -45,7 +45,7 @@ public class LoginPage {
 
 	public FavoritesPage submitLogin() {
 		loginButtonLocator.click();
-		(new WebDriverWait(driver, Configuration.getWaiting())).until(ExpectedConditions.presenceOfElementLocated(By.id("navbar-company-name")));
+		(new WebDriverWait(driver, Configuration.getWaiting())).until(ExpectedConditions.presenceOfElementLocated(By.id("navbar-project")));
 		return new FavoritesPage(driver);
 	}
 

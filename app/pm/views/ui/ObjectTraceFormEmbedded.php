@@ -5,11 +5,14 @@ include_once SERVER_ROOT_PATH."pm/views/wiki/fields/FieldWikiPageTrace.php";
 class ObjectTraceFormEmbedded extends PMFormEmbedded
 {
  	var $trace_object;
- 	
  	private $trace_type = '';
- 	
  	private $trace_field_name = '';
- 	
+ 	private $createParameters = array();
+
+ 	function setCreateParameters( $parms ) {
+ 	    $this->createParameters = $parms;
+    }
+
  	function setTraceObject ( $object )
  	{
  		$this->trace_object = $object;
@@ -96,6 +99,7 @@ class ObjectTraceFormEmbedded extends PMFormEmbedded
  			    if ( $object instanceof WikiPage ) {
  			    	$field = new FieldWikiPageTrace($object, $this->getFormId());
                     $field->setBaselineAttribute($this->getObject()->getBaselineReference());
+                    $field->setCreateParameters($this->createParameters);
  			    }
  			    else {
 					$field = new FieldAutoCompleteObject($object);

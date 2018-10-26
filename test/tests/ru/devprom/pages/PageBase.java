@@ -51,16 +51,16 @@ public class PageBase {
 	protected WebElement filterBtn;
 
 	// Web Elements
-	@FindBy(xpath = "//a[contains(text(),'Создать проект')]")//".//a[@href='/projects/new']")
+	@FindBy(xpath = "//a[contains(.,'Создать проект')]")//".//a[@href='/projects/new']")
 	private WebElement newProjectLink;
 
-	@FindBy(xpath = "//a[@id='navbar-company-name']/following-sibling::ul//a[text()='Мои проекты']")
+	@FindBy(xpath = "//a[@id='navbar-project']/following-sibling::ul//a[text()='Мои проекты']")
 	private WebElement myProjectsLink;
 
 	@FindBy(xpath = "//a[@id='navbar-user-menu']/following-sibling::ul//a[text()='Мои отчеты']")
 	private WebElement myReportsLink;
 
-	@FindBy(id = "navbar-company-name")
+	@FindBy(id = "navbar-project")
 	private WebElement companyLink;
 
 	@FindBy(id = "navbar-quick-create")
@@ -121,7 +121,7 @@ public class PageBase {
 	}
 
 	public boolean isTextPresent(String text) {
-		return driver.getPageSource().contains(text);
+		return driver.findElements(By.xpath("//*[contains(.,'"+text+"')]")).size() > 0;
 	}
 
 	public ActivitiesPage goToAdminTools() {
@@ -188,7 +188,7 @@ public class PageBase {
 	public SDLCPojectPageBase gotoSDLCProject(String projectname) {
 		companyLink.click();
 		driver.findElement(
-				By.xpath(".//a[@id='navbar-company-name']/following-sibling::ul//a[text()='"
+				By.xpath(".//a[@id='navbar-project']/following-sibling::ul//a[text()='"
 						+ projectname + "']")).click();
 		return new SDLCPojectPageBase(driver);
 	}
@@ -198,7 +198,7 @@ public class PageBase {
 
 		clickOnInvisibleElement(driver
 				.findElement(By
-						.xpath(".//a[@id='navbar-company-name']/following-sibling::ul//a[text()='"
+						.xpath(".//a[@id='navbar-project']/following-sibling::ul//a[text()='"
 								+ project.getName() + "']")));
 		switch (project.getTemplate().getName()) {
 		case "Scrum":
@@ -281,7 +281,7 @@ public class PageBase {
 			e.printStackTrace();
 		}
 		driver.findElement(
-				By.xpath("html/body/ul/li/a[contains(text(),'" + keyword
+				By.xpath("html/body/ul/li/a[contains(.,'" + keyword
 						+ "')]")).click();
 	}
 
@@ -300,9 +300,9 @@ public class PageBase {
 				List<WebElement> list = driver
 						.findElements(
 							strict 
-								? By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/a[text()='"
+								? By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/*[text()='"
 										+ target + "']")
-								: By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/a[contains(text(),'"
+								: By.xpath("//ul[contains(@class,'ui-autocomplete')]/li/*[contains(.,'"
 										+ target + "')]"));
 				for (WebElement el : list) {
 					if (!el.isDisplayed()) continue;
@@ -377,24 +377,13 @@ public class PageBase {
 	 * @return
 	 */
 	public double getScriptExecutionTime() {
-		String scriptTimeString = null;
-		try {
-			scriptTimeString = driver.findElement(
-					By.xpath("//span[@id='clscript']/..")).getText();
-		} catch (org.openqa.selenium.NoSuchElementException e) {
-			FILELOG.warn("METRICS_VISIBLE is not turned on. Please check your settings_server.php.");
-			e.printStackTrace();
-			return 0.0;
-		}
-		String temp = scriptTimeString.split("скрипт:")[1];
-		scriptTimeString = temp.split("сек.")[0].trim();
-		return Double.parseDouble(scriptTimeString);
+		return 0.0;
 	}
 
 	public boolean isAllProjectsEnabled() {
 		return !driver
 				.findElements(
-						By.xpath("//a[@id='navbar-company-name']/following-sibling::ul//a[text()='Все проекты']"))
+						By.xpath("//a[@id='navbar-project']/following-sibling::ul//a[text()='Все проекты']"))
 				.isEmpty();
 	}
 
@@ -402,7 +391,7 @@ public class PageBase {
 		companyLink.click();
 		WebElement allProjectsLink = driver
 				.findElement(By
-						.xpath("//a[@id='navbar-company-name']/following-sibling::ul//a[text()='Все проекты']"));
+						.xpath("//a[@id='navbar-project']/following-sibling::ul//a[text()='Все проекты']"));
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 				.visibilityOf(allProjectsLink));
 		allProjectsLink.click();
@@ -492,17 +481,17 @@ public class PageBase {
 	public void waitForFilterActivity() {
 		try {
 			driver.findElement(By
-					.xpath("//a[@id='filter-settings']/i[contains(@class,'filter-activity')]"));
+					.xpath("//*[@id='filter-settings']/i[contains(@class,'filter-activity')]"));
 		} catch (org.openqa.selenium.NoSuchElementException e) {
 			FILELOG.error("Состояние индикатора процесса не активно");
 		}
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.invisibilityOfElementLocated(By
-						.xpath("//a[@id='filter-settings']/i[contains(@class,'filter-activity')]")));
+						.xpath("//*[@id='filter-settings']/i[contains(@class,'filter-activity')]")));
 	}
 
 	public List<String> getProjectsList() {
-		WebElement link = driver.findElement(By.id("navbar-company-name"));
+		WebElement link = driver.findElement(By.id("navbar-project"));
 		link.click();
 		List<String> result = new ArrayList<String>();
 		List<WebElement> we = link
@@ -561,10 +550,10 @@ public class PageBase {
 				.click();
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//a[@id='filter-settings']//i[contains(@class,'filter-activity')]")));
+						.xpath("//*[@id='filter-settings']//i[contains(@class,'filter-activity')]")));
 		(new WebDriverWait(driver, waiting))
 				.until(ExpectedConditions.presenceOfElementLocated(By
-						.xpath("//a[@id='filter-settings']//i[not (contains(@class,'filter-activity'))]")));
+						.xpath("//*[@id='filter-settings']//i[not (contains(@class,'filter-activity'))]")));
 	}
 
 	public boolean isBoxChechedJQuery(String boxId) {

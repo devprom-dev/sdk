@@ -1,7 +1,4 @@
 <?php
-
-define ('ROLE_PARTICIPANT', 2);
-
 include 'UserIterator.php';
 include "predicates/UserRolePredicate.php";
 include "predicates/UserSessionPredicate.php";
@@ -19,29 +16,6 @@ class User extends Metaobject
  	{
 		parent::Metaobject('cms_User', $registry);
 		$this->setSortDefault( new SortAttributeClause('Caption') );
-		$this->addPersister( new UserReadonlyPersister() );
-
-		$system_attributes = array ('IsAdmin', 'IsShared', 'Rating', 'IsActivated', 'SessionHash', 'ICQ', 'Skype', 'LDAPUID', 'AskChangePassword', 'IsReadonly');
-		foreach( $system_attributes as $attribute ) {
-    		$this->addAttributeGroup($attribute, 'system');
-		}
-		$system_attributes = array ('Phone', 'Description', 'LDAPUID');
-		foreach( $system_attributes as $attribute ) {
-			$this->addAttributeGroup($attribute, 'additional');
-		}
-
-		foreach( array( 'ICQ', 'Skype' ) as $attribute ) {
-		    $this->setAttributeVisible( $attribute, false );
-		}
-		
-		$this->setAttributeCaption( 'Phone', translate('Контакты') );
-		$this->setAttributeVisible( 'Phone', true );
-		$this->setAttributeType( 'Phone', 'RICHTEXT' );
-		$this->setAttributeRequired( 'Language', false );
-		$this->setAttributeOrderNum('Photo', 1);
-
-		$this->addAttributeGroup('Email', 'alternative-key');
-        $this->addAttributeGroup('Login', 'alternative-key');
  	}
 
  	function createIterator() 
@@ -56,16 +30,16 @@ class User extends Metaobject
 	
  	function getDefaultAttributeValue( $name )
 	{
-		global $model_factory;
-		
 		switch ( $name )
 		{
 			case 'Language':
-
-			    $settings_it = $model_factory->getObject('cms_SystemSettings')->getAll();
-				
-				return $settings_it->get('Language');
-				
+				return getFactory()->getObject('cms_SystemSettings')->getAll()->get('Language');
+            case 'NotificationTrackingType':
+                return 'personal';
+            case 'NotificationEmailType':
+                return 'direct';
+            case 'SendDeadlinesReport':
+                return 'Y';
 			default:
 				return parent::getDefaultAttributeValue( $name );
 		}
@@ -91,7 +65,13 @@ class User extends Metaobject
  	 	if ( array_key_exists('PasswordHash', $parms) ) {
  			$parms['Password'] = $parms['PasswordHash'];
  		}
- 		
+
+ 		foreach( array('NotificationTrackingType', 'NotificationEmailType', 'SendDeadlinesReport') as $attribute ) {
+            if ( !array_key_exists($attribute, $parms) ) {
+                $parms[$attribute] = $this->getDefaultAttributeValue($attribute);
+            }
+        }
+
  		$parms['IsActivated'] = 'Y';
  		
  		$user_id = parent::add_parms( $parms );
@@ -156,19 +136,11 @@ class User extends Metaobject
 		return $result;
 	}
 
-	function getHashedPassword( $password )
-	{
+	function getHashedPassword( $password ) {
 		return md5(strtolower($password).PASS_KEY);
 	}
 	
-	function DeletesCascade( $object )
-	{
-		switch($object->getEntityRefName()) {
-			case 'pm_Task':
-			case 'pm_ChangeRequest':
-			case 'pm_Question':
-				return false;
-		}
-		return true;
+	function DeletesCascade( $object ) {
+		return false;
 	}
 }

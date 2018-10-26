@@ -12,7 +12,7 @@
  				  AND r.Project = pr.pm_ProjectId
  				  AND r.PlannedRelease IS NULL
  				  AND NOT EXISTS (SELECT 1 FROM pm_Task s WHERE s.ChangeRequest = r.pm_ChangeRequestId AND s.Release IS NOT NULL)
- 				  AND r.State NOT IN ('".join("','", getFactory()->getObject('Request')->getTerminalStates())."')) EstimatedFinishDate "
+ 				  AND r.FinishDate IS NULL) EstimatedFinishDate "
  		);
  	}
  }

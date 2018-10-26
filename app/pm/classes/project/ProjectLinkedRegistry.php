@@ -28,11 +28,14 @@ class ProjectLinkedRegistry extends ObjectRegistrySQL
         }
         if ( count($projects) < 1 ) $projects = array(0);
 
+        $vpds = getSession()->getAccessibleVpds();
+        if ( count($vpds) < 1 ) $vpds = array(0);
+
 		return array_merge(
 			parent::getFilters(),
 			array (
 				new FilterInPredicate($projects),
-				new ProjectAccessibleActiveVpdPredicate()
+                new FilterVpdPredicate($vpds)
 			)
 		);
 	}

@@ -1,5 +1,4 @@
 <?php
-
 include('common.php');
 
 include_once SERVER_ROOT_PATH.'core/methods/ProcessEmbeddedWebMethod.php';
@@ -26,19 +25,19 @@ include_once SERVER_ROOT_PATH."core/methods/SettingsWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/CloneWikiPageWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/OpenWorkItemWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/methods/BindIssuesWebMethod.php";
-
-include_once SERVER_ROOT_PATH.'core/c_more.php';
+include_once SERVER_ROOT_PATH."pm/methods/SetTagsTaskWebMethod.php";
+include_once SERVER_ROOT_PATH."pm/methods/SetWatchersWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
+include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStageWebMethod.php';
+include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStateWebMethod.php';
 
 include_once('methods/c_state_methods.php');
-include_once('methods/c_priority_methods.php');
 include_once('methods/c_project_methods.php');
 include_once('methods/c_request_methods.php');
 include_once('methods/c_task_methods.php');
 include_once('methods/c_watcher_methods.php');
 include_once('methods/c_date_methods.php');
 include_once('methods/c_stage_methods.php');
-include_once('methods/c_function_methods.php');
 include_once('methods/c_user_methods.php');
 include_once('methods/c_wiki_methods.php');
 include_once('methods/c_report_methods.php');
@@ -53,7 +52,6 @@ include_once "methods/SyncWikiLinkWebMethod.php";
 include_once "methods/CompareDocumentsWebMethod.php";
 include_once "methods/OpenBrokenTraceWebMethod.php";
 include_once "methods/IgnoreWikiLinkWebMethod.php";
-include_once "methods/ReorderWebMethod.php";
 include_once "methods/GotoReportWebMethod.php";
 include_once "methods/StateExFilterWebMethod.php";
 include_once "methods/FilterStateTransitionMethod.php";
@@ -78,14 +76,17 @@ if ( !is_a($method, 'WebMethod') ) throw new Exception('Unknown method class: '.
 try
 {
     \FeatureTouch::Instance()->touch(strtolower(get_class($method)));
+    getFactory()->getEventsManager()->delayNotifications();
+
+    getSession()->addBuilder( new RequestModelExtendedBuilder() );
 
     $method->exportHeaders();
     $method->execute_request();
+
+    getFactory()->getEventsManager()->releaseNotifications();
 }
 catch( Exception $e )
 {
     $logger = \Logger::getLogger('System');
     if ( is_object($logger) ) $logger->error($e->getMessage());
-
-
 }

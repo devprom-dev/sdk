@@ -19,8 +19,13 @@ class ApplicationBundle extends DevpromBundle
     	parent::boot();
 		$this->setUpMailLogging();
 
-    	if ( $this->handleCustomMethod() ) die();
-    	if ( $this->handleCustomCommand() ) die();
+		if ( getSession()->getUserIt()->getId() != '' || $_REQUEST['class'] == 'runjobs' ) {
+            if ( $this->handleCustomCommand() ) die();
+        }
+
+        if ( getSession()->getUserIt()->getId() != '' ) {
+            if ( $this->handleCustomMethod() ) die();
+        }
     }
     
     protected function handleCustomMethod()

@@ -21,6 +21,8 @@ class StateBaseIterator extends OrderedIterator
 	function getObjectsCount()
 	{
 		$object = $this->getObject();
+		if ( !is_object($object) ) return 0;
+
 		$object->addFilter( new ObjectStatePredicate($this) );
 		$object->addFilter( new FilterBaseVpdPredicate() );
 		
@@ -38,8 +40,7 @@ class StateBaseIterator extends OrderedIterator
 		
 		$it = getFactory()->getObject('Transition')->getRegistry()->Query(
             array (
-                new FilterAttributePredicate('SourceState', $this->getId()),
-                new SortOrderedClause()
+                new FilterAttributePredicate('SourceState', $this->getId())
             )
 		);
 		$it->object->setStateAttributeType( $this->object );

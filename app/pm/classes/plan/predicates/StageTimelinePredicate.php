@@ -7,11 +7,11 @@ class StageTimelinePredicate extends FilterPredicate
  		switch ( $filter )
  		{
  			case 'past':
- 			    return " AND '".SystemDateTime::date('Y-m-d')."' > DATE(GREATEST(IFNULL(t.EstimatedFinishDate, NOW()), IFNULL(t.FinishDate, NOW()))) " .
+ 			    return " AND '".SystemDateTime::date('Y-m-d')."' > IFNULL(t.FinishDate, NOW()) " .
 			   		   " AND t.UncompletedIssues < 1 AND t.UncompletedTasks < 1 ";
 					   
 			case 'not-passed':
- 			    return " AND '".SystemDateTime::date('Y-m-d')."' <= DATE(GREATEST(IFNULL(t.EstimatedFinishDate, NOW()), IFNULL(t.FinishDate, NOW()))) " .
+ 			    return " AND '".SystemDateTime::date('Y-m-d')."' <= IFNULL(t.FinishDate, NOW()) " .
 			   		   " OR (t.UncompletedIssues + t.UncompletedTasks) > 0 ";
 
             case 'overdue':

@@ -1,8 +1,7 @@
 <?php
-
 use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
 
-include "FieldIssueTraces.php";
+include_once "FieldIssueTraces.php";
 include_once "FieldTaskTypeDictionary.php";
 include_once SERVER_ROOT_PATH.'pm/views/time/FieldSpentTimeTask.php';
 include_once SERVER_ROOT_PATH.'pm/views/ui/FieldAttachments.php';
@@ -17,6 +16,7 @@ include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTrace.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskInverseTrace.php";
 include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
+include "FieldTaskTagTrace.php";
 
 class TaskForm extends PMPageForm
 {
@@ -60,6 +60,7 @@ class TaskForm extends PMPageForm
             $this->getObject()->setAttributeVisible('ChangeRequest', false);
         }
         $this->getObject()->setAttributeVisible('ProjectPage', true);
+        $this->getObject()->setAttributeRequired('Author', false);
 
 		parent::extendModel();
 
@@ -69,6 +70,12 @@ class TaskForm extends PMPageForm
 			$builder = new WorkflowTransitionTaskModelBuilder($transition_it);
 			$builder->build( $this->getObject() );
 		}
+
+		if ( !$this->getObject()->IsAttributeVisible('ChangeRequest') ) {
+		    foreach( $this->getObject()->getAttributesByGroup('source-issue') as $attribute ) {
+                $this->getObject()->setAttributeVisible($attribute, false);
+            }
+        }
     }
 
 	function buildModelValidator()
@@ -107,6 +114,13 @@ class TaskForm extends PMPageForm
             $this->convertMethod = array (
                 'name' => $method->getCaption(),
                 'url' => $method->url('%1')
+            );
+        }
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Assignee') ) {
+            $this->assignMethod = array (
+                'name' => translate('Назначить'),
+                'url' => "javascript:processBulk('".translate('Назначить')."','?formonly=true&operation=AttributeAssignee','%ids');"
             );
         }
 	}
@@ -197,9 +211,7 @@ class TaskForm extends PMPageForm
 					$model_factory->getObject('TaskTraceSourceCode') );
 
 			case 'Fact':
-				$field = new FieldSpentTimeTask( $this->object_it );
-                $field->setShortMode();
-                return $field;
+				return new FieldSpentTimeTask( $this->object_it );
 
 			case 'Watchers':
 			    return new FieldWatchers( is_object($this->object_it) ? $this->object_it : $this->object );
@@ -220,9 +232,6 @@ class TaskForm extends PMPageForm
                     $iteration = getFactory()->getObject('IterationRecent');
                 }
                 return new FieldAutoCompleteObject( $iteration );
-
-			case 'ResultArtefact':
-				return new FieldDictionary( $model_factory->getObject('pm_Artefact') );
 
 			case 'Attachment':
 				return new FieldAttachments( is_object($this->object_it) ? $this->object_it : $this->object );
@@ -253,6 +262,9 @@ class TaskForm extends PMPageForm
                 }
                 return null;
 
+            case 'Tags':
+                return new FieldTaskTagTrace( is_object($this->object_it) ? $this->object_it : null );
+
 			default:
 				return parent::createFieldObject( $name );
 		}
@@ -278,6 +290,7 @@ class TaskForm extends PMPageForm
 		{
 			case 'ChangeRequest':
 				$field->setDefault($this->getDefaultValue($attr));
+                $field->setCrossProject();
 				return $field;
 		}
 		return $field;
@@ -385,6 +398,13 @@ class TaskForm extends PMPageForm
 		if ( !is_object($object_it) ) return array();
 
 		$actions = parent::getMoreActions();
+
+        if ( is_array($this->assignMethod) && !$this->IsFormDisplayed() ) {
+            $method = $this->assignMethod;
+            $method['url'] = preg_replace('/%ids/', $object_it->getId(), $method['url']);
+            $actions[] = array();
+            $actions[] = $method;
+        }
 
 		if ( is_object($this->method_spend_time) )
 		{

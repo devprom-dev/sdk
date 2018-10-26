@@ -8,12 +8,19 @@ $title = '<span class="label-state label '.$color_class.'" id="'.$id.'" style="b
 
 if ( count($actions) > 0 ) {
     echo $view->render('core/EmbeddedRowTitleMenu.php', array(
-        'title' => $title.' <span class="label">...</span>',
+        'title' => $title,
         'items' => $actions,
         'id' => $id,
         'group_class' => 'last'
     ));
 }
 else {
+    if ( is_object($listWidgetIt) && $referenceName != '' ) {
+        $url = $listWidgetIt->getUrl('state='.$referenceName);
+        if ( $url != '' ) {
+            echo '<a href="'.$url.'">'.$title.'</a>';
+            return;
+        }
+    }
     echo $title;
 }

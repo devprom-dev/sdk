@@ -6,8 +6,6 @@ class WysiwygMetadataBuilder extends ObjectMetadataEntityBuilder
 {
     public function build( ObjectMetadata $metadata )
     {
-		if ( $metadata->hasAttributesOfType('wysiwyg') ) {
-            $metadata->addPersister(new FieldWysiwygPersister());
-        }
+        $metadata->addPersister(new FieldWysiwygPersister());
 	}
 }

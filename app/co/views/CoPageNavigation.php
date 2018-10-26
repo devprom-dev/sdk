@@ -33,23 +33,6 @@ class CoPageNavigation extends PageNavigation
             );
         }
 
-        $quick_actions = $plugins->getQuickActions('co');
-        if ( count($quick_actions) > 0 ) {
-            foreach ( $quick_actions as $action ) {
-                array_push( $actions, $action );
-            }
-        }
-
-        if ( count($actions) > 0 ) {
-            $menus[] = array (
-                'class' => 'header_popup',
-                'button_class' => 'btn-warning',
-                'icon' => 'icon-plus icon-white',
-                'items' => $actions,
-                'id' => 'navbar-quick-create'
-            );
-        }
-
         $menus[] = array (
             'button_class' => 'btn-navbar btn-link',
             'icon' => 'icon-white icon-question-sign',
@@ -111,5 +94,33 @@ class CoPageNavigation extends PageNavigation
 
         $menu = new CoPageMenu();
         return $menu->getTabs();
+    }
+
+    function getQuickActions()
+    {
+        $actions = parent::getQuickActions();
+
+        $plugins = PluginsFactory::Instance();
+        $quick_actions = $plugins->getQuickActions('co');
+        if ( count($quick_actions) > 0 ) {
+            foreach ( $quick_actions as $action ) {
+                array_push( $actions, $action );
+            }
+        }
+
+        $projectActions = array();
+        if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) )
+        {
+            $projectActions[] = array (
+                'icon' => 'icon-plus',
+                'url' =>  '/projects/welcome',
+                'name' => text('project.name')
+            );
+        }
+        if ( count($projectActions) > 0 ) {
+            $actions = array_merge($actions, array(array()), $projectActions);
+        }
+
+        return $actions;
     }
 }

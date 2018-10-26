@@ -82,8 +82,7 @@ class Snapshot extends Metaobject
 	
 	function getMakePage( $anchor_it, $iterator, $list_name = '', $url = '' )
 	{
-		$items = $iterator->count() > 1 ? getFactory()->getObject('HashIds')->getHash( $iterator ) : $iterator->getId(); 
-			
+		$items = \TextUtils::buildIds($iterator->idsToArray());
 		return $this->getPageName().
  			'&class='.get_class($iterator->object).'&ObjectId='.$anchor_it->getId().'&ObjectClass='.get_class($anchor_it->object).
  			'&items='.$items.'&ListName='.$list_name.'&redirect='.($url != '' ? $url : urlencode($_SERVER['REQUEST_URI']));

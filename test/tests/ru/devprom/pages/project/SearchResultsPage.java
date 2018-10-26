@@ -29,7 +29,9 @@ public class SearchResultsPage extends SDLCPojectPageBase {
 			 String id = link.getText().trim();
 			 id = id.substring(1, id.length() - 1);
 			 String findString = item.findElement(By.xpath("./td[@id='caption']")).getText().trim();
+			 findString = findString.replace("&lt;", "<").replace("&gt;", ">");
 			 String bold = item.findElement(By.xpath("./td[@id='caption']//span")).getText().trim();
+			 bold = bold.replace("&lt;", "<").replace("&gt;", ">");
 			 results.add(new SearchResultItem(link, "", id, "", findString, bold));
 		 }
 		return results;

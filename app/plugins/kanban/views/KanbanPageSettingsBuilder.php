@@ -11,8 +11,8 @@ class KanbanPageSettingsBuilder extends PageSettingBuilder
         $setting->setFilters(array('type','priority'));
         $settings->add( $setting );
 
-        $setting = new ReportSetting('kanban/avgleadtime');
-        $setting->setFilters( array('type','priority','modifiedafter') );
+        $setting = new ReportSetting('avgleadtime');
+        $setting->setFilters( array('type','priority','modifiedafter','owner','estimation') );
         $settings->add( $setting );
     }
 }

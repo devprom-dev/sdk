@@ -1,16 +1,11 @@
 <?php
-
+include_once SERVER_ROOT_PATH."pm/views/issues/RequestPage.php";
 include 'ReportWorkflowAnalysisTable.php';
 include 'PageSettingWorkflowAnalysisBuilder.php';
 include "model/RequestModelWorkflowBuilder.php";
 
-class ReportWorkflowAnalysisPage extends PMPage
+class ReportWorkflowAnalysisPage extends RequestPage
 {
-	public function __construct()
-	{
-		parent::__construct();
-	}
-	
 	public function getObject()
 	{
         getSession()->addBuilder( new RequestModelWorkflowBuilder() );

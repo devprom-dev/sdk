@@ -42,5 +42,15 @@ class InstallFormComplete extends AdminForm
 	{
 	    return 'core/WizardForm.php';
 	}
+
+    function getRenderParms($view)
+    {
+        return array_merge(
+            parent::getRenderParms($view),
+            array(
+                'actions_on_top' => false
+            )
+        );
+    }
 }
  

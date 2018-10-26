@@ -44,7 +44,12 @@ class CustomAttributeTypeRegistry extends ObjectRegistrySQL
 				'entityId' => 8,
 				'ReferenceName' => 'computed',
 				'Caption' => text(2132)
-			)
+			),
+            array (
+                'entityId' => 9,
+                'ReferenceName' => 'char',
+                'Caption' => text(2542)
+            )
  		));  
  	}
 }

@@ -144,8 +144,7 @@ class ModelFactoryBase
 	function resetCachedIterator( $object )
 	{
 		if ( !$this->sql_cache_enabled ) return;
-		
-		$this->sql_cache[get_class($object)] = array();
+        $this->sql_cache[$object->getEntityRefName()] = array();
 	}
 	
 	function resetCache()

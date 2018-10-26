@@ -21,8 +21,6 @@ class MenuCustomizationPage extends PMPage
  	{
  		$parms = parent::getFullPageRenderParms();
  		
- 		unset($parms['navigation_parms']['areas']);
- 		
  		$parms['inside'] = true;
  		$parms['has_horizontal_menu'] = false;
  		$parms['reports_edit_url'] = getFactory()->getObject('Module')->getExact('project-reports')->get('Url');

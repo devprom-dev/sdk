@@ -75,21 +75,19 @@ class PageNavigation
 
         return array (
             'class' => 'header_popup',
-            'title' => '<span class="profile-avatar" style="background: url(\'/images/userpics-middle.png?v='.$timestamp.'\') no-repeat -'.($column * $size).'px -'. ($row * $size).'px;"></span>',
+            'title' => '<span class="profile-avatar" style="background: url(\'/images/userpics-middle.png?v='.$timestamp.'\') no-repeat -'.($column * $size).'px -'. ($row * $size).'px;" title="'.text(2637).'"></span>',
             'items' => $actions,
         );
     }
 
     function getHelpActions()
     {
-        $support_url = defined('HELP_SUPPORT_URL') ? HELP_SUPPORT_URL : 'http://support.devprom.ru/issue/new';
-        if ( $support_url == '' ) return array();
+        $language = strtolower(getSession()->getLanguageUid());
         return array(
             array(),
             array (
                 'name' => text('guide.support'),
-                'url' => $support_url,
-                'target' => '_blank'
+                'click' => "javascript: workflowModify({'form_url':'/widget/support/".$language."','class_name':'','entity_ref':'','object_id':'','form_title':'".text('guide.support')."','can_delete':'false','can_modify':'false','delete_reason':null,'width':520}, donothing);"
             )
         );
     }
@@ -258,12 +256,6 @@ class PageNavigation
             }
         }
 
-        if ( array_key_exists('all', $portfolios) && count($projects['all']) < 1 ) {
-            if ( count($programs) + count($realPortfolios) == 1 ) {
-                unset($portfolios['all']);
-            }
-        }
-
         if ( array_key_exists('my', $portfolios) ) {
             $allPrtfolio = $portfolios['all'];
             if ( is_array($allPrtfolio) ) {
@@ -276,10 +268,9 @@ class PageNavigation
             'programs' => $programs,
             'portfolios' => $portfolios,
             'projects' => $projects,
-            'admin_actions' => $this->getProjectNavigatorActions($projects),
-            'portfolio_actions' => $this->getPortfolioActions($projects),
+            'admin_actions' => $this->getActions($projects),
             'company_actions' => $this->getAddParticipantActions(),
-            'settings_actions' => $this->getAdministrationActions()
+            'settings_actions' => $this->getAdministrationLinks()
         );
     }
 
@@ -292,24 +283,9 @@ class PageNavigation
         return '';
     }
 
-    function getProjectNavigatorActions( $projects )
+    function getActions( $projects )
     {
         $actions = array();
-
-        if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED )
-        {
-            $portfolio = getFactory()->getObject('co_ProjectGroup');
-            if ( count($projects) > 0 && getFactory()->getAccessPolicy()->can_create($portfolio) )
-            {
-                $method = new ObjectCreateNewWebMethod($portfolio);
-                $method->setRedirectUrl('function(id){window.location=\'/pm/project-portfolio-\'+id;}');
-                $actions[] = array (
-                    'icon' => 'icon-briefcase',
-                    'url' => $method->getJSCall(),
-                    'name' => text('portfolio.new')
-                );
-            }
-        }
 
         $inviteUrl = $this->getInviteUserUrl();
         if ( $inviteUrl != '' ) {
@@ -323,43 +299,7 @@ class PageNavigation
         return $actions;
     }
 
-    function getPortfolioActions( $projects )
-    {
-        $actions = array();
-        if ( count($projects) < 2 ) return $actions;
-
-        $project_it = getSession()->getProjectIt();
-        if ( $project_it->get('ProjectGroupId') < 1 ) return $actions;
-
-        if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) ) {
-            $actions[] = array (
-                'icon' => 'icon-plus',
-                'url' =>  '/projects/welcome?portfolio='.$project_it->get('ProjectGroupId'),
-                'name' => text('project.new')
-            );
-        }
-
-        if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED )
-        {
-            $portfolio = getFactory()->getObject('co_ProjectGroup');
-            if ( getFactory()->getAccessPolicy()->can_modify($portfolio) )
-            {
-                $method = new ObjectModifyWebMethod(
-                    $portfolio->getExact($project_it->get('ProjectGroupId'))
-                );
-                $actions[] = array (
-                    'icon' => 'icon-briefcase',
-                    'uid' => 'project-settings',
-                    'url' => $method->getJSCall(),
-                    'name' => translate('Настройки')
-                );
-            }
-        }
-
-        return $actions;
-    }
-
-    function getAdministrationActions()
+    function getAdministrationLinks()
     {
         $actions = array();
         if ( getSession()->getUserIt()->get('IsAdmin') != 'Y' ) return $actions;
@@ -398,11 +338,18 @@ class PageNavigation
         if ( getFactory()->getAccessPolicy()->can_create(getFactory()->getObject('Project')) )
         {
             $skip_welcome = getFactory()->getObject('UserSettings')->getSettingsValue('projects-welcome-page');
+            $url = $skip_welcome != 'off' && !defined('SKIP_WELCOME_PAGE')
+                ? '/projects/welcome'
+                : '/projects/new';
+
+            $projectIt = getSession()->getProjectIt();
+            if ( $projectIt->IsPortfolio() && $projectIt->get('ProjectGroupId') != '' ) {
+                $url .= '?portfolio='.$projectIt->get('ProjectGroupId');
+            }
+
             $actions[] = array (
                 'icon' => 'icon-plus',
-                'url' =>  $skip_welcome != 'off' && !defined('SKIP_WELCOME_PAGE')
-                    ? '/projects/welcome'
-                    : '/projects/new',
+                'url' =>  $url,
                 'name' => text('project.new')
             );
         }

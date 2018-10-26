@@ -10,6 +10,7 @@ class PMWikiList extends PMPageList
 	private $displayContent = false;
 	private $searchText = '';
     private $workflowFrame = null;
+    private $typeField = null;
 
 	function retrieve()
 	{
@@ -17,6 +18,11 @@ class PMWikiList extends PMPageList
 		if ( $this->displayContent ) {
 			$this->getObject()->setRegistry( new WikiPageRegistryContent($this->getObject()) );
 		}
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'PageType') ) {
+            $this->typeField = new FieldReferenceAttribute($this->getObject()->getEmptyIterator(), 'PageType');
+        }
+
 		parent::retrieve();
 	}
 
@@ -58,13 +64,13 @@ class PMWikiList extends PMPageList
 		{
 			case 'Caption':
                 if ( $this->displayContent ) {
-                    $title = $object_it->getHtmlDecoded('CaptionLong');
+                    $title = $object_it->get('CaptionLong');
                 }
                 else {
                     $title = $this->getTitle($object_it);
                 }
 				if ( $object_it->get('BrokenTraces') != "" ) {
-					$title = $this->getTable()->getView()->render('pm/WikiPageBrokenIcon.php',
+					$title = $this->getRenderView()->render('pm/WikiPageBrokenIcon.php',
 						array (
 							'id' => $object_it->getId(),
 							'url' => getSession()->getApplicationUrl($object_it)
@@ -106,17 +112,12 @@ class PMWikiList extends PMPageList
 				break;
 
             case 'Estimation':
-                if ( $object_it->get('TotalCount') > 0 ) {
-                    echo getSession()->getLanguage()->getHoursWording($object_it->get('EstimationCumulative'));
+                if ( is_object($this->estimation_field) && $object_it->get('TotalCount') < 1 && $object_it->getId() != '' ) {
+                    $this->estimation_field->setObjectIt($object_it);
+                    $this->estimation_field->draw($this->getRenderView());
                 }
                 else {
-                    if ( is_object($this->estimation_field) && $object_it->get('TotalCount') < 1 ) {
-                        $this->estimation_field->setObjectIt($object_it);
-                        $this->estimation_field->draw($this->getTable()->getView());
-                    }
-                    else {
-                        parent::drawCell($object_it, $attr);
-                    }
+                    parent::drawCell($object_it, $attr);
                 }
                 break;
 				
@@ -125,7 +126,7 @@ class PMWikiList extends PMPageList
                     $lines = array();
                     $rows = json_decode($object_it->getHtmlDecoded($attr), true);
                     foreach( $rows as $row ) {
-						$line = $this->getTable()->getView()->render('core/UserPicture.php', array (
+						$line = $this->getRenderView()->render('core/UserPicture.php', array (
 							'id' => $row['author_id'],
 							'class' => 'user-mini',
 							'image' => 'userpics-mini',
@@ -198,15 +199,27 @@ class PMWikiList extends PMPageList
 		            $entity_it->moveNext();
 		        }
 
-		        echo $this->getTable()->getView()->render('core/Attachments.php', array(
+		        echo $this->getRenderView()->render('core/Attachments.php', array(
 		            'files' => $files,
                     'random' => $entity_it->getId()
                 ));
-		        
 		        break;
-				
+
 			default:
-				parent::drawRefCell( $entity_it, $object_it, $attr );
+			    switch ( $attr ) {
+                    case 'PageType':
+                        if ( is_object($this->typeField) ) {
+                            $this->typeField->setObjectIt($object_it);
+                            $this->typeField->draw($this->getRenderView());
+                        }
+                        else {
+                            parent::drawRefCell( $entity_it, $object_it, $attr );
+                        }
+                        break;
+
+                    default:
+                        parent::drawRefCell( $entity_it, $object_it, $attr );
+                }
 		}
 	}
 	
@@ -266,7 +279,6 @@ class PMWikiList extends PMPageList
  	        	return '1%';
  	            
  	        case 'Progress':
- 	        case 'DocumentVersion':
  	        case 'Stage':
  	            return '5%';
  	        

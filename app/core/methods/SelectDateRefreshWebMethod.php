@@ -32,7 +32,7 @@ class SelectDateRefreshWebMethod extends WebMethod
 			$value = getSession()->getLanguage()->getDateFormatted($value);
 		}
 
-		echo ' <input type="text" class="btn-small input-small datepicker-filter" title="'.$this->getCaption().'" style="'.$this->getStyle().'" id="select_'.$this->id.'" value="'.$value.'" placeholder="'.$this->getCaption().'" valueparm="'.$this->getValueParm().'">';
+		echo ' <input type="text" class="btn-sm input-small datepicker-filter" title="'.$this->getCaption().'" style="'.$this->getStyle().'" id="select_'.$this->id.'" value="'.$value.'" placeholder="'.$this->getCaption().'" valueparm="'.$this->getValueParm().'">';
  	}
  	
  	function getStyle()

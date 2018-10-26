@@ -18,6 +18,9 @@ public class ProjectPageBase extends PageBase implements IProjectBase {
 	@FindBy(xpath = ".//a[@id='navbar-project']")
 	protected WebElement projectLink;
 	
+	@FindBy(xpath = ".//a[@uid='settings-4-project']")
+	protected WebElement settingsLink;
+
 	protected Project project;
 
 	public ProjectPageBase(WebDriver driver) {
@@ -72,18 +75,17 @@ public ProjectPageBase gotoCustomReport(String headMenu, String leftMenuId, Stri
  * @param reportName - видимое имя отчета
  * @return
  */
-public boolean isReportAccessible (String headMenu, String leftMenuId, String reportName){
-    
-	if ((leftMenuId==null || leftMenuId.isEmpty()) && (reportName==null || reportName.isEmpty())) 
-		return !driver.findElements(By.xpath("//li[@id='tab_"+headMenu+"']/a")).isEmpty();
-	else 
-		driver.findElement(By.xpath("//li[@id='tab_"+headMenu+"']/a")).click();
-	if (reportName==null || reportName.isEmpty()) 
-		return !driver.findElements(By.xpath("//li[@id='"+leftMenuId+"']/a")).isEmpty();
-	else
-		return !driver.findElements(By.xpath("//ul[@id='menu_"+headMenu+"']//a[text()='"+reportName+"']")).isEmpty();
-	
-  }
+	public boolean isReportAccessible (String headMenu, String leftMenuId, String reportName)
+	{
+		if ((leftMenuId==null || leftMenuId.isEmpty()) && (reportName==null || reportName.isEmpty())) 
+			return !driver.findElements(By.xpath("//li[@id='tab_"+headMenu+"']/a")).isEmpty();
+		else 
+			driver.findElement(By.xpath("//li[@id='tab_"+headMenu+"']/a")).click();
+		if (reportName==null || reportName.isEmpty()) 
+			return !driver.findElements(By.xpath("//li[@id='"+leftMenuId+"']/a")).isEmpty();
+		else
+			return !driver.findElements(By.xpath("//ul[@id='menu_"+headMenu+"']//a[text()='"+reportName+"']")).isEmpty();
+	}
 
 	public String requestReadLinkedIdOnPage()
 	{
@@ -108,4 +110,13 @@ public boolean isReportAccessible (String headMenu, String leftMenuId, String re
 		catch( NotFoundException ex ) {
 		}
     }
+    
+    public ProjectPageBase gotoSettingsPage() {
+    	settingsLink.click();
+    	return this;
+    }
+
+	public boolean isSettingAccessible (String uid) {
+		return !driver.findElements(By.xpath("//a[@uid='"+uid+"']")).isEmpty();
+	}
 }

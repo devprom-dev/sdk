@@ -42,13 +42,13 @@ public class RequirementsTracePage extends SDLCPojectPageBase{
     public TestScenarioNewPage gotoCreateScenario(String idRequirement) {
         WebElement requirement = driver.findElement(By.xpath(".//tr[@object-id='"+idRequirement+"']"));
         WebElement invisElement = driver.findElement(By.xpath(".//*[@object-id='"+idRequirement
-                +"']//*[@id='operations']//*[@class='icon-asterisk icon-gray']"));
+                +"']//*[@id='operations']//a[contains(@class,'dropdown-toggle')]"));
         clickOnInvisibleElement(invisElement);
         clickOnInvisibleElement(
-    		driver.findElement(By.xpath(".//*[@object-id='"+idRequirement+"']//*[@id='operations']//a[contains(text(),'Создать')]"))
+    		driver.findElement(By.xpath(".//*[@object-id='"+idRequirement+"']//*[@id='operations']//a[contains(.,'Создать')]"))
    		);
         clickOnInvisibleElement(
-        	driver.findElement(By.xpath(".//*[@object-id='"+idRequirement+"']//*[@id='operations']//a[contains(text(),'Тестовый сценарий')]"))
+        	driver.findElement(By.xpath(".//*[@object-id='"+idRequirement+"']//*[@id='operations']//a[contains(.,'Тестовый сценарий')]"))
         );
         waitForDialog();
         return new TestScenarioNewPage(driver);

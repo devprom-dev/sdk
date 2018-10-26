@@ -18,7 +18,9 @@ class WikiIncludePagePersister extends ObjectSQLPersister
 		$object = $this->getObject();
 		$include_it = $object->getRegistry()->Query(
 			array (
-				new ParentTransitiveFilter($ids),
+                $object instanceof Requirement
+                    ? new FilterInPredicate($ids)
+                    : new ParentTransitiveFilter($ids),
 				new FilterVpdPredicate(),
 				new SortDocumentClause()
 			)

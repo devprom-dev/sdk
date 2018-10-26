@@ -105,6 +105,10 @@ _widgets_shortcuts:
     path:  /widget/shortcut/{language}
     defaults: { _controller: ApplicationBundle:Widget:shortcut }
 
+_widgets_support:
+    path:  /widget/support/{language}
+    defaults: { _controller: ApplicationBundle:Widget:support }
+
 _namespace:
     path:  /{module}/{namespace}
     defaults: { _controller: CommonBundle:Page:module }
@@ -132,3 +136,8 @@ _css:
 _co_css:
     path:  /co/scripts/css/
     defaults: { _controller: CommonBundle:Scripts:css }
+
+_rest_auth:
+    type:     rest
+    resource: Devprom\WelcomeBundle\Controller\Rest\AuthController
+    prefix:   /api/auth/{login}

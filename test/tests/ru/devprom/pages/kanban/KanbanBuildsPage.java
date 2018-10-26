@@ -27,7 +27,7 @@ public class KanbanBuildsPage extends KanbanPageBase {
 	protected WebElement moreBtn;
         
         //пункт Реализовано меню Еще
-        @FindBy(xpath = ".//*[@id='bulk-actions']//a[contains(text(),'Реализовано')]")
+        @FindBy(xpath = ".//*[@id='bulk-actions']//a[contains(.,'Реализовано')]")
 	protected WebElement realizedItem;
 
     public KanbanBuildsPage(WebDriver driver, Project project) {
@@ -45,11 +45,7 @@ public class KanbanBuildsPage extends KanbanPageBase {
     }
 
     public void checkAll() {
-        int countRows = driver.findElements(By.xpath(".//*[@id='buildlist1']/tbody/tr")).size();
-        for(int i=2;i<=countRows;i++)
-        {
-            driver.findElement(By.xpath(".//*[@id='buildlist1']/tbody/tr["+i+"]/td[2]/input")).click();
-        }
+		driver.findElement(By.xpath("//input[contains(@id,'to_delete_all')]")).click();
     }
 
     public void clickRealized() {

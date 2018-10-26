@@ -42,6 +42,10 @@ _treemodel_select:
     path:  /pm/{project}/treemodel/{classname}
     defaults: { _controller: ProjectBundle:Tree:index }
 
+_treegrid_select:
+    path:  /pm/{project}/treegrid/{classname}
+    defaults: { _controller: ProjectBundle:Tree:grid }
+
 _network:
     path:  /pm/{project}/network/{classname}/{object}
     defaults: { _controller: ProjectBundle:Network:json }
@@ -49,6 +53,10 @@ _network:
 _export:
     path:  /pm/{project}/export
     defaults: { _controller: ProjectBundle:Project:export }
+
+_projectlist:
+    path:  /pm/{project}/projects
+    defaults: { _controller: ProjectBundle:Project:list }
 
 _whatsnew:
     path:  /pm/{project}/whatsnew
@@ -92,12 +100,26 @@ invite_process:
     methods:  POST
 
 metrics:
+    path:  /pm/{project}/metrics
+    defaults: { _controller: ProjectBundle:Metrics:page }
+    methods:  GET
+
+metrics_report:
     path:  /pm/{project}/metrics/{report}
     defaults: { _controller: ProjectBundle:Metrics:page }
     methods:  GET
 
+attachments_upload:
+    path:  /pm/{project}/attachments/upload
+    defaults: { _controller: ProjectBundle:Attachments:upload }
+    methods:  [GET, POST]
+
 attachments:
     path:  /pm/{project}/attachments
+    defaults: { _controller: ProjectBundle:Attachments:page }
+    methods:  GET
+attachments_report:
+    path:  /pm/{project}/attachments/{report}
     defaults: { _controller: ProjectBundle:Attachments:page }
     methods:  GET
 
@@ -155,6 +177,26 @@ rest_build:
 rest_requirement:
     type:     rest
     resource: Devprom\ProjectBundle\Controller\Rest\RequirementController
+    prefix:   /pm/{project}/api/{version}
+
+rest_testplan:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\TestplanController
+    prefix:   /pm/{project}/api/{version}
+
+rest_testscenario:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\TestscenarioController
+    prefix:   /pm/{project}/api/{version}
+
+rest_test:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\TestController
+    prefix:   /pm/{project}/api/{version}
+
+rest_testitem:
+    type:     rest
+    resource: Devprom\ProjectBundle\Controller\Rest\TestitemController
     prefix:   /pm/{project}/api/{version}
 
 rest_issue:

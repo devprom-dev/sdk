@@ -32,7 +32,7 @@ class SnapshotItemValuePersister extends ObjectSQLPersister
         foreach( $attributes as $attribute )
         {
             $columns[] = 
-                " (SELECT ivl.Value FROM cms_SnapshotItemValue ivl, cms_SnapshotItem itm " .
+                " (SELECT MAX(ivl.Value) FROM cms_SnapshotItemValue ivl, cms_SnapshotItem itm " .
     			"   WHERE ivl.SnapshotItem = itm.cms_SnapshotItemId " .
     			"     AND ivl.ReferenceName = '".$attribute."' ".
     			"     AND itm.Snapshot = ".$this->snapshot_it->getId().

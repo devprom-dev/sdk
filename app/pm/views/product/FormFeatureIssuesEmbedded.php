@@ -98,7 +98,7 @@ class FormFeatureIssuesEmbedded extends PMFormEmbedded
                         'can_delete' => 'false'
                     )
                 );
-                echo '<a class="dashed embedded-add-button" style="margin-left:20px;" href="'.$url.'" tabindex="-1">';
+                echo '<a class="dashed embedded-add-button" href="'.$url.'" tabindex="-1">';
                     echo translate('связать');
                 echo '</a>';
             }

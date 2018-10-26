@@ -11,7 +11,7 @@ class IssueIsAuthorRule extends BusinessRulePredicate
  		return text(2135);
  	}
  	
- 	function check( $object_it ) {
+ 	function check( $object_it, $transitionIt ) {
  		return $object_it->get('Author') == getSession()->getUserIt()->getId();
  	}
 }

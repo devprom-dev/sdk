@@ -18,7 +18,9 @@ class QuestionForm extends PMPageForm
 
    		$this->buildMethods();
    		
-   		return parent::extendModel();
+   		parent::extendModel();
+
+        $this->getObject()->setAttributeVisible('State', false);
     }
     
     protected function buildMethods()

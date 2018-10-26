@@ -3,6 +3,7 @@
 class FieldHierarchySelector extends FieldAutoCompleteObject
 {
 	private $treeObject = null;
+	private $createParameters = array();
 
 	function __construct( $object, $attributes = null ) {
 		parent::__construct($object, $attributes);
@@ -12,6 +13,10 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 	function setTreeObject( $object ) {
 		$this->treeObject = $object;
 	}
+
+	function setCreateParameters( $parms ) {
+	    $this->createParameters = $parms;
+    }
 
     function draw( $view = null )
     {
@@ -39,12 +44,21 @@ class FieldHierarchySelector extends FieldAutoCompleteObject
 	    		parent::draw();
 	    	echo '</div>';
 	    	echo '<div style="display:table-cell;">&nbsp;</div>';
-	    	echo '<div class="find-in-tree" style="display:table-cell;width:150px;">';
+	    	echo '<div class="find-in-tree" style="display:table-cell;width:1%;white-space:nowrap;">';
 	    		$tabindex++;
-	    		
-	        	echo '<button type="button" tabindex="'.$tabindex.'" field-id="'.$this->getId().'" class="btn btn-small btn-success" onclick="javascript: '.$script.'">';
-	            	echo '<i class="icon-search icon-white"></i> '.translate('Выбрать в дереве');
+	        	echo '<button type="button" tabindex="'.$tabindex.'" field-id="'.$this->getId().'" class="btn btn-sm btn-success" onclick="javascript: '.$script.'" title="'.translate('Выбрать в дереве').'">';
+	            	echo '<i class="icon-search icon-white"></i> ';
 				echo '</button>';
+
+				if ( count($this->createParameters) > 0 ) {
+                    $method = new ObjectCreateNewWebMethod($this->treeObject);
+                    if ( $method->hasAccess() ) {
+                        $tabindex++;
+                        echo ' <button type="button" tabindex="'.$tabindex.'" class="btn btn-sm btn-success" onclick="'.$method->getJSCall($this->createParameters).'" title="'.translate('Создать').'">';
+                            echo '<i class="icon-plus icon-white"></i> ';
+                        echo '</button>';
+                    }
+                }
 			echo '</div>';
 		echo '</div>';
 		echo '<span class="input-block-level well well-text find-in-tree-area" style="display:none;margin-top: 10px;" field-class="'.$class.'" field-id="'.$this->getId().'" field-name="'.$this->getName().'">';

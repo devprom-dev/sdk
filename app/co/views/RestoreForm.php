@@ -27,7 +27,7 @@ class ForgetPasswordForm extends AjaxForm
 
 	function getAttributeType( $attribute )
 	{
-		return 'text';
+		return 'varchar';
 	}
 	
 	function getName( $attribute )

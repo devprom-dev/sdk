@@ -58,7 +58,7 @@ class ObjectRegistryArray extends ObjectRegistrySQL
 
     function Store(OrderedIterator $object_it, array $data)
     {
-        return 1;
+        return $this->getObject()->getEmptyIterator();
     }
 
     function Create(array $data)

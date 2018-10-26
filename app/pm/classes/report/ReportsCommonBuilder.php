@@ -11,58 +11,46 @@ class ReportsCommonBuilder extends ReportsBuilder
 
         $module = getFactory()->getObject('Module');
 		$request = getFactory()->getObject('pm_ChangeRequest');
-		$bug_type = getFactory()->getObject('RequestType')->getByRef('ReferenceName', 'bug')->get('ReferenceName');
 
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+		$separateIssues = $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD;
 		$project_it = getSession()->getProjectIt();
-		
-		$terminal = array_merge(
-		    $request->getTerminalStates(),
-            array('Y')
-        );
-		$nonterminal = array_merge(
-		    $request->getNonTerminalStates(),
-            array('N','I')
-        );
-		
+
+		if ( $project_it->IsPortfolio() ) {
+            $terminal = array('Y');
+            $nonterminal = array('N','I');
+        }
+        else {
+            $terminal = array_merge(
+                $request->getTerminalStates(),
+                array('Y')
+            );
+            $nonterminal = array_merge(
+                $request->getNonTerminalStates(),
+                array('N','I')
+            );
+        }
+
 		$module_it = $module->getExact('issues-backlog');
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
 			$object->addReport(
 				array ( 'name' => 'allissues',
-					'title' => text(801),
+					'title' => $separateIssues ? text(2652) : text(801),
 					'description' => text(1398),
 					'category' => FUNC_AREA_MANAGEMENT,
 					'query' => 'state=all',
 					'module' => $module_it->getId() )
 			);
 
-			$object->addReport(
-				array ( 'name' => 'resolvedissues',
-					'title' => text(1249),
-					'description' => text(1399),
-					'category' => FUNC_AREA_MANAGEMENT,
-					'query' => 'state='.join($terminal,',').'&modifiedafter=last-month',
-					'module' => $module_it->getId() )
-			);
-
             $object->addReport(
                 array ( 'name' => 'readyissues',
-                    'title' => text(2509),
+                    'title' => $separateIssues ? text(2653) : text(2509),
                     'description' => text(1399),
                     'category' => FUNC_AREA_MANAGEMENT,
-                    'query' => 'version=all&sort=ClosedInVersion.D&sort2=RecordModified.D',
+                    'query' => 'state='.join($terminal,',').'&version=all',
                     'module' => $module_it->getId() )
             );
-
-			$object->addReport(
-				array ( 'name' => 'bugs',
-					'title' => text(2043),
-					'description' => text(781),
-					'category' => FUNC_AREA_MANAGEMENT,
-					'query' => 'type='.$bug_type.'&modifiedafter=last-month',
-					'module' => $module_it->getId() )
-			);
 
 			$object->addReport(
 				array ( 'name' => 'productbacklog',
@@ -74,17 +62,10 @@ class ReportsCommonBuilder extends ReportsBuilder
 
             $object->addReport( array (
                 'name' => 'issuesestimation',
-                'title' => text(2290),
+                'title' => $separateIssues ? text(2659) : text(2290),
+                'description' => text(2669),
                 'category' => FUNC_AREA_MANAGEMENT,
                 'query' => 'state=all&group=Function',
-                'module' => $module_it->getId()
-            ));
-
-            $object->addReport( array (
-                'name' => 'sincelastview',
-                'title' => text(2290),
-                'category' => FUNC_AREA_MANAGEMENT,
-                'query' => 'state=all',
                 'module' => $module_it->getId()
             ));
 		}
@@ -118,6 +99,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                     array (
                         'name' => 'iterationplanningboard',
                         'title' => text(2190),
+                        'description' => text(2667),
                         'category' => FUNC_AREA_MANAGEMENT,
                         'query' => ($methodology_it->HasTasks() ? 'group=none' : 'group=Owner').'&state='.join(',',$nonterminal),
                         'module' => $module_it->getId() )
@@ -126,7 +108,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 
 			$object->addReport(
 				array ( 'name' => 'issuesboarddeadlines',
-						'title' => text(1939),
+						'title' => $separateIssues ? text(2654) : text(1939),
 				        'description' => text(1940),
 						'category' => FUNC_AREA_MANAGEMENT,
 						'query' => 'group=DueWeeks&state='.join(',',$nonterminal),
@@ -139,7 +121,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 		{
 			$object->addReport(
 				array ( 'name' => 'issuesimplementationchart',
-						'title' => text(995),
+						'title' => $separateIssues ? text(2655) : text(995),
 						'description' => text(1019),
 				        'query' => 'group=history&aggby=State&state='.join(',',$nonterminal).'&modifiedafter=last-month',
 						'category' => FUNC_AREA_MANAGEMENT,
@@ -149,7 +131,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 
 			$object->addReport(
 				array ( 'name' => 'issuesbyprioritieschart',
-						'title' => text(997),
+						'title' => $separateIssues ? text(2656) : text(997),
 				        'description' => text(1415),
 				        'query' => 'group=history&aggby=Priority&state=all&modifiedafter=last-month',
 				        'category' => $qa_area,
@@ -186,7 +168,7 @@ class ReportsCommonBuilder extends ReportsBuilder
 			
             $object->addReport(
                 array ( 'name' => 'issuesbyownerschart',
-                        'title' => text(999),
+                        'title' => $separateIssues ? text(2657) : text(999),
                         'query' => 'group=Owner&state=all&aggby=Priority&aggregator=none&modifiedafter=last-month',
                         'category' => FUNC_AREA_MANAGEMENT,
                         'type' => 'chart',
@@ -208,8 +190,21 @@ class ReportsCommonBuilder extends ReportsBuilder
 		}
 
     	$task = getFactory()->getObject('pm_Task');
-		$terminal_states = $task->getTerminalStates();
-		$non_terminal_states = $task->getNonTerminalStates();
+
+        if ( $project_it->IsPortfolio() ) {
+            $terminal_states = array('Y');
+            $non_terminal_states = array('N','I');
+        }
+        else {
+            $terminal_states = array_merge(
+                $task->getTerminalStates(),
+                array('Y')
+            );
+            $non_terminal_states = array_merge(
+                $task->getNonTerminalStates(),
+                array('N','I')
+            );
+        }
 
 		$task_list_it = $module->getExact('tasks-list');
 		if ( getFactory()->getAccessPolicy()->can_read($task_list_it) )
@@ -233,7 +228,16 @@ class ReportsCommonBuilder extends ReportsBuilder
                     array ( 'name' => 'resolvedtasks',
                         'title' => text(531),
                         'description' => text(1416),
-                        'query' => 'iteration=all&state=resolved',
+                        'query' => 'iteration=all&state='.join(',',$terminal_states),
+                        'category' => FUNC_AREA_MANAGEMENT,
+                        'module' => $task_list_it->getId() )
+                );
+
+                $object->addReport(
+                    array ( 'name' => 'tasksefforts',
+                        'title' => text(2535),
+                        'description' => text(2670),
+                        'query' => 'iteration=all&state=all',
                         'category' => FUNC_AREA_MANAGEMENT,
                         'module' => $task_list_it->getId() )
                 );
@@ -258,6 +262,7 @@ class ReportsCommonBuilder extends ReportsBuilder
             $object->addReport( array (
                     'name' => 'assignedtasks',
                     'title' => text(2303),
+                    'description' => text(2668),
                     'query' => 'group=Assignee',
                     'category' => FUNC_AREA_MANAGEMENT,
                     'module' => $task_list_it->getId() )
@@ -267,6 +272,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                 'title' => text(2476),
                 'query' => 'plannedfinish=next-week',
                 'category' => FUNC_AREA_MANAGEMENT,
+                'description' => text(2664),
                 'module' => $task_list_it->getId() )
             );
             $object->addReport(
@@ -274,6 +280,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                     'title' => text(2138),
                     'query' => 'submittedon=last-week',
                     'category' => FUNC_AREA_MANAGEMENT,
+                    'description' => text(2666),
                     'module' => $task_list_it->getId() )
             );
             $object->addReport(
@@ -289,6 +296,7 @@ class ReportsCommonBuilder extends ReportsBuilder
                     'title' => text(2310),
                     'category' => FUNC_AREA_MANAGEMENT,
                     'query' => 'watcher=user-id',
+                    'description' => text(2665),
                     'module' => $task_list_it->getId() )
             );
 		}
@@ -431,18 +439,6 @@ class ReportsCommonBuilder extends ReportsBuilder
 			}
         }
 
-		$module_it = $module->getExact('project-blog');
-		
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-    		$object->addReport(
-    		        array ( 'name' => 'project-blog',
-    		                'description' => text(1392),
-    		                'category' => FUNC_AREA_MANAGEMENT,
-    		                'module' => $module_it->getId() )
-    		);
-		}
-        
    		$object->addReport(
    		        array ( 'name' => 'navigation-settings',
    		                'title' => text(1326),
@@ -509,27 +505,16 @@ class ReportsCommonBuilder extends ReportsBuilder
                 array (
                     'name' => 'activitieschart',
                     'title' => text(2492),
+                    'description' => text(2671),
                     'category' => FUNC_AREA_MANAGEMENT,
                     'module' => $module_it->getId(),
                     'type' => 'chart',
-                    'query' => 'view=chart&projectuser=all&aggby=Participant&aggregator=SUM',
+                    'query' => 'view=chart&projectuser=all&group=Participant&aggby=Capacity&aggregator=SUM',
                 )
             );
         }
 
-		$module_it = $module->getExact('project-question');
-		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
-		{
-		    $object->addReport(
-		            array ( 'name' => 'project-question',
-		                    'description' => text(892),
-		                    'category' => FUNC_AREA_MANAGEMENT,
-		                    'module' => $module_it->getId() )
-		    );
-		}
-		
     	$module_it = $module->getExact('project-plan-hierarchy');
-		
 		if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 		{
 			$object->addReport(

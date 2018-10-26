@@ -8,30 +8,6 @@ var mentions = [];
 CKEDITOR.disableAutoInline = true;
 CKEDITOR.disableNativeSpellChecker = true;
 
-function addImagesAutomatically() 
- {
-	$('div.embeddedRow a.modify_image').each(function() 
-	{
-		$(this).click(function() 
-		{
-	    	var dialog = CKEDITOR.dialog.getCurrent();
-	    	
-	    	if ( dialog == null ) return;
-	    	if ( typeof dialog == 'undefined' ) return;
-	    	
-			$('div.embeddedRow a.modify_image').css('font-weight', 'normal');
-			
-			$(this).css('font-weight', 'bold');
-			
-			var title = typeof $(this).attr('name') != 'undefined' ? $(this).attr('name').replace(/\[/,"(").replace(/\]/,")") : "";
-			
-			dialog.setValueOf( 'info', 'src', $(this).attr('href') ); 
-			dialog.setValueOf( 'info', 'alt', title );
-			
-			return false;
-		});
-	});
- }
 function setupDialogTable( dialogDefinition )
 {
     var infoTab = dialogDefinition.getContents('info');
@@ -45,6 +21,8 @@ function setupDialogTable( dialogDefinition )
     var advTab = dialogDefinition.getContents('advanced');
     var tableStyle = advTab.get('advStyles');
     tableStyle['default'] = "border-collapse:collapse;";
+    var tableClass = advTab.get('advCSSClasses');
+    tableClass['default'] = "docs-table";
 }
 
 function html_entity_decode(str)
@@ -56,53 +34,8 @@ function html_entity_decode(str)
 	return value;
 }
  
-function setupDialogImage( filesTitle, dialogDefinition )
-{
-	var contents = dialogDefinition.getContents('uploadImage');
-	
-	if ( contents == null )
-	{
-	 	dialogDefinition.addContents({
-	        id : 'uploadImage',
-	        label : filesTitle,
-	        accessKey : 'U',
-	        elements : [
-	           {
-	              id : 'myFile',
-	              type : 'html',
-	              html : ''
-	           }
-	        ]
-		}, 'info');
-	}
-}
- 
 function setupEditor( editor )
 {
-	editor.on( 'dialogShow', function(e) {
-		var dialog = CKEDITOR.dialog.getCurrent();
-
-		if ( dialog.getName() == 'image' || dialog.getName() == 'image2' )
-		{
-			var element = dialog.getContentElement('uploadImage', 'myFile');
-
-			if ( element != null ) 
-			{
-				element.getElement().setHtml(e.editor.custom.attachmentsHtml);
-			}
-			
-			addImagesAutomatically();
-		}
-	});
-	editor.on( 'dialogHide', function(e) {
-		var dialog = CKEDITOR.dialog.getCurrent();
-		if ( dialog.getName() == 'image' || dialog.getName() == 'image2' ) {
-			var element = dialog.getContentElement('uploadImage', 'myFile');
-			if ( element != null ) {
-				e.editor.custom.attachmentsHtml = element.getElement().getHtml();
-			}
-		}
-	});
 	editor.on( 'focus', function( e ) {
 		$('.wysiwyg-welcome[for-id='+e.editor.custom.id+']').hide();
 		$('.wysiwyg-hover').removeClass('wysiwyg-hover');
@@ -132,6 +65,30 @@ function setupEditor( editor )
             });
 		}
     });
+    editor.on( 'contentDom', function() {
+        var editable = editor.editable();
+        editable.attachListener( editable, 'mousedown', function( evt ) {
+            var target = evt.data.getTarget(),
+                clickedAnchor = ( new CKEDITOR.dom.elementPath( target, editor.editable() ) ).contains( 'a' ),
+                href = clickedAnchor && clickedAnchor.getAttribute( 'href' ),
+                modifierPressed = evt.data.$.ctrlKey || evt.data.$.shiftKey;
+
+            if ( href && modifierPressed ) {
+                window.open( href, target );
+                evt.data.preventDefault();
+            }
+        });
+    } );
+    $('.wysiwyg-welcome:not(.armed)').click(function() {
+        $('#' + $(this).attr('for-id')).focus();
+        $(this).addClass('armed');
+    });
+}
+
+function setupDialogLink( def )
+{
+    var infoTab = def.getContents( 'info' );
+    infoTab.remove( 'linkType' );
 }
 
 function setupEditorGlobal( filesTitle )
@@ -141,22 +98,15 @@ function setupEditorGlobal( filesTitle )
 
 	CKEDITOR.on('dialogDefinition', function( ev ) 
 	{
-		  var dialogName = ev.data.name;
-		  var dialogDefinition = ev.data.definition;
-		  
-		  if ( dialogName === 'table' ) 
-		  {
-			  setupDialogTable( dialogDefinition );
-		  }
+		var dialogName = ev.data.name;
+		var dialogDefinition = ev.data.definition;
 
-	      if ( dialogName == 'image' || dialogName == 'image2' )
-	      {
-			  setupDialogImage( filesTitle, dialogDefinition );
-	      }
-	});
-
-	$('.wysiwyg-welcome').click(function() {
-		$('#' + $(this).attr('for-id')).focus();
+		if ( dialogName === 'table' ) {
+		  setupDialogTable( dialogDefinition );
+		}
+        if ( dialogName === 'link' ) {
+            setupDialogLink( dialogDefinition );
+        }
 	});
 }
 
@@ -216,7 +166,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
             });
 
             var editableElement = $(e.editor.editable().$);
-            editableElement.on( 'paste', pasteImage);
+            buildPastable(editableElement);
 			makeupEditor(e.editor, editableElement, 'body', project, $('#cke_'+editor_id+' .cke_wysiwyg_frame').offset());
 
 			if ( !$.browser.msie ) {
@@ -316,9 +266,10 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			e.editor.dataProcessor.writer.setRules('p', {
                 breakAfterClose: false
             });
-			
-			$(e.editor.editable().$).on( 'paste', pasteImage);
-			makeupEditor(e.editor, $(e.editor.editable().$), 'body', project);
+
+			var editor = $(e.editor.editable().$);
+			buildPastable(editor);
+            makeupEditor(e.editor, editor, 'body', project);
 		});
 
 		editor.on('destroy', function(e) 
@@ -362,53 +313,54 @@ function reportBrowserError(element)
 	$(element).replaceWith('<div class="alert alert-danger" role="alert">'+cket('wrong-browser')+'<br/>'+$(element).html()+'</div>');
 }
 
-function pasteImage(e) {
-	try {
-	    var data = e.originalEvent.clipboardData.items[0].getAsFile();
-	    var elem = $(e.target);
-	    var fr = new FileReader;
-	    
-	    fr.onloadend = function() {
-            var originalImage = new Image;
-            var uriData = '';
-            if ( fr.result.length > 1048576 ) {
-                originalImage.onload = function() {
-                    var maxWidth = 1024;
-                    var canvas = document.createElement('canvas')
-                    var ctx = canvas.getContext('2d');
-                    var scaledWidth = Math.min(maxWidth, originalImage.width);
-                    var scaledHeight = (scaledWidth / originalImage.width ) * originalImage.height;
-                    canvas.width = scaledWidth;
-                    canvas.height = scaledHeight;
-                    ctx.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight);
+function pasteImage(ev, data)
+{
+    var elem = $(ev.target);
+    var originalImage = new Image;
+    if ( data.blob.size > 1048576 ) {
+        originalImage.onload = function() {
+            var maxWidth = 1024;
+            var canvas = document.createElement('canvas')
+            var ctx = canvas.getContext('2d');
+            var scaledWidth = Math.min(maxWidth, originalImage.width);
+            var scaledHeight = (scaledWidth / originalImage.width ) * originalImage.height;
+            canvas.width = scaledWidth;
+            canvas.height = scaledHeight;
+            ctx.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight);
 
-                    var scaledImage = new Image;
-                    scaledImage.onload = function() {
-                        $(scaledImage)
-                            .attr("height",scaledImage.height)
-                            .attr("width",scaledImage.width);
-                        elem.canContainText()
-                            ? elem.append(scaledImage)
-                            : $(scaledImage).insertAfter(elem);
-                    };
-                    scaledImage.src = canvas.toDataURL();
-                };
-			}
-			else {
-                originalImage.onload = function() {
-                    $(originalImage)
-                        .attr("height",originalImage.height)
-                        .attr("width",originalImage.width);
+            var scaledImage = new Image;
+            scaledImage.onload = function() {
+                $(scaledImage)
+                    .attr("height",scaledImage.height)
+                    .attr("width",scaledImage.width);
+                if ( CKEDITOR.currentInstance ) {
+                    CKEDITOR.currentInstance.insertHtml(scaledImage.outerHTML)
+				}
+				else {
                     elem.canContainText()
-						? elem.append(originalImage)
-						: $(originalImage).insertAfter(elem);
-                };
-			}
-            originalImage.src = fr.result;
-	    };
-	    fr.readAsDataURL(data);
-	}
-	catch(ex) {}
+                        ? elem.append(scaledImage)
+                        : $(scaledImage).insertAfter(elem);
+				}
+            };
+            scaledImage.src = canvas.toDataURL();
+        };
+    }
+    else {
+        originalImage.onload = function() {
+            $(originalImage)
+                .attr("height",originalImage.height)
+                .attr("width",originalImage.width);
+            if ( CKEDITOR.currentInstance ) {
+                CKEDITOR.currentInstance.insertHtml(originalImage.outerHTML);
+            }
+            else {
+                elem.canContainText()
+                    ? elem.append(originalImage)
+                    : $(originalImage).insertAfter(elem);
+            }
+        };
+    }
+    originalImage.src = data.dataURL;
 }
 
 function pasteTemplate( field, content )
@@ -447,34 +399,38 @@ function makeupEditor( editor, e, container, project, offset )
         });
     }
 
+    if ( !Array.isArray(mentions[project]) ) {
+        mentions[project] = [];
+	}
+
     e.textcomplete([
 		{ // mentions
-			mentions: mentions,
+			mentions: mentions[project],
 			match: /\B@([^\s]*)\s?$/,
 			search: function (term, callback) {
-				if ( mentions.length < 1 ) {
+				if ( mentions[project].length < 1 ) {
 					$.getJSON('/pm/'+project+'/mentions', function(data) {
-						mentions = data;
-						callback($.map(mentions, function (mention) {
+                        mentions[project] = data;
+						callback($.map(mentions[project], function (mention) {
 							return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
 						}));
 					});
 				}
 				else {
-					callback($.map(mentions, function (mention) {
+					callback($.map(mentions[project], function (mention) {
 						return mention.Id.toLowerCase().indexOf(term.toLowerCase()) === 0 ? mention.Caption : null;
 					}));
 				}
 			},
 			index: 1,
 			replace: function (selectedMention) {
-				var selected = $.map(mentions, function (mention) {
+				var selected = $.map(mentions[project], function (mention) {
 					return mention.Caption == selectedMention ? mention.Id : null;
 				});
 				return '@' + selected.shift();
 			},
 			template: function (value) {
-				var selected = $.map(mentions, function (mention) {
+				var selected = $.map(mentions[project], function (mention) {
 					return mention.Caption == value ? mention : null;
 				});
 				if ( selected[0].PhotoColumn < 0 && selected[0].PhotoRow < 0 ) {
@@ -525,6 +481,12 @@ function makeupEditor( editor, e, container, project, offset )
         return ($.inArray(tagName, cannotContainText) == -1);
     };
 }(jQuery));
+
+function buildPastable(editableElement) {
+    if ($.browser.mozilla && $.browser.version >= '57' || detectIE()) return;
+    editableElement.pastableContenteditable();
+    editableElement.on( 'pasteImage', pasteImage);
+}
 
 $(document).ready( function()
 {

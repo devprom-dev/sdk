@@ -1,5 +1,5 @@
 <?php
-define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9])\[?([A-Z]{1}-[0-9]+)([\]<\s\r\n\.,;:\!\?]+|$)/mi' );
+define( 'REGEX_UID', '/(^|<[^as][^>]*>|<s[^t][^>]*>|[^>\[\/A-Z0-9{])\[?([A-Z]{1}-[0-9]+)([\]<\s\r\n\.,;:\!\?]+|$)/mi' );
 define( 'REGEX_INCLUDE_PAGE', '/\{\{([^}]+)\}\}/si' );
 define( 'REGEX_INCLUDE_REVISION', '/\{\{([^}]+):([\d-]+)\}\}/si' );
 define( 'REGEX_UPDATE_UID', '/(http|https):\/\/[^\/]+\/pm\/[^\/]+\/[A-Z]{1}-[0-9]+/i' );
@@ -52,7 +52,7 @@ class WikiParser
 		$result = html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 
         $result = preg_replace_callback('/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im', array($this, 'parseUrl'), $result );
-		$result = preg_replace_callback('/\r?\n?\[code\]\r?\n?(.*?)\r?\n?\[\/code\]/si', preg_code_callback_store, $result);
+        $result = preg_replace_callback('/\r?\n?\[code\]\r?\n?(.*?)\r?\n?\[\/code\]/si', preg_code_callback_store, $result);
 		$result = preg_replace_callback('/\[uml\](.*?)\[\/uml\]/si', preg_uml_callback_store, $result);
 		
 		// insert content of included page
@@ -227,9 +227,6 @@ class WikiParser
 	
 	function parse_substr( $content, $width, &$more_text ) 
 	{
-		//$html2text = new html2text( $this->parse() ); 
-		//return substr($html2text->get_text(), 0, $width).'...';
-
 		$text = $this->parse($content);
 
 		$cut_pos = strpos( $text, '<cut/>' );
@@ -510,6 +507,19 @@ class WikiParser
 	    $uid_resolver = new ObjectUID;
      	$object_it = $uid_resolver->getObjectIt($uid);
 
+        if ( $object_it->object->IsAttributeStored('UID') ) {
+            if ( $object_it->get('UID') == '' ) {
+                return array();
+            }
+            // remap references inside baseline
+            $registry = $object_it->object->getRegistry();
+            $registry->setPersisters(array(new EntityProjectPersister()));
+
+            $parms[] = new FilterTextExactPredicate('UID', $object_it->get('UID'));
+            $result_it = $registry->Query($parms);
+            if ( $result_it->getId() > 0 ) $object_it = $result_it;
+        }
+
 		if ( $object_it->getId() > 0 ) {
 			$info = $uid_resolver->getUidInfo($object_it,true);
 			$info['object_it'] = $object_it;
@@ -552,22 +562,6 @@ class WikiParser
      	}
     }
 
-    function parseUpdateUidCallback ( $match )
-    {
-    	$url_parts = parse_url($match[0]);
-    	$uid = basename($url_parts['path']);
-
-    	$uid_info = $this->getUidInfo($uid);
-    	if ( count($uid_info) < 1 ) return $match[0];
-
-        if ( is_object($uid_info['object_it']) ) {
-            $object_it = $uid_info['object_it'];
-            $url = $this->getPageUrl($object_it);
-            if ( $url != '' ) $uid_info['url'] = $url;
-        }
-        return $uid_info['url'];
-    }
-    
 	function parseIncludePageCallback( $match )
     {
         $this->includePageDepth++;
@@ -604,7 +598,7 @@ class WikiParser
         $count = 0;
         $content = preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $object_it->getHtmlDecoded($contentAttribute), -1, $count);
 
-        if ( $object_it->object instanceof WikiPage ) {
+        if ( $object_it->object instanceof Requirement ) {
             $registry = $object_it->object->getRegistry();
             $registry->setPersisters(array());
             $pageIt = $registry->Query(
@@ -614,9 +608,9 @@ class WikiParser
                     new SortDocumentClause()
                 )
             );
-            while (!$pageIt->end()) {
+            while ( !$pageIt->end() ) {
                 $itemCount = 0;
-                $content .= '<h4>' . $pageIt->get('Caption') . '</h4>';
+                $content .= '<h4>' . $pageIt->get('SectionNumber') . ' &nbsp; ' . $pageIt->get('Caption') . '</h4>';
                 $content .= preg_replace_callback(REGEX_INCLUDE_PAGE, array($this, 'parseIncludePageCallback'), $pageIt->getHtmlDecoded($contentAttribute), -1, $itemCount);
                 $pageIt->moveNext();
             }

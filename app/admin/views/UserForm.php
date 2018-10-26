@@ -1,12 +1,11 @@
 <?php
-
 include_once SERVER_ROOT_PATH."core/classes/user/validators/ModelValidatorPasswordLength.php";
 include (dirname(__FILE__).'/../methods/c_user_methods.php');
+include "ui/FieldUserLicensesAttribute.php";
 
 class UserForm extends AdminPageForm
 {
 	var $warning_message;
-	private $readonlyEnabled = true;
 
 	function __construct( $object )
 	{
@@ -31,9 +30,7 @@ class UserForm extends AdminPageForm
             $object->setAttributeRequired($attribute, $has_password);
             $object->setAttributeVisible($attribute, $this->getEditMode() && $has_password);
         }
-
-		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
-		$this->readonlyEnabled = $license_it->allowCreate($this->getObject());
+        $object->setAttributeVisible( 'IsReadonly', true );
 	}
 
 	function buildModelValidator()
@@ -76,7 +73,6 @@ class UserForm extends AdminPageForm
 
 	function IsAttributeVisible( $attr_name )
 	{
-		echo $attr_name;
 		switch ( $attr_name )
 		{
 			case 'OrderNum':
@@ -98,27 +94,12 @@ class UserForm extends AdminPageForm
 			case 'RepeatPassword':
 				return new FieldPassword;
 
+            case 'IsReadonly':
+                return new FieldUserLicensesAttribute($this->getObjectIt());
+
 			default:
 				return parent::createFieldObject( $name );
 		}
-	}
-
-	function createField($name)
-	{
-		$field = parent::createField($name);
-
-		switch ( $name )
-		{
-			case 'IsReadonly':
-				$field->setReadOnly(
-					is_object($this->getObjectIt()) && $this->getObjectIt()->get('IsReadonly') == 'N'
-						? false
-						: !$this->readonlyEnabled
-				);
-				break;
-		}
-
-		return $field;
 	}
 
 	function getFieldValue( $attr )
@@ -149,9 +130,6 @@ class UserForm extends AdminPageForm
 	{
 		switch ( $field )
 		{
-			case 'IsReadonly':
-				return $this->readonlyEnabled ? 'N' : 'Y';
-
 			default:
 				return parent::getDefaultValue( $field );
 		}

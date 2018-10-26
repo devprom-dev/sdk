@@ -11,7 +11,7 @@ class ParticipantTeamAtWorkPredicate extends FilterPredicate
  	    
 		return " AND EXISTS (SELECT 1 FROM pm_Task s" .
 			   "				WHERE s.Assignee = t.SystemUser " .
-			   "    			  AND s.State IN ('".join("','", $states)."') ".
+			   "    			  AND s.FinishDate IS NOT NULL ".
 			   ($year > 0 ? " AND YEAR(s.RecordModified) = " .$year : "").
 			   ($month > 0 ? " AND MONTH(s.RecordModified) = " .$month : "").
 			   "			    UNION" .

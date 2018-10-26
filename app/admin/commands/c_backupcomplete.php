@@ -35,7 +35,7 @@ class BackupComplete extends MaintenanceCommand
 	            
 	            $project = $model_factory->getObject('pm_Project');
 	            
-	            $project_it = $project->getExact( preg_split('/-/', $parts[1]) );
+	            $project_it = $project->getExact(\TextUtils::parseIds($parts[1]));
 	            	
 	            $reason = str_replace('%1', join(',',$project_it->fieldToArray('Caption')), text(1172));
 	            

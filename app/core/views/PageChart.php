@@ -29,13 +29,19 @@ class PageChart extends StaticPageList
 		return $this->demo;
 	}
 
-	function getIterator()
+	function buildIterator()
 	{
 		$minSizeValuable = 1;
 
 		$object = $this->getObject();
 
         $predicates = $this->getPredicates( $this->getFilterValues() );
+        $ids = $this->getIds();
+        if ( count($ids) > 0 ) {
+            $predicates[] = new FilterInPredicate($ids);
+        }
+        $predicates[] = new FilterVpdPredicate();
+
         foreach( $predicates as $predicate ) {
             $object->addFilter($predicate);
         }
@@ -249,7 +255,7 @@ class PageChart extends StaticPageList
 		
 		if ( !in_array($values['aggby'],array('','all','none')) )
 		{
-			return $values['aggby'];
+			return $this->getGroup() != $values['aggby'] ? $values['aggby'] : '1';
 		}
 		else
 		{
@@ -309,218 +315,193 @@ class PageChart extends StaticPageList
 	{
 		return array();
 	}
-	
+
+	function getChartFields()
+    {
+        $object = $this->getObject();
+        $attrs = $object->getAttributes();
+        $fields = array();
+
+        $skip_attributes = array_merge(
+            $this->getSystemAttributes(),
+            $this->getObject()->getAttributesByGroup('trace'),
+            $this->getObject()->getAttributesByGroup('skip-chart')
+        );
+
+        $clause = $object->getRegistry()->getSelectClause('', false);
+        $skip_types = array('','text','wysiwyg','largetext','char','varchar','date','datetime');
+
+        foreach ( $attrs as $key => $attr )
+        {
+            if ( $key == 'OrderNum' ) continue;
+            if ( in_array($key, $skip_attributes) ) continue;
+            if ( $key != 'DocumentId' && !$this->object->IsAttributeStored( $key ) && !preg_match('/\)\s+\`?'.$key.'\`?\s+,/', $clause) ) continue;
+            if ( $key != 'State' && in_array($this->object->getAttributeType($key), $skip_types) ) continue;
+
+            array_push( $fields, $key );
+        }
+        return $fields;
+    }
+
 	function getGroupFields()
 	{
-		$object = $this->getObject();
-		$attrs = $object->getAttributes();
-		$fields = array();
-		
-		$skip_attributes = array_merge(
-				$this->getSystemAttributes(),
-				$this->getObject()->getAttributesByGroup('trace')
-		);
-		foreach( $attrs as $attribute => $info ) {
-			if ( !$this->getObject()->IsAttributeStored($attribute) && $this->getObject()->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) {
-				$skip_attributes[] = $attribute;
-			}
-		}
-
-		$clause = $object->getRegistry()->getSelectClause('', false);
-
-		foreach ( $attrs as $key => $attr )
-		{
-			if ( $key == 'OrderNum' ) continue;
-			if ( in_array($key, $skip_attributes) ) continue;
-			if ( !$this->object->IsAttributeStored( $key ) && !preg_match('/\)\s+\`?'.$key.'\`?\s+,/', $clause) ) continue;
-			if ( $key != 'State' && in_array($this->object->getAttributeType($key), array('','text','wysiwyg','largetext','char','varchar')) ) continue;
-			
-			array_push( $fields, $key );
-		}
-		
+        $fields = $this->getChartFields();
 		$fields[] = 'RecordModified';
 		$fields[] = 'RecordCreated';
-		
 		return $fields;
 	}
 	
 	function getAggByFields()
 	{
-		$fields = array_merge(
-		    parent::getColumnFields(),
-            array(
-                'State'
-            )
-        );
-		
-		$skip_attributes = array_merge(
-				$this->getSystemAttributes(),
-				$this->getObject()->getAttributesByGroup('trace')
-		);
-
-		foreach( $fields as $key => $field )
-		{
-			if ( in_array($field, $skip_attributes) ) {
-				unset ( $fields[$key] );
-				continue;
-			}
-			if ( $field != 'State' && in_array($this->object->getAttributeType($field), array('','text','wysiwyg','largetext','char','varchar')) ) {
-				unset ( $fields[$key] );
-				continue;
-			}
-			if ( !$this->getObject()->IsAttributeStored($field) ) {
-				unset ( $fields[$key] );
-				continue;
-			}
-		}
-		
-		return $fields;
+	    return $this->getChartFields();
 	}
 	
 	function HasRows()
 	{
 		return false;
 	}
-	
-	function buildFilterActions( & $base_actions )
-	{
-	    $actions = array();
-	    $object = $this->getObject();
-	    $filter_values = $this->getFilterValues();
-	
-	    // grouping by
-	    $used_group = $filter_values['group'];
-	    if ( $used_group == '' ) $used_group = $this->getGroup();
-	
-	    $fields = $this->getGroupFields();
-	    if ( count($fields) > 0 )
-	    {
-	        $groups = array();
-	        foreach ( $fields as $field )
-	        {
-	            $name = $object->getAttributeUserName($field);
-	            if ( $name != '' )
-	            {
-	                $script = "javascript: filterLocation.setup( 'group=".$field."', 0 ); ";
-	                $groups[translate($name)] = array ( 'url' => $script, 'checked' => $used_group == $field );
-	            }
-	        }
-	
-	        ksort($groups);
-	        $group_actions = array();
-	        	
-	        foreach ( $groups as $caption => $group )
-	        {
-	            array_push( $group_actions,
-	            array ( 'url' => $group['url'], 'name' => $caption,
-	            'checked' => $group['checked'], 'radio' => true )
-	            );
-	        }
-	
-	        if ( count($group_actions) > 0 )
-	        {
-	            $script = "javascript: filterLocation.setup( 'group=history', 0 ); ";
-	
-	            array_push( $group_actions,
-	            array (),
-	            array ( 'url' => $script, 'name' => translate('По дате'),
-	            'checked' => $used_group == 'history', 'radio' => true )
-	            );
-	
-	            array_push($actions, array (
-	            'name' => text(2482),
-	            'items' => $group_actions )
-	            );
-	        }
-	    }
-	
-	    // aggregate by
-	    if ( $filter_values['aggby'] == '' ) $filter_values['aggby'] = $this->getAggregateBy();
-	
-	    $fields = $this->getAggByFields();
-	    $columns = array();
-	
-	    foreach ( $fields as $field )
-	    {
-	        $name = $object->getAttributeUserName( $field );
-	        	
-	        $script = "filterLocation.setup( 'aggby=".$field."', 0 ); ";
-	        	
-	        $columns[translate($name)] = array(
-	                'url' => $script, 'checked' => $filter_values['aggby'] == $field );
-	    }
-	
-	    ksort($columns);
-	    $column_actions = array();
-	
-	    foreach( $columns as $caption => $column )
-	    {
-	        array_push( $column_actions,
-	        array ( 'url' => $column['url'], 'name' => $caption,
-	        'checked' => $column['checked'], 'radio' => true )
-	        );
-	    }
-	
-	    if ( count($column_actions) > 0 )
-	    {
-	        array_push($actions, array ( 'name' => text(2483),
-	        'items' => $column_actions , 'title' => '' ) );
-	    }
-	
-	    // aggregators
-	    if ( $filter_values['aggregator'] == '' ) $filter_values['aggregator'] = $this->getAggregator();
-	
-	    $fields = $this->getAggregators();
-	    $columns = array();
-	
-	    foreach ( $fields as $key => $field )
-	    {
-	        $script = "filterLocation.setup( 'aggregator=".$key."', 0 ); ";
-	        	
-	        $columns[translate($field)] = array(
-	                'url' => $script, 'checked' => $filter_values['aggregator'] == $key );
-	    }
-	
-	    ksort($columns);
-	    $column_actions = array();
-	
-	    foreach( $columns as $caption => $column )
-	    {
-	        array_push( $column_actions,
-	        array ( 'url' => $column['url'], 'name' => $caption,
-	        'checked' => $column['checked'], 'radio' => true )
-	        );
-	    }
-	
-	    if ( count($column_actions) > 0 )
-	    {
-	        $script = "javascript: filterLocation.setup( 'aggregator=none', 0 ); ";
-	
-	        array_push( $column_actions,
-	        array (),
-	        array ( 'url' => $script, 'name' => translate('Без агрегации'),
-	        'checked' => $filter_values['aggregator'] == 'none', 'radio' => true )
-	        );
-	
-	        array_push($actions, array ( 'name' => translate('Тип агрегации'),
-	        'items' => $column_actions , 'title' => '' ) );
-	    }
-	
-	    // chart options
-	    if ( $filter_values['chartlegend'] == '' ) $filter_values['chartlegend'] = 'none';
-	    if ( $filter_values['chartdata'] == '' ) $filter_values['chartdata'] = 'none';
-	
-	    $column_actions = $this->getOptions($filter_values);
-	    if ( count($column_actions) > 0 ) {
-            array_push($actions, array ( 'name' => translate('Опции'),
-                'items' => $column_actions , 'title' => '' ) );
+
+	function getChartSettings()
+    {
+        $actions = array();
+        $object = $this->getObject();
+        $filter_values = $this->getFilterValues();
+
+        // grouping by
+        $used_group = $filter_values['group'];
+        if ( $used_group == '' ) $used_group = $this->getGroup();
+
+        $fields = $this->getGroupFields();
+        if ( count($fields) > 0 )
+        {
+            $groups = array();
+            foreach ( $fields as $field )
+            {
+                $name = $object->getAttributeUserName($field);
+                if ( $name != '' )
+                {
+                    $script = "javascript: filterLocation.setup( 'group=".$field."', 0 ); ";
+                    $groups[translate($name)] = array ( 'click' => $script, 'checked' => $used_group == $field );
+                }
+            }
+
+            ksort($groups);
+            $group_actions = array();
+
+            foreach ( $groups as $caption => $group )
+            {
+                $group_actions[] = array (
+                    'click' => $group['click'],
+                    'name' => $caption,
+                    'checked' => $group['checked']
+                );
+            }
+
+            if ( count($group_actions) > 0 )
+            {
+                $script = "javascript: filterLocation.setup( 'group=history', 0 ); ";
+
+                array_push( $group_actions,
+                    array (),
+                    array ( 'click' => $script, 'name' => translate('Дата'),
+                        'checked' => $used_group == 'history' )
+                );
+
+                array_push($actions, array (
+                    'name' => 'group-by',
+                    'title' => text(2482),
+                    'items' => $group_actions )
+                );
+            }
         }
 
-	    $base_actions = array_merge(
-	            array_slice($base_actions, 0, 1),
-	            $actions,
-	            array_slice($base_actions, 1, count($base_actions) - 1)
-	    );
+        // aggregate by
+        if ( $filter_values['aggby'] == '' ) $filter_values['aggby'] = $this->getAggregateBy();
+
+        $fields = $this->getAggByFields();
+        $columns = array();
+
+        foreach ( $fields as $field )
+        {
+            $name = $object->getAttributeUserName( $field );
+
+            $script = "filterLocation.setup( 'aggby=".$field."', 0 ); ";
+
+            $columns[translate($name)] = array(
+                'click' => $script, 'checked' => $filter_values['aggby'] == $field );
+        }
+
+        ksort($columns);
+        $column_actions = array();
+
+        foreach( $columns as $caption => $column )
+        {
+            array_push( $column_actions,
+                array ( 'click' => $column['click'], 'name' => $caption,
+                    'checked' => $column['checked'] )
+            );
+        }
+
+        if ( count($column_actions) > 0 )
+        {
+            array_push($actions, array ( 'title' => text(2483),
+                'items' => $column_actions , 'name' => 'agg-by' ) );
+        }
+
+        // aggregators
+        if ( $filter_values['aggregator'] == '' ) $filter_values['aggregator'] = $this->getAggregator();
+
+        $fields = $this->getAggregators();
+        $columns = array();
+
+        foreach ( $fields as $key => $field )
+        {
+            $script = "filterLocation.setup( 'aggregator=".$key."', 0 ); ";
+
+            $columns[translate($field)] = array(
+                'click' => $script, 'checked' => $filter_values['aggregator'] == $key );
+        }
+
+        ksort($columns);
+        $column_actions = array();
+
+        foreach( $columns as $caption => $column )
+        {
+            array_push( $column_actions,
+                array ( 'click' => $column['click'], 'name' => $caption,
+                    'checked' => $column['checked'] )
+            );
+        }
+
+        if ( count($column_actions) > 0 )
+        {
+            $script = "javascript: filterLocation.setup( 'aggregator=none', 0 ); ";
+
+            array_push( $column_actions,
+                array (),
+                array ( 'click' => $script, 'name' => translate('нет'),
+                    'checked' => $filter_values['aggregator'] == 'none' )
+            );
+
+            array_push($actions, array ( 'title' => translate('Агрегация'),
+                'items' => $column_actions , 'name' => 'aggregator' ) );
+        }
+
+        // chart options
+        if ( $filter_values['chartlegend'] == '' ) $filter_values['chartlegend'] = 'none';
+        if ( $filter_values['chartdata'] == '' ) $filter_values['chartdata'] = 'none';
+
+        $column_actions = $this->getOptions($filter_values);
+        if ( count($column_actions) > 0 ) {
+            array_push($actions, array ( 'title' => translate('Опции'),
+                'items' => $column_actions , 'name' => 'chart-options' ) );
+        }
+
+        return $actions;
+    }
+
+	function buildFilterActions( & $base_actions )
+	{
 	}
 
 	function getOptions( $filter_values )
@@ -574,9 +555,19 @@ class PageChart extends StaticPageList
 
         if ( $this->getObject()->IsReference($color_attribute) ) {
             $ref = $this->getObject()->getAttributeObject($color_attribute);
-            $colors = $ref->getAll()->fieldToArray('RelatedColor');
+            $colors = array();
+            $colorIt = $ref->getAll();
+            while( !$colorIt->end() ) {
+                $colors[$colorIt->getDisplayName()] = $colorIt->get('RelatedColor');
+                $colorIt->moveNext();
+            }
             if ( !$this->getObject()->IsAttributeRequired($color_attribute) ) {
-                array_unshift($colors, 'rgb(192,192,192)');
+                $colors = array_merge(
+                    array(
+                        translate('нет') => 'rgb(192,192,192)'
+                    ),
+                    $colors
+                );
             }
             if ( $ref->getAttributeType('RelatedColor') != '' ) {
                 $widget->setColors($colors);
@@ -584,7 +575,12 @@ class PageChart extends StaticPageList
         }
         if ( $color_attribute == 'State' ) {
             $state_it = \WorkflowScheme::Instance()->getStateIt($this->getObject());
-            $widget->setColors($state_it->fieldToArray('RelatedColor'));
+            $colors = array();
+            while( !$state_it->end() ) {
+                $colors[$state_it->getDisplayName()] = $state_it->get('RelatedColor');
+                $state_it->moveNext();
+            }
+            $widget->setColors($colors);
         }
 		return $widget;
 	}
@@ -640,24 +636,26 @@ class PageChart extends StaticPageList
         }
 
         $result = array();
-        $tmp = array_shift(array_values($data));
-        if ( is_array($tmp) ) {
-            $rows = array_keys($tmp['data']);
-            foreach ($rows as $row_name) {
-                $resultRow = array(
-                    array_shift(array_values($columns)) => $row_name
-                );
-                foreach ($data as $column => $item) {
-                    $resultRow = array_merge(
-                        $resultRow,
-                        array (
-                            $column => $data[$column]['data'][$row_name]
-                        )
-                    );
-                }
-                $result[] = $resultRow;
-            }
+        $rows = array();
+        foreach( array_values($data) as $values ) {
+            $rows = array_merge($rows, array_keys($values['data']));
         }
+
+        foreach (array_unique($rows) as $row_name) {
+            $resultRow = array(
+                array_shift(array_values($columns)) => $row_name
+            );
+            foreach ($data as $column => $item) {
+                $resultRow = array_merge(
+                    $resultRow,
+                    array (
+                        $column => $data[$column]['data'][$row_name]
+                    )
+                );
+            }
+            $result[] = $resultRow;
+        }
+
         return $entity->createCachedIterator($result);
     }
 	
@@ -724,8 +722,7 @@ class PageChart extends StaticPageList
 			
 			$attribute = $agg->getAggregatedAttribute();
 
-			if ( $attribute != '' && $attribute != '1' )
-			{
+			if ( !in_array($attribute, array('', '1', $agg->getAttribute())) ) {
 				$agg_title .= ' ('.translate($object->getAttributeUserName($attribute)).')';
 			}
 			
@@ -755,7 +752,7 @@ class PageChart extends StaticPageList
         foreach (array_keys($dataIt->getData()) as $column ) {
             echo '<th>' . $column . '</th>';
         }
-        $actions = $this->getTable()->getExportActions();
+        $actions = $this->getExportActions();
         if ( $dataIt->count() > 0 ) {
             if ( count($actions) > 0 ) {
                 echo '<th width="1%">';
@@ -770,6 +767,7 @@ class PageChart extends StaticPageList
         while( !$dataIt->end() ) {
             echo '<tr>';
             foreach ($dataIt->getData() as $column => $value) {
+                if ( $value == '' ) $value = text(2536);
                 echo '<td>' . $value . '</td>';
             }
             if ( count($actions) > 0 ) {
@@ -786,12 +784,18 @@ class PageChart extends StaticPageList
 		return false;
 	}
 
+	function getExportActions()
+    {
+        return array();
+    }
+
 	function getRenderParms()
 	{
 		return array_merge(
 			parent::getRenderParms(),
 			array (
-				'demo_hint' => $this->getDemo() ? text(2095) : ''
+				'demo_hint' => $this->getDemo() ? text(2095) : '',
+                'chartSettingsItems' => $this->getChartSettings()
 			)
 		);
 	}

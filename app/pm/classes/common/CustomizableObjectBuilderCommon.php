@@ -1,5 +1,4 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/common/CustomizableObjectBuilder.php";
 
 class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
@@ -7,7 +6,8 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
     public function build( CustomizableObjectRegistry & $set )
     {
      	$entities = array (
-			'Question'
+			'Question',
+            'pm_AutoAction'
 		);
  		
  		$methodology_it = $this->getSession()->getProjectIt()->getMethodologyIt();
@@ -38,17 +38,32 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
 				$type_it->moveNext();
 			}
 		}
-		
-		$set->add('Request', '', translate('Пожелание').': '.translate('любой тип'));
-		
+
+        if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
+            if ( class_exists('Issue') ) {
+                $set->add('Issue', '', getFactory()->getObject('Issue')->getDisplayName());
+            }
+		    if ( class_exists('Increment') ) {
+                $issueObject = getFactory()->getObject('Increment');
+            }
+        }
+        if ( !is_object($issueObject) ) {
+            $issueObject = getFactory()->getObject('Request');
+        }
+
+        $set->add('Request', '', $issueObject->getDisplayName().': '.translate('любой тип'));
 		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
-				array (
-						new FilterBaseVpdPredicate()
-				)
+            array (
+                new FilterBaseVpdPredicate()
+            )
 		);
 		while ( !$type_it->end() )
 		{
-			$set->add( 'Request', 'request:'.$type_it->get('ReferenceName'), translate('Пожелание').': '.$type_it->getDisplayName());
+		    $title = $type_it->getDisplayName() == $issueObject->getDisplayName()
+                ? $issueObject->getDisplayName()
+                : $issueObject->getDisplayName().': '.$type_it->getDisplayName();
+
+			$set->add( 'Request', 'request:'.$type_it->get('ReferenceName'), $title);
 			$type_it->moveNext();
 		}        
     }

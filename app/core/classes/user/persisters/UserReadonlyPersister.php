@@ -4,12 +4,46 @@ class UserReadonlyPersister extends ObjectSQLPersister
 {
  	function map( &$parms )
 	{
-		if ( $parms[$this->getObject()->getIdAttribute()] > 0 ) return;
+        $permissions = array();
+        $updatePermissions = false;
 
-		// check license restrictions when user is to be created
-		$license_it = getFactory()->getObject('LicenseInstalled')->getAll();
-		if ( !$license_it->allowCreate($this->getObject()) ) {
-			$parms['IsReadonly'] = 'Y';
-		}
+        $permissionIt = getFactory()->getObject('LicensePermission')->getAll();
+        while( !$permissionIt->end() ) {
+            if ( $permissionIt->get('IsGlobal') != 'Y' ) {
+                if ( $parms['LicensePermission' . $permissionIt->getId() . 'OnForm'] != '' ) {
+                    $updatePermissions = true;
+                    $wasPermissions = TextUtils::parseItems($parms['IsReadonly']);
+
+                    $leftLicenses = $permissionIt->getLeftLicenses() + (in_array($permissionIt->getId(), $wasPermissions) ? 1 : 0);
+                    if ( $leftLicenses > 0 ) {
+                        if ( $parms['LicensePermission' . $permissionIt->getId()] != '' ) {
+                            $permissions[] = $permissionIt->getId();
+                        }
+                    }
+                }
+            }
+            $permissionIt->moveNext();
+        }
+
+        if ( $updatePermissions ) {
+            $parms['IsReadonly'] = join(',', $permissions);
+        }
 	}
+
+	function getSelectColumns($alias)
+    {
+        $allPermissions = join(',',
+            array_map( function($row) {
+                return $row['IsGlobal'] == 'N' ? $row['entityId'] : '';
+            },
+            getFactory()->getObject('LicensePermission')->getAll()->getRowset()
+        ));
+        return array (
+            " IF(".$alias.".IsReadonly = 'N', '".$allPermissions."', ".$alias.".IsReadonly) IsReadonly "
+        );
+    }
+
+    function IsPersisterImportant() {
+        return true;
+    }
 }

@@ -155,9 +155,9 @@ public class InstallTest extends TestBase {
 		driver.get(baseURL + "/admin/updates.php");
 		(new WebDriverWait(driver, installTimeout)).until(ExpectedConditions
 				.presenceOfElementLocated(By
-						.xpath("//a[contains(text(),'Действия')]")));
+						.xpath("//a[contains(.,'Действия')]")));
 		FILELOG.debug("Entering: " + driver.getCurrentUrl());
-		driver.findElement(By.xpath("//a[contains(text(),'Действия')]"))
+		driver.findElement(By.xpath("//a[contains(.,'Действия')]"))
 				.click();
 		driver.findElement(By.xpath("//a[@href='?action=upload']")).click();
 		// make file input visible

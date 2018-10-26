@@ -30,7 +30,7 @@ public class SupportProjectTest extends ProjectTestBase {
 		Template SDLC = new Template(
 				this.supportTemplateName);
 		String p = DataProviders.getUniqueString();
-		this.myTestProject = new Project("SupportProject" + p, "supportproject" + p, SDLC);
+		this.myTestProject = new Project("SupportProject" + p, "supportproject" + DataProviders.getUniqueStringAlphaNum(), SDLC);
 		npp.createNew(myTestProject);
 		FILELOG.debug("Created new project " + myTestProject.getName());
 	}

@@ -1,5 +1,5 @@
 <div class="treeview sticks-top" heightStyle="window">
-	<div class="treeview-container sticks-top-body" style="position:relative;overflow:hidden;">
+	<div id="treeview-container" class="treeview-container sticks-top-body" style="position:relative;overflow:hidden;">
 		<div id="wikitree" data-type="json" style="display:none;">
 			<?=$data?>
 		</div>
@@ -58,6 +58,8 @@
 		}
 	});
 	var activeKey = '';
+	var ps;
+
 	$(function() {
 		var tree = $('#wikitree');
         tree.fancytree({
@@ -65,31 +67,45 @@
 			quicksearch: true,
 			debugLevel: 0,
 			activate: function(event, data){
-				gotoRandomPage(data.node.key, 4, true);
+			    setTimeout(function() {
+                    gotoRandomPage(data.node.key, 4, true);
+                }, 100);
 			},
 			create: function() {
 				$('#wikitree').show();
-				$('#wikitree').parent().perfectScrollbar({wheelPropagation:true});
+                ps = new PerfectScrollbar('#treeview-container', {wheelPropagation:true});
+                document.querySelector('#treeview-container').addEventListener('ps-scroll-y', function() {
+                    $('span.fancytree-node:hover span.fancytree-title').css({
+                        'top': '',
+                        'position': ''
+                    });
+                });
 			},
 			init: function() {
 				if ( activeKey != "" ) {
-					$("#wikitree").fancytree("getTree").activateKey(activeKey);
+					var nodeObj = $("#wikitree").fancytree("getTree").getNodeByKey(activeKey);
+                    if(nodeObj) {
+                        nodeObj.setActive(true, {noEvents:true, noFocus:true});
+                    }
 				}
-				var container = $('#wikitree').closest('.ps-container');
-				if ( container.length > 0 ) {
-					container.perfectScrollbar('update');
-				}
+				if ( ps ) {
+                    ps.update();
+                }
 			},
             createNode: function(event, data) {
                 $(data.node.span)
                     .hover(
                         function(){
-                            $(this).find('span.fancytree-title').css(
-                                'top', $(this).position().top + $('#wikitree ul').offset().top - $(document).scrollTop()
-                            );
+                            $(this).find('span.fancytree-title').css({
+                                'position': 'fixed',
+                                'top' : $(this).position().top + $('#wikitree ul').offset().top - $(document).scrollTop()
+                            });
                         },
                         function() {
-                            $(this).find('span.fancytree-title').css('top','auto');
+                            $(this).find('span.fancytree-title').css({
+                                'position': '',
+                                'top': '',
+                            });
                         }
                     );
             },
@@ -102,6 +118,10 @@
 					/** This function MUST be defined to enable dragging for the tree.
 					 *  Return false to cancel dragging of node.
 					 */
+                    $('span.fancytree-title').css({
+                        'top': '',
+                        'position': ''
+                    });
 					return true;
 				},
 				dragEnter: function(node, data) {
@@ -125,26 +145,26 @@
 				dragDrop: function(node, data) {
 					data.otherNode.moveTo(node, data.hitMode);
 
-					var item = parent = prev = '';
+					var item = parentNode = prev = '';
 					switch(data.hitMode) {
 						case 'over':
 							item = data.otherNode.key;
-							parent = node.key;
+                            parentNode = node.key;
 							prev = '';
 							break;
 						case 'after':
 							item = data.otherNode.key;
 							prev = node.key;
-							parent = node.parent ? node.parent.key : '';
+                            parentNode = node.parent ? node.parent.key : '';
 							break;
 						case 'before':
 							item = data.otherNode.key;
-							parent = node.parent ? node.parent.key : '';
+                            parentNode = node.parent ? node.parent.key : '';
 							prev = node.key;
 					}
 
 					var url = '/pm/'+devpromOpts.project+"/command.php?class=wikipagemove" +
-						"&object_id=" + item + "&ParentPage=" + parent + "&"+data.hitMode+"=" + prev + "&action=2";
+						"&object_id=" + item + "&ParentPage=" + parentNode + "&"+data.hitMode+"=" + prev + "&action=2";
 
 					$.ajax({ url: url, dataType: 'json', type: 'POST'})
 						.success(function (data) {
@@ -153,13 +173,27 @@
 								row.attr('sort-value', value.si);
 								row.find('.sec-num').html(value.sn);
 							});
-							gotoRandomPage(item, 0, false);
+							setTimeout(function() {
+                                gotoRandomPage(item, 0, false);
+                            }, 100);
 						})
 						.error(function() {
 						});
 				}
 			},
+            strings: {
+                loading: "<?=text(1708)?>",
+                loadError: "<?=text(677)?>",
+                noData: "<?=text(2649)?>"
+            }
 		});
+
+        $(document).scroll(function() {
+            $('span.fancytree-node:hover span.fancytree-title').css({
+                'top': '',
+                'position': ''
+            });
+        });
 	});
 	function loadContentTree( callback )
 	{
@@ -215,15 +249,13 @@
         var tree = $(".wiki-page-tree");
         if ( tree.hasClass('custom-width') ) {
             tree.css({
-                'width': '',
-                'max-width': ''
+                'width': ''
             });
             tree.removeClass('custom-width');
         }
         else {
             tree.css({
-                'width': '50%',
-                'max-width': '50%'
+                'width': '50%'
             });
             $('#documentToolbar').width('auto');
             tree.addClass('custom-width');

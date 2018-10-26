@@ -9,7 +9,7 @@ class WatchersPersister extends ObjectSQLPersister
  		$object = $this->getObject();
 
  		$columns[] = 
- 			"(SELECT GROUP_CONCAT(CAST(wt.SystemUser AS CHAR)) FROM pm_Watcher wt " .
+ 			"(SELECT GROUP_CONCAT(CAST(wt.pm_WatcherId AS CHAR)) FROM pm_Watcher wt " .
 			"  WHERE wt.ObjectId = ".$this->getPK($alias).
  			"    AND LCASE(wt.ObjectClass) IN ('".
  					join("','", array ( 
@@ -28,7 +28,38 @@ class WatchersPersister extends ObjectSQLPersister
  		
  		return $columns;
  	}
- 	
+
+    function add($object_id, $parms)
+    {
+        if ( trim($parms['Watchers']) == '' ) return;
+
+        $registry = getFactory()->getObject('Watcher')->getRegistry();
+        foreach( preg_split('/,/', $parms['Watchers']) as $watcher )
+        {
+            if ( filter_var($watcher, FILTER_VALIDATE_EMAIL) === false ) {
+                $userIt = getFactory()->getObject('User')->getByRef('Caption', $watcher);
+                if ( $userIt->getId() != '' ) {
+                    $registry->Merge(
+                        array(
+                            'ObjectId' => $object_id,
+                            'ObjectClass' => strtolower(get_class($this->getObject())),
+                            'SystemUser' => $userIt->getId()
+                        )
+                    );
+                }
+            }
+            else {
+                $registry->Merge(
+                    array(
+                        'ObjectId' => $object_id,
+                        'ObjectClass' => strtolower(get_class($this->getObject())),
+                        'Email' => $watcher
+                    )
+                );
+            }
+        }
+    }
+
 	function afterDelete( $object_it )
  	{
  		$it = getFactory()->getObject('Watcher')->getRegistry()->Query(

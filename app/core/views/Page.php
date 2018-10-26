@@ -46,12 +46,8 @@ class Page
 
  	    $this->form = $this->buildForm();
  		
- 		if ( is_object($this->form) && is_a($this->form, 'PageForm') ) {
-		    $this->form->setPage( $this );
-		}
-
-		if ( is_a($this->form, 'MetaobjectForm') && $this->form->getAction() != '' ) {
-			if ( $this->needDisplayForm() ) {
+ 		if ( is_a($this->form, 'MetaobjectForm') && $this->form->getAction() != '' ) {
+			if ( $this->needDisplayForm() && $this->hasAccess() ) {
                 \FeatureTouch::Instance()->touch(strtolower(get_class($this->form)));
 				$this->form->process();
 			}
@@ -110,7 +106,12 @@ class Page
  		if ( $_REQUEST['bulkmode'] != '' ) {
  			return $this->getBulkForm();
  		}
- 		return $this->getForm();
+ 		$form = $this->getForm();
+ 		if ( $form instanceof \PageForm) {
+            $form->setPage($this);
+            $form->buildForm();
+        }
+        return $form;
  	}
  	
  	function getForm() 
@@ -255,9 +256,7 @@ class Page
                 }
  			}
 			$it = $this->buildExportIterator(
-			    $object,
-                preg_split('/-/', trim($_REQUEST['objects'], '-')),
-                $_REQUEST['class']
+			    $object, \TextUtils::parseIds($_REQUEST['objects']), $_REQUEST['class']
             );
  		}
 
@@ -298,6 +297,9 @@ class Page
                 }
                 else {
                     $skip_fields = array();
+                    if ( $_REQUEST['show'] == 'all' ) {
+                        $skip_fields = $object->getAttributesByGroup('trace');
+                    }
                 }
 
     			foreach( $columns as $column )
@@ -563,15 +565,14 @@ class Page
         $first_menu = count($areas) > 0 ? array_pop(array_values($areas)) : array();
 
         $script_service = new ScriptService();
-        
         $page_uid = $this->getPageUid();
+        $pageTitle = $this->getTitle() != '' ? $this->getTitle() : $tab_title;
 
 		list($alerts, $alerts_url) = $this->getCheckpointAlerts();
 
 		return array(
  			'inside' => count($first_menu['menus']) > 0,
- 			'title' => $this->getTitle() != '' ? $this->getTitle() : $tab_title,
- 		    'navigation_title' => $tab_title != '' ? $tab_title : $this->getTitle(),
+ 			'title' => $pageTitle,
  		    'navigation_url' => $tab_url,
 			'active_url' => $active_url,
  			'checkpoint_alerts' => $alerts,
@@ -673,7 +674,12 @@ class Page
                 time_nanosleep(0, 500000000);
 
                 getFactory()->resetCachedIterator($affected);
-		        $ids = $this->getRecentChangedObjectIds($filters);
+		        $ids = array_filter(
+		            $this->getRecentChangedObjectIds($filters),
+                    function($value) {
+		                return $value > 0;
+                    }
+                );
 		        if ( count($ids) < 1 ) $ids[] = 0;
 		        
 		        $_REQUEST['object'] = $_REQUEST[strtolower(get_class($object))] = join(',', $ids); 

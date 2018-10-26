@@ -4,13 +4,15 @@ include "SystemDictionaryList.php";
 
 class SystemDictionaryTable extends StaticPageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new SystemDictionaryList( $this->getObject() );
 	}
 
-	function getFilterActions()
-	{
+	function getFilterActions() {
 		return array();
 	}
+
+    function getCaption() {
+        return translate('Справочники');
+    }
 }

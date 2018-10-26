@@ -27,7 +27,7 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             'ExportChildren' => 'children',
         );
         if ( !in_array($class, array('WikiConverterPanDocMSWord')) ) {
-            $options['paging'] = 'UsePaging';
+            $options['UsePaging'] = 'paging';
         }
         return $options;
     }

@@ -16,44 +16,34 @@ class StateForm extends PMPageForm
 
         $object->addAttribute('Transitions', 'INTEGER', text(2016), true, false,
 				str_replace('%1', $this->getObject()->getPage(), text(2013)), 25);
-		$object->addPersister( new StateTransitionsPersister() );
 
+		$object->addPersister( new StateTransitionsPersister() );
 		$object->setAttributeOrderNum('ReferenceName', 998);
 		$object->setAttributeVisible('ReferenceName', $this->getMode() != 'new');
-		$object->setAttributeRequired('ReferenceName', false);
-		
 		$object->setAttributeType('Description', 'TEXT');
 		$object->setAttributeOrderNum('Description', 999);
-		
 		$object->setAttributeOrderNum('OrderNum', 997);
 
-        if ( $object instanceof IssueState ) {
+        if ( getFactory()->getObject($object->getObjectClass())->getEntityRefName() == 'pm_ChangeRequest' ) {
             $object->addAttribute('TaskTypes', 'REF_TaskTypeId', translate('Задачи'), true, false, text(2273), 40);
             $object->setAttributeVisible('ArtifactsType', true);
             $object->addAttributeGroup('ArtifactsType', 'additional');
         }
 	}
 	
- 	function validateInputValues( $id, $action )
- 	{
- 		$object = $this->getObject();
- 		$object->addFilter( new FilterBaseVPDPredicate() );
- 		
- 		$object_it = $object->getByRef('ReferenceName', $_REQUEST['ReferenceName']);
- 		if ( $object_it->count() > 0 && $object_it->getId() != $id ) {
- 			return text(1121);
- 		}
- 		
- 		return parent::validateInputValues( $id, $action );
- 	}
+ 	function buildModelValidator()
+    {
+        $validator = parent::buildModelValidator();
+        $validator->addValidator( new StateModelValidator() );
+        return $validator;
+    }
 
- 	function IsAttributeVisible( $attr_name ) 
+    function IsAttributeVisible( $attr_name )
  	{
  		switch ( $attr_name )
  		{
  			case 'ObjectClass':
  				return false;
- 				
  			default:
  				return parent::IsAttributeVisible( $attr_name );
  		}

@@ -3,8 +3,6 @@ use Devprom\ProjectBundle\Service\Wiki\WikiDeltaService;
 
 include_once SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
-include_once SERVER_ROOT_PATH."pm/methods/DuplicateIssuesWebMethod.php";
-include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 include_once SERVER_ROOT_PATH."pm/views/time/FieldSpentTimeRequest.php";
 include_once SERVER_ROOT_PATH."pm/views/watchers/FieldWatchers.php";
 include_once SERVER_ROOT_PATH."pm/views/ui/FieldAttachments.php";
@@ -15,13 +13,11 @@ include_once SERVER_ROOT_PATH."pm/methods/SpendTimeWebMethod.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueFeatureLevel.php";
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/converters/WikiConverter.php';
-
-include "FieldIssueTypeDictionary.php";
-include "FieldTasksRequest.php";
-include "FieldLinkedRequest.php";
-include "FieldRequestTagTrace.php";
-include "FieldIssueDeadlines.php";
-include "FieldAuthor.php";
+include_once "FieldTasksRequest.php";
+include_once "FieldLinkedRequest.php";
+include_once "FieldRequestTagTrace.php";
+include_once "FieldIssueDeadlines.php";
+include_once "FieldAuthor.php";
 include "FieldEstimationDictionary.php";
 
 class RequestForm extends PMPageForm
@@ -34,9 +30,10 @@ class RequestForm extends PMPageForm
 	private $new_template_url = '';
 	private $target_projects = array();
  	private $method_spend_time = null;
- 	private $feature_types = array();
+ 	private $featureTypesCount = 0;
 	private $links_it = null;
 	private $linkTypes = array();
+	private $fieldActions = array();
 
 	function __construct( $object ) 
 	{
@@ -109,6 +106,17 @@ class RequestForm extends PMPageForm
 
         $this->getObject()->setAttributeEditable('ResponseSLA', false);
         $this->getObject()->setAttributeEditable('LeadTimeSLA', false);
+
+        if ( is_object($this->getObjectIt()) && $this->getAction() == 'view' ) {
+            $this->fieldActions = $this->buildReferencesActions( $this->getObjectIt(), array (
+                'priority' => 'Priority',
+                'severity' => 'Severity',
+                'release' => 'PlannedRelease',
+                'iteration' => 'Iteration',
+                'owner' => 'Owner',
+                'type' => 'Type'
+            ));
+        }
     }
     
  	function buildModelValidator()
@@ -130,16 +138,14 @@ class RequestForm extends PMPageForm
 
     public function checkTemplateDefined()
 	{
-		global $model_factory;
-		
 		if ( $_REQUEST['template'] == '' ) return;
 
-		$template = $model_factory->getObject('RequestTemplate');
-		
-		$template->addPersister( new ObjectTemplatePersister() );
-		
-		$template_it = $template->getExact($_REQUEST['template']);
-		
+		$template_it = getFactory()->getObject('RequestTemplate')->getRegistry()->Query(
+		    array(
+		        new FilterInPredicate($_REQUEST['template']),
+                new ObjectTemplatePersister()
+            )
+        );
 		if ( $template_it->getId() < 1 ) return;
 		
 		$this->template_it = $template_it;
@@ -210,7 +216,7 @@ class RequestForm extends PMPageForm
                 if ( count($projects) > 11 ) $projects = array();
             }
             else {
-                $linked_it = getFactory()->getObject('ProjectLinked')->getRegistry()->Query();
+                $linked_it = getFactory()->getObject('ProjectLinkedActive')->getRegistry()->Query();
             }
         }
         else {
@@ -236,7 +242,7 @@ class RequestForm extends PMPageForm
 			}
 		}
 		
-		$this->feature_types = getFactory()->getObject('pm_FeatureType')->getAll()->fieldToArray('ReferenceName');
+		$this->featureTypesCount = getFactory()->getObject('pm_FeatureType')->getRecordCount();
 
 		$type_it = getFactory()->getObject('RequestLinkType')->getAll();
 		while( !$type_it->end() ) {
@@ -258,6 +264,13 @@ class RequestForm extends PMPageForm
                 'url' => $method->url($methodPageIt, $converter_it->get('EngineClassName'))
             );
             $converter_it->moveNext();
+        }
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Owner') ) {
+            $this->assignMethod = array (
+                'name' => translate('Назначить'),
+                'url' => "javascript:processBulk('".translate('Назначить')."','?formonly=true&operation=AttributeOwner','%ids');"
+            );
         }
     }
 	
@@ -286,8 +299,12 @@ class RequestForm extends PMPageForm
 					getFactory()->getObject('RequestTraceTestExecution') );
 
 			case 'TestFound':
-				return new FieldIssueTrace( $this->object_it,
-					getFactory()->getObject('RequestTraceTestCaseExecution') );
+				if ( is_object($this->object_it) ) {
+					return new FieldListOfReferences( $this->object_it->getRef($name) );
+				}
+				else {
+					return parent::createFieldObject( $name );
+				}
 
 			case 'HelpPage':
 				return new FieldIssueTrace( $this->object_it,
@@ -310,10 +327,8 @@ class RequestForm extends PMPageForm
 					getFactory()->getObject('RequestTraceQuestion') );
 
 			case 'Fact':
-				$field = new FieldSpentTimeRequest( $this->object_it );
-				$field->setShortMode();
-				return $field;
-				
+				return new FieldSpentTimeRequest( $this->object_it );
+
 			case 'Estimation':
 				if ( $this->getEditMode() )
 				{
@@ -359,7 +374,7 @@ class RequestForm extends PMPageForm
 			    return $field;
 			    
 			case 'Function':
-				if ( count($this->feature_types) > 0 ) {
+				if ( $this->featureTypesCount > 0 ) {
 					return new FieldHierarchySelectorAppendable($this->getObject()->getAttributeObject($name));
 				}
 				else {
@@ -376,6 +391,74 @@ class RequestForm extends PMPageForm
                     return new FieldListOfReferences( $this->getObjectIt()->getRef($name) );
                 }
                 return null;
+
+            case 'Priority':
+                if ( $this->getAction() == 'view' ) {
+                    return new FieldPriority($this->getObjectIt(), true, $this->fieldActions[$name]);
+                }
+                else {
+                    return parent::createFieldObject($name);
+                }
+
+            case 'Severity':
+                if ( $this->getAction() == 'view' ) {
+                    return new FieldReferenceAttribute(
+                        $this->getObjectIt(),
+                        $name,
+                        null,
+                        $this->fieldActions[$name],
+                        true
+                    );
+                }
+                else {
+                    return parent::createFieldObject($name);
+                }
+
+            case 'PlannedRelease':
+                if ($this->getTransitionIt()->getId() > 0 || !$this->getEditMode()) {
+                    $release = getFactory()->getObject('ReleaseActual');
+                } else {
+                    $release = getFactory()->getObject('ReleaseRecent');
+                }
+                if ( $this->getAction() == 'view' ) {
+                    return new FieldReferenceAttribute($this->getObjectIt(), $name, $release, $this->fieldActions[$name], true);
+                }
+                else {
+                    return new FieldAutoCompleteObject($release);
+                }
+
+            case 'Iteration':
+                if ( $this->getTransitionIt()->getId() > 0 || !$this->getEditMode() ) {
+                    $iteration = getFactory()->getObject('IterationActual');
+                }
+                else {
+                    $iteration = getFactory()->getObject('IterationRecent');
+                }
+                if ( $this->getAction() == 'view' ) {
+                    return new FieldReferenceAttribute($this->getObjectIt(), $name, $iteration, $this->fieldActions[$name], true);
+                }
+                else {
+                    return new FieldAutoCompleteObject($iteration);
+                }
+
+            case 'Owner':
+                if ( $this->getAction() == 'view' ) {
+                    return new FieldReferenceAttribute(
+                        $this->getObjectIt(), $name, getFactory()->getObject('ProjectUser'),
+                        $this->fieldActions[$name], true
+                    );
+                }
+                else {
+                    return new FieldParticipantDictionary($this->getFieldValue('Iteration'));
+                }
+
+            case 'Type':
+                if ( $this->getAction() == 'view' ) {
+                    return new FieldReferenceAttribute($this->getObjectIt(), $name, null, $this->fieldActions[$name], true);
+                }
+                else {
+                    return parent::createFieldObject($name);
+                }
         }
 		
 		if( $name == 'Attachment' )
@@ -390,37 +473,9 @@ class RequestForm extends PMPageForm
 		{
 			return new FieldLinkedRequest( $this->object_it );
 		}
-		elseif($name == 'PlannedRelease') 
-		{
-			if ( $this->getTransitionIt()->getId() > 0 ) {
-				$release = getFactory()->getObject('ReleaseActual');
-			}
-			else {
-				$release = getFactory()->getObject('ReleaseRecent');
-			}
-			return new FieldAutoCompleteObject( $release );
-		}
-		elseif($name == 'Iteration')
-		{
-			if ( $this->getTransitionIt()->getId() > 0 ) {
-				$iteration = getFactory()->getObject('IterationActual');
-			}
-			else {
-                $iteration = getFactory()->getObject('IterationRecent');
-			}
-			return new FieldAutoCompleteObject( $iteration );
-		}
-		elseif($name == 'Type')
-		{
-			return new FieldIssueTypeDictionary($this->getObject());
-		}
-		elseif($name == 'Author') 
+		elseif($name == 'Author')
 		{
 			return new FieldAuthor();
-		}
-		elseif($name == 'Owner') 
-		{
-			return new FieldParticipantDictionary( $this->getFieldValue('Iteration') );
 		}
 		elseif ( in_array($name, array('SubmittedVersion', 'ClosedInVersion')) )
 		{
@@ -441,26 +496,16 @@ class RequestForm extends PMPageForm
    		switch ( $name )
    		{
    			case 'TestExecution':
-
-   			    if ( $_REQUEST['TestCaseExecution'] > 0 )
-   			    {
-   			        $field->setReadonly( true );
-   			    }
-   				
+                $field->setReadonly( true );
    			    break;
    				
    			case 'Caption':
-   			    
-   		   		if ( is_a($field, 'FieldText') )
-   			    {
+   		   		if ( is_a($field, 'FieldText') ) {
    			        $field->setRows( 1 );
    			    }
-
-   			    if ( $this->getTransitionIt()->getId() > 0 )
-   			    {
+   			    if ( $this->getTransitionIt()->getId() > 0 ) {
    			        $field->setReadonly( true );
    			    }
-   			    
    			    break;
    			    
    			case 'Description':
@@ -711,7 +756,14 @@ class RequestForm extends PMPageForm
 			}
 		}
 
-		if ( is_object($this->method_spend_time) )
+        if ( is_array($this->assignMethod) && !$this->IsFormDisplayed() ) {
+            $method = $this->assignMethod;
+            $method['url'] = preg_replace('/%ids/', $object_it->getId(), $method['url']);
+            $actions[] = array();
+            $actions[] = $method;
+        }
+
+        if ( is_object($this->method_spend_time) )
 		{
 			$this->method_spend_time->setAnchorIt($object_it);
 
@@ -752,19 +804,13 @@ class RequestForm extends PMPageForm
 			$method = new ObjectCreateNewWebMethod($this->getObject());
 			if ( $method->hasAccess() ) {
                 $typeIt = getFactory()->getObject('RequestType')->getAll();
-                $actions[] = array(
-                    'name' => $this->getObject()->getDisplayName(),
-                    'url' => $method->getJSCall(
-                        array('IssueLinked' => $object_it->getId())
-                    )
-                );
                 while(!$typeIt->end()) {
                     $actions[] = array(
                         'name' => $typeIt->getDisplayName(),
                         'url' => $method->getJSCall(
                             array(
                                 'IssueLinked' => $object_it->getId(),
-                                'Type' => $typeIt
+                                'Type' => $typeIt->getId()
                             )
                         )
                     );
@@ -799,31 +845,25 @@ class RequestForm extends PMPageForm
 							: '',
 			'refs_actions' => 
 					is_object($object_it) 
-							? $this->buildReferencesActions( $object_it ) 
+							? $this->buildReferencesActions( $object_it, array (
+                                    'function' => 'Function',
+                                    'author' => 'Author',
+                                    'subversion' => 'SubmittedVersion',
+                                    'version' => 'ClosedInVersion',
+                                    'environment' => 'Environment'
+                                ))
 							: array()
 		);
 		
 		return array_merge( parent::getRenderParms(), $parms ); 
 	}
 	
-	function buildReferencesActions( $object_it )
+	function buildReferencesActions( $object_it, $references )
 	{
 		$refs_actions = array();
 		
 		$url = getFactory()->getObject('PMReport')->getExact('allissues')->get('Url');
     											
-		$references = array (
-		    'function' => 'Function',
-            'author' => 'Author',
-            'priority' => 'Priority',
-            'subversion' => 'SubmittedVersion',
-            'version' => 'ClosedInVersion',
-            'environment' => 'Environment',
-            'release' => 'PlannedRelease',
-            'iteration' => 'Iteration',
-            'owner' => 'Owner'
-        );
-		
 	    $attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity( $this->getObject() );
         while( !$attr_it->end() )
         {
@@ -832,7 +872,7 @@ class RequestForm extends PMPageForm
             } 
             $attr_it->moveNext();
         }
-		
+
 		foreach( $references as $parm => $reference )
 		{
             if ( $object_it->object->getAttributeType($reference) == '' ) continue;
@@ -841,9 +881,12 @@ class RequestForm extends PMPageForm
                 if ( $ref_it->getId() == '' ) continue;
 
                 if ( $ref_it->object instanceof IssueAuthor ) {
-                    $ref_it = getFactory()->getObject($ref_it->get('CustomerClass'))->getExact($ref_it->get('CustomerId'));
+                    $refObject = getFactory()->getObject($ref_it->get('CustomerClass'));
+                    if ( is_object($refObject) ) {
+                        $ref_it = $refObject->getExact($ref_it->get('CustomerId'));
+                    }
                 }
-                if ( !$ref_it->object instanceof Priority && !$ref_it->object instanceof User ) {
+                if ( $object_it->object->getAttributeOrigin($reference) != ORIGIN_CUSTOM && !$ref_it->object instanceof User ) {
                     $method = new ObjectModifyWebMethod($ref_it);
                     $refs_actions[$reference][] = array (
                         'name' => translate('Открыть'),
@@ -852,17 +895,19 @@ class RequestForm extends PMPageForm
                     $refs_actions[$reference][] = array();
                 }
             }
-	   		$refs_actions[$reference][] = array(
-                'name' => text(1828),
-                'url' => $url.'&'.$parm.'='.urlencode($object_it->get($reference))
-	   		);
-		}
 
-		if ( $object_it->object->getAttributeType('Type') != '' ) {
-			$refs_actions['Type'][] = array(
-				'name' => text(1828),
-				'url' => $url . '&type=' . $object_it->getRef('Type')->get('ReferenceName')
-			);
+            if ( $reference == 'Type' && $object_it->object->getAttributeType('Type') != '' ) {
+                $refs_actions[$reference][] = array(
+                    'name' => text(1828),
+                    'url' => $url . '&type=' . $object_it->getRef('Type')->get('ReferenceName')
+                );
+            }
+            else {
+                $refs_actions[$reference][] = array(
+                    'name' => text(1828),
+                    'url' => $url.'&'.$parm.'='.urlencode($object_it->get($reference))
+                );
+            }
 		}
 
    		return $refs_actions;
@@ -909,6 +954,20 @@ class RequestForm extends PMPageForm
                 'WikiIteratorExportHtml'
             );
 		}
+
+        if ( $_REQUEST['TestCaseExecution'] != '' )
+        {
+            $object = getFactory()->getObject('TestCaseExecution');
+            $result[] = array(
+                $object->getRegistry()->Query(
+                    array(
+                        new FilterInPredicate($_REQUEST['TestCaseExecution'])
+                    )
+                ),
+                'Content'
+            );
+        }
+
 		return array_merge(parent::getSourceIt(), $result);
 	}
 

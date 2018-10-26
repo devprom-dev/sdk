@@ -12,7 +12,7 @@ public class AccessPermissionsPage extends AdminPageBase {
 	}
 
 	public AccessPermissionsPage givePermissions(String group, String module){
-		WebElement select = driver.findElement(By.xpath("//td[@id='usergroup' and contains(text(),'"+group+"')]/following-sibling::td[@id='referencename' and contains(text(),'"+module+"')]/following-sibling::td[@id='accesstype']/select"));
+		WebElement select = driver.findElement(By.xpath("//td[@id='usergroup' and contains(.,'"+group+"')]/following-sibling::td[@id='referencename' and contains(.,'"+module+"')]/following-sibling::td[@id='accesstype']/select"));
 		 (new Select(select)).selectByVisibleText("Есть");
 		 try {	Thread.sleep(3000);	} catch (InterruptedException e) {		}
 		return new AccessPermissionsPage(driver);

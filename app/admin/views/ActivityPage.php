@@ -6,10 +6,10 @@ class ActivityPage extends AdminPage
 {
  	function getTable() 
  	{
- 		return new ActivityTable();
+ 		return new ActivityTable(getFactory()->getObject('AdminChangeLog'));
  	}
- 	
- 	function getForm() 
+
+    function getForm()
  	{
  		return null;
  	}

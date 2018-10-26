@@ -6,20 +6,27 @@ class AttachmentIterator extends OrderedIterator
  	{
  		if ( $this->IsImage('File')) 
  		{
-			return '<a class="image_attach" id="File'.$this->getId().'" href="'.$this->getFileUrl().
-				'&.png" title="'.$this->get('Description').'"><img src="/images/image.png"> '.$this->getFileName('File').'</a>'; 		
+			return '<a class="image_attach" data-fancybox="gallery" id="File'.$this->getId().'" href="'.$this->getFileUrl().
+				'&.png" title="'.$this->get('Description').'">'.$this->getFileName('File').'</a>';
  		}
  		else
  		{
-			return '<a class="" id="File'.$this->getId().'" href="'.$this->getFileUrl().
-				'" title="'.$this->get('Description').'"><img src="/images/attach.png"> '.$this->getFileName('File').'</a>'; 		
+			return '<a id="File'.$this->getId().'" href="'.$this->getFileUrl().
+				'" title="'.$this->get('Description').'">'.$this->getFileName('File').'</a>';
  		}
  	}
  	
  	function getDisplayLink()
  	{
- 		return $this->getFileLink().' ('.$this->getFileSizeKb('File').' Kb)';
+        $modified = getSession()->getLanguage()->getDateFormattedShort($this->get('RecordModified'));
+ 		return $this->getFileLink().' ('.$modified.', '.$this->getFileSizeKb('File').' '.translate('Kb').')';
  	}
+
+    function getFileInfo()
+    {
+        $modified = getSession()->getLanguage()->getDateFormattedShort($this->get('RecordModified'));
+        return $modified.', '.$this->getFileSizeKb('File').' '.translate('Kb');
+    }
 
  	function getDisplayName()
  	{

@@ -116,7 +116,7 @@ public class LDAPTest extends TestBase {
 	}
 	
 	public void deleteUser() {
-		driver.findElement(By.xpath("//a[contains(text(),'Действия')]")).click();
+		driver.findElement(By.xpath("//a[contains(.,'Действия')]")).click();
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 				.visibilityOfElementLocated(By.xpath("//a[text()='Удалить']")));
 		driver.findElement(By.xpath("//a[text()='Удалить']")).click();

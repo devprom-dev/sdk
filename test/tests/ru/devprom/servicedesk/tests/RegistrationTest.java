@@ -25,7 +25,7 @@ public class RegistrationTest extends BaseServicedeskTest {
         driver.get(baseURL + "login");
         RegistrationPage registrationPage = new LoginPage(driver).clickRegisterButton();
 
-        String name = "User" + DataProviders.getUniqueString();
+        String name = "User" + DataProviders.getUniqueStringAlphaNum();
         String email = name + "@feature.devprom";
         String password = "pass123";
 

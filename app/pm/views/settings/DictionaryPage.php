@@ -17,6 +17,7 @@ include SERVER_ROOT_PATH."pm/views/workflow/StateForm.php";
 include SERVER_ROOT_PATH."pm/views/workflow/StateTable.php";
 include SERVER_ROOT_PATH."pm/views/templates/ObjectTemplateTable.php";
 include SERVER_ROOT_PATH."pm/views/wiki/RequirementTypeForm.php";
+include SERVER_ROOT_PATH."pm/classes/settings/DictionaryItemModelBuilder.php";
 
 class DictionaryPage extends PMPage
 {
@@ -40,6 +41,8 @@ class DictionaryPage extends PMPage
  	
  	function getObject()
  	{
+ 	    getSession()->addBuilder( new DictionaryItemModelBuilder() );
+
         if ( is_object($this->object) ) return $this->object;
  		return $this->object = $this->getDictionary();
  	}

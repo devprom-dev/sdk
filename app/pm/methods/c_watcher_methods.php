@@ -12,16 +12,6 @@
  	{
  		return getSession()->getParticipantIt()->getId() > 0;
  	}
- 	
- 	function execute_request()
- 	{
- 		global $_REQUEST;
-
-	 	if( $_REQUEST['object'] != '' && $_REQUEST['id'] != '' ) 
-	 	{
-	 		$this->execute($_REQUEST['object'], $_REQUEST['id']);
-	 	}
- 	}
  }
  
  /////////////////////////////////////////////////////////////////////////////
@@ -65,44 +55,46 @@
 		return text(675);
 	}
 	
-function getJSCall($parms = array())
+    function getJSCall($parms = array())
  	{
  		return parent::getJSCall(
- 			array ( 'object' => $this->object_it->object->getClassName(),
- 					'id' => $this->object_it->getId() ) 
+ 			array ( 'classname' => get_class($this->object_it->object),
+ 					'objectid' => $this->object_it->getId() )
  			);
  	}
- 	
- 	function execute( $classname, $objectid )
+
+     function execute_request()
+     {
+         if( $_REQUEST['classname'] != '' && $_REQUEST['objectid'] != '' ) {
+             $this->execute($_REQUEST['classname'], $_REQUEST['objectid']);
+         }
+     }
+
+     function execute( $classname, $objectid )
  	{
- 		global $model_factory;
- 		
  		$user_it = getSession()->getUserIt();
- 		
- 		$object = $model_factory->getObject($classname);
- 		$object_it = $object->getExact( $objectid ); 
+ 		$object_it = getFactory()->getObject($classname)->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate(),
+                new FilterInPredicate(TextUtils::parseIds($objectid))
+            )
+        );
 
  		if ( $object_it->count() > 0 )
  		{
- 			$watcher = $model_factory->getObject2('pm_Watcher', $object_it);
+ 			$watcher = getFactory()->getObject2('pm_Watcher', $object_it);
  			$watcher_it = $watcher->getWatched( $user_it );
 
- 			if ( $watcher_it->count() > 0 )
- 			{
+ 			if ( $watcher_it->count() > 0 ) {
  				$watcher_it->delete();
  			}
- 			else
- 			{
- 				$watcher->add_parms(
- 					array (
-	 					'ObjectClass' => $object->getClassName(),
-	 					'ObjectId' => $objectid,
-	 					'SystemUser' => $user_it->getId()
- 						)
- 					);
+ 			else {
+ 				$watcher->add_parms( array (
+                    'ObjectClass' => strtolower(get_class($object_it->object)),
+                    'ObjectId' => $objectid,
+                    'SystemUser' => $user_it->getId()
+                ));
  			}
  		}
  	}
  }
-
-?>

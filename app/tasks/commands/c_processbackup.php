@@ -91,11 +91,14 @@ class ProcessBackup extends TaskCommand
 				unlink($file);
 			}
 		}
+
+		\FileSystem::rmdirr( SERVER_FILES_PATH . 'tmp' );
+        \FileSystem::rmdirr( SERVER_FILES_PATH . 'upload' );
 	}
 
 	function shrinkTests()
     {
-        $lastDate = date("Y-m-d", strtotime("-1 month"));
+        $lastDate = date("Y-m-d", strtotime(defined('OLDEST_TEST_RUNS') ? OLDEST_TEST_RUNS : "-1 month"));
 
         DAL::Instance()->Query("
           DELETE FROM pm_TestCaseExecution WHERE RecordCreated < '".$lastDate."'

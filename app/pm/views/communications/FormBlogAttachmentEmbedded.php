@@ -86,7 +86,7 @@ class FormBlogAttachmentEmbedded extends PMFormEmbedded
      		{
      			<?=$editor->getAttachmentsCallback()?>();
     
-    			$('a.modify_image[name="'+data.name+'"]').each( function() {
+    			$('.image-link[name="'+data.name+'"]').each( function() {
      				if ( !$(this).parent().is('strike') ) $(this).click();
     			});
      		}

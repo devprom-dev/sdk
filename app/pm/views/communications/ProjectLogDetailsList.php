@@ -16,20 +16,26 @@ class ProjectLogDetailsList extends PMDetailsList
 	{
 		echo '<ul class="nav">';
 			echo '<li class="nav-cell nav-left">';
-				echo $this->getTable()->getView()->render('core/UserPictureMini.php', array (
+				echo $this->getRenderView()->render('core/UserPictureMini.php', array (
 					'id' => $object_it->get('SystemUser'),
 					'image' => 'userpics-mini',
 					'class' => 'user-mini',
 					'title' => $object_it->getRef('SystemUser')->getDisplayName()
 				));
 			echo '</li>';
-			echo '<li class="nav-cell">';
+			echo '<li class="nav-cell" style="width:100%;">';
 				echo '<div class="nav-date">';
 					if ( $_REQUEST['action'] != 'commented' ) {
 						echo '<i class="'.$object_it->getIcon().' hidden-print" style="margin-right: 10px;"></i>';
 					}
 					echo $object_it->getDateFormatShort('RecordCreated').', '.$object_it->getTimeFormat('RecordCreated');
-				echo '</div>';
+
+                    $method = new UndoWebMethod($object_it->get('Transaction'), $object_it->get('ProjectCodeName'));
+                    if ( $method->hasAccess() && $this->last_transaction != $object_it->get('Transaction') ) {
+                        echo '<a class="btn btn-info btn-xs pull-right" href="javascript: '.$method->getJSCall().'">'.$method->getCaption().'</a>';
+                        $this->last_transaction = $object_it->get('Transaction');
+                    }
+                echo '</div>';
 				echo '<div>';
 					$anchor_it = $object_it->getObjectIt();
 					if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
@@ -38,13 +44,12 @@ class ProjectLogDetailsList extends PMDetailsList
                             $this->getUidService()->drawUidIcon($anchor_it);
                         }
 
-						drawMore($object_it, 'Content', 20);
-						if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
-							echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
-								'object_it' => $anchor_it,
-								'redirect' => 'donothing'
-							));
-						}
+                        echo $object_it->getHtmlDecoded('Content');
+
+                        echo $this->getRenderView()->render('core/CommentsIcon.php', array (
+                            'object_it' => $anchor_it,
+                            'redirect' => 'donothing'
+                        ));
 					}
 					else {
 						if ( $anchor_it->getId() != '' )
@@ -63,7 +68,7 @@ class ProjectLogDetailsList extends PMDetailsList
 						else {
 							echo $anchor_it->object->getDisplayName().': ';
 						}
-						drawMore($object_it, 'Caption', 20);
+						parent::drawCell( $object_it, 'Caption' );
 					}
 				echo '</div>';
 			echo '</li>';

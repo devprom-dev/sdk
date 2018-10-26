@@ -42,7 +42,7 @@ public class RequestBoardTest2 extends ProjectTestBase {
 		Template SDLC = new Template(
 				this.waterfallTemplateName);
 		String p = DataProviders.getUniqueString();
-		this.newTestProject = new Project("RBT2Project" + p, "rbt2project" + p, SDLC);
+		this.newTestProject = new Project("RBT2Project" + p, "rbt2project" + DataProviders.getUniqueStringAlphaNum(), SDLC);
 		npp.createNew(newTestProject);
 		FILELOG.debug("Created new project " + newTestProject.getName());
 	}
@@ -104,10 +104,11 @@ public class RequestBoardTest2 extends ProjectTestBase {
 	
 	rbp.setupGrouping("Tags");
 	groups = rbp.getAllGroupingSections();
-	Assert.assertTrue(groups.contains("Тэги: Тег1Teg"), "На доске нет группы с именем 'Тэги: Тег1Teg'");
+	Assert.assertTrue(groups.contains("Тэг: Тег1Teg"), "На доске нет группы с именем 'Тег1Teg'");
 	Assert.assertTrue(rbp.isRequestInSection(requests.get(4).getNumericId(), "Тэги: нет", "Добавлено"), "Ошибка теста, пожелание " +requests.get(4).getId()+ " изначально находится в секции отличной от Тэги: не задано");
-	rbp = rbp.moveToAnotherSection(requests.get(4).getNumericId(), "Тэги: Тег1Teg", "Добавлено");
-	Assert.assertTrue(rbp.isRequestInSection(requests.get(4).getNumericId(), "Тэги: Тег1Teg", "Добавлено"), "Пожелание не было перемещено в секцию 'Тэги: Тег1Teg'");
+	rbp = rbp.moveToAnotherSection(requests.get(4).getNumericId(), "Тег1Teg", "Добавлено");
+	Assert.assertTrue(rbp.isRequestInSection(requests.get(4).getNumericId(), "Тег1Teg", "Добавлено"), "Пожелание не было перемещено в секцию 'Тег1Teg'");
+	driver.navigate().refresh();
 	rvp = rbp.clickToRequest(requests.get(4).getId());
 	String[] tags = rvp.getTagsList();
 	boolean isTag = false;
@@ -175,8 +176,9 @@ public class RequestBoardTest2 extends ProjectTestBase {
 	 */
 	@Test
 	public void customAttributesTest(){
-		String p = DataProviders.getUniqueString();
+		String p = DataProviders.getUniqueStringAlphaNum();
 		        String cattr1 = "attr1_" + p;
+		        String attrName = DataProviders.getUniqueString();
 		        String cattr1value = "Значение пользовательского атрибута 1";
 		        
 		        
@@ -184,7 +186,7 @@ public class RequestBoardTest2 extends ProjectTestBase {
 						.gotoAttributeSettings();
 				AttributeEntityNewPage naep = asp.addNewAttribute();
 				AttributeNewPage nap = naep.selectEntity("request", "Строка текста");
-			    nap.enterNewAttribute(cattr1, cattr1, "Для теста доски", false);
+			    nap.enterNewAttribute(attrName, cattr1, "Для теста доски", false);
 			    asp = nap.createNewAttribute();
 				
 			RequestsPage mip = (new SDLCPojectPageBase(driver)).gotoRequests();
@@ -201,7 +203,7 @@ public class RequestBoardTest2 extends ProjectTestBase {
 			rvp = rep.saveEdited();
 			RequestsBoardPage rbp = rvp.gotoRequestsBoard();
 			rbp = rbp.showSpecificAttributes(cattr1);
-			Assert.assertEquals(rbp.readAttributeByName(request.getNumericId(), cattr1),cattr1value, "Неверное значение атрибута 1");
+			Assert.assertEquals(rbp.readAttributeByName(request.getNumericId(), attrName),cattr1value, "Неверное значение атрибута 1");
 			
 			rvp = rbp.clickToRequest(request.getId());
 			rep = rvp.gotoEditRequest();
@@ -209,13 +211,13 @@ public class RequestBoardTest2 extends ProjectTestBase {
 			rep.saveEdited();
 			rbp = rvp.gotoRequestsBoard();
 			rbp = rbp.showSpecificAttributes(cattr1);
-			Assert.assertEquals(rbp.readAttributeByName(request.getNumericId(), cattr1),cattr1value, "Неверное значение атрибута 1 после редактирования пожелания");
+			Assert.assertEquals(rbp.readAttributeByName(request.getNumericId(), attrName),cattr1value, "Неверное значение атрибута 1 после редактирования пожелания");
 			
 			rbp = rbp.moveToAnotherSection(request.getNumericId(), "0", "В релизе");
 			driver.navigate().refresh();
 			rvp = rbp.clickToRequest(request.getId());
 			
-			Assert.assertEquals(rvp.readUserAttribute(cattr1),cattr1value, "Неверное значение атрибута 1 после перевода пожелания в релиз");
+			Assert.assertEquals(rvp.readUserAttribute(attrName),cattr1value, "Неверное значение атрибута 1 после перевода пожелания в релиз");
 	}
 	
 }

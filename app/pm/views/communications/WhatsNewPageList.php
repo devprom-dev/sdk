@@ -54,7 +54,7 @@ class WhatsNewPageList extends PMPageList
                     if ( $object_it->get('Content') != '' ) {
                         echo '<br/>'.$object_it->getHtmlDecoded('Content');
                     }
-                    echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+                    echo $this->getRenderView()->render('core/CommentsIcon.php', array (
                         'object_it' => $anchor_it,
                         'redirect' => 'donothing'
                     ));
@@ -70,7 +70,7 @@ class WhatsNewPageList extends PMPageList
                     echo '<br/>'.$object_it->getHtmlDecoded('Content');
                 }
 			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
-				    echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+				    echo $this->getRenderView()->render('core/CommentsIcon.php', array (
 							'object_it' => $anchor_it,
 							'redirect' => 'donothing'
 					));

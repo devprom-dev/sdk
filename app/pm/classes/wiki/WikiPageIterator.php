@@ -46,7 +46,7 @@ class WikiPageIterator extends StatableIterator
             $prefix .= '['.$this->get('DocumentVersion').'] ';
         }
         if ( $this->get('DocumentName') != '' && $this->get('ParentPage') != '' ) {
-            $prefix .= $this->getHtmlDecoded('DocumentName') . ' / ' ;
+            $prefix .= $this->get('DocumentName') . ' / ' ;
         }
         return parent::getDisplayNameExt($prefix);
     }
@@ -156,10 +156,7 @@ class WikiPageIterator extends StatableIterator
 
 		$parent_page = $this->get('ParentPage');
 		if ( $parent_page != '' ) {
-			$registry = new WikiPageRegistryContent($this->object);
-			$registry->setPersisters(array());
-			$parent_it = $registry->Query(array(new FilterInPredicate($parent_page)));
-
+			$parent_it = $this->object->getRegistryBase()->Query(array(new FilterInPredicate($parent_page)));
 			$roots = array_merge($roots,
 				array_reverse(
 					array_filter(preg_split('/,/',$parent_it->get('ParentPath')), function($value) {
@@ -172,13 +169,12 @@ class WikiPageIterator extends StatableIterator
 		return $roots;
 	}
 	
-	function getParentsIt()
+	function getParentsIt( $object = null )
 	{
 	    if ( trim($this->get('ParentPath'), ',') == '' ) return $this->object->getEmptyIterator();
-	    
-		$registry = new WikiPageRegistry($this->object);
-		
-		return $registry->Query( array(
+	    if ( !is_object($object) ) $object = $this->object;
+
+		return $object->getRegistryBase()->Query( array(
 				 new FilterInPredicate($this->getParentsArray())
 		));
 	}

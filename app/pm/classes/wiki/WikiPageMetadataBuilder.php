@@ -6,6 +6,7 @@ include_once "persisters/WikiIncludePagePersister.php";
 include_once "persisters/WikiPageDetailsPersister.php";
 include_once 'persisters/DocumentVersionPersister.php';
 include_once "persisters/WikiPageModifierPersister.php";
+include_once "persisters/WikiPageIsIncludedPersister.php";
 
 class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
@@ -30,6 +31,9 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
 		foreach( array('DocumentId','ParentPage') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'skip-network');
 		}
+        foreach( array('ParentPage') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'skip-chart');
+        }
 
 		$metadata->addAttributeGroup('Dependency', 'trace');
 		$metadata->setAttributeDescription('Dependency', text(2131));
@@ -38,11 +42,10 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->addPersister( new WikiPageStylePersister() );
 		$metadata->addPersister( new WikiPageDetailsPersister() );
 
-        if ( !$metadata->getObject() instanceof Requirement ) {
-            foreach ( array('Estimation','Importance') as $attribute ) {
-                $metadata->addAttributeGroup($attribute, 'system');
-            }
-        }
+        $metadata->addAttribute('IncludedIn', 'REF_'.get_class($object).'Id', translate('Включено в'), true);
+        $metadata->addAttributeGroup('IncludedIn', 'trace');
+        $metadata->addPersister( new WikiPageIsIncludedPersister() );
+
         if ( $metadata->getObject() instanceof ProjectPage ) {
             foreach ( array('State') as $attribute ) {
                 $metadata->removeAttribute($attribute);
@@ -71,6 +74,9 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
         }
         foreach ( array('Content','DocumentId','Author','Caption','DocumentVersion') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'tooltip');
+        }
+        foreach ( array('ParentPage') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'skip-tooltip');
         }
 	}
 }

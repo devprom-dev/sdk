@@ -24,7 +24,7 @@ class FieldWysiwygPersister extends ObjectSQLPersister
             }
 
             $parms[$field] = TextUtils::getValidHtml(
-                $this->parseField($parms[$field])
+                TextUtils::getCleansedHtml($this->parseField($parms[$field]))
             );
 
             $this->codeBlocks = array();

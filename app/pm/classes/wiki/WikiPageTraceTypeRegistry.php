@@ -12,7 +12,7 @@ class WikiPageTraceTypeRegistry extends ObjectRegistrySQL
 						),
 						array (
 								'entityId' => 'branch',
-								'Caption' => translate('Копия')
+								'Caption' => translate('Ветка')
 						)
 				)
 		);

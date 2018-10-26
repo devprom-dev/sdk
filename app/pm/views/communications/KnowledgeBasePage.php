@@ -39,7 +39,7 @@ class KnowledgeBasePage extends PMWikiUserPage
  		return array( new KnowledgeBaseAccessPredicate() );
  	}
  	
- 	function getObject() 
+ 	function buildObject()
 	{
 		$object = getFactory()->getObject('ProjectPage');
 		$builders = array (
@@ -76,7 +76,6 @@ class KnowledgeBasePage extends PMWikiUserPage
 		return array_merge(
 			parent::getExportPersisters(),
 			array (
-				new ProjectPageTitlePersister()
 			)
 		);
 	}

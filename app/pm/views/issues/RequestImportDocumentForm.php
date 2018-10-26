@@ -18,10 +18,12 @@ class RequestImportDocumentForm extends PMPageForm
 		}
         $object->addAttribute('DocumentFile', 'FILE', translate('Файл'), true, false, text(2282), 1);
 
-        $typeObject = $object->getAttributeObject('Type');
-        $typeIt = $typeObject->getAll();
-        if ( $typeIt->count() > 0 ) {
-            $object->setAttributeVisible('Type', true);
+		if ( $object->getAttributeType('Type') != '' ) {
+            $typeObject = $object->getAttributeObject('Type');
+            $typeIt = $typeObject->getAll();
+            if ( $typeIt->count() > 0 ) {
+                $object->setAttributeVisible('Type', true);
+            }
         }
     }
     
@@ -43,8 +45,9 @@ class RequestImportDocumentForm extends PMPageForm
                 'Type' => $_REQUEST['Type'],
                 'State' => $_REQUEST['State']
             );
-            $builder = new RequestImporterContentBuilder($this->getObject());
-            $importer = new WikiImporter($this->getObject());
+            $importObject = getFactory()->getObject(get_class($this->getObject()));
+            $builder = new RequestImporterContentBuilder($importObject);
+            $importer = new WikiImporter($importObject);
             $importer_it = $importer->getAll();
 
             while( !$importer_it->end() ) {
@@ -58,7 +61,7 @@ class RequestImportDocumentForm extends PMPageForm
                             array(
                                 'Id' => $documentIt->getId(),
                                 'Url' => getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
-                                            'request='.join(',',$documentIt->idsToArray())
+                                            'request='.\TextUtils::buildIds($documentIt->idsToArray())
                                          )
                             )
                         );
@@ -81,10 +84,12 @@ class RequestImportDocumentForm extends PMPageForm
     {
         switch ( $name )
         {
-            case 'Type':
-                return new FieldIssueTypeDictionary($this->getObject());
             default:
                 return parent::createFieldObject( $name );
         }
+    }
+
+    function getHint() {
+        return '';
     }
 }

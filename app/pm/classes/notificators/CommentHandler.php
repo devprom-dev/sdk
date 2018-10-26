@@ -18,29 +18,6 @@ class CommentHandler extends EmailNotificatorHandler
 		return parent::getSubject( $subject, $commented_it, $commented_it, $action, $recipient );
 	}
 
-	function IsParticipantNotified( $participant_it )
-	{
-		return $participant_it->get('NotificationEmailType') != '';
-	}
-
-	function getParticipants($object_it, $prev_object_it, $action)
-    {
-        $result = array();
-
-        $anchor_it = $object_it->getAnchorIt();
-        if ( $anchor_it->getId() == '' ) return $result;
-
-        switch( $anchor_it->object->getClassName() )
-        {
-            case 'pm_ChangeRequest':
-            case 'pm_Task':
-            case 'pm_Question':
-                return $this->getProject($object_it)->getLeadIt()->idsToArray();
-        }
-
-        return $result;
-    }
-
     function getUsers( $object_it, $prev_object_it, $action )
 	{
 		$result = array();
@@ -52,12 +29,14 @@ class CommentHandler extends EmailNotificatorHandler
 		switch( $anchor_it->object->getClassName() )
 		{
 			case 'pm_ChangeRequest':
-			    $taskAssignee = getFactory()->getObject('Task')->getRegistry()->Query(
-			        array(
-			            new FilterAttributePredicate('ChangeRequest', $anchor_it->getId())
-                    )
-                )->fieldToArray('Assignee');
-			    $result = array_merge($result, $taskAssignee);
+                $result = array_merge($result,
+                    $taskAssignee = getFactory()->getObject('Task')->getRegistry()->Query(
+                        array(
+                            new FilterAttributePredicate('ChangeRequest', $anchor_it->getId())
+                        )
+                    )->fieldToArray('Assignee')
+                );
+			    break;
 
 			case 'pm_Question':
 				if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
@@ -73,6 +52,24 @@ class CommentHandler extends EmailNotificatorHandler
                 if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
                 break;
 		}
+
+        switch( $anchor_it->object->getClassName() )
+        {
+            case 'pm_ChangeRequest':
+            case 'pm_Task':
+            case 'pm_Question':
+                $leadIt = $this->getProject($anchor_it)->getLeadIt();
+                $result = array_merge($result,
+                    $leadIt->object->getRegistry()->Query(
+                        array(
+                            new FilterInPredicate($leadIt->idsToArray()),
+                            new FilterAttributePredicate('NotificationTrackingType', 'system')
+                        )
+                    )->fieldToArray('SystemUser')
+                );
+                break;
+        }
+
 		return array_merge(
 				$result, $object_it->getRollupIt()->fieldToArray('AuthorId')
 		);

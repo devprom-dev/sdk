@@ -139,7 +139,8 @@ class VersionTable extends PMPageTable
                     'milestones',
                     'tasksplanningboard',
                     'iterationplanningboard',
-                    'assignedtasks'
+                    'assignedtasks',
+                    'projects'
                 );
             default:
                 return parent::getFamilyModules($module);

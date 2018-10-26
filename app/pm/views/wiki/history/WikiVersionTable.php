@@ -57,7 +57,7 @@ class WikiVersionTable extends PMPageTable
         return array(
             array (
                 'url' => $this->getPageIt()->getHistoryUrl(),
-                'name' => text(2238)
+                'name' => text(824)
             )
         );
     }
@@ -81,9 +81,8 @@ class WikiVersionTable extends PMPageTable
         }
         else {
             $titleParms = array (
-                'navigation_title' => $this->getPageIt()->getDisplayName(),
                 'navigation_url' => $this->getPageIt()->getViewUrl(),
-                'title' => text(2235)
+                'title' => str_replace('%1', $this->getPageIt()->getDisplayName(), text(2235))
             );
         }
 		return array_merge(

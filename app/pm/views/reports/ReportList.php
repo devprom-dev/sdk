@@ -154,11 +154,6 @@ class ReportList extends PMPageList
 		}
 	}
 	
-	function IsNeedToDisplayNumber()
-	{
-		return false;
-	}
-	
 	protected function getFirstAreaIt()
 	{
 		if ( is_object($this->first_area_it) ) return $this->first_area_it;

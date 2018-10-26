@@ -21,7 +21,7 @@ public class KanbanTestsPage extends KanbanPageBase{
     @FindBy(xpath = "//a[@id='import']")
 	protected WebElement importReportsBtn;
     
-    @FindBy(xpath = ".//*[contains(text(),'Действия')]")
+    @FindBy(xpath = ".//*[contains(.,'Действия')]")
 	protected WebElement actionBtn;
     
     @FindBy(xpath = ".//*[@id='pm_TestSubmitBtn']")

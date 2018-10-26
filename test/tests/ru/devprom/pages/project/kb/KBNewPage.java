@@ -41,7 +41,6 @@ public class KBNewPage extends SDLCPojectPageBase {
 		nameEdit.clear();
 		nameEdit.sendKeys(kb.getName());
 		submitDialog(saveBtn);
-		
 		By titleLoc = By.xpath("//div[contains(@class,'table-master')]//tr[contains(@id,'knowledgebasedocumentlist')]//div[contains(@class,'wysiwyg-text') and contains(.,'" + kb.getName() + "')]");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(titleLoc));
 		kb.setId("K-" + driver.findElement(titleLoc).getAttribute("objectid"));

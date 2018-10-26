@@ -69,7 +69,7 @@ class PMWikiTable extends PMPageTable
 		$filters = array();
 
 		if ( $this->getObject()->IsStatable() ) {
-			$filters[] = new FilterStateMethod($this->getObject());
+			$filters[] = $this->buildFilterState();
 		}
 		$filters[] = $this->buildTagsFilter();
 		$filters[] = new FilterObjectMethod(
@@ -80,7 +80,7 @@ class PMWikiTable extends PMPageTable
 		return $filters;
 	}
 
-	function buildTagsFilter()
+    function buildTagsFilter()
     {
         $tag = getFactory()->getObject('WikiTag');
         $tag->addFilter( new WikiTagReferenceFilter($this->getObject()->getReferenceName()) );
@@ -119,7 +119,9 @@ class PMWikiTable extends PMPageTable
 		if ( $this->getObject()->IsStatable() ) {
 			$filters[] = new FilterStateTransitionMethod($this->getObject());
 		}
-        $filters[] = $this->buildCompareBaselineFilter();
+
+		$filter = $this->buildCompareBaselineFilter();
+		if ( is_object($filter) ) $filters[] = $filter;
 
 		return array_merge(
 			$this->getCommonFilters(),
@@ -239,11 +241,6 @@ class PMWikiTable extends PMPageTable
 		return $left_part.': '.$right_part;
 	}
 	
-	function IsNeedNavigator2() 
-	{
-		return false;
-	}
-	
 	function getViewFilter()
 	{
 		return new WikiFilterViewWebMethod();
@@ -252,18 +249,16 @@ class PMWikiTable extends PMPageTable
 	function buildFilterDocument()
 	{
 		$document_filter = new FilterObjectMethod(
-		    getFactory()->getObject('WikiDocument')->getRegistry()->Query(
+            getFactory()->getObject('WikiDocument')->getRegistry()->Query(
 		        array(
 		            new FilterAttributePredicate('ReferenceName', $this->getObject()->getReferenceName()),
                     new FilterVpdPredicate()
                 )
             ),
-            translate('Документ'), 'document'
+            $this->getObject()->getDocumentName(), 'document'
         );
 		$document_filter->setType( 'singlevalue' );
-		$document_filter->setUseUid( true );
 		$document_filter->setHasNone( false );
-		$document_filter->setIdFieldName('UID');
 		return $document_filter;
 	}
 
@@ -277,7 +272,7 @@ class PMWikiTable extends PMPageTable
 
 	function buildTypeFilter( $type_it )
 	{
-		$filter = new FilterObjectMethod( $type_it, translate('Тип'), 'type' );
+		$filter = new FilterObjectMethod( $type_it->object, translate('Тип'), 'type' );
 		$filter->setIdFieldName( 'ReferenceName' );
 		return $filter;
 	}

@@ -17,11 +17,7 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
     }
 
     function getLeftWorkAttribute() {
-	    return $this->left_work_attribute;
-	}
-	
-	function setLeftWorkAttribute( $attribute ) {
-	    $this->left_work_attribute = $attribute;
+	    return 'LeftWork';
 	}
 	
 	function IsAttributeVisible( $attribute )
@@ -29,9 +25,11 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
  		switch ( $attribute )
  		{
  			case 'LeftWork':
- 			    return $this->anchor_it->object->getAttributeType($this->getLeftWorkAttribute()) != ''
- 			    	&& getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
- 			    
+ 			    return getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
+
+            case 'Participant':
+                return getFactory()->getAccessPolicy()->can_modify_attribute(new Activity(), 'Participant');
+
  			default:
  				return parent::IsAttributeVisible( $attribute );
  		}
@@ -64,7 +62,10 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
 
 			case 'LeftWork':
 			    return $this->anchor_it->get($this->getLeftWorkAttribute());
-			    
+
+            case 'Participant':
+                return getSession()->getUserIt()->getId();
+
 			default:
 			    if ( $attr == $this->getAnchorField() ) {
 					return $this->anchor_it->getId();
@@ -72,8 +73,18 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
 				return parent::getFieldValue( $attr );
 		}
 	}
- 	
-	function getSaveCallback() {
+
+    function createField( $attr )
+    {
+        switch( $attr ) {
+            case 'Participant':
+                return new FieldParticipantDictionary();
+            default:
+                return parent::createField( $attr );
+        }
+    }
+
+    function getSaveCallback() {
 		return 'updateLeftWorkAttribute';
 	}
 	
@@ -93,12 +104,17 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
 		        break;
  		        
  			case 'Capacity':
-				echo '<div class="line">';
-					echo '<div class="line">';
+				echo '<div class="row-fluid formvalueholder formvalue-short">';
+					echo '<div>';
 						echo translate($this->object->getAttributeUserName('Capacity')).text(2191);
 					echo '</div>';
 					$script = "javascript: updateLeftWork($('#".$field_name."'), $('#".$this->getFieldName('LeftWork')."'));";
-					echo '<input type="text" class="spent-time input-block-level" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
+					echo '<input type="text" class="input-medium" id="'.$field_name.'" name="'.$field_name.'" default="'.$value.'" tabindex="'.$tabindex.'" onkeydown="'.$script.'" title="'.htmlentities($this->object->getAttributeDescription('Capacity')).'">';
+
+                    echo '<span class="auto-time-field">';
+                        echo '<span class="auto-time"> &nbsp; </span>';
+					    $this->drawAutoTimes();
+                    echo '</span>';
 				echo '</div>';
 				break;
  				
@@ -124,5 +140,27 @@ class SpentTimeFormEmbedded extends PMFormEmbedded
             $actions,
             parent::getActions($object_it, $item)
         );
+    }
+
+    function drawAutoTimes()
+    {
+        $intervals = array(
+            strval(5/60) => '', strval(10/60) => '', strval(20/60) => '', '1' => ''
+        );
+        $objectIt = $this->getAnchorIt();
+        if ( $objectIt->get('StateDurationRecent') > 0 ) {
+            $workHours = strval($objectIt->get('StateDurationRecent') - (24 - 8) * $objectIt->get('StateDaysRecent'));
+            $intervals[$workHours] = $objectIt->object->getAttributeUserName('StateDuration');
+        }
+
+        foreach( $intervals as $interval => $description ) {
+            $timePassed = getSession()->getLanguage()->getHoursWording($interval);
+            $class = $description != '' ? 'label-success' : 'label-warning';
+            echo '<span class="auto-time">';
+                echo '<a class="'.$class.' label" href="javascript: useAutoTime('.$this->getFormId().', \''.$timePassed.'\');" title="'.$description.'">';
+                    echo $timePassed;
+                echo '</a>';
+            echo '</span>';
+        }
     }
 }

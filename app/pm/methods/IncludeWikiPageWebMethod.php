@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH.'core/methods/ObjectCreateNewWebMethod.php';
 
 class IncludeWikiPageWebMethod extends ObjectCreateNewWebMethod
 {

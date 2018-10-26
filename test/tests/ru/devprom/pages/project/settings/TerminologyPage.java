@@ -18,7 +18,7 @@ public class TerminologyPage extends SDLCPojectPageBase {
 	@FindBy(id="filter-settings")
 	protected WebElement filterBtn;
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
 	@FindBy(xpath = "//input[@valueparm='searchsystem']")

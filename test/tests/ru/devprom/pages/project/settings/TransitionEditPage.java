@@ -23,16 +23,16 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 	@FindBy(id = "pm_TransitionIsReasonRequired")
 	protected WebElement reasonSelect;
 
-	@FindBy(xpath = "//input[@value='transitionattribute']/following-sibling::a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_TransitionAttributes']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement obligatoryFieldAddBtn;
 	
-	@FindBy(xpath = "//input[@value='transitionpredicate']/following-sibling::a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_TransitionPredicates']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement preconditionAddBtn;
 
-	@FindBy(xpath = "//input[@value='transitionrole']/following-sibling::a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_TransitionProjectRoles']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement projectRoleAddBtn;
 	
-	@FindBy(xpath = "//input[@value='transitionresetfield']/following-sibling::a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_TransitionResetFields']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement resetFieldAddBtn;
 	
 	public TransitionEditPage(WebDriver driver) {
@@ -84,7 +84,6 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 
 	public void addResetField(String field)
 	{
-		clickTab("additional");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(resetFieldAddBtn));
 		resetFieldAddBtn.click();
 		WebElement selectElem = driver
@@ -99,9 +98,9 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 	
 	
 	public TransitionEditPage removePrecondition(String precondition) {
-	WebElement deleteBtn = driver.findElement(By.xpath("//div[@id='fieldRowPredicates']//span[@id='pm_TransitionPredicates']//*[contains(@class,'title') and contains(text(),'"
+	WebElement deleteBtn = driver.findElement(By.xpath("//div[@id='fieldRowPredicates']//span[@name='pm_TransitionPredicates']//*[contains(@class,'title') and contains(.,'"
 	                   +precondition+"')]/following-sibling::ul/li[@uid='delete']/a"));
-		driver.findElement(By.xpath("//div[@id='fieldRowPredicates']//span[@id='pm_TransitionPredicates']//*[contains(@class,'title') and contains(text(),'" +precondition+"')]")).click();
+		driver.findElement(By.xpath("//div[@id='fieldRowPredicates']//span[@name='pm_TransitionPredicates']//*[contains(@class,'title') and contains(.,'" +precondition+"')]")).click();
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(deleteBtn));
 		deleteBtn.click();
 		return new TransitionEditPage(driver);
@@ -123,7 +122,7 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 	public List<String> getObligatoryFields(){
 		List<String> list = new ArrayList<String>();
 		
-		List<WebElement> elements = driver.findElements(By.xpath("//span[@id='pm_TransitionAttributes']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
+		List<WebElement> elements = driver.findElements(By.xpath("//span[@name='pm_TransitionAttributes']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
 		 for (WebElement el:elements){
 			 String[] items = el.getText().split("\\(");
 			 list.add(items[0].trim());
@@ -136,7 +135,7 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 	public List<String> getProjectRoles(){
 		List<String> list = new ArrayList<String>();
 		
-		List<WebElement> elements = driver.findElements(By.xpath("//span[@id='pm_TransitionProjectRoles']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
+		List<WebElement> elements = driver.findElements(By.xpath("//span[@name='pm_TransitionProjectRoles']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
 		 for (WebElement el:elements){
 			 list.add(el.getText().trim());
 		 }
@@ -147,10 +146,9 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 	
 	public List<String> getResetFields()
 	{
-		clickTab("additional");
 		List<String> list = new ArrayList<String>();
 		
-		List<WebElement> elements = driver.findElements(By.xpath("//span[@id='pm_TransitionResetFields']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
+		List<WebElement> elements = driver.findElements(By.xpath("//span[@name='pm_TransitionResetFields']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
 		 for (WebElement el:elements){
 			 list.add(el.getText().trim());
 		 }
@@ -161,7 +159,7 @@ public class TransitionEditPage extends SDLCPojectPageBase {
 	public List<String> getRemovePreconditions(){
 		List<String> list = new ArrayList<String>();
 		
-		List<WebElement> elements = driver.findElements(By.xpath("//span[@id='pm_TransitionPredicates']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
+		List<WebElement> elements = driver.findElements(By.xpath("//span[@name='pm_TransitionPredicates']//div[contains(@id,'Caption')]//*[contains(@class,'title')]"));
 		 for (WebElement el:elements){
 			 list.add(el.getText().trim());
 		 }

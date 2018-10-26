@@ -8,7 +8,6 @@ include "EmailNotificatorHandler.php";
 include "CommentHandler.php";
 include "ChangeRequestHandler.php";
 include "QuestionHandler.php";
-include "BlogPostHandler.php";
 include "TaskHandler.php";
 include "DigestHandler.php";
 
@@ -34,7 +33,6 @@ class EmailNotificator extends ObjectFactoryNotificator
             'Comment' => new CommentHandler(),
             'pm_ChangeRequest' => new ChangeRequestHandler(),
             'pm_Question' => new QuestionHandler(),
-            'BlogPost' => new BlogPostHandler(),
             'pm_Task' => new TaskHandler(),
             'ObjectChangeLog' => new DigestHandler()
         );
@@ -77,7 +75,7 @@ class EmailNotificator extends ObjectFactoryNotificator
 		$this->addRecipient(getSession()->getUserIt(), $self_emails);
 
 		$recipients = array_diff(
-            array_unique($this->getRecipientArray($object_it, $prev_object_it, $action, $usersToNotify)),
+            array_unique($this->getEmailRecipientArray($object_it, $prev_object_it, $action, $usersToNotify)),
             $self_emails
 		);
 
@@ -103,7 +101,21 @@ class EmailNotificator extends ObjectFactoryNotificator
 			$mail->appendAddress( $this->getAddress($recipient) );
 			$mail->setSubject( $this->getSubject( $object_it, $prev_object_it, $action, $recipient ) );
 	   		$mail->setBody($render_service->getContent($parms['template'], $parms));
-			
+
+	   		$attachments = array();
+	   		foreach( $object_it->object->getAttributesByGroup('email-attachments') as $attribute ) {
+	   		    if ( $object_it->get($attribute) == '' ) continue;
+	   		    $attachmentIt = $object_it->getRef($attribute);
+	   		    while( !$attachmentIt->end() ) {
+                    $attachments[] = array(
+                        'path' => $attachmentIt->getFilePath('File'),
+                        'title' => $attachmentIt->getFileName('File')
+                    );
+                    $attachmentIt->moveNext();
+                }
+            }
+            $mail->setAttachments($attachments);
+
 			$queues[] = $mail->send();
 		} 
 		
@@ -114,25 +126,16 @@ class EmailNotificator extends ObjectFactoryNotificator
     {
         $handler = $this->getHandler( $object_it );
 
-        $participants = array_filter(
-            $handler->getParticipants( $object_it, $prev_object_it, $action ), function($id) {
-                return is_numeric($id) && $id > 0;
-            }
-        );
-
         // include participants who wants to receive all notifications
         $participant = getFactory()->getObject('Participant');
         $participants =
-            array_merge(
-                $participants,
-                $participant->getRegistry()->Query(
-                    array(
-                        new ParticipantActivePredicate(),
-                        new FilterVpdPredicate(),
-                        new FilterHasNoAttributePredicate('NotificationTrackingType', 'system')
-                    )
-                )->idsToArray()
-            );
+            $participant->getRegistry()->Query(
+                array(
+                    new ParticipantActivePredicate(),
+                    new FilterVpdPredicate(),
+                    new FilterAttributePredicate('NotificationTrackingType', 'any-changes')
+                )
+            )->idsToArray();
 
         $self = getSession()->getUserIt()->getId();
         $users =
@@ -279,29 +282,23 @@ class EmailNotificator extends ObjectFactoryNotificator
 		}
 	}
 
-	protected function getRecipientArray( $object_it, $prev_object_it, $action, $usersToNotify )
+	protected function getEmailRecipientArray( $object_it, $prev_object_it, $action, $usersToNotify )
 	{
 		$project_it = getSession()->getProjectIt();
 
 		$handler = $this->getHandler( $object_it );
 
-		$participants = array_filter($handler->getParticipants( $object_it, $prev_object_it, $action ), function($id) {
-			return is_numeric($id) && $id > 0;
-		});
-
 		// include participants who wants to receive all notifications
         $participant = getFactory()->getObject('Participant');
         $participants =
-            array_merge(
-                $participants,
-                $participant->getRegistry()->Query(
-                        array(
-                            new ParticipantActivePredicate(),
-                            new FilterVpdPredicate(),
-                            new FilterHasNoAttributePredicate('NotificationTrackingType', 'system')
-                        )
-                    )->idsToArray()
-            );
+            $participant->getRegistry()->Query(
+                    array(
+                        new ParticipantActivePredicate(),
+                        new FilterVpdPredicate(),
+                        new FilterAttributePredicate('NotificationTrackingType', 'any-changes'),
+                        new FilterAttributeNotNullPredicate('NotificationEmailType')
+                    )
+                )->idsToArray();
 
         $users =
             array_merge(
@@ -311,15 +308,13 @@ class EmailNotificator extends ObjectFactoryNotificator
                 $usersToNotify
             );
 
-        // make email addresses
-		$emails = array();
-
 		// process users
 		$user = getFactory()->getObject('cms_User');
 		if ( count($users) > 0 ) {
 		    $systemuser_it = $user->getRegistry()->Query(
 				array (
 					new UserStatePredicate('nonblocked'),
+					new FilterAttributeNotNullPredicate('NotificationEmailType'),
 					new FilterInPredicate($users)
 				)
 			);
@@ -327,12 +322,21 @@ class EmailNotificator extends ObjectFactoryNotificator
 		else {
 		    $systemuser_it = $user->getEmptyIterator();
 		}
-		
+
+        // make email addresses
+        $emails = array();
+
 		while( !$systemuser_it->end() )
 		{
 			// check if user is a prticipant
-			$it = $project_it->getParticipantForUserIt( $systemuser_it );
-			if ( $it->count() < 1 && $systemuser_it->get('NotificationEmailType') != '' ) {
+			$it = $participant->getRegistry()->Query(
+                array(
+                    new ParticipantActivePredicate(),
+                    new FilterAttributePredicate('SystemUser', $systemuser_it->getId()),
+                    new FilterAttributePredicate('Project', $project_it->getId())
+                )
+            );
+			if ( $it->count() < 1 ) {
 				$this->addRecipient($systemuser_it, $emails);
 			}
 			else {
@@ -353,11 +357,11 @@ class EmailNotificator extends ObjectFactoryNotificator
 		else {
 		    $participant_it = $participant->getEmptyIterator();
 		}
-		
-		while( !$participant_it->end() )
+
+        while( !$participant_it->end() )
 		{
 			// exclude those who don't want to receive direct notifications
-			if ( !$handler->IsParticipantNotified($participant_it) ) {
+			if ( !$handler->IsParticipantNotified($participant_it) && !in_array($participant_it->get('SystemUser'), $usersToNotify) ) {
 				$this->info($participant_it->getDisplayName().' skipped as non notified');
 				$participant_it->moveNext();
 				continue;

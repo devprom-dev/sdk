@@ -1,8 +1,7 @@
 <?php
-
 include "TagList.php";
 
-class TagTable extends PMPageTable
+class TagTable extends SettingsTableBase
 {
 	function getList()
 	{

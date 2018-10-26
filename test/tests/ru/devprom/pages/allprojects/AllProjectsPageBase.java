@@ -22,15 +22,12 @@ public class AllProjectsPageBase extends PageBase {
 	@FindBy(xpath = "//ul/li/a[@id='menu-group-resources']")
 	protected WebElement resourcesMenusGroup;
 	
-	@FindBy(xpath = "//ul/li/a[@id='menu-group-reports']")
-	protected WebElement reportsMenusGroup;
-
 	public AllProjectsPageBase(WebDriver driver) {
 		super(driver);
 	}
 
 	public AllProjectsTimetableReportPage gotoTimetableReport(){
-		reportsMenusGroup.click();
+		resourcesMenusGroup.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(timeSpentLink));
 		timeSpentLink.click();
 		return new AllProjectsTimetableReportPage(driver);

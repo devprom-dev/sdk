@@ -4,6 +4,6 @@ class TransitionSourceStateSort extends SortClauseBase
 {
  	function clause()
  	{
- 		return " ".$this->getAlias().".SourceState ASC, ".$this->getAlias().".OrderNum ASC ";
+ 		return " ".$this->getAlias().".SourceState ASC ";
  	}
 }

@@ -3,12 +3,14 @@
 // PHPLOCKITOPT NOOBFUSCATE
 
 include_once SERVER_ROOT_PATH.'core/c_session.php';
+include_once SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include_once SERVER_ROOT_PATH."co/classes/ResourceBuilderCoLanguageFile.php";
 
 include SERVER_ROOT_PATH.'pm/classes/model/ModelFactoryProject.php';
 include SERVER_ROOT_PATH.'pm/classes/model/permissions/AccessPolicyProject.php';
 
 include SERVER_ROOT_PATH.'pm/classes/widgets/ModuleCategoryBuilderCommon.php';
+include SERVER_ROOT_PATH.'pm/classes/product/widgets/ModuleBuilderProduct.php';
 include SERVER_ROOT_PATH.'pm/classes/widgets/ObjectsListWidgetBuilderCommon.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceBuilder.php';
 include SERVER_ROOT_PATH.'pm/classes/common/PMContextResourceCustomReportsBuilder.php';
@@ -70,13 +72,13 @@ include SERVER_ROOT_PATH."pm/classes/tasks/events/TaskMetricsEventHandler.php";
 include SERVER_ROOT_PATH."pm/classes/plan/IterationMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/ReleaseMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/plan/MilestoneMetadataBuilder.php";
-include SERVER_ROOT_PATH."pm/classes/plan/events/ModifyIssuesVersionNumber.php";
 
 include SERVER_ROOT_PATH."pm/classes/product/FeatureMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/product/ProjectTemplateArtefactsBuilderProduct.php";
 include SERVER_ROOT_PATH."pm/classes/product/events/FeatureUpdateMetricsEventHandler.php";
 
 include SERVER_ROOT_PATH."pm/classes/common/HistoricalObjectsRegistryBuilderCommon.php";
+include SERVER_ROOT_PATH."pm/classes/comments/CommentMetadataBuilder.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderCommon.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateSectionsRegistryBuilderLatest.php";
 include SERVER_ROOT_PATH."pm/classes/project/ProjectTemplateArtefactsBuilderWorkItems.php";
@@ -179,7 +181,8 @@ class PMSession extends SessionBase
  	    return array_merge( 
  	            array (
  	            		new ResourceBuilderCoLanguageFile(),
- 	                    new CacheResetTrigger(),
+                        new PortfolioAllBuilder(),
+                        new CacheResetTrigger(),
                         new WorkflowMetadataBuilder(),
  	            		new WikiPageMetadataBuilder(),
  	                    new SharedObjectsCommonBuilder(),
@@ -219,11 +222,13 @@ class PMSession extends SessionBase
 						new QuestionMetadataBuilder(),
 						new ProjectArtifactMetadataBuilder(),
  	            		new IssueAutoActionMetadataBuilder(),
+ 	            		new CommentMetadataBuilder(),
  	            		
  	            		// widgets
  	            		new ModuleCategoryBuilderCommon(),
  	            		new BulkActionBuilderWorkflow(),
  	            		new ObjectsListWidgetBuilderCommon(),
+ 	            		new ModuleBuilderProduct(),
  	            		
  	            		// triggers
  	            		new WikiPageNewVersionTrigger(),
@@ -233,7 +238,6 @@ class PMSession extends SessionBase
  	            		new FeatureUpdateMetricsEventHandler(),
  	            		new RequestMetricsEventHandler(),
                         new TaskMetricsEventHandler(),
-						new ModifyIssuesVersionNumber(),
 						new RemoveObsoleteAttachmentsEventHandler(),
                         new MilestoneMetricsEventHandler(),
                         new ProjectPageModifyProjectTrigger(),
@@ -352,7 +356,7 @@ class PMSession extends SessionBase
                         'Project' => $this->project_it->getId(),
                         'IsActive' => 'Y',
                         'VPD' => $this->project_it->get('VPD'),
-                        'NotificationTrackingType' => 'system',
+                        'NotificationTrackingType' => 'personal',
                         'NotificationEmailType' => 'direct',
                         'ProjectRole' => join(',',$role_it->idsToArray()),
                         'ProjectRoleReferenceName' => join(',',$role_it->fieldToArray('ReferenceName')),

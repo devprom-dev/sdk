@@ -33,14 +33,14 @@ public class KanbanTasksPage extends KanbanPageBase {
 	
 	public KanbanTaskNewPage addNewTaskUserType(String taskType){
 		addBtn.click();
-		WebElement taskBtn = driver.findElement(By.xpath("//ul/li/a[contains(text(),'"+taskType+"')]"));
+		WebElement taskBtn = driver.findElement(By.xpath("//ul/li/a[contains(.,'"+taskType+"')]"));
 		clickOnInvisibleElement(taskBtn);
 		waitForDialog();		
 		return new KanbanTaskNewPage(driver);
 	}
 	
 	public boolean isTaskPresent(String id){
-		return driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row')]/td[@id='uid']/a[contains(text(),'["+ id + "]')]")).size()>0;
+		return driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row')]/td[@id='uid']/a[contains(.,'["+ id + "]')]")).size()>0;
 	}
 	
 	public KanbanTaskViewPage clickToTask(String id) {
@@ -68,7 +68,7 @@ public class KanbanTasksPage extends KanbanPageBase {
 	public List<String> getTemplatesList(){
 		List<String> results = new ArrayList<String>();
 		List<WebElement> we = driver.findElements(By.xpath("//div[@id='main']//div[@class='btn-group']"
-				+ "//a[contains(text(),'Добавить')]/following-sibling::ul/li[@class='divider']/following-sibling::li/a"));
+				+ "//a[contains(.,'Добавить')]/following-sibling::ul/li[@class='divider']/following-sibling::li/a"));
 	   for (WebElement el:we){
 		   results.add(el.getText());
 	   }

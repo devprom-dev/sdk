@@ -115,23 +115,26 @@ class MethodologyIterator extends OrderedIterator
                 {
                     if ( is_a($strategy, $this->get('RequestEstimationRequired')) )
                     {
+                        if ( $strategy instanceof EstimationNoneStrategy && $this->get('TaskEstimationUsed') == 'Y' ) {
+                            return new EstimationHoursStrategy();
+                        }
+
                         return $strategy;
                     }
                 }
             }
 	    }
-	    
 		return new EstimationNoneStrategy();
 	}
 	
 	function RequestEstimationUsed()
 	{
-		return !$this->getEstimationStrategy() instanceof EstimationNoneStrategy;
+		return $this->get('RequestEstimationRequired') != 'estimationnonestrategy';
 	}
 	
 	function TaskEstimationUsed()
 	{
-		return $this->HasTasks() && $this->get('TaskEstimationUsed') == 'Y';
+		return $this->get('TaskEstimationUsed') == 'Y';
 	}
 
 	function IsAgile() {

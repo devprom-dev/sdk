@@ -41,7 +41,6 @@ class VersionList extends PMPageList
 		return $object_it;
 	}
 	
-	function IsNeedToDisplayNumber( ) { return false; }
 	function IsNeedToDelete( ) { return false; }
 
 	function drawCell( $source_it, $attr )
@@ -69,13 +68,23 @@ class VersionList extends PMPageList
                     $class = getFactory()->getClass($class);
                     if ( $class == '' ) continue;
                     $ref_it = getFactory()->getObject($class)->getExact($id);
-					if ( $type != 'branch' ) $this->getUidService()->setBaseline($baseline);
+					if ( $type != 'branch' ) {
+					    $this->getUidService()->setBaseline($baseline);
+					    $baselineText = getFactory()->getObject('Snapshot')->getExact($baseline)->getDisplayName();
+                        $ref_it = $ref_it->object->createCachedIterator(
+                            array_map(function($row) use ($baselineText) {
+                                    $row['DocumentVersion'] = $baselineText;
+                                    return $row;
+                                }, $ref_it->getRowset()
+                            )
+                        );
+                    }
 					$text = $this->getUidService()->getUidIconGlobal($ref_it, false);
-                    $text .= '<span class="ref-name">'.$ref_it->getDisplayNameExt().'<br/></span>';
+                    $text .= '<span class="ref-name">'.$ref_it->getDisplayNameExt().'</span>';
                     $uids[] = $text;
 					$this->getUidService()->setBaseline('');
                 }
-                echo join(' ',$uids);
+                echo '<span class="tracing-ref"><span>'.join('</span><span>',$uids).'</span></span>';
                 return;
 
             case 'RecentComment':
@@ -87,17 +96,10 @@ class VersionList extends PMPageList
 		{
             $offset = '0px';
             echo '<div style="padding-left:'.$offset.';">';
-                $caption = $source_it->getHtmlDecoded('Caption');
-                if ( is_numeric($caption) ) $caption =  $source_it->getHtmlDecoded('CaptionType');
-                echo trim($source_it->getHtmlDecoded('CaptionPrefix').' '.$caption);
+                $caption = $source_it->get('Caption');
+                if ( is_numeric($caption) ) $caption =  $source_it->get('CaptionType');
+                echo trim($source_it->get('CaptionPrefix').' '.$caption);
             echo '</div>';
-		}
-		elseif ( $attr == 'Description' )
-		{
-			if ( $object_it->get('Description') != '' )
-			{
-				drawMore( $object_it, 'Description', 30 );
-			}
 		}
 		elseif ( $attr == 'VersionNumber' )
 		{
@@ -231,16 +233,13 @@ class VersionList extends PMPageList
 				    ));
 				}
 				
-	            $module_it = getFactory()->getObject('Module')->getExact('issues-backlog');
-	            
+	            $module_it = getFactory()->getObject('PMReport')->getExact('assignedtasks');
 	            if ( getFactory()->getAccessPolicy()->can_read($module_it) )
 	            {
 					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 	                
-				    $states = getFactory()->getObject('Request')->getNonTerminalStates();
-				    $info = $module_it->buildMenuItem('?release='.$it->getId().'&group=State&state='.join(',',$states));
-				    
-	                $actions[] = array( 
+				    $info = $module_it->buildMenuItem('issue-release='.$it->getId());
+	                $actions[] = array(
 	                    'url' => $info['url'],
 	                    'name' => translate('Бэклог релиза')
 	                );
@@ -270,19 +269,12 @@ class VersionList extends PMPageList
 					));
 				}
 
-                if ( $methodology_it->HasTasks() ) {
-                    $task_list_it = getFactory()->getObject('Module')->getExact('tasks-list');
-                    $states = getFactory()->getObject('Task')->getNonTerminalStates();
-                }
-                else {
-                    $task_list_it = getFactory()->getObject('Module')->getExact('issues-backlog');
-                    $states = getFactory()->getObject('Request')->getNonTerminalStates();
-                }
-
-	            if ( getFactory()->getAccessPolicy()->can_read($task_list_it) ) {
+                $task_list_it = getFactory()->getObject('PMReport')->getExact('assignedtasks');
+	            if ( getFactory()->getAccessPolicy()->can_read($task_list_it) )
+	            {
 					if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 	                
-				    $info = $task_list_it->buildMenuItem('?iteration='.$it->getId().'&group=State&state='.join(',',$states));
+				    $info = $task_list_it->buildMenuItem('iteration='.$it->getId());
 	                $actions[] = array(
 	                    'url' => $info['url'],
 	                    'name' => translate('Бэклог итерации')
@@ -308,22 +300,14 @@ class VersionList extends PMPageList
                     'name' => $method->getCaption()
                 );
             }
-            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
-            if ( $method->hasAccess() ) {
-                $actions[] = array (
-                    'name' => $method->getCaption(),
-                    'url' => $method->getJSCall(array('PlannedRelease' => $object_it->getId()))
-                );
-            }
+            $issueParms = array(
+                'PlannedRelease' => $object_it->getId()
+            );
         }
         if ( $object_it->object instanceof Iteration ) {
-            $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
-            if ( $method->hasAccess() ) {
-                $actions[] = array (
-                    'name' => $method->getCaption(),
-                    'url' => $method->getJSCall(array('Iteration' => $object_it->getId()))
-                );
-            }
+            $issueParms = array(
+                'Iteration' => $object_it->getId()
+            );
             if ( $methodology_it->HasTasks() ) {
                 $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Task'));
                 if ( $method->hasAccess() ) {
@@ -334,6 +318,26 @@ class VersionList extends PMPageList
                 }
             }
         }
+
+        $method = new ObjectCreateNewWebMethod($object_it->object->getAttributeObject('Issues'));
+        if ( $method->hasAccess() ) {
+            $typeIt = getFactory()->getObject('pm_IssueType')->getAll();
+            while( !$typeIt->end() ) {
+                $actions[] = array (
+                    'name' => $typeIt->getDisplayName(),
+                    'url' => $method->getJSCall(
+                        array_merge(
+                            $issueParms,
+                            array(
+                                'Type' => $typeIt->getId()
+                            )
+                        )
+                    )
+                );
+                $typeIt->moveNext();
+            }
+        }
+
         return $actions;
     }
 

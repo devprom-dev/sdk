@@ -1,7 +1,6 @@
 <?php
  
 include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorBase.php";
-include_once SERVER_ROOT_PATH."plugins/wrtfckeditor/views/fields/FieldWYSIWYGTempFile.php";
 include 'WrtfCKEditorWikiParser.php';
 include 'WrtfCKEditorPageParser.php';
 include 'WrtfCKEditorHtmlParser.php';
@@ -13,13 +12,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 	function __construct()
 	{
 		parent::__construct();
-		parent::setAttachmentsField( new FieldWYSIWYGTempFile() );
 		$this->setToolbar(self::ToolbarMini);
-	}
-
-	function setAttachmentsField($field)
-	{
-		// disallow change attachments field object
 	}
 
 	function hasInlineEditingCapabilities()
@@ -124,39 +117,7 @@ class WikiRtfCKEditor extends WikiEditorBase
  		$object_id = is_object($object_it) ? $object_it->getId() : '';
  			
  		$modify_url = getSession()->getApplicationUrl().'methods.php?method=modifyattributewebmethod';
- 		
- 		$attachment_field = $this->getAttachmentsField();
- 		
- 		if ( is_object($attachment_field) && !($this->getMode() & WIKI_MODE_INPLACE_INPUT) )
- 		{
- 		    $attachment_field->setReadonly( false );
- 		    
- 			$form = $attachment_field->getForm();
- 			
- 			$form->drawScripts();
- 			
- 			$form->setAddButtonText( translate('загрузить изображение') );
- 			
- 			ob_start();
- 			
- 			echo wordwrap(text(1281), 60, '<br/>');
- 			echo '<br/><br/>';
- 			
 
- 			$attachment_field->draw();
-
- 			echo '<br/><br/>';
- 			echo wordwrap(text(1282), 60, '<br/>');
- 			
- 			$attachments_html = ob_get_contents();
- 			
- 			ob_end_clean();
- 		}
- 		else
- 		{
- 			$attachments_html = '';
- 		}
- 		
 		?>
 		
 		<div class="editor-area">
@@ -182,7 +143,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 			<?php } elseif ( $this->getMode() & WIKI_MODE_INPLACE_INPUT ) { ?>
 			
 			<div class="wysiwyg-text wysiwyg-input <?=$this->getCssClassName()?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
-                <? echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); ?>
+                <? echo $content; ?>
             </div>
 			
 			<?php } else { ?>

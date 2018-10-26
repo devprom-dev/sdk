@@ -19,7 +19,7 @@ public class BlogTest extends ProjectTestBase {
 
 	/**The method creates new Blog Post and then verify it.
 	 * Additionally it logs all the existed blogposts data*/
-	@Test
+	@Test(enabled=false)
 	public void testCreateBlogPost() {
 		
 		PageBase page = new PageBase(driver);

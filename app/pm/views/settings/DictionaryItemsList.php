@@ -2,7 +2,18 @@
 
 class DictionaryItemsList extends PMPageList
 {
-	function IsNeedToDisplayLinks( ) { return false; }
+    function extendModel()
+    {
+        parent::extendModel();
+
+        switch ( $this->object->getClassName() ) {
+            case 'pm_IssueType':
+                $this->object->setRegistry( new ObjectRegistrySQL($this->object) );
+                break;
+        }
+    }
+
+    function IsNeedToDisplayLinks( ) { return false; }
 	
 	function IsNeedToDisplay( $attr ) 
 	{

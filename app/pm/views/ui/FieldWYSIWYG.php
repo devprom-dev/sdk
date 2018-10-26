@@ -1,8 +1,5 @@
 <?php
-define( 'REGEX_SHRINK', '/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]_]+[_\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im');
-
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
-include "FieldWYSIWYGFile.php";
 
 class FieldWYSIWYG extends Field
 {
@@ -86,11 +83,6 @@ class FieldWYSIWYG extends Field
 	    return $this->editor->getMode();
 	}
 	
-	function setAttachmentsField( $field)
-	{
-		$this->attachments_field = $field;
-	}
-	
 	function setHasBorder( $border )
 	{
 		$this->has_border = $border;
@@ -150,16 +142,17 @@ class FieldWYSIWYG extends Field
             );
         }
 
-    	$content = preg_replace_callback(REGEX_SHRINK, array($this, 'shrinkLongUrl'), $content);
+    	$content = preg_replace_callback(TextUtils::REGEX_SHRINK, array(TextUtils::class, 'shrinkLongUrl'), $content);
+        $content = preg_replace_callback(TextUtils::REGEX_SHARE, array(TextUtils::class, 'shrinkLongShare'), $content);
 		$content = TextUtils::breakLongWords($content);
 
-		return TextUtils::getValidHtml($content);
+		return $content;
 	}
 	
 	function drawReadonly()
 	{
 		echo '<div id="'.$this->getId().'" class="reset '.($this->getMode() & WIKI_MODE_INPLACE_INPUT ? 'wysiwyg-input' : 'wysiwyg').'" attributename="'.$this->getName().'" name="'.$this->getName().'">';
-		    echo $this->getText();
+		    echo $this->getMode() & WIKI_MODE_INPLACE_INPUT ? $this->getValue() : $this->getText();
 		echo '</div>';
 	}
 	
@@ -184,12 +177,6 @@ class FieldWYSIWYG extends Field
 				$object = $editor->getObject();
 				$this->object_it = $object->getEmptyIterator();
 			}
-			
-			$field = is_object($this->attachments_field)
-				? $this->attachments_field : new FieldWYSIWYGFile( $this->object_it );
-
-			$field->setEditMode( $this->getEditMode() );
-			$editor->setAttachmentsField( $field );
 		}
 		
 		$editor->setFieldId( $this->getId().abs(crc32(microtime())) );
@@ -208,17 +195,5 @@ class FieldWYSIWYG extends Field
 
 	function shrinkLongUrl( $match )
 	{
-		$context = $match[1].$match[5];
-		if ( $context == '=""' || $context == '="">' ) return $match[0];
-
-		$display_name = trim($match[2], "\.\,\;\:");
-
-		$shrink_length = 80;
-		if ( strlen($display_name) > $shrink_length )
-		{
-			$display_name = substr($display_name, 0, $shrink_length/2).'[...]'.
-				substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
-		}
-		return $match[1].$display_name.$match[5];
 	}
 }

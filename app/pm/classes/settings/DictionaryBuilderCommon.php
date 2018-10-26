@@ -14,7 +14,9 @@ class DictionaryBuilderCommon extends DictionaryBuilder
  		$methodology_it = $this->session->getProjectIt()->getMethodologyIt();
 		
  		$registry->addEntity( getFactory()->getObject('PMCustomAttribute') );
- 		$registry->addEntity( getFactory()->getObject('pm_IssueType') );
+ 		$registry->addEntity( getFactory()->getObject('RequestType'),
+            $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ? text(2672) : ''
+        );
  		$registry->addEntity( getFactory()->getObject('RequestTemplate') );
         $registry->addEntity( getFactory()->getObject('TextTemplate') );
         $registry->addEntity( getFactory()->getObject('ExportTemplate') );

@@ -34,10 +34,10 @@ class BulkActionBuilderCommon extends BulkActionBuilder
 		foreach ( $object->getAttributes() as $key => $attribute )
 		{
 			if ( in_array($key, $system_attributes) ) continue;
+            if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object,$key) ) continue;
 			if ( !in_array($key, $bulk_attributes) ) {
 				if ( in_array($object->getAttributeType($key), $system_types) ) continue;
 				if ( !$object->IsAttributeStored($key) ) continue;
-                if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object,$key) ) continue;
 			}
 			$registry->addModifyAction( translate($object->getAttributeUserName($key)), $key );
 		}

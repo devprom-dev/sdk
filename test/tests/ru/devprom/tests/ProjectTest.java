@@ -60,7 +60,7 @@ public class ProjectTest extends ProjectTestBase {
 		Template SDLC = new Template(
 				this.waterfallTemplateName);
 		String p = DataProviders.getUniqueString();
-		this.myTestProject = new Project("MyP1" + p, "MyP1" + p, SDLC);
+		this.myTestProject = new Project("MyP1" + p, "MyP1" + DataProviders.getUniqueStringAlphaNum(), SDLC);
 		ProjectPageBase sdlcFirstPage = (ProjectPageBase) npp
 				.createNew(myTestProject);
 		FILELOG.debug("Created new project " + myTestProject.getName());
@@ -103,7 +103,7 @@ public class ProjectTest extends ProjectTestBase {
 		ProjectMembersPage pmp =  ((SDLCPojectPageBase) ulp.gotoProject(myTestProject)).gotoMembers();
 		pmp = pmp.gotoAddMember().addUserToProject(member,"Тестировщик", 2, "Дайджест об изменениях в проекте: ежедневно");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
-				.presenceOfElementLocated(By.xpath("//tr[contains(@id,'participantlist1_row')]/td[@id='caption' and contains(text(),'"+member.getUsername()+"')]")));
+				.presenceOfElementLocated(By.xpath("//tr[contains(@id,'participantlist1_row')]/td[@id='caption' and contains(.,'"+member.getUsername()+"')]")));
 	}
 	
 	@Test (priority = 10, description="S-1878")
@@ -111,9 +111,9 @@ public class ProjectTest extends ProjectTestBase {
 		String p = DataProviders.getUniqueString();
 		Template SDLC = new Template(
 				this.waterfallTemplateName);
-		Template myTemplate = new Template("MyTemplate"+p, "Template for test", "template"+p, Lang.russian);
-		Project projectSource = new Project("MyP1" + p, "MyP1" + p, SDLC);
-		Project projectTarget = new Project("MyP2" + p, "MyP2" + p, myTemplate);		
+		Template myTemplate = new Template("MyTemplate"+p, "Template for test", "template"+DataProviders.getUniqueStringAlphaNum(), Lang.russian);
+		Project projectSource = new Project("MyP1" + p, "MyP1" + DataProviders.getUniqueStringAlphaNum(), SDLC);
+		Project projectTarget = new Project("MyP2" + p, "MyP2" + DataProviders.getUniqueStringAlphaNum(), myTemplate);		
 		
 		ProjectNewPage npp = (new PageBase(driver)).createNewProject();
 		SDLCPojectPageBase favspage = (SDLCPojectPageBase) npp.createNew(projectSource);
@@ -149,7 +149,7 @@ public class ProjectTest extends ProjectTestBase {
 	public void rolesAndPermissions(String projectType, String role, String requestType, String requestsReport, String authorAttribute) {
 	
 		String p = DataProviders.getUniqueString();
-		Project	project = new Project("TestProject" + p, "testproject" + p,
+		Project	project = new Project("TestProject" + p, "testproject" + DataProviders.getUniqueStringAlphaNum(),
 				new Template(projectType));
 		
 		    LoginPage lp = (new PageBase(driver)).logOut();
@@ -165,34 +165,34 @@ public class ProjectTest extends ProjectTestBase {
 		    pp.selectRole(role);
 		    pp.setRight("Настройки: Атрибуты", "none");
 			pp.setRight("Бэклог", "none");
-			pp.setRight("Вопрос", "none");
+			pp.setRight("Обсуждение", "none");
 			pp.setRight(authorAttribute, "view");
 			
 			ProjectMembersPage pmp  = pp.gotoMembers();
 			pmp = pmp.assignRole(testUser.getUsernameLong(), role);
-			
-			Assert.assertTrue(new ProjectPageBase(driver).isReportAccessible("stg", "", "Атрибуты"), "Недоступен отчет Атрибуты");	
-			Assert.assertTrue(new ProjectPageBase(driver).isReportAccessible("reqs", "menu-folder-features", "Бэклог"), "Недоступен отчет Баклог");
+			Assert.assertTrue(new ProjectPageBase(driver).isReportAccessible("reqs", "", "Бэклог"), "Недоступен отчет Баклог");
+			pmp.gotoSettingsPage();
+			Assert.assertTrue(new ProjectPageBase(driver).isSettingAccessible("dicts-pmcustomattribute"), "Недоступен отчет Атрибуты");	
 			
 			MenuCustomizationPage mcp = new SDLCPojectPageBase(driver).gotoMenuFavsCustomization();
-			mcp.searchMenuItem("Вопросы");
+			mcp.searchMenuItem("Обсуждения");
 			if (projectType.equals("Scrum")){
-			mcp.addFilteredMenuItem("Вопросы", "Бэклог");
+			mcp.addFilteredMenuItem("Обсуждения", "Бэклог");
 			mcp.saveChanges();
 			mcp.close();
-			new ProjectPageBase(driver).gotoCustomReport("favs", "menu-folder-settings", "Вопросы");
+			new ProjectPageBase(driver).gotoCustomReport("favs", "menu-folder-settings", "Обсуждения");
 			}
 			else {
-			mcp.addFilteredMenuItem("Вопросы", "Бэклог");
+			mcp.addFilteredMenuItem("Обсуждения", "Бэклог");
 			mcp.saveChanges();
 			mcp.close();
-			new ProjectPageBase(driver).gotoCustomReport("favs", "", "Вопросы");
+			new ProjectPageBase(driver).gotoCustomReport("favs", "", "Обсуждения");
 			}
 			QuestionsPage qp = new QuestionsPage(driver);
 			QuestionNewPage qnp = qp.addNewQuestion();
 			qp = qnp.createNewQuestion("Новый вопрос");
 			
-			pp.gotoCustomReport("reqs", "menu-folder-features", "Бэклог");
+			pp.gotoCustomReport("reqs", "", "Бэклог");
 			RequestsPage rp = new RequestsPage(driver);
 			RequestNewPage rnp = rp.clickNewRequestUserType(requestType);
 			Request request = new Request("TestRequest" + p);
@@ -216,16 +216,16 @@ public class ProjectTest extends ProjectTestBase {
 			
 			lp = (new PageBase(driver)).logOut();
 			fp = lp.loginAs(testuser.getUsername(), testuser.getPass());
-			fp.gotoProject(project);
-			
-			Assert.assertFalse(new ProjectPageBase(driver).isReportAccessible("stg", "", "Атрибуты"), "Ошибочно доступен отчет Атрибуты");	
-			Assert.assertFalse(new ProjectPageBase(driver).isReportAccessible("reqs", "menu-folder-features", "Бэклог"), "Ошибочно доступен отчет Баклог");
-			
+			ProjectPageBase ppb = (ProjectPageBase) fp.gotoProject(project);
+			Assert.assertFalse(new ProjectPageBase(driver).isReportAccessible("reqs", "", "Бэклог"), "Ошибочно доступен отчет Баклог");
+			ppb.gotoSettingsPage();
+			Assert.assertFalse(new ProjectPageBase(driver).isSettingAccessible("dicts-pmcustomattribute"), "Ошибочно доступен отчет Атрибуты");	
+
 			mcp = new SDLCPojectPageBase(driver).gotoMenuFavsCustomization();
-		    Assert.assertFalse(mcp.isItemExists("Вопросы"), "Ошибочно доступен отчет Вопросы");
+		    Assert.assertFalse(mcp.isItemExists("Обсуждения"), "Ошибочно доступен отчет Обсуждения");
 			mcp.close();
 			
-			new ProjectPageBase(driver).gotoCustomReport("reqs", "menu-folder-features", requestsReport);
+			new ProjectPageBase(driver).gotoCustomReport("reqs", "", requestsReport);
 			
 			rvp = new RequestsBoardPage(driver).clickToRequest(request.getId());
 			rep = rvp.gotoEditRequest();
@@ -237,7 +237,7 @@ public class ProjectTest extends ProjectTestBase {
 	public void blockMember() {
 		 String p = DataProviders.getUniqueString();
 	       User member = new User("m"+p, true); 
-     	   Project sdlcProject= new Project("sdlcProject"+p, "sdlcproject"+p,
+     	   Project sdlcProject= new Project("sdlcProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),
 					new Template(this.waterfallTemplateName));
      	   Request request = new Request("Доработка"+p, "", "Высокий", 10.0, "Доработка");
      	    RTask task = new RTask("Задача-1", member.getUsernameLong(), "Разработка", 6.0);

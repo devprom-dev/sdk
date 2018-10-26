@@ -28,7 +28,7 @@ class ExecuteAutoCompleteWebMethod extends AutocompleteWebMethod
  					array (
  							is_numeric($default_value)
  									? new FilterInPredicate($default_value)
- 									: new FilterAttributePredicate('Caption', $default_value)
+ 									: new FilterTextExactPredicate('Caption', $default_value)
  					)
  			);
 

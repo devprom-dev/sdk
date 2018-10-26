@@ -9,10 +9,9 @@ class UpdateTable extends StaticPageTable
 		return new UpdateList( $this->object );
 	}
 
-	function getCaption() 
-	{
-		return '';
-	}
+    function getCaption() {
+        return translate('Обновления');
+    }
 
 	function drawFilter()
 	{

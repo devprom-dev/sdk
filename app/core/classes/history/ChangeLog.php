@@ -30,6 +30,7 @@ class ChangeLog extends Metaobject
  		$this->setSortDefault( array(
  		    new SortAttributeClause('RecordCreated.D')
  		));
+        $this->addAttributeGroup('UserName', 'system');
  	}
  	
  	function createIterator() 
@@ -56,10 +57,6 @@ class ChangeLog extends Metaobject
 	}
 
 	function IsDeletedCascade($object) {
-		return false;
-	}
-
-	function IsUpdatedCascade($object) {
 		return false;
 	}
 

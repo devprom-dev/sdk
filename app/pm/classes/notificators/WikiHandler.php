@@ -6,18 +6,11 @@ include_once "EmailNotificatorHandler.php";
 
 class WikiHandler extends EmailNotificatorHandler
 {
-	function getParticipants( $object_it, $prev_object_it, $action ) 
+	function getUsers( $object_it, $prev_object_it, $action )
 	{
-		// notify author of wiki page
 		$result = array(
-				$object_it->get('Author')
-		);
-		return $result;
-	}	
- 	
-	function getUsers( $object_it, $prev_object_it, $action ) 
-	{
-		$result = array();
+            $object_it->get('Author')
+        );
 
 		// notify assignee and owners of tasks and issues related to wiki page
 		if ( $object_it->get('Tasks') != '' ) {

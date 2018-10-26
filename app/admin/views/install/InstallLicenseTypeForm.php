@@ -125,7 +125,8 @@ class InstallLicenseTypeForm extends AjaxForm
 		}
 	    
 	    return array_merge( parent::getRenderParms($view), array (
-	        'warning' => $message        
+	        'warning' => $message,
+            'actions_on_top' => false
 	    ));
 	}
 }

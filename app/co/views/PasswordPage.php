@@ -37,4 +37,14 @@ class ResetPasswordPage extends CoPage
  			exit(header('Location: /404'));
  		}
  	}
+
+    function getFullPageRenderParms()
+    {
+        return array_merge(
+            parent::getFullPageRenderParms(),
+            array(
+                'inside' => false
+            )
+        );
+    }
 }

@@ -1,6 +1,5 @@
 <?php
 include_once SERVER_ROOT_PATH . "core/classes/project/PortfolioBuilder.php";
-include_once SERVER_ROOT_PATH . "core/classes/SessionPortfolioAllProjects.php";
 
 class PortfolioAllBuilder extends PortfolioBuilder
 {
@@ -32,9 +31,7 @@ class PortfolioAllBuilder extends PortfolioBuilder
             	'RelatedProject' => join(',',$project_ids),
                 'WikiEditorClass' => 'WikiRtfCKEditor'
             ),
-            function( $portfolio_it ) {
-                return new SessionPortfolioAllProjects($portfolio_it);
-            }
+            'SessionPortfolioAllProjects'
         );
     }
 }

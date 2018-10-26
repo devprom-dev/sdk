@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."pm/methods/DuplicateIssuesWebMethod.php";
 
 class RequestFormDuplicate extends RequestForm
 {

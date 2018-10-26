@@ -15,7 +15,7 @@ class ModelValidatorObligatory extends ModelValidatorInstance
 	{
         $attributes = $this->attributes;
 	    if ( count($attributes) < 1 ) {
-            foreach( array_keys($object->getAttributesSorted()) as $attribute ) {
+            foreach( array_keys($object->getAttributes()) as $attribute ) {
                 if (!$object->IsAttributeStored($attribute)) continue;
                 $attributes[] = $attribute;
             }

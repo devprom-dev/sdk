@@ -15,11 +15,9 @@ class UserIterator extends OrderedIterator
  			case 'Skills':
  			case 'Tools':
  			case 'HourCost':
- 				
  			    $it = $this->getProjectParticipanceRoleIt();
- 				
  			    return $it->get( $attribute );
- 				
+
  			default:
 	 			return parent::get( $attribute );
  		}
@@ -149,4 +147,25 @@ class UserIterator extends OrderedIterator
 				array ( new FilterAttributePredicate('SystemUser', $this->getId()) )
 		);
 	}
+
+	function getRestrictions()
+    {
+        $restrictions = array();
+        $permissions = TextUtils::parseItems($this->get('IsReadonly'));
+
+        $permissionIt = $this->object->getAttributeObject('IsReadonly')->getAll();
+        while( !$permissionIt->end() ) {
+            if ( $permissionIt->get('IsGlobal') == 'Y' ) {
+                $permissionIt->moveNext();
+                continue;
+            }
+            if ( $this->get('IsReadonly') == 'Y' || !in_array($permissionIt->getId(), $permissions) || $permissionIt->getLeftLicenses() < 0 ) {
+                $restrictions = array_merge(
+                    $restrictions, TextUtils::parseItems($permissionIt->get('ReferenceName'))
+                );
+            }
+            $permissionIt->moveNext();
+        }
+ 	    return $restrictions;
+    }
 }

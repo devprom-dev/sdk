@@ -14,7 +14,6 @@ class BackupList extends PageList
 	}
 	
 	function IsNeedToDisplayLinks( ) { return false; }
-	function IsNeedToDisplayNumber( ) { return false; }
 
 	function getColumns()
 	{
@@ -48,7 +47,9 @@ class BackupList extends PageList
 
 			case 'Description':
 				$this->backup_it->moveTo('BackupFileName', $object_it->get('Caption'));
-				if( $this->backup_it->get('BackupFileName') == $object_it->get('Caption') ) drawMore($this->backup_it, 'Caption', 12); 
+				if( $this->backup_it->get('BackupFileName') == $object_it->get('Caption') ) {
+				    parent::drawCell( $object_it, 'Caption' );
+                }
 				break;
 				
 			case 'Size':
@@ -63,7 +64,7 @@ class BackupList extends PageList
 		array_push( $actions, array() );
 		
 		array_push( $actions, array (
-			'url' => '?export=download&backup_file_name='.$object_it->get('Caption'),
+			'url' => '?export=download&backup_file_name='.$object_it->getId(),
 			'name' => translate('Скачать'),
 			'uid' => 'download'
 		));

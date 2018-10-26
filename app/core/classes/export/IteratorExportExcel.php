@@ -162,72 +162,53 @@ class IteratorExportExcel extends IteratorExport
         {
             case 'UID':
                 $uid = new ObjectUID;
-                return array( $uid->getObjectUid( $iterator->getCurrentIt() ), PHPExcel_Cell_DataType::TYPE_STRING );
+                return array(
+                    $iterator->object->IsAttributeStored($key)
+                        ? $iterator->get($key)
+                        : $uid->getObjectUid( $iterator->getCurrentIt() ),
+                    PHPExcel_Cell_DataType::TYPE_STRING
+                );
 
             case 'StateDuration':
             case 'LeadTime':
                 return array($iterator->get($key), PHPExcel_Cell_DataType::TYPE_NUMERIC);
         }
 
- 		if ( !$iterator->object->IsReference( $key ) )
- 		{
-	 		switch ( strtolower($type) )
-	 		{
-	 			case 'integer':
-	 			case 'float':
-	 				$value = $this->get( $key );
-	 				$type = PHPExcel_Cell_DataType::TYPE_NUMERIC;
-	 				break;
-                case 'date':
-	 				$type = "Date";
-                    $value = strtotime(SystemDateTime::convertToClientTime($iterator->get($key)));
-	 				break;
-                case 'datetime':
-                    $type = "DateTime";
-                    $value = strtotime(SystemDateTime::convertToClientTime($iterator->get($key)));
-                    break;
-	 		}
- 		}
-
- 		if ( $value == '' )
- 		{
- 		    $value = $this->get($key);
- 		    
- 		    if ( is_array($value) ) {
- 		        $self = $this;
- 		        $value = join(chr(10), array_map(
- 		            function($value) use($self) {
- 		                return $self->decode($value);
-                    }, $value)
-                );
-            }
-            else {
-                $value = $this->decode($value);
-            }
- 		    
- 			if ( is_numeric($value) ) {
-		 		$type = PHPExcel_Cell_DataType::TYPE_NUMERIC;
- 			}
- 			else {
-		 		$value = TextUtils::getXmlString($value);
-		 		$type = PHPExcel_Cell_DataType::TYPE_STRING;
- 			}
- 		}
- 		
+        switch ( strtolower($type) )
+        {
+            case 'integer':
+            case 'float':
+                $value = $this->get( $key );
+                $type = PHPExcel_Cell_DataType::TYPE_NUMERIC;
+                break;
+            case 'date':
+                $type = "Date";
+                $value = strtotime(SystemDateTime::convertToClientTime($iterator->get($key)));
+                break;
+            case 'datetime':
+                $type = "DateTime";
+                $value = strtotime(SystemDateTime::convertToClientTime($iterator->get($key)));
+                break;
+            default:
+                $value = $this->get($key);
+                if ( is_array($value) ) {
+                    $self = $this;
+                    $value = join(chr(10), array_map(
+                            function($value) use($self) {
+                                return $value;
+                            }, $value)
+                    );
+                }
+                if ( is_numeric($value) ) {
+                    $type = PHPExcel_Cell_DataType::TYPE_NUMERIC;
+                }
+                else {
+                    $type = PHPExcel_Cell_DataType::TYPE_STRING;
+                }
+        }
  		return array( $value, $type );
  	}
 
- 	function convert ( $attributes )
- 	{
-		$tags = array_keys($attributes);
-        $result = '';
-
-		for ( $i = 0; $i < count($tags); $i++ ) {
-			$result .= '<'.$tags[$i].'>'.$attributes[$tags[$i]].'</'.$tags[$i].'>';
-		}
-		return $result;
- 	}
- 	
  	function export()
  	{
 	 	header("Expires: Thu, 1 Jan 1970 00:00:00 GMT"); // Date in the past

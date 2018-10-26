@@ -2,8 +2,18 @@
 
 class FeatureIterator extends OrderedIterator
 {
-	function getDisplayName() {
-		return $this->get('CaptionAndType') != '' ? $this->get('CaptionAndType') : parent::getDisplayName();
+	function getDisplayName()
+    {
+        $title = $this->get('CaptionAndType') != '' ? $this->get('CaptionAndType') : parent::getDisplayName();
+
+        if ( $this->get('TagNames') != '' ) {
+            $tags = array_map(function($value) {
+                return ' <span class="label label-info label-tag">'.$value.'</span> ';
+            }, preg_split('/,/', $this->get('TagNames')));
+            $title .= join('',$tags);
+        }
+
+        return $title;
 	}
 
 	function getDisplayNameExt($prefix = '')
@@ -17,7 +27,13 @@ class FeatureIterator extends OrderedIterator
                 $title = '<span class="label label-warning">'.$this->get('ImportanceName').'</span> ';
             }
         }
-        return $title.parent::getDisplayNameExt($prefix);
+
+        if ( $this->get('RootCaption') != '' ) {
+            $prefix .= $this->getHtmlDecoded('RootCaption') . ' / ';
+        }
+
+        $title .= parent::getDisplayNameExt($prefix);
+        return $title;
     }
 
     function getParentsArray()

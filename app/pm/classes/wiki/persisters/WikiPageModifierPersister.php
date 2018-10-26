@@ -2,6 +2,10 @@
 
 class WikiPageModifierPersister extends ObjectSQLPersister
 {
+    function getAttributes() {
+        return array('Modifier');
+    }
+
     function getSelectColumns( $alias )
  	{
  		$objectPK = $this->getPK($alias);

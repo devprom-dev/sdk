@@ -25,4 +25,12 @@ class WorkItemIterator extends StatableIterator
 
         return $title;
     }
+
+    function getObjectIt()
+    {
+        $data = $this->getData();
+        $object = getFactory()->getObject($this->get('ObjectClass'));
+        $data[$object->getIdAttribute()] = $this->getId();
+        return $object->createCachedIterator(array($data));
+    }
 }

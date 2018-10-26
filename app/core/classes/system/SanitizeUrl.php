@@ -4,10 +4,13 @@ class SanitizeUrl
 {
 	private static $applications = array('admin', 'api', 'cache', 'co', 'core', 'file', 'images', 'plugins', 'pm', 'tasks');
 	
-	static public function parseUrl( $url )
-	{
-		return strip_tags(html_entity_decode(urldecode($url)));
+	static public function parseUrl( $url ) {
+		return preg_replace("/[']/", '', strip_tags(html_entity_decode(urldecode($url))));
 	}
+
+	static public function parseScript( $script ) {
+        return preg_replace("/['\"]/", '', $script);
+    }
 
 	static public function parseSystemUrl( $url )
 	{ 

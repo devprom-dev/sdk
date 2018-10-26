@@ -48,7 +48,7 @@ public class BlogPage extends SDLCPojectPageBase {
 	
 	public Blogpost readPostByName(String name){
 		Blogpost post;
-		WebElement postRoot = driver.findElement(By.xpath("//div[contains(@id,'BlogPostCaption') and contains(text(),'"+name+"')]/../.."));
+		WebElement postRoot = driver.findElement(By.xpath("//div[contains(@id,'BlogPostCaption') and contains(.,'"+name+"')]/../.."));
 		String id = postRoot.findElement(By.xpath("./div/a")).getText();
 		id = id.substring(1, id.length()-1);
 		String content = postRoot.findElement(By.xpath("./following-sibling::div[contains(@id,'BlogPostContent')]")).getText();

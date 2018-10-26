@@ -1,7 +1,7 @@
 <?php
 include "IntegrationList.php";
 
-class IntegrationTable extends PMPageTable
+class IntegrationTable extends SettingsTableBase
 {
     function getList() {
         return new IntegrationList( $this->getObject() );

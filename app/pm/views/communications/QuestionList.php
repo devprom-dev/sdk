@@ -30,18 +30,6 @@ class QuestionList extends PMPageList
 		}
 	}
 
-	function drawCell( $object_it, $attr )
-	{
-		switch ( $attr )
-		{
-			case 'Content':
-			    drawMore($object_it, 'Content', 20);
-			    break;
-			default:
-				parent::drawCell( $object_it, $attr );
-		}			
-	}
-	
  	function getColumnWidth( $attr )
  	{
  		switch ( $attr )

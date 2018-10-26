@@ -53,7 +53,8 @@ class StateMetaRegistry extends ObjectRegistrySQL
                     ),
                     'Caption' => translate('Добавлено'),
                     'QueueLength' => $queueLengths['initial'],
-                    'IsTerminal' => 'N'
+                    'IsTerminal' => 'N',
+                    'Description' => text(2638)
                 ),
                 array (
                     'pm_StateId' => 2,
@@ -63,7 +64,8 @@ class StateMetaRegistry extends ObjectRegistrySQL
                     ),
                     'Caption' => translate('В работе'),
                     'QueueLength' => $queueLengths['progress'],
-                    'IsTerminal' => 'I'
+                    'IsTerminal' => 'I',
+                    'Description' => text(2639)
                 ),
                 array (
                     'pm_StateId' => 3,
@@ -73,7 +75,8 @@ class StateMetaRegistry extends ObjectRegistrySQL
                     ),
                     'Caption' => translate('Выполнено'),
                     'QueueLength' => $queueLengths['final'],
-                    'IsTerminal' => 'Y'
+                    'IsTerminal' => 'Y',
+                    'Description' => text(2640)
                 )
             )
 		);

@@ -26,6 +26,15 @@ class Activity extends Metaobject
         foreach( array_keys($this->getAttributes()) as $attribute ) {
             $this->addAttributeGroup($attribute, 'nonbulk');
         }
+
+        $permission_attributes = array(
+            'Capacity',
+            'Participant',
+            'Caption'
+        );
+        foreach ( $permission_attributes as $attribute ) {
+            $this->addAttributeGroup($attribute, 'permissions');
+        }
     }
  	
  	function createIterator() 

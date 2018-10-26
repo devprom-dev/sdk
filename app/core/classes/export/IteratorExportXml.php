@@ -35,7 +35,7 @@ class IteratorExportXml extends IteratorExport
  					    $value = $this->get($key);
  					    if ( is_array($value) ) $value = join(PHP_EOL, $value);
  					    
- 						$text = TextUtils::getXmlString($this->decode($value));
+ 						$text = TextUtils::getXmlString($value);
  				}
  				$result .= '<'.$key.'>'.$text.'</'.$key.'>';
  			}

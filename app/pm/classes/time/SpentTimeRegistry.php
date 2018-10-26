@@ -76,6 +76,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 			   "  WHERE 1 = 1 ".$this->getFilterPredicate('t2').
 			   "	AND t2.".$row_field." = t.".$row_object->getIdAttribute();
 
+        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
 		$activity_it = parent::createSQLIterator($sql);
 
 		$rows = array();
@@ -87,12 +88,13 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 					+= $activity_it->get('Capacity');
             $rows[$activity_it->get($group_field)][$activity_it->get($row_field)]['Comment'.$activity_it->get('Day')][] =
                 array (
-                    'Task' => $activity_it->get('Task'),
+                    'Task' => $methodologyIt->HasTasks() ? $activity_it->get('Task') : '',
+                    'Issue' => $activity_it->get('ChangeRequest'),
                     'Text' => $activity_it->get('Description') != ''
-                                ? $activity_it->getHtmlDecoded('Description')
+                                ? $activity_it->get('Description')
                                 : ($activity_it->get('TaskCaption') != ''
-                                        ? $activity_it->getHtmlDecoded('TaskCaption')
-                                        : $activity_it->getHtmlDecoded('RequestCaption'))
+                                        ? $activity_it->get('TaskCaption')
+                                        : $activity_it->get('RequestCaption'))
                 );
 			$groups[$activity_it->get($group_field)]['Day'.$activity_it->get('Day')] += $activity_it->get('Capacity');
 			$activity_it->moveNext();

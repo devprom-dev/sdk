@@ -45,7 +45,7 @@ class BackupAndRecoveryStrategy
  		{
 			$this->writeLog("Backup: make directory ".$sql_path);
  			
-			mkdir($sql_path);
+			mkdir($sql_path, 0700, true);
  		}
 		
 		if ( defined('MYSQL_BACKUP_COMMAND') )
@@ -155,7 +155,7 @@ class BackupAndRecoveryStrategy
  		{
  			$this->writeLog("Backup: make directory ".SERVER_BACKUP_PATH);
  			 		
- 			mkdir(SERVER_BACKUP_PATH);
+ 			mkdir(SERVER_BACKUP_PATH, 0700, true);
  		}
 
 		// soruce files backup
@@ -165,7 +165,7 @@ class BackupAndRecoveryStrategy
 		{
 			$this->writeLog("Backup: make directory ".$htdocs_backup_path);
 			 			
-			mkdir($htdocs_backup_path);
+			mkdir($htdocs_backup_path, 0700, true);
 		}
 
 		$this->writeLog("Backup: start copying application");
@@ -192,7 +192,7 @@ class BackupAndRecoveryStrategy
 		{
 			$this->writeLog("Backup: make directory ".$files_backup_path);
 			
-			mkdir($files_backup_path);
+			mkdir($files_backup_path, 0700, true);
 		}
 		
 		$this->writeLog("Backup: start copying files");
@@ -248,7 +248,7 @@ class BackupAndRecoveryStrategy
 		
 		// files backup destination
 		$files_backup_path = SERVER_BACKUP_PATH.
-			$parts['basename'].'/';
+			preg_replace('/\.zip/i', '', $parts['basename']).'/';
 		
 		$this->full_copy( $files_backup_path, SERVER_FILES_PATH, false );
  	}
@@ -455,40 +455,42 @@ class BackupAndRecoveryStrategy
  	    if ( realpath($source_path) == realpath(CACHE_PATH) || realpath($source_path) == realpath(SERVER_ROOT_PATH.'cache') )
  	    {
  	    	$this->writeLog('skip cache directory: '.$source_path);
- 	        
  	        return;
  	    }
- 	    
-        if (is_dir($source_path)) {
-           if ($dh = opendir($source_path)) {
-               while (($file = readdir($dh)) !== false ) {
-                   if( $file != "." && $file != ".." )
+
+        $this->writeLog('Copying: '.$source_path);
+
+        if ($dh = opendir($source_path)) {
+           while (($file = readdir($dh)) !== false ) {
+               if( $file != "." && $file != ".." )
+               {
+                   if( is_dir( $source_path . $file ) )
                    {
-                       if( is_dir( $source_path . $file ) )
-                       {
-                       		$result = !is_dir($destination_path . $file) ?
-                       			mkdir($destination_path . $file) : true;
+                        $result = !is_dir($destination_path . $file) ?
+                            mkdir($destination_path . $file) : true;
 
-                       		if ( !$result )
-                       		{
-                       			$this->writeLog('Failed mkdir: '.var_export(error_get_last(), true));
-                       		}
-                       		
-                           	$this->full_copy( $source_path . $file . "/", $destination_path . $file . "/" );
-                       }
-                       else
-                       {
-                            $result = copy($source_path.$file, $destination_path.$file);
+                        if ( !$result )
+                        {
+                            $this->writeLog('Failed mkdir: '.var_export(error_get_last(), true));
+                        }
 
-                            if ( !$result )
-                            {
-                            	$this->writeLog('Failed copying: '.var_export(error_get_last(), true));
-                            }
-                       }
+                        $this->full_copy( $source_path . $file . "/", $destination_path . $file . "/" );
+                   }
+                   else
+                   {
+                        $result = copy($source_path.$file, $destination_path.$file);
+
+                        if ( !$result )
+                        {
+                            $this->writeLog('Failed copying: '.var_export(error_get_last(), true));
+                        }
                    }
                }
-               closedir($dh);
            }
+           closedir($dh);
+       }
+       else {
+           $this->writeLog('Failed open dir: '.$source_path.', '.var_export(error_get_last(), true));
        }
  	}
 

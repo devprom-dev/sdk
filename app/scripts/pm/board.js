@@ -83,7 +83,6 @@ var draggableOptions = {
 				'object': item.attr("object"),
 				'class': this.className
 			};
-			var url = '';
 
 			if( parseInt(cell.attr("order")) >= 0 )
 			{
@@ -93,22 +92,32 @@ var draggableOptions = {
 				if ( parseInt(item.attr("order")) != tobe_seq ) {
 					dataObject.attribute = 'OrderNum';
 					dataObject.value = Math.max(0, parseInt(tobe_seq) - 1);
-					url = controllerUrl+'methods.php?method=modifyattributewebmethod';
 				}
 			}
 
+
 			if( jQuery.trim(item.attr("group")) != jQuery.trim(cell.attr("group")) )
 			{
-				dataObject.attribute = this.groupAttribute;
-				dataObject.value = jQuery.trim(cell.attr("group"));
-				url = controllerUrl+'methods.php?method=modifyattributewebmethod';
+                if ( this.groupAttribute == "State" ) {
+                    dataObject.attribute = this.boardAttribute;
+                    dataObject.value = jQuery.trim(cell.attr("more"));
+                    dataObject.source = jQuery.trim(item.attr("group"));
+                    dataObject.target = jQuery.trim(cell.attr("group"));
+                }
+                else {
+                    dataObject.attribute = this.groupAttribute;
+                    dataObject.value = jQuery.trim(cell.attr("group"));
+                    url = controllerUrl + 'methods.php?method=modifyattributewebmethod';
+                    if ( this.boardAttribute != '' ) {
+                        dataObject.parms = {};
+                        dataObject.parms[this.boardAttribute] = jQuery.trim(cell.attr("more"));
+                    }
+                }
 			}
 
 			if( jQuery.trim(item.attr("more")) != jQuery.trim(cell.attr("more")) )
 			{
-				controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
 				if ( this.boardAttribute == "State" ) {
-					url = controllerUrl+'methods.php?method=modifystatewebmethod';
 					dataObject.source = jQuery.trim(item.attr("more"));
 					dataObject.target = jQuery.trim(cell.attr("more"));
 					if ( this.groupAttribute != '' ) {
@@ -126,9 +135,19 @@ var draggableOptions = {
 					}
 				}
 			}
-			if ( url != '' ) {
+
+            var url = '';
+            controllerUrl = cell.is('[project]') ? '/pm/'+cell.attr('project')+'/' : controllerUrl;
+			if ( dataObject.source ) {
+                url = controllerUrl+'methods.php?method=modifystatewebmethod';
+			}
+			else if ( dataObject.attribute ) {
+                url = controllerUrl+'methods.php?method=modifyattributewebmethod';
+			}
+            if ( url != '' ) {
 				methods.push({url: url, data: dataObject});
 			}
+
 			return methods;
 		},
 		afterItemModified: function( item, options )
@@ -377,6 +396,7 @@ function boardMake( options )
 			$(this).parents('tr').next().find('td:eq('+index+').cell-add-btn a').attr('style','');
 		}
 	);
+    adjustContainerHeight();
 }
 
 function processBoardActions( methods, item, options )
@@ -437,7 +457,13 @@ function processActionResult( result, item, options )
 			$('#modal-form').dialog({
 				width: 450,
 				modal: true,
-				buttons: { "Ok": function() { $(this).dialog("close"); } }
+                closeText: "",
+				buttons: [
+					{
+						id: "buttonOk",
+						text: "Ok",
+						click: function() { $(this).dialog("close"); } }
+					]
 			});
 			
 			redrawBoardItem( item, options );
@@ -451,12 +477,11 @@ function processActionResult( result, item, options )
 				async: true,
 				cache: false,
 				success: 
-					function(result) {
-						$('#modal-form').parent().detach();
+					function(result)
+					{
+                        workflowCloseDialog($('#modal-form'));
 						$('body').append( '<div id="modal-form" style="display:none;">'+
 							result+'</div>' );
-						
-						completeUIExt($('#modal-form'));
 						
 						$('#modal-form').attr('title', options.transitionTitle);
 						window.onbeforeunload = null;
@@ -466,13 +491,14 @@ function processActionResult( result, item, options )
 								? $(window).width() * 0.9
 								: getDialogWidth()),
 							modal: true,
+                            closeText: "",
 							open: function()
 							{
 								workflowMakeupDialog();
 							},
 							create: function() 
 							{
-								workflowBuildDialog($(this),{});
+								workflowBuildDialog($(this),options);
 						        $(this).css("maxHeight", $(window).height() - 200);        
 						    },
 							beforeClose: function(event, ui) 
@@ -519,7 +545,7 @@ function processActionResult( result, item, options )
 															.removeClass("ui-state-disabled");
 
 														$('.form_warning').remove();
-														$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id]'));
+														$('<div class="alert alert-error form_warning">'+warning.html()+'</div>').insertBefore($('#modal-form form[id][class_name]'));
 													}
 												}
 											},
@@ -553,8 +579,6 @@ function initializeBoardItem( items, options )
 	boardMake( options );
 
 	completeUIExt(items);
-	
-	toggleBulkActions();
 	
 	options.initializeBoardItemCustom( items, options );
 }
@@ -625,6 +649,7 @@ function createBoardItem( query_string, options, data, callback )
 					modal: true,
 					height: 'auto',
 					resizable: false,
+                    closeText: "",
 					open: function()
 					{
 						workflowMakeupDialog();
@@ -669,7 +694,7 @@ function createBoardItem( query_string, options, data, callback )
 													.find('.ui-button').attr('disabled', false).removeClass("ui-state-disabled");
 
 												$('.form_warning').remove();
-												$('<div class="alert alert-error form_warning">' + warning.html() + '</div>').insertBefore($('form[id]'));
+												$('<div class="alert alert-error form_warning">' + warning.html() + '</div>').insertBefore($('form[id][class_name]'));
 											}
 										}
 									},
@@ -834,8 +859,8 @@ function redrawBoardChanges( options )
 
 function updateBoardHeaders( result, options )
 {
-	result.find('.board-table th').each( function(index, value) {
-		$('.board-table th:eq('+index+')').html($(this).html());
+	result.find('.board-table th .brd-head-menu').each( function(index, value) {
+		$('.board-table th:eq('+index+') .brd-head-menu').html($(this).html());
 	});
 	result.find('.board-table tr.info[group-id]').each( function(index, value) {
 		$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());

@@ -7,10 +7,8 @@ class FunctionalAreaCommonBuilder extends FunctionalAreaBuilder
 {
     public function build( FunctionalAreaRegistry & $set )
     {
-        $set->addArea( FUNC_AREA_FAVORITES );
-         
-        $set->addArea( FUNC_AREA_MANAGEMENT );
-
-        $set->addArea( FunctionalAreaMenuSettingsBuilder::AREA_UID, array(), 'icon-wrench', 9999 );
+        $set->addArea( FUNC_AREA_FAVORITES, array(), 'icon-favorites' );
+        $set->addArea( FUNC_AREA_MANAGEMENT, array(), 'icon-management'  );
+        $set->addArea( FunctionalAreaMenuSettingsBuilder::AREA_UID, array(), 'icon-settings', 9999 );
     }
 }

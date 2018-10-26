@@ -6,12 +6,12 @@ class BlogPostFileIterator extends OrderedIterator
     {
         if ( $this->IsImage('File'))
         {
-            return '<a class="image_attach" href="'.$this->getFileUrl().'&.png" name="'.$this->getFileName('Content').'" ' .
+            return '<a class="image_attach" data-fancybox="gallery" href="'.$this->getFileUrl().'&.png" name="'.$this->getFileName('Content').'" ' .
                     'title="'.$this->get('Description').'"><img src="/images/image.png" style="margin-bottom:-4px;"> '.$this->getFileName('Content').'</a>';
         }
         else
         {
-            return '<a class="" href="'.$this->getFileUrl().'" name="'.$this->getFileName('Content').'" ' .
+            return '<a href="'.$this->getFileUrl().'" name="'.$this->getFileName('Content').'" ' .
                     'title="'.$this->get('Description').'"><img src="/images/attach.png" style="margin-bottom:-4px;"> '.$this->getFileName('Content').'</a>';
         }
     }

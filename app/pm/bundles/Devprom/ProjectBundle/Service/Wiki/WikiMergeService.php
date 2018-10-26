@@ -76,4 +76,39 @@ class WikiMergeService
             $traceIt->moveNext();
         }
     }
+
+    function mergePage( $pageIt, $parentIt, $traceClassName )
+    {
+        $data = array_merge(
+            array_map( function($value) {
+                return \TextUtils::decodeHtml($value);
+            }, $pageIt->getData()),
+            array(
+                'StateObject' => '',
+                'ParentPage' => $parentIt->getId(),
+                'DocumentId' => $parentIt->get('DocumentId'),
+                'DocumentVersion' => $parentIt->get('DocumentVersion'),
+                'SortIndex' => '',
+                'ParentPath' => ''
+            )
+        );
+        unset($data['WikiPageId']);
+        $newPageIt = $parentIt->object->getRegistry()->Create($data);
+
+        $traceClass = getFactory()->getClass($traceClassName);
+        if ( class_exists($traceClass) ) {
+            getFactory()->getObject($traceClass)->getRegistry()->Merge(
+                array(
+                    'SourcePage' => $newPageIt->getId(),
+                    'TargetPage' => $pageIt->getId(),
+                    'Type' => 'branch'
+                ),
+                array(
+                    'SourcePage', 'TargetPage'
+                )
+            );
+        }
+
+        return $newPageIt;
+    }
 }

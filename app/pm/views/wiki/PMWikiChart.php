@@ -2,7 +2,13 @@
 
 class PMWikiChart extends PMPageChart
 {
- 	function getGroupDefault()
+    function buildIterator()
+    {
+        $this->getObject()->setRegistry( new WikiPageRegistryContent($this->getObject()) );
+        return parent::buildIterator();
+    }
+
+    function getGroupDefault()
  	{
  		return 'State';
  	}

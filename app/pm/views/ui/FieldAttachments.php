@@ -5,9 +5,9 @@ include_once "FormAttachmentEmbedded.php";
 class FieldAttachments extends FieldForm
 {
  	var $object_it, $attachments, $caution, $anchor_field;
- 	private $image_class = 'image_attach';
 	private $object = null;
 	private $addButtonText = '';
+	private $appendButtonTemplate = 'pm/AttachmentsAppendButton.php';
  	
  	function FieldAttachments( $object_it = null, $writable = true, $caution = true )
  	{
@@ -24,88 +24,106 @@ class FieldAttachments extends FieldForm
  		
  		// reports the caution message that form values may be lost
  		$this->caution = $caution;
- 		
+ 		$this->addButtonText = translate('добавить');
  		$this->anchor_field = 'ObjectId';
  	}
- 	
- 	function getAttachments()
+
+ 	function setButtonTemplate( $templatePath ) {
+ 	    $this->appendButtonTemplate = $templatePath;
+    }
+
+ 	function getAttachmentIt()
  	{
- 	    if ( is_object($this->attachments) ) return $this->attachments;
  		if ( is_object($this->object_it) ) {
 			$this->attachments = getFactory()->getObject('pm_Attachment');
 			$this->attachments->addFilter( new AttachmentObjectPredicate($this->object_it) );
  		    $this->attachments->setVpdContext($this->object_it);
-
+            return $this->attachments->getAll();
  		}
  		else {
- 		    $this->attachments = getFactory()->getObject('pm_Attachment');
- 		    $this->attachments->addFilter( new AttachmentObjectPredicate(0) );
+ 		    return getFactory()->getObject('pm_Attachment')->getEmptyIterator();
  		}
- 		return $this->attachments;
  	}
  	
- 	function setAttachments( $attachments )
- 	{
- 		$this->attachments = $attachments;
- 	}
-
- 	function setImageClass( $class_name )
- 	{
- 		$this->image_class = $class_name;
- 	}
-
 	function setAddButtonText( $text ) {
 		$this->addButtonText = $text;
 	}
 	
- 	function getObjectIt()
- 	{
+ 	function getObjectIt() {
  		return $this->object_it;
  	}
 
-	function getObject()
-	{
+	function getObject() {
 		return $this->object;
 	}
  	
  	function draw( $view = null )
 	{
 		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
-			$this->drawBody();
+			$this->render($view);
 		echo '</div>';
-	}
-	
-	function getForm()
-	{
- 		$form = new FormAttachmentEmbedded( $this->getAttachments(), $this->anchor_field );
- 		
- 		$form->setImageClass( $this->image_class );
- 		$form->setAnchorIt( $this->getObjectIt() );
-		if ( $this->addButtonText != '' ) {
-			$form->setAddButtonText($this->addButtonText);
-		}
-
- 		return $form;
 	}
 	
  	function render( $view )
 	{
-	    $this->drawBody( $view );    
+        echo '<div class="attachment-items">';
+	        $attachmentIt = $this->getAttachmentIt();
+            while( !$attachmentIt->end() )
+            {
+                $actions = array();
+
+                if ( !$this->readOnly() && getFactory()->getAccessPolicy()->can_delete($attachmentIt) ) {
+                    if ( $this->getEditMode() ) {
+                        $actions['delete'] = array(
+                            'name' => translate('Удалить'),
+                            'uid' => 'delete',
+                            'url' => "javascript: filesFormDelete(".$attachmentIt->getId().", '".get_class($attachmentIt->object)."');"
+                        );
+                    }
+                    else {
+                        $method = new DeleteObjectWebMethod($attachmentIt);
+                        $actions['delete'] = array(
+                            'name' => translate('Удалить'),
+                            'uid' => 'delete',
+                            'url' => $method->getJSCall()
+                        );
+                    }
+                }
+
+                echo $view->render('core/EmbeddedRowAttachmentMenu.php', array (
+                    'title' => $attachmentIt->getFileLink(),
+                    'info' => $attachmentIt->getFileInfo(),
+                    'id' => $attachmentIt->getId(),
+                    'class' => get_class($attachmentIt->object),
+                    'items' => $actions,
+                    'position' => 'last'
+                ));
+
+                $attachmentIt->moveNext();
+            }
+         echo '</div>';
+
+        if ( $this->readOnly() ) return;
+
+        if ( is_object($this->object_it) ) {
+            $objectid = $this->object_it->getId();
+            $objectclass = get_class($this->object);
+        }
+        else {
+            $objectclass = get_class($this->object);
+        }
+
+        echo $view->render($this->appendButtonTemplate, array(
+            'title' => $this->addButtonText,
+            'action' => $this->getEditMode() ? '' : 'refresh',
+            'objectid' => $this->getEditMode() ? '' : $objectid,
+            'objectclass' => $objectclass,
+            'attachmentClass' => get_class($attachmentIt->object),
+            'count' => $attachmentIt->count()
+        ));
 	}
-	
-	function drawBody( $view = null )
-	{
-		$form = $this->getForm();
 
-		$object_it = $this->getObjectIt();
- 		if ( is_object($object_it) ) {
- 			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
- 		}
-
- 		$form->setReadonly( $this->readOnly() );
- 		$form->setTabIndex( $this->getTabIndex() );
- 		$form->setFormId( 1000 + $form->getFormId() );
-
- 		$form->draw( $view );
-	}
+    function getCssClass() {
+        return 'file-drop-target';
+    }
 }

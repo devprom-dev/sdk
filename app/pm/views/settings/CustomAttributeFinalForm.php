@@ -68,8 +68,7 @@ class CustomAttributeFinalForm extends PMPageForm
 		}
 
 		// check for db-column correctness
-		if ( !preg_match("/^[a-zA-Z][a-zA-Z0-9\_]+$/i", $_REQUEST['ReferenceName']) )
-		{
+		if ( !\TextUtils::checkDatabaseColumnName($_REQUEST['ReferenceName']) ) {
 			return text(1126);
 		}
 		
@@ -188,11 +187,8 @@ class CustomAttributeFinalForm extends PMPageForm
 	
 	function createField( $attr_name ) 
 	{
-		global $model_factory;
-		
 		$field = parent::createField( $attr_name );
-		$object = $this->getObject();
-		
+
 		switch( $attr_name )
 		{
 			case 'EntityReferenceName':
@@ -206,10 +202,10 @@ class CustomAttributeFinalForm extends PMPageForm
 				$field->setReadonly(true);
 				$type = new CustomAttributeType();
 				$type_it = $type->getExact($this->getFieldValue('AttributeType'));
-				if ( $type_it->get('ReferenceName') == 'reference' ) {
+				$className = getFactory()->getClass($this->getFieldValue('AttributeTypeClassName'));
+				if ( $type_it->get('ReferenceName') == 'reference' && class_exists($className) ) {
 					$field->setText(
-                        $type_it->getDisplayName().': '.
-                            getFactory()->getObject($this->getFieldValue('AttributeTypeClassName'))->getDisplayName()
+                        $type_it->getDisplayName().': '.getFactory()->getObject($className)->getDisplayName()
 					);
 				}
 				else {
@@ -220,7 +216,7 @@ class CustomAttributeFinalForm extends PMPageForm
 			case 'OrderNum':
 				$object_it = $this->getObjectIt();
 				if ( !is_object($object_it) ) {
-					$ref = $model_factory->getObject( $this->getFieldValue('EntityReferenceName') );
+					$ref = getFactory()->getObject( $this->getFieldValue('EntityReferenceName') );
 					$field->setValue( $ref->getLatestOrderNum() + 10 );
 				}
 				break;
@@ -267,4 +263,10 @@ class CustomAttributeFinalForm extends PMPageForm
 				return parent::getFieldDescription( $attr );
 		}
 	}
+
+	function redirectOnAdded($object_it, $redirect_url = '')
+    {
+        $redirect_url = $this->getObject()->getPage();
+        parent::redirectOnAdded($object_it, $redirect_url);
+    }
 }

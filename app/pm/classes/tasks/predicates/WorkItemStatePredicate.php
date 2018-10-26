@@ -15,8 +15,19 @@ class WorkItemStatePredicate extends FilterPredicate
             $values[] = $map[$value];
         }
 
-		if ( count($values) > 0 ) {
-			return " AND ".$this->getAlias().".IsTerminal IN ('".join($values,"','")."')";
+        $predicates = array();
+        if ( in_array('N', $values) ) {
+            $predicates[] = $this->getAlias().".StateObject IS NULL AND ".$this->getAlias().".FinishDate IS NULL";
+        }
+        if ( in_array('I', $values) ) {
+            $predicates[] = $this->getAlias().".FinishDate IS NULL";
+        }
+        if ( in_array('Y', $values) ) {
+            $predicates[] = $this->getAlias().".FinishDate IS NOT NULL";
+        }
+
+		if ( count($predicates) > 0 ) {
+			return " AND (".join(" OR ", $predicates).")";
 		}
 		else {
 			return " AND 1 = 2 ";

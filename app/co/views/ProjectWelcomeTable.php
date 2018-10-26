@@ -86,12 +86,13 @@ class ProjectWelcomeTable extends CoPageTable
             }
 
     		$tiles[] = array (
-    				'kind' => $total_it->get('Kind'),
-    				'name' => $total_it->getHtml('Caption'),
-    				'description' => $total_it->getHtml('Description'),
-    				'id' => $idQuery,
-    				'active' => $active,
-    				'url' => $urls[$total_it->get('FileName')]
+                'kind' => $total_it->get('Kind'),
+                'name' => $total_it->getHtml('Caption'),
+                'description' => $total_it->getHtml('Description'),
+                'id' => $idQuery,
+                'active' => $active,
+                'url' => $urls[$total_it->get('FileName')],
+                'file' => $total_it->get('FileName')
     		);
     		
     		$total_it->moveNext();

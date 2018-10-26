@@ -18,7 +18,25 @@ class RequestIterator extends StatableIterator
             $prefix .= $this->getDateFormatShort('DeliveryDate');
             $prefix .= '</span> ';
         }
+
+        $displayAttributes = array();
+        foreach( $this->object->getAttributesByGroup('display-name') as $attribute ) {
+            if ( $this->get($attribute) == '' ) continue;
+            if ( in_array($attribute, array('Estimation', 'TasksPlanned')) ) {
+                $displayAttributes[] = '<span class="label label-success">'.
+                    $this->getRef('Project')->getMethodologyIt()->getEstimationStrategy()->getDimensionText($this->get($attribute)).
+                    '</span>';
+            }
+            else {
+                $displayAttributes[] = '['.$this->get($attribute).']';
+            }
+        }
+        if ( count($displayAttributes) > 0 ) {
+            $prefix = $prefix . join(' ', $displayAttributes) . ' ';
+        }
+
         $title = parent::getDisplayNameExt($prefix);
+
         if ( $this->get('ClosedInVersion') != '' ) {
             $title = ' <span class="badge badge-uid badge-inverse">'.$this->get('ClosedInVersion').'</span> ' . $title;
         }
@@ -41,11 +59,6 @@ class RequestIterator extends StatableIterator
         return $this->get('TypeName') != '' ? $this->get('TypeName') : parent::getObjectDisplayName();
     }
 
- 	function IsResolved()
- 	{
- 		return $this->get_native('State') == 'resolved';
- 	}
-
  	function IsFinished() {
  		return $this->get('StateTerminal') == 'Y';
  	}
@@ -60,7 +73,7 @@ class RequestIterator extends StatableIterator
 		$result = array();
 		$items = preg_split('/,/', $this->get('LinksWithTypes'));
 		foreach( $items as $item ) {
-			list($title, $id, $link_type, $state, $blocked) = preg_split('/:/', $item);
+			list($title, $id, $link_type) = preg_split('/:/', $item);
 			if ( $link_type == 'implemented' ) {
 				$result[] = $id;
 			}
@@ -114,50 +127,41 @@ class RequestIterator extends StatableIterator
 
  	function getProgress()
  	{
- 		global $model_factory;
- 		
- 		$task = $model_factory->getObject('pm_Task');
- 		$types_map = $task->getTypesMap();
- 		
  		$ids = array();
- 		while ( !$this->end() )
- 		{
+ 		while ( !$this->end() ) {
  			array_push($ids, $this->getId());
  			$this->moveNext();
  		}
- 		
- 		if ( count($ids) < 1 )
- 		{
- 			array_push($ids, 0);
- 		}
- 		
-		$sql = " SELECT COUNT(o.ChangeRequest) Total, SUM(o.Resolved) Resolved, o.Kind " .
-			   "  FROM ( SELECT t.ChangeRequest, (CASE t.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved, " .
-			   		   "		CASE t.TaskType " .
-			   		   "			WHEN '".$types_map['support']."' THEN 'D'" .
-			   		   "		 	WHEN '".$types_map['development']."' THEN 'D'" .
-			   		   "		 	WHEN '".$types_map['analysis']."' THEN 'A'" .
-			   		   "		 	WHEN '".$types_map['design']."' THEN 'A'" .
-			   		   "		 	WHEN '".$types_map['documenting']."' THEN 'H'" .
-			   		   "		 	WHEN '".$types_map['testing']."' THEN 'T'" .
-			   		   " 		END Kind " .
-		 			   "   FROM pm_Task t" .
-		 			   "  UNION ".
-		 		       " SELECT r.pm_ChangeRequestId, CASE r.State WHEN 'resolved' THEN 1 ELSE 0 END Resolved, 'R' Kind " .
-		 			   "   FROM pm_ChangeRequest r ) o " .
-			   " WHERE o.ChangeRequest IN (".join(',', $ids).")" .
-			   " GROUP BY o.Kind ";
+ 		if ( count($ids) < 1 ) {
+ 		    return array(
+ 		        'R' => array(0, 0)
+            );
+        }
 
- 		$it = $this->object->createSQLIterator( $sql );
- 		$result = array();
- 		
- 		while ( !$it->end() )
- 		{
- 			$result[$it->get('Kind')] = array( $it->get('Total'), $it->get('Resolved') );
-
- 			$it->moveNext();
- 		}
-
- 		return $result;
+        $total = $this->object->getRegistry()->Count(
+            array(
+                new FilterInPredicate($ids)
+            )
+        );
+        $resolved = $this->object->getRegistry()->Count(
+            array(
+                new StatePredicate('terminal'),
+                new FilterInPredicate($ids)
+            )
+        );
+        return array(
+            'R' => array($total, $resolved)
+        );
  	}
+
+ 	function getSpecifiedIt()
+    {
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $this->get('Type') == '' && !$this->object instanceof Issue && $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD && class_exists('Issue') ) {
+            return getFactory()->getObject('Issue')->createCachedIterator(
+                array($this->getData())
+            );
+        }
+        return $this;
+    }
 }

@@ -4,8 +4,6 @@ include_once "TaskProgressFrame.php";
 include_once "TaskBalanceFrame.php";
 include_once "FieldTaskPlanned.php";
 include_once SERVER_ROOT_PATH.'core/views/c_issue_type_view.php';
-include_once SERVER_ROOT_PATH.'core/views/c_priority_view.php';
-include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 include "TaskChart.php";
 include "TaskPlanFactChart.php";
 include "TaskChartBurndown.php";
@@ -14,14 +12,8 @@ class TaskList extends PMPageList
 {
  	var $has_grouping, $free_states;
 	private $planned_field = null;
+    private $assigneeField = null;
  	
- 	function TaskList( $object ) 
-	{
-		$this->priority_frame = new PriorityFrame();
-		
-		parent::__construct( $object );
-	}
-
 	function buildRelatedDataCache()
 	{
 		$it = $this->getIteratorRef();
@@ -41,20 +33,21 @@ class TaskList extends PMPageList
 
 		$this->has_grouping = $this->getGroup() != '';
 
-		// cache priority method
-		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
-				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority');
-		
-		if ( $has_access )
-		{
-			$this->priority_method = new ChangePriorityWebMethod(getFactory()->getObject('Priority')->getAll());
-		}
-
 		$this->planned_field = new FieldTaskPlanned();
 		$this->getTable()->buildRelatedDataCache();
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Assignee') ) {
+            $this->assigneeField = new FieldReferenceAttribute($this->getObject()->getEmptyIterator(), 'Assignee');
+        }
 	}
 
- 	function getColumns()
+    function getGroupObject() {
+        $object = parent::getGroupObject();
+        $object->addAttributeGroup('Estimation', 'display-name');
+        return $object;
+    }
+
+    function getColumns()
 	{
 		$attrs = $this->object->getAttributes();
 		
@@ -83,22 +76,6 @@ class TaskList extends PMPageList
 		return $group;
 	}
 	
-	function getSorts()
-	{
-		$sorts = parent::getSorts();
-		
-		foreach( $sorts as $key => $sort )
-		{
-			if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'ChangeRequest' )
-			{
-                array_unshift($sorts, new TaskRequestOrderSortClause());
-                array_unshift($sorts, new TaskRequestPrioritySortClause());
-			}
-		}
-		
-		return $sorts;
-	}
-	
   	function IsNeedToSelect()
 	{
 		return true;
@@ -114,24 +91,20 @@ class TaskList extends PMPageList
 	    switch( $attr )
 	    {
 			case 'TaskType':
-				
 				echo $object_it->get('TaskTypeDisplayName');
-				
 				break;
-	    	
-			case 'Priority':
-				if ( is_object($this->priority_method) )
-				{
-					$this->priority_method->drawMethod( $object_it, 'Priority' );
-				}
-				else
-				{
-					parent::drawRefCell( $entity_it, $object_it, $attr );
-				}
-				break;
-	        
-			case 'ChangeRequest':
 
+            case 'Assignee':
+                if ( is_object($this->assigneeField) ) {
+                    $this->assigneeField->setObjectIt($object_it);
+                    $this->assigneeField->draw($this->getRenderView());
+                }
+                else {
+                    parent::drawRefCell( $entity_it, $object_it, $attr );
+                }
+                break;
+
+			case 'ChangeRequest':
 				$states = array();
 				
 				if ( $entity_it->getId() != '' && $entity_it->object->getAttributeType('Tasks') != '' )
@@ -143,7 +116,7 @@ class TaskList extends PMPageList
 			     
 				if ( count($states) > 0 )
 				{
-					echo $this->getTable()->getView()->render('pm/TasksIcons.php', array (
+					echo $this->getRenderView()->render('pm/TasksIcons.php', array (
 						'states' => $states,
 						'random' => $entity_it->getId()
 					));
@@ -160,7 +133,7 @@ class TaskList extends PMPageList
 				$field->setEditMode( false );
                 $field->setShortMode();
 				$field->setReadonly( !getFactory()->getAccessPolicy()->can_modify_attribute($object_it->object, 'Fact') );
-				$field->render( $this->getTable()->getView() );
+				$field->render( $this->getRenderView() );
 				break;
 				
 	        default:
@@ -188,7 +161,7 @@ class TaskList extends PMPageList
 			case 'Planned':
 				echo '<div style="margin-left:36px;">';
 					$this->planned_field->setObjectIt($object_it);
-					$this->planned_field->draw($this->getTable()->getView());
+					$this->planned_field->draw($this->getRenderView());
 				echo '</div>';
 				break;
 
@@ -209,7 +182,7 @@ class TaskList extends PMPageList
 				$workload = $this->getTable()->getAssigneeUserWorkloadData();
 				if ( count($workload) > 0 )
 				{
-                    echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+                    echo $this->getRenderView()->render('pm/UserWorkload.php', array (
                         'user' => $object_it->getRef('Assignee')->getDisplayName(),
                         'data' => $workload[$object_it->get($group_field)]
                     ));
@@ -243,15 +216,6 @@ class TaskList extends PMPageList
 			return '80';
 		
 		return parent::getColumnWidth( $attr );
-	}
-
-	function getColumnAlignment( $attr )
-	{
-		switch( $attr )
-		{
-			case 'Priority': return 'center';
-			default: return parent::getColumnAlignment($attr);
-		}
 	}
 
 	function getRenderParms()

@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Files\UploadFileService;
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator.php";
@@ -32,6 +33,12 @@ class PMPageForm extends PageForm
         $this->state_it = null;
         parent::setObjectIt($object_it);
     }
+
+    function buildForm()
+    {
+        parent::buildForm();
+        $this->extendModel();
+    }
     
     protected function extendModel()
     {
@@ -52,7 +59,7 @@ class PMPageForm extends PageForm
             $this->getObject()->setAttributeRequired('Project', true);
         }
 
-        if ( !is_object($this->getObjectIt()) && $this->getObject() instanceof MetaobjectStatable) {
+        if ( !is_object($this->getObjectIt()) && $this->getObject() instanceof MetaobjectStatable && !$this->allowChooseProject ) {
             $this->getObject()->setAttributeVisible('State', true);
         }
 
@@ -161,19 +168,34 @@ class PMPageForm extends PageForm
 
     	$object_it = $this->getObjectIt();
 
+        $service = new UploadFileService();
+        $service->deleteFiles();
+        $this->persistTemporaryAttachments($service, $object_it);
+
     	$invoke_workflow = is_object($object_it) 
     		&& ($this->getAction() == 'add' || $this->getAction() == 'modify' && $this->getTransitionIt()->getId() > 0);
     	
 	    if ( $invoke_workflow )
 	    {
+            $it = $object_it->object->getExact($object_it->getId());
+	        $data = array();
+
+	        foreach( $it->getData() as $key => $value ) {
+	            if ( $this->getObject()->IsAttributeVisible($key) ) {
+                    $data[$key] = $value;
+                }
+            }
 	    	getFactory()->getEventsManager()
                 ->executeEventsAfterBusinessTransaction(
-                    $object_it->object->getExact($object_it->getId()),
-                    'WorklfowMovementEventHandler'
+                    $it, 'WorklfowMovementEventHandler', $data
                 );
 	    }
 	    
 	    return true;
+    }
+
+    function persistTemporaryAttachments( $service, $objectIt ) {
+        $service->attachTemporaryFiles($objectIt, 'File', getFactory()->getObject('pm_Attachment'));
     }
 
     function validateInputValues($id, $action)
@@ -350,7 +372,7 @@ class PMPageForm extends PageForm
 
             case 'Project':
                 if ( $this->allowChooseProject ) {
-                    return new FieldAutoCompleteObject(getFactory()->getObject('ProjectLinked'));
+                    return new FieldAutoCompleteObject(getFactory()->getObject('ProjectLinkedActive'));
                 }
                 return parent::createFieldObject($attr);
 
@@ -441,13 +463,6 @@ class PMPageForm extends PageForm
 		return array();
 	}
 	
-    function process()
-    {
-        $this->extendModel();
-        
-        return parent::process();
-    }
-
     function getShortAttributes()
     {
         return array_intersect(
@@ -458,7 +473,6 @@ class PMPageForm extends PageForm
 
     function getRenderParms()
     {
-        $this->extendModel();
         $uid = new ObjectUID;
 
  		$object_it = $this->getObjectIt();
@@ -484,7 +498,9 @@ class PMPageForm extends PageForm
             'showtabs' => $this->getTransitionIt()->getId() == '',
             'shortAttributes' => $this->getShortAttributes(),
             'nextUrl' => $nextUrl,
-            'nextTitle' => $nextTitle
+            'nextTitle' => $nextTitle,
+            'listWidgetIt' => getFactory()->getObject('ObjectsListWidget')
+                                ->getByRef('Caption', get_class($this->getObject()))->getWidgetIt()
         ));
     }
     
@@ -587,6 +603,7 @@ class PMPageForm extends PageForm
             $filters[] = new FilterAttributePredicate($attribute, $objectIt->get($attribute));
         }
         $sorts[] = new SortOrderedClause();
+        $sorts[] = new SortKeyClause();
 
         $registry = $this->getObject()->getRegistry();
         $registry->setLimit(1);
@@ -602,11 +619,26 @@ class PMPageForm extends PageForm
         );
         if ( $resultIt->getId() != '' ) return $resultIt;
 
-        return $registry->Query(
+        $resultIt = $registry->Query(
+            array_merge($filters, $sorts, array(
+                new FilterNotInPredicate($objectIt->getId())
+            ))
+        );
+        if ( $resultIt->getId() != '' ) return $resultIt;
+
+        $resultIt = $registry->Query(
             array_merge($sorts, array(
                 new FilterVpdPredicate(),
                 new FilterNextSiblingsPredicate($objectIt),
                 new FilterNextKeyPredicate($objectIt)
+            ))
+        );
+        if ( $resultIt->getId() != '' ) return $resultIt;
+
+        return $registry->Query(
+            array_merge($sorts, array(
+                new FilterVpdPredicate(),
+                new FilterNotInPredicate($objectIt->getId())
             ))
         );
     }

@@ -2,9 +2,10 @@
 
 include_once SERVER_ROOT_PATH."pm/classes/settings/MethodologyPlanningMode.php";
 include "EstimationStrategyDictionary.php";
+include "EstimationTasksDictionary.php";
 include "MetricsTypeDictionary.php";
         
-class MethodologyForm extends PMPageForm
+class MethodologyForm extends SettingsFormBase
 {
     function IsNeedButtonNew() {
         return false;
@@ -17,6 +18,11 @@ class MethodologyForm extends PMPageForm
     }
     function IsNeedButtonSave() {
         return true;
+    }
+
+    function getPageTitle()
+    {
+        return $this->getObject()->getDisplayName();
     }
 
     function IsAttributeVisible( $attr_name )
@@ -90,7 +96,14 @@ class MethodologyForm extends PMPageForm
         switch ( $attr )
         {
             case 'RequestEstimationRequired':
-            	return new EstimationStrategyDictionary();
+                $field = new EstimationStrategyDictionary();
+                $field->setTitleRequired( $this->getObject()->getAttributeUserName($attr) );
+            	return $field;
+
+            case 'TaskEstimationUsed':
+                $field = new EstimationTasksDictionary();
+                $field->setTitleRequired( $this->getObject()->getAttributeUserName($attr) );
+                return $field;
 
             case 'MetricsType':
                 return new MetricsTypeDictionary();
@@ -110,22 +123,10 @@ class MethodologyForm extends PMPageForm
         }
     }
 
-    function getPageTitle()
-    {
-        return '';
-    }
-    
 	function getBodyTemplate()
 	{
 	    return "pm/MethodologyFormBody.php";
 	}
-    
-    function getRenderParms()
-    {
-        return array_merge( parent::getRenderParms(), array (
-                'uid_icon' => ''
-        ));
-    }
     
     function validateInputValues( $id, $action )
     {
@@ -182,5 +183,11 @@ class MethodologyForm extends PMPageForm
 			});
 		</script>
     	<?php
+    }
+
+    function redirectOnModified( $object_it, $redirect_url = '' )
+    {
+        $redirect_url = getSession()->getApplicationUrl().'settings';
+        parent::redirectOnModified($object_it, $redirect_url);
     }
 }

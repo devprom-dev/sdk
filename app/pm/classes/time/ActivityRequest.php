@@ -10,10 +10,9 @@ class ActivityRequest extends Activity
  	{
  		parent::__construct($registry);
 
-		$strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		if ( $strategy instanceof EstimationHoursStrategy ) {
-			$this->addAttribute('LeftWork', 'INTEGER', $strategy->getDimensionText(text(1161)), true, false, '', 25);
-		}
+		$strategy = new EstimationHoursStrategy();
+		$this->addAttribute('LeftWork', 'INTEGER', $strategy->getDimensionText(text(1161)), true, false, '', 15);
+		$this->setAttributeRequired('Issue', true);
  	}
  	
 	function getTaskIt( $fact, $request_it, $user_id, $task_type )

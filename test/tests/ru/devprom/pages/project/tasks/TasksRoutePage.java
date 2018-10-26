@@ -10,10 +10,10 @@ import ru.devprom.pages.project.SDLCPojectPageBase;
 
 public class TasksRoutePage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Добавить')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Добавить')]")
 	protected WebElement addBtn;
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 
 	@FindBy(xpath = "//a[contains(@href,'/pm/devprom_webtest/tasks/board?class=metaobject&entity=pm_Task') and text()='Задача']")

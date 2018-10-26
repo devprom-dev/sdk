@@ -163,7 +163,7 @@ abstract class IntegrationChannel
         return json_encode($post);
     }
 
-    protected function jsonPut( $url, $post = array(), $parms = array(), $verbose = false )
+    protected function jsonPut( $url, $post = array(), $parms = array(), $verbose = true )
     {
         if ( strpos($url, 'http') === false ) {
             $url = $this->object_it->get('URL').$url;

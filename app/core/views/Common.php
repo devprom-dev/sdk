@@ -6,6 +6,4 @@ $dirname = dirname(__FILE__).'/';
 
 include ($dirname.'Page.php');
 include_once ($dirname.'FormAsync.php');
-include ($dirname.'../c_more.php');
-
 include_once SERVER_ROOT_PATH.'core/methods/SettingsWebMethod.php';

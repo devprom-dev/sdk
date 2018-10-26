@@ -3,7 +3,6 @@
 include_once SERVER_ROOT_PATH."pm/classes/product/validation/ModelValidatorAvoidInfiniteLoop.php";
 include_once SERVER_ROOT_PATH."pm/classes/product/validation/ModelValidatorChildrenLevels.php";
 include_once SERVER_ROOT_PATH."pm/views/product/FieldFunctionTrace.php";
-include_once SERVER_ROOT_PATH."pm/views/ui/FieldHierarchySelector.php";
 include "FieldFeatureTagTrace.php";
 include "FieldFeatureIssues.php";
 
@@ -14,6 +13,7 @@ class FunctionForm extends PMPageForm
 	private $goto_issues_template = '';
 	private $request_it = null;
 	private $assignRequestIt = null;
+	private $hasFeatureLevelRules = false;
 
 	function __construct( $object )
 	{
@@ -39,6 +39,10 @@ class FunctionForm extends PMPageForm
 
 	function extendModel()
     {
+        if ( $this->getEditMode() ) {
+            $this->getObject()->setAttributeVisible('OrderNum', true);
+        }
+
         parent::extendModel();
 
         if ( is_object($this->getObjectIt()) ) {
@@ -48,12 +52,19 @@ class FunctionForm extends PMPageForm
 
     function buildMethods()
  	{
+        $this->hasFeatureLevelRules = join('',getFactory()->getObject('FeatureType')->getRegistry()->Query(
+                array(
+                    new FilterBaseVpdPredicate()
+                )
+            )->fieldToArray('ChildrenLevels')) != '';
+
  		if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) )
  		{
  			$type_it = getFactory()->getObject('FeatureType')->getAll();
 		    while( !$type_it->end() )
 		    {
 		        $method = new ObjectCreateNewWebMethod($this->getObject());
+                if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
 		        $this->create_subfunc_actions[$type_it->get('OrderNum')] = array(
 			            'name' => $type_it->getDisplayName(),
 			        	'method' => $method,
@@ -65,6 +76,8 @@ class FunctionForm extends PMPageForm
 		    }
 		    if ( $type_it->count() < 1 ) {
                 $method = new ObjectCreateNewWebMethod($this->getObject());
+                if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+                $method->setRedirectUrl('donothing');
                 $this->create_subfunc_actions[] = array(
                     'name' => text(2272),
                     'method' => $method
@@ -81,7 +94,7 @@ class FunctionForm extends PMPageForm
 		    while( !$type_it->end() )
 		    {
 		        $method = new ObjectCreateNewWebMethod($request);
-		        $method->setRedirectUrl('donothing');
+                if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
 		        
 		        $this->create_issue_actions[] = array(
 			            'name' => $type_it->getDisplayName(),
@@ -91,14 +104,6 @@ class FunctionForm extends PMPageForm
 		        
 		        $type_it->moveNext();
 		    }
-		    
-	        $method = new ObjectCreateNewWebMethod($request);
-	        $method->setRedirectUrl('donothing');
-	        
-	        $this->create_issue_actions[] = array(
-		            'name' => $request->getDisplayName(),
-		        	'method' => $method
-	        );
  		}
 
  		$report_it = getFactory()->getObject('PMReport')->getExact('allissues');
@@ -119,7 +124,7 @@ class FunctionForm extends PMPageForm
  		$new_actions = array();
  		
  		$able_create_issues = $object_it->get('Type') == ''
- 				|| $this->getObject()->getAttributeType('Type') != '' && $object_it->getRef('Type')->get('HasIssues') == 'Y';
+ 				|| $object_it->object->IsReference('Type') != '' && $object_it->getRef('Type')->get('HasIssues') == 'Y';
  		
  		if ( $able_create_issues )
  		{
@@ -146,7 +151,7 @@ class FunctionForm extends PMPageForm
  		$subfunc_actions = array();
  		foreach( $this->create_subfunc_actions as $key => $data )
  		{
- 			if ( count($levels) > 0 && !in_array($data['system-name'], $levels) ) continue;
+ 			if ( $this->hasFeatureLevelRules && !in_array($data['system-name'], $levels) ) continue;
  			
  			$method = $data['method'];
 	        $subfunc_actions[] = array(
@@ -189,7 +194,6 @@ class FunctionForm extends PMPageForm
  	{
  		switch ( $attr_name )
  		{
- 		    case 'OrderNum':
  		    case 'FinishDate':
  		    case 'ResponsibleAnalyst':
  		    case 'ResponsibleDesigner':
@@ -232,6 +236,14 @@ class FunctionForm extends PMPageForm
 			case 'Requirement':
 				return new FieldFunctionTrace( $this->object_it, 
 					getFactory()->getObject('FunctionTraceRequirement') );
+
+            case 'TestScenario':
+                return new FieldFunctionTrace( $this->object_it,
+                    getFactory()->getObject('FunctionTraceTestScenario') );
+
+            case 'HelpPage':
+                return new FieldFunctionTrace( $this->object_it,
+                    getFactory()->getObject('FunctionTraceHelpPage') );
 
 			case 'Tags':
 			    return new FieldFeatureTagTrace( 

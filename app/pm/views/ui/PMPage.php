@@ -12,7 +12,6 @@ include_once SERVER_ROOT_PATH.'pm/methods/c_report_methods.php';
 include_once SERVER_ROOT_PATH.'pm/methods/WikiExportBaseWebMethod.php';
 include_once SERVER_ROOT_PATH."pm/methods/OpenWorkItemWebMethod.php";
 
-
 include 'PMFormEmbedded.php';
 include 'PMPageForm.php';
 include 'PMPageTable.php';
@@ -27,6 +26,8 @@ include_once "DetailsInfoSection.php";
 include_once 'BulkForm.php';
 include 'converters/WikiIteratorExportHtml.php';
 include 'converters/WikiIteratorExportPdf.php';
+include "SettingsFormBase.php";
+include "SettingsTableBase.php";
 
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/WorkflowModelBuilder.php';
 include_once SERVER_ROOT_PATH.'pm/views/comments/PageSectionComments.php';
@@ -153,10 +154,6 @@ class PMPage extends Page
 	{
 		$parms = parent::getFullPageRenderParms();
                 
-	    if ( $this->getReport() != '' ) {
-            $parms['navigation_title'] = getFactory()->getObject('PMReport')->getExact( $this->getReport() )->getDisplayName();
-        }
-
 		$bodyExpanded = $_COOKIE['menu-state'] == '' && defined('MENU_STATE_DEFAULT')
 							? MENU_STATE_DEFAULT == 'minimized' : ($_COOKIE['menu-state'] == 'minimized');
 
@@ -192,10 +189,10 @@ class PMPage extends Page
 			);
 		}
 
-        if ( $parms['navigation_url'] == '' && $this->needDisplayForm() ) {
+        if ( $this->needDisplayForm() ) {
             $info = $this->getPageWidgetNearestUrl();
             $parms['navigation_url'] = $info['url'];
-            $parms['navigation_title'] = $info['name'];
+            $parms['nearest_title'] = $info['name'];
         }
 
         $parentIt = getSession()->getProjectIt()->getParentIt();
@@ -369,7 +366,7 @@ class PMPage extends Page
 				if ( $object_it->getId() == '' ) return;
 
 				$reference = $this->getObject()->getAttributeObject($_REQUEST['attribute']);
-				$ids = join(',',$object_it->fieldToArray($_REQUEST['attribute']));
+				$ids = \TextUtils::buildIds($object_it->fieldToArray($_REQUEST['attribute']));
 				if ( $ids == '' ) $ids = '0';
 
 				$it = getFactory()->getObject('ObjectsListWidget')->getAll();
@@ -510,7 +507,7 @@ class PMPage extends Page
         );
         $form->setControlUID( $control_uid );
         if ( $_REQUEST['dorefresh'] == 1 ) {
-            $form->setRedirectUrl( "javascript: refreshCommentsThread(\\'".$control_uid."\\');" );
+            $form->setRedirectUrl( "javascript: refreshCommentsThread(\"".$control_uid."\");" );
         }
         return $form;
     }
@@ -754,7 +751,8 @@ class PMPage extends Page
         $openIt = $registry->Query(
             array(
                 new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId()),
-                new FilterAttributePredicate('IsTerminal', array('I')),
+                new FilterAttributeNotNullPredicate('StateObject'),
+                new FilterAttributeNullPredicate('FinishDate'),
                 new StateObjectSortClause()
             )
         );
@@ -763,7 +761,11 @@ class PMPage extends Page
             $title = $openIt->getDisplayNameExt();
             $actions[] = array(
                 'name' => translate('Открыть'),
-                'url' => getFactory()->getObject($openIt->get('ObjectClass'))->getExact($openIt->getId())->getViewUrl()
+                'url' => getFactory()->getObject($openIt->get('ObjectClass'))->getRegistryBase()->Query(
+                            array(
+                                new FilterInPredicate($openIt->getId())
+                            )
+                         )->getViewUrl()
             );
             $actions[] = array();
         }
@@ -775,10 +777,10 @@ class PMPage extends Page
         $taskIt = $registry->Query(
             array(
                 new FilterAttributePredicate('Assignee', getSession()->getUserIt()->getId()),
-                new FilterAttributePredicate('IsTerminal', array('N','I')),
+                new FilterAttributeNullPredicate('FinishDate'),
                 $sortDueDate,
-                new SortAttributeClause('State.D'),
-                new SortAttributeClause('Priority')
+                new SortAttributeClause('Priority'),
+                new StateObjectSortClause()
             )
         );
 

@@ -41,6 +41,19 @@ class ModelService
 				if ( $key == 'Id' || is_null($value) || strtolower($value) == 'null' ) {
 					unset($data[$key]); continue;
 				}
+				else {
+                    if ( $object->IsReference($key) && !is_numeric($value) ) {
+                        $ref = $object->getAttributeObject($key);
+                        $altAttributes = $ref->getAttributesByGroup('alternative-key');
+                        $data[$key] = $ref->getRegistry()->Query(
+                                $this->buildSearchQuery($ref,
+                                    array(
+                                        array_shift($altAttributes) => $value
+                                    )
+                                )
+                            )->getId();
+                    }
+                }
 			}
 		}
 
@@ -241,7 +254,10 @@ class ModelService
 		
 		getFactory()->getEventsManager()
 	    	->executeEventsAfterBusinessTransaction(
-	    		$object->getExact($object_id)->copyAll(), 'WorklfowMovementEventHandler');
+	    		$object->getExact($object_id)->copyAll(),
+                'WorklfowMovementEventHandler',
+                $data
+            );
 		
 	    return $object_id;
 	}
@@ -376,6 +392,13 @@ class ModelService
 				else {
 					$result[$attribute] = html_entity_decode($value, ENT_QUOTES | ENT_HTML401, APP_ENCODING);
 					if ( in_array($type, array('wysiwyg')) ) {
+
+                        $editor = \WikiEditorBuilder::build($result['ContentEditor']);
+                        $editor->setObject($object);
+                        $parser = $editor->getHtmlParser();
+                        $parser->setObjectIt( $object->createCachedIterator(array($data)) );
+                        $result[$attribute] = $parser->parse($result[$attribute]);
+
 						if ( $output == 'html' ) {
 							$result[$attribute] = \IteratorBase::getHtmlValue(str_replace(chr(10), ' ', $result[$attribute]));
 						}
@@ -535,8 +558,13 @@ class ModelService
                         $refName = $object->getAttributeByCaption($caption);
                     }
                     if ( $object->IsReference($refName) ) {
-                        $referenceIt = $objectIt->getRef($refName);
-                        return '{'.join('.',array_slice($attributes, $attributeIndex+1)).'}';
+                        if ( $objectIt->get($refName) != '' ) {
+                            $referenceIt = $objectIt->getRef($refName);
+                            return '{'.join('.',array_slice($attributes, $attributeIndex+1)).'}';
+                        }
+                        else {
+                            return $default;
+                        }
                     }
                     else {
                         if ( $refName == $object->getIdAttribute() ) {
@@ -561,6 +589,7 @@ class ModelService
             },
             $formula
         );
+
         if ( is_object($referenceIt) ) {
             while( !$referenceIt->end() ) {
                 $result = array_merge( $result,

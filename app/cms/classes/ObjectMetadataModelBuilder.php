@@ -27,7 +27,7 @@ class ObjectMetadataModelBuilder extends ObjectMetadataBuilder
 			if($type == 'LARGETEXT') $type = 'TEXT';
 	
 			$attributes[$ref_name] = array_merge($attributes[$ref_name], array (
-				'caption' => $attribute_it->get_native('Caption'),
+				'caption' => translate($attribute_it->get_native('Caption')),
 				'visible' => $attribute_it->get('IsVisible') == 'Y',
 				'stored' => true,
 				'type' => $type,

@@ -4,5 +4,5 @@ var resources =
 	'Saving...': 	'Сохранение...',
 	'Loading...': 	'Загрузка',
 	'Restore': 		'Восстановить',
-	'Add menu group': 		'Добавить группу меню'
+	'Add menu group': 		'Добавить папку'
 };

@@ -15,10 +15,11 @@ class ModuleProjectsBuilder extends ModuleBuilder
     public function buildProjectManagement( ModuleRegistry & $object, $methodology_it )
     {
     	$modules = array();
+        $separateIssues = $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD;
 
         $item = array();
         $item['cms_PluginModuleId'] = 'project-log';
-        $item['Caption'] = translate('Активности');
+        $item['Caption'] = text(2624);
         $item['AccessEntityReferenceName'] = 'ObjectChangeLog';
         $item['Url'] = 'project/log';
         $item['Icon'] = 'icon-eye-open';
@@ -33,8 +34,18 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['Description'] = text(2459);
         $modules[] = $item;
 
-        $item = array();
+        $projectIt = getSession()->getProjectIt();
+        if ( $projectIt->IsPortfolio() || $projectIt->IsProgram() ) {
+            $item = array();
+            $item['cms_PluginModuleId'] = 'projects';
+            $item['Caption'] = text('projects.list.title');
+            $item['AccessEntityReferenceName'] = 'pm_Project';
+            $item['Url'] = 'projects';
+            $item['Icon'] = 'icon-briefcase';
+            $modules[] = $item;
+        }
 
+        $item = array();
         $item['cms_PluginModuleId'] = 'metrics';
         $item['Caption'] = translate('Метрики');
         $item['AccessEntityReferenceName'] = 'pm_ProjectMetric';
@@ -46,6 +57,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         $item['cms_PluginModuleId'] = 'project-spenttime';
         $item['Caption'] = translate('Затраченное время');
+        $item['Description'] = text(2662);
         $item['AccessEntityReferenceName'] = 'pm_Activity';
         $item['Url'] = 'participants/spenttime';
         $item['Icon'] = 'icon-time';
@@ -59,16 +71,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item['Icon'] = 'icon-time';
         $modules[] = $item;
 
-        $item = array();
-        
-        $item['cms_PluginModuleId'] = 'project-question';
-        $item['Caption'] = translate('Вопросы');
-        $item['AccessEntityReferenceName'] = 'pm_Question';
-        $item['Url'] = 'project/question';
-        $item['Icon'] = 'icon-question-sign';
-        
-        $modules[] = $item;
-        
         $item = array();
         $item['cms_PluginModuleId'] = 'project-blog';
         $item['Caption'] = translate('Блог');
@@ -132,7 +134,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'issues-trace';
-        $item['Caption'] = translate('Трассировка пожеланий');
+        $item['Caption'] = $separateIssues ? text(2658) : translate('Трассировка пожеланий');
         $item['AccessEntityReferenceName'] = 'pm_ChangeRequest';
         $item['Url'] = 'issues/trace';
         $item['Icon'] = 'icon-random';
@@ -165,6 +167,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
 	        
 	        $item['cms_PluginModuleId'] = 'tasks-board';
 	        $item['Caption'] = getSession()->getProjectIt()->IsPortfolio() ? text(1844) : translate('Доска задач');
+            $item['Description'] = text(2663);
 	        $item['AccessEntityReferenceName'] = 'pm_Task';
 	        $item['Url'] = 'tasks/board';
             $item['Icon'] = 'icon-th';
@@ -202,16 +205,6 @@ class ModuleProjectsBuilder extends ModuleBuilder
             $modules[] = $item;
         }
 
-        if ( $methodology_it->HasFeatures() ) {
-            $item = array();
-            $item['cms_PluginModuleId'] = 'features-list';
-            $item['Caption'] = translate('Функции');
-            $item['AccessEntityReferenceName'] = 'pm_Function';
-            $item['Url'] = 'features/list';
-            $item['Icon'] = 'icon-picture';
-            $modules[] = $item;
-        }
-
         foreach( $modules as $module ) {
         	$module['Area'] = FUNC_AREA_MANAGEMENT;
             $object->addModule( $module );
@@ -228,6 +221,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         $item['cms_PluginModuleId'] = 'attachments';
         $item['Caption'] = text(2097);
+        $item['Description'] = text(2661);
         $item['AccessEntityReferenceName'] = 'Attachment';
         $item['Url'] = 'attachments';
         $item['Icon'] = 'icon-file';
@@ -242,7 +236,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
         $item = array();
         
         $item['cms_PluginModuleId'] = 'project-settings';
-        $item['Caption'] = translate('Проект');
+        $item['Caption'] = text(2618);
         $item['Description'] = text(1812);
         $item['AccessEntityReferenceName'] = 'pm_Project';
         $item['AccessType'] = ACCESS_MODIFY;
@@ -252,7 +246,7 @@ class ModuleProjectsBuilder extends ModuleBuilder
 
         $item['cms_PluginModuleId'] = 'menu';
         $item['Caption'] = text(1807);
-        $item['AccessEntityReferenceName'] = 'pm_CustomReport';
+        $item['AccessEntityReferenceName'] = 'pm_Workspace';
         $item['Url'] = 'menu';
         
         $modules[] = $item;

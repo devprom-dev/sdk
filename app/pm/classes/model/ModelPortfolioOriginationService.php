@@ -31,6 +31,7 @@ class ModelPortfolioOriginationService extends ModelProjectOriginationService
  	            return array( $this->getSession()->getProjectIt()->get('VPD') );
 
             case 'pm_State':
+            case 'pm_Participant':
             case 'pm_CustomAttribute':
                 return $this->getSession()->getLinkedIt()->fieldToArray('VPD');
 

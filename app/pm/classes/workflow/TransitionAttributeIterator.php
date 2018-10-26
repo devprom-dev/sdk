@@ -15,6 +15,7 @@ class TransitionAttributeIterator extends OrderedIterator
         $props[] = in_array($this->get('IsRequired'), array('Y','on')) ? text(1803) : '';
         $props[] = in_array($this->get('IsReadonly'), array('Y','on')) ? text(2239) : '';
         $props[] = in_array($this->get('IsMainTab'), array('Y','on')) ? text(2269) : '';
+        $props[] = in_array($this->get('IsAskForValue'), array('Y','on')) ? text(2541) : '';
 
         $props = array_filter($props, function($value) {
             return $value != '';

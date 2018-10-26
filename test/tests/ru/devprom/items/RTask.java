@@ -79,10 +79,6 @@ public class RTask implements Comparable<RTask> {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else return name.contains(other.name) || other.name.contains(name);
 		if (priority == null) {
 			if (other.priority != null)
 				return false;

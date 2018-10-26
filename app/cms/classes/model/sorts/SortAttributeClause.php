@@ -7,6 +7,7 @@ class SortAttributeClause extends SortClauseBase
     private $textInsteadOfNull;
     private $dateInsteadOfNull;
     private $nullOnTop;
+    private $referenceSorts = array();
  	
  	function SortAttributeClause( $attribute )
  	{
@@ -60,6 +61,10 @@ class SortAttributeClause extends SortClauseBase
 		
 		return $sort_type;
  	}
+
+ 	function setReferenceSorts( $referenceAttribute, $sorts = array() ) {
+        $this->referenceSorts[$referenceAttribute] = $sorts;
+    }
  	
  	function getColumn()
  	{
@@ -92,7 +97,7 @@ class SortAttributeClause extends SortClauseBase
 
 			default:
 	 			if ( $object->IsReference($attr) )
-	 			{ 
+	 			{
 	 				$ref = $object->getAttributeObject($attr);
 
 					if ( $ref instanceof Metaobject && $ref->getEntity()->get('IsDictionary') == 'Y' )
@@ -108,10 +113,10 @@ class SortAttributeClause extends SortClauseBase
                         }
                     }
 
-					$sorts = $ref->getSortDefault();
+					$sorts = is_array($this->referenceSorts[$attr]) ? $this->referenceSorts[$attr] : $ref->getSortDefault();
 					if ( count($sorts) > 0 && $ref->getEntityRefName() != $object->getEntityRefName() )
 					{
-						$titleSortFound = false;
+                        $titleSortFound = false;
 						foreach( $sorts as $sort ) {
 							if ( $sort instanceof SortAttributeClause && $sort->getAttributeName() == 'Caption' ) {
 								$titleSortFound = true;
@@ -126,16 +131,25 @@ class SortAttributeClause extends SortClauseBase
 
 						$sort_clauses = array();
 						foreach( $sorts as $sort ) {
+						    if ( $sort instanceof SortKeyClause ) {
+						        return $sql_attr . " " . $sort_type;
+                            }
 							if ( !$sort instanceof SortAttributeClause ) continue;
+                            $sort->setObject($ref);
+                            $sort->setAlias('t');
                             $sort->setNullOnTop($this->nullOnTop);
+
 							$clause = trim($sort->clause());
 							if ( $clause == '' ) continue;
 							if ( strpos($clause, 'SELECT') === false ) {
-								$sort->setAlias('s');
+                                $sort->setAlias('s');
 								$clause = preg_replace('/\s(ASC|DESC)\s/i', '', $sort->clause());
-								$sort_clauses[] = " (SELECT ".$clause." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort_type;
+								$sort_clauses[] = " (SELECT ".$clause." FROM ".$ref->getClassName()." s WHERE s.".$ref->getIdAttribute()." = ".$sql_attr.") ".$sort->getSortType();
 							}
 							else {
+                                $clause = str_replace('FROM ', 'FROM ' . $ref->getClassName()." e, ", $clause);
+                                $clause = str_replace('t.', 'e.', $clause);
+                                $clause = str_replace('WHERE ', 'WHERE e.' . $ref->getIdAttribute()." = ".$sql_attr . " AND ", $clause);
 								$sort_clauses[] = $clause;
 							}
 						}

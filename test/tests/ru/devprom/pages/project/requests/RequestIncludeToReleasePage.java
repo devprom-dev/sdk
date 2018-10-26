@@ -3,6 +3,7 @@ package ru.devprom.pages.project.requests;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -11,6 +12,9 @@ import ru.devprom.pages.PageBase;
 
 public class RequestIncludeToReleasePage extends PageBase {
 
+	@FindBy(id = "pm_ChangeRequestSubmitBtn")
+	private WebElement submitBtn;
+	
 	public RequestIncludeToReleasePage(WebDriver driver) {
 		super(driver);
 	}
@@ -37,9 +41,9 @@ public class RequestIncludeToReleasePage extends PageBase {
 			input.sendKeys(releaseNumber); 
 	   		autocompleteSelect(releaseNumber);
 		}
-		driver.findElement(By.xpath("//button[@type='button']/span[text()='Сохранить']/..")).click();
+		submitDialog(submitBtn);
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
-				.presenceOfElementLocated(By.xpath("//span[@id='state-label' and contains(text(),'В релизе')]")));
+				.presenceOfElementLocated(By.xpath("//span[@id='state-label' and contains(.,'В релизе')]")));
 		return new RequestViewPage(driver);
 	}
 

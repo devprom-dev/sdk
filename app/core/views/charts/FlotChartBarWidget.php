@@ -11,9 +11,9 @@ class FlotChartBarWidget extends FlotChartWidget
 		$index = 0;
 		
 		$data = $this->getData();
-		
+
 		$keys = array_keys($data);
-		
+
 		if ( !is_array($data[$keys[0]]['data']) )
 		{
 			foreach ( $data as $key => $item )
@@ -24,34 +24,29 @@ class FlotChartBarWidget extends FlotChartWidget
 		}
 		else
 		{
-			$inner_row = array();
-			foreach ( $data as $item_key => $item )
-			{
-				foreach ( $item['data'] as $data_key => $data )
-				{
-					$inner_row[$data_key][$item_key] += $data;
+            $inner_row = array();
+			foreach ( $data as $item_key => $item ) {
+				foreach ( $item['data'] as $data_key => $itemData ) {
+					$inner_row[$data_key][$item_key] += $itemData;
 				}
 			}
-	
-			foreach ( $inner_row as $key => $item )
-			{
+
+            $ticks = array_keys($data);
+            foreach ( $inner_row as $key => $item )
+            {
 				$row = array();
-				$index = 0;
-				
-				foreach ( $item as $inner_key => $inner )
-				{
+				foreach ( $item as $inner_key => $inner ) {
+				    $index = array_search($inner_key, $ticks);
 					array_push($row, "[".$index.", ".$inner."]");
-					$ticks[$index] = $inner_key;
-					
-					$index++;
 				}
-				
+
+				if ( $key == '' ) $key = text(2536);
 				array_push( $rows, " {label: '".$key."', data: [".join($row, ',')."] }");
 			}
 		}
 
 		$labels = array();
-		
+
 		foreach( $ticks as $key => $tick )
 		{
 			array_push( $labels, "[".$key.", '".$tick."']");

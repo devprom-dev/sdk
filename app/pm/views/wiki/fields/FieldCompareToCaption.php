@@ -19,9 +19,9 @@ class FieldCompareToCaption extends FieldStatic
 
 		$diffBuilder = new WikiHtmlDiff(
 			$this->compare_to_page_it->getId() > 0
-				? $parser->parse($this->compare_to_page_it->getHtmlDecoded('Caption'))
+				? $parser->parse($this->compare_to_page_it->get('Caption'))
 				: "",
-			$parser->parse($this->page_it->getHtmlDecoded('Caption'))
+			$parser->parse($this->page_it->get('Caption'))
 		);
 
 		echo '<div class="reset wysiwyg">';

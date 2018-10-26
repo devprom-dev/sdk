@@ -95,17 +95,25 @@ class ObjectCreateNewWebMethod extends WebMethod
             if ( $type_it->getId() != '' ) {
                 $data['Caption'] = '<'.$type_it->getDisplayName().'>';
             }
+            if ( !array_key_exists('PageType', $_REQUEST) ) {
+                $data['PageType'] = $type_it->getId();
+            }
+            if ( $type_it->get('DefaultPageTemplate') != '' ) {
+                $data['Content'] = $type_it->getRef('DefaultPageTemplate')->getHtmlDecoded('Content');
+            }
         }
 
-        $template_it = getFactory()->getObject('TextTemplate')->getRegistry()->Query(
-            array (
-                new FilterVpdPredicate(),
-                new TextTemplateEntityPredicate(get_class($object)),
-                new FilterAttributePredicate('IsDefault', 'Y')
-            )
-        );
-        if ( $template_it->getId() != '' ) {
-            $data['Content'] = $template_it->getHtmlDecoded('Content');
+        if ( $data['Content'] == '' ) {
+            $template_it = getFactory()->getObject('TextTemplate')->getRegistry()->Query(
+                array (
+                    new FilterVpdPredicate(),
+                    new TextTemplateEntityPredicate(get_class($object)),
+                    new FilterAttributePredicate('IsDefault', 'Y')
+                )
+            );
+            if ( $template_it->getId() != '' ) {
+                $data['Content'] = $template_it->getHtmlDecoded('Content');
+            }
         }
 
         $parms = array_filter(
@@ -125,6 +133,7 @@ class ObjectCreateNewWebMethod extends WebMethod
                 return $value != '';
             }
         );
+
         $object_it = $object->getRegistry()->Create($parms);
         echo json_encode(
             array(
@@ -132,6 +141,17 @@ class ObjectCreateNewWebMethod extends WebMethod
                 'Url' => $object_it->getViewUrl()
             )
         );
+
+        $data = array();
+        foreach( $object_it->getData() as $key => $value ) {
+            if ( $object_it->object->IsAttributeVisible($key) ) {
+                $data[$key] = $value;
+            }
+        }
+        getFactory()->getEventsManager()
+            ->executeEventsAfterBusinessTransaction(
+                $object_it, 'WorklfowMovementEventHandler', $data
+            );
     }
 
     function hasAccess()

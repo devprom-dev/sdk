@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 include_once SERVER_ROOT_PATH . "pm/views/ui/Common.php";
 include_once SERVER_ROOT_PATH . "pm/views/communications/WhatsNewPage.php";
+include_once SERVER_ROOT_PATH . "pm/views/project/ProjectDashboardPage.php";
 
 class ProjectController extends PageController
 {
@@ -22,8 +23,11 @@ class ProjectController extends PageController
         return new RedirectResponse('/pm/'.$project_it->get('CodeName'));
     }
 
-    public function whatsnewAction(Request $request)
-    {
+    public function whatsnewAction(Request $request) {
         return $this->responsePage( new \WhatsNewPage() );
+    }
+
+    public function listAction(Request $request) {
+        return $this->responsePage( new \ProjectDashboardPage() );
     }
 }

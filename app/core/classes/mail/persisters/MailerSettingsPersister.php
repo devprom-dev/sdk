@@ -3,7 +3,7 @@ include "MailerSettingsFileSwiftMailer.php";
 
 class MailerSettingsPersister extends ObjectSQLPersister
 {
-	private $attributes = array (
+	private $fields = array (
 		'MailServer',
 		'MailServerPort',
 		'Pop3Server',
@@ -37,7 +37,7 @@ class MailerSettingsPersister extends ObjectSQLPersister
  	function modify( $object_id, $parms )
  	{
  		foreach( $this->files as $file ) {
- 			foreach( $this->attributes as $attribute ) {
+ 			foreach( $this->fields as $attribute ) {
 	 			if ( !array_key_exists($attribute, $parms) ) continue;
 	 			$file->write( $attribute, $parms[$attribute] );
  			}
@@ -65,7 +65,7 @@ class MailerSettingsPersister extends ObjectSQLPersister
  		foreach( $this->files as $file ) {
  			if ( !$file->exists() ) continue;
  			
- 		 	foreach( $this->attributes as $attribute ) {
+ 		 	foreach( $this->fields as $attribute ) {
 	 			$values[$attribute] = $file->read( $attribute );
  			}
  			break;

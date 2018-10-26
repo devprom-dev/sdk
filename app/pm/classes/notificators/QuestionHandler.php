@@ -1,30 +1,24 @@
 <?php
-
 include_once "EmailNotificatorHandler.php";
 
 class QuestionHandler extends EmailNotificatorHandler
 {
-	function getParticipants( $object_it, $prev_object_it, $action ) 
+	function getUsers( $object_it, $prev_object_it, $action )
 	{
 		$result = array();
 		
 		switch( $action )
 		{
 			case 'add':
-				$result = $this->getProject($object_it)->getLeadIt()->idsToArray();
-				break;
-		}
-
-		return $result;
-	}	
- 	
-	function getUsers( $object_it, $prev_object_it, $action ) 
-	{
-		$result = array();
-		
-		switch( $action )
-		{
-			case 'add':
+                $leadIt = $this->getProject($object_it)->getLeadIt();
+                $result = array_merge($result,
+                    $leadIt->object->getRegistry()->Query(
+                        array(
+                            new FilterInPredicate($leadIt->idsToArray()),
+                            new FilterAttributePredicate('NotificationTrackingType', 'system')
+                        )
+                    )->fieldToArray('SystemUser')
+                );
 				break;
 				
 			default:

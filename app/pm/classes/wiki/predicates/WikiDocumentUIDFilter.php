@@ -14,7 +14,7 @@ class WikiDocumentUIDFilter extends FilterPredicate
 			array (
 				count($idsFilter) > 0
 					? new FilterInPredicate($idsFilter)
-					: new FilterAttributePredicate('UID', $filter)
+					: new FilterTextExactPredicate('UID', $filter)
 			)
 		);
 		$ids = $document_it->idsToArray();

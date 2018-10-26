@@ -24,6 +24,7 @@ class SearchTextTemplateForm extends PMPageForm
             'Requirement' => 'RequirementTextTemplate',
             'TestScenario' => 'TestScenarioTextTemplate',
             'ProjectPage' => 'ProjectPageTextTemplate',
+            'HelpPage' => 'HelpPageTextTemplate',
             'Request' => 'RequestTextTemplate',
             'Comment' => 'CommentTextTemplate'
         );

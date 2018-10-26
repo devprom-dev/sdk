@@ -45,8 +45,9 @@ include('c_iterator.php');
 				'ordernum' 		=> $ordernum,
 				'origin' 		=> ORIGIN_METADATA
 		);
-		
 		$this->setAttributeType($ref_name, $type);
+
+        uasort( $this->attributes, "attribute_sort_ordernum" );
 	}
 	
 	function removeAttribute( $attr )
@@ -113,8 +114,10 @@ include('c_iterator.php');
 
  	function getAttributeUserName( $name ) 
  	{
-		return preg_replace_callback ( '/text\(([a-zA-Z\d]+)\)/i', iterator_text_callback,
-			html_entity_decode($this->attributes[$name]['caption'], ENT_COMPAT | ENT_HTML401, APP_ENCODING)
+		return preg_replace_callback (
+		    '/text\(([a-zA-Z\d]+)\)/i',
+            iterator_text_callback,
+            $this->attributes[$name]['caption']
 		);
 	}
 	
@@ -142,7 +145,7 @@ include('c_iterator.php');
 	
 	function getAttributesByGroup( $group )
 	{
-		$attributes = array_filter( $this->attributes, function($value) use ($group) {
+		$attributes = array_filter( $this->getAttributes(), function($value) use ($group) {
 			return is_array($value['groups']) && in_array($group, $value['groups']);
 		});
 		
@@ -275,6 +278,7 @@ include('c_iterator.php');
 	    if ( !array_key_exists($ref_name, $this->attributes) ) return;
 	    
 	    $this->attributes[$ref_name]['ordernum'] = $value;
+        uasort( $this->attributes, "attribute_sort_ordernum" );
 	}
 	
  	function setAttributeStored( $ref_name, $value )
@@ -328,17 +332,8 @@ include('c_iterator.php');
  	function setAttributes( $attributes )
 	{
 		$this->attributes = $attributes;
+        uasort( $this->attributes, "attribute_sort_ordernum" );
 	}
-	
-	function getAttributesSorted()
-	{
-		$result = $this->getAttributes();
-		
- 		uasort( $result, "attribute_sort_ordernum" );
- 		
- 		return $result;
-	}
-	
 	
 	function getLatestOrderNum()
 	{

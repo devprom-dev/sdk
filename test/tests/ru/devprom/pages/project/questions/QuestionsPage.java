@@ -12,7 +12,7 @@ import ru.devprom.pages.project.SDLCPojectPageBase;
 
 public class QuestionsPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 
 	@FindBy(xpath = "//a[@id='new-question']")

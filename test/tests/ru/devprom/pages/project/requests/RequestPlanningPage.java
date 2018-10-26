@@ -18,8 +18,8 @@ import ru.devprom.pages.project.SDLCPojectPageBase;
 
 public class RequestPlanningPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//button[@type='button']/span[text()='Сохранить']/..")
-	protected WebElement saveBtn;
+	@FindBy(id = "pm_ChangeRequestSubmitBtn")
+	protected WebElement submitBtn;
         
         @FindBy(id = "pm_ChangeRequestEstimation")
 	protected WebElement estimationField;
@@ -41,7 +41,7 @@ public class RequestPlanningPage extends SDLCPojectPageBase {
 	}
 
 	public void addTask(RTask task){
-		driver.findElement(By.xpath("//div[@id='fieldRowTasks']//a[contains(text(),'Еще задачу')]")).click();
+		driver.findElement(By.xpath("//div[@id='fieldRowTasks']//a[contains(.,'Еще задачу')]")).click();
 		fillTask(getTasksNumber(), task.getName(), task.getType(), task.getExecutor(), task.getEstimation());
 	}
 	
@@ -70,15 +70,15 @@ public class RequestPlanningPage extends SDLCPojectPageBase {
 	}
 
 	public RequestViewPage savePlanned() {
-		saveBtn.click();
+		submitDialog(submitBtn);
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
-				.presenceOfElementLocated(By.xpath("//span[@id='state-label' and contains(text(),'Запланировано')]")));
+				.presenceOfElementLocated(By.xpath("//span[@id='state-label' and contains(.,'Запланировано')]")));
 		return new RequestViewPage(driver);
 	}
 	
 
 	public RequestsBoardPage savePlannedOnBoard() {
-		submitDialog(saveBtn);
+		submitDialog(submitBtn);
 		return new RequestsBoardPage(driver);
 	}
 

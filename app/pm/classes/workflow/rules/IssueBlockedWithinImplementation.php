@@ -1,5 +1,4 @@
 <?php
-
 include_once "BusinessRulePredicate.php";
 
 class IssueBlockedWithinImplementation extends BusinessRulePredicate
@@ -12,13 +11,12 @@ class IssueBlockedWithinImplementation extends BusinessRulePredicate
  		return text(2042);
  	}
  	
- 	function check( $object_it )
+ 	function check( $object_it, $transitionIt )
  	{
-		$terminals = $this->getObject()->getTerminalStates();
 		foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
 		{
 			list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
-			if ( $type_ref == 'implemented' && $direction == 2 && !in_array($link_state,$terminals)) return false;
+			if ( $type_ref == 'implemented' && $direction == 2 && $link_state != 'Y') return false;
 		}
  		return true;
  	}

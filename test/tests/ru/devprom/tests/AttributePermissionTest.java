@@ -27,7 +27,7 @@ public class AttributePermissionTest extends ProjectTestBase {
 		
 		PageBase page = new PageBase(driver);
 		String p = DataProviders.getUniqueString();
-		Project testProject = new Project("DevTest"+p, "devtest"+p,
+		Project testProject = new Project("DevTest"+p, "devtest"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName)); 
 		ProjectNewPage pnp = page.createNewProject();
 		SDLCPojectPageBase sdlcFirstPage = (SDLCPojectPageBase) pnp.createNew(testProject);

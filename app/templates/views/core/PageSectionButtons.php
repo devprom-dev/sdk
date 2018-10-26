@@ -6,14 +6,14 @@
 	<div class="btn-group pull-left info-action">
 		<? $btnState = $_COOKIE[$section->getId().'-'.$table_id]; ?>
 		<? $btnState = $btnState == '' ? $section->IsActive() : $btnState == 'true'; ?>
-		<a id="<?=$section->getId()?>" class="btn dropdown-toggle btn-small btn-info <?=($btnState ? 'active' : '')?>" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
+		<a id="<?=$section->getId()?>" class="btn dropdown-toggle btn-sm btn-info <?=($btnState ? 'active' : '')?>" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
 			<i class="<?=$section->getIcon()?> icon-white"></i>
 		</a>
 	</div>
 <?php continue; } ?>
 
 <div class="btn-group pull-left info-action last">
-	<a class="btn dropdown-toggle btn-small btn-info" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
+	<a class="btn dropdown-toggle btn-sm btn-info" href="#" data-toggle="dropdown" title="<?=$section->getCaption()?>">
     	<i class="<?=$section->getIcon()?> icon-white"></i>
     	<span class="caret"></span>
 	</a>

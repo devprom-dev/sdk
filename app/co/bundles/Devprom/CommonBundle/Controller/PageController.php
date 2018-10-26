@@ -126,9 +126,9 @@ class PageController extends MainController
 		return $this->replyResult( false, $message, $object_id );
 	}
 
-	protected function replyRedirect( $url, $text = '' )
+	protected function replyRedirect( $url, $text = '', $info = '' )
 	{
-		return $this->_reply( 'redirect', $text, $url );
+		return $this->_reply( 'redirect', $text, $url, $info );
 	}
 
 	protected function replyRedirectError( $url, $text = '' )
@@ -151,12 +151,13 @@ class PageController extends MainController
 		return $this->_reply( $is_error ? 'error' : 'success', $message, $object_id);  
 	}    
 	
-	private function _reply( $state, $text, $object )
+	private function _reply( $state, $text, $object, $info = '' )
 	{
 		$result = array (
-		    'state' => \IteratorBase::wintoutf8($state),
-		    'message' => \IteratorBase::wintoutf8($text),
-		    'object' => \IteratorBase::wintoutf8($object)
+		    'state' => $state,
+		    'message' => $text,
+		    'object' => $object,
+            'info' => $info
 		);
 		
 		$log = $this->getLogger();

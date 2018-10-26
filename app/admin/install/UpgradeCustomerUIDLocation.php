@@ -14,7 +14,7 @@ class UpgradeCustomerUIDLocation extends Installable
 	    $content = $this->getSettingsContent();
 	    
 	    $content = $this->updateConstant( 'CUSTOMER_UID', CUSTOMER_UID, $content );
-	    
+
 	    $this->writeSettingsContent( $content );
 	     
 		return true;

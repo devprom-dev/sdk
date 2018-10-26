@@ -6,6 +6,8 @@ include "classes/MethodologyKanbanMetadataBuilder.php";
 include "classes/StateKanbanMetadataBuilder.php";
 include "classes/RequestKanbanMetadataBuilder.php";
 include "classes/widgets/KanbanTourScriptBuilder.php";
+include "classes/rules/KanbanIssueStateBusinessRuleBuilder.php";
+include "classes/rules/KanbanTaskStateBusinessRuleBuilder.php";
 
 class KanbanPmPlugin extends PluginPMBase
 {
@@ -66,7 +68,9 @@ class KanbanPmPlugin extends PluginPMBase
                 new StateKanbanMetadataBuilder(),
                 new MethodologyKanbanMetadataBuilder(),
                 // widgets
-                new KanbanTourScriptBuilder(getSession())
+                new KanbanTourScriptBuilder(getSession()),
+                new KanbanIssueStateBusinessRuleBuilder(),
+                new KanbanTaskStateBusinessRuleBuilder()
             )
  	    );
  	}

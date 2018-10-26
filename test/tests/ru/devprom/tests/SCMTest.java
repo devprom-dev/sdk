@@ -97,7 +97,7 @@ public class SCMTest extends ProjectTestBase {
 		FILELOG.debug("Created new Request: " + request);
 		
 		// Create a file with random name and content
-		File txtFile = FileOperations.createTxt(workingCopyPath+"//FileToBeCommited"+DataProviders.getUniqueString()+".php", "Some content");
+		File txtFile = FileOperations.createTxt(workingCopyPath+"//FileToBeCommited"+DataProviders.getUniqueStringAlphaNum()+".php", "Some content");
 		FILELOG.debug("Created file: " + txtFile.getAbsolutePath());
 		
 		 //Add & commit file to SVN with special comment
@@ -142,15 +142,9 @@ public class SCMTest extends ProjectTestBase {
 			Assert.assertEquals(rvp.readComment(rvp.readFirstInPageCommentNumber()),textComment);
 			//Check Time estimates
             List<Spent> timeEstimates = rvp.readSpentRecords();
-            Assert.assertEquals(timeEstimates.size(), 1);
+            Assert.assertEquals(timeEstimates.size(), 2);
             Assert.assertEquals(timeEstimates.get(0).hours, Double.parseDouble(spentTime));
 		}
-		
-				
-		//delete repository connection entry
-		rcp =rcp.gotoRepositoryConnectPage();
-		rcp = rcp.deleteRepository(repositoryName);	
-		FILELOG.debug("Deleted repository " + repositoryName);
 	}
 	
 	
@@ -210,7 +204,7 @@ public class SCMTest extends ProjectTestBase {
         FILELOG.debug("Created new Task: " + task);
 
 		// Create a file with random name and content
-		File txtFile = FileOperations.createTxt(workingCopyPath+"//FileToBeCommited"+DataProviders.getUniqueString()+".txt", "Some content");
+		File txtFile = FileOperations.createTxt(workingCopyPath+"//FileToBeCommited"+DataProviders.getUniqueStringAlphaNum()+".txt", "Some content");
 		FILELOG.debug("Created file: " + txtFile.getAbsolutePath());
 		
 		 //Add & commit file to SVN with special comment
@@ -248,11 +242,6 @@ public class SCMTest extends ProjectTestBase {
 			List<Commit> commitsFromTask = tvp.readCommitRecords();
 			Assert.assertTrue(commitsFromTask.containsAll(commits), "Some of commits are not displayed in Request");
 		}
-				
-		//delete repository connection entry
-		rcp =rcp.gotoRepositoryConnectPage();
-		rcp = rcp.deleteRepository(repositoryName);	
-		FILELOG.debug("Deleted repository " + repositoryName);
 	}
 		
 	
@@ -262,7 +251,7 @@ public class SCMTest extends ProjectTestBase {
 		
 		String contentBefore = "Содержимое файла после его создания";
 		String contentAfter = "Содержимое файла после его изменения";
-		String filename = "file"+DataProviders.getUniqueString()+".php";
+		String filename = "file"+DataProviders.getUniqueStringAlphaNum()+".php";
 		
 		// Configure SCM connection
 		String repositoryUrl = Configuration.getSVNUrl();
@@ -322,25 +311,5 @@ public class SCMTest extends ProjectTestBase {
 		CommitPage cp = rcomp.clickToTheLastCommitCommentedAs(textComment);
 		ChangesPage chp = cp.seeChanges(filename);
 		Assert.assertTrue(chp.isFileChanged(), "Изменения в файле не отображаются");
-		
-		//delete repository connection entry
-		rcp =chp.gotoRepositoryConnectPage();
-		rcp = rcp.deleteRepository(repositoryName);	
-		FILELOG.debug("Deleted repository " + repositoryName);
 	}
-	
-	
-		
-	@AfterClass 
-	public void deleteAllConections(){
-		PageBase page = new PageBase(driver);
-		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
-				new Template(this.waterfallTemplateName));
-		SDLCPojectPageBase favspage = (SDLCPojectPageBase) page.gotoProject(webTest);
-		RepositoryConnectPage rcp = favspage.gotoRepositoryConnectPage();
-		rcp.deleteAllRepositories();
-		FILELOG.debug("Connection to Repository list successfully cleaned up");
-		
-	}
-	
 }

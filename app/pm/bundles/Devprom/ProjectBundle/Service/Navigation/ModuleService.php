@@ -34,25 +34,29 @@ class ModuleService
 		
 		while( !$report_it->end() )
 		{
-			if ( !array_key_exists($report_it->get('Category'), $data) )
-			{
+			if ( !array_key_exists($report_it->get('Category'), $data) ) {
 				$report_it->moveNext();
 				continue;
 			}
 			
-			if ( !getFactory()->getAccessPolicy()->can_read($report_it) )
-			{
-				$report_it->moveNext(); continue;
+			if ( !getFactory()->getAccessPolicy()->can_read($report_it) ) {
+				$report_it->moveNext();
+				continue;
 			}
+
+			if ( $report_it->getDisplayName() == '' ) {
+                $report_it->moveNext();
+                continue;
+            }
 				
 			$info = $report_it->buildMenuItem();
 			
 			$data[$report_it->get('Category')]['nodes'][] = array (
-					'id' => $report_it->getId(),
-					'title' => $report_it->getDisplayName(),
-					'type' => 'report',
-					'desc' => $report_it->get('Description') != '' ? $report_it->get('Description') : '',
-					'reportUrl' => $info['url'] != '' ? $info['url'] : '#'
+                'id' => $report_it->getId(),
+                'title' => $report_it->getDisplayName(),
+                'type' => 'report',
+                'desc' => $report_it->get('Description') != '' ? $report_it->get('Description') : '',
+                'reportUrl' => $info['url'] != '' ? $info['url'] : '#'
 			);
 			
 			if ( $report_it->get('Module') != '' ) $skip_modules[] = $report_it->getDisplayName();
@@ -62,27 +66,28 @@ class ModuleService
 
 		while( !$module_it->end() )
 		{
-			if ( in_array($module_it->getDisplayName(), $skip_modules) )
-			{
+			if ( in_array($module_it->getDisplayName(), $skip_modules) ) {
 				$module_it->moveNext(); continue;
 			}
 			
-			if ( !array_key_exists($module_it->get('Area'), $data) )
-			{
+			if ( !array_key_exists($module_it->get('Area'), $data) ) {
 				$module_it->moveNext(); continue;
 			}
 			
-			if ( !getFactory()->getAccessPolicy()->can_read($module_it) )
-			{
+			if ( !getFactory()->getAccessPolicy()->can_read($module_it) ) {
 				$module_it->moveNext(); continue;
 			}
-			
+
+            if ( $module_it->getDisplayName() == '' ) {
+                $module_it->moveNext(); continue;
+            }
+
 			$data[$module_it->get('Area')]['nodes'][] = array (
-					'id' => $module_it->getId(),
-					'title' => $module_it->getDisplayName(),
-					'type' => 'module',
-					'desc' => $module_it->get('Description') != '' ? $module_it->get('Description') : '',
-					'reportUrl' => $module_it->get('Url') != '' ? $module_it->get('Url') : '#'
+                'id' => $module_it->getId(),
+                'title' => $module_it->getDisplayName(),
+                'type' => 'module',
+                'desc' => $module_it->get('Description') != '' ? $module_it->get('Description') : '',
+                'reportUrl' => $module_it->get('Url') != '' ? $module_it->get('Url') : '#'
 			);
 			
 			$module_it->moveNext();

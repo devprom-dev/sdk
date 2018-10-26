@@ -6,7 +6,7 @@ $attributeIndex++;
 if ( is_a($field, 'FieldForm') )
 {
     $field->setTabIndex($attributeIndex);
-	echo '<span id="'.$field->getId().'" class="input-block-level well well-text" style="width:100%;height:auto;">';
+	echo '<span name="'.$field->getId().'" class="input-block-level well well-text '.$field->getCssClass().'" style="width:100%;height:auto;">';
 		$field->render( $view );
 	echo '</span>';
 }

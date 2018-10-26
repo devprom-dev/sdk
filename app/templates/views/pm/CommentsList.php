@@ -11,13 +11,13 @@
 			<div class="comment">
 
                 <? if ( $form->IsAttributeModifable('Caption') ) { ?>
-				<a tabindex="5" class="btn btn-small btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
+				<a tabindex="5" class="btn btn-sm btn-success" type="button" title="" onclick="showCommentForm('<?=$url?>',$('#comments-form<?=$control_uid?>'), '', '');">
 					<i class="icon-comment icon-white"></i> <?=translate('Добавить комментарий')?>
 				</a>
                 <? } ?>
 
 				<? if ( $collapseable ) { ?>
-				<a tabindex="6" class="btn btn-small btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
+				<a tabindex="6" class="btn btn-sm btn-link" title="" onclick="toggleDocumentPageComments($('#comments-form<?=$control_uid?>'));">
 					<?=text(2231)?>
 				</a>
 				<? } ?>
@@ -96,7 +96,7 @@
 			success: function( result ) 
 			{
 				placeholder.html(result);
-				makeupUI(placeholder);
+                completeUIExt(placeholder);
 				setTimeout(function() {
 					try {
 						var captionElement = placeholder.contents().find('[id*=Caption]');
@@ -139,11 +139,11 @@
 				formDestroy('<?=$form->getId()?>');
 				
 				$('#commentsthread'+thread_id).html(result);
+                completeUIExt($('#commentsthread'+thread_id));
 				
 				$('.list_row_popup').each(function() {
 					$(this).contextMenu( $('#'+$(this).attr('menu')) );
 				});
-				$("a.image_attach").fancybox({ 'hideOnContentClick': true });
 			}
 		});				
 	}

@@ -29,7 +29,17 @@ class RequestTagsPersister extends ObjectSQLPersister
  		}
  	}
 
- 	function IsPersisterImportant() {
+ 	function add($object_id, $parms)
+    {
+        if ( trim($parms[$this->column_name]) == '' ) return;
+
+        $tag = getFactory()->getObject('RequestTag');
+        foreach( preg_split('/,/', $parms[$this->column_name]) as $tag_id ) {
+            $tag->bindToObject( $object_id, $tag_id );
+        }
+    }
+
+    function IsPersisterImportant() {
         return true;
     }
 }

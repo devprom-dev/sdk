@@ -77,7 +77,7 @@ class LastChangesSection extends InfoSection
             }
 
 			$rows[] = array(
-				'author' => $it->getHtmlDecoded('AuthorName'),
+				'author' => $it->get('UserName') != '' ? $it->getHtmlDecoded('UserName') : $it->getHtmlDecoded('AuthorName'),
 			 	'datetime' => $it->getDateTimeFormat('RecordModified'),
 			    'caption' => $content,
 				'icon' => $it->get('ChangeKind') == 'added' ? 'icon-plus-sign' : 'icon-pencil'

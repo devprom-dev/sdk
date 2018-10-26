@@ -6,7 +6,6 @@ include_once SERVER_ROOT_PATH."pm/classes/comments/persisters/CommentRecentPersi
 include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.php";
 include_once "persisters/TaskDatesPersister.php";
 include_once "persisters/TaskColorsPersister.php";
-include "persisters/TaskAssigneePersister.php";
 include "persisters/TaskSpentTimePersister.php";
 include "persisters/TaskPhotoPersister.php";
 include "persisters/TaskIssueArtefactsPersister.php";
@@ -25,17 +24,22 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 		$object->addPersister( new AttachmentsPersister(array('Attachment')) );
 		$object->addPersister( new WatchersPersister(array('Watchers')) );
 
-		if ( $object->getAttributeType('ChangeRequest') != '') {
-		    $request = $object->getAttributeObject('ChangeRequest');
-		    if ( getFactory()->getAccessPolicy()->can_read_attribute($request, 'Description') && $object instanceof Task ) {
-                $object->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
+		if ( $object->getAttributeType('ChangeRequest') != '' ) {
+		    if ( $object->getAttributeType('Description') == '' ) {
+                $request = $object->getAttributeObject('ChangeRequest');
+                if ( getFactory()->getAccessPolicy()->can_read_attribute($request, 'Description') && $object instanceof Task ) {
+                    $object->addAttribute('IssueDescription', 'WYSIWYG', text(2083), false, false, '', 40);
+                }
             }
+            $object->addAttribute('IssueFeature', 'REF_pm_FunctionId', translate('Функция'), false, false, '', 41);
 			$object->addAttribute('IssueAttachment', 'REF_pm_AttachmentId', text(2123), false, false, '', 41);
 			$object->addAttribute('IssueTraces', 'TEXT', text(1902), false, false, '', 42);
+            $object->addAttributeGroup('IssueTraces', 'trace');
             $object->addAttribute('IssueVersion', 'VARCHAR', text(1334), false, false, '', 43);
             $object->addAttribute('IssueState', 'VARCHAR', text(2128), false, false, '', 43);
-			$object->addPersister( new TaskIssueArtefactsPersister(array('IssueTraces','IssueDescription','IssueAttachment','IssueVersion','IssueState')) );
-			foreach ( array('IssueDescription','IssueAttachment','IssueVersion') as $attribute ) {
+            $object->addAttributeGroup('IssueState', 'workflow');
+			$object->addPersister( new TaskIssueArtefactsPersister() );
+			foreach ( array('IssueDescription','IssueAttachment','IssueVersion', 'IssueTraces') as $attribute ) {
 				$object->addAttributeGroup($attribute, 'source-issue');
 			}
 		}
@@ -74,7 +78,6 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
 
         if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED ) {
             $object->addAttribute('UserGroup', 'REF_UserGroupId', text('user.group.name'), false);
-            $object->addPersister( new TaskAssigneePersister() );
         }
 
         $object->addAttribute('ProjectPage', 'REF_ProjectPageId', translate('База знаний'), false);
@@ -84,21 +87,5 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
         $object->addAttribute('PlanFact', 'FLOAT', '', false, false);
         $object->addPersister( new TaskPlanFactPersister() );
         $object->addAttributeGroup('PlanFact', 'system');
-
-        $this->removeAttributes( $object, $methodology_it );
-    }
-
-    private function removeAttributes( $object, $methodology_it )
-    {
-        if ( !$methodology_it->HasPlanning() ) {
-            $object->removeAttribute( 'Release' );
-        }
-        if ( !$methodology_it->TaskEstimationUsed() ) {
-            $object->removeAttribute( 'Planned' );
-            $object->removeAttribute( 'LeftWork' );
-        }
-        if ( !$methodology_it->IsTimeTracking() ) {
-            $object->removeAttribute( 'Fact' );
-        }
     }
 }

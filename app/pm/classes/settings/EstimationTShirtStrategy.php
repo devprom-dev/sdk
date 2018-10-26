@@ -28,6 +28,7 @@ class EstimationTShirtStrategy extends EstimationStrategy
 
     public function convertToNumeric( $value )
     {
+        if ( is_numeric($value) ) return $value;
         if ( !preg_match('/(([\d]+X\s*)|([\d]+L\s*)|([\d]+M\s*)|([\d]+S\s*))+/', $value, $matches) ) return '*';
         return
             trim($matches[2] * 8,' X')

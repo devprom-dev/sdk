@@ -323,7 +323,6 @@ span.fancytree-node {
   min-height: 20px;
 }
 span.fancytree-title {
-  color: #555555;
   cursor: pointer;
   display: inline-block;
   vertical-align: top;
@@ -435,6 +434,7 @@ ul.fancytree-container.fancytree-rtl.fancytree-no-connector > li {
  *----------------------------------------------------------------------------*/
 table.fancytree-ext-table {
   border-collapse: collapse;
+  outline: none;
 }
 table.fancytree-ext-table span.fancytree-node {
   display: inline-block;
@@ -473,7 +473,6 @@ table.fancytree-ext-columnview span.fancytree-node {
   display: inline-block;
 }
 table.fancytree-ext-columnview span.fancytree-node.fancytree-expanded {
-  background-color: #CBE8F6;
 }
 table.fancytree-ext-columnview .fancytree-has-children span.fancytree-cv-right {
   position: absolute;
@@ -640,37 +639,23 @@ ul.fancytree-ext-wide span.fancytree-node span.fancytree-title {
 /*******************************************************************************
  * 'table' extension
  */
-table.fancytree-ext-table tbody tr td {
-  border: 1px solid #EDEDED;
-}
 table.fancytree-ext-table tbody span.fancytree-node,
 table.fancytree-ext-table tbody span.fancytree-node:hover {
   border: none;
   background: none;
 }
 table.fancytree-ext-table tbody tr:hover {
-  background-color: #E5F3FB;
-  outline: 1px solid #70C0E7;
 }
 table.fancytree-ext-table tbody tr.fancytree-focused span.fancytree-title {
-  outline: 1px dotted black;
 }
 table.fancytree-ext-table tbody tr.fancytree-active:hover,
 table.fancytree-ext-table tbody tr.fancytree-selected:hover {
-  background-color: #CBE8F6;
-  outline: 1px solid #26A0DA;
 }
 table.fancytree-ext-table tbody tr.fancytree-active {
-  background-color: #F7F7F7;
-  outline: 1px solid #DEDEDE;
 }
 table.fancytree-ext-table tbody tr.fancytree-selected {
-  background-color: #F7F7F7;
 }
 table.fancytree-ext-table.fancytree-treefocus tbody tr.fancytree-active {
-  background-color: #CBE8F6;
-  outline: 1px solid #26A0DA;
 }
 table.fancytree-ext-table.fancytree-treefocus tbody tr.fancytree-selected {
-  background-color: #CBE8F6;
 }

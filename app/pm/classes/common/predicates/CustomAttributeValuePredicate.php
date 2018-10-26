@@ -23,37 +23,35 @@ class CustomAttributeValuePredicate extends FilterPredicate
  		$mapper = new ModelDataTypeMapper();
  		$value_column = $attr_it->getRef('AttributeType')->getValueColumn();
 
-		if ( $filter == 'none' )
-		{
-			return " AND NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
-			"			  	  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
-			"				    AND av.".$value_column." IS NOT NULL".
-			"			    	AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ) ";
-		}
+ 		$sql = array();
+        foreach( preg_split('/,/',$filter) as $value )
+        {
+            if ( $value == 'none' ) {
+                $sql[] =
+                    " NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
+                    "              WHERE av.ObjectId = t.".$object->getClassName()."Id ".
+                    "            	 AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") )";
+                $sql[] =
+                    " EXISTS (SELECT 1 FROM pm_AttributeValue av ".
+                    "          WHERE av.ObjectId = t.".$object->getClassName()."Id ".
+                    "			 AND av.".$value_column." IS NULL".
+                    "			 AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") )";
+            }
+            else {
+                $data = array( $this->attribute => $value );
+                $mapper->map( $object, $data );
+                $values[] = $object->formatValueForDB($this->attribute, $data[$this->attribute]);
+            }
+        }
 
- 		$values = array();
- 		foreach( preg_split('/,/',$filter) as $value )
- 		{
-			if ( $value == 'none' ) {
-				$values[] = 'NULL';
-			} else {
-				$data = array( $this->attribute => $value );
-				$mapper->map( $object, $data );
-				$values[] = $object->formatValueForDB($this->attribute, $data[$this->attribute]);
-			}
- 		}
- 				
- 		if ( count($values) == 1 && $values[0] == 'NULL' )
- 		{
-	 		return " AND NOT EXISTS (SELECT 1 FROM pm_AttributeValue av ".
-	 			   "			  	  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
-	 			   "			    	AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
-	 			   "					AND av.".$value_column." IS NOT NULL ) ";
- 		}
- 				
- 		return " AND EXISTS (SELECT 1 FROM pm_AttributeValue av ".
- 			   "			  WHERE av.ObjectId = t.".$object->getClassName()."Id ".
- 			   "			    AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
- 			   "				AND av.".$value_column." IN (".join(",",$values).") ) ";
+        if ( count($values) > 0 ) {
+            $sql[] =
+                " EXISTS (SELECT 1 FROM pm_AttributeValue av ".
+                "		   WHERE av.ObjectId = t.".$object->getClassName()."Id ".
+                "		   	 AND av.CustomAttribute IN (".join(',',$attr_it->idsToArray()).") ".
+                "			 AND av.".$value_column." IN (".join(",",$values).") ) ";
+        }
+
+ 		return " AND (".join(" OR ", $sql)." ) ";
  	}
 }

@@ -99,7 +99,7 @@ div.treeview {
 .filetree {
 	position: relative;
 }
-.filetree li.treeview 
+.filetree li.treeview
 { 
 	padding: 0 0 0 16px;
 	width: 90%;
@@ -107,6 +107,9 @@ div.treeview {
 	margin: 0;
 	line-height: 18px;
 	white-space: nowrap;
+}
+.find-in-tree-area .filetree li.treeview {
+    line-height: 22px;
 }
 
 .filetree > li.treeview.collapsable {

@@ -6,6 +6,6 @@ class FilterTextExactPredicate extends FilterAttributePredicate
  	function _predicate( $filter )
  	{
 		$mapper = new ModelDataTypeMappingString();
-		return " AND ".$this->getAlias().".".$this->getAttribute()." = ".$this->getObject()->formatValueForDB($this->getAttribute(), $mapper->map(DAL::Instance()->Escape($filter)));
+		return " AND ".$this->getAlias().".".$this->getAttribute()." = '".htmlspecialchars(trim($mapper->map(DAL::Instance()->Escape($filter))), ENT_QUOTES | ENT_HTML401, APP_ENCODING)."' ";
  	}
 }

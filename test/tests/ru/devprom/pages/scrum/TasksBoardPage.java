@@ -34,7 +34,7 @@ public class TasksBoardPage extends ScrumPageBase{
 		if (!"".equals(task.getPriority())) 
 			new Select(driver.findElement(By.id("pm_TaskPriority"))).selectByVisibleText(task.getPriority());
 		submitDialog(driver.findElement(By.id("pm_TaskSubmitBtn")));
-		String uid = driver.findElement(By.xpath("//div[contains(.,'"+task.getName()+"')]/preceding-sibling::div//a")).getText();
+		String uid = driver.findElement(By.xpath("//div[contains(@class,'bi-cap') and contains(.,'"+task.getName()+"')]/preceding-sibling::div//a")).getText();
 		task.setId(uid.substring(1, uid.length()-1));
     	FILELOG.debug("Created Scrum Task: " + task.getId());
 		return new TasksBoardPage(driver);
@@ -47,7 +47,7 @@ public class TasksBoardPage extends ScrumPageBase{
 		} catch (InterruptedException e) {
 		}
         String taskNumber = taskID.substring(2);
-        WebElement onElement = driver.findElement(By.xpath("//a[contains(text(),'[" +taskID+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//a[contains(.,'[" +taskID+ "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
@@ -63,7 +63,7 @@ public class TasksBoardPage extends ScrumPageBase{
     public String getIdByName(String name) {
         FILELOG.debug("getIDTaskByName started");
         String IDtask;
-        WebElement element = driver.findElement(By.xpath("//div[contains(text(),'"+name+"')]/preceding-sibling::*/div/a"));
+        WebElement element = driver.findElement(By.xpath("//div[contains(.,'"+name+"')]/preceding-sibling::*/div/a"));
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(element));
         String uid = element.getText();
         IDtask = uid.substring(1, uid.length()-1);
@@ -81,7 +81,7 @@ public class TasksBoardPage extends ScrumPageBase{
                 "')]//a[text()='"+menuItemName+"']"));
         WebElement subMenuItem = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+taskNumber+
                 "')]//a[text()='"+subMenuItemName+"']"));
-        WebElement onElement = driver.findElement(By.xpath("//a[contains(text(),'[" +taskID+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//a[contains(.,'[" +taskID+ "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();

@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include "FormRequestTasksEmbedded.php";
 
 class FieldTasksRequest extends FieldForm
@@ -46,7 +45,7 @@ class FieldTasksRequest extends FieldForm
             if ( is_object($this->object_it) && $this->object_it->get('Iteration') > 0 ) {
                 $_REQUEST['Release'] = $this->object_it->get('Iteration');
             }
- 		    if ( is_object($this->object_it) && !$this->getEditMode() ) $form->setObjectIt($this->object_it);
+ 		    if ( is_object($this->object_it) ) $form->setObjectIt($this->object_it);
  		    
  		    $form->setReadonly( $this->readOnly() );
  		    $form->setTabIndex( $this->getTabIndex() );

@@ -1,15 +1,15 @@
 <?php
-
 include_once SERVER_ROOT_PATH."cms/classes/model/ObjectModelBuilder.php";
 include_once "persisters/RequestSpentTimePersister.php";
 include_once "persisters/RequestQuestionsPersister.php";
 include_once "persisters/IssueUsedByPersister.php";
+include "persisters/RequestTasksDetailPersister.php";
 
 class RequestModelExtendedBuilder extends ObjectModelBuilder 
 {
     public function build( Metaobject $object )
     {
-    	if ( $object->getEntityRefName() != 'pm_ChangeRequest' ) return;
+    	if ( !$object instanceof Request) return;
     	
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
@@ -17,9 +17,25 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
 			$object->addAttribute( 'Spent', 'REF_ActivityRequestId', translate('Списание времени'), false );
 		    $object->addPersister( new RequestSpentTimePersister(array('Spent')) );
 		}
-		$object->addPersister( new RequestQuestionsPersister(array('Question')) );
 
+        if ( $methodology_it->HasTasks() && $methodology_it->TaskEstimationUsed() ) {
+            $object->addAttribute( 'TasksPlanned', 'FLOAT', text(2532), !$methodology_it->RequestEstimationUsed(), false);
+            $object->setAttributeEditable('TasksPlanned', false);
+            $object->addAttributeGroup('TasksPlanned', 'workload');
+            $object->addAttributeGroup('TasksPlanned', 'hours');
+            $object->addAttributeGroup('TasksPlanned', 'additional');
+            if ( !$methodology_it->RequestEstimationUsed() ) {
+                $object->addAttributeGroup('TasksPlanned', 'display-name');
+            }
+            $object->addPersister( new RequestTasksDetailPersister(array('Question')) );
+        }
+
+		$object->addPersister( new RequestQuestionsPersister(array('Question')) );
         $this->removeAttributes( $object, $methodology_it );
+
+        $object->addAttribute( 'ProjectPage', 'REF_ProjectPageId', translate('База знаний'), false);
+        $object->addAttributeGroup('ProjectPage', 'trace');
+        $object->addPersister( new IssueUsedByPersister() );
 	}
 
     private function removeAttributes( $object, $methodology_it )
@@ -37,7 +53,7 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
         }
 
         $strategy = $methodology_it->getEstimationStrategy();
-        if ( $methodology_it->getId() > 0 && !$strategy->hasEstimationValue() ) {
+        if ( $methodology_it->getId() > 0 && $methodology_it->RequestEstimationUsed() && !$strategy->hasEstimationValue() ) {
             $object->removeAttribute( 'Estimation' );
             $object->removeAttribute( 'EstimationLeft' );
         }
@@ -56,13 +72,12 @@ class RequestModelExtendedBuilder extends ObjectModelBuilder
 
         $task = getFactory()->getObject('Task');
         if ( !getFactory()->getAccessPolicy()->can_read($task) ) {
+            $object->removeAttribute('TasksPlanned');
             $object->removeAttribute('Tasks');
             $object->removeAttribute('OpenTasks');
         }
-
-        $object->addAttribute( 'ProjectPage', 'REF_ProjectPageId', translate('База знаний'), false);
-        $object->addAttributeGroup('ProjectPage', 'trace');
-        $object->addPersister( new IssueUsedByPersister() );
-
+        if ( !getFactory()->getAccessPolicy()->can_read_attribute($task, 'Planned') ) {
+            $object->removeAttribute('TasksPlanned');
+        }
     }
 }

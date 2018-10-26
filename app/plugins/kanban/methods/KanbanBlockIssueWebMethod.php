@@ -25,7 +25,7 @@ class KanbanBlockIssueWebMethod extends WebMethod
     }
 
     function getJSCall( $parms = array() ) {
-        return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&Comment', ".$this->request_it->getId().", ".$this->getRedirectUrl().")";
+        return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=".$this->getMethodName()."&Comment&project=".$this->request_it->get('ProjectCodeName')."', ".$this->request_it->getId().", ".$this->getRedirectUrl().")";
     }
 
     function hasAccess() {

@@ -46,7 +46,7 @@ public class CKEditor {
         @FindBy(xpath = "//*[@class='cke_dialog_ui_vbox_child']//*[@class='cke_dialog_ui_input_textarea']/textarea")
 	protected WebElement addUMLField;
         
-        @FindBy(xpath = ".//*[@class='cke_dialog_ui_button' and contains(text(),'ОК')]")
+        @FindBy(xpath = ".//*[@class='cke_dialog_ui_button' and contains(.,'ОК')]")
 	protected WebElement okUMLBtn;
         
     @FindBy(className = "cke_button__source")
@@ -87,12 +87,12 @@ public class CKEditor {
 		WebElement editable = driver.findElement(By.xpath("//body"));
 		editable.clear();
 		editable.sendKeys("#");
-		driver.switchTo().defaultContent();
 		try {
-			Thread.sleep(2000);
+			Thread.sleep(4000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		driver.switchTo().defaultContent();
 		(new WebDriverWait(driver, Configuration.getWaiting())).until(
 				ExpectedConditions.presenceOfElementLocated(By.xpath("//ul[not(contains(@style,'none'))]/li[contains(@class,'textcomplete-item')]/a"))
 				);
@@ -117,41 +117,30 @@ public class CKEditor {
 		return text;
 	}
 
-	public void loadAttachementToRequirement(File image){
-	    addImageToRequirementBtn.click();
-	    
-		//turn off popup dialog
-	    String codeIE = "$.browser.msie = true; document.documentMode = 8;";
+	public void loadAttachementToRequirement(File image)
+	{
+		(new WebDriverWait(driver, Configuration.getWaiting())).until(
+				ExpectedConditions.presenceOfElementLocated(By.xpath(".//form//*[contains(@class,'editor-area')]//input"))
+				);
+
+		String codeIE = "$('input[type]').css('visibility','visible')";
 		((JavascriptExecutor) driver).executeScript(codeIE);
 		
-		//show input field and load file
-		driver.findElement(By.xpath("//div[@name='uploadImage']//a[contains(@class,'embedded-add-button')]")).click();
-		driver.findElement(By.xpath("//div[@name='uploadImage']//input[@type='file']")).sendKeys(image.getAbsolutePath());
-		driver.findElement(By.xpath("//div[@name='uploadImage']//div/input[contains(@id,'saveEmbedded')]")).click();
+		driver.findElement(By.xpath(".//form//*[contains(@class,'editor-area')]//input")).sendKeys(image.getAbsolutePath());
+		
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 		}
-        (new WebDriverWait(driver, Configuration.getWaiting())).until(ExpectedConditions.presenceOfElementLocated(By.name(image.getName())));
-		driver.findElement(By.className("cke_dialog_ui_button_ok")).click();
 	}
 
-    public void addUMLdiagramm(String uml) {
-        try{
-      (new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.visibilityOf(addUMLBtn));
-        addUMLBtn.click();
-        String codeIE = "$.browser.msie = true; document.documentMode = 8;";
-	((JavascriptExecutor) driver).executeScript(codeIE);
-        Thread.sleep(2000);
-        //driver.findElement(By.xpath("//*[@class='cke_dialog_ui_vbox_child']//*[@class='cke_dialog_ui_input_textarea']/textarea")).sendKeys(uml);//("//td/div/div/div/textarea")).sendKeys(uml);
-    //    Thread.sleep(5000);
-        //(new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.visibilityOf(addUMLField));
-        addUMLField.sendKeys(uml);
-        (new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.visibilityOf(okUMLBtn));
-        okUMLBtn.click();  
-        }
-        catch(InterruptedException e)
-        {}
+    public void addUMLdiagramm(String uml) 
+    {
+    	(new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.visibilityOf(addUMLBtn));
+    	addUMLBtn.click();
+    	(new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.visibilityOf(okUMLBtn));
+    	addUMLField.sendKeys(uml);
+    	okUMLBtn.click();  
     }
     
      public void addFormula(String formula) {

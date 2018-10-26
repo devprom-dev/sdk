@@ -23,7 +23,7 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
     @FindBy(xpath = "//a[contains(@id,'workflow') and contains(.,'Отклонить')]")
 	protected WebElement rejectBtn;
         
-    @FindBy(xpath = "//a[@id='workflow-development']")
+    @FindBy(xpath = "//a[contains(@id,'workflow-development')]")
 	protected WebElement issueReadyBtn;
 
     @FindBy(xpath = "//a[contains(@class,'btn-warning') and contains(.,'Состояние')]")
@@ -41,7 +41,7 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
     	protected WebElement statesBtn;
 
         //кнопка готово
-    @FindBy(xpath = "//div[@class='filter-actions']//a[contains(text(),'Готово')]")
+    @FindBy(xpath = "//div[@class='filter-actions']//a[contains(.,'Готово')]")
 	protected WebElement readyBtn;
         
     //кнопка Ошибка+
@@ -49,22 +49,22 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
 	protected WebElement addBugBtn;
         
           //добавить затраченное время на форма перехода для требования
-    @FindBy(xpath = "//span[@id='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
+    @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTimeReqBtn;  
         
         //поле добавления времени на форме перехода для требования
-    @FindBy(xpath = "//span[@id='pm_ChangeRequestFact']//input[contains(@name,'_Capacity')]")
+    @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//input[contains(@name,'_Capacity')]")
 	protected WebElement addTimeReqField;  
         
         //кнопка добавить время после ввода на форме  перехода
-    @FindBy(xpath = "//span[@id='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
+    @FindBy(xpath = "//span[@name='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAddedTimeReq;
        
         //кнопка сохранить время после ввода на форме  перехода для требования
         @FindBy(xpath=".//*[@id='pm_ChangeRequestSubmitBtn']")
 	protected WebElement submitAddedTimeReq;
         
-        @FindBy(xpath="(//a[contains(text(),'Списать время')])[1]")
+        @FindBy(xpath="(//a[contains(.,'Списать время')])[1]")
 	protected WebElement markTimeItem;
         
         @FindBy(xpath="//a[@id='new-task']")
@@ -84,7 +84,7 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
 	public TestScenarioTestingPage failTest(TestScenario testScenario) {
 		driver.findElement(By.xpath("//td[@id='attributes']//a[text()='Провален']")).click();
 		try {
-			Thread.sleep(1500);
+			Thread.sleep(5000);
 		} catch (InterruptedException e) {
 		}
 		return new TestScenarioTestingPage(driver);
@@ -95,7 +95,7 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(locator));
 		driver.findElement(locator).click();
 		try {
-			Thread.sleep(1500);
+			Thread.sleep(5000);
 		} catch (InterruptedException e) {
 		}
 		return new TestScenarioTestingPage(driver);
@@ -142,13 +142,21 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
         workflowButton.click();
         issueReadyBtn.click();
         waitForDialog();
-        (new CKEditor(driver)).typeText("-");
         return new RequestDonePage(driver);
     }
 
+    public RequestDonePage rejectWishWithOutTime() throws InterruptedException {
+        Thread.sleep(1000);
+        workflowButton.click();
+        issueReadyBtn.click();
+        waitForDialog();
+        (new CKEditor(driver)).typeText("-");
+        return new RequestDonePage(driver);
+    }
+    
     public void gotoScenarioNumber(int i) throws InterruptedException {
         Thread.sleep(2000);
-        driver.findElement(By.xpath(".//*[@class='pagination']//li[2]/a")).click();
+        driver.findElement(By.xpath(".//div[contains(@class,'test-pagination')]//a[" + String.valueOf(i) + "]")).click();
     }
 
     public void fillCell(String row, String coloumn, String text) {

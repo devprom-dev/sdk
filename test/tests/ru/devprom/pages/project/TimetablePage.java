@@ -11,6 +11,7 @@ import javax.xml.xpath.XPathExpressionException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -26,7 +27,7 @@ import ru.devprom.items.TimetableItem;
 public class TimetablePage extends SDLCPojectPageBase {
 
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
 	@FindBy(xpath = "//a[text()='Экспорт в Excel']")
@@ -41,7 +42,7 @@ public class TimetablePage extends SDLCPojectPageBase {
 	}
 
 	public TimetablePage setMode(String mode) {
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(text(),'Вид:')]")).click();
+		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(.,'Вид:')]")).click();
 		driver.findElement(By.xpath("//ul[@uid='view']/li/a[contains(@onkeydown,'view="+mode+"') or contains(@href,'view="+mode+"')]")).click();
 	    return new TimetablePage(driver);
 	}
@@ -137,7 +138,7 @@ return t;
 		}
 		driver.findElement(
 				By.xpath("//a[@data-toggle='dropdown' and @uid='role']/following-sibling::ul/li/a[text()='" + value + "']")).click();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(text(),'"	+ value + "')]")));
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(.,'"	+ value + "')]")));
 		
 		return new TimetablePage(driver);
 	}
@@ -148,17 +149,26 @@ return t;
 				By.xpath("//a[@data-toggle='dropdown' and @uid='participant']")).click();
 		try {
 			Thread.sleep(1000);
-		} catch (InterruptedException e) {
+		} catch (InterruptedException e) {}
+		try {
+			driver.findElement( By.xpath("//li[@uid='show-all']/a")).click();
 		}
+		catch(NoSuchElementException e) {}
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {}
 		driver.findElement(
 				By.xpath("//a[@data-toggle='dropdown' and @uid='participant']/following-sibling::ul/li/a[text()='" + value + "']")).click();
 		driver.findElement(
 				By.xpath("//a[@data-toggle='dropdown' and @uid='participant']")).click();
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(6000);
 		} catch (InterruptedException e) {
 		}
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(text(),'"	+ value.substring(0, 9) + "')]")));
+		driver.navigate().refresh();
+		(new WebDriverWait(driver, waiting)).until(
+				ExpectedConditions.presenceOfElementLocated(
+						By.xpath("//a[@data-toggle='dropdown' and @uid='participant' and contains(.,'" + value.substring(0, 9) + "')]")));
 		return new TimetablePage(driver);
 	}
 

@@ -72,25 +72,22 @@ class FlotChartDataSource
 				
 				$inner_value = $it->getWordsOnlyValue( $inner_value, 5 );
 				
-				if ( $inner_value != '' )
-				{
-					if ( !is_array($data[$value]['data']) )
-					{
-						$agg_attr = $aggs[1]->getAttribute();
-						if ( $object->IsReference($agg_attr) ) {
-							$values = $agg_values;
-						}
-						else {
-							$values = array( $inner_value => $it->get($agg_attr) ); 
-						}
-						 
-						$data[$value] =  
-							array( 'data' => $values ); 
-					}
-					
-					$data[$value]['data'][$inner_value] = 
-						round( $it->get($aggs[1]->getAggregateAlias()) );
-				}
+                if ( !is_array($data[$value]['data']) )
+                {
+                    $agg_attr = $aggs[1]->getAttribute();
+                    if ( $object->IsReference($agg_attr) ) {
+                        $values = $agg_values;
+                    }
+                    else {
+                        $values = array( $inner_value => $it->get($agg_attr) );
+                    }
+
+                    $data[$value] =
+                        array( 'data' => $values );
+                }
+
+                $data[$value]['data'][$inner_value] =
+                    round( $it->get($aggs[1]->getAggregateAlias()) );
 			}
 			else
 			{

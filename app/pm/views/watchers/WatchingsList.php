@@ -49,9 +49,7 @@ class WatchingsList extends PMPageList
 			if ( $actions[array_pop(array_keys($actions))]['name'] != '' ) $actions[] = array();
 			array_push($actions, array(
 			    'name' => $method->getCaption(),
-			    'url' => $method->getJSCall(
-			        array('object' => $anchor_it->object->getClassName(), 'id' => $anchor_it->getId() )
-			    )
+			    'url' => $method->getJSCall()
 			));
 		}
 		
@@ -61,7 +59,7 @@ class WatchingsList extends PMPageList
 		
 		array_push($actions, array( 
 		    'url' => $session->getApplicationUrl().'project/log?object='.$anchor_it->object->getClassName().'&'.$class.'='.$anchor_it->getId(), 
-		    'name' => text(2238)
+		    'name' => text(824)
 		));
 
 		return $actions;

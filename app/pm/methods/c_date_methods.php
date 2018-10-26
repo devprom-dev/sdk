@@ -33,12 +33,12 @@ class ViewStartDateWebMethod extends FilterDateWebMethod
 		return 'start';
 	}
 
-	function getPersistedValue()
+	function getPersistedValue2()
 	{
 		return null;
 	}
 
-	function getValue()
+	function getValue2()
 	{
 		$value = SystemDateTime::parseRelativeDateTime($_REQUEST[$this->getValueParm()], getLanguage());
 		if ( in_array($value, array('','hide')) ) return $this->getDefault();

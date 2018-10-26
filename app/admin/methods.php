@@ -20,14 +20,12 @@ include_once SERVER_ROOT_PATH."core/methods/FilterTextWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/GetAttributeWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedBeforeDateWebMethod.php";
 include_once SERVER_ROOT_PATH."core/methods/ViewSubmmitedAfterDateWebMethod.php";
-
-include_once SERVER_ROOT_PATH.'core/c_more.php';
-
 include_once('methods/c_user_methods.php');
 include_once('methods/c_plugin_methods.php');
 include_once('methods/c_project_methods.php');
 include_once('methods/c_check_methods.php');
 
+if ( !getSession()->getUserIt()->IsAdministrator() ) exit(header('Location: /'));
 if ( !class_exists($_REQUEST['method'], false) ) throw new Exception('There is no such method');
 
 $method = new $_REQUEST['method'];

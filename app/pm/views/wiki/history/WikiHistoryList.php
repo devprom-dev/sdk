@@ -13,10 +13,10 @@ class WikiHistoryList extends ProjectLogList
 	function retrieve()
 	{
 		parent::retrieve();
-	
+
 		$object_it = $this->getTable()->getObjectIt();
 		if ( $object_it->getId() < 1 ) return;
-		
+
 		$this->can_revert = true;
 		$this->documentMode = $object_it->get('TotalCount') > 0;
 		$this->editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));

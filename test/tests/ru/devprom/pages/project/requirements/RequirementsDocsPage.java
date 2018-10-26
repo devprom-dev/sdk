@@ -28,6 +28,10 @@ public class RequirementsDocsPage extends SDLCPojectPageBase {
     public RequirementViewPage addDoc() {
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(addDocBtn));
         addDocBtn.click();
+        try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+		}
         return new RequirementViewPage(driver);
     }
     

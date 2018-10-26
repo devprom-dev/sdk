@@ -9,10 +9,17 @@ $project_it = $session->getProjectIt();
 
 <div class="btn-toolbar title-toolbar">
     <div class="btn-group navbar-company">
-        <a id="navbar-company-name" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
-            <i class="icon-th-list icon-white"></i>&nbsp;
-            <?=$company_name?>
-            <span class="caret"></span>
+        <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
+            <i class="icon-white icon-align-justify"></i>&nbsp;
+            <?php
+                if ( $project_navigation_parms['current_portfolio'] != $project_navigation_parms['current_project'] ) {
+                    echo $project_navigation_parms['current_project_title'];
+                }
+                else {
+                    echo $project_navigation_parms['current_portfolio_title'];
+                }
+                echo PHP_EOL . '<span class="caret"></span>';
+            ?>
         </a>
         <?php
         if ( is_array($project_navigation_parms) ) {
@@ -20,60 +27,13 @@ $project_it = $session->getProjectIt();
         }
         ?>
     </div>
-    <div class="btn-group">
-    </div>
-    <?php $subprojects_count = count($project_navigation_parms['projects'][$project_navigation_parms['current_portfolio']]); ?>
-    <?php if( is_array($project_navigation_parms) ) { ?>
-        <?
-        if ( $project_navigation_parms['current_portfolio'] == '' ) { ?>
-            <div class="btn-group">
-                <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
-                    <?=$project_navigation_parms['current_project_title']?>
-                    <span class="caret"></span>
-                </a>
-                <? echo $view->render('core/PageTitleProjects.php', $project_navigation_parms); ?>
-            </div>
-        <?
-        }
-        else if ( $project_navigation_parms['current_project'] == $project_navigation_parms['current_portfolio'] ) { ?>
-            <?php $hasActions = count($project_navigation_parms['portfolio_actions']) > 0 || count($project_navigation_parms['program_actions']) > 0; ?>
-            <div class="btn-group">
-                <a id="navbar-portfolio" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
-                    <?=$project_navigation_parms['current_portfolio_title']?>
-                    <?php if ( $hasActions ) { ?>
-                    <span class="caret"></span>
-                    <?php } ?>
-                </a>
 
-                <?php if ( $hasActions ) { echo $view->render('core/PageTitlePortfolios.php', $project_navigation_parms); } ?>
-            </div>
-
-        <? } else { ?>
-
-            <? if ( !in_array($project_navigation_parms['current_portfolio'], array('all','my')) ) { ?>
-                <div class="btn-group">
-                    <a id="navbar-portfolio" class="btn btn-link btn-navbar" href="/pm/<?=$project_navigation_parms['current_portfolio']?>">
-                        <?=$project_navigation_parms['current_portfolio_title']?>
-                    </a>
-                </div>
-            <?php } ?>
-
-            <div class="btn-group">
-                <a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
-                    <?=$project_navigation_parms['current_project_title']?>
-                    <span class="caret"></span>
-                </a>
-                <?php echo $view->render('core/PageTitleProjects.php', $project_navigation_parms); ?>
-            </div>
-        <?php } ?>
-
-    <?php } ?>
-
-    <?php if ( is_array($quickMenu) && count($quickMenu['items']) > 0 ) { ?>
+    <?php
+    if ( is_array($quickMenu) && count($quickMenu['items']) > 0 ) {
+    ?>
     <div class="btn-group quick-btn">
-        <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-small <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$quickMenu['description']?>">
+        <a id="<?=$quickMenu['id']?>" class="btn dropdown-toggle btn-sm <?=$quickMenu['button_class']?>" data-toggle="dropdown" href="#" title="<?=$quickMenu['description']?>">
             <i class="<?=$quickMenu['icon']?>"></i>
-            <span class="caret"></span>
         </a>
         <?php
             echo $view->render('core/PopupMenu.php', array (
@@ -83,7 +43,9 @@ $project_it = $session->getProjectIt();
             ));
         ?>
     </div>	<!-- end btn-group -->
-    <?php } ?>
+    <?php
+    }
+    ?>
 
 </div> <!-- end btn-toolbar -->
 

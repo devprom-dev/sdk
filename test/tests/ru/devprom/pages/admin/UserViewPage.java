@@ -8,7 +8,7 @@ import org.testng.Assert;
 
 public class UserViewPage extends AdminPageBase {
 
-	@FindBy(xpath = "//a[contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[contains(.,'Действия')]")
 	private WebElement actionsBtn;
 
 	@FindBy(xpath = "//a[@id='modify']")

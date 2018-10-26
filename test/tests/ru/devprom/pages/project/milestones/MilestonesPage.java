@@ -11,7 +11,7 @@ import ru.devprom.pages.project.SDLCPojectPageBase;
 
 public class MilestonesPage extends SDLCPojectPageBase {
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 
 	@FindBy(id="filter-settings")
@@ -32,14 +32,14 @@ public class MilestonesPage extends SDLCPojectPageBase {
 	
 	public MilestoneEditPage editMilestone(String id){
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'milestonelist1_row_')]/td[@id='uid']/a[contains(text(),'["
+				By.xpath("//tr[contains(@id,'milestonelist1_row_')]/td[@id='uid']/a[contains(.,'["
 						+ id + "]')]")).click();
 		return new MilestoneEditPage(driver);
 	}
 	
 	public String getLinkedRequestId(String milestoneId){
 		String requestId = "";
-		String path = "//tr[contains(@id,'milestonelist1_row_')]/td[@id='uid']/a[contains(text(),'["
+		String path = "//tr[contains(@id,'milestonelist1_row_')]/td[@id='uid']/a[contains(.,'["
 				+ milestoneId + "]')]/../following-sibling::td[@id='tracerequests']/a";
 		if (driver.findElements(By.xpath(path)).size()>0) {
 			requestId = driver.findElement(By.xpath(path)).getText();
@@ -51,7 +51,7 @@ public class MilestonesPage extends SDLCPojectPageBase {
 	
 	public boolean isMilestonePresent(String milestoneId){
 		return driver.findElements(
-				By.xpath("//tr[contains(@id,'milestonelist1_row_')]/td[@id='uid']/a[contains(text(),'["
+				By.xpath("//tr[contains(@id,'milestonelist1_row_')]/td[@id='uid']/a[contains(.,'["
 						+ milestoneId + "]')]")).size()>0;
 	}
 	

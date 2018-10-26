@@ -47,7 +47,7 @@ class SanitizeUrlTest extends PHPUnit_Framework_TestCase
 	public function testUrlsStripTags()
 	{
 	    $this->assertEquals( 
-	    		'/pm/tyjtjty/module/helpdocs/list/wj3aeqd9.asp?document.cookie="testqrgv=4463;"', 
+	    		'/pm/tyjtjty/module/helpdocs/list/wj3aeqd9.asp?document.cookie="testqrgv=4463;"',
 	    		SanitizeUrl::parseUrl($this->url_with_tags)
 		);
 	}

@@ -34,11 +34,11 @@ switch ( $type )
 {
     case 'css':
         $files =
-            'styles/jquery-ui/jquery-ui-1.8.16.custom.css,' .
+            'styles/jquery-ui/jquery-ui-1.10.0.custom.css,' .
             'styles/bootstrap/css/bootstrap.css,'.
             'styles/bootstrap/css/bootstrap-responsive.css,'.
             'styles/select/jquery_select.css,' .
-            'styles/fancybox/fancy.css,'.
+            'styles/fancybox/jquery.fancybox.min.css,'.
             'styles/newlook/main.css,'.
             'styles/newlook/medium-fonts.css,'.
             'styles/jquery/jquery.treeview.css,' .
@@ -69,7 +69,7 @@ switch ( $type )
                     'jquery/jquery.treeview.edit.js,'.
                     'jquery/jquery.treeview.async.js,'.
                     'keyboard/mousetrap.min.js,'.
-                    'fancybox/jquery.fancybox-1.0.0.js,'.
+                    'fancybox/jquery.fancybox.min.js,'.
                     'excanvas/excanvas.compiled.js,'.
                     'flot/jquery.flot.min.js,'.
                     'flot/jquery.flot.pie.min.js,'.
@@ -83,14 +83,20 @@ switch ( $type )
                     'jquery/jquery.base64.min.js,'.
                     'jquery/jquery.ba-resize.min.js,'.
                     'jquery/imagesloaded.pkgd.min.js,'.
+                    'jquery/paste.js,'.
+                    'jquery/jquery.imageLens.js,'.
                     'color-picker/jquery.colorPicker.min.js,'.
                     'locale/underi18n.js,' .
                     'time/jstz-1.0.4.min.js,'.
                     'clipboard/clipboard.min.js,'.
                     'pm/locale/'.$language.'/resources.js,'.
                     'pm/common.js,'.
+                    'flow/circle-progress.min.js,'.
+                    'flow/flow.min.js,'.
+                    'pm/upload.js,'.
                     'pm/board.js,'.
                     'pm/document.js,'.
+                    'pm/treegrid.js,'.
                     'pm/shortcuts.js';
                 break;
             case '2': // TODO: remove for next update
@@ -117,13 +123,16 @@ switch ( $type )
             ',bootstrap/bootstrap.min.js,'.
             'bootstrap/bootstrap-filestyle-0.1.0.min.js,'.
             'bootstrap/bootstrap-contextmenu.js,'.
-            'jquery-ui/jquery-ui-1.8.23.custom.min.js,'.
+            'jquery-ui/jquery-ui.js,'.
             'jquery-ui/jquery.ui.touch-punch.min.js,'.
             'fancytree/jquery.fancytree.js,' .
             'fancytree/jquery.fancytree.dnd.js,' .
             'fancytree/jquery.fancytree.persist.js,' .
-            'jquery/perfect-scrollbar.jquery.min.js,'.
-            'jquery/jquery.peekabar.js,';
+            'fancytree/jquery.fancytree.table.js,' .
+            'scrollbar/perfect-scrollbar.min.js,'.
+            'jquery/jquery.peekabar.js,'.
+            'jquery/jquery.cookie.js,'.
+            'hashids/hashids.min.js,';
 
         switch ( $_GET['dpl'] ) {
             case 'ru':

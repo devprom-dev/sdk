@@ -63,37 +63,28 @@ class SnapshotList extends PMPageList
     	    		
 					$uid = new ObjectUID;
 					
-					if ( $uid->hasUid($it) )
-					{
-						$info = $uid->getUidInfo($it, true);
-						$url = $info['url'];
-						$title = '['.$info['uid'].'] '.$info['caption']; 
+					if ( $uid->hasUid($it) ) {
+                        if ( $object_it->get('Type') != 'branch' ) {
+                            $uid->setBaseline($object_it->getId());
+                        }
+						$title = $uid->getUidWithCaption($it, 20);
 					}
-					else
-					{
-						$url = $it->getViewUrl();
-						$title = $it->getDisplayName();
+					else {
+						$title = $it->getDisplayNameExt();
 					}
 
 					if ( $object_it->get('Type') == 'branch' ) {
 						$title = translate('Бейзлайн').': '.$title;
 					}
 					else {
-						$title = translate('Версия').': '.$title;
-						$url .= (strpos($url, '?') !== false ? '&' : '?').'baseline='.$object_it->getId();
+						$title = translate('Версия').': '.$object_it->get($attr) . ' ' . $title;
 					}
 					
-					echo '<a href="'.$url.'">'.$title.'</a>';
+					echo $title;
     	    	}
 
 				// version of the branch included in the object's title already
-				if ( $object_it->get('Type') != 'branch' )
-				{
-					echo ': ';
-					
-					parent::drawCell( $object_it, $attr );
-				}
-    	    	
+
     	    	break;
     	    	
     	    default:

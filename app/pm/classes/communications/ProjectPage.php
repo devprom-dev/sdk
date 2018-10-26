@@ -1,18 +1,17 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/PMWikiPage.php';
-
 include "ProjectPageIterator.php";
 include "predicates/KnowledgeBaseAccessPredicate.php";
 include "sorts/NativeProjectSortClause.php";
-include "persisters/ProjectPageTitlePersister.php";
 
 class ProjectPage extends PMWikiPage
 {
  	function __construct()
  	{
  		parent::__construct();
-		$this->addPersister(new ProjectPageTitlePersister());
+        foreach ( array('Estimation','Importance') as $attribute ) {
+            $this->addAttributeGroup($attribute, 'system');
+        }
  	}
  	
  	function getDisplayName() 

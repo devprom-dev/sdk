@@ -27,6 +27,12 @@ class Severity extends BaseEntity
     private $name;
 
     /**
+     * @ORM\Column(type="integer", name="OrderNum")
+     * @var integer
+     */
+    private $orderNum;
+
+    /**
      * @param string $name
      */
     public function setName($name)
@@ -61,5 +67,21 @@ class Severity extends BaseEntity
     public function __toString()
     {
         return $this->getName();
+    }
+
+    /**
+     * @return int
+     */
+    public function getOrderNum()
+    {
+        return $this->orderNum;
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setOrderNum($value)
+    {
+        $this->orderNum = $value;
     }
 }

@@ -3,18 +3,6 @@ include "fields/FieldProjectTemplateDictionary.php";
 
 class CreateProjectForm extends AjaxForm
 {
- 	var $question_it;
- 	
- 	function CreateProjectForm ( $object )
- 	{
- 		global $model_factory;
- 		
-		$question = $model_factory->getObject('cms_CheckQuestion');
-		$this->question_it = $question->getRandom();
-		
-		parent::AjaxForm( $object );
- 	}
- 	
  	function getAddCaption()
  	{
  		return text('projects.create.title');
@@ -74,7 +62,15 @@ class CreateProjectForm extends AjaxForm
 		    	return getFactory()->getObject('pm_ProjectTemplate')->getExact($template)->getDisplayName();
 		    	
 		    case 'CodeName':
-		    	return defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? md5(microtime(true)) : "";
+		        $codeName = defined('SKIP_TARGET_BLANK') && SKIP_TARGET_BLANK ? md5(microtime(true)) : "";
+                if ( $codeName == "" && is_numeric($_REQUEST['program']) ) {
+                    $programIt = getFactory()->getObject('Project')->getExact($_REQUEST['program']);
+                    if ( $programIt->getId() != '' ) {
+                        $projectsNumber = count(preg_split('/,/', $programIt->get('LinkedProject')));
+                        $codeName = $programIt->get('CodeName') . '-' .strval($projectsNumber + 1);
+                    }
+                }
+		    	return $codeName;
 
 		    case 'Template':
 		    	return $_REQUEST['Template'];
@@ -113,7 +109,7 @@ class CreateProjectForm extends AjaxForm
 			case 'Caption':
 				return translate('Название');
 			case 'Template':
-				return translate('Шаблон начальных настроек проекта');
+				return translate('Процесс');
 			case 'Participants':
 				return text(2001);
 			default:

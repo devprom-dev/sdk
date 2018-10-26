@@ -22,7 +22,7 @@ public class HistoryBoardPage extends ScrumPageBase{
     }
 
     public IterationNewPage versionChange(String sprint) {
-        WebElement sprintTitle = driver.findElement(By.xpath("//td[@class='board-group']//span[contains(text(),'"+sprint+"')]"));
+        WebElement sprintTitle = driver.findElement(By.xpath("//td[@class='board-group']//span[contains(.,'"+sprint+"')]"));
         clickOnInvisibleElement(sprintTitle.findElement(By.xpath("./ancestor::td//a[@id='row-modify']")));
         return new IterationNewPage(driver);
     }
@@ -36,7 +36,7 @@ public class HistoryBoardPage extends ScrumPageBase{
             if(driver.findElement(By.xpath("//table[contains(@id,'requestboard')]/tbody/tr[contains(@class,'board-columns')]/th["+i+"]")).getText().contains(columnName))	
                column = i;
         }
-      	 WebElement element = driver.findElement(By.xpath("//a[contains(text(),'"+requestNumericId+"')]/ancestor::div[@class='board_item_body']"));
+      	 WebElement element = driver.findElement(By.xpath("//a[contains(.,'"+requestNumericId+"')]/ancestor::div[@class='board_item_body']"));
          int rowNum = releaseNumber+1;
        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//tr[contains(@class,'row-cards')]["+rowNum+"]//td["+column+"]"));
        scrollToElement(onElement);
@@ -51,7 +51,7 @@ public class HistoryBoardPage extends ScrumPageBase{
     }
 
     public ScrumIssueViewPage openUserStory(String id) {
-        driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(text(),'[" +id+ "]')]")).click();
+        driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +id+ "]')]")).click();
         return new ScrumIssueViewPage(driver);
     }
     

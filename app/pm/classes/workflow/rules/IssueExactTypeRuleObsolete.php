@@ -45,7 +45,7 @@ class IssueExactTypeRuleObsolete extends BusinessRulePredicate
  		return str_replace('%1', $this->type_name, text(1157));
  	}
  	
- 	function check( $object_it ) {
+ 	function check( $object_it, $transitionIt ) {
  		return $object_it->get('Type') == $this->type_id;
  	}
 }

@@ -17,7 +17,7 @@ class BusinessRulePredicate
  		return null;
  	}
  	
- 	function check( $object_it )
+ 	function check( $object_it, $transitionIt )
  	{
  		return false;
  	}

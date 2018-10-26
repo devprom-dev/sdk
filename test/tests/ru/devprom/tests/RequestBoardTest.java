@@ -42,7 +42,7 @@ public class RequestBoardTest extends ProjectTestBase {
 	public void prepare(){
 		 PageBase page = new PageBase(driver);
 		 String p = DataProviders.getUniqueString();
-		 Project project = new Project("SDLCProject"+p, "sdlc"+p,new Template(this.waterfallTemplateName));
+		 Project project = new Project("SDLCProject"+p, "sdlc"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 			
 		 ProjectNewPage pnp = page.createNewProject();
 		SDLCPojectPageBase sdlc =  (SDLCPojectPageBase)pnp.createNew(project);
@@ -336,7 +336,7 @@ public class RequestBoardTest extends ProjectTestBase {
 		      Assert.assertTrue(rbp.isRequestInSection(request.getNumericId(), "Низкий", "Добавлено"), "Пожелание не было перемещено строку Приоритет: Низкий (через перетаскивание)");
 
 	          RequestViewPage rvp = rbp.clickToRequest(request.getId());
-	          Assert.assertEquals(rvp.readPriority(), "Низкий", "В режиме просмотра пожелания неверный приоритет");
+	          Assert.assertTrue(rvp.readPriority().contains("Низкий"), "В режиме просмотра пожелания неверный приоритет");
 	}
 	
 	@Test (priority=10, description="S-1992")

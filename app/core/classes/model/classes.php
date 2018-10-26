@@ -3,6 +3,7 @@
 include SERVER_ROOT_PATH.'core/classes/analytics/FeatureTouch.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/License.php';
 include SERVER_ROOT_PATH.'core/classes/licenses/LicenseState.php';
+include SERVER_ROOT_PATH.'core/classes/licenses/LicensePermission.php';
 include SERVER_ROOT_PATH.'core/classes/maintenance/Update.php';
 include SERVER_ROOT_PATH.'core/classes/mail/MailerSettings.php';
 include SERVER_ROOT_PATH.'core/classes/mail/SmtpEncryptionMode.php';
@@ -21,8 +22,7 @@ include SERVER_ROOT_PATH.'core/classes/history/ChangeLog.php';
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLogAggregated.php';
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLogWhatsNew.php';
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLogAction.php';
-include SERVER_ROOT_PATH.'cms/c_hashids.php'; 
-include SERVER_ROOT_PATH.'core/classes/system/SystemSettings.php'; 
+include SERVER_ROOT_PATH.'core/classes/system/SystemSettings.php';
 include SERVER_ROOT_PATH.'core/classes/UserSettings.php'; 
 include SERVER_ROOT_PATH.'core/classes/schedule/Calendar.php'; 
 include SERVER_ROOT_PATH.'core/classes/history/ChangeLogEntitySet.php'; 

@@ -32,7 +32,7 @@ public class SettingsTest extends ProjectTestBase {
 	public void customSettingsForAllMembers() throws InterruptedException {
 		PageBase page = new PageBase(driver);
 		 String p = DataProviders.getUniqueString();
-		 Project project = new Project("SDLCProject"+p, "sdlc"+p,new Template(this.waterfallTemplateName));
+		 Project project = new Project("SDLCProject"+p, "sdlc"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 			
 		 ProjectNewPage pnp = page.createNewProject();
 		SDLCPojectPageBase sdlc =  (SDLCPojectPageBase)pnp.createNew(project);

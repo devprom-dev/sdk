@@ -19,7 +19,7 @@ public class RequestRejectPage extends SDLCPojectPageBase {
 	@FindBy(id = "ClosedInVersionText")
 	protected WebElement versionClosed;
 
-	@FindBy(xpath = "//button[@type='button']/span[text()='Сохранить']/..")
+	@FindBy(id = "pm_ChangeRequestSubmitBtn")
 	protected WebElement submitBtn;
 
 	public RequestRejectPage(WebDriver driver) {
@@ -36,9 +36,9 @@ public class RequestRejectPage extends SDLCPojectPageBase {
 		} catch (InterruptedException e) {
 		}
 		(new CKEditor(driver)).typeText(comment);
-		submitBtn.click();
+		submitDialog(submitBtn);
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
-				.presenceOfElementLocated(By.xpath("//span[@id='state-label' and contains(text(),'Добавлено')]")));
+				.presenceOfElementLocated(By.xpath("//span[@id='state-label' and contains(.,'Добавлено')]")));
 		return new RequestViewPage(driver);
 	}
 

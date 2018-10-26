@@ -4,13 +4,16 @@
 
 class TextUtils
 {
+    const REGEX_SHRINK = '/(^|[^=]"|[^="])((http:|https:|ftp:|ftps:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]_]+[_\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im';
+    const REGEX_SHARE = '/(\\\\)(\\\\[^<\s]+){2,}(\\\\)?/im';
+
     public static function breakLongWords( $content, $maxLength = 80 ) {
         return join(' ', array_map(
             function($line) use ($maxLength) {
                 return mb_strlen($line) > $maxLength && strpos($line, 'src="') === false && strpos($line, 'href="') === false
                     ? join('<', array_map(
                         function($line) use ($maxLength) {
-                            return TextUtils::mb_wordwrap($line, $maxLength, "<wbr/>", true);
+                            return TextUtils::mb_wordwrap($line, $maxLength, "\n", true);
                         },
                         preg_split('/</u', $line)
                       ))
@@ -170,6 +173,33 @@ class TextUtils
         return $body;
     }
 
+    public static function checkHtml( $body )
+    {
+        $text = preg_replace('/<meta\s+[^>]+>/i', '', $body);
+        if ( mb_stripos($text, '<body>') === false ) {
+            return "";
+        }
+        else {
+            $text = array_pop(preg_split('/<html>/i', $text));
+            $text = array_shift(preg_split('/<\/html>/i', $text));
+            $text = '<html>'.$text.'</html>';
+        }
+        $text = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?>'.$text;
+
+        $was_state = libxml_use_internal_errors(true);
+        $doc = new \DOMDocument("1.0", APP_ENCODING);
+        if ( $doc->loadHTML($text) ) {
+            $bodyElement = $doc->getElementsByTagName('body');
+            if ( $bodyElement->length > 0 ) {
+                return $doc->saveHTML($bodyElement->item(0));
+            }
+        }
+        libxml_clear_errors();
+        libxml_use_internal_errors($was_state);
+
+        return "";
+    }
+
     public function EscapeShellArgument( $text ) {
         return preg_replace('/`/','\\`',trim(escapeshellarg($text),'"\''));
     }
@@ -190,7 +220,7 @@ class TextUtils
     }
 
     public function getAlphaNumericString( $text ) {
-        $text = preg_replace( "/[^\p{L}|\p{N}\+\-\.,:;_\{\}]+/u", " ", $text );
+        $text = preg_replace( "/[^\p{L}|\p{N}\+\-\&\(\)\=\@\/\.,:;_\{\}]+/u", " ", $text );
         return preg_replace( "/[\p{Z}]{2,}/u", " ", $text );
     }
 
@@ -242,12 +272,61 @@ class TextUtils
         }
     }
 
-    public static function parseIds( $text ) {
+    protected static function getHashIdsInstance() {
+        return new Hashids\Hashids(
+            md5(INSTALLATION_UID.CUSTOMER_UID), 4, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        );
+    }
+
+    public static function buildIds( $ids )
+    {
+        $ids = preg_split('/[,-]/', join(',', $ids));
+        return self::getHashIdsInstance()->encode(
+            array_values(
+                array_filter(
+                    array_map(function($value) {
+                        return intval($value, 10);
+                    }, $ids),
+                    function($value) {
+                        return $value > 0;
+                    }
+                )
+            )
+        );
+    }
+
+    public static function parseIds( $text )
+    {
+        if ( is_array($text) ) return $text;
+        if ( is_numeric($text) && $text > 0 ) return array($text);
+
+        try {
+            $ids = self::getHashIdsInstance()->decode($text);
+            if ( count($ids) > 0 ) return $ids;
+        }
+        catch( Exception $e ) {
+        }
+
         return array_unique(
             array_filter(
-                preg_split('/[,-]/', $text ),
+                preg_split('/[,-]/', trim($text, '-,') ),
                 function($value) {
                     return is_numeric($value) && $value >= 0;
+                }
+            )
+        );
+    }
+
+    public static function parseItems( $text )
+    {
+        if ( is_array($text) ) return $text;
+        if ( is_numeric($text) && $text > 0 ) return array($text);
+
+        return array_unique(
+            array_filter(
+                preg_split('/[,]/', trim($text, ',') ),
+                function($value) {
+                    return $value != '';
                 }
             )
         );
@@ -257,9 +336,56 @@ class TextUtils
         return str_replace("\\", "/", realpath($path));
     }
 
+    public static function removeHtmlTag( $tagName, $content )
+    {
+        $beforeTag = preg_split('/<'.$tagName.'[^>]*>/i', $content);
+        foreach( $beforeTag as $index => $text ) {
+            $afterTag = preg_split('/<\/'.$tagName.'>/', $text);
+            if ( count($afterTag) > 1 ) {
+                array_shift($afterTag);
+            }
+            $beforeTag[$index] = join('', $afterTag);
+        }
+        return join('', $beforeTag);
+    }
+
+    public static function checkDatabaseColumnName( $text ) {
+        return preg_match("/^[a-zA-Z][a-zA-Z0-9\_]+$/i", $text);
+    }
+
     public static function getRandomPassword() {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $password = substr(str_shuffle($chars), 0, 12);
         return $password;
+    }
+
+    public static function shrinkLongUrl( $match )
+    {
+        $context = $match[1].$match[5];
+        if ( $context == '=""' || $context == '="">' ) return $match[0];
+
+        $display_name = trim($match[2], "\.\,\;\:");
+
+        $shrink_length = 80;
+        if ( strlen($display_name) > $shrink_length )
+        {
+            $display_name = substr($display_name, 0, $shrink_length/2).'[...]'.
+                substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
+        }
+        return $match[1].$display_name.$match[5];
+    }
+
+    public static function shrinkLongShare( $match )
+    {
+        return '<a target="_blank" href="file:'.str_replace('\\', '/', $match[0]).'">'.$match[0].'</a>';
+    }
+
+    public static function htmlSpecialCharsExceptImage( $text )
+    {
+        $text = preg_replace('/<img\s([^>]+)>/i', 'INTERNAL_TAG_IMG_START \\1 INTERNAL_TAG_IMG_END', $text);
+        $text = htmlspecialchars($text, ENT_HTML401);
+        $text = preg_replace('/INTERNAL_TAG_IMG_START/', '<img ', $text);
+        $text = preg_replace('/INTERNAL_TAG_IMG_END/', '>', $text);
+        return $text;
     }
 }

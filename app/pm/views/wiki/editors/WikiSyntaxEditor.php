@@ -210,23 +210,6 @@ class WikiSyntaxEditor extends WikiEditorBase
 			echo '<textarea class="reset" tabindex="'.$this->getTabIndex().'" style="overflow:hidden;width:100%" id="'.
 				$this->getFieldId().'" rows='.$rows.' name="'.$this->getFieldName().'" '.($this->getRequired() ? 'required' : '').' >'.$content.'</textarea>';
 		echo '</div>';
-				
-		$field = $this->getAttachmentsField();
-		if ( is_object($field) )
-		{	
-		    $field->setEditMode( true );
-		    $field->setReadonly( false );
-		    
-			$form = $field->getForm();
-			
- 			$form->setAddButtonText( text(1317) );
-			
- 			echo '<div style="margin:0 0 6px 0;" class="formvalueholder">';
-				$field->draw();
-			echo '</div>';
-			
-			$form->drawScripts();
-		}
  	}
 
 	function drawPreviewButton()
@@ -239,26 +222,4 @@ class WikiSyntaxEditor extends WikiEditorBase
 		echo '<input class="btn btn-primary" tabindex="'.$tabindex.'" style="float:left;margin-right:18px;" onclick="'.$script.'" type="button" id="previewbtn" title="'.
 			text(1509).'" value="'.translate('Просмотр').'">';
 	}
-	
-	function getDescription()
-	{
-		ob_start();
-		
-		echo str_replace('%1', '<a href="http://devprom.ru/docs/%D0%AF%D0%B7%D1%8B%D0%BA-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%82%D0%BA%D0%B8">'.text(1165).'</a>', text(1264));
-		echo parent::getDescription();
-		
-		$result = ob_get_contents();
-		
-		ob_end_clean();
-		
-		return $result;
-	}
-	
-	function drawHelpSection()
- 	{
- 		parent::drawHelpSection();
- 		
- 		echo '<tr><td class="wiki_sub" height=15 valign=middle>'.translate('Дополнительно').'</td></tr>';
- 		echo '<tr><td style="padding-top:6px;"><a href="http://devprom.ru/docs/%D0%AF%D0%B7%D1%8B%D0%BA-%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%82%D0%BA%D0%B8">'.text(1165).'</a></td></tr>';
- 	}
 }

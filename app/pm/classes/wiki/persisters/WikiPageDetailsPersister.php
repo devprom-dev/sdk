@@ -16,11 +16,4 @@ class WikiPageDetailsPersister extends ObjectSQLPersister
 
  		return $columns;
  	}
-
-	function map( & $parms )
-	{
-		if ( $parms['Content'] != '' ) {
-			$parms['Content'] = TextUtils::getValidHtml($parms['Content']);
-		}
-	}
 }

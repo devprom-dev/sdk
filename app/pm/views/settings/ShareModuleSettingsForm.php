@@ -21,8 +21,11 @@ class ShareModuleSettingsForm extends PMPageForm
         $object->setAttributeRequired('Subject', true);
 
         if ( defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED ) {
-            $object->addAttribute('ProjectRole', 'REF_ProjectRoleInheritedId', text(2610), true, false, text(2611));
-            $object->setAttributeRequired('ProjectRole', true);
+            $participant = getFactory()->getObject('Participant');
+            if ( getFactory()->getAccessPolicy()->can_create($participant) ) {
+                $object->addAttribute('ProjectRole', 'REF_ProjectRoleInheritedId', text(2610), true, false, text(2611));
+                $object->setAttributeRequired('ProjectRole', true);
+            }
         }
     }
 

@@ -33,7 +33,7 @@ import ru.devprom.pages.project.SpentTimePage;
 
 public class TasksPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
 	@FindBy(xpath = "//a[@id='append-task']")
@@ -54,10 +54,10 @@ public class TasksPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//div[@id='bulk-modify-actions']/a")
 	protected WebElement massChangeBtn;
 	
-	@FindBy(xpath = "//div[contains(@class,'btn-group') and not (@style='display: none;')]/a[contains(text(),'Выполнить')]")
+	@FindBy(xpath = "//div[contains(@class,'btn-group') and not (@style='display: none;')]/a[contains(.,'Выполнить')]")
 	protected WebElement massCompleteBtn;
 	
-	@FindBy(xpath = "//div[contains(@class,'btn-group') and not (@style='display: none;')]/a[contains(text(),'Удалить')]")
+	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[@id='bulk-delete']")
 	protected WebElement massDeleteBtn;
 	
 	
@@ -73,7 +73,7 @@ public class TasksPage extends SDLCPojectPageBase {
 	public TaskViewPage clickToTask(String id) {
 		try {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(text(),'["+ id + "]')]")).click();
+				By.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(.,'["+ id + "]')]")).click();
 		}
 		catch (NoSuchElementException e) {
 			driver.findElement(
@@ -101,14 +101,14 @@ public class TasksPage extends SDLCPojectPageBase {
 		try {
 			task = driver
 					.findElement(By
-							.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(text(),'"
+							.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(.,'"
 									+ id + "')]/../.."));
 		}
 		// strike element (completed request)
 		catch (NoSuchElementException e) {
 			task = driver
 					.findElement(By
-							.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a/strike[contains(text(),'"
+							.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a/strike[contains(.,'"
 									+ id + "')]/../../.."));
 		}
 		switch (propertyName) {
@@ -149,14 +149,14 @@ public class TasksPage extends SDLCPojectPageBase {
 				By.xpath("//a[@data-toggle='dropdown' and @uid='state']"))
 				.click();
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'Исполнитель')]"))
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'Исполнитель')]"))
 				.click();
 		String code = "filterLocation.turnOn('state', 'all', 0)";
 		((JavascriptExecutor) driver).executeScript(code);
 		code = "filterLocation.turnOn('taskassignee', 'all', 0)";
 		((JavascriptExecutor) driver).executeScript(code);
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'Исполнитель')]"))
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'Исполнитель')]"))
 				.click();
 	    try {
 			Thread.sleep(3000);
@@ -180,7 +180,7 @@ public class TasksPage extends SDLCPojectPageBase {
 			String name = row.findElement(By.id("caption")).getText();
 			String state = row.findElement(By.id("state")).getText();
 			String type = row.findElement(By.id("tasktype")).getText();
-			String priority = row.findElement(By.id("priority")).getText().trim();
+			String priority = row.findElement(By.xpath(".//td[@id='priority']//a")).getText().trim();
 			tasksList[i] = new RTask(id, name, type, priority, state);
 		}
 		return tasksList;
@@ -254,7 +254,7 @@ public class TasksPage extends SDLCPojectPageBase {
 
 	public void checkTask(String id) {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(text(),'"
+				By.xpath("//tr[contains(@id,'tasklist1_row_')]/td[@id='uid']/a[contains(.,'"
 						+ id + "')]/../preceding-sibling::td/input[@class='checkbox']"))
 				.click();		
 	}
@@ -275,7 +275,7 @@ public TasksPage addSpentRecord(Spent spent, String taskId){
 	}
 	
 	public boolean isTaskPresent(String taskId){
-		return (!driver.findElements(By.xpath("//td[@id='uid']/a[text()='["+taskId+"]']")).isEmpty() ||  !driver.findElements(By.xpath("//td[@id='uid']/a/strike[contains(text(),'"	+ taskId + "')]")).isEmpty());
+		return (!driver.findElements(By.xpath("//td[@id='uid']/a[text()='["+taskId+"]']")).isEmpty() ||  !driver.findElements(By.xpath("//td[@id='uid']/a/strike[contains(.,'"	+ taskId + "')]")).isEmpty());
 	}
 	
 	

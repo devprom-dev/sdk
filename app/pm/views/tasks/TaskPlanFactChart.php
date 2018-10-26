@@ -31,6 +31,11 @@ class TaskPlanFactChart extends PMPageChart
 		return array();
 	}
 
+	function getOptions($filter_values)
+    {
+        return array();
+    }
+
     function getGroup() {
 	    return 'FinishDate';
     }

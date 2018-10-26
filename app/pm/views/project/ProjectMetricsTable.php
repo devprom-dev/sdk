@@ -1,12 +1,18 @@
 <?php
 include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
 include "ProjectMetricsChart.php";
+include "ProjectMetricsList.php";
 
 class ProjectMetricsTable extends PMPageTable
 {
-	function getList()
+	function getList( $mode )
 	{
-		return new ProjectMetricsChart( $this->getObject() );
+	    if ( is_numeric($this->getReport()) || $this->getReport() == '' ) {
+            return new ProjectMetricsList( $this->getObject() );
+        }
+        else {
+            return new ProjectMetricsChart( $this->getObject() );
+        }
 	}
 
     function getFilters()
@@ -27,7 +33,7 @@ class ProjectMetricsTable extends PMPageTable
         return array (
             new FilterModifiedAfterPredicate( $values['start'] ),
             new FilterModifiedBeforePredicate( $values['finish'] ),
-            new FilterAttributePredicate('Metric', $values['metric'])
+            new MetricReferencePredicate($values['metric'])
         );
     }
 
@@ -39,5 +45,12 @@ class ProjectMetricsTable extends PMPageTable
     function getExportActions()
     {
         return array();
+    }
+
+    function getChartModules($module)
+    {
+        return array(
+            'metrics'
+        );
     }
 }

@@ -136,6 +136,11 @@ class UserFilterStateWebMethod extends FilterWebMethod
 		return translate('Состояние');
 	}
 
+    function getType()
+    {
+        return 'singlevalue';
+    }
+
 	function getValues()
 	{
 		$values = array (

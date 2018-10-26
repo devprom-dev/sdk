@@ -36,8 +36,8 @@ class ProjectLogPage extends PMPage
          return $this->getObject()->getRegistry()->Query(
          		array (
                     new FilterModifiedSinceSecondsPredicate(5 * 60),
-         				new FilterVpdPredicate(),
-         				new SortChangeLogRecentClause()
+                    new FilterVpdPredicate(),
+                    new SortChangeLogRecentClause()
          		)
 	         )->idsToArray();
  	}

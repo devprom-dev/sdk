@@ -33,7 +33,7 @@ class TaskExactTypeRule extends BusinessRulePredicate
  		return str_replace('%1', $this->type_name, text(1158));
  	}
  	
- 	function check( $object_it ) {
+ 	function check( $object_it, $transitionIt ) {
  		return $object_it->get('TaskType') == $this->type_id;
  	}
 }

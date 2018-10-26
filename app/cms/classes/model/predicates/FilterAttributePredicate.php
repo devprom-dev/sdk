@@ -58,50 +58,46 @@ class FilterAttributePredicate extends FilterPredicate
  	{
  		$object = $this->getObject();
 
- 		if ( $object->getAttributeDbType($this->attr) == '' )
- 		{
+ 		if ( $object->getAttributeDbType($this->attr) == '' ) {
  			$this->setIds(array('-1'));
- 			
  			return $this->getQueryPredicate();
- 		} 
-
- 		if ( $this->hasMultipleValues() )
- 		{
- 			$values = preg_split('/,/', $filter);
  		}
- 		else
- 		{
- 			$values[] = $filter;
+
+ 		if ( !$this->getObject() instanceof User && is_object(getSession()) ) {
+            $filter = preg_replace('/user-id/', getSession()->getUserIt()->getId(), $filter);
+        }
+        $has_null_value = strpos($filter, 'none') !== false;
+
+ 		if ( $this->hasMultipleValues() && $object->IsReference($this->attr) ) {
+            $values = \TextUtils::parseIds($filter);
+            if ( count($values) < 1 ) {
+                $values = \TextUtils::parseItems($filter);
+            }
+            elseif ( $has_null_value ) {
+                $values[] = 0;
+            }
+ 		}
+ 		else {
+ 			$values = \TextUtils::parseItems($filter);
  		}
 
  		$is_numeric_value = false;
- 		foreach( $values as $key => $value )
- 		{
- 		    if ( $value == 'user-id' ) {
- 		        $values[$key] = $value = getSession()->getUserIt()->getId();
-            }
+ 		foreach( $values as $key => $value ) {
  			if ( is_numeric($value) ) { $is_numeric_value = true; break; }
  		}
  			
- 		$has_null_value = false;
- 		
- 		foreach( $values as $key => $value )
- 		{
- 			if ( $value == 'none' ) 
- 			{
- 				$has_null_value = true;
+ 		foreach( $values as $key => $value ) {
+ 			if ( $value == 'none' ) {
  				$values[$key] = $is_numeric_value ? 0 : 'NULL';
- 				
  				break;
  			}
  		}
- 		
+
  		$this->setNullValue($has_null_value);
  		
  		if ( $object->IsReference( $this->attr ) )
  		{
  			$ref = $object->getAttributeObject( $this->attr );
-
  			if ( $ref instanceof CacheableSet ) {
                 foreach( $values as $key => $value ) {
                     $values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
@@ -125,14 +121,20 @@ class FilterAttributePredicate extends FilterPredicate
                     else {
                         $ref_it = $ref->getEmptyIterator();
                     }
+                    $values = $ref_it->idsToArray();
                 }
-                else {
+                elseif ( $ref->getEntityRefName() != 'entity' ) {
                     $ref_it = $registry->Query( array (
                         new FilterAttributePredicate('ReferenceName', $values),
                         new FilterVpdPredicate($object->getVpds())
                     ));
+                    $values = $ref_it->idsToArray();
                 }
-                $values = $ref_it->idsToArray();
+                else {
+                    foreach( $values as $key => $value ) {
+                        $values[$key] = $object->formatValueForDb($this->attr, addslashes($value));
+                    }
+                }
             }
  		}
  		else
@@ -143,7 +145,7 @@ class FilterAttributePredicate extends FilterPredicate
  		}
 
  		if ( count($values) < 1 ) $values = array(0);
- 		
+
  		$this->setIds($values);
 
  		return $this->getQueryPredicate();

@@ -197,7 +197,6 @@ class CreateProjectService
 
 		$project_roles = $model_factory->getObject('ProjectRole');
 
-		$lead_it = $project_roles->getByRef( 'ReferenceName', 'lead' );
 		// check the template has been imported
 		if ( $project_roles->getRecordCount() < 1 ) return -11;
 
@@ -225,8 +224,9 @@ class CreateProjectService
             )
 		);
 
-		$role_cls = $model_factory->getObject('pm_ParticipantRole');
+        $lead_it = $project_roles->getByRef( 'ReferenceName', 'lead' );
 
+        $role_cls = getFactory()->getObject('pm_ParticipantRole');
 		$result_it = $role_cls->getRegistry()->Query(
 				array (
 						new \FilterAttributePredicate('Participant', $part_it->getId()),
@@ -382,7 +382,8 @@ class CreateProjectService
  	
  	public function invalidateCache()
  	{
-        foreach( array('sessions', 'projects') as $path ) {
+        getFactory()->getCacheService()->setReadonly();
+        foreach( array('sessions', 'projects', 'apps') as $path ) {
             getFactory()->getCacheService()->invalidate($path);
         }
  	}

@@ -122,5 +122,15 @@ class InstallLicenseForm extends AdminForm
 		    	parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
 		}
 	}
+
+    function getRenderParms($view)
+    {
+        return array_merge(
+            parent::getRenderParms($view),
+            array(
+                'actions_on_top' => false
+            )
+        );
+    }
 }
  

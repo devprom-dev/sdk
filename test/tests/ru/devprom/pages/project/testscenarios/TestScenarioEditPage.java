@@ -72,7 +72,7 @@ public class TestScenarioEditPage extends TestScenarioNewPage {
             try
         {
 		clickTraceTab();
-		WebElement addRequestBtn = driver.findElement(By.xpath("//span[@id='WikiPageIssues']//a[@class='dashed embedded-add-button']"));
+		WebElement addRequestBtn = driver.findElement(By.xpath("//span[@name='WikiPageIssues']//a[@class='dashed embedded-add-button']"));
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 					.visibilityOf(addRequestBtn));
 			addRequestBtn.click();
@@ -84,7 +84,7 @@ public class TestScenarioEditPage extends TestScenarioNewPage {
 					.sendKeys(request);
 			autocompleteSelect(request);
 			driver.findElement(
-					By.xpath(".//span[@id='WikiPageIssues']//input[contains(@id,'saveEmbedded')]"))
+					By.xpath(".//span[@name='WikiPageIssues']//input[contains(@id,'saveEmbedded')]"))
 					.click();
         Thread.sleep(3000);
             }

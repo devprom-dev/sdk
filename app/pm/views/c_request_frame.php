@@ -51,10 +51,15 @@
  	function drawLine( $stage, $total, $resloved, $color, $background )
  	{
  		$progress = 100 - floor(($total - $resloved) / $total * 100);
- 		
+
+ 		echo '<div style="display: table;">';
+ 		echo '<div style="display: table-cell;">';
  		echo '<div class="progress">';
  		    echo '<div class="bar '.($progress == 100 ? 'bar-success' : 'bar-warning').'" style="width:'.$progress.'%;"></div>';
- 		echo '</div>'; 
+ 		echo '</div>';
+ 		echo '</div><div style="display: table-cell;width: 1%;vertical-align: top;padding-left: 4px;">';
+ 		echo $progress.'%';
+ 		echo '</div></div>';
 
 		if ( $this->drawtasks && $stage == translate('Выполнено пожеланий') )
 		{
@@ -63,64 +68,6 @@
  	}
  }
 
- //////////////////////////////////////////////////////////////////////////////////////////////
- class ReleaseIssuesProgressFrame extends IssuesProgressFrame
- {
- 	var $release_it, $type, $type_it;
- 	
- 	function ReleaseIssuesProgressFrame ( $release_it, $progress )
- 	{
- 		global $model_factory;
- 		
- 		$this->release_it = $release_it;
- 		
- 		$this->type = $model_factory->getObject('pm_TaskType');
- 		$this->type_it = $this->type->getAll();
- 		 
- 		parent::IssuesProgressFrame( $progress );
- 	}
- 	
- 	function drawLine( $stage, $total, $resloved, $color, $background )
- 	{
-		switch ( $stage )
-		{
-			case translate('Анализ'):
-				$letter = $stage[0];
-				$this->type_it->moveTo('ReferenceName', 'analysis');
-				break;
-
-			case translate('Реализация'):
-				$letter = $stage[0];
-				$this->type_it->moveTo('ReferenceName', 'development');
-				break;
-
-			case translate('Тестирование'):
-				$letter = $stage[0];
-				$this->type_it->moveTo('ReferenceName', 'testing');
-				break;
-
-			case translate('Документирование'):
-				$letter = $stage[0];
-				$this->type_it->moveTo('ReferenceName', 'documenting');
-				break;
-				
-			default:
-				parent::drawLine( $stage, $total, $resloved, $color, $background );
-				return;
-		}
-
-		echo '<div style="float:left;width:100%;">';
-			echo '<div style="float:left;width:18px;margin-top:-2px;">';
-				echo $letter;
-	 		echo '</div>';
-	 		
-			echo '<div style="float:right;width:90%;">';
-				parent::drawLine( $stage, $total, $resloved, $color, $background );
-			echo '</div>';
- 	 	echo '</div>';
- 	}
- }
- 
  //////////////////////////////////////////////////////////////////////////////////////////////
  class IssuesGroupFrame
  {

@@ -9,7 +9,8 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
         $this->applyRules(
             $object_it->object->getExact($object_it->getId()),
             $prev_object_it,
-            array_diff_assoc($object_it->getData(), $prev_object_it->getData())
+            array_diff_assoc($object_it->getData(), $prev_object_it->getData()),
+            TRIGGER_ACTION_MODIFY
         );
 	}
 
@@ -18,16 +19,16 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
         if ( $object_it->object instanceof WikiPageChange )
         {
             $page_it = $object_it->getRef('WikiPage');
-            $this->applyRules($page_it, $page_it, array('Content'));
+            $this->applyRules($page_it, $page_it, array('Content'), TRIGGER_ACTION_ADD);
         }
         if ( $object_it->object instanceof Request ) {
-            $this->applyRules($object_it, $object_it, $object_it->getData());
+            $this->applyRules($object_it, $object_it, $object_it->getData(), TRIGGER_ACTION_ADD);
         }
     }
 
 	function delete( $object_it ) {;}
 
-    protected function applyRules( $object_it, $prev_object_it, $attributes )
+    protected function applyRules( $object_it, $prev_object_it, $attributes, $action )
     {
         $state_it = $object_it->getStateIt();
         if ( $state_it->getId() < 1 ) return;
@@ -39,14 +40,14 @@ class BusinessActionModifiedEvent extends ObjectFactoryNotificator
             )
         );
 
-        $action = getFactory()->getObject('StateBusinessAction');
+        $actionObject = getFactory()->getObject('StateBusinessAction');
         while ( !$action_it->end() )
         {
-            $rule_it = $action_it->getRef('ReferenceName', $action);
+            $rule_it = $action_it->getRef('ReferenceName', $actionObject);
             if ( is_object($rule_it) && $rule_it->checkType('BusinessActionShift') )
             {
                 $prev_object_it->object->removeNotificator(get_class($this));
-                $rule_it->getRule()->applyContent( $prev_object_it, $attributes );
+                $rule_it->getRule()->applyContent( $prev_object_it, $attributes, $action );
             }
             $action_it->moveNext();
         }

@@ -1,5 +1,4 @@
 <?php
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/views/tasks/FieldTaskTypeDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
  
@@ -146,9 +145,6 @@ class FormTaskEmbedded extends PMFormEmbedded
 				return new FieldTaskTypeDictionary( $tasktype );
 
 			case 'Assignee':
-				$object = $this->getAttributeObject( $attr );
-				$object->addFilter( new UserWorkerPredicate() );
-
 				return new FieldParticipantDictionary( $this->getFieldValue('Release') );
 
             case 'Planned':

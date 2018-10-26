@@ -1,13 +1,13 @@
 function downloadUpdate()
 {
-    var payed = window.location.protocol+"//devprom.ru/download?payed&iid=%iid%";
+    var payed = window.location.protocol+"//"+devpromOpts.serviceUrl+"/download?payed&iid=%iid%";
     $.getJSON( payed, function( data ) {
         try {
             if ( !data.till || data.till < new Date().toJSON().split('T')[0] ) {
                 alert('%notpayed%');
                 return;
             }
-            var url = window.location.protocol+"//devprom.ru/download?json&iid=%iid%";
+            var url = window.location.protocol+"//"+devpromOpts.serviceUrl+"/download?json&iid=%iid%";
             $.getJSON( url, function( data ) {
                 if ( data.length < 1 ) {
                     alert('%error%');

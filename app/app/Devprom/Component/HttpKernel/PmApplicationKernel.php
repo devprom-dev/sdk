@@ -12,7 +12,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Routing\Exception;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Nelmio\CorsBundle;
+use Nelmio\CorsBundle\NelmioCorsBundle;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class PmApplicationKernel extends Kernel

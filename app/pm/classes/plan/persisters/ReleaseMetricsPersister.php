@@ -46,7 +46,7 @@ class ReleaseMetricsPersister extends ObjectSQLPersister
         $columns[] =
             " (SELECT COUNT(1) FROM pm_ChangeRequest s " .
             "   WHERE s.PlannedRelease = " .$objectPK.
-            "	 AND s.State IN ('".join("','",getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates())."')) UncompletedItems ";
+            "	  AND s.FinishDate IS NULL) UncompletedItems ";
 
  		return $columns;
  	}

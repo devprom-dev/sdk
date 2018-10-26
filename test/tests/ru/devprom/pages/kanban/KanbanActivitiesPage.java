@@ -17,16 +17,16 @@ public class KanbanActivitiesPage extends KanbanPageBase {
 	}
 
 	public KanbanTaskViewPage clickToLastTask(){
-		driver.findElement(By.xpath("//td[@id='content']/a[contains(text(),'I')]")).click();
+		driver.findElement(By.xpath("//td[@id='content']/a[contains(.,'I')]")).click();
 		return new KanbanTaskViewPage(driver);
 	}
 	
 	public KanbanTaskViewPage clickToTask(String id){
 		try {
-			driver.findElement(By.xpath("//td[@id='content']/a[contains(text(),'["+ id + "]')]")).click();
+			driver.findElement(By.xpath("//td[@id='content']/a[contains(.,'["+ id + "]')]")).click();
 		} catch (NoSuchElementException e) {
 			driver.findElement(
-					By.xpath("//td[@id='content']/a/strike[contains(text(),'" + id + "')]/..")).click();
+					By.xpath("//td[@id='content']/a/strike[contains(.,'" + id + "')]/..")).click();
 		}
 		return new KanbanTaskViewPage(driver);
 	}

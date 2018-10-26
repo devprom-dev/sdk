@@ -4,7 +4,7 @@
 			<?php if ( count($action['items']) < 1 ) continue; ?>
 		
 			<div class="btn-group pull-left" <?=($index > 0) ? 'style="padding-left:5px;"' : ""?> >
-			   	<a uid="<?=$action['uid']?>" class="btn dropdown-toggle btn-small <?=($action['class'] == '' ? 'btn-inverse' : $action['class'])?>" href="#" data-toggle="dropdown">
+			   	<a uid="<?=$action['uid']?>" class="btn dropdown-toggle btn-sm <?=($action['class'] == '' ? 'btn-inverse' : $action['class'])?>" href="#" data-toggle="dropdown">
 			   		<?=$action['name']?>
 			   		<span class="caret"></span>
 			   	</a>
@@ -19,7 +19,7 @@
         if ( count($compareMoreActions) > 0 ) {
         ?>
             <div class="btn-group pull-left">
-                <a class="btn btn-cell dropdown-toggle transparent-btn" uid="compare-more-actions" href="#"
+                <a class="btn btn-cell dropdown-toggle btn-light" uid="compare-more-actions" href="#"
                    data-toggle="dropdown" style="padding-left:0;">
                     <span class="label">...</span>
                 </a>
@@ -27,6 +27,8 @@
             </div>
         <?php
         }
+
+        echo $html;
         ?>
 	</div>
 </div>

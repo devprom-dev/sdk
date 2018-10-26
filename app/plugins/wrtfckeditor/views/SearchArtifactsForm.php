@@ -39,7 +39,9 @@ class SearchArtifactsForm extends PMPageForm
 
         $attributeObject = $this->getObject()->getAttributeObject($attr);
         if ( $attributeObject instanceof WikiPage ) {
-            return new FieldHierarchySelector($attributeObject);
+            $field = new FieldHierarchySelector($attributeObject);
+            $field->setCrossProject();
+            return $field;
         }
         else {
             return new FieldAutoCompleteObject($attributeObject);

@@ -110,7 +110,7 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
 		
 		$object = $object_it->object;
 		
-		$this->object_it = $object->getRegistry()->Query( array (
+		$this->object_it = $object->getRegistryBase()->Query( array (
 				new FilterInPredicate($object_it->getId())
 		));
 		
@@ -122,7 +122,7 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
 
 		if ( $field_value != $result )
 		{
-			$object->getRegistry()->Store( $this->object_it, array ( $field => $result ) );
+			$object->getRegistryBase()->Store( $this->object_it, array ( $field => $result ) );
 		}
 	}
 	
@@ -204,7 +204,7 @@ class WrtfCKEditorChangeNotificator extends SystemTriggersBase
      			
      			$predicates[] = $filter;
      			
-     			$file_it = $file->getRegistry()->Query( $predicates );
+     			$file_it = $file->getRegistryBase()->Query( $predicates );
 
      			if ( $file_it->count() > 0 )
      			{

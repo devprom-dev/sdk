@@ -138,6 +138,7 @@ class ModelEntityOriginationService
 			case 'cms_ExternalUser':
 			case 'ObjectChangeLogAttribute':
             case 'ObjectChangeNotification':
+            case 'pm_AttributeValue':
 				return '';
 				
 			default:

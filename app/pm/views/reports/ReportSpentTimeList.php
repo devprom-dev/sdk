@@ -273,6 +273,7 @@ class ReportSpentTimeList extends PMStaticPageList
 	{
         if ( $object_it->get('Group') == '' ) return;
 
+        echo '<td style="background-color:white;"></td>';
 		foreach( $this->getObject()->getAttributes() as $attribute => $data )
 		{
 			if ( !in_array($attribute, array('Caption','Total')) && strpos($attribute, 'Day') === false ) continue;
@@ -318,14 +319,14 @@ class ReportSpentTimeList extends PMStaticPageList
 		}
 		elseif ( $attr == 'Total' )	{
 			if ( $object_it->get('Total') > 0 ) {
-				echo getSession()->getLanguage()->getHoursWording(round($object_it->get('Total'), 1));
+				echo round($object_it->get('Total'), 0);
 			}
 			else {
 				echo '<span style="color:silver;">0</span>';
 			}
 		}
         elseif ( $attr == 'Planned' )	{
-            echo getSession()->getLanguage()->getHoursWording($this->row_it->get('Planned'));
+            echo round($this->row_it->get('Planned'), 0);
         }
 		else {
 			$hours = round($object_it->get($attr), 1);
@@ -335,14 +336,22 @@ class ReportSpentTimeList extends PMStaticPageList
 				if ( is_array($object_it->get($comment_attr)) ) {
 					foreach ($object_it->get($comment_attr) as $task) {
 						if ($task['Text'] == '') continue;
-						$actions[$task['Task']] = array(
-							'url' => $this->getUidService()->getObjectUrl('T-' . $task['Task']),
-							'name' => 'T-' . $task['Task'] . ' ' . substr($task['Text'], 0, 120)
-						);
+						if ( $task['Task'] > 0 ) {
+                            $actions[$task['Task']] = array(
+                                'url' => $this->getUidService()->getObjectUrl('T-' . $task['Task']),
+                                'name' => 'T-' . $task['Task'] . ' ' . substr($task['Text'], 0, 120)
+                            );
+                        }
+                        else {
+                            $actions[$task['Issue']] = array(
+                                'url' => $this->getUidService()->getObjectUrl('I-' . $task['Issue']),
+                                'name' => 'I-' . $task['Issue'] . ' ' . substr($task['Text'], 0, 120)
+                            );
+                        }
 					}
 				}
 				if ( count($actions) > 0 ) {
-					echo $this->getTable()->getView()->render('core/SpentTimeMenu.php', array (
+					echo $this->getRenderView()->render('core/SpentTimeMenu.php', array (
 						'title' => $hours,
 						'items' => $actions,
 						'id' => $object_it->getId().$attr
@@ -369,11 +378,6 @@ class ReportSpentTimeList extends PMStaticPageList
 		return parent::getColumnAlignment ( $attr );
 	}
 
-	function IsNeedToDisplayNumber()
-	{
-		return false;
-	}
-	
 	function IsNeedToDisplayRow($object_it)
 	{
 		return $object_it->get('Group') == '' || in_array($this->group, array('','none'));

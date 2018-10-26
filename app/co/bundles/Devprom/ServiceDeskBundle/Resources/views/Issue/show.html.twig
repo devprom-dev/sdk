@@ -104,10 +104,12 @@
                             {{ issue.severity.name|trans }}
                         </p>
 
+                        <!--
                         {% if issue.assignedTo != "" %}
                             <h4>{{ 'issue_assignedTo'|trans }}</h4>
                             <p>{{ issue.assignedTo }}</p>
                         {% endif %}
+                        -->
 
                         <a id="edit-issue-button" href="{{ url('issue_edit', { 'id': issue.id }) }}" class="btn btn-sm btn-success">{{ 'issue.edit'|trans }}</a>
                     </div>

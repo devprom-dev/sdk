@@ -14,7 +14,7 @@
 	}
 	
 	function createIterator() {
-		return new Iterator( $this );
+		return new IteratorBase( $this );
 	}
 
 	function createDefaultView() {

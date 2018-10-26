@@ -9,7 +9,7 @@
 	<div class="title-cell">
 		<?php if ( count($actions) > 0 ) { ?>
 		<div class="btn-group operation last">
-			<a class="btn btn-mini dropdown-toggle" href="#" data-toggle="dropdown">
+			<a class="btn btn-xs dropdown-toggle" href="#" data-toggle="dropdown">
 				<i class="icon-asterisk icon-gray"></i>
 				<span class="caret"></span>
 			</a>

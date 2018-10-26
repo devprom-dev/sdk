@@ -1,5 +1,4 @@
 <?php
-
 include_once "PMSession.php";
 
 include SERVER_ROOT_PATH."pm/classes/model/permissions/AccessPolicyPortfolio.php";
@@ -84,7 +83,18 @@ class SessionPortfolio extends PMSession
  	}
  	
  	function getLanguageUid() {
- 	    return $this->getUserIt()->get('Language') == 2 ? 'EN' : 'RU';
+ 	    if ( in_array($this->getProjectIt()->get('CodeName'), array('my', 'all')) ) {
+            return $this->getUserIt()->get('Language') == 2 ? 'EN' : 'RU';
+        }
+        else {
+            $langIds = $this->getProjectIt()->getRef('LinkedProject')->fieldToArray('Language');
+            if ( count($langIds) > 1 ) {
+                return $this->getUserIt()->get('Language') == 2 ? 'EN' : 'RU';
+            }
+            else {
+                return array_shift($langIds) == 2 ? 'EN' : 'RU';
+            }
+        }
  	}
 
     function getProjectObject() {

@@ -1,7 +1,8 @@
 <?php
-
 include_once "WebMethod.php";
+include_once SERVER_ROOT_PATH.'core/classes/model/validation/ModelValidator.php';
 include_once SERVER_ROOT_PATH."core/classes/model/persisters/ObjectAffectedDatePersister.php";
+include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelBuilder.php";
 
 class ModifyAttributeWebMethod extends WebMethod
 {
@@ -153,8 +154,7 @@ class ModifyAttributeWebMethod extends WebMethod
 			$_REQUEST['attribute'] => $_REQUEST['value']
 		);
 
-		if ( !array_key_exists('OrderNum', $parms) )
-		{
+		if ( !array_key_exists('OrderNum', $parms) ) {
 			$parms['OrderNum'] = $object_it->get('OrderNum');
 		}
 		else
@@ -203,6 +203,26 @@ class ModifyAttributeWebMethod extends WebMethod
         $mapper = new ModelDataTypeMapper();
         $mapper->map( $object, $parms );
 
+        if ( $object instanceof MetaobjectStatable and $object_it->getStateIt()->getId() != '' ) {
+            $model_builder = new WorkflowStateAttributesModelBuilder(
+                $object_it->getStateIt(), array_keys($parms)
+            );
+            $model_builder->build($object);
+        }
+
+        $validator = new ModelValidator();
+        $validator->addValidator(new ModelValidatorObligatory());
+        $validationResult = $validator->validate($object, $parms);
+        if ( $validationResult != "" ) {
+            echo JsonWrapper::encode(
+                array(
+                    'message' => 'denied',
+                    'description' => $validationResult
+                )
+            );
+            return;
+        }
+
         // check if there are changes
         $has_changes = false;
 		foreach( $parms as $key => $value )
@@ -216,7 +236,7 @@ class ModifyAttributeWebMethod extends WebMethod
 		if ( is_array($user_parms) && array_key_exists('SkipEvents', $user_parms) ) {
 			$object->setNotificationEnabled(false);
 		}
-		
+
 		if ( $has_changes )	{
 			$object->modify_parms($object_it->getId(), $parms);
 		}

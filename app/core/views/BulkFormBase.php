@@ -240,7 +240,9 @@ class BulkFormBase extends AjaxForm
 	}
 
 	function getIds() {
-		return array_unique(preg_split('/-/', trim($_REQUEST['ids'], '-')));
+		return array_unique(
+		    \TextUtils::parseIds($_REQUEST['ids'])
+        );
 	}
 	
 	function drawIds( $value )
@@ -251,6 +253,13 @@ class BulkFormBase extends AjaxForm
 		$object = $this->getObject();
 
 		$it = $this->getIt();
+
+		if ( $it->count() < 1 ) {
+            echo '<br/>';
+            echo '<div class="alert alert-error">'.$this->getEmptyIteratorMessage().'</div>';
+            echo '<br/>';
+            return;
+        }
 
         echo '<br/>';
 		echo '<label><b>'.text(1303).'</b></label>';
@@ -296,6 +305,10 @@ class BulkFormBase extends AjaxForm
 	function getHintId() {
 		return $this->getMethod();
 	}
+
+	function getEmptyIteratorMessage() {
+ 	    return text(2530);
+    }
 	
 	private $form = null;
 	private $visibleAttributes = array();

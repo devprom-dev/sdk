@@ -4,16 +4,34 @@
  * Drag-and-drop support (jQuery UI draggable/droppable).
  * (Extension module for jquery.fancytree.js: https://github.com/mar10/fancytree/)
  *
- * Copyright (c) 2008-2017, Martin Wendt (http://wwWendt.de)
+ * Copyright (c) 2008-2018, Martin Wendt (http://wwWendt.de)
  *
  * Released under the MIT license
  * https://github.com/mar10/fancytree/wiki/LicenseInfo
  *
- * @version @VERSION
- * @date @DATE
+ * @version 2.30.0
+ * @date 2018-09-02T15:42:49Z
  */
 
-;(function($, window, document, undefined) {
+;(function( factory ) {
+	if ( typeof define === "function" && define.amd ) {
+		// AMD. Register as an anonymous module.
+		define( [
+			"jquery",
+			"jquery-ui/ui/widgets/draggable",
+			"jquery-ui/ui/widgets/droppable",
+			"./jquery.fancytree"
+		], factory );
+	} else if ( typeof module === "object" && module.exports ) {
+		// Node/CommonJS
+		require("./jquery.fancytree");
+		module.exports = factory(require("jquery"));
+	} else {
+		// Browser globals
+		factory( jQuery );
+	}
+
+}( function( $ ) {
 
 "use strict";
 
@@ -189,7 +207,7 @@ function _initDragAndDrop(tree) {
 				// Support glyph symbols instead of icons
 				if( glyph ) {
 					$helper.find(".fancytree-drag-helper-img")
-						.addClass(glyph.map.dragHelper);
+						.addClass(glyph.map._addClass + " " + glyph.map.dragHelper);
 				}
 				// Allow to modify the helper, e.g. to add multi-node-drag feedback
 				if( opts.initHelper ) {
@@ -247,7 +265,7 @@ function _initDragAndDrop(tree) {
 
 $.ui.fancytree.registerExtension({
 	name: "dnd",
-	version: "@VERSION",
+	version: "2.30.0",
 	// Default options for this extension.
 	options: {
 		// Make tree nodes accept draggables
@@ -255,9 +273,11 @@ $.ui.fancytree.registerExtension({
 		draggable: null,     // Additional options passed to jQuery draggable
 		droppable: null,     // Additional options passed to jQuery droppable
 		focusOnClick: false, // Focus, although draggable cancels mousedown event (#270)
-		preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
-		preventRecursiveMoves: true, // Prevent dropping nodes on own descendants
+		preventVoidMoves: true, 	// Prevent dropping nodes 'before self', etc.
+		preventRecursiveMoves: true,// Prevent dropping nodes on own descendants
 		smartRevert: true,   // set draggable.revert = true if drop was rejected
+		dropMarkerOffsetX: -24,			// absolute position offset for .fancytree-drop-marker relatively to ..fancytree-title (icon/img near a node accepting drop)
+		dropMarkerInsertOffsetX: -16,	// additional offset for drop-marker with hitMode = "before"/"after"
 		// Events (drag support)
 		dragStart: null,     // Callback(sourceNode, data), return true, to enable dnd
 		dragStop: null,      // Callback(sourceNode, data)
@@ -297,13 +317,14 @@ $.ui.fancytree.registerExtension({
 	},
 	/* Display drop marker according to hitMode ('after', 'before', 'over'). */
 	_setDndStatus: function(sourceNode, targetNode, helper, hitMode, accept) {
-		var markerOffsetX,
+		var markerOffsetX, pos,
 			markerAt = "center",
 			instData = this._local,
-			glyph = this.options.glyph || null,
+			dndOpt = this.options.dnd ,
+			glyphOpt = this.options.glyph,
 			$source = sourceNode ? $(sourceNode.span) : null,
 			$target = $(targetNode.span),
-			$targetTitle = $target.find(">span.fancytree-title");
+			$targetTitle = $target.find("span.fancytree-title");
 
 		if( !instData.$dropMarker ) {
 			instData.$dropMarker = $("<div id='fancytree-drop-marker'></div>")
@@ -312,35 +333,40 @@ $.ui.fancytree.registerExtension({
 				.prependTo($(this.$div).parent());
 //                .prependTo("body");
 
-			if( glyph ) {
-				// instData.$dropMarker.addClass(glyph.map.dragHelper);
+			if( glyphOpt ) {
 				instData.$dropMarker
-					.addClass(glyph.map.dropMarker);
+					.addClass(glyphOpt.map._addClass + " " + glyphOpt.map.dropMarker);
 			}
 		}
 		if( hitMode === "after" || hitMode === "before" || hitMode === "over" ){
-			markerOffsetX = -24;
+			markerOffsetX = dndOpt.dropMarkerOffsetX || 0;
 			switch(hitMode){
 			case "before":
 				markerAt = "top";
-				markerOffsetX -= 16;
+				markerOffsetX += (dndOpt.dropMarkerInsertOffsetX || 0);
 				break;
 			case "after":
 				markerAt = "bottom";
-				markerOffsetX -= 16;
+				markerOffsetX += (dndOpt.dropMarkerInsertOffsetX || 0);
 				break;
 			}
 
+			pos = {
+				my: "left" + offsetString(markerOffsetX) + " center",
+				at: "left " + markerAt,
+				of: $targetTitle
+			};
+			if( this.options.rtl ) {
+				pos.my = "right" + offsetString(-markerOffsetX) + " center";
+				pos.at = "right " + markerAt;
+			}
 			instData.$dropMarker
 				.toggleClass(classDropAfter, hitMode === "after")
 				.toggleClass(classDropOver, hitMode === "over")
 				.toggleClass(classDropBefore, hitMode === "before")
+				.toggleClass("fancytree-rtl", !!this.options.rtl)
 				.show()
-				.position($.ui.fancytree.fixPositionOptions({
-					my: "left" + offsetString(markerOffsetX) + " center",
-					at: "left " + markerAt,
-					of: $targetTitle
-					}));
+				.position($.ui.fancytree.fixPositionOptions(pos));
 		} else {
 			instData.$dropMarker.hide();
 		}
@@ -566,4 +592,6 @@ $.ui.fancytree.registerExtension({
 		 }
 	}
 });
-}(jQuery, window, document));
+// Value returned by `require('jquery.fancytree..')`
+return $.ui.fancytree;
+}));  // End of closure

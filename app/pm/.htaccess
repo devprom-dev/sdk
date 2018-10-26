@@ -4,7 +4,7 @@ RewriteEngine On
 RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
-RewriteRule ^([^/]+)/(whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/(upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&report=$4 [L,QSA]
 RewriteRule ^_images/([^/]+)$ /images/$1 [L]
@@ -23,7 +23,7 @@ RewriteRule ^([^/]+)/issues/(backlog|list|trace|chart|board|import)/([^/]+)$ req
 RewriteRule ^([^/]+)/versioning/revisions/?([^/]+)?$ snapshots.php?project=$1&object=$2 [L,QSA]
 RewriteRule ^([^/]+)/tasks/(list|trace|chart|board)$ planning.php?project=$1&view=$2 [L,QSA]
 RewriteRule ^([^/]+)/tasks/(list|trace|chart|board)/([^/]+)$ planning.php?project=$1&view=$2&report=$3 [L,QSA]
-RewriteRule ^([^/]+)/project/reports/(.+)$ index.php?project=$1&mode=reports&pmreportcategory=$2 [L,QSA]
+RewriteRule ^([^/]+)/project/reports/(.+)$ index.php?project=$1&mode=reports [L,QSA]
 RewriteRule ^([^/]+)/project/dicts/PMCustomAttribute/([^/]+)$ index.php?project=$1&mode=dicts&dict=PMCustomAttribute&customattributeentity=$2 [L,QSA]
 RewriteRule ^([^/]+)/project/dicts/(.+)$ index.php?project=$1&mode=dicts&dict=$2 [L,QSA]
 RewriteRule ^([^/]+)/project/workflow/(.+)$ index.php?project=$1&mode=workflow&dict=$2 [L,QSA]

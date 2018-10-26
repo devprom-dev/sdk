@@ -7,31 +7,38 @@ class MailBox
 {
  	var $to_address, $body, $from_address, $subject;
 	private $mailer_settings = null;
+	private $attachments = array();
+	private $text = '';
 	
-	function __construct()
-	{
+	function __construct() {
 		$this->to_address = array();
 		$this->mailer_settings = getFactory()->getObject('MailerSettings')->getAll();
 	}
 	
-	function appendAddress( $address )
-	{
+	function appendAddress( $address ) {
 		array_push($this->to_address, $address);
 	}
 	
 	function setBody( $body ) {
 		$this->body = $body;
+		$this->setText($body);
 	}
 	
-	function getBody()
-	{
+	function getBody() {
 		return $this->body;
 	}
 
-	function setSubject( $subject )
-	{
+	function setSubject( $subject ) {
 		$this->subject = $this->encode($subject);
 	}
+
+	function setText( $text ) {
+	    $this->text = $text;
+    }
+
+	function setAttachments( $attachments ) {
+	    $this->attachments = $attachments;
+    }
 
 	function setFrom( $from_address, $override = true )
 	{
@@ -98,13 +105,20 @@ class MailBox
 
  		$queue = new Metaobject('EmailQueue');
  		$address = new Metaobject('EmailQueueAddress');
-
  		$queue_id = $queue->add_parms(
- 			array ( 'FromAddress' => $this->from_address,
- 				    'Caption' => $this->subject,
- 				    'Description' => $this->body,
- 				    'MailboxClass' => get_class($this) )
- 			);
+ 			array (
+ 			    'FromAddress' => $this->from_address,
+ 				'Caption' => $this->subject,
+ 				'Description' => serialize(
+ 				    array(
+ 				        'native' => $this->body,
+ 				        'text' => $this->text
+                    )
+                ),
+ 				'MailboxClass' => get_class($this),
+                'Attachments' => serialize($this->attachments)
+            )
+        );
 
 		for ( $i = 0; $i < count($this->to_address); $i++ )
 		{
@@ -177,6 +191,7 @@ class HtmlMailBox extends MailBox
 	{
         // convert linked images into embedded ones
         $body = preg_replace_callback( '/<img\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceImageCallback'), $body);
+        $this->setText($body);
 
 		// process embedded images
 		$images_body = '';
@@ -201,12 +216,12 @@ class HtmlMailBox extends MailBox
 				return 'alt="'.text(2074).' '.($images_count).'" src="cid:'.$image_id.'"';
 			}, $body);
 
-        $this->body .= "--".self::mixed."\r\n";
+        $this->body .= "\r\n--".self::mixed."\r\n";
         $this->body .= "Content-Type: multipart/alternative; boundary=".self::boundary."\r\n";
         $this->body .= "\r\n";
         $this->body .= "This is multi-part message in MIME format.\r\n";
 
-        $this->body .= "--".self::boundary."\r\n";
+        $this->body .= "\r\n--".self::boundary."\r\n";
         $this->body .= "Content-Type: text/plain; charset=UTF-8\r\n";
         $this->body .= "Content-Transfer-Encoding: base64\r\n";
         $this->body .= "\r\n";
@@ -218,12 +233,12 @@ class HtmlMailBox extends MailBox
 		$texted = preg_replace('/[\r\n]{2,}/', PHP_EOL.PHP_EOL, $texted);
 		$this->body .= base64_encode($texted)."\r\n";
 
-        $this->body .= "--".self::boundary."\r\n";
+        $this->body .= "\r\n--".self::boundary."\r\n";
         $this->body .= "Content-Type: multipart/related; boundary=".self::boundary_related."\r\n";
         $this->body .= "\r\n";
 
 		// process html part
-        $this->body .= "--" . self::boundary_related . "\r\n";
+        $this->body .= "\r\n--" . self::boundary_related . "\r\n";
         $this->body .= "Content-Type: text/html; charset=UTF-8\r\n";
         $this->body .= "Content-Transfer-Encoding: base64\r\n";
         $this->body .= "\r\n";

@@ -39,9 +39,12 @@ abstract class NewDocumentWebMethod extends WebMethod
 	function getJSCall( $parms = array() )
 	{
 		return parent::getJSCall(
-			array (
-				'template' => is_object($this->object_it) ? $this->object_it->getId() : 0
-			)
+		    array_merge(
+                array (
+                    'template' => is_object($this->object_it) ? $this->object_it->getId() : 0
+                ),
+                $parms
+            )
 		);
 	}
 
@@ -71,13 +74,15 @@ abstract class NewDocumentWebMethod extends WebMethod
 			$object_it = $object->getExact(array_shift($ids[$object->getEntityRefName()]));
 
 			$object->modify_parms($object_it->getId(), array (
-				'Caption' => $template_it->getHtmlDecoded('Caption')
+				'Caption' => $template_it->getHtmlDecoded('Caption'),
+                'PageType' => $_REQUEST['PageType']
 			));
 		}
 		else {
 			$object_it = $object->getExact($object->add_parms(
 				array (
-					'Caption' => $this->getCaption()
+					'Caption' => $this->getCaption(),
+                    'PageType' => $_REQUEST['PageType']
 				)
 			));
 		}

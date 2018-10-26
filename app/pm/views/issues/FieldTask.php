@@ -3,7 +3,6 @@
 use Devprom\ProjectBundle\Service\Task\TaskDefaultsService;
 
 include_once SERVER_ROOT_PATH."pm/classes/issues/validators/ModelValidatorIssueTasks.php";
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once "FormTaskEmbedded.php";
 
 class FieldTask extends Field
@@ -61,7 +60,7 @@ class FieldTask extends Field
  		$_REQUEST['Transition'] = $transition;
 		
 		echo '<div style="float:left;padding-bottom:8px;">';
-			echo '<a id="btn-more-tasks" class="btn btn-success btn-small" onclick="taskboxShow();"><i class="icon-plus icon-white"></i> ' .translate('Еще задачу').'</a>';
+			echo '<a id="btn-more-tasks" class="btn btn-success btn-sm" onclick="taskboxShow();"><i class="icon-plus icon-white"></i> ' .translate('Еще задачу').'</a>';
 		echo '</div>';
 
 		echo '<div class="clearfix">&nbsp;</div>';

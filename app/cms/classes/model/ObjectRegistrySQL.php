@@ -174,18 +174,12 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 	public function createSQLIterator( $sql_query )
 	{
-		global $model_factory;
-		
-		$class_name = get_class($this->getObject()); 
-
-		$cached_iterator = $model_factory->getCachedIterator( $class_name, $sql_query );
+		$class_name = $this->getObject()->getEntityRefName();
+		$cached_iterator = getFactory()->getCachedIterator( $class_name, $sql_query );
 	
 		if ( is_object($cached_iterator) )
 		{
 			$cached_iterator->resetStop();
-
-		    $model_factory->debug("Hit SQL cache: ".$sql_query);
-			
 			return $this->createIterator($cached_iterator->getRowset());
 		}
 		
@@ -193,15 +187,11 @@ class ObjectRegistrySQL extends ObjectRegistry
 		
 		$r2 = DAL::Instance()->Query($sql_query);
 
-   		if ( $r2 !== false )
-   		{
-   			$model_factory->info('Query: Ok');
+   		if ( $r2 !== false ) {
     		$iterator = $this->createIterator( $r2 );
-    		$model_factory->cacheIterator( $class_name, $sql_query, $iterator );
+            getFactory()->cacheIterator( $class_name, $sql_query, $iterator );
    		}
-   		else
-   		{
-   			$model_factory->info('Query: Failed');
+   		else {
    			$iterator = $this->createIterator( array() );
    		}
 		
@@ -306,8 +296,6 @@ class ObjectRegistrySQL extends ObjectRegistry
 	
 	public function Store( OrderedIterator $object_it, array $data )
 	{
-		global $model_factory;
-		
 		$sql = "";
 		
 		$object = $this->getObject();
@@ -330,10 +318,8 @@ class ObjectRegistrySQL extends ObjectRegistry
 			
 			if ( in_array($object->getAttributeType($key), array('file', 'image')) ) continue; 
 			
-			if( !$object->IsAttributeStored($key) )
-			{
-			    $model_factory->info( 'Skip non-storable attribute: '.$key );
-			    
+			if( !$object->IsAttributeStored($key) ) {
+			    getFactory()->info( 'Skip non-storable attribute: '.$key );
 			    continue;
 			}
 
@@ -359,8 +345,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 		if ( $data['VPD'] != '' ) $sql .= "`VPD` = '".DAL::Instance()->Escape(addslashes($data['VPD']))."',";
 		
-		$model_factory->info( JsonWrapper::encode($data) );
-        $affected_rows = 0;
+		getFactory()->info( JsonWrapper::encode($data) );
 
 		if ( $sql != '' )
 		{
@@ -381,23 +366,29 @@ class ObjectRegistrySQL extends ObjectRegistry
 
 			$r2 = DAL::Instance()->Query($sql);
 
-			$affected_rows = DAL::Instance()->GetAffectedRows();
+			if ( $data['RecordVersion'] != '' && DAL::Instance()->GetAffectedRows() < 1 ) {
+			    return $object->getEmptyIterator();
+            }
 
-			if ( $data['RecordVersion'] != '' && $affected_rows < 1 ) return $affected_rows;
-
-		    $model_factory->resetCachedIterator($object);
+		    getFactory()->resetCachedIterator($object);
 		}
 		else
 		{
-			$model_factory->debug( 'SQL query to update attributes is empty: '.$pre_sql );
+			getFactory()->debug( 'SQL query to update attributes is empty: '.$pre_sql );
 		}
 
 		foreach ( $this->persisters as $persister ) {
 			$persister->modify( $object_it->getId(), $data );
 		}
-		$model_factory->resetCachedIterator($object);
 
-		return 1;
+		getFactory()->resetCachedIterator($object);
+		$resultIt = $object->getExact($object_it->getId());
+
+        if ( $object->getNotificationEnabled() ) {
+            getFactory()->getEventsManager()->notify_object_modify($object_it, $resultIt, $data);
+        }
+
+        return $resultIt;
 	}
 
     public function Create( array $data )
@@ -415,11 +406,25 @@ class ObjectRegistrySQL extends ObjectRegistry
     {
         $parms = array();
         if ( count($alternativeKey) < 1 ) $alternativeKey = array_keys($data);
+
+        $localSearchOnly = true;
         foreach( $alternativeKey as $attribute ) {
-            $parms[] = new FilterAttributePredicate($attribute, $data[$attribute]);
+            if ( $attribute == 'VPD' ) {
+                $parms[] = new FilterVpdPredicate($alternativeKey[$attribute]);
+                $localSearchOnly = false;
+            }
+            else {
+                $parms[] = new FilterAttributePredicate($attribute, $data[$attribute]);
+            }
         }
+        if ( $localSearchOnly ) {
+            $parms[] = new FilterBaseVpdPredicate();
+        }
+
         $object_it = $this->Query($parms);
-        if ( $object_it->getId() != '' ) return $object_it;
+        if ( $object_it->getId() != '' ) {
+            return $this->Store($object_it, $data);
+        }
         return $this->Create($data);
     }
 

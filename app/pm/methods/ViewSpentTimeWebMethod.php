@@ -16,7 +16,8 @@ class ViewSpentTimeWebMethod extends FilterWebMethod
  			'projects' => text('projects.name')
 		);
 
-        if ( getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Task')) ) {
+  		$methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodologyIt->HasTasks() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Task')) ) {
             $values['tasks'] = translate('Задачи');
         }
 
@@ -32,6 +33,7 @@ class ViewSpentTimeWebMethod extends FilterWebMethod
 	    $value = parent::getValue();
 
 	    if ( $value == '' ) {
+	        if ( getSession()->getProjectIt()->IsPortfolio() ) return 'projects';
             $values = $this->getValues();
             if ( array_key_exists('issues', $values) ) return 'issues';
             return 'tasks';

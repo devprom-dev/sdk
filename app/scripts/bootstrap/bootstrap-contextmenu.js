@@ -133,7 +133,7 @@
 				, Y, X;
 
 			if (mouseY + menuHeight > boundsY) {
-				Y = {"top": mouseY - menuHeight};
+				Y = {"top": Math.max(0,mouseY - menuHeight)};
 			} else {
 				Y = {"top": mouseY};
 			}

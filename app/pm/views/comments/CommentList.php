@@ -98,7 +98,7 @@ class CommentList
 			$method = new ObjectModifyWebMethod($object_it);
 			$method->setObjectUrl(
 				getSession()->getApplicationUrl($object_it).'comments/'.
-					strtolower(get_class($this->object_it->object)).'/'.$this->object_it->getId()
+					strtolower(get_class($this->object_it->object)).'/'.$this->object_it->getId().'?action=show'
 			);
 			$actions[] = array ();
 			$actions[] = array (
@@ -112,7 +112,7 @@ class CommentList
 			$actions[] = array ();
 			$actions[] = array (
 				'click' => $method->getJSCall(),
-				'name' => $method->getCaption() 
+				'name' => $method->getCaption()
 			);
 		}
 

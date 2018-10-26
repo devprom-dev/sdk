@@ -6,20 +6,38 @@ import java.io.*;
 import java.util.Random;
 
 //For future needs - Data Driven Tests
-public class DataProviders {
+public class DataProviders 
+{
 	protected static final int UNIQUELENGTH = 10;
 
+	public static String encodeHtml(String text) {
+		return text.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+	}
+	
 	public static String getUniqueString() {
 		return getUniqueString(UNIQUELENGTH);
 	}
+	
 	public static String getUniqueString(int digits) {
 		if (digits > 13 || digits < 1) {
 			digits = 13;
 			System.out.println("Invalid digits number. Set to 13.");
 		}
 		Random r = new Random();
-		return String.valueOf(System.currentTimeMillis() + r.nextInt())
-				.substring(13 - digits, 13);
+		return "2123@<svg/onload=alert(1)>ya.ru"
+				+ String.valueOf(System.currentTimeMillis() + r.nextInt())
+					.substring(13 - digits, 13);
+    }
+
+	public static String getUniqueStringAlphaNum() 
+	{
+		int digits = UNIQUELENGTH;
+		if (digits > 13 || digits < 1) {
+			digits = 13;
+			System.out.println("Invalid digits number. Set to 13.");
+		}
+		Random r = new Random();
+		return String.valueOf(System.currentTimeMillis() + r.nextInt()).substring(13 - digits, 13);
     }
 
     public static File createRandomTextFile() {

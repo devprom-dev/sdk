@@ -31,6 +31,7 @@ class RequestBulkForm extends BulkForm
  		switch ( $attr )
  		{
  			case 'Tag':
+            case 'Watchers':
  			case 'Project':
  			case 'Iteration':
  			case 'LinkType':
@@ -63,6 +64,7 @@ class RequestBulkForm extends BulkForm
 		switch( $attribute )
 		{
 		    case 'RemoveTag':
+            case 'RemoveWatchers':
 			case 'Tasks':
 		    	return false;
             case 'CreateLinked':
@@ -130,7 +132,21 @@ class RequestBulkForm extends BulkForm
 				}
 				$field->draw();
 				break;
-				
+
+            case 'Watchers':
+                $field = new FieldAutoCompleteObject( getFactory()->getObject2('IssueAuthor') );
+                $field->SetId($attribute);
+                $field->SetName('value');
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->setAppendable();
+
+                if ( $this->showAttributeCaption() ) {
+                    echo $this->getName($attribute);
+                }
+                $field->draw();
+                break;
+
  			case 'LinkType':
  				$type = getFactory()->getObject('RequestLinkType');
  				
@@ -174,7 +190,7 @@ class RequestBulkForm extends BulkForm
                     )
                 );
                 echo '<div class="btn-group">';
-                    echo '<a class="btn btn-small btn-success" href="'.$url.'">';
+                    echo '<a class="btn btn-sm btn-success" href="'.$url.'">';
                         echo '<i class="icon-plus icon-white"></i> '.$this->getObject()->getDisplayName();
                     echo '</a>';
                 echo '</div>';

@@ -31,7 +31,7 @@ import ru.devprom.pages.project.testscenarios.TestScenariosPage;
 
 public class RequirementsPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
         
     @FindBy(xpath = ".//*[@id='bulk-actions']/a")
@@ -77,7 +77,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 
 	public RequirementViewPage clickToRequirement(String id) {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'"+ id + "')]")).click();
+				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'R-" + id.split("-")[1] + "')]")).click();
 		return new RequirementViewPage(driver);
 	}
 	
@@ -97,7 +97,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 		WebElement requirement;
 		requirement = driver
 				.findElement(By
-						.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'"
+						.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
 								+ id + "')]/../.."));
 		switch (propertyName) {
 		case "name": {
@@ -140,7 +140,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 
 	public void checkRequirement(String id) {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'"
+				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
 						+ id + "')]/../preceding-sibling::td/input[@class='checkbox']"))
 				.click();		
 	}
@@ -148,7 +148,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 	public boolean isRequirementPresent(String id) {
 		try {
 			driver.findElement(By
-					.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'"
+					.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
 							+ id + "')]"));
 			return true;
 		} catch (NoSuchElementException e) {
@@ -238,7 +238,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 			Requirement requirement;
 			WebElement row = driver
 					.findElement(By
-							.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'"
+							.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
 									+ id + "')]/../.."));
 			String caption = row.findElement(By.id("caption")).getText();
 			String state = row.findElement(By.id("state")).getText();
@@ -253,7 +253,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 			Requirement requirement;
 			WebElement row = driver
 					.findElement(By
-							.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='caption' and contains(text(),'"
+							.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='caption' and contains(.,'"
 									+ name + "')]/.."));
 			String id = row.findElement(By.xpath("td[@id='uid']/a")).getAttribute("href");
 			id = id.substring(id.lastIndexOf("/")+1);
@@ -266,7 +266,7 @@ public class RequirementsPage extends SDLCPojectPageBase {
 		
 		public 	RequirementsPage selectDocument(String requirement){
 			selectDocumentList.click();
-			WebElement documentItem = selectDocumentList.findElement(By.xpath("./ul[@role='menu']/li/a[contains(text(),'"+requirement+"')]"));
+			WebElement documentItem = selectDocumentList.findElement(By.xpath("./ul[@role='menu']/li/a[contains(.,'"+requirement+"')]"));
 			(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(documentItem));
 			documentItem.click();
 			return new RequirementsPage(driver);
@@ -283,8 +283,8 @@ public class RequirementsPage extends SDLCPojectPageBase {
 
     public String getIdByName(String name) {
         String ids = driver.findElement(By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='caption' and contains(.,'"+
-                name+"')]/preceding-sibling::td[@id='uid']/a")).getAttribute("href");
-        ids = ids.substring(ids.lastIndexOf("/")+1);
+                name+"')]/preceding-sibling::td[@id='uid']/a")).getText();
+        ids = ids.substring(1, ids.length() - 1);
         FILELOG.debug("Click to UID of requirement");
         return ids; 
     }

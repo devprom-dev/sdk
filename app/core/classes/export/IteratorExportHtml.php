@@ -1,5 +1,4 @@
 <?php
-
 include_once "IteratorExport.php";
 
 class IteratorExportHtml extends IteratorExport
@@ -40,18 +39,19 @@ class IteratorExportHtml extends IteratorExport
  				switch ( $keys[$j] )
  				{
  					case 'UID':
- 						
  					    $text = $uid->getObjectUid($it->getCurrentIt());
- 						
  					    break;
  						
  					default:
-
  					    $value = $this->get($keys[$j]);
- 					    
- 					    if ( is_array($value) ) $value = join('<br/>', $value);
- 					    
- 						$text = html_entity_decode($value, ENT_COMPAT | ENT_HTML401, APP_ENCODING); 
+ 					    if ( is_array($value) ) {
+                            $text = join('<br/>', array_map(function($value) {
+ 					            return htmlentities($value);
+                            }, $value));
+                        }
+                        else {
+                            $text = htmlentities($value);
+                        }
  				}
  				
  				$result .= '<td>'.$text.'</td>';

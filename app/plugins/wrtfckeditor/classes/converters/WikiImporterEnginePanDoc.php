@@ -42,6 +42,8 @@ class WikiImporterEnginePanDoc extends WikiImporterEngine
 
         $content = file_get_contents($outputPath);
         $content = preg_replace_callback( '/<img\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceExternalImageCallback'), $content);
+        $content = preg_replace_callback( '/<embed\s+([^>]*)>/i', array('HtmlImageConverter', 'replaceExternalImageCallback'), $content);
+        $content = preg_replace('/<embed/i', '<img', $content);
 
         // append table borders
         $content = preg_replace('/<table>/i', '<table border="1">', $content);

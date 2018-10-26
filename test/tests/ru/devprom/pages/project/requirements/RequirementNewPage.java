@@ -42,13 +42,13 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//input[@type='button' and @value='Отменить']")
 	protected WebElement cancelBtn;
 
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='functioninversedtracerequirement']]")
+	@FindBy(xpath = "//span[@name='WikiPageFeature']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addFunctionBtn;
 
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requestinversedtracerequirement']]")
+	@FindBy(xpath = "//span[@name='WikiPageIssues']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addRequestBtn;
 
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='wikitag']]")
+	@FindBy(xpath = "//span[@name='WikiPageTags']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTagBtn;
         
         //добавить исходное пожелание на вкладке Трассировка
@@ -60,7 +60,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 	protected WebElement addSourseWishField;
         
         //нопка сохранения добавленного исходного пожелания
-        @FindBy(xpath = ".//input[@class='btn btn-primary btn-small']")
+        @FindBy(xpath = ".//input[@class='btn btn-primary btn-sm']")
 	protected WebElement saveAddedSourseWish;
 
 	// кнопка добавить изображение в контент
@@ -87,7 +87,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 		submitDialog(submitBtn);
 		driver.navigate().refresh();
 
-		By locator = By.xpath("//td[@id='caption' and contains(text(),'"
+		By locator = By.xpath("//td[@id='caption' and contains(.,'"
 				+ r.getName() + "')]/preceding-sibling::td[@id='uid']");
 		String uid = driver.findElement(locator).getText();
 		r.setId(uid.substring(1, uid.length() - 1));
@@ -164,7 +164,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 		submitDialog(submitBtn);
 		driver.navigate().refresh();
 
-		By locator = By.xpath("//td[@id='caption' and contains(text(),'" + r.getName() + "')]/preceding-sibling::td[@id='uid']");
+		By locator = By.xpath("//td[@id='caption' and contains(.,'" + r.getName() + "')]/preceding-sibling::td[@id='uid']");
 		String uid = driver.findElement(locator).getText();
 		r.setId(uid.substring(1, uid.length() - 1));
 		return clickToRequirement(r.getId());
@@ -190,10 +190,6 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 			addContent(r.getContent());
 		}
 
-		if (r.getType() != null && !r.getType().equals("")) {
-			selectType(r.getType());
-		}
-
 		if (r.getTemplateName() != null && !r.getTemplateName().equals("")) {
 			CKEditor we = (new CKEditor(driver)); 
 			we.typeTemplate(r.getTemplateName());
@@ -207,6 +203,10 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 		
 		if (r.getParentPage() != null && !r.getParentPage().equals("")) {
 			addParentPage(r.getParentPage().getId().equals("") ? r.getParentPage().getName() : r.getParentPage().getId(), searchForParent);
+		}
+
+		if (r.getType() != null && !r.getType().equals("")) {
+			selectType(r.getType());
 		}
 
 		if (r.getTags().size() > 0) {
@@ -226,7 +226,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 
 	public RequirementViewPage clickToRequirement(String id) {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(@href,'"
+				By.xpath("//tr[contains(@id,'requirementlist1_row_')]/td[@id='uid']/a[contains(.,'"
 						+ id + "')]")).click();
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions
 				.presenceOfElementLocated(By
@@ -328,7 +328,7 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 	}
 
 	public void selectType(String type) {
-		clickMainTab();
+		clickMoreTab();
 		(new Select(typeEdit)).selectByVisibleText(type);
 		try {
 			Thread.sleep(3000);
@@ -417,11 +417,13 @@ public class RequirementNewPage extends SDLCPojectPageBase {
 	   CKEditor we = new CKEditor(driver);
 	   if(testScenario.getTemplateName() != null)
 		   we.typeTemplate(testScenario.getTemplateName());   
-	   if(testScenario.getType()!= null)
-	       (new Select(typeEdit)).selectByValue(
-	    		   typeEdit.findElement(By.xpath("./option[contains(text(),'"+testScenario.getType()+"')]")).getAttribute("value")
-	    		   );
 		captionEdit.sendKeys(testScenario.getName());
+	   if(testScenario.getType()!= null){
+		   clickMoreTab();
+	       (new Select(typeEdit)).selectByValue(
+	    		   typeEdit.findElement(By.xpath("./option[contains(.,'"+testScenario.getType()+"')]")).getAttribute("value")
+	    		   );
+	   }
 		submitDialog(submitBtn);
 	}
 
@@ -435,8 +437,9 @@ public class RequirementNewPage extends SDLCPojectPageBase {
     	   we.typeTemplate(testScenario.getTemplateName());   
        }
        if(testScenario.getType()!= null) {
+    	   clickMoreTab();
 		   (new Select(typeEdit)).selectByValue(
-				   typeEdit.findElement(By.xpath("./option[contains(text(),'"+testScenario.getType()+"')]")).getAttribute("value")
+				   typeEdit.findElement(By.xpath("./option[contains(.,'"+testScenario.getType()+"')]")).getAttribute("value")
 				   );
        }
         try {

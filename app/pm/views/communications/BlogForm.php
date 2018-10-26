@@ -1,8 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
-
-include 'FieldBlogAttachments.php';
 include 'FieldBlogPostTagTrace.php';
 
 if ( !class_exists('FieldSignature', false) )
@@ -103,91 +100,11 @@ class BlogForm extends PMPageForm
                     $project_it = getFactory()->getObject('Project')->getExact($projectId);
                 }
                 return $project_it->get('Blog');
-
-            case 'Content':
-                if ( $_REQUEST['from'] == 'requests' ) {
-                    return $this->getReleaseNotes();
-                }
-                
-                break;
         }
 
         return parent::getFieldValue( $field );
     }
 
-    function getReleaseNotes()
-    {
-        global $model_factory;
-        
-		$hashids = $model_factory->getObject('HashIds');
-		$ids = $hashids->getHashIds( $_REQUEST['items'] );
-		
- 		$issue_type = $model_factory->getObject('pm_IssueType');
- 		$issue_type_it = $issue_type->getByRef('ReferenceName', 'bug');
-
- 		$request = $model_factory->getObject('pm_ChangeRequest');
- 		$req_it = $request->getInArray('pm_ChangeRequestId', $ids);
- 		
-		$uid = new ObjectUID;
-		
- 		$issues = array();
- 		$bugs = array();
- 		$description = '';
- 		
- 		for ( $i = 0; $i < $req_it->count(); $i++ )
- 		{
- 			$info = $uid->getUidInfo($req_it);
- 			
- 			$title = str_replace(chr(13), ' ',  
- 							str_replace(chr(10), ' ', 
- 									'[url='.$info['url'].' text='.$info['uid'].'] '.$req_it->getWordsOnly('Caption', 15).
- 										' ('.$info['state_name'].')'
- 				));
- 			
- 			if ( $req_it->get('Type') == $issue_type_it->getId() )
- 			{
- 				 array_push($bugs, $title);
- 			}
- 			else
- 			{
- 				 array_push($issues, $title);
- 			}
- 			
- 			$req_it->moveNext();
- 		}
-
-		if ( count($issues) > 0 )
-		{
- 			$description .= '*'.text(759).':*'.chr(10);
- 			
- 			foreach ( $issues as $issue )
- 			{
- 				$description .= '* '.$issue.chr(10);
- 			}
-		}
- 		
-		if ( count($bugs) > 0 )
-		{
- 			$description .= '*'.text(760).':*'.chr(10);
- 			
- 			foreach ( $bugs as $issue )
- 			{
- 				$description .= '* '.$issue.chr(10);
- 			}
-		}
-		
-		$editor = $this->getEditor();
-		$parser = $editor->getEditorParser( 'wikisyntaxeditor' );
-		if ( is_object($parser) )
-		{
-			return $parser->parse( $description );
-		}
-		else
-		{
-			return $description;
-		}
-    }
-    
     function getFieldDescription( $attr )
     {
         switch ( $attr )
@@ -332,10 +249,6 @@ class BlogForm extends PMPageForm
                 is_object($this->object_it) ?
                     $field->setObjectIt( $this->object_it ) :
                     $field->setObject( $this->getObject() );
-
-                $field->setAttachmentsField( new FieldBlogAttachments(
-                        is_object($this->object_it) ? $this->object_it : $this->object
-                ));
 
         		if ( $this->getEditMode() )
 				{

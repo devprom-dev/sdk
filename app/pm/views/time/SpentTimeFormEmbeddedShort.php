@@ -2,8 +2,13 @@
 
 class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
 {
-	function getItemVisibility( $object_it )
-	{
+    private $showAutoTimeButtons = true;
+
+	function showAutoTimeButtons( $value = true ) {
+	    $this->showAutoTimeButtons = $value;
+    }
+
+    function getItemVisibility( $object_it ) {
 		return false; 		
 	}
 	
@@ -31,7 +36,7 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
                 'items' => array(
                     array(
                         'uid' => 'activity-edit',
-                        'url' => $moduleIt->getUrl('activitytask='.join('-',$ids[$key])),
+                        'url' => $moduleIt->getUrl('activitytask='.\TextUtils::buildIds($ids[$key])),
                         'name' => translate('Редактировать')
                     )
                 )
@@ -44,14 +49,21 @@ class SpentTimeFormEmbeddedShort extends SpentTimeFormEmbedded
     			echo join('<br/>', $lines);
 			echo '</div><br/>';
 		}		
-	
-		parent::drawAddButton( $view, $tabindex );
 
-        if ( count($lines) > 0 ) {
-            $url = $moduleIt->getUrl('activitytask='.join('-',$object_it->idsToArray()));
-            echo '<a class="dashed embedded-add-button" style="margin-left:20px;" target="_blank" href="'.$url.'" tabindex="-1">';
-                echo translate('подробнее');
-            echo '</a>';
+		echo '<span>';
+            parent::drawAddButton( $view, $tabindex );
+            if ( count($lines) > 0 ) {
+                $url = $moduleIt->getUrl('activitytask='.\TextUtils::buildIds($object_it->idsToArray()));
+                echo '<a class="dashed embedded-add-button" target="_blank" href="'.$url.'" tabindex="-1">';
+                    echo translate('подробнее');
+                echo '</a>';
+            }
+        echo '</span>';
+
+        if ( $this->showAutoTimeButtons ) {
+            echo '<span class="auto-time-panel embedded-add-button">';
+                $this->drawAutoTimes();
+            echo '</span>';
         }
 	}
 }

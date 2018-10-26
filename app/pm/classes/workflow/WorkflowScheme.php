@@ -108,7 +108,9 @@ class WorkflowScheme
 		$this->transition->setStateAttributeType($this->getStateObject($object));
 		$data = $this->getStatesCache($object);
 		if ( !is_array($states) ) {
-			return $this->transition->createCachedIterator($data['transitions'][$states]);
+			return $this->transition->createCachedIterator(
+			    array_values($data['transitions'][$states])
+            );
 		}
 		else {
 			$result = array();
@@ -158,24 +160,27 @@ class WorkflowScheme
 			)
 		);
 		$stateattr_it->buildPositionHash(array('State'));
+
 		$transition_it = $this->transition->getRegistry()->Query(
 			array (
-				new FilterAttributePredicate('TargetState', $state_it->idsToArray()),
-				new TransitionSourceStateSort()
+                new FilterVpdPredicate(join(',',$vpds)),
+				new TransitionSourceStateSort(),
+				new TransitionTargetStateSort()
 			)
 		);
 		$transition_it->buildPositionHash(array('SourceState'));
+
 		$attribute_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
 			array (
 				new FilterAttributePredicate('Transition', $transition_it->idsToArray()),
-				new SortAttributeClause('Transition')
+				new TransitionAttributeSortClause()
 			)
 		);
 		$attribute_it->buildPositionHash(array('Transition'));
 		$predicate_it = getFactory()->getObject('TransitionPredicate')->getRegistry()->Query(
 			array (
 				new FilterAttributePredicate('Transition', $transition_it->idsToArray()),
-				new SortAttributeClause('Transition')
+				new TransitionAttributeSortClause()
 			)
 		);
 		$predicate_it->buildPositionHash(array('Transition'));

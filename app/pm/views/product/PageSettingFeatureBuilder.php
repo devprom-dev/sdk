@@ -7,15 +7,21 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
     public function build( PageSettingSet & $settings )
     {
         $feature = getFactory()->getObject('Feature');
-        
+
+        $setting = new PageListSetting('FunctionTreeGrid');
+        $setting->setVisibleColumns(
+            array(
+                'UID', 'Caption', 'Progress', 'StartDate', 'DeliveryDate', 'Fact'
+            )
+        );
+        $settings->add( $setting );
+
         $setting = new PageListSetting('FunctionList');
         $setting->setVisibleColumns(
             array_diff(
                 array_merge(
-                    array( 'UID', 'Caption', 'Progress', 'Workload', 'StartDate', 'DeliveryDate', 'Request' ),
-                    array_filter($feature->getAttributesByGroup('trace'), function($value) use ($feature) {
-                        return true;
-                    })
+                    array( 'UID', 'Caption', 'Progress' ),
+                    $feature->getAttributesByGroup('trace')
                 ),
                 $feature->getAttributesByGroup('system')
             )
@@ -27,14 +33,6 @@ class PageSettingFeatureBuilder extends PageSettingBuilder
 				array (
 						'state', 'tag', 'type', 'importance', 'parent'
 				)
-        );
-        $settings->add( $setting );
-
-        $setting = new ReportSetting('features-chart');
-        $setting->setVisibleColumns( 
-        		array(
-        			'UID', 'Caption', 'Workload', 'StartDate', 'DeliveryDate'
-        		)
         );
         $settings->add( $setting );
     }

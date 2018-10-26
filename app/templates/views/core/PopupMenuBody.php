@@ -34,7 +34,22 @@ foreach( $items as $key => $action )
  	
  	$items[$key]['url'] = preg_replace('/last-month/', $last_month,
  	        preg_replace('/last-week/', $last_week, $items[$key]['url']));
+
+	if ( EnvironmentSettings::getBrowserIE() && strpos($items[$key]['url'], 'javascript:') !== false ) {
+        $items[$key]['click'] = $items[$key]['url'];
+        unset($items[$key]['url']);
+    }
 }
+
+if ( EnvironmentSettings::getBrowserIE() ) {
+    foreach( $items as $key => $action ) {
+        if ( strpos($items[$key]['url'], 'javascript:') !== false ) {
+            $items[$key]['click'] = $items[$key]['url'];
+            unset($items[$key]['url']);
+        }
+    }
+}
+
 if ( count($items) < 1 ) return;
 
 ?>
@@ -62,7 +77,9 @@ if ( count($items) < 1 ) return;
 				continue;
 			}
 			else {
+			    $prefix = $action['name'] . ': ';
 				$action = array_shift($action['items']);
+                $action['name'] = $prefix . $action['name'];
 			}
 		}
 	}
@@ -102,9 +119,14 @@ if ( count($items) < 1 ) return;
 		    
 		    <?php } else { ?>
 		    
-    		    <?php if ( $class == '' ) { ?>
+    		    <?php if ( $class == '' ) {
+
+    		        if ( $action['class'] == 'image_attach' ) {
+    		            $attributes = 'data-fancybox="gallery"';
+                    }
+    		        ?>
     			
-    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" alt="<?=$action['alt']?>" <?=($action['target'] != '' ? 'target="'.$action['target'].'"' : '')?> <?=($action['url'] != '' ? 'href="'.$action['url'].'"' : '')?> title="<?=$action['title']?>"><?=$action['name']?></a>
+    			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" <?=$attributes?> alt="<?=$action['alt']?>" <?=($action['target'] != '' ? 'target="'.$action['target'].'"' : '')?> <?=($action['url'] != '' ? 'href="'.$action['url'].'"' : '')?> title="<?=$action['title']?>"><?=$action['name']?></a>
     		    
     		    <?php } else { ?>
     			

@@ -8,50 +8,50 @@ CKEDITOR.plugins.add( 'productivity',
 
 		editor.addCommand( 'productivityCreateIssue', {
 			exec: function(editor) {
-				var focusedEditor = editor;
-				var focusedSelection = focusedEditor.getSelection();
-				var text = focusedSelection.getSelectedText();
+                var focusedName = editor.name;
 				var objectClass = editor.element.getAttribute('objectclass');
 
+                var text = editor.getSelection().getSelectedText();
 				var data = {
 					Caption: text.split(/[\s,;:.]+/).slice(0,7).join(" "),
 					Description: text,
 				};
 				data[objectClass] = editor.element.getAttribute('objectid');
+                if ( objectClass == "ProjectPage" ) {
+                    editor.insertText(' [I-] ');
+				}
 
-				var focusManager = new CKEDITOR.focusManager( focusedEditor );
-				workflowNewObject(baseUrl+'/issues/board?mode=request&class=metaobject&entity=pm_ChangeRequest','Request','pm_ChangeRequest','',cket('issue-title'), data, function(id) {
+				workflowNewObject(baseUrl+'/issues/board?mode=request&class=metaobject&entity=pm_ChangeRequest','Request','pm_ChangeRequest','',cket('issue-title'), data, function(id)
+				{
+                    if ( objectClass != "ProjectPage" ) return;
+                    var focusedEditor = CKEDITOR.instances[focusedName];
 					if ( focusedEditor.element.hasClass('wysiwyg-input') ) return;
-					if ( objectClass != "ProjectPage" ) return;
-					if ( text != "" ) focusedEditor.insertText(text + ' ');
-					focusedEditor.insertText(' [I-'+id+']');
-					focusedEditor.persist(true);
-					focusManager.blur();
-				});
+                    focusedEditor.setData(focusedEditor.getData().replace(/\[I\-\]/g, '[I-'+id+']'));
+				}, "false");
 			}
 		});
 		editor.addCommand( 'productivityCreateTask', {
 			exec: function(editor) {
-				var focusedEditor = editor;
-				var focusedSelection = focusedEditor.getSelection();
-				var text = focusedSelection.getSelectedText();
+				var focusedName = editor.name;
 				var objectClass = editor.element.getAttribute('objectclass');
 
+                var text = editor.getSelection().getSelectedText();
 				var data = {
 					Caption: text.split(/[\s,;:.]+/).slice(0,7).join(" "),
 					Description: text,
 				};
 				data[objectClass] = editor.element.getAttribute('objectid');
+                if ( objectClass == "ProjectPage" ) {
+                    editor.insertText(' [T-] ');
+                }
 
-				var focusManager = new CKEDITOR.focusManager( focusedEditor );
-				workflowNewObject(baseUrl+'/tasks/board?class=metaobject&entity=pm_Task','Task','pm_Task','',cket('task-title'), data, function(id) {
+				workflowNewObject(baseUrl+'/tasks/board?class=metaobject&entity=pm_Task','Task','pm_Task','',cket('task-title'), data, function(id)
+				{
+                    if ( objectClass != "ProjectPage" ) return;
+					var focusedEditor = CKEDITOR.instances[focusedName];
 					if ( focusedEditor.element.hasClass('wysiwyg-input') ) return;
-					if ( objectClass != "ProjectPage" ) return;
-					if ( text != "" ) focusedEditor.insertText(text + ' ');
-					focusedEditor.insertText(' [T-'+id+']');
-					focusedEditor.persist(true);
-					focusManager.blur();
-				});
+                    focusedEditor.setData(focusedEditor.getData().replace(/\[T\-\]/g, '[T-'+id+']'));
+				}, "false");
 			}
 		});
 		editor.addCommand( 'productivityComment', {
@@ -90,7 +90,7 @@ CKEDITOR.plugins.add( 'productivity',
                     focusedEditor.persist(true);
                     focusManager.blur();
 					toggleDocumentPageComments($(focusedEditor.element.$).closest('tr').find('.comments-section:hidden'), false);
-				});
+				}, "false");
 			}
 		});
 

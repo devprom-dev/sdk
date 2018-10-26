@@ -9,7 +9,9 @@ class ExceptionHandlerListenerRaven extends ExceptionHandlerListener
         try
         {
             $client = $this->getClient();
-            $client->captureMessage($data['error']['message'], $data);
+            $client->captureMessage(
+                array_shift(explode('array (', $data['error']['message'], 2)), array(), $data
+            );
             if ( $client->getLastError() != '' ) throw new \Exception($client->getLastError());
         }
         catch( Exception $e )

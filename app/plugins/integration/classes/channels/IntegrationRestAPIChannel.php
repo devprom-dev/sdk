@@ -103,7 +103,11 @@ abstract class IntegrationRestAPIChannel extends IntegrationChannel
             }
             else {
                 $postData = $put;
-                $result = $this->jsonPost($mapping['url'], $postData, array('expand' => 'renderedBody'));
+                $result = $this->jsonPost(
+                    $mapping['url-append'] != '' ? $mapping['url-append'] : $mapping['url'],
+                    $postData,
+                    array('expand' => 'renderedBody')
+                );
                 $this->itemCreated($mapping, $class, $put, $result);
                 $result = array($result);
             }

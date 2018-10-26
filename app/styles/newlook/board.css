@@ -71,7 +71,6 @@ div.board-item-fact
 	font-size: 11.844px;
 	vertical-align: middle;
 	display: inline-block;
-	margin-left: 4px;
 }
 
 div.board-item-fact a
@@ -91,11 +90,6 @@ div.board-item-fact a
 	word-wrap:normal;
 	overflow:hidden;
 	cursor: pointer;
-}
-
-.item-footer .btn-group
-{
-	margin-right:0;
 }
 
 .item-footer .btn-group .label
@@ -173,7 +167,7 @@ div.board-item-fact a
 }
 .board-size-xl .bi-cap {
 	padding:3px 0 0 0;
-	height:5.0em;
+	height:7.5em;
 	line-height: 15px;
 	color: #303030;
 }
@@ -225,7 +219,7 @@ div.board-item-fact a
 .board-size-s .board_item_attributes .ca-field > div:not(.title-on-card) {
 	display: none;
 }
-.board-size-s .label {
+.board-size-s .board_item_attributes .label {
 	display: none;
 }
 .board-size-s .board_item_attributes div.bi-cap {
@@ -254,7 +248,7 @@ div.board-item-fact a
 .board-size-xs .board_item_attributes .ca-field > div:not(.title-on-card) {
 	display: none;
 }
-.board-size-xs .label {
+.board-size-xs .board_item_attributes .label {
 	display: none;
 }
 .board-size-xs .item-footer {
@@ -342,13 +336,13 @@ div.board-item-fact a
 #board-slider {
 	float:left;
 	width: 90px;
-	margin-top:17px;
+	margin-top:8px;
 	margin-right:15px;
 }
 #list-slider {
 	float:left;
 	width: 27px;
-	margin-top:17px;
+	margin-top:8px;
 	margin-right:15px;
 }
 
@@ -430,7 +424,8 @@ tr.info:hover .group-collapse-cards {
 	vertical-align: top;
 }
 .board-header-op .btn {
-	width: 25px;
+	width: 20px;
+	line-height: 18px;
 }
 .board-header-details {
 	font-weight: normal;
@@ -452,4 +447,10 @@ div.board_item.list_cell_hover {
 
 .board_item.ui-draggable:not(.sepa-item) {
 	display: table !important;
+}
+
+div.card-f {
+	clear:both;
+	padding:0;
+	overflow:hidden;
 }

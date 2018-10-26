@@ -25,7 +25,7 @@ class FieldFeatureIssues extends FieldForm
  		$task->disableVpd();
 
  		$task->addFilter( new FilterAttributePredicate( 'Function',
- 			is_object($this->object_it) ? $this->object_it->getId() : -1 ) );
+ 			is_object($this->object_it) ? $this->object_it->getId() : '0' ) );
  		
  		$task->addSort( new SortAttributeClause('State') );
  		$task->addSort( new SortOrderedClause() );

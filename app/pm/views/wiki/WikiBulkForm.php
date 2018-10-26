@@ -189,7 +189,7 @@ class WikiBulkForm extends BulkForm
 				$field->SetName($attribute);
 				$field->SetValue($value);
 				$field->SetTabIndex($tab_index);
-				$field->setDefault(getSession()->getProjectIt()->getId());
+				$field->setDefault($this->getAttributeValue($attribute));
 
 				if ( $this->showAttributeCaption() ) {
 					echo $this->getName($attribute);

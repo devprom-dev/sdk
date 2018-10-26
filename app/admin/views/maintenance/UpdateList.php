@@ -5,7 +5,6 @@ class UpdateList extends PageList
 {
     const RecentUpdateId = 999999990;
 
-	function IsNeedToDisplayNumber( ) { return false; }
 	function IsNeedToSelect( ) { return false; }
 	
  	function getIterator() 

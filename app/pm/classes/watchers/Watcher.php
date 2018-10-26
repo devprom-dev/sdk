@@ -64,18 +64,6 @@ class Watcher extends Metaobject
  			);
  	}
 
-	function getExact( $object_id )
-	{
-		$it = parent::getExact( $object_id );
-		
-		if ( !is_object($this->object_it) && $it->count() > 0 )
-		{
-			$this->object_it = getFactory()->getObject($it->get('ObjectClass'))->getExact($it->get('ObjectId'));
-		}
-		
-		return $it; 
-	}
-	
 	function IsAttributeRequired( $attr_name )
 	{
 		switch ( $attr_name )

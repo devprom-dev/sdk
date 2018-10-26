@@ -4,18 +4,19 @@ include('LogsList.php');
 
 class LogsTable extends StaticPageTable
 {
-	function getList()
-	{
+	function getList() {
 		return new LogsList( $this->getObject() );
 	}
 
-	function getNewActions()
-	{
+	function getNewActions() {
 		return array();
 	}
 	
-	function getActions()
-	{
+	function getActions() {
 		return array();
 	}
+
+    function getCaption() {
+        return translate('Логи');
+    }
 }

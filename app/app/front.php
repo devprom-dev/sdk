@@ -1,6 +1,5 @@
 <?php
-
-include (dirname(__FILE__).'/../common.php'); 
+include (dirname(__FILE__).'/../common.php');
 
 use Devprom\Component\HttpFoundation\DevpromRequest;
 use Devprom\Component\HttpKernel\MainApplicationKernel;
@@ -35,3 +34,5 @@ catch( \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e )
 	header($_SERVER["SERVER_PROTOCOL"]." 301 Moved Permanently");
 	exit(header('Location: /'));
 }
+
+exit(header('Location: /'));

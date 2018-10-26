@@ -15,7 +15,7 @@ class BulkComplete extends CommandForm
  	function buildObject() {
         $object = getFactory()->getObject( $_REQUEST['object'] );
         if ( !is_a($object, 'Metaobject') ) $this->replyError( text(1061) );
-        return $object->getExact( preg_split('/-/', trim($_REQUEST['ids'], '-')) );
+        return $object->getExact(\TextUtils::parseIds($_REQUEST['ids']));
     }
  	
  	function validate()
@@ -75,7 +75,11 @@ class BulkComplete extends CommandForm
 			    $data['attributes'][$key] = $value;
 			}
 
-			if ( $transition_it->get('IsReasonRequired') != TransitionReasonTypeRegistry::None ) {
+			$specifyTransition =
+                $transition_it->get('IsReasonRequired') == TransitionReasonTypeRegistry::Required
+                || $transition_it->get('IsReasonRequired') == TransitionReasonTypeRegistry::Visible && $_REQUEST['TransitionComment'] != '';
+
+			if ( $specifyTransition ) {
 				$data['attributes']['TransitionComment'] = $_REQUEST['TransitionComment'];
    			}
 		}
@@ -151,7 +155,7 @@ class BulkComplete extends CommandForm
 								$widget_it = $widget->getExact($it->getId());
 								if ( $widget_it->getId() != '' ) {
 									$_REQUEST['redirect'] =
-										$url = $widget_it->getUrl(strtolower(get_class($object_it->object)).'='.join(',',$processedIt->idsToArray()).'&clickedonform');
+										$url = $widget_it->getUrl(strtolower(get_class($object_it->object)).'='.\TextUtils::buildIds($processedIt->idsToArray()).'&clickedonform');
 								}
 							}
 						}
@@ -192,7 +196,16 @@ class BulkComplete extends CommandForm
     				}
     				$object_it->moveNext();
     			}
-			    break;
+
+                getFactory()->getEventsManager()->
+                    executeEventsAfterBusinessTransaction(
+                        $object_it->object->getRegistry()->Query(
+                            array (
+                                new FilterInPredicate($object_it->idsToArray())
+                            )
+                        ), 'WorklfowMovementEventHandler', $data['attributes']
+                    );
+                break;
 			    
 		    case 'Method':
 
@@ -236,35 +249,18 @@ class BulkComplete extends CommandForm
 					}
     			}
 				catch( Exception $e ) {
-   					$except_items[] = array (
-   							'it' => $object_it->copy(),
-   							'ex' => $e
-   					); 
+    			    while( !$object_it->end() ) {
+                        $except_items[] = array(
+                            'it' => $object_it->copy(),
+                            'ex' => $e
+                        );
+                        $object_it->moveNext();
+                    }
     			}
     			break;
 		}
 
-        getFactory()->getEventsManager()->
-            executeEventsAfterBusinessTransaction(
-                $object_it->object->getRegistry()->Query(
-                    array (
-                        new FilterInPredicate($object_it->idsToArray())
-                    )
-                ), 'WorklfowMovementEventHandler'
-            );
-
-		if ( false && count($except_items) == $object_it->count() )
-		{
-			$reasons = array();
-			foreach( $except_items as $item )
-			{
-				$reasons[] = $item['ex']->getMessage();
-			}
-			$this->replyError( 
-					preg_replace('/%1/',join('<br/>', array_unique($reasons)),text(1926))
-			);
-		}
-		else if ( count($except_items) > 0 )
+		if ( count($except_items) > 0 )
 		{
 			$uid = new ObjectUID;
 			$items = array();

@@ -8,7 +8,8 @@ class IssueStateDetailsPersister extends ObjectSQLPersister
  		
  		$columns[] = 
  			" ( SELECT GROUP_CONCAT(CAST(a.TaskType AS CHAR)) ".
- 			"	  FROM pm_TaskTypeState a WHERE a.VPD = ".$alias.".VPD AND a.State = ".$alias.".ReferenceName ) TaskTypes ";
+ 			"	  FROM pm_TaskTypeState a ".
+            "    WHERE a.VPD = ".$alias.".VPD AND a.State = ".$alias.".ReferenceName ) TaskTypes ";
  		
  		return $columns;
  	}

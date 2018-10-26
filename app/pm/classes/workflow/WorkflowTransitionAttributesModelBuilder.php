@@ -12,11 +12,9 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
 	{
 		$this->transition_it = $transition_it;
 		$this->attributes = $attributes;
-        $this->data = array_filter($data, function($value) {
-            return $value != '';
-        });
+        $this->data = $data;
 	}
-	
+
     public function build( Metaobject $object )
     {
     	if ( ! $object instanceof MetaobjectStatable ) return;
@@ -41,7 +39,7 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
         $attribute_it = WorkflowScheme::Instance()->getStateAttributeIt($object, $this->transition_it->get('TargetStateReferenceName'));
 		while( !$attribute_it->end() )
 		{
-            if ( $this->data[$attribute_it->get('ReferenceName')] != '' ) {
+            if ( $this->data[$attribute_it->get('ReferenceName')] != '' && $attribute_it->get('IsAskForValue') != 'Y' && !in_array($attribute_it->get('ReferenceName'), array('Tasks','Fact')) ) {
                 $attribute_it->moveNext();
                 continue;
             }
@@ -60,7 +58,7 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
             }
 			$attribute_it->moveNext();
 		}
- 	    
+
  	    $attribute_it = getFactory()->getObject('TransitionAttribute')->getRegistry()->Query(
             array(
                 new FilterAttributePredicate('Transition', $this->transition_it->getId()),

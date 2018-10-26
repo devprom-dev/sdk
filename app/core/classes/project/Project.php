@@ -14,7 +14,7 @@ include "predicates/ProjectNoGroupsPredicate.php";
 include "predicates/ProjectAccessiblePredicate.php";
 include "persisters/ProjectVPDPersister.php";
 include "persisters/ProjectLeadsPersister.php";
-include "persisters/ProjectLinkedPersister.php";
+include_once "persisters/ProjectLinkedPersister.php";
 include "validators/ModelValidatorProjectCodeName.php";
 include "validators/ModelValidatorProjectIntegration.php";
 include "sorts/SortProjectImportanceClause.php";
@@ -92,15 +92,6 @@ class Project extends Metaobject
 		return $this->createSqlIterator($sql);
 	}
 
-	function getAttributeUserName( $attr )
-	{
-		switch ( $attr )
-		{
-			default:
-				return parent::getAttributeUserName( $attr );
-		}
-	}
-	
 	function getProjectItToBeExported( $hash )
 	{
 		$it = $this->getAll();
@@ -325,4 +316,9 @@ class Project extends Metaobject
 		
 		return $id;
 	}
+
+	function getDisplayName()
+    {
+        return text('project.name');
+    }
 }

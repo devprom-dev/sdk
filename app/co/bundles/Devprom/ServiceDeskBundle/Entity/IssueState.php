@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @author Kosta Korenkov <7r0ggy@gmail.com>
  *
  * @ORM\Entity
- * @ORM\Table(name="pm_State")
+ * @ORM\Table(name="v_pm_State")
  */
 class IssueState extends BaseEntity {
 
@@ -42,6 +42,12 @@ class IssueState extends BaseEntity {
      * @var string
      */
     private $terminal;
+
+    /**
+     * @ORM\Column(type="integer", name="IsTerminalNum")
+     * @var string
+     */
+    private $terminalNum;
 
     /**
      * @ORM\Column(type="integer", name="OrderNum")
@@ -145,6 +151,22 @@ class IssueState extends BaseEntity {
     public function getTerminal()
     {
         return $this->terminal;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setTerminalNum($value)
+    {
+        $this->terminalNum = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTerminalNum()
+    {
+        return $this->terminalNum;
     }
 
     function __toString()

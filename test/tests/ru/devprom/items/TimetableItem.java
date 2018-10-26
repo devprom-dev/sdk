@@ -55,7 +55,7 @@ public final class TimetableItem implements Comparable<TimetableItem> {
 			if (name == null) {
 				if (other.name != null)
 					return false;
-			} else if (!name.replaceAll("\\s+","").equalsIgnoreCase(other.name.replaceAll("\\s+","")))
+			} else if (!name.split("]")[0].equalsIgnoreCase(other.name.split("]")[0]))
 				return false;
 			if (sum == null) {
 				if (other.sum != null)

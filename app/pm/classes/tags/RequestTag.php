@@ -1,5 +1,4 @@
 <?php
-if ( !class_exists('Tag', false) ) include "Tag.php";
 include "RequestTagIterator.php";
 include "persisters/RequestTagCaptionPersister.php";
 

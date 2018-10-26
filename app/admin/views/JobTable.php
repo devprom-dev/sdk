@@ -14,4 +14,9 @@ class JobTable extends PageTable
 		if ( $sort_parm == 'sort' ) return 'OrderNum';
 		return parent::getSortDefault( $sort_parm );
 	}
+
+	function getCaption()
+    {
+        return text(2024);
+    }
 }

@@ -20,7 +20,7 @@ public class RequirementEditPage extends RequirementNewPage
 	@FindBy(xpath = "//button[@id='WikiPageCancelBtn']")
 	protected WebElement cancelBtn;
 
-	@FindBy(xpath = "//form//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='wikipagefile']]")
+	@FindBy(xpath = "//form//a[contains(@class,'file-browse')]")
 	protected WebElement addAttachmentBtn;
 	
 	public RequirementEditPage(WebDriver driver) {
@@ -39,7 +39,7 @@ public class RequirementEditPage extends RequirementNewPage
 	}
 	
 	public String getType() {
-		clickMainTab();
+		clickMoreTab();
 	    (new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.id("WikiPagePageType")));
 		return new Select(driver.findElement(By.id("WikiPagePageType"))).getFirstSelectedOption().getText();
 	}
@@ -52,25 +52,29 @@ public class RequirementEditPage extends RequirementNewPage
 	public void addAttachment(File attachment)
 	{
 		clickMoreTab();
-		//turn off popup dialog
-		String codeIE = "$.browser.msie = true; document.documentMode = 8;";
+
+		String codeIE = "$('input[type]').css('visibility','visible')";
 		((JavascriptExecutor) driver).executeScript(codeIE);
-		addAttachmentBtn.click();
-		// make file input visible
-		((JavascriptExecutor) driver).executeScript("document.evaluate(\"//form//input[contains(@id,'_Content') and @type='file']\", document, null, 9, null).singleNodeValue.removeAttribute('style')");
-		// fill file input
-		driver.findElement(By.xpath("//form//input[contains(@id,'_Content') and @type='file']")).sendKeys(attachment.getAbsolutePath());
-		driver.findElement(By.xpath("//form//span[@id='WikiPageAttachments']//input[@action='save']")).click();
+		
+		addAttachmentBtn.findElement(By.xpath(".//input")).sendKeys(attachment.getAbsolutePath());
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	public List<String> getAttachments() {
 		clickMoreTab();
-		List<String> attachements = new ArrayList<String>();
-		List<WebElement> elements = driver.findElements(By.xpath("//input[@value='wikipagefile']/following-sibling::div[contains(@id,'embeddedItems')]/div[contains(@id,'Caption')]"));
-		for (WebElement element:elements){
-			attachements.add(element.findElement(By.xpath(".//*[contains(@class,'title')]/a")).getText());
+		List<String> result = new ArrayList<String>();
+		List<WebElement> captions = driver
+				.findElements(By
+						.xpath("//div[contains(@class,'attachment-items')]//a[contains(@class,'image_attach')]"));
+		for (int i = 0; i < captions.size(); i++) {
+			String title = captions.get(i).getText().trim();
+			if ( !title.equals("") ) result.add(title);
 		}
-		return attachements;
+		return result;
 	}
 	
 	public String getUserAttribute(String title) {
@@ -92,7 +96,7 @@ public class RequirementEditPage extends RequirementNewPage
 	public List<String> readLinkedEnhancements(){
 		clickTraceTab();
 		List<String> requests = new ArrayList<String>();
-		List<WebElement> elements = driver.findElements(By.xpath("//div[@id='fieldRowIncrements']//input[@value='requestinversedtracerequirement']/following-sibling::div[contains(@id,'embeddedItems')]/div[contains(@id,'Caption')]//*[contains(@class,'title')]/a"));
+		List<WebElement> elements = driver.findElements(By.xpath("//div[@id='fieldRowIncrements']//input[@value='incrementinversedtracerequirement']/following-sibling::div[contains(@id,'embeddedItems')]/div[contains(@id,'Caption')]//*[contains(@class,'title')]/a"));
 		for (WebElement element:elements){
 			String uid = element.getText();
 			requests.add(uid.substring(1, uid.length()-1));

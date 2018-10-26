@@ -16,12 +16,12 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
         $content = preg_replace('/<\/figure>/i', '</figure></center>', $content);
 
         $callbacks = array (
-            REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_INCLUDE_REVISION => array($this, 'parseIncludeRevisionCallback'),
+            REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
             REGEX_IMAGE_NUMBERING => array($this, 'imageNumbering'),
             REGEX_TABLE_NUMBERING => array($this, 'tableNumbering'),
-            '/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im' => array($this, 'parseUrl')
+            TextUtils::REGEX_SHRINK => array(TextUtils::class, 'shrinkLongUrl')
         );
         if ( function_exists('preg_replace_callback_array') ) {
             return preg_replace_callback_array($callbacks, $content);

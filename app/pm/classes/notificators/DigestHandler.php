@@ -26,14 +26,14 @@ class DigestHandler extends EmailNotificatorHandler
 	{
 		return str_replace( '%1', getSession()->getProjectIt()->get('CodeName'), text(965) );
 	}
-	
-	function getParticipants( $object_it, $prev_object_it, $action ) 
-	{
-		return array(
-				$this->recipient_it->getId()
-		);
-	}	
-	
+
+    function getUsers( $object_it, $prev_object_it, $action )
+    {
+        return array(
+            $this->recipient_it->get('SystemUser')
+        );
+    }
+
 	function IsParticipantNotified( $participant_it )
 	{
 		return $participant_it->getId() == $this->recipient_it->getId();
@@ -64,8 +64,8 @@ class DigestHandler extends EmailNotificatorHandler
 			$dates[$date_formatted][$log_it->get('AuthorName')][] = array (
 				'action' => $log_it->get('ChangeKind'),
 				'entity' => $anchor_it->object->getDisplayName(),
-				'title' => $log_it->getHtmlValue($log_it->getHtmlDecoded('Caption')),
-				'content' => $log_it->getHtmlValue($log_it->getHtmlDecoded('Content')),
+				'title' => $log_it->getHtml('Caption'),
+				'content' => $log_it->getHtml('Content'),
 				'time' => getSession()->getLanguage()->getTimeFormatted($log_it->get('RecordCreated'))
 			);
 			

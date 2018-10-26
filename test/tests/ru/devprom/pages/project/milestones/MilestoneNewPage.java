@@ -31,7 +31,7 @@ public class MilestoneNewPage extends SDLCPojectPageBase {
 	@FindBy(id = "pm_MilestonePassed")
 	protected WebElement isDoneBox;
 	
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='requestinversedtracemilestone']]")
+	@FindBy(xpath = "//span[@name='pm_MilestoneTraceRequests']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addRequestBtn;
 
 	@FindBy(id = "pm_MilestoneSubmitBtn")
@@ -62,8 +62,8 @@ public class MilestoneNewPage extends SDLCPojectPageBase {
 		submitDialog(submitBtn);
 		
     	//read ID
-		  (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(text(),'"+milestone.getName()+"')]")));
-    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(text(),'"+milestone.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
+		  (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(.,'"+milestone.getName()+"')]")));
+    	String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+milestone.getName()+"')]/preceding-sibling::td[@id='uid']")).getText();
     	milestone.setId(uid.substring(1, uid.length()-1));
 
     	return new MilestonesPage(driver);

@@ -80,7 +80,8 @@ class NetworkService
             'label' => \TextUtils::mb_wordwrap($label, 60),
             'shape' => 'box',
             'group' => get_class($object_it->object),
-            'url' => $object_it->getViewUrl()
+            'url' => $object_it->getViewUrl(),
+            'level' => ($level-1)
         );
 
         if ( $level > 4 ) return false;

@@ -9,18 +9,18 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class RequirementChangesPage extends RequirementViewPage {
 
-	@FindBy(xpath = "//a[contains(text(),'Использовать текст')]/../../preceding-sibling::a")
+	@FindBy(xpath = "//a[contains(.,'Использовать текст')]/../../preceding-sibling::a")
 	protected WebElement processChangesBtn;
 	
-	@FindBy(xpath = "//a[contains(text(),'Использовать текст')]")
+	@FindBy(xpath = "//a[contains(.,'Использовать текст')]")
 	protected WebElement useTextBtn;
 	
-	@FindBy(xpath = "//a[contains(text(),'Оставить текст')]")
+	@FindBy(xpath = "//a[contains(.,'Оставить текст')]")
 	protected WebElement leaveTextBtn;
 	
 	public RequirementChangesPage(WebDriver driver) {
 		super(driver);
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[contains(text(),'Использовать текст')]")));
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[contains(.,'Использовать текст')]")));
 	}
 
 	public RequirementViewPage useText(){

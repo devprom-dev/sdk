@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH.'core/c_session.php';
+include_once SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include_once 'COAccessPolicy.php';
 include_once 'COSystemTriggers.php';
 include_once "ResourceBuilderCoLanguageFile.php";
@@ -41,6 +42,7 @@ class COSession extends SessionBase
  	    		),
  	    		parent::createBuilders(),
  	    		array (
+                    new PortfolioAllBuilder(),
  	    			new ProjectWelcomeStylesheetBuilder(getSession()),
                     new COSystemTriggers()
  	    		)

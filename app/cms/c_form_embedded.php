@@ -130,7 +130,7 @@ class FormEmbedded
  	
  	function getAttributes()
  	{
-		$names = array_keys($this->object->getAttributesSorted());
+		$names = array_keys($this->object->getAttributes());
 		$visible = array();
 
 		for ( $i = 0; $i < count($names); $i++ ) {
@@ -414,12 +414,12 @@ class FormEmbedded
 				? 'function(formid,data,row_number) { if ( typeof '.$this->getSaveCallback().' == \'function\' ) {'.$this->getSaveCallback().'(formid,data,row_number);}}' : 'function(formid,data,row_number) {}';
 			 
 			$html .= '<div class="embedded_footer clearfix">';
-				$html .= '<input class="btn btn-primary btn-small" tabindex="'.$tabindex.'" id="saveEmbedded'.$this->form_id.'" style="float:left;" action="save" type="button" value="'.translate('Добавить').'" '.
+				$html .= '<input class="btn btn-primary btn-sm" tabindex="'.$tabindex.'" id="saveEmbedded'.$this->form_id.'" style="float:left;" action="save" type="button" value="'.translate('Добавить').'" '.
 					'onclick="javascript: saveEmbeddedItem(\''.$this->form_id.'\', [\''.join("','", $fields).'\'], [\''.join("','", $required).'\'], '.$callback.')">';
 	
 			$tabindex++;
 			
-				$html .= ' <input class="btn btn-link btn-small" tabindex="'.$tabindex.'" id="closeEmbedded'.$this->form_id.'" style="float:left;" action="cancel" type="button" value="'.translate('Отменить').'" ' .
+				$html .= ' <input class="btn btn-link btn-sm" tabindex="'.$tabindex.'" id="closeEmbedded'.$this->form_id.'" style="float:left;" action="cancel" type="button" value="'.translate('Отменить').'" ' .
 					'onclick="javascript: closeEmbeddedForm('.$this->form_id.')">';
 			$html .= '</div>';
 		}
@@ -438,8 +438,9 @@ class FormEmbedded
 		$anchor_credentials = '<input type="hidden" name="embedded'.$this->form_id.'" value="'.strtolower(get_class($this->object)).'">'.
 			 '<input type="hidden" name="embeddedFields'.$this->form_id.'" value="'.join(',', $names).'">'.
 			 '<input type="hidden" name="embeddedPrefix'.$this->form_id.'" value="'.$prefix.'">'.
-			 '<input type="hidden" id="embeddedProject'.$this->form_id.'" value="'.$project.'">';
-			 			 
+			 '<input type="hidden" id="embeddedProject'.$this->form_id.'" value="'.$project.'">'.
+             '<input type="hidden" name="embeddedFieldName'.$this->form_id.'" value="'.$this->getFormField().'">';
+
 		if ( is_object($this->object_it) && $this->object_it->count() > 0 )
 		{
 			 $anchor_credentials .= '<input type="hidden" name="anchorObject'.$this->form_id.'" value="'.$this->object_it->getId().'">'.
@@ -491,7 +492,7 @@ class FormEmbedded
 		{
 				echo '<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
 				echo '<input type="hidden" id="embeddedActive'.$this->form_id.'" name="embeddedActive'.$this->form_id.'" value="'.($this->getFieldValue('FormActive') == 'N' ? 'N' : 'Y').'">';
-				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" value="1">';
+				echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" name="embeddedItemsCount'.$this->form_id.'" value="1">';
 				echo '<input type="hidden" id="'.$this->form_id.'Id" name="'.$prefix.'Id'.$this->form_id.'" value="'.(is_object($this->getObjectIt()) ? $this->getObjectIt()->getId() : "").'">';
 				
 	 		echo '<div style="clear:both"></div>';
@@ -548,7 +549,7 @@ class FormEmbedded
 
     							if ( is_object($view) && $this->getShowMenu() && !$this->readonly && $delete_value == 0 && count($actions) > 0 )
     							{
-    								echo $view->render('core/EmbeddedRowTitleMenu.php', array (
+    								echo $view->render($this->getTitleTemplate(), array (
     								    'title' => $display_name,
     								    'items' => $actions,
     									'position' => 'last'
@@ -618,15 +619,15 @@ class FormEmbedded
 
 					echo '</div>';
 
-					echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
+					echo '<input type="hidden" id="embeddedItemsCount'.$this->form_id.'" name="embeddedItemsCount'.$this->form_id.'" value="'.$items_count.'">';
                     echo '<div class="end-of-list"></div>';
 				echo '</div>';
 			echo '</div>';
 
-			if ( !$this->readonly && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
-			{
-				$this->drawAddButton( $view, $this->tabindex );
-			}
+			echo '<div>';
+    			$this->drawAddButton( $view, $this->tabindex );
+            echo '</div>';
+
 	 		echo '</div>';
 		}
  	}
@@ -648,8 +649,11 @@ class FormEmbedded
  	
  	function drawAddButton( $view, $tabindex )
  	{
- 		echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" href="javascript: appendEmbeddedItem('.
-			$this->getFormId().');">'.$this->getAddButtonText().'</a>';
+        if ( !$this->getReadonly() && getFactory()->getAccessPolicy()->can_create($this->getObject()) )
+        {
+            echo '<a class="dashed embedded-add-button" tabindex="'.$tabindex.'" href="javascript: appendEmbeddedItem('.
+                $this->getFormId().');">'.$this->getAddButtonText().'</a>';
+        }
  	}
  	
  	function process( $object_it, $e, $process_record_callback = null )
@@ -744,7 +748,7 @@ class FormEmbedded
                     $parms[$anchor_field] = $object_it->getId();
 
                     // check for required fields
-                    $keys = array_keys($embedded->getAttributesSorted());
+                    $keys = array_keys($embedded->getAttributes());
 
                     foreach ( $keys as $key )
                     {
@@ -772,7 +776,7 @@ class FormEmbedded
                 }
 
                 // check for required fields
-                $keys = array_keys($embedded->getAttributesSorted());
+                $keys = array_keys($embedded->getAttributes());
                 $was_errors = false;
 
                 foreach ( $keys as $key )
@@ -838,6 +842,8 @@ class FormEmbedded
     		);
  	    }
 	}
+
+	function getTitleTemplate() {
+ 	    return 'core/EmbeddedRowTitleMenu.php';
+    }
  }
- 
-?>

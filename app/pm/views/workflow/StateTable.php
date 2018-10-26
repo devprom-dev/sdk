@@ -1,8 +1,7 @@
 <?php
-
 include 'StateList.php';
 
-class StateTable extends PMPageTable
+class StateTable extends SettingsTableBase
 {
     function getList()
     {

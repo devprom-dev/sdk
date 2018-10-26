@@ -1,27 +1,27 @@
 <?php
 include "RequestIterator.php";
-include_once "persisters/IssueLinkedIssuesPersister.php";
-include_once "persisters/RequestIterationsPersister.php";
-include_once "predicates/RequestIterationFilter.php";
-include_once "predicates/RequestAuthorFilter.php";
-include_once "predicates/RequestEstimationFilter.php";
-include_once "predicates/RequestTagFilter.php";
-include_once "predicates/RequestTestResultPredicate.php";
-include_once "predicates/RequestStagePredicate.php";
-include_once "predicates/RequestTaskTypePredicate.php";
-include_once "predicates/RequestTaskStatePredicate.php";
-include_once "predicates/RequestNonPlannedPredicate.php";
-include_once "predicates/RequestReleasePredicate.php";
-include_once "predicates/RequestDuplicatesOfFilter.php";
-include_once "predicates/RequestImplementationFilter.php";
-include_once "predicates/RequestDependencyFilter.php";
-include_once "predicates/RequestFeatureFilter.php";
-include_once "predicates/RequestFinishAfterPredicate.php";
-include_once "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
-include_once "predicates/RequestDependsFilter.php";
-include_once "sorts/IssueOwnerSortClause.php";
-include_once "sorts/IssueFunctionSortClause.php";
-include_once "sorts/IssueUnifiedTypeSortClause.php";
+include "persisters/IssueLinkedIssuesPersister.php";
+include "persisters/RequestIterationsPersister.php";
+include "predicates/RequestIterationFilter.php";
+include "predicates/RequestAuthorFilter.php";
+include "predicates/RequestEstimationFilter.php";
+include "predicates/RequestTagFilter.php";
+include "predicates/RequestTestResultPredicate.php";
+include "predicates/RequestTaskTypePredicate.php";
+include "predicates/RequestTaskStatePredicate.php";
+include "predicates/RequestNonPlannedPredicate.php";
+include "predicates/RequestReleasePredicate.php";
+include "predicates/RequestDuplicatesOfFilter.php";
+include "predicates/RequestImplementationFilter.php";
+include "predicates/RequestDependencyFilter.php";
+include "predicates/RequestFeatureFilter.php";
+include "predicates/RequestFinishAfterPredicate.php";
+include "predicates/RequestOwnerIsNotTasksAssigneeFilter.php";
+include "predicates/RequestDependsFilter.php";
+include "sorts/IssueOwnerSortClause.php";
+include "sorts/IssueFunctionSortClause.php";
+include "sorts/IssueUnifiedTypeSortClause.php";
+include "RequestModelExtendedBuilder.php";
 
 class Request extends MetaobjectStatable 
 {
@@ -130,15 +130,6 @@ class Request extends MetaobjectStatable
 		return parent::getDefaultAttributeValue( $attr_name );
 	}
 	
-	function getAttributeUserName( $attr_name )
-	{
-		switch ( $attr_name )
-		{
-			default:
-				return parent::getAttributeUserName( $attr_name );
-		}
-	}
-	
 	function addTraceAttribute( $attribute )
 	{
 	}
@@ -170,20 +161,8 @@ class Request extends MetaobjectStatable
 			$parms['EstimationLeft'] = $parms['Estimation'];
 		}
 
-		$req_it = $this->getExact($object_id);
-		
 		switch ( $parms['State'] )
 		{
-			case 'resolved':
-				$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-				if ( $methodology_it->getEstimationStrategy() instanceof EstimationHoursStrategy && $methodology_it->HasTasks() )
-				{
-					if ( $req_it->get('Estimation') == '' ) {
-						$parms['Estimation'] = $req_it->getPlannedDuration(); 					
- 					}
-				}
-				break;
-				
 			default:
 				if ( in_array($parms['State'], $this->getTerminalStates()) ) {
 					$parms['EstimationLeft'] = 0;

@@ -54,19 +54,19 @@ class TransitionIterator extends OrderedIterator
         }
 
  		while ( !$rules_it->end() ) {
-            $result = $rules_it->check( $object_it );
+            $result = $rules_it->check( $object_it, $this );
             $checkResult[] = $result ? 1 : 0;
             if ( !$result ) {
                 $reason = $rules_it->getNegativeReason();
                 if ( $reason != '' ) {
-                    $this->nondoablereason .= $rules_it->getNegativeReason().PHP_EOL;
+                    $this->nondoablereason .= $reason.PHP_EOL;
                 }
             }
             $rules_it->moveNext();
  		}
 
  		return $this->get('PredicatesLogic') == 'any'
-            ? array_sum($checkResult) > 0
+            ? array_sum($checkResult) > 0 || count($checkResult) < 1
             : array_sum($checkResult) == count($checkResult);
  	}
  	

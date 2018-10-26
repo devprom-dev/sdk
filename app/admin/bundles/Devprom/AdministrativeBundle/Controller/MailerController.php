@@ -36,6 +36,8 @@ class MailerController extends BaseController
     		$parms[$attribute] = $request->request->get($attribute);
     	}
 
+        $mapper = new \ModelDataTypeMapper();
+        $mapper->map( $settings, $parms );
     	$settings->modify_parms($settings->getAll()->getId(), $parms);
 
 		$command = new \ClearCache();

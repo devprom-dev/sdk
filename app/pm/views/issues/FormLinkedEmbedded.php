@@ -42,15 +42,14 @@ class FormLinkedEmbedded extends PMFormEmbedded
 					new StateDurationPersister()
 			)
 		);
+        $target_it = $target_it->getSpecifiedIt();
 
  		$link_type_it = $object_it->getRef('LinkType');
-
- 		$type_title = 
+ 		$type_title =
  			is_object($this->anchor_it) && $this->anchor_it->getId() == $object_it->get('TargetRequest')
  				?  $link_type_it->get('BackwardCaption') : $link_type_it->get('Caption');
 		
 	    $uid = new ObjectUID;
-	    
  		return translate($type_title).': '.$uid->getUidWithCaption( $target_it );
  	}
  	

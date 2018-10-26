@@ -16,6 +16,9 @@ class BulkActionBuilderTasks extends BulkActionBuilder
 			);
  		}
 
+        $registry->addCustomAction(text(861), 'Method:SetTagsTaskWebMethod:Tag');
+        $registry->addCustomAction(text(862), 'Method:SetTagsTaskWebMethod:RemoveTag');
+
         $method = new TaskConvertToIssueWebMethod();
         if ( $method->hasAccess() ) {
             $registry->addCustomAction($method->getCaption(), $method->getMethodName());

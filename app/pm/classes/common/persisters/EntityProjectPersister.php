@@ -12,4 +12,8 @@ class EntityProjectPersister extends ObjectSQLPersister
 		}
 		return $columns;
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }

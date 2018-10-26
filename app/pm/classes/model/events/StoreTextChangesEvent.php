@@ -17,9 +17,13 @@ class StoreTextChangesEvent extends ObjectFactoryNotificator
 		$attribute = $this->getTextAttribute($object_it);
 		if ( $attribute == '' ) return;
 
-        if ( $object_it->object instanceof WikiPageChange )
+        if ( $object_it->object instanceof WikiPageChange && $object_it->get('WikiPage') != '' )
         {
-            $page_it = $object_it->getRef('WikiPage');
+            $page_it = getFactory()->getObject('WikiPage')->getRegistryBase()->Query(
+                array(
+                    new FilterInPredicate($object_it->get('WikiPage'))
+                )
+            );
             $this->storeChanges($page_it, $object_it->getHtmlDecoded($attribute), $page_it->getHtmlDecoded('Content'));
         }
         else {

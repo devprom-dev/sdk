@@ -1,5 +1,6 @@
 <?php
-$form_id = 'myForm'; 
+$form_id = 'myForm';
+$restoreAction = array_shift($actions);
 ?>
 
 <script language="javascript">
@@ -18,36 +19,38 @@ $form_id = 'myForm';
     <fieldset>
         <legend><?=text(1307)?></legend>
 
-	    <label>&nbsp;</label>
+	    <label><?=translate('Логин')?></label>
         
-        <div class="input-prepend input-block-level">
-          <span class="add-on"><i class="icon-user"></i></span><input type="text" class="span11" id="login" name="login" placeholder="<?=translate('Логин')?>">
+        <div class="input-prepend input-block-level input-login">
+          <input type="text" class="" id="login" name="login" placeholder="<?=text(2629)?>">
 	    </div>
 
-	    <label>&nbsp;</label>
+	    <label><?=translate('Пароль')?></label>
 	    
         <div class="input-prepend input-block-level">
-          <span class="add-on"><i class="icon-lock"></i></span><input type="password" class="span11" id="pass" name="pass" placeholder="<?=translate('Пароль')?>">
+          <input type="password" class="" id="pass" name="pass" placeholder="<?=text(2630)?>">
         </div>
-        
-	    <label>&nbsp;</label>
+
+        <div>
+            <div class="pull-left remember-field">
+                <label class="checkbox">
+                    <input name="remember" type="checkbox" checked > <?=text(1308)?>
+                </label>
+            </div>
+            <div class="pull-right remember-field">
+                <label>
+                    <?php echo str_replace('%1', $restoreAction['url'], $restoreAction['name']) ?>
+                </label>
+            </div>
+        </div>
         
         <div class="clearfix"></div>
 
         <div id="result<?=$form_id?>"></div>
         
-	    <label>&nbsp;</label>
-        
-      <div class="pull-left">
+      <div class="enter">
         <div>
-            <button type="submit" class="btn btn-primary" style="padding-left:30px;padding-right:30px;" onclick="<?="javascript: $('#action').val('".$form_action."');"?>" ><?=translate('Войти')?></button>
-        </div>
-      </div>
-      <div class="pull-left" style="padding:6px 0 0 20px;">
-        <div> 
-            <label class="checkbox">
-              <input name="remember" type="checkbox"> <?=text(1308)?>
-            </label>
+            <button type="submit" class="btn btn-lg btn-primary" onclick="<?="javascript: $('#action').val('".$form_action."');"?>" ><?=translate('Войти')?></button>
         </div>
       </div>
 

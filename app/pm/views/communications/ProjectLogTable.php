@@ -54,7 +54,7 @@ class ProjectLogTable extends PMPageTable
 	
 	function getObjectIt()
 	{
-		if ( is_object($this->object_it) ) return $this->object_it->copy();
+		if ( is_object($this->object_it) ) return $this->object_it->copyAll();
 		return $this->object_it = $this->buildObjectIt();
 	}
 	
@@ -171,14 +171,14 @@ class ProjectLogTable extends PMPageTable
 			{
 				$method->setRedirectUrl('donothing');
 				$uid = strtolower('new-question');
-				$actions[$uid] = array ( 
-						'name' => translate('Задать вопрос'),
-						'uid' => $uid,
-						'url' => $method->getJSCall(
-										array( 
-												'area' => $this->getPage()->getArea()
-										)
-								 ) 
+				$actions[$uid] = array (
+                    'uid' => $uid,
+                    'name' => $method->getCaption(),
+                    'url' => $method->getJSCall(
+                                array(
+                                    'area' => $this->getPage()->getArea()
+                                )
+                             )
 				);
 			}
 		}

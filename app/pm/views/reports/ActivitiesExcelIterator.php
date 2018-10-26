@@ -61,20 +61,15 @@ class ActivitiesExcelIterator extends IteratorExportExcel
  		{
  			case 'ItemId':
  				if ( $iterator->get('Group') > 0 ) {
- 						$this->group_it->moveToId($iterator->get('ItemId'));
- 						return $this->group_it->getDisplayName();
+                    $this->group_it->moveToId($iterator->get('ItemId'));
+                    return $this->group_it->getDisplayName();
  				} 
  				else {
- 						$this->row_it->moveToId($iterator->get('ItemId'));
- 						if ( !$uid->hasUid($this->row_it) ) {
- 							return $this->row_it->getDisplayName();
- 						}
- 						else {
- 						    $html = $uid->getUidWithCaption($this->row_it);
-                            $html = preg_replace('/<i[^<]+<\/i>/i', '', $html);
-	 						$html = new \Html2Text\Html2Text($html, array('do_links' => 'none'));
-	 						return $html->getText();
- 						}
+                    $this->row_it->moveToId($iterator->get('ItemId'));
+                    $info = $this->getUidService()->getUidInfo($this->row_it, true);
+                    $title = ($info['uid'] != '' ? '['.$info['uid'].'] ' : '') . html_entity_decode($info['caption']);
+                    if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
+                    return $title;
  				}
  				break;
  			

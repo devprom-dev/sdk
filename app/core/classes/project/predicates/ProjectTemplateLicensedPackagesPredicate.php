@@ -32,6 +32,10 @@ class ProjectTemplateLicensedPackagesPredicate extends FilterPredicate
 		$packages = $options['options'];
 		if ( $packages == '' ) $packages = join(',',$this->getLicensedOptions());
 		$packages = preg_split('/,\s?/', $packages);
+		foreach( $packages as $key => $package ) {
+            list($package, $users) = preg_split('/:/', $package);
+            $packages[$key] = $package;
+        }
 
 		$templates = array();
 		foreach( $package_map as $template => $package ) {

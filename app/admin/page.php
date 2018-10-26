@@ -1,5 +1,4 @@
 <?php
-
 include ('header.php');
 
 $module = $plugins->useModule( $_REQUEST['namespace'],

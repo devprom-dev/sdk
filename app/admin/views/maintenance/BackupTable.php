@@ -30,4 +30,8 @@ class BackupTable extends PageTable
 		
 		return $actions;
 	}
+
+	function getCaption() {
+        return translate('Резервные копии');
+    }
 }

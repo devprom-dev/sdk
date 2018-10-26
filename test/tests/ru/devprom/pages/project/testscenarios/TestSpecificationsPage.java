@@ -18,7 +18,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//a[@id='new-doc']")
 	protected WebElement createSpecificationBtn;
         
-	@FindBy(xpath = "//div[@class='btn-group operation last']//i[@class='icon-asterisk icon-gray']")
+	@FindBy(xpath = "//div[contains(@class,'operation')]//a[contains(@class,'actions-button')]")
 	protected WebElement actionBtn;
         
         @FindBy(xpath = ".//*[@id='modify']")
@@ -27,7 +27,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
         @FindBy(xpath = "//i[@class='icon-broken']")
 	protected WebElement handleBtn;
         
-        @FindBy(xpath = "//a[contains(text(),'Восстановить покрытие')]")
+        @FindBy(xpath = "//a[contains(.,'Восстановить покрытие')]")
 	protected WebElement repairItem;
         
         //Пункт Начать тестирование меню действий строки
@@ -90,7 +90,7 @@ public class TestSpecificationsPage extends SDLCPojectPageBase {
     }
 
     public StartTestingPage clickStartTesting(String Id) {
-        String clearID = Id.substring(2);
+        String clearID = Id.split("-")[1];
         WebElement onElement = driver.findElement(By.xpath(".//tr[@object-id='"+clearID+"']"));
         WebElement itemAsterixBtn = driver.findElement(By.xpath("//tr[@object-id='"+clearID+"']//*[@id='operations']/div/a"));
         (new Actions(driver)).moveToElement(onElement).click(itemAsterixBtn).build().perform();

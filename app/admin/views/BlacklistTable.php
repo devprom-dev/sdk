@@ -29,4 +29,9 @@ class BlackTable extends PageTable
 	{
 		return array();
 	}
+
+	function getCaption()
+    {
+        return translate('Блокировки');
+    }
 }

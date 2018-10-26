@@ -45,7 +45,7 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
 		setParentPageUID(parentPage.getId());		
 		submitDialog(submitBtn);
 		
-		By locator = By.xpath("//td[@id='caption' and contains(text(),'"+testScenario.getName()+"')]/preceding-sibling::td[@id='uid']");
+		By locator = By.xpath("//td[@id='caption' and contains(.,'"+testScenario.getName()+"')]/preceding-sibling::td[@id='uid']");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(locator));
 
 		String uid =driver.findElement(locator).getText();
@@ -61,7 +61,7 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
 		setParentPageText(parentPageName);		
 		submitDialog(submitBtn);
 		
-		By locator = By.xpath("//td[@id='caption' and contains(text(),'"+testScenario.getName()+"')]/preceding-sibling::td[@id='uid']");
+		By locator = By.xpath("//td[@id='caption' and contains(.,'"+testScenario.getName()+"')]/preceding-sibling::td[@id='uid']");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(locator));
 
 		String uid =driver.findElement(locator).getText();
@@ -96,7 +96,7 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
 	public void addRequirement(String requirement, String version)
 	{
 		clickTraceTab();
-		driver.findElement(By.xpath("//input[@value='wikipageinversedtrace']/following-sibling::a[contains(@class,'embedded-add-button')]")).click();
+		driver.findElement(By.xpath("//span[@name='WikiPageRequirement']//a[contains(@class,'embedded-add-button')]")).click();
 		WebElement requirementInput = driver.findElement(By.xpath("//div[@id='fieldRowRequirement']//input[contains(@id,'SourcePageText')]"));
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(requirementInput));
 		requirementInput.sendKeys(requirement);
@@ -105,7 +105,7 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
 	    if (!"".equals(version)) {
 	    	(new Select(driver.findElement(By.xpath("//div[@id='fieldRowRequirement']//select[contains(@id,'SourcePageSourceBaseline')]")))).selectByVisibleText(version);
 	    }
-		driver.findElement(By.xpath("//input[@value='wikipageinversedtrace']/following-sibling::div/input[@value='Добавить']")).click();
+		driver.findElement(By.xpath("//span[@name='WikiPageRequirement']//input[@value='Добавить']")).click();
 		
 	}
 
@@ -144,7 +144,7 @@ public class TestScenarioNewPage extends SDLCPojectPageBase {
         setParentPage(testScenary);
 		submitDialog(submitBtn);
 		
-		By locator = By.xpath("//td[@id='caption' and contains(text(),'"+testScenary.getName()+"')]/preceding-sibling::td[@id='uid']");
+		By locator = By.xpath("//td[@id='caption' and contains(.,'"+testScenary.getName()+"')]/preceding-sibling::td[@id='uid']");
 		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(locator));
 
 		String uid =driver.findElement(locator).getText();

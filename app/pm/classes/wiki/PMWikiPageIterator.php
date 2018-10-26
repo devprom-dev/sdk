@@ -13,8 +13,16 @@ class PMWikiPageIterator extends WikiPageIterator
 				return parent::getRef( $attr, $object );
 		}
 	}
-	
-	function getHistoryUrl()
+
+    function get($attr)
+    {
+        if ( $attr == 'StateName' && parent::get('StateNameAlt') != '' ) {
+            return parent::get('StateNameAlt');
+        }
+        return parent::get($attr);
+    }
+
+    function getHistoryUrl()
 	{
 		$class_name = strtolower(get_class($this->object));
 		

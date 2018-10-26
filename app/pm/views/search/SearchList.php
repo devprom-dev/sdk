@@ -22,7 +22,18 @@ class SearchList extends PMStaticPageList
 		return array();
 	}
 
-	function drawCell( $object_it, $attr ) 
+	function getColumnWidth($attr)
+    {
+        switch ( $attr )
+        {
+            case 'UID':
+                return '21%';
+            default:
+                return parent::getColumnWidth( $attr );
+        }
+    }
+
+    function drawCell( $object_it, $attr )
 	{
 		switch ( $attr )
 		{

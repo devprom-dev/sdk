@@ -48,20 +48,29 @@ class CommonAccessRight extends Metaobject
 	
 	function getDataEntities()
 	{
-	    foreach( getSession()->getBuilders('AccessRightEntitySetBuilder') as $builder )
-	    {
+        $entities = array_filter(
+            preg_split('/,/', $this->getFilterValue( 'CommonAccessEntityPredicate' )),
+	        function($value) {
+                return $value != '';
+            }
+        );
+
+	    foreach( getSession()->getBuilders('AccessRightEntitySetBuilder') as $builder ) {
 	        $builder->build( $this );
 	    }
-	    
+
  		foreach( $this->objects as $object )
  		{
+ 		    $className = get_class($object) == 'Metaobject' ? $object->getClassName() : strtolower(get_class($object));
+ 		    if ( count($entities) > 0 && !in_array($className, $entities) ) continue;
+
  			$data[] = array (
- 				'ReferenceName' => get_class($object) == 'Metaobject' ? $object->getClassName() : strtolower(get_class($object)),
+ 				'ReferenceName' => $className,
  				'ReferenceType' => 'Y',
  				'DisplayName' => $object->getDisplayName()
  			);
  		}
- 		
+
  		usort( $data, 'usort_display_name' );
  		
  		return $data;
@@ -103,8 +112,9 @@ class CommonAccessRight extends Metaobject
 	{
 		$data = array();
 
-		$area_set = new FunctionalArea();
-		
+        if ( $this->getFilterValue( 'CommonAccessEntityPredicate' ) != '' ) return $data;
+
+        $area_set = new FunctionalArea();
 		$module_it = getFactory()->getObject('Module')->getAll();
 		
 		while ( !$module_it->end() )
@@ -135,9 +145,10 @@ class CommonAccessRight extends Metaobject
 	function getDataReports()
 	{
 		$data = array();
-		
+
+        if ( $this->getFilterValue( 'CommonAccessEntityPredicate' ) != '' ) return $data;
+
 		$report_filter = $this->getFilterValue( 'CommonAccessReportPredicate' );
-		
 		$report_it = getFactory()->getObject('PMReport')->getAll();
 		
 		while ( !$report_it->end() )
@@ -176,7 +187,10 @@ class CommonAccessRight extends Metaobject
 		$object_it = getFactory()->getObject('AttributePermissionEntity')->getAll();
 		while( !$object_it->end() )
 		{
-			if ( !in_array($entity_filter, array('', 'all', $object_it->getId() )) ) continue;
+			if ( !in_array($entity_filter, array('', 'all', $object_it->getId() )) ) {
+                $object_it->moveNext();
+			    continue;
+            }
 
 			$object = getFactory()->getObject($object_it->getId());
 
@@ -208,9 +222,7 @@ class CommonAccessRight extends Metaobject
 	
 	function getData()
 	{
-		global $model_factory;
-
-		$filter_kind = $this->getFilterValue( 'CommonAccessObjectPredicate' );  
+		$filter_kind = $this->getFilterValue( 'CommonAccessObjectPredicate' );
 		
 		$data = array();
 		
@@ -218,7 +230,7 @@ class CommonAccessRight extends Metaobject
 		{
 			$data = array_merge($data, $this->getDataEntities());	
 		}
-		
+
 		if ( in_array($filter_kind, array('', 'all', 'module')) )
 		{
 			$data = array_merge($data, $this->getDataModules());	
@@ -228,13 +240,13 @@ class CommonAccessRight extends Metaobject
 		{
 			$data = array_merge($data, $this->getDataReports());	
 		}
-		
+
 		if ( in_array($filter_kind, array('', 'all', 'attribute')) )
 		{
 			$data = array_merge($data, $this->getDataAttributes());	
 		}
 
-		$role = $model_factory->getObject('pm_ProjectRole');
+		$role = getFactory()->getObject('pm_ProjectRole');
 		$role_it = $role->getAll();
 
 		$filter_role = $this->getFilterValue( 'CommonAccessRolePredicate' );

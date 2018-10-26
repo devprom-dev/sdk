@@ -99,13 +99,18 @@ class SecurityController extends PageController
             }
         }
 
+        $info = \AuthenticationAppKeyFactory::getKey(getSession()->getUserIt()->getId());
         if ( getSession()->getUserIt()->get('AskChangePassword') == 'Y' ) {
             return $this->replyRedirect(
-                '/reset?key='.getSession()->getUserIt()->getResetPasswordKey()
+                '/reset?key='.getSession()->getUserIt()->getResetPasswordKey(),
+                '',
+                $info
             );
         } else {
             return $this->replyRedirect(
-                $redirect != '' ? $redirect : $_SERVER['ENTRY_URL']
+                $redirect != '' ? $redirect : $_SERVER['ENTRY_URL'],
+                '',
+                $info
             );
         }
     }
@@ -129,14 +134,19 @@ class SecurityController extends PageController
         }
 
         \SessionBuilder::Instance()->persist(getSession());
+        $info = \AuthenticationAppKeyFactory::getKey(getSession()->getUserIt()->getId());
 
         if ( getSession()->getUserIt()->get('AskChangePassword') == 'Y' ) {
             return $this->replyRedirect(
-                '/reset?key='.getSession()->getUserIt()->getResetPasswordKey()
+                '/reset?key='.getSession()->getUserIt()->getResetPasswordKey(),
+                '',
+                $info
             );
         } else {
             return $this->replyRedirect(
-                $request->request->get('redirect') != '' ? $request->request->get('redirect') : $_SERVER['ENTRY_URL']
+                $request->request->get('redirect') != '' ? $request->request->get('redirect') : $_SERVER['ENTRY_URL'],
+                '',
+                $info
             );
         }
     }

@@ -70,6 +70,7 @@ class LicensePage extends AdminPage
                 'Login' => $user_it->get('Login'),
                 'Email' => $user_it->get('Email'),
                 'IsAdmin' => 'Y',
+                'IsReadonly' => 'N',
                 'Password' => $user_it->get('Login'),
                 'RepeatPassword' => $user_it->get('Login')
             )

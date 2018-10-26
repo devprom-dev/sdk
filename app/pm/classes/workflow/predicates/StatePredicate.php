@@ -10,12 +10,13 @@ class StatePredicate extends FilterPredicate
             return " AND (".$this->getAlias().".State, ".$this->getAlias().".VPD) IN (
                        SELECT s.ReferenceName, s.VPD FROM pm_State s 
                         WHERE s.IsTerminal IN ('".join($states,"','")."') 
-                          AND s.ObjectClass = '".get_class($this->getObject())."' ) ";
+                          AND s.ObjectClass = '".$this->getObject()->getStatableClassName()."' ) ";
         }
 
  		$object = $this->getObject();
- 		$states = \WorkflowScheme::Instance()->getNonTerminalStates($object);
+        if ( ! $object instanceof MetaobjectStatable ) return " AND 1 = 1 ";
 
+ 		$states = \WorkflowScheme::Instance()->getNonTerminalStates($object);
 		switch ( $filter )
 		{
 			case 'notresolved':

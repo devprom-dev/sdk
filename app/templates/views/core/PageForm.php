@@ -13,7 +13,7 @@ else
 
 $no_sections_class = is_a($form, 'PMWikiForm') ? 'span12' : 'span10';
 
-$has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_title;
+$has_caption = $uid_icon != '' || $caption != '' && $caption != $title;
 ?>
 
 <?php if (!$formonly) { ?>
@@ -31,16 +31,19 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
 
     <ul class="breadcrumb hidden-print" style="margin-right: 0px;">
         <?php
+        if ( $navigation_url != '' ) {
+            if ( $parent_widget_url != '' ) {
+                echo '<li><a href="'.$parent_widget_url.'">'.$parent_widget_title.'</a><span class="divider">/</span></li>';
+            }
+            if ( $nearest_title != '' ) {
+                echo '<li><a href="'.$navigation_url.'">'.$nearest_title.'</a><span class="divider">/</span></li>';
+            }
+        }
+        else if ( $has_caption ) {
+            echo '<li>'.$caption.'<span class="divider">/</span></li>';
+        }
+
         if ( $uid != '' ) {
-            if ( $navigation_url != '' ) {
-                if ( $parent_widget_url != '' ) {
-                    echo '<li><a href="'.$parent_widget_url.'">'.$parent_widget_title.'</a><span class="divider">/</span></li>';
-                }
-                echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
-            }
-            else if ( $has_caption ) {
-                echo '<li>'.$caption.'<span class="divider">/</span></li>';
-            }
             echo '<li>'.$view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)).'</li>';
 
             if ( $state_name != '' ) {
@@ -48,7 +51,9 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
                     'color' => $form->getObjectIt()->get('StateColor'),
                     'name' => $form->getObjectIt()->get('StateName'),
                     'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
-                    'id' => 'state-label'
+                    'id' => 'state-label',
+                    'referenceName' => $form->getObjectIt()->get('State'),
+                    'listWidgetIt' => $listWidgetIt
                 )).'</li>';
             }
             if ( $nextUrl != '' ) {
@@ -56,7 +61,15 @@ $has_caption = $uid_icon != '' || $caption != '' && $caption != $navigation_titl
             }
         }
         else {
-            echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a></li>';
+            ?>
+            <li class="page-title">
+                <div class="btn-group">
+                    <div class="btn transparent-btn">
+                        <span class="title"><?=$title?></span>
+                    </div>
+                </div>
+            </li>
+            <?
         }
         ?>
     </ul> <!-- end breadcrumb -->

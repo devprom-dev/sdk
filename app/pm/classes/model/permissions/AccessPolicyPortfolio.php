@@ -18,7 +18,6 @@ class AccessPolicyPortfolio extends AccessPolicyBase
  	        case 'pm_Activity':
  	        case 'pm_CustomReport':
  	        case 'cms_Report':
-			case 'co_ProjectGroup':
 			case 'pm_ChangeRequest':
 			case 'pm_ChangeRequestTrace':
             case 'pm_Task':
@@ -42,6 +41,9 @@ class AccessPolicyPortfolio extends AccessPolicyBase
             case 'sm_Aim':
             case 'sm_Activity':
             case 'sm_Action':
+            case 'pm_Workspace':
+            case 'pm_WorkspaceMenu':
+            case 'pm_WorkspaceMenuItem':
  	            return true;
 
  	        case 'pm_Methodology':
@@ -52,6 +54,9 @@ class AccessPolicyPortfolio extends AccessPolicyBase
 			case 'pm_Task':
 			case 'pm_TaskTrace':
 				return $action_kind != ACCESS_CREATE;
+
+            case 'co_ProjectGroup':
+                return parent::getEntityAccess( $action_kind, $object );
 
  	        case 'pm_Project':
  	        	$access = parent::getEntityAccess( $action_kind, $object );

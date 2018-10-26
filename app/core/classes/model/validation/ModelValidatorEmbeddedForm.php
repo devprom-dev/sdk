@@ -5,12 +5,9 @@ include_once "ModelValidatorInstance.php";
 class ModelValidatorEmbeddedForm extends ModelValidatorInstance
 {
 	private $validate_field = '';
-	private $check_embedded_field = '';
-	
-	public function __construct( $validate_field, $check_embedded_field )
-	{
+
+	public function __construct( $validate_field ) {
 		$this->validate_field = $validate_field;
-		$this->check_embedded_field = $check_embedded_field;
 	}
 	
 	public function validate( Metaobject $object, array & $parms )
@@ -20,13 +17,18 @@ class ModelValidatorEmbeddedForm extends ModelValidatorInstance
 		if ( !$object->IsAttributeRequired($this->validate_field) ) return "";
 		if ( $parms[$this->validate_field] != '' ) return "";
 
+		$embeddedFormId = '';
+        foreach( array_keys($parms) as $field ) {
+            if (preg_match('/embeddedFieldName([\d]+)/', $field, $matches) && $parms[$field] == $this->validate_field) {
+                $embeddedFormId = $matches[1];
+            }
+        }
+        if ( $embeddedFormId == '' ) return "";
+
 		foreach( array_keys($parms) as $field )
 		{
-			 if ( preg_match('/F[\d]+_'.$this->check_embedded_field.'[\d]+/i', $field, $matches) && $parms[$field] != '' ) {
-			 	$rows[] = $parms[$field];
-			 }
-			 if ( preg_match('/F([\d]+)_Id([\d]+)/i', $field, $matches) && $parms[$field] != '' ) {
-			 	if ( $parms['F'.$matches[1].'_Delete'.$matches[2]] < 1 ) $rows[] = $parms[$field];
+			 if ( preg_match('/F'.$embeddedFormId.'_Id([\d]+)/i', $field, $matches) && $parms[$field] != '' ) {
+			 	if ( $parms['F'.$embeddedFormId.'_Delete'.$matches[1]] < 1 ) $rows[] = $parms[$field];
 			 }
 		}
 

@@ -168,7 +168,7 @@ class SoapService
 
         getFactory()->getEventsManager()
             ->executeEventsAfterBusinessTransaction(
-                $it->copy(), 'WorklfowMovementEventHandler'
+                $it->copy(), 'WorklfowMovementEventHandler', $parms
             );
 
 		$result = $this->serializeToSoap( $it );

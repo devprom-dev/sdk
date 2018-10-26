@@ -74,7 +74,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         
 	// Navigation bar items
         //верхняя панель
-        @FindBy(xpath = ".//*[@id='append-issue']")
+        @FindBy(xpath = ".//*[@id='new-issue']")
 	protected WebElement addWish;
         
         @FindBy(xpath = ".//*[@id='new-plannedrelease']")
@@ -82,7 +82,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         
         //разработка
         //верхнее меню "Разработка"
-        @FindBy(xpath = ".//div[@class='navbar']//li[@id='tab_dev']/a")//".//div[@class='navbar']//li[@id='tab_dev']/a")
+        @FindBy(xpath = ".//div[@id='main-sidebar']//li[@id='tab_dev']/a")
 	protected WebElement developmentLink;
         
         //верхнее меню Контроль качества
@@ -142,7 +142,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 	protected WebElement tasksBoardSubItem;
         
 	// --ИЗБРАННОЕ--
-	@FindBy(xpath = ".//div[@class='navbar']//li[@id='tab_favs']/a")
+	@FindBy(xpath = ".//div[@id='main-sidebar']//li[@id='tab_favs']/a")
 	protected WebElement favLink;
 	
 	@FindBy(xpath = ".//div[@id='sidebar']//a[@uid='kanbanboard']")
@@ -171,21 +171,18 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 	
 	
 	// --НАСТРОЙКИ--
-	@FindBy(xpath = "//li[@id='tab_stg']/a")
+	@FindBy(xpath = "//a[@uid='settings-4-project']")
 	protected WebElement settingsLink;
 	
 	// Участники
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='permissions-participants']")
+	@FindBy(xpath = ".//a[@uid='permissions-participants']")
 	protected WebElement participantsListItem;
 	
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@id='menu-group-workflow']")	
-	protected WebElement settingsStateMenu;
-
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='workflow-issuestate']")
+	@FindBy(xpath = ".//a[@uid='workflow-issuestate']")
 	protected WebElement requestsStateItem;
 	
 	// Методология
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='methodology']")
+	@FindBy(xpath = ".//a[@uid='methodology']")
 	protected WebElement methodologyItem;
 	
 	
@@ -221,8 +218,6 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 
 	public KanbanTasksStatesPage gotoTasksStates(){
 		settingsLink.click();
-		if (!requestsStateItem.isDisplayed())
-			settingsStateMenu.click();
 		requestsStateItem.click();
 		return new KanbanTasksStatesPage(driver);
 	}
@@ -242,6 +237,10 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
     public void moveToAnotherRelease(String requestNumericId, int releaseNumber, String columnName)
     {
     	RequestsBoardPage board = new RequestsBoardPage(driver);
+    	try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+		}
     	board.moveToAnotherSection(requestNumericId, String.valueOf(releaseNumber), columnName);
     }
 
@@ -260,7 +259,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         String wishNumber = idWish.substring(2);
         WebElement menuItem = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+wishNumber+"')]//a[text()='"+menuItemString+"']"));
         WebElement submenuItem = driver.findElement(By.xpath("//div[contains(@id,'context-menu-"+wishNumber+"')]//a[text()='"+submenuItemString+"']"));
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(text(),'[" +idWish+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idWish+ "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
@@ -271,7 +270,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
 
     public KanbanTaskViewPage openTask(String idTask) {
         try{
-           driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(text(),'[" +idTask+ "]')]")).click();
+           driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idTask+ "]')]")).click();
            Thread.sleep(3000);
            return new KanbanTaskViewPage(driver); 
         }
@@ -301,7 +300,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
         try{
         Thread.sleep(3000);
         String wishNumber = idWish.substring(2);
-        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(text(),'[" +idWish+ "]')]/../.."));
+        WebElement onElement = driver.findElement(By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idWish+ "]')]/../.."));
         Actions contextClick = new Actions(driver);
         mouseMove(onElement);
         contextClick.contextClick(onElement).build().perform();
@@ -362,7 +361,7 @@ public class KanbanPageBase extends ProjectPageBase implements IProjectBase
     public void selectWish(String idWish) {
     	clickOnInvisibleElementWithCtrl(
 			driver.findElement(
-				By.xpath("//table[contains(@id,'requestboard')]//a[contains(text(),'[" +idWish+ "]')]/ancestor::div[contains(@class,'board_item')]")     
+				By.xpath("//table[contains(@id,'requestboard')]//a[contains(.,'[" +idWish+ "]')]/ancestor::div[contains(@class,'board_item')]")     
 			)
     	);
     }

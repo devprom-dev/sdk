@@ -40,8 +40,14 @@ class ApplyTemplateService
             $class_name = strtolower($class_name);
 
             if ( $this->entities[$class_name] == '' ) {
-                \Logger::getLogger('System')->info('Entity '.$class_name.' is missed in project template file');
-                continue;
+                if ( $class_name == 'projectroleinherited' ) {
+                    $class_name = 'projectrole';
+                    $object = getFactory()->getObject($class_name);
+                }
+                else {
+                    \Logger::getLogger('System')->info('Entity '.$class_name.' is missed in project template file');
+                    continue;
+                }
             }
 
             $iterator = $object->createXmlIterator($this->entities[$class_name]);
@@ -64,6 +70,7 @@ class ApplyTemplateService
 				case 'pm_TransitionResetField':
 				case 'pm_TransitionRole':
 				case 'pm_TransitionPredicate':
+                case 'pm_TransitionAction':
 				case 'pm_TaskTypeStage':
 				case 'pm_Predicate':
 				case 'pm_StateAction':
@@ -125,41 +132,9 @@ class ApplyTemplateService
 			}
 
 			\CloneLogic::Run( $context, $object, $iterator, $project_it ); 
-		} 
+		}
 
-		$stateableEntities = array(
-		    'Request',
-            'Task',
-            'Requirement',
-            'TestScenario',
-            'HelpPage',
-            'Question'
-        );
-		foreach( $stateableEntities as $className ) {
-            if ( !class_exists(getFactory()->getClass($className)) ) continue;
-
-            $object = getFactory()->getObject($className);
-            $stateObject = getFactory()->getObject($object->getStateClassName());
-            if ( !is_object($stateObject) ) continue;
-
-            $states = $stateObject->getAll()->fieldToArray('ReferenceName');
-            $firstState = array_shift(array_values($states));
-
-            $registry = $object->getRegistry();
-            $registry->setPersisters(array());
-
-            $object_it = $registry->Query(
-                array (
-                    new \FilterBaseVpdPredicate(),
-                    new \FilterHasNoAttributePredicate('State', $states)
-                )
-            );
-            if ( $object_it->count() > 0 ) {
-                \DAL::Instance()->Query(
-                    "UPDATE ".$object->getEntityRefName()." SET State = '".$firstState."' WHERE ".$object->getIdAttribute()." IN (".join(',',$object_it->idsToArray()).")"
-                );
-            }
-        }
+        \CloneLogic::postProcess($context);
 
 		$metrics_service = new StoreMetricsService();
 		$metrics_service->execute($project_it, true);

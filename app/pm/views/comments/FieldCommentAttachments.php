@@ -6,14 +6,11 @@ class FieldCommentAttachments extends FieldAttachments
 {
  	function draw( $view = null )
  	{
-		$count = $this->getAttachments()->getRecordCount();
-        echo '<div class="uneditable-input" style="width:60%;height:auto;overflow:inherit;">';
-            echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'" style="float:left;width:360px;">';
-                if ( $count < 1 ) {
-                    echo '<div style="float:left;width:20px;"><img src="/images/attach.png"></div>';
-                }
+ 	    $this->setAddButtonText(text(2081));
+        echo '<div class="uneditable-input" style="width:99%;height:auto;overflow:inherit;">';
+            echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
                 echo '<div style="float:left;width:90%;">';
-                    $this->drawBody($view);
+                    $this->render($view);
                 echo '</div>';
             echo '</div>';
         echo '</div>';

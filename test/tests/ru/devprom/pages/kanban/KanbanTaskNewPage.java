@@ -33,16 +33,13 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 	@FindBy(id = "pm_ChangeRequestOwner")
 	protected WebElement ownerSelect;
 	
-	@FindBy(xpath = "//span[@id='pm_ChangeRequestAttachment']//a[contains(@class,'embedded-add-button')]")
-	protected WebElement addAttachBtn;
-	
-	@FindBy(xpath = "//span[@id='pm_ChangeRequestTags']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_ChangeRequestTags']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTagsBtn;
 	
-	@FindBy(xpath = "//span[@id='pm_ChangeRequestLinks']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_ChangeRequestLinks']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addLinkedTasksBtn;
 	
-	@FindBy(xpath = "//span[@id='pm_ChangeRequestWatchers']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='pm_ChangeRequestWatchers']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addWatchersBtn;
 	
 	@FindBy(id = "pm_ChangeRequestSubmitBtn")
@@ -82,8 +79,8 @@ public class KanbanTaskNewPage extends KanbanPageBase {
      (new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(saveBtn));
      submitDialog(saveBtn);
      //read ID
-       (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(text(),'"+task.getName()+"')]")));
-     String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(text(),'"+task.getName()+"')]/preceding-sibling::td[@id='uid']/a")).getText();
+       (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]")));
+     String uid =driver.findElement(By.xpath("//td[@id='caption' and contains(.,'"+task.getName()+"')]/preceding-sibling::td[@id='uid']/a")).getText();
      task.setId(uid.substring(1, uid.length()-1));
   return new KanbanTasksPage(driver);
     }
@@ -155,25 +152,6 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 
 			}
 			
-
-			public void addAttachment(String attachment) {
-				//turn off popup dialog
-				String codeIE = "$.browser.msie = true; document.documentMode = 8;";
-				((JavascriptExecutor) driver).executeScript(codeIE);
-				
-				addAttachBtn.click();
-
-				driver.findElement(
-						By.xpath("//input[@value='attachment']/following-sibling::div[contains(@id,'fieldRowFile')]//input[contains(@id,'File')]"))
-						.sendKeys(attachment);
-				driver.findElement(
-						By.xpath("//input[@value='attachment']/following-sibling::div//input[contains(@id,'saveEmbedded')]"))
-						.click();
-
-			}
-
-		//Read Default parameters
-			
 		    public String readName(){
 		     return captionEdit.getAttribute("value");
 		    }
@@ -229,7 +207,7 @@ public class KanbanTaskNewPage extends KanbanPageBase {
 	public void saveTaskFromBoard(KanbanTask task)
 	{
         submitDialog(saveBtn);
-        By idLocator = By.xpath("//div[contains(text(),'"+task.getName()+"')]/preceding-sibling::*/div/a");
+        By idLocator = By.xpath("//div[contains(.,'"+task.getName()+"')]/preceding-sibling::*/div/a");
         (new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(idLocator));
         WebElement element = driver.findElement(idLocator);
         String uid = element.getText();

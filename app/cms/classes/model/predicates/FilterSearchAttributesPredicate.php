@@ -16,25 +16,32 @@ class FilterSearchAttributesPredicate extends FilterPredicate
 		$predicates = array();
 		foreach( $this->attributes as $attribute ) {
 			if ( $this->getObject()->getAttributeType($attribute) == '') continue;
+
+            $searchString = $filter;
+            if ( $this->getObject()->getAttributeType($attribute) == 'wysiwyg' ) {
+                $searchString = htmlentities($searchString);
+            }
+
 			if ( $attribute == 'Content' && !$this->getObject()->getRegistry() instanceof WikiPageRegistryVersion ) {
 				$words = array_map(
 					function($word) {
-						if ( $word[0] != '+' && $word[0] != '-' ) $word = '+'.trim($word,'+-').'*';
-						return $word;
+                        return preg_replace('/@/', '*', trim(addslashes($word),'+-').'*');
 					},
-					SearchRules::getSearchItems($filter, getSession()->getLanguageUid())
+					SearchRules::getSearchItems($searchString, getSession()->getLanguageUid())
 				);
-				$predicates[] = " MATCH (".$this->getAlias().".".$attribute.") AGAINST ('".join(' ',$words)."' IN BOOLEAN MODE) ";
+				if ( count($words) > 0 ) {
+                    $predicates[] = " MATCH (".$this->getAlias().".".$attribute.") AGAINST ('+".join(' ',$words)."' IN BOOLEAN MODE) ";
+                }
 			}
 			else {
-                $searchString = DAL::Instance()->Escape($filter);
                 if ( $attribute == $this->getObject()->getIdAttribute() ) {
                     $searchString = array_pop(preg_split('/-/',$searchString));
                 }
                 $searchString = preg_replace('/%/', '', $searchString);
-				$predicates[] = $this->getAlias().".".$attribute." LIKE ('%".$searchString."%') ";
+				$predicates[] = $this->getAlias().".".$attribute." LIKE ('%".addslashes($searchString)."%') ";
 			}
 		}
+
 		return count($predicates) < 1 ? " AND 1 = 2 " : " AND (".join(' OR ', $predicates).") ";
  	}
 }

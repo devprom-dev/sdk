@@ -26,7 +26,6 @@ class StateBaseModelBuilder extends ObjectModelBuilder
 
         foreach( array('Description','OrderNum','ReferenceName','ExcludeLeadTime','SkipEmailNotification') as $attribute ) {
             $object->addAttributeGroup($attribute, 'additional');
-            $object->setAttributeRequired($attribute, false);
         }
 		foreach( array('QueueLength','RelatedColor') as $attribute ) {
 			$object->addAttributeGroup($attribute, 'nonbulk');

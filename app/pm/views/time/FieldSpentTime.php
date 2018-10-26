@@ -20,11 +20,6 @@ class FieldSpentTime extends FieldForm
  		$this->short_form = $short;
  	}
  	
- 	function getValidator()
- 	{
- 		return new ModelValidatorEmbeddedForm('Fact', 'Capacity');
- 	}
- 	
  	function getObject()
  	{
  		return getFactory()->getObject('pm_Activity');
@@ -40,11 +35,6 @@ class FieldSpentTime extends FieldForm
  		return 'Task';
  	}
 
- 	function getLeftWorkAttribute()
- 	{
- 	    return '';
- 	} 	
- 	
 	function & getForm( & $activity )
 	{
         return new SpentTimeFormEmbeddedShort( $activity, $this->getAnchorField(), $this->getName() );
@@ -66,8 +56,8 @@ class FieldSpentTime extends FieldForm
  		$activity->setVpdContext($object_it);
 		
  		$form = $this->getForm( $activity );
- 		$form->setLeftWorkAttribute( $this->getLeftWorkAttribute() );
-		
+ 		$form->showAutoTimeButtons( !$this->short_form );
+
  		if ( is_object($object_it) ) {
  			$form->setAnchorIt($object_it);
  			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );

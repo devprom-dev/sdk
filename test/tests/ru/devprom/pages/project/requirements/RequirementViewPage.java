@@ -43,7 +43,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	@FindBy(xpath = ".//*[@class='trace-state']/..")
 	protected WebElement attentionBtn;
 	
-        @FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+        @FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
         
         @FindBy(xpath = "//ul//*[text()='Экспорт']")
@@ -54,7 +54,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
         
        
     //пункт Тестовый сценарий подменю Создать меню конопки со зведочкой
-    @FindBy(xpath = "//a[contains(text(),'Тестовый сценарий')]")
+    @FindBy(xpath = "//a[contains(.,'Тестовый сценарий')]")
 	protected WebElement testScenarioItem;
         
     //пункт Тестовый сценарий подменю Создать меню конопки со зведочкой
@@ -98,7 +98,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//a[@uid='baseline' and contains(@class,'dropdown-toggle')]")
 	protected WebElement versionBtn;
 	
-	@FindBy(xpath = "//a[@id='append-child-page']")
+	@FindBy(xpath = "//a[contains(@id,'append-child-page')]")
 	protected WebElement addPartitionBtn;
 	
 	@FindBy(xpath = "//a[@uid='compareto']")
@@ -107,7 +107,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	@FindBy (id="wikitree")
 	protected WebElement tree;
         
-        @FindBy (xpath = "//*[@class='document-page-comments-link dashed']")
+        @FindBy (xpath = "//*[contains(@class,'document-page-comments-link')]")
 	protected WebElement commentsLink;
         
         @FindBy (xpath = "//*[@class='comment']/a")
@@ -132,7 +132,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
         @FindBy (xpath="//ul//a[@id='column-Workflow']")
 	protected WebElement statusChangesItem;
         
-         @FindBy (xpath=".//*[@class='filter hidden-print']//*[contains(text(),'Бейзлайн')]")
+         @FindBy (xpath=".//*[@class='filter hidden-print']//*[contains(.,'Бейзлайн')]")
 	protected WebElement atributeBaselineItem;
          
          @FindBy(xpath = "//span[contains(@class,'document-structure-action')]//a[@id='new-child']")
@@ -232,7 +232,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	public RequirementViewPage clickToNested(String idShort, String text){
 		 WebElement content = driver.findElement(By.xpath("//div[contains(@id,'WikiPageContent" + idShort + "') and contains(@class,'wysiwyg')]"));
 		 content.click();
-		 driver.findElement(By.xpath(".//p/a[contains(text(),'"+text+"')]")).click();
+		 driver.findElement(By.xpath(".//p/a[contains(.,'"+text+"')]")).click();
 		return new RequirementViewPage(driver);
 	}
 	
@@ -246,7 +246,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	}
 	
 	protected void waitForState( String stateName ) {
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[contains(@class,'label') and contains(text(),'"+stateName+"')]")));
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[contains(@class,'label') and contains(.,'"+stateName+"')]")));
 	}
 	
 	public RequirementViewPage completeRequirement(){
@@ -392,22 +392,22 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	
 	public RequirementViewPage showBaseline(String version){
 		clickOnInvisibleElement(versionBtn);
-		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(text(),'Бейзлайн: "+version+"')]")));
+		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'Бейзлайн: "+version+"')]")));
 		return new RequirementViewPage(driver);
 	}
 
 	public RequirementViewPage showVersion(String version){
 		clickOnInvisibleElement(versionBtn);
-		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(text(),'Версия: "+version+"')]")));
+		clickOnInvisibleElement(versionBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'Версия: "+version+"')]")));
 		return new RequirementViewPage(driver);
 	}
 	
 	public RequirementViewPage compareWithVersion(String version){
 		clickOnInvisibleElement(compareWithBtn);
-		WebElement compareRow = compareWithBtn.findElement(By.xpath("./following-sibling::ul//a[contains(text(),'"+version+"')]"));
+		WebElement compareRow = compareWithBtn.findElement(By.xpath("./following-sibling::ul//a[contains(.,'"+version+"')]"));
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(compareRow));
 		compareRow.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@uid='compareto' and contains(text(),'"+version+"')]")));
+		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@uid='compareto' and contains(.,'"+version+"')]")));
 		return new RequirementViewPage(driver);
 	}
 	
@@ -431,9 +431,9 @@ public class RequirementViewPage extends SDLCPojectPageBase {
 	}
 	
 	public String readCurrentBaseline(){
-		if (driver.findElements(By.xpath("//a[@data-toggle='dropdown' and contains(text(),'Бейзлайн')]")).isEmpty())
+		if (driver.findElements(By.xpath("//a[@data-toggle='dropdown' and contains(.,'Бейзлайн')]")).isEmpty())
 			return "";
-		else return driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(text(),'Бейзлайн')]")).getText().replace("Бейзлайн:", "").trim();
+		else return driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(.,'Бейзлайн')]")).getText().replace("Бейзлайн:", "").trim();
 	}
 			
 	public RequirementNewPage addPartition() {
@@ -457,8 +457,8 @@ public class RequirementViewPage extends SDLCPojectPageBase {
     public RequirementEditPage editRequirement(String id) {
         try
         {
-        String ids = id.substring(2);
-        driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//a[@class='btn btn-mini dropdown-toggle actions-button']")).click();
+        String ids = id.split("-")[1];
+        driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//div[contains(@class,'operation')]//a[contains(@class,'actions-button')]")).click();
         (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(editBtn));
         editBtn.click();
         Thread.sleep(2000);
@@ -470,16 +470,17 @@ public class RequirementViewPage extends SDLCPojectPageBase {
         }
     }
     
-    public RequirementChangesHistoryPage seeChanges(String id) {
-     try
+    public RequirementChangesHistoryPage seeChanges(String id) 
+    {
+    	try
         {
-        String ids = id.substring(2);
-        Thread.sleep(3000);
-        driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//a[@class='btn btn-mini dropdown-toggle actions-button']")).click();
-         Thread.sleep(2000);
-        driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[@id='history']")).click();
-        Thread.sleep(2000);
-        return new RequirementChangesHistoryPage(driver);
+	        String ids = id.split("-")[1];
+	        Thread.sleep(3000);
+	        driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//div[contains(@class,'operation')]//a[contains(@class,'actions-button')]")).click();
+	        Thread.sleep(2000);
+	        clickOnInvisibleElement(driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[@id='history']")));
+	        Thread.sleep(2000);
+	        return new RequirementChangesHistoryPage(driver);
         }
         catch(InterruptedException e)
         {
@@ -490,13 +491,13 @@ public class RequirementViewPage extends SDLCPojectPageBase {
     public TestScenariosPage menuTestSuit(String id) {
         try
         {
-        String ids = id.substring(2);
+        String ids = id.split("-")[1];
         Thread.sleep(3000);
-        driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//a[@class='btn btn-mini dropdown-toggle actions-button']")).click();
-         Thread.sleep(2000);
-        driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[contains(text(),'Трассировка')]")).click();
+        driver.findElement(By.xpath(".//tr[@object-id="+ids+"]//div[contains(@class,'operation')]//a[contains(@class,'actions-button')]")).click();
         Thread.sleep(2000);
-        driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[contains(text(),'Трассировка тестовой документации')]")).click();
+        clickOnInvisibleElement(driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[contains(.,'Трассировка')]")));
+        Thread.sleep(2000);
+        clickOnInvisibleElement(driver.findElement(By.xpath("//tr[@object-id='"+ids+"']//a[contains(.,'Трассировка тестовой документации')]")));
         Thread.sleep(2000);
         return new TestScenariosPage(driver);
         }
@@ -621,7 +622,7 @@ public class RequirementViewPage extends SDLCPojectPageBase {
     }
 
     public RequestRejectPage clickToRework() {
-        WebElement rework = driver.findElement(By.xpath("//li[contains(text(),'Реализация: ')]/a"));
+        WebElement rework = driver.findElement(By.xpath("//li[contains(.,'Реализация: ')]//a"));
         clickOnInvisibleElement(rework);
         return new RequestRejectPage(driver);
     }

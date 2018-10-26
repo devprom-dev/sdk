@@ -1,8 +1,5 @@
 <?php
-
-if ( !class_exists('Tag', false) ) include "Tag.php";
 include "WikiTagIterator.php";
-
 include "predicates/WikiTagReferenceFilter.php";
 include "persisters/WikiTagCaptionPersister.php";
 

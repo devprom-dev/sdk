@@ -14,6 +14,8 @@ class CustomAttributeTypeIterator extends OrderedIterator
  				return 'varchar';
             case 'integer':
                 return 'float';
+            case 'char':
+                return 'char';
  			default:
  				return $type;
  		}
@@ -32,6 +34,7 @@ class CustomAttributeTypeIterator extends OrderedIterator
  				break;
 
  			case 'string':
+            case 'char':
  			case 'date':
 			case 'computed':
  				$value_column = 'StringValue';

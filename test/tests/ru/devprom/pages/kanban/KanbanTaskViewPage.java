@@ -15,24 +15,28 @@ import ru.devprom.pages.CKEditor;
 import ru.devprom.pages.project.requirements.RequirementNewPage;
 import ru.devprom.pages.project.requirements.RequirementViewPage;
 import ru.devprom.pages.project.tasks.TaskCompletePage;
+import ru.devprom.pages.project.tasks.TaskViewPage;
 import ru.devprom.pages.project.testscenarios.TestScenarioNewPage;
 import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 
 public class KanbanTaskViewPage extends KanbanPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
         
-        //добавить затраченное время на форма перехода к статусу Анализ:готово
-        @FindBy(css = "#pm_ChangeRequestFact > div.embedded_form.form-inline > a.dashed.embedded-add-button")
+	@FindBy(id = "pm_ChangeRequestSubmitBtn")
+	protected WebElement submitBtn;
+
+	//добавить затраченное время на форма перехода к статусу Анализ:готово
+    @FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_ChangeRequestFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTimeBtn;        
         
     //поле добавления времени на форме перехода к статусу Анализ:готово
-    @FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_ChangeRequestFact']//input[contains(@id,'Capacity')]")
+    @FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_ChangeRequestFact']//input[contains(@id,'Capacity')]")
 	protected WebElement addTimeField;   
         
     //кнопка добавить время после ввода на форме  перехода к статусу Анализ:готово
-    @FindBy(xpath="//div[@id='modal-form']//span[@id='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
+    @FindBy(xpath="//div[@id='modal-form']//span[@name='pm_ChangeRequestFact']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAddedTime;  
                 
 	@FindBy(xpath = "//a[@id='workflow-resolved']")
@@ -46,7 +50,7 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 	protected WebElement developmentBtn;
         
         //кнопа действия
-        @FindBy(xpath = "//a[contains(text(),'Действия')]")
+        @FindBy(xpath = "//a[contains(.,'Действия')]")
 	protected WebElement actionBtn;
         
         //пункт начать тестировани меню действия
@@ -63,13 +67,13 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]/..//a[@id='new-task']")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]/..//a[@id='new-task']")
 	protected WebElement addSubtaskBtn;
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]/..//a[@id='as-template']")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]/..//a[@id='as-template']")
 	protected WebElement saveTemplateBtn;
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]/..//a[text()='Реализовать в проекте']")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]/..//a[text()='Реализовать в проекте']")
 	protected WebElement duplicateBtn;
         
         //подменю Тестовый сценарий пункта Создать меню Действие
@@ -77,11 +81,11 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 	protected WebElement createScenarioItem;
         
         //подменю Требование пункта Создать меню Действие
-	@FindBy(xpath = "//*[@class='btn-group operation last open']//*[contains(text(),'Требование')]")
+	@FindBy(xpath = "//*[@class='btn-group operation last open']//*[contains(.,'Требование')]")
 	protected WebElement createRequirementItem;
         
         //пункт Создать меню Действие
-	@FindBy(xpath = "//*[@class='btn-group operation last open']//*[contains(text(),'Создать')]")
+	@FindBy(xpath = "//*[@class='btn-group operation last open']//*[contains(.,'Создать')]")
 	protected WebElement createItem;
 	
 	@FindBy(xpath = "//div[@class='accordion-heading']/a[contains(.,'Свойства')]")
@@ -90,19 +94,19 @@ public class KanbanTaskViewPage extends KanbanPageBase {
 	@FindBy(xpath = "//div[@class='accordion-heading']/a[contains(.,'Описание')]")
 	protected WebElement descriptionField;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(text(),'Приоритет:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Приоритет:')]/following-sibling::td")
 	protected WebElement priorityLabel;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(text(),'Автор:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Автор:')]/following-sibling::td")
 	protected WebElement authorLabel;
 
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(text(),'Номер:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Номер:')]/following-sibling::td")
 	protected WebElement numberLabel;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(text(),'Состояние:')]/following-sibling::td/span")
+	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Состояние:')]/following-sibling::td/span")
 	protected WebElement stateLabel;
 	
-	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(text(),'Исполнитель:')]/following-sibling::td")
+	@FindBy(xpath = "//table[@class='properties-table']/tbody/tr/th[contains(.,'Исполнитель:')]/following-sibling::td")
 	protected WebElement ownerLabel;
 	
 	
@@ -234,12 +238,10 @@ public class KanbanTaskViewPage extends KanbanPageBase {
     public void doDevelopment(KanbanTask task1, KanbanTask task2) {
         (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(developmentBtn));
         developmentBtn.click();
-        (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(changeRequestSubmitBtn));
-        WebElement task1field = driver.findElement(By.xpath("//div[@class=\"taskbox span4\"][1]//input[contains(@name,'_Caption')]"));
-        WebElement task2field = driver.findElement(By.xpath("//div[@class=\"taskbox span4\"][2]//input[contains(@name,'_Caption')]"));
-        task1field.sendKeys(task1.getName());
-        task2field.sendKeys(task2.getName());
-        submitDialog(changeRequestSubmitBtn);
+        try {
+            Thread.sleep(3000);
+        }
+        catch(InterruptedException e) {}
     }
 
     public void doDevelopmentComplete() {
@@ -280,10 +282,10 @@ public class KanbanTaskViewPage extends KanbanPageBase {
          return clearID;
      }
 
-    public TaskCompletePage completeTask() {
+    public void completeTask() {
         clickOnInvisibleElement(completeBtn);
         waitForDialog();
-        return new TaskCompletePage(driver);
+    	submitDialog(submitBtn);
     }
 
     public KanbanAddSubtaskPage actionAddSubtask(){

@@ -23,7 +23,6 @@ foreach( $sections as $key => $section ) {
 		$secondary_sections[$key] = $section;
 	}
 }
-
 ?>
 <div class="tabs">
 	<?php if ( count($sections) > 0 ) { ?>
@@ -69,13 +68,12 @@ foreach( $sections as $key => $section ) {
 					<? if ( count($source_parms) > 0 ) { ?>
 						<div class="source-text">
 							<? foreach( $source_parms as $parameter) { ?>
-								<div>
+								<div class="source-text-header">
 									<?=$parameter['uid']?>
 								</div>
-								<div>
+								<div class="source-text-data">
 									<?=$parameter['text']?>
 								</div>
-								<br/>
 							<? } ?>
 						</div>
 					<? } ?>

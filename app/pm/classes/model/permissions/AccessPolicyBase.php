@@ -5,32 +5,34 @@ include_once SERVER_ROOT_PATH."co/classes/COAccessPolicy.php";
 abstract class AccessPolicyBase extends COAccessPolicy
 {
     private $session;
-    
     private $methodology_it;
-    
     private $project_it;
-    
  	private $roles = array();
- 	
+    private $restrictions = array();
  	private $subject_key = '';
-    
+
     function __construct( $cache_service = null, PMSession $session = null )
     {
         $this->session = is_object($session) ? $session : getSession();
         parent::__construct($cache_service, $this->session->getCacheKey());
     }
     
- 	public function getRoles()
- 	{
+ 	public function getRoles() {
  		if ( count($this->roles) > 0 ) return $this->roles;
- 		
  		return $this->roles = $this->buildRoles();
  	}
  	
- 	public function setRoles( $roles )
- 	{
+ 	public function setRoles( $roles ) {
  		$this->roles = $roles;
  	}
+
+ 	public function getRestrictions() {
+        return $this->restrictions;
+    }
+
+    public function setRestrictions( $value = array() ) {
+        $this->restrictions = $value;
+    }
 
  	public function getSubjectKey()
  	{
@@ -79,7 +81,7 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		        break;
 		}
 		
-		return parent::getEntityAccess( $action_kind, $object );
+		return $this->checkRestrictions(parent::getEntityAccess( $action_kind, $object ), $action_kind, $object);
 	}
 	
 	function getRoleReferenceName( $role_id )
@@ -132,4 +134,9 @@ abstract class AccessPolicyBase extends COAccessPolicy
 		
 		return parent::getDefaultObjectAccess( $action_kind, $object_it );
  	}
+
+    function checkRestrictions( $access, $action_kind, $object )
+    {
+        return $access;
+    }
 }

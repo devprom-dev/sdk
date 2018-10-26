@@ -4,9 +4,9 @@
 
 class ObjectPersister
 {
+    protected $attributes = array();
  	private $object = null;
-	private $attributes = array();
- 	
+
  	function __construct( array $attributes = array() )
  	{
 		$this->attributes = $attributes;

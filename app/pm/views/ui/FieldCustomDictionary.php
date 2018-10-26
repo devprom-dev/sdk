@@ -15,7 +15,7 @@ class FieldCustomDictionary extends FieldDictionary
  		{
  			if ( $this->attribute_it->get('ReferenceName') == $reference_name ) {
  				$this->lov = $this->attribute_it->toDictionary();
-				if ( $this->attribute_it->get('IsRequired') && $this->attribute_it->get('DefaultValue') != '' ) {
+				if ( $object->IsAttributeRequired($reference_name) && $this->attribute_it->get('DefaultValue') != '' ) {
 					$this->setNullOption(false);
 				}
  				break;

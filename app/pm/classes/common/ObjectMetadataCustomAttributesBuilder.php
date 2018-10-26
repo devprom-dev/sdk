@@ -56,9 +56,15 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
                 $groups[] = 'computed';
             }
 
+            foreach( \TextUtils::parseItems($attr_it->get('Groups')) as $group ) {
+                if ( preg_match('/[0-9a-z\-_]+/i', $group) ) {
+                    $groups[] = $group;
+                }
+            }
+
 			$attributes[$attr_it->get('ReferenceName')] = array(
 				'dbtype' => $db_type,
-				'caption' => translate($attr_it->get('Caption')),
+				'caption' => $attr_it->get('Caption'),
 				'visible' => $attr_it->get('IsVisible') == 'Y',
 				'stored' => false,
 				'type' => $db_type,
@@ -85,7 +91,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 		foreach( $attributes as $key => $attribute )
 		{
 			$metadata->setAttribute( $key, $attribute );
-			if ( !in_array($key, $firstTabAttributes) ) {
+			if ( !in_array($key, $firstTabAttributes) && !in_array('trace', $attribute['groups']) ) {
 				$metadata->addAttributeGroup($key, 'additional');
 			}
 			$metadata->addAttributeGroup($key, 'bulk');

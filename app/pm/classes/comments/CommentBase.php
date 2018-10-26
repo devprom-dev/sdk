@@ -144,7 +144,7 @@ class CommentBase extends Metaobject
 
 	function getPage()
 	{
-	    return getSession()->getApplicationUrl($this).'project/log/project-log?';
+	    return getSession()->getApplicationUrl($this).'project/log/discussions?';
 	}
 	
 	function getPageNameEditMode( $comment_id )

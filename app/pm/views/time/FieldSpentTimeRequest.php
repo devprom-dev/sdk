@@ -4,11 +4,6 @@ include_once "FieldSpentTime.php";
 
 class FieldSpentTimeRequest extends FieldSpentTime
 {
-	function getLeftWorkAttribute()
-	{
-	    return 'EstimationLeft';
-	}
-
     function getAnchorField()
     {
         return 'Issue';

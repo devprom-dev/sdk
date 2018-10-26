@@ -88,8 +88,9 @@ class ReleaseDatesFrame
 					echo '<div style="padding:15px;">';
 
 					    $flot = new FlotChartBurndownWidget();
-						
-						$report_it = $model_factory->getObject('PMReport')->getExact('iterationburndown');
+                    $flot->setLegend(false);
+
+                    $report_it = $model_factory->getObject('PMReport')->getExact('iterationburndown');
 					
 					    $url = $report_it->getUrl().'&release='.$iteration_it->getId();
 

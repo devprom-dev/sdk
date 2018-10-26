@@ -13,6 +13,8 @@ class PageList extends ListTable
  	private $uid_service = null;
  	private $iterator_data = null;
     private $itemsCount = null;
+    private $group = null;
+    private $skipIvisiblePersisters = true;
 
  	function PageList( $object )
  	{
@@ -173,6 +175,7 @@ class PageList extends ListTable
         $persisters = $object->getPersisters();
         foreach( $persisters as $key => $persister )
         {
+            if ( !$this->skipIvisiblePersisters ) continue;
             if ( $persister->IsPersisterImportant() ) continue;
             $attributes = $persister->getAttributes();
             if ( count($attributes) < 1 ) continue;
@@ -201,8 +204,14 @@ class PageList extends ListTable
         return $persisters;
     }
 
-	protected function IsAttributeInQuery( $attribute ) {
-		return $this->getColumnVisibility($attribute);
+	protected function IsAttributeInQuery( $attribute )
+    {
+        if ( $this->getColumnVisibility($attribute) ) return true;
+        $attributeCaption = $this->getObject()->getAttributeUserName($attribute);
+        foreach( $this->getObject()->getAttributesByGroup('computed') as $computedAttribute ) {
+            if ( strpos($this->getObject()->getDefaultAttributeValue($computedAttribute), $attributeCaption) !== false ) return true;
+        }
+		return false;
 	}
 
     function getIds()
@@ -211,7 +220,7 @@ class PageList extends ListTable
 		if ( $ids == '' ) {
 			$ids = $_REQUEST[$this->getObject()->getIdAttribute()];
 		}
-        return TextUtils::parseIds($ids);
+        return \TextUtils::parseIds($ids);
     }
 
 	function getGroupFilterValue() {
@@ -227,6 +236,10 @@ class PageList extends ListTable
         return $this->group_it = $this->buildGroupIt();
 	}
 
+	function getGroupObject() {
+ 	    return $this->getObject()->getAttributeObject($this->getGroup());
+    }
+
 	function buildGroupIt() {
         if ( $this->getGroup() == '' ) {
             return $this->getObject()->getEmptyIterator();
@@ -235,7 +248,7 @@ class PageList extends ListTable
             return $this->getObject()->getEmptyIterator();
         }
 
-        $group_object = $this->getObject()->getAttributeObject($this->getGroup());
+        $group_object = $this->getGroupObject();
         if ( !is_object($group_object) ) {
             return $this->getObject()->getEmptyIterator();
         }
@@ -258,12 +271,21 @@ class PageList extends ListTable
         );
     }
 
-    function getGroupQuery() {
+    function getGroupQuery()
+    {
+        $values = $this->getFilterValues();
+        if ( $values['sortgroup'] != '' ) {
+            return array(
+                new SortAttributeClause($values['sortgroup'])
+            );
+        }
         return array();
     }
 
-	function getGroupActions( $ref_it ) {
+	function getGroupActions( $ref_it )
+    {
 		$actions = array();
+
 		$method = new ObjectModifyWebMethod($ref_it);
 		if ( $method->hasAccess() ) {
 			$actions[] = array (
@@ -272,6 +294,63 @@ class PageList extends ListTable
 				'url' => $method->getJSCall()
 			);
 		}
+
+		$values = $this->getFilterValues();
+		$parts = preg_split('/\./', $values['sortgroup']);
+
+        $sortActions = array();
+        $sortAttributes = array_diff(
+            array_keys($ref_it->object->getAttributes()),
+            $ref_it->object->getAttributesByGroup('system')
+        );
+
+        foreach ( $sortAttributes as $attribute )
+        {
+            if ( $ref_it->object->getAttributeDbType($attribute) == '' ) continue;
+            if ( !$ref_it->object->IsAttributeStored($attribute) ) continue;
+
+            $type = $ref_it->object->getAttributeType($attribute);
+            if ( in_array($type, array('text','wysiwyg','password','file', 'char')) ) continue;
+
+            $name = $ref_it->object->getAttributeUserName($attribute);
+
+            $sortActions[translate($name)] = array(
+                'name' => translate($name),
+                'url' => "javascript: filterLocation.setSort( 'sortgroup', '".$attribute."' ); ",
+                'ref' => $attribute,
+                'checked' => $parts[0] == $attribute
+            );
+        }
+        ksort($sortActions);
+
+        if ( count($sortActions) > 0 )
+        {
+            array_push( $sortActions,
+                array (),
+                array ( 'url' => "javascript: filterLocation.setSortType( 'sortgroup', 'asc' ); ",
+                    'name' => translate('По возрастанию'), 'checked' => $parts[1] == 'A' || $parts[1] == '',
+                    'uid' => 'sortgroup-a',
+                    'radio-group' => 'direction',
+                    'radio' => true ),
+                array ( 'url' => "javascript: filterLocation.setSortType( 'sortgroup', 'desc' ); ",
+                    'name' => translate('По убыванию'), 'checked' => $parts[1] == 'D',
+                    'uid' => 'sortgroup-d',
+                    'radio-group' => 'direction',
+                    'radio' => true )
+            );
+
+            $actions = array_merge(
+                $actions,
+                array(
+                    array(),
+                    array(
+                        'name' => translate('Сортировка'),
+                        'items' => $sortActions
+                    )
+                )
+            );
+        }
+
 		return $actions;
 	}
 
@@ -343,16 +422,21 @@ class PageList extends ListTable
 		$sort_parms = array( '_group', 'sort', 'sort2', 'sort3', 'sort4' );
 		$values = $this->getFilterValues();
 
-		$groupSort = $this->getGroupSort();
-		if ( $groupSort == '' ) $groupSort = 'A';
-		$values['_group'] = $this->getGroup().".".$groupSort;
+        $groupSort = $this->getGroupSort();
+        if ( $groupSort == '' ) $groupSort = 'A';
+        $values['_group'] = $this->getGroup().".".$groupSort;
 
-		foreach( $sort_parms as $sort_parm ) {
+		foreach( $sort_parms as $sort_parm )
+		{
         	$sort_field = $values[$sort_parm];
 		    $sort_attribute = array_shift(preg_split('/\./', $sort_field));
 
         	if ( $sort_parm == '_group' && $this->getObject()->hasAttribute($sort_attribute) ) {
-				$sorts[] = $this->getTable()->getSortAttributeClause( $sort_field );
+        	    $clause = $this->getTable()->getSortAttributeClause( $sort_field );
+        	    if ( is_object($clause) && $values['sortgroup'] != '' ) {
+                    $clause->setReferenceSorts($sort_attribute, array(new SortAttributeClause( $values['sortgroup'] )));
+                }
+				$sorts[] = $clause;
         	}
         	else {
 			    $clause = $this->getTable()->getSortAttributeClause( $sort_field );
@@ -448,9 +532,9 @@ class PageList extends ListTable
 	
 	function IsNeedNavigator()
 	{
-		return $this->getPages() > 1;
+		return true;
 	}
-	
+
 	function IsNeedHeader()
 	{
 		return true;
@@ -488,11 +572,12 @@ class PageList extends ListTable
 		switch ( $attr )
 		{
 			case 'UID':
-				return '1%';
-				
+            case 'OrderNum':
+                return '1%';
+
 			case 'RecordCreated':
 			case 'RecordModified':
-			    return '110';
+			    return '130';
 				
 	        default:
 				return parent::getColumnWidth( $attr );
@@ -637,7 +722,7 @@ class PageList extends ListTable
 								: $this->getGroupActions($ref_it);
 
 							if ( count($actions) > 0 ) {
-								echo $this->getTable()->getView()->render('core/RowGroupMenu.php', array (
+								echo $this->getRenderView()->render('core/RowGroupMenu.php', array (
 									'title' => $group_title,
 									'items' => $actions,
 									'id' => $object_it->getId()
@@ -663,7 +748,12 @@ class PageList extends ListTable
 	function getGroupEntityName( $groupField, $object_it, $referenceIt )
     {
         if ( $referenceIt->object instanceof Priority ) return "";
-        return translate($object_it->object->getAttributeUserName($groupField));
+        if ( $referenceIt->object->getEntityRefName() == 'entity' ) {
+            return $object_it->object->getAttributeUserName($groupField);
+        }
+        else {
+            return $referenceIt->object->getDisplayName();
+        }
     }
 	
 	function drawRefCell( $entity_it, $object_it, $attr ) 
@@ -703,7 +793,7 @@ class PageList extends ListTable
 				            $entity_it->moveNext();
 				        }
 
-				        echo $this->getTable()->getView()->render('core/Attachments.php',
+				        echo $this->getRenderView()->render('core/Attachments.php',
                             array(
                                 'files' => $files,
                                 'random' => $entity_it->getId()
@@ -713,25 +803,25 @@ class PageList extends ListTable
 				        break;
 
 				    default:
-						$separator = $this->uid_service->hasUid($entity_it) ? ' ' : '<div/>';
                 		$ids = $entity_it->idsToArray();
+                        echo '<span class="tracing-ref" entity="'.get_class($entity_it->object).'">';
+                            $widget_it = $this->getTable()->getReferencesListWidget($entity_it, $attr);
+                            if ( $widget_it->getId() != '' && count($ids) > 1 )
+                            {
+                                $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.\TextUtils::buildIds($ids));
+                                $text = count($ids) > 10
+                                        ? str_replace('%1', count($ids) - 10, text(2028))
+                                        : text(2034);
 
-                		$widget_it = $this->getTable()->getReferencesListWidget($entity_it, $attr);
-                		if ( $widget_it->getId() != '' && count($ids) > 1 )
-                		{
-                            $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.join(',',$ids));
-                			$text = count($ids) > 10
-                					? str_replace('%1', count($ids) - 10, text(2028))
-                					: text(2034);
+                                $item_it = $entity_it->object->createCachedIterator(array_slice($entity_it->getRowset(),0,10));
 
-							$item_it = $entity_it->object->createCachedIterator(array_slice($entity_it->getRowset(),0,10));
-                			echo join($separator,$this->getRefNames($item_it, $object_it, $attr));
-                			echo ' <a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
-                		}
-                		else
-                		{
-                			echo join($separator,$this->getRefNames($entity_it, $object_it, $attr));
-                		}
+                                echo '<span>'.join('</span> <span>',$this->getRefNames($item_it, $object_it, $attr)).'</span>';
+                                echo ' <a class="dashed" target="_blank" href="'.$url.'">'.$text.'</a>';
+                            }
+                            else {
+                                echo '<span>'.join('</span> <span>',$this->getRefNames($entity_it, $object_it, $attr)).'</span>';
+                            }
+                        echo '</span>';
 				}
 		}
 	}
@@ -772,7 +862,7 @@ class PageList extends ListTable
                         if ( $uid_used ) {
                             $text = $this->uid_service->getUidIconGlobal($entity_it, $entity_it->get('VPD') != $object_it->get('VPD'));
                             if ( !$this instanceof PageBoard ) {
-                                $text .= '<span class="ref-name">' . $entity_it->getDisplayNameExt() . '<br/></span>';
+                                $text .= '<span class="ref-name">' . $entity_it->getDisplayNameExt() . '</span>';
                             }
                             $items[$entity_it->getId()] = $text;
                         }
@@ -809,14 +899,13 @@ class PageList extends ListTable
                 $this->uid_service->setBaseline($baselines[$entity_it->getId()]);
                 $text = $this->uid_service->getUidIconGlobal($entity_it, true);
                 if ( !$this instanceof PageBoard ) {
-                    $text .= '<span class="ref-name">' . $entity_it->getDisplayNameExt() . '<br/></span>';
+                    $text .= '<span class="ref-name">' . $entity_it->getDisplayNameExt() . '</span>';
                 }
                 $items[$entity_it->getId()] = $text;
                 $entity_it->moveNext();
             }
             $this->uid_service->setBaseline('');
         }
-
 		return $items;
 	}
 
@@ -844,13 +933,6 @@ class PageList extends ListTable
 			default:
 				switch ( $this->object->getAttributeType($attr) )
 			    {
-			        case 'text':
-			        case 'wysiwyg':
-
-			            drawMore($object_it, $attr);
-
-			            break;
-			            
 			        case 'date':
 			        	
 			            if ( $object_it->get($attr) != '' )
@@ -1012,23 +1094,29 @@ class PageList extends ListTable
 		}
 		else
 		{
-			return 999;
+			return defined('MAX_LIST_ITEMS') ? MAX_LIST_ITEMS : 1024;
 		}
 	}
 
 	function getGroup() 
 	{
-	    $values = $this->getFilterValues();
-		if ( $values['group'] != '' ) {
-            $values['group'] = array_shift(preg_split('/\./', $values['group']));
-			return $values['group'] != 'none'
-				? (in_array($values['group'], $this->getAllowedGroupFields()) ? $values['group'] : '')
-				: '';
-		}
-		else {
-			return parent::getGroup();
-		}
+	    if ( $this->group ) return $this->group;
+	    return $this->group = $this->buildGroup();
 	}
+
+	function buildGroup()
+    {
+        $values = $this->getFilterValues();
+        if ( $values['group'] != '' ) {
+            $values['group'] = array_shift(preg_split('/\./', $values['group']));
+            return $values['group'] != 'none'
+                ? (in_array($values['group'], $this->getAllowedGroupFields()) ? $values['group'] : '')
+                : '';
+        }
+        else {
+            return $this->getGroupDefault();
+        }
+    }
 
 	function getGroupSort()
     {
@@ -1122,7 +1210,7 @@ class PageList extends ListTable
 	    {
 	        $name = $object->getAttributeUserName($field);
 	        
-	        $value = $this->getColumnVisibility( $field );
+	        $value = PageList::getColumnVisibility( $field );
 	        	
 	        $script = "javascript: $(this).hasClass('checked') ? filterLocation.showColumn('".$field."', 0) : filterLocation.hideColumn('".$field."', 0); ";
 	        
@@ -1294,31 +1382,23 @@ class PageList extends ListTable
 	        if ( $_REQUEST['rows'] == '' ) $_REQUEST['rows'] = $this->getMaxOnPage();
 
 	        $rows_actions = array();
-	        $rows = array( 5, 20, 60, 100, 300 );
+	        $rows = array( 5, 20, 60, 100, 300, 500 );
 	        	
 	        foreach ( $rows as $value )
 	        {
-	            $checked = $_REQUEST['rows'] == $value;
-	
-	            $script = "javascript: filterLocation.setup( 'rows=".$value."', 0 ); ";
-	            	
-	            array_push( $rows_actions,
-	            array ( 'url' => $script, 'name' => $value.' '.translate('строк'),
-	            'checked' => $checked, 'radio' => true )
-	            );
+	            $script = "javascript: filterLocation.setup( 'rows=".$value."', 1 ); ";
+                $rows_actions[] = array ( 'url' => $script, 'name' => $value );
 	        }
 	        	
-	        $script = "javascript: filterLocation.setup( 'rows=all', 0 ); ";
+	        $script = "javascript: filterLocation.setup( 'rows=all', 1 ); ";
 	
 	        $rows_actions[] =
 				array (
 					'url' => $script,
-					'name' => translate('Все строки'),
-					'checked' => in_array($_REQUEST['rows'], array('999','all')), 'radio' => true,
+					'name' => '&infin;'
 				);
 
 	        $actions['rows'] = array (
-				'name' => translate('Количество строк'),
 				'items' => $rows_actions,
 				'uid' => 'rows'
 	        );
@@ -1420,38 +1500,36 @@ class PageList extends ListTable
 		    'list_mode' => $this->list_mode,
 			'created_datetime' => SystemDateTime::date(),
 			'scrollable' => $this->getScrollable(),
+            'draggable' => $this->getDraggable(),
 			'reorder' => false,
 			'sort_field' => $sort_field,
 			'sort_type' => $sort_type,
 			'show_header' => $this->IsNeedHeader(),
 			'autorefresh' => getFactory()->getAccessPolicy()->can_read($this->getObject()),
+            'groupAttribute' => $this->getGroup()
 		);
 	}
-	
+
+	function getDraggable() {
+        return $this->getObject()->hasAttribute('OrderNum');
+    }
+
 	function getSortingParms()
 	{
-		foreach( $this->getSorts() as $clause )
-		{
-			if ( !$clause instanceof SortAttributeClause ) continue;
-			
-			if ( $clause->getAttributeName() == $this->getGroup() ) continue;
-			
-			$sort_clause = $clause;
-			
-			break;
-		}
-		
-		return array( 
-				is_object($sort_clause) ? $sort_clause->getAttributeName() : '',
-				is_object($sort_clause) ? strtolower($sort_clause->getSortType()) : ''
-		);
+        $values = $this->getFilterValues();
+        list($field, $order) = preg_split('/\./', $values['sort']);
+        $order = $order == '' ? 'asc': ($order == 'D' ? 'desc' : 'asc');
+        return array($field, $order);
 	}
 	
-	function getRenderView()
-	{
+	function getRenderView() {
 	    return $this->view;
 	}
-	
+
+	function setRenderView( $view ) {
+        $this->view = $view;
+    }
+
 	function getTemplate()
 	{
 	    return "core/PageList.php";
@@ -1459,11 +1537,11 @@ class PageList extends ListTable
 	
 	function render( $view, $parms )
 	{
-	    $this->view = $view;
-
+	    $this->setRenderView($view);
 		echo $view->render( $this->getTemplate(), array_merge($parms, $this->getRenderParms()) );
-
-		unset($this->view);
-		$this->view = null;
 	}
+
+	function skipInvisiblePersisters( $flag ) {
+ 	    $this->skipIvisiblePersisters = $flag;
+    }
 }

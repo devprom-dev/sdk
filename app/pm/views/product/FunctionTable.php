@@ -1,5 +1,9 @@
 <?php
+include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStageWebMethod.php';
+include_once SERVER_ROOT_PATH.'pm/methods/FunctionFilterStateWebMethod.php';
 include "FunctionList.php";
+include "FunctionChart.php";
+include "FunctionTreeGrid.php";
 
 class FunctionTable extends PMPageTable
 {
@@ -7,12 +11,37 @@ class FunctionTable extends PMPageTable
 	{
 		switch ( $mode )
 		{
+            case 'chart':
+                return new FunctionChart( $this->getObject() );
+            case 'trace':
+                return new FunctionList( $this->getObject() );
 			default:
-				return new FunctionList( $this->getObject() );
+				return new FunctionTreeGrid( $this->getObject() );
 		}
 	}
 
-	function getNewActions()
+    function buildFiltersName() {
+        return md5($_REQUEST['view'].parent::buildFiltersName());
+    }
+
+    function getActions()
+    {
+        $actions = array();
+        $object = $this->getObject();
+
+        if ( getFactory()->getAccessPolicy()->can_create($object) && !getSession()->getProjectIt()->IsPortfolio() ) {
+            $actions[] = array();
+            $actions['import-excel'] = array(
+                'name' => text(2261),
+                'url' => '?view=import&mode=xml&object='.get_class($this->getObject()),
+                'uid' => 'import-excel'
+            );
+        }
+
+        return array_merge($actions, parent::getActions());
+    }
+
+    function getNewActions()
 	{
 		$type_it = getFactory()->getObject('FeatureType')->getAll();
 		
@@ -52,9 +81,6 @@ class FunctionTable extends PMPageTable
 			new FilterObjectMethod($this->getObject(), text(2094), 'parent')
 		);
 
-		$view = new FunctionFilterViewWebMethod();
-		$view->setFilter( $this->getFiltersName() );
-		
 		return array_merge( $filters, parent::getFilters() );
 	}
 	
@@ -64,7 +90,6 @@ class FunctionTable extends PMPageTable
 	    
 		$predicates = array(
 			new FeatureStateFilter( $filters['state'] ),
-			new FeatureStageFilter( $filters['stage'] ),
 			new CustomTagFilter( $this->getObject(), $filters['tag'] ),
 			new FilterAttributePredicate( 'Importance', $filters['importance'] ),
 			new FilterAttributePredicate( 'Type', $filters['type'] ),
@@ -92,5 +117,25 @@ class FunctionTable extends PMPageTable
         $filter = new FilterObjectMethod($tag, translate('Тэги'), 'tag');
         $filter->setIdFieldName('Tag');
         return $filter;
+    }
+
+    protected function getFamilyModules( $module )
+    {
+        return array(
+            'features-trace',
+            'features-list'
+        );
+    }
+
+    protected function getChartModules( $module )
+    {
+        return array(
+            'features-chart'
+        );
+    }
+
+    protected function getChartsModuleName()
+    {
+        return 'features-chart';
     }
 }

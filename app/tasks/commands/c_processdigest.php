@@ -1,5 +1,5 @@
 <?php
-
+use Devprom\ProjectBundle\Service\Email\DeadlinesReport;
 include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 include_once SERVER_ROOT_PATH.'pm/classes/notificators/EmailNotificator.php';
 include_once SERVER_ROOT_PATH.'pm/classes/notificators/DigestHandler.php';
@@ -117,7 +117,11 @@ class ProcessDigest extends TaskCommand
 					SystemDateTime::date('Y-m-d H:i') 
 			);
 		}
-		
+
+		if ( $notification_type == 'daily' ) {
+		    $this->processDeadlinesReport();
+        }
+
 		$this->logFinish();
 	}
 	
@@ -279,4 +283,18 @@ class ProcessDigest extends TaskCommand
 			$recipient_it->moveNext();
 		}
 	}
+
+	function processDeadlinesReport()
+    {
+        $service = new DeadlinesReport(getSession());
+        $userIt = getFactory()->getObject('UserActive')->getRegistry()->Query(
+            array(
+                new \FilterAttributePredicate('SendDeadlinesReport', 'Y')
+            )
+        );
+        while( !$userIt->end() ) {
+            $service->send($userIt);
+            $userIt->moveNext();
+        }
+    }
 }

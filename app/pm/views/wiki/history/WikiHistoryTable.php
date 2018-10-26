@@ -1,8 +1,5 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/communications/ProjectLogTable.php";
-
-include "WikiHistorySettingBuilder.php";
 include "WikiHistoryList.php";
 
 class WikiHistoryTable extends ProjectLogTable
@@ -13,7 +10,6 @@ class WikiHistoryTable extends ProjectLogTable
 	{
         $this->pageObject = $object;
 		parent::__construct(getFactory()->getObject('ChangeLog'));
-        getSession()->addBuilder( new WikiHistorySettingBuilder($this->getObjectIt()) );
 	}
 	
 	function buildObjectIt()
@@ -24,10 +20,12 @@ class WikiHistoryTable extends ProjectLogTable
 			$object_it = getFactory()->getObject(get_class($object_it->object))
                 ->getRegistry()->Query(
 				    array (
-				        new ParentTransitiveFilter($object_it->getId())
+				        new ParentTransitiveFilter($object_it->getId()),
+                        new SortDocumentClause()
                     )
 				);
 		}
+
 		return $object_it;
 	}
 	
@@ -66,7 +64,11 @@ class WikiHistoryTable extends ProjectLogTable
 	function getFilterPredicates()
 	{
 		$object_it = $this->getObjectIt();
-		if ( $object_it->get('ParentPage') == '' ) return parent::getFilterPredicates();
+
+		$predicates = array();
+		if ( $object_it->get('ParentPage') != '' ) {
+            $predicates[] = new FilterAttributeNotNullPredicate('Content');
+        }
 
 		return array_merge(
 		    array_filter(
@@ -75,9 +77,7 @@ class WikiHistoryTable extends ProjectLogTable
 					return !$predicate instanceof ChangeLogVisibilityFilter;
 				}
 		    ),
-            array(
-                new FilterAttributeNotNullPredicate('Content')
-            )
+            $predicates
         );
 	}
 
@@ -104,15 +104,25 @@ class WikiHistoryTable extends ProjectLogTable
 
 	function getRenderParms( $parms )
 	{
-		$page_it = $this->getObjectIt();
-		$parms = array_merge(
-		    $parms,
+        $uid = new ObjectUID();
+		return array_merge(
+            parent::getRenderParms( $parms ),
             array (
-                'navigation_title' => $page_it->getDisplayName(),
-                'navigation_url' => $page_it->getViewUrl(),
-                'title' => text(2238)
+                'navigation_url' => $this->getObjectIt()->getViewUrl(),
+                'nearest_title' => $uid->getUidWithCaption($this->getObjectIt())
             )
         );
-		return parent::getRenderParms( $parms );
 	}
-} 
+
+	function getCaption() {
+        return text(2238);
+    }
+
+    function getDefaultRowsOnPage() {
+        return 5;
+    }
+
+    function buildQuickReports()
+    {
+    }
+}

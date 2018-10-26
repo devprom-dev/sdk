@@ -70,6 +70,11 @@ class FieldIssueTrace extends FieldForm
  		if ( is_object($object_it) )
  		{
  			if ( !$this->getEditMode() ) $form->setObjectIt( $object_it );
+            $form->setCreateParameters(
+                array(
+                    'Request' => $object_it->getId()
+                )
+            );
  		}
  		
  		$form->setReadonly( $this->readOnly() );

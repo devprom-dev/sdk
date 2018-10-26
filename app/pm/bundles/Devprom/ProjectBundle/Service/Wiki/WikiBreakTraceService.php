@@ -9,7 +9,7 @@ class WikiBreakTraceService
         $this->factory = $factory;
     }
 
-    function execute( $object_it )
+    function execute( $object_it, $ignoreTraceIt = null )
     {
         if ( $object_it->getId() < 1 ) throw new \Exception('Unknown Wiki is given');
 
@@ -22,6 +22,10 @@ class WikiBreakTraceService
         );
         while ( !$trace_it->end() )
         {
+            if ( is_object($ignoreTraceIt) && $ignoreTraceIt->getId() == $trace_it->getId() ) {
+                $trace_it->moveNext();
+                continue;
+            }
             $registry->Store( $trace_it, array(
                 'IsActual' => 'N',
                 'RecordModified' => $trace_it->get('RecordModified'),

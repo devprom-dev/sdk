@@ -1,8 +1,7 @@
 <?php
-
 include "AutoActionList.php";
 
-class AutoActionTable extends PMPageTable
+class AutoActionTable extends SettingsTableBase
 {
     function getList() {
         return new AutoActionList( $this->getObject() );

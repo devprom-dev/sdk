@@ -6,13 +6,8 @@ class FunctionalAreaMenuProjectBuilder extends FunctionalAreaMenuBuilder
 {
     public function build( FunctionalAreaMenuRegistry & $set )
     {
+        $items = array ();
         $report = getFactory()->getObject('PMReport');
-        $item = $report->getExact('navigation-settings')->buildMenuItem();
-        $item['order'] = 9998;
-
-        $items = array (
-            'navigation-settings' => $item
-        );
 
         $uid = $this->getAreaUid();
         if ( $uid != '' ) {

@@ -29,13 +29,16 @@ class ShareWidgetService
 
     function createUser( $name, $login, $email )
     {
+        $password = \TextUtils::getRandomPassword();
+        $_REQUEST['Password'] = $password;
+
         $userIt = getFactory()->getObject('User')->getRegistry()->Merge(
             array(
                 'Caption' => $name,
                 'Login' => $login,
                 'Email' => $email,
-                'Password' => \TextUtils::getRandomPassword(),
-                'IsReadonly' => 'Y'
+                'Password' => $password,
+                'IsReadonly' => ''
             ),
             array(
                 'Email'

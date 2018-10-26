@@ -20,8 +20,6 @@ class TaskDetailsPersister extends ObjectSQLPersister
  		
  		$columns[] = " ( SELECT u.Caption FROM cms_User u WHERE u.cms_UserId = t.Assignee) TaskAssigneePhotoTitle ";
 
-        $columns[] = " ( SELECT u.State FROM pm_ChangeRequest u WHERE u.pm_ChangeRequestId = t.ChangeRequest) IssueState ";
-
  		return $columns;
  	}
 }

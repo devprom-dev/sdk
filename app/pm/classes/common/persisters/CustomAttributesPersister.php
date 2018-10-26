@@ -59,35 +59,9 @@ class CustomAttributesPersister extends ObjectSQLPersister
 		return array_keys($this->getReferenceNames());
 	}
 
-	function map( &$parms )
-	{
-		foreach( $this->getAttributesInfo() as $id => $attr ) {
-		    if ( $attr['name'] != 'UID' || $parms[$attr['name']] == '' ) continue;
-			if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
-                $idAttribute = $this->getObject()->getIdAttribute();
-			    if ( mb_strpos($attr['default'], 'ИД') === false || $parms[$idAttribute] != '' ) {
-			        $computed = $this->computeFormula($parms, $attr['default']);
-			        if ( $computed != '' ) $parms[$attr['name']] = $computed;
-                }
-			}
-		}
-	}
-
  	function add( $object_id, $parms )
  	{
 		$this->set($object_id, $parms);
-
-		foreach( $this->getAttributesInfo() as $attr_id => $attr ) {
-            if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' ) {
-                $idAttribute = $this->getObject()->getIdAttribute();
-                $parms[$idAttribute] = $object_id;
-                $uid = $this->computeFormula($parms, $parms[$attr['name']]);
-                if ( $uid != '' && $attr['name'] == 'UID' ) {
-                    $sql = "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$uid."' WHERE w.".$idAttribute." IN (".join(",", array($object_id)).")";
-                    DAL::Instance()->Query( $sql );
-                }
-            }
-		}
  	}
 
  	function modify( $object_id, $parms )
@@ -98,49 +72,64 @@ class CustomAttributesPersister extends ObjectSQLPersister
  	protected function set( $object_id, $parms )
  	{
  	 	$attributes = $this->getAttributesInfo();
- 		$ids = array_keys($attributes);
 
  		$value = getFactory()->getObject('pm_AttributeValue');
- 		$value_it = $value->getRegistry()->Query(
-			array (
-				new FilterAttributePredicate('CustomAttribute', $ids),
-				new FilterAttributePredicate('ObjectId', $object_id),
-				new ObjectSQLPasswordPersister(),
-				new SortAttributeClause('CustomAttribute')
-			)
- 		);
+        $value->disableVpd();
+        $valueRegistry = $value->getRegistry();
 
  		foreach( $attributes as $attr_id => $attr ) {
  		    if ( $parms['VPD'] != '' && $parms['VPD'] != $attr['VPD'] ) continue;
 
- 			$value_it->moveTo('CustomAttribute', $attr['id']);
- 			if ( $value_it->getId() == '' ) {
- 				// append
- 				$value_parms = array(
- 					'CustomAttribute' => $attr['id'],
- 					'ObjectId' => $object_id,
-                    'VPD' => $attr['VPD']
- 				);
- 				
- 				$this->setValueParms( $attr, $parms, $value_parms );
- 				$value_it->object->add_parms( $value_parms );
- 			}
- 			else {
- 				// update
- 				$value_column = $this->getTypeIt($attr)->getValueColumn();
-	 			$value_parms = array(
-	 				$value_column => $value_it->getHtmlDecoded( $value_column )
-	 			);
+            if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' )
+            {
+                $objectAttributes = $this->getObject()->getRegistryBase()->Query(
+                    array(
+                        new FilterInPredicate($object_id)
+                    )
+                )->getData();
+                $idAttribute = $this->getObject()->getIdAttribute();
+                $value = $this->computeFormula($objectAttributes, $attr['default']);
 
-	 			$this->setValueParms( $attr, $parms, $value_parms );
-	 			$value->modify_parms($value_it->getId(),
-					array_merge(
-						$value_parms,
-						array (
-							'VPD' => $value->getVpdValue()
-						)
-					));
- 			}
+                if ( $attr['name'] == 'UID' )
+                {
+                    if ( $this->getObject()->IsAttributeStored('UID') && in_array($parms[$attr['name']], array('',$attr['default'])) && $objectAttributes['TraceSourceRequirementBaselines'] == '' )
+                    {
+                        $value = DAL::Instance()->Escape($value);
+                        $objectAttributes['UID'] = DAL::Instance()->Escape($objectAttributes['UID']);
+
+                        DAL::Instance()->Query(
+                            "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$value."' WHERE w.".$idAttribute." IN (".join(",", array($object_id)).")"
+                        );
+
+                        if ( $objectAttributes['UID'] != '' ) {
+                            DAL::Instance()->Query(
+                                "UPDATE ".$this->getObject()->getEntityRefName()." w SET w.UID = '".$value."' WHERE w.UID = '".$objectAttributes['UID']."'"
+                            );
+                        }
+                    }
+                    continue;
+                }
+                else {
+                    $parms[$attr['name']] = $value;
+                }
+            }
+
+            if ( !array_key_exists($attr['name'], $parms) ) continue;
+
+            $value_parms = array(
+                'CustomAttribute' => $attr['id'],
+                'ObjectId' => $object_id
+            );
+            $this->setValueParms( $attr, $parms, $value_parms );
+
+            $valueRegistry->Merge(
+                $value_parms,
+                array(
+                    'CustomAttribute',
+                    'ObjectId'
+                )
+            );
+
  		}
  	}
 
@@ -150,13 +139,13 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		$ids = array_keys($attributes);
 
  		$value = getFactory()->getObject('pm_AttributeValue');
- 		$value_it = $value->getByRefArray(
- 			array( 'CustomAttribute' => $ids,
- 				   'ObjectId' => $object_it->getId() )
- 		);
- 		
- 		while( !$value_it->end() ) 
- 		{
+ 		$value_it = $value->getRegistry()->Query(
+ 		    array(
+ 		        new FilterAttributePredicate('CustomAttribute', $ids),
+                new FilterAttributePredicate('ObjectId', $object_it->getId())
+            )
+        );
+ 		while( !$value_it->end() ) {
 			$value->delete($value_it->getId());
  			$value_it->moveNext();
  		}
@@ -206,7 +195,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
  		foreach( $attribute_data as $ref_name => $attr )
  		{
-			if ( !preg_match("/^[a-zA-Z][a-zA-Z0-9\_]+$/i", $attr['name']) ) continue;
+			if ( !\TextUtils::checkDatabaseColumnName($attr['name']) ) continue;
             if ( $attr['name'] == 'UID' ) continue;
 
 			$type_it = $this->getTypeIt($attr);
@@ -232,7 +221,6 @@ class CustomAttributesPersister extends ObjectSQLPersister
 			array_push( $columns,
  				"(SELECT ".$column." FROM pm_AttributeValue cav ".
  				"  WHERE cav.ObjectId = ".$this->getPK($alias).
-				"    AND cav.VPD = ".$alias.".VPD ".
  				"    AND cav.CustomAttribute IN (".join(',',$attribute_ids[$ref_name]).") LIMIT 1) `".trim($attr['name'])."` "
  			);
  		}

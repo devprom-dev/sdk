@@ -13,11 +13,12 @@ include SERVER_ROOT_PATH."core/classes/model/events/AccessPolicyModelEventsHandl
 include SERVER_ROOT_PATH."core/classes/model/events/ChangesWaitLockReleaseTrigger.php";
 include SERVER_ROOT_PATH."core/classes/versioning/triggers/SnapshotDeleteCascadeTrigger.php";
 include SERVER_ROOT_PATH."core/classes/licenses/LicenseRegistryBuilderCommon.php";
-include SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include SERVER_ROOT_PATH."core/classes/project/ProjectMetadataBuilder.php";
+include SERVER_ROOT_PATH."core/classes/user/UserMetadataBuilder.php";
 include SERVER_ROOT_PATH."core/classes/resources/ContextResourceFileBuilder.php";
 include SERVER_ROOT_PATH."core/classes/model/events/UserCreatedEvent.php";
 include SERVER_ROOT_PATH."core/classes/system/SystemSettingsMetadataBuilder.php";
+include SERVER_ROOT_PATH."core/classes/licenses/LicensePermissionRegistryBuilderCommon.php";
 
 class SessionBase
 {
@@ -49,7 +50,9 @@ class SessionBase
                     new ResourceBuilderLanguageFiles(),
                     new ResourceBuilderPluginsLanguageFiles(),
                     new ProjectMetadataBuilder(),
-                    new LicenseRegistryBuilderCommon()
+                    new UserMetadataBuilder(),
+                    new LicenseRegistryBuilderCommon(),
+                    new LicensePermissionRegistryBuilderCommon()
  				),
 				getFactory()->getPluginsManager()->getCommonBuilders()
  		);
@@ -338,7 +341,6 @@ class SessionBase
  	{
  	    return array (
             new ModulePluginsBuilder($this->getSite()),
-            new PortfolioAllBuilder(),
 
             // triggers
             new AccessPolicyModelEventsHandler(),

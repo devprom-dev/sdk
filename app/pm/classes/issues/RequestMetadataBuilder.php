@@ -13,7 +13,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 {
     public function build( ObjectMetadata $metadata )
     {
-    	if ( $metadata->getObject()->getEntityRefName() != 'pm_ChangeRequest' ) return;
+    	if ( !$metadata->getObject() instanceof Request) return;
 
 		$metadata->addPersister( new WatchersPersister(array('Watchers')) );
 		$metadata->addPersister( new RequestOwnerPersister() );
@@ -53,7 +53,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		if ( $methodology_it->HasTasks() ) {
             $metadata->addAttribute( 'OpenTasks', 'REF_pm_TaskId', text(2117), false, false, '', 210);
             $metadata->addAttributeGroup('OpenTasks', 'skip-network');
-            $metadata->addPersister( new RequestTasksPersister(array('OpenTasks')) );
+            $metadata->addPersister( new RequestTasksPersister() );
             if ( !$methodology_it->HasTasks() ) {
                 $metadata->addAttributeGroup('OpenTasks', 'system');
             }
@@ -77,7 +77,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 		$metadata->setAttributeType( 'Function', 'REF_FeatureId' );
 
 		$strategy = $methodology_it->getEstimationStrategy();
-		if ( $strategy->hasEstimationValue() ) {
+		if ( $methodology_it->RequestEstimationUsed() && $strategy->hasEstimationValue() ) {
 			$title = translate($metadata->getAttributeCaption('Estimation'));
 			if ( strpos($title, ',') === false ) {
 				$metadata->setAttributeCaption( 
@@ -86,7 +86,7 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
 			}
 		}
 
-        $metadata->addAttribute('Watchers', 'REF_cms_UserId', translate('Наблюдатели'), true);
+        $metadata->addAttribute('Watchers', 'REF_WatcherId', translate('Наблюдатели'), true);
         $metadata->addAttributeGroup('Watchers', 'additional');
 
 		$metadata->addAttributeGroup('DeliveryDate', 'non-form');
@@ -121,6 +121,9 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
         foreach ( array('DueWeeks') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'skip-tooltip');
         }
+        foreach ( array('Tags','Watchers','Tasks', 'OpenTasks') as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'skip-chart');
+        }
 		foreach ( array('Environment','Caption','Description','Estimation','Attachment') as $attribute ) {
 			$metadata->addAttributeGroup($attribute, 'nonbulk');
 		}
@@ -151,10 +154,27 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
             'Iteration',
             'Estimation',
             'Project',
-            'Watchers'
+            'Watchers',
+            'Tags'
         );
         foreach ( $permission_attributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'permissions');
+        }
+
+        $firstColumnAttributes = array(
+            'Type',
+            'Priority',
+            'Estimation',
+            'Deadlines',
+            'OrderNum',
+            'PlannedRelease',
+            'ClosedInVersion',
+            'SubmittedVersion',
+            'Iteration',
+            'Owner'
+        );
+        foreach ( $firstColumnAttributes as $attribute ) {
+            $metadata->addAttributeGroup($attribute, 'form-column-first');
         }
     }
 }

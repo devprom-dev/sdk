@@ -81,22 +81,20 @@ class InstallForm extends AjaxForm
 
 	function getAttributeValue( $attribute )
 	{
-		if ( $attribute == 'MySQLHost' )
-		{
-			return 'localhost';
-		}
-		else if ( $attribute == 'DatabaseUser' )
-		{
-			return 'devprom';
-		}
-		else if ( $attribute == 'Database' )
-		{
-			return 'devprom';
-		}
-		else
-		{
-			return parent::getAttributeValue( $attribute );
-		}
+	    switch( $attribute ) {
+            case 'MySQLHost':
+                return defined('INSTALL_DB_SERVER') ? INSTALL_DB_SERVER : 'localhost';
+            case 'DatabaseUser':
+                return defined('INSTALL_DB_USER') ? INSTALL_DB_USER : 'devprom';
+            case 'DatabasePass':
+                return defined('INSTALL_DB_PASS') ? INSTALL_DB_PASS : '';
+            case 'Database':
+                return defined('INSTALL_DB_NAME') ? INSTALL_DB_NAME : 'devprom';
+            case 'SkipCreation':
+                return defined('INSTALL_DB_SKIP') ? INSTALL_DB_SKIP : 'N';
+            default:
+                return parent::getAttributeValue( $attribute );
+        }
 	}
 
 	function IsAttributeRequired( $attribute )
@@ -171,5 +169,15 @@ class InstallForm extends AjaxForm
             default:
                 parent::drawCustomAttribute($attribute, $value, $tab_index, $view);
         }
+    }
+
+    function getRenderParms($view)
+    {
+        return array_merge(
+            parent::getRenderParms($view),
+            array(
+                'actions_on_top' => false
+            )
+        );
     }
 }

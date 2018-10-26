@@ -167,7 +167,7 @@ public class KanbanTest extends ProjectTestBase {
 		ProjectNewPage npp = (new PageBase(driver)).createNewProject();
 		Template kanbanTemplate = new Template(this.kanbanTemplateName);
 		String p = DataProviders.getUniqueString();
-		 Project project = new Project("Kanban" + p, "kanban" + p, kanbanTemplate);
+		 Project project = new Project("Kanban" + p, "kanban" + DataProviders.getUniqueStringAlphaNum(), kanbanTemplate);
 		if (isGlobal) this.kanbanProject = project;
 		KanbanPageBase firstPage = (KanbanPageBase) npp
 				.createNew(project);

@@ -2,7 +2,14 @@
 
 class FeatureRequestPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes()
+    {
+        return array(
+            'Request', 'Fact'
+        );
+    }
+
+    function getSelectColumns( $alias )
  	{
  		return array( 
  			" ( SELECT GROUP_CONCAT(CAST(l.pm_ChangeRequestId AS CHAR)) " .

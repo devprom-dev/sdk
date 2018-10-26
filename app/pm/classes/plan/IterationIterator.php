@@ -268,7 +268,7 @@ class IterationIterator extends OrderedIterator
 		
 		$sql = "SELECT SUM(IFNULL(t.LeftWork, 0)) leftwork ".
 			   "  FROM pm_Task t ".
-			   " WHERE t.State IN ('".join("','", WorkflowScheme::Instance()->getNonTerminalStates(getFactory()->getObject('Task')))."') ".
+			   " WHERE t.FinishDate IS NULL ".
 			   "   AND t.Assignee = ".$userId.
   		 	   "   AND t.Release = " .$this->getId();
 
@@ -484,56 +484,6 @@ class IterationIterator extends OrderedIterator
 		return getFactory()->getObject('pm_Task')->createSQLIterator($sql);
 	}
  
- 	function getProgress()
-	{
-		global $model_factory;
-		
-		$task = $model_factory->getObject('pm_Task');
-		$progress = array();
-		
- 		$sql = " SELECT COUNT(1) Total, SUM(CASE t.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved, 'D' Kind " .
- 			   "   FROM pm_Task t, pm_TaskType tt " .
- 			   "  WHERE t.Release = ".$this->getId().
- 			   "    AND t.TaskType = tt.pm_TaskTypeId " .
- 			   "	AND tt.ReferenceName IN ('support','development')".
- 			   "  UNION ".
- 		       " SELECT COUNT(1) Total, SUM(CASE t.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved, 'A' Kind " .
- 			   "   FROM pm_Task t, pm_TaskType tt " .
- 			   "  WHERE t.Release = ".$this->getId().
- 			   "    AND t.TaskType = tt.pm_TaskTypeId " .
- 			   "	AND tt.ReferenceName IN ('analysis','design')".
- 			   "  UNION ".
- 		       " SELECT COUNT(1) Total, SUM(CASE t.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved, 'H' Kind " .
- 			   "   FROM pm_Task t, pm_TaskType tt " .
- 			   "  WHERE t.Release = ".$this->getId().
- 			   "    AND t.TaskType = tt.pm_TaskTypeId " .
- 			   "	AND tt.ReferenceName IN ('documenting')".
- 			   "  UNION ".
- 		       " SELECT COUNT(1) Total, SUM(CASE t.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved, 'T' Kind " .
- 			   "   FROM pm_Task t, pm_TaskType tt " .
- 			   "  WHERE t.Release = ".$this->getId().
- 			   "    AND t.TaskType = tt.pm_TaskTypeId " .
- 			   "	AND tt.ReferenceName IN ('testing')".
- 			   "  UNION ".
-		 	   " SELECT COUNT(1), SUM(CASE r.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved, 'R' Kind " .
-		 	   "   FROM pm_ChangeRequest r" .
-		 	   "  WHERE EXISTS (SELECT 1 FROM pm_Task t " .
-		 	   "				 WHERE t.ChangeRequest = r.pm_ChangeRequestId " .
-		 	   "				   AND t.Release = ".$this->getId().") ";
- 		
- 		$it = $this->object->createSQLIterator( $sql );
-		
- 		while ( !$it->end() )
- 		{
- 			$progress[$it->get('Kind')][0] += $it->get('Total');
- 			$progress[$it->get('Kind')][1] += $it->get('Resolved');
-
- 			$it->moveNext();
- 		}
-
-		return $progress;
-	}
-
 	function getStartDate()
 	{
 		return $this->getDateFormat('StartDate');
@@ -600,4 +550,8 @@ class IterationIterator extends OrderedIterator
         );
         return $it->get('diff');
 	}
+
+    function getCommentsUrl() {
+        return '';
+    }
 }

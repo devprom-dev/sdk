@@ -447,7 +447,7 @@ class Metaobject extends StoredObjectDB
 
     function formatValueForDB( $name, $value )
     {
-        if ( $this->IsReference($name) && $value > 0 ) {
+        if ( $this->IsReference($name) && is_numeric($value) && $value > 0 ) {
             $ref = $this->getAttributeObject($name);
             if ( $ref->getEntityRefName() != 'entity' ) {
                 $ref_it = $ref->getRegistryBase()->Query(

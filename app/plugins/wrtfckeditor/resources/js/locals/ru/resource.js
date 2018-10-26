@@ -18,4 +18,7 @@ var ckeditor_resources =
 	'comment-title': 'Комментарий',
 	'text-template-search': 'Вставить шаблон',
 	'text-template-dlg': 'Выбор шаблона текста',
+	'embedhtml-dialog': 'Вставить HTML',
+	'embedhtml-text': 'Скопируйте сюда HTML-текст:',
+    'imagemulti-button': 'Вставить изображения'
 };

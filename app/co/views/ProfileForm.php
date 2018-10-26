@@ -41,10 +41,9 @@ class ProfileForm extends AjaxForm
 			case 'Phone':
 			case 'Photo':
             case 'NotificationEmailType':
-				return true;
-
             case 'NotificationTrackingType':
-                return defined('PERMISSIONS_ENABLED') && PERMISSIONS_ENABLED;
+            case 'SendDeadlinesReport':
+				return true;
 
 			case 'Login':
 				return $this->IsAttributeModifable($attribute);

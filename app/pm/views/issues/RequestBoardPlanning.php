@@ -59,7 +59,7 @@ class RequestBoardPlanning extends RequestBoard
                         $it->getData(),
                         array(
                             $object->getIdAttribute() => 0,
-                            'Caption' => translate('<нет значения>')
+                            'Caption' => ''
                         )
                     )
                 ),
@@ -95,10 +95,14 @@ class RequestBoardPlanning extends RequestBoard
         $names = array();
         while ( !$attribute_it->end() )
         {
-            $title = $name.': '.$attribute_it->get('Caption');
+            $title = $attribute_it->get('Caption') == ''
+                ? translate('Бэклог')
+                : $name.': '.$attribute_it->get('Caption');
+
             if ( $attribute_it->getId() > 0 && $attribute_it->get('VPD') != getSession()->getProjectIt()->get('VPD') ) {
                 $title = '{'.$attribute_it->get('ProjectCodeName').'} '.$title;
             }
+
             $names[$attribute_it->getId()] = $title;
             $attribute_it->moveNext();
         }
@@ -199,7 +203,7 @@ class RequestBoardPlanning extends RequestBoard
                 $object = $this->getObject()->getAttributeObject($this->getBoardAttribute());
                 $method = new ObjectCreateNewWebMethod($object);
                 if ( $method->hasAccess() ) {
-                    echo '<div class="board-header-op"><a class="btn btn-mini btn-success" href="'.$method->getJSCall().'"><i class="icon icon-white icon-plus"></i></a></div>';
+                    echo '<div class="board-header-op"><a class="btn btn-xs btn-success" href="'.$method->getJSCall().'"><i class="icon icon-white icon-plus"></i></a></div>';
                 }
             }
             else {
@@ -239,7 +243,7 @@ class RequestBoardPlanning extends RequestBoard
 
         $workloadData = $this->workload[$groupValue]['Iterations'][intval($boardValue)];
         if ( is_array($workloadData) ) {
-            echo $this->getTable()->getView()->render('pm/UserWorkloadDetails.php', array (
+            echo $this->getRenderView()->render('pm/UserWorkloadDetails.php', array (
                 'data' => array( 'Iterations' => array($workloadData) ),
                 'measure' => $this->strategy
             ));

@@ -76,7 +76,6 @@ public class TestReviewScreenCast extends ProjectTestBase{
           improvementRecoveryStage();
           releaseTestingStage();
           versionTestingStage();
-          planGroupTestingStage();
 	}
         
     private void developmentDocsStage() throws InterruptedException {
@@ -247,7 +246,6 @@ public class TestReviewScreenCast extends ProjectTestBase{
         catch (InterruptedException e) {
     	}
         kanbanBoard.moveToAnotherRelease(bug2.getNumericId(), 0, "Разработка (");
-        kanbanBoard.clickSubmit();
         try {
     		Thread.sleep(2000);
     	}
@@ -268,7 +266,7 @@ public class TestReviewScreenCast extends ProjectTestBase{
         foundBugsPage.checkAll();
         foundBugsPage.moreStartTesting();
         startTestingPage.startTest("3.4.1", "IE");
-        RequestDonePage requestDonePage = testingPage.readyWishWithOutTime();
+        RequestDonePage requestDonePage = testingPage.rejectWishWithOutTime();
         requestDonePage.submit();
         testingPage.passTest(testPlan);
         requestDonePage = testingPage.readyWishWithOutTime();
@@ -294,7 +292,7 @@ public class TestReviewScreenCast extends ProjectTestBase{
             Thread.sleep(timeOut);
             Template kanbanTemplate = new Template(this.kanbanTemplateName);
             String p = DataProviders.getUniqueString();
-            Project project = new Project("Тестирование продукта", "kanban" + p, kanbanTemplate);
+            Project project = new Project("Тестирование продукта", "kanban" + DataProviders.getUniqueStringAlphaNum(), kanbanTemplate);
             if (isGlobal) this.kanbanProject = project;
             KanbanPageBase kanbanPage = (KanbanPageBase) newProjectPage.createNew(project);
             Thread.sleep(timeOut);
@@ -318,17 +316,5 @@ public class TestReviewScreenCast extends ProjectTestBase{
         testScenario.setTemplate("Приемочный сценарий");
         testScenarioNewPage.createNewScenarioWithTemplate(testPlan);
         testPlanViewPage.compareWithVersion("Начальная");
-    }
-
-    private void planGroupTestingStage() {
-        KanbanTasksPage taskBoardPage = (new KanbanPageBase(driver)).gotoQATaskBoard();
-        KanbanAddSubtaskPage subTaskNewPage = taskBoardPage.addSubtask();
-        KanbanTask testTask = new KanbanTask("Выполнить проверку по тест-плану на регресс");
-        testTask.setType("Тестирование");
-        subTaskNewPage.createSubtask(testTask);
-        testTask.setId((new KanbanTaskBoardPage(driver)).getIDTaskByName(testTask.getName()));
-        (new KanbanTaskBoardPage(driver)).clickToContextMenuItem(testTask.getId(), "Взять в работу");
-        (new KanbanTaskBoardPage(driver)).clickToContextMenuItem(testTask.getId(), "Выполнить");
-        (new KanbanTaskBoardPage(driver)).setTime("2ч");
     }
 }

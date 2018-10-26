@@ -91,7 +91,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             Thread.sleep(timeOut);
             Template kanbanTemplate = new Template(this.kanbanTemplateName);
             String p = DataProviders.getUniqueString();
-            Project project = new Project("Разработка по Kanban", "kanban" + p, kanbanTemplate);
+            Project project = new Project("Разработка по Kanban", "kanban" + DataProviders.getUniqueStringAlphaNum(), kanbanTemplate);
             project.setDemoData(true);
             if (isGlobal) this.kanbanProject = project;
             KanbanPageBase kanbanPage = (KanbanPageBase) newProjectPage.createNew(project);
@@ -164,7 +164,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
         requirement1 = new Requirement("Авторизованный доступ");
         requirement1.setTemplateName("OpenUP");
         requirement1.setParentPage(parentRequirement);
-        requirement1.setTemplateName("Вариант использования (OpenUP)");
+        requirement1.setTemplateName("OpenUP");
         requirementNewPage.createFromBoard(requirement1, new File(Configuration.getPathToRequestKanbanImage()));
         FILELOG.debug("Created new requirement " + requirement1.getName());
     }
@@ -184,7 +184,6 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
                 "\n" +
                 "Alice -> Bob: Another authentication Request\n" +
                 "Alice <-- Bob: another authentication Response";
-     //   File file = new File(Configuration.getPathToRequestKanbanImage());
         requirementNewPage.createWithUML(requirement2,uml);
         FILELOG.debug("Created new requirement " + requirement2.getName());
     }
@@ -247,25 +246,8 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
 
     private void developmentStage(KanbanTaskViewPage viewTaskPage, KanbanPageBase kanbanPage) throws InterruptedException {
             doDevelopment(viewTaskPage);
-            KanbanTaskBoardPage taskBoardPage = kanbanPage.gotoTaskBoard();
-            Thread.sleep(timeOut);
-            String taskID1 = taskBoardPage.getIDTaskByName(taskName1);
-            String taskID2 = taskBoardPage.getIDTaskByName(taskName2);
-            taskBoardPage.clickToContextMenuItem(taskID1, "Взять в работу");
-            KanbanSubTaskEditPage taskEditPage = taskBoardPage.doubleClickOnTask(taskName1);
-            taskEditPage.openTabWishes();
-            Thread.sleep(bigTimeOut);
-            taskEditPage.cancel();
-            kanbanPage.gotoCommits();
-            Thread.sleep(bigTimeOut);
-            kanbanPage.gotoTaskBoard();
-            taskBoardPage.clickToContextMenuItem(taskID1, "Изменить");
-            (new KanbanSubTaskEditPage(driver)).addSourceCode("60010c8");
-            (new KanbanSubTaskEditPage(driver)).saveChanges();
-            taskBoardPage.clickToContextMenuItem(taskID1, "Выполнить");
-            taskBoardPage.setTime("2ч");
-            taskBoardPage.clickToContextMenuItem(taskID2, "Выполнить");
-            taskBoardPage.setTime("1ч");
+            //kanbanPage.openTask(wish1.getId());
+            viewTaskPage.doDevelopmentComplete();
             KanbanBuildsPage buildsPage = kanbanPage.gotoBuilds();
             KanbanNewBuildPage newBuildPage = buildsPage.clickNewBuild();
             newBuildPage.createNewBuild("3.4.1", "В сборку вошли изменения по всем основным веткам, по которым прошли тесты", "");
@@ -274,11 +256,10 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             Thread.sleep(timeOut);
             kanbanPage.selectWish(wish1.getId());
             RequirementsTracePage requirementTracePage = kanbanPage.massRequirements();
-            //здесь остановились
             createTestScenario1(requirementTracePage);
             createTestScenario2(requirementTracePage);
             Thread.sleep(timeOut);
-            newBuildPage.gotoKanbanBoardFromBuildPage();
+            newBuildPage.gotoKanbanBoard();
             kanbanPage.clickToContextMenuItem(wish1.getId(), "Начать тестирование");
             TestScenarioTestingPage testingPage = kanbanPage.startTesting("3.4.1");
             testingPage.passTest(test1);
@@ -287,13 +268,12 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             Thread.sleep(bigTimeOut);
             testingPage.rejectWish("Не прошел тест");
             Thread.sleep(timeOut);
-             newBuildPage.gotoKanbanBoardFromBuildPage();
+            newBuildPage.gotoKanbanBoard();
             Thread.sleep(timeOut);
             kanbanPage.openTask(wish1.getId());
             viewTaskPage.doDevelopmentComplete();
             Thread.sleep(timeOut);
-            newBuildPage.gotoKanbanBoardFromBuildPage();
-        
+            newBuildPage.gotoKanbanBoard();
     }
 
     private void editRequirementsStage(KanbanTaskViewPage viewTaskPage, KanbanPageBase kanbanPage) throws InterruptedException {
@@ -315,7 +295,6 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
             (new KanbanTaskBoardPage(driver)).setTimeRequirement("2ч");
             Thread.sleep(3000);
             kanbanPage.moveToAnotherRelease(wish2.getNumericId(), 1, "Разработка (");
-            kanbanPage.clickSubmit();
             Thread.sleep(1000);
             kanbanPage.openTask(wish2.getId());
 	            viewTaskPage.openRequirement(requirement1.getName());
@@ -359,7 +338,7 @@ public class RequestsKanbanScreenCast extends ProjectTestBase{
 		kanbanPage.moveToAnotherRelease(wish1.getNumericId(), 0, "Документирование (");
 		Thread.sleep(timeOut);
 		kanbanPage.moveToAnotherRelease(wish1.getNumericId(), 0, "Готово (");
-		kanbanPage.clickSubmit();
+		//kanbanPage.clickSubmit();
 		Thread.sleep(timeOut);
     }
 }

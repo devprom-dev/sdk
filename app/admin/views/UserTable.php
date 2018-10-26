@@ -88,4 +88,9 @@ class UserTable extends PageTable
 
         return $actions;
     }
+
+    function getCaption()
+    {
+        return translate('Список пользователей');
+    }
 }

@@ -737,23 +737,23 @@ class StoredObjectDB extends Object
 			foreach( $persisters as $persister ) {
 				if ( !$persister instanceof ObjectPersister ) continue;
 				if ( count(array_intersect(array($aggregate->getAggregatedAttribute(), $aggregate->getAttribute()), $persister->getAttributes())) < 1 ) continue;
-				$usedPersisters[] = $persister;
+				$usedPersisters[get_class($persister)] = $persister;
 			}
 
 			// custom attributes are part of inner select already, just skip it
 			if ( $this->getAttributeOrigin($aggregate->getAttribute()) != ORIGIN_CUSTOM ) {
 				$column = trim($aggregate->getInnerColumn());
-				if ( $column != '' ) array_push( $inner_columns, $column );
+				if ( $column != '' ) $inner_columns[$column] = $column;
 			}
 			
 			$column = trim($aggregate->getColumn());
-			if ( $column != '' ) array_push( $outer_columns, $column );
-			
+			if ( $column != '' ) $outer_columns[$column] = $column;
+
 			$column = trim($aggregate->getAggregatedInnerColumn());
-			if ( $column != '' ) array_push( $agg_attrs, $column );
+			if ( $column != '' ) $agg_attrs[$column] = $column;
 			
 			$column = $aggregate->getAggregateColumn();
-			if ( $column != '' ) array_push( $agg_columns, $column );
+			if ( $column != '' ) $agg_columns[$column] = $column;
 			
 			$alias = $aggregate->getAlias();
 		}
@@ -804,6 +804,7 @@ class StoredObjectDB extends Object
 
         foreach( $predicates as $filter )
         {
+            $filter->setObject($this);
             if ( $filter instanceof FilterModifiedAfterPredicate || $filter instanceof FilterModifiedBeforePredicate ) {
                 $filter->setAlias('h');
                 $agg_predicate .= $filter->getPredicate();
@@ -813,6 +814,7 @@ class StoredObjectDB extends Object
         {
 			if ( $filter instanceof FilterModifiedAfterPredicate || $filter instanceof FilterModifiedBeforePredicate ) continue;
 
+            $filter->setObject($this);
             $filter->setAlias('t');
             $filter_sql = $filter->getPredicate();
 
@@ -1091,13 +1093,13 @@ class StoredObjectDB extends Object
 
 		getFactory()->resetCachedIterator($this);
 		
-		foreach ( $this->persisters as $persister )
-		{
+		foreach ( $this->persisters as $persister ) {
 			$persister->add( $id, $parms );
 		}
-		
+
         if ( count($imageattributes) > 0 || count($fileattributes) > 0  )
         {
+            getFactory()->resetCachedIterator($this);
 			$new_object_it = $this->getExact($id);
 			
 			// загружаем изображения
@@ -1110,12 +1112,15 @@ class StoredObjectDB extends Object
 			}
 		}
 
-		if ( $this->getNotificationEnabled() )
+		if ( $this->getNotificationEnabled() && $id > 0 )
 		{
-    		$new_object_it = $this->getExact($id);
-    		
-    		if ( $new_object_it->getId() > 0 )
-    		{
+            getFactory()->resetCachedIterator($this);
+    		$new_object_it = $this->getRegistryBase()->Query(
+    		    array(
+    		        new FilterInPredicate($id)
+                )
+            );
+    		if ( $new_object_it->getId() > 0 ) {
     			getFactory()->getEventsManager()->notify_object_add($new_object_it, $parms);
     		}
 		}
@@ -1249,12 +1254,10 @@ class StoredObjectDB extends Object
 			}
 		}
 
-		$affected_rows = $this->getRegistryDefault()->Store( $prev_object_it, $parms );
+        $now_object_it = $this->getRegistryDefault()->Store( $prev_object_it, $parms );
 		
 		if ( count($imageattributes) > 0 || count($fileattributes) > 0 )
 		{
-		    $now_object_it = $this->getExact($id);
-		    
 		    foreach( $imageattributes as $attribute )
 		    {
 		        $this->fs_image->storeFile( $attribute, $now_object_it );
@@ -1266,14 +1269,7 @@ class StoredObjectDB extends Object
 		    }
 		}
 		
-		if ( $this->getNotificationEnabled() )
-		{
-		    if ( !is_object($now_object_it) ) $now_object_it = $this->getExact($id);
-
-		    getFactory()->getEventsManager()->notify_object_modify($prev_object_it, $now_object_it, $parms);
-		}
-		
-		return $affected_rows;
+		return is_object($now_object_it) ? $now_object_it->count() : 0;
 	}
 
 	//----------------------------------------------------------------------------------------------------------
@@ -1291,20 +1287,16 @@ class StoredObjectDB extends Object
 		switch ( $name )
 		{
 			case 'VPD':
-				
 				$attribute_type = 'varchar';
-				
 				break;
 				
 			default:
 				$attribute_type = $this->getAttributeType($name);
-				
-				if ( $attribute_type == '' )
-				{
+				if ( $attribute_type == '' ) {
 					$attribute_type = strpos($name, "(") !== false ? 'varchar' : 'integer';
 				}
 		}
-		
+
 		switch( strtolower($attribute_type) )
 		{
 			case 'date':

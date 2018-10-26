@@ -10,7 +10,7 @@ class PMCustomReportIterator extends OrderedIterator
                 
                 $value = parent::get($attr);
                 
-                if ( $caption == '' )
+                if ( $value == '' )
                 {
                 	$report_id = parent::get('ReportBase');
                 	

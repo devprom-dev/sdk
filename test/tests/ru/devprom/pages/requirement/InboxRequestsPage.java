@@ -18,7 +18,7 @@ import ru.devprom.pages.kanban.KanbanTaskViewPage;
  */
 public class InboxRequestsPage extends RequirementBasePage{
     
-    @FindBy(xpath = "//*[@id='append-issue']")
+    @FindBy(xpath = "//*[@id='new-issue']")
 	protected WebElement addWishBtn;
 
     public InboxRequestsPage(WebDriver driver) {
@@ -32,16 +32,16 @@ public class InboxRequestsPage extends RequirementBasePage{
 
     public String getIDWishByName(String name) {
          String ids;
-        ids = driver.findElement(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(text(),'"+
+        ids = driver.findElement(By.xpath("//tr[contains(@id,'issueslist1_row_')]/td[@id='caption' and contains(.,'"+
                 name+"')]/preceding-sibling::td[@id='uid']")).getText();
         String id = ids.substring(1, ids.length()-1);
         FILELOG.debug("Get UID of wish" + id);
         return id; 
     }
 
-    public KanbanTaskViewPage clickOnWish(String id) {
-        driver.findElement(By.xpath("//*[@id='uid']/a[contains(text(),'"+id+"')]")).click();
-        return new KanbanTaskViewPage(driver);
+    public IssueViewPage clickOnWish(String id) {
+        driver.findElement(By.xpath("//*[@id='uid']/a[contains(.,'"+id+"')]")).click();
+        return new IssueViewPage(driver);
     }
     
     

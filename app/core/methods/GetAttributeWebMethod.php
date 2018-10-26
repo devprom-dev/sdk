@@ -29,7 +29,7 @@ class GetAttributeWebMethod extends WebMethod
     		 		break;
     
     	 		default:
-    		 		$result = html_entity_decode($object_it->getHtmlValue($result), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
+    		 		$result = html_entity_decode($object_it->getHtml($result), ENT_COMPAT | ENT_HTML401, APP_ENCODING);
     	 	}
     	 	
     	 	echo $result;

@@ -7,8 +7,6 @@ class PMStaticPageList extends PMPageList
  		parent::__construct( $object );
  	}
 
-	function IsNeedToDisplayNumber( ) { return false; }
-
 	function IsNeedToDelete( ) { return false; }
 	
 	function getItemActions( $dummy, $object_it )

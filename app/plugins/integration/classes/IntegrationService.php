@@ -46,7 +46,7 @@ class IntegrationService
         $queue = array();
 
         try {
-            $queue = $this->getItemsQueue();
+            $queue = $this->getItemsQueue($this->itemsToProcess);
 
             if ( count($queue['items']) < 1 ) {
                 $this->getLogger()->info('Integration queue is empty for '.$this->object_it->getDisplayName());
@@ -173,14 +173,18 @@ class IntegrationService
                         foreach( $results as $result ) {
                             if ( $data['Id'] != '' ) continue; // skip modifications
                             $id = $this->self_channel->getKeyValue($result);
+
                             if ( $id != '' ) {
-                                $linkObject->add_parms(
+                                $linkObject->getRegistry()->Merge(
                                     array (
                                         'ObjectId' => $id,
                                         'ObjectClass' => $item['class'],
                                         'URL' => $data['SourceId'],
                                         'Integration' => $this->object_it->getId(),
                                         'ExternalId' => $item['id']
+                                    ),
+                                    array(
+                                        'Integration', 'ExternalId', 'ObjectClass'
                                     )
                                 );
                                 $this->links[$item['class'].$id] = $data['SourceId'];
@@ -194,13 +198,17 @@ class IntegrationService
                                 $url = $this->object_it->get('URL') .
                                     preg_replace('/\{parent\}/', $data['{parent}'],
                                         preg_replace('/\{id\}/', $id, $classMapping['link']));
-                                $linkObject->add_parms(
+
+                                $linkObject->getRegistry()->Merge(
                                     array(
                                         'ObjectId' => $item['id'],
                                         'ObjectClass' => $item['class'],
                                         'URL' => $url,
                                         'Integration' => $this->object_it->getId(),
                                         'ExternalId' => $id
+                                    ),
+                                    array(
+                                        'Integration', 'ExternalId', 'ObjectClass'
                                     )
                                 );
                                 $this->links[$item['class'] . $item['id']] = $url;
@@ -251,7 +259,7 @@ class IntegrationService
         $this->getLogger()->info('Integration process has been completed for '.$this->object_it->getDisplayName());
     }
 
-    protected function getItemsQueue( $limit = 1000 )
+    protected function getItemsQueue( $limit = 256 )
     {
         $queue = json_decode($this->object_it->getHtmlDecoded('ItemsQueue'), true);
         if ( count($queue['items']) > 0 ) return $queue;

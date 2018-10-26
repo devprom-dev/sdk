@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH.'pm/methods/c_date_methods.php';
+include_once SERVER_ROOT_PATH.'pm/methods/c_request_methods.php';
 include "LeadAndCycleTimeChart.php";
 
 class LeadAndCycleTimeTable extends PMPageTable
@@ -20,7 +21,9 @@ class LeadAndCycleTimeTable extends PMPageTable
 				new RequestFinishAfterPredicate($values['modifiedafter']),
 				new RequestAuthorFilter( $values['author'] ),
 				new FilterAttributePredicate('Type', $values['type']),
-				new FilterAttributePredicate('Priority', $values['priority'])
+				new FilterAttributePredicate('Priority', $values['priority']),
+                new FilterAttributePredicate( 'Owner', $values['owner'] ),
+                new RequestEstimationFilter($values['estimation'])
 			)
  		);
  	}
@@ -36,11 +39,28 @@ class LeadAndCycleTimeTable extends PMPageTable
 			$filter,
 			new FilterObjectMethod( getFactory()->getObject('Priority'), '', 'priority'),
 			$this->buildTypeFilter(),
-			$this->buildFilterAuthor()
+			$this->buildFilterAuthor(),
+            $this->buildFilterOwner(),
+            $this->buildFilterEstimation()
 		);
 		return array_merge( $filters, parent::getFilters() );
 	}
-	
+
+    protected function buildFilterOwner() {
+        return new FilterObjectMethod(
+            getFactory()->getObject('ProjectUser'),
+            translate($this->getObject()->getAttributeUserName('Owner')),
+            'owner'
+        );
+    }
+
+    protected function buildFilterEstimation()
+    {
+        return new ViewRequestEstimationWebMethod(
+            getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy()->getFilterScale()
+        );
+    }
+
 	function buildTypeFilter()
 	{
 		$type_method = new FilterObjectMethod( getFactory()->getObject('pm_IssueType'), translate('Тип'), 'type');
@@ -52,4 +72,8 @@ class LeadAndCycleTimeTable extends PMPageTable
 	protected function buildFilterAuthor() {
 		return new FilterObjectMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
 	}
+
+	function getFiltersDefault() {
+        return array('type','priority','modifiedafter','owner','estimation');
+    }
 }

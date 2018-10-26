@@ -25,6 +25,10 @@ class MigrateDatabaseInnoDB extends Installable
     	while( !$it->end() )
     	{
     		$table_name = $it->get(0);
+    		if ( strpos($table_name, 'v_') !== false ) { // skip custom views
+                $it->moveNext();
+                continue;
+            }
     		$this->info('Change engine for '.$table_name);
 			DAL::Instance()->Query("ALTER TABLE ".$table_name." engine=InnoDB");
     		$it->moveNext();

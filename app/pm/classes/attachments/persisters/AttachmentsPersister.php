@@ -2,7 +2,14 @@
 
 class AttachmentsPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes()
+    {
+        return array(
+            'Attachment'
+        );
+    }
+
+    function getSelectColumns( $alias )
  	{
  		$columns = array();
  		

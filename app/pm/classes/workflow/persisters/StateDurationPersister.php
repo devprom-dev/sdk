@@ -36,6 +36,13 @@ class StateDurationPersister extends ObjectSQLPersister
 			"			   WHERE self.pm_StateObjectId = ".$alias.".StateObject), ".
 			"            UNIX_TIMESTAMP(".$alias.".RecordCreated)/ 3600 ) ) StateDurationRecent " );
 
+        array_push( $columns,
+            "( SELECT TO_DAYS(NOW()) - ".
+            "    IFNULL( (SELECT TO_DAYS(MAX(self.RecordCreated)) ".
+            "               FROM pm_StateObject self ".
+            "			   WHERE self.pm_StateObjectId = ".$alias.".StateObject), ".
+            "            TO_DAYS(".$alias.".RecordCreated) ) ) StateDaysRecent " );
+
         if ( $this->getObject()->getAttributeType('LifecycleDuration') != '' ) {
             array_push( $columns,
                 "(IFNULL(".$alias.".LifecycleDuration, 0) + 

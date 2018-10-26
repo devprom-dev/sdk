@@ -204,7 +204,7 @@ class IteratorBase
 
 	function getHtml( $attribute )	
 	{
-		return $this->getHtmlValue( $this->get_native( $attribute ) );
+		return $this->getHtmlValue( $this->get( $attribute ) );
 	}
 	
 	static function getHtmlValue( $text )	
@@ -214,9 +214,7 @@ class IteratorBase
 		$shrink_length = 30;
 
 		$text = preg_replace('/&quot;/', '"', $text);
-		$text = preg_replace_callback(
-			'/(^|[^=]"|[^="])((http:|https:)\/\/([\w\.\/:\-\?\%\=\#\&\;\+\,\(\)\[\]]+[\w\.\/:\-\?\%\=\#\&\;\+\,]{1}))/im', 
-				htmllink_shrinker_callback, $text );
+		$text = preg_replace_callback(TextUtils::REGEX_SHRINK, array(TextUtils::class, 'shrinkLongUrl'), $text);
         $text = preg_replace_callback('/\[url=([^\]]+)\s+text=([^\]]+)]/im', iterator_url_callback, $text);
 		$text = preg_replace_callback('/\[url=([^\]]+)]/im', iterator_url_callback, $text);
         $text = preg_replace_callback('/(^|[^\w\.\,\:\;\/\#">]+)(\[?[A-Z]{1}-[0-9]+\]?)([\s]*|$)/mi', iterator_uid_callback, $text);
@@ -385,6 +383,7 @@ class IteratorBase
 	        if ( $attribute == 'RecordCreated' ) continue;
 	        if ( $attribute == 'RecordModified' ) continue;
 	        if ( $attribute == 'OrderNum' ) continue;
+	        if ( !$this->object->IsAttributeStored($attribute) ) continue;
 	        
 	        $key[$attribute] = $this->data[$attribute];
 	    }
@@ -568,20 +567,11 @@ class IteratorBase
 		if ( is_null($object) )
 		{
 		    $object = $this->object->getAttributeObject( $attribute );
-		
 		    if ( is_null($object) ) return $this->object->createCachedIterator(array());
 		}
 		
 	    $object->resetFilters();
-
-		if ( $this->data[$attribute] == '' )
-		{
-			return $object->createCachedIterator(array());
-		}
-		else
-		{
-			return $object->getExact(preg_split('/,/', $this->data[$attribute]));
-		}
+		return $object->getExact(preg_split('/,/', $this->data[$attribute]));
 	}
 	
 	function modify( $parms ) 
@@ -701,20 +691,17 @@ class IteratorBase
  		$this->moveFirst();
 		while ( !$this->end() )
 		{
-			if ( $this->getId() > 0 )
-			{
+			if ( $this->getId() != '' ) {
 				array_push( $result, $this->getId() );
 			}
 			$this->moveNext(); 		
 		}
 
-		if ( count($result) < 1 )
-		{
+		if ( count($result) < 1 ) {
 			array_push($result, 0);
 		}
 
-		if ( $pos < $this->count() )
-		{
+		if ( $pos < $this->count() ) {
  			$this->moveToPos($pos);
 		}
  		return array_unique($result);
@@ -751,6 +738,11 @@ class IteratorBase
 		$xml = '';
 		while ( !$this->end() )
 		{
+		    if ( $this->getId() == '' ) {
+                $this->moveNext();
+                continue;
+            }
+
 			$xml .= '<object id="'.$this->getId().'">';
 			
 			$keys = array_keys($this->object->getAttributes());
@@ -759,7 +751,7 @@ class IteratorBase
 			{
                 if ( !$this->object->IsAttributeStored($keys[$i]) ) continue;
 
-				$value = $this->getHtmlDecoded($keys[$i]);
+				$value = $this->get($keys[$i]);
 				$encoding = '';
 				
 				$type = $this->object->getAttributeType($keys[$i]);
@@ -909,23 +901,12 @@ class IteratorBase
  	}
  }
 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////
- function htmllink_shrinker_callback( $match )
- {
-	global $shrink_length;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function sharelink_shrinker_callback( $match )
+{
+    return '<a target="_blank" href="'.$match[0].'">'.$match[0].'</a>';
+}
 
- 	$display_name = trim($match[2], "\.\,\;\:");
- 	$display_tag = str_replace($display_name, "", $match[2]);
- 	
- 	if ( strlen($display_name) > $shrink_length )
- 	{
- 		$display_name = substr($display_name, 0, $shrink_length/2).'[...]'.
- 			substr($display_name, strlen($display_name) - $shrink_length/2, $shrink_length/2);
- 	}
- 	
- 	return $match[1].'<a target="_blank" href="'.trim($match[2], "\.\,\;\:").'">'.$display_name.'</a>'.$display_tag;
- }
- 
  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
  function iterator_uid_callback( $match )
  {

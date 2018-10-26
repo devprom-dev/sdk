@@ -41,7 +41,7 @@ class WikiBreakTraceTrigger extends SystemTriggersBase
 	    $trace_it = getFactory()->getObject('WikiPageTrace')->getRegistry()->Query( 
 	    		array (
 	    			new FilterAttributePredicate('TargetPage', $object_it->get('ParentPage') ),
-	    			new FilterAttributePredicate('UnsyncReasonType', 'structure-append')
+	    			new FilterTextExactPredicate('UnsyncReasonType', 'structure-append')
 	    		)
 	    	);
 	    

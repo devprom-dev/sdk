@@ -13,6 +13,7 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
     	if ( $metadata->getObject()->getEntityRefName() != 'pm_Function' ) return;
 
 		$metadata->setAttributeType('Description', 'WYSIWYG');
+        $metadata->setAttributeVisible('OrderNum', true);
 
 		$metadata->setAttributeDescription('StartDate', text(1837));
 	    $metadata->setAttributeDescription('DeliveryDate', text(1838));
@@ -23,7 +24,6 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addAttribute('Children', 'REF_FeatureId', text(2437), false);
 
  		$metadata->addAttribute( 'Tags', 'REF_TagId', translate('Тэги'), false, false, '', 280 );
- 		$tag = getFactory()->getObject('CustomTag');
  		$metadata->addPersister( new FeatureTagPersister() );
  		
 		foreach ( array('Caption', 'Importance', 'Description', 'Tags', 'Type', 'StartDate', 'DeliveryDate') as $attribute ) {
@@ -31,6 +31,7 @@ class FeatureMetadataBuilder extends ObjectMetadataEntityBuilder
 			$metadata->addAttributeGroup($attribute, 'permissions');
 		}
 
+        $metadata->addAttribute('Request', 'REF_pm_ChangeRequestId', translate('Пожелания'), true, false, '', 140);
 		$metadata->setAttributeOrderNum('Workload', 132);
 
     	foreach ( array('Workload', 'Estimation', 'EstimationLeft') as $attribute ) {

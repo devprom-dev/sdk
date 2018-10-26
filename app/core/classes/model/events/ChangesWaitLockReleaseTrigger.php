@@ -14,6 +14,12 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
         'MetaobjectStatable',
         'PMCustomAttribute'
     );
+	private $skipReferences = array(
+        'Priority',
+        'TaskType',
+        'cms_User',
+        'pm_Participant'
+    );
     static $declaredClasses = array();
     static $parentClasses = array();
     static $childrenClasses = array();
@@ -33,9 +39,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 			'cms_EntityCluster',
 			'pm_StateObject',
             'cms_SnapshotItem',
-            'cms_SnapshotItemValue',
-            'Priority',
-            'TaskType'
+            'cms_SnapshotItemValue'
 		);
         $this->finalize();
 	}
@@ -113,7 +117,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
     		if ( in_array($attribute, array("Project","DocumentId","ParentPage")) ) continue;
     		
     		$ref = $object_it->object->getAttributeObject($attribute);
-    		if ( in_array($ref->getEntityRefName(), array('cms_User', 'pm_Participant')) ) continue;
+    		if ( in_array($ref->getEntityRefName(), $this->skipReferences) ) continue;
     		
     		$class_name = get_class($ref);
     		

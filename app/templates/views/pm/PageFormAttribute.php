@@ -4,6 +4,7 @@ switch ( $class )
 {
 	case 'fieldnumber':
     case 'fieldhours':
+    case 'fieldhourspositivenegative':
 	case 'fieldtext':
 	case 'fieldlargetext':
 	case 'fieldshorttext':
@@ -27,7 +28,9 @@ switch ( $class )
 		{
 		    if ( is_object($field) )
 		    {
-		        $field->render( $view );
+                echo '<span name="'.$field->getId().'">';
+		            $field->render( $view );
+                echo '</span>';
 		    }
 		    else
 		    {

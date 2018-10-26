@@ -13,6 +13,7 @@ class FormStateAttributeEmbedded extends PMFormEmbedded
  			case 'IsRequired':
             case 'IsReadonly':
             case 'IsMainTab':
+            case 'IsAskForValue':
  				return true;
 
  			default:

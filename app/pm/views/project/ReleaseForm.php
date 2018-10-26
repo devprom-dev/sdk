@@ -1,5 +1,6 @@
 <?php
 include_once SERVER_ROOT_PATH."pm/classes/plan/validators/ModelValidatorDatesCausality.php";
+include_once SERVER_ROOT_PATH.'pm/views/tasks/FieldIssueTraces.php';
 
 class ReleaseForm extends PMPageForm
 {
@@ -30,7 +31,7 @@ class ReleaseForm extends PMPageForm
 		}
 
 		if ( is_object($this->getObjectIt()) ) {
-			foreach( array('Issues', 'Tasks') as $attribute ) {
+			foreach( array('Issues', 'Tasks', 'Artefacts') as $attribute ) {
 				$this->getObject()->setAttributeVisible($attribute, true);
 			}
 		}
@@ -76,10 +77,30 @@ class ReleaseForm extends PMPageForm
 	{
 		switch ( $attr )
 		{
+            case 'Artefacts':
+                return new FieldIssueTraces(is_object($this->object_it) ? $this->object_it->get($attr) : '');
+
 			case 'Issues':
+                if ( !is_object($this->getObjectIt()) ) return null;
+                $boardIt = getFactory()->getObject('Module')->getExact('issues-board');
+                return new FieldListOfReferences(
+                    $this->getObjectIt()->getRef($attr),
+                    array(
+                        $boardIt->getDisplayName() => $boardIt->getUrl('release='.$this->getObjectIt()->getId())
+                    )
+                );
+
 			case 'Tasks':
 				if ( !is_object($this->getObjectIt()) ) return null;
-				return new FieldListOfReferences( $this->getObjectIt()->getRef($attr) );
+                $boardIt = getFactory()->getObject('Module')->getExact('tasks-board');
+                $effortsIt = getFactory()->getObject('PMReport')->getExact('tasksefforts');
+				return new FieldListOfReferences(
+                    $this->getObjectIt()->getRef($attr),
+                    array(
+                        $boardIt->getDisplayName() => $boardIt->getUrl('issue-release='.$this->getObjectIt()->getId()),
+                        $effortsIt->getDisplayName() => $effortsIt->getUrl('iteration='.$this->getObjectIt()->getId())
+                    )
+                );
 
 			default:
 				return parent::createFieldObject($attr);

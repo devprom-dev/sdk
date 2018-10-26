@@ -13,6 +13,8 @@ include "RequestChart.php";
 include "RequestBoard.php";
 include "RequestBoardPlanning.php";
 include "RequestTraceList.php";
+include "RequestProjectBurnUpChart.php";
+include "RequestReleaseBurndownChart.php";
 
 class RequestTable extends PMPageTable
 {
@@ -42,8 +44,15 @@ class RequestTable extends PMPageTable
 				}
 
 			case 'chart':
-				return new RequestChart( $this->getObject() );
-				
+                switch($this->getPage()->getReportBase()) {
+                    case 'releaseburndown':
+                        return new RequestReleaseBurndownChart( $this->getObject() );
+                    case 'projectburnup':
+                        return new RequestProjectBurnUpChart( $this->getObject() );
+                    default:
+                        return new RequestChart( $this->getObject() );
+                }
+
 			default:
 				return new RequestList( $this->getObject() );
 		}
@@ -198,27 +207,19 @@ class RequestTable extends PMPageTable
         $append_actions = array();
         $filter_values = $this->getFilterValues();
 
-		if ( in_array($filter_values['type'], array('','hide','all')) || strpos($filter_values['type'],'none') !== false )
-		{
-			$uid = 'append-issue';
-			$append_actions[$uid] = array (
-				'name' => $this->object->getDisplayName(),
-				'uid' => $uid,
-				'url' => $method->getJSCall($parms)
-			);
-		}
-
 		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
-				array (
-						new FilterVpdPredicate($project_it->get('VPD')),
-						new FilterAttributePredicate('ReferenceName', $filter_values['type']),
-						new SortOrderedClause()
-				)
+            array (
+                new FilterVpdPredicate($project_it->get('VPD')),
+                in_array($filter_values['type'], array('none',''))
+                    ? new FilterAttributeNullPredicate('ReferenceName')
+                    : new FilterAttributePredicate('ReferenceName', $filter_values['type']),
+                new SortOrderedClause()
+            )
 		);
 		while ( !$type_it->end() )
 		{
 			$parms['Type'] = $type_it->getId();
-			$uid = 'append-issue-'.$type_it->get('ReferenceName');
+			$uid = $type_it->get('ReferenceName') == '' ? 'new-issue' : 'new-issue-'.$type_it->get('ReferenceName');
 			
 			$append_actions[$uid] = array ( 
 				'name' => $type_it->getDisplayName(),
@@ -340,14 +341,20 @@ class RequestTable extends PMPageTable
 			$this->buildFilterPriority(),
 			new ViewSubmmitedAfterDateWebMethod(),
 			new ViewSubmmitedBeforeDateWebMethod(),
+            new ViewModifiedAfterDateWebMethod(),
 			new ViewModifiedBeforeDateWebMethod(),
-			new ViewModifiedAfterDateWebMethod(),
+            new FilterDateWebMethod(text(2539), 'finishedafter'),
+            new FilterDateWebMethod(text(2538), 'finishedbefore'),
 			$this->buildFilterOwner(),
 			$this->buildTagsFilter(),
 			$this->buildFilterAuthor(),
 			$this->buildFilterTaskType(),
 			new ViewRequestTaskStateWebMethod()
 		);
+
+		if ( class_exists(getFactory()->getClass('Severity')) ) {
+            $filters[] = $this->buildFilterSeverity();
+        }
 
 		$filter = new FilterObjectMethod( getFactory()->getObject('Version'), translate('Выполнено в версии'), 'version');
 		$filter->setIdFieldName('Caption');
@@ -391,8 +398,6 @@ class RequestTable extends PMPageTable
 	
  	function getFilterPredicates()
 	{
- 		global $_REQUEST, $model_factory;
-
  		$values = $this->getFilterValues();
         $this->parseFilterValues($values);
 
@@ -400,6 +405,7 @@ class RequestTable extends PMPageTable
  		
 		$predicates[] = new StatePredicate( $values['state'] );
 		$predicates[] = new FilterAttributePredicate('Priority', $values['priority']);
+        $predicates[] = new FilterAttributePredicate('Severity', $values['severity']);
 		$predicates[] = $this->buildOwnerPredicate($values);
 		$predicates[] = new FilterAttributePredicate('Type', $values['type']);
 		$predicates[] = new FilterSubmittedAfterPredicate($values['submittedon']);
@@ -412,14 +418,15 @@ class RequestTable extends PMPageTable
 		$predicates[] = new RequestTestResultPredicate($_REQUEST['test']);
 		$predicates[] = new RequestAuthorFilter( $values['author'] );
 		$predicates[] = new TransitionObjectPredicate( $this->getObject(), $values['transition'] );
-		$predicates[] = new TransitionWasPredicate( $values['was-transition'] );
 		$predicates[] = new RequestTaskTypePredicate( $values['tasktype'] );
 		$predicates[] = new RequestTaskStatePredicate( $values['taskstate'] );
 		$predicates[] = new FilterAttributePredicate('ClosedInVersion', $values['version']);
 		$predicates[] = new FilterAttributePredicate('Iteration',$values['iteration']);
 		$predicates[] = new FilterAttributePredicate('Iteration',$_REQUEST['iterations']);
+        $predicates[] = new FilterDateAfterPredicate('FinishDate', $values['finishedafter']);
+        $predicates[] = new FilterDateBeforePredicate('FinishDate', $values['finishedbefore']);
 
-		$trace = $model_factory->getObject('pm_ChangeRequestTrace');
+		$trace = getFactory()->getObject('pm_ChangeRequestTrace');
 		array_push($predicates, new RequestTracePredicate( $_REQUEST['trace'] ) );
 
 		$predicates[] = new FilterModifiedAfterPredicate($values['modifiedafter']);
@@ -429,6 +436,11 @@ class RequestTable extends PMPageTable
 
         if ( $this->getPage()->getReportBase() == 'sincelastview' ) {
             $predicates[] = new SinceNotificationFilter(getSession()->getUserIt());
+        }
+
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
+            $predicates[] = new FilterAttributeNotNullPredicate('Type');
         }
 
 		return array_merge($predicates, parent::getFilterPredicates());
@@ -453,7 +465,12 @@ class RequestTable extends PMPageTable
 	{
 		$type_method = new FilterObjectMethod( getFactory()->getObject('RequestType'), translate('Тип'), 'type');
 		$type_method->setIdFieldName( 'ReferenceName' );
-		$type_method->setNoneTitle( getFactory()->getObject('Request')->getDisplayName() );
+		if ( $this->getObject()->IsAttributeRequired('Type') ) {
+            $type_method->setHasNone(false);
+        }
+        else {
+            $type_method->setNoneTitle( $this->getObject()->getDisplayName() );
+        }
 		return $type_method;
 	}
 	
@@ -486,6 +503,13 @@ class RequestTable extends PMPageTable
 		$filter->setHasNone(false);
 		return $filter;
 	}
+
+    protected function buildFilterSeverity()
+    {
+        $priority = getFactory()->getObject('Severity');
+        $filter = new FilterObjectMethod($priority);
+        return $filter;
+    }
 
 	protected function buildFilterSubmittedVersion()
 	{
@@ -567,7 +591,7 @@ class RequestTable extends PMPageTable
 			case 'Project':
 				$project_it = $this->getListRef()->getGroupIt();
 				$project_it->moveToId($object_it->get($group_field));
-				echo $this->getView()->render('pm/RowGroupActions.php', array (
+				echo $this->getRenderView()->render('pm/RowGroupActions.php', array (
 					'actions' => $this->getNewCardActions($project_it)
 				));
 				break;
@@ -683,7 +707,8 @@ class RequestTable extends PMPageTable
             'issuesmine',
             'watchedtasks',
             'project-plan-hierarchy',
-            'customs/workflowanalysis'
+            'customs/workflowanalysis',
+            'tasks-board'
         );
         switch( $module ) {
             case 'kanban/requests':
@@ -731,7 +756,12 @@ class RequestTable extends PMPageTable
         );
     }
 
-	function getDefaultRowsOnPage() {
+    protected function getChartsModuleName()
+    {
+        return 'issues-chart';
+    }
+
+    function getDefaultRowsOnPage() {
 		return 60;
 	}
 }

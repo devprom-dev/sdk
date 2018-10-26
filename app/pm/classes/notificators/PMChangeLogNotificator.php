@@ -1,5 +1,6 @@
 <?php
-include_once SERVER_ROOT_PATH.'cms/classes/ChangeLogNotificator.php';
+include_once SERVER_ROOT_PATH . 'cms/classes/ChangeLogNotificator.php';
+include_once SERVER_ROOT_PATH . "pm/views/wiki/diff/WikiHtmlDiff.php";
 
 class PMChangeLogNotificator extends ChangeLogNotificator
 {
@@ -32,7 +33,33 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		}
 	}
 
-	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
+    protected function getAttributeContent($prev_object_it, $object_it, $att_name)
+    {
+        if ( $object_it->object->getAttributeType($att_name) == 'wysiwyg' )
+        {
+            $editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
+            $parser = $editor->getComparerParser();
+            $parser->setObjectIt($object_it);
+
+            ob_start();
+            echo '<div class="reset wysiwyg">';
+            $diffBuilder = new WikiHtmlDiff(
+                $prev_object_it->getId() > 0
+                    ? $parser->parse($prev_object_it->getHtmlDecoded($att_name))
+                    : "",
+                $parser->parse($object_it->getHtmlDecoded($att_name))
+            );
+            echo $diffBuilder->build();
+            echo '</div>';
+
+            $content = ob_get_contents();
+            ob_clean();
+            return $content;
+        }
+        return parent::getAttributeContent($prev_object_it, $object_it, $att_name);
+    }
+
+    function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())
 	{
 		if( !is_object($object_it) ) return;
 		if( !$this->is_active($object_it) ) return;
@@ -96,13 +123,8 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 				
 				switch ( $anchor_it->object->getClassName() )
 				{
-					case 'pm_TestCaseExecution':
-						return false;
-						
 					default:
-						
 						$this->setModifiedAttributes(array('Attachments'));
-						
 						parent::process(
 						    $anchor_it, 'modified',
 							$object_it->object->getDisplayName().': '.$object_it->getFileName('File').
@@ -374,7 +396,7 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 			        case 'added':
 					    $page_it = $object_it->getRef('WikiPage');
 						$history_url = $page_it->getHistoryUrl();
-					    $content = '[url='.$history_url.' text='.text(2238).']';
+					    $content = '[url='.$history_url.' text='.text(824).']';
 					    
 					    parent::process( $page_it, 'modified', $content, $visibility, $author_email,
 								array('ObjectUrl' => $history_url.'&version='.$object_it->getId()) );

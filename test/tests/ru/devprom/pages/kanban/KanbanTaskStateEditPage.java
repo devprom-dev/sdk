@@ -15,7 +15,7 @@ public class KanbanTaskStateEditPage extends KanbanPageBase {
 	@FindBy(id = "pm_StateSubmitBtn")
 	protected WebElement saveBtn;
 	
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='stateattribute']]")
+	@FindBy(xpath = "//span[@name='pm_StateAttributes']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addAttributeBtn;
 
 	@FindBy(xpath = "//select[contains(@id,'ReferenceName')]")

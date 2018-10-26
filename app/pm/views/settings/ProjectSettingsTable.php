@@ -7,7 +7,12 @@ class ProjectSettingsTable extends PMPageTable
     {
 		return 'pm/ProjectSettingsTable.tpl.php';
     }
-    
+
+    function getCaption()
+    {
+        return translate('Настройки');
+    }
+
     function getRenderParms( $parms )
     {
 		getSession()->insertBuilder( new \FunctionalAreaMenuSettingsBuilder() );
@@ -40,9 +45,13 @@ class ProjectSettingsTable extends PMPageTable
 				else if ( $widget['module'] != '' ) {
 					$widget_it = $module->getExact($widget['module']);
 				}
-				else {
-					continue;
+				else if ( $widget['name'] != '' ) {
+                    $items[] = $widget;
+                    continue;
 				}
+				else {
+                    continue;
+                }
 
 				$resource_it = $resource->getExact($widget_it->getId());
 				$description =  $resource_it->getId() != ''
@@ -53,7 +62,7 @@ class ProjectSettingsTable extends PMPageTable
 				if ( mb_strlen($description) > 140 ) $description = mb_substr($description, 0, 140).'...';
 
 				$items[] = array (
-                    'uid' => $widget_it->getId(),
+                    'uid' => str_replace('/', '-', $widget_it->getId()),
 					'name' => $widget_it->getDisplayName(),
 					'url' => $widget_it->getUrl(),
 					'description' => $description

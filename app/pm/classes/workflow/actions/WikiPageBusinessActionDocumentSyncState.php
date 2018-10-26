@@ -16,29 +16,37 @@ class WikiPageBusinessActionDocumentSyncState extends BusinessActionWorkflow
 		if ( $object_it->get('DocumentId') == '' ) return true;
         $stateAttribute = $object_it->get('StateNameAlt') != '' ? 'StateNameAlt' : 'State';
 
-		$page_it = $object_it->object->getRegistry()->Query(
-            array (
-                new ParentTransitiveFilter($object_it->get('DocumentId')),
-                new WikiNonRootFilter()
-            )
-		);
-		$children_states = array_unique($page_it->fieldToArray($stateAttribute));
-		if ( count($children_states) != 1 ) return true;
+        $parentObject = getFactory()->getObject(get_class($object_it->object));
+        $parentObject->removeNotificator('DocumentStateChangedEventHandler');
 
-		$state = array_shift($children_states);
-		$root_it = $object_it->getRootIt();
-		if ( $root_it->get($stateAttribute) == $state ) return true;
-				
-		$service = new WorkflowService($object_it->object);
-		try {
-			$service->moveToState(
-					$root_it, $object_it->get('State'), '', array(), false
-				);
-		}
- 		catch( Exception $e ) {
-			Logger::getLogger('System')->error($e->getMessage());
-		}
-		
+		$page_it = $object_it->getParentsIt($parentObject);
+		$states = array_unique(
+		    array_merge(
+		        $page_it->fieldToArray($stateAttribute),
+                array(
+                    $object_it->get($stateAttribute)
+                )
+            )
+        );
+		if ( count($states) == 1 ) return true;
+
+		$objectStateIt = $object_it->getStateIt();
+        $service = new WorkflowService($parentObject);
+		while( !$page_it->end() ) {
+            try {
+                $pageStateIt = $page_it->getStateIt();
+                if ( $pageStateIt->get('OrderNum') > $objectStateIt->get('OrderNum') ) {
+                    $service->moveToState(
+                        $page_it, $object_it->get('State'), '', array(), true
+                    );
+                }
+            }
+            catch( Exception $e ) {
+                Logger::getLogger('System')->error($e->getMessage());
+            }
+            $page_it->moveNext();
+        }
+
  		return true;
  	}
 

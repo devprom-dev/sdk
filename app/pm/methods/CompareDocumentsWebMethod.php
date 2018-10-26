@@ -25,7 +25,7 @@ class CompareDocumentsWebMethod extends WebMethod
 	
 	function execute_request()
  	{
- 		$ids = array_filter(preg_split('/-/', $_REQUEST['objects']), function($value) {
+ 		$ids = array_filter(\TextUtils::parseIds($_REQUEST['objects']), function($value) {
  			return $value > 0;
  		});
  		

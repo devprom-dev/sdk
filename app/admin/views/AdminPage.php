@@ -17,9 +17,12 @@ class AdminPage extends Page
 
     function getRenderParms()
 	{
-		return array_merge( parent::getRenderParms(), array (
-			'caption_template' => 'admin/PageTitle.php',a
-		));
+		return array_merge(
+		    parent::getRenderParms(),
+            array (
+			    'caption_template' => 'admin/PageTitle.php'
+		    )
+        );
 	}
 	
 	function getTabsTemplate()
@@ -41,11 +44,6 @@ class AdminPage extends Page
  		return parent::getCheckpointAlerts();
  	}
  	
- 	function getTitle()
- 	{
- 	    return '';
- 	}
-
  	function hasAccess()
     {
         if ( \DeploymentState::Instance()->IsReadyToBeUsed() && !getSession()->getUserIt()->IsAdministrator() ) return false;

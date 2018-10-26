@@ -11,7 +11,7 @@ if ( count($sections) > 0 )
 
 <div class="page-title" style="display:table;width:100%;">
 
-<?php if ( $show_section_number && $attributes['SectionNumber']['value'] != '' ) { ?>
+<?php if ( $attributes['SectionNumber']['visible'] && $attributes['SectionNumber']['value'] != '' ) { ?>
 
 <h4 class="title-cell bs" style="padding-left:0;">
 	<div class="sec-num">
@@ -47,7 +47,7 @@ if ( count($sections) > 0 )
 <?php } ?>
 
 <?php if ( $persisted && $uid_icon != '' ) { ?>
-	<div class="title-cell" style="white-space:nowrap;">
+	<div class="title-cell" style="white-space:nowrap;padding-top:1px;">
 		<? echo $view->render('core/Clipboard.php', array ('url' => $uid_url, 'uid' => $uid)); ?>
 	</div>
 <?php } ?>
@@ -58,31 +58,55 @@ if ( count($sections) > 0 )
 		</div>
 	<?php } ?>
 
+    <?php if ( $attributes['PageType']['visible'] && is_object($attributes['PageType']['field']) ) { ?>
+        <div class="title-cell" style="padding-top: 1px;">
+            <?
+            $attributes['PageType']['field']->render($view);
+            unset($attributes['PageType']);
+            ?>
+        </div>
+    <?php } ?>
+
 
 	<?php if ( $persisted && $baseline == '' && is_a($form->getObjectIt(), 'StatableIterator') && $attributes['State']['value'] != '' ) { ?>
 
-<div class="title-cell hidden-print">
-<?php
-	echo $view->render('pm/StateColumn.php', array (
-				'color' => $form->getObjectIt()->get('StateColor'),
-				'name' => $form->getObjectIt()->get('StateName'),
-				'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y'
-		)); 
-?>
-</div>
+    <div class="title-cell hidden-print" style="padding-top: 2px;">
+    <?php
+        $workflowActions = array();
+        if ( is_array($actions['workflow']) ) {
+            $workflowActions = $actions['workflow']['items'];
+            unset($actions['workflow']['items']);
+        }
+        else {
+            $workflowActions = array_filter($actions, function($action) {
+                return strpos($action['uid'], 'workflow') !== false;
+            });
+            $actions = array_filter($actions, function($action) {
+                return strpos($action['uid'], 'workflow') === false;
+            });
+        }
+        echo $view->render('pm/StateColumn.php', array (
+            'color' => $form->getObjectIt()->get('StateColor'),
+            'name' => $form->getObjectIt()->get('StateName'),
+            'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
+            'actions' => $workflowActions
+        ));
+    ?>
+    </div>
 
 <?php } ?>
 
 	<?php if ( $persisted && count($actions['create']['items']) > 0 ) { ?>
 		<div class="title-cell hidden-print">
-			<div class="btn-group operation last">
-				<a tabindex="-1" class="btn btn-mini btn-success dropdown-toggle actions-button" data-toggle="dropdown" href="#">
+			<div class="btn-group last">
+				<a tabindex="-1" class="btn btn-xs btn-success dropdown-toggle actions-button" data-toggle="dropdown" href="#">
 					<i class="icon-plus icon-white"></i>
 				</a>
 				<?php
 				echo $view->render('core/PopupMenu.php', array (
 					'items' => $actions['create']['items']
 				));
+				unset($actions['create']);
 				?>
 			</div>
 		</div>
@@ -94,7 +118,7 @@ if ( count($sections) > 0 )
 
 	<div class="title-cell hidden-print">
     <div class="btn-group operation last">
-      <a tabindex="-1" class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
+      <a tabindex="-1" class="btn btn-xs btn-light dropdown-toggle actions-button" data-toggle="dropdown" href="#">
     	<i class="icon-broken"></i>
     	<?=text(1725)?>
     	<span class="caret"></span>
@@ -113,8 +137,8 @@ if ( count($sections) > 0 )
 
 <div class="title-cell hidden-print">
     <div class="btn-group operation last">
-      <a tabindex="-1" class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#">
-		<i class="icon-asterisk icon-gray"></i>
+      <a tabindex="-1" class="btn btn-xs btn-secondary dropdown-toggle actions-button" data-toggle="dropdown" href="#">
+		<i class="icon-pencil icon-white"></i>
 		<span class="caret"></span>
       </a>
       <?php
@@ -129,13 +153,13 @@ if ( count($sections) > 0 )
 </div>
 
 <input type="hidden" name="ParentPage" value="<?=$attributes['ParentPage']['value']?>">
-<input type="hidden" name="treeTitle" value="<?=$form->getObjectIt()->getTreeDisplayName()?>">
+<input type="hidden" name="treeTitle" value="<?=htmlentities($form->getObjectIt()->getTreeDisplayName())?>">
 
 <div class="page-attachments">
 <? if ( is_object($attachments) ) { echo $attachments->render($this); } ?>
 </div>
 
-<? $attributes['Content']['field']->draw(); ?>
+<? if ( is_object($attributes['Content']['field']) ) { $attributes['Content']['field']->draw(); } ?>
 <? if ( $persisted ) echo $traces_html; ?>
 
 <?php if ( $persisted && is_object($comments_section) ) { ?>
@@ -144,18 +168,27 @@ if ( count($sections) > 0 )
 		<div class="comments-cell">
 			<span class="<?=($comments_count < 1 ? 'document-item-bottom-hidden': '')?>">
 				<i class="icon-comment"></i>
-				<a class="document-page-comments-link dashed" style="margin-top:3px;">
+				<a class="document-page-comments-link" style="margin-top:3px;">
 					<?=translate('комментарии').($comments_count > 0 ? ' ('.$comments_count.')' : '')?>
 				</a>
 			</span>
 		</div>
 		<div class="bottom-link" style="display:table-cell;text-align:right;vertical-align:top;width:70%;">
 			<span class="document-item-bottom-hidden">
-				<? foreach( $structureActions as $action ) { ?>
+				<? foreach( $structureActions as $key => $action ) { ?>
+                    <? if ( $key == 'files' ) { ?>
+                    <span class="document-structure-action">
+						<i class="<?=$action['icon']?>"></i>
+                        <a class="file-browse" post-action="refresh" objectclass="<?=get_class($form->getObjectIt()->object)?>" objectid="<?=$form->getObjectIt()->getId()?>" attachmentClass="WikiPageFile" href="#" tabindex="-1">
+                            <?=$action['name']?>
+                        </a>
+                    </span>
+                    <? } else { ?>
 					<span class="document-structure-action">
 						<i class="<?=$action['icon']?>"></i>
-						<a class="dashed" id="<?=$action['uid']?>" onclick="<?=$action['url']?>"><?=$action['name']?></a>
+						<a class="" id="<?=$action['uid']?>" onclick="<?=$action['url']?>"><?=$action['name']?></a>
 					</span>
+                    <? } ?>
 				<? } ?>
 			</span>
 		</div>

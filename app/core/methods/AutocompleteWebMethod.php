@@ -65,7 +65,7 @@ class AutocompleteWebMethod extends WebMethod
 	    	
  			 $result_item = array (
  			    'id' => html_entity_decode($object_it->getId(), ENT_COMPAT | ENT_HTML401, 'utf-8'),
- 			    'label' => html_entity_decode($caption, ENT_COMPAT | ENT_HTML401, 'utf-8'),
+ 			    'label' => TextUtils::stripAnyTags(html_entity_decode($caption, ENT_COMPAT | ENT_HTML401, 'utf-8')),
  			    'completed' => $completed
  			);
  			
@@ -93,13 +93,15 @@ class AutocompleteWebMethod extends WebMethod
 		if ( $_REQUEST['attributes'] == '' || count($attributes) < 1 ) $attributes = array('Caption');
 
  		$object = getFactory()->getObject($_REQUEST['class']);
+ 		$queryParms = array();
 
 		if ( $object->getVpdValue() != '' ) {
-			$queryParms = array(
-				in_array('cross', $attributes) ? new \ProjectAccessibleActiveVpdPredicate() : new FilterVpdPredicate()
-			);
+            $queryParms[] = in_array('cross', $attributes)
+                ? new \ProjectAccessibleActiveVpdPredicate()
+                : new FilterVpdPredicate();
 		}
- 		if ( is_a($object, 'MetaobjectStatable') ) {
+
+ 		if ( is_a($object, 'MetaobjectStatable') && $object->getStateClassName() != '' ) {
 			$queryParms[] = new SortMetaStateClause();
  		}
 		if ( in_array('cross', $attributes) ) {
@@ -145,7 +147,7 @@ class AutocompleteWebMethod extends WebMethod
 			}
 			if ( !is_object($result_it) || is_object($result_it) && $result_it->getId() == '' ) {
 				$queryParms[] = new FilterSearchAttributesPredicate(
-					$_REQUEST[$key],
+                    $_REQUEST[$key],
 					array_unique(
 					    array_merge(
                             array_intersect(

@@ -21,7 +21,7 @@ public class ProductPlanTest extends ProjectTestBase {
 	/** The test creates 2 releases and 2 iterations for each of them*/
 	@Test
 	public void CreateProductPlan(){
-		String p = DataProviders.getUniqueString();
+		String p = DataProviders.getUniqueStringAlphaNum();
 		
 		Release release1 = new Release("1-Р+" + p,"Release for ProductPlanTest",DateHelper.getCurrentDate(),DateHelper.getDayAfter(13));
 		Release release2 = new Release("2-Р+" + p,"Release for ProductPlanTest",DateHelper.getDayAfter(14),DateHelper.getDayAfter(27));

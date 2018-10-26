@@ -436,11 +436,10 @@ class PluginsFactory
  	{
  		$builders = array();
 
- 	 	foreach ( $this->namespaces as $plugin )
- 		{
+ 	 	foreach ( $this->namespaces as $plugin ) {
 			$builders = array_merge( $builders, $plugin->getBuilders() );
  		}
- 		
+
  		return $builders;
  	}
  	
@@ -448,16 +447,21 @@ class PluginsFactory
  	{
 		$builders = array();
 
-		foreach ( $this->plugins as $namespace )
- 		{
-	 		foreach ( $namespace as $plugin )
-	 		{
-	 			if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) )
-	 			{
+		foreach ( $this->plugins as $namespace ) {
+	 		foreach ( $namespace as $plugin ) {
+	 			if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) ) {
 	 			    $builders = array_merge( $builders, $plugin->getBuilders() );
 	 			}
 	 		}
  		}
+
+        foreach ( $this->plugins as $namespace ) {
+            foreach ( $namespace as $plugin ) {
+                if ( is_subclass_of($plugin, $this->_getPluginClass4Section( $section ) ) ) {
+                    $builders = array_merge( $builders, $plugin->getBuildersLatest() );
+                }
+            }
+        }
 
  		return $builders;
  	}

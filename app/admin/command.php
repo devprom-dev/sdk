@@ -4,6 +4,8 @@ if ( function_exists('opcache_reset') ) opcache_reset();
 include dirname(__FILE__).'/../app/bootstrap.php';
 include_once(dirname(__FILE__).'/../core/c_command.php');
 
+if ( !getSession()->getUserIt()->IsAdministrator() ) exit(header('Location: /'));
+
 $class = $_REQUEST['class'];
 $page = $_REQUEST['page'];
 

@@ -6,6 +6,6 @@ class FunctionalAreaMyProjectsBuilder extends FunctionalAreaBuilder
 {
     public function build( FunctionalAreaRegistry & $set )
     {
-        $set->addArea( FUNC_AREA_FAVORITES );
+        $set->addArea( FUNC_AREA_FAVORITES, array(), 'icon-favorites' );
     }
 }

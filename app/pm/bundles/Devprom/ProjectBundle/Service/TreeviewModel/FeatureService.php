@@ -1,8 +1,6 @@
 <?php
-
 namespace Devprom\ProjectBundle\Service\TreeviewModel;
-
-include SERVER_ROOT_PATH."pm/classes/product/FeatureModelExtendedBuilder.php";
+include_once SERVER_ROOT_PATH."pm/classes/product/FeatureModelExtendedBuilder.php";
 
 class FeatureService
 {

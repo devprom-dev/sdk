@@ -28,7 +28,7 @@ if ( $searchMode ) {
 }
 ?>
 
-<ul class="dropdown-menu">
+<ul class="dropdown-menu navbar-menu">
     <li>
         <div class="container-fluid">
           <div class="row-fluid">

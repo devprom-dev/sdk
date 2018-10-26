@@ -42,6 +42,12 @@ class IssueType {
     private $visible;
 
     /**
+     * @ORM\Column(type="integer", name="OrderNum")
+     * @var string
+     */
+    private $orderNum;
+
+    /**
      * @param int $id
      */
     public function setId($id)
@@ -124,5 +130,21 @@ class IssueType {
     public function getVisible()
     {
         return $this->visible;
+    }
+
+    /**
+     * @param string $value
+     */
+    public function setOrderNum($value)
+    {
+        $this->orderNum = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrderNum()
+    {
+        return $this->orderNum;
     }
 }

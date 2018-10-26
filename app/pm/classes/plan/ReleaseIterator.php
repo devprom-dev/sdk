@@ -26,8 +26,6 @@ class ReleaseIterator extends OrderedIterator
 	
 	function getLeftDurationEstimation()
 	{
-		global $model_factory;
-		
 		$velocity = $this->getVelocity();
 		if ( $velocity <= 0 )
 		{
@@ -88,7 +86,7 @@ class ReleaseIterator extends OrderedIterator
 		else
 		{
 			$request_sql = " (SELECT MIN(r.RecordCreated) FROM pm_ChangeRequest r " .
-				" WHERE r.PlannedRelease = ".$this->getId()." AND r.State = 'resolved') ";
+				" WHERE r.PlannedRelease = ".$this->getId()." AND r.FinishDate IS NOT NULL) ";
 		}
 		
 		$sql = " SELECT IFNULL( (SELECT MIN(r.StartDate) FROM pm_Release r WHERE r.Version = ".
@@ -467,40 +465,7 @@ class ReleaseIterator extends OrderedIterator
 		return $result;
 	}
 
-	function getProgress()
-	{
-		global $model_factory;
-		
-		$request = $model_factory->getObject('pm_ChangeRequest');
-		$request->addFilter( new FilterAttributePredicate('PlannedRelease', $this->getId()) );
-		
-		$request_it = $request->getAll();
-		
-		$task = $model_factory->getObject('pm_Task');
-		$types_map = $task->getTypesMap();
-		
-		$progress = $request_it->getProgress();
-		
- 		$sql = " SELECT COUNT(1) Total, SUM(CASE t.State WHEN 'resolved' THEN 1 ELSE 0 END) Resolved " .
- 			   "   FROM pm_Task t, pm_Release r " .
- 			   "  WHERE t.ChangeRequest IS NULL ".
- 			   "    AND t.Release = r.pm_ReleaseId ".
- 			   "    AND r.Version = ".$this->getId();
- 		
- 		$it = $this->object->createSQLIterator( $sql );
-		
- 		while ( !$it->end() )
- 		{
- 			$progress['D'][0] += $it->get('Total');
- 			$progress['D'][1] += $it->get('Resolved');
-
- 			$it->moveNext();
- 		}
-
-		return $progress;
-	}
-
-	function getPlannedTotalWorkload() 
+	function getPlannedTotalWorkload()
 	{
 		$request = getFactory()->getObject('pm_ChangeRequest');
 
@@ -560,12 +525,23 @@ class ReleaseIterator extends OrderedIterator
 
 		$sql = "SELECT SUM(IFNULL(t.LeftWork, 0)) leftwork ".
 			"  FROM pm_Task t, pm_ChangeRequest r ".
-			" WHERE t.State IN ('".join("','", WorkflowScheme::Instance()->getNonTerminalStates(getFactory()->getObject('Task')))."') ".
+			" WHERE t.FinishDate IS NULL ".
 			"   AND t.Assignee = ".$userId.
 			"   AND r.pm_ChangeRequestId = t.ChangeRequest ".
-			"	AND r.PlannedRelease = " .$this->getId();
+			"	AND r.PlannedRelease = " .$this->getId().
+            " UNION ".
+            "SELECT SUM(IFNULL(r.EstimationLeft, 0)) leftwork ".
+            "  FROM pm_ChangeRequest r ".
+            " WHERE r.FinishDate IS NULL ".
+            "   AND r.Owner = ".$userId.
+            "	AND r.PlannedRelease = " .$this->getId().
+            "   AND NOT EXISTS (SELECT 1 FROM pm_Task t WHERE t.ChangeRequest = r.pm_ChangeRequestId)";
 
 		$it = $this->object->createSQLIterator( $sql );
 		return $it->get('leftwork');
 	}
+
+    function getCommentsUrl() {
+ 	    return '';
+    }
 }

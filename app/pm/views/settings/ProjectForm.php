@@ -2,7 +2,7 @@
 include_once SERVER_ROOT_PATH."pm/views/wiki/editors/WikiEditorsDictionary.php";
 include "FieldRestUISettings.php";
 
-class ProjectForm extends PMPageForm
+class ProjectForm extends SettingsFormBase
 {
     function extendModel()
     {
@@ -10,12 +10,12 @@ class ProjectForm extends PMPageForm
 
         $object = $this->getObject();
 
-        $object->setAttributeCaption('Rating', translate('Скорость'));
-        $object->setAttributeEditable('Rating', false);
-        $object->setAttributeVisible('Rating', true);
-        $object->setAttributeOrderNum('Rating', 300);
-        $object->setAttributeDescription('Rating', text(2284));
-        $object->setAttributeEditable('FinishDate', false);
+        foreach( array('FinishDate') as $attribute ) {
+            $object->setAttributeEditable($attribute, false);
+        }
+        foreach( array('Features', 'SpentHours', 'SpentHoursWeek') as $attribute ) {
+            $object->setAttributeVisible($attribute, false);
+        }
 
         $project_roles = getSession()->getRoles();
         if ( $project_roles['lead'] ) {
@@ -96,28 +96,20 @@ class ProjectForm extends PMPageForm
         return array();
     }
 
-    function getPageTitle()
-    {
-        return '';
-    }
-
     function getRedirectUrl()
 	{
 		return '/pm/'.$this->getObjectIt()->get('CodeName').'/project/settings';
 	}
     
-    function getRenderParms()
-    {
-        return array_merge( parent::getRenderParms(), array (
-            'uid_icon' => '',
-            'uid' => ''
-        ));
-    }
-
     function getShortAttributes()
     {
         return array(
             'CodeName', 'StartDate', 'FinishDate', 'Importance', 'Language'
         );
+    }
+
+    function getPageTitle()
+    {
+        return text(2618);
     }
 }

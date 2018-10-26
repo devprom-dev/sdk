@@ -58,7 +58,6 @@ class ModelFactory extends ModelFactoryBase
 			'cms_snapshot' => array('Snapshot'),
 			'cms_snapshotitem' => array('SnapshotItem'),
 		    'cms_snapshotitemvalue' => array('SnapshotItemValue'),
-		    'cms_idshash' => array('HashIds'),
 			'cms_systemsettings' => array('SystemSettings'),
 			'pm_project' => array( 'Project'),
 			'pm_projecttemplate' => array( 'ProjectTemplate' ),

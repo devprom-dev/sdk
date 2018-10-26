@@ -307,7 +307,7 @@
 	function drawItem( $object_it )	{}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function drawNavigator( $object_it )
+	function drawNavigator( $b_top_navigator, $rowsLimit = '', $rowsActions = array() )
 	{
 		global $_REQUEST;
 		$offset = $_REQUEST['offset'];
@@ -824,11 +824,6 @@
 				echo $object_it->getDateTimeFormat($attr);
 				break;
 				
-			case 'largetext':
-			case 'text':
-				drawMore($object_it, $attr, 20);
-				break;
-
 			default:
 				echo $object_it->getHtml($attr);
 		}
@@ -857,57 +852,62 @@
 	}
 	
 	//---------------------------------------------------------------------------------------------------------
-	function drawNavigator( $b_top_navigator )
+	function drawNavigator( $b_top_navigator, $rowsLimit = '', $rowsActions = array() )
 	{
 		// название страницы
 		$pagename = $this->getUrl();
 		
 		// общее число страниц
         $pages = $this->getPages();
+        $totalItems = $this->getItemsCount($this->getIteratorRef());
         $offset_page = max(1, $this->getOffset() / $this->getMaxOnPage() - 3);
+        if ( $totalItems < 20 ) return;
 
-		echo '<div class="pull-left hover-holder">';
-        echo '<div class="pull-left pagination">';
-		
-        echo '<ul>';
-        // выводим номера страниц
-	    if ( $offset_page > 2 )
-        {
-        	//echo '<div class="btn-group">';
-        		$this->drawNavigatorItem( 0, $pagename );
-        //	echo '</div>';
-        }
-        else
-        {
-        	$offset_page = 0;
-        }
+		echo '<div class="hover-holder">';
+		if ( $this->moreThanOnePage() ) {
+            echo '<div class="pull-left pagination">';
+            echo '<ul>';
+            // выводим номера страниц
+            if ($offset_page > 2) {
+                //echo '<div class="btn-group">';
+                $this->drawNavigatorItem(0, $pagename);
+                //	echo '</div>';
+            } else {
+                $offset_page = 0;
+            }
 
-        //echo '<div class="btn-group">';
-        // выводим номера страниц
-        for ($i = 0; $i < min($pages, 7); $i++)
-        {
-        	if ( $i + $offset_page >= $pages )
-        	{
-        		break;
-        	}
-        		
-       		$this->drawNavigatorItem( $i + $offset_page, $pagename );
+            //echo '<div class="btn-group">';
+            // выводим номера страниц
+            for ($i = 0; $i < min($pages, 7); $i++) {
+                if ($i + $offset_page >= $pages) {
+                    break;
+                }
+
+                $this->drawNavigatorItem($i + $offset_page, $pagename);
+            }
+            //echo '</div>';
+
+            if ($i + $offset_page < $pages) {
+                //echo '<div class="btn-group">';
+                $this->drawNavigatorItem($pages - 1, $pagename);
+                //echo '</div>';
+            }
+            echo '</ul></div>';
         }
-        //echo '</div>';
-        
-        if ( $i + $offset_page < $pages )
-        {
-        	//echo '<div class="btn-group">';
-				$this->drawNavigatorItem( $pages - 1, $pagename );
-        	//echo '</div>';
-        }
-       	echo '</ul></div>';
        	
-        echo '<div class="pull-left pagination pagination-total">';
-			$script = "javascript: filterLocation.setup('rows=all',0);";
-			echo '<a onclick="'.$script.'" class="dashed dashed-hidden">' .text(2159).'</a> ';
-	        echo preg_replace('/%1/', $this->getItemsCount($this->getIteratorRef()), text(1884));
+        echo '<div class="pull-left">';
+            echo '<div class="btn-group">';
+                echo '<div class="btn">';
+                    echo preg_replace('/%1/', $totalItems, text(1884));
+                echo '</div>';
+            echo '</div>';
+            echo $this->getRenderView()->render('pm/AttributeButton.php', array (
+                'data' => $rowsLimit > 9000 ? text(2627) : str_replace('%1', $rowsLimit, text(2626)),
+                'items' => $rowsActions,
+                'random' => 'pagination'
+            ));
 		echo '</div>';
+		echo '<div class="clearfix"></div>';
 		echo '</div>';
 	}
 	
@@ -919,7 +919,7 @@
 			
     	$current = $i * $this->getMaxOnPage() == $this->getOffset();
     	
-    	//$class_name = $current ? "btn btn-small btn-info" : "btn btn-small";
+    	//$class_name = $current ? "btn btn-sm btn-info" : "btn btn-sm";
 		//echo '<button class="'.$class_name.'" onclick="javascript: window.location=\''.$pageurl.'\';">'.round($i+1).'</button>';
 		
     	$class_name = $current ? "active" : "";
@@ -936,7 +936,7 @@
 	//---------------------------------------------------------------------------------------------------------
 	function getColumns()
 	{
-		return array_keys($this->object->getAttributesSorted());
+		return array_keys($this->object->getAttributes());
 	}
 
 	//---------------------------------------------------------------------------------------------------------

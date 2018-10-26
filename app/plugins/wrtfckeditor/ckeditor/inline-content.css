@@ -46,6 +46,10 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 .editor-area {
 	padding: 2px;
 }
+#modal-form .editor-area {
+	padding: 0;
+}
+
 .wysiwyg-hover
 {
     position: relative;
@@ -85,6 +89,10 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
     font-weight: normal;
     float: none;
+}
+
+.wysiwyg table.docs-table td {
+	min-width: 30px;
 }
 
 .wysiwyg blockquote
@@ -217,4 +225,13 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 .wiki-page.left .documentToolbar {
 	margin-left: -9px;
+}
+.wiki-page.left .table-master:not(.details-visible) .documentToolbar {
+	margin-right: -15px;
+}
+
+.wysiwyg iframe {
+	width: 100%;
+	height: 600px;
+	border-style: none;
 }

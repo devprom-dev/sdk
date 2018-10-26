@@ -1,7 +1,4 @@
 <?php
-
-if ( !class_exists('Tag', false) ) include "Tag.php";
-
 include "BlogPostTagIterator.php";
 include "persisters/BlogPostTagDetailsPersister.php";
 

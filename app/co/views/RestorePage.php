@@ -4,10 +4,17 @@ include('RestoreForm.php');
 
 class ForgetPasswordPage extends CoPage
 {
- 	function getTable()
- 	{
- 		global $model_factory;
- 		
-		return new ForgetPasswordForm( $model_factory->getObject('cms_User') );
+ 	function getTable() {
+		return new ForgetPasswordForm( getFactory()->getObject('cms_User') );
  	}
+
+    function getFullPageRenderParms()
+    {
+        return array_merge(
+            parent::getFullPageRenderParms(),
+            array(
+                'inside' => false
+            )
+        );
+    }
 }

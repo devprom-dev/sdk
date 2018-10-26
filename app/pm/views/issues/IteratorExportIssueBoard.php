@@ -44,13 +44,13 @@ class IteratorExportIssueBoard extends IteratorExport
 		 						echo $uid->getObjectUid($it->getCurrentIt());
 			 				echo '</td></tr>';
 		 					echo '<tr><td class="field">';
-		 						echo join(',', $this->get('Priority'));
+		 						echo htmlentities(join(',', $this->get('Priority')));
 			 				echo '</td></tr>';
 		 					echo '<tr><td class="field">';
-		 						echo join(',', $this->get('Author'));
+		 						echo htmlentities(join(',', $this->get('Owner')));
 			 				echo '</td></tr>';
 		 					echo '<tr><td class="uid" style="border-bottom:0">';
-		 						echo $this->get('Estimation');
+		 						echo htmlentities($this->get('Estimation'));
 			 				echo '</td></tr>';
 		 				echo '</table>';
 	 				echo '</td>';

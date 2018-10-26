@@ -3,7 +3,6 @@
 use Devprom\ProjectBundle\Service\Workflow\WorkflowService;
 
 include_once "BusinessActionWorkflow.php";
-include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 
 class TaskBusinessActionDeclineIssue extends BusinessActionWorkflow
 {

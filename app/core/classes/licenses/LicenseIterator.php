@@ -53,7 +53,14 @@ class LicenseIterator extends OrderedIterator
 	function getUsers()
 	{
 		$options = $this->getOptions();
-		return $options['users'] > 0 ? $options['users'] : 0;
+		if ( $options['users'] > 0 ) return $options['users'];
+
+		$licensedUsers = 0;
+		foreach( preg_split('/,/', $options['options']) as $option ) {
+		    list($permission, $users) = preg_split('/:/', $option);
+		    if ( $users > 0 ) $licensedUsers += $users;
+        }
+		return $licensedUsers;
 	}
 
     function getDays()

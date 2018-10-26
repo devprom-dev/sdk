@@ -20,6 +20,7 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
 
 	public function applyTransitionActions( $transition_it, $object_it )
     {
+        if ( $transition_it->getId() == '' ) return;
         $action_it = getFactory()->getObject('TransitionAction')->getRegistry()->Query(
             array (
                 new FilterAttributePredicate('Transition', $transition_it->getId()),
@@ -31,6 +32,7 @@ class ApplyBusinessActionsEventHandler extends WorklfowMovementEventHandler
 
 	public function applyStateActions( $state_it, $object_it )
     {
+        if ( $state_it->getId() == '' ) return;
         $action_it = getFactory()->getObject('StateAction')->getRegistry()->Query(
             array (
                 new FilterAttributePredicate('State', $state_it->getId()),

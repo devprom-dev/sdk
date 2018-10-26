@@ -4,6 +4,8 @@ include "WikiConverterPreviewExt.php";
 
 abstract class WikiConverterPanDoc extends WikiIteratorExport
 {
+    private $pandocVersion = '';
+
     function __construct( $iterator )
     {
         parent::IteratorExport($iterator);
@@ -34,7 +36,9 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
         file_put_contents($this->htmlPath, $content);
         ob_end_clean();
 
+        $templateId = '';
         $templatePath = $this->getDefaultTemplatePath();
+
         foreach($options as $option) {
             if ( strpos($option, 'template=') !== false ) {
                 $templateId = array_pop(explode('=', $option));
@@ -64,7 +68,7 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
 
         $requiredParms .= ' --from=html';
         if (version_compare($pandocVersion, '1.16.0') >= 0) {
-            $requiredParms .= ' --dpi=300';
+            $requiredParms .= ' --dpi=100';
         }
 
         $command = 'pandoc '.$requiredParms.' '.$templateParm.' '.$this->getToParms().' --data-dir="'.SERVER_FILES_PATH.'" -o "'.$this->outputPath.'" "'.$this->htmlPath.'" 2>&1';
@@ -75,15 +79,12 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
 
         if ( $result != "" ) {
             Logger::getLogger('Commands')->error(get_class($this).': '.$result);
-            $lines = array_filter(
-                preg_split('/[\r\n]/', $result),
-                function($value) {
-                    return $value != '' && strpos($value, 'skipping.') === false;
-                });
-            if ( count($lines) > 0 ) throw new Exception($result);
+            if ( stripos($result, 'skipping.') === false && stripos($result, 'warning') === false ) {
+                throw new Exception($result);
+            }
         }
 
-        if ( $templateParm != '' ) {
+        if ( $templateParm != '' && $templateId != '' ) {
             $this->postProcessByTemplate($templatePath, $this->outputPath);
         }
 
@@ -101,13 +102,16 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
         echo file_get_contents($this->outputPath);
 	}
 
-	protected function getVersion() {
+	protected function getVersion()
+    {
+        if ( $this->pandocVersion != '' ) return $this->pandocVersion;
+
         putenv("HOME=".trim(SERVER_FILES_PATH,"\\/"));
         $command = 'pandoc -v 2>&1';
         Logger::getLogger('Commands')->info(get_class($this).': '.$command);
         $result = shell_exec($command);
         Logger::getLogger('Commands')->info($result);
-        return array_pop(
+        return $this->pandocVersion = array_pop(
             preg_split('/\s+/',
                 array_shift(
                     preg_split('/[\r\n]/', $result)
@@ -142,6 +146,7 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
             }
         }
         $content = join('dummy="', $colspanParts);
+        $content = \TextUtils::removeHtmlTag('colgroup', $content);
     }
 
     abstract protected function getToParms();

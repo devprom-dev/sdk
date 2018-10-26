@@ -54,16 +54,16 @@ public class UserEditPage extends AdminPageBase {
 	@FindBy(xpath = "//select[@id='cms_UserLanguage']/option[@value='2']")
 	private WebElement englishSelect;
 
-	@FindBy(xpath = "//span[@id='cms_UserGroupId']//a[contains(@class,'embedded-add-button')]")
+	@FindBy(xpath = "//span[@name='cms_UserGroupId']//a[contains(@class,'embedded-add-button')]")
 	private WebElement addGroupLink;
 
-	@FindBy(xpath = "//span[@id='cms_UserGroupId']//select[contains(@name,'UserGroup')]")
+	@FindBy(xpath = "//span[@name='cms_UserGroupId']//input[contains(@id,'UserGroupText')]")
 	private WebElement groupsList;
 
-	@FindBy(xpath = "//span[@id='cms_UserGroupId']//input[@action='save']")
+	@FindBy(xpath = "//span[@name='cms_UserGroupId']//input[@action='save']")
 	private WebElement addGroupBtn;
 
-	@FindBy(xpath = "//span[@id='cms_UserGroupId']//input[@action='cancel']")
+	@FindBy(xpath = "//span[@name='cms_UserGroupId']//input[@action='cancel']")
 	private WebElement cancelGroupBtn;
 
 	@FindBy(xpath = "//select[@id='cms_UserLanguage']")
@@ -129,7 +129,7 @@ public class UserEditPage extends AdminPageBase {
 		try {
 			groupsL = driver
 					.findElements(By
-							.xpath(".//span[@id='cms_UserGroupId']//div[contains(@id,'embeddedList')]//*[contains(@class,'title')]"));
+							.xpath(".//span[@name='cms_UserGroupId']//div[contains(@id,'embeddedList')]//*[contains(@class,'title')]"));
 		} catch (NoSuchElementException e) {
 			// The user is not included in groups
 		}
@@ -147,7 +147,7 @@ public class UserEditPage extends AdminPageBase {
 				// if the current group is not in our new list - delete it
 				if (toDelete) {
 					int deleteNumber = 100 + i;
-					clickOnInvisibleElement(driver.findElement(By.xpath(".//span[@id='cms_UserGroupId']//div[contains(@id,'Caption" + deleteNumber+ "')]//li[@uid='delete']/a")));
+					clickOnInvisibleElement(driver.findElement(By.xpath(".//span[@name='cms_UserGroupId']//div[contains(@id,'Caption" + deleteNumber+ "')]//li[@uid='delete']/a")));
 				}
 			}
 		}
@@ -159,15 +159,9 @@ public class UserEditPage extends AdminPageBase {
 		for (String group : user.getGroups()) {
 			clickOnInvisibleElement(addGroupLink);
 			(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(groupsList));
-			if (Configuration.getBrowser().equals("firefox")) {
-				(new Select(groupsList)).selectByVisibleText(group);
-			} else {
-				groupsList.click();
-				groupsList.findElement(
-						By.xpath("//option[contains(text(),'" + group + "')]"))
-						.click();
-			}
-			(new WebDriverWait(driver, waiting)).until(ExpectedConditions.visibilityOf(addGroupBtn));
+			groupsList.clear();
+			groupsList.sendKeys(group);
+			autocompleteSelect(group);
 			addGroupBtn.click();
 		}
 		submitDialog(createBtn);
@@ -202,7 +196,7 @@ public class UserEditPage extends AdminPageBase {
 		try {
 			groupsL = driver
 					.findElements(By
-							.xpath(".//span[@id='cms_UserGroupId']//div[contains(@id,'embeddedList')]//*[contains(@class,'title')]"));
+							.xpath(".//span[@name='cms_UserGroupId']//div[contains(@id,'embeddedList')]//*[contains(@class,'title')]"));
 		} catch (NoSuchElementException e) {
 			// The user is not included in groups
 		}

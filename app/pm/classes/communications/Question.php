@@ -23,4 +23,9 @@ class Question extends MetaobjectStatable
 		}
 		return parent::getDefaultAttributeValue( $attribute );
 	}
+
+	function getDisplayName()
+    {
+        return translate('Обсуждение');
+    }
 }

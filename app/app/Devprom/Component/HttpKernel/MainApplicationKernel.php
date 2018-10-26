@@ -18,9 +18,13 @@ class MainApplicationKernel extends Kernel
             new \Symfony\Bundle\MonologBundle\MonologBundle(),
             new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
             new \Symfony\Bundle\TwigBundle\TwigBundle(),
+            new \JMS\SerializerBundle\JMSSerializerBundle(),
+            new \FOS\RestBundle\FOSRestBundle(),
             new \Devprom\WelcomeBundle\WelcomeBundle(),
         	new \Devprom\ApplicationBundle\ApplicationBundle(),
-            new \Devprom\CommonBundle\CommonBundle()
+            new \Devprom\CommonBundle\CommonBundle(),
+            new \Symfony\Bundle\AsseticBundle\AsseticBundle(),
+            new \Nelmio\CorsBundle\NelmioCorsBundle()
         );
 
         return $bundles;

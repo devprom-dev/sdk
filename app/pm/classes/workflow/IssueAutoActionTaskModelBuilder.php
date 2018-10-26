@@ -24,7 +24,7 @@ class IssueAutoActionTaskModelBuilder extends ObjectModelBuilder
         );
 
     	foreach( $attributes as $attribute ) {
-            if ( !$task->IsAttributeStored($attribute) ) continue;
+            if ( !$task->IsAttributeStored($attribute) && $task->getAttributeOrigin($attribute) != ORIGIN_CUSTOM ) continue;
             if ( !$task->IsAttributeVisible($attribute) ) continue;
             $key = 'Task_'.$attribute;
             $object->addAttribute(

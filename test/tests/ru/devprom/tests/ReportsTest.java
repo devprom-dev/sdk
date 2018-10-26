@@ -34,7 +34,7 @@ public class ReportsTest extends TestBase {
 		String p = DataProviders.getUniqueString();
 		Template SDLC = new Template(
 				this.waterfallTemplateName);
-		Project project = new Project("MyP1" + p, "MyP1" + p, SDLC);
+		Project project = new Project("MyP1" + p, "MyP1" + DataProviders.getUniqueStringAlphaNum(), SDLC);
 		ProjectNewPage npp = (new PageBase(driver)).createNewProject();
 		SDLCPojectPageBase favspage = (SDLCPojectPageBase) npp.createNew(project);
 		FILELOG.debug("Created new project " + project.getName());					
@@ -112,8 +112,8 @@ public class ReportsTest extends TestBase {
 	public void reportRecycling() {
 		String p = DataProviders.getUniqueString();
 		String reportName = "Мой Баклог" + p;
-		Template myTemplate = new Template("MyTemplate"+p, "Template for test", "template"+p, Lang.russian);
-		Project project = new Project("MyTemplateProject" + p, "mtp" + p, myTemplate);
+		Template myTemplate = new Template("MyTemplate"+p, "Template for test", "template"+DataProviders.getUniqueStringAlphaNum(), Lang.russian);
+		Project project = new Project("MyTemplateProject" + p, "mtp" + DataProviders.getUniqueStringAlphaNum(), myTemplate);
 		User user = new User(p, true);
 		Project webTest = new Project("DEVPROM.WebTest", "devprom_webtest",
 				new Template(

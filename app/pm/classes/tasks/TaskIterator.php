@@ -22,6 +22,14 @@ class TaskIterator extends StatableIterator
             $prefix .= $this->getDateFormatShort('PlannedFinishDate');
             $prefix .= '</span> ';
         }
+
+        if ( $this->get('TagNames') != '' ) {
+            $tags = array_map(function($value) {
+                return ' <span class="label label-info label-tag">'.$value.'</span> ';
+            }, preg_split('/,/', $this->get('TagNames')));
+            $prefix = join('',$tags) . $prefix;
+        }
+
         return parent::getDisplayNameExt($prefix);
     }
 

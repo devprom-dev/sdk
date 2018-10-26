@@ -1,8 +1,5 @@
 <?php
-
-if ( !class_exists('Tag', false) ) include "Tag.php";
 include "CustomTagIterator.php";
-
 include "predicates/CustomTagFilter.php";
 include "persisters/CustomTagDetailsPersister.php";
 
@@ -111,5 +108,13 @@ class CustomTag extends Tag
  			$tag_it->moveNext();
  		}
  	}
+
+ 	function add_parms($parms)
+    {
+        if ( $parms['ObjectClass'] == '' ) {
+            $parms['ObjectClass'] = strtolower(get_class($this->getObject()));
+        }
+        return parent::add_parms($parms);
+    }
 }
  

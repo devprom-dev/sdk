@@ -23,10 +23,10 @@ public class FunctionNewPage extends SDLCPojectPageBase {
 	@FindBy(id = "pm_FunctionImportance")
 	protected WebElement importanceSelect;
 
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='featuretag']]")
+	@FindBy(xpath = "//span[@name='pm_FunctionTags']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTag;
 
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='functiontracerequirement']]")
+	@FindBy(xpath = "//span[@name='pm_FunctionRequirement']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addRequirementsBtn;
 
 	@FindBy(id = "pm_FunctionSubmitBtn")

@@ -34,7 +34,7 @@ abstract class NewDocumentTemplateWebMethod extends WebMethod
 	}
 
 	function getMethodName() {
-		return 'Method:'.get_class($this);
+		return 'Method:'.get_class($this).':Caption';
 	}
 	
 	function getJSCall( $parms = array() )
@@ -48,7 +48,7 @@ abstract class NewDocumentTemplateWebMethod extends WebMethod
  		if ( $this->object_it->getId() == '' ) {
  			$this->setObjectIt(
  					$_REQUEST['objects'] != '' 
- 						? $this->getObject()->getExact(preg_split('/-/', $_REQUEST['objects']))
+ 						? $this->getObject()->getExact(\TextUtils::parseIds($_REQUEST['objects']))
  						: $this->getObject()->getEmptyIterator()
  			);
  		}
@@ -64,7 +64,9 @@ abstract class NewDocumentTemplateWebMethod extends WebMethod
 		$template = new DocumentTemplate($this->getObject());
 		$template->add_parms(
 			array (
-				'Caption' => $this->object_it->getHtmlDecoded('Caption'),
+				'Caption' => $_REQUEST['Caption'] != ''
+                                ? $_REQUEST['Caption']
+                                : $this->object_it->getHtmlDecoded('Caption'),
 				'Content' => $xml
 			)
 		);

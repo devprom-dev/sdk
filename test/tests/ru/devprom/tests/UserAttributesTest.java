@@ -63,8 +63,9 @@ public class UserAttributesTest extends ProjectTestBase {
 		AttributeNewPage nap = naep.selectEntity("request:bug", "Справочник");
 		int defaultAttributeValue = 2;
 		nap.setDefaultStringValue(String.valueOf(defaultAttributeValue));
-		String p = DataProviders.getUniqueString();
-		nap.enterNewAttribute("Важность" + p, "ref" + p, "Для теста пользовательских атрибутов", false);
+		String p = DataProviders.getUniqueStringAlphaNum();
+		String name = "Важность" + DataProviders.getUniqueString();
+		nap.enterNewAttribute(name, "ref" + p, "Для теста пользовательских атрибутов", false);
 		
 	    //Create a values map	
 		Map<Integer, String> attributeValues = new HashMap <Integer, String>();
@@ -80,7 +81,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		Request testRequest = new Request("TestCR-"
 				+ DataProviders.getUniqueString(), "dd", "Низкий", 10, "Ошибка");
 		RequestNewPage nrp = mip.clickNewBug();
-		Assert.assertTrue(nrp.isAttributePresent("ref" + p), "Важность"+p+" attribute isn't present");
+		Assert.assertTrue(nrp.isAttributePresent("ref" + p), name+" attribute isn't present");
 		Assert.assertEquals(nrp.checkSelectAttributeDefaultValue("ref" + p), "Некорректное поведение", "Incorrect default value was displayed for Важность"+p+" attribute when creating request");
 		List<String> attributeValuesRead = nrp.getSelectValues(driver.findElement(By.name("ref" + p)));
 		FILELOG.debug("had values: ");
@@ -100,7 +101,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		
 		 // Re-open request and check attribute's value
 		RequestViewPage rvp = mip.clickToRequest(testRequest.getId());
-		Assert.assertEquals(rvp.readUserAttribute("Важность"+p),"Проблемы Usability");
+		Assert.assertEquals(rvp.readUserAttribute(name),"Проблемы Usability");
 		
 		// Clean attributes
 		asp = rvp.gotoAttributeSettings();
@@ -130,8 +131,9 @@ public class UserAttributesTest extends ProjectTestBase {
 		
 	    //Create a new attribute for Request:bug objects, type "string"
 		AttributeNewPage nap = naep.selectEntity("requirement", "Строка текста");
-		String p = DataProviders.getUniqueString();
-		nap.enterNewAttribute("Источник" + p, "ref" + p, "Для теста пользовательских атрибутов", false);
+		String p = DataProviders.getUniqueStringAlphaNum();
+		String name = "Источник" + DataProviders.getUniqueString();
+		nap.enterNewAttribute(name, "ref" + p, "Для теста пользовательских атрибутов", false);
 		nap.setDefaultStringValue("Default value "+p);
 		asp = nap.createNewAttribute();
 		
@@ -149,7 +151,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		FILELOG.info("Requirement created: "+requirement.getId()+" : " + requirement.getName());
 		
 		 // Check attribute's value
-        Assert.assertEquals(rvp.readUserAttribute("Источник"+p),"Some test value " + p);
+        Assert.assertEquals(rvp.readUserAttribute(name),"Some test value " + p);
 		
 		// Clean attributes
 		asp = rvp.gotoAttributeSettings();
@@ -181,7 +183,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		nap.enterNewAttribute("Пользовательский тип", referenceName, "Для теста пользовательских атрибутов", false);
 		Assert.assertEquals(nap.createWithError(), Messages.ERROR_MESSAGE_DUPLICATE_ATTRIBUTE.getText(),
 				 "Нет правильного сообщения об ошибке при попытке создать атрибут с существующим именем");
-		referenceName = "type" + DataProviders.getUniqueString(); 
+		referenceName = "type" + DataProviders.getUniqueStringAlphaNum(); 
 		nap.enterNewAttribute("Пользовательский тип", referenceName, "Для теста пользовательских атрибутов", false);
 		asp = nap.createNewAttribute();
 		Assert.assertTrue(asp.isAttribute(referenceName), "В списке нет созданного атрибута");
@@ -198,7 +200,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		
 		//New SDLC Project
 		String p = DataProviders.getUniqueString();
-			Project project = new Project("SDLCProject"+p, "sdlcproject"+p,new Template(this.waterfallTemplateName));
+			Project project = new Project("SDLCProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 		
 		//Create a Development Project
 		ProjectNewPage pnp = page.createNewProject();
@@ -246,9 +248,9 @@ public class UserAttributesTest extends ProjectTestBase {
 		String p = DataProviders.getUniqueString();
 		User user1 = new User(p+"1",true);
 		User user2 = new User(p+"2",true);
-		Project project = new Project("SDLCProject"+p,"sdlcproject"+p, new Template(this.waterfallTemplateName));
+		Project project = new Project("SDLCProject"+p,"sdlcproject"+DataProviders.getUniqueStringAlphaNum(), new Template(this.waterfallTemplateName));
 		String attributeName = "Ответственный за уточнение";
-		String attribute = "resplink" + p;
+		String attribute = "resplink" + DataProviders.getUniqueStringAlphaNum();
 		Request request1 = new Request("Request1"+p);
 		Request request2 = new Request("Request2"+p);
 		
@@ -312,7 +314,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		PageBase page = new PageBase(driver);
 		//New SDLC Project
 		String p = DataProviders.getUniqueString();
-			Project project = new Project("SDLCProject"+p, "sdlcproject"+p,new Template(this.waterfallTemplateName));
+			Project project = new Project("SDLCProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),new Template(this.waterfallTemplateName));
 		
 		ProjectNewPage pnp = page.createNewProject();
 		SDLCPojectPageBase sdlcFirstPage = (SDLCPojectPageBase) pnp.createNew(project);

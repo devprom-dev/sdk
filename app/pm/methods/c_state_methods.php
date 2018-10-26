@@ -250,6 +250,18 @@ class TransitionStateMethod extends WebMethod
 			return;
 		}
 
+		if ( $parms['attribute'] != '' ) {
+            if ( $object_it->get($parms['attribute']) != $parms['value'] ) {
+                if ( !getFactory()->getAccessPolicy()->can_modify_attribute($object, $parms['attribute']) ) {
+                    echo JsonWrapper::encode(array (
+                        "message" => "denied",
+                        "description" => text(1062)
+                    ));
+                    return;
+                }
+            }
+        }
+
         try {
             if ( $parms['attribute'] == 'Project' ) {
                 $session = new PMSession(
@@ -358,16 +370,17 @@ class TransitionStateMethod extends WebMethod
 			}
 
 			// extend model to get visible|required attributes
+            $tobeData = array_merge(
+                $object_it->getData(),
+                $parms,
+                array (
+                    $parms['attribute'] => $parms['value']
+                )
+            );
 			$model_builder = new WorkflowTransitionAttributesModelBuilder(
 			    $transition_it,
                 array(),
-                array_merge(
-                    $object_it->getData(),
-                    $parms,
-                    array (
-                        $parms['attribute'] => $parms['value']
-                    )
-                )
+                $tobeData
             );
 			$model_builder->build( $object );
 
@@ -375,9 +388,6 @@ class TransitionStateMethod extends WebMethod
 			foreach( $object->getAttributes() as $attribute => $data )
 			{
 				if ( !$object->IsAttributeVisible($attribute) ) continue;
-				if ( $parms[$attribute] != '' ) continue;
-				if ( !in_array($attribute, array('Tasks','Fact')) && $object_it->get($attribute) != '' ) continue;
-
 				$attributes[] = $attribute;
 			}
 

@@ -11,6 +11,11 @@ class WidgetRegistry extends ObjectRegistrySQL
 		$module_it = getFactory()->getObject('Module')->getAll();
 		while( !$module_it->end() )
 		{
+		    if ( $module_it->get('Area') == '' ) {
+                $module_it->moveNext();
+                continue;
+            }
+
 			$resource_it->moveToId($module_it->getId());
 			if ( $resource_it->getId() == '' ) $resource_it->moveToId($module_it->getId().':'.array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools'))));
 

@@ -23,10 +23,13 @@ class AdminSystemTriggers extends SystemTriggersBase
 			case 'cms_BlackList':
             case 'co_AccessRight':
             case 'co_UserGroupLink':
+            case 'Priority':
+            case 'pm_Importance':
                 $this->invalidateCache(array('projects','apps','sessions'));
                 break;
 
 			case 'co_ProjectGroupLink':
+            case 'co_ProjectGroup':
 			case 'cms_PluginModule':
 			case 'cms_Update':
                 $this->invalidateGlobalCache();

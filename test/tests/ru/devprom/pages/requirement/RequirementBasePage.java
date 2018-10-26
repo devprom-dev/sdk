@@ -30,7 +30,7 @@ public class RequirementBasePage extends ProjectPageBase implements IProjectBase
     @FindBy(xpath = "//*[@uid='requirements-docs']")
 	protected WebElement requirementDocsItem;
     
-    @FindBy(xpath = ".//*[contains(text(),'Входящие запросы')]")
+    @FindBy(xpath = ".//*[contains(text(),'Пожелания')]")
 	protected WebElement inboxRequestsItem;
     
     @FindBy(xpath = "//*[@uid='requirements-list']")

@@ -20,7 +20,11 @@ $fields_dont_skip_if_empty = array (
 	'Watchers',
 	'Fact',
 	'Tags',
-	'Estimation'
+	'Estimation',
+    'Type',
+    'Owner',
+    'PlannedRelease',
+    'Iteration'
 );
 
 $fields_to_be_skiped = array (
@@ -29,22 +33,14 @@ $fields_to_be_skiped = array (
 );
 
 // attributes to be displayed in first column
+if ( array_key_exists('ResponseSLA', $attributes) ) {
+    unset($attributes['PlannedResponse']);
+}
+if ( array_key_exists('LeadTimeSLA', $attributes) ) {
+    unset($attributes['Estimation']);
+}
 
-$important_attributes = array( 
-	'Type', 
-	'Priority', 
-	'Author',
-    'ExternalAuthor',
-	'Estimation',
-	'Deadlines',
-	'OrderNum',
-    'PlannedRelease',
-	'ClosedInVersion',
-	'SubmittedVersion',
-	'Iteration',
-	'Owner',
-	'TestFound'
-);
+$important_attributes = $form->getObject()->getAttributesByGroup('form-column-first');
 
 $columns = array();
 $hidden_class = array();
@@ -53,11 +49,9 @@ $recent_column = 0;
 
 foreach( $attributes as $name => $attribute ) 
 {
-	if ( !in_array($name, $important_attributes) && !$attribute['custom'] ) continue;
+	if ( !in_array($name, $important_attributes) ) continue;
     if ( in_array($name, $fields_to_be_skiped) ) continue;
-
 	if ( !$attribute['visible'] ) continue;
-
 	if ( $attribute['value'] == '' && !in_array($name, $fields_dont_skip_if_empty) ) continue;
 
 	$columns[$recent_column][$name] = $attribute;
@@ -74,7 +68,8 @@ foreach( $attributes as $name => $attribute )
     if ( is_null($attribute['field']) ) continue;
 
 	if ( !$attribute['visible'] ) continue;
-	if ( in_array($name, array('Attachment', 'Tasks', 'Caption', 'Description')) ) continue;
+    if ( in_array($attribute['type'], array('wysiwyg')) ) continue;
+	if ( in_array($name, array('Attachment', 'Tasks', 'Caption')) ) continue;
 
 	if ( $attribute['value'] == '' && !in_array($name, $fields_dont_skip_if_empty) ) continue;
 	
@@ -100,7 +95,7 @@ foreach( $attributes as $name => $attribute )
 	if ( !$attribute['visible'] ) continue;
     if ( is_null($attribute['field']) ) continue;
 
-	if ( count(preg_split('/,/',$attribute['value'])) > 6 ) {
+	if ( count(preg_split('/,/',$attribute['value'])) > 20 ) {
 		$wordyAttributes[$name] =  $attribute;
 	}
 	else {
@@ -141,7 +136,7 @@ foreach( $attributes as $name => $attribute )
             if ( $parent_widget_url != '' ) {
                 echo '<li><a href="'.$parent_widget_url.'">'.$parent_widget_title.'</a><span class="divider">/</span></li>';
             }
-			echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a><span class="divider">/</span></li>';
+			echo '<li><a href="'.$navigation_url.'">'.$nearest_title.'</a><span class="divider">/</span></li>';
 		}
 		else if ( $caption != '' ) {
 			echo '<li>'.$caption.'<span class="divider">/</span></li>';
@@ -153,16 +148,18 @@ foreach( $attributes as $name => $attribute )
                     'color' => $form->getObjectIt()->get('StateColor'),
                     'name' => $form->getObjectIt()->get('StateName'),
                     'terminal' => $form->getObjectIt()->get('StateTerminal') == 'Y',
-                    'id' => 'state-label'
+                    'id' => 'state-label',
+                    'referenceName' => $form->getObjectIt()->get('State'),
+                    'listWidgetIt' => $listWidgetIt
                 )).'</li>';
         }
 
 		if ( $nextUrl != '' ) {
-            echo '<li class="hidden-phone next-item">&#10140; <a class="btn btn-link" title="'.text(2333).'" href="'.$nextUrl.'">'.$nextTitle.'</a></li>';
+            echo '<li class="hidden-phone next-item">&#10140; <a title="'.text(2333).'" href="'.$nextUrl.'">'.$nextTitle.'</a></li>';
         }
 	}
 	else {
-		echo '<li><a href="'.$navigation_url.'">'.$navigation_title.'</a></li>';
+		echo '<li><a href="'.$navigation_url.'">'.$title.'</a></li>';
 	}
 ?>
 </ul> <!-- end breadcrumb -->
@@ -263,33 +260,37 @@ foreach( $attributes as $name => $attribute )
 				</div>
 
 				<!--  -->
-                <? if ( is_array($attributes['Description']) ) { ?>
+                <?
+                foreach( $attributes as $key => $attribute )
+                {
+                    if ( $attribute['type'] != 'wysiwyg' ) continue;
+                ?>
 				<div class="accordion-heading">
-					<a class="to-drop-btn <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'collapsed':'')?>" data-toggle="collapse" href="#collapseTwo" tabindex="-1">
+					<a class="to-drop-btn" data-toggle="collapse" tabindex="-1">
 						<span class="caret"></span>
-						<?=$attributes['Description']['name']?>
+						<?=$attribute['name']?>
 					</a>
 				</div>
-				<div id="collapseTwo" class="accordion-body <?=($_COOKIE['devprom_request_form_section#collapseTwo']=='0'?'':'in')?> collapse">
+				<div class="accordion-body in collapse">
 					<?
-					if ( is_a($attributes['Description']['field'], 'Field') )
-					{
-						$attributes['Description']['field']->draw($this);
+					if ( is_a($attribute['field'], 'Field') ) {
+                        $attribute['field']->draw($this);
 					}
-					else
-					{
-						echo '<p>'.$attributes['Description']['text'].'</p>';
+					else {
+						echo '<p>'.$attribute['text'].'</p>';
 					}
 					?>
 					<br/>
 				</div>
-                <? } ?>
+                <?
+                }
+                ?>
 
 			</div>
 			<div class="properties-cell-2">
 				<div class="properties-column">&nbsp;</div>
 				<?php $column = $columns[2]; ?>
-				<div class="properties-column-32">
+				<div class="properties-column-32 file-drop-target">
 					<table class="properties-table">
 						<?php foreach( $column as $ref_name => $attribute ) { ?>
 							<tr name="<?=$ref_name?>">

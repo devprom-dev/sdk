@@ -98,13 +98,13 @@ public class Requirement implements Cloneable{
 	}
 	public void setId(String id) {
 		this.id = id;
-		this.clearId = id.substring(2);
+		this.clearId = id.split("-")[1];
 	}
 	public String getClearId() {
 		return clearId;
 	}
 	public String getNumericId() {
-		return id.substring(2);
+		return id.split("-")[1];
 	}
 	public String getName() {
 		return name;

@@ -47,7 +47,7 @@ class FilterTextWebMethod extends WebMethod
  	{
 		$value_text = $this->getValue();
 		if ( in_array($value_text, array('none','all')) ) $value_text = '';
-		echo '<input type="text" valueparm="'.$this->getValueParm().'" class="btn-small input-large" placeholder="'.$this->title.'" style="'.$this->getStyle().'" value="'.$value_text.'" onchange="'.$this->script.'" onkeyup="enterKeyUp(event) ? '.preg_replace('/javascript:/','',$this->script).' : 0;">';
+		echo '<input type="text" valueparm="'.$this->getValueParm().'" class="btn-sm input-large" placeholder="'.$this->title.'" style="'.$this->getStyle().'" value="'.$value_text.'" onchange="'.$this->script.'" onkeyup="enterKeyUp(event) ? '.preg_replace('/javascript:/','',$this->script).' : 0;">';
  	}
  	
  	function execute_request()

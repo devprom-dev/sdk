@@ -21,12 +21,12 @@ public class TemplatesTest extends ProjectTestBase
 	@Test(description="S-2206")
 	public void transitionSettingsTest() throws InterruptedException{
 		String p = DataProviders.getUniqueString();
-		Template template = new Template("TransitionTestSDLC" +p, "Шаблон для теста настроек перехода", "trtest"+p, Template.Lang.russian);
+		Template template = new Template("TransitionTestSDLC" +p, "Шаблон для теста настроек перехода", "trtest"+DataProviders.getUniqueStringAlphaNum(), Template.Lang.russian);
 		
 		ProjectNewPage npp = (new PageBase(driver)).createNewProject();
 		Template SDLC = new Template(
 				this.waterfallTemplateName);
-		Project protoripeProject = new Project("TemplatePrototipeProject" + p, "tpproject" + p, SDLC);
+		Project protoripeProject = new Project("TemplatePrototipeProject" + p, "tpproject" + DataProviders.getUniqueStringAlphaNum(), SDLC);
 		npp.createNew(protoripeProject);
 		FILELOG.debug("Created new project " + protoripeProject.getName());
 		
@@ -43,7 +43,7 @@ public class TemplatesTest extends ProjectTestBase
 		stp.saveTemplate(template);
 		
 		stp.createNewProject();
-		Project inheritProject = new Project("InheritSettingsProject" + p, "isproject" + p, SDLC);
+		Project inheritProject = new Project("InheritSettingsProject" + p, "isproject" + DataProviders.getUniqueStringAlphaNum(), SDLC);
 		//npp.createNewSDLCFromUserTemplate(inheritProject);
 		npp.createNew(inheritProject);
 		FILELOG.debug("Created new project " + inheritProject.getName());

@@ -9,7 +9,6 @@ include_once SERVER_ROOT_PATH."pm/classes/workflow/persisters/StateDurationPersi
 include_once SERVER_ROOT_PATH."pm/classes/attachments/persisters/AttachmentsPersister.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/persisters/IssueLinkedIssuesPersister.php";
 include_once SERVER_ROOT_PATH.'pm/views/wiki/editors/WikiEditorBuilder.php';
-include_once SERVER_ROOT_PATH.'pm/classes/issues/RequestModelExtendedBuilder.php';
 
 class TooltipProjectService extends TooltipService
 {
@@ -71,11 +70,14 @@ class TooltipProjectService extends TooltipService
  	 	{
  	 		$data[] = array (
                 'name' => 'Baseline',
-                'title' => translate('Версия'),
+                'title' => translate('Бейзлайн'),
                 'type' => 'varchar',
                 'text' => getFactory()->getObject('Snapshot')->getExact($this->baseline)->getDisplayName(),
                 'group' => TOOLTIP_GROUP_ADDITIONAL
  	 		);
+            $data = array_filter($data, function($value) {
+                return $value['name'] != 'DocumentVersion';
+            });
  	 	}
  	 	
  	 	if ( $object_it->object instanceof \Request ) {
@@ -225,7 +227,7 @@ class TooltipProjectService extends TooltipService
 
  	 	return array (
             'author' => $comment_it->getHtmlDecoded('AuthorName'),
-            'text' => $this->getAttributeValue($comment_it, 'Caption', 'text')
+            'text' => $this->getAttributeValue($comment_it, 'Caption', 'wysiwyg')
  	 	);
     }
 
@@ -236,7 +238,7 @@ class TooltipProjectService extends TooltipService
                 $parser = $this->editor->getHtmlParser();
 		        $parser->displayHints(true);
 		        $parser->setObjectIt($object_it);
-                return \TextUtils::getValidHtml($parser->parse($object_it->getHtmlDecoded($attribute)));
+                return $parser->parse($object_it->getHtmlDecoded($attribute));
 
             default:
                 return parent::getAttributeValue($object_it, $attribute, $type);

@@ -67,7 +67,7 @@ public class ProgramTest extends ProjectTestBase {
 		String p = DataProviders.getUniqueString();
 		
 		//Program Project
-		Project webTest = new Project("Program"+p, "program"+p,
+		Project webTest = new Project("Program"+p, "program"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName));
 
 		ProjectNewPage pnp = page.createNewProject();
@@ -75,7 +75,7 @@ public class ProgramTest extends ProjectTestBase {
 		FILELOG.debug("Created new project " + webTest.getName());
 
 		//Sub Project
-		Project subProject= new Project("subProject"+p, "subproject"+p,
+		Project subProject= new Project("subProject"+p, "subproject"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName));
 		
 		pnp = page.createNewProject();
@@ -122,7 +122,7 @@ public class ProgramTest extends ProjectTestBase {
 		String p = DataProviders.getUniqueString();
 
 		//Program Project
-		Project webTest = new Project("Program"+p, "program"+p, new Template(this.waterfallTemplateName));
+		Project webTest = new Project("Program"+p, "program"+DataProviders.getUniqueStringAlphaNum(), new Template(this.waterfallTemplateName));
 		ProjectNewPage pnp = page.createNewProject();
 		SDLCPojectPageBase sdlcFirstPage = (SDLCPojectPageBase) pnp.createNew(webTest);
 		FILELOG.debug("Created new project " + webTest.getName());
@@ -146,7 +146,7 @@ public class ProgramTest extends ProjectTestBase {
 		ulp = ulp.addNewUser(testUser, false);
 		
 		//Sub Project
-		Project subProject= new Project("subProject"+p, "subproject"+p,
+		Project subProject= new Project("subProject"+p, "subproject"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName));
 		
 		//Create another Project and add User as a Member
@@ -193,15 +193,15 @@ public class ProgramTest extends ProjectTestBase {
          
          
         //SDLC Project
-		sdlcProject= new Project("sdlcProject"+p, "sdlcproject"+p,
+		sdlcProject= new Project("sdlcProject"+p, "sdlcproject"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.waterfallTemplateName));
 		
 		//Scrum Project
-		scrumProject = new Project("scrumProject"+p, "scrumproject"+p,
+		scrumProject = new Project("scrumProject"+p, "scrumproject"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.scrumTemplateName));
 		
 		//Kanban Project
-		kanbanProject = new Project("kanbanProject"+p, "kanbanproject"+p,
+		kanbanProject = new Project("kanbanProject"+p, "kanbanproject"+DataProviders.getUniqueStringAlphaNum(),
 				new Template(this.kanbanTemplateName));
 		
 		
@@ -336,21 +336,20 @@ public class ProgramTest extends ProjectTestBase {
 		FavoritesPage fp = lp.loginAs(testUser.getUsername(), testUser.getPass());
 		
 		ScrumPageBase spb =  (ScrumPageBase) fp.gotoProject(scrumProject);
-		Assert.assertTrue(spb.isReportAccessible("stg", "menu-folder-workflow", ""), "Координатор не видит раздел 'Состояния'");
+		spb.gotoSettingsPage();
+		Assert.assertTrue(spb.isSettingAccessible("workflow-issuestate"), "Координатор не видит раздел 'Состояния'");
 		
 		lp = (new PageBase(driver)).logOut();
 		FileOperations.deleteDirectory(new File(Configuration.getCachePath()));
 	    fp = lp.loginAs(scrumUser.getUsername(), scrumUser.getPass());
 		spb =  (ScrumPageBase) fp.gotoProject(scrumProject);
 		
-		Assert.assertFalse(spb.isReportAccessible("stg", "", "Терминология"), "Участник видит 'Терминологию'");
+		Assert.assertFalse(spb.isSettingAccessible("process-terminology"), "Участник видит 'Терминологию'");
 		
 		lp = (new PageBase(driver)).logOut();
 		fp = lp.loginAs(testUser.getUsername(), testUser.getPass());
 		spb =  (ScrumPageBase) fp.gotoProject(scrumProject);
-		Assert.assertTrue(spb.isReportAccessible("stg", "menu-folder-workflow", ""), "Координатор не видит раздел 'Состояния'");
-		
+		spb.gotoSettingsPage();
+		Assert.assertTrue(spb.isSettingAccessible("workflow-issuestate"), "Координатор не видит раздел 'Состояния'");
 	}
-	
-	
 }

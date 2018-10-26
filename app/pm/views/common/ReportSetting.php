@@ -1,6 +1,6 @@
 <?php
 
-class ReportSetting extends PageListSetting
+class   ReportSetting extends PageListSetting
 {
     function __construct( $report_uid )
     {

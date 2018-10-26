@@ -6,19 +6,18 @@ abstract class SetTagsWebMethod extends WebMethod
     abstract function getTagObject();
     abstract function getAttribute();
 
+    function __construct( $objectIt = null ) {
+        $this->objectIt = $objectIt;
+    }
+
     function execute_request()
     {
-        if ( $_REQUEST['ids'] != '' ) {
-            $ids = join(',', preg_split('/-/', $_REQUEST['ids']));
-        }
-        if ( $ids == '' ) throw new Exception('Object is required');
-
         if ( array_key_exists('Tag', $_REQUEST) ) {
-            $this->attachTag( $ids, $_REQUEST['value'] );
+            $this->attachTag( $this->objectIt->idsToArray(), $_REQUEST['value'] );
         }
 
         if ( array_key_exists('RemoveTag', $_REQUEST) ) {
-            $this->removeTag( $ids );
+            $this->removeTag( $this->objectIt->idsToArray() );
         }
     }
 
@@ -30,7 +29,7 @@ abstract class SetTagsWebMethod extends WebMethod
         $request = $this->getObject();
         $request->removeNotificator( 'EmailNotificator' );
 
-        $request_it = $request->getExact( preg_split('/,/', $ids) );
+        $request_it = $request->getExact( \TextUtils::parseIds($ids) );
         while ( !$request_it->end() )
         {
             $parms = array (
@@ -57,11 +56,13 @@ abstract class SetTagsWebMethod extends WebMethod
         $request = $this->getObject();
         $request->removeNotificator( 'EmailNotificator' );
 
-        $request_it = $request->getExact( preg_split('/,/', $ids) );
+        $request_it = $request->getExact( \TextUtils::parseIds($ids) );
         while ( !$request_it->end() )
         {
             $request_tag->removeTags( $request_it->getId() );
             $request_it->moveNext();
         }
     }
+
+    private $objectIt = null;
 }

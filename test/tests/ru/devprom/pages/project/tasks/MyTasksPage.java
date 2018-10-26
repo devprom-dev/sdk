@@ -16,7 +16,7 @@ public class MyTasksPage extends TasksPage
 	public TaskViewPage clickToTask(String id) {
 		try {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'workitemlist1_row_')]/td[@id='uid']/a[contains(text(),'["+ id + "]')]")).click();
+				By.xpath("//tr[contains(@id,'workitemlist1_row_')]/td[@id='uid']/a[contains(.,'["+ id + "]')]")).click();
 		}
 		catch (NoSuchElementException e) {
 			driver.findElement(

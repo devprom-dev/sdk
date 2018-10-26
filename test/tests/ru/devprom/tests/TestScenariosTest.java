@@ -239,7 +239,7 @@ public class TestScenariosTest extends ProjectTestBase {
 		tsvp = tsvp.showBaseline(baseline);
 		tsvp = tsvp.compareWithVersion(specification.getName());
 		Assert.assertTrue(tsvp.isAlertPresent(), "Нет предупреждающего об изменениях знака");
-		Assert.assertTrue(tsvp.isTextPresent(section.getContent()), "В режиме сравнения не видно секции исходной версии");
+		Assert.assertTrue(tsvp.isTextPresent(section.getName()), "В режиме сравнения не видно секции исходной версии");
 		tsvp = tsvp.copySection();
 		
 		//Check new content
@@ -249,7 +249,7 @@ public class TestScenariosTest extends ProjectTestBase {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 		}
-		Assert.assertTrue(tsvp.isTextPresent(section.getContent()), "Секция не отображается в версии бейзлайна");
+		Assert.assertTrue(tsvp.isTextPresent(section.getName()), "Секция не отображается в версии бейзлайна");
 	}
 	
 	@Test(description="S-2498")

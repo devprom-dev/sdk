@@ -4,10 +4,8 @@ include_once SERVER_ROOT_PATH."cms/views/FieldDictionary.php";
 include_once SERVER_ROOT_PATH."pm/views/workflow/FieldAttributeDictionary.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/Request.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestMetadataBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/Task.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskMetadataBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 
 class FieldAttributeDictionaryDummyTest extends DevpromDummyTestCase
 {

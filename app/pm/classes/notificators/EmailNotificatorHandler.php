@@ -16,24 +16,20 @@ class EmailNotificatorHandler
             getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/EmailSubject"
         );
 
-        $project = $object_it->get('ProjectCodeName');
-        if ( $project == '' ) $project = getSession()->getProjectIt()->get('CodeName');
-        $uid = new ObjectUid;
+        $projectIt = $object_it->getRef('Project');
+        if ( $projectIt->getId() == '' ) $projectIt = getSession()->getProjectIt();
 
+        $uid = new ObjectUid;
         return $render_service->getContent('subject-changed.twig', array(
             'entityName' => $object_it->object->getDisplayName(),
-            'codeName' => $project,
+            'codeName' => $projectIt->getHtmlDecoded('CodeName'),
+            'projectName' => $projectIt->getHtmlDecoded('Caption'),
             'uid' => $uid->getObjectUid($object_it),
-            'title' => $object_it->getDisplayName()
+            'title' => $object_it->getHtmlDecoded('Caption')
         ));
 	}
 	
-	function getParticipants( $object_it, $prev_object_it, $action ) 
-	{
-		return array();
-	}	
-	
-	function getUsers( $object_it, $prev_object_it, $action ) 
+	function getUsers( $object_it, $prev_object_it, $action )
 	{
 		return array();
 	}	
@@ -96,7 +92,7 @@ class EmailNotificatorHandler
 	{
 		$parms = array();
 		
-		foreach( array_keys($object_it->object->getAttributesSorted()) as $attribute ) 
+		foreach( array_keys($object_it->object->getAttributes()) as $attribute )
 		{
 			if( !$this->isAttributeVisible($attribute, $object_it, $action) ) continue;
 
@@ -165,8 +161,8 @@ class EmailNotificatorHandler
 		switch ( $attr )
 		{
 			case 'State':
-				if ( method_exists($object_it, 'getStateIt') )
-				{
+                if ( $object_it->get('StateNameAlt') != '' ) return $object_it->get('StateNameAlt');
+				if ( method_exists($object_it, 'getStateIt') ) {
 					$state_it = $object_it->getStateIt();
 					return $state_it->getDisplayName();
 				}
@@ -174,7 +170,6 @@ class EmailNotificatorHandler
 		}
 		
 		$att_type = $object_it->object->getAttributeType($attr);
-
 		if ( $att_type == 'wysiwyg' )
 		{ 
 			$editor = WikiEditorBuilder::build();

@@ -35,7 +35,7 @@ class Stage extends Metaobject
 	function getExact( $id )
  	{
  		return $this->getRegistry()->Query( array (
- 				new FilterAttributePredicate('Caption', $id)
+ 				new FilterTextExactPredicate('Caption', $id)
  		));
  	}
 }

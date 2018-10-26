@@ -83,10 +83,24 @@ class AutoAction extends Metaobject
 
  	function modify_parms( $id, $parms )
  	{
- 		$this->serializeActions($parms);
- 		$this->serializeConditions($parms);
- 		
- 		return parent::modify_parms( $id, $parms );
+        if ( $parms['Actions'] != '' ) {
+            $this->serializeActions($parms);
+        }
+        $this->serializeConditions($parms);
+
+ 		$result = parent::modify_parms( $id, $parms );
+
+ 		if ( $parms['OrderNum'] != '' ) {
+            DAL::Instance()->Query("SET @r=0");
+            DAL::Instance()->Query("UPDATE ".$this->getEntityRefName()." t SET t.OrderNum = @r:= (@r+1) WHERE t.VPD = '".$this->getVpdValue()."' ORDER BY t.OrderNum ASC");
+
+            $sql = "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass) ".
+                " SELECT NOW(), NOW(), t.VPD, t.".$this->getIdAttribute().", '".get_class($this)."' ".
+                "     FROM ".$this->getEntityRefName()." t WHERE t.VPD = '".$this->getVpdValue()."' ";
+            DAL::Instance()->Query( $sql );
+        }
+
+        return $result;
  	}
  	
  	function delete( $id, $record_version = ''  )
@@ -126,7 +140,7 @@ class AutoAction extends Metaobject
  	protected function serializeConditions( &$parms )
  	{
  		$items = array();
- 		for( $i = 0; $i < 3; $i++ )
+ 		for( $i = 0; $i < 30; $i++ )
  		{
  			if ( $parms['Operator'.$i] == '' || $parms['Condition'.$i] == '' ) continue; 
  			$items[] = array (
@@ -144,4 +158,8 @@ class AutoAction extends Metaobject
             )
         );
  	}
+
+    function getOrderStep() {
+        return 1;
+    }
 }

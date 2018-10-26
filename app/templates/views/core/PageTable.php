@@ -24,7 +24,7 @@ echo $view->render('core/PageTableBody.php', array (
 	'bulk_actions' => $bulk_actions,
     'list' => $list,
     'navigation_url' => $navigation_url,
-    'navigation_title' => $navigation_title,
+    'nearest_title' => $nearest_title,
 	'title' => $title,
     'changed_ids' => $changed_ids,
 	'filterMoreActions' => $filterMoreActions,

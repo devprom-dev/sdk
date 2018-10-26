@@ -32,8 +32,9 @@ public class StressTest extends ProjectTestBase {
    int pagesCount = 100;
 		
 	@Test
-	public void RequirementsStressTest() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
-		String templateName = "StressTestTemplate" + DataProviders.getUniqueString();
+	public void RequirementsStressTest() throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException
+	{
+		String templateName = "StressTestTemplate" + DataProviders.getUniqueStringAlphaNum();
 		System.out.println("Max Load Time set to: " + maxLoadTime/1000 );
 		
 		PageBase page = new PageBase(driver);
@@ -108,7 +109,7 @@ public class StressTest extends ProjectTestBase {
 		ProjectNewPage npp = (new PageBase(driver)).createNewProject();
 		Template kanbanTemplate = new Template(this.kanbanTemplateName);
 		String p = DataProviders.getUniqueString();
-		 Project project = new Project("Kanban" + p, "kanban" + p, kanbanTemplate);
+		 Project project = new Project("Kanban" + p, "kanban" + DataProviders.getUniqueStringAlphaNum(), kanbanTemplate);
 		KanbanPageBase firstPage = (KanbanPageBase) npp
 				.createNew(project);
 		FILELOG.debug("Created new project " + project.getName());
@@ -172,15 +173,8 @@ public class StressTest extends ProjectTestBase {
 		double kanbanBoardLoadTime = ppb.getScriptExecutionTime();
 		System.out.println("Kanban доска: " + kanbanBoardLoadTime + " sec.");
 		
-		mrpb = ppb.gotoMyReports();
-		ppb = mrpb.openReport("tasksboard");
-		double subtasksBoardLoadTime = ppb.getScriptExecutionTime();
-		System.out.println("Доска задач: " + subtasksBoardLoadTime + " sec.");
-		
 		Assert.assertTrue(allTasksLoadTime<maxLoadTime, "Время загрузки отчета 'Все задачи в проекте' превышает "+ maxLoadTime + " секунд");
 		Assert.assertTrue(kanbanBoardLoadTime<maxLoadTime, "Время загрузки отчета 'Kanban доска' превышает " + maxLoadTime + " секунд");
-		Assert.assertTrue(subtasksBoardLoadTime<maxLoadTime, "Время загрузки отчета 'Доска задач' превышает " + maxLoadTime + " секунд");
-		
 	}
 	
 	

@@ -7,12 +7,8 @@ class TagPage extends PMPage
 {
 	function getObject()
 	{
-		global $model_factory;
-		
- 		$object = $model_factory->getObject('Tag');
- 		
+ 		$object = getFactory()->getObject('Tag');
  		$object->extendMetadata();
- 		
  		return $object;
 	}
 	

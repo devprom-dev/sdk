@@ -1,5 +1,6 @@
 <?php
 
+include_once SERVER_ROOT_PATH."core/classes/project/PortfolioAllBuilder.php";
 include SERVER_ROOT_PATH."admin/classes/model/ModelFactoryAdmin.php";
 include SERVER_ROOT_PATH."admin/classes/common/AdminAccessPolicy.php";
 include SERVER_ROOT_PATH."admin/classes/notificators/AdminChangeLogNotificator.php";
@@ -50,18 +51,19 @@ class AdminSession extends SessionBase
  	function createBuilders()
  	{
  	    return array_merge(
- 	    		array (
- 	    				new ResourceBuilderCoLanguageFile(),
- 	    				new MaintenanceJSBuilder(getSession())
- 	    		),
- 	    		parent::createBuilders(),
- 	    		array (
-		 	            new AdminChangeLogNotificator(),
-		 	            new AdminSystemTriggers(),
-		 	    		new ProcessFirstUserEvent(),
-		 	    		new MaintenanceModuleBuilder(),
-		 	    		new RecentBackupCreatedEvent()
- 	    		)
+            array (
+                new ResourceBuilderCoLanguageFile(),
+                new MaintenanceJSBuilder(getSession())
+            ),
+            parent::createBuilders(),
+            array (
+                new PortfolioAllBuilder(),
+                new AdminChangeLogNotificator(),
+                new AdminSystemTriggers(),
+                new ProcessFirstUserEvent(),
+                new MaintenanceModuleBuilder(),
+                new RecentBackupCreatedEvent()
+            )
  	    );
  	}
 }

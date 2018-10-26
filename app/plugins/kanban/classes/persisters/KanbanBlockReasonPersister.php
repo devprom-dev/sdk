@@ -4,9 +4,6 @@ class KanbanBlockReasonPersister extends ObjectSQLPersister
 {
 	function map( & $parms )
 	{
-		if ( $parms['State'] != '' ) {
-			$parms['BlockReason'] = '';
-		}
 	}
 
  	function modify( $object_id, $parms )

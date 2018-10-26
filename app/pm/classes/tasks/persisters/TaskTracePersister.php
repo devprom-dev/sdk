@@ -25,5 +25,9 @@ class TaskTracePersister extends ObjectSQLPersister
  			"      AND l.ObjectClass = '".$trace->getObjectClass()."' ) TraceTaskInfo "
  		);
  	}
+
+ 	function IsPersisterImportant() {
+        return true;
+    }
 }
 

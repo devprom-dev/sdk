@@ -1,8 +1,7 @@
 <?php
-
 include "ObjectTemplateList.php";
 
-class ObjectTemplateTable extends PMPageTable
+class ObjectTemplateTable extends SettingsTableBase
 {
 	function getList()
 	{

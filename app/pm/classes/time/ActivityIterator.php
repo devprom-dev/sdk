@@ -6,7 +6,7 @@ class ActivityIterator extends OrderedIterator
  	{
  		$result = $this->getDateFormat('ReportDate');
  		
-		$result .= ' ['.$this->get('Capacity').' '.translate('ч.').']';
+		$result .= ' ['.getSession()->getLanguage()->getHoursWording($this->get('Capacity')).']';
 		
 		$part_it = $this->getRef('Participant');
 		
@@ -23,7 +23,7 @@ class ActivityIterator extends OrderedIterator
  	{
  		$result = $this->getDateFormat('ReportDate');
  		
-		$result .= ' ['.$this->get('Capacity').' '.translate('ч.').']';
+		$result .= ' ['.getSession()->getLanguage()->getHoursWording($this->get('Capacity')).']';
 		
 		if ( $this->get('Description') != '' )
 			$result .= ' '.$this->get('Description');

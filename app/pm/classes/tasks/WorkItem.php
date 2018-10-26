@@ -34,7 +34,9 @@ class WorkItem extends MetaobjectStatable
             'TraceTask',
             'Attachment',
             'Tags',
-            'Assignee'
+            'Assignee',
+            'Planned',
+            'LeftWork'
         );
 
         foreach( $this->getAttributes() as $attribute => $data ) {

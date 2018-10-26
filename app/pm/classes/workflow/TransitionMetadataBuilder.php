@@ -25,7 +25,7 @@ class TransitionMetadataBuilder extends ObjectMetadataEntityBuilder
 
 		$metadata->addPersister(new TransitionDetailsPersister());
 
-        foreach( array('Description','OrderNum','ResetFields') as $attribute ) {
+        foreach( array('Description','OrderNum') as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'additional');
             $metadata->setAttributeRequired($attribute, false);
         }

@@ -1,10 +1,13 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/project/ProjectModelExtendedBuilder.php";
 include "ProjectForm.php";
 include "ProjectSettingsTable.php";
 
 class ProjectSettingsPage extends PMPage
 {
     function getObject() {
+        $builder = new ProjectModelExtendedBuilder();
+        $builder->build(getSession()->getProjectIt()->object);
         return getSession()->getProjectIt()->object;
     }
 

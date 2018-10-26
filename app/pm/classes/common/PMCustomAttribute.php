@@ -16,11 +16,12 @@ class PMCustomAttribute extends MetaobjectCacheable
  		));
  		
  		$this->setAttributeType('AttributeType', 'REF_CustomAttributeTypeId');
+        $this->setAttributeDescription('Groups', text(2645));
  		
  		foreach( array('ValueRange', 'IsVisible', 'IsRequired', 'IsUnique', 'ObjectKind', 'AttributeTypeClassName', 'Capacity') as $field ) {
 			$this->addAttributeGroup($field, 'system');
 		}
-        foreach( array('AttributeType', 'EntityReferenceName','OrderNum') as $field ) {
+        foreach( array('AttributeType', 'EntityReferenceName','OrderNum', 'Groups') as $field ) {
             $this->addAttributeGroup($field, 'additional');
         }
  	}
@@ -221,20 +222,23 @@ class PMCustomAttribute extends MetaobjectCacheable
 		$registry = $this->getExact($id)->getEntityRegistry();
 		if ( !is_object($registry) ) return;
 
+        $registry->getObject()->setAttributeDefault($parms['ReferenceName'], $parms['DefaultValue']);
+        $registry->getObject()->setNotificationEnabled(false);
+
 		$persister = new CustomAttributesPersister();
 		$persister->setObject($registry->getObject());
-
 		$registry->setPersisters(array($persister));
+
 		$object_it = $registry->getAll();
-
-		$object_it->object->setNotificationEnabled(false);
-		$attribute = $parms['ReferenceName'];
-
 		while( !$object_it->end() ) {
 			$data = $object_it->getData();
-			$data[$attribute] = $parms['DefaultValue'];
+
+            unset($data['Caption']);
+            unset($data['Description']);
+            unset($data['Content']);
 			unset($data['RecordCreated']);
 			unset($data['RecordVersion']);
+            unset($data['UID']);
 
 			$registry->Store($object_it, $data);
 			$object_it->moveNext();

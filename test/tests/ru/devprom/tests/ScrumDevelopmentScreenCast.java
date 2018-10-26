@@ -120,7 +120,7 @@ public class ScrumDevelopmentScreenCast extends ProjectTestBase{
             Thread.sleep(timeOut);
             Template requirementTemplate = new Template(this.scrumTemplateName);
             String p = DataProviders.getUniqueString();
-            Project project = new Project("Разработка по Scrum", "scrum" + p, requirementTemplate);
+            Project project = new Project("Разработка по Scrum", "scrum" + DataProviders.getUniqueStringAlphaNum(), requirementTemplate);
             if (isGlobal) this.newProject = project;
             ScrumPageBase scrumBasePage = (ScrumPageBase) newProjectPage.createNew(project);
             Thread.sleep(timeOut);

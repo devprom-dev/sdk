@@ -45,39 +45,29 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	// Navigation bar items
 
-	//@FindBy(xpath = ".//div[@class='navbar']//a[contains(text(),'Избранное')]")
 	@FindBy(xpath = ".//li[@id='tab_favs']/a")
 	protected WebElement favLink;
 
-	//@FindBy(xpath = ".//div[@class='navbar']//a[contains(text(),'Управление проектом')]")
 	@FindBy(xpath = ".//li[@id='tab_mgmt']/a")
 	protected WebElement manageLink;
 
-	//@FindBy(xpath = ".//div[@class='navbar']//a[contains(text(),'Анализ и проектирование')]")
 	@FindBy(xpath = ".//li[@id='tab_reqs']/a")
 	protected WebElement analysisLink;
 
-	//@FindBy(xpath = ".//div[@class='navbar']//a[contains(text(),'Разработка')]")
 	@FindBy(xpath = ".//li[@id='tab_dev']/a")
 	protected WebElement devLink;
 
-	//@FindBy(xpath = ".//div[@class='navbar']//a[contains(text(),'Контроль качества')]")
 	@FindBy(xpath = ".//li[@id='tab_qa']/a")
 	protected WebElement qcLink;
 
-	//@FindBy(xpath = ".//div[@class='navbar']//a[contains(text(),'Документирование')]")
 	@FindBy(xpath = ".//li[@id='tab_docs']/a")
 	protected WebElement docLink;
 
-	//@FindBy(xpath = ".//div[@class='navbar']//i/..")
-	@FindBy(xpath = ".//li[@id='tab_stg']/a")
-	protected WebElement settingsLink;
-
 	// ИЗБРАННОЕ menu items
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//li[@id='setup']/a")
+	@FindBy(xpath = ".//li[@id='setup']/a")
 	protected WebElement menuReqsCustomItem;
 	
-	@FindBy(xpath = ".//ul[@id='menu_favs']//li[@id='setup']/a")
+	@FindBy(xpath = ".//li[@id='setup']/a")
 	protected WebElement menuFavsCustomItem;
 
 	@FindBy(xpath = "//a[@uid='project-settings']")
@@ -90,45 +80,19 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='База знаний']")
 	protected WebElement knowledgeBaseItem;
 
-	// Left menu head items for УПРАВЛЕНИЕ ПРОЕКТОМ
-	// Проект
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@id='menu-group-project']")
-	protected WebElement projectMenu;
-
-	// План
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@id='menu-group-plan']")
-	protected WebElement planMenu;
-
-	// Продукт
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@id='menu-group-features']")
-	protected WebElement productMenu;
-
-	// Релизы
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@id='menu-group-releases']")
-	protected WebElement releaseMenu;
-
-	// Итерации
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@id='menu-group-iterations']")
-	protected WebElement iterationMenu;
-
 	// Графики и отчеты
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@id='menu-group-reports']")	
 	protected WebElement reportsMenu;
-
 	
 	// УПРАВЛЕНИЕ ПРОЕКТОМ menu subitems
 
 	// Активности
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Активности']")
+	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='project-log']")
 	protected WebElement activitiesItem;
 
 	// Блог
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Блог']")
 	protected WebElement blogItem;
-
-	// Вопросы
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Вопросы ']")
-	protected WebElement questionsItem;
 
 	// Релизы и итерации
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='projectplan']")
@@ -153,10 +117,6 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Планирование релизов']")
 	protected WebElement releasePlanItem;
 
-	// Трассировка пожеланий
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Трассировка пожеланий']")
-	protected WebElement issuesTraceItem;
-
 	// Планирование итераций
 	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[text()='Планирование итераций']")
 	protected WebElement iterationPlanningBoardItem;
@@ -178,7 +138,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	protected WebElement resourceLoadItem;
 
 	// Все отчеты
-	@FindBy(xpath = ".//ul[@id='menu_mgmt']//a[@uid='project-reports']")
+	@FindBy(xpath = ".//a[@id='profile-my-reports']")
 	protected WebElement reportsItem;
 
 	// Проект
@@ -217,22 +177,6 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
  
 	// Left menu head items for АНАЛИЗ И ПРОЕКТИРОВАНИЕ
 
-	// Задачи
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@id='menu-group-tasks']")	
-	protected WebElement tasksAnMenu;
-
-	// Продукт
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@id='menu-group-features']")	
-	protected WebElement productAnMenu;
-	
-	// StoryMapping
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@uid='storymapping-storyboard']")	
-	protected WebElement storyMappingItem;
-
-	// Трассировка
-	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@id='menu-group-trace']")	
-	protected WebElement trassAnMenu;
-
 	// Графики и отчеты
 	@FindBy(xpath = ".//ul[@id='menu_reqs']//a[@id='menu-group-charts']")	
 	protected WebElement reportAnMenu;
@@ -258,11 +202,6 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	// РАЗРАБОТКА menu items
 
-	//Меню
-	
-	@FindBy(xpath = ".//ul[@id='menu_dev']/li[@id='menu-folder-'][2]/a")	
-	protected WebElement settingsDevMenu;
-	
 	// Коммиты
 	
 	@FindBy(xpath = ".//ul[@id='menu_dev']//a[@uid='sourcecontrol-revision']")
@@ -293,81 +232,60 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	// НАСТРОЙКИ
 
-	// Меню
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@id='menu-group-workflow']")	
-	protected WebElement settingsStateMenu;
-
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@id='menu-group-dicts']")	
-	protected WebElement settingsDictMenu;
-
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@id='menu-group-more']")	
-	protected WebElement settingsAddMenu;
-
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@id='menu-group-templates']")	
-	protected WebElement settingsTemplateMenu;
-	
 	// Атрибуты
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Атрибуты']")
+	@FindBy(xpath = ".//div[contains(@class,'project-settings')]//a[@uid='dicts-pmcustomattribute']")
 	protected WebElement dictsAttrItem;
 
 	// Состояния пожеланий
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='workflow-issuestate']")
+	@FindBy(xpath = ".//div[contains(@class,'project-settings')]//a[@uid='workflow-issuestate']")
 	protected WebElement requestsStateItem;
 
 	// Состояния задач
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='workflow-taskstate']")
+	@FindBy(xpath = ".//div[contains(@class,'project-settings')]//a[@uid='workflow-taskstate']")
 	protected WebElement tasksStateItem;
 
 	// Тэги
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Тэги']")
+	@FindBy(xpath = ".//a[@uid='tags']")
 	protected WebElement tagsItem;
 
 	// Участники
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Участники']")
+	@FindBy(xpath = ".//a[@uid='permissions-participants']")
 	protected WebElement participantsListItem;
 
 	// Тип требования
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Тип требования']")
+	@FindBy(xpath = ".//div[contains(@class,'project-settings')]//a[@uid='dicts-requirementtype']")
 	protected WebElement requirementTypeItem;
 	
 	// Тип пожелания
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Тип пожелания']")
+	@FindBy(xpath = ".//div[contains(@class,'project-settings')]//a[@uid='dicts-requesttype']")
 	protected WebElement requestTypeItem;
 	
 	// Права доступа
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@id='menu-group-permissions']")	
+	@FindBy(xpath = ".//a[@id='menu-group-permissions']")	
 	protected WebElement permissionsMenu;
 	
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='permissions-settings']")
+	@FindBy(xpath = ".//a[@uid='permissions-settings']")
 	protected WebElement permissionsItem;
 	
 	// Методология
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Методология']")
+	@FindBy(xpath = ".//a[@uid='methodology']")
 	protected WebElement methodologyItem;
 	
 	// Терминология
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Терминология']")
+	@FindBy(xpath = ".//a[@uid='process-terminology']")
 	protected WebElement terminologyItem;
 	
 	// Общие настройки
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='project-settings']")
+	@FindBy(xpath = ".//a[@uid='project-settings']")
 	protected WebElement commonSettingsItem;
 	
-	// Шаблоны базы знаний
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Шаблоны базы знаний']")
-	protected WebElement kbTemplatesItem;
-	
-	
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='ee-projectlinks']")
+	@FindBy(xpath = ".//a[@uid='ee-projectlinks']")
 	protected WebElement linkedProjectsItem;
 	
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[text()='Версионирование']")
-	protected WebElement versioningItem;
-	
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='process-import']")
+	@FindBy(xpath = ".//a[@uid='process-import']")
 	protected WebElement loadTemplateItem;
 	
-	@FindBy(xpath = ".//ul[@id='menu_stg']//a[@uid='process-export']")
+	@FindBy(xpath = ".//a[@uid='process-export']")
 	protected WebElement saveTemplateItem;
 	
 	@FindBy(xpath = ".//a[@uid='profile']")
@@ -378,7 +296,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	@FindBy(id = "filter-settings")
 	protected WebElement asterixBtn;
 	
-	@FindBy(xpath = "//a[@id='filter-settings']//following-sibling::ul//a[@id='save-report']")
+	@FindBy(xpath = "//div[contains(@class,'filter')]//a[@id='save-report']")
 	protected WebElement saveReportBtn;
 		
 		
@@ -394,7 +312,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	// GOTO Methods
 
 	public ProjectMembersPage gotoMembers() {
-		settingsLink.click();
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(participantsListItem));
 		participantsListItem.click();
 		return new ProjectMembersPage(driver);
@@ -408,9 +326,6 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	public RequestsBoardPage gotoRequestsBoard() {
 		manageLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(productMenu));
-		if (!boardItem.isDisplayed())
-			productMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(boardItem));
 		boardItem.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(driver.findElement(By.xpath("//table[contains(@id,'requestboard')]"))));
@@ -421,9 +336,6 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	public FunctionsPage gotoFunctions() {
 		manageLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(productMenu));
-		if (!featuresItem.isDisplayed())
-			productMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(featuresItem));
 		featuresItem.click();
 		return new FunctionsPage(driver);
@@ -445,31 +357,25 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	public TasksBoardPage gotoTasksBoard() {
 		manageLink.click();
-		clickOnInvisibleElement(planMenu);
 		clickOnInvisibleElement(tasksBoardItem);
 		return new TasksBoardPage(driver);
 	}
 	
 	public RequestsStatePage gotoRequestsStatePage() {
-		settingsLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(settingsStateMenu));
-		if (!requestsStateItem.isDisplayed())
-			settingsStateMenu.click();
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(requestsStateItem));
 		requestsStateItem.click();
 		return new RequestsStatePage(driver);
 	}
 
 	public TasksStatePage gotoTasksStatePage() {
-		settingsLink.click();
-		if (!tasksStateItem.isDisplayed())
-			settingsStateMenu.click();
+		gotoSettingsPage();
 		tasksStateItem.click();
 		return new TasksStatePage(driver);
 	}
 
 	public AttributeSettingsPage gotoAttributeSettings() {
-		settingsLink.click();
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(dictsAttrItem));
 		dictsAttrItem.click();
 		return new AttributeSettingsPage(driver);
@@ -496,9 +402,9 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	 * public String createNewTag (String name) { String youCameFrom=
 	 * driver.getCurrentUrl(); manageLink.click(); if (! tagsItem.isDisplayed())
 	 * settingsMenu.click(); tagsItem.click(); driver.findElement(By.xpath(
-	 * "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")).click();
+	 * "//a[@data-toggle='dropdown' and contains(.,'Действия')]")).click();
 	 * driver.findElement(By.xpath(
-	 * "//a[contains(text(),'Добавить') and contains(@href,'/pm/devprom_webtest/project/tags?class=metaobject&entity=Tag')]"
+	 * "//a[contains(.,'Добавить') and contains(@href,'/pm/devprom_webtest/project/tags?class=metaobject&entity=Tag')]"
 	 * )).click(); driver.findElement(By.id("TagCaption")).sendKeys(name);
 	 * driver.findElement(By.id("TagSubmitBtn")).click();
 	 * driver.navigate().to(youCameFrom); return name; }
@@ -506,9 +412,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	public String[] getTagsList() {
 		String youCameFrom = driver.getCurrentUrl();
-		settingsLink.click();
-		if (!tagsItem.isDisplayed())
-			settingsAddMenu.click();
+		gotoSettingsPage();
 		tagsItem.click();
 		String[] tagsList = new String[driver.findElements(
 				By.xpath("//tr[contains(@id,'taglist1_row_')]")).size()];
@@ -532,7 +436,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 		if (category != '0')
 			id = driver
 					.findElement(
-							By.xpath("//tr[contains(@id,'projectloglist1_row_')]/td[@id='content']//a[contains(text(),'["
+							By.xpath("//tr[contains(@id,'projectloglist1_row_')]/td[@id='content']//a[contains(.,'["
 									+ category + "')]")).getText();
 		else
 			id = driver
@@ -548,10 +452,9 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 		String id;
 		String youCameFrom= driver.getCurrentUrl();
 		manageLink.click();
-		if (!activitiesItem.isDisplayed()) projectMenu.click();
 		activitiesItem.click();	
 		if (category!='0') 
-		 id = driver.findElement(By.xpath("//tr[contains(@id,'projectloglist1_row_')]/td[@id='content']/a[contains(text(),'["+category+"')]")).getText();
+		 id = driver.findElement(By.xpath("//tr[contains(@id,'projectloglist1_row_')]/td[@id='content']/a[contains(.,'["+category+"')]")).getText();
 		else  id = driver.findElement(By.xpath("//tr[contains(@id,'projectloglist1_row_')]/td[@id='content']/a")).getText();
 		id = id.substring(1, id.length()-1);
 	    driver.navigate().to(youCameFrom);
@@ -567,7 +470,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	
 	public TextTemplatesPage gotoTextTemplates() {
-		clickOnInvisibleElement(projectSettingsLink);
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(
 				ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@uid='dicts-texttemplate']"))
 				);
@@ -576,26 +479,20 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	}
 
 	public RequirementsTypesPage gotoRequirementsTypes() {
-		settingsLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(settingsDictMenu));
-		if (!requirementTypeItem.isDisplayed())
-			settingsDictMenu.click();
+		gotoSettingsPage();
 		requirementTypeItem.click();
 		return new RequirementsTypesPage(driver);
 	}
 	
 	public RequestsTypesPage gotoRequestsTypes() {
-		settingsLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(settingsDictMenu));
-		if (!requestTypeItem.isDisplayed())
-			settingsDictMenu.click();
+		gotoSettingsPage();
 		requestTypeItem.click();
 		return new RequestsTypesPage(driver);
 	}
 	
 	
 	public ProjectCommonSettingsPage gotoCommonSettings(){
-		settingsLink.click();
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(commonSettingsItem));
 		commonSettingsItem.click();
 		return new ProjectCommonSettingsPage(driver);
@@ -611,19 +508,13 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	public BlogPage gotoBlog(){
 		manageLink.click();
-		if (!blogItem.isDisplayed())
-			projectMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(blogItem));
 		blogItem.click();
 		return new BlogPage(driver);
 	}
 	
 	public AllReportsPage gotoAllReports(){
-		manageLink.click();
-		if (!reportsItem.isDisplayed())
-			reportsMenu.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(reportsItem));
-		reportsItem.click();
+		clickOnInvisibleElement(reportsItem);
 		return new AllReportsPage(driver);
 	}
 	
@@ -652,8 +543,6 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	public RepositoryConnectPage gotoRepositoryConnectPage(){
 		devLink.click();
-		if (!repositoryConnectItem.isDisplayed())
-			settingsDevMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(repositoryConnectItem));
 		repositoryConnectItem.click();
 		return new RepositoryConnectPage(driver);
@@ -661,7 +550,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	
 	
 	public PermissionsPage gotoPermissionsPage(){
-		settingsLink.click();
+		gotoSettingsPage();
 		if (!permissionsItem.isDisplayed()) permissionsMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(permissionsItem));
 		permissionsItem.click();
@@ -669,7 +558,7 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 	}
 
 	public TerminologyPage gotoTerminologyPage() {
-		settingsLink.click();
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(terminologyItem));
 		terminologyItem.click();
 		return new TerminologyPage(driver);
@@ -681,16 +570,13 @@ public class SDLCPojectPageBase extends ProjectPageBase implements IProjectBase{
 
 	public ReleasesIterationsPage gotoReleasesIterations() {
 		manageLink.click();
-		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(planMenu));
-		if (!releaseItem.isDisplayed())
-			planMenu.click();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(releaseItem));
 		releaseItem.click();
 		return new ReleasesIterationsPage(driver);
 	}
 
 	public LinkedProjectsPage gotoLinkedProjects() {
-		settingsLink.click();
+		gotoSettingsPage();
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(linkedProjectsItem));
 		linkedProjectsItem.click();
 		return new LinkedProjectsPage(driver);
@@ -730,8 +616,6 @@ public RequestViewPage searchByRequestId(String id) {
 
 public ProjectActivitiesPage gotoProjectActivities() {
 	manageLink.click();
-	if (!activitiesItem.isDisplayed())
-		projectMenu.click();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(activitiesItem));
 	activitiesItem.click();
 	return new ProjectActivitiesPage(driver);
@@ -739,8 +623,6 @@ public ProjectActivitiesPage gotoProjectActivities() {
 
 public MilestonesPage gotoMilestones() {
 	manageLink.click();
-	if (!milestonesItem.isDisplayed())
-		planMenu.click();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(milestonesItem));
 	milestonesItem.click();
 	return new MilestonesPage(driver);
@@ -751,14 +633,6 @@ public TraceMatrixPage gotoTraceMatrix() {
 	analysisLink.click();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(traceMatrixListItem));
 	traceMatrixListItem.click();
-	return new TraceMatrixPage(driver);
-}
-
-public TraceMatrixPage gotoStoryMapping() {
-	analysisLink.click();
-	if (!storyMappingItem.isDisplayed())
-		productAnMenu.click();
-	storyMappingItem.click();
 	return new TraceMatrixPage(driver);
 }
 
@@ -776,6 +650,11 @@ public MenuCustomizationPage gotoMenuReqsCustomization() {
 	menuReqsCustomItem.click();
 	(new WebDriverWait(driver,waiting))
 		.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//button[@id='menu-reset']")));
+	try {
+		Thread.sleep(5000);
+	} catch (InterruptedException e) {
+	}
+	driver.findElement(By.xpath(".//section[@id='functional-group-selector']//a[@uid='reqs']")).click();
 	try {
 		Thread.sleep(5000);
 	} catch (InterruptedException e) {
@@ -806,49 +685,32 @@ public List<String> getAllVisibleMenuItems(){
 }
 
 public void openSubmenu(String submenuEng){
-driver.findElement(By.xpath("//li[@id='menu-folder-"+submenuEng+"']/a")).click();
+	driver.findElement(By.xpath("//li[@id='menu-folder-"+submenuEng+"']/a")).click();
 	 
 }
 
 public MethodologyPage gotoMethodologyPage() {
-	settingsLink.click();
+	gotoSettingsPage();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(methodologyItem));
 	methodologyItem.click();
 	return new MethodologyPage(driver);
 }
 
 public SaveTemplatePage gotoSaveTemplatePage() {
-	settingsLink.click();
-	if(!saveTemplateItem.isDisplayed()) {
-		settingsTemplateMenu.click();
-	}
+	gotoSettingsPage();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(saveTemplateItem));
 	saveTemplateItem.click();
 	return new SaveTemplatePage(driver);
 }
 
 public LoadTemplatePage gotoLoadTemplatePage() {
-	settingsLink.click();
-	if(!loadTemplateItem.isDisplayed()) {
-		settingsTemplateMenu.click();
-	}
+	gotoSettingsPage();
 	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(loadTemplateItem));
 	loadTemplateItem.click();
 	return new LoadTemplatePage(driver);
 }
 
-public VersioningPage gotoVersioningPage() {
-	settingsLink.click();
-	if (!versioningItem.isDisplayed())
-		settingsAddMenu.click();
-	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(versioningItem));
-	versioningItem.click();
-	return new VersioningPage(driver);
-}
-
-
 public SaveReportPage saveReport(){
-	asterixBtn.click();
 	clickOnInvisibleElement(saveReportBtn);
 	return new SaveReportPage(driver);
 }
@@ -869,14 +731,12 @@ public boolean isFilterPresent(String filter){
 }
 
 public MySettingsPage gotoMySettingsPage() {
-	settingsLink.click();
-	(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(mySettingsItem));
+	gotoSettingsPage();
 	mySettingsItem.click();
 	return new MySettingsPage(driver);
 }
 
 public void savePageSettins(){
-	asterixBtn.click();
 	clickOnInvisibleElement(driver.findElement(By.id("personal-persist")));
 	asterixBtn.click();
 }

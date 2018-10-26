@@ -15,39 +15,36 @@ import ru.devprom.pages.project.tasks.TasksStatePage;
 
 
 
-public class StateEditPage extends SDLCPojectPageBase {
-
-	@FindBy(xpath = "//input[@value='stateaction']//following-sibling::a[contains(@class,'embedded-add-button')]")
-	protected WebElement addSystemActionBtn;
-
-	@FindBy(xpath = "//span[@id='pm_StateActions']//a[contains(@class,'embedded-add-button')]")
+public class StateEditPage extends SDLCPojectPageBase 
+{
+	@FindBy(xpath = "//span[@name='pm_StateActions']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addActionBtn;
 	
-	@FindBy(xpath = "//span[@id='pm_StateActions']//select[contains(@id,'ReferenceName')]")
+	@FindBy(xpath = "//span[@name='pm_StateActions']//select[contains(@id,'ReferenceName')]")
 	protected WebElement addSystemActionSelect;
 	
 	@FindBy(id = "pm_StateSubmitBtn")
 	protected WebElement saveBtn;
 	
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='stateattribute']]")
+	@FindBy(xpath = "//span[@name='pm_StateAttributes']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addAttributeBtn;
 
-	@FindBy(xpath = "//span[@id='pm_StateAttributes']//select[contains(@id,'ReferenceName')]")
+	@FindBy(xpath = "//span[@name='pm_StateAttributes']//select[contains(@id,'ReferenceName')]")
 	protected WebElement addAttributeSelect;
 	
-	@FindBy(xpath = "//span[@id='pm_StateAttributes']//input[contains(@id,'IsVisible')]")
+	@FindBy(xpath = "//span[@name='pm_StateAttributes']//input[contains(@id,'IsVisible')]")
 	protected WebElement addAttributeIsVisible;
 	
-	@FindBy(xpath = "//span[@id='pm_StateAttributes']//input[contains(@id,'IsRequired')]")
+	@FindBy(xpath = "//span[@name='pm_StateAttributes']//input[contains(@id,'IsRequired')]")
 	protected WebElement addAttributeIsRequired;
 	
-	@FindBy(xpath = "//span[@id='pm_StateAttributes']//input[contains(@id,'saveEmbedded')]")
+	@FindBy(xpath = "//span[@name='pm_StateAttributes']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveAttributeBtn;
 	
-	@FindBy(xpath = "//span[@id='pm_StateActions']//input[contains(@id,'saveEmbedded')]")
+	@FindBy(xpath = "//span[@name='pm_StateActions']//input[contains(@id,'saveEmbedded')]")
 	protected WebElement saveActionBtn;
 	
-	@FindBy(xpath = "//span[@id='pm_StateActions']//select[contains(@name,'ReferenceName')]")
+	@FindBy(xpath = "//span[@name='pm_StateActions']//select[contains(@name,'ReferenceName')]")
 	protected WebElement actionSelect;
 	
 	public StateEditPage(WebDriver driver) {
@@ -60,7 +57,7 @@ public class StateEditPage extends SDLCPojectPageBase {
 
 	
 	public void addSystemAction(String systemAction){
-		addSystemActionBtn.click();
+		addActionBtn.click();
 		(new Select(addSystemActionSelect)).selectByVisibleText(systemAction);
 		saveActionBtn.click();
 		
@@ -105,9 +102,9 @@ public class StateEditPage extends SDLCPojectPageBase {
 	 */
 	public boolean removeAttribute(String attributeName) {
 		boolean isFound=false; 
-		if (!driver.findElements(By.xpath("//span[@id='pm_StateAttributes']//div[contains(@id,'Caption')]//*[contains(@class,'title') and contains(text(),'"+attributeName+"')]")).isEmpty()) {
+		if (!driver.findElements(By.xpath("//span[@name='pm_StateAttributes']//div[contains(@id,'Caption')]//*[contains(@class,'title') and contains(.,'"+attributeName+"')]")).isEmpty()) {
 			isFound = true;
-			clickOnInvisibleElement(driver.findElement(By.xpath("//div[@class='embeddedRowTitle']//*[contains(@class,'title') and contains(text(),'" + attributeName
+			clickOnInvisibleElement(driver.findElement(By.xpath("//div[@class='embeddedRowTitle']//*[contains(@class,'title') and contains(.,'" + attributeName
 						+ "')]/following-sibling::ul//a[text()='Удалить']")));
 		}
 		return isFound;
@@ -115,7 +112,7 @@ public class StateEditPage extends SDLCPojectPageBase {
 
 	public void removeAction(String actionName) {
 		clickOnInvisibleElement(driver.findElement(By
-				.xpath("//div[@class='embeddedRowTitle']//*[contains(@class,'title') and contains(text(),'" + actionName
+				.xpath("//div[@class='embeddedRowTitle']//*[contains(@class,'title') and contains(.,'" + actionName
 						+ "')]/following-sibling::ul//a[text()='Удалить']")));
 	}
 

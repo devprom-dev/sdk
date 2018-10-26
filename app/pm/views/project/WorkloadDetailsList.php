@@ -10,14 +10,9 @@ class WorkloadDetailsList extends PMDetailsList
 		$methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 		if ( $methodology_it->HasTasks() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Task')) ) {
 			$this->strategy = $methodology_it->TaskEstimationUsed() ? new EstimationHoursStrategy() : new EstimationNoneStrategy();
-			$this->buildTasksWorkload($methodology_it);
-			if ( $this->strategy instanceof EstimationNoneStrategy ) {
-				$this->buildIssuesWorkload($methodology_it, array( new RequestOwnerIsNotTasksAssigneeFilter() ));
-			}
 		}
 		else {
 			$this->strategy = $methodology_it->getEstimationStrategy();
-			$this->buildIssuesWorkload($methodology_it);
 		}
 
 		foreach( $this->getObject()->getAttributes() as $attribute => $info ) {
@@ -29,7 +24,7 @@ class WorkloadDetailsList extends PMDetailsList
 
 	function drawCell( $object_it, $attr )
 	{
-		echo $this->getTable()->getView()->render('pm/UserWorkloadDetails.php', array (
+		echo $this->getRenderView()->render('pm/UserWorkloadDetails.php', array (
 			'user_id' => $object_it->getId(),
 			'user_name' => $object_it->getDisplayName(),
 			'data' => $this->workload[$object_it->getId()],
@@ -39,7 +34,7 @@ class WorkloadDetailsList extends PMDetailsList
 
     function drawCellShort( $object_it, $attr )
     {
-        echo $this->getTable()->getView()->render('pm/UserWorkloadDetails.php', array (
+        echo $this->getRenderView()->render('pm/UserWorkloadDetails.php', array (
             'user_id' => $object_it->getId(),
             'user_name' => $object_it->getDisplayName(),
             'data' => $this->workload[$object_it->getId()],
@@ -48,181 +43,109 @@ class WorkloadDetailsList extends PMDetailsList
         ));
     }
 
-	protected function buildTasksWorkload( $methodology_it )
-	{
-		$object = getFactory()->getObject('Task');
-		$object->setRegistry(new ObjectRegistrySQL($object));
-		$object->addFilter( new FilterVpdPredicate() );
-		$object->addFilter( new StatePredicate('notterminal') );
+    protected function buildWorkItemWorkload()
+    {
+        $projectIt = getSession()->getProjectIt();
+        $workItemIt = getFactory()->getObject('WorkItem')->getRegistry()->Query(
+            array(
+                new FilterVpdPredicate(),
+                new FilterAttributeNullPredicate('FinishDate')
+            )
+        );
+        while( !$workItemIt->end() )
+        {
+            if ( $workItemIt->get('Assignee') > 0 ) {
+                $this->workload[$workItemIt->get('Assignee')]['Planned'] += $workItemIt->get('Planned');
+                $this->workload[$workItemIt->get('Assignee')]['LeftWork'] += $workItemIt->get('LeftWork');
+            }
+            $workItemIt->moveNext();
+        }
 
-		// cache aggregates on workload and spent time
-		$planned_aggregate = new AggregateBase(
-			'Assignee',
-			$this->strategy->getEstimationAggregate() == 'COUNT' ? 'Assignee' : 'Planned',
-			$this->strategy->getEstimationAggregate()
-		);
-		$object->addAggregate( $planned_aggregate );
+        $userIds = $workItemIt->fieldToArray('Assignee');
+        $iterationIds = array_filter($workItemIt->fieldToArray('Release'), function( $value ) {
+            return $value > 0;
+        });
+        if ( count($iterationIds) < 1 ) {
+            $iterationIds = array(-1);
+        }
+        $iterationIt = getFactory()->getObject('Iteration')->getRegistry()->Query(
+            array(
+                new FilterInPredicate($iterationIds)
+            )
+        );
+        $releaseIds = array_filter($workItemIt->fieldToArray('PlannedRelease'), function($value) {
+            return $value;
+        });
+        if ( count($releaseIds) < 1 ) {
+            $releaseIds = array(-1);
+        }
+        $releaseIt = getFactory()->getObject('Release')->getRegistry()->Query(
+            array(
+                new FilterInPredicate($releaseIds)
+            )
+        );
 
-		$left_aggregate = new AggregateBase(
-			'Assignee',
-			$this->strategy->getEstimationAggregate() == 'COUNT' ? 'Assignee' : 'LeftWork',
-			$this->strategy->getEstimationAggregate()
-		);
-		$object->addAggregate( $left_aggregate );
+        foreach( $userIds as $userId ) {
+            $this->workload[$userId]['Iterations'] = array();
+            $iterationIt->moveFirst();
+            while( !$iterationIt->end() )
+            {
+                $data = $this->getIterationMetrics($iterationIt, $userId, $projectIt);
+                if ( $data['leftwork'] < 1 ) {
+                    $iterationIt->moveNext();
+                    continue;
+                }
+                $this->workload[$userId]['Iterations'][] = $data;
+                $iterationIt->moveNext();
+            }
 
-		$task_it = $object->getAggregated();
-		while( !$task_it->end() )
-		{
-			$value = $task_it->get($planned_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$task_it->get('Assignee')]['Planned'] += $value;
+            if ( count($this->workload[$userId]['Iterations']) > 0 ) continue;
 
-			$value = $task_it->get($left_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$task_it->get('Assignee')]['LeftWork'] += $value;
+            $releaseIt->moveFirst();
+            while( !$releaseIt->end() )
+            {
+                $data = $this->getIterationMetrics($releaseIt, $userId, $projectIt);
+                if ( $data['leftwork'] < 1 ) {
+                    $releaseIt->moveNext();
+                    continue;
+                }
+                $this->workload[$userId]['Iterations'][] = $data;
+                $releaseIt->moveNext();
+            }
+        }
+    }
 
-			$task_it->moveNext();
-		}
+    protected function getIterationMetrics( $iterationIt, $userId, $projectIt )
+    {
+        $data = array();
+        $data['leftwork'] = $iterationIt->getLeftWorkParticipant( $userId );
+        if ( $data['leftwork'] < 1 ) return $data;
 
-		if ( $methodology_it->HasPlanning() ) {
-			$iteration_registry = getFactory()->getObject('Iteration')->getRegistry();
-		}
-		else {
-			$iteration_registry = getFactory()->getObject('Release')->getRegistry();
-		}
+        $data['title'] = $iterationIt->getHtmlDecoded('Caption');
+        if ( $projectIt->get('VPD') != $iterationIt->get('VPD') ) {
+            $data['title'] = '{'.$iterationIt->get('ProjectCodeName').'} '.$data['title'];
+        }
 
-		$capacity = array();
-		$worker_it = getFactory()->getObject('ProjectUser')->getAll();
-		while( !$worker_it->end() ) {
-			$capacity[$worker_it->getId()] = $worker_it->get('Capacity');
-			$worker_it->moveNext();
-		}
+        $worker_it = getFactory()->getObject('Participant')->getRegistry()->Query(
+            array(
+                new FilterAttributePredicate('SystemUser', $userId),
+                new FilterVpdPredicate($iterationIt->get('VPD'))
+            )
+        );
+        $data['capacity'] = $iterationIt->getLeftDuration() * $worker_it->get('Capacity');
 
-		foreach( $this->workload as $user_id => $data )
-		{
-			if ( $methodology_it->HasPlanning() ) {
-				$iteration_it = $iteration_registry->Query(
-					array(
-						new IterationTimelinePredicate(IterationTimelinePredicate::NOTPASSED),
-						new IterationUserHasTasksPredicate($user_id),
-						new FilterVpdPredicate(),
-						new SortAttributeClause('Project'),
-						new SortAttributeClause('StartDate')
-					)
-				);
-			}
-			else {
-				$iteration_it = $iteration_registry->Query(
-					array(
-						new ReleaseTimelinePredicate('not-passed'),
-						new ReleaseUserHasTasksPredicate($user_id),
-						new FilterVpdPredicate(),
-						new SortAttributeClause('Project'),
-						new SortAttributeClause('StartDate')
-					)
-				);
-			}
+        $method = new ObjectModifyWebMethod($iterationIt);
+        if ( $method->hasAccess() ) {
+            $method->setRedirectUrl('donothing');
+            $data['url'] = $method->getJSCall();
+        }
 
-			$data = array();
-			$this->workload[$user_id]['Iterations'] = array();
+        return $data;
+    }
 
-			if ( $user_id == '' ) continue;
-
-			while( !$iteration_it->end() )
-			{
-				$data['leftwork'] = $iteration_it->getLeftWorkParticipant( $user_id );
-				if ( $data['leftwork'] < 1 ) {
-					$iteration_it->moveNext();
-					continue;
-				}
-
-				$data['title'] = $iteration_it->getHtmlDecoded($methodology_it->HasPlanning() ? 'ShortCaption' : 'Caption');
-				$data['capacity'] = $iteration_it->getLeftDuration() * $capacity[$user_id];
-
-				$method = new ObjectModifyWebMethod($iteration_it);
-				if ( $method->hasAccess() ) {
-					$method->setRedirectUrl('donothing');
-					$data['url'] = $method->getJSCall();
-				}
-
-				$this->workload[$user_id]['Iterations'][] = $data;
-				$iteration_it->moveNext();
-			}
-		}
-	}
-
-	protected function buildIssuesWorkload( $methodology_it, $filters = array() )
-	{
-		$object = getFactory()->getObject('Request');
-		$object->setRegistry(new ObjectRegistrySQL($object));
-
-		$object->addFilter( new FilterVpdPredicate() );
-		$object->addFilter( new StatePredicate('notterminal') );
-		foreach( $filters as $filter ) {
-			$object->addFilter($filter);
-		}
-
-		// cache aggregates on workload and spent time
-		$planned_aggregate = new AggregateBase(
-			'Owner',
-			$this->strategy->getEstimationAggregate() == 'COUNT' ? 'Owner' : 'Estimation',
-			$this->strategy->getEstimationAggregate()
-		);
-		$object->addAggregate( $planned_aggregate );
-
-		$task_it = $object->getAggregated();
-		while( !$task_it->end() ) {
-			$value = $task_it->get($planned_aggregate->getAggregateAlias());
-			if ( $value == '' ) $value = 0;
-			$this->workload[$task_it->get('Owner')]['Planned'] += $value;
-            $this->workload[$task_it->get('Owner')]['LeftWork'] += $value;
-            $task_it->moveNext();
-		}
-
-		$iteration_registry = getFactory()->getObject('Release')->getRegistry();
-		foreach( $this->workload as $user_id => $data )
-		{
-			$iteration_it = $iteration_registry->Query(
-				array(
-					new ReleaseTimelinePredicate('not-passed'),
-					new FilterVpdPredicate(),
-					new SortAttributeClause('Project'),
-					new SortAttributeClause('StartDate')
-				)
-			);
-
-			$data = array();
-			$this->workload[$user_id]['Iterations'] = array();
-
-			if ( $user_id == '' || !$methodology_it->IsAgile() ) continue;
-
-			while( !$iteration_it->end() )
-			{
-				$request = getFactory()->getObject('pm_ChangeRequest');
-				$request->addFilter( new FilterAttributePredicate('PlannedRelease', $iteration_it->getId()) );
-				$request->addFilter( new FilterAttributePredicate('Owner', $user_id) );
-				$request->addFilter( new StatePredicate('notterminal') );
-
-				$data['leftwork'] = array_shift($this->strategy->getEstimation( $request, 'Estimation' ));
-				if ( $data['leftwork'] < 1 ) {
-					$iteration_it->moveNext();
-					continue;
-				}
-
-				$data['title'] = $iteration_it->getHtmlDecoded('Caption');
-
-				list( $capacity, $maximum, $actual_velocity ) = $iteration_it->getRealBurndownMetrics();
-				$data['capacity'] = ($capacity / count($this->workload)) * $actual_velocity;
-
-				$method = new ObjectModifyWebMethod($iteration_it);
-				if ( $method->hasAccess() ) {
-					$method->setRedirectUrl('donothing');
-					$data['url'] = $method->getJSCall();
-				}
-
-				$this->workload[$user_id]['Iterations'][] = $data;
-				$iteration_it->moveNext();
-			}
-		}
-	}
+    function getRenderParms()
+    {
+        $this->buildWorkItemWorkload();
+        return parent::getRenderParms();
+    }
 }

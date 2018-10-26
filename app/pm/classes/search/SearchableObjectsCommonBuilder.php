@@ -20,7 +20,7 @@ class SearchableObjectsCommonBuilder extends SearchableObjectsBuilder
      		$set->add( 'BlogPost', array('Caption', 'Content') );
  		}
 
- 		$set->add( 'Question', array('Content'), 'project-question' );
+ 		$set->add( 'Question', array('Content'), 'discussions' );
  		$set->add( 'Comment', array('Caption') );
         $set->add( 'Widget', array('Caption','ReferenceName') );
     }

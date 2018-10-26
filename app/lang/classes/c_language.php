@@ -127,7 +127,7 @@ include "DateFormatRussian.php";
  	{
  		if ( $value == '' ) return $value;
  		
- 		return strftime($this->dateformat->getDateFormat().' %H:%M', strtotime(SystemDateTime::convertToClientTime($value)));
+ 		return strftime($this->dateformat->getDateFormat().' %H:%M:%S', strtotime(SystemDateTime::convertToClientTime($value)));
  	}
  	
  	function getTimeFormatted( $value )

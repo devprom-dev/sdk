@@ -26,17 +26,21 @@ class RequestBusinessActionMoveImplementedNextState extends BusinessActionWorkfl
                 continue;
             }
 
-            $transition_it = $state_it->getTransitionIt();
-            if ( !$transition_it->appliable() || !$transition_it->doable($request_it) ) {
-                $request_it->moveNext();
-                continue;
+            $transition_it = getFactory()->getObject('Transition')->getRegistry()->Query(
+                array (
+                    new FilterAttributePredicate('SourceState', $state_it->getId()),
+                    new SortOrderedClause()
+                )
+            );
+            while( !$transition_it->end() ) {
+                if ( !$transition_it->doable($request_it) ) {
+                    $transition_it->moveNext();
+                    continue;
+                }
+                $service = new WorkflowService($request_it->object);
+                $service->moveByTransition( $request_it->copy(), $transition_it );
+                break;
             }
-
-			$service = new WorkflowService($request_it->object);
-			$service->moveToState(
-                $request_it->copy(),
-                $transition_it->getRef('TargetState')->get('ReferenceName')
-			);
 
 			$request_it->moveNext();
 		}

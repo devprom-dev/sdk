@@ -14,7 +14,7 @@ public class AdminPageBase extends PageBase {
 	@FindBy(xpath = "//li[child::a[@href='http://devprom.ru']]")
 	protected WebElement currentVersion;
 
-	@FindBy(id = "navbar-company-name")
+	@FindBy(id = "navbar-project")
 	protected WebElement devpromLLC;
 
 	// Администрирование

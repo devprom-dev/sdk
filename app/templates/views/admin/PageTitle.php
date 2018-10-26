@@ -4,7 +4,7 @@ $project_navigation_parms['projectSortData'] = $projectSortData;
 <div class="btn-toolbar title-toolbar">
     <?php if ( $company_name != '' ) { ?>
     <div class="btn-group navbar-company">
-    	<a id="navbar-company-name" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
+    	<a id="navbar-project" class="btn btn-link btn-navbar dropdown-toggle" data-toggle="dropdown" href="#">
     	    <i class="icon-th-list icon-white"></i>&nbsp;
     		<?=$company_name?>
     		<span class="caret"></span>

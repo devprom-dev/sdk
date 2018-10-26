@@ -6,13 +6,24 @@ if ( !$tableonly )
     $view['slots']->output('_content');
 }
 
-$bodySections = array(new DetailsInfoSection());
+$section = new DetailsInfoSection();
+if ( $_REQUEST['viewmode'] == 'recon' ) {
+    $section->setActive(true);
+}
+$bodySections = array($section);
+
 $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'right';
+if ( array_key_exists('applyChanges', $_REQUEST) ) {
+    $placementClass = '';
+}
+
+$filter_actions = $table->getFilterActions();
+unset($filter_actions['filters']);
 
 ?>
 <div class="wiki-page <?=$placementClass?>">
     <?php
-        if ( !$tableonly && count($sections) > 0 && $placementClass != 'right' ) {
+        if ( !$tableonly && count($sections) > 0 && $placementClass == 'left' ) {
             echo $view->render('pm/WikiDocumentTree.php', array(
                 'sections' => $sections,
                 'object_class' => $object_class,
@@ -25,7 +36,8 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'placement_text' => text(2209),
                 'placement_icon' => 'icon-arrow-right',
                 'placement_script' => "javascript: toggleDocumentTreePlacement('right')",
-                'placement_class' => 'left'
+                'placement_class' => 'left',
+                'filter_actions' => $filter_actions
             ));
         }
     ?>
@@ -43,7 +55,6 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'list' => $list,
                 'filter_modified' => $filter_modified,
                 'navigation_url' => $navigation_url,
-                'navigation_title' => $navigation_title,
                 'changed_ids' => $changed_ids,
                 'object_id' => $object_id,
                 'object_class' => $object_class,
@@ -55,7 +66,8 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'hint' => $hint,
                 'hint_open' => $hint_open,
                 'page_uid' => $page_uid,
-                'sliderClass' => 'list-slider-1',
+                'list_slider' => $list_slider,
+                'sliderClass' => $sliderClass,
                 'filterMoreActions' => $filterMoreActions
             ));
             if ( $hint_open )
@@ -79,7 +91,8 @@ $placementClass = $_COOKIE['document-tree-placement'] != 'right' ? 'left' : 'rig
                 'placement_text' => text(2208),
                 'placement_icon' => 'icon-arrow-left',
                 'placement_script' => "javascript: toggleDocumentTreePlacement('left')",
-                'placement_class' => 'right'
+                'placement_class' => 'right',
+                'filter_actions' => $filter_actions
             ));
         }
     ?>

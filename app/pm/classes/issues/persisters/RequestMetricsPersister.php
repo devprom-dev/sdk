@@ -45,7 +45,7 @@ class RequestMetricsPersister extends ObjectSQLPersister
          }
          else if ( $this->getObject()->getAttributeType('LeadTimeSLA') != '' ) {
              $defaultDeliveryDate =
-                 " IFNULL( FROM_UNIXTIME(UNIX_TIMESTAMP(t.RecordCreated) + t.Estimation * 3600), ".$defaultDeliveryDate." )";
+                 " IFNULL( FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()) + t.Estimation * 3600), ".$defaultDeliveryDate." )";
              $defaultDeliveryDateMethod =
                  " IF( t.Estimation IS NOT NULL, 3, ".$defaultDeliveryDate." )";
          }
@@ -56,7 +56,6 @@ class RequestMetricsPersister extends ObjectSQLPersister
 
          $columns[] =
          	 "  IFNULL( t.FinishDate, ". 
-         	 "  	IFNULL( (SELECT so.RecordCreated FROM pm_StateObject so WHERE so.pm_StateObjectId = t.StateObject AND so.State IN (".join(',',$terminalIds).")), ".
              "          IFNULL( (SELECT MIN(ms.MilestoneDate) FROM pm_ChangeRequestTrace tr, pm_Milestone ms ".
              "		  		      WHERE tr.ChangeRequest = t.pm_ChangeRequestId ".
              "					    AND tr.ObjectId = ms.pm_MilestoneId ".
@@ -74,7 +73,6 @@ class RequestMetricsPersister extends ObjectSQLPersister
          	 "					".$defaultDeliveryDate.
          	 "				) ".
              " 	 		)  ".
-             " 	 	)  ".
              "	) MetricDeliveryDate ";
 
          $columns[] =

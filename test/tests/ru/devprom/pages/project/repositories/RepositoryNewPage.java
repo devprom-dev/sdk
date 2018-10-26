@@ -88,13 +88,13 @@ public class RepositoryNewPage extends SDLCPojectPageBase {
 	
 
 	public void addUserMapping(String systemUserName, String svnUserName, String svnUserPass){
-		String addBtn = "//input[@value='subversionuser']/following-sibling::a[contains(@class,'embedded-add-button')]";
+		String addBtn = "//span[@name='pm_SubversionUsers']//a[contains(@class,'embedded-add-button')]";
 		(new WebDriverWait(driver,timeoutValue)).until(ExpectedConditions.presenceOfElementLocated(By.xpath(addBtn)));
 		driver.findElement(By.xpath(addBtn)).click();
 		new Select(systemUserSelect).selectByVisibleText(systemUserName);
 		userNameInput.sendKeys(svnUserName);
 		userPassInput.sendKeys(svnUserPass);
-		driver.findElement(By.xpath("//input[@value='subversionuser']/following-sibling::div//input[contains(@id,'saveEmbedded')]")).click();
+		driver.findElement(By.xpath("//span[@name='pm_SubversionUsers']//input[contains(@id,'saveEmbedded')]")).click();
 		
 	}	
 	

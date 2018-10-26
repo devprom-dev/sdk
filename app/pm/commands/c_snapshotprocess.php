@@ -6,8 +6,6 @@ class SnapshotProcess extends CommandForm
 {
  	function validate()
  	{
-		global $_REQUEST, $model_factory;
-
 		// proceeds with validation
 		$this->checkRequired( array('Caption') );
 		
@@ -16,9 +14,7 @@ class SnapshotProcess extends CommandForm
  	
  	function modify( $object_id )
 	{
-		global $_REQUEST, $model_factory;
-		
-		$snapshot = $model_factory->getObject('Snapshot');
+		$snapshot = getFactory()->getObject('Snapshot');
 		$snapshot_it = $snapshot->getExact( $object_id );
 
 		if ( !getFactory()->getAccessPolicy()->can_modify($snapshot_it) ) $this->replyDenied();
@@ -28,24 +24,20 @@ class SnapshotProcess extends CommandForm
 				'Description' => IteratorBase::utf8towin($_REQUEST['Description'])
 		));
 
-		if ( $result > 0 )
-		{
+		if ( $result > 0 ) {
 			$this->replyRedirect( $snapshot_it->getViewUrl() );
 		}
-		else
-		{
+		else {
 			$this->replyError( text(1106) );
 		}
 	}
 	
 	function create()
 	{
-		global $model_factory, $_REQUEST;
-		
 		// proceeds with validation
 		$this->checkRequired( array('versionedclass', 'Caption', 'items', 'ListName') );
 		
-	 	$snapshot = $model_factory->getObject('cms_Snapshot');
+	 	$snapshot = getFactory()->getObject('cms_Snapshot');
 			
 		$snapshot_id = $snapshot->add_parms(
 			array ( 'Caption' => IteratorBase::utf8towin($_REQUEST['Caption']),
@@ -56,20 +48,15 @@ class SnapshotProcess extends CommandForm
 				    'SystemUser' => getSession()->getUserIt()->getId() ) 
 			);
 
- 		$ids = is_numeric($_REQUEST['items']) 
-			? array($_REQUEST['items'])
-			: getFactory()->getObject('HashIds')->getHashIds( $_REQUEST['items'] );
-		
  		$versioned = new VersionedObject();
  		
  		$versioned_it = $versioned->getExact($_REQUEST['versionedclass']);
- 		
  		if ( $versioned_it->getId() == '' ) $this->replyDenied();
  		
  		$snapshot->freeze( 
  			$snapshot_id, 
  			$versioned_it->getId(),
- 			$ids, 
+            \TextUtils::parseIds($_REQUEST['items']),
  			$versioned_it->get('Attributes') 
  			);
 		

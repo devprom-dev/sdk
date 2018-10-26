@@ -6,16 +6,29 @@
  *
  * @depends: js-cookie or jquery-cookie
  *
- * Copyright (c) 2008-2017, Martin Wendt (http://wwWendt.de)
+ * Copyright (c) 2008-2018, Martin Wendt (http://wwWendt.de)
  *
  * Released under the MIT license
  * https://github.com/mar10/fancytree/wiki/LicenseInfo
  *
- * @version @VERSION
- * @date @DATE
+ * @version 2.30.0
+ * @date 2018-09-02T15:42:49Z
  */
 
-;(function($, window, document, undefined) {
+;(function( factory ) {
+	if ( typeof define === "function" && define.amd ) {
+		// AMD. Register as an anonymous module.
+		define( [ "jquery", "./jquery.fancytree" ], factory );
+	} else if ( typeof module === "object" && module.exports ) {
+		// Node/CommonJS
+		require("./jquery.fancytree");
+		module.exports = factory(require("jquery"));
+	} else {
+		// Browser globals
+		factory( jQuery );
+	}
+
+}( function( $ ) {
 
 "use strict";
 /* global Cookies:false */
@@ -23,7 +36,17 @@
 /*******************************************************************************
  * Private functions and variables
  */
-var cookieGetter, cookieRemover, cookieSetter,
+var cookieStore = null,
+	localStorageStore = window.localStorage ? {
+		get: function(key){ return window.localStorage.getItem(key); },
+		set: function(key, value){ window.localStorage.setItem(key, value); },
+		remove: function(key){ window.localStorage.removeItem(key); }
+	} : null,
+	sessionStorageStore = window.sessionStorage ? {
+		get: function(key){ return window.sessionStorage.getItem(key); },
+		set: function(key, value){ window.sessionStorage.setItem(key, value); },
+		remove: function(key){ window.sessionStorage.removeItem(key); }
+	} : null,
 	_assert = $.ui.fancytree.assert,
 	ACTIVE = "active",
 	EXPANDED = "expanded",
@@ -32,13 +55,22 @@ var cookieGetter, cookieRemover, cookieSetter,
 
 if( typeof Cookies === "function" ) {
 	// Assume https://github.com/js-cookie/js-cookie
-	cookieSetter = Cookies.set;
-	cookieGetter = Cookies.get;
-	cookieRemover = Cookies.remove;
-} else {
+	cookieStore = {
+		get: Cookies.get,
+		set: function(key, value) {
+			Cookies.set(key, value, this.options.persist.cookie);
+		},
+		remove: Cookies.remove
+	};
+} else if ( $ && typeof $.cookie === "function" ) {
 	// Fall back to https://github.com/carhartl/jquery-cookie
-	cookieSetter = cookieGetter = $.cookie;
-	cookieRemover = $.removeCookie;
+	cookieStore = {
+		get: $.cookie,
+		set: function(key, value) {
+			$.cookie.set(key, value, this.options.persist.cookie);
+		},
+		remove: $.removeCookie
+	};
 }
 
 /* Recursively load lazy nodes
@@ -47,6 +79,7 @@ if( typeof Cookies === "function" ) {
 function _loadLazyNodes(tree, local, keyList, mode, dfd) {
 	var i, key, l, node,
 		foundOne = false,
+		expandOpts = tree.options.persist.expandOpts,
 		deferredList = [],
 		missingKeyList = [];
 
@@ -61,13 +94,13 @@ function _loadLazyNodes(tree, local, keyList, mode, dfd) {
 				foundOne = true;
 				tree.debug("_loadLazyNodes: " + node + " is lazy: loading...");
 				if( mode === "expand" ) {
-					deferredList.push(node.setExpanded());
+					deferredList.push(node.setExpanded(true, expandOpts));
 				} else {
 					deferredList.push(node.load());
 				}
 			} else {
 				tree.debug("_loadLazyNodes: " + node + " already loaded.");
-				node.setExpanded();
+				node.setExpanded(true, expandOpts);
 			}
 		} else {
 			missingKeyList.push(key);
@@ -96,14 +129,14 @@ function _loadLazyNodes(tree, local, keyList, mode, dfd) {
 
 
 /**
- * [ext-persist] Remove persistence cookies of the given type(s).
+ * [ext-persist] Remove persistence data of the given type(s).
  * Called like
  *     $("#tree").fancytree("getTree").clearCookies("active expanded focus selected");
  *
- * @alias Fancytree#clearCookies
+ * @alias Fancytree#clearPersistData
  * @requires jquery.fancytree.persist.js
  */
-$.ui.fancytree._FancytreeClass.prototype.clearCookies = function(types){
+$.ui.fancytree._FancytreeClass.prototype.clearPersistData = function(types){
 	var local = this.ext.persist,
 		prefix = local.cookiePrefix;
 
@@ -122,6 +155,10 @@ $.ui.fancytree._FancytreeClass.prototype.clearCookies = function(types){
 	}
 };
 
+$.ui.fancytree._FancytreeClass.prototype.clearCookies = function(types){
+	this.warn("'tree.clearCookies()' is deprecated since v2.27.0: use 'clearPersistData()' instead.");
+	return this.clearPersistData(types);
+};
 
 /**
  * [ext-persist] Return persistence information from cookies
@@ -151,7 +188,7 @@ $.ui.fancytree._FancytreeClass.prototype.getPersistData = function(){
  */
 $.ui.fancytree.registerExtension({
 	name: "persist",
-	version: "@VERSION",
+	version: "2.30.0",
 	// Default options for this extension.
 	options: {
 		cookieDelimiter: "~",
@@ -164,6 +201,7 @@ $.ui.fancytree.registerExtension({
 			secure: false
 		},
 		expandLazy: false,     // true: recursively expand and load lazy nodes
+		expandOpts: undefined, // optional `opts` argument passed to setExpanded()
 		fireActivate: true,    // false: suppress `activate` event after active node was restored
 		overrideSource: true,  // true: cookie takes precedence over `source` data attributes.
 		store: "auto",         // 'cookie': force cookie, 'local': force localStore, 'session': force sessionStore
@@ -172,22 +210,14 @@ $.ui.fancytree.registerExtension({
 
 	/* Generic read/write string data to cookie, sessionStorage or localStorage. */
 	_data: function(key, value){
-		var ls = this._local.localStorage; // null, sessionStorage, or localStorage
+		var store = this._local.store;
 
 		if( value === undefined ) {
-			return ls ? ls.getItem(key) : cookieGetter(key);
+			return store.get.call(this, key);
 		} else if ( value === null ) {
-			if( ls ) {
-				ls.removeItem(key);
-			} else {
-				cookieRemover(key);
-			}
+			store.remove.call(this, key);
 		} else {
-			if( ls ) {
-				ls.setItem(key, value);
-			} else {
-				cookieSetter(key, value, this.options.persist.cookie);
-			}
+			store.set.call(this, key, value);
 		}
 	},
 
@@ -218,23 +248,33 @@ $.ui.fancytree.registerExtension({
 			local = this._local,
 			instOpts = this.options.persist;
 
-		// For 'auto' or 'cookie' mode, the cookie plugin must be available
-		_assert((instOpts.store !== "auto" && instOpts.store !== "cookie") || cookieGetter,
-			"Missing required plugin for 'persist' extension: js.cookie.js or jquery.cookie.js");
+		// // For 'auto' or 'cookie' mode, the cookie plugin must be available
+		// _assert((instOpts.store !== "auto" && instOpts.store !== "cookie") || cookieStore,
+		// 	"Missing required plugin for 'persist' extension: js.cookie.js or jquery.cookie.js");
 
 		local.cookiePrefix = instOpts.cookiePrefix || ("fancytree-" + tree._id + "-");
 		local.storeActive = instOpts.types.indexOf(ACTIVE) >= 0;
 		local.storeExpanded = instOpts.types.indexOf(EXPANDED) >= 0;
 		local.storeSelected = instOpts.types.indexOf(SELECTED) >= 0;
 		local.storeFocus = instOpts.types.indexOf(FOCUS) >= 0;
-		if( instOpts.store === "cookie" || !window.localStorage ) {
-			local.localStorage = null;
-		} else {
-			local.localStorage = (instOpts.store === "local") ? window.localStorage : window.sessionStorage;
+		local.store = null;
+
+		if( instOpts.store === "auto" ) {
+			instOpts.store = localStorageStore ? "local" : "cookie";
 		}
+		if( $.isPlainObject(instOpts.store) ) {
+			local.store = instOpts.store;
+		} else if( instOpts.store === "cookie" ) {
+			local.store = cookieStore;
+		} else if( instOpts.store === "local" ){
+			local.store = (instOpts.store === "local") ? localStorageStore : sessionStorageStore;
+		} else if( instOpts.store === "session" ){
+			local.store = (instOpts.store === "local") ? localStorageStore : sessionStorageStore;
+		}
+		_assert(local.store, "Need a valid store.");
 
 		// Bind init-handler to apply cookie state
-		tree.$div.bind("fancytreeinit", function(event){
+		tree.$div.on("fancytreeinit", function(event){
 			if ( tree._triggerTreeEvent("beforeRestore", null, {}) === false ) {
 				return;
 			}
@@ -320,7 +360,7 @@ $.ui.fancytree.registerExtension({
 		// Init the tree
 		return this._superApply(arguments);
 	},
-	nodeSetActive: function(ctx, flag, opts) {
+	nodeSetActive: function(ctx, flag, callOpts) {
 		var res,
 			local = this._local;
 
@@ -332,7 +372,7 @@ $.ui.fancytree.registerExtension({
 		}
 		return res;
 	},
-	nodeSetExpanded: function(ctx, flag, opts) {
+	nodeSetExpanded: function(ctx, flag, callOpts) {
 		var res,
 			node = ctx.node,
 			local = this._local;
@@ -357,7 +397,7 @@ $.ui.fancytree.registerExtension({
 		}
 		return res;
 	},
-	nodeSetSelected: function(ctx, flag) {
+	nodeSetSelected: function(ctx, flag, callOpts) {
 		var res, selNodes,
 			tree = ctx.tree,
 			node = ctx.node,
@@ -384,4 +424,6 @@ $.ui.fancytree.registerExtension({
 		return res;
 	}
 });
-}(jQuery, window, document));
+// Value returned by `require('jquery.fancytree..')`
+return $.ui.fancytree;
+}));  // End of closure

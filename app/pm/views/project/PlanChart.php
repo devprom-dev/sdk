@@ -8,7 +8,7 @@ class PlanChart extends PMPageChart
         parent::__construct( new PlanChartData() );
     }
 
-    function getIterator()
+    function buildIterator()
 	{
 		return $this->getObject()->getRegistry()->Query(
             array_merge(
@@ -36,8 +36,13 @@ class PlanChart extends PMPageChart
 	{
 		return array();
 	}
-	
-	function getChartWidget()
+
+	function getOptions($filter_values)
+    {
+        return array();
+    }
+
+    function getChartWidget()
 	{
 	    $values = $this->getFilterValues();
 

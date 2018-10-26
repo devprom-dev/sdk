@@ -8,7 +8,18 @@ class TaskBulkForm extends BulkForm
  	{
  		return new TaskForm($this->getObject());
  	}
- 	
+
+    function IsAttributeVisible( $attribute )
+    {
+        switch( $attribute )
+        {
+            case 'RemoveTag':
+                return false;
+            default:
+                return parent::IsAttributeVisible( $attribute );
+        }
+    }
+
  	function IsAttributeModifiable( $attr )
 	{
 	    switch ( $attr ) 
@@ -23,11 +34,11 @@ class TaskBulkForm extends BulkForm
  	
  	function getAttributeType( $attr )
  	{
- 		return 'custom';
  		switch ( $attr )
  		{
  			case 'Release':
  			case 'Project':
+            case 'Tag':
  				return 'custom';
  				
  			default:
@@ -41,7 +52,8 @@ class TaskBulkForm extends BulkForm
  		{
  			case 'Release':
  				return translate('Итерация');
- 				
+            case 'Tag':
+                return translate('Тэг');
  			default:
  				return parent::getName( $attr );
  		}
@@ -77,7 +89,21 @@ class TaskBulkForm extends BulkForm
 				}
 				$field->draw();
 				break;
-				
+
+            case 'Tag':
+                $field = new FieldAutoCompleteObject( getFactory()->getObject('Tag') );
+                $field->SetId($attribute);
+                $field->SetName('value');
+                $field->SetValue($value);
+                $field->SetTabIndex($tab_index);
+                $field->setAppendable();
+
+                if ( $this->showAttributeCaption() ) {
+                    echo $this->getName($attribute);
+                }
+                $field->draw();
+                break;
+
 			default:
  				parent::drawCustomAttribute( $attribute, $value, $tab_index, $view );
  		}

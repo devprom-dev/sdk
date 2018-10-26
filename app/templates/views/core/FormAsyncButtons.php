@@ -13,4 +13,3 @@
 
 <input tabindex="<?=(++$tab_index)?>" id="btn" class="btn btn-primary" type="submit" 
 	onclick="javascript: $('#action<?=$form_id?>').val(<?=$form_action?>);" value="<?=$button_text?>">
-	

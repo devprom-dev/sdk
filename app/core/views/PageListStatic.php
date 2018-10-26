@@ -7,7 +7,6 @@ class StaticPageList extends PageList
  		parent::PageList( $object );
  	}
 
-	function IsNeedToDisplayNumber( ) { return false; }
 	function IsNeedToDelete( ) { return false; }
 	
 	function getItemActions( $dummy, $object_it )

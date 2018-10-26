@@ -39,7 +39,7 @@ public class TasksBoardPage extends SDLCPojectPageBase {
 	public TasksBoardPage showAll() {
 		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and @uid='state']")).click();
 		((JavascriptExecutor) driver).executeScript("filterLocation.turnOn('state', 'all', 0)");
-		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(text(),'Исполнитель')]")).click();
+		driver.findElement(By.xpath("//a[@data-toggle='dropdown' and contains(.,'Исполнитель')]")).click();
 	    try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {

@@ -27,6 +27,7 @@ function showAccountForm(url)
 		open: function() {
 			$("#modal-frame").css("minHeight", "97%");
 		},
+        closeText: "",
 		buttons: [
 			{
 				tabindex: 10,
@@ -100,8 +101,12 @@ function showAccountForm(url)
 	});
 	
 	window.resizeModalWindow = function() {
-		$('#modal-form').dialog('option', 'height', $(window).height() * 1/2);
-		$('#modal-form').dialog('option', 'position', { my: "center", at: "center", of: window });
+		try {
+            $('#modal-form').dialog('option', 'height', $(window).height() * 1/2);
+            $('#modal-form').dialog('option', 'position', { my: "center", at: "center", of: window });
+		}
+		catch(e) {
+		}
 	};
 }
 

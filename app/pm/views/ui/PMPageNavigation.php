@@ -3,6 +3,41 @@ use Devprom\ProjectBundle\Service\Navigation\WorkspaceService;
 
 class PMPageNavigation extends PageNavigation
 {
+    function build()
+    {
+        $parms = parent::build();
+
+        $parms['adjust_menu'] = getFactory()->getObject('PMReport')
+            ->getExact('navigation-settings')->buildMenuItem('area=favs');
+
+        $projectIt = getSession()->getProjectIt();
+        if ( $projectIt->IsPortfolio() ) {
+            $portfolio = getFactory()->getObject('co_ProjectGroup');
+            if ( getFactory()->getAccessPolicy()->can_modify($portfolio) )
+            {
+                $method = new ObjectModifyWebMethod(
+                    $portfolio->getExact($projectIt->get('ProjectGroupId'))
+                );
+                $parms['settings_menu'] = array (
+                    'icon' => 'icon-briefcase',
+                    'uid' => 'settings-4-project',
+                    'url' => $method->getJSCall(),
+                    'name' => translate('Настройки')
+                );
+            }
+        }
+        else {
+            $parms['settings_menu'] = array (
+                'icon' => 'icon-wrench',
+                'uid' => 'settings-4-project',
+                'url' => getSession()->getApplicationUrl().'settings',
+                'name' => translate('Настройки')
+            );
+        }
+
+        return $parms;
+    }
+
     function getAreas()
     {
         $service = new WorkspaceService();
@@ -61,33 +96,60 @@ class PMPageNavigation extends PageNavigation
 
         if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
         $actions[] =  array (
-            'name' => translate('Настройки'),
+            'name' => text(1292),
             'url' => getSession()->getApplicationUrl().'profile'
         );
 
         if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-        $actions[] = array (
+        $actions['profile-my-reports'] = array (
             'name' => text(1811),
-            'url' => $module->getExact('project-reports')->get('Url')
+            'url' => $module->getExact('project-reports')->get('Url'),
+            'uid' => 'profile-my-reports'
         );
 
         $auth_factory = getSession()->getAuthenticationFactory();
         if ( is_object($auth_factory) && $auth_factory->tokenRequired() )
         {
-            if ( $actions[count($actions)-1]['name'] != '' ) $actions[] = array();
-
+            $actions[] = array();
             array_push( $actions, array (
                 'name' => translate('Выйти'),
                 'url' => '/logoff'
             ));
         }
 
+        $portfolioIt = getFactory()->getObject('Portfolio')->getAll();
+        while( !$portfolioIt->end() ) {
+            if ( in_array($portfolioIt->get('CodeName'), array('my','all')) ) {
+                break;
+            }
+            $portfolioIt->moveNext();
+        }
+
+        $menus[] = array (
+            'class' => 'header_popup',
+            'button_class' => 'btn-navbar btn-link',
+            'icon' => 'icon-white icon-eye-open',
+            'id' => 'menu-changelog',
+            'url' => $module->getExact('project-log')->getUrl(),
+            'description' => text(2624)
+        );
+
+        $menus[] = array (
+            'class' => 'header_popup',
+            'button_class' => 'btn-navbar btn-link',
+            'icon' => 'icon-white icon-book',
+            'id' => 'menu-kbs',
+            'url' => $module->getExact('project-knowledgebase')->getUrl('', $portfolioIt->getId() != '' ? $portfolioIt : null),
+            'description' => translate('База знаний')
+        );
+
         $menus[] = array (
             'class' => 'header_popup',
             'button_class' => 'btn-navbar btn-link',
             'icon' => 'icon-white icon-file',
             'id' => 'menu-files',
-            'url' => $module->getExact('attachments')->get('Url')
+            'url' => $module->getExact('attachments')->get('Url'),
+            'description' => text(2635)
         );
 
         $menus[] = array (
@@ -95,7 +157,8 @@ class PMPageNavigation extends PageNavigation
             'button_class' => 'btn-navbar btn-link',
             'icon' => 'icon-white icon-question-sign',
             'id' => 'menu-guide',
-            'items' => $this->getHelpActions()
+            'items' => $this->getHelpActions(),
+            'description' => text(2636)
         );
 
         $menus[] = $this->getProfileMenu(getSession()->getUserIt(), $actions);
@@ -138,11 +201,29 @@ class PMPageNavigation extends PageNavigation
         $actions = array();
         $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
 
-        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_ChangeRequest'));
+        $className = getFactory()->getClass('Issue');
+        if ($methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD && class_exists($className)) {
+            $method = new ObjectCreateNewWebMethod(getFactory()->getObject($className));
+            if ($method->hasAccess()) {
+                $method->setRedirectUrl('donothing');
+                $actions[] = array(
+                    'name' => $method->getCaption(),
+                    'url' => $method->getJSCall(
+                        array(
+                            'area' => $this->getPage()->getArea()
+                        ),
+                        $method->getCaption()
+                    ),
+                    'uid' => 'request'
+                );
+            }
+        }
+
+        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Request'));
         if ( $method->hasAccess() )
         {
             $method->setRedirectUrl('donothing');
-            $type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
+            $type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
                 array (
                     new FilterBaseVpdPredicate()
                 )
@@ -157,20 +238,11 @@ class PMPageNavigation extends PageNavigation
                         ),
                         translate($type_it->getDisplayName())
                     ),
-                    'uid' => $type_it->get('ReferenceName')
+                    'uid' => $type_it->get('ReferenceName') == '' ? 'issue' : $type_it->get('ReferenceName')
 
                 );
                 $type_it->moveNext();
             }
-            $actions[] = array (
-                'name' => $method->getObject()->getDisplayName(),
-                'url' => $method->getJSCall(
-                    array (
-                        'area' => $this->getPage()->getArea()
-                    )
-                ),
-                'uid' => 'issue'
-            );
 
             $template_it = getFactory()->getObject('RequestTemplate')->getAll();
             while( !$template_it->end() ) {
@@ -204,16 +276,6 @@ class PMPageNavigation extends PageNavigation
             );
         }
 
-        $method = new ObjectCreateNewWebMethod(getFactory()->getObject('Feature'));
-        if( $method->hasAccess() ) {
-            $method->setRedirectUrl('donothing');
-            $actions[] = array(
-                'name' => translate('Функция'),
-                'url' => $method->getJSCall(),
-                'uid' => 'quick-feature'
-            );
-        }
-
         $method = new ObjectCreateNewWebMethod(getFactory()->getObject('pm_Question'));
         if ( $method->hasAccess() )
         {
@@ -236,14 +298,58 @@ class PMPageNavigation extends PageNavigation
             }
         }
 
+        $projectActions = array();
+        $module = getFactory()->getObject('Module');
+
         $projectIt = getSession()->getProjectIt();
-        if ( getFactory()->getAccessPolicy()->can_create($projectIt->object) ) {
-            $actions[] = array();
-            $actions[] = array (
+        if ( getFactory()->getAccessPolicy()->can_create($projectIt->object) )
+        {
+            $url = '/projects/welcome';
+            $projectIt = getSession()->getProjectIt();
+            if ( $projectIt->IsPortfolio() && $projectIt->get('ProjectGroupId') != '' ) {
+                $url .= '?portfolio='.$projectIt->get('ProjectGroupId');
+            }
+
+            $projectActions[] = array (
                 'icon' => 'icon-plus',
-                'url' =>  '/projects/welcome',
-                'name' => text('project.new')
+                'url' => $url,
+                'name' => text('project.name')
             );
+
+            if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED && !$projectIt->IsPortfolio() ) {
+                $projectActions[] = array();
+                $projectActions[] = array (
+                    'icon' => 'icon-plus',
+                    'uid' => 'new-subproject',
+                    'url' =>  '/projects/welcome?program='.$projectIt->getId(),
+                    'name' => text('subproject.name')
+                );
+                $projectActions[] = array (
+                    'icon' => 'icon-plus',
+                    'url' =>  $module->getExact('ee/projectlinks')->getUrl(),
+                    'name' => text('subproject.include')
+                );
+            }
+        }
+
+        if ( defined('ENTERPRISE_ENABLED') && ENTERPRISE_ENABLED )
+        {
+            $portfolio = getFactory()->getObject('co_ProjectGroup');
+            if ( getFactory()->getAccessPolicy()->can_create($portfolio) )
+            {
+                $method = new ObjectCreateNewWebMethod($portfolio);
+                $method->setRedirectUrl('function(id){window.location=\'/pm/project-portfolio-\'+id;}');
+                $projectActions[] = array();
+                $projectActions[] = array (
+                    'icon' => 'icon-briefcase',
+                    'url' => $method->getJSCall(),
+                    'name' => text('portfolio.name')
+                );
+            }
+        }
+
+        if ( count($projectActions) > 0 ) {
+            $actions = array_merge($actions, array(array()), $projectActions);
         }
 
         return $actions;
@@ -266,89 +372,14 @@ class PMPageNavigation extends PageNavigation
         }
 
         $parms['current_project'] = $project_it->get('CodeName');
-        $parms['current_project_title'] = $project_it->getDisplayName();
+        $parms['current_project_title'] = $project_it->getParentIt()->IsProgram()
+            ? $project_it->getParentIt()->getDisplayName() . '&nbsp; &#x279E; &nbsp;' . $project_it->getDisplayName()
+            : $project_it->getDisplayName();
+
         if ( $project_it->get('IsClosed') == 'Y' ) {
             $parms['current_project_title'] = '<strike>'.$parms['current_project_title'].'</strike>';
         }
-
-        $portfolio_it = $project_it->copy();
-        if ( !$project_it->IsPortfolio() && !$project_it->IsProgram() ) {
-            $portfolio_it = $project_it->getParentIt();
-        }
-
-        $parms['subprojects_title'] = translate('project.name');
-        if ( $portfolio_it->IsPortfolio() ) {
-            $parms['portfolio_title'] = translate('Группа проектов');
-        }
-        elseif ( $portfolio_it->IsProgram() ) {
-            $parms['portfolio_title'] = translate('Программа');
-            $parms['subprojects_title'] = translate('Подпроект');
-            $parms['program_actions'] = $this->getProgramNavitationActions($portfolio_it);
-        }
-
-        $parms['current_portfolio'] = $portfolio_it->get('CodeName');
-        $parms['current_portfolio_title'] = $portfolio_it->getDisplayName();
-
-        if ( $portfolio_it->get('CodeName') == 'my' ) {
-            $parms['title'] = translate('Мои проекты');
-        }
-
-        $parms['project_actions'] = $this->getProjectNavigationActions($project_it);
-
         return $parms;
-    }
-
-    function getProgramNavitationActions($project_it)
-    {
-        $portfolio_actions = array();
-
-        $item = getFactory()->getObject('Module')->getExact('project-reports')->buildMenuItem();
-        $item['icon'] = 'icon-signal';
-        $item['name'] = text(2194);
-        $portfolio_actions[] = $item;
-
-        if ( class_exists('ProjectLink') && getFactory()->getAccessPolicy()->can_create($project_it->object) ) {
-            $portfolio_actions[] = array (
-                'icon' => 'icon-plus',
-                'url' =>  '/projects/welcome?program='.$project_it->getId(),
-                'name' => text('subproject.new')
-            );
-        }
-
-        $portfolio_actions[] = array (
-            'icon' => 'icon-wrench',
-            'uid' => 'project-settings',
-            'url' => getSession()->getApplicationUrl().'settings',
-            'name' => text(2174)
-        );
-        return $portfolio_actions;
-    }
-
-    function getProjectNavigationActions($project_it)
-    {
-        $project_actions = array();
-
-        $item = getFactory()->getObject('Module')->getExact('project-reports')->buildMenuItem();
-        $item['icon'] = 'icon-signal';
-        $item['name'] = text(2194);
-        $project_actions[] = $item;
-
-        if ( class_exists('ProjectLink') && getFactory()->getAccessPolicy()->can_create($project_it->object) ) {
-            $project_actions[] = array (
-                'icon' => 'icon-plus',
-                'url' =>  '/projects/welcome?program='.$project_it->getId(),
-                'name' => text('subproject.new')
-            );
-        }
-
-        $project_actions[] = array (
-            'icon' => 'icon-wrench',
-            'uid' => 'project-settings',
-            'url' => getSession()->getApplicationUrl().'settings',
-            'name' => text(2173)
-        );
-
-        return $project_actions;
     }
 
     function getInviteUserUrl()

@@ -82,7 +82,7 @@ class IntegrationTask extends TaskCommand
 		$layout->setConversionPattern("\n%d %l %n %m");
 		$layout->activateOptions();
 
-        $appFile = new LoggerAppenderFile('foo');
+        $appFile = new LoggerAppenderRollingFile('foo');
         $appFile->setFile($filePath);
         $appFile->setLayout($layout);
         $appFile->setAppend(true);

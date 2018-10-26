@@ -52,8 +52,19 @@ if ( $show_header && $need_to_select ) $columns_number++;
 		<tr class="header-row">
 			<?php if ( $display_numbers ) { ?>
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
-				<?=translate('№')?>
-			</th>
+                <div class="btn-group pull-left">
+                    <div id="filter-settings" class="btn dropdown-toggle btn-sm btn-secondary" data-toggle="dropdown" href="#" data-target="#listmenu<?=$table_id?>">
+                        <i class="icon-cog icon-white"></i>
+                    </div>
+                </div>
+                <div class="btn-group dropdown-fixed" id="listmenu<?=$table_id?>">
+                <?php
+                    echo $view->render('core/PopupMenu.php', array(
+                        'items' => $filter_actions
+                    ));
+                ?>
+                </div>
+            </th>
 			<?php } ?>
 
 			<th class="for-chk <?=($need_to_select ? 'visible' : 'hidden')?>" width="1%" uid="checkbox">
@@ -120,6 +131,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
 			if ( !in_array($group_field, array_keys($it->object->getAttributes())) ) $group_field = '';
 
 			$group_field_prev_value = '{83C23330-E68F-4852-83D7-6BE4E49FF985}';
+			$rowNumber = intval($offset);
 
 			for( $i = 0; $i < $rows_num; $i++)
 			{
@@ -148,14 +160,15 @@ if ( $show_header && $need_to_select ) $columns_number++;
 					$it->moveNext();
 					continue;
 				}
-				
+
+                $rowNumber++;
 				?>
 				
-				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=$it->get('ProjectCodeName')?>" group-id="<?=$group_field_value?>" modified="<?=$it->get('AffectedDate')?>" modifier="<?=$it->get('Modifier')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
+				<tr id="<?=($table_row_id.($offset + $i + 1))?>" class="<?=$list->getRowClassName($it)?>" object-id="<?=$it->getId()?>" state="<?=$it->get('State')?>" project="<?=$it->get('ProjectCodeName')?>" group-id="<?=$group_field_value?>" order="<?=$it->get('OrderNum')?>" modified="<?=$it->get('AffectedDate')?>" modifier="<?=$it->get('Modifier')?>" sort-value="<?=htmlspecialchars($it->get_native($sort_field))?>" sort-type="<?=$sort_type?>">
 				
 					<? if ( $display_numbers ) { ?>
 					<td name="row-num">
-						<? $list->drawNumberColumn( $it, $offset + $i + 1 ); ?>
+						<? $list->drawNumberColumn( $it, $rowNumber ); ?>
 					</td>
 					<? } ?>
 
@@ -203,8 +216,8 @@ if ( $show_header && $need_to_select ) $columns_number++;
 							$action = array_shift($actions);
 							if ( $action['url'] != '' || $action['click'] != '' ) {
                                 ?>
-                                <div class="btn-group operation last">
-                                    <a id="<?=$action['uid']?>" class="btn btn-info btn-mini dropdown-toggle actions-button" href="#" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
+                                <div class="btn-group visible-operations last">
+                                    <a id="<?=$action['uid']?>" class="btn btn-info btn-xs dropdown-toggle actions-button" href="#" onclick="<?=(!in_array($action['url'],array('','#')) ? $action['url'] : $action['click'])?>"><?=$action['name']?></a>
                                 </div>
                                 <?
                             }
@@ -212,8 +225,8 @@ if ( $show_header && $need_to_select ) $columns_number++;
 						{
 						?>
 						<div class="btn-group btn-group-actions operation">
-							<a class="btn btn-mini dropdown-toggle actions-button" data-toggle="dropdown" href="#" data-target="#actions<?=$it->getId()?>">
-								<i class="icon-asterisk icon-gray"></i>
+							<a class="btn btn-xs dropdown-toggle actions-button btn-secondary" data-toggle="dropdown" href="#" data-target="#actions<?=$it->getId()?>">
+								<i class="icon-pencil icon-white"></i>
 								<span class="caret"></span>
 							</a>
 						</div>
@@ -278,11 +291,13 @@ if ( $show_header && $need_to_select ) $columns_number++;
 		var options = {
 			className: "<?=strtolower($object_class)?>",
 			scrollable: <?=var_export($scrollable, true)?>,
+            draggable: <?=var_export($draggable, true)?>,
 			reorder: <?=var_export($reorder, true)?>,
 			visiblePages: <?=($visible_pages < 1 ? 999 : $visible_pages)?>,
 			pageOpen: <?=(is_numeric($offset) ? $offset : 0)?>,
 			totalPages: <?=max($pages,1)?>,
-			modifier: '<?=getSession()->getUserIt()->getId()?>'
+			modifier: '<?=getSession()->getUserIt()->getId()?>',
+            groupAttribute: '<?=$groupAttribute?>'
 		};
 
 		initializeDocument(<?=($object_id != '' ? $object_id : "''")?>, options);

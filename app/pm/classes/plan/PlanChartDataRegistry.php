@@ -4,9 +4,6 @@ class PlanChartDataRegistry extends ObjectRegistrySQL
 {
  	function getQueryClause()
  	{
-        $issueStates = getFactory()->getObject('pm_ChangeRequest')->getNonTerminalStates();
-        $taskStates = getFactory()->getObject('Task')->getNonTerminalStates();
-
         $items = array(
             " SELECT IFNULL(t.MilestoneDate, NOW()) StartDate, t.MilestoneDate FinishDate, ".
             "		 (SELECT p.pm_ProjectId FROM pm_Project p WHERE p.VPD = t.VPD) Project, ".
@@ -23,7 +20,7 @@ class PlanChartDataRegistry extends ObjectRegistrySQL
 			"		 'Release' ObjectType, t.Caption SortIndex, '' Custom1,".
             "        (SELECT COUNT(1) FROM pm_ChangeRequest s " .
             "	       WHERE s.PlannedRelease = t.pm_VersionId" .
-            "			 AND s.State IN ('".join("','",$issueStates)."')) UncompletedIssues, ".
+            "			 AND s.FinishDate IS NULL) UncompletedIssues, ".
             "        0 UncompletedTasks ".
             "   FROM pm_Version t ".
  			"  WHERE 1 = 1 ".getFactory()->getObject('Release')->getVpdPredicate('t'),
@@ -38,7 +35,7 @@ class PlanChartDataRegistry extends ObjectRegistrySQL
             "         0 UncompletedIssues, ".
             "        (SELECT COUNT(1) FROM pm_Task s " .
             "	      WHERE t.pm_ReleaseId = s.Release ".
-            "			AND s.State IN ('".join("','",$taskStates)."')) UncompletedTasks ".
+            "			AND s.FinishDate IS NULL) UncompletedTasks ".
  			"   FROM pm_Release t ".
  			"  WHERE 1 = 1 ".getFactory()->getObject('Iteration')->getVpdPredicate('t'),
 				

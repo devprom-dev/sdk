@@ -30,7 +30,7 @@ class PageSectionAttributes extends InfoSection
         $attributes = array();
         foreach( $this->referenceName as $referenceName ) {
             foreach( $this->object->getAttributesByGroup($referenceName) as $attribute ) {
-                if ( $this->object->IsAttributeRequired($attribute) && !in_array($attribute, array('OrderNum')) ) continue;
+                if ( $this->object->IsAttributeRequired($attribute) && !in_array($attribute, array('OrderNum','ReferenceName')) ) continue;
                 $attributes[] = $attribute;
             };
         }

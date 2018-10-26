@@ -1,5 +1,4 @@
 <?php
-
 include SERVER_ROOT_PATH."pm/methods/c_watcher_methods.php";
 include_once SERVER_ROOT_PATH."pm/methods/c_wiki_methods.php";
 include SERVER_ROOT_PATH."pm/methods/c_stage_methods.php";
@@ -16,6 +15,7 @@ include "WikiDocumentSettingBuilder.php";
 include "WikiPageSettingBuilder.php";
 include "history/WikiHistoryTable.php";
 include "history/WikiVersionTable.php";
+include "history/WikiHistorySettingBuilder.php";
 include 'parsers/WikiIteratorExportExcelText.php';
 include 'parsers/WikiIteratorExportExcelHtml.php';
 include "import/ImportExcelForm.php";
@@ -27,12 +27,15 @@ include "templates/DocumentTemplateForm.php";
 
 class PMWikiUserPage extends PMPage
 {
+    private $object = null;
+
  	function PMWikiUserPage()
  	{
  		parent::PMPage();
 
         getSession()->addBuilder( new WikiDocumentSettingBuilder($this->getObject()) );
         getSession()->addBuilder( new WikiPageSettingBuilder() );
+        getSession()->addBuilder( new WikiHistorySettingBuilder($this->getObjectIt()) );
 
 	    $table = $this->getTableRef();
  		    
@@ -81,9 +84,15 @@ class PMWikiUserPage extends PMPage
  	
  	function getObject()
  	{
- 		return null;
+        if ( is_object($this->object) ) return $this->object;
+        return $this->object = $this->buildObject();
  	}
- 	
+
+ 	function buildObject()
+    {
+        return null;
+    }
+
  	function getPredicates()
  	{
  		return array();
@@ -228,6 +237,7 @@ class PMWikiUserPage extends PMPage
                     array_merge(
                         array(
                             new WikiDocumentWaitFilter($object_it->getId()),
+                            new FilterVpdPredicate(),
                             new SortDocumentClause()
                         ),
                         $this->getPredicates()
@@ -244,13 +254,14 @@ class PMWikiUserPage extends PMPage
                 }
                 $object_it->moveNext();
             }
-            $json = $this->buildTree($json, '');
+            $json = \JSONWrapper::buildJSONTree($json, '');
         }
         else {
             $children_it = $registry->Query(
                 array_merge(
                     array(
                         new FilterInPredicate($object_it->idsToArray()),
+                        new FilterVpdPredicate(),
                         new SortDocumentClause()
                     ),
                     $this->getPredicates()
@@ -265,27 +276,10 @@ class PMWikiUserPage extends PMPage
  		echo JsonWrapper::encode($json);
  	}
  	
- 	private function buildTree( array &$elements, $parentId = '' ) 
- 	{
-       $branch = array();
-
-       foreach ($elements as $key => $element) {
-           if ($element['parent'] == $parentId) {
-               $children = $this->buildTree($elements, $element['key']);
-               if (count($children)>0) {
-                   $element['children'] = $children;
-               }
-               $branch[] = $element;
-           }
-       }
-       
-       return $branch;
-    }
-
     function exportWikiNodeNew( $object_it, $open_path, $level )
     {
         // display version (revision) number for the root only
-        $caption = $object_it->get('ParentPage') == '' ? $object_it->getDisplayName() : $object_it->getTreeDisplayName();
+        $caption = $object_it->get('ParentPage') == '' ? $object_it->getDisplayNameExt() : $object_it->getTreeDisplayName();
 
         if ( $object_it->get('TotalCount') > 0 )
         {
@@ -390,13 +384,33 @@ class PMWikiUserPage extends PMPage
     function getWaitFilters( $classes )
     {
         $filters = parent::getWaitFilters($classes);
-
         $table = $this->getTableRef();
+
         if ( $table instanceof PMWikiDocument && $table->getDocumentIt()->getId() > 0 ) {
             $filters[] = new WikiDocumentWaitFilter($table->getDocumentIt()->getId());
         }
 
         return $filters;
+    }
+
+    function getRecentChangedObjectIds( $filters )
+    {
+        $table = $this->getTableRef();
+
+        if ( $table instanceof WikiHistoryTable ) {
+            return $table->getObject()->getRegistry()->Query(
+                array_merge(
+                    $table->getFilterPredicates(),
+                    array (
+                        new FilterModifiedSinceSecondsPredicate(5 * 60),
+                        new FilterVpdPredicate(),
+                        new SortRecentClause()
+                    )
+                )
+            )->idsToArray();
+        }
+
+        return parent::getRecentChangedObjectIds( $filters );
     }
 
     function getDemoDataIt( $object )

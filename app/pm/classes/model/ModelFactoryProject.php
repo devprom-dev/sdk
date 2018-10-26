@@ -44,6 +44,7 @@ class ModelFactoryProject extends ModelFactoryExtended
 			'pm_transitionpredicate' => array('TransitionPredicate'),
 			'pm_transitionattribute' => array('TransitionAttribute'),
 			'pm_transitionresetfield' => array('TransitionResetField'),
+            'pm_transitionaction' => array('TransitionAction'),
 			'pm_customreport' => array('PMCustomReport'),
 			'pm_stateaction' => array( 'StateAction'),
 			'pm_functiontrace' => array( 'FunctionTrace' ),

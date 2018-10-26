@@ -13,29 +13,21 @@ include "RecoveryFormApplication.php";
 
 class BackupPage extends AdminPage
 {
-	function getObject()
-	{
-		global $model_factory;
-		return $model_factory->getObject('Backup');
+	function getObject() {
+		return getFactory()->getObject('Backup');
 	}
 	
-	function getTable()
-	{
+	function getTable() {
 		return new BackupTable($this->getObject());
 	}
 
-	function needDisplayForm()
-	{
-	    global $_REQUEST;
-	    return $_REQUEST['action'] != '';    
+	function needDisplayForm() {
+	    return $_REQUEST['action'] != '';
 	}
 	
 	function getForm()
 	{
-	    global $_REQUEST, $model_factory;
-	    
-	    $object = $model_factory->getObject('cms_Update');
-	    
+	    $object = getFactory()->getObject('cms_Update');
 	    switch ( $_REQUEST['action'] )
 	    {
 	        case 'backupdatabase':
@@ -66,14 +58,17 @@ class BackupPage extends AdminPage
 	    switch ( $_REQUEST['export'] )
 	    {
 	        case 'download':
-	            
-	            $backup_file_name = $_REQUEST['backup_file_name'];
-	            
-	            $downloader = new Downloader;
-	            
-	            $downloader->echoFile( SERVER_BACKUP_PATH.$backup_file_name,
-	                $backup_file_name, 'application/zip' );
-	             
+	            $backupIt = $this->getObject()->getAll();
+                $backupIt->moveToId($_REQUEST['backup_file_name']);
+
+                if ( $backupIt->getId() != '' ) {
+                    $downloader = new Downloader;
+                    $downloader->echoFile(
+                        SERVER_BACKUP_PATH.$backupIt->get('Caption'),
+                        $backupIt->get('Caption'),
+                        'application/zip'
+                    );
+                }
 	            break;
 
 	        default:

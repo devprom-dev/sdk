@@ -97,12 +97,23 @@ class ReportSpentTimeTable extends PMPageTable
         switch( $module ) {
             case 'project-spenttime':
                 return array (
-                    'tasksplanbyfact',
-                    'worklog',
-                    'activitieschart'
+                    'worklog'
                 );
             default:
                 return parent::getFamilyModules($module);
+        }
+    }
+
+    protected function getChartModules( $module )
+    {
+        switch( $module ) {
+            case 'project-spenttime':
+                return array (
+                    'tasksplanbyfact',
+                    'activitieschart'
+                );
+            default:
+                return parent::getChartModules($module);
         }
     }
 }

@@ -12,7 +12,7 @@ import ru.devprom.pages.project.tasks.TaskViewPage;
 
 public class KanbanSubTaskEditPage extends KanbanAddSubtaskPage{
 
-        @FindBy(xpath = "//div[@id='modal-form']//span[@id='pm_TaskSourceCode']//a[contains(@class,'embedded-add-button')]")
+        @FindBy(xpath = "//div[@id='modal-form']//span[@name='pm_TaskSourceCode']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addSourceCodeBtn;
 
 	public KanbanSubTaskEditPage(WebDriver driver) {

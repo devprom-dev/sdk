@@ -1,5 +1,4 @@
 <?php
-
 include('../common.php');
 include SERVER_ROOT_PATH.'co/classes/SessionBuilderCommon.php';
 

@@ -32,5 +32,7 @@ $plugin_text_array = array
 	30 => 'The use of Cumulative Flow Diagram is very simple. On a vertical axis we have a number of tasks. On a horizontal one we have a timeline. The curves are basically a number of items in any possible state shown in a time perspective. The whole trick is that they are shown cumulatively.',
 	31 => 'for demo puproses',
 	32 => 'Issues block reasons',
-	33 => 'The chart shows the basic causes of issues blockings. Analyze this reasons on the retrospectives and seek how to optimize the process to reduce or eliminate the appearance of blockings in the future.'
+	33 => 'The chart shows the basic causes of issues blockings. Analyze this reasons on the retrospectives and seek how to optimize the process to reduce or eliminate the appearance of blockings in the future.',
+    34 => 'Work in progress is below maximum value for target state',
+    35 => 'There is maximum work in progress for the state "%1", unable to move into the state'
 );

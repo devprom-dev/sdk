@@ -34,7 +34,7 @@ class ModelValidatorTypes extends ModelValidatorInstance
 	public function validate( Metaobject $object, array & $parms )
 	{
 		$attributes = count($this->attributes) < 1 
-				? array_keys($object->getAttributesSorted()) : $this->attributes;
+				? array_keys($object->getAttributes()) : $this->attributes;
 		
 		foreach( $attributes as $attribute )
 		{

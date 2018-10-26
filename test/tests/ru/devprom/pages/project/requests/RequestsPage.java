@@ -35,7 +35,7 @@ import ru.devprom.pages.project.testscenarios.TestScenarioTestingPage;
 
 public class RequestsPage extends SDLCPojectPageBase {
 
-	@FindBy(id = "append-issue")
+	@FindBy(id = "new-issue")
 	protected WebElement addRequestBtn;
         
         @FindBy(xpath = ".//*[@id='tablePlaceholder']//*[@id='to_delete_allrequestlist1']")
@@ -47,25 +47,25 @@ public class RequestsPage extends SDLCPojectPageBase {
         @FindBy(xpath = ".//*[@id='bulk-actions']//*[contains(text(),'Начать тестирование')]")
 	protected WebElement startTestingItem;
 
-	@FindBy(id = "append-issue-bug")
+	@FindBy(id = "new-issue-bug")
 	protected WebElement addBugBtn;
 
-	@FindBy(id = "append-issue-enhancement")
+	@FindBy(id = "new-issue-enhancement")
 	protected WebElement addEnhancementBtn;
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 	
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Добавить')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Добавить')]")
 	protected WebElement addBtn;
 
 	@FindBy(id="filter-settings")
 	protected WebElement filterBtn;
 	
-	@FindBy(xpath = "//li[@uid='append-issue-enhancement']/a")
+	@FindBy(xpath = "//li[@uid='new-issue-enhancement']/a")
 	protected WebElement newCRBtn;
 
-	@FindBy(xpath = "//li[@uid='append-issue-bug']/a")
+	@FindBy(xpath = "//li[@uid='new-issue-bug']/a")
 	protected WebElement newBugBtn;
 
 	@FindBy(xpath = "//ul//a[text()='Печать карточек']")
@@ -83,13 +83,13 @@ public class RequestsPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//li[@class='dropdown-submenu']/a[text()='Фильтры']")
 	protected WebElement filtersSubmenu;
 	
-	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(text(),'Выполнить')]")
+	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(.,'Выполнить')]")
 	protected WebElement massCompleteBtn;
 	
-	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(text(),'Включить в релиз')]")
+	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(.,'Включить в релиз')]")
 	protected WebElement massIncludeInReleaseBtn;
 	
-	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[contains(text(),'Удалить')]")
+	@FindBy(xpath = "//div[contains(@class,'btn-group')]//a[@id='bulk-delete']")
 	protected WebElement massDeleteBtn;
         
         //поле версия на форме начать тестирование
@@ -132,7 +132,7 @@ public class RequestsPage extends SDLCPojectPageBase {
 		}
 		catch(NoSuchElementException e) {
 		}
-		WebElement reqBtn = driver.findElement(By.xpath("//a[contains(@id,'append') and contains(.,'"+userType+"')]"));
+		WebElement reqBtn = driver.findElement(By.xpath("//a[contains(@id,'new-') and contains(.,'"+userType+"')]"));
 		(new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(reqBtn));
 		reqBtn.click();
 		waitForDialog();
@@ -226,7 +226,7 @@ public class RequestsPage extends SDLCPojectPageBase {
 		return parseRequestRow(
 				driver
 					.findElement(By
-						.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(text(),'["
+						.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'["
 								+ id + "]')]/../..")).getAttribute("id"));
 	}
 	
@@ -235,7 +235,7 @@ public class RequestsPage extends SDLCPojectPageBase {
 		return parseRequestRow(
 				driver
 					.findElement(By
-						.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(text(),'"
+						.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(.,'"
 								+ name + "')]/..")).getAttribute("id"));
 	}
 	
@@ -243,11 +243,11 @@ public class RequestsPage extends SDLCPojectPageBase {
 	public RequestViewPage clickToRequest(String id) {
 		try {
 			driver.findElement(
-					By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(text(),'["
+					By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'["
 							+ id + "]')]")).click();
 		} catch (NoSuchElementException e) {
 			driver.findElement(
-					By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a/strike[contains(text(),'"
+					By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a/strike[contains(.,'"
 							+ id + "')]/..")).click();
 		}
 		return new RequestViewPage(driver);
@@ -273,13 +273,13 @@ public class RequestsPage extends SDLCPojectPageBase {
 		try {
 			request = driver
 					.findElement(By
-							.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(text(),'"
+							.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'"
 									+ requestID + "')]/../.."));
 		}
 		catch (NoSuchElementException e) {
 			request = driver
 					.findElement(By
-							.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a/strike[contains(text(),'"
+							.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a/strike[contains(.,'"
 									+ requestID + "')]/../../.."));
 		}
 		switch (propertyName) {
@@ -309,26 +309,26 @@ public class RequestsPage extends SDLCPojectPageBase {
 	public Boolean isLinkedIssueCompleted(String requestID, String linkedID){
 		return driver
 		.findElements(By
-				.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(text(),'"
+				.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'"
 						+ requestID + "')]/../../td[@id='links']//strike[contains(.,'"+linkedID+"')]")).size()>0;
 	}
 	
 	
 	public void checkRequest(String id) {
 		driver.findElement(
-				By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(text(),'"
+				By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'"
 						+ id
 						+ "')]/../preceding-sibling::td/input[@class='checkbox']"))
 				.click();
 	}
 
 	public boolean isRequestPresent(String id) {
-         return	!driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(text(),'"
+         return	!driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='uid']/a[contains(.,'"
 							+ id + "')]")).isEmpty();
 	}
 	
 	public boolean isRequestPresentByName(String name) {
-		   return	!driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(text(),'"
+		   return	!driver.findElements(By.xpath("//tr[contains(@id,'requestlist1_row_')]/td[@id='caption' and contains(.,'"
 					+ name + "')]")).isEmpty();
 	}
 
@@ -375,18 +375,18 @@ public class RequestsPage extends SDLCPojectPageBase {
 			String russianFilterName) throws InterruptedException {
 
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'"
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
 						+ russianFilterName + "')]")).click();
 
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'"
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
 						+ russianFilterName + "')]/following-sibling::ul/li/a[text()='" + value + "']")).click();
 	Thread.sleep(600);
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'"
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
 						+ russianFilterName + "')]")).click();
 		
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(text(),'"
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and contains(@class,'btn-info') and contains(.,'"
 						+ russianFilterName + "')]")));
 		
 		return new RequestsPage(driver);
@@ -396,18 +396,18 @@ public class RequestsPage extends SDLCPojectPageBase {
 			String russianName) throws InterruptedException {
 
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'"
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
 						+ russianName + "')]")).click();
 		
 		
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'"
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
 						+ russianName + "')]/following-sibling::ul/li/a[text()='" + value + "']")).click();
 		Thread.sleep(600);
 		driver.findElement(
-				By.xpath("//a[@data-toggle='dropdown' and contains(text(),'"
+				By.xpath("//a[@data-toggle='dropdown' and contains(.,'"
 						+ russianName + "')]")).click();
-		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @class='btn btn-small dropdown-toggle' and contains(text(),'"
+		(new WebDriverWait(driver, waiting)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[@data-toggle='dropdown' and @class='btn btn-sm dropdown-toggle' and contains(.,'"
 				+ russianName + "')]")));
 		
 		return new RequestsPage(driver);
@@ -423,27 +423,21 @@ public class RequestsPage extends SDLCPojectPageBase {
 	
 
 	public void addColumn(String columnname) {
-		String code = "filterLocation.showColumn('" + columnname + "', 0)";
-		filterBtn.click();
+		String code = "filterLocation.showColumn('" + columnname + "', 1)";
 		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(6000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 		driver.navigate().refresh();
 	}
 
 	public void removeColumn(String columnname) {
-		String code = "filterLocation.hideColumn('" + columnname + "', 0)";
-		filterBtn.click();
+		String code = "filterLocation.hideColumn('" + columnname + "', 1)";
 		((JavascriptExecutor) driver).executeScript(code);
-		filterBtn.click();
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(6000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 		driver.navigate().refresh();
 	}

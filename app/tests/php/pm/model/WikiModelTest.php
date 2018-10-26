@@ -39,8 +39,6 @@ class WikiModelTest extends DevpromDummyTestCase
 
     function testParentPath()
     {
-        global $model_factory;
-        
         $this->registry->expects($this->any())->method('Query')->will( $this->returnValue(
                 $this->entity->createCachedIterator(array()) 
         ));
@@ -59,7 +57,7 @@ class WikiModelTest extends DevpromDummyTestCase
                 ) 
         ));
         
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("t.ParentPath = ',1,2,'")
         );
 
@@ -96,7 +94,7 @@ class WikiModelTest extends DevpromDummyTestCase
                 ) 
         ));
         
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("t.ParentPath = ',1,2,3,'")
         );
 
@@ -130,7 +128,7 @@ class WikiModelTest extends DevpromDummyTestCase
                 ) 
         ));
         
-        $this->getDALMock()->expects($this->at(0))->method('Query')->with(
+        $this->getDALMock()->expects($this->at(1))->method('Query')->with(
                 $this->stringContains("t.ParentPath = ',1,2,'")
         );
 

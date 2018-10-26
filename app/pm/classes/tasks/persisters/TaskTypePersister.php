@@ -5,7 +5,8 @@ class TaskTypePersister extends ObjectSQLPersister
  	function getSelectColumns( $alias )
  	{
  		return array(
- 			" IFNULL((SELECT i.ReferenceName FROM pm_TaskType i WHERE i.pm_TaskTypeId = t.TaskType),'z') TypeBase "
+ 			" IFNULL((SELECT i.ReferenceName FROM pm_TaskType i WHERE i.pm_TaskTypeId = t.TaskType),'z') TypeBase ",
+            " ( SELECT r.State FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueState "
  		);
  	}
 
@@ -24,5 +25,9 @@ class TaskTypePersister extends ObjectSQLPersister
 			)->getId();
 		}
 	}
+
+	function IsPersisterImportant() {
+        return true;
+    }
 }
 

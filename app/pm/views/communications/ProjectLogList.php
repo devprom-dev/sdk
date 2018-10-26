@@ -41,8 +41,13 @@ class ProjectLogList extends PMPageList
 		switch( $attr ) 
 		{
 			case 'SystemUser':
-				if ( $object_it->get($attr) == '' ) {
-                    parent::drawCell( $object_it, 'AuthorName' );
+				if ( $entity_it->getId() == '' ) {
+				    if ( $object_it->get('UserName') != '' ) {
+                        parent::drawCell( $object_it, 'UserName' );
+                    }
+                    else {
+                        parent::drawCell( $object_it, 'AuthorName' );
+                    }
 				}
 				else {
 					parent::drawRefCell( $entity_it, $object_it, $attr );
@@ -60,7 +65,7 @@ class ProjectLogList extends PMPageList
 		{
 		    case 'UserAvatar':
 		        
-    	    	echo $this->getTable()->getView()->render('core/UserPicture.php', array (
+    	    	echo $this->getRenderView()->render('core/UserPicture.php', array (
 					'id' => $object_it->get('SystemUser'), 
 					'class' => 'user-avatar',
 					'title' => $object_it->getRef('SystemUser')->getDisplayName()
@@ -72,28 +77,23 @@ class ProjectLogList extends PMPageList
 
                 echo '<i class="'.$object_it->getIcon().' hidden-print" style="margin-right: 10px;"></i>';
 
+                $uid = new ObjectUID;
                 $anchor_it = $object_it->getObjectIt();
-                if ( $anchor_it->getId() != '' )
-                {
-                    $uid = new ObjectUID;
-                    if ( strpos($object_it->get('Caption'), $uid->getObjectUid($anchor_it)) === false ) {
-                        if ( $uid->hasUid( $anchor_it ) ) {
-                        }
-                        else {
-                            echo $anchor_it->object->getDisplayName().': ';
-                        }
-                    }
+                if ( $anchor_it->getId() != '' && $uid->hasUid( $anchor_it ) ) {
+                    $uid->drawUidInCaption($anchor_it);
+                    echo '<br/>';
                 }
                 else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
                     echo text(1360) . ': ';
+                    parent::drawCell( $object_it, 'Caption' );
                 }
                 else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
+                    parent::drawCell( $object_it, 'Caption' );
                 }
                 else {
                     echo $anchor_it->object->getDisplayName().': ';
+                    parent::drawCell( $object_it, 'Caption' );
                 }
-
-                parent::drawCell( $object_it, 'Caption' );
 
                 if ( strpos($object_it->get('Content'), '[url') !== false && $anchor_it->object instanceof WikiPage) {
                     echo '<br/>'.str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319));
@@ -102,7 +102,7 @@ class ProjectLogList extends PMPageList
                     echo '<br/>'.$object_it->getHtmlDecoded('Content');
                 }
 			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
-				    echo $this->getTable()->getView()->render('core/CommentsIcon.php', array (
+				    echo $this->getRenderView()->render('core/CommentsIcon.php', array (
 							'object_it' => $anchor_it,
 							'redirect' => 'donothing'
 					));

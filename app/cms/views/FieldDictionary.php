@@ -8,11 +8,19 @@ class FieldDictionary extends Field
 	
  	private $translate_options = false;
  	private $null_title = '';
+ 	private $objectIt = null;
+ 	private $titleRequired = '';
  	
-	function FieldDictionary( & $object ) 
+	function FieldDictionary( $object )
 	{
-		$this->object = $object;
-		
+	    if ( $object instanceof OrderedIterator ) {
+            $this->object = $object->object;
+            $this->objectIt = $object;
+        }
+        else {
+            $this->object = $object;
+        }
+
 		$this->style = '';
 		$this->null_option = true;
 		
@@ -36,6 +44,10 @@ class FieldDictionary extends Field
 
 	function setNullTitle( $value ) {
 	    $this->null_title = $value;
+    }
+
+    function setTitleRequired( $value ) {
+	    $this->titleRequired = $value;
     }
 	
 	function translateOptions( $translate = true )
@@ -101,8 +113,12 @@ class FieldDictionary extends Field
 	    $options = array();
 	    
 		$uid = new ObjectUID;
-		
-		$entity_it = $this->object->getAll();
+
+        if ( !is_object($this->objectIt) ) {
+            $this->objectIt = $this->object->getAll();
+        }
+        $entity_it = $this->objectIt;
+        $entity_it->moveFirst();
 
 		while( !$entity_it->end() )
 		{
@@ -128,7 +144,7 @@ class FieldDictionary extends Field
 	
  	function draw( $view = null )
 	{
-		global $tabindex, $model_factory;
+		global $tabindex;
 
 		if ( $this->readOnly() )
 		{
@@ -148,7 +164,12 @@ class FieldDictionary extends Field
 			if ( !array_key_exists($option['group'],$groups) ) $option['group'] = ''; 
 			$groups[$option['group']]['items'][] = $option;
 		}
-			
+
+		if ( $this->titleRequired != '' ) {
+		    echo '<div style="padding-bottom: 5px;">';
+		        echo $this->titleRequired;
+            echo '</div>';
+        }
 		?>
 		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> default="<?=htmlentities($this->getDefault())?>">
 		<?php if ( $this->null_option ) { ?>

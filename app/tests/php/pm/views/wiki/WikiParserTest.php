@@ -1,6 +1,6 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/views/wiki/parsers/WikiParser.php";
+include_once SERVER_ROOT_PATH."plugins/wrtfckeditor/classes/WrtfCKEditorPageParser.php";
 
 class WikiParserTest extends DevpromTestCase
 {
@@ -89,17 +89,14 @@ class WikiParserTest extends DevpromTestCase
 
     function testUpdateUid()
     {
-        $parser = $this->getMock('WikiParser', array('getUidInfo'), array(null));
+        $parser = $this->getMock('WrtfCKEditorPageParser', array('getUidInfo'), array(null));
         $parser->expects($this->any())->method('getUidInfo')->will( $this->returnValueMap(
             array (
                 array ( 'K-1', array('url' => 'http://localhost/pm/devprom/K-1', 'caption' => 'Caption', 'uid' => 'K-1') )
             )
         ));
 
-        $this->assertContains(
-            preg_replace('/[\r\n]|\s{2,}/', '',
-                'http://127.0.0.1/pm/devprom/K-2'
-            ),
+        $this->assertContains( 'http://127.0.0.1/pm/devprom/K-2',
             preg_replace_callback(REGEX_UPDATE_UID, array($parser, 'parseUpdateUidCallback'), 'http://127.0.0.1/pm/devprom/K-2')
         );
 
@@ -111,6 +108,43 @@ class WikiParserTest extends DevpromTestCase
                 </ol></p>'
             ),
             preg_replace_callback(REGEX_UPDATE_UID, array($parser, 'parseUpdateUidCallback'), '<p><ol><li>text before <a class="uid" href="http://127.0.0.1/pm/devprom/K-1">[K-1] Caption</a> text after <a class="uid" href="http://127.0.0.1/pm/devprom/K-1">[K-1] Caption</a></li><li>text K-1 text K-1.</li></ol></p>')
+        );
+    }
+
+    function testUpdateUidTitle()
+    {
+        $parser = $this->getMock('WrtfCKEditorPageParser', array('getUidInfo'));
+        $parser->expects($this->any())->method('getUidInfo')->will( $this->returnValueMap(
+            array (
+                array ( 'K-1', array('url' => 'http://localhost/pm/devprom/K-1', 'caption' => 'Caption', 'uid' => 'K-1') )
+            )
+        ));
+
+        $this->assertContains(
+            '<a class="uid" href="http://localhost/pm/devprom/K-1">[K-1] Caption</a>',
+            preg_replace_callback(
+                REGEX_UPDATE_UID_TITLE,
+                array($parser, 'updateUIDTitle'),
+                '<a class="uid" href="http://localhost/pm/devprom/K-1">[K-1] XXXXXXXXXXx</a>'
+            )
+        );
+
+        $this->assertContains(
+            'before <a class="uid" href="http://localhost/pm/devprom/K-1">[K-1] Caption</a> text after <a href="http://localhost/pm/devprom/K-1" class="uid">[K-1] Caption</a>',
+            preg_replace_callback(
+                REGEX_UPDATE_UID_TITLE,
+                array($parser, 'updateUIDTitle'),
+                'before <a class="uid" href="http://localhost/pm/devprom/K-1">[K-1] XXXXXXXXXXx</a> text after <a href="http://localhost/pm/devprom/K-1" class="uid">[K-1] YYYYYYYYY</a>'
+            )
+        );
+
+        $this->assertContains(
+            'before <a href="http://localhost/pm/devprom/K-1">[K-1] XXX</a> text',
+            preg_replace_callback(
+                REGEX_UPDATE_UID_TITLE,
+                array($parser, 'updateUIDTitle'),
+                'before <a href="http://localhost/pm/devprom/K-1">[K-1] XXX</a> text'
+            )
         );
     }
 

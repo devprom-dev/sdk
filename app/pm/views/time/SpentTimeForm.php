@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH."pm/views/project/FieldParticipantDictionary.php";
 
 class SpentTimeForm extends PMPageForm
 {
@@ -8,7 +9,7 @@ class SpentTimeForm extends PMPageForm
     {
         parent::extendModel();
 
-        if ( is_object($this->getObjectIt()) ) {
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute(new Activity(), 'Participant') ) {
             $this->getObject()->setAttributeVisible('Participant', true);
         }
     }
@@ -20,7 +21,7 @@ class SpentTimeForm extends PMPageForm
 	
 	public function getLeftFieldName()
 	{
-		return is_a($this->anchor_it->object, 'Request') ? 'EstimationLeft' : 'LeftWork';
+		return 'LeftWork';
 	}
 	
 	function IsAttributeVisible( $attr_name )
@@ -28,14 +29,29 @@ class SpentTimeForm extends PMPageForm
 		switch ( $attr_name ) 
 		{
 		    case 'LeftWork':
-		    	return $this->anchor_it->object->getAttributeType($this->getLeftFieldName()) != ''
-		    		&& getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
+		    	return getSession()->getProjectIt()->getMethodologyIt()->TaskEstimationUsed();
 		    default:
 		    	return parent::IsAttributeVisible($attr_name);
 		}
 	}
-	
-	function getFieldValue( $attr )
+
+    function IsAttributeEditable( $attr_name )
+    {
+        if ( !$this->getObject()->getAttributeEditable($attr_name) ) return false;
+        return getFactory()->getAccessPolicy()->can_modify_attribute(new Activity(), $attr_name);
+    }
+
+	function getDefaultValue($field)
+    {
+        switch( $field ) {
+            case 'Participant':
+                return getSession()->getUserIt()->getId();
+            default:
+                return parent::getDefaultValue($field);
+        }
+    }
+
+    function getFieldValue( $attr )
 	{
 	    $value = parent::getFieldValue( $attr );
 	    if ( $value != '' ) return $value;
@@ -68,8 +84,18 @@ class SpentTimeForm extends PMPageForm
 		
 		return $field;
 	}
-	
-	function drawScripts()
+
+	function createFieldObject($attr)
+    {
+        switch( $attr ) {
+            case 'Participant':
+                return new FieldParticipantDictionary();
+            default:
+                return parent::createFieldObject($attr);
+        }
+    }
+
+    function drawScripts()
 	{
 		?>
 		<script type="text/javascript">

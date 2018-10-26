@@ -96,7 +96,6 @@ class KnowledgeBaseForm extends PMWikiForm
                 $html .= '<ul><li>'.join('</li><li>', $type['items']).'</li></ul>';
             }
         }
-        var_export($items);
         return $html;
     }
 }

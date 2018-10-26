@@ -11,7 +11,7 @@ class IssueBlockedByOpenTasks extends BusinessRulePredicate
  		return text(2118);
  	}
  	
- 	function check( $object_it ) {
+ 	function check( $object_it, $transitionIt ) {
 		return $object_it->get('OpenTasks') == '';
  	}
  	

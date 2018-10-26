@@ -28,7 +28,7 @@ class FieldLinkedRequest extends FieldForm
  		
  		echo '<div class="'.(!$this->readOnly() ? "attwritable" : "attreadonly").'">';
 
-	 		$form = new FormLinkedEmbedded( $link, 'SourceRequest' );
+	 		$form = new FormLinkedEmbedded( $link, 'SourceRequest', $this->getName() );
 	 		
  			$form->setAnchorIt( $this->object_it );
 	 		

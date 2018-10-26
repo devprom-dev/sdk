@@ -2,15 +2,8 @@
 
 include "DictionaryItemsList.php";
 
-class DictionaryItemsTable extends PMPageTable
+class DictionaryItemsTable extends SettingsTableBase
 {
-	function __construct( $object )
-	{
-		$object->setAttributeVisible('OrderNum', $object instanceof StateBase || $object instanceof FeatureType);
-		
-		parent::__construct($object);
-	}
-	
 	function getList()
 	{
 		return new DictionaryItemsList( $this->getObject() );
@@ -18,8 +11,9 @@ class DictionaryItemsTable extends PMPageTable
 
 	function getSortDefault( $sort_parm = 'sort' )
 	{
-	    if ( $sort_parm == 'sort' ) return 'OrderNum';
-		
+	    if ( $sort_parm == 'sort' ) {
+	        return 'OrderNum';
+        }
 	    return parent::getSortDefault( $sort_parm );
 	}
 	
@@ -112,5 +106,9 @@ class DictionaryItemsTable extends PMPageTable
             );
         }
         return $actions;
+    }
+
+    protected function buildProjectFilter() {
+        return null;
     }
 }

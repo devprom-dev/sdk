@@ -1,17 +1,18 @@
 <?php
-
 include_once SERVER_ROOT_PATH."pm/classes/product/FeatureModelExtendedBuilder.php";
-
 include "FunctionForm.php";
 include "FunctionSearchIssueForm.php";
 include "FunctionTable.php";
 include "PageSettingFeatureBuilder.php";
+include "ImportProductExcelForm.php";
 
 class FunctionsPage extends PMPage
 {
  	function FunctionsPage()
  	{
  	    getSession()->addBuilder( new PageSettingFeatureBuilder() );
+        getSession()->addBuilder( new FeatureModelExtendedBuilder() );
+
  		parent::__construct();
  		
  		if ( $this->needDisplayForm() )
@@ -33,18 +34,11 @@ class FunctionsPage extends PMPage
         }
  	}
  	
- 	function getObject()
- 	{
- 		$object = getFactory()->getObject('Feature');
-
-		$builder = new FeatureModelExtendedBuilder();
-		$builder->build($object);
-
-		return $object;
+ 	function getObject() {
+ 		return getFactory()->getObject('Feature');
  	}
  	
- 	function getTable() 
- 	{
+ 	function getTable() {
 		return new FunctionTable( $this->getObject() );
  	}
  	
@@ -54,7 +48,21 @@ class FunctionsPage extends PMPage
             return new FunctionSearchIssueForm( $this->getObject() );
         }
         else {
-            return new FunctionForm( $this->getObject() );
+            switch( $_REQUEST['view'] ) {
+                case 'import':
+                    return new ImportProductExcelForm($this->getObject());
+                default:
+                    return new FunctionForm( $this->getObject() );
+            }
         }
  	}
+
+    function needDisplayForm() {
+        return in_array($_REQUEST['view'], array('import')) ? true : parent::needDisplayForm();
+    }
+
+    function getPageWidgets()
+    {
+        return array('features-list');
+    }
 }

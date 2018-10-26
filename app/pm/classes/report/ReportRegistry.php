@@ -62,6 +62,7 @@ class ReportRegistry extends ObjectRegistryArray
  	    $data_array = array();
         $vpd_value = array_shift($this->getObject()->getVpds());
 
+        $module = getFactory()->getObject('Module');
         $template = array_shift(preg_split('/_/', getSession()->getProjectIt()->get('Tools')));
 		$resource = getFactory()->getObject('ContextResource');
         $resource_it = $resource->getAll();
@@ -75,7 +76,12 @@ class ReportRegistry extends ObjectRegistryArray
                 if ( $resource_it->getId() == '' ) {
                     $resource_it->moveToId($report['name'].':'.$template);
                 }
-				$report['description'] = preg_replace('/<\/?strong>/i', '', $resource_it->getHtmlDecoded('Caption'));
+                if ( $resource_it->getId() != '' ) {
+                    $report['description'] = preg_replace('/<\/?strong>/i', '', $resource_it->getHtmlDecoded('Caption'));
+                }
+                else {
+                    $report['description'] = $module->getExact($report['module'])->getHtmlDecoded('Description');
+                }
 			}
 
     		$data['cms_ReportId'] = $report['name'];

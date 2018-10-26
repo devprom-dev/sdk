@@ -141,6 +141,8 @@ class StoreMetricsService
 		$feature_it = $registry->Query($queryParms);
 
         getFactory()->resetCachedIterator($feature_it->object);
+        $feature_it->object->setNotificationEnabled(false);
+
  		while( !$feature_it->end() )
  		{
 			$registry->Store(
@@ -164,6 +166,8 @@ class StoreMetricsService
 		$issue_it = $registry->Query($queryParms);
 
         getFactory()->resetCachedIterator($issue_it->object);
+        $issue_it->object->setNotificationEnabled(false);
+
  		while( !$issue_it->end() )
  		{
 			$parms = array();

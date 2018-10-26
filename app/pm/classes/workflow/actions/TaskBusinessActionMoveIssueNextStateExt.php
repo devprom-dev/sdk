@@ -31,7 +31,12 @@ class TaskBusinessActionMoveIssueNextStateExt extends BusinessActionWorkflow
             );
         if ( count($taskStates) > 1 ) return true;
 
-        $transitionIt = $request_it->getStateIt()->getTransitionIt();
+        $transitionIt = getFactory()->getObject('Transition')->getRegistry()->Query(
+            array (
+                new FilterAttributePredicate('SourceState', $request_it->getStateIt()->getId()),
+                new SortOrderedClause()
+            )
+        );
         while( !$transitionIt->end() )
         {
             if ( !$transitionIt->doable($request_it) ) {
@@ -39,10 +44,7 @@ class TaskBusinessActionMoveIssueNextStateExt extends BusinessActionWorkflow
                 continue;
             }
             $service = new WorkflowService($request_it->object);
-            $service->moveToState(
-                $request_it,
-                $transitionIt->getRef('TargetState')->get('ReferenceName')
-            );
+            $service->moveByTransition( $request_it, $transitionIt );
             return true;
         }
 

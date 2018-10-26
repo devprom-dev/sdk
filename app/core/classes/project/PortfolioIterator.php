@@ -4,25 +4,18 @@
 
 class PortfolioIterator extends ProjectIterator
 {
-    protected $callback_array = array();
-
     public function __wakeup()
     {
         IteratorBase::__wakeup();
         $this->setObject( new Portfolio );
     }
 
-    public function setCallbacks( $callbacks ) {
-    	$this->callback_array = $callbacks; 
-    }
-    
-    public function getSession()
-    {
-    	$callback = $this->callback_array[$this->get('CodeName')];
-    	
-		if ( !is_callable($callback) ) return;
-
-        return call_user_func($callback, $this);
+    public function getSession() {
+        if ( class_exists($this->get('sessionClassName')) ) {
+            $className = $this->get('sessionClassName');
+            return new $className($this);
+        }
+        throw new Exception('Unknown session class given for portfolio');
     }
     
     function buildMethodologyIt()

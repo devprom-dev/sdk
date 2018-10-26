@@ -32,6 +32,9 @@
  }
  
  $object_url = $object_uid->getObjectUrl($uid);
+ if ( $object_url == '' ) {
+     exit(header('Location: '.$object_it->object->getPageName()));
+ }
 
 foreach(array('baseline', 'case', 'revision') as $parm ) {
     if ( is_numeric($_REQUEST[$parm]) && $_REQUEST[$parm] > 0 ) {

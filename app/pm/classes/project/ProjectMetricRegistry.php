@@ -6,10 +6,8 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
 	{
         $default_metric = '';
         foreach( $this->getFilters() as $filter ) {
-            if ( $filter instanceof FilterAttributePredicate ) {
-                if ( $filter->getAttribute() == 'Metric' ) {
-                    $default_metric = $filter->getValue();
-                }
+            if ( $filter instanceof MetricReferencePredicate ) {
+                $default_metric = $filter->getValue();
             }
         }
 		return " (SELECT t.pm_ProjectMetricId,
@@ -33,7 +31,7 @@ class ProjectMetricRegistry extends ObjectRegistrySQL
         $registry->setLimit(1);
         $row_it = $registry->Query(
             array (
-                new FilterAttributePredicate('Metric', $metric),
+                new MetricReferencePredicate($metric),
                 new FilterAttributePredicate('Project', getSession()->getProjectIt()->getId()),
                 new SortRecentClause()
             )

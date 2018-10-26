@@ -36,4 +36,9 @@ class ProjectTemplateTable extends PageTable
 				new FilterAttributePredicate('Language', $values['language'])
 		);
 	}
+
+	function getCaption()
+    {
+        return translate('Процессы');
+    }
 }

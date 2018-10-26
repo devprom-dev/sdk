@@ -12,10 +12,22 @@
                 height: ($(window).height() * 4/5 - 100) + 'px',
                 edges: {
                     smooth: {
-                        roundness: 0.1
+                        type: 'cubicBezier',
+                        roundness: 0.1,
+                        forceDirection: 'vertical'
                     }
                 },
-                layout:{randomSeed:8}
+                nodes: {
+                    shape: 'box',
+                    widthConstraint: {
+                        maximum: 200
+                    }
+                },
+                layout:{
+                    hierarchical: {
+                        direction: 'UD'
+                    }
+                }
             });
             network.on('doubleClick', function(e) {
                 if (e.nodes.length > 0) {
@@ -26,6 +38,7 @@
                     });
                 }
             });
+            completeUIExt($('<?=$id?>'));
         })
     })
 </script>

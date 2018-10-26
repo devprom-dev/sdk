@@ -91,7 +91,13 @@ foreach( $timeTable as $author => $durations ) {
 		echo '<td>'.array_pop(preg_split('/#/', $author)).'</td>'.
 		$stateIt->moveFirst();
 		while( !$stateIt->end() ) {
-			echo '<td width="'.$width.'%">'.getSession()->getLanguage()->getDurationWording($durations[$stateIt->get('ReferenceName')]).'</td>';
+		    if ( is_numeric($durations[$stateIt->get('ReferenceName')]) ) {
+                $hours = getSession()->getLanguage()->getDurationWording($durations[$stateIt->get('ReferenceName')]);
+            }
+            else {
+                $hours = '';
+            }
+			echo '<td width="'.$width.'%">'.$hours.'</td>';
 			$stateIt->moveNext();
 		}
 	echo '</tr>';

@@ -1,21 +1,19 @@
 <?php
 
 include_once SERVER_ROOT_PATH."pm/methods/c_request_methods.php";
-include_once SERVER_ROOT_PATH."pm/methods/c_priority_methods.php";
 include_once SERVER_ROOT_PATH."pm/views/time/FieldSpentTimeRequest.php";
 include_once SERVER_ROOT_PATH."pm/views/issues/FieldIssueEstimation.php";
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
-include_once SERVER_ROOT_PATH."core/views/c_priority_view.php";
 
 class RequestList extends PMPageList
 {
 	private $estimation_field = null;
 	private $visible_columns = array();
-	private $priority_method = null;
 	private $type_it = null;
     private $strategy = null;
     private $velocity = 0;
-	
+    private $assigneeField = null;
+
 	function RequestList( $object ) 
 	{
 		$object->setAttributeOrderNum('OrderNum', 35);
@@ -25,22 +23,15 @@ class RequestList extends PMPageList
 	
 	function buildRelatedDataCache()
 	{
-		$this->priority_frame = new PriorityFrame();
         $this->non_terminal_states = $this->getObject()->getNonTerminalStates();
-
-		// cache priority method
-		$has_access = getFactory()->getAccessPolicy()->can_modify($this->getObject())
-				&& getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Priority');
-		
-		if ( $has_access )
-		{
-			$this->priority_method = new ChangePriorityWebMethod( getFactory()->getObject('Priority')->getAll() );
-		}
-
 		$this->estimation_field = new FieldIssueEstimation();
 		$this->type_it = getFactory()->getObject('RequestType')->getAll();
         $this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
         $this->velocity = getSession()->getProjectIt()->getVelocityDevider();
+
+        if ( getFactory()->getAccessPolicy()->can_modify_attribute($this->getObject(), 'Owner') ) {
+            $this->assigneeField = new FieldReferenceAttribute($this->getObject()->getEmptyIterator(), 'Owner');
+        }
 	}
 	
  	function IsNeedToSelect()
@@ -101,7 +92,7 @@ class RequestList extends PMPageList
 				$workload = $this->getTable()->getAssigneeWorkload();
 				if ( count($workload) > 0 )
 				{
-					echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+					echo $this->getRenderView()->render('pm/UserWorkload.php', array (
 							'user' => $object_it->getRef('Owner')->getDisplayName(),
 							'data' => $workload[$object_it->get($group_field)]
 					));
@@ -120,45 +111,34 @@ class RequestList extends PMPageList
 		{
 			case 'Spent':
 			    $field = new FieldSpentTimeRequest( $object_it );
+                $field->setShortMode();
 				$field->setEditMode( false );
-				$field->render( $this->getTable()->getView() );
+				$field->render( $this->getRenderView() );
 			    break;
 
 			case 'Links':
-				
 				if ( $object_it->get('LinksWithTypes') == '' ) break;
 
-				foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $type)
-				{
+				foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $type) {
 					list( $type_name, $id ) = preg_split('/\:/', $type);
-					
-					$types_ids[$id] = $type_name; 
+					$types_ids[$id] = $type_name;
 				}
 				
 				$items = array();
                 while ( !$entity_it->end() )
                 {
-                    $text = $this->getUidService()->getUidIconGlobal($entity_it, true);
+                    $it = $entity_it->getSpecifiedIt();
+                    $text = $this->getUidService()->getUidIconGlobal($it, true);
                     if ( !$this instanceof PageBoard ) {
-                        $text .= '<span class="ref-name">'.$entity_it->getDisplayNameExt().'</span>';
+                        $text .= '<span class="ref-name">'.$it->getDisplayNameExt().'</span>';
                     }
-					$items[] = translate($types_ids[$entity_it->getId()]).': '.$text;
+					$items[] = translate($types_ids[$it->getId()]).': '.$text;
 					$entity_it->moveNext();
 				}
                 		
                 echo join($items, '<div/> ');
-				
 				break;
 				
-			case 'Priority':
-				if ( is_object($this->priority_method) ) {
-					$this->priority_method->drawMethod( $object_it, 'Priority' );
-				}
-				else {
-					parent::drawRefCell( $entity_it, $object_it, $attr );
-				}
-				break;
-
             case 'Author':
                 if ( $entity_it->get('CustomerId') > 0 ) {
                     parent::drawRefCell(
@@ -168,6 +148,16 @@ class RequestList extends PMPageList
                 }
                 else {
                     echo $entity_it->getDisplayName();
+                }
+                break;
+
+            case 'Owner':
+                if ( is_object($this->assigneeField) ) {
+                    $this->assigneeField->setObjectIt($object_it);
+                    $this->assigneeField->draw($this->getRenderView());
+                }
+                else {
+                    parent::drawRefCell( $entity_it, $object_it, $attr );
                 }
                 break;
 
@@ -199,7 +189,7 @@ class RequestList extends PMPageList
                 else {
                     echo '<div style="margin-left:22px;">';
                     $this->estimation_field->setObjectIt($object_it);
-                    $this->estimation_field->draw($this->getTable()->getView());
+                    $this->estimation_field->draw($this->getRenderView());
                     echo '</div>';
                 }
     			break;
@@ -264,11 +254,8 @@ class RequestList extends PMPageList
 	{
 	    switch( $attr ) 
 	    {
-	        case 'Priority': return 'center';
-
 	        case 'Fact': return 'right';
-	        
-	        default: return parent::getColumnAlignment($attr); 
+	        default: return parent::getColumnAlignment($attr);
 	    }
 	}
 
@@ -302,11 +289,6 @@ class RequestList extends PMPageList
 		}
 		
 		return '?'.join($parts, '&');
-	}
-	
-	function getPriorityIcon( $object_it )
-	{
-		return $this->priority_frame->getIcon( $object_it->get('Priority') );
 	}
 	
 	function getColumnFields()

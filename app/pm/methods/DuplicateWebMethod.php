@@ -86,6 +86,17 @@ class DuplicateWebMethod extends WebMethod
         $this->execute( $_REQUEST );
  	}
 
+ 	function getTargetIt( $parms )
+    {
+        $project = getFactory()->getObject('Project');
+
+        $target_it = $parms['Project'] > 0 ? $project->getExact( $parms['Project'] ) : $project->getEmptyIterator();
+
+        if ( $target_it->getId() < 1 ) $target_it = getSession()->getProjectIt();
+
+        return $target_it;
+    }
+
  	function execute( $parms )
     {
         if ( $this->object_it->getId() == '' )
@@ -98,11 +109,7 @@ class DuplicateWebMethod extends WebMethod
             );
         }
 
-        $project = getFactory()->getObject('Project');
-
-        $target_it = $parms['Project'] > 0 ? $project->getExact( $parms['Project'] ) : $project->getEmptyIterator();
-
-        if ( $target_it->getId() < 1 ) $target_it = getSession()->getProjectIt();
+        $target_it = $this->getTargetIt($parms);
 
         $context = $this->duplicate( $target_it, $parms );
 
@@ -134,7 +141,7 @@ class DuplicateWebMethod extends WebMethod
                 else {
                     $this->setRedirectUrl(
                         getFactory()->getObject('PMReport')->getExact('allissues')->getUrl(
-                            'request='.join(',',$duplicate_it->idsToArray())
+                            'request='.\TextUtils::buildIds($duplicate_it->idsToArray())
                         )
                     );
                 }

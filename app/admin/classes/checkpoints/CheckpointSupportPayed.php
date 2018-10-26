@@ -4,9 +4,9 @@ include_once SERVER_ROOT_PATH."admin/classes/CheckpointEntryDynamic.php";
 class CheckpointSupportPayed extends CheckpointEntryDynamic
 {
     const UPDATES_FILE = 'conf/new-updates.json';
-    const UPDATES_URL = 'http://devprom.ru/download?json';
+    const UPDATES_URL = 'https://devprom.ru/download?json';
     const FILE = 'conf/support-payed.dat';
-    const URL = 'http://devprom.ru/download?payed';
+    const URL = 'https://devprom.ru/download?payed';
 
     function execute()
     {
@@ -51,8 +51,12 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
     
     protected function getSupportPayedDate()
     {
+        $url = defined('SERVICE_URL')
+            ? str_replace('devprom.ru', SERVICE_URL, self::URL)
+            : self::URL;
+
         $curl = CurlBuilder::getCurl();
-        curl_setopt($curl, CURLOPT_URL, self::URL.'&iid='.INSTALLATION_UID);
+        curl_setopt($curl, CURLOPT_URL, $url.'&iid='.INSTALLATION_UID);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($curl, CURLOPT_HEADER, false);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
@@ -75,18 +79,18 @@ class CheckpointSupportPayed extends CheckpointEntryDynamic
 
     protected function getAllUpdates()
     {
-        $this->debug('Download updates json: '.self::UPDATES_URL);
+        $updatesUrl = defined('SERVICE_URL')
+            ? str_replace('devprom.ru', SERVICE_URL, self::UPDATES_URL)
+            : self::UPDATES_URL;
+
+        $this->debug('Download updates json: '.$updatesUrl);
 
         $license_it = getFactory()->getObject('LicenseInstalled')->getAll();
-        $users_count = getFactory()->getObject('UserActive')->getRegistry()->Count(
-            array (
-                new FilterAttributePredicate('IsReadonly', 'N')
-            )
-        );
+        $users_count = getFactory()->getObject('User')->getRegistry()->Count();
 
         $curl = CurlBuilder::getCurl();
         curl_setopt($curl, CURLOPT_URL,
-            self::UPDATES_URL.'&version='.$_SERVER['APP_VERSION'].'&iid='.INSTALLATION_UID.'&license='.$license_it->get('LicenseType').'&users='.$users_count);
+            $updatesUrl.'&version='.$_SERVER['APP_VERSION'].'&iid='.INSTALLATION_UID.'&license='.$license_it->get('LicenseType').'&users='.$users_count);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);

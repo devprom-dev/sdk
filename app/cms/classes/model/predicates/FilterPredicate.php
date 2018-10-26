@@ -58,7 +58,7 @@ class FilterPredicate
 
  			array_walk( $filter, function (&$value, $key) 
  			{
- 				return $value = DAL::Instance()->Escape($value);
+ 				return $value = htmlspecialchars(DAL::Instance()->Escape(addslashes($value)), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  			});
  			
  			return join($filter, ',');
@@ -72,7 +72,7 @@ class FilterPredicate
  		}
  		else
  		{
- 			$filter = DAL::Instance()->Escape($filter);
+ 			$filter = htmlspecialchars(DAL::Instance()->Escape(addslashes($filter)), ENT_QUOTES | ENT_HTML401, APP_ENCODING);
  		}
  		
  		return $filter;

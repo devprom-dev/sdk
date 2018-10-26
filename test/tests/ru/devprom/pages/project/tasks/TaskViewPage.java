@@ -23,7 +23,7 @@ import ru.devprom.pages.project.requests.RequestViewPage;
 
 public class TaskViewPage extends SDLCPojectPageBase {
 
-	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(text(),'Действия')]")
+	@FindBy(xpath = "//a[@data-toggle='dropdown' and contains(.,'Действия')]")
 	protected WebElement actionsBtn;
 
 	@FindBy(xpath = "//a[@id='workflow-resolved']")
@@ -32,10 +32,10 @@ public class TaskViewPage extends SDLCPojectPageBase {
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
 	
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='tasktracetestscenario']]")
+	@FindBy(xpath = "//span[@name='pm_TaskTestScenario']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addTestDocBtn;
 	
-	@FindBy(xpath = "//a[contains(@class,'embedded-add-button') and preceding-sibling::input[@value='activitytask']]")
+	@FindBy(xpath = "//span[@name='pm_TaskFact']//a[contains(@class,'embedded-add-button')]")
 	protected WebElement addSpentTimeBtn;
 	
 	@FindBy(id = "pm_TaskRelease")
@@ -200,10 +200,14 @@ public class TaskViewPage extends SDLCPojectPageBase {
 	public List<Commit> readCommitRecords() {
 		List<WebElement> captions = driver
 				.findElements(By
-						.xpath("//input[@value='tasktracesourcecode']/following-sibling::div[contains(@id,'embeddedItems')]//*[contains(@class,'title')]"));
+						.xpath("//span[@name='pm_TaskSourceCode']//span[contains(@class,'title')]"));
 		List<Commit> commitArray = new ArrayList<Commit>();
 		for (int i = 0; i < captions.size(); i++) {
-			commitArray.add(new Commit(captions.get(i).getText()));
+			try {
+				commitArray.add(new Commit(captions.get(i).getText()));
+			}
+			catch(StringIndexOutOfBoundsException e) {
+			}
 		}
 		return commitArray;
 	}
@@ -274,6 +278,6 @@ public class TaskViewPage extends SDLCPojectPageBase {
 	}
 
     public void clickOnTestScenario(String id) {
-        driver.findElement(By.xpath("//*[@id='fieldRowIssueTraces']//*[contains(text(),'"+id+"')]")).click();
+        driver.findElement(By.xpath("//*[@id='fieldRowIssueTraces']//*[contains(.,'"+id+"')]")).click();
     }
 }

@@ -1,9 +1,6 @@
 <?php
-
-include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/tasks/TaskViewModelCommonBuilder.php";
-include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelExtendedBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/issues/RequestModelPageTableBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/widgets/BulkActionBuilderTasks.php";
 include_once SERVER_ROOT_PATH.'pm/views/import/ImportXmlForm.php';

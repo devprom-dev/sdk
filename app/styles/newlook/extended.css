@@ -1,4 +1,4 @@
-.treeview input[type="checkbox"].checkbox 
+.treeview input[type="checkbox"].checkbox
 {
     width:15px;
     height:15px;
@@ -38,11 +38,16 @@
   background-position: 4px 6px;
 }
 
+#filter-settings {
+    padding: 0 3px;
+}
+.wiki-page-tree #filter-settings {
+    margin-top: 2px;
+    padding: 3px 8px;
+}
+
 .filter-activity
 {
-  background-image: url("/images/indicator.gif");
-  background-repeat: no-repeat;
-  background-position: -1px -1px;
 }
 
 .well-text
@@ -272,29 +277,19 @@ td.release-cell
     padding-right: 11px;
 }
 
+body > .container-fluid {
+    padding: 0;
+}
 .container-fluid-internal
 {
 	padding-left: 0;
-	background-color: #666666;
     padding-right: 0 !important;
 }
 
-section.content-internal {
-    min-height: 550px;
-    box-shadow: none;
-    border-radius: 0;
-    border-top-left-radius: 8px;
-    -moz-border-top-left-radius: 8px;
-    -khtml-border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-    -moz-border-bottom-left-radius: 8px;
-    -khtml-border-bottom-left-radius: 8px;
-}
-
-@media screen 
+@media screen
 {
 	section.content-internal {
-        margin-left: 170px;
+        margin-left: 205px;
     }
     section.content-expanded {
         margin-left: 45px;
@@ -305,7 +300,6 @@ footer.internal,
 footer.internal p
 {
 	color: silver;
-	padding-top: 0;
 }
 
 header.navbar {
@@ -314,12 +308,15 @@ header.navbar {
 
 header .navbar
 {
-	margin-left: 10px;
+	margin-left: 0;
 	margin-bottom: 0;
 }
 
+.navbar-inner ul li > a {
+    border-bottom: 2px solid white;
+}
 .navbar-inner ul li.active > a {
-    background: url("/images/area-active.png") no-repeat scroll bottom center transparent !important;
+    border-bottom: 2px solid black;
 }
 
 table.features-chart-header
@@ -358,7 +355,7 @@ input[type=text].datepicker
     padding-right: 6px
 }
 
-input.btn-small
+input.btn-sm
 {
 	padding:2px 4px;
 }
@@ -378,7 +375,7 @@ input.btn-small
 
 .btn-group.open .btn-navbar.dropdown-toggle
 {
-	background-color: #555555;
+	background-color: #1f252d;
 	text-decoration: none;
     color: white;
 }
@@ -438,6 +435,8 @@ section.modal-fullscreen {
 
 .ui-dialog {
     width: auto;
+    border: none;
+    border-radius: 3px;
 }
 .ui-dialog-content .form-horizontal
 {
@@ -557,6 +556,7 @@ div.embeddedRowTitle .transparent-btn
 	    width: 50%;
 	}
     .properties-column-32 {
+        padding-left: 8px;
     }
     .hidden-tv {
         display: block !important;
@@ -575,6 +575,7 @@ div.embeddedRowTitle .transparent-btn
     }
     .properties-column-32 {
         width: auto;
+        padding-left: 8px;
     }
     .hidden-tv {
         display: none !important;
@@ -653,13 +654,6 @@ div.embeddedRowTitle .btn-group .btn
 	max-width: inherit;
 }
 
-.inside body
-{
-    background: none;
-	background-color: #666666;
-	padding: 0;
-}
-
 form .actions
 {
 	margin-top: 4px;
@@ -689,7 +683,6 @@ td .progress
 {
 	display: table;
 	width: 100%;
-    margin-bottom:13px;
 }
 
 .table-header .filter-btn
@@ -705,11 +698,11 @@ td .progress
     vertical-align: top;
 	display: table-cell;
 	padding: 0;
+    padding-right: 15px;
 }
 
-.table-header .filter .btn-group
-{
-    padding: 10px 0 0 0;
+.table-header .filter .btn-group {
+    padding: 0 0 10px 0;
 }
 
 .table-header .filter-btn > .btn-group > ul.dropdown-menu
@@ -720,15 +713,13 @@ td .progress
 
 .table-header .filter-actions
 {
-	float:right;
     vertical-align: top;
     display: table-cell;
     padding: 0;
 }
 
-.table-header .filter-actions .btn-group
-{
-    padding: 10px 0 0 0;
+.table-header .btn-group {
+    padding: 0 0 10px 0;
 }
 
 .table-header .filter-actions .btn-group:first-child {
@@ -749,6 +740,11 @@ td .progress
   margin-right: 5px;
   margin-left: 0;
 }
+.item-footer .btn-group + .btn-group {
+    margin-right: 0;
+    margin-left: 0;
+}
+
 .btn-group:last-child
 {
     margin-right: 0;
@@ -822,7 +818,7 @@ table.table td select
 }
 
 
-#navbar-company-name i
+#navbar-project i
 {
 	margin-top: 0;
 }
@@ -860,9 +856,11 @@ table th input[type="checkbox"]
     margin-top: 3px;
 }
 
-.btn-group > .transparent-btn .title
-{
+.btn-group > .transparent-btn .title {
 	color: #404040;
+}
+.board-columns .transparent-btn .title {
+    font-weight: bold;
 }
 
 .ui-dialog-buttonset .ui-button:nth-child(3){
@@ -922,12 +920,17 @@ body.fullpage
 	padding: 0;
 }
 
-.accordion-body .pagination
-{
-	margin-bottom: 12px;
-	padding-bottom: 6px;
-	border-bottom: #E5E5E5 1px solid;
-	text-align: center;
+.accordion-body .filter .btn-group {
+    font-size: inherit;
+}
+
+.accordion-body .filter .btn-group + .btn-group {
+    margin-left: 5px;
+}
+
+.accordion-body .filter .pagination ul > li > a {
+    padding: 2px 10px;
+    line-height: 21px;
 }
 
 .accordion-body .table-header
@@ -973,6 +976,9 @@ ul.vertical-menu form.form-search {
     margin-left: 6px;
     margin-right: 0;
 }
+.filter .btn-group:first-child {
+    margin-right: 5px;
+}
 .tools-toolbar .btn-group:last-child {
     padding-right: 0;
 }
@@ -992,6 +998,7 @@ ul.vertical-menu form.form-search {
 }
 .btn-toolbar .form-search button[type=submit] {
     padding: 2px;
+    padding-bottom: 3px;
 }
 
 .form-search .btn {
@@ -1075,7 +1082,7 @@ span.cke_widget_wrapper.cke_image_nocaption {
     width:100%;
 }
 
-.btn-mini i.icon-asterisk {
+.btn-xs i.icon-asterisk {
     margin-top: 0;
 }
 
@@ -1105,6 +1112,16 @@ a.btn {
 }
 .well-traces {
     margin: 7px 0 7px 0;
+}
+.well-traces .wel-tbl {
+    display: table;
+}
+.well-traces .lt-pn {
+    display: table-cell;
+}
+.well-traces .rg-pn {
+    display: table-cell;
+    width: 1%;
 }
 
 .btn-menu span.btn-link {
@@ -1178,6 +1195,7 @@ li.dropdown-item-options>a {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 13px;
     border-color: rgba(11, 117, 0, 0.3);
+    z-index: 999;
 }
 
 .vis-time-axis .vis-grid.vis-saturday,
@@ -1247,6 +1265,10 @@ section[module*=workflow] .hint-holder .alert {
     background-color: white;
     color: black;
 }
+.hint-holder {
+    padding-top: 18px;
+    padding-bottom: 85px;
+}
 .hint-holder .workflow-image-holder {
     text-align: center;
 }
@@ -1306,7 +1328,7 @@ span.fancytree-node {
     position: inherit;
 }
 .fancytree-plain span.fancytree-node:hover span.fancytree-title {
-    position: fixed;
+    background: white;
 }
 
 .tab-pane .alert-blocked p,
@@ -1332,7 +1354,7 @@ span.fancytree-node {
 }
 
 .accordion-body .row {
-    display: inline-flex;
+    display: table;
     width: 100%;
 }
 
@@ -1341,12 +1363,16 @@ span.fancytree-node {
     display: table-row;
 }
 
-.table-header:hover .btn-filter-more {
+.table-header .filter:hover .btn-filter-more {
     visibility: visible;
 }
 a.btn.btn-filter-more {
     padding-left: 0px;
+    padding-bottom: 0px;
     visibility: hidden;
+}
+a.btn.btn-filter-more span {
+    padding: 4px 6px;
 }
 
 th.text-right {
@@ -1360,4 +1386,80 @@ th.text-right a {
     padding: 0 10px;
     color: #ccc;
     font-size: 1.1em;
+}
+
+@media screen and (max-device-width: 1024px) and (max-device-height: 1024px) {
+    .device-hidden-desktop {
+        display: inherit !important;
+    }
+    .device-visible-desktop {
+        display: none !important ;
+    }
+    .device-visible-tablet {
+        display: inherit !important;
+    }
+    .device-hidden-tablet {
+        display: none !important;
+    }
+}
+
+.more-actions .dropdown-menu {
+    margin: 0;
+}
+
+
+.navbar .nav > li > a {
+    padding-top: 0px;
+}
+.nav > li > a:hover,
+.nav > li > a:focus {
+    background: none;
+}
+
+.cke_screen_reader_only {
+    height: 0 !important;
+}
+
+.btn.actions-button i.icon-plus {
+   background-position: -408px -97px;
+}
+
+table.table td .btn-field {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+table.table .btn-group .btn.btn-priority {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.btn-link.title {
+    white-space: normal;
+}
+
+.list-slider-2 ul.inline li {
+    display: block;
+}
+.list-slider-2 ul.inline li:nth-child(n+2) {
+    padding-top: 8px;
+}
+ul.inline i {
+    margin-right: 8px;
+}
+.list-slider-2 ul.inline .dashed-hidden {
+    display: inline-block;
+}
+
+td .fancytree-node {
+    white-space: nowrap;
+}
+td .fancytree-node .fancytree-title {
+    white-space: normal;
+}
+table.fancytree-ext-table th a {
+    white-space: nowrap;
+}
+
+.fancybox-slide--image .fancybox-content {
+    background: show;
 }

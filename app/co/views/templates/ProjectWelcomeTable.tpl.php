@@ -4,8 +4,11 @@ $custom_tiles = array_filter($tiles, function($value) {
 	return $value['kind'] == 'process';
 });
 $builtin_tiles = array_filter($tiles, function($value) {
-	return $value['kind'] != 'process';
-})
+	return $value['kind'] != 'process' && !in_array($value['file'], array('reqs_ru.xml','sdlc_ru.xml'));
+});
+$design_tiles = array_filter($tiles, function($value) {
+    return in_array($value['file'], array('reqs_ru.xml','sdlc_ru.xml'));
+});
 
 ?>
 
@@ -75,7 +78,7 @@ $builtin_tiles = array_filter($tiles, function($value) {
 				<? if ( count($languages) > 1 ) { ?>
 				<div class="pull-right language-buttons">
 					<? foreach( $languages as $language ) { ?>
-					<a href="?language=<?=htmlentities($language['cms_LanguageId'])?>" class="btn btn-small <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=translate($language['Caption'])?></a>
+					<a href="?language=<?=htmlentities($language['cms_LanguageId'])?>" class="btn btn-sm <?=($language_selected == $language['cms_LanguageId'] ? "btn-primary" : "")?>"><?=translate($language['Caption'])?></a>
 					<? } ?>
 				</div>
 				<? } ?>
@@ -135,37 +138,46 @@ $builtin_tiles = array_filter($tiles, function($value) {
 					</div>
 				</li>
 			<?php } ?>
-
-			<?php if ( !$custom_template_exists && $custom_template_url != '' ) { ?>
-				<li class="template-list-item">
-					<div class="template grey">
-						<i class="icon-lock"></i>
-						<h6 class="bs"><?=text('co26')?></h6>
-						<p><?=text('co27')?></p>
-						<a href="<?=$custom_template_url?>" target="_blank" class="template-action"><?=text('co28')?></a>
-					</div>
-				</li>
-			<?php } ?>
 		</ul>
 
-		<?php if ( count($solutions) > 0 ) { ?>
+		<?php if ( count($design_tiles) > 0 ) { ?>
 			<div class="create-project-info">
 				<p>
 					<i class="icon-info"></i> <?=text('co31')?>
 				</p>
 			</div>
 			<ul class="template-list">
-			<?php foreach ( $solutions  as $solution ) { ?>
-				<li class="template-list-item">
-					<div class="template">
-						<a target="_blank" href="<?=htmlentities($solution['url'])?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
-						<h6 class="bs"><?=$solution['name']?></h6>
-						<p>
-							<?=$solution['description']?>
-						</p>
-						<a href="<?=htmlentities($solution['url'])?>" target="_blank" class="template-action"><?=text('co28')?></a>
-					</div>
-				</li>
+			<?php foreach ( $design_tiles as $tile ) { ?>
+                <li class="template-list-item">
+                    <div class="template <?=(!$tile['active'] ? 'locked' : '')?>">
+                        <?php if ( !$tile['active'] ) { ?>
+                            <i class="icon-lock"></i>
+                        <?php } else if ( $tile['url'] != '' ) { ?>
+                            <a target="_blank" href="<?=htmlentities($tile['url'])?>" title="<?=text('co28')?>"><i class="icon-info"></i></a>
+                        <?php } ?>
+                        <h6 class="bs"><?=$tile['name']?></h6>
+                        <p>
+                            <?=$tile['description']?>
+                        </p>
+                        <?php if ( $tile['active'] ) { ?>
+                            <a href="/projects/new?Template=<?=htmlentities($tile['id'])?>" class="template-action"><?=text('co30')?></a>
+                        <?php } else { ?>
+                            <a href="<?=htmlentities($tile['url'])?>" target="_blank" class="template-action"><?=text('co29')?></a>
+                        <?php } ?>
+                    </div>
+                </li>
 			<?php } ?>
+
+            <?php if ( !$custom_template_exists && $custom_template_url != '' ) { ?>
+                <li class="template-list-item">
+                    <div class="template grey">
+                        <i class="icon-lock"></i>
+                        <h6 class="bs"><?=text('co26')?></h6>
+                        <p><?=text('co27')?></p>
+                        <a href="<?=$custom_template_url?>" target="_blank" class="template-action"><?=text('co28')?></a>
+                    </div>
+                </li>
+            <?php } ?>
+
 			</ul>
 		<?php } ?>

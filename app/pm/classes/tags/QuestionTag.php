@@ -1,7 +1,5 @@
 <?php
 
-if ( !class_exists('CustomTag', false) ) include "CustomTag.php";
-
 class QuestionTag extends CustomTag
 {
     function __construct()

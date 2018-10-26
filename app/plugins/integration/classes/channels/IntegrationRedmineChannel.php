@@ -12,7 +12,7 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         if ( $timestamp != '' ) {
             $time = new DateTime($timestamp, new DateTimeZone("UTC"));
             $time->modify("+1 second");
-            $jql['updated_on'] = '>='.array_shift(preg_split('/\+/', $time->format(DateTime::ATOM)));
+            $jql['updated_on'] = '>='.array_shift(preg_split('/\+/', $time->format(DateTime::ATOM))).'Z';
         }
 
         $releases = array();
@@ -207,10 +207,17 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
                 case 'tracker':
                     $typeMap = array_flip($this->issueTypeMap);
                     $put['issue']['tracker_id'] = $typeMap[$value['name']];
+                    $put['issue']['tracker']['id'] = $typeMap[$value['name']];
                     break;
                 case 'status':
                     $statusMap = array_flip($this->issueStates);
                     $put['issue']['status_id'] = $statusMap[$value['name']];
+                    $put['issue']['status']['id'] = $statusMap[$value['name']];
+                    break;
+                case 'priority':
+                    $map = array_flip($this->priorities);
+                    $put['issue']['priority_id'] = $map[$value['name']];
+                    $put['issue']['priority']['id'] = $map[$value['name']];
                     break;
                 case 'assigned_to':
                     $put['issue']['assigned_to_id'] = $value['id'];
@@ -239,10 +246,12 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         foreach( $data['issue_statuses'] as $issueState ) {
             $this->issueStates[$issueState['id']] = $issueState['name'];
         }
-        $data = $this->jsonGet(self::apiPath.'/projects.json', array(), false);
-        foreach( $data['projects'] as $project ) {
-            $this->projects[$project['id']] = $project['identifier'];
+        $data = $this->jsonGet(self::apiPath.'/enumerations/issue_priorities.json', array(), false);
+        foreach( $data['issue_priorities'] as $value ) {
+            $this->priorities[$value['id']] = $value['name'];
         }
+        $data = $this->jsonGet(self::apiPath.'/projects/'.$this->getObjectIt()->get('ProjectKey').'.json', array(), false);
+        $this->projects[$data['project']['id']] = $data['project']['identifier'];
     }
 
     protected function buildUsersMap()
@@ -259,6 +268,7 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
             }
         }
         catch( \Exception $e ) {
+            $map = array(0);
             $this->getLogger()->error($e->getMessage().$e->getTraceAsString());
         }
         return $map;
@@ -282,7 +292,15 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         return true;
     }
 
+    function getKeyValue($data) {
+        $value = parent::getKeyValue($data);
+        if ( $value != '' ) return $value;
+        $item = is_numeric(array_shift(array_keys($data))) ? array_shift($data) : $data;
+        return $item[array_shift(array_keys($item))][$this->getKeyField()];
+    }
+
     private $issueTypeMap = array();
     private $issueStates = array();
     private $projects = array();
+    private $priorities = array();
 }

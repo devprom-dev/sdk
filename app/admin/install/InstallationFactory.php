@@ -18,6 +18,7 @@ include_once 'SDKSetup.php';
 include_once 'AttachCustomersToCompanies.php';
 include_once 'SetupSupportProjectSettings.php';
 include_once 'MigrateDatabaseUTF8.php';
+include_once 'MigrateTablesTrueUTF8.php';
 include_once 'MigrateDatabaseInnoDB.php';
 include_once "CacheParameters.php";
 include_once "DownloadProductChangesInfo.php";
@@ -49,6 +50,7 @@ class InstallationFactory
         return array (
         	new MigrateDatabaseUTF8(),
 			new MigrateDatabaseInnoDB(),
+	        new MigrateTablesTrueUTF8(),
 	        new ApplyServicedeskMigrations(),
 	        new ChangeConfigurationPath(),
 	        new CheckLicense(),

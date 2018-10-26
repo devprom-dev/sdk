@@ -21,10 +21,17 @@ class TextTemplateEntityRegistry extends ObjectRegistrySQL
 	public static function getEntities() {
         return array (
             'Request' => 'Description',
+            'Task' => 'Description',
+            'Release' => 'Description',
+            'Iteration' => 'Description',
+            'Milestone' => 'Description',
+            'Build' => 'Description',
+            'Feature' => 'Description',
             'Comment' => 'Caption',
             'ProjectPage' => 'Content',
             'Requirement' => 'Content',
-            'TestScenario' => 'Content'
+            'TestScenario' => 'Content',
+            'HelpPage' => 'Content'
         );
     }
 }

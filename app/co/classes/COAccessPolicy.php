@@ -71,14 +71,6 @@ class CoAccessPolicy extends AccessPolicy
 	    	if ( is_bool($access) ) return $access;
 		}
 
-		if ( $action_kind == ACCESS_CREATE ) {
-			switch( $ref_name ) {
-				case 'pm_Project':
-				case 'co_ProjectGroup':
-					return getSession()->getUserIt()->getId() == '' || getSession()->getUserIt()->get('IsReadonly') == 'N';
-			}
-		}
-		
 		return true;
 	}
 	

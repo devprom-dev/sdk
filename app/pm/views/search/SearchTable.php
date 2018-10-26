@@ -28,7 +28,7 @@ class SearchTable extends PMPageTable
 		return $category;
 	}
 
-	function buildFilterState() {
+	function buildFilterState( $filterValues = array() ) {
         $filter = new FilterObjectMethod( getFactory()->getObject('StateCommon'), translate('Состояние'), 'state' );
         $filter->setHasNone(false);
         return $filter;
@@ -72,5 +72,9 @@ class SearchTable extends PMPageTable
 
 	function IsFilterPersisted() {
 	    return true;
+    }
+
+    function getCaption() {
+        return translate('Поиск');
     }
 }

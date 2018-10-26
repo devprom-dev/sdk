@@ -24,6 +24,7 @@ public class TestScenario implements Cloneable{
     public TestScenario(String name) {
     	this.name=name;
     	this.state="В работе";
+    	this.type="Тестовый сценарий";
     }
     
     public TestScenario clone() {

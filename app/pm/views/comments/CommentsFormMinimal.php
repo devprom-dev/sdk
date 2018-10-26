@@ -13,6 +13,7 @@ class CommentsFormMinimal extends PMPageForm
 		parent::extendModel();
 		$this->getObject()->addAttribute('Attachment', 'VARCHAR', '', true, false);
         $this->getObject()->addAttribute('Notification', 'VARCHAR', '', true, false);
+        $this->getObject()->removeAttribute('Project');
 
         $objectIt = $this->getObjectIt();
         if ( is_object($objectIt) && $objectIt->getId() != '' ) {

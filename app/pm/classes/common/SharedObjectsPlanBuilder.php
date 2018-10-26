@@ -21,8 +21,10 @@ class SharedObjectsPlanBuilder extends SharedObjectsBuilder
             'Version',
             'Release',
             'ReleaseRecent',
+            'ReleaseActual',
             'Iteration',
             'IterationRecent',
+            'IterationActual',
             'Stage',
             'Baseline'
 		);

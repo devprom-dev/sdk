@@ -1,4 +1,5 @@
 <?php
+use Devprom\ProjectBundle\Service\Files\UploadFileService;
 include_once SERVER_ROOT_PATH . "cms/c_form.php";
 include_once SERVER_ROOT_PATH . "pm/classes/model/validators/ModelNotificationValidator.php";
 
@@ -75,6 +76,10 @@ class ManageComment extends CommandForm
 	{
 		$form = new Form($comment_it->object);
         $form->processEmbeddedForms( $comment_it );
+
+        $service = new UploadFileService();
+        $service->deleteFiles();
+        $service->attachTemporaryFiles($comment_it, 'File', getFactory()->getObject('pm_Attachment'));
 	}
 }
  

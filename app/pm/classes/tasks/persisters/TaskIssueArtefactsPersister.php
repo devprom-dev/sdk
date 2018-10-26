@@ -2,7 +2,11 @@
 
 class TaskIssueArtefactsPersister extends ObjectSQLPersister
 {
- 	function getSelectColumns( $alias )
+    function getAttributes() {
+        return array('IssueFeature', 'IssueTraces', 'IssueDescription', 'IssueVersion', 'IssueState', 'IssueStateColor', 'IssueStateName', 'IssueAttachment');
+    }
+
+    function getSelectColumns( $alias )
  	{
  		return array(
  			" ( SELECT GROUP_CONCAT(DISTINCT CONCAT_WS(':',l.ObjectClass,CAST(l.ObjectId AS CHAR))) " .
@@ -19,6 +23,8 @@ class TaskIssueArtefactsPersister extends ObjectSQLPersister
 
             "( SELECT s.Caption FROM pm_State s, pm_ChangeRequest r ".
             "   WHERE r.pm_ChangeRequestId = t.ChangeRequest AND s.ReferenceName = r.State AND s.VPD = r.VPD AND s.ObjectClass = 'request') IssueStateName ",
+
+            " ( SELECT r.Function FROM pm_ChangeRequest r WHERE r.pm_ChangeRequestId = t.ChangeRequest) IssueFeature ",
 
             " (SELECT GROUP_CONCAT(CAST(a.pm_AttachmentId AS CHAR)) ".
 			"    FROM pm_Attachment a ".

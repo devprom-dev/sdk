@@ -70,7 +70,7 @@ class WorkspaceService
 		// merge workspace
 		$workspace_it = $workspace->getRegistry()->Query( 
 					array (
-							new \FilterAttributePredicate('UID', $data['id']),
+							new \FilterTextExactPredicate('UID', $data['id']),
 							new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
 							new \FilterBaseVpdPredicate()
 					)
@@ -100,7 +100,7 @@ class WorkspaceService
 			$menu_it = $menu->getRegistry()->Query(
 						array (
 								new \FilterAttributePredicate('Workspace', $workspace_it->getId()),
-								new \FilterAttributePredicate('UID', $node['id'])
+								new \FilterTextExactPredicate('UID', $node['id'])
 						)
 				);
 			
@@ -130,7 +130,7 @@ class WorkspaceService
 					$item_it = $item->getRegistry()->Query(
 								array (
 										new \FilterAttributePredicate('WorkspaceMenu', $menu_it->getId()),
-										new \FilterAttributePredicate('UID', $uid)
+										new \FilterTextExactPredicate('UID', $uid)
 								)
 						);
 					
@@ -159,7 +159,7 @@ class WorkspaceService
 	{
 		$workspace_it = getFactory()->getObject('Workspace')->getRegistry()->Query( 
 					array (
-							new \FilterAttributePredicate('UID', $area_id),
+							new \FilterTextExactPredicate('UID', $area_id),
 							new \FilterAttributePredicate('SystemUser', getSession()->getUserIt()->getId()),
 							new \FilterBaseVpdPredicate()
 					)
@@ -246,20 +246,15 @@ class WorkspaceService
 	{
  	 	$project_it = getSession()->getProjectIt();
 
- 	    if ( $project_it->get('CodeName') == 'my' )
- 	    {
- 	        getSession()->insertBuilder( new \FunctionalAreaMyProjectsBuilder() ); 
+        getSession()->insertBuilder( new \FunctionalAreaCommonBuilder() );
+ 	    if ( $project_it->get('CodeName') == 'my' ) {
  	    	getSession()->insertBuilder( new \FunctionalAreaMenuMyProjectsBuilder() );
  	    }
- 	    else if ( $project_it->IsPortfolio() )
- 	    {
- 	        getSession()->insertBuilder( new \FunctionalAreaPortfolioBuilder() ); 
- 	    	getSession()->insertBuilder( new \FunctionalAreaMenuPortfolioBuilder() ); 
+ 	    else if ( $project_it->IsPortfolio() ) {
+ 	    	getSession()->insertBuilder( new \FunctionalAreaMenuPortfolioBuilder() );
  	    }
- 	    else
- 	    {
- 	        getSession()->insertBuilder( new \FunctionalAreaCommonBuilder() ); 
- 	    	getSession()->insertBuilder( new \FunctionalAreaMenuFavoritesBuilder() ); 
+ 	    else {
+ 	    	getSession()->insertBuilder( new \FunctionalAreaMenuFavoritesBuilder() );
  	    }
  	        
  	    getSession()->insertBuilder( new \FunctionalAreaMenuManagementBuilder() ); 

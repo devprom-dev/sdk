@@ -1,7 +1,6 @@
 <?php
 
 include_once SERVER_ROOT_PATH."core/views/c_issue_type_view.php";
-include_once SERVER_ROOT_PATH."core/views/c_priority_view.php";
 include_once SERVER_ROOT_PATH."pm/methods/CommentWebMethod.php";
 
 class RequestBoard extends PMPageBoard
@@ -191,7 +190,7 @@ class RequestBoard extends PMPageBoard
 			}
 		}
 
-		$state_it = $this->getBoardAttributeIterator();
+		$state_it = getFactory()->getObject($this->getObject()->getStateClassName())->getAll();
 		while( !$state_it->end() ) {
 			if ( $state_it->get('TaskTypes') != '' ) {
 				$this->taskBoardStates[] = $state_it->get('ReferenceName');
@@ -501,7 +500,7 @@ class RequestBoard extends PMPageBoard
 			case 'Owner':
 				$workload = $this->getTable()->getAssigneeWorkload();
 				if ( count($workload) > 0 ) {
-					echo $this->getTable()->getView()->render('pm/UserWorkload.php', array (
+					echo $this->getRenderView()->render('pm/UserWorkload.php', array (
 							'user' => $object_it->getRef('Owner')->getDisplayName(),
 							'data' => $workload[$object_it->get($group_field)]
 					));
@@ -525,11 +524,9 @@ class RequestBoard extends PMPageBoard
 		{
 			case 'Owner':
 				if ( $object_it->get($attr) < 1 || $object_it->get('OwnerPhotoId') > 0 ) return;
-				
-				echo '<div style="padding:0 0 0 0;overflow-y:hidden;height:16px;">';
+				echo '<div style="padding:0;overflow-y:hidden;height:16px;">';
 					echo $ref_it->getDisplayName();
 				echo '</div>';
-				
 				break;
 				
 			case 'Attachment':
@@ -577,10 +574,10 @@ class RequestBoard extends PMPageBoard
 
                 echo '<div class="item-footer">';
 					echo '<div style="display:table-cell;text-align:left;">';
-						if ( $object_it->get('OpenTasks') == '' && $object_it->get('OwnerPhotoId') != '' )
+						if ( $object_it->get('OwnerPhotoId') != '' )
 						{
 							echo '<div class="btn-group">';
-							echo $this->getTable()->getView()->render('core/UserPicture.php', array (
+							echo $this->getRenderView()->render('core/UserPicture.php', array (
 								'id' => $object_it->get('OwnerPhotoId'),
 								'class' => 'user-mini',
 								'image' => 'userpics-mini',
@@ -607,7 +604,7 @@ class RequestBoard extends PMPageBoard
 								$task_it->moveNext();
 					 		}
 					 		
-							echo $this->getTable()->getView()->render('pm/TasksIcons.php', array (
+							echo $this->getRenderView()->render('pm/TasksIcons.php', array (
 								'states' => $states,
 								'random' => $object_it->getId()
 							));
@@ -655,15 +652,20 @@ class RequestBoard extends PMPageBoard
 
 							$estimationValue = $this->estimation_scale[$object_it->get('Estimation')];
 							if ( $estimationValue == '' ) $estimationValue = $object_it->get('Estimation');
-							echo '<div style="display: inline-block;">';
-								echo $this->getTable()->getView()->render('pm/EstimationIcon.php', array (
-									'title' => $this->estimation_title,
-									'data' => $estimationValue != '' ? $estimationValue : '0',
-									'items' => $actions,
-									'random' => $object_it->getId()
-								));
-							echo '</div>';
+
+                            echo $this->getRenderView()->render('pm/EstimationIcon.php', array (
+                                'title' => $this->estimation_title,
+                                'data' => $estimationValue != '' ? $estimationValue : '0',
+                                'items' => $actions,
+                                'random' => $object_it->getId()
+                            ));
 						}
+
+						if ( $this->visible_column['TasksPlanned'] && $object_it->get('TasksPlanned') > 0 ) {
+                            echo '<div class="btn-group">';
+                                echo '<span class="label label-success">'.$object_it->get('TasksPlanned').'</span>';
+                            echo '</div>';
+                        }
 					
 						if ( $this->visible_column['Fact'] && $object_it->get('Fact') > 0 )
 						{
@@ -681,7 +683,7 @@ class RequestBoard extends PMPageBoard
 						if ( $this->visible_column['RecentComment'] && $object_it->get('CommentsCount') > 0 )
 						{
 							echo '<div style="margin-left:4px;display: inline-block;">';
-								echo $this->getTable()->getView()->render('core/CommentsIconMini.php', array (
+								echo $this->getRenderView()->render('core/CommentsIconMini.php', array (
 										'object_it' => $object_it,
 										'redirect' => 'donothing'
 								));
@@ -694,6 +696,7 @@ class RequestBoard extends PMPageBoard
 
 			case 'OrderNum':
 			case 'Estimation':
+            case 'TasksPlanned':
 			case 'Fact':
 			case 'RecentComment':
 				break;
@@ -708,14 +711,14 @@ class RequestBoard extends PMPageBoard
 		foreach(preg_split('/,/', $object_it->get('LinksWithTypes')) as $link_info)
 		{
 			list($type_name, $link_id, $type_ref, $link_state, $direction) = preg_split('/:/',$link_info);
-			if ( $type_ref == 'blocked' && $direction == 2 && !in_array($link_state,$this->terminal_states))
+			if ( $type_ref == 'blocked' && $direction == 2 && $link_state != 'Y')
 			{
-				$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
+				$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id)->getSpecifiedIt());
 				echo '<a class="with-tooltip block-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(961).'"></a>';
 			}
-			if ( $type_ref == 'implemented' && $direction == 2 && !in_array($link_state,$this->terminal_states))
+			if ( $type_ref == 'implemented' && $direction == 2 && $link_state != 'Y')
 			{
-				$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id));
+				$uid_info = $this->getUidService()->getUIDInfo($object_it->object->getExact($link_id)->getSpecifiedIt());
 				echo '<a class="with-tooltip impl-sign" tabindex="-1" data-placement="right" data-original-title="" data-content="" info="'.$uid_info['tooltip-url'].'" href="'.$uid_info['url'].'" title="'.text(2035).'"></a>';
 			}
 		}
@@ -739,6 +742,7 @@ class RequestBoard extends PMPageBoard
 			'RecentComment',
 			'OrderNum',
 			'Estimation',
+			'TasksPlanned',
 			'RecentComment',
 			'Fact',
 			'DeliveryDate',

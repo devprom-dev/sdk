@@ -22,15 +22,14 @@ class TransitionForm extends PMPageForm
  		{
  			case 'ProjectRoles':
  				return text(893);
- 				
  			case 'Attributes':
  				return text(897);
- 				
  			case 'ResetFields':
  				return text(1146);
- 				
  			case 'Predicates':
  				return text(1141);
+            case 'Actions':
+                return preg_replace('/%1/', getFactory()->getObject('Module')->getExact('autoactions')->getUrl(), text(1167));
  		}
  	}
 

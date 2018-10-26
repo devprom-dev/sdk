@@ -71,8 +71,12 @@ class TooltipService
 				array (
 					'OrderNum', 'RecordCreated', 'RecordModified', 'UID'
 				),
-                $object->getAttributesByGroup('skip-tooltip')
+                $object->getAttributesByGroup('skip-tooltip'),
+                $object instanceof \PMWikiPage
+                    ? array('Content')
+                    : array()
 			);
+
             if ( $object_it->get('VPD') == getSession()->getProjectIt()->get('VPD') ) {
                 $tooltip_attributes = array_diff(
                     $tooltip_attributes,
@@ -143,8 +147,7 @@ class TooltipService
 			    return $object_it->get($attribute) == 'Y' ? translate('Да') : translate('Нет');
 			    
  		    case 'text':
-			    $totext = new \Html2Text\Html2Text( $object_it->getHtmlDecoded($attribute), array('width'=>0) );
-			    return $object_it->getWordsOnlyValue($totext->getText(), 25);
+			    return $object_it->get($attribute);
 
  			case 'wysiwyg':
 			    return $object_it->getHtmlDecoded($attribute);

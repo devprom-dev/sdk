@@ -13,6 +13,7 @@ include "predicates/StateHasNoObjectsPredicate.php";
 include "predicates/StateTransitionTargetPredicate.php";
 include "StateBaseModelBuilder.php";
 include "persisters/StateQueueLengthPersister.php";
+include "validators/StateModelValidator.php";
 
 class StateBase extends Metaobject
 {
