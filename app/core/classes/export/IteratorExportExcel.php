@@ -96,19 +96,23 @@ class IteratorExportExcel extends IteratorExport
                 if ( $type != '' ) {
                     if ( $type == 'DateTime' ) {
                         $objPHPExcel->setActiveSheetIndex(0)
-                            ->setCellValueByColumnAndRow($key, $row, PHPExcel_Shared_Date::PHPToExcel( $value ));
-                        $objPHPExcel->setActiveSheetIndex(0)
                             ->getStyleByColumnAndRow($key, $row)
                             ->getNumberFormat()
-                            ->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_DATETIME);
+                            ->setFormatCode(getSession()->getLanguage()->getExcelDateTimeFormat());
+                        if ( $value != '' ) {
+                            $objPHPExcel->setActiveSheetIndex(0)
+                                ->setCellValueByColumnAndRow($key, $row, PHPExcel_Shared_Date::PHPToExcel($value));
+                        }
                     }
                     elseif ( $type == 'Date' ) {
                         $objPHPExcel->setActiveSheetIndex(0)
-                            ->setCellValueByColumnAndRow($key, $row, PHPExcel_Shared_Date::PHPToExcel( $value ));
-                        $objPHPExcel->setActiveSheetIndex(0)
                             ->getStyleByColumnAndRow($key, $row)
                             ->getNumberFormat()
-                            ->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDD2);
+                            ->setFormatCode(getSession()->getLanguage()->getExcelDateFormat());
+                        if ( $value != '' ) {
+                            $objPHPExcel->setActiveSheetIndex(0)
+                                ->setCellValueByColumnAndRow($key, $row, PHPExcel_Shared_Date::PHPToExcel( $value ));
+                        }
                     }
                     else {
                         $objPHPExcel->setActiveSheetIndex(0)

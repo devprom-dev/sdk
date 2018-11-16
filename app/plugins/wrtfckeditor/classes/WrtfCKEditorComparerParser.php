@@ -12,7 +12,8 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
             CODE_ISOLATE => array($this, 'codeIsolate'),
             '/<img\s+alt="([^"]+)"[^>]+>/i' => array($this, 'parseUMLImage'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
-            CODE_RESTORE => array($this, 'codeRestore')
+            CODE_RESTORE => array($this, 'codeRestore'),
+            REGEX_COMMENTS => array($this, 'removeComments'),
         );
         if ( function_exists('preg_replace_callback_array') ) {
             $content = preg_replace_callback_array($callbacks, $content);
@@ -58,5 +59,10 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
                 }, preg_split('/[\r\n]/',$this->codeBlocks[$match[2] - 1]))
             )
         .'</code>';
+    }
+
+    function removeComments( $match )
+    {
+ 	    return $match[2];
     }
 }

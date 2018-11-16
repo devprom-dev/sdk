@@ -186,8 +186,6 @@ App.on("start", function()
 		    		view.select();
 		    	};
 		    });
-
-		    adjustContainerHeight();
 		}});
 	    }
         });

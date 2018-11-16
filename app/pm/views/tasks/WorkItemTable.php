@@ -1,5 +1,6 @@
 <?php
 include "WorkItemList.php";
+include "WorkItemChart.php";
 
 class WorkItemTable extends TaskTable
 {
@@ -11,11 +12,16 @@ class WorkItemTable extends TaskTable
 
     function getList( $mode = '' )
     {
-        return new WorkItemList($this->getObject());
+        switch( $_REQUEST['report'] )
+        {
+            case 'workitemchart':
+                return new WorkItemChart($this->getObject());
+            default:
+                return new WorkItemList($this->getObject());
+        }
     }
 
-    function getBulkActions()
-    {
+    function getBulkActions() {
         return array();
     }
 
@@ -105,5 +111,15 @@ class WorkItemTable extends TaskTable
 
     function getDefaultRowsOnPage() {
         return 20;
+    }
+
+    function getChartModules($module)
+    {
+        return array_merge(
+            array(
+                'workitemchart'
+            ),
+            parent::getChartModules($module)
+        );
     }
 }

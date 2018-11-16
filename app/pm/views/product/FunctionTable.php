@@ -87,19 +87,29 @@ class FunctionTable extends PMPageTable
 	function getFilterPredicates()
 	{
 	    $filters = $this->getFilterValues();
-	    
+
 		$predicates = array(
 			new FeatureStateFilter( $filters['state'] ),
 			new CustomTagFilter( $this->getObject(), $filters['tag'] ),
 			new FilterAttributePredicate( 'Importance', $filters['importance'] ),
 			new FilterAttributePredicate( 'Type', $filters['type'] ),
-			new ParentTransitiveFilter( $filters['parent'] )
+            new ParentTransitiveFilter($filters['roots'])
 		);
 		
 		return array_merge(parent::getFilterPredicates(), $predicates);
 	}
-		
-	function getViewFilter()
+
+	function getFilterParms()
+    {
+        return array_merge(
+            parent::getFilterParms(),
+            array(
+                'roots'
+            )
+        );
+    }
+
+    function getViewFilter()
 	{
 		return new FunctionFilterViewWebMethod();
 	}

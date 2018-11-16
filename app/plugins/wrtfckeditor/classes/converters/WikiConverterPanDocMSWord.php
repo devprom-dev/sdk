@@ -100,37 +100,34 @@ class WikiConverterPanDocMSWord extends WikiConverterPanDoc
     function mergeContent( $documentContent, $templateContent )
     {
         list($documentHeader, $documentBody) = preg_split('/<w:body[^>]*>/i', $documentContent);
-        list($documentBody, $documentFooter) = preg_split('/<\/w:p><w:sectPr\s*/i', $documentBody);
-        $documentBody .= '</w:p>';
+        list($documentBody, $documentFooter) = preg_split('/<w:sectPr\s*/i', $documentBody);
 
         $templateContent = preg_replace('/w14:paraId="[^"]+"/i', '', $templateContent);
         $templateContent = preg_replace('/w14:textId="[^"]+"/i', '', $templateContent);
-
         list($templateHeader, $templateBody) = preg_split('/<w:body[^>]*>/i', $templateContent);
-        list($templateBody, $templateFooter) = preg_split('/<\/w:p><w:sectPr\s*/i', $templateBody);
-        $templateBody .= '</w:p>';
 
-        if ( strpos($templateBody, 'DEVPROM_DOCUMENT_BODY') !== false )
-        {
+        if ( strpos($templateBody, 'DEVPROM_DOCUMENT_BODY') !== false ) {
             $templateBody = preg_replace(
-                '/DEVPROM_DOCUMENT_BODY\s*<\/w:t>\s*<\/w:r>/i',
-                '</w:t></w:r></w:p>'.$documentBody.'<w:p><w:r><w:t></w:t></w:r>',
+                '/DEVPROM_DOCUMENT_BODY\s*<\/w:t>\s*<\/w:r><\/w:p>/i',
+                '</w:t></w:r></w:p>'.$documentBody,
                 $templateBody
             );
         }
         else {
-            $templateBody .= $documentBody;
+            $parts = preg_split('/<w:sectPr\s*/i', $templateBody);
+            $parts[count($parts) - 2] .= $documentBody;
+            $templateBody = join('<w:sectPr ' , $parts);
         }
 
         if ( strpos($templateHeader, 'xmlns:a') === false ) {
             $templateHeader = preg_replace('/<w:document\s+/i', '<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ', $templateHeader);
         }
-
         if ( strpos($templateHeader, 'xmlns:pic') === false ) {
             $templateHeader = preg_replace('/<w:document\s+/i', '<w:document xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" ', $templateHeader);
         }
 
-        return $templateHeader . '<w:body>' . $templateBody . '<w:sectPr ' . $templateFooter;
+        $result = $templateHeader . '<w:body>' . $templateBody;
+        return $result;
     }
 
     function mergeRelationships( $documentRels, $templateRels, &$ids )

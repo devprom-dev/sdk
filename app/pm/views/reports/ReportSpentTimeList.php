@@ -217,58 +217,6 @@ class ReportSpentTimeList extends PMStaticPageList
     	return in_array($this->group, array('', 'none')) ? 0 : 2;
 	}
 	
-	function drawDay( $column )
-	{
-	    global $model_factory;
-	    
-	    $column = preg_replace('/Day/', '', $column);
-	    
-		$weekday = $model_factory->getObject('DateWeekday');
-		
-		$weekday_it = $weekday->getAll();
-		
-		$year = $this->object->getReportYear();
-		
-		$month = $this->object->getReportMonth();
-			
-		$week_day = date('w', mktime(0, 0, 0, $month, (int) $column, $year));
-			
-		$weekday_it->moveToPos( $week_day );
-		 
-		if( is_numeric($column) ) 
-		{
-			if ( $column == date('d') && $month == date('m') && $year == date('Y') )
-			{
-				echo '<span title="'.$weekday_it->getDisplayName().'"><b>'.$column.'</b></span>';
-			}
-			else
-			{
-				switch ( $week_day )
-				{
-					case 0:
-					case 6:
-						echo '<span style="color:silver;" title="'.$weekday_it->getDisplayName().'">'.$column.'</span>';
-						break;
-						
-					default:
-						echo '<span title="'.$weekday_it->getDisplayName().'">'.$column.'</span>';
-				}
-			}
-		}	    
-	}
-	
-	function drawHeader( $column, $title )
-	{
-		if ( strpos($column, 'Day') !== false )
-		{
-	        $this->drawDay( $column );
-		}
-		else
-		{
-			parent::drawHeader( $column, $title );
-		}
-	}
-
 	function drawGroupRow( $group, $object_it, $columns )
 	{
         if ( $object_it->get('Group') == '' ) return;

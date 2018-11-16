@@ -83,9 +83,7 @@ class AutoAction extends Metaobject
 
  	function modify_parms( $id, $parms )
  	{
-        if ( $parms['Actions'] != '' ) {
-            $this->serializeActions($parms);
-        }
+        $this->serializeActions($parms);
         $this->serializeConditions($parms);
 
  		$result = parent::modify_parms( $id, $parms );
@@ -123,8 +121,8 @@ class AutoAction extends Metaobject
  	protected function serializeActions( &$parms )
  	{
  		$data = array();
- 		foreach( $this->getActionAttributes() as $attribute )
- 		{
+ 		foreach( $this->getActionAttributes() as $attribute ) {
+ 		    if ( !array_key_exists($attribute, $parms) ) continue;
  		    if ( $attribute == 'State' ) {
                 $data[$attribute] = getFactory()->getObject('pm_State')
                     ->getExact($parms[$attribute])->get('ReferenceName');
@@ -134,7 +132,9 @@ class AutoAction extends Metaobject
             }
  			unset($parms[$attribute]);
  		}
- 		$parms['Actions'] = JsonWrapper::encode($data);
+ 		if ( count($data) > 0 ) {
+            $parms['Actions'] = JsonWrapper::encode($data);
+        }
  	}
  	
  	protected function serializeConditions( &$parms )

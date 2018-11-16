@@ -364,6 +364,11 @@ class TextUtils
         $context = $match[1].$match[5];
         if ( $context == '=""' || $context == '="">' ) return $match[0];
 
+        if ( $match[1] == '' ) {
+            $match[1] = '<a href="'.$match[2].'">';
+            $match[5] = '</a>';
+        }
+
         $display_name = trim($match[2], "\.\,\;\:");
 
         $shrink_length = 80;

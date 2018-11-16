@@ -8,7 +8,7 @@ class Methodology extends Metaobject
  	{
 		parent::Metaobject('pm_Methodology');
 
-		$this->setAttributeDescription('IsBlogUsed', text(679));
+		$this->removeAttribute('IsBlogUsed');
 		$this->setAttributeDescription('IsKnowledgeUsed', text(678));
 	}
 	

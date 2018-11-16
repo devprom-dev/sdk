@@ -6,6 +6,7 @@ include_once "FieldCheckNotifications.php";
 class CommentsFormMinimal extends PMPageForm
 {
 	private $anchor_it;
+	private $commentIt = null;
 	private $private = false;
 
 	function extendModel()
@@ -21,7 +22,23 @@ class CommentsFormMinimal extends PMPageForm
         }
 	}
 
-	public function setAnchorIt( $anchor_it )
+	public function setObjectIt($object_it) {
+	    if ( is_object($object_it) ) {
+            $this->anchor_it = $object_it->getAnchorIt();
+        }
+        parent::setObjectIt($object_it);
+    }
+
+    public function setCommentIt($commentIt) {
+        $this->anchor_it = $commentIt->getAnchorIt();
+	    $this->commentIt = $commentIt;
+    }
+
+    public function getCommentIt() {
+	    return $this->commentIt;
+    }
+
+    public function setAnchorIt( $anchor_it )
 	{
 		$this->anchor_it = $anchor_it;
 	}
@@ -95,10 +112,11 @@ class CommentsFormMinimal extends PMPageForm
         }
 
 		return array_merge( 
-				parent::getRenderParms(), 
-				array(
-					'form_body_template' => "pm/CommentsFormMinimal.php"
-				)
+            parent::getRenderParms(),
+            array(
+                'form_body_template' => "pm/CommentsFormMinimal.php",
+                'comment_it' => $this->commentIt
+            )
 		);
 	}
 
@@ -150,7 +168,7 @@ class CommentsFormMinimal extends PMPageForm
  		
  		if ( $level > 50 || $comment_it->count() < 1 ) return;
 
-		echo $view->render("pm/CommentsThread.php", 
+		echo $view->render("pm/CommentsThread.php",
 			array_merge( array (
 				'level' => $level
 				), $this->getThreadParms($comment_it)

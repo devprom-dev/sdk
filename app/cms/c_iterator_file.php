@@ -32,7 +32,7 @@
    				
    				$db_format = str_replace('%', '', getSession()->getLanguage()->getDateFormat().' %H:%i');
 
-   				$createddate = date($db_format, $stat['ctime']);
+   				$createddate = date($db_format, $stat['mtime']);
 
    				array_push( $files,  array( 
    				    'created' => $createddate, 
@@ -40,7 +40,7 @@
    				    'name' => $file, 
    				    'Caption' => $file, 
    				    'size' => $stat['size'], 
-					'ctime' => $stat['ctime'],
+					'ctime' => $stat['mtime'],
    				    is_a($object, 'Metaobject') ? $object->getClassName().'Id' : 'id' => abs(crc32($file)) 
    				));
    			}

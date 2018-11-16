@@ -114,7 +114,7 @@ class ReleaseIterator extends OrderedIterator
 	function getFinishOffsetDays()
 	{
 		$est_finish = $this->get('EstimatedFinishDate');
-		
+
 		$it = $this->object->createSQLIterator(
             " SELECT TO_DAYS('".$est_finish."') - TO_DAYS('".$this->get_native('FinishDate')."') diff "
         );
@@ -441,12 +441,9 @@ class ReleaseIterator extends OrderedIterator
 	
 	function IsFinished() 
 	{
-		$finish = $this->get('EstimatedFinishDate');
-		
-		$sql = " SELECT TO_DAYS(NOW()) - TO_DAYS('".$finish."') Offset ";
-		$it = $this->object->createSQLIterator( $sql );
-		
-		return $it->get('Offset') > 0;
+		return $this->object->createSQLIterator(
+		        " SELECT TO_DAYS(NOW()) - TO_DAYS('".$this->get('EstimatedFinishDate')."') Offset "
+            )->get('Offset') > 0;
 	}
 
 	function IsEmpty()

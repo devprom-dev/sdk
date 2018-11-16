@@ -114,8 +114,6 @@ include_once SERVER_ROOT_PATH.'pm/classes/workflow/TransitionResetField.php';
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiPageTrace.php';
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiPageInversedTrace.php';
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiPageTraceType.php';
-include_once SERVER_ROOT_PATH.'pm/classes/communications/Notification.php';
-include_once SERVER_ROOT_PATH.'pm/classes/communications/NotificationTrackingType.php';
 include_once SERVER_ROOT_PATH.'pm/classes/report/PMCustomReport.php';
 include_once SERVER_ROOT_PATH.'pm/classes/c_entity_cluster.php';
 include_once SERVER_ROOT_PATH.'pm/classes/workflow/StateAction.php';

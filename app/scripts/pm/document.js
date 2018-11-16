@@ -493,8 +493,6 @@ var sortNodes = function(nodes, mapper, compare) {
 
 function reorderSections()
 {
-	console.log('reordering sections');
-	
     sortNodes($('#tablePlaceholder .table-inner:first').find('tr[object-id]'),
         function (elem) {
             return $(elem).attr('sort-value');
@@ -721,6 +719,10 @@ function selectPageInTree( page_id )
 	if ( typeof activateTreeNode != 'undefined' ) {
 		activateTreeNode(page_id);
 	}
+    var captionElement = $("[id*=WikiPageCaption][objectid='"+page_id+"']");
+    if ( captionElement.text() != '' ) {
+        updateHistory(captionElement.text(), page_id);
+    }
     $(document).trigger("trackerItemSelected", [page_id]);
 }
 
@@ -739,7 +741,7 @@ function scrollToPage( page_id )
 
     pos = item.offset().top;
 	if ( $('.documentToolbar').length > 0 ) {
-		pos -= $('.documentToolbar').height() - 5;
+		pos -= $('.documentToolbar').height() + 10;
 	}
 	if ( pos > $(document).scrollTop() && pos < ($(window).height() - 80) ) return;
 	$('body, html').animate({ scrollTop: pos }, 50);
@@ -775,7 +777,7 @@ function showNewRows( rows, selectRow ) {
 		});
 	}
 	restoreCache(rows[0], function() {
-		if ( selectRow ) {
+			if ( selectRow ) {
 			setRowFocus(rows[0]);
 		}
 	});
@@ -797,7 +799,7 @@ function makeupUI( container )
 		});
 	}
 
-	container.find("tr:not(.info)").each( function(i, e) {
+	container.find("tr:not(.info):not(.makeup-armed)").each( function(i, e) {
 		$(e).dblclick( function(evt) {
 			if ( $(evt.target).closest('td[uid="checkbox"],td#operations,div.wysiwyg').length > 0 ) return;
 			var ref = $(this).find('td[id=operations] a#modify');
@@ -811,18 +813,18 @@ function makeupUI( container )
 			if ( id != '' ) {
 				$(document).trigger("trackerItemSelected", [id, e.ctrlKey || e.metaKey]);
 			}
-		});
+		}).addClass('makeup-armed');
 	});
 	
-	container.find("tr:not(.info) td:not(#content)").dblclick( function(e) {
+	container.find("tr:not(.info) td:not(#content):not(.makeup-armed)").dblclick( function(e) {
 		if ( $(this).find('.wysiwyg').length > 0 ) return;
 		if (window.getSelection)
 	        window.getSelection().removeAllRanges();
 	    else if (document.selection)
 	        document.selection.empty();
-	});
+	}).addClass('makeup-armed');
 	
-	container.find("td#content").hover(
+	container.find("td#content:not(.makeup-armed)").hover(
 			function() {
 				if ( $(this).find('.document-page-bottom .editor-area').length < 1 ) {
 					var el = $(this).find('.document-item-bottom-hidden');
@@ -834,9 +836,9 @@ function makeupUI( container )
 				var el = $(this).find('.document-item-bottom-hidden');
                 el.removeClass('hover').hide();
 			}
-		).find('.wysiwyg').attachDragger();
+		).addClass('makeup-armed').find('.wysiwyg').attachDragger();
 
-	container.find("td#content div[contenteditable]")
+	container.find("td#content div[contenteditable]:not(.makeup-armed)")
 		.focus( function() {
 			$(this).parents('td#content').find('.document-item-bottom-hidden').show();
 			if ( $(this).parents('tr').first().is(':not(.row-empty)')) {
@@ -847,16 +849,12 @@ function makeupUI( container )
 			var parentNode = $(this).parents('td#content');
             if ( parentNode.find('.document-item-bottom-hidden.hover').length > 0 ) return;
             parentNode.find('.document-item-bottom-hidden').hide();
-		});
+		})
+		.addClass('makeup-armed');
 
 	container.find('.document-page-comments-link').click( function(event) {
 		toggleDocumentPageComments($(this), true);
         event.stopPropagation();
-	});
-	container.find("tr[object-id]").each( function(i,e) {
-		if ( cookies.get('comments-state-'+$(this).attr('object-id')) == 'open' && $(this).find('.comment-line').length > 0 ) {
-			toggleDocumentPageComments($(this).find('.comments-section'), false);
-		}
 	});
 
     if ( documentOptions.draggable ) {
@@ -928,10 +926,6 @@ function toggleDocumentPageComments(container, openForm) {
 	var bottom = container.parents('.document-page-bottom');
 	bottom.find('.comments-section').each(function(value) {
 		$(this).toggleClass('closed');
-		cookies.set(
-			'comments-state-'+$(this).parents('tr[object-id]').attr('object-id'),
-			$(this).is(':visible') ? 'open' : 'closed'
-		);
 		if ( openForm && $(this).is(':visible') && $(this).find('.comment-line').length < 1 ) {
 			$(this).find('.btn-success').click();
 		}
@@ -942,6 +936,7 @@ function toggleDocumentPageComments(container, openForm) {
 function editorFocused() {
 	return CKEDITOR.currentInstance != null
 		&& document.activeElement != null
+		&& $(CKEDITOR.currentInstance.editable()).attr('id')
 		&& $(CKEDITOR.currentInstance.editable()).attr('id') == document.activeElement.getAttribute('id');
 }
 

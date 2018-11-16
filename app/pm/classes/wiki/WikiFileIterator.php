@@ -4,7 +4,12 @@ class WikiFileIterator extends OrderedIterator
 {
  	function getFileLink() 
  	{
-        return '<a class="image_attach" data-fancybox="gallery" href="'.$this->getFileUrl().'&.png" ' . '>'.$this->getFileName('Content').'</a>';
+ 	    if ( $this->isImage('Content') ) {
+            return '<a class="image_attach" data-fancybox="gallery" href="'.$this->getFileUrl().'&.png" ' . '>'.$this->getFileName('Content').'</a>';
+        }
+        else {
+            return '<a class="file_attach" href="'.$this->getFileUrl().'&.png" ' . '>'.$this->getFileName('Content').'</a>';
+        }
  	}
  	
  	function getDisplayName() 

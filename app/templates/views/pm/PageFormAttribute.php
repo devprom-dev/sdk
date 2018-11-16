@@ -11,7 +11,7 @@ switch ( $class )
 	case 'fielddatetime':
     case 'fielddate':
 
-		echo $text;
+		echo IteratorBase::getHtmlValue($text);
 		
 		break;
 		

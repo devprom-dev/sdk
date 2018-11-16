@@ -5,6 +5,13 @@ class FieldCheckNotifications extends FieldCheck
 {
     private $anchor_it = null;
     private $emails = array();
+    private $transitionIt = null;
+
+    function __construct( $transitionIt = null )
+    {
+        $this->transitionIt = $transitionIt;
+        parent::__construct('');
+    }
 
     public function setAnchor( $anchor_it )
     {
@@ -22,11 +29,23 @@ class FieldCheckNotifications extends FieldCheck
         $this->setCheckName(str_replace('%1', '<b>'.join('</b>, <b>', $this->emails).'</b>', text(2318)));
         $this->setValue('Y');
 
+        $skipNotification = false;
+        if ( is_object($this->transitionIt) && $this->transitionIt->getId() != '' ) {
+            if ( $this->transitionIt->getRef('TargetState')->get('SkipEmailNotification') == 'Y' ) {
+                $skipNotification = true;
+            }
+        }
+
         if ( count($this->emails) > 0 )
         {
-            echo '<div class="alert alert-danger alert-comment">';
-                parent::draw($view);
-            echo '</div>';
+            if ( $skipNotification ) {
+                echo '<input type="hidden" name="IsPrivate" value="Y">';
+            }
+            else {
+                echo '<div class="alert alert-danger alert-comment">';
+                    parent::draw($view);
+                echo '</div>';
+            }
         }
  	}
 

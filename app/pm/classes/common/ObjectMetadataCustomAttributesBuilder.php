@@ -81,8 +81,7 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 			$attr_it->moveNext();
 		}
 		
-		if ( $object->getEntityRefName() == 'pm_ChangeRequest' )
-		{
+		if ( $object->getEntityRefName() == 'pm_ChangeRequest' ) {
 		    unset($attributes['Description']);
 		}
 		

@@ -45,13 +45,13 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
             }
 		    if ( class_exists('Increment') ) {
                 $issueObject = getFactory()->getObject('Increment');
+                $set->add('Request', '', $issueObject->getDisplayName());
             }
         }
         if ( !is_object($issueObject) ) {
             $issueObject = getFactory()->getObject('Request');
         }
 
-        $set->add('Request', '', $issueObject->getDisplayName().': '.translate('любой тип'));
 		$type_it = getFactory()->getObject('pm_IssueType')->getRegistry()->Query(
             array (
                 new FilterBaseVpdPredicate()
@@ -59,11 +59,10 @@ class CustomizableObjectBuilderCommon extends CustomizableObjectBuilder
 		);
 		while ( !$type_it->end() )
 		{
-		    $title = $type_it->getDisplayName() == $issueObject->getDisplayName()
-                ? $issueObject->getDisplayName()
-                : $issueObject->getDisplayName().': '.$type_it->getDisplayName();
-
-			$set->add( 'Request', 'request:'.$type_it->get('ReferenceName'), $title);
+		    $title = $type_it->getDisplayName();
+		    $refName = $type_it->get('ReferenceName');
+		    if ( $refName != '' ) $refName  = ':'.$refName;
+			$set->add( 'Request', 'request'.$refName, $title);
 			$type_it->moveNext();
 		}        
     }

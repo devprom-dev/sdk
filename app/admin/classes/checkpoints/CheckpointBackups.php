@@ -21,9 +21,9 @@ class CheckpointBackups extends CheckpointEntryDynamic
 		{
 			$it->sortCreatedDesc();
 			
-			$days_it = $object->createSQLIterator(" SELECT TO_DAYS(NOW()) - TO_DAYS('".date("Y-m-d", $it->get('ctime'))."') Days");
+			$days = strtotime(date("Y-m-d")) - strtotime($it->get('RecordCreated'));
 
-			$this->setValue( $days_it->get('Days') > 1 ? "0" : "1");
+			$this->setValue( $days > 1 ? "0" : "1");
 		}
 	}
 	

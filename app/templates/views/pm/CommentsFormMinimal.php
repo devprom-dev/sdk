@@ -3,10 +3,8 @@
 <?php
 }
 
-if ( $object_id == '' ) {
-    $form->renderThread( $view );
-    echo '<br/>';
-}
+$form->renderThread( $view, $form->getCommentIt() );
+echo '<br/>';
 
 echo $view->render('core/PageFormAttribute.php', $attributes['Caption']);
 if ( $attributes['Caption']['description'] != '' ) {

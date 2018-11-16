@@ -39,6 +39,34 @@ class StateMetaRegistry extends ObjectRegistrySQL
             }
             $state_it->moveNext();
         }
+
+        if ( $state_object instanceof IssueState && class_exists('RequestState') )
+        {
+            $state_it = getFactory()->getObject('RequestState')->getRegistry()->Query(
+                array (
+                    new FilterVpdPredicate(getFactory()->getObject($state_object->getObjectClass())->getVpds()),
+                    new SortOrderedClause()
+                )
+            );
+            while (!$state_it->end()) {
+                switch( $state_it->get('IsTerminal') ) {
+                    case 'N':
+                        $ref_names['initial'][] = $state_it->get('ReferenceName');
+                        $queueLengths['initial'] += $state_it->get('QueueLength');
+                        break;
+                    case 'I':
+                        $ref_names['progress'][] = $state_it->get('ReferenceName');
+                        $queueLengths['progress'] += $state_it->get('QueueLength');
+                        break;
+                    case 'Y':
+                        $ref_names['final'][] = $state_it->get('ReferenceName');
+                        $queueLengths['final'] += $state_it->get('QueueLength');
+                        break;
+                }
+                $state_it->moveNext();
+            }
+        }
+
         if ( count($ref_names['initial']) < 1 ) $ref_names['initial'][] = 'submitted';
 		if ( count($ref_names['progress']) < 1 ) $ref_names['progress'][] = 'inprogress';
         if ( count($ref_names['final']) < 1 ) $ref_names['final'][] = 'resolved';

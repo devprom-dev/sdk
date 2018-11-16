@@ -16,9 +16,10 @@ class SharedObjectsTasksBuilder extends SharedObjectsBuilder
     
     public function build( SharedObjectRegistry & $set )
     {
-		$entities = array (
-    			'TaskState',
-     	        'Task'
+        $entities = array (
+            'TaskState',
+            'Task',
+            'WorkItem'
 		);
 		
  		foreach( $entities as $key )

@@ -69,7 +69,7 @@ CKEDITOR.plugins.add( 'productivity',
                     : "";
 
 				var data = {
-					Caption: text != "" ? '<blockquote>'+text+'</blockquote> <p></p>' : ""
+					Caption: text && text != "" ? '<blockquote>'+text+'</blockquote> <p></p>' : ""
 				};
 				var className = editor.element.getAttribute('objectclass').toLowerCase();
 				var objectId = editor.element.getAttribute('objectid');

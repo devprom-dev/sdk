@@ -36,6 +36,8 @@ class CommentHandler extends EmailNotificatorHandler
                         )
                     )->fieldToArray('Assignee')
                 );
+                if ( $anchor_it->get('Owner') != '' ) $result[] = $anchor_it->get('Owner');
+                if ( $anchor_it->get('Author') != '' ) $result[] = $anchor_it->get('Author');
 			    break;
 
 			case 'pm_Question':

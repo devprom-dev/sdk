@@ -527,7 +527,9 @@ class PageForm extends MetaObjectForm
 		{
 		    $visible = $this->IsAttributeVisible($key);
 
-		    if ( !$visible && !$this->object->IsAttributeStored($key) && $this->object->getAttributeOrigin($key) != ORIGIN_CUSTOM ) continue;
+		    if ( !$this->object->IsAttributeStored($key) && $this->object->getAttributeOrigin($key) != ORIGIN_CUSTOM  ) {
+		        if ( $this->object->IsReference($key) && !$visible ) continue;
+            }
 		    if ( $this->object->IsReference($key) ) {
 		        if ( !getFactory()->getAccessPolicy()->can_read($this->object->getAttributeObject($key)) ) continue;
             }

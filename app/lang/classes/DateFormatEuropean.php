@@ -65,4 +65,12 @@ class DateFormatEuropean extends DateFormatBase
             return 'days';
         }
     }
+
+    function getExcelDateFormat() {
+        return 'dd/mm/yyyy';
+    }
+
+    function getExcelDateTimeFormat() {
+        return 'dd/mm/yyyy h:mm:ss';
+    }
 }

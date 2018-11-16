@@ -143,8 +143,27 @@ class EmailNotificatorHandler
 			}
 		}
 
+		if ( array_key_exists('Assignee', $parms) || array_key_exists('Owner', $parms) ) {
+            $value = $this->getField($object_it, 'Description');
+            if ( $parms['Description'] == '' && $value != '' ) {
+                $parms['Description'] = $value;
+            }
+        }
+
 		return $parms;
 	}
+
+	function getField( $object_it, $attribute )
+    {
+        if ( $object_it->object->getAttributeType($attribute) != '' ) {
+             return array (
+                'name' => translate($object_it->object->getAttributeUserName($attribute)),
+                'value' => $this->getValue( $object_it, $attribute),
+                'type' => $object_it->object->getAttributeType($attribute)
+            );
+        }
+        return array();
+    }
 
 	public static function getWasValue( $object_it, $attr )
 	{

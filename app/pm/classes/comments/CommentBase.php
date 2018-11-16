@@ -52,12 +52,22 @@ class CommentBase extends Metaobject
 	
 	function getAllRootsForObject( $object_it, $query_parms = array() )
 	{
+	    $classes = array(
+	        strtolower(get_class($object_it->object))
+        );
+        if ( $object_it->object instanceof Request ) {
+            $classes[] = 'issue';
+        }
+        if ( $object_it->object instanceof Issue ) {
+            $classes[] = 'request';
+        }
+
 		return $this->getRegistry()->Query(
 			array_merge(
                 $query_parms,
                 array(
                     new FilterAttributePredicate('ObjectId', $object_it->getId()),
-                    new FilterAttributePredicate('ObjectClass', strtolower(get_class($object_it->object))),
+                    new FilterAttributePredicate('ObjectClass', $classes),
                     new CommentRootFilter(),
                     new SortKeyClause()
                 )

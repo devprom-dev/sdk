@@ -33,7 +33,7 @@ class AttachmentController extends Controller
     {
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
         if ( !is_object($attachment) ) {
-            $this->redirect($this->generateUrl('issue_list', array()));
+            return $this->redirect($this->generateUrl('issue_list', array()));
         }
 
         $issue = $attachment->getIssue();
@@ -55,8 +55,16 @@ class AttachmentController extends Controller
     public function downloadCommentIssueAttachmentAction($attachmentId)
     {
         $attachment = $this->container->get('comment_attachment_service')->getAttachmentById($attachmentId);
+        if ( !is_object($attachment) ) {
+            return $this->redirect($this->generateUrl('issue_list', array()));
+        }
 
-        $issue = $attachment->getComment()->getIssue();
+        $comment = $attachment->getComment();
+        if ( !is_object($comment) ) {
+            return $this->redirect($this->generateUrl('issue_list', array()));
+        }
+
+        $issue = $comment->getIssue();
         if ( !$this->checkUserIsAuthorized($issue) ) {
             return new RedirectResponse($this->container->get('router')->generate('fos_user_security_login', array(), true));
         }
@@ -126,7 +134,7 @@ class AttachmentController extends Controller
 
         $attachment = $this->getAttachmentService()->getAttachmentById($attachmentId);
         if ( !is_object($attachment) ) {
-            $this->redirect($this->generateUrl('issue_list', array()));
+            return $this->redirect($this->generateUrl('issue_list', array()));
         }
 
         $issue = $attachment->getIssue();

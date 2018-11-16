@@ -7,7 +7,7 @@ class AdminChangeLogPersister extends ObjectSQLPersister
  		$columns = array();
  		
  		array_push( $columns, 
- 			" FROM_DAYS(TO_DAYS(t.RecordModified)) ChangeDate " );
+ 			" TIMESTAMP(FROM_DAYS(TO_DAYS(t.RecordModified))) ChangeDate " );
 
  		return $columns;
  	}

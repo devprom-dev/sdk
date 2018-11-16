@@ -104,7 +104,18 @@ class CommentBaseIterator extends OrderedIterator
 	{
 	    $class_name = getFactory()->getClass($this->get('ObjectClass'));
 	    if ( !class_exists($class_name) ) return $this->object->getEmptyIterator();
-	    return getFactory()->getObject($class_name)->getExact($this->get('ObjectId'));
+
+	    if ( is_subclass_of($class_name, 'WikiPage') ) {
+	        $registry = new WikiPageRegistryContent(getFactory()->getObject($class_name));
+	        return $registry->Query(
+	            array(
+                    new FilterInPredicate($this->get('ObjectId'))
+                )
+            );
+        }
+        else {
+            return getFactory()->getObject($class_name)->getExact($this->get('ObjectId'));
+        }
 	}
 	
 	function getViewUrl()

@@ -21,8 +21,6 @@ class UploadFileService
         $config = new Flow\Config();
         $config->setTempDir($this->tmp);
 
-        \Logger::getLogger('Commands')->error(var_export($_FILES, true));
-
         $request = new Flow\Request();
         $uploadFileName = uniqid()."_".$request->getFileName(); // The name the file will have on the server
         $uploadPath = $this->upload . '/' . $uploadFileName;

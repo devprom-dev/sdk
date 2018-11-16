@@ -278,7 +278,7 @@ public class UserAttributesTest extends ProjectTestBase {
 		//Создаем новый атрибут типа Ссылка
 		AttributeSettingsPage asp = sdlcFirstPage.gotoAttributeSettings();
 	    AttributeEntityNewPage aenp = asp.addNewAttribute();
-		AttributeNewPage nap = aenp.selectEntity("request", "Ссылка");
+		AttributeNewPage nap = aenp.selectEntity("request", "Ссылка", "user");
 		nap.enterNewAttribute(attributeName, attribute, "Для теста настройки видимости при переходе", false);
 		asp = nap.createNewAttribute();
 	

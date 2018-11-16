@@ -12,7 +12,7 @@ class ModuleBuilderProduct extends ModuleBuilder
 
         $item = array();
         $item['cms_PluginModuleId'] = 'features-list';
-        $item['Caption'] = translate('Функции');
+        $item['Caption'] = text(2681);
         $item['AccessEntityReferenceName'] = 'pm_Function';
         $item['Url'] = 'features/list';
         $item['Icon'] = 'icon-picture';

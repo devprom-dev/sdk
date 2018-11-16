@@ -51,10 +51,6 @@ class WorkItem extends MetaobjectStatable
         }
     }
 
-    function getVpds() {
-        return array();
-    }
-
     function createIterator() {
         return new WorkItemIterator($this);
     }

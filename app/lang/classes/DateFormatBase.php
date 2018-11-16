@@ -41,4 +41,12 @@ class DateFormatBase
  	function getDaysWording( $days )
  	{
  	}
+
+ 	function getExcelDateFormat() {
+	    return 'dd.mm.yyyy';
+    }
+
+    function getExcelDateTimeFormat() {
+        return 'dd.mm.yyyy h:mm:ss';
+    }
 }

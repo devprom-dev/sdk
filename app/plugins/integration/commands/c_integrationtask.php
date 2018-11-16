@@ -11,8 +11,6 @@ class IntegrationTask extends TaskCommand
 
 		$this->logStart();
 
-		$system_it = getFactory()->getObject('SystemSettings')->getAll();
-
 		$parameters = $this->getData()->getParameters();
 		$itemsToProcess = $parameters['limit'] > 0 ? $parameters['limit'] : 60;
 
@@ -58,7 +56,7 @@ class IntegrationTask extends TaskCommand
             $this->setupLogger($logFilePath);
 
 			$service = new IntegrationService(
-			    $integration_it, \Logger::getLogger('Commands')
+			    $integration_it, \Logger::getLogger('Commands'), $parameters['delay'] != '' ? $parameters['delay'] : 0
             );
 
 			$service->setItemsToProcess($itemsToProcess);

@@ -743,20 +743,7 @@
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToDelete()
 	{
-		if ( !getFactory()->getAccessPolicy()->can_delete($this->object) ) return false;
-		if ( count($this->delete_checks) < 1 )
-		{
-			$it = $this->getIteratorRef();
-			while( !$it->end() ) {
-    			$this->delete_checks[$it->getId()] = getFactory()->getAccessPolicy()->can_delete($it);
-				$it->moveNext();
-			}
-			$it->moveFirst();
-		}
-		
-		$has_any = count($this->delete_checks) < 1 ? true : false;
-		foreach( $this->delete_checks as $check ) $has_any |= $check;
-		return $has_any;
+		return getFactory()->getAccessPolicy()->can_delete($this->object);
 	}
 	
 	function IsNeedToSelect()
@@ -772,9 +759,21 @@
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToDeleteRow( $object_it )
 	{
+	    if ( count($this->delete_checks) < 1 ) $this->buildDeleteChecks();
 		return $this->delete_checks[$object_it->getId()];
 	}
-	
+
+	function buildDeleteChecks()
+    {
+        $it = $this->getIteratorRef();
+        while( !$it->end() ) {
+            $this->delete_checks[$it->getId()] = getFactory()->getAccessPolicy()->can_delete($it);
+            $it->moveNext();
+        }
+        $it->moveFirst();
+        return $this->delete_checks;
+    }
+
 	//---------------------------------------------------------------------------------------------------------
 	function IsNeedToModify( $object_it )
 	{

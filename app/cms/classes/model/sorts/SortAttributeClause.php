@@ -90,6 +90,9 @@ class SortAttributeClause extends SortClauseBase
  		
 		switch ( $attr )
 		{
+            case 'UID':
+                return " ".$this->getAlias().".".$this->getObject()->getIdAttribute()." ".$sort_type;
+
 			case 'State':
 			    if ( $object instanceof MetaobjectStatable ) {
                     return " IFNULL((SELECT s.OrderNum FROM pm_State s WHERE s.ReferenceName = ".$sql_attr." AND s.VPD = t.VPD AND s.ObjectClass = '".strtolower(get_class($object))."'), ".$this->valueInsteadOfNull.") ".$sort_type." ";

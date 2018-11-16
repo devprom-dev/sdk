@@ -4,9 +4,12 @@ class CustomAttributeTypeClassNameField extends FieldDictionary
 {
  	function getOptions()
 	{
-		$objects = array('user' => '', 'priority' => '', 'importance' => '');
+		$objects = array('user' => '', 'priority' => '', 'importance' => '', 'usergroup' => '');
 		foreach( $objects as $className => $name ) {
-            $objects[$className] = getFactory()->getObject($className)->getDisplayName();
+		    $className = getFactory()->getClass($className);
+		    if ( class_exists($className) ) {
+                $objects[$className] = getFactory()->getObject($className)->getDisplayName();
+            }
         }
 
         $object_it = getFactory()->getObject('CustomizableObjectSet')->getAll();
@@ -28,7 +31,13 @@ class CustomAttributeTypeClassNameField extends FieldDictionary
                 'disabled' => false
             );
 		}
-		
+
+        usort( $options, array($this, 'sortByCaption') );
+
 		return $options;
 	}
+
+    function sortByCaption( $left, $right ) {
+        return $left['caption'] > $right['caption'] ? 1 : -1;
+    }
 }

@@ -55,8 +55,6 @@ class Request extends MetaobjectStatable
 
 	function getRequestsAggByVersion( $version_name = '' )
 	{
-		global $project_it, $model_factory;
-		
 		$trace_class = getFactory()->getObject('RequestTraceTestCaseExecution')->getObjectClass();
 		
 		$sql = " SELECT t.Version, " .
@@ -136,21 +134,21 @@ class Request extends MetaobjectStatable
 	
 	function add_parms( $parms )
 	{
-		global $model_factory;
-		
 		if ( $parms['EstimationLeft'] == '' ) $parms['EstimationLeft'] = $parms['Estimation'];
 		
 		$request_id = parent::add_parms( $parms );
 		
 		if ( $parms['Question'] > 0 )
 		{
-			$trace = $model_factory->getObject('RequestTraceQuestion');
+			$trace = getFactory()->getObject('RequestTraceQuestion');
 			$trace->add_parms( 
 				array( 'ObjectId' => $parms['Question'],
 					   'ObjectClass' => $trace->getObjectClass(),
 					   'ChangeRequest' => $request_id )
 			);
 		}
+
+		$this->updateUID($request_id);
 
 		return $request_id;
 	}
@@ -185,5 +183,13 @@ class Request extends MetaobjectStatable
 
         return $result;
 	}
+
+    function updateUID( $objectId )
+    {
+        if ( $objectId < 1 ) return;
+        $uid = new ObjectUID();
+        $sql = "UPDATE pm_ChangeRequest w SET w.UID = '".$uid->getObjectUidInt(get_class($this), $objectId)."' WHERE w.pm_ChangeRequestId = ".$objectId;
+        DAL::Instance()->Query( $sql );
+    }
 }
  

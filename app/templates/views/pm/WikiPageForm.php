@@ -157,6 +157,7 @@ if ( count($sections) > 0 )
 
 <div class="page-attachments">
 <? if ( is_object($attachments) ) { echo $attachments->render($this); } ?>
+    <div class="clearfix"></div>
 </div>
 
 <? if ( is_object($attributes['Content']['field']) ) { $attributes['Content']['field']->draw(); } ?>

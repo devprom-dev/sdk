@@ -27,10 +27,10 @@ class IssueRepository extends EntityRepository
             ->leftJoin('issue.stateComment', 'IssueStateComment')
             ->leftJoin('issue.comments', 'comments',
                 'WITH',
-                'comments.objectClass = \'request\'')
+                'comments.objectClass IN(\'request\',\'issue\')')
             ->join('issue.state', 'state',
                 'WITH',
-                'state.objectClass = \'request\' AND state.vpd = issue.vpd')
+                'state.objectClass IN (\'request\',\'issue\') AND state.vpd = issue.vpd')
             ->where("issue.author is NULL");
     }
 

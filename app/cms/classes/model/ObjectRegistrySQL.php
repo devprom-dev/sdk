@@ -121,6 +121,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 	
 	public function Query( $parms = array() )
 	{
+	    if ( !is_array($parms) ) throw new Exception("parms should be array");
 		$this->setParameters( $parms );
 		return $this->getAll();
 	}
@@ -385,7 +386,7 @@ class ObjectRegistrySQL extends ObjectRegistry
 		$resultIt = $object->getExact($object_it->getId());
 
         if ( $object->getNotificationEnabled() ) {
-            getFactory()->getEventsManager()->notify_object_modify($object_it, $resultIt, $data);
+            getFactory()->getEventsManager()->notify_object_modify($object_it->copy(), $resultIt, $data);
         }
 
         return $resultIt;

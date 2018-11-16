@@ -1,7 +1,6 @@
 <?php
 // PHPLOCKITOPT NOENCODE
 // PHPLOCKITOPT NOOBFUSCATE
-define( 'REGEX_COMMENTS', '/<span\s+comment-id="(\d+)"\s*>([^<]+)<\/span>/i' );
 define( 'TABLE_ROW_NUMBERING', '/<t(d|h)>\s*<ol\s*([^>]*)>/i' );
 define( 'REGEX_HREF_UID', '/<a\s*[^>]*>\s*(http|https):\/\/[^\/]+\/pm\/[^\/]+\/([A-Z]{1}-[0-9]+)\s*<\/a>/i' );
 
@@ -17,19 +16,12 @@ class FieldWysiwygPersister extends ObjectSQLPersister
         foreach( $this->getFields() as $field ) {
             if ( $parms[$field] == '' ) continue;
 
-            $idValue = $parms[$this->getObject()->getIdAttribute()];
-            if ( $idValue != '' ) {
-                $objectIt = $this->getObject()->getExact($idValue);
-                $this->comment_it = getFactory()->getObject('Comment')->getAllForObject($objectIt);
-            }
-
             $parms[$field] = TextUtils::getValidHtml(
                 TextUtils::getCleansedHtml($this->parseField($parms[$field]))
             );
 
             $this->codeBlocks = array();
             $this->tableRowIndex = 0;
-            unset($this->comment_it);
         }
     }
 
@@ -39,7 +31,6 @@ class FieldWysiwygPersister extends ObjectSQLPersister
             CODE_ISOLATE => array($this, 'codeIsolate'),
             '/<img\s+([^>]*)>/i' => array('HtmlImageConverter', 'replaceImageCallback'),
             REGEX_HREF_UID => array($this, 'replaceHrefWithUid'),
-            REGEX_COMMENTS => array($this, 'checkComments'),
             TABLE_ROW_NUMBERING => array($this, 'tableRowNumbering'),
             '/<div><\/div>/i' => function($match) {
                 return "";
@@ -81,19 +72,6 @@ class FieldWysiwygPersister extends ObjectSQLPersister
             if ( preg_match('/start="(\d+)"/i', $match[2], $result) ) {
                 $this->tableRowIndex = $result[1];
             }
-            return $match[0];
-        }
-    }
-
-    function checkComments( $match )
-    {
-        if ( !is_object($this->comment_it) ) return $match[0];
-
-        $this->comment_it->moveToId($match[1]);
-        if ( $this->comment_it->getId() != $match[1] ) {
-            return $match[2];
-        }
-        else {
             return $match[0];
         }
     }

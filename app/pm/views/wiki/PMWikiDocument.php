@@ -24,20 +24,31 @@ class PMWikiDocument extends PMWikiTable
 	
 	protected function buildDocumentIt()
 	{
+        if ( !in_array($_REQUEST['page'], array('', 'all')) )
+        {
+            $registry = new ObjectRegistrySQL($this->getObject());
+            $documentIt = $registry->Query(
+                    array(
+                        new FilterInPredicate($_REQUEST['page'])
+                    )
+                )->getRef('DocumentId');
+            if ( $documentIt->getId() != '' ) return $documentIt;
+        }
+
 		if ( !in_array($_REQUEST['document'], array('', 'all')) )
 	    {
 			$registry = new ObjectRegistrySQL($this->getObject());
-        	return $registry->Query(
-					array(
-							new DocumentVersionPersister(),
-							new FilterInPredicate($_REQUEST['document'])
-					)
+        	$documentIt = $registry->Query(
+                array(
+                    new DocumentVersionPersister(),
+                    new FilterInPredicate($_REQUEST['document']),
+                    new WikiRootFilter()
+                )
 			);
+        	if ( $documentIt->getId() != '' ) return $documentIt;
 	    }
-	    else
-	    {
-	        return $this->getObject()->getEmptyIterator();
-	    }
+
+        return $this->getObject()->getEmptyIterator();
 	}
 
 	function buildFilterState($filterValues = array())
@@ -513,7 +524,7 @@ class PMWikiDocument extends PMWikiTable
 		if ( $report_it->getId() != '' )
 		{
 			$class_name = strtolower(get_class($this->getObject()));
-			$item = $report_it->buildMenuItem('object='.$class_name.'&'.$class_name.'='.$this->getDocumentIt()->getId());
+			$item = $report_it->buildMenuItem('entities='.$class_name.'&'.$class_name.'='.$this->getDocumentIt()->getId());
 
 			$actions[] = array(
 				'name' => $report_it->getDisplayName(),

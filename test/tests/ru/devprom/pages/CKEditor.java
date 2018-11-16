@@ -40,13 +40,13 @@ public class CKEditor {
 	@FindBy(className = "cke_button__image")
 	protected WebElement addImageToRequirementBtn;
         
-        @FindBy(className = "cke_button__plantuml")
+    @FindBy(className = "cke_button__plantuml")
 	protected WebElement addUMLBtn;
         
-        @FindBy(xpath = "//*[@class='cke_dialog_ui_vbox_child']//*[@class='cke_dialog_ui_input_textarea']/textarea")
+    @FindBy(xpath = "//*[@class='cke_dialog_ui_vbox_child']//*[@class='cke_dialog_ui_input_textarea']/textarea")
 	protected WebElement addUMLField;
         
-        @FindBy(xpath = ".//*[@class='cke_dialog_ui_button' and contains(.,'ОК')]")
+    @FindBy(xpath = ".//*[contains(@class,'cke_dialog_ui_button_ok')]")
 	protected WebElement okUMLBtn;
         
     @FindBy(className = "cke_button__source")
@@ -145,7 +145,7 @@ public class CKEditor {
     
      public void addFormula(String formula) {
         try{
-        	By locator = By.xpath("//span[contains(@class,'cke_toolgroup')]//a[contains(@class,'cke_button__mathjax')]");
+        	By locator = By.xpath("//div[contains(@class,'editor-area')]//span[contains(@class,'cke_toolgroup')]//a[contains(@class,'cke_button__mathjax')]");
         	(new WebDriverWait(driver,Configuration.getWaiting())).until(ExpectedConditions.presenceOfElementLocated(locator));
         	for( WebElement btn : driver.findElements(locator) ) {
         		if ( btn.isDisplayed() ) {

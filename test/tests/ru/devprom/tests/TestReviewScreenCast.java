@@ -193,11 +193,6 @@ public class TestReviewScreenCast extends ProjectTestBase{
         testingPage.pasteToCell("3", "4"); 
         //-----
         testingPage.failTest(checkVersionPlan);
-        try {
-    		Thread.sleep(6000);
-    	}
-        catch (InterruptedException e) {
-    	}
         testingPage.rejectWish("Не прошел тест, все подробности смотри в связанном отчете по тестированию");
         testingPage.gotoScenarioNumber(2);
         KanbanTask bug2 = new KanbanTask("Проблема авторизации пользователя, если в пароле есть символы врехнего регистра");

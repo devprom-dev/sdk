@@ -113,18 +113,13 @@ if ( count($items) < 1 ) return;
 		
 		<li uid="<?=$action['uid']?>">
 
-		    <?php if ( $action['click'] != '' ) { ?>
-		    
-    			<a id="<?=$action['uid']?>" onclick="<?=$action['click']?>" title="<?=$action['title']?>"><?=$action['name']?></a>
-		    
-		    <?php } else { ?>
-		    
-    		    <?php if ( $class == '' ) {
-
-    		        if ( $action['class'] == 'image_attach' ) {
-    		            $attributes = 'data-fancybox="gallery"';
+		    <?php
+                if ( $action['click'] != '' ) $action['url'] = $action['click'];
+    		    if ( $class == '' ) {
+                    if ( $action['class'] == 'image_attach' ) {
+                        $attributes = 'data-fancybox="gallery"';
                     }
-    		        ?>
+                ?>
     			
     			<a id="<?=$action['uid']?>" class="<?=$action['class']?>" <?=$attributes?> alt="<?=$action['alt']?>" <?=($action['target'] != '' ? 'target="'.$action['target'].'"' : '')?> <?=($action['url'] != '' ? 'href="'.$action['url'].'"' : '')?> title="<?=$action['title']?>"><?=$action['name']?></a>
     		    
@@ -134,8 +129,6 @@ if ( count($items) < 1 ) return;
     			
     			<?php } ?>
     			
-			<?php } ?>
-			
 		</li>
 		
 		<?php } ?>

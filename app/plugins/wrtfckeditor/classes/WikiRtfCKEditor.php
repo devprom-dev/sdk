@@ -153,9 +153,7 @@ class WikiRtfCKEditor extends WikiEditorBase
 		    <div class="wysiwyg-welcome hidden-print" for-id="<?=$id?>"><?=text(1280)?></div>
 			
 			<?php } ?>
-			
-			<?php if ( $content == '' ) $style = 'min-height:'.$height.'px;'; ?>
-			
+
 			<div class="reset wysiwyg <?=$this->getCssClassName()?>" style="<?=$style?>" project="<?=$projectCodeName?>" objectClass="<?=get_class($this->getObject())?>" objectId="<?=$object_id?>" attributeName="<?=$field?>" contenteditable="true" id="<?php echo $id; ?>" <?=($this->getRequired() ? 'required' : '')?> >
                 <? echo html_entity_decode($content, ENT_QUOTES | ENT_HTML401, APP_ENCODING); ?>
             </div>

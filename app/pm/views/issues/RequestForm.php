@@ -156,14 +156,8 @@ class RequestForm extends PMPageForm
 		$object = $this->getObject();
 		$object_it = $object->getEmptyIterator();
 
-		$referenceName = '';
-		if ( $_REQUEST['Type'] != '' ) {
-			$referenceName = getFactory()->getObject('RequestType')->getExact($_REQUEST['Type'])->get('ReferenceName');
-		}
-		if ( $referenceName != 'bug' ) {
-			$object->addAttributeGroup('SubmittedVersion', 'additional');
-			$object->addAttributeGroup('Environment', 'additional');
-		}
+        $object->addAttributeGroup('SubmittedVersion', 'additional');
+        $object->addAttributeGroup('Environment', 'additional');
 
  		$method = new RequestCreateTaskWebMethod($object_it);
 		if ( $method->hasAccess() ) {

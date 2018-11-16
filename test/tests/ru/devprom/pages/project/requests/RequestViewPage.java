@@ -534,7 +534,7 @@ public class RequestViewPage extends SDLCPojectPageBase {
 		List<String> result = new ArrayList<String>();
 		List<WebElement> captions = driver
 				.findElements(By
-						.xpath("//div[contains(@class,'attachment-items')]//a[contains(@class,'image_attach')]"));
+						.xpath("//div[contains(@class,'attachment-items')]//a[contains(@class,'_attach')]"));
 		for (int i = 0; i < captions.size(); i++) {
 			String title = captions.get(i).getText().trim();
 			if ( !title.equals("") ) result.add(title);

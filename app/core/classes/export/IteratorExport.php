@@ -123,7 +123,7 @@ class IteratorExport extends IteratorBase
 					$names = array();
 					while( !$entity_it->end() ) {
                         $info = $this->uidService->getUidInfo($entity_it, true);
-                        $title = ($info['uid'] != '' ? '['.$info['uid'].'] ' : '') . html_entity_decode($info['caption']);
+                        $title = ($info['uid'] != '' ? '['.$info['uid'].'] ' : '') . $entity_it->getHtmlDecoded('Caption');
                         if ( $info['state_name'] != '' ) $title .= ' ('.$info['state_name'].')';
                         $names[] = $title;
 						$entity_it->moveNext();

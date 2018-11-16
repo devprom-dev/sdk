@@ -218,7 +218,7 @@ var draggableOptions = {
 
 function board( options ) 
 {
-	options.sliderName = 'board-slider-pos['+$('section[uid]').attr('uid')+'/'+devpromOpts.project+']';
+	options.sliderName = 'board-slider-pos';
 	var defaultBoardSize = (cookies.get(options.sliderName) != null
 			? cookies.get(options.sliderName)
 			: ($(window).width() <= 1024 ? 2 : 3));
@@ -396,7 +396,6 @@ function boardMake( options )
 			$(this).parents('tr').next().find('td:eq('+index+').cell-add-btn a').attr('style','');
 		}
 	);
-    adjustContainerHeight();
 }
 
 function processBoardActions( methods, item, options )
@@ -894,7 +893,6 @@ function setBoardSize( options, value )
 //     $("table").attachDragger();
 // --------------------------------------------------------------------------
 $.fn.attachDragger = function(){
-    console.log("attachDragger");
     var attachment = false, lastPosition, position, difference;
     $( $(this).selector )
 		.on("mousedown mouseup mousemove mouseleave",function(e){

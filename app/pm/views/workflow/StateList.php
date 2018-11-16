@@ -131,10 +131,14 @@ class StateList extends PMPageList
 
     function getColumnFields()
     {
-    	$fields = parent::getColumnFields();
-    	
-    	if ( !$this->getObject()->IsAttributeVisible('QueueLength') )
-		{
+    	$fields = array_merge(
+    	    parent::getColumnFields(),
+            array(
+                'ReferenceName'
+            )
+        );
+
+    	if ( !$this->getObject()->IsAttributeVisible('QueueLength') ) {
 			unset($fields[array_search('QueueLength', $fields)]);
 		}
 

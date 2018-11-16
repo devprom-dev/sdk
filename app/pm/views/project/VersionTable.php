@@ -139,6 +139,7 @@ class VersionTable extends PMPageTable
                     'milestones',
                     'tasksplanningboard',
                     'iterationplanningboard',
+                    'releaseplanningboard',
                     'assignedtasks',
                     'projects'
                 );
@@ -154,7 +155,8 @@ class VersionTable extends PMPageTable
             'resman/resourceload',
             'projectburnup',
             'iterationburndown',
-            'scrum/velocitychart'
+            'scrum/velocitychart',
+            'workitemchart'
         );
     }
 

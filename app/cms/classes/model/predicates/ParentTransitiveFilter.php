@@ -12,6 +12,6 @@ class ParentTransitiveFilter extends FilterPredicate
  	        $likes[] = " t.ParentPath LIKE '%,".$id.",%' ";
  	    }
 
-		return " AND (".join("OR", $likes).") ";
+		return " AND (".join("OR", $likes)." OR t.ParentPath IS NULL) ";
  	}
 }

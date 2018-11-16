@@ -69,13 +69,33 @@ $url = trim(defined('PLANTUML_SERVER_URL') ? PLANTUML_SERVER_URL : 'http://plant
 $url .= '/plantuml/img/'.encode64(gzdeflate($uml, 9));
 
 echo '<img class="workflow-image" src="'.$url.'">';
-
 echo '<br/>';
+echo str_replace('%1', $stateUrl, text(2679));
+echo '<br/>';
+
 if ( $lastComment != '' ) {
 	echo '<br/>';
 	echo '<div class="alert alert-blocked">'.$lastComment.'</div>';
 }
 echo '<br/>';
+
+if ( $createDate != '' ) {
+    echo str_replace('%1', $createDate, text(2676));
+    echo '<br/>';
+}
+if ( $startDate != '' ) {
+    echo str_replace('%1', $startDate, text(2677));
+    echo '<br/>';
+}
+if ( $finishDate != '' ) {
+    echo str_replace('%1', $finishDate, text(2678));
+    echo '<br/>';
+}
+echo '<br/>';
+echo str_replace('%1', $lifecycle, text(2301));
+echo '<br/>';
+echo '<br/>';
+
 echo '<table class="table">';
 echo '<tr>';
 echo '<td>'.text(2270).'</td>'.
@@ -103,4 +123,3 @@ foreach( $timeTable as $author => $durations ) {
 	echo '</tr>';
 }
 echo '</table>';
-echo str_replace('%1', $lifecycle, text(2301));

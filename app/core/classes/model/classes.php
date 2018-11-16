@@ -52,3 +52,6 @@ include SERVER_ROOT_PATH.'core/classes/files/TempFile.php';
 include SERVER_ROOT_PATH.'core/classes/locale/SearchRules.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttribute.php';
 include_once SERVER_ROOT_PATH.'pm/classes/common/PMCustomAttributeValue.php';
+include_once SERVER_ROOT_PATH.'core/classes/user/Notification.php';
+include_once SERVER_ROOT_PATH.'core/classes/user/NotificationTrackingType.php';
+

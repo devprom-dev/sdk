@@ -101,7 +101,8 @@ else {
 	<?= $scripts ?>
 
 	<?php $view['slots']->output('ext_after'); ?>
-	</body>
+    <div id="documentCache"></div>
+    </body>
 	</html>
 	<?php
 }

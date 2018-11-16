@@ -55,7 +55,9 @@ class BulkFormBase extends AjaxForm
 				return join(',',$this->getIt()->idsToArray());
 
 			case 'operation':
-				return htmlentities($_REQUEST['operation']);
+				return htmlentities(
+                    str_replace('=ids', '='.\TextUtils::buildIds($this->getIds()), $_REQUEST['operation'])
+                );
 
 			default:
 				return htmlentities($_REQUEST[$attribute]);
@@ -189,10 +191,6 @@ class BulkFormBase extends AjaxForm
 				$this->drawIds( $value );
 				break;
 				
-			case 'operation':
-				$this->drawAction( $value, $tab_index );
-				break;
-				
 			default:
 				$form = $this->getForm();
 				if ( is_object($form) )
@@ -228,14 +226,22 @@ class BulkFormBase extends AjaxForm
 	
 	function getIt()
 	{
-	    global $_REQUEST;
+	    if ( is_object($this->it) ) {
+	        return $this->it->object->createCachedIterator($this->it->getRowset());
+        }
 
-	    if ( is_object($this->it) ) return $this->it->object->createCachedIterator($this->it->getRowset());
+	    $ids = $this->getIds();
+	    if ( count($ids) < 1 ) {
+	        return $this->getObject()->getEmptyIterator();
+        }
 
-	    $object = $this->getObject();
+	    $this->it = $this->getObject()->getRegistry()->Query(
+	        array(
+	            new FilterInPredicate($ids),
+                new FilterVpdPredicate()
+            )
+        );
 
-	    $this->it = $object->getExact($this->getIds());
-	     
 	    return $this->it->object->createCachedIterator($this->it->getRowset());    
 	}
 
@@ -287,11 +293,6 @@ class BulkFormBase extends AjaxForm
 		echo '<br/>';
 	}
 	
-	function drawAction( $value, $tab_index )
-	{
-		echo '<input type="hidden" name="operation" value="'.$value.'">';
-	}
-
 	protected function showAttributeCaption()
 	{
 		return !preg_match('/Attribute(.+)/mi', $this->getAttributeValue('operation'), $match);		

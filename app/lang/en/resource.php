@@ -1106,7 +1106,7 @@ return array (
     1911 => 'You can <b>reset settings</b> for all project participants, that is, to revert basic settings of the project for all.<br/>Click "Restore from template" to revert settings to default values defined for the project template.',
     1912 => 'Notifications',
     1913 => 'Select mode of <b>email notifications</b> will be send you by the system when the data is changed and other actions done by project members. If you don\'t want to receive notifications just left the field blank.',
-    1914 => 'Decomposition levels',
+    1914 => 'Feature levels',
     1915 => 'Corresponding level in functional decomposition. Setup functional decomposition levels in the dictionary: %1.',
     1916 => 'It is allowed to create issues at this feature level',
     1917 => 'Is it now allowed to create issues at this level of features. Choose another feature or change feature levels settings.',
@@ -1298,7 +1298,7 @@ return array (
     2165 => 'Details panel',
     2166 => 'Project activities log',
     2167 => 'More details',
-    2168 => 'planned: %1<br/>remained: %2',
+    2168 => 'remained: %2<br/><a class="dashed" href="%3" target="_blank">more</a>',
     2169 => '<b>%0</b> / available %3',
     2170 => '<b>%0</b> / overloaded on %3',
     2171 => 'Common project settings',
@@ -1657,5 +1657,11 @@ return array (
     2672 => 'Increment kinds',
     2673 => 'Restrict change result for this status',
     2674 => 'There are no differences between documents',
-    2675 => 'Process all changes'
+    2675 => 'Process all changes',
+    2676 => 'Submitted at %1',
+    2677 => 'Taken to work at %1',
+    2678 => 'Completed at %1',
+    2679 => '<a href="%1" target="_blank">Lifecycle schema</a>',
+    2680 => 'Participants workload chart',
+    2681 => 'Goals and features'
 );

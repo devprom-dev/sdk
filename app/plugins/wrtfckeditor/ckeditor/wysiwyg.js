@@ -93,10 +93,7 @@ function setupDialogLink( def )
 
 function setupEditorGlobal( filesTitle )
 {
-	var width = $('.documentToolbar').width();
-	$('.documentToolbar').css('min-height', width > 1410 ? '40px' : '76px');
-
-	CKEDITOR.on('dialogDefinition', function( ev ) 
+	CKEDITOR.on('dialogDefinition', function( ev )
 	{
 		var dialogName = ev.data.name;
 		var dialogDefinition = ev.data.definition;
@@ -144,7 +141,6 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	      	registerBeforeUnloadHandler($(element).parents('form').attr('id'), function() 
 	      	{
 		      	e.editor.updateElement();
-                e.editor.resetDirty();
 		      	return true;
 	      	});
 
@@ -152,12 +148,10 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	      	{ 
 	      		e.editor.custom.updateForm();
 		      	e.editor.updateElement();
-                e.editor.resetDirty();
-		      	return true; 
+		      	return true;
 	      	});
 	      	
 	      	registerFormDestructorHandler($(element).parents('form').attr('id'), function () {
-                e.editor.resetDirty();
 	      		e.editor.destroy();
 	      	});
 	      	
@@ -178,7 +172,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 	else
 	{
 		var editor = CKEDITOR.inline( element, {
-			removePlugins: toolbar == '' ? 'codesnippet,image2,mathjax,autoembed,widget,embed,embedbase,pastefromword,pastetext,autolink,clipboard,notificationaggregator,notification,toolbar' : '',
+			removePlugins: toolbar == '' ? 'codesnippet,image,image2,mathjax,autoembed,widget,embed,embedbase,pastefromword,pastetext,autolink,clipboard,notificationaggregator,notification,toolbar' : '',
 			toolbar: toolbar,
 			enterMode: toolbar == '' ? CKEDITOR.ENTER_BR : CKEDITOR.ENTER_P,
 			allowedContent: toolbar != '',
@@ -190,7 +184,7 @@ function setupWysiwygEditor( editor_id, toolbar, rows, modify_url, attachmentsHt
 			return;
 		}
 
-		editor.purgeTimeoutValue = 6000;
+		editor.purgeTimeoutValue = 1000;
 		editor.persist = function( async )
 		{
 			var element = $('#' + this.name ); 

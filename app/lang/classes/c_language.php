@@ -145,6 +145,16 @@ include "DateFormatRussian.php";
          return $this->dateformat->getPhpDateTime($time);
      }
 
+     function getExcelDateFormat()
+     {
+         return $this->dateformat->getExcelDateFormat();
+     }
+
+     function getExcelDateTimeFormat()
+     {
+         return $this->dateformat->getExcelDateTimeFormat();
+     }
+
  	function getDbDate( $text )
  	{
  	    if ( $text == '' ) return $text;

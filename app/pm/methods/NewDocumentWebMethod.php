@@ -61,7 +61,7 @@ abstract class NewDocumentWebMethod extends WebMethod
 
 			getFactory()->setEventsManager(new \ModelEventsManager());
 			$context = new CloneContext();
-			$context->setUseExistingReferences(false);
+			$context->setUseExistingReferences(true);
 
 			foreach( $this->getReferences() as $cloneObject )
 			{
@@ -77,7 +77,22 @@ abstract class NewDocumentWebMethod extends WebMethod
 				'Caption' => $template_it->getHtmlDecoded('Caption'),
                 'PageType' => $_REQUEST['PageType']
 			));
-		}
+
+			if ( $_REQUEST['Request'] > 0 ) {
+                $request_it = getFactory()->getObject('Request')->getExact($_REQUEST['Request']);
+                $trace = getFactory()->getObject('RequestTraceRequirement');
+
+                $trace->getRegistry()->Merge(
+                    array(
+                        'ObjectId' => $object_it->getId(),
+                        'ObjectClass' => $trace->getObjectClass(),
+                        'ChangeRequest' => $request_it->getId(),
+                        'Type' => $request_it->get('Type') == '' ? REQUEST_TRACE_REQUEST : REQUEST_TRACE_PRODUCT
+                    ),
+                    array('ObjectId','ObjectClass','ChangeRequest')
+                );
+            }
+        }
 		else {
 			$object_it = $object->getExact($object->add_parms(
 				array (

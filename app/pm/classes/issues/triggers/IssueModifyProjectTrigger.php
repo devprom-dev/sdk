@@ -43,7 +43,7 @@ class IssueModifyProjectTrigger extends EntityModifyProjectTrigger
         parent::process($object_it, $kind, $content, $visibility);
     }
 
-	protected function & getObjectReferences( & $object_it )
+    protected function & getObjectReferences( & $object_it )
 	{
  	    // prepare list of objects to be serilalized
  	    $references = array();

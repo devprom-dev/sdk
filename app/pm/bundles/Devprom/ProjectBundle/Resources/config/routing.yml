@@ -46,6 +46,10 @@ _treegrid_select:
     path:  /pm/{project}/treegrid/{classname}
     defaults: { _controller: ProjectBundle:Tree:grid }
 
+_treegrid_select_report:
+    path:  /pm/{project}/treegrid/{classname}/{report}
+    defaults: { _controller: ProjectBundle:Tree:grid }
+
 _network:
     path:  /pm/{project}/network/{classname}/{object}
     defaults: { _controller: ProjectBundle:Network:json }
@@ -108,6 +112,11 @@ metrics_report:
     path:  /pm/{project}/metrics/{report}
     defaults: { _controller: ProjectBundle:Metrics:page }
     methods:  GET
+
+comments_new:
+    path:  /pm/{project}/comment/{id}/reply
+    defaults: { _controller: ProjectBundle:Comment:reply }
+    methods:  [GET, POST]
 
 attachments_upload:
     path:  /pm/{project}/attachments/upload

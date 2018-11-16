@@ -44,7 +44,10 @@ class ProjectLogDetailsList extends PMDetailsList
                             $this->getUidService()->drawUidIcon($anchor_it);
                         }
 
-                        echo $object_it->getHtmlDecoded('Content');
+                        $field = new FieldWYSIWYG();
+                        $field->setObjectIt( $object_it );
+                        $field->setValue( $object_it->get('Content') );
+                        $field->drawReadonly();
 
                         echo $this->getRenderView()->render('core/CommentsIcon.php', array (
                             'object_it' => $anchor_it,

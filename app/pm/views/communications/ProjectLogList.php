@@ -9,7 +9,12 @@ class ProjectLogList extends PMPageList
  		parent::__construct($object);
 		$this->getObject()->setAttributeType( 'Author', 'REF_IssueAuthorId' );
  	}
- 	
+
+    function buildItemsHash($object, $predicates)
+    {
+        return '';
+    }
+
 	function setupColumns()
 	{
 		$this->object->addAttribute('UserAvatar', '', translate('Автор'), true, false, '', 1);
@@ -79,18 +84,27 @@ class ProjectLogList extends PMPageList
 
                 $uid = new ObjectUID;
                 $anchor_it = $object_it->getObjectIt();
-                if ( $anchor_it->getId() != '' && $uid->hasUid( $anchor_it ) ) {
-                    $uid->drawUidInCaption($anchor_it);
+                if ( $anchor_it->getId() != '' && $uid->hasUid( $anchor_it ) )
+                {
+                    if ( strpos($object_it->get('ChangeKind'), 'deleted') !== false ) {
+                        parent::drawCell( $object_it, 'Caption' );
+                    }
+                    else {
+                        $uid->drawUidInCaption($anchor_it);
+                    }
                     echo '<br/>';
                 }
-                else if ($object_it->get('EntityRefName') == 'cms_ExternalUser') {
+                else if ($object_it->get('EntityRefName') == 'cms_ExternalUser')
+                {
                     echo text(1360) . ': ';
                     parent::drawCell( $object_it, 'Caption' );
                 }
-                else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest') {
+                else if ($object_it->get('EntityRefName') == 'pm_ChangeRequest')
+                {
                     parent::drawCell( $object_it, 'Caption' );
                 }
-                else {
+                else
+                    {
                     echo $anchor_it->object->getDisplayName().': ';
                     parent::drawCell( $object_it, 'Caption' );
                 }
@@ -98,8 +112,13 @@ class ProjectLogList extends PMPageList
                 if ( strpos($object_it->get('Content'), '[url') !== false && $anchor_it->object instanceof WikiPage) {
                     echo '<br/>'.str_replace('%1', $anchor_it->getHistoryUrl().'&start='.$object_it->getDateTimeFormat('RecordModified'), text(2319));
                 }
-                else if ( $object_it->get('Content') != '' ) {
-                    echo '<br/>'.$object_it->getHtmlDecoded('Content');
+                else if ( $object_it->get('Content') != '' )
+                {
+                    echo '<br/>';
+                    $field = new FieldWYSIWYG();
+                    $field->setObjectIt( $object_it );
+                    $field->setValue( $object_it->get('Content') );
+                    $field->drawReadonly();
                 }
 			    if ( strpos($object_it->get('ChangeKind'), 'commented') !== false ) {
 				    echo $this->getRenderView()->render('core/CommentsIcon.php', array (

@@ -292,13 +292,26 @@ class ReportsCommonBuilder extends ReportsBuilder
                     'module' => $task_list_it->getId() )
             );
             $object->addReport(
-                array ( 'name' => 'watchedtasks',
+                array (
+                    'name' => 'watchedtasks',
                     'title' => text(2310),
                     'category' => FUNC_AREA_MANAGEMENT,
                     'query' => 'watcher=user-id',
                     'description' => text(2665),
-                    'module' => $task_list_it->getId() )
+                    'module' => $task_list_it->getId()
+                )
             );
+            $object->addReport(
+                array (
+                    'name' => 'workitemchart',
+                    'title' => text(2680),
+                    'category' => FUNC_AREA_MANAGEMENT,
+                    'query' => 'assignee=user-id',
+                    'type' => 'chart',
+                    'module' => $task_list_it->getId()
+                )
+            );
+
 		}
 
 

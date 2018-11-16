@@ -115,13 +115,18 @@
             }
 		}
 
+		$objectStateIt = WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object);
 		return array_merge( parent::getRenderParms(), array (
 			'section' => $this,
 			'rows' => $rows,
             'lifecycle' => getSession()->getLanguage()->getDurationWording($this->getObjectIt()->get('LeadTime')),
-            'stateIt' => WorkflowScheme::Instance()->getStateIt($this->getObjectIt()->object),
+            'stateIt' => $objectStateIt,
             'placement' => $this->getPlacement(),
-            'lastComment' => trim($lastComment)
+            'lastComment' => trim($lastComment),
+            'stateUrl' => $objectStateIt->object->getPage(),
+            'createDate' => $this->getObjectIt()->getDateTimeFormat('RecordCreated'),
+            'startDate' => $this->getObjectIt()->getDateTimeFormat('StartDate'),
+            'finishDate' => $this->getObjectIt()->getDateTimeFormat('FinishDate')
         ));
 	}
  	

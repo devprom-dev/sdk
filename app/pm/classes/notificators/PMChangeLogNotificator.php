@@ -33,30 +33,32 @@ class PMChangeLogNotificator extends ChangeLogNotificator
 		}
 	}
 
-    protected function getAttributeContent($prev_object_it, $object_it, $att_name)
+    protected function getValue( $objectIt, $attribute )
+    {
+        if ( $objectIt->object->getAttributeType($attribute) == 'wysiwyg' )
+        {
+            $editor = WikiEditorBuilder::build($objectIt->get('ContentEditor'));
+            $parser = $editor->getComparerParser();
+            $parser->setObjectIt($objectIt);
+            return $parser->parse($objectIt->getHtmlDecoded($attribute));
+        }
+        return parent::getValue( $objectIt, $attribute );
+    }
+
+    protected function getAttributeContent($object_it, $att_name, $wasValue, $nowValue)
     {
         if ( $object_it->object->getAttributeType($att_name) == 'wysiwyg' )
         {
-            $editor = WikiEditorBuilder::build($object_it->get('ContentEditor'));
-            $parser = $editor->getComparerParser();
-            $parser->setObjectIt($object_it);
-
             ob_start();
             echo '<div class="reset wysiwyg">';
-            $diffBuilder = new WikiHtmlDiff(
-                $prev_object_it->getId() > 0
-                    ? $parser->parse($prev_object_it->getHtmlDecoded($att_name))
-                    : "",
-                $parser->parse($object_it->getHtmlDecoded($att_name))
-            );
-            echo $diffBuilder->build();
+                $diffBuilder = new WikiHtmlDiff( $wasValue, $nowValue );
+                echo $diffBuilder->build();
             echo '</div>';
-
             $content = ob_get_contents();
             ob_clean();
             return $content;
         }
-        return parent::getAttributeContent($prev_object_it, $object_it, $att_name);
+        return parent::getAttributeContent($object_it, $att_name, $wasValue, $nowValue);
     }
 
     function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())

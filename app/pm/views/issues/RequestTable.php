@@ -438,7 +438,8 @@ class RequestTable extends PMPageTable
             $predicates[] = new SinceNotificationFilter(getSession()->getUserIt());
         }
 
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        $projectIt = getSession()->getProjectIt();
+        $methodology_it = $projectIt->getMethodologyIt();
         if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
             $predicates[] = new FilterAttributeNotNullPredicate('Type');
         }
@@ -752,7 +753,8 @@ class RequestTable extends PMPageTable
     protected function getChartModules( $module )
     {
         return array(
-            'issues-chart'
+            'issues-chart',
+            'workitemchart'
         );
     }
 

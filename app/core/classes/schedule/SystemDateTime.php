@@ -51,11 +51,6 @@ class SystemDateTime
 
 		try
 		{
-            if ( strpos($date, '00:00:00') > 0 ) {
-                $time = new DateTime($date);
-                return $time->format($format);
-            }
-
 			// convert from client's time to UTC+0
 			$time = new DateTime($date, EnvironmentSettings::getClientTimeZone());
 			
@@ -111,6 +106,11 @@ class SystemDateTime
         $value = preg_replace(
             '/next-week/',
             $language->getPhpDate( strtotime('1 week', strtotime(date('Y-m-j'))) ),
+            $value
+        );
+        $value = preg_replace(
+            '/now\(\)/',
+            $language->getPhpDate( strtotime(date('Y-m-j')) ),
             $value
         );
 

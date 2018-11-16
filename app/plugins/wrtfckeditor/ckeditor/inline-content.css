@@ -208,7 +208,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 .documentToolbar {
 	background-image: url('/images/toolbar.png');
-	min-height: 40px;
+	min-height: 76px;
 }
 
 .documentToolbar .cke_shared {

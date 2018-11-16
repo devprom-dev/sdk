@@ -122,6 +122,10 @@ class TreeGridService
             $cells['class'] = strtolower(get_class($refIt->object));
             $cells['id'] = $refIt->getId();
 
+            if ( $refIt->get('DeliveryDate') != '' ) {
+                $cells['deliverydate'] = getSession()->getLanguage()->getDateFormattedShort($refIt->get('DeliveryDate'));
+            }
+
             $method = new \ObjectModifyWebMethod($refIt);
             $method->setRedirectUrl('donothing');
             $actions['modify'] = array(

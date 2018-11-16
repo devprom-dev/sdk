@@ -75,7 +75,9 @@ class WikiPageDependencyPersister extends ObjectSQLPersister
 		$this->issueTrace = getFactory()->getObject('RequestTraceBase');
 
 		$usedby_it = $registry->Query (
-			new FilterInPredicate($usedIds)
+		    array(
+                new FilterInPredicate($usedIds)
+            )
 		);
 
 		while( !$usedby_it->end() ) {

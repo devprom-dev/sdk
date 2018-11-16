@@ -441,7 +441,7 @@ function processBulk(title, url, id, callback)
 	var ids = getCheckedRows(id);
 	if ( ids == '' ) return;
 
-	openAjaxForm(title, url.replace('%ids%',ids).replace('%id%', ids)+'&bulkmode=complete&ids='+ids, callback);
+	openAjaxForm(title, url.replace('%ids%','ids').replace('%id%', 'ids')+'&bulkmode=complete', ids, callback);
 }
 
 function toggleBulkActions( event, minItems )
@@ -497,68 +497,69 @@ function runMethod( method, data, url, warning, async, before )
         data.objects = data.id = getCheckedRows();
 	}
 
-	$.ajax({
-		type: "POST",
-		url: method,
-		dataType: "html",
-		data: data,
-		async: async,	
-		success: 
-			function(result, status, xhr) 
-			{
-				if ( xhr.getResponseHeader('status') == '500' )
-				{
-					window.location = '/500';
-				}
-			
-				filterLocation.hideActivity();
+	try {
+        $.ajax({
+            type: "POST",
+            url: method,
+            dataType: "html",
+            data: data,
+            proccessData: false,
+            async: async,
+            success:
+                function (result, status, xhr) {
+                    if (xhr.getResponseHeader('status') == '500') {
+                        window.location = '/500';
+                    }
 
-				if ( xhr.getResponseHeader('status') == '404' )
-				{
-					result = '{"message":""}';
-				}
+                    filterLocation.hideActivity();
 
-				if ( typeof url == 'function' ) {
-					url( result );
-				}
-				else if ( typeof url == 'string' && url == 'donothing' ) {
-					donothing( result );
-				}
-				else if ( typeof url == 'string' )
-				{
-					try {
-						resultObject = jQuery.parseJSON(result);
-						result = "";
-						if ( resultObject && typeof resultObject.url == 'string' ) {
-							result = resultObject.url;
-						}
-					}
-					catch( e ) {
-						if ( (new RegExp('Internal Server Error')).exec( result ) != null ) {
-							window.location = '/500';
-							return;
-						}
-					}
-					if ( url+result == '' ) {
-						window.location.reload(true);
-					}
-					else {
-						window.location = url+result;
-					}
-				}
-			},
-		error: 
-			function(result)
-			{
-				filterLocation.hideActivity();
-			},
-		statusCode:
-			{
-		      500: function(xhr) {
-		    	  window.location = '/500';
-		       }
-			}
-	});
+                    if (xhr.getResponseHeader('status') == '404') {
+                        result = '{"message":""}';
+                    }
+
+                    if (typeof url == 'function') {
+                        url(result);
+                    }
+                    else if (typeof url == 'string' && url == 'donothing') {
+                        donothing(result);
+                    }
+                    else if (typeof url == 'string') {
+                        try {
+                            resultObject = jQuery.parseJSON(result);
+                            result = "";
+                            if (resultObject && typeof resultObject.url == 'string') {
+                                result = resultObject.url;
+                            }
+                        }
+                        catch (e) {
+                            if ((new RegExp('Internal Server Error')).exec(result) != null) {
+                                window.location = '/500';
+                                return;
+                            }
+                        }
+                        if (url + result == '') {
+                            window.location.reload(true);
+                        }
+                        else {
+                            window.location = url + result;
+                        }
+                    }
+                },
+            error:
+                function (xhr, status, error) {
+                    reportError(ajaxErrorExplain(xhr, error));
+                },
+            statusCode:
+                {
+                    500: function (xhr) {
+                        window.location = '/500';
+                    }
+                }
+        });
+    }
+    catch(e) {
+        reportError(e.toString());
+	}
 }
 
 function selectRefreshMethod( method_url, id, parm_name )
@@ -570,9 +571,9 @@ function selectRefreshMethod( method_url, id, parm_name )
 			'value': $('#select_'+id).val(),
 			'valueparm': parm_name
 		},
-		error: function( xhr ) 
-		{
-		},
+		error: function(xhr, status, error) {
+            reportError(ajaxErrorExplain( xhr, error ));
+        },
 		success: function( data ) 
 		{
 			if ( data != '' )
@@ -792,13 +793,11 @@ function saveEmbeddedItem( form_id, jfields, required, callback )
 		dataType: 'html',
 		async: false,
 		cache: false,
-		error: function( xhr, status, e )
-		{
-			$("#embeddedForm"+form_id)
-				.find("input[type='button']").removeAttr('disabled');
-			
-			alert(e);
-		},
+		error: function(xhr, status, error) {
+            $("#embeddedForm"+form_id)
+                .find("input[type='button']").removeAttr('disabled');
+            reportError(ajaxErrorExplain( xhr, error ));
+        },
 		success: function( data ) 
 		{
 			try
@@ -933,11 +932,9 @@ function translate( text_id, callback )
 		url: method_url+'?method=translatewebmethod',
 		dataType: 'text',
 		data: {'text':text_id},
-		error: function( xhr, status, error ) 
-		{
-			if ( xhr.status === 0 ) return;
-			alert(ajaxErrorExplain( xhr, error ));				
-		},
+		error: function(xhr, status, error) {
+            reportError(ajaxErrorExplain( xhr, error ));
+        },
 		success: function( data ) 
 		{
 			try
@@ -974,9 +971,9 @@ function getattribute( classname, objectid, attributename, callbackname, convert
 			'attr': attributename,
 			'converter': converter
 		},
-		error: function( xhr ) 
-		{
-		},
+		error: function(xhr, status, error) {
+            reportError(ajaxErrorExplain( xhr, error ));
+        },
 		success: function( result ) 
 		{
 			callbackname( result );
@@ -1059,9 +1056,10 @@ function objectAutoComplete( jqe_field, classname, caption, attributes, project 
 						});
 						response( data );
 					},
-					error: function() {
-						response( [] );
-					}
+					error: function(xhr, status, error) {
+                        reportError(ajaxErrorExplain( xhr, error ));
+                        response( [] );
+                    }
 				});
 			},
 			focus: function() {
@@ -1868,6 +1866,9 @@ function makeUpApp()
 
 function completeUIExt( jqe )
 {
+    adjustContainerHeight();
+    completeChartsUI(jqe);
+
 	jqe.find('.file-browse').each(function() {
         uploadFiles($(this));
     });
@@ -2053,9 +2054,6 @@ function completeUIExt( jqe )
 		placement: 'bottom',
 		container: 'body'
 	});
-
-    adjustContainerHeight();
-    completeChartsUI(jqe);
 }
 
 function markupDiff( el )
@@ -2212,7 +2210,11 @@ function completeChartsUI( jqe )
 
 function ajaxErrorExplain( jqXHR, exception )
 {
-    if ( jqXHR.status === 0 ) 
+    if (exception === 'abort') {
+    	return "";
+	}
+
+    if ( jqXHR.status === 0 )
     {
         return ('There is no connection to the server.');
     } 
@@ -2232,11 +2234,7 @@ function ajaxErrorExplain( jqXHR, exception )
     {
     	return ('Time out error.');
     } 
-    else if (exception === 'abort') 
-    {
-    	return ('Ajax request aborted.');
-    } 
-    else 
+    else
     {
     	return ('Uncaught Error.\n' + jqXHR.responseText);
     }
@@ -2677,7 +2675,7 @@ function workflowMakeupDialog()
 	registerFormValidator( formId, function(form)
 	{
 		form.find('.autocomplete-text').each(function() {
-            $(this).trigger('autocompletechange');
+            $(this).data("ui-autocomplete")._trigger("change", null, {item: "commit"});
 		});
 		form.parents('#modal-form').find('form[id] .btn-primary[type=submit]').click();
 		form.find('.embedded_form').children('div[multiple]:visible').filter( function() {
@@ -3172,7 +3170,7 @@ function workflowGetField( options, callback )
 	});
 }
 
-function openAjaxForm(title, url, callback) 
+function openAjaxForm(title, url, ids, callback)
 {
 	filterLocation.showActivity();
 	beforeUnload();
@@ -3278,13 +3276,15 @@ function openAjaxForm(title, url, callback)
 	});
 
 	$.ajax({
-		type: "GET",
+		type: "POST",
 		url: url+'&formonly=true&screenWidth='+$(window).width(),
 		dataType: "html",
+		data: {ids: ids},
+        proccessData: false,
 		async: true,
 		cache: false,
 		success: 
-			function(result, status, xhr) 
+			function(result, status, xhr)
 			{
 				filterLocation.hideActivity();
 				if ( xhr.getResponseHeader('status') == '500' ) {
@@ -3417,6 +3417,13 @@ function getCheckedRows( ids )
     }
 
     ids = '';
+
+    var allChecked = $('input[id*=to_delete_all]:checked');
+    if ( allChecked.length > 0 ) {
+    	ids = allChecked.attr("items-hash");
+    	if ( ids != "" ) return ids;
+	}
+
     $('.checkbox').each(function() {
         if ( this.checked ) {
             ids += this.name.toString().replace('to_delete_','')+'-';
@@ -3432,6 +3439,11 @@ function getCheckedRows( ids )
         ).join('-');
     }
     if ( ids == '' ) {
+    	var allItems = $('input[id*=to_delete_all]');
+    	if ( allItems.length > 0 ) {
+    		ids = allItems.attr("items-hash");
+    		if ( ids != "" ) return ids;
+		}
         ids = $.grep(
         	$.map($('.table[uid!=""] tr[object-id], .table-document tr[object-id]'), function(val) {
             	return $(val).attr('object-id');
@@ -3706,9 +3718,8 @@ function switchMenuState(state) {
 }
 
 function adjustContainerHeight() {
-    var height = $(document).height();
-    if ( $('#page-content').height() < height ) {
-        $('#page-content').height(height);
+    if ( $('#page-content').height() < $(window).height() ) {
+        $('#page-content').height($(window).height() - 1);
     }
     $('.vertical-menu').height($('#page-content').height() - 43);
 }
@@ -3745,16 +3756,10 @@ function enterKeyUp(e) {
 
 function navigateToComment( id )
 {
-	var section = $('#comment'+id).parents('.comments-section');
-	if ( !section.is(':visible') ) {
-		toggleDocumentPageComments(section, false);
-	}
-	$('.comment-line-holder').removeClass('active');
-	$('#comment'+id).addClass('active');
-
-	var locstr = String(window.location);
-	var parts = locstr.split('#');
-	window.location = parts[0] + '#comment' + id;
+    workflowNewObject(
+    	'/pm/' + devpromOpts.project + '/comment/' + id + '/reply', 'Comment','Comment',
+		'/pm/' + devpromOpts.project + '/O-', text('sc-key-edt-comment'), [], donothing
+	);
 }
 
 function sortByModified( path, direction ) {
@@ -3863,3 +3868,32 @@ function setDocumentListSize(size) {
     $('#tablePlaceholder').addClass('list-slider-' + size);
 }
 
+function reportError( txt )
+{
+	if ( txt == "" ) return;
+
+	lastActionBar = new $.peekABar({
+		cssClass: 'alert alert-error',
+		backgroundColor: '#b96b65',
+		animation: {
+			type: 'fade',
+			duration: 450
+		},
+		delay: 8000,
+		html: txt.replace(/\+/g, ' '),
+		autohide: true,
+		closeOnClick: true,
+		onHide: function() {
+			cookies.set('last-action-message', '');
+			lastActionBar = null;
+			setTimeout(function() {$('.peek-a-bar').remove();}, 1000);
+		}
+	});
+    var width = Math.max($(window).width() * 1 / 3, 600);
+    $('.peek-a-bar').css({
+        width: width,
+        left: ($(window).width() - width) / 2,
+		color: 'white'
+    });
+    lastActionBar.show();
+}

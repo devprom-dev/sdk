@@ -1,19 +1,25 @@
-<? foreach( $files as $file ) { ?>
+<?php
+foreach( $files as $file )
+{
+    $url = $file['type'] == 'image' ? $file['url'].'&.png' : $file['url'];
+    $title = $file['name']." (".$file['size']." KB)";
 
-<? 
-
-$url = $file['type'] == 'image' ? $file['url'].'&.png' : $file['url'];  
-
-$title = $file['name']." (".$file['size']." KB)";
-
-?>
-
-<span>
-	<a class="<?=$file['type']?>_attach" data-fancybox="gallery" href="<?=$url?>" title="<?=$title?>">
-		<img src="/images/<?=($file['type'] == 'image' ? 'image' : 'attach')?>.png"> <?=$title?>
-	</a>
-</span>
-
-&nbsp;
-
-<? } ?>
+    if ( $file['type'] == 'image' ) {
+    ?>
+        <span>
+            <a class="image_attach" data-fancybox="gallery" href="<?=$url?>" title="<?=$title?>">
+                <img src="/images/image.png"> <?=$title?>
+            </a>
+        </span>
+    <?php
+    }
+    else {
+        ?>
+        <span>
+            <a class="file_attach" href="<?=$url?>" title="<?=$title?>">
+                <img src="/images/attach.png"> <?=$title?>
+            </a>
+        </span>
+        <?php
+    }
+}

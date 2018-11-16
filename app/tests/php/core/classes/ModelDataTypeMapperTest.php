@@ -22,7 +22,7 @@ class ModelDataTypeMapperTest extends DevpromTestCase
     	
     	$mapper->map(new Snapshot(), $data);
     	
-    	$this->assertEquals(SystemDateTime::convertToServerTime("2013-10-31"), $data['RecordModified']); 
+    	$this->assertEquals(SystemDateTime::convertToServerTime("2013-10-31"), $data['RecordModified']);
     }
 
     function testModelMapperOnDates()
@@ -33,6 +33,6 @@ class ModelDataTypeMapperTest extends DevpromTestCase
     	
     	$mapper->map(new Activity(), $data);
     	
-    	$this->assertEquals("2013-10-31", $data['ReportDate']); 
+    	$this->assertEquals("2013-10-31", array_shift(preg_split('/\s+/', $data['ReportDate'])));
     }
 }

@@ -189,23 +189,25 @@ if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') && count($bulk
 
 <?php if ( !$tableonly ) { ?>
 	<?php foreach( $additional_actions as $action ) { ?>
-        <?php $buttonsNumber = count(array_filter($action['items'], function($item){return $item['name'] != '';})); ?>
-		<?php if ( $buttonsNumber < 5 ) { ?>
-			<?php foreach( $action['items'] as $key => $item ) { ?>
-				<?php if ( $item['name'] == '' ) continue; ?>
-				<div class="btn-group pull-left plus-action">
-					<a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn append-btn btn-sm <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
-						<i class="icon-plus icon-white"></i> <?=($buttonsNumber > 2 ? TextUtils::getWords($item['name']) : $item['name'])?>
-					</a>
-				</div>
-			<?php } ?>
-		<?php } else { ?>
+        <?php
+        $buttons = array_filter($action['items'], function($item){return $item['name'] != '';});
+
+        foreach( array_slice($buttons, 0, 3) as $key => $item ) { ?>
+            <div class="btn-group pull-left plus-action">
+                <a id="<?=($item['uid'] != '' ? $item['uid'] : $key)?>" class="btn append-btn btn-sm <?=($item['class'] == '' ? 'btn-success' : $item['class'])?>" href="<?=$item['url']?>">
+                    <i class="icon-plus icon-white"></i> <?=($buttonsNumber > 2 ? TextUtils::getWords($item['name']) : $item['name'])?>
+                </a>
+            </div>
+        <?php
+        }
+        $restActions = array_slice($buttons, 3);
+        if ( count($restActions) > 0 ) { ?>
 			<div class="btn-group pull-left plus-action">
 				<a class="btn dropdown-toggle btn-sm <?=($action['class'] == '' ? 'btn-success' : $action['class'])?>" href="#" data-toggle="dropdown">
 					<?=$action['name']?>
 					<span class="caret"></span>
 				</a>
-				<? echo $view->render('core/PopupMenu.php', array ('items' => $action['items'])); ?>
+				<? echo $view->render('core/PopupMenu.php', array ('items' => $restActions)); ?>
 			</div>
 		<?php } ?>
 	<?php } ?>
@@ -284,6 +286,7 @@ if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') && count($bulk
     		: $table->draw( $view );
 
 		$is_need_navigator = $table->IsNeedNavigator() && is_object($list);
+
 		if ( is_object($list) && $is_need_navigator ) {
 		    $list->drawNavigator(false, $table->getRowsOnPage(), $rowsActions);
         } else {
@@ -310,8 +313,6 @@ if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') && count($bulk
 			?>
 		</div>
 	<? } ?>
-</div>
-<div id="documentCache">
 </div>
 
 <?php

@@ -11,7 +11,7 @@ include "channels/IntegrationYouTrackChannel.php";
 
 class IntegrationService
 {
-    public function __construct( $object_it, $logger )
+    public function __construct( $object_it, $logger, $curlDelay = 0 )
     {
         $this->logger = $logger;
         $this->object_it = $object_it;
@@ -27,6 +27,7 @@ class IntegrationService
 
         $this->remote_channel = $this->buildIntegrationChannel();
         $this->remote_channel->setMapping($this->mapping);
+        $this->remote_channel->setCurlDelay($curlDelay);
 
         $this->setIdsMapping();
     }

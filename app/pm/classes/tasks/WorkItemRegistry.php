@@ -30,7 +30,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
 
     function getTaskPersisters() {
         $result = array (
-            new ObjectUIDPersister(),
             new TaskDatesPersister(),
             new TaskTagsPersister(),
             new TaskFactPersister(),
@@ -44,7 +43,6 @@ class WorkItemRegistry extends ObjectRegistrySQL
 
     function getIssuePersisters() {
         $result = array (
-            new ObjectUIDPersister(),
             new RequestDueDatesPersister(),
             new RequestTagsPersister(),
             new RequestColorsPersister()
@@ -103,6 +101,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.RecordModified,
 				   t.StartDate,
 				   t.FinishDate,
+				   IFNULL(t.PlannedStartDate, (SELECT i.StartDate FROM pm_Release i WHERE i.pm_ReleaseId = t.Release)) PlannedStartDate,
 				   t.Assignee,
 				   t.ChangeRequest,
 				   t.OrderNum,
@@ -120,7 +119,8 @@ class WorkItemRegistry extends ObjectRegistrySQL
                       FROM pm_ChangeRequestTrace l
                      WHERE l.ChangeRequest = t.ChangeRequest
                        AND l.ObjectClass NOT IN ('Task')) IssueTraces") : "'' IssueTraces").",
-				   ".join(',',$task_columns)."
+				   ".join(',',$task_columns).",
+				   CONCAT('T-', t.pm_TaskId) UID
 			  FROM pm_Task t
 			 WHERE 1 = 1 ".$task->getVpdPredicate('t').$this->getInnerFilterPredicate($task,$this->getTaskFilters())."
 			   AND t.VPD IN (SELECT m.VPD FROM pm_Methodology m, pm_Project p 
@@ -142,6 +142,7 @@ class WorkItemRegistry extends ObjectRegistrySQL
 				   t.RecordModified,
 				   t.StartDate,
 				   t.FinishDate,
+				   IFNULL((SELECT i.StartDate FROM pm_Release i WHERE i.pm_ReleaseId = t.Iteration), (SELECT i.StartDate FROM pm_Version i WHERE i.pm_VersionId = t.PlannedRelease)),
 				   t.Owner,
 				   t.pm_ChangeRequestId,
 				   t.OrderNum,
@@ -158,7 +159,8 @@ class WorkItemRegistry extends ObjectRegistrySQL
                       FROM pm_ChangeRequestTrace l
                      WHERE l.ChangeRequest = t.pm_ChangeRequestId
                        AND l.ObjectClass NOT IN ('Task', 'Milestone')) IssueTraces"):"'' IssueTraces").",
-				   ".join(',',$issue_columns)."
+				   ".join(',',$issue_columns).",
+				   t.UID
 			  FROM pm_ChangeRequest t
 			 WHERE 1 = 1 ".$request->getVpdPredicate('t').$this->getInnerFilterPredicate($request,$this->getIssueFilters())."
 			   AND t.VPD IN (SELECT p.VPD FROM pm_Project p WHERE IFNULL(p.IsClosed,'N') = 'N')

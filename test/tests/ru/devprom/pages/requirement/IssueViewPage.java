@@ -37,7 +37,7 @@ public class IssueViewPage extends ProjectPageBase {
 	@FindBy(xpath = "//a[@id='modify']")
 	protected WebElement editBtn;
 	
-	@FindBy(xpath = "//a[@id='requirement']")
+	@FindBy(xpath = "//a[contains(@id,'requirement')]")
 	protected WebElement createRequirementBtn;
 	
 	public IssueViewPage(WebDriver driver) {

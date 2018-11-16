@@ -15,7 +15,7 @@ class PageBoard extends PageList
  	function PageBoard( $object ) 
 	{
 		parent::__construct( $object );
-		
+
 		$plugins = getFactory()->getPluginsManager();
 		$this->plugins = is_object($plugins) 
 				? $plugins->getPluginsForSection(getSession()->getSite()) : array();
@@ -319,6 +319,7 @@ class PageBoard extends PageList
     			    echo $object_it->get($attr);
 
     			    foreach( $this->wysiwygAttributes as $attribute ) {
+    			        if ($attribute == 'RecentComment' ) continue;
                         echo $object_it->getHtmlDecoded($attribute);
                     }
 				echo '</div>';

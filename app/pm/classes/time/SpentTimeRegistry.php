@@ -141,7 +141,7 @@ class SpentTimeRegistry extends ObjectRegistrySQL
 		$map = array();
 
         $it = parent::createSQLIterator(
-            " SELECT TO_DAYS(t.StartDateOnly) DayId, DAYOFMONTH(t.StartDateOnly) DayName, t.StartDateOnly 
+            " SELECT TO_DAYS(t.StartDateOnly) DayId, DAYOFMONTH(t.StartDateOnly) DayName, TIMESTAMP(t.StartDateOnly) StartDateOnly 
                 FROM pm_CalendarInterval t WHERE t.Kind = 'day' AND t.StartDateOnly BETWEEN ".$startDate." AND ".$finishDate."
                ORDER BY t.StartDateOnly ASC "
         );

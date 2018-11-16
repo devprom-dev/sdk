@@ -85,9 +85,7 @@ class WorkflowTransitionAttributesModelBuilder extends ObjectModelBuilder
             if ( $this->transition_it->get('IsReasonRequired') == TransitionReasonTypeRegistry::Required ) {
                 $object->setAttributeRequired('TransitionComment', true);
             }
-            if ( $this->transition_it->getRef('TargetState')->get('SkipEmailNotification') != 'Y' ) {
-                $object->addAttribute('TransitionNotification', 'CHAR', '', true, false);
-            }
+            $object->addAttribute('TransitionNotification', 'CHAR', '', true, false);
 		}
 		
 		foreach( $this->attributes as $attribute ) {

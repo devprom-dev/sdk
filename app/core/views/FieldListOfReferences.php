@@ -41,7 +41,7 @@ class FieldListOfReferences extends Field
 
         $html = join('<br/>', $uids);
 
-        $html .= '<div>';
+        $html .= '<div class="embedded_form">';
         if ( $url != '' && count($uids) > 1 ) {
             $text = $this->object_it->count() > count($uids)
                 ? str_replace('%1', $this->object_it->count() - count($uids), text(2028))

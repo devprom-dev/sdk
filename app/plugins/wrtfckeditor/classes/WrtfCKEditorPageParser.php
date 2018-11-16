@@ -98,11 +98,11 @@ class WrtfCKEditorPageParser extends WikiParser
 
         $urlMatches = array();
         if ( !preg_match('/\/([A-Z]{1}-[0-9]+)/i', $attributes, $urlMatches)) return $match[0];
+        if ( strpos($title, $urlMatches[1]) === false ) return $match[0];
 
         $info = $this->getUidInfo($urlMatches[1]);
         if ( $info['caption'] == '' ) return $match[0];
 
-        if ( $info['alien'] ) $info['uid'] = $info['project'] . ':' . $info['uid'];
-        return '<a ' . $attributes . '>' . '[' . $info['uid'] . '] '. $info['caption'] . '</a>';
+        return '<a ' . $attributes . '>[' . $info['uid'] . '] '. $info['caption'] . '</a>';
     }
 }

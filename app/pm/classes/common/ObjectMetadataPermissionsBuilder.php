@@ -8,7 +8,13 @@ class ObjectMetadataPermissionsBuilder extends ObjectMetadataEntityBuilder
     	$policy = getFactory()->getAccessPolicy();
         foreach($metadata->getAttributesByGroup('permissions') as $attribute ) {
 			if ( $policy->can_read_attribute($metadata->getObject(), $attribute, $metadata->getAttributeClass($attribute))) continue;
-			$metadata->removeAttribute($attribute);
+			if ( $metadata->IsReference($attribute) ) {
+                $metadata->setAttributeVisible($attribute, false);
+                $metadata->addAttributeGroup($attribute, 'system');
+            }
+            else {
+                $metadata->removeAttribute($attribute);
+            }
 		}
     }
 }

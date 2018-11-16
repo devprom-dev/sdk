@@ -1,4 +1,4 @@
-<div class="btn-group">
+<div class="btn-group" id="<?=$id?>">
     <div class="btn dropdown-toggle transparent-btn" data-toggle="dropdown" href="#">
         <span class="title"><?=$title?></span>
         <?php if ( count($items) > 0 ) { ?>

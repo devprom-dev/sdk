@@ -1350,7 +1350,6 @@ span.fancytree-node {
 }
 
 .ui-dialog .ui-tabs-panel {
-    overflow-x: auto;
 }
 
 .accordion-body .row {
@@ -1462,4 +1461,8 @@ table.fancytree-ext-table th a {
 
 .fancybox-slide--image .fancybox-content {
     background: show;
+}
+
+.brd-head-menu .title {
+    white-space: normal;
 }

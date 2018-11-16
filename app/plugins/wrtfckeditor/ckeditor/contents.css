@@ -108,3 +108,7 @@ pre
 span.math-tex {
 	font-size: 180%;
 }
+
+.cke_editable td {
+	min-width: 18px;
+}

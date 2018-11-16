@@ -17,4 +17,38 @@ class CommentAuthorPersister extends ObjectSQLPersister
 
  		return $columns;
  	}
+
+ 	function afterDelete($object_it)
+    {
+        // remove comment tags from wysiwyg fields;
+        $this->commentId = $object_it->getId();
+        $anchorIt = $object_it->getAnchorIt();
+
+        if ( $anchorIt->getId() != '' ) {
+            $data = $anchorIt->getData();
+            $parms = array();
+            foreach( $anchorIt->object->getAttributesByType('wysiwyg') as $attribute ) {
+                $parms[$attribute] = preg_replace_callback(
+                    REGEX_COMMENTS, array($this, 'removeComments'), html_entity_decode($data[$attribute])
+                );
+                if ( $parms[$attribute] == '' ) unset($parms[$attribute]);
+            }
+            if ( count($parms) > 0 ) {
+                $anchorIt->object->setNotificationEnabled(false);
+                $anchorIt->object->getRegistry()->Store($anchorIt, $parms);
+            }
+        }
+
+        parent::afterDelete($object_it);
+    }
+
+    function removeComments( $match )
+    {
+        if ( $match[1] == $this->commentId ) {
+            return $match[2];
+        }
+        else {
+            return $match[0];
+        }
+    }
 }

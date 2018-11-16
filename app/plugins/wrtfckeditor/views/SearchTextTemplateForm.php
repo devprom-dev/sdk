@@ -26,6 +26,8 @@ class SearchTextTemplateForm extends PMPageForm
             'ProjectPage' => 'ProjectPageTextTemplate',
             'HelpPage' => 'HelpPageTextTemplate',
             'Request' => 'RequestTextTemplate',
+            'Issue' => 'IssueTextTemplate',
+            'Increment' => 'IncrementTextTemplate',
             'Comment' => 'CommentTextTemplate'
         );
         $className = getFactory()->getClass($templateMap[$_REQUEST['objectclass']]);

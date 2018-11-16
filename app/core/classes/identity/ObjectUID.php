@@ -120,6 +120,10 @@ class ObjectUID
 				return $object_it->get('CodeName');
 			case 'pm_TestCaseExecution':
 				return $this->getObjectUidInt($class_name, $object_it->get('Test'));
+            case 'pm_ChangeRequest':
+                if ( $object_it->get('UID') != '' ) {
+                    return $object_it->get('UID');
+                }
  			default:
  				return $this->map[$class_name] != ''
                     ? $this->getObjectUidInt($class_name, $object_it->getId())
@@ -309,9 +313,6 @@ class ObjectUID
 			case 'pm_Project':
 				$need_project = false;
 				break;
-            case 'pm_ChangeRequest':
-                $object_it = $object_it->getSpecifiedIt();
-                break;
 		}
 		
 		$info = $this->getUIDInfo( $object_it );

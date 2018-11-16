@@ -38,6 +38,8 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 	    global $session;
 
         $wasProjectIt = getSession()->getProjectIt();
+        $this->sourceProjectProcess = $wasProjectIt->get('Tools');
+
         $session = new PMSession($target_it);
 
  	 	foreach( $references as $object ) {
@@ -89,13 +91,19 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
                     }
 			        continue;
                 }
+
                 if ( in_array($attribute, array('Estimation','EstimationLeft')) ) {
                     $estimationValue = $methodology->getByRef('VPD', $object_it->get('VPD'))->get('RequestEstimationRequired');
 			        if ( $estimationValue != $targetEstimationValue ) {
                         $parms[$attribute] = 'NULL';
                     }
                 }
-				if ( $object_it->object->IsReference($attribute) ) {
+
+                if ( $attribute == 'Function' && $this->sourceProjectProcess == 'ticket_ru.xml' ) {
+                    $parms[$attribute] = 'NULL';
+                }
+
+                if ( $object_it->object->IsReference($attribute) ) {
 					$ref = $object_it->object->getAttributeObject($attribute);
                     if ( $ref->getVpdValue() == '' ) {
                         $parms[$attribute] = $object_it->get($attribute);
@@ -119,6 +127,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 					}
 				}
 			}
+
 			if ( $object_it->object instanceof MetaobjectStatable) {
 				$state_it = $state->getRegistry()->Query(
 					array(
@@ -177,5 +186,7 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
 		$change_parms['VPD'] = $target_it->get('VPD');
 		$change->add_parms( $change_parms );
 	}
+
+	private $sourceProjectProcess = '';
 }
  

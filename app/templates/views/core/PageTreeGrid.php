@@ -39,7 +39,7 @@ if ( $message != '' ) {
                 </div>
             </th>
 			<th class="for-chk visible" width="1%" uid="checkbox">
-                <input id="to_delete_all<?=$table_id?>" tabindex="-1" type="checkbox" onclick="checkRows('<?=$table_id?>')">
+                <input id="to_delete_all<?=$table_id?>" tabindex="-1" type="checkbox" onclick="checkRows('<?=$table_id?>')" items-hash="<?=$itemsHash?>" >
 			</th>
 
 			<?php

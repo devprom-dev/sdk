@@ -12,36 +12,30 @@ class CustomTagFilter extends FilterPredicate
  	
  	function _predicate( $filter )
  	{
- 		global $model_factory;
- 		
  		$class = strtolower(get_class($this->object));
  		$idfield = $this->object->getClassName().'Id';
 
-		if ( trim($filter) == 'none' )
-		{
-			$predicate = " AND NOT EXISTS (SELECT 1 FROM pm_CustomTag rt " .
-						 "   		    	WHERE rt.ObjectId = t." .$idfield.
-						 "					  AND rt.ObjectClass = '".$class."') ";
-		}
-		else
-		{
-			$tag = getFactory()->getObject('Tag');
-			$tag_it = $tag->getExact( TextUtils::parseIds($filter) );
-			
-			if ( $tag_it->count() > 0 )
-			{
-				$predicate = " AND EXISTS (SELECT 1 FROM pm_CustomTag rt " .
-							 "   		    WHERE rt.ObjectId = t." .$idfield.
-							 "                AND rt.ObjectClass = '".$class."' ".
-							 "                AND rt.Tag IN (".join($tag_it->idsToArray(),',').")) ";
-			}
-			else
-			{
-				$predicate = '';
-			}
-		}
-		
-		return $predicate;
+ 		$clauses = array();
+ 		if ( strpos($filter, 'none') !== false ) {
+            $clauses[] =
+                " NOT EXISTS (SELECT 1 FROM pm_CustomTag rt " .
+                "   		   WHERE rt.ObjectId = t." .$idfield.
+                "				 AND rt.ObjectClass = '".$class."') ";
+        }
+
+        $tag = getFactory()->getObject('Tag');
+        $tag_it = $tag->getExact( TextUtils::parseIds($filter) );
+
+        if ( $tag_it->count() > 0 )
+        {
+            $clauses[] =
+                " EXISTS (SELECT 1 FROM pm_CustomTag rt " .
+                "   	   WHERE rt.ObjectId = t." .$idfield.
+                "            AND rt.ObjectClass = '".$class."' ".
+                "            AND rt.Tag IN (".join($tag_it->idsToArray(),',').")) ";
+        }
+
+		return count($clauses) < 1 ? " AND 1 = 2 " : " AND (".join(" OR ", $clauses).") ";
  	}
  	
  	function get( $filter )

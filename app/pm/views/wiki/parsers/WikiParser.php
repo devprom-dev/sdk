@@ -496,7 +496,11 @@ class WikiParser
 	
 	function getUidInfo( $uid )
 	{
-		$parms = array();
+		$parms = array(
+		    new FilterVpdPredicate()
+        );
+
+        $documentVersion = '';
 		if ( is_object($this->getObjectIt()) ) {
 			$documentVersion = $this->getObjectIt()->get('DocumentVersion');
 			if ( $documentVersion != '' ) {
@@ -507,7 +511,7 @@ class WikiParser
 	    $uid_resolver = new ObjectUID;
      	$object_it = $uid_resolver->getObjectIt($uid);
 
-        if ( $object_it->object->IsAttributeStored('UID') ) {
+        if ( $documentVersion != '' && $object_it->object->IsAttributeStored('UID') ) {
             if ( $object_it->get('UID') == '' ) {
                 return array();
             }

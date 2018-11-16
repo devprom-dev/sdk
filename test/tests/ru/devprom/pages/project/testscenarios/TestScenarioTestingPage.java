@@ -106,12 +106,19 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
 		return text.substring(2,text.length());
 	}
 
-    public void rejectWish(String comment) {
-    	workflowButton.click();
-    	rejectBtn.click();
-    	waitForDialog();
-        (new CKEditor(driver)).typeText(comment);
-        submitDialog(saveBtn);
+    public void rejectWish(String comment) 
+    {
+        try
+        {
+            Thread.sleep(3000);
+	    	clickOnInvisibleElement(workflowButton);
+	    	clickOnInvisibleElement(rejectBtn);
+            Thread.sleep(6000);
+	    	waitForDialog();
+	        (new CKEditor(driver)).typeText(comment);
+	        submitDialog(saveBtn);
+        }
+        catch(InterruptedException e) {}
     }
 
     public void readyWish(String id, String time) {
@@ -119,7 +126,7 @@ public class TestScenarioTestingPage extends SDLCPojectPageBase {
         {
             Thread.sleep(3000);
             workflowButton.click();
-            readyBtn.click();
+	    	clickOnInvisibleElement(readyBtn);
 	        (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(addTimeReqBtn));
 	         addTimeReqBtn.click();
 	         (new WebDriverWait(driver,waiting)).until(ExpectedConditions.visibilityOf(addTimeReqField));

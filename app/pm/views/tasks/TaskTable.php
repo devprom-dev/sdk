@@ -580,7 +580,8 @@ class TaskTable extends PMPageTable
     protected function getChartModules( $module )
     {
         return array(
-            'tasks-chart'
+            'tasks-chart',
+            'workitemchart'
         );
     }
 

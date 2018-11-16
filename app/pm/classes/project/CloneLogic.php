@@ -547,6 +547,7 @@ class CloneLogic
 
             case 'pm_ChangeRequest':
             case 'pm_Task':
+                $parms['UID'] = '';
                 $parms['StartDate'] = '';
                 $parms['DueWeeks'] = '';
 
@@ -737,7 +738,7 @@ class CloneLogic
 		}
 		
 		// remember obsolete attributes values
-		foreach( array('IsSubversionUsed', 'IsSupportUsed', 'IsFileServer', 'IsBlogUsed', 'IsKnowledgeUsed') as $attribute )
+		foreach( array('IsSubversionUsed', 'IsSupportUsed', 'IsFileServer', 'IsKnowledgeUsed') as $attribute )
 		{
 			if ( $it->get($attribute) != '' ) {
 				$context->setDefaultParms(
@@ -838,7 +839,7 @@ class CloneLogic
 		$parms['Project'] = $project_it->getId();
 		
 		// get values for obsolete attributes
-		foreach( array('IsSubversionUsed', 'IsSupportUsed', 'IsFileServer', 'IsBlogUsed', 'IsKnowledgeUsed') as $attribute )
+		foreach( array('IsSubversionUsed', 'IsSupportUsed', 'IsFileServer', 'IsKnowledgeUsed') as $attribute )
 		{
 			if ( $it->get($attribute) == '' ) {
 				$defaults = $context->getDefaultParms();

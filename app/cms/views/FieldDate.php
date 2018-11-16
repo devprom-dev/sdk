@@ -9,11 +9,9 @@ class FieldDate extends Field
     
 	function setValue( $value )
 	{
-		if ( preg_match('/([0-9]+\-)+/', $value) > 0 ) {
-			$value = getSession()->getLanguage()->getDateFormatted(
-                SystemDateTime::convertToServerTime($value)
-            );
-		}		
+        $value = getSession()->getLanguage()->getDateFormatted(
+            SystemDateTime::convertToClientTime($value)
+        );
 		parent::setValue( $value );
 	}
 	

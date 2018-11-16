@@ -40,7 +40,7 @@ class ChangeLogAggregatePersister extends ObjectSQLPersister
 			"   ORDER BY RecordModified DESC) AffectedDate ";
 
 		array_push( $columns,
-			" FROM_DAYS(TO_DAYS(MAX(t.RecordModified))) ChangeDate " );
+			"TIMESTAMP(FROM_DAYS(TO_DAYS(MAX(t.RecordModified)))) ChangeDate " );
 
 		return $columns;
  	}

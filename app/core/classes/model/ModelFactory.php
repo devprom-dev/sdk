@@ -72,7 +72,9 @@ class ModelFactory extends ModelFactoryBase
 			'pm_calendarinterval' => array( 'Calendar' ),
 			'pm_customattribute'  => array('PMCustomAttribute'),
             'pm_attributevalue'  => array('PMCustomAttributeValue'),
-			'cms_tempfile' => array( 'TempFile' )
+			'cms_tempfile' => array( 'TempFile' ),
+            'pm_projectrole' => array('ProjectRoleBase'),
+            'pm_tasktype' => array('TaskTypeBase')
 		);
 	}
  	

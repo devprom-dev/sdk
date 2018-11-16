@@ -164,12 +164,9 @@ foreach( $attributes as $key => $attribute ) {
 </div>
 
 <?php foreach( $invisible as $key => $attribute ) { ?>
-
-	<?php if ( !$attribute['visible'] && $attribute['required'] ) { ?>
-		<input id="<?=$attribute['id']?>" type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>" referenceName="<?=$attribute['referenceName']?>">
-	<?php continue; } ?>
-	
-<?php } ?> 
+	<?php if ( !$attribute['required'] ) continue; ?>
+	<input id="<?=$attribute['id']?>" type="hidden" name="<?=$key?>" value="<?=$attribute['value']?>" referenceName="<?=$attribute['referenceName']?>">
+<?php } ?>
 
 <?php if ( !$formonly) { ?>
 <div class="control-group">

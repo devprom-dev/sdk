@@ -972,11 +972,18 @@ class PMPageTable extends PageTable
                 new StatePredicate('terminal')
             )
         );
-        if ( !$this->hasCommonStates($filterValues) ) {
-            $filter = new FilterObjectMethod( getFactory()->getObject('StateCommon'), translate('Состояние'), 'state' );
-            $filter->setDefaultValue(StateCommonRegistry::Submitted . ',' . StateCommonRegistry::Progress);
-            $filter->setHasNone(false);
-            return $filter;
+        if ( !$this->hasCommonStates($filterValues) )
+        {
+            if ( $this->getListRef() instanceof PageBoard ) {
+                $filter = new FilterObjectMethod( getFactory()->getObject('StateCommon'), translate('Состояние'), 'state' );
+                $filter->setDefaultValue(StateCommonRegistry::Submitted . ',' . StateCommonRegistry::Progress);
+                $filter->setHasNone(false);
+                return $filter;
+            }
+            else {
+                $state_it = WorkflowScheme::Instance()->getStateIt($this->getObject());
+                return new StateExFilterWebMethod($state_it, 'state', $resolvedAmount < 30 ? "all" : "");
+            }
         }
         else {
             $projectIt = getFactory()->getObject('Project')->getExact(

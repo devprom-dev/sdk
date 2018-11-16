@@ -4,7 +4,8 @@ RewriteEngine On
 RewriteBase /pm
 
 RewriteRule ^([^/]+)/menu/?(rest/)?(.*)$ /app/project.php?project=$1 [L,QSA]
-RewriteRule ^([^/]+)/(upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
+RewriteRule ^([^/]+)/comments/([^/]+)/([^/]+)$ comments.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
+RewriteRule ^([^/]+)/(comment|upload|projects|whatsnew|autoactions|bulk|tooltip|wiki|export|scripts|api|invite|treegrid|treemodel|settings|metrics|attachments|mentions|network|section|details|worklog|widget)/?.*$ /app/project.php?project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)$ page.php?namespace=$2&module=$3&project=$1 [L,QSA]
 RewriteRule ^([^/]+)/module/([^/]+)/([^/]+)/(.+)$ page.php?namespace=$2&module=$3&project=$1&report=$4 [L,QSA]
 RewriteRule ^_images/([^/]+)$ /images/$1 [L]
@@ -14,7 +15,6 @@ RewriteRule ^([^/]+)/I-([0-9]+)$ $1/issues/board?mode=request&class=metaobject&e
 RewriteRule ^([^/]+)/T-([0-9]+)$ $1/tasks/board?class=metaobject&entity=pm_Task&pm_TaskId=$2&pm_Taskaction=view [L,NC,QSA]
 RewriteRule ^([^/]+)/([a-z]{1}-[0-9]+)/?(\d+)?$ goto.php?project=$1&uid=$2&baseline=$3 [L,NC,QSA]
 
-RewriteRule ^([^/]+)/comments/([^/]+)/([^/]+)$ comments.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
 RewriteRule ^([^/]+)/time/([^/]+)/([^/]+)$ spenttime.php?project=$1&class=$2&object=$3&formonly=true [L,QSA]
 RewriteRule ^([^/]+)/features/(list|trace|chart)$ functions.php?project=$1&view=$2 [L,QSA]
 RewriteRule ^([^/]+)/features/(list|trace|chart)/([^/]+)$ functions.php?project=$1&view=$2&report=$3 [L,QSA]

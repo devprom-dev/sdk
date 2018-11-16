@@ -47,6 +47,10 @@ class IssueController extends Controller
 
             return $this->redirect($this->generateUrl('issue_show', array('id' => $issue->getId())));
         }
+        else {
+            $this->get('logger')->err($form->getErrorsAsString());
+            throw $this->createNotFoundException('Unable append Issue entity.');
+        }
 
         return array(
             'issue' => $issue,
@@ -177,8 +181,11 @@ class IssueController extends Controller
 
         if ($editForm->isValid()) {
             $this->getIssueService()->saveIssue($issue, $this->getUser());
-
             return $this->redirect($this->generateUrl('issue_show', array('id' => $id)));
+        }
+        else {
+            $this->get('logger')->err($editForm->getErrorsAsString());
+            throw $this->createNotFoundException('Unable update Issue entity.');
         }
 
         return array(
@@ -211,6 +218,10 @@ class IssueController extends Controller
         if ($commentForm->isValid()) {
             $this->getIssueService()->saveComment($issueComment, $issue, $this->getUser());
             return $this->redirect($this->generateUrl('issue_show', array('id' => $issueId)));
+        }
+        else {
+            $this->get('logger')->err($commentForm->getErrorsAsString());
+            throw $this->createNotFoundException('Unable append comment to Issue entity.');
         }
 
         return $this->render("DevpromServiceDeskBundle:Issue:show.html.twig", array(
@@ -266,13 +277,8 @@ class IssueController extends Controller
         $issue = $this->getIssueService()->getBlankIssue($this->getProjectVpds());
         $form = $this->createForm(new IssueFormType($this->get('doctrine.orm.entity_manager'), $this->getProjectVpds(), $this->getUser(), true), $issue);
 
-        $products = $this->get('doctrine.orm.entity_manager')->getRepository('DevpromServiceDeskBundle:Product')
-            ->findById($form->get('product')->getConfig()->getOption('choice_list')->getValues());
-        foreach($products as $product_ref) {
-            $vpds[] = $product_ref->getVpd();
-        }
         $projects = $this->get('doctrine.orm.entity_manager')->getRepository('DevpromServiceDeskBundle:Project')
-            ->findBy(array('vpd' => $vpds));
+            ->findBy(array('vpd' => $this->getProjectVpds()));
         return array(
             'projects' => $projects
         );

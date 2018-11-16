@@ -15,6 +15,7 @@ class PageList extends ListTable
     private $itemsCount = null;
     private $group = null;
     private $skipIvisiblePersisters = true;
+    private $itemsHash = '';
 
  	function PageList( $object )
  	{
@@ -48,7 +49,6 @@ class PageList extends ListTable
 		}
 		else if ( $this->uid_service->hasUidObject( $object ) ) {
 			$object->addAttribute('UID', 'INTEGER', 'UID', true, false, '', 0);
-			$object->addPersister(new ObjectUIDPersister());
 		}
 	}
  	
@@ -128,11 +128,27 @@ class PageList extends ListTable
             }
         }
 
+        if ( $this->IsNeedToSelect() ) {
+            $this->itemsHash = $this->buildItemsHash($object, $predicates);
+        }
+
         return $registry->Query(
             array_merge(
                 $predicates, $sorts, $persisters
             )
         );
+    }
+
+    function buildItemsHash($object, $predicates) {
+ 	    return \TextUtils::buildIds(
+            $object->getRegistryBase()->Query(
+                $predicates
+            )->idsToArray()
+        );
+    }
+
+    function getItemsHash() {
+ 	    return $this->itemsHash;
     }
 
     function buildItemsCount($registry, $predicates) {
@@ -927,7 +943,6 @@ class PageList extends ListTable
 		{
 			case 'UID':
 				echo $this->uid_service->getUidIconGlobal($object_it, false);
-
 				break;
 				
 			default:
@@ -1498,6 +1513,7 @@ class PageList extends ListTable
 			'groups' => $this->getGroupFields(),
 		    'table_class_name' => 'table table-hover wishes-table',
 		    'list_mode' => $this->list_mode,
+			'itemsHash' => $this->itemsHash,
 			'created_datetime' => SystemDateTime::date(),
 			'scrollable' => $this->getScrollable(),
             'draggable' => $this->getDraggable(),

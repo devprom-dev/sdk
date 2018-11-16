@@ -4,6 +4,7 @@
  */
 
 CKEDITOR.disableAutoInline = true;
+CKEDITOR.verbosity = CKEDITOR.VERBOSITY_ERROR;
 
 CKEDITOR.editorConfig = function( config ) {
 	// Define changes to default configuration here.
@@ -18,6 +19,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.extraAllowedContent = 'svg';
 	config.disableNativeSpellChecker = false;
 	config.entities = false;
+    config.debug = false;
     config.autoGrow_maxHeight = $(window).height() * 0.5;
     config.autoGrow_onStartup = true;
 	config.mathJaxLib = devpromOpts.mathJaxLib != ''
@@ -47,6 +49,6 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'tools', items : [ 'Maximize','Source' ] }
 	];
 
-	config.removeDialogTabs = 'image:advanced;link:advanced';
+	config.removeDialogTabs = 'image2:advanced;link:advanced';
 	config.codeSnippet_languages = {ones:"1C",apache:"Apache",bash:"Bash",coffeescript:"CoffeeScript",cpp:"C++",cs:"C#",css:"CSS",diff:"Diff",html:"HTML",http:"HTTP",ini:"INI",java:"Java",javascript:"JavaScript",json:"JSON",lua:"Lua",makefile:"Makefile",markdown:"Markdown",nginx:"Nginx",objectivec:"Objective-C",perl:"Perl",php:"PHP",python:"Python",ruby:"Ruby",sql:"SQL",vbscript:"VBScript",xhtml:"XHTML",xml:"XML"};
 };

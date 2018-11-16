@@ -42,7 +42,7 @@ class FeatureMetricsPersister extends ObjectSQLPersister
              "	     FROM pm_ChangeRequest r, pm_Function f" .
              "	    WHERE r.Function = f.pm_FunctionId ".
          	 "		  AND f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')), ".
-             "    (SELECT MAX(FROM_DAYS(TO_DAYS(GREATEST(pr.FinishDate,NOW())))) ".
+             "    (SELECT TIMESTAMP(MAX(FROM_DAYS(TO_DAYS(GREATEST(pr.FinishDate,NOW()))))) ".
              "	     FROM pm_Project pr, pm_Function f " .
              "	    WHERE f.ParentPath LIKE CONCAT('%,',".$this->getPK($alias).",',%')".
              "		  AND f.VPD = pr.VPD ) ".

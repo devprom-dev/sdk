@@ -49,25 +49,30 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             }
         }
 
-        if ( count($options) < 1 ) {
-            foreach( $this->getCheckOptions($_REQUEST['class']) as $requestKey => $optionName ) {
-                if ( in_array($_REQUEST[$requestKey], array('Y','on')) ) {
-                    $options[] = $optionName;
+        foreach( $this->getCheckOptions($_REQUEST['class']) as $requestKey => $optionName ) {
+            if ( in_array($_REQUEST[$requestKey], array('Y','on')) ) {
+                $options[] = $optionName;
+            }
+            foreach( $options as $key => $option ) {
+                if ( $_REQUEST[$key] == '' && $key == $requestKey ) {
+                    unset($options[$key]);
                 }
             }
-            if ( $_REQUEST['baseline'] != '' ) {
-                $options[] = 'baseline,'.$_REQUEST['baseline'];
-            }
-            if ( file_exists($_FILES['File']['tmp_name']) ) {
-                $template_it = getFactory()->getObject('ExportTemplate')->
-                getRegistry()->Create(
-                    array (
-                        'Caption' => array_shift(explode('.',$_FILES['File']['name'])),
-                        'Options' => join('-',$options)
-                    )
-                );
-                $options[] = 'template='.$template_it->getId();
-            }
+        }
+
+        if ( $_REQUEST['baseline'] != '' ) {
+            $options[] = 'baseline,'.$_REQUEST['baseline'];
+        }
+
+        if ( file_exists($_FILES['File']['tmp_name']) ) {
+            $template_it = getFactory()->getObject('ExportTemplate')->
+            getRegistry()->Create(
+                array (
+                    'Caption' => array_shift(explode('.',$_FILES['File']['name'])),
+                    'Options' => join('-',$options)
+                )
+            );
+            $options[] = 'template='.$template_it->getId();
         }
 
         $url = '?'.$url.'&options='.join('-',$options);

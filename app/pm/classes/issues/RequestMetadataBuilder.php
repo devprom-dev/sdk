@@ -155,7 +155,8 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
             'Estimation',
             'Project',
             'Watchers',
-            'Tags'
+            'Tags',
+            'Links'
         );
         foreach ( $permission_attributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'permissions');

@@ -385,7 +385,7 @@ class PMPageForm extends PageForm
                 }
 
             case 'TransitionNotification':
-                $field = new FieldCheckNotifications();
+                $field = new FieldCheckNotifications($this->getTransitionIt());
                 if ( is_object($this->getObjectIt()) ) {
                     $field->setAnchor($this->getObjectIt());
                 }
@@ -402,7 +402,7 @@ class PMPageForm extends PageForm
 
                 if ( $this->getObject()->getAttributeType($attr) == 'wysiwyg')
                 {
-                    if ( is_object($this->getObjectIt()) && !$this->getEditMode() ) {
+                    if ( $attr == "Description" && is_object($this->getObjectIt()) && !$this->getEditMode() ) {
                         if ( json_decode(JSONViewerField::stripTags($this->getObjectIt()->get($attr))) ) {
                             return new JSONViewerField();
                         }
@@ -431,6 +431,8 @@ class PMPageForm extends PageForm
     function createField($name)
     {
         $field = parent::createField($name);
+        if ( !is_object($field) ) return $field;
+
         switch( $name ) {
             case 'IntegrationLink':
                 $field->setReadOnly(true);

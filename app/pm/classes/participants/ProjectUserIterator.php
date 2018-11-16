@@ -19,7 +19,7 @@ class ProjectUserIterator extends UserIterator
                     return $title . sprintf(text(2496), round($leftWork - $capacity, 0));
                 }
             }
-            return $title . sprintf(text(2494), $this->get('LeftWork'));
+            return $title . sprintf(text(2494), round($this->get('LeftWork'),0));
         }
         else {
             return $title;

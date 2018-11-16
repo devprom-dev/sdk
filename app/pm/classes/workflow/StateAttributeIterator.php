@@ -4,7 +4,13 @@ class StateAttributeIterator extends OrderedIterator
 {
  	function getDisplayName() 
  	{
- 		$caption = translate(getFactory()->getObject($this->get('Entity'))->getAttributeUserName( $this->get('ReferenceName') ));
+ 	    $className = getFactory()->getClass($this->get('Entity'));
+ 	    if ( !class_exists($className) ) return "";
+
+ 	    $object = getFactory()->getObject($className);
+ 	    if ( !is_object($object) ) return "";
+
+ 		$caption = translate($object->getAttributeUserName( $this->get('ReferenceName') ));
  		if ( $caption == '' ) return '';
  		
  		$props = array();

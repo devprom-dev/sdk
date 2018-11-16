@@ -79,6 +79,7 @@ class RequestPage extends PMPage
 	function getObject()
 	{
 		$object = getFactory()->getObject('Request');
+
 		foreach (getSession()->getBuilders('RequestViewModelBuilder') as $builder) {
 			$builder->build($object);
 		}

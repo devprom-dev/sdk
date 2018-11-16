@@ -21,6 +21,10 @@ abstract class IntegrationChannel
         return $this->logger;
     }
 
+    public function setCurlDelay( $delay ) {
+        $this->curlDelay = $delay;
+    }
+
     public function getMapping() {
         return $this->mapping;
     }
@@ -117,6 +121,8 @@ abstract class IntegrationChannel
 
     protected function jsonGet( $url, $data = array(), $verbose = true )
     {
+        if ( $this->curlDelay > 0 ) sleep($this->curlDelay);
+
         $url = $this->object_it->get('URL').$url;
         $url .= (strpos($url, '?') === FALSE ? '?' : '').http_build_query($data);
         $this->getLogger()->info("GET: ".$url);
@@ -456,4 +462,5 @@ abstract class IntegrationChannel
     private $idsMapRead = array();
     private $idsMapWrite = array();
     private $mapping = array();
+    private $curlDelay = 0;
 }

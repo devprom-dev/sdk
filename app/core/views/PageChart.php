@@ -324,7 +324,6 @@ class PageChart extends StaticPageList
 
         $skip_attributes = array_merge(
             $this->getSystemAttributes(),
-            $this->getObject()->getAttributesByGroup('trace'),
             $this->getObject()->getAttributesByGroup('skip-chart')
         );
 
@@ -425,7 +424,7 @@ class PageChart extends StaticPageList
         {
             $name = $object->getAttributeUserName( $field );
 
-            $script = "filterLocation.setup( 'aggby=".$field."', 0 ); ";
+            $script = "javascript: filterLocation.setup( 'aggby=".$field."', 0 ); ";
 
             $columns[translate($name)] = array(
                 'click' => $script, 'checked' => $filter_values['aggby'] == $field );
@@ -456,7 +455,7 @@ class PageChart extends StaticPageList
 
         foreach ( $fields as $key => $field )
         {
-            $script = "filterLocation.setup( 'aggregator=".$key."', 0 ); ";
+            $script = "javascript: filterLocation.setup( 'aggregator=".$key."', 0 ); ";
 
             $columns[translate($field)] = array(
                 'click' => $script, 'checked' => $filter_values['aggregator'] == $key );
@@ -553,23 +552,29 @@ class PageChart extends StaticPageList
 			}
 		}
 
-        if ( $this->getObject()->IsReference($color_attribute) ) {
+        if ( $this->getObject()->IsReference($color_attribute) )
+        {
             $ref = $this->getObject()->getAttributeObject($color_attribute);
-            $colors = array();
-            $colorIt = $ref->getAll();
-            while( !$colorIt->end() ) {
-                $colors[$colorIt->getDisplayName()] = $colorIt->get('RelatedColor');
-                $colorIt->moveNext();
-            }
-            if ( !$this->getObject()->IsAttributeRequired($color_attribute) ) {
-                $colors = array_merge(
-                    array(
-                        translate('нет') => 'rgb(192,192,192)'
-                    ),
-                    $colors
-                );
-            }
             if ( $ref->getAttributeType('RelatedColor') != '' ) {
+                $builtinColors = array (
+                    'rgb(255, 102, 0)', 'rgb(153, 204, 0)', 'rgb(255, 204, 0)', 'rgb(89, 143, 239)', 'rgb(255, 153, 204)', 'rgb(0, 255, 0)', 'rgb(255, 255, 0)'
+                );
+                $colors = array();
+                $colorIt = $ref->getAll();
+                while( !$colorIt->end() ) {
+                    $colors[$colorIt->getDisplayName()] = $colorIt->get('RelatedColor') != ''
+                        ? $colorIt->get('RelatedColor')
+                        : array_shift($builtinColors);
+                    $colorIt->moveNext();
+                }
+                if ( !$this->getObject()->IsAttributeRequired($color_attribute) ) {
+                    $colors = array_merge(
+                        array(
+                            translate('нет') => 'rgb(192,192,192)'
+                        ),
+                        $colors
+                    );
+                }
                 $widget->setColors($colors);
             }
         }
@@ -695,7 +700,7 @@ class PageChart extends StaticPageList
 		{
 		    if ( is_a($widget, 'FlotChartPieWidget') )
 		    {
-				echo '<div style="float:left;width:31%">';
+				echo '<div style="float:right;width:31%">';
 					$this->drawLegend( $data, $aggs );
 				echo '</div>';
 		    }
@@ -783,6 +788,11 @@ class PageChart extends StaticPageList
 	{
 		return false;
 	}
+
+	function IsNeedToSelect()
+    {
+        return false;
+    }
 
 	function getExportActions()
     {

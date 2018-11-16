@@ -263,6 +263,7 @@ foreach( $attributes as $name => $attribute )
                 <?
                 foreach( $attributes as $key => $attribute )
                 {
+                    if ( !$attribute['visible'] ) continue;
                     if ( $attribute['type'] != 'wysiwyg' ) continue;
                 ?>
 				<div class="accordion-heading">

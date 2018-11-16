@@ -7,9 +7,12 @@ class ProfilePage extends CoPage
  	function __construct()
  	{
  		parent::__construct();
- 		$this->addInfoSection(
- 		    new ProfileProjectSection(getSession()->getUserIt())
-        );
+
+ 		if ( defined('PERMISSIONS_ENABLED') ) {
+            $this->addInfoSection(
+                new ProfileProjectSection(getSession()->getUserIt())
+            );
+        }
    	}
 			
  	function getTable()

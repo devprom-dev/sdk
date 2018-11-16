@@ -491,7 +491,7 @@ class Issue extends BaseEntity {
         return $this->notifications->matching(
             Criteria::create()->where(
                 Criteria::expr()->andX(
-                    Criteria::expr()->eq('className', 'Request'),
+                    Criteria::expr()->in('className', array('Request','Issue')),
                     is_object($customer)
                         ? Criteria::expr()->eq('customer', $customer)
                         : Criteria::expr()->neq('customer', null)

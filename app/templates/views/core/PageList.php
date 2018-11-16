@@ -69,7 +69,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
 
 			<th class="for-chk <?=($need_to_select ? 'visible' : 'hidden')?>" width="1%" uid="checkbox">
 				<?php if ( $need_to_select ) { ?>
-					<input id="to_delete_all<?=$table_id?>" tabindex="-1" type="checkbox" onclick="checkRows('<?=$table_id?>')">
+					<input id="to_delete_all<?=$table_id?>" tabindex="-1" type="checkbox" onclick="checkRows('<?=$table_id?>')" items-hash="<?=$itemsHash?>">
 				<?php } ?>
 			</th>
 

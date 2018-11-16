@@ -390,9 +390,6 @@ class AccessPolicyProject extends AccessPolicyBase
 			case $this->role_manager: 
 			    switch ( $ref_name )
 			    {
-			        case 'Blog':
-			        case 'BlogPost':
-			            return $this->project_it->getMethodologyIt()->get('IsBlogUsed') == 'Y';
 			        case 'pm_Project':
                         return parent::getDefaultEntityAccess($action_kind, $object) && $action_kind != ACCESS_DELETE;
 			        case 'pm_Methodology':
@@ -445,10 +442,6 @@ class AccessPolicyProject extends AccessPolicyBase
 					    
 					case 'pm_AccessRight':
 						return $action_kind == ACCESS_READ;
-
-					case 'Blog':
-					case 'BlogPost':
-						return $this->project_it->getMethodologyIt()->get('IsBlogUsed') == 'Y';
 
                     case 'pm_SubversionRevision':
                         return $action_kind != ACCESS_MODIFY;

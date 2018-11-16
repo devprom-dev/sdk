@@ -200,7 +200,7 @@ class CommonAccessRight extends Metaobject
 	 			$data[] = array (
 	 				'ReferenceName' => get_class($object).'.'.$attribute,
 	 				'ReferenceType' => 'A',
-	 				'DisplayName' => $object->getDisplayName().'.'.translate($object->getAttributeUserName($attribute))
+	 				'DisplayName' => $object_it->get('Caption').'.'.translate($object->getAttributeUserName($attribute))
 	 			);
 			}
 			foreach( $object->getAttributesRemoved() as $attribute => $info )
@@ -208,7 +208,7 @@ class CommonAccessRight extends Metaobject
 				$data[] = array (
 						'ReferenceName' => get_class($object).'.'.$attribute,
 						'ReferenceType' => 'A',
-						'DisplayName' => $object->getDisplayName().'.'.translate($info['caption'])
+						'DisplayName' => $object_it->get('Caption').'.'.translate($info['caption'])
 				);
 			}
 

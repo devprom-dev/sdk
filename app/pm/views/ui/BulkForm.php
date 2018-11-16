@@ -113,7 +113,9 @@ class BulkForm extends BulkFormBase
 				break;
 
             case 'TransitionNotification':
-                $field = new FieldCheckNotifications();
+                $field = new FieldCheckNotifications(
+                    getFactory()->getObject('Transition')->getExact($_REQUEST['Transition'])
+                );
                 $field->setAnchor( $this->getIt() );
                 $field->SetId($attribute);
                 $field->SetName($attribute);

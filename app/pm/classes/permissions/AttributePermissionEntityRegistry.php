@@ -4,12 +4,7 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
 {
     function createSQLIterator( $sql )
     {
-        return $this->createIterator( array (
-            array (
-                'entityId' => 'pm_ChangeRequest',
-                'ReferenceName' => 'pm_ChangeRequest',
-                'Caption' => getFactory()->getObject('pm_ChangeRequest')->getDisplayName()
-            ),
+        $data = array (
             array (
                 'entityId' => 'pm_Task',
                 'ReferenceName' => 'pm_Task',
@@ -40,6 +35,32 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
                 'ReferenceName' => 'pm_Activity',
                 'Caption' => getFactory()->getObject('Activity')->getDisplayName()
             ),
-        ));
+        );
+
+        if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
+            if ( class_exists('Issue') ) {
+                $data[] = array (
+                    'entityId' => 'Issue',
+                    'ReferenceName' => 'Issue',
+                    'Caption' => getFactory()->getObject('Issue')->getDisplayName()
+                );
+            }
+            if ( class_exists('Increment') ) {
+                $data[] = array (
+                    'entityId' => 'pm_ChangeRequest',
+                    'ReferenceName' => 'pm_ChangeRequest',
+                    'Caption' => getFactory()->getObject('Increment')->getDisplayName()
+                );
+            }
+        }
+        else {
+            $data[] = array (
+                'entityId' => 'pm_ChangeRequest',
+                'ReferenceName' => 'pm_ChangeRequest',
+                'Caption' => getFactory()->getObject('pm_ChangeRequest')->getDisplayName()
+            );
+        }
+
+        return $this->createIterator($data);
     }
 }

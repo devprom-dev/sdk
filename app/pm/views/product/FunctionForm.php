@@ -60,7 +60,11 @@ class FunctionForm extends PMPageForm
 
  		if ( getFactory()->getAccessPolicy()->can_create($this->getObject()) )
  		{
- 			$type_it = getFactory()->getObject('FeatureType')->getAll();
+ 			$type_it = getFactory()->getObject('FeatureType')->getRegistry()->Query(
+ 			    array(
+ 			        new FilterBaseVpdPredicate()
+                )
+            );
 		    while( !$type_it->end() )
 		    {
 		        $method = new ObjectCreateNewWebMethod($this->getObject());

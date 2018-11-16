@@ -73,29 +73,15 @@ class TaskPlanningPage extends PMPage
 		}
  	}
  	
- 	function getTable() 
- 	{
-        $method = new ViewTaskListWebMethod();
-
-        $method->setFilter('iteration');
-    	
-		switch ( $method->getValue() )
-		{
-   		    case 'chart':
-				return $this->getTableDefault();
-
-    		default:
-				return $this->getTableDefault();
- 		}
+ 	function getTable() {
+        return $this->getTableDefault();
  	}
 
-	function needDisplayForm()
-	{
+	function needDisplayForm() {
 		return $_REQUEST['view'] == 'import' || in_array($_REQUEST['mode'], array('bulk','group')) || parent::needDisplayForm();
 	}
 	
-	function getBulkForm()
-	{
+	function getBulkForm() {
 		return new TaskBulkForm($this->getObject());
 	}
 	
@@ -135,7 +121,8 @@ class TaskPlanningPage extends PMPage
             'assignedtasks',
             'newtasks',
             'issuesmine',
-            'watchedtasks'
+            'watchedtasks',
+            'workitemchart'
         );
     }
 }

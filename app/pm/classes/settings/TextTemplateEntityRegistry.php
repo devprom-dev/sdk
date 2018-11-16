@@ -18,9 +18,9 @@ class TextTemplateEntityRegistry extends ObjectRegistrySQL
 		return $this->createIterator($data);
 	}
 
-	public static function getEntities() {
-        return array (
-            'Request' => 'Description',
+	public static function getEntities()
+    {
+        $values = array(
             'Task' => 'Description',
             'Release' => 'Description',
             'Iteration' => 'Description',
@@ -33,5 +33,19 @@ class TextTemplateEntityRegistry extends ObjectRegistrySQL
             'TestScenario' => 'Content',
             'HelpPage' => 'Content'
         );
+
+        if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD )
+        {
+            if ( class_exists('Issue') ) {
+                $values['Issue'] = 'Description';
+            }
+            if ( class_exists('Increment') ) {
+                $values['Increment'] = 'Description';
+            }
+        }
+        else {
+            $values['Request'] = 'Description';
+        }
+        return $values;
     }
 }

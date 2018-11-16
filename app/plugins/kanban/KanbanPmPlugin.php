@@ -2,7 +2,6 @@
 
 include "classes/widgets/FunctionalAreaMenuKanbanBuilder.php";
 include "classes/ReportsKanbanBuilder.php";
-include "classes/MethodologyKanbanMetadataBuilder.php";
 include "classes/StateKanbanMetadataBuilder.php";
 include "classes/RequestKanbanMetadataBuilder.php";
 include "classes/widgets/KanbanTourScriptBuilder.php";
@@ -64,9 +63,10 @@ class KanbanPmPlugin extends PluginPMBase
             array (
                 new ReportsKanbanBuilder( getSession() ),
                 new FunctionalAreaMenuKanbanBuilder(),
+
                 // model extenders
                 new StateKanbanMetadataBuilder(),
-                new MethodologyKanbanMetadataBuilder(),
+
                 // widgets
                 new KanbanTourScriptBuilder(getSession()),
                 new KanbanIssueStateBusinessRuleBuilder(),

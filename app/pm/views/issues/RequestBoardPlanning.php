@@ -243,7 +243,7 @@ class RequestBoardPlanning extends RequestBoard
 
         $workloadData = $this->workload[$groupValue]['Iterations'][intval($boardValue)];
         if ( is_array($workloadData) ) {
-            echo $this->getRenderView()->render('pm/UserWorkloadDetails.php', array (
+            echo $this->getRenderView()->render('pm/UserWorkloadProgress.php', array (
                 'data' => array( 'Iterations' => array($workloadData) ),
                 'measure' => $this->strategy
             ));

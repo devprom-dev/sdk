@@ -640,9 +640,6 @@ article.post th {
   padding: 5px;
   color: #363D45;
 }
-article.post table {
-  border: 1px solid #363D45;
-}
 
 .post blockquote {
   background: #f9f9f9;

@@ -81,4 +81,12 @@ class DateFormatRussian extends DateFormatBase
 		'Nov' => 'Нояб',
 		'Dec' => 'Дек',
 	);
+
+    function getExcelDateFormat() {
+        return 'dd.mm.yyyy';
+    }
+
+    function getExcelDateTimeFormat() {
+        return 'dd.mm.yyyy h:mm:ss';
+    }
 }

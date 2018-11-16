@@ -67,8 +67,6 @@
 
 	function showCommentForm( url, placeholder, comment_id, parent_id )
 	{
-		cookies.set('comments-state-<?=$form->getAnchorIt()->getId()?>', 'open', {hoursToLive:0});
-	
 		formDestroy('<?=$form->getId()?>');
 
 		lastForm.html(lastFormContent);

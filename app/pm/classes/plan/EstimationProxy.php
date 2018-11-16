@@ -45,7 +45,8 @@ class EstimationProxy
             return getSession()->getLanguage()->getDateUserFormatted( $finish_date, $format );
         }
         else {
-            return $finish_date;
+            $mapper = new ModelDataTypeMappingDate();
+            return $mapper->map($finish_date);
         }
     }
 }

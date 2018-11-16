@@ -12,7 +12,7 @@ class FieldDateTime extends Field
 		parent::setValue(
             str_replace('00:00', '',
                 getSession()->getLanguage()->getDateTimeFormatted(
-                    SystemDateTime::convertToServerTime($value)
+                    SystemDateTime::convertToClientTime($value)
                 )
             )
         );

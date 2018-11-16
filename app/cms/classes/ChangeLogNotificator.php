@@ -65,45 +65,45 @@ class ChangeLogNotificator extends ObjectFactoryNotificator
 		foreach( $attributes as $att_name => $attribute ) 
 		{
 		    if ( !$object_it->defined($att_name) || !$prev_object_it->defined($att_name) ) continue;
+            if ( !$this->isAttributeVisible($att_name, $object_it, 'modify') ) continue;
 
-            if ( $object_it->object->getAttributeType($att_name) == 'date' ) {
-                $was_value = getSession()->getLanguage()->getDateFormattedShort($prev_object_it->get($att_name));
-                $now_value = getSession()->getLanguage()->getDateFormattedShort($object_it->get($att_name));
-            }
-            elseif ( $object_it->object->getAttributeType($att_name) == 'datetime' ) {
-                $was_value = getSession()->getLanguage()->getDateTimeFormatted($prev_object_it->get($att_name));
-                $now_value = getSession()->getLanguage()->getDateTimeFormatted($object_it->get($att_name));
-            }
-            else {
-                $was_value = $prev_object_it->getHtmlDecoded($att_name);
-                $now_value = $object_it->getHtmlDecoded($att_name);
-            }
+            $was_value = $this->getValue($prev_object_it, $att_name);
+            $now_value = $this->getValue($object_it, $att_name);
 			if( $was_value == $now_value ) continue;
 			
 			$modified_attributes[] = $att_name;
-			if( !$this->isAttributeVisible($att_name, $object_it, 'modify') ) continue;
 
             $content = translate($object_it->object->getAttributeUserName($att_name)).': ';
-            $content .= $this->getAttributeContent($prev_object_it, $object_it, $att_name);
+            $content .= $this->getAttributeContent($object_it, $att_name, $was_value, $now_value);
         }
 
         return array($content, $modified_attributes);
 	}
 
-	protected function getAttributeContent($prev_object_it, $object_it, $att_name)
+	protected function getValue( $objectIt, $attribute )
     {
-        if ( $object_it->object->IsReference($att_name) )
-        {
-            return html_entity_decode($object_it->getRef($att_name)->getDisplayName());
+        if ( $objectIt->object->getAttributeType($attribute) == 'date' ) {
+            return getSession()->getLanguage()->getDateFormattedShort($objectIt->get($attribute));
+        }
+        elseif ( $objectIt->object->getAttributeType($attribute) == 'datetime' ) {
+            return getSession()->getLanguage()->getDateTimeFormatted($objectIt->get($attribute));
+        }
+        elseif ( $objectIt->object->IsReference($attribute) ) {
+            return html_entity_decode($objectIt->getRef($attribute)->getDisplayName());
         }
         else {
-            $now_value = $object_it->getHtmlDecoded($att_name);
+            $value = $objectIt->getHtmlDecoded($attribute);
 
-            if ( $now_value == 'Y' ) $now_value = translate('Да');
-            if ( $now_value == 'N' ) $now_value = translate('Нет');
+            if ( $value == 'Y' ) $value = translate('Да');
+            if ( $value == 'N' ) $value = translate('Нет');
 
-            return $now_value;
+            return $value;
         }
+    }
+
+	protected function getAttributeContent($object_it, $att_name, $wasValue, $nowValue)
+    {
+        return $nowValue;
     }
 
 	function process( $object_it, $kind, $content = '', $visibility = 1, $author_email = '', $parms = array())

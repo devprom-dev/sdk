@@ -37,12 +37,6 @@ class ChangeLogEntitiesProjectBuilder extends ChangeLogEntitiesBuilder
             'cms_SnapshotItem'
  		);
         
-        if ( $methodology_it->get('IsBlogUsed') == 'Y' )
-        {
-            $entities[] = 'BlogPost';
-            $entities[] = 'BlogPostFile';
-        }
-        
         if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' )
         {
             $entities[] = 'ProjectPage';

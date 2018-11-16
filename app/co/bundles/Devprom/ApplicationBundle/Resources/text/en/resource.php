@@ -54,5 +54,6 @@ $text_array = array
 	52 => 'Choose relevant process for new activity or project, setup own process using options of <b>methodology</b>',
 	53 => 'Adjust templates',
     54 => 'Use the best of <b>Agile and Lean</b> to improve quality of your product development process',
-    55 => 'Improve product'
+    55 => 'Improve product',
+    56 => 'Choose process <b>adapted</b> for technology and approach you use'
 );
