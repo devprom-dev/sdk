@@ -152,6 +152,8 @@ class CreateProjectService
 		$parms['IsActive'] = 'Y';
 		$parms['Project'] = $project_id;
 		$parms['VPD'] = \ModelProjectOriginationService::getOrigin($project_id);
+		$parms['NotificationTrackingType'] = 'system';
+        $parms['NotificationEmailType'] = 'direct';
 
 		$id = $part_cls->add_parms($parms);
 

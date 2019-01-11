@@ -50,11 +50,22 @@ class WorkloadDetailsList extends PMDetailsList
 
     function getLeftWork( $object_it )
     {
-        $work = getFactory()->getObject('WorkItem');
+        $leftWorkValue = 0;
+
+        $work = getFactory()->getObject('Task');
         $work->addFilter( new FilterAttributePredicate('Assignee', $object_it->getId()) );
         $sum_aggregate = new AggregateBase( 'Assignee', 'LeftWork', 'SUM' );
         $work->addAggregate( $sum_aggregate );
         $workIt = $work->getAggregated();
-        return $workIt->get($sum_aggregate->getAggregateAlias());
+        $leftWorkValue += $workIt->get($sum_aggregate->getAggregateAlias());
+
+        $work = getFactory()->getObject('Request');
+        $work->addFilter( new FilterAttributePredicate('Owner', $object_it->getId()) );
+        $sum_aggregate = new AggregateBase( 'Owner', 'EstimationLeft', 'SUM' );
+        $work->addAggregate( $sum_aggregate );
+        $workIt = $work->getAggregated();
+        $leftWorkValue += $workIt->get($sum_aggregate->getAggregateAlias());
+
+        return $leftWorkValue;
     }
 }

@@ -192,6 +192,7 @@ class TransitionStateMethod extends WebMethod
             if ( $key == 'attribute' ) $required[$required[$key]] = $required['value'];
 		}
 
+        $required['WasRecordVersion'] = $object_it->get('RecordVersion');
 		$object_it->object->modify_parms($object_it->getId(), $required);
 
         if ( $doEvents ) {

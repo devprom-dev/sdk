@@ -7,6 +7,7 @@ include_once "persisters/WikiPageDetailsPersister.php";
 include_once 'persisters/DocumentVersionPersister.php';
 include_once "persisters/WikiPageModifierPersister.php";
 include_once "persisters/WikiPageIsIncludedPersister.php";
+include "persisters/WikiPageFeaturePersister.php";
 
 class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder 
 {
@@ -46,6 +47,17 @@ class WikiPageMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addAttribute('IncludedIn', 'REF_'.get_class($object).'Id', translate('Включено в'), true);
         $metadata->addAttributeGroup('IncludedIn', 'trace');
         $metadata->addPersister( new WikiPageIsIncludedPersister() );
+
+        if ( !$object instanceof ProjectPage ) {
+            $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+            if( $methodology_it->HasFeatures() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Feature')) )
+            {
+                $metadata->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), true, false);
+                $metadata->addPersister( new WikiPageFeaturePersister() );
+                $metadata->addAttributeGroup('Feature', 'trace');
+                $metadata->addAttributeGroup('Feature', 'bulk');
+            }
+        }
 
         if ( $metadata->getObject() instanceof ProjectPage ) {
             foreach ( array('State') as $attribute ) {

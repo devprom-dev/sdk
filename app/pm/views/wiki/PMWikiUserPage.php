@@ -361,13 +361,11 @@ class PMWikiUserPage extends PMPage
 
         $exportOptions = preg_split('/-/', $_REQUEST['options']);
         return $registry->Query(
-            array_merge(
-                array(
-                    $_REQUEST['options'] == '' || in_array('children', $exportOptions)
-                        ? new ParentTransitiveFilter($ids)
-                        : new FilterInPredicate($ids),
-                    new SortDocumentClause()
-                )
+            array(
+                $_REQUEST['options'] == '' || in_array('children', $exportOptions)
+                    ? new ParentTransitiveFilter($ids)
+                    : new FilterInPredicate($ids),
+                new SortDocumentClause()
             )
         );
     }

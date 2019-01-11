@@ -9,7 +9,26 @@ class StoreMetricsService
 {
  	function execute( $project_it, $force = false )
  	{
- 		$this->storeProjectMetrics($project_it, $force);
+ 		$this->storeProjectMetrics(
+ 		    $project_it,
+            getFactory()->getObject('Release')->getRegistry()->Query(
+                array (
+                    new \FilterAttributePredicate('Project', $project_it->getId()),
+                    $force
+                        ? new \FilterDummyPredicate()
+                        : new \ReleaseTimelinePredicate('not-passed')
+                )
+            ),
+            getFactory()->getObject('Iteration')->getRegistry()->Query(
+                array (
+                    new \FilterAttributePredicate('Project', $project_it->getId()),
+                    new \FilterHasNoAttributePredicate('Version'),
+                    $force
+                        ? new \FilterDummyPredicate()
+                        : new \IterationTimelinePredicate(\IterationTimelinePredicate::NOTPASSED)
+                )
+            )
+        );
 
 		$registry = getFactory()->getObject('Request')->getRegistry();
  		$this->storeIssueMetrics(
@@ -49,34 +68,22 @@ class StoreMetricsService
 		);
  	}
  	
- 	function storeProjectMetrics( $project_it, $force )
+ 	function storeProjectMetrics( $project_it, $version_it, $iteration_it )
  	{
         getFactory()->resetCachedIterator($project_it->object);
 
-        $version_it = getFactory()->getObject('Release')->getRegistry()->Query(
-            array (
-                new \FilterAttributePredicate('Project', $project_it->getId()),
-                $force
-                    ? new \FilterDummyPredicate()
-                    : new \ReleaseTimelinePredicate('not-passed')
-            )
-        );
-        while ( !$version_it->end() ) {
-            $version_it->storeMetrics();
-            $version_it->moveNext();
+        if ( $version_it instanceof \OrderedIterator ) {
+            while ( !$version_it->end() ) {
+                $version_it->storeMetrics();
+                $version_it->moveNext();
+            }
         }
-        $iteration_it = getFactory()->getObject('Iteration')->getRegistry()->Query(
-            array (
-                new \FilterAttributePredicate('Project', $project_it->getId()),
-                new \FilterHasNoAttributePredicate('Version'),
-                $force
-                    ? new \FilterDummyPredicate()
-                    : new \IterationTimelinePredicate(\IterationTimelinePredicate::NOTPASSED)
-            )
-        );
-        while ( !$iteration_it->end() ) {
-            $iteration_it->storeMetrics();
-            $iteration_it->moveNext();
+
+        if ( $iteration_it instanceof \OrderedIterator ) {
+            while ( !$iteration_it->end() ) {
+                $iteration_it->storeMetrics();
+                $iteration_it->moveNext();
+            }
         }
 
         $methodology_it = $project_it->getMethodologyIt();

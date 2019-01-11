@@ -158,33 +158,30 @@ class DuplicateWebMethod extends WebMethod
  	    
  	    // prepare list of objects to be serilalized
  	    $references = $this->getReferences();
+        $ids_map = array();
 
  	    $xml = '<?xml version="1.0" encoding="'.APP_ENCODING.'"?><entities>';
- 	    
- 	    $ids_map = array();
- 	    
- 	    foreach( $references as $object )
- 	    {
+ 	    foreach( $references as $object ) {
  	       $xml .= $object->serialize2Xml();
- 	       
  	       $ids_map = array_merge($ids_map, $this->getIdsMap($object));
  	    }
- 	    
  	    $xml .= '</entities>';
   
  	    $object_it = $this->getObjectIt();
- 	    $source_ids = $object_it->idsToArray();
 
- 	    // duplicate serialized data in the target project
- 	    $session = new PMSession( $project_it );
- 	    
  	    $context = $this->buildContext();
  	    $context->setIdsMap( $ids_map );
- 	    // bind data to existing objects if any
- 	    $context->setUseExistingReferences( true );
+
+ 	    if ( getSession()->getProjectIt()->getId() == $project_it->getId() ) {
+            // bind data to existing objects if any
+            $context->setUseExistingReferences( true );
+        }
 		if ( $_REQUEST['Owner'] == '' ) {
 			$context->setResetAssignments();
 		}
+
+        // duplicate serialized data in the target project
+        $session = new PMSession( $project_it );
 
  	    foreach( $references as $object )
  	    {

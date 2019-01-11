@@ -31,8 +31,6 @@ class UpdateDownload extends MaintenanceCommand
 
 	function create()
 	{
-		global $model_factory, $_FILES;
-
 		$logger = $this->getLogger();
 		
 		if ( is_object($logger) ) $logger->info('Download update on the url: '.$this->update_info['download_url']);

@@ -19,7 +19,7 @@ class TaskBusinessActionDeclineIssue extends BusinessActionWorkflow
 		getFactory()->resetCachedIterator($request);
  		getSession()->addBuilder( new RequestModelExtendedBuilder() );
  		
- 		$request_it = $object_it->getRef('ChangeRequest');
+ 		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 
         if ( $request_it->object->getAttributeType('OpenTasks') == '' ) return true;
 		$task_it = $request_it->getRef('OpenTasks');

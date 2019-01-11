@@ -72,8 +72,11 @@ class TextUtils
                 );
     }
 
-    public static function stripAnyTags( $text ) {
-        return preg_replace('/(?:<|&lt;)\/?([a-zA-Z]+) *[^<\/]*?(?:>|&gt;)/', '', self::removeHtmlEntities($text));
+    public static function stripAnyTags( $text )
+    {
+        $text = preg_replace('/(?:<|&lt;)\/?([a-zA-Z]+) *[^<\/]*?(?:>|&gt;)/', '', self::removeHtmlEntities($text));
+        $text = preg_replace('/\s{3,}/', ' ', $text);
+        return trim($text, ' '.PHP_EOL);
     }
 
     public static function getCleansedHtml( $body )

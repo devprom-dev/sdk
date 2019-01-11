@@ -274,8 +274,6 @@ class TaskForm extends PMPageForm
 	{
 		$field = parent::createField( $attr );
 
-		$object_it = $this->getObjectIt();
-
     	if ( $_REQUEST['Transition'] > 0 )
     	{
     		switch ( $attr )
@@ -298,6 +296,9 @@ class TaskForm extends PMPageForm
 
 	function getFieldValue( $attr )
 	{
+        $value = parent::getFieldValue( $attr );
+        if ( $value != '' ) return $value;
+
 		switch( $attr )
 		{
 		    case 'TaskType':
@@ -335,9 +336,6 @@ class TaskForm extends PMPageForm
 		    	break;
 
             case 'Release':
-                $value = parent::getFieldValue( $attr );
-                if ( $value != '' ) return $value;
-
                 $request_id = parent::getFieldValue('ChangeRequest');
                 if ( $request_id > 0 ) {
                     return getFactory()->getObject('Request')->getExact($request_id)->get('Iteration');
@@ -352,9 +350,6 @@ class TaskForm extends PMPageForm
 		switch( $attr )
 		{
 			case 'Assignee':
-                $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-                if ( !$methodology_it->IsParticipantsTakesTasks() ) return '';
-
 				$type_id = $this->getFieldValue('TaskType');
 				return $type_id > 0
 					? TaskDefaultsService::getAssignee($type_id) : parent::getDefaultValue( $attr );

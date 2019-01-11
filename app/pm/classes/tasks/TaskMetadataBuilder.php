@@ -79,6 +79,12 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
         $metadata->addPersister( new TaskDetailsPersister() );
         $metadata->addPersister( new TaskAssigneePersister() );
 
+        $priority = new Priority();
+        $priorityIt = $priority->getByRef('IsDefault', 'Y');
+        if ( $priorityIt->getId() != '' ) {
+            $metadata->setAttributeDefault('Priority', $priorityIt->getId());
+        }
+
 		$this->removeAttributes( $metadata, getSession()->getProjectIt()->getMethodologyIt() );
     }
     
@@ -89,10 +95,6 @@ class TaskMetadataBuilder extends ObjectMetadataEntityBuilder
 
         if ( !$methodology_it->IsTimeTracking() ) {
             $metadata->removeAttribute( 'Fact' );
-        }
-
-        if ( !$methodology_it->HasPlanning() ) {
-            $metadata->removeAttribute( 'Release' );
         }
 
         if ( !$methodology_it->TaskEstimationUsed() ) {

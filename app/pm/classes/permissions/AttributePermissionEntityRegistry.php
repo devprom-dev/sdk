@@ -6,27 +6,27 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
     {
         $data = array (
             array (
-                'entityId' => 'pm_Task',
+                'entityId' => 'task',
                 'ReferenceName' => 'pm_Task',
                 'Caption' => getFactory()->getObject('pm_Task')->getDisplayName()
             ),
             array (
-                'entityId' => 'pm_Function',
+                'entityId' => 'feature',
                 'ReferenceName' => 'pm_Function',
                 'Caption' => getFactory()->getObject('pm_Function')->getDisplayName()
             ),
             array (
-                'entityId' => 'pm_Milestone',
+                'entityId' => 'milestone',
                 'ReferenceName' => 'pm_Milestone',
                 'Caption' => getFactory()->getObject('pm_Milestone')->getDisplayName()
             ),
             array (
-                'entityId' => 'pm_Release',
+                'entityId' => 'iteration',
                 'ReferenceName' => 'pm_Release',
                 'Caption' => getFactory()->getObject('pm_Release')->getDisplayName()
             ),
             array (
-                'entityId' => 'pm_Version',
+                'entityId' => 'release',
                 'ReferenceName' => 'pm_Version',
                 'Caption' => getFactory()->getObject('pm_Version')->getDisplayName()
             ),
@@ -40,14 +40,14 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
         if ( getSession()->getProjectIt()->getMethodologyIt()->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
             if ( class_exists('Issue') ) {
                 $data[] = array (
-                    'entityId' => 'Issue',
+                    'entityId' => 'issue',
                     'ReferenceName' => 'Issue',
                     'Caption' => getFactory()->getObject('Issue')->getDisplayName()
                 );
             }
             if ( class_exists('Increment') ) {
                 $data[] = array (
-                    'entityId' => 'pm_ChangeRequest',
+                    'entityId' => 'request',
                     'ReferenceName' => 'pm_ChangeRequest',
                     'Caption' => getFactory()->getObject('Increment')->getDisplayName()
                 );
@@ -55,7 +55,7 @@ class AttributePermissionEntityRegistry extends ObjectRegistrySQL
         }
         else {
             $data[] = array (
-                'entityId' => 'pm_ChangeRequest',
+                'entityId' => 'request',
                 'ReferenceName' => 'pm_ChangeRequest',
                 'Caption' => getFactory()->getObject('pm_ChangeRequest')->getDisplayName()
             );

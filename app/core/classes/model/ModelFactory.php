@@ -96,6 +96,10 @@ class ModelFactory extends ModelFactoryBase
 			}
 		}
 
+		if ( strtolower($class_name) == 'metaobject' ) {
+		    return '';
+        }
+
 		return $class_name;
 	}
  	

@@ -507,7 +507,7 @@ class FormEmbedded
 					echo '<input type="hidden" name="embeddedAnchor'.$this->form_id.'" value="'.$this->anchor_field.'">';
 	
 					// draw exist embedded items
-					echo '<div id="embeddedItems'.$this->form_id.'">';
+					echo '<div id="embeddedItems'.$this->form_id.'" style="position:relative;">';
 					
 					$object_it = $this->getIteratorRef();
 					

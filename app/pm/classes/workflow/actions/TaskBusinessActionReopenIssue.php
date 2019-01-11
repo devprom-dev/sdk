@@ -17,7 +17,7 @@ class TaskBusinessActionReopenIssue extends BusinessActionWorkflow
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
 
-		$request_it = $object_it->getRef('ChangeRequest');
+		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 		if ( !in_array($request_it->get('State'), $request_it->object->getTerminalStates()) ) return true;
 		
 		$service = new WorkflowService($request_it->object);

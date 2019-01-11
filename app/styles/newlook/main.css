@@ -416,7 +416,9 @@ a.dashed:hover {
 	padding-left:8px;
 	padding-right:8px;
 	outline: none;
-	overflow-x: hidden;
+}
+.collapse.in {
+	overflow: inherit;
 }
 
 .actions {

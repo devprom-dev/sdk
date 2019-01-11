@@ -299,6 +299,16 @@ class PMPageNavigation extends PageNavigation
         }
 
         $projectActions = array();
+
+        $inviteUrl = $this->getInviteUserUrl();
+        if ( $inviteUrl != '' ) {
+            $projectActions[] =
+                array(
+                    'url' => $inviteUrl,
+                    'name' => translate('Участник')
+                );
+        }
+
         $module = getFactory()->getObject('Module');
 
         $projectIt = getSession()->getProjectIt();
@@ -393,6 +403,7 @@ class PMPageNavigation extends PageNavigation
             $method->setRedirectUrl("function(){javascript:window.location='".getFactory()->getObject('Module')->getExact('permissions/participants')->get('Url')."'}");
         }
 
+        $method->setRedirectUrl('donothing');
         return $method->getJSCall();
     }
 }

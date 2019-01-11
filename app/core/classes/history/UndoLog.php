@@ -14,6 +14,7 @@ class UndoLog
         if ( !is_object($object_it->object) ) return false;
         switch( $object_it->object->getEntityRefName() ) {
             case 'ObjectChangeLog':
+            case 'pm_State':
                 return false;
         }
         return strtolower(get_class($object_it->object)) != 'metaobject';

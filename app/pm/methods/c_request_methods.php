@@ -157,60 +157,6 @@ include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";
  	 }
  }
 
- //////////////////////////////////////////////////////////////////////////////////////
- class ViewRequestListViewWebMethod extends ViewRequestWebMethod
- {
- 	var $default_value = 'list';
- 	
- 	function setDefaultValue( $value )
- 	{
- 		$this->default_value = $value;
- 	}
- 	
- 	function getCaption()
- 	{
- 		return translate('Вид');
- 	}
-
- 	function getValues()
- 	{
-  		return array (
- 			'list' => translate('Список'), 
- 			'board' => translate('Доска'),
- 			'trace' => translate('Трассировка'),
- 			'chart' => translate('График')
- 			);
-	}
-
-	function getStyle()
-	{
-		return 'width:110px;';
-	}
-
- 	function getValueParm()
- 	{
- 		return 'view';
- 	}
- 
- 	function getValue()
- 	{
- 		$value = parent::getValue();
- 		
- 		if ( $value == '' )
- 		{
- 			return $this->default_value; 
- 		}
- 		
- 		return $value;
- 	}
- 	
- 	function getType()
- 	{
- 		return 'singlevalue';
- 	}
- 	
- }
-
   ///////////////////////////////////////////////////////////////////////////////////////
  class ViewRequestTaskTypeWebMethod extends ViewRequestWebMethod
  {

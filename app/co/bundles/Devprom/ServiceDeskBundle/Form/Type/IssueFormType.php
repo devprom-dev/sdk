@@ -26,6 +26,12 @@ class IssueFormType extends AbstractType
     {
 		$vpds = $this->vpds;
 
+        $result = $this->em->getRepository('DevpromServiceDeskBundle:Severity')->findBy(
+            array(
+                "default" => 'Y'
+            )
+        );
+
     	$builder
             ->add('caption', 'text', array('label' => 'issue_caption'))
             ->add('description', 'textarea', array('label' => 'issue_description'))
@@ -36,6 +42,7 @@ class IssueFormType extends AbstractType
                     return $er->createQueryBuilder('t')
                         ->orderBy('t.orderNum', 'asc');
                 },
+                'data' => array_shift($result)
             ));
 
         $result = $this->em->getRepository('DevpromServiceDeskBundle:IssueType')->findBy(

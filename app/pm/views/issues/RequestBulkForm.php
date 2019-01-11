@@ -4,14 +4,23 @@ include_once SERVER_ROOT_PATH.'pm/views/ui/BulkForm.php';
 
 class RequestBulkForm extends BulkForm
 {
- 	function buildForm()
+    private $formClass;
+
+    function __construct( $object, $formClass )
+    {
+        parent::__construct($object);
+        $this->formClass = $formClass;
+    }
+
+    function buildForm()
  	{
 		$object = $this->getObject();
 
 		$object->addAttribute('TransitionComment', 'WYSIWYG', translate('Комментарий'), false);
         $object->addAttribute('SourceIssue', 'REF_RequestId', translate('Пожелание'), false);
 
- 		return new RequestForm($object);
+        $class_name = $this->formClass;
+ 		return new $class_name($object);
  	}
 
 	function getActionAttributes()

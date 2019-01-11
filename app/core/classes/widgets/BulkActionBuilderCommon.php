@@ -12,7 +12,7 @@ class BulkActionBuilderCommon extends BulkActionBuilder
  		{
 			$registry->addDeleteAction(
 					translate('Удалить'),
-					'Method:BulkDeleteWebMethod:class='.strtolower(get_class($object)).':objects=%ids%'
+					'Method:BulkDeleteWebMethod:class='.strtolower(get_class($object))
 			);
 		}
 

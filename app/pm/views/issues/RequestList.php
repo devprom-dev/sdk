@@ -161,6 +161,15 @@ class RequestList extends PMPageList
                 }
                 break;
 
+            case 'Type':
+                if ( $object_it->get($attr) != '' ) {
+                    parent::drawRefCell( $entity_it, $object_it, $attr );
+                }
+                else {
+                    echo $object_it->getObjectDisplayName();
+                }
+                break;
+
 			default:
 				parent::drawRefCell( $entity_it, $object_it, $attr );
 		}
@@ -171,15 +180,14 @@ class RequestList extends PMPageList
 		switch ( $attr )
 		{
 			case 'Caption':
-    		    if ( !$this->visible_columns['Type'] && $this->type_it->count() > 0 )
-    		    {
+    		    if ( !$this->visible_columns['Type'] && $this->type_it->count() > 0 ) {
     		    	$this->type_it->moveToId($object_it->get('Type'));
 					echo '<img src="/images/'.IssueTypeFrame::getIcon($this->type_it).'">&nbsp;';
-					if ( $this->type_it->getId() != '' ) {
-						echo $this->type_it->getDisplayName().': ';
-					}
+                    echo $object_it->getDisplayName();
     		    }
-                parent::drawCell($object_it, $attr);
+    		    else {
+                    parent::drawCell($object_it, $attr);
+                }
 			break;
 			
 			case 'Estimation':

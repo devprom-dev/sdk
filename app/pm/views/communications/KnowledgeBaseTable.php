@@ -11,13 +11,14 @@ class KnowledgeBaseTable extends PMWikiTable
 	
 	function getFilters()
 	{
-		$object = $this->getObject();
-		
 		$filters = array(
-			new ViewWikiModifiedAfterDateWebMethod(),
 			$this->buildTagsFilter()
 			);
-			
+        $filters[] = new ViewSubmmitedAfterDateWebMethod();
+        $filters[] = new ViewSubmmitedBeforeDateWebMethod();
+        $filters[] = new ViewModifiedAfterDateWebMethod();
+        $filters[] = new ViewModifiedBeforeDateWebMethod();
+
 		return $filters;
 	}
 

@@ -15,9 +15,11 @@ class TaskBusinessActionMoveIssueNextStateExt extends BusinessActionWorkflow
 
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
-		$request_it = $object_it->getRef('ChangeRequest');
+		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 
-		$types = getFactory()->getObject('IssueState')->getByRef('ReferenceName',$request_it->get('State'))->get('TaskTypes');
+		$types = getFactory()->getObject($request_it->object->getStateClassName())
+            ->getByRef('ReferenceName',$request_it->get('State'))->get('TaskTypes');
+
         if ( $types == '' ) return true;
 
         $taskStates =

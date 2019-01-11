@@ -29,10 +29,8 @@ class Snapshot extends Metaobject
 	 */
 	function freeze( $snapshot_id, $classname, $items, $attributes )
 	{
-		global $model_factory;
-		
 		// get records to be snapshot items
-		$anchor = $model_factory->getObject($classname);
+		$anchor = getFactory()->getObject($classname);
 		
 	 	if ( $anchor instanceof WikiPage && count($items) == 1 )
  		{
@@ -46,9 +44,8 @@ class Snapshot extends Metaobject
  		}
 		
 		// append items into snapshot
-		$snapshotitem = $model_factory->getObject('cms_SnapshotItem');
-
-		$itemvalue = $model_factory->getObject('cms_SnapshotItemValue');
+		$snapshotitem = getFactory()->getObject('cms_SnapshotItem');
+		$itemvalue = getFactory()->getObject('cms_SnapshotItemValue');
 		
 		while ( !$anchor_it->end() )
 		{
@@ -61,11 +58,24 @@ class Snapshot extends Metaobject
 			// freeze values of each item
 			foreach ( $attributes as $attribute )
 			{
-				$itemvalue->add_parms( array ( 
-						'SnapshotItem' => $item_id,
-						'Caption' => $anchor->getAttributeUserName($attribute),
-						'ReferenceName' => $attribute,
-						'Value' => $anchor_it->getHtmlDecoded($attribute) 
+			    $type = $anchor->getAttributeType($attribute);
+			    switch ( $type ) {
+                    case 'wysiwyg':
+                        $editor = WikiEditorBuilder::build();
+                        $parser = $editor->getHtmlParser();
+                        $parser->setObjectIt( $anchor_it->copy() );
+                        $value = $parser->parse( $anchor_it->getHtmlDecoded($attribute) );
+                        break;
+                    default:
+                        $value = $anchor_it->getHtmlDecoded($attribute);
+                        break;
+                }
+
+				$itemvalue->add_parms( array (
+                    'SnapshotItem' => $item_id,
+                    'Caption' => $anchor->getAttributeUserName($attribute),
+                    'ReferenceName' => $attribute,
+                    'Value' => $value
 				));
 			}
 			

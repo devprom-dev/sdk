@@ -235,14 +235,8 @@ class BulkFormBase extends AjaxForm
 	        return $this->getObject()->getEmptyIterator();
         }
 
-	    $this->it = $this->getObject()->getRegistry()->Query(
-	        array(
-	            new FilterInPredicate($ids),
-                new FilterVpdPredicate()
-            )
-        );
-
-	    return $this->it->object->createCachedIterator($this->it->getRowset());    
+	    $this->it = $this->getObject()->getExact($ids);
+	    return $this->it->object->createCachedIterator($this->it->getRowset());
 	}
 
 	function getIds() {

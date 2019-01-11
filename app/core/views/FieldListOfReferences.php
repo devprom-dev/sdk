@@ -34,7 +34,7 @@ class FieldListOfReferences extends Field
             $widget_it = getFactory()->getObject('ObjectsListWidget')->getByRef('Caption', get_class($this->object_it->object));
             if ( $widget_it->getId() != '' ) {
                 $url = getFactory()->getObject($widget_it->get('ReferenceName'))->getExact($widget_it->getId())->getUrl(
-                    strtolower(get_class($this->object_it->object)).'='.\TextUtils::buildIds($ids)
+                    strtolower(get_class($this->object_it->object)).'='.\TextUtils::buildIds($this->object_it->idsToArray())
                 );
             }
         }

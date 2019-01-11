@@ -1,5 +1,5 @@
 <?php
- 
+include_once SERVER_ROOT_PATH . "pm/classes/workflow/MetaobjectStatable.php";
 include "TaskIterator.php";
 include "predicates/TaskCategoryPredicate.php";
 include "predicates/TaskTypeBasePredicate.php";

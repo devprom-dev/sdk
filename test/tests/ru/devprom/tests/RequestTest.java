@@ -247,11 +247,7 @@ public class RequestTest extends ProjectTestBase {
 	@Test
 	public void editRequest() throws InterruptedException {
 		new PageBase(driver).gotoProject(webTest);
-		FunctionsPage fp = (new SDLCPojectPageBase(driver)).gotoFunctions();
-		FunctionNewPage nfp = fp.clickNewFunction();
-		ProductFunction pfunction = new ProductFunction("MyTestFunction" + DataProviders.getUniqueString());
-		fp = nfp.createNewFunction(pfunction);
-		DocumentsPage dp = fp.gotoDocuments();
+		DocumentsPage dp = (new SDLCPojectPageBase(driver)).gotoDocuments();
 		DocumentNewPage ndp = dp.clickNewDoc();
 		Document tDoc = new Document("TestDoc"
 				+ DataProviders.getUniqueString(), "Some document body");
@@ -275,8 +271,6 @@ public class RequestTest extends ProjectTestBase {
 				"some test description 2"));
 		testRequest.addSpentTimeRecord("", 2, user,
 				"some test description 2");
-		rep.addFunction(pfunction);
-		testRequest.setPfunction(pfunction.getName());
 		testRequest.setVersion("0.1");
 		rep.addLinkedReqs(linkedRequest.getName(),
 				Request.getRandomLinkType());

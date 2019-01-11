@@ -6,14 +6,14 @@ class PlanItemsEventHandler extends SystemTriggersBase
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
 	{
 	    if ( $object_it->object instanceof Release ) {
-	        $this->buildProjectMetrics();
+	        $this->buildProjectMetrics($object_it->copy());
         }
         if ( $object_it->object instanceof Iteration ) {
-            $this->buildProjectMetrics();
+            $this->buildProjectMetrics($object_it->copy());
         }
 	}
 
-	function buildProjectMetrics()
+	function buildProjectMetrics($object_it)
     {
         if ( getSession()->getUserIt()->getId() < 1 ) return;
 
@@ -22,9 +22,13 @@ class PlanItemsEventHandler extends SystemTriggersBase
             array(
                 'ProjectMetrics' => $projectId
             ),
-            function() use ( $projectId ) {
+            function() use ( $projectId, $object_it ) {
                 $service = new StoreMetricsService();
-                $service->storeProjectMetrics($projectId, true);
+                $service->storeProjectMetrics(
+                    $projectId,
+                    $object_it instanceof ReleaseIterator ? $object_it : null,
+                    $object_it instanceof IterationIterator ? $object_it : null
+                );
             }
         );
     }

@@ -9,7 +9,6 @@ class Priority extends MetaobjectCacheable
  		parent::__construct('Priority');
  		
  		$this->setSortDefault( new SortOrderedClause() );
- 		
  		$this->setAttributeDescription( 'RelatedColor', text(1853) );
  	}
  	
@@ -21,5 +20,20 @@ class Priority extends MetaobjectCacheable
     function getPage()
     {
         return '/admin/dictionaries.php?dict=Priority';
+    }
+
+    function modify_parms($id, $parms)
+    {
+        if ( $parms['IsDefault'] == 'Y' ) {
+            $registry = $this->getRegistryBase();
+            $objectIt = $registry->Query();
+            while( !$objectIt->end() ) {
+                $registry->Store($objectIt, array(
+                    'IsDefault' => 'N'
+                ));
+                $objectIt->moveNext();
+            }
+        }
+        return parent::modify_parms($id, $parms);
     }
 }

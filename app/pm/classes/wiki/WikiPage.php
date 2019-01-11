@@ -1,4 +1,6 @@
 <?php
+use Devprom\ProjectBundle\Service\Model\ModelService;
+
 include_once SERVER_ROOT_PATH."pm/classes/workflow/MetaobjectStatable.php";
 include_once SERVER_ROOT_PATH.'pm/classes/wiki/WikiType.php';
 include "WikiPageIterator.php";
@@ -17,6 +19,7 @@ include "predicates/WikiTypePlusChildren.php";
 include "predicates/WikiTraceBrokenPredicate.php";
 include "predicates/WikiOriginalFilter.php";
 include "predicates/WikiDocumentWaitFilter.php";
+include "predicates/PMWikiTransitiveLinkedStateFilter.php";
 include "persisters/WikiPageRevisionPersister.php";
 include 'persisters/WikiPageTracesRevisionsPersister.php';
 include "persisters/WikiPageHistoryPersister.php";
@@ -132,10 +135,12 @@ class WikiPage extends MetaobjectStatable
                 new FilterInPredicate($id)
             )
         );
-		
-		$this->updateParentPath($object_it);
+
+        $documentId = $this->updateParentPath($object_it);
 		$this->updateSortIndexAndSections($object_it);
-		$this->updateUID($object_it);
+		if ( !$this->updateUIDs($documentId) ) {
+            $this->updateUID($object_it);
+        }
 
 		return $id;
 	}
@@ -183,13 +188,54 @@ class WikiPage extends MetaobjectStatable
 			$this->updateParentPath($now_it);
             $this->updateSortIndexAndSections($wasObjectIt);
             $this->updateSortIndexAndSections($now_it);
+            $this->updateUIDs($object_it->getId());
 		}
 		else if ( $object_it->get('OrderNum') != $now_it->get('OrderNum') ) {
 			$this->updateSortIndexAndSections($now_it);
+            $this->updateUIDs($now_it->get('DocumentId'));
 		}
 		
 		return $result; 
 	}
+
+	protected function updateUIDs( $documentId )
+    {
+        if ( $documentId < 1 ) return false;
+        if ( !in_array('computed', $this->getAttributeGroups('UID')) ) return false;
+
+        $default = $this->getDefaultAttributeValue('UID');
+        $objectIt = $this->getRegistryBase()->Query(
+            array(
+                new ParentTransitiveFilter($documentId)
+            )
+        );
+        while( !$objectIt->end() ) {
+            $result = $this->computeFormula($objectIt, $default);
+            if ( $objectIt->get('UID') != $result ) {
+                DAL::Instance()->Query(
+                    "UPDATE WikiPage w SET w.UID = '" . $result . "' WHERE w.WikiPageId = " . $objectIt->getId()
+                );
+            }
+            $objectIt->moveNext();
+        }
+        return true;
+    }
+
+    protected function computeFormula( $objectIt, $formula )
+    {
+        return trim(
+            DAL::Instance()->Escape(
+                addslashes(
+                    array_shift(
+                        ModelService::computeFormula(
+                            $objectIt,
+                            $formula
+                        )
+                    )
+                )
+            )
+        );
+    }
 
     protected function beforeDelete( $object_it )
     {
@@ -295,12 +341,14 @@ class WikiPage extends MetaobjectStatable
 
         $className = get_class($object_it->object);
 
-        DAL::Instance()->Query(
-            "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass, DocumentId) ".
-            " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . $className . "', w.DocumentId ".
-            "   FROM WikiPage w WHERE w.DocumentId = ".$documentId.
-            "    AND w.ParentPath LIKE '%,".$parentIt->getId().",%' AND ParentPage <> ".$parentIt->getId()
-        );
+        if ( $parentIt->getId() != '' && $documentId != '' ) {
+            DAL::Instance()->Query(
+                "INSERT INTO co_AffectedObjects (RecordCreated, RecordModified, VPD, ObjectId, ObjectClass, DocumentId) ".
+                " SELECT NOW(), NOW(), w.VPD, w.WikiPageId, '" . $className . "', w.DocumentId ".
+                "   FROM WikiPage w WHERE w.DocumentId = ".$documentId.
+                "    AND w.ParentPath LIKE '%,".$parentIt->getId().",%' AND ParentPage <> ".$parentIt->getId()
+            );
+        }
 	}
 	
 	function updateSectionNumber( $object_it )

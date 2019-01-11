@@ -793,7 +793,6 @@ input[type="color"],
 .uneditable-input 
 {
     vertical-align: top;
-	min-height: 1px !important;
 }
 
 .controls input[type="text"],
@@ -1124,7 +1123,7 @@ a.btn {
     width: 1%;
 }
 
-.btn-menu span.btn-link {
+.btn-menu span.title {
     padding: 0;
     color: #404040;
     text-decoration: none;
@@ -1132,7 +1131,7 @@ a.btn {
     line-height: 18px;
     margin-bottom: 2px;
 }
-.btn-menu span.btn-link:hover
+.btn-menu span.title:hover
 {
     color: #404040;
     text-decoration: underline;
@@ -1368,6 +1367,8 @@ span.fancytree-node {
 a.btn.btn-filter-more {
     padding-left: 0px;
     padding-bottom: 0px;
+}
+.filter a.btn.btn-filter-more {
     visibility: hidden;
 }
 a.btn.btn-filter-more span {
@@ -1465,4 +1466,8 @@ table.fancytree-ext-table th a {
 
 .brd-head-menu .title {
     white-space: normal;
+}
+
+th.for-num {
+    padding-left: 0;
 }

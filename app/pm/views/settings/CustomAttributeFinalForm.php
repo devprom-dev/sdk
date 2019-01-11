@@ -248,7 +248,13 @@ class CustomAttributeFinalForm extends PMPageForm
 
 			case 'IsUnique':
 				return text(1175);
-				
+
+            case 'ShowMainTab':
+                return text(2682);
+
+            case 'IsRequired':
+                return text(2683);
+
 			case 'ValueRange':
 				switch ( $type )
 				{

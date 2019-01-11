@@ -38,7 +38,7 @@
             target.css({ backgroundImage: "url('" + imageSrc + "')" });
             target.add($(this)).mousemove(function (e)
             {
-                if ( widthRatio == 1 ) return;
+                if ( widthRatio <= 1 ) return;
                 var leftPos = parseInt(e.pageX - offset.left);
                 var topPos = parseInt(e.pageY - offset.top);
 

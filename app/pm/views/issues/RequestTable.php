@@ -18,7 +18,6 @@ include "RequestReleaseBurndownChart.php";
 
 class RequestTable extends PMPageTable
 {
- 	var $view_filter;
 	private $estimation_strategy = null;
 
  	function __construct( & $object )
@@ -251,16 +250,6 @@ class RequestTable extends PMPageTable
 		return $append_actions;
 	}
 	
-	function getViewFilter()
-	{
-		if ( !is_object($this->view_filter) )
-		{
-			$this->view_filter = new ViewRequestListViewWebMethod(); 
-		}
-		
-		return $this->view_filter;
-	}
-	
  	function getSortFields()
 	{
 		$cols = parent::getSortFields();
@@ -408,8 +397,6 @@ class RequestTable extends PMPageTable
         $predicates[] = new FilterAttributePredicate('Severity', $values['severity']);
 		$predicates[] = $this->buildOwnerPredicate($values);
 		$predicates[] = new FilterAttributePredicate('Type', $values['type']);
-		$predicates[] = new FilterSubmittedAfterPredicate($values['submittedon']);
-		$predicates[] = new FilterSubmittedBeforePredicate($values['submittedbefore']);
 		$predicates[] = new FilterAttributePredicate('SubmittedVersion',$values['subversion']);
 		$predicates[] = new RequestFeatureFilter($values['function']);
 		$predicates[] = new RequestTagFilter($values['tag']);
@@ -429,8 +416,6 @@ class RequestTable extends PMPageTable
 		$trace = getFactory()->getObject('pm_ChangeRequestTrace');
 		array_push($predicates, new RequestTracePredicate( $_REQUEST['trace'] ) );
 
-		$predicates[] = new FilterModifiedAfterPredicate($values['modifiedafter']);
-		$predicates[] = new FilterModifiedBeforePredicate($values['modifiedbefore']);
 		$predicates[] = new RequestEstimationFilter($values['estimation']);
         $predicates[] = $this->buildDeadlinePredicate($values);
 
@@ -479,8 +464,15 @@ class RequestTable extends PMPageTable
 		return new FilterObjectMethod( getFactory()->getObject('ProjectUser'), translate($this->getObject()->getAttributeUserName('Owner')), 'owner' );
 	}
 	
-	protected function buildFilterAuthor() {
-		return new FilterObjectMethod(getFactory()->getObject('IssueAuthor'), translate('Автор'), 'author');
+	protected function buildFilterAuthor()
+    {
+        $author = getFactory()->getObject('IssueAuthor');
+        if ( $author->getRegistry()->Count() > 100 ) {
+            return new FilterAutoCompleteWebMethod($author, translate('Автор'), 'author');
+        }
+        else {
+            return new FilterObjectMethod($author, translate('Автор'), 'author');
+        }
 	}
 
 	protected function buildFilterFunction()

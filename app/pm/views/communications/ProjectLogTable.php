@@ -148,9 +148,7 @@ class ProjectLogTable extends PMPageTable
 		}
 		else if ( !in_array($values['entities'], array('','all','none')) )
 		{
-		    $classes = preg_split('/,/', $values['entities']);
-	    	$class_name = getFactory()->getClass($classes[0]);
-	    	if ( class_exists($class_name) ) $filters[] = new ChangeLogObjectFilter( $class_name );
+            $filters[] = new ChangeLogObjectFilter( preg_split('/,/', $values['entities']) );
 		}
  		
 		return array_merge(
@@ -201,5 +199,10 @@ class ProjectLogTable extends PMPageTable
     protected function getFamilyModules( $module )
     {
         return array('whatsnew');
+    }
+
+    function getFiltersDefault()
+    {
+        return array('start', 'finish', 'entities', 'action', 'participant');
     }
 }

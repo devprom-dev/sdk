@@ -87,5 +87,9 @@ class TaskModelExtendedBuilder extends ObjectModelBuilder
         $object->addAttribute('PlanFact', 'FLOAT', '', false, false);
         $object->addPersister( new TaskPlanFactPersister() );
         $object->addAttributeGroup('PlanFact', 'system');
+
+        if ( !$methodology_it->HasPlanning() ) {
+            $object->addAttributeGroup('Release', 'system');
+        }
     }
 }

@@ -99,8 +99,15 @@ abstract class EntityModifyProjectTrigger extends SystemTriggersBase
                     }
                 }
 
-                if ( $attribute == 'Function' && $this->sourceProjectProcess == 'ticket_ru.xml' ) {
-                    $parms[$attribute] = 'NULL';
+                if ( $attribute == 'Function' ) {
+                    $targetFeaturesCount = getFactory()->getObject('Feature')->getRegistry()->Count(
+                        array(
+                            new FilterVpdPredicate($target_it->get('VPD'))
+                        )
+                    );
+                    if ( $targetFeaturesCount > 0 ) {
+                        $parms[$attribute] = 'NULL';
+                    }
                 }
 
                 if ( $object_it->object->IsReference($attribute) ) {

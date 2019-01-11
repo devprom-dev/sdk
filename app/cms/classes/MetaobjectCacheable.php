@@ -180,12 +180,11 @@ class MetaobjectCacheable extends Metaobject
 	    }
 	    
 		$id_key = $this->getClassName().'Id';
-		
-		$data = array();
 
+		$data = array();
 		foreach( $iterator->getRowset() as $key => $value )
 		{
-			if ( in_array($value[$id_key], $id) ) $data[] = $value;
+			if ( in_array($value[$id_key], $ids) ) $data[] = $value;
 		}
 
 		return $this->createCachedIterator( $data );

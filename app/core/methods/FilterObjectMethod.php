@@ -110,9 +110,11 @@ class FilterObjectMethod extends FilterWebMethod
 		if ( !is_object($this->it) )
 		{
 			$registry = $this->object->getRegistryDefault();
-			$registry->setPersisters(array(
-                new EntityProjectPersister()
-            ));
+			if ( $this->object->getVpdValue() != '' ) {
+                $registry->setPersisters(array(
+                    new EntityProjectPersister()
+                ));
+            }
             $registry->setSorts(array());
 	 		$this->it = $registry->getAll();
 		}

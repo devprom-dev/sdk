@@ -858,9 +858,13 @@ function redrawBoardChanges( options )
 
 function updateBoardHeaders( result, options )
 {
+    if ( $('.dropdown-fixed.open').length > 0 ) return;
 	result.find('.board-table th .brd-head-menu').each( function(index, value) {
-		$('.board-table th:eq('+index+') .brd-head-menu').html($(this).html());
+		$('.board-table th .brd-head-menu:eq('+index+')').html($(this).html());
 	});
+    result.find('.board-table th .brd-head-details').each( function(index, value) {
+        $('.board-table th .brd-head-details:eq('+index+')').html($(this).html());
+    });
 	result.find('.board-table tr.info[group-id]').each( function(index, value) {
 		$('.board-table tr.info[group-id="'+$(this).attr('group-id')+'"]').html($(this).html());
 	});

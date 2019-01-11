@@ -242,7 +242,16 @@ class PMSession extends SessionBase
                         new MilestoneMetricsEventHandler(),
                         new ProjectPageModifyProjectTrigger(),
                         new AutoActionEventHandler(),
-                        new PlanItemsEventHandler()
+                        new PlanItemsEventHandler(),
+
+                        new ResetFieldsEventHandler(),
+                        new ResetTasksEventHandler(),
+                        new ClearCommentsEvent(),
+                        new ClearChangeNotificationsEvent(),
+                        new StoreTextChangesEvent($this),
+                        new TimeSpentEvent(),
+                        new ProjectMetricsModelBuilderDates(),
+                        new AttachmentEntityRemoveEvent()
                 ),
  	            parent::createBuilders(),
  	            array (
@@ -257,21 +266,11 @@ class PMSession extends SessionBase
                         new ResourceBuilderTerminology(),
 
  	            		// model
- 	            		new ResetFieldsEventHandler(),
- 	            		new ResetTasksEventHandler(),
- 	            		new ClearCommentsEvent(),
-                        new ClearChangeNotificationsEvent(),
-                        new StoreTextChangesEvent($this),
-						new TimeSpentEvent(),
-						new ProjectMetricsModelBuilderDates(),
-                        new AttachmentEntityRemoveEvent(),
-
                         new PMChangeLogNotificator(),
                         new EmailNotificator(),
 
 						// latest to override custom builders
 					    new ObjectMetadataPermissionsBuilder(),
-
                         new ApplyBusinessActionsEventHandler(),
                         new BusinessActionModifiedEvent()
 				)
@@ -497,50 +496,16 @@ class PMSession extends SessionBase
  	
  	function truncateForProject( $project_it )
  	{
- 	    global $model_factory;
- 	    
  		$this->truncate( 'projects/'.$project_it->get('VPD') );
- 		
- 		// reset users related cache
- 		
- 		$user = $model_factory->getObject('cms_User');
- 	    
- 		$user_it = $user->getAll();
- 			
- 		while( !$user_it->end() )
- 		{
- 		    $this->truncateFor( $project_it, $user_it );
- 			
- 			$user_it->moveNext();
- 		}
- 		
+
  		// reset linked projects cache
- 		
  		$linked_it = $project_it->getRef('LinkedProject');
- 		
- 		while ( !$linked_it->end() )
- 		{
- 		    $this->truncate( 'projects'.$linked_it->get('VPD') );
- 		    
- 		    $user_it->moveFirst();
- 		    
- 		 	while( !$user_it->end() )
-     		{
-     		    $this->truncateFor( $linked_it, $user_it );
-     			
-     			$user_it->moveNext();
-     		}
- 		    
+ 		while ( !$linked_it->end() ) {
+ 		    $this->truncate( 'projects/'.$linked_it->get('VPD') );
  		    $linked_it->moveNext();
  		}
  	}
  	
- 	function truncateFor( $project_it, $user_it )
- 	{
- 	    $cache_key = $this->getCacheKey( $project_it, $user_it );
- 	    $this->truncate( $cache_key );
- 	}
- 
  	function getRoles()
  	{
  		return $this->project_roles;

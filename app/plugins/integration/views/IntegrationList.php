@@ -12,6 +12,14 @@ class IntegrationList extends PMPageList
         }
     }
 
+    function getColumns()
+    {
+        return array_diff(
+            parent::getColumns(),
+            array('Log','ItemsQueue','MappingSettings')
+        );
+    }
+
     function getGroupFields()
     {
         return array();

@@ -656,4 +656,8 @@ class PMWikiDocument extends PMWikiTable
     protected function buildQuickReports(& $base_actions)
     {
     }
+
+    function buildLinkStateFilter( $values ) {
+        return new PMWikiTransitiveLinkedStateFilter( $values['linkstate'] );
+    }
 }

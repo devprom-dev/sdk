@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH.'pm/classes/sessions/PMSession.php';
 
 class AddProjectParticipant extends CommandForm
 {
@@ -10,10 +11,14 @@ class AddProjectParticipant extends CommandForm
 
 	function create()
 	{
+	    global $session;
+
 		$project_it = getFactory()->getObject('pm_Project')->getExact($_REQUEST['Project']);
 		if ( $project_it->getId() == '' ) {
 			$this->replyError( text(200) );
 		}
+
+        $session = new PMSession($project_it);
 
 		$baserole_it = getFactory()->getObject('ProjectRole')->getRegistry()->Query(
 		    array (
@@ -37,8 +42,7 @@ class AddProjectParticipant extends CommandForm
 				'Project' => $_REQUEST['Project'],
 				'SystemUser' => $userIt->getId(),
                 'NotificationTrackingType' => $userIt->get('NotificationTrackingType'),
-                'NotificationEmailType' => $userIt->get('NotificationEmailType'),
-                'VPD' => $project_it->get('VPD')
+                'NotificationEmailType' => $userIt->get('NotificationEmailType')
 			));
 			$part_it = $participant->getExact($id);
 		}
@@ -55,13 +59,12 @@ class AddProjectParticipant extends CommandForm
 		{
 			$mapper = new ModelDataTypeMapper();
 			$mapper->map( $participant_role, $_REQUEST );
-			
-			$id = $participant_role->add_parms( array ( 
+
+			$id = $participant_role->add_parms( array (
 				'Project' => $_REQUEST['Project'],
 				'Participant' => $part_it->getId(),
 				'ProjectRole' => $baserole_it->getId(),
-				'Capacity' => $_REQUEST['Capacity'] == '' ? 0 : $_REQUEST['Capacity'],
-                'VPD' => $project_it->get('VPD')
+				'Capacity' => $_REQUEST['Capacity'] == '' ? 0 : $_REQUEST['Capacity']
 			));
 			if ( $id < 1 ) $this->replyError( text(706) );
 		}

@@ -88,7 +88,11 @@ function setupEditor( editor )
 function setupDialogLink( def )
 {
     var infoTab = def.getContents( 'info' );
-    infoTab.remove( 'linkType' );
+    var linkTypeItems = infoTab.get( 'linkType' ).items;
+    if ( linkTypeItems.length > 0 ) {
+        var items_no_anchor = linkTypeItems.slice(0, 1).concat( linkTypeItems.slice(2, linkTypeItems.length) );
+        infoTab.get( 'linkType' ).items = items_no_anchor;
+    }
 }
 
 function setupEditorGlobal( filesTitle )

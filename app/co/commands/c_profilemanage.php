@@ -45,6 +45,23 @@
 				 )
 			);
 
+		$participantParms = array();
+		if ( $this->user_it->get('NotificationTrackingType') != $_REQUEST['NotificationTrackingType'] ) {
+            $participantParms['NotificationTrackingType'] = $_REQUEST['NotificationTrackingType'];
+        }
+        if ( $this->user_it->get('NotificationEmailType') != $_REQUEST['NotificationEmailType'] ) {
+            $participantParms['NotificationEmailType'] = $_REQUEST['NotificationEmailType'];
+        }
+
+        if ( count($participantParms) > 0 ) {
+            $participant = getFactory()->getObject('pm_Participant');
+            $participantIt = $participant->getByRef('SystemUser', $this->user_it->getId());
+            while( !$participantIt->end() ) {
+                $participant->getRegistry()->Store($participantIt, $participantParms);
+                $participantIt->moveNext();
+            }
+        }
+
 		$this->replySuccess( 
 			$this->getResultDescription( 1001 ) );
 	}

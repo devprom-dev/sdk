@@ -167,7 +167,7 @@ $formGroups = array_filter($formGroups, function($key) use ($groups) {
 					<?=($valuesCount > 0 ? ' ('.$valuesCount.')': '')?>
 				</a>
 			</div>
-			<div id="collapse<?=$group?>" class="accordion-body <?=($openState ? "in" : "out")?> collapse" style="padding-top: 12px;">
+			<div id="collapse<?=$group?>" class="accordion-body <?=($openState ? "in" : "out")?>" style="padding-top: 12px;">
 				<?php foreach( $chunked_attributes[$group] as $key => $attribute ) { ?>
 					<? echo $view->render('core/PageFormBodyAttribute.php', array('key' => $key, 'attribute' => $attribute)); ?>
 				<?php } ?>

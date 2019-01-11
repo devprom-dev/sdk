@@ -47,8 +47,12 @@ class KnowledgeBaseDocument extends PMWikiDocument
 	function getFilters()
 	{
 		$filters = array();
-		
-		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
+
+        $filters[] = new ViewSubmmitedAfterDateWebMethod();
+        $filters[] = new ViewSubmmitedBeforeDateWebMethod();
+        $filters[] = new ViewModifiedAfterDateWebMethod();
+        $filters[] = new ViewModifiedBeforeDateWebMethod();
+
 		$filters[] = $this->buildTagsFilter();
 		$filters[] = $this->buildViewModeFilter();
 		$filters[] = new FilterObjectMethod(

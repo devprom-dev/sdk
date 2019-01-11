@@ -174,7 +174,7 @@ class TaskBoardPlanning extends TaskBoardList
         if ( $board_value > 0 ) {
             $object_it = $this->getObject()->getAttributeObject($this->getBoardAttribute())->getExact($board_value);
             if ( $object_it->getId() > 0 ) {
-                echo '<div class="board-header-details">';
+                echo '<div class="board-header-details brd-head-details">';
                     echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
                         ." / "
                         .getSession()->getLanguage()->getDateFormattedShort($object_it->get('FinishDate'));

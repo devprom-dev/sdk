@@ -4,6 +4,7 @@ include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowStateAttributesModelB
 include_once SERVER_ROOT_PATH."pm/classes/workflow/WorkflowTransitionAttributesModelBuilder.php";
 include_once SERVER_ROOT_PATH."pm/classes/model/validators/ModelProjectValidator.php";
 include_once SERVER_ROOT_PATH."pm/views/comments/FieldCheckNotifications.php";
+include_once SERVER_ROOT_PATH."pm/classes/common/CustomAttributesModelBuilder.php";
 include "FieldWidgetUrl.php";
 include "FieldState.php";
 include "FieldComputed.php";
@@ -34,6 +35,22 @@ class PMPageForm extends PageForm
         parent::setObjectIt($object_it);
     }
 
+    function getIterator( $objectId )
+    {
+        if ( $objectId > 0 ) {
+            $objectIt = $this->getObject()->createCachedIterator(
+                array(
+                    array(
+                        $this->getObject()->getIdAttribute() => $objectId
+                    )
+                )
+            );
+            $builder = new CustomAttributesModelBuilder($objectIt);
+            $builder->build($this->getObject());
+        }
+        return parent::getIterator($objectId);
+    }
+
     function buildForm()
     {
         parent::buildForm();
@@ -45,9 +62,15 @@ class PMPageForm extends PageForm
         $entities = TextTemplateEntityRegistry::getEntities();
         $this->templateFields = preg_split('/,/',$entities[get_class($this->getObject())]);
 
-        $this->allowChooseProject =
-            getSession()->getProjectIt()->IsPortfolio()
-            || getSession()->getProjectIt()->IsProgram();
+        $shareable = in_array(
+            strtolower(get_class($this->getObject())),
+            getFactory()->getObject('SharedObjectSet')->getAll()->fieldToArray('ClassName')
+        );
+
+        $this->allowChooseProject = $shareable && (
+                getSession()->getProjectIt()->IsPortfolio()
+                || getSession()->getProjectIt()->IsProgram()
+            );
 
         if ( in_array($this->getMode(), array('new','add')) && $this->allowChooseProject ) {
             if ( $this->getObject()->getAttributeEditable('Project') ) {
@@ -393,7 +416,10 @@ class PMPageForm extends PageForm
 
             default:
                 if ( in_array('dictionary', $this->getObject()->getAttributeGroups($attr)) ) {
-                    return new FieldCustomDictionary($this->getObject(), $attr);
+                    return new FieldCustomDictionary(
+                        is_object($this->getObjectIt()) ? $this->getObjectIt() : $this->getObject(),
+                        $attr
+                    );
                 }
 
                 if ( in_array('computed', $this->getObject()->getAttributeGroups($attr)) ) {

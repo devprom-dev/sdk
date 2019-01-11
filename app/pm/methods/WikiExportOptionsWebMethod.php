@@ -53,13 +53,14 @@ class WikiExportOptionsWebMethod extends WikiExportBaseWebMethod
             if ( in_array($_REQUEST[$requestKey], array('Y','on')) ) {
                 $options[] = $optionName;
             }
-            foreach( $options as $key => $option ) {
-                if ( $_REQUEST[$key] == '' && $key == $requestKey ) {
-                    unset($options[$key]);
+            else {
+                foreach( $options as $key => $option ) {
+                    if ( $option == $optionName ) {
+                        unset($options[$key]);
+                    }
                 }
             }
         }
-
         if ( $_REQUEST['baseline'] != '' ) {
             $options[] = 'baseline,'.$_REQUEST['baseline'];
         }

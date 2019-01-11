@@ -21,6 +21,11 @@ class ProjectTemplateSectionsRegistry extends ObjectRegistrySQL
  		array_push( $this->objects[$ref_name]['items'], $object );
  	}
 
+    function ushiftSectionItem( $ref_name, $object )
+    {
+        array_unshift( $this->objects[$ref_name]['items'], $object );
+    }
+
  	function setSectionVisible( $ref_name, $b_visible = true )
  	{
  		$this->objects[$ref_name]['IsVisible'] = $b_visible ? 'Y' : 'N';

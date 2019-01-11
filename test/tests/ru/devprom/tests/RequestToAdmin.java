@@ -39,7 +39,7 @@ public class RequestToAdmin extends ProjectTestBase {
 		//Setup Administration Project
 		CommonSettingsPage csp = ulp.gotoCommonSettings();
 		String name = csp.createAdministrativeProject();
-		Assert.assertEquals(name, "Администрирование DEVPROM", "Неверное имя созданного проекта администрирования");
+		Assert.assertTrue(name.contains("Администрирование"), "Неверное имя созданного проекта администрирования");
 		//re-login with the new user
 		LoginPage lp =  csp.logOut();
 		FavoritesPage fp = lp.loginAs(user.getUsername(), user.getPass());

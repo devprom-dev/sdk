@@ -169,13 +169,18 @@ class RequestMetadataBuilder extends ObjectMetadataEntityBuilder
             'Deadlines',
             'OrderNum',
             'PlannedRelease',
-            'ClosedInVersion',
             'SubmittedVersion',
             'Iteration',
             'Owner'
         );
         foreach ( $firstColumnAttributes as $attribute ) {
             $metadata->addAttributeGroup($attribute, 'form-column-first');
+        }
+
+        $priority = new Priority();
+        $priorityIt = $priority->getByRef('IsDefault', 'Y');
+        if ( $priorityIt->getId() != '' ) {
+            $metadata->setAttributeDefault('Priority', $priorityIt->getId());
         }
     }
 }

@@ -27,12 +27,12 @@ class BulkDeleteWebMethod extends WebMethod
 	function url( $object, $ids = '' )
 	{
 		if ( $ids == '' ) $ids = '0';
- 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=Method:BulkDeleteWebMethod:class=".strtolower(get_class($object)).":objects=%ids%', ".$ids.", ".$this->getRedirectUrl().")";
+ 		return "javascript:processBulk('".$this->getCaption()."','?formonly=true&operation=Method:BulkDeleteWebMethod:class=".strtolower(get_class($object))."', ".$ids.", ".$this->getRedirectUrl().")";
 	}
 	
  	function execute_request()
  	{
-		if ( $_REQUEST['class'] == '' || $_REQUEST['objects'] == '' ) throw new Exception('Required parameters missed');
+		if ( $_REQUEST['class'] == '' || $_REQUEST['ids'] == '' ) throw new Exception('Required parameters missed');
 		
 		$class = getFactory()->getClass($_REQUEST['class']);
 		
@@ -40,7 +40,7 @@ class BulkDeleteWebMethod extends WebMethod
 		
 		$object = getFactory()->getObject($class);
 		
-		$ids = TextUtils::parseIds(trim($_REQUEST['objects'], '-'));
+		$ids = TextUtils::parseIds(trim($_REQUEST['ids'], '-'));
 		$object_it = $object->getExact($ids);
 
         if ( $object instanceof Project ) {

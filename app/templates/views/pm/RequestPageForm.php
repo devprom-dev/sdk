@@ -272,7 +272,7 @@ foreach( $attributes as $name => $attribute )
 						<?=$attribute['name']?>
 					</a>
 				</div>
-				<div class="accordion-body in collapse">
+				<div class="accordion-body in collapse" style="overflow-x: hidden;">
 					<?
 					if ( is_a($attribute['field'], 'Field') ) {
                         $attribute['field']->draw($this);

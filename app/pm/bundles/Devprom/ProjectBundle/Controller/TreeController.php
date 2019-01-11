@@ -39,7 +39,7 @@ class TreeController extends PageController
                 $page = new \FunctionsPage();
                 $page->getTableRef()->buildFilters();
 
-                $list = new \FunctionList(getFactory()->getObject($request->get('classname')));
+                $list = new \FunctionList($page->getTableRef()->getObject());
                 $list->skipInvisiblePersisters(false);
                 $list->setTable($page->getTableRef());
 

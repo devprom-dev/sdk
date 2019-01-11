@@ -21,16 +21,13 @@ class FlotChartBurndownWidget extends FlotChartWidget
 		if ( $sectionMode ) {
 			?>
 			<script type="text/javascript">
-				$(document).on('tabsactivated', function(event, e,ui) {
-					if ( $(ui.tab).attr('href').indexOf('burndownsection') > -1 ) {
-						$("#<?=$chart_id?>").css({
-							width: '100%',
-							height: $(window).height() * 0.5
-						});
-
-						<? $this->drawChart($chart_id) ?>
-					}
-				});
+                bindTabHandler('burndownsection', function () {
+                    $("#<?=$chart_id?>").css({
+                        width: '100%',
+                        height: $(window).height() * 0.5
+                    });
+                    <? $this->drawChart($chart_id) ?>
+                });
 			</script>
 			<?
 		}

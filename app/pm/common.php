@@ -8,13 +8,14 @@ include SERVER_ROOT_PATH.'pm/classes/sessions/SessionBuilderProject.php';
 $lock = new CacheLock();
 
 // allow OPTIONS to be requested from any domain (CORS support)
-if ( $_SERVER['REQUEST_METHOD'] == 'OPTIONS' )
-{
+$allowedCORS = $_SERVER['REQUEST_METHOD'] == 'OPTIONS';
+if ( $allowedCORS ) {
 	header('Access-Control-Allow-Origin: *');
 	header('Access-Control-Allow-Methods: OPTIONS, GET, POST, PUT, DELETE');
 	header('Access-Control-Allow-Headers: Devprom-Auth-Key,Content-Type');
 	exit();
 }
+
 if ( $_REQUEST['project'] == '') {
     EnvironmentSettings::ajaxRequest() ? exit() : exit(header('Location: /404?redirect='.urlencode($_SERVER['REQUEST_URI'])));
 }

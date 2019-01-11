@@ -2,6 +2,8 @@
 
 class FunctionTreeGrid extends FunctionList
 {
+    private $roots = array();
+
     function getTemplate() {
         return "core/PageTreeGrid.php";
     }
@@ -29,28 +31,39 @@ class FunctionTreeGrid extends FunctionList
             $predicates[] = new FilterInPredicate($ids);
         }
 
-        $roots = $this->getObject()->getRegistryBase()->Query(
-            array_merge(
-                $predicates,
-                array(
-                    new FeatureHierarchyPersister()
+        $this->roots = $this->getObject()->getRegistryBase()->Query(
+                array_merge(
+                    $predicates,
+                    array(
+                        new FeatureHierarchyPersister()
+                    )
                 )
-            )
-        )->fieldToArray('RootId');
-
-        $this->getTable()->setFilterValue('roots', \TextUtils::buildIds($roots));
+            )->fieldToArray('RootId');
 
         return parent::buildIterator();
     }
 
+    function getPredicates( $filters )
+    {
+        return array_merge(
+            PMPageList::getPredicates($filters),
+            array(
+                new FilterInPredicate($this->roots)
+            )
+        );
+    }
+
     function getRenderParms()
     {
+        $it = $this->getIteratorRef();
+        $this->shiftNextPage($it, $this->getOffset());
+
         return array_merge(
             parent::getRenderParms(),
             array(
                 'jsonUrl' =>
                     str_replace('features/list', 'treegrid/feature', $this->getTable()->getFiltersUrl())
-                        .'&parent='.\TextUtils::buildIds($this->getIteratorRef()->idsToArray())
+                        .'&rows=all&roots='.\TextUtils::buildIds($it->idsToArray())
             )
         );
     }

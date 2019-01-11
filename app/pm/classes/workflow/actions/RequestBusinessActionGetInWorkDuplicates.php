@@ -24,25 +24,23 @@ class RequestBusinessActionGetInWorkDuplicates extends BusinessActionWorkflow
  	        
  	        $duplicate_it = $request->getRegistry()->Query( 
  	        		array(new FilterInPredicate($request_it->getId())) 
- 	        );
+ 	            )->getSpecifiedIt();
  	        
- 	        $state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
- 	        		array( 
- 	        				new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
- 	        				new FilterVpdPredicate($duplicate_it->get('VPD'))
- 	        		)
+ 	        $state_it = getFactory()->getObject($duplicate_it->object->getStateClassName())->getRegistry()->Query(
+                array(
+                    new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
+                    new FilterVpdPredicate($duplicate_it->get('VPD'))
+                )
  	        );
 
  	        // move to the second state
  	        $state_it->moveNext();
  	        
- 	        if ( $state_it->getId() > 0 )
- 	        {
+ 	        if ( $state_it->getId() > 0 ) {
 				$service = new WorkflowService($request);
 				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'));
  	        }
- 	        else
- 	        {
+ 	        else {
  	        	throw new Exception('There is no initial state for the issue "'.$duplicate_it->getId().'"');
  	        }
  	    

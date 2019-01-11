@@ -18,7 +18,11 @@ class CommentAuthorPersister extends ObjectSQLPersister
  		return $columns;
  	}
 
- 	function afterDelete($object_it)
+ 	function IsPersisterImportant() {
+        return true;
+    }
+
+    function afterDelete($object_it)
     {
         // remove comment tags from wysiwyg fields;
         $this->commentId = $object_it->getId();

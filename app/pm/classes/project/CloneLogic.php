@@ -159,27 +159,28 @@ class CloneLogic
 					break;
 
 				default:
-                    $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-
-                    if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD ) {
-                        if ( $object instanceof Request ) {
-                            $iterator->moveNext();
-                            continue;
-                        }
-                    }
-                    else {
-                        if ( $object instanceof Issue || $object instanceof Increment ) {
+                    if ( array_key_exists($iterator->getId(), $ids_map[$object->getEntityRefName()]) ) {
+                        if ( $ids_map[$object->getEntityRefName()][$iterator->getId()] != $iterator->getId() ) {
+                            // avoid duplicates are in templates
                             $iterator->moveNext();
                             continue;
                         }
                     }
 
-				    if ( count($object->getVpds()) < 1 ) {
+                    if ( $object instanceof Issue || $object instanceof Increment ) {
+                        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+                        if ( $methodologyIt->get('IsRequirements') != ReqManagementModeRegistry::RDD ) {
+                            $iterator->moveNext();
+                            continue;
+                        }
+                    }
+
+				    if ( count($object->getVpds()) < 1 && !$object instanceof PMCustomAttributeValue ) {
 				        // just copy the reference to global object
 				        $ids_map[$object->getEntityRefName()][$iterator->getId()] = $iterator->getId();
 				    }
 				    else {
-				        // duplicate data in the project
+                        // duplicate data in the project
 				    	$parms = CloneLogic::applyToObject( $context, $attrs, $parms, $iterator, $project_it );
     					if ( count($parms) > 0 ) {
     						$ids_map[$object->getEntityRefName()][$iterator->getId()] = self::duplicate( $iterator, $parms );
@@ -283,6 +284,10 @@ class CloneLogic
 						}
    			            break;
 
+                    case 'pm_Predicate':
+                        $parms[$attr] = $reference->getExact($it->get($attr))->getId();
+                        break;
+
    			        default:
 						if ( $context->getUseExistingReferences() ) {
 							$parms[$attr] = $reference->getExact($it->get($attr))->getId();
@@ -291,6 +296,9 @@ class CloneLogic
 							    $parms[$attr] = $it->object->getDefaultAttributeValue( $attr );
 							}
 						}
+						elseif ( $reference->getEntityRefName() != 'entity' && count($reference->getVpds()) > 0 )  {
+                            $parms[$attr] = '';
+                        }
    			    }
 			}
 
@@ -391,7 +399,7 @@ class CloneLogic
 
 			default:
 		}
-		
+
 		switch ( $it->object->getEntityRefName() )
 		{
 		    case 'pm_Test':
@@ -523,8 +531,13 @@ class CloneLogic
 				if ( !class_exists($class_name) ) return array();
 
 				$anchor_id = $ids_map[getFactory()->getObject($class_name)->getEntityRefName()][$it->get('ObjectId')];
-				if ( $anchor_id == '' ) return array();
-				
+				if ( $anchor_id == '' && $context->getUseExistingReferences() ) {
+                    $anchor_id = getFactory()->getObject($class_name)->getExact($it->get('ObjectId'))->getId();
+                }
+                if ( $anchor_id == '' ) {
+                    return array();
+                }
+
 				$parms['ObjectId'] = $anchor_id;
 
                 $versions = getFactory()->getObject('cms_Snapshot')->getRegistry()->Count(
@@ -633,6 +646,7 @@ class CloneLogic
 
                 $entityRefName = getFactory()->getObject($refName)->getEntityRefName();
                 $object_id = $ids_map[$entityRefName][$it->get('ObjectId')];
+
                 if ( $object_id != '' ) {
                     $foundValues = $it->object->getRegistry()->Count(
                         array(
@@ -640,10 +654,10 @@ class CloneLogic
                             new FilterAttributePredicate('ObjectId', $object_id),
                         )
                     );
+
                     if ( $foundValues > 0 ) return array();
                 }
                 $parms['ObjectId'] = $object_id;
-
                 break;
 
             case 'pm_AutoAction':
@@ -880,6 +894,10 @@ class CloneLogic
 				$values[$attribute] = $iterator->getHtmlDecoded($attribute);
 			}
 		}
+
+		if ( $iterator->object instanceof Request ) {
+            $iterator = $iterator->object->getSpecific($iterator->object->createCachedIterator(array($values)));
+        }
 
 		return $iterator->object->add_parms( $values );
 	}

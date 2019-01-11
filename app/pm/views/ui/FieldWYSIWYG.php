@@ -142,8 +142,6 @@ class FieldWYSIWYG extends Field
             );
         }
 
-    	$content = preg_replace_callback(TextUtils::REGEX_SHRINK, array(TextUtils::class, 'shrinkLongUrl'), $content);
-        $content = preg_replace_callback(TextUtils::REGEX_SHARE, array(TextUtils::class, 'shrinkLongShare'), $content);
 		$content = TextUtils::breakLongWords($content);
 
 		return $content;

@@ -261,13 +261,6 @@ public class RequestEditPage extends RequestNewPage {
 	
 	}
 
-	public void addFunction(ProductFunction function)
-	{
-		clickMoreTab();
-		functionsList.sendKeys(function.getName());
-		autocompleteSelect(function.getName());
-	}
-
 	public void setType(String type)
 	{
 		clickMoreTab();

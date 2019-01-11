@@ -860,7 +860,7 @@
         $pages = $this->getPages();
         $totalItems = $this->getItemsCount($this->getIteratorRef());
         $offset_page = max(1, $this->getOffset() / $this->getMaxOnPage() - 3);
-        if ( $totalItems < 20 ) return;
+        if ( $totalItems < $rowsLimit ) return;
 
 		echo '<div class="hover-holder">';
 		if ( $this->moreThanOnePage() ) {

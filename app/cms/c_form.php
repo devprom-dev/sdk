@@ -696,11 +696,13 @@ class Form
 				   ) 
 			   );
 
-		if ( in_array($this->getObject()->getAttributeType($field), array('datetime')) )
-		{
-			$value = SystemDateTime::convertToClientTime($value);
+		if ( in_array($this->getObject()->getAttributeType($field), array('date')) ) {
+			$value = getSession()->getLanguage()->getDateFormatted($value);
 		}
-		
+		if ( in_array($this->getObject()->getAttributeType($field), array('datetime')) ) {
+			$value = getSession()->getLanguage()->getDateTimeFormatted($value);
+		}
+
 		return $value;
 	}
 

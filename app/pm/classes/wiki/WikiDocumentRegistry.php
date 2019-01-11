@@ -1,5 +1,4 @@
 <?php
-include_once "persisters/DocumentStatePersister.php";
 include_once "persisters/DocumentVersionPersister.php";
 
 class WikiDocumentRegistry extends ObjectRegistrySQL
@@ -7,8 +6,7 @@ class WikiDocumentRegistry extends ObjectRegistrySQL
 	function getPersisters()
     {
         return array(
-            new DocumentVersionPersister(),
-            new DocumentStatePersister()
+            new DocumentVersionPersister()
         );
     }
 

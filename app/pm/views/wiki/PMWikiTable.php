@@ -97,11 +97,13 @@ class PMWikiTable extends PMPageTable
 
 		$filters[] = $this->buildByDateFilter();
 		$filters[] = new WikiFilterActualLinkWebMethod();
-		$filters[] = new ViewWikiModifiedAfterDateWebMethod();
 
-		$parent_filter = new FilterAutoCompleteWebMethod(
-			$object, translate($object->getAttributeUserName( 'ParentPage' ))
-		);
+        $filters[] = new ViewSubmmitedAfterDateWebMethod();
+        $filters[] = new ViewSubmmitedBeforeDateWebMethod();
+		$filters[] = new ViewModifiedAfterDateWebMethod();
+        $filters[] = new ViewModifiedBeforeDateWebMethod();
+
+		$parent_filter = new FilterAutoCompleteWebMethod($object, translate('Входит в'));
 		$parent_filter->setValueParm( 'parentpage' );
 		$filters[] = $parent_filter;
 
@@ -140,13 +142,12 @@ class PMWikiTable extends PMPageTable
 			new StatePredicate( $values['state'] ),
 			new FilterAttributePredicate( 'PageType', $values['type'] ),
 			new WikiTypePlusChildren($values['typepluschildren']),
-			new PMWikiLinkedStateFilter( $values['linkstate'] ),
 			new FilterAttributePredicate( 'Author', $values['author'] ),
 			new ParentTransitiveFilter( $values['parentpage'] ),
 			new WikiTagFilter( $values['tag'] ),
 			new WikiRelatedIssuesPredicate( $_REQUEST['issues'] ),
-			new FilterModifiedAfterPredicate($values['modifiedafter']),
-			new FilterSearchAttributesPredicate($values['search'], array('Caption','Content'))
+			new FilterSearchAttributesPredicate($values['search'], array('Caption','Content')),
+            $this->buildLinkStateFilter($values)
 		);
 
 		if ( $this->Statable($this->getObject()) ) {
@@ -162,6 +163,10 @@ class PMWikiTable extends PMPageTable
 
 		return array_merge(parent::getFilterPredicates(), $predicates);
 	}
+
+	function buildLinkStateFilter( $values ) {
+        return new PMWikiLinkedStateFilter( $values['linkstate'] );
+    }
 
 	function getNewPageTitle()
     {
@@ -241,11 +246,6 @@ class PMWikiTable extends PMPageTable
 		return $left_part.': '.$right_part;
 	}
 	
-	function getViewFilter()
-	{
-		return new WikiFilterViewWebMethod();
-	}
-
 	function buildFilterDocument()
 	{
 		$document_filter = new FilterObjectMethod(

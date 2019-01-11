@@ -6,7 +6,6 @@ include_once SERVER_ROOT_PATH."pm/classes/watchers/persisters/WatchersPersister.
 include "persisters/WikiTagsPersister.php";
 include "persisters/WikiPageAttachmentsPersister.php";
 include "persisters/WikiPageWorkflowPersister.php";
-include "persisters/WikiPageFeaturePersister.php";
 
 class WikiPageModelExtendedBuilder extends ObjectModelBuilder 
 {
@@ -31,19 +30,6 @@ class WikiPageModelExtendedBuilder extends ObjectModelBuilder
 
 		$object->addAttribute('RecentComment', 'WYSIWYG', translate('Комментарии'), false);
 		$object->addPersister( new CommentRecentPersister(array('RecentComment')) );
-
-        if ( !$object instanceof ProjectPage ) {
-            $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-            if( $methodology_it->HasFeatures() && getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Feature')) )
-            {
-                $visible = $object instanceof Requirement && $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD
-                    || !$object instanceof Requirement;
-                $object->addAttribute( 'Feature', 'REF_pm_FunctionId', translate('Функции'), $visible, false);
-                $object->addPersister( new WikiPageFeaturePersister(array('Feature')) );
-                $object->addAttributeGroup('Feature', 'trace');
-                $object->addAttributeGroup('Feature', 'bulk');
-            }
-        }
 
         $object->addAttribute('UsedBy', 'REF_'.get_class($object).'Id', text(2154), true, false, text(2155), 205);
         $object->addAttributeGroup('UsedBy', 'trace');

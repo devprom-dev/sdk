@@ -32,6 +32,7 @@ class SearchResultRegistry extends ObjectRegistrySQL
 
         $uid = new ObjectUID;
         $report = getFactory()->getObject('PMReport');
+        $module = getFactory()->getObject('Module');
         $searchable = getFactory()->getObject('SearchableObjectSet');
         $searchable_it = $searchable->getAll();
         $search_items = SearchRules::getSearchItems($searchString, getSession()->getLanguageUid());
@@ -51,6 +52,9 @@ class SearchResultRegistry extends ObjectRegistrySQL
             if ( $lists[$entityId] == '' ) {
                 $searchable_it->moveToId($entityId);
                 $report_it = $report->getExact($searchable_it->get('Report'));
+                if ( $report_it->getId() == '' ) {
+                    $report_it = $module->getExact($searchable_it->get('Report'));
+                }
                 $lists[$entityId] = $report_it->getUrl(strtolower($entityId).'='.\TextUtils::buildIds($object_it->idsToArray()));
             }
 

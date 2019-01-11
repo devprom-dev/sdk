@@ -444,6 +444,10 @@ class WikiParser
  		$this->title_resolver_func = $func;
  	}
 
+ 	function getTitleResolver() {
+	    return $this->title_resolver_func;
+    }
+
 	function getObjectIt()
 	{
 		return $this->object_it;
@@ -592,7 +596,7 @@ class WikiParser
         if ( $object_it->object instanceof WikiPage ) {
             $contentAttribute = 'Content';
         }
-        else if ( $object_it->object instanceof Request ) {
+        else if ( $object_it->object->getEntityRefName() == 'pm_ChangeRequest' ) {
             $contentAttribute = 'Description';
         }
         else {

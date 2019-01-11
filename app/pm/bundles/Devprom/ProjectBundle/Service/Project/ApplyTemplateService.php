@@ -1,7 +1,5 @@
 <?php
-
 namespace Devprom\ProjectBundle\Service\Project;
-use Devprom\ProjectBundle\Service\Project\StoreMetricsService;
 
 include_once SERVER_ROOT_PATH."ext/xml/xml2Array.php";
 include_once SERVER_ROOT_PATH."pm/classes/project/CloneLogic.php";

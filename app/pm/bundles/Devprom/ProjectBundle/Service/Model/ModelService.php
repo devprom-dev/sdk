@@ -57,41 +57,36 @@ class ModelService
 			}
 		}
 
-		if ( $id != '' ) {
-			$data[$object->getEmptyIterator()->getIdAttribute()] = $id;
-		}
-
 		// validate field values
 		$message = $this->validator_service->validate( $object, $data );
 		if ( $message != '' ) throw new \Exception($message);
 		
-		// remove client data
-		unset($data['RecordCreated']);
-		unset($data['RecordModified']);
-		
 		// convert data into database format
 		$this->mapping_service->map($object, $data);
 
-		// check an object exists already (search by Id or alternative key)
-		$key_filters = array();
-		foreach( $object->getAttributesByGroup('alternative-key') as $key ) {
-			if ( $data[$key] != '' ) {
-				$key_filters[] = new \FilterAttributePredicate($key, $data[$key]);
-			}
-		}
-
-		$object_it = $id != ''
-				? $object->getRegistry()->Query(array(new \FilterInPredicate($id)))
-				: (count($key_filters) > 0
-						? $object->getRegistry()->Query(
-						    array_merge(
-						        $key_filters,
-                                array(
-                                    new \FilterBaseVpdPredicate()
-                                )
-                            )
-                          )
-						: $object->getEmptyIterator());
+        if ( $id != '' ) {
+            $data[$object->getIdAttribute()] = $id;
+            $object_it = $object->getRegistry()->Query(array(new \FilterInPredicate($id)));
+        }
+        else {
+            // check an object exists already (search by Id or alternative key)
+            $key_filters = array();
+            foreach( $object->getAttributesByGroup('alternative-key') as $key ) {
+                if ( $data[$key] != '' ) {
+                    $key_filters[] = new \FilterAttributePredicate($key, $data[$key]);
+                }
+            }
+            $object_it = count($key_filters) > 0
+                ? $object->getRegistry()->Query(
+                    array_merge(
+                        $key_filters,
+                        array(
+                            new \FilterBaseVpdPredicate()
+                        )
+                    )
+                )
+                : $object->getEmptyIterator();
+        }
 
 		if ( $object_it->getId() < 1 )
 		{
@@ -101,7 +96,7 @@ class ModelService
 
 			$result = $this->create($object, $data);
 			if ( $result < 1 ) throw new \Exception('Unable create new record of '.get_class($object));
-			
+
 			return $this->get($entity, $result, "text", $this->recursive);
 		}
 		else
@@ -279,6 +274,7 @@ class ModelService
 		}
 		if ( count($data) < 1 ) return 1; // do not modify if there were no changes
 
+        $data['WasRecordVersion'] = $object_it->get('RecordVersion');
 		$result = $object_it->object->modify_parms($object_it->getId(), $data);
 
         getFactory()->getEventsManager()
@@ -546,11 +542,12 @@ class ModelService
         $text = preg_replace_callback('/\{([^\}]+)\}/',
             function($match) use ($objectIt, &$referenceIt, &$result)
             {
-                $object = $objectIt->object;
                 list($path,$default) = preg_split('/,/', $match[1]);
 
                 $attributes = preg_split('/\./', $path);
-                foreach( $attributes as $attributeIndex => $caption ) {
+                foreach( $attributes as $attributeIndex => $caption )
+                {
+                    $object = $objectIt->object;
                     if ( strcasecmp($caption,'ИД') == 0 ) {
                         $refName = $object->getIdAttribute();
                     }
@@ -559,8 +556,15 @@ class ModelService
                     }
                     if ( $object->IsReference($refName) ) {
                         if ( $objectIt->get($refName) != '' ) {
-                            $referenceIt = $objectIt->getRef($refName);
-                            return '{'.join('.',array_slice($attributes, $attributeIndex+1)).'}';
+                            $ids = \TextUtils::parseIds($objectIt->get($refName));
+                            if ( count($ids) > 1 ) {
+                                $referenceIt = $objectIt->getRef($refName);
+                                return '{'.join('.',array_slice($attributes, $attributeIndex+1)).'}';
+                            }
+                            else {
+                                $objectIt = $objectIt->getRef($refName);
+                                continue;
+                            }
                         }
                         else {
                             return $default;
@@ -589,6 +593,7 @@ class ModelService
             },
             $formula
         );
+        $text = trim($text, ' -');
 
         if ( is_object($referenceIt) ) {
             while( !$referenceIt->end() ) {

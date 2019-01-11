@@ -6,12 +6,13 @@ class WidgetRegistry extends ObjectRegistrySQL
  	{
  		$data = array();
 
+ 		$policy = getFactory()->getAccessPolicy();
  		$resource_it = getFactory()->getObject('ContextResource')->getAll();
-
 		$module_it = getFactory()->getObject('Module')->getAll();
+
 		while( !$module_it->end() )
 		{
-		    if ( $module_it->get('Area') == '' ) {
+		    if ( $module_it->get('Area') == '' || !$policy->can_read($module_it) ) {
                 $module_it->moveNext();
                 continue;
             }
@@ -31,6 +32,11 @@ class WidgetRegistry extends ObjectRegistrySQL
 		$report_it = getFactory()->getObject('PMReport')->getAll();
  		while( !$report_it->end() )
  		{
+            if ( !$policy->can_read($report_it) ) {
+                $report_it->moveNext();
+                continue;
+            }
+
  			$resource_it->moveToId($report_it->getId());
 			$description = $resource_it->getHtmlDecoded('Caption');
 

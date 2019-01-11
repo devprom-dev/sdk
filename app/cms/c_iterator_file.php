@@ -41,7 +41,7 @@
    				    'Caption' => $file, 
    				    'size' => $stat['size'], 
 					'ctime' => $stat['mtime'],
-   				    is_a($object, 'Metaobject') ? $object->getClassName().'Id' : 'id' => abs(crc32($file)) 
+                    (is_a($object, 'Metaobject') ? $object->getClassName().'Id' : 'id') => abs(crc32($file))
    				));
    			}
    		}

@@ -247,7 +247,7 @@ class WikiConverterPreview
 			$info = $this->uid->getUIDInfo($wiki_it);
 			$title .= $info['uid'] . '&nbsp; ';
 		}
-		$title .= $wiki_it->getHtmlDecoded('Caption');
+		$title .= $wiki_it->get('Caption');
 		return $title;
 	}
 	

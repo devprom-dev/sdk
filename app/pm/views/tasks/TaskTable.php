@@ -17,11 +17,6 @@ class TaskTable extends PMPageTable
 	private $estimation_strategy = null;
 	private $uidService = null;
 
-	function getViewFilter()
-	{
-		return new ViewTaskListWebMethod();
-	}
-	
 	function buildRelatedDataCache()
 	{
 		$this->estimation_strategy = new EstimationHoursStrategy();

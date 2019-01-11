@@ -17,7 +17,7 @@ class TaskBusinessActionMoveIssuePrevState extends BusinessActionWorkflow
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
 
-		$request_it = $object_it->getRef('ChangeRequest');
+		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 		if ( $request_it->get('StateObject') == '' ) return true;
 
 		$stateObjectIt = getFactory()->getObject('pm_StateObject')->getExact($request_it->get('StateObject'));

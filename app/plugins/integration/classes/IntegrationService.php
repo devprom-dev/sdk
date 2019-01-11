@@ -19,17 +19,12 @@ class IntegrationService
             json_decode($this->object_it->getHtmlDecoded('MappingSettings'), true)
         );
 
-        $this->links = $this->restoreLinks();
-        $this->buildLinks();
-
         $this->self_channel = new IntegrationDevpromChannel($this->object_it, $this->getLogger());
         $this->self_channel->setMapping($this->mapping);
 
         $this->remote_channel = $this->buildIntegrationChannel();
         $this->remote_channel->setMapping($this->mapping);
         $this->remote_channel->setCurlDelay($curlDelay);
-
-        $this->setIdsMapping();
     }
 
     public function setItemsToProcess( $items ) {
@@ -62,6 +57,9 @@ class IntegrationService
             else {
                 $this->getLogger()->debug('Integration queue: '.var_export($queue,true));
             }
+
+            $this->links = $this->restoreLinks();
+            $this->buildLinks();
 
             // prepare integration channel for processing
             try {
@@ -99,10 +97,10 @@ class IntegrationService
                     }
 
                     if ( $item['action'] == 'delete' ) {
-                        $id = $this->shortLinks[$item['class'].$item['id']];
+                        $id = $this->itemMapExternalId[$item['class'].$item['id']];
                         $linkPredicate = new FilterAttributePredicate('ObjectId', $item['id']);
                         if ( $id == '' ) {
-                            $id = $this->shortBackLinks[$item['id']];
+                            $id = $this->externalIdMapInternalId[$item['id']];
                             $linkPredicate = new FilterAttributePredicate('ObjectId', $id);
                         }
                         if ( $id != '' ) {
@@ -126,7 +124,7 @@ class IntegrationService
                     $data = $read->readItem( $classMapping, $item['class'], $item['id'],
                         array (
                             '{parent}' => $item['parentId'],
-                            '{parentId}' => $this->shortBackLinks[$item['parentId']]
+                            '{parentId}' => $this->externalIdMapInternalId[$item['parentId']]
                         )
                     );
                     $result = $data;
@@ -147,20 +145,20 @@ class IntegrationService
 
                         // map external ID to internal one
                         if ( $data['SourceId'] != '' ) {
-                            $data['Id'] = $this->backlinks[$data['SourceId']];
+                            $data['Id'] = $this->urlMapInternalId[$data['SourceId']];
                         }
 
                         // map internal ID to external one
-                        if ( $this->links[$data['SourceId']] != '' ) {
+                        if ( $this->itemMapExternalId[$data['SourceId']] != '' ) {
                             // extract ID from link
-                            $data['Id'] = $this->shortLinks[$data['SourceId']];
+                            $data['Id'] = $this->itemMapExternalId[$data['SourceId']];
                         }
 
                         // map internal parent ID to external one
                         foreach( $classMapping as $attribute => $column ) {
                             if ( $column == '{parentId}' ) {
                                 $parentObject = getFactory()->getObject($item['class'])->getAttributeObject($attribute);
-                                $data['{parent}'] = $this->shortLinks[get_class($parentObject).$data[$attribute]['Id']];
+                                $data['{parent}'] = $this->itemMapExternalId[get_class($parentObject).$data[$attribute]['Id']];
 
                                 $classMapping['url'] = preg_replace('/\{parent\}/', $data['{parent}'], $classMapping['originalUrl']);
                                 if ( $classMapping['originalAppendUrl'] != '' ) {
@@ -171,69 +169,71 @@ class IntegrationService
 
                         $results = $write->writeItem( $classMapping, $item['class'], $data['Id'], $data, $item );
 
-                        foreach( $results as $result ) {
-                            if ( $data['Id'] != '' ) continue; // skip modifications
-                            $id = $this->self_channel->getKeyValue($result);
-
-                            if ( $id != '' ) {
-                                $linkObject->getRegistry()->Merge(
-                                    array (
-                                        'ObjectId' => $id,
-                                        'ObjectClass' => $item['class'],
-                                        'URL' => $data['SourceId'],
-                                        'Integration' => $this->object_it->getId(),
-                                        'ExternalId' => $item['id']
-                                    ),
-                                    array(
-                                        'Integration', 'ExternalId', 'ObjectClass'
-                                    )
-                                );
-                                $this->links[$item['class'].$id] = $data['SourceId'];
-                                $internalId = $id;
-                                $externalId = $item['id'];
-                            }
-
-                            $remoteId = $this->remote_channel->getKeyValue($result);
-                            if ( $remoteId ) {
-                                $id = $result['key'] != '' ? $result['key'] : $remoteId;
-                                $url = $this->object_it->get('URL') .
-                                    preg_replace('/\{parent\}/', $data['{parent}'],
-                                        preg_replace('/\{id\}/', $id, $classMapping['link']));
-
-                                $linkObject->getRegistry()->Merge(
-                                    array(
-                                        'ObjectId' => $item['id'],
-                                        'ObjectClass' => $item['class'],
-                                        'URL' => $url,
-                                        'Integration' => $this->object_it->getId(),
-                                        'ExternalId' => $id
-                                    ),
-                                    array(
-                                        'Integration', 'ExternalId', 'ObjectClass'
-                                    )
-                                );
-                                $this->links[$item['class'] . $item['id']] = $url;
-                                $internalId = $item['id'];
-                                $externalId = $id;
-                            }
-
-                            if ( $internalId != '' && $externalId != '' ) {
-                                $uid = new ObjectUID();
-                                $info = $uid->getUIDInfo(getFactory()->getObject($item['class'])->getExact($internalId));
-                                try {
-                                    $this->remote_channel->storeLink($classMapping, $item['class'], $externalId, $info['url'], $info['uid']);
+                        if ( $data['Id'] == '' ) {
+                            foreach( $results as $result )
+                            {
+                                $id = $this->self_channel->getKeyValue($result);
+                                if ( $id > 0 && $write instanceof IntegrationDevpromChannel )
+                                {
+                                    $linkObject->getRegistry()->Merge(
+                                        array (
+                                            'ObjectId' => $id,
+                                            'ObjectClass' => $item['class'],
+                                            'URL' => $data['SourceId'],
+                                            'Integration' => $this->object_it->getId(),
+                                            'ExternalId' => $item['id']
+                                        ),
+                                        array(
+                                            'Integration', 'ExternalId', 'ObjectClass'
+                                        )
+                                    );
+                                    $this->links[$item['class'] . $id] = $data['SourceId'];
+                                    $internalId = $id;
+                                    $externalId = $item['id'];
                                 }
-                                catch( Exception $e ) {
-                                    $this->getLogger()->info($e->getMessage());
+
+                                $remoteId = $this->remote_channel->getKeyValue($result);
+                                if ( $remoteId != '' && $read instanceof IntegrationDevpromChannel )
+                                {
+                                    $id = $result['key'] != '' ? $result['key'] : $remoteId;
+                                    $url = $this->object_it->get('URL') .
+                                        preg_replace('/\{parent\}/', $data['{parent}'],
+                                            preg_replace('/\{id\}/', $id, $classMapping['link']));
+
+                                    $linkObject->getRegistry()->Merge(
+                                        array(
+                                            'ObjectId' => $item['id'],
+                                            'ObjectClass' => $item['class'],
+                                            'URL' => $url,
+                                            'Integration' => $this->object_it->getId(),
+                                            'ExternalId' => $id
+                                        ),
+                                        array(
+                                            'Integration', 'ExternalId', 'ObjectClass'
+                                        )
+                                    );
+                                    $this->links[$item['class'] . $item['id']] = $url;
+                                    $internalId = $item['id'];
+                                    $externalId = $id;
+                                }
+
+                                if ( $internalId != '' && $externalId != '' ) {
+                                    $uid = new ObjectUID();
+                                    $info = $uid->getUIDInfo(getFactory()->getObject($item['class'])->getExact($internalId));
+                                    try {
+                                        $this->remote_channel->storeLink($classMapping, $item['class'], $externalId, $info['url'], $info['uid']);
+                                    }
+                                    catch( Exception $e ) {
+                                        $this->getLogger()->info($e->getMessage());
+                                    }
                                 }
                             }
+
+                            array_walk_recursive($results, function(&$value, $key) { $value = substr($value,0,128); });
+                            $this->getLogger()->debug($item['class'].': '.var_export($results,true));
+
+                            $this->buildLinks();
                         }
-
-                        array_walk_recursive($results, function(&$value, $key) { $value = substr($value,0,128); });
-                        $this->getLogger()->debug($item['class'].': '.var_export($results,true));
-
-                        $this->buildLinks();
-                        $this->setIdsMapping();
                     }
                 }
                 catch( \Exception $e ) {
@@ -334,15 +334,18 @@ class IntegrationService
         foreach( $this->links as $key => $link )
         {
             if ( !preg_match('/([A-Za-z]+)/', $key, $matches) ) continue;
-            $this->shortLinks[$key] = $this->extractId($this->mapping[$matches[1]]['link'], $link);
-            $this->backlinks[$link] = str_replace($matches[1], '', $key);
-            $this->shortBackLinks[$this->shortLinks[$key]] = $this->backlinks[$link];
+            $this->itemMapExternalId[$key] = $this->extractId($this->mapping[$matches[1]]['link'], $link);
+            $this->urlMapInternalId[$link] = str_replace($matches[1], '', $key);
+            $this->externalIdMapInternalId[$this->itemMapExternalId[$key]] = $this->urlMapInternalId[$link];
         }
-        $this->shortLinks['Project'.getSession()->getProjectIt()->getId()] = $this->object_it->get('ProjectKey');
-        $this->shortBackLinks[$this->object_it->get('ProjectKey')] = getSession()->getProjectIt()->getId();
+        $this->itemMapExternalId['Project'.getSession()->getProjectIt()->getId()] = $this->object_it->get('ProjectKey');
+        $this->externalIdMapInternalId[$this->object_it->get('ProjectKey')] = getSession()->getProjectIt()->getId();
+
+        $this->self_channel->setIdsMap($this->itemMapExternalId);
+        $this->remote_channel->setIdsMap(array_flip($this->itemMapExternalId));
     }
 
-    protected function extractId( $link_pattern, $link )
+    public function extractId( $link_pattern, $link )
     {
         if ( $link_pattern == '' ) return $link;
 
@@ -355,15 +358,6 @@ class IntegrationService
         return $link;
     }
 
-    protected function setIdsMapping()
-    {
-        $this->self_channel->setIdsMap($this->shortLinks);
-        $this->self_channel->setIdsMapReversed($this->shortBackLinks);
-
-        $this->remote_channel->setIdsMap($this->shortBackLinks);
-        $this->remote_channel->setIdsMapReversed($this->shortLinks);
-    }
-
     protected function getLogger() {
         return $this->logger;
     }
@@ -372,9 +366,9 @@ class IntegrationService
     private $remote_channel = null;
     private $self_channel = null;
     private $links = array();
-    private $backlinks = array();
-    private $shortLinks = array();
-    private $shortBackLinks = array();
+    private $urlMapInternalId = array();
+    private $itemMapExternalId = array();
+    private $externalIdMapInternalId = array();
     private $mapping = array();
     private $itemsToProcess = 60;
     private $logger = null;

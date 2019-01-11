@@ -12,7 +12,7 @@ include "RequestForm.php";
 include "RequestFormDuplicate.php";
 include "RequestFormLinked.php";
 include "RequestTable.php";
-include "RequestBulkForm.php";
+include_once "RequestBulkForm.php";
 include "RequestPlanningForm.php";
 include "IssueCompoundSection.php";
 include "IteratorExportIssueBoard.php";
@@ -34,10 +34,19 @@ class RequestPage extends PMPage
 
 		if ( $this->needDisplayForm() && is_object($this->getFormRef()) ) {
 			$form = $this->getFormRef();
+            $object_it = $this->getObjectIt();
+
+            if ( is_object($object_it) ) {
+                $object_it = $object_it->getSpecifiedIt();
+                if ( $object_it->object instanceof Issue ) {
+                    exit(header('Location: '.$object_it->getViewUrl()));
+                }
+            }
+
             if ( $_REQUEST['mode'] == 'group' ) {
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
-                $this->addInfoSection(new PageSectionComments($form->getObjectIt()));
+                $this->addInfoSection(new PageSectionComments($object_it));
             }
             else {
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'deadlines', translate('Сроки')));
@@ -45,7 +54,6 @@ class RequestPage extends PMPage
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'additional', translate('Дополнительно')));
                 $this->addInfoSection(new PageSectionAttributes($form->getObject(), 'trace', translate('Трассировки')));
 
-                $object_it = $this->getObjectIt();
                 if (is_object($object_it) && $object_it->getId() > 0) {
                     $this->addInfoSection(new PageSectionComments($object_it));
 
@@ -95,7 +103,7 @@ class RequestPage extends PMPage
 		return $object;
 	}
 
-	function getTable()
+    function getTable()
 	{
 		switch ($_REQUEST['kind']) {
 			case 'submitted':
@@ -119,7 +127,7 @@ class RequestPage extends PMPage
 
 	function getBulkForm()
 	{
-		return new RequestBulkForm($this->getObject());
+		return new RequestBulkForm($this->getObject(), \RequestForm::class);
 	}
 
 	function getForm()

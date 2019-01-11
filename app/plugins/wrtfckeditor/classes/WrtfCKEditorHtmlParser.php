@@ -14,14 +14,17 @@ class WrtfCKEditorHtmlParser extends WrtfCKEditorPageParser
 	    $content = preg_replace('/<p>(\xA0|\s|\&nbsp;)*<\/p>/i', '', $content);
         $content = preg_replace('/<figure/i', '<center><figure', $content);
         $content = preg_replace('/<\/figure>/i', '</figure></center>', $content);
+        $this->resetCodeBlocks();
 
         $callbacks = array (
+            CODE_ISOLATE => array($this, 'codeIsolate'),
             REGEX_INCLUDE_REVISION => array($this, 'parseIncludeRevisionCallback'),
             REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
             REGEX_IMAGE_NUMBERING => array($this, 'imageNumbering'),
             REGEX_TABLE_NUMBERING => array($this, 'tableNumbering'),
-            TextUtils::REGEX_SHRINK => array(TextUtils::class, 'shrinkLongUrl')
+            TextUtils::REGEX_SHRINK => array(TextUtils::class, 'shrinkLongUrl'),
+            CODE_RESTORE => array($this, 'codeRestore')
         );
         if ( function_exists('preg_replace_callback_array') ) {
             return preg_replace_callback_array($callbacks, $content);

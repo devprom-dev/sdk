@@ -35,7 +35,6 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 	{
 		$references = array();
 		
- 	    $references[] = getFactory()->getObject('pm_IssueType');
  	    $references[] = getFactory()->getObject('Priority');
 
  	    $request = getFactory()->getObject('pm_ChangeRequest');
@@ -64,11 +63,13 @@ class DuplicateIssuesWebMethod extends DuplicateWebMethod
 		$link = getFactory()->getObject('pm_ChangeRequestLink');
 
 		foreach( $this->getObjectIt()->idsToArray() as $source_id ) {
-			$link->add_parms( array(
-				'SourceRequest' => $source_id,
-				'TargetRequest' => $map[$request->getEntityRefName()][$source_id],
-				'LinkType' => $this->type_it->getId()
-			));
+		    if ( $map[$request->getEntityRefName()][$source_id] > 0 ) {
+                $link->add_parms( array(
+                    'SourceRequest' => $source_id,
+                    'TargetRequest' => $map[$request->getEntityRefName()][$source_id],
+                    'LinkType' => $this->type_it->getId()
+                ));
+            }
 		}
 	}
 }

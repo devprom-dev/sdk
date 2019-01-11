@@ -15,24 +15,25 @@ class RequestBusinessActionResolveImplemented extends BusinessActionWorkflow
  	    $request = $this->getObject();
  		
  		$duplicate_it = $request->getRegistry()->Query(
-				array (
- 	    				new RequestImplementationFilter($object_it->getId())
-				)
+            array (
+                new RequestImplementationFilter($object_it->getId())
+            )
 		);
  		 	    
  	    while( !$duplicate_it->end() )
  	    {
- 	        $state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
+            $item_it = $duplicate_it->getSpecifiedIt();
+ 	        $state_it = getFactory()->getObject($item_it->object->getStateClassName())->getRegistry()->Query(
 				array(
 					new FilterAttributePredicate('IsTerminal', 'Y'),
-					new FilterVpdPredicate($duplicate_it->get('VPD'))
+					new FilterVpdPredicate($item_it->get('VPD'))
 				)
  	        );
 			if ( $state_it->getId() == '' ) {
 				// if there is no terminal state than use latest one
 				$state_it = $state_it->object->getRegistry()->Query(
 					array(
-						new FilterVpdPredicate($duplicate_it->get('VPD')),
+						new FilterVpdPredicate($item_it->get('VPD')),
 						new SortRevOrderedClause()
 					)
 				);
@@ -40,10 +41,10 @@ class RequestBusinessActionResolveImplemented extends BusinessActionWorkflow
  	        
  	        if ( $state_it->getId() > 0 ) {
 				$service = new WorkflowService($request);
-				$service->moveToState($duplicate_it, $state_it->get('ReferenceName'));
+				$service->moveToState($item_it, $state_it->get('ReferenceName'));
  	        }
  	        else {
- 	        	throw new Exception('There is no terminal state for the issue "'.$duplicate_it->getId().'"');
+ 	        	throw new Exception('There is no terminal state for the issue "'.$item_it->getId().'"');
  	        }
  	    
  	        $duplicate_it->moveNext();

@@ -89,7 +89,8 @@ abstract class WikiConverterPanDoc extends WikiIteratorExport
         }
 
         $this->getIterator()->moveFirst();
-        $title = $this->getIterator()->count() == 1
+        $documents = array_unique($this->getIterator()->fieldToArray('DocumentId'));
+        $title = count($documents) < 2
             ? $this->getIterator()->getDisplayName()
             : $this->getName();
 

@@ -9,7 +9,7 @@ class SpendTimeWebMethod extends ObjectCreateNewWebMethod
  	function __construct( $object_it = null )
  	{
  		parent::__construct( 
- 				is_a($object_it->object, 'Request') 
+ 				is_object($object_it) && $object_it->object->getEntityRefName() == 'pm_ChangeRequest'
  				? getFactory()->getObject('ActivityRequest') 
  				: getFactory()->getObject('ActivityTask') 
 		);

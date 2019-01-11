@@ -6,11 +6,29 @@ class FieldCustomDictionary extends FieldDictionary
  	
  	function __construct( $object, $reference_name )
  	{
-		parent::__construct($object);
+ 	    if ( $object instanceof IteratorBase ) {
+            $objectIt = $object;
+            $object = $object->object;
+        }
 
- 		$attr = getFactory()->getObject('pm_CustomAttribute');
- 		
- 		$this->attribute_it = $attr->getByEntity( $object );
+        parent::__construct($object);
+
+ 	    $attribute = getFactory()->getObject('pm_CustomAttribute');
+        $this->attribute_it = $attribute->getByEntity( $object );
+
+ 	    if ( is_object($objectIt) ) {
+            $this->attribute_it = $attribute->createCachedIterator(
+                array_merge(
+                    $this->attribute_it->getRowset(),
+                    $attribute->getRegistry()->Query(
+                            array(
+                                new CustomAttributeObjectPredicate($objectIt)
+                            )
+                        )->getRowset()
+                )
+            );
+ 	    }
+
  		while( !$this->attribute_it->end() )
  		{
  			if ( $this->attribute_it->get('ReferenceName') == $reference_name ) {

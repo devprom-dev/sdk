@@ -106,12 +106,12 @@ invite_process:
 metrics:
     path:  /pm/{project}/metrics
     defaults: { _controller: ProjectBundle:Metrics:page }
-    methods:  GET
+    methods:  [GET, POST]
 
 metrics_report:
     path:  /pm/{project}/metrics/{report}
     defaults: { _controller: ProjectBundle:Metrics:page }
-    methods:  GET
+    methods:  [GET, POST]
 
 comments_new:
     path:  /pm/{project}/comment/{id}/reply
@@ -126,11 +126,11 @@ attachments_upload:
 attachments:
     path:  /pm/{project}/attachments
     defaults: { _controller: ProjectBundle:Attachments:page }
-    methods:  GET
+    methods:  [GET, POST]
 attachments_report:
     path:  /pm/{project}/attachments/{report}
     defaults: { _controller: ProjectBundle:Attachments:page }
-    methods:  GET
+    methods:  [GET, POST]
 
 mentions:
     type:     rest

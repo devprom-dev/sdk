@@ -17,7 +17,7 @@ class TaskBusinessActionMoveIssueNextState extends BusinessActionWorkflow
 		$request = getFactory()->getObject('Request');
 		getFactory()->resetCachedIterator($request);
 
-		$request_it = $object_it->getRef('ChangeRequest');
+		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 		if ( $request_it->get('OpenTasks') != '' ) return true;
 
 		$state_it = workflowScheme::Instance()->getStateIt($request_it->object);

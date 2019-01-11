@@ -27,6 +27,12 @@ class Priority extends BaseEntity
     private $name;
 
     /**
+     * @ORM\Column(type="string", name="IsDefault")
+     * @var string
+     */
+    private $default;
+
+    /**
      * @param string $name
      */
     public function setName($name)
@@ -40,6 +46,22 @@ class Priority extends BaseEntity
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setDefault($value)
+    {
+        $this->default = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefault()
+    {
+        return $this->default;
     }
 
     /**

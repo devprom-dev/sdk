@@ -1,8 +1,8 @@
 <?php
 
 define( 'ORIGIN_CUSTOM', 'custom' );
-include "persisters/CustomAttributesPersister.php";
-include "sorts/CustomAttributeSortClause.php";
+include_once "persisters/CustomAttributesPersister.php";
+include_once "sorts/CustomAttributeSortClause.php";
 
 class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder 
 {
@@ -33,34 +33,25 @@ class ObjectMetadataCustomAttributesBuilder extends ObjectMetadataBuilder
 			if ( $attr_it->get('ReferenceName') == 'UID' ) {
                 $uidOverriden = true;
                 $metadata->setAttributeDefault('UID', $attr_it->getHtmlDecoded('DefaultValue'));
+                $metadata->addAttributeGroup('UID', 'computed');
 				$attr_it->moveNext();
 				continue;
 			}
 
-			$groups = array('permissions');
-			$description = $attr_it->get('Description');
+            $db_type = $attr_it->getDBType();
+            $groups = array_merge(
+                array(
+                    'permissions'
+                ),
+                $attr_it->getGroups()
+            );
 
-			$type_it = $attr_it->getRef('AttributeType');
-			$db_type = $type_it->getDbType();
-			if ( $db_type == 'reference' ) {
-				$db_type = "REF_".$attr_it->get('AttributeTypeClassName')."Id";
-			}
+            $description = $attr_it->get('Description');
 
-			if ( $type_it->get('ReferenceName') == 'dictionary' ) {
+			if ( in_array('dictionary',$groups) ) {
 				$url = getSession()->getApplicationUrl($attr_it).'project/dicts/PMCustomAttribute'.$attr_it->getEditUrl();
 				$description .= ' '.str_replace('%1', $url, text(2183));
-                $groups[] = 'dictionary';
 			}
-
-            if ( $type_it->get('ReferenceName') == 'computed' ) {
-                $groups[] = 'computed';
-            }
-
-            foreach( \TextUtils::parseItems($attr_it->get('Groups')) as $group ) {
-                if ( preg_match('/[0-9a-z\-_]+/i', $group) ) {
-                    $groups[] = $group;
-                }
-            }
 
 			$attributes[$attr_it->get('ReferenceName')] = array(
 				'dbtype' => $db_type,

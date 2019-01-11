@@ -17,8 +17,12 @@ class ProfilePage extends CoPage
 			
  	function getTable()
  	{
+ 	    $user = getFactory()->getObject('User');
+        $user->addAttributeGroup('Password', 'system');
+        $user->addAttributeGroup('IsReadonly', 'system');
+
 		return new ProfileForm(
-		    getFactory()->getObject('User')->getExact(
+            $user->getExact(
 		        getSession()->getUserIt()->getId()
             )
         );

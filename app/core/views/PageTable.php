@@ -601,8 +601,6 @@ class PageTable extends ViewTable
 		
 		foreach( $attributes as $key => $field )
 		{
-		    if ( $field == 'OrderNum' ) continue;
-		    
 		    $db_type = $object->getAttributeDbType($field);
 		    
 			if ( $db_type == '' ) continue;
@@ -615,7 +613,7 @@ class PageTable extends ViewTable
 			
 			$fields[] = $field;
 		}
-		
+
 		$fields = array_diff($fields, $this->system_attributes);		
 
 		return $fields;
@@ -664,11 +662,6 @@ class PageTable extends ViewTable
 		return 'priority';
 	}
 	
-	function getViewFilter()
-	{
-		return null;
-	}
-
 	function draw( $view = null )
 	{
 	}

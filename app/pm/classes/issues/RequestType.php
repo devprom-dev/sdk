@@ -2,7 +2,7 @@
 include "RequestTypeIterator.php";
 include "RequestTypeRegistry.php";
 
-class RequestType extends MetaobjectCacheable
+class RequestType extends Metaobject
 {
  	function __construct() 
  	{

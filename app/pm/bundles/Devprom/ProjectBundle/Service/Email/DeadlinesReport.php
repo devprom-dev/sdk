@@ -20,10 +20,12 @@ class DeadlinesReport
             getSession(), SERVER_ROOT_PATH."pm/bundles/Devprom/ProjectBundle/Resources/views/Emails"
         );
 
+        $systemIt = getFactory()->getObject('cms_SystemSettings')->getAll();
+
         $mail = new \HtmlMailBox();
         $mail->setFromUser($this->session->getUserIt());
         $mail->appendAddress( $userIt->get('Email') );
-        $mail->setSubject( text(2620) );
+        $mail->setSubject( $systemIt->getDisplayName() . ': ' . text(2620) );
 
         $data = $this->getReportParms($userIt);
         if ( count($data['deadlines']) < 1 ) return;
@@ -78,7 +80,7 @@ class DeadlinesReport
             $uidInfo = $uid->getUIDInfo($artefactIt, true);
             $result['deadlines'][$dateText][] = array(
                 'id' => '<a href="'.$uidInfo['url'].'">'.$uidInfo['uid'].'</a>',
-                'title' => '{'.$uidInfo['project'] . '}' . $uidInfo['caption']
+                'title' => '{'.$uidInfo['project'] . '} ' . $uidInfo['caption']
             );
             $objectIt->moveNext();
         }

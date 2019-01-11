@@ -89,26 +89,43 @@ class FunctionForm extends PMPageForm
             }
  		}
 
- 		$request = getFactory()->getObject('Request');
- 	 	if ( getFactory()->getAccessPolicy()->can_create($request) )
- 		{
- 			$type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
- 					array ( new FilterBaseVpdPredicate() )
- 			);
-		    while( !$type_it->end() )
-		    {
-		        $method = new ObjectCreateNewWebMethod($request);
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD )
+        {
+            $request = getFactory()->getObject('Issue');
+            if ( getFactory()->getAccessPolicy()->can_create($request) )
+            {
+                $method = new ObjectCreateNewWebMethod($request);
                 if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
-		        
-		        $this->create_issue_actions[] = array(
-			            'name' => $type_it->getDisplayName(),
-			        	'method' => $method,
-			        	'type' => $type_it->getId()
-		        );
-		        
-		        $type_it->moveNext();
-		    }
- 		}
+
+                $this->create_issue_actions[] = array(
+                    'name' => $method->getCaption(),
+                    'method' => $method
+                );
+            }
+        }
+        else {
+            $request = getFactory()->getObject('Request');
+            if ( getFactory()->getAccessPolicy()->can_create($request) )
+            {
+                $type_it = getFactory()->getObject('RequestType')->getRegistry()->Query(
+                    array ( new FilterBaseVpdPredicate() )
+                );
+                while( !$type_it->end() )
+                {
+                    $method = new ObjectCreateNewWebMethod($request);
+                    if ( !$this->IsFormDisplayed() ) $method->setRedirectUrl('donothing');
+
+                    $this->create_issue_actions[] = array(
+                        'name' => $type_it->getDisplayName(),
+                        'method' => $method,
+                        'type' => $type_it->getId()
+                    );
+
+                    $type_it->moveNext();
+                }
+            }
+        }
 
  		$report_it = getFactory()->getObject('PMReport')->getExact('allissues');
  		if ( $report_it->getId() != '' )

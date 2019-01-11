@@ -10,16 +10,12 @@ class RequestBusinessActionSetPriorityHigh extends BusinessActionWorkflow
 	
 	function apply( $object_it )
  	{
- 	    global $model_factory;
- 	    
  	    if ( $object_it->get('Priority') != $object_it->object->getDefaultAttributeValue('Priority') ) return;
  	    
- 	    $priority = $model_factory->getObject('Priority');
- 	    
+ 	    $priority = getFactory()->getObject('Priority');
  	    $priority->setVpdContext($object_it);
  	    
  	    $priority_it = $priority->getAll();
- 	    
  	    $priority_it->moveNext();
  	    
  	    $object_it->object->modify_parms($object_it->getId(), array(
@@ -31,8 +27,7 @@ class RequestBusinessActionSetPriorityHigh extends BusinessActionWorkflow
 
  	function getObject()
  	{
- 		global $model_factory;
- 		return $model_factory->getObject('pm_ChangeRequest');
+ 		return getFactory()->getObject('pm_ChangeRequest');
  	}
  	
  	function getDisplayName()

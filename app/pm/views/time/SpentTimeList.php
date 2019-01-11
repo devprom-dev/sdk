@@ -13,7 +13,11 @@ class SpentTimeList extends PMPageList
 
         $object->setAttributeVisible('Participant', true);
         $object->setAttributeVisible('Issue', true);
-        $object->setAttributeVisible('Task', true);
+
+        $methodologyIt = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $methodologyIt->HasTasks() ) {
+            $object->setAttributeVisible('Task', true);
+        }
         $object->addAttributeGroup('Completed', 'system');
 
         $object->setAttributeOrderNum('Participant', 5);

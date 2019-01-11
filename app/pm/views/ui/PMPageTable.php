@@ -320,14 +320,16 @@ class PMPageTable extends PageTable
 			);
 			if ( $custom_it->getId() > 0 ) {
 				$store = new ReportModifyWebMethod( $custom_it );
-				if ( $store->hasAccess() ) {
+				if ( $store->hasAccess() )
+				{
+				    unset($actions['personal-persist']);
                     $actions[] = array();
 
 					$store->setRedirectUrl("function() { $('.alert-filter').hide(); }");
                     $actions['common-persist'] =
 						array (
 							'uid' => 'common-persist',
-							'name' => text(977),
+							'name' => text(2684),
 							'url' => $store->getJSCall($this->getFilterValues())
 						);
 
@@ -664,8 +666,23 @@ class PMPageTable extends PageTable
         }
 
         $predicates[] = new StateNotInPredicate($values['hiddencolumns']);
-        return array_merge($predicates, parent::getFilterPredicates());
+
+		return array_merge(
+            $predicates,
+            parent::getFilterPredicates(),
+            $this->buildDateFilterPredicates($values)
+        );
 	}
+
+    function buildDateFilterPredicates( $values )
+    {
+        return array(
+            new FilterSubmittedAfterPredicate($values['submittedon']),
+            new FilterSubmittedBeforePredicate($values['submittedbefore']),
+            new FilterModifiedAfterPredicate($values['modifiedafter']),
+            new FilterModifiedBeforePredicate($values['modifiedbefore'])
+        );
+    }
 
     function buildStatePredicate( $value )
     {
@@ -855,9 +872,7 @@ class PMPageTable extends PageTable
     protected function buildProjectFilter()
     {
    		$project = getFactory()->getObject('pm_Project');
-
-		$project_it = getSession()->getProjectIt();
-		if ( $project_it->IsPortfolio() || $project_it->IsProgram() )
+		if ( getSession()->getProjectIt()->get('LinkedProject') != '' )
 		{
 			$project->addFilter( new ProjectLinkedSelfPredicate() );
 			$filter = new FilterObjectMethod( $project, translate('Проект'), 'target' );

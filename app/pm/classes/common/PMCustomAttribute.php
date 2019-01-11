@@ -3,6 +3,7 @@
 include "PMCustomAttributeIterator.php";
 include "predicates/CustomAttributeEntityPredicate.php";
 include "predicates/CustomAttributeValuePredicate.php";
+include "predicates/CustomAttributeObjectPredicate.php";
 
 class PMCustomAttribute extends MetaobjectCacheable
 {

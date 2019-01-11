@@ -820,11 +820,21 @@ class PageList extends ListTable
 
 				    default:
                 		$ids = $entity_it->idsToArray();
+                		$vpds = array_unique($entity_it->fieldToArray('VPD'));
+
                         echo '<span class="tracing-ref" entity="'.get_class($entity_it->object).'">';
                             $widget_it = $this->getTable()->getReferencesListWidget($entity_it, $attr);
                             if ( $widget_it->getId() != '' && count($ids) > 1 )
                             {
-                                $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.\TextUtils::buildIds($ids));
+                                $projectIt = null;
+                                if ( count($vpds) > 1 ) {
+                                    $projectIt = getSession()->getProjectIt()->object->createCachedIterator(array(
+                                        array(
+                                            'CodeName' => 'my'
+                                        )
+                                    ));
+                                }
+                                $url = $widget_it->getUrl('filter=skip&'.strtolower(get_class($entity_it->object)).'='.\TextUtils::buildIds($ids), $projectIt);
                                 $text = count($ids) > 10
                                         ? str_replace('%1', count($ids) - 10, text(2028))
                                         : text(2034);
@@ -915,7 +925,7 @@ class PageList extends ListTable
                 $this->uid_service->setBaseline($baselines[$entity_it->getId()]);
                 $text = $this->uid_service->getUidIconGlobal($entity_it, true);
                 if ( !$this instanceof PageBoard ) {
-                    $text .= '<span class="ref-name">' . $entity_it->getDisplayNameExt() . '</span>';
+                    $text .= '<span class="ref-name">' . $entity_it->getDisplayNameExt('', $baselines[$entity_it->getId()]) . '</span>';
                 }
                 $items[$entity_it->getId()] = $text;
                 $entity_it->moveNext();

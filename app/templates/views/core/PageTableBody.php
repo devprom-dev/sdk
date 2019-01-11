@@ -125,7 +125,7 @@ if ( is_array($filtersMenu) ) {
             }
         }
 
-        if (count($filter_items) > 0 && count($filterMoreActions) > 0) { ?>
+        if (count($filterMoreActions) > 0) { ?>
             <div class="btn-group pull-left">
                 <a class="btn btn-cell dropdown-toggle transparent-btn btn-filter-more" uid="filter-more-actions" href="#" data-toggle="dropdown">
                     <span class="label">...</span>
@@ -136,6 +136,16 @@ if ( is_array($filtersMenu) ) {
         }
 
         echo '</div>';
+    }
+	else if (count($filterMoreActions) > 1) {
+        ?>
+        <div class="btn-group pull-left">
+            <a class="btn btn-cell dropdown-toggle transparent-btn btn-filter-more" uid="filter-more-actions" href="#" data-toggle="dropdown">
+                <span class="label">...</span>
+            </a>
+            <? echo $view->render('core/PopupMenu.php', array('items' => $filterMoreActions, 'uid' => 'filter-more-actions')); ?>
+        </div>
+        <?php
     }
 
 if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') && count($bulk_actions) > 0 ) { ?>
@@ -241,7 +251,7 @@ if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') && count($bulk
 ?>
 <div class="clearfix"></div>
 
-<?php if ( $filter_modified ) { ?>
+<?php if ( $filter_modified && count($filterMoreActions) > 0 ) { ?>
 
 <div class="hidden-print alert alert-filter alert-warning">
 	<button type="button" class="close" data-dismiss="alert">
@@ -251,6 +261,10 @@ if ( !$tableonly && is_object($list) && !is_a($list, 'PageChart') && count($bulk
         $items = $filterMoreActions;
         $persistItem = $items['personal-persist'];
         unset($items['personal-persist']);
+        if ( !is_array($persistItem) ) {
+            $persistItem = $items['common-persist'];
+            unset($items['common-persist']);
+        }
         unset($items['filters']);
         unset($items['share']);
         unset($items['reset']);

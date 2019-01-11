@@ -41,7 +41,7 @@
                     {% for root in roots %}
                         <header>
                             <h2><span class="icon-pages"></span>{{ root.name }}</h2>
-                            <p>{% autoescape false %}{{ root.content|unescapeHtml }}{% endautoescape %}</p>
+                            <p><p>{% autoescape false %}{{ wysiwyg(root) }}{% endautoescape %}</p></p>
                         </header>
                         {% for theme in themes if theme.parent == root %}
                             {% if loop.index0 > 0 and loop.index0 % 3 == 0 %}

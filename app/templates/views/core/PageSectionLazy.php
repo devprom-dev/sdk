@@ -6,5 +6,5 @@
             $('#<?=$id?>').html(data);
             completeUIExt($('#<?=$id?>'));
         });
-    })
+    });
 </script>

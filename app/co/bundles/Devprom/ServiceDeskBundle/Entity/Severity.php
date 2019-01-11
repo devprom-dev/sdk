@@ -27,6 +27,12 @@ class Severity extends BaseEntity
     private $name;
 
     /**
+     * @ORM\Column(type="string", name="IsDefault")
+     * @var string
+     */
+    private $default;
+
+    /**
      * @ORM\Column(type="integer", name="OrderNum")
      * @var integer
      */
@@ -46,6 +52,22 @@ class Severity extends BaseEntity
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setDefault($value)
+    {
+        $this->default = $value;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefault()
+    {
+        return $this->default;
     }
 
     /**

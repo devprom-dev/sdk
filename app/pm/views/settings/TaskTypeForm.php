@@ -1,5 +1,4 @@
 <?php
-include "FieldTaskTypeStates.php";
 
 class TaskTypeForm extends PMPageForm
 {
@@ -17,7 +16,6 @@ class TaskTypeForm extends PMPageForm
  			case 'ReferenceName':
  			case 'ParentTaskType':
  			case 'Stages':
-			case 'States':
  				return true;
 
  			default:
@@ -32,9 +30,6 @@ class TaskTypeForm extends PMPageForm
 		{
 			case 'ParentTaskType': 
 				return new FieldDictionary( getFactory()->getObject('TaskTypeBase') );
-
-			case 'States':
-				return new FieldTaskTypeStates($this->object_it);
 
 			default:
 				return parent::createFieldObject( $attr_name );

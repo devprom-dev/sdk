@@ -292,11 +292,18 @@ class IntegrationRedmineChannel extends IntegrationRestAPIChannel
         return true;
     }
 
-    function getKeyValue($data) {
+    function getKeyValue($data)
+    {
         $value = parent::getKeyValue($data);
         if ( $value != '' ) return $value;
-        $item = is_numeric(array_shift(array_keys($data))) ? array_shift($data) : $data;
-        return $item[array_shift(array_keys($item))][$this->getKeyField()];
+
+        $firstKey = array_shift(array_keys($data));
+        if ( is_numeric($firstKey) ) {
+            $data = array_shift($data);
+        }
+
+        $key = array_shift(array_keys($data));
+        return $data[$key][$this->getKeyField()];
     }
 
     private $issueTypeMap = array();

@@ -12,8 +12,9 @@ class TreeGridService
         $this->object = getFactory()->getObject($className);
     }
 
-    function getTreeGridJsonView( $listView, $view, $titleField, $childrenField, $parentField )
+    function  getTreeGridJsonView( $listView, $view, $titleField, $childrenField, $parentField )
     {
+        $listView->extendModel();
         $traceAttributes = $this->object->getAttributesByGroup('trace');
 
         $listView->setRenderView($view);
@@ -43,6 +44,7 @@ class TreeGridService
             $cells['id'] = $it->getId();
             $cells['folder'] = $it->get($childrenField) != '';
             $cells['parent'] = in_array($it->get($parentField), $parentIds) ? $it->get($parentField) : '';
+            $cells['parentid'] = $it->get($parentField);
             $cells['icon'] = false;
             $cells['class'] = strtolower(get_class($this->object));
             $cells['checkbox-field'] = '<input class=checkbox tabindex="-1" type="checkbox" name="to_delete_'.$it->getId().'">';

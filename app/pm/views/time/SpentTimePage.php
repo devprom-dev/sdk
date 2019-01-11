@@ -15,12 +15,35 @@ class SpentTimePage extends PMPage
 
     function getFormObject()
 	{
-		$class_name = in_array(strtolower($_REQUEST['class']), array('request', 'pm_changerequest')) ? 'Request' : 'Task';
-		$target = getFactory()->getObject($class_name);
+	    $className = getFactory()->getClass($_REQUEST['class']);
+	    if ( !class_exists($className) )
+	    {
+	        $object = getFactory()->getObject('Activity');
+	        if ( $_REQUEST[$object->getIdAttribute()] > 0 ) {
+                $objectIt = $object->getExact($_REQUEST[$object->getIdAttribute()]);
+                if ( $objectIt->get('Issue') > 0 ) {
+                    $this->anchor_it = $objectIt->getRef('Issue');
+                    $object = getFactory()->getObject('ActivityRequest');
+                }
+                else if ($objectIt->get('Task') > 0) {
+                    $this->anchor_it = $objectIt->getRef('Task');
+                    $object = getFactory()->getObject('ActivityTask');
+                }
+                else {
+                    $this->anchor_it = getFactory()->getObject('Task')->getEmptyIterator();
+                }
+            }
+	        else {
+                $this->anchor_it = getFactory()->getObject('Task')->getEmptyIterator();
+            }
+	        return $object;
+        }
+
+		$target = getFactory()->getObject($_REQUEST['class']);
 		$this->anchor_it = $target->getExact($_REQUEST['object']);
 
 		return getFactory()->getObject(
-		    is_a($target, 'Request') ? 'ActivityRequest' : 'ActivityTask'
+		    $target->getEntityRefName() == 'pm_ChangeRequest' ? 'ActivityRequest' : 'ActivityTask'
         );
 	}
 

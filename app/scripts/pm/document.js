@@ -574,13 +574,13 @@ function refreshListItems()
    	    	    }
    	    	});
 
+            mergeTitles(html);
+
 			$.each( skip, function(index, object_id) {
 				var row = html.find('tr[object-id="'+object_id+'"]');
 				clearRow(row);
 				row.remove();
 			});
-
-			mergeTitles(html);
 
 			var container = $('#documentCache');
             mergeRows(container, html);

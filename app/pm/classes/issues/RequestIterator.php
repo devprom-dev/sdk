@@ -1,14 +1,10 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/workflow/StatableIterator.php";
 
 class RequestIterator extends StatableIterator
 {
-	function getDisplayName()
-	{
-	    $result = parent::getDisplayName();
-	 	if ( $this->get('TypeName') != '' ) {
-            $result = $this->get('TypeName').': '.$result;
-	 	}
-	 	return $result;
+	function getDisplayName() {
+	    return $this->getObjectDisplayName() . ': ' . parent::getDisplayName();
 	}
 
 	function getDisplayNameExt( $prefix = '' )
@@ -154,14 +150,7 @@ class RequestIterator extends StatableIterator
         );
  	}
 
- 	function getSpecifiedIt()
-    {
-        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
-        if ( $this->get('Type') == '' && !$this->object instanceof Issue && $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD && class_exists('Issue') ) {
-            return getFactory()->getObject('Issue')->createCachedIterator(
-                array($this->getData())
-            );
-        }
-        return $this;
+ 	function getSpecifiedIt() {
+        return $this->object->getSpecific($this);
     }
 }

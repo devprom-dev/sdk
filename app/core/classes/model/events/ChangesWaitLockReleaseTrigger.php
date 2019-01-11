@@ -86,6 +86,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		}
 		$lock = new LockFileSystem('ChangeLogAggregated');
 		$lock->Release();
+
+        $this->affected_queue = array();
 	}
 	
 	function process( $object_it, $kind, $content = array(), $visibility = 1) 
@@ -93,8 +95,8 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
 		if ( $object_it->object instanceof AffectedObjects ) return; // avoid infinite recursion
 		if ( $object_it->object instanceof CoScheduledJob ) return;
 		if ( in_array($object_it->object->getEntityRefName(), $this->skipped_entities) ) return; // skip unnesessary events
-		
-		// put itself in the queue
+
+        // put itself in the queue
 		$class_name = get_class($object_it->object);
 		
 		if ( !in_array($class_name, $this->skipClasses) ) {
@@ -114,7 +116,7 @@ class ChangesWaitLockReleaseTrigger extends SystemTriggersBase
     	{
     		if ( $object_it->get($attribute) == '' ) continue;
     		if ( !$object_it->object->IsReference($attribute) ) continue;
-    		if ( in_array($attribute, array("Project","DocumentId","ParentPage")) ) continue;
+    		if ( in_array($attribute, array("Project","DocumentId","ParentPage","ParentFeature")) ) continue;
     		
     		$ref = $object_it->object->getAttributeObject($attribute);
     		if ( in_array($ref->getEntityRefName(), $this->skipReferences) ) continue;

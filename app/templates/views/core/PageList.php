@@ -52,6 +52,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
 		<tr class="header-row">
 			<?php if ( $display_numbers ) { ?>
 			<th class="for-num" width="<?=$numbers_column_width?>" uid="numbers">
+                <? if ( count($filter_actions) > 0 ) { ?>
                 <div class="btn-group pull-left">
                     <div id="filter-settings" class="btn dropdown-toggle btn-sm btn-secondary" data-toggle="dropdown" href="#" data-target="#listmenu<?=$table_id?>">
                         <i class="icon-cog icon-white"></i>
@@ -64,6 +65,7 @@ if ( $show_header && $need_to_select ) $columns_number++;
                     ));
                 ?>
                 </div>
+                <?php } ?>
             </th>
 			<?php } ?>
 

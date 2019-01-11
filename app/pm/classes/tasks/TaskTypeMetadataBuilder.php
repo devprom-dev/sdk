@@ -13,6 +13,7 @@ class TaskTypeMetadataBuilder extends ObjectMetadataEntityBuilder
     	
 		$metadata->addAttribute('States', 'VARCHAR', text(2077), false, false, text(2078));
 		$metadata->addPersister( new TaskTypeStatePersister() );
+        $metadata->addAttributeGroup('States', 'system');
 
 		$metadata->setAttributeCaption('ReferenceName', text(1868));
 		$metadata->setAttributeOrderNum('ReferenceName', 14);

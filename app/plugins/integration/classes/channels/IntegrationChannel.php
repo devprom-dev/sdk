@@ -34,12 +34,8 @@ abstract class IntegrationChannel
     }
 
     public function setIdsMap( $map ) {
-        $this->idsMapRead = $map;
-        $this->idsMapWrite = array_flip($map);
-    }
-
-    public function setIdsMapReversed( $map ) {
         $this->idsMapWrite = $map;
+        $this->idsMapRead = array_flip($map);
     }
 
     protected function getIdsMapRead() {

@@ -20,9 +20,9 @@ class TaskBusinessActionGetIssueInWork extends BusinessActionWorkflow
 		getFactory()->resetCachedIterator($request);
 
  		getSession()->addBuilder( new RequestModelExtendedBuilder() );
- 		$request_it = $object_it->getRef('ChangeRequest');
+ 		$request_it = $object_it->getRef('ChangeRequest')->getSpecifiedIt();
 
-		$state_it = getFactory()->getObject('IssueState')->getRegistry()->Query(
+		$state_it = getFactory()->getObject($request_it->object->getStateClassName())->getRegistry()->Query(
 			array(
 				new FilterHasNoAttributePredicate('IsTerminal', 'Y'),
 				new FilterVpdPredicate($request_it->get('VPD'))

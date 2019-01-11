@@ -158,9 +158,11 @@ class FieldDictionary extends Field
 
 		$groups = $this->getGroups();
 		$this->options = $this->getOptions();
-		
+
+		$hasNullOption = false;
 		foreach( $this->options as $option )
 		{
+		    if ( $option['value'] == '' ) $hasNullOption = true;
 			if ( !array_key_exists($option['group'],$groups) ) $option['group'] = ''; 
 			$groups[$option['group']]['items'][] = $option;
 		}
@@ -172,7 +174,7 @@ class FieldDictionary extends Field
         }
 		?>
 		<select class="input-block-level" tabindex="<? echo $tab_index ?>" onchange="<?php echo $this->script ?>" style="<? echo $this->style ?>" name="<? echo $this->getName(); ?>" id="<? echo $this->getId(); ?>" <?=($this->getRequired() ? 'required' : '')?> default="<?=htmlentities($this->getDefault())?>">
-		<?php if ( $this->null_option ) { ?>
+		<?php if ( $this->null_option && !$hasNullOption ) { ?>
 			<option value="" referenceName=""><?=$this->null_title?></option>
 			<?php } ?>
 			<?

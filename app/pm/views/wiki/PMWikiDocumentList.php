@@ -344,7 +344,7 @@ class PMWikiDocumentList extends PMWikiList
 		$form = $this->pageForm;
 
 		$form->setFormIndex( $object_it->getId() );
-        $form->setObject(getFactory()->getObject(get_class($form->getObject())));
+        $form->setObject($this->getTable()->getPage()->buildObject());
 		$form->show( $form->getObject()->createCachedIterator(array($object_it->getData())) );
 		$form->setPage( $this->getTable()->getPage() );
         $form->buildForm();
@@ -458,7 +458,8 @@ class PMWikiDocumentList extends PMWikiList
                                 }
                                 echo '</li>';
                             }
-                            else if ( $object_it->object->IsReference($attribute) ) {
+                            else if ( $object_it->object->IsReference($attribute) )
+                            {
                                 $ref_it = $this->getFilteredReferenceIt($attribute, $object_it->get($attribute));
                                 if ( $ref_it->count() < 1 ) continue;
 
@@ -706,5 +707,10 @@ class PMWikiDocumentList extends PMWikiList
             return text(2674);
         }
         return parent::getNoItemsMessage();
+    }
+
+    function getFilteredReferenceIt( $attr, $value )
+    {
+        return $this->getObject()->getAttributeObject($attr)->getExact(preg_split('/,/', $value));
     }
 }

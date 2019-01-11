@@ -176,6 +176,11 @@ class ObjectUID
  	
  	function getObjectIt( $uid, $parms = array() )
  	{
+ 	    $objectIt = $this->checkUIDResolvers($uid);
+ 	    if ( is_object($objectIt) && $objectIt->getId() != '' ) {
+ 	        return $objectIt;
+        }
+
  		list($type, $object_id) = preg_split('/-/', $uid);
  		$class = array_search(strtoupper($type), $this->map);
  		if($class === false) {
@@ -183,10 +188,10 @@ class ObjectUID
  		}
 
  		$class = getFactory()->getClass($class);
- 		if ( $class == '' || !class_exists($class, false)) {
-            return $this->checkUIDResolvers($uid);
+ 		if ( !class_exists($class, false)) {
+            return getFactory()->getObject('Task')->getEmptyIterator();
 		}
- 		
+
  		$object = getFactory()->getObject($class);
 		$registry = $object->getRegistry();
 		if ( $object instanceof WikiPage ) {

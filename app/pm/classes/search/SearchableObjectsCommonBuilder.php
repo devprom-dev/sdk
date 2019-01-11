@@ -16,9 +16,9 @@ class SearchableObjectsCommonBuilder extends SearchableObjectsBuilder
  		if ( $methodology_it->get('IsKnowledgeUsed') == 'Y' ) {
      		$set->add( 'ProjectPage', array('Caption', 'Content') );
  		}
- 		if ( $project_it->get('IsBlog') == 'Y' ) {
-     		$set->add( 'BlogPost', array('Caption', 'Content') );
- 		}
+ 		if ( $methodology_it->HasFeatures() ) {
+            $set->add( 'Feature', array('Caption', 'Description'), 'features-trace' );
+        }
 
  		$set->add( 'Question', array('Content'), 'discussions' );
  		$set->add( 'Comment', array('Caption') );

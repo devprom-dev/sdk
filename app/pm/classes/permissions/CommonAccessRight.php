@@ -1,8 +1,5 @@
 <?php
-
 include "CommonAccessRightIterator.php";
-
-include "predicates/CommonAccessClassPredicate.php";
 include "predicates/CommonAccessEntityPredicate.php";
 include "predicates/CommonAccessObjectPredicate.php";
 include "predicates/CommonAccessReportPredicate.php";
@@ -80,7 +77,7 @@ class CommonAccessRight extends Metaobject
 	{
 		$data = array();
 
-		$object_class = $this->getFilterValue( 'CommonAccessClassPredicate' );
+		$object_class = $this->getFilterValue( 'CommonAccessEntityPredicate' );
 		$role_filter = $this->getFilterValue( 'CommonAccessRolePredicate' );
 
 		$access_it = getFactory()->getObject('pm_ObjectAccess')->getRegistry()->Query(
@@ -183,7 +180,7 @@ class CommonAccessRight extends Metaobject
 	{
 		$data = array();
 		$entity_filter = $this->getFilterValue( 'CommonAccessEntityPredicate' );
-		
+
 		$object_it = getFactory()->getObject('AttributePermissionEntity')->getAll();
 		while( !$object_it->end() )
 		{
@@ -214,7 +211,7 @@ class CommonAccessRight extends Metaobject
 
 			$object_it->moveNext();
 		}
-		
+
 		usort( $data, 'usort_display_name' );
 		
 		return $data;

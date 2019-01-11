@@ -7,14 +7,6 @@ class FieldDate extends Field
          return !$this->getEditMode() || parent::readOnly();
     }
     
-	function setValue( $value )
-	{
-        $value = getSession()->getLanguage()->getDateFormatted(
-            SystemDateTime::convertToClientTime($value)
-        );
-		parent::setValue( $value );
-	}
-	
     function draw( $view = null )
 	{
 		if ( $this->readOnly() )

@@ -64,4 +64,35 @@ class PMCustomAttributeIterator extends OrderedIterator
 		$registry->setFilters($filters);
 		return $registry;
 	}
+
+	function getDBType()
+    {
+        $db_type = $this->getRef('AttributeType')->getDbType();
+        if ( $db_type == '' ) {
+            $db_type = 'VARCHAR';
+        }
+        if ( $db_type == 'reference' ) {
+            return "REF_".$this->get('AttributeTypeClassName')."Id";
+        }
+        return $db_type;
+    }
+
+    function getGroups()
+    {
+        $groups = array();
+
+        $type_it = $this->getRef('AttributeType');
+        if ( $type_it->get('ReferenceName') == 'dictionary' ) {
+            $groups[] = 'dictionary';
+        }
+        if ( $type_it->get('ReferenceName') == 'computed' ) {
+            $groups[] = 'computed';
+        }
+        foreach( \TextUtils::parseItems($this->get('Groups')) as $group ) {
+            if ( preg_match('/[0-9a-z\-_]+/i', $group) ) {
+                $groups[] = $group;
+            }
+        }
+        return $groups;
+    }
 }

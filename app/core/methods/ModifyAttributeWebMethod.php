@@ -238,12 +238,24 @@ class ModifyAttributeWebMethod extends WebMethod
 		}
 
 		if ( $has_changes )	{
+            $parms['WasRecordVersion'] = $object_it->get('RecordVersion');
 			$object->modify_parms($object_it->getId(), $parms);
 		}
 
-		$object->addPersister( new ObjectAffectedDatePersister() );
-		$object_it = $object->getExact($object_it->getId());
-		
+		// flush notifications on changes
+        getFactory()->getEventsManager()->releaseNotifications();
+		foreach( getFactory()->getEventsManager()->getNotificators('ChangesWaitLockReleaseTrigger') as $notificator ) {
+            getFactory()->getEventsManager()->removeNotificator($notificator);
+            $notificator->terminate();
+        }
+
+		$object_it = $object->getRegistryBase()->Query(
+		    array(
+                new ObjectAffectedDatePersister(),
+                new FilterInPredicate($object_it->getId())
+            )
+        );
+
 		echo '{"message":"ok", "modified":"'.$object_it->get_native('AffectedDate').'"}';
  	}
 }

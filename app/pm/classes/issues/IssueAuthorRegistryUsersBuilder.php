@@ -7,18 +7,37 @@ class IssueAuthorRegistryUsersBuilder extends IssueAuthorRegistryBuilder
     function build( IssueAuthorRegistry & $registry )
     {
         if ( !getFactory()->getAccessPolicy()->can_read(getFactory()->getObject('Participant')) ) {
-            $rowset = getSession()->getUserIt()->getRowset();
-            foreach( $rowset as $row => $data ) {
-                $rowset[$row]['CustomerClass'] = 'User';
-            }
-            $registry->merge($rowset);
+            $registry->merge("
+                SELECT t.cms_UserId, 
+                       t.Caption, 
+                       t.Login, 
+                       t.Email, 
+                       t.Description, 
+                       t.cms_UserId CustomerId, 
+                       'User' CustomerClass,
+                       t.IsReadonly,
+                       t.OrderNum
+                  FROM cms_User t
+                 WHERE t.cms_UserId = ".getSession()->getUserIt()->getId()."
+            ");
             return;
         }
 
-        $rowset = getFactory()->getObject('UserActive')->getRegistry()->Query()->getRowset();
-        foreach( $rowset as $row => $data ) {
-            $rowset[$row]['CustomerClass'] = 'User';
-        }
-    	$registry->merge($rowset);
+        $predicate = new UserStatePredicate();
+        $predicate->setObject(getFactory()->getObject('UserActive'));
+
+        $registry->merge("
+                SELECT t.cms_UserId, 
+                       t.Caption, 
+                       t.Login, 
+                       t.Email, 
+                       t.Description, 
+                       t.cms_UserId CustomerId, 
+                       'User' CustomerClass,
+                       t.IsReadonly,
+                       t.OrderNum
+                  FROM cms_User t
+                 WHERE 1 = 1 ". $predicate->getPredicate('nonblocked')."
+            ");
     }
 }

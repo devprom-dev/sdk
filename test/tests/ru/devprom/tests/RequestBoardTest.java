@@ -150,8 +150,6 @@ public class RequestBoardTest extends ProjectTestBase {
 		
 		ProductFunction pfunction = new ProductFunction("Функция");
 		FunctionsPage fp = (new SDLCPojectPageBase(driver)).gotoFunctions();
-		FunctionNewPage fnp = fp.clickNewFunction();
-		fp = fnp.createNewFunction(pfunction);
 		
 		String attach = "resources/config.properties";
 		Request request = requests.get(2);
@@ -177,7 +175,6 @@ public class RequestBoardTest extends ProjectTestBase {
 	  rep.updateRequest(request);
 	  rep.addTask(task);
 	  rep.setVersion(request.getVersion());
-	  rep.addFunction(pfunction);
      /* for (String attachment:request.getAttachments()) {
       	rep.addAttachment(new File(attachment));
       }*/
@@ -218,15 +215,9 @@ public class RequestBoardTest extends ProjectTestBase {
       Assert.assertEquals(readRequest.getTags(), request.getTags(), "Неправильный список Тэгов");
       Assert.assertEquals(readRequest.getVersion(), request.getVersion(), "Неправильный параметр 'Обнаружено в версии'");
       Assert.assertEquals(readRequest.getClosedVersion(), request.getClosedVersion(), "Неправильный параметр 'Выполнено в версии'");
-      Assert.assertEquals(readRequest.getPfunction(), request.getPfunction(), "Нет функции, или она не правильная");
       
       //Проверка ссылок
-      SDLCPojectPageBase page = rbp.clickToEmbeddedLink(request.getNumericId(), true, "Функция:");  
-      Assert.assertTrue(page.isTextPresent(pfunction.getName()), "Не работает ссылка на функцию. Текущий адрес: " + driver.getCurrentUrl());
-      driver.navigate().back();
-      rbp = new RequestsBoardPage(driver);
-      
-      page = rbp.clickToEmbeddedLink(request.getNumericId(), true, "Связи:");
+      SDLCPojectPageBase page = rbp.clickToEmbeddedLink(request.getNumericId(), true, "Связи:");
       Assert.assertTrue(page.isTextPresent(request.getLinkedRequests().get(0).getName()), "Не работает ссылка на Связанные пожелания. Текущий адрес: " + driver.getCurrentUrl());
       driver.navigate().back();
       rbp = new RequestsBoardPage(driver);

@@ -62,7 +62,7 @@
     "url": "/time_entries/{id}.json",
     "link": "/time_entries/{id}",
     "Participant": {"Caption":"time_entry.user.name"},
-    "Task": {
+    "Issue": {
       "reference": "time_entry.issue",
       "type": "Request"
     },

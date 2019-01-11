@@ -216,7 +216,7 @@ class RequestBoardPlanning extends RequestBoard
             {
                 $methodology_it = $object_it->getRef('Project')->getMethodologyIt();
 
-                echo '<div class="board-header-details">';
+                echo '<div class="board-header-details brd-head-details">';
                     echo getSession()->getLanguage()->getDateFormattedShort($object_it->get('StartDate'))
                         ." / "
                         .getSession()->getLanguage()->getDateFormattedShort($object_it->get('FinishDate'));

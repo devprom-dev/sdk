@@ -40,10 +40,8 @@ class RequestFormDuplicate extends RequestForm
 			case 'Project':
 				return $_REQUEST['Project'] > 0 ? $_REQUEST['Project'] : parent::getFieldValue($attribute);
 
-			case 'Function':
 			case 'Estimation':
 			case 'PlannedRelease':
-			case 'SubmittedVersion':
 			case 'Owner':
 			case 'Customer':
             case 'OrderNum':

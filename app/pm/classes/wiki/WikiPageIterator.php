@@ -40,10 +40,18 @@ class WikiPageIterator extends StatableIterator
  		}
  	}
 
- 	function getDisplayNameExt( $prefix = '' )
+ 	function getDisplayNameExt( $prefix = '', $baselineId = 0 )
     {
-        if ( $this->get('DocumentVersion') != '' ) {
-            $prefix .= '['.$this->get('DocumentVersion').'] ';
+        if ( $baselineId > 0 ) {
+            $baselineIt = getFactory()->getObject('cms_Snapshot')->getExact($baselineId);
+            if ( $baselineIt->getId() != '' ) {
+                $prefix .= '['.$baselineIt->getDisplayName().'] ';
+            }
+        }
+        else {
+            if ( $this->get('DocumentVersion') != '' ) {
+                $prefix .= '['.$this->get('DocumentVersion').'] ';
+            }
         }
         if ( $this->get('DocumentName') != '' && $this->get('ParentPage') != '' ) {
             $prefix .= $this->get('DocumentName') . ' / ' ;

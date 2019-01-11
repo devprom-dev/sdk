@@ -54,6 +54,10 @@ class WrtfCKEditorPageParser extends WikiParser
         return '<img src="'.$url.rawurlencode(trim(html_entity_decode($match[1], ENT_QUOTES | ENT_HTML401, APP_ENCODING ))).'">';
     }
 
+    function resetCodeBlocks() {
+        $this->codeBlocks = array();
+    }
+
     function codeIsolate( $match ) {
         return '<code'.$match[1].'>'.array_push($this->codeBlocks, $match[2]).'</code>';
     }
@@ -97,12 +101,20 @@ class WrtfCKEditorPageParser extends WikiParser
         if ( $title == '' ) return $match[0];
 
         $urlMatches = array();
-        if ( !preg_match('/\/([A-Z]{1}-[0-9]+)/i', $attributes, $urlMatches)) return $match[0];
-        if ( strpos($title, $urlMatches[1]) === false ) return $match[0];
+        if ( !preg_match('/\[([A-Z]{1}-[0-9]+)\]/i', $title, $matches)) return $match[0];
+        if ( count($matches) < 2 ) return $match[0];
 
+        if ( !preg_match('/\/([A-Z]{1}-[0-9]+)/i', $attributes, $urlMatches)) return $match[0];
         $info = $this->getUidInfo($urlMatches[1]);
         if ( $info['caption'] == '' ) return $match[0];
 
-        return '<a ' . $attributes . '>[' . $info['uid'] . '] '. $info['caption'] . '</a>';
+        $callback = $this->getTitleResolver();
+        if ( is_callable($callback) ) {
+            $title = $callback($info);
+        }
+        else {
+            $title = '[' . $info['uid'] . '] '. $info['caption'];
+        }
+        return '<a ' . $attributes . '>' . $title . '</a>';
     }
 }

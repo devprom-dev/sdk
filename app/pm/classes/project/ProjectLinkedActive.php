@@ -1,9 +1,9 @@
 <?php
 include "ProjectLinkedActiveRegistry.php";
 
-class ProjectLinkedActive extends Metaobject
+class ProjectLinkedActive extends Project
 {
 	function __construct() {
-		parent::__construct('pm_Project', new ProjectLinkedActiveRegistry($this));
+		parent::__construct(new ProjectLinkedActiveRegistry($this));
 	}
 }

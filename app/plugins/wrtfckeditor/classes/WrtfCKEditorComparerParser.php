@@ -11,6 +11,7 @@ class WrtfCKEditorComparerParser extends WrtfCKEditorPageParser
 		$callbacks = array(
             CODE_ISOLATE => array($this, 'codeIsolate'),
             '/<img\s+alt="([^"]+)"[^>]+>/i' => array($this, 'parseUMLImage'),
+            REGEX_INCLUDE_PAGE => array($this, 'parseIncludePageCallback'),
             REGEX_MATH_TEX => array($this, 'parseMathTex'),
             CODE_RESTORE => array($this, 'codeRestore'),
             REGEX_COMMENTS => array($this, 'removeComments'),

@@ -1663,5 +1663,8 @@ return array (
     2678 => 'Completed at %1',
     2679 => '<a href="%1" target="_blank">Lifecycle schema</a>',
     2680 => 'Participants workload chart',
-    2681 => 'Goals and features'
+    2681 => 'Goals and features',
+    2682 => 'Custom attributes are displayed on Additional tab of the form by default. Check the option to have the attribute be didsplayed on the first tab.',
+    2683 => 'Check the option if the attribute value should be specified always',
+    2684 => 'Save settings'
 );

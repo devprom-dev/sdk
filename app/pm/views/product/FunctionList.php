@@ -7,45 +7,17 @@ if ( !class_exists('IssuesProgressFrame', false) )
 
 class FunctionList extends PMPageList
 {
- 	var $request_agg_it, $strategy;
- 	
+ 	private $strategy;
  	private $request_non_terminal_states = array();
  	private $visible_columns = array();
  	private $trace_attributes = array();
- 	private $group_defined = false;
- 	
+
  	function __construct( $object )
  	{
  	    parent::__construct( $object );
+        $this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
  	}
  	
-	function retrieve()
-	{
-		$this->group_defined =
-            !in_array($this->getGroup(), array('','none'))
-            || count($this->getIds()) > 0;
-		
-		parent::retrieve();
-
-		// cache requests per feature
-		$filters = $this->getFilterValues();
-		
-		$request = getFactory()->getObject('pm_ChangeRequest');
-		$request->addFilter( new StatePredicate('notresolved') );
-		
-		$this->strategy = getSession()->getProjectIt()->getMethodologyIt()->getEstimationStrategy();
-		$this->request_agg_it = $request->getRequestsAggByFunction();
-		$this->request_agg_it->buildPositionHash( array('Function') );
-	}
-
-	function getSortingParms()
-	{
-		return array (
-				'SortIndex',
-				'asc'
-		);
-	}
-	
 	function setupColumns()
 	{
 		parent::setupColumns();
@@ -77,8 +49,6 @@ class FunctionList extends PMPageList
 	
 	function drawCell( $object_it, $attr )
 	{
-		global $model_factory;
-		
 		switch( $attr )
 		{
 			case 'CaptionShort':

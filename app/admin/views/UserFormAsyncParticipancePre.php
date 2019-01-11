@@ -56,15 +56,16 @@ class UserParticipancePreForm extends AdminForm
 
 	function getAttributeClass( $attribute )
 	{
-		global $model_factory;
-
 		switch ( $attribute )
 		{
 			case 'SystemUser':
-				return $model_factory->getObject('cms_User');
+				return getFactory()->getObject('cms_User');
 
 			case 'ProjectRole':
-				return $model_factory->getObject('ProjectRoleBase');
+				return getFactory()->getObject('ProjectRoleBase');
+
+            case 'Project':
+                return getFactory()->getObject('ProjectActive');
 
 			default:
 				return parent::getAttributeClass( $attribute );

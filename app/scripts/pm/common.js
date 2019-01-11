@@ -79,7 +79,7 @@ var lastActionBar = null;
 	 {
 		 for ( var key in this.parms )
 		 {
-			 if ($.inArray(key,['','show','hide','group','sort','sort2','sort3','sort4','infosections','color']) >= 0) continue;
+			 if ($.inArray(key,['','show','hide','group','sort','sort2','sort3','sort4','infosections','color','rows']) >= 0) continue;
 			 if ($.inArray(this.parms[key],['','all','hide']) >= 0) continue;
 			 this.location = updateLocation( key+'=all', this.location );
 		 }
@@ -2770,6 +2770,12 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
         beforeUnload();
 	}
 
+    if ( $('#modal-form').length > 0 ) {
+        if ( !workflowHandleBeforeClose() ) {
+            return;
+        }
+    }
+
 	if ( form_url.indexOf('?') < 0 )
 	{
 		form_url += '?formonly=true';
@@ -2793,6 +2799,7 @@ function workflowNewObject( form_url, class_name, entity_ref, absoluteUrl, form_
 		data: workflowCompleteData(data),
 		async: true,
 		cache: false,
+        proccessData: false,
 		success: 
 			function(result, status, xhr) 
 			{
@@ -3419,15 +3426,13 @@ function getCheckedRows( ids )
     ids = '';
 
     var allChecked = $('input[id*=to_delete_all]:checked');
-    if ( allChecked.length > 0 ) {
+    if ( allChecked.length > 0 && $('input[name*=to_delete_]:not(:checked)').length < 1 ) {
     	ids = allChecked.attr("items-hash");
     	if ( ids != "" ) return ids;
 	}
 
-    $('.checkbox').each(function() {
-        if ( this.checked ) {
-            ids += this.name.toString().replace('to_delete_','')+'-';
-        }
+    $('input[name*=to_delete_]:checked').each(function() {
+		ids += this.name.toString().replace('to_delete_','')+'-';
     });
     if ( ids == '' ) {
         ids = $.grep(

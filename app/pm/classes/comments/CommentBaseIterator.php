@@ -109,7 +109,8 @@ class CommentBaseIterator extends OrderedIterator
 	        $registry = new WikiPageRegistryContent(getFactory()->getObject($class_name));
 	        return $registry->Query(
 	            array(
-                    new FilterInPredicate($this->get('ObjectId'))
+                    new FilterInPredicate($this->get('ObjectId')),
+                    new EntityProjectPersister()
                 )
             );
         }

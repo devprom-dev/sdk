@@ -9,7 +9,7 @@ class BackupRegistry extends ObjectRegistrySQL
 		$it = new IteratorFile( $this->getObject(), SERVER_BACKUP_PATH, 'zip' );
 		
 		$it->sortCreatedDesc();
-			
+
 		return $it;
 	}
 }

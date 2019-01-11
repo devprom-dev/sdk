@@ -135,5 +135,6 @@ class ModelEventsManager
         foreach( $this->delayedNotifications as $key => $functor ) {
             $functor();
         }
+        $this->delayedNotifications = array();
     }
 }

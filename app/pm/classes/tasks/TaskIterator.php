@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/workflow/StatableIterator.php";
 
 class TaskIterator extends StatableIterator
 {

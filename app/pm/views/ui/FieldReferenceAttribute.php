@@ -2,12 +2,12 @@
 
 class FieldReferenceAttribute extends Field
 {
-	private $actions = null;
 	private $reload = false;
 	private $attribute = '';
 	private $attributeObject = null;
 	private $moreActions = array();
 	private $extraClass = '';
+	private $lovObject = null;
 
 	function __construct( $object_it, $attribute, $attributeObject = null, $moreActions = array(), $reload = false, $extraClass = '' )
     {
@@ -17,13 +17,9 @@ class FieldReferenceAttribute extends Field
         $this->attributeObject = is_object($attributeObject)
             ? $attributeObject
             : $this->object_it->object->getAttributeObject($attribute);
+        $this->lovObject = $this->attributeObject;
         $this->moreActions = $moreActions;
-		$this->actions = $this->buildActions();
         $this->extraClass = $extraClass;
-	}
-
-	function getActions() {
-		return $this->actions;
 	}
 
 	function getObjectIt() {
@@ -34,25 +30,37 @@ class FieldReferenceAttribute extends Field
 		$this->object_it = $object_it;
 	}
 
+	function setLovObject( $object ) {
+	    $this->lovObject = $object;
+    }
+
 	function draw( $view = null )
 	{
-		foreach( $this->actions as $key => $action )
+        $actions = $this->buildActions();
+
+		foreach( $actions as $key => $action )
 		{
 			$method = $action['method'];
 			$method->setObjectIt($this->object_it);
-			$this->actions[$key]['url'] = $method->getJSCall();
+            $actions[$key]['url'] = $method->getJSCall();
 		}
 
         $uid = new ObjectUID;
-        $priorityIt = $this->object_it->getRef($this->attribute, $this->attributeObject);
+		if ( $this->object_it->get($this->attribute) == '' && $this->attributeObject instanceof RequestType ) {
+            $priorityIt = $this->attributeObject->getAll();
+            $priorityIt->moveToId('');
+        }
+		else {
+            $priorityIt = $this->object_it->getRef($this->attribute, $this->attributeObject);
+        }
 
         if ( count($this->moreActions) > 0 ) {
-            $this->actions = array_merge($this->actions, array(array()), $this->moreActions);
+            $actions = array_merge($actions, array(array()), $this->moreActions);
         }
 
 		echo $view->render('pm/AttributeButton.php', array (
 			'data' => $uid->getUidTitle($priorityIt),
-			'items' => $this->actions,
+			'items' => $actions,
 			'extraClass' => $this->extraClass,
 			'random' => $this->attribute . $this->object_it->getId(),
             'title' => $this->object_it->object->getAttributeUserName($this->attribute)
@@ -64,9 +72,9 @@ class FieldReferenceAttribute extends Field
 		$actions = array();
         $empty_it = $this->object_it;
 
-        $priorityIt = $this->attributeObject->getVpdValue() == ''
-            ? $this->attributeObject->getAll()
-            : $this->attributeObject->getRegistry()->Query(
+        $priorityIt = $this->lovObject->getVpdValue() == ''
+            ? $this->lovObject->getAll()
+            : $this->lovObject->getRegistry()->Query(
                     array(
                         new FilterVpdPredicate($this->object_it->get('VPD'))
                     )

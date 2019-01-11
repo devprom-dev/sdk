@@ -15,14 +15,17 @@ class CustomAttributesPersister extends ObjectSQLPersister
 	{
 		parent::setObject($object);
 		$this->getAttributesInfo();
-		$this->getReferenceNames();
 	}
+
+    protected function getAttributeIt() {
+        return getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
+    }
 
  	protected function getAttributesInfo()
  	{
  		if ( count($this->attrs) > 0 ) return $this->attrs;
 
- 		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getByEntity($this->getObject());
+        $attr_it = $this->getAttributeIt();
  		while ( !$attr_it->end() )
 		{
  			$this->attrs[$attr_it->getId()] = array (
@@ -32,31 +35,21 @@ class CustomAttributesPersister extends ObjectSQLPersister
 				'default' => $attr_it->getHtmlDecoded('DefaultValue'),
                 'VPD' => $attr_it->get('VPD'),
  			);
+            $this->references[$attr_it->get('ReferenceName')][] = $attr_it->getId();
  			$attr_it->moveNext();
  		}
 
  		return $this->attrs;
  	}
 
-	protected function getReferenceNames()
-	{
-		if (count($this->references) > 0) return $this->references;
-
-		$attr_it = getFactory()->getObject('pm_CustomAttribute')->getRegistry()->Query(
-			array(
-				new FilterAttributePredicate('EntityReferenceName', strtolower(get_class($this->getObject())))
-			)
-		);
-		while( !$attr_it->end() ) {
-			$this->references[$attr_it->get('ReferenceName')][] = $attr_it->getId();
-			$attr_it->moveNext();
-		}
-
-		return $this->references;
-	}
-
-	function getAttributes() {
-		return array_keys($this->getReferenceNames());
+	function getAttributes()
+    {
+		return array_map(
+		    function($item) {
+		        return $item['name'];
+            },
+            $this->attrs
+        );
 	}
 
  	function add( $object_id, $parms )
@@ -76,17 +69,15 @@ class CustomAttributesPersister extends ObjectSQLPersister
  		$value = getFactory()->getObject('pm_AttributeValue');
         $value->disableVpd();
         $valueRegistry = $value->getRegistry();
+        $objectAttributes = $this->getObject()->getRegistryBase()->Query(
+                array(
+                    new FilterInPredicate($object_id)
+                )
+            )->getData();
 
  		foreach( $attributes as $attr_id => $attr ) {
- 		    if ( $parms['VPD'] != '' && $parms['VPD'] != $attr['VPD'] ) continue;
-
             if ( $this->getTypeIt($attr)->get('ReferenceName') == 'computed' )
             {
-                $objectAttributes = $this->getObject()->getRegistryBase()->Query(
-                    array(
-                        new FilterInPredicate($object_id)
-                    )
-                )->getData();
                 $idAttribute = $this->getObject()->getIdAttribute();
                 $value = $this->computeFormula($objectAttributes, $attr['default']);
 
@@ -114,7 +105,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
                 }
             }
 
-            if ( !array_key_exists($attr['name'], $parms) ) continue;
+            if ( !array_key_exists($attr['name'], $parms) && !array_key_exists($attr['name'].'OnForm', $parms) ) continue;
 
             $value_parms = array(
                 'CustomAttribute' => $attr['id'],
@@ -159,7 +150,12 @@ class CustomAttributesPersister extends ObjectSQLPersister
 
  		if ( !array_key_exists( $attribute['name'], $parms ) )
  		{
- 			$parms[$attribute['name']] = $value_parms[$value_column];
+ 		    if ( $parms[$attribute['name'].'OnForm'] == 'Y' ) {
+                $parms[$attribute['name']] = 'N';
+            }
+ 		    else {
+                $parms[$attribute['name']] = $value_parms[$value_column];
+            }
  		}
  		else
  		{
@@ -184,11 +180,8 @@ class CustomAttributesPersister extends ObjectSQLPersister
 		$algorithm = defined('MYSQL_ENCRYPTION_ALGORITHM') ? MYSQL_ENCRYPTION_ALGORITHM : 'DES';
 
  		$attributes = $this->getAttributesInfo();
-		$attribute_ids = $this->getReferenceNames();
-
- 		$object = $this->getObject();
 		$attribute_data = array();
-		
+
 		foreach( $attributes as $attr_id => $attr ) {
  		    $attribute_data[$attr['name']] = $attr;
  		}
@@ -221,7 +214,7 @@ class CustomAttributesPersister extends ObjectSQLPersister
 			array_push( $columns,
  				"(SELECT ".$column." FROM pm_AttributeValue cav ".
  				"  WHERE cav.ObjectId = ".$this->getPK($alias).
- 				"    AND cav.CustomAttribute IN (".join(',',$attribute_ids[$ref_name]).") LIMIT 1) `".trim($attr['name'])."` "
+ 				"    AND cav.CustomAttribute IN (".join(',',$this->references[$ref_name]).") LIMIT 1) `".trim($attr['name'])."` "
  			);
  		}
 

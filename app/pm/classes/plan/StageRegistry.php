@@ -45,7 +45,7 @@ class StageRegistry extends ObjectRegistrySQL
     		   "          WHERE m.Version = v.pm_VersionId) Iterations, ".
                "		v.RecordCreated, ".
     		   "		v.RecordModified, ".
-    		   "		UNIX_TIMESTAMP(v.RecordModified) * 100000 AffectedDate, ".
+    		   "		v.RecordVersion, ".
                "        CONCAT(LPAD(v.pm_VersionId, 8, '0'),LPAD('',8,'0')) Stage, ".
                "        'Release' State ".
     		   "   FROM (SELECT v.*," .
@@ -96,7 +96,7 @@ class StageRegistry extends ObjectRegistrySQL
  		   "        r.pm_ReleaseId Iterations, ".
     	   "		r.RecordCreated, ".
     	   "		r.RecordModified, ".
-    	   "		UNIX_TIMESTAMP(v.RecordModified) * 100000 AffectedDate, ".
+    	   "		r.RecordVersion, ".
            "        CONCAT(LPAD(IFNULL(v.pm_VersionId, 0), 8, '0'),LPAD(r.pm_ReleaseId, 8, '0')) Stage, ".
            "        'Iteration' State ".
     	   "   FROM (SELECT r.*, ".

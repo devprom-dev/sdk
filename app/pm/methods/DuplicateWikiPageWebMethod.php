@@ -162,22 +162,78 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
  	{
  	 	$link = getFactory()->getObject('WikiPageTrace');
 
-		$object_it = $object->getRegistry()->Query( 
+        $entityRefName = $object->getEntityRefName();
+		$object_it = $object->getRegistry()->Query(
 				array (
 					new ParentTransitiveFilter($this->getObjectIt()->idsToArray())
 				)
 			);
-		
- 	    foreach( $object_it->idsToArray() as $source_id )
- 	    {
-    		$link->add_parms( array( 
-    		    'SourcePage' => $source_id,
-    			'TargetPage' => $map[$object->getEntityRefName()][$source_id],
-    			'IsActual' => 'Y',
-    			'SourceBaseline' => $_REQUEST['Snapshot'],
-    			'Type' => 'branch'
-    		));
- 	    }
+		while( !$object_it->end() )
+        {
+            $link->add_parms( array(
+                'SourcePage' => $object_it->getId(),
+                'TargetPage' => $map[$entityRefName][$object_it->getId()],
+                'IsActual' => 'Y',
+                'SourceBaseline' => $_REQUEST['Snapshot'],
+                'Type' => 'branch'
+            ));
+
+            // remap upstream traces
+            $upstreamTraceIt = $link->getRegistry()->Query(
+                array(
+                    new FilterAttributePredicate('TargetPage', $map[$entityRefName][$object_it->getId()]),
+                    new FilterHasNoAttributePredicate('Type', 'branch')
+                )
+            );
+            if ( $upstreamTraceIt->get('SourcePage') != '' ) {
+                $downstreamTraceIt = $link->getRegistry()->Query(
+                    array(
+                        new FilterAttributePredicate('SourcePage', $upstreamTraceIt->get('SourcePage')),
+                        new FilterAttributePredicate('Type', 'branch'),
+                        new WikiTraceTargetBaselinePredicate(html_entity_decode($this->baselineIt->getDisplayName()))
+                    )
+                );
+                if ( $downstreamTraceIt->get('TargetPage') != '' ) {
+                    $link->getRegistry()->Store(
+                        $upstreamTraceIt,
+                        array (
+                            'SourcePage' => $downstreamTraceIt->get('TargetPage')
+                        )
+                    );
+                }
+            }
+
+            $parms = array();
+
+            // remap dependencies
+            $dependencies =
+                array_map(
+                    function( $item ) use ( $map, $entityRefName ) {
+                        list($className, $id) = preg_split('/:/', $item);
+                        if ( $id == '' ) return $item;
+                        if ( $map[$entityRefName][$id] > 0 ) {
+                            $id = $map[$entityRefName][$id];
+                        }
+                        return $className . ':' . $id;
+                    },
+                    preg_split('/,/', $object_it->get('Dependency'))
+                );
+            $dependencyNew = join(',', $dependencies);
+            if ( $dependencyNew != $object_it->get('Dependency') ) {
+                $parms['Dependency'] = $dependencyNew;
+            }
+
+            // remap includes
+            if ( array_key_exists($object_it->get('Includes'), $map[$entityRefName]) ) {
+                $parms['Includes'] = $map[$entityRefName][$object_it->get('Includes')];
+            }
+
+            if ( count($parms) > 0 ) {
+                $object->getRegistry()->Store($object_it, $parms);
+            }
+
+            $object_it->moveNext();
+        }
 
  	    if ( is_object($this->baselineIt) && $this->baselineIt->getId() != '' )
         {
@@ -229,6 +285,7 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
 	function storeVersion( & $map, & $object, $parms, $previousName = false )
 	{
 		$snapshot = getFactory()->getObject('Snapshot');
+		$trace = getFactory()->getObject('WikiPageTrace');
 		$versioned = new VersionedObject();
 		$versioned_it = $versioned->getExact(get_class($object));
 
@@ -266,20 +323,67 @@ class DuplicateWikiPageWebMethod extends DuplicateWebMethod
                 continue;
             }
 
+			$versionId = $snapshot->add_parms( array (
+                'Caption' => $caption,
+                'Description' => $parms['Description'],
+                'ListName' => get_class($object).':'.$object_id,
+                'Stage' => $baselineIt->getId(),
+                'ObjectId' => $object_id,
+                'ObjectClass' => get_class($object),
+                'SystemUser' => getSession()->getUserIt()->getId()
+            ));
 			$snapshot->freeze(
-				$snapshot->add_parms( array (
-					'Caption' => $caption,
-					'Description' => $parms['Description'],
-					'ListName' => get_class($object).':'.$object_id,
-                    'Stage' => $baselineIt->getId(),
-					'ObjectId' => $object_id,
-					'ObjectClass' => get_class($object),
-					'SystemUser' => getSession()->getUserIt()->getId()
-				)),
+                $versionId,
 				$versioned_it->getId(),
 				array($object_id),
 				$versioned_it->get('Attributes')
 			);
+
+			// fix dependency for downstream traces
+			$ids = array_filter(
+                $trace->getRegistry()->Query(
+                        array(
+                            new WikiTraceSourceDocumentPredicate($object_id)
+                        )
+                    )->idsToArray(),
+			    function($id) {
+			        return $id > 0;
+                }
+            );
+			if ( count($ids) > 0 && $versionId > 0 ) {
+                DAL::Instance()->Query(" UPDATE WikiPageTrace SET SourceBaseline = ".$versionId." WHERE WikiPageTraceId IN (".join(',',$ids).") ");
+            }
+
+            // fix dependency for upstream traces
+			if ( $versionId > 0 ) {
+                $traceIt = $trace->getRegistry()->Query(
+                    array(
+                        new FilterAttributePredicate('TargetPage', $object_id)
+                    )
+                );
+                $versionIt = $snapshot->getRegistry()->Query(
+                    array(
+                        new FilterAttributePredicate('Stage', $baselineIt->getId()),
+                        new FilterAttributePredicate('ObjectId', $traceIt->get('SourcePage')),
+                        new FilterHasNoAttributePredicate('Type', 'branch')
+                    )
+                );
+
+                $ids = array_filter(
+                    $trace->getRegistry()->Query(
+                        array(
+                            new WikiTraceTargetDocumentPredicate($object_id)
+                        )
+                    )->idsToArray(),
+                    function($id) {
+                        return $id > 0;
+                    }
+                );
+                if ( count($ids) > 0 ) {
+                    $sourceBaseline = $versionIt->getId() > 0 ? $versionIt->getId() : 'NULL';
+                    DAL::Instance()->Query(" UPDATE WikiPageTrace SET SourceBaseline = ".$sourceBaseline." WHERE WikiPageTraceId IN (".join(',',$ids).") ");
+                }
+            }
 
             $object_it->moveNext();
         }

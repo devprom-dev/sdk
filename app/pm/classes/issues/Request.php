@@ -1,4 +1,5 @@
 <?php
+include_once SERVER_ROOT_PATH . "pm/classes/workflow/MetaobjectStatable.php";
 include "RequestIterator.php";
 include "persisters/IssueLinkedIssuesPersister.php";
 include "persisters/RequestIterationsPersister.php";
@@ -190,6 +191,17 @@ class Request extends MetaobjectStatable
         $uid = new ObjectUID();
         $sql = "UPDATE pm_ChangeRequest w SET w.UID = '".$uid->getObjectUidInt(get_class($this), $objectId)."' WHERE w.pm_ChangeRequestId = ".$objectId;
         DAL::Instance()->Query( $sql );
+    }
+
+    function getSpecific( $iterator )
+    {
+        $methodology_it = getSession()->getProjectIt()->getMethodologyIt();
+        if ( $iterator->get('Type') == '' && !$this instanceof Issue && $methodology_it->get('IsRequirements') == ReqManagementModeRegistry::RDD && class_exists('Issue') ) {
+            return getFactory()->getObject('Issue')->createCachedIterator(
+                array($iterator->getData())
+            );
+        }
+        return $iterator;
     }
 }
  

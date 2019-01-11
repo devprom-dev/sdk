@@ -1,5 +1,5 @@
 <?php
-include "StatableIterator.php";
+include_once "StatableIterator.php";
 include "predicates/StatePredicate.php";
 include "predicates/StateNotInPredicate.php";
 include "sorts/StateObjectSortClause.php";

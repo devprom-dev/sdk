@@ -212,7 +212,7 @@ class PMPageBoard extends PageBoard
 				break;
 				
 			default:
-                if ( in_array('computed', $this->object->getAttributeGroups($attr)) ) {
+                if ( $attr != 'UID' && in_array('computed', $this->object->getAttributeGroups($attr)) ) {
                     $lines = array();
                     $times = 0;
                     $result = ModelService::computeFormula($object_it, $this->object->getDefaultAttributeValue($attr));

@@ -95,7 +95,8 @@ class WorkflowService
             array_merge( $parms,
                 array(
                     'Transition' => $transition_it->getId(),
-                    'TransitionComment' => $comment
+                    'TransitionComment' => $comment,
+                    'WasRecordVersion' => $object_it->get('RecordVersion')
                 )
             )
         );
